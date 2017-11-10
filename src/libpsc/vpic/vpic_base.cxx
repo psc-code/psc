@@ -5,6 +5,8 @@
 
 #include <mpi.h>
 
+#include <cassert>
+
 #define mprintf(fmt...) do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); { printf("[%d] ", __rank); printf(fmt); } } while(0)
 
 #define MHERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
@@ -15,7 +17,7 @@
 extern vpic_simulation *simulation;
 
 void
-vpic_base_init(struct vpic_info *info)
+vpic_base_init(struct vpic_simulation_info *info)
 {
   if (simulation) {
     return;
@@ -47,28 +49,21 @@ vpic_base_init(struct vpic_info *info)
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
   simulation->initialize( 0, NULL );
+
+  info->num_step = simulation->num_step;
+  info->clean_div_e_interval = simulation->clean_div_e_interval;
+  info->clean_div_b_interval = simulation->clean_div_b_interval;
+  info->sync_shared_interval = simulation->sync_shared_interval;
+}
+
+void vpic_inc_step(int step)
+{
+  assert(simulation->grid->step == step);
+  simulation->grid->step++;
 }
 
 void vpic_step(void)
 {
-  vpic_performance_sort();
-  vpic_clear_accumulator_array();
-  vpic_collisions();
-  vpic_advance_p();
-  vpic_emitter();
-  vpic_reduce_accumulator_array();
-  vpic_boundary_p();
-  vpic_calc_jf();
-  vpic_current_injection();
-
-  // Half advance the magnetic field from B_0 to B_{1/2}
-  vpic_advance_b(0.5);
-  // Advance the electric field from E_0 to E_1
-  vpic_advance_e(1.0);
-  vpic_field_injection();
-  // Half advance the magnetic field from B_{1/2} to B_1
-  vpic_advance_b(0.5);
-
   // Divergence clean e
   if( (simulation->clean_div_e_interval>0) && ((simulation->grid->step % simulation->clean_div_e_interval)==0) ) {
     vpic_clean_div_e();
@@ -83,15 +78,5 @@ void vpic_step(void)
   if( (simulation->sync_shared_interval>0) && ((simulation->grid->step % simulation->sync_shared_interval)==0) ) {
     vpic_sync_faces();
   }
-
-  // Fields are updated ... load the interpolator for next time step and
-  // particle diagnostics in user_diagnostics if there are any particle
-  // species to worry about
-  vpic_load_interpolator_array();
-
-  simulation->grid->step++;
-
-  vpic_print_status();
-  vpic_diagnostics();
 }
 

@@ -103,6 +103,9 @@ static struct param psc_marder_descr[] = {
   { "loop"             , VAR(loop)             , PARAM_INT(1),      },
   { "dump"             , VAR(dump)             , PARAM_BOOL(false), },
 
+  { "clean_div_e_interval", VAR(clean_div_e_interval), PARAM_INT(-1),     },
+  { "clean_div_b_interval", VAR(clean_div_b_interval), PARAM_INT(-1),     },
+  { "sync_shared_interval", VAR(sync_shared_interval), PARAM_INT(-1),     },
   {},
 };
 #undef VAR

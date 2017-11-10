@@ -4,6 +4,7 @@
 #include <psc_push_fields.h>
 #include <psc_collision.h>
 #include <psc_balance.h>
+#include <psc_marder.h>
 
 #include <psc_particles_as_single.h>
 
@@ -438,6 +439,34 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 static void
 psc_harris_step(struct psc *psc)
 {
+  vpic_performance_sort();
+  vpic_clear_accumulator_array();
+  vpic_collisions();
+  vpic_advance_p();
+  vpic_emitter();
+  vpic_reduce_accumulator_array();
+  vpic_boundary_p();
+  vpic_calc_jf();
+  vpic_current_injection();
+
+  // Half advance the magnetic field from B_0 to B_{1/2}
+  vpic_advance_b(0.5);
+  // Advance the electric field from E_0 to E_1
+  vpic_advance_e(1.0);
+  vpic_field_injection();
+  // Half advance the magnetic field from B_{1/2} to B_1
+  vpic_advance_b(0.5);
+
+  vpic_step();
+
+  // Fields are updated ... load the interpolator for next time step and
+  // particle diagnostics in user_diagnostics if there are any particle
+  // species to worry about
+  vpic_load_interpolator_array();
+
+  vpic_print_status();
+  vpic_diagnostics();
+  vpic_inc_step(psc->timestep);
 }
 
 // ======================================================================
@@ -457,14 +486,6 @@ struct psc_ops psc_harris_ops = {
 
 // ======================================================================
 // main
-
-void
-vpic_base_integrate()
-{
-  while (!vpic_done()) {
-    vpic_step();
-  }
-}
 
 int
 main(int argc, char **argv)
@@ -501,8 +522,18 @@ main(int argc, char **argv)
     // The standard implementation, used here, will set particles using
     // psc_bubble_init_npt and the fields using setup_field()
     psc_setup(psc);
+
+    struct vpic_simulation_info info;
+    vpic_base_init(&info);
+
+    psc->prm.nmax = info.num_step;
+    psc_marder_set_param_int(psc->marder, "clean_div_e_interval",
+			     info.clean_div_e_interval);
+    psc_marder_set_param_int(psc->marder, "clean_div_b_interval",
+			     info.clean_div_b_interval);
+    psc_marder_set_param_int(psc->marder, "sync_shared_interval",
+			     info.sync_shared_interval);
     
-    vpic_base_init(NULL);
   } else {
     // get psc object from checkpoint file
 
@@ -527,7 +558,6 @@ main(int argc, char **argv)
   
   // psc_integrate() uses the standard implementation, which does the regular
   // classic PIC time integration loop
-  vpic_base_integrate();
   psc_integrate(psc);
   
   // psc_destroy() just cleans everything up when we're done.

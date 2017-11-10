@@ -16,7 +16,14 @@ struct vpic_info {
   double eps0;
 };
 
-void vpic_base_init(struct vpic_info *info);
+struct vpic_simulation_info {
+  int num_step;
+  int clean_div_e_interval;
+  int clean_div_b_interval;
+  int sync_shared_interval;
+};
+
+void vpic_base_init(struct vpic_simulation_info *info);
 void vpic_base_integrate();
 
 bool vpic_done();
@@ -38,6 +45,8 @@ void vpic_sync_faces();
 void vpic_load_interpolator_array();
 void vpic_print_status();
 void vpic_diagnostics();
+void vpic_inc_step(int step);
+
 void vpic_step();
 
 

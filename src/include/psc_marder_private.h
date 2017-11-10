@@ -12,6 +12,10 @@ struct psc_marder {
   int loop; //< execute this many relaxation steps in a loop
   bool dump; //< dump div_E, rho
 
+  int clean_div_e_interval;
+  int clean_div_b_interval;
+  int sync_shared_interval;
+
   // state
   struct psc_mfields *div_e;
   struct psc_mfields *rho;

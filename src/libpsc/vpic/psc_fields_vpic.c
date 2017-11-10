@@ -21,16 +21,16 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 			 &mflds->nr_patches);
   assert(mflds->nr_patches == 1);
 
-  struct vpic_info info = {
-    /* .dx = dx[0], */
-    /* .dy = dx[1], */
-    /* .dz = dx[2], */
-    /* .dt = , */
-    .c = 1.,
-    .eps0 = 1.,
-  };
+  /* struct vpic_info info = { */
+  /*   /\* .dx = dx[0], *\/ */
+  /*   /\* .dy = dx[1], *\/ */
+  /*   /\* .dz = dx[2], *\/ */
+  /*   /\* .dt = , *\/ */
+  /*   .c = 1., */
+  /*   .eps0 = 1., */
+  /* }; */
 
-  vpic_base_init(&info);
+  /* vpic_base_init(&info); */
 
   //  sub->vmflds = cuda_mfields_create();
   //  cuda_mfields_ctor(sub->vmflds, json);
