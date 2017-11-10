@@ -491,9 +491,9 @@ psc_harris_step(struct psc *psc)
   // species to worry about
   vpic_load_interpolator_array();
 
+  vpic_inc_step(psc->timestep);
   vpic_print_status();
   vpic_diagnostics();
-  vpic_inc_step(psc->timestep);
 }
 
 // ======================================================================
