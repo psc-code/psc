@@ -1,6 +1,6 @@
 
-#ifndef PSC_PARTICLE_CUDA_H
-#define PSC_PARTICLE_CUDA_H
+#ifndef PSC_PARTICLES_CUDA_H
+#define PSC_PARTICLES_CUDA_H
 
 #include "psc_particles_private.h"
 #include "psc_particles_single.h"

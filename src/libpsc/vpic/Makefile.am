@@ -22,6 +22,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_vpic.c \
 	psc_bnd_fields_vpic.c \
 	psc_marder_vpic.c \
+	psc_particles_vpic.c \
 	psc_fields_vpic.c \
 	\
 	vpic_base.cxx \

@@ -1,6 +1,7 @@
 
 #include "vpic_iface.h"
 #include "vpic_mfields.h"
+#include "vpic_mparticles.h"
 
 #include <vpic.h>
 
@@ -33,6 +34,27 @@ void
 vpic_mfields_ctor_from_simulation(struct vpic_mfields *vmflds)
 {
   vmflds->field_array = simulation->field_array;
+}
+
+// ======================================================================
+// vpic_mparticles
+
+// ----------------------------------------------------------------------
+// vpic_mparticles_create
+
+struct vpic_mparticles *
+vpic_mparticles_create()
+{
+  return new vpic_mparticles;
+}
+
+// ----------------------------------------------------------------------
+// vpic_mparticles_ctor_from_simulation
+
+void
+vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts)
+{
+  vmprts->species_list = simulation->species_list;
 }
 
 // ======================================================================

@@ -14,6 +14,7 @@
 #include <psc_event_generator.h>
 
 #include <psc_fields_vpic.h>
+#include <psc_particles_vpic.h>
 
 #include <psc_particles_as_single.h>
 
@@ -545,6 +546,7 @@ main(int argc, char **argv)
 			     info.sync_shared_interval);
 
     vpic_mfields_ctor_from_simulation(psc_mfields_vpic(psc->flds)->vmflds);
+    vpic_mparticles_ctor_from_simulation(psc_mparticles_vpic(psc->particles)->vmprts);
   } else {
     // get psc object from checkpoint file
 

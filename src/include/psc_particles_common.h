@@ -162,6 +162,29 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
+#elif PTYPE == PTYPE_VPIC
+
+#define particle_PTYPE_real_t particle_vpic_real_t
+#if 0
+#define particle_PTYPE_t particle_vpic_t
+
+#define psc_particle_PTYPE_buf_t psc_particle_vpic_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_vpic_buf_ctor
+#define psc_particle_PTYPE_buf_dtor psc_particle_vpic_buf_dtor
+#define psc_particle_PTYPE_buf_size psc_particle_vpic_buf_size
+#define psc_particle_PTYPE_buf_resize psc_particle_vpic_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_vpic_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_vpic_buf_capacity
+#define psc_particle_PTYPE_buf_push_back psc_particle_vpic_buf_push_back
+#define psc_particle_PTYPE_buf_at_ptr psc_particle_vpic_buf_at_ptr
+#endif
+
+#define psc_mparticles_PTYPE psc_mparticles_vpic
+#if 0
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_vpic_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_vpic_patch_get_b_mx
+#endif
+
 #endif
 
 // ======================================================================
@@ -178,7 +201,13 @@ struct psc_mparticles_PTYPE {
 const particle_PTYPE_real_t *psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p);
 const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p);
 
-#else // PTYPE != PTYPE_CUDA
+#elif PTYPE == PTYPE_VPIC
+
+struct psc_mparticles_PTYPE {
+  struct vpic_mparticles *vmprts;
+};
+
+#else // PTYPE != PTYPE_CUDA / VPIC
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
