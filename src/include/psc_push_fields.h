@@ -11,6 +11,8 @@ struct psc_bnd_fields *psc_push_fields_get_bnd_fields(struct psc_push_fields *pu
 
 void psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 			    double dt_fac);
+void psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds,
+			    double dt_fac);
 
 void psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *flds);
 void psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *flds);

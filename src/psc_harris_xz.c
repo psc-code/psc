@@ -111,15 +111,17 @@ psc_harris_create(struct psc *psc)
   psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
   psc->domain.bnd_part_hi[2] = BND_PART_REFLECTING;
 
-  // FIXME: can only use 1st order pushers with current conducting wall b.c.
-  psc_push_particles_set_type(psc->push_particles, "vpic");
-
   psc_sort_set_type(psc->sort, "vpic");
   // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
   // internally
   psc_sort_set_param_int(psc->sort, "every", 1);
 
   psc_collision_set_type(psc->collision, "vpic");
+
+  // FIXME: can only use 1st order pushers with current conducting wall b.c.
+  psc_push_particles_set_type(psc->push_particles, "vpic");
+
+  psc_push_fields_set_type(psc->push_fields, "vpic");
 }
 
 static inline double trunc_granular( double a, double b )
@@ -487,15 +489,13 @@ psc_harris_step(struct psc *psc)
 {
   psc_sort_run(psc->sort, psc->particles);
   psc_collision_run(psc->collision, psc->particles);
+
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-  
-  // Half advance the magnetic field from B_0 to B_{1/2}
-  vpic_advance_b(0.5);
-  // Advance the electric field from E_0 to E_1
-  vpic_advance_e(1.0);
+
+  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
+  psc_push_fields_push_E(psc->push_fields, psc->flds, 1.);
   vpic_field_injection();
-  // Half advance the magnetic field from B_{1/2} to B_1
-  vpic_advance_b(0.5);
+  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
 
   psc_harris_marder_run(psc->marder, psc->timestep);
 

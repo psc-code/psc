@@ -18,7 +18,7 @@ psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 // ======================================================================
 // forward to subclass
 
-static void
+void
 psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds,
 		       double dt_fac)
 {
@@ -134,6 +134,9 @@ psc_push_fields_init()
 #endif
 #ifdef USE_ACC
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_acc_ops);
+#endif
+#ifdef USE_VPIC
+  mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_vpic_ops);
 #endif
 }
 

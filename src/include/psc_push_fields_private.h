@@ -30,6 +30,7 @@ extern struct psc_push_fields_ops psc_push_fields_cbe_ops;
 extern struct psc_push_fields_ops psc_push_fields_cuda_ops;
 extern struct psc_push_fields_ops psc_push_fields_cuda2_ops;
 extern struct psc_push_fields_ops psc_push_fields_acc_ops;
+extern struct psc_push_fields_ops psc_push_fields_vpic_ops;
 extern struct psc_push_fields_ops psc_push_fields_none_ops;
 
 #define psc_push_fields_ops(push_fields) ((struct psc_push_fields_ops *)((push_fields)->obj.ops))
