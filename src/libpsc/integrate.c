@@ -142,6 +142,8 @@ psc_step(struct psc *psc)
   psc_marder_run(psc->marder, psc->flds, psc->particles);
     
   psc_checks_gauss(psc->checks, psc);
+
+  psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
 }
 
 extern void dynamicwindow_timestep();

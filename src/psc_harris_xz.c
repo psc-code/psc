@@ -477,40 +477,6 @@ psc_harris_output(struct psc *psc)
   }
 }
 
-// ----------------------------------------------------------------------
-// psc_harris_step
-
-static void
-psc_harris_step(struct psc *psc)
-{
-  psc_sort_run(psc->sort, psc->particles);
-  psc_collision_run(psc->collision, psc->particles);
-
-  psc_checks_continuity_before_particle_push(psc->checks, psc);
-
-  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-
-  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
-
-  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
-
-  psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
-  
-  psc_push_fields_step_b2(psc->push_fields, psc->flds);
-  psc_push_fields_step_a(psc->push_fields, psc->flds);
-
-  psc_checks_continuity_after_particle_push(psc->checks, psc);
-
-  psc_marder_run(psc->marder, psc->flds, psc->particles);
-
-  psc_checks_gauss(psc->checks, psc);
-
-  // Fields are updated ... load the interpolator for next time step and
-  // particle diagnostics in user_diagnostics if there are any particle
-  // species to worry about
-  psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
-}
-
 // ======================================================================
 // psc_harris_ops
 
@@ -523,7 +489,6 @@ struct psc_ops psc_harris_ops = {
   .read             = psc_harris_read,
   .init_field       = psc_harris_init_field,
   .setup_particles  = psc_harris_setup_particles,
-  .step             = psc_harris_step,
   .output           = psc_harris_output,
 };
 
