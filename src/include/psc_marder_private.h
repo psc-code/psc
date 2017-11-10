@@ -15,6 +15,8 @@ struct psc_marder {
   int clean_div_e_interval;
   int clean_div_b_interval;
   int sync_shared_interval;
+  int num_div_e_round;
+  int num_div_b_round;
 
   // state
   struct psc_mfields *div_e;

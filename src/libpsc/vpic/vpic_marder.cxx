@@ -1,8 +1,6 @@
 
 #include "vpic_marder.h"
 
-extern vpic_simulation *simulation;
-
 // ======================================================================
 // vpic_marder
 
@@ -16,16 +14,16 @@ vpic_marder_create()
 }
 
 // ----------------------------------------------------------------------
-// vpic_marder_ctor_from_simulation
+// vpic_marder_ctor
 
 void
-vpic_marder_ctor_from_simulation(struct vpic_marder *vmarder)
+vpic_marder_ctor(struct vpic_marder *vmarder, struct vpic_marder_info *info)
 {
-  vmarder->clean_div_e_interval = simulation->clean_div_e_interval;
-  vmarder->clean_div_b_interval = simulation->clean_div_b_interval;
-  vmarder->sync_shared_interval = simulation->sync_shared_interval;
-  vmarder->num_div_e_round = simulation->num_div_e_round;
-  vmarder->num_div_b_round = simulation->num_div_b_round;
+  vmarder->clean_div_e_interval = info->clean_div_e_interval;
+  vmarder->clean_div_b_interval = info->clean_div_b_interval;
+  vmarder->sync_shared_interval = info->sync_shared_interval;
+  vmarder->num_div_e_round = info->num_div_e_round;
+  vmarder->num_div_b_round = info->num_div_b_round;
 }
 
 // ----------------------------------------------------------------------

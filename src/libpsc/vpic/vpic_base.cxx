@@ -57,9 +57,28 @@ void vpic_simulation_init(struct vpic_simulation_info *info)
   TIC simulation->user_initialization(argc, argv); TOC( user_initialization, 1 );
 
   info->num_step = simulation->num_step;
+
+  // grid
+  info->dt = simulation->grid->dt;
+  info->nx[0] = simulation->grid->nx;
+  info->nx[1] = simulation->grid->ny;
+  info->nx[2] = simulation->grid->nz;
+  info->dx[0] = simulation->grid->dx;
+  info->dx[1] = simulation->grid->dy;
+  info->dx[2] = simulation->grid->dz;
+  info->x0[0] = simulation->grid->x0;
+  info->x0[1] = simulation->grid->y0;
+  info->x0[2] = simulation->grid->z0;
+  info->x1[0] = simulation->grid->x1;
+  info->x1[1] = simulation->grid->y1;
+  info->x1[2] = simulation->grid->z1;
+  
   info->clean_div_e_interval = simulation->clean_div_e_interval;
   info->clean_div_b_interval = simulation->clean_div_b_interval;
   info->sync_shared_interval = simulation->sync_shared_interval;
+  info->num_div_e_round = simulation->num_div_e_round;
+  info->num_div_b_round = simulation->num_div_b_round;
+
   info->status_interval = simulation->status_interval;
 }
 

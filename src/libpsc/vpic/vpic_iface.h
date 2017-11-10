@@ -71,10 +71,18 @@ void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac);
 // ----------------------------------------------------------------------
 // vpic_marder
 
+struct vpic_marder_info {
+  int clean_div_e_interval;
+  int clean_div_b_interval;
+  int sync_shared_interval;
+  int num_div_e_round;
+  int num_div_b_round;
+};
+
 struct vpic_marder;
 
 struct vpic_marder *vpic_marder_create();
-void vpic_marder_ctor_from_simulation(struct vpic_marder *vmarder);
+void vpic_marder_ctor(struct vpic_marder *vmarder, struct vpic_marder_info *info);
 void vpic_marder_run(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
 		     struct vpic_mparticles *vmprts, int step);
 
@@ -98,10 +106,17 @@ struct vpic_info {
 
 struct vpic_simulation_info {
   int num_step;
+  double dt;
+  int nx[3];
+  double dx[3];
+  double x0[3];
+  double x1[3];
 
   int clean_div_e_interval;
   int clean_div_b_interval;
   int sync_shared_interval;
+  int num_div_e_round;
+  int num_div_b_round;
 
   int status_interval;
 };

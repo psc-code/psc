@@ -13,7 +13,15 @@ psc_marder_vpic_setup(struct psc_marder *marder)
 {
   struct psc_marder_vpic *sub = psc_marder_vpic(marder);
 
+  struct vpic_marder_info info = {
+    .clean_div_e_interval = marder->clean_div_e_interval,
+    .clean_div_b_interval = marder->clean_div_b_interval,
+    .sync_shared_interval = marder->sync_shared_interval,
+    .num_div_e_round = marder->num_div_e_round,
+    .num_div_b_round = marder->num_div_b_round,
+  };
   sub->vmarder = vpic_marder_create();
+  vpic_marder_ctor(sub->vmarder, &info);
 }
 
 // ----------------------------------------------------------------------
