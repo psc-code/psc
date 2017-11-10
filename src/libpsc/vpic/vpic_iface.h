@@ -46,6 +46,7 @@ struct vpic_mparticles;
 
 struct vpic_mparticles *vpic_mparticles_create();
 void vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts);
+int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts);
 
 // ----------------------------------------------------------------------
 // vpic_push_particles

@@ -68,7 +68,9 @@ psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 static unsigned int
 psc_mparticles_vpic_get_nr_particles(struct psc_mparticles *mprts)
 {
-  return 0;
+  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  
+  return vpic_mparticles_get_nr_particles(vmprts);
 }
 
 // ----------------------------------------------------------------------

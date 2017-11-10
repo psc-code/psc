@@ -37,7 +37,7 @@ psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds,
 
   prof_stop(pr_time_step_no_comm);
   prof_stop(pr);
-  psc_stats_start(st_time_field);
+  psc_stats_stop(st_time_field);
 }
 
 void
@@ -59,7 +59,7 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 
   prof_stop(pr);
   prof_stop(pr_time_step_no_comm);
-  psc_stats_start(st_time_field);
+  psc_stats_stop(st_time_field);
 }
 
 // ======================================================================
