@@ -50,6 +50,7 @@ extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
 extern struct psc_mparticles_ops psc_mparticles_cuda2_ops;
 extern struct psc_mparticles_ops psc_mparticles_acc_ops;
+extern struct psc_mparticles_ops psc_mparticles_vpic_ops;
 
 
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
