@@ -126,14 +126,14 @@ void vpic_push_particles_boundary_p(struct vpic_push_particles *vpushp,
 				    struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
 {
   TIC
-    for( int round=0; round<simulation->num_comm_round; round++ )
+    for( int round=0; round<vpushp->num_comm_round; round++ )
       boundary_p( simulation->particle_bc_list, vmprts->species_list,
                   vmflds->field_array, vpushp->accumulator_array );
-  TOC( boundary_p, simulation->num_comm_round );
+  TOC( boundary_p, vpushp->num_comm_round );
 
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->species_list ) {
-    if( sp->nm && simulation->verbose )
+    if( sp->nm ) // && simulation->verbose )
       WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
                 sp->nm, sp->name ));
     // Drop the particles that have unprocessed movers due to a user defined

@@ -12,6 +12,7 @@
 struct vpic_push_particles {
   interpolator_array_t *interpolator_array;
   accumulator_array_t *accumulator_array;
+  int num_comm_round;
 };
 
 void vpic_push_particles_clear_accumulator_array(struct vpic_push_particles *vpushp);

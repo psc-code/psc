@@ -94,6 +94,9 @@ psc_step(struct psc *psc)
 
   // default psc_step() implementation
 
+  mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
+	     psc->prm.nmax, psc->timestep * psc->dt);
+
   if (psc->use_dynamic_patches) {
     psc_patchmanager_timestep(&psc->patchmanager);
   }

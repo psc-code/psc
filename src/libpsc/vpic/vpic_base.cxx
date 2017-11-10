@@ -79,6 +79,7 @@ vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp)
 {
   vpushp->interpolator_array = simulation->interpolator_array;
   vpushp->accumulator_array = simulation->accumulator_array;
+  vpushp->num_comm_round = simulation->num_comm_round;
 }
 
 // ----------------------------------------------------------------------
