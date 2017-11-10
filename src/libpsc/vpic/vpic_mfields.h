@@ -11,6 +11,10 @@
 
 struct vpic_mfields {
   field_array_t *field_array;
+
+  vpic_mfields() :
+    field_array(0) {
+  }
 };
 
 void vpic_mfields_clear_jf(struct vpic_mfields *vmflds);

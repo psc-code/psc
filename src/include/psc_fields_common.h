@@ -101,6 +101,16 @@ typedef double fields_FTYPE_real_t;
       * (flds).im[1] + ((j)-(flds).ib[1]))				\
      * (flds).im[0] + ((i)-(flds).ib[0]))))
 
+#if FTYPE == FTYPE_VPIC
+
+#define _F3_VPIC_OFF(flds, m, i,j,k)					\
+  ((((((k)-(flds).ib[2])) * (flds).im[1] +				\
+     ((j)-(flds).ib[1])) * (flds).im[0] +				\
+    ((i)-(flds).ib[0])) * (flds).nr_comp +				\
+   m)
+
+#endif
+
 #ifndef BOUNDS_CHECK // ------------------------------
 
 #if FTYPE == FTYPE_SINGLE
@@ -117,6 +127,11 @@ typedef double fields_FTYPE_real_t;
 
 #define _F3_FORTRAN(flds, m, i,j,k)		\
   ((flds).data[_F3_OFF(flds, m, i,j,k)])
+
+#elif FTYPE == FTYPE_VPIC
+
+#define _F3_VPIC(flds, m, i,j,k)		\
+  ((flds).data[_F3_VPIC_OFF(flds, m, i,j,k)])
 
 #endif
 
@@ -150,6 +165,16 @@ typedef double fields_FTYPE_real_t;
       assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
       assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
       &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
+    }))
+
+#elif FTYPE == FTYPE_VPIC
+
+#define _F3_VPIC(flds, m, i,j,k)					\
+  (*({assert(m >= 0 && m < (flds).nr_comp);				\
+      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
+      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
+      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
+      &((flds).data[_F3_VPIC_OFF(flds, m, i,j,k)]);			\
     }))
 
 #endif
@@ -222,6 +247,17 @@ static inline fields_c_t
 fields_c_t_mflds(struct psc_mfields *mflds, int p)
 {
   return psc_mfields_c_get_field_t(mflds, p);
+}
+
+#elif FTYPE == FTYPE_VPIC
+
+struct psc_mfields;
+fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
+
+static inline fields_vpic_t
+fields_vpic_t_mflds(struct psc_mfields *mflds, int p)
+{
+  return psc_mfields_vpic_get_field_t(mflds, p);
 }
 
 #elif FTYPE == FTYPE_FORTRAN
