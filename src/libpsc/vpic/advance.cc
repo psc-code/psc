@@ -178,6 +178,74 @@ void vpic_mfields::synchronize_jf()
   TIC FAK->synchronize_jf( field_array ); TOC( synchronize_jf, 1 );
 }
 
+void vpic_mfields::compute_div_b_err()
+{
+  TIC FAK->compute_div_b_err( field_array ); TOC( compute_div_b_err, 1 );
+}
+
+void vpic_mfields::compute_div_e_err()
+{
+  TIC FAK->compute_div_e_err( field_array ); TOC( compute_div_e_err, 1 );
+}
+
+double vpic_mfields::compute_rms_div_b_err()
+{
+  double err;
+  TIC err = FAK->compute_rms_div_b_err( field_array ); TOC( compute_rms_div_b_err, 1 );
+  return err;
+}
+
+double vpic_mfields::compute_rms_div_e_err()
+{
+  double err;
+  TIC err = FAK->compute_rms_div_e_err( field_array ); TOC( compute_rms_div_e_err, 1 );
+  return err;
+}
+
+void vpic_mfields::clean_div_b()
+{
+  TIC FAK->clean_div_b( field_array ); TOC( clean_div_b, 1 );
+}
+
+void vpic_mfields::clean_div_e()
+{
+  TIC FAK->clean_div_e( field_array ); TOC( clean_div_e, 1 );
+}
+
+void vpic_mfields::compute_curl_b()
+{
+  TIC FAK->compute_curl_b( field_array ); TOC( compute_curl_b, 1 );
+}
+
+void vpic_mfields::clear_rhof()
+{
+  TIC FAK->clear_rhof( field_array ); TOC( clear_rhof, 1 );
+}
+
+void vpic_mfields::accumulate_rho_p(vpic_mparticles *vmprts)
+{
+  species_t *sp;
+  LIST_FOR_EACH( sp, vmprts->species_list )
+    TIC ::accumulate_rho_p( field_array, sp ); TOC( accumulate_rho_p, 1 );
+}
+
+void vpic_mfields::synchronize_rho()
+{
+  TIC FAK->synchronize_rho( field_array ); TOC( synchronize_rho, 1 );
+}
+
+void vpic_mfields::compute_rhob()
+{
+  TIC FAK->compute_rhob( field_array ); TOC( compute_rhob, 1 );
+}
+
+double vpic_mfields::synchronize_tang_e_norm_b()
+{
+  double err;
+  TIC err = FAK->synchronize_tang_e_norm_b( field_array ); TOC( synchronize_tang_e_norm_b, 1 );
+  return err;
+}
+
 #undef FAK
 #define FAK vmflds->field_array->kernel
 
@@ -201,22 +269,17 @@ void vpic_marder::clean_div_e(vpic_mfields *vmflds, vpic_mparticles *vmprts)
 {
   if( rank()==0 ) MESSAGE(( "Divergence cleaning electric field" ));
 
-  TIC FAK->clear_rhof( vmflds->field_array ); TOC( clear_rhof,1 );
-  if( vmprts->species_list ) {
-    species_t *sp;
-    TIC LIST_FOR_EACH( sp, vmprts->species_list )
-      accumulate_rho_p( vmflds->field_array, sp ); TOC( accumulate_rho_p, vmprts->species_list->id );
-  }
-  TIC FAK->synchronize_rho( vmflds->field_array ); TOC( synchronize_rho, 1 );
+  vmflds->clear_rhof();
+  vmflds->accumulate_rho_p(vmprts);
+  vmflds->synchronize_rho();
   
   for( int round=0; round<num_div_e_round; round++ ) {
-    TIC FAK->compute_div_e_err( vmflds->field_array ); TOC( compute_div_e_err, 1 );
+    vmflds->compute_div_e_err();
     if( round==0 || round==num_div_e_round-1 ) {
-      double err;
-      TIC err = FAK->compute_rms_div_e_err( vmflds->field_array ); TOC( compute_rms_div_e_err, 1 );
+      double err = vmflds->compute_rms_div_e_err();
       if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
     }
-    TIC FAK->clean_div_e( vmflds->field_array ); TOC( clean_div_e, 1 );
+    vmflds->clean_div_e();
   }
 }
 
@@ -225,21 +288,19 @@ void vpic_marder::clean_div_b(vpic_mfields *vmflds)
   if( rank()==0 ) MESSAGE(( "Divergence cleaning magnetic field" ));
   
   for( int round=0; round<num_div_b_round; round++ ) {
-    TIC FAK->compute_div_b_err( vmflds->field_array ); TOC( compute_div_b_err, 1 );
+    vmflds->compute_div_b_err();
     if( round==0 || round==num_div_b_round-1 ) {
-      double err;
-      TIC err = FAK->compute_rms_div_b_err( vmflds->field_array ); TOC( compute_rms_div_b_err, 1 );
+      double err = vmflds->compute_rms_div_b_err();
       if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
     }
-    TIC FAK->clean_div_b( vmflds->field_array ); TOC( clean_div_b, 1 );
+    vmflds->clean_div_b();
   }
 }
 
 void vpic_marder::sync_faces(vpic_mfields *vmflds)
 {
   if( rank()==0 ) MESSAGE(( "Synchronizing shared tang e, norm b, rho_b" ));
-  double err;
-  TIC err = FAK->synchronize_tang_e_norm_b( vmflds->field_array ); TOC( synchronize_tang_e_norm_b, 1 );
+  double err = vmflds->synchronize_tang_e_norm_b();
   if( rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
 }
 

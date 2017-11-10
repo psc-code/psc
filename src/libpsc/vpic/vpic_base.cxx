@@ -82,8 +82,47 @@ void vpic_simulation_init(struct vpic_simulation_info *info)
   info->status_interval = simulation->status_interval;
 }
 
-void vpic_simulation_init2()
+void vpic_simulation_init2(vpic_marder *vmarder, vpic_mfields *vmflds,
+			   vpic_mparticles *vmprts)
 {
+  double err;
+  // Do some consistency checks on user initialized fields
+
+  if (simulation->rank() == 0) MESSAGE(( "Checking interdomain synchronization" ));
+  err = vmflds->synchronize_tang_e_norm_b();
+  if( simulation->rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
+  
+  if (simulation->rank() == 0) MESSAGE(( "Checking magnetic field divergence" ));
+  vmflds->compute_div_b_err();
+  err = vmflds->compute_rms_div_b_err();
+  if (simulation->rank() == 0) MESSAGE(( "RMS error = %e (charge/volume)", err ));
+  vmflds->clean_div_b();
+  
+  // Load fields not initialized by the user
+
+  if( simulation->rank()==0 ) MESSAGE(( "Initializing radiation damping fields" ));
+  vmflds->compute_curl_b();
+
+  if( simulation->rank()==0 ) MESSAGE(( "Initializing bound charge density" ));
+  vmflds->clear_rhof();
+  vmflds->accumulate_rho_p(vmprts);
+  vmflds->synchronize_rho();
+  vmflds->compute_rhob();
+
+  // Internal sanity checks
+
+  if( simulation->rank()==0 ) MESSAGE(( "Checking electric field divergence" ));
+
+  vmflds->compute_div_e_err();
+  err = vmflds->compute_rms_div_e_err();
+  if( simulation->rank()==0 ) MESSAGE(( "RMS error = %e (charge/volume)", err ));
+  vmflds->clean_div_e();
+
+  if( simulation->rank()==0 ) MESSAGE(( "Rechecking interdomain synchronization" ));
+  err = vmflds->synchronize_tang_e_norm_b();
+  if( simulation->rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
+    
+
   int argc = 0; char **argv = NULL;
   simulation->initialize(argc, argv);
 }
@@ -96,42 +135,6 @@ vpic_simulation::initialize( int argc,
   double err;
   species_t * sp;
 
-  // Do some consistency checks on user initialized fields
-
-  if( rank()==0 ) MESSAGE(( "Checking interdomain synchronization" ));
-  TIC err = FAK->synchronize_tang_e_norm_b( field_array ); TOC( synchronize_tang_e_norm_b, 1 );
-  if( rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
-
-  if( rank()==0 ) MESSAGE(( "Checking magnetic field divergence" ));
-  TIC FAK->compute_div_b_err( field_array ); TOC( compute_div_b_err, 1 );
-  TIC err = FAK->compute_rms_div_b_err( field_array ); TOC( compute_rms_div_b_err, 1 );
-  if( rank()==0 ) MESSAGE(( "RMS error = %e (charge/volume)", err ));
-  TIC FAK->clean_div_b( field_array ); TOC( clean_div_b, 1 );
-
-  // Load fields not initialized by the user
-
-  if( rank()==0 ) MESSAGE(( "Initializing radiation damping fields" ));
-  TIC FAK->compute_curl_b( field_array ); TOC( compute_curl_b, 1 );
-
-  if( rank()==0 ) MESSAGE(( "Initializing bound charge density" ));
-  TIC FAK->clear_rhof( field_array ); TOC( clear_rhof, 1 );
-  LIST_FOR_EACH( sp, species_list ) TIC accumulate_rho_p( field_array, sp ); TOC( accumulate_rho_p, 1 );
-  TIC FAK->synchronize_rho( field_array ); TOC( synchronize_rho, 1 );
-  TIC FAK->compute_rhob( field_array ); TOC( compute_rhob, 1 );
-
-  // Internal sanity checks
-
-  if( rank()==0 ) MESSAGE(( "Checking electric field divergence" ));
-
-  TIC FAK->compute_div_e_err( field_array ); TOC( compute_div_e_err, 1 );
-  TIC err = FAK->compute_rms_div_e_err( field_array ); TOC( compute_rms_div_e_err, 1 );
-  if( rank()==0 ) MESSAGE(( "RMS error = %e (charge/volume)", err ));
-  TIC FAK->clean_div_e( field_array ); TOC( clean_div_e, 1 );
-
-  if( rank()==0 ) MESSAGE(( "Rechecking interdomain synchronization" ));
-  TIC err = FAK->synchronize_tang_e_norm_b( field_array ); TOC( synchronize_tang_e_norm_b, 1 );
-  if( rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
-    
   if( species_list ) {
     if( rank()==0 ) MESSAGE(( "Uncentering particles" ));
     TIC load_interpolator_array( interpolator_array, field_array ); TOC( load_interpolator, 1 );

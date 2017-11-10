@@ -381,14 +381,17 @@ psc_harris_setup(struct psc *psc)
     mprintf("::: dt reduced to %g\n", psc->dt);
   }
 #endif
-  
-  vpic_simulation_init2();
-  
-  vpic_mfields_ctor_from_simulation(psc_mfields_vpic(psc->flds)->vmflds);
-  
-  vpic_mparticles_ctor_from_simulation(psc_mparticles_vpic(psc->particles)->vmprts);
 
-  vpic_push_particles_ctor_from_simulation(psc_push_particles_vpic(psc->push_particles)->vpushp);
+  struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
+  struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
+  struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;
+  struct vpic_marder *vmarder = psc_marder_vpic(psc->marder)->vmarder;
+
+  vpic_mfields_ctor_from_simulation(vmflds);
+  vpic_mparticles_ctor_from_simulation(vmprts);
+  vpic_push_particles_ctor_from_simulation(vpushp);
+
+  vpic_simulation_init2(vmarder, vmflds, vmprts);
 }
 
 #if 0
