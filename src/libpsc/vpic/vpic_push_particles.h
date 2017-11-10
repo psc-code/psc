@@ -13,17 +13,15 @@ struct vpic_push_particles {
   interpolator_array_t *interpolator_array;
   accumulator_array_t *accumulator_array;
   int num_comm_round;
+
+  void clear_accumulator_array();
+  void advance_p(vpic_mparticles *vmprts);
+  void reduce_accumulator_array();
+  void boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmflds);
+  void unload_accumulator_array(vpic_mfields *vmflds);
+  void load_interpolator_array(vpic_mfields *vmflds);
 };
 
-void vpic_push_particles_clear_accumulator_array(struct vpic_push_particles *vpushp);
-void vpic_push_particles_advance_p(struct vpic_push_particles *vpushp, struct vpic_mparticles *vmprts);
-void vpic_push_particles_reduce_accumulator_array(struct vpic_push_particles *vpushp);
-void vpic_push_particles_boundary_p(struct vpic_push_particles *vpushp, struct vpic_mparticles *vmprts,
-				    struct vpic_mfields *vmflds);
-void vpic_push_particles_unload_accumulator_array(struct vpic_push_particles *vpushp,
-						  struct vpic_mfields *vmflds);
-void vpic_push_particles_load_interpolator_array(struct vpic_push_particles *vpushp,
-						 struct vpic_mfields *vmflds);
 
 #endif
 

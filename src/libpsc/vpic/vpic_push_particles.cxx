@@ -45,8 +45,8 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // Advance the particle lists.
 
   if (vmprts->species_list) {
-    vpic_push_particles_clear_accumulator_array(vpushp);
-    vpic_push_particles_advance_p(vpushp, vmprts);
+    vpushp->clear_accumulator_array();
+    vpushp->advance_p(vmprts);
   }
 
   // Because the partial position push when injecting aged particles might
@@ -61,14 +61,14 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
-    vpic_push_particles_reduce_accumulator_array(vpushp);
+    vpushp->reduce_accumulator_array();
   }
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the
   // guard lists. Particles that absorbed are added to rhob (using a corrected
   // local accumulation).
 
-  vpic_push_particles_boundary_p(vpushp, vmprts, vmflds);
+  vpushp->boundary_p(vmprts, vmflds);
 
   // At this point, all particle positions are at r_1 and u_{1/2}, the
   // guard lists are empty and the accumulators on each processor are current.
@@ -76,7 +76,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 
   vmflds->clear_jf();
   if (vmprts->species_list) {
-    vpic_push_particles_unload_accumulator_array(vpushp, vmflds);
+    vpushp->unload_accumulator_array(vmflds);
   }
   vmflds->synchronize_jf();
 
@@ -97,7 +97,7 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
 {
   if (vmprts->species_list) {
-    vpic_push_particles_load_interpolator_array(vpushp, vmflds);
+    vpushp->load_interpolator_array(vmflds);
   }
 }
 
