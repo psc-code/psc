@@ -482,6 +482,8 @@ psc_harris_output(struct psc *psc)
     }
     vpic_diagnostics();
   }
+
+  psc_output_default(psc);
 }
 
 // ======================================================================

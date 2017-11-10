@@ -231,10 +231,11 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       psc_output_fields_item_run(out_c->item[i], flds, particles, pfd->flds[i]);
     }
   }
-  
+
   if (out_c->dowrite_pfield) {
     if (psc->timestep >= out_c->pfield_next) {
        out_c->pfield_next += out_c->pfield_step;
+       mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
        write_fields(out_c, &out_c->pfd, IO_TYPE_PFD, out_c->pfd_s);
     }
   }
