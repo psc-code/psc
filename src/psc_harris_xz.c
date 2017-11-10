@@ -492,7 +492,6 @@ psc_harris_step(struct psc *psc)
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   
   psc_push_fields_push_E(psc->push_fields, psc->flds, 1.); // FIXME, should be _b2
-  vpic_field_injection();
   psc_push_fields_push_H(psc->push_fields, psc->flds, .5); // FIXME, should be _a
 
   psc_checks_continuity_after_particle_push(psc->checks, psc);

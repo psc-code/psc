@@ -23,6 +23,7 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
 				  double frac)
 {
   vpic_advance_e(frac);
+  vpic_field_injection(); // FIXME, this isn't the place, should have its own psc_field_injection
 }
 
 // ----------------------------------------------------------------------
