@@ -247,6 +247,7 @@ vpic_base_init(struct vpic_simulation_info *info)
   info->clean_div_e_interval = simulation->clean_div_e_interval;
   info->clean_div_b_interval = simulation->clean_div_b_interval;
   info->sync_shared_interval = simulation->sync_shared_interval;
+  info->status_interval = simulation->status_interval;
 }
 
 void vpic_inc_step(int step)

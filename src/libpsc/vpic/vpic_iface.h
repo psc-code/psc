@@ -75,9 +75,12 @@ struct vpic_info {
 
 struct vpic_simulation_info {
   int num_step;
+
   int clean_div_e_interval;
   int clean_div_b_interval;
   int sync_shared_interval;
+
+  int status_interval;
 };
 
 void vpic_base_init(struct vpic_simulation_info *info);

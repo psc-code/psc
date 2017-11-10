@@ -540,6 +540,8 @@ main(int argc, char **argv)
     vpic_base_init(&info);
 
     psc->prm.nmax = info.num_step;
+    psc->prm.stats_every = info.status_interval;
+    
     psc_marder_set_param_int(psc->marder, "clean_div_e_interval",
 			     info.clean_div_e_interval);
     psc_marder_set_param_int(psc->marder, "clean_div_b_interval",
