@@ -38,6 +38,7 @@ void vpic_sync_faces();
 void vpic_load_interpolator_array();
 void vpic_print_status();
 void vpic_diagnostics();
+void vpic_step();
 
 
 #if 0

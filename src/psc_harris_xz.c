@@ -435,6 +435,11 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
   psc_read_super(psc, io);
 }
 
+static void
+psc_harris_step(struct psc *psc)
+{
+}
+
 // ======================================================================
 // psc_harris_ops
 
@@ -447,10 +452,19 @@ struct psc_ops psc_harris_ops = {
   .read             = psc_harris_read,
   .init_field       = psc_harris_init_field,
   .setup_particles  = psc_harris_setup_particles,
+  .step             = psc_harris_step,
 };
 
 // ======================================================================
 // main
+
+void
+vpic_base_integrate()
+{
+  while (!vpic_done()) {
+    vpic_step();
+  }
+}
 
 int
 main(int argc, char **argv)

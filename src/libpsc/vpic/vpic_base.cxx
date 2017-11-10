@@ -95,19 +95,3 @@ void vpic_step(void)
   vpic_diagnostics();
 }
 
-void
-vpic_base_integrate()
-{
-  if( world_rank==0 ) log_printf( "*** Advancing\n" );
-  double elapsed = wallclock();
-  while (!vpic_done()) {
-    vpic_step();
-  }
-  elapsed = wallclock() - elapsed;
-  if (world_rank==0) {
-    int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
-    /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
-    log_printf( "*** Done (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
-                elapsed, w, d, h, m, s );
-  }
-}

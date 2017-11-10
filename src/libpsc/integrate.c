@@ -166,6 +166,9 @@ psc_integrate(struct psc *psc)
   st_time_comm = psc_stats_register("time communication");
   st_time_output = psc_stats_register("time output");
 
+  mpi_printf(psc_comm(psc), "*** Advancing\n");
+  double elapsed = MPI_Wtime();
+
   bool first_iteration = true;
   for (; psc->timestep < psc->prm.nmax; psc->timestep++) {
     prof_start(pr);
@@ -206,4 +209,13 @@ psc_integrate(struct psc *psc)
   if (psc->prm.write_checkpoint) {
     psc_write_checkpoint(psc);
   }
+
+  // FIXME, merge with existing handling of wallclock time
+  elapsed = MPI_Wtime() - elapsed;
+
+  int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
+  /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
+  mpi_printf(psc_comm(psc), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
+	     elapsed, w, d, h, m, s );
+  
 }
