@@ -34,6 +34,10 @@ do_n_run(int p, fields_t flds, particle_range_t prts)
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int m = particle_kind(prt);
+    static int cnt = 0;
+    if (cnt++ < 10) {
+      mprintf("cnt %d u %g:%g:%g w %g kind %d\n", cnt, prt->pxi, prt->pyi, prt->pzi, prt->qni_wni*2*2*5, m);
+    }
     DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, 1.f);
   }
 }

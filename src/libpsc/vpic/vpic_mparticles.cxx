@@ -73,12 +73,10 @@ void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int 
 {
   species_t *sp;
   unsigned int v_off = 0;
-  printf("off %d n_prts %d\n", off, n_prts);
   LIST_FOR_EACH(sp, vmprts->species_list) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
-    printf("nb %d ne %d\n", nb, ne);
     for (int n = nb; n < ne; n++) {
       particle *p = &sp->p[n - v_off];
       struct vpic_mparticles_prt prt;

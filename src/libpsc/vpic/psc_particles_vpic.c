@@ -32,8 +32,6 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
       ctx.im[d] += 2; // add ghost points
     }
     ctx.dVi = 1.f / (ctx.dx[0] * ctx.dx[1] * ctx.dx[2]);
-    mprintf("im %d:%d:%d dx %g:%g:%g\n", ctx.im[0], ctx.im[1], ctx.im[2],
-	    ctx.dx[0], ctx.dx[1], ctx.dx[2]);
     vpic_mparticles_get_particles(vmprts, n_prts, off, put_particle, &ctx);
 
     off += n_prts;
@@ -65,11 +63,6 @@ put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   part->pyi     = prt->ux[1];
   part->pzi     = prt->ux[2];
   part->qni_wni = ppsc->kinds[prt->kind].q * prt->w * ctx->dVi;
-  if (n < 10) {
-    mprintf("n %d xi %g:%g:%g kind %d w %g i %d i3 %d:%d:%d\n",
-	    n, part->xi, part->yi, part->zi, part->kind, part->qni_wni,
-	    prt->i, i3[0], i3[1], i3[2]);
-  }
 }
 
 static void
