@@ -15,6 +15,7 @@ psc_push_particles_vpic_setup(struct psc_push_particles *push)
   struct psc_push_particles_vpic *sub = psc_push_particles_vpic(push);
 
   sub->vpushp = vpic_push_particles_create();
+  vpic_push_particles_ctor_from_simulation(sub->vpushp);
   psc_push_particles_setup_super(push);
 }
 

@@ -10,12 +10,14 @@ static void
 psc_mparticles_vpic_copy_from_single(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single, unsigned int flags)
 {
+  assert(0);
 }
 
 static void
 psc_mparticles_vpic_copy_to_single(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single, unsigned int flags)
 {
+  assert(0);
 }
 
 // ----------------------------------------------------------------------
@@ -36,6 +38,7 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 
   sub->vmprts = vpic_mparticles_create();
+  vpic_mparticles_ctor_from_simulation(sub->vmprts);
 }
 
 // ----------------------------------------------------------------------
@@ -44,6 +47,9 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
 static void
 psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    assert(n_prts_by_patch[p] == 0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -52,6 +58,7 @@ psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 static void
 psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
+  assert(0);
 }
 
 // ----------------------------------------------------------------------
@@ -60,6 +67,7 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 static void
 psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
+  assert(0);
 }
 
 // ----------------------------------------------------------------------

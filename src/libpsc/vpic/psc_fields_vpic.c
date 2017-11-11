@@ -88,6 +88,9 @@ static void
 psc_mfields_vpic_copy_from_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
 			    int mb, int me)
 {
+  if (me > mb) {
+    assert(0);
+  }
   for (int p = 0; p < mflds->nr_patches; p++) {
 #if 0
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);

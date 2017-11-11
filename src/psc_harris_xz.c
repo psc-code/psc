@@ -388,9 +388,6 @@ psc_harris_setup(struct psc *psc)
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;
   //struct vpic_marder *vmarder = psc_marder_vpic(psc->marder)->vmarder;
 
-  vpic_mparticles_ctor_from_simulation(vmprts);
-  vpic_push_particles_ctor_from_simulation(vpushp);
-
   vpic_simulation_init2(vpushp, vmflds, vmprts);
 
   mpi_printf(psc_comm(psc), "Initialization complete.\n");
