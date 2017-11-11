@@ -41,7 +41,26 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
   /* vpic_base_init(&info); */
 
   sub->vmflds = vpic_mfields_create();
-  //vpic_mfields_ctor(sub->vmflds);
+
+  if (mflds->nr_fields == NR_FIELDS) {
+    // make sure we notice if we create a second psc_mfields
+    // which would share its memory with the first
+    static int ref_count;
+    assert(ref_count == 0);
+    ref_count++;
+
+    // FIXME: can't do this because our comp_name array isn't
+    // this big
+    //mflds->nr_fields = VPIC_MFIELDS_N_COMP;
+    mflds->ibn[0] = 1;
+    mflds->ibn[1] = 1;
+    mflds->ibn[2] = 1;
+    assert(mflds->first_comp == 0);
+    vpic_mfields_ctor_from_simulation(sub->vmflds);
+  } else {
+    assert(0);
+    //vpic_mfields_ctor(sub->vmflds);
+  }
 }
 
 // ----------------------------------------------------------------------
