@@ -328,6 +328,15 @@ psc_harris_setup(struct psc *psc)
 
   psc->prm.nmax = info.num_step;
   psc->prm.stats_every = info.status_interval;
+
+  struct psc_kind *kinds = calloc(info.n_kinds, sizeof(*kinds));
+  for (int m = 0; m < info.n_kinds; m++) {
+    kinds[m].q = info.kinds[m].q;
+    kinds[m].m = info.kinds[m].m;
+    kinds[m].name = info.kinds[m].name;
+  }
+  psc_set_kinds(psc, info.n_kinds, kinds);
+  free(kinds);
   
   psc_marder_set_param_int(psc->marder, "clean_div_e_interval", info.clean_div_e_interval);
   psc_marder_set_param_int(psc->marder, "clean_div_b_interval", info.clean_div_b_interval);

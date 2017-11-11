@@ -72,7 +72,18 @@ void vpic_simulation_init(struct vpic_simulation_info *info)
   info->x1[0] = simulation->grid->x1;
   info->x1[1] = simulation->grid->y1;
   info->x1[2] = simulation->grid->z1;
+
+  // species
+  info->n_kinds = num_species(simulation->species_list);
+  info->kinds = new vpic_kind_info[info->n_kinds];
+  species_t *sp;
+  LIST_FOR_EACH( sp, simulation->species_list ) {
+    info->kinds[sp->id].q = sp->q;
+    info->kinds[sp->id].m = sp->m;
+    info->kinds[sp->id].name = sp->name;
+  }
   
+  // Marder cleaning etc
   info->clean_div_e_interval = simulation->clean_div_e_interval;
   info->clean_div_b_interval = simulation->clean_div_b_interval;
   info->sync_shared_interval = simulation->sync_shared_interval;

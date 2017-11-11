@@ -111,11 +111,10 @@ void vpic_field_injection();
 
 // ----------------------------------------------------------------------
 
-struct vpic_info {
-  double dx, dy, dz;
-  double dt;
-  double c;
-  double eps0;
+struct vpic_kind_info {
+  double q;
+  double m;
+  char *name;
 };
 
 struct vpic_simulation_info {
@@ -125,6 +124,9 @@ struct vpic_simulation_info {
   double dx[3];
   double x0[3];
   double x1[3];
+
+  int n_kinds;
+  struct vpic_kind_info *kinds;
 
   int clean_div_e_interval;
   int clean_div_b_interval;
