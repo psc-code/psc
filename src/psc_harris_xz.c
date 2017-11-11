@@ -385,13 +385,13 @@ psc_harris_setup(struct psc *psc)
   struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;
-  struct vpic_marder *vmarder = psc_marder_vpic(psc->marder)->vmarder;
+  //struct vpic_marder *vmarder = psc_marder_vpic(psc->marder)->vmarder;
 
   vpic_mfields_ctor_from_simulation(vmflds);
   vpic_mparticles_ctor_from_simulation(vmprts);
   vpic_push_particles_ctor_from_simulation(vpushp);
 
-  vpic_simulation_init2(vmarder, vmflds, vmprts);
+  vpic_simulation_init2(vpushp, vmflds, vmprts);
 }
 
 #if 0

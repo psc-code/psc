@@ -163,6 +163,13 @@ void vpic_push_particles::load_interpolator_array(vpic_mfields *vmflds)
   TIC ::load_interpolator_array( interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
 }
 
+void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
+{
+  species_t *sp;
+  LIST_FOR_EACH( sp, vmprts->species_list )
+    TIC ::uncenter_p( sp, interpolator_array ); TOC( uncenter_p, 1 );
+}
+
 // ======================================================================
 // vpic_mfields
 

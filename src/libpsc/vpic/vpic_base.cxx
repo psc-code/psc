@@ -82,7 +82,7 @@ void vpic_simulation_init(struct vpic_simulation_info *info)
   info->status_interval = simulation->status_interval;
 }
 
-void vpic_simulation_init2(vpic_marder *vmarder, vpic_mfields *vmflds,
+void vpic_simulation_init2(vpic_push_particles *vpushp, vpic_mfields *vmflds,
 			   vpic_mparticles *vmprts)
 {
   double err;
@@ -122,39 +122,20 @@ void vpic_simulation_init2(vpic_marder *vmarder, vpic_mfields *vmflds,
   err = vmflds->synchronize_tang_e_norm_b();
   if( simulation->rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
     
-
-  int argc = 0; char **argv = NULL;
-  simulation->initialize(argc, argv);
-}
-
-#define FAK field_array->kernel
-
-void
-vpic_simulation::initialize( int argc,
-                             char **argv ) {
-  double err;
-  species_t * sp;
-
-  if( species_list ) {
-    if( rank()==0 ) MESSAGE(( "Uncentering particles" ));
-    TIC load_interpolator_array( interpolator_array, field_array ); TOC( load_interpolator, 1 );
+  if( vmprts->species_list ) {
+    if( simulation->rank()==0 ) MESSAGE(( "Uncentering particles" ));
+    vpushp->load_interpolator_array(vmflds);
   }
-  LIST_FOR_EACH( sp, species_list ) TIC uncenter_p( sp, interpolator_array ); TOC( uncenter_p, 1 );
+  vpushp->uncenter_p(vmprts);
 
-  if( rank()==0 ) MESSAGE(( "Performing initial diagnostics" ));
+  if( simulation->rank()==0 ) MESSAGE(( "Performing initial diagnostics" ));
 
   // Let the user to perform diagnostics on the initial condition
   // field(i,j,k).jfx, jfy, jfz will not be valid at this point.
-  TIC user_diagnostics(); TOC( user_diagnostics, 1 );
+  TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
 
-  if( rank()==0 ) MESSAGE(( "Initialization complete" ));
-  update_profile( rank()==0 ); // Let the user know how initialization went
-}
-
-void
-vpic_simulation::finalize( void ) {
-  barrier();
-  update_profile( rank()==0 );
+  if( simulation->rank()==0 ) MESSAGE(( "Initialization complete" ));
+  update_profile( simulation->rank()==0 ); // Let the user know how initialization went
 }
 
 void vpic_inc_step(int step)

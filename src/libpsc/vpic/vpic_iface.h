@@ -123,7 +123,7 @@ struct vpic_simulation_info {
 
 void vpic_base_init(int *pargc, char ***pargv);
 void vpic_simulation_init(struct vpic_simulation_info *info);
-void vpic_simulation_init2(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
+void vpic_simulation_init2(struct vpic_push_particles *vpushp, struct vpic_mfields *vmflds,
 			   struct vpic_mparticles *vmprts);
 
 
