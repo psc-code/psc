@@ -392,6 +392,8 @@ psc_harris_setup(struct psc *psc)
   vpic_push_particles_ctor_from_simulation(vpushp);
 
   vpic_simulation_init2(vpushp, vmflds, vmprts);
+
+  mpi_printf(psc_comm(psc), "Initialization complete.\n");
 }
 
 #if 0
@@ -544,16 +546,20 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 static void
 psc_harris_output(struct psc *psc)
 {
-  // currently, vpic does its first output as part of its own initialize,
-  // so let's not do it again here
-  if (psc->timestep > 0) {
+  if (psc->timestep == 0) {
+    mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
+    // Let the user to perform diagnostics on the initial condition
+    // field(i,j,k).jfx, jfy, jfz will not be valid at this point.
+  } else {
     vpic_inc_step(psc->timestep);
-    if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
-      vpic_print_status();
-    }
-    vpic_diagnostics();
   }
 
+  vpic_diagnostics();
+  
+  if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
+    vpic_print_status();
+  }
+  
   psc_output_default(psc);
 }
 

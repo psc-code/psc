@@ -127,15 +127,6 @@ void vpic_simulation_init2(vpic_push_particles *vpushp, vpic_mfields *vmflds,
     vpushp->load_interpolator_array(vmflds);
   }
   vpushp->uncenter_p(vmprts);
-
-  if( simulation->rank()==0 ) MESSAGE(( "Performing initial diagnostics" ));
-
-  // Let the user to perform diagnostics on the initial condition
-  // field(i,j,k).jfx, jfy, jfz will not be valid at this point.
-  TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
-
-  if( simulation->rank()==0 ) MESSAGE(( "Initialization complete" ));
-  update_profile( simulation->rank()==0 ); // Let the user know how initialization went
 }
 
 void vpic_inc_step(int step)
