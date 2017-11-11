@@ -44,9 +44,23 @@ float *vpic_mfields_get_data(struct vpic_mfields *mflds, int *ib, int *im);
 
 struct vpic_mparticles;
 
+struct vpic_mparticles_prt {
+  float dx[3];
+  int i;
+  float ux[3];
+  float w;
+  int kind;
+};
+
 struct vpic_mparticles *vpic_mparticles_create();
 void vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts);
 int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts);
+void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
+				  int *n_prts_by_patch);
+void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
+				   void (*put_particle)(struct vpic_mparticles_prt *, int, void *),
+				   void *ctx);
+void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx);
 
 // ----------------------------------------------------------------------
 // vpic_push_particles
