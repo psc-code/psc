@@ -1,0 +1,63 @@
+
+#include "psc_output_fields_item_private.h"
+
+#include "psc_fields_as_c.h"
+
+// ----------------------------------------------------------------------
+// run_all_vpic_fields
+
+static void
+run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+		   struct psc_mparticles *mprts, struct psc_mfields *mres)
+{
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, 16);
+  
+  for (int p = 0; p < mres->nr_patches; p++) {
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t res = fields_t_mflds(mres, p);
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+      for (int m = 0; m < 16; m++) {
+	_F3(res, m, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
+      }
+    } foreach_3d_end;
+  }
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_item "vpic_fields"
+
+struct psc_output_fields_item_ops psc_output_fields_item_vpic_fields_ops = {
+  .name      = "vpic_fields",
+  .nr_comp   = 16,
+  .fld_names = { "ex_ec", "ey_ec", "ez_ec", "dive_nc",
+                 "hx_fc", "hy_fc", "hz_fc", "divb_cc",
+                 "tcax", "tcay", "tcaz", "rhob_nc",
+                 "jx_ec", "jy_ec", "jz_ec", "rho_nc", },
+  .run_all   = run_all_vpic_fields,
+};
+
+// ----------------------------------------------------------------------
+// run_all_vpic_hydro
+
+static void
+run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+		   struct psc_mparticles *mprts, struct psc_mfields *mres)
+{
+  MHERE;
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_item "vpic_hydro"
+
+struct psc_output_fields_item_ops psc_output_fields_item_vpic_hydro_ops = {
+  .name      = "vpic_hydro",
+  .nr_comp   = 16,
+  .fld_names = { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
+                 "px_nc", "py_nc", "pz_nc", "ke_nc",
+                 "txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",
+                 "tzx_nc", "txy_nc", "_pad0", "_pad1", },
+  .run_all   = run_all_vpic_hydro,
+  .flags     = POFI_BY_KIND,
+};
+

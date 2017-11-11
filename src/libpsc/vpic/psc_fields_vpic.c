@@ -122,15 +122,29 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
       ib[d] = MAX(flds.ib[d], flds_c.ib[d]);
       ie[d] = MIN(flds.ib[d] + flds.im[d], flds_c.ib[d] + flds_c.im[d]);
     }
-    
-    for (int m = mb; m < me; m++) {
-      assert(m < 9);
-      int m_vpic = map_psc2vpic[m];
-      assert(m_vpic >= 0);
-      for (int jz = ib[2]; jz < ie[2]; jz++) {
-	for (int jy = ib[1]; jy < ie[1]; jy++) {
-	  for (int jx = ib[0]; jx < ie[0]; jx++) {
-	    _F3_C(flds_c, m, jx,jy,jz) = _F3_VPIC(flds, m_vpic, jx,jy,jz);
+
+    if (mb == 0 && me == 16) {
+      // FIXME, very hacky way to distinguish whether we want
+      // to copy the field into the standard PSC component numbering or,
+      // as in this case, just copy one-to-one
+      for (int m = mb; m < me; m++) {
+	for (int jz = ib[2]; jz < ie[2]; jz++) {
+	  for (int jy = ib[1]; jy < ie[1]; jy++) {
+	    for (int jx = ib[0]; jx < ie[0]; jx++) {
+	      _F3_C(flds_c, m, jx,jy,jz) = _F3_VPIC(flds, m, jx,jy,jz);
+	    }
+	  }
+	}
+      }
+    } else {
+      for (int m = mb; m < me; m++) {
+	assert(m < 9);
+	int m_vpic = map_psc2vpic[m];
+	for (int jz = ib[2]; jz < ie[2]; jz++) {
+	  for (int jy = ib[1]; jy < ie[1]; jy++) {
+	    for (int jx = ib[0]; jx < ie[0]; jx++) {
+	      _F3_C(flds_c, m, jx,jy,jz) = _F3_VPIC(flds, m_vpic, jx,jy,jz);
+	    }
 	  }
 	}
       }

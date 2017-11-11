@@ -14,7 +14,7 @@ enum {
   POFI_BY_KIND    = 2, // this item needs to be replicated by kind
 };
 
-#define POFI_MAX_COMPS (10)
+#define POFI_MAX_COMPS (16)
 
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
@@ -83,5 +83,8 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_dive_single_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_cuda_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_cuda_ops;
+
+extern struct psc_output_fields_item_ops psc_output_fields_item_vpic_fields_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_vpic_hydro_ops;
 
 #endif
