@@ -2,6 +2,10 @@
 #include "psc_output_fields_item_private.h"
 
 #include "psc_fields_as_c.h"
+#include "psc_fields_vpic.h"
+#include "psc_particles_vpic.h"
+#include "vpic_iface.h"
+
 
 // ----------------------------------------------------------------------
 // run_all_vpic_fields
@@ -44,7 +48,35 @@ static void
 run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 		   struct psc_mparticles *mprts, struct psc_mfields *mres)
 {
-  MHERE;
+  struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres));
+  psc_mfields_set_type(mflds_hydro, "vpic");
+  psc_mfields_set_param_obj(mflds_hydro, "domain", mres->domain);
+  psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
+  psc_mfields_set_param_int3(mflds_hydro, "ibn", (int [3]) { 1, 1, 1});
+  psc_mfields_setup(mflds_hydro);
+
+  assert(strcmp(psc_mparticles_type(mprts), "vpic") == 0);
+  
+  for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
+    struct vpic_mfields *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds;
+    struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+    vpic_moments_run(vmflds_hydro, vmprts, kind);
+    
+    struct psc_mfields *mflds = psc_mfields_get_as(mflds_hydro, FIELDS_TYPE, 0, VPIC_HYDRO_N_COMP);
+  
+    for (int p = 0; p < mres->nr_patches; p++) {
+      fields_t flds = fields_t_mflds(mflds, p);
+      fields_t res = fields_t_mflds(mres, p);
+      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+	for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
+	  _F3(res, m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
+	}
+      } foreach_3d_end;
+    }
+    psc_mfields_put_as(mflds, mflds_hydro, 0, 0);
+  }
+
+  psc_mfields_destroy(mflds_hydro);
 }
 
 // ----------------------------------------------------------------------
@@ -52,7 +84,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
 
 struct psc_output_fields_item_ops psc_output_fields_item_vpic_hydro_ops = {
   .name      = "vpic_hydro",
-  .nr_comp   = 16,
+  .nr_comp   = VPIC_HYDRO_N_COMP,
   .fld_names = { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
                  "px_nc", "py_nc", "pz_nc", "ke_nc",
                  "txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",

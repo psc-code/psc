@@ -328,3 +328,22 @@ void vpic_diagnostics()
   TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
 }
 
+// ======================================================================
+// vpic_moments
+
+void vpic_moments_run(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts, int kind)
+{
+  // This relies on load_interpolator_array() having been called earlier
+  assert(vmflds->hydro_array);
+  
+  clear_hydro_array(vmflds->hydro_array);
+  species_t *sp;
+  LIST_FOR_EACH(sp, vmprts->species_list) {
+    if (sp->id == kind) {
+      accumulate_hydro_p(vmflds->hydro_array, sp, simulation->interpolator_array);
+      break;
+    }
+  }
+  
+  synchronize_hydro_array(vmflds->hydro_array);
+}

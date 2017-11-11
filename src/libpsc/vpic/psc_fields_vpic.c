@@ -56,8 +56,20 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
     mflds->ibn[1] = 1;
     mflds->ibn[2] = 1;
     assert(mflds->first_comp == 0);
-    vpic_mfields_ctor_from_simulation(sub->vmflds);
-  } else {
+    vpic_mfields_ctor_from_simulation_fields(sub->vmflds);
+  } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+    // make sure we notice if we create a second psc_mfields
+    // which would share its memory with the first
+    static int ref_count;
+    assert(ref_count == 0);
+    ref_count++;
+
+    assert(mflds->ibn[0] == 1);
+    assert(mflds->ibn[1] == 1);
+    assert(mflds->ibn[2] == 1);
+    assert(mflds->first_comp == 0);
+    vpic_mfields_ctor_from_simulation_hydro(sub->vmflds);
+} else {
     assert(0);
     //vpic_mfields_ctor(sub->vmflds);
   }
@@ -74,7 +86,14 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
   fields_vpic_t flds;
 
   flds.data = vpic_mfields_get_data(sub->vmflds, flds.ib, flds.im);
-  flds.nr_comp = VPIC_MFIELDS_N_COMP;
+  // FIXME hacky...
+  if (mflds->nr_fields == NR_FIELDS) {
+    flds.nr_comp = VPIC_MFIELDS_N_COMP;
+  } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+    flds.nr_comp = VPIC_HYDRO_N_COMP;
+  } else {
+    assert(0);
+  }
   flds.first_comp = 0;
   assert(mflds->first_comp == 0);
 
@@ -124,6 +143,7 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
     }
 
     if (mb == 0 && me == 16) {
+      mprintf("AAA flds %d:%d:%d n_comp %d\n", flds.im[0], flds.im[1], flds.im[2], flds.nr_comp);
       // FIXME, very hacky way to distinguish whether we want
       // to copy the field into the standard PSC component numbering or,
       // as in this case, just copy one-to-one

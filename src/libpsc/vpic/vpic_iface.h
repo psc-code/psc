@@ -32,11 +32,15 @@ enum {
   VPIC_MFIELDS_N_COMP = 20,
 };
 
+enum {
+  VPIC_HYDRO_N_COMP = 16,
+};
 
 struct vpic_mfields;
 
 struct vpic_mfields *vpic_mfields_create();
-void vpic_mfields_ctor_from_simulation(struct vpic_mfields *vmflds);
+void vpic_mfields_ctor_from_simulation_fields(struct vpic_mfields *vmflds);
+void vpic_mfields_ctor_from_simulation_hydro(struct vpic_mfields *vmflds);
 float *vpic_mfields_get_data(struct vpic_mfields *mflds, int *ib, int *im);
 
 // ----------------------------------------------------------------------
@@ -108,6 +112,7 @@ void vpic_collision_run();
 void vpic_emitter();
 void vpic_current_injection();
 void vpic_field_injection();
+void vpic_moments_run(struct vpic_mfields *mflds, struct vpic_mparticles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
 

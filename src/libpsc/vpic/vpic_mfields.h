@@ -11,9 +11,10 @@
 
 struct vpic_mfields {
   field_array_t *field_array;
+  hydro_array_t *hydro_array;
 
   vpic_mfields() :
-    field_array(0) {
+    field_array(0), hydro_array(0) {
   }
 
   void clear_jf();
