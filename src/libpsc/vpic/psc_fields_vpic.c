@@ -15,6 +15,8 @@ static const int map_psc2vpic[9] = {
   [HX]  = VPIC_MFIELDS_BX , [HY]  = VPIC_MFIELDS_BY , [HZ]  = VPIC_MFIELDS_BZ,
 };
 
+static int ref_count_fields, ref_count_hydro;
+
 // ----------------------------------------------------------------------
 // psc_mfields_vpic_setup
 
@@ -29,25 +31,13 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 			 &mflds->nr_patches);
   assert(mflds->nr_patches == 1);
 
-  /* struct vpic_info info = { */
-  /*   /\* .dx = dx[0], *\/ */
-  /*   /\* .dy = dx[1], *\/ */
-  /*   /\* .dz = dx[2], *\/ */
-  /*   /\* .dt = , *\/ */
-  /*   .c = 1., */
-  /*   .eps0 = 1., */
-  /* }; */
-
-  /* vpic_base_init(&info); */
-
   sub->vmflds = vpic_mfields_create();
 
   if (mflds->nr_fields == NR_FIELDS) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
-    static int ref_count;
-    assert(ref_count == 0);
-    ref_count++;
+    assert(ref_count_fields == 0);
+    ref_count_fields++;
 
     // FIXME: can't do this because our comp_name array isn't
     // this big
@@ -60,9 +50,8 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
-    static int ref_count;
-    assert(ref_count == 0);
-    ref_count++;
+    assert(ref_count_hydro == 0);
+    ref_count_hydro++;
 
     assert(mflds->ibn[0] == 1);
     assert(mflds->ibn[1] == 1);
@@ -72,6 +61,21 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 } else {
     assert(0);
     //vpic_mfields_ctor(sub->vmflds);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_vpic_destroy
+
+static void
+psc_mfields_vpic_destroy(struct psc_mfields *mflds)
+{
+  if (mflds->nr_fields == NR_FIELDS) {
+    ref_count_fields--;
+  } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+    ref_count_hydro--;
+  } else {
+    assert(0);
   }
 }
 
@@ -190,8 +194,8 @@ struct psc_mfields_ops psc_mfields_vpic_ops = {
   .size                  = sizeof(struct psc_mfields_vpic),
   .methods               = psc_mfields_vpic_methods,
   .setup                 = psc_mfields_vpic_setup,
-#if 0
   .destroy               = psc_mfields_vpic_destroy,
+#if 0
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_mfields_vpic_write,
   .read                  = psc_mfields_vpic_read,
