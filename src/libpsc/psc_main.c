@@ -1,12 +1,19 @@
 
 #include <psc.h>
 
+#include "vpic/vpic_iface.h"
+
 #include <mrc_params.h>
 
 int
 psc_main(int *argc, char ***argv, struct psc_ops *type)
 {
+#ifdef USE_VPIC
+  vpic_base_init(argc, argv);
+#else
   MPI_Init(argc, argv);
+#endif
+  //  MPI_Init(argc, argv);
   libmrc_params_init(*argc, *argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 
