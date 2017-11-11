@@ -99,18 +99,41 @@ AS_IF([test "x$have_papi" != "xyes"],
 
 # Checks for options
 
+# VPIC
+
+AC_LANG_PUSH([C++])
+
 AH_TEMPLATE([USE_VPIC], [interface with VPIC])
-AC_ARG_ENABLE(
+AC_ARG_WITH(
   [vpic],
-  [AS_HELP_STRING([--enable-vpic], [interface with vpic])],
-  [AS_IF([test "$enable_vpic" = "yes"],
-    [AC_DEFINE([USE_VPIC])
-     VPIC_DIR=/Users/kai/build/vpic
-     CFLAGS="$CFLAGS -I$VPIC_DIR/src/vpic"
-    dnl LIBS="$LIBS $CUDALIBS"])
-  ]
+  [AS_HELP_STRING([--with-vpic=DIR], [interface with vpic])],
+  [],
+  [with_vpic=no])
+
+AM_CONDITIONAL([USE_VPIC], [test "with_vpic" != "no"])
+
+AS_IF([test "with_vpic" != "no"],
+ [VPICDIR=$with_vpic
+  AC_SUBST([VPICDIR])
+  CPPFLAGS="$CPPFLAGS -I$VPICDIR/src/vpic"
+  AC_CHECK_HEADER([vpic.h],
+    [],
+    [AC_MSG_FAILURE([--with-vpic was given, but could not find vpic.h.])]
+  )
+
+  dnl FIXME, that presumes the library was built in "build" subdir
+  LDFLAGS="$LDFLAGS -L$VPICDIR/build"
+  AC_CHECK_LIB([vpic], [main],
+    [],
+    [AC_MSG_FAILURE([--with-vpic was given, but could not link libvpic.a])]
+  )
+  AC_DEFINE([USE_VPIC])
+ ]
 )
-AM_CONDITIONAL([USE_VPIC], [test "$enable_vpic" = "yes"])
+  
+AC_LANG_POP([C++])
+
+# CUDA
 
 AC_ARG_VAR([CUDACC], [CUDA compiler])
 AC_ARG_VAR([CUDACFLAGS], [flags to pass to the CUDA compiler])
@@ -283,8 +306,11 @@ echo "Compiling Options:"
 echo "------------------"
 echo "                     C Compiler: $CC"
 echo "                         CFLAGS: $CFLAGS"
+echo "                   C++ Compiler: $CXX"
+echo "                       CXXFLAGS: $CXXFLAGS"
 echo "               Fortran Compiler: $F77"
 echo "                         FFLAGS: $FFLAGS"
+echo "                       CPPFLAGS: $CPPFLAGS"
 echo "                  CUDA Compiler: $CUDACC"
 echo "                     CUDACFLAGS: $CUDACFLAGS"
 echo "                       CUDALIBS: $CUDALIBS"
