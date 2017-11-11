@@ -34,3 +34,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_double_ops =
   .flags              = POFI_ADD_GHOSTS,
 };
 
+// ======================================================================
+// psc_output_fields_item: subclass "v_1st_nc_double"
+
+struct psc_output_fields_item_ops psc_output_fields_item_v_1st_nc_double_ops = {
+  .name               = "v_1st_nc_double",
+  .nr_comp            = 3,
+  .fld_names          = { "vx_nc", "vy_nc", "vz_nc" },
+  .run_all             = v_run_all,
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,
+};
+

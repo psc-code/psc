@@ -58,7 +58,7 @@ do_rho_run(int p, fields_t flds, particle_range_t prts)
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int m = particle_kind(prt);
-    DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, ppsc->kinds[m].q); // FIXME, I think this needs qni_wni
+    DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, ppsc->kinds[m].q);
   }
 }
 
@@ -68,4 +68,36 @@ rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 {
   run_all(item, mflds, mprts_base, mres, do_rho_run);
 }
+
+// ======================================================================
+// v
+
+static void
+do_v_run(int p, fields_t flds, particle_range_t prts)
+{
+  struct psc_patch *patch = &ppsc->patch[p];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    particle_t *prt = particle_iter_deref(prt_iter);
+    int mm = particle_kind(prt) * 3;
+
+    particle_real_t vxi[3];
+    particle_calc_vxi(prt, vxi);
+
+    for (int m = 0; m < 3; m++) {
+      DEPOSIT_TO_GRID_1ST_NC(prt, flds, mm + m, vxi[m]);
+    }
+  }
+}
+
+static void
+v_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+	  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+{
+  run_all(item, mflds, mprts_base, mres, do_v_run);
+}
+
+
 
