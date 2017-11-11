@@ -368,6 +368,7 @@ psc_harris_setup(struct psc *psc)
     psc->domain.length[d] = x1[d] - x0[d];
     psc->domain.corner[d] = x0[d];
     psc->domain.gdims[d] = np[d] * info.nx[d];
+    psc->domain.np[d] = np[d];
   }
   
   // initializes fields, particles, etc.
