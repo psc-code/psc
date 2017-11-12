@@ -96,14 +96,7 @@ void vpic_simulation_init2(vpic_push_particles *vpushp, vpic_mfields *vmflds,
 			   vpic_mparticles *vmprts)
 {
   double err;
-  // Do some consistency checks on user initialized fields
 
-  if (simulation->rank() == 0) MESSAGE(( "Checking magnetic field divergence" ));
-  vmflds->compute_div_b_err();
-  err = vmflds->compute_rms_div_b_err();
-  if (simulation->rank() == 0) MESSAGE(( "RMS error = %e (charge/volume)", err ));
-  vmflds->clean_div_b();
-  
   // Load fields not initialized by the user
 
   if( simulation->rank()==0 ) MESSAGE(( "Initializing radiation damping fields" ));

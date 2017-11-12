@@ -400,11 +400,17 @@ psc_harris_setup(struct psc *psc)
   }
 #endif
 
-  // Consistency checks
+  // Do some consistency checks on user initialized fields
 
   mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
   double err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
   mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
+  
+  mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
+  psc_mfields_compute_div_b_err(psc->flds);
+  err = psc_mfields_compute_rms_div_b_err(psc->flds);
+  mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
+  psc_mfields_clean_div_b(psc->flds);
   
   struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
