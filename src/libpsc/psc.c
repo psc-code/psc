@@ -138,8 +138,6 @@ static struct param psc_descr[] = {
     .help = "if set, interpret momenta as velocities and multiply by gamma to get "
     "relativistic momenta." },
   
-  { "adjust_dt_to_cycles"
-                    , VAR(prm.adjust_dt_to_cycles), PARAM_BOOL(0)  },
   { "initial_particle_shift"
                     , VAR(prm.initial_particle_shift), PARAM_DOUBLE(0.) },
   { "wallclock_limit"
@@ -370,17 +368,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
-
-  // adjust to match laser cycles FIXME, this isn't a good place,
-  // and hardcoded params (2, 30.)
-  psc->coeff.nnp = ceil(2.*M_PI / psc->dt);
-  if (psc->prm.adjust_dt_to_cycles) {
-    psc->dt = 2.*M_PI / psc->coeff.nnp;
-  }
-  psc->coeff.np = 2 * psc->coeff.nnp;
-  if (psc->prm.nmax == 0) {
-    psc->prm.nmax = 30. * psc->coeff.nnp;
-  }
 
   // set up index bounds,
   // sanity checks for the decomposed domain

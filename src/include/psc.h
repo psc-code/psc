@@ -93,7 +93,6 @@ struct psc_param {
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
   bool initial_momentum_gamma_correction;
-  bool adjust_dt_to_cycles;
   double wallclock_limit;
   bool write_checkpoint;
   int write_checkpoint_every_step;
@@ -120,8 +119,6 @@ struct psc_coeff {
   double vos;	///< 1/k
   double vt;
   double wp;
-  int np; ///< # steps for time-averaging fields
-  int nnp; ///< # steps per laser cycle
 };
 
 ///Paramters for PML
