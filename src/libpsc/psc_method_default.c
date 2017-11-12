@@ -49,4 +49,5 @@ struct psc_method_ops psc_method_ops_default = {
   .name                = "default",
   .do_setup            = psc_method_default_do_setup,
   .initialize          = psc_method_default_initialize,
+  .output              = psc_method_default_output,
 };
