@@ -304,11 +304,6 @@ void vpic_marder::clean_div_b(vpic_mfields *vmflds)
   }
 }
 
-double vpic_marder::sync_faces(vpic_mfields *vmflds)
-{
-  return vmflds->synchronize_tang_e_norm_b();
-}
-
 // ======================================================================
 // vpic_print_status
 

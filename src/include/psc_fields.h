@@ -32,6 +32,8 @@ struct psc_mfields_ops {
   void (*axpy_comp)(struct psc_mfields *y, int my, double alpha,
 		    struct psc_mfields *x, int mx);
   double (*max_comp)(struct psc_mfields *mflds, int m);
+
+  double (*synchronize_tang_e_norm_b)(struct psc_mfields *mflds);
 };
 
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
@@ -58,6 +60,8 @@ void psc_mfields_put_as(struct psc_mfields *mflds,
 			struct psc_mfields *mflds_base, int mb, int me);
 
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
+
+double psc_mfields_synchronize_tang_e_norm_b(struct psc_mfields *mflds);
 
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;

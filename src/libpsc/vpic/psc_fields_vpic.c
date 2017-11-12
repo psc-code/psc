@@ -104,6 +104,17 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
   return flds;
 }
 
+// ----------------------------------------------------------------------
+// psc_mfields_vpic_synchronize_tang_e_norm_b
+
+static double
+psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  return vpic_mfields_synchronize_tang_e_norm_b(vmflds);
+}
+
 // ======================================================================
 // convert from/to "c"
 
@@ -203,6 +214,7 @@ struct psc_mfields_ops psc_mfields_vpic_ops = {
   .zero_comp             = psc_mfields_vpic_zero_comp,
   .axpy_comp             = psc_mfields_vpic_axpy_comp,
 #endif
+  .synchronize_tang_e_norm_b = psc_mfields_vpic_synchronize_tang_e_norm_b,
 };
 
 

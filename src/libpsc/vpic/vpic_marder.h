@@ -18,7 +18,6 @@ struct vpic_marder {
 
   void clean_div_e(vpic_mfields *vmflds, vpic_mparticles *vmprts);
   void clean_div_b(vpic_mfields *vmflds);
-  double sync_faces(vpic_mfields *vmflds);
 };
 
 #endif

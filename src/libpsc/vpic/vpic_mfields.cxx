@@ -71,3 +71,10 @@ float *vpic_mfields_get_data(struct vpic_mfields *vmflds, int *ib, int *im)
   }
 }
 
+// ----------------------------------------------------------------------
+// vpic_mfields_synchronize_tang_e_norm_b
+
+double vpic_mfields_synchronize_tang_e_norm_b(struct vpic_mfields *vmflds)
+{
+  return vmflds->synchronize_tang_e_norm_b();
+}

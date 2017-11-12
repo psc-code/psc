@@ -39,6 +39,14 @@ psc_marder_vpic_run(struct psc_marder *marder,
   struct psc *psc = ppsc; // FIXME
 
   vpic_marder_run(vmarder, vmflds, vmprts, psc->timestep);
+
+  // Synchronize the shared faces
+  int sync_shared_interval = marder->sync_shared_interval;
+  if (sync_shared_interval > 0 && psc->timestep % sync_shared_interval == 0) {
+    mpi_printf(psc_marder_comm(marder), "Synchronizing shared tang e, norm b, rho_b\n");
+    double err = psc_mfields_synchronize_tang_e_norm_b(mflds_base);
+    mpi_printf(psc_marder_comm(marder), "Domain desynchronization error = %e (arb units)\n", err);
+  }
 }
 
 // ----------------------------------------------------------------------

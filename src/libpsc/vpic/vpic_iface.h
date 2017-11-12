@@ -42,6 +42,7 @@ struct vpic_mfields *vpic_mfields_create();
 void vpic_mfields_ctor_from_simulation_fields(struct vpic_mfields *vmflds);
 void vpic_mfields_ctor_from_simulation_hydro(struct vpic_mfields *vmflds);
 float *vpic_mfields_get_data(struct vpic_mfields *mflds, int *ib, int *im);
+double vpic_mfields_synchronize_tang_e_norm_b(struct vpic_mfields *mflds);
 
 // ----------------------------------------------------------------------
 // vpic_mparticles
