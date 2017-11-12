@@ -31,11 +31,15 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
   // Fields are updated ... load the interpolator for next time step and
   // particle diagnostics in user_diagnostics if there are any particle
   // species to worry about
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
+
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds_base)->vmflds;
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
 
   vpic_push_particles_prep(vpushp, vmprts, vmflds);
+
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -46,11 +50,15 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 				   struct psc_mparticles *mprts_base,
 				   struct psc_mfields *mflds_base)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
+
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds_base)->vmflds;
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
 
   vpic_push_particles_push_mprts(vpushp, vmprts, vmflds);
+
+  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
 // ----------------------------------------------------------------------
@@ -61,11 +69,15 @@ psc_push_particles_vpic_stagger_mprts(struct psc_push_particles *push,
 				      struct psc_mparticles *mprts_base,
 				      struct psc_mfields *mflds_base)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
+
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds_base)->vmflds;
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
 
   vpic_push_particles_stagger_mprts(vpushp, vmprts, vmflds);
+
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------

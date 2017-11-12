@@ -16,43 +16,49 @@
 static void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 {
+  struct psc_mparticles *mprts = psc->particles;
+  psc_mfields_view(psc->flds);
+  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
+  
   // Do some consistency checks on user initialized fields
 
   mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
-  double err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
+  double err = psc_mfields_synchronize_tang_e_norm_b(mflds);
   mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
   
   mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
-  psc_mfields_compute_div_b_err(psc->flds);
-  err = psc_mfields_compute_rms_div_b_err(psc->flds);
+  psc_mfields_compute_div_b_err(mflds);
+  err = psc_mfields_compute_rms_div_b_err(mflds);
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-  psc_mfields_clean_div_b(psc->flds);
+  psc_mfields_clean_div_b(mflds);
   
   // Load fields not initialized by the user
 
   mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
-  psc_mfields_compute_curl_b(psc->flds);
+  psc_mfields_compute_curl_b(mflds);
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
-  psc_mfields_clear_rhof(psc->flds);
-  psc_mfields_accumulate_rho_p(psc->flds, psc->particles);
-  psc_mfields_synchronize_rho(psc->flds);
-  psc_mfields_compute_rhob(psc->flds);
+  psc_mfields_clear_rhof(mflds);
+  psc_mfields_accumulate_rho_p(mflds, mprts);
+  psc_mfields_synchronize_rho(mflds);
+  psc_mfields_compute_rhob(mflds);
 
   // Internal sanity checks
 
   mpi_printf(psc_comm(psc), "Checking electric field divergence\n");
-  psc_mfields_compute_div_e_err(psc->flds);
-  err = psc_mfields_compute_rms_div_e_err(psc->flds);
+  psc_mfields_compute_div_e_err(mflds);
+  err = psc_mfields_compute_rms_div_e_err(mflds);
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-  psc_mfields_clean_div_e(psc->flds);
+  psc_mfields_clean_div_e(mflds);
 
   mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
-  err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
+  err = psc_mfields_synchronize_tang_e_norm_b(mflds);
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
   mpi_printf(psc_comm(psc), "Uncentering particles\n");
-  psc_push_particles_stagger(psc->push_particles, psc->particles, psc->flds);
+  psc_push_particles_stagger(psc->push_particles, mprts, mflds);
+
+  psc_mfields_put_as(mflds, psc->flds, 0, 9);
 
   // First output / stats
   

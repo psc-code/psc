@@ -2,6 +2,7 @@
 #include "psc_fields_vpic.h"
 
 #include "psc_fields_c.h"
+#include "psc_fields_single.h"
 #include "psc.h"
 #include "psc_particles_vpic.h"
 
@@ -207,6 +208,77 @@ psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
 }
 
 // ======================================================================
+// convert from/to "single"
+
+static void
+psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
+				  int mb, int me)
+{
+  if (me > mb) {
+    assert(0);
+  }
+  for (int p = 0; p < mflds->nr_patches; p++) {
+#if 0
+    fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
+    fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+
+    for (int m = mb; m < me; m++) {
+      for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
+	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
+	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	    _F3_VPIC(flds, m, jx,jy,jz) = _F3_single(flds_single, m, jx,jy,jz);
+	  }
+	}
+      }
+    }
+#endif
+  }
+}
+
+static void
+psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
+			   int mb, int me)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
+    fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+
+    int ib[3], ie[3];
+    for (int d = 0; d < 3; d++) {
+      ib[d] = MAX(flds.ib[d], flds_single.ib[d]);
+      ie[d] = MIN(flds.ib[d] + flds.im[d], flds_single.ib[d] + flds_single.im[d]);
+    }
+
+    if (mb == 0 && me == 16) {
+      // FIXME, very hacky way to distinguish whether we want
+      // to copy the field into the standard PSC component numbering or,
+      // as in this case, just copy one-to-one
+      for (int m = mb; m < me; m++) {
+	for (int jz = ib[2]; jz < ie[2]; jz++) {
+	  for (int jy = ib[1]; jy < ie[1]; jy++) {
+	    for (int jx = ib[0]; jx < ie[0]; jx++) {
+	      _F3_S(flds_single, m, jx,jy,jz) = _F3_VPIC(flds, m, jx,jy,jz);
+	    }
+	  }
+	}
+      }
+    } else {
+      for (int m = mb; m < me; m++) {
+	assert(m < 9);
+	int m_vpic = map_psc2vpic[m];
+	for (int jz = ib[2]; jz < ie[2]; jz++) {
+	  for (int jy = ib[1]; jy < ie[1]; jy++) {
+	    for (int jx = ib[0]; jx < ie[0]; jx++) {
+	      _F3_S(flds_single, m, jx,jy,jz) = _F3_VPIC(flds, m_vpic, jx,jy,jz);
+	    }
+	  }
+	}
+      }
+    }
+  }
+}
+
+// ======================================================================
 // convert from/to "c"
 
 static void
@@ -249,7 +321,6 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
     }
 
     if (mb == 0 && me == 16) {
-      mprintf("AAA flds %d:%d:%d n_comp %d\n", flds.im[0], flds.im[1], flds.im[2], flds.nr_comp);
       // FIXME, very hacky way to distinguish whether we want
       // to copy the field into the standard PSC component numbering or,
       // as in this case, just copy one-to-one
@@ -284,10 +355,8 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
 static struct mrc_obj_method psc_mfields_vpic_methods[] = {
   MRC_OBJ_METHOD("copy_to_c"       , psc_mfields_vpic_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c"     , psc_mfields_vpic_copy_from_c),
-#if 0
   MRC_OBJ_METHOD("copy_to_single"  , psc_mfields_vpic_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_mfields_vpic_copy_from_single),
-#endif
   {}
 };
 

@@ -57,26 +57,29 @@ psc_marder_vpic_run(struct psc_marder *marder,
 		    struct psc_mparticles *mprts_base)
 {
   struct psc *psc = ppsc; // FIXME
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
 
   // Divergence clean e
   int clean_div_e_interval = marder->clean_div_e_interval;
   if (clean_div_e_interval > 0 && psc->timestep % clean_div_e_interval == 0) {
-    psc_marder_vpic_clean_div_e(marder, mflds_base, mprts_base);
+    psc_marder_vpic_clean_div_e(marder, mflds, mprts_base);
   }
 
   // Divergence clean b
   int clean_div_b_interval = marder->clean_div_b_interval;
   if (clean_div_b_interval > 0 && psc->timestep % clean_div_b_interval == 0) {
-    psc_marder_vpic_clean_div_b(marder, mflds_base);
+    psc_marder_vpic_clean_div_b(marder, mflds);
   }
   
   // Synchronize the shared faces
   int sync_shared_interval = marder->sync_shared_interval;
   if (sync_shared_interval > 0 && psc->timestep % sync_shared_interval == 0) {
     mpi_printf(psc_marder_comm(marder), "Synchronizing shared tang e, norm b, rho_b\n");
-    double err = psc_mfields_synchronize_tang_e_norm_b(mflds_base);
+    double err = psc_mfields_synchronize_tang_e_norm_b(mflds);
     mpi_printf(psc_marder_comm(marder), "Domain desynchronization error = %e (arb units)\n", err);
   }
+
+  psc_mfields_put_as(mflds, mflds_base, EX, HX + 3);
 }
 
 // ----------------------------------------------------------------------
