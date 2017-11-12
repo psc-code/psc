@@ -97,25 +97,6 @@ void vpic_simulation_init2(vpic_push_particles *vpushp, vpic_mfields *vmflds,
 {
   double err;
 
-  if( simulation->rank()==0 ) MESSAGE(( "Initializing bound charge density" ));
-  vpic_mfields_clear_rhof(vmflds);
-  vpic_mfields_accumulate_rho_p(vmflds, vmprts);
-  vpic_mfields_synchronize_rho(vmflds);
-  vpic_mfields_compute_rhob(vmflds);
-
-  // Internal sanity checks
-
-  if( simulation->rank()==0 ) MESSAGE(( "Checking electric field divergence" ));
-
-  vpic_mfields_compute_div_e_err(vmflds);
-  err = vpic_mfields_compute_rms_div_e_err(vmflds);
-  if( simulation->rank()==0 ) MESSAGE(( "RMS error = %e (charge/volume)", err ));
-  vpic_mfields_clean_div_e(vmflds);
-
-  if( simulation->rank()==0 ) MESSAGE(( "Rechecking interdomain synchronization" ));
-  err = vpic_mfields_synchronize_tang_e_norm_b(vmflds);
-  if( simulation->rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
-    
   if( vmprts->species_list ) {
     if( simulation->rank()==0 ) MESSAGE(( "Uncentering particles" ));
     vpushp->load_interpolator_array(vmflds);
