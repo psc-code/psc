@@ -351,8 +351,11 @@ psc_harris_setup(struct psc *psc)
   psc_marder_set_param_int(psc->marder, "num_div_b_round", info.num_div_b_round);
 
   MPI_Comm comm = psc_comm(psc);
+  MPI_Barrier(comm);
 
-  int np[3] = { 4, 1, 1 }; // FIXME, hardcoded, but really hard to get from vpic
+  int *np = psc->domain.np;
+  mpi_printf(comm, "domain: np = %d x %d x %d\n", np[0], np[1], np[2]);
+  //int np[3] = { 4, 1, 1 }; // FIXME, hardcoded, but really hard to get from vpic
 
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -371,11 +374,13 @@ psc_harris_setup(struct psc *psc)
   }
 
   // FIXME, it's also not so obvious that this is going to be the same on all procs
-  mprintf("x0 %g:%g:%g x1 %g:%g:%g\n", info.x0[0], info.x0[1], info.x0[2],
+  mprintf("domain: local x0 %g:%g:%g x1 %g:%g:%g\n",
+	  info.x0[0], info.x0[1], info.x0[2],
 	  info.x1[0], info.x1[1], info.x1[2]);
-  mprintf("np %d:%d:%d\n", np[0], np[1], np[2]);
-  mprintf("p %d %d %d\n", p[0], p[1], p[2]);
-  mprintf("x0 %g:%g:%g x1 %g:%g:%g\n", x0[0], x0[1], x0[2],
+  mprintf("domain: p %d %d %d\n",
+	  p[0], p[1], p[2]);
+  mprintf("domain: global x0 %g:%g:%g x1 %g:%g:%g\n",
+	  x0[0], x0[1], x0[2],
 	  x1[0], x1[1], x1[2]);
 
   // set size of simulation box to match vpic
