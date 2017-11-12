@@ -83,7 +83,7 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
   struct psc_patch *patch = ppsc->patch + p;
 
    if (d == 1) {
-    int my = patch->ldims[1];
+     int my  _mrc_unused = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
@@ -210,7 +210,7 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
-    int my = patch->ldims[1];
+    int my _mrc_unused = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
@@ -307,7 +307,7 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
-    int my = patch->ldims[1];
+    int my _mrc_unused = patch->ldims[1];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
 	F3(flds, JYI, ix,my-2,iz) -= F3(flds, JYI, ix,my+1,iz);
@@ -415,7 +415,7 @@ open_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
-    int my = patch->ldims[1];
+    int my _mrc_unused = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
