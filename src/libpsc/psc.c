@@ -353,18 +353,20 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
   }
 
-  double inv_sum = 0.;
-  int nr_levels;
-  mrc_domain_get_nr_levels(psc->mrc_domain, &nr_levels);
-  for (int d=0;d<3;d++) {
-    if (psc->domain.gdims[d] > 1) {
-      inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
+  if (!psc->dt) {
+    double inv_sum = 0.;
+    int nr_levels;
+    mrc_domain_get_nr_levels(psc->mrc_domain, &nr_levels);
+    for (int d=0;d<3;d++) {
+      if (psc->domain.gdims[d] > 1) {
+	inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
+      }
     }
+    if (!inv_sum) { // simulation has 0 dimensions
+      inv_sum = 1.;
+    }
+    psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
   }
-  if (!inv_sum) { // simulation has 0 dimensions
-    inv_sum = 1.;
-  }
-  psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
 
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
