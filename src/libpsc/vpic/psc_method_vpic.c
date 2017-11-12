@@ -55,7 +55,11 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 
   // First output / stats
   
-  psc_output(psc);
+  mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
+  vpic_diagnostics();
+  psc_output_default(psc);
+
+  vpic_print_status();
   psc_stats_log(psc);
   psc_print_profiling(psc);
 }

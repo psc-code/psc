@@ -550,13 +550,8 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 static void
 psc_harris_output(struct psc *psc)
 {
-  if (psc->timestep == 0) {
-    mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
-    // Let the user to perform diagnostics on the initial condition
-    // field(i,j,k).jfx, jfy, jfz will not be valid at this point.
-  } else {
-    vpic_inc_step(psc->timestep);
-  }
+  // FIXME, a hacky place to do this
+  vpic_inc_step(psc->timestep);
 
   vpic_diagnostics();
   
