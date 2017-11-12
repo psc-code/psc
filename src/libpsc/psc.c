@@ -523,8 +523,6 @@ _psc_setup(struct psc *psc)
 #endif
 
   psc_setup_member_objs(psc);
-
-  psc_push_particles_stagger(psc->push_particles, psc->particles, psc->flds);
 }
 
 // ----------------------------------------------------------------------

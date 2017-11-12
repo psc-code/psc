@@ -159,6 +159,7 @@ void
 psc_integrate(struct psc *psc)
 {
   psc_method_initialize(psc->method, psc);
+  mpi_printf(psc_comm(psc), "Initialization complete.\n");
   
   static int pr;
   if (!pr) {

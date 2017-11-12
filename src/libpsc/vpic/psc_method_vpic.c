@@ -62,8 +62,6 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   psc_output(psc);
   psc_stats_log(psc);
   psc_print_profiling(psc);
-
-  mpi_printf(psc_comm(psc), "Initialization complete.\n");
 }
 
 // ----------------------------------------------------------------------
