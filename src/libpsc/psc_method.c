@@ -5,6 +5,18 @@
 // psc_method
 
 // ----------------------------------------------------------------------
+// psc_method_do_setup
+
+void
+psc_method_do_setup(struct psc_method *method, struct psc *psc)
+{
+  struct psc_method_ops *ops = psc_method_ops(method);
+  assert(ops && ops->do_setup);
+
+  ops->do_setup(method, psc);
+}
+
+// ----------------------------------------------------------------------
 // psc_method_initialize
 
 void

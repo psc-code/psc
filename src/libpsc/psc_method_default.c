@@ -10,6 +10,14 @@
 // psc_method "default"
 
 // ----------------------------------------------------------------------
+// psc_method_default_do_setup
+
+static void
+psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
+{
+}
+
+// ----------------------------------------------------------------------
 // psc_method_default_initialize
 
 static void
@@ -39,5 +47,6 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 
 struct psc_method_ops psc_method_ops_default = {
   .name                = "default",
+  .do_setup            = psc_method_default_do_setup,
   .initialize          = psc_method_default_initialize,
 };

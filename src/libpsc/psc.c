@@ -494,6 +494,8 @@ psc_setup_partition_and_particles(struct psc *psc)
 static void
 _psc_setup(struct psc *psc)
 {
+  psc_method_do_setup(psc->method, psc);
+
   psc_setup_coeff(psc);
   psc_setup_domain(psc);
 

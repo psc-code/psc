@@ -11,6 +11,14 @@
 // psc_method "vpic"
 
 // ----------------------------------------------------------------------
+// psc_method_vpic_do_setup
+
+static void
+psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
+{
+}
+
+// ----------------------------------------------------------------------
 // psc_method_vpic_initialize
 
 static void
@@ -94,6 +102,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
 
 struct psc_method_ops psc_method_ops_vpic = {
   .name                = "vpic",
+  .do_setup            = psc_method_vpic_do_setup,
   .initialize          = psc_method_vpic_initialize,
   .output              = psc_method_vpic_output,
 };
