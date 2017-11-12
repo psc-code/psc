@@ -45,6 +45,8 @@ struct psc_mfields_ops {
   void (*clear_rhof)(struct psc_mfields *mflds);
   void (*accumulate_rho_p)(struct psc_mfields *mflds, struct psc_mparticles *mprts);
   void (*synchronize_rho)(struct psc_mfields *mflds);
+  void (*compute_rhob)(struct psc_mfields *mflds);
+  void (*compute_curl_b)(struct psc_mfields *mflds);
 };
 
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
@@ -82,6 +84,8 @@ void psc_mfields_clean_div_e(struct psc_mfields *mflds);
 void psc_mfields_clear_rhof(struct psc_mfields *mflds);
 void psc_mfields_accumulate_rho_p(struct psc_mfields *mflds, struct psc_mparticles *mprts);
 void psc_mfields_synchronize_rho(struct psc_mfields *mflds);
+void psc_mfields_compute_rhob(struct psc_mfields *mflds);
+void psc_mfields_compute_curl_b(struct psc_mfields *mflds);
 
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;

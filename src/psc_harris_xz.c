@@ -412,6 +412,11 @@ psc_harris_setup(struct psc *psc)
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
   psc_mfields_clean_div_b(psc->flds);
   
+  // Load fields not initialized by the user
+
+  mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
+  psc_mfields_compute_curl_b(psc->flds);
+
   struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;

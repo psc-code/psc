@@ -248,6 +248,24 @@ psc_mfields_synchronize_rho(struct psc_mfields *mflds)
   ops->synchronize_rho(mflds);
 }
 
+void
+psc_mfields_compute_rhob(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->compute_rhob);
+  ops->compute_rhob(mflds);
+}
+
+void
+psc_mfields_compute_curl_b(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->compute_curl_b);
+  ops->compute_curl_b(mflds);
+}
+
 // ----------------------------------------------------------------------
 
 static void

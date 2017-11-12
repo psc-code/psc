@@ -190,6 +190,22 @@ psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
   vpic_mfields_synchronize_rho(vmflds);
 }
 
+static void
+psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_compute_rhob(vmflds);
+}
+
+static void
+psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_compute_curl_b(vmflds);
+}
+
 // ======================================================================
 // convert from/to "c"
 
@@ -299,6 +315,8 @@ struct psc_mfields_ops psc_mfields_vpic_ops = {
   .clear_rhof                = psc_mfields_vpic_clear_rhof,
   .accumulate_rho_p          = psc_mfields_vpic_accumulate_rho_p,
   .synchronize_rho           = psc_mfields_vpic_synchronize_rho,
+  .compute_rhob              = psc_mfields_vpic_compute_rhob,
+  .compute_curl_b            = psc_mfields_vpic_compute_curl_b,
 };
 
 

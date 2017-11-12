@@ -124,3 +124,13 @@ void vpic_mfields_synchronize_rho(struct vpic_mfields *vmflds)
 {
   vmflds->synchronize_rho();
 }
+
+void vpic_mfields_compute_rhob(struct vpic_mfields *vmflds)
+{
+  vmflds->compute_rhob();
+}
+
+void vpic_mfields_compute_curl_b(struct vpic_mfields *vmflds)
+{
+  vmflds->compute_curl_b();
+}

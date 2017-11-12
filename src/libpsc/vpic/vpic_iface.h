@@ -54,6 +54,8 @@ void vpic_mfields_clean_div_e(struct vpic_mfields *vmflds);
 void vpic_mfields_clear_rhof(struct vpic_mfields *vmflds);
 void vpic_mfields_accumulate_rho_p(struct vpic_mfields *vmflds, struct vpic_mparticles *mprts);
 void vpic_mfields_synchronize_rho(struct vpic_mfields *vmflds);
+void vpic_mfields_compute_rhob(struct vpic_mfields *vmflds);
+void vpic_mfields_compute_curl_b(struct vpic_mfields *vmflds);
 
 // ----------------------------------------------------------------------
 // vpic_mparticles
