@@ -35,7 +35,7 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 
   sub->vmflds = vpic_mfields_create();
 
-  if (mflds->nr_fields == NR_FIELDS) {
+  if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_fields == 0);
@@ -72,7 +72,7 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_destroy(struct psc_mfields *mflds)
 {
-  if (mflds->nr_fields == NR_FIELDS) {
+  if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     ref_count_fields--;
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     ref_count_hydro--;
@@ -93,7 +93,7 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 
   flds.data = vpic_mfields_get_data(sub->vmflds, flds.ib, flds.im);
   // FIXME hacky...
-  if (mflds->nr_fields == NR_FIELDS) {
+  if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     flds.nr_comp = VPIC_MFIELDS_N_COMP;
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     flds.nr_comp = VPIC_HYDRO_N_COMP;

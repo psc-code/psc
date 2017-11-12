@@ -88,8 +88,12 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
     psc->domain.np[d] = np[d];
   }
 
-  mpi_printf(comm, "method_vpic_do_setup: Setting dt = %g\n", info.dt);
   psc->dt = info.dt;
+  mpi_printf(comm, "method_vpic_do_setup: Setting dt = %g\n", psc->dt);
+
+  psc->n_state_fields = VPIC_MFIELDS_N_COMP;
+  mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d\n",
+	     psc->n_state_fields);
 }
 
 // ----------------------------------------------------------------------
