@@ -11,11 +11,9 @@ void
 psc_method_initialize(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
-  assert(ops);
+  assert(ops && ops->initialize);
 
-  if (ops->initialize) {
-    ops->initialize(method, psc);
-  }
+  ops->initialize(method, psc);
 }
 
 // ----------------------------------------------------------------------

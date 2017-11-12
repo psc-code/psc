@@ -11,6 +11,9 @@
 // ======================================================================
 // psc_method "vpic"
 
+// ----------------------------------------------------------------------
+// psc_method_vpic_initialize
+
 static void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 {
@@ -53,6 +56,12 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
   vpic_simulation_init2(vpushp, vmflds, vmprts);
+
+  // First output / stats
+  
+  psc_output(psc);
+  psc_stats_log(psc);
+  psc_print_profiling(psc);
 
   mpi_printf(psc_comm(psc), "Initialization complete.\n");
 }

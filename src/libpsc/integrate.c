@@ -25,12 +25,11 @@ int st_time_field;
 
 #define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
 
-/////////////////////////////////////////////////////////////////////////
-/// print_profiling
-///
+// ----------------------------------------------------------------------
+// psc_print_profiling
 
 void
-print_profiling(struct psc *psc)
+psc_print_profiling(struct psc *psc)
 {
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -161,11 +160,6 @@ psc_integrate(struct psc *psc)
 {
   psc_method_initialize(psc->method, psc);
   
-  // FIXME, mv -> end of initialize
-  psc_output(psc);
-  psc_stats_log(psc);
-  print_profiling(psc);
-
   static int pr;
   if (!pr) {
     pr = prof_register("psc_step", 1., 0, 0);
@@ -207,7 +201,7 @@ psc_integrate(struct psc *psc)
 
     if (psc->timestep % psc->prm.stats_every == 0) {
       psc_stats_log(psc);
-      print_profiling(psc);
+      psc_print_profiling(psc);
     }
 
     if (psc->prm.wallclock_limit > 0.) {
