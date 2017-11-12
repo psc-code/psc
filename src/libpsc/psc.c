@@ -494,11 +494,6 @@ psc_setup_partition_and_particles(struct psc *psc)
 static void
 _psc_setup(struct psc *psc)
 {
-  if (!psc_ops(psc)) { // old-style: setup is handled by psc_case
-    psc_setup_member_objs(psc);
-    return;
-  }
-
   psc_setup_coeff(psc);
   psc_setup_domain(psc);
 
