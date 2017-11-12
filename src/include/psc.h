@@ -66,8 +66,6 @@ typedef int f_int;
 #include "psc_particles.h"
 #include "psc_fields.h"
 
-#include "psc_patchmanager.h"
-
 ///User specified parameters
 ///
 struct psc_param {
@@ -260,10 +258,6 @@ struct psc {
 
   struct mrc_domain *mrc_domain;
   
-  bool use_dynamic_patches;	///< Setting this to true will enable dynamic allocation of patches. Make sure to provide at least one domainwindow in this case.
-
-  struct psc_patchmanager patchmanager;	///< Use this to allocate and deallocate patches dynamically on the domain
-
   int nr_patches;	///< Number of patches (on this processor)
   struct psc_patch *patch;	///< List of patches (on this processor)
   int ibn[3];         ///< number of ghost points

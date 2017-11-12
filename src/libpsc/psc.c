@@ -208,10 +208,6 @@ _psc_create(struct psc *psc)
 static void
 _psc_set_from_options(struct psc *psc)
 {
-  if (psc->use_dynamic_patches) {
-    psc_patchmanager_set_from_options(&psc->patchmanager);
-  }
-
   // make comma separated list of current kinds
   char *s = calloc(100, 1);
   char *s_save = s;
@@ -323,10 +319,6 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   }
 
   mrc_domain_set_type(domain, "multi");
-  if(psc->use_dynamic_patches) {
-    psc_patchmanager_timestep(&psc->patchmanager);
-    mrc_domain_set_param_ptr(domain, "activepatches", psc->patchmanager.activepatches);
-  }
   mrc_domain_set_param_int3(domain, "m", psc->domain.gdims);
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
@@ -460,11 +452,6 @@ psc_setup_domain(struct psc *psc)
   psc->pml.size = psc->pml.thick + psc->pml.cushion;
   psc->pml.order = 3;
 
-  //Needs to be done before setting up the domain
-  if (psc->use_dynamic_patches) {
-    psc_patchmanager_setup(&psc->patchmanager, psc->domain.np);
-  }
-
   if (!psc->mrc_domain) {
     psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
   }
@@ -537,10 +524,6 @@ _psc_destroy(struct psc *psc)
 
   mrc_domain_destroy(psc->mrc_domain);
   free(psc->patch);
-
-  if (psc->use_dynamic_patches) {
-    psc_patchmanager_destroy(&psc->patchmanager);
-  }
 
   if (psc->kinds) {
     for (int k = 0; k < psc->nr_kinds; k++) {

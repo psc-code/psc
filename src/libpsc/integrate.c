@@ -84,10 +84,6 @@ psc_step(struct psc *psc)
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	     psc->prm.nmax, psc->timestep * psc->dt);
 
-  if (psc->use_dynamic_patches) {
-    psc_patchmanager_timestep(&psc->patchmanager);
-  }
-
   // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
   psc_balance_run(psc->balance, psc);
@@ -135,8 +131,6 @@ psc_step(struct psc *psc)
 
   psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
 }
-
-extern void dynamicwindow_timestep();
 
 /////////////////////////////////////////////////////////////////////////
 /// Main time integration loop.

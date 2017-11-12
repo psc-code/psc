@@ -198,19 +198,7 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
     }
     mrc_domain_get_nr_global_patches(domain, p_nr_global_patches);
 	  
-    //HACK If we have a dynamic domain, assume all newly created patches have a fixed load
-    if(ppsc->use_dynamic_patches) {
-      int n_old_patches = *p_nr_global_patches;
-      *p_nr_global_patches = bitfield3d_count_bits_set(ppsc->patchmanager.activepatches);
-      
-      loads_all = calloc(MAX(n_old_patches, *p_nr_global_patches), sizeof(*loads_all));
-      
-      for(int i = n_old_patches; i < *p_nr_global_patches; i++) {
-	loads_all[i] = 1.;	//TODO Better assumption? Like take the median or sth alike...
-      }
-    } else {
-      loads_all = calloc(*p_nr_global_patches, sizeof(*loads_all));
-    }
+    loads_all = calloc(*p_nr_global_patches, sizeof(*loads_all));
   }
   MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
 	      MPI_DOUBLE, 0, comm);
