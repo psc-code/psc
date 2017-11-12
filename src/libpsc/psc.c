@@ -124,22 +124,11 @@ static struct param psc_descr[] = {
                     , VAR(prm.fractional_n_particles_per_cell), PARAM_BOOL(0)  },
   { "const_num_particles_per_cell"
                     , VAR(prm.const_num_particles_per_cell), PARAM_BOOL(0)  },
-  // a hack which allows to set the particle weight equal the density,
-  // even though the # of particles was already set according to it.
-  // this is for compatibility testing between Fortran and C initial
-  // conditions, but I believe it's incorrect and should go away, eventually.
-  { "fortran_particle_weight_hack"
-                    , VAR(prm.fortran_particle_weight_hack), PARAM_BOOL(0)  },
-  // yet another hackish thing for compatibility
-  // adjust dt so that the laser period is an integer multiple of dt
-  // only useful when actually doing lasers.
   { "initial_momentum_gamma_correction"
                     , VAR(prm.initial_momentum_gamma_correction), PARAM_BOOL(0),
     .help = "if set, interpret momenta as velocities and multiply by gamma to get "
     "relativistic momenta." },
   
-  { "initial_particle_shift"
-                    , VAR(prm.initial_particle_shift), PARAM_DOUBLE(0.) },
   { "wallclock_limit"
                     , VAR(prm.wallclock_limit)    , PARAM_DOUBLE(0.) },
   { "write_checkpoint"
@@ -844,8 +833,6 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fractional_n_particles_per_cell) {
 		prt.qni_wni = psc->kinds[prt.kind].q;
-	      } else if (psc->prm.fortran_particle_weight_hack) {
-		prt.qni_wni = psc->kinds[prt.kind].q * npt.n;
 	      } else {
 		prt.qni_wni = psc->kinds[prt.kind].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }

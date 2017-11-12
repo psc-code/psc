@@ -91,12 +91,10 @@ struct psc_param {
   bool seed_by_time;
   bool fractional_n_particles_per_cell;
   bool const_num_particles_per_cell;
-  bool fortran_particle_weight_hack;
   bool initial_momentum_gamma_correction;
   double wallclock_limit;
   bool write_checkpoint;
   int write_checkpoint_every_step;
-  double initial_particle_shift;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
   char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
   unsigned int particles_base_flags; ///< additional flags for the particles base type
