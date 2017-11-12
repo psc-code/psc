@@ -29,15 +29,6 @@ void cell_map_free(struct cell_map *map);
 
 // ----------------------------------------------------------------------
 
-#define FIELDS_FORTRAN 1
-#define FIELDS_C       2
-#define FIELDS_SSE2    3
-
-#define PARTICLES_FORTRAN 1
-#define PARTICLES_C       2
-#define PARTICLES_SSE2    3
-#define PARTICLES_CBE     4
-
 enum {
   JXI, JYI, JZI,
   EX , EY , EZ ,
