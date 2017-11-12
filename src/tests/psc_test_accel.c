@@ -129,7 +129,7 @@ psc_test_accel_setup(struct psc *psc)
 static double
 psc_test_accel_init_field(struct psc *psc, double crd[3], int m)
 {
-  struct psc_test_accel *sub = psc_test_accel(psc);
+  //struct psc_test_accel *sub = psc_test_accel(psc);
 
   switch (m) {
   case EX: return 1.;
