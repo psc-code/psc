@@ -239,7 +239,8 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
       } psc_foreach_3d_g_end;
     }
     if (opt_checks_verbose || max_delta > thres) {
-      mprintf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
+      mprintf("max_delta (%s) %g / thres %g\n",
+	      psc_mfields_comp_name(mflds, m), max_delta, thres);
     }
     if (max_delta > thres) {
       //      psc_dump_field(diff, 0, "diff");

@@ -45,8 +45,6 @@ enum {
   NR_FIELDS,
 };
 
-extern const char *fldname[NR_FIELDS];
-
 // C floating point type
 // used to switch between single and double precision
 
