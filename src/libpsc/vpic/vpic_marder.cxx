@@ -1,6 +1,8 @@
 
 #include "vpic_marder.h"
 
+extern vpic_simulation *simulation;
+
 // ======================================================================
 // vpic_marder
 
@@ -48,7 +50,9 @@ vpic_marder_run(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
   // Synchronize the shared faces
   int sync_shared_interval = vmarder->sync_shared_interval;
   if (sync_shared_interval > 0 && step % sync_shared_interval == 0) {
-    vmarder->sync_faces(vmflds);
+    if ( simulation->rank()==0 ) MESSAGE(( "Synchronizing shared tang e, norm b, rho_b" ));
+    double err = vmarder->sync_faces(vmflds);
+    if ( simulation->rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
   }
 }
 

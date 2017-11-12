@@ -304,11 +304,9 @@ void vpic_marder::clean_div_b(vpic_mfields *vmflds)
   }
 }
 
-void vpic_marder::sync_faces(vpic_mfields *vmflds)
+double vpic_marder::sync_faces(vpic_mfields *vmflds)
 {
-  if( rank()==0 ) MESSAGE(( "Synchronizing shared tang e, norm b, rho_b" ));
-  double err = vmflds->synchronize_tang_e_norm_b();
-  if( rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
+  return vmflds->synchronize_tang_e_norm_b();
 }
 
 // ======================================================================
