@@ -97,24 +97,6 @@ void vpic_push_fields_advance_b(struct vpic_mfields *vmflds, double frac);
 void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac);
 
 // ----------------------------------------------------------------------
-// vpic_marder
-
-struct vpic_marder_info {
-  int clean_div_e_interval;
-  int clean_div_b_interval;
-  int sync_shared_interval;
-  int num_div_e_round;
-  int num_div_b_round;
-};
-
-struct vpic_marder;
-
-struct vpic_marder *vpic_marder_create();
-void vpic_marder_ctor(struct vpic_marder *vmarder, struct vpic_marder_info *info);
-void vpic_marder_run(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
-		     struct vpic_mparticles *vmprts, int step);
-
-// ----------------------------------------------------------------------
 // other (may want an object eventually)
 
 void vpic_sort_run(struct vpic_mparticles *vmprts, int step);

@@ -3,7 +3,6 @@
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
-#include "vpic_marder.h"
 
 #include <vpic.h>
 

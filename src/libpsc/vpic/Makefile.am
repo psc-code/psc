@@ -26,7 +26,6 @@ libsubdir_la_SOURCES = \
 	vpic_mfields.cxx \
 	vpic_mparticles.cxx \
 	vpic_push_particles.cxx \
-	vpic_marder.cxx \
 	main.cxx \
 	wrapper.cxx \
 	advance.cc
