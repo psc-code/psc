@@ -92,18 +92,6 @@ void vpic_simulation_init(struct vpic_simulation_info *info)
   info->status_interval = simulation->status_interval;
 }
 
-void vpic_simulation_init2(vpic_push_particles *vpushp, vpic_mfields *vmflds,
-			   vpic_mparticles *vmprts)
-{
-  double err;
-
-  if( vmprts->species_list ) {
-    if( simulation->rank()==0 ) MESSAGE(( "Uncentering particles" ));
-    vpushp->load_interpolator_array(vmflds);
-  }
-  vpushp->uncenter_p(vmprts);
-}
-
 void vpic_inc_step(int step)
 {
   simulation->grid->step++;

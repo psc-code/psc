@@ -101,3 +101,15 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
   }
 }
 
+// ----------------------------------------------------------------------
+// vpic_push_particles_stagger_mprts
+
+void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
+				       struct vpic_mparticles *vmprts,
+				       struct vpic_mfields *vmflds)
+{
+  if (vmprts->species_list) {
+    vpushp->load_interpolator_array(vmflds);
+  }
+  vpushp->uncenter_p(vmprts);
+}

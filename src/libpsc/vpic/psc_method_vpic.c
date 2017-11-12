@@ -5,8 +5,6 @@
 #include <psc_particles_vpic.h>
 #include <psc_push_particles_vpic.h>
 
-#include <vpic_iface.h>
-
 
 // ======================================================================
 // psc_method "vpic"
@@ -17,10 +15,6 @@
 static void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
-  struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;
-
   // Do some consistency checks on user initialized fields
 
   mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
@@ -55,7 +49,9 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
   err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
-  vpic_simulation_init2(vpushp, vmflds, vmprts);
+
+  mpi_printf(psc_comm(psc), "Uncentering particles\n");
+  psc_push_particles_stagger(psc->push_particles, psc->particles, psc->flds);
 
   // First output / stats
   

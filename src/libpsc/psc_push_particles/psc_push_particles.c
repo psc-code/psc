@@ -129,25 +129,30 @@ psc_push_particles_stagger(struct psc_push_particles *push,
   } else {
     mflds = mflds_base;
   }
-  
-  int *im = ppsc->domain.gdims;
 
-  if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-    if (!ops->stagger_mprts_yz) {
-      mprintf("WARNING: no stagger_mprts() method!\n");
-    } else {
-      ops->stagger_mprts_yz(push, mprts, mflds);
-    }
-  } else if (im[0] == 1 && im[1] == 1 && im[2] == 1) { // 1
-    if (!ops->stagger_mprts_1) {
-      mprintf("WARNING: no stagger_mprts() method!\n");
-    } else {
-      ops->stagger_mprts_1(push, mprts, mflds);
-    }
+  if (ops->stagger_mprts) {
+    ops->stagger_mprts(push, mprts, mflds);
   } else {
-    mprintf("WARNING: no stagger_mprts() case!\n");
-  }
 
+    int *im = ppsc->domain.gdims;
+
+    if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
+      if (!ops->stagger_mprts_yz) {
+	mprintf("WARNING: no stagger_mprts() method!\n");
+      } else {
+	ops->stagger_mprts_yz(push, mprts, mflds);
+      }
+    } else if (im[0] == 1 && im[1] == 1 && im[2] == 1) { // 1
+      if (!ops->stagger_mprts_1) {
+	mprintf("WARNING: no stagger_mprts() method!\n");
+      } else {
+	ops->stagger_mprts_1(push, mprts, mflds);
+      }
+    } else {
+      mprintf("WARNING: no stagger_mprts() case!\n");
+    }
+  }
+  
   if (ops->particles_type) {
     psc_mparticles_put_as(mprts, mprts_base, 0);
   }

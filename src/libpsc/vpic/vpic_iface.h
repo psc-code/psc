@@ -88,6 +88,9 @@ void vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 				    struct vpic_mparticles *vmprts,
 				    struct vpic_mfields *vmflds);
+void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
+				       struct vpic_mparticles *vmprts,
+				       struct vpic_mfields *vmflds);
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct vpic_mparticles *mprts,
 			      struct vpic_mfields *vmflds);
@@ -138,8 +141,6 @@ struct vpic_simulation_info {
 
 void vpic_base_init(int *pargc, char ***pargv);
 void vpic_simulation_init(struct vpic_simulation_info *info);
-void vpic_simulation_init2(struct vpic_push_particles *vpushp, struct vpic_mfields *vmflds,
-			   struct vpic_mparticles *vmprts);
 
 
 void vpic_print_status();

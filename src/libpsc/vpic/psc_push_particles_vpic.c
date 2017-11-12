@@ -39,7 +39,7 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
 }
 
 // ----------------------------------------------------------------------
-// psc_push_particles_vpic_run
+// psc_push_particles_vpic_push_mprts
 
 static void
 psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
@@ -54,6 +54,21 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 }
 
 // ----------------------------------------------------------------------
+// psc_push_particles_vpic_stagger_mprts
+
+static void
+psc_push_particles_vpic_stagger_mprts(struct psc_push_particles *push,
+				      struct psc_mparticles *mprts_base,
+				      struct psc_mfields *mflds_base)
+{
+  struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds_base)->vmflds;
+  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
+
+  vpic_push_particles_stagger_mprts(vpushp, vmprts, vmflds);
+}
+
+// ----------------------------------------------------------------------
 // psc_push_particles: subclass "vpic"
 
 struct psc_push_particles_ops psc_push_particles_vpic_ops = {
@@ -62,5 +77,6 @@ struct psc_push_particles_ops psc_push_particles_vpic_ops = {
   .setup                 = psc_push_particles_vpic_setup,
   .prep                  = psc_push_particles_vpic_prep,
   .push_mprts            = psc_push_particles_vpic_push_mprts,
+  .stagger_mprts         = psc_push_particles_vpic_stagger_mprts,
 };
 
