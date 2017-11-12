@@ -119,14 +119,6 @@ struct psc_coeff {
   double wp;
 };
 
-///Paramters for PML
-struct psc_pml {
-  int thick; ///< # grid points for PML
-  int cushion; ///< # grid points for buffer zone
-  int size; ///< # grid points PML + buffer
-  int order; ///< PML order
-};
-
 // need to match fortran values
 
 ///Possible boundary conditions for fields
@@ -232,7 +224,6 @@ struct psc {
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff;	///< automatically derived constants
   struct psc_domain domain;	///< the computational domain
-  struct psc_pml pml;		///< PML settings
   int nr_kinds;                 ///< nr of different particle kinds
   struct psc_kind *kinds;       ///< particle kinds (e.g., e-, ion, ...)
   ///@}

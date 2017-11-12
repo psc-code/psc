@@ -373,19 +373,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
       patch->off[d] = patches[p].off[d];
       patch->dx[d]  = dx[d] / (1 << info.level);
       patch->xb[d]  = patches[p].off[d] * patch->dx[d] + psc->domain.corner[d] / psc->coeff.ld;
-      
-      int min_size = 1;
-      if (patch->off[d] == 0 && // left-most patch in this dir
-	  (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML || 
-	   psc->domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-	min_size += psc->pml.size;
-      }
-      if (patch->off[d] + patch->ldims[d] == gdims[d] && // right-most patch in this dir
-	  (psc->domain.bnd_fld_hi[d] == BND_FLD_UPML || 
-	   psc->domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-	min_size += psc->pml.size;
-      }
-      assert(psc->patch[p].ldims[d] >= min_size);
     }
   }
 }
@@ -425,11 +412,6 @@ psc_setup_domain(struct psc *psc)
 	    "WARNING: pml is not supported anymore but pml boundary conditions requested.\n");
     abort();
   }
-  psc->pml.thick = 10;
-  psc->pml.cushion = psc->pml.thick / 3;
-  psc->pml.size = psc->pml.thick + psc->pml.cushion;
-  psc->pml.order = 3;
-
   if (!psc->mrc_domain) {
     psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
   }
@@ -609,30 +591,17 @@ get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
 }
 
 // ----------------------------------------------------------------------
-// pml_find_bounds
+// find_bounds
 //
 // helper function for partition / particle setup
 
-// particles must not be placed in the pml regions
-// check if pml bnds are set and restrict avoid particle placement inside pml regions
-
 static void
-pml_find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
+find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 {
   struct psc_patch *patch = &psc->patch[p];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
-    if (patch->off[d] == 0 && // left-most proc in this dir
-	(psc->domain.bnd_fld_lo[d] == BND_FLD_UPML || 
-	 psc->domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-      ilo[d] += psc->pml.size+1;
-    }
     ihi[d] = patch->ldims[d];
-    if (ihi[d] + patch->off[d] == psc->domain.gdims[d] && // right-most proc in this dir
-	(psc->domain.bnd_fld_hi[d] == BND_FLD_UPML || 
-	 psc->domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-      ihi[d] -= psc->pml.size+1;
-    }
   }
 }
 
@@ -664,7 +633,7 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
   int np_total = 0;
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
-    pml_find_bounds(psc, p, ilo, ihi);
+    find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
     int nr_pop = psc->prm.nr_populations;
@@ -789,7 +758,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
-    pml_find_bounds(psc, p, ilo, ihi);
+    find_bounds(psc, p, ilo, ihi);
   
     int nr_pop = psc->prm.nr_populations;
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
