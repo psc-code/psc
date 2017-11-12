@@ -48,10 +48,6 @@ typedef float real;
 typedef double f_real;
 typedef int f_int;
 
-// always need the fortran types for fortran interface
-#include "psc_particles_fortran.h"
-#include "psc_fields_fortran.h"
-
 #include "psc_particles.h"
 #include "psc_fields.h"
 
