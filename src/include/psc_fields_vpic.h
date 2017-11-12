@@ -14,6 +14,9 @@ struct psc_mfields_vpic {
   struct vpic_mfields *vmflds;
 };
 
-#define psc_mfields_vpic(mflds) mrc_to_subobj(mflds, struct psc_mfields_vpic)
+#define psc_mfields_vpic(mflds) ({					\
+      assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_vpic_ops); \
+      mrc_to_subobj(mflds, struct psc_mfields_vpic);			\
+    })
 
 #endif
