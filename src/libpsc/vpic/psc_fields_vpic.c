@@ -249,7 +249,10 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
       ie[d] = MIN(flds.ib[d] + flds.im[d], flds_single.ib[d] + flds_single.im[d]);
     }
 
-    if (mb == 0 && me == 16) {
+    // FIXME, hacky way to distinguish whether we want
+    // to copy the field into the standard PSC component numbering or,
+    // as in this case, just copy one-to-one
+    if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
       // FIXME, very hacky way to distinguish whether we want
       // to copy the field into the standard PSC component numbering or,
       // as in this case, just copy one-to-one
@@ -262,7 +265,7 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 	  }
 	}
       }
-    } else {
+    } else if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
       for (int m = mb; m < me; m++) {
 	assert(m < 9);
 	int m_vpic = map_psc2vpic[m];
@@ -274,6 +277,8 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 	  }
 	}
       }
+    } else {
+      assert(0);
     }
   }
 }
@@ -320,10 +325,10 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
       ie[d] = MIN(flds.ib[d] + flds.im[d], flds_c.ib[d] + flds_c.im[d]);
     }
 
-    if (mb == 0 && me == 16) {
-      // FIXME, very hacky way to distinguish whether we want
-      // to copy the field into the standard PSC component numbering or,
-      // as in this case, just copy one-to-one
+    // FIXME, hacky way to distinguish whether we want
+    // to copy the field into the standard PSC component numbering or,
+    // as in this case, just copy one-to-one
+    if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
       for (int m = mb; m < me; m++) {
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
@@ -333,7 +338,7 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
 	  }
 	}
       }
-    } else {
+    } else if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
       for (int m = mb; m < me; m++) {
 	assert(m < 9);
 	int m_vpic = map_psc2vpic[m];
@@ -345,6 +350,8 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
 	  }
 	}
       }
+    } else {
+      assert(0);
     }
   }
 }
