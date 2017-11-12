@@ -44,7 +44,6 @@ enum {
   HX , HY , HZ ,
   DX , DY , DZ ,
   BX , BY , BZ ,
-  EPS, MU ,
   NR_FIELDS,
 };
 
