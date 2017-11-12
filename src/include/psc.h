@@ -220,6 +220,7 @@ enum {
 struct psc {
   ///@defgroup interfaces Interfaces @{
   struct mrc_obj obj;
+  struct psc_method *method;                    ///< particular variant of PIC method
   struct psc_push_particles *push_particles;	///< particle pusher
   struct psc_push_fields *push_fields;		///< field pusher
   struct psc_bnd *bnd;				///< boundaries

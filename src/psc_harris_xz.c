@@ -1,5 +1,6 @@
 
 #include <psc.h>
+#include <psc_method.h>
 #include <psc_push_particles.h>
 #include <psc_push_fields.h>
 #include <psc_collision.h>
@@ -12,11 +13,6 @@
 #include <psc_bnd_fields.h>
 #include <psc_checks.h>
 #include <psc_event_generator.h>
-
-#include <psc_fields_vpic.h>
-#include <psc_particles_vpic.h>
-#include <psc_push_particles_vpic.h>
-#include <psc_marder_vpic.h>
 
 #include <psc_particles_as_single.h>
 
@@ -112,6 +108,8 @@ psc_harris_create(struct psc *psc)
   psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
   psc->domain.bnd_part_hi[2] = BND_PART_REFLECTING;
+
+  psc_method_set_type(psc->method, "vpic");
 
   psc_sort_set_type(psc->sort, "vpic");
   // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
@@ -434,15 +432,6 @@ psc_harris_setup(struct psc *psc)
   mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
   err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
-    
-  struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
-  struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;
-  //struct vpic_marder *vmarder = psc_marder_vpic(psc->marder)->vmarder;
-
-  vpic_simulation_init2(vpushp, vmflds, vmprts);
-
-  mpi_printf(psc_comm(psc), "Initialization complete.\n");
 }
 
 #if 0

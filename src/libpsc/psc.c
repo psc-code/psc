@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_method.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
@@ -161,6 +162,7 @@ static struct param psc_descr[] = {
   { "theta_xz"      , VAR(prm.theta_xz)           , PARAM_DOUBLE(0.),
     .help = "rotate initial particle shifted Maxwellian in x-z plane." },
 
+  { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
   { "push_particles"          , VAR(push_particles)          , MRC_VAR_OBJ(psc_push_particles) },
   { "push_fields"             , VAR(push_fields)             , MRC_VAR_OBJ(psc_push_fields) },
   { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },

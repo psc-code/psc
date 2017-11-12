@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_method.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_marder.h"
@@ -158,6 +159,8 @@ extern void dynamicwindow_timestep();
 void
 psc_integrate(struct psc *psc)
 {
+  psc_method_initialize(psc->method, psc);
+  
   // FIXME, mv -> end of initialize
   psc_output(psc);
   psc_stats_log(psc);
@@ -233,3 +236,4 @@ psc_integrate(struct psc *psc)
 	     elapsed, w, d, h, m, s );
   
 }
+
