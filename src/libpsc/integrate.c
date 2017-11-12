@@ -8,9 +8,6 @@
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
-#include "psc_diag.h"
-#include "psc_output_fields_collection.h"
-#include "psc_output_particles.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 #include "psc_checks.h"
@@ -48,27 +45,17 @@ psc_print_profiling(struct psc *psc)
   }
 }
 
-/////////////////////////////////////////////////////////////////////////
-/// psc_output
-///
-
-void
-psc_output_default(struct psc *psc)
-{
-  psc_diag_run(psc->diag, psc);
-  psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, psc->particles);
-  psc_output_particles_run(psc->output_particles, psc->particles);
-}
+// ----------------------------------------------------------------------
+// psc_output
 
 void
 psc_output(struct psc *psc)
 {
   if (psc_ops(psc) && psc_ops(psc)->output) {
-    psc_ops(psc)->output(psc);
-    return;
+    return psc_ops(psc)->output(psc);
   }
 
-  psc_output_default(psc);
+  psc_method_output(psc->method, psc);
 }
 
 /////////////////////////////////////////////////////////////////////////

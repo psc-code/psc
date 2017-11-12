@@ -17,6 +17,18 @@ psc_method_initialize(struct psc_method *method, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_method_output
+
+void
+psc_method_output(struct psc_method *method, struct psc *psc)
+{
+  struct psc_method_ops *ops = psc_method_ops(method);
+  assert(ops && ops->output);
+
+  ops->output(method, psc);
+}
+
+// ----------------------------------------------------------------------
 // psc_method_init
 
 static void

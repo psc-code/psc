@@ -542,27 +542,6 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 }
 
 // ======================================================================
-// PSC/VPIC coupling that should eventually move out of this file
-
-// ----------------------------------------------------------------------
-// psc_harris_output
-
-static void
-psc_harris_output(struct psc *psc)
-{
-  // FIXME, a hacky place to do this
-  vpic_inc_step(psc->timestep);
-
-  vpic_diagnostics();
-  
-  if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
-    vpic_print_status();
-  }
-  
-  psc_output_default(psc);
-}
-
-// ======================================================================
 // psc_harris_ops
 
 struct psc_ops psc_harris_ops = {
@@ -576,7 +555,6 @@ struct psc_ops psc_harris_ops = {
   .init_field       = psc_harris_init_field,
   .setup_particles  = psc_harris_setup_particles,
 #endif
-  .output           = psc_harris_output,
 };
 
 // ======================================================================

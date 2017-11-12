@@ -6,7 +6,8 @@
 
 MRC_CLASS_DECLARE(psc_method, struct psc_method);
 
-void psc_method_initialize(struct psc_method *method, struct psc *);
+void psc_method_initialize(struct psc_method *method, struct psc *psc);
+void psc_method_output(struct psc_method *method, struct psc *psc);
 
 #endif
 

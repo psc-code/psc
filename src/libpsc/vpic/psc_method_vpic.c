@@ -5,6 +5,7 @@
 #include <psc_particles_vpic.h>
 #include <psc_push_particles_vpic.h>
 
+#include <vpic_iface.h>
 
 // ======================================================================
 // psc_method "vpic"
@@ -57,11 +58,29 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
   vpic_diagnostics();
-  psc_output_default(psc);
+  psc_method_default_output(method, psc);
 
   vpic_print_status();
   psc_stats_log(psc);
   psc_print_profiling(psc);
+}
+
+// ----------------------------------------------------------------------
+// psc_method_vpic_output
+
+static void
+psc_method_vpic_output(struct psc_method *method, struct psc *psc)
+{
+  // FIXME, a hacky place to do this
+  vpic_inc_step(psc->timestep);
+
+  vpic_diagnostics();
+  
+  if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
+    vpic_print_status();
+  }
+  
+  psc_method_default_output(NULL, psc);
 }
 
 // ----------------------------------------------------------------------
@@ -70,4 +89,5 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 struct psc_method_ops psc_method_ops_vpic = {
   .name                = "vpic",
   .initialize          = psc_method_vpic_initialize,
+  .output              = psc_method_vpic_output,
 };
