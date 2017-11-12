@@ -149,6 +149,8 @@ static struct param psc_descr[] = {
   { "theta_xz"      , VAR(prm.theta_xz)           , PARAM_DOUBLE(0.),
     .help = "rotate initial particle shifted Maxwellian in x-z plane." },
 
+  { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
+
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
   { "push_particles"          , VAR(push_particles)          , MRC_VAR_OBJ(psc_push_particles) },
   { "push_fields"             , VAR(push_fields)             , MRC_VAR_OBJ(psc_push_fields) },
@@ -181,6 +183,9 @@ _psc_create(struct psc *psc)
 
   // default: 2 species (e-, i+)
   psc_set_kinds(psc, 2, NULL);
+
+  // default 9 state fields (J,E,B)
+  psc->n_state_fields = NR_FIELDS;
 
   psc_bnd_set_psc(psc->bnd, psc); // FIXME, do general parent interface?
   psc_bnd_particles_set_psc(psc->bnd_particles, psc);
@@ -877,7 +882,7 @@ psc_setup_fields(struct psc *psc)
   psc_mfields_set_type(psc->flds, psc->prm.fields_base);
   psc_mfields_set_name(psc->flds, "mfields");
   psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
-  psc_mfields_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
+  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
   psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
   psc_mfields_setup(psc->flds);
 

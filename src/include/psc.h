@@ -222,6 +222,7 @@ struct psc {
 
   struct psc_mparticles *particles;	///< All the particles, indexed by their containing patch
   struct psc_mfields *flds;	///< The fields.
+  int n_state_fields;           ///< How many field components do we need in ::flds
 
   ///The domain partitioner.
   ///
