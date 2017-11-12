@@ -400,6 +400,12 @@ psc_harris_setup(struct psc *psc)
   }
 #endif
 
+  // Consistency checks
+
+  mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
+  double err = psc_mfields_synchronize_tang_e_norm_b(psc->flds);
+  mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
+  
   struct vpic_mfields *vmflds = psc_mfields_vpic(psc->flds)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(psc->particles)->vmprts;
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(psc->push_particles)->vpushp;

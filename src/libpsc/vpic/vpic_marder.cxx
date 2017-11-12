@@ -36,16 +36,5 @@ void
 vpic_marder_run(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
 		struct vpic_mparticles *vmprts, int step)
 {
-  // Divergence clean e
-  int clean_div_e_interval = vmarder->clean_div_e_interval;
-  if (clean_div_e_interval > 0 && step % clean_div_e_interval == 0) {
-    vmarder->clean_div_e(vmflds, vmprts);
-  }
-  
-  // Divergence clean b
-  int clean_div_b_interval = vmarder->clean_div_b_interval;
-  if (clean_div_b_interval > 0 && step % clean_div_b_interval == 0) {
-    vmarder->clean_div_b(vmflds);
-  }
 }
 

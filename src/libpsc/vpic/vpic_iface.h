@@ -9,6 +9,8 @@ extern "C" {
 }
 #endif
 
+struct vpic_mparticles;
+
 // ----------------------------------------------------------------------
 // vpic_mfields
 
@@ -43,11 +45,18 @@ void vpic_mfields_ctor_from_simulation_fields(struct vpic_mfields *vmflds);
 void vpic_mfields_ctor_from_simulation_hydro(struct vpic_mfields *vmflds);
 float *vpic_mfields_get_data(struct vpic_mfields *mflds, int *ib, int *im);
 double vpic_mfields_synchronize_tang_e_norm_b(struct vpic_mfields *mflds);
+void vpic_mfields_compute_div_b_err(struct vpic_mfields *vmflds);
+double vpic_mfields_compute_rms_div_b_err(struct vpic_mfields *vmflds);
+void vpic_mfields_clean_div_b(struct vpic_mfields *vmflds);
+void vpic_mfields_compute_div_e_err(struct vpic_mfields *vmflds);
+double vpic_mfields_compute_rms_div_e_err(struct vpic_mfields *vmflds);
+void vpic_mfields_clean_div_e(struct vpic_mfields *vmflds);
+void vpic_mfields_clear_rhof(struct vpic_mfields *vmflds);
+void vpic_mfields_accumulate_rho_p(struct vpic_mfields *vmflds, struct vpic_mparticles *mprts);
+void vpic_mfields_synchronize_rho(struct vpic_mfields *vmflds);
 
 // ----------------------------------------------------------------------
 // vpic_mparticles
-
-struct vpic_mparticles;
 
 struct vpic_mparticles_prt {
   float dx[3];

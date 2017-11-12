@@ -166,6 +166,90 @@ psc_mfields_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
   return ops->synchronize_tang_e_norm_b(mflds);
 }
 
+void
+psc_mfields_compute_div_b_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->compute_div_b_err);
+  ops->compute_div_b_err(mflds);
+}
+
+double
+psc_mfields_compute_rms_div_b_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->compute_rms_div_b_err);
+  return ops->compute_rms_div_b_err(mflds);
+}
+
+void
+psc_mfields_clean_div_b(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->clean_div_b);
+  ops->clean_div_b(mflds);
+}
+
+void
+psc_mfields_compute_div_e_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->compute_div_e_err);
+  ops->compute_div_e_err(mflds);
+}
+
+double
+psc_mfields_compute_rms_div_e_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->compute_rms_div_e_err);
+  return ops->compute_rms_div_e_err(mflds);
+}
+
+void
+psc_mfields_clean_div_e(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->clean_div_e);
+  ops->clean_div_e(mflds);
+}
+
+void
+psc_mfields_clear_rhof(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->clear_rhof);
+  ops->clear_rhof(mflds);
+}
+
+void
+psc_mfields_accumulate_rho_p(struct psc_mfields *mflds,
+			     struct psc_mparticles *mprts)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->accumulate_rho_p);
+  ops->accumulate_rho_p(mflds, mprts);
+}
+
+void
+psc_mfields_synchronize_rho(struct psc_mfields *mflds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->synchronize_rho);
+  ops->synchronize_rho(mflds);
+}
+
+// ----------------------------------------------------------------------
+
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
 {

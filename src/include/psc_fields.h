@@ -23,6 +23,8 @@ struct psc_mfields {
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
 
+struct psc_mparticles;
+
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
   void (*zero_comp)(struct psc_mfields *mflds, int m);
@@ -34,6 +36,15 @@ struct psc_mfields_ops {
   double (*max_comp)(struct psc_mfields *mflds, int m);
 
   double (*synchronize_tang_e_norm_b)(struct psc_mfields *mflds);
+  void (*compute_div_b_err)(struct psc_mfields *mflds);
+  double (*compute_rms_div_b_err)(struct psc_mfields *mflds);
+  void (*clean_div_b)(struct psc_mfields *mflds);
+  void (*compute_div_e_err)(struct psc_mfields *mflds);
+  double (*compute_rms_div_e_err)(struct psc_mfields *mflds);
+  void (*clean_div_e)(struct psc_mfields *mflds);
+  void (*clear_rhof)(struct psc_mfields *mflds);
+  void (*accumulate_rho_p)(struct psc_mfields *mflds, struct psc_mparticles *mprts);
+  void (*synchronize_rho)(struct psc_mfields *mflds);
 };
 
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
@@ -62,6 +73,15 @@ void psc_mfields_put_as(struct psc_mfields *mflds,
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
 
 double psc_mfields_synchronize_tang_e_norm_b(struct psc_mfields *mflds);
+void psc_mfields_compute_div_b_err(struct psc_mfields *mflds);
+double psc_mfields_compute_rms_div_b_err(struct psc_mfields *mflds);
+void psc_mfields_clean_div_b(struct psc_mfields *mflds);
+void psc_mfields_compute_div_e_err(struct psc_mfields *mflds);
+double psc_mfields_compute_rms_div_e_err(struct psc_mfields *mflds);
+void psc_mfields_clean_div_e(struct psc_mfields *mflds);
+void psc_mfields_clear_rhof(struct psc_mfields *mflds);
+void psc_mfields_accumulate_rho_p(struct psc_mfields *mflds, struct psc_mparticles *mprts);
+void psc_mfields_synchronize_rho(struct psc_mfields *mflds);
 
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;

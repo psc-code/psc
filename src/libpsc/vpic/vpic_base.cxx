@@ -99,10 +99,6 @@ void vpic_simulation_init2(vpic_push_particles *vpushp, vpic_mfields *vmflds,
   double err;
   // Do some consistency checks on user initialized fields
 
-  if (simulation->rank() == 0) MESSAGE(( "Checking interdomain synchronization" ));
-  err = vmflds->synchronize_tang_e_norm_b();
-  if( simulation->rank()==0 ) MESSAGE(( "Error = %e (arb units)", err ));
-  
   if (simulation->rank() == 0) MESSAGE(( "Checking magnetic field divergence" ));
   vmflds->compute_div_b_err();
   err = vmflds->compute_rms_div_b_err();

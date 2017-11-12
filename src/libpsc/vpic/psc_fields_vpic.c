@@ -3,6 +3,7 @@
 
 #include "psc_fields_c.h"
 #include "psc.h"
+#include "psc_particles_vpic.h"
 
 #include "mrc_domain.h"
 #include "mrc_bits.h"
@@ -105,7 +106,7 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 }
 
 // ----------------------------------------------------------------------
-// psc_mfields_vpic_synchronize_tang_e_norm_b
+// forward to vmflds
 
 static double
 psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
@@ -113,6 +114,80 @@ psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
 
   return vpic_mfields_synchronize_tang_e_norm_b(vmflds);
+}
+
+static void
+psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_compute_div_b_err(vmflds);
+}
+
+static double
+psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  return vpic_mfields_compute_rms_div_b_err(vmflds);
+}
+
+static void
+psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_clean_div_b(vmflds);
+}
+
+static void
+psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_compute_div_e_err(vmflds);
+}
+
+static double
+psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  return vpic_mfields_compute_rms_div_e_err(vmflds);
+}
+
+static void
+psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_clean_div_e(vmflds);
+}
+
+static void
+psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_clear_rhof(vmflds);
+}
+
+static void
+psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
+				  struct psc_mparticles *mprts)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+
+  vpic_mfields_accumulate_rho_p(vmflds, vmprts);
+}
+
+static void
+psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
+{
+  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
+
+  vpic_mfields_synchronize_rho(vmflds);
 }
 
 // ======================================================================
@@ -215,6 +290,15 @@ struct psc_mfields_ops psc_mfields_vpic_ops = {
   .axpy_comp             = psc_mfields_vpic_axpy_comp,
 #endif
   .synchronize_tang_e_norm_b = psc_mfields_vpic_synchronize_tang_e_norm_b,
+  .compute_div_b_err         = psc_mfields_vpic_compute_div_b_err,
+  .compute_rms_div_b_err     = psc_mfields_vpic_compute_rms_div_b_err,
+  .clean_div_b               = psc_mfields_vpic_clean_div_b,
+  .compute_div_e_err         = psc_mfields_vpic_compute_div_e_err,
+  .compute_rms_div_e_err     = psc_mfields_vpic_compute_rms_div_e_err,
+  .clean_div_e               = psc_mfields_vpic_clean_div_e,
+  .clear_rhof                = psc_mfields_vpic_clear_rhof,
+  .accumulate_rho_p          = psc_mfields_vpic_accumulate_rho_p,
+  .synchronize_rho           = psc_mfields_vpic_synchronize_rho,
 };
 
 

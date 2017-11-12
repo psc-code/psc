@@ -12,7 +12,6 @@
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
-#include "vpic_marder.h"
 
 #include "vpic.h"
 
@@ -267,41 +266,6 @@ void vpic_push_fields_advance_b(struct vpic_mfields *vmflds, double frac)
 void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac)
 {
   TIC FAK->advance_e( vmflds->field_array, frac ); TOC( advance_e, 1 );
-}
-
-// ======================================================================
-// vpic_marder
-
-void vpic_marder::clean_div_e(vpic_mfields *vmflds, vpic_mparticles *vmprts)
-{
-  if( rank()==0 ) MESSAGE(( "Divergence cleaning electric field" ));
-
-  vmflds->clear_rhof();
-  vmflds->accumulate_rho_p(vmprts);
-  vmflds->synchronize_rho();
-  
-  for( int round=0; round<num_div_e_round; round++ ) {
-    vmflds->compute_div_e_err();
-    if( round==0 || round==num_div_e_round-1 ) {
-      double err = vmflds->compute_rms_div_e_err();
-      if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
-    }
-    vmflds->clean_div_e();
-  }
-}
-
-void vpic_marder::clean_div_b(vpic_mfields *vmflds)
-{
-  if( rank()==0 ) MESSAGE(( "Divergence cleaning magnetic field" ));
-  
-  for( int round=0; round<num_div_b_round; round++ ) {
-    vmflds->compute_div_b_err();
-    if( round==0 || round==num_div_b_round-1 ) {
-      double err = vmflds->compute_rms_div_b_err();
-      if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
-    }
-    vmflds->clean_div_b();
-  }
 }
 
 // ======================================================================
