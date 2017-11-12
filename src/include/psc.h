@@ -42,8 +42,6 @@ enum {
   JXI, JYI, JZI,
   EX , EY , EZ ,
   HX , HY , HZ ,
-  DX , DY , DZ ,
-  BX , BY , BZ ,
   NR_FIELDS,
 };
 
