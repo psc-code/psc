@@ -465,6 +465,7 @@ static void
 _psc_setup(struct psc *psc)
 {
   psc_method_do_setup(psc->method, psc);
+  psc_method_setup_fields(psc->method, psc);
 
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);

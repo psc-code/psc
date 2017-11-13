@@ -104,8 +104,16 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 
   // -- set particles x^{n+1/2}, p^{n+1/2}
   psc_setup_partition_and_particles(psc);
+}
 
-  // -- set fields E^{n+1/2}, B^{n+1/2}
+// ----------------------------------------------------------------------
+// psc_method_vpic_setup_fields
+
+static void
+psc_method_vpic_setup_fields(struct psc_method *method, struct psc *psc)
+{
+  // set fields E^{n+1/2}, B^{n+1/2}
+
   // create fields
   psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
   psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
@@ -218,6 +226,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
 struct psc_method_ops psc_method_ops_vpic = {
   .name                = "vpic",
   .do_setup            = psc_method_vpic_do_setup,
+  .setup_fields        = psc_method_vpic_setup_fields,
   .initialize          = psc_method_vpic_initialize,
   .output              = psc_method_vpic_output,
 };
