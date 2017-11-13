@@ -1,14 +1,12 @@
 
-#ifndef PSC_PARTICLE_SINGLE_BY_KIND_H
-#define PSC_PARTICLE_SINGLE_BY_KIND_H
+#ifndef PSC_PARTICLES_SINGLE_BY_KIND_H
+#define PSC_PARTICLES_SINGLE_BY_KIND_H
 
 #include "psc_particles_private.h"
 
 #include <psc.h>
 
-#define PTYPE PTYPE_SINGLE_BY_KIND
-#include "psc_particle_buf_common.h"
-#undef PTYPE
+#include "psc_particle_single_by_kind.h"
 
 struct psc_mparticles_single_by_kind {
   struct bk_mparticles *bkmprts;

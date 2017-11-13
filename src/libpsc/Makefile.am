@@ -1,5 +1,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 SUBDIRS = \
 	psc_balance \
@@ -93,6 +94,7 @@ libpsc_la_SOURCES = \
 	psc_particles_double.c \
 	psc_particles_single_by_block.c \
 	psc_particles_single_by_kind.c \
+	bk_mparticles.cxx \
 	psc.c \
 	psc_method.c \
 	psc_method_default.c \
