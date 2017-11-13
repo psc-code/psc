@@ -151,8 +151,8 @@ psc_harris_setup_sub(struct psc *psc)
 
 #if 0
   double cfl_req   = 0.99;  // How close to Courant should we try to run
-#endif
   double wpedt_max = 0.36;  // Max dt allowed if Courant not too restrictive
+#endif
 #if 0
   double damp      = 0.0;   // Level of radiation damping
   int rng_seed     = 1;     // Random number seed increment
