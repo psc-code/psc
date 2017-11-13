@@ -48,6 +48,60 @@ void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
   free(bkmprts->buf);
 }
 
+// ----------------------------------------------------------------------
+// bk_mparticles_reserve_all
+
+void bk_mparticles_reserve_all(struct bk_mparticles *bkmprts,
+			       int n_prts_by_patch[])
+{
+  for (int p = 0; p < bkmprts->n_patches; p++) {
+    PARTICLE_BUF(reserve)(&bkmprts->buf[p], n_prts_by_patch[p]);
+  }
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles_resize_all
+
+void bk_mparticles_resize_all(struct bk_mparticles *bkmprts,
+			       int n_prts_by_patch[])
+{
+  for (int p = 0; p < bkmprts->n_patches; p++) {
+    PARTICLE_BUF(resize)(&bkmprts->buf[p], n_prts_by_patch[p]);
+  }
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles_get_size_all
+
+void bk_mparticles_get_size_all(struct bk_mparticles *bkmprts,
+				int n_prts_by_patch[])
+{
+  for (int p = 0; p < bkmprts->n_patches; p++) {
+    n_prts_by_patch[p] = PARTICLE_BUF(size)(&bkmprts->buf[p]);
+  }
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles_get_n_prts
+
+int bk_mparticles_get_n_prts(struct bk_mparticles *bkmprts)
+{
+  int n_prts = 0;
+  for (int p = 0; p < bkmprts->n_patches; p++) {
+    n_prts += PARTICLE_BUF(size)(&bkmprts->buf[p]);
+  }
+  return n_prts;
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles_at_ptr
+
+particle_single_by_kind_t *
+bk_mparticles_at_ptr(struct bk_mparticles *bkmprts, int p, int n)
+{
+  return PARTICLE_BUF(at_ptr)(&bkmprts->buf[p], n);
+}
+
 // ======================================================================
 // psc_mparticles: subclass "single_by_kind"
 
@@ -75,59 +129,49 @@ PFX(setup)(struct psc_mparticles *mprts)
 static void
 PFX(destroy)(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  bk_mparticles_dtor(sub->bkmprts);
+  bk_mparticles_dtor(bkmprts);
 }
 
 static void
 PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    psc_particle_single_by_kind_buf_reserve(&sub->bkmprts->buf[p], n_prts_by_patch[p]);
-  }
+  bk_mparticles_reserve_all(bkmprts, n_prts_by_patch);
 }
 
 static void
 PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    PARTICLE_BUF(resize)(&sub->bkmprts->buf[p], n_prts_by_patch[p]);
-  }
+  bk_mparticles_resize_all(bkmprts, n_prts_by_patch);
 }
 
 static void
 PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts_by_patch[p] = PARTICLE_BUF(size)(&sub->bkmprts->buf[p]);
-  }
+  bk_mparticles_get_size_all(bkmprts, n_prts_by_patch);
 }
 
 static unsigned int
 PFX(get_nr_particles)(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  int n_prts = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts += PARTICLE_BUF(size)(&sub->bkmprts->buf[p]);
-  }
-  return n_prts;
+  return bk_mparticles_get_n_prts(bkmprts);
 }
 
 particle_single_by_kind_t *
 PFX(get_one)(struct psc_mparticles *mprts, int p, unsigned int n)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  return PARTICLE_BUF(at_ptr)(&sub->bkmprts->buf[p], n);
+  return bk_mparticles_at_ptr(bkmprts, p, n);
 }
 
 // ----------------------------------------------------------------------
