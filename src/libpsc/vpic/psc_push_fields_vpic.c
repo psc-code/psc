@@ -17,7 +17,8 @@ psc_push_fields_vpic_push_mflds_H(struct psc_push_fields *push,
 
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
   vpic_push_fields_advance_b(vmflds, frac);
-  
+
+  // vpic updates H
   psc_mfields_put_as(mflds, mflds_base, HX, HX + 3);
 }
 
@@ -35,7 +36,8 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
   vpic_push_fields_advance_e(vmflds, frac);
   vpic_field_injection(); // FIXME, this isn't the place, should have its own psc_field_injection
 
-  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
+  // vpic updates E, TCA, and B ghost points FIXME 9 == TCAX
+  psc_mfields_put_as(mflds, mflds_base, EX, 9 + 3);
 }
 
 // ----------------------------------------------------------------------

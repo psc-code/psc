@@ -79,7 +79,8 @@ psc_marder_vpic_run(struct psc_marder *marder,
     mpi_printf(psc_marder_comm(marder), "Domain desynchronization error = %e (arb units)\n", err);
   }
 
-  psc_mfields_put_as(mflds, mflds_base, EX, HX + 3);
+  // vpic definitely updates E, B, but also rhof
+  psc_mfields_put_as(mflds, mflds_base, EX, 16);
 }
 
 // ----------------------------------------------------------------------
