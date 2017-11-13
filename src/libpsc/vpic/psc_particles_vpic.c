@@ -1,6 +1,8 @@
 
 #include "psc_particles_vpic.h"
 
+#include <psc_particles_single_by_kind.h>
+
 #include "vpic_iface.h"
 
 // ======================================================================
@@ -33,6 +35,25 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
     }
     ctx.dVi = 1.f / (ctx.dx[0] * ctx.dx[1] * ctx.dx[2]);
     vpic_mparticles_get_particles(vmprts, n_prts, off, put_particle, &ctx);
+
+    off += n_prts;
+  }
+}
+
+static void
+copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
+	  void (*get_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
+{
+  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+
+  int n_prts_by_patch[mprts->nr_patches];
+  vpic_mparticles_get_size_all(vmprts, mprts->nr_patches, n_prts_by_patch);
+  
+  unsigned int off = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    int n_prts = n_prts_by_patch[p];
+    struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
+    vpic_mparticles_set_particles(vmprts, n_prts, off, get_particle, &ctx);
 
     off += n_prts;
   }
@@ -79,12 +100,67 @@ psc_mparticles_vpic_copy_to_single(struct psc_mparticles *mprts,
   copy_to(mprts, mprts_single, put_particle_single);
 }
 
+// ======================================================================
+// conversion to "single_by_kind"
+
+static void
+put_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+{
+  struct copy_ctx *ctx = _ctx;
+  particle_single_by_kind_t *part = psc_mparticles_single_by_kind_get_one(ctx->mprts, ctx->p, n);
+
+  assert(prt->kind < ppsc->nr_kinds);
+  part->dx[0] = prt->dx[0];
+  part->dx[1] = prt->dx[1];
+  part->dx[2] = prt->dx[2];
+  part->i     = prt->i;
+  part->ux[0] = prt->ux[0];
+  part->ux[1] = prt->ux[1];
+  part->ux[2] = prt->ux[2];
+  part->w     = prt->w;
+  part->kind  = prt->kind;
+}
+
+static void
+get_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+{
+  struct copy_ctx *ctx = _ctx;
+  particle_single_by_kind_t *part = psc_mparticles_single_by_kind_get_one(ctx->mprts, ctx->p, n);
+
+  assert(part->kind < ppsc->nr_kinds);
+  prt->dx[0] = part->dx[0];
+  prt->dx[1] = part->dx[1];
+  prt->dx[2] = part->dx[2];
+  prt->i     = part->i;
+  prt->ux[0] = part->ux[0];
+  prt->ux[1] = part->ux[1];
+  prt->ux[2] = part->ux[2];
+  prt->w     = part->w;
+  prt->kind  = part->kind;
+}
+
+static void
+psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
+				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
+{
+  copy_from(mprts, mprts_single_by_kind, get_particle_single_by_kind);
+}
+
+static void
+psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
+				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
+{
+  copy_to(mprts, mprts_single_by_kind, put_particle_single_by_kind);
+}
+
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
 static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_vpic_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_mparticles_vpic_copy_from_single),
+  MRC_OBJ_METHOD("copy_to_single_by_kind"  , psc_mparticles_vpic_copy_to_single_by_kind),
+  MRC_OBJ_METHOD("copy_from_single_by_kind", psc_mparticles_vpic_copy_from_single_by_kind),
   {}
 };
 

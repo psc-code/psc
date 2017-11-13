@@ -189,7 +189,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   mpi_printf(psc_comm(psc), "Uncentering particles\n");
   psc_push_particles_stagger(psc->push_particles, mprts, mflds);
 
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  psc_mparticles_put_as(mprts, mprts_base, 0);
   psc_mfields_put_as(mflds, mflds_base, 0, VPIC_MFIELDS_N_COMP);
 
   // First output / stats

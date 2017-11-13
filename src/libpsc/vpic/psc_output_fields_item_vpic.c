@@ -55,7 +55,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_mfields_set_param_int3(mflds_hydro, "ibn", (int [3]) { 1, 1, 1});
   psc_mfields_setup(mflds_hydro);
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY); // FIXME, really need to copy
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
   
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
     struct vpic_mfields *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds;
