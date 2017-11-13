@@ -17,7 +17,14 @@ psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
 {
   psc_setup_coeff(psc);
   psc_setup_domain(psc);
+}
 
+// ----------------------------------------------------------------------
+// psc_method_default_setup_partition_and_particles
+
+static void
+psc_method_default_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
+{
   // set particles x^{n+1/2}, p^{n+1/2}
   psc_setup_partition_and_particles(psc);
 }
@@ -61,9 +68,10 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 // psc_method "default"
 
 struct psc_method_ops psc_method_ops_default = {
-  .name                = "default",
-  .do_setup            = psc_method_default_do_setup,
-  .setup_fields        = psc_method_default_setup_fields,
-  .initialize          = psc_method_default_initialize,
-  .output              = psc_method_default_output,
+  .name                          = "default",
+  .do_setup                      = psc_method_default_do_setup,
+  .setup_fields                  = psc_method_default_setup_fields,
+  .setup_partition_and_particles = psc_method_default_setup_partition_and_particles,
+  .initialize                    = psc_method_default_initialize,
+  .output                        = psc_method_default_output,
 };

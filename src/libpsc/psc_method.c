@@ -17,6 +17,18 @@ psc_method_do_setup(struct psc_method *method, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_method_setup_partition_and_particles
+
+void
+psc_method_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
+{
+  struct psc_method_ops *ops = psc_method_ops(method);
+  assert(ops && ops->setup_partition_and_particles);
+
+  ops->setup_partition_and_particles(method, psc);
+}
+
+// ----------------------------------------------------------------------
 // psc_method_setup_fields
 
 void

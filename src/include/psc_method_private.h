@@ -12,6 +12,7 @@ struct psc_method_ops {
   MRC_SUBCLASS_OPS(struct psc_method);
   void (*do_setup)(struct psc_method *method, struct psc *psc);
   void (*setup_fields)(struct psc_method *method, struct psc *psc);
+  void (*setup_partition_and_particles)(struct psc_method *method, struct psc *psc);
   void (*initialize)(struct psc_method *method, struct psc *psc);
   void (*output)(struct psc_method *method, struct psc *psc);
 };

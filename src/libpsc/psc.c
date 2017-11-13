@@ -482,6 +482,9 @@ _psc_setup(struct psc *psc)
 {
   psc_method_do_setup(psc->method, psc);
 
+  psc_method_setup_partition_and_particles(psc->method, psc);
+
+  // create and set up base mflds
   psc_setup_base_mflds(psc);
   // set i.c. on E^{n+1/2}, B^{n+1/2}
   psc_method_setup_fields(psc->method, psc);
