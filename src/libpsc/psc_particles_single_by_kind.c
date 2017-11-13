@@ -44,6 +44,13 @@ void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
 // ======================================================================
 // psc_mparticles: subclass "single_by_kind"
 
+struct psc_mparticles_single_by_kind_patch {
+  psc_particle_single_by_kind_buf_t buf;
+
+  int b_mx[3];
+  particle_single_by_kind_real_t b_dxi[3];
+};
+
 static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
   {}
 };
@@ -136,6 +143,26 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
     n_prts += PARTICLE_BUF(size)(&patch->buf);
   }
   return n_prts;
+}
+
+void
+psc_mparticles_single_by_kind_patch_reserve(struct psc_mparticles *mprts, int p,
+					    unsigned int new_capacity)
+{
+  struct psc_mparticles_single_by_kind *sub = psc_mparticles_single_by_kind(mprts);
+  struct psc_mparticles_single_by_kind_patch *patch = &sub->patch[p];
+
+  psc_particle_single_by_kind_buf_reserve(&patch->buf, new_capacity);
+}
+
+particle_single_by_kind_t *
+psc_mparticles_single_by_kind_get_one(struct psc_mparticles *mprts, int p, unsigned int n)
+{
+  assert(psc_mparticles_ops(mprts) == &psc_mparticles_single_by_kind_ops);
+  struct psc_mparticles_single_by_kind *sub = psc_mparticles_single_by_kind(mprts);
+  struct psc_mparticles_single_by_kind_patch *patch = &sub->patch[p];
+
+  return psc_particle_single_by_kind_buf_at_ptr(&patch->buf, n);
 }
 
 // ----------------------------------------------------------------------
