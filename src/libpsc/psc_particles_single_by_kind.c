@@ -8,6 +8,40 @@
 #define PARTICLE_BUF(x) psc_particle_single_by_kind_buf_ ## x
 
 // ======================================================================
+// bk_mparticles
+
+struct bk_mparticles {
+  int n_patches;
+  PARTICLE_BUF(t) **buf;
+};
+
+// ----------------------------------------------------------------------
+// bk_mparticles_create
+
+struct bk_mparticles *bk_mparticles_create()
+{
+  return calloc(1, sizeof(struct bk_mparticles));
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles_ctor
+
+void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches,
+			PARTICLE_BUF(t) **_buf)
+{
+  bkmprts->n_patches = n_patches;
+  bkmprts->buf = calloc(n_patches, sizeof(*bkmprts->buf));
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles_dtor
+
+void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
+{
+  free(bkmprts->buf);
+}
+
+// ======================================================================
 // psc_mparticles: subclass "single_by_kind"
 
 static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
@@ -58,6 +92,14 @@ PFX(setup)(struct psc_mparticles *mprts)
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p);
   }
+
+  sub->bkmprts = bk_mparticles_create(); // FIXME, leaked
+
+  PARTICLE_BUF(t) *buf[mprts->nr_patches];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    buf[p] = &sub->patch[p].buf;
+  }
+  bk_mparticles_ctor(sub->bkmprts, mprts->nr_patches, buf);
 }
 
 static void
@@ -69,6 +111,8 @@ PFX(destroy)(struct psc_mparticles *mprts)
     PFX(destroy_patch)(mprts, p);
   }
   free(sub->patch);
+
+  bk_mparticles_dtor(sub->bkmprts);
 }
 
 static void

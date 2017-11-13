@@ -261,6 +261,10 @@ struct psc_mparticles_PTYPE_patch {
 
 struct psc_mparticles_PTYPE {
   struct psc_mparticles_PTYPE_patch *patch;
+
+#if PTYPE == PTYPE_SINGLE_BY_KIND
+  struct bk_mparticles *bkmprts;
+#endif
 };
 
 // ----------------------------------------------------------------------
