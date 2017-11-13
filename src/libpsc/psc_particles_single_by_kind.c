@@ -46,9 +46,6 @@ void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
 
 struct psc_mparticles_single_by_kind_patch {
   psc_particle_single_by_kind_buf_t buf;
-
-  int b_mx[3];
-  particle_single_by_kind_real_t b_dxi[3];
 };
 
 static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
@@ -70,11 +67,6 @@ PFX(setup)(struct psc_mparticles *mprts)
     struct PFX(patch) *patch = &sub->patch[p];
     
     PARTICLE_BUF(ctor)(&patch->buf);
-    
-    for (int d = 0; d < 3; d++) {
-      patch->b_mx[d] = ppsc->patch[p].ldims[d];
-      patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
-    }
   }
 
   sub->bkmprts = bk_mparticles_create(); // FIXME, leaked
