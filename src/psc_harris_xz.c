@@ -54,7 +54,6 @@ struct psc_harris {
   // params
   
   // state
-#if 0
   int n_global_patches;
 
   double Npe_sheet, Npe_back, Npe;
@@ -73,7 +72,6 @@ struct psc_harris {
   double dbx, dbz;
   double Lx, Ly, Lz;
   double Lpert;
-#endif
 };
 
 #define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
@@ -131,17 +129,16 @@ psc_harris_create(struct psc *psc)
   psc_marder_set_param_int(psc->marder, "every_step", 1);
 }
 
-#if 0
 static inline double trunc_granular( double a, double b )
 {
   return b * (int)(a/b);
 }
 
 // ----------------------------------------------------------------------
-// psc_harris_setup
+// psc_harris_setup_sub
 
 static void
-psc_harris_setup(struct psc *psc)
+psc_harris_setup_sub(struct psc *psc)
 {
   struct psc_harris *sub = psc_harris(psc);
 
@@ -246,14 +243,6 @@ psc_harris_setup(struct psc *psc)
   sub->cs = cs;
   sub->sn = sn;
 
-  psc->domain.length[0] = Lx;
-  psc->domain.length[1] = Ly;
-  psc->domain.length[2] = Lz;
-
-  psc->domain.corner[0] = 0.;
-  psc->domain.corner[1] = -.5 * Ly;
-  psc->domain.corner[2] = -.5 * Lz;
-  
   double gdri = 1/sqrt(1-vdri*vdri/(c*c));  // gamma of ion drift frame
   double gdre = 1/sqrt(1-vdre*vdre/(c*c)); // gamma of electron drift frame
   double udri = vdri*gdri;                 // 4-velocity of ion drift frame
@@ -283,15 +272,23 @@ psc_harris_setup(struct psc *psc)
   mpi_printf(comm, "weight_s = %g, weight_b = %g\n",
 	     sub->weight_s, sub->weight_b);
   
-  // initializes fields, particles, etc.
-  psc_setup_super(psc);
-
+#if 0
   if (wpe*psc->dt > wpedt_max) {
     psc->dt = wpedt_max/wpe;  // override timestep if plasma frequency limited
     mprintf("::: dt reduced to %g\n", psc->dt);
   }
+
+  psc->domain.length[0] = Lx;
+  psc->domain.length[1] = Ly;
+  psc->domain.length[2] = Lz;
+
+  psc->domain.corner[0] = 0.;
+  psc->domain.corner[1] = -.5 * Ly;
+  psc->domain.corner[2] = -.5 * Lz;
   
-  //  psc->dt = 0.0714471;
+  // initializes fields, particles, etc.
+  psc_setup_super(psc);
+#endif
 
 #if 0
   MPI_Comm comm = psc_comm(psc);
@@ -313,7 +310,6 @@ psc_harris_setup(struct psc *psc)
   mpi_printf(comm, "lambda_De = %g\n", sqrt(harris->Te));
 #endif
 }
-#endif
 
 // ----------------------------------------------------------------------
 // psc_harris_setup
@@ -321,6 +317,8 @@ psc_harris_setup(struct psc *psc)
 static void
 psc_harris_setup(struct psc *psc)
 {
+  psc_harris_setup_sub(psc);
+  
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 }
