@@ -31,7 +31,9 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
   // Fields are updated ... load the interpolator for next time step and
   // particle diagnostics in user_diagnostics if there are any particle
   // species to worry about
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
+
+  // needs E, B
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 6);
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
@@ -50,7 +52,8 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 				   struct psc_mparticles *mprts_base,
 				   struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
+  // needs E, B (not really, because they're already in interpolator), rhob?
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 6);
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
@@ -58,6 +61,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 
   vpic_push_particles_push_mprts(vpushp, vmprts, vmflds);
 
+  // update jf FIXME: rhob too, probably, depending on b.c.
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
@@ -69,7 +73,8 @@ psc_push_particles_vpic_stagger_mprts(struct psc_push_particles *push,
 				      struct psc_mparticles *mprts_base,
 				      struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
+  // needs E, B
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 6);
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;
@@ -77,6 +82,7 @@ psc_push_particles_vpic_stagger_mprts(struct psc_push_particles *push,
 
   vpic_push_particles_stagger_mprts(vpushp, vmprts, vmflds);
 
+  // updates no fields
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
 
