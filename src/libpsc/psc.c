@@ -466,12 +466,6 @@ _psc_setup(struct psc *psc)
 {
   psc_method_do_setup(psc->method, psc);
 
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc);
-
-  // set particles x^{n+1/2}, p^{n+1/2}
-  psc_setup_partition_and_particles(psc);
-  psc_setup_fields(psc);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
 #endif

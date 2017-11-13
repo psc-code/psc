@@ -98,6 +98,14 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
   mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d, ibn = [%d,%d,%d]\n",
 	     psc->n_state_fields, psc->ibn[0], psc->ibn[1], psc->ibn[2]);
+
+  psc_setup_coeff(psc);
+  psc_setup_domain(psc);
+
+  // set particles x^{n+1/2}, p^{n+1/2}
+  psc_setup_partition_and_particles(psc);
+  // set fields E^{n+1/2}, B^{n+1/2}
+  psc_setup_fields(psc);
 }
 
 // ----------------------------------------------------------------------

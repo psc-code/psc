@@ -15,6 +15,13 @@
 static void
 psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
 {
+  psc_setup_coeff(psc);
+  psc_setup_domain(psc);
+
+  // set particles x^{n+1/2}, p^{n+1/2}
+  psc_setup_partition_and_particles(psc);
+  // set fields E^{n+1/2}, B^{n+1/2}
+  psc_setup_fields(psc);
 }
 
 // ----------------------------------------------------------------------
