@@ -104,8 +104,17 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 
   // set particles x^{n+1/2}, p^{n+1/2}
   psc_setup_partition_and_particles(psc);
+
   // set fields E^{n+1/2}, B^{n+1/2}
   psc_setup_fields(psc);
+
+  if (strcmp(psc_mfields_type(psc->flds), "vpic") != 0) {
+    // right now, the vpic-internal fields are initialized, but the general logic expects
+    // the base fields to be initialized, so we need to copy them over first
+
+    struct psc_mfields *mflds_vpic = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
+    psc_mfields_put_as(mflds_vpic, psc->flds, 0, VPIC_MFIELDS_N_COMP);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -115,14 +124,6 @@ static void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 {
   struct psc_mfields *mflds_base = psc->flds;
-  if (strcmp(psc_mfields_type(mflds_base), "vpic") != 0) {
-    // right now, the vpic-internal fields are initialized, but the general logic expects
-    // the base fields to be initialized, so we need to copy them over first
-
-    struct psc_mfields *mflds_vpic = psc_mfields_get_as(mflds_base, "vpic", 0, 0);
-    psc_mfields_put_as(mflds_vpic, mflds_base, 0, VPIC_MFIELDS_N_COMP);
-  }
-  
   struct psc_mparticles *mprts = psc->particles;
   psc_mfields_view(psc->flds);
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, VPIC_MFIELDS_N_COMP);
