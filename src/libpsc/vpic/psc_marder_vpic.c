@@ -57,28 +57,36 @@ psc_marder_vpic_run(struct psc_marder *marder,
 		    struct psc_mparticles *mprts_base)
 {
   struct psc *psc = ppsc; // FIXME
-  // FIXME: don't get_as / put_as if we aren't doing anything
+
+  int clean_div_e_interval = marder->clean_div_e_interval;
+  int clean_div_b_interval = marder->clean_div_b_interval;
+  int sync_shared_interval = marder->sync_shared_interval;
+  bool clean_div_e = (clean_div_e_interval > 0 && psc->timestep % clean_div_e_interval == 0);
+  bool clean_div_b = (clean_div_b_interval > 0 && psc->timestep % clean_div_b_interval == 0);
+  bool sync_shared = (sync_shared_interval > 0 && psc->timestep % sync_shared_interval == 0);
+
+  if (!(clean_div_e || clean_div_b || sync_shared)) {
+    return;
+  }
+  
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, VPIC_MFIELDS_N_COMP);
 
   // Divergence clean e
-  int clean_div_e_interval = marder->clean_div_e_interval;
-  if (clean_div_e_interval > 0 && psc->timestep % clean_div_e_interval == 0) {
+  if (clean_div_e) {
     // needs E, rhof, rhob, material
     psc_marder_vpic_clean_div_e(marder, mflds, mprts_base);
     // upates E, rhof, div_e_err
   }
 
   // Divergence clean b
-  int clean_div_b_interval = marder->clean_div_b_interval;
-  if (clean_div_b_interval > 0 && psc->timestep % clean_div_b_interval == 0) {
+  if (clean_div_b) {
     // needs B
     psc_marder_vpic_clean_div_b(marder, mflds);
     // updates B, div_b_err
   }
   
   // Synchronize the shared faces
-  int sync_shared_interval = marder->sync_shared_interval;
-  if (sync_shared_interval > 0 && psc->timestep % sync_shared_interval == 0) {
+  if (sync_shared) {
     // needs E, B, TCA
     mpi_printf(psc_marder_comm(marder), "Synchronizing shared tang e, norm b\n");
     double err = psc_mfields_synchronize_tang_e_norm_b(mflds);
@@ -86,7 +94,6 @@ psc_marder_vpic_run(struct psc_marder *marder,
     // updates E, B, TCA
   }
 
-  // vpic definitely updates E, B, but also rhof
   psc_mfields_put_as(mflds, mflds_base, EX, 16);
 }
 
