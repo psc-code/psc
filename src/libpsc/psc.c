@@ -459,12 +459,31 @@ psc_setup_partition_and_particles(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_setup_base_mflds
+
+static void
+psc_setup_base_mflds(struct psc *psc)
+{
+  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
+  psc_mfields_set_name(psc->flds, "mfields");
+  psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
+  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
+  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
+  psc_mfields_setup(psc->flds);
+}
+
+// ----------------------------------------------------------------------
 // _psc_setup
 
 static void
 _psc_setup(struct psc *psc)
 {
   psc_method_do_setup(psc->method, psc);
+
+  psc_setup_base_mflds(psc);
+  // set i.c. on E^{n+1/2}, B^{n+1/2}
   psc_method_setup_fields(psc->method, psc);
 
 #ifdef USE_FORTRAN
@@ -869,23 +888,12 @@ psc_setup_fields_default(struct psc *psc)
   psc_mfields_put_as(mflds, psc->flds, JXI, HX + 3);
 }
 
-
 // ----------------------------------------------------------------------
 // psc_setup_fields
 
 void
 psc_setup_fields(struct psc *psc)
 {
-  // create fields
-  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
-  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
-  psc_mfields_set_name(psc->flds, "mfields");
-  psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
-  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
-  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
-  psc_mfields_setup(psc->flds);
-
   // type-specific other initial condition
   if (psc_ops(psc)->setup_fields) {
     psc_ops(psc)->setup_fields(psc, psc->flds);

@@ -112,32 +112,16 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 static void
 psc_method_vpic_setup_fields(struct psc_method *method, struct psc *psc)
 {
-  // set fields E^{n+1/2}, B^{n+1/2}
+  // right now, the vpic-internal fields are already initialized, but
+  // the general logic expects the base fields to be initialized, so
+  // we need to copy them over first
+  struct psc_mfields *mflds_vpic = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
+  psc_mfields_put_as(mflds_vpic, psc->flds, 0, VPIC_MFIELDS_N_COMP);
 
-  // create fields
-  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
-  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
-  psc_mfields_set_name(psc->flds, "mfields");
-  psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
-  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
-  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
-  psc_mfields_setup(psc->flds);
-
-  if (strcmp(psc_mfields_type(psc->flds), "vpic") != 0) {
-    // right now, the vpic-internal fields are initialized, but the general logic expects
-    // the base fields to be initialized, so we need to copy them over first
-
-    struct psc_mfields *mflds_vpic = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
-    psc_mfields_put_as(mflds_vpic, psc->flds, 0, VPIC_MFIELDS_N_COMP);
-  }
-
-  // type-specific other initial condition
-  if (psc_ops(psc)->setup_fields) {
-    psc_ops(psc)->setup_fields(psc, psc->flds);
-  } else {
-    psc_setup_fields_default(psc);
-  }
+  // fields may get initialized twice here -- first in deck.cxx, and
+  // then the regular PSC way.
+  // FIXME, this is kinda confusing, but not easy to do much about.
+  psc_setup_fields(psc);
 }
 
 // ----------------------------------------------------------------------
