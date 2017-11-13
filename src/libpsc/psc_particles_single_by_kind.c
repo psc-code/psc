@@ -12,7 +12,7 @@
 
 struct bk_mparticles {
   int n_patches;
-  PARTICLE_BUF(t) **buf;
+  psc_particle_single_by_kind_buf_t *buf;
 };
 
 // ----------------------------------------------------------------------
@@ -26,11 +26,14 @@ struct bk_mparticles *bk_mparticles_create()
 // ----------------------------------------------------------------------
 // bk_mparticles_ctor
 
-void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches,
-			PARTICLE_BUF(t) **_buf)
+void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches)
 {
   bkmprts->n_patches = n_patches;
+
   bkmprts->buf = calloc(n_patches, sizeof(*bkmprts->buf));
+  for (int p = 0; p < n_patches; p++) {
+    PARTICLE_BUF(ctor)(&bkmprts->buf[p]);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -38,19 +41,22 @@ void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches,
 
 void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
 {
+  for (int p = 0; p < bkmprts->n_patches; p++) {
+    // need to free structures created in ::patch_setup and ::patch_reserve
+    PARTICLE_BUF(dtor)(&bkmprts->buf[p]);
+  }
   free(bkmprts->buf);
 }
 
 // ======================================================================
 // psc_mparticles: subclass "single_by_kind"
 
-struct psc_mparticles_single_by_kind_patch {
-  psc_particle_single_by_kind_buf_t buf;
-};
-
 static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
   {}
 };
+
+void psc_mparticles_single_by_kind_patch_reserve(struct psc_mparticles *mprts, int p,
+						 unsigned int new_capacity);
 
 // ----------------------------------------------------------------------
 // psc_mparticles_sub_setup
@@ -61,35 +67,15 @@ PFX(setup)(struct psc_mparticles *mprts)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   psc_mparticles_setup_super(mprts);
-  sub->patch = calloc(mprts->nr_patches, sizeof(*sub->patch));
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    
-    PARTICLE_BUF(ctor)(&patch->buf);
-  }
-
-  sub->bkmprts = bk_mparticles_create(); // FIXME, leaked
-
-  PARTICLE_BUF(t) *buf[mprts->nr_patches];
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    buf[p] = &sub->patch[p].buf;
-  }
-  bk_mparticles_ctor(sub->bkmprts, mprts->nr_patches, buf);
+  sub->bkmprts = bk_mparticles_create();
+  bk_mparticles_ctor(sub->bkmprts, mprts->nr_patches);
 }
 
 static void
 PFX(destroy)(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    
-    // need to free structures created in ::patch_setup and ::patch_reserve
-    PARTICLE_BUF(dtor)(&patch->buf);
-  }
-  free(sub->patch);
 
   bk_mparticles_dtor(sub->bkmprts);
 }
@@ -108,8 +94,7 @@ PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    PARTICLE_BUF(resize)(&patch->buf, n_prts_by_patch[p]);
+    PARTICLE_BUF(resize)(&sub->bkmprts->buf[p], n_prts_by_patch[p]);
   }
 }
 
@@ -119,8 +104,7 @@ PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    n_prts_by_patch[p] = PARTICLE_BUF(size)(&patch->buf);
+    n_prts_by_patch[p] = PARTICLE_BUF(size)(&sub->bkmprts->buf[p]);
   }
 }
 
@@ -131,8 +115,7 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
 
   int n_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    n_prts += PARTICLE_BUF(size)(&patch->buf);
+    n_prts += PARTICLE_BUF(size)(&sub->bkmprts->buf[p]);
   }
   return n_prts;
 }
@@ -142,9 +125,8 @@ psc_mparticles_single_by_kind_patch_reserve(struct psc_mparticles *mprts, int p,
 					    unsigned int new_capacity)
 {
   struct psc_mparticles_single_by_kind *sub = psc_mparticles_single_by_kind(mprts);
-  struct psc_mparticles_single_by_kind_patch *patch = &sub->patch[p];
 
-  psc_particle_single_by_kind_buf_reserve(&patch->buf, new_capacity);
+  psc_particle_single_by_kind_buf_reserve(&sub->bkmprts->buf[p], new_capacity);
 }
 
 particle_single_by_kind_t *
@@ -152,9 +134,8 @@ psc_mparticles_single_by_kind_get_one(struct psc_mparticles *mprts, int p, unsig
 {
   assert(psc_mparticles_ops(mprts) == &psc_mparticles_single_by_kind_ops);
   struct psc_mparticles_single_by_kind *sub = psc_mparticles_single_by_kind(mprts);
-  struct psc_mparticles_single_by_kind_patch *patch = &sub->patch[p];
 
-  return psc_particle_single_by_kind_buf_at_ptr(&patch->buf, n);
+  return psc_particle_single_by_kind_buf_at_ptr(&sub->bkmprts->buf[p], n);
 }
 
 // ----------------------------------------------------------------------

@@ -11,16 +11,11 @@
 #undef PTYPE
 
 struct psc_mparticles_single_by_kind {
-  struct psc_mparticles_single_by_kind_patch *patch;
-
   struct bk_mparticles *bkmprts;
 };
 
 particle_single_by_kind_t *psc_mparticles_single_by_kind_get_one(struct psc_mparticles *mprts,
 								 int p, unsigned int n);
-
-void psc_mparticles_single_by_kind_patch_reserve(struct psc_mparticles *mprts, int p,
-						 unsigned int new_capacity);
 
 
 #endif
