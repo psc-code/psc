@@ -825,7 +825,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 // ----------------------------------------------------------------------
 // psc_setup_fields_default
 
-static void
+void
 psc_setup_fields_default(struct psc *psc)
 {
   double (*init_field)(struct psc *psc, double x[3], int m);
