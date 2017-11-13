@@ -128,7 +128,7 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 static void
 psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  assert(0);
+  mprintf("psc_mparticles_vpic_resize_all: %d\n", n_prts_by_patch[0]);
 }
 
 // ----------------------------------------------------------------------

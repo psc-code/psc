@@ -124,7 +124,10 @@ particle_PTYPE_real_fint(particle_PTYPE_real_t x)
 #elif PTYPE == PTYPE_VPIC
 
 #define MPI_PARTICLES_VPIC_REAL MPI_FLOAT
-#define psc_mparticles_vpic(prts) mrc_to_subobj(prts, struct psc_mparticles_vpic)
+#define psc_mparticles_vpic(mprts)({					\
+      assert((struct psc_mparticles_ops *) mprts->obj.ops == &psc_mparticles_vpic_ops); \
+      mrc_to_subobj(mprts, struct psc_mparticles_vpic);			\
+})
 
 #endif
 

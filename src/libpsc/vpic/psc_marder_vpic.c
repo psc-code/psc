@@ -70,13 +70,16 @@ psc_marder_vpic_run(struct psc_marder *marder,
   }
   
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, VPIC_MFIELDS_N_COMP);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY);
 
   // Divergence clean e
   if (clean_div_e) {
     // needs E, rhof, rhob, material
-    psc_marder_vpic_clean_div_e(marder, mflds, mprts_base);
+    psc_marder_vpic_clean_div_e(marder, mflds, mprts);
     // upates E, rhof, div_e_err
   }
+
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
 
   // Divergence clean b
   if (clean_div_b) {
