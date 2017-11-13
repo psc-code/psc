@@ -92,6 +92,7 @@ libpsc_la_SOURCES = \
 	psc_particles_single.c \
 	psc_particles_double.c \
 	psc_particles_single_by_block.c \
+	psc_particles_single_by_kind.c \
 	psc.c \
 	psc_method.c \
 	psc_method_default.c \

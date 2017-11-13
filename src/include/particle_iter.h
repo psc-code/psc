@@ -7,6 +7,8 @@
 
 // FIXME, abuse of this file...
 
+#ifdef particle_real_fint
+
 // ----------------------------------------------------------------------
 // find_block_position
 
@@ -18,3 +20,4 @@ particle_xi_get_block_pos(const particle_real_t xi[3], const particle_real_t b_d
   }
 }
 
+#endif

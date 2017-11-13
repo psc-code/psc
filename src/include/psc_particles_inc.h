@@ -29,6 +29,12 @@
 #define psc_mparticles_sub psc_mparticles_fortran
 #define PARTICLE_BUF(x) psc_particle_fortran_buf_ ## x
 
+#elif PSC_PARTICLES_AS_SINGLE_BY_KIND
+
+#define PFX(x) psc_mparticles_single_by_kind_ ## x
+#define psc_mparticles_sub psc_mparticles_single_by_kind
+#define PARTICLE_BUF(x) psc_particle_single_by_kind_buf_ ## x
+
 #endif
 
 static inline void

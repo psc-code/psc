@@ -80,6 +80,21 @@
 #define psc_particle_PTYPE_buf_push_back psc_particle_cuda_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_cuda_buf_at_ptr
 
+#elif PTYPE == PTYPE_SINGLE_BY_KIND
+
+#define particle_PTYPE_real_t particle_single_by_kind_real_t
+#define particle_PTYPE_t particle_single_by_kind_t
+
+#define psc_particle_PTYPE_buf_t psc_particle_single_by_kind_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_single_by_kind_buf_ctor
+#define psc_particle_PTYPE_buf_dtor psc_particle_single_by_kind_buf_dtor
+#define psc_particle_PTYPE_buf_size psc_particle_single_by_kind_buf_size
+#define psc_particle_PTYPE_buf_resize psc_particle_single_by_kind_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_single_by_kind_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_single_by_kind_buf_capacity
+#define psc_particle_PTYPE_buf_push_back psc_particle_single_by_kind_buf_push_back
+#define psc_particle_PTYPE_buf_at_ptr psc_particle_single_by_kind_buf_at_ptr
+
 #endif
 
 // ======================================================================

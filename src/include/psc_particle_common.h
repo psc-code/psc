@@ -7,6 +7,7 @@
 #define PTYPE_FORTRAN         5
 #define PTYPE_CUDA            6
 #define PTYPE_VPIC            7
+#define PTYPE_SINGLE_BY_KIND  8
 
 
 #if PTYPE == PTYPE_SINGLE
@@ -50,12 +51,19 @@
 #define particle_PTYPE_t particle_vpic_t
 #define psc_particle_PTYPE psc_particle_vpic
 
+#elif PTYPE == PTYPE_SINGLE_BY_KIND
+
+#define particle_PTYPE_real_t particle_single_by_kind_real_t
+#define particle_PTYPE_real_fint particle_single_by_kind_real_fint
+#define particle_PTYPE_t particle_single_by_kind_t
+#define psc_particle_PTYPE psc_particle_single_by_kind
+
 #endif
 
 // ----------------------------------------------------------------------
 // particle_PYTPE_real_t
 
-#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_CUDA || PTYPE == PTYPE_VPIC
+#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_CUDA || PTYPE == PTYPE_VPIC || PTYPE == PTYPE_SINGLE_BY_KIND
 
 typedef float particle_PTYPE_real_t;
 
@@ -129,6 +137,14 @@ particle_PTYPE_real_fint(particle_PTYPE_real_t x)
       mrc_to_subobj(mprts, struct psc_mparticles_vpic);			\
 })
 
+#elif PTYPE == PTYPE_SINGLE_BY_KIND
+
+#define MPI_PARTICLES_SINGLE_BY_KIND_REAL MPI_FLOAT
+#define psc_mparticles_single_by_kind(mprts)({				\
+      assert((struct psc_mparticles_ops *) mprts->obj.ops == &psc_mparticles_single_by_kind_ops); \
+      mrc_to_subobj(mprts, struct psc_mparticles_single_by_kind);	\
+})
+
 #endif
 
 // ----------------------------------------------------------------------
@@ -153,6 +169,16 @@ typedef struct psc_particle_PTYPE {
   particle_PTYPE_real_t cni;
   particle_PTYPE_real_t lni;
   particle_PTYPE_real_t wni;
+} particle_PTYPE_t;
+
+#elif PTYPE == PTYPE_SINGLE_BY_KIND
+
+typedef struct psc_particle_PTYPE {
+  particle_PTYPE_real_t dx[3];
+  int i;
+  particle_PTYPE_real_t ux[3];
+  particle_PTYPE_real_t w;
+  int kind;
 } particle_PTYPE_t;
 
 #endif
