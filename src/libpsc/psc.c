@@ -390,12 +390,17 @@ psc_setup_domain(struct psc *psc)
 {
   struct psc_domain *domain = &psc->domain;
 
-  for (int d = 0; d < 3; d++) {
-    // FIXME, old-style particle pushers need 3 ghost points still
-    psc->ibn[d] = 2;
-  }
   bool need_pml = false;
+
   for (int d = 0; d < 3; d++) {
+    if (psc->ibn[d] != 0) {
+      continue;
+    }
+    // FIXME, old-style particle pushers need 3 ghost points still
+    if (psc->ibn[d] == 0) {
+      psc->ibn[d] = 2;
+    }
+
     if (domain->gdims[d] == 1) {
       // if invariant in this direction:
       // set bnd to periodic (FIXME?)

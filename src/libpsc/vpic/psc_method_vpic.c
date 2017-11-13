@@ -92,8 +92,12 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   mpi_printf(comm, "method_vpic_do_setup: Setting dt = %g\n", psc->dt);
 
   psc->n_state_fields = VPIC_MFIELDS_N_COMP;
-  mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d\n",
-	     psc->n_state_fields);
+  // having two ghost points wouldn't really hurt, however having no ghost points
+  // in the invariant direction does cause trouble.
+  // By setting this here, it will override what otherwise happens automatically
+  psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
+  mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d, ibn = [%d,%d,%d]\n",
+	     psc->n_state_fields, psc->ibn[0], psc->ibn[1], psc->ibn[2]);
 }
 
 // ----------------------------------------------------------------------
