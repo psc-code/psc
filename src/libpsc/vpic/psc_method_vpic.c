@@ -111,6 +111,15 @@ psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct 
 {
   // set particles x^{n+1/2}, p^{n+1/2}
   psc_setup_partition_and_particles(psc);
+
+  // right now, the vpic-internal particles have been initialized by
+  // deck.cxx, (while the base particles have potentially been
+  // initialized by setup_particles/init_npt).
+  //
+  // the general logic expects the base particles to be initialized, so
+  // we need to copy them over from the vpic particles first
+  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY);
+  psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
 }
 
 // ----------------------------------------------------------------------
