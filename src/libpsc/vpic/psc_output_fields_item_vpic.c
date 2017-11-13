@@ -12,7 +12,7 @@
 
 static void
 run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		   struct psc_mparticles *mprts, struct psc_mfields *mres)
+		   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, 16);
   
@@ -46,7 +46,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_vpic_fields_ops = {
 
 static void
 run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		   struct psc_mparticles *mprts, struct psc_mfields *mres)
+		   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres));
   psc_mfields_set_type(mflds_hydro, "vpic");
@@ -55,7 +55,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_mfields_set_param_int3(mflds_hydro, "ibn", (int [3]) { 1, 1, 1});
   psc_mfields_setup(mflds_hydro);
 
-  assert(strcmp(psc_mparticles_type(mprts), "vpic") == 0);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY); // FIXME, really need to copy
   
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
     struct vpic_mfields *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds;
@@ -76,6 +76,8 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
     psc_mfields_put_as(mflds, mflds_hydro, 0, 0);
   }
 
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  
   psc_mfields_destroy(mflds_hydro);
 }
 
