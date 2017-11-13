@@ -32,6 +32,7 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 					   unsigned int);
 
 #define MP_DONT_COPY (0x1)
+#define MP_DONT_RESIZE (0x2)
 #define MP_NEED_BLOCK_OFFSETS (0x0100)
 #define MP_NEED_CELL_OFFSETS  (0x0200)
 #define MP_BLOCKSIZE_MASK     (0x7000)

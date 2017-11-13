@@ -66,7 +66,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 
   // update jf FIXME: rhob too, probably, depending on b.c.
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  psc_mparticles_put_as(mprts, mprts_base, 0);
 }
 
 // ----------------------------------------------------------------------

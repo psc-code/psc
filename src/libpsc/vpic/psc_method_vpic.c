@@ -118,7 +118,7 @@ psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct 
   //
   // the general logic expects the base particles to be initialized, so
   // we need to copy them over from the vpic particles first
-  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY);
+  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
   psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
 }
 

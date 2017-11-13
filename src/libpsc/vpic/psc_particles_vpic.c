@@ -120,11 +120,11 @@ psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
   int cur_n_prts_by_patch[mprts->nr_patches];
   psc_mparticles_vpic_get_size_all(mprts, cur_n_prts_by_patch);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    if (!(n_prts_by_patch[p] <= cur_n_prts_by_patch[p])) {
+    if (n_prts_by_patch[p] != cur_n_prts_by_patch[p]) {
       mprintf("psc_mparticles_vpic_reserve_all: %d -> %d\n",
 	      cur_n_prts_by_patch[p], cur_n_prts_by_patch[p]);
     }
-    //assert(n_prts_by_patch[p] <= cur_n_prts_by_patch[p]);
+    assert(n_prts_by_patch[p] == cur_n_prts_by_patch[p]);
   }
 }
 
@@ -134,7 +134,13 @@ psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 static void
 psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  mprintf("psc_mparticles_vpic_resize_all: %d\n", n_prts_by_patch[0]);
+  int cur_n_prts_by_patch[mprts->nr_patches];
+  psc_mparticles_vpic_get_size_all(mprts, cur_n_prts_by_patch);
+  if (n_prts_by_patch[0] != cur_n_prts_by_patch[0]) {
+    mprintf("psc_mparticles_vpic_resize_all: %d -> %d\n",
+	    cur_n_prts_by_patch[0], n_prts_by_patch[0]);
+  }
+  assert(n_prts_by_patch[0] == cur_n_prts_by_patch[0]);
 }
 
 // ----------------------------------------------------------------------

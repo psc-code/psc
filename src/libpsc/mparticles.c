@@ -125,11 +125,13 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
   psc_mparticles_set_param_int(mprts, "flags", flags);
   psc_mparticles_setup(mprts);
 
-  int nr_particles_by_patch[mprts_from->nr_patches];
-  psc_mparticles_get_size_all(mprts_from, nr_particles_by_patch);
-  psc_mparticles_reserve_all(mprts, nr_particles_by_patch);
-  psc_mparticles_resize_all(mprts, nr_particles_by_patch);
-
+  if (!(flags & MP_DONT_RESIZE)) {
+    int nr_particles_by_patch[mprts_from->nr_patches];
+    psc_mparticles_get_size_all(mprts_from, nr_particles_by_patch);
+    psc_mparticles_reserve_all(mprts, nr_particles_by_patch);
+    psc_mparticles_resize_all(mprts, nr_particles_by_patch);
+  }
+  
   if (!(flags & MP_DONT_COPY)) {
     copy(mprts_from, mprts, type_from, type, flags);
   }
@@ -178,7 +180,7 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
 	mprintf("psc_mparticles_put_as: p = %d n_prts %d -- %d\n",
 		p, n_prts_by_patch[p], n_prts_by_patch_to[p]);
       }
-      //assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
+      assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
     }
   }
   psc_mparticles_destroy(mprts);
