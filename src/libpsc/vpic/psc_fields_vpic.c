@@ -11,10 +11,15 @@
 
 #include "vpic_iface.h"
 
-static const int map_psc2vpic[9] = {
+static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
   [JXI] = VPIC_MFIELDS_JFX, [JYI] = VPIC_MFIELDS_JFY, [JZI] = VPIC_MFIELDS_JFZ,
   [EX]  = VPIC_MFIELDS_EX , [EY]  = VPIC_MFIELDS_EY , [EZ]  = VPIC_MFIELDS_EZ,
   [HX]  = VPIC_MFIELDS_BX , [HY]  = VPIC_MFIELDS_BY , [HZ]  = VPIC_MFIELDS_BZ,
+
+  [9]   = VPIC_MFIELDS_TCAX, [10]  = VPIC_MFIELDS_TCAY, [11]  = VPIC_MFIELDS_TCAZ,
+  [12]  = VPIC_MFIELDS_DIV_E_ERR, [13] = VPIC_MFIELDS_DIV_B_ERR,
+  [14]  = VPIC_MFIELDS_RHOB     , [15] = VPIC_MFIELDS_RHOF,
+  [16]  = 16, [17] = 17, [18] = 18, [19] = 19,
 };
 
 static int ref_count_fields, ref_count_hydro;
@@ -214,24 +219,26 @@ static void
 psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
 				  int mb, int me)
 {
-  if (me > mb) {
-    assert(0);
-  }
   for (int p = 0; p < mflds->nr_patches; p++) {
-#if 0
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
 
-    for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
-	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
-	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	    _F3_VPIC(flds, m, jx,jy,jz) = _F3_single(flds_single, m, jx,jy,jz);
+    // FIXME, hacky way to distinguish whether we want
+    // to copy the field into the standard PSC component numbering
+    if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
+      for (int m = mb; m < me; m++) {
+	int m_vpic = map_psc2vpic[m];
+	for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
+	  for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
+	    for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	      _F3_VPIC(flds, m_vpic, jx,jy,jz) = _F3_S(flds_single, m, jx,jy,jz);
+	    }
 	  }
 	}
       }
+    } else {
+      assert(0);
     }
-#endif
   }
 }
 
@@ -253,9 +260,6 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
     // to copy the field into the standard PSC component numbering or,
     // as in this case, just copy one-to-one
     if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
-      // FIXME, very hacky way to distinguish whether we want
-      // to copy the field into the standard PSC component numbering or,
-      // as in this case, just copy one-to-one
       for (int m = mb; m < me; m++) {
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
@@ -267,7 +271,6 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
       }
     } else if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
       for (int m = mb; m < me; m++) {
-	assert(m < 9);
 	int m_vpic = map_psc2vpic[m];
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
@@ -340,7 +343,6 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
       }
     } else if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
       for (int m = mb; m < me; m++) {
-	assert(m < 9);
 	int m_vpic = map_psc2vpic[m];
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
