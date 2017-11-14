@@ -1,9 +1,10 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 if USE_VPIC
 
-AM_CXXFLAGS = \
+AM_CXXFLAGS += \
 	-I$(VPICDIR)/src \
 	-I$(VPICDIR)
 

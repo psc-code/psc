@@ -2,6 +2,8 @@
 #ifndef VPIC_IFACE_H
 #define VPIC_IFACE_H
 
+#include "../bk_mparticles_iface.h" // FIXME, path
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -80,6 +82,9 @@ void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int 
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
 void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx);
+
+void vpic_mparticles_copy_to_single_by_kind(struct vpic_mparticles *vmprts, bk_mparticles *bkmprts);
+void vpic_mparticles_copy_from_single_by_kind(struct vpic_mparticles *vmprts, bk_mparticles *bkmprts);
 
 // ----------------------------------------------------------------------
 // vpic_push_particles

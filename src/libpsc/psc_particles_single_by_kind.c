@@ -7,7 +7,6 @@
 #define PARTICLE_TYPE "single_by_kind"
 #define PFX(x) psc_mparticles_single_by_kind_ ## x
 #define psc_mparticles_sub psc_mparticles_single_by_kind
-#define PARTICLE_BUF(x) psc_particle_single_by_kind_buf_ ## x
 
 // ======================================================================
 // psc_mparticles: subclass "single_by_kind"
