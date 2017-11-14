@@ -6,15 +6,10 @@
 
 //////////////////////////////////////////////////////
 
-// structure to hold the data for energy diagnostics
-struct edata {
-  species_id sp_id;       /* species id */
-  double       vth;       /* thermal energy */
-  char  fname[256];       /* file to save data */
-};
+// ======================================================================
+// diag
 
-begin_globals {
-
+struct globals_diag {
   int restart_interval;
   int energies_interval;
   int fields_interval;
@@ -22,54 +17,7 @@ begin_globals {
   int Hhydro_interval;
   int eparticle_interval;
   int Hparticle_interval;
-  int quota_check_interval;  // How frequently to check if quota exceeded
-
   int rtoggle;               // enables save of last 2 restart dumps for safety
-  double quota_sec;          // Run quota in seconds
-  double b0;                 // B0
-  double bg;                 // Guide field
-  double v_A;
-  double topology_x;       // domain topology
-  double topology_y;
-  double topology_z;
-
-  // parameters for the collision model
-  int    ee_collisions; // Flag to signal we want to do e-e collisions.
-  int    ei_collisions; // Flag to signal we want to do e-i collisions.
-  int    ii_collisions; // Flag to signal we want to do i-i collisions.
-
-  double cvar; // Base variance (dimensionless) used in particle collision
-  double nppc_max; // Max number of particles/cell (used to def key array size).
-  int tstep_coll;  // Collision interval (=multiple of sort interval).
-  double Z;
-  double mi_me;
-  double wpewce;
-
-  // Variables for Open BC Model
-  int open_bc_x; // Flag to signal we want to do open boundary condition in x
-  int driven_bc_z; // Flag to signal we want to do driven boundary condition in z
-  double nb;      // Background density
-  int nsp;        // Number of Species
-  double vth[2];  // Thermal velocity of Harris components
-  double vthb[2]; // Thermal velocity of background components
-  double q[2];    // Species charge
-  double L_de;    // Initial Harris sheet thickness
-  double uf[2];   // Initial Fluid Drift in Harris
-  double nfac; // Normalization factor to convert particles per cell to density
-  double rin[3];  // Relaxation parameter for inflow boundary moments
-  double rout[3]; // Relaxation parameter for outlfow boundary moments
-  double sort[2]; // Intervals where we know particles are sorted
-  double edrive;  // Drive field for inflow boundary
-  double tdrive;
-  int left,right,top,bottom;  // Keep track of boundary domains
-  // Moments for bottom injectors
-  double *nbot, *ubot, *pbot, *bbot, *fbot;
-  // Moments for top injectors
-  double *ntop, *utop, *ptop, *btop, *ftop;
-  // Moments for left injectors
-  double *nleft, *uleft, *pleft, *bleft, *fleft;
-  // Moments for right injectors
-  double *nright, *uright, *pright, *bright, *fright;
 
   // Output variables
   DumpParameters fdParams;
@@ -77,24 +25,175 @@ begin_globals {
   DumpParameters hHdParams;
   std::vector<DumpParameters *> outputParams;
 
-  // Variables for the energy diagnostics
-  edata ede;             // parameters for electron species
-  edata edi;             // parameters for ion species
-  double emax;           // maximum energy (in units of me*c**2)
-  int nex;               // number of energy bins
+  int quota_check_interval;  // How frequently to check if quota exceeded
+  double quota_sec;          // Run quota in seconds
 
-  //Vadim: modified restart machinary
+  // Vadim: modified restart machinary
   int write_restart;     // global flag for all to write restart files
   int write_end_restart; // global flag for all to write restart files
 };
 
+// ======================================================================
+
+struct globals_particles {
+  // Variables for Open BC Model
+  int open_bc_x; // Flag to signal we want to do open boundary condition in x
+  int driven_bc_z; // Flag to signal we want to do driven boundary condition in z
+
+  int nsp;        // Number of Species
+  double vth[2];  // Thermal velocity of Harris components
+  double vthb[2]; // Thermal velocity of background components
+  double q[2];    // Species charge
+};
+
+begin_globals {
+  struct globals_diag diag;
+
+  double b0;                 // B0
+  double bg;                 // Guide field
+  double v_A;
+  double topology_x;       // domain topology
+  double topology_y;
+  double topology_z;
+
+  struct globals_particles prts;
+
+  int left,right,top,bottom;  // Keep track of boundary domains
+};
+
+
+
+// ----------------------------------------------------------------------
+// user_load_fields
+
+static void user_load_fields(vpic_simulation *simulation,
+			     double cs, double sn,
+			     double L, double Lx, double Lz, double Lpert,
+			     double b0, double bg, double dbx, double dbz)
+{
+  grid_t *grid = simulation->grid;
+#define rank simulation->rank
+#define field simulation->field
+  
+  sim_log( "Loading fields" );
+  set_region_field( everywhere, 0, 0, 0,                    // Electric field
+    cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
+    -sn*b0*tanh(z/L) + b0*bg, //By
+    dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
+
+  // Note: everywhere is a region that encompasses the entire simulation
+  // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
+
+#undef field
+#undef rank
+}
+
+// ----------------------------------------------------------------------
+// user_load_particles
+
+static void user_load_particles(vpic_simulation *simulation,
+				species_t *electron, species_t *ion,
+				double Ne_sheet, double vthe, double vthi, double weight_s,
+				double tanhf, double L,
+				double gdre, double udre, double gdri, double udri,
+				double cs, double sn,
+				double Ne_back, double vtheb, double vthib, double weight_b)
+{
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
+  grid_t *grid = simulation->grid;
+#define rank simulation->rank
+#define nproc simulation->nproc
+#define rng simulation->rng
+#define uniform simulation->uniform
+#define normal simulation->normal
+#define inject_particle simulation->inject_particle
+#define seed_entropy simulation->seed_entropy
+  
+  // LOAD PARTICLES
+
+  sim_log( "Loading particles" );
+
+  // Do a fast load of the particles
+
+  seed_entropy( rank() );  //Generators desynchronized
+  double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
+  double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
+  double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
+
+  // Load Harris population
+
+  sim_log( "-> Main Harris Sheet" );
+
+  repeat ( Ne_sheet/nproc() ) {
+    double x, y, z, ux, uy, uz, d0 ;
+
+    do {
+      z = L*atanh(uniform( rng(0), -1, 1)*tanhf);
+    } while( z<= zmin || z>=zmax );
+    x = uniform( rng(0), xmin, xmax );
+    y = uniform( rng(0), ymin, ymax );
+
+    // inject_particles() will return an error for particles no on this
+    // node and will not inject particle locally
+
+    ux = normal( rng(0), 0, vthe);
+    uy = normal( rng(0), 0, vthe);
+    uz = normal( rng(0), 0, vthe);
+    d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
+    uy = d0*cs - ux*sn;
+    ux = d0*sn + ux*cs;
+
+    inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+
+    ux = normal( rng(0), 0, vthi);
+    uy = normal( rng(0), 0, vthi);
+    uz = normal( rng(0), 0, vthi);
+    d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
+    uy = d0*cs - ux*sn;
+    ux = d0*sn + ux*cs;
+
+    inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+
+  }
+
+  sim_log( "-> Background Population" );
+
+  repeat ( Ne_back/nproc() ) {
+
+    double x = uniform( rng(0), xmin, xmax );
+    double y = uniform( rng(0), ymin, ymax );
+    double z = uniform( rng(0), zmin, zmax );
+
+    inject_particle( electron, x, y, z,
+                     normal( rng(0), 0, vtheb),
+                     normal( rng(0), 0, vtheb),
+                     normal( rng(0), 0, vtheb),
+                     weight_b, 0, 0);
+
+    inject_particle( ion, x, y, z,
+                     normal( rng(0), 0, vthib),
+                     normal( rng(0), 0, vthib),
+                     normal( rng(0), 0, vthib),
+                     weight_b, 0 ,0 );
+  }
+
+  sim_log( "Finished loading particles" );
+
+#undef rank
+#undef nproc
+#undef rng
+#undef uniform
+#undef normal
+#undef inject_particle
+#undef seed_entropy
+}
+
 // ----------------------------------------------------------------------
 // user_init_diagnostics
 
-static void user_init_diagnostics(vpic_simulation *simulation,
+static void user_init_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				  species_t *electron, species_t *ion)
 {
-  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
 #define create_field_list simulation->create_field_list
 #define create_hydro_list simulation->create_hydro_list
 #define rank simulation->rank
@@ -121,13 +220,13 @@ static void user_init_diagnostics(vpic_simulation *simulation,
    *
    *------------------------------------------------------------------------*/
 
-  global->fdParams.format = band;
+  diag->fdParams.format = band;
   sim_log ( "Fields output format = band" );
 
-  global->hedParams.format = band;
+  diag->hedParams.format = band;
   sim_log ( "Electron species output format = band" );
 
-  global->hHdParams.format = band;
+  diag->hHdParams.format = band;
   sim_log ( "Ion species output format = band" );
 
   /*--------------------------------------------------------------------------
@@ -165,55 +264,55 @@ static void user_init_diagnostics(vpic_simulation *simulation,
    *------------------------------------------------------------------------*/
 
   // relative path to fields data from global header
-  sprintf(global->fdParams.baseDir, "fields");
+  sprintf(diag->fdParams.baseDir, "fields");
 
   // base file name for fields output
-  sprintf(global->fdParams.baseFileName, "fields");
+  sprintf(diag->fdParams.baseFileName, "fields");
 
-  global->fdParams.stride_x = 1;
-  global->fdParams.stride_y = 1;
-  global->fdParams.stride_z = 1;
+  diag->fdParams.stride_x = 1;
+  diag->fdParams.stride_y = 1;
+  diag->fdParams.stride_z = 1;
 
   // add field parameters to list
-  global->outputParams.push_back(&global->fdParams);
+  diag->outputParams.push_back(&diag->fdParams);
 
-  sim_log ( "Fields x-stride " << global->fdParams.stride_x );
-  sim_log ( "Fields y-stride " << global->fdParams.stride_y );
-  sim_log ( "Fields z-stride " << global->fdParams.stride_z );
-
-  // relative path to electron species data from global header
-  sprintf(global->hedParams.baseDir, "hydro");
-
-  // base file name for fields output
-  sprintf(global->hedParams.baseFileName, "ehydro");
-
-  global->hedParams.stride_x = 1;
-  global->hedParams.stride_y = 1;
-  global->hedParams.stride_z = 1;
-
-  // add electron species parameters to list
-  global->outputParams.push_back(&global->hedParams);
-
-  sim_log ( "Electron species x-stride " << global->hedParams.stride_x );
-  sim_log ( "Electron species y-stride " << global->hedParams.stride_y );
-  sim_log ( "Electron species z-stride " << global->hedParams.stride_z );
+  sim_log ( "Fields x-stride " << diag->fdParams.stride_x );
+  sim_log ( "Fields y-stride " << diag->fdParams.stride_y );
+  sim_log ( "Fields z-stride " << diag->fdParams.stride_z );
 
   // relative path to electron species data from global header
-  sprintf(global->hHdParams.baseDir, "hydro");
+  sprintf(diag->hedParams.baseDir, "hydro");
 
   // base file name for fields output
-  sprintf(global->hHdParams.baseFileName, "Hhydro");
+  sprintf(diag->hedParams.baseFileName, "ehydro");
 
-  global->hHdParams.stride_x = 1;
-  global->hHdParams.stride_y = 1;
-  global->hHdParams.stride_z = 1;
-
-  sim_log ( "Ion species x-stride " << global->hHdParams.stride_x );
-  sim_log ( "Ion species y-stride " << global->hHdParams.stride_y );
-  sim_log ( "Ion species z-stride " << global->hHdParams.stride_z );
+  diag->hedParams.stride_x = 1;
+  diag->hedParams.stride_y = 1;
+  diag->hedParams.stride_z = 1;
 
   // add electron species parameters to list
-  global->outputParams.push_back(&global->hHdParams);
+  diag->outputParams.push_back(&diag->hedParams);
+
+  sim_log ( "Electron species x-stride " << diag->hedParams.stride_x );
+  sim_log ( "Electron species y-stride " << diag->hedParams.stride_y );
+  sim_log ( "Electron species z-stride " << diag->hedParams.stride_z );
+
+  // relative path to electron species data from global header
+  sprintf(diag->hHdParams.baseDir, "hydro");
+
+  // base file name for fields output
+  sprintf(diag->hHdParams.baseFileName, "Hhydro");
+
+  diag->hHdParams.stride_x = 1;
+  diag->hHdParams.stride_y = 1;
+  diag->hHdParams.stride_z = 1;
+
+  sim_log ( "Ion species x-stride " << diag->hHdParams.stride_x );
+  sim_log ( "Ion species y-stride " << diag->hHdParams.stride_y );
+  sim_log ( "Ion species z-stride " << diag->hHdParams.stride_z );
+
+  // add electron species parameters to list
+  diag->outputParams.push_back(&diag->hHdParams);
 
   /*--------------------------------------------------------------------------
    * Set output fields
@@ -256,41 +355,27 @@ static void user_init_diagnostics(vpic_simulation *simulation,
   //global->hHdParams.output_variables( current_density | charge_density );
   //                                    | stress_tensor );
 
-  global->fdParams.output_variables( all );
-  global->hedParams.output_variables( all );
-  global->hHdParams.output_variables( all );
+  diag->fdParams.output_variables( all );
+  diag->hedParams.output_variables( all );
+  diag->hHdParams.output_variables( all );
 
   /*--------------------------------------------------------------------------
    * Convenience functions for simlog output
    *------------------------------------------------------------------------*/
 
   char varlist[512];
-  create_field_list(varlist, global->fdParams);
+  create_field_list(varlist, diag->fdParams);
 
   sim_log ( "Fields variable list: " << varlist );
 
-  create_hydro_list(varlist, global->hedParams);
+  create_hydro_list(varlist, diag->hedParams);
 
   sim_log ( "Electron species variable list: " << varlist );
 
-  create_hydro_list(varlist, global->hHdParams);
+  create_hydro_list(varlist, diag->hHdParams);
 
   sim_log ( "Ion species variable list: " << varlist );
 
-  /* ---------------------------------------------
-     Add parameters for the energy diagnostics
-     --------------------------------------------- */
-
-  global->ede.sp_id = electron->id;
-  global->ede.vth = global->vth[0];
-  sprintf(global->ede.fname,"%s",global->hedParams.baseFileName);
-
-  global->edi.sp_id = ion->id;
-  global->edi.vth = global->vth[1];
-  sprintf(global->edi.fname,"%s",global->hHdParams.baseFileName);
-
-  global->nex  = 6;
-  global->emax = 120;
 #undef create_field_list
 #undef create_hydro_list
 #undef rank
@@ -360,10 +445,7 @@ begin_initialization {
   int driven_bc_z = 0;
   double rin[3] =  {0.000, 0.06, 0.000};
   double rout[3] = {0.002, 0.002, 0.002};
-  double edrive = 0.08*v_A/(wpe_wce);    // edrive = 0 gives undriven limit
-  //double edrive = 0.0099;    // Setting edrive = 0 will give undriven limit
 
-  double tdrive = 32000.0;
   double sort_interval = 10;  // Injector moments also updated at this interval
 
   // Numerical parameters
@@ -405,7 +487,6 @@ begin_initialization {
   double qe_b = -ec*Npe_back/Ne_back;  // Charge per macro electron
   double qi_b =  ec*Npe_back/Ne_back;  // Charge per macro electron
   double weight_b =  ec*Npe_back/Ne_back;  // Charge per macro electron
-  double nfac = qi_s/(hx*hy*hz);       // Convert density to particles per cell
 
   double gdri = 1/sqrt(1-vdri*vdri/(c*c));  // gamma of ion drift frame
   double gdre = 1/sqrt(1-vdre*vdre/(c*c)); // gamma of electron drift frame
@@ -443,10 +524,6 @@ begin_initialization {
   int tstep_coll = (int) sort_interval;  // How frequently to do collisions
   double dt_coll = dt*(tstep_coll);      // in (1/wpe)
   double nuei_wce = 0.05;
-  double cvar = dt_coll*3.0*sqrt(2.0*M_PI)/4.0*pow(vthe,3)*nuei_wce/wpe_wce;
-  // Max possible number of particles/cell of ea. species
-  // (to size the key array in collision handler)
-  double nppc_max   = 20*nppc;
 
   // Determine which domains area along the boundaries - Use macro from
   // grid/partition.c.
@@ -478,22 +555,22 @@ begin_initialization {
   clean_div_e_interval = status_interval/2;
   clean_div_b_interval = status_interval/2;
 
-  global->restart_interval     = restart_interval;
-  global->energies_interval    = energies_interval;
-  global->fields_interval      = fields_interval;
-  global->ehydro_interval      = ehydro_interval;
-  global->Hhydro_interval      = Hhydro_interval;
-  global->eparticle_interval   = eparticle_interval;
-  global->Hparticle_interval   = Hparticle_interval;
-  global->quota_check_interval = quota_check_interval;
-  global->quota_sec            = quota_sec;
-  global->rtoggle              = 0;
+  struct globals_diag *diag = &global->diag;
+  diag->restart_interval     = restart_interval;
+  diag->energies_interval    = energies_interval;
+  diag->fields_interval      = fields_interval;
+  diag->ehydro_interval      = ehydro_interval;
+  diag->Hhydro_interval      = Hhydro_interval;
+  diag->eparticle_interval   = eparticle_interval;
+  diag->Hparticle_interval   = Hparticle_interval;
+  diag->rtoggle              = 0;
+
+  diag->quota_check_interval = quota_check_interval;
+  diag->quota_sec            = quota_sec;
 
   global->b0  = b0;
   global->bg  = bg;
   global->v_A  = v_A;
-  global->edrive  = edrive;
-  global->tdrive  = tdrive;
 
   global->topology_x  = topology_x;
   global->topology_y  = topology_y;
@@ -505,41 +582,16 @@ begin_initialization {
   global->bottom = bottom;
 
   // Parameters for the open boundary model
-  global->open_bc_x = open_bc_x;
-  global->driven_bc_z = driven_bc_z;
-  global->nsp = 2;
-  global->nb  = nb_n0;
-  global->rin[0]  = rin[0];
-  global->rin[1]  = rin[1];
-  global->rin[2]  = rin[2];
-  global->rout[0]  = rout[0];
-  global->rout[1]  = rout[1];
-  global->rout[2]  = rout[2];
-  global->vth[0]  = sqrt(2)*vthe;
-  global->vth[1]  = sqrt(2)*vthi;
-  global->vthb[0]  = sqrt(2)*vtheb;
-  global->vthb[1]  = sqrt(2)*vthib;
-  global->q[0]  = weight_s;
-  global->q[1]  = weight_s;
-  global->uf[0]  = udre;
-  global->uf[1]  = udri;
-  global->sort[0]  = sort_interval;
-  global->sort[1]  = sort_interval;
-  global->nfac  = nfac;
-  global->L_de  = L;
-
-  // Collision model parameters
-  global->ee_collisions            = ee_collisions;
-  global->ii_collisions            = ii_collisions;
-  global->ei_collisions            = ei_collisions;
-
-  global->cvar                     = cvar;
-  global->nppc_max                 = nppc_max;
-  global->tstep_coll               = tstep_coll;
-  global->mi_me                    = mi_me;
-  global->Z                        = Z;
-  global->wpewce                   = wpe_wce;
-  global->nfac                     = nfac;
+  struct globals_particles *prts = &global->prts;
+  prts->open_bc_x = open_bc_x;
+  prts->driven_bc_z = driven_bc_z;
+  prts->nsp = 2;
+  prts->vth[0]  = sqrt(2)*vthe;
+  prts->vth[1]  = sqrt(2)*vthi;
+  prts->vthb[0]  = sqrt(2)*vtheb;
+  prts->vthb[1]  = sqrt(2)*vthib;
+  prts->q[0]  = weight_s;
+  prts->q[1]  = weight_s;
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the grid
@@ -563,7 +615,7 @@ begin_initialization {
   //sim_log("Absorbing fields on X & Z-boundaries");
   //if ( iz==0 )            set_domain_field_bc( BOUNDARY(0,0,-1), absorb_fields );
   //if ( iz==topology_z-1 ) set_domain_field_bc( BOUNDARY( 0,0,1), absorb_fields );
- if (global->open_bc_x)
+ if (prts->open_bc_x)
  {
   sim_log("Absorbing fields on X-boundaries");
   if ( ix==0 )
@@ -580,7 +632,7 @@ begin_initialization {
 
   // ***** Set Particle Boundary Conditions *****
 
- if (global->driven_bc_z)
+ if (prts->driven_bc_z)
  {
   sim_log("Absorb particles on Z-boundaries");
   if ( iz==0 )
@@ -594,7 +646,7 @@ begin_initialization {
   if ( iz==topology_z-1 )
     set_domain_particle_bc( BOUNDARY(0,0,1), reflect_particles );
  }
- if (global->open_bc_x)
+ if (prts->open_bc_x)
  {
   sim_log("Absorb particles on X-boundaries");
   if ( ix==0 )
@@ -627,8 +679,8 @@ begin_initialization {
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature
   double thickness = 0;
-#define resistive_layer ((global->open_bc_x && x < hx*thickness) || \
-                          (global->open_bc_x && x > Lx-hx*thickness) \
+#define resistive_layer ((prts->open_bc_x && x < hx*thickness) || \
+                          (prts->open_bc_x && x > Lx-hx*thickness) \
                          || z <-Lz/2+hz*thickness  || z > Lz/2-hz*thickness )
 
   if (thickness > 0)
@@ -707,9 +759,6 @@ begin_initialization {
   sim_log ( "vdre/c = " << vdre/c );
   sim_log ("* nu/wce:                        " << nuei_wce);
   sim_log ("* nu*dt_coll:                    " << nuei_wce/wpe_wce*dt_coll);
-  sim_log ( "ee_collisions   = " << ee_collisions );
-  sim_log ( "ei_collisions   = " << ei_collisions );
-  sim_log ( "ii_collisions   = " << ii_collisions );
   sim_log ( "Open BC in x?   = " << open_bc_x );
   sim_log ( "Driven BC in z? = " << driven_bc_z );
 
@@ -778,98 +827,19 @@ begin_initialization {
     fp_info.close();
   }
 
-  ////////////////////////////
-  // Load fields
+  user_load_fields(this,
+		   cs, sn,
+		   L, Lx, Lz, Lpert,
+		   b0, bg, dbx, dbz);
 
-  sim_log( "Loading fields" );
-  set_region_field( everywhere, 0, 0, 0,                    // Electric field
-    cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
-    -sn*b0*tanh(z/L) + b0*bg, //By
-    dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
+  user_load_particles(this, electron, ion,
+		      Ne_sheet, vthe, vthi, weight_s,
+		      tanhf, L,
+		      gdre, udre, gdri, udri,
+		      cs, sn,
+		      Ne_back, vtheb, vthib, weight_b);
 
-  // Localized Perturbation to lauch a light wave
-
-//    # define R2 ((x-0.5*Lx)*(x-0.5*Lx) + z*z)/(L*L)
-//    # define PERT  0.2*tanh(R2)/cosh(R2)
-//      set_region_field( everywhere, 0, 0, 0,                    // Electric field
-//        cs*b0*tanh(z/L) - z*PERT, //Bx
-//        b0*bg, //By
-//        (x-0.5*Lx)*PERT ); // Bz
-
-  // Note: everywhere is a region that encompasses the entire simulation
-  // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
-
-  // LOAD PARTICLES
-
-  sim_log( "Loading particles" );
-
-  // Do a fast load of the particles
-
-  seed_entropy( rank() );  //Generators desynchronized
-  double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
-  double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
-  double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
-
-  // Load Harris population
-
-  sim_log( "-> Main Harris Sheet" );
-
-  repeat ( Ne_sheet/nproc() ) {
-    double x, y, z, ux, uy, uz, d0 ;
-
-    do {
-      z = L*atanh(uniform( rng(0), -1, 1)*tanhf);
-    } while( z<= zmin || z>=zmax );
-    x = uniform( rng(0), xmin, xmax );
-    y = uniform( rng(0), ymin, ymax );
-
-    // inject_particles() will return an error for particles no on this
-    // node and will not inject particle locally
-
-    ux = normal( rng(0), 0, vthe);
-    uy = normal( rng(0), 0, vthe);
-    uz = normal( rng(0), 0, vthe);
-    d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
-    uy = d0*cs - ux*sn;
-    ux = d0*sn + ux*cs;
-
-    inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
-
-    ux = normal( rng(0), 0, vthi);
-    uy = normal( rng(0), 0, vthi);
-    uz = normal( rng(0), 0, vthi);
-    d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
-    uy = d0*cs - ux*sn;
-    ux = d0*sn + ux*cs;
-
-    inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
-
-  }
-
-  sim_log( "-> Background Population" );
-
-  repeat ( Ne_back/nproc() ) {
-
-    double x = uniform( rng(0), xmin, xmax );
-    double y = uniform( rng(0), ymin, ymax );
-    double z = uniform( rng(0), zmin, zmax );
-
-    inject_particle( electron, x, y, z,
-                     normal( rng(0), 0, vtheb),
-                     normal( rng(0), 0, vtheb),
-                     normal( rng(0), 0, vtheb),
-                     weight_b, 0, 0);
-
-    inject_particle( ion, x, y, z,
-                     normal( rng(0), 0, vthib),
-                     normal( rng(0), 0, vthib),
-                     normal( rng(0), 0, vthib),
-                     weight_b, 0 ,0 );
-  }
-
-  sim_log( "Finished loading particles" );
-
-  user_init_diagnostics(this, electron, ion);
+  user_init_diagnostics(this, &global->diag, electron, ion);
 
   sim_log("*** Finished with user-specified initialization ***");
 
@@ -903,7 +873,7 @@ begin_initialization {
 } //begin_initialization
 
 #define should_dump(x)                                                  \
-  (global->x##_interval>0 && remainder(step(), global->x##_interval) == 0)
+  (diag->x##_interval>0 && remainder(step(), diag->x##_interval) == 0)
 
 begin_diagnostics {
 
@@ -949,7 +919,10 @@ begin_diagnostics {
    * THE LOCATION OF THE GLOBAL HEADER!!!
    *------------------------------------------------------------------------*/
 
-  const int nsp=global->nsp;
+  struct globals_diag *diag = &global->diag;
+  struct globals_particles *prts = &global->prts;
+
+  const int nsp=prts->nsp;
   const int nx=grid->nx;
   const int ny=grid->ny;
   const int nz=grid->nz;
@@ -969,7 +942,7 @@ begin_diagnostics {
     dump_grid("rundata/grid");
     dump_materials("rundata/materials");
     dump_species("rundata/species");
-    global_header("global", global->outputParams);
+    global_header("global", diag->outputParams);
   } // if
 
   /*--------------------------------------------------------------------------
@@ -983,31 +956,31 @@ begin_diagnostics {
    * Field data output
    *------------------------------------------------------------------------*/
 
-  if(step() == -1 || should_dump(fields)) field_dump(global->fdParams);
+  if(step() == -1 || should_dump(fields)) field_dump(diag->fdParams);
 
   /*--------------------------------------------------------------------------
    * Electron species output
    *------------------------------------------------------------------------*/
 
-  if(should_dump(ehydro)) hydro_dump("electron", global->hedParams);
+  if(should_dump(ehydro)) hydro_dump("electron", diag->hedParams);
 
   /*--------------------------------------------------------------------------
    * Ion species output
    *------------------------------------------------------------------------*/
 
-  if(should_dump(Hhydro)) hydro_dump("ion", global->hHdParams);
+  if(should_dump(Hhydro)) hydro_dump("ion", diag->hHdParams);
 
   /*--------------------------------------------------------------------------
    * Restart dump
    *------------------------------------------------------------------------*/
 
-  if(step() && !(step()%global->restart_interval)) {
-    if(!global->rtoggle) {
-      global->rtoggle = 1;
+  if(step() && !(step()%diag->restart_interval)) {
+    if(!diag->rtoggle) {
+      diag->rtoggle = 1;
       checkpt("restart1/restart", 0);
     }
     else {
-      global->rtoggle = 0;
+      diag->rtoggle = 0;
       checkpt("restart2/restart", 0);
     } // if
   } // if
@@ -1016,7 +989,7 @@ begin_diagnostics {
 
   char subdir[36];
   if ( should_dump(eparticle) && step() !=0
-       && step() > 56*(global->fields_interval)  ) {
+       && step() > 56*(diag->fields_interval)  ) {
     // if ( should_dump(eparticle) && step() !=0 ) {
     sprintf(subdir,"particle/T.%lld",step());
     dump_mkdir(subdir);
@@ -1025,7 +998,7 @@ begin_diagnostics {
   }
 
   if ( should_dump(Hparticle) && step() !=0
-       && step() > 56*(global->fields_interval)  ) {
+       && step() > 56*(diag->fields_interval)  ) {
     sprintf(subdir,"particle/T.%lld/Hparticle",step());
     dump_particles("ion", subdir);
   }
@@ -1037,12 +1010,12 @@ begin_diagnostics {
   // few timesteps to eliminate the expensive mp_elapsed call from every
   // timestep. mp_elapsed has an ALL_REDUCE in it!
 
-  if (( step()>0 && global->quota_check_interval>0
-        && (step()&global->quota_check_interval)==0)
-      || (global->write_end_restart) ) {
-    if ( (global->write_end_restart) ) {
+  if (( step()>0 && diag->quota_check_interval>0
+        && (step()&diag->quota_check_interval)==0)
+      || (diag->write_end_restart) ) {
+    if ( (diag->write_end_restart) ) {
 
-      global->write_end_restart = 0; // reset restart flag
+      diag->write_end_restart = 0; // reset restart flag
 
       sim_log( "Allowed runtime exceeded for this job.  Terminating....\n");
       double dumpstart = uptime();
@@ -1055,7 +1028,7 @@ begin_diagnostics {
       sim_log("Restart duration "<< dumpelapsed);
       exit(0); // Exit or abort?
     }
-    if( uptime() > global->quota_sec ) global->write_end_restart = 1;
+    if( uptime() > diag->quota_sec ) diag->write_end_restart = 1;
   }
 
 } // end diagnostics
