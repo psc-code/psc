@@ -40,7 +40,6 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
   }
 }
 
-#if 0
 static void
 copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
@@ -54,15 +53,45 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
+    vpic_mparticles_get_grid_nx_dx(vmprts, ctx.im, ctx.dx);
+    for (int d = 0; d < 3; d++) {
+      ctx.im[d] += 2; // add ghost points
+    }
+    ctx.dVi = 1.f / (ctx.dx[0] * ctx.dx[1] * ctx.dx[2]);
     vpic_mparticles_set_particles(vmprts, n_prts, off, get_particle, &ctx);
 
     off += n_prts;
   }
 }
-#endif
 
 // ======================================================================
 // conversion to "single"
+
+static void
+get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+{
+  struct copy_ctx *ctx = _ctx;
+  particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
+
+  assert(part->kind < ppsc->nr_kinds);
+  int *im = ctx->im;
+  float *dx = ctx->dx;
+  int i3[3];
+  for (int d = 0; d < 3; d++) {
+    float val = (&part->xi)[d] / dx[d];
+    i3[d] = (int) val;
+    //mprintf("d %d val %g xi %g\n", d, val, part->xi);
+    assert(i3[d] >= -1 && i3[d] < im[d] + 1);
+    prt->dx[d] = (val - i3[d]) * 2.f - 1.f;
+    i3[d] += 1;
+  }
+  prt->i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
+  prt->ux[0] = part->pxi;
+  prt->ux[1] = part->pyi;
+  prt->ux[2] = part->pzi;
+  prt->w     = part->qni_wni / ppsc->kinds[part->kind].q / ctx->dVi;
+  prt->kind  = part->kind;
+}
 
 static void
 put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
@@ -92,7 +121,7 @@ static void
 psc_mparticles_vpic_copy_from_single(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single, unsigned int flags)
 {
-  assert(0);
+  copy_from(mprts, mprts_single, get_particle_single);
 }
 
 static void
