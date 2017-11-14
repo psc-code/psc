@@ -1,14 +1,19 @@
 
 #include "bk_mparticles_iface.h"
 
+#include <vector>
+
 #define PARTICLE_BUF(x) psc_particle_single_by_kind_buf_ ## x
 
 // ======================================================================
 // bk_mparticles
 
 struct bk_mparticles {
+  typedef particle_single_by_kind_t particle_t;
+  typedef psc_particle_single_by_kind_buf_t particle_buf_t;
+
   int n_patches;
-  psc_particle_single_by_kind_buf_t *buf;
+  std::vector<particle_buf_t> buf;
 };
 
 // ----------------------------------------------------------------------
@@ -34,7 +39,7 @@ void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches)
 {
   bkmprts->n_patches = n_patches;
 
-  bkmprts->buf = (PARTICLE_BUF(t) *) calloc(n_patches, sizeof(*bkmprts->buf));
+  bkmprts->buf.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
     PARTICLE_BUF(ctor)(&bkmprts->buf[p]);
   }
@@ -46,10 +51,8 @@ void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches)
 void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
 {
   for (int p = 0; p < bkmprts->n_patches; p++) {
-    // need to free structures created in ::patch_setup and ::patch_reserve
     PARTICLE_BUF(dtor)(&bkmprts->buf[p]);
   }
-  free(bkmprts->buf);
 }
 
 // ----------------------------------------------------------------------
