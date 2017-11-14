@@ -88,6 +88,214 @@ begin_globals {
   int write_end_restart; // global flag for all to write restart files
 };
 
+// ----------------------------------------------------------------------
+// user_init_diagnostics
+
+static void user_init_diagnostics(vpic_simulation *simulation,
+				  species_t *electron, species_t *ion)
+{
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
+#define create_field_list simulation->create_field_list
+#define create_hydro_list simulation->create_hydro_list
+#define rank simulation->rank
+
+  /*--------------------------------------------------------------------------
+   * New dump definition
+   *------------------------------------------------------------------------*/
+
+  /*--------------------------------------------------------------------------
+   * Set data output format
+   *
+   * This option allows the user to specify the data format for an output
+   * dump.  Legal settings are 'band' and 'band_interleave'.  Band-interleave
+   * format is the native storage format for data in VPIC.  For field data,
+   * this looks something like:
+   *
+   *   ex0 ey0 ez0 div_e_err0 cbx0 ... ex1 ey1 ez1 div_e_err1 cbx1 ...
+   *
+   * Banded data format stores all data of a particular state variable as a
+   * contiguous array, and is easier for ParaView to process efficiently.
+   * Banded data looks like:
+   *
+   *   ex0 ex1 ex2 ... exN ey0 ey1 ey2 ...
+   *
+   *------------------------------------------------------------------------*/
+
+  global->fdParams.format = band;
+  sim_log ( "Fields output format = band" );
+
+  global->hedParams.format = band;
+  sim_log ( "Electron species output format = band" );
+
+  global->hHdParams.format = band;
+  sim_log ( "Ion species output format = band" );
+
+  /*--------------------------------------------------------------------------
+   * Set stride
+   *
+   * This option allows data down-sampling at output.  Data are down-sampled
+   * in each dimension by the stride specified for that dimension.  For
+   * example, to down-sample the x-dimension of the field data by a factor
+   * of 2, i.e., half as many data will be output, select:
+   *
+   *   global->fdParams.stride_x = 2;
+   *
+   * The following 2-D example shows down-sampling of a 7x7 grid (nx = 7,
+   * ny = 7.  With ghost-cell padding the actual extents of the grid are 9x9.
+   * Setting the strides in x and y to equal 2 results in an output grid of
+   * nx = 4, ny = 4, with actual extents 6x6.
+   *
+   * G G G G G G G G G
+   * G X X X X X X X G
+   * G X X X X X X X G         G G G G G G
+   * G X X X X X X X G         G X X X X G
+   * G X X X X X X X G   ==>   G X X X X G
+   * G X X X X X X X G         G X X X X G
+   * G X X X X X X X G         G X X X X G
+   * G X X X X X X X G         G G G G G G
+   * G G G G G G G G G
+   *
+   * Note that grid extents in each dimension must be evenly divisible by
+   * the stride for that dimension:
+   *
+   *   nx = 150;
+   *   global->fdParams.stride_x = 10; // legal -> 150/10 = 15
+   *
+   *   global->fdParams.stride_x = 8; // illegal!!! -> 150/8 = 18.75
+   *------------------------------------------------------------------------*/
+
+  // relative path to fields data from global header
+  sprintf(global->fdParams.baseDir, "fields");
+
+  // base file name for fields output
+  sprintf(global->fdParams.baseFileName, "fields");
+
+  global->fdParams.stride_x = 1;
+  global->fdParams.stride_y = 1;
+  global->fdParams.stride_z = 1;
+
+  // add field parameters to list
+  global->outputParams.push_back(&global->fdParams);
+
+  sim_log ( "Fields x-stride " << global->fdParams.stride_x );
+  sim_log ( "Fields y-stride " << global->fdParams.stride_y );
+  sim_log ( "Fields z-stride " << global->fdParams.stride_z );
+
+  // relative path to electron species data from global header
+  sprintf(global->hedParams.baseDir, "hydro");
+
+  // base file name for fields output
+  sprintf(global->hedParams.baseFileName, "ehydro");
+
+  global->hedParams.stride_x = 1;
+  global->hedParams.stride_y = 1;
+  global->hedParams.stride_z = 1;
+
+  // add electron species parameters to list
+  global->outputParams.push_back(&global->hedParams);
+
+  sim_log ( "Electron species x-stride " << global->hedParams.stride_x );
+  sim_log ( "Electron species y-stride " << global->hedParams.stride_y );
+  sim_log ( "Electron species z-stride " << global->hedParams.stride_z );
+
+  // relative path to electron species data from global header
+  sprintf(global->hHdParams.baseDir, "hydro");
+
+  // base file name for fields output
+  sprintf(global->hHdParams.baseFileName, "Hhydro");
+
+  global->hHdParams.stride_x = 1;
+  global->hHdParams.stride_y = 1;
+  global->hHdParams.stride_z = 1;
+
+  sim_log ( "Ion species x-stride " << global->hHdParams.stride_x );
+  sim_log ( "Ion species y-stride " << global->hHdParams.stride_y );
+  sim_log ( "Ion species z-stride " << global->hHdParams.stride_z );
+
+  // add electron species parameters to list
+  global->outputParams.push_back(&global->hHdParams);
+
+  /*--------------------------------------------------------------------------
+   * Set output fields
+   *
+   * It is now possible to select which state-variables are output on a
+   * per-dump basis.  Variables are selected by passing an or-list of
+   * state-variables by name.  For example, to only output the x-component
+   * of the electric field and the y-component of the magnetic field, the
+   * user would call output_variables like:
+   *
+   *   global->fdParams.output_variables( ex | cby );
+   *
+   * NOTE: OUTPUT VARIABLES ARE ONLY USED FOR THE BANDED FORMAT.  IF THE
+   * FORMAT IS BAND-INTERLEAVE, ALL VARIABLES ARE OUTPUT AND CALLS TO
+   * 'output_variables' WILL HAVE NO EFFECT.
+   *
+   * ALSO: DEFAULT OUTPUT IS NONE!  THIS IS DUE TO THE WAY THAT VPIC
+   * HANDLES GLOBAL VARIABLES IN THE INPUT DECK AND IS UNAVOIDABLE.
+   *
+   * For convenience, the output variable 'all' is defined:
+   *
+   *   global->fdParams.output_variables( all );
+   *------------------------------------------------------------------------*/
+  /* CUT AND PASTE AS A STARTING POINT
+   * REMEMBER TO ADD APPROPRIATE GLOBAL DUMPPARAMETERS VARIABLE
+
+   output_variables( all );
+
+   output_variables( electric | div_e_err | magnetic | div_b_err |
+                     tca      | rhob      | current  | rhof |
+                     emat     | nmat      | fmat     | cmat );
+
+   output_variables( current_density  | charge_density |
+                     momentum_density | ke_density     | stress_tensor );
+   */
+
+  //global->fdParams.output_variables( electric | magnetic );
+  //global->hedParams.output_variables( current_density | charge_density
+  //                                    | stress_tensor );
+  //global->hHdParams.output_variables( current_density | charge_density );
+  //                                    | stress_tensor );
+
+  global->fdParams.output_variables( all );
+  global->hedParams.output_variables( all );
+  global->hHdParams.output_variables( all );
+
+  /*--------------------------------------------------------------------------
+   * Convenience functions for simlog output
+   *------------------------------------------------------------------------*/
+
+  char varlist[512];
+  create_field_list(varlist, global->fdParams);
+
+  sim_log ( "Fields variable list: " << varlist );
+
+  create_hydro_list(varlist, global->hedParams);
+
+  sim_log ( "Electron species variable list: " << varlist );
+
+  create_hydro_list(varlist, global->hHdParams);
+
+  sim_log ( "Ion species variable list: " << varlist );
+
+  /* ---------------------------------------------
+     Add parameters for the energy diagnostics
+     --------------------------------------------- */
+
+  global->ede.sp_id = electron->id;
+  global->ede.vth = global->vth[0];
+  sprintf(global->ede.fname,"%s",global->hedParams.baseFileName);
+
+  global->edi.sp_id = ion->id;
+  global->edi.vth = global->vth[1];
+  sprintf(global->edi.fname,"%s",global->hHdParams.baseFileName);
+
+  global->nex  = 6;
+  global->emax = 120;
+#undef create_field_list
+#undef create_hydro_list
+#undef rank
+}
+
 begin_initialization {
   // use natural PIC units
   double ec   = 1;         // Charge normalization
@@ -661,198 +869,7 @@ begin_initialization {
 
   sim_log( "Finished loading particles" );
 
-  /*--------------------------------------------------------------------------
-   * New dump definition
-   *------------------------------------------------------------------------*/
-
-  /*--------------------------------------------------------------------------
-   * Set data output format
-   *
-   * This option allows the user to specify the data format for an output
-   * dump.  Legal settings are 'band' and 'band_interleave'.  Band-interleave
-   * format is the native storage format for data in VPIC.  For field data,
-   * this looks something like:
-   *
-   *   ex0 ey0 ez0 div_e_err0 cbx0 ... ex1 ey1 ez1 div_e_err1 cbx1 ...
-   *
-   * Banded data format stores all data of a particular state variable as a
-   * contiguous array, and is easier for ParaView to process efficiently.
-   * Banded data looks like:
-   *
-   *   ex0 ex1 ex2 ... exN ey0 ey1 ey2 ...
-   *
-   *------------------------------------------------------------------------*/
-
-  global->fdParams.format = band;
-  sim_log ( "Fields output format = band" );
-
-  global->hedParams.format = band;
-  sim_log ( "Electron species output format = band" );
-
-  global->hHdParams.format = band;
-  sim_log ( "Ion species output format = band" );
-
-  /*--------------------------------------------------------------------------
-   * Set stride
-   *
-   * This option allows data down-sampling at output.  Data are down-sampled
-   * in each dimension by the stride specified for that dimension.  For
-   * example, to down-sample the x-dimension of the field data by a factor
-   * of 2, i.e., half as many data will be output, select:
-   *
-   *   global->fdParams.stride_x = 2;
-   *
-   * The following 2-D example shows down-sampling of a 7x7 grid (nx = 7,
-   * ny = 7.  With ghost-cell padding the actual extents of the grid are 9x9.
-   * Setting the strides in x and y to equal 2 results in an output grid of
-   * nx = 4, ny = 4, with actual extents 6x6.
-   *
-   * G G G G G G G G G
-   * G X X X X X X X G
-   * G X X X X X X X G         G G G G G G
-   * G X X X X X X X G         G X X X X G
-   * G X X X X X X X G   ==>   G X X X X G
-   * G X X X X X X X G         G X X X X G
-   * G X X X X X X X G         G X X X X G
-   * G X X X X X X X G         G G G G G G
-   * G G G G G G G G G
-   *
-   * Note that grid extents in each dimension must be evenly divisible by
-   * the stride for that dimension:
-   *
-   *   nx = 150;
-   *   global->fdParams.stride_x = 10; // legal -> 150/10 = 15
-   *
-   *   global->fdParams.stride_x = 8; // illegal!!! -> 150/8 = 18.75
-   *------------------------------------------------------------------------*/
-
-  // relative path to fields data from global header
-  sprintf(global->fdParams.baseDir, "fields");
-
-  // base file name for fields output
-  sprintf(global->fdParams.baseFileName, "fields");
-
-  global->fdParams.stride_x = 1;
-  global->fdParams.stride_y = 1;
-  global->fdParams.stride_z = 1;
-
-  // add field parameters to list
-  global->outputParams.push_back(&global->fdParams);
-
-  sim_log ( "Fields x-stride " << global->fdParams.stride_x );
-  sim_log ( "Fields y-stride " << global->fdParams.stride_y );
-  sim_log ( "Fields z-stride " << global->fdParams.stride_z );
-
-  // relative path to electron species data from global header
-  sprintf(global->hedParams.baseDir, "hydro");
-
-  // base file name for fields output
-  sprintf(global->hedParams.baseFileName, "ehydro");
-
-  global->hedParams.stride_x = 1;
-  global->hedParams.stride_y = 1;
-  global->hedParams.stride_z = 1;
-
-  // add electron species parameters to list
-  global->outputParams.push_back(&global->hedParams);
-
-  sim_log ( "Electron species x-stride " << global->hedParams.stride_x );
-  sim_log ( "Electron species y-stride " << global->hedParams.stride_y );
-  sim_log ( "Electron species z-stride " << global->hedParams.stride_z );
-
-  // relative path to electron species data from global header
-  sprintf(global->hHdParams.baseDir, "hydro");
-
-  // base file name for fields output
-  sprintf(global->hHdParams.baseFileName, "Hhydro");
-
-  global->hHdParams.stride_x = 1;
-  global->hHdParams.stride_y = 1;
-  global->hHdParams.stride_z = 1;
-
-  sim_log ( "Ion species x-stride " << global->hHdParams.stride_x );
-  sim_log ( "Ion species y-stride " << global->hHdParams.stride_y );
-  sim_log ( "Ion species z-stride " << global->hHdParams.stride_z );
-
-  // add electron species parameters to list
-  global->outputParams.push_back(&global->hHdParams);
-
-  /*--------------------------------------------------------------------------
-   * Set output fields
-   *
-   * It is now possible to select which state-variables are output on a
-   * per-dump basis.  Variables are selected by passing an or-list of
-   * state-variables by name.  For example, to only output the x-component
-   * of the electric field and the y-component of the magnetic field, the
-   * user would call output_variables like:
-   *
-   *   global->fdParams.output_variables( ex | cby );
-   *
-   * NOTE: OUTPUT VARIABLES ARE ONLY USED FOR THE BANDED FORMAT.  IF THE
-   * FORMAT IS BAND-INTERLEAVE, ALL VARIABLES ARE OUTPUT AND CALLS TO
-   * 'output_variables' WILL HAVE NO EFFECT.
-   *
-   * ALSO: DEFAULT OUTPUT IS NONE!  THIS IS DUE TO THE WAY THAT VPIC
-   * HANDLES GLOBAL VARIABLES IN THE INPUT DECK AND IS UNAVOIDABLE.
-   *
-   * For convenience, the output variable 'all' is defined:
-   *
-   *   global->fdParams.output_variables( all );
-   *------------------------------------------------------------------------*/
-  /* CUT AND PASTE AS A STARTING POINT
-   * REMEMBER TO ADD APPROPRIATE GLOBAL DUMPPARAMETERS VARIABLE
-
-   output_variables( all );
-
-   output_variables( electric | div_e_err | magnetic | div_b_err |
-                     tca      | rhob      | current  | rhof |
-                     emat     | nmat      | fmat     | cmat );
-
-   output_variables( current_density  | charge_density |
-                     momentum_density | ke_density     | stress_tensor );
-   */
-
-  //global->fdParams.output_variables( electric | magnetic );
-  //global->hedParams.output_variables( current_density | charge_density
-  //                                    | stress_tensor );
-  //global->hHdParams.output_variables( current_density | charge_density );
-  //                                    | stress_tensor );
-
-  global->fdParams.output_variables( all );
-  global->hedParams.output_variables( all );
-  global->hHdParams.output_variables( all );
-
-  /*--------------------------------------------------------------------------
-   * Convenience functions for simlog output
-   *------------------------------------------------------------------------*/
-
-  char varlist[512];
-  create_field_list(varlist, global->fdParams);
-
-  sim_log ( "Fields variable list: " << varlist );
-
-  create_hydro_list(varlist, global->hedParams);
-
-  sim_log ( "Electron species variable list: " << varlist );
-
-  create_hydro_list(varlist, global->hHdParams);
-
-  sim_log ( "Ion species variable list: " << varlist );
-
-  /* ---------------------------------------------
-     Add parameters for the energy diagnostics
-     --------------------------------------------- */
-
-  global->ede.sp_id = electron->id;
-  global->ede.vth = sqrt(2.0)*vthe;
-  sprintf(global->ede.fname,"%s",global->hedParams.baseFileName);
-
-  global->edi.sp_id = ion->id;
-  global->edi.vth = sqrt(2.0)*vthi;
-  sprintf(global->edi.fname,"%s",global->hHdParams.baseFileName);
-
-  global->nex  = 6;
-  global->emax = 120;
+  user_init_diagnostics(this, electron, ion);
 
   sim_log("*** Finished with user-specified initialization ***");
 
