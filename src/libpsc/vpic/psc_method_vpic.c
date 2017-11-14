@@ -14,6 +14,7 @@
 
 struct psc_method_vpic {
   bool use_deck_field_ic;
+  bool use_deck_particle_ic;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
@@ -21,6 +22,7 @@ struct psc_method_vpic {
 #define VAR(x) (void *)offsetof(struct psc_method_vpic, x)
 static struct param psc_method_vpic_descr[] = {
   { "use_deck_field_ic"         , VAR(use_deck_field_ic)          , PARAM_BOOL(false) },
+  { "use_deck_particle_ic"      , VAR(use_deck_particle_ic)       , PARAM_BOOL(false) },
   {},
 };
 #undef VAR
@@ -118,23 +120,25 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 
 // ----------------------------------------------------------------------
 // psc_method_vpic_setup_partition_and_particles
+//
+// set particles x^{n+1/2}, p^{n+1/2}
 
 static void
 psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
 {
-  // set particles x^{n+1/2}, p^{n+1/2}
+  struct psc_method_vpic *sub = psc_method_vpic(method);
   psc_setup_partition_and_particles(psc);
 
-  // right now, the vpic-internal particles have been initialized by
-  // deck.cxx, (while the base particles have potentially been
+  // Right now, the vpic-internal particles may have been initialized
+  // by he deck, while the base particles have potentially been
   // initialized by setup_particles/init_npt).
   //
-  // the general logic expects the base particles to be initialized, so
-  // we need to copy them over from the vpic particles first
-#if 1
-  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
-  psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
-#endif
+  // If we want to use the deck particle i.c., we need to copy the
+  // VPIC particles over to the base particles.
+  if (sub->use_deck_particle_ic) {
+    struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
+    psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
+  }
 }
 
 // ----------------------------------------------------------------------
