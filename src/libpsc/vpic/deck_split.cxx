@@ -845,11 +845,11 @@ begin_initialization {
 
   global->ede.sp_id = electron->id;
   global->ede.vth = sqrt(2.0)*vthe;
-  sprintf(global->ede.fname,global->hedParams.baseFileName);
+  sprintf(global->ede.fname,"%s",global->hedParams.baseFileName);
 
   global->edi.sp_id = ion->id;
   global->edi.vth = sqrt(2.0)*vthi;
-  sprintf(global->edi.fname, global->hHdParams.baseFileName);
+  sprintf(global->edi.fname,"%s",global->hHdParams.baseFileName);
 
   global->nex  = 6;
   global->emax = 120;
@@ -1001,15 +1001,15 @@ begin_diagnostics {
   if ( should_dump(eparticle) && step() !=0
        && step() > 56*(global->fields_interval)  ) {
     // if ( should_dump(eparticle) && step() !=0 ) {
-    sprintf(subdir,"particle/T.%d",step());
+    sprintf(subdir,"particle/T.%lld",step());
     dump_mkdir(subdir);
-    sprintf(subdir,"particle/T.%d/eparticle",step());
+    sprintf(subdir,"particle/T.%lld/eparticle",step());
     dump_particles("electron", subdir);
   }
 
   if ( should_dump(Hparticle) && step() !=0
        && step() > 56*(global->fields_interval)  ) {
-    sprintf(subdir,"particle/T.%d/Hparticle",step());
+    sprintf(subdir,"particle/T.%lld/Hparticle",step());
     dump_particles("ion", subdir);
   }
 
