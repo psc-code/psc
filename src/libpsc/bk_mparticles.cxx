@@ -24,7 +24,7 @@ struct particle_buf_t {
     PARTICLE_BUF(resize)(&z, n);
   }
   
-  int size() {
+  int size() const {
     return PARTICLE_BUF(size)(&z);
   }
 
@@ -45,26 +45,76 @@ struct bk_mparticles {
 
   int n_patches;
   std::vector<particle_buf_t> buf;
+
+  void reserve_all(const int n_prts_by_patch[]);
+  void resize_all(const int n_prts_by_patch[]);
+  void size_all(int n_prts_by_patch[]) const;
+  int n_prts() const;
+  particle_t& at(int p, int n);
 };
 
 // ----------------------------------------------------------------------
-// bk_mparticles_create
+// bk_mparticles::reserve_all
+
+void bk_mparticles::reserve_all(const int n_prts_by_patch[])
+{
+  for (int p = 0; p < n_patches; p++) {
+    buf[p].reserve(n_prts_by_patch[p]);
+  }
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles::resize_all
+
+void bk_mparticles::resize_all(const int n_prts_by_patch[])
+{
+  for (int p = 0; p < n_patches; p++) {
+    buf[p].resize(n_prts_by_patch[p]);
+  }
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles::size_all
+
+void bk_mparticles::size_all(int n_prts_by_patch[]) const
+{
+  for (int p = 0; p < n_patches; p++) {
+    n_prts_by_patch[p] = buf[p].size();
+  }
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles::n_prts
+
+int bk_mparticles::n_prts() const
+{
+  int n_prts = 0;
+  for (int p = 0; p < n_patches; p++) {
+    n_prts += buf[p].size();
+  }
+  return n_prts;
+}
+
+// ----------------------------------------------------------------------
+// bk_mparticles::at
+
+bk_mparticles::particle_t& bk_mparticles::at(int p, int n)
+{
+  return buf[p][n];
+}
+
+// ======================================================================
+// bk_mparticles C wrappers
 
 struct bk_mparticles *bk_mparticles_create()
 {
   return new bk_mparticles;
 }
 
-// ----------------------------------------------------------------------
-// bk_mparticles_destroy
-
 void bk_mparticles_destroy(struct bk_mparticles *bkmprts)
 {
   delete bkmprts;
 }
-
-// ----------------------------------------------------------------------
-// bk_mparticles_ctor
 
 void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches)
 {
@@ -72,62 +122,33 @@ void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches)
   bkmprts->buf.resize(n_patches);
 }
 
-// ----------------------------------------------------------------------
-// bk_mparticles_dtor
-
 void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
 {
 }
 
-// ----------------------------------------------------------------------
-// bk_mparticles_reserve_all
-
 void bk_mparticles_reserve_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[])
 {
-  for (int p = 0; p < bkmprts->n_patches; p++) {
-    bkmprts->buf[p].reserve(n_prts_by_patch[p]);
-  }
+  bkmprts->reserve_all(n_prts_by_patch);
 }
-
-// ----------------------------------------------------------------------
-// bk_mparticles_resize_all
 
 void bk_mparticles_resize_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[])
 {
-  for (int p = 0; p < bkmprts->n_patches; p++) {
-    bkmprts->buf[p].resize(n_prts_by_patch[p]);
-  }
+  bkmprts->resize_all(n_prts_by_patch);
 }
 
-// ----------------------------------------------------------------------
-// bk_mparticles_get_size_all
-
-void bk_mparticles_get_size_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[])
+void bk_mparticles_size_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[])
 {
-  for (int p = 0; p < bkmprts->n_patches; p++) {
-    n_prts_by_patch[p] = bkmprts->buf[p].size();
-  }
+  bkmprts->size_all(n_prts_by_patch);
 }
 
-// ----------------------------------------------------------------------
-// bk_mparticles_get_n_prts
-
-int bk_mparticles_get_n_prts(struct bk_mparticles *bkmprts)
+int bk_mparticles_n_prts(struct bk_mparticles *bkmprts)
 {
-  int n_prts = 0;
-  for (int p = 0; p < bkmprts->n_patches; p++) {
-    n_prts += bkmprts->buf[p].size();
-  }
-  return n_prts;
+  return bkmprts->n_prts();
 }
 
-// ----------------------------------------------------------------------
-// bk_mparticles_at_ptr
-
-particle_single_by_kind_t *
-bk_mparticles_at_ptr(struct bk_mparticles *bkmprts, int p, int n)
+particle_single_by_kind_t *bk_mparticles_at_ptr(struct bk_mparticles *bkmprts, int p, int n)
 {
-  return &bkmprts->buf[p][n];
+  return &bkmprts->at(p, n);
 }
 
 

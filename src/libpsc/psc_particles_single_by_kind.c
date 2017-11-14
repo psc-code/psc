@@ -63,7 +63,7 @@ PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  bk_mparticles_get_size_all(bkmprts, n_prts_by_patch);
+  bk_mparticles_size_all(bkmprts, n_prts_by_patch);
 }
 
 static unsigned int
@@ -71,7 +71,7 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
 {
   struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  return bk_mparticles_get_n_prts(bkmprts);
+  return bk_mparticles_n_prts(bkmprts);
 }
 
 particle_single_by_kind_t *
