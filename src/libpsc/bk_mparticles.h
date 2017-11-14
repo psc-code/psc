@@ -5,15 +5,15 @@
 #include <vector>
 
 // ======================================================================
-// bk_mparticles
+// mparticles
 
 template<typename T>
 struct mparticles {
-  typedef T particle_type;
-  typedef std::vector<particle_type> particle_buf_t;
+  typedef T particle_buf_type;
+  typedef typename T::value_type particle_type;
 
   int n_patches;
-  std::vector<particle_buf_t> buf;
+  std::vector<particle_buf_type> buf;
 
   mparticles(int _n_patches);
 
@@ -23,7 +23,5 @@ struct mparticles {
   int n_prts() const;
   particle_type& at(int p, int n);
 };
-
-typedef mparticles<particle_single_by_kind_t> bk_mparticles;
 
 #endif

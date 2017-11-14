@@ -6,7 +6,8 @@
 
 #ifdef __cplusplus
 #include "bk_mparticles.h"
-typedef mparticles<particle_single_by_kind_t> bk_mparticles;
+typedef std::vector<particle_single_by_kind_t> particle_single_by_kind_buf_t;
+typedef mparticles<particle_single_by_kind_buf_t> bk_mparticles;
 #else
 typedef struct bk_mparticles bk_mparticles;
 #endif
