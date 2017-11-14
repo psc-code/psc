@@ -5,6 +5,7 @@
 #include <psc_diag.h>
 #include <psc_output_fields_collection.h>
 #include <psc_output_particles.h>
+#include <psc_balance.h>
 
 #include <stdlib.h>
 
@@ -29,6 +30,17 @@ psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
 				   int *n_prts_by_patch, int *particle_label_offset)
 {
   psc_setup_partition(psc, n_prts_by_patch, particle_label_offset);
+}
+
+// ----------------------------------------------------------------------
+// psc_method_default_setup_particles
+
+static void
+psc_method_default_setup_particles(struct psc_method *method, struct psc *psc,
+				   int *n_prts_by_patch, int particle_label_offset)
+{
+  psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
+  psc_setup_particles(psc, n_prts_by_patch, particle_label_offset);
 }
 
 // ----------------------------------------------------------------------
@@ -57,8 +69,7 @@ psc_method_default_setup_partition_and_particles(struct psc_method *method, stru
   psc_mparticles_setup(psc->particles);
 
   // set up particles
-  psc_mparticles_reserve_all(psc->particles, nr_particles_by_patch);
-  psc_setup_particles(psc, nr_particles_by_patch, particle_label_offset);
+  psc_method_default_setup_particles(psc->method, psc, nr_particles_by_patch, particle_label_offset);
 
   free(nr_particles_by_patch);
 }

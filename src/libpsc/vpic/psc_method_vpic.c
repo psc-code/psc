@@ -137,6 +137,27 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
+// psc_method_vpic_setup_particles
+
+static void
+psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
+				   int *n_prts_by_patch, int particle_label_offset)
+{
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+
+  // set up particles
+    if (sub->use_deck_particle_ic) {
+    // If we want to use the deck particle i.c., we need to copy the
+    // already set up "vpic" particles over to the base particles.
+    struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
+    psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
+  } else {
+    psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
+    psc_setup_particles(psc, n_prts_by_patch, particle_label_offset);
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_method_vpic_setup_partition_and_particles
 //
 // set particles x^{n+1/2}, p^{n+1/2}
@@ -144,8 +165,6 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
 static void
 psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
 {
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-
   // initial balancing
   int particle_label_offset;
   int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
@@ -165,16 +184,7 @@ psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct 
   psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
 
-  // set up particles
-    if (sub->use_deck_particle_ic) {
-    // If we want to use the deck particle i.c., we need to copy the
-    // already set up "vpic" particles over to the base particles.
-    struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
-    psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
-  } else {
-    psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
-    psc_setup_particles(psc, n_prts_by_patch, particle_label_offset);
-  }
+  psc_method_vpic_setup_particles(method, psc, n_prts_by_patch, particle_label_offset);
 
   free(n_prts_by_patch);
 }
