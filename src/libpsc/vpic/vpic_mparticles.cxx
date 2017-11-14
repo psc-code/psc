@@ -42,6 +42,33 @@ int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts)
 }
 
 // ----------------------------------------------------------------------
+// vpic_mparticles_reserve_all
+//
+// This is a bit iffy, since we don't really want to reallocate stuff here,
+// at least for now, and we wouldn't be able to know how to split this into
+// the different species, anyway.
+
+void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
+				 int *n_prts_by_patch)
+{
+  assert(n_patches == 1);
+
+  for (int p = 0; p < n_patches; p++) {
+    int n_prts = 0, n_prts_alloced = 0;
+    species_t *sp;
+    LIST_FOR_EACH(sp, vmprts->species_list) {
+      n_prts += sp->np;
+      n_prts_alloced += sp->max_np;
+    }
+    if (n_prts_by_patch[p] != n_prts) {
+      mprintf("psc_mparticles_vpic_reserve_all: %d (currently %d max %d)\n",
+	      n_prts_by_patch[p], n_prts, n_prts_alloced);
+    }
+    assert(n_prts_by_patch[p] <= n_prts_alloced);
+  }
+}
+
+// ----------------------------------------------------------------------
 // vpic_mparticles_get_size_all
 
 void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
