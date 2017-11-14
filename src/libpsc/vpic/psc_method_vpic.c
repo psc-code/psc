@@ -146,12 +146,10 @@ psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct 
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
-  // from psc_setup_partition_and_particles(psc);
-
   // initial balancing
-  int particle_label_offset = 0;
+  int particle_label_offset;
   int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
-  psc_method_vpic_setup_partition(method, psc, n_prts_by_patch, &particle_label_offset);
+  psc_method_setup_partition(method, psc, n_prts_by_patch, &particle_label_offset);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
     
   // create base particle data structure
@@ -297,6 +295,7 @@ struct psc_method_ops psc_method_ops_vpic = {
   .param_descr                   = psc_method_vpic_descr,
   .do_setup                      = psc_method_vpic_do_setup,
   .setup_fields                  = psc_method_vpic_setup_fields,
+  .setup_partition               = psc_method_vpic_setup_partition,
   .setup_partition_and_particles = psc_method_vpic_setup_partition_and_particles,
   .initialize                    = psc_method_vpic_initialize,
   .output                        = psc_method_vpic_output,

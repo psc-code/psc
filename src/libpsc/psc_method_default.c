@@ -6,6 +6,8 @@
 #include <psc_output_fields_collection.h>
 #include <psc_output_particles.h>
 
+#include <stdlib.h>
+
 // ======================================================================
 // psc_method "default"
 
@@ -35,14 +37,14 @@ psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
 static void
 psc_method_default_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
 {
-  // alloc / initialize particles
+  // initial balancing
   int particle_label_offset;
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   psc_method_setup_partition(psc->method, psc, nr_particles_by_patch, &particle_label_offset);
   psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
 
-  psc->particles = 
-    psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
+  // create base particle data structure
+  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
   psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
   int nr_patches;
@@ -53,9 +55,11 @@ psc_method_default_setup_partition_and_particles(struct psc_method *method, stru
   }
   psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
-  psc_mparticles_reserve_all(psc->particles, nr_particles_by_patch);
 
+  // set up particles
+  psc_mparticles_reserve_all(psc->particles, nr_particles_by_patch);
   psc_setup_particles(psc, nr_particles_by_patch, particle_label_offset);
+
   free(nr_particles_by_patch);
 }
 
