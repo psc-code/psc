@@ -34,10 +34,3 @@ int bk_mparticles_n_prts(bk_mparticles *bkmprts)
   return bkmprts->n_prts();
 }
 
-particle_single_by_kind_t *bk_mparticles_at_ptr(bk_mparticles *bkmprts, int p, int n)
-{
-  return &bkmprts->at(p, n);
-}
-
-
-

@@ -36,7 +36,6 @@ void bk_mparticles_reserve_all(bk_mparticles *bkmprts, int n_prts_by_patch[]);
 void bk_mparticles_resize_all(bk_mparticles *bkmprts, int n_prts_by_patch[]);
 void bk_mparticles_size_all(bk_mparticles *bkmprts, int n_prts_by_patch[]);
 int bk_mparticles_n_prts(bk_mparticles *bkmprts);
-particle_single_by_kind_t *bk_mparticles_at_ptr(bk_mparticles *bkmprts, int p, int n);
 
 #if 0
 {

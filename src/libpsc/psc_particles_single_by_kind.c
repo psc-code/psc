@@ -71,14 +71,6 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
   return bk_mparticles_n_prts(bkmprts);
 }
 
-particle_single_by_kind_t *
-PFX(get_one)(struct psc_mparticles *mprts, int p, unsigned int n)
-{
-  struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
-
-  return bk_mparticles_at_ptr(bkmprts, p, n);
-}
-
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
