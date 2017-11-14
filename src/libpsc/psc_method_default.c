@@ -69,7 +69,7 @@ psc_method_default_setup_partition_and_particles(struct psc_method *method, stru
   psc_mparticles_setup(psc->particles);
 
   // set up particles
-  psc_method_default_setup_particles(psc->method, psc, nr_particles_by_patch, particle_label_offset);
+  psc_method_setup_particles(psc->method, psc, nr_particles_by_patch, particle_label_offset);
 
   free(nr_particles_by_patch);
 }
@@ -117,6 +117,7 @@ struct psc_method_ops psc_method_ops_default = {
   .do_setup                      = psc_method_default_do_setup,
   .setup_fields                  = psc_method_default_setup_fields,
   .setup_partition               = psc_method_default_setup_partition,
+  .setup_particles               = psc_method_default_setup_particles,
   .setup_partition_and_particles = psc_method_default_setup_partition_and_particles,
   .initialize                    = psc_method_default_initialize,
   .output                        = psc_method_default_output,

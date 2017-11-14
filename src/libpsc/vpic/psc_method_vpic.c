@@ -141,7 +141,7 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
-				   int *n_prts_by_patch, int particle_label_offset)
+				int *n_prts_by_patch, int particle_label_offset)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -184,7 +184,8 @@ psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct 
   psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
 
-  psc_method_vpic_setup_particles(method, psc, n_prts_by_patch, particle_label_offset);
+  // set up particles
+  psc_method_setup_particles(method, psc, n_prts_by_patch, particle_label_offset);
 
   free(n_prts_by_patch);
 }
@@ -306,6 +307,7 @@ struct psc_method_ops psc_method_ops_vpic = {
   .do_setup                      = psc_method_vpic_do_setup,
   .setup_fields                  = psc_method_vpic_setup_fields,
   .setup_partition               = psc_method_vpic_setup_partition,
+  .setup_particles               = psc_method_vpic_setup_particles,
   .setup_partition_and_particles = psc_method_vpic_setup_partition_and_particles,
   .initialize                    = psc_method_vpic_initialize,
   .output                        = psc_method_vpic_output,
