@@ -158,39 +158,6 @@ psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_setup_partition_and_particles
-//
-// set particles x^{n+1/2}, p^{n+1/2}
-
-static void
-psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
-{
-  // initial balancing
-  int particle_label_offset;
-  int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
-  psc_method_setup_partition(method, psc, n_prts_by_patch, &particle_label_offset);
-  psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
-    
-  // create base particle data structure
-  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
-  psc_mparticles_set_name(psc->particles, "mparticles");
-  int nr_patches;
-  mrc_domain_get_patches(psc->mrc_domain, &nr_patches);
-  psc_mparticles_set_param_int(psc->particles, "nr_patches", nr_patches);
-  if (psc->prm.particles_base_flags == 0) {
-    psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
-  }
-  psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
-  psc_mparticles_setup(psc->particles);
-
-  // set up particles
-  psc_method_setup_particles(method, psc, n_prts_by_patch, particle_label_offset);
-
-  free(n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_vpic_setup_fields
 
 static void
@@ -308,7 +275,6 @@ struct psc_method_ops psc_method_ops_vpic = {
   .setup_fields                  = psc_method_vpic_setup_fields,
   .setup_partition               = psc_method_vpic_setup_partition,
   .setup_particles               = psc_method_vpic_setup_particles,
-  .setup_partition_and_particles = psc_method_vpic_setup_partition_and_particles,
   .initialize                    = psc_method_vpic_initialize,
   .output                        = psc_method_vpic_output,
 };

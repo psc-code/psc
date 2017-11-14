@@ -16,7 +16,6 @@ struct psc_method_ops {
 			  int *particle_label_offset);
   void (*setup_particles)(struct psc_method *method, struct psc *psc, int *n_prts_by_patch,
 			  int particle_label_offset);
-  void (*setup_partition_and_particles)(struct psc_method *method, struct psc *psc);
   void (*initialize)(struct psc_method *method, struct psc *psc);
   void (*output)(struct psc_method *method, struct psc *psc);
 };
