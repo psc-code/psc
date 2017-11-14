@@ -473,7 +473,7 @@ struct psc_ops psc_harris_ops = {
   .setup            = psc_harris_setup,
   .read             = psc_harris_read,
   .init_field       = psc_harris_init_field,
-  //  .setup_particles  = psc_harris_setup_particles,
+  .setup_particles  = psc_harris_setup_particles,
 };
 
 // ======================================================================

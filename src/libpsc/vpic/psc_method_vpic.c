@@ -5,6 +5,7 @@
 #include <psc_particles_vpic.h>
 #include <psc_push_particles_vpic.h>
 
+#include <psc_balance.h>
 #include <psc_marder.h>
 
 #include <vpic_iface.h>
@@ -127,18 +128,45 @@ static void
 psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
-  psc_setup_partition_and_particles(psc);
 
-  // Right now, the vpic-internal particles may have been initialized
-  // by he deck, while the base particles have potentially been
-  // initialized by setup_particles/init_npt).
-  //
-  // If we want to use the deck particle i.c., we need to copy the
-  // VPIC particles over to the base particles.
+  // from psc_setup_partition_and_particles(psc);
+
+  // initial balancing
+  int particle_label_offset = 0;
+  int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   if (sub->use_deck_particle_ic) {
+    assert(psc->nr_patches == 1);
+    nr_particles_by_patch[0] = 1; // fake, but not possible to balance, anyway
+  } else {
+    psc_setup_partition(psc, nr_particles_by_patch, &particle_label_offset);
+  }
+  psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
+
+  // create base particle data structure
+  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
+  psc_mparticles_set_name(psc->particles, "mparticles");
+  int nr_patches;
+  mrc_domain_get_patches(psc->mrc_domain, &nr_patches);
+  psc_mparticles_set_param_int(psc->particles, "nr_patches", nr_patches);
+  if (psc->prm.particles_base_flags == 0) {
+    psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
+  }
+  psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
+  psc_mparticles_setup(psc->particles);
+
+  // set up particles
+    if (sub->use_deck_particle_ic) {
+    // If we want to use the deck particle i.c., we need to copy the
+    // already set up "vpic" particles over to the base particles.
     struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
     psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
+  } else {
+    psc_mparticles_reserve_all(psc->particles, nr_particles_by_patch);
+    psc_setup_particles(psc, nr_particles_by_patch, particle_label_offset);
   }
+
+  free(nr_particles_by_patch);
 }
 
 // ----------------------------------------------------------------------
