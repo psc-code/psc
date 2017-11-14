@@ -353,7 +353,6 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
   }
 }
 
-#if 0
 // ----------------------------------------------------------------------
 // psc_harris_setup_particles
 
@@ -453,7 +452,6 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
 
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }
-#endif
 
 // ----------------------------------------------------------------------
 // psc_harris_read
@@ -475,9 +473,7 @@ struct psc_ops psc_harris_ops = {
   .setup            = psc_harris_setup,
   .read             = psc_harris_read,
   .init_field       = psc_harris_init_field,
-#if 0
   .setup_particles  = psc_harris_setup_particles,
-#endif
 };
 
 // ======================================================================
