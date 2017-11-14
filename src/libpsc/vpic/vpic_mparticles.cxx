@@ -173,7 +173,7 @@ static void
 get_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_single_by_kind_t *part = &ctx->bkmprts->at(ctx->p, n);
+  particle_single_by_kind *part = &ctx->bkmprts->at(ctx->p, n);
 
   //  assert(part->kind < ppsc->nr_kinds);
   prt->dx[0] = part->dx[0];
@@ -191,7 +191,7 @@ static void
 put_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_single_by_kind_t *part = &ctx->bkmprts->at(ctx->p, n);
+  particle_single_by_kind *part = &ctx->bkmprts->at(ctx->p, n);
 
   assert(prt->kind < 2); // FIXMEppsc->nr_kinds);
   part->dx[0] = prt->dx[0];

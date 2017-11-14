@@ -2,20 +2,22 @@
 #ifndef BK_MPARTICLES_IFACE_H
 #define BK_MPARTICLES_IFACE_H
 
-typedef float particle_single_by_kind_real_t;
-typedef struct {
-  particle_single_by_kind_real_t dx[3];
-  int i;
-  particle_single_by_kind_real_t ux[3];
-  particle_single_by_kind_real_t w;
-  int kind;
-} particle_single_by_kind_t;
-
 #ifdef __cplusplus
 
 #include "bk_mparticles.h"
-typedef std::vector<particle_single_by_kind_t> particle_single_by_kind_buf_t;
-typedef mparticles<particle_single_by_kind_buf_t> bk_mparticles;
+
+struct particle_single_by_kind {
+  typedef float real_type;
+  
+  real_type dx[3];
+  int i;
+  real_type ux[3];
+  real_type w;
+  int kind;
+};
+
+typedef std::vector<particle_single_by_kind> particle_single_by_kind_buf;
+typedef mparticles<particle_single_by_kind_buf> bk_mparticles;
 
 #else
 
