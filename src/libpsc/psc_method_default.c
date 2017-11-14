@@ -20,6 +20,16 @@ psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_method_default_setup_partition
+
+static void
+psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
+				   int *n_prts_by_patch, int *particle_label_offset)
+{
+  psc_setup_partition(psc, n_prts_by_patch, particle_label_offset);
+}
+
+// ----------------------------------------------------------------------
 // psc_method_default_setup_partition_and_particles
 
 static void
@@ -71,6 +81,7 @@ struct psc_method_ops psc_method_ops_default = {
   .name                          = "default",
   .do_setup                      = psc_method_default_do_setup,
   .setup_fields                  = psc_method_default_setup_fields,
+  .setup_partition               = psc_method_default_setup_partition,
   .setup_partition_and_particles = psc_method_default_setup_partition_and_particles,
   .initialize                    = psc_method_default_initialize,
   .output                        = psc_method_default_output,

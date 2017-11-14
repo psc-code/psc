@@ -437,7 +437,7 @@ psc_setup_partition_and_particles(struct psc *psc)
   // alloc / initialize particles
   int particle_label_offset;
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
-  psc_setup_partition(psc, nr_particles_by_patch, &particle_label_offset);
+  psc_method_setup_partition(psc->method, psc, nr_particles_by_patch, &particle_label_offset);
   psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
 
   psc->particles = 
