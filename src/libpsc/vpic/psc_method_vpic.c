@@ -12,6 +12,19 @@
 // ======================================================================
 // psc_method "vpic"
 
+struct psc_method_vpic {
+  bool use_deck_field_ic;
+};
+
+#define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
+
+#define VAR(x) (void *)offsetof(struct psc_method_vpic, x)
+static struct param psc_method_vpic_descr[] = {
+  { "use_deck_field_ic"         , VAR(use_deck_field_ic)          , PARAM_BOOL(false) },
+  {},
+};
+#undef VAR
+
 // ----------------------------------------------------------------------
 // psc_method_vpic_do_setup
 
@@ -130,16 +143,24 @@ psc_method_vpic_setup_partition_and_particles(struct psc_method *method, struct 
 static void
 psc_method_vpic_setup_fields(struct psc_method *method, struct psc *psc)
 {
-  // right now, the vpic-internal fields are already initialized, but
-  // the general logic expects the base fields to be initialized, so
-  // we need to copy them over first
-  struct psc_mfields *mflds_vpic = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
-  psc_mfields_put_as(mflds_vpic, psc->flds, 0, VPIC_MFIELDS_N_COMP);
-
-  // fields may get initialized twice here -- first in deck.cxx, and
-  // then the regular PSC way.
-  // FIXME, this is kinda confusing, but not easy to do much about.
-  psc_setup_fields(psc);
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+  
+  if (sub->use_deck_field_ic) {
+    // The vpic-internal fields have already been initialized by the deck,
+    // but by the end of this function, PSC expects the base fields to be contains
+    // the initial condition.
+    // So let's copy the vpic-internal fields into the base fields in this somewhat
+    // odd fashion.
+    struct psc_mfields *mflds_vpic = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
+    psc_mfields_put_as(mflds_vpic, psc->flds, 0, VPIC_MFIELDS_N_COMP);
+  } else {
+    // While the fields may already have been initialized by the deck,
+    // we'll initialize them the PSC way now.  And in case PSC doesn't
+    // specificy a field i.c., clear out whatever the deck did first.
+    psc_mfields_zero_range(psc->flds, 0, psc->flds->nr_fields);
+    // This does the usual PSC initialization.
+    psc_setup_fields(psc);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -228,6 +249,8 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
 
 struct psc_method_ops psc_method_ops_vpic = {
   .name                          = "vpic",
+  .size                          = sizeof(struct psc_method_vpic),
+  .param_descr                   = psc_method_vpic_descr,
   .do_setup                      = psc_method_vpic_do_setup,
   .setup_fields                  = psc_method_vpic_setup_fields,
   .setup_partition_and_particles = psc_method_vpic_setup_partition_and_particles,
