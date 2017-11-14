@@ -13,12 +13,22 @@ struct bk_mparticles {
   int n_patches;
   std::vector<particle_buf_t> buf;
 
+  bk_mparticles(int _n_patches);
+
   void reserve_all(const int n_prts_by_patch[]);
   void resize_all(const int n_prts_by_patch[]);
   void size_all(int n_prts_by_patch[]) const;
   int n_prts() const;
   particle_t& at(int p, int n);
 };
+
+// ----------------------------------------------------------------------
+// bk_mparticles::ctor
+
+bk_mparticles::bk_mparticles(int _n_patches)
+  : n_patches(_n_patches), buf(_n_patches)
+{
+}
 
 // ----------------------------------------------------------------------
 // bk_mparticles::reserve_all
@@ -73,24 +83,14 @@ bk_mparticles::particle_t& bk_mparticles::at(int p, int n)
 // ======================================================================
 // bk_mparticles C wrappers
 
-struct bk_mparticles *bk_mparticles_create()
+struct bk_mparticles *bk_mparticles_new(int n_patches)
 {
-  return new bk_mparticles;
+  return new bk_mparticles(n_patches);
 }
 
-void bk_mparticles_destroy(struct bk_mparticles *bkmprts)
+void bk_mparticles_delete(struct bk_mparticles *bkmprts)
 {
   delete bkmprts;
-}
-
-void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches)
-{
-  bkmprts->n_patches = n_patches;
-  bkmprts->buf.resize(n_patches);
-}
-
-void bk_mparticles_dtor(struct bk_mparticles *bkmprts)
-{
 }
 
 void bk_mparticles_reserve_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[])

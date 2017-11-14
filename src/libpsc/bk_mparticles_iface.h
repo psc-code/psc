@@ -13,10 +13,8 @@ extern "C" {
 
 struct bk_mparticles;
 
-struct bk_mparticles *bk_mparticles_create();
-void bk_mparticles_destroy(struct bk_mparticles *bkmprts);
-void bk_mparticles_ctor(struct bk_mparticles *bkmprts, int n_patches);
-void bk_mparticles_dtor(struct bk_mparticles *bkmprts);
+struct bk_mparticles *bk_mparticles_new(int n_patches);
+void bk_mparticles_delete(struct bk_mparticles *bkmprts);
 void bk_mparticles_reserve_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[]);
 void bk_mparticles_resize_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[]);
 void bk_mparticles_size_all(struct bk_mparticles *bkmprts, int n_prts_by_patch[]);

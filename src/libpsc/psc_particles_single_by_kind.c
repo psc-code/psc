@@ -29,8 +29,7 @@ PFX(setup)(struct psc_mparticles *mprts)
 
   psc_mparticles_setup_super(mprts);
 
-  sub->bkmprts = bk_mparticles_create();
-  bk_mparticles_ctor(sub->bkmprts, mprts->nr_patches);
+  sub->bkmprts = bk_mparticles_new(mprts->nr_patches);
 }
 
 static void
@@ -38,8 +37,7 @@ PFX(destroy)(struct psc_mparticles *mprts)
 {
   struct bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
 
-  bk_mparticles_dtor(bkmprts);
-  bk_mparticles_destroy(bkmprts);
+  bk_mparticles_delete(bkmprts);
 }
 
 static void
