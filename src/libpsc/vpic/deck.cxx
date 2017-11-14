@@ -574,12 +574,10 @@ begin_initialization {
   // Load fields
 
   sim_log( "Loading fields" );
-#if 0
   set_region_field( everywhere, 0, 0, 0,                    // Electric field
     cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
     -sn*b0*tanh(z/L) + b0*bg, //By
     dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
-#endif
 
   // Localized Perturbation to lauch a light wave
 
