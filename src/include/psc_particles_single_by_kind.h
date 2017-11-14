@@ -4,16 +4,13 @@
 
 #include "psc_particles_private.h"
 
-#include <psc.h>
-
-#include "psc_particle_single_by_kind.h"
-
 struct psc_mparticles_single_by_kind {
   struct bk_mparticles *bkmprts;
 };
 
-particle_single_by_kind_t *psc_mparticles_single_by_kind_get_one(struct psc_mparticles *mprts,
-								 int p, unsigned int n);
-
+#define psc_mparticles_single_by_kind(mprts)({				\
+      assert((struct psc_mparticles_ops *) mprts->obj.ops == &psc_mparticles_single_by_kind_ops); \
+      mrc_to_subobj(mprts, struct psc_mparticles_single_by_kind);	\
+})
 
 #endif
