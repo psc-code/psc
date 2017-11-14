@@ -3,45 +3,12 @@
 
 #include <vector>
 
-#define PARTICLE_BUF(x) psc_particle_single_by_kind_buf_ ## x
-
-struct particle_buf_t {
-  typedef particle_single_by_kind_t particle_t;
-
-  particle_buf_t() {
-    PARTICLE_BUF(ctor)(&z);
-  }
-
-  ~particle_buf_t() {
-    PARTICLE_BUF(dtor)(&z);
-  }
-
-  void reserve(int n) {
-    PARTICLE_BUF(reserve)(&z, n);
-  }
-  
-  void resize(int n) {
-    PARTICLE_BUF(resize)(&z, n);
-  }
-  
-  int size() const {
-    return PARTICLE_BUF(size)(&z);
-  }
-
-  particle_t& operator[](int n) {
-    return *PARTICLE_BUF(at_ptr)(&z, n);
-  }
-
-  psc_particle_single_by_kind_buf_t z;
-
-};
-
 // ======================================================================
 // bk_mparticles
 
 struct bk_mparticles {
   typedef particle_single_by_kind_t particle_t;
-  //typedef psc_particle_single_by_kind_buf_t particle_buf_t;
+  typedef std::vector<particle_t> particle_buf_t;
 
   int n_patches;
   std::vector<particle_buf_t> buf;
