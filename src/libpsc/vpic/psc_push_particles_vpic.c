@@ -56,7 +56,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 {
   // needs E, B (not really, because they're already in interpolator), rhob?
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 6);
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds;

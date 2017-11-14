@@ -75,6 +75,8 @@ void vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts);
 int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts);
 void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
 				 int *n_prts_by_patch);
+void vpic_mparticles_resize_all(struct vpic_mparticles *vmprts, int n_patches,
+				 int *n_prts_by_patch);
 void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
 				  int *n_prts_by_patch);
 void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
@@ -83,6 +85,7 @@ void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int 
 void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
+void vpic_mparticles_push_back(struct vpic_mparticles *vmprts, const struct vpic_mparticles_prt *prt);
 void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx);
 
 void vpic_mparticles_copy_to_single_by_kind(struct vpic_mparticles *vmprts, bk_mparticles *bkmprts);

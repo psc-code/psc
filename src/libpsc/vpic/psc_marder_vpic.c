@@ -70,7 +70,8 @@ psc_marder_vpic_run(struct psc_marder *marder,
   }
   
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, VPIC_MFIELDS_N_COMP);
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY);
+
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
 
   // Divergence clean e
   if (clean_div_e) {

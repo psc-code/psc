@@ -60,11 +60,44 @@ void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
       n_prts += sp->np;
       n_prts_alloced += sp->max_np;
     }
+#if 0
     if (n_prts_by_patch[p] != n_prts) {
-      mprintf("psc_mparticles_vpic_reserve_all: %d (currently %d max %d)\n",
+      mprintf("vpic_mparticles_reserve_all: %d (currently %d max %d)\n",
 	      n_prts_by_patch[p], n_prts, n_prts_alloced);
     }
+#endif
     assert(n_prts_by_patch[p] <= n_prts_alloced);
+  }
+}
+
+// ----------------------------------------------------------------------
+// vpic_mparticles_resize_all
+//
+// Even more iffy, since can't really resize the per-species arrays, since we don't
+// know how the total # of particles we're given should be divided up
+
+void vpic_mparticles_resize_all(struct vpic_mparticles *vmprts, int n_patches,
+				int *n_prts_by_patch)
+{
+  assert(n_patches == 1);
+  
+  // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
+  // The mparticles conversion function should call resize_all() itself first, resizing to
+  // 0, and then using push_back, which will increase the count back to the right value
+
+  if (n_prts_by_patch[0] == 0) {
+    species_t *sp;
+    LIST_FOR_EACH(sp, vmprts->species_list) {
+      sp->np = 0;
+    }
+  } else {
+#if 0
+    int cur_n_prts_by_patch[n_patches];
+    vpic_mparticles_get_size_all(vmprts, n_patches, cur_n_prts_by_patch);
+
+    mprintf("vpic_mparticles_resize_all: ignoring %d -> %d\n",
+	    cur_n_prts_by_patch[0], n_prts_by_patch[0]);
+#endif
   }
 }
 
@@ -150,6 +183,23 @@ void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int 
 
     v_off += v_n_prts;
   }
+}
+
+void vpic_mparticles_push_back(struct vpic_mparticles *vmprts, const struct vpic_mparticles_prt *prt)
+{
+  species_t *sp;
+  LIST_FOR_EACH(sp, vmprts->species_list) {
+    if (sp->id == prt->kind) {
+      assert(sp->np < sp->max_np);
+      // the below is inject_particle_raw()
+      particle_t * RESTRICT p = sp->p + (sp->np++);
+      p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
+      p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
+      return;
+    }
+  }
+  mprintf("prt->kind %d not found in species list!\n", prt->kind);
+  assert(0);
 }
 
 // ----------------------------------------------------------------------

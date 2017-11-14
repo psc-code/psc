@@ -151,7 +151,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   struct psc_mfields *mflds_base = psc->flds;
   struct psc_mparticles *mprts_base = psc->particles;
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, VPIC_MFIELDS_N_COMP);
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
   
   // Do some consistency checks on user initialized fields
 
