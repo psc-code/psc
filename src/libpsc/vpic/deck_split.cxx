@@ -102,377 +102,30 @@ begin_globals {
   struct globals_physics phys;
 };
 
+// ======================================================================
 
-// ----------------------------------------------------------------------
-// user_load_fields
+static void user_init_params(globals_physics *phys, globals_diag *diag);
 
-static void user_load_fields(vpic_simulation *simulation, globals_physics *phys)
-{
-  double cs = cos(phys->theta), sn = sin(phys->theta);
-  double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
-  double b0 = phys->b0, bg = phys->bg, dbx = phys->dbx, dbz = phys->dbz;
-  grid_t *grid = simulation->grid;
-#define rank simulation->rank
-#define field simulation->field
-  
-  sim_log( "Loading fields" );
-  set_region_field( everywhere, 0, 0, 0,                    // Electric field
-    cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
-    -sn*b0*tanh(z/L) + b0*bg, //By
-    dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
-
-  // Note: everywhere is a region that encompasses the entire simulation
-  // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
-
-#undef field
-#undef rank
-}
-
-// ----------------------------------------------------------------------
-// user_load_particles
-
+static void user_load_fields(vpic_simulation *simulation, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, globals_physics *phys,
-				species_t *electron, species_t *ion)
-{
-  double cs = cos(phys->theta), sn = sin(phys->theta);
-  double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
-  double weight_s = phys->weight_s;
-  double tanhf = phys->tanhf, L = phys->L;
-  double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
-  double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
-  double weight_b = phys->weight_b;
-  grid_t *grid = simulation->grid;
-#define rank simulation->rank
-#define nproc simulation->nproc
-#define rng simulation->rng
-#define uniform simulation->uniform
-#define normal simulation->normal
-#define inject_particle simulation->inject_particle
-#define seed_entropy simulation->seed_entropy
-  
-  // LOAD PARTICLES
-
-  sim_log( "Loading particles" );
-
-  // Do a fast load of the particles
-
-  seed_entropy( rank() );  //Generators desynchronized
-  double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
-  double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
-  double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
-
-  // Load Harris population
-
-  sim_log( "-> Main Harris Sheet" );
-
-  repeat ( Ne_sheet/nproc() ) {
-    double x, y, z, ux, uy, uz, d0 ;
-
-    do {
-      z = L*atanh(uniform( rng(0), -1, 1)*tanhf);
-    } while( z<= zmin || z>=zmax );
-    x = uniform( rng(0), xmin, xmax );
-    y = uniform( rng(0), ymin, ymax );
-
-    // inject_particles() will return an error for particles no on this
-    // node and will not inject particle locally
-
-    ux = normal( rng(0), 0, vthe);
-    uy = normal( rng(0), 0, vthe);
-    uz = normal( rng(0), 0, vthe);
-    d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
-    uy = d0*cs - ux*sn;
-    ux = d0*sn + ux*cs;
-
-    inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
-
-    ux = normal( rng(0), 0, vthi);
-    uy = normal( rng(0), 0, vthi);
-    uz = normal( rng(0), 0, vthi);
-    d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
-    uy = d0*cs - ux*sn;
-    ux = d0*sn + ux*cs;
-
-    inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
-  }
-
-  sim_log( "-> Background Population" );
-
-  repeat ( Ne_back/nproc() ) {
-
-    double x = uniform( rng(0), xmin, xmax );
-    double y = uniform( rng(0), ymin, ymax );
-    double z = uniform( rng(0), zmin, zmax );
-
-    inject_particle( electron, x, y, z,
-                     normal( rng(0), 0, vtheb),
-                     normal( rng(0), 0, vtheb),
-                     normal( rng(0), 0, vtheb),
-                     weight_b, 0, 0);
-
-    inject_particle( ion, x, y, z,
-                     normal( rng(0), 0, vthib),
-                     normal( rng(0), 0, vthib),
-                     normal( rng(0), 0, vthib),
-                     weight_b, 0 ,0 );
-  }
-
-  sim_log( "Finished loading particles" );
-
-#undef rank
-#undef nproc
-#undef rng
-#undef uniform
-#undef normal
-#undef inject_particle
-#undef seed_entropy
-}
-
-// ----------------------------------------------------------------------
-// user_init_diagnostics
-
+				species_t *electron, species_t *ion);
 static void user_init_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				  species_t *electron, species_t *ion)
+				  species_t *electron, species_t *ion);
+
+static void user_init_harris(globals_physics *phys, globals_diag *diag)
 {
-#define create_field_list simulation->create_field_list
-#define create_hydro_list simulation->create_hydro_list
-#define rank simulation->rank
-
-  /*--------------------------------------------------------------------------
-   * New dump definition
-   *------------------------------------------------------------------------*/
-
-  /*--------------------------------------------------------------------------
-   * Set data output format
-   *
-   * This option allows the user to specify the data format for an output
-   * dump.  Legal settings are 'band' and 'band_interleave'.  Band-interleave
-   * format is the native storage format for data in VPIC.  For field data,
-   * this looks something like:
-   *
-   *   ex0 ey0 ez0 div_e_err0 cbx0 ... ex1 ey1 ez1 div_e_err1 cbx1 ...
-   *
-   * Banded data format stores all data of a particular state variable as a
-   * contiguous array, and is easier for ParaView to process efficiently.
-   * Banded data looks like:
-   *
-   *   ex0 ex1 ex2 ... exN ey0 ey1 ey2 ...
-   *
-   *------------------------------------------------------------------------*/
-
-  diag->fdParams.format = band;
-  sim_log ( "Fields output format = band" );
-
-  diag->hedParams.format = band;
-  sim_log ( "Electron species output format = band" );
-
-  diag->hHdParams.format = band;
-  sim_log ( "Ion species output format = band" );
-
-  /*--------------------------------------------------------------------------
-   * Set stride
-   *
-   * This option allows data down-sampling at output.  Data are down-sampled
-   * in each dimension by the stride specified for that dimension.  For
-   * example, to down-sample the x-dimension of the field data by a factor
-   * of 2, i.e., half as many data will be output, select:
-   *
-   *   global->fdParams.stride_x = 2;
-   *
-   * The following 2-D example shows down-sampling of a 7x7 grid (nx = 7,
-   * ny = 7.  With ghost-cell padding the actual extents of the grid are 9x9.
-   * Setting the strides in x and y to equal 2 results in an output grid of
-   * nx = 4, ny = 4, with actual extents 6x6.
-   *
-   * G G G G G G G G G
-   * G X X X X X X X G
-   * G X X X X X X X G         G G G G G G
-   * G X X X X X X X G         G X X X X G
-   * G X X X X X X X G   ==>   G X X X X G
-   * G X X X X X X X G         G X X X X G
-   * G X X X X X X X G         G X X X X G
-   * G X X X X X X X G         G G G G G G
-   * G G G G G G G G G
-   *
-   * Note that grid extents in each dimension must be evenly divisible by
-   * the stride for that dimension:
-   *
-   *   nx = 150;
-   *   global->fdParams.stride_x = 10; // legal -> 150/10 = 15
-   *
-   *   global->fdParams.stride_x = 8; // illegal!!! -> 150/8 = 18.75
-   *------------------------------------------------------------------------*/
-
-  // relative path to fields data from global header
-  sprintf(diag->fdParams.baseDir, "fields");
-
-  // base file name for fields output
-  sprintf(diag->fdParams.baseFileName, "fields");
-
-  diag->fdParams.stride_x = 1;
-  diag->fdParams.stride_y = 1;
-  diag->fdParams.stride_z = 1;
-
-  // add field parameters to list
-  diag->outputParams.push_back(&diag->fdParams);
-
-  sim_log ( "Fields x-stride " << diag->fdParams.stride_x );
-  sim_log ( "Fields y-stride " << diag->fdParams.stride_y );
-  sim_log ( "Fields z-stride " << diag->fdParams.stride_z );
-
-  // relative path to electron species data from global header
-  sprintf(diag->hedParams.baseDir, "hydro");
-
-  // base file name for fields output
-  sprintf(diag->hedParams.baseFileName, "ehydro");
-
-  diag->hedParams.stride_x = 1;
-  diag->hedParams.stride_y = 1;
-  diag->hedParams.stride_z = 1;
-
-  // add electron species parameters to list
-  diag->outputParams.push_back(&diag->hedParams);
-
-  sim_log ( "Electron species x-stride " << diag->hedParams.stride_x );
-  sim_log ( "Electron species y-stride " << diag->hedParams.stride_y );
-  sim_log ( "Electron species z-stride " << diag->hedParams.stride_z );
-
-  // relative path to electron species data from global header
-  sprintf(diag->hHdParams.baseDir, "hydro");
-
-  // base file name for fields output
-  sprintf(diag->hHdParams.baseFileName, "Hhydro");
-
-  diag->hHdParams.stride_x = 1;
-  diag->hHdParams.stride_y = 1;
-  diag->hHdParams.stride_z = 1;
-
-  sim_log ( "Ion species x-stride " << diag->hHdParams.stride_x );
-  sim_log ( "Ion species y-stride " << diag->hHdParams.stride_y );
-  sim_log ( "Ion species z-stride " << diag->hHdParams.stride_z );
-
-  // add electron species parameters to list
-  diag->outputParams.push_back(&diag->hHdParams);
-
-  /*--------------------------------------------------------------------------
-   * Set output fields
-   *
-   * It is now possible to select which state-variables are output on a
-   * per-dump basis.  Variables are selected by passing an or-list of
-   * state-variables by name.  For example, to only output the x-component
-   * of the electric field and the y-component of the magnetic field, the
-   * user would call output_variables like:
-   *
-   *   global->fdParams.output_variables( ex | cby );
-   *
-   * NOTE: OUTPUT VARIABLES ARE ONLY USED FOR THE BANDED FORMAT.  IF THE
-   * FORMAT IS BAND-INTERLEAVE, ALL VARIABLES ARE OUTPUT AND CALLS TO
-   * 'output_variables' WILL HAVE NO EFFECT.
-   *
-   * ALSO: DEFAULT OUTPUT IS NONE!  THIS IS DUE TO THE WAY THAT VPIC
-   * HANDLES GLOBAL VARIABLES IN THE INPUT DECK AND IS UNAVOIDABLE.
-   *
-   * For convenience, the output variable 'all' is defined:
-   *
-   *   global->fdParams.output_variables( all );
-   *------------------------------------------------------------------------*/
-  /* CUT AND PASTE AS A STARTING POINT
-   * REMEMBER TO ADD APPROPRIATE GLOBAL DUMPPARAMETERS VARIABLE
-
-   output_variables( all );
-
-   output_variables( electric | div_e_err | magnetic | div_b_err |
-                     tca      | rhob      | current  | rhof |
-                     emat     | nmat      | fmat     | cmat );
-
-   output_variables( current_density  | charge_density |
-                     momentum_density | ke_density     | stress_tensor );
-   */
-
-  //global->fdParams.output_variables( electric | magnetic );
-  //global->hedParams.output_variables( current_density | charge_density
-  //                                    | stress_tensor );
-  //global->hHdParams.output_variables( current_density | charge_density );
-  //                                    | stress_tensor );
-
-  diag->fdParams.output_variables( all );
-  diag->hedParams.output_variables( all );
-  diag->hHdParams.output_variables( all );
-
-  /*--------------------------------------------------------------------------
-   * Convenience functions for simlog output
-   *------------------------------------------------------------------------*/
-
-  char varlist[512];
-  create_field_list(varlist, diag->fdParams);
-
-  sim_log ( "Fields variable list: " << varlist );
-
-  create_hydro_list(varlist, diag->hedParams);
-
-  sim_log ( "Electron species variable list: " << varlist );
-
-  create_hydro_list(varlist, diag->hHdParams);
-
-  sim_log ( "Ion species variable list: " << varlist );
-
-#undef create_field_list
-#undef create_hydro_list
-#undef rank
 }
+
+// ======================================================================
+// initialization
 
 begin_initialization {
-  struct globals_physics *phys = &global->phys;
-  struct globals_diag *diag = &global->diag;
+  globals_physics *phys = &global->phys;
+  globals_diag *diag = &global->diag;
 
-  phys->cfl_req   = 0.99;  // How close to Courant should we try to run
-  phys->wpedt_max = 0.36;  // Max dt allowed if Courant not too restrictive
+  user_init_params(phys, diag);
 
-  // Physics parameters
-  phys->mi_me = 25.0;      // Ion mass / electron mass
-  phys->L_di    = 0.5;     // Sheet thickness / ion inertial length
-  phys->Ti_Te   = 5.0;     // Ion temperature / electron temperature
-  phys->nb_n0   = 0.228;   // background plasma density
-  phys->Tbe_Te  = 0.7598;  // Ratio of background T_e to Harris T_e
-  phys->Tbi_Ti  = 0.3039;  // Ratio of background T_i to Harris T_i
-  phys->wpe_wce = 2.0;     // electron plasma freq / electron cyclotron freq
-  phys->bg = 0.0;
-  phys->theta = 0;         // B0 = Bx
-  phys->taui = 1.1;//100;  // simulation wci's to run
-
-  phys->Lpert_Lx = 1.;     // wavelength of perturbation in terms of Lx
-  phys->dbz_b0 = 0.03;     // perturbation in Bz relative to B0
-
-  // Parameters for Open BC model
-  phys->open_bc_x = 0;
-  phys->driven_bc_z = 0;
-
-  phys->ion_sort_interval = 1000; // Injector moments also updated
-  phys->electron_sort_interval = 1000; // Injector moments also updated
-
-  diag->status_interval  = 100;
-  diag->restart_interval = 8000;
-  diag->energies_interval = 50;
-  diag->t_intervali = 1; // output interval in terms of 1/wci
-  diag->quota   = 11.0;   // run quota in hours
-  diag->quota_check_interval = 100;
-
-
-  // Numerical parameters
-
-  phys->nppc  = 100; // Average number of macro particle per cell per species
-
-  phys->Lx_di = 25.6;
-  phys->Ly_di = 1;
-  phys->Lz_di = 12.8;
-
-  phys->nx = 64;
-  phys->ny = 1;
-  phys->nz = 32;
-
-  phys->topology_x = 4;  // Number of domains in x, y, and z
-  phys->topology_y = 1;
-  phys->topology_z = 1;  // For load balance, keep "1" or "2" for Harris sheet
+  user_init_harris(phys, diag);
 
   // use natural PIC units
   double ec   = 1;         // Charge normalization
@@ -820,6 +473,378 @@ begin_initialization {
   // - (periodically) Print a status message
 
 } //begin_initialization
+
+// ----------------------------------------------------------------------
+// user_init_params
+
+static void user_init_params(globals_physics *phys, globals_diag *diag)
+{
+  // Physics parameters
+  phys->mi_me   = 25.0;    // Ion mass / electron mass
+  phys->L_di    = 0.5;     // Sheet thickness / ion inertial length
+  phys->Ti_Te   = 5.0;     // Ion temperature / electron temperature
+  phys->nb_n0   = 0.228;   // background plasma density
+  phys->Tbe_Te  = 0.7598;  // Ratio of background T_e to Harris T_e
+  phys->Tbi_Ti  = 0.3039;  // Ratio of background T_i to Harris T_i
+  phys->wpe_wce = 2.0;     // electron plasma freq / electron cyclotron freq
+  phys->bg = 0.0;
+  phys->theta = 0;         // B0 = Bx
+  phys->taui = 1.1;//100;  // simulation wci's to run
+
+  phys->Lpert_Lx = 1.;     // wavelength of perturbation in terms of Lx
+  phys->dbz_b0 = 0.03;     // perturbation in Bz relative to B0
+
+  // Parameters for Open BC model
+  phys->open_bc_x = 0;
+  phys->driven_bc_z = 0;
+
+  // Numerical parameters
+
+  phys->ion_sort_interval = 1000; // Injector moments also updated
+  phys->electron_sort_interval = 1000; // Injector moments also updated
+
+  phys->cfl_req   = 0.99;  // How close to Courant should we try to run
+  phys->wpedt_max = 0.36;  // Max dt allowed if Courant not too restrictive
+
+  phys->nppc  = 100; // Average number of macro particle per cell per species
+
+  phys->Lx_di = 25.6;
+  phys->Ly_di = 1;
+  phys->Lz_di = 12.8;
+
+  phys->nx = 64;
+  phys->ny = 1;
+  phys->nz = 32;
+
+  phys->topology_x = 4;  // Number of domains in x, y, and z
+  phys->topology_y = 1;
+  phys->topology_z = 1;  // For load balance, keep "1" or "2" for Harris sheet
+
+  diag->status_interval  = 100;
+  diag->restart_interval = 8000;
+  diag->energies_interval = 50;
+  diag->t_intervali = 1; // output interval in terms of 1/wci
+  diag->quota   = 11.0;   // run quota in hours
+  diag->quota_check_interval = 100;
+}
+
+// ----------------------------------------------------------------------
+// user_load_fields
+
+static void user_load_fields(vpic_simulation *simulation, globals_physics *phys)
+{
+  double cs = cos(phys->theta), sn = sin(phys->theta);
+  double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
+  double b0 = phys->b0, bg = phys->bg, dbx = phys->dbx, dbz = phys->dbz;
+  grid_t *grid = simulation->grid;
+#define rank simulation->rank
+#define field simulation->field
+  
+  sim_log( "Loading fields" );
+  set_region_field( everywhere, 0, 0, 0,                    // Electric field
+    cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
+    -sn*b0*tanh(z/L) + b0*bg, //By
+    dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
+
+  // Note: everywhere is a region that encompasses the entire simulation
+  // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
+
+#undef field
+#undef rank
+}
+
+// ----------------------------------------------------------------------
+// user_load_particles
+
+static void user_load_particles(vpic_simulation *simulation, globals_physics *phys,
+				species_t *electron, species_t *ion)
+{
+  double cs = cos(phys->theta), sn = sin(phys->theta);
+  double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
+  double weight_s = phys->weight_s;
+  double tanhf = phys->tanhf, L = phys->L;
+  double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
+  double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
+  double weight_b = phys->weight_b;
+  grid_t *grid = simulation->grid;
+#define rank simulation->rank
+#define nproc simulation->nproc
+#define rng simulation->rng
+#define uniform simulation->uniform
+#define normal simulation->normal
+#define inject_particle simulation->inject_particle
+#define seed_entropy simulation->seed_entropy
+  
+  // LOAD PARTICLES
+
+  sim_log( "Loading particles" );
+
+  // Do a fast load of the particles
+
+  seed_entropy( rank() );  //Generators desynchronized
+  double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
+  double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
+  double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
+
+  // Load Harris population
+
+  sim_log( "-> Main Harris Sheet" );
+
+  repeat ( Ne_sheet/nproc() ) {
+    double x, y, z, ux, uy, uz, d0 ;
+
+    do {
+      z = L*atanh(uniform( rng(0), -1, 1)*tanhf);
+    } while( z<= zmin || z>=zmax );
+    x = uniform( rng(0), xmin, xmax );
+    y = uniform( rng(0), ymin, ymax );
+
+    // inject_particles() will return an error for particles no on this
+    // node and will not inject particle locally
+
+    ux = normal( rng(0), 0, vthe);
+    uy = normal( rng(0), 0, vthe);
+    uz = normal( rng(0), 0, vthe);
+    d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
+    uy = d0*cs - ux*sn;
+    ux = d0*sn + ux*cs;
+
+    inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+
+    ux = normal( rng(0), 0, vthi);
+    uy = normal( rng(0), 0, vthi);
+    uz = normal( rng(0), 0, vthi);
+    d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
+    uy = d0*cs - ux*sn;
+    ux = d0*sn + ux*cs;
+
+    inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+  }
+
+  sim_log( "-> Background Population" );
+
+  repeat ( Ne_back/nproc() ) {
+
+    double x = uniform( rng(0), xmin, xmax );
+    double y = uniform( rng(0), ymin, ymax );
+    double z = uniform( rng(0), zmin, zmax );
+
+    inject_particle( electron, x, y, z,
+                     normal( rng(0), 0, vtheb),
+                     normal( rng(0), 0, vtheb),
+                     normal( rng(0), 0, vtheb),
+                     weight_b, 0, 0);
+
+    inject_particle( ion, x, y, z,
+                     normal( rng(0), 0, vthib),
+                     normal( rng(0), 0, vthib),
+                     normal( rng(0), 0, vthib),
+                     weight_b, 0 ,0 );
+  }
+
+  sim_log( "Finished loading particles" );
+
+#undef rank
+#undef nproc
+#undef rng
+#undef uniform
+#undef normal
+#undef inject_particle
+#undef seed_entropy
+}
+
+// ----------------------------------------------------------------------
+// user_init_diagnostics
+
+static void user_init_diagnostics(vpic_simulation *simulation, globals_diag *diag,
+				  species_t *electron, species_t *ion)
+{
+#define create_field_list simulation->create_field_list
+#define create_hydro_list simulation->create_hydro_list
+#define rank simulation->rank
+
+  /*--------------------------------------------------------------------------
+   * New dump definition
+   *------------------------------------------------------------------------*/
+
+  /*--------------------------------------------------------------------------
+   * Set data output format
+   *
+   * This option allows the user to specify the data format for an output
+   * dump.  Legal settings are 'band' and 'band_interleave'.  Band-interleave
+   * format is the native storage format for data in VPIC.  For field data,
+   * this looks something like:
+   *
+   *   ex0 ey0 ez0 div_e_err0 cbx0 ... ex1 ey1 ez1 div_e_err1 cbx1 ...
+   *
+   * Banded data format stores all data of a particular state variable as a
+   * contiguous array, and is easier for ParaView to process efficiently.
+   * Banded data looks like:
+   *
+   *   ex0 ex1 ex2 ... exN ey0 ey1 ey2 ...
+   *
+   *------------------------------------------------------------------------*/
+
+  diag->fdParams.format = band;
+  sim_log ( "Fields output format = band" );
+
+  diag->hedParams.format = band;
+  sim_log ( "Electron species output format = band" );
+
+  diag->hHdParams.format = band;
+  sim_log ( "Ion species output format = band" );
+
+  /*--------------------------------------------------------------------------
+   * Set stride
+   *
+   * This option allows data down-sampling at output.  Data are down-sampled
+   * in each dimension by the stride specified for that dimension.  For
+   * example, to down-sample the x-dimension of the field data by a factor
+   * of 2, i.e., half as many data will be output, select:
+   *
+   *   global->fdParams.stride_x = 2;
+   *
+   * The following 2-D example shows down-sampling of a 7x7 grid (nx = 7,
+   * ny = 7.  With ghost-cell padding the actual extents of the grid are 9x9.
+   * Setting the strides in x and y to equal 2 results in an output grid of
+   * nx = 4, ny = 4, with actual extents 6x6.
+   *
+   * G G G G G G G G G
+   * G X X X X X X X G
+   * G X X X X X X X G         G G G G G G
+   * G X X X X X X X G         G X X X X G
+   * G X X X X X X X G   ==>   G X X X X G
+   * G X X X X X X X G         G X X X X G
+   * G X X X X X X X G         G X X X X G
+   * G X X X X X X X G         G G G G G G
+   * G G G G G G G G G
+   *
+   * Note that grid extents in each dimension must be evenly divisible by
+   * the stride for that dimension:
+   *
+   *   nx = 150;
+   *   global->fdParams.stride_x = 10; // legal -> 150/10 = 15
+   *
+   *   global->fdParams.stride_x = 8; // illegal!!! -> 150/8 = 18.75
+   *------------------------------------------------------------------------*/
+
+  // relative path to fields data from global header
+  sprintf(diag->fdParams.baseDir, "fields");
+
+  // base file name for fields output
+  sprintf(diag->fdParams.baseFileName, "fields");
+
+  diag->fdParams.stride_x = 1;
+  diag->fdParams.stride_y = 1;
+  diag->fdParams.stride_z = 1;
+
+  // add field parameters to list
+  diag->outputParams.push_back(&diag->fdParams);
+
+  sim_log ( "Fields x-stride " << diag->fdParams.stride_x );
+  sim_log ( "Fields y-stride " << diag->fdParams.stride_y );
+  sim_log ( "Fields z-stride " << diag->fdParams.stride_z );
+
+  // relative path to electron species data from global header
+  sprintf(diag->hedParams.baseDir, "hydro");
+
+  // base file name for fields output
+  sprintf(diag->hedParams.baseFileName, "ehydro");
+
+  diag->hedParams.stride_x = 1;
+  diag->hedParams.stride_y = 1;
+  diag->hedParams.stride_z = 1;
+
+  // add electron species parameters to list
+  diag->outputParams.push_back(&diag->hedParams);
+
+  sim_log ( "Electron species x-stride " << diag->hedParams.stride_x );
+  sim_log ( "Electron species y-stride " << diag->hedParams.stride_y );
+  sim_log ( "Electron species z-stride " << diag->hedParams.stride_z );
+
+  // relative path to electron species data from global header
+  sprintf(diag->hHdParams.baseDir, "hydro");
+
+  // base file name for fields output
+  sprintf(diag->hHdParams.baseFileName, "Hhydro");
+
+  diag->hHdParams.stride_x = 1;
+  diag->hHdParams.stride_y = 1;
+  diag->hHdParams.stride_z = 1;
+
+  sim_log ( "Ion species x-stride " << diag->hHdParams.stride_x );
+  sim_log ( "Ion species y-stride " << diag->hHdParams.stride_y );
+  sim_log ( "Ion species z-stride " << diag->hHdParams.stride_z );
+
+  // add electron species parameters to list
+  diag->outputParams.push_back(&diag->hHdParams);
+
+  /*--------------------------------------------------------------------------
+   * Set output fields
+   *
+   * It is now possible to select which state-variables are output on a
+   * per-dump basis.  Variables are selected by passing an or-list of
+   * state-variables by name.  For example, to only output the x-component
+   * of the electric field and the y-component of the magnetic field, the
+   * user would call output_variables like:
+   *
+   *   global->fdParams.output_variables( ex | cby );
+   *
+   * NOTE: OUTPUT VARIABLES ARE ONLY USED FOR THE BANDED FORMAT.  IF THE
+   * FORMAT IS BAND-INTERLEAVE, ALL VARIABLES ARE OUTPUT AND CALLS TO
+   * 'output_variables' WILL HAVE NO EFFECT.
+   *
+   * ALSO: DEFAULT OUTPUT IS NONE!  THIS IS DUE TO THE WAY THAT VPIC
+   * HANDLES GLOBAL VARIABLES IN THE INPUT DECK AND IS UNAVOIDABLE.
+   *
+   * For convenience, the output variable 'all' is defined:
+   *
+   *   global->fdParams.output_variables( all );
+   *------------------------------------------------------------------------*/
+  /* CUT AND PASTE AS A STARTING POINT
+   * REMEMBER TO ADD APPROPRIATE GLOBAL DUMPPARAMETERS VARIABLE
+
+   output_variables( all );
+
+   output_variables( electric | div_e_err | magnetic | div_b_err |
+                     tca      | rhob      | current  | rhof |
+                     emat     | nmat      | fmat     | cmat );
+
+   output_variables( current_density  | charge_density |
+                     momentum_density | ke_density     | stress_tensor );
+   */
+
+  //global->fdParams.output_variables( electric | magnetic );
+  //global->hedParams.output_variables( current_density | charge_density
+  //                                    | stress_tensor );
+  //global->hHdParams.output_variables( current_density | charge_density );
+  //                                    | stress_tensor );
+
+  diag->fdParams.output_variables( all );
+  diag->hedParams.output_variables( all );
+  diag->hHdParams.output_variables( all );
+
+  /*--------------------------------------------------------------------------
+   * Convenience functions for simlog output
+   *------------------------------------------------------------------------*/
+
+  char varlist[512];
+  create_field_list(varlist, diag->fdParams);
+
+  sim_log ( "Fields variable list: " << varlist );
+
+  create_hydro_list(varlist, diag->hedParams);
+
+  sim_log ( "Electron species variable list: " << varlist );
+
+  create_hydro_list(varlist, diag->hHdParams);
+
+  sim_log ( "Ion species variable list: " << varlist );
+
+#undef create_field_list
+#undef create_hydro_list
+#undef rank
+}
 
 #define should_dump(x)                                                  \
   (diag->x##_interval>0 && remainder(step(), diag->x##_interval) == 0)
