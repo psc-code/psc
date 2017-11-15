@@ -16,6 +16,7 @@ struct globals_diag {
   int status_interval;
 
   // calculated
+  int interval;
   int restart_interval;
   int energies_interval;
   int fields_interval;
@@ -40,6 +41,19 @@ struct globals_diag {
 // ======================================================================
 
 struct globals_physics {
+  double ec;
+  double me;
+  double c;
+  double eps0;
+  double de;
+
+  double mi;
+  double di;
+  double wpe;
+  double wpi;
+  double wce;
+  double wci;
+  
   // general
   double cfl_req;
   double wpedt_max;
@@ -74,7 +88,9 @@ struct globals_physics {
   
   // calculated
   double b0;       // B0
+  double n0;
   double v_A;
+  double rhoi_L;
   double Lx, Ly, Lz; // size of box
   double L;        // Harris sheet thickness
   double Lpert;    // wavelength of perturbation
@@ -82,10 +98,13 @@ struct globals_physics {
   double dbz;      // Set Bx perturbation so that div(B) = 0
   double tanhf;
 
+  double Ne;       // Total number of macro electrons
   double Ne_sheet; // Number of macro electrons in Harris sheet
   double weight_s; // Charge per macro electron
   double vthe;     // Electron thermal velocity
   double vthi;     // Ion thermal velocity
+  double vdre;     // Electron drift velocity
+  double vdri;     // Ion drift velocity
   double gdri;     // gamma of ion drift frame
   double gdre;     // gamma of electron drift frame
   double udri;     // 4-velocity of ion drift frame
@@ -105,16 +124,26 @@ begin_globals {
 // ======================================================================
 
 static void user_init_params(globals_physics *phys, globals_diag *diag);
+static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
+			     int nproc);
+static void user_init_diagnostics(globals_diag *diag, globals_physics *phys, double dt)
+{
+  diag->rtoggle              = 0;
+  diag->quota_sec = diag->quota*3600;  // Run quota in seconds
+
+  diag->interval = int(diag->t_intervali/(phys->wci*dt));
+  diag->fields_interval = diag->interval;
+  diag->ehydro_interval = diag->interval;
+  diag->Hhydro_interval = diag->interval;
+  diag->eparticle_interval = 8*diag->interval;
+  diag->Hparticle_interval = 8*diag->interval;
+}
 
 static void user_load_fields(vpic_simulation *simulation, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, globals_physics *phys,
 				species_t *electron, species_t *ion);
-static void user_init_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				  species_t *electron, species_t *ion);
-
-static void user_init_harris(globals_physics *phys, globals_diag *diag)
-{
-}
+static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
+				   species_t *electron, species_t *ion);
 
 // ======================================================================
 // initialization
@@ -125,88 +154,22 @@ begin_initialization {
 
   user_init_params(phys, diag);
 
-  user_init_harris(phys, diag);
-
-  // use natural PIC units
-  double ec   = 1;         // Charge normalization
-  double me   = 1;         // Mass normalization
-  double c    = 1;         // Speed of light
-  double de   = 1;         // Length normalization (electron inertial length)
-  double eps0 = 1;         // Permittivity of space
-
-  //derived quantities
-  double mi = me*phys->mi_me;       // Ion mass
-  double Te = me*c*c/(2*eps0*phys->wpe_wce*phys->wpe_wce*(1+phys->Ti_Te)); // Electron temperature
-  double Ti = Te*phys->Ti_Te;       // Ion temperature
-  phys->vthe = sqrt(Te/me);         // Electron thermal velocity
-  phys->vthi = sqrt(Ti/mi);         // Ion thermal velocity
-  phys->vtheb = sqrt(phys->Tbe_Te*Te/me);  // normalized background e thermal vel.
-  phys->vthib = sqrt(phys->Tbi_Ti*Ti/mi);  // normalized background ion thermal vel.
-  double wci  = 1.0/(phys->mi_me*phys->wpe_wce);  // Ion cyclotron frequency
-  double wce  = wci*phys->mi_me;            // Electron cyclotron freqeuncy
-  double wpe  = wce*phys->wpe_wce;          // electron plasma frequency
-  double wpi  = wpe/sqrt(phys->mi_me);      // ion plasma frequency
-  double di   = c/wpi;                // ion inertial length
-  phys->L    = phys->L_di*di;              // Harris sheet thickness
-  double rhoi_L = sqrt(phys->Ti_Te/(1.0+phys->Ti_Te))/phys->L_di;
-  phys->v_A = (wci/wpi)/sqrt(phys->nb_n0); // based on nb
-
-  phys->Lx    = phys->Lx_di*di; // size of box in x dimension
-  phys->Ly    = phys->Ly_di*di; // size of box in y dimension
-  phys->Lz    = phys->Lz_di*di; // size of box in z dimension
+  user_init_harris(this, phys, nproc());
 
   double hx = phys->Lx/phys->nx;
   double hy = phys->Ly/phys->ny;
   double hz = phys->Lz/phys->nz;
 
-  phys->b0 = me*c*wce/ec; // Asymptotic magnetic field strength
-  double n0 = me*eps0*wpe*wpe/(ec*ec);  // Peak electron (ion) density
-  double vdri = 2*c*Ti/(ec*phys->b0*phys->L);   // Ion drift velocity
-  double vdre = -vdri/(phys->Ti_Te);      // electron drift velocity
-
-  double Lx = phys->Lx, Ly = phys->Ly, Lz = phys->Lz, L = phys->L;
-  double Npe_sheet = 2*n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
-  double Npe_back  = phys->nb_n0*n0* Ly*Lz*Lx;          // N physical e's in backgrnd
-  double Npe       = Npe_sheet + Npe_back;
-  double Ne        = phys->nppc*phys->nx*phys->ny*phys->nz;  // total macro electrons in box
-  phys->Ne_sheet  = Ne*Npe_sheet/Npe;
-  phys->Ne_back   = Ne*Npe_back/Npe;
-  phys->Ne_sheet = trunc_granular(phys->Ne_sheet,nproc()); // Make it divisible by nproc
-  phys->Ne_back  = trunc_granular(phys->Ne_back, nproc());  // Make it divisible by nproc
-  Ne = phys->Ne_sheet + phys->Ne_back;
-  phys->weight_s = ec*Npe_sheet/phys->Ne_sheet;  // Charge per macro electron
-  phys->weight_b = ec*Npe_back/phys->Ne_back;  // Charge per macro electron
-
-  phys->gdri  = 1/sqrt(1-vdri*vdri/(c*c));  // gamma of ion drift frame
-  phys->gdre  = 1/sqrt(1-vdre*vdre/(c*c)); // gamma of electron drift frame
-  phys->udri  = vdri*phys->gdri;                 // 4-velocity of ion drift frame
-  phys->udre  = vdre*phys->gdre;                 // 4-velocity of electron drift frame
-  phys->tanhf = tanh(0.5*Lz/L);
-  phys->Lpert = phys->Lpert_Lx*Lx; // wavelength of perturbation
-  phys->dbz   =  phys->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
-  phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
-
   // Determine the time step
-  double dg = courant_length(Lx,Ly,Lz,phys->nx,phys->ny,phys->nz);  // courant length
-  double dt = phys->cfl_req*dg/c;                       // courant limited time step
-  if( wpe*dt>phys->wpedt_max)
-    dt=phys->wpedt_max/wpe;  // override timestep if plasma frequency limited
-
-  // Intervals for output
-  diag->rtoggle              = 0;
-  diag->quota_sec = diag->quota*3600;  // Run quota in seconds
-
-  int interval = int(diag->t_intervali/(wci*dt));
-  diag->fields_interval = interval;
-  diag->ehydro_interval = interval;
-  diag->Hhydro_interval = interval;
-  diag->eparticle_interval = 8*interval;
-  diag->Hparticle_interval = 8*interval;
+  double dg = courant_length(phys->Lx,phys->Ly,phys->Lz,phys->nx,phys->ny,phys->nz);  // courant length
+  double dt = phys->cfl_req*dg/phys->c;                       // courant limited time step
+  if( phys->wpe*dt>phys->wpedt_max)
+    dt=phys->wpedt_max/phys->wpe;  // override timestep if plasma frequency limited
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  num_step             = int(phys->taui/(wci*dt));
+  num_step             = int(phys->taui/(phys->wci*dt));
   status_interval      = diag->status_interval;
   sync_shared_interval = status_interval/2;
   clean_div_e_interval = status_interval/2;
@@ -220,12 +183,12 @@ begin_initialization {
   grid->dy = hy;
   grid->dz = hz;
   grid->dt = dt;
-  grid->cvac = c;
-  grid->eps0 = eps0;
+  grid->cvac = phys->c;
+  grid->eps0 = phys->eps0;
 
   // Define the grid
-  define_periodic_grid(  0, -0.5*Ly, -0.5*Lz,    // Low corner
-                         Lx, 0.5*Ly, 0.5*Lz,     // High corner
+  define_periodic_grid(  0       , -0.5*phys->Ly, -0.5*phys->Lz,   // Low corner
+                         phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,   // High corner
                          phys->nx, phys->ny, phys->nz,             // Resolution
                          phys->topology_x, phys->topology_y, phys->topology_z); // Topology
 
@@ -303,8 +266,8 @@ begin_initialization {
   // to eliminate this feature
   double thickness = 0;
 #define resistive_layer ((phys->open_bc_x && x < hx*thickness) || \
-                          (phys->open_bc_x && x > Lx-hx*thickness) \
-                         || z <-Lz/2+hz*thickness  || z > Lz/2-hz*thickness )
+                          (phys->open_bc_x && x > phys->Lx-hx*thickness) \
+                         || z <-phys->Lz/2+hz*thickness  || z > phys->Lz/2-hz*thickness )
 
   if (thickness > 0) {
     sim_log("Setting resistive layer of thickness "<< thickness);
@@ -315,13 +278,18 @@ begin_initialization {
   // Setup the species
 
   sim_log("Setting up species. ");
-  double nmax = 2.0*Ne/nproc();
+  double nmax = 2.0*phys->Ne/nproc();
   double nmovers = 0.1*nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
-  species_t *electron = define_species("electron", -ec, me, nmax, nmovers,
+  species_t *electron = define_species("electron", -phys->ec, phys->me, nmax, nmovers,
 				       phys->electron_sort_interval, sort_method);
-  species_t *ion = define_species("ion", ec, mi, nmax, nmovers,
+  species_t *ion = define_species("ion", phys->ec, phys->mi, nmax, nmovers,
 				  phys->ion_sort_interval, sort_method);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Intervals for output
+
+  user_init_diagnostics(diag, phys, dt);
 
   ///////////////////////////////////////////////////
   // Log diagnostic information about this simulation
@@ -331,7 +299,7 @@ begin_initialization {
     << " " << phys->topology_y << " " << phys->topology_z);
   sim_log ( "tanhf = " << phys->tanhf );
   sim_log ( "L_di   = " << phys->L_di );
-  sim_log ( "rhoi/L   = " << rhoi_L );
+  sim_log ( "rhoi/L   = " << phys->rhoi_L );
   sim_log ( "Ti/Te = " << phys->Ti_Te ) ;
   sim_log ( "nb/n0 = " << phys->nb_n0 ) ;
   sim_log ( "wpe/wce = " << phys->wpe_wce );
@@ -341,43 +309,43 @@ begin_initialization {
   sim_log ( "dbz/b0 = " << phys->dbz_b0 );
   sim_log ( "taui = " << phys->taui );
   sim_log ( "t_intervali = " << diag->t_intervali );
-  sim_log ( "interval = " << interval );
+  sim_log ( "interval = " << diag->interval );
   sim_log ( "num_step = " << num_step );
-  sim_log ( "Lx/di = " << Lx/di );
-  sim_log ( "Lx/de = " << Lx/de );
-  sim_log ( "Ly/di = " << Ly/di );
-  sim_log ( "Ly/de = " << Ly/de );
-  sim_log ( "Lz/di = " << Lz/di );
-  sim_log ( "Lz/de = " << Lz/de );
+  sim_log ( "Lx/di = " << phys->Lx/phys->di );
+  sim_log ( "Lx/de = " << phys->Lx/phys->de );
+  sim_log ( "Ly/di = " << phys->Ly/phys->di );
+  sim_log ( "Ly/de = " << phys->Ly/phys->de );
+  sim_log ( "Lz/di = " << phys->Lz/phys->di );
+  sim_log ( "Lz/de = " << phys->Lz/phys->de );
   sim_log ( "nx = " << phys->nx );
   sim_log ( "ny = " << phys->ny );
   sim_log ( "nz = " << phys->nz );
-  sim_log ( "courant = " << c*dt/dg );
+  sim_log ( "courant = " << phys->c*dt/dg );
   sim_log ( "nproc = " << nproc ()  );
   sim_log ( "nppc = " << phys->nppc );
   sim_log ( "b0 = " << phys->b0 );
   sim_log ( "v_A (based on nb) = " << phys->v_A );
-  sim_log ( "di = " << di );
-  sim_log ( "Ne = " << Ne );
+  sim_log ( "di = " << phys->di );
+  sim_log ( "Ne = " << phys->Ne );
   sim_log ( "Ne_sheet = " << phys->Ne_sheet );
   sim_log ( "Ne_back = " << phys->Ne_back );
-  sim_log ( "total # of particles = " << 2*Ne );
-  sim_log ( "dt*wpe = " << wpe*dt );
-  sim_log ( "dt*wce = " << wce*dt );
-  sim_log ( "dt*wci = " << wci*dt );
+  sim_log ( "total # of particles = " << 2*phys->Ne );
+  sim_log ( "dt*wpe = " << phys->wpe*dt );
+  sim_log ( "dt*wce = " << phys->wce*dt );
+  sim_log ( "dt*wci = " << phys->wci*dt );
   sim_log ( "energies_interval: " << diag->energies_interval );
-  sim_log ( "dx/de = " << Lx/(de*phys->nx) );
-  sim_log ( "dy/de = " << Ly/(de*phys->ny) );
-  sim_log ( "dz/de = " << Lz/(de*phys->nz) );
-  sim_log ( "dx/rhoi = " << (Lx/phys->nx)/(phys->vthi/wci)  );
-  sim_log ( "dx/rhoe = " << (Lx/phys->nx)/(phys->vthe/wce)  );
-  sim_log ( "L/debye = " << L/(phys->vthe/wpe)  );
-  sim_log ( "dx/debye = " << (Lx/phys->nx)/(phys->vthe/wpe)  );
-  sim_log ( "n0 = " << n0 );
-  sim_log ( "vthi/c = " << phys->vthi/c );
-  sim_log ( "vthe/c = " << phys->vthe/c );
-  sim_log ( "vdri/c = " << vdri/c );
-  sim_log ( "vdre/c = " << vdre/c );
+  sim_log ( "dx/de = " << phys->Lx/(phys->de*phys->nx) );
+  sim_log ( "dy/de = " << phys->Ly/(phys->de*phys->ny) );
+  sim_log ( "dz/de = " << phys->Lz/(phys->de*phys->nz) );
+  sim_log ( "dx/rhoi = " << (phys->Lx/phys->nx)/(phys->vthi/phys->wci)  );
+  sim_log ( "dx/rhoe = " << (phys->Lx/phys->nx)/(phys->vthe/phys->wce)  );
+  sim_log ( "L/debye = " << phys->L/(phys->vthe/phys->wpe)  );
+  sim_log ( "dx/debye = " << (phys->Lx/phys->nx)/(phys->vthe/phys->wpe)  );
+  sim_log ( "n0 = " << phys->n0 );
+  sim_log ( "vthi/c = " << phys->vthi/phys->c );
+  sim_log ( "vthe/c = " << phys->vthe/phys->c );
+  sim_log ( "vdri/c = " << phys->vdri/phys->c );
+  sim_log ( "vdre/c = " << phys->vdre/phys->c );
   sim_log ( "Open BC in x?   = " << phys->open_bc_x );
   sim_log ( "Driven BC in z? = " << phys->driven_bc_z );
 
@@ -387,8 +355,8 @@ begin_initialization {
     if ( ! (fp_info.open("info", io_write)==ok) ) ERROR(("Cannot open file."));
     fp_info.print("           ***** Simulation parameters ***** \n");
     fp_info.print("              L/di   =               %e\n", phys->L_di);
-    fp_info.print("              L/de   =               %e\n", L/de);
-    fp_info.print("              rhoi/L =               %e\n", rhoi_L);
+    fp_info.print("              L/de   =               %e\n", phys->L/phys->de);
+    fp_info.print("              rhoi/L =               %e\n", phys->rhoi_L);
     fp_info.print("              Ti/Te  =               %e\n", phys->Ti_Te );
     fp_info.print("              Tbi/Ti =               %e\n", phys->Tbi_Ti );
     fp_info.print("              Tbe/Te =               %e\n", phys->Tbe_Te );
@@ -398,41 +366,41 @@ begin_initialization {
     fp_info.print("              theta =                %e\n", phys->theta );
     fp_info.print("              taui =                 %e\n", phys->taui );
     fp_info.print("              num_step =             %i\n", num_step );
-    fp_info.print("              Lx/de =                %e\n", Lx/de );
-    fp_info.print("              Ly/de =                %e\n", Ly/de );
-    fp_info.print("              Lz/de =                %e\n", Lz/de );
-    fp_info.print("              Lx/di =                %e\n", Lx/di );
-    fp_info.print("              Ly/di =                %e\n", Ly/di );
-    fp_info.print("              Lz/di =                %e\n", Lz/di );
+    fp_info.print("              Lx/de =                %e\n", phys->Lx/phys->de );
+    fp_info.print("              Ly/de =                %e\n", phys->Ly/phys->de );
+    fp_info.print("              Lz/de =                %e\n", phys->Lz/phys->de );
+    fp_info.print("              Lx/di =                %e\n", phys->Lx/phys->di );
+    fp_info.print("              Ly/di =                %e\n", phys->Ly/phys->di );
+    fp_info.print("              Lz/di =                %e\n", phys->Lz/phys->di );
     fp_info.print("              nx =                   %e\n", phys->nx );
     fp_info.print("              ny =                   %e\n", phys->ny );
     fp_info.print("              nz =                   %e\n", phys->nz );
-    fp_info.print("              courant =              %e\n", c*dt/dg );
+    fp_info.print("              courant =              %e\n", phys->c*dt/dg );
     fp_info.print("              nproc =                %i\n", nproc() );
     fp_info.print("              nppc =                 %e\n", phys->nppc );
     fp_info.print("              b0 =                   %e\n", phys->b0 );
     fp_info.print("              v_A (based on nb) =    %e\n", phys->v_A );
-    fp_info.print("              di =                   %e\n", di );
-    fp_info.print("              Ne =                   %e\n", Ne );
+    fp_info.print("              di =                   %e\n", phys->di );
+    fp_info.print("              Ne =                   %e\n", phys->Ne );
     fp_info.print("              Ne_sheet =             %e\n", phys->Ne_sheet );
     fp_info.print("              Ne_back =              %e\n", phys->Ne_back );
-    fp_info.print("              total # of particles = %e\n", 2*Ne );
-    fp_info.print("              dt*wpe =               %e\n", wpe*dt );
-    fp_info.print("              dt*wce =               %e\n", wce*dt );
-    fp_info.print("              dt*wci =               %e\n", wci*dt );
+    fp_info.print("              total # of particles = %e\n", 2*phys->Ne );
+    fp_info.print("              dt*wpe =               %e\n", phys->wpe*dt );
+    fp_info.print("              dt*wce =               %e\n", phys->wce*dt );
+    fp_info.print("              dt*wci =               %e\n", phys->wci*dt );
     fp_info.print("              energies_interval:     %i\n", diag->energies_interval);
-    fp_info.print("              dx/de =                %e\n", Lx/(de*phys->nx) );
-    fp_info.print("              dy/de =                %e\n", Ly/(de*phys->ny) );
-    fp_info.print("              dz/de =                %e\n", Lz/(de*phys->nz) );
-    fp_info.print("              L/debye =              %e\n", L/(phys->vthe/wpe) );
-    fp_info.print("              dx/rhoi =              %e\n", (Lx/phys->nx)/(phys->vthi/wci) );
-    fp_info.print("              dx/rhoe =              %e\n", (Lx/phys->nx)/(phys->vthe/wce) );
-    fp_info.print("              dx/debye =             %e\n", (Lx/phys->nx)/(phys->vthe/wpe) );
-    fp_info.print("              n0 =                   %e\n", n0 );
-    fp_info.print("              vthi/c =               %e\n", phys->vthi/c );
-    fp_info.print("              vthe/c =               %e\n", phys->vthe/c );
-    fp_info.print("              vdri/c =               %e\n", vdri/c );
-    fp_info.print("              vdre/c =               %e\n", vdre/c );
+    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*phys->nx) );
+    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*phys->ny) );
+    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*phys->nz) );
+    fp_info.print("              L/debye =              %e\n", phys->L/(phys->vthe/phys->wpe) );
+    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/phys->nx)/(phys->vthi/phys->wci) );
+    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/phys->nx)/(phys->vthe/phys->wce) );
+    fp_info.print("              dx/debye =             %e\n", (phys->Lx/phys->nx)/(phys->vthe/phys->wpe) );
+    fp_info.print("              n0 =                   %e\n", phys->n0 );
+    fp_info.print("              vthi/c =               %e\n", phys->vthi/phys->c );
+    fp_info.print("              vthe/c =               %e\n", phys->vthe/phys->c );
+    fp_info.print("              vdri/c =               %e\n", phys->vdri/phys->c );
+    fp_info.print("              vdre/c =               %e\n", phys->vdre/phys->c );
     fp_info.print("              ***************************\n");
     fp_info.close();
   }
@@ -441,7 +409,7 @@ begin_initialization {
 
   user_load_particles(this, phys, electron, ion);
 
-  user_init_diagnostics(this, &global->diag, electron, ion);
+  user_setup_diagnostics(this, diag, electron, ion);
 
   sim_log("*** Finished with user-specified initialization ***");
 
@@ -526,6 +494,69 @@ static void user_init_params(globals_physics *phys, globals_diag *diag)
   diag->t_intervali = 1; // output interval in terms of 1/wci
   diag->quota   = 11.0;   // run quota in hours
   diag->quota_check_interval = 100;
+}
+
+// ----------------------------------------------------------------------
+// user_init_harris
+
+static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
+			     int nproc)
+{
+  // use natural PIC units
+  phys->ec   = 1;         // Charge normalization
+  phys->me   = 1;         // Mass normalization
+  phys->c    = 1;         // Speed of light
+  phys->de   = 1;         // Length normalization (electron inertial length)
+  phys->eps0 = 1;         // Permittivity of space
+
+  double c = phys->c;
+  //derived quantities
+  phys->mi = phys->me*phys->mi_me;       // Ion mass
+  double Te = phys->me*c*c/(2*phys->eps0*phys->wpe_wce*phys->wpe_wce*(1+phys->Ti_Te)); // Electron temperature
+  double Ti = Te*phys->Ti_Te;       // Ion temperature
+  phys->vthe = sqrt(Te/phys->me);         // Electron thermal velocity
+  phys->vthi = sqrt(Ti/phys->mi);         // Ion thermal velocity
+  phys->vtheb = sqrt(phys->Tbe_Te*Te/phys->me);  // normalized background e thermal vel.
+  phys->vthib = sqrt(phys->Tbi_Ti*Ti/phys->mi);  // normalized background ion thermal vel.
+  phys->wci  = 1.0/(phys->mi_me*phys->wpe_wce);  // Ion cyclotron frequency
+  phys->wce  = phys->wci*phys->mi_me;            // Electron cyclotron freqeuncy
+  phys->wpe  = phys->wce*phys->wpe_wce;          // electron plasma frequency
+  phys->wpi  = phys->wpe/sqrt(phys->mi_me);      // ion plasma frequency
+  phys->di   = c/phys->wpi;                      // ion inertial length
+  phys->L    = phys->L_di*phys->di;              // Harris sheet thickness
+  phys->rhoi_L = sqrt(phys->Ti_Te/(1.0+phys->Ti_Te))/phys->L_di;
+  phys->v_A = (phys->wci/phys->wpi)/sqrt(phys->nb_n0); // based on nb
+
+  phys->Lx    = phys->Lx_di*phys->di; // size of box in x dimension
+  phys->Ly    = phys->Ly_di*phys->di; // size of box in y dimension
+  phys->Lz    = phys->Lz_di*phys->di; // size of box in z dimension
+
+  phys->b0 = phys->me*c*phys->wce/phys->ec; // Asymptotic magnetic field strength
+  phys->n0 = phys->me*phys->eps0*phys->wpe*phys->wpe/(phys->ec*phys->ec);  // Peak electron (ion) density
+  phys->vdri = 2*c*Ti/(phys->ec*phys->b0*phys->L);   // Ion drift velocity
+  phys->vdre = -phys->vdri/(phys->Ti_Te);      // electron drift velocity
+
+  double Lx = phys->Lx, Ly = phys->Ly, Lz = phys->Lz, L = phys->L;
+  double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
+  double Npe_back  = phys->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
+  double Npe       = Npe_sheet + Npe_back;
+  phys->Ne         = phys->nppc*phys->nx*phys->ny*phys->nz;  // total macro electrons in box
+  phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
+  phys->Ne_back    = phys->Ne*Npe_back/Npe;
+  phys->Ne_sheet   = simulation->trunc_granular(phys->Ne_sheet,nproc); // Make it divisible by nproc
+  phys->Ne_back    = simulation->trunc_granular(phys->Ne_back, nproc);  // Make it divisible by nproc
+  phys->Ne         = phys->Ne_sheet + phys->Ne_back;
+  phys->weight_s   = phys->ec*Npe_sheet/phys->Ne_sheet;  // Charge per macro electron
+  phys->weight_b   = phys->ec*Npe_back/phys->Ne_back;  // Charge per macro electron
+
+  phys->gdri  = 1/sqrt(1-phys->vdri*phys->vdri/(c*c));  // gamma of ion drift frame
+  phys->gdre  = 1/sqrt(1-phys->vdre*phys->vdre/(c*c)); // gamma of electron drift frame
+  phys->udri  = phys->vdri*phys->gdri;                 // 4-velocity of ion drift frame
+  phys->udre  = phys->vdre*phys->gdre;                 // 4-velocity of electron drift frame
+  phys->tanhf = tanh(0.5*Lz/L);
+  phys->Lpert = phys->Lpert_Lx*Lx; // wavelength of perturbation
+  phys->dbz   =  phys->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
+  phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
 }
 
 // ----------------------------------------------------------------------
@@ -654,10 +685,10 @@ static void user_load_particles(vpic_simulation *simulation, globals_physics *ph
 }
 
 // ----------------------------------------------------------------------
-// user_init_diagnostics
+// user_setup_diagnostics
 
-static void user_init_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				  species_t *electron, species_t *ion)
+static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
+				   species_t *electron, species_t *ion)
 {
 #define create_field_list simulation->create_field_list
 #define create_hydro_list simulation->create_hydro_list
