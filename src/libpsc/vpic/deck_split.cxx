@@ -12,10 +12,7 @@
 // ----------------------------------------------------------------------
 // params
 
-struct params : vpic_params {
-  // general
-  double wpedt_max;
-
+struct params : vpic_params, vpic_harris_params {
   double wpe_wce;            // electron plasma freq / electron cyclotron freq
   double mi_me;              // Ion mass / electron mass
   
@@ -39,7 +36,6 @@ struct params : vpic_params {
   double nppc;     // Average number of macro particle per cell per species
   int open_bc_x;   // Flag to signal we want to do open boundary condition in x
   int driven_bc_z; // Flag to signal we want to do driven boundary condition in z
-  
 };
 
 // ----------------------------------------------------------------------
@@ -142,12 +138,15 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 // initialization
 
 begin_initialization {
-  // FIXME, what a hacky way of passing arguments...
-  vpic_params *vpic_prm = reinterpret_cast<vpic_params *>(cmdline_argument);
   params *prm = &global->prm;
-  *static_cast<vpic_params *>(prm) = *vpic_prm;
   globals_physics *phys = &global->phys;
   globals_diag *diag = &global->diag;
+
+  // FIXME, what a hacky way of passing arguments...
+  vpic_params *vpic_prm = reinterpret_cast<vpic_params *>(cmdline_argument[0]);
+  vpic_harris_params *vpic_harris_prm = reinterpret_cast<vpic_harris_params *>(cmdline_argument[1]);
+  *static_cast<vpic_params *>(prm) = *vpic_prm;
+  *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
 
   user_init_params(prm);
 
@@ -290,8 +289,6 @@ static void user_init_params(params *prm)
 
   // Numerical parameters
 
-  prm->wpedt_max = 0.36;
-  
   prm->taui = 1.1;//100;  // simulation wci's to run
   prm->ion_sort_interval = 1000;
   prm->electron_sort_interval = 1000;

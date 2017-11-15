@@ -147,6 +147,20 @@ struct vpic_kind_info {
   char *name;
 };
 
+// ----------------------------------------------------------------------
+// vpic_harris_params
+
+struct vpic_harris_params {
+  // general
+  double wpedt_max;
+
+};
+
+// ----------------------------------------------------------------------
+// vpic_simulation_info
+//
+// returned from vpic_simulation_init
+
 struct vpic_simulation_info {
   int num_step;
   double dt;
@@ -168,7 +182,8 @@ struct vpic_simulation_info {
 };
 
 void vpic_base_init(int *pargc, char ***pargv);
-void vpic_simulation_init(struct vpic_params *prm, struct vpic_simulation_info *info);
+void vpic_simulation_init(struct vpic_params *prm, struct vpic_harris_params *harris_prm,
+			  struct vpic_simulation_info *info);
 
 
 void vpic_print_status();

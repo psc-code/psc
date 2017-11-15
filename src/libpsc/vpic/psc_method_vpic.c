@@ -48,9 +48,12 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
     prm->gdims[d]           = psc->domain.gdims[d];
     prm->np[d]              = psc->domain.np[d];
   }
-      
+
+  struct vpic_harris_params harris_prm;
+  harris_prm.wpedt_max = 0.36;
+
   struct vpic_simulation_info info;
-  vpic_simulation_init(prm, &info);
+  vpic_simulation_init(prm, &harris_prm, &info);
 
   MPI_Comm comm = psc_comm(psc);
   MPI_Barrier(comm);
