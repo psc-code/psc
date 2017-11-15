@@ -44,15 +44,14 @@ void vpic_base_init(int *pargc, char ***pargv)
   }
 }
 
-
-void vpic_simulation_init(struct vpic_simulation_info *info)
+void vpic_simulation_init(vpic_params *vpic_prm, vpic_simulation_info *info)
 {
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
 
   // Call the user initialize the simulation
 
-  int argc = 0; char **argv = NULL;
+  int argc = 0; char **argv = reinterpret_cast<char **>(vpic_prm);
   TIC simulation->user_initialization(argc, argv); TOC( user_initialization, 1 );
 
   info->num_step = simulation->num_step;

@@ -1,3 +1,8 @@
+
+#include "vpic_iface.h"
+
+#include <cassert>
+
 //////////////////////////////////////////////////////
 //
 //   Harris Sheet Reconnection - Open Boundary Model
@@ -7,29 +12,19 @@
 // ----------------------------------------------------------------------
 // params
 
-struct params {
+struct params : vpic_params {
   // general
-  double cfl_req;
   double wpedt_max;
 
   double wpe_wce;            // electron plasma freq / electron cyclotron freq
   double mi_me;              // Ion mass / electron mass
   
   double Lx_di, Ly_di, Lz_di;                // Size of box in d_i
-  double topology_x, topology_y, topology_z; // domain topology
-  int nx, ny, nz;                            // global dims
-
-  double taui;               // simulation wci's to run
-  double t_intervali;        // output interval in terms of 1/wci
 
   double ion_sort_interval;
   double electron_sort_interval;
-  int status_interval;
-
-  int quota_check_interval;  // How frequently to check if quota exceeded
-  double quota;              // Run quota in hours
-
-  int restart_interval;
+  double taui;               // simulation wci's to run
+  double t_intervali;        // output interval in terms of 1/wci
 
   // Harris
   double L_di;     // Sheet thickness / ion inertial length
@@ -147,7 +142,10 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 // initialization
 
 begin_initialization {
+  // FIXME, what a hacky way of passing arguments...
+  vpic_params *vpic_prm = reinterpret_cast<vpic_params *>(cmdline_argument);
   params *prm = &global->prm;
+  *static_cast<vpic_params *>(prm) = *vpic_prm;
   globals_physics *phys = &global->phys;
   globals_diag *diag = &global->diag;
 
@@ -156,7 +154,7 @@ begin_initialization {
   user_init_harris(this, phys, prm, nproc());
 
   // Determine the time step
-  phys->dg = courant_length(phys->Lx,phys->Ly,phys->Lz,prm->nx,prm->ny,prm->nz);  // courant length
+  phys->dg = courant_length(phys->Lx,phys->Ly,phys->Lz,prm->gdims[0],prm->gdims[1],prm->gdims[2]);  // courant length
   phys->dt = prm->cfl_req*phys->dg/phys->c;                       // courant limited time step
   if (phys->wpe * phys->dt > prm->wpedt_max)
     phys->dt = prm->wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
@@ -196,8 +194,8 @@ begin_initialization {
 
   sim_log("Finalizing Field Advance");
 
-  double hx = phys->Lx/prm->nx;
-  double hz = phys->Lz/prm->nz;
+  double hx = phys->Lx/prm->gdims[0];
+  double hz = phys->Lz/prm->gdims[1];
 
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature
@@ -292,11 +290,9 @@ static void user_init_params(params *prm)
 
   // Numerical parameters
 
-  prm->cfl_req   = 0.99;  // How close to Courant should we try to run
-  prm->wpedt_max = 0.36;  // Max dt allowed if Courant not too restrictive
-
+  prm->wpedt_max = 0.36;
+  
   prm->taui = 1.1;//100;  // simulation wci's to run
-  prm->status_interval  = 100;
   prm->ion_sort_interval = 1000;
   prm->electron_sort_interval = 1000;
 
@@ -306,13 +302,7 @@ static void user_init_params(params *prm)
   prm->Ly_di = 1;
   prm->Lz_di = 12.8;
 
-  prm->nx = 64;
-  prm->ny = 1;
-  prm->nz = 32;
-
-  prm->topology_x = 4;  // Number of domains in x, y, and z
-  prm->topology_y = 1;
-  prm->topology_z = 1;  // For load balance, keep "1" or "2" for Harris sheet
+  assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   prm->t_intervali = 1; // output interval in terms of 1/wci
   prm->quota   = 11.0;   // run quota in hours
@@ -365,7 +355,7 @@ static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
   double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
   double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
   double Npe       = Npe_sheet + Npe_back;
-  phys->Ne         = prm->nppc * prm->nx * prm->ny * prm->nz;  // total macro electrons in box
+  phys->Ne         = prm->nppc * prm->gdims[0] * prm->gdims[1] * prm->gdims[2];  // total macro electrons in box
   phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
   phys->Ne_back    = phys->Ne*Npe_back/Npe;
   phys->Ne_sheet   = simulation->trunc_granular(phys->Ne_sheet,nproc); // Make it divisible by nproc
@@ -411,29 +401,29 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
   grid_t *grid = simulation->grid;
   
   // Setup basic grid parameters
-  grid->dx = phys->Lx / prm->nx;
-  grid->dy = phys->Ly / prm->ny;
-  grid->dz = phys->Lz / prm->nz;
+  grid->dx = phys->Lx / prm->gdims[0];
+  grid->dy = phys->Ly / prm->gdims[1];
+  grid->dz = phys->Lz / prm->gdims[2];
   grid->dt = phys->dt;
   grid->cvac = phys->c;
   grid->eps0 = phys->eps0;
 
   // Define the grid
-  simulation->define_periodic_grid(0       , -0.5*phys->Ly, -0.5*phys->Lz,   // Low corner
-				   phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,   // High corner
-				   prm->nx, prm->ny, prm->nz,             // Resolution
-				   prm->topology_x, prm->topology_y, prm->topology_z); // Topology
+  simulation->define_periodic_grid(0       , -0.5*phys->Ly, -0.5*phys->Lz,      // Low corner
+				   phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,      // High corner
+				   prm->gdims[0], prm->gdims[1], prm->gdims[2], // Resolution
+				   prm->np[0], prm->np[1], prm->np[2]);         // Topology
 
   // Determine which domains area along the boundaries - Use macro from
   // grid/partition.c.
-
+  
 # define RANK_TO_INDEX(rank,ix,iy,iz) BEGIN_PRIMITIVE {                 \
     int _ix, _iy, _iz;                                                  \
     _ix  = (rank);                /* ix = ix+gpx*( iy+gpy*iz ) */       \
-    _iy  = _ix/int(prm->topology_x);   /* iy = iy+gpy*iz */		\
-    _ix -= _iy*int(prm->topology_x);   /* ix = ix */			\
-    _iz  = _iy/int(prm->topology_y);   /* iz = iz */			\
-    _iy -= _iz*int(prm->topology_y);   /* iy = iy */			\
+    _iy  = _ix/int(prm->np[0]);   /* iy = iy+gpy*iz */			\
+    _ix -= _iy*int(prm->np[0]);   /* ix = ix */				\
+    _iz  = _iy/int(prm->np[1]);   /* iz = iz */				\
+    _iy -= _iz*int(prm->np[2]);   /* iy = iy */				\
     (ix) = _ix;                                                         \
     (iy) = _iy;                                                         \
     (iz) = _iz;                                                         \
@@ -442,9 +432,9 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
   int ix, iy, iz, left=0,right=0,top=0,bottom=0;
   RANK_TO_INDEX( int(rank()), ix, iy, iz );
   if ( ix ==0 ) left=1;
-  if ( ix ==prm->topology_x-1 ) right=1;
+  if ( ix ==prm->np[0]-1 ) right=1;
   if ( iz ==0 ) bottom=1;
-  if ( iz ==prm->topology_z-1 ) top=1;
+  if ( iz ==prm->np[1]-1 ) top=1;
 
   // ***** Set Field Boundary Conditions *****
   if (prm->open_bc_x) {
@@ -486,8 +476,8 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
 #define nproc simulation->nproc
 
   sim_log( "***********************************************" );
-  sim_log("* Topology:                       " << prm->topology_x
-	  << " " << prm->topology_y << " " << prm->topology_z);
+  sim_log("* Topology:                       " << prm->np[0]
+	  << " " << prm->np[1] << " " << prm->np[2]);
   sim_log ( "tanhf = " << phys->tanhf );
   sim_log ( "L_di   = " << prm->L_di );
   sim_log ( "rhoi/L   = " << phys->rhoi_L );
@@ -508,9 +498,9 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
   sim_log ( "Ly/de = " << phys->Ly/phys->de );
   sim_log ( "Lz/di = " << phys->Lz/phys->di );
   sim_log ( "Lz/de = " << phys->Lz/phys->de );
-  sim_log ( "nx = " << prm->nx );
-  sim_log ( "ny = " << prm->ny );
-  sim_log ( "nz = " << prm->nz );
+  sim_log ( "nx = " << prm->gdims[0] );
+  sim_log ( "ny = " << prm->gdims[1] );
+  sim_log ( "nz = " << prm->gdims[2] );
   sim_log ( "courant = " << phys->c*phys->dt/phys->dg );
   sim_log ( "nproc = " << nproc ()  );
   sim_log ( "nppc = " << prm->nppc );
@@ -525,13 +515,13 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
   sim_log ( "dt*wce = " << phys->wce*phys->dt );
   sim_log ( "dt*wci = " << phys->wci*phys->dt );
   sim_log ( "energies_interval: " << diag->energies_interval );
-  sim_log ( "dx/de = " << phys->Lx/(phys->de*prm->nx) );
-  sim_log ( "dy/de = " << phys->Ly/(phys->de*prm->ny) );
-  sim_log ( "dz/de = " << phys->Lz/(phys->de*prm->nz) );
-  sim_log ( "dx/rhoi = " << (phys->Lx/prm->nx)/(phys->vthi/phys->wci)  );
-  sim_log ( "dx/rhoe = " << (phys->Lx/prm->nx)/(phys->vthe/phys->wce)  );
+  sim_log ( "dx/de = " << phys->Lx/(phys->de*prm->gdims[0]) );
+  sim_log ( "dy/de = " << phys->Ly/(phys->de*prm->gdims[1]) );
+  sim_log ( "dz/de = " << phys->Lz/(phys->de*prm->gdims[2]) );
+  sim_log ( "dx/rhoi = " << (phys->Lx/prm->gdims[0])/(phys->vthi/phys->wci)  );
+  sim_log ( "dx/rhoe = " << (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wce)  );
   sim_log ( "L/debye = " << phys->L/(phys->vthe/phys->wpe)  );
-  sim_log ( "dx/debye = " << (phys->Lx/prm->nx)/(phys->vthe/phys->wpe)  );
+  sim_log ( "dx/debye = " << (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wpe)  );
   sim_log ( "n0 = " << phys->n0 );
   sim_log ( "vthi/c = " << phys->vthi/phys->c );
   sim_log ( "vthe/c = " << phys->vthe/phys->c );
@@ -563,9 +553,9 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.print("              Lx/di =                %e\n", phys->Lx/phys->di );
     fp_info.print("              Ly/di =                %e\n", phys->Ly/phys->di );
     fp_info.print("              Lz/di =                %e\n", phys->Lz/phys->di );
-    fp_info.print("              nx =                   %e\n", prm->nx );
-    fp_info.print("              ny =                   %e\n", prm->ny );
-    fp_info.print("              nz =                   %e\n", prm->nz );
+    fp_info.print("              nx =                   %e\n", prm->gdims[0] );
+    fp_info.print("              ny =                   %e\n", prm->gdims[1] );
+    fp_info.print("              nz =                   %e\n", prm->gdims[2] );
     fp_info.print("              courant =              %e\n", phys->c*phys->dt/phys->dg );
     fp_info.print("              nproc =                %i\n", nproc() );
     fp_info.print("              nppc =                 %e\n", prm->nppc );
@@ -580,13 +570,13 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.print("              dt*wce =               %e\n", phys->wce*phys->dt );
     fp_info.print("              dt*wci =               %e\n", phys->wci*phys->dt );
     fp_info.print("              energies_interval:     %i\n", diag->energies_interval);
-    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*prm->nx) );
-    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*prm->ny) );
-    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*prm->nz) );
+    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*prm->gdims[0]) );
+    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*prm->gdims[1]) );
+    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*prm->gdims[2]) );
     fp_info.print("              L/debye =              %e\n", phys->L/(phys->vthe/phys->wpe) );
-    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/prm->nx)/(phys->vthi/phys->wci) );
-    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/prm->nx)/(phys->vthe/phys->wce) );
-    fp_info.print("              dx/debye =             %e\n", (phys->Lx/prm->nx)/(phys->vthe/phys->wpe) );
+    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/prm->gdims[0])/(phys->vthi/phys->wci) );
+    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wce) );
+    fp_info.print("              dx/debye =             %e\n", (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wpe) );
     fp_info.print("              n0 =                   %e\n", phys->n0 );
     fp_info.print("              vthi/c =               %e\n", phys->vthi/phys->c );
     fp_info.print("              vthe/c =               %e\n", phys->vthe/phys->c );

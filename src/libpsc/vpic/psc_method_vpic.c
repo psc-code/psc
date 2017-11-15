@@ -16,14 +16,19 @@
 struct psc_method_vpic {
   bool use_deck_field_ic;
   bool use_deck_particle_ic;
+
+  struct vpic_params vpic_prm;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
 
 #define VAR(x) (void *)offsetof(struct psc_method_vpic, x)
 static struct param psc_method_vpic_descr[] = {
-  { "use_deck_field_ic"         , VAR(use_deck_field_ic)          , PARAM_BOOL(false) },
-  { "use_deck_particle_ic"      , VAR(use_deck_particle_ic)       , PARAM_BOOL(false) },
+  { "use_deck_field_ic"     , VAR(use_deck_field_ic)              , PARAM_BOOL(false) },
+  { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
+  { "quota"                 , VAR(vpic_prm.quota)                 , PARAM_DOUBLE(1.)  },
+  { "quota_check_interval"  , VAR(vpic_prm.quota_check_interval)  , PARAM_INT(0)      },
+  { "restart_interval"      , VAR(vpic_prm.restart_interval)      , PARAM_INT(0)      },
   {},
 };
 #undef VAR
@@ -34,8 +39,18 @@ static struct param psc_method_vpic_descr[] = {
 static void
 psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 {
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+  struct vpic_params *prm = &sub->vpic_prm;
+
+  prm->cfl_req              = psc->prm.cfl;
+  prm->status_interval      = psc->prm.stats_every;
+  for (int d = 0; d < 3; d++) {
+    prm->gdims[d]           = psc->domain.gdims[d];
+    prm->np[d]              = psc->domain.np[d];
+  }
+      
   struct vpic_simulation_info info;
-  vpic_simulation_init(&info);
+  vpic_simulation_init(prm, &info);
 
   MPI_Comm comm = psc_comm(psc);
   MPI_Barrier(comm);

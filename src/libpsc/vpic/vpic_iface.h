@@ -125,6 +125,21 @@ void vpic_field_injection();
 void vpic_moments_run(struct vpic_mfields *mflds, struct vpic_mparticles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
+// vpic_params
+
+struct vpic_params {
+  double cfl_req;
+
+  int np[3];    // domain topology
+  int gdims[3]; // global dims
+
+  int status_interval;
+
+  int quota_check_interval;  // How frequently to check if quota exceeded
+  double quota;              // Run quota in hours
+
+  int restart_interval;
+};
 
 struct vpic_kind_info {
   double q;
@@ -153,12 +168,13 @@ struct vpic_simulation_info {
 };
 
 void vpic_base_init(int *pargc, char ***pargv);
-void vpic_simulation_init(struct vpic_simulation_info *info);
+void vpic_simulation_init(struct vpic_params *prm, struct vpic_simulation_info *info);
 
 
 void vpic_print_status();
 void vpic_diagnostics();
 void vpic_inc_step(int step);
+
 
 #if 0
 {

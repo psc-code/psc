@@ -93,6 +93,8 @@ psc_harris_create(struct psc *psc)
   psc->prm.nicell = 1;
   psc->prm.cfl = 0.99;
 
+  psc->prm.stats_every = 100;
+
   psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
