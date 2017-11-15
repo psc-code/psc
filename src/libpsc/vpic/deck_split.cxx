@@ -4,8 +4,6 @@
 //
 //////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////
-
 // ======================================================================
 // diag
 
@@ -13,7 +11,6 @@ struct globals_diag {
   double t_intervali;        // output interval in terms of 1/wci
   int quota_check_interval;  // How frequently to check if quota exceeded
   double quota;              // Run quota in hours
-  int status_interval;
 
   // calculated
   int interval;
@@ -63,6 +60,7 @@ struct globals_physics {
   double Lx_di, Ly_di, Lz_di; // Size of box in d_i
   double ion_sort_interval; // Injector moments also updated
   double electron_sort_interval; // Injector moments also updated
+  int status_interval;
 
   double topology_x;       // domain topology
   double topology_y;
@@ -71,6 +69,9 @@ struct globals_physics {
   int nx;
   int ny;
   int nz;
+
+  double dg;       // courant length
+  double dt;       // timestep
   
   // Harris related
   double L_di;     // Sheet thickness / ion inertial length
@@ -126,19 +127,10 @@ begin_globals {
 static void user_init_params(globals_physics *phys, globals_diag *diag);
 static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
 			     int nproc);
-static void user_init_diagnostics(globals_diag *diag, globals_physics *phys, double dt)
-{
-  diag->rtoggle              = 0;
-  diag->quota_sec = diag->quota*3600;  // Run quota in seconds
-
-  diag->interval = int(diag->t_intervali/(phys->wci*dt));
-  diag->fields_interval = diag->interval;
-  diag->ehydro_interval = diag->interval;
-  diag->Hhydro_interval = diag->interval;
-  diag->eparticle_interval = 8*diag->interval;
-  diag->Hparticle_interval = 8*diag->interval;
-}
-
+static void user_init_diagnostics(globals_diag *diag, globals_physics *phys);
+static void user_init_grid(vpic_simulation *simulation, globals_physics *phys);
+static void user_init_log(vpic_simulation *simulation, globals_physics *phys,
+			  globals_diag *diag);
 static void user_load_fields(vpic_simulation *simulation, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, globals_physics *phys,
 				species_t *electron, species_t *ion);
@@ -156,21 +148,17 @@ begin_initialization {
 
   user_init_harris(this, phys, nproc());
 
-  double hx = phys->Lx/phys->nx;
-  double hy = phys->Ly/phys->ny;
-  double hz = phys->Lz/phys->nz;
-
   // Determine the time step
-  double dg = courant_length(phys->Lx,phys->Ly,phys->Lz,phys->nx,phys->ny,phys->nz);  // courant length
-  double dt = phys->cfl_req*dg/phys->c;                       // courant limited time step
-  if( phys->wpe*dt>phys->wpedt_max)
-    dt=phys->wpedt_max/phys->wpe;  // override timestep if plasma frequency limited
+  phys->dg = courant_length(phys->Lx,phys->Ly,phys->Lz,phys->nx,phys->ny,phys->nz);  // courant length
+  phys->dt = phys->cfl_req*phys->dg/phys->c;                       // courant limited time step
+  if (phys->wpe*phys->dt > phys->wpedt_max)
+    phys->dt = phys->wpedt_max/phys->wpe;  // override timestep if plasma frequency limited
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  num_step             = int(phys->taui/(phys->wci*dt));
-  status_interval      = diag->status_interval;
+  num_step             = int(phys->taui/(phys->wci*phys->dt));
+  status_interval      = phys->status_interval;
   sync_shared_interval = status_interval/2;
   clean_div_e_interval = status_interval/2;
   clean_div_b_interval = status_interval/2;
@@ -178,69 +166,8 @@ begin_initialization {
   //////////////////////////////////////////////////////////////////////////////
   // Setup the grid
 
-  // Setup basic grid parameters
-  grid->dx = hx;
-  grid->dy = hy;
-  grid->dz = hz;
-  grid->dt = dt;
-  grid->cvac = phys->c;
-  grid->eps0 = phys->eps0;
-
-  // Define the grid
-  define_periodic_grid(  0       , -0.5*phys->Ly, -0.5*phys->Lz,   // Low corner
-                         phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,   // High corner
-                         phys->nx, phys->ny, phys->nz,             // Resolution
-                         phys->topology_x, phys->topology_y, phys->topology_z); // Topology
-
-  // Determine which domains area along the boundaries - Use macro from
-  // grid/partition.c.
-
-# define RANK_TO_INDEX(rank,ix,iy,iz) BEGIN_PRIMITIVE {                 \
-    int _ix, _iy, _iz;                                                  \
-    _ix  = (rank);                /* ix = ix+gpx*( iy+gpy*iz ) */       \
-    _iy  = _ix/int(phys->topology_x);   /* iy = iy+gpy*iz */		\
-    _ix -= _iy*int(phys->topology_x);   /* ix = ix */			\
-    _iz  = _iy/int(phys->topology_y);   /* iz = iz */			\
-    _iy -= _iz*int(phys->topology_y);   /* iy = iy */			\
-    (ix) = _ix;                                                         \
-    (iy) = _iy;                                                         \
-    (iz) = _iz;                                                         \
-  } END_PRIMITIVE
-
-  int ix, iy, iz, left=0,right=0,top=0,bottom=0;
-  RANK_TO_INDEX( int(rank()), ix, iy, iz );
-  if ( ix ==0 ) left=1;
-  if ( ix ==phys->topology_x-1 ) right=1;
-  if ( iz ==0 ) bottom=1;
-  if ( iz ==phys->topology_z-1 ) top=1;
-
-  // ***** Set Field Boundary Conditions *****
-  if (phys->open_bc_x) {
-    sim_log("Absorbing fields on X-boundaries");
-    if (left ) set_domain_field_bc( BOUNDARY(-1,0,0), absorb_fields );
-    if (right) set_domain_field_bc( BOUNDARY( 1,0,0), absorb_fields );
-  }
+  user_init_grid(this, phys);
   
-  sim_log("Conducting fields on Z-boundaries");
-  if (bottom) set_domain_field_bc( BOUNDARY(0,0,-1), pec_fields );
-  if (top   ) set_domain_field_bc( BOUNDARY( 0,0,1), pec_fields );
-
-  // ***** Set Particle Boundary Conditions *****
-  if (phys->driven_bc_z) {
-    sim_log("Absorb particles on Z-boundaries");
-    if (bottom) set_domain_particle_bc( BOUNDARY(0,0,-1), absorb_particles );
-    if (top   ) set_domain_particle_bc( BOUNDARY(0,0, 1), absorb_particles );
-  } else {
-    sim_log("Reflect particles on Z-boundaries");
-    if (bottom) set_domain_particle_bc( BOUNDARY(0,0,-1), reflect_particles );
-    if (top   ) set_domain_particle_bc( BOUNDARY(0,0, 1), reflect_particles );
-  }
-  if (phys->open_bc_x) {
-    sim_log("Absorb particles on X-boundaries");
-    if (left)  set_domain_particle_bc( BOUNDARY(-1,0,0), absorb_particles );
-    if (right) set_domain_particle_bc( BOUNDARY( 1,0,0), absorb_particles );
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // Setup materials
 
@@ -261,6 +188,9 @@ begin_initialization {
   // Finalize Field Advance
 
   sim_log("Finalizing Field Advance");
+
+  double hx = phys->Lx/phys->nx;
+  double hz = phys->Lz/phys->nz;
 
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature
@@ -289,121 +219,9 @@ begin_initialization {
   ////////////////////////////////////////////////////////////////////////
   // Intervals for output
 
-  user_init_diagnostics(diag, phys, dt);
+  user_init_diagnostics(diag, phys);
 
-  ///////////////////////////////////////////////////
-  // Log diagnostic information about this simulation
-
-  sim_log( "***********************************************" );
-  sim_log("* Topology:                       " << phys->topology_x
-    << " " << phys->topology_y << " " << phys->topology_z);
-  sim_log ( "tanhf = " << phys->tanhf );
-  sim_log ( "L_di   = " << phys->L_di );
-  sim_log ( "rhoi/L   = " << phys->rhoi_L );
-  sim_log ( "Ti/Te = " << phys->Ti_Te ) ;
-  sim_log ( "nb/n0 = " << phys->nb_n0 ) ;
-  sim_log ( "wpe/wce = " << phys->wpe_wce );
-  sim_log ( "mi/me = " << phys->mi_me );
-  sim_log ( "theta = " << phys->theta );
-  sim_log ( "Lpert/Lx = " << phys->Lpert_Lx );
-  sim_log ( "dbz/b0 = " << phys->dbz_b0 );
-  sim_log ( "taui = " << phys->taui );
-  sim_log ( "t_intervali = " << diag->t_intervali );
-  sim_log ( "interval = " << diag->interval );
-  sim_log ( "num_step = " << num_step );
-  sim_log ( "Lx/di = " << phys->Lx/phys->di );
-  sim_log ( "Lx/de = " << phys->Lx/phys->de );
-  sim_log ( "Ly/di = " << phys->Ly/phys->di );
-  sim_log ( "Ly/de = " << phys->Ly/phys->de );
-  sim_log ( "Lz/di = " << phys->Lz/phys->di );
-  sim_log ( "Lz/de = " << phys->Lz/phys->de );
-  sim_log ( "nx = " << phys->nx );
-  sim_log ( "ny = " << phys->ny );
-  sim_log ( "nz = " << phys->nz );
-  sim_log ( "courant = " << phys->c*dt/dg );
-  sim_log ( "nproc = " << nproc ()  );
-  sim_log ( "nppc = " << phys->nppc );
-  sim_log ( "b0 = " << phys->b0 );
-  sim_log ( "v_A (based on nb) = " << phys->v_A );
-  sim_log ( "di = " << phys->di );
-  sim_log ( "Ne = " << phys->Ne );
-  sim_log ( "Ne_sheet = " << phys->Ne_sheet );
-  sim_log ( "Ne_back = " << phys->Ne_back );
-  sim_log ( "total # of particles = " << 2*phys->Ne );
-  sim_log ( "dt*wpe = " << phys->wpe*dt );
-  sim_log ( "dt*wce = " << phys->wce*dt );
-  sim_log ( "dt*wci = " << phys->wci*dt );
-  sim_log ( "energies_interval: " << diag->energies_interval );
-  sim_log ( "dx/de = " << phys->Lx/(phys->de*phys->nx) );
-  sim_log ( "dy/de = " << phys->Ly/(phys->de*phys->ny) );
-  sim_log ( "dz/de = " << phys->Lz/(phys->de*phys->nz) );
-  sim_log ( "dx/rhoi = " << (phys->Lx/phys->nx)/(phys->vthi/phys->wci)  );
-  sim_log ( "dx/rhoe = " << (phys->Lx/phys->nx)/(phys->vthe/phys->wce)  );
-  sim_log ( "L/debye = " << phys->L/(phys->vthe/phys->wpe)  );
-  sim_log ( "dx/debye = " << (phys->Lx/phys->nx)/(phys->vthe/phys->wpe)  );
-  sim_log ( "n0 = " << phys->n0 );
-  sim_log ( "vthi/c = " << phys->vthi/phys->c );
-  sim_log ( "vthe/c = " << phys->vthe/phys->c );
-  sim_log ( "vdri/c = " << phys->vdri/phys->c );
-  sim_log ( "vdre/c = " << phys->vdre/phys->c );
-  sim_log ( "Open BC in x?   = " << phys->open_bc_x );
-  sim_log ( "Driven BC in z? = " << phys->driven_bc_z );
-
-  // Dump simulation information to file "info"
-  if (rank() == 0 ) {
-    FileIO fp_info;
-    if ( ! (fp_info.open("info", io_write)==ok) ) ERROR(("Cannot open file."));
-    fp_info.print("           ***** Simulation parameters ***** \n");
-    fp_info.print("              L/di   =               %e\n", phys->L_di);
-    fp_info.print("              L/de   =               %e\n", phys->L/phys->de);
-    fp_info.print("              rhoi/L =               %e\n", phys->rhoi_L);
-    fp_info.print("              Ti/Te  =               %e\n", phys->Ti_Te );
-    fp_info.print("              Tbi/Ti =               %e\n", phys->Tbi_Ti );
-    fp_info.print("              Tbe/Te =               %e\n", phys->Tbe_Te );
-    fp_info.print("              nb/n0 =                %e\n", phys->nb_n0 );
-    fp_info.print("              wpe/wce =              %e\n", phys->wpe_wce );
-    fp_info.print("              mi/me =                %e\n", phys->mi_me );
-    fp_info.print("              theta =                %e\n", phys->theta );
-    fp_info.print("              taui =                 %e\n", phys->taui );
-    fp_info.print("              num_step =             %i\n", num_step );
-    fp_info.print("              Lx/de =                %e\n", phys->Lx/phys->de );
-    fp_info.print("              Ly/de =                %e\n", phys->Ly/phys->de );
-    fp_info.print("              Lz/de =                %e\n", phys->Lz/phys->de );
-    fp_info.print("              Lx/di =                %e\n", phys->Lx/phys->di );
-    fp_info.print("              Ly/di =                %e\n", phys->Ly/phys->di );
-    fp_info.print("              Lz/di =                %e\n", phys->Lz/phys->di );
-    fp_info.print("              nx =                   %e\n", phys->nx );
-    fp_info.print("              ny =                   %e\n", phys->ny );
-    fp_info.print("              nz =                   %e\n", phys->nz );
-    fp_info.print("              courant =              %e\n", phys->c*dt/dg );
-    fp_info.print("              nproc =                %i\n", nproc() );
-    fp_info.print("              nppc =                 %e\n", phys->nppc );
-    fp_info.print("              b0 =                   %e\n", phys->b0 );
-    fp_info.print("              v_A (based on nb) =    %e\n", phys->v_A );
-    fp_info.print("              di =                   %e\n", phys->di );
-    fp_info.print("              Ne =                   %e\n", phys->Ne );
-    fp_info.print("              Ne_sheet =             %e\n", phys->Ne_sheet );
-    fp_info.print("              Ne_back =              %e\n", phys->Ne_back );
-    fp_info.print("              total # of particles = %e\n", 2*phys->Ne );
-    fp_info.print("              dt*wpe =               %e\n", phys->wpe*dt );
-    fp_info.print("              dt*wce =               %e\n", phys->wce*dt );
-    fp_info.print("              dt*wci =               %e\n", phys->wci*dt );
-    fp_info.print("              energies_interval:     %i\n", diag->energies_interval);
-    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*phys->nx) );
-    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*phys->ny) );
-    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*phys->nz) );
-    fp_info.print("              L/debye =              %e\n", phys->L/(phys->vthe/phys->wpe) );
-    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/phys->nx)/(phys->vthi/phys->wci) );
-    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/phys->nx)/(phys->vthe/phys->wce) );
-    fp_info.print("              dx/debye =             %e\n", (phys->Lx/phys->nx)/(phys->vthe/phys->wpe) );
-    fp_info.print("              n0 =                   %e\n", phys->n0 );
-    fp_info.print("              vthi/c =               %e\n", phys->vthi/phys->c );
-    fp_info.print("              vthe/c =               %e\n", phys->vthe/phys->c );
-    fp_info.print("              vdri/c =               %e\n", phys->vdri/phys->c );
-    fp_info.print("              vdre/c =               %e\n", phys->vdre/phys->c );
-    fp_info.print("              ***************************\n");
-    fp_info.close();
-  }
+  user_init_log(this, phys, diag);
 
   user_load_fields(this, phys);
 
@@ -468,6 +286,7 @@ static void user_init_params(globals_physics *phys, globals_diag *diag)
 
   // Numerical parameters
 
+  phys->status_interval  = 100;
   phys->ion_sort_interval = 1000; // Injector moments also updated
   phys->electron_sort_interval = 1000; // Injector moments also updated
 
@@ -488,7 +307,6 @@ static void user_init_params(globals_physics *phys, globals_diag *diag)
   phys->topology_y = 1;
   phys->topology_z = 1;  // For load balance, keep "1" or "2" for Harris sheet
 
-  diag->status_interval  = 100;
   diag->restart_interval = 8000;
   diag->energies_interval = 50;
   diag->t_intervali = 1; // output interval in terms of 1/wci
@@ -557,6 +375,220 @@ static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
   phys->Lpert = phys->Lpert_Lx*Lx; // wavelength of perturbation
   phys->dbz   =  phys->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
   phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
+}
+
+// ----------------------------------------------------------------------
+// user_init_diagnostics
+
+static void user_init_diagnostics(globals_diag *diag, globals_physics *phys)
+{
+  diag->rtoggle              = 0;
+  diag->quota_sec = diag->quota*3600;  // Run quota in seconds
+
+  diag->interval = int(diag->t_intervali/(phys->wci*phys->dt));
+  diag->fields_interval = diag->interval;
+  diag->ehydro_interval = diag->interval;
+  diag->Hhydro_interval = diag->interval;
+  diag->eparticle_interval = 8*diag->interval;
+  diag->Hparticle_interval = 8*diag->interval;
+}
+
+// ----------------------------------------------------------------------
+// user_init_grid
+
+static void user_init_grid(vpic_simulation *simulation, globals_physics *phys)
+{
+#define rank simulation->rank
+  grid_t *grid = simulation->grid;
+  
+  // Setup basic grid parameters
+  grid->dx = phys->Lx/phys->nx;
+  grid->dy = phys->Ly/phys->ny;
+  grid->dz = phys->Lz/phys->nz;
+  grid->dt = phys->dt;
+  grid->cvac = phys->c;
+  grid->eps0 = phys->eps0;
+
+  // Define the grid
+  simulation->define_periodic_grid(0       , -0.5*phys->Ly, -0.5*phys->Lz,   // Low corner
+				   phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,   // High corner
+				   phys->nx, phys->ny, phys->nz,             // Resolution
+				   phys->topology_x, phys->topology_y, phys->topology_z); // Topology
+
+  // Determine which domains area along the boundaries - Use macro from
+  // grid/partition.c.
+
+# define RANK_TO_INDEX(rank,ix,iy,iz) BEGIN_PRIMITIVE {                 \
+    int _ix, _iy, _iz;                                                  \
+    _ix  = (rank);                /* ix = ix+gpx*( iy+gpy*iz ) */       \
+    _iy  = _ix/int(phys->topology_x);   /* iy = iy+gpy*iz */		\
+    _ix -= _iy*int(phys->topology_x);   /* ix = ix */			\
+    _iz  = _iy/int(phys->topology_y);   /* iz = iz */			\
+    _iy -= _iz*int(phys->topology_y);   /* iy = iy */			\
+    (ix) = _ix;                                                         \
+    (iy) = _iy;                                                         \
+    (iz) = _iz;                                                         \
+  } END_PRIMITIVE
+
+  int ix, iy, iz, left=0,right=0,top=0,bottom=0;
+  RANK_TO_INDEX( int(rank()), ix, iy, iz );
+  if ( ix ==0 ) left=1;
+  if ( ix ==phys->topology_x-1 ) right=1;
+  if ( iz ==0 ) bottom=1;
+  if ( iz ==phys->topology_z-1 ) top=1;
+
+  // ***** Set Field Boundary Conditions *****
+  if (phys->open_bc_x) {
+    sim_log("Absorbing fields on X-boundaries");
+    if (left ) simulation->set_domain_field_bc( BOUNDARY(-1,0,0), absorb_fields );
+    if (right) simulation->set_domain_field_bc( BOUNDARY( 1,0,0), absorb_fields );
+  }
+  
+  sim_log("Conducting fields on Z-boundaries");
+  if (bottom) simulation->set_domain_field_bc( BOUNDARY(0,0,-1), pec_fields );
+  if (top   ) simulation->set_domain_field_bc( BOUNDARY( 0,0,1), pec_fields );
+
+  // ***** Set Particle Boundary Conditions *****
+  if (phys->driven_bc_z) {
+    sim_log("Absorb particles on Z-boundaries");
+    if (bottom) simulation->set_domain_particle_bc( BOUNDARY(0,0,-1), absorb_particles );
+    if (top   ) simulation->set_domain_particle_bc( BOUNDARY(0,0, 1), absorb_particles );
+  } else {
+    sim_log("Reflect particles on Z-boundaries");
+    if (bottom) simulation->set_domain_particle_bc( BOUNDARY(0,0,-1), reflect_particles );
+    if (top   ) simulation->set_domain_particle_bc( BOUNDARY(0,0, 1), reflect_particles );
+  }
+  if (phys->open_bc_x) {
+    sim_log("Absorb particles on X-boundaries");
+    if (left)  simulation->set_domain_particle_bc( BOUNDARY(-1,0,0), absorb_particles );
+    if (right) simulation->set_domain_particle_bc( BOUNDARY( 1,0,0), absorb_particles );
+  }
+
+#undef rank
+}
+
+// ----------------------------------------------------------------------
+// user_init_log
+
+static void user_init_log(vpic_simulation *simulation, globals_physics *phys,
+			  globals_diag *diag)
+{
+#define rank simulation->rank
+#define nproc simulation->nproc
+
+  sim_log( "***********************************************" );
+  sim_log("* Topology:                       " << phys->topology_x
+    << " " << phys->topology_y << " " << phys->topology_z);
+  sim_log ( "tanhf = " << phys->tanhf );
+  sim_log ( "L_di   = " << phys->L_di );
+  sim_log ( "rhoi/L   = " << phys->rhoi_L );
+  sim_log ( "Ti/Te = " << phys->Ti_Te ) ;
+  sim_log ( "nb/n0 = " << phys->nb_n0 ) ;
+  sim_log ( "wpe/wce = " << phys->wpe_wce );
+  sim_log ( "mi/me = " << phys->mi_me );
+  sim_log ( "theta = " << phys->theta );
+  sim_log ( "Lpert/Lx = " << phys->Lpert_Lx );
+  sim_log ( "dbz/b0 = " << phys->dbz_b0 );
+  sim_log ( "taui = " << phys->taui );
+  sim_log ( "t_intervali = " << diag->t_intervali );
+  sim_log ( "interval = " << diag->interval );
+  sim_log ( "num_step = " << simulation->num_step );
+  sim_log ( "Lx/di = " << phys->Lx/phys->di );
+  sim_log ( "Lx/de = " << phys->Lx/phys->de );
+  sim_log ( "Ly/di = " << phys->Ly/phys->di );
+  sim_log ( "Ly/de = " << phys->Ly/phys->de );
+  sim_log ( "Lz/di = " << phys->Lz/phys->di );
+  sim_log ( "Lz/de = " << phys->Lz/phys->de );
+  sim_log ( "nx = " << phys->nx );
+  sim_log ( "ny = " << phys->ny );
+  sim_log ( "nz = " << phys->nz );
+  sim_log ( "courant = " << phys->c*phys->dt/phys->dg );
+  sim_log ( "nproc = " << nproc ()  );
+  sim_log ( "nppc = " << phys->nppc );
+  sim_log ( "b0 = " << phys->b0 );
+  sim_log ( "v_A (based on nb) = " << phys->v_A );
+  sim_log ( "di = " << phys->di );
+  sim_log ( "Ne = " << phys->Ne );
+  sim_log ( "Ne_sheet = " << phys->Ne_sheet );
+  sim_log ( "Ne_back = " << phys->Ne_back );
+  sim_log ( "total # of particles = " << 2*phys->Ne );
+  sim_log ( "dt*wpe = " << phys->wpe*phys->dt );
+  sim_log ( "dt*wce = " << phys->wce*phys->dt );
+  sim_log ( "dt*wci = " << phys->wci*phys->dt );
+  sim_log ( "energies_interval: " << diag->energies_interval );
+  sim_log ( "dx/de = " << phys->Lx/(phys->de*phys->nx) );
+  sim_log ( "dy/de = " << phys->Ly/(phys->de*phys->ny) );
+  sim_log ( "dz/de = " << phys->Lz/(phys->de*phys->nz) );
+  sim_log ( "dx/rhoi = " << (phys->Lx/phys->nx)/(phys->vthi/phys->wci)  );
+  sim_log ( "dx/rhoe = " << (phys->Lx/phys->nx)/(phys->vthe/phys->wce)  );
+  sim_log ( "L/debye = " << phys->L/(phys->vthe/phys->wpe)  );
+  sim_log ( "dx/debye = " << (phys->Lx/phys->nx)/(phys->vthe/phys->wpe)  );
+  sim_log ( "n0 = " << phys->n0 );
+  sim_log ( "vthi/c = " << phys->vthi/phys->c );
+  sim_log ( "vthe/c = " << phys->vthe/phys->c );
+  sim_log ( "vdri/c = " << phys->vdri/phys->c );
+  sim_log ( "vdre/c = " << phys->vdre/phys->c );
+  sim_log ( "Open BC in x?   = " << phys->open_bc_x );
+  sim_log ( "Driven BC in z? = " << phys->driven_bc_z );
+
+  // Dump simulation information to file "info"
+  if (rank() == 0 ) {
+    FileIO fp_info;
+    if ( ! (fp_info.open("info", io_write)==ok) ) ERROR(("Cannot open file."));
+    fp_info.print("           ***** Simulation parameters ***** \n");
+    fp_info.print("              L/di   =               %e\n", phys->L_di);
+    fp_info.print("              L/de   =               %e\n", phys->L/phys->de);
+    fp_info.print("              rhoi/L =               %e\n", phys->rhoi_L);
+    fp_info.print("              Ti/Te  =               %e\n", phys->Ti_Te );
+    fp_info.print("              Tbi/Ti =               %e\n", phys->Tbi_Ti );
+    fp_info.print("              Tbe/Te =               %e\n", phys->Tbe_Te );
+    fp_info.print("              nb/n0 =                %e\n", phys->nb_n0 );
+    fp_info.print("              wpe/wce =              %e\n", phys->wpe_wce );
+    fp_info.print("              mi/me =                %e\n", phys->mi_me );
+    fp_info.print("              theta =                %e\n", phys->theta );
+    fp_info.print("              taui =                 %e\n", phys->taui );
+    fp_info.print("              num_step =             %i\n", simulation->num_step );
+    fp_info.print("              Lx/de =                %e\n", phys->Lx/phys->de );
+    fp_info.print("              Ly/de =                %e\n", phys->Ly/phys->de );
+    fp_info.print("              Lz/de =                %e\n", phys->Lz/phys->de );
+    fp_info.print("              Lx/di =                %e\n", phys->Lx/phys->di );
+    fp_info.print("              Ly/di =                %e\n", phys->Ly/phys->di );
+    fp_info.print("              Lz/di =                %e\n", phys->Lz/phys->di );
+    fp_info.print("              nx =                   %e\n", phys->nx );
+    fp_info.print("              ny =                   %e\n", phys->ny );
+    fp_info.print("              nz =                   %e\n", phys->nz );
+    fp_info.print("              courant =              %e\n", phys->c*phys->dt/phys->dg );
+    fp_info.print("              nproc =                %i\n", nproc() );
+    fp_info.print("              nppc =                 %e\n", phys->nppc );
+    fp_info.print("              b0 =                   %e\n", phys->b0 );
+    fp_info.print("              v_A (based on nb) =    %e\n", phys->v_A );
+    fp_info.print("              di =                   %e\n", phys->di );
+    fp_info.print("              Ne =                   %e\n", phys->Ne );
+    fp_info.print("              Ne_sheet =             %e\n", phys->Ne_sheet );
+    fp_info.print("              Ne_back =              %e\n", phys->Ne_back );
+    fp_info.print("              total # of particles = %e\n", 2*phys->Ne );
+    fp_info.print("              dt*wpe =               %e\n", phys->wpe*phys->dt );
+    fp_info.print("              dt*wce =               %e\n", phys->wce*phys->dt );
+    fp_info.print("              dt*wci =               %e\n", phys->wci*phys->dt );
+    fp_info.print("              energies_interval:     %i\n", diag->energies_interval);
+    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*phys->nx) );
+    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*phys->ny) );
+    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*phys->nz) );
+    fp_info.print("              L/debye =              %e\n", phys->L/(phys->vthe/phys->wpe) );
+    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/phys->nx)/(phys->vthi/phys->wci) );
+    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/phys->nx)/(phys->vthe/phys->wce) );
+    fp_info.print("              dx/debye =             %e\n", (phys->Lx/phys->nx)/(phys->vthe/phys->wpe) );
+    fp_info.print("              n0 =                   %e\n", phys->n0 );
+    fp_info.print("              vthi/c =               %e\n", phys->vthi/phys->c );
+    fp_info.print("              vthe/c =               %e\n", phys->vthe/phys->c );
+    fp_info.print("              vdri/c =               %e\n", phys->vdri/phys->c );
+    fp_info.print("              vdre/c =               %e\n", phys->vdre/phys->c );
+    fp_info.print("              ***************************\n");
+    fp_info.close();
+  }
+
+#undef rank
+#undef nproc
 }
 
 // ----------------------------------------------------------------------
