@@ -227,3 +227,15 @@ vpic_simulation_set_domain_field_bc(int boundary, int bc)
   simulation->set_domain_field_bc(boundary, fbc);
 }
 
+void
+vpic_simulation_set_domain_particle_bc(int boundary, int bc)
+{
+  int pbc;
+  switch (bc) {
+  case BND_PART_REFLECTING: pbc = reflect_particles; break;
+  case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
+  default: assert(0);
+  }
+  simulation->set_domain_particle_bc(boundary, pbc);
+}
+

@@ -271,8 +271,6 @@ psc_harris_setup_domain(struct psc *psc)
   bool bottom = psc_at_boundary_lo(psc, p, 2);
   bool top = psc_at_boundary_hi(psc, p, 2);
 
-  mprintf("lrtp %d %d %d %d\n", left, right, top, bottom);
-
   // ***** Set Field Boundary Conditions *****
   if (sub->prm.open_bc_x) {
     mpi_printf(comm, "Absorbing fields on X-boundaries\n");
@@ -284,6 +282,21 @@ psc_harris_setup_domain(struct psc *psc)
   if (bottom) vpic_simulation_set_domain_field_bc(BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
   if (top   ) vpic_simulation_set_domain_field_bc(BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
 
+  // ***** Set Particle Boundary Conditions *****
+  if (sub->prm.driven_bc_z) {
+    mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+    if (bottom) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PART_ABSORBING);
+    if (top   ) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PART_ABSORBING);
+  } else {
+    mpi_printf(comm, "Reflect particles on Z-boundaries\n");
+    if (bottom) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PART_REFLECTING);
+    if (top   ) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PART_REFLECTING);
+  }
+  if (sub->prm.open_bc_x) {
+    mpi_printf(comm, "Absorb particles on X-boundaries\n");
+    if (left)  vpic_simulation_set_domain_particle_bc(BOUNDARY(-1,0,0), BND_PART_ABSORBING);
+    if (right) vpic_simulation_set_domain_particle_bc(BOUNDARY( 1,0,0), BND_PART_ABSORBING);
+  }
 }
 
 

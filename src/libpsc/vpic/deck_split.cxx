@@ -26,8 +26,6 @@
 
 static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
 				  vpic_params *vprm, globals_physics *phys);
-static void user_init_grid(vpic_simulation *simulation, vpic_params *vprm,
-			   psc_harris *sub);
 static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
 			  vpic_params *vprm, globals_physics *phys, globals_diag *diag);
 static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
@@ -46,8 +44,6 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
-
-  user_init_grid(simulation, vprm, sub);
 
   user_setup_fields(simulation, harris, vprm, phys);
 
@@ -98,55 +94,6 @@ static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
   diag->Hparticle_interval = 8*diag->interval;
 
   diag->energies_interval = 50;
-}
-
-// ----------------------------------------------------------------------
-// user_init_grid
-
-static void user_init_grid(vpic_simulation *simulation, vpic_params *vprm,
-			   psc_harris *sub)
-{
-  vpic_harris_params *prm = &sub->prm;
-  globals_physics *phys = &sub->phys;
-  grid_t *grid = simulation->grid;
-
-  // Determine which domains area along the boundaries - Use macro from
-  // grid/partition.c.
-  
-# define RANK_TO_INDEX(rank,ix,iy,iz) BEGIN_PRIMITIVE {                 \
-    int _ix, _iy, _iz;                                                  \
-    _ix  = (rank);                /* ix = ix+gpx*( iy+gpy*iz ) */       \
-    _iy  = _ix/int(vprm->np[0]);   /* iy = iy+gpy*iz */			\
-    _ix -= _iy*int(vprm->np[0]);   /* ix = ix */			\
-    _iz  = _iy/int(vprm->np[1]);   /* iz = iz */			\
-    _iy -= _iz*int(vprm->np[2]);   /* iy = iy */			\
-    (ix) = _ix;                                                         \
-    (iy) = _iy;                                                         \
-    (iz) = _iz;                                                         \
-  } END_PRIMITIVE
-
-  int ix, iy, iz, left=0,right=0,top=0,bottom=0;
-  RANK_TO_INDEX( int(simulation->rank()), ix, iy, iz );
-  if ( ix ==0 ) left=1;
-  if ( ix ==vprm->np[0]-1 ) right=1;
-  if ( iz ==0 ) bottom=1;
-  if ( iz ==vprm->np[1]-1 ) top=1;
-
-  // ***** Set Particle Boundary Conditions *****
-  if (prm->driven_bc_z) {
-    sim_log("Absorb particles on Z-boundaries");
-    if (bottom) simulation->set_domain_particle_bc( BOUNDARY(0,0,-1), absorb_particles );
-    if (top   ) simulation->set_domain_particle_bc( BOUNDARY(0,0, 1), absorb_particles );
-  } else {
-    sim_log("Reflect particles on Z-boundaries");
-    if (bottom) simulation->set_domain_particle_bc( BOUNDARY(0,0,-1), reflect_particles );
-    if (top   ) simulation->set_domain_particle_bc( BOUNDARY(0,0, 1), reflect_particles );
-  }
-  if (prm->open_bc_x) {
-    sim_log("Absorb particles on X-boundaries");
-    if (left)  simulation->set_domain_particle_bc( BOUNDARY(-1,0,0), absorb_particles );
-    if (right) simulation->set_domain_particle_bc( BOUNDARY( 1,0,0), absorb_particles );
-  }
 }
 
 static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
