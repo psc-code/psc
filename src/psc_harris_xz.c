@@ -163,7 +163,15 @@ psc_harris_setup_sub(struct psc *psc)
 {
   struct psc_harris *sub = psc_harris(psc);
 
-  // use natural PIC units
+  int n_procs;
+  MPI_Comm_size(psc_comm(psc), &n_procs);
+  struct vpic_params vprm = {
+    .np = { psc->domain.np[0], psc->domain.np[1], psc->domain.np[2] },
+    .gdims = { psc->domain.gdims[0], psc->domain.gdims[1], psc->domain.gdims[2] },
+  };
+  user_init_harris(&vprm, sub, n_procs);
+
+    // use natural PIC units
   double ec   = 1;         // Charge normalization
   double me   = 1;         // Mass normalization
   double c    = 1;         // Speed of light
