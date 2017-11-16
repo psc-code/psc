@@ -832,39 +832,13 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 #define should_dump(x)                                                  \
   (diag->x##_interval>0 && remainder(step(), diag->x##_interval) == 0)
 
-begin_diagnostics {
-
-  /*--------------------------------------------------------------------------
-   * NOTE: YOU CANNOT DIRECTLY USE C FILE DESCRIPTORS OR SYSTEM CALLS ANYMORE
-   *
-   * To create a new directory, use:
-   *
-   *   dump_mkdir("full-path-to-directory/directoryname")
-   *
-   * To open a file, use: FileIO class
-   *
-   * Example for file creation and use:
-   *
-   *   // declare file and open for writing
-   *   // possible modes are: io_write, io_read, io_append,
-   *   // io_read_write, io_write_read, io_append_read
-   *   FileIO fileIO;
-   *   FileIOStatus status;
-   *   status= fileIO.open("full-path-to-file/filename", io_write);
-   *
-   *   // formatted ASCII  output
-   *   fileIO.print("format string", varg1, varg2, ...);
-   *
-   *   // binary output
-   *   // Write n elements from array data to file.
-   *   // T is the type, e.g., if T=double
-   *   // fileIO.write(double * data, size_t n);
-   *   // All basic types are supported.
-   *   fileIO.write(T * data, size_t n);
-   *
-   *   // close file
-   *   fileIO.close();
-   *------------------------------------------------------------------------*/
+void vpic_simulation_diagnostics(struct vpic_simulation *simulation)
+{
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  struct globals_diag *diag = &global->diag;
+  struct params *prm = &global->prm;
+#define step simulation->step
+#define rank simulation->rank
 
   /*--------------------------------------------------------------------------
    * Data output directories
@@ -876,51 +850,48 @@ begin_diagnostics {
    * THE LOCATION OF THE GLOBAL HEADER!!!
    *------------------------------------------------------------------------*/
 
-  struct globals_diag *diag = &global->diag;
-  struct params *prm = &global->prm;
-
   /*--------------------------------------------------------------------------
    * Normal rundata dump
    *------------------------------------------------------------------------*/
   if(step()==0) {
-    dump_mkdir("fields");
-    dump_mkdir("hydro");
-    dump_mkdir("rundata");
-    dump_mkdir("injectors");
-    dump_mkdir("restart1");  // 1st backup
-    dump_mkdir("restart2");  // 2nd backup
-    dump_mkdir("particle");
+    simulation->dump_mkdir("fields");
+    simulation->dump_mkdir("hydro");
+    simulation->dump_mkdir("rundata");
+    simulation->dump_mkdir("injectors");
+    simulation->dump_mkdir("restart1");  // 1st backup
+    simulation->dump_mkdir("restart2");  // 2nd backup
+    simulation->dump_mkdir("particle");
 
-    dump_grid("rundata/grid");
-    dump_materials("rundata/materials");
-    dump_species("rundata/species");
-    global_header("global", diag->outputParams);
+    simulation->dump_grid("rundata/grid");
+    simulation->dump_materials("rundata/materials");
+    simulation->dump_species("rundata/species");
+    simulation->global_header("global", diag->outputParams);
   } // if
 
   /*--------------------------------------------------------------------------
    * Normal rundata energies dump
    *------------------------------------------------------------------------*/
   if(should_dump(energies)) {
-    dump_energies("rundata/energies", step() == 0 ? 0 : 1);
+    simulation->dump_energies("rundata/energies", step() == 0 ? 0 : 1);
   } // if
 
   /*--------------------------------------------------------------------------
    * Field data output
    *------------------------------------------------------------------------*/
 
-  if(step() == -1 || should_dump(fields)) field_dump(diag->fdParams);
+  if(step() == -1 || should_dump(fields)) simulation->field_dump(diag->fdParams);
 
   /*--------------------------------------------------------------------------
    * Electron species output
    *------------------------------------------------------------------------*/
 
-  if(should_dump(ehydro)) hydro_dump("electron", diag->hedParams);
+  if(should_dump(ehydro)) simulation->hydro_dump("electron", diag->hedParams);
 
   /*--------------------------------------------------------------------------
    * Ion species output
    *------------------------------------------------------------------------*/
 
-  if(should_dump(Hhydro)) hydro_dump("ion", diag->hHdParams);
+  if(should_dump(Hhydro)) simulation->hydro_dump("ion", diag->hHdParams);
 
   /*--------------------------------------------------------------------------
    * Restart dump
@@ -944,15 +915,15 @@ begin_diagnostics {
        && step() > 56*(diag->fields_interval)  ) {
     // if ( should_dump(eparticle) && step() !=0 ) {
     sprintf(subdir,"particle/T.%lld",step());
-    dump_mkdir(subdir);
+    simulation->dump_mkdir(subdir);
     sprintf(subdir,"particle/T.%lld/eparticle",step());
-    dump_particles("electron", subdir);
+    simulation->dump_particles("electron", subdir);
   }
 
   if ( should_dump(Hparticle) && step() !=0
        && step() > 56*(diag->fields_interval)  ) {
     sprintf(subdir,"particle/T.%lld/Hparticle",step());
-    dump_particles("ion", subdir);
+    simulation->dump_particles("ion", subdir);
   }
 
   // Shut down simulation when wall clock time exceeds global->quota_sec.
@@ -983,6 +954,12 @@ begin_diagnostics {
     if( uptime() > diag->quota_sec ) diag->write_end_restart = 1;
   }
 
+#undef step
+#undef rank
+}
+
+begin_diagnostics {
+  vpic_simulation_diagnostics(this);
 } // end diagnostics
 
 begin_particle_injection {
