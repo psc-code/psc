@@ -1,5 +1,7 @@
 
 #include "vpic_iface.h"
+
+#include "vpic_init.h"
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
@@ -56,7 +58,7 @@ void vpic_simulation_init(vpic_params *vpic_prm, vpic_harris_params *vpic_harris
     char *argv[2];
     argv[0] = reinterpret_cast<char *>(vpic_prm);
     argv[1] = reinterpret_cast<char *>(vpic_harris_prm);
-    TIC simulation->user_initialization(0, argv); TOC( user_initialization, 1 );
+    user_init(simulation, argv);
   } else {
     char *argv[2];
     argv[0] = reinterpret_cast<char *>(vpic_prm);

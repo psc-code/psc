@@ -111,7 +111,7 @@ static void user_load_particles(vpic_simulation *simulation, params *prm, global
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-static void user_init(vpic_simulation *simulation, char **argv)
+void user_init(vpic_simulation *simulation, char **argv)
 {
 #define rank simulation->rank
 #define nproc simulation->nproc

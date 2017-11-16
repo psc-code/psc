@@ -1,5 +1,5 @@
 
-#define INPUT_DECK deck_split.cxx
+#define INPUT_DECK deck.cxx
 
 #include "deck/wrapper.cc"
 

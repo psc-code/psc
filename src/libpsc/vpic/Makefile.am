@@ -30,6 +30,7 @@ libsubdir_la_SOURCES = \
 	vpic_push_particles.cxx \
 	main.cxx \
 	wrapper.cxx \
+	wrapper_split.cxx \
 	advance.cc
 
 endif USE_VPIC
