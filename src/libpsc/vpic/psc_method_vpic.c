@@ -207,6 +207,8 @@ psc_method_vpic_setup_fields(struct psc_method *method, struct psc *psc)
 static void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 {
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+
   struct psc_mfields *mflds_base = psc->flds;
   struct psc_mparticles *mprts_base = psc->particles;
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, VPIC_MFIELDS_N_COMP);
@@ -256,7 +258,11 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   // First output / stats
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
-  vpic_diagnostics();
+  if (sub->split) {
+    vpic_diagnostics_split();
+  } else {
+    vpic_diagnostics();
+  }
   psc_method_default_output(method, psc);
 
   vpic_print_status();
@@ -270,10 +276,16 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 static void
 psc_method_vpic_output(struct psc_method *method, struct psc *psc)
 {
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+
   // FIXME, a hacky place to do this
   vpic_inc_step(psc->timestep);
 
-  vpic_diagnostics();
+  if (sub->split) {
+    vpic_diagnostics_split();
+  } else {
+    vpic_diagnostics();
+  }
   
   if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
     vpic_print_status();

@@ -6,4 +6,6 @@
 
 void user_init(vpic_simulation *simulation, char **argv);
 
+void vpic_simulation_diagnostics(vpic_simulation *simulation);
+
 #endif

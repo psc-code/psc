@@ -180,10 +180,6 @@ void user_init(vpic_simulation *simulation, char **argv)
 // ======================================================================
 // initialization
 
-begin_initialization {
-  user_init(this, cmdline_argument);
-} //begin_initialization
-
 // ----------------------------------------------------------------------
 // user_init_harris
 
@@ -832,7 +828,7 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 #define should_dump(x)                                                  \
   (diag->x##_interval>0 && remainder(step(), diag->x##_interval) == 0)
 
-void vpic_simulation_diagnostics(struct vpic_simulation *simulation)
+void vpic_simulation_diagnostics(vpic_simulation *simulation)
 {
   user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   struct globals_diag *diag = &global->diag;
@@ -958,18 +954,3 @@ void vpic_simulation_diagnostics(struct vpic_simulation *simulation)
 #undef rank
 }
 
-begin_diagnostics {
-  vpic_simulation_diagnostics(this);
-} // end diagnostics
-
-begin_particle_injection {
-}
-
-begin_current_injection {
-}
-
-begin_field_injection {
-}
-
-begin_particle_collisions {
-}

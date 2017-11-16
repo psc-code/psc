@@ -12,6 +12,7 @@
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
+#include "vpic_init.h"
 
 #include "vpic.h"
 
@@ -283,6 +284,15 @@ void vpic_diagnostics()
 {
   // Let the user compute diagnostics
   TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
+}
+
+// ======================================================================
+// vpic_diagnostics_split
+
+void vpic_diagnostics_split()
+{
+  // Let the user compute diagnostics
+  TIC vpic_simulation_diagnostics(simulation); TOC( user_diagnostics, 1 );
 }
 
 // ======================================================================

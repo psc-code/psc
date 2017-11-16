@@ -212,6 +212,7 @@ void vpic_simulation_init(struct vpic_params *prm, struct vpic_harris_params *ha
 
 void vpic_print_status();
 void vpic_diagnostics();
+void vpic_diagnostics_split();
 void vpic_inc_step(int step);
 
 
