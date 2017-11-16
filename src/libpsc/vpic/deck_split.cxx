@@ -24,7 +24,6 @@
 
 // ======================================================================
 
-static void user_init_diagnostics(globals_diag *diag, int interval);
 static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
 			  vpic_params *vprm, globals_physics *phys, globals_diag *diag);
 static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys);
@@ -42,9 +41,6 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
   species_t *electron = simulation->find_species("electron");
   species_t *ion = simulation->find_species("ion");
   
-  int interval = int(harris->t_intervali/(phys->wci*phys->dt));
-  user_init_diagnostics(diag, interval);
-
   user_init_log(simulation, harris, vprm, phys, diag);
 
   user_load_fields(simulation, harris, phys);
@@ -58,23 +54,6 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
 
 // ======================================================================
 // initialization
-
-// ----------------------------------------------------------------------
-// user_init_diagnostics
-
-static void user_init_diagnostics(globals_diag *diag, int interval)
-{
-  diag->rtoggle = 0;
-
-  diag->interval = interval;
-  diag->fields_interval = diag->interval;
-  diag->ehydro_interval = diag->interval;
-  diag->Hhydro_interval = diag->interval;
-  diag->eparticle_interval = 8*diag->interval;
-  diag->Hparticle_interval = 8*diag->interval;
-
-  diag->energies_interval = 50;
-}
 
 // ----------------------------------------------------------------------
 // user_init_log

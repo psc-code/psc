@@ -142,17 +142,6 @@ void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *sub,
 }
 
 // ----------------------------------------------------------------------
-// vpic_diagnostics_split
-
-void vpic_diagnostics_split(vpic_params *vpic_prm, psc_harris *harris)
-{
-  // Let the user compute diagnostics
-  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
-  TIC vpic_simulation_diagnostics(simulation, vpic_prm,
-				  &user_global->diag); TOC( user_diagnostics, 1 );
-}
-
-// ----------------------------------------------------------------------
 // vpic_simulation_set_params
 
 void vpic_simulation_set_params(int num_step,
@@ -282,5 +271,40 @@ vpic_simulation_define_species(const char *name, double q, double m,
 {
   return simulation->define_species(name, q, m, max_local_np, max_local_nm,
 				    sort_interval, sort_out_of_place);
+}
+
+// ======================================================================
+// diagnostics
+
+// ----------------------------------------------------------------------
+// vpic_diagnostics_init
+
+void
+vpic_diagnostics_init(int interval)
+{
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
+  globals_diag *diag = &user_global->diag;
+  
+  diag->rtoggle = 0;
+
+  diag->interval = interval;
+  diag->fields_interval = diag->interval;
+  diag->ehydro_interval = diag->interval;
+  diag->Hhydro_interval = diag->interval;
+  diag->eparticle_interval = 8*diag->interval;
+  diag->Hparticle_interval = 8*diag->interval;
+
+  diag->energies_interval = 50;
+}
+
+// ----------------------------------------------------------------------
+// vpic_diagnostics_split
+
+void vpic_diagnostics_split(vpic_params *vpic_prm, psc_harris *harris)
+{
+  // Let the user compute diagnostics
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
+  TIC vpic_simulation_diagnostics(simulation, vpic_prm,
+				  &user_global->diag); TOC( user_diagnostics, 1 );
 }
 

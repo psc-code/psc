@@ -296,7 +296,10 @@ void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
 struct species * vpic_simulation_define_species(const char *name, double q, double m,
 						double max_local_np, double max_local_nm,
 						double sort_interval, double sort_out_of_place);
-  
+
+
+void vpic_diagnostics_init(int interval);
+
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 

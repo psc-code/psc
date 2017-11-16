@@ -405,6 +405,9 @@ psc_harris_setup(struct psc *psc)
   psc_harris_setup_species(psc);
   }
 
+  int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
+  vpic_diagnostics_init(interval);
+  
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 }
