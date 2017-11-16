@@ -24,8 +24,7 @@
 
 // ======================================================================
 
-static void user_init_harris(globals_physics *phys, vpic_harris_params *prm,
-			     vpic_params *vprm, int nproc);
+static void user_init_harris(vpic_params *prm, struct psc_harris *sub, int nproc);
 static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
 				  vpic_params *vprm, globals_physics *phys);
 static void user_init_grid(vpic_simulation *simulation, vpic_harris_params *prm,
@@ -40,13 +39,13 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris *sub_harris,
+void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris *sub,
 	       globals_diag *diag)
 {
-  vpic_harris_params *harris = &sub_harris->prm;
-  globals_physics *phys = &sub_harris->phys;
+  vpic_harris_params *harris = &sub->prm;
+  globals_physics *phys = &sub->phys;
 
-  user_init_harris(phys, harris, prm, simulation->nproc());
+  user_init_harris(prm, sub, simulation->nproc());
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
@@ -102,9 +101,11 @@ inline double trunc_granular( double a, double b ) { return b*int(a/b); }
 // ----------------------------------------------------------------------
 // user_init_harris
 
-static void user_init_harris(globals_physics *phys, vpic_harris_params *prm,
-			     vpic_params *vprm, int nproc)
+static void user_init_harris(vpic_params *vprm, struct psc_harris *sub, int nproc)
 {
+  globals_physics *phys = &sub->phys;
+  vpic_harris_params *prm = &sub->prm;
+
   assert(vprm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   // use natural PIC units
