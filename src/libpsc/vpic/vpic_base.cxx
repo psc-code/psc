@@ -183,3 +183,13 @@ void vpic_simulation_setup_grid(double dx[3], double dt, double cvac, double eps
   grid->eps0 = eps0;
 }
 
+// ----------------------------------------------------------------------
+// vpic_simulation_define_periodic_grid
+
+void vpic_simulation_define_periodic_grid(double xl[3], double xh[3],
+					  int gdims[3], int np[3])
+{
+  simulation->define_periodic_grid(xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
+				   gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
+}
+

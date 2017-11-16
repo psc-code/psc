@@ -110,12 +110,6 @@ static void user_init_grid(vpic_simulation *simulation, vpic_params *vprm,
   globals_physics *phys = &sub->phys;
   grid_t *grid = simulation->grid;
 
-  // Define the grid
-  simulation->define_periodic_grid(0       , -0.5*phys->Ly, -0.5*phys->Lz,      // Low corner
-				   phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,      // High corner
-				   vprm->gdims[0], vprm->gdims[1], vprm->gdims[2], // Resolution
-				   vprm->np[0], vprm->np[1], vprm->np[2]);         // Topology
-
   // Determine which domains area along the boundaries - Use macro from
   // grid/partition.c.
   
