@@ -125,7 +125,6 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
 	       const vpic_harris_params *vpic_harris_prm)
 {
-#define nproc simulation->nproc
   user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   params *prm = &global->prm;
   globals_physics *phys = &global->phys;
@@ -159,7 +158,7 @@ void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
   // Setup the species
 
   sim_log("Setting up species. ");
-  double nmax = 2.0*phys->Ne/nproc();
+  double nmax = 2.0*phys->Ne/simulation->nproc();
   double nmovers = 0.1*nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
   species_t *electron = simulation->define_species("electron", -phys->ec, phys->me, nmax, nmovers,
@@ -180,8 +179,6 @@ void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
   user_setup_diagnostics(simulation, diag, electron, ion);
 
   sim_log("*** Finished with user-specified initialization ***");
-
-#undef nproc
 }
 
 // ======================================================================
@@ -346,7 +343,6 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
 
 static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_physics *phys)
 {
-#define field simulation->field
   grid_t *grid = simulation->grid;
   //////////////////////////////////////////////////////////////////////////////
   // Setup materials
@@ -380,7 +376,9 @@ static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_
 
   if (thickness > 0) {
     sim_log("Setting resistive layer of thickness "<< thickness);
+#define field simulation->field
     set_region_material(resistive_layer, resistive, resistive);
+#undef field
   }
 }
 
@@ -390,8 +388,6 @@ static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_
 static void user_init_log(vpic_simulation *simulation, params *prm,
 			  globals_physics *phys, globals_diag *diag)
 {
-#define nproc simulation->nproc
-
   sim_log( "***********************************************" );
   sim_log("* Topology:                       " << prm->np[0]
 	  << " " << prm->np[1] << " " << prm->np[2]);
@@ -419,7 +415,7 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
   sim_log ( "ny = " << prm->gdims[1] );
   sim_log ( "nz = " << prm->gdims[2] );
   sim_log ( "courant = " << phys->c*phys->dt/phys->dg );
-  sim_log ( "nproc = " << nproc ()  );
+  sim_log ( "nproc = " << simulation->nproc()  );
   sim_log ( "nppc = " << prm->nppc );
   sim_log ( "b0 = " << phys->b0 );
   sim_log ( "v_A (based on nb) = " << phys->v_A );
@@ -474,7 +470,7 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.print("              ny =                   %e\n", prm->gdims[1] );
     fp_info.print("              nz =                   %e\n", prm->gdims[2] );
     fp_info.print("              courant =              %e\n", phys->c*phys->dt/phys->dg );
-    fp_info.print("              nproc =                %i\n", nproc() );
+    fp_info.print("              nproc =                %i\n", simulation->nproc() );
     fp_info.print("              nppc =                 %e\n", prm->nppc );
     fp_info.print("              b0 =                   %e\n", phys->b0 );
     fp_info.print("              v_A (based on nb) =    %e\n", phys->v_A );
@@ -502,8 +498,6 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.print("              ***************************\n");
     fp_info.close();
   }
-
-#undef nproc
 }
 
 // ----------------------------------------------------------------------
@@ -515,18 +509,17 @@ static void user_load_fields(vpic_simulation *simulation, params *prm, globals_p
   double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
   double b0 = phys->b0, bg = prm->bg, dbx = phys->dbx, dbz = phys->dbz;
   grid_t *grid = simulation->grid;
-#define field simulation->field
   
   sim_log( "Loading fields" );
+#define field simulation->field
   set_region_field( everywhere, 0, 0, 0,                    // Electric field
     cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
     -sn*b0*tanh(z/L) + b0*bg, //By
     dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
+#undef field
 
   // Note: everywhere is a region that encompasses the entire simulation
   // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
-
-#undef field
 }
 
 // ----------------------------------------------------------------------
@@ -543,12 +536,7 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
   double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
   double weight_b = phys->weight_b;
   grid_t *grid = simulation->grid;
-#define nproc simulation->nproc
-#define rng simulation->rng
-#define uniform simulation->uniform
-#define normal simulation->normal
-#define inject_particle simulation->inject_particle
-#define seed_entropy simulation->seed_entropy
+  int nproc = simulation->nproc();
   
   // LOAD PARTICLES
 
@@ -556,7 +544,9 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
 
   // Do a fast load of the particles
 
-  seed_entropy( simulation->rank() );  //Generators desynchronized
+  simulation->seed_entropy( simulation->rank() );  //Generators desynchronized
+  rng_t *rng = simulation->rng(0);
+
   double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
   double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
   double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
@@ -565,66 +555,61 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
 
   sim_log( "-> Main Harris Sheet" );
 
-  repeat ( Ne_sheet/nproc() ) {
+  repeat ( Ne_sheet/nproc ) {
     double x, y, z, ux, uy, uz, d0 ;
 
     do {
-      z = L*atanh(uniform( rng(0), -1, 1)*tanhf);
+      z = L*atanh(simulation->uniform( rng, -1, 1)*tanhf);
     } while( z<= zmin || z>=zmax );
-    x = uniform( rng(0), xmin, xmax );
-    y = uniform( rng(0), ymin, ymax );
+    x = simulation->uniform( rng, xmin, xmax );
+    y = simulation->uniform( rng, ymin, ymax );
 
     // inject_particles() will return an error for particles no on this
     // node and will not inject particle locally
 
-    ux = normal( rng(0), 0, vthe);
-    uy = normal( rng(0), 0, vthe);
-    uz = normal( rng(0), 0, vthe);
+    ux = simulation->normal( rng, 0, vthe);
+    uy = simulation->normal( rng, 0, vthe);
+    uz = simulation->normal( rng, 0, vthe);
     d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
     uy = d0*cs - ux*sn;
     ux = d0*sn + ux*cs;
 
-    inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+    simulation->inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
 
-    ux = normal( rng(0), 0, vthi);
-    uy = normal( rng(0), 0, vthi);
-    uz = normal( rng(0), 0, vthi);
+    ux = simulation->normal( rng, 0, vthi);
+    uy = simulation->normal( rng, 0, vthi);
+    uz = simulation->normal( rng, 0, vthi);
     d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
     uy = d0*cs - ux*sn;
     ux = d0*sn + ux*cs;
 
-    inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+    simulation->inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
   }
 
   sim_log( "-> Background Population" );
 
-  repeat ( Ne_back/nproc() ) {
+  repeat ( Ne_back/nproc ) {
 
-    double x = uniform( rng(0), xmin, xmax );
-    double y = uniform( rng(0), ymin, ymax );
-    double z = uniform( rng(0), zmin, zmax );
+    double x = simulation->uniform( rng, xmin, xmax );
+    double y = simulation->uniform( rng, ymin, ymax );
+    double z = simulation->uniform( rng, zmin, zmax );
 
-    inject_particle( electron, x, y, z,
-                     normal( rng(0), 0, vtheb),
-                     normal( rng(0), 0, vtheb),
-                     normal( rng(0), 0, vtheb),
-                     weight_b, 0, 0);
-
-    inject_particle( ion, x, y, z,
-                     normal( rng(0), 0, vthib),
-                     normal( rng(0), 0, vthib),
-                     normal( rng(0), 0, vthib),
-                     weight_b, 0 ,0 );
+    simulation->inject_particle( electron, x, y, z,
+				 simulation->normal( rng, 0, vtheb),
+				 simulation->normal( rng, 0, vtheb),
+				 simulation->normal( rng, 0, vtheb),
+				 weight_b, 0, 0);
+    
+    simulation->inject_particle( ion, x, y, z,
+				 simulation->normal( rng, 0, vthib),
+				 simulation->normal( rng, 0, vthib),
+				 simulation->normal( rng, 0, vthib),
+				 weight_b, 0 ,0 );
   }
 
   sim_log( "Finished loading particles" );
 
-#undef nproc
 #undef rng
-#undef uniform
-#undef normal
-#undef inject_particle
-#undef seed_entropy
 }
 
 // ----------------------------------------------------------------------
@@ -633,9 +618,6 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion)
 {
-#define create_field_list simulation->create_field_list
-#define create_hydro_list simulation->create_hydro_list
-
   /*--------------------------------------------------------------------------
    * New dump definition
    *------------------------------------------------------------------------*/
@@ -802,31 +784,28 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
    *------------------------------------------------------------------------*/
 
   char varlist[512];
-  create_field_list(varlist, diag->fdParams);
+  simulation->create_field_list(varlist, diag->fdParams);
 
   sim_log ( "Fields variable list: " << varlist );
 
-  create_hydro_list(varlist, diag->hedParams);
+  simulation->create_hydro_list(varlist, diag->hedParams);
 
   sim_log ( "Electron species variable list: " << varlist );
 
-  create_hydro_list(varlist, diag->hHdParams);
+  simulation->create_hydro_list(varlist, diag->hHdParams);
 
   sim_log ( "Ion species variable list: " << varlist );
-
-#undef create_field_list
-#undef create_hydro_list
 }
 
 #define should_dump(x)                                                  \
-  (diag->x##_interval>0 && remainder(step(), diag->x##_interval) == 0)
+  (diag->x##_interval>0 && remainder(step, diag->x##_interval) == 0)
 
 void vpic_simulation_diagnostics(vpic_simulation *simulation)
 {
   user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   struct globals_diag *diag = &global->diag;
   struct params *prm = &global->prm;
-#define step simulation->step
+  int64_t step = simulation->step();
 
   /*--------------------------------------------------------------------------
    * Data output directories
@@ -841,7 +820,7 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
   /*--------------------------------------------------------------------------
    * Normal rundata dump
    *------------------------------------------------------------------------*/
-  if(step()==0) {
+  if(step==0) {
     simulation->dump_mkdir("fields");
     simulation->dump_mkdir("hydro");
     simulation->dump_mkdir("rundata");
@@ -860,14 +839,14 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
    * Normal rundata energies dump
    *------------------------------------------------------------------------*/
   if(should_dump(energies)) {
-    simulation->dump_energies("rundata/energies", step() == 0 ? 0 : 1);
+    simulation->dump_energies("rundata/energies", step == 0 ? 0 : 1);
   } // if
 
   /*--------------------------------------------------------------------------
    * Field data output
    *------------------------------------------------------------------------*/
 
-  if(step() == -1 || should_dump(fields)) simulation->field_dump(diag->fdParams);
+  if(step == -1 || should_dump(fields)) simulation->field_dump(diag->fdParams);
 
   /*--------------------------------------------------------------------------
    * Electron species output
@@ -885,7 +864,7 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
    * Restart dump
    *------------------------------------------------------------------------*/
 
-  if(step() && !(step()%prm->restart_interval)) {
+  if(step && !(step%prm->restart_interval)) {
     if(!diag->rtoggle) {
       diag->rtoggle = 1;
       checkpt("restart1/restart", 0);
@@ -899,18 +878,18 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
   // Dump particle data
 
   char subdir[36];
-  if ( should_dump(eparticle) && step() !=0
-       && step() > 56*(diag->fields_interval)  ) {
-    // if ( should_dump(eparticle) && step() !=0 ) {
-    sprintf(subdir,"particle/T.%lld",step());
+  if ( should_dump(eparticle) && step !=0
+       && step > 56*(diag->fields_interval)  ) {
+    // if ( should_dump(eparticle) && step !=0 ) {
+    sprintf(subdir,"particle/T.%lld",step);
     simulation->dump_mkdir(subdir);
-    sprintf(subdir,"particle/T.%lld/eparticle",step());
+    sprintf(subdir,"particle/T.%lld/eparticle",step);
     simulation->dump_particles("electron", subdir);
   }
 
-  if ( should_dump(Hparticle) && step() !=0
-       && step() > 56*(diag->fields_interval)  ) {
-    sprintf(subdir,"particle/T.%lld/Hparticle",step());
+  if ( should_dump(Hparticle) && step !=0
+       && step > 56*(diag->fields_interval)  ) {
+    sprintf(subdir,"particle/T.%lld/Hparticle",step);
     simulation->dump_particles("ion", subdir);
   }
 
@@ -921,8 +900,8 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
   // few timesteps to eliminate the expensive mp_elapsed call from every
   // timestep. mp_elapsed has an ALL_REDUCE in it!
 
-  if (( step()>0 && prm->quota_check_interval>0
-        && (step()&prm->quota_check_interval)==0)
+  if (( step>0 && prm->quota_check_interval>0
+        && (step&prm->quota_check_interval)==0)
       || (diag->write_end_restart) ) {
     if ( (diag->write_end_restart) ) {
 
@@ -941,7 +920,5 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
     }
     if( uptime() > diag->quota_sec ) diag->write_end_restart = 1;
   }
-
-#undef step
 }
 
