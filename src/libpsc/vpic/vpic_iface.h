@@ -240,23 +240,6 @@ struct psc_harris {
   // state
   struct globals_physics phys;
   int n_global_patches;
-
-  double Npe_sheet, Npe_back, Npe;
-  double Ne_sheet, Ne_back, Ne;
-  double weight_s, weight_b;
-  double vthe, vthi;
-  double vtheb, vthib;
-  double L;
-  double gdre;
-  double gdri;
-  double udre;
-  double udri;
-  double tanhf;
-  double sn, cs;
-  double b0, bg;
-  double dbx, dbz;
-  double Lx, Ly, Lz;
-  double Lpert;
 };
 
 #define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
