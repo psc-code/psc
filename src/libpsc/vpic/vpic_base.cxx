@@ -86,22 +86,6 @@ vpic_simulation_get_info(struct vpic_simulation_info *info)
   info->status_interval = simulation->status_interval;
 }
 
-void vpic_simulation_init_split(vpic_params *vpic_prm, vpic_harris_params *vpic_harris_prm,
-				vpic_simulation_info *info)
-{
-  simulation = new vpic_simulation;
-
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
-  params *prm = &user_global->prm;
-  
-  *static_cast<vpic_params *>(prm) = *vpic_prm;
-  *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
-  
-  user_init(simulation, user_global, prm, &user_global->phys, &user_global->diag);
-
-  vpic_simulation_get_info(info);
-}
-
 void vpic_simulation_init(vpic_simulation_info *info)
 {
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
@@ -111,17 +95,6 @@ void vpic_simulation_init(vpic_simulation_info *info)
   TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
 
   vpic_simulation_get_info(info);
-}
-
-// ======================================================================
-// vpic_diagnostics_split
-
-void vpic_diagnostics_split()
-{
-  // Let the user compute diagnostics
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
-  TIC vpic_simulation_diagnostics(simulation, user_global, &user_global->prm,
-				  &user_global->diag); TOC( user_diagnostics, 1 );
 }
 
 // ======================================================================
@@ -141,4 +114,45 @@ void vpic_inc_step(int step)
   assert(simulation->grid->step == step);
 }
 
+
+// ======================================================================
+// ======================================================================
+
+// ----------------------------------------------------------------------
+
+struct user_global_t {
+  struct params prm;
+  struct globals_diag diag;
+  struct globals_physics phys;
+};
+
+// ----------------------------------------------------------------------
+// vpic_simulation_init_split
+
+void vpic_simulation_init_split(vpic_params *vpic_prm, vpic_harris_params *vpic_harris_prm,
+				vpic_simulation_info *info)
+{
+  simulation = new vpic_simulation;
+
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  params *prm = &user_global->prm;
+  
+  *static_cast<vpic_params *>(prm) = *vpic_prm;
+  *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
+  
+  user_init(simulation, prm, &user_global->phys, &user_global->diag);
+
+  vpic_simulation_get_info(info);
+}
+
+// ----------------------------------------------------------------------
+// vpic_diagnostics_split
+
+void vpic_diagnostics_split()
+{
+  // Let the user compute diagnostics
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  TIC vpic_simulation_diagnostics(simulation, &user_global->prm,
+				  &user_global->diag); TOC( user_diagnostics, 1 );
+}
 
