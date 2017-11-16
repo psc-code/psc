@@ -40,9 +40,12 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, vpic_harris_params *harris, vpic_params *prm,
-	       globals_physics *phys, globals_diag *diag)
+void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris *sub_harris,
+	       globals_diag *diag)
 {
+  vpic_harris_params *harris = &sub_harris->prm;
+  globals_physics *phys = &sub_harris->phys;
+
   user_init_harris(phys, harris, prm, simulation->nproc());
 
   ///////////////////////////////////////////////
