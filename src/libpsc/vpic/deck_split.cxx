@@ -1,7 +1,18 @@
 
 #include "vpic_iface.h"
 
+#include <mrc_common.h>
+
 #include <cassert>
+
+#undef sim_log
+#define sim_log(x) do {                                \
+    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);    \
+    if( rank==0 ) {				       \
+      std::cerr << "SIM_LOG: " << x << std::endl;      \
+      std::cerr.flush();                               \
+    }                                                  \
+  } while(0)
 
 //////////////////////////////////////////////////////
 //
@@ -114,7 +125,6 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
 	       const vpic_harris_params *vpic_harris_prm)
 {
-#define rank simulation->rank
 #define nproc simulation->nproc
   user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   params *prm = &global->prm;
@@ -172,7 +182,6 @@ void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
   sim_log("*** Finished with user-specified initialization ***");
 
 #undef nproc
-#undef rank
 }
 
 // ======================================================================
@@ -269,7 +278,6 @@ static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physi
 
 static void user_init_grid(vpic_simulation *simulation, params *prm, globals_physics *phys)
 {
-#define rank simulation->rank
   grid_t *grid = simulation->grid;
   
   // Setup basic grid parameters
@@ -302,7 +310,7 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
   } END_PRIMITIVE
 
   int ix, iy, iz, left=0,right=0,top=0,bottom=0;
-  RANK_TO_INDEX( int(rank()), ix, iy, iz );
+  RANK_TO_INDEX( int(simulation->rank()), ix, iy, iz );
   if ( ix ==0 ) left=1;
   if ( ix ==prm->np[0]-1 ) right=1;
   if ( iz ==0 ) bottom=1;
@@ -334,13 +342,10 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
     if (left)  simulation->set_domain_particle_bc( BOUNDARY(-1,0,0), absorb_particles );
     if (right) simulation->set_domain_particle_bc( BOUNDARY( 1,0,0), absorb_particles );
   }
-
-#undef rank
 }
 
 static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_physics *phys)
 {
-#define rank simulation->rank
 #define field simulation->field
   grid_t *grid = simulation->grid;
   //////////////////////////////////////////////////////////////////////////////
@@ -377,8 +382,6 @@ static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_
     sim_log("Setting resistive layer of thickness "<< thickness);
     set_region_material(resistive_layer, resistive, resistive);
   }
-
-#undef rank
 }
 
 // ----------------------------------------------------------------------
@@ -387,7 +390,6 @@ static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_
 static void user_init_log(vpic_simulation *simulation, params *prm,
 			  globals_physics *phys, globals_diag *diag)
 {
-#define rank simulation->rank
 #define nproc simulation->nproc
 
   sim_log( "***********************************************" );
@@ -446,7 +448,7 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
   sim_log ( "Driven BC in z? = " << prm->driven_bc_z );
 
   // Dump simulation information to file "info"
-  if (rank() == 0 ) {
+  if (simulation->rank() == 0 ) {
     FileIO fp_info;
     if ( ! (fp_info.open("info", io_write)==ok) ) ERROR(("Cannot open file."));
     fp_info.print("           ***** Simulation parameters ***** \n");
@@ -501,7 +503,6 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.close();
   }
 
-#undef rank
 #undef nproc
 }
 
@@ -514,7 +515,6 @@ static void user_load_fields(vpic_simulation *simulation, params *prm, globals_p
   double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
   double b0 = phys->b0, bg = prm->bg, dbx = phys->dbx, dbz = phys->dbz;
   grid_t *grid = simulation->grid;
-#define rank simulation->rank
 #define field simulation->field
   
   sim_log( "Loading fields" );
@@ -527,7 +527,6 @@ static void user_load_fields(vpic_simulation *simulation, params *prm, globals_p
   // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
 
 #undef field
-#undef rank
 }
 
 // ----------------------------------------------------------------------
@@ -544,7 +543,6 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
   double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
   double weight_b = phys->weight_b;
   grid_t *grid = simulation->grid;
-#define rank simulation->rank
 #define nproc simulation->nproc
 #define rng simulation->rng
 #define uniform simulation->uniform
@@ -558,7 +556,7 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
 
   // Do a fast load of the particles
 
-  seed_entropy( rank() );  //Generators desynchronized
+  seed_entropy( simulation->rank() );  //Generators desynchronized
   double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
   double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
   double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
@@ -621,7 +619,6 @@ static void user_load_particles(vpic_simulation *simulation, params *prm,
 
   sim_log( "Finished loading particles" );
 
-#undef rank
 #undef nproc
 #undef rng
 #undef uniform
@@ -638,7 +635,6 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 {
 #define create_field_list simulation->create_field_list
 #define create_hydro_list simulation->create_hydro_list
-#define rank simulation->rank
 
   /*--------------------------------------------------------------------------
    * New dump definition
@@ -820,7 +816,6 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 
 #undef create_field_list
 #undef create_hydro_list
-#undef rank
 }
 
 #define should_dump(x)                                                  \
@@ -832,7 +827,6 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
   struct globals_diag *diag = &global->diag;
   struct params *prm = &global->prm;
 #define step simulation->step
-#define rank simulation->rank
 
   /*--------------------------------------------------------------------------
    * Data output directories
@@ -949,6 +943,5 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation)
   }
 
 #undef step
-#undef rank
 }
 
