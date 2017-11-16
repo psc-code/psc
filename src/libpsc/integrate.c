@@ -81,8 +81,10 @@ psc_step(struct psc *psc)
 
   // default psc_step() implementation
 
+#if 0
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	     psc->prm.nmax, psc->timestep * psc->dt);
+#endif
 
   // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
