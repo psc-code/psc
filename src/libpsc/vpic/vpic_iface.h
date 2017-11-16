@@ -287,6 +287,16 @@ void vpic_simulation_define_periodic_grid(double xl[3], double xh[3],
 					  int gdims[3], int np[3]);
 void vpic_simulation_set_domain_field_bc(int boundary, int fbc);
 void vpic_simulation_set_domain_particle_bc(int boundary, int pbc);
+struct material *vpic_simulation_define_material(const char *name, double eps, double mu,
+						 double sigma, double zeta);
+
+struct field_array;
+void vpic_simulation_define_field_array(struct field_array *fa, double damp);
+void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
+						 struct globals_physics *phys,
+						 double dx[3],
+						 double thickness,
+						 struct material *resistive);
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */

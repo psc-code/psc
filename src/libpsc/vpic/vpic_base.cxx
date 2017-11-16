@@ -239,3 +239,41 @@ vpic_simulation_set_domain_particle_bc(int boundary, int bc)
   simulation->set_domain_particle_bc(boundary, pbc);
 }
 
+struct material *vpic_simulation_define_material(const char *name, double eps, double mu,
+				     double sigma, double zeta)
+{
+  return simulation->define_material(name, eps, mu, sigma, zeta);
+}
+
+void vpic_simulation_define_field_array(field_array_t *fa, double damp)
+{
+  simulation->define_field_array(fa, damp);
+}
+
+void vpic_simulation_set_region_resistive_harris(vpic_harris_params *prm,
+						 globals_physics *phys,
+						 double dx[3],
+						 double thickness,
+						 struct material *resistive)
+{
+  // Define resistive layer surrounding boundary --> set thickness=0
+  // to eliminate this feature
+#define resistive_layer ((prm->open_bc_x && x < dx[0]*thickness) ||	\
+			 (prm->open_bc_x && x > phys->Lx-dx[0]*thickness)	\
+                         || z <-phys->Lz/2+dx[2]*thickness  || z > phys->Lz/2-dx[2]*thickness )
+
+  if (thickness > 0) {
+    log_printf("Setting resistive layer of thickness %g", thickness);
+    // FIXME!!!
+    assert(0);
+#if 0
+#define field simulation->field
+    grid_t *grid = simulation->grid;
+    set_region_material(resistive_layer, resistive, resistive);
+#undef field
+#endif
+  }
+}
+
+
+

@@ -105,10 +105,10 @@ static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *p
 
   sim_log("Setting up materials. ");
 
-  simulation->define_material( "vacuum", 1 );
-  material_t * resistive = simulation->define_material( "resistive",1,1,1 );
+  vpic_simulation_define_material("vacuum", 1., 1., 0., 0.);
+  material_t *resistive = vpic_simulation_define_material("resistive", 1., 1., 1., 0.);
 
-  simulation->define_field_array(NULL); // second argument is damp, default to 0
+  vpic_simulation_define_field_array(NULL, 0.);
 
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
   // Tensor electronic, magnetic and conductive materials are supported
@@ -120,22 +120,11 @@ static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *p
 
   sim_log("Finalizing Field Advance");
 
-  double hx = phys->Lx/vprm->gdims[0];
-  double hz = phys->Lz/vprm->gdims[1];
+  double dx[3] = { phys->Lx / vprm->gdims[0],
+		   phys->Ly / vprm->gdims[1],
+		   phys->Lz / vprm->gdims[2] };
 
-  // Define resistive layer surrounding boundary --> set thickness=0
-  // to eliminate this feature
-  double thickness = 0;
-#define resistive_layer ((prm->open_bc_x && x < hx*thickness) ||	\
-			 (prm->open_bc_x && x > phys->Lx-hx*thickness)	\
-                         || z <-phys->Lz/2+hz*thickness  || z > phys->Lz/2-hz*thickness )
-
-  if (thickness > 0) {
-    sim_log("Setting resistive layer of thickness "<< thickness);
-#define field simulation->field
-    set_region_material(resistive_layer, resistive, resistive);
-#undef field
-  }
+  vpic_simulation_set_region_resistive_harris(prm, phys, dx, 0., resistive);
 }
 
 // ----------------------------------------------------------------------
