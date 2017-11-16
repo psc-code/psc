@@ -180,6 +180,54 @@ struct vpic_harris_params {
   bool driven_bc_z;               // Flag to signal we want to do driven boundary condition in z
 };
 
+struct globals_physics {
+  double ec;
+  double me;
+  double c;
+  double eps0;
+  double de;
+
+  double mi;
+  double di;
+  double wpe;
+  double wpi;
+  double wce;
+  double wci;
+  
+  // general
+  double dg;       // courant length
+  double dt;       // timestep
+  
+  // calculated
+  double b0;       // B0
+  double n0;
+  double v_A;
+  double rhoi_L;
+  double Lx, Ly, Lz; // size of box
+  double L;        // Harris sheet thickness
+  double Lpert;    // wavelength of perturbation
+  double dbx;      // Perturbation in Bz relative to Bo (Only change here)
+  double dbz;      // Set Bx perturbation so that div(B) = 0
+  double tanhf;
+
+  double Ne;       // Total number of macro electrons
+  double Ne_sheet; // Number of macro electrons in Harris sheet
+  double weight_s; // Charge per macro electron
+  double vthe;     // Electron thermal velocity
+  double vthi;     // Ion thermal velocity
+  double vdre;     // Electron drift velocity
+  double vdri;     // Ion drift velocity
+  double gdri;     // gamma of ion drift frame
+  double gdre;     // gamma of electron drift frame
+  double udri;     // 4-velocity of ion drift frame
+  double udre;     // 4-velocity of electron drift frame
+
+  double Ne_back;  // Number of macro electrons in background
+  double weight_b; // Charge per macro electron
+  double vtheb;    // normalized background e thermal vel.
+  double vthib;    // normalized background ion thermal vel.
+};
+
 // ----------------------------------------------------------------------
 // vpic_simulation_info
 //
