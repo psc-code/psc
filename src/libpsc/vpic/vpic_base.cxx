@@ -193,3 +193,37 @@ void vpic_simulation_define_periodic_grid(double xl[3], double xh[3],
 				   gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
 }
 
+// ----------------------------------------------------------------------
+// vpic_simulation_set_domain_field_bc
+
+// FIXME, replicated
+///Possible boundary conditions for fields
+enum {
+  BND_FLD_OPEN,
+  BND_FLD_PERIODIC,
+  BND_FLD_UPML,
+  BND_FLD_TIME,
+  BND_FLD_CONDUCTING_WALL,
+  BND_FLD_ABSORBING,
+};
+
+///Possible boundary conditions for particles
+enum {
+  BND_PART_REFLECTING,
+  BND_PART_PERIODIC,
+  BND_PART_ABSORBING,
+  BND_PART_OPEN,
+};
+
+void
+vpic_simulation_set_domain_field_bc(int boundary, int bc)
+{
+  int fbc;
+  switch (bc) {
+  case BND_FLD_CONDUCTING_WALL: fbc = absorb_fields; break;
+  case BND_FLD_ABSORBING:       fbc = pec_fields; break;
+  default: assert(0);
+  }
+  simulation->set_domain_field_bc(boundary, fbc);
+}
+
