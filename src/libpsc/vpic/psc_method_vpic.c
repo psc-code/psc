@@ -44,6 +44,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
   struct vpic_params *prm = &sub->vpic_prm;
+  MPI_Comm comm = psc_comm(psc);
 
   prm->cfl_req              = psc->prm.cfl;
   prm->status_interval      = psc->prm.stats_every;
@@ -52,10 +53,14 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
     prm->np[d]              = psc->domain.np[d];
   }
 
+  mpi_printf(comm, "*** Initializing\n");
   struct vpic_simulation_info info;
-  vpic_simulation_init(prm, psc->obj.subctx, &info, sub->split);
+  if (sub->split) {
+    vpic_simulation_init_split(prm, psc->obj.subctx, &info);
+  } else {
+    vpic_simulation_init(&info);
+  }
 
-  MPI_Comm comm = psc_comm(psc);
   MPI_Barrier(comm);
 
   psc->prm.nmax = info.num_step;

@@ -254,8 +254,9 @@ struct vpic_simulation_info {
 };
 
 void vpic_base_init(int *pargc, char ***pargv);
-void vpic_simulation_init(struct vpic_params *prm, struct vpic_harris_params *harris_prm,
-			  struct vpic_simulation_info *info, bool split);
+void vpic_simulation_init_split(struct vpic_params *vpic_prm, struct vpic_harris_params *vpic_harris_prm,
+				struct vpic_simulation_info *info);
+void vpic_simulation_init(struct vpic_simulation_info *info);
 
 
 void vpic_print_status();

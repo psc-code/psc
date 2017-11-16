@@ -46,26 +46,9 @@ void vpic_base_init(int *pargc, char ***pargv)
   }
 }
 
-void vpic_simulation_init(vpic_params *vpic_prm, vpic_harris_params *vpic_harris_prm,
-			  vpic_simulation_info *info, bool split)
+static void
+vpic_simulation_get_info(struct vpic_simulation_info *info)
 {
-  if( world_rank==0 ) log_printf( "*** Initializing\n" );
-  simulation = new vpic_simulation;
-
-  // Call the user initialize the simulation
-
-  if (split) {
-    user_global_t *user_global = (struct user_global_t *)simulation->user_global;
-    params *prm = &user_global->prm;
-    
-    *static_cast<vpic_params *>(prm) = *vpic_prm;
-    *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
-    
-    user_init(simulation, user_global);
-  } else {
-    TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
-  }
-
   info->num_step = simulation->num_step;
 
   // grid
@@ -101,6 +84,33 @@ void vpic_simulation_init(vpic_params *vpic_prm, vpic_harris_params *vpic_harris
   info->num_div_b_round = simulation->num_div_b_round;
 
   info->status_interval = simulation->status_interval;
+}
+
+void vpic_simulation_init_split(vpic_params *vpic_prm, vpic_harris_params *vpic_harris_prm,
+				vpic_simulation_info *info)
+{
+  simulation = new vpic_simulation;
+
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  params *prm = &user_global->prm;
+  
+  *static_cast<vpic_params *>(prm) = *vpic_prm;
+  *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
+  
+  user_init(simulation, user_global);
+
+  vpic_simulation_get_info(info);
+}
+
+void vpic_simulation_init(vpic_simulation_info *info)
+{
+  if( world_rank==0 ) log_printf( "*** Initializing\n" );
+  simulation = new vpic_simulation;
+
+  // Call the user initialize the simulation
+  TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
+
+  vpic_simulation_get_info(info);
 }
 
 void vpic_inc_step(int step)
