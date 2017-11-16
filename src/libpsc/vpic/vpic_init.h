@@ -36,13 +36,15 @@ struct globals_diag {
   int write_end_restart; // global flag for all to write restart files
 };
 
-// ======================================================================
+// ----------------------------------------------------------------------
 
 struct user_global_t {
   struct params prm;
   struct globals_diag diag;
   struct globals_physics phys;
 };
+
+// ----------------------------------------------------------------------
 
 void user_init(vpic_simulation *simulation, user_global_t *user_global);
 

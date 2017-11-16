@@ -229,6 +229,39 @@ struct globals_physics {
 };
 
 // ----------------------------------------------------------------------
+// psc_harris
+
+struct psc_harris {
+  // must be first because of our hacky way of passing arguments to
+  // vpic initialization deck
+  // params
+  struct vpic_harris_params prm;
+  
+  // state
+  struct globals_physics phys;
+  int n_global_patches;
+
+  double Npe_sheet, Npe_back, Npe;
+  double Ne_sheet, Ne_back, Ne;
+  double weight_s, weight_b;
+  double vthe, vthi;
+  double vtheb, vthib;
+  double L;
+  double gdre;
+  double gdri;
+  double udre;
+  double udri;
+  double tanhf;
+  double sn, cs;
+  double b0, bg;
+  double dbx, dbz;
+  double Lx, Ly, Lz;
+  double Lpert;
+};
+
+#define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
+
+// ----------------------------------------------------------------------
 // vpic_simulation_info
 //
 // returned from vpic_simulation_init
