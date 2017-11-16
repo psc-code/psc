@@ -129,7 +129,8 @@ struct user_global_t {
 // ----------------------------------------------------------------------
 // vpic_simulation_init_split
 
-void vpic_simulation_init_split(vpic_params *vpic_prm, vpic_harris_params *vpic_harris_prm,
+void vpic_simulation_init_split(vpic_params *vpic_prm,
+				psc_harris *harris,
 				vpic_simulation_info *info)
 {
   simulation = new vpic_simulation;
@@ -138,7 +139,7 @@ void vpic_simulation_init_split(vpic_params *vpic_prm, vpic_harris_params *vpic_
   params *prm = &user_global->prm;
   
   *static_cast<vpic_params *>(prm) = *vpic_prm;
-  *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
+  *static_cast<vpic_harris_params *>(prm) = harris->prm;
   
   user_init(simulation, prm, &user_global->phys, &user_global->diag);
 

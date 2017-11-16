@@ -57,8 +57,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   struct vpic_simulation_info info;
   if (sub->split) {
     struct psc_harris *harris = psc_harris(psc);
-    struct vpic_harris_params *harris_prm = &harris->prm;
-    vpic_simulation_init_split(prm, harris_prm, &info);
+    vpic_simulation_init_split(prm, harris, &info);
   } else {
     vpic_simulation_init(&info);
   }
