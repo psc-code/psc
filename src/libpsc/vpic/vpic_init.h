@@ -6,12 +6,6 @@
 #include "vpic.h"
 
 // ----------------------------------------------------------------------
-// params
-
-struct params : vpic_params {
-};
-
-// ----------------------------------------------------------------------
 // globals_diag
 
 struct globals_diag {
@@ -38,10 +32,10 @@ struct globals_diag {
 
 // ----------------------------------------------------------------------
 
-void user_init(vpic_simulation *simulation, vpic_harris_params *harris, params *prm,
+void user_init(vpic_simulation *simulation, vpic_harris_params *harris, vpic_params *prm,
 	       globals_physics *phys, globals_diag *diag);
 
 void vpic_simulation_diagnostics(vpic_simulation *simulation,
-				 params *prm, globals_diag *diag);
+				 vpic_params *prm, globals_diag *diag);
 
 #endif

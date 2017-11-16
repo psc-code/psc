@@ -121,7 +121,7 @@ void vpic_inc_step(int step)
 // ----------------------------------------------------------------------
 
 struct user_global_t {
-  struct params prm;
+  struct vpic_params prm;
   struct vpic_harris_params harris;
   struct globals_diag diag;
 };
@@ -136,12 +136,12 @@ void vpic_simulation_init_split(vpic_params *vpic_prm,
   simulation = new vpic_simulation;
 
   user_global_t *user_global = (struct user_global_t *)simulation->user_global;
-  params *prm = &user_global->prm;
   
-  *static_cast<vpic_params *>(prm) = *vpic_prm;
+  user_global->prm = *vpic_prm;
   user_global->harris = harris->prm;
   
-  user_init(simulation, &user_global->harris, prm, &harris->phys, &user_global->diag);
+  user_init(simulation, &user_global->harris, &user_global->prm,
+	    &harris->phys, &user_global->diag);
 
   vpic_simulation_get_info(info);
 }
