@@ -115,62 +115,6 @@ static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
   sim_log ( "vdre/c = " << phys->vdre/phys->c );
   sim_log ( "Open BC in x?   = " << prm->open_bc_x );
   sim_log ( "Driven BC in z? = " << prm->driven_bc_z );
-
-  // Dump simulation information to file "info"
-  if (simulation->rank() == 0 ) {
-    FileIO fp_info;
-    if ( ! (fp_info.open("info", io_write)==ok) ) ERROR(("Cannot open file."));
-    fp_info.print("           ***** Simulation parameters ***** \n");
-    fp_info.print("              L/di   =               %e\n", prm->L_di);
-    fp_info.print("              L/de   =               %e\n", phys->L/phys->de);
-    fp_info.print("              rhoi/L =               %e\n", phys->rhoi_L);
-    fp_info.print("              Ti/Te  =               %e\n", prm->Ti_Te );
-    fp_info.print("              Tbi/Ti =               %e\n", prm->Tbi_Ti );
-    fp_info.print("              Tbe/Te =               %e\n", prm->Tbe_Te );
-    fp_info.print("              nb/n0 =                %e\n", prm->nb_n0 );
-    fp_info.print("              wpe/wce =              %e\n", prm->wpe_wce );
-    fp_info.print("              mi/me =                %e\n", prm->mi_me );
-    fp_info.print("              theta =                %e\n", prm->theta );
-    fp_info.print("              taui =                 %e\n", prm->taui );
-    fp_info.print("              num_step =             %i\n", simulation->num_step );
-    fp_info.print("              Lx/de =                %e\n", phys->Lx/phys->de );
-    fp_info.print("              Ly/de =                %e\n", phys->Ly/phys->de );
-    fp_info.print("              Lz/de =                %e\n", phys->Lz/phys->de );
-    fp_info.print("              Lx/di =                %e\n", phys->Lx/phys->di );
-    fp_info.print("              Ly/di =                %e\n", phys->Ly/phys->di );
-    fp_info.print("              Lz/di =                %e\n", phys->Lz/phys->di );
-    fp_info.print("              nx =                   %e\n", vprm->gdims[0] );
-    fp_info.print("              ny =                   %e\n", vprm->gdims[1] );
-    fp_info.print("              nz =                   %e\n", vprm->gdims[2] );
-    fp_info.print("              courant =              %e\n", phys->c*phys->dt/phys->dg );
-    fp_info.print("              nproc =                %i\n", simulation->nproc() );
-    fp_info.print("              nppc =                 %e\n", prm->nppc );
-    fp_info.print("              b0 =                   %e\n", phys->b0 );
-    fp_info.print("              v_A (based on nb) =    %e\n", phys->v_A );
-    fp_info.print("              di =                   %e\n", phys->di );
-    fp_info.print("              Ne =                   %e\n", phys->Ne );
-    fp_info.print("              Ne_sheet =             %e\n", phys->Ne_sheet );
-    fp_info.print("              Ne_back =              %e\n", phys->Ne_back );
-    fp_info.print("              total # of particles = %e\n", 2*phys->Ne );
-    fp_info.print("              dt*wpe =               %e\n", phys->wpe*phys->dt );
-    fp_info.print("              dt*wce =               %e\n", phys->wce*phys->dt );
-    fp_info.print("              dt*wci =               %e\n", phys->wci*phys->dt );
-    fp_info.print("              energies_interval:     %i\n", diag->energies_interval);
-    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*vprm->gdims[0]) );
-    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*vprm->gdims[1]) );
-    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*vprm->gdims[2]) );
-    fp_info.print("              L/debye =              %e\n", phys->L/(phys->vthe/phys->wpe) );
-    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/vprm->gdims[0])/(phys->vthi/phys->wci) );
-    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wce) );
-    fp_info.print("              dx/debye =             %e\n", (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wpe) );
-    fp_info.print("              n0 =                   %e\n", phys->n0 );
-    fp_info.print("              vthi/c =               %e\n", phys->vthi/phys->c );
-    fp_info.print("              vthe/c =               %e\n", phys->vthe/phys->c );
-    fp_info.print("              vdri/c =               %e\n", phys->vdri/phys->c );
-    fp_info.print("              vdre/c =               %e\n", phys->vdre/phys->c );
-    fp_info.print("              ***************************\n");
-    fp_info.close();
-  }
 }
 
 // ----------------------------------------------------------------------
