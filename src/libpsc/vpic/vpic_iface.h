@@ -164,6 +164,20 @@ struct vpic_harris_params {
   double taui;                    // simulation wci's to run
   double t_intervali;             // output interval in terms of 1/wci
 
+  // Harris
+  double L_di;                    // Sheet thickness / ion inertial length
+  double Ti_Te;                   // Ion temperature / electron temperature
+  double nb_n0;                   // background plasma density
+  double Tbe_Te;                  // Ratio of background T_e to Harris T_e
+  double Tbi_Ti;                  // Ratio of background T_i to Harris T_i
+  double bg;                      // Guide field
+  double theta;
+
+  double Lpert_Lx;                // wavelength of perturbation in terms of Lx
+  double dbz_b0;                  // perturbation in Bz relative to B0
+  double nppc;                    // Average number of macro particle per cell per species
+  bool open_bc_x;                 // Flag to signal we want to do open boundary condition in x
+  bool driven_bc_z;               // Flag to signal we want to do driven boundary condition in z
 };
 
 // ----------------------------------------------------------------------

@@ -13,19 +13,6 @@
 // params
 
 struct params : vpic_params, vpic_harris_params {
-  // Harris
-  double L_di;     // Sheet thickness / ion inertial length
-  double Ti_Te;    // Ion temperature / electron temperature
-  double nb_n0;    // background plasma density
-  double Tbe_Te;   // Ratio of background T_e to Harris T_e
-  double Tbi_Ti;   // Ratio of background T_i to Harris T_i
-  double bg;       // Guide field
-  double theta;
-  double Lpert_Lx; // wavelength of perturbation in terms of Lx
-  double dbz_b0;   // perturbation in Bz relative to B0
-  double nppc;     // Average number of macro particle per cell per species
-  int open_bc_x;   // Flag to signal we want to do open boundary condition in x
-  int driven_bc_z; // Flag to signal we want to do driven boundary condition in z
 };
 
 // ----------------------------------------------------------------------
@@ -111,7 +98,6 @@ begin_globals {
 
 // ======================================================================
 
-static void user_init_params(params *prm);
 static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
 			     params *prm, int nproc);
 static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physics *phys);
@@ -137,8 +123,6 @@ begin_initialization {
   vpic_harris_params *vpic_harris_prm = reinterpret_cast<vpic_harris_params *>(cmdline_argument[1]);
   *static_cast<vpic_params *>(prm) = *vpic_prm;
   *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
-
-  user_init_params(prm);
 
   user_init_harris(this, phys, prm, nproc());
 
@@ -224,67 +208,7 @@ begin_initialization {
 
   sim_log("*** Finished with user-specified initialization ***");
 
-  // Upon completion of the initialization, the following occurs:
-  // - The synchronization error (tang E, norm B) is computed between domains
-  //   and tang E / norm B are synchronized by averaging where discrepancies
-  //   are encountered.
-  // - The initial divergence error of the magnetic field is computed and
-  //   one pass of cleaning is done (for good measure)
-  // - The bound charge density necessary to give the simulation an initially
-  //   clean divergence e is computed.
-  // - The particle momentum is uncentered from u_0 to u_{-1/2}
-  // - The user diagnostics are called on the initial state
-  // - The physics loop is started
-  //
-  // The physics loop consists of:
-  // - Advance particles from x_0,u_{-1/2} to x_1,u_{1/2}
-  // - User particle injection at x_{1-age}, u_{1/2} (use inject_particles)
-  // - User current injection (adjust field(x,y,z).jfx, jfy, jfz)
-  // - Advance B from B_0 to B_{1/2}
-  // - Advance E from E_0 to E_1
-  // - User field injection to E_1 (adjust field(x,y,z).ex,ey,ez,cbx,cby,cbz)
-  // - Advance B from B_{1/2} to B_1
-  // - (periodically) Divergence clean electric field
-  // - (periodically) Divergence clean magnetic field
-  // - (periodically) Synchronize shared tang e and norm b
-  // - Increment the time step
-  // - Call user diagnostics
-  // - (periodically) Print a status message
-
 } //begin_initialization
-
-// ----------------------------------------------------------------------
-// user_init_params
-
-static void user_init_params(params *prm)
-{
-  // Physics parameters
-  prm->L_di    = 0.5;     // Sheet thickness / ion inertial length
-  prm->Ti_Te   = 5.0;     // Ion temperature / electron temperature
-  prm->nb_n0   = 0.228;   // background plasma density
-  prm->Tbe_Te  = 0.7598;  // Ratio of background T_e to Harris T_e
-  prm->Tbi_Ti  = 0.3039;  // Ratio of background T_i to Harris T_i
-  prm->bg = 0.0;
-  prm->theta = 0;         // B0 = Bx
-
-  prm->Lpert_Lx = 1.;     // wavelength of perturbation in terms of Lx
-  prm->dbz_b0 = 0.03;     // perturbation in Bz relative to B0
-
-  // Parameters for Open BC model
-  prm->open_bc_x = 0;
-  prm->driven_bc_z = 0;
-
-  // Numerical parameters
-
-  prm->nppc  = 100; // Average number of macro particle per cell per species
-
-  assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
-
-  prm->quota   = 11.0;   // run quota in hours
-  prm->quota_check_interval = 100;
-
-  prm->restart_interval = 8000;
-}
 
 // ----------------------------------------------------------------------
 // user_init_harris
@@ -292,6 +216,8 @@ static void user_init_params(params *prm)
 static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
 			     params *prm, int nproc)
 {
+  assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+
   // use natural PIC units
   phys->ec   = 1;         // Charge normalization
   phys->me   = 1;         // Mass normalization
