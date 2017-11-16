@@ -233,6 +233,10 @@ psc_harris_setup_ic(struct psc *psc)
   psc->domain.length[0] = phys->Lx;
   psc->domain.length[1] = phys->Ly;
   psc->domain.length[2] = phys->Lz;
+
+  psc->domain.corner[0] = 0.;
+  psc->domain.corner[1] = -.5 * phys->Ly;
+  psc->domain.corner[2] = -.5 * phys->Lz;
 }
 
 // ----------------------------------------------------------------------
@@ -243,13 +247,19 @@ psc_harris_setup_domain(struct psc *psc)
 {
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;
+  MPI_Comm comm = psc_comm(psc);
 
   // Setup basic grid parameters
-  double dx[3];
-  dx[0] = phys->Lx / psc->domain.gdims[0];
-  dx[1] = phys->Ly / psc->domain.gdims[1];
-  dx[2] = phys->Lz / psc->domain.gdims[2];
+  double dx[3], xl[3], xh[3];
+  for (int d = 0; d < 3; d++) {
+    dx[d] = psc->domain.length[d] / psc->domain.gdims[d];
+    xl[d] = psc->domain.corner[d];
+    xh[d] = xl[d] + psc->domain.length[d];
+  }
   vpic_simulation_setup_grid(dx, phys->dt, phys->c, phys->eps0);
+
+  // Define the grid
+  vpic_simulation_define_periodic_grid(xl, xh, psc->domain.gdims, psc->domain.np);
 }
 
 // ----------------------------------------------------------------------
