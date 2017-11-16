@@ -148,7 +148,7 @@ void vpic_simulation_init_split(vpic_params *vpic_prm,
 // ----------------------------------------------------------------------
 // vpic_diagnostics_split
 
-void vpic_diagnostics_split()
+void vpic_diagnostics_split(psc_harris *harris)
 {
   // Let the user compute diagnostics
   user_global_t *user_global = (struct user_global_t *)simulation->user_global;
