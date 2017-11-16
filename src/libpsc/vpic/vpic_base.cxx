@@ -55,15 +55,9 @@ void vpic_simulation_init(vpic_params *vpic_prm, vpic_harris_params *vpic_harris
   // Call the user initialize the simulation
 
   if (split) {
-    char *argv[2];
-    argv[0] = reinterpret_cast<char *>(vpic_prm);
-    argv[1] = reinterpret_cast<char *>(vpic_harris_prm);
-    user_init(simulation, argv);
+    user_init(simulation, vpic_prm, vpic_harris_prm);
   } else {
-    char *argv[2];
-    argv[0] = reinterpret_cast<char *>(vpic_prm);
-    argv[1] = reinterpret_cast<char *>(vpic_harris_prm);
-    TIC simulation->user_initialization(0, argv); TOC( user_initialization, 1 );
+    TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
   }
 
   info->num_step = simulation->num_step;

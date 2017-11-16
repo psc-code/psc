@@ -111,7 +111,8 @@ static void user_load_particles(vpic_simulation *simulation, params *prm, global
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, char **argv)
+void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
+	       const vpic_harris_params *vpic_harris_prm)
 {
 #define rank simulation->rank
 #define nproc simulation->nproc
@@ -120,9 +121,6 @@ void user_init(vpic_simulation *simulation, char **argv)
   globals_physics *phys = &global->phys;
   globals_diag *diag = &global->diag;
 
-  // FIXME, what a hacky way of passing arguments...
-  vpic_params *vpic_prm = reinterpret_cast<vpic_params *>(argv[0]);
-  vpic_harris_params *vpic_harris_prm = reinterpret_cast<vpic_harris_params *>(argv[1]);
   *static_cast<vpic_params *>(prm) = *vpic_prm;
   *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
 
