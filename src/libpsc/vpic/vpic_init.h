@@ -8,7 +8,8 @@
 // ----------------------------------------------------------------------
 // params
 
-struct params : vpic_params, vpic_harris_params {
+struct params : vpic_params {
+  struct vpic_harris_params harris;
 };
 
 // ----------------------------------------------------------------------

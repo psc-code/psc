@@ -138,7 +138,7 @@ void vpic_simulation_init_split(vpic_params *vpic_prm,
   params *prm = &user_global->prm;
   
   *static_cast<vpic_params *>(prm) = *vpic_prm;
-  *static_cast<vpic_harris_params *>(prm) = harris->prm;
+  prm->harris = harris->prm;
   
   user_init(simulation, prm, &harris->phys, &user_global->diag);
 

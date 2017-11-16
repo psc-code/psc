@@ -24,21 +24,25 @@
 
 // ======================================================================
 
-static void user_init_harris(globals_physics *phys, params *prm, int nproc);
-static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physics *phys);
-static void user_init_grid(vpic_simulation *simulation, params *prm, globals_physics *phys);
-static void user_init_log(vpic_simulation *simulation, params *prm,
-			  globals_physics *phys, globals_diag *diag);
-static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_physics *phys);
-static void user_load_fields(vpic_simulation *simulation, params *prm, globals_physics *phys);
-static void user_load_particles(vpic_simulation *simulation, params *prm, globals_physics *phys,
+static void user_init_harris(globals_physics *phys, vpic_harris_params *prm,
+			     vpic_params *vprm, int nproc);
+static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
+				  vpic_params *vprm, globals_physics *phys);
+static void user_init_grid(vpic_simulation *simulation, vpic_harris_params *prm,
+			   vpic_params *vprm, globals_physics *phys);
+static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
+			  vpic_params *vprm, globals_physics *phys, globals_diag *diag);
+static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
+			      vpic_params *vprm, globals_physics *phys);
+static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys);
+static void user_load_particles(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys,
 				species_t *electron, species_t *ion);
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
 void user_init(vpic_simulation *simulation, params *prm, globals_physics *phys, globals_diag *diag)
 {
-  user_init_harris(phys, prm, simulation->nproc());
+  user_init_harris(phys, &prm->harris, prm, simulation->nproc());
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
@@ -46,18 +50,18 @@ void user_init(vpic_simulation *simulation, params *prm, globals_physics *phys, 
   // Determine the time step
   phys->dg = simulation->courant_length(phys->Lx,phys->Ly,phys->Lz,prm->gdims[0],prm->gdims[1],prm->gdims[2]);  // courant length
   phys->dt = prm->cfl_req*phys->dg/phys->c; // courant limited time step
-  if (phys->wpe * phys->dt > prm->wpedt_max)
-    phys->dt = prm->wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
+  if (phys->wpe * phys->dt > prm->harris.wpedt_max)
+    phys->dt = prm->harris.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
 
-  simulation->num_step             = int(prm->taui / (phys->wci*phys->dt));
+  simulation->num_step             = int(prm->harris.taui / (phys->wci*phys->dt));
   simulation->status_interval      = prm->status_interval;
   simulation->sync_shared_interval = prm->status_interval/2;
   simulation->clean_div_e_interval = prm->status_interval/2;
   simulation->clean_div_b_interval = prm->status_interval/2;
 
-  user_init_grid(simulation, prm, phys);
+  user_init_grid(simulation, &prm->harris, prm, phys);
 
-  user_setup_fields(simulation, prm, phys);
+  user_setup_fields(simulation, &prm->harris, prm, phys);
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the species
@@ -67,19 +71,19 @@ void user_init(vpic_simulation *simulation, params *prm, globals_physics *phys, 
   double nmovers = 0.1*nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
   species_t *electron = simulation->define_species("electron", -phys->ec, phys->me, nmax, nmovers,
-						   prm->electron_sort_interval, sort_method);
+						   prm->harris.electron_sort_interval, sort_method);
   species_t *ion = simulation->define_species("ion", phys->ec, phys->mi, nmax, nmovers,
-					      prm->ion_sort_interval, sort_method);
+					      prm->harris.ion_sort_interval, sort_method);
 
   ////////////////////////////////////////////////////////////////////////
 
-  user_init_diagnostics(diag, prm, phys);
+  user_init_diagnostics(diag, &prm->harris, prm, phys);
 
-  user_init_log(simulation, prm, phys, diag);
+  user_init_log(simulation, &prm->harris, prm, phys, diag);
 
-  user_load_fields(simulation, prm, phys);
+  user_load_fields(simulation, &prm->harris, phys);
 
-  user_load_particles(simulation, prm, phys, electron, ion);
+  user_load_particles(simulation, &prm->harris, phys, electron, ion);
 
   user_setup_diagnostics(simulation, diag, electron, ion);
 
@@ -94,9 +98,10 @@ inline double trunc_granular( double a, double b ) { return b*int(a/b); }
 // ----------------------------------------------------------------------
 // user_init_harris
 
-static void user_init_harris(globals_physics *phys, params *prm, int nproc)
+static void user_init_harris(globals_physics *phys, vpic_harris_params *prm,
+			     vpic_params *vprm, int nproc)
 {
-  assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+  assert(vprm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   // use natural PIC units
   phys->ec   = 1;         // Charge normalization
@@ -136,7 +141,7 @@ static void user_init_harris(globals_physics *phys, params *prm, int nproc)
   double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
   double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
   double Npe       = Npe_sheet + Npe_back;
-  phys->Ne         = prm->nppc * prm->gdims[0] * prm->gdims[1] * prm->gdims[2];  // total macro electrons in box
+  phys->Ne         = prm->nppc * vprm->gdims[0] * vprm->gdims[1] * vprm->gdims[2];  // total macro electrons in box
   phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
   phys->Ne_back    = phys->Ne*Npe_back/Npe;
   phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,nproc); // Make it divisible by nproc
@@ -158,10 +163,11 @@ static void user_init_harris(globals_physics *phys, params *prm, int nproc)
 // ----------------------------------------------------------------------
 // user_init_diagnostics
 
-static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physics *phys)
+static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
+				  vpic_params *vprm, globals_physics *phys)
 {
   diag->rtoggle              = 0;
-  diag->quota_sec = prm->quota*3600;  // Run quota in seconds
+  diag->quota_sec = vprm->quota*3600;  // Run quota in seconds
 
   diag->interval = int(prm->t_intervali/(phys->wci*phys->dt));
   diag->fields_interval = diag->interval;
@@ -176,14 +182,15 @@ static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physi
 // ----------------------------------------------------------------------
 // user_init_grid
 
-static void user_init_grid(vpic_simulation *simulation, params *prm, globals_physics *phys)
+static void user_init_grid(vpic_simulation *simulation, vpic_harris_params *prm,
+			   vpic_params *vprm, globals_physics *phys)
 {
   grid_t *grid = simulation->grid;
   
   // Setup basic grid parameters
-  grid->dx = phys->Lx / prm->gdims[0];
-  grid->dy = phys->Ly / prm->gdims[1];
-  grid->dz = phys->Lz / prm->gdims[2];
+  grid->dx = phys->Lx / vprm->gdims[0];
+  grid->dy = phys->Ly / vprm->gdims[1];
+  grid->dz = phys->Lz / vprm->gdims[2];
   grid->dt = phys->dt;
   grid->cvac = phys->c;
   grid->eps0 = phys->eps0;
@@ -191,8 +198,8 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
   // Define the grid
   simulation->define_periodic_grid(0       , -0.5*phys->Ly, -0.5*phys->Lz,      // Low corner
 				   phys->Lx,  0.5*phys->Ly,  0.5*phys->Lz,      // High corner
-				   prm->gdims[0], prm->gdims[1], prm->gdims[2], // Resolution
-				   prm->np[0], prm->np[1], prm->np[2]);         // Topology
+				   vprm->gdims[0], vprm->gdims[1], vprm->gdims[2], // Resolution
+				   vprm->np[0], vprm->np[1], vprm->np[2]);         // Topology
 
   // Determine which domains area along the boundaries - Use macro from
   // grid/partition.c.
@@ -200,10 +207,10 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
 # define RANK_TO_INDEX(rank,ix,iy,iz) BEGIN_PRIMITIVE {                 \
     int _ix, _iy, _iz;                                                  \
     _ix  = (rank);                /* ix = ix+gpx*( iy+gpy*iz ) */       \
-    _iy  = _ix/int(prm->np[0]);   /* iy = iy+gpy*iz */			\
-    _ix -= _iy*int(prm->np[0]);   /* ix = ix */				\
-    _iz  = _iy/int(prm->np[1]);   /* iz = iz */				\
-    _iy -= _iz*int(prm->np[2]);   /* iy = iy */				\
+    _iy  = _ix/int(vprm->np[0]);   /* iy = iy+gpy*iz */			\
+    _ix -= _iy*int(vprm->np[0]);   /* ix = ix */			\
+    _iz  = _iy/int(vprm->np[1]);   /* iz = iz */			\
+    _iy -= _iz*int(vprm->np[2]);   /* iy = iy */			\
     (ix) = _ix;                                                         \
     (iy) = _iy;                                                         \
     (iz) = _iz;                                                         \
@@ -212,9 +219,9 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
   int ix, iy, iz, left=0,right=0,top=0,bottom=0;
   RANK_TO_INDEX( int(simulation->rank()), ix, iy, iz );
   if ( ix ==0 ) left=1;
-  if ( ix ==prm->np[0]-1 ) right=1;
+  if ( ix ==vprm->np[0]-1 ) right=1;
   if ( iz ==0 ) bottom=1;
-  if ( iz ==prm->np[1]-1 ) top=1;
+  if ( iz ==vprm->np[1]-1 ) top=1;
 
   // ***** Set Field Boundary Conditions *****
   if (prm->open_bc_x) {
@@ -244,7 +251,8 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
   }
 }
 
-static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_physics *phys)
+static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
+			      vpic_params *vprm, globals_physics *phys)
 {
   grid_t *grid = simulation->grid;
   //////////////////////////////////////////////////////////////////////////////
@@ -267,8 +275,8 @@ static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_
 
   sim_log("Finalizing Field Advance");
 
-  double hx = phys->Lx/prm->gdims[0];
-  double hz = phys->Lz/prm->gdims[1];
+  double hx = phys->Lx/vprm->gdims[0];
+  double hz = phys->Lz/vprm->gdims[1];
 
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature
@@ -288,12 +296,12 @@ static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_
 // ----------------------------------------------------------------------
 // user_init_log
 
-static void user_init_log(vpic_simulation *simulation, params *prm,
-			  globals_physics *phys, globals_diag *diag)
+static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
+			  vpic_params *vprm, globals_physics *phys, globals_diag *diag)
 {
   sim_log( "***********************************************" );
-  sim_log("* Topology:                       " << prm->np[0]
-	  << " " << prm->np[1] << " " << prm->np[2]);
+  sim_log("* Topology:                       " << vprm->np[0]
+	  << " " << vprm->np[1] << " " << vprm->np[2]);
   sim_log ( "tanhf = " << phys->tanhf );
   sim_log ( "L_di   = " << prm->L_di );
   sim_log ( "rhoi/L   = " << phys->rhoi_L );
@@ -314,9 +322,9 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
   sim_log ( "Ly/de = " << phys->Ly/phys->de );
   sim_log ( "Lz/di = " << phys->Lz/phys->di );
   sim_log ( "Lz/de = " << phys->Lz/phys->de );
-  sim_log ( "nx = " << prm->gdims[0] );
-  sim_log ( "ny = " << prm->gdims[1] );
-  sim_log ( "nz = " << prm->gdims[2] );
+  sim_log ( "nx = " << vprm->gdims[0] );
+  sim_log ( "ny = " << vprm->gdims[1] );
+  sim_log ( "nz = " << vprm->gdims[2] );
   sim_log ( "courant = " << phys->c*phys->dt/phys->dg );
   sim_log ( "nproc = " << simulation->nproc()  );
   sim_log ( "nppc = " << prm->nppc );
@@ -331,13 +339,13 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
   sim_log ( "dt*wce = " << phys->wce*phys->dt );
   sim_log ( "dt*wci = " << phys->wci*phys->dt );
   sim_log ( "energies_interval: " << diag->energies_interval );
-  sim_log ( "dx/de = " << phys->Lx/(phys->de*prm->gdims[0]) );
-  sim_log ( "dy/de = " << phys->Ly/(phys->de*prm->gdims[1]) );
-  sim_log ( "dz/de = " << phys->Lz/(phys->de*prm->gdims[2]) );
-  sim_log ( "dx/rhoi = " << (phys->Lx/prm->gdims[0])/(phys->vthi/phys->wci)  );
-  sim_log ( "dx/rhoe = " << (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wce)  );
+  sim_log ( "dx/de = " << phys->Lx/(phys->de*vprm->gdims[0]) );
+  sim_log ( "dy/de = " << phys->Ly/(phys->de*vprm->gdims[1]) );
+  sim_log ( "dz/de = " << phys->Lz/(phys->de*vprm->gdims[2]) );
+  sim_log ( "dx/rhoi = " << (phys->Lx/vprm->gdims[0])/(phys->vthi/phys->wci)  );
+  sim_log ( "dx/rhoe = " << (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wce)  );
   sim_log ( "L/debye = " << phys->L/(phys->vthe/phys->wpe)  );
-  sim_log ( "dx/debye = " << (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wpe)  );
+  sim_log ( "dx/debye = " << (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wpe)  );
   sim_log ( "n0 = " << phys->n0 );
   sim_log ( "vthi/c = " << phys->vthi/phys->c );
   sim_log ( "vthe/c = " << phys->vthe/phys->c );
@@ -369,9 +377,9 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.print("              Lx/di =                %e\n", phys->Lx/phys->di );
     fp_info.print("              Ly/di =                %e\n", phys->Ly/phys->di );
     fp_info.print("              Lz/di =                %e\n", phys->Lz/phys->di );
-    fp_info.print("              nx =                   %e\n", prm->gdims[0] );
-    fp_info.print("              ny =                   %e\n", prm->gdims[1] );
-    fp_info.print("              nz =                   %e\n", prm->gdims[2] );
+    fp_info.print("              nx =                   %e\n", vprm->gdims[0] );
+    fp_info.print("              ny =                   %e\n", vprm->gdims[1] );
+    fp_info.print("              nz =                   %e\n", vprm->gdims[2] );
     fp_info.print("              courant =              %e\n", phys->c*phys->dt/phys->dg );
     fp_info.print("              nproc =                %i\n", simulation->nproc() );
     fp_info.print("              nppc =                 %e\n", prm->nppc );
@@ -386,13 +394,13 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
     fp_info.print("              dt*wce =               %e\n", phys->wce*phys->dt );
     fp_info.print("              dt*wci =               %e\n", phys->wci*phys->dt );
     fp_info.print("              energies_interval:     %i\n", diag->energies_interval);
-    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*prm->gdims[0]) );
-    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*prm->gdims[1]) );
-    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*prm->gdims[2]) );
+    fp_info.print("              dx/de =                %e\n", phys->Lx/(phys->de*vprm->gdims[0]) );
+    fp_info.print("              dy/de =                %e\n", phys->Ly/(phys->de*vprm->gdims[1]) );
+    fp_info.print("              dz/de =                %e\n", phys->Lz/(phys->de*vprm->gdims[2]) );
     fp_info.print("              L/debye =              %e\n", phys->L/(phys->vthe/phys->wpe) );
-    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/prm->gdims[0])/(phys->vthi/phys->wci) );
-    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wce) );
-    fp_info.print("              dx/debye =             %e\n", (phys->Lx/prm->gdims[0])/(phys->vthe/phys->wpe) );
+    fp_info.print("              dx/rhoi =              %e\n", (phys->Lx/vprm->gdims[0])/(phys->vthi/phys->wci) );
+    fp_info.print("              dx/rhoe =              %e\n", (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wce) );
+    fp_info.print("              dx/debye =             %e\n", (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wpe) );
     fp_info.print("              n0 =                   %e\n", phys->n0 );
     fp_info.print("              vthi/c =               %e\n", phys->vthi/phys->c );
     fp_info.print("              vthe/c =               %e\n", phys->vthe/phys->c );
@@ -406,7 +414,7 @@ static void user_init_log(vpic_simulation *simulation, params *prm,
 // ----------------------------------------------------------------------
 // user_load_fields
 
-static void user_load_fields(vpic_simulation *simulation, params *prm, globals_physics *phys)
+static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys)
 {
   double cs = cos(prm->theta), sn = sin(prm->theta);
   double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
@@ -428,7 +436,7 @@ static void user_load_fields(vpic_simulation *simulation, params *prm, globals_p
 // ----------------------------------------------------------------------
 // user_load_particles
 
-static void user_load_particles(vpic_simulation *simulation, params *prm,
+static void user_load_particles(vpic_simulation *simulation, vpic_harris_params *prm,
 				globals_physics *phys, species_t *electron, species_t *ion)
 {
   double cs = cos(prm->theta), sn = sin(prm->theta);
