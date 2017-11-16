@@ -104,6 +104,7 @@ static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physi
 static void user_init_grid(vpic_simulation *simulation, params *prm, globals_physics *phys);
 static void user_init_log(vpic_simulation *simulation, params *prm,
 			  globals_physics *phys, globals_diag *diag);
+static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_physics *phys);
 static void user_load_fields(vpic_simulation *simulation, params *prm, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, params *prm, globals_physics *phys,
 				species_t *electron, species_t *ion);
@@ -141,46 +142,9 @@ begin_initialization {
   clean_div_e_interval = status_interval/2;
   clean_div_b_interval = status_interval/2;
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Setup the grid
-
   user_init_grid(this, prm, phys);
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // Setup materials
 
-  sim_log("Setting up materials. ");
-
-  define_material( "vacuum", 1 );
-  material_t * resistive = define_material( "resistive",1,1,1 );
-
-  define_field_array(NULL); // second argument is damp, default to 0
-
-  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
-  // Tensor electronic, magnetic and conductive materials are supported
-  // though. See "shapes" for how to define them and assign them to regions.
-  // Also, space is initially filled with the first material defined.
-
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Finalize Field Advance
-
-  sim_log("Finalizing Field Advance");
-
-  double hx = phys->Lx/prm->gdims[0];
-  double hz = phys->Lz/prm->gdims[1];
-
-  // Define resistive layer surrounding boundary --> set thickness=0
-  // to eliminate this feature
-  double thickness = 0;
-#define resistive_layer ((prm->open_bc_x && x < hx*thickness) ||	\
-			 (prm->open_bc_x && x > phys->Lx-hx*thickness)	\
-                         || z <-phys->Lz/2+hz*thickness  || z > phys->Lz/2-hz*thickness )
-
-  if (thickness > 0) {
-    sim_log("Setting resistive layer of thickness "<< thickness);
-    set_region_material(resistive_layer, resistive, resistive);
-  }
+  user_setup_fields(this, prm, phys);
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the species
@@ -362,6 +326,49 @@ static void user_init_grid(vpic_simulation *simulation, params *prm, globals_phy
     sim_log("Absorb particles on X-boundaries");
     if (left)  simulation->set_domain_particle_bc( BOUNDARY(-1,0,0), absorb_particles );
     if (right) simulation->set_domain_particle_bc( BOUNDARY( 1,0,0), absorb_particles );
+  }
+
+#undef rank
+}
+
+static void user_setup_fields(vpic_simulation *simulation, params *prm, globals_physics *phys)
+{
+#define rank simulation->rank
+#define field simulation->field
+  grid_t *grid = simulation->grid;
+  //////////////////////////////////////////////////////////////////////////////
+  // Setup materials
+
+  sim_log("Setting up materials. ");
+
+  simulation->define_material( "vacuum", 1 );
+  material_t * resistive = simulation->define_material( "resistive",1,1,1 );
+
+  simulation->define_field_array(NULL); // second argument is damp, default to 0
+
+  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
+  // Tensor electronic, magnetic and conductive materials are supported
+  // though. See "shapes" for how to define them and assign them to regions.
+  // Also, space is initially filled with the first material defined.
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Finalize Field Advance
+
+  sim_log("Finalizing Field Advance");
+
+  double hx = phys->Lx/prm->gdims[0];
+  double hz = phys->Lz/prm->gdims[1];
+
+  // Define resistive layer surrounding boundary --> set thickness=0
+  // to eliminate this feature
+  double thickness = 0;
+#define resistive_layer ((prm->open_bc_x && x < hx*thickness) ||	\
+			 (prm->open_bc_x && x > phys->Lx-hx*thickness)	\
+                         || z <-phys->Lz/2+hz*thickness  || z > phys->Lz/2-hz*thickness )
+
+  if (thickness > 0) {
+    sim_log("Setting resistive layer of thickness "<< thickness);
+    set_region_material(resistive_layer, resistive, resistive);
   }
 
 #undef rank
