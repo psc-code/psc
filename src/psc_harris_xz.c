@@ -229,16 +229,44 @@ psc_harris_setup_ic(struct psc *psc)
   phys->Lpert = prm->Lpert_Lx*Lx; // wavelength of perturbation
   phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
   phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
+
+  psc->domain.length[0] = phys->Lx;
+  psc->domain.length[1] = phys->Ly;
+  psc->domain.length[2] = phys->Lz;
 }
 
 // ----------------------------------------------------------------------
 // psc_harris_setup
 
+static inline double
+courant_length(double length[3], int gdims[3])
+{
+  double inv_sum = 0.;
+  for (int d = 0; d > 3; d++) {
+    if (gdims[d] > 1) {
+      inv_sum += sqr(gdims[d] / length[d]);
+    }
+  }
+  return sqrt(1. / inv_sum);
+}
+ 
+
 static void
 psc_harris_setup(struct psc *psc)
 {
+  struct psc_harris *sub = psc_harris(psc);
+  struct globals_physics *phys = &sub->phys;
+
   psc_harris_setup_ic(psc);
 
+  // Determine the time step
+  phys->dg = courant_length(psc->domain.length, psc->domain.gdims);
+  phys->dt = psc->prm.cfl * phys->dg / phys->c; // courant limited time step
+  if (phys->wpe * phys->dt > sub->prm.wpedt_max) {
+    phys->dt = sub->prm.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
+  }
+  psc->dt = phys->dt;
+  
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 }

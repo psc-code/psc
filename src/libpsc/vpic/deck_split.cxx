@@ -47,12 +47,6 @@ void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  // Determine the time step
-  phys->dg = simulation->courant_length(phys->Lx,phys->Ly,phys->Lz,prm->gdims[0],prm->gdims[1],prm->gdims[2]);  // courant length
-  phys->dt = prm->cfl_req*phys->dg/phys->c; // courant limited time step
-  if (phys->wpe * phys->dt > harris->wpedt_max)
-    phys->dt = harris->wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
-
   simulation->num_step             = int(harris->taui / (phys->wci*phys->dt));
   simulation->status_interval      = prm->status_interval;
   simulation->sync_shared_interval = prm->status_interval/2;
