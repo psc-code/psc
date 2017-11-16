@@ -278,25 +278,6 @@ void vpic_print_status()
 }
 
 // ======================================================================
-// vpic_diagnostics
-
-void vpic_diagnostics()
-{
-  // Let the user compute diagnostics
-  TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
-}
-
-// ======================================================================
-// vpic_diagnostics_split
-
-void vpic_diagnostics_split()
-{
-  // Let the user compute diagnostics
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
-  TIC vpic_simulation_diagnostics(simulation, user_global); TOC( user_diagnostics, 1 );
-}
-
-// ======================================================================
 // vpic_moments
 
 void vpic_moments_run(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts, int kind)

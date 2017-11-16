@@ -46,8 +46,10 @@ struct user_global_t {
 
 // ----------------------------------------------------------------------
 
-void user_init(vpic_simulation *simulation, user_global_t *user_global);
+void user_init(vpic_simulation *simulation, user_global_t *user_global, params *prm,
+	       globals_physics *phys, globals_diag *diag);
 
-void vpic_simulation_diagnostics(vpic_simulation *simulation, user_global_t *user_global);
+void vpic_simulation_diagnostics(vpic_simulation *simulation, user_global_t *user_global,
+				 params *prm, globals_diag *diag);
 
 #endif

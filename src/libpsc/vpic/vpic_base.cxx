@@ -97,7 +97,7 @@ void vpic_simulation_init_split(vpic_params *vpic_prm, vpic_harris_params *vpic_
   *static_cast<vpic_params *>(prm) = *vpic_prm;
   *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
   
-  user_init(simulation, user_global);
+  user_init(simulation, user_global, prm, &user_global->phys, &user_global->diag);
 
   vpic_simulation_get_info(info);
 }
@@ -112,6 +112,28 @@ void vpic_simulation_init(vpic_simulation_info *info)
 
   vpic_simulation_get_info(info);
 }
+
+// ======================================================================
+// vpic_diagnostics_split
+
+void vpic_diagnostics_split()
+{
+  // Let the user compute diagnostics
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  TIC vpic_simulation_diagnostics(simulation, user_global, &user_global->prm,
+				  &user_global->diag); TOC( user_diagnostics, 1 );
+}
+
+// ======================================================================
+// vpic_diagnostics
+
+void vpic_diagnostics()
+{
+  // Let the user compute diagnostics
+  TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
+}
+
+// ======================================================================
 
 void vpic_inc_step(int step)
 {
