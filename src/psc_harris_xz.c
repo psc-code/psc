@@ -51,7 +51,10 @@ normal(void *dummy, double mu, double sigma)
 // ----------------------------------------------------------------------
 
 struct psc_harris {
+  // must be first because of our hacky way of passing arguments to
+  // vpic initialization deck
   // params
+  struct vpic_harris_params prm;
   
   // state
   int n_global_patches;
@@ -78,6 +81,25 @@ struct psc_harris {
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
 static struct param psc_harris_descr[] = {
+  { "wpedt_max"             , VAR(prm.wpedt_max)             , PARAM_DOUBLE(.36)  },
+  { "wpe_wce"               , VAR(prm.wpe_wce)               , PARAM_DOUBLE(2.),
+    .help = "electron plasma freq / electron cyclotron freq" },
+  { "mi_me"                 , VAR(prm.mi_me)                 , PARAM_DOUBLE(25.),
+    .help = "ion mass over electron mass" },
+  { "Lx_di"                 , VAR(prm.Lx_di)                 , PARAM_DOUBLE(25.6),
+    .help = "x-size of simulatin domain in terms of d_i" },
+  { "Ly_di"                 , VAR(prm.Ly_di)                 , PARAM_DOUBLE(1.),
+    .help = "y-size of simulatin domain in terms of d_i" },
+  { "Lz_di"                 , VAR(prm.Lz_di)                 , PARAM_DOUBLE(12.8),
+    .help = "z-size of simulatin domain in terms of d_i" },
+
+  { "ion_sort_interval"     , VAR(prm.ion_sort_interval)     , PARAM_INT(1000)    },
+  { "electron_sort_interval", VAR(prm.electron_sort_interval), PARAM_INT(1000)    },
+
+  { "taui"                  , VAR(prm.taui)                  , PARAM_DOUBLE(100.),
+    .help = "simulation wci's to run" },
+  { "t_intervali"           , VAR(prm.t_intervali)           , PARAM_DOUBLE(1.),
+    .help = "output interval in terms of 1/wci" },
   {},
 };
 #undef VAR

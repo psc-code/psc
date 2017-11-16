@@ -154,6 +154,16 @@ struct vpic_harris_params {
   // general
   double wpedt_max;
 
+  double wpe_wce;                 // electron plasma freq / electron cyclotron freq
+  double mi_me;                   // Ion mass / electron mass
+  
+  double Lx_di, Ly_di, Lz_di;     // Size of box in d_i
+
+  int ion_sort_interval;
+  int electron_sort_interval;
+  double taui;                    // simulation wci's to run
+  double t_intervali;             // output interval in terms of 1/wci
+
 };
 
 // ----------------------------------------------------------------------

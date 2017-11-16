@@ -13,16 +13,6 @@
 // params
 
 struct params : vpic_params, vpic_harris_params {
-  double wpe_wce;            // electron plasma freq / electron cyclotron freq
-  double mi_me;              // Ion mass / electron mass
-  
-  double Lx_di, Ly_di, Lz_di;                // Size of box in d_i
-
-  double ion_sort_interval;
-  double electron_sort_interval;
-  double taui;               // simulation wci's to run
-  double t_intervali;        // output interval in terms of 1/wci
-
   // Harris
   double L_di;     // Sheet thickness / ion inertial length
   double Ti_Te;    // Ion temperature / electron temperature
@@ -269,9 +259,6 @@ begin_initialization {
 static void user_init_params(params *prm)
 {
   // Physics parameters
-  prm->mi_me   = 25.0;    // Ion mass / electron mass
-  prm->wpe_wce = 2.0;     // electron plasma freq / electron cyclotron freq
-
   prm->L_di    = 0.5;     // Sheet thickness / ion inertial length
   prm->Ti_Te   = 5.0;     // Ion temperature / electron temperature
   prm->nb_n0   = 0.228;   // background plasma density
@@ -289,19 +276,10 @@ static void user_init_params(params *prm)
 
   // Numerical parameters
 
-  prm->taui = 1.1;//100;  // simulation wci's to run
-  prm->ion_sort_interval = 1000;
-  prm->electron_sort_interval = 1000;
-
   prm->nppc  = 100; // Average number of macro particle per cell per species
-
-  prm->Lx_di = 25.6;
-  prm->Ly_di = 1;
-  prm->Lz_di = 12.8;
 
   assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
-  prm->t_intervali = 1; // output interval in terms of 1/wci
   prm->quota   = 11.0;   // run quota in hours
   prm->quota_check_interval = 100;
 
