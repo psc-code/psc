@@ -220,8 +220,8 @@ vpic_simulation_set_domain_field_bc(int boundary, int bc)
 {
   int fbc;
   switch (bc) {
-  case BND_FLD_CONDUCTING_WALL: fbc = absorb_fields; break;
-  case BND_FLD_ABSORBING:       fbc = pec_fields; break;
+  case BND_FLD_CONDUCTING_WALL: fbc = pec_fields   ; break;
+  case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
   default: assert(0);
   }
   simulation->set_domain_field_bc(boundary, fbc);

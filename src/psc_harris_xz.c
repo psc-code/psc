@@ -263,7 +263,29 @@ psc_harris_setup_domain(struct psc *psc)
 
   // Define the grid
   vpic_simulation_define_periodic_grid(xl, xh, psc->domain.gdims, psc->domain.np);
+
+  int p = 0;
+  bool left = psc_at_boundary_lo(psc, p, 0);
+  bool right = psc_at_boundary_hi(psc, p, 0);
+
+  bool bottom = psc_at_boundary_lo(psc, p, 2);
+  bool top = psc_at_boundary_hi(psc, p, 2);
+
+  mprintf("lrtp %d %d %d %d\n", left, right, top, bottom);
+
+  // ***** Set Field Boundary Conditions *****
+  if (sub->prm.open_bc_x) {
+    mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+    if (left ) vpic_simulation_set_domain_field_bc(BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
+    if (right) vpic_simulation_set_domain_field_bc(BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+  }
+  
+  mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+  if (bottom) vpic_simulation_set_domain_field_bc(BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
+  if (top   ) vpic_simulation_set_domain_field_bc(BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+
 }
+
 
 // ----------------------------------------------------------------------
 // courant length

@@ -132,17 +132,6 @@ static void user_init_grid(vpic_simulation *simulation, vpic_params *vprm,
   if ( iz ==0 ) bottom=1;
   if ( iz ==vprm->np[1]-1 ) top=1;
 
-  // ***** Set Field Boundary Conditions *****
-  if (prm->open_bc_x) {
-    sim_log("Absorbing fields on X-boundaries");
-    if (left ) simulation->set_domain_field_bc( BOUNDARY(-1,0,0), absorb_fields );
-    if (right) simulation->set_domain_field_bc( BOUNDARY( 1,0,0), absorb_fields );
-  }
-  
-  sim_log("Conducting fields on Z-boundaries");
-  if (bottom) simulation->set_domain_field_bc( BOUNDARY(0,0,-1), pec_fields );
-  if (top   ) simulation->set_domain_field_bc( BOUNDARY( 0,0,1), pec_fields );
-
   // ***** Set Particle Boundary Conditions *****
   if (prm->driven_bc_z) {
     sim_log("Absorb particles on Z-boundaries");
