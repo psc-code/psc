@@ -132,8 +132,6 @@ void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *sub,
 {
   simulation = new vpic_simulation;
 
-  user_init_harris(vpic_prm, sub, simulation->nproc());
-
   user_global_t *user_global = (struct user_global_t *) simulation->user_global;
   
   user_init(simulation, vpic_prm, sub, &user_global->diag);

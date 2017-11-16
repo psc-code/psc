@@ -56,7 +56,10 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   mpi_printf(comm, "*** Initializing\n");
   struct vpic_simulation_info info;
   if (sub->split) {
+    int n_procs;
+    MPI_Comm_size(comm, &n_procs);
     struct psc_harris *harris = psc_harris(psc);
+    user_init_harris(prm, harris, n_procs);
     vpic_simulation_init_split(prm, harris, &info);
   } else {
     vpic_simulation_init(&info);
