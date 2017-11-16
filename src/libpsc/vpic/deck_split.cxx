@@ -40,9 +40,10 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, params *prm, globals_physics *phys, globals_diag *diag)
+void user_init(vpic_simulation *simulation, vpic_harris_params *harris, params *prm,
+	       globals_physics *phys, globals_diag *diag)
 {
-  user_init_harris(phys, &prm->harris, prm, simulation->nproc());
+  user_init_harris(phys, harris, prm, simulation->nproc());
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
@@ -50,18 +51,18 @@ void user_init(vpic_simulation *simulation, params *prm, globals_physics *phys, 
   // Determine the time step
   phys->dg = simulation->courant_length(phys->Lx,phys->Ly,phys->Lz,prm->gdims[0],prm->gdims[1],prm->gdims[2]);  // courant length
   phys->dt = prm->cfl_req*phys->dg/phys->c; // courant limited time step
-  if (phys->wpe * phys->dt > prm->harris.wpedt_max)
-    phys->dt = prm->harris.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
+  if (phys->wpe * phys->dt > harris->wpedt_max)
+    phys->dt = harris->wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
 
-  simulation->num_step             = int(prm->harris.taui / (phys->wci*phys->dt));
+  simulation->num_step             = int(harris->taui / (phys->wci*phys->dt));
   simulation->status_interval      = prm->status_interval;
   simulation->sync_shared_interval = prm->status_interval/2;
   simulation->clean_div_e_interval = prm->status_interval/2;
   simulation->clean_div_b_interval = prm->status_interval/2;
 
-  user_init_grid(simulation, &prm->harris, prm, phys);
+  user_init_grid(simulation, harris, prm, phys);
 
-  user_setup_fields(simulation, &prm->harris, prm, phys);
+  user_setup_fields(simulation, harris, prm, phys);
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the species
@@ -71,19 +72,19 @@ void user_init(vpic_simulation *simulation, params *prm, globals_physics *phys, 
   double nmovers = 0.1*nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
   species_t *electron = simulation->define_species("electron", -phys->ec, phys->me, nmax, nmovers,
-						   prm->harris.electron_sort_interval, sort_method);
+						   harris->electron_sort_interval, sort_method);
   species_t *ion = simulation->define_species("ion", phys->ec, phys->mi, nmax, nmovers,
-					      prm->harris.ion_sort_interval, sort_method);
+					      harris->ion_sort_interval, sort_method);
 
   ////////////////////////////////////////////////////////////////////////
 
-  user_init_diagnostics(diag, &prm->harris, prm, phys);
+  user_init_diagnostics(diag, harris, prm, phys);
 
-  user_init_log(simulation, &prm->harris, prm, phys, diag);
+  user_init_log(simulation, harris, prm, phys, diag);
 
-  user_load_fields(simulation, &prm->harris, phys);
+  user_load_fields(simulation, harris, phys);
 
-  user_load_particles(simulation, &prm->harris, phys, electron, ion);
+  user_load_particles(simulation, harris, phys, electron, ion);
 
   user_setup_diagnostics(simulation, diag, electron, ion);
 
