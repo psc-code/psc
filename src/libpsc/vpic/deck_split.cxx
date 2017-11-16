@@ -24,8 +24,7 @@
 
 // ======================================================================
 
-static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
-			     params *prm);
+static void user_init_harris(globals_physics *phys, params *prm, int nproc);
 static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physics *phys);
 static void user_init_grid(vpic_simulation *simulation, params *prm, globals_physics *phys);
 static void user_init_log(vpic_simulation *simulation, params *prm,
@@ -43,7 +42,7 @@ void user_init(vpic_simulation *simulation, user_global_t *user_global)
   globals_physics *phys = &global->phys;
   globals_diag *diag = &global->diag;
 
-  user_init_harris(simulation, phys, prm);
+  user_init_harris(phys, prm, simulation->nproc());
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
@@ -94,14 +93,13 @@ void user_init(vpic_simulation *simulation, user_global_t *user_global)
 // ======================================================================
 // initialization
 
+inline double trunc_granular( double a, double b ) { return b*int(a/b); }
+
 // ----------------------------------------------------------------------
 // user_init_harris
 
-static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
-			     params *prm)
+static void user_init_harris(globals_physics *phys, params *prm, int nproc)
 {
-  int nproc = simulation->nproc();
-  
   assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   // use natural PIC units
@@ -145,8 +143,8 @@ static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
   phys->Ne         = prm->nppc * prm->gdims[0] * prm->gdims[1] * prm->gdims[2];  // total macro electrons in box
   phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
   phys->Ne_back    = phys->Ne*Npe_back/Npe;
-  phys->Ne_sheet   = simulation->trunc_granular(phys->Ne_sheet,nproc); // Make it divisible by nproc
-  phys->Ne_back    = simulation->trunc_granular(phys->Ne_back, nproc);  // Make it divisible by nproc
+  phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,nproc); // Make it divisible by nproc
+  phys->Ne_back    = trunc_granular(phys->Ne_back, nproc); // Make it divisible by nproc
   phys->Ne         = phys->Ne_sheet + phys->Ne_back;
   phys->weight_s   = phys->ec*Npe_sheet/phys->Ne_sheet;  // Charge per macro electron
   phys->weight_b   = phys->ec*Npe_back/phys->Ne_back;  // Charge per macro electron
@@ -159,7 +157,6 @@ static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
   phys->Lpert = prm->Lpert_Lx*Lx; // wavelength of perturbation
   phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
   phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
-#undef proc
 }
 
 // ----------------------------------------------------------------------
