@@ -40,20 +40,9 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
   vpic_harris_params *harris = &sub->prm;
   globals_physics *phys = &sub->phys;
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Setup the species
-
-  sim_log("Setting up species. ");
-  double nmax = 2.0*phys->Ne/simulation->nproc();
-  double nmovers = 0.1*nmax;
-  double sort_method = 1;   // 0=in place and 1=out of place
-  species_t *electron = simulation->define_species("electron", -phys->ec, phys->me, nmax, nmovers,
-						   harris->electron_sort_interval, sort_method);
-  species_t *ion = simulation->define_species("ion", phys->ec, phys->mi, nmax, nmovers,
-					      harris->ion_sort_interval, sort_method);
-
-  ////////////////////////////////////////////////////////////////////////
-
+  species_t *electron = simulation->find_species("electron");
+  species_t *ion = simulation->find_species("ion");
+  
   user_init_diagnostics(diag, harris, vprm, phys);
 
   user_init_log(simulation, harris, vprm, phys, diag);

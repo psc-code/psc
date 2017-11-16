@@ -333,6 +333,27 @@ psc_harris_setup_fields(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_harris_setup_species
+
+static void
+psc_harris_setup_species(struct psc *psc)
+{
+  struct psc_harris *sub = psc_harris(psc);
+  struct globals_physics *phys = &sub->phys;
+  MPI_Comm comm = psc_comm(psc);
+
+  mpi_printf(comm, "Setting up species.\n");
+  double nmax = 2.*phys->Ne / sub->n_global_patches;
+  double nmovers = .1*nmax;
+  double sort_method = 1;   // 0=in place and 1=out of place
+
+  vpic_simulation_define_species("electron", -phys->ec, phys->me, nmax, nmovers,
+				 sub->prm.electron_sort_interval, sort_method);
+  vpic_simulation_define_species("ion", phys->ec, phys->mi, nmax, nmovers,
+				 sub->prm.ion_sort_interval, sort_method);
+}
+
+// ----------------------------------------------------------------------
 // courant length
 //
 // FIXME, the dt calculating should be consolidated with what regular PSC does
@@ -381,6 +402,7 @@ psc_harris_setup(struct psc *psc)
 			     psc->prm.stats_every / 2);
   psc_harris_setup_domain(psc);
   psc_harris_setup_fields(psc);
+  psc_harris_setup_species(psc);
   }
 
   // initializes fields, particles, etc.
