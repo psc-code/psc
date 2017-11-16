@@ -38,7 +38,7 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris *sub,
+void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris *sub,
 	       globals_diag *diag)
 {
   vpic_harris_params *harris = &sub->prm;
@@ -47,9 +47,9 @@ void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  user_init_grid(simulation, harris, prm, phys);
+  user_init_grid(simulation, harris, vprm, phys);
 
-  user_setup_fields(simulation, harris, prm, phys);
+  user_setup_fields(simulation, harris, vprm, phys);
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the species
@@ -65,9 +65,9 @@ void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris 
 
   ////////////////////////////////////////////////////////////////////////
 
-  user_init_diagnostics(diag, harris, prm, phys);
+  user_init_diagnostics(diag, harris, vprm, phys);
 
-  user_init_log(simulation, harris, prm, phys, diag);
+  user_init_log(simulation, harris, vprm, phys, diag);
 
   user_load_fields(simulation, harris, phys);
 
