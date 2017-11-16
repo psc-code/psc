@@ -249,6 +249,9 @@ psc_harris_setup_domain(struct psc *psc)
   struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
 
+  psc_setup_coeff(psc); // FIXME -- in the middle of things here, will be done again later
+  psc_setup_domain(psc);
+  
   // Setup basic grid parameters
   double dx[3], xl[3], xh[3];
   for (int d = 0; d < 3; d++) {
