@@ -121,7 +121,6 @@ void vpic_inc_step(int step)
 // ----------------------------------------------------------------------
 
 struct user_global_t {
-  struct vpic_params prm;
   struct globals_diag diag;
 };
 
@@ -133,11 +132,9 @@ void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *harris,
 {
   simulation = new vpic_simulation;
 
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
   
-  user_global->prm = *vpic_prm;
-  
-  user_init(simulation, &harris->prm, &user_global->prm,
+  user_init(simulation, &harris->prm, vpic_prm,
 	    &harris->phys, &user_global->diag);
 
   vpic_simulation_get_info(info);
@@ -149,8 +146,8 @@ void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *harris,
 void vpic_diagnostics_split(vpic_params *vpic_prm, psc_harris *harris)
 {
   // Let the user compute diagnostics
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
-  TIC vpic_simulation_diagnostics(simulation, &user_global->prm,
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
+  TIC vpic_simulation_diagnostics(simulation, vpic_prm,
 				  &user_global->diag); TOC( user_diagnostics, 1 );
 }
 
