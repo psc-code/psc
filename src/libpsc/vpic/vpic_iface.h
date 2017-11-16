@@ -270,10 +270,17 @@ struct vpic_simulation_info {
 };
 
 void vpic_base_init(int *pargc, char ***pargv);
+
+void vpic_simulation_new(void);
 void vpic_simulation_init_split(struct vpic_params *vpic_prm,
 				struct psc_harris *harris,
 				struct vpic_simulation_info *info);
 void vpic_simulation_init(struct vpic_simulation_info *info);
+void vpic_simulation_set_params(int num_step,
+				int status_interval,
+				int sync_shared_interval,
+				int clean_div_e_interval,
+				int clean_div_b_interval);
 
 
 void vpic_print_status();

@@ -236,7 +236,9 @@ psc_harris_setup_ic(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_harris_setup
+// courant length
+//
+// FIXME, the dt calculating should be consolidated with what regular PSC does
 
 static inline double
 courant_length(double length[3], int gdims[3])
@@ -250,6 +252,8 @@ courant_length(double length[3], int gdims[3])
   return sqrt(1. / inv_sum);
 }
  
+// ----------------------------------------------------------------------
+// psc_harris_setup
 
 static void
 psc_harris_setup(struct psc *psc)
@@ -266,7 +270,16 @@ psc_harris_setup(struct psc *psc)
     phys->dt = sub->prm.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
   }
   psc->dt = phys->dt;
-  
+
+  // set high level VPIC simulation parameters
+  // FIXME, will be unneeded eventually
+  vpic_simulation_new();
+  vpic_simulation_set_params((int) (sub->prm.taui / (phys->wci*phys->dt)),
+			     psc->prm.stats_every,
+			     psc->prm.stats_every / 2,
+			     psc->prm.stats_every / 2,
+			     psc->prm.stats_every / 2);
+
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 }

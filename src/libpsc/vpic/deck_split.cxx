@@ -47,12 +47,6 @@ void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  simulation->num_step             = int(harris->taui / (phys->wci*phys->dt));
-  simulation->status_interval      = prm->status_interval;
-  simulation->sync_shared_interval = prm->status_interval/2;
-  simulation->clean_div_e_interval = prm->status_interval/2;
-  simulation->clean_div_b_interval = prm->status_interval/2;
-
   user_init_grid(simulation, harris, prm, phys);
 
   user_setup_fields(simulation, harris, prm, phys);

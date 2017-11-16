@@ -86,11 +86,15 @@ vpic_simulation_get_info(struct vpic_simulation_info *info)
   info->status_interval = simulation->status_interval;
 }
 
-void vpic_simulation_init(vpic_simulation_info *info)
+void vpic_simulation_new()
 {
+  assert(!simulation);
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
+}
 
+void vpic_simulation_init(vpic_simulation_info *info)
+{
   // Call the user initialize the simulation
   TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
 
@@ -130,8 +134,6 @@ struct user_global_t {
 void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *sub,
 				vpic_simulation_info *info)
 {
-  simulation = new vpic_simulation;
-
   user_global_t *user_global = (struct user_global_t *) simulation->user_global;
   
   user_init(simulation, vpic_prm, sub, &user_global->diag);
@@ -148,5 +150,21 @@ void vpic_diagnostics_split(vpic_params *vpic_prm, psc_harris *harris)
   user_global_t *user_global = (struct user_global_t *) simulation->user_global;
   TIC vpic_simulation_diagnostics(simulation, vpic_prm,
 				  &user_global->diag); TOC( user_diagnostics, 1 );
+}
+
+// ----------------------------------------------------------------------
+// vpic_simulation_set_params
+
+void vpic_simulation_set_params(int num_step,
+				int status_interval,
+				int sync_shared_interval,
+				int clean_div_e_interval,
+				int clean_div_b_interval)
+{
+  simulation->num_step             = num_step;
+  simulation->status_interval      = status_interval;
+  simulation->sync_shared_interval = sync_shared_interval;
+  simulation->clean_div_e_interval = clean_div_e_interval;
+  simulation->clean_div_b_interval = clean_div_b_interval;
 }
 

@@ -58,6 +58,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   if (sub->split) {
     vpic_simulation_init_split(prm, psc_harris(psc), &info);
   } else {
+    vpic_simulation_new();
     vpic_simulation_init(&info);
   }
 
