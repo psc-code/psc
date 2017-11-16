@@ -16,7 +16,6 @@ struct globals_diag {
   int Hhydro_interval;
   int eparticle_interval;
   int Hparticle_interval;
-  double quota_sec;          // Run quota in seconds
 
   // state
   int rtoggle;               // enables save of last 2 restart dumps for safety
@@ -25,9 +24,6 @@ struct globals_diag {
   DumpParameters hedParams;
   DumpParameters hHdParams;
   std::vector<DumpParameters *> outputParams;
-
-  // Vadim: modified restart machinary
-  int write_end_restart; // global flag for all to write restart files
 };
 
 // ----------------------------------------------------------------------

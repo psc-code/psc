@@ -29,8 +29,6 @@ static struct param psc_method_vpic_descr[] = {
   { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
   { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
   
-  { "quota"                 , VAR(vpic_prm.quota)                 , PARAM_DOUBLE(1.)  },
-  { "quota_check_interval"  , VAR(vpic_prm.quota_check_interval)  , PARAM_INT(100)    },
   { "restart_interval"      , VAR(vpic_prm.restart_interval)      , PARAM_INT(8000)   },
   {},
 };

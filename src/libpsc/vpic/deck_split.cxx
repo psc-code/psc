@@ -24,8 +24,7 @@
 
 // ======================================================================
 
-static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
-				  vpic_params *vprm, globals_physics *phys);
+static void user_init_diagnostics(globals_diag *diag, int interval);
 static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
 			  vpic_params *vprm, globals_physics *phys, globals_diag *diag);
 static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys);
@@ -43,7 +42,8 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
   species_t *electron = simulation->find_species("electron");
   species_t *ion = simulation->find_species("ion");
   
-  user_init_diagnostics(diag, harris, vprm, phys);
+  int interval = int(harris->t_intervali/(phys->wci*phys->dt));
+  user_init_diagnostics(diag, interval);
 
   user_init_log(simulation, harris, vprm, phys, diag);
 
@@ -62,13 +62,11 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
 // ----------------------------------------------------------------------
 // user_init_diagnostics
 
-static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
-				  vpic_params *vprm, globals_physics *phys)
+static void user_init_diagnostics(globals_diag *diag, int interval)
 {
-  diag->rtoggle              = 0;
-  diag->quota_sec = vprm->quota*3600;  // Run quota in seconds
+  diag->rtoggle = 0;
 
-  diag->interval = int(prm->t_intervali/(phys->wci*phys->dt));
+  diag->interval = interval;
   diag->fields_interval = diag->interval;
   diag->ehydro_interval = diag->interval;
   diag->Hhydro_interval = diag->interval;
@@ -587,32 +585,5 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, vpic_params *prm,
     simulation->dump_particles("ion", subdir);
   }
 
-  // Shut down simulation when wall clock time exceeds global->quota_sec.
-  // Note that the mp_elapsed() is guaranteed to return the same value for all
-  // processors (i.e., elapsed time on proc #0), and therefore the abort will
-  // be synchronized across processors. Note that this is only checked every
-  // few timesteps to eliminate the expensive mp_elapsed call from every
-  // timestep. mp_elapsed has an ALL_REDUCE in it!
-
-  if (( step>0 && prm->quota_check_interval>0
-        && (step&prm->quota_check_interval)==0)
-      || (diag->write_end_restart) ) {
-    if ( (diag->write_end_restart) ) {
-
-      diag->write_end_restart = 0; // reset restart flag
-
-      sim_log( "Allowed runtime exceeded for this job.  Terminating....\n");
-      double dumpstart = uptime();
-
-      checkpt("restart0/restart",0);
-
-      mp_barrier(  ); // Just to be safe
-      sim_log( "Restart dump restart completed." );
-      double dumpelapsed = uptime() - dumpstart;
-      sim_log("Restart duration "<< dumpelapsed);
-      exit(0); // Exit or abort?
-    }
-    if( uptime() > diag->quota_sec ) diag->write_end_restart = 1;
-  }
 }
 

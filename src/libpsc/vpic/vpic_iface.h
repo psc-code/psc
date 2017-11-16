@@ -134,10 +134,6 @@ struct vpic_params {
   int gdims[3]; // global dims
 
   int status_interval;
-
-  int quota_check_interval;  // How frequently to check if quota exceeded
-  double quota;              // Run quota in hours
-
   int restart_interval;
 };
 
