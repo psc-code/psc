@@ -24,7 +24,6 @@
 
 // ======================================================================
 
-static void user_init_harris(vpic_params *prm, struct psc_harris *sub, int nproc);
 static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
 				  vpic_params *vprm, globals_physics *phys);
 static void user_init_grid(vpic_simulation *simulation, vpic_harris_params *prm,
@@ -44,8 +43,6 @@ void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris 
 {
   vpic_harris_params *harris = &sub->prm;
   globals_physics *phys = &sub->phys;
-
-  user_init_harris(prm, sub, simulation->nproc());
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
@@ -101,7 +98,7 @@ inline double trunc_granular( double a, double b ) { return b*int(a/b); }
 // ----------------------------------------------------------------------
 // user_init_harris
 
-static void user_init_harris(vpic_params *vprm, struct psc_harris *sub, int nproc)
+void user_init_harris(vpic_params *vprm, struct psc_harris *sub, int nproc)
 {
   globals_physics *phys = &sub->phys;
   vpic_harris_params *prm = &sub->prm;

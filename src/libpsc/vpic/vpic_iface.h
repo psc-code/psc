@@ -291,6 +291,7 @@ void vpic_simulation_init_split(struct vpic_params *vpic_prm,
 				struct psc_harris *harris,
 				struct vpic_simulation_info *info);
 void vpic_simulation_init(struct vpic_simulation_info *info);
+void user_init_harris(struct vpic_params *prm, struct psc_harris *sub, int nproc);
 
 
 void vpic_print_status();

@@ -127,14 +127,16 @@ struct user_global_t {
 // ----------------------------------------------------------------------
 // vpic_simulation_init_split
 
-void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *harris,
+void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *sub,
 				vpic_simulation_info *info)
 {
   simulation = new vpic_simulation;
 
+  user_init_harris(vpic_prm, sub, simulation->nproc());
+
   user_global_t *user_global = (struct user_global_t *) simulation->user_global;
   
-  user_init(simulation, vpic_prm, harris, &user_global->diag);
+  user_init(simulation, vpic_prm, sub, &user_global->diag);
 
   vpic_simulation_get_info(info);
 }
