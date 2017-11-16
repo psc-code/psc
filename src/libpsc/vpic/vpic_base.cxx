@@ -55,7 +55,13 @@ void vpic_simulation_init(vpic_params *vpic_prm, vpic_harris_params *vpic_harris
   // Call the user initialize the simulation
 
   if (split) {
-    user_init(simulation, vpic_prm, vpic_harris_prm);
+    user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+    params *prm = &user_global->prm;
+    
+    *static_cast<vpic_params *>(prm) = *vpic_prm;
+    *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
+    
+    user_init(simulation, user_global);
   } else {
     TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
   }

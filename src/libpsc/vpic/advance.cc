@@ -292,7 +292,8 @@ void vpic_diagnostics()
 void vpic_diagnostics_split()
 {
   // Let the user compute diagnostics
-  TIC vpic_simulation_diagnostics(simulation); TOC( user_diagnostics, 1 );
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
+  TIC vpic_simulation_diagnostics(simulation, user_global); TOC( user_diagnostics, 1 );
 }
 
 // ======================================================================

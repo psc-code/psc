@@ -1,6 +1,8 @@
 
 #include "vpic_iface.h"
 
+#include "vpic_init.h"
+
 #include <mrc_common.h>
 
 #include <cassert>
@@ -20,93 +22,6 @@
 //
 //////////////////////////////////////////////////////
 
-// ----------------------------------------------------------------------
-// params
-
-struct params : vpic_params, vpic_harris_params {
-};
-
-// ----------------------------------------------------------------------
-// globals_diag
-
-struct globals_diag {
-  int interval;
-  int energies_interval;
-  int fields_interval;
-  int ehydro_interval;
-  int Hhydro_interval;
-  int eparticle_interval;
-  int Hparticle_interval;
-  double quota_sec;          // Run quota in seconds
-
-  // state
-  int rtoggle;               // enables save of last 2 restart dumps for safety
-  // Output variables
-  DumpParameters fdParams;
-  DumpParameters hedParams;
-  DumpParameters hHdParams;
-  std::vector<DumpParameters *> outputParams;
-
-  // Vadim: modified restart machinary
-  int write_end_restart; // global flag for all to write restart files
-};
-
-// ======================================================================
-
-struct globals_physics {
-  double ec;
-  double me;
-  double c;
-  double eps0;
-  double de;
-
-  double mi;
-  double di;
-  double wpe;
-  double wpi;
-  double wce;
-  double wci;
-  
-  // general
-  double dg;       // courant length
-  double dt;       // timestep
-  
-  // calculated
-  double b0;       // B0
-  double n0;
-  double v_A;
-  double rhoi_L;
-  double Lx, Ly, Lz; // size of box
-  double L;        // Harris sheet thickness
-  double Lpert;    // wavelength of perturbation
-  double dbx;      // Perturbation in Bz relative to Bo (Only change here)
-  double dbz;      // Set Bx perturbation so that div(B) = 0
-  double tanhf;
-
-  double Ne;       // Total number of macro electrons
-  double Ne_sheet; // Number of macro electrons in Harris sheet
-  double weight_s; // Charge per macro electron
-  double vthe;     // Electron thermal velocity
-  double vthi;     // Ion thermal velocity
-  double vdre;     // Electron drift velocity
-  double vdri;     // Ion drift velocity
-  double gdri;     // gamma of ion drift frame
-  double gdre;     // gamma of electron drift frame
-  double udri;     // 4-velocity of ion drift frame
-  double udre;     // 4-velocity of electron drift frame
-
-  double Ne_back;  // Number of macro electrons in background
-  double weight_b; // Charge per macro electron
-  double vtheb;    // normalized background e thermal vel.
-  double vthib;    // normalized background ion thermal vel.
-};
-
-begin_globals {
-  struct params prm;
-  struct globals_diag diag;
-  struct globals_physics phys;
-};
-
 // ======================================================================
 
 static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
@@ -122,16 +37,11 @@ static void user_load_particles(vpic_simulation *simulation, params *prm, global
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, const vpic_params *vpic_prm,
-	       const vpic_harris_params *vpic_harris_prm)
+void user_init(vpic_simulation *simulation, user_global_t *user_global)
 {
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   params *prm = &global->prm;
   globals_physics *phys = &global->phys;
   globals_diag *diag = &global->diag;
-
-  *static_cast<vpic_params *>(prm) = *vpic_prm;
-  *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
 
   user_init_harris(simulation, phys, prm);
 
@@ -800,9 +710,8 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 #define should_dump(x)                                                  \
   (diag->x##_interval>0 && remainder(step, diag->x##_interval) == 0)
 
-void vpic_simulation_diagnostics(vpic_simulation *simulation)
+void vpic_simulation_diagnostics(vpic_simulation *simulation, user_global_t *user_global)
 {
-  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   struct globals_diag *diag = &global->diag;
   struct params *prm = &global->prm;
   int64_t step = simulation->step();
