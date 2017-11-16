@@ -16,6 +16,7 @@
 struct psc_method_vpic {
   bool use_deck_field_ic;
   bool use_deck_particle_ic;
+  bool split;
 
   struct vpic_params vpic_prm;
 };
@@ -26,6 +27,8 @@ struct psc_method_vpic {
 static struct param psc_method_vpic_descr[] = {
   { "use_deck_field_ic"     , VAR(use_deck_field_ic)              , PARAM_BOOL(false) },
   { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
+  { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
+  
   { "quota"                 , VAR(vpic_prm.quota)                 , PARAM_DOUBLE(1.)  },
   { "quota_check_interval"  , VAR(vpic_prm.quota_check_interval)  , PARAM_INT(100)    },
   { "restart_interval"      , VAR(vpic_prm.restart_interval)      , PARAM_INT(8000)   },
@@ -50,7 +53,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   }
 
   struct vpic_simulation_info info;
-  vpic_simulation_init(prm, psc->obj.subctx, &info);
+  vpic_simulation_init(prm, psc->obj.subctx, &info, sub->split);
 
   MPI_Comm comm = psc_comm(psc);
   MPI_Barrier(comm);

@@ -99,7 +99,7 @@ begin_globals {
 // ======================================================================
 
 static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
-			     params *prm, int nproc);
+			     params *prm);
 static void user_init_diagnostics(globals_diag *diag, params *prm, globals_physics *phys);
 static void user_init_grid(vpic_simulation *simulation, params *prm, globals_physics *phys);
 static void user_init_log(vpic_simulation *simulation, params *prm,
@@ -111,40 +111,41 @@ static void user_load_particles(vpic_simulation *simulation, params *prm, global
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-// ======================================================================
-// initialization
-
-begin_initialization {
+static void user_init(vpic_simulation *simulation, char **argv)
+{
+#define rank simulation->rank
+#define nproc simulation->nproc
+  user_global_t *user_global = (struct user_global_t *)simulation->user_global;
   params *prm = &global->prm;
   globals_physics *phys = &global->phys;
   globals_diag *diag = &global->diag;
 
   // FIXME, what a hacky way of passing arguments...
-  vpic_params *vpic_prm = reinterpret_cast<vpic_params *>(cmdline_argument[0]);
-  vpic_harris_params *vpic_harris_prm = reinterpret_cast<vpic_harris_params *>(cmdline_argument[1]);
+  vpic_params *vpic_prm = reinterpret_cast<vpic_params *>(argv[0]);
+  vpic_harris_params *vpic_harris_prm = reinterpret_cast<vpic_harris_params *>(argv[1]);
   *static_cast<vpic_params *>(prm) = *vpic_prm;
   *static_cast<vpic_harris_params *>(prm) = * vpic_harris_prm;
 
-  user_init_harris(this, phys, prm, nproc());
-
-  // Determine the time step
-  phys->dg = courant_length(phys->Lx,phys->Ly,phys->Lz,prm->gdims[0],prm->gdims[1],prm->gdims[2]);  // courant length
-  phys->dt = prm->cfl_req*phys->dg/phys->c;                       // courant limited time step
-  if (phys->wpe * phys->dt > prm->wpedt_max)
-    phys->dt = prm->wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
+  user_init_harris(simulation, phys, prm);
 
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  num_step             = int(prm->taui / (phys->wci*phys->dt));
-  status_interval      = prm->status_interval;
-  sync_shared_interval = status_interval/2;
-  clean_div_e_interval = status_interval/2;
-  clean_div_b_interval = status_interval/2;
+  // Determine the time step
+  phys->dg = simulation->courant_length(phys->Lx,phys->Ly,phys->Lz,prm->gdims[0],prm->gdims[1],prm->gdims[2]);  // courant length
+  phys->dt = prm->cfl_req*phys->dg/phys->c; // courant limited time step
+  if (phys->wpe * phys->dt > prm->wpedt_max)
+    phys->dt = prm->wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
 
-  user_init_grid(this, prm, phys);
+  simulation->num_step             = int(prm->taui / (phys->wci*phys->dt));
+  simulation->status_interval      = prm->status_interval;
+  simulation->sync_shared_interval = prm->status_interval/2;
+  simulation->clean_div_e_interval = prm->status_interval/2;
+  simulation->clean_div_b_interval = prm->status_interval/2;
 
-  user_setup_fields(this, prm, phys);
+  user_init_grid(simulation, prm, phys);
+
+  user_setup_fields(simulation, prm, phys);
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the species
@@ -153,33 +154,44 @@ begin_initialization {
   double nmax = 2.0*phys->Ne/nproc();
   double nmovers = 0.1*nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
-  species_t *electron = define_species("electron", -phys->ec, phys->me, nmax, nmovers,
-				       prm->electron_sort_interval, sort_method);
-  species_t *ion = define_species("ion", phys->ec, phys->mi, nmax, nmovers,
-				  prm->ion_sort_interval, sort_method);
+  species_t *electron = simulation->define_species("electron", -phys->ec, phys->me, nmax, nmovers,
+						   prm->electron_sort_interval, sort_method);
+  species_t *ion = simulation->define_species("ion", phys->ec, phys->mi, nmax, nmovers,
+					      prm->ion_sort_interval, sort_method);
 
   ////////////////////////////////////////////////////////////////////////
 
   user_init_diagnostics(diag, prm, phys);
 
-  user_init_log(this, prm, phys, diag);
+  user_init_log(simulation, prm, phys, diag);
 
-  user_load_fields(this, prm, phys);
+  user_load_fields(simulation, prm, phys);
 
-  user_load_particles(this, prm, phys, electron, ion);
+  user_load_particles(simulation, prm, phys, electron, ion);
 
-  user_setup_diagnostics(this, diag, electron, ion);
+  user_setup_diagnostics(simulation, diag, electron, ion);
 
   sim_log("*** Finished with user-specified initialization ***");
 
+#undef nproc
+#undef rank
+}
+
+// ======================================================================
+// initialization
+
+begin_initialization {
+  user_init(this, cmdline_argument);
 } //begin_initialization
 
 // ----------------------------------------------------------------------
 // user_init_harris
 
 static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
-			     params *prm, int nproc)
+			     params *prm)
 {
+  int nproc = simulation->nproc();
+  
   assert(prm->np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   // use natural PIC units
@@ -237,6 +249,7 @@ static void user_init_harris(vpic_simulation* simulation, globals_physics *phys,
   phys->Lpert = prm->Lpert_Lx*Lx; // wavelength of perturbation
   phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
   phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
+#undef proc
 }
 
 // ----------------------------------------------------------------------
