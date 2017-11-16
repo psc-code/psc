@@ -295,7 +295,7 @@ void vpic_simulation_init(struct vpic_simulation_info *info);
 
 void vpic_print_status();
 void vpic_diagnostics();
-void vpic_diagnostics_split(struct psc_harris *harris);
+void vpic_diagnostics_split(struct vpic_params *vpic_prm, struct psc_harris *harris);
 void vpic_inc_step(int step);
 
 
