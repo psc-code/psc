@@ -266,8 +266,7 @@ void vpic_base_init(int *pargc, char ***pargv);
 
 void vpic_simulation_new(void);
 void vpic_simulation_init_split(struct vpic_params *vpic_prm,
-				struct psc_harris *harris,
-				struct vpic_simulation_info *info);
+				struct psc_harris *harris);
 void vpic_simulation_init(struct vpic_simulation_info *info);
 void vpic_simulation_set_params(int num_step,
 				int status_interval,

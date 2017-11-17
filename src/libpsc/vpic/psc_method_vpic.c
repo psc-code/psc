@@ -50,11 +50,12 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   }
 
   mpi_printf(comm, "*** Initializing\n");
-  struct vpic_simulation_info info;
   if (sub->split) {
-    vpic_simulation_init_split(prm, psc_harris(psc), &info);
+    vpic_simulation_init_split(prm, psc_harris(psc));
   } else {
     vpic_simulation_new();
+
+    struct vpic_simulation_info info;
     vpic_simulation_init(&info);
 
     psc->prm.nmax = info.num_step;
@@ -132,8 +133,10 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d, ibn = [%d,%d,%d]\n",
 	     psc->n_state_fields, psc->ibn[0], psc->ibn[1], psc->ibn[2]);
 
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc);
+  if (!sub->split) { // FIXME -- the following has already been done by harris
+    psc_setup_coeff(psc);
+    psc_setup_domain(psc);
+  }
 }
 
 // ----------------------------------------------------------------------
