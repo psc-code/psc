@@ -199,10 +199,14 @@ inline void Simulation::set_domain_particle_bc(int boundary, int bc)
 }
 
 inline struct material *Simulation::define_material(const char *name,
-						    double eps, double mu,
-						    double sigma, double zeta)
+						    double eps, double mu=1.,
+						    double sigma=0., double zeta=0.)
 {
-  return simulation->define_material(name, eps, mu, sigma, zeta);
+  return append_material(material(name,
+				  eps,   eps,   eps,
+				  mu,    mu,    mu,
+				  sigma, sigma, sigma,
+				  zeta,  zeta,  zeta), &simulation->material_list);
 }
 
 inline void Simulation::define_field_array(struct field_array *fa, double damp)
