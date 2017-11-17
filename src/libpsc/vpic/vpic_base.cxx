@@ -140,17 +140,6 @@ void vpic_simulation_set_params(int num_step,
   simulation->clean_div_b_interval = clean_div_b_interval;
 }
 
-struct material *vpic_simulation_define_material(const char *name, double eps, double mu,
-				     double sigma, double zeta)
-{
-  return simulation->define_material(name, eps, mu, sigma, zeta);
-}
-
-void vpic_simulation_define_field_array(field_array_t *fa, double damp)
-{
-  simulation->define_field_array(fa, damp);
-}
-
 void vpic_simulation_set_region_resistive_harris(vpic_harris_params *prm,
 						 globals_physics *phys,
 						 double dx[3],

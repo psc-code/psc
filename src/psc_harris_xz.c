@@ -314,11 +314,11 @@ psc_harris_setup_fields(struct psc *psc)
 
   mpi_printf(comm, "Setting up materials.\n");
 
-  vpic_simulation_define_material("vacuum", 1., 1., 0., 0.);
+  Simulation_define_material(sub->sim, "vacuum", 1., 1., 0., 0.);
   struct material *resistive =
-    vpic_simulation_define_material("resistive", 1., 1., 1., 0.);
+    Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 
-  vpic_simulation_define_field_array(NULL, 0.);
+  Simulation_define_field_array(sub->sim, NULL, 0.);
 
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
   // Tensor electronic, magnetic and conductive materials are supported

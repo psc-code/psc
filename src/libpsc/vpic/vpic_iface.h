@@ -131,6 +131,7 @@ void vpic_moments_run(struct vpic_mfields *mflds, struct vpic_mparticles *vmprts
 struct psc_harris;
 
 struct Simulation;
+struct field_array;
 
 struct Simulation *Simulation_create();
 void Simulation_delete(struct Simulation *sim);
@@ -141,6 +142,11 @@ void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
 				     double xh[3], int gdims[3], int np[3]);
 void Simulation_set_domain_field_bc(struct Simulation *sim, int boundary, int fbc);
 void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int pbc);
+
+struct material *Simulation_define_material(struct Simulation *sim, const char *name,
+					    double eps, double mu,
+					    double sigma, double zeta);
+void Simulation_define_field_array(struct Simulation *sim, struct field_array *fa, double damp);
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
@@ -294,11 +300,6 @@ void vpic_simulation_set_params(int num_step,
 				int sync_shared_interval,
 				int clean_div_e_interval,
 				int clean_div_b_interval);
-struct material *vpic_simulation_define_material(const char *name, double eps, double mu,
-						 double sigma, double zeta);
-
-struct field_array;
-void vpic_simulation_define_field_array(struct field_array *fa, double damp);
 void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
 						 struct globals_physics *phys,
 						 double dx[3],

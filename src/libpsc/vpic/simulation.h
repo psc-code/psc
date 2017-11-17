@@ -135,8 +135,12 @@ struct Simulation {
   void setup_grid(double dx[3], double dt, double cvac, double eps0);
   void define_periodic_grid(double xl[3], double xh[3], int gdims[3],
 			    int np[3]);
-  void set_domain_field_bc(struct Simulation *sim, int boundary, int bc);
-  void set_domain_particle_bc(struct Simulation *sim, int boundary, int bc);
+  void set_domain_field_bc(int boundary, int bc);
+  void set_domain_particle_bc(int boundary, int bc);
+
+  struct material *define_material(const char *name, double eps, double mu,
+				   double sigma, double zeta);
+  inline void define_field_array(struct field_array *fa, double damp);
   
   RngPool rng_pool;
 
@@ -172,7 +176,7 @@ inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdi
   grid_.partition_periodic_box(xl, xh, gdims, np);
 }
 
-inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary, int bc)
+inline void Simulation::set_domain_field_bc(int boundary, int bc)
 {
   int fbc;
   switch (bc) {
@@ -183,7 +187,7 @@ inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary
   grid_.set_fbc(boundary, fbc);
 }
 
-inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
+inline void Simulation::set_domain_particle_bc(int boundary, int bc)
 {
   int pbc;
   switch (bc) {
@@ -193,6 +197,19 @@ inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int bound
   }
   grid_.set_pbc(boundary, pbc);
 }
+
+inline struct material *Simulation::define_material(const char *name,
+						    double eps, double mu,
+						    double sigma, double zeta)
+{
+  return simulation->define_material(name, eps, mu, sigma, zeta);
+}
+
+inline void Simulation::define_field_array(struct field_array *fa, double damp)
+{
+  simulation->define_field_array(fa, damp);
+}
+
 
 #endif
 

@@ -52,6 +52,18 @@ void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int
   simulation->set_domain_particle_bc(boundary, pbc);
 }
 
+struct material *Simulation_define_material(struct Simulation *sim, const char *name,
+					    double eps, double mu,
+					    double sigma, double zeta)
+{
+  return sim->define_material(name, eps, mu, sigma, zeta);
+}
+
+void Simulation_define_field_array(struct Simulation *sim, struct field_array *fa, double damp)
+{
+  sim->define_field_array(fa, damp);
+}
+
 // ----------------------------------------------------------------------
 // diagnostics
 
