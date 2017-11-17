@@ -16,6 +16,13 @@ struct psc_mparticles {
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
 
+typedef struct psc_particle_inject {
+  double x[3];
+  double u[3];
+  double w;
+  int kind;
+} particle_inject_t;
+
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
   void (*setup_internals)(struct psc_mparticles *mprts);
@@ -23,6 +30,8 @@ struct psc_mparticles_ops {
   void (*reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
   void (*resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
   void (*get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
+  void (*inject)(struct psc_mparticles *mprts, int p,
+		 const struct psc_particle_inject *prt);
 };
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
@@ -60,6 +69,9 @@ void psc_mparticles_get_size_all(struct psc_mparticles *mparticles, int *n_prts_
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
 void psc_mparticles_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
 void psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
+
+void psc_mparticles_inject(struct psc_mparticles *mprts, int p,
+			   const struct psc_particle_inject *prt);
 
 struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
 					     const char *type,

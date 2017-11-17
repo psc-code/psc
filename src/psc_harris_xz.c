@@ -592,21 +592,6 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
 //
 // set particles x^{n+1/2}, p^{n+1/2}
 
-typedef struct psc_particle_inject {
-  double x[3];
-  double u[3];
-  double w;
-  int kind;
-} particle_inject_t;
-
-void
-inject_particle(struct species *sp, const struct psc_particle_inject *prt,
-		double age, int update_rhob)
-{
-  vpic_simulation_inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
-				  prt->u[0], prt->u[1], prt->u[2], prt->w, age, update_rhob);
-}
-
 static void
 psc_harris_set_ic_particles(struct psc *psc)
 {
@@ -614,7 +599,7 @@ psc_harris_set_ic_particles(struct psc *psc)
   struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
 
-  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
   
   double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
   double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
@@ -643,9 +628,6 @@ psc_harris_set_ic_particles(struct psc *psc)
   double ymin = patch->xb[1], ymax = patch->xb[1] + patch->dx[1] * patch->ldims[1];
   double zmin = patch->xb[2], zmax = patch->xb[2] + patch->dx[2] * patch->ldims[2];
 
-  struct species *electron = vpic_simulation_find_species("electron");
-  struct species *ion = vpic_simulation_find_species("ion");
-  
   // Load Harris population
 
   mpi_printf(comm, "-> Main Harris Sheet\n");
@@ -675,7 +657,8 @@ psc_harris_set_ic_particles(struct psc *psc)
     prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
     prt.w = weight_s;
     prt.kind = KIND_ELECTRON;
-    inject_particle(electron, &prt, 0., 0);
+    psc_mparticles_inject(mprts, 0, &prt);
+    //inject_particle(electron, &prt, 0., 0);
 
     ux = vpic_simulation_normal(rng, 0, vthi);
     uy = vpic_simulation_normal(rng, 0, vthi);
@@ -686,7 +669,7 @@ psc_harris_set_ic_particles(struct psc *psc)
 
     prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
     prt.kind = KIND_ION;
-    inject_particle(ion, &prt, 0., 0);
+    psc_mparticles_inject(mprts, 0, &prt);
   }
 
   mpi_printf(comm, "-> Background Population\n");
@@ -703,18 +686,18 @@ psc_harris_set_ic_particles(struct psc *psc)
     prt.u[2] = vpic_simulation_normal(rng, 0, vtheb);
     prt.w = weight_b;
     prt.kind = KIND_ELECTRON;
-    inject_particle(electron, &prt, 0., 0);
+    psc_mparticles_inject(mprts, 0, &prt);
     
     prt.u[0] = vpic_simulation_normal(rng, 0, vthib);
     prt.u[1] = vpic_simulation_normal(rng, 0, vthib);
     prt.u[2] = vpic_simulation_normal(rng, 0, vthib);
     prt.kind = KIND_ION;
-    inject_particle(ion, &prt, 0., 0);
+    psc_mparticles_inject(mprts, 0, &prt);
   }
 
   mpi_printf(comm, "Finished loading particles\n");
 
-  psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
+  psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
 

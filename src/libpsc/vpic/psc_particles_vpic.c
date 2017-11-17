@@ -229,6 +229,18 @@ psc_mparticles_vpic_get_nr_particles(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_vpic_inject
+
+static void
+psc_mparticles_vpic_inject(struct psc_mparticles *mprts, int p,
+			   const struct psc_particle_inject *prt)
+{
+  struct species *sp = vpic_simulation_find_species(prt->kind == 0 ? "electron" : "ion");
+  vpic_simulation_inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
+				  prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles: subclass "vpic"
   
 struct psc_mparticles_ops psc_mparticles_vpic_ops = {
@@ -240,5 +252,6 @@ struct psc_mparticles_ops psc_mparticles_vpic_ops = {
   .get_size_all            = psc_mparticles_vpic_get_size_all,
   .resize_all              = psc_mparticles_vpic_resize_all,
   .get_nr_particles        = psc_mparticles_vpic_get_nr_particles,
+  .inject                  = psc_mparticles_vpic_inject,
 };
 
