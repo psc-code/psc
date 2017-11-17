@@ -83,6 +83,8 @@ struct Simulation {
   Simulation();
   ~Simulation();
 
+  void setup_grid(double dx[3], double dt, double cvac, double eps0);
+  
   RngPool rng_pool;
   //private:
   globals_diag *pDiag_;
@@ -99,6 +101,11 @@ inline Simulation::~Simulation()
 {
   delete pDiag_;
   // don't delete rng_pool_, because it's not ours
+}
+
+inline void Simulation::setup_grid(double dx[3], double dt, double cvac, double eps0)
+{
+  vpic_simulation_setup_grid(dx, dt, cvac, eps0);
 }
 
 #endif

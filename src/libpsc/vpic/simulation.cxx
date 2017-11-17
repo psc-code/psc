@@ -16,6 +16,12 @@ void Simulation_delete(Simulation *sim)
   delete sim;
 }
 
+void Simulation_setup_grid(Simulation *sim, double dx[3], double dt,
+			   double cvac, double eps0)
+{
+  sim->setup_grid(dx, dt, cvac, eps0);
+}
+
 // ----------------------------------------------------------------------
 // diagnostics
 

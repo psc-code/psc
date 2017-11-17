@@ -135,6 +135,9 @@ struct Simulation;
 struct Simulation *Simulation_create();
 void Simulation_delete(struct Simulation *sim);
 
+void Simulation_setup_grid(struct Simulation *sim, double dx[3], double dt,
+			   double cvac, double eps0);
+
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
 void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);

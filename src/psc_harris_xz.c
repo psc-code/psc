@@ -262,7 +262,7 @@ psc_harris_setup_domain(struct psc *psc)
     xl[d] = psc->domain.corner[d];
     xh[d] = xl[d] + psc->domain.length[d];
   }
-  vpic_simulation_setup_grid(dx, phys->dt, phys->c, phys->eps0);
+  Simulation_setup_grid(sub->sim, dx, phys->dt, phys->c, phys->eps0);
 
   // Define the grid
   vpic_simulation_define_periodic_grid(xl, xh, psc->domain.gdims, psc->domain.np);
