@@ -35,7 +35,7 @@ inline double Rng::normal(double mu, double sigma)
 // class RngPool
 
 struct RngPool {
-  RngPool() : rng_pool_(simulation->entropy) { }
+  RngPool();
   
   void seed(int base, int which);
   Rng *operator[](int n);
@@ -45,6 +45,13 @@ struct RngPool {
 
 // ----------------------------------------------------------------------
 // RngPool implementation
+
+inline RngPool::RngPool()
+{
+  //rng_pool_ = simulation->entropy;
+  int new_rng = 2;
+  rng_pool_ = new_rng_pool(new_rng, 0, 0);
+}
 
 inline void RngPool::seed(int base, int which)
 {
