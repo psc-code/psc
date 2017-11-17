@@ -123,8 +123,11 @@ inline void Simulation::setup_grid(double dx[3], double dt, double cvac, double 
 inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdims[3],
 					     int np[3])
 {
-  simulation->define_periodic_grid(xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
-				   gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
+  simulation->px = size_t(np[0]);
+  simulation->py = size_t(np[1]);
+  simulation->pz = size_t(np[2]);
+  partition_periodic_box(grid_, xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
+			 gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
 }
 
 inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary, int bc)

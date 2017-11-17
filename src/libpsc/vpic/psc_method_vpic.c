@@ -73,6 +73,8 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   
   int *np = psc->domain.np;
   mpi_printf(comm, "domain: np = %d x %d x %d\n", np[0], np[1], np[2]);
+  // FIXME, it looks like we can get np from simulation->p[xyz], so we should use that or
+  // at least make sure it's consistent
   
   int rank, size;
   MPI_Comm_rank(comm, &rank);
