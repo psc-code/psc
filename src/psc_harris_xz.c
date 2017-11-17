@@ -424,6 +424,46 @@ psc_harris_setup_log(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_setup_base_mprts
+//
+// FIXME, duplicated
+
+static void
+psc_setup_base_mprts(struct psc *psc)
+{
+  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
+  psc_mparticles_set_name(psc->particles, "mparticles");
+  int nr_patches;
+  mrc_domain_get_patches(psc->mrc_domain, &nr_patches);
+  psc_mparticles_set_param_int(psc->particles, "nr_patches", nr_patches);
+  if (psc->prm.particles_base_flags == 0) {
+    psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
+  }
+  psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
+  psc_mparticles_setup(psc->particles);
+}
+
+// ----------------------------------------------------------------------
+// psc_setup_base_mflds
+//
+// FIXME, duplicated
+
+static void
+psc_setup_base_mflds(struct psc *psc)
+{
+  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
+  psc_mfields_set_name(psc->flds, "mfields");
+  psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
+  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
+  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
+  psc_mfields_setup(psc->flds);
+}
+
+
+// ----------------------------------------------------------------------
 // courant length
 //
 // FIXME, the dt calculating should be consolidated with what regular PSC does
@@ -488,7 +528,32 @@ psc_harris_setup(struct psc *psc)
   vpic_diagnostics_init(interval);
   
   // initializes fields, particles, etc.
-  psc_setup_super(psc);
+  //psc_setup_super(psc); FIXME, we completely overrode psc_setup() here (redundant..)
+  psc_method_do_setup(psc->method, psc);
+
+  // partition and initial balancing
+  int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
+  psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
+  psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
+    
+  // create base particle data structure
+  psc_setup_base_mprts(psc);
+  
+  // set particles x^{n+1/2}, p^{n+1/2}
+  psc_method_setup_particles(psc->method, psc, n_prts_by_patch);
+
+  free(n_prts_by_patch);
+
+  // create and set up base mflds
+  psc_setup_base_mflds(psc);
+  // set i.c. on E^{n+1/2}, B^{n+1/2}
+  psc_method_setup_fields(psc->method, psc);
+
+#ifdef USE_FORTRAN
+  psc_setup_fortran(psc);
+#endif
+
+  psc_setup_member_objs(psc);
 }
 
 // ----------------------------------------------------------------------
