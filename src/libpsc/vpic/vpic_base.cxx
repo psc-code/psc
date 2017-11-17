@@ -133,11 +133,11 @@ struct user_global_t {
 // ----------------------------------------------------------------------
 // vpic_simulation_init_split
 
-void vpic_simulation_init_split(vpic_params *vpic_prm, psc_harris *sub)
+void vpic_simulation_init_split(psc_harris *sub)
 {
   user_global_t *user_global = (struct user_global_t *) simulation->user_global;
   
-  user_init(simulation, vpic_prm, sub, &user_global->diag);
+  user_init(simulation, sub, &user_global->diag);
 }
 
 // ----------------------------------------------------------------------
@@ -292,6 +292,7 @@ vpic_diagnostics_init(int interval)
   diag->Hhydro_interval = diag->interval;
   diag->eparticle_interval = 8*diag->interval;
   diag->Hparticle_interval = 8*diag->interval;
+  diag->restart_interval = 8000;
 
   diag->energies_interval = 50;
 
@@ -303,11 +304,10 @@ vpic_diagnostics_init(int interval)
 // ----------------------------------------------------------------------
 // vpic_diagnostics_split
 
-void vpic_diagnostics_split(vpic_params *vpic_prm, psc_harris *harris)
+void vpic_diagnostics_split(psc_harris *harris)
 {
   // Let the user compute diagnostics
   user_global_t *user_global = (struct user_global_t *) simulation->user_global;
-  TIC vpic_simulation_diagnostics(simulation, vpic_prm,
-				  &user_global->diag); TOC( user_diagnostics, 1 );
+  TIC vpic_simulation_diagnostics(simulation, &user_global->diag); TOC( user_diagnostics, 1 );
 }
 

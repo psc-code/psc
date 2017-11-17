@@ -125,19 +125,6 @@ void vpic_field_injection();
 void vpic_moments_run(struct vpic_mfields *mflds, struct vpic_mparticles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
-// vpic_params
-
-struct vpic_params {
-  int restart_interval;
-};
-
-struct vpic_kind_info {
-  double q;
-  double m;
-  char *name;
-};
-
-// ----------------------------------------------------------------------
 // vpic_harris_params
 
 struct vpic_harris_params {
@@ -235,6 +222,15 @@ struct psc_harris {
 #define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
 
 // ----------------------------------------------------------------------
+// vpic_kind_info
+
+struct vpic_kind_info {
+  double q;
+  double m;
+  char *name;
+};
+
+// ----------------------------------------------------------------------
 // vpic_simulation_info
 //
 // returned from vpic_simulation_init
@@ -262,8 +258,7 @@ struct vpic_simulation_info {
 void vpic_base_init(int *pargc, char ***pargv);
 
 void vpic_simulation_new(void);
-void vpic_simulation_init_split(struct vpic_params *vpic_prm,
-				struct psc_harris *harris);
+void vpic_simulation_init_split(struct psc_harris *harris);
 void vpic_simulation_init(struct vpic_simulation_info *info);
 void vpic_simulation_set_params(int num_step,
 				int status_interval,
@@ -298,7 +293,7 @@ void vpic_diagnostics_init(int interval);
 
 void vpic_print_status();
 void vpic_diagnostics();
-void vpic_diagnostics_split(struct vpic_params *vpic_prm, struct psc_harris *harris);
+void vpic_diagnostics_split(struct psc_harris *harris);
 void vpic_inc_step(int step);
 
 

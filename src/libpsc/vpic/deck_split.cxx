@@ -30,17 +30,17 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				   species_t *electron, species_t *ion);
 
-void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris *sub,
+void user_init(vpic_simulation *simulation, struct psc_harris *sub,
 	       globals_diag *diag)
 {
   vpic_harris_params *harris = &sub->prm;
   globals_physics *phys = &sub->phys;
 
+  user_load_fields(simulation, harris, phys);
+
   species_t *electron = simulation->find_species("electron");
   species_t *ion = simulation->find_species("ion");
   
-  user_load_fields(simulation, harris, phys);
-
   user_load_particles(simulation, harris, phys, electron, ion);
 
   user_setup_diagnostics(simulation, diag, electron, ion);
@@ -351,8 +351,7 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 #define should_dump(x)                                                  \
   (diag->x##_interval>0 && remainder(step, diag->x##_interval) == 0)
 
-void vpic_simulation_diagnostics(vpic_simulation *simulation, vpic_params *prm,
-				 globals_diag *diag)
+void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag)
 {
   int64_t step = simulation->step();
 
@@ -413,7 +412,7 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, vpic_params *prm,
    * Restart dump
    *------------------------------------------------------------------------*/
 
-  if(step && !(step%prm->restart_interval)) {
+  if(step && !(step%diag->restart_interval)) {
     if(!diag->rtoggle) {
       diag->rtoggle = 1;
       checkpt("restart1/restart", 0);

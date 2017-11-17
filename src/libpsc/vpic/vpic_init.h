@@ -16,6 +16,7 @@ struct globals_diag {
   int Hhydro_interval;
   int eparticle_interval;
   int Hparticle_interval;
+  int restart_interval;
 
   // state
   int rtoggle;               // enables save of last 2 restart dumps for safety
@@ -28,10 +29,9 @@ struct globals_diag {
 
 // ----------------------------------------------------------------------
 
-void user_init(vpic_simulation *simulation, vpic_params *prm, struct psc_harris *harris,
+void user_init(vpic_simulation *simulation, struct psc_harris *harris,
 	       globals_diag *diag);
 
-void vpic_simulation_diagnostics(vpic_simulation *simulation, vpic_params *prm,
-				 globals_diag *diag);
+void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
 
 #endif

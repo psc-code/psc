@@ -17,8 +17,6 @@ struct psc_method_vpic {
   bool use_deck_field_ic;
   bool use_deck_particle_ic;
   bool split;
-
-  struct vpic_params vpic_prm;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
@@ -28,8 +26,6 @@ static struct param psc_method_vpic_descr[] = {
   { "use_deck_field_ic"     , VAR(use_deck_field_ic)              , PARAM_BOOL(false) },
   { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
   { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
-  
-  { "restart_interval"      , VAR(vpic_prm.restart_interval)      , PARAM_INT(8000)   },
   {},
 };
 #undef VAR
@@ -41,12 +37,11 @@ static void
 psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
-  struct vpic_params *prm = &sub->vpic_prm;
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "*** Initializing\n");
   if (sub->split) {
-    vpic_simulation_init_split(prm, psc_harris(psc));
+    vpic_simulation_init_split(psc_harris(psc));
   } else {
     vpic_simulation_new();
 
@@ -256,7 +251,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
   if (sub->split) {
-    vpic_diagnostics_split(&sub->vpic_prm, psc_harris(psc));
+    vpic_diagnostics_split(psc_harris(psc));
   } else {
     vpic_diagnostics();
   }
@@ -279,7 +274,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
   vpic_inc_step(psc->timestep);
 
   if (sub->split) {
-    vpic_diagnostics_split(&sub->vpic_prm, psc_harris(psc));
+    vpic_diagnostics_split(psc_harris(psc));
   } else {
     vpic_diagnostics();
   }
