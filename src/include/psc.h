@@ -235,7 +235,6 @@ struct psc {
   struct psc_patch *patch;	///< List of patches (on this processor)
   int ibn[3];         ///< number of ghost points
   // did we allocate the fields / particles (otherwise, Fortran did)
-  bool allocated;
 
   double time_start;
 };
