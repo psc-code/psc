@@ -496,6 +496,7 @@ psc_harris_setup(struct psc *psc)
   bool split;
   psc_method_get_param_bool(psc->method, "split", &split);
   if (split) {
+  sub->sim = Simulation_create();
   psc_harris_setup_ic(psc);
 
   // Determine the time step
@@ -529,7 +530,7 @@ psc_harris_setup(struct psc *psc)
   }
 
   int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
-  vpic_diagnostics_init(interval);
+  Simulation_diagnostics_init(sub->sim, interval);
   
   psc->n_state_fields = VPIC_MFIELDS_N_COMP;
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
@@ -547,7 +548,7 @@ psc_harris_setup(struct psc *psc)
 
   psc_set_ic_fields(psc);
   
-  vpic_diagnostics_setup();
+  Simulation_diagnostics_setup(sub->sim);
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   
@@ -814,6 +815,17 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
   psc_read_super(psc, io);
 }
 
+// ----------------------------------------------------------------------
+// psc_harris_destroy
+
+static void
+psc_harris_destroy(struct psc *psc)
+{
+  struct psc_harris *sub = psc_harris(psc);
+
+  Simulation_delete(sub->sim);
+}
+
 // ======================================================================
 // psc_harris_ops
 
@@ -823,6 +835,7 @@ struct psc_ops psc_harris_ops = {
   .param_descr      = psc_harris_descr,
   .create           = psc_harris_create,
   .setup            = psc_harris_setup,
+  .destroy          = psc_harris_destroy,
   .read             = psc_harris_read,
   .init_field       = psc_harris_init_field,
   .setup_particles  = psc_harris_setup_particles,

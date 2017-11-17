@@ -245,7 +245,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
   if (sub->split) {
-    vpic_diagnostics_split(psc_harris(psc));
+    Simulation_diagnostics_run(psc_harris(psc)->sim, psc_harris(psc));
   } else {
     vpic_diagnostics();
   }
@@ -268,7 +268,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
   vpic_inc_step(psc->timestep);
 
   if (sub->split) {
-    vpic_diagnostics_split(psc_harris(psc));
+    Simulation_diagnostics_run(psc_harris(psc)->sim, psc_harris(psc));
   } else {
     vpic_diagnostics();
   }

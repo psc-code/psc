@@ -126,6 +126,20 @@ void vpic_field_injection();
 void vpic_moments_run(struct vpic_mfields *mflds, struct vpic_mparticles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
+// Simulation
+
+struct psc_harris;
+
+struct Simulation;
+
+struct Simulation *Simulation_create();
+void Simulation_delete(struct Simulation *sim);
+
+void Simulation_diagnostics_init(struct Simulation *sim, int interval);
+void Simulation_diagnostics_setup(struct Simulation *sim);
+void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);
+
+// ----------------------------------------------------------------------
 // vpic_harris_params
 
 struct vpic_harris_params {
@@ -218,6 +232,8 @@ struct psc_harris {
   // state
   struct globals_physics phys;
   int n_global_patches;
+
+  struct Simulation *sim;
 };
 
 #define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
@@ -299,9 +315,6 @@ struct species *vpic_simulation_find_species(const char *name);
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 
 void vpic_print_status();
-void vpic_diagnostics_init(int interval);
-void vpic_diagnostics_setup();
-void vpic_diagnostics_split(struct psc_harris *harris);
 
 void vpic_diagnostics();
 void vpic_inc_step(int step);
