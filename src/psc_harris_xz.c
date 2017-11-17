@@ -347,6 +347,12 @@ psc_harris_setup_species(struct psc *psc)
   double nmovers = .1*nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
 
+  struct psc_kind kinds[2] = {
+    [KIND_ELECTRON] = { .name = "e", .q = -phys->ec, .m = phys->me, },
+    [KIND_ION     ] = { .name = "i", .q =  phys->ec, .m = phys->mi, },
+  };
+  psc_set_kinds(psc, 2, kinds);
+
   vpic_simulation_define_species("electron", -phys->ec, phys->me, nmax, nmovers,
 				 sub->prm.electron_sort_interval, sort_method);
   vpic_simulation_define_species("ion", phys->ec, phys->mi, nmax, nmovers,
@@ -378,7 +384,7 @@ psc_harris_setup_log(struct psc *psc)
   mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
   mpi_printf(comm, "taui     = %g\n", sub->prm.taui);
   mpi_printf(comm, "t_intervali = %g\n", sub->prm.t_intervali);
-  //  mpi_printf(comm, "num_step = %g\n", simulation->num_step);
+  mpi_printf(comm, "num_step = %d\n", psc->prm.nmax);
   mpi_printf(comm, "Lx/di = %g\n", phys->Lx/phys->di);
   mpi_printf(comm, "Lx/de = %g\n", phys->Lx/phys->de);
   mpi_printf(comm, "Ly/di = %g\n", phys->Ly/phys->di);
@@ -389,7 +395,7 @@ psc_harris_setup_log(struct psc *psc)
   mpi_printf(comm, "ny = %d\n", psc->domain.gdims[1]);
   mpi_printf(comm, "nz = %d\n", psc->domain.gdims[2]);
   mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
-  //  mpi_printf(comm, "nproc = %g\n", simulation->nproc() );
+  mpi_printf(comm, "n_global_patches = %d\n", sub->n_global_patches);
   mpi_printf(comm, "nppc = %g\n", sub->prm.nppc);
   mpi_printf(comm, "b0 = %g\n", phys->b0);
   mpi_printf(comm, "v_A (based on nb) = %g\n", phys->v_A);
@@ -456,10 +462,18 @@ psc_harris_setup(struct psc *psc)
   }
   psc->dt = phys->dt;
 
+  psc->prm.nmax = (int) (sub->prm.taui / (phys->wci*phys->dt)); // number of steps from taui
+
+  psc_marder_set_param_int(psc->marder, "clean_div_e_interval", psc->prm.stats_every / 2);
+  psc_marder_set_param_int(psc->marder, "clean_div_b_interval", psc->prm.stats_every / 2);
+  psc_marder_set_param_int(psc->marder, "sync_shared_interval", psc->prm.stats_every / 2);
+  psc_marder_set_param_int(psc->marder, "num_div_e_round", 2);
+  psc_marder_set_param_int(psc->marder, "num_div_b_round", 2);
+    
   // set high level VPIC simulation parameters
   // FIXME, will be unneeded eventually
   vpic_simulation_new();
-  vpic_simulation_set_params((int) (sub->prm.taui / (phys->wci*phys->dt)),
+  vpic_simulation_set_params(psc->prm.nmax,
 			     psc->prm.stats_every,
 			     psc->prm.stats_every / 2,
 			     psc->prm.stats_every / 2,
