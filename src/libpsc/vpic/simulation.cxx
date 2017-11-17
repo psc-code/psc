@@ -39,7 +39,7 @@ void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub)
 
 void Simulation_rngPool_seed(struct Simulation *sim, int base)
 {
-  sim->rng_pool.seed(base);
+  sim->rng_pool.seed(base, 0);
 }
 
 Rng *Simulation_rngPool_get(struct Simulation *sim, int n)

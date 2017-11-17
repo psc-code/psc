@@ -496,7 +496,6 @@ psc_harris_setup(struct psc *psc)
   bool split;
   psc_method_get_param_bool(psc->method, "split", &split);
   if (split) {
-  sub->sim = Simulation_create();
   psc_harris_setup_ic(psc);
 
   // Determine the time step
@@ -518,6 +517,7 @@ psc_harris_setup(struct psc *psc)
   // set high level VPIC simulation parameters
   // FIXME, will be unneeded eventually
   vpic_simulation_new();
+  sub->sim = Simulation_create();
   vpic_simulation_set_params(psc->prm.nmax,
 			     psc->prm.stats_every,
 			     psc->prm.stats_every / 2,
