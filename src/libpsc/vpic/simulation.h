@@ -236,7 +236,7 @@ struct Simulation {
 
   struct material *define_material(const char *name, double eps, double mu,
 				   double sigma, double zeta);
-  inline void define_field_array(struct field_array *fa, double damp);
+  inline void define_field_array(double damp);
   
   RngPool rng_pool;
 
@@ -315,7 +315,7 @@ inline struct material *Simulation::define_material(const char *name,
 					zeta,  zeta,  zeta));
 }
 
-inline void Simulation::define_field_array(struct field_array *fa, double damp)
+inline void Simulation::define_field_array(double damp)
 {
   grid_t *grid = grid_.g_;
  
@@ -328,11 +328,10 @@ inline void Simulation::define_field_array(struct field_array *fa, double damp)
     assert(0);
   }
   
-  field_array_ptr_.p_ = fa ? fa :
-    ::new_standard_field_array(grid, simulation->material_list, damp);
-  interpolator_array_ptr_.p_ = new_interpolator_array(grid);
-  accumulator_array_ptr_.p_ = new_accumulator_array(grid);
-  hydro_array_ptr_.p_ = new_hydro_array(grid);
+  field_array_ptr_.p_ = ::new_standard_field_array(grid, simulation->material_list, damp);
+  interpolator_array_ptr_.p_ = ::new_interpolator_array(grid);
+  accumulator_array_ptr_.p_ = ::new_accumulator_array(grid);
+  hydro_array_ptr_.p_ = ::new_hydro_array(grid);
  
   // Pre-size communications buffers. This is done to get most memory
   // allocation over with before the simulation starts running

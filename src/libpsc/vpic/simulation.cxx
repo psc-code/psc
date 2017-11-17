@@ -59,9 +59,9 @@ struct material *Simulation_define_material(struct Simulation *sim, const char *
   return sim->define_material(name, eps, mu, sigma, zeta);
 }
 
-void Simulation_define_field_array(struct Simulation *sim, struct field_array *fa, double damp)
+void Simulation_define_field_array(struct Simulation *sim, double damp)
 {
-  sim->define_field_array(fa, damp);
+  sim->define_field_array(damp);
 }
 
 // ----------------------------------------------------------------------

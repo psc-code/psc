@@ -146,7 +146,7 @@ void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int
 struct material *Simulation_define_material(struct Simulation *sim, const char *name,
 					    double eps, double mu,
 					    double sigma, double zeta);
-void Simulation_define_field_array(struct Simulation *sim, struct field_array *fa, double damp);
+void Simulation_define_field_array(struct Simulation *sim, double damp);
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);

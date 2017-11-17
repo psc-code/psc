@@ -318,7 +318,7 @@ psc_harris_setup_fields(struct psc *psc)
   struct material *resistive =
     Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 
-  Simulation_define_field_array(sub->sim, NULL, 0.);
+  Simulation_define_field_array(sub->sim, 0.);
 
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
   // Tensor electronic, magnetic and conductive materials are supported
