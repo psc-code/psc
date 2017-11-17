@@ -33,10 +33,10 @@ psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
-// psc_method_default_setup_particles
+// psc_method_default_set_ic_particles
 
 static void
-psc_method_default_setup_particles(struct psc_method *method, struct psc *psc,
+psc_method_default_set_ic_particles(struct psc_method *method, struct psc *psc,
 				   int *n_prts_by_patch)
 {
   psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
@@ -44,13 +44,13 @@ psc_method_default_setup_particles(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
-// psc_method_default_setup_fields
+// psc_method_default_set_ic_fields
 
 static void
-psc_method_default_setup_fields(struct psc_method *method, struct psc *psc)
+psc_method_default_set_ic_fields(struct psc_method *method, struct psc *psc)
 {
   // set fields E^{n+1/2}, B^{n+1/2}
-  psc_setup_fields(psc);
+  psc_set_ic_fields(psc);
 }
 
 // ----------------------------------------------------------------------
@@ -84,9 +84,9 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 struct psc_method_ops psc_method_ops_default = {
   .name                          = "default",
   .do_setup                      = psc_method_default_do_setup,
-  .setup_fields                  = psc_method_default_setup_fields,
   .setup_partition               = psc_method_default_setup_partition,
-  .setup_particles               = psc_method_default_setup_particles,
+  .set_ic_particles              = psc_method_default_set_ic_particles,
+  .set_ic_fields                 = psc_method_default_set_ic_fields,
   .initialize                    = psc_method_default_initialize,
   .output                        = psc_method_default_output,
 };

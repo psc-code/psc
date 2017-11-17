@@ -544,7 +544,7 @@ psc_harris_setup(struct psc *psc)
   vpic_simulation_init_split(sub);
   
   // set i.c. on E^{n+1/2}, B^{n+1/2}
-  psc_setup_fields(psc);
+  psc_set_ic_fields(psc);
 
   // set particles x^{n+1/2}, p^{n+1/2}
   struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);

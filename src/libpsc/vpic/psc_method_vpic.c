@@ -36,7 +36,6 @@ static struct param psc_method_vpic_descr[] = {
 static void
 psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 {
-  struct psc_method_vpic *sub = psc_method_vpic(method);
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "*** Initializing\n");
@@ -142,11 +141,11 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_setup_particles
+// psc_method_vpic_set_ic_particles
 
 static void
-psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
-				int *n_prts_by_patch)
+psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
+				 int *n_prts_by_patch)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -163,10 +162,10 @@ psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_setup_fields
+// psc_method_vpic_set_ic_fields
 
 static void
-psc_method_vpic_setup_fields(struct psc_method *method, struct psc *psc)
+psc_method_vpic_set_ic_fields(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
   
@@ -184,7 +183,7 @@ psc_method_vpic_setup_fields(struct psc_method *method, struct psc *psc)
     // specificy a field i.c., clear out whatever the deck did first.
     psc_mfields_zero_range(psc->flds, 0, psc->flds->nr_fields);
     // This does the usual PSC initialization.
-    psc_setup_fields(psc);
+    psc_set_ic_fields(psc);
   }
 }
 
@@ -289,9 +288,9 @@ struct psc_method_ops psc_method_ops_vpic = {
   .size                          = sizeof(struct psc_method_vpic),
   .param_descr                   = psc_method_vpic_descr,
   .do_setup                      = psc_method_vpic_do_setup,
-  .setup_fields                  = psc_method_vpic_setup_fields,
   .setup_partition               = psc_method_vpic_setup_partition,
-  .setup_particles               = psc_method_vpic_setup_particles,
+  .set_ic_particles              = psc_method_vpic_set_ic_particles,
+  .set_ic_fields                 = psc_method_vpic_set_ic_fields,
   .initialize                    = psc_method_vpic_initialize,
   .output                        = psc_method_vpic_output,
 };

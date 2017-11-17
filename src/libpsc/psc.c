@@ -480,14 +480,13 @@ _psc_setup(struct psc *psc)
   psc_setup_base_mprts(psc);
   
   // set particles x^{n+1/2}, p^{n+1/2}
-  psc_method_setup_particles(psc->method, psc, n_prts_by_patch);
+  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch);
 
   free(n_prts_by_patch);
 
   // create and set up base mflds
   psc_setup_base_mflds(psc);
-  // set i.c. on E^{n+1/2}, B^{n+1/2}
-  psc_method_setup_fields(psc->method, psc);
+  psc_method_set_ic_fields(psc->method, psc);
 
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
@@ -838,10 +837,12 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_fields_default
+// psc_set_ic_fields_default
+//
+// FIXME, eventually we don't need to do J anymore
 
 void
-psc_setup_fields_default(struct psc *psc)
+psc_set_ic_fields_default(struct psc *psc)
 {
   double (*init_field)(struct psc *psc, double x[3], int m);
   init_field = psc_ops(psc)->init_field;
@@ -884,16 +885,18 @@ psc_setup_fields_default(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_fields
+// psc_set_ic_fields
+//
+// set i.c. on E^{n+1/2}, B^{n+1/2}
 
 void
-psc_setup_fields(struct psc *psc)
+psc_set_ic_fields(struct psc *psc)
 {
   // type-specific other initial condition
   if (psc_ops(psc)->setup_fields) {
     psc_ops(psc)->setup_fields(psc, psc->flds);
   } else {
-    psc_setup_fields_default(psc);
+    psc_set_ic_fields_default(psc);
   }
 }
 

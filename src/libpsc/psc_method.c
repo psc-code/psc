@@ -30,28 +30,28 @@ psc_method_setup_partition(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
-// psc_method_setup_particles
+// psc_method_set_ic_particles
 
 void
-psc_method_setup_particles(struct psc_method *method, struct psc *psc,
-			   int *n_prts_by_patch)
+psc_method_set_ic_particles(struct psc_method *method, struct psc *psc,
+			    int *n_prts_by_patch)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
-  assert(ops && ops->setup_particles);
+  assert(ops && ops->set_ic_particles);
 
-  ops->setup_particles(method, psc, n_prts_by_patch);
+  ops->set_ic_particles(method, psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
-// psc_method_setup_fields
+// psc_method_set_ic_fields
 
 void
-psc_method_setup_fields(struct psc_method *method, struct psc *psc)
+psc_method_set_ic_fields(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
-  assert(ops && ops->setup_fields);
+  assert(ops && ops->set_ic_fields);
 
-  ops->setup_fields(method, psc);
+  ops->set_ic_fields(method, psc);
 }
 
 // ----------------------------------------------------------------------

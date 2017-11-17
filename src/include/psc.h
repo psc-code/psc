@@ -253,9 +253,11 @@ struct psc_particle_npt {
 
 struct psc_ops {
   MRC_SUBCLASS_OPS(struct psc);
+  // FIXME setup_particles -> set_ic_particles
   void (*setup_particles)(struct psc *psc, int *nr_particles_by_patch, bool count_only);
   void (*init_npt)(struct psc *psc, int kind, double x[3],
 		   struct psc_particle_npt *npt);
+  // FIXME setup_fields -> set_ic_fields
   void (*setup_fields)(struct psc *psc, struct psc_mfields *flds);
   double (*init_field)(struct psc *psc, double x[3], int m);
   void (*integrate)(struct psc *psc);
@@ -371,8 +373,8 @@ void psc_setup_particle(struct psc *psc, struct psc_particle_double *prt, struct
 			int p, double xx[3]);
 void psc_setup_partition(struct psc *psc, int *nr_particles_by_patch);
 void psc_setup_particles(struct psc *psc, int *nr_particles_by_patch);
-void psc_setup_fields(struct psc *psc);
-void psc_setup_fields_default(struct psc *psc);
+void psc_set_ic_fields(struct psc *psc);
+void psc_set_ic_fields_default(struct psc *psc);
 void psc_output(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
