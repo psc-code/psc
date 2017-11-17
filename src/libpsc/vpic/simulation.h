@@ -103,8 +103,8 @@ inline void Grid::setup(double dx[3], double dt, double cvac, double eps0)
   g_->eps0 = eps0;
 }
 
-inline Grid::Grid(grid *g) :
-  g_(g)
+inline Grid::Grid(grid *g)
+  : g_(g)
 {
 }
 
@@ -132,19 +132,81 @@ struct MaterialList {
   MaterialList(material_t*& m);
 
   material_t* append(material_t* m);
-
+  bool empty();
+  
   //private:
   material_t *&ml_;
 };
 
-inline MaterialList::MaterialList(material_t*& m) :
-  ml_(m)
+inline MaterialList::MaterialList(material_t*& m)
+  : ml_(m)
 {
 }
 
 inline material_t* MaterialList::append(material_t* m)
 {
   return ::append_material(m, &ml_);
+}
+
+inline bool MaterialList::empty()
+{
+  return !ml_;
+}
+
+// ======================================================================
+// FieldArray
+
+struct FieldArray {
+  FieldArray(field_array_t*& a);
+
+  field_array_t *&a_;
+};
+
+inline FieldArray::FieldArray(field_array_t*& a)
+  : a_(a)
+{
+}
+
+// ======================================================================
+// InterpolatorArray
+
+struct InterpolatorArray {
+  InterpolatorArray(interpolator_array_t*& a);
+
+  interpolator_array_t *&a_;
+};
+
+inline InterpolatorArray::InterpolatorArray(interpolator_array_t*& a)
+  : a_(a)
+{
+}
+
+// ======================================================================
+// AccumulatorArray
+
+struct AccumulatorArray {
+  AccumulatorArray(accumulator_array_t*& a);
+
+  accumulator_array_t *&a_;
+};
+
+inline AccumulatorArray::AccumulatorArray(accumulator_array_t*& a)
+  : a_(a)
+{
+}
+
+// ======================================================================
+// HydroArray
+
+struct HydroArray {
+  HydroArray(hydro_array_t*& a);
+
+  hydro_array_t *&a_;
+};
+
+inline HydroArray::HydroArray(hydro_array_t*& a)
+  : a_(a)
+{
 }
 
 // ======================================================================
@@ -170,13 +232,22 @@ struct Simulation {
   globals_diag *pDiag_;
   Grid grid_;
   MaterialList material_list_;
+  FieldArray field_array_;
+  InterpolatorArray interpolator_array_;
+  AccumulatorArray accumulator_array_;
+  HydroArray hydro_array_;
 };
 
 // ----------------------------------------------------------------------
 // Simulation implementation
 
 inline Simulation::Simulation()
-  : grid_(simulation->grid), material_list_(simulation->material_list)
+  : grid_(simulation->grid),
+    material_list_(simulation->material_list),
+    field_array_(simulation->field_array),
+    interpolator_array_(simulation->interpolator_array),
+    accumulator_array_(simulation->accumulator_array),
+    hydro_array_(simulation->hydro_array)
 {
 }
 
@@ -234,24 +305,22 @@ inline struct material *Simulation::define_material(const char *name,
 
 inline void Simulation::define_field_array(struct field_array *fa, double damp)
 {
-  //  simulation->define_field_array(fa, damp);
   grid_t *grid = grid_.g_;
  
   if (grid->nx<1 || grid->ny<1 || grid->nz<1 ) {
     mprintf("Define your grid before defining the field array\n");
     assert(0);
   }
-  if (!simulation->material_list) {
+  if (material_list_.empty()) {
     mprintf("Define your materials before defining the field array\n");
     assert(0);
   }
   
-  simulation->field_array = fa ? fa :
-    new_standard_field_array(grid, simulation->material_list, damp);
-
-  simulation->interpolator_array = new_interpolator_array(grid);
-  simulation->accumulator_array = new_accumulator_array(grid);
-  simulation->hydro_array = new_hydro_array(grid);
+  field_array_.a_ = fa ? fa :
+    ::new_standard_field_array(grid, simulation->material_list, damp);
+  interpolator_array_.a_ = new_interpolator_array(grid);
+  accumulator_array_.a_ = new_accumulator_array(grid);
+  hydro_array_.a_ = new_hydro_array(grid);
  
   // Pre-size communications buffers. This is done to get most memory
   // allocation over with before the simulation starts running
