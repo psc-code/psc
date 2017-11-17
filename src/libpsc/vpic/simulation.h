@@ -126,6 +126,28 @@ inline void Grid::set_pbc(int boundary, int pbc)
 }
 
 // ======================================================================
+// MaterialList
+
+struct MaterialList {
+  MaterialList(material_t*& m);
+
+  material_t* append(material_t* m);
+
+  //private:
+  material_t *&ml_;
+};
+
+inline MaterialList::MaterialList(material_t*& m) :
+  ml_(m)
+{
+}
+
+inline material_t* MaterialList::append(material_t* m)
+{
+  return ::append_material(m, &ml_);
+}
+
+// ======================================================================
 // class Simulation
 
 struct Simulation {
@@ -147,13 +169,14 @@ struct Simulation {
   //private:
   globals_diag *pDiag_;
   Grid grid_;
+  MaterialList material_list_;
 };
 
 // ----------------------------------------------------------------------
 // Simulation implementation
 
 inline Simulation::Simulation()
-  : grid_(simulation->grid)
+  : grid_(simulation->grid), material_list_(simulation->material_list)
 {
 }
 
@@ -202,11 +225,11 @@ inline struct material *Simulation::define_material(const char *name,
 						    double eps, double mu=1.,
 						    double sigma=0., double zeta=0.)
 {
-  return append_material(material(name,
-				  eps,   eps,   eps,
-				  mu,    mu,    mu,
-				  sigma, sigma, sigma,
-				  zeta,  zeta,  zeta), &simulation->material_list);
+  return material_list_.append(material(name,
+				       eps,   eps,   eps,
+				       mu,    mu,    mu,
+				       sigma, sigma, sigma,
+				       zeta,  zeta,  zeta));
 }
 
 inline void Simulation::define_field_array(struct field_array *fa, double damp)
