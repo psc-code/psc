@@ -79,6 +79,53 @@ inline Rng* RngPool::operator[](int n)
 }
 
 // ======================================================================
+// Grid
+
+struct Grid {
+  Grid(grid *grid);
+  
+  void setup(double dx[3], double dt, double cvac, double eps0);
+  void partition_periodic_box(double xl[3], double xh[3], int gdims[3], int np[3]);
+  void set_fbc(int boundary, int fbc);
+  void set_pbc(int boundary, int pbc);
+
+private:
+  grid *g_;
+};
+
+inline void Grid::setup(double dx[3], double dt, double cvac, double eps0)
+{
+  g_->dx = dx[0];
+  g_->dy = dx[1];
+  g_->dz = dx[2];
+  g_->dt = dt;
+  g_->cvac = cvac;
+  g_->eps0 = eps0;
+}
+
+inline Grid::Grid(grid *g) :
+  g_(g)
+{
+}
+
+inline void Grid::partition_periodic_box(double xl[3], double xh[3],
+					 int gdims[3], int np[3])
+{
+  ::partition_periodic_box(g_, xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
+			   gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
+}
+
+inline void Grid::set_fbc(int boundary, int fbc)
+{
+  ::set_fbc(g_, boundary, fbc);
+}
+
+inline void Grid::set_pbc(int boundary, int pbc)
+{
+  ::set_pbc(g_, boundary, pbc);
+}
+
+// ======================================================================
 // class Simulation
 
 struct Simulation {
@@ -92,17 +139,18 @@ struct Simulation {
   void set_domain_particle_bc(struct Simulation *sim, int boundary, int bc);
   
   RngPool rng_pool;
+
   //private:
   globals_diag *pDiag_;
-  grid *grid_;
+  Grid grid_;
 };
 
 // ----------------------------------------------------------------------
 // Simulation implementation
 
 inline Simulation::Simulation()
+  : grid_(simulation->grid)
 {
-  grid_ = simulation->grid;
 }
 
 inline Simulation::~Simulation()
@@ -112,12 +160,7 @@ inline Simulation::~Simulation()
 
 inline void Simulation::setup_grid(double dx[3], double dt, double cvac, double eps0)
 {
-  grid_->dx = dx[0];
-  grid_->dy = dx[1];
-  grid_->dz = dx[2];
-  grid_->dt = dt;
-  grid_->cvac = cvac;
-  grid_->eps0 = eps0;
+  grid_.setup(dx, dt, cvac, eps0);
 }
 
 inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdims[3],
@@ -126,8 +169,7 @@ inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdi
   simulation->px = size_t(np[0]);
   simulation->py = size_t(np[1]);
   simulation->pz = size_t(np[2]);
-  partition_periodic_box(grid_, xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
-			 gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
+  grid_.partition_periodic_box(xl, xh, gdims, np);
 }
 
 inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary, int bc)
@@ -138,7 +180,7 @@ inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary
   case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
   default: assert(0);
   }
-  set_fbc(grid_, boundary, fbc);
+  grid_.set_fbc(boundary, fbc);
 }
 
 inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
@@ -149,7 +191,7 @@ inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int bound
   case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
   default: assert(0);
   }
-  set_pbc(grid_, boundary, pbc);
+  grid_.set_pbc(boundary, pbc);
 }
 
 #endif
