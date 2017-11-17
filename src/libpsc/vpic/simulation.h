@@ -89,7 +89,7 @@ struct Grid {
   void set_fbc(int boundary, int fbc);
   void set_pbc(int boundary, int pbc);
 
-private:
+  //private:
   grid *g_;
 };
 
@@ -234,7 +234,42 @@ inline struct material *Simulation::define_material(const char *name,
 
 inline void Simulation::define_field_array(struct field_array *fa, double damp)
 {
-  simulation->define_field_array(fa, damp);
+  //  simulation->define_field_array(fa, damp);
+  grid_t *grid = grid_.g_;
+ 
+  if (grid->nx<1 || grid->ny<1 || grid->nz<1 ) {
+    mprintf("Define your grid before defining the field array\n");
+    assert(0);
+  }
+  if (!simulation->material_list) {
+    mprintf("Define your materials before defining the field array\n");
+    assert(0);
+  }
+  
+  simulation->field_array = fa ? fa :
+    new_standard_field_array(grid, simulation->material_list, damp);
+
+  simulation->interpolator_array = new_interpolator_array(grid);
+  simulation->accumulator_array = new_accumulator_array(grid);
+  simulation->hydro_array = new_hydro_array(grid);
+ 
+  // Pre-size communications buffers. This is done to get most memory
+  // allocation over with before the simulation starts running
+  
+  int nx1 = grid->nx+1, ny1 = grid->ny+1, nz1 = grid->nz+1;
+  mp_size_recv_buffer(grid->mp, BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  mp_size_recv_buffer(grid->mp, BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  mp_size_recv_buffer(grid->mp, BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
+  mp_size_recv_buffer(grid->mp, BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
+  mp_size_recv_buffer(grid->mp, BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
+  mp_size_recv_buffer(grid->mp, BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
+  
+  mp_size_send_buffer(grid->mp, BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  mp_size_send_buffer(grid->mp, BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  mp_size_send_buffer(grid->mp, BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
+  mp_size_send_buffer(grid->mp, BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
+  mp_size_send_buffer(grid->mp, BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
+  mp_size_send_buffer(grid->mp, BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
 }
 
 
