@@ -131,16 +131,6 @@ struct user_global_t {
 };
 
 // ----------------------------------------------------------------------
-// vpic_simulation_init_split
-
-void vpic_simulation_init_split(psc_harris *sub)
-{
-  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
-  
-  user_init(simulation, sub, &user_global->diag);
-}
-
-// ----------------------------------------------------------------------
 // vpic_simulation_set_params
 
 void vpic_simulation_set_params(int num_step,
@@ -298,6 +288,11 @@ void vpic_simulation_inject_particle(struct species * sp,
 				     double w,  double age, bool update_rhob)
 {
   simulation->inject_particle(sp, x, y, z, ux, uy, uz, w, age, update_rhob);
+}
+
+struct species *vpic_simulation_find_species(const char *name)
+{
+  return simulation->find_species(name);
 }
 
 

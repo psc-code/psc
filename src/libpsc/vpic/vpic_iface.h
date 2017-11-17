@@ -258,7 +258,6 @@ struct vpic_simulation_info {
 void vpic_base_init(int *pargc, char ***pargv);
 
 void vpic_simulation_new(void);
-void vpic_simulation_init_split(struct psc_harris *harris);
 void vpic_simulation_init(struct vpic_simulation_info *info);
 void vpic_simulation_set_params(int num_step,
 				int status_interval,
@@ -293,6 +292,7 @@ void vpic_simulation_inject_particle(struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,
 				     double w,  double age, bool update_rhob);
+struct species *vpic_simulation_find_species(const char *name);
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */

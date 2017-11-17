@@ -29,9 +29,6 @@ struct globals_diag {
 
 // ----------------------------------------------------------------------
 
-void user_init(vpic_simulation *simulation, struct psc_harris *harris,
-	       globals_diag *diag);
-
 void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
 void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
 				       species_t *electron, species_t *ion);

@@ -22,6 +22,8 @@
 
 #include "libpsc/vpic/vpic_iface.h"
 
+static void psc_harris_set_ic_particles(struct psc *psc);
+
 // ----------------------------------------------------------------------
 
 void *
@@ -539,19 +541,17 @@ psc_harris_setup(struct psc *psc)
 
   psc_setup_base_mprts(psc);
   psc_setup_base_mflds(psc);
+
+  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
+  psc_harris_set_ic_particles(psc);
+  psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
+
+  psc_set_ic_fields(psc);
   
-  vpic_simulation_init_split(sub);
   vpic_diagnostics_setup();
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   
-  // set i.c. on E^{n+1/2}, B^{n+1/2}
-  psc_set_ic_fields(psc);
-
-  // set particles x^{n+1/2}, p^{n+1/2}
-  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
-  psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
-
   psc_setup_member_objs(psc);
 }
 
@@ -589,7 +589,105 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_harris_setup_particles
+// psc_harris_set_ic_particles
+//
+// set particles x^{n+1/2}, p^{n+1/2}
+
+static void
+psc_harris_set_ic_particles(struct psc *psc)
+{
+  struct psc_harris *sub = psc_harris(psc);
+  struct globals_physics *phys = &sub->phys;
+  MPI_Comm comm = psc_comm(psc);
+
+  double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
+  double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
+  double weight_s = phys->weight_s;
+  double tanhf = phys->tanhf, L = phys->L;
+  double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
+  double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
+  double weight_b = phys->weight_b;
+  //grid_t *grid = simulation->grid;
+  int n_global_patches = sub->n_global_patches;
+  
+  // LOAD PARTICLES
+
+  mpi_printf(comm, "Loading particles\n");
+
+  // Do a fast load of the particles
+
+  int rank;
+  MPI_Comm_rank(comm, &rank);
+  vpic_simulation_seed_entropy(rank);  //Generators desynchronized
+  struct rng *rng = vpic_simulation_rng(0);
+
+  assert(psc->nr_patches > 0);
+  struct psc_patch *patch = &psc->patch[0];
+  double xmin = patch->xb[0], xmax = patch->xb[0] + patch->dx[0] * patch->ldims[0];
+  double ymin = patch->xb[1], ymax = patch->xb[1] + patch->dx[1] * patch->ldims[1];
+  double zmin = patch->xb[2], zmax = patch->xb[2] + patch->dx[2] * patch->ldims[2];
+
+  struct species *electron = vpic_simulation_find_species("electron");
+  struct species *ion = vpic_simulation_find_species("ion");
+  
+  // Load Harris population
+
+  mpi_printf(comm, "-> Main Harris Sheet\n");
+
+  for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
+    double x, y, z, ux, uy, uz, d0 ;
+
+    do {
+      z = L*atanh(vpic_simulation_uniform( rng, -1, 1)*tanhf);
+    } while( z<= zmin || z>=zmax );
+    x = vpic_simulation_uniform(rng, xmin, xmax);
+    y = vpic_simulation_uniform(rng, ymin, ymax);
+
+    // inject_particles() will return an error for particles no on this
+    // node and will not inject particle locally
+
+    ux = vpic_simulation_normal(rng, 0, vthe);
+    uy = vpic_simulation_normal(rng, 0, vthe);
+    uz = vpic_simulation_normal(rng, 0, vthe);
+    d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
+    uy = d0*cs - ux*sn;
+    ux = d0*sn + ux*cs;
+
+    vpic_simulation_inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+
+    ux = vpic_simulation_normal(rng, 0, vthi);
+    uy = vpic_simulation_normal(rng, 0, vthi);
+    uz = vpic_simulation_normal(rng, 0, vthi);
+    d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
+    uy = d0*cs - ux*sn;
+    ux = d0*sn + ux*cs;
+
+    vpic_simulation_inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+  }
+
+  mpi_printf(comm, "-> Background Population\n");
+
+  for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
+    double x = vpic_simulation_uniform(rng, xmin, xmax);
+    double y = vpic_simulation_uniform(rng, ymin, ymax);
+    double z = vpic_simulation_uniform(rng, zmin, zmax);
+
+    vpic_simulation_inject_particle(electron, x, y, z,
+				    vpic_simulation_normal(rng, 0, vtheb),
+				    vpic_simulation_normal(rng, 0, vtheb),
+				    vpic_simulation_normal(rng, 0, vtheb),
+				    weight_b, 0, 0);
+    
+    vpic_simulation_inject_particle(ion, x, y, z,
+				    vpic_simulation_normal(rng, 0, vthib),
+				    vpic_simulation_normal(rng, 0, vthib),
+				    vpic_simulation_normal(rng, 0, vthib),
+				    weight_b, 0 , 0);
+  }
+
+  mpi_printf(comm, "Finished loading particles\n");
+}
+
 
 #define inject_particle(knd, x, y, z, ux, uy, uz, weight, a, b) do {	\
     double Vi = 1./(psc->patch[0].dx[0] * psc->patch[0].dx[1] * psc->patch[0].dx[2]); \
@@ -604,6 +702,10 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
     prt.kind = knd;							\
     mparticles_patch_push_back(mprts, p, prt);				\
   } while (0)
+
+
+// ----------------------------------------------------------------------
+// psc_harris_setup_particles
 
 static void
 psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
