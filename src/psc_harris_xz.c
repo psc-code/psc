@@ -620,8 +620,8 @@ psc_harris_set_ic_particles(struct psc *psc)
 
   int rank;
   MPI_Comm_rank(comm, &rank);
-  vpic_simulation_seed_entropy(rank);  //Generators desynchronized
-  struct rng *rng = vpic_simulation_rng(0);
+  Simulation_rngPool_seed(rank);  //Generators desynchronized
+  struct rng *rng = Simulation_rngPool_get(0);
 
   assert(psc->nr_patches > 0);
   struct psc_patch *patch = &psc->patch[0];
@@ -639,17 +639,17 @@ psc_harris_set_ic_particles(struct psc *psc)
     particle_inject_t prt;
 
     do {
-      z = L*atanh(vpic_simulation_uniform(rng, -1., 1.)*tanhf);
+      z = L*atanh(Rng_uniform(rng, -1., 1.)*tanhf);
     } while (z <= zmin || z >= zmax);
-    x = vpic_simulation_uniform(rng, xmin, xmax);
-    y = vpic_simulation_uniform(rng, ymin, ymax);
+    x = Rng_uniform(rng, xmin, xmax);
+    y = Rng_uniform(rng, ymin, ymax);
 
     // inject_particles() will return an error for particles no on this
     // node and will not inject particle locally
 
-    ux = vpic_simulation_normal(rng, 0, vthe);
-    uy = vpic_simulation_normal(rng, 0, vthe);
-    uz = vpic_simulation_normal(rng, 0, vthe);
+    ux = Rng_normal(rng, 0, vthe);
+    uy = Rng_normal(rng, 0, vthe);
+    uz = Rng_normal(rng, 0, vthe);
     d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
     uy = d0*cs - ux*sn;
     ux = d0*sn + ux*cs;
@@ -661,9 +661,9 @@ psc_harris_set_ic_particles(struct psc *psc)
     psc_mparticles_inject(mprts, 0, &prt);
     //inject_particle(electron, &prt, 0., 0);
 
-    ux = vpic_simulation_normal(rng, 0, vthi);
-    uy = vpic_simulation_normal(rng, 0, vthi);
-    uz = vpic_simulation_normal(rng, 0, vthi);
+    ux = Rng_normal(rng, 0, vthi);
+    uy = Rng_normal(rng, 0, vthi);
+    uz = Rng_normal(rng, 0, vthi);
     d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
     uy = d0*cs - ux*sn;
     ux = d0*sn + ux*cs;
@@ -677,21 +677,21 @@ psc_harris_set_ic_particles(struct psc *psc)
 
   for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
     particle_inject_t prt;
-    double x = vpic_simulation_uniform(rng, xmin, xmax);
-    double y = vpic_simulation_uniform(rng, ymin, ymax);
-    double z = vpic_simulation_uniform(rng, zmin, zmax);
+    double x = Rng_uniform(rng, xmin, xmax);
+    double y = Rng_uniform(rng, ymin, ymax);
+    double z = Rng_uniform(rng, zmin, zmax);
 
     prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
-    prt.u[0] = vpic_simulation_normal(rng, 0, vtheb);
-    prt.u[1] = vpic_simulation_normal(rng, 0, vtheb);
-    prt.u[2] = vpic_simulation_normal(rng, 0, vtheb);
+    prt.u[0] = Rng_normal(rng, 0, vtheb);
+    prt.u[1] = Rng_normal(rng, 0, vtheb);
+    prt.u[2] = Rng_normal(rng, 0, vtheb);
     prt.w = weight_b;
     prt.kind = KIND_ELECTRON;
     psc_mparticles_inject(mprts, 0, &prt);
     
-    prt.u[0] = vpic_simulation_normal(rng, 0, vthib);
-    prt.u[1] = vpic_simulation_normal(rng, 0, vthib);
-    prt.u[2] = vpic_simulation_normal(rng, 0, vthib);
+    prt.u[0] = Rng_normal(rng, 0, vthib);
+    prt.u[1] = Rng_normal(rng, 0, vthib);
+    prt.u[2] = Rng_normal(rng, 0, vthib);
     prt.kind = KIND_ION;
     psc_mparticles_inject(mprts, 0, &prt);
   }

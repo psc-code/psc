@@ -139,6 +139,12 @@ void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
 void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);
 
+void Simulation_rngPool_seed(int base);
+struct rng *Simulation_rngPool_get(int n);
+
+double Rng_uniform(struct rng *rng, double lo, double hi);
+double Rng_normal(struct rng *rng, double mu, double sigma);
+
 // ----------------------------------------------------------------------
 // vpic_harris_params
 
@@ -300,11 +306,6 @@ void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
 struct species * vpic_simulation_define_species(const char *name, double q, double m,
 						double max_local_np, double max_local_nm,
 						double sort_interval, double sort_out_of_place);
-void vpic_simulation_seed_entropy(int base);
-struct rng *vpic_simulation_rng(int n);
-double vpic_simulation_uniform(struct rng *rng, double lo, double hi);
-double vpic_simulation_normal(struct rng *rng, double mu, double sigma);
-
 void vpic_simulation_inject_particle(struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,

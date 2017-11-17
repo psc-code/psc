@@ -256,26 +256,6 @@ vpic_simulation_define_species(const char *name, double q, double m,
 				    sort_interval, sort_out_of_place);
 }
 
-void vpic_simulation_seed_entropy(int base)
-{
-  simulation->seed_entropy(base);
-}
-
-struct rng *vpic_simulation_rng(int n)
-{
-  return simulation->rng(n);
-}
-
-double vpic_simulation_uniform(struct rng *rng, double lo, double hi)
-{
-  return simulation->uniform(rng, lo, hi);
-}
-
-double vpic_simulation_normal(struct rng *rng, double mu, double sigma)
-{
-  return simulation->normal(rng, mu, sigma);
-}
-
 void vpic_simulation_inject_particle(struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,
