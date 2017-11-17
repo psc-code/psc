@@ -42,17 +42,17 @@ void Simulation_rngPool_seed(int base)
   simulation->seed_entropy(base);
 }
 
-struct rng *Simulation_rngPool_get(int n)
+Rng *Simulation_rngPool_get(int n)
 {
-  return simulation->rng(n);
+  return static_cast<Rng *>(simulation->rng(n));
 }
 
-double Rng_uniform(struct rng *rng, double lo, double hi)
+double Rng_uniform(struct Rng *rng, double lo, double hi)
 {
   return simulation->uniform(rng, lo, hi);
 }
 
-double Rng_normal(struct rng *rng, double mu, double sigma)
+double Rng_normal(struct Rng *rng, double mu, double sigma)
 {
   return simulation->normal(rng, mu, sigma);
 }

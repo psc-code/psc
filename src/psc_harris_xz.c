@@ -621,7 +621,7 @@ psc_harris_set_ic_particles(struct psc *psc)
   int rank;
   MPI_Comm_rank(comm, &rank);
   Simulation_rngPool_seed(rank);  //Generators desynchronized
-  struct rng *rng = Simulation_rngPool_get(0);
+  struct Rng *rng = Simulation_rngPool_get(0);
 
   assert(psc->nr_patches > 0);
   struct psc_patch *patch = &psc->patch[0];

@@ -140,10 +140,10 @@ void Simulation_diagnostics_setup(struct Simulation *sim);
 void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);
 
 void Simulation_rngPool_seed(int base);
-struct rng *Simulation_rngPool_get(int n);
+struct Rng *Simulation_rngPool_get(int n);
 
-double Rng_uniform(struct rng *rng, double lo, double hi);
-double Rng_normal(struct rng *rng, double mu, double sigma);
+double Rng_uniform(struct Rng *rng, double lo, double hi);
+double Rng_normal(struct Rng *rng, double mu, double sigma);
 
 // ----------------------------------------------------------------------
 // vpic_harris_params
