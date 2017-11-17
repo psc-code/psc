@@ -138,7 +138,7 @@ inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary
   case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
   default: assert(0);
   }
-  simulation->set_domain_field_bc(boundary, fbc);
+  set_fbc(grid_, boundary, fbc);
 }
 
 inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
@@ -149,7 +149,7 @@ inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int bound
   case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
   default: assert(0);
   }
-  simulation->set_domain_particle_bc(boundary, pbc);
+  set_pbc(grid_, boundary, pbc);
 }
 
 #endif
