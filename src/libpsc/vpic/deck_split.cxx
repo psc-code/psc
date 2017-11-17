@@ -24,7 +24,6 @@
 
 // ======================================================================
 
-static void user_init_log(vpic_harris_params *prm, vpic_params *vprm, globals_physics *phys);
 static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys,
 				species_t *electron, species_t *ion);
@@ -40,8 +39,6 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
   species_t *electron = simulation->find_species("electron");
   species_t *ion = simulation->find_species("ion");
   
-  user_init_log(harris, vprm, phys);
-
   user_load_fields(simulation, harris, phys);
 
   user_load_particles(simulation, harris, phys, electron, ion);
@@ -53,66 +50,6 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
 
 // ======================================================================
 // initialization
-
-// ----------------------------------------------------------------------
-// user_init_log
-
-static void user_init_log(vpic_harris_params *prm,
-			  vpic_params *vprm, globals_physics *phys)
-{
-  MPI_Comm comm = MPI_COMM_WORLD;
-  mpi_printf(comm, "***********************************************\n");
-  mpi_printf(comm, "* Topology: %d x %d x %d\n", vprm->np[0], vprm->np[1], vprm->np[2]);
-  mpi_printf(comm, "tanhf    = %g\n", phys->tanhf);
-  mpi_printf(comm, "L_di     = %g\n", prm->L_di);
-  mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
-  mpi_printf(comm, "Ti/Te    = %g\n", prm->Ti_Te) ;
-  mpi_printf(comm, "nb/n0    = %g\n", prm->nb_n0) ;
-  mpi_printf(comm, "wpe/wce  = %g\n", prm->wpe_wce);
-  mpi_printf(comm, "mi/me    = %g\n", prm->mi_me);
-  mpi_printf(comm, "theta    = %g\n", prm->theta);
-  mpi_printf(comm, "Lpert/Lx = %g\n", prm->Lpert_Lx);
-  mpi_printf(comm, "dbz/b0   = %g\n", prm->dbz_b0);
-  mpi_printf(comm, "taui     = %g\n", prm->taui);
-  mpi_printf(comm, "t_intervali = %g\n", prm->t_intervali);
-  //  mpi_printf(comm, "num_step = %g\n", simulation->num_step);
-  mpi_printf(comm, "Lx/di = %g\n", phys->Lx/phys->di);
-  mpi_printf(comm, "Lx/de = %g\n", phys->Lx/phys->de);
-  mpi_printf(comm, "Ly/di = %g\n", phys->Ly/phys->di);
-  mpi_printf(comm, "Ly/de = %g\n", phys->Ly/phys->de);
-  mpi_printf(comm, "Lz/di = %g\n", phys->Lz/phys->di);
-  mpi_printf(comm, "Lz/de = %g\n", phys->Lz/phys->de);
-  mpi_printf(comm, "nx = %d\n", vprm->gdims[0]);
-  mpi_printf(comm, "ny = %d\n", vprm->gdims[1]);
-  mpi_printf(comm, "nz = %d\n", vprm->gdims[2]);
-  mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
-  //  mpi_printf(comm, "nproc = %g\n", simulation->nproc() );
-  mpi_printf(comm, "nppc = %g\n", prm->nppc);
-  mpi_printf(comm, "b0 = %g\n", phys->b0);
-  mpi_printf(comm, "v_A (based on nb) = %g\n", phys->v_A);
-  mpi_printf(comm, "di = %g\n", phys->di);
-  mpi_printf(comm, "Ne = %g\n", phys->Ne);
-  mpi_printf(comm, "Ne_sheet = %g\n", phys->Ne_sheet);
-  mpi_printf(comm, "Ne_back = %g\n", phys->Ne_back);
-  mpi_printf(comm, "total # of particles = %g\n", 2*phys->Ne);
-  mpi_printf(comm, "dt*wpe = %g\n", phys->wpe*phys->dt);
-  mpi_printf(comm, "dt*wce = %g\n", phys->wce*phys->dt);
-  mpi_printf(comm, "dt*wci = %g\n", phys->wci*phys->dt);
-  mpi_printf(comm, "dx/de = %g\n", phys->Lx/(phys->de*vprm->gdims[0]));
-  mpi_printf(comm, "dy/de = %g\n", phys->Ly/(phys->de*vprm->gdims[1]));
-  mpi_printf(comm, "dz/de = %g\n", phys->Lz/(phys->de*vprm->gdims[2]));
-  mpi_printf(comm, "dx/rhoi = %g\n", (phys->Lx/vprm->gdims[0])/(phys->vthi/phys->wci));
-  mpi_printf(comm, "dx/rhoe = %g\n", (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wce));
-  mpi_printf(comm, "L/debye = %g\n", phys->L/(phys->vthe/phys->wpe));
-  mpi_printf(comm, "dx/debye = %g\n", (phys->Lx/vprm->gdims[0])/(phys->vthe/phys->wpe));
-  mpi_printf(comm, "n0 = %g\n", phys->n0);
-  mpi_printf(comm, "vthi/c = %g\n", phys->vthi/phys->c);
-  mpi_printf(comm, "vthe/c = %g\n", phys->vthe/phys->c);
-  mpi_printf(comm, "vdri/c = %g\n", phys->vdri/phys->c);
-  mpi_printf(comm, "vdre/c = %g\n", phys->vdre/phys->c);
-  mpi_printf(comm, "Open BC in x?   = %d\n", prm->open_bc_x);
-  mpi_printf(comm, "Driven BC in z? = %d\n", prm->driven_bc_z);
-}
 
 // ----------------------------------------------------------------------
 // user_load_fields
