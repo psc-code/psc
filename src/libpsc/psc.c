@@ -445,20 +445,11 @@ psc_setup_base_mflds(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_partition_and_particles
-//
-// partition and then set particles x^{n+1/2}, p^{n+1/2}
+// psc_setup_base_mprts
 
 static void
-psc_setup_partition_and_particles(struct psc *psc)
+psc_setup_base_mprts(struct psc *psc)
 {
-  // initial balancing
-  int particle_label_offset;
-  int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
-  psc_method_setup_partition(psc->method, psc, n_prts_by_patch, &particle_label_offset);
-  psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
-    
-  // create base particle data structure
   psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
   psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
@@ -470,11 +461,6 @@ psc_setup_partition_and_particles(struct psc *psc)
   }
   psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
-
-  // set up particles
-  psc_method_setup_particles(psc->method, psc, n_prts_by_patch, particle_label_offset);
-
-  free(n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -485,7 +471,19 @@ _psc_setup(struct psc *psc)
 {
   psc_method_do_setup(psc->method, psc);
 
-  psc_setup_partition_and_particles(psc);
+  // partition and initial balancing
+  int particle_label_offset;
+  int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
+  psc_method_setup_partition(psc->method, psc, n_prts_by_patch, &particle_label_offset);
+  psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
+    
+  // create base particle data structure
+  psc_setup_base_mprts(psc);
+  
+  // set particles x^{n+1/2}, p^{n+1/2}
+  psc_method_setup_particles(psc->method, psc, n_prts_by_patch, particle_label_offset);
+
+  free(n_prts_by_patch);
 
   // create and set up base mflds
   psc_setup_base_mflds(psc);
