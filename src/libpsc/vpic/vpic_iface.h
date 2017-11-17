@@ -128,12 +128,9 @@ void vpic_moments_run(struct vpic_mfields *mflds, struct vpic_mparticles *vmprts
 // vpic_params
 
 struct vpic_params {
-  double cfl_req;
-
   int np[3];    // domain topology
   int gdims[3]; // global dims
 
-  int status_interval;
   int restart_interval;
 };
 
