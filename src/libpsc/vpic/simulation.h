@@ -7,6 +7,8 @@
 #include "vpic_init.h" // FIXME, bad name for _diag
 #include "util/rng/rng.h"
 
+#include <psc.h> // FIXME, only need the BND_* constants
+
 // ======================================================================
 // class Rng
 
@@ -86,6 +88,8 @@ struct Simulation {
   void setup_grid(double dx[3], double dt, double cvac, double eps0);
   void define_periodic_grid(double xl[3], double xh[3], int gdims[3],
 			    int np[3]);
+  void set_domain_field_bc(struct Simulation *sim, int boundary, int bc);
+  void set_domain_particle_bc(struct Simulation *sim, int boundary, int bc);
   
   RngPool rng_pool;
   //private:
@@ -121,6 +125,28 @@ inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdi
 {
   simulation->define_periodic_grid(xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
 				   gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
+}
+
+inline void Simulation::set_domain_field_bc(struct Simulation *sim, int boundary, int bc)
+{
+  int fbc;
+  switch (bc) {
+  case BND_FLD_CONDUCTING_WALL: fbc = pec_fields   ; break;
+  case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
+  default: assert(0);
+  }
+  simulation->set_domain_field_bc(boundary, fbc);
+}
+
+inline void Simulation::set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
+{
+  int pbc;
+  switch (bc) {
+  case BND_PART_REFLECTING: pbc = reflect_particles; break;
+  case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
+  default: assert(0);
+  }
+  simulation->set_domain_particle_bc(boundary, pbc);
 }
 
 #endif

@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+#include <cassert>
+
 extern vpic_simulation *simulation;
 
 // ----------------------------------------------------------------------
@@ -26,6 +28,28 @@ void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
 				     double xh[3], int gdims[3], int np[3])
 {
   sim->define_periodic_grid(xl, xh, gdims, np);
+}
+
+void Simulation_set_domain_field_bc(struct Simulation *sim, int boundary, int bc)
+{
+  int fbc;
+  switch (bc) {
+  case BND_FLD_CONDUCTING_WALL: fbc = pec_fields   ; break;
+  case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
+  default: assert(0);
+  }
+  simulation->set_domain_field_bc(boundary, fbc);
+}
+
+void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
+{
+  int pbc;
+  switch (bc) {
+  case BND_PART_REFLECTING: pbc = reflect_particles; break;
+  case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
+  default: assert(0);
+  }
+  simulation->set_domain_particle_bc(boundary, pbc);
 }
 
 // ----------------------------------------------------------------------

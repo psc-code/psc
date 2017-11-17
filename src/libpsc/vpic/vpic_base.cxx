@@ -140,52 +140,6 @@ void vpic_simulation_set_params(int num_step,
   simulation->clean_div_b_interval = clean_div_b_interval;
 }
 
-// ----------------------------------------------------------------------
-// vpic_simulation_set_domain_field_bc
-
-// FIXME, replicated
-///Possible boundary conditions for fields
-enum {
-  BND_FLD_OPEN,
-  BND_FLD_PERIODIC,
-  BND_FLD_UPML,
-  BND_FLD_TIME,
-  BND_FLD_CONDUCTING_WALL,
-  BND_FLD_ABSORBING,
-};
-
-///Possible boundary conditions for particles
-enum {
-  BND_PART_REFLECTING,
-  BND_PART_PERIODIC,
-  BND_PART_ABSORBING,
-  BND_PART_OPEN,
-};
-
-void
-vpic_simulation_set_domain_field_bc(int boundary, int bc)
-{
-  int fbc;
-  switch (bc) {
-  case BND_FLD_CONDUCTING_WALL: fbc = pec_fields   ; break;
-  case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
-  default: assert(0);
-  }
-  simulation->set_domain_field_bc(boundary, fbc);
-}
-
-void
-vpic_simulation_set_domain_particle_bc(int boundary, int bc)
-{
-  int pbc;
-  switch (bc) {
-  case BND_PART_REFLECTING: pbc = reflect_particles; break;
-  case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
-  default: assert(0);
-  }
-  simulation->set_domain_particle_bc(boundary, pbc);
-}
-
 struct material *vpic_simulation_define_material(const char *name, double eps, double mu,
 				     double sigma, double zeta)
 {

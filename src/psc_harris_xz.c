@@ -277,28 +277,28 @@ psc_harris_setup_domain(struct psc *psc)
   // ***** Set Field Boundary Conditions *****
   if (sub->prm.open_bc_x) {
     mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-    if (left ) vpic_simulation_set_domain_field_bc(BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
-    if (right) vpic_simulation_set_domain_field_bc(BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+    if (left ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
+    if (right) Simulation_set_domain_field_bc(sub->sim, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
   }
   
   mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-  if (bottom) vpic_simulation_set_domain_field_bc(BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
-  if (top   ) vpic_simulation_set_domain_field_bc(BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+  if (bottom) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
+  if (top   ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
 
   // ***** Set Particle Boundary Conditions *****
   if (sub->prm.driven_bc_z) {
     mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-    if (bottom) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PART_ABSORBING);
-    if (top   ) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PART_ABSORBING);
+    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PART_ABSORBING);
+    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PART_ABSORBING);
   } else {
     mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    if (bottom) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PART_REFLECTING);
-    if (top   ) vpic_simulation_set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PART_REFLECTING);
+    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PART_REFLECTING);
+    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PART_REFLECTING);
   }
   if (sub->prm.open_bc_x) {
     mpi_printf(comm, "Absorb particles on X-boundaries\n");
-    if (left)  vpic_simulation_set_domain_particle_bc(BOUNDARY(-1,0,0), BND_PART_ABSORBING);
-    if (right) vpic_simulation_set_domain_particle_bc(BOUNDARY( 1,0,0), BND_PART_ABSORBING);
+    if (left)  Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(-1,0,0), BND_PART_ABSORBING);
+    if (right) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY( 1,0,0), BND_PART_ABSORBING);
   }
 }
 
