@@ -44,11 +44,6 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   struct vpic_params *prm = &sub->vpic_prm;
   MPI_Comm comm = psc_comm(psc);
 
-  for (int d = 0; d < 3; d++) {
-    prm->gdims[d]           = psc->domain.gdims[d];
-    prm->np[d]              = psc->domain.np[d];
-  }
-
   mpi_printf(comm, "*** Initializing\n");
   if (sub->split) {
     vpic_simulation_init_split(prm, psc_harris(psc));
