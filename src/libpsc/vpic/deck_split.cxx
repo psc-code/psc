@@ -64,46 +64,46 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 
   // Do a fast load of the particles
 
-  simulation->seed_entropy( simulation->rank() );  //Generators desynchronized
-  rng_t *rng = simulation->rng(0);
+  vpic_simulation_seed_entropy( simulation->rank() );  //Generators desynchronized
+  struct rng *rng = vpic_simulation_rng(0);
 
-  double xmin = grid->x0 , xmax = grid->x0+(grid->dx)*(grid->nx);
-  double ymin = grid->y0 , ymax = grid->y0+(grid->dy)*(grid->ny);
-  double zmin = grid->z0 , zmax = grid->z0+(grid->dz)*(grid->nz);
+  double xmin = grid->x0, xmax = grid->x0+(grid->dx)*(grid->nx);
+  double ymin = grid->y0, ymax = grid->y0+(grid->dy)*(grid->ny);
+  double zmin = grid->z0, zmax = grid->z0+(grid->dz)*(grid->nz);
 
   // Load Harris population
 
   sim_log( "-> Main Harris Sheet" );
 
-  repeat ( Ne_sheet/nproc ) {
+  for (int64_t n = 0; n < Ne_sheet/nproc; n++) {
     double x, y, z, ux, uy, uz, d0 ;
 
     do {
-      z = L*atanh(simulation->uniform( rng, -1, 1)*tanhf);
+      z = L*atanh(vpic_simulation_uniform( rng, -1, 1)*tanhf);
     } while( z<= zmin || z>=zmax );
-    x = simulation->uniform( rng, xmin, xmax );
-    y = simulation->uniform( rng, ymin, ymax );
+    x = vpic_simulation_uniform( rng, xmin, xmax );
+    y = vpic_simulation_uniform( rng, ymin, ymax );
 
     // inject_particles() will return an error for particles no on this
     // node and will not inject particle locally
 
-    ux = simulation->normal( rng, 0, vthe);
-    uy = simulation->normal( rng, 0, vthe);
-    uz = simulation->normal( rng, 0, vthe);
+    ux = vpic_simulation_normal( rng, 0, vthe);
+    uy = vpic_simulation_normal( rng, 0, vthe);
+    uz = vpic_simulation_normal( rng, 0, vthe);
     d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
     uy = d0*cs - ux*sn;
     ux = d0*sn + ux*cs;
 
-    simulation->inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+    vpic_simulation_inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
 
-    ux = simulation->normal( rng, 0, vthi);
-    uy = simulation->normal( rng, 0, vthi);
-    uz = simulation->normal( rng, 0, vthi);
+    ux = vpic_simulation_normal( rng, 0, vthi);
+    uy = vpic_simulation_normal( rng, 0, vthi);
+    uz = vpic_simulation_normal( rng, 0, vthi);
     d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
     uy = d0*cs - ux*sn;
     ux = d0*sn + ux*cs;
 
-    simulation->inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
+    vpic_simulation_inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
   }
 
   sim_log( "-> Background Population" );

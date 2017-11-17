@@ -284,8 +284,15 @@ void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
 struct species * vpic_simulation_define_species(const char *name, double q, double m,
 						double max_local_np, double max_local_nm,
 						double sort_interval, double sort_out_of_place);
+void vpic_simulation_seed_entropy(int base);
+struct rng *vpic_simulation_rng(int n);
+double vpic_simulation_uniform(struct rng *rng, double lo, double hi);
+double vpic_simulation_normal(struct rng *rng, double mu, double sigma);
 
-
+void vpic_simulation_inject_particle(struct species * sp,
+				     double x,  double y,  double z,
+				     double ux, double uy, double uz,
+				     double w,  double age, bool update_rhob);
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
