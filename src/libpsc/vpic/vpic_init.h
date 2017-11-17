@@ -5,16 +5,6 @@
 #include "vpic_iface.h"
 #include "vpic.h"
 
-#include "mrc_common.h"
-
-extern vpic_simulation *simulation;
-
-struct globals_diag;
-
-void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				       species_t *electron, species_t *ion);
-
 // ----------------------------------------------------------------------
 // globals_diag
 
@@ -40,6 +30,19 @@ struct globals_diag {
   void setup();
   void run();
 };
+
+extern vpic_simulation *simulation;
+
+#include "mrc_common.h"
+
+// ================================================================================
+// globals_diag implementation
+
+void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
+				       species_t *electron, species_t *ion);
+
+
 
 inline globals_diag::globals_diag(int interval_)
 {
