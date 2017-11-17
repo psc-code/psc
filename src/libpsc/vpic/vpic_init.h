@@ -7,6 +7,14 @@
 
 #include "mrc_common.h"
 
+extern vpic_simulation *simulation;
+
+struct globals_diag;
+
+void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
+				       species_t *electron, species_t *ion);
+
 // ----------------------------------------------------------------------
 // globals_diag
 
@@ -29,6 +37,8 @@ struct globals_diag {
   std::vector<DumpParameters *> outputParams;
 
   globals_diag(int interval_);
+  void setup();
+  void run();
 };
 
 inline globals_diag::globals_diag(int interval_)
@@ -50,12 +60,20 @@ inline globals_diag::globals_diag(int interval_)
   mpi_printf(comm, "energies_interval: %d\n", energies_interval);
 }
 
+inline void globals_diag::setup()
+{
+  species_t *electron = simulation->find_species("electron");
+  species_t *ion = simulation->find_species("ion");
+  vpic_simulation_setup_diagnostics(simulation, this, electron, ion);
+}
+
+inline void globals_diag::run()
+{
+  TIC vpic_simulation_diagnostics(simulation, this); TOC(user_diagnostics, 1);
+}
+
 // ----------------------------------------------------------------------
 
-
-void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				       species_t *electron, species_t *ion);
 
 
 #endif

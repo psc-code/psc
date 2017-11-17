@@ -125,12 +125,6 @@ void vpic_inc_step(int step)
 // ======================================================================
 
 // ----------------------------------------------------------------------
-
-struct user_global_t {
-  struct globals_diag diag;
-};
-
-// ----------------------------------------------------------------------
 // vpic_simulation_set_params
 
 void vpic_simulation_set_params(int num_step,
