@@ -14,6 +14,8 @@
 #include "util/rng/rng_private.h"
 
 struct Rng : rng {
+  double drand();
+  double drandn();
   double uniform(double lo, double hi);
   double normal(double mu, double sigma);
 };
@@ -21,14 +23,25 @@ struct Rng : rng {
 // ----------------------------------------------------------------------
 // Rng implementation
 
+inline double Rng::drand()
+{
+  return ::drand(this);
+}
+
+inline double Rng::drandn()
+{
+  return ::drandn(this);
+}
+
 inline double Rng::uniform(double lo, double hi)
 {
-  return simulation->uniform(this, lo, hi);
+  double dx = drand();
+  return lo*(1.-dx) + hi*dx;
 }
 
 inline double Rng::normal(double mu, double sigma)
 {
-  return simulation->normal(this, mu, sigma);
+  return mu + sigma*drandn();
 }
 
 // ======================================================================
