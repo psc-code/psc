@@ -265,7 +265,7 @@ psc_harris_setup_domain(struct psc *psc)
   Simulation_setup_grid(sub->sim, dx, phys->dt, phys->c, phys->eps0);
 
   // Define the grid
-  vpic_simulation_define_periodic_grid(xl, xh, psc->domain.gdims, psc->domain.np);
+  Simulation_define_periodic_grid(sub->sim, xl, xh, psc->domain.gdims, psc->domain.np);
 
   int p = 0;
   bool left = psc_at_boundary_lo(psc, p, 0);

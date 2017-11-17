@@ -137,6 +137,8 @@ void Simulation_delete(struct Simulation *sim);
 
 void Simulation_setup_grid(struct Simulation *sim, double dx[3], double dt,
 			   double cvac, double eps0);
+void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
+				     double xh[3], int gdims[3], int np[3]);
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
@@ -290,8 +292,6 @@ void vpic_simulation_set_params(int num_step,
 				int sync_shared_interval,
 				int clean_div_e_interval,
 				int clean_div_b_interval);
-void vpic_simulation_define_periodic_grid(double xl[3], double xh[3],
-					  int gdims[3], int np[3]);
 void vpic_simulation_set_domain_field_bc(int boundary, int fbc);
 void vpic_simulation_set_domain_particle_bc(int boundary, int pbc);
 struct material *vpic_simulation_define_material(const char *name, double eps, double mu,
