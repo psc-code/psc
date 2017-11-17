@@ -21,12 +21,12 @@ psc_method_do_setup(struct psc_method *method, struct psc *psc)
 
 void
 psc_method_setup_partition(struct psc_method *method, struct psc *psc,
-			   int *n_prts_by_patch, int *particle_label_offset)
+			   int *n_prts_by_patch)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->setup_partition);
 
-  ops->setup_partition(method, psc, n_prts_by_patch, particle_label_offset);
+  ops->setup_partition(method, psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -34,12 +34,12 @@ psc_method_setup_partition(struct psc_method *method, struct psc *psc,
 
 void
 psc_method_setup_particles(struct psc_method *method, struct psc *psc,
-			   int *n_prts_by_patch, int particle_label_offset)
+			   int *n_prts_by_patch)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->setup_particles);
 
-  ops->setup_particles(method, psc, n_prts_by_patch, particle_label_offset);
+  ops->setup_particles(method, psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------

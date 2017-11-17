@@ -27,9 +27,9 @@ psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
 
 static void
 psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
-				   int *n_prts_by_patch, int *particle_label_offset)
+				   int *n_prts_by_patch)
 {
-  psc_setup_partition(psc, n_prts_by_patch, particle_label_offset);
+  psc_setup_partition(psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -37,10 +37,10 @@ psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_default_setup_particles(struct psc_method *method, struct psc *psc,
-				   int *n_prts_by_patch, int particle_label_offset)
+				   int *n_prts_by_patch)
 {
   psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
-  psc_setup_particles(psc, n_prts_by_patch, particle_label_offset);
+  psc_setup_particles(psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------

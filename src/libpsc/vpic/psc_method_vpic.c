@@ -144,7 +144,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 
 static void
 psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
-				int *n_prts_by_patch, int *particle_label_offset)
+				int *n_prts_by_patch)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -152,7 +152,7 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
     assert(psc->nr_patches == 1);
     n_prts_by_patch[0] = 1; // fake, but not possible to balance, anyway
   } else {
-    psc_setup_partition(psc, n_prts_by_patch, particle_label_offset);
+    psc_setup_partition(psc, n_prts_by_patch);
   }
 }
 
@@ -161,7 +161,7 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
-				int *n_prts_by_patch, int particle_label_offset)
+				int *n_prts_by_patch)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -173,7 +173,7 @@ psc_method_vpic_setup_particles(struct psc_method *method, struct psc *psc,
     psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
   } else {
     psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
-    psc_setup_particles(psc, n_prts_by_patch, particle_label_offset);
+    psc_setup_particles(psc, n_prts_by_patch);
   }
 }
 
