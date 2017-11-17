@@ -529,7 +529,13 @@ psc_harris_setup(struct psc *psc)
   
   // initializes fields, particles, etc.
   //psc_setup_super(psc); FIXME, we completely overrode psc_setup() here (redundant..)
-  psc_method_do_setup(psc->method, psc);
+  //psc_method_do_setup(psc->method, psc);
+  vpic_simulation_init_split(sub);
+  psc->n_state_fields = VPIC_MFIELDS_N_COMP;
+  // having two ghost points wouldn't really hurt, however having no ghost points
+  // in the invariant direction does cause trouble.
+  // By setting this here, it will override what otherwise happens automatically
+  psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
 
   // partition and initial balancing
   int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
@@ -540,14 +546,16 @@ psc_harris_setup(struct psc *psc)
   psc_setup_base_mprts(psc);
   
   // set particles x^{n+1/2}, p^{n+1/2}
-  psc_method_setup_particles(psc->method, psc, n_prts_by_patch);
+  //psc_method_setup_particles(psc->method, psc, n_prts_by_patch);
+  struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
+  psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
 
   free(n_prts_by_patch);
 
   // create and set up base mflds
   psc_setup_base_mflds(psc);
   // set i.c. on E^{n+1/2}, B^{n+1/2}
-  psc_method_setup_fields(psc->method, psc);
+  psc_setup_fields(psc);
 
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);

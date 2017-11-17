@@ -40,80 +40,77 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "*** Initializing\n");
-  if (sub->split) {
-    vpic_simulation_init_split(psc_harris(psc));
-  } else {
-    vpic_simulation_new();
 
-    struct vpic_simulation_info info;
-    vpic_simulation_init(&info);
-
-    psc->prm.nmax = info.num_step;
-    psc->prm.stats_every = info.status_interval;
-
-    struct psc_kind *kinds = calloc(info.n_kinds, sizeof(*kinds));
-    for (int m = 0; m < info.n_kinds; m++) {
-      kinds[m].q = info.kinds[m].q;
-      kinds[m].m = info.kinds[m].m;
-      // map "electron" -> "e", "ion"-> "i" to avoid even more confusion with
-      // how moments etc are named.
-      if (strcmp(info.kinds[m].name, "electron") == 0) {
-	kinds[m].name = "e";
-      } else if (strcmp(info.kinds[m].name, "ion") == 0) {
-	kinds[m].name = "i";
-      } else {
-	kinds[m].name = info.kinds[m].name;
-      }
+  vpic_simulation_new();
+  
+  struct vpic_simulation_info info;
+  vpic_simulation_init(&info);
+  
+  psc->prm.nmax = info.num_step;
+  psc->prm.stats_every = info.status_interval;
+  
+  struct psc_kind *kinds = calloc(info.n_kinds, sizeof(*kinds));
+  for (int m = 0; m < info.n_kinds; m++) {
+    kinds[m].q = info.kinds[m].q;
+    kinds[m].m = info.kinds[m].m;
+    // map "electron" -> "e", "ion"-> "i" to avoid even more confusion with
+    // how moments etc are named.
+    if (strcmp(info.kinds[m].name, "electron") == 0) {
+      kinds[m].name = "e";
+    } else if (strcmp(info.kinds[m].name, "ion") == 0) {
+      kinds[m].name = "i";
+    } else {
+      kinds[m].name = info.kinds[m].name;
     }
-    psc_set_kinds(psc, info.n_kinds, kinds);
-    free(kinds);
-
-    psc_marder_set_param_int(psc->marder, "clean_div_e_interval", info.clean_div_e_interval);
-    psc_marder_set_param_int(psc->marder, "clean_div_b_interval", info.clean_div_b_interval);
-    psc_marder_set_param_int(psc->marder, "sync_shared_interval", info.sync_shared_interval);
-    psc_marder_set_param_int(psc->marder, "num_div_e_round", info.num_div_e_round);
-    psc_marder_set_param_int(psc->marder, "num_div_b_round", info.num_div_b_round);
-
-    int *np = psc->domain.np;
-    mpi_printf(comm, "domain: np = %d x %d x %d\n", np[0], np[1], np[2]);
-
-    int rank, size;
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
-    assert(size == np[0] * np[1] * np[2]);
-
-    int p[3];
-    p[2] = rank / (np[1] * np[0]); rank -= p[2] * (np[1] * np[0]);
-    p[1] = rank / np[0]; rank -= p[1] * np[0];
-    p[0] = rank;
-
-    double x0[3], x1[3];
-    for (int d = 0; d < 3; d++) {
-      x0[d] = info.x0[d] - p[d] * (info.x1[d] - info.x0[d]);
-      x1[d] = info.x0[d] + (np[d] - p[d]) * (info.x1[d] - info.x0[d]);
-    }
-
-    // FIXME, it's also not so obvious that this is going to be exactly the same on all procs
-    mprintf("domain: local x0 %g:%g:%g x1 %g:%g:%g\n",
-	    info.x0[0], info.x0[1], info.x0[2],
-	    info.x1[0], info.x1[1], info.x1[2]);
-    mprintf("domain: p %d %d %d\n",
-	    p[0], p[1], p[2]);
-    mprintf("domain: global x0 %g:%g:%g x1 %g:%g:%g\n",
-	    x0[0], x0[1], x0[2],
-	    x1[0], x1[1], x1[2]);
-    
-    // set size of simulation box to match vpic
-    for (int d = 0; d < 3; d++) {
-      psc->domain.length[d] = x1[d] - x0[d];
-      psc->domain.corner[d] = x0[d];
-      psc->domain.gdims[d] = np[d] * info.nx[d];
-      psc->domain.np[d] = np[d];
-    }
-
-    psc->dt = info.dt;
-    mpi_printf(comm, "method_vpic_do_setup: Setting dt = %g\n", psc->dt);
   }
+  psc_set_kinds(psc, info.n_kinds, kinds);
+  free(kinds);
+  
+  psc_marder_set_param_int(psc->marder, "clean_div_e_interval", info.clean_div_e_interval);
+  psc_marder_set_param_int(psc->marder, "clean_div_b_interval", info.clean_div_b_interval);
+  psc_marder_set_param_int(psc->marder, "sync_shared_interval", info.sync_shared_interval);
+  psc_marder_set_param_int(psc->marder, "num_div_e_round", info.num_div_e_round);
+  psc_marder_set_param_int(psc->marder, "num_div_b_round", info.num_div_b_round);
+  
+  int *np = psc->domain.np;
+  mpi_printf(comm, "domain: np = %d x %d x %d\n", np[0], np[1], np[2]);
+  
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+  assert(size == np[0] * np[1] * np[2]);
+  
+  int p[3];
+  p[2] = rank / (np[1] * np[0]); rank -= p[2] * (np[1] * np[0]);
+  p[1] = rank / np[0]; rank -= p[1] * np[0];
+  p[0] = rank;
+  
+  double x0[3], x1[3];
+  for (int d = 0; d < 3; d++) {
+    x0[d] = info.x0[d] - p[d] * (info.x1[d] - info.x0[d]);
+    x1[d] = info.x0[d] + (np[d] - p[d]) * (info.x1[d] - info.x0[d]);
+  }
+  
+  // FIXME, it's also not so obvious that this is going to be exactly the same on all procs
+  mprintf("domain: local x0 %g:%g:%g x1 %g:%g:%g\n",
+	  info.x0[0], info.x0[1], info.x0[2],
+	  info.x1[0], info.x1[1], info.x1[2]);
+  mprintf("domain: p %d %d %d\n",
+	  p[0], p[1], p[2]);
+  mprintf("domain: global x0 %g:%g:%g x1 %g:%g:%g\n",
+	  x0[0], x0[1], x0[2],
+	  x1[0], x1[1], x1[2]);
+  
+  // set size of simulation box to match vpic
+  for (int d = 0; d < 3; d++) {
+    psc->domain.length[d] = x1[d] - x0[d];
+    psc->domain.corner[d] = x0[d];
+    psc->domain.gdims[d] = np[d] * info.nx[d];
+    psc->domain.np[d] = np[d];
+  }
+  
+  psc->dt = info.dt;
+  mpi_printf(comm, "method_vpic_do_setup: Setting dt = %g\n", psc->dt);
   
   psc->n_state_fields = VPIC_MFIELDS_N_COMP;
   // having two ghost points wouldn't really hurt, however having no ghost points
@@ -123,10 +120,8 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d, ibn = [%d,%d,%d]\n",
 	     psc->n_state_fields, psc->ibn[0], psc->ibn[1], psc->ibn[2]);
 
-  if (!sub->split) { // FIXME -- the following has already been done by harris
-    psc_setup_coeff(psc);
-    psc_setup_domain(psc);
-  }
+  psc_setup_coeff(psc);
+  psc_setup_domain(psc);
 }
 
 // ----------------------------------------------------------------------
