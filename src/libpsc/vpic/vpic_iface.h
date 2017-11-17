@@ -85,6 +85,7 @@ void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int 
 void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
+void vpic_mparticles_inject(struct vpic_mparticles *cmprts, int p, const struct psc_particle_inject *prt);
 void vpic_mparticles_push_back(struct vpic_mparticles *vmprts, const struct vpic_mparticles_prt *prt);
 void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx);
 

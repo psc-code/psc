@@ -1,6 +1,7 @@
 
 #include "vpic_mparticles.h"
 
+#include "psc_particles.h"
 #include <cassert>
 
 extern vpic_simulation *simulation;
@@ -109,6 +110,18 @@ void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
 {
   assert(n_patches == 1);
   n_prts_by_patch[0] = vpic_mparticles_get_nr_particles(vmprts);
+}
+
+// ----------------------------------------------------------------------
+// vpic_mparticles_inject
+
+void vpic_mparticles_inject(struct vpic_mparticles *vmprts, int p,
+			    const struct psc_particle_inject *prt)
+{
+  species_t *sp = find_species_id(prt->kind, vmprts->species_list);
+
+  vpic_simulation_inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
+				  prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
 }
 
 // ----------------------------------------------------------------------
