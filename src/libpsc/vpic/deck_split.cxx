@@ -36,8 +36,6 @@ void user_init(vpic_simulation *simulation, struct psc_harris *sub,
   vpic_harris_params *harris = &sub->prm;
   globals_physics *phys = &sub->phys;
 
-  user_load_fields(simulation, harris, phys);
-
   species_t *electron = simulation->find_species("electron");
   species_t *ion = simulation->find_species("ion");
   
