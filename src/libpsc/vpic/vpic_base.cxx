@@ -8,6 +8,8 @@
 
 #include <vpic.h>
 
+#include <mrc_common.h>
+
 #include <cassert>
 
 extern vpic_simulation *simulation;
@@ -295,6 +297,10 @@ vpic_diagnostics_init(int interval)
   diag->Hparticle_interval = 8*diag->interval;
 
   diag->energies_interval = 50;
+
+  MPI_Comm comm = MPI_COMM_WORLD;
+  mpi_printf(comm, "interval = %d\n", diag->interval);
+  mpi_printf(comm, "energies_interval: %d\n", diag->energies_interval);
 }
 
 // ----------------------------------------------------------------------
