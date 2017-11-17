@@ -88,10 +88,17 @@ struct Grid {
   void partition_periodic_box(double xl[3], double xh[3], int gdims[3], int np[3]);
   void set_fbc(int boundary, int fbc);
   void set_pbc(int boundary, int pbc);
+  void mp_size_recv_buffer(int tag, int size);
+  void mp_size_send_buffer(int tag, int size);
 
   //private:
   grid *g_;
 };
+
+inline Grid::Grid(grid *g)
+  : g_(g)
+{
+}
 
 inline void Grid::setup(double dx[3], double dt, double cvac, double eps0)
 {
@@ -101,11 +108,6 @@ inline void Grid::setup(double dx[3], double dt, double cvac, double eps0)
   g_->dt = dt;
   g_->cvac = cvac;
   g_->eps0 = eps0;
-}
-
-inline Grid::Grid(grid *g)
-  : g_(g)
-{
 }
 
 inline void Grid::partition_periodic_box(double xl[3], double xh[3],
@@ -123,6 +125,16 @@ inline void Grid::set_fbc(int boundary, int fbc)
 inline void Grid::set_pbc(int boundary, int pbc)
 {
   ::set_pbc(g_, boundary, pbc);
+}
+
+inline void Grid::mp_size_recv_buffer(int tag, int size)
+{
+  ::mp_size_recv_buffer(g_->mp, tag, size);
+}
+
+inline void Grid::mp_size_send_buffer(int tag, int size)
+{
+  ::mp_size_send_buffer(g_->mp, tag, size);
 }
 
 // ======================================================================
@@ -156,56 +168,56 @@ inline bool MaterialList::empty()
 // ======================================================================
 // FieldArray
 
-struct FieldArray {
-  FieldArray(field_array_t*& a);
+struct FieldArrayPtr {
+  FieldArrayPtr(field_array_t*& p);
 
-  field_array_t *&a_;
+  field_array_t *&p_;
 };
 
-inline FieldArray::FieldArray(field_array_t*& a)
-  : a_(a)
+inline FieldArrayPtr::FieldArrayPtr(field_array_t*& p)
+  : p_(p)
 {
 }
 
 // ======================================================================
-// InterpolatorArray
+// InterpolatorArrayPtr
 
-struct InterpolatorArray {
-  InterpolatorArray(interpolator_array_t*& a);
+struct InterpolatorArrayPtr {
+  InterpolatorArrayPtr(interpolator_array_t*& p);
 
-  interpolator_array_t *&a_;
+  interpolator_array_t *&p_;
 };
 
-inline InterpolatorArray::InterpolatorArray(interpolator_array_t*& a)
-  : a_(a)
+inline InterpolatorArrayPtr::InterpolatorArrayPtr(interpolator_array_t*& p)
+  : p_(p)
 {
 }
 
 // ======================================================================
-// AccumulatorArray
+// AccumulatorArrayPtr
 
-struct AccumulatorArray {
-  AccumulatorArray(accumulator_array_t*& a);
+struct AccumulatorArrayPtr {
+  AccumulatorArrayPtr(accumulator_array_t*& p);
 
-  accumulator_array_t *&a_;
+  accumulator_array_t *&p_;
 };
 
-inline AccumulatorArray::AccumulatorArray(accumulator_array_t*& a)
-  : a_(a)
+inline AccumulatorArrayPtr::AccumulatorArrayPtr(accumulator_array_t*& p)
+  : p_(p)
 {
 }
 
 // ======================================================================
-// HydroArray
+// HydroArrayPtr
 
-struct HydroArray {
-  HydroArray(hydro_array_t*& a);
+struct HydroArrayPtr {
+  HydroArrayPtr(hydro_array_t*& p);
 
-  hydro_array_t *&a_;
+  hydro_array_t *&p_;
 };
 
-inline HydroArray::HydroArray(hydro_array_t*& a)
-  : a_(a)
+inline HydroArrayPtr::HydroArrayPtr(hydro_array_t*& p)
+  : p_(p)
 {
 }
 
@@ -232,10 +244,10 @@ struct Simulation {
   globals_diag *pDiag_;
   Grid grid_;
   MaterialList material_list_;
-  FieldArray field_array_;
-  InterpolatorArray interpolator_array_;
-  AccumulatorArray accumulator_array_;
-  HydroArray hydro_array_;
+  FieldArrayPtr field_array_ptr_;
+  InterpolatorArrayPtr interpolator_array_ptr_;
+  AccumulatorArrayPtr accumulator_array_ptr_;
+  HydroArrayPtr hydro_array_ptr_;
 };
 
 // ----------------------------------------------------------------------
@@ -244,10 +256,10 @@ struct Simulation {
 inline Simulation::Simulation()
   : grid_(simulation->grid),
     material_list_(simulation->material_list),
-    field_array_(simulation->field_array),
-    interpolator_array_(simulation->interpolator_array),
-    accumulator_array_(simulation->accumulator_array),
-    hydro_array_(simulation->hydro_array)
+    field_array_ptr_(simulation->field_array),
+    interpolator_array_ptr_(simulation->interpolator_array),
+    accumulator_array_ptr_(simulation->accumulator_array),
+    hydro_array_ptr_(simulation->hydro_array)
 {
 }
 
@@ -297,10 +309,10 @@ inline struct material *Simulation::define_material(const char *name,
 						    double sigma=0., double zeta=0.)
 {
   return material_list_.append(material(name,
-				       eps,   eps,   eps,
-				       mu,    mu,    mu,
-				       sigma, sigma, sigma,
-				       zeta,  zeta,  zeta));
+					eps,   eps,   eps,
+					mu,    mu,    mu,
+					sigma, sigma, sigma,
+					zeta,  zeta,  zeta));
 }
 
 inline void Simulation::define_field_array(struct field_array *fa, double damp)
@@ -316,29 +328,29 @@ inline void Simulation::define_field_array(struct field_array *fa, double damp)
     assert(0);
   }
   
-  field_array_.a_ = fa ? fa :
+  field_array_ptr_.p_ = fa ? fa :
     ::new_standard_field_array(grid, simulation->material_list, damp);
-  interpolator_array_.a_ = new_interpolator_array(grid);
-  accumulator_array_.a_ = new_accumulator_array(grid);
-  hydro_array_.a_ = new_hydro_array(grid);
+  interpolator_array_ptr_.p_ = new_interpolator_array(grid);
+  accumulator_array_ptr_.p_ = new_accumulator_array(grid);
+  hydro_array_ptr_.p_ = new_hydro_array(grid);
  
   // Pre-size communications buffers. This is done to get most memory
   // allocation over with before the simulation starts running
   
   int nx1 = grid->nx+1, ny1 = grid->ny+1, nz1 = grid->nz+1;
-  mp_size_recv_buffer(grid->mp, BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
-  mp_size_recv_buffer(grid->mp, BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
-  mp_size_recv_buffer(grid->mp, BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
-  mp_size_recv_buffer(grid->mp, BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
-  mp_size_recv_buffer(grid->mp, BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
-  mp_size_recv_buffer(grid->mp, BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
+  grid_.mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  grid_.mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  grid_.mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
+  grid_.mp_size_recv_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
+  grid_.mp_size_recv_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
+  grid_.mp_size_recv_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
   
-  mp_size_send_buffer(grid->mp, BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
-  mp_size_send_buffer(grid->mp, BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
-  mp_size_send_buffer(grid->mp, BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
-  mp_size_send_buffer(grid->mp, BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
-  mp_size_send_buffer(grid->mp, BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
-  mp_size_send_buffer(grid->mp, BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
+  grid_.mp_size_send_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  grid_.mp_size_send_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
+  grid_.mp_size_send_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
+  grid_.mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
+  grid_.mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
+  grid_.mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
 }
 
 
