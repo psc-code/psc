@@ -37,22 +37,22 @@ void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub)
 // ----------------------------------------------------------------------
 // Rng
 
-void Simulation_rngPool_seed(int base)
+void Simulation_rngPool_seed(struct Simulation *sim, int base)
 {
-  simulation->seed_entropy(base);
+  sim->rng_pool.seed(base);
 }
 
-Rng *Simulation_rngPool_get(int n)
+Rng *Simulation_rngPool_get(struct Simulation *sim, int n)
 {
-  return static_cast<Rng *>(simulation->rng(n));
+  return sim->rng_pool[n];
 }
 
 double Rng_uniform(struct Rng *rng, double lo, double hi)
 {
-  return simulation->uniform(rng, lo, hi);
+  return rng->uniform(lo, hi);
 }
 
 double Rng_normal(struct Rng *rng, double mu, double sigma)
 {
-  return simulation->normal(rng, mu, sigma);
+  return rng->normal(mu, sigma);
 }

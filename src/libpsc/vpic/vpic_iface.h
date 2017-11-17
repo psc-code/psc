@@ -139,8 +139,8 @@ void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
 void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);
 
-void Simulation_rngPool_seed(int base);
-struct Rng *Simulation_rngPool_get(int n);
+void Simulation_rngPool_seed(struct Simulation *sim, int base);
+struct Rng *Simulation_rngPool_get(struct Simulation *sim, int n);
 
 double Rng_uniform(struct Rng *rng, double lo, double hi);
 double Rng_normal(struct Rng *rng, double mu, double sigma);
