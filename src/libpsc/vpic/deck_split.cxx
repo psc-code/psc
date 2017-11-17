@@ -24,11 +24,8 @@
 
 // ======================================================================
 
-static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys,
 				species_t *electron, species_t *ion);
-static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				   species_t *electron, species_t *ion);
 
 void user_init(vpic_simulation *simulation, struct psc_harris *sub,
 	       globals_diag *diag)
@@ -40,36 +37,10 @@ void user_init(vpic_simulation *simulation, struct psc_harris *sub,
   species_t *ion = simulation->find_species("ion");
   
   user_load_particles(simulation, harris, phys, electron, ion);
-
-  user_setup_diagnostics(simulation, diag, electron, ion);
-
-  sim_log("*** Finished with user-specified initialization ***");
 }
 
 // ======================================================================
 // initialization
-
-// ----------------------------------------------------------------------
-// user_load_fields
-
-static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys)
-{
-  double cs = cos(prm->theta), sn = sin(prm->theta);
-  double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
-  double b0 = phys->b0, bg = prm->bg, dbx = phys->dbx, dbz = phys->dbz;
-  grid_t *grid = simulation->grid;
-  
-  sim_log( "Loading fields" );
-#define field simulation->field
-  set_region_field( everywhere, 0, 0, 0,                    // Electric field
-    cs*b0*tanh(z/L)+dbx*cos(2.0*M_PI*(x-0.5*Lx)/Lpert)*sin(M_PI*z/Lz), //Bx
-    -sn*b0*tanh(z/L) + b0*bg, //By
-    dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert) ); // Bz
-#undef field
-
-  // Note: everywhere is a region that encompasses the entire simulation
-  // In general, regions are specied as logical equations (i.e. x>0 && x+y<2)
-}
 
 // ----------------------------------------------------------------------
 // user_load_particles
@@ -162,10 +133,10 @@ static void user_load_particles(vpic_simulation *simulation, vpic_harris_params 
 }
 
 // ----------------------------------------------------------------------
-// user_setup_diagnostics
+// vpic_simulation_setup_diagnostics
 
-static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				   species_t *electron, species_t *ion)
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
+				       species_t *electron, species_t *ion)
 {
   /*--------------------------------------------------------------------------
    * New dump definition
@@ -352,7 +323,6 @@ static void user_setup_diagnostics(vpic_simulation *simulation, globals_diag *di
 void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag)
 {
   int64_t step = simulation->step();
-
   /*--------------------------------------------------------------------------
    * Data output directories
    * WARNING: The directory list passed to "global_header" must be
@@ -378,7 +348,7 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag
     simulation->dump_grid("rundata/grid");
     simulation->dump_materials("rundata/materials");
     simulation->dump_species("rundata/species");
-    simulation->global_header("global\n", diag->outputParams);
+    simulation->global_header("global", diag->outputParams);
   } // if
 
   /*--------------------------------------------------------------------------

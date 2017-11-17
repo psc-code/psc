@@ -488,6 +488,7 @@ psc_harris_setup(struct psc *psc)
 {
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;
+  MPI_Comm comm = psc_comm(psc);
 
   bool split;
   psc_method_get_param_bool(psc->method, "split", &split);
@@ -539,9 +540,10 @@ psc_harris_setup(struct psc *psc)
   psc_setup_base_mprts(psc);
   psc_setup_base_mflds(psc);
   
-  //psc_setup_super(psc); FIXME, we completely overrode psc_setup() here (redundant..)
-  //psc_method_do_setup(psc->method, psc);
   vpic_simulation_init_split(sub);
+  vpic_diagnostics_setup();
+
+  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   
   // set i.c. on E^{n+1/2}, B^{n+1/2}
   psc_set_ic_fields(psc);

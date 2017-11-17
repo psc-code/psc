@@ -286,14 +286,16 @@ struct species * vpic_simulation_define_species(const char *name, double q, doub
 						double sort_interval, double sort_out_of_place);
 
 
-void vpic_diagnostics_init(int interval);
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 
 void vpic_print_status();
-void vpic_diagnostics();
+void vpic_diagnostics_init(int interval);
+void vpic_diagnostics_setup();
 void vpic_diagnostics_split(struct psc_harris *harris);
+
+void vpic_diagnostics();
 void vpic_inc_step(int step);
 
 

@@ -302,6 +302,18 @@ vpic_diagnostics_init(int interval)
 }
 
 // ----------------------------------------------------------------------
+// vpic_simulation_setup
+
+void vpic_diagnostics_setup()
+{
+  user_global_t *user_global = (struct user_global_t *) simulation->user_global;
+
+  species_t *electron = simulation->find_species("electron");
+  species_t *ion = simulation->find_species("ion");
+  vpic_simulation_setup_diagnostics(simulation, &user_global->diag, electron, ion);
+}
+
+// ----------------------------------------------------------------------
 // vpic_diagnostics_split
 
 void vpic_diagnostics_split(psc_harris *harris)
