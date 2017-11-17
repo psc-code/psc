@@ -141,21 +141,6 @@ void vpic_simulation_set_params(int num_step,
 }
 
 // ----------------------------------------------------------------------
-// vpic_simulation_setup_grid
-
-void vpic_simulation_setup_grid(double dx[3], double dt, double cvac, double eps0)
-{
-  grid_t *grid = simulation->grid;
-
-  grid->dx = dx[0];
-  grid->dy = dx[1];
-  grid->dz = dx[2];
-  grid->dt = dt;
-  grid->cvac = cvac;
-  grid->eps0 = eps0;
-}
-
-// ----------------------------------------------------------------------
 // vpic_simulation_define_periodic_grid
 
 void vpic_simulation_define_periodic_grid(double xl[3], double xh[3],

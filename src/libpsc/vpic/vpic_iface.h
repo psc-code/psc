@@ -290,8 +290,6 @@ void vpic_simulation_set_params(int num_step,
 				int sync_shared_interval,
 				int clean_div_e_interval,
 				int clean_div_b_interval);
-void vpic_simulation_setup_grid(double dx[3], double dt,
-				double cvac, double eps0);
 void vpic_simulation_define_periodic_grid(double xl[3], double xh[3],
 					  int gdims[3], int np[3]);
 void vpic_simulation_set_domain_field_bc(int boundary, int fbc);
