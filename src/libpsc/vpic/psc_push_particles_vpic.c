@@ -4,6 +4,7 @@
 #include "psc_push_particles_vpic.h"
 #include "psc_fields_vpic.h"
 #include "psc_particles_vpic.h"
+#include "psc_method.h"
 #include "vpic_iface.h"
 
 // ----------------------------------------------------------------------
@@ -14,8 +15,11 @@ psc_push_particles_vpic_setup(struct psc_push_particles *push)
 {
   struct psc_push_particles_vpic *sub = psc_push_particles_vpic(push);
 
+  struct Simulation *sim;
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+
   sub->vpushp = vpic_push_particles_create();
-  vpic_push_particles_ctor_from_simulation(sub->vpushp);
+  vpic_push_particles_ctor_from_simulation(sub->vpushp, sim);
   psc_push_particles_setup_super(push);
 }
 

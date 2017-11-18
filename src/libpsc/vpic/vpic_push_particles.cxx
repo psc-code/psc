@@ -22,10 +22,11 @@ vpic_push_particles_create()
 // vpic_push_particles_ctor_from_simulation
 
 void
-vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp)
+vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp,
+					 struct Simulation *sim)
 {
-  vpushp->interpolator_array = simulation->interpolator_array;
-  vpushp->accumulator_array = simulation->accumulator_array;
+  vpushp->interpolator_array = static_cast<InterpolatorArray*>(sim->interpolator_array_);
+  vpushp->accumulator_array = static_cast<AccumulatorArray*>(sim->accumulator_array_);
   vpushp->num_comm_round = simulation->num_comm_round;
 }
 
