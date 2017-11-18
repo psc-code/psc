@@ -104,6 +104,8 @@ double Rng_normal(struct Rng *rng, double mu, double sigma)
   return rng->normal(mu, sigma);
 }
 
+// ----------------------------------------------------------------------
+
 void Simulation_set_params(Simulation *sim, int num_step, int status_interval,
 			   int sync_shared_interval, int clean_div_e_interval,
 			   int clean_div_b_interval)
@@ -116,3 +118,15 @@ void Simulation_set_params(Simulation *sim, int num_step, int status_interval,
   vpic->clean_div_b_interval = clean_div_b_interval;
 }
 
+// ----------------------------------------------------------------------
+// Simulation_inject_particle
+
+void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
+				const struct psc_particle_inject *prt)
+{
+  assert(p == 0);
+  species_t *sp = find_species_id(prt->kind, vmprts->sl_);
+
+  sim->simulation_->inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
+				    prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
+}

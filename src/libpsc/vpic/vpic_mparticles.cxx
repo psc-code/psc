@@ -102,20 +102,6 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 }
 
 // ----------------------------------------------------------------------
-// vpic_mparticles_inject
-
-void vpic_mparticles_inject(Particles *vmprts, int p,
-			    const struct psc_particle_inject *prt)
-{
-  species_t *sp = find_species_id(prt->kind, vmprts->sl_);
-
-  extern vpic_simulation *simulation;
-
-  simulation->inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
-			      prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
-}
-
-// ----------------------------------------------------------------------
 // vpic_mparticles_get_grid_nx_dx
 
 void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx)

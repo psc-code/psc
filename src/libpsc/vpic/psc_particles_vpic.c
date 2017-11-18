@@ -181,9 +181,8 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 
-  struct Simulation *sim;
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-  sub->vmprts = vpic_mparticles_new_from_simulation(sim);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
+  sub->vmprts = vpic_mparticles_new_from_simulation(sub->sim);
 }
 
 // ----------------------------------------------------------------------
@@ -237,9 +236,10 @@ static void
 psc_mparticles_vpic_inject(struct psc_mparticles *mprts, int p,
 			   const struct psc_particle_inject *prt)
 {
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
   struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
-  vpic_mparticles_inject(vmprts, p, prt);
+  Simulation_inject_particle(sub->sim, vmprts, p, prt);
 }
 
 // ----------------------------------------------------------------------

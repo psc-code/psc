@@ -89,7 +89,6 @@ void vpic_mparticles_get_particles(struct Particles *vmprts, unsigned int n_prts
 void vpic_mparticles_set_particles(struct Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
-void vpic_mparticles_inject(struct Particles *cmprts, int p, const struct psc_particle_inject *prt);
 void vpic_mparticles_push_back(struct Particles *vmprts, const struct vpic_mparticles_prt *prt);
 void vpic_mparticles_get_grid_nx_dx(struct Particles *vmprts, int *nx, float *dx);
 
@@ -156,6 +155,8 @@ void Simulation_define_field_array(struct Simulation *sim, double damp);
 struct species * Simulation_define_species(struct Simulation *sim, const char *name, double q, double m,
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place);
+void Simulation_inject_particle(struct Simulation *sim, struct Particles *vmprts, int p,
+				const struct psc_particle_inject *prt);
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
