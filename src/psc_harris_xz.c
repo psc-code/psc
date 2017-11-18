@@ -331,7 +331,7 @@ psc_harris_setup_fields(struct psc *psc)
   mpi_printf(comm, "Finalizing Field Advance\n");
 
   assert(psc->nr_patches > 0);
-  vpic_simulation_set_region_resistive_harris(&sub->prm, phys, psc->patch[0].dx,
+  vpic_simulation_set_region_resistive_harris(NULL, &sub->prm, phys, psc->patch[0].dx,
 					      0., resistive);
 }
 
@@ -520,14 +520,13 @@ psc_harris_setup(struct psc *psc)
     
   // set high level VPIC simulation parameters
   // FIXME, will be unneeded eventually
-  vpic_simulation_new();
+  struct vpic_simulation *vpic = vpic_simulation_new();
   sub->sim = Simulation_create();
   psc_method_set_param_ptr(psc->method, "sim", sub->sim);
-  vpic_simulation_set_params(psc->prm.nmax,
-			     psc->prm.stats_every,
-			     psc->prm.stats_every / 2,
-			     psc->prm.stats_every / 2,
-			     psc->prm.stats_every / 2);
+  psc_method_set_param_ptr(psc->method, "vpic", vpic);
+  Simulation_set_params(sub->sim, psc->prm.nmax, psc->prm.stats_every,
+			psc->prm.stats_every / 2, psc->prm.stats_every / 2,
+			psc->prm.stats_every / 2);
   psc_harris_setup_domain(psc);
   psc_harris_setup_fields(psc);
   psc_harris_setup_species(psc);

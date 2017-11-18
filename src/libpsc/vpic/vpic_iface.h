@@ -141,6 +141,10 @@ struct field_array;
 struct Simulation *Simulation_create();
 void Simulation_delete(struct Simulation *sim);
 
+void Simulation_set_params(struct Simulation *vpic,
+			   int num_step, int status_interval, int sync_shared_interval,
+			   int clean_div_e_interval, int clean_div_b_interval);
+
 void Simulation_setup_grid(struct Simulation *sim, double dx[3], double dt,
 			   double cvac, double eps0);
 void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
@@ -301,31 +305,32 @@ struct vpic_simulation_info {
 
 void vpic_base_init(int *pargc, char ***pargv);
 
-void vpic_simulation_new(void);
-void vpic_simulation_init(struct vpic_simulation_info *info);
-void vpic_simulation_set_params(int num_step,
-				int status_interval,
-				int sync_shared_interval,
-				int clean_div_e_interval,
-				int clean_div_b_interval);
-void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
+#ifdef __cplusplus
+typedef class vpic_simulation vpic_simulation_t;
+#else
+typedef struct vpic_simulation vpic_simulation_t;
+#endif
+
+vpic_simulation_t *vpic_simulation_new();
+void vpic_simulation_init(vpic_simulation_t *vpic, struct vpic_simulation_info *info);
+void vpic_simulation_set_region_resistive_harris(vpic_simulation_t *vpic,
+						 struct vpic_harris_params *prm,
 						 struct globals_physics *phys,
 						 double dx[3],
 						 double thickness,
 						 struct material *resistive);
-void vpic_simulation_inject_particle(struct species * sp,
+void vpic_simulation_inject_particle(vpic_simulation_t *vpic, struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,
 				     double w,  double age, bool update_rhob);
-struct species *vpic_simulation_find_species(const char *name);
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 
-void vpic_print_status();
+void vpic_print_status(vpic_simulation_t *vpic);
 
-void vpic_diagnostics();
-void vpic_inc_step(int step);
+void vpic_diagnostics(vpic_simulation_t *vpic);
+void vpic_inc_step(vpic_simulation_t *vpic, int step);
 
 
 #if 0

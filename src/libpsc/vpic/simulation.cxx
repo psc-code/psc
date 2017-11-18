@@ -100,3 +100,16 @@ double Rng_normal(struct Rng *rng, double mu, double sigma)
 {
   return rng->normal(mu, sigma);
 }
+
+void Simulation_set_params(Simulation *sim, int num_step, int status_interval,
+			   int sync_shared_interval, int clean_div_e_interval,
+			   int clean_div_b_interval)
+{
+  vpic_simulation_t *vpic = sim->simulation_;
+  vpic->num_step             = num_step;
+  vpic->status_interval      = status_interval;
+  vpic->sync_shared_interval = sync_shared_interval;
+  vpic->clean_div_e_interval = clean_div_e_interval;
+  vpic->clean_div_b_interval = clean_div_b_interval;
+}
+

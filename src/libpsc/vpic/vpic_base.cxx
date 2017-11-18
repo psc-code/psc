@@ -2,16 +2,11 @@
 #include "vpic_iface.h"
 
 #include "vpic_push_particles.h"
-
 #include <vpic.h>
 
 #include <mrc_common.h>
-
 #include <cassert>
 
-extern vpic_simulation *simulation;
-
-// ======================================================================
 
 // ----------------------------------------------------------------------
 // vpic_base_init
@@ -46,102 +41,89 @@ void vpic_base_init(int *pargc, char ***pargv)
 }
 
 static void
-vpic_simulation_get_info(struct vpic_simulation_info *info)
+vpic_simulation_get_info(vpic_simulation *vpic, struct vpic_simulation_info *info)
 {
-  info->num_step = simulation->num_step;
+  info->num_step = vpic->num_step;
 
   // grid
-  info->dt = simulation->grid->dt;
-  info->nx[0] = simulation->grid->nx;
-  info->nx[1] = simulation->grid->ny;
-  info->nx[2] = simulation->grid->nz;
-  info->dx[0] = simulation->grid->dx;
-  info->dx[1] = simulation->grid->dy;
-  info->dx[2] = simulation->grid->dz;
-  info->x0[0] = simulation->grid->x0;
-  info->x0[1] = simulation->grid->y0;
-  info->x0[2] = simulation->grid->z0;
-  info->x1[0] = simulation->grid->x1;
-  info->x1[1] = simulation->grid->y1;
-  info->x1[2] = simulation->grid->z1;
+  info->dt = vpic->grid->dt;
+  info->nx[0] = vpic->grid->nx;
+  info->nx[1] = vpic->grid->ny;
+  info->nx[2] = vpic->grid->nz;
+  info->dx[0] = vpic->grid->dx;
+  info->dx[1] = vpic->grid->dy;
+  info->dx[2] = vpic->grid->dz;
+  info->x0[0] = vpic->grid->x0;
+  info->x0[1] = vpic->grid->y0;
+  info->x0[2] = vpic->grid->z0;
+  info->x1[0] = vpic->grid->x1;
+  info->x1[1] = vpic->grid->y1;
+  info->x1[2] = vpic->grid->z1;
 
   // species
-  info->n_kinds = num_species(simulation->species_list);
+  info->n_kinds = num_species(vpic->species_list);
   info->kinds = new vpic_kind_info[info->n_kinds];
   species_t *sp;
-  LIST_FOR_EACH( sp, simulation->species_list ) {
+  LIST_FOR_EACH( sp, vpic->species_list ) {
     info->kinds[sp->id].q = sp->q;
     info->kinds[sp->id].m = sp->m;
     info->kinds[sp->id].name = sp->name;
   }
   
   // Marder cleaning etc
-  info->clean_div_e_interval = simulation->clean_div_e_interval;
-  info->clean_div_b_interval = simulation->clean_div_b_interval;
-  info->sync_shared_interval = simulation->sync_shared_interval;
-  info->num_div_e_round = simulation->num_div_e_round;
-  info->num_div_b_round = simulation->num_div_b_round;
+  info->clean_div_e_interval = vpic->clean_div_e_interval;
+  info->clean_div_b_interval = vpic->clean_div_b_interval;
+  info->sync_shared_interval = vpic->sync_shared_interval;
+  info->num_div_e_round = vpic->num_div_e_round;
+  info->num_div_b_round = vpic->num_div_b_round;
 
-  info->status_interval = simulation->status_interval;
+  info->status_interval = vpic->status_interval;
 }
 
-void vpic_simulation_new()
+vpic_simulation *vpic_simulation_new()
 {
+  extern vpic_simulation *simulation;
   assert(!simulation);
+
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
+  return simulation;
 }
 
-void vpic_simulation_init(vpic_simulation_info *info)
+void vpic_simulation_init(vpic_simulation *vpic, vpic_simulation_info *info)
 {
   // Call the user initialize the simulation
-  TIC simulation->user_initialization(0, 0); TOC( user_initialization, 1 );
+  TIC vpic->user_initialization(0, 0); TOC( user_initialization, 1 );
 
-  vpic_simulation_get_info(info);
+  vpic_simulation_get_info(vpic, info);
 }
 
 // ======================================================================
 // vpic_diagnostics
 
-void vpic_diagnostics()
+void vpic_diagnostics(vpic_simulation *vpic)
 {
   // Let the user compute diagnostics
-  TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
+  TIC vpic->user_diagnostics(); TOC( user_diagnostics, 1 );
 }
 
 // ======================================================================
 
-void vpic_inc_step(int step)
+void vpic_inc_step(vpic_simulation *vpic, int step)
 {
-  simulation->grid->step++;
-  assert(simulation->grid->step == step);
+  vpic->grid->step++;
+  assert(vpic->grid->step == step);
 }
 
 
 // ======================================================================
-// ======================================================================
 
-// ----------------------------------------------------------------------
-// vpic_simulation_set_params
-
-void vpic_simulation_set_params(int num_step,
-				int status_interval,
-				int sync_shared_interval,
-				int clean_div_e_interval,
-				int clean_div_b_interval)
-{
-  simulation->num_step             = num_step;
-  simulation->status_interval      = status_interval;
-  simulation->sync_shared_interval = sync_shared_interval;
-  simulation->clean_div_e_interval = clean_div_e_interval;
-  simulation->clean_div_b_interval = clean_div_b_interval;
-}
-
-void vpic_simulation_set_region_resistive_harris(vpic_harris_params *prm,
+void vpic_simulation_set_region_resistive_harris(vpic_simulation *vpic,
+						 vpic_harris_params *prm,
 						 globals_physics *phys,
 						 double dx[3],
 						 double thickness,
-						 struct material *resistive)
+						 material_t *resistive)
 {
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature
@@ -154,25 +136,20 @@ void vpic_simulation_set_region_resistive_harris(vpic_harris_params *prm,
     // FIXME!!!
     assert(0);
 #if 0
-#define field simulation->field
-    grid_t *grid = simulation->grid;
+#define field vpic->field
+    grid_t *grid = vpic->grid;
     set_region_material(resistive_layer, resistive, resistive);
 #undef field
 #endif
   }
 }
 
-void vpic_simulation_inject_particle(struct species * sp,
+void vpic_simulation_inject_particle(vpic_simulation *vpic,
+				     species_t * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,
 				     double w,  double age, bool update_rhob)
 {
-  simulation->inject_particle(sp, x, y, z, ux, uy, uz, w, age, update_rhob);
+  vpic->inject_particle(sp, x, y, z, ux, uy, uz, w, age, update_rhob);
 }
-
-struct species *vpic_simulation_find_species(const char *name)
-{
-  return simulation->find_species(name);
-}
-
 

@@ -21,6 +21,7 @@ struct psc_method_vpic {
 
   // state
   struct Simulation *sim;
+  struct vpic_simulation *vpic;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
@@ -32,6 +33,7 @@ static struct param psc_method_vpic_descr[] = {
   { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
 
   { "sim"                   , VAR(sim)                            , PARAM_PTR(NULL)   },
+  { "vpic"                  , VAR(vpic)                           , PARAM_PTR(NULL)   },
   {},
 };
 #undef VAR
@@ -46,12 +48,12 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "*** Initializing\n");
-
-  vpic_simulation_new();
+  
+  sub->vpic = vpic_simulation_new();
   sub->sim = Simulation_create();
   
   struct vpic_simulation_info info;
-  vpic_simulation_init(&info);
+  vpic_simulation_init(sub->vpic, &info);
   
   psc->prm.nmax = info.num_step;
   psc->prm.stats_every = info.status_interval;
@@ -257,11 +259,11 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   if (sub->split) {
     Simulation_diagnostics_run(psc_harris(psc)->sim, psc_harris(psc));
   } else {
-    vpic_diagnostics();
+    vpic_diagnostics(sub->vpic);
   }
   psc_method_default_output(method, psc);
 
-  vpic_print_status();
+  vpic_print_status(sub->vpic);
   psc_stats_log(psc);
   psc_print_profiling(psc);
 }
@@ -275,16 +277,16 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
   // FIXME, a hacky place to do this
-  vpic_inc_step(psc->timestep);
+  vpic_inc_step(sub->vpic, psc->timestep);
 
   if (sub->split) {
     Simulation_diagnostics_run(psc_harris(psc)->sim, psc_harris(psc));
   } else {
-    vpic_diagnostics();
+    vpic_diagnostics(sub->vpic);
   }
   
   if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
-    vpic_print_status();
+    vpic_print_status(sub->vpic);
   }
   
   psc_method_default_output(NULL, psc);

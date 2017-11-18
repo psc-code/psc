@@ -112,9 +112,9 @@ void vpic_push_fields_advance_e(FieldArray *vmflds, double frac)
 // ======================================================================
 // vpic_print_status
 
-void vpic_print_status()
+void vpic_print_status(vpic_simulation *vpic)
 {
-  update_profile( rank()==0 );
+  update_profile(vpic->rank() == 0);
 }
 
 // ======================================================================

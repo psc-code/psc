@@ -4,6 +4,8 @@
 
 #include "simulation.h"
 
+extern vpic_simulation *simulation;
+
 // ======================================================================
 // vpic_mparticles
 
@@ -109,7 +111,7 @@ void vpic_mparticles_inject(Particles *vmprts, int p,
 {
   species_t *sp = find_species_id(prt->kind, vmprts->sl_);
 
-  vpic_simulation_inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
+  vpic_simulation_inject_particle(simulation, sp, prt->x[0], prt->x[1], prt->x[2],
 				  prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
 }
 
