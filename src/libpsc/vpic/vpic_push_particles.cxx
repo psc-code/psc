@@ -113,3 +113,74 @@ void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
   }
   vpushp->uncenter_p(vmprts);
 }
+
+void vpic_push_particles::clear_accumulator_array()
+{
+  TIC ::clear_accumulator_array( accumulator_array ); TOC( clear_accumulators, 1 );
+}
+
+void vpic_push_particles::advance_p(Particles *vmprts)
+{
+  species_t *sp;
+
+  LIST_FOR_EACH( sp, vmprts->sl_ )
+    TIC ::advance_p( sp, accumulator_array, interpolator_array ); TOC( advance_p, 1 );
+}
+
+void vpic_push_particles::reduce_accumulator_array()
+{
+  TIC ::reduce_accumulator_array( accumulator_array ); TOC( reduce_accumulators, 1 );
+}
+
+void vpic_push_particles::boundary_p(Particles *vmprts, FieldArray *vmflds)
+{
+  TIC
+    for( int round=0; round<num_comm_round; round++ )
+      ::boundary_p( simulation->particle_bc_list, vmprts->sl_,
+		    vmflds, accumulator_array );
+  TOC( boundary_p, num_comm_round );
+
+  species_t *sp;
+  LIST_FOR_EACH( sp, vmprts->sl_ ) {
+    if( sp->nm ) // && simulation->verbose )
+      WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
+                sp->nm, sp->name ));
+    // Drop the particles that have unprocessed movers due to a user defined
+    // boundary condition. Particles of this type with unprocessed movers are
+    // in the list of particles and move_p has set the voxel in the particle to
+    // 8*voxel + face. This is an incorrect voxel index and in many cases can
+    // in fact go out of bounds of the voxel indexing space. Removal is in
+    // reverse order for back filling. Particle charge is accumulated to the
+    // mesh before removing the particle.
+    int nm = sp->nm;
+    particle_mover_t * RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
+    particle_t * RESTRICT ALIGNED(128) p0 = sp->p;
+    for (; nm; nm--, pm--) {
+      int i = pm->i; // particle index we are removing
+      p0[i].i >>= 3; // shift particle voxel down
+      // accumulate the particle's charge to the mesh
+      accumulate_rhob( vmflds->f, p0+i, sp->g, sp->q );
+      p0[i] = p0[sp->np-1]; // put the last particle into position i
+      sp->np--; // decrement the number of particles
+    }
+    sp->nm = 0;
+  }
+}
+
+void vpic_push_particles::unload_accumulator_array(FieldArray *vmflds)
+{
+  TIC ::unload_accumulator_array( vmflds, accumulator_array ); TOC( unload_accumulator, 1 );
+}
+
+void vpic_push_particles::load_interpolator_array(FieldArray *vmflds)
+{
+  TIC ::load_interpolator_array( interpolator_array, vmflds ); TOC( load_interpolator, 1 );
+}
+
+void vpic_push_particles::uncenter_p(Particles *vmprts)
+{
+  species_t *sp;
+  LIST_FOR_EACH( sp, vmprts->sl_ )
+    TIC ::uncenter_p( sp, interpolator_array ); TOC( uncenter_p, 1 );
+}
+
