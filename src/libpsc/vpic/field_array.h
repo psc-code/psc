@@ -28,6 +28,8 @@ struct FieldArray : field_array_t {
   void synchronize_rho();
   void compute_rhob();
   double synchronize_tang_e_norm_b();
+  void advance_b(double frak);
+  void advance_e(double frak);
 };
 
 // ----------------------------------------------------------------------
@@ -316,6 +318,16 @@ inline double FieldArray::synchronize_tang_e_norm_b()
   double err;
   TIC err = FAK->synchronize_tang_e_norm_b(this); TOC(synchronize_tang_e_norm_b, 1);
   return err;
+}
+
+inline void FieldArray::advance_b(double frac)
+{
+  FAK->advance_b(this, frac);
+}
+
+inline void FieldArray::advance_e(double frac)
+{
+  FAK->advance_e(this, frac);
 }
 
 #undef FAK

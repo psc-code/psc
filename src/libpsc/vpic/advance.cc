@@ -98,30 +98,17 @@ void vpic_field_injection()
 }
 
 // ======================================================================
-
-void vpic_simulation_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
-{
-  species_t *sp;
-  LIST_FOR_EACH( sp, vmprts->sl_ )
-    TIC ::accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1 );
-}
-
-// ======================================================================
 // vpic_push_fields
-
-#define FAK vmflds->kernel
 
 void vpic_push_fields_advance_b(FieldArray *vmflds, double frac)
 {
-  TIC FAK->advance_b( vmflds, frac ); TOC( advance_b, 1 );
+  TIC vmflds->advance_b(frac); TOC(advance_b, 1);
 }
 
 void vpic_push_fields_advance_e(FieldArray *vmflds, double frac)
 {
-  TIC FAK->advance_e( vmflds, frac ); TOC( advance_e, 1 );
+  TIC vmflds->advance_e(frac); TOC(advance_e, 1);
 }
-
-#undef FAK
 
 // ======================================================================
 // vpic_print_status
