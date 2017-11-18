@@ -14,8 +14,6 @@
 
 #include <psc.h> // FIXME, only need the BND_* constants
 
-extern vpic_simulation *simulation;
-
 // ======================================================================
 // Particles
 
@@ -48,7 +46,7 @@ inline bool Particles::empty()
 // class Simulation
 
 struct Simulation {
-  Simulation();
+  Simulation(vpic_simulation *simulation);
   ~Simulation();
 
   void setup_grid(double dx[3], double dt, double cvac, double eps0);
@@ -75,18 +73,20 @@ struct Simulation {
   interpolator_array_t*& interpolator_array_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
-
   Particles particles_;
+
+  vpic_simulation *simulation_;
 };
 
-inline Simulation::Simulation()
+inline Simulation::Simulation(vpic_simulation *simulation)
   : grid_(simulation->grid),
     material_list_(simulation->material_list),
     field_array_(simulation->field_array),
     interpolator_array_(simulation->interpolator_array),
     accumulator_array_(simulation->accumulator_array),
     hydro_array_(simulation->hydro_array),
-    particles_(simulation->species_list)
+    particles_(simulation->species_list),
+    simulation_(simulation)
 {
 }
 
@@ -103,9 +103,9 @@ inline void Simulation::setup_grid(double dx[3], double dt, double cvac, double 
 inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdims[3],
 					     int np[3])
 {
-  simulation->px = size_t(np[0]);
-  simulation->py = size_t(np[1]);
-  simulation->pz = size_t(np[2]);
+  simulation_->px = size_t(np[0]);
+  simulation_->py = size_t(np[1]);
+  simulation_->pz = size_t(np[2]);
   grid_.partition_periodic_box(xl, xh, gdims, np);
 }
 

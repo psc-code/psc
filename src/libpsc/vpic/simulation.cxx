@@ -3,12 +3,14 @@
 
 #include <cassert>
 
+extern vpic_simulation *simulation;
+
 // ----------------------------------------------------------------------
 // C wrappers
 
 Simulation *Simulation_create()
 {
-  return new Simulation;
+  return new Simulation(simulation);
 }
 
 void Simulation_delete(Simulation *sim)

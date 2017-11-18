@@ -3,6 +3,8 @@
 
 #include "field_array.h"
 
+extern vpic_simulation *simulation;
+
 // ======================================================================
 // vpic_push_particles
 
