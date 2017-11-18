@@ -11,7 +11,8 @@
 // ----------------------------------------------------------------------
 
 struct psc_mfields_vpic {
-  struct vpic_mfields *vmflds;
+  struct vpic_mfields *vmflds_fields;
+  struct vpic_mfields *vmflds_hydro;
 };
 
 #define psc_mfields_vpic(mflds) ({					\
