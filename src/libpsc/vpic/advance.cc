@@ -123,7 +123,7 @@ void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmfl
   TIC
     for( int round=0; round<num_comm_round; round++ )
       ::boundary_p( simulation->particle_bc_list, vmprts->species_list,
-		    vmflds->field_array, accumulator_array );
+		    vmflds, accumulator_array );
   TOC( boundary_p, num_comm_round );
 
   species_t *sp;
@@ -145,7 +145,7 @@ void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmfl
       int i = pm->i; // particle index we are removing
       p0[i].i >>= 3; // shift particle voxel down
       // accumulate the particle's charge to the mesh
-      accumulate_rhob( vmflds->field_array->f, p0+i, sp->g, sp->q );
+      accumulate_rhob( vmflds->f, p0+i, sp->g, sp->q );
       p0[i] = p0[sp->np-1]; // put the last particle into position i
       sp->np--; // decrement the number of particles
     }
@@ -155,12 +155,12 @@ void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmfl
 
 void vpic_push_particles::unload_accumulator_array(vpic_mfields *vmflds)
 {
-  TIC ::unload_accumulator_array( vmflds->field_array, accumulator_array ); TOC( unload_accumulator, 1 );
+  TIC ::unload_accumulator_array( vmflds, accumulator_array ); TOC( unload_accumulator, 1 );
 }
 
 void vpic_push_particles::load_interpolator_array(vpic_mfields *vmflds)
 {
-  TIC ::load_interpolator_array( interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
+  TIC ::load_interpolator_array( interpolator_array, vmflds ); TOC( load_interpolator, 1 );
 }
 
 void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
@@ -173,100 +173,100 @@ void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
 // ======================================================================
 // vpic_mfields
 
-#define FAK field_array->kernel
+#define FAK kernel
 
 void vpic_mfields::clear_jf()
 {
-  TIC FAK->clear_jf( field_array ); TOC( clear_jf, 1 );
+  TIC FAK->clear_jf(this); TOC( clear_jf, 1 );
 }
 
 void vpic_mfields::synchronize_jf()
 {
-  TIC FAK->synchronize_jf( field_array ); TOC( synchronize_jf, 1 );
+  TIC FAK->synchronize_jf(this); TOC( synchronize_jf, 1 );
 }
 
 void vpic_mfields::compute_div_b_err()
 {
-  TIC FAK->compute_div_b_err( field_array ); TOC( compute_div_b_err, 1 );
+  TIC FAK->compute_div_b_err(this); TOC( compute_div_b_err, 1 );
 }
 
 void vpic_mfields::compute_div_e_err()
 {
-  TIC FAK->compute_div_e_err( field_array ); TOC( compute_div_e_err, 1 );
+  TIC FAK->compute_div_e_err(this); TOC( compute_div_e_err, 1 );
 }
 
 double vpic_mfields::compute_rms_div_b_err()
 {
   double err;
-  TIC err = FAK->compute_rms_div_b_err( field_array ); TOC( compute_rms_div_b_err, 1 );
+  TIC err = FAK->compute_rms_div_b_err(this); TOC( compute_rms_div_b_err, 1 );
   return err;
 }
 
 double vpic_mfields::compute_rms_div_e_err()
 {
   double err;
-  TIC err = FAK->compute_rms_div_e_err( field_array ); TOC( compute_rms_div_e_err, 1 );
+  TIC err = FAK->compute_rms_div_e_err(this); TOC( compute_rms_div_e_err, 1 );
   return err;
 }
 
 void vpic_mfields::clean_div_b()
 {
-  TIC FAK->clean_div_b( field_array ); TOC( clean_div_b, 1 );
+  TIC FAK->clean_div_b(this); TOC( clean_div_b, 1 );
 }
 
 void vpic_mfields::clean_div_e()
 {
-  TIC FAK->clean_div_e( field_array ); TOC( clean_div_e, 1 );
+  TIC FAK->clean_div_e(this); TOC( clean_div_e, 1 );
 }
 
 void vpic_mfields::compute_curl_b()
 {
-  TIC FAK->compute_curl_b( field_array ); TOC( compute_curl_b, 1 );
+  TIC FAK->compute_curl_b(this); TOC( compute_curl_b, 1 );
 }
 
 void vpic_mfields::clear_rhof()
 {
-  TIC FAK->clear_rhof( field_array ); TOC( clear_rhof, 1 );
+  TIC FAK->clear_rhof(this); TOC( clear_rhof, 1 );
 }
 
 void vpic_mfields::accumulate_rho_p(vpic_mparticles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->species_list )
-    TIC ::accumulate_rho_p( field_array, sp ); TOC( accumulate_rho_p, 1 );
+    TIC ::accumulate_rho_p(this, sp); TOC( accumulate_rho_p, 1 );
 }
 
 void vpic_mfields::synchronize_rho()
 {
-  TIC FAK->synchronize_rho( field_array ); TOC( synchronize_rho, 1 );
+  TIC FAK->synchronize_rho(this); TOC( synchronize_rho, 1 );
 }
 
 void vpic_mfields::compute_rhob()
 {
-  TIC FAK->compute_rhob( field_array ); TOC( compute_rhob, 1 );
+  TIC FAK->compute_rhob(this); TOC( compute_rhob, 1 );
 }
 
 double vpic_mfields::synchronize_tang_e_norm_b()
 {
   double err;
-  TIC err = FAK->synchronize_tang_e_norm_b( field_array ); TOC( synchronize_tang_e_norm_b, 1 );
+  TIC err = FAK->synchronize_tang_e_norm_b(this); TOC( synchronize_tang_e_norm_b, 1 );
   return err;
 }
 
 #undef FAK
-#define FAK vmflds->field_array->kernel
+#define FAK vmflds->kernel
 
 // ======================================================================
 // vpic_push_fields
 
 void vpic_push_fields_advance_b(struct vpic_mfields *vmflds, double frac)
 {
-  TIC FAK->advance_b( vmflds->field_array, frac ); TOC( advance_b, 1 );
+  TIC FAK->advance_b( vmflds, frac ); TOC( advance_b, 1 );
 }
 
 void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac)
 {
-  TIC FAK->advance_e( vmflds->field_array, frac ); TOC( advance_e, 1 );
+  TIC FAK->advance_e( vmflds, frac ); TOC( advance_e, 1 );
 }
 
 // ======================================================================

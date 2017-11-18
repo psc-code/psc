@@ -4,15 +4,18 @@
 
 #include "vpic_iface.h"
 
+#include "field_array.h"
 #include "hydro_array.h"
+
 #include <vpic.h>
 
 // ======================================================================
 // vpic_mfields
 
-struct vpic_mfields {
-  field_array_t* field_array;
-
+struct vpic_mfields : FieldArray {
+  vpic_mfields(Grid g, MaterialList m_list, float damp)
+    : FieldArray(g, m_list, damp) { }
+  
   void clear_jf();
   void synchronize_jf();
   void compute_div_b_err();
