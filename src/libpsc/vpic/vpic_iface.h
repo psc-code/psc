@@ -147,6 +147,9 @@ struct material *Simulation_define_material(struct Simulation *sim, const char *
 					    double eps, double mu,
 					    double sigma, double zeta);
 void Simulation_define_field_array(struct Simulation *sim, double damp);
+struct species * Simulation_define_species(struct Simulation *sim, const char *name, double q, double m,
+					   double max_local_np, double max_local_nm,
+					   double sort_interval, double sort_out_of_place);
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
@@ -305,9 +308,6 @@ void vpic_simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
 						 double dx[3],
 						 double thickness,
 						 struct material *resistive);
-struct species * vpic_simulation_define_species(const char *name, double q, double m,
-						double max_local_np, double max_local_nm,
-						double sort_interval, double sort_out_of_place);
 void vpic_simulation_inject_particle(struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,

@@ -356,10 +356,10 @@ psc_harris_setup_species(struct psc *psc)
   };
   psc_set_kinds(psc, 2, kinds);
 
-  vpic_simulation_define_species("electron", -phys->ec, phys->me, nmax, nmovers,
-				 sub->prm.electron_sort_interval, sort_method);
-  vpic_simulation_define_species("ion", phys->ec, phys->mi, nmax, nmovers,
-				 sub->prm.ion_sort_interval, sort_method);
+  Simulation_define_species(sub->sim, "electron", -phys->ec, phys->me, nmax, nmovers,
+			    sub->prm.electron_sort_interval, sort_method);
+  Simulation_define_species(sub->sim, "ion", phys->ec, phys->mi, nmax, nmovers,
+			    sub->prm.ion_sort_interval, sort_method);
 }
 
 // ----------------------------------------------------------------------

@@ -165,15 +165,6 @@ void vpic_simulation_set_region_resistive_harris(vpic_harris_params *prm,
   }
 }
 
-struct species *
-vpic_simulation_define_species(const char *name, double q, double m,
-			       double max_local_np, double max_local_nm,
-			       double sort_interval, double sort_out_of_place)
-{
-  return simulation->define_species(name, q, m, max_local_np, max_local_nm,
-				    sort_interval, sort_out_of_place);
-}
-
 void vpic_simulation_inject_particle(struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,

@@ -28,7 +28,10 @@ struct Simulation {
 				   double sigma, double zeta);
   field_array_t *new_field_array(float damp=0.);
   void define_field_array(double damp);
-  
+  species_t* define_species(const char *name, double q, double m,
+			    double max_local_np, double max_local_nm,
+			    double sort_interval, double sort_out_of_place);
+    
   RngPool rng_pool;
 
   //private:
@@ -39,6 +42,8 @@ struct Simulation {
   interpolator_array_t*& interpolator_array_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
+
+  species_t*& species_list_;
 };
 
 inline Simulation::Simulation()
@@ -47,7 +52,8 @@ inline Simulation::Simulation()
     field_array_(simulation->field_array),
     interpolator_array_(simulation->interpolator_array),
     accumulator_array_(simulation->accumulator_array),
-    hydro_array_(simulation->hydro_array)
+    hydro_array_(simulation->hydro_array),
+    species_list_(simulation->species_list)
 {
 }
 
@@ -132,6 +138,27 @@ inline void Simulation::define_field_array(double damp)
   grid_.mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
   grid_.mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
   grid_.mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
+}
+
+species_t* Simulation::define_species(const char *name, double q, double m,
+				      double max_local_np, double max_local_nm,
+				      double sort_interval, double sort_out_of_place)
+{
+  // Compute a reasonble number of movers if user did not specify
+  // Based on the twice the number of particles expected to hit the boundary
+  // of a wpdt=0.2 / dx=lambda species in a 3x3x3 domain
+  if (max_local_nm < 0) {
+    max_local_nm = 2 * max_local_np / 25;
+    if (max_local_nm<16*(MAX_PIPELINE+1))
+      max_local_nm = 16*(MAX_PIPELINE+1);
+  }
+  return append_species(species(name, (float)q, (float)m,
+				(int)max_local_np, (int)max_local_nm,
+				(int)sort_interval, (int)sort_out_of_place,
+				grid_.g_), &species_list_);
+
+    // return simulation->define_species(name, q, m, max_local_np, max_local_nm,
+    // 				    sort_interval, sort_out_of_place);
 }
 
 
