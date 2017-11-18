@@ -55,7 +55,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // be done after advance_p and before guard list processing. Note:
   // user_particle_injection should be a stub if sl_ is empty.
 
-  vpic_emitter();
+  Simulation_emitter(vpushp->sim_);
 
   if (vmprts->sl_) {
     // This should be after the emission and injection to allow for the
@@ -87,7 +87,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
   // the user wants electric field divergence cleaning to work.
 
-  vpic_current_injection();
+  Simulation_current_injection(vpushp->sim_);
 }
 
 // ----------------------------------------------------------------------

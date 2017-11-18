@@ -122,9 +122,9 @@ void vpic_push_fields_advance_e(struct FieldArray *vmflds, double frac);
 
 void vpic_sort_run(struct Particles *vmprts, int step);
 void Simulation_collision_run(struct Simulation *sim);
-void vpic_emitter();
-void vpic_current_injection();
-void vpic_field_injection();
+void Simulation_emitter(struct Simulation *sim);
+void Simulation_current_injection(struct Simulation *sim);
+void Simulation_field_injection(struct Simulation *sim);
 void vpic_moments_run(struct HydroArray *mflds, struct Particles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
