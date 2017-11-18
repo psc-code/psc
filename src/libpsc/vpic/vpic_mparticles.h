@@ -4,13 +4,15 @@
 
 #include "vpic_iface.h"
 
+#include "simulation.h"
 #include <vpic.h>
 
 // ======================================================================
 // vpic_mparticles
 
 struct vpic_mparticles {
-  species_t *species_list;
+  vpic_mparticles(species_t*& sl) : p_(sl) { }
+  Particles p_;
 };
 
 #endif

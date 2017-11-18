@@ -45,7 +45,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // empty and all particles should be inside the local computational domain.
   // Advance the particle lists.
 
-  if (vmprts->species_list) {
+  if (vmprts->p_.sl_) {
     vpushp->clear_accumulator_array();
     vpushp->advance_p(vmprts);
   }
@@ -54,11 +54,11 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // place those particles onto the guard list (boundary interaction) and
   // because advance_p requires an empty guard list, particle injection must
   // be done after advance_p and before guard list processing. Note:
-  // user_particle_injection should be a stub if species_list is empty.
+  // user_particle_injection should be a stub if p_.sl_ is empty.
 
   vpic_emitter();
 
-  if (vmprts->species_list) {
+  if (vmprts->p_.sl_) {
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
@@ -76,7 +76,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // Convert the accumulators into currents.
 
   vmflds->clear_jf();
-  if (vmprts->species_list) {
+  if (vmprts->p_.sl_) {
     vpushp->unload_accumulator_array(vmflds);
   }
   vmflds->synchronize_jf();
@@ -97,7 +97,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct vpic_mparticles *vmprts, struct FieldArray *vmflds)
 {
-  if (vmprts->species_list) {
+  if (vmprts->p_.sl_) {
     vpushp->load_interpolator_array(vmflds);
   }
 }
@@ -109,7 +109,7 @@ void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 				       struct vpic_mparticles *vmprts,
 				       struct FieldArray *vmflds)
 {
-  if (vmprts->species_list) {
+  if (vmprts->p_.sl_) {
     vpushp->load_interpolator_array(vmflds);
   }
   vpushp->uncenter_p(vmprts);
