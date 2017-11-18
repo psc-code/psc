@@ -61,6 +61,8 @@ void vpic_mfields_accumulate_rho_p(struct FieldArray *vmflds, struct Particles *
 void vpic_mfields_synchronize_rho(struct FieldArray *vmflds);
 void vpic_mfields_compute_rhob(struct FieldArray *vmflds);
 void vpic_mfields_compute_curl_b(struct FieldArray *vmflds);
+void vpic_mfields_advance_b(struct FieldArray *vmflds, double frac);
+void vpic_mfields_advance_e(struct FieldArray *vmflds, double frac);
 
 // ----------------------------------------------------------------------
 // vpic_mparticles
@@ -112,12 +114,6 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct FieldArray *vmflds);
 
 // ----------------------------------------------------------------------
-// vpic_push_fields
-
-void vpic_push_fields_advance_b(struct FieldArray *vmflds, double frac);
-void vpic_push_fields_advance_e(struct FieldArray *vmflds, double frac);
-
-// ----------------------------------------------------------------------
 // other (may want an object eventually)
 
 void vpic_sort_run(struct Particles *vmprts, int step);
@@ -125,7 +121,7 @@ void Simulation_collision_run(struct Simulation *sim);
 void Simulation_emitter(struct Simulation *sim);
 void Simulation_current_injection(struct Simulation *sim);
 void Simulation_field_injection(struct Simulation *sim);
-void vpic_moments_run(struct HydroArray *mflds, struct Particles *vmprts, int kind);
+void Simulation_moments_run(struct Simulation *sim, struct HydroArray *mflds, struct Particles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
 // Simulation

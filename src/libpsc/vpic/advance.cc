@@ -45,30 +45,3 @@ void vpic_sort_run(Particles *vmprts, int step)
 // ======================================================================
 // vpic_push_fields
 
-void vpic_push_fields_advance_b(FieldArray *vmflds, double frac)
-{
-  TIC vmflds->advance_b(frac); TOC(advance_b, 1);
-}
-
-void vpic_push_fields_advance_e(FieldArray *vmflds, double frac)
-{
-  TIC vmflds->advance_e(frac); TOC(advance_e, 1);
-}
-
-// ======================================================================
-// vpic_moments
-
-void vpic_moments_run(HydroArray *vmflds, Particles *vmprts, int kind)
-{
-  // This relies on load_interpolator_array() having been called earlier
-  clear_hydro_array(vmflds);
-  species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->sl_) {
-    if (sp->id == kind) {
-      accumulate_hydro_p(vmflds, sp, simulation->interpolator_array);
-      break;
-    }
-  }
-  
-  synchronize_hydro_array(vmflds);
-}

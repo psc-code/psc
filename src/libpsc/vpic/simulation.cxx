@@ -185,4 +185,20 @@ void Simulation_field_injection(Simulation* sim)
   TIC sim->simulation_->user_field_injection(); TOC(user_field_injection, 1);
 }
 
+// ----------------------------------------------------------------------
+// Simulation_moments_run
 
+void Simulation_moments_run(Simulation *sim, HydroArray *hydro_array, Particles *vmprts, int kind)
+{
+  // This relies on load_interpolator_array() having been called earlier
+  clear_hydro_array(hydro_array);
+  species_t *sp;
+  LIST_FOR_EACH(sp, vmprts->sl_) {
+    if (sp->id == kind) {
+      accumulate_hydro_p(hydro_array, sp, sim->simulation_->interpolator_array);
+      break;
+    }
+  }
+  
+  synchronize_hydro_array(hydro_array);
+}
