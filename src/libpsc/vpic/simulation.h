@@ -508,13 +508,8 @@ inline void field_array_dtor(field_array_t *fa)
 
 inline field_array_t *Simulation::new_field_array(float damp)
 {
-  //return ::new_standard_field_array(grid_.g_, material_list_.ml_, damp);
-  grid_t *g = grid_.g_;
-  material_t *m_list = material_list_.ml_;
-  
-  field_array_t * fa;
-  MALLOC( fa, 1 );
-  field_array_ctor(fa, g, m_list, damp);
+  field_array_t * fa = new field_array_t;
+  field_array_ctor(fa, grid_.g_, material_list_.ml_, damp);
   return fa;
 }
 
