@@ -43,8 +43,8 @@ enum {
 struct vpic_mfields;
 struct Simulation;
 
-struct vpic_mfields_hydro *vpic_mfields_new_hydro_array(struct Simulation *sim);
-float *vpic_mfields_hydro_get_data(struct vpic_mfields_hydro *fmflds, int *ib, int *im);
+struct HydroArray *vpic_mfields_new_hydro_array(struct Simulation *sim);
+float *vpic_mfields_hydro_get_data(struct HydroArray *vmflds, int *ib, int *im);
 
 struct vpic_mfields *vpic_mfields_new_fields_array(struct Simulation *sim);
 float *vpic_mfields_get_data(struct vpic_mfields *fmflds, int *ib, int *im);
@@ -125,7 +125,7 @@ void vpic_collision_run();
 void vpic_emitter();
 void vpic_current_injection();
 void vpic_field_injection();
-void vpic_moments_run(struct vpic_mfields_hydro *mflds, struct vpic_mparticles *vmprts, int kind);
+void vpic_moments_run(struct HydroArray *mflds, struct vpic_mparticles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
 // Simulation

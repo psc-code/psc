@@ -170,19 +170,17 @@ void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
     TIC ::uncenter_p( sp, interpolator_array ); TOC( uncenter_p, 1 );
 }
 
+#undef FAK
+
 // ======================================================================
-// vpic_mfields
 
-#define FAK kernel
-
-void vpic_mfields::accumulate_rho_p(vpic_mparticles *vmprts)
+void vpic_simulation_accumulate_rho_p(vpic_mfields *vmflds, vpic_mparticles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->species_list )
-    TIC ::accumulate_rho_p(this, sp); TOC( accumulate_rho_p, 1 );
+    TIC ::accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1 );
 }
 
-#undef FAK
 #define FAK vmflds->kernel
 
 // ======================================================================
@@ -209,7 +207,7 @@ void vpic_print_status()
 // ======================================================================
 // vpic_moments
 
-void vpic_moments_run(struct vpic_mfields_hydro *vmflds, struct vpic_mparticles *vmprts, int kind)
+void vpic_moments_run(HydroArray *vmflds, struct vpic_mparticles *vmprts, int kind)
 {
   // This relies on load_interpolator_array() having been called earlier
   clear_hydro_array(vmflds);

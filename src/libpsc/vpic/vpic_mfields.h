@@ -15,11 +15,6 @@
 struct vpic_mfields : FieldArray {
   vpic_mfields(Grid g, MaterialList m_list, float damp)
     : FieldArray(g, m_list, damp) { }
-  
-  void accumulate_rho_p(vpic_mparticles *vmprts);
-};
-
-struct vpic_mfields_hydro : HydroArray {
 };
 
 #endif

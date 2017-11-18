@@ -12,7 +12,7 @@
 
 struct psc_mfields_vpic {
   struct vpic_mfields *vmflds_fields;
-  struct vpic_mfields_hydro *vmflds_hydro;
+  struct HydroArray *vmflds_hydro;
 };
 
 #define psc_mfields_vpic(mflds) ({					\
