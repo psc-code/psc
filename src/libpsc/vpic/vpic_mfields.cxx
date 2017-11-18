@@ -27,7 +27,7 @@ vpic_mfields* vpic_mfields_new_fields_array(Simulation *sim)
 vpic_mfields_hydro* vpic_mfields_new_hydro_array(Simulation *sim)
 {
   vpic_mfields_hydro* vmflds = new vpic_mfields_hydro;
-  vmflds->hydro_array = sim->hydro_array_;
+  vmflds->hydro_array = static_cast<HydroArray*>(sim->hydro_array_);
 
   // Accessing the data as a C array relies on hydro_array_t to not change
   assert(sizeof(vmflds->hydro_array->h[0]) / sizeof(float) == VPIC_HYDRO_N_COMP);

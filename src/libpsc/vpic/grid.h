@@ -2,11 +2,13 @@
 #ifndef GRID_H
 #define GRID_H
 
+#include "vpic.h"
+
 // ======================================================================
 // Grid
 
 struct Grid {
-  Grid(grid *grid);
+  Grid(grid_t *grid);
   
   void setup(double dx[3], double dt, double cvac, double eps0);
   void partition_periodic_box(double xl[3], double xh[3], int gdims[3], int np[3]);
@@ -16,10 +18,10 @@ struct Grid {
   void mp_size_send_buffer(int tag, int size);
 
   //private:
-  grid *g_;
+  grid_t *g_;
 };
 
-inline Grid::Grid(grid *g)
+inline Grid::Grid(grid_t *g)
   : g_(g)
 {
 }

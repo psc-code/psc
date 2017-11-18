@@ -4,15 +4,14 @@
 
 #include "vpic_iface.h"
 
+#include "hydro_array.h"
 #include <vpic.h>
 
 // ======================================================================
 // vpic_mfields
 
 struct vpic_mfields {
-  field_array_t *field_array;
-
-  vpic_mfields() { }
+  field_array_t* field_array;
 
   void clear_jf();
   void synchronize_jf();
@@ -31,9 +30,8 @@ struct vpic_mfields {
 };
 
 struct vpic_mfields_hydro {
-  hydro_array_t *hydro_array;
+  HydroArray* hydro_array;
 
-  vpic_mfields_hydro() { }
 };
 
 #endif

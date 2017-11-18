@@ -2,6 +2,8 @@
 #ifndef HYDRO_ARRAY_H
 #define HYDRO_ARRAY_H
 
+#include "grid.h"
+
 // ======================================================================
 // HydroArray
 
