@@ -110,14 +110,6 @@ void vpic_push_fields_advance_e(FieldArray *vmflds, double frac)
 }
 
 // ======================================================================
-// vpic_print_status
-
-void vpic_print_status(vpic_simulation *vpic)
-{
-  update_profile(vpic->rank() == 0);
-}
-
-// ======================================================================
 // vpic_moments
 
 void vpic_moments_run(HydroArray *vmflds, Particles *vmprts, int kind)

@@ -331,8 +331,8 @@ psc_harris_setup_fields(struct psc *psc)
   mpi_printf(comm, "Finalizing Field Advance\n");
 
   assert(psc->nr_patches > 0);
-  vpic_simulation_set_region_resistive_harris(NULL, &sub->prm, phys, psc->patch[0].dx,
-					      0., resistive);
+  Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc->patch[0].dx,
+					 0., resistive);
 }
 
 // ----------------------------------------------------------------------

@@ -41,8 +41,10 @@ void vpic_base_init(int *pargc, char ***pargv)
 }
 
 void
-vpic_simulation_get_info(vpic_simulation *vpic, struct vpic_simulation_info *info)
+Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
 {
+  vpic_simulation *vpic = sim->simulation_;
+  
   info->num_step = vpic->num_step;
 
   // grid
@@ -80,6 +82,9 @@ vpic_simulation_get_info(vpic_simulation *vpic, struct vpic_simulation_info *inf
   info->status_interval = vpic->status_interval;
 }
 
+// ----------------------------------------------------------------------
+// vpic_simulation_new
+
 vpic_simulation *vpic_simulation_new()
 {
   extern vpic_simulation *simulation;
@@ -90,37 +95,49 @@ vpic_simulation *vpic_simulation_new()
   return simulation;
 }
 
-void vpic_simulation_user_initialization(vpic_simulation *vpic)
+// ----------------------------------------------------------------------
+// Simulation_user_intialization
+
+void Simulation_user_initialization(Simulation *sim)
 {
   // Call the user to initialize the simulation
-  TIC vpic->user_initialization(0, 0); TOC( user_initialization, 1 );
+  TIC sim->simulation_->user_initialization(0, 0); TOC( user_initialization, 1 );
 }
 
-// ======================================================================
-// vpic_diagnostics
+// ----------------------------------------------------------------------
+// Simulation_diagnostics
 
-void vpic_diagnostics(vpic_simulation *vpic)
+void Simulation_diagnostics(Simulation *sim)
 {
   // Let the user compute diagnostics
-  TIC vpic->user_diagnostics(); TOC( user_diagnostics, 1 );
+  TIC sim->simulation_->user_diagnostics(); TOC( user_diagnostics, 1 );
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
+// Simulation_inc_step
 
-void vpic_inc_step(vpic_simulation *vpic, int step)
+void Simulation_inc_step(Simulation *sim, int step)
 {
-  vpic->grid->step++;
-  assert(vpic->grid->step == step);
+  sim->grid_.g_->step++;
+  assert(sim->grid_.g_->step == step);
+}
+
+// ----------------------------------------------------------------------
+// vpic_print_status
+
+void Simulation_print_status(Simulation *sim)
+{
+  update_profile(sim->simulation_->rank() == 0);
 }
 
 // ======================================================================
 
-void vpic_simulation_set_region_resistive_harris(vpic_simulation *vpic,
-						 vpic_harris_params *prm,
-						 globals_physics *phys,
-						 double dx[3],
-						 double thickness,
-						 material_t *resistive)
+void Simulation_set_region_resistive_harris(Simulation *sim,
+					    vpic_harris_params *prm,
+					    globals_physics *phys,
+					    double dx[3],
+					    double thickness,
+					    material_t *resistive)
 {
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature
@@ -134,7 +151,7 @@ void vpic_simulation_set_region_resistive_harris(vpic_simulation *vpic,
     assert(0);
 #if 0
 #define field vpic->field
-    grid_t *grid = vpic->grid;
+    grid_t *grid = sim->grid_.g_;
     set_region_material(resistive_layer, resistive, resistive);
 #undef field
 #endif

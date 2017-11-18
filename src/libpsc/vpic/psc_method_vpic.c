@@ -53,8 +53,8 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   sub->sim = Simulation_create();
   
   struct vpic_simulation_info info;
-  vpic_simulation_user_initialization(sub->vpic);
-  vpic_simulation_get_info(sub->vpic, &info);
+  Simulation_user_initialization(sub->sim);
+  Simulation_get_info(sub->sim, &info);
   
   psc->prm.nmax = info.num_step;
   psc->prm.stats_every = info.status_interval;
@@ -260,11 +260,11 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   if (sub->split) {
     Simulation_diagnostics_run(psc_harris(psc)->sim, psc_harris(psc));
   } else {
-    vpic_diagnostics(sub->vpic);
+    Simulation_diagnostics(sub->sim);
   }
   psc_method_default_output(method, psc);
 
-  vpic_print_status(sub->vpic);
+  Simulation_print_status(sub->sim);
   psc_stats_log(psc);
   psc_print_profiling(psc);
 }
@@ -278,16 +278,16 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
   // FIXME, a hacky place to do this
-  vpic_inc_step(sub->vpic, psc->timestep);
+  Simulation_inc_step(sub->sim, psc->timestep);
 
   if (sub->split) {
     Simulation_diagnostics_run(psc_harris(psc)->sim, psc_harris(psc));
   } else {
-    vpic_diagnostics(sub->vpic);
+    Simulation_diagnostics(sub->sim);
   }
   
   if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
-    vpic_print_status(sub->vpic);
+    Simulation_print_status(sub->sim);
   }
   
   psc_method_default_output(NULL, psc);
