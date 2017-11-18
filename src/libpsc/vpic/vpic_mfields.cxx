@@ -109,7 +109,7 @@ void vpic_mfields_accumulate_rho_p(struct FieldArray *vmflds,
 				   struct vpic_mparticles *vmprts)
 {
   species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->p_.sl_)
+  LIST_FOR_EACH(sp, vmprts->sl_)
     TIC accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1);
 }
 

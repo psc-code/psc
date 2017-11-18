@@ -37,7 +37,7 @@ void vpic_sort_run(struct vpic_mparticles *vmprts, int step)
 
   species_t *sp;
 
-  LIST_FOR_EACH( sp, vmprts->p_.sl_ )
+  LIST_FOR_EACH( sp, vmprts->sl_ )
     if( (sp->sort_interval>0) && ((step % sp->sort_interval)==0) ) {
       if( rank()==0 ) MESSAGE(( "Performance sorting \"%s\"", sp->name ));
       TIC sort_p( sp ); TOC( sort_p, 1 );
@@ -110,7 +110,7 @@ void vpic_push_particles::advance_p(vpic_mparticles *vmprts)
 {
   species_t *sp;
 
-  LIST_FOR_EACH( sp, vmprts->p_.sl_ )
+  LIST_FOR_EACH( sp, vmprts->sl_ )
     TIC ::advance_p( sp, accumulator_array, interpolator_array ); TOC( advance_p, 1 );
 }
 
@@ -123,12 +123,12 @@ void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, FieldArray *vmflds
 {
   TIC
     for( int round=0; round<num_comm_round; round++ )
-      ::boundary_p( simulation->particle_bc_list, vmprts->p_.sl_,
+      ::boundary_p( simulation->particle_bc_list, vmprts->sl_,
 		    vmflds, accumulator_array );
   TOC( boundary_p, num_comm_round );
 
   species_t *sp;
-  LIST_FOR_EACH( sp, vmprts->p_.sl_ ) {
+  LIST_FOR_EACH( sp, vmprts->sl_ ) {
     if( sp->nm ) // && simulation->verbose )
       WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
                 sp->nm, sp->name ));
@@ -167,7 +167,7 @@ void vpic_push_particles::load_interpolator_array(FieldArray *vmflds)
 void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
 {
   species_t *sp;
-  LIST_FOR_EACH( sp, vmprts->p_.sl_ )
+  LIST_FOR_EACH( sp, vmprts->sl_ )
     TIC ::uncenter_p( sp, interpolator_array ); TOC( uncenter_p, 1 );
 }
 
@@ -178,7 +178,7 @@ void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
 void vpic_simulation_accumulate_rho_p(FieldArray *vmflds, vpic_mparticles *vmprts)
 {
   species_t *sp;
-  LIST_FOR_EACH( sp, vmprts->p_.sl_ )
+  LIST_FOR_EACH( sp, vmprts->sl_ )
     TIC ::accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1 );
 }
 
@@ -213,7 +213,7 @@ void vpic_moments_run(HydroArray *vmflds, struct vpic_mparticles *vmprts, int ki
   // This relies on load_interpolator_array() having been called earlier
   clear_hydro_array(vmflds);
   species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+  LIST_FOR_EACH(sp, vmprts->sl_) {
     if (sp->id == kind) {
       accumulate_hydro_p(vmflds, sp, simulation->interpolator_array);
       break;

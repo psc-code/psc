@@ -6,8 +6,6 @@
 
 #include "simulation.h"
 
-extern vpic_simulation *simulation;
-
 // ======================================================================
 // vpic_mparticles
 
@@ -30,7 +28,7 @@ int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts)
   int n_prts = 0;
 
   species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+  LIST_FOR_EACH(sp, vmprts->sl_) {
     n_prts += sp->np;
   }
 
@@ -52,7 +50,7 @@ void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
   for (int p = 0; p < n_patches; p++) {
     int n_prts = 0, n_prts_alloced = 0;
     species_t *sp;
-    LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+    LIST_FOR_EACH(sp, vmprts->sl_) {
       n_prts += sp->np;
       n_prts_alloced += sp->max_np;
     }
@@ -83,7 +81,7 @@ void vpic_mparticles_resize_all(struct vpic_mparticles *vmprts, int n_patches,
 
   if (n_prts_by_patch[0] == 0) {
     species_t *sp;
-    LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+    LIST_FOR_EACH(sp, vmprts->sl_) {
       sp->np = 0;
     }
   } else {
@@ -113,7 +111,7 @@ void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
 void vpic_mparticles_inject(struct vpic_mparticles *vmprts, int p,
 			    const struct psc_particle_inject *prt)
 {
-  species_t *sp = find_species_id(prt->kind, vmprts->p_.sl_);
+  species_t *sp = find_species_id(prt->kind, vmprts->sl_);
 
   vpic_simulation_inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
 				  prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
@@ -124,12 +122,12 @@ void vpic_mparticles_inject(struct vpic_mparticles *vmprts, int p,
 
 void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx)
 {
-  nx[0] = vmprts->p_.sl_->g->nx;
-  nx[1] = vmprts->p_.sl_->g->ny;
-  nx[2] = vmprts->p_.sl_->g->nz;
-  dx[0] = vmprts->p_.sl_->g->dx;
-  dx[1] = vmprts->p_.sl_->g->dy;
-  dx[2] = vmprts->p_.sl_->g->dz;
+  nx[0] = vmprts->sl_->g->nx;
+  nx[1] = vmprts->sl_->g->ny;
+  nx[2] = vmprts->sl_->g->nz;
+  dx[0] = vmprts->sl_->g->dx;
+  dx[1] = vmprts->sl_->g->dy;
+  dx[2] = vmprts->sl_->g->dz;
 }
 
 // ----------------------------------------------------------------------
@@ -141,7 +139,7 @@ void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int 
 {
   species_t *sp;
   unsigned int v_off = 0;
-  LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+  LIST_FOR_EACH(sp, vmprts->sl_) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
@@ -170,7 +168,7 @@ void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int 
 {
   species_t *sp;
   unsigned int v_off = 0;
-  LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+  LIST_FOR_EACH(sp, vmprts->sl_) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
@@ -196,7 +194,7 @@ void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int 
 void vpic_mparticles_push_back(struct vpic_mparticles *vmprts, const struct vpic_mparticles_prt *prt)
 {
   species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->p_.sl_) {
+  LIST_FOR_EACH(sp, vmprts->sl_) {
     if (sp->id == prt->kind) {
       assert(sp->np < sp->max_np);
       // the below is inject_particle_raw()

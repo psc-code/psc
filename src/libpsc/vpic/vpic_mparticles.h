@@ -10,9 +10,8 @@
 // ======================================================================
 // vpic_mparticles
 
-struct vpic_mparticles {
-  vpic_mparticles(species_t*& sl) : p_(sl) { }
-  Particles p_;
+struct vpic_mparticles : Particles {
+  vpic_mparticles(species_t*& sl) : Particles(sl) { }
 };
 
 #endif
