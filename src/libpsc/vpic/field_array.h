@@ -30,6 +30,7 @@ struct FieldArray : field_array_t {
   double synchronize_tang_e_norm_b();
   void advance_b(double frak);
   void advance_e(double frak);
+  void advanceB(double frac);
 };
 
 // ----------------------------------------------------------------------
@@ -322,7 +323,8 @@ inline double FieldArray::synchronize_tang_e_norm_b()
 
 inline void FieldArray::advance_b(double frac)
 {
-  FAK->advance_b(this, frac);
+  //  FAK->advance_b(this, frac);
+  advanceB(frac);
 }
 
 inline void FieldArray::advance_e(double frac)
