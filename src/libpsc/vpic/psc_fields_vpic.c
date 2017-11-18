@@ -38,8 +38,10 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
   mrc_domain_get_patches(mflds->domain,
 			 &mflds->nr_patches);
   assert(mflds->nr_patches == 1);
-
-  sub->vmflds = vpic_mfields_create();
+  assert(mflds->ibn[0] == 1);
+  assert(mflds->ibn[1] == 1);
+  assert(mflds->ibn[2] == 1);
+  assert(mflds->first_comp == 0);
 
   struct Simulation *sim;
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -50,28 +52,16 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
     assert(ref_count_fields == 0);
     ref_count_fields++;
 
-    // FIXME: can't do this because our comp_name array isn't
-    // this big
-    //mflds->nr_fields = VPIC_MFIELDS_N_COMP;
-    mflds->ibn[0] = 1;
-    mflds->ibn[1] = 1;
-    mflds->ibn[2] = 1;
-    assert(mflds->first_comp == 0);
-    vpic_mfields_ctor_from_simulation_fields(sub->vmflds, sim);
+    sub->vmflds = vpic_mfields_new_fields_array(sim);
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    assert(mflds->ibn[0] == 1);
-    assert(mflds->ibn[1] == 1);
-    assert(mflds->ibn[2] == 1);
-    assert(mflds->first_comp == 0);
-    vpic_mfields_ctor_from_simulation_hydro(sub->vmflds, sim);
-} else {
+    sub->vmflds = vpic_mfields_new_hydro_array(sim);
+  } else {
     assert(0);
-    //vpic_mfields_ctor(sub->vmflds);
   }
 }
 

@@ -5,44 +5,33 @@
 
 #include <cassert>
 
-extern vpic_simulation *simulation;
-
 // ======================================================================
 // vpic_mfields
 
 // ----------------------------------------------------------------------
-// vpic_mfields_create
+// vpic_mfields_new_fields_array
 
-struct vpic_mfields *
-vpic_mfields_create()
+vpic_mfields *vpic_mfields_new_fields_array(Simulation *sim)
 {
-  return new vpic_mfields;
-}
-
-// ----------------------------------------------------------------------
-// vpic_mfields_ctor_from_simulation_fields
-
-void
-vpic_mfields_ctor_from_simulation_fields(vpic_mfields *vmflds,
-					 Simulation *sim)
-{
+  vpic_mfields* vmflds = new vpic_mfields;
   vmflds->field_array = sim->field_array_;
 
-  // Accessing the data as a C array relies on fields_t to not change
+  // Accessing the data as a C array relies on fields_array_t to not change
   assert(sizeof(vmflds->field_array->f[0]) / sizeof(float) == VPIC_MFIELDS_N_COMP);
+  return vmflds;
 }
 
 // ----------------------------------------------------------------------
-// vpic_mfields_ctor_from_simulation_hydro
+// vpic_mfields_new_hydro_array
 
-void
-vpic_mfields_ctor_from_simulation_hydro(struct vpic_mfields *vmflds,
-					Simulation *sim)
+vpic_mfields *vpic_mfields_new_hydro_array(Simulation *sim)
 {
+  vpic_mfields* vmflds = new vpic_mfields;
   vmflds->hydro_array = sim->hydro_array_;
 
-  // Accessing the data as a C array relies on fields_t to not change
+  // Accessing the data as a C array relies on hydro_array_t to not change
   assert(sizeof(vmflds->hydro_array->h[0]) / sizeof(float) == VPIC_HYDRO_N_COMP);
+  return vmflds;
 }
 
 // ----------------------------------------------------------------------
