@@ -175,82 +175,11 @@ void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
 
 #define FAK kernel
 
-void vpic_mfields::clear_jf()
-{
-  TIC FAK->clear_jf(this); TOC( clear_jf, 1 );
-}
-
-void vpic_mfields::synchronize_jf()
-{
-  TIC FAK->synchronize_jf(this); TOC( synchronize_jf, 1 );
-}
-
-void vpic_mfields::compute_div_b_err()
-{
-  TIC FAK->compute_div_b_err(this); TOC( compute_div_b_err, 1 );
-}
-
-void vpic_mfields::compute_div_e_err()
-{
-  TIC FAK->compute_div_e_err(this); TOC( compute_div_e_err, 1 );
-}
-
-double vpic_mfields::compute_rms_div_b_err()
-{
-  double err;
-  TIC err = FAK->compute_rms_div_b_err(this); TOC( compute_rms_div_b_err, 1 );
-  return err;
-}
-
-double vpic_mfields::compute_rms_div_e_err()
-{
-  double err;
-  TIC err = FAK->compute_rms_div_e_err(this); TOC( compute_rms_div_e_err, 1 );
-  return err;
-}
-
-void vpic_mfields::clean_div_b()
-{
-  TIC FAK->clean_div_b(this); TOC( clean_div_b, 1 );
-}
-
-void vpic_mfields::clean_div_e()
-{
-  TIC FAK->clean_div_e(this); TOC( clean_div_e, 1 );
-}
-
-void vpic_mfields::compute_curl_b()
-{
-  TIC FAK->compute_curl_b(this); TOC( compute_curl_b, 1 );
-}
-
-void vpic_mfields::clear_rhof()
-{
-  TIC FAK->clear_rhof(this); TOC( clear_rhof, 1 );
-}
-
 void vpic_mfields::accumulate_rho_p(vpic_mparticles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->species_list )
     TIC ::accumulate_rho_p(this, sp); TOC( accumulate_rho_p, 1 );
-}
-
-void vpic_mfields::synchronize_rho()
-{
-  TIC FAK->synchronize_rho(this); TOC( synchronize_rho, 1 );
-}
-
-void vpic_mfields::compute_rhob()
-{
-  TIC FAK->compute_rhob(this); TOC( compute_rhob, 1 );
-}
-
-double vpic_mfields::synchronize_tang_e_norm_b()
-{
-  double err;
-  TIC err = FAK->synchronize_tang_e_norm_b(this); TOC( synchronize_tang_e_norm_b, 1 );
-  return err;
 }
 
 #undef FAK

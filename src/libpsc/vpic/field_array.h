@@ -15,6 +15,19 @@ struct FieldArray : field_array_t {
   ~FieldArray();
 
   float* getData(int* ib, int* im);
+  void clear_jf();
+  void synchronize_jf();
+  void compute_div_b_err();
+  void compute_div_e_err();
+  double compute_rms_div_b_err();
+  double compute_rms_div_e_err();
+  void clean_div_b();
+  void clean_div_e();
+  void compute_curl_b();
+  void clear_rhof();
+  void synchronize_rho();
+  void compute_rhob();
+  double synchronize_tang_e_norm_b();
 };
 
 // ----------------------------------------------------------------------
@@ -231,6 +244,81 @@ inline float* FieldArray::getData(int* ib, int* im)
   ib[2] = -B;
   return &f[0].ex;
 }
+
+#define FAK kernel
+
+inline void FieldArray::clear_jf()
+{
+  TIC FAK->clear_jf(this); TOC(clear_jf, 1);
+}
+
+inline void FieldArray::synchronize_jf()
+{
+  TIC FAK->synchronize_jf(this); TOC(synchronize_jf, 1);
+}
+
+inline void FieldArray::compute_div_b_err()
+{
+  TIC FAK->compute_div_b_err(this); TOC(compute_div_b_err, 1);
+}
+
+inline void FieldArray::compute_div_e_err()
+{
+  TIC FAK->compute_div_e_err(this); TOC(compute_div_e_err, 1);
+}
+
+inline double FieldArray::compute_rms_div_b_err()
+{
+  double err;
+  TIC err = FAK->compute_rms_div_b_err(this); TOC(compute_rms_div_b_err, 1);
+  return err;
+}
+
+inline double FieldArray::compute_rms_div_e_err()
+{
+  double err;
+  TIC err = FAK->compute_rms_div_e_err(this); TOC(compute_rms_div_e_err, 1);
+  return err;
+}
+
+inline void FieldArray::clean_div_b()
+{
+  TIC FAK->clean_div_b(this); TOC(clean_div_b, 1);
+}
+
+inline void FieldArray::clean_div_e()
+{
+  TIC FAK->clean_div_e(this); TOC(clean_div_e, 1);
+}
+
+inline void FieldArray::compute_curl_b()
+{
+  TIC FAK->compute_curl_b(this); TOC(compute_curl_b, 1);
+}
+
+inline void FieldArray::clear_rhof()
+{
+  TIC FAK->clear_rhof(this); TOC(clear_rhof, 1);
+}
+
+inline void FieldArray::synchronize_rho()
+{
+  TIC FAK->synchronize_rho(this); TOC(synchronize_rho, 1);
+}
+
+inline void FieldArray::compute_rhob()
+{
+  TIC FAK->compute_rhob(this); TOC(compute_rhob, 1);
+}
+
+inline double FieldArray::synchronize_tang_e_norm_b()
+{
+  double err;
+  TIC err = FAK->synchronize_tang_e_norm_b(this); TOC(synchronize_tang_e_norm_b, 1);
+  return err;
+}
+
+#undef FAK
 
 #endif
 
