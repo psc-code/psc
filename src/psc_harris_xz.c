@@ -261,6 +261,9 @@ psc_harris_setup(struct psc *psc)
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;
 
+  bool split;
+  psc_method_get_param_bool(psc->method, "split", &split);
+  if (split) {
   psc_harris_setup_ic(psc);
 
   // Determine the time step
@@ -279,7 +282,7 @@ psc_harris_setup(struct psc *psc)
 			     psc->prm.stats_every / 2,
 			     psc->prm.stats_every / 2,
 			     psc->prm.stats_every / 2);
-
+  }
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 }
