@@ -10,6 +10,7 @@ extern vpic_simulation *simulation;
 
 Simulation *Simulation_create()
 {
+  simulation = vpic_simulation_new();
   return new Simulation(simulation);
 }
 

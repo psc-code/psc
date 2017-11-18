@@ -518,12 +518,10 @@ psc_harris_setup(struct psc *psc)
   psc_marder_set_param_int(psc->marder, "num_div_e_round", 2);
   psc_marder_set_param_int(psc->marder, "num_div_b_round", 2);
     
-  // set high level VPIC simulation parameters
-  // FIXME, will be unneeded eventually
-  struct vpic_simulation *vpic = vpic_simulation_new();
   sub->sim = Simulation_create();
   psc_method_set_param_ptr(psc->method, "sim", sub->sim);
-  psc_method_set_param_ptr(psc->method, "vpic", vpic);
+  // set high level VPIC simulation parameters
+  // FIXME, will be unneeded eventually
   Simulation_set_params(sub->sim, psc->prm.nmax, psc->prm.stats_every,
 			psc->prm.stats_every / 2, psc->prm.stats_every / 2,
 			psc->prm.stats_every / 2);

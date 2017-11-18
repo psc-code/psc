@@ -33,7 +33,6 @@ static struct param psc_method_vpic_descr[] = {
   { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
 
   { "sim"                   , VAR(sim)                            , PARAM_PTR(NULL)   },
-  { "vpic"                  , VAR(vpic)                           , PARAM_PTR(NULL)   },
   {},
 };
 #undef VAR
@@ -49,7 +48,6 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 
   mpi_printf(comm, "*** Initializing\n");
   
-  sub->vpic = vpic_simulation_new();
   sub->sim = Simulation_create();
   
   struct vpic_simulation_info info;
