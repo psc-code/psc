@@ -12,9 +12,7 @@
 // vpic_push_particles
 
 struct vpic_push_particles {
-  // vpic_push_particles(Simulation *sim)
-  //   : sim_(sim) {
-  // }
+  vpic_push_particles(Simulation *sim);
       
   Simulation *sim_;
   InterpolatorArray* interpolator_array;
@@ -29,7 +27,6 @@ struct vpic_push_particles {
   void load_interpolator_array(FieldArray *vmflds);
   void uncenter_p(Particles *vmprts);
 };
-
 
 #endif
 
