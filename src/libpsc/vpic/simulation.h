@@ -232,14 +232,8 @@ inline void Simulation::define_field_array(double damp)
 {
   grid_t *grid = grid_.g_;
  
-  if (grid->nx<1 || grid->ny<1 || grid->nz<1 ) {
-    mprintf("Define your grid before defining the field array\n");
-    assert(0);
-  }
-  if (material_list_.empty()) {
-    mprintf("Define your materials before defining the field array\n");
-    assert(0);
-  }
+  assert(grid_.g_->nx && grid_.g_->ny && grid_.g_->ny);
+  assert(!material_list_.empty());
   
   field_array_ptr_.p_ = new FieldArray(grid_, material_list_, damp);
   interpolator_array_ptr_.p_ = ::new_interpolator_array(grid);
