@@ -495,7 +495,11 @@ psc_harris_setup(struct psc *psc)
 
   bool split;
   psc_method_get_param_bool(psc->method, "split", &split);
-  if (split) {
+  if (!split) {
+    psc_setup_super(psc);
+    return;
+  }
+
   psc_harris_setup_ic(psc);
 
   // Determine the time step
@@ -527,7 +531,6 @@ psc_harris_setup(struct psc *psc)
   psc_harris_setup_fields(psc);
   psc_harris_setup_species(psc);
   psc_harris_setup_log(psc);
-  }
 
   int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
   Simulation_diagnostics_init(sub->sim, interval);
