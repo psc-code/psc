@@ -81,62 +81,6 @@ inline Rng* RngPool::operator[](int n)
 }
 
 // ======================================================================
-// FieldArrayPtr
-
-struct FieldArrayPtr {
-  FieldArrayPtr(field_array_t*& p);
-
-  field_array_t *&p_;
-};
-
-inline FieldArrayPtr::FieldArrayPtr(field_array_t*& p)
-  : p_(p)
-{
-}
-
-// ======================================================================
-// InterpolatorArrayPtr
-
-struct InterpolatorArrayPtr {
-  InterpolatorArrayPtr(interpolator_array_t*& p);
-
-  interpolator_array_t *&p_;
-};
-
-inline InterpolatorArrayPtr::InterpolatorArrayPtr(interpolator_array_t*& p)
-  : p_(p)
-{
-}
-
-// ======================================================================
-// AccumulatorArrayPtr
-
-struct AccumulatorArrayPtr {
-  AccumulatorArrayPtr(accumulator_array_t*& p);
-
-  accumulator_array_t *&p_;
-};
-
-inline AccumulatorArrayPtr::AccumulatorArrayPtr(accumulator_array_t*& p)
-  : p_(p)
-{
-}
-
-// ======================================================================
-// HydroArrayPtr
-
-struct HydroArrayPtr {
-  HydroArrayPtr(hydro_array_t*& p);
-
-  hydro_array_t *&p_;
-};
-
-inline HydroArrayPtr::HydroArrayPtr(hydro_array_t*& p)
-  : p_(p)
-{
-}
-
-// ======================================================================
 // class Simulation
 
 struct Simulation {
@@ -160,19 +104,19 @@ struct Simulation {
   globals_diag *pDiag_;
   Grid grid_;
   MaterialList material_list_;
-  FieldArrayPtr field_array_ptr_;
-  InterpolatorArrayPtr interpolator_array_ptr_;
-  AccumulatorArrayPtr accumulator_array_ptr_;
-  HydroArrayPtr hydro_array_ptr_;
+  field_array_t*& field_array_;
+  interpolator_array_t*& interpolator_array_;
+  accumulator_array_t*& accumulator_array_;
+  hydro_array_t*& hydro_array_;
 };
 
 inline Simulation::Simulation()
   : grid_(simulation->grid),
     material_list_(simulation->material_list),
-    field_array_ptr_(simulation->field_array),
-    interpolator_array_ptr_(simulation->interpolator_array),
-    accumulator_array_ptr_(simulation->accumulator_array),
-    hydro_array_ptr_(simulation->hydro_array)
+    field_array_(simulation->field_array),
+    interpolator_array_(simulation->interpolator_array),
+    accumulator_array_(simulation->accumulator_array),
+    hydro_array_(simulation->hydro_array)
 {
 }
 
@@ -235,10 +179,10 @@ inline void Simulation::define_field_array(double damp)
   assert(grid_.g_->nx && grid_.g_->ny && grid_.g_->ny);
   assert(!material_list_.empty());
   
-  field_array_ptr_.p_ = new FieldArray(grid_, material_list_, damp);
-  interpolator_array_ptr_.p_ = ::new_interpolator_array(grid);
-  accumulator_array_ptr_.p_ = ::new_accumulator_array(grid);
-  hydro_array_ptr_.p_ = ::new_hydro_array(grid);
+  field_array_ = new FieldArray(grid_, material_list_, damp);
+  interpolator_array_ = ::new_interpolator_array(grid);
+  accumulator_array_ = ::new_accumulator_array(grid);
+  hydro_array_ = ::new_hydro_array(grid);
  
   // Pre-size communications buffers. This is done to get most memory
   // allocation over with before the simulation starts running
