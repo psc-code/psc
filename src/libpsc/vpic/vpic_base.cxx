@@ -145,12 +145,3 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
   }
 }
 
-void vpic_simulation_inject_particle(vpic_simulation *vpic,
-				     species_t * sp,
-				     double x,  double y,  double z,
-				     double ux, double uy, double uz,
-				     double w,  double age, bool update_rhob)
-{
-  vpic->inject_particle(sp, x, y, z, ux, uy, uz, w, age, update_rhob);
-}
-

@@ -108,7 +108,7 @@ void Simulation_set_params(Simulation *sim, int num_step, int status_interval,
 			   int sync_shared_interval, int clean_div_e_interval,
 			   int clean_div_b_interval)
 {
-  vpic_simulation_t *vpic = sim->simulation_;
+  vpic_simulation *vpic = sim->simulation_;
   vpic->num_step             = num_step;
   vpic->status_interval      = status_interval;
   vpic->sync_shared_interval = sync_shared_interval;

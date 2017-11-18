@@ -322,17 +322,6 @@ struct vpic_simulation_info {
 
 void vpic_base_init(int *pargc, char ***pargv);
 
-#ifdef __cplusplus
-typedef class vpic_simulation vpic_simulation_t;
-#else
-typedef struct vpic_simulation vpic_simulation_t;
-#endif
-
-void vpic_simulation_inject_particle(vpic_simulation_t *vpic, struct species * sp,
-				     double x,  double y,  double z,
-				     double ux, double uy, double uz,
-				     double w,  double age, bool update_rhob);
-
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 
