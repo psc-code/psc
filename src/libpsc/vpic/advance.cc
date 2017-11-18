@@ -280,7 +280,7 @@ void vpic_print_status()
 // ======================================================================
 // vpic_moments
 
-void vpic_moments_run(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts, int kind)
+void vpic_moments_run(struct vpic_mfields_hydro *vmflds, struct vpic_mparticles *vmprts, int kind)
 {
   // This relies on load_interpolator_array() having been called earlier
   assert(vmflds->hydro_array);

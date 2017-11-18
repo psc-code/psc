@@ -11,11 +11,8 @@
 
 struct vpic_mfields {
   field_array_t *field_array;
-  hydro_array_t *hydro_array;
 
-  vpic_mfields() :
-    field_array(0), hydro_array(0) {
-  }
+  vpic_mfields() { }
 
   void clear_jf();
   void synchronize_jf();
@@ -31,6 +28,12 @@ struct vpic_mfields {
   void synchronize_rho();
   void compute_rhob();
   double synchronize_tang_e_norm_b();
+};
+
+struct vpic_mfields_hydro {
+  hydro_array_t *hydro_array;
+
+  vpic_mfields_hydro() { }
 };
 
 #endif

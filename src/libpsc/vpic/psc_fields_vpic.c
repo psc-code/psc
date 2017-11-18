@@ -95,7 +95,7 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
     flds.data = vpic_mfields_get_data(sub->vmflds_fields, flds.ib, flds.im);
     flds.nr_comp = VPIC_MFIELDS_N_COMP;
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
-    flds.data = vpic_mfields_get_data(sub->vmflds_hydro, flds.ib, flds.im);
+    flds.data = vpic_mfields_hydro_get_data(sub->vmflds_hydro, flds.ib, flds.im);
     flds.nr_comp = VPIC_HYDRO_N_COMP;
   } else {
     assert(0);

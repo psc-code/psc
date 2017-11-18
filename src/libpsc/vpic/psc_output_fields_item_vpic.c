@@ -58,7 +58,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
   
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
-    struct vpic_mfields *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds_hydro;
+    struct vpic_mfields_hydro *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds_hydro;
     struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
     vpic_moments_run(vmflds_hydro, vmprts, kind);
     
