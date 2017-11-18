@@ -32,24 +32,12 @@ void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
 
 void Simulation_set_domain_field_bc(struct Simulation *sim, int boundary, int bc)
 {
-  int fbc;
-  switch (bc) {
-  case BND_FLD_CONDUCTING_WALL: fbc = pec_fields   ; break;
-  case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
-  default: assert(0);
-  }
-  simulation->set_domain_field_bc(boundary, fbc);
+  sim->set_domain_field_bc(boundary, bc);
 }
 
 void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
 {
-  int pbc;
-  switch (bc) {
-  case BND_PART_REFLECTING: pbc = reflect_particles; break;
-  case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
-  default: assert(0);
-  }
-  simulation->set_domain_particle_bc(boundary, pbc);
+  sim->set_domain_particle_bc(boundary, bc);
 }
 
 struct material *Simulation_define_material(struct Simulation *sim, const char *name,
