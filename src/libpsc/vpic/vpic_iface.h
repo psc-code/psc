@@ -93,6 +93,7 @@ void vpic_mparticles_set_particles(struct Particles *vmprts, unsigned int n_prts
 				   void *ctx);
 void vpic_mparticles_push_back(struct Particles *vmprts, const struct vpic_mparticles_prt *prt);
 void vpic_mparticles_get_grid_nx_dx(struct Particles *vmprts, int *nx, float *dx);
+void vpic_mparticles_sort(struct Particles *vmprts, int step);
 
 void vpic_mparticles_copy_to_single_by_kind(struct Particles *vmprts, bk_mparticles *bkmprts);
 void vpic_mparticles_copy_from_single_by_kind(struct Particles *vmprts, bk_mparticles *bkmprts);
@@ -112,16 +113,6 @@ void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct Particles *mprts,
 			      struct FieldArray *vmflds);
-
-// ----------------------------------------------------------------------
-// other (may want an object eventually)
-
-void vpic_sort_run(struct Particles *vmprts, int step);
-void Simulation_collision_run(struct Simulation *sim);
-void Simulation_emitter(struct Simulation *sim);
-void Simulation_current_injection(struct Simulation *sim);
-void Simulation_field_injection(struct Simulation *sim);
-void Simulation_moments_run(struct Simulation *sim, struct HydroArray *mflds, struct Particles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
 // Simulation
@@ -153,6 +144,12 @@ struct species * Simulation_define_species(struct Simulation *sim, const char *n
 					   double sort_interval, double sort_out_of_place);
 void Simulation_inject_particle(struct Simulation *sim, struct Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
+void Simulation_collision_run(struct Simulation *sim);
+void Simulation_emitter(struct Simulation *sim);
+void Simulation_current_injection(struct Simulation *sim);
+void Simulation_field_injection(struct Simulation *sim);
+void Simulation_moments_run(struct Simulation *sim, struct HydroArray *mflds, struct Particles *vmprts, int kind);
+
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);

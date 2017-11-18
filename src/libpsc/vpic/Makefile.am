@@ -32,8 +32,7 @@ libsubdir_la_SOURCES = \
 	simulation.cxx \
 	main.cxx \
 	wrapper.cxx \
-	wrapper_split.cxx \
-	advance.cc
+	wrapper_split.cxx
 
 endif USE_VPIC
 
