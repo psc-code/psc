@@ -112,7 +112,7 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 static double
 psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   return vpic_mfields_synchronize_tang_e_norm_b(vmflds);
 }
@@ -120,7 +120,7 @@ psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_compute_div_b_err(vmflds);
 }
@@ -128,7 +128,7 @@ psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds)
 static double
 psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   return vpic_mfields_compute_rms_div_b_err(vmflds);
 }
@@ -136,7 +136,7 @@ psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_clean_div_b(vmflds);
 }
@@ -144,7 +144,7 @@ psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_compute_div_e_err(vmflds);
 }
@@ -152,7 +152,7 @@ psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
 static double
 psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   return vpic_mfields_compute_rms_div_e_err(vmflds);
 }
@@ -160,7 +160,7 @@ psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_clean_div_e(vmflds);
 }
@@ -168,7 +168,7 @@ psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_clear_rhof(vmflds);
 }
@@ -177,8 +177,8 @@ static void
 psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
 				  struct psc_mparticles *mprts)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mfields_accumulate_rho_p(vmflds, vmprts);
 }
@@ -186,7 +186,7 @@ psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
 static void
 psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_synchronize_rho(vmflds);
 }
@@ -194,7 +194,7 @@ psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_compute_rhob(vmflds);
 }
@@ -202,7 +202,7 @@ psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
 {
-  struct vpic_mfields *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
 
   vpic_mfields_compute_curl_b(vmflds);
 }

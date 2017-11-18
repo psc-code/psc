@@ -4,7 +4,7 @@
 
 #include "vpic_iface.h"
 
-#include "vpic_init.h" // FIXME, bad name for _diag
+#include "vpic_diag.h"
 
 #include "field_array.h"
 #include "interpolator_array.h"
@@ -13,6 +13,8 @@
 #include "rng.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
+
+extern vpic_simulation *simulation;
 
 // ======================================================================
 // Particles

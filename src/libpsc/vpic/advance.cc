@@ -10,7 +10,6 @@
 
 #include "vpic_iface.h"
 #include "vpic_push_particles.h"
-#include "vpic_init.h"
 #include "field_array.h"
 #include "hydro_array.h"
 

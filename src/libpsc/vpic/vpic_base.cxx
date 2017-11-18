@@ -1,7 +1,6 @@
 
 #include "vpic_iface.h"
 
-#include "vpic_init.h"
 #include "vpic_push_particles.h"
 
 #include <vpic.h>

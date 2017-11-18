@@ -21,7 +21,7 @@ static void
 copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
   
   int n_prts_by_patch[mprts->nr_patches];
   vpic_mparticles_get_size_all(vmprts, mprts->nr_patches, n_prts_by_patch);
@@ -45,7 +45,7 @@ static void
 copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   int n_prts_by_patch[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -146,7 +146,7 @@ static void
 psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
   struct bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
 
   vpic_mparticles_copy_from_single_by_kind(vmprts, bkmprts);
@@ -156,7 +156,7 @@ static void
 psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
   struct bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
 
   vpic_mparticles_copy_to_single_by_kind(vmprts, bkmprts);
@@ -192,7 +192,7 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
 static void
 psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mparticles_get_size_all(vmprts, mprts->nr_patches, n_prts_by_patch);
 }
@@ -203,7 +203,7 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 static void
 psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mparticles_reserve_all(vmprts, mprts->nr_patches, n_prts_by_patch);
 }
@@ -214,7 +214,7 @@ psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 static void
 psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mparticles_resize_all(vmprts, mprts->nr_patches, n_prts_by_patch);
 }
@@ -225,7 +225,7 @@ psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 static unsigned int
 psc_mparticles_vpic_get_nr_particles(struct psc_mparticles *mprts)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
   
   return vpic_mparticles_get_nr_particles(vmprts);
 }
@@ -237,7 +237,7 @@ static void
 psc_mparticles_vpic_inject(struct psc_mparticles *mprts, int p,
 			   const struct psc_particle_inject *prt)
 {
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mparticles_inject(vmprts, p, prt);
 }

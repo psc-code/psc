@@ -2,9 +2,12 @@
 #ifndef VPIC_IFACE_H
 #define VPIC_IFACE_H
 
+#include <stdbool.h>
+
 #include "../bk_mparticles_iface.h" // FIXME, path
 
 #ifdef __cplusplus
+
 extern "C" {
 #endif
 #if 0 // hack to fix indentation
@@ -69,6 +72,8 @@ struct vpic_mparticles_prt {
   float w;
   int kind;
 };
+
+struct psc_particle_inject;
 
 struct Particles *vpic_mparticles_new_from_simulation(struct Simulation *sim);
 int vpic_mparticles_get_nr_particles(struct Particles *vmprts);

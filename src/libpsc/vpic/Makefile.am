@@ -25,6 +25,7 @@ libsubdir_la_SOURCES = \
 	psc_output_fields_item_vpic.c \
 	\
 	vpic_base.cxx \
+	vpic_diag.cxx \
 	vpic_mfields.cxx \
 	vpic_mparticles.cxx \
 	vpic_push_particles.cxx \
