@@ -10,7 +10,11 @@ extern vpic_simulation *simulation;
 
 Simulation *Simulation_create()
 {
-  simulation = vpic_simulation_new();
+  extern vpic_simulation *simulation;
+  assert(!simulation);
+
+  if( world_rank==0 ) log_printf( "*** Initializing\n" );
+  simulation = new vpic_simulation;
   return new Simulation(simulation);
 }
 

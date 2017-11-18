@@ -133,9 +133,8 @@ void vpic_moments_run(struct HydroArray *mflds, struct Particles *vmprts, int ki
 // ----------------------------------------------------------------------
 // Simulation
 
-struct psc_harris;
-
 struct Simulation;
+struct vpic_simulation_info;
 struct field_array;
 
 struct Simulation *Simulation_create();
@@ -162,7 +161,27 @@ struct species * Simulation_define_species(struct Simulation *sim, const char *n
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);
 void Simulation_diagnostics_setup(struct Simulation *sim);
+
+void Simulation_get_info(struct Simulation *sim, struct vpic_simulation_info *info);
+void Simulation_print_status(struct Simulation *sim);
+void Simulation_diagnostics(struct Simulation *sim);
+void Simulation_inc_step(struct Simulation *sim, int step);
+void Simulation_user_initialization(struct Simulation *sim);
+
+// Harris specific
+struct psc_harris;
+struct vpic_harris_params;
+struct globals_physics;
+
 void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);
+void Simulation_set_region_resistive_harris(struct Simulation *sim,
+					    struct vpic_harris_params *prm,
+					    struct globals_physics *phys,
+					    double dx[3],
+					    double thickness,
+					    struct material *resistive);
+
+
 
 void Simulation_rngPool_seed(struct Simulation *sim, int base);
 struct Rng *Simulation_rngPool_get(struct Simulation *sim, int n);
@@ -311,15 +330,6 @@ typedef class vpic_simulation vpic_simulation_t;
 typedef struct vpic_simulation vpic_simulation_t;
 #endif
 
-vpic_simulation_t *vpic_simulation_new();
-void Simulation_get_info(struct Simulation *sim, struct vpic_simulation_info *info);
-void Simulation_user_initialization(struct Simulation *sim);
-void Simulation_set_region_resistive_harris(struct Simulation *sim,
-					    struct vpic_harris_params *prm,
-					    struct globals_physics *phys,
-					    double dx[3],
-					    double thickness,
-					    struct material *resistive);
 void vpic_simulation_inject_particle(vpic_simulation_t *vpic, struct species * sp,
 				     double x,  double y,  double z,
 				     double ux, double uy, double uz,
@@ -327,10 +337,6 @@ void vpic_simulation_inject_particle(vpic_simulation_t *vpic, struct species * s
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
-
-void Simulation_print_status(struct Simulation *sim);
-void Simulation_diagnostics(struct Simulation *sim);
-void Simulation_inc_step(struct Simulation *sim, int step);
 
 
 #if 0

@@ -83,19 +83,6 @@ Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
 }
 
 // ----------------------------------------------------------------------
-// vpic_simulation_new
-
-vpic_simulation *vpic_simulation_new()
-{
-  extern vpic_simulation *simulation;
-  assert(!simulation);
-
-  if( world_rank==0 ) log_printf( "*** Initializing\n" );
-  simulation = new vpic_simulation;
-  return simulation;
-}
-
-// ----------------------------------------------------------------------
 // Simulation_user_intialization
 
 void Simulation_user_initialization(Simulation *sim)
