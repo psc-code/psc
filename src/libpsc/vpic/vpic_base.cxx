@@ -40,7 +40,7 @@ void vpic_base_init(int *pargc, char ***pargv)
   }
 }
 
-static void
+void
 vpic_simulation_get_info(vpic_simulation *vpic, struct vpic_simulation_info *info)
 {
   info->num_step = vpic->num_step;
@@ -90,12 +90,10 @@ vpic_simulation *vpic_simulation_new()
   return simulation;
 }
 
-void vpic_simulation_init(vpic_simulation *vpic, vpic_simulation_info *info)
+void vpic_simulation_user_initialization(vpic_simulation *vpic)
 {
-  // Call the user initialize the simulation
+  // Call the user to initialize the simulation
   TIC vpic->user_initialization(0, 0); TOC( user_initialization, 1 );
-
-  vpic_simulation_get_info(vpic, info);
 }
 
 // ======================================================================
@@ -114,7 +112,6 @@ void vpic_inc_step(vpic_simulation *vpic, int step)
   vpic->grid->step++;
   assert(vpic->grid->step == step);
 }
-
 
 // ======================================================================
 

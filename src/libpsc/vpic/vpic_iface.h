@@ -312,7 +312,8 @@ typedef struct vpic_simulation vpic_simulation_t;
 #endif
 
 vpic_simulation_t *vpic_simulation_new();
-void vpic_simulation_init(vpic_simulation_t *vpic, struct vpic_simulation_info *info);
+void vpic_simulation_get_info(vpic_simulation_t *vpic, struct vpic_simulation_info *info);
+void vpic_simulation_user_initialization(vpic_simulation_t *vpic);
 void vpic_simulation_set_region_resistive_harris(vpic_simulation_t *vpic,
 						 struct vpic_harris_params *prm,
 						 struct globals_physics *phys,

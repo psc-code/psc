@@ -53,7 +53,8 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   sub->sim = Simulation_create();
   
   struct vpic_simulation_info info;
-  vpic_simulation_init(sub->vpic, &info);
+  vpic_simulation_user_initialization(sub->vpic);
+  vpic_simulation_get_info(sub->vpic, &info);
   
   psc->prm.nmax = info.num_step;
   psc->prm.stats_every = info.status_interval;
