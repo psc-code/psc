@@ -13,6 +13,8 @@
 struct FieldArray : field_array_t {
   FieldArray(Grid g, MaterialList m_list, float damp);
   ~FieldArray();
+
+  float* getData(int* ib, int* im);
 };
 
 // ----------------------------------------------------------------------
@@ -217,6 +219,18 @@ inline FieldArray::~FieldArray()
   field_array_dtor(this);
 }
 
+inline float* FieldArray::getData(int* ib, int* im)
+{
+  const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+
+  im[0] = g->nx + 2*B;
+  im[1] = g->ny + 2*B;
+  im[2] = g->nz + 2*B;
+  ib[0] = -B;
+  ib[1] = -B;
+  ib[2] = -B;
+  return &f[0].ex;
+}
 
 #endif
 
