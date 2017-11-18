@@ -26,8 +26,8 @@
 
 static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
 				  vpic_params *vprm, globals_physics *phys);
-static void user_init_grid(vpic_simulation *simulation, vpic_harris_params *prm,
-			   vpic_params *vprm, globals_physics *phys);
+static void user_init_grid(vpic_simulation *simulation, vpic_params *vprm,
+			   psc_harris *sub);
 static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
 			  vpic_params *vprm, globals_physics *phys, globals_diag *diag);
 static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
@@ -47,7 +47,7 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
   ///////////////////////////////////////////////
   // Setup high level simulation parameters
 
-  user_init_grid(simulation, harris, vprm, phys);
+  user_init_grid(simulation, vprm, sub);
 
   user_setup_fields(simulation, harris, vprm, phys);
 
@@ -103,18 +103,12 @@ static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
 // ----------------------------------------------------------------------
 // user_init_grid
 
-static void user_init_grid(vpic_simulation *simulation, vpic_harris_params *prm,
-			   vpic_params *vprm, globals_physics *phys)
+static void user_init_grid(vpic_simulation *simulation, vpic_params *vprm,
+			   psc_harris *sub)
 {
+  vpic_harris_params *prm = &sub->prm;
+  globals_physics *phys = &sub->phys;
   grid_t *grid = simulation->grid;
-  
-  // Setup basic grid parameters
-  grid->dx = phys->Lx / vprm->gdims[0];
-  grid->dy = phys->Ly / vprm->gdims[1];
-  grid->dz = phys->Lz / vprm->gdims[2];
-  grid->dt = phys->dt;
-  grid->cvac = phys->c;
-  grid->eps0 = phys->eps0;
 
   // Define the grid
   simulation->define_periodic_grid(0       , -0.5*phys->Ly, -0.5*phys->Lz,      // Low corner

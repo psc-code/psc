@@ -236,6 +236,23 @@ psc_harris_setup_ic(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_harris_setup_domain
+
+static void
+psc_harris_setup_domain(struct psc *psc)
+{
+  struct psc_harris *sub = psc_harris(psc);
+  struct globals_physics *phys = &sub->phys;
+
+  // Setup basic grid parameters
+  double dx[3];
+  dx[0] = phys->Lx / psc->domain.gdims[0];
+  dx[1] = phys->Ly / psc->domain.gdims[1];
+  dx[2] = phys->Lz / psc->domain.gdims[2];
+  vpic_simulation_setup_grid(dx, phys->dt, phys->c, phys->eps0);
+}
+
+// ----------------------------------------------------------------------
 // courant length
 //
 // FIXME, the dt calculating should be consolidated with what regular PSC does
@@ -282,7 +299,9 @@ psc_harris_setup(struct psc *psc)
 			     psc->prm.stats_every / 2,
 			     psc->prm.stats_every / 2,
 			     psc->prm.stats_every / 2);
+  psc_harris_setup_domain(psc);
   }
+
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 }

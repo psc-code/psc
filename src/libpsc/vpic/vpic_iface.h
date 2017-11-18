@@ -281,6 +281,8 @@ void vpic_simulation_set_params(int num_step,
 				int sync_shared_interval,
 				int clean_div_e_interval,
 				int clean_div_b_interval);
+void vpic_simulation_setup_grid(double dx[3], double dt,
+				double cvac, double eps0);
 
 
 void vpic_print_status();
