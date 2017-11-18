@@ -247,7 +247,7 @@ struct Simulation {
 
   struct material *define_material(const char *name, double eps, double mu,
 				   double sigma, double zeta);
-  field_array_t *new_field_array(double damp=0.);
+  field_array_t *new_field_array(float damp=0.);
   void define_field_array(double damp);
   
   RngPool rng_pool;
@@ -473,15 +473,15 @@ create_sfa_params( grid_t           * g,
   return p;
 }
 
-inline field_array_t *Simulation::new_field_array(double damp)
+inline void
+destroy_sfa_params( sfa_params_t * p ) {
+  FREE_ALIGNED( p->mc );
+  FREE( p );
+}
+
+inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp)
 {
-  //return ::new_standard_field_array(grid_.g_, material_list_.ml_, damp);
-  grid_t *g = grid_.g_;
-  material_t *m_list = material_list_.ml_;
-  
-  field_array_t * fa;
-  if( !g || !m_list || damp<0 ) ERROR(( "Bad args" ));
-  MALLOC( fa, 1 );
+  assert(g && m_list && damp >= 0.);
   MALLOC_ALIGNED( fa->f, g->nv, 128 );
   CLEAR( fa->f, g->nv );
   fa->g = g;
@@ -497,7 +497,24 @@ inline field_array_t *Simulation::new_field_array(double damp)
     fa->kernel->compute_div_e_err = vacuum_compute_div_e_err;
     fa->kernel->clean_div_e       = vacuum_clean_div_e;
   }
+}
 
+inline void field_array_dtor(field_array_t *fa)
+{
+  destroy_sfa_params( (sfa_params_t *)fa->params );
+  FREE_ALIGNED( fa->f );
+}
+
+
+inline field_array_t *Simulation::new_field_array(float damp)
+{
+  //return ::new_standard_field_array(grid_.g_, material_list_.ml_, damp);
+  grid_t *g = grid_.g_;
+  material_t *m_list = material_list_.ml_;
+  
+  field_array_t * fa;
+  MALLOC( fa, 1 );
+  field_array_ctor(fa, g, m_list, damp);
   return fa;
 }
 
