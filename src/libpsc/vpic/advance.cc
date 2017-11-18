@@ -9,10 +9,11 @@
  */
 
 #include "vpic_iface.h"
-#include "vpic_mfields.h"
 #include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
 #include "vpic_init.h"
+#include "field_array.h"
+#include "hydro_array.h"
 
 #include "vpic.h"
 
@@ -118,7 +119,7 @@ void vpic_push_particles::reduce_accumulator_array()
   TIC ::reduce_accumulator_array( accumulator_array ); TOC( reduce_accumulators, 1 );
 }
 
-void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmflds)
+void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, FieldArray *vmflds)
 {
   TIC
     for( int round=0; round<num_comm_round; round++ )
@@ -153,12 +154,12 @@ void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmfl
   }
 }
 
-void vpic_push_particles::unload_accumulator_array(vpic_mfields *vmflds)
+void vpic_push_particles::unload_accumulator_array(FieldArray *vmflds)
 {
   TIC ::unload_accumulator_array( vmflds, accumulator_array ); TOC( unload_accumulator, 1 );
 }
 
-void vpic_push_particles::load_interpolator_array(vpic_mfields *vmflds)
+void vpic_push_particles::load_interpolator_array(FieldArray *vmflds)
 {
   TIC ::load_interpolator_array( interpolator_array, vmflds ); TOC( load_interpolator, 1 );
 }
@@ -174,7 +175,7 @@ void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
 
 // ======================================================================
 
-void vpic_simulation_accumulate_rho_p(vpic_mfields *vmflds, vpic_mparticles *vmprts)
+void vpic_simulation_accumulate_rho_p(FieldArray *vmflds, vpic_mparticles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->species_list )
@@ -186,12 +187,12 @@ void vpic_simulation_accumulate_rho_p(vpic_mfields *vmflds, vpic_mparticles *vmp
 // ======================================================================
 // vpic_push_fields
 
-void vpic_push_fields_advance_b(struct vpic_mfields *vmflds, double frac)
+void vpic_push_fields_advance_b(struct FieldArray *vmflds, double frac)
 {
   TIC FAK->advance_b( vmflds, frac ); TOC( advance_b, 1 );
 }
 
-void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac)
+void vpic_push_fields_advance_e(struct FieldArray *vmflds, double frac)
 {
   TIC FAK->advance_e( vmflds, frac ); TOC( advance_e, 1 );
 }

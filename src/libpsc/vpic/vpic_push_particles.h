@@ -17,9 +17,9 @@ struct vpic_push_particles {
   void clear_accumulator_array();
   void advance_p(vpic_mparticles *vmprts);
   void reduce_accumulator_array();
-  void boundary_p(vpic_mparticles *vmprts, vpic_mfields *vmflds);
-  void unload_accumulator_array(vpic_mfields *vmflds);
-  void load_interpolator_array(vpic_mfields *vmflds);
+  void boundary_p(vpic_mparticles *vmprts, FieldArray *vmflds);
+  void unload_accumulator_array(FieldArray *vmflds);
+  void load_interpolator_array(FieldArray *vmflds);
   void uncenter_p(vpic_mparticles *vmprts);
 };
 

@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------
 
 struct psc_mfields_vpic {
-  struct vpic_mfields *vmflds_fields;
+  struct FieldArray *vmflds_fields;
   struct HydroArray *vmflds_hydro;
 };
 
