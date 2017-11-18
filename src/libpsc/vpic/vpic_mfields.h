@@ -29,9 +29,7 @@ struct vpic_mfields {
   double synchronize_tang_e_norm_b();
 };
 
-struct vpic_mfields_hydro {
-  HydroArray* hydro_array;
-
+struct vpic_mfields_hydro : HydroArray {
 };
 
 #endif

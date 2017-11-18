@@ -9,6 +9,26 @@
 // vpic_mfields
 
 // ----------------------------------------------------------------------
+// vpic_mfields_new_hydro_array
+
+vpic_mfields_hydro* vpic_mfields_new_hydro_array(Simulation *sim)
+{
+  vpic_mfields_hydro* vmflds = static_cast<vpic_mfields_hydro*>(sim->hydro_array_);
+
+  // Accessing the data as a C array relies on hydro_array_t to not change
+  assert(sizeof(vmflds->h[0]) / sizeof(float) == VPIC_HYDRO_N_COMP);
+  return vmflds;
+}
+
+// ----------------------------------------------------------------------
+// vpic_mfields_hydro_get_data
+
+float *vpic_mfields_hydro_get_data(struct vpic_mfields_hydro *vmflds, int *ib, int *im)
+{
+  return vmflds->getData(ib, im);
+}
+
+// ----------------------------------------------------------------------
 // vpic_mfields_new_fields_array
 
 vpic_mfields* vpic_mfields_new_fields_array(Simulation *sim)
@@ -18,19 +38,6 @@ vpic_mfields* vpic_mfields_new_fields_array(Simulation *sim)
 
   // Accessing the data as a C array relies on fields_array_t to not change
   assert(sizeof(vmflds->field_array->f[0]) / sizeof(float) == VPIC_MFIELDS_N_COMP);
-  return vmflds;
-}
-
-// ----------------------------------------------------------------------
-// vpic_mfields_new_hydro_array
-
-vpic_mfields_hydro* vpic_mfields_new_hydro_array(Simulation *sim)
-{
-  vpic_mfields_hydro* vmflds = new vpic_mfields_hydro;
-  vmflds->hydro_array = static_cast<HydroArray*>(sim->hydro_array_);
-
-  // Accessing the data as a C array relies on hydro_array_t to not change
-  assert(sizeof(vmflds->hydro_array->h[0]) / sizeof(float) == VPIC_HYDRO_N_COMP);
   return vmflds;
 }
 
@@ -49,14 +56,6 @@ float *vpic_mfields_get_data(struct vpic_mfields *vmflds, int *ib, int *im)
   ib[1] = -B;
   ib[2] = -B;
   return &vmflds->field_array->f[0].ex;
-}
-
-// ----------------------------------------------------------------------
-// vpic_mfields_hydro_get_data
-
-float *vpic_mfields_hydro_get_data(struct vpic_mfields_hydro *vmflds, int *ib, int *im)
-{
-  return vmflds->hydro_array->getData(ib, im);
 }
 
 // ----------------------------------------------------------------------
