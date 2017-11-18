@@ -30,7 +30,10 @@ struct FieldArray : field_array_t {
   double synchronize_tang_e_norm_b();
   void advance_b(double frak);
   void advance_e(double frak);
-  void advanceB(double frac);
+
+private:
+  void advanceB(float frac);
+  void advanceB_interior(float frac);
 };
 
 // ----------------------------------------------------------------------

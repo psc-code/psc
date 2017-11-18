@@ -4,9 +4,6 @@
 #include <mrc_common.h>
 
 #define DECLARE_STENCIL()                                       \
-  /**/  field_t * ALIGNED(128) f = fa->f;			\
-  const grid_t  *              g = fa->g;			\
-                                                                \
   const int   nx   = g->nx;                                     \
   const int   ny   = g->ny;                                     \
   const int   nz   = g->nz;                                     \
@@ -15,64 +12,58 @@
   const float py   = (ny>1) ? frac*g->cvac*g->dt*g->rdy : 0;    \
   const float pz   = (nz>1) ? frac*g->cvac*g->dt*g->rdz : 0
 
-#define f(x,y,z) f[ VOXEL(x,y,z, nx,ny,nz) ]
+#define f(i,j,k) f[ VOXEL(i,j,k, nx,ny,nz) ]
 
-#define UPDATE_CBX() f(x,y,z).cbx -= (py*(f(x,y+1,z).ez - f(x,y,z).ez) - pz*(f(x,y,z+1).ey - f(x,y,z).ey))
-#define UPDATE_CBY() f(x,y,z).cby -= (pz*(f(x,y,z+1).ex - f(x,y,z).ex) - px*(f(x+1,y,z).ez - f(x,y,z).ez))
-#define UPDATE_CBZ() f(x,y,z).cbz -= (px*(f(x+1,y,z).ey - f(x,y,z).ey) - py*(f(x,y+1,z).ex - f(x,y,z).ex))
+#define UPDATE_CBX() f(i,j,k).cbx -= (py*(f(i,j+1,k).ez - f(i,j,k).ez) - pz*(f(i,j,k+1).ey - f(i,j,k).ey))
+#define UPDATE_CBY() f(i,j,k).cby -= (pz*(f(i,j,k+1).ex - f(i,j,k).ex) - px*(f(i+1,j,k).ez - f(i,j,k).ez))
+#define UPDATE_CBZ() f(i,j,k).cbz -= (px*(f(i+1,j,k).ey - f(i,j,k).ey) - py*(f(i,j+1,k).ex - f(i,j,k).ex))
 
-static void
-advance_b_interior(field_array_t *fa, float frac)
+void FieldArray::advanceB_interior(float frac)
 {
   DECLARE_STENCIL();
 
-  for (int z = 1; z <= nz; z++) {
-    for (int y = 1; y <= ny; y++) {
-      for (int x = 1; x <= nx; x++) {
+  for (int k = 1; k <= nz; k++) {
+    for (int j = 1; j <= ny; j++) {
+      for (int i = 1; i <= nx; i++) {
 	UPDATE_CBX(); UPDATE_CBY(); UPDATE_CBZ();
       }
     }
   }
 }
 
-
-static void
-advance_b_(field_array_t* fa, float frac)
+void FieldArray::advanceB(float frac)
 {
-  advance_b_interior(fa, frac);
+  advanceB_interior(frac);
 
   DECLARE_STENCIL();
-  int x, y, z;
   
-  // Do left over bx
-  x = nx+1;
-  for( z=1; z<=nz; z++ ) {
-    for( y=1; y<=ny; y++ ) {
-      UPDATE_CBX();
+  // leftover bx
+  { int i = nx + 1;
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	UPDATE_CBX();
+      }
     }
   }
 
-  // Do left over by
-  y = ny+1;
-  for( z=1; z<=nz; z++ ) {
-    for( x=1; x<=nx; x++ ) {
-      UPDATE_CBY();
+  // leftover by
+  { int j = ny + 1;
+    for (int k = 1; k <= nz; k++) {
+      for (int i = 1; i <= nx; i++) {
+	UPDATE_CBY();
+      }
     }
   }
 
-  // Do left over bz
-  z = nz+1;
-  for( y=1; y<=ny; y++ ) {
-    for( x=1; x<=nx; x++ ) {
-      UPDATE_CBZ();
+  // leftover bz
+  { int k = nz + 1;
+    for (int j = 1; j <= ny; j++) {
+      for (int i = 1; i <= nx; i++) {
+	UPDATE_CBZ();
+      }
     }
   }
-
+  
   local_adjust_norm_b( f, g );
-}
-
-void FieldArray::advanceB(double frac)
-{
-  advance_b_(this, frac);
 }
 
