@@ -1,6 +1,4 @@
 
-#include "vpic_mparticles.h"
-
 #include "psc_particles.h"
 #include <cassert>
 
@@ -12,18 +10,16 @@
 // ----------------------------------------------------------------------
 // vpic_mparticles_new_from_simulation
 
-struct vpic_mparticles *
+Particles *
 vpic_mparticles_new_from_simulation(Simulation *sim)
 {
-  vpic_mparticles *vmprts = new vpic_mparticles(sim->particles_.sl_);
-  //vmprts->species_list = sim->particles_.sl_;
-  return vmprts;
+  return new Particles(sim->particles_.sl_);
 }
 
 // ----------------------------------------------------------------------
 // vpic_mparticles_get_nr_particles
 
-int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts)
+int vpic_mparticles_get_nr_particles(Particles *vmprts)
 {
   int n_prts = 0;
 
@@ -42,7 +38,7 @@ int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts)
 // at least for now, and we wouldn't be able to know how to split this into
 // the different species, anyway.
 
-void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
+void vpic_mparticles_reserve_all(Particles *vmprts, int n_patches,
 				 int *n_prts_by_patch)
 {
   assert(n_patches == 1);
@@ -70,7 +66,7 @@ void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
 // Even more iffy, since can't really resize the per-species arrays, since we don't
 // know how the total # of particles we're given should be divided up
 
-void vpic_mparticles_resize_all(struct vpic_mparticles *vmprts, int n_patches,
+void vpic_mparticles_resize_all(Particles *vmprts, int n_patches,
 				int *n_prts_by_patch)
 {
   assert(n_patches == 1);
@@ -98,7 +94,7 @@ void vpic_mparticles_resize_all(struct vpic_mparticles *vmprts, int n_patches,
 // ----------------------------------------------------------------------
 // vpic_mparticles_get_size_all
 
-void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
+void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 				  int *n_prts_by_patch)
 {
   assert(n_patches == 1);
@@ -108,7 +104,7 @@ void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
 // ----------------------------------------------------------------------
 // vpic_mparticles_inject
 
-void vpic_mparticles_inject(struct vpic_mparticles *vmprts, int p,
+void vpic_mparticles_inject(Particles *vmprts, int p,
 			    const struct psc_particle_inject *prt)
 {
   species_t *sp = find_species_id(prt->kind, vmprts->sl_);
@@ -120,7 +116,7 @@ void vpic_mparticles_inject(struct vpic_mparticles *vmprts, int p,
 // ----------------------------------------------------------------------
 // vpic_mparticles_get_grid_nx_dx
 
-void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx)
+void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx)
 {
   nx[0] = vmprts->sl_->g->nx;
   nx[1] = vmprts->sl_->g->ny;
@@ -133,7 +129,7 @@ void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, flo
 // ----------------------------------------------------------------------
 // vpic_mparticles_get_particles
 
-void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
+void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*put_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx)
 {
@@ -162,7 +158,7 @@ void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int 
   }
 }
 
-void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
+void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx)
 {
@@ -191,7 +187,7 @@ void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int 
   }
 }
 
-void vpic_mparticles_push_back(struct vpic_mparticles *vmprts, const struct vpic_mparticles_prt *prt)
+void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_prt *prt)
 {
   species_t *sp;
   LIST_FOR_EACH(sp, vmprts->sl_) {
@@ -217,7 +213,7 @@ struct copy_ctx {
 };
 
 static void
-copy_from(vpic_mparticles *vmprts, bk_mparticles *bkmprts,
+copy_from(Particles *vmprts, bk_mparticles *bkmprts,
 	  void (*get_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
 {
   int n_patches = 1; // FIXME
@@ -235,7 +231,7 @@ copy_from(vpic_mparticles *vmprts, bk_mparticles *bkmprts,
 }
 
 static void
-copy_to(vpic_mparticles *vmprts, bk_mparticles *bkmprts,
+copy_to(Particles *vmprts, bk_mparticles *bkmprts,
 	void (*put_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
 {
   int n_patches = 1; // FIXME
@@ -288,12 +284,12 @@ put_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   part->kind  = prt->kind;
 }
 
-void vpic_mparticles_copy_from_single_by_kind(vpic_mparticles *vmprts, bk_mparticles *bkmprts)
+void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
 {
   copy_from(vmprts, bkmprts, get_particle_single_by_kind);
 }
 
-void vpic_mparticles_copy_to_single_by_kind(vpic_mparticles *vmprts, bk_mparticles *bkmprts)
+void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
 {
   copy_to(vmprts, bkmprts, put_particle_single_by_kind);
 }

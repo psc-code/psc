@@ -42,7 +42,7 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_push_particles_prep(vpushp, vmprts, vmflds);
 
@@ -64,7 +64,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_push_particles_push_mprts(vpushp, vmprts, vmflds);
 
@@ -86,7 +86,7 @@ psc_push_particles_vpic_stagger_mprts(struct psc_push_particles *push,
 
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
+  struct Particles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
 
   vpic_push_particles_stagger_mprts(vpushp, vmprts, vmflds);
 

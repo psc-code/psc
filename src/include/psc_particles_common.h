@@ -187,7 +187,7 @@ const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int
 #elif PTYPE == PTYPE_VPIC
 
 struct psc_mparticles_PTYPE {
-  struct vpic_mparticles *vmprts;
+  struct Particles *vmprts;
 };
 
 #else // PTYPE != PTYPE_CUDA / VPIC

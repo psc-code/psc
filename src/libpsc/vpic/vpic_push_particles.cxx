@@ -1,7 +1,6 @@
 
 #include "vpic_push_particles.h"
 
-#include "vpic_mparticles.h"
 #include "field_array.h"
 
 extern vpic_simulation *simulation;
@@ -34,8 +33,8 @@ vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp,
 // vpic_push_particles_push_mprts
 
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
-				    struct vpic_mparticles *vmprts,
-				    struct FieldArray *vmflds)
+				    Particles *vmprts,
+				    FieldArray *vmflds)
 {
   // FIXME, this is kinda too much stuff all in here,
   // so it should be split up, but it'll do for now
@@ -95,7 +94,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 // vpic_push_particles_prep
 
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
-			      struct vpic_mparticles *vmprts, struct FieldArray *vmflds)
+			      Particles *vmprts, FieldArray *vmflds)
 {
   if (vmprts->sl_) {
     vpushp->load_interpolator_array(vmflds);
@@ -106,8 +105,8 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 // vpic_push_particles_stagger_mprts
 
 void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
-				       struct vpic_mparticles *vmprts,
-				       struct FieldArray *vmflds)
+				       Particles *vmprts,
+				       FieldArray *vmflds)
 {
   if (vmprts->sl_) {
     vpushp->load_interpolator_array(vmflds);

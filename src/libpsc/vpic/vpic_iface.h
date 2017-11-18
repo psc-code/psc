@@ -11,8 +11,6 @@ extern "C" {
 }
 #endif
 
-struct vpic_mparticles;
-
 // ----------------------------------------------------------------------
 // vpic_mfields
 
@@ -40,8 +38,8 @@ enum {
   VPIC_HYDRO_N_COMP = 16,
 };
 
-struct vpic_mfields;
 struct Simulation;
+struct Particles;
 
 struct HydroArray *vpic_mfields_new_hydro_array(struct Simulation *sim);
 float *vpic_mfields_hydro_get_data(struct HydroArray *vmflds, int *ib, int *im);
@@ -56,7 +54,7 @@ void vpic_mfields_compute_div_e_err(struct FieldArray *vmflds);
 double vpic_mfields_compute_rms_div_e_err(struct FieldArray *vmflds);
 void vpic_mfields_clean_div_e(struct FieldArray *vmflds);
 void vpic_mfields_clear_rhof(struct FieldArray *vmflds);
-void vpic_mfields_accumulate_rho_p(struct FieldArray *vmflds, struct vpic_mparticles *mprts);
+void vpic_mfields_accumulate_rho_p(struct FieldArray *vmflds, struct Particles *mprts);
 void vpic_mfields_synchronize_rho(struct FieldArray *vmflds);
 void vpic_mfields_compute_rhob(struct FieldArray *vmflds);
 void vpic_mfields_compute_curl_b(struct FieldArray *vmflds);
@@ -72,26 +70,26 @@ struct vpic_mparticles_prt {
   int kind;
 };
 
-struct vpic_mparticles *vpic_mparticles_new_from_simulation(struct Simulation *sim);
-int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts);
-void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
+struct Particles *vpic_mparticles_new_from_simulation(struct Simulation *sim);
+int vpic_mparticles_get_nr_particles(struct Particles *vmprts);
+void vpic_mparticles_reserve_all(struct Particles *vmprts, int n_patches,
 				 int *n_prts_by_patch);
-void vpic_mparticles_resize_all(struct vpic_mparticles *vmprts, int n_patches,
+void vpic_mparticles_resize_all(struct Particles *vmprts, int n_patches,
 				 int *n_prts_by_patch);
-void vpic_mparticles_get_size_all(struct vpic_mparticles *vmprts, int n_patches,
+void vpic_mparticles_get_size_all(struct Particles *vmprts, int n_patches,
 				  int *n_prts_by_patch);
-void vpic_mparticles_get_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
+void vpic_mparticles_get_particles(struct Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*put_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
-void vpic_mparticles_set_particles(struct vpic_mparticles *vmprts, unsigned int n_prts, unsigned int off,
+void vpic_mparticles_set_particles(struct Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
-void vpic_mparticles_inject(struct vpic_mparticles *cmprts, int p, const struct psc_particle_inject *prt);
-void vpic_mparticles_push_back(struct vpic_mparticles *vmprts, const struct vpic_mparticles_prt *prt);
-void vpic_mparticles_get_grid_nx_dx(struct vpic_mparticles *vmprts, int *nx, float *dx);
+void vpic_mparticles_inject(struct Particles *cmprts, int p, const struct psc_particle_inject *prt);
+void vpic_mparticles_push_back(struct Particles *vmprts, const struct vpic_mparticles_prt *prt);
+void vpic_mparticles_get_grid_nx_dx(struct Particles *vmprts, int *nx, float *dx);
 
-void vpic_mparticles_copy_to_single_by_kind(struct vpic_mparticles *vmprts, bk_mparticles *bkmprts);
-void vpic_mparticles_copy_from_single_by_kind(struct vpic_mparticles *vmprts, bk_mparticles *bkmprts);
+void vpic_mparticles_copy_to_single_by_kind(struct Particles *vmprts, bk_mparticles *bkmprts);
+void vpic_mparticles_copy_from_single_by_kind(struct Particles *vmprts, bk_mparticles *bkmprts);
 
 // ----------------------------------------------------------------------
 // vpic_push_particles
@@ -102,13 +100,13 @@ struct vpic_push_particles *vpic_push_particles_create();
 void vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp,
 					      struct Simulation *sim);
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
-				    struct vpic_mparticles *vmprts,
+				    struct Particles *vmprts,
 				    struct FieldArray *vmflds);
 void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
-				       struct vpic_mparticles *vmprts,
+				       struct Particles *vmprts,
 				       struct FieldArray *vmflds);
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
-			      struct vpic_mparticles *mprts,
+			      struct Particles *mprts,
 			      struct FieldArray *vmflds);
 
 // ----------------------------------------------------------------------
@@ -120,12 +118,12 @@ void vpic_push_fields_advance_e(struct FieldArray *vmflds, double frac);
 // ----------------------------------------------------------------------
 // other (may want an object eventually)
 
-void vpic_sort_run(struct vpic_mparticles *vmprts, int step);
+void vpic_sort_run(struct Particles *vmprts, int step);
 void vpic_collision_run();
 void vpic_emitter();
 void vpic_current_injection();
 void vpic_field_injection();
-void vpic_moments_run(struct HydroArray *mflds, struct vpic_mparticles *vmprts, int kind);
+void vpic_moments_run(struct HydroArray *mflds, struct Particles *vmprts, int kind);
 
 // ----------------------------------------------------------------------
 // Simulation

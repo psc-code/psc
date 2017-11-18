@@ -1,6 +1,5 @@
 
 #include "simulation.h"
-#include "vpic_mparticles.h"
 
 #include <cassert>
 
@@ -22,7 +21,7 @@ HydroArray* vpic_mfields_new_hydro_array(Simulation *sim)
 // ----------------------------------------------------------------------
 // vpic_mfields_hydro_get_data
 
-float *vpic_mfields_hydro_get_data(struct HydroArray *vmflds, int *ib, int *im)
+float *vpic_mfields_hydro_get_data(HydroArray *vmflds, int *ib, int *im)
 {
   return vmflds->getData(ib, im);
 }
@@ -42,7 +41,7 @@ FieldArray* vpic_mfields_new_fields_array(Simulation *sim)
 // ----------------------------------------------------------------------
 // vpic_mfields_get_data
 
-float *vpic_mfields_get_data(struct FieldArray *vmflds, int *ib, int *im)
+float *vpic_mfields_get_data(FieldArray *vmflds, int *ib, int *im)
 {
   return vmflds->getData(ib, im);
 }
@@ -50,63 +49,62 @@ float *vpic_mfields_get_data(struct FieldArray *vmflds, int *ib, int *im)
 // ----------------------------------------------------------------------
 // C wrappers
 
-double vpic_mfields_synchronize_tang_e_norm_b(struct FieldArray *vmflds)
+double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *vmflds)
 {
   return vmflds->synchronize_tang_e_norm_b();
 }
 
-void vpic_mfields_compute_div_b_err(struct FieldArray *vmflds)
+void vpic_mfields_compute_div_b_err(FieldArray *vmflds)
 {
   vmflds->compute_div_b_err();
 }
 
-double vpic_mfields_compute_rms_div_b_err(struct FieldArray *vmflds)
+double vpic_mfields_compute_rms_div_b_err(FieldArray *vmflds)
 {
   return vmflds->compute_rms_div_b_err();
 }
 
-void vpic_mfields_clean_div_b(struct FieldArray *vmflds)
+void vpic_mfields_clean_div_b(FieldArray *vmflds)
 {
   vmflds->clean_div_b();
 }
 
-void vpic_mfields_compute_div_e_err(struct FieldArray *vmflds)
+void vpic_mfields_compute_div_e_err(FieldArray *vmflds)
 {
   vmflds->compute_div_e_err();
 }
 
-double vpic_mfields_compute_rms_div_e_err(struct FieldArray *vmflds)
+double vpic_mfields_compute_rms_div_e_err(FieldArray *vmflds)
 {
   return vmflds->compute_rms_div_e_err();
 }
 
-void vpic_mfields_clean_div_e(struct FieldArray *vmflds)
+void vpic_mfields_clean_div_e(FieldArray *vmflds)
 {
   vmflds->clean_div_e();
 }
 
-void vpic_mfields_clear_rhof(struct FieldArray *vmflds)
+void vpic_mfields_clear_rhof(FieldArray *vmflds)
 {
   vmflds->clear_rhof();
 }
 
-void vpic_mfields_synchronize_rho(struct FieldArray *vmflds)
+void vpic_mfields_synchronize_rho(FieldArray *vmflds)
 {
   vmflds->synchronize_rho();
 }
 
-void vpic_mfields_compute_rhob(struct FieldArray *vmflds)
+void vpic_mfields_compute_rhob(FieldArray *vmflds)
 {
   vmflds->compute_rhob();
 }
 
-void vpic_mfields_compute_curl_b(struct FieldArray *vmflds)
+void vpic_mfields_compute_curl_b(FieldArray *vmflds)
 {
   vmflds->compute_curl_b();
 }
 
-void vpic_mfields_accumulate_rho_p(struct FieldArray *vmflds,
-				   struct vpic_mparticles *vmprts)
+void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH(sp, vmprts->sl_)

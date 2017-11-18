@@ -9,7 +9,6 @@
  */
 
 #include "vpic_iface.h"
-#include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
 #include "vpic_init.h"
 #include "field_array.h"
@@ -31,7 +30,7 @@ int rank()
 // ======================================================================
 // vpic_sort
 
-void vpic_sort_run(struct vpic_mparticles *vmprts, int step)
+void vpic_sort_run(Particles *vmprts, int step)
 {
   // Sort the particles for performance if desired.
 
@@ -106,7 +105,7 @@ void vpic_push_particles::clear_accumulator_array()
   TIC ::clear_accumulator_array( accumulator_array ); TOC( clear_accumulators, 1 );
 }
 
-void vpic_push_particles::advance_p(vpic_mparticles *vmprts)
+void vpic_push_particles::advance_p(Particles *vmprts)
 {
   species_t *sp;
 
@@ -119,7 +118,7 @@ void vpic_push_particles::reduce_accumulator_array()
   TIC ::reduce_accumulator_array( accumulator_array ); TOC( reduce_accumulators, 1 );
 }
 
-void vpic_push_particles::boundary_p(vpic_mparticles *vmprts, FieldArray *vmflds)
+void vpic_push_particles::boundary_p(Particles *vmprts, FieldArray *vmflds)
 {
   TIC
     for( int round=0; round<num_comm_round; round++ )
@@ -164,7 +163,7 @@ void vpic_push_particles::load_interpolator_array(FieldArray *vmflds)
   TIC ::load_interpolator_array( interpolator_array, vmflds ); TOC( load_interpolator, 1 );
 }
 
-void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
+void vpic_push_particles::uncenter_p(Particles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->sl_ )
@@ -175,7 +174,7 @@ void vpic_push_particles::uncenter_p(vpic_mparticles *vmprts)
 
 // ======================================================================
 
-void vpic_simulation_accumulate_rho_p(FieldArray *vmflds, vpic_mparticles *vmprts)
+void vpic_simulation_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH( sp, vmprts->sl_ )
@@ -187,12 +186,12 @@ void vpic_simulation_accumulate_rho_p(FieldArray *vmflds, vpic_mparticles *vmprt
 // ======================================================================
 // vpic_push_fields
 
-void vpic_push_fields_advance_b(struct FieldArray *vmflds, double frac)
+void vpic_push_fields_advance_b(FieldArray *vmflds, double frac)
 {
   TIC FAK->advance_b( vmflds, frac ); TOC( advance_b, 1 );
 }
 
-void vpic_push_fields_advance_e(struct FieldArray *vmflds, double frac)
+void vpic_push_fields_advance_e(FieldArray *vmflds, double frac)
 {
   TIC FAK->advance_e( vmflds, frac ); TOC( advance_e, 1 );
 }
@@ -208,7 +207,7 @@ void vpic_print_status()
 // ======================================================================
 // vpic_moments
 
-void vpic_moments_run(HydroArray *vmflds, struct vpic_mparticles *vmprts, int kind)
+void vpic_moments_run(HydroArray *vmflds, Particles *vmprts, int kind)
 {
   // This relies on load_interpolator_array() having been called earlier
   clear_hydro_array(vmflds);
