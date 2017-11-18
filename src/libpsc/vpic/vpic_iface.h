@@ -101,9 +101,7 @@ void vpic_mparticles_copy_from_single_by_kind(struct Particles *vmprts, bk_mpart
 
 struct vpic_push_particles;
 
-struct vpic_push_particles *vpic_push_particles_create();
-void vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp,
-					      struct Simulation *sim);
+struct vpic_push_particles *vpic_push_particles_new_from_Simulation(struct Simulation *sim);
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 				    struct Particles *vmprts,
 				    struct FieldArray *vmflds);

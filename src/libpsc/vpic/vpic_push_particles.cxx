@@ -9,24 +9,18 @@ extern vpic_simulation *simulation;
 // vpic_push_particles
 
 // ----------------------------------------------------------------------
-// vpic_push_particles_create
+// vpic_push_particles_new_from_Simulation
 
 struct vpic_push_particles *
-vpic_push_particles_create()
+vpic_push_particles_new_from_Simulation(Simulation *sim)
 {
-  return new vpic_push_particles;
-}
-
-// ----------------------------------------------------------------------
-// vpic_push_particles_ctor_from_simulation
-
-void
-vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp,
-					 struct Simulation *sim)
-{
+  vpic_push_particles *vpushp = new vpic_push_particles;
+  vpushp->sim_ = sim;
   vpushp->interpolator_array = static_cast<InterpolatorArray*>(sim->interpolator_array_);
   vpushp->accumulator_array = static_cast<AccumulatorArray*>(sim->accumulator_array_);
   vpushp->num_comm_round = simulation->num_comm_round;
+
+  return vpushp;
 }
 
 // ----------------------------------------------------------------------
