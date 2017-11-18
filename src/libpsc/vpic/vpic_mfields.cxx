@@ -56,16 +56,7 @@ float *vpic_mfields_get_data(struct vpic_mfields *vmflds, int *ib, int *im)
 
 float *vpic_mfields_hydro_get_data(struct vpic_mfields_hydro *vmflds, int *ib, int *im)
 {
-  const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-
-  grid_t *g = vmflds->hydro_array->g;
-  im[0] = g->nx + 2*B;
-  im[1] = g->ny + 2*B;
-  im[2] = g->nz + 2*B;
-  ib[0] = -B;
-  ib[1] = -B;
-  ib[2] = -B;
-  return &vmflds->hydro_array->h[0].jx;
+  return vmflds->hydro_array->getData(ib, im);
 }
 
 // ----------------------------------------------------------------------

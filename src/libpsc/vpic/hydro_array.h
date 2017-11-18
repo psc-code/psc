@@ -10,6 +10,8 @@
 struct HydroArray : hydro_array_t {
   HydroArray(Grid g);
   ~HydroArray();
+
+  float* getData(int* ib, int* im);
 };
 
 // ----------------------------------------------------------------------
@@ -40,6 +42,19 @@ inline HydroArray::HydroArray(Grid grid)
 inline HydroArray::~HydroArray()
 {
   hydro_array_dtor(this);
+}
+
+inline float* HydroArray::getData(int* ib, int* im)
+{
+  const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+
+  im[0] = g->nx + 2*B;
+  im[1] = g->ny + 2*B;
+  im[2] = g->nz + 2*B;
+  ib[0] = -B;
+  ib[1] = -B;
+  ib[2] = -B;
+  return &h[0].jx;
 }
 
 
