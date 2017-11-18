@@ -2,9 +2,9 @@
 #include "vpic_iface.h"
 #include "vpic_diag.h"
 
-#include "mrc_common.h"
+#include "simulation.h"
 
-extern vpic_simulation *simulation;
+#include "mrc_common.h"
 
 // ================================================================================
 // globals_diag implementation
@@ -34,15 +34,15 @@ globals_diag::globals_diag(int interval_)
   mpi_printf(comm, "energies_interval: %d\n", energies_interval);
 }
 
-void globals_diag::setup()
+void globals_diag::setup(Simulation *sim)
 {
-  species_t *electron = simulation->find_species("electron");
-  species_t *ion = simulation->find_species("ion");
-  vpic_simulation_setup_diagnostics(simulation, this, electron, ion);
+  species_t *electron = sim->simulation_->find_species("electron");
+  species_t *ion = sim->simulation_->find_species("ion");
+  vpic_simulation_setup_diagnostics(sim->simulation_, this, electron, ion);
 }
 
-void globals_diag::run()
+void globals_diag::run(Simulation *sim)
 {
-  TIC vpic_simulation_diagnostics(simulation, this); TOC(user_diagnostics, 1);
+  TIC vpic_simulation_diagnostics(sim->simulation_, this); TOC(user_diagnostics, 1);
 }
 

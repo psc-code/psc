@@ -27,8 +27,8 @@ struct globals_diag {
   std::vector<DumpParameters *> outputParams;
 
   globals_diag(int interval_);
-  void setup();
-  void run();
+  void setup(Simulation *sim);
+  void run(Simulation *sim);
 };
 
 #endif

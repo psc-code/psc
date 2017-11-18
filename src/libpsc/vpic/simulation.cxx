@@ -73,12 +73,12 @@ void Simulation_diagnostics_init(struct Simulation *sim, int interval)
 
 void Simulation_diagnostics_setup(struct Simulation *sim)
 {
-  sim->pDiag_->setup();
+  sim->pDiag_->setup(sim);
 }
 
 void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub)
 {
-  sim->pDiag_->run();
+  sim->pDiag_->run(sim);
 }
 
 // ----------------------------------------------------------------------
