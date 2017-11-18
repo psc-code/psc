@@ -140,7 +140,7 @@ inline void Simulation::define_field_array(double damp)
   grid_.mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
 }
 
-species_t* Simulation::define_species(const char *name, double q, double m,
+inline species_t* Simulation::define_species(const char *name, double q, double m,
 				      double max_local_np, double max_local_nm,
 				      double sort_interval, double sort_out_of_place)
 {
@@ -156,9 +156,6 @@ species_t* Simulation::define_species(const char *name, double q, double m,
 				(int)max_local_np, (int)max_local_nm,
 				(int)sort_interval, (int)sort_out_of_place,
 				grid_.g_), &species_list_);
-
-    // return simulation->define_species(name, q, m, max_local_np, max_local_nm,
-    // 				    sort_interval, sort_out_of_place);
 }
 
 

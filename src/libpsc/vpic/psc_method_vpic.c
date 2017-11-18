@@ -14,9 +14,13 @@
 // psc_method "vpic"
 
 struct psc_method_vpic {
+  // params
   bool use_deck_field_ic;
   bool use_deck_particle_ic;
   bool split;
+
+  // state
+  struct Simulation *sim;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
@@ -26,6 +30,8 @@ static struct param psc_method_vpic_descr[] = {
   { "use_deck_field_ic"     , VAR(use_deck_field_ic)              , PARAM_BOOL(false) },
   { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
   { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
+
+  { "sim"                   , VAR(sim)                            , PARAM_PTR(NULL)   },
   {},
 };
 #undef VAR
@@ -36,11 +42,13 @@ static struct param psc_method_vpic_descr[] = {
 static void
 psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 {
+  struct psc_method_vpic *sub = psc_method_vpic(method);
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "*** Initializing\n");
 
   vpic_simulation_new();
+  sub->sim = Simulation_create();
   
   struct vpic_simulation_info info;
   vpic_simulation_init(&info);

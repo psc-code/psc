@@ -522,6 +522,7 @@ psc_harris_setup(struct psc *psc)
   // FIXME, will be unneeded eventually
   vpic_simulation_new();
   sub->sim = Simulation_create();
+  psc_method_set_param_ptr(psc->method, "sim", sub->sim);
   vpic_simulation_set_params(psc->prm.nmax,
 			     psc->prm.stats_every,
 			     psc->prm.stats_every / 2,

@@ -4,6 +4,7 @@
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
 #include "psc.h"
+#include "psc_method.h"
 #include "psc_particles_vpic.h"
 
 #include "mrc_domain.h"
@@ -40,6 +41,9 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 
   sub->vmflds = vpic_mfields_create();
 
+  struct Simulation *sim;
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+
   if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
@@ -53,7 +57,7 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
     mflds->ibn[1] = 1;
     mflds->ibn[2] = 1;
     assert(mflds->first_comp == 0);
-    vpic_mfields_ctor_from_simulation_fields(sub->vmflds);
+    vpic_mfields_ctor_from_simulation_fields(sub->vmflds, sim);
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
@@ -64,7 +68,7 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
     assert(mflds->ibn[1] == 1);
     assert(mflds->ibn[2] == 1);
     assert(mflds->first_comp == 0);
-    vpic_mfields_ctor_from_simulation_hydro(sub->vmflds);
+    vpic_mfields_ctor_from_simulation_hydro(sub->vmflds, sim);
 } else {
     assert(0);
     //vpic_mfields_ctor(sub->vmflds);

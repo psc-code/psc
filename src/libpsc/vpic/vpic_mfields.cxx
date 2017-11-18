@@ -1,6 +1,8 @@
 
 #include "vpic_mfields.h"
 
+#include "simulation.h"
+
 #include <cassert>
 
 extern vpic_simulation *simulation;
@@ -21,9 +23,10 @@ vpic_mfields_create()
 // vpic_mfields_ctor_from_simulation_fields
 
 void
-vpic_mfields_ctor_from_simulation_fields(struct vpic_mfields *vmflds)
+vpic_mfields_ctor_from_simulation_fields(vpic_mfields *vmflds,
+					 Simulation *sim)
 {
-  vmflds->field_array = simulation->field_array;
+  vmflds->field_array = sim->field_array_;
 
   // Accessing the data as a C array relies on fields_t to not change
   assert(sizeof(vmflds->field_array->f[0]) / sizeof(float) == VPIC_MFIELDS_N_COMP);
@@ -33,9 +36,10 @@ vpic_mfields_ctor_from_simulation_fields(struct vpic_mfields *vmflds)
 // vpic_mfields_ctor_from_simulation_hydro
 
 void
-vpic_mfields_ctor_from_simulation_hydro(struct vpic_mfields *vmflds)
+vpic_mfields_ctor_from_simulation_hydro(struct vpic_mfields *vmflds,
+					Simulation *sim)
 {
-  vmflds->hydro_array = simulation->hydro_array;
+  vmflds->hydro_array = sim->hydro_array_;
 
   // Accessing the data as a C array relies on fields_t to not change
   assert(sizeof(vmflds->hydro_array->h[0]) / sizeof(float) == VPIC_HYDRO_N_COMP);
