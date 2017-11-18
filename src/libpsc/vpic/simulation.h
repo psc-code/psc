@@ -7,8 +7,9 @@
 #include "vpic_init.h" // FIXME, bad name for _diag
 
 #include "field_array.h"
-#include "hydro_array.h"
 #include "interpolator_array.h"
+#include "accumulator_array.h"
+#include "hydro_array.h"
 #include "rng.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
@@ -120,8 +121,8 @@ inline void Simulation::define_field_array(double damp)
   
   field_array_ = new FieldArray(grid_, material_list_, damp);
   interpolator_array_ = new InterpolatorArray(grid);
-  accumulator_array_ = ::new_accumulator_array(grid);
-  hydro_array_ = new HydroArray(grid_); //::new_hydro_array(grid);
+  accumulator_array_ = new AccumulatorArray(grid);
+  hydro_array_ = new HydroArray(grid_);
  
   // Pre-size communications buffers. This is done to get most memory
   // allocation over with before the simulation starts running
