@@ -228,12 +228,6 @@ inline struct material *Simulation::define_material(const char *name,
 					zeta,  zeta,  zeta));
 }
 
-inline field_array_t *Simulation::new_field_array(float damp)
-{
-  FieldArray* fa = new FieldArray(grid_, material_list_, damp);
-  return fa;
-}
-
 inline void Simulation::define_field_array(double damp)
 {
   grid_t *grid = grid_.g_;
@@ -247,7 +241,7 @@ inline void Simulation::define_field_array(double damp)
     assert(0);
   }
   
-  field_array_ptr_.p_ = new_field_array(damp);
+  field_array_ptr_.p_ = new FieldArray(grid_, material_list_, damp);
   interpolator_array_ptr_.p_ = ::new_interpolator_array(grid);
   accumulator_array_ptr_.p_ = ::new_accumulator_array(grid);
   hydro_array_ptr_.p_ = ::new_hydro_array(grid);
