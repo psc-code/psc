@@ -8,6 +8,7 @@
 
 #include "field_array.h"
 #include "hydro_array.h"
+#include "interpolator_array.h"
 #include "rng.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
@@ -118,7 +119,7 @@ inline void Simulation::define_field_array(double damp)
   assert(!material_list_.empty());
   
   field_array_ = new FieldArray(grid_, material_list_, damp);
-  interpolator_array_ = ::new_interpolator_array(grid);
+  interpolator_array_ = new InterpolatorArray(grid);
   accumulator_array_ = ::new_accumulator_array(grid);
   hydro_array_ = new HydroArray(grid_); //::new_hydro_array(grid);
  
