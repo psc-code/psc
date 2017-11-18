@@ -299,6 +299,38 @@ psc_harris_setup_domain(struct psc *psc)
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_harris_setup_fields
+
+static void
+psc_harris_setup_fields(struct psc *psc)
+{
+  struct psc_harris *sub = psc_harris(psc);
+  struct globals_physics *phys = &sub->phys;
+  MPI_Comm comm = psc_comm(psc);
+
+  mpi_printf(comm, "Setting up materials.\n");
+
+  vpic_simulation_define_material("vacuum", 1., 1., 0., 0.);
+  struct material *resistive =
+    vpic_simulation_define_material("resistive", 1., 1., 1., 0.);
+
+  vpic_simulation_define_field_array(NULL, 0.);
+
+  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
+  // Tensor electronic, magnetic and conductive materials are supported
+  // though. See "shapes" for how to define them and assign them to regions.
+  // Also, space is initially filled with the first material defined.
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Finalize Field Advance
+
+  mpi_printf(comm, "Finalizing Field Advance\n");
+
+  assert(psc->nr_patches > 0);
+  vpic_simulation_set_region_resistive_harris(&sub->prm, phys, psc->patch[0].dx,
+					      0., resistive);
+}
 
 // ----------------------------------------------------------------------
 // courant length
@@ -348,6 +380,7 @@ psc_harris_setup(struct psc *psc)
 			     psc->prm.stats_every / 2,
 			     psc->prm.stats_every / 2);
   psc_harris_setup_domain(psc);
+  psc_harris_setup_fields(psc);
   }
 
   // initializes fields, particles, etc.

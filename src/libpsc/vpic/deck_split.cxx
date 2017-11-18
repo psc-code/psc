@@ -28,8 +28,6 @@ static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
 				  vpic_params *vprm, globals_physics *phys);
 static void user_init_log(vpic_simulation *simulation, vpic_harris_params *prm,
 			  vpic_params *vprm, globals_physics *phys, globals_diag *diag);
-static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
-			      vpic_params *vprm, globals_physics *phys);
 static void user_load_fields(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys);
 static void user_load_particles(vpic_simulation *simulation, vpic_harris_params *prm, globals_physics *phys,
 				species_t *electron, species_t *ion);
@@ -41,11 +39,6 @@ void user_init(vpic_simulation *simulation, vpic_params *vprm, struct psc_harris
 {
   vpic_harris_params *harris = &sub->prm;
   globals_physics *phys = &sub->phys;
-
-  ///////////////////////////////////////////////
-  // Setup high level simulation parameters
-
-  user_setup_fields(simulation, harris, vprm, phys);
 
   //////////////////////////////////////////////////////////////////////////////
   // Setup the species
@@ -94,37 +87,6 @@ static void user_init_diagnostics(globals_diag *diag, vpic_harris_params *prm,
   diag->Hparticle_interval = 8*diag->interval;
 
   diag->energies_interval = 50;
-}
-
-static void user_setup_fields(vpic_simulation *simulation, vpic_harris_params *prm,
-			      vpic_params *vprm, globals_physics *phys)
-{
-  grid_t *grid = simulation->grid;
-  //////////////////////////////////////////////////////////////////////////////
-  // Setup materials
-
-  sim_log("Setting up materials. ");
-
-  vpic_simulation_define_material("vacuum", 1., 1., 0., 0.);
-  material_t *resistive = vpic_simulation_define_material("resistive", 1., 1., 1., 0.);
-
-  vpic_simulation_define_field_array(NULL, 0.);
-
-  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
-  // Tensor electronic, magnetic and conductive materials are supported
-  // though. See "shapes" for how to define them and assign them to regions.
-  // Also, space is initially filled with the first material defined.
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Finalize Field Advance
-
-  sim_log("Finalizing Field Advance");
-
-  double dx[3] = { phys->Lx / vprm->gdims[0],
-		   phys->Ly / vprm->gdims[1],
-		   phys->Lz / vprm->gdims[2] };
-
-  vpic_simulation_set_region_resistive_harris(prm, phys, dx, 0., resistive);
 }
 
 // ----------------------------------------------------------------------
