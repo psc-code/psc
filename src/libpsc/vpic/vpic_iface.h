@@ -122,7 +122,7 @@ void vpic_push_fields_advance_e(struct FieldArray *vmflds, double frac);
 // other (may want an object eventually)
 
 void vpic_sort_run(struct Particles *vmprts, int step);
-void vpic_collision_run();
+void Simulation_collision_run(struct Simulation *sim);
 void vpic_emitter();
 void vpic_current_injection();
 void vpic_field_injection();

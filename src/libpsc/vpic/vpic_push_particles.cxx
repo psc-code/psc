@@ -3,8 +3,6 @@
 
 #include "field_array.h"
 
-extern vpic_simulation *simulation;
-
 // ======================================================================
 // vpic_push_particles implementation
 
@@ -138,7 +136,7 @@ void vpic_push_particles::boundary_p(Particles *vmprts, FieldArray *vmflds)
 {
   TIC
     for( int round=0; round<num_comm_round; round++ )
-      ::boundary_p( simulation->particle_bc_list, vmprts->sl_,
+      ::boundary_p( sim_->simulation_->particle_bc_list, vmprts->sl_,
 		    vmflds, accumulator_array );
   TOC( boundary_p, num_comm_round );
 

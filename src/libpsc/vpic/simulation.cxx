@@ -3,8 +3,6 @@
 
 #include <cassert>
 
-extern vpic_simulation *simulation;
-
 // ----------------------------------------------------------------------
 // C wrappers
 

@@ -43,9 +43,9 @@ void vpic_sort_run(Particles *vmprts, int step)
 }
 
 // ======================================================================
-// vpic_collision
+// Simulation_collision_run
 
-void vpic_collision_run()
+void Simulation_collision_run(Simulation *sim)
 {
   // Note: Particles should not have moved since the last performance sort
   // when calling collision operators.
@@ -53,7 +53,7 @@ void vpic_collision_run()
   // yields a first order accurate Trotter factorization (not a second
   // order accurate factorization).
 
-  if( simulation->collision_op_list ) {
+  if (sim->simulation_->collision_op_list) {
     // FIXME: originally, vpic_clear_accumulator_array() was called before this.
     // It's now called later, though. I'm not sure why that would be necessary here,
     // but it needs to be checked.
@@ -61,9 +61,9 @@ void vpic_collision_run()
     // (ie., it's missing the user_particle_collisions())
 
     assert(0);
-    TIC apply_collision_op_list( simulation->collision_op_list ); TOC( collision_model, 1 );
+    TIC apply_collision_op_list(sim->simulation_->collision_op_list); TOC(collision_model, 1);
   }
-  TIC simulation->user_particle_collisions(); TOC( user_particle_collisions, 1 );
+  TIC sim->simulation_->user_particle_collisions(); TOC(user_particle_collisions, 1);
 }
 
 // ======================================================================
