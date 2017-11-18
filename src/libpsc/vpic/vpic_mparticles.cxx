@@ -4,27 +4,22 @@
 #include "psc_particles.h"
 #include <cassert>
 
+#include "simulation.h"
+
 extern vpic_simulation *simulation;
 
 // ======================================================================
 // vpic_mparticles
 
 // ----------------------------------------------------------------------
-// vpic_mparticles_create
+// vpic_mparticles_new_from_simulation
 
 struct vpic_mparticles *
-vpic_mparticles_create()
+vpic_mparticles_new_from_simulation(Simulation *sim)
 {
-  return new vpic_mparticles;
-}
-
-// ----------------------------------------------------------------------
-// vpic_mparticles_ctor_from_simulation
-
-void
-vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts)
-{
-  vmprts->species_list = simulation->species_list;
+  vpic_mparticles *vmprts = new vpic_mparticles;
+  vmprts->species_list = sim->particles_.sl_;
+  return vmprts;
 }
 
 // ----------------------------------------------------------------------

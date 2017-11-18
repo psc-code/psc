@@ -2,6 +2,7 @@
 #include "psc_particles_vpic.h"
 
 #include <psc_particles_single_by_kind.h>
+#include <psc_method.h>
 
 #include "vpic_iface.h"
 
@@ -180,8 +181,9 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 
-  sub->vmprts = vpic_mparticles_create();
-  vpic_mparticles_ctor_from_simulation(sub->vmprts);
+  struct Simulation *sim;
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+  sub->vmprts = vpic_mparticles_new_from_simulation(sim);
 }
 
 // ----------------------------------------------------------------------

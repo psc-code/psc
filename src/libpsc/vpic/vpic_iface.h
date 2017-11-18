@@ -72,8 +72,7 @@ struct vpic_mparticles_prt {
   int kind;
 };
 
-struct vpic_mparticles *vpic_mparticles_create();
-void vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts);
+struct vpic_mparticles *vpic_mparticles_new_from_simulation(struct Simulation *sim);
 int vpic_mparticles_get_nr_particles(struct vpic_mparticles *vmprts);
 void vpic_mparticles_reserve_all(struct vpic_mparticles *vmprts, int n_patches,
 				 int *n_prts_by_patch);
