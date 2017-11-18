@@ -15,6 +15,34 @@
 #include <psc.h> // FIXME, only need the BND_* constants
 
 // ======================================================================
+// Particles
+
+struct Particles {
+  Particles(species_t*& sl);
+
+  species_t* append(species_t* sl);
+  bool empty();
+  
+  //private:
+  species_t *&sl_;
+};
+
+inline Particles::Particles(species_t*& sl)
+  : sl_(sl)
+{
+}
+
+inline species_t* Particles::append(species_t* s)
+{
+  return ::append_species(s, &sl_);
+}
+
+inline bool Particles::empty()
+{
+  return !sl_;
+}
+
+// ======================================================================
 // class Simulation
 
 struct Simulation {
@@ -46,7 +74,7 @@ struct Simulation {
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
 
-  species_t*& species_list_;
+  Particles particles_;
 };
 
 inline Simulation::Simulation()
@@ -56,7 +84,7 @@ inline Simulation::Simulation()
     interpolator_array_(simulation->interpolator_array),
     accumulator_array_(simulation->accumulator_array),
     hydro_array_(simulation->hydro_array),
-    species_list_(simulation->species_list)
+    particles_(simulation->species_list)
 {
 }
 
@@ -155,10 +183,10 @@ inline species_t* Simulation::define_species(const char *name, double q, double 
     if (max_local_nm<16*(MAX_PIPELINE+1))
       max_local_nm = 16*(MAX_PIPELINE+1);
   }
-  return append_species(species(name, (float)q, (float)m,
-				(int)max_local_np, (int)max_local_nm,
-				(int)sort_interval, (int)sort_out_of_place,
-				grid_.g_), &species_list_);
+  return particles_.append(species(name, (float)q, (float)m,
+				   (int)max_local_np, (int)max_local_nm,
+				   (int)sort_interval, (int)sort_out_of_place,
+				   grid_.g_));
 }
 
 
