@@ -21,7 +21,6 @@ struct psc_method_vpic {
 
   // state
   Simulation *sim;
-  struct vpic_simulation *vpic;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)

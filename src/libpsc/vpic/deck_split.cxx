@@ -19,8 +19,7 @@
 // ----------------------------------------------------------------------
 // vpic_simulation_setup_diagnostics
 
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				       species_t *electron, species_t *ion)
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag)
 {
   /*--------------------------------------------------------------------------
    * New dump definition

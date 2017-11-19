@@ -10,9 +10,7 @@
 // globals_diag implementation
 
 void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag,
-				       species_t *electron, species_t *ion);
-
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag);
 
 
 globals_diag::globals_diag(int interval_)
@@ -36,9 +34,7 @@ globals_diag::globals_diag(int interval_)
 
 void globals_diag::setup(Simulation *sim)
 {
-  species_t *electron = sim->simulation_->find_species("electron");
-  species_t *ion = sim->simulation_->find_species("ion");
-  vpic_simulation_setup_diagnostics(sim->simulation_, this, electron, ion);
+  vpic_simulation_setup_diagnostics(sim->simulation_, this);
 }
 
 void globals_diag::run(Simulation *sim)

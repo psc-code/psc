@@ -114,7 +114,9 @@ void Simulation_inc_step(Simulation *sim, int step)
 
 void Simulation_print_status(Simulation *sim)
 {
-  update_profile(sim->simulation_->rank() == 0);
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  update_profile(rank == 0);
 }
 
 // ======================================================================
