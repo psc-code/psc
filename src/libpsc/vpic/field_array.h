@@ -10,13 +10,25 @@
 // ======================================================================
 // VpicFieldArrayOps
 
+template<class FieldArray>
 struct VpicFieldArrayOps {
+#define FAK kernel
+
+  void ops_advanceB(FieldArray *fa, double frac)
+  {
+    fa->FAK->advance_b(fa, frac);
+    //advanceB(frac);
+  }
+
+#undef FAK
 };
 
 // ======================================================================
 // VpicFieldArray
 
-template<class VpicFieldArrayOps>
+inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp);
+inline void field_array_dtor(field_array_t *fa);
+
 struct VpicFieldArray : field_array_t {
   enum {
     EX = 0,

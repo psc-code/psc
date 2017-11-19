@@ -45,8 +45,8 @@ enum {
 
 #ifdef __cplusplus
 
-typedef struct VpicFieldArrayOps FieldArrayOps;
-typedef struct VpicFieldArray<FieldArrayOps> FieldArray;
+typedef struct VpicFieldArray FieldArray;
+typedef struct VpicFieldArrayOps<FieldArray> FieldArrayOps;
 
 #else
 
