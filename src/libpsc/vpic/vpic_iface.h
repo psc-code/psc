@@ -8,6 +8,8 @@
 
 #ifdef __cplusplus
 
+#include "field_array.h"
+
 extern "C" {
 #endif
 #if 0 // hack to fix indentation
@@ -41,7 +43,16 @@ enum {
   VPIC_HYDRO_N_COMP = 16,
 };
 
-typedef struct VpicFieldArray FieldArray;
+#ifdef __cplusplus
+
+typedef struct VpicFieldArrayOps FieldArrayOps;
+typedef struct VpicFieldArray<FieldArrayOps> FieldArray;
+
+#else
+
+typedef struct FieldArray FieldArray;
+
+#endif
 
 struct Simulation;
 struct Particles;

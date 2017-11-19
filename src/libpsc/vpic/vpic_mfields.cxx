@@ -29,9 +29,9 @@ float *vpic_mfields_hydro_get_data(HydroArray *vmflds, int *ib, int *im)
 // ----------------------------------------------------------------------
 // vpic_mfields_new_fields_array
 
-VpicFieldArray* vpic_mfields_new_fields_array(Simulation *sim)
+FieldArray* vpic_mfields_new_fields_array(Simulation *sim)
 {
-  VpicFieldArray* vmflds = static_cast<VpicFieldArray*>(sim->field_array_);
+  FieldArray* vmflds = static_cast<FieldArray*>(sim->field_array_);
 
   // Accessing the data as a C array relies on fields_array_t to not change
   assert(sizeof(vmflds->f[0]) / sizeof(float) == VPIC_MFIELDS_N_COMP);
@@ -41,7 +41,7 @@ VpicFieldArray* vpic_mfields_new_fields_array(Simulation *sim)
 // ----------------------------------------------------------------------
 // vpic_mfields_get_data
 
-float *vpic_mfields_get_data(VpicFieldArray *vmflds, int *ib, int *im)
+float *vpic_mfields_get_data(FieldArray *vmflds, int *ib, int *im)
 {
   return vmflds->getData(ib, im);
 }
@@ -49,74 +49,74 @@ float *vpic_mfields_get_data(VpicFieldArray *vmflds, int *ib, int *im)
 // ----------------------------------------------------------------------
 // C wrappers
 
-double vpic_mfields_synchronize_tang_e_norm_b(VpicFieldArray *vmflds)
+double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *vmflds)
 {
   return vmflds->synchronize_tang_e_norm_b();
 }
 
-void vpic_mfields_compute_div_b_err(VpicFieldArray *vmflds)
+void vpic_mfields_compute_div_b_err(FieldArray *vmflds)
 {
   vmflds->compute_div_b_err();
 }
 
-double vpic_mfields_compute_rms_div_b_err(VpicFieldArray *vmflds)
+double vpic_mfields_compute_rms_div_b_err(FieldArray *vmflds)
 {
   return vmflds->compute_rms_div_b_err();
 }
 
-void vpic_mfields_clean_div_b(VpicFieldArray *vmflds)
+void vpic_mfields_clean_div_b(FieldArray *vmflds)
 {
   vmflds->clean_div_b();
 }
 
-void vpic_mfields_compute_div_e_err(VpicFieldArray *vmflds)
+void vpic_mfields_compute_div_e_err(FieldArray *vmflds)
 {
   vmflds->compute_div_e_err();
 }
 
-double vpic_mfields_compute_rms_div_e_err(VpicFieldArray *vmflds)
+double vpic_mfields_compute_rms_div_e_err(FieldArray *vmflds)
 {
   return vmflds->compute_rms_div_e_err();
 }
 
-void vpic_mfields_clean_div_e(VpicFieldArray *vmflds)
+void vpic_mfields_clean_div_e(FieldArray *vmflds)
 {
   vmflds->clean_div_e();
 }
 
-void vpic_mfields_clear_rhof(VpicFieldArray *vmflds)
+void vpic_mfields_clear_rhof(FieldArray *vmflds)
 {
   vmflds->clear_rhof();
 }
 
-void vpic_mfields_synchronize_rho(VpicFieldArray *vmflds)
+void vpic_mfields_synchronize_rho(FieldArray *vmflds)
 {
   vmflds->synchronize_rho();
 }
 
-void vpic_mfields_compute_rhob(VpicFieldArray *vmflds)
+void vpic_mfields_compute_rhob(FieldArray *vmflds)
 {
   vmflds->compute_rhob();
 }
 
-void vpic_mfields_compute_curl_b(VpicFieldArray *vmflds)
+void vpic_mfields_compute_curl_b(FieldArray *vmflds)
 {
   vmflds->compute_curl_b();
 }
 
-void vpic_mfields_accumulate_rho_p(VpicFieldArray *vmflds, Particles *vmprts)
+void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
 {
   species_t *sp;
   LIST_FOR_EACH(sp, vmprts->sl_)
     TIC accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1);
 }
 
-void vpic_mfields_advance_b(VpicFieldArray *vmflds, double frac)
+void vpic_mfields_advance_b(FieldArray *vmflds, double frac)
 {
   TIC vmflds->advance_b(frac); TOC(advance_b, 1);
 }
 
-void vpic_mfields_advance_e(VpicFieldArray *vmflds, double frac)
+void vpic_mfields_advance_e(FieldArray *vmflds, double frac)
 {
   TIC vmflds->advance_e(frac); TOC(advance_e, 1);
 }

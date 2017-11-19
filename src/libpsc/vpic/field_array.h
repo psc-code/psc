@@ -8,8 +8,15 @@
 #include <cassert>
 
 // ======================================================================
+// VpicFieldArrayOps
+
+struct VpicFieldArrayOps {
+};
+
+// ======================================================================
 // VpicFieldArray
 
+template<class VpicFieldArrayOps>
 struct VpicFieldArray : field_array_t {
   enum {
     EX = 0,
@@ -21,48 +28,151 @@ struct VpicFieldArray : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
   
-  VpicFieldArray(Grid g, MaterialList m_list, float damp);
-  ~VpicFieldArray();
+  VpicFieldArray(Grid grid, MaterialList material_list, float damp)
+  {
+    field_array_ctor(this, grid.g_, material_list.ml_, damp);
+  }
+  
+  ~VpicFieldArray()
+  {
+    field_array_dtor(this);
+  }
 
-  float* data();
-  float* getData(int* ib, int* im);
+  float* data()
+  {
+    return &f[0].ex;
+  }
+  
+  float* getData(int* ib, int* im)
+  {
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    im[0] = g->nx + 2*B;
+    im[1] = g->ny + 2*B;
+    im[2] = g->nz + 2*B;
+    ib[0] = -B;
+    ib[1] = -B;
+    ib[2] = -B;
+    return &f[0].ex;
+  }
 
   // These operators can be used to access the field directly,
   // though the performance isn't great, so one you use Field3D
   // when performance is important
-  float operator()(int m, int i, int j, int k) const;
-  float& operator()(int m, int i, int j, int k);
+  float operator()(int m, int i, int j, int k) const
+  {
+    float *f_ = &f[0].ex;
+    return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+  }
+  
+  float& operator()(int m, int i, int j, int k)
+  {
+    float *f_ = &f[0].ex;
+    return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+  }
 
-  void clear_jf();
-  void synchronize_jf();
-  void compute_div_b_err();
-  void compute_div_e_err();
-  double compute_rms_div_b_err();
-  double compute_rms_div_e_err();
-  void clean_div_b();
-  void clean_div_e();
-  void compute_curl_b();
-  void clear_rhof();
-  void synchronize_rho();
-  void compute_rhob();
-  double synchronize_tang_e_norm_b();
-  void advance_b(double frak);
-  void advance_e(double frak);
+  // ----------------------------------------------------------------------
+  // kernels
+  
+#define FAK kernel
+
+  void advance_b(double frac)
+  {
+    FAK->advance_b(this, frac);
+    //advanceB(frac);
+  }
+
+  void advance_e(double frac)
+  {
+    FAK->advance_e(this, frac);
+  }
+
+  void clear_jf()
+  {
+    TIC FAK->clear_jf(this); TOC(clear_jf, 1);
+  }
+  
+  void synchronize_jf()
+  {
+    TIC FAK->synchronize_jf(this); TOC(synchronize_jf, 1);
+  }
+  
+  void compute_div_b_err()
+  {
+    TIC FAK->compute_div_b_err(this); TOC(compute_div_b_err, 1);
+  }
+  
+  void compute_div_e_err()
+  {
+    TIC FAK->compute_div_e_err(this); TOC(compute_div_e_err, 1);
+  }
+  
+  double compute_rms_div_b_err()
+  {
+    double err;
+    TIC err = FAK->compute_rms_div_b_err(this); TOC(compute_rms_div_b_err, 1);
+    return err;
+  }
+  
+  double compute_rms_div_e_err()
+  {
+    double err;
+    TIC err = FAK->compute_rms_div_e_err(this); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
+  void clean_div_b()
+  {
+    TIC FAK->clean_div_b(this); TOC(clean_div_b, 1);
+  }
+
+  void clean_div_e()
+  {
+    TIC FAK->clean_div_e(this); TOC(clean_div_e, 1);
+  }
+
+  void compute_curl_b()
+  {
+    TIC FAK->compute_curl_b(this); TOC(compute_curl_b, 1);
+  }
+
+  void clear_rhof()
+  {
+    TIC FAK->clear_rhof(this); TOC(clear_rhof, 1);
+  }
+
+  void synchronize_rho()
+  {
+    TIC FAK->synchronize_rho(this); TOC(synchronize_rho, 1);
+  }
+
+  void compute_rhob()
+  {
+    TIC FAK->compute_rhob(this); TOC(compute_rhob, 1);
+  }
+
+  double synchronize_tang_e_norm_b()
+  {
+    double err;
+    TIC err = FAK->synchronize_tang_e_norm_b(this); TOC(synchronize_tang_e_norm_b, 1);
+    return err;
+  }
+
+#undef FAK
 
   // I'm keeping these for now, because I tink they're a nice interface,
   // but it doesn't scale well to other kinds of fields (as one can tell
   // from the macro use...)
-#define MK_COMP_ACCESSOR(cbx)					\
-  float cbx(int i, int j, int k) const				\
-  {								\
-    const int nx = g->nx, ny = g->ny;				\
-    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;			\
-  }								\
- 								\
-  float& cbx(int i, int j, int k)				\
-  {								\
-    const int nx = g->nx, ny = g->ny;				\
-    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;			\
+#define MK_COMP_ACCESSOR(cbx)			\
+  float cbx(int i, int j, int k) const		\
+  {						\
+    const int nx = g->nx, ny = g->ny;		\
+    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;	\
+  }						\
+						\
+  float& cbx(int i, int j, int k)		\
+  {						\
+    const int nx = g->nx, ny = g->ny;		\
+    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;	\
   }
 
   MK_COMP_ACCESSOR(cbx)
@@ -73,7 +183,7 @@ struct VpicFieldArray : field_array_t {
   MK_COMP_ACCESSOR(ez)
   
 
-private:
+  private:
   void advanceB(float frac);
   void advanceB_interior(float frac);
 
@@ -173,8 +283,8 @@ create_sfa_params( grid_t           * g,
     if( m->epsy*m->mux<0 )
       WARNING(("\"%s\" has an imaginary z speed of light (ey)", m->name));
     cg2 = ax/minf(m->epsy*m->muz,m->epsz*m->muy) +
-          ay/minf(m->epsz*m->mux,m->epsx*m->muz) +
-          az/minf(m->epsx*m->muy,m->epsy*m->mux);
+      ay/minf(m->epsz*m->mux,m->epsx*m->muz) +
+      az/minf(m->epsx*m->muy,m->epsy*m->mux);
     if( cg2>=1 )
       WARNING(( "\"%s\" Courant condition estimate = %e", m->name, sqrt(cg2) ));
     if( m->zetax!=0 || m->zetay!=0 || m->zetaz!=0 )
@@ -270,135 +380,6 @@ inline void field_array_dtor(field_array_t *fa)
   FREE_ALIGNED( fa->f );
 }
 
-// ----------------------------------------------------------------------
-// VpicFieldArray implementation
-
-inline VpicFieldArray::VpicFieldArray(Grid grid, MaterialList material_list, float damp)
-{
-  field_array_ctor(this, grid.g_, material_list.ml_, damp);
-}
-
-inline VpicFieldArray::~VpicFieldArray()
-{
-  field_array_dtor(this);
-}
-
-inline float* VpicFieldArray::data()
-{
-  return &f[0].ex;
-}
-
-inline float* VpicFieldArray::getData(int* ib, int* im)
-{
-  const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-
-  im[0] = g->nx + 2*B;
-  im[1] = g->ny + 2*B;
-  im[2] = g->nz + 2*B;
-  ib[0] = -B;
-  ib[1] = -B;
-  ib[2] = -B;
-  return &f[0].ex;
-}
-
-inline float VpicFieldArray::operator()(int m, int i, int j, int k) const
-{
-  float *f_ = &f[0].ex;
-  return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
-}
-
-inline float& VpicFieldArray::operator()(int m, int i, int j, int k)
-{
-  float *f_ = &f[0].ex;
-  return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
-}
-
-#define FAK kernel
-
-inline void VpicFieldArray::clear_jf()
-{
-  TIC FAK->clear_jf(this); TOC(clear_jf, 1);
-}
-
-inline void VpicFieldArray::synchronize_jf()
-{
-  TIC FAK->synchronize_jf(this); TOC(synchronize_jf, 1);
-}
-
-inline void VpicFieldArray::compute_div_b_err()
-{
-  TIC FAK->compute_div_b_err(this); TOC(compute_div_b_err, 1);
-}
-
-inline void VpicFieldArray::compute_div_e_err()
-{
-  TIC FAK->compute_div_e_err(this); TOC(compute_div_e_err, 1);
-}
-
-inline double VpicFieldArray::compute_rms_div_b_err()
-{
-  double err;
-  TIC err = FAK->compute_rms_div_b_err(this); TOC(compute_rms_div_b_err, 1);
-  return err;
-}
-
-inline double VpicFieldArray::compute_rms_div_e_err()
-{
-  double err;
-  TIC err = FAK->compute_rms_div_e_err(this); TOC(compute_rms_div_e_err, 1);
-  return err;
-}
-
-inline void VpicFieldArray::clean_div_b()
-{
-  TIC FAK->clean_div_b(this); TOC(clean_div_b, 1);
-}
-
-inline void VpicFieldArray::clean_div_e()
-{
-  TIC FAK->clean_div_e(this); TOC(clean_div_e, 1);
-}
-
-inline void VpicFieldArray::compute_curl_b()
-{
-  TIC FAK->compute_curl_b(this); TOC(compute_curl_b, 1);
-}
-
-inline void VpicFieldArray::clear_rhof()
-{
-  TIC FAK->clear_rhof(this); TOC(clear_rhof, 1);
-}
-
-inline void VpicFieldArray::synchronize_rho()
-{
-  TIC FAK->synchronize_rho(this); TOC(synchronize_rho, 1);
-}
-
-inline void VpicFieldArray::compute_rhob()
-{
-  TIC FAK->compute_rhob(this); TOC(compute_rhob, 1);
-}
-
-inline double VpicFieldArray::synchronize_tang_e_norm_b()
-{
-  double err;
-  TIC err = FAK->synchronize_tang_e_norm_b(this); TOC(synchronize_tang_e_norm_b, 1);
-  return err;
-}
-
-inline void VpicFieldArray::advance_b(double frac)
-{
-  //  FAK->advance_b(this, frac);
-  advanceB(frac);
-}
-
-inline void VpicFieldArray::advance_e(double frac)
-{
-  FAK->advance_e(this, frac);
-}
-
-#undef FAK
-
 // ======================================================================
 // Field3D
 //
@@ -406,8 +387,9 @@ inline void VpicFieldArray::advance_e(double frac)
 // For now, it's specific to VpicFieldArray, but it should be generalizable
 // fairly easily
 
+template<class FieldArray>
 struct Field3D {
-  Field3D(VpicFieldArray& fa)
+  Field3D(FieldArray& fa)
     : sx_(fa.g->nx + 2), sy_(fa.g->ny + 2),
       f_(fa.data())
   {
@@ -418,24 +400,24 @@ struct Field3D {
     return i + sx_ * (j + sy_ * (k));
   }
 
-  field_t& operator()(VpicFieldArray &fa, int i, int j, int k)
+  field_t& operator()(FieldArray &fa, int i, int j, int k)
   {
     return fa.f[voxel(i,j,k)];
   }
   
-  field_t operator()(VpicFieldArray &fa, int i, int j, int k) const
+  field_t operator()(FieldArray &fa, int i, int j, int k) const
   {
     return fa.f[voxel(i,j,k)];
   }
   
   float& operator()(int m, int i, int j, int k)
   {
-    return f_[m + VpicFieldArray::N_COMP * voxel(i,j,k)];
+    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
   }
   
   float operator()(int m, int i, int j, int k) const
   {
-    return f_[m + VpicFieldArray::N_COMP * voxel(i,j,k)];
+    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
   }
 
 private:
