@@ -5,22 +5,21 @@
 #include "grid.h"
 #include "material.h"
 
+#include <mrc_common.h>
 #include <cassert>
 
 // ======================================================================
 // VpicFieldArrayOps
 
-template<class FieldArray>
+template<class FA>
 struct VpicFieldArrayOps {
-#define FAK kernel
-
-  void ops_advanceB(FieldArray *fa, double frac)
+  typedef FA FieldArray;
+  
+  void advance_b(FieldArray& fa, double frac)
   {
-    fa->FAK->advance_b(fa, frac);
+    fa.kernel->advance_b(&fa, frac);
     //advanceB(frac);
   }
-
-#undef FAK
 };
 
 // ======================================================================

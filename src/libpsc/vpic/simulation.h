@@ -6,6 +6,7 @@
 #include "interpolator_array.h"
 #include "accumulator_array.h"
 #include "hydro_array.h"
+#include "particles.h"
 #include "rng.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
@@ -13,38 +14,12 @@
 struct globals_diag;
 
 // ======================================================================
-// Particles
-
-struct Particles {
-  Particles(species_t*& sl);
-
-  species_t* append(species_t* sl);
-  bool empty();
-  
-  //private:
-  species_t *&sl_;
-};
-
-inline Particles::Particles(species_t*& sl)
-  : sl_(sl)
-{
-}
-
-inline species_t* Particles::append(species_t* s)
-{
-  return ::append_species(s, &sl_);
-}
-
-inline bool Particles::empty()
-{
-  return !sl_;
-}
-
-// ======================================================================
 // class VpicSimulation
 
-template<class FieldArray>
-struct VpicSimulation {
+template<class FieldArrayOps>
+struct VpicSimulation : FieldArrayOps{
+  typedef typename FieldArrayOps::FieldArray FieldArray;
+  
   VpicSimulation(vpic_simulation *simulation)
   : grid_(simulation->grid),
     material_list_(simulation->material_list),
@@ -170,12 +145,6 @@ struct VpicSimulation {
 			      double max_local_np, double max_local_nm,
 			      double sort_interval, double sort_out_of_place);
   }
-  
-  void advance_b(FieldArray &fa, double frac)
-  {
-    fa.kernel->advance_b(&fa, frac);
-  }
-
   
   RngPool rng_pool;
 
