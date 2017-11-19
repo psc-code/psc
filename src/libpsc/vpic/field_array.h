@@ -399,5 +399,51 @@ inline void FieldArray::advance_e(double frac)
 
 #undef FAK
 
+// ======================================================================
+// Field3D
+//
+// A class to accelerate 3-d field access
+// For now, it's specific to FieldArray, but it should be generalizable
+// fairly easily
+
+struct Field3D {
+  Field3D(FieldArray& fa)
+    : sx_(fa.g->nx + 2), sy_(fa.g->ny + 2),
+      f_(fa.data())
+  {
+  }
+
+  int voxel(int i, int j, int k) const
+  {
+    return i + sx_ * (j + sy_ * (k));
+  }
+
+  field_t& operator()(FieldArray &fa, int i, int j, int k)
+  {
+    return fa.f[voxel(i,j,k)];
+  }
+  
+  field_t operator()(FieldArray &fa, int i, int j, int k) const
+  {
+    return fa.f[voxel(i,j,k)];
+  }
+  
+  float& operator()(int m, int i, int j, int k)
+  {
+    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
+  }
+  
+  float operator()(int m, int i, int j, int k) const
+  {
+    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
+  }
+
+private:
+  int sx_, sy_;
+  float * RESTRICT f_;
+};
+
+
+
 #endif
 
