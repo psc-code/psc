@@ -13,6 +13,8 @@
 #include "VpicFieldArrayOps.h"
 #include "PscFieldArrayOps.h"
 
+#include "VpicParticlesOps.h"
+
 extern "C" {
 #endif
 #if 0 // hack to fix indentation
@@ -50,7 +52,10 @@ enum {
 
 typedef struct VpicFieldArray FieldArray;
 typedef struct PscFieldArrayOps<FieldArray> FieldArrayOps;
-typedef struct VpicSimulation<FieldArrayOps> Simulation;
+
+typedef struct VpicParticlesOps ParticlesOps;
+
+typedef struct VpicSimulation<FieldArrayOps, ParticlesOps> Simulation;
 
 #else
 

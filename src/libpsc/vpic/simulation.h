@@ -16,19 +16,21 @@ struct globals_diag;
 // ======================================================================
 // class VpicSimulation
 
-template<class FieldArrayOps>
-struct VpicSimulation : FieldArrayOps{
+template<class FieldArrayOps, class ParticlesOps>
+struct VpicSimulation : FieldArrayOps, ParticlesOps
+{
   typedef typename FieldArrayOps::FieldArray FieldArray;
   
   VpicSimulation(vpic_simulation *simulation)
-  : grid_(simulation->grid),
-    material_list_(simulation->material_list),
-    field_array_(simulation->field_array),
-    interpolator_array_(simulation->interpolator_array),
-    accumulator_array_(simulation->accumulator_array),
-    hydro_array_(simulation->hydro_array),
-    particles_(simulation->species_list),
-    simulation_(simulation)
+    : ParticlesOps(simulation),
+      grid_(simulation->grid),
+      material_list_(simulation->material_list),
+      field_array_(simulation->field_array),
+      interpolator_array_(simulation->interpolator_array),
+      accumulator_array_(simulation->accumulator_array),
+      hydro_array_(simulation->hydro_array),
+      particles_(simulation->species_list),
+      simulation_(simulation)
   {
   }
 
@@ -133,15 +135,6 @@ struct VpicSimulation : FieldArrayOps{
 				     grid_.g_));
   }
 
-  void inject_particle(Particles *vmprts, int p, const struct psc_particle_inject *prt)
-  {
-    assert(p == 0);
-    species_t *sp = find_species_id(prt->kind, vmprts->sl_);
-    
-    simulation_->inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
-				 prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
-  }
-  
   RngPool rng_pool;
 
   //private:
