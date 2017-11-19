@@ -23,8 +23,6 @@
 
 #include "libpsc/vpic/vpic_iface.h"
 
-static void psc_harris_set_ic_particles(struct psc *psc);
-
 // ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
@@ -514,12 +512,12 @@ psc_harris_setup(struct psc *psc)
   int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
-  free(n_prts_by_patch);
 
   psc_setup_base_mprts(psc);
   psc_setup_base_mflds(psc);
 
-  psc_harris_set_ic_particles(psc);
+  psc_setup_particles(psc, n_prts_by_patch);
+  free(n_prts_by_patch);
 
   psc_set_ic_fields(psc);
   
@@ -564,13 +562,14 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_harris_set_ic_particles
+// psc_harris_setup_particles
 //
 // set particles x^{n+1/2}, p^{n+1/2}
 
 static void
-psc_harris_set_ic_particles(struct psc *psc)
+psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
+  assert(!count_only);
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
@@ -674,14 +673,6 @@ psc_harris_set_ic_particles(struct psc *psc)
   mpi_printf(comm, "Finished loading particles\n");
 
   psc_mparticles_put_as(mprts, psc->particles, 0);
-}
-
-// ----------------------------------------------------------------------
-// psc_harris_setup_particles
-
-static void
-psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
-{
 }
 
 // ----------------------------------------------------------------------
