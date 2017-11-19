@@ -11,6 +11,7 @@
 #include "simulation.h"
 #include "field_array.h"
 #include "VpicFieldArrayOps.h"
+#include "PscFieldArrayOps.h"
 
 extern "C" {
 #endif
@@ -48,7 +49,7 @@ enum {
 #ifdef __cplusplus
 
 typedef struct VpicFieldArray FieldArray;
-typedef struct VpicFieldArrayOps<FieldArray> FieldArrayOps;
+typedef struct PscFieldArrayOps<FieldArray> FieldArrayOps;
 typedef struct VpicSimulation<FieldArrayOps> Simulation;
 
 #else

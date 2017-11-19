@@ -16,9 +16,9 @@ inline void field_array_dtor(field_array_t *fa);
 
 struct VpicFieldArray : field_array_t {
   enum {
-    EX = 0,
-    EY = 1,
-    EZ = 2,
+    EX  = 0,
+    EY  = 1,
+    EZ  = 2,
     CBX = 4,
     CBY = 5,
     CBZ = 6,
