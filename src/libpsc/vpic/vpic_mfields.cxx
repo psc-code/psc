@@ -111,8 +111,3 @@ void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
     TIC accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1);
 }
 
-void vpic_mfields_advance_e(FieldArray *vmflds, double frac)
-{
-  TIC vmflds->advance_e(frac); TOC(advance_e, 1);
-}
-

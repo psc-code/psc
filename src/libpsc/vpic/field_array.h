@@ -72,11 +72,6 @@ struct VpicFieldArray : field_array_t {
   
 #define FAK kernel
 
-  void advance_e(double frac)
-  {
-    FAK->advance_e(this, frac);
-  }
-
   void clear_jf()
   {
     TIC FAK->clear_jf(this); TOC(clear_jf, 1);

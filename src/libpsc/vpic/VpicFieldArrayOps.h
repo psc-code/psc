@@ -12,8 +12,13 @@ struct VpicFieldArrayOps {
   void advance_b(FieldArray& fa, double frac)
   {
     fa.kernel->advance_b(&fa, frac);
-    //advanceB(frac);
   }
+
+  void advance_e(FieldArray& fa, double frac)
+  {
+    fa.kernel->advance_e(&fa, frac);
+  }
+
 };
 
 
