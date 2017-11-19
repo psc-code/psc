@@ -27,32 +27,6 @@ static void psc_harris_set_ic_particles(struct psc *psc);
 
 // ----------------------------------------------------------------------
 
-void *
-rng(int i)
-{
-  return NULL;
-}
-
-double
-uniform(void *dummy, double lo, double hi)
-{
-  return lo + (hi - lo) * random() / ((float) RAND_MAX + 1);
-}
-
-double
-normal(void *dummy, double mu, double sigma)
-{
-  float ran1, ran2;
-  do {
-    ran1 = random() / ((float) RAND_MAX + 1);
-    ran2 = random() / ((float) RAND_MAX + 1);
-  } while (ran1 >= 1.f || ran2 >= 1.f);
-	      
-  return mu + sigma * sqrtf(-2.f * logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-}
-
-// ----------------------------------------------------------------------
-
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
 static struct param psc_harris_descr[] = {
   { "wpedt_max"             , VAR(prm.wpedt_max)             , PARAM_DOUBLE(.36)  },
@@ -702,109 +676,12 @@ psc_harris_set_ic_particles(struct psc *psc)
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
-
-#define inject_particle(knd, x, y, z, ux, uy, uz, weight, a, b) do {	\
-    double Vi = 1./(psc->patch[0].dx[0] * psc->patch[0].dx[1] * psc->patch[0].dx[2]); \
-    particle_t prt;							\
-    prt.xi = x - xmin;							\
-    prt.yi = y - ymin;							\
-    prt.zi = z - zmin;							\
-    prt.pxi = ux;							\
-    prt.pyi = uy;							\
-    prt.pzi = uz;							\
-    prt.qni_wni = psc->kinds[knd].q * weight * Vi;			\
-    prt.kind = knd;							\
-    mparticles_patch_push_back(mprts, p, prt);				\
-  } while (0)
-
-
 // ----------------------------------------------------------------------
 // psc_harris_setup_particles
 
 static void
 psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-
-  for (int p = 0; p < psc->nr_patches; p++) {
-    nr_particles_by_patch[p] = phys->Ne / sub->n_global_patches;
-  }
-
-  if (count_only) {
-    return;
-  }
-
-  double theta = sub->prm.theta;
-  double L = phys->L;
-  double tanhf = phys->tanhf;
-  double vthe = phys->vthe, vthi = phys->vthi;
-  double vtheb = phys->vtheb, vthib = phys->vthib;
-  double gdre = phys->gdre, gdri = phys->gdri;
-  double udre = phys->udre, udri = phys->udri;
-  double weight_s = phys->weight_s;
-  double weight_b = phys->weight_b;
-  int electron = KIND_ELECTRON, ion = KIND_ION;
-  double cs = cos(theta), sn = sin(theta);
-
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, MP_DONT_COPY);
-
-  for (int p = 0; p < psc->nr_patches; p++) {
-    struct psc_patch *patch = &psc->patch[p];
-    double xmin = patch->xb[0], xmax = patch->xb[0] + patch->ldims[0] * patch->dx[0];
-    double ymin = patch->xb[1], ymax = patch->xb[1] + patch->ldims[1] * patch->dx[1];
-    double zmin = patch->xb[2], zmax = patch->xb[2] + patch->ldims[2] * patch->dx[2];
-  
-    for (int n = 0; n < phys->Ne_sheet / sub->n_global_patches; n++) {
-      double x, y, z, ux, uy, uz, d0 ;
-
-      do {
-	z = L*atanh(uniform(rng(0), -1, 1)*tanhf);
-      } while( z<= zmin || z>=zmax );
-      x = uniform( rng(0), xmin, xmax );
-      y = uniform( rng(0), ymin, ymax );
-      
-      ux = normal( rng(0), 0, vthe);
-      uy = normal( rng(0), 0, vthe);
-      uz = normal( rng(0), 0, vthe);
-      d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
-      uy = d0*cs - ux*sn;
-      ux = d0*sn + ux*cs;
-     
-      inject_particle(electron, x, y, z, ux, uy, uz, weight_s, 0, 0 );
-      
-      ux = normal( rng(0), 0, vthi);
-      uy = normal( rng(0), 0, vthi);
-      uz = normal( rng(0), 0, vthi);
-      d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
-      uy = d0*cs - ux*sn;
-      ux = d0*sn + ux*cs;
-      
-      inject_particle(ion, x, y, z, ux, uy, uz, weight_s, 0, 0 );
-    }
-
-    for (int n = 0; n < phys->Ne_back / sub->n_global_patches; n++) {
-
-      double x = uniform( rng(0), xmin, xmax );
-      double y = uniform( rng(0), ymin, ymax );
-      double z = uniform( rng(0), zmin, zmax );
-
-      inject_particle( electron, x, y, z,
-		       normal( rng(0), 0, vtheb),
-		       normal( rng(0), 0, vtheb),
-		       normal( rng(0), 0, vtheb),
-		       weight_b, 0, 0);
-      
-      inject_particle( ion, x, y, z,
-		       normal( rng(0), 0, vthib),
-		       normal( rng(0), 0, vthib),
-		       normal( rng(0), 0, vthib),
-		       weight_b, 0 ,0 );
-    }
-
-  }
-
-  psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
 // ----------------------------------------------------------------------
