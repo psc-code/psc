@@ -23,7 +23,8 @@ struct FieldArray : field_array_t {
   
   FieldArray(Grid g, MaterialList m_list, float damp);
   ~FieldArray();
-  
+
+  float* data();
   float* getData(int* ib, int* im);
   void clear_jf();
   void synchronize_jf();
@@ -270,6 +271,11 @@ inline FieldArray::FieldArray(Grid grid, MaterialList material_list, float damp)
 inline FieldArray::~FieldArray()
 {
   field_array_dtor(this);
+}
+
+inline float* FieldArray::data()
+{
+  return &f[0].ex;
 }
 
 inline float* FieldArray::getData(int* ib, int* im)
