@@ -26,6 +26,13 @@ struct FieldArray : field_array_t {
 
   float* data();
   float* getData(int* ib, int* im);
+
+  // These operators can be used to access the field directly,
+  // though the performance isn't great, so one you use Field3D
+  // when performance is important
+  float operator()(int m, int i, int j, int k) const;
+  float& operator()(int m, int i, int j, int k);
+
   void clear_jf();
   void synchronize_jf();
   void compute_div_b_err();
@@ -42,9 +49,9 @@ struct FieldArray : field_array_t {
   void advance_b(double frak);
   void advance_e(double frak);
 
-  float operator()(int m, int i, int j, int k) const;
-  float& operator()(int m, int i, int j, int k);
-
+  // I'm keeping these for now, because I tink they're a nice interface,
+  // but it doesn't scale well to other kinds of fields (as one can tell
+  // from the macro use...)
 #define MK_COMP_ACCESSOR(cbx)					\
   float cbx(int i, int j, int k) const				\
   {								\
@@ -69,6 +76,9 @@ struct FieldArray : field_array_t {
 private:
   void advanceB(float frac);
   void advanceB_interior(float frac);
+
+  // this class should not have its own data members, as we use this
+  // to wrap VPIC field_array_t and just up-cast.
 };
 
 // ----------------------------------------------------------------------
@@ -289,6 +299,18 @@ inline float* FieldArray::getData(int* ib, int* im)
   ib[1] = -B;
   ib[2] = -B;
   return &f[0].ex;
+}
+
+inline float FieldArray::operator()(int m, int i, int j, int k) const
+{
+  float *f_ = &f[0].ex;
+  return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+}
+
+inline float& FieldArray::operator()(int m, int i, int j, int k)
+{
+  float *f_ = &f[0].ex;
+  return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
 }
 
 #define FAK kernel
