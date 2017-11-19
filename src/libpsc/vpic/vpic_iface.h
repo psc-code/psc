@@ -41,28 +41,30 @@ enum {
   VPIC_HYDRO_N_COMP = 16,
 };
 
+typedef struct VpicFieldArray FieldArray;
+
 struct Simulation;
 struct Particles;
 
 struct HydroArray *vpic_mfields_new_hydro_array(struct Simulation *sim);
 float *vpic_mfields_hydro_get_data(struct HydroArray *vmflds, int *ib, int *im);
 
-struct FieldArray *vpic_mfields_new_fields_array(struct Simulation *sim);
-float *vpic_mfields_get_data(struct FieldArray *fmflds, int *ib, int *im);
-double vpic_mfields_synchronize_tang_e_norm_b(struct FieldArray *mflds);
-void vpic_mfields_compute_div_b_err(struct FieldArray *vmflds);
-double vpic_mfields_compute_rms_div_b_err(struct FieldArray *vmflds);
-void vpic_mfields_clean_div_b(struct FieldArray *vmflds);
-void vpic_mfields_compute_div_e_err(struct FieldArray *vmflds);
-double vpic_mfields_compute_rms_div_e_err(struct FieldArray *vmflds);
-void vpic_mfields_clean_div_e(struct FieldArray *vmflds);
-void vpic_mfields_clear_rhof(struct FieldArray *vmflds);
-void vpic_mfields_accumulate_rho_p(struct FieldArray *vmflds, struct Particles *mprts);
-void vpic_mfields_synchronize_rho(struct FieldArray *vmflds);
-void vpic_mfields_compute_rhob(struct FieldArray *vmflds);
-void vpic_mfields_compute_curl_b(struct FieldArray *vmflds);
-void vpic_mfields_advance_b(struct FieldArray *vmflds, double frac);
-void vpic_mfields_advance_e(struct FieldArray *vmflds, double frac);
+FieldArray *vpic_mfields_new_fields_array(struct Simulation *sim);
+float *vpic_mfields_get_data(FieldArray *fmflds, int *ib, int *im);
+double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *mflds);
+void vpic_mfields_compute_div_b_err(FieldArray *vmflds);
+double vpic_mfields_compute_rms_div_b_err(FieldArray *vmflds);
+void vpic_mfields_clean_div_b(FieldArray *vmflds);
+void vpic_mfields_compute_div_e_err(FieldArray *vmflds);
+double vpic_mfields_compute_rms_div_e_err(FieldArray *vmflds);
+void vpic_mfields_clean_div_e(FieldArray *vmflds);
+void vpic_mfields_clear_rhof(FieldArray *vmflds);
+void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, struct Particles *mprts);
+void vpic_mfields_synchronize_rho(FieldArray *vmflds);
+void vpic_mfields_compute_rhob(FieldArray *vmflds);
+void vpic_mfields_compute_curl_b(FieldArray *vmflds);
+void vpic_mfields_advance_b(FieldArray *vmflds, double frac);
+void vpic_mfields_advance_e(FieldArray *vmflds, double frac);
 
 // ----------------------------------------------------------------------
 // vpic_mparticles
@@ -106,13 +108,13 @@ struct vpic_push_particles;
 struct vpic_push_particles *vpic_push_particles_new_from_Simulation(struct Simulation *sim);
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 				    struct Particles *vmprts,
-				    struct FieldArray *vmflds);
+				    FieldArray *vmflds);
 void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 				       struct Particles *vmprts,
-				       struct FieldArray *vmflds);
+				       FieldArray *vmflds);
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct Particles *mprts,
-			      struct FieldArray *vmflds);
+			      FieldArray *vmflds);
 
 // ----------------------------------------------------------------------
 // Simulation

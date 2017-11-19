@@ -17,7 +17,7 @@
 #define UPDATE_CBY() F(CBY, i,j,k) -= (pz*(F(EX, i,j,k+1) - F(EX ,i,j,k)) - px*(F(EZ, i+1,j,k) - F(EZ, i,j,k)))
 #define UPDATE_CBZ() F(CBZ, i,j,k) -= (px*(F(EY, i+1,j,k) - F(EY, i,j,k)) - py*(F(EX, i,j+1,k) - F(EX, i,j,k)))
 
-void FieldArray::advanceB_interior(float frac)
+void VpicFieldArray::advanceB_interior(float frac)
 {
   DECLARE_STENCIL();
 
@@ -30,7 +30,7 @@ void FieldArray::advanceB_interior(float frac)
   }
 }
 
-void FieldArray::advanceB(float frac)
+void VpicFieldArray::advanceB(float frac)
 {
   advanceB_interior(frac);
 

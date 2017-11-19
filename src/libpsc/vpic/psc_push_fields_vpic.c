@@ -36,7 +36,7 @@ psc_push_fields_vpic_push_mflds_H(struct psc_push_fields *push,
   // needs E, B
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 3);
 
-  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
   vpic_mfields_advance_b(vmflds, frac);
 
   // updates B
@@ -56,7 +56,7 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
   // needs J, E, B, TCA, material
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", JXI, VPIC_MFIELDS_N_COMP);
 
-  struct FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
   vpic_mfields_advance_e(vmflds, frac);
   Simulation_field_injection(sub->sim); // FIXME, this isn't the place, should have its own psc_field_injection
 

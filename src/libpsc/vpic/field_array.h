@@ -8,9 +8,9 @@
 #include <cassert>
 
 // ======================================================================
-// FieldArray
+// VpicFieldArray
 
-struct FieldArray : field_array_t {
+struct VpicFieldArray : field_array_t {
   enum {
     EX = 0,
     EY = 1,
@@ -21,8 +21,8 @@ struct FieldArray : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
   
-  FieldArray(Grid g, MaterialList m_list, float damp);
-  ~FieldArray();
+  VpicFieldArray(Grid g, MaterialList m_list, float damp);
+  ~VpicFieldArray();
 
   float* data();
   float* getData(int* ib, int* im);
@@ -271,24 +271,24 @@ inline void field_array_dtor(field_array_t *fa)
 }
 
 // ----------------------------------------------------------------------
-// FieldArray implementation
+// VpicFieldArray implementation
 
-inline FieldArray::FieldArray(Grid grid, MaterialList material_list, float damp)
+inline VpicFieldArray::VpicFieldArray(Grid grid, MaterialList material_list, float damp)
 {
   field_array_ctor(this, grid.g_, material_list.ml_, damp);
 }
 
-inline FieldArray::~FieldArray()
+inline VpicFieldArray::~VpicFieldArray()
 {
   field_array_dtor(this);
 }
 
-inline float* FieldArray::data()
+inline float* VpicFieldArray::data()
 {
   return &f[0].ex;
 }
 
-inline float* FieldArray::getData(int* ib, int* im)
+inline float* VpicFieldArray::getData(int* ib, int* im)
 {
   const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
 
@@ -301,13 +301,13 @@ inline float* FieldArray::getData(int* ib, int* im)
   return &f[0].ex;
 }
 
-inline float FieldArray::operator()(int m, int i, int j, int k) const
+inline float VpicFieldArray::operator()(int m, int i, int j, int k) const
 {
   float *f_ = &f[0].ex;
   return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
 }
 
-inline float& FieldArray::operator()(int m, int i, int j, int k)
+inline float& VpicFieldArray::operator()(int m, int i, int j, int k)
 {
   float *f_ = &f[0].ex;
   return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
@@ -315,84 +315,84 @@ inline float& FieldArray::operator()(int m, int i, int j, int k)
 
 #define FAK kernel
 
-inline void FieldArray::clear_jf()
+inline void VpicFieldArray::clear_jf()
 {
   TIC FAK->clear_jf(this); TOC(clear_jf, 1);
 }
 
-inline void FieldArray::synchronize_jf()
+inline void VpicFieldArray::synchronize_jf()
 {
   TIC FAK->synchronize_jf(this); TOC(synchronize_jf, 1);
 }
 
-inline void FieldArray::compute_div_b_err()
+inline void VpicFieldArray::compute_div_b_err()
 {
   TIC FAK->compute_div_b_err(this); TOC(compute_div_b_err, 1);
 }
 
-inline void FieldArray::compute_div_e_err()
+inline void VpicFieldArray::compute_div_e_err()
 {
   TIC FAK->compute_div_e_err(this); TOC(compute_div_e_err, 1);
 }
 
-inline double FieldArray::compute_rms_div_b_err()
+inline double VpicFieldArray::compute_rms_div_b_err()
 {
   double err;
   TIC err = FAK->compute_rms_div_b_err(this); TOC(compute_rms_div_b_err, 1);
   return err;
 }
 
-inline double FieldArray::compute_rms_div_e_err()
+inline double VpicFieldArray::compute_rms_div_e_err()
 {
   double err;
   TIC err = FAK->compute_rms_div_e_err(this); TOC(compute_rms_div_e_err, 1);
   return err;
 }
 
-inline void FieldArray::clean_div_b()
+inline void VpicFieldArray::clean_div_b()
 {
   TIC FAK->clean_div_b(this); TOC(clean_div_b, 1);
 }
 
-inline void FieldArray::clean_div_e()
+inline void VpicFieldArray::clean_div_e()
 {
   TIC FAK->clean_div_e(this); TOC(clean_div_e, 1);
 }
 
-inline void FieldArray::compute_curl_b()
+inline void VpicFieldArray::compute_curl_b()
 {
   TIC FAK->compute_curl_b(this); TOC(compute_curl_b, 1);
 }
 
-inline void FieldArray::clear_rhof()
+inline void VpicFieldArray::clear_rhof()
 {
   TIC FAK->clear_rhof(this); TOC(clear_rhof, 1);
 }
 
-inline void FieldArray::synchronize_rho()
+inline void VpicFieldArray::synchronize_rho()
 {
   TIC FAK->synchronize_rho(this); TOC(synchronize_rho, 1);
 }
 
-inline void FieldArray::compute_rhob()
+inline void VpicFieldArray::compute_rhob()
 {
   TIC FAK->compute_rhob(this); TOC(compute_rhob, 1);
 }
 
-inline double FieldArray::synchronize_tang_e_norm_b()
+inline double VpicFieldArray::synchronize_tang_e_norm_b()
 {
   double err;
   TIC err = FAK->synchronize_tang_e_norm_b(this); TOC(synchronize_tang_e_norm_b, 1);
   return err;
 }
 
-inline void FieldArray::advance_b(double frac)
+inline void VpicFieldArray::advance_b(double frac)
 {
   //  FAK->advance_b(this, frac);
   advanceB(frac);
 }
 
-inline void FieldArray::advance_e(double frac)
+inline void VpicFieldArray::advance_e(double frac)
 {
   FAK->advance_e(this, frac);
 }
@@ -403,11 +403,11 @@ inline void FieldArray::advance_e(double frac)
 // Field3D
 //
 // A class to accelerate 3-d field access
-// For now, it's specific to FieldArray, but it should be generalizable
+// For now, it's specific to VpicFieldArray, but it should be generalizable
 // fairly easily
 
 struct Field3D {
-  Field3D(FieldArray& fa)
+  Field3D(VpicFieldArray& fa)
     : sx_(fa.g->nx + 2), sy_(fa.g->ny + 2),
       f_(fa.data())
   {
@@ -418,24 +418,24 @@ struct Field3D {
     return i + sx_ * (j + sy_ * (k));
   }
 
-  field_t& operator()(FieldArray &fa, int i, int j, int k)
+  field_t& operator()(VpicFieldArray &fa, int i, int j, int k)
   {
     return fa.f[voxel(i,j,k)];
   }
   
-  field_t operator()(FieldArray &fa, int i, int j, int k) const
+  field_t operator()(VpicFieldArray &fa, int i, int j, int k) const
   {
     return fa.f[voxel(i,j,k)];
   }
   
   float& operator()(int m, int i, int j, int k)
   {
-    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
+    return f_[m + VpicFieldArray::N_COMP * voxel(i,j,k)];
   }
   
   float operator()(int m, int i, int j, int k) const
   {
-    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
+    return f_[m + VpicFieldArray::N_COMP * voxel(i,j,k)];
   }
 
 private:

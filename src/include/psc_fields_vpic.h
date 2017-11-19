@@ -8,10 +8,12 @@
 #include "psc_fields_common.h"
 #undef FTYPE
 
+#include "vpic_iface.h"
+
 // ----------------------------------------------------------------------
 
 struct psc_mfields_vpic {
-  struct FieldArray *vmflds_fields;
+  FieldArray *vmflds_fields;
   struct HydroArray *vmflds_hydro;
 };
 
