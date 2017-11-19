@@ -62,7 +62,14 @@ struct Simulation {
   species_t* define_species(const char *name, double q, double m,
 			    double max_local_np, double max_local_nm,
 			    double sort_interval, double sort_out_of_place);
-    
+
+  void advance_b(FieldArray &fa, double frac)
+  {
+    fa.kernel->advance_b(&fa, frac);
+  }
+
+
+  
   RngPool rng_pool;
 
   //private:

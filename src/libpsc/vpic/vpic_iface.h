@@ -74,7 +74,6 @@ void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, struct Particles *mprts);
 void vpic_mfields_synchronize_rho(FieldArray *vmflds);
 void vpic_mfields_compute_rhob(FieldArray *vmflds);
 void vpic_mfields_compute_curl_b(FieldArray *vmflds);
-void vpic_mfields_advance_b(FieldArray *vmflds, double frac);
 void vpic_mfields_advance_e(FieldArray *vmflds, double frac);
 
 // ----------------------------------------------------------------------
@@ -162,6 +161,7 @@ void Simulation_emitter(struct Simulation *sim);
 void Simulation_current_injection(struct Simulation *sim);
 void Simulation_field_injection(struct Simulation *sim);
 void Simulation_moments_run(struct Simulation *sim, struct HydroArray *mflds, struct Particles *vmprts, int kind);
+void Simulation_advance_b(struct Simulation *sim, FieldArray *vmflds, double frac);
 
 
 void Simulation_diagnostics_init(struct Simulation *sim, int interval);

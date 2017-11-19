@@ -202,3 +202,9 @@ void Simulation_moments_run(Simulation *sim, HydroArray *hydro_array, Particles 
   
   synchronize_hydro_array(hydro_array);
 }
+
+void Simulation_advance_b(Simulation *sim, FieldArray *fa, double frac)
+{
+  TIC sim->advance_b(*fa, frac); TOC(advance_b, 1);
+}
+

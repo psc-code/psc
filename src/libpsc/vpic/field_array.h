@@ -87,12 +87,6 @@ struct VpicFieldArray : field_array_t {
   
 #define FAK kernel
 
-  void advance_b(double frac)
-  {
-    FAK->advance_b(this, frac);
-    //advanceB(frac);
-  }
-
   void advance_e(double frac)
   {
     FAK->advance_e(this, frac);
