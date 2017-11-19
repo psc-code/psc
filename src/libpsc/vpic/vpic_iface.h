@@ -47,7 +47,7 @@ enum {
 
 typedef struct VpicFieldArray FieldArray;
 typedef struct VpicFieldArrayOps<FieldArray> FieldArrayOps;
-typedef struct Simulation Simulation;
+typedef struct VpicSimulation Simulation;
 
 #else
 

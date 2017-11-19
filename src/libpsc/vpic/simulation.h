@@ -43,11 +43,11 @@ inline bool Particles::empty()
 }
 
 // ======================================================================
-// class Simulation
+// class VpicSimulation
 
-struct Simulation {
-  Simulation(vpic_simulation *simulation);
-  ~Simulation();
+struct VpicSimulation {
+  VpicSimulation(vpic_simulation *simulation);
+  ~VpicSimulation();
 
   void setup_grid(double dx[3], double dt, double cvac, double eps0);
   void define_periodic_grid(double xl[3], double xh[3], int gdims[3],
@@ -85,7 +85,7 @@ struct Simulation {
   vpic_simulation *simulation_;
 };
 
-inline Simulation::Simulation(vpic_simulation *simulation)
+inline VpicSimulation::VpicSimulation(vpic_simulation *simulation)
   : grid_(simulation->grid),
     material_list_(simulation->material_list),
     field_array_(simulation->field_array),
@@ -97,17 +97,17 @@ inline Simulation::Simulation(vpic_simulation *simulation)
 {
 }
 
-inline Simulation::~Simulation()
+inline VpicSimulation::~VpicSimulation()
 {
   delete pDiag_;
 }
 
-inline void Simulation::setup_grid(double dx[3], double dt, double cvac, double eps0)
+inline void VpicSimulation::setup_grid(double dx[3], double dt, double cvac, double eps0)
 {
   grid_.setup(dx, dt, cvac, eps0);
 }
 
-inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdims[3],
+inline void VpicSimulation::define_periodic_grid(double xl[3], double xh[3], int gdims[3],
 					     int np[3])
 {
   simulation_->px = size_t(np[0]);
@@ -116,7 +116,7 @@ inline void Simulation::define_periodic_grid(double xl[3], double xh[3], int gdi
   grid_.partition_periodic_box(xl, xh, gdims, np);
 }
 
-inline void Simulation::set_domain_field_bc(int boundary, int bc)
+inline void VpicSimulation::set_domain_field_bc(int boundary, int bc)
 {
   int fbc;
   switch (bc) {
@@ -127,7 +127,7 @@ inline void Simulation::set_domain_field_bc(int boundary, int bc)
   grid_.set_fbc(boundary, fbc);
 }
 
-inline void Simulation::set_domain_particle_bc(int boundary, int bc)
+inline void VpicSimulation::set_domain_particle_bc(int boundary, int bc)
 {
   int pbc;
   switch (bc) {
@@ -138,7 +138,7 @@ inline void Simulation::set_domain_particle_bc(int boundary, int bc)
   grid_.set_pbc(boundary, pbc);
 }
 
-inline struct material *Simulation::define_material(const char *name,
+inline struct material *VpicSimulation::define_material(const char *name,
 						    double eps, double mu=1.,
 						    double sigma=0., double zeta=0.)
 {
@@ -149,7 +149,7 @@ inline struct material *Simulation::define_material(const char *name,
 					zeta,  zeta,  zeta));
 }
 
-inline void Simulation::define_field_array(double damp)
+inline void VpicSimulation::define_field_array(double damp)
 {
   grid_t *grid = grid_.g_;
  
@@ -180,7 +180,7 @@ inline void Simulation::define_field_array(double damp)
   grid_.mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
 }
 
-inline species_t* Simulation::define_species(const char *name, double q, double m,
+inline species_t* VpicSimulation::define_species(const char *name, double q, double m,
 				      double max_local_np, double max_local_nm,
 				      double sort_interval, double sort_out_of_place)
 {
