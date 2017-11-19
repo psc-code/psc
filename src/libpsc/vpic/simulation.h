@@ -131,19 +131,15 @@ struct VpicSimulation : FieldArrayOps{
 				     (int)max_local_np, (int)max_local_nm,
 				     (int)sort_interval, (int)sort_out_of_place,
 				     grid_.g_));
-    void setup_grid(double dx[3], double dt, double cvac, double eps0);
-    void define_periodic_grid(double xl[3], double xh[3], int gdims[3],
-			      int np[3]);
-    void set_domain_field_bc(int boundary, int bc);
-    void set_domain_particle_bc(int boundary, int bc);
+  }
 
-    struct material *define_material(const char *name, double eps, double mu,
-				     double sigma, double zeta);
-    field_array_t *new_field_array(float damp=0.);
-    void define_field_array(double damp);
-    species_t* define_species(const char *name, double q, double m,
-			      double max_local_np, double max_local_nm,
-			      double sort_interval, double sort_out_of_place);
+  void inject_particle(Particles *vmprts, int p, const struct psc_particle_inject *prt)
+  {
+    assert(p == 0);
+    species_t *sp = find_species_id(prt->kind, vmprts->sl_);
+    
+    simulation_->inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
+				 prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
   }
   
   RngPool rng_pool;
