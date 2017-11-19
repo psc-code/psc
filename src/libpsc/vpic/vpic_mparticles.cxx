@@ -2,7 +2,7 @@
 #include "psc_particles.h"
 #include <cassert>
 
-#include "simulation.h"
+#include "vpic_iface.h"
 
 // ======================================================================
 // vpic_mparticles

@@ -8,6 +8,7 @@
 
 #ifdef __cplusplus
 
+#include "simulation.h"
 #include "field_array.h"
 
 extern "C" {
@@ -47,7 +48,7 @@ enum {
 
 typedef struct VpicFieldArray FieldArray;
 typedef struct VpicFieldArrayOps<FieldArray> FieldArrayOps;
-typedef struct VpicSimulation Simulation;
+typedef struct VpicSimulation<FieldArray> Simulation;
 
 #else
 

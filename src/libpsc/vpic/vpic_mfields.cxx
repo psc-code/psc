@@ -1,5 +1,5 @@
 
-#include "simulation.h"
+#include "vpic_iface.h"
 
 #include <cassert>
 
