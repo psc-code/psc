@@ -9,20 +9,6 @@
 #include <cassert>
 
 // ======================================================================
-// VpicFieldArrayOps
-
-template<class FA>
-struct VpicFieldArrayOps {
-  typedef FA FieldArray;
-  
-  void advance_b(FieldArray& fa, double frac)
-  {
-    fa.kernel->advance_b(&fa, frac);
-    //advanceB(frac);
-  }
-};
-
-// ======================================================================
 // VpicFieldArray
 
 inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp);

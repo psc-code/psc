@@ -10,6 +10,7 @@
 
 #include "simulation.h"
 #include "field_array.h"
+#include "VpicFieldArrayOps.h"
 
 extern "C" {
 #endif

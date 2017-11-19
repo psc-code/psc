@@ -2,10 +2,10 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "field_array.h"
 #include "interpolator_array.h"
 #include "accumulator_array.h"
 #include "hydro_array.h"
+#include "material.h"
 #include "particles.h"
 #include "rng.h"
 
