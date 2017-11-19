@@ -58,7 +58,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
 
-  struct Simulation *sim;
+  Simulation *sim;
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
 
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {

@@ -20,7 +20,7 @@ struct psc_method_vpic {
   bool split;
 
   // state
-  struct Simulation *sim;
+  Simulation *sim;
   struct vpic_simulation *vpic;
 };
 

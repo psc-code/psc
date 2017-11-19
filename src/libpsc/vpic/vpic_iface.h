@@ -47,20 +47,21 @@ enum {
 
 typedef struct VpicFieldArray FieldArray;
 typedef struct VpicFieldArrayOps<FieldArray> FieldArrayOps;
+typedef struct Simulation Simulation;
 
 #else
 
-typedef struct FieldArray FieldArray;
+typedef struct FieldArray_ FieldArray;
+typedef struct Simulation_ Simulation;
 
 #endif
 
-struct Simulation;
 struct Particles;
 
-struct HydroArray *vpic_mfields_new_hydro_array(struct Simulation *sim);
+struct HydroArray *vpic_mfields_new_hydro_array(Simulation *sim);
 float *vpic_mfields_hydro_get_data(struct HydroArray *vmflds, int *ib, int *im);
 
-FieldArray *vpic_mfields_new_fields_array(struct Simulation *sim);
+FieldArray *vpic_mfields_new_fields_array(Simulation *sim);
 float *vpic_mfields_get_data(FieldArray *fmflds, int *ib, int *im);
 double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *mflds);
 void vpic_mfields_compute_div_b_err(FieldArray *vmflds);
@@ -89,7 +90,7 @@ struct vpic_mparticles_prt {
 
 struct psc_particle_inject;
 
-struct Particles *vpic_mparticles_new_from_simulation(struct Simulation *sim);
+struct Particles *vpic_mparticles_new_from_simulation(Simulation *sim);
 int vpic_mparticles_get_nr_particles(struct Particles *vmprts);
 void vpic_mparticles_reserve_all(struct Particles *vmprts, int n_patches,
 				 int *n_prts_by_patch);
@@ -115,7 +116,7 @@ void vpic_mparticles_copy_from_single_by_kind(struct Particles *vmprts, bk_mpart
 
 struct vpic_push_particles;
 
-struct vpic_push_particles *vpic_push_particles_new_from_Simulation(struct Simulation *sim);
+struct vpic_push_particles *vpic_push_particles_new_from_Simulation(Simulation *sim);
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 				    struct Particles *vmprts,
 				    FieldArray *vmflds);
@@ -129,57 +130,56 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 // ----------------------------------------------------------------------
 // Simulation
 
-struct Simulation;
 struct vpic_simulation_info;
 struct field_array;
 
-struct Simulation *Simulation_create();
-void Simulation_delete(struct Simulation *sim);
+Simulation *Simulation_create();
+void Simulation_delete(Simulation *sim);
 
-void Simulation_set_params(struct Simulation *vpic,
+void Simulation_set_params(Simulation *vpic,
 			   int num_step, int status_interval, int sync_shared_interval,
 			   int clean_div_e_interval, int clean_div_b_interval);
 
-void Simulation_setup_grid(struct Simulation *sim, double dx[3], double dt,
+void Simulation_setup_grid(Simulation *sim, double dx[3], double dt,
 			   double cvac, double eps0);
-void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
+void Simulation_define_periodic_grid(Simulation *sim, double xl[3],
 				     double xh[3], int gdims[3], int np[3]);
-void Simulation_set_domain_field_bc(struct Simulation *sim, int boundary, int fbc);
-void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int pbc);
+void Simulation_set_domain_field_bc(Simulation *sim, int boundary, int fbc);
+void Simulation_set_domain_particle_bc(Simulation *sim, int boundary, int pbc);
 
-struct material *Simulation_define_material(struct Simulation *sim, const char *name,
+struct material *Simulation_define_material(Simulation *sim, const char *name,
 					    double eps, double mu,
 					    double sigma, double zeta);
-void Simulation_define_field_array(struct Simulation *sim, double damp);
-struct species * Simulation_define_species(struct Simulation *sim, const char *name, double q, double m,
+void Simulation_define_field_array(Simulation *sim, double damp);
+struct species * Simulation_define_species(Simulation *sim, const char *name, double q, double m,
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place);
-void Simulation_inject_particle(struct Simulation *sim, struct Particles *vmprts, int p,
+void Simulation_inject_particle(Simulation *sim, struct Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
-void Simulation_collision_run(struct Simulation *sim);
-void Simulation_emitter(struct Simulation *sim);
-void Simulation_current_injection(struct Simulation *sim);
-void Simulation_field_injection(struct Simulation *sim);
-void Simulation_moments_run(struct Simulation *sim, struct HydroArray *mflds, struct Particles *vmprts, int kind);
-void Simulation_advance_b(struct Simulation *sim, FieldArray *vmflds, double frac);
+void Simulation_collision_run(Simulation *sim);
+void Simulation_emitter(Simulation *sim);
+void Simulation_current_injection(Simulation *sim);
+void Simulation_field_injection(Simulation *sim);
+void Simulation_moments_run(Simulation *sim, struct HydroArray *mflds, struct Particles *vmprts, int kind);
+void Simulation_advance_b(Simulation *sim, FieldArray *vmflds, double frac);
 
 
-void Simulation_diagnostics_init(struct Simulation *sim, int interval);
-void Simulation_diagnostics_setup(struct Simulation *sim);
+void Simulation_diagnostics_init(Simulation *sim, int interval);
+void Simulation_diagnostics_setup(Simulation *sim);
 
-void Simulation_get_info(struct Simulation *sim, struct vpic_simulation_info *info);
-void Simulation_print_status(struct Simulation *sim);
-void Simulation_diagnostics(struct Simulation *sim);
-void Simulation_inc_step(struct Simulation *sim, int step);
-void Simulation_user_initialization(struct Simulation *sim);
+void Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info);
+void Simulation_print_status(Simulation *sim);
+void Simulation_diagnostics(Simulation *sim);
+void Simulation_inc_step(Simulation *sim, int step);
+void Simulation_user_initialization(Simulation *sim);
 
 // Harris specific
 struct psc_harris;
 struct vpic_harris_params;
 struct globals_physics;
 
-void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub);
-void Simulation_set_region_resistive_harris(struct Simulation *sim,
+void Simulation_diagnostics_run(Simulation *sim, struct psc_harris *sub);
+void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,
 					    struct globals_physics *phys,
 					    double dx[3],
@@ -188,8 +188,8 @@ void Simulation_set_region_resistive_harris(struct Simulation *sim,
 
 
 
-void Simulation_rngPool_seed(struct Simulation *sim, int base);
-struct Rng *Simulation_rngPool_get(struct Simulation *sim, int n);
+void Simulation_rngPool_seed(Simulation *sim, int base);
+struct Rng *Simulation_rngPool_get(Simulation *sim, int n);
 
 double Rng_uniform(struct Rng *rng, double lo, double hi);
 double Rng_normal(struct Rng *rng, double mu, double sigma);
@@ -288,7 +288,7 @@ struct psc_harris {
   struct globals_physics phys;
   int n_global_patches;
 
-  struct Simulation *sim;
+  Simulation *sim;
 };
 
 #define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)

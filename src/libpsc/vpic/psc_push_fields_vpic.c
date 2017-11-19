@@ -9,7 +9,7 @@
 // ----------------------------------------------------------------------
 
 struct psc_push_fields_vpic {
-  struct Simulation *sim;
+  Simulation *sim;
 };
 
 #define psc_push_fields_vpic(push_fields) mrc_to_subobj(push_fields, struct psc_push_fields_vpic)

@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------
 // C wrappers
 
-Simulation *Simulation_create()
+Simulation* Simulation_create()
 {
   extern vpic_simulation *simulation;
   assert(!simulation);
@@ -16,46 +16,46 @@ Simulation *Simulation_create()
   return new Simulation(simulation);
 }
 
-void Simulation_delete(Simulation *sim)
+void Simulation_delete(Simulation* sim)
 {
   delete sim;
 }
 
-void Simulation_setup_grid(Simulation *sim, double dx[3], double dt,
+void Simulation_setup_grid(Simulation* sim, double dx[3], double dt,
 			   double cvac, double eps0)
 {
   sim->setup_grid(dx, dt, cvac, eps0);
 }
 
-void Simulation_define_periodic_grid(struct Simulation *sim, double xl[3],
+void Simulation_define_periodic_grid(Simulation* sim, double xl[3],
 				     double xh[3], int gdims[3], int np[3])
 {
   sim->define_periodic_grid(xl, xh, gdims, np);
 }
 
-void Simulation_set_domain_field_bc(struct Simulation *sim, int boundary, int bc)
+void Simulation_set_domain_field_bc(Simulation* sim, int boundary, int bc)
 {
   sim->set_domain_field_bc(boundary, bc);
 }
 
-void Simulation_set_domain_particle_bc(struct Simulation *sim, int boundary, int bc)
+void Simulation_set_domain_particle_bc(Simulation* sim, int boundary, int bc)
 {
   sim->set_domain_particle_bc(boundary, bc);
 }
 
-struct material *Simulation_define_material(struct Simulation *sim, const char *name,
+struct material *Simulation_define_material(Simulation* sim, const char *name,
 					    double eps, double mu,
 					    double sigma, double zeta)
 {
   return sim->define_material(name, eps, mu, sigma, zeta);
 }
 
-void Simulation_define_field_array(struct Simulation *sim, double damp)
+void Simulation_define_field_array(Simulation* sim, double damp)
 {
   sim->define_field_array(damp);
 }
 
-struct species * Simulation_define_species(struct Simulation *sim, const char *name, double q, double m,
+struct species * Simulation_define_species(Simulation* sim, const char *name, double q, double m,
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place)
 {
@@ -66,17 +66,17 @@ struct species * Simulation_define_species(struct Simulation *sim, const char *n
 // ----------------------------------------------------------------------
 // diagnostics
 
-void Simulation_diagnostics_init(struct Simulation *sim, int interval)
+void Simulation_diagnostics_init(Simulation* sim, int interval)
 {
   sim->pDiag_ = new globals_diag(interval);
 }
 
-void Simulation_diagnostics_setup(struct Simulation *sim)
+void Simulation_diagnostics_setup(Simulation* sim)
 {
   sim->pDiag_->setup(sim);
 }
 
-void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub)
+void Simulation_diagnostics_run(Simulation* sim, struct psc_harris *sub)
 {
   sim->pDiag_->run(sim);
 }
@@ -84,12 +84,12 @@ void Simulation_diagnostics_run(struct Simulation *sim, struct psc_harris *sub)
 // ----------------------------------------------------------------------
 // Rng
 
-void Simulation_rngPool_seed(struct Simulation *sim, int base)
+void Simulation_rngPool_seed(Simulation* sim, int base)
 {
   sim->rng_pool.seed(base, 0);
 }
 
-Rng *Simulation_rngPool_get(struct Simulation *sim, int n)
+Rng *Simulation_rngPool_get(Simulation* sim, int n)
 {
   return sim->rng_pool[n];
 }
@@ -106,7 +106,7 @@ double Rng_normal(struct Rng *rng, double mu, double sigma)
 
 // ----------------------------------------------------------------------
 
-void Simulation_set_params(Simulation *sim, int num_step, int status_interval,
+void Simulation_set_params(Simulation* sim, int num_step, int status_interval,
 			   int sync_shared_interval, int clean_div_e_interval,
 			   int clean_div_b_interval)
 {
@@ -121,7 +121,7 @@ void Simulation_set_params(Simulation *sim, int num_step, int status_interval,
 // ----------------------------------------------------------------------
 // Simulation_inject_particle
 
-void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
+void Simulation_inject_particle(Simulation* sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt)
 {
   assert(p == 0);
@@ -134,7 +134,7 @@ void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 // ----------------------------------------------------------------------
 // Simulation_collision_run
 
-void Simulation_collision_run(Simulation *sim)
+void Simulation_collision_run(Simulation* sim)
 {
   // Note: Particles should not have moved since the last performance sort
   // when calling collision operators.
@@ -188,7 +188,7 @@ void Simulation_field_injection(Simulation* sim)
 // ----------------------------------------------------------------------
 // Simulation_moments_run
 
-void Simulation_moments_run(Simulation *sim, HydroArray *hydro_array, Particles *vmprts, int kind)
+void Simulation_moments_run(Simulation* sim, HydroArray *hydro_array, Particles *vmprts, int kind)
 {
   // This relies on load_interpolator_array() having been called earlier
   clear_hydro_array(hydro_array);
@@ -203,7 +203,7 @@ void Simulation_moments_run(Simulation *sim, HydroArray *hydro_array, Particles 
   synchronize_hydro_array(hydro_array);
 }
 
-void Simulation_advance_b(Simulation *sim, FieldArray *fa, double frac)
+void Simulation_advance_b(Simulation* sim, FieldArray *fa, double frac)
 {
   TIC sim->advance_b(*fa, frac); TOC(advance_b, 1);
 }

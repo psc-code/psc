@@ -15,7 +15,7 @@ psc_push_particles_vpic_setup(struct psc_push_particles *push)
 {
   struct psc_push_particles_vpic *sub = psc_push_particles_vpic(push);
 
-  struct Simulation *sim;
+  Simulation *sim;
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
 
   sub->vpushp = vpic_push_particles_new_from_Simulation(sim);

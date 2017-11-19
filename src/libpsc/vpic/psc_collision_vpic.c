@@ -9,7 +9,7 @@
 // ----------------------------------------------------------------------
 
 struct psc_collision_vpic {
-  struct Simulation *sim;
+  Simulation *sim;
 };
 
 #define psc_collision_vpic(collision) mrc_to_subobj(collision, struct psc_collision_vpic)
