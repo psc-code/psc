@@ -11,9 +11,19 @@
 // FieldArray
 
 struct FieldArray : field_array_t {
+  enum {
+    EX = 0,
+    EY = 1,
+    EZ = 2,
+    CBX = 4,
+    CBY = 5,
+    CBZ = 6,
+    N_COMP = sizeof(field_t) / sizeof(float),
+  };
+  
   FieldArray(Grid g, MaterialList m_list, float damp);
   ~FieldArray();
-
+  
   float* getData(int* ib, int* im);
   void clear_jf();
   void synchronize_jf();
@@ -30,6 +40,30 @@ struct FieldArray : field_array_t {
   double synchronize_tang_e_norm_b();
   void advance_b(double frak);
   void advance_e(double frak);
+
+  float operator()(int m, int i, int j, int k) const;
+  float& operator()(int m, int i, int j, int k);
+
+#define MK_COMP_ACCESSOR(cbx)					\
+  float cbx(int i, int j, int k) const				\
+  {								\
+    const int nx = g->nx, ny = g->ny;				\
+    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;			\
+  }								\
+ 								\
+  float& cbx(int i, int j, int k)				\
+  {								\
+    const int nx = g->nx, ny = g->ny;				\
+    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;			\
+  }
+
+  MK_COMP_ACCESSOR(cbx)
+  MK_COMP_ACCESSOR(cby)
+  MK_COMP_ACCESSOR(cbz)
+  MK_COMP_ACCESSOR(ex)
+  MK_COMP_ACCESSOR(ey)
+  MK_COMP_ACCESSOR(ez)
+  
 
 private:
   void advanceB(float frac);
