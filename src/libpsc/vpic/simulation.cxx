@@ -195,7 +195,7 @@ void Simulation_moments_run(Simulation *sim, HydroArray *hydro_array, Particles 
   species_t *sp;
   LIST_FOR_EACH(sp, vmprts->sl_) {
     if (sp->id == kind) {
-      accumulate_hydro_p(hydro_array, sp, sim->simulation_->interpolator_array);
+      accumulate_hydro_p(hydro_array, sp, sim->interpolator_array_);
       break;
     }
   }
