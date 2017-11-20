@@ -29,7 +29,6 @@ libsubdir_la_SOURCES = \
 	vpic_mfields.cxx \
 	vpic_mparticles.cxx \
 	vpic_push_particles.cxx \
-	field_array.cxx \
 	simulation.cxx \
 	main.cxx \
 	wrapper.cxx \
