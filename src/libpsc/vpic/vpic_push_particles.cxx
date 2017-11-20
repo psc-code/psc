@@ -14,7 +14,7 @@ vpic_push_particles::vpic_push_particles(Simulation *sim)
 {
   interpolator_array = static_cast<InterpolatorArray*>(sim->interpolator_array_);
   accumulator_array = static_cast<AccumulatorArray*>(sim->accumulator_array_);
-  num_comm_round = sim->simulation_->num_comm_round;
+  num_comm_round = sim->num_comm_round_;
 }
 
 // ======================================================================

@@ -23,6 +23,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   
   VpicSimulation(vpic_simulation *simulation)
     : ParticlesOps(simulation),
+      num_comm_round_(simulation->num_comm_round),
       grid_(simulation->grid),
       material_list_(simulation->material_list),
       field_array_(simulation->field_array),
@@ -39,13 +40,23 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
     delete pDiag_;
   }
 
+  void set_params(int num_step, int status_interval,
+		  int sync_shared_interval, int clean_div_e_interval,
+		  int clean_div_b_interval)
+  {
+    simulation_->num_step             = num_step;
+    simulation_->status_interval      = status_interval;
+    simulation_->sync_shared_interval = sync_shared_interval;
+    simulation_->clean_div_e_interval = clean_div_e_interval;
+    simulation_->clean_div_b_interval = clean_div_b_interval;
+  }
+  
   void setup_grid(double dx[3], double dt, double cvac, double eps0)
   {
     grid_.setup(dx, dt, cvac, eps0);
   }
 
-  void define_periodic_grid(double xl[3], double xh[3], int gdims[3],
-					    int np[3])
+  void define_periodic_grid(double xl[3], double xh[3], int gdims[3], int np[3])
   {
     simulation_->px = size_t(np[0]);
     simulation_->py = size_t(np[1]);
@@ -135,6 +146,66 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
 				     grid_.g_));
   }
 
+  void collision_run()
+  {
+    // Note: Particles should not have moved since the last performance sort
+    // when calling collision operators.
+    // FIXME: Technically, this placement of the collision operators only
+    // yields a first order accurate Trotter factorization (not a second
+    // order accurate factorization).
+    
+    if (simulation_->collision_op_list) {
+      // FIXME: originally, vpic_clear_accumulator_array() was called before this.
+      // It's now called later, though. I'm not sure why that would be necessary here,
+      // but it needs to be checked.
+      // The assert() below doesn't unfortunately catch all cases where this might go wrong
+      // (ie., it's missing the user_particle_collisions())
+      
+      assert(0);
+      TIC apply_collision_op_list(simulation_->collision_op_list); TOC(collision_model, 1);
+    }
+    TIC simulation_->user_particle_collisions(); TOC(user_particle_collisions, 1);
+  }
+  
+  void emitter()
+  {
+    if (simulation_->emitter_list)
+      TIC apply_emitter_list(simulation_->emitter_list); TOC(emission_model, 1);
+    TIC simulation_->user_particle_injection(); TOC(user_particle_injection, 1);
+  }
+
+  void current_injection()
+  {
+    TIC simulation_->user_current_injection(); TOC(user_current_injection, 1);
+  }
+
+  void field_injection()
+  {
+    // Let the user add their own contributions to the electric field. It is the
+    // users responsibility to insure injected electric fields are consistent
+    // across domains.
+    
+    TIC simulation_->user_field_injection(); TOC(user_field_injection, 1);
+  }
+
+  void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
+  {
+    // This relies on load_interpolator_array() having been called earlier
+    clear_hydro_array(hydro_array);
+    species_t *sp;
+    LIST_FOR_EACH(sp, vmprts->sl_) {
+      if (sp->id == kind) {
+	accumulate_hydro_p(hydro_array, sp, interpolator_array_);
+	break;
+      }
+    }
+    
+    synchronize_hydro_array(hydro_array);
+  }
+  
+  
+  int num_comm_round_;
+  
   RngPool rng_pool;
 
   //private:
