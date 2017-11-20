@@ -195,7 +195,7 @@ void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_p
 // ----------------------------------------------------------------------
 // vpic_mparticles_sort
 
-void vpic_mparticles_sort(struct Particles *vmprts, int step)
+void vpic_mparticles_sort(Particles *vmprts, int step)
 {
   // Sort the particles for performance if desired.
 

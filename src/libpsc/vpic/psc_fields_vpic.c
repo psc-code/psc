@@ -178,7 +178,7 @@ psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
 				  struct psc_mparticles *mprts)
 {
   FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  struct Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mfields_accumulate_rho_p(vmflds, vmprts);
 }

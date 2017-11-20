@@ -188,7 +188,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
     TIC simulation_->user_field_injection(); TOC(user_field_injection, 1);
   }
 
-  void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
+  void moments_run(HydroArray *hydro_array, VpicParticles *vmprts, int kind)
   {
     // This relies on load_interpolator_array() having been called earlier
     clear_hydro_array(hydro_array);
@@ -216,7 +216,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   interpolator_array_t*& interpolator_array_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
-  Particles particles_;
+  VpicParticles particles_;
 
   vpic_simulation *simulation_;
 };

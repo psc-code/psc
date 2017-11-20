@@ -2,6 +2,7 @@
 #ifndef PSC_PARTICLES_OPS
 #define PSC_PARTICLES_OPS
 
+template<class Particles>
 struct PscParticlesOps {
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 

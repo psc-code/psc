@@ -3,10 +3,10 @@
 #define PARTICLES_H
 
 // ======================================================================
-// Particles
+// VpicParticles
 
-struct Particles {
-  Particles(species_t*& sl);
+struct VpicParticles {
+  VpicParticles(species_t*& sl);
 
   species_t* append(species_t* sl);
   bool empty();
@@ -15,17 +15,17 @@ struct Particles {
   species_t *&sl_;
 };
 
-inline Particles::Particles(species_t*& sl)
+inline VpicParticles::VpicParticles(species_t*& sl)
   : sl_(sl)
 {
 }
 
-inline species_t* Particles::append(species_t* s)
+inline species_t* VpicParticles::append(species_t* s)
 {
   return ::append_species(s, &sl_);
 }
 
-inline bool Particles::empty()
+inline bool VpicParticles::empty()
 {
   return !sl_;
 }
