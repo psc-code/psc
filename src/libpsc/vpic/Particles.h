@@ -5,29 +5,30 @@
 // ======================================================================
 // VpicParticles
 
-struct VpicParticles {
-  VpicParticles(species_t*& sl);
-
-  species_t* append(species_t* sl);
-  bool empty();
-  
-  //private:
-  species_t *&sl_;
+struct VpicSpecies : species_t
+{
 };
 
-inline VpicParticles::VpicParticles(species_t*& sl)
-  : sl_(sl)
-{
-}
+struct VpicParticles {
+  inline VpicParticles(species_t*& sl)
+    : sl_(*reinterpret_cast<VpicSpecies **>(&sl))
+  {
+  }
 
-inline species_t* VpicParticles::append(species_t* s)
-{
-  return ::append_species(s, &sl_);
-}
+  species_t* append(species_t* s)
+  {
+    return ::append_species(s, reinterpret_cast<species_t **>(&sl_));
+  }
+  
+  inline bool empty()
+  {
+    return !sl_;
+  }
 
-inline bool VpicParticles::empty()
-{
-  return !sl_;
-}
+  
+  //private:
+  VpicSpecies *&sl_;
+};
+
 
 #endif

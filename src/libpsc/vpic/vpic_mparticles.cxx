@@ -13,7 +13,7 @@
 Particles *
 vpic_mparticles_new_from_simulation(Simulation *sim)
 {
-  return new Particles(sim->particles_.sl_);
+  return &sim->particles_;
 }
 
 // ----------------------------------------------------------------------
