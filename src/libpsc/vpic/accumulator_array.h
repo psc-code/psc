@@ -43,7 +43,7 @@ accumulator_array_dtor( accumulator_array_t * aa ) {
 
 inline AccumulatorArray::AccumulatorArray(Grid grid)
 {
-  accumulator_array_ctor(this, grid.g_);
+  accumulator_array_ctor(this, grid.getGrid_t());
 }
 
 inline AccumulatorArray::~AccumulatorArray()

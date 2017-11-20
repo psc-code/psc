@@ -36,7 +36,7 @@ hydro_array_dtor( hydro_array_t * ha ) {
 
 inline HydroArray::HydroArray(Grid grid)
 {
-  hydro_array_ctor(this, grid.g_);
+  hydro_array_ctor(this, grid.getGrid_t());
 }
 
 inline HydroArray::~HydroArray()

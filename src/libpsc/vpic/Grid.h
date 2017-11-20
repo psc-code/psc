@@ -17,7 +17,9 @@ struct Grid {
   void mp_size_recv_buffer(int tag, int size);
   void mp_size_send_buffer(int tag, int size);
 
-  //private:
+  grid_t* getGrid_t() { return g_; }
+
+private:
   grid_t *g_;
 };
 

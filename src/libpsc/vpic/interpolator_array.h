@@ -34,7 +34,7 @@ interpolator_array_dtor( interpolator_array_t * ia ) {
 
 inline InterpolatorArray::InterpolatorArray(Grid grid)
 {
-  interpolator_array_ctor(this, grid.g_);
+  interpolator_array_ctor(this, grid.getGrid_t());
 }
 
 inline InterpolatorArray::~InterpolatorArray()

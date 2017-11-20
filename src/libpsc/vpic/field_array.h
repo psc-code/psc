@@ -27,7 +27,7 @@ struct VpicFieldArray : field_array_t {
   
   VpicFieldArray(Grid grid, MaterialList material_list, float damp)
   {
-    field_array_ctor(this, grid.g_, material_list.ml_, damp);
+    field_array_ctor(this, grid.getGrid_t(), material_list.ml_, damp);
   }
   
   ~VpicFieldArray()
