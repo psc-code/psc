@@ -14,6 +14,7 @@
 #include "PscFieldArrayOps.h"
 
 #include "VpicParticlesOps.h"
+#include "PscParticlesOps.h"
 
 extern "C" {
 #endif
@@ -53,7 +54,7 @@ enum {
 typedef struct VpicFieldArray FieldArray;
 typedef struct PscFieldArrayOps<FieldArray> FieldArrayOps;
 
-typedef struct VpicParticlesOps ParticlesOps;
+typedef struct PscParticlesOps ParticlesOps;
 
 typedef struct VpicSimulation<FieldArrayOps, ParticlesOps> Simulation;
 
