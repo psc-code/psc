@@ -23,10 +23,13 @@ int vpic_mparticles_get_nr_particles(Particles *vmprts)
 {
   int n_prts = 0;
 
-  species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->sl_) {
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     n_prts += sp->np;
   }
+  // species_t *sp;
+  // LIST_FOR_EACH(sp, vmprts->sl_) {
+  //   n_prts += sp->np;
+  // }
 
   return n_prts;
 }
@@ -45,8 +48,7 @@ void vpic_mparticles_reserve_all(Particles *vmprts, int n_patches,
 
   for (int p = 0; p < n_patches; p++) {
     int n_prts = 0, n_prts_alloced = 0;
-    species_t *sp;
-    LIST_FOR_EACH(sp, vmprts->sl_) {
+    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
       n_prts += sp->np;
       n_prts_alloced += sp->max_np;
     }
@@ -76,8 +78,7 @@ void vpic_mparticles_resize_all(Particles *vmprts, int n_patches,
   // 0, and then using push_back, which will increase the count back to the right value
 
   if (n_prts_by_patch[0] == 0) {
-    species_t *sp;
-    LIST_FOR_EACH(sp, vmprts->sl_) {
+    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
       sp->np = 0;
     }
   } else {
@@ -106,12 +107,13 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 
 void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx)
 {
-  nx[0] = vmprts->sl_->g->nx;
-  nx[1] = vmprts->sl_->g->ny;
-  nx[2] = vmprts->sl_->g->nz;
-  dx[0] = vmprts->sl_->g->dx;
-  dx[1] = vmprts->sl_->g->dy;
-  dx[2] = vmprts->sl_->g->dz;
+  grid_t *g = vmprts->getGrid_t();
+  nx[0] = g->nx;
+  nx[1] = g->ny;
+  nx[2] = g->nz;
+  dx[0] = g->dx;
+  dx[1] = g->dy;
+  dx[2] = g->dz;
 }
 
 // ----------------------------------------------------------------------
@@ -121,9 +123,8 @@ void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsig
 				   void (*put_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx)
 {
-  species_t *sp;
   unsigned int v_off = 0;
-  LIST_FOR_EACH(sp, vmprts->sl_) {
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
@@ -150,9 +151,8 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx)
 {
-  species_t *sp;
   unsigned int v_off = 0;
-  LIST_FOR_EACH(sp, vmprts->sl_) {
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
@@ -177,8 +177,7 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 
 void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_prt *prt)
 {
-  species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->sl_) {
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if (sp->id == prt->kind) {
       assert(sp->np < sp->max_np);
       // the below is inject_particle_raw()
@@ -198,14 +197,13 @@ void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_p
 void vpic_mparticles_sort(Particles *vmprts, int step)
 {
   // Sort the particles for performance if desired.
-
-  species_t *sp;
-
-  LIST_FOR_EACH(sp, vmprts->sl_)
+  
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if (sp->sort_interval > 0 && (step % sp->sort_interval) == 0) {
       mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"", sp->name);
-      TIC sort_p(sp); TOC(sort_p, 1);
-    } 
+      TIC sort_p(&*sp); TOC(sort_p, 1);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -233,7 +231,7 @@ copy_from(Particles *vmprts, bk_mparticles *bkmprts,
     off += n_prts;
   }
 }
-
+ 
 static void
 copy_to(Particles *vmprts, bk_mparticles *bkmprts,
 	void (*put_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))

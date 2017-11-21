@@ -106,8 +106,8 @@ void vpic_mfields_compute_curl_b(FieldArray *vmflds)
 
 void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
 {
-  species_t *sp;
-  LIST_FOR_EACH(sp, vmprts->sl_)
-    TIC accumulate_rho_p(vmflds, sp); TOC( accumulate_rho_p, 1);
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    TIC accumulate_rho_p(vmflds, &*sp); TOC( accumulate_rho_p, 1);
+  }
 }
 

@@ -44,7 +44,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // empty and all particles should be inside the local computational domain.
   // Advance the particle lists.
 
-  if (vmprts->sl_) {
+  if (!vmprts->empty()) {
     vpushp->clear_accumulator_array();
     vpushp->advance_p(vmprts);
   }
@@ -57,7 +57,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 
   Simulation_emitter(vpushp->sim_);
 
-  if (vmprts->sl_) {
+  if (!vmprts->empty()) {
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
@@ -75,7 +75,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // Convert the accumulators into currents.
 
   vmflds->clear_jf();
-  if (vmprts->sl_) {
+  if (!vmprts->empty()) {
     vpushp->unload_accumulator_array(vmflds);
   }
   vmflds->synchronize_jf();
@@ -96,7 +96,7 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      Particles *vmprts, FieldArray *vmflds)
 {
-  if (vmprts->sl_) {
+  if (!vmprts->empty()) {
     vpushp->load_interpolator_array(vmflds);
   }
 }
@@ -108,7 +108,7 @@ void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 				       Particles *vmprts,
 				       FieldArray *vmflds)
 {
-  if (vmprts->sl_) {
+  if (!vmprts->empty()) {
     vpushp->load_interpolator_array(vmflds);
   }
   vpushp->uncenter_p(vmprts);
@@ -121,10 +121,9 @@ void vpic_push_particles::clear_accumulator_array()
 
 void vpic_push_particles::advance_p(Particles *vmprts)
 {
-  species_t *sp;
-
-  LIST_FOR_EACH( sp, vmprts->sl_ )
-    TIC ::advance_p( sp, accumulator_array, interpolator_array ); TOC( advance_p, 1 );
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    TIC ::advance_p(&*sp, accumulator_array, interpolator_array); TOC(advance_p, 1);
+  }
 }
 
 void vpic_push_particles::reduce_accumulator_array()
@@ -136,12 +135,11 @@ void vpic_push_particles::boundary_p(Particles *vmprts, FieldArray *vmflds)
 {
   TIC
     for( int round=0; round<num_comm_round; round++ )
-      ::boundary_p( sim_->simulation_->particle_bc_list, vmprts->sl_,
+      ::boundary_p( sim_->simulation_->particle_bc_list, vmprts->head(),
 		    vmflds, accumulator_array );
   TOC( boundary_p, num_comm_round );
 
-  species_t *sp;
-  LIST_FOR_EACH( sp, vmprts->sl_ ) {
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if( sp->nm ) // && simulation->verbose )
       WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
                 sp->nm, sp->name ));
@@ -179,8 +177,8 @@ void vpic_push_particles::load_interpolator_array(FieldArray *vmflds)
 
 void vpic_push_particles::uncenter_p(Particles *vmprts)
 {
-  species_t *sp;
-  LIST_FOR_EACH( sp, vmprts->sl_ )
-    TIC ::uncenter_p( sp, interpolator_array ); TOC( uncenter_p, 1 );
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    TIC ::uncenter_p(&*sp, interpolator_array); TOC(uncenter_p, 1);
+  }
 }
 

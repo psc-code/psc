@@ -9,17 +9,70 @@ struct VpicSpecies : species_t
 {
 };
 
+struct VpicSpeciesIter {
+  typedef VpicSpeciesIter Iter;
+  
+  VpicSpeciesIter(VpicSpecies *node=0) : node_(node)
+  {
+  }
+
+  bool operator!=(const Iter& x) const
+  {
+    return node_ != x.node_;
+  }
+
+  Iter& operator++()
+  {
+    node_ = static_cast<VpicSpecies *>(node_->next);
+    return *this;
+  }
+
+  VpicSpecies& operator*() const
+  {
+    return *node_;
+  }
+  
+  VpicSpecies *operator->() const
+  {
+    return node_;
+  }
+  
+private:
+  VpicSpecies *node_;
+};
+
 struct VpicParticles {
+  typedef VpicSpeciesIter Iter;
+  
   species_t* append(species_t* s)
   {
     return ::append_species(s, reinterpret_cast<species_t **>(&sl_));
   }
   
-  inline bool empty()
+  bool empty()
   {
     return !sl_;
   }
 
+  VpicSpeciesIter begin()
+  {
+    return VpicSpeciesIter(sl_);
+  }
+  
+  VpicSpeciesIter end()
+  {
+    return VpicSpeciesIter();
+  }
+
+  grid_t *getGrid_t()
+  {
+    return sl_->g;
+  }
+
+  species_t* head()
+  {
+    return sl_;
+  }
   
   //private:
   VpicSpecies *sl_;
