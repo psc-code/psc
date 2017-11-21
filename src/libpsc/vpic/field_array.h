@@ -37,9 +37,9 @@ struct VpicFieldArray : field_array_t {
     field_array_dtor(this);
   }
 
-  float* data()
+  Element* data()
   {
-    return &f[0].ex;
+    return f;
   }
   
   float* getData(int* ib, int* im)
@@ -397,29 +397,41 @@ struct Field3D {
   // This interface can't easily be converted to SOA
   Element& operator()(Array &fa, int i, int j, int k)
   {
-    return fa.data_elements()[voxel(i,j,k)];
+    return fa.data()[voxel(i,j,k)];
   }
   
   Element operator()(Array &fa, int i, int j, int k) const
   {
-    return fa.data_elements()[voxel(i,j,k)];
+    return fa.data()[voxel(i,j,k)];
+  }
+
+  Element& operator()(int i, int j, int k)
+  {
+    return f_[voxel(i,j,k)];
+  }
+
+  Element operator()(int i, int j, int k) const
+  {
+    return f_[voxel(i,j,k)];
   }
 
   // second, access to a particular component, but this one is
   // for the specific Array used at construction time
   float& operator()(int m, int i, int j, int k)
   {
-    return f_[m + Array::N_COMP * voxel(i,j,k)];
+    float * RESTRICT f = reinterpret_cast<float *>(f_);
+    return f[m + Array::N_COMP * voxel(i,j,k)];
   }
   
   float operator()(int m, int i, int j, int k) const
   {
-    return f_[m + Array::N_COMP * voxel(i,j,k)];
+    float * RESTRICT f = reinterpret_cast<float *>(f_);
+    return f[m + Array::N_COMP * voxel(i,j,k)];
   }
 
 private:
   int sx_, sy_;
-  float * RESTRICT f_;
+  Element * RESTRICT f_;
 };
 
 

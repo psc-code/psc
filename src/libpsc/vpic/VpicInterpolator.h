@@ -46,12 +46,7 @@ struct VpicInterpolator : interpolator_array_t {
     interpolator_array_dtor(this);
   }
 
-  float* data()
-  {
-    return &i[0].ex;
-  }
-
-  Element* data_elements()
+  Element* data()
   {
     return i;
   }
