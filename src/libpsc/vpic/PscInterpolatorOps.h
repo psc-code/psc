@@ -52,9 +52,8 @@ load_interpolator(interpolator_array_t* ia, const field_array_t* fa)
   pfzx =  &f(x+1,y,  z+1); \
   pfxy =  &f(x+1,y+1,z  )
 
-  LOAD_STENCIL();
-  
   for( ; n_voxel; n_voxel-- ) {
+    LOAD_STENCIL();
 
     // ex interpolation
     w0 = pf0->ex;
@@ -110,7 +109,6 @@ load_interpolator(interpolator_array_t* ia, const field_array_t* fa)
     if( x>nx ) {
       x=1, y++;
       if( y>ny ) y=1, z++;
-      LOAD_STENCIL();
     }
   }
 
