@@ -23,6 +23,7 @@
 
 #include "VpicAccumulator.h"
 #include "VpicAccumulatorOps.h"
+#include "PscAccumulatorOps.h"
 
 extern "C" {
 #endif
@@ -69,7 +70,7 @@ typedef VpicInterpolator Interpolator;
 typedef PscInterpolatorOps<Interpolator, FieldArray> InterpolatorOps;
 
 typedef VpicAccumulator Accumulator;
-typedef VpicAccumulatorOps<Accumulator> AccumulatorOps;
+typedef PscAccumulatorOps<Accumulator> AccumulatorOps;
 
 typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps> Simulation;
 
