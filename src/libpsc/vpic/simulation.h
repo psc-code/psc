@@ -2,8 +2,6 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "VpicInterpolator.h"
-#include "VpicAccumulator.h"
 #include "hydro_array.h"
 #include "material.h"
 #include "rng.h"
@@ -15,12 +13,13 @@ struct globals_diag;
 // ======================================================================
 // class VpicSimulation
 
-template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps>
-struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
+template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps, class AccumulatorOps>
+struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps
 {
   typedef typename FieldArrayOps::FieldArray FieldArray;
   typedef typename ParticlesOps::Particles Particles;
   typedef typename InterpolatorOps::Interpolator Interpolator;
+  typedef typename AccumulatorOps::Accumulator Accumulator;
   
   VpicSimulation(vpic_simulation *simulation)
     : ParticlesOps(simulation),
@@ -107,7 +106,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
     interpolator_ = new Interpolator(g);
-    accumulator_array_ = new VpicAccumulator(g);
+    accumulator_array_ = new Accumulator(g);
     hydro_array_ = new HydroArray(grid_);
  
     // Pre-size communications buffers. This is done to get most memory
