@@ -15,6 +15,8 @@ inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, f
 inline void field_array_dtor(field_array_t *fa);
 
 struct VpicFieldArray : field_array_t {
+  typedef field_t Element;
+  
   enum {
     EX  = 0,
     EY  = 1,
@@ -370,12 +372,15 @@ inline void field_array_dtor(field_array_t *fa)
 // Field3D
 //
 // A class to accelerate 3-d field access
-// For now, it's specific to VpicFieldArray, but it should be generalizable
-// fairly easily
+// It works for VpicFieldArray and VpicInterpolatorArray, but should
+// be generalized to work without knowing their internals
 
-template<class FieldArray>
+template<class FA>
 struct Field3D {
-  Field3D(FieldArray& fa)
+  typedef FA Array;
+  typedef typename FA::Element Element;
+  
+  Field3D(Array& fa)
     : sx_(fa.g->nx + 2), sy_(fa.g->ny + 2),
       f_(fa.data())
   {
@@ -386,24 +391,30 @@ struct Field3D {
     return i + sx_ * (j + sy_ * (k));
   }
 
-  field_t& operator()(FieldArray &fa, int i, int j, int k)
+  // FIXME, this is an odd mix of two interfaces
+  // first field3d just being used for grid information,
+  // and providing access to the whole struct
+  // This interface can't easily be converted to SOA
+  Element& operator()(Array &fa, int i, int j, int k)
   {
-    return fa.f[voxel(i,j,k)];
+    return fa.data_elements()[voxel(i,j,k)];
   }
   
-  field_t operator()(FieldArray &fa, int i, int j, int k) const
+  Element operator()(Array &fa, int i, int j, int k) const
   {
-    return fa.f[voxel(i,j,k)];
+    return fa.data_elements()[voxel(i,j,k)];
   }
-  
+
+  // second, access to a particular component, but this one is
+  // for the specific Array used at construction time
   float& operator()(int m, int i, int j, int k)
   {
-    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
+    return f_[m + Array::N_COMP * voxel(i,j,k)];
   }
   
   float operator()(int m, int i, int j, int k) const
   {
-    return f_[m + FieldArray::N_COMP * voxel(i,j,k)];
+    return f_[m + Array::N_COMP * voxel(i,j,k)];
   }
 
 private:
