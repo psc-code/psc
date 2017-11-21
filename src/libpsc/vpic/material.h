@@ -6,19 +6,12 @@
 // MaterialList
 
 struct MaterialList {
-  MaterialList(material_t*& m);
-
   material_t* append(material_t* m);
   bool empty();
   
   //private:
-  material_t *&ml_;
+  material_t* ml_;
 };
-
-inline MaterialList::MaterialList(material_t*& m)
-  : ml_(m)
-{
-}
 
 inline material_t* MaterialList::append(material_t* m)
 {

@@ -25,7 +25,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
     : ParticlesOps(simulation),
       num_comm_round_(simulation->num_comm_round),
       grid_(simulation->grid),
-      material_list_(simulation->material_list),
+      material_list_(*reinterpret_cast<MaterialList *>(&simulation->material_list)),
       field_array_(simulation->field_array),
       interpolator_array_(simulation->interpolator_array),
       accumulator_array_(simulation->accumulator_array),
@@ -211,7 +211,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   //private:
   globals_diag *pDiag_;
   Grid grid_;
-  MaterialList material_list_;
+  MaterialList& material_list_;
   field_array_t*& field_array_;
   interpolator_array_t*& interpolator_array_;
   accumulator_array_t*& accumulator_array_;
