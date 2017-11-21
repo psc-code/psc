@@ -6,7 +6,6 @@
 #include "accumulator_array.h"
 #include "hydro_array.h"
 #include "material.h"
-#include "particles.h"
 #include "rng.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
@@ -20,6 +19,7 @@ template<class FieldArrayOps, class ParticlesOps>
 struct VpicSimulation : FieldArrayOps, ParticlesOps
 {
   typedef typename FieldArrayOps::FieldArray FieldArray;
+  typedef typename ParticlesOps::Particles Particles;
   
   VpicSimulation(vpic_simulation *simulation)
     : ParticlesOps(simulation),
@@ -30,7 +30,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
       interpolator_array_(simulation->interpolator_array),
       accumulator_array_(simulation->accumulator_array),
       hydro_array_(simulation->hydro_array),
-      particles_(*reinterpret_cast<VpicParticles *>(&simulation->species_list)),
+      particles_(*reinterpret_cast<Particles *>(&simulation->species_list)),
       simulation_(simulation)
   {
   }
@@ -188,7 +188,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
     TIC simulation_->user_field_injection(); TOC(user_field_injection, 1);
   }
 
-  void moments_run(HydroArray *hydro_array, VpicParticles *vmprts, int kind)
+  void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
   {
     // This relies on load_interpolator_array() having been called earlier
     clear_hydro_array(hydro_array);
@@ -216,7 +216,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   interpolator_array_t*& interpolator_array_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
-  VpicParticles& particles_;
+  Particles& particles_;
 
   vpic_simulation *simulation_;
 };

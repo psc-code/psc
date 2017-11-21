@@ -13,6 +13,7 @@
 #include "VpicFieldArrayOps.h"
 #include "PscFieldArrayOps.h"
 
+#include "VpicParticles.h"
 #include "VpicParticlesOps.h"
 #include "PscParticlesOps.h"
 

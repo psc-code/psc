@@ -2,10 +2,13 @@
 #ifndef VPIC_PARTICLES_OPS
 #define VPIC_PARTICLES_OPS
 
+template<class P>
 struct VpicParticlesOps {
+  typedef P Particles;
+  
   VpicParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
-  void inject_particle(VpicParticles *vmprts, int p, const struct psc_particle_inject *prt)
+  void inject_particle(Particles *vmprts, int p, const struct psc_particle_inject *prt)
   {
     assert(p == 0);
     species_t *sp = find_species_id(prt->kind, vmprts->sl_);

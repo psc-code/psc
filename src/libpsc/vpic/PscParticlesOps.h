@@ -2,8 +2,10 @@
 #ifndef PSC_PARTICLES_OPS
 #define PSC_PARTICLES_OPS
 
-template<class Particles>
+template<class P>
 struct PscParticlesOps {
+  typedef P Particles;
+  
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
   void inject_particle(Particles *vmprts, int patch, const struct psc_particle_inject *prt)

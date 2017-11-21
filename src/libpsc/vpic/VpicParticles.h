@@ -1,6 +1,6 @@
 
-#ifndef PARTICLES_H
-#define PARTICLES_H
+#ifndef VPIC_PARTICLES_H
+#define VPIC_PARTICLES_H
 
 // ======================================================================
 // VpicParticles
