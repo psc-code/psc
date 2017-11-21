@@ -12,7 +12,7 @@ struct PscParticlesOps {
   {
     assert(patch == 0);
     assert(simulation_->accumulator_array);
-    species_t *sp = find_species_id(prt->kind, vmprts->sl_);
+    species_t *sp = &*vmprts->find_id(prt->kind); //::find_species_id(prt->kind, vmprts->sl_);
     assert(sp);
 
     double x = prt->x[0], y = prt->x[1], z = prt->x[2];

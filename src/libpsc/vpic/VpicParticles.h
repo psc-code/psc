@@ -64,6 +64,17 @@ struct VpicParticles {
     return VpicSpeciesIter();
   }
 
+  VpicSpeciesIter find_id(int id)
+  {
+    Iter sp;
+    for (sp = begin(); sp != end(); ++sp) {
+      if (sp->id == id) {
+	break;
+      }
+    }
+    return sp;
+  }
+
   grid_t *getGrid_t()
   {
     return sl_->g;
@@ -74,7 +85,7 @@ struct VpicParticles {
     return sl_;
   }
   
-  //private:
+private:
   VpicSpecies *sl_;
 };
 

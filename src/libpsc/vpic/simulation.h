@@ -192,13 +192,9 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   {
     // This relies on load_interpolator_array() having been called earlier
     clear_hydro_array(hydro_array);
-    species_t *sp;
-    LIST_FOR_EACH(sp, vmprts->sl_) {
-      if (sp->id == kind) {
-	accumulate_hydro_p(hydro_array, sp, interpolator_array_);
-	break;
-      }
-    }
+
+    typename Particles::Iter sp = vmprts->find_id(kind);
+    accumulate_hydro_p(hydro_array, &*sp, interpolator_array_);
     
     synchronize_hydro_array(hydro_array);
   }
