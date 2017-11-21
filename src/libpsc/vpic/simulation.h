@@ -20,6 +20,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
 {
   typedef typename FieldArrayOps::FieldArray FieldArray;
   typedef typename ParticlesOps::Particles Particles;
+  typedef typename InterpolatorOps::Interpolator Interpolator;
   
   VpicSimulation(vpic_simulation *simulation)
     : ParticlesOps(simulation),

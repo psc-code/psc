@@ -17,6 +17,7 @@
 #include "VpicParticlesOps.h"
 #include "PscParticlesOps.h"
 
+#include "VpicInterpolator.h"
 #include "VpicInterpolatorOps.h"
 
 extern "C" {
@@ -60,7 +61,8 @@ typedef PscFieldArrayOps<FieldArray> FieldArrayOps;
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles> ParticlesOps;
 
-typedef VpicInterpolatorOps InterpolatorOps;
+typedef VpicInterpolator Interpolator;
+typedef VpicInterpolatorOps<Interpolator> InterpolatorOps;
 
 typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps> Simulation;
 
