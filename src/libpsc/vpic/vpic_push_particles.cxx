@@ -72,7 +72,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // Advance the particle lists.
 
   if (!vmprts->empty()) {
-    TIC ::clear_accumulator_array(accumulator_array); TOC(clear_accumulators, 1);
+    sim_->clear_accumulator_array(accumulator_array);
     sim_->advance_p(vmprts, accumulator_array, interpolator);
   }
 

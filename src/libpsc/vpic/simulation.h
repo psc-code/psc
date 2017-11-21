@@ -198,7 +198,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
     
     synchronize_hydro_array(hydro_array);
   }
-  
+
   void advance_p(Particles *vmprts, accumulator_array_t *accumulator_array,
 		 interpolator_array_t *interpolator_array)
   {

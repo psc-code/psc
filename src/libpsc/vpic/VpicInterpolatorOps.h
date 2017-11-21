@@ -7,8 +7,7 @@ struct VpicInterpolatorOps {
   typedef I Interpolator;
   typedef F FieldArray;
 
-  void load_interpolator_array(Interpolator *interpolator,
-			       FieldArray *vmflds)
+  void load_interpolator_array(Interpolator *interpolator, FieldArray *vmflds)
   {
     TIC ::load_interpolator_array(interpolator, vmflds); TOC(load_interpolator, 1);
   }
