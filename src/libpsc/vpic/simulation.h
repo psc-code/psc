@@ -30,7 +30,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
       interpolator_array_(simulation->interpolator_array),
       accumulator_array_(simulation->accumulator_array),
       hydro_array_(simulation->hydro_array),
-      particles_(simulation->species_list),
+      particles_(*reinterpret_cast<VpicParticles *>(&simulation->species_list)),
       simulation_(simulation)
   {
   }
@@ -216,7 +216,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   interpolator_array_t*& interpolator_array_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
-  VpicParticles particles_;
+  VpicParticles& particles_;
 
   vpic_simulation *simulation_;
 };
