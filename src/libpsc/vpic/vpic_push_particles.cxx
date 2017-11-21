@@ -56,7 +56,7 @@ void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 void vpic_push_particles::stagger_mprts(Particles *vmprts, FieldArray *vmflds)
 {
   if (!vmprts->empty()) {
-    TIC ::load_interpolator_array(interpolator_array, vmflds); TOC(load_interpolator, 1);
+    sim_->load_interpolator_array(interpolator_array, vmflds);
 
     for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
       TIC ::uncenter_p(&*sp, interpolator_array); TOC(uncenter_p, 1);
@@ -149,7 +149,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 void vpic_push_particles::prep(Particles *vmprts, FieldArray *vmflds)
 {
   if (!vmprts->empty()) {
-    TIC ::load_interpolator_array(interpolator_array, vmflds); TOC(load_interpolator, 1);
+    sim_->load_interpolator_array(interpolator_array, vmflds);
   }
 }
 

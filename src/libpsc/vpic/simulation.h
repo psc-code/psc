@@ -146,6 +146,12 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
 				     grid_.getGrid_t()));
   }
 
+  void load_interpolator_array(interpolator_array_t *interpolator_array,
+			       FieldArray *vmflds)
+  {
+    TIC ::load_interpolator_array(interpolator_array, vmflds); TOC(load_interpolator, 1);
+  }
+  
   void collision_run()
   {
     // Note: Particles should not have moved since the last performance sort
