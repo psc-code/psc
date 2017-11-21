@@ -20,57 +20,57 @@ load_interpolator(interpolator_array_t* ia, const field_array_t* fa)
 
   float w0, w1, w2, w3;
 
-  for (int z = 1; z <= nz; z++) {
-    for (int y = 1; y <= ny; y++) {
-      for (int x = 1; x <= nx; x++) {
+  for (int k = 1; k <= nz; k++) {
+    for (int j = 1; j <= ny; j++) {
+      for (int i = 1; i <= nx; i++) {
 
     // ex interpolation
-    w0 = f(x,y  ,z  ).ex;
-    w1 = f(x,y+1,z  ).ex;
-    w2 = f(x,y  ,z+1).ex;
-    w3 = f(x,y+1,z+1).ex;
-    fi(x,y,z).ex       = fourth*( (w3 + w0) + (w1 + w2) );
-    fi(x,y,z).dexdy    = fourth*( (w3 - w0) + (w1 - w2) );
-    fi(x,y,z).dexdz    = fourth*( (w3 - w0) - (w1 - w2) );
-    fi(x,y,z).d2exdydz = fourth*( (w3 + w0) - (w1 + w2) );
+    w0 = f(i,j  ,k  ).ex;
+    w1 = f(i,j+1,k  ).ex;
+    w2 = f(i,j  ,k+1).ex;
+    w3 = f(i,j+1,k+1).ex;
+    fi(i,j,k).ex       = fourth*((w3 + w0) + (w1 + w2));
+    fi(i,j,k).dexdy    = fourth*((w3 - w0) + (w1 - w2));
+    fi(i,j,k).dexdz    = fourth*((w3 - w0) - (w1 - w2));
+    fi(i,j,k).d2exdydz = fourth*((w3 + w0) - (w1 + w2));
 
     // ey interpolation coefficients
-    w0 = f(x  ,y,z  ).ey;
-    w1 = f(x  ,y,z+1).ey;
-    w2 = f(x+1,y,z  ).ey;
-    w3 = f(x+1,y,z+1).ey;
-    fi(x,y,z).ey       = fourth*( (w3 + w0) + (w1 + w2) );
-    fi(x,y,z).deydz    = fourth*( (w3 - w0) + (w1 - w2) );
-    fi(x,y,z).deydx    = fourth*( (w3 - w0) - (w1 - w2) );
-    fi(x,y,z).d2eydzdx = fourth*( (w3 + w0) - (w1 + w2) );
+    w0 = f(i  ,j,k  ).ey;
+    w1 = f(i  ,j,k+1).ey;
+    w2 = f(i+1,j,k  ).ey;
+    w3 = f(i+1,j,k+1).ey;
+    fi(i,j,k).ey       = fourth*((w3 + w0) + (w1 + w2));
+    fi(i,j,k).deydz    = fourth*((w3 - w0) + (w1 - w2));
+    fi(i,j,k).deydx    = fourth*((w3 - w0) - (w1 - w2));
+    fi(i,j,k).d2eydzdx = fourth*((w3 + w0) - (w1 + w2));
 
     // ez interpolation coefficients
-    w0 = f(x  ,y,z  ).ez;
-    w1 = f(x+1,y,z  ).ez;
-    w2 = f(x  ,y+1,z).ez;
-    w3 = f(x+1,y+1,z).ez;
-    fi(x,y,z).ez       = fourth*( (w3 + w0) + (w1 + w2) );
-    fi(x,y,z).dezdx    = fourth*( (w3 - w0) + (w1 - w2) );
-    fi(x,y,z).dezdy    = fourth*( (w3 - w0) - (w1 - w2) );
-    fi(x,y,z).d2ezdxdy = fourth*( (w3 + w0) - (w1 + w2) );
+    w0 = f(i  ,j  ,k).ez;
+    w1 = f(i+1,j  ,k).ez;
+    w2 = f(i  ,j+1,k).ez;
+    w3 = f(i+1,j+1,k).ez;
+    fi(i,j,k).ez       = fourth*((w3 + w0) + (w1 + w2));
+    fi(i,j,k).dezdx    = fourth*((w3 - w0) + (w1 - w2));
+    fi(i,j,k).dezdy    = fourth*((w3 - w0) - (w1 - w2));
+    fi(i,j,k).d2ezdxdy = fourth*((w3 + w0) - (w1 + w2));
 
     // bx interpolation coefficients
-    w0 = f(x  ,y,z).cbx;
-    w1 = f(x+1,y,z).cbx;
-    fi(x,y,z).cbx    = half*( w1 + w0 );
-    fi(x,y,z).dcbxdx = half*( w1 - w0 );
+    w0 = f(i  ,j,k).cbx;
+    w1 = f(i+1,j,k).cbx;
+    fi(i,j,k).cbx    = half*(w1 + w0);
+    fi(i,j,k).dcbxdx = half*(w1 - w0);
 
     // by interpolation coefficients
-    w0 = f(x,y  ,z).cby;
-    w1 = f(x,y+1,z).cby;
-    fi(x,y,z).cby    = half*( w1 + w0 );
-    fi(x,y,z).dcbydy = half*( w1 - w0 );
+    w0 = f(i,j  ,k).cby;
+    w1 = f(i,j+1,k).cby;
+    fi(i,j,k).cby    = half*(w1 + w0);
+    fi(i,j,k).dcbydy = half*(w1 - w0);
 
     // bz interpolation coefficients
-    w0 = f(x,y,z  ).cbz;
-    w1 = f(x,y,z+1).cbz;
-    fi(x,y,z).cbz    = half*( w1 + w0 );
-    fi(x,y,z).dcbzdz = half*( w1 - w0 );
+    w0 = f(i,j,k  ).cbz;
+    w1 = f(i,j,k+1).cbz;
+    fi(i,j,k).cbz    = half*(w1 + w0);
+    fi(i,j,k).dcbzdz = half*(w1 - w0);
       }
     }
   }
