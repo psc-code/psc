@@ -19,14 +19,9 @@ struct vpic_push_particles {
   AccumulatorArray* accumulator_array;
   int num_comm_round;
 
+  void stagger_mprts(Particles *vmprts, FieldArray *vmflds);
   void push_mprts(Particles *vmprts, FieldArray *vmflds);
-  void clear_accumulator_array();
-  void advance_p(Particles *vmprts);
-  void reduce_accumulator_array();
-  void boundary_p(Particles *vmprts, FieldArray *vmflds);
-  void unload_accumulator_array(FieldArray *vmflds);
-  void load_interpolator_array(FieldArray *vmflds);
-  void uncenter_p(Particles *vmprts);
+  void prep(Particles *vmprts, FieldArray *vmflds);
 };
 
 #endif

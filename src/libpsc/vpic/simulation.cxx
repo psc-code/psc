@@ -133,22 +133,6 @@ void Simulation_collision_run(Simulation* sim)
 }
 
 // ----------------------------------------------------------------------
-// Simulation_emitter
-
-void Simulation_emitter(Simulation* sim)
-{
-  sim->emitter();
-}
-
-// ----------------------------------------------------------------------
-// Simulation_current_injection
-
-void Simulation_current_injection(Simulation* sim)
-{
-  sim->current_injection();
-}
-
-// ----------------------------------------------------------------------
 // Simulation_field_injection
 
 void Simulation_field_injection(Simulation* sim)

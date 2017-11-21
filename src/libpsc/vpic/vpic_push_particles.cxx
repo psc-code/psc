@@ -30,7 +30,7 @@ vpic_push_particles_new_from_Simulation(Simulation *sim)
 }
 
 // ----------------------------------------------------------------------
-// vpic_push_particles_push_mprts
+// vpic_push_particles forwards
 
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 				    Particles *vmprts,
@@ -39,28 +39,29 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   vpushp->push_mprts(vmprts, vmflds);
 }
 
-// ----------------------------------------------------------------------
-// vpic_push_particles_prep
-
 void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      Particles *vmprts, FieldArray *vmflds)
 {
-  if (!vmprts->empty()) {
-    vpushp->load_interpolator_array(vmflds);
-  }
+  vpushp->prep(vmprts, vmflds);
+}
+
+void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
+				       Particles *vmprts, FieldArray *vmflds)
+{
+  vpushp->stagger_mprts(vmprts, vmflds);
 }
 
 // ----------------------------------------------------------------------
-// vpic_push_particles_stagger_mprts
 
-void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
-				       Particles *vmprts,
-				       FieldArray *vmflds)
+void vpic_push_particles::stagger_mprts(Particles *vmprts, FieldArray *vmflds)
 {
   if (!vmprts->empty()) {
-    vpushp->load_interpolator_array(vmflds);
+    TIC ::load_interpolator_array(interpolator_array, vmflds); TOC(load_interpolator, 1);
+
+    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+      TIC ::uncenter_p(&*sp, interpolator_array); TOC(uncenter_p, 1);
+    }
   }
-  vpushp->uncenter_p(vmprts);
 }
 
 void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
@@ -71,8 +72,8 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // Advance the particle lists.
 
   if (!vmprts->empty()) {
-    clear_accumulator_array();
-    advance_p(vmprts);
+    TIC ::clear_accumulator_array(accumulator_array); TOC(clear_accumulators, 1);
+    sim_->advance_p(vmprts, accumulator_array, interpolator_array);
   }
 
   // Because the partial position push when injecting aged particles might
@@ -81,58 +82,19 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // be done after advance_p and before guard list processing. Note:
   // user_particle_injection should be a stub if sl_ is empty.
 
-  Simulation_emitter(sim_);
+  sim_->emitter();
 
   if (!vmprts->empty()) {
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
-    reduce_accumulator_array();
+    TIC ::reduce_accumulator_array(accumulator_array); TOC(reduce_accumulators, 1);
   }
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the
   // guard lists. Particles that absorbed are added to rhob (using a corrected
   // local accumulation).
 
-  boundary_p(vmprts, vmflds);
-
-  // At this point, all particle positions are at r_1 and u_{1/2}, the
-  // guard lists are empty and the accumulators on each processor are current.
-  // Convert the accumulators into currents.
-
-  vmflds->clear_jf();
-  if (!vmprts->empty()) {
-    unload_accumulator_array(vmflds);
-  }
-  vmflds->synchronize_jf();
-
-  // At this point, the particle currents are known at jf_{1/2}.
-  // Let the user add their own current contributions. It is the users
-  // responsibility to insure injected currents are consistent across domains.
-  // It is also the users responsibility to update rhob according to
-  // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
-  // the user wants electric field divergence cleaning to work.
-
-  Simulation_current_injection(sim_);
-}
-
-void vpic_push_particles::clear_accumulator_array()
-{
-  TIC ::clear_accumulator_array( accumulator_array ); TOC( clear_accumulators, 1 );
-}
-
-void vpic_push_particles::advance_p(Particles *vmprts)
-{
-  sim_->advance_p(vmprts, accumulator_array, interpolator_array);
-}
-
-void vpic_push_particles::reduce_accumulator_array()
-{
-  TIC ::reduce_accumulator_array( accumulator_array ); TOC( reduce_accumulators, 1 );
-}
-
-void vpic_push_particles::boundary_p(Particles *vmprts, FieldArray *vmflds)
-{
   TIC
     for( int round=0; round<num_comm_round; round++ )
       ::boundary_p( sim_->simulation_->particle_bc_list, vmprts->head(),
@@ -163,22 +125,31 @@ void vpic_push_particles::boundary_p(Particles *vmprts, FieldArray *vmflds)
     }
     sp->nm = 0;
   }
+
+  // At this point, all particle positions are at r_1 and u_{1/2}, the
+  // guard lists are empty and the accumulators on each processor are current.
+  // Convert the accumulators into currents.
+
+  vmflds->clear_jf();
+  if (!vmprts->empty()) {
+    TIC ::unload_accumulator_array(vmflds, accumulator_array); TOC(unload_accumulator, 1);
+  }
+  vmflds->synchronize_jf();
+
+  // At this point, the particle currents are known at jf_{1/2}.
+  // Let the user add their own current contributions. It is the users
+  // responsibility to insure injected currents are consistent across domains.
+  // It is also the users responsibility to update rhob according to
+  // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
+  // the user wants electric field divergence cleaning to work.
+
+  sim_->current_injection();
 }
 
-void vpic_push_particles::unload_accumulator_array(FieldArray *vmflds)
+void vpic_push_particles::prep(Particles *vmprts, FieldArray *vmflds)
 {
-  TIC ::unload_accumulator_array( vmflds, accumulator_array ); TOC( unload_accumulator, 1 );
-}
-
-void vpic_push_particles::load_interpolator_array(FieldArray *vmflds)
-{
-  TIC ::load_interpolator_array( interpolator_array, vmflds ); TOC( load_interpolator, 1 );
-}
-
-void vpic_push_particles::uncenter_p(Particles *vmprts)
-{
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    TIC ::uncenter_p(&*sp, interpolator_array); TOC(uncenter_p, 1);
+  if (!vmprts->empty()) {
+    TIC ::load_interpolator_array(interpolator_array, vmflds); TOC(load_interpolator, 1);
   }
 }
 
