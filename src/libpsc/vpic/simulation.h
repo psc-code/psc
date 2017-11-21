@@ -2,7 +2,7 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "interpolator_array.h"
+#include "VpicInterpolator.h"
 #include "accumulator_array.h"
 #include "hydro_array.h"
 #include "material.h"
@@ -15,8 +15,8 @@ struct globals_diag;
 // ======================================================================
 // class VpicSimulation
 
-template<class FieldArrayOps, class ParticlesOps>
-struct VpicSimulation : FieldArrayOps, ParticlesOps
+template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps>
+struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
 {
   typedef typename FieldArrayOps::FieldArray FieldArray;
   typedef typename ParticlesOps::Particles Particles;
@@ -27,7 +27,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
       grid_(simulation->grid),
       material_list_(*reinterpret_cast<MaterialList *>(&simulation->material_list)),
       field_array_(simulation->field_array),
-      interpolator_array_(simulation->interpolator_array),
+      interpolator_(simulation->interpolator_array),
       accumulator_array_(simulation->accumulator_array),
       hydro_array_(simulation->hydro_array),
       particles_(*reinterpret_cast<Particles *>(&simulation->species_list)),
@@ -105,7 +105,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
     assert(!material_list_.empty());
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
-    interpolator_array_ = new InterpolatorArray(g);
+    interpolator_ = new VpicInterpolator(g);
     accumulator_array_ = new AccumulatorArray(g);
     hydro_array_ = new HydroArray(grid_);
  
@@ -200,7 +200,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
     clear_hydro_array(hydro_array);
 
     typename Particles::Iter sp = vmprts->find_id(kind);
-    accumulate_hydro_p(hydro_array, &*sp, interpolator_array_);
+    accumulate_hydro_p(hydro_array, &*sp, interpolator_);
     
     synchronize_hydro_array(hydro_array);
   }
@@ -222,7 +222,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps
   Grid grid_;
   MaterialList& material_list_;
   field_array_t*& field_array_;
-  interpolator_array_t*& interpolator_array_;
+  interpolator_array_t*& interpolator_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
   Particles& particles_;

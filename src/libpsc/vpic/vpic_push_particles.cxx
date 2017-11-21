@@ -12,7 +12,7 @@
 vpic_push_particles::vpic_push_particles(Simulation *sim)
   : sim_(sim)
 {
-  interpolator_array = static_cast<InterpolatorArray*>(sim->interpolator_array_);
+  interpolator = static_cast<VpicInterpolator*>(sim->interpolator_);
   accumulator_array = static_cast<AccumulatorArray*>(sim->accumulator_array_);
   num_comm_round = sim->num_comm_round_;
 }
@@ -56,10 +56,10 @@ void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 void vpic_push_particles::stagger_mprts(Particles *vmprts, FieldArray *vmflds)
 {
   if (!vmprts->empty()) {
-    sim_->load_interpolator_array(interpolator_array, vmflds);
+    sim_->load_interpolator_array(interpolator, vmflds);
 
     for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-      TIC ::uncenter_p(&*sp, interpolator_array); TOC(uncenter_p, 1);
+      TIC ::uncenter_p(&*sp, interpolator); TOC(uncenter_p, 1);
     }
   }
 }
@@ -73,7 +73,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 
   if (!vmprts->empty()) {
     TIC ::clear_accumulator_array(accumulator_array); TOC(clear_accumulators, 1);
-    sim_->advance_p(vmprts, accumulator_array, interpolator_array);
+    sim_->advance_p(vmprts, accumulator_array, interpolator);
   }
 
   // Because the partial position push when injecting aged particles might
@@ -149,7 +149,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 void vpic_push_particles::prep(Particles *vmprts, FieldArray *vmflds)
 {
   if (!vmprts->empty()) {
-    sim_->load_interpolator_array(interpolator_array, vmflds);
+    sim_->load_interpolator_array(interpolator, vmflds);
   }
 }
 

@@ -17,6 +17,8 @@
 #include "VpicParticlesOps.h"
 #include "PscParticlesOps.h"
 
+#include "VpicInterpolatorOps.h"
+
 extern "C" {
 #endif
 #if 0 // hack to fix indentation
@@ -58,7 +60,9 @@ typedef PscFieldArrayOps<FieldArray> FieldArrayOps;
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles> ParticlesOps;
 
-typedef VpicSimulation<FieldArrayOps, ParticlesOps> Simulation;
+typedef VpicInterpolatorOps InterpolatorOps;
+
+typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps> Simulation;
 
 #else
 
