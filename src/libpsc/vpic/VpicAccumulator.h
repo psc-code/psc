@@ -4,12 +4,22 @@
 
 #include "grid.h"
 
+inline void accumulator_array_ctor(accumulator_array_t * aa, grid_t * g);
+inline void accumulator_array_dtor(accumulator_array_t * aa);
+
 // ======================================================================
 // VpicAccumulator
 
 struct VpicAccumulator : accumulator_array_t {
-  VpicAccumulator(Grid g);
-  ~VpicAccumulator();
+  VpicAccumulator(Grid grid)
+  {
+    accumulator_array_ctor(this, grid.getGrid_t());
+  }
+  
+  ~VpicAccumulator()
+  {
+    accumulator_array_dtor(this);
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -37,20 +47,6 @@ accumulator_array_dtor( accumulator_array_t * aa ) {
   if( !aa ) return;
   FREE_ALIGNED( aa->a );
 }
-
-// ----------------------------------------------------------------------
-// VpicAccumulator implementation
-
-inline VpicAccumulator::VpicAccumulator(Grid grid)
-{
-  accumulator_array_ctor(this, grid.getGrid_t());
-}
-
-inline VpicAccumulator::~VpicAccumulator()
-{
-  accumulator_array_dtor(this);
-}
-
 
 
 #endif
