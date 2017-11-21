@@ -16,7 +16,7 @@ struct vpic_push_particles {
       
   Simulation *sim_;
   VpicInterpolator* interpolator;
-  AccumulatorArray* accumulator_array;
+  VpicAccumulator* accumulator_array;
   int num_comm_round;
 
   void stagger_mprts(Particles *vmprts, FieldArray *vmflds);

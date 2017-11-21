@@ -5,11 +5,11 @@
 #include "grid.h"
 
 // ======================================================================
-// AccumulatorArray
+// VpicAccumulator
 
-struct AccumulatorArray : accumulator_array_t {
-  AccumulatorArray(Grid g);
-  ~AccumulatorArray();
+struct VpicAccumulator : accumulator_array_t {
+  VpicAccumulator(Grid g);
+  ~VpicAccumulator();
 };
 
 // ----------------------------------------------------------------------
@@ -39,14 +39,14 @@ accumulator_array_dtor( accumulator_array_t * aa ) {
 }
 
 // ----------------------------------------------------------------------
-// AccumulatorArray implementation
+// VpicAccumulator implementation
 
-inline AccumulatorArray::AccumulatorArray(Grid grid)
+inline VpicAccumulator::VpicAccumulator(Grid grid)
 {
   accumulator_array_ctor(this, grid.getGrid_t());
 }
 
-inline AccumulatorArray::~AccumulatorArray()
+inline VpicAccumulator::~VpicAccumulator()
 {
   accumulator_array_dtor(this);
 }

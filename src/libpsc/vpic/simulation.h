@@ -107,7 +107,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
     interpolator_ = new Interpolator(g);
-    accumulator_array_ = new AccumulatorArray(g);
+    accumulator_array_ = new VpicAccumulator(g);
     hydro_array_ = new HydroArray(grid_);
  
     // Pre-size communications buffers. This is done to get most memory
