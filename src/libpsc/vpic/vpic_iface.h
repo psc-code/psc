@@ -62,7 +62,7 @@ typedef VpicParticles Particles;
 typedef PscParticlesOps<Particles> ParticlesOps;
 
 typedef VpicInterpolator Interpolator;
-typedef VpicInterpolatorOps<Interpolator> InterpolatorOps;
+typedef VpicInterpolatorOps<Interpolator, FieldArray> InterpolatorOps;
 
 typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps> Simulation;
 

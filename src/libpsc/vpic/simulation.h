@@ -28,7 +28,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
       grid_(simulation->grid),
       material_list_(*reinterpret_cast<MaterialList *>(&simulation->material_list)),
       field_array_(simulation->field_array),
-      interpolator_(simulation->interpolator_array),
+      interpolator_(*reinterpret_cast<Interpolator **>(&simulation->interpolator_array)),
       accumulator_array_(simulation->accumulator_array),
       hydro_array_(simulation->hydro_array),
       particles_(*reinterpret_cast<Particles *>(&simulation->species_list)),
@@ -106,7 +106,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
     assert(!material_list_.empty());
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
-    interpolator_ = new VpicInterpolator(g);
+    interpolator_ = new Interpolator(g);
     accumulator_array_ = new AccumulatorArray(g);
     hydro_array_ = new HydroArray(grid_);
  
@@ -147,12 +147,6 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
 				     grid_.getGrid_t()));
   }
 
-  void load_interpolator_array(interpolator_array_t *interpolator_array,
-			       FieldArray *vmflds)
-  {
-    TIC ::load_interpolator_array(interpolator_array, vmflds); TOC(load_interpolator, 1);
-  }
-  
   void collision_run()
   {
     // Note: Particles should not have moved since the last performance sort
@@ -223,7 +217,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps
   Grid grid_;
   MaterialList& material_list_;
   field_array_t*& field_array_;
-  interpolator_array_t*& interpolator_;
+  Interpolator*& interpolator_;
   accumulator_array_t*& accumulator_array_;
   hydro_array_t*& hydro_array_;
   Particles& particles_;
