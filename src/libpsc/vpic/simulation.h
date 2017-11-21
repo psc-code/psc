@@ -3,7 +3,7 @@
 #define SIMULATION_H
 
 #include "VpicInterpolator.h"
-#include "accumulator_array.h"
+#include "VpicAccumulator.h"
 #include "hydro_array.h"
 #include "material.h"
 #include "rng.h"

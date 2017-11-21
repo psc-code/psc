@@ -1,6 +1,6 @@
 
-#ifndef ACCUMULATOR_ARRAY_H
-#define ACCUMULATOR_ARRAY_H
+#ifndef VPIC_ACCUMULATOR_H
+#define VPIC_ACCUMULATOR_H
 
 #include "grid.h"
 
