@@ -19,6 +19,8 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
 		   /**/  accumulator_array_t  * RESTRICT aa,
 		   const interpolator_array_t * RESTRICT ia,
 		   particle_mover_seg_t *seg,
+		   particle_t * ALIGNED(128) p, int n,
+		   int itmp2, int max_nm,
 		   int pipeline_rank,
 		   int n_pipeline)
 {
@@ -27,7 +29,6 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
   const interpolator_t * ALIGNED(128) f0 = ia->i;
   const grid_t *                      g  = sp->g;
 
-  particle_t           * ALIGNED(32)  p;
   particle_mover_t     * ALIGNED(16)  pm;
   const interpolator_t * ALIGNED(16)  f;
   float                * ALIGNED(16)  a;
@@ -46,29 +47,13 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
   float hax, hay, haz, cbx, cby, cbz;
   float v0, v1, v2, v3, v4, v5;
 
-  int itmp, ii, n, nm, max_nm;
+  int ii;
   
   DECLARE_ALIGNED_ARRAY( particle_mover_t, 16, local_pm, 1 );
 
-  // Determine which quads of particles quads this pipeline processes
-
-  DISTRIBUTE( sp->np, 16, pipeline_rank, n_pipeline, itmp, n );
-  p = p0 + itmp;
-
-  // Determine which movers are reserved for this pipeline
-  // Movers (16 bytes) should be reserved for pipelines in at least
-  // multiples of 8 such that the set of particle movers reserved for
-  // a pipeline is 128-byte aligned and a multiple of 128-byte in
-  // size.  The host is guaranteed to get enough movers to process its
-  // particles with this allocation.
-
-  max_nm = sp->max_nm - (sp->np & 15);
-  if( max_nm<0 ) max_nm = 0;
-  DISTRIBUTE( max_nm, 8, pipeline_rank, n_pipeline, itmp, max_nm );
-  if( pipeline_rank==n_pipeline ) max_nm = sp->max_nm - itmp;
-  pm   = sp->pm + itmp;
-  nm   = 0;
-  itmp = 0;
+  pm   = sp->pm + itmp2;
+  int nm   = 0;
+  int itmp = 0;
 
   // Determine which accumulator array to use
   // The host gets the first accumulator array
@@ -211,6 +196,8 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
 		      /**/  accumulator_array_t  * RESTRICT aa,
 		      const interpolator_array_t * RESTRICT ia,
 		      particle_mover_seg_t *seg,
+		      particle_t * ALIGNED(128) p, int n,
+		      int itmp2, int max_nm,
 		      int pipeline_rank,
 		      int n_pipeline)
 {
@@ -219,7 +206,6 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
   const interpolator_t * ALIGNED(128) f0 = ia->i;
   const grid_t *                      g  = sp->g;
 
-  particle_t           * ALIGNED(128) p;
   particle_mover_t     * ALIGNED(16)  pm; 
   float                * ALIGNED(16)  vp0;
   float                * ALIGNED(16)  vp1;
@@ -244,30 +230,13 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
   v4float v0, v1, v2, v3, v4, v5;
   v4int   ii, outbnd;
 
-  int itmp, nq, nm, max_nm;
-
   DECLARE_ALIGNED_ARRAY( particle_mover_t, 16, local_pm, 1 );
 
-  // Determine which quads of particle quads this pipeline processes
-
-  DISTRIBUTE( sp->np, 16, pipeline_rank, n_pipeline, itmp, nq );
-  p = p0 + itmp;
-  nq>>=2;
-
-  // Determine which movers are reserved for this pipeline.
-  // Movers (16 bytes) should be reserved for pipelines in at least
-  // multiples of 8 such that the set of particle movers reserved for
-  // a pipeline is 128-byte aligned and a multiple of 128-byte in
-  // size.  The host is guaranteed to get enough movers to process its
-  // particles with this allocation.
-
-  max_nm = sp->max_nm - (sp->np & 15);
-  if( max_nm<0 ) max_nm = 0;
-  DISTRIBUTE( max_nm, 8, pipeline_rank, n_pipeline, itmp, max_nm );
-  if( pipeline_rank==n_pipeline ) max_nm = sp->max_nm - itmp;
-  pm   = sp->pm + itmp;
-  nm   = 0;
-  itmp = 0;
+  int nq = n >> 2;
+  
+  pm   = sp->pm + itmp2;
+  int nm   = 0;
+  int itmp = 0;
 
   // Determine which accumulator array to use
   // The host gets the first accumulator array
@@ -417,7 +386,6 @@ advance_p( /**/  species_t            * RESTRICT sp,
            const interpolator_array_t * RESTRICT ia )
 {
   DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, MAX_PIPELINE+1 );
-  int rank;
 
   // Have the host processor do the last incomplete bundle if necessary.
   // Note: This is overlapped with the pipelined processing.  As such,
@@ -430,24 +398,39 @@ advance_p( /**/  species_t            * RESTRICT sp,
   // However, it is worth reconsidering this at some point in the
   // future.
 
-#if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-  advance_p_pipeline_v4(sp, aa, ia, seg, 0, 1);
-#else
-  advance_p_pipeline(sp, aa, ia, seg, 0, 1);
-#endif
-  advance_p_pipeline(sp, aa, ia, seg, 1, 1);
-
-  // FIXME: HIDEOUS HACK UNTIL BETTER PARTICLE MOVER SEMANTICS
-  // INSTALLED FOR DEALING WITH PIPELINES.  COMPACT THE PARTICLE
-  // MOVERS TO ELIMINATE HOLES FROM THE PIPELINING.
-
   sp->nm = 0;
-  for (rank=0; rank<=N_PIPELINE; rank++) {
-    if (seg[rank].n_ignored)
-      WARNING(( "Pipeline %i ran out of storage for %i movers",
-                rank, seg[rank].n_ignored ));
-    if (sp->pm + sp->nm != seg[rank].pm)
-      MOVE(sp->pm + sp->nm, seg[rank].pm, seg[rank].nm);
-    sp->nm += seg[rank].nm;
-  }
+
+  int itmp, n;
+  DISTRIBUTE( sp->np, 16, 0, 1, itmp, n );
+  particle_t *p = sp->p + itmp;
+  int max_nm = sp->max_nm - (sp->np & 15);
+  if( max_nm<0 ) max_nm = 0;
+  DISTRIBUTE( max_nm, 8, 0, 1, itmp, max_nm );
+
+#if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
+  advance_p_pipeline_v4(sp, aa, ia, seg, p, n, itmp, max_nm, 0, 1);
+#else
+  advance_p_pipeline(sp, aa, ia, seg, p, n, itmp, max_nm, 0, 1);
+#endif
+  if (seg[0].n_ignored)
+    WARNING(( "Pipeline %i ran out of storage for %i movers",
+	      0, seg[0].n_ignored ));
+  sp->nm += seg[0].nm;
+  
+  DISTRIBUTE( sp->np, 16, 1, 1, itmp, n );
+  p = sp->p + itmp;
+
+  max_nm = sp->max_nm - (sp->np & 15);
+  if (max_nm < 0) max_nm = 0;
+  DISTRIBUTE( max_nm, 8, 1, 1, itmp, max_nm );
+  max_nm = sp->max_nm - itmp;
+
+  advance_p_pipeline(sp, aa, ia, seg, p, n, itmp, max_nm, 1, 1);
+
+  if (seg[1].n_ignored)
+    WARNING(( "Pipeline %i ran out of storage for %i movers",
+	      1, seg[1].n_ignored ));
+  if (sp->pm + sp->nm != seg[1].pm)
+    MOVE(sp->pm + sp->nm, seg[1].pm, seg[1].nm);
+  sp->nm += seg[1].nm;
 }
