@@ -4,20 +4,20 @@
 
 #define HAS_V4_PIPELINE
 
-template<class P, class IA, class AA>
+template<class P, class FA, class IA, class AA>
 struct PscParticlesOps {
   typedef P Particles;
   typedef typename Particles::Species Species;
+  typedef FA FieldArray;
   typedef IA Interpolator;
   typedef AA Accumulator;
   
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
-  void inject_particle(Particles *vmprts, int patch, const struct psc_particle_inject *prt)
+  void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
+		       const struct psc_particle_inject *prt)
   {
-    assert(patch == 0);
-    assert(simulation_->accumulator_array);
-    species_t *sp = &*vmprts->find_id(prt->kind);
+    species_t *sp = &*vmprts.find_id(prt->kind);
     assert(sp);
 
     double x = prt->x[0], y = prt->x[1], z = prt->x[2];
@@ -84,7 +84,7 @@ struct PscParticlesOps {
     p->uz = (float)uz;
     p->w  = w;
 
-    if (update_rhob) accumulate_rhob( simulation_->field_array->f, p, grid, -sp->q );
+    if (update_rhob) accumulate_rhob(fa.f, p, grid, -sp->q);
 
     if (age!=0) {
       if( sp->nm >= sp->max_nm )
@@ -95,7 +95,7 @@ struct PscParticlesOps {
       pm->dispy = uy*age*grid->rdy;
       pm->dispz = uz*age*grid->rdz;
       pm->i     = sp->np-1;
-      sp->nm += move_p( sp->p, pm, simulation_->accumulator_array->a, grid, sp->q );
+      sp->nm += move_p( sp->p, pm, accumulator.a, grid, sp->q );
     }
     
   }

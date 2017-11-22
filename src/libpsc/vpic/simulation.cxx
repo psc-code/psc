@@ -121,7 +121,9 @@ void Simulation_set_params(Simulation* sim, int num_step, int status_interval,
 void Simulation_inject_particle(Simulation* sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt)
 {
-  sim->inject_particle(vmprts, p, prt);
+  assert(p == 0);
+  sim->inject_particle(*vmprts, *static_cast<Accumulator*>(sim->accumulator_array_),
+		       *static_cast<FieldArray*>(sim->field_array_), prt);
 }
 
 // ----------------------------------------------------------------------

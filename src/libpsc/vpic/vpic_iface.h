@@ -70,7 +70,7 @@ typedef VpicAccumulator Accumulator;
 typedef PscAccumulatorOps<Accumulator, FieldArray> AccumulatorOps;
 
 typedef VpicParticles Particles;  
-typedef PscParticlesOps<Particles, Interpolator, Accumulator> ParticlesOps;
+typedef PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
 typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps> Simulation;
 
