@@ -14,8 +14,6 @@ include_HEADERS = \
 	psc_diag_item.h \
 	psc_diag_item_private.h \
 	psc_diag_private.h \
-	psc_domainwindow.h \
-	psc_domainwindow_private.h \
 	psc_event_generator.h \
 	psc_event_generator_private.h \
 	psc_fields.h \
