@@ -42,6 +42,7 @@ private:
 };
 
 struct VpicParticles {
+  typedef VpicSpecies Species;
   typedef VpicSpeciesIter Iter;
   
   species_t* append(species_t* s)
