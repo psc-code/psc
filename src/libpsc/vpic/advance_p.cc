@@ -8,8 +8,6 @@
 #include <cassert>
 
 typedef struct particle_mover_seg {
-  MEM_PTR( particle_mover_t, 16 ) pm; // First mover in segment
-  int max_nm;                         // Maximum number of movers
   int nm;                             // Number of movers used
   int n_ignored;                      // Number of movers ignored
 } particle_mover_seg_t;
@@ -47,8 +45,8 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
   
   DECLARE_ALIGNED_ARRAY( particle_mover_t, 16, local_pm, 1 );
 
-  int nm   = 0;
-  int itmp = 0;
+  int nm = 0;
+  int n_ignored = 0;
 
   // Process particles for this pipeline
 
@@ -163,17 +161,15 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
 	  pm[nm++] = local_pm[0];
         }
         else {
-	  itmp++;                 // Unlikely
+	  n_ignored++;                 // Unlikely
 	} // if
       } // if
     }
 
   }
 
-  seg->pm        = pm;
-  seg->max_nm    = max_nm;
   seg->nm        = nm;
-  seg->n_ignored = itmp;
+  seg->n_ignored = n_ignored;
 }
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
@@ -220,7 +216,7 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
   int nq = n >> 2;
   
   int nm   = 0;
-  int itmp = 0;
+  int n_ignored = 0;
 
   // Process the particle quads for this pipeline
 
@@ -338,7 +334,7 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
       local_pm->i     = (p - p0) + N;                                   \
       if( move_p( p0, local_pm, a0, g, _qsp ) ) { /* Unlikely */        \
         if( nm<max_nm ) copy_4x1( &pm[nm++], local_pm );                \
-        else            itmp++;             /* Unlikely */              \
+        else            n_ignored++;             /* Unlikely */		\
       }                                                                 \
     }
 
@@ -351,10 +347,8 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
 
   }
 
-  seg->pm        = pm;
-  seg->max_nm    = max_nm;
   seg->nm        = nm;
-  seg->n_ignored = itmp;
+  seg->n_ignored = n_ignored;
 }
 
 #endif
