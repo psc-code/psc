@@ -2,9 +2,10 @@
 #ifndef PSC_ACCUMULATOR_OPS_H
 #define PSC_ACCUMULATOR_OPS_H
 
-template<class A>
+template<class A, class FA>
 struct PscAccumulatorOps {
   typedef A Accumulator;
+  typedef FA FieldArray;
 
 #if 0
 #define VOX(x,y,z) VOXEL(x,y,z, g->nx,g->ny,g->nz)
@@ -101,6 +102,14 @@ struct PscAccumulatorOps {
   void reduce_accumulator_array(Accumulator *accumulator)
   {
     TIC reduce_accumulator(*accumulator); TOC(reduce_accumulators, 1);
+  }
+
+  // ----------------------------------------------------------------------
+  // unload_accumulator_array
+  
+  void unload_accumulator_array(FieldArray *fa, Accumulator *accumulator)
+  {
+    TIC ::unload_accumulator_array(fa, accumulator); TOC(unload_accumulator, 1);
   }
   
 };

@@ -132,7 +132,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 
   vmflds->clear_jf();
   if (!vmprts->empty()) {
-    TIC ::unload_accumulator_array(vmflds, accumulator_array); TOC(unload_accumulator, 1);
+    sim_->unload_accumulator_array(vmflds, accumulator_array);
   }
   vmflds->synchronize_jf();
 
