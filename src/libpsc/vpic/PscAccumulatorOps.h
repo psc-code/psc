@@ -58,9 +58,49 @@ struct PscAccumulatorOps {
     TIC clear_accumulator(*accumulator); TOC(clear_accumulators, 1);
   }
 
+  // ----------------------------------------------------------------------
+  // reduce_accumulators
+  
+  void
+  reduce_accumulator(Accumulator& accumulator)
+  {
+    grid_t *g = accumulator.g;
+    int si = sizeof(typename Accumulator::Element) / sizeof(float);
+    int nr = accumulator.n_pipeline + 1 - 1;
+    int sr = si * accumulator.stride;
+
+    // a is broken into restricted rw and ro parts to allow the compiler
+    // to do more aggresive optimizations
+
+    accumulator_t* a_begin = &accumulator(0,1,1,1);
+    accumulator_t *a_end = &accumulator(0, g->nx, g->ny, g->nz);
+    int n = a_end - a_begin + 1;
+
+    float * RESTRICT a = reinterpret_cast<float *>(a_begin);
+    const float * RESTRICT ALIGNED(16) b = a + sr;
+
+    float f[si];
+
+    for(int i = 0; i < n; i++) {
+      int j = i*si;
+      for (int m = 0; m < si; m++) {
+	f[m] = a[j+m];
+      }
+      for (int r = 0; r < nr; r++) {
+	int k = j + r*sr;
+	for (int m = 0; m < si; m++) {
+	  f[m]  += b[k+m];
+	}
+      }
+      for (int m = 0; m < si; m++) {
+	a[j+m] = f[m];
+      }
+    }
+  }
+
   void reduce_accumulator_array(Accumulator *accumulator)
   {
-    TIC ::reduce_accumulator_array(accumulator); TOC(reduce_accumulators, 1);
+    TIC reduce_accumulator(*accumulator); TOC(reduce_accumulators, 1);
   }
   
 };
