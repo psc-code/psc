@@ -2,10 +2,11 @@
 #ifndef VPIC_PARTICLES_OPS
 #define VPIC_PARTICLES_OPS
 
-template<class P, class IA>
+template<class P, class IA, class AA>
 struct VpicParticlesOps {
   typedef P Particles;
   typedef IA Interpolator;
+  typedef AA Accumulator;
   
   VpicParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
@@ -18,11 +19,11 @@ struct VpicParticlesOps {
 				 prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
   }
 
-  void advance_p(Particles *vmprts, accumulator_array_t *accumulator_array,
-		 Interpolator& interpolator_array)
+  void advance_p(Particles& vmprts, Accumulator& accumulator,
+		 Interpolator& interpolator)
   {
-    for (typename Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-      TIC ::advance_p(&*sp, accumulator_array, &interpolator_array); TOC(advance_p, 1);
+    for (typename Particles::Iter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      TIC ::advance_p(&*sp, &accumulator, &interpolator); TOC(advance_p, 1);
     }
   }
   
