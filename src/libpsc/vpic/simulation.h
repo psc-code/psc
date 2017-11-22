@@ -199,14 +199,6 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
     synchronize_hydro_array(hydro_array);
   }
 
-  void advance_p(Particles *vmprts, accumulator_array_t *accumulator_array,
-		 interpolator_array_t *interpolator_array)
-  {
-    for (typename Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-      TIC ::advance_p(&*sp, accumulator_array, interpolator_array); TOC(advance_p, 1);
-    }
-  }
-  
   int num_comm_round_;
   
   RngPool rng_pool;

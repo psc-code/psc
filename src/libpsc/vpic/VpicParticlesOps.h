@@ -17,6 +17,14 @@ struct VpicParticlesOps {
 				 prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
   }
 
+  void advance_p(Particles *vmprts, accumulator_array_t *accumulator_array,
+		 interpolator_array_t *interpolator_array)
+  {
+    for (typename Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+      TIC ::advance_p(&*sp, accumulator_array, interpolator_array); TOC(advance_p, 1);
+    }
+  }
+  
 private:
   vpic_simulation *simulation_;
 };
