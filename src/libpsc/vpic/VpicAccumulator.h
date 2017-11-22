@@ -23,6 +23,11 @@ struct VpicAccumulator : accumulator_array_t {
     accumulator_array_dtor(this);
   }
 
+  Element* data()
+  {
+    return a;
+  }
+  
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int i, int j, int k)
   {
