@@ -4,6 +4,9 @@
 #define HAS_V4_PIPELINE
 #include "species_advance/species_advance.h"
 
+#include <cstdio>
+#include <cassert>
+
 typedef struct particle_mover_seg {
   MEM_PTR( particle_mover_t, 16 ) pm; // First mover in segment
   int max_nm;                         // Maximum number of movers
@@ -11,20 +14,11 @@ typedef struct particle_mover_seg {
   int n_ignored;                      // Number of movers ignored
 } particle_mover_seg_t;
 
-typedef struct advance_p_pipeline_args {
-  MEM_PTR( particle_mover_t,     128 ) pm;       // Particle mover array
-  MEM_PTR( particle_mover_seg_t, 128 ) seg;      // Dest for return values
-  int                                  max_nm;   // Number of movers
-} advance_p_pipeline_args_t;
-
-
-#include <cstdio>
-
 void
-advance_p_pipeline(advance_p_pipeline_args_t * args,
-		   /**/  species_t            * RESTRICT sp,
+advance_p_pipeline(/**/  species_t            * RESTRICT sp,
 		   /**/  accumulator_array_t  * RESTRICT aa,
 		   const interpolator_array_t * RESTRICT ia,
+		   particle_mover_seg_t *seg,
 		   int pipeline_rank,
 		   int n_pipeline)
 {
@@ -68,11 +62,11 @@ advance_p_pipeline(advance_p_pipeline_args_t * args,
   // size.  The host is guaranteed to get enough movers to process its
   // particles with this allocation.
 
-  max_nm = args->max_nm - (sp->np & 15);
+  max_nm = sp->max_nm - (sp->np & 15);
   if( max_nm<0 ) max_nm = 0;
   DISTRIBUTE( max_nm, 8, pipeline_rank, n_pipeline, itmp, max_nm );
-  if( pipeline_rank==n_pipeline ) max_nm = args->max_nm - itmp;
-  pm   = args->pm + itmp;
+  if( pipeline_rank==n_pipeline ) max_nm = sp->max_nm - itmp;
+  pm   = sp->pm + itmp;
   nm   = 0;
   itmp = 0;
 
@@ -80,8 +74,7 @@ advance_p_pipeline(advance_p_pipeline_args_t * args,
   // The host gets the first accumulator array
 
   if( pipeline_rank!=n_pipeline )
-    a0 += (1+pipeline_rank)*
-          POW2_CEIL((g->nx+2)*(g->ny+2)*(g->nz+2),2);
+    a0 += (1+pipeline_rank) * aa->stride;
 
   // Process particles for this pipeline
 
@@ -203,10 +196,10 @@ advance_p_pipeline(advance_p_pipeline_args_t * args,
 
   }
 
-  args->seg[pipeline_rank].pm        = pm;
-  args->seg[pipeline_rank].max_nm    = max_nm;
-  args->seg[pipeline_rank].nm        = nm;
-  args->seg[pipeline_rank].n_ignored = itmp;
+  seg[pipeline_rank].pm        = pm;
+  seg[pipeline_rank].max_nm    = max_nm;
+  seg[pipeline_rank].nm        = nm;
+  seg[pipeline_rank].n_ignored = itmp;
 }
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
@@ -214,10 +207,10 @@ advance_p_pipeline(advance_p_pipeline_args_t * args,
 using namespace v4;
 
 void
-advance_p_pipeline_v4(advance_p_pipeline_args_t * args,
-		      /**/  species_t            * RESTRICT sp,
+advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
 		      /**/  accumulator_array_t  * RESTRICT aa,
 		      const interpolator_array_t * RESTRICT ia,
+		      particle_mover_seg_t *seg,
 		      int pipeline_rank,
 		      int n_pipeline)
 {
@@ -268,19 +261,18 @@ advance_p_pipeline_v4(advance_p_pipeline_args_t * args,
   // size.  The host is guaranteed to get enough movers to process its
   // particles with this allocation.
 
-  max_nm = args->max_nm - (sp->np & 15);
+  max_nm = sp->max_nm - (sp->np & 15);
   if( max_nm<0 ) max_nm = 0;
   DISTRIBUTE( max_nm, 8, pipeline_rank, n_pipeline, itmp, max_nm );
-  if( pipeline_rank==n_pipeline ) max_nm = args->max_nm - itmp;
-  pm   = args->pm + itmp;
+  if( pipeline_rank==n_pipeline ) max_nm = sp->max_nm - itmp;
+  pm   = sp->pm + itmp;
   nm   = 0;
   itmp = 0;
 
   // Determine which accumulator array to use
   // The host gets the first accumulator array
 
-  a0 += (1+pipeline_rank)*
-        POW2_CEIL((g->nx+2)*(g->ny+2)*(g->nz+2),2);
+  a0 += (1+pipeline_rank) * aa->stride;
 
   // Process the particle quads for this pipeline
 
@@ -411,10 +403,10 @@ advance_p_pipeline_v4(advance_p_pipeline_args_t * args,
 
   }
 
-  args->seg[pipeline_rank].pm        = pm;
-  args->seg[pipeline_rank].max_nm    = max_nm;
-  args->seg[pipeline_rank].nm        = nm;
-  args->seg[pipeline_rank].n_ignored = itmp;
+  seg[pipeline_rank].pm        = pm;
+  seg[pipeline_rank].max_nm    = max_nm;
+  seg[pipeline_rank].nm        = nm;
+  seg[pipeline_rank].n_ignored = itmp;
 }
 
 #endif
@@ -422,18 +414,10 @@ advance_p_pipeline_v4(advance_p_pipeline_args_t * args,
 void
 advance_p( /**/  species_t            * RESTRICT sp,
            /**/  accumulator_array_t  * RESTRICT aa,
-           const interpolator_array_t * RESTRICT ia ) {
-  DECLARE_ALIGNED_ARRAY( advance_p_pipeline_args_t, 128, args, 1 );
+           const interpolator_array_t * RESTRICT ia )
+{
   DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, MAX_PIPELINE+1 );
   int rank;
-
-  if( !sp || !aa || !ia || sp->g!=aa->g || sp->g!=ia->g )
-    ERROR(( "Bad args" ));
-
-  args->pm       = sp->pm;
-  args->seg      = seg;
-
-  args->max_nm   = sp->max_nm;
 
   // Have the host processor do the last incomplete bundle if necessary.
   // Note: This is overlapped with the pipelined processing.  As such,
@@ -447,23 +431,23 @@ advance_p( /**/  species_t            * RESTRICT sp,
   // future.
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-  advance_p_pipeline_v4(args, sp, aa, ia, 0, 1);
+  advance_p_pipeline_v4(sp, aa, ia, seg, 0, 1);
 #else
-  advance_p_pipeline(args, sp, aa, ia, 0, 1);
+  advance_p_pipeline(sp, aa, ia, seg, 0, 1);
 #endif
-  advance_p_pipeline(args, sp, aa, ia, 1, 1);
+  advance_p_pipeline(sp, aa, ia, seg, 1, 1);
 
   // FIXME: HIDEOUS HACK UNTIL BETTER PARTICLE MOVER SEMANTICS
   // INSTALLED FOR DEALING WITH PIPELINES.  COMPACT THE PARTICLE
   // MOVERS TO ELIMINATE HOLES FROM THE PIPELINING.
 
   sp->nm = 0;
-  for( rank=0; rank<=N_PIPELINE; rank++ ) {
-    if( args->seg[rank].n_ignored )
+  for (rank=0; rank<=N_PIPELINE; rank++) {
+    if (seg[rank].n_ignored)
       WARNING(( "Pipeline %i ran out of storage for %i movers",
-                rank, args->seg[rank].n_ignored ));
-    if( sp->pm+sp->nm != args->seg[rank].pm )
-      MOVE( sp->pm+sp->nm, args->seg[rank].pm, args->seg[rank].nm );
-    sp->nm += args->seg[rank].nm;
+                rank, seg[rank].n_ignored ));
+    if (sp->pm + sp->nm != seg[rank].pm)
+      MOVE(sp->pm + sp->nm, seg[rank].pm, seg[rank].nm);
+    sp->nm += seg[rank].nm;
   }
 }
