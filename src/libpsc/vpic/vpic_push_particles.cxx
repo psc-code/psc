@@ -12,8 +12,8 @@
 vpic_push_particles::vpic_push_particles(Simulation *sim)
   : sim_(sim)
 {
-  interpolator = static_cast<VpicInterpolator*>(sim->interpolator_);
-  accumulator_array = static_cast<VpicAccumulator*>(sim->accumulator_array_);
+  interpolator = sim->interpolator_;
+  accumulator = sim->accumulator_;
   num_comm_round = sim->num_comm_round_;
 }
 
@@ -72,8 +72,8 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // Advance the particle lists.
 
   if (!vmprts->empty()) {
-    sim_->clear_accumulator_array(accumulator_array);
-    sim_->advance_p(*vmprts, *accumulator_array, *interpolator);
+    sim_->clear_accumulator_array(accumulator);
+    sim_->advance_p(*vmprts, *accumulator, *interpolator);
   }
 
   // Because the partial position push when injecting aged particles might
@@ -88,7 +88,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
-    sim_->reduce_accumulator_array(accumulator_array);
+    sim_->reduce_accumulator_array(accumulator);
   }
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the
@@ -98,7 +98,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   TIC
     for( int round=0; round<num_comm_round; round++ )
       ::boundary_p( sim_->simulation_->particle_bc_list, vmprts->head(),
-		    vmflds, accumulator_array );
+		    vmflds, accumulator );
   TOC( boundary_p, num_comm_round );
 
   for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
@@ -132,7 +132,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 
   vmflds->clear_jf();
   if (!vmprts->empty()) {
-    sim_->unload_accumulator_array(vmflds, accumulator_array);
+    sim_->unload_accumulator_array(vmflds, accumulator);
   }
   vmflds->synchronize_jf();
 

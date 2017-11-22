@@ -26,9 +26,9 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
       num_comm_round_(simulation->num_comm_round),
       grid_(simulation->grid),
       material_list_(*reinterpret_cast<MaterialList *>(&simulation->material_list)),
-      field_array_(simulation->field_array),
+      field_array_(*reinterpret_cast<FieldArray **>(&simulation->field_array)),
       interpolator_(*reinterpret_cast<Interpolator **>(&simulation->interpolator_array)),
-      accumulator_array_(simulation->accumulator_array),
+      accumulator_(*reinterpret_cast<Accumulator **>(&simulation->accumulator_array)),
       hydro_array_(simulation->hydro_array),
       particles_(*reinterpret_cast<Particles *>(&simulation->species_list)),
       simulation_(simulation)
@@ -106,7 +106,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
     interpolator_ = new Interpolator(g);
-    accumulator_array_ = new Accumulator(g);
+    accumulator_ = new Accumulator(g);
     hydro_array_ = new HydroArray(grid_);
  
     // Pre-size communications buffers. This is done to get most memory
@@ -207,9 +207,9 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   globals_diag *pDiag_;
   Grid grid_;
   MaterialList& material_list_;
-  field_array_t*& field_array_;
+  FieldArray*& field_array_;
   Interpolator*& interpolator_;
-  accumulator_array_t*& accumulator_array_;
+  Accumulator*& accumulator_;
   hydro_array_t*& hydro_array_;
   Particles& particles_;
 

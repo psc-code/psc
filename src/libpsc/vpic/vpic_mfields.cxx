@@ -31,7 +31,7 @@ float *vpic_mfields_hydro_get_data(HydroArray *vmflds, int *ib, int *im)
 
 FieldArray* vpic_mfields_new_fields_array(Simulation *sim)
 {
-  FieldArray* vmflds = static_cast<FieldArray*>(sim->field_array_);
+  FieldArray* vmflds = sim->field_array_;
 
   // Accessing the data as a C array relies on fields_array_t to not change
   assert(sizeof(vmflds->f[0]) / sizeof(float) == VPIC_MFIELDS_N_COMP);
