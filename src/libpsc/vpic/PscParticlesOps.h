@@ -217,7 +217,8 @@ struct PscParticlesOps {
 	dy = v1;
 	dz = v2;
 	v5 = q*ux*uy*uz*one_third;              // Compute correction
-	a  = (float *)( a0 + ii );              // Get accumulator
+	//a  = (float *)(a0 + ii);
+	a  = (float *) &accumulator(acc, ii);   // Get accumulator
 
 #     define ACCUMULATE_J(X,Y,Z,offset)                                 \
 	v4  = q*u##X;   /* v2 = q ux                            */	\
@@ -387,10 +388,21 @@ struct PscParticlesOps {
       dy = v1;
       dz = v2;
       v5 = q*ux*uy*uz*one_third;     // Charge conservation correction
+#if 1
       vp0 = (float * ALIGNED(16))(a0 + ii(0)); // Accumulator pointers
       vp1 = (float * ALIGNED(16))(a0 + ii(1));
       vp2 = (float * ALIGNED(16))(a0 + ii(2));
       vp3 = (float * ALIGNED(16))(a0 + ii(3));
+#else
+      // seems to cause a measurable slow-down
+      // FIXME, at least part of the solution should be to pass in a view of
+      // the accumulator array for the current block, which also would mesh better
+      // with only having a single block in the future at some point
+      vp0 = (float * ALIGNED(16)) &accumulator(acc, ii(0)); // Accumulator pointers
+      vp1 = (float * ALIGNED(16)) &accumulator(acc, ii(1));
+      vp2 = (float * ALIGNED(16)) &accumulator(acc, ii(2));
+      vp3 = (float * ALIGNED(16)) &accumulator(acc, ii(3));
+#endif
 
 #   define ACCUMULATE_J(X,Y,Z,offset)					\
       v4  = q*u##X;   /* v4 = q ux                            */	\

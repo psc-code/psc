@@ -29,6 +29,12 @@ struct VpicAccumulator : accumulator_array_t {
   }
   
   // FIXME, not a great interface with arr just another index
+  Element& operator()(int arr, int idx)
+  {
+    return a[stride * arr + idx];
+  }
+
+  // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int i, int j, int k)
   {
     return a[stride * arr + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
