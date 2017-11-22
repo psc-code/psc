@@ -16,20 +16,16 @@ typedef struct particle_mover_seg {
 
 void
 advance_p_pipeline(/**/  species_t            * RESTRICT sp,
-		   /**/  accumulator_array_t  * RESTRICT aa,
+		   accumulator_t * ALIGNED(128) a0,
 		   const interpolator_array_t * RESTRICT ia,
 		   particle_mover_seg_t *seg,
 		   particle_t * ALIGNED(128) p, int n,
-		   int itmp2, int max_nm,
-		   int pipeline_rank,
-		   int n_pipeline)
+		   particle_mover_t * ALIGNED(16) pm, int max_nm)
 {
   particle_t           * ALIGNED(128) p0 = sp->p;
-  accumulator_t        * ALIGNED(128) a0 = aa->a;
   const interpolator_t * ALIGNED(128) f0 = ia->i;
   const grid_t *                      g  = sp->g;
 
-  particle_mover_t     * ALIGNED(16)  pm;
   const interpolator_t * ALIGNED(16)  f;
   float                * ALIGNED(16)  a;
 
@@ -51,15 +47,8 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
   
   DECLARE_ALIGNED_ARRAY( particle_mover_t, 16, local_pm, 1 );
 
-  pm   = sp->pm + itmp2;
   int nm   = 0;
   int itmp = 0;
-
-  // Determine which accumulator array to use
-  // The host gets the first accumulator array
-
-  if( pipeline_rank!=n_pipeline )
-    a0 += (1+pipeline_rank) * aa->stride;
 
   // Process particles for this pipeline
 
@@ -181,10 +170,10 @@ advance_p_pipeline(/**/  species_t            * RESTRICT sp,
 
   }
 
-  seg[pipeline_rank].pm        = pm;
-  seg[pipeline_rank].max_nm    = max_nm;
-  seg[pipeline_rank].nm        = nm;
-  seg[pipeline_rank].n_ignored = itmp;
+  seg->pm        = pm;
+  seg->max_nm    = max_nm;
+  seg->nm        = nm;
+  seg->n_ignored = itmp;
 }
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
@@ -193,20 +182,16 @@ using namespace v4;
 
 void
 advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
-		      /**/  accumulator_array_t  * RESTRICT aa,
+		      accumulator_t * ALIGNED(128) a0,
 		      const interpolator_array_t * RESTRICT ia,
 		      particle_mover_seg_t *seg,
 		      particle_t * ALIGNED(128) p, int n,
-		      int itmp2, int max_nm,
-		      int pipeline_rank,
-		      int n_pipeline)
+		      particle_mover_t * ALIGNED(16) pm, int max_nm)
 {
   particle_t           * ALIGNED(128) p0 = sp->p;
-  accumulator_t        * ALIGNED(128) a0 = aa->a;
   const interpolator_t * ALIGNED(128) f0 = ia->i;
   const grid_t *                      g  = sp->g;
 
-  particle_mover_t     * ALIGNED(16)  pm; 
   float                * ALIGNED(16)  vp0;
   float                * ALIGNED(16)  vp1;
   float                * ALIGNED(16)  vp2;
@@ -234,14 +219,8 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
 
   int nq = n >> 2;
   
-  pm   = sp->pm + itmp2;
   int nm   = 0;
   int itmp = 0;
-
-  // Determine which accumulator array to use
-  // The host gets the first accumulator array
-
-  a0 += (1+pipeline_rank) * aa->stride;
 
   // Process the particle quads for this pipeline
 
@@ -372,10 +351,10 @@ advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
 
   }
 
-  seg[pipeline_rank].pm        = pm;
-  seg[pipeline_rank].max_nm    = max_nm;
-  seg[pipeline_rank].nm        = nm;
-  seg[pipeline_rank].n_ignored = itmp;
+  seg->pm        = pm;
+  seg->max_nm    = max_nm;
+  seg->nm        = nm;
+  seg->n_ignored = itmp;
 }
 
 #endif
@@ -385,52 +364,45 @@ advance_p( /**/  species_t            * RESTRICT sp,
            /**/  accumulator_array_t  * RESTRICT aa,
            const interpolator_array_t * RESTRICT ia )
 {
-  DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, MAX_PIPELINE+1 );
-
-  // Have the host processor do the last incomplete bundle if necessary.
-  // Note: This is overlapped with the pipelined processing.  As such,
-  // it uses an entire accumulator.  Reserving an entire accumulator
-  // for the host processor to handle at most 15 particles is wasteful
-  // of memory.  It is anticipated that it may be useful at some point
-  // in the future have pipelines accumulating currents while the host
-  // processor is doing other more substantive work (e.g. accumulating
-  // currents from particles received from neighboring nodes).
-  // However, it is worth reconsidering this at some point in the
-  // future.
+  DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
   sp->nm = 0;
 
-  int itmp, n;
-  DISTRIBUTE( sp->np, 16, 0, 1, itmp, n );
-  particle_t *p = sp->p + itmp;
+  particle_t *p = sp->p;
+  int n = sp->np & ~15;
+
   int max_nm = sp->max_nm - (sp->np & 15);
   if( max_nm<0 ) max_nm = 0;
+  int itmp;
   DISTRIBUTE( max_nm, 8, 0, 1, itmp, max_nm );
+  assert(itmp == 0);
+  particle_mover_t *pm = sp->pm;
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-  advance_p_pipeline_v4(sp, aa, ia, seg, p, n, itmp, max_nm, 0, 1);
+  advance_p_pipeline_v4(sp, aa->a + aa->stride, ia, seg, p, n, pm, max_nm);
 #else
-  advance_p_pipeline(sp, aa, ia, seg, p, n, itmp, max_nm, 0, 1);
+  advance_p_pipeline(sp, aa->a + aa->stride, ia, seg, p, n, pm, max_nm);
 #endif
-  if (seg[0].n_ignored)
+  if (seg->n_ignored)
     WARNING(( "Pipeline %i ran out of storage for %i movers",
-	      0, seg[0].n_ignored ));
-  sp->nm += seg[0].nm;
+	      0, seg->n_ignored ));
+  sp->nm += seg->nm;
   
-  DISTRIBUTE( sp->np, 16, 1, 1, itmp, n );
-  p = sp->p + itmp;
+  p = sp->p + n;
+  n = sp->np - n;
 
   max_nm = sp->max_nm - (sp->np & 15);
   if (max_nm < 0) max_nm = 0;
   DISTRIBUTE( max_nm, 8, 1, 1, itmp, max_nm );
   max_nm = sp->max_nm - itmp;
+  pm = sp->pm + itmp;
 
-  advance_p_pipeline(sp, aa, ia, seg, p, n, itmp, max_nm, 1, 1);
+  advance_p_pipeline(sp, aa->a, ia, seg, p, n, pm, max_nm);
 
-  if (seg[1].n_ignored)
+  if (seg->n_ignored)
     WARNING(( "Pipeline %i ran out of storage for %i movers",
-	      1, seg[1].n_ignored ));
-  if (sp->pm + sp->nm != seg[1].pm)
-    MOVE(sp->pm + sp->nm, seg[1].pm, seg[1].nm);
-  sp->nm += seg[1].nm;
+	      1, seg->n_ignored ));
+  if (sp->pm + sp->nm != seg->pm)
+    MOVE(sp->pm + sp->nm, seg->pm, seg->nm);
+  sp->nm += seg->nm;
 }
