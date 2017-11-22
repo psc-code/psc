@@ -11,6 +11,8 @@ inline void accumulator_array_dtor(accumulator_array_t * aa);
 // VpicAccumulator
 
 struct VpicAccumulator : accumulator_array_t {
+  typedef accumulator_t Element;
+  
   VpicAccumulator(Grid grid)
   {
     accumulator_array_ctor(this, grid.getGrid_t());
@@ -19,6 +21,12 @@ struct VpicAccumulator : accumulator_array_t {
   ~VpicAccumulator()
   {
     accumulator_array_dtor(this);
+  }
+
+  // FIXME, not a great interface with arr just another index
+  Element& operator()(int arr, int i, int j, int k)
+  {
+    return a[stride * arr + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
   }
 };
 
