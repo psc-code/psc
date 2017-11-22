@@ -63,14 +63,14 @@ enum {
 typedef VpicFieldArray FieldArray;
 typedef PscFieldArrayOps<FieldArray> FieldArrayOps;
 
-typedef VpicParticles Particles;  
-typedef PscParticlesOps<Particles> ParticlesOps;
-
 typedef VpicInterpolator Interpolator;
 typedef PscInterpolatorOps<Interpolator, FieldArray> InterpolatorOps;
 
 typedef VpicAccumulator Accumulator;
 typedef PscAccumulatorOps<Accumulator, FieldArray> AccumulatorOps;
+
+typedef VpicParticles Particles;  
+typedef PscParticlesOps<Particles, Interpolator> ParticlesOps;
 
 typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps> Simulation;
 

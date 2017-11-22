@@ -4,9 +4,10 @@
 
 #define HAS_V4_PIPELINE
 
-template<class P>
+template<class P, class IA>
 struct PscParticlesOps {
   typedef P Particles;
+  typedef IA Interpolator;
   
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
@@ -84,7 +85,7 @@ struct PscParticlesOps {
     if (update_rhob) accumulate_rhob( simulation_->field_array->f, p, grid, -sp->q );
 
     if (age!=0) {
-      if( sp->nm>=sp->max_nm )
+      if( sp->nm >= sp->max_nm )
 	WARNING(( "No movers available to age injected  particle" ));
       particle_mover_t * pm = sp->pm + sp->nm;
       age *= grid->cvac*grid->dt/sqrt( ux*ux + uy*uy + uz*uz + 1 );
@@ -108,13 +109,12 @@ struct PscParticlesOps {
   void
   advance_p_pipeline(/**/  species_t            * RESTRICT sp,
 		     accumulator_t * ALIGNED(128) a0,
-		     const interpolator_array_t * RESTRICT ia,
+		     Interpolator& interpolator,
 		     particle_mover_seg_t *seg,
 		     particle_t * ALIGNED(128) p, int n,
 		     particle_mover_t * ALIGNED(16) pm, int max_nm)
   {
     particle_t           * ALIGNED(128) p0 = sp->p;
-    const interpolator_t * ALIGNED(128) f0 = ia->i;
     const grid_t *                      g  = sp->g;
 
     const interpolator_t * ALIGNED(16)  f;
@@ -148,7 +148,7 @@ struct PscParticlesOps {
       dy   = p->dy;
       dz   = p->dz;
       ii   = p->i;
-      f    = f0 + ii;                           // Interpolate E
+      f    = &interpolator[ii];                 // Interpolate E
       hax  = qdt_2mc*(    ( f->ex    + dy*f->dexdy    ) +
 			  dz*( f->dexdz + dy*f->d2exdydz ) );
       hay  = qdt_2mc*(    ( f->ey    + dz*f->deydz    ) +
@@ -270,7 +270,7 @@ struct PscParticlesOps {
   void
   advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
 			accumulator_t * ALIGNED(128) a0,
-			const interpolator_array_t * RESTRICT ia,
+			Interpolator& interpolator,
 			particle_mover_seg_t *seg,
 			particle_t * ALIGNED(128) p, int n,
 			particle_mover_t * ALIGNED(16) pm, int max_nm)
@@ -278,7 +278,6 @@ struct PscParticlesOps {
     using namespace v4;
 
     particle_t           * ALIGNED(128) p0 = sp->p;
-    const interpolator_t * ALIGNED(128) f0 = ia->i;
     const grid_t *                      g  = sp->g;
 
     float                * ALIGNED(16)  vp0;
@@ -317,10 +316,10 @@ struct PscParticlesOps {
       load_4x4_tr(&p[0].dx,&p[1].dx,&p[2].dx,&p[3].dx,dx,dy,dz,ii);
 
       // Interpolate fields
-      vp0 = (float * ALIGNED(16))(f0 + ii(0));
-      vp1 = (float * ALIGNED(16))(f0 + ii(1));
-      vp2 = (float * ALIGNED(16))(f0 + ii(2));
-      vp3 = (float * ALIGNED(16))(f0 + ii(3));
+      vp0 = (float * ALIGNED(16)) (&interpolator[ii(0)]);
+      vp1 = (float * ALIGNED(16)) (&interpolator[ii(1)]);
+      vp2 = (float * ALIGNED(16)) (&interpolator[ii(2)]);
+      vp3 = (float * ALIGNED(16)) (&interpolator[ii(3)]);
       load_4x4_tr(vp0,  vp1,  vp2,  vp3,  hax,v0,v1,v2); hax = qdt_2mc*fma( fma( v2, dy, v1 ), dz, fma( v0, dy, hax ) );
       load_4x4_tr(vp0+4,vp1+4,vp2+4,vp3+4,hay,v3,v4,v5); hay = qdt_2mc*fma( fma( v5, dz, v4 ), dx, fma( v3, dz, hay ) );
       load_4x4_tr(vp0+8,vp1+8,vp2+8,vp3+8,haz,v0,v1,v2); haz = qdt_2mc*fma( fma( v2, dx, v1 ), dy, fma( v0, dx, haz ) );
@@ -447,9 +446,9 @@ struct PscParticlesOps {
 #endif
           
   void
-  advance_p( /**/  species_t            * RESTRICT sp,
-	     /**/  accumulator_array_t  * RESTRICT aa,
-	     const interpolator_array_t * RESTRICT ia )
+  advance_p(/**/  species_t            * RESTRICT sp,
+	    /**/  accumulator_array_t  * RESTRICT aa,
+	    Interpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
@@ -458,10 +457,10 @@ struct PscParticlesOps {
     particle_t *p = sp->p;
     int n = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-    advance_p_pipeline_v4(sp, aa->a + aa->stride, ia, seg, p, n,
+    advance_p_pipeline_v4(sp, aa->a + aa->stride, interpolator, seg, p, n,
 			  sp->pm + sp->nm, sp->max_nm - sp->nm);
 #else
-    advance_p_pipeline(sp, aa->a + aa->stride, ia, seg, p, n,
+    advance_p_pipeline(sp, aa->a + aa->stride, interpolator, seg, p, n,
 		       sp->pm + sp->nm, sp->max_nm - sp->nm);
 #endif
     sp->nm += seg->nm;
@@ -472,7 +471,7 @@ struct PscParticlesOps {
   
     p += n;
     n = sp->np - n;
-    advance_p_pipeline(sp, aa->a, ia, seg, p, n,
+    advance_p_pipeline(sp, aa->a, interpolator, seg, p, n,
 		       sp->pm + sp->nm, sp->max_nm - sp->nm);
     sp->nm += seg->nm;
 
@@ -483,7 +482,7 @@ struct PscParticlesOps {
 
 
   void advance_p(Particles *vmprts, accumulator_array_t *accumulator_array,
-		 interpolator_array_t *interpolator_array)
+		 Interpolator& interpolator_array)
   {
     for (typename Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
       TIC advance_p(&*sp, accumulator_array, interpolator_array); TOC(advance_p, 1);

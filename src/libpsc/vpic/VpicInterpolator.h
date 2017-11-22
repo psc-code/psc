@@ -46,6 +46,16 @@ struct VpicInterpolator : interpolator_array_t {
     interpolator_array_dtor(this);
   }
 
+  Element operator[](int idx) const
+  {
+    return i[idx];
+  }
+
+  Element& operator[](int idx)
+  {
+    return i[idx];
+  }
+
   Element* data()
   {
     return i;

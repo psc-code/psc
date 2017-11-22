@@ -73,7 +73,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 
   if (!vmprts->empty()) {
     sim_->clear_accumulator_array(accumulator_array);
-    sim_->advance_p(vmprts, accumulator_array, interpolator);
+    sim_->advance_p(vmprts, accumulator_array, *interpolator);
   }
 
   // Because the partial position push when injecting aged particles might
