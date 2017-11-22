@@ -50,6 +50,8 @@ AC_OPENMP
 CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 AC_PROG_CXX([openmpicxx mpicxx])
+AX_CXX_COMPILE_STDCXX([11])
+
 
 # add -Wall if possible
 AX_CHECK_COMPILER_FLAGS([-Wall], [CFLAGS="$CFLAGS -Wall"])
@@ -130,7 +132,10 @@ AS_IF([test "with_vpic" != "no"],
   AC_DEFINE([USE_VPIC])
  ]
 )
-  
+
+# add -Wall if possible
+AX_CHECK_COMPILER_FLAGS([-Wall], [CXXFLAGS="$CXXFLAGS -Wall"])
+
 AC_LANG_POP([C++])
 
 # CUDA

@@ -1,6 +1,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
-AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include -Wall
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include -DUSE_V4_SSE
 
 if USE_VPIC
 
@@ -30,6 +30,7 @@ libsubdir_la_SOURCES = \
 	vpic_mparticles.cxx \
 	vpic_push_particles.cxx \
 	simulation.cxx \
+	advance_p.cc \
 	main.cxx \
 	wrapper.cxx \
 	wrapper_split.cxx
