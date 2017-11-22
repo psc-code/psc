@@ -30,7 +30,6 @@ libsubdir_la_SOURCES = \
 	vpic_mparticles.cxx \
 	vpic_push_particles.cxx \
 	simulation.cxx \
-	advance_p.cc \
 	main.cxx \
 	wrapper.cxx \
 	wrapper_split.cxx
