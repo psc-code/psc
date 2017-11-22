@@ -88,7 +88,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
-    TIC ::reduce_accumulator_array(accumulator_array); TOC(reduce_accumulators, 1);
+    sim_->reduce_accumulator_array(accumulator_array);
   }
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the

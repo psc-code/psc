@@ -57,6 +57,12 @@ struct PscAccumulatorOps {
   {
     TIC clear_accumulator(*accumulator); TOC(clear_accumulators, 1);
   }
+
+  void reduce_accumulator_array(Accumulator *accumulator)
+  {
+    TIC ::reduce_accumulator_array(accumulator); TOC(reduce_accumulators, 1);
+  }
+  
 };
 
 
