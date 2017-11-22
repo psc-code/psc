@@ -370,39 +370,26 @@ advance_p( /**/  species_t            * RESTRICT sp,
 
   particle_t *p = sp->p;
   int n = sp->np & ~15;
-
-  int max_nm = sp->max_nm - (sp->np & 15);
-  if( max_nm<0 ) max_nm = 0;
-  int itmp;
-  DISTRIBUTE( max_nm, 8, 0, 1, itmp, max_nm );
-  assert(itmp == 0);
-  particle_mover_t *pm = sp->pm;
-
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-  advance_p_pipeline_v4(sp, aa->a + aa->stride, ia, seg, p, n, pm, max_nm);
+  advance_p_pipeline_v4(sp, aa->a + aa->stride, ia, seg, p, n,
+			sp->pm + sp->nm, sp->max_nm - sp->nm);
 #else
-  advance_p_pipeline(sp, aa->a + aa->stride, ia, seg, p, n, pm, max_nm);
+  advance_p_pipeline(sp, aa->a + aa->stride, ia, seg, p, n,
+		     sp->pm + sp->nm, sp->max_nm - sp->nm);
 #endif
+  sp->nm += seg->nm;
+
   if (seg->n_ignored)
     WARNING(( "Pipeline %i ran out of storage for %i movers",
 	      0, seg->n_ignored ));
-  sp->nm += seg->nm;
   
-  p = sp->p + n;
+  p += n;
   n = sp->np - n;
-
-  max_nm = sp->max_nm - (sp->np & 15);
-  if (max_nm < 0) max_nm = 0;
-  DISTRIBUTE( max_nm, 8, 1, 1, itmp, max_nm );
-  max_nm = sp->max_nm - itmp;
-  pm = sp->pm + itmp;
-
-  advance_p_pipeline(sp, aa->a, ia, seg, p, n, pm, max_nm);
+  advance_p_pipeline(sp, aa->a, ia, seg, p, n,
+		     sp->pm + sp->nm, sp->max_nm - sp->nm);
+  sp->nm += seg->nm;
 
   if (seg->n_ignored)
     WARNING(( "Pipeline %i ran out of storage for %i movers",
 	      1, seg->n_ignored ));
-  if (sp->pm + sp->nm != seg->pm)
-    MOVE(sp->pm + sp->nm, seg->pm, seg->nm);
-  sp->nm += seg->nm;
 }
