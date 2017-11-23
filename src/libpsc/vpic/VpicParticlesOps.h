@@ -28,6 +28,12 @@ struct VpicParticlesOps {
     }
   }
   
+  void boundary_p(particle_bc_t *particle_bc_list, Particles& vmprts, FieldArray& fa,
+		  Accumulator& accumulator)
+  {
+    ::boundary_p(particle_bc_list, vmprts.head(), &fa, &accumulator);
+  }
+  
 private:
   vpic_simulation *simulation_;
 };

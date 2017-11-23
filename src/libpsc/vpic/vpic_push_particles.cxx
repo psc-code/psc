@@ -96,10 +96,10 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // local accumulation).
 
   TIC
-    for( int round=0; round<num_comm_round; round++ )
-      ::boundary_p( sim_->simulation_->particle_bc_list, vmprts->head(),
-		    vmflds, accumulator );
-  TOC( boundary_p, num_comm_round );
+    for(int round = 0; round < num_comm_round; round++) {
+      sim_->boundary_p(sim_->simulation_->particle_bc_list, *vmprts,
+		       *vmflds, *accumulator);
+    } TOC( boundary_p, num_comm_round );
 
   for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if( sp->nm ) // && simulation->verbose )
