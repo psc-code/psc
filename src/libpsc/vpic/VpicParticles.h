@@ -55,6 +55,15 @@ struct VpicParticles {
     return !sl_;
   }
 
+  int size()
+  {
+    int sz = 0;
+    for (Iter sp = begin(); sp != end(); ++sp) {
+      sz++;
+    }
+    return sz;
+  }
+
   VpicSpeciesIter begin()
   {
     return VpicSpeciesIter(sl_);

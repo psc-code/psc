@@ -4,9 +4,6 @@
 
 #define HAS_V4_PIPELINE
 
-#define IN_boundary
-#include "boundary/boundary_private.h"
-
 template<class P, class FA, class IA, class AA>
 struct PscParticlesOps {
   typedef P Particles;
@@ -842,17 +839,14 @@ struct PscParticlesOps {
   // boundary_p
 
   void
-  boundary_p_(particle_bc_t       * RESTRICT pbc_list,
-	      species_t           * RESTRICT sp_list,
-	      field_array_t       * RESTRICT fa,
-	      accumulator_array_t * RESTRICT aa )
+  boundary_p_(particle_bc_t* pbc_list, Particles& vmprts, FieldArray& fa,
+	      AccumulatorBlock acc_block)
   {
 #ifdef V4_ACCELERATION
     using namespace v4;
 #endif
     
     enum { MAX_PBC = 32, MAX_SP = 32 };
-
 
     // Gives the local mp port associated with a local face
     static const int f2b[6]  = { BOUNDARY(-1, 0, 0),
@@ -883,34 +877,18 @@ struct PscParticlesOps {
 
     int n_send[6], n_recv[6], n_ci;
 
-    species_t * sp;
     int face;
 
     // Check input args 
 
-    if( !sp_list ) return; // Nothing to do if no species 
-    if( !fa || !aa || sp_list->g!=aa->g || fa->g!=aa->g )
-      ERROR(( "Bad args" ));
+    if (vmprts.empty()) return; // Nothing to do if no species 
 
-    // Unpack the particle boundary conditions
-
-    particle_bc_func_t pbc_interact[MAX_PBC];
-    void * pbc_params[MAX_PBC];
-    const int nb = num_particle_bc( pbc_list );
-    if( nb>MAX_PBC ) ERROR(( "Update this to support more particle boundary conditions" ));
-    for( particle_bc_t * pbc=pbc_list; pbc; pbc=pbc->next ) {
-      pbc_interact[-pbc->id-3] = pbc->interact;
-      pbc_params[  -pbc->id-3] = pbc->params;
-    }
+    assert(num_particle_bc(pbc_list) == 0);
 
     // Unpack fields
 
-    field_t * RESTRICT ALIGNED(128) f = fa->f;
-    grid_t  * RESTRICT              g = fa->g;
-
-    // Unpack accumulator
-
-    accumulator_t * RESTRICT ALIGNED(128) a0 = aa->a;
+    field_t * RESTRICT ALIGNED(128) f = fa.f;
+    grid_t  * RESTRICT              g = fa.g;
 
     // Unpack the grid
 
@@ -947,25 +925,11 @@ struct PscParticlesOps {
       // Each buffer is large enough to hold one injector corresponding
       // to every mover in use (worst case, but plausible scenario in
       // beam simulations, is one buffer gets all the movers).
-      //
-      // FIXME: We could be several times more efficient in our particle
-      // injector buffer sizing here.  Namely, we could create on local
-      // injector buffer of nm is size.  All injection for all
-      // boundaries would be done here.  The local buffer would then be
-      // counted to determine the size of each send buffer.  The local
-      // buffer would then move all injectors into the approate send
-      // buffers (leaving only the local injectors).  This would require
-      // some extra data motion though.  (But would give a more robust
-      // implementation against variations in MP implementation.)
-      //
-      // FIXME: This presizing assumes that custom boundary conditions
-      // inject at most one particle per incident particle.  Currently,
-      // the invocation of pbc_interact[*] insures that assumption will
-      // be satisfied (if the handlers conform that it).  We should be
-      // more flexible though in the future (especially given above the
-      // above overalloc).
     
-      int nm = 0; LIST_FOR_EACH( sp, sp_list ) nm += sp->nm;
+      int nm = 0;
+      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+	nm += sp->nm;
+      }
 
       for( face=0; face<6; face++ )
 	if( shared[face] ) {
@@ -985,7 +949,7 @@ struct PscParticlesOps {
 
       // For each species, load the movers
 
-      LIST_FOR_EACH( sp, sp_list ) {
+      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	const float   sp_q  = sp->q;
 	const int32_t sp_id = sp->id;
 
@@ -1046,31 +1010,6 @@ struct PscParticlesOps {
 	    goto backfill;
 	  }
 
-	  // User-defined handling
-
-	  // After a particle interacts with a boundary it is removed
-	  // from the local particle list.  Thus, if a boundary handler
-	  // does not want a particle destroyed,  it is the boundary
-	  // handler's job to append the destroyed particle to the list
-	  // of particles to inject.
-	  //
-	  // Note that these destruction and creation processes do _not_
-	  // adjust rhob by default.  Thus, a boundary handler is
-	  // responsible for insuring that the rhob is updated
-	  // appropriate for the incident particle it destroys and for
-	  // any particles it injects as a result too.
-	  //
-	  // Since most boundary handlers do local reinjection and are
-	  // charge neutral, this means most boundary handlers do
-	  // nothing to rhob.
-
-	  nn = -nn - 3; // Assumes reflective/absorbing are -1, -2
-	  if( (nn>=0) & (nn<nb) ) {
-	    n_ci += pbc_interact[nn]( pbc_params[nn], sp, p0+i, pm,
-				      ci+n_ci, 1, face );
-	    goto backfill;
-	  }
-
 	  // Uh-oh: We fell through
 
 	  WARNING(( "Unknown boundary interaction ... dropping particle "
@@ -1096,15 +1035,6 @@ struct PscParticlesOps {
 
     // Finish exchanging particle counts and start exchanging actual
     // particles.
-  
-    // Note: This is wasteful of communications.  A better protocol
-    // would fuse the exchange of the counts with the exchange of the
-    // messages.  in a slightly more complex protocol.  However, the MP
-    // API prohibits such a model.  Unfortuantely, refining MP is not
-    // much help here.  Under the hood on Roadrunner, the DaCS API also
-    // prohibits such (specifically, in both, you can't do the
-    // equilvanet of a MPI_Getcount to determine how much data you
-    // actually received.
   
     for( face=0; face<6; face++ )
       if( shared[face] ) {
@@ -1145,9 +1075,10 @@ struct PscParticlesOps {
       int sp_max_np[MAX_SP], n_dropped_particles[MAX_SP];
       int sp_max_nm[MAX_SP], n_dropped_movers[MAX_SP];
 
-      if( num_species( sp_list ) > MAX_SP ) 
+      if (vmprts.size() > MAX_SP) {
 	ERROR(( "Update this to support more species" ));
-      LIST_FOR_EACH( sp, sp_list ) {
+      }
+      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	sp_p[  sp->id ] = sp->p;
 	sp_pm[ sp->id ] = sp->pm;
 	sp_q[  sp->id ] = sp->q;
@@ -1208,11 +1139,11 @@ struct PscParticlesOps {
 	  pm[nm].dispx=pi->dispx; pm[nm].dispy=pi->dispy; pm[nm].dispz=pi->dispz;
 	  pm[nm].i=np;
 #       endif
-	  sp_nm[id] = nm + ::move_p( p, pm+nm, a0, g, sp_q[id] );
+	  sp_nm[id] = nm + move_p(p, pm+nm, acc_block, g, sp_q[id]);
 	}
       } while(face!=5);
   
-      LIST_FOR_EACH( sp, sp_list ) {
+      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	if( n_dropped_particles[sp->id] )
 	  WARNING(( "Dropped %i particles from species \"%s\".  Use a larger "
 		    "local particle allocation in your simulation setup for "
@@ -1235,10 +1166,10 @@ struct PscParticlesOps {
   }
   
   
-  void boundary_p(particle_bc_t *particle_bc_list, Particles& vmprts, FieldArray& fa,
+  void boundary_p(particle_bc_t *pbc_list, Particles& vmprts, FieldArray& fa,
 		  Accumulator& accumulator)
   {
-    boundary_p_(particle_bc_list, vmprts.head(), &fa, &accumulator);
+    boundary_p_(pbc_list, vmprts, fa, accumulator[0]);
   }
   
 private:
