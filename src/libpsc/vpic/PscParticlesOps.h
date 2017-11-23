@@ -53,10 +53,10 @@ struct PscParticlesOps {
       v1 -= v5;             /* v1 = q ux [ (1+dy)(1-dz) - uy*uz/3 ] */  \
       v2 -= v5;             /* v2 = q ux [ (1-dy)(1+dz) - uy*uz/3 ] */  \
       v3 += v5;             /* v3 = q ux [ (1+dy)(1+dz) + uy*uz/3 ] */  \
-      a[0] += v0;                                                       \
-      a[1] += v1;                                                       \
-      a[2] += v2;                                                       \
-      a[3] += v3
+      a[offset+0] += v0;						\
+      a[offset+1] += v1;						\
+      a[offset+2] += v2;						\
+      a[offset+3] += v3
 
 #define ACCUMULATE_J(X,Y,Z,offset)					\
       v4  = q*u##X;   /* v2 = q ux                            */	\
@@ -331,10 +331,10 @@ struct PscParticlesOps {
       v5 = q*s_dispx*s_dispy*s_dispz*(1./3.);
       a = (float *) &acc_block[p->i];
       
-      accumulate_j(x,y,z); a += 4;
-      accumulate_j(y,z,x); a += 4;
-      accumulate_j(z,x,y);
-      //#   undef accumulate_j
+      accumulate_j(x,y,z, 0); a += 4;
+      accumulate_j(y,z,x, 4); a += 4;
+      accumulate_j(z,x,y, 8);
+#   undef accumulate_j
 
       // Compute the remaining particle displacment
       pm->dispx -= s_dispx;
