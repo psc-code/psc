@@ -43,7 +43,7 @@ struct PscParticlesOps {
 
   int move_p(particle_t       * RESTRICT ALIGNED(128) p,
 	     particle_mover_t * RESTRICT ALIGNED(16)  pm,
-	     accumulator_t    * RESTRICT ALIGNED(128) a,
+	     AccumulatorBlock acc_block,
 	     const grid_t     *                       g,
 	     const float                              qsp)
   {
@@ -157,9 +157,9 @@ struct PscParticlesOps {
 
       transpose( v0, v1, v2, v3 );
 
-      increment_4x1( a[voxel].jx, v0 );
-      increment_4x1( a[voxel].jy, v1 );
-      increment_4x1( a[voxel].jz, v2 );
+      increment_4x1( acc_block[voxel].jx, v0 );
+      increment_4x1( acc_block[voxel].jy, v1 );
+      increment_4x1( acc_block[voxel].jz, v2 );
 
       // If streak ended at the end of the particle track, this mover
       // was succesfully processed.  Should be just under ~50% of the
@@ -230,7 +230,7 @@ struct PscParticlesOps {
 
   int move_p(particle_t       * ALIGNED(128) p0,
 	     particle_mover_t * ALIGNED(16)  pm,
-	     accumulator_t    * ALIGNED(128) a0,
+	     AccumulatorBlock acc_block,
 	     const grid_t     *              g,
 	     const float                     qsp )
   {
@@ -288,7 +288,7 @@ struct PscParticlesOps {
       // the total physical charge that passed through the appropriate
       // current quadrant in a time-step
       v5 = q*s_dispx*s_dispy*s_dispz*(1./3.);
-      a = (float *)(a0 + p->i);
+      a = (float *) &acc_block[p->i];
 #   define accumulate_j(X,Y,Z)						\
       v4  = q*s_disp##X;    /* v2 = q ux                            */  \
       v1  = v4*s_mid##Y;    /* v1 = q ux dy                         */  \
@@ -454,7 +454,7 @@ struct PscParticlesOps {
       pm->dispy = uy*age*grid->rdy;
       pm->dispz = uz*age*grid->rdz;
       pm->i     = sp->np-1;
-      sp->nm += move_p( sp->p, pm, accumulator.a, grid, sp->q );
+      sp->nm += move_p( sp->p, pm, accumulator[0], grid, sp->q );
     }
     
   }
@@ -474,7 +474,6 @@ struct PscParticlesOps {
 			  particle_t * ALIGNED(128) p, int n,
 			  particle_mover_t * ALIGNED(16) pm, int max_nm)
   {
-    accumulator_t        * ALIGNED(128) a0 = acc_block.arr_;
     particle_t           * ALIGNED(128) p0 = sp->p;
     const grid_t *                      g  = sp->g;
 
@@ -610,7 +609,7 @@ struct PscParticlesOps {
 	local_pm->dispz = uz;
 	local_pm->i     = p - p0;
 
-	if( move_p( p0, local_pm, a0, g, qsp ) ) { // Unlikely
+	if( move_p( p0, local_pm, acc_block, g, qsp ) ) { // Unlikely
 	  if( nm<max_nm ) {
 	    pm[nm++] = local_pm[0];
 	  }
@@ -637,7 +636,6 @@ struct PscParticlesOps {
   {
     using namespace v4;
 
-    accumulator_t        * ALIGNED(128) a0 = acc_block.arr_;
     particle_t           * ALIGNED(128) p0 = sp->p;
     const grid_t *                      g  = sp->g;
 
@@ -789,7 +787,7 @@ struct PscParticlesOps {
 	local_pm->dispy = uy(N);					\
 	local_pm->dispz = uz(N);					\
 	local_pm->i     = (p - p0) + N;					\
-	if( move_p( p0, local_pm, a0, g, _qsp ) ) { /* Unlikely */	\
+	if( move_p( p0, local_pm, acc_block, g, _qsp ) ) { /* Unlikely */	\
       if( nm<max_nm ) copy_4x1( &pm[nm++], local_pm );			\
       else            n_ignored++;             /* Unlikely */		\
     }									\
