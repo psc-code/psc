@@ -2,7 +2,8 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include "vpic.h"
+#define private public
+#include <vpic.h>
 
 // ======================================================================
 // Grid
