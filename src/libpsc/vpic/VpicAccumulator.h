@@ -8,10 +8,37 @@ inline void accumulator_array_ctor(accumulator_array_t * aa, grid_t * g);
 inline void accumulator_array_dtor(accumulator_array_t * aa);
 
 // ======================================================================
+// VpicAccumulatorBlock
+
+struct VpicAccumulatorBlock {
+  typedef accumulator_t Element;
+
+  VpicAccumulatorBlock(Element *arr, grid_t *g)
+    : arr_(arr), g_(g)
+  {
+  }
+
+  Element operator[](int idx) const
+  {
+    return arr_[idx];
+  }
+
+  Element& operator[](int idx)
+  {
+    return arr_[idx];
+  }
+
+  //private:
+  Element *arr_;
+  grid_t *g_;
+};
+  
+// ======================================================================
 // VpicAccumulator
 
 struct VpicAccumulator : accumulator_array_t {
   typedef accumulator_t Element;
+  typedef VpicAccumulatorBlock Block;
   
   VpicAccumulator(Grid grid)
   {
@@ -37,7 +64,12 @@ struct VpicAccumulator : accumulator_array_t {
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int i, int j, int k)
   {
-    return a[stride * arr + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
+    return a[arr * stride + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
+  }
+
+  VpicAccumulatorBlock operator[](int arr)
+  {
+    return VpicAccumulatorBlock(a + arr * stride, g);
   }
 };
 

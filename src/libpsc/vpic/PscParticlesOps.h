@@ -11,6 +11,7 @@ struct PscParticlesOps {
   typedef FA FieldArray;
   typedef IA Interpolator;
   typedef AA Accumulator;
+  typedef typename Accumulator::Block AccumulatorBlock;
   
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
@@ -467,13 +468,13 @@ struct PscParticlesOps {
   } particle_mover_seg_t;
 
   void advance_p_pipeline(/**/  species_t            * RESTRICT sp,
-			  Accumulator& accumulator, int acc,
+			  AccumulatorBlock acc_block,
 			  Interpolator& interpolator,
 			  particle_mover_seg_t *seg,
 			  particle_t * ALIGNED(128) p, int n,
 			  particle_mover_t * ALIGNED(16) pm, int max_nm)
   {
-    accumulator_t        * ALIGNED(128) a0 = accumulator.a + acc * accumulator.stride;
+    accumulator_t        * ALIGNED(128) a0 = acc_block.arr_;
     particle_t           * ALIGNED(128) p0 = sp->p;
     const grid_t *                      g  = sp->g;
 
@@ -575,8 +576,7 @@ struct PscParticlesOps {
 	dy = v1;
 	dz = v2;
 	v5 = q*ux*uy*uz*one_third;              // Compute correction
-	//a  = (float *)(a0 + ii);
-	a  = (float *) &accumulator(acc, ii);   // Get accumulator
+	a  = (float *) &acc_block[ii];          // Get accumulator
 
 #     define ACCUMULATE_J(X,Y,Z,offset)                                 \
 	v4  = q*u##X;   /* v2 = q ux                            */	\
@@ -629,7 +629,7 @@ struct PscParticlesOps {
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
   void advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
-			     Accumulator& accumulator, int acc,
+			     AccumulatorBlock acc_block,
 			     Interpolator& interpolator,
 			     particle_mover_seg_t *seg,
 			     particle_t * ALIGNED(128) p, int n,
@@ -637,7 +637,7 @@ struct PscParticlesOps {
   {
     using namespace v4;
 
-    accumulator_t        * ALIGNED(128) a0 = accumulator.a + acc * accumulator.stride;
+    accumulator_t        * ALIGNED(128) a0 = acc_block.arr_;
     particle_t           * ALIGNED(128) p0 = sp->p;
     const grid_t *                      g  = sp->g;
 
@@ -745,21 +745,14 @@ struct PscParticlesOps {
       dy = v1;
       dz = v2;
       v5 = q*ux*uy*uz*one_third;     // Charge conservation correction
-#if 1
-      vp0 = (float * ALIGNED(16))(a0 + ii(0)); // Accumulator pointers
-      vp1 = (float * ALIGNED(16))(a0 + ii(1));
-      vp2 = (float * ALIGNED(16))(a0 + ii(2));
-      vp3 = (float * ALIGNED(16))(a0 + ii(3));
-#else
       // seems to cause a measurable slow-down
       // FIXME, at least part of the solution should be to pass in a view of
       // the accumulator array for the current block, which also would mesh better
       // with only having a single block in the future at some point
-      vp0 = (float * ALIGNED(16)) &accumulator(acc, ii(0)); // Accumulator pointers
-      vp1 = (float * ALIGNED(16)) &accumulator(acc, ii(1));
-      vp2 = (float * ALIGNED(16)) &accumulator(acc, ii(2));
-      vp3 = (float * ALIGNED(16)) &accumulator(acc, ii(3));
-#endif
+      vp0 = (float * ALIGNED(16)) &acc_block[ii(0)]; // Accumlator pointers
+      vp1 = (float * ALIGNED(16)) &acc_block[ii(1)];
+      vp2 = (float * ALIGNED(16)) &acc_block[ii(2)];
+      vp3 = (float * ALIGNED(16)) &acc_block[ii(3)];
 
 #   define ACCUMULATE_J(X,Y,Z,offset)					\
       v4  = q*u##X;   /* v4 = q ux                            */	\
@@ -827,10 +820,10 @@ struct PscParticlesOps {
     particle_t *p = sp.p;
     int n = sp.np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-    advance_p_pipeline_v4(&sp, accumulator, 1, interpolator, seg, p, n,
+    advance_p_pipeline_v4(&sp, accumulator[1], interpolator, seg, p, n,
 			  sp.pm + sp.nm, sp.max_nm - sp.nm);
 #else
-    advance_p_pipeline(&sp, accumulator, 1, interpolator, seg, p, n,
+    advance_p_pipeline(&sp, accumulator[1], interpolator, seg, p, n,
 		       sp.pm + sp.nm, sp.max_nm - sp.nm);
 #endif
     sp.nm += seg->nm;
@@ -841,7 +834,7 @@ struct PscParticlesOps {
   
     p += n;
     n = sp.np - n;
-    advance_p_pipeline(&sp, accumulator, 0, interpolator, seg, p, n,
+    advance_p_pipeline(&sp, accumulator[0], interpolator, seg, p, n,
 		       sp.pm + sp.nm, sp.max_nm - sp.nm);
     sp.nm += seg->nm;
 
