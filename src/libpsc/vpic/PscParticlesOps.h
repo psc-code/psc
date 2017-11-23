@@ -908,14 +908,14 @@ struct PscParticlesOps {
 
     // Begin receiving the particle counts
 
-    for( face=0; face<6; face++ )
-      if( shared[face] ) {
+    for (face = 0; face < 6; face++) {
+      if (shared[face]) {
 	mp_size_recv_buffer( mp, f2b[face], sizeof(int) );
 	mp_begin_recv( mp, f2b[face], sizeof(int), bc[face], f2rb[face] );
       }
-
+    }
+    
     // Load the particle send and local injection buffers
-  
     do {
 
       particle_injector_t * RESTRICT ALIGNED(16) pi_send[6];
@@ -1036,14 +1036,14 @@ struct PscParticlesOps {
     // Finish exchanging particle counts and start exchanging actual
     // particles.
   
-    for( face=0; face<6; face++ )
-      if( shared[face] ) {
+    for (face=0; face<6; face++) {
+      if (shared[face]) {
 	*((int *)mp_send_buffer( mp, f2b[face] )) = n_send[face];
 	mp_begin_send( mp, f2b[face], sizeof(int), bc[face], f2b[face] );
       }
-
-    for( face=0; face<6; face++ )
-      if( shared[face] )  {
+    }
+    for (face=0; face<6; face++) {
+      if (shared[face])  {
 	mp_end_recv( mp, f2b[face] );
 	n_recv[face] = *((int *)mp_recv_buffer( mp, f2b[face] ));
 	mp_size_recv_buffer( mp, f2b[face],
@@ -1051,9 +1051,9 @@ struct PscParticlesOps {
 	mp_begin_recv( mp, f2b[face], 16+n_recv[face]*sizeof(particle_injector_t),
 		       bc[face], f2rb[face] );
       }
-
-    for( face=0; face<6; face++ )
-      if( shared[face] ) {
+    }
+    for (face=0; face<6; face++) {
+      if (shared[face]) {
 	mp_end_send( mp, f2b[face] );
 	// FIXME: ASSUMES MP WON'T MUCK WITH REST OF SEND BUFFER. IF WE
 	// DID MORE EFFICIENT MOVER ALLOCATION ABOVE, THIS WOULD BE
@@ -1061,10 +1061,9 @@ struct PscParticlesOps {
 	mp_begin_send( mp, f2b[face], 16+n_send[face]*sizeof(particle_injector_t),
 		       bc[face], f2b[face] );
       }
-
+    }
 
     do {
-
       // Unpack the species list for random acesss
 
       particle_t       * RESTRICT ALIGNED(32) sp_p[ MAX_SP];
@@ -1098,14 +1097,22 @@ struct PscParticlesOps {
 	const particle_injector_t * RESTRICT ALIGNED(16) pi;
 	int np, nm, n, id;
   
-	face++; if( face==7 ) face = 0;
-	if( face==6 ) pi = ci, n = n_ci;
-	else if( shared[face] ) {
+	face++;
+	if (face == 7) {
+	  face = 0;
+	}
+
+	if (face == 6) {
+	  pi = ci;
+	  n = n_ci;
+	} else if (shared[face]) {
 	  mp_end_recv( mp, f2b[face] );
 	  pi = (const particle_injector_t *)
 	    (((char *)mp_recv_buffer(mp,f2b[face]))+16);
 	  n  = n_recv[face];
-	} else continue;
+	} else {
+	  continue;
+	}
         
 	// Reverse order injection is done to reduce thrashing of the
 	// particle list (particles are removed reverse order so the
@@ -1141,7 +1148,7 @@ struct PscParticlesOps {
 #       endif
 	  sp_nm[id] = nm + move_p(p, pm+nm, acc_block, g, sp_q[id]);
 	}
-      } while(face!=5);
+      } while (face != 5);
   
       for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	if( n_dropped_particles[sp->id] )
@@ -1161,8 +1168,11 @@ struct PscParticlesOps {
 
     } while(0);
   
-    for( face=0; face<6; face++ )
-      if( shared[face] ) mp_end_send(mp,f2b[face]);
+    for (face = 0; face < 6; face++) {
+      if (shared[face]) {
+	mp_end_send(mp,f2b[face]);
+      }
+    }
   }
   
   
