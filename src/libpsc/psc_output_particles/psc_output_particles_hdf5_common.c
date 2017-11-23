@@ -125,8 +125,14 @@ get_sort_index(int p, particle_t *part)
   int j0 = particle_real_fint(u);
   int j1 = particle_real_fint(v);
   int j2 = particle_real_fint(w);
+  if (u == ldims[0]) j0--;
+  if (v == ldims[1]) j1--;
+  if (w == ldims[2]) j2--;
   assert(j0 >= 0 && j0 < ldims[0]);
   assert(j1 >= 0 && j1 < ldims[1]);
+  if (!(j2 >= 0 && j2 < ldims[2])) {
+    mprintf("j2 %d ldims %d w %g\n", j2, ldims[2], w);
+  }
   assert(j2 >= 0 && j2 < ldims[2]);
 
   int kind;

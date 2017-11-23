@@ -126,6 +126,24 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
     sp->nm = 0;
   }
 
+#if 0
+  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    for (int n = 0; n < sp->np; n++) {
+      particle_t *p = &sp->p[n];
+      int i = p->i;
+      int im[3] = { sp->g->nx + 2, sp->g->ny + 2, sp->g->nz + 2 };
+      int i3[3];
+      i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);
+      i3[1] = i / im[0]; i-= i3[1] * im[0];
+      i3[0] = i;
+      if (!(i3[2] >= 1 && i3[2] <= sp->g->nz)) {
+	mprintf("i3 %d %d %d\n", i3[0], i3[1], i3[2]);
+	assert(0);
+      }
+    }
+  }
+#endif
+  
   // At this point, all particle positions are at r_1 and u_{1/2}, the
   // guard lists are empty and the accumulators on each processor are current.
   // Convert the accumulators into currents.

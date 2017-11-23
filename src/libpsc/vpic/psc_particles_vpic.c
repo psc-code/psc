@@ -118,6 +118,11 @@ put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   part->xi      = (i3[0] - 1 + .5f * (1.f + prt->dx[0])) * dx[0];
   part->yi      = (i3[1] - 1 + .5f * (1.f + prt->dx[1])) * dx[1];
   part->zi      = (i3[2] - 1 + .5f * (1.f + prt->dx[2])) * dx[2];
+  float w = part->zi / dx[2];
+  if (!(w >= 0 && w <= im[2] - 2)) {
+    printf("w %g im %d i3 %d dx %g\n", w, im[2], i3[2], prt->dx[2]);
+  }
+  assert(w >= 0 && w <= im[2] - 2);
   part->kind    = prt->kind;
   part->pxi     = prt->ux[0];
   part->pyi     = prt->ux[1];
