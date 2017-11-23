@@ -1,6 +1,5 @@
 
 #include "vpic_iface.h"
-#include "vpic_diag.h"
 
 #include <cassert>
 

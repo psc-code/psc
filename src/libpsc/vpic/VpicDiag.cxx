@@ -1,13 +1,11 @@
 
 #include "vpic_iface.h"
-#include "vpic_diag.h"
-
-#include "simulation.h"
+#include "VpicDiag.h"
 
 #include "mrc_common.h"
 
 // ================================================================================
-// globals_diag implementation
+// VpicDiag implementation
 
 void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
 void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *diag);

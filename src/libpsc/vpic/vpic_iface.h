@@ -25,6 +25,9 @@
 #include "VpicAccumulatorOps.h"
 #include "PscAccumulatorOps.h"
 
+#include "VpicDiag.h"
+#include "NoneDiag.h"
+
 extern "C" {
 #endif
 #if 0 // hack to fix indentation

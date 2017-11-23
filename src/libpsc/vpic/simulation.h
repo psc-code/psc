@@ -6,8 +6,6 @@
 #include "material.h"
 #include "rng.h"
 
-#include "vpic_diag.h"
-
 #include <psc.h> // FIXME, only need the BND_* constants
 
 // ======================================================================

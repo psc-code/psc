@@ -1,7 +1,7 @@
 
 #include "vpic_iface.h"
 
-#include "vpic_diag.h"
+#include "VpicDiag.h"
 
 #include <mrc_common.h>
 
