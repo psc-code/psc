@@ -38,6 +38,46 @@ struct PscParticlesOps {
   // Note: changes here likely need to be reflected in SPE accelerated
   // version as well.
 
+#   define accumulate_j(X,Y,Z)						\
+      v4  = q*s_disp##X;    /* v2 = q ux                            */  \
+      v1  = v4*s_mid##Y;    /* v1 = q ux dy                         */  \
+      v0  = v4-v1;          /* v0 = q ux (1-dy)                     */  \
+      v1 += v4;             /* v1 = q ux (1+dy)                     */  \
+      v4  = 1+s_mid##Z;     /* v4 = 1+dz                            */  \
+      v2  = v0*v4;          /* v2 = q ux (1-dy)(1+dz)               */  \
+      v3  = v1*v4;          /* v3 = q ux (1+dy)(1+dz)               */  \
+      v4  = 1-s_mid##Z;     /* v4 = 1-dz                            */  \
+      v0 *= v4;             /* v0 = q ux (1-dy)(1-dz)               */  \
+      v1 *= v4;             /* v1 = q ux (1+dy)(1-dz)               */  \
+      v0 += v5;             /* v0 = q ux [ (1-dy)(1-dz) + uy*uz/3 ] */  \
+      v1 -= v5;             /* v1 = q ux [ (1+dy)(1-dz) - uy*uz/3 ] */  \
+      v2 -= v5;             /* v2 = q ux [ (1-dy)(1+dz) - uy*uz/3 ] */  \
+      v3 += v5;             /* v3 = q ux [ (1+dy)(1+dz) + uy*uz/3 ] */  \
+      a[0] += v0;                                                       \
+      a[1] += v1;                                                       \
+      a[2] += v2;                                                       \
+      a[3] += v3
+
+#define ACCUMULATE_J(X,Y,Z,offset)					\
+      v4  = q*u##X;   /* v2 = q ux                            */	\
+      v1  = v4*d##Y;  /* v1 = q ux dy                         */	\
+      v0  = v4-v1;    /* v0 = q ux (1-dy)                     */	\
+      v1 += v4;       /* v1 = q ux (1+dy)                     */	\
+      v4  = one+d##Z; /* v4 = 1+dz                            */	\
+      v2  = v0*v4;    /* v2 = q ux (1-dy)(1+dz)               */	\
+      v3  = v1*v4;    /* v3 = q ux (1+dy)(1+dz)               */	\
+      v4  = one-d##Z; /* v4 = 1-dz                            */	\
+      v0 *= v4;       /* v0 = q ux (1-dy)(1-dz)               */	\
+      v1 *= v4;       /* v1 = q ux (1+dy)(1-dz)               */	\
+      v0 += v5;       /* v0 = q ux [ (1-dy)(1-dz) + uy*uz/3 ] */	\
+      v1 -= v5;       /* v1 = q ux [ (1+dy)(1-dz) - uy*uz/3 ] */	\
+      v2 -= v5;       /* v2 = q ux [ (1-dy)(1+dz) - uy*uz/3 ] */	\
+      v3 += v5;       /* v3 = q ux [ (1+dy)(1+dz) + uy*uz/3 ] */	\
+      a[offset+0] += v0;						\
+      a[offset+1] += v1;						\
+      a[offset+2] += v2;						\
+      a[offset+3] += v3
+
 #if defined(V4_ACCELERATION)
 
   // High performance variant based on SPE accelerated version
@@ -290,29 +330,11 @@ struct PscParticlesOps {
       // current quadrant in a time-step
       v5 = q*s_dispx*s_dispy*s_dispz*(1./3.);
       a = (float *) &acc_block[p->i];
-#   define accumulate_j(X,Y,Z)						\
-      v4  = q*s_disp##X;    /* v2 = q ux                            */  \
-      v1  = v4*s_mid##Y;    /* v1 = q ux dy                         */  \
-      v0  = v4-v1;          /* v0 = q ux (1-dy)                     */  \
-      v1 += v4;             /* v1 = q ux (1+dy)                     */  \
-      v4  = 1+s_mid##Z;     /* v4 = 1+dz                            */  \
-      v2  = v0*v4;          /* v2 = q ux (1-dy)(1+dz)               */  \
-      v3  = v1*v4;          /* v3 = q ux (1+dy)(1+dz)               */  \
-      v4  = 1-s_mid##Z;     /* v4 = 1-dz                            */  \
-      v0 *= v4;             /* v0 = q ux (1-dy)(1-dz)               */  \
-      v1 *= v4;             /* v1 = q ux (1+dy)(1-dz)               */  \
-      v0 += v5;             /* v0 = q ux [ (1-dy)(1-dz) + uy*uz/3 ] */  \
-      v1 -= v5;             /* v1 = q ux [ (1+dy)(1-dz) - uy*uz/3 ] */  \
-      v2 -= v5;             /* v2 = q ux [ (1-dy)(1+dz) - uy*uz/3 ] */  \
-      v3 += v5;             /* v3 = q ux [ (1+dy)(1+dz) + uy*uz/3 ] */  \
-      a[0] += v0;                                                       \
-      a[1] += v1;                                                       \
-      a[2] += v2;                                                       \
-      a[3] += v3
+      
       accumulate_j(x,y,z); a += 4;
       accumulate_j(y,z,x); a += 4;
       accumulate_j(z,x,y);
-#   undef accumulate_j
+      //#   undef accumulate_j
 
       // Compute the remaining particle displacment
       pm->dispx -= s_dispx;
@@ -576,26 +598,6 @@ struct PscParticlesOps {
 	dz = v2;
 	v5 = q*ux*uy*uz*one_third;              // Compute correction
 	a  = (float *) &acc_block[ii];          // Get accumulator
-
-#     define ACCUMULATE_J(X,Y,Z,offset)                                 \
-	v4  = q*u##X;   /* v2 = q ux                            */	\
-	v1  = v4*d##Y;  /* v1 = q ux dy                         */	\
-	v0  = v4-v1;    /* v0 = q ux (1-dy)                     */	\
-	v1 += v4;       /* v1 = q ux (1+dy)                     */	\
-	v4  = one+d##Z; /* v4 = 1+dz                            */	\
-	v2  = v0*v4;    /* v2 = q ux (1-dy)(1+dz)               */	\
-	v3  = v1*v4;    /* v3 = q ux (1+dy)(1+dz)               */	\
-	v4  = one-d##Z; /* v4 = 1-dz                            */	\
-	v0 *= v4;       /* v0 = q ux (1-dy)(1-dz)               */	\
-	v1 *= v4;       /* v1 = q ux (1+dy)(1-dz)               */	\
-	v0 += v5;       /* v0 = q ux [ (1-dy)(1-dz) + uy*uz/3 ] */	\
-	v1 -= v5;       /* v1 = q ux [ (1+dy)(1-dz) - uy*uz/3 ] */	\
-	v2 -= v5;       /* v2 = q ux [ (1-dy)(1+dz) - uy*uz/3 ] */	\
-	v3 += v5;       /* v3 = q ux [ (1+dy)(1+dz) + uy*uz/3 ] */	\
-	a[offset+0] += v0;						\
-	a[offset+1] += v1;						\
-	a[offset+2] += v2;						\
-	a[offset+3] += v3
 
 	ACCUMULATE_J( x,y,z, 0 );
 	ACCUMULATE_J( y,z,x, 4 );
