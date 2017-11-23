@@ -13,7 +13,8 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps, class AccumulatorOps>
+template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps,
+	 class AccumulatorOps, class Diag>
 struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps
 {
   typedef typename FieldArrayOps::FieldArray FieldArray;
@@ -201,7 +202,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void newDiag(int interval)
   {
-    diag_ = new VpicDiag(simulation_, interval);
+    diag_ = new Diag(simulation_, interval);
   }
 
   void setupDiag()
@@ -226,7 +227,8 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   Accumulator*& accumulator_;
   hydro_array_t*& hydro_array_;
   Particles& particles_;
-  VpicDiag *diag_;
+
+  Diag *diag_;
 
   vpic_simulation *simulation_;
 };
