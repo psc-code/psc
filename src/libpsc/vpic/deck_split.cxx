@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------
 // vpic_simulation_setup_diagnostics
 
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag)
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *diag)
 {
   /*--------------------------------------------------------------------------
    * New dump definition
@@ -203,7 +203,7 @@ void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag
 #define should_dump(x)                                                  \
   (diag->x##_interval>0 && remainder(step, diag->x##_interval) == 0)
 
-void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag)
+void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag)
 {
   int64_t step = simulation->step();
   /*--------------------------------------------------------------------------

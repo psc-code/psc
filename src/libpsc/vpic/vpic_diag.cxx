@@ -9,11 +9,12 @@
 // ================================================================================
 // globals_diag implementation
 
-void vpic_simulation_diagnostics(vpic_simulation *simulation, globals_diag *diag);
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, globals_diag *diag);
+void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
+void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
 
 
-globals_diag::globals_diag(int interval_)
+VpicDiag::VpicDiag(vpic_simulation *simulation, int interval_)
+  : simulation_(simulation)
 {
   rtoggle = 0;
   
@@ -32,13 +33,13 @@ globals_diag::globals_diag(int interval_)
   mpi_printf(comm, "energies_interval: %d\n", energies_interval);
 }
 
-void globals_diag::setup(vpic_simulation *simulation)
+void VpicDiag::setup()
 {
-  vpic_simulation_setup_diagnostics(simulation, this);
+  vpic_simulation_setup_diagnostics(simulation_, this);
 }
 
-void globals_diag::run(vpic_simulation *simulation)
+void VpicDiag::run()
 {
-  TIC vpic_simulation_diagnostics(simulation, this); TOC(user_diagnostics, 1);
+  TIC vpic_simulation_diagnostics(simulation_, this); TOC(user_diagnostics, 1);
 }
 

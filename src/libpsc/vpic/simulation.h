@@ -37,7 +37,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   ~VpicSimulation()
   {
-    delete pDiag_;
+    delete diag_;
   }
 
   void set_params(int num_step, int status_interval,
@@ -201,17 +201,17 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void newDiag(int interval)
   {
-    pDiag_ = new globals_diag(interval);
+    diag_ = new VpicDiag(simulation_, interval);
   }
 
   void setupDiag()
   {
-    pDiag_->setup(simulation_);
+    diag_->setup();
   }
 
   void runDiag()
   {
-    pDiag_->run(simulation_);
+    diag_->run();
   }
     
   int num_comm_round_;
@@ -219,7 +219,6 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   RngPool rng_pool;
 
   //private:
-  globals_diag *pDiag_;
   Grid grid_;
   MaterialList& material_list_;
   FieldArray*& field_array_;
@@ -227,6 +226,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   Accumulator*& accumulator_;
   hydro_array_t*& hydro_array_;
   Particles& particles_;
+  VpicDiag *diag_;
 
   vpic_simulation *simulation_;
 };

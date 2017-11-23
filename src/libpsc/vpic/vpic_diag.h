@@ -6,9 +6,9 @@
 #include "vpic.h"
 
 // ----------------------------------------------------------------------
-// globals_diag
+// VpicDiag
 
-struct globals_diag {
+struct VpicDiag {
   int interval;
   int energies_interval;
   int fields_interval;
@@ -26,9 +26,12 @@ struct globals_diag {
   DumpParameters hHdParams;
   std::vector<DumpParameters *> outputParams;
 
-  globals_diag(int interval_);
-  void setup(vpic_simulation *simulation);
-  void run(vpic_simulation *simulation);
+  VpicDiag(vpic_simulation* simulaton, int interval_);
+  void setup();
+  void run();
+
+private:
+  vpic_simulation* simulation_;
 };
 
 #endif
