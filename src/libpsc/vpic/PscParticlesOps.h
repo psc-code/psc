@@ -38,27 +38,7 @@ struct PscParticlesOps {
   // Note: changes here likely need to be reflected in SPE accelerated
   // version as well.
 
-#   define accumulate_j(X,Y,Z)						\
-      v4  = q*s_disp##X;    /* v2 = q ux                            */  \
-      v1  = v4*s_mid##Y;    /* v1 = q ux dy                         */  \
-      v0  = v4-v1;          /* v0 = q ux (1-dy)                     */  \
-      v1 += v4;             /* v1 = q ux (1+dy)                     */  \
-      v4  = 1+s_mid##Z;     /* v4 = 1+dz                            */  \
-      v2  = v0*v4;          /* v2 = q ux (1-dy)(1+dz)               */  \
-      v3  = v1*v4;          /* v3 = q ux (1+dy)(1+dz)               */  \
-      v4  = 1-s_mid##Z;     /* v4 = 1-dz                            */  \
-      v0 *= v4;             /* v0 = q ux (1-dy)(1-dz)               */  \
-      v1 *= v4;             /* v1 = q ux (1+dy)(1-dz)               */  \
-      v0 += v5;             /* v0 = q ux [ (1-dy)(1-dz) + uy*uz/3 ] */  \
-      v1 -= v5;             /* v1 = q ux [ (1+dy)(1-dz) - uy*uz/3 ] */  \
-      v2 -= v5;             /* v2 = q ux [ (1-dy)(1+dz) - uy*uz/3 ] */  \
-      v3 += v5;             /* v3 = q ux [ (1+dy)(1+dz) + uy*uz/3 ] */  \
-      a[offset+0] += v0;						\
-      a[offset+1] += v1;						\
-      a[offset+2] += v2;						\
-      a[offset+3] += v3
-
-#define ACCUMULATE_J(X,Y,Z,offset)					\
+#define ACCUMULATE_J(u,d,X,Y,Z,offset)					\
       v4  = q*u##X;   /* v2 = q ux                            */	\
       v1  = v4*d##Y;  /* v1 = q ux dy                         */	\
       v0  = v4-v1;    /* v0 = q ux (1-dy)                     */	\
@@ -284,6 +264,9 @@ struct PscParticlesOps {
     float *a;
     particle_t * ALIGNED(32) p = p0 + pm->i;
 
+    // FIXME, this uses double precision constants in a bunch of places
+    const float one = 1.;
+    
     q = qsp*p->w;
 
     for(;;) {
@@ -331,9 +314,9 @@ struct PscParticlesOps {
       v5 = q*s_dispx*s_dispy*s_dispz*(1./3.);
       a = (float *) &acc_block[p->i];
       
-      accumulate_j(x,y,z, 0); a += 4;
-      accumulate_j(y,z,x, 4); a += 4;
-      accumulate_j(z,x,y, 8);
+      ACCUMULATE_J(s_disp,s_mid,x,y,z, 0);
+      accumulate_j(s_disp,s_mid,y,z,x, 4);
+      accumulate_j(s_disp,s_mid,z,x,y, 8);
 #   undef accumulate_j
 
       // Compute the remaining particle displacment
@@ -599,9 +582,9 @@ struct PscParticlesOps {
 	v5 = q*ux*uy*uz*one_third;              // Compute correction
 	a  = (float *) &acc_block[ii];          // Get accumulator
 
-	ACCUMULATE_J( x,y,z, 0 );
-	ACCUMULATE_J( y,z,x, 4 );
-	ACCUMULATE_J( z,x,y, 8 );
+	ACCUMULATE_J(u,d, x,y,z, 0);
+	ACCUMULATE_J(u,d, y,z,x, 4);
+	ACCUMULATE_J(u,d, z,x,y, 8);
 
 #     undef ACCUMULATE_J
 
