@@ -69,17 +69,17 @@ struct species * Simulation_define_species(Simulation* sim, const char *name, do
 
 void Simulation_diagnostics_init(Simulation* sim, int interval)
 {
-  sim->pDiag_ = new globals_diag(interval);
+  sim->newDiag(interval);
 }
 
 void Simulation_diagnostics_setup(Simulation* sim)
 {
-  sim->pDiag_->setup(sim);
+  sim->setupDiag();
 }
 
-void Simulation_diagnostics_run(Simulation* sim, struct psc_harris *sub)
+void Simulation_diagnostics_run(Simulation* sim)
 {
-  sim->pDiag_->run(sim);
+  sim->runDiag();
 }
 
 // ----------------------------------------------------------------------

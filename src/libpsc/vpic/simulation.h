@@ -6,9 +6,9 @@
 #include "material.h"
 #include "rng.h"
 
-#include <psc.h> // FIXME, only need the BND_* constants
+#include "vpic_diag.h"
 
-struct globals_diag;
+#include <psc.h> // FIXME, only need the BND_* constants
 
 // ======================================================================
 // class VpicSimulation
@@ -199,6 +199,21 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
     synchronize_hydro_array(hydro_array);
   }
 
+  void newDiag(int interval)
+  {
+    pDiag_ = new globals_diag(interval);
+  }
+
+  void setupDiag()
+  {
+    pDiag_->setup(simulation_);
+  }
+
+  void runDiag()
+  {
+    pDiag_->run(simulation_);
+  }
+    
   int num_comm_round_;
   
   RngPool rng_pool;

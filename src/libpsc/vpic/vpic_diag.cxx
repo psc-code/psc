@@ -32,13 +32,13 @@ globals_diag::globals_diag(int interval_)
   mpi_printf(comm, "energies_interval: %d\n", energies_interval);
 }
 
-void globals_diag::setup(Simulation *sim)
+void globals_diag::setup(vpic_simulation *simulation)
 {
-  vpic_simulation_setup_diagnostics(sim->simulation_, this);
+  vpic_simulation_setup_diagnostics(simulation, this);
 }
 
-void globals_diag::run(Simulation *sim)
+void globals_diag::run(vpic_simulation *simulation)
 {
-  TIC vpic_simulation_diagnostics(sim->simulation_, this); TOC(user_diagnostics, 1);
+  TIC vpic_simulation_diagnostics(simulation, this); TOC(user_diagnostics, 1);
 }
 

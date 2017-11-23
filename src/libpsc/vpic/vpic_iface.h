@@ -200,7 +200,7 @@ struct psc_harris;
 struct vpic_harris_params;
 struct globals_physics;
 
-void Simulation_diagnostics_run(Simulation *sim, struct psc_harris *sub);
+void Simulation_diagnostics_run(Simulation *sim);
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,
 					    struct globals_physics *phys,
