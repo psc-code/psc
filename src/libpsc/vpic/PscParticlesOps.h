@@ -8,6 +8,7 @@ template<class P, class FA, class IA, class AA>
 struct PscParticlesOps {
   typedef P Particles;
   typedef typename Particles::Species Species;
+  typedef typename Particles::Iter SpeciesIter;
   typedef FA FieldArray;
   typedef IA Interpolator;
   typedef AA Accumulator;
@@ -376,8 +377,7 @@ struct PscParticlesOps {
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
 		       const struct psc_particle_inject *prt)
   {
-    species_t *sp = &*vmprts.find_id(prt->kind);
-    assert(sp);
+    SpeciesIter sp = vmprts.find_id(prt->kind);
 
     double x = prt->x[0], y = prt->x[1], z = prt->x[2];
     double ux = prt->u[0], uy = prt->u[1], uz = prt->u[2];
@@ -467,7 +467,7 @@ struct PscParticlesOps {
     int n_ignored;                      // Number of movers ignored
   } particle_mover_seg_t;
 
-  void advance_p_pipeline(/**/  species_t            * RESTRICT sp,
+  void advance_p_pipeline(SpeciesIter sp,
 			  AccumulatorBlock acc_block,
 			  Interpolator& interpolator,
 			  particle_mover_seg_t *seg,
@@ -627,7 +627,7 @@ struct PscParticlesOps {
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  void advance_p_pipeline_v4(/**/  species_t            * RESTRICT sp,
+  void advance_p_pipeline_v4(SpeciesIter sp,
 			     AccumulatorBlock acc_block,
 			     Interpolator& interpolator,
 			     particle_mover_seg_t *seg,
@@ -809,32 +809,32 @@ struct PscParticlesOps {
 #endif
           
   void
-  advance_p(Species& sp, Accumulator& accumulator, Interpolator& interpolator)
+  advance_p(SpeciesIter sp, Accumulator& accumulator, Interpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
-    sp.nm = 0;
+    sp->nm = 0;
 
-    particle_t *p = sp.p;
-    int n = sp.np & ~15;
+    particle_t *p = sp->p;
+    int n = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-    advance_p_pipeline_v4(&sp, accumulator[1], interpolator, seg, p, n,
-			  sp.pm + sp.nm, sp.max_nm - sp.nm);
+    advance_p_pipeline_v4(sp, accumulator[1], interpolator, seg, p, n,
+			  sp->pm + sp->nm, sp->max_nm - sp->nm);
 #else
-    advance_p_pipeline(&sp, accumulator[1], interpolator, seg, p, n,
-		       sp.pm + sp.nm, sp.max_nm - sp.nm);
+    advance_p_pipeline(sp, accumulator[1], interpolator, seg, p, n,
+		       sp->pm + sp->nm, sp->max_nm - sp->nm);
 #endif
-    sp.nm += seg->nm;
+    sp->nm += seg->nm;
 
     if (seg->n_ignored)
       WARNING(( "Pipeline %i ran out of storage for %i movers",
 		0, seg->n_ignored ));
   
     p += n;
-    n = sp.np - n;
-    advance_p_pipeline(&sp, accumulator[0], interpolator, seg, p, n,
-		       sp.pm + sp.nm, sp.max_nm - sp.nm);
-    sp.nm += seg->nm;
+    n = sp->np - n;
+    advance_p_pipeline(sp, accumulator[0], interpolator, seg, p, n,
+		       sp->pm + sp->nm, sp->max_nm - sp->nm);
+    sp->nm += seg->nm;
 
     if (seg->n_ignored)
       WARNING(( "Pipeline %i ran out of storage for %i movers",
@@ -846,7 +846,7 @@ struct PscParticlesOps {
 		 Interpolator& interpolator)
   {
     for (typename Particles::Iter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-      TIC advance_p(*sp, accumulator, interpolator); TOC(advance_p, 1);
+      TIC advance_p(sp, accumulator, interpolator); TOC(advance_p, 1);
     }
   }
   
