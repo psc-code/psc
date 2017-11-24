@@ -315,9 +315,8 @@ struct PscParticlesOps {
       a = (float *) &acc_block[p->i];
       
       ACCUMULATE_J(s_disp,s_mid,x,y,z, 0);
-      accumulate_j(s_disp,s_mid,y,z,x, 4);
-      accumulate_j(s_disp,s_mid,z,x,y, 8);
-#   undef accumulate_j
+      ACCUMULATE_J(s_disp,s_mid,y,z,x, 4);
+      ACCUMULATE_J(s_disp,s_mid,z,x,y, 8);
 
       // Compute the remaining particle displacment
       pm->dispx -= s_dispx;
