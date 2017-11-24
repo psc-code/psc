@@ -360,8 +360,22 @@ struct PscFieldArrayOps {
   }
 
   // ----------------------------------------------------------------------
-  // compute_rhob
+  // foreach
+
+  template<class F>
+  static void foreach(F f, int ib, int ie, int jb, int je, int kb, int ke)
+  {
+    for (int k = kb; k <= ke; k++) {
+      for (int j = jb; j <= je; j++) {
+	for (int i = ib; i <= ie; i++) {
+	  f(i,j,k);
+	}
+      }
+    }
+  };
   
+  // ----------------------------------------------------------------------
+  // compute_rhob
   void compute_rhob(FieldArray& fa)
   {
     sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
@@ -400,49 +414,23 @@ struct PscFieldArrayOps {
     };
 
     CalcDivE updater(fa, m);
-    
-    for (int k = 2; k <= nz; k++) {
-      for (int j = 2; j <= ny; j++) {
-	for (int i = 2; i <= nx; i++) {
-	  updater(i,j,k);
-	}
-      }
-    }
 
+    foreach(updater, 2, nx, 2, ny, 2, nz);
+    
     // Finish setting normal e ghosts
     end_remote_ghost_norm_e(fa.f, fa.g);
 
     // z faces, x edges, y edges and all corners
-    for(int j = 1; j <= ny+1; j++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,j,1   );
-      }
-    }
-    for(int j = 1; j <= ny+1; j++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,j,nz+1);
-      }
-    }
+    foreach(updater, 1   , nx+1, 1   , ny+1, 1   , 1   );
+    foreach(updater, 1   , nx+1, 1   , ny+1, nz+1, nz+1);
 
     // y faces, z edges
-    for(int k = 2; k <= nz; k++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,1   ,k);
-      }
-    }
-    for(int k = 2; k <= nz; k++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,ny+1,k);
-      }
-    }
+    foreach(updater, 1   , nx+1, 1   , 1   ,    2, nz  );
+    foreach(updater, 1   , nx+1, ny+1, ny+1,    2, nz  );
 
     // x faces
-    for(int k = 2; k <= nz; k++) {
-      for(int j = 2; j <= ny; j++) {
-	updater(1   ,j,k);
-	updater(nx+1,j,k);
-      }
-    }
+    foreach(updater, 1   , 1   , 2   , ny  ,    2, nz  );
+    foreach(updater, nx+1, nx+1, 2   , ny  ,    2, nz  );
 
     local_adjust_rhob(fa.f, fa.g);
   }
@@ -490,48 +478,22 @@ struct PscFieldArrayOps {
 
     CalcDivE updater(fa, m);
     
-    for (int k = 2; k <= nz; k++) {
-      for (int j = 2; j <= ny; j++) {
-	for (int i = 2; i <= nx; i++) {
-	  updater(i,j,k);
-	}
-      }
-    }
+    foreach(updater, 2, nx, 2, ny, 2, nz);
 
     // Finish setting normal e ghosts
     end_remote_ghost_norm_e(fa.f, fa.g);
 
     // z faces, x edges, y edges and all corners
-    for(int j = 1; j <= ny+1; j++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,j,1   );
-      }
-    }
-    for(int j = 1; j <= ny+1; j++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,j,nz+1);
-      }
-    }
+    foreach(updater, 1   , nx+1, 1   , ny+1, 1   , 1   );
+    foreach(updater, 1   , nx+1, 1   , ny+1, nz+1, nz+1);
 
     // y faces, z edges
-    for(int k = 2; k <= nz; k++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,1   ,k);
-      }
-    }
-    for(int k = 2; k <= nz; k++) {
-      for(int i = 1; i <= nx+1; i++) {
-	updater(i,ny+1,k);
-      }
-    }
+    foreach(updater, 1   , nx+1, 1   , 1   ,    2, nz  );
+    foreach(updater, 1   , nx+1, ny+1, ny+1,    2, nz  );
 
     // x faces
-    for(int k = 2; k <= nz; k++) {
-      for(int j = 2; j <= ny; j++) {
-	updater(1   ,j,k);
-	updater(nx+1,j,k);
-      }
-    }
+    foreach(updater, 1   , 1   , 2   , ny  ,    2, nz  );
+    foreach(updater, nx+1, nx+1, 2   , ny  ,    2, nz  );
 
     local_adjust_div_e(fa.f, fa.g);
   }
