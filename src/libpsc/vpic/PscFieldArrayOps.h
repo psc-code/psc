@@ -550,9 +550,84 @@ struct PscFieldArrayOps {
   // ----------------------------------------------------------------------
   // clean_div_e
   
+#define MARDER_EX(i,j,k) F(i,j,k).ex += px * (F(i+1,j,k).div_e_err - F(i,j,k).div_e_err)
+#define MARDER_EY(i,j,k) F(i,j,k).ey += py * (F(i,j+1,k).div_e_err - F(i,j,k).div_e_err)
+#define MARDER_EZ(i,j,k) F(i,j,k).ez += pz * (F(i,j,k+1).div_e_err - F(i,j,k).div_e_err)
+
+  void
+  vacuum_clean_div_e(FieldArray &fa)
+  {
+    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
+    assert(params->n_mc == 1);
+
+    Field3D<FieldArray> F(fa);
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    const float _rdx = (nx>1) ? g->rdx : 0;
+    const float _rdy = (ny>1) ? g->rdy : 0;
+    const float _rdz = (nz>1) ? g->rdz : 0;
+    const float alphadt = 0.3888889/(_rdx*_rdx + _rdy*_rdy + _rdz*_rdz);
+    const float px = (alphadt*_rdx) * params->mc[0].drivex;
+    const float py = (alphadt*_rdy) * params->mc[0].drivey;
+    const float pz = (alphadt*_rdz) * params->mc[0].drivez;
+                     
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  MARDER_EX(i,j,k);
+	  MARDER_EY(i,j,k);
+	  MARDER_EZ(i,j,k);
+	}
+      }
+    }
+    
+    int x, y, z;
+  
+    // Do left over ex
+    for(y=1; y<=ny+1; y++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_EX(x,y,nz+1);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_EX(x,ny+1,z);
+      }
+    }
+
+    // Do left over ey
+    for(z=1; z<=nz+1; z++) {
+      for(y=1; y<=ny; y++) {
+	MARDER_EY(nx+1,y,z);
+      }
+    }
+    for(y=1; y<=ny; y++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_EY(x,y,nz+1);
+      }
+    }
+
+    // Do left over ez
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx+1; x++) {
+	MARDER_EZ(x,ny+1,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(y=1; y<=ny; y++) {
+	MARDER_EZ(nx+1,y,z);
+      }
+    }
+
+    local_adjust_tang_e(fa.f, fa.g);
+  }
+
+
   void clean_div_e(FieldArray& fa)
   {
-    fa.kernel->clean_div_e(&fa);
+    vacuum_clean_div_e(fa);
+    //    fa.kernel->clean_div_e(&fa);
   }
 
 };

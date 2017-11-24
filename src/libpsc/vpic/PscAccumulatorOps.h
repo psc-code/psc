@@ -122,9 +122,6 @@ struct PscAccumulatorOps {
     
   } unload_accumulator_pipeline_args_t;
 
-#define f(x,y,z) f[ VOXEL(x,y,z, nx,ny,nz) ]
-#define a(x,y,z) a[ VOXEL(x,y,z, nx,ny,nz) ]
-
   // FIXME: Accumulator should be const
   
   void
