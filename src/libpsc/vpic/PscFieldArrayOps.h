@@ -270,9 +270,9 @@ struct PscFieldArrayOps {
 						      pz * (F(i,j,k).ez - F(i,j,k-1).ez) - \
 						      cj * (F(i,j,k).rhof + F(i,j,k).rhob) )
     
-    for (int k = 1; k <= nz; k++) {
-      for (int j = 1; j <= ny; j++) {
-	for (int i = 1; i <= nx; i++) {
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
 	  UPDATE_DERR_E(i,j,k);
 	}
       }
