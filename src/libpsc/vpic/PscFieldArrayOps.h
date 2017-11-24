@@ -373,6 +373,31 @@ struct PscFieldArrayOps {
       }
     }
   };
+
+  template<class F>
+  static void foreach_nc_interior(F f, const grid_t *g)
+  {
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    foreach(f, 2, nx, 2, ny, 2, nz);
+  }
+
+  template<class F>
+  static void foreach_nc_boundary(F f, const grid_t *g)
+  {
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    // z faces, x edges, y edges and all corners
+    foreach(f, 1   , nx+1, 1   , ny+1, 1   , 1   );
+    foreach(f, 1   , nx+1, 1   , ny+1, nz+1, nz+1);
+
+    // y faces, z edges
+    foreach(f, 1   , nx+1, 1   , 1   ,    2, nz  );
+    foreach(f, 1   , nx+1, ny+1, ny+1,    2, nz  );
+
+    // x faces
+    foreach(f, 1   , 1   , 2   , ny  ,    2, nz  );
+    foreach(f, nx+1, nx+1, 2   , ny  ,    2, nz  );
+  }
   
   // ----------------------------------------------------------------------
   // compute_rhob
@@ -380,19 +405,10 @@ struct PscFieldArrayOps {
   {
     sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
     assert(params->n_mc == 1);
-
-    // Begin setting normal e ghosts
-    begin_remote_ghost_norm_e(fa.f, fa.g);
-    local_ghost_norm_e(fa.f, fa.g);
-
-    // Overlap local computation
-    Field3D<FieldArray> F(fa);
     const material_coefficient_t* m = params->mc;
-    const grid_t* g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
 
-    struct CalcDivE {
-      CalcDivE(FieldArray& fa, const material_coefficient_t *m)
+    struct CalcRhoB {
+      CalcRhoB(FieldArray& fa, const material_coefficient_t *m)
 	: F(fa),
 	  nc(m->nonconductive),
 	  px(fa.g->nx > 1 ? fa.g->eps0 * m->epsx * fa.g->rdx : 0),
@@ -413,24 +429,20 @@ struct PscFieldArrayOps {
       const float nc, px, py, pz;
     };
 
-    CalcDivE updater(fa, m);
+    CalcRhoB updater(fa, m);
 
-    foreach(updater, 2, nx, 2, ny, 2, nz);
+    // Begin setting normal e ghosts
+    begin_remote_ghost_norm_e(fa.f, fa.g);
+
+    // Overlap local computation
+    local_ghost_norm_e(fa.f, fa.g);
+    foreach_nc_interior(updater, fa.g);
     
     // Finish setting normal e ghosts
     end_remote_ghost_norm_e(fa.f, fa.g);
 
-    // z faces, x edges, y edges and all corners
-    foreach(updater, 1   , nx+1, 1   , ny+1, 1   , 1   );
-    foreach(updater, 1   , nx+1, 1   , ny+1, nz+1, nz+1);
-
-    // y faces, z edges
-    foreach(updater, 1   , nx+1, 1   , 1   ,    2, nz  );
-    foreach(updater, 1   , nx+1, ny+1, ny+1,    2, nz  );
-
-    // x faces
-    foreach(updater, 1   , 1   , 2   , ny  ,    2, nz  );
-    foreach(updater, nx+1, nx+1, 2   , ny  ,    2, nz  );
+    // Now do points on boundary
+    foreach_nc_boundary(updater, fa.g);
 
     local_adjust_rhob(fa.f, fa.g);
   }
@@ -442,16 +454,7 @@ struct PscFieldArrayOps {
   {
     sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
     assert(params->n_mc == 1);
-
-    // Begin setting normal e ghosts
-    begin_remote_ghost_norm_e(fa.f, fa.g);
-    local_ghost_norm_e(fa.f, fa.g);
-
-    // Overlap local computation
-    Field3D<FieldArray> F(fa);
     const material_coefficient_t* m = params->mc;
-    const grid_t* g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     struct CalcDivE {
       CalcDivE(FieldArray& fa, const material_coefficient_t *m)
@@ -478,22 +481,18 @@ struct PscFieldArrayOps {
 
     CalcDivE updater(fa, m);
     
-    foreach(updater, 2, nx, 2, ny, 2, nz);
+    // Begin setting normal e ghosts
+    begin_remote_ghost_norm_e(fa.f, fa.g);
+
+    // Overlap local computation
+    local_ghost_norm_e(fa.f, fa.g);
+    foreach_nc_interior(updater, fa.g);
 
     // Finish setting normal e ghosts
     end_remote_ghost_norm_e(fa.f, fa.g);
 
-    // z faces, x edges, y edges and all corners
-    foreach(updater, 1   , nx+1, 1   , ny+1, 1   , 1   );
-    foreach(updater, 1   , nx+1, 1   , ny+1, nz+1, nz+1);
-
-    // y faces, z edges
-    foreach(updater, 1   , nx+1, 1   , 1   ,    2, nz  );
-    foreach(updater, 1   , nx+1, ny+1, ny+1,    2, nz  );
-
-    // x faces
-    foreach(updater, 1   , 1   , 2   , ny  ,    2, nz  );
-    foreach(updater, nx+1, nx+1, 2   , ny  ,    2, nz  );
+    // Now do points on boundary
+    foreach_nc_boundary(updater, fa.g);
 
     local_adjust_div_e(fa.f, fa.g);
   }
