@@ -86,7 +86,7 @@ prof_print_mpi(MPI_Comm comm)
   for (int pr = 0; pr < nr_prof_data; pr++) {
     struct prof_info *pinfo = &prof_globals.info[pr];
     if (pinfo->cnt > 0) {
-      times[pr] = pinfo->time / pinfo->cnt / 1e3;
+      times[pr] = pinfo->time / 1e3;
     } else {
       times[pr] = -1;
     }
