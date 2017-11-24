@@ -33,6 +33,12 @@ struct VpicFieldArrayOps {
   {
     fa.kernel->synchronize_jf(&fa);
   }
+
+  void compute_div_b_err(FieldArray& fa)
+  {
+    fa.kernel->compute_div_b_err(&fa);
+  }
+  
 };
 
 

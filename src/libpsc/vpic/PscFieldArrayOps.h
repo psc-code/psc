@@ -219,6 +219,14 @@ struct PscFieldArrayOps {
 # undef END_SEND
   }
 
+  // ----------------------------------------------------------------------
+  // compute_divb_err
+  
+  void compute_div_b_err(FieldArray& fa)
+  {
+    fa.kernel->compute_div_b_err(&fa);
+  }
+  
 };
 
 

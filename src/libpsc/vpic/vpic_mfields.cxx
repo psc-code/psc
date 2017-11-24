@@ -54,9 +54,9 @@ double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *vmflds)
   return vmflds->synchronize_tang_e_norm_b();
 }
 
-void vpic_mfields_compute_div_b_err(FieldArray *vmflds)
+void vpic_mfields_compute_div_b_err(Simulation* sim, FieldArray* vmflds)
 {
-  vmflds->compute_div_b_err();
+  TIC sim->compute_div_b_err(*vmflds); TOC(compute_div_b_err, 1);
 }
 
 double vpic_mfields_compute_rms_div_b_err(FieldArray *vmflds)
@@ -84,7 +84,7 @@ void vpic_mfields_clean_div_e(FieldArray *vmflds)
   vmflds->clean_div_e();
 }
 
-void vpic_mfields_clear_rhof(Simulation *sim, FieldArray *vmflds)
+void vpic_mfields_clear_rhof(Simulation* sim, FieldArray* vmflds)
 {
   TIC sim->clear_rhof(*vmflds); TOC(clear_jf, 1);
 }
