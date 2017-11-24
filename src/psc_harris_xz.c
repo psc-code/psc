@@ -294,7 +294,6 @@ static void
 psc_harris_setup_fields(struct psc *psc)
 {
   struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "Setting up materials.\n");
@@ -318,6 +317,7 @@ psc_harris_setup_fields(struct psc *psc)
 
 #if 0
   assert(psc->nr_patches > 0);
+  struct globals_physics *phys = &sub->phys;
   Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc->patch[0].dx,
 					 0., resistive);
 #endif
