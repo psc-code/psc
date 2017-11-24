@@ -360,6 +360,80 @@ struct PscFieldArrayOps {
   }
 
   // ----------------------------------------------------------------------
+  // compute_rhob
+  
+  void compute_rhob(FieldArray& fa)
+  {
+    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
+    assert(params->n_mc == 1);
+
+    // Begin setting normal e ghosts
+    begin_remote_ghost_norm_e(fa.f, fa.g);
+    local_ghost_norm_e(fa.f, fa.g);
+
+    // Overlap local computation
+    Field3D<FieldArray> F(fa);
+    const material_coefficient_t* m = params->mc;
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const float nc = m->nonconductive;
+    const float px = ((nx>1) ? g->eps0 * m->epsx * g->rdx : 0);
+    const float py = ((ny>1) ? g->eps0 * m->epsy * g->rdy : 0);
+    const float pz = ((nz>1) ? g->eps0 * m->epsz * g->rdz : 0);
+
+#define UPDATE_DERR_E(i,j,k) F(i,j,k).rhob = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) + \
+						 py * (F(i,j,k).ey - F(i,j-1,k).ey) + \
+						 pz * (F(i,j,k).ez - F(i,j,k-1).ez) - \
+						 F(i,j,k).rhof);
+    
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
+	  UPDATE_DERR_E(i,j,k);
+	}
+      }
+    }
+
+    // Finish setting normal e ghosts
+    end_remote_ghost_norm_e(fa.f, fa.g);
+
+    // z faces, x edges, y edges and all corners
+    for(int j = 1; j <= ny+1; j++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,j,1   );
+      }
+    }
+    for(int j = 1; j <= ny+1; j++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,j,nz+1);
+      }
+    }
+
+    // y faces, z edges
+    for(int k = 2; k <= nz; k++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,1   ,k);
+      }
+    }
+    for(int k = 2; k <= nz; k++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,ny+1,k);
+      }
+    }
+
+    // x faces
+    for(int k = 2; k <= nz; k++) {
+      for(int j = 2; j <= ny; j++) {
+	UPDATE_DERR_E(1   ,j,k);
+	UPDATE_DERR_E(nx+1,j,k);
+      }
+    }
+#undef UPDATE_DERR_E
+
+    local_adjust_rhob(fa.f, fa.g);
+  }
+
+  // ----------------------------------------------------------------------
   // compute_div_e_err
   
   void compute_div_e_err(FieldArray& fa)
@@ -429,6 +503,9 @@ struct PscFieldArrayOps {
 	UPDATE_DERR_E(nx+1,j,k);
       }
     }
+#undef UPDATE_DERR_E
+
+    local_adjust_div_e(fa.f, fa.g);
   }
 
   // ----------------------------------------------------------------------
@@ -898,14 +975,6 @@ struct PscFieldArrayOps {
   void compute_curl_b(FieldArray& fa)
   {
     vacuum_compute_curl_b(fa);
-  }
-
-  // ----------------------------------------------------------------------
-  // compute_rhob
-  
-  void compute_rhob(FieldArray& fa)
-  {
-    fa.kernel->compute_rhob(&fa);
   }
 
 };
