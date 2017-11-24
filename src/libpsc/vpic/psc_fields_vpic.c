@@ -35,16 +35,14 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
-  mrc_domain_get_patches(mflds->domain,
-			 &mflds->nr_patches);
+  mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
   assert(mflds->nr_patches == 1);
   assert(mflds->ibn[0] == 1);
   assert(mflds->ibn[1] == 1);
   assert(mflds->ibn[2] == 1);
   assert(mflds->first_comp == 0);
 
-  Simulation *sim;
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
 
   if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
@@ -52,14 +50,14 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
     assert(ref_count_fields == 0);
     ref_count_fields++;
 
-    sub->vmflds_fields = vpic_mfields_new_fields_array(sim);
+    sub->vmflds_fields = vpic_mfields_new_fields_array(sub->sim);
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    sub->vmflds_hydro = vpic_mfields_new_hydro_array(sim);
+    sub->vmflds_hydro = vpic_mfields_new_hydro_array(sub->sim);
   } else {
     assert(0);
   }
@@ -168,9 +166,9 @@ psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
 {
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
-  vpic_mfields_clear_rhof(vmflds);
+  vpic_mfields_clear_rhof(sub->sim, sub->vmflds_fields);
 }
 
 static void

@@ -128,11 +128,6 @@ struct VpicFieldArray : field_array_t {
     TIC FAK->compute_curl_b(this); TOC(compute_curl_b, 1);
   }
 
-  void clear_rhof()
-  {
-    TIC FAK->clear_rhof(this); TOC(clear_rhof, 1);
-  }
-
   void synchronize_rho()
   {
     TIC FAK->synchronize_rho(this); TOC(synchronize_rho, 1);

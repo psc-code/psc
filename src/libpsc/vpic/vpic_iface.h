@@ -99,7 +99,7 @@ void vpic_mfields_clean_div_b(FieldArray *vmflds);
 void vpic_mfields_compute_div_e_err(FieldArray *vmflds);
 double vpic_mfields_compute_rms_div_e_err(FieldArray *vmflds);
 void vpic_mfields_clean_div_e(FieldArray *vmflds);
-void vpic_mfields_clear_rhof(FieldArray *vmflds);
+void vpic_mfields_clear_rhof(Simulation *sim, FieldArray *vmflds);
 void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *mprts);
 void vpic_mfields_synchronize_rho(FieldArray *vmflds);
 void vpic_mfields_compute_rhob(FieldArray *vmflds);

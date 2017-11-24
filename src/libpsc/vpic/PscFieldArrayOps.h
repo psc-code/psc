@@ -106,6 +106,22 @@ struct PscFieldArrayOps {
     } TOC(clear_jf, 1);
   }
 
+  // ----------------------------------------------------------------------
+  // clear_rhof
+
+  void clear_rhof(FieldArray& fa)
+  {
+    TIC {
+
+      const int nv = fa.g->nv;
+    
+      for (int v = 0; v < nv; v++) {
+	fa[v].rhof = 0;
+      }
+
+    } TOC(clear_jf, 1);
+  }
+
 };
 
 
