@@ -321,7 +321,23 @@ struct PscFieldArrayOps {
 
   double compute_rms_div_b_err(FieldArray &fa)
   {
-    return fa.kernel->compute_rms_div_b_err(&fa);
+    Field3D<FieldArray> F(fa);
+    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
+
+    double err = 0;
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  err += sqr(F(i,j,k).div_b_err);
+	}
+      }
+    }
+    
+    double local[2], _global[2]; // FIXME, name clash with global macro
+    local[0] = err * fa.g->dV;
+    local[1] = (nx * ny * nz) * fa.g->dV;
+    mp_allsum_d( local, _global, 2 );
+    return fa.g->eps0 * sqrt(_global[0]/_global[1]);
   }
   
 };
