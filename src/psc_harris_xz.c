@@ -127,9 +127,15 @@ psc_harris_create(struct psc *psc)
   psc_bnd_set_type(psc->bnd, "vpic");
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "vpic");
+
   psc_marder_set_type(psc->marder, "vpic");
   // FIXME, marder "vpic" manages its own cleaning intervals
   psc_marder_set_param_int(psc->marder, "every_step", 1);
+  psc_marder_set_param_int(psc->marder, "clean_div_e_interval", 50);
+  psc_marder_set_param_int(psc->marder, "clean_div_b_interval", 50);
+  psc_marder_set_param_int(psc->marder, "sync_shared_interval", 50);
+  psc_marder_set_param_int(psc->marder, "num_div_e_round", 2);
+  psc_marder_set_param_int(psc->marder, "num_div_b_round", 2);
 }
 
 // FIXME, helper should go somewhere...
@@ -491,12 +497,6 @@ psc_harris_setup(struct psc *psc)
 
   psc->prm.nmax = (int) (sub->prm.taui / (phys->wci*phys->dt)); // number of steps from taui
 
-  psc_marder_set_param_int(psc->marder, "clean_div_e_interval", psc->prm.stats_every / 2);
-  psc_marder_set_param_int(psc->marder, "clean_div_b_interval", psc->prm.stats_every / 2);
-  psc_marder_set_param_int(psc->marder, "sync_shared_interval", psc->prm.stats_every / 2);
-  psc_marder_set_param_int(psc->marder, "num_div_e_round", 2);
-  psc_marder_set_param_int(psc->marder, "num_div_b_round", 2);
-    
   sub->sim = Simulation_create();
   psc_method_set_param_ptr(psc->method, "sim", sub->sim);
   // set high level VPIC simulation parameters
