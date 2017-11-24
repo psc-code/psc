@@ -112,9 +112,11 @@ AC_ARG_WITH(
   [],
   [with_vpic=no])
 
-AM_CONDITIONAL([USE_VPIC], [test "with_vpic" != "no"])
+echo with_vpic $with_vpic
 
-AS_IF([test "with_vpic" != "no"],
+AM_CONDITIONAL([USE_VPIC], [test "$with_vpic" != "no"])
+
+AS_IF([test "$with_vpic" != "no"],
  [VPICDIR=$with_vpic
   AC_SUBST([VPICDIR])
   CPPFLAGS="$CPPFLAGS -I$VPICDIR/src/vpic"
