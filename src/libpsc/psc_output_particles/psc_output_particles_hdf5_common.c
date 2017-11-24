@@ -364,11 +364,13 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   MPI_Comm comm = psc_output_particles_comm(out);
   int ierr;
 
-  static int pr_A, pr_B, pr_C;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
     pr_A = prof_register("outp: local", 1., 0, 0);
     pr_B = prof_register("outp: comm", 1., 0, 0);
-    pr_C = prof_register("outp: write", 1., 0, 0);
+    pr_C = prof_register("outp: write prep", 1., 0, 0);
+    pr_D = prof_register("outp: write idx", 1., 0, 0);
+    pr_E = prof_register("outp: write prts", 1., 0, 0);
   }
 
   if (hdf5->every_step < 0 ||
@@ -571,8 +573,13 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
   }
 #endif
+  prof_stop(pr_C);
 
+  prof_start(pr_D);
   write_idx(out, gidx_begin, gidx_end, groupp, dxpl);
+  prof_stop(pr_D);
+
+  prof_start(pr_E);
   write_particles(out, n_write, n_off, n_total, arr, groupp, dxpl);
 
   ierr = H5Pclose(dxpl); CE;
@@ -580,7 +587,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   H5Gclose(groupp);
   H5Gclose(group);
   H5Fclose(file);
-  prof_stop(pr_C);
+  prof_stop(pr_E);
 
   free(arr);
   free(gidx_begin);
