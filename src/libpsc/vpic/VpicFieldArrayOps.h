@@ -68,6 +68,12 @@ struct VpicFieldArrayOps {
   {
     fa.kernel->compute_curl_b(&fa);
   }
+
+  void synchronize_rho(FieldArray& fa)
+  {
+    fa.kernel->synchronize_rho(&fa);
+  }
+
 };
 
 

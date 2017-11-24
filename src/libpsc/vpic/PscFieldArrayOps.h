@@ -783,6 +783,14 @@ struct PscFieldArrayOps {
     vacuum_compute_curl_b(fa);
   }
 
+  // ----------------------------------------------------------------------
+  // synchronize_rho
+  
+  void synchronize_rho(FieldArray& fa)
+  {
+    fa.kernel->synchronize_rho(&fa);
+  }
+
 };
 
 

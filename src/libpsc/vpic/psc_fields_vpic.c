@@ -184,9 +184,9 @@ psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
 static void
 psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
 {
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
-  vpic_mfields_synchronize_rho(vmflds);
+  vpic_mfields_synchronize_rho(sub->sim, sub->vmflds_fields);
 }
 
 static void
