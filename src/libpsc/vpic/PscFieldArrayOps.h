@@ -376,20 +376,35 @@ struct PscFieldArrayOps {
     const material_coefficient_t* m = params->mc;
     const grid_t* g = fa.g;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
-    const float nc = m->nonconductive;
-    const float px = ((nx>1) ? g->eps0 * m->epsx * g->rdx : 0);
-    const float py = ((ny>1) ? g->eps0 * m->epsy * g->rdy : 0);
-    const float pz = ((nz>1) ? g->eps0 * m->epsz * g->rdz : 0);
 
-#define UPDATE_DERR_E(i,j,k) F(i,j,k).rhob = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) + \
-						 py * (F(i,j,k).ey - F(i,j-1,k).ey) + \
-						 pz * (F(i,j,k).ez - F(i,j,k-1).ez) - \
-						 F(i,j,k).rhof);
+    struct CalcDivE {
+      CalcDivE(FieldArray& fa, const material_coefficient_t *m)
+	: F(fa),
+	  nc(m->nonconductive),
+	  px(fa.g->nx > 1 ? fa.g->eps0 * m->epsx * fa.g->rdx : 0),
+	  py(fa.g->ny > 1 ? fa.g->eps0 * m->epsy * fa.g->rdy : 0),
+	  pz(fa.g->nz > 1 ? fa.g->eps0 * m->epsz * fa.g->rdz : 0)
+      {
+      }
+
+      void operator()(int i, int j, int k)
+      {
+	F(i,j,k).rhob = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) +
+			    py * (F(i,j,k).ey - F(i,j-1,k).ey) +
+			    pz * (F(i,j,k).ez - F(i,j,k-1).ez) -
+			    F(i,j,k).rhof);
+      }
+
+      Field3D<FieldArray> F;
+      const float nc, px, py, pz;
+    };
+
+    CalcDivE updater(fa, m);
     
     for (int k = 2; k <= nz; k++) {
       for (int j = 2; j <= ny; j++) {
 	for (int i = 2; i <= nx; i++) {
-	  UPDATE_DERR_E(i,j,k);
+	  updater(i,j,k);
 	}
       }
     }
@@ -400,35 +415,34 @@ struct PscFieldArrayOps {
     // z faces, x edges, y edges and all corners
     for(int j = 1; j <= ny+1; j++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,j,1   );
+	updater(i,j,1   );
       }
     }
     for(int j = 1; j <= ny+1; j++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,j,nz+1);
+	updater(i,j,nz+1);
       }
     }
 
     // y faces, z edges
     for(int k = 2; k <= nz; k++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,1   ,k);
+	updater(i,1   ,k);
       }
     }
     for(int k = 2; k <= nz; k++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,ny+1,k);
+	updater(i,ny+1,k);
       }
     }
 
     // x faces
     for(int k = 2; k <= nz; k++) {
       for(int j = 2; j <= ny; j++) {
-	UPDATE_DERR_E(1   ,j,k);
-	UPDATE_DERR_E(nx+1,j,k);
+	updater(1   ,j,k);
+	updater(nx+1,j,k);
       }
     }
-#undef UPDATE_DERR_E
 
     local_adjust_rhob(fa.f, fa.g);
   }
@@ -450,21 +464,36 @@ struct PscFieldArrayOps {
     const material_coefficient_t* m = params->mc;
     const grid_t* g = fa.g;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
-    const float nc = m->nonconductive;
-    const float px = ((nx>1) ? g->rdx : 0) * m->epsx;
-    const float py = ((ny>1) ? g->rdy : 0) * m->epsy;
-    const float pz = ((nz>1) ? g->rdz : 0) * m->epsz;
-    const float cj = 1./g->eps0;
 
-#define UPDATE_DERR_E(i,j,k) F(i,j,k).div_e_err = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) + \
-						      py * (F(i,j,k).ey - F(i,j-1,k).ey) + \
-						      pz * (F(i,j,k).ez - F(i,j,k-1).ez) - \
-						      cj * (F(i,j,k).rhof + F(i,j,k).rhob) )
+    struct CalcDivE {
+      CalcDivE(FieldArray& fa, const material_coefficient_t *m)
+	: F(fa),
+	  nc(m->nonconductive),
+	  px(fa.g->nx > 1 ? fa.g->eps0 * fa.g->rdx : 0),
+	  py(fa.g->ny > 1 ? fa.g->eps0 * fa.g->rdy : 0),
+	  pz(fa.g->nz > 1 ? fa.g->eps0 * fa.g->rdz : 0),
+	  cj(1. / fa.g->eps0)
+      {
+      }
+
+      void operator()(int i, int j, int k)
+      {
+	F(i,j,k).div_e_err = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) +
+				 py * (F(i,j,k).ey - F(i,j-1,k).ey) +
+				 pz * (F(i,j,k).ez - F(i,j,k-1).ez) -
+				 cj * (F(i,j,k).rhof + F(i,j,k).rhob));
+      }
+
+      Field3D<FieldArray> F;
+      const float nc, px, py, pz, cj;
+    };
+
+    CalcDivE updater(fa, m);
     
     for (int k = 2; k <= nz; k++) {
       for (int j = 2; j <= ny; j++) {
 	for (int i = 2; i <= nx; i++) {
-	  UPDATE_DERR_E(i,j,k);
+	  updater(i,j,k);
 	}
       }
     }
@@ -475,35 +504,34 @@ struct PscFieldArrayOps {
     // z faces, x edges, y edges and all corners
     for(int j = 1; j <= ny+1; j++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,j,1   );
+	updater(i,j,1   );
       }
     }
     for(int j = 1; j <= ny+1; j++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,j,nz+1);
+	updater(i,j,nz+1);
       }
     }
 
     // y faces, z edges
     for(int k = 2; k <= nz; k++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,1   ,k);
+	updater(i,1   ,k);
       }
     }
     for(int k = 2; k <= nz; k++) {
       for(int i = 1; i <= nx+1; i++) {
-	UPDATE_DERR_E(i,ny+1,k);
+	updater(i,ny+1,k);
       }
     }
 
     // x faces
     for(int k = 2; k <= nz; k++) {
       for(int j = 2; j <= ny; j++) {
-	UPDATE_DERR_E(1   ,j,k);
-	UPDATE_DERR_E(nx+1,j,k);
+	updater(1   ,j,k);
+	updater(nx+1,j,k);
       }
     }
-#undef UPDATE_DERR_E
 
     local_adjust_div_e(fa.f, fa.g);
   }
