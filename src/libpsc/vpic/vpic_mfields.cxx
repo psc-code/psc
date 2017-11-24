@@ -49,9 +49,11 @@ float *vpic_mfields_get_data(FieldArray *vmflds, int *ib, int *im)
 // ----------------------------------------------------------------------
 // C wrappers
 
-double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *vmflds)
+double vpic_mfields_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* vmflds)
 {
-  return vmflds->synchronize_tang_e_norm_b();
+  double err;
+  TIC err = sim->synchronize_tang_e_norm_b(*vmflds); TOC(synchronize_tang_e_norm_b, 1);
+  return err;
 }
 
 void vpic_mfields_compute_div_b_err(Simulation* sim, FieldArray* vmflds)

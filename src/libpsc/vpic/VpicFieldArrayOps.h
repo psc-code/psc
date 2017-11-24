@@ -79,6 +79,11 @@ struct VpicFieldArrayOps {
     fa.kernel->compute_rhob(&fa);
   }
 
+  double synchronize_tang_e_norm_b(FieldArray& fa)
+  {
+    return fa.kernel->synchronize_tang_e_norm_b(&fa);
+  }
+
 };
 
 

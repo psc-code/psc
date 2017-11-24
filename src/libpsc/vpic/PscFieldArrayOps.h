@@ -337,6 +337,14 @@ struct PscFieldArrayOps {
   }
 
   // ----------------------------------------------------------------------
+  // synchronize_tang_e_norm_b
+
+  double synchronize_tang_e_norm_b(FieldArray& fa)
+  {
+    return fa.kernel->synchronize_tang_e_norm_b(&fa);
+  }
+
+  // ----------------------------------------------------------------------
   // compute_div_b_err
   
   static void compute_div_b_err(FieldArray& fa)

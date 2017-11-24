@@ -82,17 +82,6 @@ struct VpicFieldArray : field_array_t {
   // ----------------------------------------------------------------------
   // kernels
   
-#define FAK kernel
-
-  double synchronize_tang_e_norm_b()
-  {
-    double err;
-    TIC err = FAK->synchronize_tang_e_norm_b(this); TOC(synchronize_tang_e_norm_b, 1);
-    return err;
-  }
-
-#undef FAK
-
   // I'm keeping these for now, because I tink they're a nice interface,
   // but it doesn't scale well to other kinds of fields (as one can tell
   // from the macro use...)

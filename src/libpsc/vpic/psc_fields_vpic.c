@@ -110,9 +110,9 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 static double
 psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
 {
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
-  return vpic_mfields_synchronize_tang_e_norm_b(vmflds);
+  return vpic_mfields_synchronize_tang_e_norm_b(sub->sim, sub->vmflds_fields);
 }
 
 static void
