@@ -38,6 +38,12 @@ struct VpicFieldArrayOps {
   {
     fa.kernel->compute_div_b_err(&fa);
   }
+
+  void compute_div_e_err(FieldArray& fa)
+  {
+    fa.kernel->compute_div_e_err(&fa);
+  }
+  
   
 };
 

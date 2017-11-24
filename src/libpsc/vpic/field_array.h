@@ -84,11 +84,6 @@ struct VpicFieldArray : field_array_t {
   
 #define FAK kernel
 
-  void compute_div_e_err()
-  {
-    TIC FAK->compute_div_e_err(this); TOC(compute_div_e_err, 1);
-  }
-  
   double compute_rms_div_b_err()
   {
     double err;

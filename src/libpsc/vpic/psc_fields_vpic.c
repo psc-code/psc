@@ -142,9 +142,9 @@ psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
 {
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
-  vpic_mfields_compute_div_e_err(vmflds);
+  vpic_mfields_compute_div_e_err(sub->sim, sub->vmflds_fields);
 }
 
 static double
