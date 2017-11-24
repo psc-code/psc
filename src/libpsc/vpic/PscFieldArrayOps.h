@@ -12,9 +12,172 @@ struct PscFieldArrayOps {
   // ----------------------------------------------------------------------
   // advance_e
   
+#define UPDATE_EX(i,j,k)						\
+  F(i,j,k).tcax = ((py_muz*(F(i,j,k).cbz - F(i,j-1,k).cbz) -		\
+		    pz_muy*(F(i,j,k).cby - F(i,j,k-1).cby)) -		\
+		   damp*F(i,j,k).tcax);					\
+  F(i,j,k).ex   = decayx*F(i,j,k).ex + drivex*(F(i,j,k).tcax - cj*F(i,j,k).jfx)
+#define UPDATE_EY(i,j,k)						\
+  F(i,j,k).tcay = ((pz_mux*(F(i,j,k).cbx - F(i,j,k-1).cbx) -		\
+		    px_muz*(F(i,j,k).cbz - F(i-1,j,k).cbz)) -		\
+		   damp*F(i,j,k).tcay);					\
+  F(i,j,k).ey   = decayy*F(i,j,k).ey + drivey*(F(i,j,k).tcay - cj*F(i,j,k).jfy)
+#define UPDATE_EZ(i,j,k)						\
+  F(i,j,k).tcaz = ((px_muy*(F(i,j,k).cby - F(i-1,j,k).cby) -		\
+		    py_mux*(F(i,j,k).cbx - F(i,j-1,k).cbx)) -		\
+		   damp*F(i,j,k).tcaz);					\
+  F(i,j,k).ez   = decayz*F(i,j,k).ez + drivez*(F(i,j,k).tcaz - cj*F(i,j,k).jfz)
+  
+  void vacuum_advance_e(FieldArray& fa)
+  {
+    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
+    assert(params->n_mc == 1);
+
+    Field3D<FieldArray> F(fa);
+
+    // Begin tangential B ghost setup
+
+    begin_remote_ghost_tang_b(fa.f, fa.g);
+    local_ghost_tang_b(fa.f, fa.g);
+
+    // Update interior fields
+    // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
+    // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
+    // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
+
+    const material_coefficient_t* m = params->mc;
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    const float decayx = m->decayx, drivex = m->drivex;
+    const float decayy = m->decayy, drivey = m->drivey;
+    const float decayz = m->decayz, drivez = m->drivez;
+    const float damp   = params->damp;
+    const float px_muz = ((nx>1) ? (1+damp)*g->cvac*g->dt*g->rdx : 0)*m->rmuz;
+    const float px_muy = ((nx>1) ? (1+damp)*g->cvac*g->dt*g->rdx : 0)*m->rmuy;
+    const float py_mux = ((ny>1) ? (1+damp)*g->cvac*g->dt*g->rdy : 0)*m->rmux;
+    const float py_muz = ((ny>1) ? (1+damp)*g->cvac*g->dt*g->rdy : 0)*m->rmuz;
+    const float pz_muy = ((nz>1) ? (1+damp)*g->cvac*g->dt*g->rdz : 0)*m->rmuy;
+    const float pz_mux = ((nz>1) ? (1+damp)*g->cvac*g->dt*g->rdz : 0)*m->rmux;
+    const float cj     = g->dt / g->eps0;
+
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
+	  UPDATE_EX(i,j,k);
+	  UPDATE_EY(i,j,k);
+	  UPDATE_EZ(i,j,k);
+	}
+      }
+    }
+
+    // While the pipelines are busy, do non-bulk interior fields
+
+    int x, y, z;
+
+    // Do left over interior ex
+    for(z=2; z<=nz; z++) {
+      for(y=2; y<=ny; y++) {
+	UPDATE_EX(1,y,z);
+      }
+    }
+
+    // Do left over interior ey
+    for(z=2; z<=nz; z++) {
+      for(x=2; x<=nx; x++) {
+	UPDATE_EY(x,1,z);
+      }
+    }
+
+    // Do left over interior ez
+    for(y=2; y<=ny; y++) {
+      for(x=2; x<=nx; x++) {
+	UPDATE_EZ(x,y,1);
+      }
+    }
+
+    // Finish tangential B ghost setup
+
+    end_remote_ghost_tang_b(fa.f, fa.g);
+
+    // Update exterior fields
+
+    // Do exterior ex
+    for(y=1; y<=ny+1; y++) {
+      for(x=1; x<=nx; x++) {
+	UPDATE_EX(x,y,1);
+      }
+    }
+    for(y=1; y<=ny+1; y++) {
+      for(x=1; x<=nx; x++) {
+	UPDATE_EX(x,y,nz+1);
+      }
+    }
+    for(z=2; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	UPDATE_EX(x,1,z);
+      }
+    }
+    for(z=2; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	UPDATE_EX(x,ny+1,z);
+      }
+    }
+
+    // Do exterior ey
+    for(z=1; z<=nz+1; z++) {
+      for(y=1; y<=ny; y++) {
+	UPDATE_EY(1,y,z);
+      }
+    }
+    for(z=1; z<=nz+1; z++) {
+      for(y=1; y<=ny; y++) {
+	UPDATE_EY(nx+1,y,z);
+      }
+    }
+    for(y=1; y<=ny; y++) {
+      for(x=2; x<=nx; x++) {
+	UPDATE_EY(x,y,1);
+      }
+    }
+    for(y=1; y<=ny; y++) {
+      for(x=2; x<=nx; x++) {
+	UPDATE_EY(x,y,nz+1);
+      }
+    }
+
+    // Do exterior ez
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx+1; x++) {
+	UPDATE_EZ(x,1,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx+1; x++) {
+	UPDATE_EZ(x,ny+1,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(y=2; y<=ny; y++) {
+	UPDATE_EZ(1,y,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(y=2; y<=ny; y++) {
+	UPDATE_EZ(nx+1,y,z);
+      }
+    }
+
+    local_adjust_tang_e(fa.f, fa.g);
+#undef UPDATE_EX
+#undef UPDATE_EY
+#undef UPDATE_EZ
+  }
+
   void advance_e(FieldArray& fa, double frac)
   {
-    fa.kernel->advance_e(&fa, frac);
+    assert(frac == 1.);
+    vacuum_advance_e(fa);
   }
 
   // ----------------------------------------------------------------------
@@ -1080,7 +1243,7 @@ struct PscFieldArrayOps {
       }
     }
 
-    local_adjust_tang_e(fa.f, fa.g);
+    local_adjust_tang_e(fa.f, fa.g); // FIXME, is this right here?
   }
 
   void compute_curl_b(FieldArray& fa)
