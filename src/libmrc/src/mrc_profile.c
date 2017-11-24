@@ -112,11 +112,11 @@ prof_print_mpi(MPI_Comm comm)
     printf("%19s %10s %10s %10s | %10s %10s %10s\n", "",
 	   "ms", "ms", "ms", "s", "", "ms");
     for (int pr = 0; pr < nr_prof_data; pr++) {
-      if (times_max[pr] <= 0.) {
+      struct prof_info *pinfo = &prof_globals.info[pr];
+      if (pinfo->total_cnt == 0) {
 	continue;
       }
       times_avg[pr] /= size;
-      struct prof_info *pinfo = &prof_globals.info[pr];
       
       printf("%-19s %10.2f %10.2f %10.2f | %10.0f %10d %10.2f\n", prof_data[pr].name,
 	     times_avg[pr] / 1e3, times_min[pr] / 1e3, times_max[pr] / 1e3,
