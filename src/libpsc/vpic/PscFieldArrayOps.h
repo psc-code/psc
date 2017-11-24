@@ -900,6 +900,14 @@ struct PscFieldArrayOps {
     vacuum_compute_curl_b(fa);
   }
 
+  // ----------------------------------------------------------------------
+  // compute_rhob
+  
+  void compute_rhob(FieldArray& fa)
+  {
+    fa.kernel->compute_rhob(&fa);
+  }
+
 };
 
 

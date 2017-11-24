@@ -74,6 +74,11 @@ struct VpicFieldArrayOps {
     fa.kernel->synchronize_rho(&fa);
   }
 
+  void compute_rhob(FieldArray& fa)
+  {
+    fa.kernel->compute_rhob(&fa);
+  }
+
 };
 
 

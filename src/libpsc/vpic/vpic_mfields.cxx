@@ -98,9 +98,9 @@ void vpic_mfields_synchronize_rho(Simulation* sim, FieldArray* vmflds)
   TIC sim->synchronize_rho(*vmflds); TOC(synchronize_rho, 1);
 }
 
-void vpic_mfields_compute_rhob(FieldArray *vmflds)
+void vpic_mfields_compute_rhob(Simulation* sim, FieldArray* vmflds)
 {
-  vmflds->compute_rhob();
+  TIC sim->compute_rhob(*vmflds); TOC(compute_rhob, 1);
 }
 
 void vpic_mfields_compute_curl_b(Simulation* sim, FieldArray* vmflds)

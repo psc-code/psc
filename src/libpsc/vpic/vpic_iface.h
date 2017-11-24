@@ -103,7 +103,7 @@ void vpic_mfields_clean_div_e(Simulation* sim, FieldArray* vmflds);
 void vpic_mfields_clear_rhof(Simulation* sim, FieldArray* vmflds);
 void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *mprts);
 void vpic_mfields_synchronize_rho(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_compute_rhob(FieldArray *vmflds);
+void vpic_mfields_compute_rhob(Simulation* sim, FieldArray* vmflds);
 void vpic_mfields_compute_curl_b(Simulation* sim, FieldArray* vmflds);
 
 // ----------------------------------------------------------------------
