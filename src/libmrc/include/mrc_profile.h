@@ -16,6 +16,8 @@ struct prof_info {
   int cnt;
   long long time;
   long long counters[NR_EVENTS];
+  int total_cnt;
+  long long total_time;
 };
 
 #define MAX_PROF (100)

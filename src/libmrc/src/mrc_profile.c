@@ -86,7 +86,7 @@ prof_print_mpi(MPI_Comm comm)
   for (int pr = 0; pr < nr_prof_data; pr++) {
     struct prof_info *pinfo = &prof_globals.info[pr];
     if (pinfo->cnt > 0) {
-      times[pr] = pinfo->time / 1e3;
+      times[pr] = pinfo->time;
     } else {
       times[pr] = -1;
     }
@@ -100,16 +100,27 @@ prof_print_mpi(MPI_Comm comm)
   MPI_Reduce(times, times_min, nr_prof_data, MPI_FLOAT, MPI_MIN, 0, comm);
   MPI_Reduce(times, times_max, nr_prof_data, MPI_FLOAT, MPI_MAX, 0, comm);
 
+  for (int pr = 0; pr < nr_prof_data; pr++) {
+    struct prof_info *pinfo = &prof_globals.info[pr];
+    pinfo->total_time += pinfo->time;
+    pinfo->total_cnt += pinfo->cnt;
+  }
+
   if (rank == 0) {
-    printf("%19s %10s %10s %10s\n", "", "avg", "min", "max");
+    printf("%19s %10s %10s %10s | %10s %10s %10s\n", "",
+	   "avg", "min", "max", "cum.time", "cum.cnt", "cum.per");
+    printf("%19s %10s %10s %10s | %10s %10s %10s\n", "",
+	   "ms", "ms", "ms", "s", "", "ms");
     for (int pr = 0; pr < nr_prof_data; pr++) {
       if (times_max[pr] <= 0.) {
 	continue;
       }
       times_avg[pr] /= size;
+      struct prof_info *pinfo = &prof_globals.info[pr];
       
-      printf("%-19s %10.2f %10.2f %10.2f\n", prof_data[pr].name, times_avg[pr],
-	     times_min[pr], times_max[pr]);
+      printf("%-19s %10.2f %10.2f %10.2f | %10.0f %10d %10.2f\n", prof_data[pr].name,
+	     times_avg[pr] / 1e3, times_min[pr] / 1e3, times_max[pr] / 1e3,
+	     pinfo->total_time / 1e6, pinfo->total_cnt, pinfo->total_time / pinfo->total_cnt / 1e3);
     }
   }
 
