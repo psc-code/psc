@@ -95,7 +95,7 @@ float *vpic_mfields_get_data(FieldArray *fmflds, int *ib, int *im);
 double vpic_mfields_synchronize_tang_e_norm_b(FieldArray *mflds);
 void vpic_mfields_compute_div_b_err(Simulation* sim, FieldArray* vmflds);
 double vpic_mfields_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_clean_div_b(FieldArray *vmflds);
+void vpic_mfields_clean_div_b(Simulation* sim, FieldArray* vmflds);
 void vpic_mfields_compute_div_e_err(Simulation* sim, FieldArray* vmflds);
 double vpic_mfields_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds);
 void vpic_mfields_clean_div_e(FieldArray *vmflds);

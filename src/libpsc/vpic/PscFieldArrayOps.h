@@ -425,6 +425,14 @@ struct PscFieldArrayOps {
     return fa.g->eps0 * sqrt(_global[0]/_global[1]);
   }
 
+  // ----------------------------------------------------------------------
+  // clean_div_b
+  
+  void clean_div_b(FieldArray& fa)
+  {
+    fa.kernel->clean_div_b(&fa);
+  }
+
 
 };
 
