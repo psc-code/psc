@@ -45,24 +45,7 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
   vpushp->prep(vmprts, vmflds);
 }
 
-void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
-				       Particles *vmprts, FieldArray *vmflds)
-{
-  vpushp->stagger_mprts(vmprts, vmflds);
-}
-
 // ----------------------------------------------------------------------
-
-void vpic_push_particles::stagger_mprts(Particles *vmprts, FieldArray *vmflds)
-{
-  if (!vmprts->empty()) {
-    sim_->load_interpolator_array(interpolator, vmflds);
-
-    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-      TIC ::uncenter_p(&*sp, interpolator); TOC(uncenter_p, 1);
-    }
-  }
-}
 
 void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 {

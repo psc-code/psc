@@ -184,6 +184,7 @@ struct species * Simulation_define_species(Simulation *sim, const char *name, do
 					   double sort_interval, double sort_out_of_place);
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
+void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 void Simulation_collision_run(Simulation *sim);
 void Simulation_field_injection(Simulation *sim);
 void Simulation_moments_run(Simulation *sim, struct HydroArray *mflds, Particles *vmprts, int kind);

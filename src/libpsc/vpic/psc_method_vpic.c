@@ -245,8 +245,9 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   err = psc_mfields_synchronize_tang_e_norm_b(mflds);
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
-  mpi_printf(psc_comm(psc), "Uncentering particles\n");
-  psc_push_particles_stagger(psc->push_particles, mprts, mflds);
+  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  Simulation_initialize(sub->sim, vmprts, vmflds);
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
   psc_mfields_put_as(mflds, mflds_base, 0, VPIC_MFIELDS_N_COMP);
