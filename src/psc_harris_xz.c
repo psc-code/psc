@@ -300,9 +300,10 @@ psc_harris_setup_fields(struct psc *psc)
   mpi_printf(comm, "Setting up materials.\n");
 
   Simulation_define_material(sub->sim, "vacuum", 1., 1., 0., 0.);
+#if 0
   struct material *resistive =
     Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
-
+#endif
   Simulation_define_field_array(sub->sim, 0.);
 
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
@@ -315,9 +316,11 @@ psc_harris_setup_fields(struct psc *psc)
 
   mpi_printf(comm, "Finalizing Field Advance\n");
 
+#if 0
   assert(psc->nr_patches > 0);
   Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc->patch[0].dx,
 					 0., resistive);
+#endif
 }
 
 // ----------------------------------------------------------------------
