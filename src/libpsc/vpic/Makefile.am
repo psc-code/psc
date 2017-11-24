@@ -30,8 +30,11 @@ libsubdir_la_SOURCES = \
 	vpic_push_particles.cxx \
 	simulation.cxx \
 	main.cxx \
-	wrapper.cxx \
-	wrapper_split.cxx
+	wrapper_split.cxx \
+	wrapper.cxx
+
+#	wrapper_empty.cxx
+
 
 endif USE_VPIC
 
