@@ -225,7 +225,7 @@ struct PscFieldArrayOps {
   static void compute_div_b_err(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *              g = fa.g;
+    const grid_t* g = fa.g;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
     const float py = (ny>1) ? g->rdy : 0;
@@ -247,9 +247,73 @@ struct PscFieldArrayOps {
   
   void compute_div_e_err(FieldArray& fa)
   {
-    fa.kernel->compute_div_e_err(&fa);
+    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
+    assert(params->n_mc == 1);
+
+    // Begin setting normal e ghosts
+    begin_remote_ghost_norm_e(fa.f, fa.g);
+    local_ghost_norm_e(fa.f, fa.g);
+
+    // Overlap local computation
+    Field3D<FieldArray> F(fa);
+    const material_coefficient_t* m = params->mc;
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const float nc = m->nonconductive;
+    const float px = ((nx>1) ? g->rdx : 0) * m->epsx;
+    const float py = ((ny>1) ? g->rdy : 0) * m->epsy;
+    const float pz = ((nz>1) ? g->rdz : 0) * m->epsz;
+    const float cj = 1./g->eps0;
+
+#define UPDATE_DERR_E(i,j,k) F(i,j,k).div_e_err = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) + \
+						      py * (F(i,j,k).ey - F(i,j-1,k).ey) + \
+						      pz * (F(i,j,k).ez - F(i,j,k-1).ez) - \
+						      cj * (F(i,j,k).rhof + F(i,j,k).rhob) )
+    
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  UPDATE_DERR_E(i,j,k);
+	}
+      }
+    }
+
+    // Finish setting normal e ghosts
+    end_remote_ghost_norm_e(fa.f, fa.g);
+
+    // z faces, x edges, y edges and all corners
+    for(int j = 1; j <= ny+1; j++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,j,1   );
+      }
+    }
+    for(int j = 1; j <= ny+1; j++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,j,nz+1);
+      }
+    }
+
+    // y faces, z edges
+    for(int k = 2; k <= nz; k++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,1   ,k);
+      }
+    }
+    for(int k = 2; k <= nz; k++) {
+      for(int i = 1; i <= nx+1; i++) {
+	UPDATE_DERR_E(i,ny+1,k);
+      }
+    }
+
+    // x faces
+    for(int k = 2; k <= nz; k++) {
+      for(int j = 2; j <= ny; j++) {
+	UPDATE_DERR_E(1   ,j,k);
+	UPDATE_DERR_E(nx+1,j,k);
+      }
+    }
   }
-  
+
 };
 
 
