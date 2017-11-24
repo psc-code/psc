@@ -93,17 +93,12 @@ struct PscFieldArrayOps {
 
   void clear_jf(FieldArray& fa)
   {
-    TIC {
-
-      const int nv = fa.g->nv;
-    
-      for (int v = 0; v < nv; v++) {
-	fa[v].jfx = 0;
-	fa[v].jfy = 0;
-	fa[v].jfz = 0;
-      }
-
-    } TOC(clear_jf, 1);
+    const int nv = fa.g->nv;
+    for (int v = 0; v < nv; v++) {
+      fa[v].jfx = 0;
+      fa[v].jfy = 0;
+      fa[v].jfz = 0;
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -111,17 +106,11 @@ struct PscFieldArrayOps {
 
   void clear_rhof(FieldArray& fa)
   {
-    TIC {
-
-      const int nv = fa.g->nv;
-    
-      for (int v = 0; v < nv; v++) {
-	fa[v].rhof = 0;
-      }
-
-    } TOC(clear_jf, 1);
+    const int nv = fa.g->nv;
+    for (int v = 0; v < nv; v++) {
+      fa[v].rhof = 0;
+    }
   }
-
 };
 
 

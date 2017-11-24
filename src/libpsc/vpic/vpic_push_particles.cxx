@@ -148,7 +148,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // guard lists are empty and the accumulators on each processor are current.
   // Convert the accumulators into currents.
 
-  sim_->clear_jf(*vmflds);
+  TIC sim_->clear_jf(*vmflds); TOC(clear_jf, 1);
   if (!vmprts->empty()) {
     sim_->unload_accumulator_array(vmflds, accumulator);
   }

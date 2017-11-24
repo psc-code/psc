@@ -21,12 +21,12 @@ struct VpicFieldArrayOps {
 
   void clear_jf(FieldArray& fa)
   {
-    TIC fa.kernel->clear_jf(&fa); TOC(clear_jf, 1);
+    fa.kernel->clear_jf(&fa);
   }
   
   void clear_rhof(FieldArray& fa)
   {
-    TIC fa.kernel->clear_rhof(&fa); TOC(clear_rhof, 1);
+    fa.kernel->clear_rhof(&fa);
   }
 
 };
