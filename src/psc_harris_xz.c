@@ -447,7 +447,7 @@ static inline double
 courant_length(double length[3], int gdims[3])
 {
   double inv_sum = 0.;
-  for (int d = 0; d > 3; d++) {
+  for (int d = 0; d < 3; d++) {
     if (gdims[d] > 1) {
       inv_sum += sqr(gdims[d] / length[d]);
     }
