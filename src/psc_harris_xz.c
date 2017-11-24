@@ -12,6 +12,9 @@
 #include <psc_bnd.h>
 #include <psc_bnd_fields.h>
 #include <psc_checks.h>
+#include <psc_output_fields_collection_private.h>
+#include <psc_output_fields_private.h>
+#include <psc_output_particles.h>
 
 #include <psc_particles_as_single.h>
 #include <psc_particles_vpic.h>
@@ -48,6 +51,10 @@ static struct param psc_harris_descr[] = {
     .help = "simulation wci's to run" },
   { "t_intervali"           , VAR(prm.t_intervali)           , PARAM_DOUBLE(1.),
     .help = "output interval in terms of 1/wci" },
+  { "output_field_interval" , VAR(prm.output_field_interval) , PARAM_DOUBLE(1.),
+    .help = "field output interval in terms of 1/wci" },
+  { "output_particle_interval", VAR(prm.output_particle_interval), PARAM_DOUBLE(0.),
+    .help = "particle output interval in terms of 1/wci" },
 
   { "L_di"                  , VAR(prm.L_di)                  , PARAM_DOUBLE(.5),
     .help = "Sheet thickness / ion inertial length" },
@@ -504,7 +511,7 @@ psc_harris_setup(struct psc *psc)
 
   int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
   Simulation_diagnostics_init(sub->sim, interval);
-  
+
   psc->n_state_fields = VPIC_MFIELDS_N_COMP;
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
 
@@ -526,6 +533,19 @@ psc_harris_setup(struct psc *psc)
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   
   psc_setup_member_objs(psc);
+
+  if (sub->prm.output_field_interval > 0) {
+    struct psc_output_fields *out;
+    mrc_obj_for_each_child(out, psc->output_fields_collection, struct psc_output_fields) {
+      psc_output_fields_set_param_int(out, "pfield_step",
+				      (int) (sub->prm.output_field_interval / (phys->wci*phys->dt)));
+    }
+  }
+
+  if (sub->prm.output_particle_interval > 0) {
+    psc_output_particles_set_param_int(psc->output_particles, "every_step",
+				      (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
+  }
 }
 
 // ----------------------------------------------------------------------

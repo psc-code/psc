@@ -237,6 +237,8 @@ struct vpic_harris_params {
   int electron_sort_interval;
   double taui;                    // simulation wci's to run
   double t_intervali;             // output interval in terms of 1/wci
+  double output_field_interval;   // field output interval in terms of 1/wci
+  double output_particle_interval;// particle output interval in terms of 1/wci
 
   // Harris
   double L_di;                    // Sheet thickness / ion inertial length
