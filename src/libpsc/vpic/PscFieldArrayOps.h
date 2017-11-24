@@ -2,19 +2,15 @@
 #ifndef PSC_FIELD_ARRAY_OPS_H
 #define PSC_FIELD_ARRAY_OPS_H
 
-#define CBX FieldArray::CBX
-#define CBY FieldArray::CBY
-#define CBZ FieldArray::CBZ
-#define EX FieldArray::EX
-#define EY FieldArray::EY
-#define EZ FieldArray::EZ
-
 // ======================================================================
 // PscFieldArrayOps
 
 template<class FA>
 struct PscFieldArrayOps {
   typedef FA FieldArray;
+
+  // ----------------------------------------------------------------------
+  // advance_e
   
   void advance_e(FieldArray& fa, double frac)
   {
@@ -24,6 +20,13 @@ struct PscFieldArrayOps {
   // ----------------------------------------------------------------------
   // advance_b
   
+#define CBX FieldArray::CBX
+#define CBY FieldArray::CBY
+#define CBZ FieldArray::CBZ
+#define EX FieldArray::EX
+#define EY FieldArray::EY
+#define EZ FieldArray::EZ
+
 #define UPDATE_CBX() F(CBX, i,j,k) -= (py*(F(EZ, i,j+1,k) - F(EZ ,i,j,k)) - pz*(F(EY, i,j,k+1) - F(EY, i,j,k)))
 #define UPDATE_CBY() F(CBY, i,j,k) -= (pz*(F(EX, i,j,k+1) - F(EX ,i,j,k)) - px*(F(EZ, i+1,j,k) - F(EZ, i,j,k)))
 #define UPDATE_CBZ() F(CBZ, i,j,k) -= (px*(F(EY, i+1,j,k) - F(EY, i,j,k)) - py*(F(EX, i,j+1,k) - F(EX, i,j,k)))
@@ -78,13 +81,32 @@ struct PscFieldArrayOps {
     local_adjust_norm_b(fa.f, fa.g);
   }
 
-};
-
 #undef CBX
 #undef CBY
 #undef CBZ
 #undef EX
 #undef EY
 #undef EZ
+
+  // ----------------------------------------------------------------------
+  // clear_jf
+
+  void clear_jf(FieldArray& fa)
+  {
+    TIC {
+
+      const int nv = fa.g->nv;
+    
+      for (int v = 0; v < nv; v++) {
+	fa[v].jfx = 0;
+	fa[v].jfy = 0;
+	fa[v].jfz = 0;
+      }
+
+    } TOC(clear_jf, 1);
+  }
+
+};
+
 
 #endif

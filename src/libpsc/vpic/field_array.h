@@ -69,16 +69,21 @@ struct VpicFieldArray : field_array_t {
     return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
 
+  Element operator[](int idx) const
+  {
+    return f[idx];
+  }
+  
+  Element& operator[](int idx)
+  {
+    return f[idx];
+  }
+  
   // ----------------------------------------------------------------------
   // kernels
   
 #define FAK kernel
 
-  void clear_jf()
-  {
-    TIC FAK->clear_jf(this); TOC(clear_jf, 1);
-  }
-  
   void synchronize_jf()
   {
     TIC FAK->synchronize_jf(this); TOC(synchronize_jf, 1);

@@ -19,6 +19,11 @@ struct VpicFieldArrayOps {
     fa.kernel->advance_e(&fa, frac);
   }
 
+  void clear_jf(FieldArray& fa)
+  {
+    TIC fa.kernel->clear_jf(&fa); TOC(clear_jf, 1);
+  }
+  
 };
 
 
