@@ -345,7 +345,84 @@ struct PscFieldArrayOps {
   
   double compute_rms_div_e_err(FieldArray &fa)
   {
-    return fa.kernel->compute_rms_div_e_err(&fa);
+    Field3D<FieldArray> F(fa);
+    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
+
+    // Interior points
+    // FIXME, it's inconsistent to calc the square in single prec here, but
+    // double prec later
+    double err = 0;
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
+	  err += sqr(F(i,j,k).div_e_err);
+	}
+      }
+    }
+
+    int x, y, z;
+    // Exterior faces
+
+    for( y=2; y<=ny; y++ ) {
+      for( z=2; z<=nz; z++ ) {
+	err += 0.5*sqr((double) (F(1   ,y,z).div_e_err));
+	err += 0.5*sqr((double) (F(nx+1,y,z).div_e_err));
+      }
+    }
+
+    for( z=2; z<=nz; z++ ) {
+      for( x=2; x<=nx; x++ ) {
+	err += 0.5*sqr((double) (F(x,1   ,z).div_e_err));
+	err += 0.5*sqr((double) (F(x,ny+1,z).div_e_err));
+      }
+    }
+    
+    for( x=2; x<=nx; x++ ) {
+      for( y=2; y<=ny; y++ ) {
+	err += 0.5*sqr((double) (F(x,y,1   ).div_e_err));
+	err += 0.5*sqr((double) (F(x,y,nz+1).div_e_err));
+      }
+    }
+
+    // Exterior edges
+
+    for( x=2; x<=nx; x++ ) {
+      err += 0.25*sqr((double) (F(x,1   ,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(x,ny+1,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(x,1   ,nz+1).div_e_err));
+      err += 0.25*sqr((double) (F(x,ny+1,nz+1).div_e_err));
+    }
+
+    for( y=2; y<=ny; y++ ) {
+      err += 0.25*sqr((double) (F(1   ,y,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(1   ,y,nz+1).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,y,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,y,nz+1).div_e_err));
+    }
+
+    for( z=2; z<=nz; z++ ) {
+      err += 0.25*sqr((double) (F(1   ,1   ,z).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,1   ,z).div_e_err));
+      err += 0.25*sqr((double) (F(1   ,ny+1,z).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,ny+1,z).div_e_err));
+    }
+
+    // Exterior corners
+
+    err += 0.125*sqr((double) (F(1   ,1   ,   1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,1   ,   1).div_e_err));
+    err += 0.125*sqr((double) (F(1   ,ny+1,   1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,ny+1,   1).div_e_err));
+    err += 0.125*sqr((double) (F(1   ,1   ,nz+1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,1   ,nz+1).div_e_err));
+    err += 0.125*sqr((double) (F(1   ,ny+1,nz+1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,ny+1,nz+1).div_e_err));
+    
+    double local[2], _global[2]; // FIXME, name clash with global macro
+    local[0] = err * fa.g->dV;
+    local[1] = (nx * ny * nz) * fa.g->dV;
+    mp_allsum_d( local, _global, 2 );
+    return fa.g->eps0 * sqrt(_global[0]/_global[1]);
   }
 
 
