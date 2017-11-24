@@ -79,6 +79,9 @@ static struct param psc_harris_descr[] = {
   { "driven_bc_z"           , VAR(prm.driven_bc_z)           , PARAM_BOOL(false),
     .help = "use driven b.c. at z boundaries" },
 
+  { "overalloc"             , VAR(prm.overalloc)             , PARAM_DOUBLE(2.),
+    .help = "over-allocate particle arrays by this factor" },
+
   {},
 };
 #undef VAR
@@ -334,8 +337,8 @@ psc_harris_setup_species(struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
 
   mpi_printf(comm, "Setting up species.\n");
-  double nmax = 2.*phys->Ne / sub->n_global_patches;
-  double nmovers = .1*nmax;
+  double nmax = sub->prm.overalloc * phys->Ne / sub->n_global_patches;
+  double nmovers = .1 * nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
 
   struct psc_kind kinds[2] = {

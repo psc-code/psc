@@ -256,6 +256,8 @@ struct vpic_harris_params {
   double nppc;                    // Average number of macro particle per cell per species
   bool open_bc_x;                 // Flag to signal we want to do open boundary condition in x
   bool driven_bc_z;               // Flag to signal we want to do driven boundary condition in z
+
+  double overalloc;               // Overallocation factor (> 1) for particle arrays
 };
 
 struct globals_physics {
