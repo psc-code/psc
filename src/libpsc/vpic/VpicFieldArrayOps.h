@@ -64,6 +64,10 @@ struct VpicFieldArrayOps {
     fa.kernel->clean_div_e(&fa);
   }
 
+  void compute_curl_b(FieldArray& fa)
+  {
+    fa.kernel->compute_curl_b(&fa);
+  }
 };
 
 

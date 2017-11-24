@@ -623,11 +623,17 @@ struct PscFieldArrayOps {
     local_adjust_tang_e(fa.f, fa.g);
   }
 
-
   void clean_div_e(FieldArray& fa)
   {
     vacuum_clean_div_e(fa);
-    //    fa.kernel->clean_div_e(&fa);
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_curl_b
+  
+  void compute_curl_b(FieldArray& fa)
+  {
+    fa.kernel->compute_curl_b(&fa);
   }
 
 };

@@ -103,9 +103,9 @@ void vpic_mfields_compute_rhob(FieldArray *vmflds)
   vmflds->compute_rhob();
 }
 
-void vpic_mfields_compute_curl_b(FieldArray *vmflds)
+void vpic_mfields_compute_curl_b(Simulation* sim, FieldArray* vmflds)
 {
-  vmflds->compute_curl_b();
+  TIC sim->compute_curl_b(*vmflds); TOC(compute_curl_b, 1);
 }
 
 void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)

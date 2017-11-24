@@ -200,9 +200,9 @@ psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
 static void
 psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
 {
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
-  vpic_mfields_compute_curl_b(vmflds);
+  vpic_mfields_compute_curl_b(sub->sim, sub->vmflds_fields);
 }
 
 // ======================================================================
