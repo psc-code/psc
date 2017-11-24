@@ -59,9 +59,11 @@ void vpic_mfields_compute_div_b_err(Simulation* sim, FieldArray* vmflds)
   TIC sim->compute_div_b_err(*vmflds); TOC(compute_div_b_err, 1);
 }
 
-double vpic_mfields_compute_rms_div_b_err(FieldArray *vmflds)
+double vpic_mfields_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds)
 {
-  return vmflds->compute_rms_div_b_err();
+  double err;
+  TIC err = sim->compute_rms_div_b_err(*vmflds); TOC(compute_rms_div_b_err, 1);
+  return err;
 }
 
 void vpic_mfields_clean_div_b(FieldArray *vmflds)

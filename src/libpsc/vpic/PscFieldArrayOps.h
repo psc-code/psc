@@ -314,6 +314,16 @@ struct PscFieldArrayOps {
     }
   }
 
+  // ----------------------------------------------------------------------
+  // compute_rms_div_b_err
+  //
+  // OPT: doing that at the same time as div_b should be faster
+
+  double compute_rms_div_b_err(FieldArray &fa)
+  {
+    return fa.kernel->compute_rms_div_b_err(&fa);
+  }
+  
 };
 
 
