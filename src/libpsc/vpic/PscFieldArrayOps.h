@@ -133,6 +133,128 @@ struct PscFieldArrayOps {
 #define y_NODE_LOOP(y) XYZ_LOOP(1,nx+1,y,y,1,nz+1)
 #define z_NODE_LOOP(z) XYZ_LOOP(1,nx+1,1,ny+1,z,z)
 
+// x_FACE_LOOP => Loop over all x-faces at plane x
+#define x_FACE_LOOP(x) XYZ_LOOP(x,x,1,ny,1,nz)
+#define y_FACE_LOOP(y) XYZ_LOOP(1,nx,y,y,1,nz)
+#define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
+
+  // ----------------------------------------------------------------------
+  // synchronize_tang_e_norm_b
+
+#define field(x,y,z) field[ VOXEL(x,y,z, nx,ny,nz) ]
+  double synchronize_tang_e_norm_b(FieldArray& fa)
+  {
+    float * p;
+    double w1, w2, err = 0, gerr;
+    int size, face, x, y, z;
+
+    Field3D<FieldArray> F(fa);
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    
+    local_adjust_tang_e(fa.f, fa.g);
+    local_adjust_norm_b(fa.f, fa.g);
+
+# define BEGIN_RECV(i,j,k,X,Y,Z)					\
+    begin_recv_port(i,j,k, ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +	\
+			     n##Y*n##Z )*sizeof(float), g )
+
+# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {              \
+      size = ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +		\
+	       n##Y*n##Z )*sizeof(float);			\
+      p = (float *)size_send_port( i, j, k, size, g );		\
+      if( p ) {							\
+	face = (i+j+k)<0 ? 1 : n##X+1;				\
+	X##_FACE_LOOP(face) (*(p++)) = F(x,y,z).cb##X;	\
+	Y##Z##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  (*(p++)) = f->e##Y;					\
+	  (*(p++)) = f->tca##Y;					\
+	}							\
+	Z##Y##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  (*(p++)) = f->e##Z;					\
+	  (*(p++)) = f->tca##Z;					\
+	}							\
+	begin_send_port( i, j, k, size, g );			\
+      }								\
+    } END_PRIMITIVE
+    
+# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {		\
+      p = (float *)end_recv_port(i,j,k,g);			\
+      if( p ) {							\
+	face = (i+j+k)<0 ? n##X+1 : 1; /* Average */		\
+	X##_FACE_LOOP(face) {					\
+	  field_t* f = &F(x,y,z);				\
+	  w1 = (*(p++));					\
+	  w2 = f->cb##X;					\
+	  f->cb##X = 0.5*( w1+w2 );				\
+	  err += (w1-w2)*(w1-w2);				\
+	}							\
+	Y##Z##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  w1 = (*(p++));					\
+	  w2 = f->e##Y;						\
+	  f->e##Y = 0.5*( w1+w2 );				\
+	  err += (w1-w2)*(w1-w2);				\
+	  w1 = (*(p++));					\
+	  w2 = f->tca##Y;					\
+	  f->tca##Y = 0.5*( w1+w2 );				\
+	}							\
+	Z##Y##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  w1 = (*(p++));					\
+	  w2 = f->e##Z;						\
+	  f->e##Z = 0.5*( w1+w2 );				\
+	  err += (w1-w2)*(w1-w2);				\
+	  w1 = (*(p++));					\
+	  w2 = f->tca##Z;					\
+	  f->tca##Z = 0.5*( w1+w2 );				\
+	}							\
+      }								\
+    } END_PRIMITIVE
+
+# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
+
+    // Exchange x-faces
+    BEGIN_RECV(-1, 0, 0,x,y,z);
+    BEGIN_RECV( 1, 0, 0,x,y,z);
+    BEGIN_SEND(-1, 0, 0,x,y,z);
+    BEGIN_SEND( 1, 0, 0,x,y,z);
+    END_SEND(-1, 0, 0,x,y,z);
+    END_SEND( 1, 0, 0,x,y,z);
+    END_RECV(-1, 0, 0,x,y,z);
+    END_RECV( 1, 0, 0,x,y,z);
+
+    // Exchange y-faces
+    BEGIN_SEND( 0,-1, 0,y,z,x);
+    BEGIN_SEND( 0, 1, 0,y,z,x);
+    BEGIN_RECV( 0,-1, 0,y,z,x);
+    BEGIN_RECV( 0, 1, 0,y,z,x);
+    END_RECV( 0,-1, 0,y,z,x);
+    END_RECV( 0, 1, 0,y,z,x);
+    END_SEND( 0,-1, 0,y,z,x);
+    END_SEND( 0, 1, 0,y,z,x);
+
+    // Exchange z-faces
+    BEGIN_SEND( 0, 0,-1,z,x,y);
+    BEGIN_SEND( 0, 0, 1,z,x,y);
+    BEGIN_RECV( 0, 0,-1,z,x,y);
+    BEGIN_RECV( 0, 0, 1,z,x,y);
+    END_RECV( 0, 0,-1,z,x,y);
+    END_RECV( 0, 0, 1,z,x,y);
+    END_SEND( 0, 0,-1,z,x,y);
+    END_SEND( 0, 0, 1,z,x,y);
+
+# undef BEGIN_RECV
+# undef BEGIN_SEND
+# undef END_RECV
+# undef END_SEND
+
+    mp_allsum_d( &err, &gerr, 1 );
+    return gerr;
+  }
+
   // ----------------------------------------------------------------------
   // synchronize_jf
   
@@ -334,14 +456,6 @@ struct PscFieldArrayOps {
 # undef BEGIN_SEND
 # undef END_RECV
 # undef END_SEND
-  }
-
-  // ----------------------------------------------------------------------
-  // synchronize_tang_e_norm_b
-
-  double synchronize_tang_e_norm_b(FieldArray& fa)
-  {
-    return fa.kernel->synchronize_tang_e_norm_b(&fa);
   }
 
   // ----------------------------------------------------------------------
