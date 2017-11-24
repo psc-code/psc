@@ -222,75 +222,37 @@ struct PscFieldArrayOps {
   // ----------------------------------------------------------------------
   // compute_div_b_err
   
-#define f(x,y,z) f[ VOXEL(x,y,z, nx,ny,nz) ]
-
-  typedef struct pipeline_args {
-    field_t      * ALIGNED(128) f;
-    const grid_t *              g;
-  } pipeline_args_t;
-
-  static void compute_div_b_err_pipeline( pipeline_args_t * args,
-					  int pipeline_rank,
-					  int n_pipeline )
+  static void compute_div_b_err_pipeline(FieldArray& fa)
   {
-    field_t      * ALIGNED(128) f = args->f;
-    const grid_t *              g = args->g;
-  
-    field_t * ALIGNED(16) f0;
-    field_t * ALIGNED(16) fx, * ALIGNED(16) fy, * ALIGNED(16) fz;
-    int x, y, z, n_voxel;
-
-    const int nx = g->nx;
-    const int ny = g->ny;
-    const int nz = g->nz;
-
-    const float px = (nx>1) ? g->rdx : 0;
+    Field3D<FieldArray> F(fa);
+    const grid_t *              g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
     const float py = (ny>1) ? g->rdy : 0;
     const float pz = (nz>1) ? g->rdz : 0;
 
-    // Process the voxels assigned to this pipeline
-  
-    DISTRIBUTE_VOXELS( 1,nx, 1,ny, 1,nz, 16,
-		       pipeline_rank, n_pipeline,
-		       x, y, z, n_voxel );
-
-# define LOAD_STENCIL()				\
-    f0 = &f(x,  y,  z  );			\
-    fx = &f(x+1,y,  z  );			\
-    fy = &f(x,  y+1,z  );			\
-    fz = &f(x,  y,  z+1)
-
-    LOAD_STENCIL();
-
-    for( ; n_voxel; n_voxel-- ) {
-      f0->div_b_err = px*( fx->cbx - f0->cbx ) +
-	py*( fy->cby - f0->cby ) +
-	pz*( fz->cbz - f0->cbz );
-      f0++; fx++; fy++; fz++;
-    
-      x++;
-      if( x>nx ) {
-	x=1, y++;
-	if( y>ny ) y=1, z++;
-	LOAD_STENCIL();
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  F(i,j,k).div_b_err = (px * (F(i+1,j,k).cbx - F(i,j,k).cbx) +
+				py * (F(i,j+1,k).cby - F(i,j,k).cby) +
+				pz * (F(i,j,k+1).cbz - F(i,j,k).cbz));
+	}
       }
     }
-
-# undef LOAD_STENCIL
-
   }
 
-#define HAS_V4_PIPELINE
+#define f(x,y,z) f[ VOXEL(x,y,z, nx,ny,nz) ]
+
+  //#define HAS_V4_PIPELINE
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  static void compute_div_b_err_pipeline_v4(pipeline_args_t * args,
-					    int pipeline_rank,
-					    int n_pipeline)
+  static void compute_div_b_err_pipeline_v4(FieldArray &fa)
   {
     using namespace v4;
 
-    field_t      * ALIGNED(128) f = args->f;
-    const grid_t *              g = args->g;
+    field_t      * ALIGNED(128) f = fa.f;
+    const grid_t *              g = fa.g;
 
     field_t * ALIGNED(16) f0;
     field_t * ALIGNED(16) fx, * ALIGNED(16) fy, * ALIGNED(16) fz;
@@ -321,9 +283,9 @@ struct PscFieldArrayOps {
 
     // Process the voxels assigned to this pipeline 
   
-    DISTRIBUTE_VOXELS( 1,nx, 1,ny, 1,nz, 16,
-		       pipeline_rank, n_pipeline,
-		       x, y, z, n_voxel );
+    DISTRIBUTE_VOXELS(1,nx, 1,ny, 1,nz, 16,
+		      0, 1,
+		      x, y, z, n_voxel );
 
     // Process bulk of voxels 4 at a time
 
@@ -368,47 +330,15 @@ struct PscFieldArrayOps {
 
 #endif
 
-  void
-  compute_div_b_err( field_array_t * RESTRICT fa ) {
-    pipeline_args_t args[1];
-
-    if( !fa ) ERROR(( "Bad args" ));
-  
-# if 0 // Original non-pipelined version
-    for( z=1; z<=nz; z++ ) {
-      for( y=1; y<=ny; y++ ) {
-	f0 = &f(1,y,z);
-	fx = &f(2,y,z);
-	fy = &f(1,y+1,z);
-	fz = &f(1,y,z+1);
-	for( x=1; x<=nx; x++ ) {
-	  f0->div_b_err = px*( fx->cbx - f0->cbx ) +
-	    py*( fy->cby - f0->cby ) +
-	    pz*( fz->cbz - f0->cbz );
-	  f0++; fx++; fy++; fz++;
-	}
-      }
-    }
-# endif
-
-    args->f = fa->f;
-    args->g = fa->g;
-    
+  void compute_div_b_err(FieldArray &fa) {
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-    compute_div_b_err_pipeline_v4(args, 0, 1);
+    assert(fa.g->nx * fa.g->ny * fa.g->nz % 16 == 0);
+    compute_div_b_err_pipeline_v4(fa);
 #else
-    compute_div_b_err_pipeline(args, 0, 1);
+    compute_div_b_err_pipeline(fa);
 #endif
-    compute_div_b_err_pipeline(args, 1, 1);
-    /* EXEC_PIPELINES( compute_div_b_err, args, 0 ); */
-    /* WAIT_PIPELINES(); */
   }
 
-  void compute_div_b_err(FieldArray& fa)
-  {
-    compute_div_b_err(&fa);
-  }
-  
 };
 
 
