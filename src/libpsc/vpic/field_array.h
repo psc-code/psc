@@ -84,11 +84,6 @@ struct VpicFieldArray : field_array_t {
   
 #define FAK kernel
 
-  void clean_div_e()
-  {
-    TIC FAK->clean_div_e(this); TOC(clean_div_e, 1);
-  }
-
   void compute_curl_b()
   {
     TIC FAK->compute_curl_b(this); TOC(compute_curl_b, 1);

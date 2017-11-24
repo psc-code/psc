@@ -83,9 +83,9 @@ double vpic_mfields_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds)
   return err;
 }
 
-void vpic_mfields_clean_div_e(FieldArray *vmflds)
+void vpic_mfields_clean_div_e(Simulation* sim, FieldArray* vmflds)
 {
-  vmflds->clean_div_e();
+  TIC sim->clean_div_e(*vmflds); TOC(clean_div_e, 1);
 }
 
 void vpic_mfields_clear_rhof(Simulation* sim, FieldArray* vmflds)

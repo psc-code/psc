@@ -547,6 +547,14 @@ struct PscFieldArrayOps {
     local_adjust_norm_b(fa.f, g);
   }
 
+  // ----------------------------------------------------------------------
+  // clean_div_e
+  
+  void clean_div_e(FieldArray& fa)
+  {
+    fa.kernel->clean_div_e(&fa);
+  }
+
 };
 
 
