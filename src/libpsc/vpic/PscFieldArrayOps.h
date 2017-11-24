@@ -111,6 +111,15 @@ struct PscFieldArrayOps {
       fa[v].rhof = 0;
     }
   }
+
+  // ----------------------------------------------------------------------
+  // synchronize_jf
+  
+  void synchronize_jf(FieldArray& fa)
+  {
+    fa.kernel->synchronize_jf(&fa);
+  }
+  
 };
 
 

@@ -84,11 +84,6 @@ struct VpicFieldArray : field_array_t {
   
 #define FAK kernel
 
-  void synchronize_jf()
-  {
-    TIC FAK->synchronize_jf(this); TOC(synchronize_jf, 1);
-  }
-  
   void compute_div_b_err()
   {
     TIC FAK->compute_div_b_err(this); TOC(compute_div_b_err, 1);

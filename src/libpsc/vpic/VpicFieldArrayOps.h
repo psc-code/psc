@@ -29,6 +29,10 @@ struct VpicFieldArrayOps {
     fa.kernel->clear_rhof(&fa);
   }
 
+  void synchronize_jf(FieldArray& fa)
+  {
+    fa.kernel->synchronize_jf(&fa);
+  }
 };
 
 
