@@ -150,9 +150,9 @@ psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
 static double
 psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
 {
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
-  return vpic_mfields_compute_rms_div_e_err(vmflds);
+  return vpic_mfields_compute_rms_div_e_err(sub->sim, sub->vmflds_fields);
 }
 
 static void

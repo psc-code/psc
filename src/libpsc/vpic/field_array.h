@@ -84,13 +84,6 @@ struct VpicFieldArray : field_array_t {
   
 #define FAK kernel
 
-  double compute_rms_div_e_err()
-  {
-    double err;
-    TIC err = FAK->compute_rms_div_e_err(this); TOC(compute_rms_div_e_err, 1);
-    return err;
-  }
-
   void clean_div_b()
   {
     TIC FAK->clean_div_b(this); TOC(clean_div_b, 1);

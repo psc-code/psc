@@ -339,7 +339,16 @@ struct PscFieldArrayOps {
     mp_allsum_d( local, _global, 2 );
     return fa.g->eps0 * sqrt(_global[0]/_global[1]);
   }
+
+  // ----------------------------------------------------------------------
+  // compute_rms_div_e_err
   
+  double compute_rms_div_e_err(FieldArray &fa)
+  {
+    return fa.kernel->compute_rms_div_e_err(&fa);
+  }
+
+
 };
 
 
