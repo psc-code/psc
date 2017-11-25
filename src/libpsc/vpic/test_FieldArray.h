@@ -1,20 +1,5 @@
 
 template<class FieldArray>
-void
-test_FieldArrayLocal_methods(FieldArray& fa)
-{
-  fa.local_ghost_tang_b(fa);
-  fa.local_ghost_norm_e(fa);
-  fa.local_ghost_div_b(fa);
-  fa.local_adjust_tang_e(fa);
-  fa.local_adjust_norm_b(fa);
-  fa.local_adjust_div_e(fa);
-  fa.local_adjust_jf(fa);
-  fa.local_adjust_rhof(fa);
-  fa.local_adjust_rhob(fa);
-}
-
-template<class FieldArray>
 void test_FieldArray_methods(FieldArray& fa)
 {
   double en[6];
