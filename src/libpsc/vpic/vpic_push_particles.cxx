@@ -133,7 +133,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   if (!vmprts->empty()) {
     sim_->unload_accumulator_array(vmflds, accumulator);
   }
-  TIC sim_->synchronize_jf(*vmflds); TOC(synchronize_jf, 1);
+  TIC vmflds->synchronize_jf(); TOC(synchronize_jf, 1);
 
   // At this point, the particle currents are known at jf_{1/2}.
   // Let the user add their own current contributions. It is the users

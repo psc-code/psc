@@ -14,11 +14,6 @@ struct VpicFieldArrayOps : FieldArrayLocalOps {
     fa.kernel->clear_rhof(&fa);
   }
 
-  void synchronize_jf(FieldArray& fa)
-  {
-    fa.kernel->synchronize_jf(&fa);
-  }
-
   void compute_div_b_err(FieldArray& fa)
   {
     fa.kernel->compute_div_b_err(&fa);
@@ -110,6 +105,11 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
     kernel->clear_jf(this);
   }
   
+  void synchronize_jf()
+  {
+    kernel->synchronize_jf(this);
+  }
+
 };
   
 #endif

@@ -320,97 +320,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
   }
 
   // ----------------------------------------------------------------------
-  // synchronize_jf
-  
-  void synchronize_jf(FieldArray& fa) {
-    field_t * f;
-    int size, face, x, y, z;
-    float *p, lw, rw;
-
-    Field3D<FieldArray> F(fa);
-    grid_t* g = fa.g;
-
-    this->local_adjust_jf(fa);
-
-    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
-
-# define BEGIN_RECV(i,j,k,X,Y,Z)                                        \
-    begin_recv_port(i,j,k, ( n##Y*(n##Z+1) +				\
-			     n##Z*(n##Y+1) + 1 )*sizeof(float), g )
-
-# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {			\
-      size = ( n##Y*(n##Z+1) +						\
-	       n##Z*(n##Y+1) + 1 )*sizeof(float);			\
-	       p = (float *)size_send_port( i, j, k, size, g );		\
-	       if( p ) {						\
-		 (*(p++)) = g->d##X;					\
-		 face = (i+j+k)<0 ? 1 : n##X+1;				\
-		 Y##Z##_EDGE_LOOP(face) (*(p++)) = F(x,y,z).jf##Y;	\
-		 Z##Y##_EDGE_LOOP(face) (*(p++)) = F(x,y,z).jf##Z;	\
-		 begin_send_port( i, j, k, size, g );			\
-	       }							\
-    } END_PRIMITIVE
-
-# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {                \
-      p = (float *)end_recv_port(i,j,k,g);			\
-      if( p ) {							\
-	rw = (*(p++));                 /* Remote g->d##X */	\
-	lw = rw + g->d##X;					\
-	rw /= lw;						\
-	lw = g->d##X/lw;					\
-	lw += lw;						\
-	rw += rw;						\
-	face = (i+j+k)<0 ? n##X+1 : 1; /* Twice weighted sum */	\
-	Y##Z##_EDGE_LOOP(face) {				\
-	  f = &F(x,y,z);					\
-	  f->jf##Y = lw*f->jf##Y + rw*(*(p++));			\
-	}							\
-	Z##Y##_EDGE_LOOP(face) {				\
-	  f = &F(x,y,z);					\
-	  f->jf##Z = lw*f->jf##Z + rw*(*(p++));			\
-	}							\
-      }								\
-    } END_PRIMITIVE
-
-# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
-
-    // Exchange x-faces
-    BEGIN_SEND(-1, 0, 0,x,y,z);
-    BEGIN_SEND( 1, 0, 0,x,y,z);
-    BEGIN_RECV(-1, 0, 0,x,y,z);
-    BEGIN_RECV( 1, 0, 0,x,y,z);
-    END_RECV(-1, 0, 0,x,y,z);
-    END_RECV( 1, 0, 0,x,y,z);
-    END_SEND(-1, 0, 0,x,y,z);
-    END_SEND( 1, 0, 0,x,y,z);
-
-    // Exchange y-faces
-    BEGIN_SEND( 0,-1, 0,y,z,x);
-    BEGIN_SEND( 0, 1, 0,y,z,x);
-    BEGIN_RECV( 0,-1, 0,y,z,x);
-    BEGIN_RECV( 0, 1, 0,y,z,x);
-    END_RECV( 0,-1, 0,y,z,x);
-    END_RECV( 0, 1, 0,y,z,x);
-    END_SEND( 0,-1, 0,y,z,x);
-    END_SEND( 0, 1, 0,y,z,x);
-
-    // Exchange z-faces
-    BEGIN_SEND( 0, 0,-1,z,x,y);
-    BEGIN_SEND( 0, 0, 1,z,x,y);
-    BEGIN_RECV( 0, 0,-1,z,x,y);
-    BEGIN_RECV( 0, 0, 1,z,x,y);
-    END_RECV( 0, 0,-1,z,x,y);
-    END_RECV( 0, 0, 1,z,x,y);
-    END_SEND( 0, 0,-1,z,x,y);
-    END_SEND( 0, 0, 1,z,x,y);
-
-# undef BEGIN_RECV
-# undef BEGIN_SEND
-# undef END_RECV
-# undef END_SEND
-  }
-
-  // ----------------------------------------------------------------------
   // synchronize_rho
   
   // Note: synchronize_rho assumes that rhof has _not_ been adjusted at
@@ -1413,6 +1322,96 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
       (*this)[v].jfy = 0;
       (*this)[v].jfz = 0;
     }
+  }
+
+  // ----------------------------------------------------------------------
+  // synchronize_jf
+  
+  void synchronize_jf() {
+    field_t * f;
+    int size, face, x, y, z;
+    float *p, lw, rw;
+
+    Field3D<FieldArray> F(*this);
+
+    this->local_adjust_jf(*this);
+
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+# define BEGIN_RECV(i,j,k,X,Y,Z)                                        \
+    begin_recv_port(i,j,k, ( n##Y*(n##Z+1) +				\
+			     n##Z*(n##Y+1) + 1 )*sizeof(float), g )
+
+# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {			\
+      size = ( n##Y*(n##Z+1) +						\
+	       n##Z*(n##Y+1) + 1 )*sizeof(float);			\
+	       p = (float *)size_send_port( i, j, k, size, g );		\
+	       if( p ) {						\
+		 (*(p++)) = g->d##X;					\
+		 face = (i+j+k)<0 ? 1 : n##X+1;				\
+		 Y##Z##_EDGE_LOOP(face) (*(p++)) = F(x,y,z).jf##Y;	\
+		 Z##Y##_EDGE_LOOP(face) (*(p++)) = F(x,y,z).jf##Z;	\
+		 begin_send_port( i, j, k, size, g );			\
+	       }							\
+    } END_PRIMITIVE
+
+# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {                \
+      p = (float *)end_recv_port(i,j,k,g);			\
+      if( p ) {							\
+	rw = (*(p++));                 /* Remote g->d##X */	\
+	lw = rw + g->d##X;					\
+	rw /= lw;						\
+	lw = g->d##X/lw;					\
+	lw += lw;						\
+	rw += rw;						\
+	face = (i+j+k)<0 ? n##X+1 : 1; /* Twice weighted sum */	\
+	Y##Z##_EDGE_LOOP(face) {				\
+	  f = &F(x,y,z);					\
+	  f->jf##Y = lw*f->jf##Y + rw*(*(p++));			\
+	}							\
+	Z##Y##_EDGE_LOOP(face) {				\
+	  f = &F(x,y,z);					\
+	  f->jf##Z = lw*f->jf##Z + rw*(*(p++));			\
+	}							\
+      }								\
+    } END_PRIMITIVE
+
+# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
+
+    // Exchange x-faces
+    BEGIN_SEND(-1, 0, 0,x,y,z);
+    BEGIN_SEND( 1, 0, 0,x,y,z);
+    BEGIN_RECV(-1, 0, 0,x,y,z);
+    BEGIN_RECV( 1, 0, 0,x,y,z);
+    END_RECV(-1, 0, 0,x,y,z);
+    END_RECV( 1, 0, 0,x,y,z);
+    END_SEND(-1, 0, 0,x,y,z);
+    END_SEND( 1, 0, 0,x,y,z);
+
+    // Exchange y-faces
+    BEGIN_SEND( 0,-1, 0,y,z,x);
+    BEGIN_SEND( 0, 1, 0,y,z,x);
+    BEGIN_RECV( 0,-1, 0,y,z,x);
+    BEGIN_RECV( 0, 1, 0,y,z,x);
+    END_RECV( 0,-1, 0,y,z,x);
+    END_RECV( 0, 1, 0,y,z,x);
+    END_SEND( 0,-1, 0,y,z,x);
+    END_SEND( 0, 1, 0,y,z,x);
+
+    // Exchange z-faces
+    BEGIN_SEND( 0, 0,-1,z,x,y);
+    BEGIN_SEND( 0, 0, 1,z,x,y);
+    BEGIN_RECV( 0, 0,-1,z,x,y);
+    BEGIN_RECV( 0, 0, 1,z,x,y);
+    END_RECV( 0, 0,-1,z,x,y);
+    END_RECV( 0, 0, 1,z,x,y);
+    END_SEND( 0, 0,-1,z,x,y);
+    END_SEND( 0, 0, 1,z,x,y);
+
+# undef BEGIN_RECV
+# undef BEGIN_SEND
+# undef END_RECV
+# undef END_SEND
   }
 
 };
