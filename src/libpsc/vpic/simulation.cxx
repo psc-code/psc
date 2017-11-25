@@ -169,6 +169,6 @@ void Simulation_advance_b(Simulation* sim, FieldArray *vmflds, double frac)
 
 void Simulation_advance_e(Simulation* sim, FieldArray *vmflds, double frac)
 {
-  TIC sim->advance_e(*vmflds, frac); TOC(advance_e, 1);
+  TIC vmflds->advance_e(frac); TOC(advance_e, 1);
 }
 

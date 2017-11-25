@@ -6,5 +6,6 @@ void test_FieldArray_methods(FieldArray& fa)
   fa.energy_f(en);
 
   fa.advance_b(1.);
+  fa.advance_e(1.);
 }
 

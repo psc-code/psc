@@ -9,11 +9,6 @@ template<class FA, class FieldArrayLocalOps>
 struct VpicFieldArrayOps : FieldArrayLocalOps {
   typedef FA FieldArray;
   
-  void advance_e(FieldArray& fa, double frac)
-  {
-    fa.kernel->advance_e(&fa, frac);
-  }
-
   void clear_jf(FieldArray& fa)
   {
     fa.kernel->clear_jf(&fa);
@@ -97,6 +92,11 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
   void advance_b(double frac)
   {
     kernel->advance_b(this, frac);
+  }
+
+  void advance_e(double frac)
+  {
+    kernel->advance_e(this, frac);
   }
 
   // ----------------------------------------------------------------------

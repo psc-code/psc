@@ -167,91 +167,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
   }
   
   // ----------------------------------------------------------------------
-  // advance_e
-  
-  void vacuum_advance_e(FieldArray& fa)
-  {
-    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
-    assert(params->n_mc == 1);
-
-    // Update interior fields
-    // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
-    // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
-    // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
-
-    const material_coefficient_t* m = params->mc;
-
-    struct AdvanceE {
-      AdvanceE(FieldArray& fa, const grid_t *g, const material_coefficient_t *m,
-	       const double damp_)
-	: F(fa),
-	  decayx(m->decayx),
-	  decayy(m->decayy),
-	  decayz(m->decayz),
-	  drivex(m->drivex),
-	  drivey(m->drivey),
-	  drivez(m->drivez),
-	  px_muz(g->nx > 1 ? (1+damp_)*g->cvac*g->dt*g->rdx*m->rmuz : 0),
-	  px_muy(g->nx > 1 ? (1+damp_)*g->cvac*g->dt*g->rdx*m->rmuy : 0),
-	  py_mux(g->ny > 1 ? (1+damp_)*g->cvac*g->dt*g->rdy*m->rmux : 0),
-	  py_muz(g->ny > 1 ? (1+damp_)*g->cvac*g->dt*g->rdy*m->rmuz : 0),
-	  pz_muy(g->nz > 1 ? (1+damp_)*g->cvac*g->dt*g->rdz*m->rmuy : 0),
-	  pz_mux(g->nz > 1 ? (1+damp_)*g->cvac*g->dt*g->rdz*m->rmux : 0),
-	  damp(damp_),
-	  cj(g->dt / g->eps0)
-      {
-      }
-
-      void x(int i, int j, int k)
-      {
-	F(i,j,k).tcax = ((py_muz*(F(i,j,k).cbz - F(i,j-1,k).cbz) -
-			  pz_muy*(F(i,j,k).cby - F(i,j,k-1).cby)) -
-			 damp*F(i,j,k).tcax);
-	F(i,j,k).ex   = decayx*F(i,j,k).ex + drivex*(F(i,j,k).tcax - cj*F(i,j,k).jfx);
-      }
-      
-      void y(int i, int j, int k)
-      {
-	F(i,j,k).tcay = ((pz_mux*(F(i,j,k).cbx - F(i,j,k-1).cbx) -
-			  px_muz*(F(i,j,k).cbz - F(i-1,j,k).cbz)) -
-			 damp*F(i,j,k).tcay);
-	F(i,j,k).ey   = decayy*F(i,j,k).ey + drivey*(F(i,j,k).tcay - cj*F(i,j,k).jfy);
-      }
-      
-      void z(int i, int j, int k)
-      {
-	F(i,j,k).tcaz = ((px_muy*(F(i,j,k).cby - F(i-1,j,k).cby) -
-			  py_mux*(F(i,j,k).cbx - F(i,j-1,k).cbx)) -
-			 damp*F(i,j,k).tcaz);
-	F(i,j,k).ez   = decayz*F(i,j,k).ez + drivez*(F(i,j,k).tcaz - cj*F(i,j,k).jfz);
-      }
-
-      Field3D<FieldArray> F;
-      const float decayx, decayy, decayz, drivex, drivey, drivez;
-      const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
-      const float damp, cj;
-    };
-
-    AdvanceE advanceE(fa, fa.g, m, params->damp);
-
-    begin_remote_ghost_tang_b(fa.f, fa.g);
-
-    this->local_ghost_tang_b(fa);
-    foreach_ec_interior(advanceE, fa.g);
-
-    end_remote_ghost_tang_b(fa.f, fa.g);
-
-    foreach_ec_boundary(advanceE, fa.g);
-    this->local_adjust_tang_e(fa);
-  }
-
-  void advance_e(FieldArray& fa, double frac)
-  {
-    assert(frac == 1.);
-    vacuum_advance_e(fa);
-  }
-
-  // ----------------------------------------------------------------------
   // clear_jf
 
   void clear_jf(FieldArray& fa)
@@ -1136,6 +1051,155 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
   using Base::params;
   
   // ----------------------------------------------------------------------
+  // foreach
+  // FIXME, move somewhere else
+
+  template<class F>
+  static void foreach(F f, int ib, int ie, int jb, int je, int kb, int ke)
+  {
+    for (int k = kb; k <= ke; k++) {
+      for (int j = jb; j <= je; j++) {
+	for (int i = ib; i <= ie; i++) {
+	  f(i,j,k);
+	}
+      }
+    }
+  };
+
+  template<class F>
+  static void foreach_nc_interior(F f, const grid_t *g)
+  {
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    foreach(f, 2, nx, 2, ny, 2, nz);
+  }
+
+  template<class F>
+  static void foreach_nc_boundary(F f, const grid_t *g)
+  {
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    // z faces, x edges, y edges and all corners
+    foreach(f, 1   , nx+1, 1   , ny+1, 1   , 1   );
+    foreach(f, 1   , nx+1, 1   , ny+1, nz+1, nz+1);
+
+    // y faces, z edges
+    foreach(f, 1   , nx+1, 1   , 1   ,    2, nz  );
+    foreach(f, 1   , nx+1, ny+1, ny+1,    2, nz  );
+
+    // x faces
+    foreach(f, 1   , 1   , 2   , ny  ,    2, nz  );
+    foreach(f, nx+1, nx+1, 2   , ny  ,    2, nz  );
+  }
+
+  template<class F>
+  static void foreach_ec_interior(F f, const grid_t *g)
+  {
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
+	  f.x(i,j,k);
+	  f.y(i,j,k);
+	  f.z(i,j,k);
+	}
+      }
+    }
+
+    // Do leftover interior ex
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	f.x(1,j,k);
+      }
+    }
+
+    // Do leftover interior ey
+    for (int k = 2; k <= nz; k++) {
+      for (int i = 2; i <= nx; i++) {
+	f.y(i,1,k);
+      }
+    }
+
+    // Do leftover interior ez
+    for (int j = 2; j <= ny; j++) {
+      for (int i = 2; i <= nx; i++) {
+	f.z(i,j,1);
+      }
+    }
+  }
+
+  template<class F>
+  static void foreach_ec_boundary(F f, const grid_t *g)
+  {
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    for (int j = 1; j <= ny+1; j++) {
+      for (int i = 1; i <= nx; i++) {
+	f.x(i,j,1);
+      }
+    }
+    for (int j = 1; j <= ny+1; j++) {
+      for (int i = 1; i <= nx; i++) {
+	f.x(i,j,nz+1);
+      }
+    }
+    for (int k = 2; k <= nz; k++) {
+      for (int i = 1; i <= nx; i++) {
+	f.x(i,1,k);
+      }
+    }
+    for (int k = 2; k <= nz; k++) {
+      for (int i = 1; i <= nx; i++) {
+	f.x(i,ny+1,k);
+      }
+    }
+
+    // Do exterior ey
+    for (int k = 1; k <= nz+1; k++) {
+      for (int j = 1; j <= ny; j++) {
+	f.y(1,j,k);
+      }
+    }
+    for (int k = 1; k <= nz+1; k++) {
+      for (int j = 1; j <= ny; j++) {
+	f.y(nx+1,j,k);
+      }
+    }
+    for (int j = 1; j <= ny; j++) {
+      for (int i = 2; i <= nx; i++) {
+	f.y(i,j,1);
+      }
+    }
+    for (int j = 1; j <= ny; j++) {
+      for (int i = 2; i <= nx; i++) {
+	f.y(i,j,nz+1);
+      }
+    }
+
+    // Do exterior ez
+    for (int k = 1; k <= nz; k++) {
+      for (int i = 1; i <= nx+1; i++) {
+	f.z(i,1,k);
+      }
+    }
+    for (int k = 1; k <= nz; k++) {
+      for (int i = 1; i <= nx+1; i++) {
+	f.z(i,ny+1,k);
+      }
+    }
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	f.z(1,j,k);
+      }
+    }
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	f.z(nx+1,j,k);
+      }
+    }
+  }
+  
+  // ----------------------------------------------------------------------
   // advance_b
   
 #define CBX FieldArray::CBX
@@ -1204,6 +1268,91 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
 #undef EX
 #undef EY
 #undef EZ
+
+  // ----------------------------------------------------------------------
+  // advance_e
+  
+  void vacuum_advance_e(double frac)
+  {
+    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    assert(prm->n_mc == 1);
+    assert(frac == 1.);
+
+    // Update interior fields
+    // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
+    // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
+    // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
+
+    const material_coefficient_t* m = prm->mc;
+
+    struct AdvanceE {
+      AdvanceE(FieldArray& fa, const grid_t *g, const material_coefficient_t *m,
+	       const double damp_)
+	: F(fa),
+	  decayx(m->decayx),
+	  decayy(m->decayy),
+	  decayz(m->decayz),
+	  drivex(m->drivex),
+	  drivey(m->drivey),
+	  drivez(m->drivez),
+	  px_muz(g->nx > 1 ? (1+damp_)*g->cvac*g->dt*g->rdx*m->rmuz : 0),
+	  px_muy(g->nx > 1 ? (1+damp_)*g->cvac*g->dt*g->rdx*m->rmuy : 0),
+	  py_mux(g->ny > 1 ? (1+damp_)*g->cvac*g->dt*g->rdy*m->rmux : 0),
+	  py_muz(g->ny > 1 ? (1+damp_)*g->cvac*g->dt*g->rdy*m->rmuz : 0),
+	  pz_muy(g->nz > 1 ? (1+damp_)*g->cvac*g->dt*g->rdz*m->rmuy : 0),
+	  pz_mux(g->nz > 1 ? (1+damp_)*g->cvac*g->dt*g->rdz*m->rmux : 0),
+	  damp(damp_),
+	  cj(g->dt / g->eps0)
+      {
+      }
+
+      void x(int i, int j, int k)
+      {
+	F(i,j,k).tcax = ((py_muz*(F(i,j,k).cbz - F(i,j-1,k).cbz) -
+			  pz_muy*(F(i,j,k).cby - F(i,j,k-1).cby)) -
+			 damp*F(i,j,k).tcax);
+	F(i,j,k).ex   = decayx*F(i,j,k).ex + drivex*(F(i,j,k).tcax - cj*F(i,j,k).jfx);
+      }
+      
+      void y(int i, int j, int k)
+      {
+	F(i,j,k).tcay = ((pz_mux*(F(i,j,k).cbx - F(i,j,k-1).cbx) -
+			  px_muz*(F(i,j,k).cbz - F(i-1,j,k).cbz)) -
+			 damp*F(i,j,k).tcay);
+	F(i,j,k).ey   = decayy*F(i,j,k).ey + drivey*(F(i,j,k).tcay - cj*F(i,j,k).jfy);
+      }
+      
+      void z(int i, int j, int k)
+      {
+	F(i,j,k).tcaz = ((px_muy*(F(i,j,k).cby - F(i-1,j,k).cby) -
+			  py_mux*(F(i,j,k).cbx - F(i,j-1,k).cbx)) -
+			 damp*F(i,j,k).tcaz);
+	F(i,j,k).ez   = decayz*F(i,j,k).ez + drivez*(F(i,j,k).tcaz - cj*F(i,j,k).jfz);
+      }
+
+      Field3D<FieldArray> F;
+      const float decayx, decayy, decayz, drivex, drivey, drivez;
+      const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
+      const float damp, cj;
+    };
+
+    AdvanceE advanceE(*this, g, m, prm->damp);
+
+    begin_remote_ghost_tang_b(this->f, g);
+
+    this->local_ghost_tang_b(*this);
+    foreach_ec_interior(advanceE, g);
+
+    end_remote_ghost_tang_b(this->f, g);
+
+    foreach_ec_boundary(advanceE, g);
+    this->local_adjust_tang_e(*this);
+  }
+
+  void advance_e(double frac)
+  {
+    vacuum_advance_e(frac);
+  }
 
   // ----------------------------------------------------------------------
   // energy_f
