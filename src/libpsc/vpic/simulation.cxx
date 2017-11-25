@@ -164,7 +164,7 @@ void Simulation_moments_run(Simulation* sim, HydroArray *hydro_array, Particles 
 
 void Simulation_advance_b(Simulation* sim, FieldArray *vmflds, double frac)
 {
-  TIC sim->advance_b(*vmflds, frac); TOC(advance_b, 1);
+  TIC vmflds->advance_b(frac); TOC(advance_b, 1);
 }
 
 void Simulation_advance_e(Simulation* sim, FieldArray *vmflds, double frac)
