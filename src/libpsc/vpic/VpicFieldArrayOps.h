@@ -3,7 +3,7 @@
 #define VPIC_FIELD_ARRAY_OPS_H
 
 // ======================================================================
-// VpicFieldArrayOps
+// VpicFieldArray
 
 template<class FA, class FieldArrayLocalOps>
 struct VpicFieldArrayOps : FieldArrayLocalOps {
