@@ -94,12 +94,14 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
 
   using Base::Base;
 
+  using Base::kernel;
+
   // ----------------------------------------------------------------------
   // energy_f
 
-  void energy_f(FieldArray& fa, double en[6])
+  void energy_f(double en[6])
   {
-    fa.kernel->energy_f(en, &fa);
+    kernel->energy_f(en, this);
   }
 
 };

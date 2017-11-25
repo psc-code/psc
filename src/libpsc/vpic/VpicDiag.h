@@ -161,8 +161,7 @@ struct VpicDiagOps
       }
     }
 
-    fa.energy_f(fa, en_f);
-    //    fa.kernel->energy_f(en_f, &fa);
+    fa.energy_f(en_f);
     if (rank==0 && status!=fail )
       fileIO.print( " %e %e %e %e %e %e",
 		    en_f[0], en_f[1], en_f[2],

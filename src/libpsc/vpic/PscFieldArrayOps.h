@@ -1202,18 +1202,20 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
   typedef PscFieldArray<B, FieldArrayLocalOps> FieldArray;
 
   using Base::Base;
+
+  using Base::g;
+  using Base::params;
   
   // ----------------------------------------------------------------------
   // energy_f
 
-  void vacuum_energy_f(FieldArray& fa, double global[6])
+  void vacuum_energy_f(double global[6])
   {
-    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
-    assert(params->n_mc == 1);
-    const material_coefficient_t* m = params->mc;
+    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    assert(prm->n_mc == 1);
+    const material_coefficient_t* m = prm->mc;
 
-    Field3D<FieldArray> F(fa);
-    const grid_t* g = fa.g;
+    Field3D<FieldArray> F(*this);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     const float qepsx = 0.25*m->epsx;
@@ -1250,7 +1252,7 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
     }
 
     // Convert to physical units
-    double v0 = 0.5 * fa.g->eps0 * fa.g->dV;
+    double v0 = 0.5 * g->eps0 * g->dV;
     for (int m = 0; m < 6; m++) {
       en[m] *= v0;
     }
@@ -1259,9 +1261,9 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
     mp_allsum_d(en, global, 6 );
   }
 
-  void energy_f(FieldArray& fa, double en[6])
+  void energy_f(double en[6])
   {
-    vacuum_energy_f(fa, en);
+    vacuum_energy_f(en);
   }
 
 };
