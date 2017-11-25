@@ -166,17 +166,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
     }
   }
   
-  // ----------------------------------------------------------------------
-  // clear_rhof
-
-  void clear_rhof(FieldArray& fa)
-  {
-    const int nv = fa.g->nv;
-    for (int v = 0; v < nv; v++) {
-      fa[v].rhof = 0;
-    }
-  }
-
 // Generic looping
 #define XYZ_LOOP(xl,xh,yl,yh,zl,zh) \
   for( z=zl; z<=zh; z++ )	    \
@@ -317,118 +306,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
 
     mp_allsum_d( &err, &gerr, 1 );
     return gerr;
-  }
-
-  // ----------------------------------------------------------------------
-  // synchronize_rho
-  
-  // Note: synchronize_rho assumes that rhof has _not_ been adjusted at
-  // the local domain boundary to account for partial cells but that
-  // rhob _has_.  Specifically it is very expensive to accumulate rhof
-  // and doing the adjustment for each particle is adds even more
-  // expense.  Worse, if we locally corrected it after each species,
-  // we cannot accumulate the next species in the same unless we use
-  // (running sum of locally corrected results and thw current species
-  // rhof being accumulated).  Further, rhof is always accumulated from
-  // scratch so we don't have to worry about whether or not the previous
-  // rhof values were in a locally corrected form.  Thus, after all
-  // particles have accumulated to rhof, we correct it for partial cells
-  // and remote cells for use with divergence cleaning and this is
-  // the function that does the correction.
-  //
-  // rhob is another story though.  rhob is continuously incrementally
-  // accumulated over time typically through infrequent surface area
-  // scaling processes.  Like rho_f, after synchronize_rhob, rhob _must_
-  // be corrected for partial and remote celle for the benefit of
-  // divergence cleaning. And like rho_f, since we don't want to have
-  // to keep around two versions of rhob (rhob contributions since last
-  // sync and rhob as of last sync), we have no choice but to do the
-  // charge accumulation per particle to rhob in a locally corrected
-  // form.
-
-  void synchronize_rho(FieldArray& fa) {
-    int size, face, x, y, z;
-    float *p, hlw, hrw, lw, rw;
-
-    Field3D<FieldArray> F(fa);
-    const grid_t* g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-
-    this->local_adjust_rhof(fa);
-    this->local_adjust_rhob(fa);
-
-# define BEGIN_RECV(i,j,k,X,Y,Z)					\
-    begin_recv_port(i,j,k, ( 1 + 2*(n##Y+1)*(n##Z+1) )*sizeof(float), g )
-
-# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {      \
-      size = ( 1 + 2*(n##Y+1)*(n##Z+1) )*sizeof(float);	\
-      p = (float *)size_send_port( i, j, k, size, g );	\
-      if( p ) {						\
-	(*(p++)) = g->d##X;				\
-	face = (i+j+k)<0 ? 1 : n##X+1;			\
-	X##_NODE_LOOP(face) {				\
-	  field_t *f = &F(x,y,z);			\
-	  (*(p++)) = f->rhof;				\
-	  (*(p++)) = f->rhob;				\
-	}						\
-	begin_send_port( i, j, k, size, g );		\
-      }							\
-    } END_PRIMITIVE
-
-# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {                \
-      p = (float *)end_recv_port(i,j,k,g);			\
-      if( p ) {							\
-	hrw  = (*(p++));               /* Remote g->d##X */	\
-	hlw  = hrw + g->d##X;					\
-	hrw /= hlw;						\
-	hlw  = g->d##X/hlw;					\
-	lw   = hlw + hlw;					\
-	rw   = hrw + hrw;					\
-	face = (i+j+k)<0 ? n##X+1 : 1;				\
-	X##_NODE_LOOP(face) {					\
-	  field_t *f = &F(x,y,z);				\
-	  f->rhof =  lw*f->rhof  + rw*(*(p++));			\
-	  f->rhob = hlw*f->rhob + hrw*(*(p++));			\
-	}							\
-      }								\
-    } END_PRIMITIVE
-
-# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
-
-    // Exchange x-faces
-    BEGIN_SEND(-1, 0, 0,x,y,z);
-    BEGIN_SEND( 1, 0, 0,x,y,z);
-    BEGIN_RECV(-1, 0, 0,x,y,z);
-    BEGIN_RECV( 1, 0, 0,x,y,z);
-    END_RECV(-1, 0, 0,x,y,z);
-    END_RECV( 1, 0, 0,x,y,z);
-    END_SEND(-1, 0, 0,x,y,z);
-    END_SEND( 1, 0, 0,x,y,z);
-
-    // Exchange y-faces
-    BEGIN_SEND( 0,-1, 0,y,z,x);
-    BEGIN_SEND( 0, 1, 0,y,z,x);
-    BEGIN_RECV( 0,-1, 0,y,z,x);
-    BEGIN_RECV( 0, 1, 0,y,z,x);
-    END_RECV( 0,-1, 0,y,z,x);
-    END_RECV( 0, 1, 0,y,z,x);
-    END_SEND( 0,-1, 0,y,z,x);
-    END_SEND( 0, 1, 0,y,z,x);
-
-    // Exchange z-faces
-    BEGIN_SEND( 0, 0,-1,z,x,y);
-    BEGIN_SEND( 0, 0, 1,z,x,y);
-    BEGIN_RECV( 0, 0,-1,z,x,y);
-    BEGIN_RECV( 0, 0, 1,z,x,y);
-    END_RECV( 0, 0,-1,z,x,y);
-    END_RECV( 0, 0, 1,z,x,y);
-    END_SEND( 0, 0,-1,z,x,y);
-    END_SEND( 0, 0, 1,z,x,y);
-
-# undef BEGIN_RECV
-# undef BEGIN_SEND
-# undef END_RECV
-# undef END_SEND
   }
 
   // ----------------------------------------------------------------------
@@ -1325,6 +1202,17 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
   }
 
   // ----------------------------------------------------------------------
+  // clear_rhof
+
+  void clear_rhof()
+  {
+    const int nv = g->nv;
+    for (int v = 0; v < nv; v++) {
+      (*this)[v].rhof = 0;
+    }
+  }
+
+  // ----------------------------------------------------------------------
   // synchronize_jf
   
   void synchronize_jf() {
@@ -1372,6 +1260,117 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
 	Z##Y##_EDGE_LOOP(face) {				\
 	  f = &F(x,y,z);					\
 	  f->jf##Z = lw*f->jf##Z + rw*(*(p++));			\
+	}							\
+      }								\
+    } END_PRIMITIVE
+
+# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
+
+    // Exchange x-faces
+    BEGIN_SEND(-1, 0, 0,x,y,z);
+    BEGIN_SEND( 1, 0, 0,x,y,z);
+    BEGIN_RECV(-1, 0, 0,x,y,z);
+    BEGIN_RECV( 1, 0, 0,x,y,z);
+    END_RECV(-1, 0, 0,x,y,z);
+    END_RECV( 1, 0, 0,x,y,z);
+    END_SEND(-1, 0, 0,x,y,z);
+    END_SEND( 1, 0, 0,x,y,z);
+
+    // Exchange y-faces
+    BEGIN_SEND( 0,-1, 0,y,z,x);
+    BEGIN_SEND( 0, 1, 0,y,z,x);
+    BEGIN_RECV( 0,-1, 0,y,z,x);
+    BEGIN_RECV( 0, 1, 0,y,z,x);
+    END_RECV( 0,-1, 0,y,z,x);
+    END_RECV( 0, 1, 0,y,z,x);
+    END_SEND( 0,-1, 0,y,z,x);
+    END_SEND( 0, 1, 0,y,z,x);
+
+    // Exchange z-faces
+    BEGIN_SEND( 0, 0,-1,z,x,y);
+    BEGIN_SEND( 0, 0, 1,z,x,y);
+    BEGIN_RECV( 0, 0,-1,z,x,y);
+    BEGIN_RECV( 0, 0, 1,z,x,y);
+    END_RECV( 0, 0,-1,z,x,y);
+    END_RECV( 0, 0, 1,z,x,y);
+    END_SEND( 0, 0,-1,z,x,y);
+    END_SEND( 0, 0, 1,z,x,y);
+
+# undef BEGIN_RECV
+# undef BEGIN_SEND
+# undef END_RECV
+# undef END_SEND
+  }
+
+  // ----------------------------------------------------------------------
+  // synchronize_rho
+  
+  // Note: synchronize_rho assumes that rhof has _not_ been adjusted at
+  // the local domain boundary to account for partial cells but that
+  // rhob _has_.  Specifically it is very expensive to accumulate rhof
+  // and doing the adjustment for each particle is adds even more
+  // expense.  Worse, if we locally corrected it after each species,
+  // we cannot accumulate the next species in the same unless we use
+  // (running sum of locally corrected results and thw current species
+  // rhof being accumulated).  Further, rhof is always accumulated from
+  // scratch so we don't have to worry about whether or not the previous
+  // rhof values were in a locally corrected form.  Thus, after all
+  // particles have accumulated to rhof, we correct it for partial cells
+  // and remote cells for use with divergence cleaning and this is
+  // the function that does the correction.
+  //
+  // rhob is another story though.  rhob is continuously incrementally
+  // accumulated over time typically through infrequent surface area
+  // scaling processes.  Like rho_f, after synchronize_rhob, rhob _must_
+  // be corrected for partial and remote celle for the benefit of
+  // divergence cleaning. And like rho_f, since we don't want to have
+  // to keep around two versions of rhob (rhob contributions since last
+  // sync and rhob as of last sync), we have no choice but to do the
+  // charge accumulation per particle to rhob in a locally corrected
+  // form.
+
+  void synchronize_rho() {
+    int size, face, x, y, z;
+    float *p, hlw, hrw, lw, rw;
+
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    this->local_adjust_rhof(*this);
+    this->local_adjust_rhob(*this);
+
+# define BEGIN_RECV(i,j,k,X,Y,Z)					\
+    begin_recv_port(i,j,k, ( 1 + 2*(n##Y+1)*(n##Z+1) )*sizeof(float), g )
+
+# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {      \
+      size = ( 1 + 2*(n##Y+1)*(n##Z+1) )*sizeof(float);	\
+      p = (float *)size_send_port( i, j, k, size, g );	\
+      if( p ) {						\
+	(*(p++)) = g->d##X;				\
+	face = (i+j+k)<0 ? 1 : n##X+1;			\
+	X##_NODE_LOOP(face) {				\
+	  field_t *f = &F(x,y,z);			\
+	  (*(p++)) = f->rhof;				\
+	  (*(p++)) = f->rhob;				\
+	}						\
+	begin_send_port( i, j, k, size, g );		\
+      }							\
+    } END_PRIMITIVE
+
+# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {                \
+      p = (float *)end_recv_port(i,j,k,g);			\
+      if( p ) {							\
+	hrw  = (*(p++));               /* Remote g->d##X */	\
+	hlw  = hrw + g->d##X;					\
+	hrw /= hlw;						\
+	hlw  = g->d##X/hlw;					\
+	lw   = hlw + hlw;					\
+	rw   = hrw + hrw;					\
+	face = (i+j+k)<0 ? n##X+1 : 1;				\
+	X##_NODE_LOOP(face) {					\
+	  field_t *f = &F(x,y,z);				\
+	  f->rhof =  lw*f->rhof  + rw*(*(p++));			\
+	  f->rhob = hlw*f->rhob + hrw*(*(p++));			\
 	}							\
       }								\
     } END_PRIMITIVE

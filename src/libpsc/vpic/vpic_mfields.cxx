@@ -92,12 +92,12 @@ void vpic_mfields_clean_div_e(Simulation* sim, FieldArray* vmflds)
 
 void vpic_mfields_clear_rhof(Simulation* sim, FieldArray* vmflds)
 {
-  TIC sim->clear_rhof(*vmflds); TOC(clear_jf, 1);
+  TIC vmflds->clear_rhof(); TOC(clear_jf, 1);
 }
 
 void vpic_mfields_synchronize_rho(Simulation* sim, FieldArray* vmflds)
 {
-  TIC sim->synchronize_rho(*vmflds); TOC(synchronize_rho, 1);
+  TIC vmflds->synchronize_rho(); TOC(synchronize_rho, 1);
 }
 
 void vpic_mfields_compute_rhob(Simulation* sim, FieldArray* vmflds)

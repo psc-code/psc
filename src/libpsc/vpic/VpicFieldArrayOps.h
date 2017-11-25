@@ -9,11 +9,6 @@ template<class FA, class FieldArrayLocalOps>
 struct VpicFieldArrayOps : FieldArrayLocalOps {
   typedef FA FieldArray;
   
-  void clear_rhof(FieldArray& fa)
-  {
-    fa.kernel->clear_rhof(&fa);
-  }
-
   void compute_div_b_err(FieldArray& fa)
   {
     fa.kernel->compute_div_b_err(&fa);
@@ -47,11 +42,6 @@ struct VpicFieldArrayOps : FieldArrayLocalOps {
   void compute_curl_b(FieldArray& fa)
   {
     fa.kernel->compute_curl_b(&fa);
-  }
-
-  void synchronize_rho(FieldArray& fa)
-  {
-    fa.kernel->synchronize_rho(&fa);
   }
 
   void compute_rhob(FieldArray& fa)
@@ -105,9 +95,19 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
     kernel->clear_jf(this);
   }
   
+  void clear_rhof()
+  {
+    kernel->clear_rhof(this);
+  }
+
   void synchronize_jf()
   {
     kernel->synchronize_jf(this);
+  }
+
+  void synchronize_rho()
+  {
+    kernel->synchronize_rho(this);
   }
 
 };
