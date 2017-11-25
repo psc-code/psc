@@ -8,8 +8,69 @@
 
 #include <psc.h> // FIXME, only need the BND_* constants
 
-class SimulationBase : public vpic_simulation
+class SimulationBase : protected vpic_simulation
 {
+public:
+  void emitter()
+  {
+    if (emitter_list)
+      TIC ::apply_emitter_list(emitter_list); TOC(emission_model, 1);
+    TIC user_particle_injection(); TOC(user_particle_injection, 1);
+  }
+
+  void collision_run()
+  {
+    // Note: Particles should not have moved since the last performance sort
+    // when calling collision operators.
+    // FIXME: Technically, this placement of the collision operators only
+    // yields a first order accurate Trotter factorization (not a second
+    // order accurate factorization).
+    
+    if (collision_op_list) {
+      // FIXME: originally, vpic_clear_accumulator_array() was called before this.
+      // It's now called later, though. I'm not sure why that would be necessary here,
+      // but it needs to be checked.
+      // The assert() below doesn't unfortunately catch all cases where this might go wrong
+      // (ie., it's missing the user_particle_collisions())
+      
+      assert(0);
+      TIC ::apply_collision_op_list(collision_op_list); TOC(collision_model, 1);
+    }
+    TIC user_particle_collisions(); TOC(user_particle_collisions, 1);
+  }
+
+  void user_current_injection()
+  {
+    TIC vpic_simulation::user_current_injection(); TOC(user_current_injection, 1);
+  }
+
+  void user_field_injection()
+  {
+    // Let the user add their own contributions to the electric field. It is the
+    // users responsibility to insure injected electric fields are consistent
+    // across domains.
+    
+    TIC vpic_simulation::user_field_injection(); TOC(user_field_injection, 1);
+  }
+  
+  using vpic_simulation::user_current_injection;
+
+  using vpic_simulation::grid;
+  using vpic_simulation::material_list;
+  using vpic_simulation::field_array;
+  using vpic_simulation::interpolator_array;
+  using vpic_simulation::accumulator_array;
+  using vpic_simulation::hydro_array;
+  using vpic_simulation::species_list;
+  using vpic_simulation::px;
+  using vpic_simulation::py;
+  using vpic_simulation::pz;
+  using vpic_simulation::num_step;            
+  using vpic_simulation::status_interval;
+  using vpic_simulation::sync_shared_interval;
+  using vpic_simulation::clean_div_e_interval;
+  using vpic_simulation::clean_div_b_interval;
+  using vpic_simulation::num_comm_round;            
 };
 
 // ======================================================================
@@ -25,7 +86,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   typedef typename AccumulatorOps::Accumulator Accumulator;
   
   VpicSimulation(SimulationBase *sim_base)
-    : ParticlesOps(sim_base),
+    : ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
       num_comm_round_(sim_base->num_comm_round),
       grid_(sim_base->grid),
       material_list_(*reinterpret_cast<MaterialList *>(&sim_base->material_list)),
@@ -151,44 +212,22 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void collision_run()
   {
-    // Note: Particles should not have moved since the last performance sort
-    // when calling collision operators.
-    // FIXME: Technically, this placement of the collision operators only
-    // yields a first order accurate Trotter factorization (not a second
-    // order accurate factorization).
-    
-    if (sim_base_->collision_op_list) {
-      // FIXME: originally, vpic_clear_accumulator_array() was called before this.
-      // It's now called later, though. I'm not sure why that would be necessary here,
-      // but it needs to be checked.
-      // The assert() below doesn't unfortunately catch all cases where this might go wrong
-      // (ie., it's missing the user_particle_collisions())
-      
-      assert(0);
-      TIC apply_collision_op_list(sim_base_->collision_op_list); TOC(collision_model, 1);
-    }
-    TIC sim_base_->user_particle_collisions(); TOC(user_particle_collisions, 1);
+    sim_base_->collision_run();
   }
   
   void emitter()
   {
-    if (sim_base_->emitter_list)
-      TIC apply_emitter_list(sim_base_->emitter_list); TOC(emission_model, 1);
-    TIC sim_base_->user_particle_injection(); TOC(user_particle_injection, 1);
+    sim_base_->emitter();
   }
 
   void current_injection()
   {
-    TIC sim_base_->user_current_injection(); TOC(user_current_injection, 1);
+    sim_base_->user_current_injection();
   }
 
   void field_injection()
   {
-    // Let the user add their own contributions to the electric field. It is the
-    // users responsibility to insure injected electric fields are consistent
-    // across domains.
-    
-    TIC sim_base_->user_field_injection(); TOC(user_field_injection, 1);
+    sim_base_->user_field_injection();
   }
 
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
@@ -204,7 +243,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void newDiag(int interval)
   {
-    diag_ = new Diag(sim_base_, interval);
+    diag_ = new Diag(reinterpret_cast<vpic_simulation*>(sim_base_), interval);
   }
 
   void setupDiag()
