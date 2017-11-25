@@ -192,177 +192,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
 #define y_FACE_LOOP(y) XYZ_LOOP(1,nx,y,y,1,nz)
 #define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
 
-  // ----------------------------------------------------------------------
-  // compute_div_b_err
-  
-  static void compute_div_b_err(FieldArray& fa)
-  {
-    Field3D<FieldArray> F(fa);
-    const grid_t* g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
-    const float py = (ny>1) ? g->rdy : 0;
-    const float pz = (nz>1) ? g->rdz : 0;
-
-    for (int k = 1; k <= nz; k++) {
-      for (int j = 1; j <= ny; j++) {
-	for (int i = 1; i <= nx; i++) {
-	  F(i,j,k).div_b_err = (px * (F(i+1,j,k).cbx - F(i,j,k).cbx) +
-				py * (F(i,j+1,k).cby - F(i,j,k).cby) +
-				pz * (F(i,j,k+1).cbz - F(i,j,k).cbz));
-	}
-      }
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // compute_rms_div_b_err
-  //
-  // OPT: doing that at the same time as div_b should be faster
-
-  double compute_rms_div_b_err(FieldArray &fa)
-  {
-    Field3D<FieldArray> F(fa);
-    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
-
-    double err = 0;
-    for (int k = 1; k <= nz; k++) {
-      for (int j = 1; j <= ny; j++) {
-	for (int i = 1; i <= nx; i++) {
-	  err += sqr(F(i,j,k).div_b_err);
-	}
-      }
-    }
-    
-    double local[2], _global[2]; // FIXME, name clash with global macro
-    local[0] = err * fa.g->dV;
-    local[1] = (nx * ny * nz) * fa.g->dV;
-    mp_allsum_d( local, _global, 2 );
-    return fa.g->eps0 * sqrt(_global[0]/_global[1]);
-  }
-
-  // ----------------------------------------------------------------------
-  // clean_div_b
-  
-#define MARDER_CBX(i,j,k) F(i,j,k).cbx += px * (F(i,j,k).div_b_err - F(i-1,j,k).div_b_err)
-#define MARDER_CBY(i,j,k) F(i,j,k).cby += py * (F(i,j,k).div_b_err - F(i,j-1,k).div_b_err)
-#define MARDER_CBZ(i,j,k) F(i,j,k).cbz += pz * (F(i,j,k).div_b_err - F(i,j,k-1).div_b_err)
-
-  void clean_div_b(FieldArray &fa)
-  {
-    Field3D<FieldArray> F(fa);
-    const grid_t* g = fa.g;
-
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    float px = (nx>1) ? g->rdx : 0;
-    float py = (ny>1) ? g->rdy : 0;
-    float pz = (nz>1) ? g->rdz : 0;
-    float alphadt = 0.3888889/(px*px + py*py + pz*pz);
-    px *= alphadt;
-    py *= alphadt;
-    pz *= alphadt;
-
-    // Have pipelines do Marder pass in interior.  The host handles
-    // stragglers.
-
-    // Begin setting derr ghosts
-    begin_remote_ghost_div_b(fa.f, g);
-    this->local_ghost_div_b(fa);
-
-    // Interior
-    for (int k = 2; k <= nz; k++) {
-      for (int j = 2; j <= ny; j++) {
-	for (int i = 2; i <= nx; i++) {
-	  MARDER_CBX(i,j,k);
-	  MARDER_CBY(i,j,k);
-	  MARDER_CBZ(i,j,k);
-	}
-      }
-    }
-  
-    int x, y, z;
-
-    // Do left over interior bx
-    for(y=1; y<=ny; y++) {
-      for(x=2; x<=nx; x++) {
-	MARDER_CBX(x,y,1);
-      }
-    }
-    for(z=2; z<=nz; z++) {
-      for(x=2; x<=nx; x++) {
-	MARDER_CBX(x,1,z);
-      }
-    }
-
-    // Left over interior by
-    for(z=1; z<=nz; z++) {
-      for(y=2; y<=ny; y++) {
-	MARDER_CBY(1,y,z);
-      }
-    }
-    for(y=2; y<=ny; y++) {
-      for(x=2; x<=nx; x++) {
-	MARDER_CBY(x,y,1);
-      }
-    }
-
-    // Left over interior bz
-    for(z=2; z<=nz; z++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_CBZ(x,1,z);
-      }
-    }
-    for(z=2; z<=nz; z++) {
-      for(y=2; y<=ny; y++) {
-	MARDER_CBZ(1,y,z);
-      }
-    }
-
-    // Finish setting derr ghosts
-  
-    end_remote_ghost_div_b(fa.f, g);
-
-    // Do Marder pass in exterior
-
-    // Exterior bx
-    for(z=1; z<=nz; z++) {
-      for(y=1; y<=ny; y++) {
-	MARDER_CBX(1,y,z);
-      }
-    }
-    for(z=1; z<=nz; z++) {
-      for(y=1; y<=ny; y++) {
-	MARDER_CBX(nx+1,y,z);
-      }
-    }
-
-    // Exterior by
-    for(z=1; z<=nz; z++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_CBY(x,1,z);
-      }
-    }
-    for(z=1; z<=nz; z++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_CBY(x,ny+1,z);
-      }
-    }
-
-    // Exterior bz
-    for(y=1; y<=ny; y++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_CBZ(x,y,1);
-      }
-    }
-    for(y=1; y<=ny; y++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_CBZ(x,y,nz+1);
-      }
-    }
-
-    this->local_adjust_norm_b(fa);
-  }
-
 };
 
 
@@ -1412,6 +1241,175 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
   void clean_div_e()
   {
     vacuum_clean_div_e();
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_div_b_err
+  
+  void compute_div_b_err()
+  {
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
+    const float py = (ny>1) ? g->rdy : 0;
+    const float pz = (nz>1) ? g->rdz : 0;
+
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  F(i,j,k).div_b_err = (px * (F(i+1,j,k).cbx - F(i,j,k).cbx) +
+				py * (F(i,j+1,k).cby - F(i,j,k).cby) +
+				pz * (F(i,j,k+1).cbz - F(i,j,k).cbz));
+	}
+      }
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_rms_div_b_err
+  //
+  // OPT: doing that at the same time as div_b should be faster
+
+  double compute_rms_div_b_err()
+  {
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    double err = 0;
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  err += sqr(F(i,j,k).div_b_err);
+	}
+      }
+    }
+    
+    double local[2], _global[2]; // FIXME, name clash with global macro
+    local[0] = err * g->dV;
+    local[1] = (nx * ny * nz) * g->dV;
+    mp_allsum_d(local, _global, 2);
+    return g->eps0 * sqrt(_global[0]/_global[1]);
+  }
+
+  // ----------------------------------------------------------------------
+  // clean_div_b
+  
+#define MARDER_CBX(i,j,k) F(i,j,k).cbx += px * (F(i,j,k).div_b_err - F(i-1,j,k).div_b_err)
+#define MARDER_CBY(i,j,k) F(i,j,k).cby += py * (F(i,j,k).div_b_err - F(i,j-1,k).div_b_err)
+#define MARDER_CBZ(i,j,k) F(i,j,k).cbz += pz * (F(i,j,k).div_b_err - F(i,j,k-1).div_b_err)
+
+  void clean_div_b()
+  {
+    Field3D<FieldArray> F(*this);
+
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    float px = (nx>1) ? g->rdx : 0;
+    float py = (ny>1) ? g->rdy : 0;
+    float pz = (nz>1) ? g->rdz : 0;
+    float alphadt = 0.3888889/(px*px + py*py + pz*pz);
+    px *= alphadt;
+    py *= alphadt;
+    pz *= alphadt;
+
+    // Have pipelines do Marder pass in interior.  The host handles
+    // stragglers.
+
+    // Begin setting derr ghosts
+    begin_remote_ghost_div_b(this->f, g);
+    this->local_ghost_div_b(*this);
+
+    // Interior
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
+	  MARDER_CBX(i,j,k);
+	  MARDER_CBY(i,j,k);
+	  MARDER_CBZ(i,j,k);
+	}
+      }
+    }
+  
+    int x, y, z;
+
+    // Do left over interior bx
+    for(y=1; y<=ny; y++) {
+      for(x=2; x<=nx; x++) {
+	MARDER_CBX(x,y,1);
+      }
+    }
+    for(z=2; z<=nz; z++) {
+      for(x=2; x<=nx; x++) {
+	MARDER_CBX(x,1,z);
+      }
+    }
+
+    // Left over interior by
+    for(z=1; z<=nz; z++) {
+      for(y=2; y<=ny; y++) {
+	MARDER_CBY(1,y,z);
+      }
+    }
+    for(y=2; y<=ny; y++) {
+      for(x=2; x<=nx; x++) {
+	MARDER_CBY(x,y,1);
+      }
+    }
+
+    // Left over interior bz
+    for(z=2; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_CBZ(x,1,z);
+      }
+    }
+    for(z=2; z<=nz; z++) {
+      for(y=2; y<=ny; y++) {
+	MARDER_CBZ(1,y,z);
+      }
+    }
+
+    // Finish setting derr ghosts
+  
+    end_remote_ghost_div_b(this->f, g);
+
+    // Do Marder pass in exterior
+
+    // Exterior bx
+    for(z=1; z<=nz; z++) {
+      for(y=1; y<=ny; y++) {
+	MARDER_CBX(1,y,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(y=1; y<=ny; y++) {
+	MARDER_CBX(nx+1,y,z);
+      }
+    }
+
+    // Exterior by
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_CBY(x,1,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_CBY(x,ny+1,z);
+      }
+    }
+
+    // Exterior bz
+    for(y=1; y<=ny; y++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_CBZ(x,y,1);
+      }
+    }
+    for(y=1; y<=ny; y++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_CBZ(x,y,nz+1);
+      }
+    }
+
+    this->local_adjust_norm_b(*this);
   }
 
 };

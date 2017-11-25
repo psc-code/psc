@@ -8,22 +8,6 @@
 template<class FA, class FieldArrayLocalOps>
 struct VpicFieldArrayOps : FieldArrayLocalOps {
   typedef FA FieldArray;
-  
-  void compute_div_b_err(FieldArray& fa)
-  {
-    fa.kernel->compute_div_b_err(&fa);
-  }
-
-  double compute_rms_div_b_err(FieldArray &fa)
-  {
-    return fa.kernel->compute_rms_div_b_err(&fa);
-  }
-  
-  void clean_div_b(FieldArray& fa)
-  {
-    fa.kernel->clean_div_b(&fa);
-  }
-
 };
 
 template<class B, class FieldArrayLocalOps>
@@ -119,6 +103,23 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
     kernel->clean_div_e(this);
   }
 
+  // ----------------------------------------------------------------------
+  // div B cleaning
+
+  void compute_div_b_err()
+  {
+    kernel->compute_div_b_err(this);
+  }
+
+  double compute_rms_div_b_err()
+  {
+    return kernel->compute_rms_div_b_err(this);
+  }
+  
+  void clean_div_b()
+  {
+    kernel->clean_div_b(this);
+  }
 
 };
   

@@ -21,5 +21,9 @@ void test_FieldArray_methods(FieldArray& fa)
   fa.compute_div_e_err();
   fa.compute_rms_div_e_err();
   fa.clean_div_e();
+
+  fa.compute_div_b_err();
+  fa.compute_rms_div_b_err();
+  fa.clean_div_b();
 }
 
