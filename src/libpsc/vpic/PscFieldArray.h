@@ -2,11 +2,19 @@
 #ifndef PSC_FIELD_ARRAY_H
 #define PSC_FIELD_ARRAY_H
 
+#include "grid.h"
+#include "material.h"
+
+#include "field_advance/field_advance.h"
+
 #include <mrc_common.h>
 #include <cassert>
 
-// FIXME, this file relies on VpicFieldArray.h having been included before,
+// FIXME, this file relies on VpicFieldArray.h 
 // though at least that way, the duplication is limited
+#define IN_sfa
+#include "field_advance/standard/sfa_private.h"
+#include "VpicFieldArray.h"
 
 // the below are copies, though, skipping the kernels
 

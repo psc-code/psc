@@ -2,6 +2,14 @@
 #ifndef PSC_FIELD_ARRAY_OPS_H
 #define PSC_FIELD_ARRAY_OPS_H
 
+#include <mrc_bits.h>
+
+#define private public
+#include "vpic.h"
+
+#define IN_sfa
+#include "field_advance/standard/sfa_private.h"
+
 // ======================================================================
 // PscFieldArrayOps
 

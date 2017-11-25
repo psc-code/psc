@@ -32,8 +32,15 @@ libsubdir_la_SOURCES = \
 	main.cxx \
 	vpic_diag.cxx \
 	wrapper.cxx
-
 #	wrapper_empty.cxx
+
+noinst_PROGRAMS = \
+	test_VpicFieldArray \
+	test_PscFieldArray
+
+test_VpicFieldArray_SOURCES = test_VpicFieldArray.cxx
+test_PscFieldArray_SOURCES = test_PscFieldArray.cxx
+
 
 
 endif USE_VPIC
