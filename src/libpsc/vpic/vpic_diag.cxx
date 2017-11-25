@@ -208,12 +208,6 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag)
   int64_t step = simulation->step();
 
   /*--------------------------------------------------------------------------
-   * Field data output
-   *------------------------------------------------------------------------*/
-
-  if(step == -1 || should_dump(fields)) simulation->field_dump(diag->fdParams);
-
-  /*--------------------------------------------------------------------------
    * Electron species output
    *------------------------------------------------------------------------*/
 
