@@ -41,7 +41,7 @@
 // PscFieldArray
 
 template<class B, class FieldArrayLocalOps>
-struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
+struct PscFieldArray : B, FieldArrayLocalOps
 {
   typedef B Base;
   typedef PscFieldArray<B, FieldArrayLocalOps> FieldArray;

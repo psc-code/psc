@@ -69,9 +69,14 @@ enum {
 
 #ifdef __cplusplus
 
-typedef VpicFieldArrayBase FieldArrayBase;
+#if 1
+typedef PscFieldArrayBase FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
-typedef PscFieldArrayOps<FieldArrayBase, FieldArrayLocalOps> FieldArrayOps;
+typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
+#else
+typedef VpicFieldArrayBase FieldArrayBase;
+typedef VpicFieldArray<FieldArrayBase> FieldArray;
+#endif
 
 typedef VpicInterpolator Interpolator;
 typedef PscInterpolatorOps<Interpolator, FieldArrayBase> InterpolatorOps;
@@ -82,14 +87,12 @@ typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
 
-typedef VpicFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
-
 typedef VpicDiagOps<FieldArray, Particles, Interpolator> DiagOps;
 //typedef VpicSimulationBase SimulationBase;
 typedef PscSimulationBase<FieldArray> SimulationBase;
 
 
-typedef VpicSimulation<FieldArray, FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
+typedef VpicSimulation<FieldArray, ParticlesOps, InterpolatorOps, AccumulatorOps,
 		       SimulationBase, DiagOps> Simulation;
 
 #else

@@ -7,7 +7,7 @@
 
 void test_VpicFieldArray()
 {
-  typedef VpicFieldArray<VpicFieldArrayBase, VpicFieldArrayLocalOps<VpicFieldArrayBase>> FieldArray;
+  typedef VpicFieldArray<VpicFieldArrayBase> FieldArray;
 
   Grid grid;
   MaterialList material_list;
