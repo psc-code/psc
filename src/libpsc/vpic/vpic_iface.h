@@ -69,7 +69,7 @@ enum {
 
 #ifdef __cplusplus
 
-typedef PscFieldArray FieldArray;
+typedef VpicFieldArray FieldArray;
 typedef PscFieldArrayLocalOps<FieldArray> FieldArrayLocalOps;
 typedef PscFieldArrayOps<FieldArray, FieldArrayLocalOps> FieldArrayOps;
 
