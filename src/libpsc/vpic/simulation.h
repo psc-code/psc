@@ -22,7 +22,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   
   VpicSimulation(SimulationBase *sim_base)
     : ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
-      num_comm_round_(sim_base->num_comm_round),
+      num_comm_round_(3),
       grid_(sim_base->getGrid()),
       material_list_(sim_base->getMaterialList()),
       field_array_(sim_base->getFieldArray()),
@@ -44,13 +44,13 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   
   void setup_grid(double dx[3], double dt, double cvac, double eps0)
   {
-    grid_.setup(dx, dt, cvac, eps0);
+    grid_->setup(dx, dt, cvac, eps0);
   }
 
   void define_periodic_grid(double xl[3], double xh[3], int gdims[3], int np[3])
   {
     sim_base_->setTopology(np[0], np[1], np[2]);
-    grid_.partition_periodic_box(xl, xh, gdims, np);
+    grid_->partition_periodic_box(xl, xh, gdims, np);
   }
 
   void set_domain_field_bc(int boundary, int bc)
@@ -61,7 +61,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
     case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
     default: assert(0);
     }
-    grid_.set_fbc(boundary, fbc);
+    grid_->set_fbc(boundary, fbc);
   }
 
   void set_domain_particle_bc(int boundary, int bc)
@@ -72,7 +72,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
     case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
     default: assert(0);
     }
-    grid_.set_pbc(boundary, pbc);
+    grid_->set_pbc(boundary, pbc);
   }
 
   struct material *define_material(const char *name,
@@ -88,33 +88,33 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void define_field_array(double damp)
   {
-    grid_t *g = grid_.getGrid_t();
+    grid_t *g = grid_->getGrid_t();
  
     assert(g->nx && g->ny && g->ny);
     assert(!material_list_.empty());
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
-    interpolator_ = new Interpolator(g);
-    accumulator_ = new Accumulator(g);
+    interpolator_ = new Interpolator(grid_);
+    accumulator_ = new Accumulator(grid_);
     hydro_array_ = new HydroArray(grid_);
  
     // Pre-size communications buffers. This is done to get most memory
     // allocation over with before the simulation starts running
   
     int nx1 = g->nx+1, ny1 = g->ny+1, nz1 = g->nz+1;
-    grid_.mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
-    grid_.mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
-    grid_.mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
-    grid_.mp_size_recv_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
-    grid_.mp_size_recv_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
-    grid_.mp_size_recv_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
+    grid_->mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
+    grid_->mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
+    grid_->mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
+    grid_->mp_size_recv_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
+    grid_->mp_size_recv_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
+    grid_->mp_size_recv_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
   
-    grid_.mp_size_send_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
-    grid_.mp_size_send_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
-    grid_.mp_size_send_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
-    grid_.mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
-    grid_.mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
-    grid_.mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
+    grid_->mp_size_send_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
+    grid_->mp_size_send_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
+    grid_->mp_size_send_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
+    grid_->mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(hydro_t));
+    grid_->mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(hydro_t));
+    grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
   }
 
   species_t* define_species(const char *name, double q, double m,
@@ -132,7 +132,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
     return particles_.append(species(name, (float)q, (float)m,
 				     (int)max_local_np, (int)max_local_nm,
 				     (int)sort_interval, (int)sort_out_of_place,
-				     grid_.getGrid_t()));
+				     grid_->getGrid_t()));
   }
 
   void collision_run()
@@ -186,7 +186,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   RngPool rng_pool;
 
   //private:
-  Grid grid_;
+  Grid*& grid_;
   MaterialList& material_list_;
   FieldArray*& field_array_;
   Interpolator*& interpolator_;

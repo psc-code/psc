@@ -20,9 +20,9 @@ public:
     simulation = this;
   }
 
-  Grid getGrid()
+  Grid*& getGrid()
   {
-    return grid;
+    return *reinterpret_cast<Grid **>(&grid);
   }
 
   MaterialList& getMaterialList()

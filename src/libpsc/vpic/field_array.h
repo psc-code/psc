@@ -27,9 +27,9 @@ struct VpicFieldArray : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
   
-  VpicFieldArray(Grid grid, MaterialList material_list, float damp)
+  VpicFieldArray(Grid* grid, MaterialList material_list, float damp)
   {
-    field_array_ctor(this, grid.getGrid_t(), material_list.ml_, damp);
+    field_array_ctor(this, grid->getGrid_t(), material_list.ml_, damp);
   }
   
   ~VpicFieldArray()

@@ -36,9 +36,9 @@ struct VpicInterpolator : interpolator_array_t {
     N_COMP = sizeof(interpolator_t) / sizeof(float),
   };
   
-  VpicInterpolator(Grid grid)
+  VpicInterpolator(Grid *grid)
   {
-    interpolator_array_ctor(this, grid.getGrid_t());
+    interpolator_array_ctor(this, grid->getGrid_t());
   }
 
   ~VpicInterpolator()

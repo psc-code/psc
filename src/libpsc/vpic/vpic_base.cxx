@@ -104,8 +104,8 @@ void Simulation_diagnostics(Simulation *sim)
 
 void Simulation_inc_step(Simulation *sim, int step)
 {
-  sim->grid_.getGrid_t()->step++;
-  assert(sim->grid_.getGrid_t()->step == step);
+  sim->grid_->getGrid_t()->step++;
+  assert(sim->grid_->getGrid_t()->step == step);
 }
 
 // ----------------------------------------------------------------------
@@ -139,7 +139,7 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
     assert(0);
 #if 0
 #define field vpic->field
-    grid_t *grid = sim->grid_.g_;
+    grid_t *grid = sim->grid_->g_;
     set_region_material(resistive_layer, resistive, resistive);
 #undef field
 #endif

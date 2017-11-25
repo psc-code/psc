@@ -40,9 +40,9 @@ struct VpicAccumulator : accumulator_array_t {
   typedef accumulator_t Element;
   typedef VpicAccumulatorBlock Block;
   
-  VpicAccumulator(Grid grid)
+  VpicAccumulator(Grid* grid)
   {
-    accumulator_array_ctor(this, grid.getGrid_t());
+    accumulator_array_ctor(this, grid->getGrid_t());
   }
   
   ~VpicAccumulator()

@@ -8,7 +8,7 @@
 // HydroArray
 
 struct HydroArray : hydro_array_t {
-  HydroArray(Grid g);
+  HydroArray(Grid* g);
   ~HydroArray();
 
   float* getData(int* ib, int* im);
@@ -34,9 +34,9 @@ hydro_array_dtor( hydro_array_t * ha ) {
 // ----------------------------------------------------------------------
 // HydroArray implementation
 
-inline HydroArray::HydroArray(Grid grid)
+inline HydroArray::HydroArray(Grid* grid)
 {
-  hydro_array_ctor(this, grid.getGrid_t());
+  hydro_array_ctor(this, grid->getGrid_t());
 }
 
 inline HydroArray::~HydroArray()
