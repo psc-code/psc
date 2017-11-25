@@ -6,6 +6,11 @@ template<class FA>
 struct VpicFieldArrayLocalOps {
   typedef FA FieldArray;
 
+  void local_ghost_tang_b(FieldArray& fa)
+  {
+    ::local_ghost_tang_b(fa.f, fa.g);
+  }
+  
   void local_ghost_norm_e(FieldArray& fa)
   {
     ::local_ghost_norm_e(fa.f, fa.g);
@@ -52,11 +57,6 @@ template<class FieldArrayBase>
 struct VpicFieldArrayLocal : FieldArrayBase, VpicFieldArrayLocalOps<FieldArrayBase>
 {
   using FieldArrayBase::FieldArrayBase;
-
-  using FieldArrayBase::g;
-
-  void local_ghost_tang_b() { ::local_ghost_tang_b(this->f, g); }
-  
 };
 
 #endif

@@ -3,7 +3,7 @@ template<class FieldArray>
 void
 test_FieldArrayLocal_methods(FieldArray& fa)
 {
-  fa.local_ghost_tang_b();
+  fa.local_ghost_tang_b(fa);
   fa.local_ghost_norm_e(fa);
   fa.local_ghost_div_b(fa);
   fa.local_adjust_tang_e(fa);
@@ -17,8 +17,6 @@ test_FieldArrayLocal_methods(FieldArray& fa)
 template<class FieldArray>
 void test_FieldArray_methods(FieldArray& fa)
 {
-  test_FieldArrayLocal_methods(fa);
-
   double en[6];
   fa.energy_f(en);
 
