@@ -82,12 +82,13 @@ typedef PscAccumulatorOps<Accumulator, FieldArray> AccumulatorOps;
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
-typedef VpicDiagOps<FieldArrayOps, ParticlesOps, InterpolatorOps> DiagOps;
+typedef PscFieldArrayD<VpicFieldArray, FieldArrayOps> FieldArrayD;
+typedef VpicDiagOps<FieldArrayD, Particles, Interpolator> DiagOps;
 //typedef VpicSimulationBase SimulationBase;
 typedef PscSimulationBase<FieldArray> SimulationBase;
 
 
-typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
+typedef VpicSimulation<FieldArrayD, FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
 		       SimulationBase, DiagOps> Simulation;
 
 #else

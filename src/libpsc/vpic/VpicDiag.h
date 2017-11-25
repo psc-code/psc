@@ -77,13 +77,10 @@ inline void VpicDiag::run()
 // ======================================================================
 // VpicDiagOps
 
-template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps>
+template<class FieldArray, class Particles, class Interpolator>
 struct VpicDiagOps
 {
   typedef VpicDiag Diag;
-  typedef typename FieldArrayOps::FieldArray FieldArray;
-  typedef typename ParticlesOps::Particles Particles;
-  typedef typename InterpolatorOps::Interpolator Interpolator;
 
 #define should_dump(x)                                                  \
   (diag.x##_interval>0 && remainder(step, diag.x##_interval) == 0)
@@ -147,13 +144,13 @@ struct VpicDiagOps
 
     int rank = simulation->rank();
     
-    if( !fname ) ERROR(("Invalid file name"));
+    if (!fname) ERROR(("Invalid file name"));
  
-    if( rank==0 ) {
+    if (rank==0) {
       status = fileIO.open(fname, append ? io_append : io_write);
-      if(status==fail) ERROR(( "Could not open \"%s\".", fname));
+      if (status==fail) ERROR(( "Could not open \"%s\".", fname));
       else {
-	if( append==0 ) {
+	if (append==0) {
 	  fileIO.print("%% Layout\n%% step ex ey ez bx by bz" );
 	  LIST_FOR_EACH(sp, particles.sl_)
 	    fileIO.print(" \"%s\"", sp->name);
@@ -163,8 +160,9 @@ struct VpicDiagOps
 	fileIO.print( "%li", (long)simulation->step() );
       }
     }
- 
-    fa.kernel->energy_f(en_f, &fa);
+
+    fa.energy_f(fa, en_f);
+    //    fa.kernel->energy_f(en_f, &fa);
     if (rank==0 && status!=fail )
       fileIO.print( " %e %e %e %e %e %e",
 		    en_f[0], en_f[1], en_f[2],

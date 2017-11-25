@@ -12,7 +12,7 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps,
+template<class FieldArrayD, class FieldArrayOps, class ParticlesOps, class InterpolatorOps,
 	 class AccumulatorOps, class SimulationBase, class DiagOps>
 struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps,
   AccumulatorOps, DiagOps
@@ -183,7 +183,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps,
   void runDiag()
   {
     diag_.run();
-    this->diagnostics_run(diag_, *field_array_, particles_, *interpolator_);
+    this->diagnostics_run(diag_, *reinterpret_cast<FieldArrayD*>(field_array_), particles_, *interpolator_);
   }
     
   int num_comm_round_;

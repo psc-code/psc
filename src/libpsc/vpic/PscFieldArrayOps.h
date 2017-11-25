@@ -1185,7 +1185,74 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
     vacuum_compute_curl_b(fa);
   }
 
+  // ----------------------------------------------------------------------
+  // energy_f
+
+#define REDUCE_EN(i,j,k)				\
+ 
+  void vacuum_energy_f(FieldArray& fa, double global[6])
+  {
+    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
+    assert(params->n_mc == 1);
+    const material_coefficient_t* m = params->mc;
+
+    Field3D<FieldArray> F(fa);
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    const float qepsx = 0.25*m->epsx;
+    const float qepsy = 0.25*m->epsy;
+    const float qepsz = 0.25*m->epsz;
+    const float hrmux = 0.5*m->rmux;
+    const float hrmuy = 0.5*m->rmuy;
+    const float hrmuz = 0.5*m->rmuz;
+    double en[6] = {};
+
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  en[0] += qepsx*(sqr(F(i  ,j  ,k  ).ex) +
+			  sqr(F(i  ,j+1,k  ).ex) +
+			  sqr(F(i  ,j  ,k+1).ex) +
+			  sqr(F(i  ,j+1,k+1).ex));
+	  en[1] += qepsy*(sqr(F(i  ,j  ,k  ).ey) +
+			  sqr(F(i  ,j  ,k+1).ey) +
+			  sqr(F(i+1,j  ,k  ).ey) +
+			  sqr(F(i+1,j  ,k+1).ey));
+	  en[2] += qepsz*(sqr(F(i  ,j  ,k  ).ez) +
+			  sqr(F(i+1,j  ,k  ).ez) +
+			  sqr(F(i  ,j+1,k  ).ez) +
+			  sqr(F(i+1,j+1,k  ).ez));
+	  en[3] += hrmux*(sqr(F(i  ,j  ,k  ).cbx) +
+			  sqr(F(i+1,j  ,k  ).cbx));
+	  en[4] += hrmuy*(sqr(F(i  ,j  ,k  ).cby) +
+			  sqr(F(i  ,j+1,k  ).cby));
+	  en[5] += hrmuz*(sqr(F(i  ,j  ,k  ).cbz) +
+			  sqr(F(i  ,j  ,k+1).cbz));
+	}
+      }
+    }
+
+    // Convert to physical units
+    double v0 = 0.5 * fa.g->eps0 * fa.g->dV;
+    for (int m = 0; m < 6; m++) {
+      en[m] *= v0;
+    }
+
+    // Reduce results between nodes
+    mp_allsum_d(en, global, 6 );
+  }
+
+  void energy_f(FieldArray& fa, double en[6])
+  {
+    vacuum_energy_f(fa, en);
+  }
 };
 
 
+template<class FA, class FieldArrayLocalOps>
+struct PscFieldArrayD : FA, PscFieldArrayOps<FA,FieldArrayLocalOps>
+{
+};
+  
 #endif
