@@ -167,19 +167,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
   }
   
   // ----------------------------------------------------------------------
-  // clear_jf
-
-  void clear_jf(FieldArray& fa)
-  {
-    const int nv = fa.g->nv;
-    for (int v = 0; v < nv; v++) {
-      fa[v].jfx = 0;
-      fa[v].jfy = 0;
-      fa[v].jfz = 0;
-    }
-  }
-
-  // ----------------------------------------------------------------------
   // clear_rhof
 
   void clear_rhof(FieldArray& fa)
@@ -1412,6 +1399,20 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
   void energy_f(double en[6])
   {
     vacuum_energy_f(en);
+  }
+
+  // ----------------------------------------------------------------------
+  // clear_jf
+
+  void clear_jf()
+  {
+    const int nv = g->nv;
+
+    for (int v = 0; v < nv; v++) {
+      (*this)[v].jfx = 0;
+      (*this)[v].jfy = 0;
+      (*this)[v].jfz = 0;
+    }
   }
 
 };

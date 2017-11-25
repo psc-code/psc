@@ -7,5 +7,6 @@ void test_FieldArray_methods(FieldArray& fa)
 
   fa.advance_b(1.);
   fa.advance_e(1.);
+  fa.clear_jf();
 }
 

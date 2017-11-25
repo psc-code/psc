@@ -9,11 +9,6 @@ template<class FA, class FieldArrayLocalOps>
 struct VpicFieldArrayOps : FieldArrayLocalOps {
   typedef FA FieldArray;
   
-  void clear_jf(FieldArray& fa)
-  {
-    fa.kernel->clear_jf(&fa);
-  }
-  
   void clear_rhof(FieldArray& fa)
   {
     fa.kernel->clear_rhof(&fa);
@@ -107,6 +102,14 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
     kernel->energy_f(en, this);
   }
 
+  // ----------------------------------------------------------------------
+  // Accumulator interfaces
+
+  void clear_jf()
+  {
+    kernel->clear_jf(this);
+  }
+  
 };
   
 #endif
