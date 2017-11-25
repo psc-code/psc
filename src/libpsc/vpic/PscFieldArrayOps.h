@@ -1185,11 +1185,19 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
     vacuum_compute_curl_b(fa);
   }
 
+};
+
+template<class B, class FieldArrayLocalOps>
+struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
+{
+  typedef B Base;
+  typedef PscFieldArray<B, FieldArrayLocalOps> FieldArray;
+
+  using Base::Base;
+  
   // ----------------------------------------------------------------------
   // energy_f
 
-#define REDUCE_EN(i,j,k)				\
- 
   void vacuum_energy_f(FieldArray& fa, double global[6])
   {
     sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
@@ -1247,12 +1255,8 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
   {
     vacuum_energy_f(fa, en);
   }
-};
 
-
-template<class FA, class FieldArrayLocalOps>
-struct PscFieldArrayD : FA, PscFieldArrayOps<FA,FieldArrayLocalOps>
-{
 };
   
+
 #endif

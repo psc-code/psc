@@ -6,12 +6,12 @@
 #include <cassert>
 
 // ======================================================================
-// VpicFieldArray
+// VpicFieldArrayBase
 
 inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp);
 inline void field_array_dtor(field_array_t *fa);
 
-struct VpicFieldArray : field_array_t {
+struct VpicFieldArrayBase : field_array_t {
   typedef field_t Element;
   
   enum {
@@ -24,12 +24,12 @@ struct VpicFieldArray : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
   
-  VpicFieldArray(Grid* grid, MaterialList material_list, float damp)
+  VpicFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
     field_array_ctor(this, grid->getGrid_t(), material_list.ml_, damp);
   }
   
-  ~VpicFieldArray()
+  ~VpicFieldArrayBase()
   {
     field_array_dtor(this);
   }

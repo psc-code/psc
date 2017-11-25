@@ -84,11 +84,24 @@ struct VpicFieldArrayOps : FieldArrayLocalOps {
     return fa.kernel->synchronize_tang_e_norm_b(&fa);
   }
 
+};
+
+template<class B, class FieldArrayLocalOps>
+struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
+{
+  typedef B Base;
+  typedef VpicFieldArray<B, FieldArrayLocalOps> FieldArray;
+
+  using Base::Base;
+
+  // ----------------------------------------------------------------------
+  // energy_f
+
   void energy_f(FieldArray& fa, double en[6])
   {
     fa.kernel->energy_f(en, &fa);
   }
+
 };
-
-
+  
 #endif

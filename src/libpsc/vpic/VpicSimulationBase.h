@@ -2,12 +2,12 @@
 #ifndef VPIC_SIMULATION_BASE_H
 #define VPIC_SIMULATION_BASE_H
 
-#include "VpicFieldArray.h"
 #include "VpicInterpolator.h"
 #include "VpicAccumulator.h"
 #include "VpicParticles.h"
 #include "VpicDiag.h"
 
+template<class FieldArray>
 class VpicSimulationBase : protected vpic_simulation
 {
 public:
@@ -28,9 +28,9 @@ public:
     return *reinterpret_cast<MaterialList *>(&material_list);
   }
 
-  VpicFieldArray*& getFieldArray()
+  FieldArray*& getFieldArray()
   {
-    return *reinterpret_cast<VpicFieldArray **>(&field_array);
+    return *reinterpret_cast<FieldArray **>(&field_array);
   }
 
   VpicInterpolator*& getInterpolator()

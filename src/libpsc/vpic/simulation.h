@@ -17,7 +17,7 @@ template<class FieldArrayD, class FieldArrayOps, class ParticlesOps, class Inter
 struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps,
   AccumulatorOps, DiagOps
 {
-  typedef typename FieldArrayOps::FieldArray FieldArray;
+  typedef FieldArrayD FieldArray;
   typedef typename ParticlesOps::Particles Particles;
   typedef typename InterpolatorOps::Interpolator Interpolator;
   typedef typename AccumulatorOps::Accumulator Accumulator;

@@ -39,9 +39,9 @@ inline void _field_array_dtor(field_array_t *fa)
 }
 
 // ======================================================================
-// PscFieldArray
+// PscFieldArrayBase
 
-struct PscFieldArray : field_array_t {
+struct PscFieldArrayBase : field_array_t {
   typedef field_t Element;
   
   enum {
@@ -54,12 +54,12 @@ struct PscFieldArray : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
   
-  PscFieldArray(Grid* grid, MaterialList material_list, float damp)
+  PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
     _field_array_ctor(this, grid->getGrid_t(), material_list.ml_, damp);
   }
   
-  ~PscFieldArray()
+  ~PscFieldArrayBase()
   {
     _field_array_dtor(this);
   }

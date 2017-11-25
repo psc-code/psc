@@ -69,26 +69,27 @@ enum {
 
 #ifdef __cplusplus
 
-typedef VpicFieldArray FieldArray;
-typedef PscFieldArrayLocalOps<FieldArray> FieldArrayLocalOps;
-typedef PscFieldArrayOps<FieldArray, FieldArrayLocalOps> FieldArrayOps;
+typedef VpicFieldArrayBase FieldArrayBase;
+typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
+typedef PscFieldArrayOps<FieldArrayBase, FieldArrayLocalOps> FieldArrayOps;
 
 typedef VpicInterpolator Interpolator;
-typedef PscInterpolatorOps<Interpolator, FieldArray> InterpolatorOps;
+typedef PscInterpolatorOps<Interpolator, FieldArrayBase> InterpolatorOps;
 
 typedef VpicAccumulator Accumulator;
-typedef PscAccumulatorOps<Accumulator, FieldArray> AccumulatorOps;
+typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
 
 typedef VpicParticles Particles;  
-typedef PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator> ParticlesOps;
+typedef PscParticlesOps<Particles, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
 
-typedef PscFieldArrayD<VpicFieldArray, FieldArrayOps> FieldArrayD;
-typedef VpicDiagOps<FieldArrayD, Particles, Interpolator> DiagOps;
+typedef VpicFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
+
+typedef VpicDiagOps<FieldArray, Particles, Interpolator> DiagOps;
 //typedef VpicSimulationBase SimulationBase;
 typedef PscSimulationBase<FieldArray> SimulationBase;
 
 
-typedef VpicSimulation<FieldArrayD, FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
+typedef VpicSimulation<FieldArray, FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
 		       SimulationBase, DiagOps> Simulation;
 
 #else
