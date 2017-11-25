@@ -31,6 +31,7 @@
 #include "NoneDiag.h"
 
 #include "VpicSimulationBase.h"
+#include "PscSimulationBase.h"
 
 extern "C" {
 #endif
@@ -81,7 +82,7 @@ typedef VpicParticles Particles;
 typedef PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
 typedef VpicDiag Diag;
-typedef VpicSimulationBase<Diag> SimulationBase;
+typedef PscSimulationBase<Diag> SimulationBase;
 
 
 typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
