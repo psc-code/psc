@@ -30,6 +30,8 @@
 #include "VpicDiag.h"
 #include "NoneDiag.h"
 
+#include "VpicSimulationBase.h"
+
 extern "C" {
 #endif
 #if 0 // hack to fix indentation
@@ -79,8 +81,11 @@ typedef VpicParticles Particles;
 typedef PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
 typedef VpicDiag Diag;
+typedef VpicSimulationBase<Diag> SimulationBase;
 
-typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps, Diag> Simulation;
+
+typedef VpicSimulation<FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps,
+		       SimulationBase> Simulation;
 
 #else
 
