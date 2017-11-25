@@ -99,13 +99,6 @@ struct VpicFieldArray : field_array_t {
   MK_COMP_ACCESSOR(ey)
   MK_COMP_ACCESSOR(ez)
   
-
-  private:
-  void advanceB(float frac);
-  void advanceB_interior(float frac);
-
-  // this class should not have its own data members, as we use this
-  // to wrap VPIC field_array_t and just up-cast.
 };
 
 // ----------------------------------------------------------------------

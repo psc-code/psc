@@ -9,8 +9,8 @@ struct PscInterpolatorOps {
 
   void load_interpolator(Interpolator& ia, /*const*/ FieldArray& fa)
   {
-    Field3D<VpicFieldArray> F(fa);
-    Field3D<VpicInterpolator> I(ia);
+    Field3D<FieldArray> F(fa);
+    Field3D<Interpolator> I(ia);
 
     const int nx = ia.g->nx;
     const int ny = ia.g->ny;
