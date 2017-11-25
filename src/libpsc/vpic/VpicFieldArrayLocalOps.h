@@ -53,6 +53,11 @@ struct VpicFieldArrayLocalOps {
   
 };
 
+template<class FieldArrayBase>
+struct VpicFieldArrayLocal : FieldArrayBase, VpicFieldArrayLocalOps<FieldArrayBase>
+{
+  using FieldArrayBase::FieldArrayBase;
+};
 
 #endif
 

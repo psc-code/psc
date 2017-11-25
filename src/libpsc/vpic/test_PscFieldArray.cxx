@@ -8,8 +8,8 @@
 void test_PscFieldArray()
 {
   typedef PscFieldArrayBase FieldArrayBase;
-  typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
-  typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
+  typedef PscFieldArrayLocal<FieldArrayBase> FieldArrayLocal;
+  typedef PscFieldArray<FieldArrayLocal> FieldArray;
 
   Grid grid;
   MaterialList material_list;

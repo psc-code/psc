@@ -36,15 +36,14 @@
 #define y_FACE_LOOP(y) XYZ_LOOP(1,nx,y,y,1,nz)
 #define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
 
-
 // ======================================================================
 // PscFieldArray
 
-template<class B, class FieldArrayLocalOps>
-struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
+template<class B>
+struct PscFieldArray : B
 {
   typedef B Base;
-  typedef PscFieldArray<B, FieldArrayLocalOps> FieldArray;
+  typedef PscFieldArray<B> FieldArray;
 
   using Base::Base;
 
