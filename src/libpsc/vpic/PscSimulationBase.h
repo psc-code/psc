@@ -23,12 +23,12 @@ public:
 
   MaterialList& getMaterialList()
   {
-    return *reinterpret_cast<MaterialList *>(&material_list);
+    return material_list_;
   }
 
   FieldArray*& getFieldArray()
   {
-    return *reinterpret_cast<FieldArray **>(&field_array);
+    return field_array_;
   }
 
   VpicInterpolator*& getInterpolator()
@@ -73,6 +73,10 @@ public:
   }
 
   using vpic_simulation::hydro_array;
+
+ private:
+  MaterialList material_list_;
+  FieldArray *field_array_;
 };
 
 
