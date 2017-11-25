@@ -5,11 +5,16 @@
 // ======================================================================
 // VpicFieldArray
 
-template<class B>
-struct VpicFieldArray : B
+template<class FA, class FieldArrayLocalOps>
+struct VpicFieldArrayOps : FieldArrayLocalOps {
+  typedef FA FieldArray;
+};
+
+template<class B, class FieldArrayLocalOps>
+struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
 {
   typedef B Base;
-  typedef VpicFieldArray<B> FieldArray;
+  typedef VpicFieldArray<B, FieldArrayLocalOps> FieldArray;
 
   using Base::Base;
 

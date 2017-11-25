@@ -430,12 +430,6 @@ struct PscFieldArrayLocalOps {
 
 };
 
-template<class FieldArrayBase>
-struct PscFieldArrayLocal : FieldArrayBase, PscFieldArrayLocalOps<FieldArrayBase>
-{
-  using FieldArrayBase::FieldArrayBase;
-};
- 
 
 #endif
 
