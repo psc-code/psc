@@ -340,7 +340,7 @@ struct PscFieldArray : B
 
     begin_remote_ghost_tang_b(this->f, g);
 
-    this->local_ghost_tang_b(*this);
+    this->local_ghost_tang_b();
     foreach_ec_interior(advanceE, g);
 
     end_remote_ghost_tang_b(this->f, g);
@@ -741,7 +741,7 @@ struct PscFieldArray : B
       
     begin_remote_ghost_tang_b(this->f, g);
 
-    this->local_ghost_tang_b(*this);
+    this->local_ghost_tang_b();
     foreach_ec_interior(curlB, g);
 
     end_remote_ghost_tang_b(this->f, g);

@@ -27,81 +27,6 @@ template<class FA>
 struct PscFieldArrayLocalOps {
   typedef FA FieldArray;
 
-  void local_ghost_tang_b(FieldArray& fa)
-  {
-    Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    const float cdt_dx = g->cvac*g->dt*g->rdx;
-    const float cdt_dy = g->cvac*g->dt*g->rdy;
-    const float cdt_dz = g->cvac*g->dt*g->rdz;
-    int bc, face, ghost, x, y, z;
-    float decay, drive, higend, t1, t2;
-    field_t *fg, *fh;
-
-    // Absorbing boundary condition is 2nd order accurate implementation
-    // of a 1st order Higend ABC with 15 degree annihilation cone except
-    // for 1d simulations where the 2nd order accurate implementation of
-    // a 1st order Mur boundary condition is used.
-    higend = ( nx>1 || ny>1 || nz>1 ) ? 1.03527618 : 1.;
-
-# define APPLY_LOCAL_TANG_B(i,j,k,X,Y,Z)				\
-    do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
-      if( bc<0 || bc>=world_size ) {					\
-	ghost = (i+j+k)<0 ? 0 : n##X+1;					\
-	face  = (i+j+k)<0 ? 1 : n##X+1;					\
-	switch(bc) {							\
-	case anti_symmetric_fields:					\
-	  Z##Y##_EDGE_LOOP(ghost) F(x,y,z).cb##Y= F(x-i,y-j,z-k).cb##Y;	\
-	  Y##Z##_EDGE_LOOP(ghost) F(x,y,z).cb##Z= F(x-i,y-j,z-k).cb##Z;	\
-	  break;							\
-	case symmetric_fields: case pmc_fields:				\
-	  Z##Y##_EDGE_LOOP(ghost) F(x,y,z).cb##Y=-F(x-i,y-j,z-k).cb##Y;	\
-	  Y##Z##_EDGE_LOOP(ghost) F(x,y,z).cb##Z=-F(x-i,y-j,z-k).cb##Z;	\
-	  break;							\
-      case absorb_fields:                                                \
-        drive = cdt_d##X*higend;                                         \
-        decay = (1-drive)/(1+drive);                                     \
-        drive = 2*drive/(1+drive);                                       \
-	Z##Y##_EDGE_LOOP(ghost) {                                        \
-          fg = &F(x,y,z);                                                \
-          fh = &F(x-i,y-j,z-k);                                          \
-          X = face;                                                      \
-          t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Z - F(x,y,z).e##Z );         \
-          t1 = (i+j+k)<0 ? t1 : -t1;                                     \
-          X = ghost;                                                     \
-          Z++; t2 = F(x-i,y-j,z-k).e##X;                                 \
-          Z--; t2 = cdt_d##Z*( t2 - fh->e##X );                          \
-          fg->cb##Y = decay*fg->cb##Y + drive*fh->cb##Y - t1 + t2;       \
-        }                                                                \
-	Y##Z##_EDGE_LOOP(ghost) {                                        \
-          fg = &F(x,y,z);                                                \
-          fh = &F(x-i,y-j,z-k);                                          \
-          X = face;                                                      \
-          t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Y - F(x,y,z).e##Y );         \
-          t1 = (i+j+k)<0 ? t1 : -t1;                                     \
-          X = ghost;                                                     \
-          Y++; t2 = F(x-i,y-j,z-k).e##X;                                 \
-          Y--; t2 = cdt_d##Y*( t2 - fh->e##X );                          \
-          fg->cb##Z = decay*fg->cb##Z + drive*fh->cb##Z + t1 - t2;       \
-        }                                                                \
-	break;                                                           \
-	default:							\
-	  assert(0);							\
-	  break;							\
-	}								\
-      }									\
-    } while(0)
-
-    APPLY_LOCAL_TANG_B(-1, 0, 0,x,y,z);
-    APPLY_LOCAL_TANG_B( 0,-1, 0,y,z,x);
-    APPLY_LOCAL_TANG_B( 0, 0,-1,z,x,y);
-    APPLY_LOCAL_TANG_B( 1, 0, 0,x,y,z);
-    APPLY_LOCAL_TANG_B( 0, 1, 0,y,z,x);
-    APPLY_LOCAL_TANG_B( 0, 0, 1,z,x,y);
-  }
-
   // Note: local_adjust_div_e zeros the error on the boundaries for
   // absorbing boundary conditions.  Thus, ghost norm e value is
   // irrevelant.
@@ -433,7 +358,86 @@ struct PscFieldArrayLocalOps {
 template<class FieldArrayBase>
 struct PscFieldArrayLocal : FieldArrayBase, PscFieldArrayLocalOps<FieldArrayBase>
 {
+  typedef PscFieldArrayLocal<FieldArrayBase> FieldArray;
+
   using FieldArrayBase::FieldArrayBase;
+
+  using FieldArrayBase::g;
+
+  void local_ghost_tang_b()
+  {
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const float cdt_dx = g->cvac*g->dt*g->rdx;
+    const float cdt_dy = g->cvac*g->dt*g->rdy;
+    const float cdt_dz = g->cvac*g->dt*g->rdz;
+    int bc, face, ghost, x, y, z;
+    float decay, drive, higend, t1, t2;
+    field_t *fg, *fh;
+
+    // Absorbing boundary condition is 2nd order accurate implementation
+    // of a 1st order Higend ABC with 15 degree annihilation cone except
+    // for 1d simulations where the 2nd order accurate implementation of
+    // a 1st order Mur boundary condition is used.
+    higend = ( nx>1 || ny>1 || nz>1 ) ? 1.03527618 : 1.;
+
+# define APPLY_LOCAL_TANG_B(i,j,k,X,Y,Z)				\
+    do {								\
+      bc = g->bc[BOUNDARY(i,j,k)];					\
+      if( bc<0 || bc>=world_size ) {					\
+	ghost = (i+j+k)<0 ? 0 : n##X+1;					\
+	face  = (i+j+k)<0 ? 1 : n##X+1;					\
+	switch(bc) {							\
+	case anti_symmetric_fields:					\
+	  Z##Y##_EDGE_LOOP(ghost) F(x,y,z).cb##Y= F(x-i,y-j,z-k).cb##Y;	\
+	  Y##Z##_EDGE_LOOP(ghost) F(x,y,z).cb##Z= F(x-i,y-j,z-k).cb##Z;	\
+	  break;							\
+	case symmetric_fields: case pmc_fields:				\
+	  Z##Y##_EDGE_LOOP(ghost) F(x,y,z).cb##Y=-F(x-i,y-j,z-k).cb##Y;	\
+	  Y##Z##_EDGE_LOOP(ghost) F(x,y,z).cb##Z=-F(x-i,y-j,z-k).cb##Z;	\
+	  break;							\
+      case absorb_fields:                                                \
+        drive = cdt_d##X*higend;                                         \
+        decay = (1-drive)/(1+drive);                                     \
+        drive = 2*drive/(1+drive);                                       \
+	Z##Y##_EDGE_LOOP(ghost) {                                        \
+          fg = &F(x,y,z);                                                \
+          fh = &F(x-i,y-j,z-k);                                          \
+          X = face;                                                      \
+          t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Z - F(x,y,z).e##Z );         \
+          t1 = (i+j+k)<0 ? t1 : -t1;                                     \
+          X = ghost;                                                     \
+          Z++; t2 = F(x-i,y-j,z-k).e##X;                                 \
+          Z--; t2 = cdt_d##Z*( t2 - fh->e##X );                          \
+          fg->cb##Y = decay*fg->cb##Y + drive*fh->cb##Y - t1 + t2;       \
+        }                                                                \
+	Y##Z##_EDGE_LOOP(ghost) {                                        \
+          fg = &F(x,y,z);                                                \
+          fh = &F(x-i,y-j,z-k);                                          \
+          X = face;                                                      \
+          t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Y - F(x,y,z).e##Y );         \
+          t1 = (i+j+k)<0 ? t1 : -t1;                                     \
+          X = ghost;                                                     \
+          Y++; t2 = F(x-i,y-j,z-k).e##X;                                 \
+          Y--; t2 = cdt_d##Y*( t2 - fh->e##X );                          \
+          fg->cb##Z = decay*fg->cb##Z + drive*fh->cb##Z + t1 - t2;       \
+        }                                                                \
+	break;                                                           \
+	default:							\
+	  assert(0);							\
+	  break;							\
+	}								\
+      }									\
+    } while(0)
+
+    APPLY_LOCAL_TANG_B(-1, 0, 0,x,y,z);
+    APPLY_LOCAL_TANG_B( 0,-1, 0,y,z,x);
+    APPLY_LOCAL_TANG_B( 0, 0,-1,z,x,y);
+    APPLY_LOCAL_TANG_B( 1, 0, 0,x,y,z);
+    APPLY_LOCAL_TANG_B( 0, 1, 0,y,z,x);
+    APPLY_LOCAL_TANG_B( 0, 0, 1,z,x,y);
+  }
+
 };
  
 
