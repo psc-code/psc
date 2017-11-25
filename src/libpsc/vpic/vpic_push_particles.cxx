@@ -1,8 +1,6 @@
 
 #include "vpic_push_particles.h"
 
-#include "field_array.h"
-
 // ======================================================================
 // vpic_push_particles implementation
 

@@ -1,9 +1,6 @@
 
-#ifndef FIELD_ARRAY_H
-#define FIELD_ARRAY_H
-
-#include "grid.h"
-#include "material.h"
+#ifndef VPIC_FIELD_ARRAY_H
+#define VPIC_FIELD_ARRAY_H
 
 #include <mrc_common.h>
 #include <cassert>

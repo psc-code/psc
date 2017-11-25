@@ -9,7 +9,7 @@
 #ifdef __cplusplus
 
 #include "simulation.h"
-#include "field_array.h"
+#include "VpicFieldArray.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "PscFieldArrayLocalOps.h"
 #include "VpicFieldArrayOps.h"
