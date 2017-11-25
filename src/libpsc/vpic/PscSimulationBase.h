@@ -8,7 +8,7 @@
 #include "VpicParticles.h"
 #include "VpicDiag.h"
 
-template<class FieldArray>
+template<class FieldArray, class Particles, class Interpolator, class Accumulator>
 class PscSimulationBase : protected vpic_simulation
 {
 public:
@@ -36,9 +36,9 @@ public:
     return *reinterpret_cast<VpicInterpolator **>(&interpolator_array);
   }
   
-  VpicAccumulator*& getAccumulator()
+  Accumulator*& getAccumulator()
   {
-    return *reinterpret_cast<VpicAccumulator **>(&accumulator_array);
+    return accumulator_;
   }
 
   VpicParticles& getParticles()
@@ -77,6 +77,7 @@ public:
  private:
   MaterialList material_list_;
   FieldArray *field_array_;
+  Accumulator *accumulator_;
 };
 
 
