@@ -13,7 +13,7 @@ Simulation* Simulation_create()
 
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
-  return new Simulation(simulation);
+  return new Simulation(static_cast<SimulationBase*>(simulation));
 }
 
 void Simulation_delete(Simulation* sim)
