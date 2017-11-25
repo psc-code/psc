@@ -6,7 +6,11 @@
 // NoneDiag
 
 struct NoneDiag {
-  NoneDiag(vpic_simulation* simulaton, int interval_)
+  NoneDiag(vpic_simulation* simulaton)
+  {
+  }
+
+  void init(int interval_)
   {
   }
   
