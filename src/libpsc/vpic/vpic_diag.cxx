@@ -1,11 +1,10 @@
 
+#define private public
+#include "vpic.h"
+
 #include "vpic_iface.h"
 
-#include "VpicDiag.h"
-
 #include <mrc_common.h>
-
-#include <cassert>
 
 #undef sim_log
 #define sim_log(x) do {                                \
@@ -15,6 +14,7 @@
       std::cerr.flush();                               \
     }                                                  \
   } while(0)
+
 
 // ----------------------------------------------------------------------
 // vpic_simulation_setup_diagnostics
@@ -266,11 +266,11 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag)
   if(step && !(step%diag->restart_interval)) {
     if(!diag->rtoggle) {
       diag->rtoggle = 1;
-      checkpt("restart1/restart", 0);
+      //checkpt("restart1/restart", 0);
     }
     else {
       diag->rtoggle = 0;
-      checkpt("restart2/restart", 0);
+      //checkpt("restart2/restart", 0);
     } // if
   } // if
 
