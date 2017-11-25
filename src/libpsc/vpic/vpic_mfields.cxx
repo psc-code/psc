@@ -75,19 +75,19 @@ void vpic_mfields_clean_div_b(Simulation* sim, FieldArray* vmflds)
 
 void vpic_mfields_compute_div_e_err(Simulation* sim, FieldArray* vmflds)
 {
-  TIC sim->compute_div_e_err(*vmflds); TOC(compute_div_e_err, 1);
+  TIC vmflds->compute_div_e_err(); TOC(compute_div_e_err, 1);
 }
 
 double vpic_mfields_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds)
 {
   double err;
-  TIC err = sim->compute_rms_div_e_err(*vmflds); TOC(compute_rms_div_e_err, 1);
+  TIC err = vmflds->compute_rms_div_e_err(); TOC(compute_rms_div_e_err, 1);
   return err;
 }
 
 void vpic_mfields_clean_div_e(Simulation* sim, FieldArray* vmflds)
 {
-  TIC sim->clean_div_e(*vmflds); TOC(clean_div_e, 1);
+  TIC vmflds->clean_div_e(); TOC(clean_div_e, 1);
 }
 
 void vpic_mfields_clear_rhof(Simulation* sim, FieldArray* vmflds)

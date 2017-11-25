@@ -17,5 +17,9 @@ void test_FieldArray_methods(FieldArray& fa)
   fa.compute_curl_b();
 
   fa.synchronize_tang_e_norm_b();
+
+  fa.compute_div_e_err();
+  fa.compute_rms_div_e_err();
+  fa.clean_div_e();
 }
 

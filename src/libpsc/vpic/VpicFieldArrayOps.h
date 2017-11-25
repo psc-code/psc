@@ -14,29 +14,14 @@ struct VpicFieldArrayOps : FieldArrayLocalOps {
     fa.kernel->compute_div_b_err(&fa);
   }
 
-  void compute_div_e_err(FieldArray& fa)
-  {
-    fa.kernel->compute_div_e_err(&fa);
-  }
-  
   double compute_rms_div_b_err(FieldArray &fa)
   {
     return fa.kernel->compute_rms_div_b_err(&fa);
   }
   
-  double compute_rms_div_e_err(FieldArray &fa)
-  {
-    return fa.kernel->compute_rms_div_e_err(&fa);
-  }
-
   void clean_div_b(FieldArray& fa)
   {
     fa.kernel->clean_div_b(&fa);
-  }
-
-  void clean_div_e(FieldArray& fa)
-  {
-    fa.kernel->clean_div_e(&fa);
   }
 
 };
@@ -116,7 +101,24 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
     return kernel->synchronize_tang_e_norm_b(this);
   }
 
+  // ----------------------------------------------------------------------
+  // div E cleaning
+
+    void compute_div_e_err()
+  {
+    kernel->compute_div_e_err(this);
+  }
   
+  double compute_rms_div_e_err()
+  {
+    return kernel->compute_rms_div_e_err(this);
+  }
+
+  void clean_div_e()
+  {
+    kernel->clean_div_e(this);
+  }
+
 
 };
   

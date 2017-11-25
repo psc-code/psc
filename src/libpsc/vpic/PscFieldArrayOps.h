@@ -216,56 +216,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
   }
 
   // ----------------------------------------------------------------------
-  // compute_div_e_err
-  
-  void compute_div_e_err(FieldArray& fa)
-  {
-    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
-    assert(params->n_mc == 1);
-    const material_coefficient_t* m = params->mc;
-
-    struct CalcDivE {
-      CalcDivE(FieldArray& fa, const material_coefficient_t *m)
-	: F(fa),
-	  nc(m->nonconductive),
-	  px(fa.g->nx > 1 ? fa.g->eps0 * fa.g->rdx : 0),
-	  py(fa.g->ny > 1 ? fa.g->eps0 * fa.g->rdy : 0),
-	  pz(fa.g->nz > 1 ? fa.g->eps0 * fa.g->rdz : 0),
-	  cj(1. / fa.g->eps0)
-      {
-      }
-
-      void operator()(int i, int j, int k)
-      {
-	F(i,j,k).div_e_err = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) +
-				 py * (F(i,j,k).ey - F(i,j-1,k).ey) +
-				 pz * (F(i,j,k).ez - F(i,j,k-1).ez) -
-				 cj * (F(i,j,k).rhof + F(i,j,k).rhob));
-      }
-
-      Field3D<FieldArray> F;
-      const float nc, px, py, pz, cj;
-    };
-
-    CalcDivE updater(fa, m);
-    
-    // Begin setting normal e ghosts
-    begin_remote_ghost_norm_e(fa.f, fa.g);
-
-    // Overlap local computation
-    this->local_ghost_norm_e(fa);
-    foreach_nc_interior(updater, fa.g);
-
-    // Finish setting normal e ghosts
-    end_remote_ghost_norm_e(fa.f, fa.g);
-
-    // Now do points on boundary
-    foreach_nc_boundary(updater, fa.g);
-
-    this->local_adjust_div_e(fa);
-  }
-
-  // ----------------------------------------------------------------------
   // compute_rms_div_b_err
   //
   // OPT: doing that at the same time as div_b should be faster
@@ -283,91 +233,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
 	}
       }
     }
-    
-    double local[2], _global[2]; // FIXME, name clash with global macro
-    local[0] = err * fa.g->dV;
-    local[1] = (nx * ny * nz) * fa.g->dV;
-    mp_allsum_d( local, _global, 2 );
-    return fa.g->eps0 * sqrt(_global[0]/_global[1]);
-  }
-
-  // ----------------------------------------------------------------------
-  // compute_rms_div_e_err
-  
-  double compute_rms_div_e_err(FieldArray &fa)
-  {
-    Field3D<FieldArray> F(fa);
-    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
-
-    // Interior points
-    // FIXME, it's inconsistent to calc the square in single prec here, but
-    // double prec later
-    double err = 0;
-    for (int k = 2; k <= nz; k++) {
-      for (int j = 2; j <= ny; j++) {
-	for (int i = 2; i <= nx; i++) {
-	  err += sqr(F(i,j,k).div_e_err);
-	}
-      }
-    }
-
-    int x, y, z;
-    // Exterior faces
-
-    for( y=2; y<=ny; y++ ) {
-      for( z=2; z<=nz; z++ ) {
-	err += 0.5*sqr((double) (F(1   ,y,z).div_e_err));
-	err += 0.5*sqr((double) (F(nx+1,y,z).div_e_err));
-      }
-    }
-
-    for( z=2; z<=nz; z++ ) {
-      for( x=2; x<=nx; x++ ) {
-	err += 0.5*sqr((double) (F(x,1   ,z).div_e_err));
-	err += 0.5*sqr((double) (F(x,ny+1,z).div_e_err));
-      }
-    }
-    
-    for( x=2; x<=nx; x++ ) {
-      for( y=2; y<=ny; y++ ) {
-	err += 0.5*sqr((double) (F(x,y,1   ).div_e_err));
-	err += 0.5*sqr((double) (F(x,y,nz+1).div_e_err));
-      }
-    }
-
-    // Exterior edges
-
-    for( x=2; x<=nx; x++ ) {
-      err += 0.25*sqr((double) (F(x,1   ,1   ).div_e_err));
-      err += 0.25*sqr((double) (F(x,ny+1,1   ).div_e_err));
-      err += 0.25*sqr((double) (F(x,1   ,nz+1).div_e_err));
-      err += 0.25*sqr((double) (F(x,ny+1,nz+1).div_e_err));
-    }
-
-    for( y=2; y<=ny; y++ ) {
-      err += 0.25*sqr((double) (F(1   ,y,1   ).div_e_err));
-      err += 0.25*sqr((double) (F(1   ,y,nz+1).div_e_err));
-      err += 0.25*sqr((double) (F(nx+1,y,1   ).div_e_err));
-      err += 0.25*sqr((double) (F(nx+1,y,nz+1).div_e_err));
-    }
-
-    for( z=2; z<=nz; z++ ) {
-      err += 0.25*sqr((double) (F(1   ,1   ,z).div_e_err));
-      err += 0.25*sqr((double) (F(nx+1,1   ,z).div_e_err));
-      err += 0.25*sqr((double) (F(1   ,ny+1,z).div_e_err));
-      err += 0.25*sqr((double) (F(nx+1,ny+1,z).div_e_err));
-    }
-
-    // Exterior corners
-
-    err += 0.125*sqr((double) (F(1   ,1   ,   1).div_e_err));
-    err += 0.125*sqr((double) (F(nx+1,1   ,   1).div_e_err));
-    err += 0.125*sqr((double) (F(1   ,ny+1,   1).div_e_err));
-    err += 0.125*sqr((double) (F(nx+1,ny+1,   1).div_e_err));
-    err += 0.125*sqr((double) (F(1   ,1   ,nz+1).div_e_err));
-    err += 0.125*sqr((double) (F(nx+1,1   ,nz+1).div_e_err));
-    err += 0.125*sqr((double) (F(1   ,ny+1,nz+1).div_e_err));
-    err += 0.125*sqr((double) (F(nx+1,ny+1,nz+1).div_e_err));
     
     double local[2], _global[2]; // FIXME, name clash with global macro
     local[0] = err * fa.g->dV;
@@ -496,87 +361,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
     }
 
     this->local_adjust_norm_b(fa);
-  }
-
-  // ----------------------------------------------------------------------
-  // clean_div_e
-  
-#define MARDER_EX(i,j,k) F(i,j,k).ex += px * (F(i+1,j,k).div_e_err - F(i,j,k).div_e_err)
-#define MARDER_EY(i,j,k) F(i,j,k).ey += py * (F(i,j+1,k).div_e_err - F(i,j,k).div_e_err)
-#define MARDER_EZ(i,j,k) F(i,j,k).ez += pz * (F(i,j,k+1).div_e_err - F(i,j,k).div_e_err)
-
-  void
-  vacuum_clean_div_e(FieldArray &fa)
-  {
-    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
-    assert(params->n_mc == 1);
-
-    Field3D<FieldArray> F(fa);
-    const grid_t* g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-
-    const float _rdx = (nx>1) ? g->rdx : 0;
-    const float _rdy = (ny>1) ? g->rdy : 0;
-    const float _rdz = (nz>1) ? g->rdz : 0;
-    const float alphadt = 0.3888889/(_rdx*_rdx + _rdy*_rdy + _rdz*_rdz);
-    const float px = (alphadt*_rdx) * params->mc[0].drivex;
-    const float py = (alphadt*_rdy) * params->mc[0].drivey;
-    const float pz = (alphadt*_rdz) * params->mc[0].drivez;
-                     
-    for (int k = 1; k <= nz; k++) {
-      for (int j = 1; j <= ny; j++) {
-	for (int i = 1; i <= nx; i++) {
-	  MARDER_EX(i,j,k);
-	  MARDER_EY(i,j,k);
-	  MARDER_EZ(i,j,k);
-	}
-      }
-    }
-    
-    int x, y, z;
-  
-    // Do left over ex
-    for(y=1; y<=ny+1; y++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_EX(x,y,nz+1);
-      }
-    }
-    for(z=1; z<=nz; z++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_EX(x,ny+1,z);
-      }
-    }
-
-    // Do left over ey
-    for(z=1; z<=nz+1; z++) {
-      for(y=1; y<=ny; y++) {
-	MARDER_EY(nx+1,y,z);
-      }
-    }
-    for(y=1; y<=ny; y++) {
-      for(x=1; x<=nx; x++) {
-	MARDER_EY(x,y,nz+1);
-      }
-    }
-
-    // Do left over ez
-    for(z=1; z<=nz; z++) {
-      for(x=1; x<=nx+1; x++) {
-	MARDER_EZ(x,ny+1,z);
-      }
-    }
-    for(z=1; z<=nz; z++) {
-      for(y=1; y<=ny; y++) {
-	MARDER_EZ(nx+1,y,z);
-      }
-    }
-
-    this->local_adjust_tang_e(fa);
-  }
-
-  void clean_div_e(FieldArray& fa)
-  {
-    vacuum_clean_div_e(fa);
   }
 
 };
@@ -1411,6 +1195,223 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
 
     mp_allsum_d(&err, &gerr, 1);
     return gerr;
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_div_e_err
+  
+  void compute_div_e_err()
+  {
+    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    assert(prm->n_mc == 1);
+    const material_coefficient_t* m = prm->mc;
+
+    struct CalcDivE {
+      CalcDivE(FieldArray& fa, const material_coefficient_t *m)
+	: F(fa),
+	  nc(m->nonconductive),
+	  px(fa.g->nx > 1 ? fa.g->eps0 * fa.g->rdx : 0),
+	  py(fa.g->ny > 1 ? fa.g->eps0 * fa.g->rdy : 0),
+	  pz(fa.g->nz > 1 ? fa.g->eps0 * fa.g->rdz : 0),
+	  cj(1. / fa.g->eps0)
+      {
+      }
+
+      void operator()(int i, int j, int k)
+      {
+	F(i,j,k).div_e_err = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) +
+				 py * (F(i,j,k).ey - F(i,j-1,k).ey) +
+				 pz * (F(i,j,k).ez - F(i,j,k-1).ez) -
+				 cj * (F(i,j,k).rhof + F(i,j,k).rhob));
+      }
+
+      Field3D<FieldArray> F;
+      const float nc, px, py, pz, cj;
+    };
+
+    CalcDivE updater(*this, m);
+    
+    // Begin setting normal e ghosts
+    begin_remote_ghost_norm_e(this->f, g);
+
+    // Overlap local computation
+    this->local_ghost_norm_e(*this);
+    foreach_nc_interior(updater, g);
+
+    // Finish setting normal e ghosts
+    end_remote_ghost_norm_e(this->f, g);
+
+    // Now do points on boundary
+    foreach_nc_boundary(updater, g);
+
+    this->local_adjust_div_e(*this);
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_rms_div_e_err
+  //
+  // OPT: doing this at the same time as compute_div_e_err might be
+  // advantageous (faster)
+  
+  double compute_rms_div_e_err()
+  {
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    // Interior points
+    // FIXME, it's inconsistent to calc the square in single prec here, but
+    // double prec later
+    double err = 0;
+    for (int k = 2; k <= nz; k++) {
+      for (int j = 2; j <= ny; j++) {
+	for (int i = 2; i <= nx; i++) {
+	  err += sqr(F(i,j,k).div_e_err);
+	}
+      }
+    }
+
+    int x, y, z;
+    // Exterior faces
+
+    for( y=2; y<=ny; y++ ) {
+      for( z=2; z<=nz; z++ ) {
+	err += 0.5*sqr((double) (F(1   ,y,z).div_e_err));
+	err += 0.5*sqr((double) (F(nx+1,y,z).div_e_err));
+      }
+    }
+
+    for( z=2; z<=nz; z++ ) {
+      for( x=2; x<=nx; x++ ) {
+	err += 0.5*sqr((double) (F(x,1   ,z).div_e_err));
+	err += 0.5*sqr((double) (F(x,ny+1,z).div_e_err));
+      }
+    }
+    
+    for( x=2; x<=nx; x++ ) {
+      for( y=2; y<=ny; y++ ) {
+	err += 0.5*sqr((double) (F(x,y,1   ).div_e_err));
+	err += 0.5*sqr((double) (F(x,y,nz+1).div_e_err));
+      }
+    }
+
+    // Exterior edges
+
+    for( x=2; x<=nx; x++ ) {
+      err += 0.25*sqr((double) (F(x,1   ,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(x,ny+1,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(x,1   ,nz+1).div_e_err));
+      err += 0.25*sqr((double) (F(x,ny+1,nz+1).div_e_err));
+    }
+
+    for( y=2; y<=ny; y++ ) {
+      err += 0.25*sqr((double) (F(1   ,y,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(1   ,y,nz+1).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,y,1   ).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,y,nz+1).div_e_err));
+    }
+
+    for( z=2; z<=nz; z++ ) {
+      err += 0.25*sqr((double) (F(1   ,1   ,z).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,1   ,z).div_e_err));
+      err += 0.25*sqr((double) (F(1   ,ny+1,z).div_e_err));
+      err += 0.25*sqr((double) (F(nx+1,ny+1,z).div_e_err));
+    }
+
+    // Exterior corners
+
+    err += 0.125*sqr((double) (F(1   ,1   ,   1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,1   ,   1).div_e_err));
+    err += 0.125*sqr((double) (F(1   ,ny+1,   1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,ny+1,   1).div_e_err));
+    err += 0.125*sqr((double) (F(1   ,1   ,nz+1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,1   ,nz+1).div_e_err));
+    err += 0.125*sqr((double) (F(1   ,ny+1,nz+1).div_e_err));
+    err += 0.125*sqr((double) (F(nx+1,ny+1,nz+1).div_e_err));
+    
+    double local[2], _global[2]; // FIXME, name clash with global macro
+    local[0] = err * g->dV;
+    local[1] = (nx * ny * nz) * g->dV;
+    mp_allsum_d(local, _global, 2);
+    return g->eps0 * sqrt(_global[0]/_global[1]);
+  }
+
+  // ----------------------------------------------------------------------
+  // clean_div_e
+  
+#define MARDER_EX(i,j,k) F(i,j,k).ex += px * (F(i+1,j,k).div_e_err - F(i,j,k).div_e_err)
+#define MARDER_EY(i,j,k) F(i,j,k).ey += py * (F(i,j+1,k).div_e_err - F(i,j,k).div_e_err)
+#define MARDER_EZ(i,j,k) F(i,j,k).ez += pz * (F(i,j,k+1).div_e_err - F(i,j,k).div_e_err)
+
+  void vacuum_clean_div_e()
+  {
+    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    assert(prm->n_mc == 1);
+
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    const float _rdx = (nx>1) ? g->rdx : 0;
+    const float _rdy = (ny>1) ? g->rdy : 0;
+    const float _rdz = (nz>1) ? g->rdz : 0;
+    const float alphadt = 0.3888889/(_rdx*_rdx + _rdy*_rdy + _rdz*_rdz);
+    const float px = (alphadt*_rdx) * prm->mc[0].drivex;
+    const float py = (alphadt*_rdy) * prm->mc[0].drivey;
+    const float pz = (alphadt*_rdz) * prm->mc[0].drivez;
+                     
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  MARDER_EX(i,j,k);
+	  MARDER_EY(i,j,k);
+	  MARDER_EZ(i,j,k);
+	}
+      }
+    }
+    
+    int x, y, z;
+  
+    // Do left over ex
+    for(y=1; y<=ny+1; y++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_EX(x,y,nz+1);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_EX(x,ny+1,z);
+      }
+    }
+
+    // Do left over ey
+    for(z=1; z<=nz+1; z++) {
+      for(y=1; y<=ny; y++) {
+	MARDER_EY(nx+1,y,z);
+      }
+    }
+    for(y=1; y<=ny; y++) {
+      for(x=1; x<=nx; x++) {
+	MARDER_EY(x,y,nz+1);
+      }
+    }
+
+    // Do left over ez
+    for(z=1; z<=nz; z++) {
+      for(x=1; x<=nx+1; x++) {
+	MARDER_EZ(x,ny+1,z);
+      }
+    }
+    for(z=1; z<=nz; z++) {
+      for(y=1; y<=ny; y++) {
+	MARDER_EZ(nx+1,y,z);
+      }
+    }
+
+    this->local_adjust_tang_e(*this);
+  }
+
+  void clean_div_e()
+  {
+    vacuum_clean_div_e();
   }
 
 };
