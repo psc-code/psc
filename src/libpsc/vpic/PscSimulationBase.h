@@ -89,7 +89,6 @@ public:
   }
   
   using vpic_simulation::hydro_array;
-  using vpic_simulation::num_comm_round;
 
 private:
   Diag diag_;
