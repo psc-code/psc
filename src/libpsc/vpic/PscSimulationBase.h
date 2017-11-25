@@ -31,8 +31,9 @@ public:
     return field_array_;
   }
 
-  VpicInterpolator*& getInterpolator()
+  Interpolator*& getInterpolator()
   {
+    //return interpolator_;
     return *reinterpret_cast<VpicInterpolator **>(&interpolator_array);
   }
   
@@ -77,6 +78,7 @@ public:
  private:
   MaterialList material_list_;
   FieldArray *field_array_;
+  Interpolator *interpolator_;
   Accumulator *accumulator_;
 };
 
