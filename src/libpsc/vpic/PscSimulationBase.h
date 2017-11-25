@@ -8,12 +8,11 @@
 #include "VpicParticles.h"
 #include "VpicDiag.h"
 
-template<class Diag, class FieldArray>
+template<class FieldArray>
 class PscSimulationBase : protected vpic_simulation
 {
 public:
   PscSimulationBase()
-    : diag_(this)
   {
   }
 
@@ -73,25 +72,7 @@ public:
   {
   }
 
-  void diagInit(int interval)
-  {
-    diag_.init(interval);
-  }
-  
-  void diagSetup()
-  {
-    diag_.setup();
-  }
-  
-  void diagRun()
-  {
-    diag_.run();
-  }
-  
   using vpic_simulation::hydro_array;
-
-private:
-  Diag diag_;
 };
 
 

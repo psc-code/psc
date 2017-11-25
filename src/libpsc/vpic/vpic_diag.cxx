@@ -206,40 +206,6 @@ void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *di
 void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag)
 {
   int64_t step = simulation->step();
-  /*--------------------------------------------------------------------------
-   * Data output directories
-   * WARNING: The directory list passed to "global_header" must be
-   * consistent with the actual directories where fields and species are
-   * output using "field_dump" and "hydro_dump".
-   *
-   * DIRECTORY PATHES SHOULD BE RELATIVE TO
-   * THE LOCATION OF THE GLOBAL HEADER!!!
-   *------------------------------------------------------------------------*/
-
-  /*--------------------------------------------------------------------------
-   * Normal rundata dump
-   *------------------------------------------------------------------------*/
-  if(step==0) {
-    simulation->dump_mkdir("fields");
-    simulation->dump_mkdir("hydro");
-    simulation->dump_mkdir("rundata");
-    simulation->dump_mkdir("injectors");
-    simulation->dump_mkdir("restart1");  // 1st backup
-    simulation->dump_mkdir("restart2");  // 2nd backup
-    simulation->dump_mkdir("particle");
-
-    simulation->dump_grid("rundata/grid");
-    simulation->dump_materials("rundata/materials");
-    simulation->dump_species("rundata/species");
-    simulation->global_header("global", diag->outputParams);
-  } // if
-
-  /*--------------------------------------------------------------------------
-   * Normal rundata energies dump
-   *------------------------------------------------------------------------*/
-  if(should_dump(energies)) {
-    simulation->dump_energies("rundata/energies", step == 0 ? 0 : 1);
-  } // if
 
   /*--------------------------------------------------------------------------
    * Field data output

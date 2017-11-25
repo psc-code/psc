@@ -8,17 +8,20 @@
 
 #include <psc.h> // FIXME, only need the BND_* constants
 
+
 // ======================================================================
 // class VpicSimulation
 
 template<class FieldArrayOps, class ParticlesOps, class InterpolatorOps,
-	 class AccumulatorOps, class SimulationBase>
-struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, AccumulatorOps
+	 class AccumulatorOps, class SimulationBase, class DiagOps>
+struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps,
+  AccumulatorOps, DiagOps
 {
   typedef typename FieldArrayOps::FieldArray FieldArray;
   typedef typename ParticlesOps::Particles Particles;
   typedef typename InterpolatorOps::Interpolator Interpolator;
   typedef typename AccumulatorOps::Accumulator Accumulator;
+  typedef typename DiagOps::Diag Diag;
   
   VpicSimulation(SimulationBase *sim_base)
     : ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
@@ -30,7 +33,8 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
       accumulator_(sim_base->getAccumulator()),
       hydro_array_(sim_base->hydro_array),
       particles_(sim_base->getParticles()),
-      sim_base_(sim_base)
+      sim_base_(sim_base),
+      diag_(reinterpret_cast<vpic_simulation*>(sim_base)) // FIXME
   {
   }
 
@@ -168,17 +172,18 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void newDiag(int interval)
   {
-    sim_base_->diagInit(interval);
+    diag_.init(interval);
   }
 
   void setupDiag()
   {
-    sim_base_->diagSetup();
+    diag_.setup();
   }
 
   void runDiag()
   {
-    sim_base_->diagRun();
+    diag_.run();
+    this->diagnostics_run(diag_, *field_array_, particles_, *interpolator_);
   }
     
   int num_comm_round_;
@@ -195,6 +200,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   Particles& particles_;
 
   SimulationBase *sim_base_;
+  Diag diag_;
 };
 
 #endif
