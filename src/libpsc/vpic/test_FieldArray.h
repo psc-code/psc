@@ -15,5 +15,7 @@ void test_FieldArray_methods(FieldArray& fa)
 
   fa.compute_rhob();
   fa.compute_curl_b();
+
+  fa.synchronize_tang_e_norm_b();
 }
 

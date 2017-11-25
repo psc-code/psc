@@ -39,11 +39,6 @@ struct VpicFieldArrayOps : FieldArrayLocalOps {
     fa.kernel->clean_div_e(&fa);
   }
 
-  double synchronize_tang_e_norm_b(FieldArray& fa)
-  {
-    return fa.kernel->synchronize_tang_e_norm_b(&fa);
-  }
-
 };
 
 template<class B, class FieldArrayLocalOps>
@@ -78,7 +73,7 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
   }
 
   // ----------------------------------------------------------------------
-  // Accumulator interfaces
+  // for accumulation
 
   void clear_jf()
   {
@@ -101,7 +96,7 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
   }
 
   // ----------------------------------------------------------------------
-  // For initialization
+  // for initialization
 
   void compute_rhob()
   {
@@ -112,6 +107,16 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
   {
     kernel->compute_curl_b(this);
   }
+
+  // ----------------------------------------------------------------------
+  // shared face cleaning
+
+  double synchronize_tang_e_norm_b()
+  {
+    return kernel->synchronize_tang_e_norm_b(this);
+  }
+
+  
 
 };
   

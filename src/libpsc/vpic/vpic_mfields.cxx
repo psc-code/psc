@@ -52,7 +52,7 @@ float *vpic_mfields_get_data(FieldArray *vmflds, int *ib, int *im)
 double vpic_mfields_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* vmflds)
 {
   double err;
-  TIC err = sim->synchronize_tang_e_norm_b(*vmflds); TOC(synchronize_tang_e_norm_b, 1);
+  TIC err = vmflds->synchronize_tang_e_norm_b(); TOC(synchronize_tang_e_norm_b, 1);
   return err;
 }
 

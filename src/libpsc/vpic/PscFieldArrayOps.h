@@ -193,122 +193,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
 #define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
 
   // ----------------------------------------------------------------------
-  // synchronize_tang_e_norm_b
-
-  double synchronize_tang_e_norm_b(FieldArray& fa)
-  {
-    float * p;
-    double w1, w2, err = 0, gerr;
-    int size, face, x, y, z;
-
-    Field3D<FieldArray> F(fa);
-    const grid_t* g = fa.g;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    
-    this->local_adjust_tang_e(fa);
-    this->local_adjust_norm_b(fa);
-
-# define BEGIN_RECV(i,j,k,X,Y,Z)					\
-    begin_recv_port(i,j,k, ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +	\
-			     n##Y*n##Z )*sizeof(float), g )
-
-# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {              \
-      size = ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +		\
-	       n##Y*n##Z )*sizeof(float);			\
-      p = (float *)size_send_port( i, j, k, size, g );		\
-      if( p ) {							\
-	face = (i+j+k)<0 ? 1 : n##X+1;				\
-	X##_FACE_LOOP(face) (*(p++)) = F(x,y,z).cb##X;	\
-	Y##Z##_EDGE_LOOP(face) {				\
-	  field_t* f = &F(x,y,z);				\
-	  (*(p++)) = f->e##Y;					\
-	  (*(p++)) = f->tca##Y;					\
-	}							\
-	Z##Y##_EDGE_LOOP(face) {				\
-	  field_t* f = &F(x,y,z);				\
-	  (*(p++)) = f->e##Z;					\
-	  (*(p++)) = f->tca##Z;					\
-	}							\
-	begin_send_port( i, j, k, size, g );			\
-      }								\
-    } END_PRIMITIVE
-    
-# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {		\
-      p = (float *)end_recv_port(i,j,k,g);			\
-      if( p ) {							\
-	face = (i+j+k)<0 ? n##X+1 : 1; /* Average */		\
-	X##_FACE_LOOP(face) {					\
-	  field_t* f = &F(x,y,z);				\
-	  w1 = (*(p++));					\
-	  w2 = f->cb##X;					\
-	  f->cb##X = 0.5*( w1+w2 );				\
-	  err += (w1-w2)*(w1-w2);				\
-	}							\
-	Y##Z##_EDGE_LOOP(face) {				\
-	  field_t* f = &F(x,y,z);				\
-	  w1 = (*(p++));					\
-	  w2 = f->e##Y;						\
-	  f->e##Y = 0.5*( w1+w2 );				\
-	  err += (w1-w2)*(w1-w2);				\
-	  w1 = (*(p++));					\
-	  w2 = f->tca##Y;					\
-	  f->tca##Y = 0.5*( w1+w2 );				\
-	}							\
-	Z##Y##_EDGE_LOOP(face) {				\
-	  field_t* f = &F(x,y,z);				\
-	  w1 = (*(p++));					\
-	  w2 = f->e##Z;						\
-	  f->e##Z = 0.5*( w1+w2 );				\
-	  err += (w1-w2)*(w1-w2);				\
-	  w1 = (*(p++));					\
-	  w2 = f->tca##Z;					\
-	  f->tca##Z = 0.5*( w1+w2 );				\
-	}							\
-      }								\
-    } END_PRIMITIVE
-
-# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
-
-    // Exchange x-faces
-    BEGIN_RECV(-1, 0, 0,x,y,z);
-    BEGIN_RECV( 1, 0, 0,x,y,z);
-    BEGIN_SEND(-1, 0, 0,x,y,z);
-    BEGIN_SEND( 1, 0, 0,x,y,z);
-    END_SEND(-1, 0, 0,x,y,z);
-    END_SEND( 1, 0, 0,x,y,z);
-    END_RECV(-1, 0, 0,x,y,z);
-    END_RECV( 1, 0, 0,x,y,z);
-
-    // Exchange y-faces
-    BEGIN_SEND( 0,-1, 0,y,z,x);
-    BEGIN_SEND( 0, 1, 0,y,z,x);
-    BEGIN_RECV( 0,-1, 0,y,z,x);
-    BEGIN_RECV( 0, 1, 0,y,z,x);
-    END_RECV( 0,-1, 0,y,z,x);
-    END_RECV( 0, 1, 0,y,z,x);
-    END_SEND( 0,-1, 0,y,z,x);
-    END_SEND( 0, 1, 0,y,z,x);
-
-    // Exchange z-faces
-    BEGIN_SEND( 0, 0,-1,z,x,y);
-    BEGIN_SEND( 0, 0, 1,z,x,y);
-    BEGIN_RECV( 0, 0,-1,z,x,y);
-    BEGIN_RECV( 0, 0, 1,z,x,y);
-    END_RECV( 0, 0,-1,z,x,y);
-    END_RECV( 0, 0, 1,z,x,y);
-    END_SEND( 0, 0,-1,z,x,y);
-    END_SEND( 0, 0, 1,z,x,y);
-
-# undef BEGIN_RECV
-# undef BEGIN_SEND
-# undef END_RECV
-# undef END_SEND
-
-    mp_allsum_d( &err, &gerr, 1 );
-    return gerr;
-  }
-
-  // ----------------------------------------------------------------------
   // compute_div_b_err
   
   static void compute_div_b_err(FieldArray& fa)
@@ -1412,6 +1296,121 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
   void compute_curl_b()
   {
     vacuum_compute_curl_b();
+  }
+
+  // ----------------------------------------------------------------------
+  // synchronize_tang_e_norm_b
+
+  double synchronize_tang_e_norm_b()
+  {
+    float * p;
+    double w1, w2, err = 0, gerr;
+    int size, face, x, y, z;
+
+    Field3D<FieldArray> F(*this);
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    
+    this->local_adjust_tang_e(*this);
+    this->local_adjust_norm_b(*this);
+
+# define BEGIN_RECV(i,j,k,X,Y,Z)					\
+    begin_recv_port(i,j,k, ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +	\
+			     n##Y*n##Z )*sizeof(float), g )
+
+# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {              \
+      size = ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +		\
+	       n##Y*n##Z )*sizeof(float);			\
+      p = (float *)size_send_port( i, j, k, size, g );		\
+      if( p ) {							\
+	face = (i+j+k)<0 ? 1 : n##X+1;				\
+	X##_FACE_LOOP(face) (*(p++)) = F(x,y,z).cb##X;	\
+	Y##Z##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  (*(p++)) = f->e##Y;					\
+	  (*(p++)) = f->tca##Y;					\
+	}							\
+	Z##Y##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  (*(p++)) = f->e##Z;					\
+	  (*(p++)) = f->tca##Z;					\
+	}							\
+	begin_send_port( i, j, k, size, g );			\
+      }								\
+    } END_PRIMITIVE
+    
+# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {		\
+      p = (float *)end_recv_port(i,j,k,g);			\
+      if( p ) {							\
+	face = (i+j+k)<0 ? n##X+1 : 1; /* Average */		\
+	X##_FACE_LOOP(face) {					\
+	  field_t* f = &F(x,y,z);				\
+	  w1 = (*(p++));					\
+	  w2 = f->cb##X;					\
+	  f->cb##X = 0.5*( w1+w2 );				\
+	  err += (w1-w2)*(w1-w2);				\
+	}							\
+	Y##Z##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  w1 = (*(p++));					\
+	  w2 = f->e##Y;						\
+	  f->e##Y = 0.5*( w1+w2 );				\
+	  err += (w1-w2)*(w1-w2);				\
+	  w1 = (*(p++));					\
+	  w2 = f->tca##Y;					\
+	  f->tca##Y = 0.5*( w1+w2 );				\
+	}							\
+	Z##Y##_EDGE_LOOP(face) {				\
+	  field_t* f = &F(x,y,z);				\
+	  w1 = (*(p++));					\
+	  w2 = f->e##Z;						\
+	  f->e##Z = 0.5*( w1+w2 );				\
+	  err += (w1-w2)*(w1-w2);				\
+	  w1 = (*(p++));					\
+	  w2 = f->tca##Z;					\
+	  f->tca##Z = 0.5*( w1+w2 );				\
+	}							\
+      }								\
+    } END_PRIMITIVE
+
+# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
+
+    // Exchange x-faces
+    BEGIN_RECV(-1, 0, 0,x,y,z);
+    BEGIN_RECV( 1, 0, 0,x,y,z);
+    BEGIN_SEND(-1, 0, 0,x,y,z);
+    BEGIN_SEND( 1, 0, 0,x,y,z);
+    END_SEND(-1, 0, 0,x,y,z);
+    END_SEND( 1, 0, 0,x,y,z);
+    END_RECV(-1, 0, 0,x,y,z);
+    END_RECV( 1, 0, 0,x,y,z);
+
+    // Exchange y-faces
+    BEGIN_SEND( 0,-1, 0,y,z,x);
+    BEGIN_SEND( 0, 1, 0,y,z,x);
+    BEGIN_RECV( 0,-1, 0,y,z,x);
+    BEGIN_RECV( 0, 1, 0,y,z,x);
+    END_RECV( 0,-1, 0,y,z,x);
+    END_RECV( 0, 1, 0,y,z,x);
+    END_SEND( 0,-1, 0,y,z,x);
+    END_SEND( 0, 1, 0,y,z,x);
+
+    // Exchange z-faces
+    BEGIN_SEND( 0, 0,-1,z,x,y);
+    BEGIN_SEND( 0, 0, 1,z,x,y);
+    BEGIN_RECV( 0, 0,-1,z,x,y);
+    BEGIN_RECV( 0, 0, 1,z,x,y);
+    END_RECV( 0, 0,-1,z,x,y);
+    END_RECV( 0, 0, 1,z,x,y);
+    END_SEND( 0, 0,-1,z,x,y);
+    END_SEND( 0, 0, 1,z,x,y);
+
+# undef BEGIN_RECV
+# undef BEGIN_SEND
+# undef END_RECV
+# undef END_SEND
+
+    mp_allsum_d(&err, &gerr, 1);
+    return gerr;
   }
 
 };
