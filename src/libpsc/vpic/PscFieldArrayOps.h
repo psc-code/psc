@@ -5,8 +5,9 @@
 // ======================================================================
 // PscFieldArrayOps
 
-template<class FA>
-struct PscFieldArrayOps {
+template<class FA, class FieldArrayLocalOps>
+struct PscFieldArrayOps : public FieldArrayLocalOps
+{
   typedef FA FieldArray;
 
   // ----------------------------------------------------------------------
@@ -227,13 +228,13 @@ struct PscFieldArrayOps {
 
     begin_remote_ghost_tang_b(fa.f, fa.g);
 
-    local_ghost_tang_b(fa.f, fa.g);
+    this->local_ghost_tang_b(fa);
     foreach_ec_interior(advanceE, fa.g);
 
     end_remote_ghost_tang_b(fa.f, fa.g);
 
     foreach_ec_boundary(advanceE, fa.g);
-    local_adjust_tang_e(fa.f, fa.g);
+    this->local_adjust_tang_e(fa);
   }
 
   void advance_e(FieldArray& fa, double frac)
@@ -303,7 +304,7 @@ struct PscFieldArrayOps {
       }
     }
     
-    local_adjust_norm_b(fa.f, fa.g);
+    this->local_adjust_norm_b(fa);
   }
 
 #undef CBX
@@ -376,8 +377,8 @@ struct PscFieldArrayOps {
     const grid_t* g = fa.g;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     
-    local_adjust_tang_e(fa.f, fa.g);
-    local_adjust_norm_b(fa.f, fa.g);
+    this->local_adjust_tang_e(fa);
+    this->local_adjust_norm_b(fa);
 
 # define BEGIN_RECV(i,j,k,X,Y,Z)					\
     begin_recv_port(i,j,k, ( 2*n##Y*(n##Z+1) + 2*n##Z*(n##Y+1) +	\
@@ -490,7 +491,7 @@ struct PscFieldArrayOps {
     Field3D<FieldArray> F(fa);
     grid_t* g = fa.g;
 
-    local_adjust_jf(fa.f, g );
+    this->local_adjust_jf(fa);
 
     const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
 
@@ -605,8 +606,8 @@ struct PscFieldArrayOps {
     const grid_t* g = fa.g;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
-    local_adjust_rhof(fa.f, fa.g);
-    local_adjust_rhob(fa.f, fa.g);
+    this->local_adjust_rhof(fa);
+    this->local_adjust_rhob(fa);
 
 # define BEGIN_RECV(i,j,k,X,Y,Z)					\
     begin_recv_port(i,j,k, ( 1 + 2*(n##Y+1)*(n##Z+1) )*sizeof(float), g )
@@ -741,7 +742,7 @@ struct PscFieldArrayOps {
     begin_remote_ghost_norm_e(fa.f, fa.g);
 
     // Overlap local computation
-    local_ghost_norm_e(fa.f, fa.g);
+    this->local_ghost_norm_e(fa);
     foreach_nc_interior(updater, fa.g);
     
     // Finish setting normal e ghosts
@@ -750,7 +751,7 @@ struct PscFieldArrayOps {
     // Now do points on boundary
     foreach_nc_boundary(updater, fa.g);
 
-    local_adjust_rhob(fa.f, fa.g);
+    this->local_adjust_rhob(fa);
   }
 
   // ----------------------------------------------------------------------
@@ -791,7 +792,7 @@ struct PscFieldArrayOps {
     begin_remote_ghost_norm_e(fa.f, fa.g);
 
     // Overlap local computation
-    local_ghost_norm_e(fa.f, fa.g);
+    this->local_ghost_norm_e(fa);
     foreach_nc_interior(updater, fa.g);
 
     // Finish setting normal e ghosts
@@ -800,7 +801,7 @@ struct PscFieldArrayOps {
     // Now do points on boundary
     foreach_nc_boundary(updater, fa.g);
 
-    local_adjust_div_e(fa.f, fa.g);
+    this->local_adjust_div_e(fa);
   }
 
   // ----------------------------------------------------------------------
@@ -940,7 +941,7 @@ struct PscFieldArrayOps {
 
     // Begin setting derr ghosts
     begin_remote_ghost_div_b(fa.f, g);
-    local_ghost_div_b(fa.f, g);
+    this->local_ghost_div_b(fa);
 
     // Interior
     for (int k = 2; k <= nz; k++) {
@@ -1033,7 +1034,7 @@ struct PscFieldArrayOps {
       }
     }
 
-    local_adjust_norm_b(fa.f, g);
+    this->local_adjust_norm_b(fa);
   }
 
   // ----------------------------------------------------------------------
@@ -1109,7 +1110,7 @@ struct PscFieldArrayOps {
       }
     }
 
-    local_adjust_tang_e(fa.f, fa.g);
+    this->local_adjust_tang_e(fa);
   }
 
   void clean_div_e(FieldArray& fa)
@@ -1170,13 +1171,13 @@ struct PscFieldArrayOps {
       
     begin_remote_ghost_tang_b(fa.f, fa.g);
 
-    local_ghost_tang_b(fa.f, fa.g);
+    this->local_ghost_tang_b(fa);
     foreach_ec_interior(curlB, fa.g);
 
     end_remote_ghost_tang_b(fa.f, fa.g);
 
     foreach_ec_boundary(curlB, fa.g);
-    local_adjust_tang_e(fa.f, fa.g); // FIXME, is this right here?
+    this->local_adjust_tang_e(fa); // FIXME, is this right here?
   }
 
   void compute_curl_b(FieldArray& fa)

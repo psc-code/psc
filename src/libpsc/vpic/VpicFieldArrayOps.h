@@ -5,8 +5,8 @@
 // ======================================================================
 // VpicFieldArrayOps
 
-template<class FA>
-struct VpicFieldArrayOps {
+template<class FA, class FieldArrayLocalOps>
+struct VpicFieldArrayOps : FieldArrayLocalOps {
   typedef FA FieldArray;
   
   void advance_b(FieldArray& fa, double frac)

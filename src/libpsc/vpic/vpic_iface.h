@@ -10,6 +10,8 @@
 
 #include "simulation.h"
 #include "field_array.h"
+#include "VpicFieldArrayLocalOps.h"
+#include "PscFieldArrayLocalOps.h"
 #include "VpicFieldArrayOps.h"
 #include "PscFieldArrayOps.h"
 
@@ -64,7 +66,8 @@ enum {
 #ifdef __cplusplus
 
 typedef VpicFieldArray FieldArray;
-typedef PscFieldArrayOps<FieldArray> FieldArrayOps;
+typedef PscFieldArrayLocalOps<FieldArray> FieldArrayLocalOps;
+typedef PscFieldArrayOps<FieldArray, FieldArrayLocalOps> FieldArrayOps;
 
 typedef VpicInterpolator Interpolator;
 typedef PscInterpolatorOps<Interpolator, FieldArray> InterpolatorOps;
