@@ -8,12 +8,8 @@
 
 Simulation* Simulation_create()
 {
-  extern vpic_simulation *simulation;
-  assert(!simulation);
-
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
-  simulation = new vpic_simulation;
-  return new Simulation(reinterpret_cast<SimulationBase*>(simulation));
+  return new Simulation(new SimulationBase);
 }
 
 void Simulation_delete(Simulation* sim)

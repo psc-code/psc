@@ -8,9 +8,61 @@
 
 #include <psc.h> // FIXME, only need the BND_* constants
 
-class SimulationBase : protected vpic_simulation
+
+
+#include "field_array.h"
+#include "VpicInterpolator.h"
+#include "VpicAccumulator.h"
+#include "VpicParticles.h"
+#include "VpicDiag.h"
+
+template<class Diag>
+class VpicSimulationBase : protected vpic_simulation
 {
 public:
+  VpicSimulationBase()
+  {
+    extern vpic_simulation *simulation;
+    assert(!simulation);
+    simulation = this;
+    diag_ = new Diag(this);
+  }
+
+  ~VpicSimulationBase()
+  {
+    delete diag_;
+  }
+
+  Grid getGrid()
+  {
+    return grid;
+  }
+
+  MaterialList& getMaterialList()
+  {
+    return *reinterpret_cast<MaterialList *>(&material_list);
+  }
+
+  VpicFieldArray*& getFieldArray()
+  {
+    return *reinterpret_cast<VpicFieldArray **>(&field_array);
+  }
+
+  VpicInterpolator*& getInterpolator()
+  {
+    return *reinterpret_cast<VpicInterpolator **>(&interpolator_array);
+  }
+  
+  VpicAccumulator*& getAccumulator()
+  {
+    return *reinterpret_cast<VpicAccumulator **>(&accumulator_array);
+  }
+
+  VpicParticles& getParticles()
+  {
+    return *reinterpret_cast<VpicParticles *>(&species_list);
+  }
+  
   void emitter()
   {
     if (emitter_list)
@@ -53,25 +105,45 @@ public:
     TIC vpic_simulation::user_field_injection(); TOC(user_field_injection, 1);
   }
   
-  using vpic_simulation::user_current_injection;
+  void setParams(int num_step_, int status_interval_,
+		 int sync_shared_interval_, int clean_div_e_interval_,
+		 int clean_div_b_interval_)
+  {
+    num_step             = num_step_;
+    status_interval      = status_interval_;
+    sync_shared_interval = sync_shared_interval_;
+    clean_div_e_interval = clean_div_e_interval_;
+    clean_div_b_interval = clean_div_b_interval_;
+  }
 
-  using vpic_simulation::grid;
-  using vpic_simulation::material_list;
-  using vpic_simulation::field_array;
-  using vpic_simulation::interpolator_array;
-  using vpic_simulation::accumulator_array;
+  void setTopology(int px_, int py_, int pz_)
+  {
+    px = px_; py = py_; pz = pz_;
+  }
+
+  void diagInit(int interval)
+  {
+    diag_->init(interval);
+  }
+  
+  void diagSetup()
+  {
+    diag_->setup();
+  }
+  
+  void diagRun()
+  {
+    diag_->run();
+  }
+  
   using vpic_simulation::hydro_array;
-  using vpic_simulation::species_list;
-  using vpic_simulation::px;
-  using vpic_simulation::py;
-  using vpic_simulation::pz;
-  using vpic_simulation::num_step;            
-  using vpic_simulation::status_interval;
-  using vpic_simulation::sync_shared_interval;
-  using vpic_simulation::clean_div_e_interval;
-  using vpic_simulation::clean_div_b_interval;
-  using vpic_simulation::num_comm_round;            
+  using vpic_simulation::num_comm_round;
+
+private:
+  Diag *diag_;
 };
+
+typedef VpicSimulationBase<VpicDiag> SimulationBase;
 
 // ======================================================================
 // class VpicSimulation
@@ -88,31 +160,23 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   VpicSimulation(SimulationBase *sim_base)
     : ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
       num_comm_round_(sim_base->num_comm_round),
-      grid_(sim_base->grid),
-      material_list_(*reinterpret_cast<MaterialList *>(&sim_base->material_list)),
-      field_array_(*reinterpret_cast<FieldArray **>(&sim_base->field_array)),
-      interpolator_(*reinterpret_cast<Interpolator **>(&sim_base->interpolator_array)),
-      accumulator_(*reinterpret_cast<Accumulator **>(&sim_base->accumulator_array)),
+      grid_(sim_base->getGrid()),
+      material_list_(sim_base->getMaterialList()),
+      field_array_(sim_base->getFieldArray()),
+      interpolator_(sim_base->getInterpolator()),
+      accumulator_(sim_base->getAccumulator()),
       hydro_array_(sim_base->hydro_array),
-      particles_(*reinterpret_cast<Particles *>(&sim_base->species_list)),
+      particles_(sim_base->getParticles()),
       sim_base_(sim_base)
   {
-  }
-
-  ~VpicSimulation()
-  {
-    delete diag_;
   }
 
   void set_params(int num_step, int status_interval,
 		  int sync_shared_interval, int clean_div_e_interval,
 		  int clean_div_b_interval)
   {
-    sim_base_->num_step             = num_step;
-    sim_base_->status_interval      = status_interval;
-    sim_base_->sync_shared_interval = sync_shared_interval;
-    sim_base_->clean_div_e_interval = clean_div_e_interval;
-    sim_base_->clean_div_b_interval = clean_div_b_interval;
+    sim_base_->setParams(num_step, status_interval, sync_shared_interval,
+			 clean_div_e_interval, clean_div_b_interval);
   }
   
   void setup_grid(double dx[3], double dt, double cvac, double eps0)
@@ -122,9 +186,7 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void define_periodic_grid(double xl[3], double xh[3], int gdims[3], int np[3])
   {
-    sim_base_->px = size_t(np[0]);
-    sim_base_->py = size_t(np[1]);
-    sim_base_->pz = size_t(np[2]);
+    sim_base_->setTopology(np[0], np[1], np[2]);
     grid_.partition_periodic_box(xl, xh, gdims, np);
   }
 
@@ -243,17 +305,17 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
 
   void newDiag(int interval)
   {
-    diag_ = new Diag(reinterpret_cast<vpic_simulation*>(sim_base_), interval);
+    sim_base_->diagInit(interval);
   }
 
   void setupDiag()
   {
-    diag_->setup();
+    sim_base_->diagSetup();
   }
 
   void runDiag()
   {
-    diag_->run();
+    sim_base_->diagRun();
   }
     
   int num_comm_round_;
@@ -268,8 +330,6 @@ struct VpicSimulation : FieldArrayOps, ParticlesOps, InterpolatorOps, Accumulato
   Accumulator*& accumulator_;
   hydro_array_t*& hydro_array_;
   Particles& particles_;
-
-  Diag *diag_;
 
   SimulationBase *sim_base_;
 };

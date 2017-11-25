@@ -26,7 +26,8 @@ struct VpicDiag {
   DumpParameters hHdParams;
   std::vector<DumpParameters *> outputParams;
 
-  VpicDiag(vpic_simulation* simulaton, int interval_);
+  VpicDiag(vpic_simulation* simulation);
+  void init(int interval_);
   void setup();
   void run();
 
@@ -40,8 +41,12 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
 void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
 
 
-inline VpicDiag::VpicDiag(vpic_simulation *simulation, int interval_)
+inline VpicDiag::VpicDiag(vpic_simulation *simulation)
   : simulation_(simulation)
+{
+}
+
+inline void VpicDiag::init(int interval_)
 {
   rtoggle = 0;
   
