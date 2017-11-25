@@ -39,16 +39,6 @@ struct VpicFieldArrayOps : FieldArrayLocalOps {
     fa.kernel->clean_div_e(&fa);
   }
 
-  void compute_curl_b(FieldArray& fa)
-  {
-    fa.kernel->compute_curl_b(&fa);
-  }
-
-  void compute_rhob(FieldArray& fa)
-  {
-    fa.kernel->compute_rhob(&fa);
-  }
-
   double synchronize_tang_e_norm_b(FieldArray& fa)
   {
     return fa.kernel->synchronize_tang_e_norm_b(&fa);
@@ -108,6 +98,19 @@ struct VpicFieldArray : B, VpicFieldArrayOps<B,FieldArrayLocalOps>
   void synchronize_rho()
   {
     kernel->synchronize_rho(this);
+  }
+
+  // ----------------------------------------------------------------------
+  // For initialization
+
+  void compute_rhob()
+  {
+    kernel->compute_rhob(this);
+  }
+
+  void compute_curl_b()
+  {
+    kernel->compute_curl_b(this);
   }
 
 };

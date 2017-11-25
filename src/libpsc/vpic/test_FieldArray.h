@@ -7,9 +7,13 @@ void test_FieldArray_methods(FieldArray& fa)
 
   fa.advance_b(1.);
   fa.advance_e(1.);
+
   fa.clear_jf();
   fa.synchronize_jf();
   fa.clear_rhof();
   fa.synchronize_rho();
+
+  fa.compute_rhob();
+  fa.compute_curl_b();
 }
 

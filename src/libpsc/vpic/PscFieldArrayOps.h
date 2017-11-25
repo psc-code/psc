@@ -332,54 +332,6 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
   }
 
   // ----------------------------------------------------------------------
-  // compute_rhob
-  void compute_rhob(FieldArray& fa)
-  {
-    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
-    assert(params->n_mc == 1);
-    const material_coefficient_t* m = params->mc;
-
-    struct CalcRhoB {
-      CalcRhoB(FieldArray& fa, const material_coefficient_t *m)
-	: F(fa),
-	  nc(m->nonconductive),
-	  px(fa.g->nx > 1 ? fa.g->eps0 * m->epsx * fa.g->rdx : 0),
-	  py(fa.g->ny > 1 ? fa.g->eps0 * m->epsy * fa.g->rdy : 0),
-	  pz(fa.g->nz > 1 ? fa.g->eps0 * m->epsz * fa.g->rdz : 0)
-      {
-      }
-
-      void operator()(int i, int j, int k)
-      {
-	F(i,j,k).rhob = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) +
-			    py * (F(i,j,k).ey - F(i,j-1,k).ey) +
-			    pz * (F(i,j,k).ez - F(i,j,k-1).ez) -
-			    F(i,j,k).rhof);
-      }
-
-      Field3D<FieldArray> F;
-      const float nc, px, py, pz;
-    };
-
-    CalcRhoB updater(fa, m);
-
-    // Begin setting normal e ghosts
-    begin_remote_ghost_norm_e(fa.f, fa.g);
-
-    // Overlap local computation
-    this->local_ghost_norm_e(fa);
-    foreach_nc_interior(updater, fa.g);
-    
-    // Finish setting normal e ghosts
-    end_remote_ghost_norm_e(fa.f, fa.g);
-
-    // Now do points on boundary
-    foreach_nc_boundary(updater, fa.g);
-
-    this->local_adjust_rhob(fa);
-  }
-
-  // ----------------------------------------------------------------------
   // compute_div_e_err
   
   void compute_div_e_err(FieldArray& fa)
@@ -743,74 +695,8 @@ struct PscFieldArrayOps : public FieldArrayLocalOps
     vacuum_clean_div_e(fa);
   }
 
-  // ----------------------------------------------------------------------
-  // compute_curl_b
-  
-  void vacuum_compute_curl_b(FieldArray& fa)
-  {
-    sfa_params_t* params = static_cast<sfa_params_t*>(fa.params);
-    assert(params->n_mc == 1);
-
-    // Update interior fields
-    // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
-    // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
-    // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
-
-    const material_coefficient_t* m = params->mc;
-
-    struct CurlB {
-      CurlB(FieldArray& fa, const grid_t *g, const material_coefficient_t *m)
-	: F(fa),
-	  px_muz(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuz : 0),
-	  px_muy(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuy : 0),
-	  py_mux(g->ny > 1 ? g->cvac*g->dt*g->rdy*m->rmux : 0),
-	  py_muz(g->ny > 1 ? g->cvac*g->dt*g->rdy*m->rmuz : 0),
-	  pz_muy(g->nz > 1 ? g->cvac*g->dt*g->rdz*m->rmuy : 0),
-	  pz_mux(g->nz > 1 ? g->cvac*g->dt*g->rdz*m->rmux : 0)
-      {
-      }
-
-      void x(int i, int j, int k)
-      {
-	F(i,j,k).tcax = (py_muz*(F(i,j,k).cbz - F(i,j-1,k).cbz) -
-			 pz_muy*(F(i,j,k).cby - F(i,j,k-1).cby));
-      }
-      
-      void y(int i, int j, int k)
-      {
-	F(i,j,k).tcay = (pz_mux*(F(i,j,k).cbx - F(i,j,k-1).cbx) -
-			 px_muz*(F(i,j,k).cbz - F(i-1,j,k).cbz));
-      }
-      
-      void z(int i, int j, int k)
-      {
-	F(i,j,k).tcaz = (px_muy*(F(i,j,k).cby - F(i-1,j,k).cby) -
-			 py_mux*(F(i,j,k).cbx - F(i,j-1,k).cbx));
-      }
-
-      Field3D<FieldArray> F;
-      const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
-    };
-
-    CurlB curlB(fa, fa.g, m);
-      
-    begin_remote_ghost_tang_b(fa.f, fa.g);
-
-    this->local_ghost_tang_b(fa);
-    foreach_ec_interior(curlB, fa.g);
-
-    end_remote_ghost_tang_b(fa.f, fa.g);
-
-    foreach_ec_boundary(curlB, fa.g);
-    this->local_adjust_tang_e(fa); // FIXME, is this right here?
-  }
-
-  void compute_curl_b(FieldArray& fa)
-  {
-    vacuum_compute_curl_b(fa);
-  }
-
 };
+
 
 template<class B, class FieldArrayLocalOps>
 struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
@@ -1411,6 +1297,121 @@ struct PscFieldArray : B, PscFieldArrayOps<B,FieldArrayLocalOps>
 # undef BEGIN_SEND
 # undef END_RECV
 # undef END_SEND
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_rhob
+
+  void compute_rhob()
+  {
+    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    assert(prm->n_mc == 1);
+    const material_coefficient_t* m = prm->mc;
+
+    struct CalcRhoB {
+      CalcRhoB(FieldArray& fa, const material_coefficient_t *m)
+	: F(fa),
+	  nc(m->nonconductive),
+	  px(fa.g->nx > 1 ? fa.g->eps0 * m->epsx * fa.g->rdx : 0),
+	  py(fa.g->ny > 1 ? fa.g->eps0 * m->epsy * fa.g->rdy : 0),
+	  pz(fa.g->nz > 1 ? fa.g->eps0 * m->epsz * fa.g->rdz : 0)
+      {
+      }
+
+      void operator()(int i, int j, int k)
+      {
+	F(i,j,k).rhob = nc*(px * (F(i,j,k).ex - F(i-1,j,k).ex) +
+			    py * (F(i,j,k).ey - F(i,j-1,k).ey) +
+			    pz * (F(i,j,k).ez - F(i,j,k-1).ez) -
+			    F(i,j,k).rhof);
+      }
+
+      Field3D<FieldArray> F;
+      const float nc, px, py, pz;
+    };
+
+    CalcRhoB updater(*this, m);
+
+    // Begin setting normal e ghosts
+    begin_remote_ghost_norm_e(this->f, g);
+
+    // Overlap local computation
+    this->local_ghost_norm_e(*this);
+    foreach_nc_interior(updater, g);
+    
+    // Finish setting normal e ghosts
+    end_remote_ghost_norm_e(this->f, g);
+
+    // Now do points on boundary
+    foreach_nc_boundary(updater, g);
+
+    this->local_adjust_rhob(*this);
+  }
+
+  // ----------------------------------------------------------------------
+  // compute_curl_b
+  
+  void vacuum_compute_curl_b()
+  {
+    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    assert(prm->n_mc == 1);
+    const material_coefficient_t* m = prm->mc;
+
+    // Update interior fields
+    // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
+    // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
+    // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
+
+    struct CurlB {
+      CurlB(FieldArray& fa, const grid_t *g, const material_coefficient_t *m)
+	: F(fa),
+	  px_muz(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuz : 0),
+	  px_muy(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuy : 0),
+	  py_mux(g->ny > 1 ? g->cvac*g->dt*g->rdy*m->rmux : 0),
+	  py_muz(g->ny > 1 ? g->cvac*g->dt*g->rdy*m->rmuz : 0),
+	  pz_muy(g->nz > 1 ? g->cvac*g->dt*g->rdz*m->rmuy : 0),
+	  pz_mux(g->nz > 1 ? g->cvac*g->dt*g->rdz*m->rmux : 0)
+      {
+      }
+
+      void x(int i, int j, int k)
+      {
+	F(i,j,k).tcax = (py_muz*(F(i,j,k).cbz - F(i,j-1,k).cbz) -
+			 pz_muy*(F(i,j,k).cby - F(i,j,k-1).cby));
+      }
+      
+      void y(int i, int j, int k)
+      {
+	F(i,j,k).tcay = (pz_mux*(F(i,j,k).cbx - F(i,j,k-1).cbx) -
+			 px_muz*(F(i,j,k).cbz - F(i-1,j,k).cbz));
+      }
+      
+      void z(int i, int j, int k)
+      {
+	F(i,j,k).tcaz = (px_muy*(F(i,j,k).cby - F(i-1,j,k).cby) -
+			 py_mux*(F(i,j,k).cbx - F(i,j-1,k).cbx));
+      }
+
+      Field3D<FieldArray> F;
+      const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
+    };
+
+    CurlB curlB(*this, g, m);
+      
+    begin_remote_ghost_tang_b(this->f, g);
+
+    this->local_ghost_tang_b(*this);
+    foreach_ec_interior(curlB, g);
+
+    end_remote_ghost_tang_b(this->f, g);
+
+    foreach_ec_boundary(curlB, g);
+    this->local_adjust_tang_e(*this); // FIXME, is this right here?
+  }
+
+  void compute_curl_b()
+  {
+    vacuum_compute_curl_b();
   }
 
 };

@@ -102,12 +102,12 @@ void vpic_mfields_synchronize_rho(Simulation* sim, FieldArray* vmflds)
 
 void vpic_mfields_compute_rhob(Simulation* sim, FieldArray* vmflds)
 {
-  TIC sim->compute_rhob(*vmflds); TOC(compute_rhob, 1);
+  TIC vmflds->compute_rhob(); TOC(compute_rhob, 1);
 }
 
 void vpic_mfields_compute_curl_b(Simulation* sim, FieldArray* vmflds)
 {
-  TIC sim->compute_curl_b(*vmflds); TOC(compute_curl_b, 1);
+  TIC vmflds->compute_curl_b(); TOC(compute_curl_b, 1);
 }
 
 void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *vmprts)
