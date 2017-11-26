@@ -41,6 +41,11 @@ public:
     return accumulator_;
   }
 
+  HydroArray*& getHydroArray()
+  {
+    return *reinterpret_cast<HydroArray **>(&hydro_array);
+  }
+
   VpicParticles& getParticles()
   {
     return *reinterpret_cast<VpicParticles *>(&species_list);
@@ -71,8 +76,6 @@ public:
   void setTopology(int px_, int py_, int pz_)
   {
   }
-
-  using vpic_simulation::hydro_array;
 
  private:
   MaterialList material_list_;

@@ -43,6 +43,11 @@ public:
     return *reinterpret_cast<VpicAccumulator **>(&accumulator_array);
   }
 
+  HydroArray*& getHydroArray()
+  {
+    return *reinterpret_cast<HydroArray **>(&hydro_array);
+  }
+
   VpicParticles& getParticles()
   {
     return *reinterpret_cast<VpicParticles *>(&species_list);
@@ -106,7 +111,6 @@ public:
     px = px_; py = py_; pz = pz_;
   }
 
-  using vpic_simulation::hydro_array;
 };
 
 

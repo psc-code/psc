@@ -38,7 +38,7 @@ void psc_mfields_vpic_setup(struct psc_mfields *mflds)
     ref_count_hydro++;
 
     //assert(HydroArray::N_COMP == VPIC_HYDRO_N_COMP); FIXME
-    sub->vmflds_hydro = static_cast<HydroArray*>(sub->sim->hydro_array_); // FIXME
+    sub->vmflds_hydro = sub->sim->hydro_array_;
   } else {
     assert(0);
   }

@@ -31,7 +31,7 @@ struct VpicSimulation : ParticlesOps, InterpolatorOps,
       field_array_(sim_base->getFieldArray()),
       interpolator_(sim_base->getInterpolator()),
       accumulator_(sim_base->getAccumulator()),
-      hydro_array_(sim_base->hydro_array),
+      hydro_array_(sim_base->getHydroArray()),
       particles_(sim_base->getParticles()),
       sim_base_(sim_base),
       diag_(reinterpret_cast<vpic_simulation*>(sim_base)) // FIXME
@@ -196,7 +196,7 @@ struct VpicSimulation : ParticlesOps, InterpolatorOps,
   FieldArray*& field_array_;
   Interpolator*& interpolator_;
   Accumulator*& accumulator_;
-  hydro_array_t*& hydro_array_;
+  HydroArray*& hydro_array_;
   Particles& particles_;
 
   SimulationBase *sim_base_;
