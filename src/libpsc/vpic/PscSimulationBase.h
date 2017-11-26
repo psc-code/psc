@@ -33,8 +33,7 @@ public:
 
   Interpolator*& getInterpolator()
   {
-    //return interpolator_;
-    return *reinterpret_cast<VpicInterpolator **>(&interpolator_array);
+    return interpolator_;
   }
   
   Accumulator*& getAccumulator()

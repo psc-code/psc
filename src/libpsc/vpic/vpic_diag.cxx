@@ -208,18 +208,6 @@ void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag)
   int64_t step = simulation->step();
 
   /*--------------------------------------------------------------------------
-   * Electron species output
-   *------------------------------------------------------------------------*/
-
-  if(should_dump(ehydro)) simulation->hydro_dump("electron", diag->hedParams);
-
-  /*--------------------------------------------------------------------------
-   * Ion species output
-   *------------------------------------------------------------------------*/
-
-  if(should_dump(Hhydro)) simulation->hydro_dump("ion", diag->hHdParams);
-
-  /*--------------------------------------------------------------------------
    * Restart dump
    *------------------------------------------------------------------------*/
 

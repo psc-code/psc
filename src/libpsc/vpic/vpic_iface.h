@@ -103,24 +103,7 @@ typedef struct Simulation_ Simulation;
 
 #endif
 
-struct HydroArray *vpic_mfields_new_hydro_array(Simulation *sim);
-float *vpic_mfields_hydro_get_data(struct HydroArray *vmflds, int *ib, int *im);
-
-FieldArray *vpic_mfields_new_fields_array(Simulation *sim);
-float *vpic_mfields_get_data(FieldArray *fmflds, int *ib, int *im);
-
-double vpic_mfields_synchronize_tang_e_norm_b(Simulation* sim, FieldArray*vmflds);
-void vpic_mfields_compute_div_b_err(Simulation* sim, FieldArray* vmflds);
-double vpic_mfields_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_clean_div_b(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_compute_div_e_err(Simulation* sim, FieldArray* vmflds);
-double vpic_mfields_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_clean_div_e(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_clear_rhof(Simulation* sim, FieldArray* vmflds);
 void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *mprts);
-void vpic_mfields_synchronize_rho(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_compute_rhob(Simulation* sim, FieldArray* vmflds);
-void vpic_mfields_compute_curl_b(Simulation* sim, FieldArray* vmflds);
 
 // ----------------------------------------------------------------------
 // vpic_mparticles

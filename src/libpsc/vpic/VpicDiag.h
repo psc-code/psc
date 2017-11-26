@@ -135,11 +135,14 @@ struct VpicDiagOps
 		      fa, particles, interpolator);
       }
       
-      /*--------------------------------------------------------------------------
-       * Field data output
-       *------------------------------------------------------------------------*/
+      // Field data output
 
       if(step == -1 || should_dump(fields)) field_dump(fa, simulation, diag.fdParams);
+      
+      // Species moment output
+      
+      if(should_dump(ehydro)) hydro_dump(&interpolator, simulation, "electron", diag.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(&interpolator, simulation, "ion", diag.hHdParams);
       
       vpic_simulation_diagnostics(simulation, &diag);
     } TOC(user_diagnostics, 1);
@@ -333,6 +336,158 @@ struct VpicDiagOps
 # undef f
     
     if( fileIO.close() ) ERROR(( "File close failed on field dump!!!" ));
+#undef step
+#undef rank
+#undef nproc
+#undef nxout
+#undef nyout
+#undef nzout
+  }
+
+  void hydro_dump(Interpolator* interpolator, vpic_simulation* simulation, const char * speciesname,
+		  DumpParameters & dumpParams )
+  {
+#define step simulation->step
+#define rank simulation->rank
+#define nproc simulation->nproc
+#define nxout simulation->nxout
+#define nyout simulation->nyout
+#define nzout simulation->nzout
+#define dxout simulation->dxout
+#define dyout simulation->dyout
+#define dzout simulation->dzout
+    grid_t* grid = simulation->grid;
+
+    // Create directory for this time step
+    char timeDir[256];
+    sprintf(timeDir, "%s/T.%ld", dumpParams.baseDir, (long)step());
+    simulation->dump_mkdir(timeDir);
+  
+    // Open the file for output
+    char filename[256];
+    sprintf( filename, "%s/T.%ld/%s.%ld.%d", dumpParams.baseDir, (long)step(),
+	     dumpParams.baseFileName, (long)step(), rank() );
+  
+    FileIO fileIO;
+    FileIOStatus status;
+
+    status = fileIO.open(filename, io_write);
+    if(status == fail) ERROR(("Failed opening file: %s", filename));
+
+    species_t * sp = find_species_name(speciesname, simulation->species_list);
+    if( !sp ) ERROR(( "Invalid species name: %s", speciesname ));
+
+    clear_hydro_array( simulation->hydro_array );
+    accumulate_hydro_p( simulation->hydro_array, sp, interpolator );
+    synchronize_hydro_array( simulation->hydro_array );
+  
+    // convenience
+    const size_t istride(dumpParams.stride_x);
+    const size_t jstride(dumpParams.stride_y);
+    const size_t kstride(dumpParams.stride_z);
+  
+    // Check stride values.
+    if(remainder(grid->nx, istride) != 0)
+      ERROR(("x stride must be an integer factor of nx"));
+    if(remainder(grid->ny, jstride) != 0)
+      ERROR(("y stride must be an integer factor of ny"));
+    if(remainder(grid->nz, kstride) != 0)
+      ERROR(("z stride must be an integer factor of nz"));
+  
+    int dim[3];
+  
+    /* define to do C-style indexing */
+# define hydro(x,y,z) simulation->hydro_array->h[VOXEL(x,y,z, grid->nx,grid->ny,grid->nz)]
+
+    /* IMPORTANT: these values are written in WRITE_HEADER_V0 */
+    nxout = (grid->nx)/istride;
+    nyout = (grid->ny)/jstride;
+    nzout = (grid->nz)/kstride;
+    dxout = (grid->dx)*istride;
+    dyout = (grid->dy)*jstride;
+    dzout = (grid->dz)*kstride;
+  
+    /* Banded output will write data as a single block-array as opposed to
+     * the Array-of-Structure format that is used for native storage.
+     *
+     * Additionally, the user can specify a stride pattern to reduce
+     * the resolution of the data that are output.  If a stride is
+     * specified for a particular dimension, VPIC will write the boundary
+     * plus every "stride" elements in that dimension.
+     */
+    if(dumpParams.format == band) {
+    
+      WRITE_HEADER_V0(dump_type::hydro_dump, sp->id, sp->q/sp->m, fileIO);
+    
+      dim[0] = nxout+2;
+      dim[1] = nyout+2;
+      dim[2] = nzout+2;
+    
+      WRITE_ARRAY_HEADER(simulation->hydro_array->h, 3, dim, fileIO);
+    
+      /*
+       * Create a variable list of hydro values to output.
+       */
+      size_t numvars = std::min(dumpParams.output_vars.bitsum(),
+				total_hydro_variables);
+      size_t * varlist = new size_t[numvars];
+      for(size_t i(0), c(0); i<total_hydro_variables; i++)
+	if( dumpParams.output_vars.bitset(i) ) varlist[c++] = i;
+    
+      // More efficient for standard case
+      if(istride == 1 && jstride == 1 && kstride == 1)
+
+	for(size_t v(0); v<numvars; v++)
+	  for(size_t k(0); k<nzout+2; k++)
+	    for(size_t j(0); j<nyout+2; j++)
+	      for(size_t i(0); i<nxout+2; i++) {
+		const uint32_t * href = reinterpret_cast<uint32_t *>(&hydro(i,j,k));
+		fileIO.write(&href[varlist[v]], 1);
+	      }
+
+      else
+
+	for(size_t v(0); v<numvars; v++)
+	  for(size_t k(0); k<nzout+2; k++) { const size_t koff = (k == 0) ? 0 : (k == nzout+1) ? grid->nz+1 : k*kstride-1;
+	    for(size_t j(0); j<nyout+2; j++) { const size_t joff = (j == 0) ? 0 : (j == nyout+1) ? grid->ny+1 : j*jstride-1;
+	      for(size_t i(0); i<nxout+2; i++) { const size_t ioff = (i == 0) ? 0 : (i == nxout+1) ? grid->nx+1 : i*istride-1;
+		const uint32_t * href = reinterpret_cast<uint32_t *>(&hydro(ioff,joff,koff));
+		fileIO.write(&href[varlist[v]], 1);
+	      }
+	    }
+	  }
+    
+      delete[] varlist;
+    
+    } else { // band_interleave
+    
+      WRITE_HEADER_V0(dump_type::hydro_dump, sp->id, sp->q/sp->m, fileIO);
+    
+      dim[0] = nxout;
+      dim[1] = nyout;
+      dim[2] = nzout;
+    
+      WRITE_ARRAY_HEADER(simulation->hydro_array->h, 3, dim, fileIO);
+    
+      if(istride == 1 && jstride == 1 && kstride == 1)
+
+	fileIO.write(simulation->hydro_array->h, dim[0]*dim[1]*dim[2]);
+
+      else
+
+	for(size_t k(0); k<nzout; k++) { const size_t koff = (k == 0) ? 0 : (k == nzout+1) ? grid->nz+1 : k*kstride-1;
+	  for(size_t j(0); j<nyout; j++) { const size_t joff = (j == 0) ? 0 : (j == nyout+1) ? grid->ny+1 : j*jstride-1;
+	    for(size_t i(0); i<nxout; i++) { const size_t ioff = (i == 0) ? 0 : (i == nxout+1) ? grid->nx+1 : i*istride-1;
+	      fileIO.write(&hydro(ioff,joff,koff), 1);
+	    }
+	  }
+	}
+    }
+  
+# undef hydro
+
+    if( fileIO.close() ) ERROR(( "File close failed on hydro dump!!!" ));
+
 #undef step
 #undef rank
 #undef nproc
