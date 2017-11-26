@@ -1,6 +1,6 @@
 
-#ifndef PSC_INTERPOLATOR_OPS_H
-#define PSC_INTERPOLATOR_OPS_H
+#ifndef PSC_INTERPOLATOR_H
+#define PSC_INTERPOLATOR_H
 
 template<class InterpolatorBase, class FA>
 struct PscInterpolator : InterpolatorBase

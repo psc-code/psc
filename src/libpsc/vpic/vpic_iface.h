@@ -22,8 +22,8 @@
 #include "PscParticlesOps.h"
 
 #include "VpicInterpolatorBase.h"
-#include "VpicInterpolatorOps.h"
-#include "PscInterpolatorOps.h"
+#include "VpicInterpolator.h"
+#include "PscInterpolator.h"
 
 #include "VpicAccumulatorBase.h"
 #include "VpicAccumulatorOps.h"
