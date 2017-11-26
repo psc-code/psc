@@ -7,13 +7,17 @@
 // ======================================================================
 // VpicHydroArrayBase
 
-struct VpicHydroArrayBase : hydro_array_t {
+struct VpicHydroArrayBase : hydro_array_t
+{
   typedef hydro_t Element;
   
   VpicHydroArrayBase(Grid* g);
   ~VpicHydroArrayBase();
 
   float* getData(int* ib, int* im);
+
+  Element  operator[](int idx) const { return h[idx]; }
+  Element& operator[](int idx)       { return h[idx]; }
 
   Element *data()
   {
