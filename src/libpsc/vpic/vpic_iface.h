@@ -26,8 +26,8 @@
 #include "PscInterpolator.h"
 
 #include "VpicAccumulatorBase.h"
-#include "VpicAccumulatorOps.h"
-#include "PscAccumulatorOps.h"
+#include "VpicAccumulator.h"
+#include "PscAccumulator.h"
 
 #include "VpicHydroArrayBase.h"
 #include "VpicHydroArray.h"
