@@ -17,7 +17,7 @@
 #include "VpicFieldArray.h"
 #include "PscFieldArray.h"
 
-#include "VpicParticles.h"
+#include "VpicParticlesBase.h"
 #include "VpicParticlesOps.h"
 #include "PscParticlesOps.h"
 
@@ -90,8 +90,9 @@ typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
 typedef VpicHydroArrayBase HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
-typedef VpicParticles Particles;  
-typedef PscParticlesOps<Particles, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
+typedef VpicParticlesBase ParticlesBase;  
+typedef PscParticlesOps<ParticlesBase, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
+typedef ParticlesBase Particles;
 
 typedef VpicDiagOps<FieldArray, Particles, Interpolator, HydroArray> DiagOps;
 //typedef VpicSimulationBase SimulationBase;

@@ -4,7 +4,7 @@
 
 #include "VpicInterpolator.h"
 #include "VpicAccumulator.h"
-#include "VpicParticles.h"
+#include "VpicParticlesBase.h"
 #include "VpicDiag.h"
 
 template<class FieldArray>
@@ -48,9 +48,9 @@ public:
     return *reinterpret_cast<VpicHydroArrayBase **>(&hydro_array);
   }
 
-  VpicParticles& getParticles()
+  VpicParticlesBase& getParticles()
   {
-    return *reinterpret_cast<VpicParticles *>(&species_list);
+    return *reinterpret_cast<VpicParticlesBase *>(&species_list);
   }
   
   void emitter()

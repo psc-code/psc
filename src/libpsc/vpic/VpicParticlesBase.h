@@ -1,9 +1,9 @@
 
-#ifndef VPIC_PARTICLES_H
-#define VPIC_PARTICLES_H
+#ifndef VPIC_PARTICLES_BASE_H
+#define VPIC_PARTICLES_BASE_H
 
 // ======================================================================
-// VpicParticles
+// VpicParticlesBase
 
 struct VpicSpecies : species_t
 {
@@ -41,7 +41,7 @@ private:
   VpicSpecies *node_;
 };
 
-struct VpicParticles {
+struct VpicParticlesBase {
   typedef VpicSpecies Species;
   typedef VpicSpeciesIter Iter;
   
