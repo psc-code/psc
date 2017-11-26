@@ -31,6 +31,7 @@
 
 #include "VpicHydroArrayBase.h"
 #include "VpicHydroArray.h"
+#include "PscHydroArray.h"
 
 #include "VpicDiag.h"
 #include "NoneDiag.h"
@@ -87,7 +88,7 @@ typedef VpicAccumulator Accumulator;
 typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
 
 typedef VpicHydroArrayBase HydroArrayBase;
-typedef VpicHydroArray<HydroArrayBase> HydroArray;
+typedef PscHydroArray<HydroArrayBase> HydroArray;
 
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
