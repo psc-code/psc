@@ -1200,12 +1200,6 @@ struct PscParticlesOps {
 
     for( n=0; n<np; n++ ) {
 
-      // After detailed experiments and studying of assembly dumps, it was
-      // determined that if the platform does not support efficient 4-vector
-      // SIMD memory gather/scatter operations, the savings from using
-      // "trilinear" are slightly outweighed by the overhead of the
-      // gather/scatters.
- 
       // Load the particle data
 
       w0 = p[n].dx;
@@ -1251,7 +1245,45 @@ struct PscParticlesOps {
 
   void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
   {
-    ::accumulate_rhob(fa.f, p, fa.g, qsp);
+    float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
+    int v = p->i, x, y, z, sy = fa.g->sy, sz = fa.g->sz;
+    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
+    w7 = (qsp * fa.g->r8V) * p->w;
+
+    // Compute the trilinear weights
+    // See note in rhof for why FMA and FNMS are done this way.
+
+# define FMA( x,y,z) ((z)+(x)*(y))
+# define FNMS(x,y,z) ((z)-(x)*(y))
+    w6=FNMS(w0,w7,w7);                    // q(1-dx)
+    w7=FMA( w0,w7,w7);                    // q(1+dx)
+    w4=FNMS(w1,w6,w6); w5=FNMS(w1,w7,w7); // q(1-dx)(1-dy), q(1+dx)(1-dy)
+    w6=FMA( w1,w6,w6); w7=FMA( w1,w7,w7); // q(1-dx)(1+dy), q(1+dx)(1+dy)
+    w0=FNMS(dz,w4,w4); w1=FNMS(dz,w5,w5); w2=FNMS(dz,w6,w6); w3=FNMS(dz,w7,w7);
+    w4=FMA( dz,w4,w4); w5=FMA( dz,w5,w5); w6=FMA( dz,w6,w6); w7=FMA( dz,w7,w7);
+# undef FNMS
+# undef FMA
+
+    // Adjust the weights for a corrected local accumulation of rhob.
+    // See note in synchronize_rho why we must do this for rhob and not
+    // for rhof.
+
+    x  = v;    z = x/sz;
+    if (z==1 ) w0 += w0, w1 += w1, w2 += w2, w3 += w3;
+    if (z==nz) w4 += w4, w5 += w5, w6 += w6, w7 += w7;
+    x -= sz*z; y = x/sy;
+    if (y==1 ) w0 += w0, w1 += w1, w4 += w4, w5 += w5;
+    if (y==ny) w2 += w2, w3 += w3, w6 += w6, w7 += w7;
+    x -= sy*y;
+    if (x==1 ) w0 += w0, w2 += w2, w4 += w4, w6 += w6;
+    if (x==nx) w1 += w1, w3 += w3, w5 += w5, w7 += w7;
+
+    // Reduce the particle charge to rhob
+
+    fa[v      ].rhob += w0; fa[v      +1].rhob += w1;
+    fa[v   +sy].rhob += w2; fa[v   +sy+1].rhob += w3;
+    fa[v+sz   ].rhob += w4; fa[v+sz   +1].rhob += w5;
+    fa[v+sz+sy].rhob += w6; fa[v+sz+sy+1].rhob += w7;
   }
 
 private:
