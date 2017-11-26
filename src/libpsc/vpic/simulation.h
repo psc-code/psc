@@ -164,12 +164,12 @@ struct VpicSimulation : ParticlesOps, DiagOps
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
   {
     // This relies on load_interpolator_array() having been called earlier
-    clear_hydro_array(hydro_array);
+    hydro_array->clear();
 
     typename Particles::Iter sp = vmprts->find_id(kind);
     accumulate_hydro_p(hydro_array, &*sp, interpolator_);
     
-    synchronize_hydro_array(hydro_array);
+    hydro_array->synchronize();
   }
 
   void newDiag(int interval)

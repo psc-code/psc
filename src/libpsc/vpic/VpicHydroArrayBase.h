@@ -29,7 +29,7 @@ hydro_array_ctor(hydro_array_t * ha, grid_t * g ) {
   if( !g ) ERROR(( "NULL grid" ));
   MALLOC_ALIGNED( ha->h, g->nv, 128 );
   ha->g = g;
-  clear_hydro_array( ha );
+  /* clear_hydro_array( ha ); */ // now done in C++ constructor
 }
 
 inline void
@@ -44,6 +44,7 @@ hydro_array_dtor( hydro_array_t * ha ) {
 inline VpicHydroArrayBase::VpicHydroArrayBase(Grid* grid)
 {
   hydro_array_ctor(this, grid->getGrid_t());
+  /*clear();*/ // can't do it here, only in derived class (case for CRTP)?
 }
 
 inline VpicHydroArrayBase::~VpicHydroArrayBase()

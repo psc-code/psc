@@ -10,7 +10,9 @@ struct VpicHydroArray : HydroArrayBase
 {
   typedef HydroArrayBase Base;
 
-  using Base::Base;
+  VpicHydroArray(Grid *grid) : Base(grid) {
+    clear();
+  }
 
   // use VPIC implementations
   void clear()       { clear_hydro_array(this);       }
