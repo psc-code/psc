@@ -50,5 +50,20 @@ private:
   vpic_simulation *simulation_;
 };
 
+
+template<class ParticlesBase, class FA, class IA, class AA, class HA>
+struct VpicParticles : ParticlesBase
+{
+  typedef ParticlesBase Base;
+  typedef FA FieldArray;
+  typedef IA Interpolator;
+  typedef AA Accumulator;
+  typedef HA HydroArray;
+
+  using Base::Base;
+
+  
+};
+
 #endif
 

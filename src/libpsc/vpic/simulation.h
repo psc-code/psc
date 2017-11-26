@@ -14,7 +14,7 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class FA, class ParticlesOps, class IA, class AA, class HA,
+template<class FA, class P, class ParticlesOps, class IA, class AA, class HA,
 	 class SimulationBase, class DiagOps>
 struct VpicSimulation : ParticlesOps, DiagOps
 {
@@ -22,7 +22,7 @@ struct VpicSimulation : ParticlesOps, DiagOps
   typedef IA Interpolator;
   typedef AA Accumulator;
   typedef HA HydroArray;
-  typedef typename ParticlesOps::Particles Particles;
+  typedef P Particles;
   typedef typename DiagOps::Diag Diag;
   
   VpicSimulation(SimulationBase *sim_base)

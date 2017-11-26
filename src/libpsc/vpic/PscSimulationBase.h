@@ -43,9 +43,9 @@ public:
     return hydro_array_;
   }
 
-  VpicParticlesBase& getParticles()
+  Particles& getParticles()
   {
-    return *reinterpret_cast<VpicParticlesBase *>(&species_list);
+    return *reinterpret_cast<Particles*>(&species_list);
   }
   
   void emitter()

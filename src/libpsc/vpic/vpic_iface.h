@@ -90,16 +90,16 @@ typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
 typedef VpicHydroArrayBase HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
-typedef VpicParticlesBase ParticlesBase;  
-typedef PscParticlesOps<ParticlesBase, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
-typedef ParticlesBase Particles;
+typedef VpicParticlesBase ParticlesBase;
+typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
+typedef PscParticlesOps<ParticlesBase, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
 typedef VpicDiagOps<FieldArray, Particles, Interpolator, HydroArray> DiagOps;
 //typedef VpicSimulationBase SimulationBase;
 typedef PscSimulationBase<FieldArray, Particles, Interpolator, Accumulator, HydroArray> SimulationBase;
 
 
-typedef VpicSimulation<FieldArray, ParticlesOps, Interpolator, Accumulator, HydroArray,
+typedef VpicSimulation<FieldArray, Particles, ParticlesOps, Interpolator, Accumulator, HydroArray,
 		       SimulationBase, DiagOps> Simulation;
 
 #else
