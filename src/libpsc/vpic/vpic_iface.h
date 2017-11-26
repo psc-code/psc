@@ -111,8 +111,6 @@ typedef struct HydroArray_ HydroArray;
 
 #endif
 
-void vpic_mfields_accumulate_rho_p(FieldArray *vmflds, Particles *mprts);
-
 // ----------------------------------------------------------------------
 // vpic_mparticles
 
@@ -198,6 +196,8 @@ void Simulation_field_injection(Simulation *sim);
 void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
 void Simulation_advance_b(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_advance_e(Simulation *sim, FieldArray *vmflds, double frac);
+void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
+
 
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);

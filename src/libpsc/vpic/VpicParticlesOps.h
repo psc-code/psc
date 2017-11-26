@@ -34,6 +34,13 @@ struct VpicParticlesOps {
     ::boundary_p(particle_bc_list, vmprts.head(), &fa, &accumulator);
   }
   
+  void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
+  {
+    for (typename Particles::Iter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      TIC ::accumulate_rho_p(&vmflds, &*sp); TOC(accumulate_rho_p, 1);
+    }
+  }
+
 private:
   vpic_simulation *simulation_;
 };

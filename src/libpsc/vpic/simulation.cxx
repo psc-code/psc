@@ -122,6 +122,14 @@ void Simulation_inject_particle(Simulation* sim, Particles *vmprts, int p,
 }
 
 // ----------------------------------------------------------------------
+// Simulation_accumulate_rho_p
+
+void Simulation_accumulate_rho_p(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
+{
+  return sim->accumulate_rho_p(*vmprts, *vmflds);
+}
+
+// ----------------------------------------------------------------------
 // Simulation_initialize
 
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds)

@@ -30,10 +30,11 @@ static void
 psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
 				  struct psc_mparticles *mprts)
 {
+  Simulation *sim = psc_mfields_vpic(mflds)->sim;
   FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
-  vpic_mfields_accumulate_rho_p(vmflds, vmprts);
+  Simulation_accumulate_rho_p(sim, vmprts, vmflds);
 }
 
 // ======================================================================
