@@ -8,10 +8,17 @@
 // VpicHydroArrayBase
 
 struct VpicHydroArrayBase : hydro_array_t {
+  typedef hydro_t Element;
+  
   VpicHydroArrayBase(Grid* g);
   ~VpicHydroArrayBase();
 
   float* getData(int* ib, int* im);
+
+  Element *data()
+  {
+    return h;
+  }
 };
 
 // ----------------------------------------------------------------------
