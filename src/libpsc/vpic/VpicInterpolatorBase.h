@@ -1,6 +1,6 @@
 
-#ifndef VPIC_INTERPOLATOR_H
-#define VPIC_INTERPOLATOR_H
+#ifndef VPIC_INTERPOLATOR_BASE_H
+#define VPIC_INTERPOLATOR_BASE_H
 
 #include "grid.h"
 
@@ -8,9 +8,9 @@ inline void interpolator_array_ctor(interpolator_array_t * ia, grid_t * g);
 inline void interpolator_array_dtor(interpolator_array_t * ia);
 
 // ======================================================================
-// VpicInterpolator
+// VpicInterpolatorBase
 
-struct VpicInterpolator : interpolator_array_t {
+struct VpicInterpolatorBase : interpolator_array_t {
   typedef interpolator_t Element;
 
   enum {
@@ -36,12 +36,12 @@ struct VpicInterpolator : interpolator_array_t {
     N_COMP = sizeof(interpolator_t) / sizeof(float),
   };
   
-  VpicInterpolator(Grid *grid)
+  VpicInterpolatorBase(Grid *grid)
   {
     interpolator_array_ctor(this, grid->getGrid_t());
   }
 
-  ~VpicInterpolator()
+  ~VpicInterpolatorBase()
   {
     interpolator_array_dtor(this);
   }

@@ -15,7 +15,7 @@ struct vpic_push_particles {
   vpic_push_particles(Simulation *sim);
       
   Simulation *sim_;
-  VpicInterpolator* interpolator;
+  VpicInterpolatorBase* interpolator;
   VpicAccumulatorBase* accumulator;
   int num_comm_round;
 

@@ -2,7 +2,7 @@
 #ifndef VPIC_SIMULATION_BASE_H
 #define VPIC_SIMULATION_BASE_H
 
-#include "VpicInterpolator.h"
+#include "VpicInterpolatorBase.h"
 #include "VpicAccumulatorBase.h"
 #include "VpicParticlesBase.h"
 #include "VpicDiag.h"
@@ -33,9 +33,9 @@ public:
     return *reinterpret_cast<FieldArray **>(&field_array);
   }
 
-  VpicInterpolator*& getInterpolator()
+  VpicInterpolatorBase*& getInterpolator()
   {
-    return *reinterpret_cast<VpicInterpolator **>(&interpolator_array);
+    return *reinterpret_cast<VpicInterpolatorBase **>(&interpolator_array);
   }
   
   VpicAccumulatorBase*& getAccumulatorBase()
