@@ -8,7 +8,8 @@
 #include "VpicParticles.h"
 #include "VpicDiag.h"
 
-template<class FieldArray, class Particles, class Interpolator, class Accumulator>
+template<class FieldArray, class Particles, class Interpolator, class Accumulator,
+	 class HydroArray>
 class PscSimulationBase : protected vpic_simulation
 {
 public:

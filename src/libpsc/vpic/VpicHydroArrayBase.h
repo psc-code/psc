@@ -1,15 +1,15 @@
 
-#ifndef HYDRO_ARRAY_H
-#define HYDRO_ARRAY_H
+#ifndef VPIC_HYDRO_ARRAY_BASE_H
+#define VPIC_HYDRO_ARRAY_BASE_H
 
 #include "grid.h"
 
 // ======================================================================
-// HydroArray
+// VpicHydroArrayBase
 
-struct HydroArray : hydro_array_t {
-  HydroArray(Grid* g);
-  ~HydroArray();
+struct VpicHydroArrayBase : hydro_array_t {
+  VpicHydroArrayBase(Grid* g);
+  ~VpicHydroArrayBase();
 
   float* getData(int* ib, int* im);
 };
@@ -32,19 +32,19 @@ hydro_array_dtor( hydro_array_t * ha ) {
 }
 
 // ----------------------------------------------------------------------
-// HydroArray implementation
+// VpicHydroArrayBase implementation
 
-inline HydroArray::HydroArray(Grid* grid)
+inline VpicHydroArrayBase::VpicHydroArrayBase(Grid* grid)
 {
   hydro_array_ctor(this, grid->getGrid_t());
 }
 
-inline HydroArray::~HydroArray()
+inline VpicHydroArrayBase::~VpicHydroArrayBase()
 {
   hydro_array_dtor(this);
 }
 
-inline float* HydroArray::getData(int* ib, int* im)
+inline float* VpicHydroArrayBase::getData(int* ib, int* im)
 {
   const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
 

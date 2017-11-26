@@ -2,9 +2,11 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "hydro_array.h"
 #include "material.h"
 #include "rng.h"
+#include "grid.h"
+
+#include "species_advance/species_advance.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
 
@@ -13,11 +15,12 @@
 // class VpicSimulation
 
 template<class FA, class ParticlesOps, class InterpolatorOps,
-	 class AccumulatorOps, class SimulationBase, class DiagOps>
+	 class AccumulatorOps, class HA, class SimulationBase, class DiagOps>
 struct VpicSimulation : ParticlesOps, InterpolatorOps,
   AccumulatorOps, DiagOps
 {
   typedef FA FieldArray;
+  typedef HA HydroArray;
   typedef typename ParticlesOps::Particles Particles;
   typedef typename InterpolatorOps::Interpolator Interpolator;
   typedef typename AccumulatorOps::Accumulator Accumulator;

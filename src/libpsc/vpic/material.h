@@ -2,6 +2,8 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "material/material.h"
+
 // ======================================================================
 // MaterialList
 

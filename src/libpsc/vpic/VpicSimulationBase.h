@@ -43,9 +43,9 @@ public:
     return *reinterpret_cast<VpicAccumulator **>(&accumulator_array);
   }
 
-  HydroArray*& getHydroArray()
+  VpicHydroArrayBase*& getHydroArray()
   {
-    return *reinterpret_cast<HydroArray **>(&hydro_array);
+    return *reinterpret_cast<VpicHydroArrayBase **>(&hydro_array);
   }
 
   VpicParticles& getParticles()
