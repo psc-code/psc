@@ -9,6 +9,7 @@
 #ifdef __cplusplus
 
 #include "simulation.h"
+
 #include "VpicFieldArray.h"
 #include "PscFieldArray.h"
 #include "VpicFieldArrayLocalOps.h"
@@ -27,6 +28,8 @@
 #include "VpicAccumulator.h"
 #include "VpicAccumulatorOps.h"
 #include "PscAccumulatorOps.h"
+
+#include "hydro_array.h"
 
 #include "VpicDiag.h"
 #include "NoneDiag.h"
@@ -87,7 +90,7 @@ typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
 
-typedef VpicDiagOps<FieldArray, Particles, Interpolator> DiagOps;
+typedef VpicDiagOps<FieldArray, Particles, Interpolator, HydroArray> DiagOps;
 //typedef VpicSimulationBase SimulationBase;
 typedef PscSimulationBase<FieldArray, Particles, Interpolator, Accumulator> SimulationBase;
 
@@ -100,6 +103,7 @@ typedef VpicSimulation<FieldArray, ParticlesOps, InterpolatorOps, AccumulatorOps
 typedef struct FieldArray_ FieldArray;
 typedef struct Particles_ Particles;
 typedef struct Simulation_ Simulation;
+typedef struct HydroArray_ HydroArray;
 
 #endif
 
@@ -187,7 +191,7 @@ void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 void Simulation_collision_run(Simulation *sim);
 void Simulation_field_injection(Simulation *sim);
-void Simulation_moments_run(Simulation *sim, struct HydroArray *mflds, Particles *vmprts, int kind);
+void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
 void Simulation_advance_b(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_advance_e(Simulation *sim, FieldArray *vmflds, double frac);
 

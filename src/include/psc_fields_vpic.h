@@ -19,7 +19,7 @@ BEGIN_C_DECLS
 struct psc_mfields_vpic {
   Simulation *sim;
   FieldArray *vmflds_fields;
-  struct HydroArray *vmflds_hydro;
+  HydroArray *vmflds_hydro;
 };
 
 #define psc_mfields_vpic(mflds) ({					\

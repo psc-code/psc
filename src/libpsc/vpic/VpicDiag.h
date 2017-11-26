@@ -88,7 +88,7 @@ namespace dump_type {
   const int history_dump = 5;
 }
 
-template<class FieldArray, class Particles, class Interpolator>
+template<class FieldArray, class Particles, class Interpolator, class HydroArray>
 struct VpicDiagOps
 {
   typedef VpicDiag Diag;
@@ -97,7 +97,7 @@ struct VpicDiagOps
   (diag.x##_interval>0 && remainder(step, diag.x##_interval) == 0)
 
   void diagnostics_run(VpicDiag& diag, FieldArray& fa, Particles& particles,
-		       Interpolator& interpolator)
+		       Interpolator& interpolator, HydroArray& hydro_array)
   {
     TIC {
       vpic_simulation *simulation = diag.simulation_;
@@ -141,8 +141,8 @@ struct VpicDiagOps
       
       // Species moment output
       
-      if(should_dump(ehydro)) hydro_dump(&interpolator, simulation, "electron", diag.hedParams);
-      if(should_dump(Hhydro)) hydro_dump(&interpolator, simulation, "ion", diag.hHdParams);
+      if(should_dump(ehydro)) hydro_dump(&interpolator, &hydro_array, simulation, "electron", diag.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(&interpolator, &hydro_array, simulation, "ion", diag.hHdParams);
       
       vpic_simulation_diagnostics(simulation, &diag);
     } TOC(user_diagnostics, 1);
@@ -344,7 +344,8 @@ struct VpicDiagOps
 #undef nzout
   }
 
-  void hydro_dump(Interpolator* interpolator, vpic_simulation* simulation, const char * speciesname,
+  void hydro_dump(Interpolator* interpolator, HydroArray* hydro_array,
+		  vpic_simulation* simulation, const char * speciesname,
 		  DumpParameters & dumpParams )
   {
 #define step simulation->step
@@ -377,9 +378,9 @@ struct VpicDiagOps
     species_t * sp = find_species_name(speciesname, simulation->species_list);
     if( !sp ) ERROR(( "Invalid species name: %s", speciesname ));
 
-    clear_hydro_array( simulation->hydro_array );
-    accumulate_hydro_p( simulation->hydro_array, sp, interpolator );
-    synchronize_hydro_array( simulation->hydro_array );
+    clear_hydro_array(hydro_array);
+    accumulate_hydro_p(hydro_array, sp, interpolator);
+    synchronize_hydro_array(hydro_array);
   
     // convenience
     const size_t istride(dumpParams.stride_x);
@@ -397,7 +398,7 @@ struct VpicDiagOps
     int dim[3];
   
     /* define to do C-style indexing */
-# define hydro(x,y,z) simulation->hydro_array->h[VOXEL(x,y,z, grid->nx,grid->ny,grid->nz)]
+# define hydro(x,y,z) hydro_array->h[VOXEL(x,y,z, grid->nx,grid->ny,grid->nz)]
 
     /* IMPORTANT: these values are written in WRITE_HEADER_V0 */
     nxout = (grid->nx)/istride;
@@ -423,7 +424,7 @@ struct VpicDiagOps
       dim[1] = nyout+2;
       dim[2] = nzout+2;
     
-      WRITE_ARRAY_HEADER(simulation->hydro_array->h, 3, dim, fileIO);
+      WRITE_ARRAY_HEADER(hydro_array->h, 3, dim, fileIO);
     
       /*
        * Create a variable list of hydro values to output.
@@ -467,11 +468,11 @@ struct VpicDiagOps
       dim[1] = nyout;
       dim[2] = nzout;
     
-      WRITE_ARRAY_HEADER(simulation->hydro_array->h, 3, dim, fileIO);
+      WRITE_ARRAY_HEADER(hydro_array->h, 3, dim, fileIO);
     
       if(istride == 1 && jstride == 1 && kstride == 1)
 
-	fileIO.write(simulation->hydro_array->h, dim[0]*dim[1]*dim[2]);
+	fileIO.write(hydro_array->h, dim[0]*dim[1]*dim[2]);
 
       else
 

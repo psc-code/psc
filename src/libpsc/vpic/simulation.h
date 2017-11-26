@@ -183,7 +183,7 @@ struct VpicSimulation : ParticlesOps, InterpolatorOps,
   void runDiag()
   {
     diag_.run();
-    this->diagnostics_run(diag_, *field_array_, particles_, *interpolator_);
+    this->diagnostics_run(diag_, *field_array_, particles_, *interpolator_, *hydro_array_);
   }
     
   int num_comm_round_;

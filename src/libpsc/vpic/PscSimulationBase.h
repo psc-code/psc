@@ -43,7 +43,7 @@ public:
 
   HydroArray*& getHydroArray()
   {
-    return *reinterpret_cast<HydroArray **>(&hydro_array);
+    return hydro_array_;
   }
 
   VpicParticles& getParticles()
@@ -82,6 +82,7 @@ public:
   FieldArray *field_array_;
   Interpolator *interpolator_;
   Accumulator *accumulator_;
+  HydroArray *hydro_array_;
 };
 
 
