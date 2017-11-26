@@ -29,6 +29,7 @@
 #include "VpicAccumulatorOps.h"
 #include "PscAccumulatorOps.h"
 
+#include "VpicHydroArrayBase.h"
 #include "VpicHydroArray.h"
 
 #include "VpicDiag.h"
@@ -37,11 +38,9 @@
 #include "VpicSimulationBase.h"
 #include "PscSimulationBase.h"
 
-extern "C" {
 #endif
-#if 0 // hack to fix indentation
-}
-#endif
+
+BEGIN_C_DECLS
 
 // ----------------------------------------------------------------------
 // vpic_mfields
@@ -87,7 +86,8 @@ typedef PscInterpolatorOps<Interpolator, FieldArrayBase> InterpolatorOps;
 typedef VpicAccumulator Accumulator;
 typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
 
-typedef VpicHydroArrayBase HydroArray;
+typedef VpicHydroArrayBase HydroArrayBase;
+typedef VpicHydroArray<HydroArrayBase> HydroArray;
 
 typedef VpicParticles Particles;  
 typedef PscParticlesOps<Particles, FieldArrayBase, Interpolator, Accumulator> ParticlesOps;
@@ -370,13 +370,7 @@ void vpic_base_init(int *pargc, char ***pargv);
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 
-
-#if 0
-{
-#endif
-#ifdef __cplusplus
-}
-#endif
+END_C_DECLS
 
 #ifndef mprintf
 

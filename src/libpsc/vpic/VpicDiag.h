@@ -378,9 +378,9 @@ struct VpicDiagOps
     species_t * sp = find_species_name(speciesname, simulation->species_list);
     if( !sp ) ERROR(( "Invalid species name: %s", speciesname ));
 
-    clear_hydro_array(hydro_array);
+    hydro_array->clear();
     accumulate_hydro_p(hydro_array, sp, interpolator);
-    synchronize_hydro_array(hydro_array);
+    hydro_array->synchronize();
   
     // convenience
     const size_t istride(dumpParams.stride_x);
