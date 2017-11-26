@@ -29,14 +29,16 @@ void psc_mfields_vpic_setup(struct psc_mfields *mflds)
     assert(ref_count_fields == 0);
     ref_count_fields++;
 
-    sub->vmflds_fields = vpic_mfields_new_fields_array(sub->sim);
+    assert(FieldArray::N_COMP == VPIC_MFIELDS_N_COMP);
+    sub->vmflds_fields = sub->sim->field_array_;
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    sub->vmflds_hydro = vpic_mfields_new_hydro_array(sub->sim);
+    //assert(HydroArray::N_COMP == VPIC_HYDRO_N_COMP); FIXME
+    sub->vmflds_hydro = static_cast<HydroArray*>(sub->sim->hydro_array_); // FIXME
   } else {
     assert(0);
   }
@@ -66,10 +68,10 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 
   // FIXME hacky...
   if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
-    flds.data = vpic_mfields_get_data(sub->vmflds_fields, flds.ib, flds.im);
+    flds.data = sub->vmflds_fields->getData(flds.ib, flds.im);
     flds.nr_comp = VPIC_MFIELDS_N_COMP;
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
-    flds.data = vpic_mfields_hydro_get_data(sub->vmflds_hydro, flds.ib, flds.im);
+    flds.data = sub->vmflds_hydro->getData(flds.ib, flds.im);
     flds.nr_comp = VPIC_HYDRO_N_COMP;
   } else {
     assert(0);
