@@ -167,7 +167,7 @@ struct VpicSimulation : ParticlesOps, DiagOps
     hydro_array->clear();
 
     typename Particles::Iter sp = vmprts->find_id(kind);
-    accumulate_hydro_p(hydro_array, &*sp, interpolator_);
+    vmprts->accumulate_hydro_p(*hydro_array, &*sp, *interpolator_);
     
     hydro_array->synchronize();
   }

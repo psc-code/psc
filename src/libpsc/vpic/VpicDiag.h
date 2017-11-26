@@ -379,7 +379,7 @@ struct VpicDiagOps
     if( !sp ) ERROR(( "Invalid species name: %s", speciesname ));
 
     hydro_array->clear();
-    accumulate_hydro_p(hydro_array, sp, interpolator);
+    Particles::accumulate_hydro_p(*hydro_array, &*sp, *interpolator);
     hydro_array->synchronize();
   
     // convenience

@@ -62,6 +62,10 @@ struct VpicParticles : ParticlesBase
 
   using Base::Base;
 
+  static void accumulate_hydro_p(HydroArray& ha, species_t* sp, Interpolator& interpolator)
+  {
+    ::accumulate_hydro_p(&ha, sp, &interpolator);
+  }
   
 };
 
