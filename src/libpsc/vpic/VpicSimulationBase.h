@@ -3,7 +3,7 @@
 #define VPIC_SIMULATION_BASE_H
 
 #include "VpicInterpolator.h"
-#include "VpicAccumulator.h"
+#include "VpicAccumulatorBase.h"
 #include "VpicParticlesBase.h"
 #include "VpicDiag.h"
 
@@ -38,9 +38,9 @@ public:
     return *reinterpret_cast<VpicInterpolator **>(&interpolator_array);
   }
   
-  VpicAccumulator*& getAccumulator()
+  VpicAccumulatorBase*& getAccumulatorBase()
   {
-    return *reinterpret_cast<VpicAccumulator **>(&accumulator_array);
+    return *reinterpret_cast<VpicAccumulatorBase **>(&accumulator_array);
   }
 
   VpicHydroArrayBase*& getHydroArray()

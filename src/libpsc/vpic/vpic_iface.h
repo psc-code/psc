@@ -25,7 +25,7 @@
 #include "VpicInterpolatorOps.h"
 #include "PscInterpolatorOps.h"
 
-#include "VpicAccumulator.h"
+#include "VpicAccumulatorBase.h"
 #include "VpicAccumulatorOps.h"
 #include "PscAccumulatorOps.h"
 
@@ -84,8 +84,9 @@ typedef VpicFieldArray<FieldArrayBase> FieldArray;
 typedef VpicInterpolator Interpolator;
 typedef PscInterpolatorOps<Interpolator, FieldArrayBase> InterpolatorOps;
 
-typedef VpicAccumulator Accumulator;
-typedef PscAccumulatorOps<Accumulator, FieldArrayBase> AccumulatorOps;
+typedef VpicAccumulatorBase AccumulatorBase;
+typedef PscAccumulatorOps<AccumulatorBase, FieldArrayBase> AccumulatorOps;
+typedef AccumulatorBase Accumulator;
 
 typedef VpicHydroArrayBase HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;

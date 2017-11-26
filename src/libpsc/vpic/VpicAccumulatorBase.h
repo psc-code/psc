@@ -1,6 +1,6 @@
 
-#ifndef VPIC_ACCUMULATOR_H
-#define VPIC_ACCUMULATOR_H
+#ifndef VPIC_ACCUMULATOR_BASE_H
+#define VPIC_ACCUMULATOR_BASE_H
 
 #include "grid.h"
 
@@ -34,18 +34,18 @@ struct VpicAccumulatorBlock {
 };
   
 // ======================================================================
-// VpicAccumulator
+// VpicAccumulatorBase
 
-struct VpicAccumulator : accumulator_array_t {
+struct VpicAccumulatorBase : accumulator_array_t {
   typedef accumulator_t Element;
   typedef VpicAccumulatorBlock Block;
   
-  VpicAccumulator(Grid* grid)
+  VpicAccumulatorBase(Grid* grid)
   {
     accumulator_array_ctor(this, grid->getGrid_t());
   }
   
-  ~VpicAccumulator()
+  ~VpicAccumulatorBase()
   {
     accumulator_array_dtor(this);
   }
