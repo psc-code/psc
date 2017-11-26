@@ -10,8 +10,8 @@
 
 #include "simulation.h"
 
-#include "VpicFieldArray.h"
-#include "PscFieldArray.h"
+#include "VpicFieldArrayBase.h"
+#include "PscFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "PscFieldArrayLocalOps.h"
 #include "VpicFieldArrayOps.h"

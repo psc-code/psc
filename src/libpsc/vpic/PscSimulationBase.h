@@ -2,10 +2,6 @@
 #ifndef PSC_SIMULATION_BASE_H
 #define PSC_SIMULATION_BASE_H
 
-#include "VpicFieldArray.h"
-#include "VpicInterpolator.h"
-#include "VpicAccumulator.h"
-#include "VpicParticles.h"
 #include "VpicDiag.h"
 
 template<class FieldArray, class Particles, class Interpolator, class Accumulator,

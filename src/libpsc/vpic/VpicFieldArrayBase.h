@@ -1,6 +1,6 @@
 
-#ifndef VPIC_FIELD_ARRAY_H
-#define VPIC_FIELD_ARRAY_H
+#ifndef VPIC_FIELD_ARRAY_BASE_H
+#define VPIC_FIELD_ARRAY_BASE_H
 
 #include "grid.h"
 #include "material.h"

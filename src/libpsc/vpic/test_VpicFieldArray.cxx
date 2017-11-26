@@ -1,8 +1,7 @@
 
 #include "test_FieldArray.h"
 
-#include "VpicFieldArray.h"
-#include "VpicFieldArrayLocalOps.h"
+#include "VpicFieldArrayBase.h"
 #include "VpicFieldArrayOps.h"
 
 void test_VpicFieldArray()

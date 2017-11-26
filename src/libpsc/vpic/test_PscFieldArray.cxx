@@ -1,7 +1,7 @@
 
 #include "test_FieldArray.h"
 
-#include "PscFieldArray.h"
+#include "PscFieldArrayBase.h"
 #include "PscFieldArrayLocalOps.h"
 #include "PscFieldArrayOps.h"
 

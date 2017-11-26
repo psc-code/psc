@@ -1,6 +1,6 @@
 
-#ifndef PSC_FIELD_ARRAY_H
-#define PSC_FIELD_ARRAY_H
+#ifndef PSC_FIELD_ARRAY_BASE_H
+#define PSC_FIELD_ARRAY_BASE_H
 
 #include "grid.h"
 #include "material.h"
@@ -14,7 +14,7 @@
 // though at least that way, the duplication is limited
 #define IN_sfa
 #include "field_advance/standard/sfa_private.h"
-#include "VpicFieldArray.h"
+#include "VpicFieldArrayBase.h"
 
 // the below are copies, though, skipping the kernels
 
