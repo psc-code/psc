@@ -30,6 +30,10 @@ struct psc_mfields_vpic {
 
 // These should otherwise be static, but they are defined in a separate C++ source file
 
+void psc_mfields_vpic_setup(struct psc_mfields *mflds);
+void psc_mfields_vpic_destroy(struct psc_mfields *mflds);
+fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
+
 double psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds);
 
 void psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds);
