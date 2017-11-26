@@ -2,7 +2,7 @@
 #include "test_FieldArray.h"
 
 #include "VpicFieldArrayBase.h"
-#include "VpicFieldArrayOps.h"
+#include "VpicFieldArray.h"
 
 void test_VpicFieldArray()
 {

@@ -14,8 +14,8 @@
 #include "PscFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "PscFieldArrayLocalOps.h"
-#include "VpicFieldArrayOps.h"
-#include "PscFieldArrayOps.h"
+#include "VpicFieldArray.h"
+#include "PscFieldArray.h"
 
 #include "VpicParticles.h"
 #include "VpicParticlesOps.h"

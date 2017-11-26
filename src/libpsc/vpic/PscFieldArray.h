@@ -1,6 +1,6 @@
 
-#ifndef PSC_FIELD_ARRAY_OPS_H
-#define PSC_FIELD_ARRAY_OPS_H
+#ifndef PSC_FIELD_ARRAY_H
+#define PSC_FIELD_ARRAY_H
 
 #include <mrc_bits.h>
 

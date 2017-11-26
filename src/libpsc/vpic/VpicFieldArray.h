@@ -1,6 +1,6 @@
 
-#ifndef VPIC_FIELD_ARRAY_OPS_H
-#define VPIC_FIELD_ARRAY_OPS_H
+#ifndef VPIC_FIELD_ARRAY_H
+#define VPIC_FIELD_ARRAY_H
 
 // ======================================================================
 // VpicFieldArray

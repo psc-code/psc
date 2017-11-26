@@ -3,7 +3,7 @@
 
 #include "PscFieldArrayBase.h"
 #include "PscFieldArrayLocalOps.h"
-#include "PscFieldArrayOps.h"
+#include "PscFieldArray.h"
 
 void test_PscFieldArray()
 {
