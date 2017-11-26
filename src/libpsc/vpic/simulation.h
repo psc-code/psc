@@ -14,15 +14,15 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class FA, class ParticlesOps, class IA,
-	 class AccumulatorOps, class HA, class SimulationBase, class DiagOps>
-struct VpicSimulation : ParticlesOps, AccumulatorOps, DiagOps
+template<class FA, class ParticlesOps, class IA, class AA, class HA,
+	 class SimulationBase, class DiagOps>
+struct VpicSimulation : ParticlesOps, DiagOps
 {
   typedef FA FieldArray;
   typedef IA Interpolator;
+  typedef AA Accumulator;
   typedef HA HydroArray;
   typedef typename ParticlesOps::Particles Particles;
-  typedef typename AccumulatorOps::Accumulator Accumulator;
   typedef typename DiagOps::Diag Diag;
   
   VpicSimulation(SimulationBase *sim_base)

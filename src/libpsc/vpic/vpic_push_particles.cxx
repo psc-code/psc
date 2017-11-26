@@ -53,7 +53,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
   // Advance the particle lists.
 
   if (!vmprts->empty()) {
-    sim_->clear_accumulator_array(accumulator);
+    TIC accumulator->clear(); TOC(clear_accumulators, 1);
     sim_->advance_p(*vmprts, *accumulator, *interpolator);
   }
 
@@ -69,7 +69,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
 
-    sim_->reduce_accumulator_array(accumulator);
+    TIC accumulator->reduce(); TOC(reduce_accumulators, 1);
   }
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the
@@ -131,7 +131,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 
   TIC vmflds->clear_jf(); TOC(clear_jf, 1);
   if (!vmprts->empty()) {
-    sim_->unload_accumulator_array(vmflds, accumulator);
+    TIC accumulator->unload(*vmflds); TOC(unload_accumulator, 1);
   }
   TIC vmflds->synchronize_jf(); TOC(synchronize_jf, 1);
 
