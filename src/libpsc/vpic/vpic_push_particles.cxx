@@ -100,7 +100,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
       int i = pm->i; // particle index we are removing
       p0[i].i >>= 3; // shift particle voxel down
       // accumulate the particle's charge to the mesh
-      accumulate_rhob( vmflds->f, p0+i, sp->g, sp->q );
+      sim_->accumulate_rhob(*vmflds, p0+i, sp->q );
       p0[i] = p0[sp->np-1]; // put the last particle into position i
       sp->np--; // decrement the number of particles
     }

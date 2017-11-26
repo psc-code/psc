@@ -41,6 +41,11 @@ struct VpicParticlesOps {
     }
   }
 
+  void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
+  {
+    ::accumulate_rhob(fa.f, p, fa.g, qsp);
+  }
+
 private:
   vpic_simulation *simulation_;
 };

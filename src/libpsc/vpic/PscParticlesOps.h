@@ -447,7 +447,7 @@ struct PscParticlesOps {
     p->uz = (float)uz;
     p->w  = w;
 
-    if (update_rhob) accumulate_rhob(fa.f, p, grid, -sp->q);
+    if (update_rhob) accumulate_rhob(fa, p, -sp->q);
 
     if (age!=0) {
       if( sp->nm >= sp->max_nm )
@@ -886,7 +886,6 @@ struct PscParticlesOps {
 
     // Unpack fields
 
-    field_t * RESTRICT ALIGNED(128) f = fa.f;
     grid_t  * RESTRICT              g = fa.g;
 
     // Unpack the grid
@@ -984,7 +983,7 @@ struct PscParticlesOps {
 	  if( nn==absorb_particles ) {
 	    // Ideally, we would batch all rhob accumulations together
 	    // for efficiency
-	    accumulate_rhob( f, p0+i, g, sp_q );
+	    accumulate_rhob(fa, p0+i, sp_q );
 	    goto backfill;
 	  }
 
@@ -1245,6 +1244,14 @@ struct PscParticlesOps {
     for (typename Particles::Iter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       TIC accumulate_rho_p(vmflds, sp); TOC(accumulate_rho_p, 1);
     }
+  }
+
+  // ----------------------------------------------------------------------
+  // accumulate_rhob
+
+  void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
+  {
+    ::accumulate_rhob(fa.f, p, fa.g, qsp);
   }
 
 private:
