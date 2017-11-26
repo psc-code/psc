@@ -2,23 +2,28 @@
 #ifndef PSC_INTERPOLATOR_OPS_H
 #define PSC_INTERPOLATOR_OPS_H
 
-template<class IA, class FA>
-struct PscInterpolatorOps {
-  typedef IA Interpolator;
+template<class InterpolatorBase, class FA>
+struct PscInterpolator : InterpolatorBase
+{
+  typedef InterpolatorBase Base;
   typedef FA FieldArray;
 
-  void load_interpolator(Interpolator& ia, /*const*/ FieldArray& fa)
+  using Base::Base;
+
+  using Base::g;
+
+  // ----------------------------------------------------------------------
+  // load
+  
+  void do_load(/*const*/ FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    Field3D<Interpolator> I(ia);
+    Field3D<Base> I(*this);
 
-    const int nx = ia.g->nx;
-    const int ny = ia.g->ny;
-    const int nz = ia.g->nz;
-    
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float fourth = 0.25;
     const float half   = 0.5;
-    
+
     float w0, w1, w2, w3;
     
     for (int k = 1; k <= nz; k++) {
@@ -77,9 +82,9 @@ struct PscInterpolatorOps {
     }
   }
   
-  void load_interpolator_array(Interpolator *interpolator, FieldArray *vmflds)
+  void load(FieldArray& fa)
   {
-    TIC load_interpolator(*interpolator, *vmflds); TOC(load_interpolator, 1);
+    TIC do_load(fa); TOC(load_interpolator, 1);
   }
 };
 

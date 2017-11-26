@@ -82,8 +82,7 @@ typedef VpicFieldArray<FieldArrayBase> FieldArray;
 #endif
 
 typedef VpicInterpolatorBase InterpolatorBase;
-typedef PscInterpolatorOps<InterpolatorBase, FieldArrayBase> InterpolatorOps;
-typedef InterpolatorBase Interpolator;
+typedef VpicInterpolator<InterpolatorBase, FieldArrayBase> Interpolator;
 
 typedef VpicAccumulatorBase AccumulatorBase;
 typedef PscAccumulatorOps<AccumulatorBase, FieldArrayBase> AccumulatorOps;
@@ -101,7 +100,7 @@ typedef VpicDiagOps<FieldArray, Particles, Interpolator, HydroArray> DiagOps;
 typedef PscSimulationBase<FieldArray, Particles, Interpolator, Accumulator, HydroArray> SimulationBase;
 
 
-typedef VpicSimulation<FieldArray, ParticlesOps, InterpolatorOps, AccumulatorOps, HydroArray,
+typedef VpicSimulation<FieldArray, ParticlesOps, Interpolator, AccumulatorOps, HydroArray,
 		       SimulationBase, DiagOps> Simulation;
 
 #else

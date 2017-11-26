@@ -148,7 +148,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 void vpic_push_particles::prep(Particles *vmprts, FieldArray *vmflds)
 {
   if (!vmprts->empty()) {
-    sim_->load_interpolator_array(interpolator, vmflds);
+    interpolator->load(*vmflds);
   }
 }
 

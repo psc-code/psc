@@ -2,14 +2,17 @@
 #ifndef VPIC_INTERPOLATOR_OPS_H
 #define VPIC_INTERPOLATOR_OPS_H
 
-template<class I, class F>
-struct VpicInterpolatorOps {
-  typedef I Interpolator;
-  typedef F FieldArray;
+template<class InterpolatorBase, class FA>
+struct VpicInterpolator : InterpolatorBase
+{
+  typedef InterpolatorBase Base;
+  typedef FA FieldArray;
 
-  void load_interpolator_array(Interpolator *interpolator, FieldArray *vmflds)
+  using Base::Base;
+  
+  void load(FieldArray& fa)
   {
-    TIC ::load_interpolator_array(interpolator, vmflds); TOC(load_interpolator, 1);
+    TIC ::load_interpolator_array(this, &fa); TOC(load_interpolator, 1);
   }
 };
 

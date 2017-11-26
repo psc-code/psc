@@ -130,7 +130,7 @@ void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmfld
   
   mpi_printf(comm, "Uncentering particles\n");
   if (!vmprts->empty()) {
-    sim->load_interpolator_array(sim->interpolator_, vmflds);
+    sim->interpolator_->load(*vmflds);
 
     for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
       TIC ::uncenter_p(&*sp, sim->interpolator_); TOC(uncenter_p, 1);

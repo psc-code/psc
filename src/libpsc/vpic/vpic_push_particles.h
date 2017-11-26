@@ -15,8 +15,8 @@ struct vpic_push_particles {
   vpic_push_particles(Simulation *sim);
       
   Simulation *sim_;
-  VpicInterpolatorBase* interpolator;
-  VpicAccumulatorBase* accumulator;
+  Interpolator* interpolator;
+  Accumulator* accumulator;
   int num_comm_round;
 
   void push_mprts(Particles *vmprts, FieldArray *vmflds);
