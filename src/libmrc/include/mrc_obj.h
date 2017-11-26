@@ -9,6 +9,8 @@
 #include <mpi.h>
 #include <stdbool.h>
 
+BEGIN_C_DECLS
+
 struct mrc_io;
 
 struct mrc_obj {
@@ -587,5 +589,7 @@ void __mrc_class_register_subclass(struct mrc_class *cls,
 
 #define mrc_obj_for_each_child(item, parent, type) \
   __list_for_each_entry(item, &parent->obj.children_list, obj.child_entry, type)
+
+END_C_DECLS
 
 #endif

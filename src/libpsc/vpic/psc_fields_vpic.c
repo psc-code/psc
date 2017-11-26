@@ -107,70 +107,6 @@ psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 // ----------------------------------------------------------------------
 // forward to vmflds
 
-static double
-psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  return vpic_mfields_synchronize_tang_e_norm_b(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_compute_div_b_err(sub->sim, sub->vmflds_fields);
-}
-
-static double
-psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  return vpic_mfields_compute_rms_div_b_err(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_clean_div_b(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_compute_div_e_err(sub->sim, sub->vmflds_fields);
-}
-
-static double
-psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  return vpic_mfields_compute_rms_div_e_err(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_clean_div_e(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_clear_rhof(sub->sim, sub->vmflds_fields);
-}
-
 static void
 psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
 				  struct psc_mparticles *mprts)
@@ -179,30 +115,6 @@ psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
   vpic_mfields_accumulate_rho_p(vmflds, vmprts);
-}
-
-static void
-psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_synchronize_rho(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_compute_rhob(sub->sim, sub->vmflds_fields);
-}
-
-static void
-psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  vpic_mfields_compute_curl_b(sub->sim, sub->vmflds_fields);
 }
 
 // ======================================================================
