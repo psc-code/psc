@@ -92,7 +92,7 @@ typedef PscHydroArray<HydroArrayBase> HydroArray;
 
 typedef VpicParticlesBase ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
-typedef PscParticlesOps<ParticlesBase, FieldArray, Interpolator, Accumulator> ParticlesOps;
+typedef PscParticlesOps<Particles> ParticlesOps;
 
 typedef VpicDiagMixin<Particles> DiagMixin;
 

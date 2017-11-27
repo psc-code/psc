@@ -4,14 +4,14 @@
 
 #define HAS_V4_PIPELINE
 
-template<class P, class FA, class IA, class AA>
+template<class P>
 struct PscParticlesOps {
   typedef P Particles;
   typedef typename Particles::Species Species;
   typedef typename Particles::Iter SpeciesIter;
-  typedef FA FieldArray;
-  typedef IA Interpolator;
-  typedef AA Accumulator;
+  typedef typename Particles::FieldArray FieldArray;
+  typedef typename Particles::Interpolator Interpolator;
+  typedef typename Particles::Accumulator Accumulator;
   typedef typename Accumulator::Block AccumulatorBlock;
   
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }

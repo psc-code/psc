@@ -2,12 +2,13 @@
 #ifndef VPIC_PARTICLES_OPS
 #define VPIC_PARTICLES_OPS
 
-template<class P, class IA, class AA, class FA>
-struct VpicParticlesOps {
+template<class P>
+struct VpicParticlesOps
+{
   typedef P Particles;
-  typedef FA FieldArray;
-  typedef IA Interpolator;
-  typedef AA Accumulator;
+  typedef typename Particles::FieldArray FieldArray;
+  typedef typename Particles::Interpolator Interpolator;
+  typedef typename Particles::Accumulator Accumulator;
   
   VpicParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
 
