@@ -213,7 +213,7 @@ void vpic_mparticles_sort(Particles *vmprts, int step)
   for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if (sp->sort_interval > 0 && (step % sp->sort_interval) == 0) {
       mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp->name);
-      TIC sort_p(&*sp); TOC(sort_p, 1);
+      TIC vmprts->sort_p(&*sp); TOC(sort_p, 1);
     }
   }
 }

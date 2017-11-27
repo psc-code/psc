@@ -1599,6 +1599,12 @@ struct PscParticles : ParticlesBase
 #endif
     uncenter_p_pipeline(sp, interpolator, cnt, sp->np - cnt);
   }
+
+  static void sort_p(species_t *sp)
+  {
+    ::sort_p(sp);
+  }
+
 };
 
 

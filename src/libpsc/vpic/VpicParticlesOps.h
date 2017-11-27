@@ -74,6 +74,11 @@ struct VpicParticles : ParticlesBase
     ::uncenter_p(sp, &interpolator);
   }
   
+  static void sort_p(species_t *sp)
+  {
+    ::sort_p(sp);
+  }
+
 };
 
 #endif
