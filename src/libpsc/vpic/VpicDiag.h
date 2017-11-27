@@ -46,14 +46,14 @@ namespace dump_type {
 }
 
 template<class Particles>
-struct VpicDiagOps
+struct VpicDiagMixin
 {
   typedef VpicDiag Diag;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::HydroArray HydroArray;
   
-  VpicDiagOps(vpic_simulation *simulation) : s_(simulation) {}
+  VpicDiagMixin(vpic_simulation *simulation) : s_(simulation) {}
 
   void diagnostics_init(int interval_)
   {

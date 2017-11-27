@@ -14,8 +14,8 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class ParticlesOps, class SimulationMixin, class DiagOps>
-struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
+template<class P, class ParticlesOps, class SimulationMixin, class DiagMixin>
+struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 {
   typedef P Particles;
   typedef typename Particles::FieldArray FieldArray;
@@ -31,7 +31,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
   VpicSimulation()
     : SimulationMixin(),
       ParticlesOps(static_cast<vpic_simulation*>(this)),
-      DiagOps(static_cast<vpic_simulation*>(this)),
+      DiagMixin(static_cast<vpic_simulation*>(this)),
       num_comm_round_(3),
       grid_(SimulationMixin::getGrid()),
       material_list_(SimulationMixin::getMaterialList()),
@@ -149,17 +149,17 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
 
   void newDiag(int interval)
   {
-    DiagOps::diagnostics_init(interval);
+    DiagMixin::diagnostics_init(interval);
   }
 
   void setupDiag()
   {
-    DiagOps::diagnostics_setup();
+    DiagMixin::diagnostics_setup();
   }
 
   void runDiag()
   {
-    DiagOps::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_);
+    DiagMixin::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_);
   }
     
   int num_comm_round_;

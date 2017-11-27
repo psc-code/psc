@@ -94,7 +94,7 @@ typedef VpicParticlesBase ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
 typedef PscParticlesOps<ParticlesBase, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
-typedef VpicDiagOps<Particles> DiagOps;
+typedef VpicDiagMixin<Particles> DiagMixin;
 
 #if 1
 typedef PscSimulationMixin<Particles> SimulationMixin;
@@ -102,7 +102,7 @@ typedef PscSimulationMixin<Particles> SimulationMixin;
 typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
 
-typedef VpicSimulation<Particles, ParticlesOps, SimulationMixin, DiagOps> Simulation;
+typedef VpicSimulation<Particles, ParticlesOps, SimulationMixin, DiagMixin> Simulation;
 
 #else
 
