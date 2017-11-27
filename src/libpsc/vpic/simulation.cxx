@@ -9,7 +9,7 @@
 Simulation* Simulation_create()
 {
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
-  return new Simulation(new SimulationBase);
+  return new Simulation();
 }
 
 void Simulation_delete(Simulation* sim)

@@ -14,7 +14,7 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class ParticlesOps, class SimulationMixin, class SimulationBase, class DiagOps>
+template<class P, class ParticlesOps, class SimulationMixin, class DiagOps>
 struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
 {
   typedef P Particles;
@@ -28,7 +28,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
   using SimulationMixin::current_injection;
   using SimulationMixin::field_injection;
   
-  VpicSimulation(SimulationBase *sim_base)
+  VpicSimulation()
     : SimulationMixin(),
       ParticlesOps(static_cast<vpic_simulation*>(this)),
       DiagOps(static_cast<vpic_simulation*>(this)),

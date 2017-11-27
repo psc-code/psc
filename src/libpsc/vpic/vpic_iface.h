@@ -97,13 +97,12 @@ typedef PscParticlesOps<ParticlesBase, FieldArray, Interpolator, Accumulator> Pa
 typedef VpicDiagOps<Particles> DiagOps;
 
 #if 1
-typedef PscSimulationBase<Particles> SimulationBase;
 typedef PscSimulationMixin<Particles> SimulationMixin;
 #else
-typedef VpicSimulationBase<Particles> SimulationBase;
+typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
 
-typedef VpicSimulation<Particles, ParticlesOps, SimulationMixin, SimulationBase, DiagOps> Simulation;
+typedef VpicSimulation<Particles, ParticlesOps, SimulationMixin, DiagOps> Simulation;
 
 #else
 

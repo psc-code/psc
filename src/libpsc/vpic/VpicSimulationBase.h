@@ -11,7 +11,7 @@
 // this the underlying base types aren't vpic / vpic-compatible layout
 
 template<class Particles>
-class VpicSimulationBase : protected vpic_simulation
+class VpicSimulationMixin : protected vpic_simulation
 {
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
@@ -19,7 +19,7 @@ class VpicSimulationBase : protected vpic_simulation
   typedef typename Particles::HydroArray HydroArray;
 
 public:
-  VpicSimulationBase()
+  VpicSimulationMixin()
   {
     extern vpic_simulation *simulation;
     assert(!simulation);
@@ -89,18 +89,18 @@ public:
     TIC user_particle_collisions(); TOC(user_particle_collisions, 1);
   }
 
-  void user_current_injection()
+  void current_injection()
   {
-    TIC vpic_simulation::user_current_injection(); TOC(user_current_injection, 1);
+    TIC user_current_injection(); TOC(user_current_injection, 1);
   }
 
-  void user_field_injection()
+  void field_injection()
   {
     // Let the user add their own contributions to the electric field. It is the
     // users responsibility to insure injected electric fields are consistent
     // across domains.
     
-    TIC vpic_simulation::user_field_injection(); TOC(user_field_injection, 1);
+    TIC user_field_injection(); TOC(user_field_injection, 1);
   }
   
   void getParams(int& num_step_,
