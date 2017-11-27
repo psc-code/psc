@@ -22,20 +22,24 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+
+  using SimulationMixin::collision_run;
+  using SimulationMixin::emitter;
+  using SimulationMixin::current_injection;
+  using SimulationMixin::field_injection;
   
   VpicSimulation(SimulationBase *sim_base)
     : SimulationMixin(),
-      ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
-      DiagOps(reinterpret_cast<vpic_simulation*>(sim_base)),
+      ParticlesOps(static_cast<vpic_simulation*>(this)),
+      DiagOps(static_cast<vpic_simulation*>(this)),
       num_comm_round_(3),
-      grid_(sim_base->getGrid()),
-      material_list_(sim_base->getMaterialList()),
-      field_array_(sim_base->getFieldArray()),
-      interpolator_(sim_base->getInterpolator()),
-      accumulator_(sim_base->getAccumulator()),
-      hydro_array_(sim_base->getHydroArray()),
-      particles_(sim_base->getParticles()),
-      sim_base_(sim_base)
+      grid_(SimulationMixin::getGrid()),
+      material_list_(SimulationMixin::getMaterialList()),
+      field_array_(SimulationMixin::getFieldArray()),
+      interpolator_(SimulationMixin::getInterpolator()),
+      accumulator_(SimulationMixin::getAccumulator()),
+      hydro_array_(SimulationMixin::getHydroArray()),
+      particles_(SimulationMixin::getParticles())
   {
   }
 
@@ -132,26 +136,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
 				     grid_->getGrid_t()));
   }
 
-  void collision_run()
-  {
-    sim_base_->collision_run();
-  }
-  
-  void emitter()
-  {
-    sim_base_->emitter();
-  }
-
-  void current_injection()
-  {
-    sim_base_->user_current_injection();
-  }
-
-  void field_injection()
-  {
-    sim_base_->user_field_injection();
-  }
-
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
   {
     // This relies on load_interpolator_array() having been called earlier
@@ -190,8 +174,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
   Accumulator*& accumulator_;
   HydroArray*& hydro_array_;
   Particles& particles_;
-
-  SimulationBase *sim_base_;
 };
 
 #endif
