@@ -40,6 +40,19 @@ struct VpicSimulation : ParticlesOps, DiagOps
   {
   }
 
+  void getParams(int& num_step,
+		 int& clean_div_e_interval,
+		 int& clean_div_b_interval,
+		 int& sync_shared_interval,
+		 int& num_div_e_round,
+		 int& num_div_b_round,
+		 int& status_interval)
+  {
+    return sim_base_->getParams(num_step, clean_div_e_interval, clean_div_b_interval,
+				sync_shared_interval, num_div_e_round, num_div_b_round,
+				status_interval);
+  }
+  
   void set_params(int num_step, int status_interval,
 		  int sync_shared_interval, int clean_div_e_interval,
 		  int clean_div_b_interval)

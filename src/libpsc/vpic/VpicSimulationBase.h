@@ -95,6 +95,23 @@ public:
     TIC vpic_simulation::user_field_injection(); TOC(user_field_injection, 1);
   }
   
+  void getParams(int& num_step_,
+		 int& clean_div_e_interval_,
+		 int& clean_div_b_interval_,
+		 int& sync_shared_interval_,
+		 int& num_div_e_round_,
+		 int& num_div_b_round_,
+		 int& status_interval_)
+  {
+    num_step_ = num_step;
+    clean_div_e_interval_ = clean_div_e_interval;
+    clean_div_b_interval_ = clean_div_b_interval;
+    sync_shared_interval_ = sync_shared_interval;
+    num_div_e_round_ = num_div_e_round;
+    num_div_b_round_ = num_div_b_round;
+    status_interval_ = status_interval;
+  }
+
   void setParams(int num_step_, int status_interval_,
 		 int sync_shared_interval_, int clean_div_e_interval_,
 		 int clean_div_b_interval_)

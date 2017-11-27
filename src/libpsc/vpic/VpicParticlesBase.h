@@ -44,6 +44,11 @@ private:
 struct VpicParticlesBase {
   typedef VpicSpecies Species;
   typedef VpicSpeciesIter Iter;
+
+  int getNumSpecies()
+  {
+    return ::num_species(sl_);
+  }
   
   species_t* append(species_t* s)
   {
