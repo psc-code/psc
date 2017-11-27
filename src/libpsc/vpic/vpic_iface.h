@@ -94,7 +94,11 @@ typedef VpicParticlesBase ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
 typedef PscParticlesOps<Particles> ParticlesOps;
 
+#if 1
 typedef VpicDiagMixin<Particles> DiagMixin;
+#else
+typedef NoneDiagMixin<Particles> DiagMixin;
+#endif
 
 #if 1
 typedef PscSimulationMixin<Particles> SimulationMixin;

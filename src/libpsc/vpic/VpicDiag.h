@@ -48,7 +48,6 @@ namespace dump_type {
 template<class Particles>
 struct VpicDiagMixin
 {
-  typedef VpicDiag Diag;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::HydroArray HydroArray;
@@ -485,7 +484,7 @@ struct VpicDiagMixin
 
 private:
   vpic_simulation *s_;
-  Diag diag_;
+  VpicDiag diag_;
 };
 
 
