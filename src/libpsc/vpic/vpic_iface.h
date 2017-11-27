@@ -98,11 +98,12 @@ typedef VpicDiagOps<Particles> DiagOps;
 
 #if 1
 typedef PscSimulationBase<Particles> SimulationBase;
+typedef PscSimulationMixin<Particles> SimulationMixin;
 #else
 typedef VpicSimulationBase<Particles> SimulationBase;
 #endif
 
-typedef VpicSimulation<Particles, ParticlesOps, SimulationBase, DiagOps> Simulation;
+typedef VpicSimulation<Particles, ParticlesOps, SimulationMixin, SimulationBase, DiagOps> Simulation;
 
 #else
 

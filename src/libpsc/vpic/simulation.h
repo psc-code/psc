@@ -14,8 +14,8 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class ParticlesOps, class SimulationBase, class DiagOps>
-struct VpicSimulation : ParticlesOps, DiagOps
+template<class P, class ParticlesOps, class SimulationMixin, class SimulationBase, class DiagOps>
+struct VpicSimulation : SimulationMixin, ParticlesOps, DiagOps
 {
   typedef P Particles;
   typedef typename Particles::FieldArray FieldArray;
@@ -24,7 +24,8 @@ struct VpicSimulation : ParticlesOps, DiagOps
   typedef typename Particles::HydroArray HydroArray;
   
   VpicSimulation(SimulationBase *sim_base)
-    : ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
+    : SimulationMixin(),
+      ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
       DiagOps(reinterpret_cast<vpic_simulation*>(sim_base)),
       num_comm_round_(3),
       grid_(sim_base->getGrid()),
