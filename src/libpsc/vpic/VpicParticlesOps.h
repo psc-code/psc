@@ -68,6 +68,11 @@ struct VpicParticles : ParticlesBase
   {
     ::accumulate_hydro_p(&ha, sp, &interpolator);
   }
+
+  static void uncenter_p(species_t *sp, const Interpolator& interpolator)
+  {
+    ::uncenter_p(sp, &interpolator);
+  }
   
 };
 

@@ -147,6 +147,18 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     hydro_array->synchronize();
   }
 
+  void uncenter_p(Particles *vmprts, FieldArray *vmflds)
+  {
+    if (!vmprts->empty()) {
+      interpolator_->load(*vmflds);
+      
+      for (typename Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+	//	TIC ::uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
+	TIC vmprts->uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
+      }
+    }
+  }
+  
   void newDiag(int interval)
   {
     DiagMixin::diagnostics_init(interval);

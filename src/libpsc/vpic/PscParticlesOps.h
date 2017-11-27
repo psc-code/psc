@@ -1448,6 +1448,14 @@ struct PscParticles : ParticlesBase
     }
   }
 
+  // ----------------------------------------------------------------------
+  // uncenter_p
+  
+  static void uncenter_p(species_t *sp, const Interpolator& interpolator)
+  {
+    ::uncenter_p(sp, &interpolator);
+  }
+  
 };
 
 

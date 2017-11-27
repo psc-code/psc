@@ -137,13 +137,7 @@ void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmfld
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   
   mpi_printf(comm, "Uncentering particles\n");
-  if (!vmprts->empty()) {
-    sim->interpolator_->load(*vmflds);
-
-    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-      TIC ::uncenter_p(&*sp, sim->interpolator_); TOC(uncenter_p, 1);
-    }
-  }
+  sim->uncenter_p(vmprts, vmflds);
 }
 
 // ----------------------------------------------------------------------
