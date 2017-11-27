@@ -27,54 +27,11 @@ struct VpicDiag {
   DumpParameters hedParams;
   DumpParameters hHdParams;
   std::vector<DumpParameters *> outputParams;
-
-  VpicDiag(vpic_simulation* simulation);
-  void init(int interval_);
-  void setup();
-  void run();
-
-private:
-  vpic_simulation* simulation_;
 };
-
 
 
 void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
 void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
-
-
-inline VpicDiag::VpicDiag(vpic_simulation *simulation)
-  : simulation_(simulation)
-{
-}
-
-inline void VpicDiag::init(int interval_)
-{
-  rtoggle = 0;
-  
-  interval = interval_;
-  fields_interval = interval_;
-  ehydro_interval = interval_;
-  Hhydro_interval = interval_;
-  eparticle_interval = 8 * interval_;
-  Hparticle_interval = 8 * interval_;
-  restart_interval = 8000;
-
-  energies_interval = 50;
-
-  MPI_Comm comm = MPI_COMM_WORLD;
-  mpi_printf(comm, "interval = %d\n", interval);
-  mpi_printf(comm, "energies_interval: %d\n", energies_interval);
-}
-
-inline void VpicDiag::setup()
-{
-  vpic_simulation_setup_diagnostics(simulation_, this);
-}
-
-inline void VpicDiag::run()
-{
-}
 
 // ======================================================================
 // VpicDiagOps
@@ -92,15 +49,41 @@ template<class FieldArray, class Particles, class Interpolator, class HydroArray
 struct VpicDiagOps
 {
   typedef VpicDiag Diag;
+  
+  VpicDiagOps(vpic_simulation *simulation) : s_(simulation) {}
+
+  void diagnostics_init(int interval_)
+  {
+    diag_.rtoggle = 0;
+    
+    diag_.interval = interval_;
+    diag_.fields_interval = interval_;
+    diag_.ehydro_interval = interval_;
+    diag_.Hhydro_interval = interval_;
+    diag_.eparticle_interval = 8 * interval_;
+    diag_.Hparticle_interval = 8 * interval_;
+    diag_.restart_interval = 8000;
+    
+    diag_.energies_interval = 50;
+    
+    MPI_Comm comm = MPI_COMM_WORLD;
+    mpi_printf(comm, "interval = %d\n", diag_.interval);
+    mpi_printf(comm, "energies_interval: %d\n", diag_.energies_interval);
+  }
+
+  void diagnostics_setup()
+  {
+    vpic_simulation_setup_diagnostics(s_, &diag_);
+  }
 
 #define should_dump(x)                                                  \
-  (diag.x##_interval>0 && remainder(step, diag.x##_interval) == 0)
+  (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
-  void diagnostics_run(VpicDiag& diag, FieldArray& fa, Particles& particles,
+  void diagnostics_run(FieldArray& fa, Particles& particles,
 		       Interpolator& interpolator, HydroArray& hydro_array)
   {
     TIC {
-      vpic_simulation *simulation = diag.simulation_;
+      vpic_simulation *simulation = s_;
       int64_t step = simulation->step();
       
       /*--------------------------------------------------------------------------
@@ -126,7 +109,7 @@ struct VpicDiagOps
 	simulation->dump_grid("rundata/grid");
 	simulation->dump_materials("rundata/materials");
 	simulation->dump_species("rundata/species");
-	simulation->global_header("global", diag.outputParams);
+	simulation->global_header("global", diag_.outputParams);
       }
 
       // Normal rundata energies dump
@@ -137,14 +120,14 @@ struct VpicDiagOps
       
       // Field data output
 
-      if(step == -1 || should_dump(fields)) field_dump(fa, simulation, diag.fdParams);
+      if(step == -1 || should_dump(fields)) field_dump(fa, simulation, diag_.fdParams);
       
       // Species moment output
       
-      if(should_dump(ehydro)) hydro_dump(&interpolator, &hydro_array, simulation, "electron", diag.hedParams);
-      if(should_dump(Hhydro)) hydro_dump(&interpolator, &hydro_array, simulation, "ion", diag.hHdParams);
+      if(should_dump(ehydro)) hydro_dump(&interpolator, &hydro_array, simulation, "electron", diag_.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(&interpolator, &hydro_array, simulation, "ion", diag_.hHdParams);
       
-      vpic_simulation_diagnostics(simulation, &diag);
+      vpic_simulation_diagnostics(simulation, &diag_);
     } TOC(user_diagnostics, 1);
   }
 
@@ -496,7 +479,10 @@ struct VpicDiagOps
 #undef nyout
 #undef nzout
   }
-  
+
+private:
+  vpic_simulation *s_;
+  Diag diag_;
 };
 
 

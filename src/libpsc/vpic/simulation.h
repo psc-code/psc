@@ -27,6 +27,7 @@ struct VpicSimulation : ParticlesOps, DiagOps
   
   VpicSimulation(SimulationBase *sim_base)
     : ParticlesOps(reinterpret_cast<vpic_simulation*>(sim_base)),
+      DiagOps(reinterpret_cast<vpic_simulation*>(sim_base)),
       num_comm_round_(3),
       grid_(sim_base->getGrid()),
       material_list_(sim_base->getMaterialList()),
@@ -35,8 +36,7 @@ struct VpicSimulation : ParticlesOps, DiagOps
       accumulator_(sim_base->getAccumulator()),
       hydro_array_(sim_base->getHydroArray()),
       particles_(sim_base->getParticles()),
-      sim_base_(sim_base),
-      diag_(reinterpret_cast<vpic_simulation*>(sim_base)) // FIXME
+      sim_base_(sim_base)
   {
   }
 
@@ -174,18 +174,17 @@ struct VpicSimulation : ParticlesOps, DiagOps
 
   void newDiag(int interval)
   {
-    diag_.init(interval);
+    DiagOps::diagnostics_init(interval);
   }
 
   void setupDiag()
   {
-    diag_.setup();
+    DiagOps::diagnostics_setup();
   }
 
   void runDiag()
   {
-    diag_.run();
-    this->diagnostics_run(diag_, *field_array_, particles_, *interpolator_, *hydro_array_);
+    DiagOps::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_);
   }
     
   int num_comm_round_;
@@ -202,7 +201,6 @@ struct VpicSimulation : ParticlesOps, DiagOps
   Particles& particles_;
 
   SimulationBase *sim_base_;
-  Diag diag_;
 };
 
 #endif
