@@ -61,6 +61,16 @@ public:
     return *reinterpret_cast<Particles *>(&species_list);
   }
   
+  void initialization(int argc, char **argv)
+  {
+    TIC user_initialization(argc, argv); TOC(user_initialization, 1);
+  }
+
+  void diagnostics()
+  {
+    TIC user_diagnostics(); TOC(user_diagnostics, 1);
+  }
+  
   void emitter()
   {
     if (emitter_list)

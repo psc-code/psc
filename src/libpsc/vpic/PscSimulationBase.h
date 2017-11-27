@@ -43,6 +43,14 @@ public:
   }
 
   //FIXME, those should probably be in a separate mixin...
+  void initialization(int argc, char **argv)
+  {
+  }
+
+  void diagnostics()
+  {
+  }
+  
   void emitter()
   {
   }

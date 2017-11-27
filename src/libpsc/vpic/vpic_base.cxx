@@ -82,7 +82,7 @@ Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
 void Simulation_user_initialization(Simulation *sim)
 {
   // Call the user to initialize the simulation
-  TIC sim->simulation_->user_initialization(0, 0); TOC( user_initialization, 1 );
+  sim->initialization(0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -91,7 +91,7 @@ void Simulation_user_initialization(Simulation *sim)
 void Simulation_diagnostics(Simulation *sim)
 {
   // Let the user compute diagnostics
-  TIC sim->simulation_->user_diagnostics(); TOC( user_diagnostics, 1 );
+  sim->diagnostics();
 }
 
 // ----------------------------------------------------------------------

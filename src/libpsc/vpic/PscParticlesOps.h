@@ -1290,6 +1290,8 @@ private:
   vpic_simulation *simulation_;
 };
 
+
+
 template<class ParticlesBase, class FA, class IA, class AA, class HA>
 struct PscParticles : ParticlesBase
 {
