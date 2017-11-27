@@ -95,9 +95,12 @@ typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, Hydro
 typedef PscParticlesOps<ParticlesBase, FieldArray, Interpolator, Accumulator> ParticlesOps;
 
 typedef VpicDiagOps<Particles> DiagOps;
-//typedef VpicSimulationBase<Particles> SimulationBase;
-typedef PscSimulationBase<Particles> SimulationBase;
 
+#if 1
+typedef PscSimulationBase<Particles> SimulationBase;
+#else
+typedef VpicSimulationBase<Particles> SimulationBase;
+#endif
 
 typedef VpicSimulation<Particles, ParticlesOps, SimulationBase, DiagOps> Simulation;
 

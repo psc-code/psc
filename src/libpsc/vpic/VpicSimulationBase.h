@@ -7,6 +7,9 @@
 #include "VpicParticlesBase.h"
 #include "VpicDiag.h"
 
+// FIXME, the casts below will happily do the wrong thing if
+// this the underlying base types aren't vpic / vpic-compatible layout
+
 template<class Particles>
 class VpicSimulationBase : protected vpic_simulation
 {
@@ -38,24 +41,24 @@ public:
     return *reinterpret_cast<FieldArray **>(&field_array);
   }
 
-  VpicInterpolatorBase*& getInterpolator()
+  Interpolator*& getInterpolator()
   {
-    return *reinterpret_cast<VpicInterpolatorBase **>(&interpolator_array);
+    return *reinterpret_cast<Interpolator **>(&interpolator_array);
   }
   
-  VpicAccumulatorBase*& getAccumulatorBase()
+  Accumulator*& getAccumulator()
   {
-    return *reinterpret_cast<VpicAccumulatorBase **>(&accumulator_array);
+    return *reinterpret_cast<Accumulator **>(&accumulator_array);
   }
 
-  VpicHydroArrayBase*& getHydroArray()
+  HydroArray*& getHydroArray()
   {
-    return *reinterpret_cast<VpicHydroArrayBase **>(&hydro_array);
+    return *reinterpret_cast<HydroArray **>(&hydro_array);
   }
-
-  VpicParticlesBase& getParticles()
+  
+  Particles& getParticles()
   {
-    return *reinterpret_cast<VpicParticlesBase *>(&species_list);
+    return *reinterpret_cast<Particles *>(&species_list);
   }
   
   void emitter()
