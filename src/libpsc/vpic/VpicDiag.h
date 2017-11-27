@@ -45,10 +45,13 @@ namespace dump_type {
   const int history_dump = 5;
 }
 
-template<class FieldArray, class Particles, class Interpolator, class HydroArray>
+template<class Particles>
 struct VpicDiagOps
 {
   typedef VpicDiag Diag;
+  typedef typename Particles::FieldArray FieldArray;
+  typedef typename Particles::Interpolator Interpolator;
+  typedef typename Particles::HydroArray HydroArray;
   
   VpicDiagOps(vpic_simulation *simulation) : s_(simulation) {}
 

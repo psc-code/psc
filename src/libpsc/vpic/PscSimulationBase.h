@@ -4,10 +4,14 @@
 
 #include "VpicDiag.h"
 
-template<class FieldArray, class Particles, class Interpolator, class Accumulator,
-	 class HydroArray>
+template<class Particles>
 class PscSimulationBase : protected vpic_simulation
 {
+  typedef typename Particles::FieldArray FieldArray;
+  typedef typename Particles::Interpolator Interpolator;
+  typedef typename Particles::Accumulator Accumulator;
+  typedef typename Particles::HydroArray HydroArray;
+
 public:
   PscSimulationBase()
   {
