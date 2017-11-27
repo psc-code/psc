@@ -7,7 +7,33 @@
 template<class Particles>
 class PscSimulationMixin : private vpic_simulation
 {
-  
+  typedef typename Particles::FieldArray FieldArray;
+  typedef typename Particles::Interpolator Interpolator;
+  typedef typename Particles::Accumulator Accumulator;
+  typedef typename Particles::HydroArray HydroArray;
+
+public:
+  void getParams(int& num_step_,
+		 int& clean_div_e_interval_,
+		 int& clean_div_b_interval_,
+		 int& sync_shared_interval_,
+		 int& num_div_e_round_,
+		 int& num_div_b_round_,
+		 int& status_interval_)
+  {
+    assert(0);
+  }
+
+  void setParams(int num_step_, int status_interval_,
+		 int sync_shared_interval_, int clean_div_e_interval_,
+		 int clean_div_b_interval_)
+  {
+  }
+
+  void setTopology(int px_, int py_, int pz_)
+  {
+  }
+
 };
 
 template<class Particles>
@@ -74,27 +100,6 @@ public:
   {
   }
   
-  void getParams(int& num_step_,
-		 int& clean_div_e_interval_,
-		 int& clean_div_b_interval_,
-		 int& sync_shared_interval_,
-		 int& num_div_e_round_,
-		 int& num_div_b_round_,
-		 int& status_interval_)
-  {
-    assert(0);
-  }
-
-  void setParams(int num_step_, int status_interval_,
-		 int sync_shared_interval_, int clean_div_e_interval_,
-		 int clean_div_b_interval_)
-  {
-  }
-
-  void setTopology(int px_, int py_, int pz_)
-  {
-  }
-
  private:
   MaterialList material_list_;
   FieldArray *field_array_;
