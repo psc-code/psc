@@ -48,8 +48,13 @@ struct VpicMaterialList
   {
     return !ml_;
   }
+
+  operator const material_t * () const
+  {
+    return ml_;
+  }
   
-  //private:
+private:
   material_t* ml_;
 };
 

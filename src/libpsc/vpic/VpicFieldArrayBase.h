@@ -13,7 +13,7 @@
 // ======================================================================
 // VpicFieldArrayBase
 
-inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp);
+inline void field_array_ctor(field_array_t *fa, grid_t *g, const material_t *m_list, float damp);
 inline void field_array_dtor(field_array_t *fa);
 
 template<class ML>
@@ -33,7 +33,7 @@ struct VpicFieldArrayBase : field_array_t {
   
   VpicFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
-    field_array_ctor(this, grid->getGrid_t(), material_list.ml_, damp);
+    field_array_ctor(this, grid->getGrid_t(), material_list, damp);
   }
   
   ~VpicFieldArrayBase()
@@ -271,7 +271,7 @@ destroy_sfa_params( sfa_params_t * p ) {
 // the following are basically the same as the corresponding new/delete
 // functions from sfa.c, but changed to leave out the allocation / free
 
-inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp)
+inline void field_array_ctor(field_array_t *fa, grid_t *g, const material_t *m_list, float damp)
 {
   assert(g && m_list && damp >= 0.);
   MALLOC_ALIGNED( fa->f, g->nv, 128 );
