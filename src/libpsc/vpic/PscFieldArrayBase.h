@@ -10,28 +10,14 @@
 #include <mrc_common.h>
 #include <cassert>
 
-// FIXME, this file relies on VpicFieldArray.h 
+// FIXME, this file relies for now on VpicFieldArray.h 
 // though at least that way, the duplication is limited
+// Basically, this is actually still VpicFieldArrayBase in terms
+// of data layout, just some methods are adapted
+
 #define IN_sfa
 #include "field_advance/standard/sfa_private.h"
 #include "VpicFieldArrayBase.h"
-
-// the below are copies, though, skipping the kernels
-
-inline void _field_array_ctor(field_array_t *fa, grid_t *g, const material_t *m_list, float damp)
-{
-  assert(g && m_list && damp >= 0.);
-  MALLOC_ALIGNED( fa->f, g->nv, 128 );
-  CLEAR( fa->f, g->nv );
-  fa->g = g;
-  fa->params = create_sfa_params( g, m_list, damp );
-}
-
-inline void _field_array_dtor(field_array_t *fa)
-{
-  destroy_sfa_params( (sfa_params_t *)fa->params );
-  FREE_ALIGNED( fa->f );
-}
 
 // ======================================================================
 // PscFieldArrayBase
@@ -54,12 +40,18 @@ struct PscFieldArrayBase : field_array_t
   
   PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
-    _field_array_ctor(this, grid->getGrid_t(), material_list, damp);
+    grid_t *g = grid->getGrid_t();
+    assert(g && !material_list.empty() && damp >= 0.);
+    MALLOC_ALIGNED(this->f, g->nv, 128);
+    CLEAR(this->f, g->nv);
+    this->g = g;
+    this->params = create_sfa_params(g, material_list, damp);
   }
   
   ~PscFieldArrayBase()
   {
-    _field_array_dtor(this);
+    destroy_sfa_params((sfa_params_t *) this->params);
+    FREE_ALIGNED(this->f);
   }
 
   Element* data()
