@@ -16,7 +16,9 @@
 inline void field_array_ctor(field_array_t *fa, grid_t *g, material_t *m_list, float damp);
 inline void field_array_dtor(field_array_t *fa);
 
+template<class ML>
 struct VpicFieldArrayBase : field_array_t {
+  typedef ML MaterialList;
   typedef field_t Element;
   
   enum {

@@ -17,6 +17,7 @@ class VpicSimulationMixin : protected vpic_simulation
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename FieldArray::MaterialList MaterialList;
 
 public:
   VpicSimulationMixin()

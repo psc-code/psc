@@ -49,7 +49,10 @@ inline void _field_array_dtor(field_array_t *fa)
 // ======================================================================
 // PscFieldArrayBase
 
-struct PscFieldArrayBase : field_array_t {
+template<class ML>
+struct PscFieldArrayBase : field_array_t
+{
+  typedef ML MaterialList;
   typedef field_t Element;
   
   enum {

@@ -72,12 +72,14 @@ enum {
 
 #ifdef __cplusplus
 
+
 #if 1
-typedef PscFieldArrayBase FieldArrayBase;
+typedef VpicMaterialList MaterialList;
+typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
 #else
-typedef VpicFieldArrayBase FieldArrayBase;
+typedef VpicFieldArrayBase<VpicMaterialList> FieldArrayBase;
 typedef VpicFieldArray<FieldArrayBase> FieldArray;
 #endif
 
@@ -94,7 +96,7 @@ typedef VpicParticlesBase ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
 typedef PscParticlesOps<Particles> ParticlesOps;
 
-#if 1
+#if 0
 typedef VpicDiagMixin<Particles> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;

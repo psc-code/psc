@@ -22,6 +22,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename FieldArray::MaterialList MaterialList;
 
   using SimulationMixin::collision_run;
   using SimulationMixin::emitter;

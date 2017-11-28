@@ -7,7 +7,8 @@
 
 void test_PscFieldArray()
 {
-  typedef PscFieldArrayBase FieldArrayBase;
+  typedef VpicMaterialList MaterialList;
+  typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
   typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
   typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
 

@@ -5,25 +5,22 @@
 #include "material/material.h"
 
 // ======================================================================
-// MaterialList
+// VpicMaterialList
 
-struct MaterialList {
-  material_t* append(material_t* m);
-  bool empty();
+struct VpicMaterialList {
+  material_t* append(material_t* m)
+  {
+    return ::append_material(m, &ml_);
+  }
+
+  bool empty()
+  {
+    return !ml_;
+  }
   
   //private:
   material_t* ml_;
 };
-
-inline material_t* MaterialList::append(material_t* m)
-{
-  return ::append_material(m, &ml_);
-}
-
-inline bool MaterialList::empty()
-{
-  return !ml_;
-}
 
 
 #endif

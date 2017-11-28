@@ -11,6 +11,7 @@ class PscSimulationMixin : private vpic_simulation
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename FieldArray::MaterialList MaterialList;
 
 public:
   Grid*& getGrid()                 { return *reinterpret_cast<Grid **>(&grid); }
