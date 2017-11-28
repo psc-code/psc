@@ -23,6 +23,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
   typedef typename FieldArray::MaterialList MaterialList;
+  typedef typename MaterialList::Material Material;
 
   using SimulationMixin::collision_run;
   using SimulationMixin::emitter;
@@ -81,11 +82,11 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 						   double eps, double mu=1.,
 						   double sigma=0., double zeta=0.)
   {
-    return material_list_.append(material(name,
-					  eps,   eps,   eps,
-					  mu,    mu,    mu,
-					  sigma, sigma, sigma,
-					  zeta,  zeta,  zeta));
+    return material_list_.append(new Material(name,
+					      eps,   eps,   eps,
+					      mu,    mu,    mu,
+					      sigma, sigma, sigma,
+					      zeta,  zeta,  zeta));
   }
 
   void define_field_array(double damp)
