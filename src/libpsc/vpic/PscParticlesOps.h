@@ -1600,9 +1600,65 @@ struct PscParticles : ParticlesBase
     uncenter_p_pipeline(sp, interpolator, cnt, sp->np - cnt);
   }
 
-  static void sort_p(species_t *sp)
+  // ----------------------------------------------------------------------
+  // sort_p
+
+  static void sort_p(species_t * sp)
   {
-    ::sort_p(sp);
+    sp->last_sorted = sp->g->step;
+
+    int n_prts = sp->np;
+    int vl = VOXEL(1,1,1,                         sp->g->nx,sp->g->ny,sp->g->nz);
+    int vh = VOXEL(sp->g->nx,sp->g->ny,sp->g->nz, sp->g->nx,sp->g->ny,sp->g->nz) + 1;
+
+    static int * RESTRICT ALIGNED(128) next;
+    if (!next) {
+      MALLOC_ALIGNED(next, sp->g->nv * sizeof(*next), 128);
+    }
+    int * RESTRICT ALIGNED(128) partition = sp->partition;
+
+    static particle_t * RESTRICT ALIGNED(128) p_aux;
+    static size_t n_alloced;
+    if (n_prts > n_alloced) {
+      FREE_ALIGNED(p_aux);
+      MALLOC_ALIGNED(p_aux, n_prts * sizeof(*p_aux), 128);
+      n_alloced = n_prts;
+    }
+    particle_t * RESTRICT ALIGNED(128) p = sp->p;
+
+    // zero counts
+    CLEAR(&next[vl], vh - vl);
+    
+    // find counts
+    for (int i = 0; i < n_prts; i++) {
+      next[p[i].i]++;
+    }
+    
+    // prefix sum
+    int sum = 0;
+    for (int v = vl; v < vh; v++) {
+      int count = next[v];
+      next[v] = sum;
+      partition[v] = sum;
+      sum += count;
+    }
+    partition[vh] = sum;
+    
+    // reorder
+    for(int i = 0; i < n_prts; i++) {
+      int v = p[i].i;
+      int j = next[v]++;
+      p_aux[j] = p[i];
+    }
+
+    // fix up unused part of partition
+    CLEAR(partition, vl);
+    for (int i = vh; i < sp->g->nv; i++) {
+      partition[i] = n_prts;
+    }
+
+    // OPT: just swap pointer?
+    COPY(p, p_aux, n_prts);
   }
 
 };
