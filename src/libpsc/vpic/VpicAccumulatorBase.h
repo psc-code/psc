@@ -42,7 +42,7 @@ struct VpicAccumulatorBase : accumulator_array_t {
   
   VpicAccumulatorBase(Grid* grid)
   {
-    accumulator_array_ctor(this, grid->getGrid_t());
+    accumulator_array_ctor(this, grid);
   }
   
   ~VpicAccumulatorBase()

@@ -99,8 +99,8 @@ void Simulation_diagnostics(Simulation *sim)
 
 void Simulation_inc_step(Simulation *sim, int step)
 {
-  sim->grid_->getGrid_t()->step++;
-  assert(sim->grid_->getGrid_t()->step == step);
+  sim->grid_->step++;
+  assert(sim->grid_->step == step);
 }
 
 // ----------------------------------------------------------------------

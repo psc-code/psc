@@ -33,7 +33,7 @@ struct VpicFieldArrayBase : field_array_t {
   
   VpicFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
-    field_array_ctor(this, grid->getGrid_t(), material_list, damp);
+    field_array_ctor(this, grid, material_list, damp);
   }
   
   ~VpicFieldArrayBase()

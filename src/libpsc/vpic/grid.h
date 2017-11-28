@@ -15,8 +15,6 @@ struct Grid : grid_t {
   void set_pbc(int boundary, int pbc);
   void mp_size_recv_buffer(int tag, int size);
   void mp_size_send_buffer(int tag, int size);
-
-  grid_t* getGrid_t() { return this; }
 };
 
 inline void Grid::setup(double dx_[3], double dt_, double cvac_, double eps0_)

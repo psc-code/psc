@@ -38,7 +38,7 @@ struct VpicInterpolatorBase : interpolator_array_t {
   
   VpicInterpolatorBase(Grid *grid)
   {
-    interpolator_array_ctor(this, grid->getGrid_t());
+    interpolator_array_ctor(this, grid);
   }
 
   ~VpicInterpolatorBase()

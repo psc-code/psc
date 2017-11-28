@@ -91,9 +91,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
   void define_field_array(double damp)
   {
-    grid_t *g = grid_->getGrid_t();
- 
-    assert(g->nx && g->ny && g->ny);
+    assert(grid_->nx && grid_->ny && grid_->ny);
     assert(!material_list_.empty());
   
     field_array_ = new FieldArray(grid_, material_list_, damp);
@@ -104,7 +102,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // Pre-size communications buffers. This is done to get most memory
     // allocation over with before the simulation starts running
   
-    int nx1 = g->nx+1, ny1 = g->ny+1, nz1 = g->nz+1;
+    int nx1 = grid_->nx+1, ny1 = grid_->ny+1, nz1 = grid_->nz+1;
     grid_->mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(hydro_t));
     grid_->mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(hydro_t));
     grid_->mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(hydro_t));
@@ -135,7 +133,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     return particles_.append(species(name, (float)q, (float)m,
 				     (int)max_local_np, (int)max_local_nm,
 				     (int)sort_interval, (int)sort_out_of_place,
-				     grid_->getGrid_t()));
+				     grid_));
   }
 
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)

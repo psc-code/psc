@@ -47,7 +47,7 @@ hydro_array_dtor( hydro_array_t * ha ) {
 
 inline VpicHydroArrayBase::VpicHydroArrayBase(Grid* grid)
 {
-  hydro_array_ctor(this, grid->getGrid_t());
+  hydro_array_ctor(this, grid);
   /*clear();*/ // can't do it here, only in derived class (case for CRTP)?
 }
 
