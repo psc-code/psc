@@ -78,9 +78,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     grid_->set_pbc(boundary, pbc);
   }
 
-  struct material *define_material(const char *name,
-						   double eps, double mu=1.,
-						   double sigma=0., double zeta=0.)
+  Material *define_material(const char *name,
+			    double eps, double mu=1.,
+			    double sigma=0., double zeta=0.)
   {
     return material_list_.append(new Material(name,
 					      eps,   eps,   eps,
