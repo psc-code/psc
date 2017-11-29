@@ -20,7 +20,7 @@ public:
   Interpolator*& getInterpolator() { return interpolator_; }
   Accumulator*& getAccumulator()   { return accumulator_; }
   HydroArray*& getHydroArray()     { return hydro_array_;  }
-  Particles& getParticles()        { return *reinterpret_cast<Particles*>(&species_list); }
+  Particles& getParticles()        { return particles_; }
   
   void getParams(int& num_step_,
 		 int& clean_div_e_interval_,
@@ -74,6 +74,7 @@ private:
   Interpolator *interpolator_;
   Accumulator *accumulator_;
   HydroArray *hydro_array_;
+  Particles particles_;
 };
 
 template<class Particles>
