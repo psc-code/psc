@@ -1,5 +1,4 @@
 
-#define private public
 #include "vpic.h"
 
 #include "vpic_iface.h"

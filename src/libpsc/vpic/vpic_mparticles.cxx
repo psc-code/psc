@@ -128,7 +128,7 @@ void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsig
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
-    for (int n = nb; n < ne; n++) {
+    for (unsigned int n = nb; n < ne; n++) {
       particle *p = &sp->p[n - v_off];
 #if 0
       int i = p->i;
@@ -168,7 +168,7 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
-    for (int n = nb; n < ne; n++) {
+    for (unsigned int n = nb; n < ne; n++) {
       struct vpic_mparticles_prt prt;
       get_particle(&prt, n - off, ctx);
       particle *p = &sp->p[n - v_off];

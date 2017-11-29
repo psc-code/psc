@@ -1284,7 +1284,7 @@ struct PscParticlesOps {
     fa[v+sz+sy].rhob += w6; fa[v+sz+sy+1].rhob += w7;
   }
 
-private:
+  //private:
   vpic_simulation *simulation_;
 };
 

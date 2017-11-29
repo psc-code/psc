@@ -4,7 +4,6 @@
 
 #include <mrc_bits.h>
 
-#define private public
 #include "vpic.h"
 
 #define IN_sfa

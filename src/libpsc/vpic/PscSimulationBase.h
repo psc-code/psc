@@ -5,7 +5,7 @@
 #include "VpicDiag.h"
 
 template<class Particles>
-class PscSimulationMixin : private vpic_simulation
+class PscSimulationMixin : protected vpic_simulation
 {
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
