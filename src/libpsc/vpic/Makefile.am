@@ -31,7 +31,7 @@ libsubdir_la_SOURCES = \
 	simulation.cxx \
 	main.cxx \
 	vpic_diag.cxx \
-	wrapper.cxx
+	wrapper_empty.cxx
 #	wrapper_empty.cxx
 
 noinst_PROGRAMS = \

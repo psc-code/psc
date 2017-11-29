@@ -2,6 +2,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "VpicListBase.h"
 #include "material/material.h"
 
 #include <cassert>
@@ -35,98 +36,48 @@ struct VpicMaterial : material_t
 };
 
 // ======================================================================
-// VpicMaterialConstIter
-
-struct VpicMaterialConstIter {
-  typedef VpicMaterialConstIter ConstIter;
-  
-  VpicMaterialConstIter(const VpicMaterial *node=nullptr) : node_(node)
-  {
-  }
-
-  bool operator!=(const ConstIter& x) const
-  {
-    return node_ != x.node_;
-  }
-
-  ConstIter& operator++()
-  {
-    node_ = static_cast<VpicMaterial *>(node_->next);
-    return *this;
-  }
-
-  const VpicMaterial& operator*() const
-  {
-    return *node_;
-  }
-  
-  const VpicMaterial *operator->() const
-  {
-    return node_;
-  }
-  
-private:
-  const VpicMaterial *node_;
-};
-
-// ======================================================================
 // VpicMaterialList
 
-struct VpicMaterialList
+struct VpicMaterialList : public VpicListBase<VpicMaterial>
 {
   typedef VpicMaterial Material;
-  typedef VpicMaterialConstIter ConstIter;
   
   Material* append(Material* m)
   {
-    return static_cast<Material*>(::append_material(m, &ml_));
+    return static_cast<Material*>(::append_material(m, reinterpret_cast<material_t**>(&head_)));
   }
 
   bool empty()
   {
-    return !ml_;
+    return !head_;
   }
 
   operator const material_t * () const
   {
-    return ml_;
+    return head_;
   }
-  
-private:
-  material_t* ml_;
 };
 
 // ======================================================================
 // PscMaterialList
 
-struct PscMaterialList
+struct PscMaterialList : public VpicListBase<VpicMaterial>
 {
   typedef VpicMaterial Material;
-  typedef VpicMaterialConstIter ConstIter;
-
-  ConstIter cbegin() const
-  {
-    return VpicMaterialConstIter(ml_);
-  }
-  
-  ConstIter cend() const
-  {
-    return VpicMaterialConstIter(nullptr);
-  }
 
   size_t size() const
   {
     size_t sz = 0;
-    for (ConstIter m = cbegin(); m != cend(); ++m) {
+    for (const_iterator m = cbegin(); m != cend(); ++m) {
       sz++;
     }
     return sz;
   }
   
-  ConstIter find(const char *name) const
+  const_iterator find(const char *name) const
   {
     assert(name);
-    for (ConstIter m = cbegin(); m != cend(); ++m) {
+    for (const_iterator m = cbegin(); m != cend(); ++m) {
       if (strcmp(name, m->name) == 0) {
 	return m;
       }
@@ -155,11 +106,6 @@ struct PscMaterialList
     return !ml_;
   }
 
-  // operator const material_t * () const
-  // {
-  //   return ml_;
-  // }
-  
 private:
   Material* ml_;
 };

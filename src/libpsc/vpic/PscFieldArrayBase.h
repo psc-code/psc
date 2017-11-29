@@ -60,7 +60,6 @@ struct PscFieldArrayBase : field_array_t
     sfa_params_t * p;
     float ax, ay, az, cg2;
     material_coefficient_t *mc;
-    typename MaterialList::ConstIter m;
     int n_mc;
 
     // Run sanity checks on the material list
@@ -69,7 +68,7 @@ struct PscFieldArrayBase : field_array_t
     ay = g->ny>1 ? g->cvac*g->dt*g->rdy : 0; ay *= ay;
     az = g->nz>1 ? g->cvac*g->dt*g->rdz : 0; az *= az;
     n_mc = 0;
-    for (m = m_list.cbegin(); m != m_list.cend(); ++m) {
+    for (auto m = m_list.cbegin(); m != m_list.cend(); ++m) {
       if( m->sigmax/m->epsx<0 )
 	WARNING(("\"%s\" is an active medium along x", m->name));
       if( m->epsy*m->muz<0 )
@@ -109,7 +108,7 @@ struct PscFieldArrayBase : field_array_t
     // FIXME: THIS IMPLICITLY ASSUMES MATERIALS ARE NUMBERED CONSECUTIVELY FROM
     // O.
 
-    for (m = m_list.cbegin(); m != m_list.cend(); ++m) {
+    for (auto m = m_list.cbegin(); m != m_list.cend(); ++m) {
       mc = p->mc + m->id;
 
       // Advance E coefficients
