@@ -39,9 +39,9 @@ struct VpicMaterialList
 {
   typedef VpicMaterial Material;
   
-  VpicMaterial* append(VpicMaterial* m)
+  Material* append(Material* m)
   {
-    return static_cast<VpicMaterial*>(::append_material(m, &ml_));
+    return static_cast<Material*>(::append_material(m, &ml_));
   }
 
   bool empty()
@@ -56,6 +56,32 @@ struct VpicMaterialList
   
 private:
   material_t* ml_;
+};
+
+// ======================================================================
+// PscMaterialList
+
+struct PscMaterialList
+{
+  typedef VpicMaterial Material;
+  
+  Material* append(Material* m)
+  {
+    return static_cast<Material*>(::append_material(m, reinterpret_cast<material_t**>(&ml_)));
+  }
+
+  bool empty()
+  {
+    return !ml_;
+  }
+
+  operator const material_t * () const
+  {
+    return ml_;
+  }
+  
+private:
+  Material* ml_;
 };
 
 // ======================================================================

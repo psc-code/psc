@@ -74,7 +74,7 @@ enum {
 
 
 #if 1
-typedef VpicMaterialList MaterialList;
+typedef PscMaterialList MaterialList;
 typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
