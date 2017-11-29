@@ -126,8 +126,8 @@ struct VpicDiagMixin
       
       // Species moment output
       
-      if(should_dump(ehydro)) hydro_dump(&interpolator, &hydro_array, simulation, "electron", diag_.hedParams);
-      if(should_dump(Hhydro)) hydro_dump(&interpolator, &hydro_array, simulation, "ion", diag_.hHdParams);
+      if(should_dump(ehydro)) hydro_dump(&particles, &interpolator, &hydro_array, simulation, "electron", diag_.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(&particles, &interpolator, &hydro_array, simulation, "ion", diag_.hHdParams);
       
       vpic_simulation_diagnostics(simulation, &diag_);
     } TOC(user_diagnostics, 1);
@@ -157,7 +157,7 @@ struct VpicDiagMixin
       else {
 	if (append==0) {
 	  fileIO.print("%% Layout\n%% step ex ey ez bx by bz" );
-	  LIST_FOR_EACH(sp, particles.sl_)
+	  LIST_FOR_EACH(sp, particles.head())
 	    fileIO.print(" \"%s\"", sp->name);
 	  fileIO.print("\n");
 	  fileIO.print("%% timestep = %e\n", fa.g->dt);
@@ -172,7 +172,7 @@ struct VpicDiagMixin
 		    en_f[0], en_f[1], en_f[2],
 		    en_f[3], en_f[4], en_f[5] );
  
-    LIST_FOR_EACH(sp, particles.sl_) {
+    LIST_FOR_EACH(sp, particles.head()) {
       en_p = energy_p(sp, &interpolator);
       if (rank==0 && status != fail) fileIO.print(" %e", en_p);
     }
@@ -329,7 +329,7 @@ struct VpicDiagMixin
 #undef nzout
   }
 
-  void hydro_dump(Interpolator* interpolator, HydroArray* hydro_array,
+  void hydro_dump(Particles *vmprts, Interpolator* interpolator, HydroArray* hydro_array,
 		  vpic_simulation* simulation, const char * speciesname,
 		  DumpParameters & dumpParams )
   {
@@ -360,11 +360,11 @@ struct VpicDiagMixin
     status = fileIO.open(filename, io_write);
     if(status == fail) ERROR(("Failed opening file: %s", filename));
 
-    species_t * sp = find_species_name(speciesname, simulation->species_list);
-    if( !sp ) ERROR(( "Invalid species name: %s", speciesname ));
+    typename Particles::const_iterator sp = vmprts->find(speciesname);
+    if (sp == vmprts->cend()) ERROR(( "Invalid species name: %s", speciesname ));
 
     hydro_array->clear();
-    Particles::accumulate_hydro_p(*hydro_array, &*sp, *interpolator);
+    Particles::accumulate_hydro_p(*hydro_array, sp, *interpolator);
     hydro_array->synchronize();
   
     // convenience

@@ -64,6 +64,16 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies>
     return end();
   }
 
+  iterator find(const char *name)
+  {
+    for (auto sp = begin(); sp != end(); ++sp) {
+      if (strcmp(sp->name, name) == 0) {
+	return sp;
+      }
+    }
+    return end();
+  }
+
   grid_t *getGrid_t()
   {
     assert(head_);
