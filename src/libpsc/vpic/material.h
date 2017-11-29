@@ -35,11 +35,47 @@ struct VpicMaterial : material_t
 };
 
 // ======================================================================
+// VpicMaterialConstIter
+
+struct VpicMaterialConstIter {
+  typedef VpicMaterialConstIter ConstIter;
+  
+  VpicMaterialConstIter(const VpicMaterial *node=nullptr) : node_(node)
+  {
+  }
+
+  bool operator!=(const ConstIter& x) const
+  {
+    return node_ != x.node_;
+  }
+
+  ConstIter& operator++()
+  {
+    node_ = static_cast<VpicMaterial *>(node_->next);
+    return *this;
+  }
+
+  const VpicMaterial& operator*() const
+  {
+    return *node_;
+  }
+  
+  const VpicMaterial *operator->() const
+  {
+    return node_;
+  }
+  
+private:
+  const VpicMaterial *node_;
+};
+
+// ======================================================================
 // VpicMaterialList
 
 struct VpicMaterialList
 {
   typedef VpicMaterial Material;
+  typedef VpicMaterialConstIter ConstIter;
   
   Material* append(Material* m)
   {
@@ -66,31 +102,42 @@ private:
 struct PscMaterialList
 {
   typedef VpicMaterial Material;
+  typedef VpicMaterialConstIter ConstIter;
+
+  ConstIter cbegin() const
+  {
+    return VpicMaterialConstIter(ml_);
+  }
+  
+  ConstIter cend() const
+  {
+    return VpicMaterialConstIter(nullptr);
+  }
 
   size_t size() const
   {
-    size_t cnt = 0;
-    for (const Material *m = ml_; m; m = static_cast<Material*>(m->next)) {
-      cnt++;
+    size_t sz = 0;
+    for (ConstIter m = cbegin(); m != cend(); ++m) {
+      sz++;
     }
-    return cnt;
+    return sz;
   }
   
-  const Material* find(const char *name)
+  ConstIter find(const char *name) const
   {
     assert(name);
-    for (const Material *m = ml_; m; m = static_cast<Material*>(m->next)) {
+    for (ConstIter m = cbegin(); m != cend(); ++m) {
       if (strcmp(name, m->name) == 0) {
 	return m;
       }
     }
-    return NULL;
+    return cend();
   }
   
   Material* append(Material* m)
   {
     assert(!m->next);
-    if (find(m->name)) {
+    if (find(m->name) != cend()) {
       ERROR(("There is already a material named \"%s\" in list", m->name ));
     }
     int id = size();
@@ -108,10 +155,10 @@ struct PscMaterialList
     return !ml_;
   }
 
-  operator const material_t * () const
-  {
-    return ml_;
-  }
+  // operator const material_t * () const
+  // {
+  //   return ml_;
+  // }
   
 private:
   Material* ml_;
