@@ -35,10 +35,19 @@ run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mfl
 struct psc_output_fields_item_ops psc_output_fields_item_vpic_fields_ops = {
   .name      = "vpic_fields",
   .nr_comp   = 16,
+#if 0
   .fld_names = { "ex_ec", "ey_ec", "ez_ec", "dive_nc",
                  "hx_fc", "hy_fc", "hz_fc", "divb_cc",
                  "tcax", "tcay", "tcaz", "rhob_nc",
                  "jx_ec", "jy_ec", "jz_ec", "rho_nc", },
+#else
+  .fld_names = { "jx_ec", "jy_ec", "jz_ec",
+		 "ex_ec", "ey_ec", "ez_ec",
+                 "hx_fc", "hy_fc", "hz_fc",
+		 "tcax_ec", "tcay_ec", "tcaz_ec",
+                 "div_e_err_nc", "div_b_err_cc",
+		 "rhob_nc", "rhof_nc", },
+#endif
   .run_all   = run_all_vpic_fields,
 };
 
