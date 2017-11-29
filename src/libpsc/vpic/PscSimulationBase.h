@@ -41,6 +41,7 @@ public:
 
   void setTopology(int px_, int py_, int pz_)
   {
+    px = px_; py = py_; pz = pz_;
   }
 
   //FIXME, those should probably be in a separate mixin...
