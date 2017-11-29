@@ -142,8 +142,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // This relies on load_interpolator_array() having been called earlier
     hydro_array->clear();
 
-    typename Particles::Iter sp = vmprts->find_id(kind);
-    vmprts->accumulate_hydro_p(*hydro_array, &*sp, *interpolator_);
+    typename Particles::const_iterator sp = vmprts->find_id(kind);
+    vmprts->accumulate_hydro_p(*hydro_array, sp, *interpolator_);
     
     hydro_array->synchronize();
   }
@@ -153,7 +153,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     if (!vmprts->empty()) {
       interpolator_->load(*vmflds);
       
-      for (typename Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+      for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
 	//	TIC ::uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
 	TIC vmprts->uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
       }

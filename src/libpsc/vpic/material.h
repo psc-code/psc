@@ -5,6 +5,8 @@
 #include "VpicListBase.h"
 #include "material/material.h"
 
+#include <mrc_common.h>
+
 #include <cassert>
 
 static void material_ctor(material_t *m, const char *name,
@@ -96,18 +98,15 @@ struct PscMaterialList : public VpicListBase<VpicMaterial>
       ERROR(("Too many materials in list to append material \"%s\"", m->name));
     }
     m->id   = (material_id)id;
-    m->next = ml_;
-    ml_ = m;
+    m->next = head_;
+    head_ = m;
     return m;
   }
 
   bool empty()
   {
-    return !ml_;
+    return !head_;
   }
-
-private:
-  Material* ml_;
 };
 
 // ======================================================================

@@ -23,7 +23,7 @@ int vpic_mparticles_get_nr_particles(Particles *vmprts)
 {
   int n_prts = 0;
 
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     n_prts += sp->np;
   }
   // species_t *sp;
@@ -48,7 +48,7 @@ void vpic_mparticles_reserve_all(Particles *vmprts, int n_patches,
 
   for (int p = 0; p < n_patches; p++) {
     int n_prts = 0, n_prts_alloced = 0;
-    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    for (auto sp = vmprts->cbegin(); sp != vmprts->cend(); ++sp) {
       n_prts += sp->np;
       n_prts_alloced += sp->max_np;
     }
@@ -78,7 +78,7 @@ void vpic_mparticles_resize_all(Particles *vmprts, int n_patches,
   // 0, and then using push_back, which will increase the count back to the right value
 
   if (n_prts_by_patch[0] == 0) {
-    for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
       sp->np = 0;
     }
   } else {
@@ -124,7 +124,7 @@ void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsig
 				   void *ctx)
 {
   unsigned int v_off = 0;
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+  for (auto sp = vmprts->cbegin(); sp != vmprts->cend(); ++sp) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
@@ -164,7 +164,7 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 				   void *ctx)
 {
   unsigned int v_off = 0;
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     unsigned int v_n_prts = sp->np;
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
@@ -189,7 +189,7 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 
 void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_prt *prt)
 {
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if (sp->id == prt->kind) {
       assert(sp->np < sp->max_np);
       // the below is inject_particle_raw()
@@ -210,7 +210,7 @@ void vpic_mparticles_sort(Particles *vmprts, int step)
 {
   // Sort the particles for performance if desired.
   
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if (sp->sort_interval > 0 && (step % sp->sort_interval) == 0) {
       mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp->name);
       TIC vmprts->sort_p(&*sp); TOC(sort_p, 1);

@@ -2,6 +2,8 @@
 #ifndef VPIC_PARTICLES_BASE_H
 #define VPIC_PARTICLES_BASE_H
 
+#include "VpicListBase.h"
+
 // ======================================================================
 // VpicParticlesBase
 
@@ -29,99 +31,54 @@ struct VpicSpecies : species_t
   
 };
 
-struct VpicSpeciesIter {
-  typedef VpicSpeciesIter Iter;
-  
-  VpicSpeciesIter(VpicSpecies *node=0) : node_(node)
-  {
-  }
-
-  bool operator!=(const Iter& x) const
-  {
-    return node_ != x.node_;
-  }
-
-  Iter& operator++()
-  {
-    node_ = static_cast<VpicSpecies *>(node_->next);
-    return *this;
-  }
-
-  VpicSpecies& operator*() const
-  {
-    return *node_;
-  }
-  
-  VpicSpecies *operator->() const
-  {
-    return node_;
-  }
-  
-private:
-  VpicSpecies *node_;
-};
-
-struct VpicParticlesBase {
+struct VpicParticlesBase : public VpicListBase<VpicSpecies>
+{
   typedef VpicSpecies Species;
-  typedef VpicSpeciesIter Iter;
 
   int getNumSpecies()
   {
-    return ::num_species(sl_);
+    return ::num_species(head_);
   }
   
   VpicSpecies* append(species_t* s)
   {
-    return static_cast<VpicSpecies*>(::append_species(s, reinterpret_cast<species_t **>(&sl_)));
+    return static_cast<VpicSpecies*>(::append_species(s, reinterpret_cast<species_t **>(&head_)));
   }
   
   bool empty()
   {
-    return !sl_;
+    return !head_;
   }
 
   int size()
   {
     int sz = 0;
-    for (Iter sp = begin(); sp != end(); ++sp) {
+    for (const_iterator sp = cbegin(); sp != cend(); ++sp) {
       sz++;
     }
     return sz;
   }
 
-  VpicSpeciesIter begin()
+  iterator find_id(int id)
   {
-    return VpicSpeciesIter(sl_);
-  }
-  
-  VpicSpeciesIter end()
-  {
-    return VpicSpeciesIter();
-  }
-
-  VpicSpeciesIter find_id(int id)
-  {
-    Iter sp;
-    for (sp = begin(); sp != end(); ++sp) {
+    for (auto sp = begin(); sp != end(); ++sp) {
       if (sp->id == id) {
-	break;
+	return sp;
       }
     }
-    return sp;
+    return end();
   }
 
   grid_t *getGrid_t()
   {
-    return sl_->g;
+    assert(head_);
+    return head_->g;
   }
 
   species_t* head()
   {
-    return sl_;
+    return head_;
   }
-  
-private:
-  VpicSpecies *sl_;
 };
 
 // ======================================================================

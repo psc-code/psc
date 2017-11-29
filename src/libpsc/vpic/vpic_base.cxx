@@ -68,7 +68,7 @@ Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
   // species
   info->n_kinds = sim->particles_.getNumSpecies();
   info->kinds = new vpic_kind_info[info->n_kinds];
-  for (typename Particles::Iter sp = sim->particles_.begin(); sp != sim->particles_.end(); ++sp) {
+  for (auto sp = sim->particles_.begin(); sp != sim->particles_.end(); ++sp) {
     info->kinds[sp->id].q = sp->q;
     info->kinds[sp->id].m = sp->m;
     info->kinds[sp->id].name = sp->name;

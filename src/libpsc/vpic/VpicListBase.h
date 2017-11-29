@@ -48,6 +48,7 @@ public:
 
   public:
     const_iterator() {}
+    const_iterator(const iterator& x) : node_(x.node_) {}
     bool operator!=(const const_iterator& x) const { return node_ != x.node_; }
     const_reference operator*() const { return *node_; }
     const_pointer operator->() const { return node_; }

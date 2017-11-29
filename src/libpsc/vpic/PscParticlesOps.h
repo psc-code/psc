@@ -8,7 +8,6 @@ template<class P>
 struct PscParticlesOps {
   typedef P Particles;
   typedef typename Particles::Species Species;
-  typedef typename Particles::Iter SpeciesIter;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
@@ -381,7 +380,7 @@ struct PscParticlesOps {
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
 		       const struct psc_particle_inject *prt)
   {
-    SpeciesIter sp = vmprts.find_id(prt->kind);
+    auto sp = vmprts.find_id(prt->kind);
 
     double x = prt->x[0], y = prt->x[1], z = prt->x[2];
     double ux = prt->u[0], uy = prt->u[1], uz = prt->u[2];
@@ -471,7 +470,7 @@ struct PscParticlesOps {
     int n_ignored;                      // Number of movers ignored
   } particle_mover_seg_t;
 
-  void advance_p_pipeline(SpeciesIter sp,
+  void advance_p_pipeline(typename Particles::iterator sp,
 			  AccumulatorBlock acc_block,
 			  Interpolator& interpolator,
 			  particle_mover_seg_t *seg,
@@ -611,7 +610,7 @@ struct PscParticlesOps {
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  void advance_p_pipeline_v4(SpeciesIter sp,
+  void advance_p_pipeline_v4(typename Particles::iterator sp,
 			     AccumulatorBlock acc_block,
 			     Interpolator& interpolator,
 			     particle_mover_seg_t *seg,
@@ -792,8 +791,7 @@ struct PscParticlesOps {
 
 #endif
           
-  void
-  advance_p(SpeciesIter sp, Accumulator& accumulator, Interpolator& interpolator)
+  void advance_p(typename Particles::iterator sp, Accumulator& accumulator, Interpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
@@ -829,7 +827,7 @@ struct PscParticlesOps {
   void advance_p(Particles& vmprts, Accumulator& accumulator,
 		 Interpolator& interpolator)
   {
-    for (typename Particles::Iter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       TIC advance_p(sp, accumulator, interpolator); TOC(advance_p, 1);
     }
   }
@@ -925,7 +923,7 @@ struct PscParticlesOps {
       // beam simulations, is one buffer gets all the movers).
     
       int nm = 0;
-      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
 	nm += sp->nm;
       }
 
@@ -947,7 +945,7 @@ struct PscParticlesOps {
 
       // For each species, load the movers
 
-      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	const float   sp_q  = sp->q;
 	const int32_t sp_id = sp->id;
 
@@ -1075,7 +1073,7 @@ struct PscParticlesOps {
       if (vmprts.size() > MAX_SP) {
 	ERROR(( "Update this to support more species" ));
       }
-      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	sp_p[  sp->id ] = sp->p;
 	sp_pm[ sp->id ] = sp->pm;
 	sp_q[  sp->id ] = sp->q;
@@ -1148,7 +1146,7 @@ struct PscParticlesOps {
 	}
       } while (face != 5);
   
-      for (SpeciesIter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	if( n_dropped_particles[sp->id] )
 	  WARNING(( "Dropped %i particles from species \"%s\".  Use a larger "
 		    "local particle allocation in your simulation setup for "
@@ -1183,7 +1181,7 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // accumulate_rho_p
 
-  void accumulate_rho_p(FieldArray& fa, SpeciesIter sp)
+  void accumulate_rho_p(FieldArray& fa, typename Particles::const_iterator sp)
   {
     const particle_t * RESTRICT ALIGNED(128) p = sp->p;
 
@@ -1235,7 +1233,7 @@ struct PscParticlesOps {
 
   void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
   {
-    for (typename Particles::Iter sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+    for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
       TIC accumulate_rho_p(vmflds, sp); TOC(accumulate_rho_p, 1);
     }
   }
@@ -1296,6 +1294,7 @@ template<class ParticlesBase, class FA, class IA, class AA, class HA>
 struct PscParticles : ParticlesBase
 {
   typedef ParticlesBase Base;
+  typedef PscParticles<Base, FA, IA, AA, HA> Particles;
   typedef FA FieldArray;
   typedef IA Interpolator;
   typedef AA Accumulator;
@@ -1314,7 +1313,7 @@ struct PscParticles : ParticlesBase
   // hydro jx,jy,jz are for diagnostic purposes only; they are not
   // accumulated with a charge conserving algorithm.
 
-  static void accumulate_hydro_p(HydroArray& ha, const species_t* sp,
+  static void accumulate_hydro_p(HydroArray& ha, typename Particles::const_iterator sp,
 				 /*const*/ Interpolator& IP)
   {
     float c, qsp, mspc, qdt_2mc, qdt_4mc2, r8V;

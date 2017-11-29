@@ -82,8 +82,8 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 		       *vmflds, *accumulator);
     } TOC( boundary_p, num_comm_round );
 
-  for (Particles::Iter sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    if( sp->nm ) // && simulation->verbose )
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    if (sp->nm) // && simulation->verbose )
       WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
                 sp->nm, sp->name ));
     // Drop the particles that have unprocessed movers due to a user defined
