@@ -67,6 +67,8 @@ static void material_ctor(material_t *m, const char *name,
 	       float zetax, float zetay, float zetaz)
 {
   // copy&paste from material.c, but as ctor not new
+  CLEAR(m, 1);
+
   int len = name ? strlen(name) : 0;
   if (!len) ERROR(( "Cannot create a nameless material" ));
   MALLOC(m->name, len+1);
