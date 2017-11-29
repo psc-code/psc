@@ -22,6 +22,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename Particles::Species Species;
   typedef typename FieldArray::MaterialList MaterialList;
   typedef typename MaterialList::Material Material;
 
@@ -118,9 +119,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(hydro_t));
   }
 
-  species_t* define_species(const char *name, double q, double m,
-			    double max_local_np, double max_local_nm,
-			    double sort_interval, double sort_out_of_place)
+  Species* define_species(const char *name, double q, double m,
+			  double max_local_np, double max_local_nm,
+			  double sort_interval, double sort_out_of_place)
   {
     // Compute a reasonble number of movers if user did not specify
     // Based on the twice the number of particles expected to hit the boundary
@@ -130,10 +131,10 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       if (max_local_nm<16*(MAX_PIPELINE+1))
 	max_local_nm = 16*(MAX_PIPELINE+1);
     }
-    return particles_.append(species(name, (float)q, (float)m,
-				     (int)max_local_np, (int)max_local_nm,
-				     (int)sort_interval, (int)sort_out_of_place,
-				     grid_));
+    return particles_.append(new Species(name, (float)q, (float)m,
+					 (int)max_local_np, (int)max_local_nm,
+					 (int)sort_interval, (int)sort_out_of_place,
+					 grid_));
   }
 
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
