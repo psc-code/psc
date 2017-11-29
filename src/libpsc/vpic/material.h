@@ -4,11 +4,13 @@
 
 #include "material/material.h"
 
+#include <cassert>
+
 static void material_ctor(material_t *m, const char *name,
-	       float epsx, float epsy, float epsz,
-	       float mux, float muy, float muz,
-	       float sigmax, float sigmay, float sigmaz,
-	       float zetax, float zetay, float zetaz);
+			  float epsx, float epsy, float epsz,
+			  float mux, float muy, float muz,
+			  float sigmax, float sigmay, float sigmaz,
+			  float zetax, float zetay, float zetaz);
 static void material_dtor(material_t *m);
 
 // ======================================================================
@@ -64,10 +66,41 @@ private:
 struct PscMaterialList
 {
   typedef VpicMaterial Material;
+
+  size_t size() const
+  {
+    size_t cnt = 0;
+    for (const Material *m = ml_; m; m = static_cast<Material*>(m->next)) {
+      cnt++;
+    }
+    return cnt;
+  }
+  
+  const Material* find(const char *name)
+  {
+    assert(name);
+    for (const Material *m = ml_; m; m = static_cast<Material*>(m->next)) {
+      if (strcmp(name, m->name) == 0) {
+	return m;
+      }
+    }
+    return NULL;
+  }
   
   Material* append(Material* m)
   {
-    return static_cast<Material*>(::append_material(m, reinterpret_cast<material_t**>(&ml_)));
+    assert(!m->next);
+    if (find(m->name)) {
+      ERROR(("There is already a material named \"%s\" in list", m->name ));
+    }
+    int id = size();
+    if (id >= ::max_material) {
+      ERROR(("Too many materials in list to append material \"%s\"", m->name));
+    }
+    m->id   = (material_id)id;
+    m->next = ml_;
+    ml_ = m;
+    return m;
   }
 
   bool empty()
