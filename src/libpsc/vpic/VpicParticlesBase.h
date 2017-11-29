@@ -45,11 +45,6 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies>
     return static_cast<VpicSpecies*>(::append_species(s, reinterpret_cast<species_t **>(&head_)));
   }
   
-  bool empty()
-  {
-    return !head_;
-  }
-
   int size()
   {
     int sz = 0;

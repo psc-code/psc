@@ -49,11 +49,6 @@ struct VpicMaterialList : public VpicListBase<VpicMaterial>
     return static_cast<Material*>(::append_material(m, reinterpret_cast<material_t**>(&head_)));
   }
 
-  bool empty()
-  {
-    return !head_;
-  }
-
   operator const material_t * () const
   {
     return head_;
@@ -101,11 +96,6 @@ struct PscMaterialList : public VpicListBase<VpicMaterial>
     m->next = head_;
     head_ = m;
     return m;
-  }
-
-  bool empty()
-  {
-    return !head_;
   }
 };
 

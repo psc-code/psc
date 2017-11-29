@@ -63,8 +63,10 @@ public:
 
   VpicListBase() : head_(nullptr) {}
 
-  iterator begin()              { return iterator(head_); }
-  iterator end()                { return iterator(nullptr); }
+  bool empty() { return !head_; }
+  
+  iterator begin() { return iterator(head_); }
+  iterator end()   { return iterator(nullptr); }
 
   const_iterator cbegin() const { return const_iterator(head_); }
   const_iterator cend()   const { return const_iterator(nullptr); }
