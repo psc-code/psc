@@ -674,14 +674,14 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     CalcRhoB updater(*this, m);
 
     // Begin setting normal e ghosts
-    begin_remote_ghost_norm_e(this->f, g);
+    this->begin_remote_ghost_norm_e(*this);
 
     // Overlap local computation
     this->local_ghost_norm_e(*this);
     foreach_nc_interior(updater, g);
     
     // Finish setting normal e ghosts
-    end_remote_ghost_norm_e(this->f, g);
+    this->end_remote_ghost_norm_e(*this);
 
     // Now do points on boundary
     foreach_nc_boundary(updater, g);
@@ -905,14 +905,14 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     CalcDivE updater(*this, m);
     
     // Begin setting normal e ghosts
-    begin_remote_ghost_norm_e(this->f, g);
+    this->begin_remote_ghost_norm_e(*this);
 
     // Overlap local computation
     this->local_ghost_norm_e(*this);
     foreach_nc_interior(updater, g);
 
     // Finish setting normal e ghosts
-    end_remote_ghost_norm_e(this->f, g);
+    this->end_remote_ghost_norm_e(*this);
 
     // Now do points on boundary
     foreach_nc_boundary(updater, g);
@@ -1158,8 +1158,8 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     // Have pipelines do Marder pass in interior.  The host handles
     // stragglers.
 
-    // Begin setting derr ghosts
-    begin_remote_ghost_div_b(this->f, g);
+    // Begin setting ghosts
+    this->begin_remote_ghost_div_b(*this);
     this->local_ghost_div_b(*this);
 
     // Interior
@@ -1213,7 +1213,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
     // Finish setting derr ghosts
   
-    end_remote_ghost_div_b(this->f, g);
+    this->end_remote_ghost_div_b(*this);
 
     // Do Marder pass in exterior
 
