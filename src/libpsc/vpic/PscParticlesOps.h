@@ -1070,7 +1070,7 @@ struct PscParticlesOps {
       int sp_max_np[MAX_SP], n_dropped_particles[MAX_SP];
       int sp_max_nm[MAX_SP], n_dropped_movers[MAX_SP];
 
-      if (vmprts.size() > MAX_SP) {
+      if (vmprts.getNumSpecies() > MAX_SP) {
 	ERROR(( "Update this to support more species" ));
       }
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {

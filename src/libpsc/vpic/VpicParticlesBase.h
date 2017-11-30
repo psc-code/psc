@@ -45,15 +45,6 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies>
     return static_cast<VpicSpecies*>(::append_species(s, reinterpret_cast<species_t **>(&head_)));
   }
   
-  int size()
-  {
-    int sz = 0;
-    for (const_iterator sp = cbegin(); sp != cend(); ++sp) {
-      sz++;
-    }
-    return sz;
-  }
-
   iterator find_id(int id)
   {
     for (auto sp = begin(); sp != end(); ++sp) {
