@@ -739,12 +739,12 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
     CurlB curlB(*this, g, m);
       
-    begin_remote_ghost_tang_b(this->f, g);
+    this->begin_remote_ghost_tang_b(*this);
 
     this->local_ghost_tang_b(*this);
     foreach_ec_interior(curlB, g);
 
-    end_remote_ghost_tang_b(this->f, g);
+    this->end_remote_ghost_tang_b(*this);
 
     foreach_ec_boundary(curlB, g);
     this->local_adjust_tang_e(*this); // FIXME, is this right here?
