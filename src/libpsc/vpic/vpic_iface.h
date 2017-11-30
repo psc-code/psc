@@ -18,6 +18,7 @@
 #include "PscFieldArray.h"
 
 #include "VpicParticlesBase.h"
+#include "PscParticlesBase.h"
 #include "VpicParticlesOps.h"
 #include "PscParticlesOps.h"
 
@@ -92,7 +93,7 @@ typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
 typedef VpicHydroArrayBase HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
-typedef VpicParticlesBase ParticlesBase;
+typedef PscParticlesBase ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
 typedef PscParticlesOps<Particles> ParticlesOps;
 
