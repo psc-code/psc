@@ -115,16 +115,80 @@ struct PscFieldArrayRemoteOps {
 # undef END_SEND
   }
 
-  void begin_remote_ghost_norm_e(FieldArray& fa)
+  void begin_remote_ghost_norm_e(FieldArray &fa)
   {
-    ::begin_remote_ghost_norm_e(fa.f, fa.g);
+    Field3D<FieldArray> F(fa);
+    const grid_t *g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    int size, face, x, y, z;
+    float *p;
+
+# define BEGIN_RECV(i,j,k,X,Y,Z)					\
+    begin_recv_port(i,j,k,( 1 + (n##Y+1)*(n##Z+1) )*sizeof(float),g)
+    BEGIN_RECV(-1, 0, 0,x,y,z);
+    BEGIN_RECV( 0,-1, 0,y,z,x);
+    BEGIN_RECV( 0, 0,-1,z,x,y);
+    BEGIN_RECV( 1, 0, 0,x,y,z);
+    BEGIN_RECV( 0, 1, 0,y,z,x);
+    BEGIN_RECV( 0, 0, 1,z,x,y);
+# undef BEGIN_RECV
+
+# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {		\
+      size = ( 1+ (n##Y+1)*(n##Z+1) )*sizeof(float);		\
+      p = (float *)size_send_port( i, j, k, size, g );		\
+      if( p ) {							\
+	(*(p++)) = g->d##X;					\
+	face = (i+j+k)<0 ? 1 : n##X;				\
+	X##_NODE_LOOP(face) (*(p++)) = F(x,y,z).e##X;	\
+	begin_send_port( i, j, k, size, g );			\
+      }								\
+    } END_PRIMITIVE
+    BEGIN_SEND(-1, 0, 0,x,y,z);
+    BEGIN_SEND( 0,-1, 0,y,z,x);
+    BEGIN_SEND( 0, 0,-1,z,x,y);
+    BEGIN_SEND( 1, 0, 0,x,y,z);
+    BEGIN_SEND( 0, 1, 0,y,z,x);
+    BEGIN_SEND( 0, 0, 1,z,x,y);
+# undef BEGIN_SEND
   }
 
   void end_remote_ghost_norm_e(FieldArray& fa)
   {
-    ::end_remote_ghost_norm_e(fa.f, fa.g);
+    Field3D<FieldArray> F(fa);
+    const grid_t* g = fa.g;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    int face, x, y, z;
+    float *p, lw, rw;
+
+# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {			\
+      p = (float *)end_recv_port(i,j,k,g);                              \
+      if( p ) {                                                         \
+	lw = (*(p++));                 /* Remote g->d##X */             \
+	rw = (2.*g->d##X)/(lw+g->d##X);                                 \
+	lw = (lw-g->d##X)/(lw+g->d##X);                                 \
+	face = (i+j+k)<0 ? n##X+1 : 0; /* Interpolate */                \
+	X##_NODE_LOOP(face)                                             \
+	  F(x,y,z).e##X = rw*(*(p++)) + lw*F(x+i,y+j,z+k).e##X;		\
+      }                                                                 \
+    } END_PRIMITIVE
+    END_RECV(-1, 0, 0,x,y,z);
+    END_RECV( 0,-1, 0,y,z,x);
+    END_RECV( 0, 0,-1,z,x,y);
+    END_RECV( 1, 0, 0,x,y,z);
+    END_RECV( 0, 1, 0,y,z,x);
+    END_RECV( 0, 0, 1,z,x,y);
+# undef END_RECV
+
+# define END_SEND(i,j,k,X,Y,Z) end_send_port(i,j,k,g)
+    END_SEND(-1, 0, 0,x,y,z);
+    END_SEND( 0,-1, 0,y,z,x);
+    END_SEND( 0, 0,-1,z,x,y);
+    END_SEND( 1, 0, 0,x,y,z);
+    END_SEND( 0, 1, 0,y,z,x);
+    END_SEND( 0, 0, 1,z,x,y);
+# undef END_SEND
   }
-  
+
   void begin_remote_ghost_div_b(FieldArray& fa)
   {
     ::begin_remote_ghost_div_b(fa.f, fa.g);
