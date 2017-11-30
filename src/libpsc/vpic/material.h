@@ -92,12 +92,8 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
   const_iterator find(const char *name) const
   {
     assert(name);
-    for (const_iterator m = cbegin(); m != cend(); ++m) {
-      if (strcmp(name, m->name) == 0) {
-	return m;
-      }
-    }
-    return cend();
+    return std::find_if(cbegin(), cend(),
+			[&name](const Material &m) { return strcmp(m.name, name) == 0; });
   }
   
   Material* append(Material* m)
