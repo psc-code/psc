@@ -21,20 +21,6 @@ static void material_dtor(material_t *m);
 
 struct VpicMaterial : material_t
 {
-  VpicMaterial(const char *name,
-	       float epsx, float epsy, float epsz,
-	       float mux, float muy, float muz,
-	       float sigmax, float sigmay, float sigmaz,
-	       float zetax, float zetay, float zetaz)
-  {
-    material_ctor(this, name, epsx, epsy, epsz, mux, muy, muz,
-		  sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
-  }
-  
-  ~VpicMaterial()
-  {
-    material_dtor(this);
-  }
 };
 
 // ======================================================================
@@ -50,8 +36,8 @@ struct VpicMaterialList : public VpicListBase<VpicMaterial>
 			  float sigmax, float sigmay, float sigmaz,
 			  float zetax, float zetay, float zetaz)
   {
-    return new Material(name, epsx, epsy, epsz, mux, muy, muz,
-			sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
+    return static_cast<Material*>(::material(name, epsx, epsy, epsz, mux, muy, muz,
+					     sigmax, sigmay, sigmaz, zetax, zetay, zetaz));
   }
 
   Material* append(Material* m)
@@ -66,11 +52,32 @@ struct VpicMaterialList : public VpicListBase<VpicMaterial>
 };
 
 // ======================================================================
+// PscMaterial
+
+struct PscMaterial : material_t
+{
+  PscMaterial(const char *name,
+	      float epsx, float epsy, float epsz,
+	      float mux, float muy, float muz,
+	       float sigmax, float sigmay, float sigmaz,
+	      float zetax, float zetay, float zetaz)
+  {
+    material_ctor(this, name, epsx, epsy, epsz, mux, muy, muz,
+		  sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
+  }
+  
+  ~PscMaterial()
+  {
+    material_dtor(this);
+  }
+};
+
+// ======================================================================
 // PscMaterialList
 
-struct PscMaterialList : public VpicListBase<VpicMaterial>
+struct PscMaterialList : public VpicListBase<PscMaterial>
 {
-  typedef VpicMaterial Material;
+  typedef PscMaterial Material;
 
   static Material* create(const char *name,
 			  float epsx, float epsy, float epsz,
@@ -79,7 +86,7 @@ struct PscMaterialList : public VpicListBase<VpicMaterial>
 			  float zetax, float zetay, float zetaz)
   {
     return new Material(name, epsx, epsy, epsz, mux, muy, muz,
-			sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
+    			sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
   }
 
   size_t size() const
