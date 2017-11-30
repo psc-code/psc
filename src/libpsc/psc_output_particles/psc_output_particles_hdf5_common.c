@@ -206,10 +206,10 @@ find_patch_bounds(struct psc_output_particles_hdf5 *hdf5,
   for (int d = 0; d < 3; d++) {
     ilo[d] = MIN(ldims[d], MAX(0, hdf5->lo[d] - off[d]));
     ihi[d] = MAX(0, MIN(ldims[d], hdf5->hi[d] - off[d]));
+    ilo[d] = MAX(0, hdf5->lo[d] - off[d]);
+    ihi[d] = MIN(ldims[d], hdf5->hi[d] - off[d]);
     ld[d] = ihi[d] - ilo[d];
   }
-  mprintf("info.rank %d i %d:%d %d:%d %d:%d\n", info->rank,
-	  ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
   *p_sz = ppsc->nr_kinds * ld[0] * ld[1] * ld[2];
 }
 
@@ -226,7 +226,6 @@ make_local_particle_array(struct psc_output_particles *out,
   int nr_kinds = ppsc->nr_kinds;
   struct mrc_patch_info info;
 
-  MHERE;
   // count all particles to be written locally
   size_t n_write = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -243,14 +242,12 @@ make_local_particle_array(struct psc_output_particles *out,
 	}
       }
     }
-    mprintf("p %d n_write %ld\n", p, n_write);
   }
 
   assert(sizeof(size_t) == sizeof(unsigned long));
   size_t n_total, n_off = 0;
   MPI_Allreduce(&n_write, &n_total, 1, MPI_LONG, MPI_SUM, comm);
   MPI_Exscan(&n_write, &n_off, 1, MPI_LONG, MPI_SUM, comm);
-  MHERE;
 
   struct hdf5_prt *arr = malloc(n_write * sizeof(*arr));
 
@@ -274,7 +271,6 @@ make_local_particle_array(struct psc_output_particles *out,
 	    idx[p][jj     ] = nn + n_off;
 	    idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	    for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-	      assert(nn < n_write);
 	      particle_t *part = particle_iter_at(prts.begin, map[p][n]);
 	      arr[nn].x  = part->xi + patch->xb[0];
 	      arr[nn].y  = part->yi + patch->xb[1];
@@ -290,13 +286,11 @@ make_local_particle_array(struct psc_output_particles *out,
 	}
       }
     }
-    mprintf("p %d nn %d\n", p, nn);
   }
 
   *p_n_write = n_write;
   *p_n_off = n_off;
   *p_n_total = n_total;
-  MHERE;
   return arr;
 }
 
@@ -408,7 +402,6 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 
   size_t *gidx_begin = NULL, *gidx_end = NULL;
   if (rank == 0) {
-    mprintf("gidx %d\n", nr_kinds * wdims[0]*wdims[1]*wdims[2]);
     // alloc global idx array
     gidx_begin = malloc(nr_kinds * wdims[0]*wdims[1]*wdims[2] * sizeof(*gidx_begin));
     gidx_end = malloc(nr_kinds * wdims[0]*wdims[1]*wdims[2] * sizeof(*gidx_end));
@@ -425,13 +418,11 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     }
   }
 
-  MHERE;
   // find local particle and idx arrays
   size_t n_write, n_off, n_total;
   struct hdf5_prt *arr =
     make_local_particle_array(out, mprts, map, off, idx, &n_write, &n_off, &n_total);
   prof_stop(pr_A);
-  MHERE;
 
   prof_start(pr_B);
   if (rank == 0) {
@@ -446,7 +437,6 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
       }
       int ilo[3], ihi[3], ld[3], sz;
       find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
-      mprintf("p %d rank %d sz %d\n", p, info.rank, sz);
       remote_sz[info.rank] += sz;
     }
 
@@ -460,12 +450,11 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	    for (int kind = 0; kind < nr_kinds; kind++) {
-	      unsigned int ix = jx + info.off[0] - hdf5->lo[0];
-	      unsigned int iy = jy + info.off[1] - hdf5->lo[1];
-	      unsigned int iz = jz + info.off[2] - hdf5->lo[2];
-	      unsigned int jj = ((kind * ld[2] + jz - ilo[2])
+	      int ix = jx + info.off[0] - hdf5->lo[0];
+	      int iy = jy + info.off[1] - hdf5->lo[1];
+	      int iz = jz + info.off[2] - hdf5->lo[2];
+	      int jj = ((kind * ld[2] + jz - ilo[2])
 			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
-	      assert(ix < wdims[0]  && iy < wdims[1] && iz < wdims[2]);
 	      int ii = ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
 	      gidx_begin[ii] = idx[p][jj];
 	      gidx_end[ii]   = idx[p][jj + sz];
@@ -478,16 +467,15 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     size_t **recv_buf = calloc(size, sizeof(*recv_buf));
     size_t **recv_buf_p = calloc(size, sizeof(*recv_buf_p));
     MPI_Request *recv_req = calloc(size, sizeof(*recv_req));
+    recv_req[rank] = MPI_REQUEST_NULL;
     for (int r = 0; r < size; r++) {
       if (r == rank) { // skip this proc
-	recv_req[r] = MPI_REQUEST_NULL;
 	continue;
       }
       recv_buf[r] = malloc(2 * remote_sz[r] * sizeof(*recv_buf[r]));
       recv_buf_p[r] = recv_buf[r];
-      mprintf("r %d sz %d sizeof %d\n", r, 2 * remote_sz[r], sizeof(*recv_buf[r]));
       MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_LONG, r, 0x4000, comm,
-      		&recv_req[r]);
+		&recv_req[r]);
     }
     MPI_Waitall(size, recv_req, MPI_STATUSES_IGNORE);
     free(recv_req);
@@ -617,7 +605,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   free(off);
   free(map);
   free(idx);
-  
+
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
 }
 
