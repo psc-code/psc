@@ -143,7 +143,6 @@ struct VpicDiagMixin
 		     Interpolator& interpolator)
   {
     double en_f[6], en_p;
-    species_t *sp;
     FileIO fileIO;
     FileIOStatus status(fail);
 
@@ -157,8 +156,9 @@ struct VpicDiagMixin
       else {
 	if (append==0) {
 	  fileIO.print("%% Layout\n%% step ex ey ez bx by bz" );
-	  LIST_FOR_EACH(sp, particles.head())
+	  for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
 	    fileIO.print(" \"%s\"", sp->name);
+	  }
 	  fileIO.print("\n");
 	  fileIO.print("%% timestep = %e\n", fa.g->dt);
 	}
@@ -172,8 +172,8 @@ struct VpicDiagMixin
 		    en_f[0], en_f[1], en_f[2],
 		    en_f[3], en_f[4], en_f[5] );
  
-    LIST_FOR_EACH(sp, particles.head()) {
-      en_p = energy_p(sp, &interpolator);
+    for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
+      en_p = energy_p(&*sp, &interpolator);
       if (rank==0 && status != fail) fileIO.print(" %e", en_p);
     }
  
