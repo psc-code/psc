@@ -83,11 +83,12 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 			    double eps, double mu=1.,
 			    double sigma=0., double zeta=0.)
   {
-    return material_list_.append(new Material(name,
-					      eps,   eps,   eps,
-					      mu,    mu,    mu,
-					      sigma, sigma, sigma,
-					      zeta,  zeta,  zeta));
+    Material *m = material_list_.create(name,
+					eps,   eps,   eps,
+					mu,    mu,    mu,
+					sigma, sigma, sigma,
+					zeta,  zeta,  zeta);
+    return material_list_.append(m);
   }
 
   void define_field_array(double damp)
