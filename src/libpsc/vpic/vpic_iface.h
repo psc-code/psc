@@ -14,6 +14,7 @@
 #include "PscFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "PscFieldArrayLocalOps.h"
+#include "VpicFieldArrayRemoteOps.h"
 #include "VpicFieldArray.h"
 #include "PscFieldArray.h"
 
@@ -78,7 +79,8 @@ enum {
 typedef PscMaterialList MaterialList;
 typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
-typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
+typedef VpicFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
+typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
 #else
 typedef VpicFieldArrayBase<VpicMaterialList> FieldArrayBase;
 typedef VpicFieldArray<FieldArrayBase> FieldArray;

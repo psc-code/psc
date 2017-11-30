@@ -3,6 +3,7 @@
 
 #include "PscFieldArrayBase.h"
 #include "PscFieldArrayLocalOps.h"
+#include "VpicFieldArrayRemoteOps.h"
 #include "PscFieldArray.h"
 
 void test_PscFieldArray()
@@ -10,7 +11,8 @@ void test_PscFieldArray()
   typedef PscMaterialList MaterialList;
   typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
   typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
-  typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps> FieldArray;
+  typedef VpicFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
+  typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
 
   Grid grid;
   MaterialList material_list;

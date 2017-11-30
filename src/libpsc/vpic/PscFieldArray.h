@@ -39,11 +39,11 @@
 // ======================================================================
 // PscFieldArray
 
-template<class B, class FieldArrayLocalOps>
-struct PscFieldArray : B, FieldArrayLocalOps
+template<class B, class FieldArrayLocalOps, class FieldArrayRemoteOps>
+struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 {
   typedef B Base;
-  typedef PscFieldArray<B, FieldArrayLocalOps> FieldArray;
+  typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
 
   using Base::Base;
 
@@ -338,12 +338,12 @@ struct PscFieldArray : B, FieldArrayLocalOps
 
     AdvanceE advanceE(*this, g, m, prm->damp);
 
-    begin_remote_ghost_tang_b(this->f, g);
+    this->begin_remote_ghost_tang_b(*this);
 
     this->local_ghost_tang_b(*this);
     foreach_ec_interior(advanceE, g);
 
-    end_remote_ghost_tang_b(this->f, g);
+    this->end_remote_ghost_tang_b(*this);
 
     foreach_ec_boundary(advanceE, g);
     this->local_adjust_tang_e(*this);
