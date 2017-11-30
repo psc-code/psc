@@ -107,8 +107,7 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
       ERROR(("Too many materials in list to append material \"%s\"", m->name));
     }
     m->id   = (material_id)id;
-    m->next = head_;
-    head_ = m;
+    push_front(*m);
     return m;
   }
 };

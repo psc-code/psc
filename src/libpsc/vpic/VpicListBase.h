@@ -22,7 +22,8 @@ public:
   {
     friend class VpicListBase<T>;
 
-  protected:
+    //protected: FIXME, not accessible from derived VpicListBae (?)
+  public:
     iterator(T* node) : node_(node) {}
 
   public:
@@ -67,6 +68,8 @@ public:
 
   bool empty() { return !head_; }
   size_t size() const { return std::distance(cbegin(), cend()); }
+
+  void push_front(T& x) { x.next = head_; head_ = &x; }
   
   iterator begin() { return iterator(head_); }
   iterator end()   { return iterator(nullptr); }

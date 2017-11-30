@@ -380,7 +380,7 @@ struct PscParticlesOps {
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
 		       const struct psc_particle_inject *prt)
   {
-    auto sp = vmprts.find_id(prt->kind);
+    auto sp = vmprts.find(prt->kind);
 
     double x = prt->x[0], y = prt->x[1], z = prt->x[2];
     double ux = prt->u[0], uy = prt->u[1], uz = prt->u[2];

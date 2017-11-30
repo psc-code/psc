@@ -54,24 +54,16 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies>
     return static_cast<VpicSpecies*>(::append_species(s, reinterpret_cast<species_t **>(&head_)));
   }
   
-  iterator find_id(int id)
+  iterator find(int id)
   {
-    for (auto sp = begin(); sp != end(); ++sp) {
-      if (sp->id == id) {
-	return sp;
-      }
-    }
-    return end();
+    species_t *sp = ::find_species_id(id, head_);
+    return iterator(static_cast<Species*>(sp));
   }
 
   iterator find(const char *name)
   {
-    for (auto sp = begin(); sp != end(); ++sp) {
-      if (strcmp(sp->name, name) == 0) {
-	return sp;
-      }
-    }
-    return end();
+    species_t *sp = ::find_species_name(name, head_);
+    return iterator(static_cast<Species*>(sp));
   }
 
   grid_t *getGrid_t()

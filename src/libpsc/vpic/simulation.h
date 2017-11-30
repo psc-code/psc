@@ -142,7 +142,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // This relies on load_interpolator_array() having been called earlier
     hydro_array->clear();
 
-    typename Particles::const_iterator sp = vmprts->find_id(kind);
+    typename Particles::const_iterator sp = vmprts->find(kind);
     vmprts->accumulate_hydro_p(*hydro_array, sp, *interpolator_);
     
     hydro_array->synchronize();
