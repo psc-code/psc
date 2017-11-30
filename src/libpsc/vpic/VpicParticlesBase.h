@@ -35,6 +35,15 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies>
 {
   typedef VpicSpecies Species;
 
+  static Species* create(const char * name, float q, float m,
+			 int max_local_np, int max_local_nm,
+			 int sort_interval, int sort_out_of_place,
+			 Grid *grid)
+  {
+    return new Species(name, q, m, max_local_np, max_local_nm,
+		       sort_interval, sort_out_of_place, grid);
+  }
+
   int getNumSpecies()
   {
     return ::num_species(head_);

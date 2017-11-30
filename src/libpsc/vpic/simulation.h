@@ -129,13 +129,12 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // of a wpdt=0.2 / dx=lambda species in a 3x3x3 domain
     if (max_local_nm < 0) {
       max_local_nm = 2 * max_local_np / 25;
-      if (max_local_nm<16*(MAX_PIPELINE+1))
+      if (max_local_nm < 16*(MAX_PIPELINE+1))
 	max_local_nm = 16*(MAX_PIPELINE+1);
     }
-    return particles_.append(new Species(name, (float)q, (float)m,
-					 (int)max_local_np, (int)max_local_nm,
-					 (int)sort_interval, (int)sort_out_of_place,
-					 grid_));
+    Species *sp = particles_.create(name, q, m, max_local_np, max_local_nm,
+				    sort_interval, sort_out_of_place, grid_);
+    return particles_.append(sp);
   }
 
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
