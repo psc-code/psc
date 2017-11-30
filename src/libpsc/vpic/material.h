@@ -89,15 +89,6 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
     			sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
   }
 
-  size_t size() const
-  {
-    size_t sz = 0;
-    for (const_iterator m = cbegin(); m != cend(); ++m) {
-      sz++;
-    }
-    return sz;
-  }
-  
   const_iterator find(const char *name) const
   {
     assert(name);

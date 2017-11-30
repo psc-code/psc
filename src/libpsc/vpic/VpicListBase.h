@@ -18,7 +18,7 @@ public:
   // ----------------------------------------------------------------------
   // class iterator
   
-  class iterator
+  class iterator : public std::iterator<std::output_iterator_tag, T>
   {
     friend class VpicListBase<T>;
 
@@ -40,7 +40,7 @@ public:
   // ----------------------------------------------------------------------
   // class const_iterator
   
-  class const_iterator
+  class const_iterator : public std::iterator<std::input_iterator_tag, T>
   {
     friend class VpicListBase<T>;
 
@@ -66,6 +66,7 @@ public:
   VpicListBase() : head_(nullptr) {}
 
   bool empty() { return !head_; }
+  size_t size() const { return std::distance(cbegin(), cend()); }
   
   iterator begin() { return iterator(head_); }
   iterator end()   { return iterator(nullptr); }
