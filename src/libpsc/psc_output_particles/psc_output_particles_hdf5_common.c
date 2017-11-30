@@ -204,6 +204,8 @@ find_patch_bounds(struct psc_output_particles_hdf5 *hdf5,
   int *ldims = info->ldims, *off = info->off;
 
   for (int d = 0; d < 3; d++) {
+    ilo[d] = MIN(ldims[d], MAX(0, hdf5->lo[d] - off[d]));
+    ihi[d] = MAX(0, MIN(ldims[d], hdf5->hi[d] - off[d]));
     ilo[d] = MAX(0, hdf5->lo[d] - off[d]);
     ihi[d] = MIN(ldims[d], hdf5->hi[d] - off[d]);
     ld[d] = ihi[d] - ilo[d];
