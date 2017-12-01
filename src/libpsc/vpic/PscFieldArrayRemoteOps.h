@@ -100,7 +100,7 @@ struct Comm
     return static_cast<float*>(::end_recv_port(ijk[0], ijk[1], ijk[2], g_));
   }
 
-  void end_send(int dir, int side) const
+  void end_send_port(int dir, int side) const
   {
     const int* ijk = to_ijk[dir][side];
     ::end_send_port(ijk[0], ijk[1], ijk[2], g_);
@@ -108,7 +108,16 @@ struct Comm
 
   // ----------------------------------------------------------------------
 
-  virtual void begin_recv(int side, int dir) const = 0;
+  void begin_recv(int X, int side) const
+  {
+    begin_recv_port(X, side, buf_size_[X]);
+  }
+
+  void end_send(int X, int side) const
+  {
+    end_send_port(X, side);
+  }
+
   virtual void begin_send(int side, int dir, F3D& F) const = 0;
   virtual void end_recv(int side, int dir, F3D& F) const = 0;
   
@@ -166,7 +175,6 @@ struct CommCC : Comm<F3D>
   using Base::end_recv;
   using Base::end_send;
   
-  using Base::begin_recv_port;
   using Base::begin_send_port;
   using Base::end_recv_port;
   using Base::get_send_buf;
@@ -182,11 +190,6 @@ struct CommCC : Comm<F3D>
     }
   }
     
-  void begin_recv(int X, int side) const
-  {
-    begin_recv_port(X, side, buf_size_[X]);
-  }
-
   void begin_send(int X, int side, F3D& F) const
   {
     float *p = get_send_buf(X, side, buf_size_[X]);
@@ -220,7 +223,6 @@ struct CommNC : Comm<F3D>
   using Base::end_recv;
   using Base::end_send;
 
-  using Base::begin_recv_port;
   using Base::begin_send_port;
   using Base::end_recv_port;
   using Base::get_send_buf;
@@ -236,11 +238,6 @@ struct CommNC : Comm<F3D>
     }
   }
     
-  void begin_recv(int X, int side) const
-  {
-    begin_recv_port(X, side, buf_size_[X]);
-  }
-
   void begin_send(int X, int side, F3D& F) const
   {
     float *p = get_send_buf(X, side, buf_size_[X]);
@@ -274,7 +271,6 @@ struct CommEC : Comm<F3D>
   using Base::end_recv;
   using Base::end_send;
 
-  using Base::begin_recv_port;
   using Base::begin_send_port;
   using Base::end_recv_port;
   using Base::get_send_buf;
@@ -288,11 +284,6 @@ struct CommEC : Comm<F3D>
       int Y = (X + 1) % 3, Z = (X + 2) % 3;
       buf_size_[X] = nx_[Y] * (nx_[Z] + 1) + nx_[Z] * (nx_[Y] + 1);
     }
-  }
-
-  void begin_recv(int X, int side) const
-  {
-    begin_recv_port(X, side, buf_size_[X]);
   }
 
   void begin_send(int X, int side, F3D& F) const
