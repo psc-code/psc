@@ -43,7 +43,7 @@ static void foreach_node(const Grid *g, int X, int face, F f)
 }
 
 template<class F>
-static void foreach_center(const Grid *g, int X, int face, F f)
+static void foreach_face(const Grid *g, int X, int face, F f)
 {
   if        (X == 0) { foreach(f, face, face, 1, g->ny  , 1, g->nz  );
   } else if (X == 1) { foreach(f, 1, g->nx  , face, face, 1, g->nz  );
@@ -108,42 +108,83 @@ struct Comm
 
   // ----------------------------------------------------------------------
 
-  virtual void begin_send(int side, int dir, float* p, F3D& F) const = 0;
-  virtual void end_recv(int side, int dir, float* p, F3D& F) const = 0;
+  virtual void begin_send(int dir, int side, float* p, F3D& F) = 0;
+  virtual void end_recv(int dir, int side, float* p, F3D& F) = 0;
+
+  void begin_recv(int dir, int side)
+  {
+    begin_recv_port(dir, side, buf_size_[dir]);
+  }
+
+  void begin_send(int dir, int side, F3D& F)
+  {
+    float *p = get_send_buf(dir, side, buf_size_[dir]);
+    if (p) {
+      begin_send(dir, side, p, F);
+      begin_send_port(dir, side, buf_size_[dir]);
+    }
+  }
+
+  void end_recv(int dir, int side, F3D& F)
+  {
+    float* p = end_recv_port(dir, side);
+    if (p) {
+      end_recv(dir, side, p, F);
+    }
+  }
   
-  void begin(F3D& F) const
+  void end_send(int dir, int side)
+  {
+    end_send_port(dir, side);
+  }
+  
+  void begin(int dir, F3D& F)
+  {
+    for (int side = 0; side <= 1; side++) {
+      begin_recv(dir, side);
+    }
+    for (int side = 0; side <= 1; side++) {
+      begin_send(dir, side, F);
+    }
+  }
+
+  void end(int dir, F3D& F)
+  {
+    for (int side = 0; side <= 1; side++) {
+      end_recv(dir, side, F);
+    }
+
+    for (int side = 0; side <= 1; side++) {
+      end_send(dir, side);
+    }
+  }
+  
+  void begin(F3D& F)
   {
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	begin_recv_port(dir, side, buf_size_[dir]);
+	begin_recv(dir, side);
       }
     }
 
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	float *p = get_send_buf(dir, side, buf_size_[dir]);
-	if (p) {
-	  begin_send(dir, side, p, F);
-	  begin_send_port(dir, side, buf_size_[dir]);
-	}
+	begin_send(dir, side, F);
       }
     }
   }
   
-  void end(F3D& F) const
+  void end(F3D& F)
   {
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	float* p = end_recv_port(dir, side);
-	if (p) {
-	  end_recv(dir, side, p, F);
-	}
+	end_recv(dir, side, F);
       }
     }
 
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	end_send_port(dir, side);
+	end_send(dir, side);
       }
     }
   }
@@ -183,7 +224,7 @@ struct PscFieldArrayRemoteOps {
       }
     }
 
-    void begin_send(int X, int side, float* p, F3D& F) const
+    void begin_send(int X, int side, float* p, F3D& F)
     {
       int Y = (X + 1) % 3, Z = (X + 2) % 3;
       int face = side ? nx_[X] : 1;
@@ -191,7 +232,7 @@ struct PscFieldArrayRemoteOps {
       foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Z]; });
     }
     
-    void end_recv(int X, int side, float* p, F3D& F) const
+    void end_recv(int X, int side, float* p, F3D& F)
     {
       int Y = (X + 1) % 3, Z = (X + 2) % 3;
       int face = side ? 0 : nx_[X] + 1;
@@ -238,13 +279,13 @@ struct PscFieldArrayRemoteOps {
       }
     }
     
-    void begin_send(int X, int side, float *p, F3D& F) const
+    void begin_send(int X, int side, float *p, F3D& F)
     {
       int face = side ? nx_[X] : 1;
       foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).ex)[X]; });
     }
     
-    void end_recv(int X, int side, float *p, F3D& F) const
+    void end_recv(int X, int side, float *p, F3D& F)
     {
       int face = side ? 0 : nx_[X] + 1;
       foreach_node(g_, X, face, [&](int x, int y, int z) { (&F(x,y,z).ex)[X] = *p++; });
@@ -289,16 +330,16 @@ struct PscFieldArrayRemoteOps {
       }
     }
     
-    void begin_send(int X, int side, float *p, F3D& F) const
+    void begin_send(int X, int side, float *p, F3D& F)
     {
       int face = side ? nx_[X] : 1;
-      foreach_center(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
+      foreach_face(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
     }
     
-    void end_recv(int X, int side, float *p, F3D& F) const
+    void end_recv(int X, int side, float *p, F3D& F)
     {
       int face = side ? 0 : nx_[X] + 1;
-      foreach_center(g_, X, face, [&](int x, int y, int z) { F(x,y,z).div_b_err = *p++; });
+      foreach_face(g_, X, face, [&](int x, int y, int z) { F(x,y,z).div_b_err = *p++; });
     }
   };
      
