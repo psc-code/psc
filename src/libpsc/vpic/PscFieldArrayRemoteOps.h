@@ -100,30 +100,29 @@ struct PscFieldArrayRemoteOps {
     
     void nc_begin_recv(int i, int j, int k, int X, int Y, int Z) const
     {
-      int sz = 1 + (nx_[Y] + 1) * (nx_[Z] + 1);
+      int sz = (nx_[Y] + 1) * (nx_[Z] + 1);
       begin_recv_port(i, j, k, sz);
     }
 
     void ec_begin_recv(int i, int j, int k, int X, int Y, int Z) const
     {
-      int sz = 1 + nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
+      int sz = nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
       begin_recv_port(i, j, k, sz);
     }
 
     void cc_begin_recv(int i, int j, int k, int X, int Y, int Z) const
     {
-      int sz = 1 + nx_[Y] * nx_[Z];
+      int sz = nx_[Y] * nx_[Z];
       begin_recv_port(i, j, k, sz);
     }
 
     template<class F3D>
     void nc_begin_send(int i, int j, int k, int X, int Y, int Z, F3D& F) const
     {
-      int sz = 1 + (nx_[Y] + 1) * (nx_[Z] + 1);
+      int sz = (nx_[Y] + 1) * (nx_[Z] + 1);
       float *p = get_send_buf(i, j, k, sz);
       if (p) {
 	int face = (i+j+k) < 0 ? 1 : nx_[X];
-	*p++ = (&g_->dx)[X];
 	foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).ex)[X]; });
 	begin_send_port(i, j, k, sz);
       }
@@ -132,11 +131,10 @@ struct PscFieldArrayRemoteOps {
     template<class F3D>
     void ec_begin_send(int i, int j, int k, int X, int Y, int Z, F3D& F) const
     {
-      int sz = 1 + nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
+      int sz = nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
       float *p = get_send_buf(i, j, k, sz);
       if (p) {
 	int face = (i+j+k) < 0 ? 1 : nx_[X];
-	*p++ = (&g_->dx)[X];
 	foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Y]; });
 	foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Z]; });
 	begin_send_port(i, j, k, sz);
@@ -146,11 +144,10 @@ struct PscFieldArrayRemoteOps {
     template<class F3D>
     void cc_begin_send(int i, int j, int k, int X, int Y, int Z, F3D& F) const
     {
-      int sz = 1 + nx_[Y] * nx_[Z];
+      int sz = nx_[Y] * nx_[Z];
       float *p = get_send_buf(i, j, k, sz);
       if (p) {
 	int face = (i+j+k) < 0 ? 1 : nx_[X];
-	*p++ = (&g_->dx)[X];
 	foreach_center(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
 	begin_send_port(i, j, k, sz);
       }
@@ -161,7 +158,6 @@ struct PscFieldArrayRemoteOps {
     {
       float* p = end_recv_port(i,j,k);
       if (p) {
-	p++;                 /* Remote g->d##X */
 	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
 	foreach_node(g_, X, face, [&](int x, int y, int z) { (&F(x,y,z).ex)[X] = *p++; });
       }
@@ -172,7 +168,6 @@ struct PscFieldArrayRemoteOps {
     {
       float* p = end_recv_port(i,j,k);
       if (p) {
-	p++;                 /* Remote g->d##X */
 	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
 	foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { (&F(x,y,z).cbx)[Y] = *p++; });
 	foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { (&F(x,y,z).cbx)[Z] = *p++; });
@@ -184,7 +179,6 @@ struct PscFieldArrayRemoteOps {
     {
       float* p = end_recv_port(i,j,k);
       if (p) {
-	p++;                 /* Remote g->d##X */
 	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
 	foreach_center(g_, X, face, [&](int x, int y, int z) { F(x,y,z).div_b_err = *p++; });
       }
