@@ -69,6 +69,14 @@ struct PscFieldArrayRemoteOps {
       nx_[2] = g_->nz;
     }
 
+    const int to_ijk[3][2][3] = {
+      { { -1, 0, 0 },
+	{  1, 0, 0 }, },
+      { {  0,-1, 0 },
+	{  0, 1, 0 }, },
+      { {  0, 0,-1 },
+	{  0, 0, 1 }, },
+    };
     // wrap what probably should be in Grid::
 
     float* get_send_buf(int i, int j, int k, int sz) const
@@ -91,74 +99,82 @@ struct PscFieldArrayRemoteOps {
       return static_cast<float*>(::end_recv_port(i, j, k, g_));
     }
 
-    void end_send(int i, int j, int k) const
+    void end_send(int dir, int side) const
     {
-      ::end_send_port(i, j, k, g_);
+      const int* ijk = to_ijk[dir][side];
+      ::end_send_port(ijk[0], ijk[1], ijk[2], g_);
     }
 
     // ghost communication
     
-    void nc_begin_recv(int i, int j, int k, int X, int Y, int Z) const
+    void nc_begin_recv(int dir, int side, int X, int Y, int Z) const
     {
+      const int* ijk = to_ijk[dir][side];
       int sz = (nx_[Y] + 1) * (nx_[Z] + 1);
-      begin_recv_port(i, j, k, sz);
+      begin_recv_port(ijk[0], ijk[1], ijk[2], sz);
     }
 
-    void ec_begin_recv(int i, int j, int k, int X, int Y, int Z) const
+    void ec_begin_recv(int dir, int side, int X, int Y, int Z) const
     {
+      const int* ijk = to_ijk[dir][side];
       int sz = nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
-      begin_recv_port(i, j, k, sz);
+      begin_recv_port(ijk[0], ijk[1], ijk[2], sz);
     }
 
-    void cc_begin_recv(int i, int j, int k, int X, int Y, int Z) const
+    void cc_begin_recv(int dir, int side, int X, int Y, int Z) const
     {
+      const int* ijk = to_ijk[dir][side];
       int sz = nx_[Y] * nx_[Z];
-      begin_recv_port(i, j, k, sz);
+      begin_recv_port(ijk[0], ijk[1], ijk[2], sz);
     }
 
     template<class F3D>
-    void nc_begin_send(int i, int j, int k, int X, int Y, int Z, F3D& F) const
+    void nc_begin_send(int dir, int side, int X, int Y, int Z, F3D& F) const
     {
+      const int* ijk = to_ijk[dir][side];
       int sz = (nx_[Y] + 1) * (nx_[Z] + 1);
-      float *p = get_send_buf(i, j, k, sz);
+      float *p = get_send_buf(ijk[0], ijk[1], ijk[2], sz);
       if (p) {
-	int face = (i+j+k) < 0 ? 1 : nx_[X];
+	int face = side ? nx_[X] : 1;
 	foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).ex)[X]; });
-	begin_send_port(i, j, k, sz);
+	begin_send_port(ijk[0], ijk[1], ijk[2], sz);
       }
     }
     
     template<class F3D>
-    void ec_begin_send(int i, int j, int k, int X, int Y, int Z, F3D& F) const
+    void ec_begin_send(int dir, int side, int X, int Y, int Z, F3D& F) const
     {
+      const int* ijk = to_ijk[dir][side];
       int sz = nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
-      float *p = get_send_buf(i, j, k, sz);
+      float *p = get_send_buf(ijk[0], ijk[1], ijk[2], sz);
       if (p) {
-	int face = (i+j+k) < 0 ? 1 : nx_[X];
+	int face = side ? nx_[X] : 1;
 	foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Y]; });
 	foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Z]; });
-	begin_send_port(i, j, k, sz);
+	begin_send_port(ijk[0], ijk[1], ijk[2], sz);
       }
     }
     
     template<class F3D>
-    void cc_begin_send(int i, int j, int k, int X, int Y, int Z, F3D& F) const
+    void cc_begin_send(int dir, int side, int X, int Y, int Z, F3D& F) const
     {
+      const int* ijk = to_ijk[dir][side];
       int sz = nx_[Y] * nx_[Z];
-      float *p = get_send_buf(i, j, k, sz);
+      float *p = get_send_buf(ijk[0], ijk[1], ijk[2], sz);
       if (p) {
-	int face = (i+j+k) < 0 ? 1 : nx_[X];
+	int face = side ? nx_[X] : 1;
 	foreach_center(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
-	begin_send_port(i, j, k, sz);
+	begin_send_port(ijk[0], ijk[1], ijk[2], sz);
       }
     }
     
     template<class F3D>
-    void nc_end_recv(int i, int j, int k, int X, int Y, int Z, F3D& F) const
+    void nc_end_recv(int dir, int side, int X, int Y, int Z, F3D& F) const
     {
-      float* p = end_recv_port(i,j,k);
+      const int* ijk = to_ijk[dir][side];
+      float* p = end_recv_port(ijk[0], ijk[1], ijk[2]);
       if (p) {
-	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
+	int face = side ? 0 : nx_[X] + 1;
 	foreach_node(g_, X, face, [&](int x, int y, int z) { (&F(x,y,z).ex)[X] = *p++; });
       }
     }
@@ -175,11 +191,12 @@ struct PscFieldArrayRemoteOps {
     }
 
     template<class F3D>
-    void cc_end_recv(int i, int j, int k, int X, int Y, int Z, F3D& F) const
+    void cc_end_recv(int dir, int side, int X, int Y, int Z, F3D& F) const
     {
-      float* p = end_recv_port(i,j,k);
+      const int* ijk = to_ijk[dir][side];
+      float* p = end_recv_port(ijk[0], ijk[1], ijk[2]);
       if (p) {
-	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
+	int face = side ? 0 : nx_[X] + 1;
 	foreach_center(g_, X, face, [&](int x, int y, int z) { F(x,y,z).div_b_err = *p++; });
       }
     }
@@ -194,19 +211,19 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     Comm comm(fa.g);
 
-    comm.ec_begin_recv(-1, 0, 0, 0,1,2);
-    comm.ec_begin_recv( 0,-1, 0, 1,2,0);
-    comm.ec_begin_recv( 0, 0,-1, 2,0,1);
-    comm.ec_begin_recv( 1, 0, 0, 0,1,2);
-    comm.ec_begin_recv( 0, 1, 0, 1,2,0);
-    comm.ec_begin_recv( 0, 0, 1, 2,0,1);
+    comm.ec_begin_recv(0, 0, 0,1,2);
+    comm.ec_begin_recv(1, 0, 1,2,0);
+    comm.ec_begin_recv(2, 0, 2,0,1);
+    comm.ec_begin_recv(0, 1, 0,1,2);
+    comm.ec_begin_recv(1, 1, 1,2,0);
+    comm.ec_begin_recv(2, 1, 2,0,1);
 
-    comm.ec_begin_send(-1, 0, 0, 0,1,2, F);
-    comm.ec_begin_send( 0,-1, 0, 1,2,0, F);
-    comm.ec_begin_send( 0, 0,-1, 2,0,1, F);
-    comm.ec_begin_send( 1, 0, 0, 0,1,2, F);
-    comm.ec_begin_send( 0, 1, 0, 1,2,0, F);
-    comm.ec_begin_send( 0, 0, 1, 2,0,1, F);
+    comm.ec_begin_send(0, 0, 0,1,2, F);
+    comm.ec_begin_send(1, 0, 1,2,0, F);
+    comm.ec_begin_send(2, 0, 2,0,1, F);
+    comm.ec_begin_send(0, 1, 0,1,2, F);
+    comm.ec_begin_send(1, 1, 1,2,0, F);
+    comm.ec_begin_send(2, 1, 2,0,1, F);
   }
 
   void end_remote_ghost_tang_b(FieldArray& fa)
@@ -221,12 +238,12 @@ struct PscFieldArrayRemoteOps {
     comm.ec_end_recv( 0, 1, 0, 1,2,0, F);
     comm.ec_end_recv( 0, 0, 1, 2,0,1, F);
 
-    comm.end_send(-1, 0, 0);
-    comm.end_send( 0,-1, 0);
-    comm.end_send( 0, 0,-1);
-    comm.end_send( 1, 0, 0);
-    comm.end_send( 0, 1, 0);
-    comm.end_send( 0, 0, 1);
+    comm.end_send(0, 0);
+    comm.end_send(1, 0);
+    comm.end_send(2, 0);
+    comm.end_send(0, 1);
+    comm.end_send(1, 1);
+    comm.end_send(2, 1);
   }
 
   void begin_remote_ghost_norm_e(FieldArray &fa)
@@ -234,19 +251,19 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     Comm comm(fa.g);
 
-    comm.nc_begin_recv(-1, 0, 0, 0,1,2);
-    comm.nc_begin_recv( 0,-1, 0, 1,2,0);
-    comm.nc_begin_recv( 0, 0,-1, 2,0,1);
-    comm.nc_begin_recv( 1, 0, 0, 0,1,2);
-    comm.nc_begin_recv( 0, 1, 0, 1,2,0);
-    comm.nc_begin_recv( 0, 0, 1, 2,0,1);
+    comm.nc_begin_recv(0, 0, 0,1,2);
+    comm.nc_begin_recv(1, 0, 1,2,0);
+    comm.nc_begin_recv(2, 0, 2,0,1);
+    comm.nc_begin_recv(0, 1, 0,1,2);
+    comm.nc_begin_recv(1, 1, 1,2,0);
+    comm.nc_begin_recv(2, 1, 2,0,1);
 
-    comm.nc_begin_send(-1, 0, 0, 0,1,2, F);
-    comm.nc_begin_send( 0,-1, 0, 1,2,0, F);
-    comm.nc_begin_send( 0, 0,-1, 2,0,1, F);
-    comm.nc_begin_send( 1, 0, 0, 0,1,2, F);
-    comm.nc_begin_send( 0, 1, 0, 1,2,0, F);
-    comm.nc_begin_send( 0, 0, 1, 2,0,1, F);
+    comm.nc_begin_send(0, 0, 0,1,2, F);
+    comm.nc_begin_send(1, 0, 1,2,0, F);
+    comm.nc_begin_send(2, 0, 2,0,1, F);
+    comm.nc_begin_send(0, 1, 0,1,2, F);
+    comm.nc_begin_send(1, 1, 1,2,0, F);
+    comm.nc_begin_send(2, 1, 2,0,1, F);
   }
 
   void end_remote_ghost_norm_e(FieldArray& fa)
@@ -254,19 +271,19 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     Comm comm(fa.g);
 
-    comm.nc_end_recv(-1, 0, 0, 0,1,2, F);
-    comm.nc_end_recv( 0,-1, 0, 1,2,0, F);
-    comm.nc_end_recv( 0, 0,-1, 2,0,1, F);
-    comm.nc_end_recv( 1, 0, 0, 0,1,2, F);
-    comm.nc_end_recv( 0, 1, 0, 1,2,0, F);
-    comm.nc_end_recv( 0, 0, 1, 2,0,1, F);
+    comm.nc_end_recv(0, 0, 0,1,2, F);
+    comm.nc_end_recv(1, 0, 1,2,0, F);
+    comm.nc_end_recv(2, 0, 2,0,1, F);
+    comm.nc_end_recv(0, 1, 0,1,2, F);
+    comm.nc_end_recv(1, 1, 1,2,0, F);
+    comm.nc_end_recv(2, 1, 2,0,1, F);
     
-    comm.end_send(-1, 0, 0);
-    comm.end_send( 0,-1, 0);
-    comm.end_send( 0, 0,-1);
-    comm.end_send( 1, 0, 0);
-    comm.end_send( 0, 1, 0);
-    comm.end_send( 0, 0, 1);
+    comm.end_send(0, 0);
+    comm.end_send(1, 0);
+    comm.end_send(2, 0);
+    comm.end_send(0, 1);
+    comm.end_send(1, 1);
+    comm.end_send(2, 1);
   }
 
   void begin_remote_ghost_div_b(FieldArray& fa)
@@ -274,19 +291,19 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     Comm comm(fa.g);
 
-    comm.cc_begin_recv(-1, 0, 0, 0,1,2);
-    comm.cc_begin_recv( 0,-1, 0, 1,2,0);
-    comm.cc_begin_recv( 0, 0,-1, 2,0,1);
-    comm.cc_begin_recv( 1, 0, 0, 0,1,2);
-    comm.cc_begin_recv( 0, 1, 0, 1,2,0);
-    comm.cc_begin_recv( 0, 0, 1, 2,0,1);
+    comm.cc_begin_recv(0, 0, 0,1,2);
+    comm.cc_begin_recv(1, 0, 1,2,0);
+    comm.cc_begin_recv(2, 0, 2,0,1);
+    comm.cc_begin_recv(0, 1, 0,1,2);
+    comm.cc_begin_recv(1, 1, 1,2,0);
+    comm.cc_begin_recv(2, 1, 2,0,1);
 
-    comm.cc_begin_send(-1, 0, 0, 0,1,2, F);
-    comm.cc_begin_send( 0,-1, 0, 1,2,0, F);
-    comm.cc_begin_send( 0, 0,-1, 2,0,1, F);
-    comm.cc_begin_send( 1, 0, 0, 0,1,2, F);
-    comm.cc_begin_send( 0, 1, 0, 1,2,0, F);
-    comm.cc_begin_send( 0, 0, 1, 2,0,1, F);
+    comm.cc_begin_send(0, 0, 0,1,2, F);
+    comm.cc_begin_send(1, 0, 1,2,0, F);
+    comm.cc_begin_send(2, 0, 2,0,1, F);
+    comm.cc_begin_send(0, 1, 0,1,2, F);
+    comm.cc_begin_send(1, 1, 1,2,0, F);
+    comm.cc_begin_send(2, 1, 2,0,1, F);
   }
 
   void end_remote_ghost_div_b(FieldArray& fa)
@@ -294,19 +311,19 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     Comm comm(fa.g);
 
-    comm.cc_end_recv(-1, 0, 0, 0,1,2, F);
-    comm.cc_end_recv( 0,-1, 0, 1,2,0, F);
-    comm.cc_end_recv( 0, 0,-1, 2,0,1, F);
-    comm.cc_end_recv( 1, 0, 0, 0,1,2, F);
-    comm.cc_end_recv( 0, 1, 0, 1,2,0, F);
-    comm.cc_end_recv( 0, 0, 1, 2,0,1, F);
+    comm.cc_end_recv(0, 0, 0,1,2, F);
+    comm.cc_end_recv(1, 0, 1,2,0, F);
+    comm.cc_end_recv(2, 0, 2,0,1, F);
+    comm.cc_end_recv(0, 1, 0,1,2, F);
+    comm.cc_end_recv(1, 1, 1,2,0, F);
+    comm.cc_end_recv(2, 1, 2,0,1, F);
     
-    comm.end_send(-1, 0, 0);
-    comm.end_send( 0,-1, 0);
-    comm.end_send( 0, 0,-1);
-    comm.end_send( 1, 0, 0);
-    comm.end_send( 0, 1, 0);
-    comm.end_send( 0, 0, 1);
+    comm.end_send(0, 0);
+    comm.end_send(1, 0);
+    comm.end_send(2, 0);
+    comm.end_send(0, 1);
+    comm.end_send(1, 1);
+    comm.end_send(2, 1);
   }
 
 };
