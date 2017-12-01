@@ -86,6 +86,11 @@ struct PscFieldArrayRemoteOps {
       ::begin_recv_port(i, j, k, sz * sizeof(float), g_);
     }
 
+    float* end_recv_port(int i, int j, int k) const
+    {
+      return static_cast<float*>(::end_recv_port(i, j, k, g_));
+    }
+
     void end_send(int i, int j, int k) const
     {
       ::end_send_port(i, j, k, g_);
@@ -154,7 +159,7 @@ struct PscFieldArrayRemoteOps {
     template<class F3D>
     void nc_end_recv(int i, int j, int k, int X, int Y, int Z, F3D& F) const
     {
-      float* p = static_cast<float*>(::end_recv_port(i,j,k, g_));
+      float* p = end_recv_port(i,j,k);
       if (p) {
 	p++;                 /* Remote g->d##X */
 	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
@@ -165,7 +170,7 @@ struct PscFieldArrayRemoteOps {
     template<class F3D>
     void ec_end_recv(int i, int j, int k, int X, int Y, int Z, F3D& F) const
     {
-      float* p = static_cast<float*>(::end_recv_port(i,j,k, g_));
+      float* p = end_recv_port(i,j,k);
       if (p) {
 	p++;                 /* Remote g->d##X */
 	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
@@ -177,7 +182,7 @@ struct PscFieldArrayRemoteOps {
     template<class F3D>
     void cc_end_recv(int i, int j, int k, int X, int Y, int Z, F3D& F) const
     {
-      float* p = static_cast<float*>(::end_recv_port(i,j,k, g_));
+      float* p = end_recv_port(i,j,k);
       if (p) {
 	p++;                 /* Remote g->d##X */
 	int face = (i+j+k) < 0 ? nx_[X] + 1 : 0;
