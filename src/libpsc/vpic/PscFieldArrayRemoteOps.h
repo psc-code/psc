@@ -148,8 +148,9 @@ struct Comm
     }
   }
 
-  //private:
+protected:
   int nx_[3];
+  int buf_size_[3];
   const grid_t *g_;
 };
 
@@ -160,7 +161,6 @@ template<class F3D>
 struct CommCC : Comm<F3D>
 {
   typedef Comm<F3D> Base;
-  using Base::Comm;
   using Base::begin_recv;
   using Base::begin_send;
   using Base::end_recv;
@@ -172,23 +172,28 @@ struct CommCC : Comm<F3D>
   using Base::get_send_buf;
   using Base::nx_;
   using Base::g_;
+  using Base::buf_size_;
+
+  CommCC(grid_t *g) : Base(g)
+  {
+    for (int X = 0; X < 3; X++) {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      buf_size_[X] = nx_[Y] * nx_[Z];
+    }
+  }
     
   void begin_recv(int X, int side) const
   {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    int sz = nx_[Y] * nx_[Z];
-    begin_recv_port(X, side, sz);
+    begin_recv_port(X, side, buf_size_[X]);
   }
 
   void begin_send(int X, int side, F3D& F) const
   {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    int sz = nx_[Y] * nx_[Z];
-    float *p = get_send_buf(X, side, sz);
+    float *p = get_send_buf(X, side, buf_size_[X]);
     if (p) {
       int face = side ? nx_[X] : 1;
       foreach_center(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
-      begin_send_port(X, side, sz);
+      begin_send_port(X, side, buf_size_[X]);
     }
   }
     
@@ -221,23 +226,28 @@ struct CommNC : Comm<F3D>
   using Base::get_send_buf;
   using Base::nx_;
   using Base::g_;
+  using Base::buf_size_;
 
+  CommNC(grid_t *g) : Base(g)
+  {
+    for (int X = 0; X < 3; X++) {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      buf_size_[X] = (nx_[Y] + 1) * (nx_[Z] + 1);
+    }
+  }
+    
   void begin_recv(int X, int side) const
   {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    int sz = (nx_[Y] + 1) * (nx_[Z] + 1);
-    begin_recv_port(X, side, sz);
+    begin_recv_port(X, side, buf_size_[X]);
   }
 
   void begin_send(int X, int side, F3D& F) const
   {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    int sz = (nx_[Y] + 1) * (nx_[Z] + 1);
-    float *p = get_send_buf(X, side, sz);
+    float *p = get_send_buf(X, side, buf_size_[X]);
     if (p) {
       int face = side ? nx_[X] : 1;
       foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).ex)[X]; });
-      begin_send_port(X, side, sz);
+      begin_send_port(X, side, buf_size_[X]);
     }
   }
     
@@ -270,24 +280,30 @@ struct CommEC : Comm<F3D>
   using Base::get_send_buf;
   using Base::nx_;
   using Base::g_;
+  using Base::buf_size_;
+
+  CommEC(grid_t *g) : Base(g)
+  {
+    for (int X = 0; X < 3; X++) {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      buf_size_[X] = nx_[Y] * (nx_[Z] + 1) + nx_[Z] * (nx_[Y] + 1);
+    }
+  }
 
   void begin_recv(int X, int side) const
   {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    int sz = nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
-    begin_recv_port(X, side, sz);
+    begin_recv_port(X, side, buf_size_[X]);
   }
 
   void begin_send(int X, int side, F3D& F) const
   {
     int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    int sz = nx_[Y] * (nx_[Z]+1) + nx_[Z] * (nx_[Y]+1);
-    float *p = get_send_buf(X, side, sz);
+    float *p = get_send_buf(X, side, buf_size_[X]);
     if (p) {
       int face = side ? nx_[X] : 1;
       foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Y]; });
       foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Z]; });
-      begin_send_port(X, side, sz);
+      begin_send_port(X, side, buf_size_[X]);
     }
   }
     
