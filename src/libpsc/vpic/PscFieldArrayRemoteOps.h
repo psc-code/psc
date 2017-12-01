@@ -108,206 +108,50 @@ struct Comm
 
   // ----------------------------------------------------------------------
 
-  void begin_recv(int X, int side) const
-  {
-    begin_recv_port(X, side, buf_size_[X]);
-  }
-
-  void end_send(int X, int side) const
-  {
-    end_send_port(X, side);
-  }
-
-  virtual void begin_send(int side, int dir, F3D& F) const = 0;
-  virtual void end_recv(int side, int dir, F3D& F) const = 0;
+  virtual void begin_send(int side, int dir, float* p, F3D& F) const = 0;
+  virtual void end_recv(int side, int dir, float* p, F3D& F) const = 0;
   
-  void begin_recv() const
+  void begin(F3D& F) const
   {
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	begin_recv(dir, side);
+	begin_recv_port(dir, side, buf_size_[dir]);
       }
     }
-  }
 
-  void begin_send(F3D& F) const
-  {
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	begin_send(dir, side, F);
+	float *p = get_send_buf(dir, side, buf_size_[dir]);
+	if (p) {
+	  begin_send(dir, side, p, F);
+	  begin_send_port(dir, side, buf_size_[dir]);
+	}
       }
     }
   }
   
-  void end_recv(F3D& F) const
+  void end(F3D& F) const
   {
     for (int side = 0; side <= 1; side++) {
       for (int dir = 0; dir < 3; dir++) {
-	end_recv(dir, side, F);
+	float* p = end_recv_port(dir, side);
+	if (p) {
+	  end_recv(dir, side, p, F);
+	}
+      }
+    }
+
+    for (int side = 0; side <= 1; side++) {
+      for (int dir = 0; dir < 3; dir++) {
+	end_send_port(dir, side);
       }
     }
   }
   
-  void end_send() const
-  {
-    for (int side = 0; side <= 1; side++) {
-      for (int dir = 0; dir < 3; dir++) {
-	end_send(dir, side);
-      }
-    }
-  }
-
 protected:
   int nx_[3];
   int buf_size_[3];
   const grid_t *g_;
-};
-
-// ======================================================================
-// CommCC
-
-template<class F3D>
-struct CommCC : Comm<F3D>
-{
-  typedef Comm<F3D> Base;
-  using Base::begin_recv;
-  using Base::begin_send;
-  using Base::end_recv;
-  using Base::end_send;
-  
-  using Base::begin_send_port;
-  using Base::end_recv_port;
-  using Base::get_send_buf;
-  using Base::nx_;
-  using Base::g_;
-  using Base::buf_size_;
-
-  CommCC(grid_t *g) : Base(g)
-  {
-    for (int X = 0; X < 3; X++) {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      buf_size_[X] = nx_[Y] * nx_[Z];
-    }
-  }
-    
-  void begin_send(int X, int side, F3D& F) const
-  {
-    float *p = get_send_buf(X, side, buf_size_[X]);
-    if (p) {
-      int face = side ? nx_[X] : 1;
-      foreach_center(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
-      begin_send_port(X, side, buf_size_[X]);
-    }
-  }
-    
-  void end_recv(int X, int side, F3D& F) const
-  {
-    float* p = end_recv_port(X, side);
-    if (p) {
-      int face = side ? 0 : nx_[X] + 1;
-      foreach_center(g_, X, face, [&](int x, int y, int z) { F(x,y,z).div_b_err = *p++; });
-    }
-  }
-};
-     
-// ======================================================================
-// CommNC
-
-template<class F3D>
-struct CommNC : Comm<F3D>
-{
-  typedef Comm<F3D> Base;
-  using Base::Comm;
-  using Base::begin_recv;
-  using Base::begin_send;
-  using Base::end_recv;
-  using Base::end_send;
-
-  using Base::begin_send_port;
-  using Base::end_recv_port;
-  using Base::get_send_buf;
-  using Base::nx_;
-  using Base::g_;
-  using Base::buf_size_;
-
-  CommNC(grid_t *g) : Base(g)
-  {
-    for (int X = 0; X < 3; X++) {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      buf_size_[X] = (nx_[Y] + 1) * (nx_[Z] + 1);
-    }
-  }
-    
-  void begin_send(int X, int side, F3D& F) const
-  {
-    float *p = get_send_buf(X, side, buf_size_[X]);
-    if (p) {
-      int face = side ? nx_[X] : 1;
-      foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).ex)[X]; });
-      begin_send_port(X, side, buf_size_[X]);
-    }
-  }
-    
-  void end_recv(int X, int side, F3D& F) const
-  {
-    float* p = end_recv_port(X, side);
-    if (p) {
-      int face = side ? 0 : nx_[X] + 1;
-      foreach_node(g_, X, face, [&](int x, int y, int z) { (&F(x,y,z).ex)[X] = *p++; });
-    }
-  }
-};
-  
-// ======================================================================
-// CommEC
-
-template<class F3D>
-struct CommEC : Comm<F3D>
-{
-  typedef Comm<F3D> Base;
-  using Base::Comm;
-  using Base::begin_recv;
-  using Base::begin_send;
-  using Base::end_recv;
-  using Base::end_send;
-
-  using Base::begin_send_port;
-  using Base::end_recv_port;
-  using Base::get_send_buf;
-  using Base::nx_;
-  using Base::g_;
-  using Base::buf_size_;
-
-  CommEC(grid_t *g) : Base(g)
-  {
-    for (int X = 0; X < 3; X++) {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      buf_size_[X] = nx_[Y] * (nx_[Z] + 1) + nx_[Z] * (nx_[Y] + 1);
-    }
-  }
-
-  void begin_send(int X, int side, F3D& F) const
-  {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    float *p = get_send_buf(X, side, buf_size_[X]);
-    if (p) {
-      int face = side ? nx_[X] : 1;
-      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Y]; });
-      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Z]; });
-      begin_send_port(X, side, buf_size_[X]);
-    }
-  }
-    
-  void end_recv(int X, int side, F3D& F) const
-  {
-    int Y = (X + 1) % 3, Z = (X + 2) % 3;
-    float* p = end_recv_port(X, side);
-    if (p) {
-      int face = side ? 0 : nx_[X] + 1;
-      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { (&F(x,y,z).cbx)[Y] = *p++; });
-      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { (&F(x,y,z).cbx)[Z] = *p++; });
-    }
-  }
 };
 
 // ======================================================================
@@ -317,13 +161,51 @@ template<class FA>
 struct PscFieldArrayRemoteOps {
   typedef FA FieldArray;
 
+  // ----------------------------------------------------------------------
+  // CommEC
+
+  template<class F3D>
+  struct CommEC : Comm<F3D>
+  {
+    typedef Comm<F3D> Base;
+    using Base::begin;
+    using Base::end;
+
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommEC(grid_t *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = nx_[Y] * (nx_[Z] + 1) + nx_[Z] * (nx_[Y] + 1);
+      }
+    }
+
+    void begin_send(int X, int side, float* p, F3D& F) const
+    {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      int face = side ? nx_[X] : 1;
+      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Y]; });
+      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).cbx)[Z]; });
+    }
+    
+    void end_recv(int X, int side, float* p, F3D& F) const
+    {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      int face = side ? 0 : nx_[X] + 1;
+      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { (&F(x,y,z).cbx)[Y] = *p++; });
+      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { (&F(x,y,z).cbx)[Z] = *p++; });
+    }
+  };
+
   void begin_remote_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     CommEC<Field3D<FieldArray>> comm(fa.g);
 
-    comm.begin_recv();
-    comm.begin_send(F);
+    comm.begin(F);
   }
 
   void end_remote_ghost_tang_b(FieldArray& fa)
@@ -331,17 +213,50 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     CommEC<Field3D<FieldArray>> comm(fa.g);
     
-    comm.end_recv(F);
-    comm.end_send();
+    comm.end(F);
   }
 
+  // ----------------------------------------------------------------------
+  // CommNC
+
+  template<class F3D>
+  struct CommNC : Comm<F3D>
+  {
+    typedef Comm<F3D> Base;
+    using Base::begin;
+    using Base::end;
+
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommNC(grid_t *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = (nx_[Y] + 1) * (nx_[Z] + 1);
+      }
+    }
+    
+    void begin_send(int X, int side, float *p, F3D& F) const
+    {
+      int face = side ? nx_[X] : 1;
+      foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).ex)[X]; });
+    }
+    
+    void end_recv(int X, int side, float *p, F3D& F) const
+    {
+      int face = side ? 0 : nx_[X] + 1;
+      foreach_node(g_, X, face, [&](int x, int y, int z) { (&F(x,y,z).ex)[X] = *p++; });
+    }
+  };
+  
   void begin_remote_ghost_norm_e(FieldArray &fa)
   {
     Field3D<FieldArray> F(fa);
     CommNC<Field3D<FieldArray>> comm(fa.g);
 
-    comm.begin_recv();
-    comm.begin_send(F);
+    comm.begin(F);
   }
 
   void end_remote_ghost_norm_e(FieldArray& fa)
@@ -349,17 +264,50 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     CommNC<Field3D<FieldArray>> comm(fa.g);
 
-    comm.end_recv(F);
-    comm.end_send();
+    comm.end(F);
   }
 
+  // ----------------------------------------------------------------------
+  // CommCC
+
+  template<class F3D>
+  struct CommCC : Comm<F3D>
+  {
+    typedef Comm<F3D> Base;
+    using Base::begin;
+    using Base::end;
+  
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommCC(grid_t *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = nx_[Y] * nx_[Z];
+      }
+    }
+    
+    void begin_send(int X, int side, float *p, F3D& F) const
+    {
+      int face = side ? nx_[X] : 1;
+      foreach_center(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).div_b_err; });
+    }
+    
+    void end_recv(int X, int side, float *p, F3D& F) const
+    {
+      int face = side ? 0 : nx_[X] + 1;
+      foreach_center(g_, X, face, [&](int x, int y, int z) { F(x,y,z).div_b_err = *p++; });
+    }
+  };
+     
   void begin_remote_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     CommCC<Field3D<FieldArray>> comm(fa.g);
 
-    comm.begin_recv();
-    comm.begin_send(F);
+    comm.begin(F);
   }
 
   void end_remote_ghost_div_b(FieldArray& fa)
@@ -367,8 +315,7 @@ struct PscFieldArrayRemoteOps {
     Field3D<FieldArray> F(fa);
     CommCC<Field3D<FieldArray>> comm(fa.g);
 
-    comm.end_recv(F);
-    comm.end_send();
+    comm.end(F);
   }
 
 };
