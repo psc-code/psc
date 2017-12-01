@@ -190,6 +190,11 @@ struct PscFieldArrayBase : field_array_t
   {
     return f[idx];
   }
+
+  Grid* getGrid()
+  {
+    return static_cast<Grid*>(g);
+  }
 };
 
 
