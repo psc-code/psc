@@ -12,6 +12,28 @@
 
 struct PscGridBase : grid_t
 {
+  PscGridBase()
+  {
+    CLEAR(this, 1 );
+    for(int i = 0; i < 27; i++) {
+      bc[i] = anti_symmetric_fields;
+    }
+    bc[BOUNDARY(0,0,0)] = world_rank;
+    mp = new_mp(27);
+  }
+  
+  ~PscGridBase()
+  {
+    FREE_ALIGNED(neighbor);
+    FREE_ALIGNED(range);
+    delete_mp(mp);
+  }
+  
+  static PscGridBase* create()
+  {
+    return new PscGridBase;
+  }
+
   void setup(double dx_[3], double dt_, double cvac_, double eps0_)
   {
     dx = dx_[0]; dy = dx_[1]; dz = dx_[2];

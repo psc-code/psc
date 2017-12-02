@@ -9,6 +9,11 @@
 
 struct VpicGridBase : grid_t
 {
+  static VpicGridBase* create()
+  {
+    return static_cast<VpicGridBase*>(::new_grid());
+  }
+
   void setup(double dx_[3], double dt_, double cvac_, double eps0_)
   {
     dx = dx_[0]; dy = dx_[1]; dz = dx_[2];

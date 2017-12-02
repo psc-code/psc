@@ -16,7 +16,13 @@ class PscSimulationMixin : protected vpic_simulation
   typedef typename FieldArray::MaterialList MaterialList;
 
 public:
-  Grid*& getGrid()                    { return *reinterpret_cast<Grid **>(&grid); }
+  PscSimulationMixin()
+  {
+    grid_ = Grid::create();
+  }
+  
+  //  Grid*& getGrid()                    { return *reinterpret_cast<Grid **>(&grid); }
+  Grid*& getGrid()                    { return grid_; }
   MaterialList& getMaterialList()     { return material_list_; }
   FieldArray*& getFieldArray()        { return field_array_; }
   Interpolator*& getInterpolator()    { return interpolator_; }
@@ -73,6 +79,7 @@ public:
   }
 
 private:
+  Grid* grid_;
   MaterialList material_list_;
   FieldArray *field_array_;
   Interpolator *interpolator_;
