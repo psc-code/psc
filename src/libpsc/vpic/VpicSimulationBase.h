@@ -18,6 +18,7 @@ class VpicSimulationMixin : protected vpic_simulation
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename FieldArray::MaterialList MaterialList;
 
 public:
@@ -63,6 +64,11 @@ public:
     return *reinterpret_cast<Particles *>(&species_list);
   }
   
+  ParticleBcList& getParticleBcList()
+  {
+    return *reinterpret_cast<ParticleBcList*>(&particle_bc_list);
+  }
+
   void initialization(int argc, char **argv)
   {
     TIC user_initialization(argc, argv); TOC(user_initialization, 1);

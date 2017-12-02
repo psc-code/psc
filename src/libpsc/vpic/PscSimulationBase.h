@@ -12,16 +12,18 @@ class PscSimulationMixin : protected vpic_simulation
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename FieldArray::MaterialList MaterialList;
 
 public:
-  Grid*& getGrid()                 { return *reinterpret_cast<Grid **>(&grid); }
-  MaterialList& getMaterialList()  { return material_list_; }
-  FieldArray*& getFieldArray()     { return field_array_; }
-  Interpolator*& getInterpolator() { return interpolator_; }
-  Accumulator*& getAccumulator()   { return accumulator_; }
-  HydroArray*& getHydroArray()     { return hydro_array_;  }
-  Particles& getParticles()        { return particles_; }
+  Grid*& getGrid()                    { return *reinterpret_cast<Grid **>(&grid); }
+  MaterialList& getMaterialList()     { return material_list_; }
+  FieldArray*& getFieldArray()        { return field_array_; }
+  Interpolator*& getInterpolator()    { return interpolator_; }
+  Accumulator*& getAccumulator()      { return accumulator_; }
+  HydroArray*& getHydroArray()        { return hydro_array_;  }
+  Particles& getParticles()           { return particles_; }
+  ParticleBcList& getParticleBcList() { return *reinterpret_cast<ParticleBcList*>(&particle_bc_list); }
   
   void getParams(int& num_step_,
 		 int& clean_div_e_interval_,

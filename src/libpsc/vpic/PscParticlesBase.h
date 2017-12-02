@@ -70,10 +70,11 @@ struct PscSpecies : species_t
 // ======================================================================
 // PscParticlesBase
 
-template<class G>
+template<class G, class BCL>
 struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 {
   typedef G Grid;
+  typedef BCL ParticleBcList;
   typedef PscSpecies<Grid> Species;
   typedef VpicListBase<Species> Base;
 
