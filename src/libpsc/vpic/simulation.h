@@ -24,6 +24,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
   typedef typename Particles::Species Species;
+  typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename FieldArray::MaterialList MaterialList;
   typedef typename MaterialList::Material Material;
 
@@ -43,7 +44,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       interpolator_(SimulationMixin::getInterpolator()),
       accumulator_(SimulationMixin::getAccumulator()),
       hydro_array_(SimulationMixin::getHydroArray()),
-      particles_(SimulationMixin::getParticles())
+      particles_(SimulationMixin::getParticles()),
+      particle_bc_list_(SimulationMixin::getParticleBcList())
   {
   }
 
@@ -191,6 +193,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   Accumulator*& accumulator_;
   HydroArray*& hydro_array_;
   Particles& particles_;
+  ParticleBcList& particle_bc_list_;
 };
 
 #endif

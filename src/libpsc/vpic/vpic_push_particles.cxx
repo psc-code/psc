@@ -78,7 +78,7 @@ void vpic_push_particles::push_mprts(Particles *vmprts, FieldArray *vmflds)
 
   TIC
     for(int round = 0; round < num_comm_round; round++) {
-      sim_->boundary_p(sim_->simulation_->particle_bc_list, *vmprts,
+      sim_->boundary_p(sim_->particle_bc_list_, *vmprts,
 		       *vmflds, *accumulator);
     } TOC( boundary_p, num_comm_round );
 

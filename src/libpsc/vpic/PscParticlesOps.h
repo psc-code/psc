@@ -11,6 +11,7 @@ struct PscParticlesOps {
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
+  typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename Accumulator::Block AccumulatorBlock;
   
   PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
@@ -835,9 +836,8 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // boundary_p
 
-  void
-  boundary_p_(particle_bc_t* pbc_list, Particles& vmprts, FieldArray& fa,
-	      AccumulatorBlock acc_block)
+  void boundary_p_(const particle_bc_t* pbc_list, Particles& vmprts, FieldArray& fa,
+		   AccumulatorBlock acc_block)
   {
 #ifdef V4_ACCELERATION
     using namespace v4;
@@ -1172,7 +1172,7 @@ struct PscParticlesOps {
   }
   
   
-  void boundary_p(particle_bc_t *pbc_list, Particles& vmprts, FieldArray& fa,
+  void boundary_p(ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
 		  Accumulator& accumulator)
   {
     boundary_p_(pbc_list, vmprts, fa, accumulator[0]);

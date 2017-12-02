@@ -133,7 +133,11 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     assert(head_);
     return head_->g;
   }
-
+  
+  Species* head()
+  {
+    return head_;
+  }
 };
  
 #endif

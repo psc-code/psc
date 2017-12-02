@@ -110,7 +110,11 @@ typedef VpicParticleBcList ParticleBcList;
 
 typedef PscParticlesBase<Grid, ParticleBcList> ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
+#if 1
 typedef PscParticlesOps<Particles> ParticlesOps;
+#else
+typedef VpicParticlesOps<Particles> ParticlesOps;
+#endif
 
 #if 1
 typedef VpicDiagMixin<Particles> DiagMixin;
