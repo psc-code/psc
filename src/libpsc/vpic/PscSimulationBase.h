@@ -23,7 +23,7 @@ public:
   Accumulator*& getAccumulator()      { return accumulator_; }
   HydroArray*& getHydroArray()        { return hydro_array_;  }
   Particles& getParticles()           { return particles_; }
-  ParticleBcList& getParticleBcList() { return *reinterpret_cast<ParticleBcList*>(&particle_bc_list); }
+  ParticleBcList& getParticleBcList() { return particle_bc_list_; }
   
   void getParams(int& num_step_,
 		 int& clean_div_e_interval_,
@@ -79,6 +79,7 @@ private:
   Accumulator *accumulator_;
   HydroArray *hydro_array_;
   Particles particles_;
+  ParticleBcList particle_bc_list_;
 };
 
 template<class Particles>
