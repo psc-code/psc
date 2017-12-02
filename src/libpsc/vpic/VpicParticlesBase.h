@@ -7,13 +7,21 @@
 // ======================================================================
 // VpicParticlesBase
 
+template<class G>
 struct VpicSpecies : species_t
 {
 };
 
-struct VpicParticlesBase : public VpicListBase<VpicSpecies>
+template<class G>
+struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
 {
-  typedef VpicSpecies Species;
+  typedef G Grid;
+  typedef VpicSpecies<Grid> Species;
+  typedef VpicListBase<Species> Base;
+
+  using iterator = typename Base::iterator;
+  using const_iterator = typename Base::const_iterator;
+  using Base::head_;
 
   static Species* create(const char * name, float q, float m,
 			 int max_local_np, int max_local_nm,
@@ -30,10 +38,10 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies>
     return ::num_species(head_);
   }
   
-  VpicSpecies* append(species_t* s)
+  Species* append(species_t* s)
   {
     species_t *sp = ::append_species(s, reinterpret_cast<species_t **>(&head_));
-    return static_cast<VpicSpecies*>(sp);
+    return static_cast<Species*>(sp);
   }
   
   iterator find(int id)

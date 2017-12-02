@@ -75,10 +75,11 @@ enum {
 
 #ifdef __cplusplus
 
+//typedef Grid;
 
 #if 1
 typedef PscMaterialList MaterialList;
-typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
+typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
 typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
@@ -96,7 +97,7 @@ typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
 typedef VpicHydroArrayBase HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
-typedef PscParticlesBase ParticlesBase;
+typedef PscParticlesBase<Grid> ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
 typedef PscParticlesOps<Particles> ParticlesOps;
 

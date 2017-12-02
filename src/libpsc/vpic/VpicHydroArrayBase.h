@@ -2,8 +2,6 @@
 #ifndef VPIC_HYDRO_ARRAY_BASE_H
 #define VPIC_HYDRO_ARRAY_BASE_H
 
-#include "grid.h"
-
 // ======================================================================
 // VpicHydroArrayBase
 

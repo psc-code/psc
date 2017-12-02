@@ -8,16 +8,19 @@
 // PscFieldArrayRemoteOps
 
 template<class FA>
-struct PscFieldArrayRemoteOps {
+struct PscFieldArrayRemoteOps
+{
   typedef FA FieldArray;
+  typedef typename FieldArray::Grid Grid;
 
   // ----------------------------------------------------------------------
   // CommEC
 
-  template<class F3D>
-  struct CommEC : Comm<F3D>
+  template<class G, class F3D>
+  struct CommEC : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
     using Base::begin;
     using Base::end;
 
@@ -53,7 +56,7 @@ struct PscFieldArrayRemoteOps {
   void begin_remote_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommEC<Field3D<FieldArray>> comm(fa.getGrid());
+    CommEC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
 
     comm.begin(F);
   }
@@ -61,7 +64,7 @@ struct PscFieldArrayRemoteOps {
   void end_remote_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommEC<Field3D<FieldArray>> comm(fa.getGrid());
+    CommEC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
     
     comm.end(F);
   }
@@ -69,10 +72,11 @@ struct PscFieldArrayRemoteOps {
   // ----------------------------------------------------------------------
   // CommNC
 
-  template<class F3D>
-  struct CommNC : Comm<F3D>
+  template<class G, class F3D>
+  struct CommNC : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
     using Base::begin;
     using Base::end;
 
@@ -104,7 +108,7 @@ struct PscFieldArrayRemoteOps {
   void begin_remote_ghost_norm_e(FieldArray &fa)
   {
     Field3D<FieldArray> F(fa);
-    CommNC<Field3D<FieldArray>> comm(fa.getGrid());
+    CommNC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
 
     comm.begin(F);
   }
@@ -112,7 +116,7 @@ struct PscFieldArrayRemoteOps {
   void end_remote_ghost_norm_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommNC<Field3D<FieldArray>> comm(fa.getGrid());
+    CommNC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
 
     comm.end(F);
   }
@@ -120,10 +124,11 @@ struct PscFieldArrayRemoteOps {
   // ----------------------------------------------------------------------
   // CommCC
 
-  template<class F3D>
-  struct CommCC : Comm<F3D>
+  template<class G, class F3D>
+  struct CommCC : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
     using Base::begin;
     using Base::end;
   
@@ -155,7 +160,7 @@ struct PscFieldArrayRemoteOps {
   void begin_remote_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommCC<Field3D<FieldArray>> comm(fa.getGrid());
+    CommCC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
 
     comm.begin(F);
   }
@@ -163,7 +168,7 @@ struct PscFieldArrayRemoteOps {
   void end_remote_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommCC<Field3D<FieldArray>> comm(fa.getGrid());
+    CommCC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
 
     comm.end(F);
   }

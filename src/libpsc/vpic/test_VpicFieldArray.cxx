@@ -1,13 +1,14 @@
 
 #include "test_FieldArray.h"
 
+#include "VpicGridBase.h"
 #include "VpicFieldArrayBase.h"
 #include "VpicFieldArray.h"
 
 void test_VpicFieldArray()
 {
   typedef VpicMaterialList MaterialList;
-  typedef VpicFieldArrayBase<MaterialList> FieldArrayBase;
+  typedef VpicFieldArrayBase<Grid, MaterialList> FieldArrayBase;
   typedef VpicFieldArray<FieldArrayBase> FieldArray;
 
   Grid grid;

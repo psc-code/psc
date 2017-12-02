@@ -2,6 +2,8 @@
 #ifndef VPIC_LIST_BASE_H
 #define VPIC_LIST_BASE_H
 
+#include <algorithm>
+
 // ======================================================================
 // VpicListBase
 

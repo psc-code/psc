@@ -5,7 +5,7 @@
 #include <vpic.h>
 
 // ======================================================================
-// Grid
+// VpicGridBase
 
 struct Grid : grid_t
 {

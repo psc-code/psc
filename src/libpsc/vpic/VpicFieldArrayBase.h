@@ -2,7 +2,6 @@
 #ifndef VPIC_FIELD_ARRAY_BASE_H
 #define VPIC_FIELD_ARRAY_BASE_H
 
-#include "grid.h"
 #include "material.h"
 
 #include "field_advance/field_advance.h"
@@ -16,8 +15,9 @@
 inline void field_array_ctor(field_array_t *fa, grid_t *g, const material_t *m_list, float damp);
 inline void field_array_dtor(field_array_t *fa);
 
-template<class ML>
+template<class G, class ML>
 struct VpicFieldArrayBase : field_array_t {
+  typedef G Grid;
   typedef ML MaterialList;
   typedef field_t Element;
   

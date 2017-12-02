@@ -40,10 +40,12 @@ struct PscHydroArray : HydroArrayBase
   // ----------------------------------------------------------------------
   // synchronize
   
-  template<class F3D>
-  struct CommHydro : Comm<F3D>
+  template<class G, class F3D>
+  struct CommHydro : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+    
     using Base::begin;
     using Base::end;
 
@@ -151,7 +153,7 @@ struct PscHydroArray : HydroArrayBase
 
 # undef ADJUST_HYDRO
 
-    CommHydro<Field3D<HydroArrayBase>> comm(this->getGrid());
+    CommHydro<Grid, Field3D<HydroArrayBase>> comm(this->getGrid());
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, H);

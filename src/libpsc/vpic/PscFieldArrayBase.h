@@ -2,7 +2,6 @@
 #ifndef PSC_FIELD_ARRAY_BASE_H
 #define PSC_FIELD_ARRAY_BASE_H
 
-#include "grid.h"
 #include "material.h"
 
 #include "field_advance/field_advance.h"
@@ -22,9 +21,10 @@
 // ======================================================================
 // PscFieldArrayBase
 
-template<class ML>
+template<class G, class ML>
 struct PscFieldArrayBase : field_array_t
 {
+  typedef G Grid;
   typedef ML MaterialList;
   typedef field_t Element;
   

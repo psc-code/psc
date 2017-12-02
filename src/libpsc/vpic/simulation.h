@@ -4,7 +4,7 @@
 
 #include "material.h"
 #include "rng.h"
-#include "grid.h"
+#include "vpic.h"
 
 #include "species_advance/species_advance.h"
 
@@ -18,6 +18,7 @@ template<class P, class ParticlesOps, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 {
   typedef P Particles;
+  typedef typename Particles::Grid Grid;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;

@@ -17,7 +17,7 @@ static void foreach(F f, int ib, int ie, int jb, int je, int kb, int ke)
   }
 };
 
-template<class F>
+template<class Grid, class F>
 static void foreach_edge(const Grid *g, int Y, int Z, int face, F f)
 {
   if        (Y == 1 && Z == 2) { foreach(f, face, face, 1, g->ny  , 1, g->nz+1);
@@ -31,7 +31,7 @@ static void foreach_edge(const Grid *g, int Y, int Z, int face, F f)
   }
 }
   
-template<class F>
+template<class Grid, class F>
 static void foreach_node(const Grid *g, int X, int face, F f)
 {
   if        (X == 0) { foreach(f, face, face, 1, g->ny+1, 1, g->nz+1);
@@ -42,7 +42,7 @@ static void foreach_node(const Grid *g, int X, int face, F f)
   }
 }
 
-template<class F>
+template<class Grid, class F>
 static void foreach_face(const Grid *g, int X, int face, F f)
 {
   if        (X == 0) { foreach(f, face, face, 1, g->ny  , 1, g->nz  );
@@ -53,15 +53,15 @@ static void foreach_face(const Grid *g, int X, int face, F f)
   }
 }
 
-template<class F>
-static void foreach_nc_interior(F f, const grid_t *g)
+template<class Grid, class F>
+static void foreach_nc_interior(F f, Grid* g)
 {
   const int nx = g->nx, ny = g->ny, nz = g->nz;
   foreach(f, 2, nx, 2, ny, 2, nz);
 }
 
-template<class F>
-static void foreach_nc_boundary(F f, const grid_t *g)
+template<class Grid, class F>
+static void foreach_nc_boundary(F f, Grid* g)
 {
   const int nx = g->nx, ny = g->ny, nz = g->nz;
 
@@ -78,8 +78,8 @@ static void foreach_nc_boundary(F f, const grid_t *g)
   foreach(f, nx+1, nx+1, 2   , ny  ,    2, nz  );
 }
 
-template<class F>
-static void foreach_ec_interior(F f, const grid_t *g)
+template<class Grid, class F>
+static void foreach_ec_interior(F f, Grid* g)
 {
   const int nx = g->nx, ny = g->ny, nz = g->nz;
 
@@ -115,8 +115,8 @@ static void foreach_ec_interior(F f, const grid_t *g)
   }
 }
 
-template<class F>
-static void foreach_ec_boundary(F f, const grid_t *g)
+template<class Grid, class F>
+static void foreach_ec_boundary(F f, Grid* g)
 {
   const int nx = g->nx, ny = g->ny, nz = g->nz;
 
@@ -190,9 +190,11 @@ static void foreach_ec_boundary(F f, const grid_t *g)
 // ======================================================================
 // Comm
 
-template<class F3D>
+template<class G, class F3D>
 struct Comm
 {
+  typedef G Grid;
+  
   Comm(Grid* g) : g_(g)
   {
     nx_[0] = g_->nx;

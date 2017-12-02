@@ -2,8 +2,6 @@
 #ifndef VPIC_ACCUMULATOR_BASE_H
 #define VPIC_ACCUMULATOR_BASE_H
 
-#include "grid.h"
-
 inline void accumulator_array_ctor(accumulator_array_t * aa, grid_t * g);
 inline void accumulator_array_dtor(accumulator_array_t * aa);
 

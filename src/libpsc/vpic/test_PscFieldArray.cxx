@@ -1,6 +1,7 @@
 
 #include "test_FieldArray.h"
 
+#include "VpicGridBase.h"
 #include "PscFieldArrayBase.h"
 #include "PscFieldArrayLocalOps.h"
 #include "VpicFieldArrayRemoteOps.h"
@@ -9,7 +10,7 @@
 void test_PscFieldArray()
 {
   typedef PscMaterialList MaterialList;
-  typedef PscFieldArrayBase<MaterialList> FieldArrayBase;
+  typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
   typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
   typedef VpicFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
   typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;

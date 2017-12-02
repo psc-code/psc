@@ -19,7 +19,8 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 {
   typedef B Base;
   typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
-
+  typedef typename Base::Grid Grid;
+  
   using Base::Base;
 
   using Base::g;
@@ -275,10 +276,12 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   // ----------------------------------------------------------------------
   // CommJf
 
-  template<class F3D>
-  struct CommJf : Comm<F3D>
+  template<class G, class F3D>
+  struct CommJf : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+
     using Base::begin;
     using Base::end;
 
@@ -314,7 +317,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void synchronize_jf()
   {
     Field3D<FieldArray> F(*this);
-    CommJf<Field3D<FieldArray>> comm(this->getGrid());
+    CommJf<Grid, Field3D<FieldArray>> comm(this->getGrid());
 
     this->local_adjust_jf(*this);
 
@@ -354,10 +357,12 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   // ----------------------------------------------------------------------
   // CommRho
 
-  template<class F3D>
-  struct CommRho : Comm<F3D>
+  template<class G, class F3D>
+  struct CommRho : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+    
     using Base::begin;
     using Base::end;
 
@@ -391,7 +396,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void synchronize_rho()
   {
     Field3D<FieldArray> F(*this);
-    CommRho<Field3D<FieldArray>> comm(this->getGrid());
+    CommRho<Grid, Field3D<FieldArray>> comm(this->getGrid());
 
     this->local_adjust_rhof(*this);
     this->local_adjust_rhob(*this);
@@ -520,10 +525,12 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   // ----------------------------------------------------------------------
   // synchronize_tang_e_norm_b
 
-  template<class F3D>
-  struct CommTangENormB : Comm<F3D>
+  template<class G, class F3D>
+  struct CommTangENormB : Comm<G, F3D>
   {
-    typedef Comm<F3D> Base;
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+    
     using Base::begin;
     using Base::end;
 
@@ -582,7 +589,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   double synchronize_tang_e_norm_b()
   {
     Field3D<FieldArray> F(*this);
-    CommTangENormB<Field3D<FieldArray>> comm(this->getGrid());
+    CommTangENormB<Grid, Field3D<FieldArray>> comm(this->getGrid());
     
     this->local_adjust_tang_e(*this);
     this->local_adjust_norm_b(*this);

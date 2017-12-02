@@ -14,15 +14,18 @@ inline void species_ctor(species_t *sp ,const char * name,
 // ======================================================================
 // PscSpecies
 
+template<class G>
 struct PscSpecies : species_t
 {
+  typedef G Grid;
+  
   // ----------------------------------------------------------------------
   // PscSpecies::ctor
   
   PscSpecies(const char * name, float q, float m,
-	      int max_local_np, int max_local_nm,
-	      int sort_interval, int sort_out_of_place,
-	      Grid *grid)
+	     int max_local_np, int max_local_nm,
+	     int sort_interval, int sort_out_of_place,
+	     Grid *grid)
   {
     CLEAR(this, 1);
   
@@ -67,9 +70,20 @@ struct PscSpecies : species_t
 // ======================================================================
 // PscParticlesBase
 
-struct PscParticlesBase : public VpicListBase<PscSpecies>
+template<class G>
+struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 {
-  typedef PscSpecies Species;
+  typedef G Grid;
+  typedef PscSpecies<Grid> Species;
+  typedef VpicListBase<Species> Base;
+
+  using iterator = typename Base::iterator;
+  using const_iterator = typename Base::const_iterator;
+  using Base::size;
+  using Base::begin;
+  using Base::end;
+  using Base::head_;
+  using Base::push_front;
 
   static Species* create(const char * name, float q, float m,
 			 int max_local_np, int max_local_nm,
