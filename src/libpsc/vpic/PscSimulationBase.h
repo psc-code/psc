@@ -5,7 +5,7 @@
 #include "VpicDiag.h"
 
 template<class Particles>
-class PscSimulationMixin : protected vpic_simulation
+class PscSimulationMixin
 {
   typedef typename Particles::Grid Grid;
   typedef typename Particles::FieldArray FieldArray;
@@ -21,7 +21,6 @@ public:
     grid_ = Grid::create();
   }
   
-  //  Grid*& getGrid()                    { return *reinterpret_cast<Grid **>(&grid); }
   Grid*& getGrid()                    { return grid_; }
   MaterialList& getMaterialList()     { return material_list_; }
   FieldArray*& getFieldArray()        { return field_array_; }
@@ -50,7 +49,6 @@ public:
 
   void setTopology(int px_, int py_, int pz_)
   {
-    px = px_; py = py_; pz = pz_;
   }
 
   //FIXME, those should probably be in a separate mixin...
