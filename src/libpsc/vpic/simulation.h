@@ -35,7 +35,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   
   VpicSimulation()
     : SimulationMixin(),
-      ParticlesOps(static_cast<vpic_simulation*>(this)),
+      ParticlesOps(),
       DiagMixin(static_cast<vpic_simulation*>(this)),
       num_comm_round_(3),
       grid_(SimulationMixin::getGrid()),

@@ -14,8 +14,6 @@ struct PscParticlesOps {
   typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename Accumulator::Block AccumulatorBlock;
   
-  PscParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
-
   // ----------------------------------------------------------------------
   // move_p
   //
@@ -1283,9 +1281,6 @@ struct PscParticlesOps {
     fa[v+sz   ].rhob += w4; fa[v+sz   +1].rhob += w5;
     fa[v+sz+sy].rhob += w6; fa[v+sz+sy+1].rhob += w7;
   }
-
-  //private:
-  vpic_simulation *simulation_;
 };
 
 
