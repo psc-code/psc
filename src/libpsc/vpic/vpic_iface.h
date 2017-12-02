@@ -11,6 +11,7 @@
 #include "simulation.h"
 
 #include "VpicGridBase.h"
+#include "PscGridBase.h"
 
 #include "VpicFieldArrayBase.h"
 #include "PscFieldArrayBase.h"
@@ -77,7 +78,11 @@ enum {
 
 #ifdef __cplusplus
 
+#if 1
+typedef PscGridBase Grid;
+#else
 typedef VpicGridBase Grid;
+#endif
 
 #if 1
 typedef PscMaterialList MaterialList;

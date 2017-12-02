@@ -1,6 +1,6 @@
 
-#ifndef GRID_H
-#define GRID_H
+#ifndef VPIC_GRID_BASE_H
+#define VPIC_GRID_BASE_H
 
 #include <vpic.h>
 
