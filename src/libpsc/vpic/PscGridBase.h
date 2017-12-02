@@ -8,6 +8,70 @@
 #include <mrc_common.h>
 
 // ======================================================================
+// VpicMp
+
+struct mp {
+  int n_port;
+  char * ALIGNED(128) * rbuf; char * ALIGNED(128) * sbuf;
+  int * rbuf_sz;              int * sbuf_sz;
+  int * rreq_sz;              int * sreq_sz;
+  MPI_Request * rreq;         MPI_Request * sreq;
+};
+
+struct VpicMp : mp_t
+{
+  static VpicMp* create(int n_port)
+  {
+    return reinterpret_cast<VpicMp*>(::new_mp(n_port));
+  }
+
+  static void destroy(VpicMp* mp)
+  {
+    ::delete_mp(mp);
+  }
+
+  void size_recv_buffer(int port, int size)
+  {
+    ::mp_size_recv_buffer(this, port, size);
+  }
+
+  void size_send_buffer(int port, int size)
+  {
+    ::mp_size_send_buffer(this, port, size);
+  }
+
+  void* send_buffer(int port)
+  {
+    return ::mp_send_buffer(this, port);
+  }
+
+  void* recv_buffer(int port)
+  {
+    return ::mp_recv_buffer(this, port);
+  }
+
+  void begin_send(int port, int size,  int dst, int tag)
+  {
+    return ::mp_begin_send(this, port, size, dst, tag);
+  }
+
+  void end_send(int port)
+  {
+    return ::mp_end_send(this, port);
+  }
+
+  void begin_recv(int port, int size,  int src, int tag)
+  {
+    return ::mp_begin_recv(this, port, size, src, tag);
+  }
+
+  void end_recv(int port)
+  {
+    return ::mp_end_recv(this, port);
+  }
+};
+
+// ======================================================================
 // PscGridBase
 
 struct PscGridBase : grid_t
@@ -19,14 +83,14 @@ struct PscGridBase : grid_t
       bc[i] = anti_symmetric_fields;
     }
     bc[BOUNDARY(0,0,0)] = world_rank;
-    mp = new_mp(27);
+    mp = VpicMp::create(27);
   }
   
   ~PscGridBase()
   {
     FREE_ALIGNED(neighbor);
     FREE_ALIGNED(range);
-    delete_mp(mp);
+    VpicMp::destroy(reinterpret_cast<VpicMp*>(mp));
   }
   
   static PscGridBase* create()
@@ -59,7 +123,6 @@ struct PscGridBase : grid_t
 
   void set_pbc(int boundary, int pbc)
   {
-    mprintf("pbc %d %d\n", boundary, pbc);
     assert(boundary >= 0 && boundary < 27 && boundary != BOUNDARY(0,0,0) &&
 	   pbc < 0);
     
@@ -85,55 +148,69 @@ struct PscGridBase : grid_t
 #undef LOCAL_CELL_ID
   }
 
-  void mp_size_recv_buffer(int tag, int size) { ::mp_size_recv_buffer(mp, tag, size); }
-  void mp_size_send_buffer(int tag, int size) { ::mp_size_send_buffer(mp, tag, size); }
+  void mp_size_recv_buffer(int tag, int size)
+  {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    mp->size_recv_buffer(tag, size);
+  }
+
+  void mp_size_send_buffer(int tag, int size)
+  {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    mp->size_send_buffer(tag, size);
+  }
 
   void* size_send_port(int i, int j, int k, int size)
   {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
     if (dst < 0 || dst >= world_size ) {
       return nullptr;
     }
-    ::mp_size_send_buffer(mp, port, size);
-    return ::mp_send_buffer(mp, port);
+    mp->size_send_buffer(port, size);
+    return mp->send_buffer(port);
   }
 
   void begin_send_port(int i, int j, int k, int size)
   {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
     if (dst < 0 || dst >= world_size) {
       return;
     }
-    ::mp_begin_send(mp, port, size, dst, port);
+    mp->begin_send(port, size, dst, port);
   }
 
   void end_send_port(int i, int j, int k)
   {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
     if (dst < 0 || dst >= world_size) {
       return;
     }
-    ::mp_end_send(mp, port);
+    mp->end_send(port);
   }
 
   void begin_recv_port(int i, int j, int k, int size)
   {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
     int port = BOUNDARY(-i,-j,-k), src = bc[port];
     if (src < 0 || src >= world_size) {
       return;
     }
-    ::mp_size_recv_buffer(mp, port, size);
-    ::mp_begin_recv(mp, port, size, src, BOUNDARY(i,j,k));
+    mp->size_recv_buffer(port, size);
+    mp->begin_recv(port, size, src, BOUNDARY(i,j,k));
   }
   
   void* end_recv_port(int i, int j, int k)
   {
+    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
     int port = BOUNDARY(-i,-j,-k), src = bc[port];
     if (src < 0 || src >= world_size) {
       return nullptr;
     }
-    ::mp_end_recv(mp, port);
-    return ::mp_recv_buffer(mp, port);
+    mp->end_recv(port);
+    return mp->recv_buffer(port);
   }
 };
 
