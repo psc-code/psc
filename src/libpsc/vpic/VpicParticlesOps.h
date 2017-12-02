@@ -62,6 +62,8 @@ struct VpicParticles : ParticlesBase
   typedef HA HydroArray;
 
   using Base::Base;
+  using typename Base::iterator;
+  using typename Base::const_iterator;
 
   static void accumulate_hydro_p(HydroArray& ha, const species_t* sp,
 				 const Interpolator& interpolator)
@@ -79,6 +81,10 @@ struct VpicParticles : ParticlesBase
     ::sort_p(sp);
   }
 
+  static double energy_p(const_iterator sp, const Interpolator& interpolator)
+  {
+    return ::energy_p(&*sp, &interpolator);
+  }
 };
 
 #endif

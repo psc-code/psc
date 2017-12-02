@@ -501,7 +501,7 @@ struct VpicDiagMixin
 		    en_f[3], en_f[4], en_f[5] );
  
     for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
-      en_p = energy_p(&*sp, &interpolator);
+      en_p = particles.energy_p(sp, interpolator);
       if (rank==0 && status != fail) fileIO.print(" %e", en_p);
     }
  

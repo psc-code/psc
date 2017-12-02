@@ -1296,6 +1296,8 @@ struct PscParticles : ParticlesBase
   typedef HA HydroArray;
 
   using Base::Base;
+  using typename Base::iterator;
+  using typename Base::const_iterator;
 
   // ----------------------------------------------------------------------
   // accumulate_hydro_p
@@ -1655,6 +1657,10 @@ struct PscParticles : ParticlesBase
     COPY(p, p_aux, n_prts);
   }
 
+  static double energy_p(const_iterator sp, const Interpolator& interpolator)
+  {
+    return ::energy_p(&*sp, &interpolator);
+  }
 };
 
 
