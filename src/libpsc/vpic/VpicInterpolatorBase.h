@@ -2,15 +2,15 @@
 #ifndef VPIC_INTERPOLATOR_BASE_H
 #define VPIC_INTERPOLATOR_BASE_H
 
-#include "VpicGridBase.h"
-
 inline void interpolator_array_ctor(interpolator_array_t * ia, grid_t * g);
 inline void interpolator_array_dtor(interpolator_array_t * ia);
 
 // ======================================================================
 // VpicInterpolatorBase
 
+template<class G>
 struct VpicInterpolatorBase : interpolator_array_t {
+  typedef G Grid;
   typedef interpolator_t Element;
 
   enum {

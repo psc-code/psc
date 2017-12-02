@@ -5,14 +5,35 @@
 // ======================================================================
 // VpicHydroArrayBase
 
+template<class G>
 struct VpicHydroArrayBase : hydro_array_t
 {
+  typedef G Grid;
   typedef hydro_t Element;
   
-  VpicHydroArrayBase(Grid* g);
-  ~VpicHydroArrayBase();
+  VpicHydroArrayBase(Grid* g)
+  {
+    hydro_array_ctor(this, g);
+    /*clear();*/ // can't do it here, only in derived class (case for CRTP)?
+  }
+  
+  ~VpicHydroArrayBase()
+  {
+    hydro_array_dtor(this);
+  }    
 
-  float* getData(int* ib, int* im);
+  float* getData(int* ib, int* im)
+  {
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    
+    im[0] = g->nx + 2*B;
+    im[1] = g->ny + 2*B;
+    im[2] = g->nz + 2*B;
+    ib[0] = -B;
+    ib[1] = -B;
+    ib[2] = -B;
+    return &h[0].jx;
+  }
 
   Element  operator[](int idx) const { return h[idx]; }
   Element& operator[](int idx)       { return h[idx]; }
@@ -43,33 +64,6 @@ inline void
 hydro_array_dtor( hydro_array_t * ha ) {
   if( !ha ) return;
   FREE_ALIGNED( ha->h );
-}
-
-// ----------------------------------------------------------------------
-// VpicHydroArrayBase implementation
-
-inline VpicHydroArrayBase::VpicHydroArrayBase(Grid* grid)
-{
-  hydro_array_ctor(this, grid);
-  /*clear();*/ // can't do it here, only in derived class (case for CRTP)?
-}
-
-inline VpicHydroArrayBase::~VpicHydroArrayBase()
-{
-  hydro_array_dtor(this);
-}
-
-inline float* VpicHydroArrayBase::getData(int* ib, int* im)
-{
-  const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-
-  im[0] = g->nx + 2*B;
-  im[1] = g->ny + 2*B;
-  im[2] = g->nz + 2*B;
-  ib[0] = -B;
-  ib[1] = -B;
-  ib[2] = -B;
-  return &h[0].jx;
 }
 
 

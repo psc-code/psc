@@ -34,8 +34,10 @@ struct VpicAccumulatorBlock {
 // ======================================================================
 // VpicAccumulatorBase
 
+template<class G>
 struct VpicAccumulatorBase : accumulator_array_t {
   typedef accumulator_t Element;
+  typedef G Grid;
   typedef VpicAccumulatorBlock Block;
   
   VpicAccumulatorBase(Grid* grid)

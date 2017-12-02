@@ -77,8 +77,8 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   typedef PscSpecies<Grid> Species;
   typedef VpicListBase<Species> Base;
 
-  using iterator = typename Base::iterator;
-  using const_iterator = typename Base::const_iterator;
+  using typename Base::iterator;
+  using typename Base::const_iterator;
   using Base::size;
   using Base::begin;
   using Base::end;

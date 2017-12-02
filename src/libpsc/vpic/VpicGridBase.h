@@ -7,7 +7,7 @@
 // ======================================================================
 // VpicGridBase
 
-struct Grid : grid_t
+struct VpicGridBase : grid_t
 {
   void setup(double dx_[3], double dt_, double cvac_, double eps0_)
   {

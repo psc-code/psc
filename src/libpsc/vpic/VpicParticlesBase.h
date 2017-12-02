@@ -19,8 +19,8 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
   typedef VpicSpecies<Grid> Species;
   typedef VpicListBase<Species> Base;
 
-  using iterator = typename Base::iterator;
-  using const_iterator = typename Base::const_iterator;
+  using typename Base::iterator;
+  using typename Base::const_iterator;
   using Base::head_;
 
   static Species* create(const char * name, float q, float m,

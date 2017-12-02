@@ -21,6 +21,8 @@ struct PscHydroArray : HydroArrayBase
 {
   typedef HydroArrayBase Base;
 
+  using typename Base::Grid;
+
   PscHydroArray(Grid *grid) : Base(grid) {
     clear();
   }

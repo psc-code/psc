@@ -7,6 +7,7 @@
 template<class Particles>
 class PscSimulationMixin : protected vpic_simulation
 {
+  typedef typename Particles::Grid Grid;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;

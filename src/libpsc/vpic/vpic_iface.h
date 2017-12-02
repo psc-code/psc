@@ -10,6 +10,8 @@
 
 #include "simulation.h"
 
+#include "VpicGridBase.h"
+
 #include "VpicFieldArrayBase.h"
 #include "PscFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
@@ -75,7 +77,7 @@ enum {
 
 #ifdef __cplusplus
 
-//typedef Grid;
+typedef VpicGridBase Grid;
 
 #if 1
 typedef PscMaterialList MaterialList;
@@ -84,17 +86,17 @@ typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
 typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
 #else
-typedef VpicFieldArrayBase<VpicMaterialList> FieldArrayBase;
+typedef VpicFieldArrayBase<Grid, VpicMaterialList> FieldArrayBase;
 typedef VpicFieldArray<FieldArrayBase> FieldArray;
 #endif
 
-typedef VpicInterpolatorBase InterpolatorBase;
+typedef VpicInterpolatorBase<Grid> InterpolatorBase;
 typedef PscInterpolator<InterpolatorBase, FieldArrayBase> Interpolator;
 
-typedef VpicAccumulatorBase AccumulatorBase;
+typedef VpicAccumulatorBase<Grid> AccumulatorBase;
 typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
 
-typedef VpicHydroArrayBase HydroArrayBase;
+typedef VpicHydroArrayBase<Grid> HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
 typedef PscParticlesBase<Grid> ParticlesBase;
