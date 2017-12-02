@@ -68,7 +68,7 @@ public:
 
   VpicListBase() : head_(nullptr) {}
 
-  bool empty() { return !head_; }
+  bool empty() const { return !head_; }
   size_t size() const { return std::distance(cbegin(), cend()); }
 
   void push_front(T& x) { x.next = head_; head_ = &x; }

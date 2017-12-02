@@ -836,7 +836,7 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // boundary_p
 
-  void boundary_p_(const particle_bc_t* pbc_list, Particles& vmprts, FieldArray& fa,
+  void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
 		   AccumulatorBlock acc_block)
   {
 #ifdef V4_ACCELERATION
@@ -880,7 +880,7 @@ struct PscParticlesOps {
 
     if (vmprts.empty()) return; // Nothing to do if no species 
 
-    assert(num_particle_bc(pbc_list) == 0);
+    assert(pbc_list.empty());
 
     // Unpack fields
 
@@ -1172,7 +1172,7 @@ struct PscParticlesOps {
   }
   
   
-  void boundary_p(ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
+  void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
 		  Accumulator& accumulator)
   {
     boundary_p_(pbc_list, vmprts, fa, accumulator[0]);
