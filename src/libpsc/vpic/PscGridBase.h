@@ -65,11 +65,54 @@ struct PscGridBase : grid_t
 
   void mp_size_recv_buffer(int tag, int size) { ::mp_size_recv_buffer(mp, tag, size); }
   void mp_size_send_buffer(int tag, int size) { ::mp_size_send_buffer(mp, tag, size); }
-  void* size_send_port(int i, int j, int k, int sz) { return ::size_send_port(i, j, k, sz, this); }
-  void begin_send_port(int i, int j, int k, int sz) { ::begin_send_port(i, j, k, sz, this); }
-  void end_send_port(int i, int j, int k) { ::end_send_port(i, j, k, this); }
-  void begin_recv_port(int i, int j, int k, int sz) { ::begin_recv_port(i, j, k, sz, this); }
-  void* end_recv_port(int i, int j, int k) { return ::end_recv_port(i, j, k, this); }
+
+  void* size_send_port(int i, int j, int k, int size)
+  {
+    int port = BOUNDARY(i, j, k), dst = bc[port];
+    if (dst < 0 || dst >= world_size ) {
+      return nullptr;
+    }
+    ::mp_size_send_buffer(mp, port, size);
+    return ::mp_send_buffer(mp, port);
+  }
+
+  void begin_send_port(int i, int j, int k, int size)
+  {
+    int port = BOUNDARY(i, j, k), dst = bc[port];
+    if (dst < 0 || dst >= world_size) {
+      return;
+    }
+    ::mp_begin_send(mp, port, size, dst, port);
+  }
+
+  void end_send_port(int i, int j, int k)
+  {
+    int port = BOUNDARY(i, j, k), dst = bc[port];
+    if (dst < 0 || dst >= world_size) {
+      return;
+    }
+    ::mp_end_send(mp, port);
+  }
+
+  void begin_recv_port(int i, int j, int k, int size)
+  {
+    int port = BOUNDARY(-i,-j,-k), src = bc[port];
+    if (src < 0 || src >= world_size) {
+      return;
+    }
+    ::mp_size_recv_buffer(mp, port, size);
+    ::mp_begin_recv(mp, port, size, src, BOUNDARY(i,j,k));
+  }
+  
+  void* end_recv_port(int i, int j, int k)
+  {
+    int port = BOUNDARY(-i,-j,-k), src = bc[port];
+    if (src < 0 || src >= world_size) {
+      return nullptr;
+    }
+    ::mp_end_recv(mp, port);
+    return ::mp_recv_buffer(mp, port);
+  }
 };
 
 #endif
