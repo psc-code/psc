@@ -36,7 +36,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   VpicSimulation()
     : SimulationMixin(),
       ParticlesOps(),
-      DiagMixin(static_cast<vpic_simulation*>(this)),
+      DiagMixin(),
       num_comm_round_(3),
       grid_(SimulationMixin::getGrid()),
       material_list_(SimulationMixin::getMaterialList()),
@@ -56,6 +56,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
   void define_periodic_grid(double xl[3], double xh[3], int gdims[3], int np[3])
   {
+    np_[0] = np[0]; np_[1] = np[1]; np_[2] = np[2];
     SimulationMixin::setTopology(np[0], np[1], np[2]);
     grid_->partition_periodic_box(xl, xh, gdims, np);
   }
@@ -178,7 +179,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
   void runDiag()
   {
-    DiagMixin::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_);
+    DiagMixin::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_, np_);
   }
     
   int num_comm_round_;
@@ -194,6 +195,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   HydroArray*& hydro_array_;
   Particles& particles_;
   ParticleBcList& particle_bc_list_;
+
+  int np_[3];
 };
 
 #endif

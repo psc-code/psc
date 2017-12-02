@@ -121,8 +121,6 @@ struct VpicDiagMixin
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::HydroArray HydroArray;
   
-  VpicDiagMixin(vpic_simulation *simulation) : s__(simulation) {}
-
   void diagnostics_init(int interval_)
   {
     diag_.rtoggle = 0;
@@ -226,12 +224,10 @@ struct VpicDiagMixin
   (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
   void diagnostics_run(FieldArray& fa, Particles& particles,
-		       Interpolator& interpolator, HydroArray& hydro_array)
+		       Interpolator& interpolator, HydroArray& hydro_array, int np[3])
   {
     TIC {
       int64_t step = fa.g->step;
-      int np[3];
-      np[0] = s__->px; np[1] = s__->py; np[2] = s__->pz;
       
       // Normal rundata dump
       if (step == 0) {
@@ -720,7 +716,6 @@ struct VpicDiagMixin
   }
 
 private:
-  vpic_simulation *s__;
   VpicDiag diag_;
 };
 
