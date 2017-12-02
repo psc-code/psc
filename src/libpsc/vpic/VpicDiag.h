@@ -45,6 +45,41 @@ namespace dump_type {
   const int history_dump = 5;
 }
 
+static FieldInfo fieldInfo[12] = {
+	{ "Electric Field", "VECTOR", "3", "FLOATING_POINT", sizeof(float) },
+	{ "Electric Field Divergence Error", "SCALAR", "1", "FLOATING_POINT",
+		sizeof(float) },
+	{ "Magnetic Field", "VECTOR", "3", "FLOATING_POINT", sizeof(float) },
+	{ "Magnetic Field Divergence Error", "SCALAR", "1", "FLOATING_POINT",
+		sizeof(float) },
+	{ "TCA Field", "VECTOR", "3", "FLOATING_POINT", sizeof(float) },
+	{ "Bound Charge Density", "SCALAR", "1", "FLOATING_POINT", sizeof(float) },
+	{ "Free Current Field", "VECTOR", "3", "FLOATING_POINT", sizeof(float) },
+	{ "Charge Density", "SCALAR", "1", "FLOATING_POINT", sizeof(float) },
+	{ "Edge Material", "VECTOR", "3", "INTEGER", sizeof(material_id) },
+	{ "Node Material", "SCALAR", "1", "INTEGER", sizeof(material_id) },
+	{ "Face Material", "VECTOR", "3", "INTEGER", sizeof(material_id) },
+	{ "Cell Material", "SCALAR", "1", "INTEGER", sizeof(material_id) }
+}; // fieldInfo
+
+static HydroInfo hydroInfo[5] = {
+	{ "Current Density", "VECTOR", "3", "FLOATING_POINT", sizeof(float) },
+	{ "Charge Density", "SCALAR", "1", "FLOATING_POINT", sizeof(float) },
+	{ "Momentum Density", "VECTOR", "3", "FLOATING_POINT", sizeof(float) },
+	{ "Kinetic Energy Density", "SCALAR", "1", "FLOATING_POINT",
+		sizeof(float) },
+	{ "Stress Tensor", "TENSOR", "6", "FLOATING_POINT", sizeof(float) }
+}; // hydroInfo
+
+#undef sim_log
+#define sim_log(x) do {                                \
+    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);    \
+    if( rank==0 ) {				       \
+      std::cerr << "SIM_LOG: " << x << std::endl;      \
+      std::cerr.flush();                               \
+    }                                                  \
+  } while(0)
+
 template<class Particles>
 struct VpicDiagMixin
 {
@@ -75,7 +110,82 @@ struct VpicDiagMixin
 
   void diagnostics_setup()
   {
-    vpic_simulation_setup_diagnostics(s_, &diag_);
+    diag_.fdParams.format = band;
+    sim_log( "Fields output format = band" );
+    
+    diag_.hedParams.format = band;
+    sim_log( "Electron species output format = band" );
+    
+    diag_.hHdParams.format = band;
+    sim_log( "Ion species output format = band" );
+    
+    // relative path to fields data from global header
+    sprintf(diag_.fdParams.baseDir, "fields");
+
+    // base file name for fields output
+    sprintf(diag_.fdParams.baseFileName, "fields");
+
+    diag_.fdParams.stride_x = 1;
+    diag_.fdParams.stride_y = 1;
+    diag_.fdParams.stride_z = 1;
+
+    // add field parameters to list
+    diag_.outputParams.push_back(&diag_.fdParams);
+
+    sim_log( "Fields x-stride " << diag_.fdParams.stride_x );
+    sim_log( "Fields y-stride " << diag_.fdParams.stride_y );
+    sim_log( "Fields z-stride " << diag_.fdParams.stride_z );
+
+    // relative path to electron species data from global header
+    sprintf(diag_.hedParams.baseDir, "hydro");
+
+    // base file name for fields output
+    sprintf(diag_.hedParams.baseFileName, "ehydro");
+
+    diag_.hedParams.stride_x = 1;
+    diag_.hedParams.stride_y = 1;
+    diag_.hedParams.stride_z = 1;
+
+    // add electron species parameters to list
+    diag_.outputParams.push_back(&diag_.hedParams);
+
+    sim_log( "Electron species x-stride " << diag_.hedParams.stride_x );
+    sim_log( "Electron species y-stride " << diag_.hedParams.stride_y );
+    sim_log( "Electron species z-stride " << diag_.hedParams.stride_z );
+
+    // relative path to ion species data from global header
+    sprintf(diag_.hHdParams.baseDir, "hydro");
+
+    // base file name for fields output
+    sprintf(diag_.hHdParams.baseFileName, "Hhydro");
+
+    diag_.hHdParams.stride_x = 1;
+    diag_.hHdParams.stride_y = 1;
+    diag_.hHdParams.stride_z = 1;
+
+    sim_log( "Ion species x-stride " << diag_.hHdParams.stride_x );
+    sim_log( "Ion species y-stride " << diag_.hHdParams.stride_y );
+    sim_log( "Ion species z-stride " << diag_.hHdParams.stride_z );
+
+    // add ion species parameters to list
+    diag_.outputParams.push_back(&diag_.hHdParams);
+
+    diag_.fdParams.output_variables( all );
+    diag_.hedParams.output_variables( all );
+    diag_.hHdParams.output_variables( all );
+
+    char varlist[512];
+    create_field_list(varlist, diag_.fdParams);
+
+    sim_log( "Fields variable list: " << varlist );
+
+    create_hydro_list(varlist, diag_.hedParams);
+
+    sim_log( "Electron species variable list: " << varlist );
+
+    create_hydro_list(varlist, diag_.hHdParams);
+
+    sim_log( "Ion species variable list: " << varlist );
   }
 
 #define should_dump(x)                                                  \
@@ -134,6 +244,30 @@ struct VpicDiagMixin
   }
 
 #undef should_dump
+
+  void create_field_list(char * strlist, DumpParameters & dumpParams)
+  {
+    strcpy(strlist, "");
+    for(int i = 0, pass = 0; i < total_field_groups; i++) {
+      if(dumpParams.output_vars.bitset(field_indeces[i])) {
+	if(i>0 && pass) strcat(strlist, ", ");
+	else pass = 1;
+	strcat(strlist, fieldInfo[i].name);
+      }
+    }
+  }
+  
+  void create_hydro_list(char * strlist, DumpParameters & dumpParams)
+  {
+    strcpy(strlist, "");
+    for(size_t i(0), pass(0); i<total_hydro_groups; i++) {
+      if(dumpParams.output_vars.bitset(hydro_indeces[i])) {
+	if(i>0 && pass) strcat(strlist, ", ");
+	else pass = 1;
+	strcat(strlist, hydroInfo[i].name);
+      }
+    }
+  }
 
   // ----------------------------------------------------------------------
   // dump_energies
