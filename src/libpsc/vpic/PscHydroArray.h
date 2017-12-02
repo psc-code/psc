@@ -40,10 +40,73 @@ struct PscHydroArray : HydroArrayBase
   // ----------------------------------------------------------------------
   // synchronize
   
+  template<class F3D>
+  struct CommHydro : Comm<F3D>
+  {
+    typedef Comm<F3D> Base;
+    using Base::begin;
+    using Base::end;
+
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommHydro(Grid *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = 14 * (nx_[Y] + 1) * (nx_[Z] + 1);
+      }
+    }
+
+    void begin_send(int X, int side, float* p, F3D& F)
+    {
+      int face = side ? nx_[X] + 1 : 1;
+      foreach_node(g_, X, face, [&](int x, int y, int z) {
+	  hydro_t *h = &F(x,y,z);
+	  *p++ = h->jx;
+	  *p++ = h->jy;
+	  *p++ = h->jz;
+	  *p++ = h->rho;
+	  *p++ = h->px;
+	  *p++ = h->py;
+	  *p++ = h->pz;
+	  *p++ = h->ke;
+	  *p++ = h->txx;
+	  *p++ = h->tyy;
+	  *p++ = h->tzz;
+	  *p++ = h->tyz;
+	  *p++ = h->tzx;
+	  *p++ = h->txy;
+	});
+    }
+    
+    void end_recv(int X, int side, float* p, F3D& F)
+    {
+      int face = side ? 1 : nx_[X] + 1;
+      foreach_node(g_, X, face, [&](int x, int y, int z) {
+	  hydro_t *h = &F(x,y,z);
+	  h->jx  += *p++;
+	  h->jy  += *p++;
+	  h->jz  += *p++;
+	  h->rho += *p++;
+	  h->px  += *p++;
+	  h->py  += *p++;
+	  h->pz  += *p++;
+	  h->ke  += *p++;
+	  h->txx += *p++;
+	  h->tyy += *p++;
+	  h->tzz += *p++;
+	  h->tyz += *p++;
+	  h->tzx += *p++;
+	  h->txy += *p++;
+	});
+    }
+  };
+
   void synchronize()
   {
-    int size, face, bc, x, y, z;
-    float *p, lw, rw;
+    int face, bc, x, y, z;
     hydro_t* h;
     
     Field3D<HydroArrayBase> H(*this);
@@ -88,105 +151,14 @@ struct PscHydroArray : HydroArrayBase
 
 # undef ADJUST_HYDRO
 
-# define BEGIN_RECV(i,j,k,X,Y,Z)					\
-    begin_recv_port(i,j,k,( 1 + 14*(n##Y+1)*(n##Z+1) )*sizeof(float),g)
+    CommHydro<Field3D<HydroArrayBase>> comm(this->getGrid());
 
-# define BEGIN_SEND(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {		\
-      size = ( 1 + 14*(n##Y+1)*(n##Z+1) )*sizeof(float);	\
-      p = (float *)size_send_port( i, j, k, size, g );		\
-      if( p ) {							\
-    (*(p++)) = g->d##X;						\
-    face = (i+j+k)<0 ? 1 : n##X+1;				\
-    X##_NODE_LOOP(face) {					\
-    h = &H(x,y,z);						\
-    (*(p++)) = h->jx;						\
-    (*(p++)) = h->jy;						\
-    (*(p++)) = h->jz;						\
-    (*(p++)) = h->rho;						\
-    (*(p++)) = h->px;						\
-    (*(p++)) = h->py;						\
-    (*(p++)) = h->pz;						\
-    (*(p++)) = h->ke;						\
-    (*(p++)) = h->txx;						\
-    (*(p++)) = h->tyy;						\
-    (*(p++)) = h->tzz;						\
-    (*(p++)) = h->tyz;						\
-    (*(p++)) = h->tzx;						\
-    (*(p++)) = h->txy;						\
-  }								\
-    begin_send_port( i, j, k, size, g );			\
-  }								\
-  } END_PRIMITIVE
-
-# define END_RECV(i,j,k,X,Y,Z) BEGIN_PRIMITIVE {                \
-      p = (float *)end_recv_port(i,j,k,g);			\
-      if( p ) {							\
-    rw = (*(p++));                 /* Remote g->d##X */		\
-    lw = rw + g->d##X;						\
-    rw /= lw;							\
-    lw = g->d##X/lw;						\
-    lw += lw;							\
-    rw += rw;							\
-    face = (i+j+k)<0 ? n##X+1 : 1; /* Twice weighted sum */	\
-    X##_NODE_LOOP(face) {					\
-    h = &H(x,y,z);						\
-    h->jx  = lw*h->jx  + rw*(*(p++));				\
-    h->jy  = lw*h->jy  + rw*(*(p++));				\
-    h->jz  = lw*h->jz  + rw*(*(p++));				\
-    h->rho = lw*h->rho + rw*(*(p++));				\
-    h->px  = lw*h->px  + rw*(*(p++));				\
-    h->py  = lw*h->py  + rw*(*(p++));				\
-    h->pz  = lw*h->pz  + rw*(*(p++));				\
-    h->ke  = lw*h->ke  + rw*(*(p++));				\
-    h->txx = lw*h->txx + rw*(*(p++));				\
-    h->tyy = lw*h->tyy + rw*(*(p++));				\
-    h->tzz = lw*h->tzz + rw*(*(p++));				\
-    h->tyz = lw*h->tyz + rw*(*(p++));				\
-    h->tzx = lw*h->tzx + rw*(*(p++));				\
-    h->txy = lw*h->txy + rw*(*(p++));				\
-  }								\
-  }								\
-  } END_PRIMITIVE
-
-# define END_SEND(i,j,k,X,Y,Z) end_send_port( i, j, k, g )
-
-    // Exchange x-faces
-    BEGIN_SEND(-1, 0, 0,x,y,z);
-    BEGIN_SEND( 1, 0, 0,x,y,z);
-    BEGIN_RECV(-1, 0, 0,x,y,z);
-    BEGIN_RECV( 1, 0, 0,x,y,z);
-    END_RECV(-1, 0, 0,x,y,z);
-    END_RECV( 1, 0, 0,x,y,z);
-    END_SEND(-1, 0, 0,x,y,z);
-    END_SEND( 1, 0, 0,x,y,z);
-
-    // Exchange y-faces
-    BEGIN_SEND( 0,-1, 0,y,z,x);
-    BEGIN_SEND( 0, 1, 0,y,z,x);
-    BEGIN_RECV( 0,-1, 0,y,z,x);
-    BEGIN_RECV( 0, 1, 0,y,z,x);
-    END_RECV( 0,-1, 0,y,z,x);
-    END_RECV( 0, 1, 0,y,z,x);
-    END_SEND( 0,-1, 0,y,z,x);
-    END_SEND( 0, 1, 0,y,z,x);
-
-    // Exchange z-faces
-    BEGIN_SEND( 0, 0,-1,z,x,y);
-    BEGIN_SEND( 0, 0, 1,z,x,y);
-    BEGIN_RECV( 0, 0,-1,z,x,y);
-    BEGIN_RECV( 0, 0, 1,z,x,y);
-    END_RECV( 0, 0,-1,z,x,y);
-    END_RECV( 0, 0, 1,z,x,y);
-    END_SEND( 0, 0,-1,z,x,y);
-    END_SEND( 0, 0, 1,z,x,y);
-
-# undef BEGIN_RECV
-# undef BEGIN_SEND
-# undef END_RECV
-# undef END_SEND
+    for (int dir = 0; dir < 3; dir++) {
+      comm.begin(dir, H);
+      comm.end(dir, H);
+    }
+    
   }
-
-#undef hydro
 };
 
 #endif

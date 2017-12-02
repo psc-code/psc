@@ -23,6 +23,11 @@ struct VpicHydroArrayBase : hydro_array_t
   {
     return h;
   }
+
+  Grid* getGrid()
+  {
+    return static_cast<Grid*>(g);
+  }
 };
 
 // ----------------------------------------------------------------------
