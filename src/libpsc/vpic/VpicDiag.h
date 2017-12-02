@@ -5,6 +5,7 @@
 #include "vpic_iface.h"
 #include "vpic.h"
 
+#include "util/io/FileUtils.h"
 #include "vpic/dumpmacros.h"
 
 // ----------------------------------------------------------------------
@@ -29,9 +30,6 @@ struct VpicDiag {
   std::vector<DumpParameters *> outputParams;
 };
 
-
-void vpic_simulation_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
-void vpic_simulation_setup_diagnostics(vpic_simulation *simulation, VpicDiag *diag);
 
 // ======================================================================
 // VpicDiagOps
@@ -196,50 +194,71 @@ struct VpicDiagMixin
   {
     TIC {
       vpic_simulation *simulation = s_;
-      int64_t step = simulation->step();
-      
-      /*--------------------------------------------------------------------------
-       * Data output directories
-       * WARNING: The directory list passed to "global_header" must be
-       * consistent with the actual directories where fields and species are
-       * output using "field_dump" and "hydro_dump".
-       *
-       * DIRECTORY PATHES SHOULD BE RELATIVE TO
-       * THE LOCATION OF THE GLOBAL HEADER!!!
-       *------------------------------------------------------------------------*/
+      int64_t step = fa.g->step;
       
       // Normal rundata dump
-      if (step==0) {
-	simulation->dump_mkdir("fields");
-	simulation->dump_mkdir("hydro");
-	simulation->dump_mkdir("rundata");
-	simulation->dump_mkdir("injectors");
-	simulation->dump_mkdir("restart1");  // 1st backup
-	simulation->dump_mkdir("restart2");  // 2nd backup
-	simulation->dump_mkdir("particle");
+      if (step == 0) {
+	dump_mkdir("fields");
+	dump_mkdir("hydro");
+	dump_mkdir("rundata");
+	dump_mkdir("injectors");
+	dump_mkdir("restart1");  // 1st backup
+	dump_mkdir("restart2");  // 2nd backup
+	dump_mkdir("particle");
 	
-	simulation->dump_grid("rundata/grid");
-	simulation->dump_materials("rundata/materials");
-	simulation->dump_species("rundata/species");
-	simulation->global_header("global", diag_.outputParams);
+	//dump_grid("rundata/grid");
+	//dump_materials("rundata/materials");
+	//dump_species("rundata/species");
+	global_header(fa.g, "global", diag_.outputParams);
       }
 
       // Normal rundata energies dump
       if(should_dump(energies)) {
-	dump_energies(simulation, "rundata/energies", step == 0 ? 0 : 1,
-		      fa, particles, interpolator);
+      	dump_energies(simulation, "rundata/energies", step == 0 ? 0 : 1,
+      		      fa, particles, interpolator);
       }
       
       // Field data output
 
-      if(step == -1 || should_dump(fields)) field_dump(fa, simulation, diag_.fdParams);
+      if(should_dump(fields)) field_dump(fa, simulation, diag_.fdParams);
       
       // Species moment output
       
       if(should_dump(ehydro)) hydro_dump(&particles, &interpolator, &hydro_array, simulation, "electron", diag_.hedParams);
       if(should_dump(Hhydro)) hydro_dump(&particles, &interpolator, &hydro_array, simulation, "ion", diag_.hHdParams);
+
+#if 0
+      if(step && !(step % diag->restart_interval)) {
+	if(!diag->rtoggle) {
+	  diag->rtoggle = 1;
+	  //checkpt("restart1/restart", 0);
+	}
+	else {
+	  diag->rtoggle = 0;
+	  //checkpt("restart2/restart", 0);
+	} // if
+      } // if
+#endif
       
-      vpic_simulation_diagnostics(simulation, &diag_);
+      // Dump particle data
+
+#if 0
+      char subdir[36];
+      if ( should_dump(eparticle) && step !=0
+	   && step > 56*(diag->fields_interval)  ) {
+	// if ( should_dump(eparticle) && step !=0 ) {
+	sprintf(subdir,"particle/T.%lld",step);
+	simulation->dump_mkdir(subdir);
+	sprintf(subdir,"particle/T.%lld/eparticle",step);
+	simulation->dump_particles("electron", subdir);
+      }
+
+      if ( should_dump(Hparticle) && step !=0
+	   && step > 56*(diag->fields_interval)  ) {
+	sprintf(subdir,"particle/T.%lld/Hparticle",step);
+	simulation->dump_particles("ion", subdir);
+      }
+#endif
     } TOC(user_diagnostics, 1);
   }
 
@@ -269,6 +288,149 @@ struct VpicDiagMixin
     }
   }
 
+  static int dump_mkdir(const char * dname)
+  {
+    return FileUtils::makeDirectory(dname);
+  }
+
+  static void print_hashed_comment( FileIO & fileIO, const char * comment)
+  {
+    fileIO.print("################################################################################\n");
+    fileIO.print("# %s\n", comment);
+    fileIO.print("################################################################################\n");
+  }
+
+  // ----------------------------------------------------------------------
+  // global_header
+
+  void global_header(const grid_t *grid, const char * base, std::vector<DumpParameters *> dumpParams)
+  {
+    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank != 0) return;
+
+    // Open the file for output
+    char filename[256];
+    sprintf(filename, "%s.vpc", base);
+    
+    FileIO fileIO;
+    FileIOStatus status;
+    
+    status = fileIO.open(filename, io_write);
+    if(status == fail) ERROR(("Failed opening file: %s", filename));
+    
+    print_hashed_comment(fileIO, "Header version information");
+    fileIO.print("VPIC_HEADER_VERSION 1.0.0\n\n");
+    
+    print_hashed_comment(fileIO,
+			 "Header size for data file headers in bytes");
+    fileIO.print("DATA_HEADER_SIZE 123\n\n");
+    
+    // Global grid inforation
+    print_hashed_comment(fileIO, "Time step increment");
+    fileIO.print("GRID_DELTA_T %f\n\n", grid->dt);
+    
+    print_hashed_comment(fileIO, "GRID_CVAC");
+    fileIO.print("GRID_CVAC %f\n\n", grid->cvac);
+    
+    print_hashed_comment(fileIO, "GRID_EPS0");
+    fileIO.print("GRID_EPS0 %f\n\n", grid->eps0);
+    
+    print_hashed_comment(fileIO, "Grid extents in the x-dimension");
+    fileIO.print("GRID_EXTENTS_X %f %f\n\n", grid->x0, grid->x1);
+    
+    print_hashed_comment(fileIO, "Grid extents in the y-dimension");
+    fileIO.print("GRID_EXTENTS_Y %f %f\n\n", grid->y0, grid->y1);
+    
+    print_hashed_comment(fileIO, "Grid extents in the z-dimension");
+    fileIO.print("GRID_EXTENTS_Z %f %f\n\n", grid->z0, grid->z1);
+    
+    print_hashed_comment(fileIO, "Spatial step increment in x-dimension");
+    fileIO.print("GRID_DELTA_X %f\n\n", grid->dx);
+    
+    print_hashed_comment(fileIO, "Spatial step increment in y-dimension");
+    fileIO.print("GRID_DELTA_Y %f\n\n", grid->dy);
+    
+    print_hashed_comment(fileIO, "Spatial step increment in z-dimension");
+    fileIO.print("GRID_DELTA_Z %f\n\n", grid->dz);
+    
+    print_hashed_comment(fileIO, "Domain partitions in x-dimension");
+    fileIO.print("GRID_TOPOLOGY_X %d\n\n", s_->px);
+    
+    print_hashed_comment(fileIO, "Domain partitions in y-dimension");
+    fileIO.print("GRID_TOPOLOGY_Y %d\n\n", s_->py);
+    
+    print_hashed_comment(fileIO, "Domain partitions in z-dimension");
+    fileIO.print("GRID_TOPOLOGY_Z %d\n\n", s_->pz);
+    
+    // Global data information
+    assert(dumpParams.size() >= 2);
+    
+    print_hashed_comment(fileIO, "Field data information");
+    fileIO.print("FIELD_DATA_DIRECTORY %s\n", dumpParams[0]->baseDir);
+    fileIO.print("FIELD_DATA_BASE_FILENAME %s\n",
+		 dumpParams[0]->baseFileName);
+    
+    // Create a variable list of field values to output.
+    size_t numvars = std::min(dumpParams[0]->output_vars.bitsum(field_indeces,
+								total_field_groups),
+			      total_field_groups);
+    size_t * varlist = new size_t[numvars];
+    for(size_t v(0), c(0); v<total_field_groups; v++)
+      if(dumpParams[0]->output_vars.bitset(field_indeces[v]))
+	varlist[c++] = v;
+    
+    // output variable list
+    fileIO.print("FIELD_DATA_VARIABLES %d\n", numvars);
+    
+    for(size_t v(0); v<numvars; v++)
+      fileIO.print("\"%s\" %s %s %s %d\n", fieldInfo[varlist[v]].name,
+		   fieldInfo[varlist[v]].degree, fieldInfo[varlist[v]].elements,
+		   fieldInfo[varlist[v]].type, fieldInfo[varlist[v]].size);
+    
+    fileIO.print("\n");
+    
+    delete[] varlist;
+    varlist = NULL;
+    
+    // Create a variable list for each species to output
+    print_hashed_comment(fileIO, "Number of species with output data");
+    fileIO.print("NUM_OUTPUT_SPECIES %d\n\n", dumpParams.size()-1);
+    char species_comment[128];
+    for(size_t i(1); i<dumpParams.size(); i++) {
+      numvars = std::min(dumpParams[i]->output_vars.bitsum(hydro_indeces,
+							   total_hydro_groups),
+			 total_hydro_groups);
+      
+      sprintf(species_comment, "Species(%d) data information", (int)i);
+      print_hashed_comment(fileIO, species_comment);
+      fileIO.print("SPECIES_DATA_DIRECTORY %s\n",
+		   dumpParams[i]->baseDir);
+      fileIO.print("SPECIES_DATA_BASE_FILENAME %s\n",
+		   dumpParams[i]->baseFileName);
+      
+      fileIO.print("HYDRO_DATA_VARIABLES %d\n", numvars);
+      
+      varlist = new size_t[numvars];
+      for(size_t v(0), c(0); v<total_hydro_groups; v++)
+	if(dumpParams[i]->output_vars.bitset(hydro_indeces[v]))
+	  varlist[c++] = v;
+      
+      for(size_t v(0); v<numvars; v++)
+	fileIO.print("\"%s\" %s %s %s %d\n", hydroInfo[varlist[v]].name,
+		     hydroInfo[varlist[v]].degree, hydroInfo[varlist[v]].elements,
+		     hydroInfo[varlist[v]].type, hydroInfo[varlist[v]].size);
+      
+      
+      delete[] varlist;
+      varlist = NULL;
+      
+      if(i<dumpParams.size()-1) fileIO.print("\n");
+    }
+    
+    
+    if( fileIO.close() ) ERROR(( "File close failed on global header!!!" ));
+  }
+  
   // ----------------------------------------------------------------------
   // dump_energies
 
