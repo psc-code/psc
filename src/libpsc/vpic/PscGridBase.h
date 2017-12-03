@@ -198,16 +198,52 @@ struct PscGridBase : grid_t
 #undef LOCAL_CELL_ID
   }
 
-  void mp_size_recv_buffer(int tag, int size)
+  void mp_size_recv_buffer(int port, int size)
   {
     Mp* mp = reinterpret_cast<Mp*>(this->mp);
-    mp->size_recv_buffer(tag, size);
+    mp->size_recv_buffer(port, size);
   }
 
-  void mp_size_send_buffer(int tag, int size)
+  void mp_size_send_buffer(int port, int size)
   {
     Mp* mp = reinterpret_cast<Mp*>(this->mp);
-    mp->size_send_buffer(tag, size);
+    mp->size_send_buffer(port, size);
+  }
+
+  void* mp_recv_buffer(int port)
+  {
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    return mp->recv_buffer(port);
+  }
+
+  void* mp_send_buffer(int port)
+  {
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    return mp->send_buffer(port);
+  }
+
+  void mp_begin_recv(int port, int size, int src, int tag)
+  {
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    mp->begin_recv(port, size, src, tag);
+  }
+
+  void mp_begin_send(int port, int size, int dst, int tag)
+  {
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    mp->begin_send(port, size, dst, tag);
+  }
+
+  void mp_end_recv(int port)
+  {
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    mp->end_recv(port);
+  }
+
+  void mp_end_send(int port)
+  {
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    mp->end_send(port);
   }
 
   void* size_send_port(int i, int j, int k, int size)

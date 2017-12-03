@@ -31,8 +31,13 @@ struct VpicGridBase : grid_t
   void set_fbc(int boundary, int fbc) { ::set_fbc(this, boundary, fbc); }
   void set_pbc(int boundary, int pbc) { ::set_pbc(this, boundary, pbc); }
 
-  void mp_size_recv_buffer(int tag, int size) { ::mp_size_recv_buffer(mp, tag, size); }
-  void mp_size_send_buffer(int tag, int size) { ::mp_size_send_buffer(mp, tag, size); }
+  void mp_size_recv_buffer(int port, int size) { ::mp_size_recv_buffer(mp, port, size); }
+  void mp_size_send_buffer(int port, int size) { ::mp_size_send_buffer(mp, port, size); }
+  void mp_begin_recv(int port, int size, int src, int tag) { ::mp_begin_recv(mp, port, size, src, tag); }
+  void mp_end_recv(int port) { ::mp_end_recv(mp, port); }
+  void mp_begin_send(int port, int size, int dst, int tag) { ::mp_begin_send(mp, port, size, dst, tag); }
+  void mp_end_send(int port) { ::mp_end_send(mp, port); }
+  
   void* size_send_port(int i, int j, int k, int sz) { return ::size_send_port(i, j, k, sz, this); }
   void begin_send_port(int i, int j, int k, int sz) { ::begin_send_port(i, j, k, sz, this); }
   void end_send_port(int i, int j, int k) { ::end_send_port(i, j, k, this); }

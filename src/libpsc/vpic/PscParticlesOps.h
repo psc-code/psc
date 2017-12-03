@@ -7,6 +7,7 @@
 template<class P>
 struct PscParticlesOps {
   typedef P Particles;
+  typedef typename Particles::Grid Grid;
   typedef typename Particles::Species Species;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
@@ -882,12 +883,11 @@ struct PscParticlesOps {
 
     // Unpack fields
 
-    grid_t  * RESTRICT              g = fa.g;
+    Grid* RESTRICT g = fa.getGrid();
 
     // Unpack the grid
 
     const int64_t * RESTRICT ALIGNED(128) neighbor = g->neighbor;
-    /**/  mp_t    * RESTRICT              mp       = g->mp;
     const int64_t rangel = g->rangel;
     const int64_t rangeh = g->rangeh;
     const int64_t rangem = g->range[world_size];
@@ -904,8 +904,8 @@ struct PscParticlesOps {
 
     for (face = 0; face < 6; face++) {
       if (shared[face]) {
-	mp_size_recv_buffer( mp, f2b[face], sizeof(int) );
-	mp_begin_recv( mp, f2b[face], sizeof(int), bc[face], f2rb[face] );
+	g->mp_size_recv_buffer(f2b[face], sizeof(int));
+	g->mp_begin_recv(f2b[face], sizeof(int), bc[face], f2rb[face]);
       }
     }
     
@@ -927,8 +927,8 @@ struct PscParticlesOps {
 
       for( face=0; face<6; face++ )
 	if( shared[face] ) {
-	  mp_size_send_buffer( mp, f2b[face], 16+nm*sizeof(particle_injector_t) );
-	  pi_send[face] = (particle_injector_t *)(((char *)mp_send_buffer(mp,f2b[face]))+16);
+	  g->mp_size_send_buffer(f2b[face], 16+nm*sizeof(particle_injector_t));
+	  pi_send[face] = (particle_injector_t *)(((char *)g->mp_send_buffer(f2b[face]))+16);
 	  n_send[face] = 0;
 	}
 
@@ -1032,28 +1032,28 @@ struct PscParticlesOps {
   
     for (face=0; face<6; face++) {
       if (shared[face]) {
-	*((int *)mp_send_buffer( mp, f2b[face] )) = n_send[face];
-	mp_begin_send( mp, f2b[face], sizeof(int), bc[face], f2b[face] );
+	*((int *)g->mp_send_buffer(f2b[face])) = n_send[face];
+	g->mp_begin_send(f2b[face], sizeof(int), bc[face], f2b[face]);
       }
     }
     for (face=0; face<6; face++) {
       if (shared[face])  {
-	mp_end_recv( mp, f2b[face] );
-	n_recv[face] = *((int *)mp_recv_buffer( mp, f2b[face] ));
-	mp_size_recv_buffer( mp, f2b[face],
-			     16+n_recv[face]*sizeof(particle_injector_t) );
-	mp_begin_recv( mp, f2b[face], 16+n_recv[face]*sizeof(particle_injector_t),
-		       bc[face], f2rb[face] );
+	g->mp_end_recv(f2b[face]);
+	n_recv[face] = *((int *)g->mp_recv_buffer(f2b[face]));
+	g->mp_size_recv_buffer(f2b[face],
+			       16+n_recv[face]*sizeof(particle_injector_t));
+	g->mp_begin_recv(f2b[face], 16+n_recv[face]*sizeof(particle_injector_t),
+			 bc[face], f2rb[face]);
       }
     }
     for (face=0; face<6; face++) {
       if (shared[face]) {
-	mp_end_send( mp, f2b[face] );
+	g->mp_end_send(f2b[face]);
 	// FIXME: ASSUMES MP WON'T MUCK WITH REST OF SEND BUFFER. IF WE
 	// DID MORE EFFICIENT MOVER ALLOCATION ABOVE, THIS WOULD BE
 	// ROBUSTED AGAINST MP IMPLEMENTATION VAGARIES
-	mp_begin_send( mp, f2b[face], 16+n_send[face]*sizeof(particle_injector_t),
-		       bc[face], f2b[face] );
+	g->mp_begin_send(f2b[face], 16+n_send[face]*sizeof(particle_injector_t),
+			 bc[face], f2b[face]);
       }
     }
 
@@ -1100,9 +1100,9 @@ struct PscParticlesOps {
 	  pi = ci;
 	  n = n_ci;
 	} else if (shared[face]) {
-	  mp_end_recv( mp, f2b[face] );
+	  g->mp_end_recv(f2b[face]);
 	  pi = (const particle_injector_t *)
-	    (((char *)mp_recv_buffer(mp,f2b[face]))+16);
+	    (((char *)g->mp_recv_buffer(f2b[face]))+16);
 	  n  = n_recv[face];
 	} else {
 	  continue;
@@ -1164,7 +1164,7 @@ struct PscParticlesOps {
   
     for (face = 0; face < 6; face++) {
       if (shared[face]) {
-	mp_end_send(mp,f2b[face]);
+	g->mp_end_send(f2b[face]);
       }
     }
   }
