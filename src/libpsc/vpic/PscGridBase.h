@@ -46,6 +46,8 @@ struct PscMp
     delete mp;
   }
 
+  constexpr static float RESIZE_FACTOR = 1.3125;
+  
   void size_recv_buffer(int port, int size)
   {
     assert(port >= 0 && port < n_port);
@@ -53,6 +55,7 @@ struct PscMp
       return;
     }
 
+    size *= RESIZE_FACTOR;
     FREE_ALIGNED(rbuf[port]);
     MALLOC_ALIGNED(rbuf[port], size, 128);
     rbuf_sz[port] = size;
@@ -65,6 +68,7 @@ struct PscMp
       return;
     }
 
+    size *= RESIZE_FACTOR;
     FREE_ALIGNED(sbuf[port]);
     MALLOC_ALIGNED(sbuf[port], size, 128);
     sbuf_sz[port] = size;
