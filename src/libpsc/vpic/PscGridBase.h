@@ -71,6 +71,107 @@ struct VpicMp : mp_t
   }
 };
 
+struct PscMp : mp_t
+{
+  PscMp(int n_port_)
+  {
+    n_port = n_port_;
+    MALLOC(rbuf,    n_port); MALLOC(sbuf,    n_port);
+    MALLOC(rbuf_sz, n_port); MALLOC(sbuf_sz, n_port); 
+    MALLOC(rreq_sz, n_port); MALLOC(sreq_sz, n_port); 
+    MALLOC(rreq,    n_port); MALLOC(sreq,    n_port); 
+    CLEAR( rbuf,    n_port); CLEAR( sbuf,    n_port);
+    CLEAR( rbuf_sz, n_port); CLEAR( sbuf_sz, n_port); 
+    CLEAR( rreq_sz, n_port); CLEAR( sreq_sz, n_port); 
+    CLEAR( rreq,    n_port); CLEAR( sreq,    n_port); 
+  }
+
+  ~PscMp()
+  {
+    for(int port=0; port < n_port; port++) {
+      FREE_ALIGNED(rbuf[port]); FREE_ALIGNED(sbuf[port]); 
+    }
+    FREE(rreq   ); FREE(sreq   ); 
+    FREE(rreq_sz); FREE(sreq_sz); 
+    FREE(rbuf_sz); FREE(sbuf_sz); 
+    FREE(rbuf   ); FREE(sbuf   );
+  }
+  
+  static PscMp* create(int n_port)
+  {
+    return new PscMp(n_port);
+  }
+
+  static void destroy(PscMp* mp)
+  {
+    delete mp;
+  }
+
+  void size_recv_buffer(int port, int size)
+  {
+    assert(port >= 0 && port < n_port);
+    if (size <= rbuf_sz[port]) {
+      return;
+    }
+
+    FREE_ALIGNED(rbuf[port]);
+    MALLOC_ALIGNED(rbuf[port], size, 128);
+    rbuf_sz[port] = size;
+  }
+
+  void size_send_buffer(int port, int size)
+  {
+    assert(port >= 0 && port < n_port);
+    if (size <= sbuf_sz[port]) {
+      return;
+    }
+
+    FREE_ALIGNED(sbuf[port]);
+    MALLOC_ALIGNED(sbuf[port], size, 128);
+    sbuf_sz[port] = size;
+  }
+
+  void* send_buffer(int port)
+  {
+    assert(port >= 0 && port < n_port);
+    return sbuf[port];
+  }
+
+  void* recv_buffer(int port)
+  {
+    assert(port >= 0 && port < n_port);
+    return rbuf[port];
+  }
+
+  void begin_send(int port, int size, int dst, int tag)
+  {
+    assert(port >= 0 && port < n_port);
+    sreq_sz[port] = size;
+    MPI_Isend(sbuf[port], size, MPI_BYTE, dst, tag, MPI_COMM_WORLD, &sreq[port]);
+  }
+
+  void end_send(int port)
+  {
+    assert(port >= 0 && port < n_port);
+    MPI_Wait(&sreq[port], MPI_STATUS_IGNORE);
+  }
+
+  void begin_recv(int port, int size,  int src, int tag)
+  {
+    assert(port >= 0 && port < n_port);
+    rreq_sz[port] = size;
+    MPI_Irecv(rbuf[port], size, MPI_BYTE, src, tag, MPI_COMM_WORLD, &rreq[port]);
+  }
+
+  void end_recv(int port)
+  {
+    assert(port >= 0 && port < n_port);
+    MPI_Wait(&rreq[port], MPI_STATUS_IGNORE);
+  }
+};
+
+typedef PscMp Mp;
+
 // ======================================================================
 // PscGridBase
 
@@ -83,14 +184,14 @@ struct PscGridBase : grid_t
       bc[i] = anti_symmetric_fields;
     }
     bc[BOUNDARY(0,0,0)] = world_rank;
-    mp = VpicMp::create(27);
+    mp = Mp::create(27);
   }
   
   ~PscGridBase()
   {
     FREE_ALIGNED(neighbor);
     FREE_ALIGNED(range);
-    VpicMp::destroy(reinterpret_cast<VpicMp*>(mp));
+    Mp::destroy(reinterpret_cast<Mp*>(mp));
   }
   
   static PscGridBase* create()
@@ -150,19 +251,19 @@ struct PscGridBase : grid_t
 
   void mp_size_recv_buffer(int tag, int size)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     mp->size_recv_buffer(tag, size);
   }
 
   void mp_size_send_buffer(int tag, int size)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     mp->size_send_buffer(tag, size);
   }
 
   void* size_send_port(int i, int j, int k, int size)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
     if (dst < 0 || dst >= world_size ) {
       return nullptr;
@@ -173,7 +274,7 @@ struct PscGridBase : grid_t
 
   void begin_send_port(int i, int j, int k, int size)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
     if (dst < 0 || dst >= world_size) {
       return;
@@ -183,7 +284,7 @@ struct PscGridBase : grid_t
 
   void end_send_port(int i, int j, int k)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
     if (dst < 0 || dst >= world_size) {
       return;
@@ -193,7 +294,7 @@ struct PscGridBase : grid_t
 
   void begin_recv_port(int i, int j, int k, int size)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(-i,-j,-k), src = bc[port];
     if (src < 0 || src >= world_size) {
       return;
@@ -204,7 +305,7 @@ struct PscGridBase : grid_t
   
   void* end_recv_port(int i, int j, int k)
   {
-    VpicMp* mp = reinterpret_cast<VpicMp*>(this->mp);
+    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(-i,-j,-k), src = bc[port];
     if (src < 0 || src >= world_size) {
       return nullptr;
