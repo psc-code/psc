@@ -474,7 +474,7 @@ struct VpicDiagMixin
     FileIO fileIO;
     FileIOStatus status(fail);
 
-    int rank = _world_rank;
+    int rank = psc_world_rank;
     
     if (!fname) ERROR(("Invalid file name"));
  
@@ -519,8 +519,8 @@ struct VpicDiagMixin
     Field3D<FieldArray> F(fa);
     grid_t* grid = fa.g;
     int64_t step = grid->step;
-    int rank = _world_rank;
-    int nproc = _world_size;
+    int rank = psc_world_rank;
+    int nproc = psc_world_size;
     
     // Create directory for this time step
     char timeDir[256];
@@ -619,8 +619,8 @@ struct VpicDiagMixin
     Field3D<HydroArray> H(*hydro_array);
     grid_t* grid = hydro_array->g;
     int64_t step = grid->step;
-    int rank = _world_rank;
-    int nproc = _world_size;
+    int rank = psc_world_rank;
+    int nproc = psc_world_size;
 
     // Create directory for this time step
     char timeDir[256];

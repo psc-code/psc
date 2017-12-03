@@ -4,6 +4,8 @@
 
 #include <stdbool.h>
 
+#include <mpi.h>
+
 #include "../bk_mparticles_iface.h" // FIXME, path
 
 #ifdef __cplusplus

@@ -124,7 +124,7 @@ struct PscHydroArray : HydroArrayBase
 # define ADJUST_HYDRO(i,j,k,X,Y,Z)              \
     do {					\
       bc = g->bc[BOUNDARY(i,j,k)];		\
-      if( bc<0 || bc>=world_size ) {		\
+      if( bc<0 || bc>=psc_world_size ) {	\
 	face = (i+j+k)<0 ? 1 : n##X+1;		\
 	X##_NODE_LOOP(face) {			\
 	  h = &H(x,y,z);			\

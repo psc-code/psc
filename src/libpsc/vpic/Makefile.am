@@ -25,6 +25,7 @@ libsubdir_la_SOURCES = \
 	psc_fields_vpic_cxx.cxx \
 	psc_output_fields_item_vpic.c \
 	\
+	psc_vpic_bits.cxx \
 	vpic_base.cxx \
 	vpic_mparticles.cxx \
 	vpic_push_particles.cxx \
@@ -39,6 +40,8 @@ noinst_PROGRAMS = \
 
 test_VpicFieldArray_SOURCES = test_VpicFieldArray.cxx
 test_PscFieldArray_SOURCES = test_PscFieldArray.cxx
+
+LDADD = libsubdir.la
 
 
 

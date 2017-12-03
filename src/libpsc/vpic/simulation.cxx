@@ -8,7 +8,7 @@
 
 Simulation* Simulation_create()
 {
-  if( world_rank==0 ) log_printf( "*** Initializing\n" );
+  if (psc_world_rank==0) log_printf("*** Initializing\n" );
   return new Simulation();
 }
 

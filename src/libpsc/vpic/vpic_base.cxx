@@ -6,7 +6,6 @@
 #include <mrc_common.h>
 #include <cassert>
 
-
 // ----------------------------------------------------------------------
 // vpic_base_init
 
@@ -32,8 +31,12 @@ void vpic_base_init(int *pargc, char ***pargv)
     // See note above about thread-core-affinity
     
     boot_mp( pargc, pargv );
+
+    MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
+    MPI_Comm_rank(psc_comm_world, &psc_world_rank);
+    MPI_Comm_size(psc_comm_world, &psc_world_size);
     
-    mp_barrier();
+    MPI_Barrier(psc_comm_world);
     _boot_timestamp = 0;
     _boot_timestamp = uptime();
   }

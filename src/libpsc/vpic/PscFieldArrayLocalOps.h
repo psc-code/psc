@@ -48,7 +48,7 @@ struct PscFieldArrayLocalOps {
 # define APPLY_LOCAL_TANG_B(i,j,k,X,Y,Z)				\
     do {								\
       bc = g->bc[BOUNDARY(i,j,k)];					\
-      if( bc<0 || bc>=world_size ) {					\
+      if( bc<0 || bc>=psc_world_size ) {				\
 	ghost = (i+j+k)<0 ? 0 : n##X+1;					\
 	face  = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
@@ -117,7 +117,7 @@ struct PscFieldArrayLocalOps {
 # define APPLY_LOCAL_NORM_E(i,j,k,X,Y,Z)                        \
     do {							\
       bc = g->bc[BOUNDARY(i,j,k)];				\
-      if( bc<0 || bc>=world_size ) {				\
+      if( bc<0 || bc>=psc_world_size ) {			\
 	face = (i+j+k)<0 ? 0 : n##X+1;				\
 	switch(bc) {						\
 	case anti_symmetric_fields:				\
@@ -170,7 +170,7 @@ struct PscFieldArrayLocalOps {
 # define APPLY_LOCAL_DIV_B(i,j,k,X,Y,Z)					\
     do {								\
     bc = g->bc[BOUNDARY(i,j,k)];					\
-    if( bc<0 || bc>=world_size ) {					\
+    if( bc<0 || bc>=psc_world_size ) {					\
     face = (i+j+k)<0 ? 0 : n##X+1;					\
     switch(bc) {							\
     case anti_symmetric_fields:						\
@@ -211,7 +211,7 @@ struct PscFieldArrayLocalOps {
 # define ADJUST_TANG_E(i,j,k,X,Y,Z)                                     \
     do {								\
       bc = g->bc[BOUNDARY(i,j,k)];					\
-      if( bc<0 || bc>=world_size ) {					\
+      if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
 	case anti_symmetric_fields:					\
@@ -253,7 +253,7 @@ struct PscFieldArrayLocalOps {
 # define ADJUST_NORM_B(i,j,k,X,Y,Z)                                     \
     do {								\
       bc = g->bc[BOUNDARY(i,j,k)];					\
-      if( bc<0 || bc>=world_size ) {					\
+      if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
 	case anti_symmetric_fields: case pmc_fields: case absorb_fields: \
@@ -286,7 +286,7 @@ struct PscFieldArrayLocalOps {
 # define ADJUST_DIV_E_ERR(i,j,k,X,Y,Z)				\
     do {							\
       bc = g->bc[BOUNDARY(i,j,k)];				\
-      if( bc<0 || bc>=world_size ) {				\
+      if( bc<0 || bc>=psc_world_size ) {			\
 	face = (i+j+k)<0 ? 1 : n##X+1;				\
 	switch(bc) {						\
 	case anti_symmetric_fields: case absorb_fields:		\
@@ -324,7 +324,7 @@ struct PscFieldArrayLocalOps {
 # define ADJUST_JF(i,j,k,X,Y,Z)                                         \
     do {								\
       bc = g->bc[BOUNDARY(i,j,k)];					\
-      if( bc<0 || bc>=world_size ) {					\
+      if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
 	case anti_symmetric_fields:					\
@@ -366,7 +366,7 @@ struct PscFieldArrayLocalOps {
 # define ADJUST_RHOF(i,j,k,X,Y,Z)                                       \
     do {								\
       bc = g->bc[BOUNDARY(i,j,k)];					\
-      if( bc<0 || bc>=world_size ) {					\
+      if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
 	case anti_symmetric_fields:					\
@@ -405,7 +405,7 @@ struct PscFieldArrayLocalOps {
 # define ADJUST_RHOB(i,j,k,X,Y,Z)                                       \
     do {								\
     bc = g->bc[BOUNDARY(i,j,k)];                                        \
-    if( bc<0 || bc>=world_size ) {                                      \
+    if( bc<0 || bc>=psc_world_size ) {					\
     face = (i+j+k)<0 ? 1 : n##X+1;					\
     switch(bc) {							\
     case anti_symmetric_fields:						\

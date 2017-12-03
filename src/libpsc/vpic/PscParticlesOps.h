@@ -890,13 +890,13 @@ struct PscParticlesOps {
     const int64_t * RESTRICT ALIGNED(128) neighbor = g->neighbor;
     const int64_t rangel = g->rangel;
     const int64_t rangeh = g->rangeh;
-    const int64_t rangem = g->range[world_size];
+    const int64_t rangem = g->range[psc_world_size];
     /*const*/ int bc[6], shared[6];
     /*const*/ int64_t range[6];
     for( face=0; face<6; face++ ) {
       bc[face] = g->bc[f2b[face]];
-      shared[face] = (bc[face]>=0) && (bc[face]<world_size) &&
-	(bc[face]!=world_rank);
+      shared[face] = (bc[face]>=0) && (bc[face]<psc_world_size) &&
+	(bc[face] != psc_world_rank);
       if( shared[face] ) range[face] = g->range[bc[face]]; 
     }
 
@@ -1779,8 +1779,8 @@ struct PscParticles : ParticlesBase
     local += energy_p_pipeline(sp, interpolator, cnt, sp->np - cnt);
 
     double global;
-    mp_allsum_d( &local, &global, 1 );
-    return global*((double)sp->g->cvac*(double)sp->g->cvac);
+    MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);
+    return global * sqr(sp->g->cvac);
   }
 
 };

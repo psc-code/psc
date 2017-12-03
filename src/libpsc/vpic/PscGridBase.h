@@ -2,7 +2,7 @@
 #ifndef PSC_GRID_BASE_H
 #define PSC_GRID_BASE_H
 
-#include <vpic.h>
+#include "psc_vpic_bits.h"
 
 #include <cassert>
 #include <mrc_common.h>
@@ -136,7 +136,7 @@ struct PscGridBase : grid_t
     for(int i = 0; i < 27; i++) {
       bc[i] = anti_symmetric_fields;
     }
-    bc[BOUNDARY(0,0,0)] = world_rank;
+    bc[BOUNDARY(0,0,0)] = psc_world_rank;
     mp = reinterpret_cast<mp_t*>(Mp::create(27));
   }
   
@@ -250,57 +250,55 @@ struct PscGridBase : grid_t
     mp->end_send(port);
   }
 
+  // ----------------------------------------------------------------------
+  // for field communications
+  
   void* size_send_port(int i, int j, int k, int size)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
-    if (dst < 0 || dst >= world_size ) {
+    if (dst < 0 || dst >= psc_world_size ) {
       return nullptr;
     }
-    mp->size_send_buffer(port, size);
-    return mp->send_buffer(port);
+    mp_size_send_buffer(port, size);
+    return mp_send_buffer(port);
   }
 
   void begin_send_port(int i, int j, int k, int size)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
-    if (dst < 0 || dst >= world_size) {
+    if (dst < 0 || dst >= psc_world_size) {
       return;
     }
-    mp->begin_send(port, size, dst, port);
+    mp_begin_send(port, size, dst, port);
   }
 
   void end_send_port(int i, int j, int k)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(i, j, k), dst = bc[port];
-    if (dst < 0 || dst >= world_size) {
+    if (dst < 0 || dst >= psc_world_size) {
       return;
     }
-    mp->end_send(port);
+    mp_end_send(port);
   }
 
   void begin_recv_port(int i, int j, int k, int size)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(-i,-j,-k), src = bc[port];
-    if (src < 0 || src >= world_size) {
+    if (src < 0 || src >= psc_world_size) {
       return;
     }
-    mp->size_recv_buffer(port, size);
-    mp->begin_recv(port, size, src, BOUNDARY(i,j,k));
+    mp_size_recv_buffer(port, size);
+    mp_begin_recv(port, size, src, BOUNDARY(i,j,k));
   }
   
   void* end_recv_port(int i, int j, int k)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
     int port = BOUNDARY(-i,-j,-k), src = bc[port];
-    if (src < 0 || src >= world_size) {
+    if (src < 0 || src >= psc_world_size) {
       return nullptr;
     }
-    mp->end_recv(port);
-    return mp->recv_buffer(port);
+    mp_end_recv(port);
+    return mp_recv_buffer(port);
   }
 };
 
