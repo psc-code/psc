@@ -8,70 +8,9 @@
 #include <mrc_common.h>
 
 // ======================================================================
-// VpicMp
+// PscMp
 
-struct mp {
-  int n_port;
-  char * ALIGNED(128) * rbuf; char * ALIGNED(128) * sbuf;
-  int * rbuf_sz;              int * sbuf_sz;
-  int * rreq_sz;              int * sreq_sz;
-  MPI_Request * rreq;         MPI_Request * sreq;
-};
-
-struct VpicMp : mp_t
-{
-  static VpicMp* create(int n_port)
-  {
-    return reinterpret_cast<VpicMp*>(::new_mp(n_port));
-  }
-
-  static void destroy(VpicMp* mp)
-  {
-    ::delete_mp(mp);
-  }
-
-  void size_recv_buffer(int port, int size)
-  {
-    ::mp_size_recv_buffer(this, port, size);
-  }
-
-  void size_send_buffer(int port, int size)
-  {
-    ::mp_size_send_buffer(this, port, size);
-  }
-
-  void* send_buffer(int port)
-  {
-    return ::mp_send_buffer(this, port);
-  }
-
-  void* recv_buffer(int port)
-  {
-    return ::mp_recv_buffer(this, port);
-  }
-
-  void begin_send(int port, int size,  int dst, int tag)
-  {
-    return ::mp_begin_send(this, port, size, dst, tag);
-  }
-
-  void end_send(int port)
-  {
-    return ::mp_end_send(this, port);
-  }
-
-  void begin_recv(int port, int size,  int src, int tag)
-  {
-    return ::mp_begin_recv(this, port, size, src, tag);
-  }
-
-  void end_recv(int port)
-  {
-    return ::mp_end_recv(this, port);
-  }
-};
-
-struct PscMp : mp_t
+struct PscMp
 {
   PscMp(int n_port_)
   {
@@ -168,6 +107,16 @@ struct PscMp : mp_t
     assert(port >= 0 && port < n_port);
     MPI_Wait(&rreq[port], MPI_STATUS_IGNORE);
   }
+
+  int n_port;
+  char * ALIGNED(128) * rbuf;
+  char * ALIGNED(128) * sbuf;
+  int * rbuf_sz;
+  int * sbuf_sz;
+  int * rreq_sz;
+  int * sreq_sz;
+  MPI_Request * rreq;
+  MPI_Request * sreq;
 };
 
 typedef PscMp Mp;
@@ -184,7 +133,7 @@ struct PscGridBase : grid_t
       bc[i] = anti_symmetric_fields;
     }
     bc[BOUNDARY(0,0,0)] = world_rank;
-    mp = Mp::create(27);
+    mp = reinterpret_cast<mp_t*>(Mp::create(27));
   }
   
   ~PscGridBase()
