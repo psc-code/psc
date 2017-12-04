@@ -237,7 +237,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     }
 
     // Reduce results between nodes
-    mp_allsum_d(en, global, 6 );
+    MPI_Allreduce(&en, &global, 6, MPI_DOUBLE, MPI_SUM, psc_comm_world);
   }
 
   void energy_f(double en[6])
@@ -600,7 +600,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     }
     
     double gerr;
-    mp_allsum_d(&comm.err, &gerr, 1);
+    MPI_Allreduce(&comm.err, &gerr, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);
     return gerr;
   }
 
@@ -738,7 +738,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     double local[2], _global[2]; // FIXME, name clash with global macro
     local[0] = err * g->dV;
     local[1] = (nx * ny * nz) * g->dV;
-    mp_allsum_d(local, _global, 2);
+    MPI_Allreduce(local, _global, 2, MPI_DOUBLE, MPI_SUM, psc_comm_world);
     return g->eps0 * sqrt(_global[0]/_global[1]);
   }
 
@@ -865,7 +865,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     double local[2], _global[2]; // FIXME, name clash with global macro
     local[0] = err * g->dV;
     local[1] = (nx * ny * nz) * g->dV;
-    mp_allsum_d(local, _global, 2);
+    MPI_Allreduce(local, _global, 2, MPI_DOUBLE, MPI_SUM, psc_comm_world);
     return g->eps0 * sqrt(_global[0]/_global[1]);
   }
 

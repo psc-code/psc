@@ -2,13 +2,14 @@
 #include "vpic_iface.h"
 
 #include <cassert>
+#include <mrc_common.h>
 
 // ----------------------------------------------------------------------
 // C wrappers
 
 Simulation* Simulation_create()
 {
-  if (psc_world_rank==0) log_printf("*** Initializing\n" );
+  mpi_printf(psc_comm_world, "*** Initializing\n" );
   return new Simulation();
 }
 

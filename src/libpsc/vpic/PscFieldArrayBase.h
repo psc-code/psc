@@ -2,6 +2,7 @@
 #ifndef PSC_FIELD_ARRAY_BASE_H
 #define PSC_FIELD_ARRAY_BASE_H
 
+#include "psc_vpic_bits.h"
 #include "material.h"
 
 #include "field_advance/field_advance.h"
@@ -93,7 +94,7 @@ struct PscFieldArrayBase : field_array_t
       if( cg2>=1 )
 	WARNING(( "\"%s\" Courant condition estimate = %e", m->name, sqrt(cg2) ));
       if( m->zetax!=0 || m->zetay!=0 || m->zetaz!=0 )
-	WARNING(( "\"%s\" magnetic conductivity is not supported" ));
+	WARNING(( "\"%s\" magnetic conductivity is not supported", m->name ));
       n_mc++;
     }
 

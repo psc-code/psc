@@ -2,6 +2,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "psc_vpic_bits.h"
 #include "VpicListBase.h"
 #include "material/material.h"
 

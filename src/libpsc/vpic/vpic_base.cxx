@@ -132,7 +132,7 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
                          || z <-phys->Lz/2+dx[2]*thickness  || z > phys->Lz/2-dx[2]*thickness )
 
   if (thickness > 0) {
-    log_printf("Setting resistive layer of thickness %g", thickness);
+    mprintf("Setting resistive layer of thickness %g", thickness);
     // FIXME!!!
     assert(0);
 #if 0

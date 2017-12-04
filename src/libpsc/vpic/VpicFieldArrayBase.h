@@ -210,7 +210,7 @@ create_sfa_params( grid_t           * g,
     if( cg2>=1 )
       WARNING(( "\"%s\" Courant condition estimate = %e", m->name, sqrt(cg2) ));
     if( m->zetax!=0 || m->zetay!=0 || m->zetaz!=0 )
-      WARNING(( "\"%s\" magnetic conductivity is not supported" ));
+      WARNING(( "\"%s\" magnetic conductivity is not supported", m->name ));
     n_mc++;
   }
 
