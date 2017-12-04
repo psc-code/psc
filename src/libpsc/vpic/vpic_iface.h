@@ -130,7 +130,10 @@ typedef PscSimulationMixin<Particles> SimulationMixin;
 typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
 
-typedef VpicSimulation<Particles, ParticlesOps, SimulationMixin, DiagMixin> Simulation;
+typedef VpicRng Rng;
+typedef VpicRngPool<Rng> RngPool;
+
+typedef VpicSimulation<Particles, ParticlesOps, RngPool, SimulationMixin, DiagMixin> Simulation;
 
 #else
 
@@ -138,6 +141,7 @@ typedef struct FieldArray_ FieldArray;
 typedef struct Particles_ Particles;
 typedef struct Simulation_ Simulation;
 typedef struct HydroArray_ HydroArray;
+typedef struct Rng_ Rng;
 
 #endif
 
@@ -255,10 +259,10 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 
 
 void Simulation_rngPool_seed(Simulation *sim, int base);
-struct Rng *Simulation_rngPool_get(Simulation *sim, int n);
+Rng *Simulation_rngPool_get(Simulation *sim, int n);
 
-double Rng_uniform(struct Rng *rng, double lo, double hi);
-double Rng_normal(struct Rng *rng, double mu, double sigma);
+double Rng_uniform(Rng *rng, double lo, double hi);
+double Rng_normal(Rng *rng, double mu, double sigma);
 
 // ----------------------------------------------------------------------
 // vpic_harris_params

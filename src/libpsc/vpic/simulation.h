@@ -14,7 +14,7 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class ParticlesOps, class SimulationMixin, class DiagMixin>
+template<class P, class ParticlesOps, class RP, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 {
   typedef P Particles;
@@ -27,6 +27,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename FieldArray::MaterialList MaterialList;
   typedef typename MaterialList::Material Material;
+  typedef RP RngPool;
 
   using SimulationMixin::collision_run;
   using SimulationMixin::emitter;

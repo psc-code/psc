@@ -8,7 +8,7 @@
 #define IN_rng
 #include "util/rng/rng_private.h"
 
-struct Rng : rng {
+struct VpicRng : rng {
   double drand() { return ::drand(this); }
   double drandn() { return ::drandn(this); }
 
@@ -27,8 +27,10 @@ struct Rng : rng {
 // ======================================================================
 // class RngPool
 
-struct RngPool {
-  RngPool()
+template<class Rng>
+struct VpicRngPool
+{
+  VpicRngPool()
   {
     int new_rng = 2;
     rng_pool_ = new_rng_pool(new_rng, 0, 0);
@@ -36,7 +38,7 @@ struct RngPool {
   
   void seed(int base, int which)
   {
-    seed_rng_pool(rng_pool_, base, which);
+    ::seed_rng_pool(rng_pool_, base, which);
   }
   
   Rng *operator[](int n)

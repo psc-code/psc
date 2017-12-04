@@ -91,12 +91,12 @@ Rng *Simulation_rngPool_get(Simulation* sim, int n)
   return sim->rng_pool[n];
 }
 
-double Rng_uniform(struct Rng *rng, double lo, double hi)
+double Rng_uniform(Rng *rng, double lo, double hi)
 {
   return rng->uniform(lo, hi);
 }
 
-double Rng_normal(struct Rng *rng, double mu, double sigma)
+double Rng_normal(Rng *rng, double mu, double sigma)
 {
   return rng->normal(mu, sigma);
 }
