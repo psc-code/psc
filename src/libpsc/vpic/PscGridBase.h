@@ -155,6 +155,7 @@ struct PscGridBase : grid_t
   }
   
 #define LOCAL_CELL_ID(x,y,z)  VOXEL(x,y,z, lnx,lny,lnz)
+#define REMOTE_CELL_ID(x,y,z) VOXEL(x,y,z, rnx,rny,rnz)
 
   void size_grid(int lnx, int lny, int lnz)
   {
@@ -228,7 +229,54 @@ struct PscGridBase : grid_t
       }
     }
   }
+
+  void join_grid(int boundary, int rank)
+  {
+    int lx, ly, lz, lnx, lny, lnz, rx, ry, rz, rnx, rny, rnz, rnc;
+
+    assert(boundary >= 0 && boundary < 27 && boundary != BOUNDARY(0,0,0));
+    assert(rank >= 0 && rank < psc_world_size);
+
+    // Join phase 2 data structures
+    bc[boundary] = rank;
+
+    // Join phase 3 data structures
+    lnx = nx;
+    lny = ny;
+    lnz = nz;
+    rnc = range[rank+1] - range[rank]; // Note: rnc <~ 2^31 / 6
+
+# define GLUE_FACE(tag,i,j,k,X,Y,Z) BEGIN_PRIMITIVE {			\
+      if (boundary == BOUNDARY(i,j,k)) {				\
+	assert(rnc % ((ln##Y+2)*(ln##Z+2)) == 0);			\
+	rn##X = (rnc / ((ln##Y+2) * (ln##Z+2))) - 2;			\
+	rn##Y = ln##Y;							\
+	rn##Z = ln##Z;							\
+	l##X = (i+j+k)<0 ? 1     : ln##X;				\
+	r##X = (i+j+k)<0 ? rn##X : 1;					\
+	for (l##Z = 1; l##Z <= ln##Z; l##Z++) {				\
+	  for (l##Y = 1; l##Y <= ln##Y; l##Y++) {			\
+	    r##Y = l##Y;						\
+	    r##Z = l##Z;						\
+	    neighbor[6*LOCAL_CELL_ID(lx,ly,lz) + tag] =			\
+	      range[rank] + REMOTE_CELL_ID(rx,ry,rz);			\
+	  }								\
+	}								\
+	return;								\
+      }									\
+    } END_PRIMITIVE
+
+    GLUE_FACE(0,-1, 0, 0,x,y,z);
+    GLUE_FACE(1, 0,-1, 0,y,z,x);
+    GLUE_FACE(2, 0, 0,-1,z,x,y);
+    GLUE_FACE(3, 1, 0, 0,x,y,z);
+    GLUE_FACE(4, 0, 1, 0,y,z,x);
+    GLUE_FACE(5, 0, 0, 1,z,x,y);
+# undef GLUE_FACE
+  }
+
 #undef LOCAL_CELL_ID
+#undef REMOTE_CELL_ID
 
   void partition_periodic_box(const double xl[3], const double xh[3],
 			      const int gdims[3], const Int3 np)
@@ -263,12 +311,12 @@ struct PscGridBase : grid_t
 
     // Join the grid to neighbors
     int px = idx[0], py = idx[1], pz = idx[2];
-    join_grid(this, BOUNDARY(-1, 0, 0), idx_to_rank(np, {px-1, py  , pz  }));
-    join_grid(this, BOUNDARY( 0,-1, 0), idx_to_rank(np, {px  , py-1, pz  }));
-    join_grid(this, BOUNDARY( 0, 0,-1), idx_to_rank(np, {px  , py  , pz-1}));
-    join_grid(this, BOUNDARY( 1, 0, 0), idx_to_rank(np, {px+1, py  , pz  }));
-    join_grid(this, BOUNDARY( 0, 1, 0), idx_to_rank(np, {px  , py+1, pz  }));
-    join_grid(this, BOUNDARY( 0, 0, 1), idx_to_rank(np, {px  , py  , pz+1}));
+    join_grid(BOUNDARY(-1, 0, 0), idx_to_rank(np, {px-1, py  , pz  }));
+    join_grid(BOUNDARY( 0,-1, 0), idx_to_rank(np, {px  , py-1, pz  }));
+    join_grid(BOUNDARY( 0, 0,-1), idx_to_rank(np, {px  , py  , pz-1}));
+    join_grid(BOUNDARY( 1, 0, 0), idx_to_rank(np, {px+1, py  , pz  }));
+    join_grid(BOUNDARY( 0, 1, 0), idx_to_rank(np, {px  , py+1, pz  }));
+    join_grid(BOUNDARY( 0, 0, 1), idx_to_rank(np, {px  , py  , pz+1}));
   }
 
   void set_fbc(int boundary, int fbc)
