@@ -4,6 +4,7 @@
 
 #include "psc_vpic_bits.h"
 
+#include <array>
 #include <cassert>
 #include <mrc_common.h>
 
@@ -101,10 +102,97 @@ struct PscGridBase : grid_t
     eps0 = eps0_;
   }
 
-  void partition_periodic_box(double xl[3], double xh[3], int gdims[3], int np[3])
+  struct Int3 : std::array<int, 3>
   {
-    ::partition_periodic_box(this, xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
-			     gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);
+    Int3() = default; // not zero initialized!, I think
+    Int3(const int *p)
+    {
+      for (int i = 0; i < 3; i++) {
+	new (&(*this)[i])
+	  int(p[i]); // placement new -- not really necessary for int
+      }
+    }
+    
+    Int3(std::initializer_list<int> l)
+    {
+      assert(l.size() == 3);
+      std::uninitialized_copy(l.begin(), l.end(), data());
+    }
+
+    operator const int* () const
+    {
+      return data();
+    }
+
+    operator int* ()
+    {
+      return data();
+    }
+  };
+  
+  Int3 rank_to_idx(int rank, const Int3& np)
+  {
+    Int3 idx;
+    int ix,iy,iz;
+    ix = rank;
+    iy = ix / np[0];
+    ix -= iy * np[0];
+    iz = iy / np[1];
+    iy -= iz * np[1];
+    idx[0] = ix;
+    idx[1] = iy;
+    idx[2] = iz;
+    return idx;
+  }
+
+  unsigned int idx_to_rank(const int np[3], Int3 idx)
+  {
+    int ix = idx[0], iy = idx[1], iz = idx[2];
+    while (ix >= np[0]) ix -= np[0]; while (ix < 0) ix += np[0];
+    while (iy >= np[1]) iy -= np[1]; while (iy < 0) iy += np[1];
+    while (iz >= np[2]) iz -= np[2]; while (iz < 0) iz += np[2];
+    return ix + np[0] * (iy + np[1] * iz);
+  }
+  
+  void partition_periodic_box(const double xl[3], const double xh[3],
+			      const int gdims[3], const Int3 np)
+  {
+    assert(np[0] > 0 && np[1] > 0 && np[2] > 0);
+    assert(gdims[0] > 0 && gdims[1] > 0 && gdims[2] > 0);
+    assert(gdims[0] % np[0] == 0 && gdims[1] % np[1] == 0 && gdims[2] % np[2] == 0);
+
+    Int3 idx = rank_to_idx(world_rank, np);
+
+    double dxyz[3];
+    for (int d = 0; d < 3; d++) {
+      dxyz[d] = (xh[d] - xl[d]) / gdims[d];
+    }
+    dx = dxyz[0]; dy = dxyz[1]; dz = dxyz[2];
+    dV = dxyz[0] * dxyz[1] * dxyz[2];
+
+    rdx = 1./dxyz[0]; rdy = 1./dxyz[1]; rdz = 1./dxyz[2];
+    r8V = 0.125 / (dxyz[0] * dxyz[1] * dxyz[2]);
+
+    double xyz0[3], xyz1[3];
+    for (int d = 0; d < 3; d++) {
+      double f;
+      f = (double) (idx[d]  ) / np[d]; xyz0[d] = xl[d] * (1-f) + xh[d] * f;
+      f = (double) (idx[d]+1) / np[d]; xyz1[d] = xl[d] * (1-f) + xh[d] * f;
+    }
+    x0 = xyz0[0]; y0 = xyz0[1]; z0 = xyz0[2];
+    x1 = xyz1[0]; y1 = xyz1[1]; z1 = xyz1[2];
+    
+    // Size the local grid
+    size_grid(this, gdims[0] / np[0], gdims[1] / np[1], gdims[2] / np[2]);
+
+    // Join the grid to neighbors
+    int px = idx[0], py = idx[1], pz = idx[2];
+    join_grid(this, BOUNDARY(-1, 0, 0), idx_to_rank(np, {px-1, py  , pz  }));
+    join_grid(this, BOUNDARY( 0,-1, 0), idx_to_rank(np, {px  , py-1, pz  }));
+    join_grid(this, BOUNDARY( 0, 0,-1), idx_to_rank(np, {px  , py  , pz-1}));
+    join_grid(this, BOUNDARY( 1, 0, 0), idx_to_rank(np, {px+1, py  , pz  }));
+    join_grid(this, BOUNDARY( 0, 1, 0), idx_to_rank(np, {px  , py+1, pz  }));
+    join_grid(this, BOUNDARY( 0, 0, 1), idx_to_rank(np, {px  , py  , pz+1}));
   }
 
   void set_fbc(int boundary, int fbc)
