@@ -12,118 +12,59 @@
 
 struct PscMp
 {
-  PscMp(int n_port_)
+  PscMp(int n_port) :
+    recv_buf_(n_port),
+    send_buf_(n_port),
+    recv_req_(n_port, MPI_REQUEST_NULL),
+    send_req_(n_port, MPI_REQUEST_NULL)
   {
-    n_port = n_port_;
-    MALLOC(rbuf,    n_port); MALLOC(sbuf,    n_port);
-    MALLOC(rbuf_sz, n_port); MALLOC(sbuf_sz, n_port); 
-    MALLOC(rreq_sz, n_port); MALLOC(sreq_sz, n_port); 
-    MALLOC(rreq,    n_port); MALLOC(sreq,    n_port); 
-    CLEAR( rbuf,    n_port); CLEAR( sbuf,    n_port);
-    CLEAR( rbuf_sz, n_port); CLEAR( sbuf_sz, n_port); 
-    CLEAR( rreq_sz, n_port); CLEAR( sreq_sz, n_port); 
-    CLEAR( rreq,    n_port); CLEAR( sreq,    n_port); 
   }
 
-  ~PscMp()
-  {
-    for(int port=0; port < n_port; port++) {
-      FREE_ALIGNED(rbuf[port]); FREE_ALIGNED(sbuf[port]); 
-    }
-    FREE(rreq   ); FREE(sreq   ); 
-    FREE(rreq_sz); FREE(sreq_sz); 
-    FREE(rbuf_sz); FREE(sbuf_sz); 
-    FREE(rbuf   ); FREE(sbuf   );
-  }
-  
-  static PscMp* create(int n_port)
-  {
-    return new PscMp(n_port);
-  }
-
-  static void destroy(PscMp* mp)
-  {
-    delete mp;
-  }
-
-  constexpr static float RESIZE_FACTOR = 1.3125;
-  
   void size_recv_buffer(int port, int size)
   {
-    assert(port >= 0 && port < n_port);
-    if (size <= rbuf_sz[port]) {
-      return;
-    }
-
-    size *= RESIZE_FACTOR;
-    FREE_ALIGNED(rbuf[port]);
-    MALLOC_ALIGNED(rbuf[port], size, 128);
-    rbuf_sz[port] = size;
+    recv_buf_[port].resize(size);
   }
 
   void size_send_buffer(int port, int size)
   {
-    assert(port >= 0 && port < n_port);
-    if (size <= sbuf_sz[port]) {
-      return;
-    }
-
-    size *= RESIZE_FACTOR;
-    FREE_ALIGNED(sbuf[port]);
-    MALLOC_ALIGNED(sbuf[port], size, 128);
-    sbuf_sz[port] = size;
+    send_buf_[port].resize(size);
   }
 
-  void* send_buffer(int port)
+  char* send_buffer(int port)
   {
-    assert(port >= 0 && port < n_port);
-    return sbuf[port];
+    return send_buf_[port].data();
   }
 
-  void* recv_buffer(int port)
+  char* recv_buffer(int port)
   {
-    assert(port >= 0 && port < n_port);
-    return rbuf[port];
+    return recv_buf_[port].data();
   }
 
   void begin_send(int port, int size, int dst, int tag)
   {
-    assert(port >= 0 && port < n_port);
-    sreq_sz[port] = size;
-    MPI_Isend(sbuf[port], size, MPI_BYTE, dst, tag, MPI_COMM_WORLD, &sreq[port]);
+    MPI_Isend(send_buf_[port].data(), size, MPI_BYTE, dst, tag, MPI_COMM_WORLD, &send_req_[port]);
   }
 
   void end_send(int port)
   {
-    assert(port >= 0 && port < n_port);
-    MPI_Wait(&sreq[port], MPI_STATUS_IGNORE);
+    MPI_Wait(&send_req_[port], MPI_STATUS_IGNORE);
   }
 
-  void begin_recv(int port, int size,  int src, int tag)
+  void begin_recv(int port, int size, int src, int tag)
   {
-    assert(port >= 0 && port < n_port);
-    rreq_sz[port] = size;
-    MPI_Irecv(rbuf[port], size, MPI_BYTE, src, tag, MPI_COMM_WORLD, &rreq[port]);
+    MPI_Irecv(recv_buf_[port].data(), size, MPI_BYTE, src, tag, MPI_COMM_WORLD, &recv_req_[port]);
   }
 
   void end_recv(int port)
   {
-    assert(port >= 0 && port < n_port);
-    MPI_Wait(&rreq[port], MPI_STATUS_IGNORE);
+    MPI_Wait(&recv_req_[port], MPI_STATUS_IGNORE);
   }
 
-  int n_port;
-  char * ALIGNED(128) * rbuf;
-  char * ALIGNED(128) * sbuf;
-  int * rbuf_sz;
-  int * sbuf_sz;
-  int * rreq_sz;
-  int * sreq_sz;
-  MPI_Request * rreq;
-  MPI_Request * sreq;
+  std::vector<std::vector<char>> recv_buf_;
+  std::vector<std::vector<char>> send_buf_;
+  std::vector<MPI_Request> recv_req_;
+  std::vector<MPI_Request> send_req_;
 };
-
-typedef PscMp Mp;
 
 // ======================================================================
 // PscGridBase
@@ -132,19 +73,19 @@ struct PscGridBase : grid_t
 {
   PscGridBase()
   {
-    CLEAR(this, 1 );
+    CLEAR(this, 1);
     for(int i = 0; i < 27; i++) {
       bc[i] = anti_symmetric_fields;
     }
     bc[BOUNDARY(0,0,0)] = psc_world_rank;
-    mp = reinterpret_cast<mp_t*>(Mp::create(27));
+    mp = reinterpret_cast<mp_t*>(new PscMp(27));
   }
   
   ~PscGridBase()
   {
     FREE_ALIGNED(neighbor);
     FREE_ALIGNED(range);
-    Mp::destroy(reinterpret_cast<Mp*>(mp));
+    delete reinterpret_cast<PscMp*>(mp);
   }
   
   static PscGridBase* create()
@@ -204,49 +145,49 @@ struct PscGridBase : grid_t
 
   void mp_size_recv_buffer(int port, int size)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->size_recv_buffer(port, size);
   }
 
   void mp_size_send_buffer(int port, int size)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->size_send_buffer(port, size);
   }
 
   void* mp_recv_buffer(int port)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     return mp->recv_buffer(port);
   }
 
   void* mp_send_buffer(int port)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     return mp->send_buffer(port);
   }
 
   void mp_begin_recv(int port, int size, int src, int tag)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->begin_recv(port, size, src, tag);
   }
 
   void mp_begin_send(int port, int size, int dst, int tag)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->begin_send(port, size, dst, tag);
   }
 
   void mp_end_recv(int port)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->end_recv(port);
   }
 
   void mp_end_send(int port)
   {
-    Mp* mp = reinterpret_cast<Mp*>(this->mp);
+    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->end_send(port);
   }
 
