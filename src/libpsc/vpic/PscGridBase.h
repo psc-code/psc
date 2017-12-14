@@ -154,6 +154,82 @@ struct PscGridBase : grid_t
     return ix + np[0] * (iy + np[1] * iz);
   }
   
+#define LOCAL_CELL_ID(x,y,z)  VOXEL(x,y,z, lnx,lny,lnz)
+
+  void size_grid(int lnx, int lny, int lnz)
+  {
+    int64_t x,y,z;
+    int i, j, k;
+    int64_t ii, jj, kk; 
+
+    assert(lnx > 0 && lny > 0 && lnz > 0);
+
+    // Setup phase 2 data structures
+    sx = 1;
+    sy = (lnx+2) * sx;
+    sz = (lny+2) * sy;
+    nv = (lnz+2) * sz;
+    nx = lnx; ny = lny; nz = lnz;
+    for (k = -1; k <= 1; k++) {
+      for (j = -1; j <= 1; j++) {
+	for (i = -1; i <= 1; i++) { 
+	  bc[BOUNDARY(i,j,k)] = pec_fields;
+	}
+      }
+    }
+    bc[BOUNDARY(0,0,0)] = world_rank;
+
+    // Setup phase 3 data structures.  This is an ugly kludge to
+    // interface phase 2 and phase 3 data structures
+    FREE_ALIGNED(range);
+    MALLOC_ALIGNED(range, world_size+1, 16);
+    ii = nv; // nv is not 64-bits
+    MPI_Allgather(&ii, 1, MPI_LONG_LONG, range, 1, MPI_LONG_LONG, MPI_COMM_WORLD);
+    jj = 0;
+    range[world_size] = 0;
+    for(i = 0; i <= world_size; i++) {
+      kk = range[i];
+      range[i] = jj;
+      jj += kk;
+    }
+    rangel = range[world_rank];
+    rangeh = range[world_rank+1]-1;
+
+    FREE_ALIGNED(neighbor);
+    MALLOC_ALIGNED(neighbor, 6 * nv, 128);
+
+    for (z = 0; z <= lnz+1; z++) {
+      for (y = 0; y <= lny+1; y++) {
+	for (x = 0; x <= lnx+1; x++) {
+	  i = 6*LOCAL_CELL_ID(x,y,z);
+	  neighbor[i+0] = rangel + LOCAL_CELL_ID(x-1,y,z);
+	  neighbor[i+1] = rangel + LOCAL_CELL_ID(x,y-1,z);
+	  neighbor[i+2] = rangel + LOCAL_CELL_ID(x,y,z-1);
+	  neighbor[i+3] = rangel + LOCAL_CELL_ID(x+1,y,z);
+	  neighbor[i+4] = rangel + LOCAL_CELL_ID(x,y+1,z);
+	  neighbor[i+5] = rangel + LOCAL_CELL_ID(x,y,z+1);
+	  // Set boundary faces appropriately
+	  if (x == 1  ) neighbor[i+0] = reflect_particles;
+	  if (y == 1  ) neighbor[i+1] = reflect_particles;
+	  if (z == 1  ) neighbor[i+2] = reflect_particles;
+	  if (x == lnx) neighbor[i+3] = reflect_particles;
+	  if (y == lny) neighbor[i+4] = reflect_particles;
+	  if (z == lnz) neighbor[i+5] = reflect_particles;
+	  // Set ghost cells appropriately
+	  if (x==0 || x==lnx+1 || y==0 || y==lny+1 || z==0 || z==lnz+1) {
+	    neighbor[i+0] = reflect_particles;
+	    neighbor[i+1] = reflect_particles;
+	    neighbor[i+2] = reflect_particles;
+	    neighbor[i+3] = reflect_particles;
+	    neighbor[i+4] = reflect_particles;
+	    neighbor[i+5] = reflect_particles;
+	  }
+	}
+      }
+    }
+  }
+#undef LOCAL_CELL_ID
+
   void partition_periodic_box(const double xl[3], const double xh[3],
 			      const int gdims[3], const Int3 np)
   {
@@ -183,7 +259,7 @@ struct PscGridBase : grid_t
     x1 = xyz1[0]; y1 = xyz1[1]; z1 = xyz1[2];
     
     // Size the local grid
-    size_grid(this, gdims[0] / np[0], gdims[1] / np[1], gdims[2] / np[2]);
+    size_grid(gdims[0] / np[0], gdims[1] / np[1], gdims[2] / np[2]);
 
     // Join the grid to neighbors
     int px = idx[0], py = idx[1], pz = idx[2];
