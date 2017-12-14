@@ -80,5 +80,6 @@ int main(int argc, char **argv)
   test_Rng<VpicRng>();
   
   test_RngPool<VpicRngPool<VpicRng>>();
+  test_RngPool<PscRngPool<VpicRng>>();
 }
 

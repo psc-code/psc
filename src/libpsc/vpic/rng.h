@@ -3,6 +3,7 @@
 #define RNG_H
 
 #include <limits>
+#include <cassert>
 
 // ======================================================================
 // VpicRng
@@ -74,10 +75,39 @@ struct VpicRngPool
   
   Rng *operator[](int n)
   {
+    assert(n == 0);
     return reinterpret_cast<Rng *>(rng_pool_->rng[n]);
   }
 
   rng_pool *rng_pool_;
+};
+
+// ======================================================================
+// PscRngPool
+
+template<class R>
+struct PscRngPool
+{
+  typedef R Rng;
+  
+  PscRngPool() :
+    rng_(Rng::create())
+  {
+  }
+  
+  void seed(int base, int which)
+  {
+    assert(which == 0);
+    rng_->seed(base);
+  }
+  
+  Rng *operator[](int n)
+  {
+    assert(n == 0);
+    return rng_;
+  }
+
+  Rng *rng_;
 };
 
 #endif
