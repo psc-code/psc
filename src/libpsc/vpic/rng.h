@@ -5,6 +5,7 @@
 #include <limits>
 #include <random>
 #include <cassert>
+#include "mrc_common.h"
 
 // ======================================================================
 // Rng
@@ -145,14 +146,16 @@ struct PscRngPool
   typedef R Rng;
   
   PscRngPool() :
-    rng_(Rng::create())
+    rng_(Rng::create()),
+    n_rng_(2) // not really needed, but kept to keep seeds the same as vpic
   {
   }
   
   void seed(int base, int which)
   {
     assert(which == 0);
-    rng_->seed(base);
+    int seed = psc_world_rank + (psc_world_size+1) * n_rng_ * base;
+    rng_->seed(seed);
   }
   
   Rng *operator[](int n)
@@ -162,6 +165,7 @@ struct PscRngPool
   }
 
   Rng *rng_;
+  int n_rng_;
 };
 
 #endif

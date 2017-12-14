@@ -130,8 +130,13 @@ typedef PscSimulationMixin<Particles> SimulationMixin;
 typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
 
+#if 1
+typedef VpicRng Rng;
+typedef PscRngPool<Rng> RngPool;
+#else
 typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
+#endif
 
 typedef VpicSimulation<Particles, ParticlesOps, RngPool, SimulationMixin, DiagMixin> Simulation;
 
