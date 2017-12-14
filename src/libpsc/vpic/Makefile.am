@@ -35,9 +35,11 @@ libsubdir_la_SOURCES = \
 #	wrapper_empty.cxx
 
 noinst_PROGRAMS = \
+	test_RngPool \
 	test_VpicFieldArray \
 	test_PscFieldArray
 
+test_RngPool_SOURCES = test_RngPool.cxx
 test_VpicFieldArray_SOURCES = test_VpicFieldArray.cxx
 test_PscFieldArray_SOURCES = test_PscFieldArray.cxx
 

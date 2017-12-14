@@ -2,13 +2,27 @@
 #ifndef RNG_H
 #define RNG_H
 
+#include <limits>
+
 // ======================================================================
-// class Rng
+// VpicRng
 
 #define IN_rng
 #include "util/rng/rng_private.h"
 
-struct VpicRng : rng {
+struct VpicRng : rng_t
+{
+  static VpicRng* create(int seed = 0)
+  {
+    return static_cast<VpicRng*>(::new_rng(seed));
+  }
+  
+  void seed(unsigned int s)
+  {
+    ::seed_rng(this, s);
+  }
+  
+  unsigned int uirand() { return ::uirand(this); }
   double drand() { return ::drand(this); }
   double drandn() { return ::drandn(this); }
 
@@ -22,14 +36,31 @@ struct VpicRng : rng {
   {
     return mu + sigma * drandn();
   }
+
+  unsigned int operator()()
+  {
+    return uirand();
+  }
+
+  static constexpr unsigned int min()
+  {
+    return std::numeric_limits<unsigned int>::min();
+  }
+
+  static constexpr unsigned int max()
+  {
+    return std::numeric_limits<unsigned int>::max();
+  }
 };
 
 // ======================================================================
-// class RngPool
+// VpicRngPool
 
-template<class Rng>
+template<class R>
 struct VpicRngPool
 {
+  typedef R Rng;
+  
   VpicRngPool()
   {
     int new_rng = 2;
