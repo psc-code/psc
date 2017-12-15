@@ -2,9 +2,6 @@
 #ifndef VPIC_INTERPOLATOR_BASE_H
 #define VPIC_INTERPOLATOR_BASE_H
 
-inline void interpolator_array_ctor(interpolator_array_t * ia, grid_t * g);
-inline void interpolator_array_dtor(interpolator_array_t * ia);
-
 // ======================================================================
 // VpicInterpolatorBase
 
@@ -35,17 +32,17 @@ struct VpicInterpolatorBase : interpolator_array_t {
     
     N_COMP = sizeof(interpolator_t) / sizeof(float),
   };
+
+  static VpicInterpolatorBase* create(Grid *grid)
+  {
+    return static_cast<VpicInterpolatorBase*>(new_interpolator_array(grid));
+  }
   
-  VpicInterpolatorBase(Grid *grid)
+  static void destroy(VpicInterpolatorBase* interpolator)
   {
-    interpolator_array_ctor(this, grid);
+    delete_interpolator_array(interpolator);
   }
-
-  ~VpicInterpolatorBase()
-  {
-    interpolator_array_dtor(this);
-  }
-
+  
   Element operator[](int idx) const
   {
     return i[idx];
@@ -62,6 +59,7 @@ struct VpicInterpolatorBase : interpolator_array_t {
   }
 };
 
+#if 0
 // ----------------------------------------------------------------------
 // copied from interpolator_array.c, converted from new/delete -> ctor
 
@@ -78,6 +76,7 @@ interpolator_array_dtor(interpolator_array_t * ia) {
   if( !ia ) return;
   FREE_ALIGNED( ia->i );
 }
+#endif
 
 #endif
 

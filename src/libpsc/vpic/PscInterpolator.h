@@ -7,11 +7,15 @@ struct PscInterpolator : InterpolatorBase
 {
   typedef InterpolatorBase Base;
   typedef FA FieldArray;
-
-  using Base::Base;
+  typedef typename Base::Grid Grid;
 
   using Base::g;
 
+  static PscInterpolator* create(Grid *grid)
+  {
+    return reinterpret_cast<PscInterpolator*>(Base::create(grid));
+  }
+  
   // ----------------------------------------------------------------------
   // load
   
