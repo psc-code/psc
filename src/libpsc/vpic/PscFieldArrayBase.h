@@ -9,10 +9,6 @@
 #include <mrc_common.h>
 #include <cassert>
 
-// ----------------------------------------------------------------------
-// copy&paste from sfa.c -- the only reason I can't just use this
-// is that there's a new/delete interface, but no ctor/dtor interface
-
 #define IN_sfa
 #include "field_advance/standard/sfa_private.h"
 
@@ -20,7 +16,7 @@
 // PscFieldArrayBase
 
 template<class G, class ML>
-struct PscFieldArrayBase : field_array_t
+struct PscFieldArrayBase
 {
   typedef G Grid;
   typedef ML MaterialList;
@@ -45,16 +41,16 @@ struct PscFieldArrayBase : field_array_t
   PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
     assert(grid && !material_list.empty() && damp >= 0.);
-    MALLOC_ALIGNED(this->f, grid->nv, 128);
-    CLEAR(this->f, grid->nv);
-    this->g = grid;
-    this->params = create_sfa_params(grid, material_list, damp);
+    MALLOC_ALIGNED(f_, grid->nv, 128);
+    CLEAR(f_, grid->nv);
+    g = grid;
+    params = create_sfa_params(grid, material_list, damp);
   }
   
   ~PscFieldArrayBase()
   {
-    destroy_sfa_params((sfa_params_t *) this->params);
-    FREE_ALIGNED(this->f);
+    destroy_sfa_params(params);
+    FREE_ALIGNED(f_);
   }
 
 public:
@@ -158,16 +154,16 @@ public:
 
     return p;
   }
-
+  
   void destroy_sfa_params(sfa_params_t* p)
   {
     FREE_ALIGNED( p->mc );
     FREE( p );
   }
-
+  
   Element* data()
   {
-    return f;
+    return f_;
   }
   
   float* getData(int* ib, int* im)
@@ -179,7 +175,7 @@ public:
     ib[0] = -B;
     ib[1] = -B;
     ib[2] = -B;
-    return &f[0].ex;
+    return &f_[0].ex;
   }
 
   // These operators can be used to access the field directly,
@@ -187,30 +183,27 @@ public:
   // when performance is important
   float operator()(int m, int i, int j, int k) const
   {
-    float *f_ = &f[0].ex;
-    return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+    float *ff = &f_[0].ex;
+    return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
   
   float& operator()(int m, int i, int j, int k)
   {
-    float *f_ = &f[0].ex;
-    return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+    float *ff = &f_[0].ex;
+    return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
 
-  Element operator[](int idx) const
-  {
-    return f[idx];
-  }
-  
-  Element& operator[](int idx)
-  {
-    return f[idx];
-  }
+  Element  operator[](int idx) const { return f_[idx]; }
+  Element& operator[](int idx)       { return f_[idx]; }
 
-  Grid* getGrid()
-  {
-    return static_cast<Grid*>(g);
-  }
+  Grid* getGrid() { return g; }
+
+private:
+  field_t* ALIGNED(128) f_;
+
+public:
+  Grid* g;
+  sfa_params_t* params;
 };
 
 
