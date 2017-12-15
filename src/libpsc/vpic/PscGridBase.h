@@ -178,23 +178,23 @@ struct PscGridBase : grid_t
 	}
       }
     }
-    bc[BOUNDARY(0,0,0)] = world_rank;
+    bc[BOUNDARY(0,0,0)] = psc_world_rank;
 
     // Setup phase 3 data structures.  This is an ugly kludge to
     // interface phase 2 and phase 3 data structures
     FREE_ALIGNED(range);
-    MALLOC_ALIGNED(range, world_size+1, 16);
+    MALLOC_ALIGNED(range, psc_world_size + 1, 16);
     ii = nv; // nv is not 64-bits
     MPI_Allgather(&ii, 1, MPI_LONG_LONG, range, 1, MPI_LONG_LONG, MPI_COMM_WORLD);
     jj = 0;
-    range[world_size] = 0;
-    for(i = 0; i <= world_size; i++) {
+    range[psc_world_size] = 0;
+    for(i = 0; i <= psc_world_size; i++) {
       kk = range[i];
       range[i] = jj;
       jj += kk;
     }
-    rangel = range[world_rank];
-    rangeh = range[world_rank+1]-1;
+    rangel = range[psc_world_rank];
+    rangeh = range[psc_world_rank+1]-1;
 
     FREE_ALIGNED(neighbor);
     MALLOC_ALIGNED(neighbor, 6 * nv, 128);
@@ -285,7 +285,7 @@ struct PscGridBase : grid_t
     assert(gdims[0] > 0 && gdims[1] > 0 && gdims[2] > 0);
     assert(gdims[0] % np[0] == 0 && gdims[1] % np[1] == 0 && gdims[2] % np[2] == 0);
 
-    Int3 idx = rank_to_idx(world_rank, np);
+    Int3 idx = rank_to_idx(psc_world_rank, np);
 
     double dxyz[3];
     for (int d = 0; d < 3; d++) {
@@ -409,7 +409,7 @@ struct PscGridBase : grid_t
   void* size_send_port(int i, int j, int k, int size)
   {
     int port = BOUNDARY(i, j, k), dst = bc[port];
-    if (dst < 0 || dst >= psc_world_size ) {
+    if (dst < 0 || dst >= psc_world_size) {
       return nullptr;
     }
     mp_size_send_buffer(port, size);
