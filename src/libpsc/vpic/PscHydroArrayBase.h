@@ -6,7 +6,7 @@
 // PscHydroArrayBase
 
 template<class G>
-struct PscHydroArrayBase : hydro_array_t
+struct PscHydroArrayBase
 {
   typedef G Grid;
   typedef hydro_t Element;
@@ -51,7 +51,13 @@ struct PscHydroArrayBase : hydro_array_t
 
   Element *data() { return h; }
 
-  Grid* getGrid() { return static_cast<Grid*>(g); }
+  Grid* getGrid() { return g; }
+
+private:
+  hydro_t* ALIGNED(128) h;
+  
+public:
+  Grid* g;
 };
 
 #endif

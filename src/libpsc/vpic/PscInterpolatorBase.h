@@ -6,7 +6,7 @@
 // PscInterpolatorBase
 
 template<class G>
-struct PscInterpolatorBase : interpolator_array_t {
+struct PscInterpolatorBase {
   typedef G Grid;
   typedef interpolator_t Element;
 
@@ -59,6 +59,12 @@ struct PscInterpolatorBase : interpolator_array_t {
   Element& operator[](int idx)      { return i[idx]; }
 
   Element* data() { return i; }
+
+private:
+  interpolator_t* ALIGNED(128) i;
+  
+public:
+  Grid* g;
 };
 
 #endif

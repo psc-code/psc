@@ -1661,7 +1661,7 @@ struct PscParticles : ParticlesBase
 				  Interpolator &interpolator,
 				  int n0, int n1)
   {
-    const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.i;
+    const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
     const particle_t     * RESTRICT ALIGNED(32)  p = sp->p;
     const float qdt_2mc = (sp->q*sp->g->dt)/(2*sp->m*sp->g->cvac);
     const float msp     = sp->m;
@@ -1705,7 +1705,7 @@ struct PscParticles : ParticlesBase
   {
     using namespace v4;
 
-    const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.i;
+    const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
 
     const float          * RESTRICT ALIGNED(16)  vp0;
     const float          * RESTRICT ALIGNED(16)  vp1;
