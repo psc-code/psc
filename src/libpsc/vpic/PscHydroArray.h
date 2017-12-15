@@ -20,15 +20,15 @@ template<class HydroArrayBase>
 struct PscHydroArray : HydroArrayBase
 {
   typedef HydroArrayBase Base;
-
   using typename Base::Grid;
-
-  PscHydroArray(Grid *grid) : Base(grid) {
-    clear();
-  }
 
   using Base::data;
   using Base::g;
+
+  static PscHydroArray* create(Grid *grid)
+  {
+    return static_cast<PscHydroArray*>(Base::create(grid));
+  }
 
   // ----------------------------------------------------------------------
   // clear

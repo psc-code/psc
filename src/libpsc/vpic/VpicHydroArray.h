@@ -9,14 +9,13 @@ template<class HydroArrayBase>
 struct VpicHydroArray : HydroArrayBase
 {
   typedef HydroArrayBase Base;
-
   using typename Base::Grid;
 
-  VpicHydroArray(Grid *grid) : Base(grid)
+  static VpicHydroArray* create(Grid *grid)
   {
-    clear();
+    return static_cast<VpicHydroArray*>(Base::create(grid));
   }
-
+  
   // use VPIC implementations
   void clear()       { clear_hydro_array(this);       }
   void synchronize() { synchronize_hydro_array(this); }

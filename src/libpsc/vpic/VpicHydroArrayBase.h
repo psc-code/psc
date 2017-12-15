@@ -11,6 +11,17 @@ struct VpicHydroArrayBase : hydro_array_t
   typedef G Grid;
   typedef hydro_t Element;
   
+  static VpicHydroArrayBase* create(Grid *grid)
+  {
+    return static_cast<VpicHydroArrayBase*>(new_hydro_array(grid));
+  }
+  
+  static void destroy(VpicHydroArrayBase* hydro)
+  {
+    delete_hydro_array(hydro);
+  }
+
+#if 0
   VpicHydroArrayBase(Grid* g)
   {
     hydro_array_ctor(this, g);
@@ -20,7 +31,8 @@ struct VpicHydroArrayBase : hydro_array_t
   ~VpicHydroArrayBase()
   {
     hydro_array_dtor(this);
-  }    
+  }
+#endif
 
   float* getData(int* ib, int* im)
   {
@@ -49,6 +61,7 @@ struct VpicHydroArrayBase : hydro_array_t
   }
 };
 
+#if 0
 // ----------------------------------------------------------------------
 // copied from hydro_array.c, converted from new/delete -> ctor
 
@@ -65,7 +78,7 @@ hydro_array_dtor( hydro_array_t * ha ) {
   if( !ha ) return;
   FREE_ALIGNED( ha->h );
 }
-
+#endif
 
 #endif
 

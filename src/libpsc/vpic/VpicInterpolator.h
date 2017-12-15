@@ -7,8 +7,12 @@ struct VpicInterpolator : InterpolatorBase
 {
   typedef InterpolatorBase Base;
   typedef FA FieldArray;
+  using typename Base::Grid;
 
-  using Base::Base;
+  static VpicInterpolator* create(Grid *grid)
+  {
+    return reinterpret_cast<VpicInterpolator*>(Base::create(grid));
+  }
   
   void load(FieldArray& fa)
   {

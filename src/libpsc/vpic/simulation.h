@@ -104,7 +104,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     field_array_ = new FieldArray(grid_, material_list_, damp);
     interpolator_ = Interpolator::create(grid_);
     accumulator_ = new Accumulator(grid_);
-    hydro_array_ = new HydroArray(grid_);
+    hydro_array_ = HydroArray::create(grid_);
  
     // Pre-size communications buffers. This is done to get most memory
     // allocation over with before the simulation starts running

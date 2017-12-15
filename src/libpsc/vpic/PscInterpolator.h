@@ -7,7 +7,7 @@ struct PscInterpolator : InterpolatorBase
 {
   typedef InterpolatorBase Base;
   typedef FA FieldArray;
-  typedef typename Base::Grid Grid;
+  using typename Base::Grid;
 
   using Base::g;
 
