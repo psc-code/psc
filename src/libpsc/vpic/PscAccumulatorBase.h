@@ -2,16 +2,20 @@
 #ifndef PSC_ACCUMULATOR_BASE_H
 #define PSC_ACCUMULATOR_BASE_H
 
+#include "PscFieldBase.h"
+
 // ======================================================================
 // PscAccumulatorBlock
 
 template<class G>
-struct PscAccumulatorBlock {
-  typedef accumulator_t Element;
-  typedef G Grid;
+struct PscAccumulatorBlock : PscFieldBase<accumulator_t, G>
+{
+  typedef PscFieldBase<accumulator_t, G> Base;
+  using typename Base::Element;
+  using typename Base::Grid;
 
-  PscAccumulatorBlock(Element *arr, Grid *g)
-    : arr_(arr), g_(g)
+  PscAccumulatorBlock(Element *arr, Grid *grid)
+    : Base(grid), arr_(arr)
   {
   }
 
@@ -27,7 +31,6 @@ struct PscAccumulatorBlock {
 
   //private:
   Element *arr_;
-  Grid *g_;
 };
   
 // ======================================================================

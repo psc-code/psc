@@ -2,13 +2,17 @@
 #ifndef PSC_INTERPOLATOR_BASE_H
 #define PSC_INTERPOLATOR_BASE_H
 
+#include "PscFieldBase.h"
+
 // ======================================================================
 // PscInterpolatorBase
 
 template<class G>
-struct PscInterpolatorBase {
-  typedef G Grid;
-  typedef interpolator_t Element;
+struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
+{
+  typedef PscFieldBase<interpolator_t, G> Base;
+  using typename Base::Grid;
+  using typename Base::Element;
 
   enum {
     EX        = 0,
@@ -44,10 +48,10 @@ struct PscInterpolatorBase {
   }
 
   PscInterpolatorBase(Grid *grid)
+    : Base(grid)
   {
     MALLOC_ALIGNED(i, grid->nv, 128);
     CLEAR(i, grid->nv);
-    g = grid;
   }
 
   ~PscInterpolatorBase()
@@ -64,7 +68,7 @@ private:
   interpolator_t* ALIGNED(128) i;
   
 public:
-  Grid* g;
+  using Base::g;
 };
 
 #endif

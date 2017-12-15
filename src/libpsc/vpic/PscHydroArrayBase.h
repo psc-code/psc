@@ -2,14 +2,17 @@
 #ifndef PSC_HYDRO_ARRAY_BASE_H
 #define PSC_HYDRO_ARRAY_BASE_H
 
+#include "PscFieldBase.h"
+
 // ======================================================================
 // PscHydroArrayBase
 
 template<class G>
-struct PscHydroArrayBase
+struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
 {
-  typedef G Grid;
-  typedef hydro_t Element;
+  typedef PscFieldBase<hydro_t, G> Base;
+  using typename Base::Grid;
+  using typename Base::Element;
   
   static PscHydroArrayBase* create(Grid *grid)
   {
@@ -22,9 +25,9 @@ struct PscHydroArrayBase
   }
 
   PscHydroArrayBase(Grid* grid)
+    : Base(grid)
   {
     MALLOC_ALIGNED(h, grid->nv, 128);
-    g = grid;
     /* clear(); */ // now done in derived class create()
   }
   
@@ -51,13 +54,11 @@ struct PscHydroArrayBase
 
   Element *data() { return h; }
 
-  Grid* getGrid() { return g; }
-
 private:
   hydro_t* ALIGNED(128) h;
-  
+
 public:
-  Grid* g;
+  using Base::g;
 };
 
 #endif

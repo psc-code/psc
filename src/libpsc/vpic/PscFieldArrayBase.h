@@ -4,6 +4,7 @@
 
 #include "psc_vpic_bits.h"
 #include "material.h"
+#include "PscFieldBase.h"
 #include "Field3D.h"
 
 #include <mrc_common.h>
@@ -16,11 +17,12 @@
 // PscFieldArrayBase
 
 template<class G, class ML>
-struct PscFieldArrayBase
+struct PscFieldArrayBase : PscFieldBase<field_t, G>
 {
-  typedef G Grid;
+  typedef PscFieldBase<field_t, G> Base;
   typedef ML MaterialList;
-  typedef field_t Element;
+  using typename Base::Grid;
+  using typename Base::Element;
   
   enum {
     EX  = 0,
@@ -39,11 +41,11 @@ struct PscFieldArrayBase
 
  private:
   PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
+    : Base(grid)
   {
     assert(grid && !material_list.empty() && damp >= 0.);
     MALLOC_ALIGNED(f_, grid->nv, 128);
     CLEAR(f_, grid->nv);
-    g = grid;
     params = create_sfa_params(grid, material_list, damp);
   }
   
@@ -202,7 +204,7 @@ private:
   field_t* ALIGNED(128) f_;
 
 public:
-  Grid* g;
+  using Base::g;
   sfa_params_t* params;
 };
 
