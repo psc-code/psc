@@ -128,10 +128,10 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     return sp;
   }
   
-  grid_t *getGrid_t()
+  Grid *getGrid()
   {
     assert(head_);
-    return head_->g;
+    return reinterpret_cast<Grid*>(head_->g);
   }
   
   Species* head()

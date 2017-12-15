@@ -107,7 +107,7 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 
 void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx)
 {
-  grid_t *g = vmprts->getGrid_t();
+  Grid *g = vmprts->getGrid();
   nx[0] = g->nx;
   nx[1] = g->ny;
   nx[2] = g->nz;
