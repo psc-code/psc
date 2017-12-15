@@ -7,11 +7,15 @@ struct PscAccumulator : AccumulatorBase
 {
   typedef AccumulatorBase Base;
   typedef FA FieldArray;
-
-  using Base::Base;
-
+  using typename Base::Grid;
+  
   using Base::g;
 
+  static PscAccumulator* create(Grid *grid)
+  {
+    return reinterpret_cast<PscAccumulator*>(new_accumulator_array(grid));
+  }
+  
   // ----------------------------------------------------------------------
   // clear
 

@@ -2,9 +2,6 @@
 #ifndef VPIC_ACCUMULATOR_BASE_H
 #define VPIC_ACCUMULATOR_BASE_H
 
-inline void accumulator_array_ctor(accumulator_array_t * aa, grid_t * g);
-inline void accumulator_array_dtor(accumulator_array_t * aa);
-
 // ======================================================================
 // VpicAccumulatorBlock
 
@@ -39,17 +36,12 @@ struct VpicAccumulatorBase : accumulator_array_t {
   typedef accumulator_t Element;
   typedef G Grid;
   typedef VpicAccumulatorBlock Block;
-  
-  VpicAccumulatorBase(Grid* grid)
-  {
-    accumulator_array_ctor(this, grid);
-  }
-  
-  ~VpicAccumulatorBase()
-  {
-    accumulator_array_dtor(this);
-  }
 
+  static VpicAccumulatorBase* create(Grid *grid)
+  {
+    return reinterpret_cast<VpicAccumulatorBase*>(new_accumulator_array(grid));
+  }
+  
   Element* data()
   {
     return a;
@@ -73,6 +65,7 @@ struct VpicAccumulatorBase : accumulator_array_t {
   }
 };
 
+#if 0
 // ----------------------------------------------------------------------
 // copied from accumulator_array.c, converted from new/delete -> ctor
 
@@ -98,7 +91,7 @@ accumulator_array_dtor( accumulator_array_t * aa ) {
   if( !aa ) return;
   FREE_ALIGNED( aa->a );
 }
-
+#endif
 
 #endif
 
