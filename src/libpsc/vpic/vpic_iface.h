@@ -32,6 +32,7 @@
 #include "PscParticlesOps.h"
 
 #include "VpicInterpolatorBase.h"
+#include "PscInterpolatorBase.h"
 #include "VpicInterpolator.h"
 #include "PscInterpolator.h"
 
@@ -101,7 +102,7 @@ typedef VpicFieldArrayBase<Grid, VpicMaterialList> FieldArrayBase;
 typedef VpicFieldArray<FieldArrayBase> FieldArray;
 #endif
 
-typedef VpicInterpolatorBase<Grid> InterpolatorBase;
+typedef PscInterpolatorBase<Grid> InterpolatorBase;
 typedef PscInterpolator<InterpolatorBase, FieldArrayBase> Interpolator;
 
 typedef PscAccumulatorBase<Grid> AccumulatorBase;

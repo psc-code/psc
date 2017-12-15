@@ -1,12 +1,12 @@
 
-#ifndef VPIC_INTERPOLATOR_BASE_H
-#define VPIC_INTERPOLATOR_BASE_H
+#ifndef PSC_INTERPOLATOR_BASE_H
+#define PSC_INTERPOLATOR_BASE_H
 
 // ======================================================================
-// VpicInterpolatorBase
+// PscInterpolatorBase
 
 template<class G>
-struct VpicInterpolatorBase : interpolator_array_t {
+struct PscInterpolatorBase : interpolator_array_t {
   typedef G Grid;
   typedef interpolator_t Element;
 
@@ -33,30 +33,32 @@ struct VpicInterpolatorBase : interpolator_array_t {
     N_COMP = sizeof(interpolator_t) / sizeof(float),
   };
 
-  static VpicInterpolatorBase* create(Grid *grid)
+  static PscInterpolatorBase* create(Grid *grid)
   {
-    return static_cast<VpicInterpolatorBase*>(new_interpolator_array(grid));
+    return new PscInterpolatorBase(grid);
   }
   
-  static void destroy(VpicInterpolatorBase* interpolator)
+  static void destroy(PscInterpolatorBase* interpolator)
   {
-    delete_interpolator_array(interpolator);
+    delete interpolator;
+  }
+
+  PscInterpolatorBase(Grid *grid)
+  {
+    MALLOC_ALIGNED(i, grid->nv, 128);
+    CLEAR(i, grid->nv);
+    g = grid;
+  }
+
+  ~PscInterpolatorBase()
+  {
+    FREE_ALIGNED(i);
   }
   
-  Element operator[](int idx) const
-  {
-    return i[idx];
-  }
+  Element operator[](int idx) const { return i[idx]; }
+  Element& operator[](int idx)      { return i[idx]; }
 
-  Element& operator[](int idx)
-  {
-    return i[idx];
-  }
-
-  Element* data()
-  {
-    return i;
-  }
+  Element* data() { return i; }
 };
 
 #endif
