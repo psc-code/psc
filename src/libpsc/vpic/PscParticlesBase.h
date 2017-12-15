@@ -4,13 +4,6 @@
 
 #include "VpicListBase.h"
 
-inline void species_ctor(species_t *sp ,const char * name,
-			 float q, float m, int max_local_np, int max_local_nm,
-			 int sort_interval, int sort_out_of_place,
-			 grid_t *g)
-{
-}
-
 // ======================================================================
 // PscSpecies
 
@@ -64,7 +57,11 @@ struct PscSpecies : species_t
     FREE_ALIGNED(p );
     free(name);
   }
-  
+
+  Grid* getGrid()
+  {
+    return static_cast<Grid*>(g);
+  }
 };
 
 // ======================================================================

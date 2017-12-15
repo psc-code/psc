@@ -64,8 +64,7 @@ struct PscParticlesOps {
   int move_p(particle_t       * RESTRICT ALIGNED(128) p,
 	     particle_mover_t * RESTRICT ALIGNED(16)  pm,
 	     AccumulatorBlock acc_block,
-	     const grid_t     *                       g,
-	     const float                              qsp)
+	     const Grid* g, const float qsp)
   {
 
     using namespace v4;
@@ -251,8 +250,7 @@ struct PscParticlesOps {
   int move_p(particle_t       * ALIGNED(128) p0,
 	     particle_mover_t * ALIGNED(16)  pm,
 	     AccumulatorBlock acc_block,
-	     const grid_t     *              g,
-	     const float                     qsp )
+	     const Grid* g, float qsp)
   {
     float s_midx, s_midy, s_midz;
     float s_dispx, s_dispy, s_dispz;
@@ -389,7 +387,7 @@ struct PscParticlesOps {
 
     int ix, iy, iz;
 
-    grid_t *grid = sp->g;
+    const Grid* grid = sp->getGrid();
     const double x0 = (double)grid->x0, y0 = (double)grid->y0, z0 = (double)grid->z0;
     const double x1 = (double)grid->x1, y1 = (double)grid->y1, z1 = (double)grid->z1;
     const int    nx = grid->nx,         ny = grid->ny,         nz = grid->nz;
@@ -478,7 +476,7 @@ struct PscParticlesOps {
 			  particle_mover_t * ALIGNED(16) pm, int max_nm)
   {
     particle_t           * ALIGNED(128) p0 = sp->p;
-    const grid_t *                      g  = sp->g;
+    const Grid* g = sp->getGrid();
 
     const interpolator_t * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
@@ -620,7 +618,7 @@ struct PscParticlesOps {
     using namespace v4;
 
     particle_t           * ALIGNED(128) p0 = sp->p;
-    const grid_t *                      g  = sp->g;
+    const Grid* g = sp->getGrid();
 
     float                * ALIGNED(16)  vp0;
     float                * ALIGNED(16)  vp1;

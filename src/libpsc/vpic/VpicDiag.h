@@ -120,6 +120,8 @@ struct VpicDiagMixin
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::HydroArray HydroArray;
+  typedef typename Particles::Grid Grid;
+  
   
   void diagnostics_init(int interval_)
   {
@@ -242,7 +244,7 @@ struct VpicDiagMixin
 	//dump_grid("rundata/grid");
 	//dump_materials("rundata/materials");
 	//dump_species("rundata/species");
-	global_header(fa.g, np, "global", diag_.outputParams);
+	global_header(fa.getGrid(), np, "global", diag_.outputParams);
       }
 
       // Normal rundata energies dump
@@ -335,7 +337,7 @@ struct VpicDiagMixin
   // ----------------------------------------------------------------------
   // global_header
 
-  void global_header(const grid_t *grid, int *np, const char * base, std::vector<DumpParameters *> dumpParams)
+  void global_header(const Grid *grid, int *np, const char * base, std::vector<DumpParameters*> dumpParams)
   {
     int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank != 0) return;
@@ -517,7 +519,7 @@ struct VpicDiagMixin
   void field_dump(FieldArray& fa, DumpParameters& dumpParams)
   {
     Field3D<FieldArray> F(fa);
-    grid_t* grid = fa.g;
+    Grid* grid = fa.getGrid();
     int64_t step = grid->step;
     int rank = psc_world_rank;
     int nproc = psc_world_size;
@@ -617,7 +619,7 @@ struct VpicDiagMixin
 		  const char * speciesname, DumpParameters & dumpParams )
   {
     Field3D<HydroArray> H(*hydro_array);
-    grid_t* grid = hydro_array->g;
+    Grid* grid = hydro_array->getGrid();
     int64_t step = grid->step;
     int rank = psc_world_rank;
     int nproc = psc_world_size;

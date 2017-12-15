@@ -5,10 +5,12 @@
 // ======================================================================
 // VpicAccumulatorBlock
 
+template<class G>
 struct VpicAccumulatorBlock {
   typedef accumulator_t Element;
+  typedef G Grid;
 
-  VpicAccumulatorBlock(Element *arr, grid_t *g)
+  VpicAccumulatorBlock(Element *arr, Grid *g)
     : arr_(arr), g_(g)
   {
   }
@@ -25,7 +27,7 @@ struct VpicAccumulatorBlock {
 
   //private:
   Element *arr_;
-  grid_t *g_;
+  Grid *g_;
 };
   
 // ======================================================================
@@ -35,7 +37,7 @@ template<class G>
 struct VpicAccumulatorBase : accumulator_array_t {
   typedef accumulator_t Element;
   typedef G Grid;
-  typedef VpicAccumulatorBlock Block;
+  typedef VpicAccumulatorBlock<Grid> Block;
 
   static VpicAccumulatorBase* create(Grid *grid)
   {
@@ -59,9 +61,14 @@ struct VpicAccumulatorBase : accumulator_array_t {
     return a[arr * stride + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
   }
 
-  VpicAccumulatorBlock operator[](int arr)
+  Block operator[](int arr)
   {
-    return VpicAccumulatorBlock(a + arr * stride, g);
+    return Block(a + arr * stride, getGrid());
+  }
+
+  Grid* getGrid()
+  {
+    return static_cast<Grid*>(g);
   }
 };
 
