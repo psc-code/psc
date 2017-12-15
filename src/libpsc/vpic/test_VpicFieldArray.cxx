@@ -14,9 +14,11 @@ void test_VpicFieldArray()
 
   Grid grid;
   MaterialList material_list;
-  FieldArray fa(&grid, material_list, 0.);
+  FieldArray* fa = FieldArray::create(&grid, material_list, 0.);
 
-  test_FieldArray_methods(fa);
+  test_FieldArray_methods(*fa);
+
+  //FieldArray::destroy(fa);
 }
 
 int main(int argc, char **argv)

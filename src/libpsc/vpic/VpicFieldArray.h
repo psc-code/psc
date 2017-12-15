@@ -10,11 +10,16 @@ struct VpicFieldArray : B
 {
   typedef B Base;
   typedef VpicFieldArray<B> FieldArray;
-
-  using Base::Base;
+  using typename Base::Grid;
+  using typename Base::MaterialList;
 
   using Base::kernel;
 
+  static VpicFieldArray* create(Grid *grid, MaterialList material_list, float damp)
+  {
+    return static_cast<VpicFieldArray*>(Base::create(grid, material_list, damp));
+  }
+  
   // ----------------------------------------------------------------------
   // advance
   

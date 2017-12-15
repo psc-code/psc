@@ -609,7 +609,6 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
   double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
   double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
   double weight_b = phys->weight_b;
-  //grid_t *grid = simulation->grid;
   int n_global_patches = sub->n_global_patches;
   
   // LOAD PARTICLES

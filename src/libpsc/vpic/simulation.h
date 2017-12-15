@@ -101,7 +101,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     assert(grid_->nx && grid_->ny && grid_->ny);
     assert(!material_list_.empty());
   
-    field_array_ = new FieldArray(grid_, material_list_, damp);
+    field_array_ = FieldArray::create(grid_, material_list_, damp);
     interpolator_ = Interpolator::create(grid_);
     accumulator_ = Accumulator::create(grid_);
     hydro_array_ = HydroArray::create(grid_);

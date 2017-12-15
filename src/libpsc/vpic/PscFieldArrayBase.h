@@ -4,20 +4,17 @@
 
 #include "psc_vpic_bits.h"
 #include "material.h"
-
-#include "field_advance/field_advance.h"
+#include "Field3D.h"
 
 #include <mrc_common.h>
 #include <cassert>
 
-// FIXME, this file relies for now on VpicFieldArray.h 
-// though at least that way, the duplication is limited
-// Basically, this is actually still VpicFieldArrayBase in terms
-// of data layout, just some methods are adapted
+// ----------------------------------------------------------------------
+// copy&paste from sfa.c -- the only reason I can't just use this
+// is that there's a new/delete interface, but no ctor/dtor interface
 
 #define IN_sfa
 #include "field_advance/standard/sfa_private.h"
-#include "VpicFieldArrayBase.h"
 
 // ======================================================================
 // PscFieldArrayBase
@@ -39,6 +36,12 @@ struct PscFieldArrayBase : field_array_t
     N_COMP = sizeof(field_t) / sizeof(float),
   };
   
+  static PscFieldArrayBase* create(Grid *grid, MaterialList material_list, float damp)
+  {
+    return new PscFieldArrayBase(grid, material_list, damp);
+  }
+
+ private:
   PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
   {
     assert(grid && !material_list.empty() && damp >= 0.);
@@ -52,6 +55,12 @@ struct PscFieldArrayBase : field_array_t
   {
     destroy_sfa_params((sfa_params_t *) this->params);
     FREE_ALIGNED(this->f);
+  }
+
+public:
+  static float minf(float a, float b)
+  {
+    return a < b ? a : b;
   }
 
   static sfa_params_t *create_sfa_params(const grid_t* g,
@@ -148,6 +157,12 @@ struct PscFieldArrayBase : field_array_t
     }
 
     return p;
+  }
+
+  void destroy_sfa_params(sfa_params_t* p)
+  {
+    FREE_ALIGNED( p->mc );
+    FREE( p );
   }
 
   Element* data()

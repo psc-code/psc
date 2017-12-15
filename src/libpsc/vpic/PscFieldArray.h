@@ -19,12 +19,16 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 {
   typedef B Base;
   typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
-  typedef typename Base::Grid Grid;
+  using typename Base::Grid;
+  using typename Base::MaterialList;
   
-  using Base::Base;
-
   using Base::g;
   using Base::params;
+
+  static PscFieldArray* create(Grid *grid, MaterialList material_list, float damp)
+  {
+    return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
+  }
   
   // ----------------------------------------------------------------------
   // foreach
