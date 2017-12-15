@@ -13,7 +13,11 @@ struct VpicHydroArray : HydroArrayBase
 
   static VpicHydroArray* create(Grid *grid)
   {
-    return static_cast<VpicHydroArray*>(Base::create(grid));
+    VpicHydroArray* hydro = static_cast<VpicHydroArray*>(Base::create(grid));
+    // if the Base is VpicHydroArrayBase, we're clearing the array twice,
+    // but oh well...
+    hydro->clear();
+    return hydro;
   }
   
   // use VPIC implementations

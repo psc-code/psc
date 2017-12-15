@@ -1,16 +1,16 @@
 
-#ifndef VPIC_ACCUMULATOR_BASE_H
-#define VPIC_ACCUMULATOR_BASE_H
+#ifndef PSC_ACCUMULATOR_BASE_H
+#define PSC_ACCUMULATOR_BASE_H
 
 // ======================================================================
-// VpicAccumulatorBlock
+// PscAccumulatorBlock
 
 template<class G>
-struct VpicAccumulatorBlock {
+struct PscAccumulatorBlock {
   typedef accumulator_t Element;
   typedef G Grid;
 
-  VpicAccumulatorBlock(Element *arr, Grid *g)
+  PscAccumulatorBlock(Element *arr, Grid *g)
     : arr_(arr), g_(g)
   {
   }
@@ -31,23 +31,43 @@ struct VpicAccumulatorBlock {
 };
   
 // ======================================================================
-// VpicAccumulatorBase
+// PscAccumulatorBase
 
 template<class G>
-struct VpicAccumulatorBase : accumulator_array_t {
+struct PscAccumulatorBase : accumulator_array_t {
   typedef accumulator_t Element;
   typedef G Grid;
-  typedef VpicAccumulatorBlock<Grid> Block;
+  typedef PscAccumulatorBlock<Grid> Block;
 
-  static VpicAccumulatorBase* create(Grid *grid)
+  static PscAccumulatorBase* create(Grid *grid)
   {
-    return reinterpret_cast<VpicAccumulatorBase*>(new_accumulator_array(grid));
+    return new PscAccumulatorBase(grid);
   }
-  
-  Element* data()
+
+  PscAccumulatorBase(Grid *grid)
   {
-    return a;
+    n_pipeline = aa_n_pipeline();
+    stride = POW2_CEIL(grid->nv,2);
+    g = grid;
+    MALLOC_ALIGNED(a, (n_pipeline+1) * stride, 128);
+    CLEAR(a, (n_pipeline+1) * stride);
   }
+
+  ~PscAccumulatorBase()
+  {
+    FREE_ALIGNED(a);
+  }
+
+  static int aa_n_pipeline(void)
+  {
+    int n = serial.n_pipeline;
+    if (n < thread.n_pipeline) {
+      n = thread.n_pipeline;
+    }
+    return n;
+  }
+
+  Element* data() { return a; }
   
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int idx)

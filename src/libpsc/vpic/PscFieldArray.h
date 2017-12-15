@@ -22,7 +22,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   using typename Base::Grid;
   using typename Base::MaterialList;
   
-  using Base::g;
+  using Base::getGrid;
   using Base::params;
 
   static PscFieldArray* create(Grid *grid, MaterialList material_list, float damp)
@@ -51,6 +51,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void advance_b(double frac)
   {
     Field3D<FieldArray> F(*this);
+    const Grid* g = getGrid();
     int nx = g->nx, ny = g->ny, nz = g->nz;
 
     // FIXME, invariant should be based on global dims
@@ -121,7 +122,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     const material_coefficient_t* m = prm->mc;
 
     struct AdvanceE {
-      AdvanceE(FieldArray& fa, const grid_t *g, const material_coefficient_t *m,
+      AdvanceE(FieldArray& fa, const Grid *g, const material_coefficient_t *m,
 	       const double damp_)
 	: F(fa),
 	  decayx(m->decayx),
@@ -171,16 +172,16 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       const float damp, cj;
     };
 
-    AdvanceE advanceE(*this, g, m, prm->damp);
+    AdvanceE advanceE(*this, getGrid(), m, prm->damp);
 
     this->begin_remote_ghost_tang_b(*this);
 
     this->local_ghost_tang_b(*this);
-    foreach_ec_interior(advanceE, g);
+    foreach_ec_interior(advanceE, getGrid());
 
     this->end_remote_ghost_tang_b(*this);
 
-    foreach_ec_boundary(advanceE, g);
+    foreach_ec_boundary(advanceE, getGrid());
     this->local_adjust_tang_e(*this);
   }
 
@@ -199,6 +200,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     const material_coefficient_t* m = prm->mc;
 
     Field3D<FieldArray> F(*this);
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     const float qepsx = 0.25*m->epsx;
@@ -254,7 +256,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void clear_jf()
   {
-    const int nv = g->nv;
+    const int nv = getGrid()->nv;
 
     for (int v = 0; v < nv; v++) {
       (*this)[v].jfx = 0;
@@ -268,7 +270,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void clear_rhof()
   {
-    const int nv = g->nv;
+    const int nv = getGrid()->nv;
     for (int v = 0; v < nv; v++) {
       (*this)[v].rhof = 0;
     }
@@ -449,13 +451,13 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
     // Overlap local computation
     this->local_ghost_norm_e(*this);
-    foreach_nc_interior(updater, g);
+    foreach_nc_interior(updater, getGrid());
     
     // Finish setting normal e ghosts
     this->end_remote_ghost_norm_e(*this);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, g);
+    foreach_nc_boundary(updater, getGrid());
 
     this->local_adjust_rhob(*this);
   }
@@ -475,7 +477,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
 
     struct CurlB {
-      CurlB(FieldArray& fa, const grid_t *g, const material_coefficient_t *m)
+      CurlB(FieldArray& fa, const Grid *g, const material_coefficient_t *m)
 	: F(fa),
 	  px_muz(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuz : 0),
 	  px_muy(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuy : 0),
@@ -508,16 +510,16 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
     };
 
-    CurlB curlB(*this, g, m);
+    CurlB curlB(*this, getGrid(), m);
       
     this->begin_remote_ghost_tang_b(*this);
 
     this->local_ghost_tang_b(*this);
-    foreach_ec_interior(curlB, g);
+    foreach_ec_interior(curlB, getGrid());
 
     this->end_remote_ghost_tang_b(*this);
 
-    foreach_ec_boundary(curlB, g);
+    foreach_ec_boundary(curlB, getGrid());
     this->local_adjust_tang_e(*this); // FIXME, is this right here?
   }
 
@@ -647,13 +649,13 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
     // Overlap local computation
     this->local_ghost_norm_e(*this);
-    foreach_nc_interior(updater, g);
+    foreach_nc_interior(updater, getGrid());
 
     // Finish setting normal e ghosts
     this->end_remote_ghost_norm_e(*this);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, g);
+    foreach_nc_boundary(updater, getGrid());
 
     this->local_adjust_div_e(*this);
   }
@@ -667,6 +669,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   double compute_rms_div_e_err()
   {
     Field3D<FieldArray> F(*this);
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     // Interior points
@@ -759,6 +762,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     assert(prm->n_mc == 1);
 
     Field3D<FieldArray> F(*this);
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     const float _rdx = (nx>1) ? g->rdx : 0;
@@ -831,6 +835,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void compute_div_b_err()
   {
     Field3D<FieldArray> F(*this);
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
     const float py = (ny>1) ? g->rdy : 0;
@@ -855,6 +860,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   double compute_rms_div_b_err()
   {
     Field3D<FieldArray> F(*this);
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     double err = 0;
@@ -883,7 +889,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void clean_div_b()
   {
     Field3D<FieldArray> F(*this);
-
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     float px = (nx>1) ? g->rdx : 0;
     float py = (ny>1) ? g->rdy : 0;

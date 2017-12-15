@@ -36,10 +36,12 @@
 #include "PscInterpolator.h"
 
 #include "VpicAccumulatorBase.h"
+#include "PscAccumulatorBase.h"
 #include "VpicAccumulator.h"
 #include "PscAccumulator.h"
 
 #include "VpicHydroArrayBase.h"
+#include "PscHydroArrayBase.h"
 #include "VpicHydroArray.h"
 #include "PscHydroArray.h"
 
@@ -102,10 +104,10 @@ typedef VpicFieldArray<FieldArrayBase> FieldArray;
 typedef VpicInterpolatorBase<Grid> InterpolatorBase;
 typedef PscInterpolator<InterpolatorBase, FieldArrayBase> Interpolator;
 
-typedef VpicAccumulatorBase<Grid> AccumulatorBase;
+typedef PscAccumulatorBase<Grid> AccumulatorBase;
 typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
 
-typedef VpicHydroArrayBase<Grid> HydroArrayBase;
+typedef PscHydroArrayBase<Grid> HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
 typedef VpicParticleBcList ParticleBcList;

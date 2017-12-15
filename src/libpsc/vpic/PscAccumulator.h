@@ -13,7 +13,7 @@ struct PscAccumulator : AccumulatorBase
 
   static PscAccumulator* create(Grid *grid)
   {
-    return reinterpret_cast<PscAccumulator*>(new_accumulator_array(grid));
+    return static_cast<PscAccumulator*>(Base::create(grid));
   }
   
   // ----------------------------------------------------------------------

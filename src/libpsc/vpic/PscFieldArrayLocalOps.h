@@ -26,11 +26,12 @@
 template<class FA>
 struct PscFieldArrayLocalOps {
   typedef FA FieldArray;
+  typedef typename FieldArray::Grid Grid;
 
   void local_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float cdt_dx = g->cvac*g->dt*g->rdx;
     const float cdt_dy = g->cvac*g->dt*g->rdy;
@@ -109,7 +110,7 @@ struct PscFieldArrayLocalOps {
   void local_ghost_norm_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
     field_t * ALIGNED(16) f0, * ALIGNED(16) f1, * ALIGNED(16) f2;
@@ -163,7 +164,7 @@ struct PscFieldArrayLocalOps {
   void local_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -203,7 +204,7 @@ struct PscFieldArrayLocalOps {
   void local_adjust_tang_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
     field_t *fs;
@@ -246,7 +247,7 @@ struct PscFieldArrayLocalOps {
   void local_adjust_norm_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -279,7 +280,7 @@ struct PscFieldArrayLocalOps {
   void local_adjust_div_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -317,7 +318,7 @@ struct PscFieldArrayLocalOps {
   void local_adjust_jf(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -359,7 +360,7 @@ struct PscFieldArrayLocalOps {
   void local_adjust_rhof(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -398,7 +399,7 @@ struct PscFieldArrayLocalOps {
   void local_adjust_rhob(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    const grid_t *g = fa.g;
+    const Grid* g = fa.getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 

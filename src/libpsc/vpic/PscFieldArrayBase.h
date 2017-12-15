@@ -63,20 +63,20 @@ public:
     return a < b ? a : b;
   }
 
-  static sfa_params_t *create_sfa_params(const grid_t* g,
+  static sfa_params_t *create_sfa_params(const Grid* g,
 					 MaterialList& m_list,
 					 float damp)
   {
-    sfa_params_t * p;
+    sfa_params_t* p;
     float ax, ay, az, cg2;
     material_coefficient_t *mc;
     int n_mc;
 
     // Run sanity checks on the material list
 
-    ax = g->nx>1 ? g->cvac*g->dt*g->rdx : 0; ax *= ax;
-    ay = g->ny>1 ? g->cvac*g->dt*g->rdy : 0; ay *= ay;
-    az = g->nz>1 ? g->cvac*g->dt*g->rdz : 0; az *= az;
+    ax = g->nx > 1 ? g->cvac*g->dt*g->rdx : 0; ax *= ax;
+    ay = g->ny > 1 ? g->cvac*g->dt*g->rdy : 0; ay *= ay;
+    az = g->nz > 1 ? g->cvac*g->dt*g->rdz : 0; az *= az;
     n_mc = 0;
     for (auto m = m_list.cbegin(); m != m_list.cend(); ++m) {
       if( m->sigmax/m->epsx<0 )

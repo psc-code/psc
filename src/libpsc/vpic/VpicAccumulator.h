@@ -11,7 +11,7 @@ struct VpicAccumulator : AccumulatorBase
 
   static VpicAccumulator* create(Grid *grid)
   {
-    return reinterpret_cast<VpicAccumulator*>(new_accumulator_array(grid));
+    return static_cast<VpicAccumulator*>(Base::create(grid));
   }
   
   void clear()                      { ::clear_accumulator_array(this); }
