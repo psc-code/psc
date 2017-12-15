@@ -8,7 +8,9 @@ struct PscFieldBase
   typedef E Element;
   typedef G Grid;
 
-  PscFieldBase(Grid* grid) : g(grid)
+  PscFieldBase(Grid* grid, Element* arr = 0)
+    : arr_(arr),
+      g(grid)
   {
   }
 
@@ -18,6 +20,10 @@ struct PscFieldBase
 
   Grid* getGrid() { return g; }
 
+protected:
+  Element* ALIGNED(128) arr_;
+
+public:
   Grid* g;
 };
 

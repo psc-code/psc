@@ -44,15 +44,15 @@ struct PscFieldArrayBase : PscFieldBase<field_t, G>
     : Base(grid)
   {
     assert(grid && !material_list.empty() && damp >= 0.);
-    MALLOC_ALIGNED(f_, grid->nv, 128);
-    CLEAR(f_, grid->nv);
+    MALLOC_ALIGNED(arr_, grid->nv, 128);
+    CLEAR(arr_, grid->nv);
     params = create_sfa_params(grid, material_list, damp);
   }
   
   ~PscFieldArrayBase()
   {
     destroy_sfa_params(params);
-    FREE_ALIGNED(f_);
+    FREE_ALIGNED(arr_);
   }
 
 public:
@@ -165,7 +165,7 @@ public:
   
   Element* data()
   {
-    return f_;
+    return arr_;
   }
   
   float* getData(int* ib, int* im)
@@ -177,7 +177,7 @@ public:
     ib[0] = -B;
     ib[1] = -B;
     ib[2] = -B;
-    return &f_[0].ex;
+    return &arr_[0].ex;
   }
 
   // These operators can be used to access the field directly,
@@ -185,23 +185,23 @@ public:
   // when performance is important
   float operator()(int m, int i, int j, int k) const
   {
-    float *ff = &f_[0].ex;
+    float *ff = &arr_[0].ex;
     return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
   
   float& operator()(int m, int i, int j, int k)
   {
-    float *ff = &f_[0].ex;
+    float *ff = &arr_[0].ex;
     return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
 
-  Element  operator[](int idx) const { return f_[idx]; }
-  Element& operator[](int idx)       { return f_[idx]; }
+  Element  operator[](int idx) const { return arr_[idx]; }
+  Element& operator[](int idx)       { return arr_[idx]; }
 
   Grid* getGrid() { return g; }
 
 private:
-  field_t* ALIGNED(128) f_;
+  using Base::arr_;
 
 public:
   using Base::g;

@@ -27,13 +27,13 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
   PscHydroArrayBase(Grid* grid)
     : Base(grid)
   {
-    MALLOC_ALIGNED(h, grid->nv, 128);
+    MALLOC_ALIGNED(arr_, grid->nv, 128);
     /* clear(); */ // now done in derived class create()
   }
   
   ~PscHydroArrayBase()
   {
-    FREE_ALIGNED(h);
+    FREE_ALIGNED(arr_);
   }
 
   float* getData(int* ib, int* im)
@@ -46,16 +46,16 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
     ib[0] = -B;
     ib[1] = -B;
     ib[2] = -B;
-    return &h[0].jx;
+    return &arr_[0].jx;
   }
 
-  Element  operator[](int idx) const { return h[idx]; }
-  Element& operator[](int idx)       { return h[idx]; }
+  Element  operator[](int idx) const { return arr_[idx]; }
+  Element& operator[](int idx)       { return arr_[idx]; }
 
-  Element *data() { return h; }
+  Element *data() { return arr_; }
 
 private:
-  hydro_t* ALIGNED(128) h;
+  using Base::arr_;
 
 public:
   using Base::g;

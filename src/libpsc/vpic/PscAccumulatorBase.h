@@ -15,7 +15,7 @@ struct PscAccumulatorBlock : PscFieldBase<accumulator_t, G>
   using typename Base::Grid;
 
   PscAccumulatorBlock(Element *arr, Grid *grid)
-    : Base(grid), arr_(arr)
+    : Base(grid, arr)
   {
   }
 
@@ -29,8 +29,8 @@ struct PscAccumulatorBlock : PscFieldBase<accumulator_t, G>
     return arr_[idx];
   }
 
-  //private:
-  Element *arr_;
+ private:
+  using Base::arr_;
 };
   
 // ======================================================================

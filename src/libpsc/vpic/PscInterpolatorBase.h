@@ -50,23 +50,23 @@ struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
   PscInterpolatorBase(Grid *grid)
     : Base(grid)
   {
-    MALLOC_ALIGNED(i, grid->nv, 128);
-    CLEAR(i, grid->nv);
+    MALLOC_ALIGNED(arr_, grid->nv, 128);
+    CLEAR(arr_, grid->nv);
   }
 
   ~PscInterpolatorBase()
   {
-    FREE_ALIGNED(i);
+    FREE_ALIGNED(arr_);
   }
   
-  Element operator[](int idx) const { return i[idx]; }
-  Element& operator[](int idx)      { return i[idx]; }
+  Element operator[](int idx) const { return arr_[idx]; }
+  Element& operator[](int idx)      { return arr_[idx]; }
 
-  Element* data() { return i; }
+  Element* data() { return arr_; }
 
 private:
-  interpolator_t* ALIGNED(128) i;
-  
+  using Base::arr_;
+
 public:
   using Base::g;
 };
