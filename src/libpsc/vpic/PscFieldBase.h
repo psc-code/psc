@@ -18,6 +18,8 @@ struct PscFieldBase
   {
   }
 
+  Element *data() { return arr_; }
+
   Grid* getGrid() { return g; }
 
 protected:

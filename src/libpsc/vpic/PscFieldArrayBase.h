@@ -163,11 +163,6 @@ public:
     FREE( p );
   }
   
-  Element* data()
-  {
-    return arr_;
-  }
-  
   float* getData(int* ib, int* im)
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
