@@ -11,8 +11,7 @@ struct PscFieldBase
   PscFieldBase(Grid* grid)
     : g_(grid), is_owner_(true)
   {
-    MALLOC_ALIGNED(arr_, grid->nv, 128);
-    CLEAR(arr_, grid->nv);
+    arr_ = new Element[g_->nv]();
   }
 
   PscFieldBase(Grid* grid, Element* arr)
@@ -23,7 +22,7 @@ struct PscFieldBase
   ~PscFieldBase()
   {
     if (is_owner_) {
-      FREE_ALIGNED(arr_);
+      delete[] arr_;
     }
   }
 
@@ -35,7 +34,7 @@ struct PscFieldBase
   Grid* grid() { return g_; }
 
 protected:
-  Element* ALIGNED(128) arr_;
+  Element* arr_;
   Grid* g_;
 
 private:

@@ -21,7 +21,8 @@ struct PscAccumulatorBlock : PscFieldBase<accumulator_t, G>
 // PscAccumulatorBase
 
 template<class G>
-struct PscAccumulatorBase : accumulator_array_t {
+struct PscAccumulatorBase
+{
   typedef accumulator_t Element;
   typedef G Grid;
   typedef PscAccumulatorBlock<Grid> Block;
@@ -32,17 +33,16 @@ struct PscAccumulatorBase : accumulator_array_t {
   }
 
   PscAccumulatorBase(Grid *grid)
+    : g_(grid)
   {
-    n_pipeline = aa_n_pipeline();
-    stride = POW2_CEIL(grid->nv,2);
-    g = grid;
-    MALLOC_ALIGNED(a, (n_pipeline+1) * stride, 128);
-    CLEAR(a, (n_pipeline+1) * stride);
+    n_pipeline_ = aa_n_pipeline();
+    stride_ = POW2_CEIL(g_->nv,2);
+    arr_ = new Element[(n_pipeline_ + 1) * stride_]();
   }
 
   ~PscAccumulatorBase()
   {
-    FREE_ALIGNED(a);
+    delete[] arr_;
   }
 
   static int aa_n_pipeline(void)
@@ -54,29 +54,34 @@ struct PscAccumulatorBase : accumulator_array_t {
     return n;
   }
 
-  Element* data() { return a; }
+  Element* data() { return arr_; }
   
-  // FIXME, not a great interface with arr just another index
-  Element& operator()(int arr, int idx)
+  // FIXME, not a great interface with c just another index
+  Element& operator()(int c, int idx)
   {
-    return a[stride * arr + idx];
+    return arr_[c * stride_ + idx];
   }
 
-  // FIXME, not a great interface with arr just another index
-  Element& operator()(int arr, int i, int j, int k)
+  // FIXME, not a great interface with c just another index
+  Element& operator()(int c, int i, int j, int k)
   {
-    return a[arr * stride + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
+    return arr_[c * stride_ + VOXEL(i,j,k, g_->nx,g_->ny,g_->nz)];
   }
 
-  Block operator[](int arr)
+  Block operator[](int c)
   {
-    return Block(grid(), a + arr * stride);
+    return Block(grid(), arr_ + c * stride_);
   }
 
-  Grid* grid()
-  {
-    return static_cast<Grid*>(g);
-  }
+  Grid* grid() { return g_; }
+
+private:
+  Element* arr_;
+
+protected:
+  int n_pipeline_; // Number of pipelines supported by this accumulator
+  int stride_;     // Stride be each pipeline's accumulator array
+  Grid* g_;
 };
 
 #endif
