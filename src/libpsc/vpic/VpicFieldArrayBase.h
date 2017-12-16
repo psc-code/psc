@@ -35,11 +35,6 @@ struct VpicFieldArrayBase : field_array_t {
   }
 
  public:
-  Element* data()
-  {
-    return f;
-  }
-  
   float* getData(int* ib, int* im)
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
@@ -67,20 +62,12 @@ struct VpicFieldArrayBase : field_array_t {
     return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
 
-  Element operator[](int idx) const
-  {
-    return f[idx];
-  }
-  
-  Element& operator[](int idx)
-  {
-    return f[idx];
-  }
+  Element  operator[](int idx) const { return f[idx]; }
+  Element& operator[](int idx)       { return f[idx]; }
 
-  Grid* getGrid()
-  {
-    return static_cast<Grid*>(g);
-  }
+  Element* data() { return f; }
+  
+  Grid* getGrid() { return static_cast<Grid*>(g); }
   
   // I'm keeping these for now, because I tink they're a nice interface,
   // but it doesn't scale well to other kinds of fields (as one can tell

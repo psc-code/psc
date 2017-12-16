@@ -14,6 +14,8 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
   using typename Base::Grid;
   using typename Base::Element;
   
+  using Base::Base;
+
   static PscHydroArrayBase* create(Grid *grid)
   {
     return new PscHydroArrayBase(grid);
@@ -22,15 +24,6 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
   static void destroy(PscHydroArrayBase* hydro)
   {
     delete hydro;
-  }
-
-  PscHydroArrayBase(Grid* grid)
-    : Base(grid)
-  {
-  }
-  
-  ~PscHydroArrayBase()
-  {
   }
 
   float* getData(int* ib, int* im)
@@ -43,12 +36,11 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
     ib[0] = -B;
     ib[1] = -B;
     ib[2] = -B;
-    return &arr_[0].jx;
+    return &data()[0].jx;
   }
 
-private:
-  using Base::arr_;
-
+  using Base::data;
+  
 public:
   using Base::g;
 };

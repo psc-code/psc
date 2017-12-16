@@ -14,28 +14,7 @@ struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
   using typename Base::Grid;
   using typename Base::Element;
 
-  enum {
-    EX        = 0,
-    DEXDY     = 1,
-    DEXDZ     = 2,
-    D2DEXDYDZ = 3,
-    EY        = 4,
-    DEYDZ     = 5,
-    DEYDX     = 6,
-    D2DEYDZDX = 7,
-    EZ        = 8,
-    DEZDX     = 9,
-    DEZDY     = 10,
-    D2DEZDXDY = 11,
-    CBX       = 12,
-    DCBXDX    = 13,
-    CBY       = 14,
-    DCBYDY    = 15,
-    CBZ       = 16,
-    DCBZDZ    = 17,
-    
-    N_COMP = sizeof(interpolator_t) / sizeof(float),
-  };
+  using Base::Base;
 
   static PscInterpolatorBase* create(Grid *grid)
   {
@@ -46,18 +25,6 @@ struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
   {
     delete interpolator;
   }
-
-  PscInterpolatorBase(Grid *grid)
-    : Base(grid)
-  {
-  }
-
-  ~PscInterpolatorBase()
-  {
-  }
-  
-private:
-  using Base::arr_;
 
 public:
   using Base::g;

@@ -21,19 +21,6 @@ struct VpicHydroArrayBase : hydro_array_t
     delete_hydro_array(hydro);
   }
 
-#if 0
-  VpicHydroArrayBase(Grid* g)
-  {
-    hydro_array_ctor(this, g);
-    /*clear();*/ // can't do it here, only in derived class (case for CRTP)?
-  }
-  
-  ~VpicHydroArrayBase()
-  {
-    hydro_array_dtor(this);
-  }
-#endif
-
   float* getData(int* ib, int* im)
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
@@ -50,35 +37,11 @@ struct VpicHydroArrayBase : hydro_array_t
   Element  operator[](int idx) const { return h[idx]; }
   Element& operator[](int idx)       { return h[idx]; }
 
-  Element *data()
-  {
-    return h;
-  }
+  Element *data() { return h; }
 
-  Grid* getGrid()
-  {
-    return static_cast<Grid*>(g);
-  }
+  Grid* getGrid() { return static_cast<Grid*>(g); }
 };
 
-#if 0
-// ----------------------------------------------------------------------
-// copied from hydro_array.c, converted from new/delete -> ctor
-
-inline void
-hydro_array_ctor(hydro_array_t * ha, grid_t * g ) {
-  if( !g ) ERROR(( "NULL grid" ));
-  MALLOC_ALIGNED( ha->h, g->nv, 128 );
-  ha->g = g;
-  /* clear_hydro_array( ha ); */ // now done in C++ constructor
-}
-
-inline void
-hydro_array_dtor( hydro_array_t * ha ) {
-  if( !ha ) return;
-  FREE_ALIGNED( ha->h );
-}
-#endif
 
 #endif
 
