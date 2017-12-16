@@ -18,6 +18,9 @@ struct PscFieldBase
   {
   }
 
+  Element  operator[](int idx) const { return arr_[idx]; }
+  Element& operator[](int idx)       { return arr_[idx]; }
+
   Element *data() { return arr_; }
 
   Grid* getGrid() { return g; }

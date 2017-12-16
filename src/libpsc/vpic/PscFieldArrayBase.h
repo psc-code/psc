@@ -190,9 +190,6 @@ public:
     return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
 
-  Element  operator[](int idx) const { return arr_[idx]; }
-  Element& operator[](int idx)       { return arr_[idx]; }
-
   Grid* getGrid() { return g; }
 
 private:

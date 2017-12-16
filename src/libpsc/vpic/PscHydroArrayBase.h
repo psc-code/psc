@@ -49,9 +49,6 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
     return &arr_[0].jx;
   }
 
-  Element  operator[](int idx) const { return arr_[idx]; }
-  Element& operator[](int idx)       { return arr_[idx]; }
-
 private:
   using Base::arr_;
 

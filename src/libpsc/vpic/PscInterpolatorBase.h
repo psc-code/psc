@@ -59,9 +59,6 @@ struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
     FREE_ALIGNED(arr_);
   }
   
-  Element operator[](int idx) const { return arr_[idx]; }
-  Element& operator[](int idx)      { return arr_[idx]; }
-
 private:
   using Base::arr_;
 
