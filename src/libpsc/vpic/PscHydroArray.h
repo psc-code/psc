@@ -27,9 +27,7 @@ struct PscHydroArray : HydroArrayBase
 
   static PscHydroArray* create(Grid *grid)
   {
-    PscHydroArray* hydro = static_cast<PscHydroArray*>(Base::create(grid));
-    hydro->clear();
-    return hydro;
+    return static_cast<PscHydroArray*>(Base::create(grid));
   }
 
   // ----------------------------------------------------------------------

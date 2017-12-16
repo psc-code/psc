@@ -8,14 +8,23 @@ struct PscFieldBase
   typedef E Element;
   typedef G Grid;
 
-  PscFieldBase(Grid* grid, Element* arr = 0)
-    : arr_(arr),
-      g(grid)
+  PscFieldBase(Grid* grid)
+    : g(grid), is_owner_(true)
+  {
+    MALLOC_ALIGNED(arr_, grid->nv, 128);
+    CLEAR(arr_, grid->nv);
+  }
+
+  PscFieldBase(Grid* grid, Element* arr)
+    : arr_(arr), g(grid), is_owner_(false)
   {
   }
 
   ~PscFieldBase()
   {
+    if (is_owner_) {
+      FREE_ALIGNED(arr_);
+    }
   }
 
   Element  operator[](int idx) const { return arr_[idx]; }
@@ -30,6 +39,9 @@ protected:
 
 public:
   Grid* g;
+
+private:
+  bool is_owner_; // OPT this could probably somehow be handled by a template...
 };
 
 

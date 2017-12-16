@@ -27,13 +27,10 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
   PscHydroArrayBase(Grid* grid)
     : Base(grid)
   {
-    MALLOC_ALIGNED(arr_, grid->nv, 128);
-    /* clear(); */ // now done in derived class create()
   }
   
   ~PscHydroArrayBase()
   {
-    FREE_ALIGNED(arr_);
   }
 
   float* getData(int* ib, int* im)

@@ -50,13 +50,10 @@ struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
   PscInterpolatorBase(Grid *grid)
     : Base(grid)
   {
-    MALLOC_ALIGNED(arr_, grid->nv, 128);
-    CLEAR(arr_, grid->nv);
   }
 
   ~PscInterpolatorBase()
   {
-    FREE_ALIGNED(arr_);
   }
   
 private:

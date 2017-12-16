@@ -43,16 +43,13 @@ struct PscFieldArrayBase : PscFieldBase<field_t, G>
   PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
     : Base(grid)
   {
-    assert(grid && !material_list.empty() && damp >= 0.);
-    MALLOC_ALIGNED(arr_, grid->nv, 128);
-    CLEAR(arr_, grid->nv);
+    assert(!material_list.empty() && damp >= 0.);
     params = create_sfa_params(grid, material_list, damp);
   }
   
   ~PscFieldArrayBase()
   {
     destroy_sfa_params(params);
-    FREE_ALIGNED(arr_);
   }
 
 public:
