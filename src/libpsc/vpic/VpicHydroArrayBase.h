@@ -39,7 +39,7 @@ struct VpicHydroArrayBase : hydro_array_t
 
   Element *data() { return h; }
 
-  Grid* getGrid() { return static_cast<Grid*>(g); }
+  Grid* grid() { return static_cast<Grid*>(g); }
 };
 
 

@@ -187,7 +187,7 @@ public:
     return ff[VOXEL(i,j,k, g_->nx,g_->ny,g_->nz) * N_COMP + m];
   }
 
-  using Base::getGrid;
+  using Base::grid;
 
 private:
   using Base::arr_;

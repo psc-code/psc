@@ -67,7 +67,7 @@ struct VpicFieldArrayBase : field_array_t {
 
   Element* data() { return f; }
   
-  Grid* getGrid() { return static_cast<Grid*>(g); }
+  Grid* grid() { return static_cast<Grid*>(g); }
   
   // I'm keeping these for now, because I tink they're a nice interface,
   // but it doesn't scale well to other kinds of fields (as one can tell

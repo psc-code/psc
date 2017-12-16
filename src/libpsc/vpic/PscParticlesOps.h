@@ -881,7 +881,7 @@ struct PscParticlesOps {
 
     // Unpack fields
 
-    Grid* RESTRICT g = fa.getGrid();
+    Grid* RESTRICT g = fa.grid();
 
     // Unpack the grid
 
@@ -1240,7 +1240,7 @@ struct PscParticlesOps {
   void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
   {
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
-    const Grid* g = fa.getGrid();
+    const Grid* g = fa.grid();
     int v = p->i, x, y, z, sy = g->sy, sz = g->sz;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     w7 = (qsp * g->r8V) * p->w;

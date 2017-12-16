@@ -24,7 +24,7 @@ struct PscHydroArray : HydroArrayBase
   using typename Base::Element;
 
   using Base::data;
-  using Base::getGrid;
+  using Base::grid;
 
   static PscHydroArray* create(Grid *grid)
   {
@@ -37,7 +37,7 @@ struct PscHydroArray : HydroArrayBase
   void clear()
   {
     Element *h = data();
-    memset(h, 0, getGrid()->nv * sizeof(*h));
+    memset(h, 0, grid()->nv * sizeof(*h));
   }
 
   // ----------------------------------------------------------------------
@@ -114,7 +114,7 @@ struct PscHydroArray : HydroArrayBase
     int face, bc, x, y, z;
     hydro_t* h;
 
-    const Grid* g = getGrid();
+    const Grid* g = grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     Field3D<HydroArrayBase> H(*this);
 
@@ -157,7 +157,7 @@ struct PscHydroArray : HydroArrayBase
 
 # undef ADJUST_HYDRO
 
-    CommHydro<Grid, Field3D<HydroArrayBase>> comm(this->getGrid());
+    CommHydro<Grid, Field3D<HydroArrayBase>> comm(this->grid());
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, H);

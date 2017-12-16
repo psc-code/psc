@@ -56,7 +56,7 @@ struct PscFieldArrayRemoteOps
   void begin_remote_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommEC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
+    CommEC<Grid, Field3D<FieldArray>> comm(fa.grid());
 
     comm.begin(F);
   }
@@ -64,7 +64,7 @@ struct PscFieldArrayRemoteOps
   void end_remote_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommEC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
+    CommEC<Grid, Field3D<FieldArray>> comm(fa.grid());
     
     comm.end(F);
   }
@@ -108,7 +108,7 @@ struct PscFieldArrayRemoteOps
   void begin_remote_ghost_norm_e(FieldArray &fa)
   {
     Field3D<FieldArray> F(fa);
-    CommNC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
+    CommNC<Grid, Field3D<FieldArray>> comm(fa.grid());
 
     comm.begin(F);
   }
@@ -116,7 +116,7 @@ struct PscFieldArrayRemoteOps
   void end_remote_ghost_norm_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommNC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
+    CommNC<Grid, Field3D<FieldArray>> comm(fa.grid());
 
     comm.end(F);
   }
@@ -160,7 +160,7 @@ struct PscFieldArrayRemoteOps
   void begin_remote_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommCC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
+    CommCC<Grid, Field3D<FieldArray>> comm(fa.grid());
 
     comm.begin(F);
   }
@@ -168,7 +168,7 @@ struct PscFieldArrayRemoteOps
   void end_remote_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    CommCC<Grid, Field3D<FieldArray>> comm(fa.getGrid());
+    CommCC<Grid, Field3D<FieldArray>> comm(fa.grid());
 
     comm.end(F);
   }

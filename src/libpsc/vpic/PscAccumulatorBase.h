@@ -70,10 +70,10 @@ struct PscAccumulatorBase : accumulator_array_t {
 
   Block operator[](int arr)
   {
-    return Block(getGrid(), a + arr * stride);
+    return Block(grid(), a + arr * stride);
   }
 
-  Grid* getGrid()
+  Grid* grid()
   {
     return static_cast<Grid*>(g);
   }

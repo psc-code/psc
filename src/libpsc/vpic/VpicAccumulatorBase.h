@@ -63,10 +63,10 @@ struct VpicAccumulatorBase : accumulator_array_t {
 
   Block operator[](int arr)
   {
-    return Block(a + arr * stride, getGrid());
+    return Block(a + arr * stride, grid());
   }
 
-  Grid* getGrid()
+  Grid* grid()
   {
     return static_cast<Grid*>(g);
   }

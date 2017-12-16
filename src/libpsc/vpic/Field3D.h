@@ -15,7 +15,7 @@ struct Field3D {
   typedef typename FA::Element Element;
   
   Field3D(Array& fa)
-    : sx_(fa.getGrid()->nx + 2), sy_(fa.getGrid()->ny + 2),
+    : sx_(fa.grid()->nx + 2), sy_(fa.grid()->ny + 2),
       f_(fa.data())
   {
   }

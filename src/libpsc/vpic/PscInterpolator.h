@@ -9,7 +9,7 @@ struct PscInterpolator : InterpolatorBase
   typedef FA FieldArray;
   using typename Base::Grid;
 
-  using Base::getGrid;
+  using Base::grid;
 
   static PscInterpolator* create(Grid *grid)
   {
@@ -24,7 +24,7 @@ struct PscInterpolator : InterpolatorBase
     Field3D<FieldArray> F(fa);
     Field3D<Base> I(*this);
 
-    const Grid* g = getGrid();
+    const Grid* g = grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float fourth = 0.25;
     const float half   = 0.5;

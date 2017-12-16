@@ -30,9 +30,9 @@ struct PscFieldBase
   Element  operator[](int idx) const { return arr_[idx]; }
   Element& operator[](int idx)       { return arr_[idx]; }
 
-  Element *data() { return arr_; }
+  Element* data() { return arr_; }
 
-  Grid* getGrid() { return g_; }
+  Grid* grid() { return g_; }
 
 protected:
   Element* ALIGNED(128) arr_;
