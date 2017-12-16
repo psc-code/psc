@@ -30,9 +30,9 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
     
-    im[0] = g->nx + 2*B;
-    im[1] = g->ny + 2*B;
-    im[2] = g->nz + 2*B;
+    im[0] = g_->nx + 2*B;
+    im[1] = g_->ny + 2*B;
+    im[2] = g_->nz + 2*B;
     ib[0] = -B;
     ib[1] = -B;
     ib[2] = -B;
@@ -42,7 +42,7 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
   using Base::data;
   
 protected:
-  using Base::g;
+  using Base::g_;
 };
 
 #endif

@@ -426,9 +426,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       CalcRhoB(FieldArray& fa, const material_coefficient_t *m)
 	: F(fa),
 	  nc(m->nonconductive),
-	  px(fa.g->nx > 1 ? fa.g->eps0 * m->epsx * fa.g->rdx : 0),
-	  py(fa.g->ny > 1 ? fa.g->eps0 * m->epsy * fa.g->rdy : 0),
-	  pz(fa.g->nz > 1 ? fa.g->eps0 * m->epsz * fa.g->rdz : 0)
+	  px(fa.getGrid()->nx > 1 ? fa.getGrid()->eps0 * m->epsx * fa.getGrid()->rdx : 0),
+	  py(fa.getGrid()->ny > 1 ? fa.getGrid()->eps0 * m->epsy * fa.getGrid()->rdy : 0),
+	  pz(fa.getGrid()->nz > 1 ? fa.getGrid()->eps0 * m->epsz * fa.getGrid()->rdz : 0)
       {
       }
 
@@ -623,10 +623,10 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       CalcDivE(FieldArray& fa, const material_coefficient_t *m)
 	: F(fa),
 	  nc(m->nonconductive),
-	  px(fa.g->nx > 1 ? fa.g->eps0 * fa.g->rdx : 0),
-	  py(fa.g->ny > 1 ? fa.g->eps0 * fa.g->rdy : 0),
-	  pz(fa.g->nz > 1 ? fa.g->eps0 * fa.g->rdz : 0),
-	  cj(1. / fa.g->eps0)
+	  px(fa.getGrid()->nx > 1 ? fa.getGrid()->eps0 * fa.getGrid()->rdx : 0),
+	  py(fa.getGrid()->ny > 1 ? fa.getGrid()->eps0 * fa.getGrid()->rdy : 0),
+	  pz(fa.getGrid()->nz > 1 ? fa.getGrid()->eps0 * fa.getGrid()->rdz : 0),
+	  cj(1. / fa.getGrid()->eps0)
       {
       }
 

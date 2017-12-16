@@ -163,9 +163,9 @@ public:
   float* getData(int* ib, int* im)
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-    im[0] = g->nx + 2*B;
-    im[1] = g->ny + 2*B;
-    im[2] = g->nz + 2*B;
+    im[0] = g_->nx + 2*B;
+    im[1] = g_->ny + 2*B;
+    im[2] = g_->nz + 2*B;
     ib[0] = -B;
     ib[1] = -B;
     ib[2] = -B;
@@ -178,22 +178,22 @@ public:
   float operator()(int m, int i, int j, int k) const
   {
     float *ff = &arr_[0].ex;
-    return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+    return ff[VOXEL(i,j,k, g_->nx,g_->ny,g_->nz) * N_COMP + m];
   }
   
   float& operator()(int m, int i, int j, int k)
   {
     float *ff = &arr_[0].ex;
-    return ff[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
+    return ff[VOXEL(i,j,k, g_->nx,g_->ny,g_->nz) * N_COMP + m];
   }
 
-  Grid* getGrid() { return g; }
+  using Base::getGrid;
 
 private:
   using Base::arr_;
 
 protected:
-  using Base::g;
+  using Base::g_;
   sfa_params_t* params;
 };
 

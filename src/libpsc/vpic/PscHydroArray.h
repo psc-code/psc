@@ -21,9 +21,10 @@ struct PscHydroArray : HydroArrayBase
 {
   typedef HydroArrayBase Base;
   using typename Base::Grid;
+  using typename Base::Element;
 
   using Base::data;
-  using Base::g;
+  using Base::getGrid;
 
   static PscHydroArray* create(Grid *grid)
   {
@@ -35,8 +36,8 @@ struct PscHydroArray : HydroArrayBase
   
   void clear()
   {
-    typename Base::Element *h = data();
-    memset(h, 0, g->nv * sizeof(*h));
+    Element *h = data();
+    memset(h, 0, getGrid()->nv * sizeof(*h));
   }
 
   // ----------------------------------------------------------------------
@@ -112,9 +113,10 @@ struct PscHydroArray : HydroArrayBase
   {
     int face, bc, x, y, z;
     hydro_t* h;
-    
-    Field3D<HydroArrayBase> H(*this);
+
+    const Grid* g = getGrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
+    Field3D<HydroArrayBase> H(*this);
 
     // Note: synchronize_hydro assumes that hydro has not been adjusted
     // at the local domain boundary. Because hydro fields are purely
