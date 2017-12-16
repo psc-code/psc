@@ -104,8 +104,8 @@ public:
 
     // Allocate the sfa parameters
 
-    MALLOC( p, 1 );
-    MALLOC_ALIGNED( p->mc, n_mc+2, 128 );
+    p = new sfa_params_t;
+    p->mc = new material_coefficient_t[n_mc+2];
     p->n_mc = n_mc;
     p->damp = damp;
 
@@ -156,8 +156,8 @@ public:
   
   void destroy_sfa_params(sfa_params_t* p)
   {
-    FREE_ALIGNED( p->mc );
-    FREE( p );
+    delete[] p->mc;
+    delete p;
   }
   
   float* getData(int* ib, int* im)

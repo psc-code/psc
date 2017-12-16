@@ -126,8 +126,7 @@ static void material_ctor(material_t *m, const char *name,
 
   int len = name ? strlen(name) : 0;
   if (!len) ERROR(( "Cannot create a nameless material" ));
-  MALLOC(m->name, len+1);
-  strcpy(m->name, name);
+  m->name = strdup(name);
   m->epsx   = epsx,   m->epsy   = epsy,   m->epsz   = epsz;
   m->mux    = mux,    m->muy    = muy,    m->muz    = muz;
   m->sigmax = sigmax, m->sigmay = sigmay, m->sigmaz = sigmaz;

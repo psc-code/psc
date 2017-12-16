@@ -930,11 +930,9 @@ struct PscParticlesOps {
 	  n_send[face] = 0;
 	}
 
-      if( max_ci<nm ) {
-	particle_injector_t * new_ci = ci;
-	FREE_ALIGNED( new_ci );
-	MALLOC_ALIGNED( new_ci, nm, 16 );
-	ci     = new_ci;
+      if (max_ci < nm) {
+	delete[] ci;
+	ci = new particle_injector_t[nm];
 	max_ci = nm;
       }
       n_ci = 0;
@@ -1607,15 +1605,15 @@ struct PscParticles : ParticlesBase
 
     static int * RESTRICT ALIGNED(128) next;
     if (!next) {
-      MALLOC_ALIGNED(next, sp->g->nv * sizeof(*next), 128);
+      next = new int[sp->g->nv];
     }
     int * RESTRICT ALIGNED(128) partition = sp->partition;
 
     static particle_t * RESTRICT ALIGNED(128) p_aux;
     static size_t n_alloced;
     if (n_prts > n_alloced) {
-      FREE_ALIGNED(p_aux);
-      MALLOC_ALIGNED(p_aux, n_prts * sizeof(*p_aux), 128);
+      delete[] p_aux;
+      p_aux = new particle_t[n_prts];
       n_alloced = n_prts;
     }
     particle_t * RESTRICT ALIGNED(128) p = sp->p;

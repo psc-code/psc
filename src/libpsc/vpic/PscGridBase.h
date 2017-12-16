@@ -84,8 +84,8 @@ struct PscGridBase : grid_t
   
   ~PscGridBase()
   {
-    FREE_ALIGNED(neighbor);
-    FREE_ALIGNED(range);
+    delete[] neighbor;
+    delete[] range;
     delete reinterpret_cast<PscMp*>(mp);
   }
   
@@ -119,15 +119,9 @@ struct PscGridBase : grid_t
       std::uninitialized_copy(l.begin(), l.end(), data());
     }
 
-    operator const int* () const
-    {
-      return data();
-    }
+    operator const int* () const { return data(); }
 
-    operator int* ()
-    {
-      return data();
-    }
+    operator int* ()             { return data(); }
   };
   
   Int3 rank_to_idx(int rank, const Int3& np)
@@ -182,8 +176,8 @@ struct PscGridBase : grid_t
 
     // Setup phase 3 data structures.  This is an ugly kludge to
     // interface phase 2 and phase 3 data structures
-    FREE_ALIGNED(range);
-    MALLOC_ALIGNED(range, psc_world_size + 1, 16);
+    delete[] range;
+    range = new int64_t[psc_world_size + 1];
     ii = nv; // nv is not 64-bits
     MPI_Allgather(&ii, 1, MPI_LONG_LONG, range, 1, MPI_LONG_LONG, MPI_COMM_WORLD);
     jj = 0;
@@ -196,8 +190,8 @@ struct PscGridBase : grid_t
     rangel = range[psc_world_rank];
     rangeh = range[psc_world_rank+1]-1;
 
-    FREE_ALIGNED(neighbor);
-    MALLOC_ALIGNED(neighbor, 6 * nv, 128);
+    delete[] neighbor;
+    neighbor = new int64_t[6 * nv];
 
     for (z = 0; z <= lnz+1; z++) {
       for (y = 0; y <= lny+1; y++) {

@@ -33,16 +33,16 @@ struct PscSpecies : species_t
     this->q = q;
     this->m = m;
     
-    MALLOC_ALIGNED( this->p, max_local_np, 128 );
+    this->p = new particle_t[max_local_np];
     this->max_np = max_local_np;
     
-    MALLOC_ALIGNED( this->pm, max_local_nm, 128 );
+    this->pm = new particle_mover_t[max_local_nm];
     this->max_nm = max_local_nm;
     
     this->last_sorted       = INT64_MIN;
     this->sort_interval     = sort_interval;
     this->sort_out_of_place = sort_out_of_place;
-    MALLOC_ALIGNED( this->partition, grid->nv+1, 128 );
+    this->partition = new int[grid->nv + 1];
     
     this->g = grid;
   }
@@ -52,9 +52,9 @@ struct PscSpecies : species_t
   
   ~PscSpecies()
   {
-    FREE_ALIGNED(partition );
-    FREE_ALIGNED(pm );
-    FREE_ALIGNED(p );
+    delete[] partition;
+    delete[] pm;
+    delete[] p;
     free(name);
   }
 
