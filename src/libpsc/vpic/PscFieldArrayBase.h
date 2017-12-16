@@ -192,7 +192,7 @@ public:
 private:
   using Base::arr_;
 
-public:
+protected:
   using Base::g;
   sfa_params_t* params;
 };

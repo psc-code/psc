@@ -25,9 +25,6 @@ struct PscInterpolatorBase : PscFieldBase<interpolator_t, G>
   {
     delete interpolator;
   }
-
-public:
-  using Base::g;
 };
 
 #endif

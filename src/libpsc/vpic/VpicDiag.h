@@ -229,7 +229,8 @@ struct VpicDiagMixin
 		       Interpolator& interpolator, HydroArray& hydro_array, int np[3])
   {
     TIC {
-      int64_t step = fa.g->step;
+      const Grid* g = fa.getGrid();
+      int64_t step = g->step;
       
       // Normal rundata dump
       if (step == 0) {
@@ -244,7 +245,7 @@ struct VpicDiagMixin
 	//dump_grid("rundata/grid");
 	//dump_materials("rundata/materials");
 	//dump_species("rundata/species");
-	global_header(fa.getGrid(), np, "global", diag_.outputParams);
+	global_header(g, np, "global", diag_.outputParams);
       }
 
       // Normal rundata energies dump
@@ -473,6 +474,7 @@ struct VpicDiagMixin
 		     Interpolator& interpolator)
   {
     double en_f[6], en_p;
+    const Grid* g = fa.getGrid();
     FileIO fileIO;
     FileIOStatus status(fail);
 
@@ -490,9 +492,9 @@ struct VpicDiagMixin
 	    fileIO.print(" \"%s\"", sp->name);
 	  }
 	  fileIO.print("\n");
-	  fileIO.print("%% timestep = %e\n", fa.g->dt);
+	  fileIO.print("%% timestep = %e\n", g->dt);
 	}
-	fileIO.print( "%li", fa.g->step );
+	fileIO.print( "%li", g->step );
       }
     }
 
@@ -519,7 +521,7 @@ struct VpicDiagMixin
   void field_dump(FieldArray& fa, DumpParameters& dumpParams)
   {
     Field3D<FieldArray> F(fa);
-    Grid* grid = fa.getGrid();
+    const Grid* grid = fa.getGrid();
     int64_t step = grid->step;
     int rank = psc_world_rank;
     int nproc = psc_world_size;

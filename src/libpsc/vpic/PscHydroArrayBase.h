@@ -41,7 +41,7 @@ struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
 
   using Base::data;
   
-public:
+protected:
   using Base::g;
 };
 

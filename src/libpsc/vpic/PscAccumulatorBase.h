@@ -15,9 +15,6 @@ struct PscAccumulatorBlock : PscFieldBase<accumulator_t, G>
   using typename Base::Grid;
 
   using Base::Base;
-
- private:
-  using Base::arr_;
 };
   
 // ======================================================================

@@ -1240,9 +1240,10 @@ struct PscParticlesOps {
   void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
   {
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
-    int v = p->i, x, y, z, sy = fa.g->sy, sz = fa.g->sz;
-    const int nx = fa.g->nx, ny = fa.g->ny, nz = fa.g->nz;
-    w7 = (qsp * fa.g->r8V) * p->w;
+    const Grid* g = fa.getGrid();
+    int v = p->i, x, y, z, sy = g->sy, sz = g->sz;
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    w7 = (qsp * g->r8V) * p->w;
 
     // Compute the trilinear weights
     // See note in rhof for why FMA and FNMS are done this way.
