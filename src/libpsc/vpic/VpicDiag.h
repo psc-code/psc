@@ -2,7 +2,6 @@
 #ifndef VPIC_DIAG_H
 #define VPIC_DIAG_H
 
-#include "vpic_iface.h"
 #include "vpic.h"
 
 #include "util/io/FileUtils.h"

@@ -24,8 +24,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "libpsc/vpic/vpic_iface.h"
-
 // ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)

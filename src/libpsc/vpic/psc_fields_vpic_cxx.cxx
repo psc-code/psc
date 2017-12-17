@@ -1,4 +1,5 @@
 
+#include "vpic_config.h"
 #include "psc_fields_vpic.h"
 
 #include <psc_method.h>

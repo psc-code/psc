@@ -1,4 +1,5 @@
 
+#include "vpic_config.h"
 #include "vpic_iface.h"
 
 #include <mrc_common.h>
