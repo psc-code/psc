@@ -1,8 +1,6 @@
 
 #include "vpic_iface.h"
 
-#include "vpic_push_particles.h"
-
 #include <mrc_common.h>
 #include <cassert>
 

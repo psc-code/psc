@@ -167,6 +167,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       }
     }
   }
+
+  // ----------------------------------------------------------------------
+  // DiagMixin
   
   void newDiag(int interval)
   {
@@ -182,7 +185,102 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   {
     DiagMixin::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_, np_);
   }
+
+  // ----------------------------------------------------------------------
+  // push_mprts
+
+  void push_mprts(Particles& vmprts, FieldArray& vmflds)
+  {
+    // For this to work, interpolator_ needs to have been set from vmflds E/B before,
+    // ie., we're not using vmflds for E and B here at all.
     
+    // At this point, fields are at E_0 and B_0 and the particle positions
+    // are at r_0 and u_{-1/2}.  Further the mover lists for the particles should
+    // empty and all particles should be inside the local computational domain.
+    // Advance the particle lists.
+    if (!vmprts.empty()) {
+      TIC accumulator_->clear(); TOC(clear_accumulators, 1);
+      this->advance_p(vmprts, *accumulator_, *interpolator_);
+    }
+
+    // Because the partial position push when injecting aged particles might
+    // place those particles onto the guard list (boundary interaction) and
+    // because advance_p requires an empty guard list, particle injection must
+    // be done after advance_p and before guard list processing. Note:
+    // user_particle_injection should be a stub if sl_ is empty.
+    emitter();
+
+    // This should be after the emission and injection to allow for the
+    // possibility of thread parallelizing these operations
+    if (!vmprts.empty()) {
+      TIC accumulator_->reduce(); TOC(reduce_accumulators, 1);
+    }
+    
+    // At this point, most particle positions are at r_1 and u_{1/2}. Particles
+    // that had boundary interactions are now on the guard list. Process the
+    // guard lists. Particles that absorbed are added to rhob (using a corrected
+    // local accumulation).
+    TIC
+      for(int round = 0; round < num_comm_round_; round++) {
+	this->boundary_p(particle_bc_list_, vmprts, vmflds, *accumulator_);
+      } TOC(boundary_p, num_comm_round_);
+
+    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      if (sp->nm) {
+	WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
+		  sp->nm, sp->name ));
+      }
+      // Drop the particles that have unprocessed movers due to a user defined
+      // boundary condition. Particles of this type with unprocessed movers are
+      // in the list of particles and move_p has set the voxel in the particle to
+      // 8*voxel + face. This is an incorrect voxel index and in many cases can
+      // in fact go out of bounds of the voxel indexing space. Removal is in
+      // reverse order for back filling. Particle charge is accumulated to the
+      // mesh before removing the particle.
+      int nm = sp->nm;
+      particle_mover_t * RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
+      particle_t * RESTRICT ALIGNED(128) p0 = sp->p;
+      for (; nm; nm--, pm--) {
+	int i = pm->i; // particle index we are removing
+	p0[i].i >>= 3; // shift particle voxel down
+	// accumulate the particle's charge to the mesh
+	this->accumulate_rhob(vmflds, p0 + i, sp->q);
+	p0[i] = p0[sp->np - 1]; // put the last particle into position i
+	sp->np--; // decrement the number of particles
+      }
+      sp->nm = 0;
+    }
+
+    // At this point, all particle positions are at r_1 and u_{1/2}, the
+    // guard lists are empty and the accumulators on each processor are current.
+    // Convert the accumulators into currents.
+    TIC vmflds.clear_jf(); TOC(clear_jf, 1);
+    if (!vmprts.empty()) {
+      TIC accumulator_->unload(vmflds); TOC(unload_accumulator, 1);
+    }
+    TIC vmflds.synchronize_jf(); TOC(synchronize_jf, 1);
+
+    // At this point, the particle currents are known at jf_{1/2}.
+    // Let the user add their own current contributions. It is the users
+    // responsibility to insure injected currents are consistent across domains.
+    // It is also the users responsibility to update rhob according to
+    // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
+    // the user wants electric field divergence cleaning to work.
+    current_injection();
+  }
+    
+  void push_mprts_prep(FieldArray& vmflds)
+  {
+    // At end of step:
+    // Fields are updated ... load the interpolator for next time step and
+    // particle diagnostics in user_diagnostics if there are any particle
+    // species to worry about
+    
+    if (!particles_.empty()) {
+      interpolator_->load(vmflds);
+    }
+  }
+
   int num_comm_round_;
   
   RngPool rng_pool;

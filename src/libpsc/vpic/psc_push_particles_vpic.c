@@ -15,10 +15,9 @@ psc_push_particles_vpic_setup(struct psc_push_particles *push)
 {
   struct psc_push_particles_vpic *sub = psc_push_particles_vpic(push);
 
-  Simulation *sim;
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
 
-  sub->vpushp = vpic_push_particles_new_from_Simulation(sim);
+  sub->vpushp = vpic_push_particles_new_from_Simulation(sub->sim);
   psc_push_particles_setup_super(push);
 }
 
@@ -30,11 +29,6 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
 			     struct psc_mparticles *mprts_base,
 			     struct psc_mfields *mflds_base)
 {
-  // At end of step:
-  // Fields are updated ... load the interpolator for next time step and
-  // particle diagnostics in user_diagnostics if there are any particle
-  // species to worry about
-
   // needs E, B
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 6);
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", MP_DONT_COPY);
