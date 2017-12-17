@@ -175,3 +175,19 @@ void Simulation_advance_e(Simulation* sim, FieldArray *vmflds, double frac)
   TIC vmflds->advance_e(frac); TOC(advance_e, 1);
 }
 
+// ----------------------------------------------------------------------
+// Simulation_push_mprts_prep
+
+void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds)
+{
+  sim->push_mprts_prep(*vmflds);
+}
+
+// ----------------------------------------------------------------------
+// Simulation_push_mprts
+
+void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
+{
+  sim->push_mprts(*vmprts, *vmflds);
+}
+

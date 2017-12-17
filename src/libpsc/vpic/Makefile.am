@@ -28,7 +28,6 @@ libsubdir_la_SOURCES = \
 	psc_vpic_bits.cxx \
 	vpic_base.cxx \
 	vpic_mparticles.cxx \
-	vpic_push_particles.cxx \
 	simulation.cxx \
 	main.cxx \
 	wrapper_empty.cxx

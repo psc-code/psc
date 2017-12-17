@@ -240,6 +240,8 @@ void Simulation_advance_b(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_advance_e(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
 
+void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
+void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);

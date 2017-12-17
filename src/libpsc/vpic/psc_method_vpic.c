@@ -3,7 +3,6 @@
 
 #include <psc_fields_vpic.h>
 #include <psc_particles_vpic.h>
-#include <psc_push_particles_vpic.h>
 
 #include <psc_balance.h>
 #include <psc_marder.h>
