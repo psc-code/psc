@@ -20,7 +20,7 @@ void vpic_base_init(int *pargc, char ***pargv)
   //  boot_services( &argc, &argv );
   {
     // Start up the checkpointing service.  This should be first.
-    
+#ifdef HAVE_VPIC    
     boot_checkpt( pargc, pargv );
     
     serial.boot( pargc, pargv );
@@ -30,14 +30,17 @@ void vpic_base_init(int *pargc, char ***pargv)
     // See note above about thread-core-affinity
     
     boot_mp( pargc, pargv );
-
+#endif
+    
     MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
     MPI_Comm_rank(psc_comm_world, &psc_world_rank);
     MPI_Comm_size(psc_comm_world, &psc_world_size);
     
     MPI_Barrier(psc_comm_world);
+#ifdef HAVE_VPIC
     _boot_timestamp = 0;
     _boot_timestamp = uptime();
+#endif
   }
 }
 
@@ -110,9 +113,11 @@ void Simulation_inc_step(Simulation *sim, int step)
 
 void Simulation_print_status(Simulation *sim)
 {
+#ifdef HAVE_VPIC
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   update_profile(rank == 0);
+#endif
 }
 
 // ======================================================================

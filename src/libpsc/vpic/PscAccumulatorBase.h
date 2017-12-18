@@ -47,11 +47,14 @@ struct PscAccumulatorBase
 
   static int aa_n_pipeline(void)
   {
+    return 2;
+#if 0
     int n = serial.n_pipeline;
     if (n < thread.n_pipeline) {
       n = thread.n_pipeline;
     }
     return n;
+#endif
   }
 
   Element* data() { return arr_; }
@@ -70,6 +73,7 @@ struct PscAccumulatorBase
 
   Block operator[](int c)
   {
+    assert(c >= 0 && c < n_pipeline_);
     return Block(grid(), arr_ + c * stride_);
   }
 

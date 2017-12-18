@@ -109,16 +109,12 @@ public:
 
   void current_injection()
   {
-    TIC user_current_injection(); TOC(user_current_injection, 1);
+    user_current_injection();
   }
 
   void field_injection()
   {
-    // Let the user add their own contributions to the electric field. It is the
-    // users responsibility to insure injected electric fields are consistent
-    // across domains.
-    
-    TIC user_field_injection(); TOC(user_field_injection, 1);
+    user_field_injection();
   }
   
   void getParams(int& num_step_,

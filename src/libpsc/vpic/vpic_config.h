@@ -2,6 +2,17 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
+#define HAVE_VPIC
+
+#include "util/profile/profile.h"
+
+#ifndef HAVE_VPIC
+#undef TIC
+#undef TOC
+#define TIC
+#define TOC(a, b)
+#endif
+
 #include "simulation.h"
 
 #include "VpicGridBase.h"
@@ -94,7 +105,7 @@ typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
 
 #if 1
-typedef VpicRng Rng;
+typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;
 #else
 typedef VpicRng Rng;
@@ -104,3 +115,4 @@ typedef VpicRngPool<Rng> RngPool;
 typedef VpicSimulation<Particles, ParticlesOps, RngPool, SimulationMixin, DiagMixin> Simulation;
 
 #endif
+

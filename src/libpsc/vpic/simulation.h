@@ -4,12 +4,10 @@
 
 #include "material.h"
 #include "rng.h"
-#include "vpic.h"
 
 #include "species_advance/species_advance.h"
 
 #include <psc.h> // FIXME, only need the BND_* constants
-
 
 // ======================================================================
 // class VpicSimulation
@@ -30,8 +28,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef RP RngPool;
 
   using SimulationMixin::collision_run;
-  using SimulationMixin::emitter;
-  using SimulationMixin::current_injection;
   using SimulationMixin::field_injection;
   
   VpicSimulation()
@@ -162,7 +158,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       interpolator_->load(*vmflds);
       
       for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-	//	TIC ::uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
 	TIC vmprts->uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
       }
     }
@@ -208,7 +203,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // because advance_p requires an empty guard list, particle injection must
     // be done after advance_p and before guard list processing. Note:
     // user_particle_injection should be a stub if sl_ is empty.
-    emitter();
+    this->emitter();
 
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
@@ -266,7 +261,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // It is also the users responsibility to update rhob according to
     // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
     // the user wants electric field divergence cleaning to work.
-    current_injection();
+    TIC this->current_injection(); TOC(user_current_injection, 1);
   }
     
   void push_mprts_prep(FieldArray& vmflds)
