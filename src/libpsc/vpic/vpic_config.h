@@ -119,7 +119,7 @@ typedef PscSimulationMixin<Particles> SimulationMixin;
 typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
 
-#if 1
+#if 0
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;
 #else
