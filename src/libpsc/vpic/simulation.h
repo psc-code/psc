@@ -29,7 +29,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
   using SimulationMixin::collision_run;
   using SimulationMixin::field_injection;
-  
+
   VpicSimulation()
     : SimulationMixin(),
       ParticlesOps(),
@@ -263,7 +263,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // the user wants electric field divergence cleaning to work.
     TIC this->current_injection(); TOC(user_current_injection, 1);
   }
-    
+  
   void push_mprts_prep(FieldArray& vmflds)
   {
     // At end of step:

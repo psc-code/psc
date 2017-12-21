@@ -4,9 +4,8 @@
 
 #define HAVE_VPIC
 
-#include "util/profile/profile.h"
-
 #ifndef HAVE_VPIC
+#include "util/profile/profile.h"
 #undef TIC
 #undef TOC
 #define TIC
@@ -15,45 +14,57 @@
 
 #include "simulation.h"
 
-#include "VpicGridBase.h"
 #include "PscGridBase.h"
 
-#include "VpicFieldArrayBase.h"
 #include "PscFieldArrayBase.h"
-#include "VpicFieldArrayLocalOps.h"
 #include "PscFieldArrayLocalOps.h"
-#include "VpicFieldArrayRemoteOps.h"
 #include "PscFieldArrayRemoteOps.h"
-#include "VpicFieldArray.h"
 #include "PscFieldArray.h"
+
+#include "PscParticleBc.h"
+
+#include "PscParticlesBase.h"
+#include "PscParticlesOps.h"
+
+#include "PscInterpolatorBase.h"
+#include "PscInterpolator.h"
+
+#include "PscAccumulatorBase.h"
+#include "PscAccumulator.h"
+
+#include "PscHydroArrayBase.h"
+#include "PscHydroArray.h"
+
+#include "NoneDiag.h"
+
+#include "PscSimulationBase.h"
+
+#ifdef HAVE_VPIC
+#include "VpicGridBase.h"
+
+#include "VpicFieldArrayBase.h"
+#include "VpicFieldArrayLocalOps.h"
+#include "VpicFieldArrayRemoteOps.h"
+#include "VpicFieldArray.h"
 
 #include "VpicParticleBc.h"
 
 #include "VpicParticlesBase.h"
-#include "PscParticlesBase.h"
 #include "VpicParticlesOps.h"
-#include "PscParticlesOps.h"
 
 #include "VpicInterpolatorBase.h"
-#include "PscInterpolatorBase.h"
 #include "VpicInterpolator.h"
-#include "PscInterpolator.h"
 
 #include "VpicAccumulatorBase.h"
-#include "PscAccumulatorBase.h"
 #include "VpicAccumulator.h"
-#include "PscAccumulator.h"
 
 #include "VpicHydroArrayBase.h"
-#include "PscHydroArrayBase.h"
 #include "VpicHydroArray.h"
-#include "PscHydroArray.h"
 
 #include "VpicDiag.h"
-#include "NoneDiag.h"
 
 #include "VpicSimulationBase.h"
-#include "PscSimulationBase.h"
+#endif
 
 
 #if 1
@@ -82,7 +93,11 @@ typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
 typedef PscHydroArrayBase<Grid> HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
 
+#if 1
+typedef PscParticleBcList ParticleBcList;
+#else
 typedef VpicParticleBcList ParticleBcList;
+#endif
 
 typedef PscParticlesBase<Grid, ParticleBcList> ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;

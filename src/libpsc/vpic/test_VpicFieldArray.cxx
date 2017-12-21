@@ -2,6 +2,7 @@
 #include "test_FieldArray.h"
 
 #include "VpicGridBase.h"
+#include "VpicMaterial.h"
 #include "VpicFieldArrayBase.h"
 #include "VpicFieldArray.h"
 

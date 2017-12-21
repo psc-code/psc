@@ -4,7 +4,10 @@
 
 #include "psc_vpic_bits.h"
 
+#include "grid/grid.h"
+
 #include <array>
+#include <vector>
 #include <cassert>
 #include <mrc_common.h>
 
