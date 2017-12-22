@@ -350,7 +350,7 @@ struct VpicDiagMixin
     FileIOStatus status;
     
     status = fileIO.open(filename, io_write);
-    if(status == fail) ERROR(("Failed opening file: %s", filename));
+    if(status == fail) LOG_ERROR("Failed opening file: %s", filename);
     
     print_hashed_comment(fileIO, "Header version information");
     fileIO.print("VPIC_HEADER_VERSION 1.0.0\n\n");
@@ -462,7 +462,7 @@ struct VpicDiagMixin
     }
     
     
-    if( fileIO.close() ) ERROR(( "File close failed on global header!!!" ));
+    if( fileIO.close() ) LOG_ERROR("File close failed on global header!!!");
   }
   
   // ----------------------------------------------------------------------
@@ -479,11 +479,11 @@ struct VpicDiagMixin
 
     int rank = psc_world_rank;
     
-    if (!fname) ERROR(("Invalid file name"));
+    if (!fname) LOG_ERROR("Invalid file name");
  
     if (rank==0) {
       status = fileIO.open(fname, append ? io_append : io_write);
-      if (status==fail) ERROR(( "Could not open \"%s\".", fname));
+      if (status==fail) LOG_ERROR("Could not open \"%s\".", fname);
       else {
 	if (append==0) {
 	  fileIO.print("%% Layout\n%% step ex ey ez bx by bz" );
@@ -510,7 +510,7 @@ struct VpicDiagMixin
  
     if (rank==0 && status != fail) {
       fileIO.print("\n");
-      if (fileIO.close()) ERROR(("File close failed on dump energies!!!"));
+      if (fileIO.close()) LOG_ERROR("File close failed on dump energies!!!");
     }
   }
 
@@ -539,7 +539,7 @@ struct VpicDiagMixin
     FileIOStatus status;
   
     status = fileIO.open(filename, io_write);
-    if( status==fail ) ERROR(( "Failed opening file: %s", filename ));
+    if( status==fail ) LOG_ERROR("Failed opening file: %s", filename);
   
     // convenience
     const size_t istride(dumpParams.stride_x);
@@ -548,11 +548,11 @@ struct VpicDiagMixin
   
     // Check stride values.
     if(remainder(grid->nx, istride) != 0)
-      ERROR(("x stride must be an integer factor of nx"));
+      LOG_ERROR("x stride must be an integer factor of nx");
     if(remainder(grid->ny, jstride) != 0)
-      ERROR(("y stride must be an integer factor of ny"));
+      LOG_ERROR("y stride must be an integer factor of ny");
     if(remainder(grid->nz, kstride) != 0)
-      ERROR(("z stride must be an integer factor of nz"));
+      LOG_ERROR("z stride must be an integer factor of nz");
   
     int dim[3];
   
@@ -610,7 +610,7 @@ struct VpicDiagMixin
     
     delete[] varlist;
     
-    if( fileIO.close() ) ERROR(( "File close failed on field dump!!!" ));
+    if( fileIO.close() ) LOG_ERROR("File close failed on field dump!!!");
   }
 
   // ----------------------------------------------------------------------
@@ -639,10 +639,10 @@ struct VpicDiagMixin
     FileIOStatus status;
 
     status = fileIO.open(filename, io_write);
-    if(status == fail) ERROR(("Failed opening file: %s", filename));
+    if(status == fail) LOG_ERROR("Failed opening file: %s", filename);
 
     typename Particles::const_iterator sp = vmprts->find(speciesname);
-    if (sp == vmprts->cend()) ERROR(( "Invalid species name: %s", speciesname ));
+    if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
 
     hydro_array->clear();
     Particles::accumulate_hydro_p(*hydro_array, sp, *interpolator);
@@ -655,11 +655,11 @@ struct VpicDiagMixin
   
     // Check stride values.
     if(remainder(grid->nx, istride) != 0)
-      ERROR(("x stride must be an integer factor of nx"));
+      LOG_ERROR("x stride must be an integer factor of nx");
     if(remainder(grid->ny, jstride) != 0)
-      ERROR(("y stride must be an integer factor of ny"));
+      LOG_ERROR("y stride must be an integer factor of ny");
     if(remainder(grid->nz, kstride) != 0)
-      ERROR(("z stride must be an integer factor of nz"));
+      LOG_ERROR("z stride must be an integer factor of nz");
   
     int dim[3];
   
@@ -715,7 +715,7 @@ struct VpicDiagMixin
     
     delete[] varlist;
     
-    if( fileIO.close() ) ERROR(( "File close failed on hydro dump!!!" ));
+    if( fileIO.close() ) LOG_ERROR("File close failed on hydro dump!!!");
   }
 
 private:

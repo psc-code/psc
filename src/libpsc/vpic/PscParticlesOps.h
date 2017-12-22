@@ -401,7 +401,7 @@ struct PscParticlesOps {
     
     // This node should inject the particle
     
-    if (sp->np>=sp->max_np) ERROR(( "No room to inject particle" ));
+    if (sp->np>=sp->max_np) LOG_ERROR("No room to inject particle");
     
     // Compute the injection cell and coordinate in cell coordinate system
     // BJA:  Note the use of double precision here for accurate particle 
@@ -448,7 +448,7 @@ struct PscParticlesOps {
 
     if (age!=0) {
       if( sp->nm >= sp->max_nm )
-	WARNING(( "No movers available to age injected  particle" ));
+	LOG_WARN("No movers available to age injected  particle");
       particle_mover_t * pm = sp->pm + sp->nm;
       age *= grid->cvac*grid->dt/sqrt( ux*ux + uy*uy + uz*uz + 1 );
       pm->dispx = ux*age*grid->rdx;
@@ -807,8 +807,8 @@ struct PscParticlesOps {
     sp->nm += seg->nm;
 
     if (seg->n_ignored)
-      WARNING(( "Pipeline %i ran out of storage for %i movers",
-		0, seg->n_ignored ));
+      LOG_WARN("Pipeline %i ran out of storage for %i movers",
+	       0, seg->n_ignored);
   
     p += n;
     n = sp->np - n;
@@ -817,8 +817,8 @@ struct PscParticlesOps {
     sp->nm += seg->nm;
 
     if (seg->n_ignored)
-      WARNING(( "Pipeline %i ran out of storage for %i movers",
-		1, seg->n_ignored ));
+      LOG_WARN("Pipeline %i ran out of storage for %i movers",
+	       1, seg->n_ignored);
   }
 
 
@@ -1002,8 +1002,8 @@ struct PscParticlesOps {
 
 	  // Uh-oh: We fell through
 
-	  WARNING(( "Unknown boundary interaction ... dropping particle "
-		    "(species=%s)", sp->name ));
+	  LOG_WARN("Unknown boundary interaction ... dropping particle "
+		   "(species=%s)", sp->name);
 
 	backfill:
 
@@ -1065,7 +1065,7 @@ struct PscParticlesOps {
       int sp_max_nm[MAX_SP], n_dropped_movers[MAX_SP];
 
       if (vmprts.getNumSpecies() > MAX_SP) {
-	ERROR(( "Update this to support more species" ));
+	LOG_ERROR("Update this to support more species");
       }
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	sp_p[  sp->id ] = sp->p;
@@ -1141,19 +1141,19 @@ struct PscParticlesOps {
       } while (face != 5);
   
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	if( n_dropped_particles[sp->id] )
-	  WARNING(( "Dropped %i particles from species \"%s\".  Use a larger "
-		    "local particle allocation in your simulation setup for "
-		    "this species on this node.",
-		    n_dropped_particles[sp->id], sp->name ));
-	if( n_dropped_movers[sp->id] )
-	  WARNING(( "%i particles were not completed moved to their final "
-		    "location this timestep for species \"%s\".  Use a larger "
-		    "local particle mover buffer in your simulation setup "
-		    "for this species on this node.",
-		    n_dropped_movers[sp->id], sp->name ));
-	sp->np=sp_np[sp->id];
-	sp->nm=sp_nm[sp->id];
+	if (n_dropped_particles[sp->id])
+	  LOG_WARN("Dropped %i particles from species \"%s\".  Use a larger "
+		   "local particle allocation in your simulation setup for "
+		   "this species on this node.",
+		   n_dropped_particles[sp->id], sp->name);
+	if (n_dropped_movers[sp->id])
+	  LOG_WARN("%i particles were not completed moved to their final "
+		   "location this timestep for species \"%s\".  Use a larger "
+		   "local particle mover buffer in your simulation setup "
+		   "for this species on this node.",
+		   n_dropped_movers[sp->id], sp->name);
+	sp->np = sp_np[sp->id];
+	sp->nm = sp_nm[sp->id];
       }
 
     } while(0);

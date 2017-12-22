@@ -222,8 +222,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
-	WARNING(( "Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
-		  sp->nm, sp->name ));
+	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
+		 sp->nm, sp->name);
       }
       // Drop the particles that have unprocessed movers due to a user defined
       // boundary condition. Particles of this type with unprocessed movers are

@@ -66,13 +66,13 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
   {
     assert(!m->next);
     if (find(m->name) != cend()) {
-      ERROR(("There is already a material named \"%s\" in list", m->name ));
+      LOG_ERROR("There is already a material named \"%s\" in list", m->name);
     }
     int id = size();
     if (id >= ::max_material) {
-      ERROR(("Too many materials in list to append material \"%s\"", m->name));
+      LOG_ERROR("Too many materials in list to append material \"%s\"", m->name);
     }
-    m->id   = (material_id)id;
+    m->id = (material_id)id;
     push_front(*m);
     return m;
   }
@@ -90,7 +90,7 @@ static void material_ctor(material_t *m, const char *name,
   CLEAR(m, 1);
 
   int len = name ? strlen(name) : 0;
-  if (!len) ERROR(( "Cannot create a nameless material" ));
+  if (!len) LOG_ERROR("Cannot create a nameless material");
   m->name = strdup(name);
   m->epsx   = epsx,   m->epsy   = epsy,   m->epsz   = epsz;
   m->mux    = mux,    m->muy    = muy,    m->muz    = muz;

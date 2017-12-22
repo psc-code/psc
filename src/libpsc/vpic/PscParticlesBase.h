@@ -114,11 +114,11 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   {
     assert(!sp->next);
     if (find(sp->name) != end()) {
-      ERROR(("There is already a material named \"%s\" in list", sp->name ));
+      LOG_ERROR("There is already a material named \"%s\" in list", sp->name);
     }
     int id = size();
     if (id >= ::max_material) {
-      ERROR(("Too many materials in list to append material \"%s\"", sp->name));
+      LOG_ERROR("Too many materials in list to append material \"%s\"", sp->name);
     }
     sp->id   = (material_id)id;
     push_front(*sp);

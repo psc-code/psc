@@ -147,7 +147,7 @@ struct PscFieldArrayLocalOps {
 	  }							\
 	  break;						\
 	default:						\
-	  ERROR(("Bad boundary condition encountered."));	\
+	  LOG_ERROR("Bad boundary condition encountered.");	\
 	  break;						\
 	}							\
       }								\
@@ -184,7 +184,7 @@ struct PscFieldArrayLocalOps {
 	  X##_FACE_LOOP(face) F(x,y,z).div_b_err = 0;			\
 	  break;							\
 	  default:							\
-	    ERROR(("Bad boundary condition encountered."));		\
+	    LOG_ERROR("Bad boundary condition encountered.");		\
 	    break;							\
   }									\
   }									\
@@ -230,7 +230,7 @@ struct PscFieldArrayLocalOps {
 	case symmetric_fields: case pmc_fields: case absorb_fields:	\
 	  break;							\
 	default:							\
-	  ERROR(("Bad boundary condition encountered."));		\
+	  LOG_ERROR("Bad boundary condition encountered.");		\
 	  break;							\
 	}								\
       }									\
@@ -263,7 +263,7 @@ struct PscFieldArrayLocalOps {
 	  X##_FACE_LOOP(face) F(x,y,z).cb##X = 0;			\
 	  break;							\
 	default:							\
-	  ERROR(("Bad boundary condition encountered."));		\
+	  LOG_ERROR("Bad boundary condition encountered.");		\
 	  break;							\
 	}								\
       }									\
@@ -296,7 +296,7 @@ struct PscFieldArrayLocalOps {
 	case symmetric_fields: case pmc_fields:			\
 	  break;						\
 	default:						\
-	  ERROR(("Bad boundary condition encountered."));	\
+	  LOG_ERROR("Bad boundary condition encountered.");	\
 	  break;						\
 	}							\
       }								\
@@ -337,7 +337,7 @@ struct PscFieldArrayLocalOps {
 	  Z##Y##_EDGE_LOOP(face) F(x,y,z).jf##Z *= 2.;			\
 	  break;							\
 	default:							\
-	  ERROR(("Bad boundary condition encountered."));		\
+	  LOG_ERROR("Bad boundary condition encountered.");		\
 	  break;							\
 	}								\
       }									\
@@ -377,7 +377,7 @@ struct PscFieldArrayLocalOps {
 	  X##_NODE_LOOP(face) F(x,y,z).rhof *= 2;			\
 	  break;							\
 	default:							\
-	  ERROR(("Bad boundary condition encountered."));		\
+	  LOG_ERROR("Bad boundary condition encountered.");		\
 	  break;							\
 	}								\
       }									\
@@ -415,7 +415,7 @@ struct PscFieldArrayLocalOps {
       case symmetric_fields: case pmc_fields: case absorb_fields:       \
         break;                                                          \
 	default:							\
-	  ERROR(("Bad boundary condition encountered."));		\
+	  LOG_ERROR("Bad boundary condition encountered.");		\
 	  break;							\
   }									\
   }									\

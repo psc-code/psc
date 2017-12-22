@@ -75,30 +75,30 @@ public:
     n_mc = 0;
     for (auto m = m_list.cbegin(); m != m_list.cend(); ++m) {
       if( m->sigmax/m->epsx<0 )
-	WARNING(("\"%s\" is an active medium along x", m->name));
+	LOG_WARN("\"%s\" is an active medium along x", m->name);
       if( m->epsy*m->muz<0 )
-	WARNING(("\"%s\" has an imaginary x speed of light (ey)", m->name));
+	LOG_WARN("\"%s\" has an imaginary x speed of light (ey)", m->name);
       if( m->epsz*m->muy<0 )
-	WARNING(("\"%s\" has an imaginary x speed of light (ez)", m->name));
+	LOG_WARN("\"%s\" has an imaginary x speed of light (ez)", m->name);
       if( m->sigmay/m->epsy<0 )
-	WARNING(("\"%s\" is an active medium along y", m->name));
+	LOG_WARN("\"%s\" is an active medium along y", m->name);
       if( m->epsz*m->mux<0 )
-	WARNING(("\"%s\" has an imaginary y speed of light (ez)", m->name));
+	LOG_WARN("\"%s\" has an imaginary y speed of light (ez)", m->name);
       if( m->epsx*m->muz<0 )
-	WARNING(("\"%s\" has an imaginary y speed of light (ex)", m->name));
+	LOG_WARN("\"%s\" has an imaginary y speed of light (ex)", m->name);
       if( m->sigmaz/m->epsz<0 )
-	WARNING(("\"%s\" is an an active medium along z", m->name));
+	LOG_WARN("\"%s\" is an an active medium along z", m->name);
       if( m->epsx*m->muy<0 )
-	WARNING(("\"%s\" has an imaginary z speed of light (ex)", m->name));
+	LOG_WARN("\"%s\" has an imaginary z speed of light (ex)", m->name);
       if( m->epsy*m->mux<0 )
-	WARNING(("\"%s\" has an imaginary z speed of light (ey)", m->name));
+	LOG_WARN("\"%s\" has an imaginary z speed of light (ey)", m->name);
       cg2 = ax/minf(m->epsy*m->muz,m->epsz*m->muy) +
 	ay/minf(m->epsz*m->mux,m->epsx*m->muz) +
 	az/minf(m->epsx*m->muy,m->epsy*m->mux);
       if( cg2>=1 )
-	WARNING(( "\"%s\" Courant condition estimate = %e", m->name, sqrt(cg2) ));
+	LOG_WARN("\"%s\" Courant condition estimate = %e", m->name, sqrt(cg2));
       if( m->zetax!=0 || m->zetay!=0 || m->zetaz!=0 )
-	WARNING(( "\"%s\" magnetic conductivity is not supported", m->name ));
+	LOG_WARN("\"%s\" magnetic conductivity is not supported", m->name);
       n_mc++;
     }
 
