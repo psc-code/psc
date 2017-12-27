@@ -2,7 +2,8 @@
 int psc_world_rank;
 int psc_world_size;
 
-#include "Rng.h"
+#include "VpicRng.h"
+#include "PscRng.h"
 
 #include "util/checkpt/checkpt.h"
 #include "util/mp/mp.h"

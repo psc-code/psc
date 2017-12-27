@@ -14,6 +14,8 @@
 
 #include "simulation.h"
 
+#include "PscRng.h"
+
 #include "PscGridBase.h"
 
 #include "PscFieldArrayBase.h"
@@ -40,6 +42,9 @@
 #include "PscSimulationBase.h"
 
 #ifdef HAVE_VPIC
+
+#include "VpicRng.h"
+
 #include "VpicGridBase.h"
 
 #include "VpicFieldArrayBase.h"
