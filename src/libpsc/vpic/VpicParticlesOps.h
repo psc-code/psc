@@ -9,15 +9,17 @@ struct VpicParticlesOps
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
+  typedef typename Particles::ParticleBcList ParticleBcList;
   
-  VpicParticlesOps(vpic_simulation *simulation) : simulation_(simulation) { }
-
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
 		       const struct psc_particle_inject *prt)
   {
     species_t *sp = &*vmprts.find(prt->kind);
 
-    simulation_->inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
+    extern vpic_simulation *simulation;
+    assert(simulation);
+
+    simulation->inject_particle(sp, prt->x[0], prt->x[1], prt->x[2],
 				 prt->u[0], prt->u[1], prt->u[2], prt->w, 0., 0);
   }
 
@@ -29,10 +31,11 @@ struct VpicParticlesOps
     }
   }
   
-  void boundary_p(const particle_bc_t& particle_bc_list, Particles& vmprts, FieldArray& fa,
+  void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
 		  Accumulator& accumulator)
   {
-    ::boundary_p(const_cast<particle_bc_t*>(&particle_bc_list), vmprts.head(), &fa, &accumulator);
+    const particle_bc_t *pbc = pbc_list;
+    ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), &fa, &accumulator);
   }
   
   void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
@@ -78,9 +81,6 @@ struct VpicParticlesOps
       sp->nm = 0;
     }
   }
-  
-private:
-  vpic_simulation *simulation_;
 };
 
 
