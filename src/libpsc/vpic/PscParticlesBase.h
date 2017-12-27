@@ -103,6 +103,7 @@ struct PscSpecies : PscSpeciesT
 	     int sort_interval, int sort_out_of_place,
 	     Grid *grid)
   {
+    memset(this, 0, sizeof(*this)); // FIXME
     int len = name ? strlen(name) : 0;
     assert(len);
     assert(grid && grid->nv);
@@ -126,8 +127,6 @@ struct PscSpecies : PscSpeciesT
     this->partition = new int[grid->nv + 1];
     
     this->g = grid;
-
-    this->next = nullptr;
   }
 
   // ----------------------------------------------------------------------
