@@ -72,8 +72,8 @@ struct PscSfaParams
       
     // Allocate the sfa parameters
       
-    this->mc = new MaterialCoefficient[n_mc+2];
-    this->n_mc = n_mc;
+    this->mc = new MaterialCoefficient[n_mc+2]; // FIXME, why +2 ?
+    n_mc_ = n_mc;
     this->damp = damp;
 
     // Fill up the material coefficient array
@@ -122,10 +122,14 @@ struct PscSfaParams
   {
     delete[] mc;
   }
+
+  int size() const { return n_mc_; }
     
   MaterialCoefficient* mc;
-  int n_mc;
   float damp;
+
+private:
+  int n_mc_;
 };
 
 // ======================================================================

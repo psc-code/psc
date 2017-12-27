@@ -12,6 +12,13 @@
 #include <cassert>
 
 // ======================================================================
+// VpicSfaParams
+
+struct VpicSfaParams: sfa_params_t
+{
+};
+
+// ======================================================================
 // VpicFieldArrayBase
 
 template<class G, class ML>
@@ -19,7 +26,7 @@ struct VpicFieldArrayBase : field_array_t {
   typedef G Grid;
   typedef ML MaterialList;
   typedef field_t Element;
-  typedef sfa_params_t SfaParams;
+  typedef VpicSfaParams SfaParams;
   typedef material_coefficient_t MaterialCoefficient;
   
   enum {

@@ -104,7 +104,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void vacuum_advance_e(double frac)
   {
     SfaParams* prm = params();
-    assert(prm->n_mc == 1);
+    assert(prm->size() == 1);
     assert(frac == 1.);
 
     // Update interior fields
@@ -189,7 +189,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void vacuum_energy_f(double global[6])
   {
     SfaParams* prm = params();
-    assert(prm->n_mc == 1);
+    assert(prm->size() == 1);
     const MaterialCoefficient* m = prm->mc;
 
     Field3D<FieldArray> F(*this);
@@ -412,7 +412,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void compute_rhob()
   {
     SfaParams* prm = params();
-    assert(prm->n_mc == 1);
+    assert(prm->size() == 1);
     const MaterialCoefficient* m = prm->mc;
 
     struct CalcRhoB {
@@ -461,7 +461,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void vacuum_compute_curl_b()
   {
     SfaParams* prm = params();
-    assert(prm->n_mc == 1);
+    assert(prm->size() == 1);
     const MaterialCoefficient* m = prm->mc;
 
     // Update interior fields
@@ -609,7 +609,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void compute_div_e_err()
   {
     SfaParams* prm = params();
-    assert(prm->n_mc == 1);
+    assert(prm->size() == 1);
     const MaterialCoefficient* m = prm->mc;
 
     struct CalcDivE {
@@ -752,7 +752,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void vacuum_clean_div_e()
   {
     SfaParams* prm = params();
-    assert(prm->n_mc == 1);
+    assert(prm->size() == 1);
 
     Field3D<FieldArray> F(*this);
     const Grid* g = grid();
