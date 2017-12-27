@@ -46,6 +46,8 @@ struct VpicGridBase : grid_t
 
   void mp_size_recv_buffer(int port, int size) { ::mp_size_recv_buffer(mp, port, size); }
   void mp_size_send_buffer(int port, int size) { ::mp_size_send_buffer(mp, port, size); }
+  void* mp_send_buffer(int port) { return ::mp_send_buffer(mp, port); };
+  void* mp_recv_buffer(int port) { return ::mp_recv_buffer(mp, port); };
   void mp_begin_recv(int port, int size, int src, int tag) { ::mp_begin_recv(mp, port, size, src, tag); }
   void mp_end_recv(int port) { ::mp_end_recv(mp, port); }
   void mp_begin_send(int port, int size, int dst, int tag) { ::mp_begin_send(mp, port, size, dst, tag); }

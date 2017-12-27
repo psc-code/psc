@@ -28,6 +28,8 @@ Grid* test_GridBase_create()
 template<typename Grid>
 void test_GridBase_methods(Grid* g)
 {
+  (void) g->mp_send_buffer(1);
+  (void) g->mp_recv_buffer(1);
 }
 
 template<typename Grid>
