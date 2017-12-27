@@ -8,11 +8,6 @@
 #include <mrc_common.h>
 #include <cassert>
 
-// FIXME, should be all inside class
-
-enum { PscMaterialIdMax = 32768 };
-typedef int16_t PscMaterialId;
-
 // ======================================================================
 // PscMaterial
 
@@ -23,7 +18,7 @@ struct PscMaterialT
   float mux, muy, muz;          // Relative permeability along x,y,z axes
   float sigmax, sigmay, sigmaz; // Electrical conductivity along x,y,z axes
   float zetax,  zetay,  zetaz;  // Magnetic conductivity along x,y,z axes
-  PscMaterialId id;             // Unique identifier for material
+  MaterialId id;                // Unique identifier for material
   struct PscMaterialT *next;    // Next material in list
 };
   
@@ -81,7 +76,7 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
       LOG_ERROR("There is already a material named \"%s\" in list", m->name);
     }
     int id = size();
-    if (id >= PscMaterialIdMax) {
+    if (id >= MaterialIdMax) {
       LOG_ERROR("Too many materials in list to append material \"%s\"", m->name);
     }
     m->id = id;

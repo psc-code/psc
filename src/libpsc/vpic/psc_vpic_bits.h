@@ -8,6 +8,11 @@ extern MPI_Comm psc_comm_world;
 extern int psc_world_rank;
 extern int psc_world_size;
 
+// FIXME, this is chosen globally and to match vpic, but could be
+// made dependent on actual MaterialList implementation
+enum { MaterialIdMax = 32768 };
+typedef int16_t MaterialId;
+
 // FIXME, get rid of this BOUNDARY macro
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 
