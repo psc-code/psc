@@ -2,10 +2,9 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "material.h"
-#include "rng.h"
+#include "psc_vpic_bits.h"
 
-#include "species_advance/species_advance.h"
+#include "vpic.h" // FIXME
 
 #include <psc.h> // FIXME, only need the BND_* constants
 
