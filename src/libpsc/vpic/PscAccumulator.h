@@ -32,7 +32,7 @@ struct PscAccumulator : AccumulatorBase
       // which I dropped -- which is also a behavior change, which I
       // though shouldn't matter as it's outside the local domain, but
       // it might, too
-      CLEAR(a_begin, a_end - a_begin + 1);
+      memset(a_begin, 0, (a_end - a_begin + 1) * sizeof(*a_begin));
     }
   }
 

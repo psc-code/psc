@@ -129,7 +129,7 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 					    globals_physics *phys,
 					    double dx[3],
 					    double thickness,
-					    material_t *resistive)
+					    struct material *resistive)
 {
   // Define resistive layer surrounding boundary --> set thickness=0
   // to eliminate this feature

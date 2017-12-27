@@ -2,8 +2,6 @@
 #ifndef PSC_SIMULATION_BASE_H
 #define PSC_SIMULATION_BASE_H
 
-#include "VpicDiag.h"
-
 template<class Particles>
 class PscSimulationMixin
 {

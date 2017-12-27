@@ -2,8 +2,6 @@
 #ifndef NONE_DIAG_H
 #define NONE_DIAG_H
 
-#include "vpic.h" // FIXME
-
 // ----------------------------------------------------------------------
 // NoneDiagMixin
 
@@ -13,12 +11,10 @@ struct NoneDiagMixin {
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::HydroArray HydroArray;
 
-  NoneDiagMixin(vpic_simulation* simulaton) { }
-
   void diagnostics_init(int interval_) { }
   void diagnostics_setup() { }
   void diagnostics_run(FieldArray& fa, Particles& particles,
-		       Interpolator& interpolator, HydroArray& hydro_array) { }
+		       Interpolator& interpolator, HydroArray& hydro_array, int np[3]) { }
 };
 
 #endif

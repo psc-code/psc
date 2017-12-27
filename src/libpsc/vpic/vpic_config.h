@@ -5,7 +5,7 @@
 //#define HAVE_VPIC
 
 #ifndef HAVE_VPIC
-#include "util/profile/profile.h"
+//#include "util/profile/profile.h"
 #undef TIC
 #undef TOC
 #define TIC

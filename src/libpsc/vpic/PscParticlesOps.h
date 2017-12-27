@@ -2,6 +2,8 @@
 #ifndef PSC_PARTICLES_OPS
 #define PSC_PARTICLES_OPS
 
+#include "psc_vpic_bits.h"
+
 #define HAS_V4_PIPELINE
 
 struct ParticleInjector
@@ -1707,7 +1709,9 @@ struct PscParticles : ParticlesBase
     }
 
     // OPT: just swap pointer?
-    COPY(p, p_aux, n_prts);
+    for (int i = 0; i < n_prts; i++) {
+      p[i] = p_aux[i];
+    }
   }
 
   // ----------------------------------------------------------------------
