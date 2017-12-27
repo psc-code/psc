@@ -37,6 +37,7 @@ struct PscMaterial : PscMaterialT
     this->mux    = mux,    this->muy    = muy,    this->muz    = muz;
     this->sigmax = sigmax, this->sigmay = sigmay, this->sigmaz = sigmaz;
     this->zetax  = zetax,  this->zetay  = zetay,  this->zetaz  = zetaz;
+    this->next = nullptr;
   }
   
   ~PscMaterial()
