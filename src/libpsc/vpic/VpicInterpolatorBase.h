@@ -2,6 +2,8 @@
 #ifndef VPIC_INTERPOLATOR_BASE_H
 #define VPIC_INTERPOLATOR_BASE_H
 
+#include "src/sf_interface/sf_interface.h"
+
 // ======================================================================
 // VpicInterpolatorBase
 
@@ -24,6 +26,8 @@ struct VpicInterpolatorBase : interpolator_array_t {
   Element& operator[](int idx)       { return i[idx]; }
 
   Element* data() { return i; }
+
+  Grid* grid() { return static_cast<Grid*>(g); }
 };
 
 #endif
