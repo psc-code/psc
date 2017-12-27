@@ -40,7 +40,7 @@ enum {
 #ifdef __cplusplus
 
 #ifndef VPIC_CONFIG_H
-#warning Things will go wrong if you don't include "vpic_config.h" before "vpic_iface.h" in C++ code!
+#warning Things will go wrong if you do not include "vpic_config.h" before "vpic_iface.h" in C++ code!
 #endif
 
 #else
@@ -66,7 +66,6 @@ struct vpic_mparticles_prt {
 
 struct psc_particle_inject;
 
-Particles *vpic_mparticles_new_from_simulation(Simulation *sim);
 int vpic_mparticles_get_nr_particles(Particles *vmprts);
 void vpic_mparticles_reserve_all(Particles *vmprts, int n_patches,
 				 int *n_prts_by_patch);
@@ -130,6 +129,7 @@ void Simulation_define_field_array(Simulation *sim, double damp);
 struct species * Simulation_define_species(Simulation *sim, const char *name, double q, double m,
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place);
+Particles * Simulation_get_particles(Simulation *sim);
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);

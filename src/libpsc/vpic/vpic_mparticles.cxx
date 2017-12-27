@@ -9,15 +9,6 @@
 // vpic_mparticles
 
 // ----------------------------------------------------------------------
-// vpic_mparticles_new_from_simulation
-
-Particles *
-vpic_mparticles_new_from_simulation(Simulation *sim)
-{
-  return &sim->particles_;
-}
-
-// ----------------------------------------------------------------------
 // vpic_mparticles_get_nr_particles
 
 int vpic_mparticles_get_nr_particles(Particles *vmprts)
@@ -27,10 +18,6 @@ int vpic_mparticles_get_nr_particles(Particles *vmprts)
   for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     n_prts += sp->np;
   }
-  // species_t *sp;
-  // LIST_FOR_EACH(sp, vmprts->sl_) {
-  //   n_prts += sp->np;
-  // }
 
   return n_prts;
 }
