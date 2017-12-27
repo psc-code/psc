@@ -27,6 +27,7 @@ template<class FA>
 struct PscFieldArrayLocalOps {
   typedef FA FieldArray;
   typedef typename FieldArray::Grid Grid;
+  typedef typename FieldArray::Element FieldT;
 
   void local_ghost_tang_b(FieldArray& fa)
   {
@@ -38,7 +39,7 @@ struct PscFieldArrayLocalOps {
     const float cdt_dz = g->cvac*g->dt*g->rdz;
     int bc, face, ghost, x, y, z;
     float decay, drive, higend, t1, t2;
-    field_t *fg, *fh;
+    FieldT *fg, *fh;
 
     // Absorbing boundary condition is 2nd order accurate implementation
     // of a 1st order Higend ABC with 15 degree annihilation cone except
@@ -53,41 +54,41 @@ struct PscFieldArrayLocalOps {
 	ghost = (i+j+k)<0 ? 0 : n##X+1;					\
 	face  = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
-	case anti_symmetric_fields:					\
+	case Grid::anti_symmetric_fields:				\
 	  Z##Y##_EDGE_LOOP(ghost) F(x,y,z).cb##Y= F(x-i,y-j,z-k).cb##Y;	\
 	  Y##Z##_EDGE_LOOP(ghost) F(x,y,z).cb##Z= F(x-i,y-j,z-k).cb##Z;	\
 	  break;							\
-	case symmetric_fields: case pmc_fields:				\
+	case Grid::symmetric_fields: case Grid::pmc_fields:		\
 	  Z##Y##_EDGE_LOOP(ghost) F(x,y,z).cb##Y=-F(x-i,y-j,z-k).cb##Y;	\
 	  Y##Z##_EDGE_LOOP(ghost) F(x,y,z).cb##Z=-F(x-i,y-j,z-k).cb##Z;	\
 	  break;							\
-      case absorb_fields:                                                \
-        drive = cdt_d##X*higend;                                         \
-        decay = (1-drive)/(1+drive);                                     \
-        drive = 2*drive/(1+drive);                                       \
-	Z##Y##_EDGE_LOOP(ghost) {                                        \
-          fg = &F(x,y,z);                                                \
-          fh = &F(x-i,y-j,z-k);                                          \
-          X = face;                                                      \
-          t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Z - F(x,y,z).e##Z );         \
-          t1 = (i+j+k)<0 ? t1 : -t1;                                     \
-          X = ghost;                                                     \
-          Z++; t2 = F(x-i,y-j,z-k).e##X;                                 \
-          Z--; t2 = cdt_d##Z*( t2 - fh->e##X );                          \
-          fg->cb##Y = decay*fg->cb##Y + drive*fh->cb##Y - t1 + t2;       \
-        }                                                                \
-	Y##Z##_EDGE_LOOP(ghost) {                                        \
-          fg = &F(x,y,z);                                                \
-          fh = &F(x-i,y-j,z-k);                                          \
-          X = face;                                                      \
-          t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Y - F(x,y,z).e##Y );         \
-          t1 = (i+j+k)<0 ? t1 : -t1;                                     \
-          X = ghost;                                                     \
-          Y++; t2 = F(x-i,y-j,z-k).e##X;                                 \
-          Y--; t2 = cdt_d##Y*( t2 - fh->e##X );                          \
-          fg->cb##Z = decay*fg->cb##Z + drive*fh->cb##Z + t1 - t2;       \
-        }                                                                \
-	break;                                                           \
+	case Grid::absorb_fields:					\
+	  drive = cdt_d##X*higend;					\
+	  decay = (1-drive)/(1+drive);					\
+	  drive = 2*drive/(1+drive);					\
+	  Z##Y##_EDGE_LOOP(ghost) {					\
+	    fg = &F(x,y,z);						\
+	    fh = &F(x-i,y-j,z-k);					\
+	    X = face;							\
+	    t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Z - F(x,y,z).e##Z );	\
+	    t1 = (i+j+k)<0 ? t1 : -t1;					\
+	    X = ghost;							\
+	    Z++; t2 = F(x-i,y-j,z-k).e##X;				\
+	    Z--; t2 = cdt_d##Z*( t2 - fh->e##X );			\
+	    fg->cb##Y = decay*fg->cb##Y + drive*fh->cb##Y - t1 + t2;	\
+	  }								\
+	  Y##Z##_EDGE_LOOP(ghost) {					\
+	    fg = &F(x,y,z);						\
+	    fh = &F(x-i,y-j,z-k);					\
+	    X = face;							\
+	    t1 = cdt_d##X*( F(x-i,y-j,z-k).e##Y - F(x,y,z).e##Y );	\
+	    t1 = (i+j+k)<0 ? t1 : -t1;					\
+	    X = ghost;							\
+	    Y++; t2 = F(x-i,y-j,z-k).e##X;				\
+	    Y--; t2 = cdt_d##Y*( t2 - fh->e##X );			\
+	    fg->cb##Z = decay*fg->cb##Z + drive*fh->cb##Z + t1 - t2;	\
+	  }								\
+	  break;							\
 	default:							\
 	  assert(0);							\
 	  break;							\
@@ -113,7 +114,7 @@ struct PscFieldArrayLocalOps {
     const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
-    field_t * ALIGNED(16) f0, * ALIGNED(16) f1, * ALIGNED(16) f2;
+    FieldT * ALIGNED(16) f0, * ALIGNED(16) f1, * ALIGNED(16) f2;
 
 # define APPLY_LOCAL_NORM_E(i,j,k,X,Y,Z)                        \
     do {							\
@@ -121,7 +122,7 @@ struct PscFieldArrayLocalOps {
       if( bc<0 || bc>=psc_world_size ) {			\
 	face = (i+j+k)<0 ? 0 : n##X+1;				\
 	switch(bc) {						\
-	case anti_symmetric_fields:				\
+	case Grid::anti_symmetric_fields:			\
 	  X##_NODE_LOOP(face) {					\
 	    f0 = &F(x,y,z);					\
 	    f1 = &F(x-i,y-j,z-k);				\
@@ -129,7 +130,7 @@ struct PscFieldArrayLocalOps {
 	    f0->tca##X = f1->tca##X;				\
 	  }							\
 	  break;						\
-	case symmetric_fields: case pmc_fields:			\
+	case Grid::symmetric_fields: case Grid::pmc_fields:	\
 	  X##_NODE_LOOP(face) {					\
 	    f0 = &F(x,y,z);					\
 	    f1 = &F(x-i,y-j,z-k);				\
@@ -137,7 +138,7 @@ struct PscFieldArrayLocalOps {
 	    f0->tca##X = -f1->tca##X;				\
 	  }							\
 	  break;						\
-	case absorb_fields:					\
+	case Grid::absorb_fields:				\
 	  X##_NODE_LOOP(face) {					\
 	    f0 = &F(x,y,z);					\
 	    f1 = &F(x-i,y-j,z-k);				\
@@ -170,25 +171,25 @@ struct PscFieldArrayLocalOps {
 
 # define APPLY_LOCAL_DIV_B(i,j,k,X,Y,Z)					\
     do {								\
-    bc = g->bc[BOUNDARY(i,j,k)];					\
-    if( bc<0 || bc>=psc_world_size ) {					\
-    face = (i+j+k)<0 ? 0 : n##X+1;					\
-    switch(bc) {							\
-    case anti_symmetric_fields:						\
-      X##_FACE_LOOP(face) F(x,y,z).div_b_err =  F(x-i,y-j,z-k).div_b_err; \
-      break;								\
-      case symmetric_fields: case pmc_fields:				\
-	X##_FACE_LOOP(face) F(x,y,z).div_b_err = -F(x-i,y-j,z-k).div_b_err; \
-	break;								\
-	case absorb_fields:						\
+      bc = g->bc[BOUNDARY(i,j,k)];					\
+      if( bc<0 || bc>=psc_world_size ) {				\
+	face = (i+j+k)<0 ? 0 : n##X+1;					\
+	switch(bc) {							\
+	case Grid::anti_symmetric_fields:				\
+	  X##_FACE_LOOP(face) F(x,y,z).div_b_err =  F(x-i,y-j,z-k).div_b_err; \
+	  break;							\
+	case Grid::symmetric_fields: case Grid::pmc_fields:		\
+	  X##_FACE_LOOP(face) F(x,y,z).div_b_err = -F(x-i,y-j,z-k).div_b_err; \
+	  break;							\
+	case Grid::absorb_fields:					\
 	  X##_FACE_LOOP(face) F(x,y,z).div_b_err = 0;			\
 	  break;							\
-	  default:							\
-	    LOG_ERROR("Bad boundary condition encountered.");		\
-	    break;							\
-  }									\
-  }									\
-  } while(0)
+	default:							\
+	  LOG_ERROR("Bad boundary condition encountered.");		\
+	  break;							\
+	}								\
+      }									\
+    } while(0)
   
     APPLY_LOCAL_DIV_B(-1, 0, 0,x,y,z);
     APPLY_LOCAL_DIV_B( 0,-1, 0,y,z,x);
@@ -207,7 +208,7 @@ struct PscFieldArrayLocalOps {
     const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
-    field_t *fs;
+    FieldT* fs;
 
 # define ADJUST_TANG_E(i,j,k,X,Y,Z)                                     \
     do {								\
@@ -215,7 +216,7 @@ struct PscFieldArrayLocalOps {
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
-	case anti_symmetric_fields:					\
+	case Grid::anti_symmetric_fields:				\
 	  Y##Z##_EDGE_LOOP(face) {					\
 	    fs = &F(x,y,z);						\
 	    fs->e##Y = 0;						\
@@ -227,7 +228,7 @@ struct PscFieldArrayLocalOps {
 	    fs->tca##Z = 0;						\
 	  }								\
 	  break;							\
-	case symmetric_fields: case pmc_fields: case absorb_fields:	\
+	case Grid::symmetric_fields: case Grid::pmc_fields: case Grid::absorb_fields: \
 	  break;							\
 	default:							\
 	  LOG_ERROR("Bad boundary condition encountered.");		\
@@ -257,9 +258,9 @@ struct PscFieldArrayLocalOps {
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
-	case anti_symmetric_fields: case pmc_fields: case absorb_fields: \
+	case Grid::anti_symmetric_fields: case Grid::pmc_fields: case Grid::absorb_fields: \
 	  break;							\
-	case symmetric_fields:						\
+	case Grid::symmetric_fields:					\
 	  X##_FACE_LOOP(face) F(x,y,z).cb##X = 0;			\
 	  break;							\
 	default:							\
@@ -290,10 +291,10 @@ struct PscFieldArrayLocalOps {
       if( bc<0 || bc>=psc_world_size ) {			\
 	face = (i+j+k)<0 ? 1 : n##X+1;				\
 	switch(bc) {						\
-	case anti_symmetric_fields: case absorb_fields:		\
+	case Grid::anti_symmetric_fields: case Grid::absorb_fields:	\
 	  X##_NODE_LOOP(face) F(x,y,z).div_e_err = 0;		\
 	  break;						\
-	case symmetric_fields: case pmc_fields:			\
+	case Grid::symmetric_fields: case Grid::pmc_fields:	\
 	  break;						\
 	default:						\
 	  LOG_ERROR("Bad boundary condition encountered.");	\
@@ -328,11 +329,11 @@ struct PscFieldArrayLocalOps {
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
-	case anti_symmetric_fields:					\
+	case Grid::anti_symmetric_fields:				\
 	  Y##Z##_EDGE_LOOP(face) F(x,y,z).jf##Y = 0;			\
 	  Z##Y##_EDGE_LOOP(face) F(x,y,z).jf##Z = 0;			\
 	  break;							\
-	case symmetric_fields: case pmc_fields: case absorb_fields:	\
+	case Grid::symmetric_fields: case Grid::pmc_fields: case Grid::absorb_fields: \
 	  Y##Z##_EDGE_LOOP(face) F(x,y,z).jf##Y *= 2.;			\
 	  Z##Y##_EDGE_LOOP(face) F(x,y,z).jf##Z *= 2.;			\
 	  break;							\
@@ -370,10 +371,10 @@ struct PscFieldArrayLocalOps {
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
-	case anti_symmetric_fields:					\
+	case Grid::anti_symmetric_fields:				\
 	  X##_NODE_LOOP(face) F(x,y,z).rhof = 0;			\
 	  break;							\
-	case symmetric_fields: case pmc_fields: case absorb_fields:	\
+	case Grid::symmetric_fields: case Grid::pmc_fields: case Grid::absorb_fields: \
 	  X##_NODE_LOOP(face) F(x,y,z).rhof *= 2;			\
 	  break;							\
 	default:							\
@@ -405,15 +406,15 @@ struct PscFieldArrayLocalOps {
 
 # define ADJUST_RHOB(i,j,k,X,Y,Z)                                       \
     do {								\
-    bc = g->bc[BOUNDARY(i,j,k)];                                        \
-    if( bc<0 || bc>=psc_world_size ) {					\
-    face = (i+j+k)<0 ? 1 : n##X+1;					\
-    switch(bc) {							\
-    case anti_symmetric_fields:						\
-      X##_NODE_LOOP(face) F(x,y,z).rhob = 0;				\
-      break;								\
-      case symmetric_fields: case pmc_fields: case absorb_fields:       \
-        break;                                                          \
+      bc = g->bc[BOUNDARY(i,j,k)];					\
+      if( bc<0 || bc>=psc_world_size ) {				\
+	face = (i+j+k)<0 ? 1 : n##X+1;					\
+	switch(bc) {							\
+	case Grid::anti_symmetric_fields:				\
+	  X##_NODE_LOOP(face) F(x,y,z).rhob = 0;			\
+	  break;							\
+	case Grid::symmetric_fields: case Grid::pmc_fields: case Grid::absorb_fields: \
+	  break;							\
 	default:							\
 	  LOG_ERROR("Bad boundary condition encountered.");		\
 	  break;							\

@@ -110,7 +110,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void vacuum_advance_e(double frac)
   {
-    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    PscSfaParams* prm = params;
     assert(prm->n_mc == 1);
     assert(frac == 1.);
 
@@ -119,10 +119,10 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
     // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
 
-    const material_coefficient_t* m = prm->mc;
+    const PscMaterialCoefficient* m = prm->mc;
 
     struct AdvanceE {
-      AdvanceE(FieldArray& fa, const Grid *g, const material_coefficient_t *m,
+      AdvanceE(FieldArray& fa, const Grid *g, const PscMaterialCoefficient* m,
 	       const double damp_)
 	: F(fa),
 	  decayx(m->decayx),
@@ -195,9 +195,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void vacuum_energy_f(double global[6])
   {
-    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    PscSfaParams* prm = params;
     assert(prm->n_mc == 1);
-    const material_coefficient_t* m = prm->mc;
+    const PscMaterialCoefficient* m = prm->mc;
 
     Field3D<FieldArray> F(*this);
     const Grid* g = grid();
@@ -418,12 +418,12 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void compute_rhob()
   {
-    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    PscSfaParams* prm = params;
     assert(prm->n_mc == 1);
-    const material_coefficient_t* m = prm->mc;
+    const PscMaterialCoefficient* m = prm->mc;
 
     struct CalcRhoB {
-      CalcRhoB(FieldArray& fa, const material_coefficient_t *m)
+      CalcRhoB(FieldArray& fa, const PscMaterialCoefficient* m)
 	: F(fa),
 	  nc(m->nonconductive),
 	  px(fa.grid()->nx > 1 ? fa.grid()->eps0 * m->epsx * fa.grid()->rdx : 0),
@@ -467,9 +467,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void vacuum_compute_curl_b()
   {
-    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    PscSfaParams* prm = params;
     assert(prm->n_mc == 1);
-    const material_coefficient_t* m = prm->mc;
+    const PscMaterialCoefficient* m = prm->mc;
 
     // Update interior fields
     // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
@@ -477,7 +477,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
 
     struct CurlB {
-      CurlB(FieldArray& fa, const Grid *g, const material_coefficient_t *m)
+      CurlB(FieldArray& fa, const Grid *g, const PscMaterialCoefficient* m)
 	: F(fa),
 	  px_muz(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuz : 0),
 	  px_muy(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuy : 0),
@@ -615,12 +615,12 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void compute_div_e_err()
   {
-    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    PscSfaParams* prm = params;
     assert(prm->n_mc == 1);
-    const material_coefficient_t* m = prm->mc;
+    const PscMaterialCoefficient* m = prm->mc;
 
     struct CalcDivE {
-      CalcDivE(FieldArray& fa, const material_coefficient_t *m)
+      CalcDivE(FieldArray& fa, const PscMaterialCoefficient* m)
 	: F(fa),
 	  nc(m->nonconductive),
 	  px(fa.grid()->nx > 1 ? fa.grid()->eps0 * fa.grid()->rdx : 0),
@@ -758,7 +758,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void vacuum_clean_div_e()
   {
-    sfa_params_t* prm = static_cast<sfa_params_t*>(params);
+    PscSfaParams* prm = params;
     assert(prm->n_mc == 1);
 
     Field3D<FieldArray> F(*this);

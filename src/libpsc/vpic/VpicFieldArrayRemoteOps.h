@@ -2,6 +2,9 @@
 #ifndef VPIC_FIELD_ARRAY_REMOTE_OPS_H
 #define VPIC_FIELD_ARRAY_REMOTE_OPS_H
 
+#define IN_sfa
+#include "field_advance/standard/sfa_private.h"
+
 template<class FA>
 struct VpicFieldArrayRemoteOps {
   typedef FA FieldArray;

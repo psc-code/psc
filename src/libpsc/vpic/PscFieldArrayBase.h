@@ -8,17 +8,42 @@
 
 #include <mrc_common.h>
 #include <cassert>
+#include <cmath>
 
-#define IN_sfa
-#include "field_advance/standard/sfa_private.h"
+struct PscFieldT
+{
+  float ex,   ey,   ez,   div_e_err;     // Electric field and div E error
+  float cbx,  cby,  cbz,  div_b_err;     // Magnetic field and div B error
+  float tcax, tcay, tcaz, rhob;          // TCA fields and bound charge density
+  float jfx,  jfy,  jfz,  rhof;          // Free current and charge density
+  MaterialId ematx, ematy, ematz, nmat; // Material at edge centers and nodes
+  MaterialId fmatx, fmaty, fmatz, cmat; // Material at face and cell centers
+};
+
+struct PscMaterialCoefficient
+{
+  float decayx, drivex;         // Decay of ex and drive of (curl H)x and Jx
+  float decayy, drivey;         // Decay of ey and drive of (curl H)y and Jy
+  float decayz, drivez;         // Decay of ez and drive of (curl H)z and Jz
+  float rmux, rmuy, rmuz;       // Reciprocle of relative permeability
+  float nonconductive;          // Divergence cleaning related coefficients
+  float epsx, epsy, epsz; 
+  float pad[3];                 // For 64-byte alignment and future expansion
+};
+
+struct PscSfaParams {
+  PscMaterialCoefficient* mc;
+  int n_mc;
+  float damp;
+};
 
 // ======================================================================
 // PscFieldArrayBase
 
 template<class G, class ML>
-struct PscFieldArrayBase : PscFieldBase<field_t, G>
+struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
 {
-  typedef PscFieldBase<field_t, G> Base;
+  typedef PscFieldBase<PscFieldT, G> Base;
   typedef ML MaterialList;
   using typename Base::Grid;
   using typename Base::Element;
@@ -30,7 +55,7 @@ struct PscFieldArrayBase : PscFieldBase<field_t, G>
     CBX = 4,
     CBY = 5,
     CBZ = 6,
-    N_COMP = sizeof(field_t) / sizeof(float),
+    N_COMP = sizeof(typename Base::Element) / sizeof(float),
   };
   
   static PscFieldArrayBase* create(Grid *grid, MaterialList material_list, float damp)
@@ -57,13 +82,13 @@ public:
     return a < b ? a : b;
   }
 
-  static sfa_params_t *create_sfa_params(const Grid* g,
+  static PscSfaParams *create_sfa_params(const Grid* g,
 					 MaterialList& m_list,
 					 float damp)
   {
-    sfa_params_t* p;
+    PscSfaParams* p;
     float ax, ay, az, cg2;
-    material_coefficient_t *mc;
+    PscMaterialCoefficient* mc;
     int n_mc;
 
     // Run sanity checks on the material list
@@ -103,8 +128,8 @@ public:
 
     // Allocate the sfa parameters
 
-    p = new sfa_params_t;
-    p->mc = new material_coefficient_t[n_mc+2];
+    p = new PscSfaParams;
+    p->mc = new PscMaterialCoefficient[n_mc+2];
     p->n_mc = n_mc;
     p->damp = damp;
 
@@ -153,7 +178,7 @@ public:
     return p;
   }
   
-  void destroy_sfa_params(sfa_params_t* p)
+  void destroy_sfa_params(PscSfaParams* p)
   {
     delete[] p->mc;
     delete p;
@@ -193,7 +218,7 @@ private:
 
 protected:
   using Base::g_;
-  sfa_params_t* params;
+  PscSfaParams* params;
 };
 
 
