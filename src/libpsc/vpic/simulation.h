@@ -4,8 +4,6 @@
 
 #include "psc_vpic_bits.h"
 
-#include "vpic.h" // FIXME
-
 #include <psc.h> // FIXME, only need the BND_* constants
 
 // ======================================================================
