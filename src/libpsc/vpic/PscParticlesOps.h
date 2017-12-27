@@ -2,9 +2,17 @@
 #ifndef PSC_PARTICLES_OPS
 #define PSC_PARTICLES_OPS
 
-#include "vpic.h"
-
 #define HAS_V4_PIPELINE
+
+struct ParticleInjector
+{
+  float dx, dy, dz;          // Particle position in cell coords (on [-1,1])
+  int32_t i;                 // Index of cell containing the particle
+  float ux, uy, uz;          // Particle normalized momentum
+  float w;                   // Particle weight (number of physical particles)
+  float dispx, dispy, dispz; // Displacement of particle
+  SpeciesId sp_id;           // Species of particle
+};
 
 template<class P>
 struct PscParticlesOps {
@@ -263,7 +271,7 @@ struct PscParticlesOps {
     int axis, face;
     int64_t neighbor;
     float *a;
-    particle_t * ALIGNED(32) p = p0 + pm->i;
+    Particle* ALIGNED(32) p = p0 + pm->i;
 
     // FIXME, this uses double precision constants in a bunch of places
     const float one = 1.;
@@ -482,7 +490,7 @@ struct PscParticlesOps {
     Particle* ALIGNED(128) p0 = sp->p;
     const Grid* g = sp->getGrid();
 
-    const interpolator_t * ALIGNED(16)  f;
+    const typename Interpolator::Element * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
 
     const float qdt_2mc  = (sp->q*g->dt)/(2*sp->m*g->cvac);
@@ -870,7 +878,7 @@ struct PscParticlesOps {
 
     // Temporary store for local particle injectors
     // FIXME: Ugly static usage
-    static particle_injector_t * RESTRICT ALIGNED(16) ci = NULL;
+    static ParticleInjector* RESTRICT ALIGNED(16) ci = NULL;
     static int max_ci = 0;
 
     int n_send[6], n_recv[6], n_ci;
@@ -914,7 +922,7 @@ struct PscParticlesOps {
     // Load the particle send and local injection buffers
     do {
 
-      particle_injector_t * RESTRICT ALIGNED(16) pi_send[6];
+      ParticleInjector* RESTRICT ALIGNED(16) pi_send[6];
 
       // Presize the send and injection buffers
       //
@@ -929,14 +937,14 @@ struct PscParticlesOps {
 
       for( face=0; face<6; face++ )
 	if( shared[face] ) {
-	  g->mp_size_send_buffer(f2b[face], 16+nm*sizeof(particle_injector_t));
-	  pi_send[face] = (particle_injector_t *)(((char *)g->mp_send_buffer(f2b[face]))+16);
+	  g->mp_size_send_buffer(f2b[face], 16+nm*sizeof(ParticleInjector));
+	  pi_send[face] = (ParticleInjector*)(((char *)g->mp_send_buffer(f2b[face]))+16);
 	  n_send[face] = 0;
 	}
 
       if (max_ci < nm) {
 	delete[] ci;
-	ci = new particle_injector_t[nm];
+	ci = new ParticleInjector[nm];
 	max_ci = nm;
       }
       n_ci = 0;
@@ -953,7 +961,7 @@ struct PscParticlesOps {
 	ParticleMover* RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
 	nm = sp->nm;
 
-	particle_injector_t * RESTRICT ALIGNED(16) pi;
+	ParticleInjector* RESTRICT ALIGNED(16) pi;
 	int i, voxel;
 	int64_t nn;
       
@@ -976,7 +984,7 @@ struct PscParticlesOps {
         
 	  // Absorb
 
-	  if( nn==absorb_particles ) {
+	  if( nn==Grid::absorb_particles ) {
 	    // Ideally, we would batch all rhob accumulations together
 	    // for efficiency
 	    accumulate_rhob(fa, p0+i, sp_q );
@@ -1041,8 +1049,8 @@ struct PscParticlesOps {
 	g->mp_end_recv(f2b[face]);
 	n_recv[face] = *((int *)g->mp_recv_buffer(f2b[face]));
 	g->mp_size_recv_buffer(f2b[face],
-			       16+n_recv[face]*sizeof(particle_injector_t));
-	g->mp_begin_recv(f2b[face], 16+n_recv[face]*sizeof(particle_injector_t),
+			       16+n_recv[face]*sizeof(ParticleInjector));
+	g->mp_begin_recv(f2b[face], 16+n_recv[face]*sizeof(ParticleInjector),
 			 bc[face], f2rb[face]);
       }
     }
@@ -1052,7 +1060,7 @@ struct PscParticlesOps {
 	// FIXME: ASSUMES MP WON'T MUCK WITH REST OF SEND BUFFER. IF WE
 	// DID MORE EFFICIENT MOVER ALLOCATION ABOVE, THIS WOULD BE
 	// ROBUSTED AGAINST MP IMPLEMENTATION VAGARIES
-	g->mp_begin_send(f2b[face], 16+n_send[face]*sizeof(particle_injector_t),
+	g->mp_begin_send(f2b[face], 16+n_send[face]*sizeof(ParticleInjector),
 			 bc[face], f2b[face]);
       }
     }
@@ -1088,7 +1096,7 @@ struct PscParticlesOps {
       do {
 	Particle     * RESTRICT ALIGNED(32) p;
 	ParticleMover* RESTRICT ALIGNED(16) pm;
-	const particle_injector_t * RESTRICT ALIGNED(16) pi;
+	const ParticleInjector * RESTRICT ALIGNED(16) pi;
 	int np, nm, n, id;
   
 	face++;
@@ -1101,7 +1109,7 @@ struct PscParticlesOps {
 	  n = n_ci;
 	} else if (shared[face]) {
 	  g->mp_end_recv(f2b[face]);
-	  pi = (const particle_injector_t *)
+	  pi = (const ParticleInjector*)
 	    (((char *)g->mp_recv_buffer(f2b[face]))+16);
 	  n  = n_recv[face];
 	} else {
@@ -1490,7 +1498,7 @@ struct PscParticles : ParticlesBase
 				  int off, int cnt)
   {
     Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
-    const interpolator_t*  f;
+    const typename Interpolator::Element* f;
     // For backward half advance
     const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);
     const float qdt_4mc = 0.5 * qdt_2mc; // For backward half rotate
@@ -1664,7 +1672,9 @@ struct PscParticles : ParticlesBase
     Particle* RESTRICT ALIGNED(128) p = sp->p;
 
     // zero counts
-    CLEAR(&next[vl], vh - vl);
+    for (int v = vl; v < vh; v++) {
+      next[v] = 0;
+    }
     
     // find counts
     for (int i = 0; i < n_prts; i++) {
@@ -1689,7 +1699,9 @@ struct PscParticles : ParticlesBase
     }
 
     // fix up unused part of partition
-    CLEAR(partition, vl);
+    for (int i = 0; i < vl; i++) {
+      partition[i] = 0;
+    }
     for (int i = vh; i < g->nv; i++) {
       partition[i] = n_prts;
     }
@@ -1706,7 +1718,7 @@ struct PscParticles : ParticlesBase
 				  int n0, int n1)
   {
     Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
-    const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
+    const typename Interpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
     const Particle       * RESTRICT ALIGNED(32)  p = sp->p;
     const float qdt_2mc = (sp->q*g->dt)/(2*sp->m*g->cvac);
     const float msp     = sp->m;

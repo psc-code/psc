@@ -36,6 +36,10 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
 #define RESTRICT __restrict
 #endif 
 
+// FIXME
+#define DECLARE_ALIGNED_ARRAY(type,align,name,count)    \
+  type name[(count)] __attribute__ ((aligned (align)))
+
 
 #define mprintf(fmt...) do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); { printf("[%d] ", __rank); printf(fmt); } } while(0)
 #define MHERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
