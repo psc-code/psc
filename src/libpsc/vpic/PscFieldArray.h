@@ -16,6 +16,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
   using typename Base::Grid;
   using typename Base::MaterialList;
+  using typename Base::SfaParams;
   
   using Base::grid;
   using Base::params;
@@ -25,10 +26,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
   }
   
-  // ----------------------------------------------------------------------
-  // foreach
-  // FIXME, move somewhere else
-
   // ----------------------------------------------------------------------
   // advance_b
   
@@ -105,7 +102,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void vacuum_advance_e(double frac)
   {
-    PscSfaParams* prm = params;
+    SfaParams* prm = params;
     assert(prm->n_mc == 1);
     assert(frac == 1.);
 
@@ -190,7 +187,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void vacuum_energy_f(double global[6])
   {
-    PscSfaParams* prm = params;
+    SfaParams* prm = params;
     assert(prm->n_mc == 1);
     const PscMaterialCoefficient* m = prm->mc;
 
@@ -413,7 +410,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void compute_rhob()
   {
-    PscSfaParams* prm = params;
+    SfaParams* prm = params;
     assert(prm->n_mc == 1);
     const PscMaterialCoefficient* m = prm->mc;
 
@@ -462,7 +459,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void vacuum_compute_curl_b()
   {
-    PscSfaParams* prm = params;
+    SfaParams* prm = params;
     assert(prm->n_mc == 1);
     const PscMaterialCoefficient* m = prm->mc;
 
@@ -610,7 +607,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void compute_div_e_err()
   {
-    PscSfaParams* prm = params;
+    SfaParams* prm = params;
     assert(prm->n_mc == 1);
     const PscMaterialCoefficient* m = prm->mc;
 
@@ -753,7 +750,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void vacuum_clean_div_e()
   {
-    PscSfaParams* prm = params;
+    SfaParams* prm = params;
     assert(prm->n_mc == 1);
 
     Field3D<FieldArray> F(*this);

@@ -31,12 +31,6 @@ struct PscMaterialCoefficient
   float pad[3];                 // For 64-byte alignment and future expansion
 };
 
-struct PscSfaParams {
-  PscMaterialCoefficient* mc;
-  int n_mc;
-  float damp;
-};
-
 // ======================================================================
 // PscFieldArrayBase
 
@@ -58,6 +52,12 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
     N_COMP = sizeof(typename Base::Element) / sizeof(float),
   };
   
+  struct SfaParams {
+    PscMaterialCoefficient* mc;
+    int n_mc;
+    float damp;
+  };
+
   static PscFieldArrayBase* create(Grid *grid, MaterialList material_list, float damp)
   {
     return new PscFieldArrayBase(grid, material_list, damp);
@@ -82,11 +82,11 @@ public:
     return a < b ? a : b;
   }
 
-  static PscSfaParams *create_sfa_params(const Grid* g,
+  static SfaParams *create_sfa_params(const Grid* g,
 					 MaterialList& m_list,
 					 float damp)
   {
-    PscSfaParams* p;
+    SfaParams* p;
     float ax, ay, az, cg2;
     PscMaterialCoefficient* mc;
     int n_mc;
@@ -128,7 +128,7 @@ public:
 
     // Allocate the sfa parameters
 
-    p = new PscSfaParams;
+    p = new SfaParams;
     p->mc = new PscMaterialCoefficient[n_mc+2];
     p->n_mc = n_mc;
     p->damp = damp;
@@ -178,7 +178,7 @@ public:
     return p;
   }
   
-  void destroy_sfa_params(PscSfaParams* p)
+  void destroy_sfa_params(SfaParams* p)
   {
     delete[] p->mc;
     delete p;
@@ -218,7 +218,7 @@ private:
 
 protected:
   using Base::g_;
-  PscSfaParams* params;
+  SfaParams* params;
 };
 
 
