@@ -72,12 +72,12 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
   {
     assert(!material_list.empty());
     assert(damp >= 0.);
-    params = create_sfa_params(grid, material_list, damp);
+    params_ = create_sfa_params(grid, material_list, damp);
   }
   
   ~PscFieldArrayBase()
   {
-    destroy_sfa_params(params);
+    destroy_sfa_params(params_);
   }
 
 public:
@@ -217,12 +217,14 @@ public:
 
   using Base::grid;
 
+  SfaParams* params() { return params_; }
+
 private:
   using Base::arr_;
 
 protected:
   using Base::g_;
-  SfaParams* params;
+  SfaParams* params_;
 };
 
 

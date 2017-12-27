@@ -5,6 +5,8 @@
 #include "Field3D.h"
 
 #include "field_advance/field_advance.h"
+#define IN_sfa
+#include "field_advance/standard/sfa_private.h"
 
 #include <mrc_common.h>
 #include <cassert>
@@ -17,6 +19,8 @@ struct VpicFieldArrayBase : field_array_t {
   typedef G Grid;
   typedef ML MaterialList;
   typedef field_t Element;
+  typedef sfa_params_t SfaParams;
+  typedef material_coefficient_t MaterialCoefficient;
   
   enum {
     EX  = 0,
@@ -28,9 +32,9 @@ struct VpicFieldArrayBase : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
 
-  static VpicFieldArrayBase* create(Grid *grid, MaterialList material_list, float damp)
+  static VpicFieldArrayBase* create(Grid *grid, const MaterialList& material_list, float damp)
   {
-    return static_cast<VpicFieldArrayBase*>(new_standard_field_array(grid, material_list, damp));
+    return static_cast<VpicFieldArrayBase*>(::new_standard_field_array(grid, material_list, damp));
   }
 
  public:
@@ -67,6 +71,7 @@ struct VpicFieldArrayBase : field_array_t {
   Element* data() { return f; }
   
   Grid* grid() { return static_cast<Grid*>(g); }
+SfaParams* params() { return static_cast<SfaParams*>(field_array_t::params); }
   
   // I'm keeping these for now, because I tink they're a nice interface,
   // but it doesn't scale well to other kinds of fields (as one can tell
