@@ -147,6 +147,7 @@ struct PscGridBase : PscGridT
 
   PscGridBase()
   {
+    memset(this, 0, sizeof(*this)); // FIXME
     neighbor = nullptr; // FIXME...
     for(int i = 0; i < 27; i++) {
       bc[i] = anti_symmetric_fields;
