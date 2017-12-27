@@ -68,7 +68,7 @@ struct PscHydroArray : HydroArrayBase
     {
       int face = side ? nx_[X] + 1 : 1;
       foreach_node(g_, X, face, [&](int x, int y, int z) {
-	  hydro_t *h = &F(x,y,z);
+	  Element* h = &F(x,y,z);
 	  *p++ = h->jx;
 	  *p++ = h->jy;
 	  *p++ = h->jz;
@@ -90,7 +90,7 @@ struct PscHydroArray : HydroArrayBase
     {
       int face = side ? 1 : nx_[X] + 1;
       foreach_node(g_, X, face, [&](int x, int y, int z) {
-	  hydro_t *h = &F(x,y,z);
+	  Element* h = &F(x,y,z);
 	  h->jx  += *p++;
 	  h->jy  += *p++;
 	  h->jz  += *p++;
@@ -112,7 +112,7 @@ struct PscHydroArray : HydroArrayBase
   void synchronize()
   {
     int face, bc, x, y, z;
-    hydro_t* h;
+    Element* h;
 
     const Grid* g = grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;

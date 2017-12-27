@@ -4,15 +4,22 @@
 
 #include "PscFieldBase.h"
 
-#include "vpic.h"
+struct PscHydroT
+{
+  float jx, jy, jz, rho; // Current and charge density => <q v_i f>, <q f>
+  float px, py, pz, ke;  // Momentum and K.E. density  => <p_i f>, <m c^2 (gamma-1) f>
+  float txx, tyy, tzz;   // Stress diagonal            => <p_i v_j f>, i==j
+  float tyz, tzx, txy;   // Stress off-diagonal        => <p_i v_j f>, i!=j
+  float _pad[2];         // 16-byte align
+};
 
 // ======================================================================
 // PscHydroArrayBase
 
 template<class G>
-struct PscHydroArrayBase : PscFieldBase<hydro_t, G>
+struct PscHydroArrayBase : PscFieldBase<PscHydroT, G>
 {
-  typedef PscFieldBase<hydro_t, G> Base;
+  typedef PscFieldBase<PscHydroT, G> Base;
   using typename Base::Grid;
   using typename Base::Element;
   
