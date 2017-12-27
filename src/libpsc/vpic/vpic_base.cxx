@@ -30,6 +30,8 @@ void vpic_base_init(int *pargc, char ***pargv)
     // See note above about thread-core-affinity
     
     boot_mp( pargc, pargv );
+#else
+    MPI_Init(pargc, pargv);
 #endif
     
     MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
