@@ -2,6 +2,9 @@
 #ifndef PSC_INTERPOLATOR_H
 #define PSC_INTERPOLATOR_H
 
+// ======================================================================
+// PscInterpolator
+
 template<class InterpolatorBase, class FA>
 struct PscInterpolator : InterpolatorBase
 {

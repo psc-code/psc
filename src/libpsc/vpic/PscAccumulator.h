@@ -8,6 +8,7 @@ struct PscAccumulator : AccumulatorBase
   typedef AccumulatorBase Base;
   typedef FA FieldArray;
   using typename Base::Grid;
+  using typename Base::Element;
   
   using Base::grid;
 
@@ -24,8 +25,8 @@ struct PscAccumulator : AccumulatorBase
     const Grid* g = grid();
     int n_array = this->n_pipeline_ + 1;
     for (int arr = 0; arr < n_array; arr++) {
-      accumulator_t *a_begin = &(*this)(arr, 1,1,1);
-      accumulator_t *a_end = &(*this)(arr, g->nx, g->ny, g->nz);
+      Element* a_begin = &(*this)(arr, 1,1,1);
+      Element* a_end = &(*this)(arr, g->nx, g->ny, g->nz);
       // FIXME, the + 1 in n0 doesn't really make sense to me.  And,
       // originally, this was extended to 128 byte boundaries, too,
       // which I dropped -- which is also a behavior change, which I
@@ -48,8 +49,8 @@ struct PscAccumulator : AccumulatorBase
     // a is broken into restricted rw and ro parts to allow the compiler
     // to do more aggresive optimizations
 
-    accumulator_t* a_begin = &(*this)(0,1,1,1);
-    accumulator_t *a_end = &(*this)(0, g->nx, g->ny, g->nz);
+    Element* a_begin = &(*this)(0,1,1,1);
+    Element* a_end = &(*this)(0, g->nx, g->ny, g->nz);
     int n = a_end - a_begin + 1;
 
     float * RESTRICT a = reinterpret_cast<float *>(a_begin);

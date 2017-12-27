@@ -4,6 +4,8 @@
 
 #include "PscFieldBase.h"
 
+#include "vpic.h"
+
 // ======================================================================
 // PscHydroArrayBase
 
