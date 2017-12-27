@@ -7,9 +7,14 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
-#define PTYPE PTYPE_VPIC
-#include "psc_particle_common.h"
-#include "psc_particles_common.h"
-#undef PTYPE
+struct psc_mparticles_vpic {
+  Particles *vmprts;
+  Simulation *sim;
+};
+
+#define psc_mparticles_vpic(mprts)({					\
+      assert((struct psc_mparticles_ops *) mprts->obj.ops == &psc_mparticles_vpic_ops); \
+      mrc_to_subobj(mprts, struct psc_mparticles_vpic);			\
+})
 
 #endif

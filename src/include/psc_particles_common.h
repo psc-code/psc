@@ -162,12 +162,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
-#elif PTYPE == PTYPE_VPIC
-
-#define particle_PTYPE_real_t particle_vpic_real_t
-
-#define psc_mparticles_PTYPE psc_mparticles_vpic
-
 #endif
 
 // ======================================================================
@@ -184,14 +178,7 @@ struct psc_mparticles_PTYPE {
 const particle_PTYPE_real_t *psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p);
 const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p);
 
-#elif PTYPE == PTYPE_VPIC
-
-struct psc_mparticles_PTYPE {
-  Particles *vmprts;
-  Simulation *sim;
-};
-
-#else // PTYPE != PTYPE_CUDA / VPIC
+#else // PTYPE != PTYPE_CUDA
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
