@@ -10,14 +10,20 @@
 template<class G>
 struct VpicSpecies : species_t
 {
+  typedef G Grid;
+  
+  Grid* getGrid() { return static_cast<Grid*>(g); }
 };
 
-template<class G>
+template<class G, class BCL>
 struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
 {
   typedef G Grid;
+  typedef BCL ParticleBcList;
   typedef VpicSpecies<Grid> Species;
   typedef VpicListBase<Species> Base;
+  typedef particle_t Particle;
+  typedef particle_mover_t ParticleMover;
 
   using typename Base::iterator;
   using typename Base::const_iterator;
