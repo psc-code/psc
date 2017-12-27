@@ -10,6 +10,7 @@ AM_CXXFLAGS += \
 
 noinst_PROGRAMS = \
 	test_RngPool \
+	test_VpicGridBase \
 	test_PscGridBase \
 	test_VpicFieldArray \
 	test_PscFieldArray
@@ -17,6 +18,7 @@ noinst_PROGRAMS = \
 TESTS = $(noinst_PROGRAMS)
 
 test_RngPool_SOURCES = test_RngPool.cxx testing.cxx
+test_VpicGridBase_SOURCES = test_VpicGridBase.cxx testing.cxx
 test_PscGridBase_SOURCES = test_PscGridBase.cxx testing.cxx
 test_VpicFieldArray_SOURCES = test_VpicFieldArray.cxx testing.cxx
 test_PscFieldArray_SOURCES = test_PscFieldArray.cxx testing.cxx
