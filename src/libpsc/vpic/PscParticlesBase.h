@@ -4,13 +4,94 @@
 
 #include "VpicListBase.h"
 
-#include "vpic.h"
-
 // ======================================================================
 // PscSpecies
 
+// FIXME: Eventually particle_t (definitely) and ther other formats
+// (maybe) should be opaque and specific to a particular
+// species_advance implementation
+
+struct PscParticle
+{
+  float dx, dy, dz; // Particle position in cell coordinates (on [-1,1])
+  int32_t i;        // Voxel containing the particle.  Note that
+  /**/              // particled awaiting processing by boundary_p
+  /**/              // have actually set this to 8*voxel + face where
+  /**/              // face is the index of the face they interacted
+  /**/              // with (on 0:5).  This limits the local number of
+  /**/              // voxels to 2^28 but emitter handling already
+  /**/              // has a stricter limit on this (2^26).
+  float ux, uy, uz; // Particle normalized momentum
+  float w;          // Particle weight (number of physical particles)
+};
+
+// WARNING: FUNCTIONS THAT USE A PARTICLE_MOVER ASSUME THAT EVERYBODY
+// WHO USES THAT PARTICLE MOVER WILL HAVE ACCESS TO PARTICLE ARRAY
+
+struct PscParticleMover
+{
+  float dispx, dispy, dispz; // Displacement of particle
+  int32_t i;                 // Index of the particle to move
+};
+
+// NOTE: THE LAYOUT OF A PARTICLE_INJECTOR _MUST_ BE COMPATIBLE WITH
+// THE CONCATENATION OF A PARTICLE_T AND A PARTICLE_MOVER!
+
+struct PscParticleInjector
+{
+  float dx, dy, dz;          // Particle position in cell coords (on [-1,1])
+  int32_t i;                 // Index of cell containing the particle
+  float ux, uy, uz;          // Particle normalized momentum
+  float w;                   // Particle weight (number of physical particles)
+  float dispx, dispy, dispz; // Displacement of particle
+  SpeciesId sp_id;           // Species of particle
+};
+
+struct PscSpeciesT
+{
+  char * name;                        // Species name
+  float q;                            // Species particle charge
+  float m;                            // Species particle rest mass
+
+  int np, max_np;                     // Number and max local particles
+  PscParticle * ALIGNED(128) p;        // Array of particles for the species
+
+  int nm, max_nm;                     // Number and max local movers in use
+  PscParticleMover * ALIGNED(128) pm; // Particle movers
+
+  int64_t last_sorted;                // Step when the particles were last
+                                      // sorted.
+  int sort_interval;                  // How often to sort the species
+  int sort_out_of_place;              // Sort method
+  int * ALIGNED(128) partition;       // Static array indexed 0:
+  /**/                                // (nx+2)*(ny+2)*(nz+2).  Each value
+  /**/                                // corresponds to the associated particle
+  /**/                                // array index of the first particle in
+  /**/                                // the cell.  Array is allocated and
+  /**/                                // values computed in sort_p.  Purpose is
+  /**/                                // for implementing collision models
+  /**/                                // This is given in terms of the
+  /**/                                // underlying's grids space filling
+  /**/                                // curve indexing.  Thus, immediately
+  /**/                                // after a sort:
+  /**/                                //   sp->p[sp->partition[g->sfc[i]  ]:
+  /**/                                //         sp->partition[g->sfc[i]+1]-1]
+  /**/                                // are all the particles in voxel
+  /**/                                // with local index i, while:
+  /**/                                //   sp->p[ sp->partition[ j   ]:
+  /**/                                //          sp->partition[ j+1 ] ]
+  /**/                                // are all the particles in voxel
+  /**/                                // with space filling curve index j.
+  /**/                                // Note: SFC NOT IN USE RIGHT NOW THUS
+  /**/                                // g->sfc[i]=i ABOVE.
+
+  void* g;                            // FIXME Underlying grid
+  SpeciesId id;                       // Unique identifier for a species
+  PscSpeciesT* next;                  // Next species in the list
+};
+
 template<class G>
-struct PscSpecies : species_t
+struct PscSpecies : PscSpeciesT
 {
   typedef G Grid;
   
@@ -35,10 +116,10 @@ struct PscSpecies : species_t
     this->q = q;
     this->m = m;
     
-    this->p = new particle_t[max_local_np];
+    this->p = new PscParticle[max_local_np];
     this->max_np = max_local_np;
     
-    this->pm = new particle_mover_t[max_local_nm];
+    this->pm = new PscParticleMover[max_local_nm];
     this->max_nm = max_local_nm;
     
     this->last_sorted       = INT64_MIN;
@@ -46,7 +127,7 @@ struct PscSpecies : species_t
     this->sort_out_of_place = sort_out_of_place;
     this->partition = new int[grid->nv + 1];
     
-    this->g = reinterpret_cast<grid_t*>(grid); // FIXME
+    this->g = grid;
   }
 
   // ----------------------------------------------------------------------
@@ -76,6 +157,8 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   typedef BCL ParticleBcList;
   typedef PscSpecies<Grid> Species;
   typedef VpicListBase<Species> Base;
+  typedef PscParticle Particle;
+  typedef PscParticleMover ParticleMover;
 
   using typename Base::iterator;
   using typename Base::const_iterator;
@@ -116,13 +199,9 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   {
     assert(!sp->next);
     if (find(sp->name) != end()) {
-      LOG_ERROR("There is already a material named \"%s\" in list", sp->name);
+      LOG_ERROR("There is already a species named \"%s\" in list", sp->name);
     }
-    int id = size();
-    if (id >= ::max_material) {
-      LOG_ERROR("Too many materials in list to append material \"%s\"", sp->name);
-    }
-    sp->id   = (material_id)id;
+    sp->id = size();
     push_front(*sp);
     return sp;
   }

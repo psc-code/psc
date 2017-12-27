@@ -13,6 +13,9 @@ extern int psc_world_size;
 enum { MaterialIdMax = 32768 };
 typedef int16_t MaterialId;
 
+// FIXME, this is chosen globally and to match vpic for now
+typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
+
 // FIXME, get rid of this BOUNDARY macro
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 

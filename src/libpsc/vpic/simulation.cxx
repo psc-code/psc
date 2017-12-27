@@ -57,8 +57,8 @@ struct species * Simulation_define_species(Simulation* sim, const char *name, do
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place)
 {
-  return sim->define_species(name, q, m, max_local_np, max_local_nm,
-			     sort_interval, sort_out_of_place);
+  return reinterpret_cast<struct species*>(sim->define_species(name, q, m, max_local_np, max_local_nm,
+							       sort_interval, sort_out_of_place));
 }
 
 // ----------------------------------------------------------------------

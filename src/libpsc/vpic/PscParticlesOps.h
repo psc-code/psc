@@ -2,6 +2,8 @@
 #ifndef PSC_PARTICLES_OPS
 #define PSC_PARTICLES_OPS
 
+#include "vpic.h"
+
 #define HAS_V4_PIPELINE
 
 template<class P>
@@ -9,6 +11,8 @@ struct PscParticlesOps {
   typedef P Particles;
   typedef typename Particles::Grid Grid;
   typedef typename Particles::Species Species;
+  typedef typename Particles::Particle Particle;
+  typedef typename Particles::ParticleMover ParticleMover;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
@@ -61,8 +65,8 @@ struct PscParticlesOps {
 
   // High performance variant based on SPE accelerated version
 
-  int move_p(particle_t       * RESTRICT ALIGNED(128) p,
-	     particle_mover_t * RESTRICT ALIGNED(16)  pm,
+  int move_p(Particle      * RESTRICT ALIGNED(128) p,
+	     ParticleMover * RESTRICT ALIGNED(16)  pm,
 	     AccumulatorBlock acc_block,
 	     const Grid* g, const float qsp)
   {
@@ -247,8 +251,8 @@ struct PscParticlesOps {
 
 #else
 
-  int move_p(particle_t       * ALIGNED(128) p0,
-	     particle_mover_t * ALIGNED(16)  pm,
+  int move_p(Particle      * ALIGNED(128) p0,
+	     ParticleMover * ALIGNED(16)  pm,
 	     AccumulatorBlock acc_block,
 	     const Grid* g, float qsp)
   {
@@ -342,7 +346,7 @@ struct PscParticlesOps {
       face = axis; if( v0>0 ) face += 3;
       neighbor = g->neighbor[ 6*p->i + face ];
     
-      if( UNLIKELY( neighbor==reflect_particles ) ) {
+      if( UNLIKELY( neighbor==Grid::reflect_particles ) ) {
 	// Hit a reflecting boundary condition.  Reflect the particle
 	// momentum and remaining displacement and keep moving the
 	// particle.
@@ -434,7 +438,7 @@ struct PscParticlesOps {
     if( iz==nz ) iz = nz-1;             // On far wall ... conditional move
     iz++;                               // Adjust for mesh indexing
 
-    particle_t * p = sp->p + (sp->np++);
+    Particle* p = sp->p + (sp->np++);
     p->dx = (float)x; // Note: Might be rounded to be on [-1,1]
     p->dy = (float)y; // Note: Might be rounded to be on [-1,1]
     p->dz = (float)z; // Note: Might be rounded to be on [-1,1]
@@ -449,7 +453,7 @@ struct PscParticlesOps {
     if (age!=0) {
       if( sp->nm >= sp->max_nm )
 	LOG_WARN("No movers available to age injected  particle");
-      particle_mover_t * pm = sp->pm + sp->nm;
+      ParticleMover * pm = sp->pm + sp->nm;
       age *= grid->cvac*grid->dt/sqrt( ux*ux + uy*uy + uz*uz + 1 );
       pm->dispx = ux*age*grid->rdx;
       pm->dispy = uy*age*grid->rdy;
@@ -472,19 +476,19 @@ struct PscParticlesOps {
 			  AccumulatorBlock acc_block,
 			  Interpolator& interpolator,
 			  particle_mover_seg_t *seg,
-			  particle_t * ALIGNED(128) p, int n,
-			  particle_mover_t * ALIGNED(16) pm, int max_nm)
+			  Particle * ALIGNED(128) p, int n,
+			  ParticleMover * ALIGNED(16) pm, int max_nm)
   {
-    particle_t           * ALIGNED(128) p0 = sp->p;
+    Particle* ALIGNED(128) p0 = sp->p;
     const Grid* g = sp->getGrid();
 
     const interpolator_t * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
 
-    const float qdt_2mc  = (sp->q*sp->g->dt)/(2*sp->m*sp->g->cvac);
-    const float cdt_dx   = sp->g->cvac*sp->g->dt*sp->g->rdx;
-    const float cdt_dy   = sp->g->cvac*sp->g->dt*sp->g->rdy;
-    const float cdt_dz   = sp->g->cvac*sp->g->dt*sp->g->rdz;
+    const float qdt_2mc  = (sp->q*g->dt)/(2*sp->m*g->cvac);
+    const float cdt_dx   = g->cvac*g->dt*g->rdx;
+    const float cdt_dy   = g->cvac*g->dt*g->rdy;
+    const float cdt_dz   = g->cvac*g->dt*g->rdz;
     const float qsp      = sp->q;
 
     const float one            = 1.;
@@ -497,7 +501,7 @@ struct PscParticlesOps {
 
     int ii;
   
-    DECLARE_ALIGNED_ARRAY( particle_mover_t, 16, local_pm, 1 );
+    DECLARE_ALIGNED_ARRAY(ParticleMover, 16, local_pm, 1 );
 
     int nm = 0;
     int n_ignored = 0;
@@ -612,12 +616,12 @@ struct PscParticlesOps {
 			     AccumulatorBlock acc_block,
 			     Interpolator& interpolator,
 			     particle_mover_seg_t *seg,
-			     particle_t * ALIGNED(128) p, int n,
-			     particle_mover_t * ALIGNED(16) pm, int max_nm)
+			     Particle * ALIGNED(128) p, int n,
+			     ParticleMover * ALIGNED(16) pm, int max_nm)
   {
     using namespace v4;
 
-    particle_t           * ALIGNED(128) p0 = sp->p;
+    Particle             * ALIGNED(128) p0 = sp->p;
     const Grid* g = sp->getGrid();
 
     float                * ALIGNED(16)  vp0;
@@ -625,10 +629,10 @@ struct PscParticlesOps {
     float                * ALIGNED(16)  vp2;
     float                * ALIGNED(16)  vp3;
 
-    const v4float qdt_2mc  = (sp->q*sp->g->dt)/(2*sp->m*sp->g->cvac);
-    const v4float cdt_dx   = sp->g->cvac*sp->g->dt*sp->g->rdx;
-    const v4float cdt_dy   = sp->g->cvac*sp->g->dt*sp->g->rdy;
-    const v4float cdt_dz   = sp->g->cvac*sp->g->dt*sp->g->rdz;
+    const v4float qdt_2mc  = (sp->q*g->dt)/(2*sp->m*g->cvac);
+    const v4float cdt_dx   = g->cvac*g->dt*g->rdx;
+    const v4float cdt_dy   = g->cvac*g->dt*g->rdy;
+    const v4float cdt_dz   = g->cvac*g->dt*g->rdz;
     const v4float qsp      = sp->q;
 
     const v4float one = 1.;
@@ -643,7 +647,7 @@ struct PscParticlesOps {
     v4float v0, v1, v2, v3, v4, v5;
     v4int   ii, outbnd;
 
-    DECLARE_ALIGNED_ARRAY( particle_mover_t, 16, local_pm, 1 );
+    DECLARE_ALIGNED_ARRAY(ParticleMover, 16, local_pm, 1);
 
     int nq = n >> 2;
   
@@ -795,7 +799,7 @@ struct PscParticlesOps {
 
     sp->nm = 0;
 
-    particle_t *p = sp->p;
+    Particle* p = sp->p;
     int n = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
     advance_p_pipeline_v4(sp, accumulator[1], interpolator, seg, p, n,
@@ -943,10 +947,10 @@ struct PscParticlesOps {
 	const float   sp_q  = sp->q;
 	const int32_t sp_id = sp->id;
 
-	particle_t * RESTRICT ALIGNED(128) p0 = sp->p;
+	Particle* RESTRICT ALIGNED(128) p0 = sp->p;
 	int np = sp->np;
 
-	particle_mover_t * RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
+	ParticleMover* RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
 	nm = sp->nm;
 
 	particle_injector_t * RESTRICT ALIGNED(16) pi;
@@ -1056,8 +1060,8 @@ struct PscParticlesOps {
     do {
       // Unpack the species list for random acesss
 
-      particle_t       * RESTRICT ALIGNED(32) sp_p[ MAX_SP];
-      particle_mover_t * RESTRICT ALIGNED(32) sp_pm[MAX_SP];
+      Particle     * RESTRICT ALIGNED(32) sp_p[ MAX_SP];
+      ParticleMover* RESTRICT ALIGNED(32) sp_pm[MAX_SP];
       float sp_q[MAX_SP];
       int sp_np[MAX_SP];
       int sp_nm[MAX_SP];
@@ -1082,8 +1086,8 @@ struct PscParticlesOps {
 
       face = 5;
       do {
-	/**/  particle_t          * RESTRICT ALIGNED(32) p;
-	/**/  particle_mover_t    * RESTRICT ALIGNED(16) pm;
+	Particle     * RESTRICT ALIGNED(32) p;
+	ParticleMover* RESTRICT ALIGNED(16) pm;
 	const particle_injector_t * RESTRICT ALIGNED(16) pi;
 	int np, nm, n, id;
   
@@ -1177,12 +1181,13 @@ struct PscParticlesOps {
 
   void accumulate_rho_p(FieldArray& fa, typename Particles::const_iterator sp)
   {
-    const particle_t * RESTRICT ALIGNED(128) p = sp->p;
+    const Particle * RESTRICT ALIGNED(128) p = sp->p;
 
-    const float q_8V = sp->q*sp->g->r8V;
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const float q_8V = sp->q*g->r8V;
     const int np = sp->np;
-    const int sy = sp->g->sy;
-    const int sz = sp->g->sz;
+    const int sy = g->sy;
+    const int sz = g->sz;
 
     float w0, w1, w2, w3, w4, w5, w6, w7, dz;
 
@@ -1235,7 +1240,7 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // accumulate_rhob
 
-  void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
+  void accumulate_rhob(FieldArray& fa, const Particle* p, float qsp)
   {
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
     const Grid* g = fa.grid();
@@ -1297,8 +1302,8 @@ struct PscParticlesOps {
       // reverse order for back filling. Particle charge is accumulated to the
       // mesh before removing the particle.
       int nm = sp->nm;
-      particle_mover_t * RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
-      particle_t * RESTRICT ALIGNED(128) p0 = sp->p;
+      ParticleMover * RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
+      Particle * RESTRICT ALIGNED(128) p0 = sp->p;
       for (; nm; nm--, pm--) {
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
@@ -1328,6 +1333,9 @@ struct PscParticles : ParticlesBase
   using Base::Base;
   using typename Base::iterator;
   using typename Base::const_iterator;
+  using typename Base::Species;
+  using typename Base::Particle;
+  using typename Base::Grid;
 
   // ----------------------------------------------------------------------
   // accumulate_hydro_p
@@ -1350,22 +1358,23 @@ struct PscParticles : ParticlesBase
     float w0, w1, w2, w3, w4, w5, w6, w7, t;
     int i, n;
 
-    const particle_t *p = sp->p;
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Particle *p = sp->p;
 
-    c        = sp->g->cvac;
+    c        = g->cvac;
     qsp      = sp->q;
     mspc     = sp->m*c;
-    qdt_2mc  = (qsp*sp->g->dt)/(2*mspc);
+    qdt_2mc  = (qsp*g->dt)/(2*mspc);
     qdt_4mc2 = qdt_2mc / (2*c);
-    r8V      = sp->g->r8V;
+    r8V      = g->r8V;
 
     np        = sp->np;
-    stride_10 = (VOXEL(1,0,0, sp->g->nx,sp->g->ny,sp->g->nz) -
-		 VOXEL(0,0,0, sp->g->nx,sp->g->ny,sp->g->nz));
-    stride_21 = (VOXEL(0,1,0, sp->g->nx,sp->g->ny,sp->g->nz) -
-		 VOXEL(1,0,0, sp->g->nx,sp->g->ny,sp->g->nz));
-    stride_43 = (VOXEL(0,0,1, sp->g->nx,sp->g->ny,sp->g->nz) -
-		 VOXEL(1,1,0, sp->g->nx,sp->g->ny,sp->g->nz));
+    stride_10 = (VOXEL(1,0,0, g->nx,g->ny,g->nz) -
+		 VOXEL(0,0,0, g->nx,g->ny,g->nz));
+    stride_21 = (VOXEL(0,1,0, g->nx,g->ny,g->nz) -
+		 VOXEL(1,0,0, g->nx,g->ny,g->nz));
+    stride_43 = (VOXEL(0,0,1, g->nx,g->ny,g->nz) -
+		 VOXEL(1,1,0, g->nx,g->ny,g->nz));
 
     for( n=0; n<np; n++ ) {
 
@@ -1477,12 +1486,13 @@ struct PscParticles : ParticlesBase
   // ----------------------------------------------------------------------
   // uncenter_p
   
-  static void uncenter_p_pipeline(species_t *sp, /*const*/ Interpolator& interpolator,
+  static void uncenter_p_pipeline(Species* sp, /*const*/ Interpolator& interpolator,
 				  int off, int cnt)
   {
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
     const interpolator_t*  f;
     // For backward half advance
-    const float qdt_2mc = -(sp->q * sp->g->dt) / (2*sp->m * sp->g->cvac);
+    const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);
     const float qdt_4mc = 0.5 * qdt_2mc; // For backward half rotate
     const float one = 1.;
     const float one_third = 1./3.;
@@ -1495,7 +1505,7 @@ struct PscParticles : ParticlesBase
     int ii;
 
     int n = cnt;
-    particle_t *p = sp->p + off;
+    Particle* p = sp->p + off;
 
     // Process particles for this pipeline
 
@@ -1541,19 +1551,20 @@ struct PscParticles : ParticlesBase
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  static void uncenter_p_pipeline_v4(species_t *sp, /*const*/ Interpolator& interpolator,
+  static void uncenter_p_pipeline_v4(Species* sp, /*const*/ Interpolator& interpolator,
 				     int off, int cnt)
   {
     using namespace v4;
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
     const interpolator_t * ALIGNED(128) f0 = interpolator.data();
 
-    particle_t           * ALIGNED(128) p;
+    Particle             * ALIGNED(128) p;
     const float          * ALIGNED(16)  vp0;
     const float          * ALIGNED(16)  vp1;
     const float          * ALIGNED(16)  vp2;
     const float          * ALIGNED(16)  vp3;
 
-    const float _qdt_2mc = (sp->q * sp->g->dt) / (2*sp->m * sp->g->cvac);
+    const float _qdt_2mc = (sp->q * g->dt) / (2*sp->m * g->cvac);
     
     const v4float qdt_2mc(    -_qdt_2mc); // For backward half advance
     const v4float qdt_4mc(-0.5*_qdt_2mc); // For backward half Boris rotate
@@ -1614,7 +1625,7 @@ struct PscParticles : ParticlesBase
 
 #endif
   
-  static void uncenter_p(species_t *sp, Interpolator& interpolator)
+  static void uncenter_p(Species* sp, Interpolator& interpolator)
   {
     int cnt = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
@@ -1628,28 +1639,29 @@ struct PscParticles : ParticlesBase
   // ----------------------------------------------------------------------
   // sort_p
 
-  static void sort_p(species_t * sp)
+  static void sort_p(Species* sp)
   {
-    sp->last_sorted = sp->g->step;
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    sp->last_sorted = g->step;
 
     int n_prts = sp->np;
-    int vl = VOXEL(1,1,1,                         sp->g->nx,sp->g->ny,sp->g->nz);
-    int vh = VOXEL(sp->g->nx,sp->g->ny,sp->g->nz, sp->g->nx,sp->g->ny,sp->g->nz) + 1;
+    int vl = VOXEL(1,1,1,             g->nx,g->ny,g->nz);
+    int vh = VOXEL(g->nx,g->ny,g->nz, g->nx,g->ny,g->nz) + 1;
 
     static int * RESTRICT ALIGNED(128) next;
     if (!next) {
-      next = new int[sp->g->nv];
+      next = new int[g->nv];
     }
     int * RESTRICT ALIGNED(128) partition = sp->partition;
 
-    static particle_t * RESTRICT ALIGNED(128) p_aux;
+    static Particle * RESTRICT ALIGNED(128) p_aux;
     static size_t n_alloced;
     if (n_prts > n_alloced) {
       delete[] p_aux;
-      p_aux = new particle_t[n_prts];
+      p_aux = new Particle[n_prts];
       n_alloced = n_prts;
     }
-    particle_t * RESTRICT ALIGNED(128) p = sp->p;
+    Particle* RESTRICT ALIGNED(128) p = sp->p;
 
     // zero counts
     CLEAR(&next[vl], vh - vl);
@@ -1678,7 +1690,7 @@ struct PscParticles : ParticlesBase
 
     // fix up unused part of partition
     CLEAR(partition, vl);
-    for (int i = vh; i < sp->g->nv; i++) {
+    for (int i = vh; i < g->nv; i++) {
       partition[i] = n_prts;
     }
 
@@ -1693,9 +1705,10 @@ struct PscParticles : ParticlesBase
 				  Interpolator &interpolator,
 				  int n0, int n1)
   {
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
     const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
-    const particle_t     * RESTRICT ALIGNED(32)  p = sp->p;
-    const float qdt_2mc = (sp->q*sp->g->dt)/(2*sp->m*sp->g->cvac);
+    const Particle       * RESTRICT ALIGNED(32)  p = sp->p;
+    const float qdt_2mc = (sp->q*g->dt)/(2*sp->m*g->cvac);
     const float msp     = sp->m;
     const float one     = 1;
 
@@ -1737,6 +1750,8 @@ struct PscParticles : ParticlesBase
   {
     using namespace v4;
 
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+
     const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
 
     const float          * RESTRICT ALIGNED(16)  vp0;
@@ -1744,7 +1759,7 @@ struct PscParticles : ParticlesBase
     const float          * RESTRICT ALIGNED(16)  vp2;
     const float          * RESTRICT ALIGNED(16)  vp3;
 
-    const v4float qdt_2mc((sp->q*sp->g->dt)/(2*sp->m*sp->g->cvac));
+    const v4float qdt_2mc((sp->q*g->dt)/(2*sp->m*g->cvac));
     const v4float msp(sp->m);
     const v4float one(1.);
 
@@ -1757,7 +1772,7 @@ struct PscParticles : ParticlesBase
 
     // Determine which particle quads this pipeline processes
 
-    const particle_t     * RESTRICT ALIGNED(32)  p = sp->p + n0;
+    const Particle * RESTRICT ALIGNED(32)  p = sp->p + n0;
     int nq = n1 >> 2;
 
     // Process the particle quads for this pipeline
@@ -1800,6 +1815,7 @@ struct PscParticles : ParticlesBase
 
   static double energy_p(const_iterator sp, Interpolator& interpolator)
   {
+    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
     int cnt = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
     double local = energy_p_pipeline_v4(sp, interpolator, 0, cnt);
@@ -1810,7 +1826,7 @@ struct PscParticles : ParticlesBase
 
     double global;
     MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);
-    return global * sqr(sp->g->cvac);
+    return global * sqr(g->cvac);
   }
 
 };

@@ -130,7 +130,7 @@ void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsig
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
     for (unsigned int n = nb; n < ne; n++) {
-      particle *p = &sp->p[n - v_off];
+      Particles::Particle* p = &sp->p[n - v_off];
 #if 0
       int i = p->i;
       int im[3] = { sp->g->nx + 2, sp->g->ny + 2, sp->g->nz + 2 };
@@ -172,7 +172,7 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
     for (unsigned int n = nb; n < ne; n++) {
       struct vpic_mparticles_prt prt;
       get_particle(&prt, n - off, ctx);
-      particle *p = &sp->p[n - v_off];
+      Particles::Particle *p = &sp->p[n - v_off];
       p->dx = prt.dx[0];
       p->dy = prt.dx[1];
       p->dz = prt.dx[2];
@@ -194,7 +194,7 @@ void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_p
     if (sp->id == prt->kind) {
       assert(sp->np < sp->max_np);
       // the below is inject_particle_raw()
-      particle_t * RESTRICT p = sp->p + (sp->np++);
+      Particles::Particle * RESTRICT p = sp->p + (sp->np++);
       p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
       p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
       return;
