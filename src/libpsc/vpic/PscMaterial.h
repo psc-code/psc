@@ -1,6 +1,6 @@
 
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#ifndef PSC_MATERIAL_H
+#define PSC_MATERIAL_H
 
 #include "psc_vpic_bits.h"
 #include "VpicListBase.h"

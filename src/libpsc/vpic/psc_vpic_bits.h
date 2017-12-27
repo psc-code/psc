@@ -18,9 +18,16 @@ extern int psc_world_size;
 #define BEGIN_PRIMITIVE do
 #define END_PRIMITIVE   while(0)
 
+// FIXME
 #ifndef ALIGNED
 #define ALIGNED(a)
 #endif
+
+// FIXME
+#ifndef RESTRICT
+#define RESTRICT __restrict
+#endif 
+
 
 #define mprintf(fmt...) do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); { printf("[%d] ", __rank); printf(fmt); } } while(0)
 #define MHERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)

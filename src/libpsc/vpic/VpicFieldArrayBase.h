@@ -2,7 +2,6 @@
 #ifndef VPIC_FIELD_ARRAY_BASE_H
 #define VPIC_FIELD_ARRAY_BASE_H
 
-#include "material.h"
 #include "Field3D.h"
 
 #include "field_advance/field_advance.h"

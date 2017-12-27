@@ -3,7 +3,6 @@
 #define PSC_FIELD_ARRAY_BASE_H
 
 #include "psc_vpic_bits.h"
-#include "material.h"
 #include "PscFieldBase.h"
 #include "Field3D.h"
 

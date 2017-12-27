@@ -17,6 +17,7 @@
 #include "PscRng.h"
 
 #include "PscGridBase.h"
+#include "PscMaterial.h"
 
 #include "PscFieldArrayBase.h"
 #include "PscFieldArrayLocalOps.h"
