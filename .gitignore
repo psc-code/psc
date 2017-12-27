@@ -12,6 +12,7 @@ okfile
 *.pyc
 *.orig
 *.dSYM
+*.trs
 .ipynb_checkpoints
 .libs
 BACKUP

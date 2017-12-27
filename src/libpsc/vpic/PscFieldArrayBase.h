@@ -61,16 +61,17 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
 
   typedef typename SfaParams::MaterialCoefficient MaterialCoefficient;
 
-  static PscFieldArrayBase* create(Grid *grid, MaterialList material_list, float damp)
+  static PscFieldArrayBase* create(Grid *grid, const MaterialList& material_list, float damp)
   {
     return new PscFieldArrayBase(grid, material_list, damp);
   }
 
  private:
-  PscFieldArrayBase(Grid* grid, MaterialList material_list, float damp)
+  PscFieldArrayBase(Grid* grid, const MaterialList& material_list, float damp)
     : Base(grid)
   {
-    assert(!material_list.empty() && damp >= 0.);
+    assert(!material_list.empty());
+    assert(damp >= 0.);
     params = create_sfa_params(grid, material_list, damp);
   }
   
@@ -86,7 +87,7 @@ public:
   }
 
   static SfaParams *create_sfa_params(const Grid* g,
-				      MaterialList& m_list,
+				      const MaterialList& m_list,
 				      float damp)
   {
     SfaParams* p;

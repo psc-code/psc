@@ -10,8 +10,11 @@
 struct VpicGridBase : grid_t
 {
   enum {
-    pec_fields    = ::pec_fields,
-    absorb_fields = ::absorb_fields,
+    anti_symmetric_fields = ::anti_symmetric_fields,
+    pec_fields            = ::pec_fields,
+    symmetric_fields      = ::symmetric_fields,
+    pmc_fields            = ::pmc_fields,
+    absorb_fields         = ::absorb_fields,
   } Fbc;
 
   enum {

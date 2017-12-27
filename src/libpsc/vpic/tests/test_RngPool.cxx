@@ -1,6 +1,5 @@
 
-int psc_world_rank;
-int psc_world_size;
+#include "testing.h"
 
 #include "VpicRng.h"
 #include "PscRng.h"
@@ -90,11 +89,8 @@ void test_RngPool()
 
 int main(int argc, char **argv)
 {
-  boot_checkpt(&argc, &argv);
-  boot_mp(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &psc_world_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &psc_world_size);
-  
+  testing_init(&argc, &argv);
+
   test_Urng<VpicRng>();
   test_Urng<PscRng>();
 

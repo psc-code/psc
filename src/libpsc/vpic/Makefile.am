@@ -4,6 +4,8 @@ AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include -DU
 
 if USE_VPIC
 
+SUBDIRS = tests
+
 AM_CXXFLAGS += \
 	-I$(VPICDIR)/src \
 	-I$(VPICDIR)
@@ -31,19 +33,8 @@ libsubdir_la_SOURCES = \
 	simulation.cxx \
 	main.cxx \
 	wrapper_empty.cxx
-#	wrapper_empty.cxx
-
-noinst_PROGRAMS = \
-	test_RngPool \
-	test_VpicFieldArray \
-	test_PscFieldArray
-
-test_RngPool_SOURCES = test_RngPool.cxx
-test_VpicFieldArray_SOURCES = test_VpicFieldArray.cxx
-test_PscFieldArray_SOURCES = test_PscFieldArray.cxx
 
 LDADD = libsubdir.la
-
 
 
 endif USE_VPIC

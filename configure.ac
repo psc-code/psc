@@ -279,6 +279,7 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/fortran/Makefile
                  src/libpsc/sse2/Makefile
                  src/libpsc/vpic/Makefile
+                 src/libpsc/vpic/tests/Makefile
                  src/libpsc/cuda/Makefile
                  src/libpsc/cuda2/Makefile
                  src/libpsc/acc/Makefile
