@@ -11,18 +11,7 @@
 // ======================================================================
 // PscMaterial
 
-struct PscMaterialT
-{
-  char* name;                   // Name of the material
-  float epsx, epsy, epsz;       // Relative permittivity along x,y,z axes
-  float mux, muy, muz;          // Relative permeability along x,y,z axes
-  float sigmax, sigmay, sigmaz; // Electrical conductivity along x,y,z axes
-  float zetax,  zetay,  zetaz;  // Magnetic conductivity along x,y,z axes
-  MaterialId id;                // Unique identifier for material
-  struct PscMaterialT *next;    // Next material in list
-};
-  
-struct PscMaterial : PscMaterialT
+struct PscMaterial
 {
   PscMaterial(const char *name,
 	      float epsx, float epsy, float epsz,
@@ -44,6 +33,14 @@ struct PscMaterial : PscMaterialT
   {
     free(name);
   }
+
+  char* name;                   // Name of the material
+  float epsx, epsy, epsz;       // Relative permittivity along x,y,z axes
+  float mux, muy, muz;          // Relative permeability along x,y,z axes
+  float sigmax, sigmay, sigmaz; // Electrical conductivity along x,y,z axes
+  float zetax,  zetay,  zetaz;  // Magnetic conductivity along x,y,z axes
+  MaterialId id;                // Unique identifier for material
+  PscMaterial *next;            // Next material in list
 };
 
 // ======================================================================
