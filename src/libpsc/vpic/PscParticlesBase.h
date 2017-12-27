@@ -44,7 +44,7 @@ struct PscSpecies : species_t
     this->sort_out_of_place = sort_out_of_place;
     this->partition = new int[grid->nv + 1];
     
-    this->g = grid;
+    this->g = reinterpret_cast<grid_t*>(grid); // FIXME
   }
 
   // ----------------------------------------------------------------------
@@ -60,7 +60,7 @@ struct PscSpecies : species_t
 
   Grid* getGrid()
   {
-    return static_cast<Grid*>(g);
+    return reinterpret_cast<Grid*>(g);
   }
 };
 

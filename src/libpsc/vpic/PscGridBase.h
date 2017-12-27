@@ -4,8 +4,6 @@
 
 #include "psc_vpic_bits.h"
 
-#include "grid/grid.h"
-
 #include <array>
 #include <vector>
 #include <cassert>
@@ -73,11 +71,73 @@ struct PscMp
 // ======================================================================
 // PscGridBase
 
-struct PscGridBase : grid_t
+struct PscGridT
+{
+  // System of units
+  float dt, cvac, eps0;
+
+  // Time stepper.  The simulation time is given by
+  // t = g->t0 + (double)g->dt*(double)g->step
+  int64_t step;             // Current timestep
+  double t0;                // Simulation time corresponding to step 0
+
+  // Phase 2 grid data structures 
+  float x0, y0, z0;         // Min corner local domain (must be coherent)
+  float x1, y1, z1;         // Max corner local domain (must be coherent)
+  int   nx, ny, nz;         // Local voxel mesh resolution.  Voxels are
+                            // indexed FORTRAN style 0:nx+1,0:ny+1,0:nz+1
+                            // with voxels 1:nx,1:ny,1:nz being non-ghost
+                            // voxels.
+  float dx, dy, dz, dV;     // Cell dimensions and volume (CONVENIENCE ...
+                            // USE x0,x1 WHEN DECIDING WHICH NODE TO USE!)
+  float rdx, rdy, rdz, r8V; // Inverse voxel dimensions and one over
+                            // eight times the voxel volume (CONVENIENCE)
+  int   sx, sy, sz, nv;     // Voxel indexing x-, y-,z- strides and the
+                            // number of local voxels (including ghosts,
+                            // (nx+2)(ny+2)(nz+2)), (CONVENIENCE)
+  int   bc[27];             // (-1:1,-1:1,-1:1) FORTRAN indexed array of
+                            // boundary conditions to apply at domain edge
+                            // 0 ... nproc-1 ... comm boundary condition
+                            // <0 ... locally applied boundary condition
+
+  // Phase 3 grid data structures
+  // NOTE: VOXEL INDEXING LIMITS NUMBER OF VOXELS TO 2^31 (INCLUDING
+  // GHOSTS) PER NODE.  NEIGHBOR INDEXING FURTHER LIMITS TO
+  // (2^31)/6.  BOUNDARY CONDITION HANDLING LIMITS TO 2^28 PER NODE
+  // EMITTER COMPONENT ID INDEXING FURTHER LIMITS TO 2^26 PER NODE.
+  // THE LIMIT IS 2^63 OVER ALL NODES THOUGH.
+  int64_t * ALIGNED(16) range;
+                          // (0:nproc) indexed array giving range of
+                          // global indexes of voxel owned by each
+                          // processor.  Replicated on each processor.
+                          // (range[rank]:range[rank+1]-1) are global
+                          // voxels owned by processor "rank".  Note:
+                          // range[rank+1]-range[rank] <~ 2^31 / 6
+
+  int64_t * ALIGNED(128) neighbor;
+                          // (0:5,0:local_num_voxel-1) FORTRAN indexed
+                          // array neighbor(0:5,lidx) are the global
+                          // indexes of neighboring voxels of the
+                          // voxel with local index "lidx".  Negative
+                          // if neighbor is a boundary condition.
+
+  int64_t rangel, rangeh; // Redundant for move_p performance reasons:
+                          //   rangel = range[rank]
+                          //   rangeh = range[rank+1]-1.
+                          // Note: rangeh-rangel <~ 2^26
+
+  // Nearest neighbor communications ports
+  PscMp* mp;
+};
+
+struct PscGridBase : PscGridT
 {
   enum {
-    pec_fields    = -1, // FIXME, matching vpic for now
-    absorb_fields = -4, 
+    anti_symmetric_fields = -1, // E_tang = 0
+    pec_fields            = -1, // FIXME, matching vpic for now
+    symmetric_fields      = -2, // B_tang = 0, B_norm = 0
+    pmc_fields            = -3, // B_tang = 0, B_norm floats
+    absorb_fields         = -4, 
   } Fbc;
 
   enum {
@@ -87,19 +147,18 @@ struct PscGridBase : grid_t
 
   PscGridBase()
   {
-    CLEAR(this, 1);
     for(int i = 0; i < 27; i++) {
       bc[i] = anti_symmetric_fields;
     }
     bc[BOUNDARY(0,0,0)] = psc_world_rank;
-    mp = reinterpret_cast<mp_t*>(new PscMp(27));
+    mp = new PscMp(27);
   }
   
   ~PscGridBase()
   {
     delete[] neighbor;
     delete[] range;
-    delete reinterpret_cast<PscMp*>(mp);
+    delete mp;
   }
   
   static PscGridBase* create()
@@ -364,49 +423,41 @@ struct PscGridBase : grid_t
 
   void mp_size_recv_buffer(int port, int size)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->size_recv_buffer(port, size);
   }
 
   void mp_size_send_buffer(int port, int size)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->size_send_buffer(port, size);
   }
 
   void* mp_recv_buffer(int port)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     return mp->recv_buffer(port);
   }
 
   void* mp_send_buffer(int port)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     return mp->send_buffer(port);
   }
 
   void mp_begin_recv(int port, int size, int src, int tag)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->begin_recv(port, size, src, tag);
   }
 
   void mp_begin_send(int port, int size, int dst, int tag)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->begin_send(port, size, dst, tag);
   }
 
   void mp_end_recv(int port)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->end_recv(port);
   }
 
   void mp_end_send(int port)
   {
-    PscMp* mp = reinterpret_cast<PscMp*>(this->mp);
     mp->end_send(port);
   }
 
