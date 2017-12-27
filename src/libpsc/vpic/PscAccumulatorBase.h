@@ -84,13 +84,15 @@ struct PscAccumulatorBase
     return Block(grid(), arr_ + c * stride_);
   }
 
+  int n_pipeline() { return n_pipeline_; }
+  int stride() { return stride_; }
   Grid* grid() { return g_; }
 
 private:
   Element* arr_;
+  int n_pipeline_; // Number of pipelines supported by this accumulator
 
 protected:
-  int n_pipeline_; // Number of pipelines supported by this accumulator
   int stride_;     // Stride be each pipeline's accumulator array
   Grid* g_;
 };

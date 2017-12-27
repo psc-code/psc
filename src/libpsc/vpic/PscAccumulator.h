@@ -23,7 +23,7 @@ struct PscAccumulator : AccumulatorBase
   void clear()
   {
     const Grid* g = grid();
-    int n_array = this->n_pipeline_ + 1;
+    int n_array = this->n_pipeline() + 1;
     for (int arr = 0; arr < n_array; arr++) {
       Element* a_begin = &(*this)(arr, 1,1,1);
       Element* a_end = &(*this)(arr, g->nx, g->ny, g->nz);
@@ -43,8 +43,8 @@ struct PscAccumulator : AccumulatorBase
   {
     const Grid* g = grid();
     int si = sizeof(typename Base::Element) / sizeof(float);
-    int nr = this->n_pipeline_ + 1 - 1;
-    int sr = si * this->stride_;
+    int nr = this->n_pipeline() + 1 - 1;
+    int sr = si * this->stride();
 
     // a is broken into restricted rw and ro parts to allow the compiler
     // to do more aggresive optimizations

@@ -52,24 +52,23 @@ struct VpicAccumulatorBase : accumulator_array_t {
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int idx)
   {
-    return a[stride * arr + idx];
+    return a[stride() * arr + idx];
   }
 
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int i, int j, int k)
   {
-    return a[arr * stride + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
+    return a[arr * stride() + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
   }
 
   Block operator[](int arr)
   {
-    return Block(a + arr * stride, grid());
+    return Block(a + arr * stride(), grid());
   }
 
-  Grid* grid()
-  {
-    return static_cast<Grid*>(g);
-  }
+  int n_pipeline() { return accumulator_array_t::n_pipeline; }
+  int stride() { return accumulator_array_t::stride; }
+  Grid* grid() { return static_cast<Grid*>(g); }  
 };
 
 #endif
