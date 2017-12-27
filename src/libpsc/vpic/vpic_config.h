@@ -49,6 +49,7 @@
 #include "VpicRng.h"
 
 #include "VpicGridBase.h"
+#include "VpicMaterial.h"
 
 #include "VpicFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
