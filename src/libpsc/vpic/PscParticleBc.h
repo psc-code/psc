@@ -7,13 +7,10 @@
 #include <mrc_common.h>
 #include <cassert>
 
-#define IN_boundary
-#include "boundary/boundary_private.h"
-
 // ======================================================================
 // PscParticleBc
 
-struct PscParticleBc : particle_bc_t
+struct PscParticleBc
 {
 };
 
@@ -29,10 +26,10 @@ struct PscParticleBcList : public VpicListBase<PscParticleBc>
     assert(0);
   }
 
-  operator const particle_bc_t* () const
-  {
-    return head_;
-  }
+  /* operator const particle_bc_t* () const */
+  /* { */
+  /*   return head_; */
+  /* } */
 };
 
 

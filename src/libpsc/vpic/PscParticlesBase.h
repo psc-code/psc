@@ -4,6 +4,8 @@
 
 #include "VpicListBase.h"
 
+#include "vpic.h"
+
 // ======================================================================
 // PscSpecies
 
