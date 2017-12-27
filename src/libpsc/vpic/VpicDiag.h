@@ -645,7 +645,7 @@ struct VpicDiagMixin
     if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
 
     hydro_array->clear();
-    Particles::accumulate_hydro_p(*hydro_array, &*sp, *interpolator);
+    Particles::accumulate_hydro_p(*hydro_array, sp, *interpolator);
     hydro_array->synchronize();
   
     // convenience

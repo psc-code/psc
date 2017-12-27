@@ -97,10 +97,10 @@ struct VpicParticles : ParticlesBase
   using typename Base::iterator;
   using typename Base::const_iterator;
 
-  static void accumulate_hydro_p(HydroArray& ha, const species_t* sp,
+  static void accumulate_hydro_p(HydroArray& ha, const_iterator sp,
 				 const Interpolator& interpolator)
   {
-    ::accumulate_hydro_p(&ha, sp, &interpolator);
+    ::accumulate_hydro_p(&ha, &*sp, &interpolator);
   }
 
   static void uncenter_p(species_t *sp, const Interpolator& interpolator)
