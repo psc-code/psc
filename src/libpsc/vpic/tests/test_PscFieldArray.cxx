@@ -19,11 +19,7 @@ void test_PscFieldArray()
   typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
   typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
 
-  FieldArray* fa = test_FieldArray_create<FieldArray>();
-
-  test_FieldArray_methods(*fa);
-
-  //FieldArray::destroy(fa);
+  test_FieldArray<FieldArray>();
 }
 
 int main(int argc, char **argv)

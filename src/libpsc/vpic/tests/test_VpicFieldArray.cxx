@@ -15,11 +15,7 @@ void test_VpicFieldArray()
   typedef VpicFieldArrayBase<Grid, MaterialList> FieldArrayBase;
   typedef VpicFieldArray<FieldArrayBase> FieldArray;
 
-  FieldArray* fa = test_FieldArray_create<FieldArray>();
-
-  test_FieldArray_methods(*fa);
-
-  //FieldArray::destroy(fa);
+  test_FieldArray<FieldArray>();
 }
 
 int main(int argc, char **argv)

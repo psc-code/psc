@@ -1,4 +1,7 @@
 
+#ifndef TEST_FIELD_ARRAY_H
+#define TEST_FIELD_ARRAY_H
+
 template<typename FieldArray>
 FieldArray* test_FieldArray_create()
 {
@@ -57,3 +60,18 @@ void test_FieldArray_methods(FieldArray& fa)
   fa.clean_div_b();
 }
 
+template<typename FieldArray>
+void test_FieldArray_destroy(FieldArray* fa)
+{
+  // FIXME
+}
+
+template<typename FieldArray>
+void test_FieldArray()
+{
+  FieldArray *fa = test_FieldArray_create<FieldArray>();
+  test_FieldArray_methods(*fa);
+  test_FieldArray_destroy(fa);
+}
+
+#endif
