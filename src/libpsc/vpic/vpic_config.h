@@ -2,12 +2,14 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-//#define HAVE_VPIC
+#define HAVE_VPIC
 
-#ifndef HAVE_VPIC
+#ifdef HAVE_VPIC
+#include "util/profile/profile.h"
+#else
 //#include "util/profile/profile.h"
-#undef TIC
-#undef TOC
+//#undef TIC
+//#undef TOC
 #define TIC
 #define TOC(a, b)
 #endif
