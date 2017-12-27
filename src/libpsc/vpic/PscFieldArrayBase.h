@@ -20,17 +20,6 @@ struct PscFieldT
   MaterialId fmatx, fmaty, fmatz, cmat; // Material at face and cell centers
 };
 
-struct PscMaterialCoefficient
-{
-  float decayx, drivex;         // Decay of ex and drive of (curl H)x and Jx
-  float decayy, drivey;         // Decay of ey and drive of (curl H)y and Jy
-  float decayz, drivez;         // Decay of ez and drive of (curl H)z and Jz
-  float rmux, rmuy, rmuz;       // Reciprocle of relative permeability
-  float nonconductive;          // Divergence cleaning related coefficients
-  float epsx, epsy, epsz; 
-  float pad[3];                 // For 64-byte alignment and future expansion
-};
-
 // ======================================================================
 // PscFieldArrayBase
 
@@ -52,11 +41,25 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
     N_COMP = sizeof(typename Base::Element) / sizeof(float),
   };
   
-  struct SfaParams {
-    PscMaterialCoefficient* mc;
+  struct SfaParams
+  {
+    struct MaterialCoefficient
+    {
+      float decayx, drivex;         // Decay of ex and drive of (curl H)x and Jx
+      float decayy, drivey;         // Decay of ey and drive of (curl H)y and Jy
+      float decayz, drivez;         // Decay of ez and drive of (curl H)z and Jz
+      float rmux, rmuy, rmuz;       // Reciprocle of relative permeability
+      float nonconductive;          // Divergence cleaning related coefficients
+      float epsx, epsy, epsz; 
+      float pad[3];                 // For 64-byte alignment and future expansion
+    };
+
+    MaterialCoefficient* mc;
     int n_mc;
     float damp;
   };
+
+  typedef typename SfaParams::MaterialCoefficient MaterialCoefficient;
 
   static PscFieldArrayBase* create(Grid *grid, MaterialList material_list, float damp)
   {
@@ -83,12 +86,12 @@ public:
   }
 
   static SfaParams *create_sfa_params(const Grid* g,
-					 MaterialList& m_list,
-					 float damp)
+				      MaterialList& m_list,
+				      float damp)
   {
     SfaParams* p;
     float ax, ay, az, cg2;
-    PscMaterialCoefficient* mc;
+    MaterialCoefficient* mc;
     int n_mc;
 
     // Run sanity checks on the material list
@@ -129,7 +132,7 @@ public:
     // Allocate the sfa parameters
 
     p = new SfaParams;
-    p->mc = new PscMaterialCoefficient[n_mc+2];
+    p->mc = new MaterialCoefficient[n_mc+2];
     p->n_mc = n_mc;
     p->damp = damp;
 
