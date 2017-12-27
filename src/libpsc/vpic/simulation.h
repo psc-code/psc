@@ -61,8 +61,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   {
     int fbc;
     switch (bc) {
-    case BND_FLD_CONDUCTING_WALL: fbc = pec_fields   ; break;
-    case BND_FLD_ABSORBING:       fbc = absorb_fields; break;
+    case BND_FLD_CONDUCTING_WALL: fbc = Grid::pec_fields   ; break;
+    case BND_FLD_ABSORBING:       fbc = Grid::absorb_fields; break;
     default: assert(0);
     }
     grid_->set_fbc(boundary, fbc);
@@ -72,8 +72,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   {
     int pbc;
     switch (bc) {
-    case BND_PART_REFLECTING: pbc = reflect_particles; break;
-    case BND_PART_ABSORBING:  pbc = absorb_particles ; break;
+    case BND_PART_REFLECTING: pbc = Grid::reflect_particles; break;
+    case BND_PART_ABSORBING:  pbc = Grid::absorb_particles ; break;
     default: assert(0);
     }
     grid_->set_pbc(boundary, pbc);

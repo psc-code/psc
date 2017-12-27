@@ -9,6 +9,16 @@
 
 struct VpicGridBase : grid_t
 {
+  enum {
+    pec_fields    = ::pec_fields,
+    absorb_fields = ::absorb_fields,
+  } Fbc;
+
+  enum {
+    reflect_particles = ::reflect_particles,
+    absorb_particles  = ::absorb_particles,
+  } Pbc;
+
   static VpicGridBase* create()
   {
     return static_cast<VpicGridBase*>(::new_grid());

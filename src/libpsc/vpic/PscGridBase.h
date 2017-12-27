@@ -75,6 +75,16 @@ struct PscMp
 
 struct PscGridBase : grid_t
 {
+  enum {
+    pec_fields    = -1, // FIXME, matching vpic for now
+    absorb_fields = -4, 
+  } Fbc;
+
+  enum {
+    reflect_particles = -1, // FIXME, matching vpic for now
+    absorb_particles  = -2 
+  } Pbc;
+
   PscGridBase()
   {
     CLEAR(this, 1);
