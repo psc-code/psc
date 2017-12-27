@@ -103,16 +103,17 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void vacuum_advance_e(double frac)
   {
-    SfaParams* prm = params();
-    assert(prm->size() == 1);
     assert(frac == 1.);
+
+    SfaParams& prm = params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     // Update interior fields
     // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
     // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
     // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
 
-    const MaterialCoefficient* m = prm->mc;
 
     struct AdvanceE {
       AdvanceE(FieldArray& fa, const Grid *g, const MaterialCoefficient* m,
@@ -165,7 +166,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       const float damp, cj;
     };
 
-    AdvanceE advanceE(*this, grid(), m, prm->damp);
+    AdvanceE advanceE(*this, grid(), m, prm.damp);
 
     this->begin_remote_ghost_tang_b(*this);
 
@@ -188,9 +189,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void vacuum_energy_f(double global[6])
   {
-    SfaParams* prm = params();
-    assert(prm->size() == 1);
-    const MaterialCoefficient* m = prm->mc;
+    SfaParams& prm = params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     Field3D<FieldArray> F(*this);
     const Grid* g = grid();
@@ -411,9 +412,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void compute_rhob()
   {
-    SfaParams* prm = params();
-    assert(prm->size() == 1);
-    const MaterialCoefficient* m = prm->mc;
+    SfaParams& prm = params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     struct CalcRhoB {
       CalcRhoB(FieldArray& fa, const MaterialCoefficient* m)
@@ -460,9 +461,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void vacuum_compute_curl_b()
   {
-    SfaParams* prm = params();
-    assert(prm->size() == 1);
-    const MaterialCoefficient* m = prm->mc;
+    SfaParams& prm = params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     // Update interior fields
     // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
@@ -608,9 +609,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   
   void compute_div_e_err()
   {
-    SfaParams* prm = params();
-    assert(prm->size() == 1);
-    const MaterialCoefficient* m = prm->mc;
+    SfaParams& prm = params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     struct CalcDivE {
       CalcDivE(FieldArray& fa, const MaterialCoefficient* m)
@@ -751,8 +752,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 
   void vacuum_clean_div_e()
   {
-    SfaParams* prm = params();
-    assert(prm->size() == 1);
+    SfaParams& prm = params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     Field3D<FieldArray> F(*this);
     const Grid* g = grid();
@@ -762,9 +764,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     const float _rdy = (ny>1) ? g->rdy : 0;
     const float _rdz = (nz>1) ? g->rdz : 0;
     const float alphadt = 0.3888889/(_rdx*_rdx + _rdy*_rdy + _rdz*_rdz);
-    const float px = (alphadt*_rdx) * prm->mc[0].drivex;
-    const float py = (alphadt*_rdy) * prm->mc[0].drivey;
-    const float pz = (alphadt*_rdz) * prm->mc[0].drivez;
+    const float px = (alphadt*_rdx) * m->drivex;
+    const float py = (alphadt*_rdy) * m->drivey;
+    const float pz = (alphadt*_rdz) * m->drivez;
                      
     for (int k = 1; k <= nz; k++) {
       for (int j = 1; j <= ny; j++) {

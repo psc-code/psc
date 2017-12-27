@@ -36,6 +36,7 @@ struct PscSfaParams
       
     assert(!m_list.empty());
     assert(damp >= 0.);
+    this->damp = damp;
 
     float ax = g->nx > 1 ? g->cvac*g->dt*g->rdx : 0; ax *= ax;
     float ay = g->ny > 1 ? g->cvac*g->dt*g->rdy : 0; ay *= ay;
@@ -72,15 +73,14 @@ struct PscSfaParams
       
     // Allocate the sfa parameters
       
-    this->mc = new MaterialCoefficient[n_mc+2]; // FIXME, why +2 ?
+    mc_ = new MaterialCoefficient[n_mc+2]; // FIXME, why +2 ?
     n_mc_ = n_mc;
-    this->damp = damp;
 
     // Fill up the material coefficient array
 
     for (auto m = m_list.cbegin(); m != m_list.cend(); ++m) {
       assert(m->id < n_mc);
-      MaterialCoefficient* mc = &this->mc[m->id];
+      MaterialCoefficient* mc = &mc_[m->id];
 	
       // Advance E coefficients
       // Note: m ->sigma{x,y,z} = 0 -> Non conductive
@@ -120,15 +120,16 @@ struct PscSfaParams
 
   ~PscSfaParams()
   {
-    delete[] mc;
+    delete[] mc_;
   }
 
+  const MaterialCoefficient* operator[](int i) const { return &mc_[i]; }
   int size() const { return n_mc_; }
     
-  MaterialCoefficient* mc;
   float damp;
 
 private:
+  MaterialCoefficient* mc_;
   int n_mc_;
 };
 
@@ -182,7 +183,6 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
   
   ~PscFieldArrayBase()
   {
-    destroy_sfa_params(params_);
     delete params_;
   }
 
@@ -216,7 +216,7 @@ public:
 
   using Base::grid;
 
-  SfaParams* params() { return params_; }
+  SfaParams& params() { return *params_; }
 
 private:
   using Base::arr_;
