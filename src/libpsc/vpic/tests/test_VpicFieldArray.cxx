@@ -1,4 +1,6 @@
 
+#include "testing.h"
+
 #include "test_FieldArray.h"
 
 #include "VpicGridBase.h"
@@ -13,9 +15,7 @@ void test_VpicFieldArray()
   typedef VpicFieldArrayBase<Grid, MaterialList> FieldArrayBase;
   typedef VpicFieldArray<FieldArrayBase> FieldArray;
 
-  Grid grid;
-  MaterialList material_list;
-  FieldArray* fa = FieldArray::create(&grid, material_list, 0.);
+  FieldArray* fa = test_FieldArray_create<FieldArray>();
 
   test_FieldArray_methods(*fa);
 
@@ -24,5 +24,7 @@ void test_VpicFieldArray()
 
 int main(int argc, char **argv)
 {
+  testing_init(&argc, &argv);
+
   test_VpicFieldArray();
 }

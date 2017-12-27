@@ -12,6 +12,9 @@ int psc_world_size;
 void testing_init(int *argc, char ***argv)
 {
   boot_checkpt(argc, argv);
+  serial.boot(argc, argv);
+  thread.boot(argc, argv);
+    
   boot_mp(argc, argv);
   //MPI_Init(argc, argv);
 
