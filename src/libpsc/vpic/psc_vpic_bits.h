@@ -20,7 +20,7 @@ extern int psc_world_size;
     abort();								\
   } while (0)
     
-#define LOG_WARNING(fmt...) do {						\
+#define LOG_WARN(fmt...) do {						\
     mprintf("WARNING at %s:%d (%s): ", __FILE__, __LINE__, __func__); printf(fmt); \
     abort();								\
   } while (0)
