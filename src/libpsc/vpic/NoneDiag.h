@@ -2,6 +2,8 @@
 #ifndef NONE_DIAG_H
 #define NONE_DIAG_H
 
+#include "vpic.h" // FIXME
+
 // ----------------------------------------------------------------------
 // NoneDiagMixin
 

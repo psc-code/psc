@@ -6,11 +6,6 @@
 
 #include "PscFieldArrayRemoteOps.h" // FIXME, only because of Comm stuff
 
-#include "vpic.h"
-
-#define IN_sfa
-#include "field_advance/standard/sfa_private.h"
-
 // ======================================================================
 // PscFieldArray
 
