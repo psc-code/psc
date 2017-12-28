@@ -129,18 +129,19 @@ struct species * Simulation_define_species(Simulation *sim, const char *name, do
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place);
 Particles * Simulation_get_particles(Simulation *sim);
+int Simulation_mprts_get_nr_particles(Simulation* sim, Particles* vmprts);
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
-void Simulation_field_injection(Simulation *sim);
 void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
-void Simulation_advance_e(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
 
 void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step);
 void Simulation_collision_run(Simulation *sim);
 void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 void Simulation_push_mflds_H(Simulation *sim, FieldArray *vmflds, double frac);
+void Simulation_push_mflds_E(Simulation *sim, FieldArray *vmflds, double frac);
+void Simulation_field_injection(Simulation *sim);
 void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);

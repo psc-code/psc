@@ -196,9 +196,10 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
 static void
 psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
-
-  vpic_mparticles_get_size_all(vmprts, mprts->nr_patches, n_prts_by_patch);
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
+  
+  assert(mprts->nr_patches == 1);
+  n_prts_by_patch[0] = Simulation_mprts_get_nr_particles(sub->sim, sub->vmprts);
 }
 
 // ----------------------------------------------------------------------
@@ -229,9 +230,9 @@ psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 static unsigned int
 psc_mparticles_vpic_get_nr_particles(struct psc_mparticles *mprts)
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
   
-  return vpic_mparticles_get_nr_particles(vmprts);
+  return Simulation_mprts_get_nr_particles(sub->sim, sub->vmprts);
 }
 
 // ----------------------------------------------------------------------

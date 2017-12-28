@@ -59,7 +59,7 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", JXI, VPIC_MFIELDS_N_COMP);
 
   FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  Simulation_advance_e(sub->sim, vmflds, frac);
+  Simulation_push_mflds_E(sub->sim, vmflds, frac);
   Simulation_field_injection(sub->sim); // FIXME, this isn't the place, should have its own psc_field_injection
 
   // updates E, TCA, and B ghost points FIXME 9 == TCAX

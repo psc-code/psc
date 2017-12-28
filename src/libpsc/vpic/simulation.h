@@ -24,8 +24,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename MaterialList::Material Material;
   typedef RP RngPool;
 
-  using SimulationMixin::field_injection;
-
   VpicSimulation()
     : SimulationMixin(),
       ParticlesOps(),
@@ -166,6 +164,20 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   }
 
   // ----------------------------------------------------------------------
+  // mprts_get_nr_particles
+  
+  int mprts_get_nr_particles(Particles& vmprts)
+  {
+    int n_prts = 0;
+    
+    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      n_prts += sp->np;
+    }
+    
+    return n_prts;
+  }
+
+  // ----------------------------------------------------------------------
   // DiagMixin
   
   void newDiag(int interval)
@@ -274,6 +286,19 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     TIC vmflds.advance_b(frac); TOC(advance_b, 1);
   }
   
+  // ----------------------------------------------------------------------
+  // push_mflds_E
+
+  void push_mflds_E(FieldArray& vmflds, double frac)
+  {
+    TIC vmflds.advance_e(frac); TOC(advance_e, 1);
+  }
+
+  // ----------------------------------------------------------------------
+  // field_injection
+  
+  using SimulationMixin::field_injection;
+
   // ----------------------------------------------------------------------
   // push_mprts_prep
   

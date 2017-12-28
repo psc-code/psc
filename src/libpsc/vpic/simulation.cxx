@@ -148,24 +148,11 @@ void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmfld
 }
 
 // ----------------------------------------------------------------------
-// Simulation_field_injection
-
-void Simulation_field_injection(Simulation* sim)
-{
-  sim->field_injection();
-}
-
-// ----------------------------------------------------------------------
 // Simulation_moments_run
 
 void Simulation_moments_run(Simulation* sim, HydroArray *hydro_array, Particles *vmprts, int kind)
 {
   sim->moments_run(hydro_array, vmprts, kind);
-}
-
-void Simulation_advance_e(Simulation* sim, FieldArray *vmflds, double frac)
-{
-  TIC vmflds->advance_e(frac); TOC(advance_e, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -191,9 +178,18 @@ void Simulation_push_mflds_H(Simulation* sim, FieldArray *vmflds, double frac)
   sim->push_mflds_H(*vmflds, frac);
 }
 
+void Simulation_push_mflds_E(Simulation* sim, FieldArray *vmflds, double frac)
+{
+  sim->push_mflds_E(*vmflds, frac);
+}
+
+void Simulation_field_injection(Simulation* sim)
+{
+  sim->field_injection();
+}
+
 void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds)
 {
   sim->push_mprts_prep(*vmflds);
 }
-
 
