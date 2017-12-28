@@ -148,14 +148,6 @@ void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmfld
 }
 
 // ----------------------------------------------------------------------
-// Simulation_collision_run
-
-void Simulation_collision_run(Simulation* sim)
-{
-  sim->collision_run();
-}
-
-// ----------------------------------------------------------------------
 // Simulation_field_injection
 
 void Simulation_field_injection(Simulation* sim)
@@ -171,11 +163,6 @@ void Simulation_moments_run(Simulation* sim, HydroArray *hydro_array, Particles 
   sim->moments_run(hydro_array, vmprts, kind);
 }
 
-void Simulation_advance_b(Simulation* sim, FieldArray *vmflds, double frac)
-{
-  TIC vmflds->advance_b(frac); TOC(advance_b, 1);
-}
-
 void Simulation_advance_e(Simulation* sim, FieldArray *vmflds, double frac)
 {
   TIC vmflds->advance_e(frac); TOC(advance_e, 1);
@@ -189,9 +176,19 @@ void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step)
   sim->sort_mprts(*vmprts, step);
 }
 
+void Simulation_collision_run(Simulation* sim)
+{
+  sim->collision_run();
+}
+
 void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
 {
   sim->push_mprts(*vmprts, *vmflds);
+}
+
+void Simulation_push_mflds_H(Simulation* sim, FieldArray *vmflds, double frac)
+{
+  sim->push_mflds_H(*vmflds, frac);
 }
 
 void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds)

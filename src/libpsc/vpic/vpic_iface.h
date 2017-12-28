@@ -132,15 +132,15 @@ Particles * Simulation_get_particles(Simulation *sim);
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
-void Simulation_collision_run(Simulation *sim);
 void Simulation_field_injection(Simulation *sim);
 void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
-void Simulation_advance_b(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_advance_e(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
 
 void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step);
+void Simulation_collision_run(Simulation *sim);
 void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
+void Simulation_push_mflds_H(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);

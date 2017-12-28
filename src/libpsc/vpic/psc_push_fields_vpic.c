@@ -39,7 +39,7 @@ psc_push_fields_vpic_push_mflds_H(struct psc_push_fields *push,
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, HX + 3);
 
   FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
-  Simulation_advance_b(sub->sim, vmflds, frac);
+  Simulation_push_mflds_H(sub->sim, vmflds, frac);
 
   // updates B
   psc_mfields_put_as(mflds, mflds_base, HX, HX + 3);

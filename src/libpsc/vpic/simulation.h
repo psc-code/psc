@@ -24,7 +24,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   typedef typename MaterialList::Material Material;
   typedef RP RngPool;
 
-  using SimulationMixin::collision_run;
   using SimulationMixin::field_injection;
 
   VpicSimulation()
@@ -203,6 +202,11 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   }
 
   // ----------------------------------------------------------------------
+  // collision_run
+  
+  using SimulationMixin::collision_run;
+
+  // ----------------------------------------------------------------------
   // push_mprts
 
   void push_mprts(Particles& vmprts, FieldArray& vmflds)
@@ -261,6 +265,17 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     // the user wants electric field divergence cleaning to work.
     TIC this->current_injection(); TOC(user_current_injection, 1);
   }
+
+  // ----------------------------------------------------------------------
+  // push_mflds_H
+
+  void push_mflds_H(FieldArray& vmflds, double frac)
+  {
+    TIC vmflds.advance_b(frac); TOC(advance_b, 1);
+  }
+  
+  // ----------------------------------------------------------------------
+  // push_mprts_prep
   
   void push_mprts_prep(FieldArray& vmflds)
   {
