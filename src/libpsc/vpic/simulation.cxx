@@ -182,18 +182,21 @@ void Simulation_advance_e(Simulation* sim, FieldArray *vmflds, double frac)
 }
 
 // ----------------------------------------------------------------------
-// Simulation_push_mprts_prep
+// substeps of a time integration step
+
+void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step)
+{
+  sim->sort_mprts(*vmprts, step);
+}
+
+void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
+{
+  sim->push_mprts(*vmprts, *vmflds);
+}
 
 void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds)
 {
   sim->push_mprts_prep(*vmflds);
 }
 
-// ----------------------------------------------------------------------
-// Simulation_push_mprts
-
-void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
-{
-  sim->push_mprts(*vmprts, *vmflds);
-}
 

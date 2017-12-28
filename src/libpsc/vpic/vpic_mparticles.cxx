@@ -192,21 +192,6 @@ void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_p
 }
 
 // ----------------------------------------------------------------------
-// vpic_mparticles_sort
-
-void vpic_mparticles_sort(Particles *vmprts, int step)
-{
-  // Sort the particles for performance if desired.
-  
-  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    if (sp->sort_interval > 0 && (step % sp->sort_interval) == 0) {
-      mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp->name);
-      TIC vmprts->sort_p(&*sp); TOC(sort_p, 1);
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
 // conversions
 
 struct copy_ctx {

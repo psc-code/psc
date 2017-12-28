@@ -184,6 +184,24 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     DiagMixin::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_, np_);
   }
 
+  // ======================================================================
+  // substeps of a time integration step
+
+  // ----------------------------------------------------------------------
+  // sort_mprts
+  
+  void sort_mprts(Particles& vmprts, int step)
+  {
+    // Sort the particles for performance if desired.
+    
+    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      if (sp->sort_interval > 0 && (step % sp->sort_interval) == 0) {
+	mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp->name);
+	TIC vmprts.sort_p(&*sp); TOC(sort_p, 1);
+      }
+    }
+  }
+
   // ----------------------------------------------------------------------
   // push_mprts
 

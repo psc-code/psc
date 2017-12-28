@@ -81,7 +81,6 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 				   void *ctx);
 void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_prt *prt);
 void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx);
-void vpic_mparticles_sort(Particles *vmprts, int step);
 
 void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts);
 void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts);
@@ -140,9 +139,9 @@ void Simulation_advance_b(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_advance_e(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
 
-void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
+void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step);
 void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
-
+void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
