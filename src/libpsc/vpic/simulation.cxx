@@ -128,6 +128,112 @@ void Simulation_inject_particle(Simulation* sim, Particles *vmprts, int p,
   static_cast<ParticlesOps*>(sim)->inject_particle(*vmprts, *sim->accumulator_, *sim->field_array_, prt);
 }
 
+int Simulation_mprts_get_nr_particles(Simulation*sim, Particles *vmprts)
+{
+  return sim->mprts_get_nr_particles(*vmprts);
+}
+
+// ----------------------------------------------------------------------
+// Simulation_mprts_reserve_all
+//
+// This is a bit iffy, since we don't really want to reallocate stuff here,
+// at least for now, and we wouldn't be able to know how to split this into
+// the different species, anyway.
+
+void Simulation_mprts_reserve_all(Simulation* sim, Particles* vmprts, int n_patches,
+				 int *n_prts_by_patch)
+{
+  assert(n_patches == 1);
+
+  for (int p = 0; p < n_patches; p++) {
+    int n_prts = 0, n_prts_alloced = 0;
+    for (auto sp = vmprts->cbegin(); sp != vmprts->cend(); ++sp) {
+      n_prts += sp->np;
+      n_prts_alloced += sp->max_np;
+    }
+#if 0
+    if (n_prts_by_patch[p] != n_prts) {
+      mprintf("vpic_mparticles_reserve_all: %d (currently %d max %d)\n",
+	      n_prts_by_patch[p], n_prts, n_prts_alloced);
+    }
+#endif
+    assert(n_prts_by_patch[p] <= n_prts_alloced);
+  }
+}
+
+// ----------------------------------------------------------------------
+// Simulation_mprts_resize_all
+//
+// Even more iffy, since can't really resize the per-species arrays, since we don't
+// know how the total # of particles we're given should be divided up
+
+void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patches,
+				int *n_prts_by_patch)
+{
+  assert(n_patches == 1);
+  
+  // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
+  // The mparticles conversion function should call resize_all() itself first, resizing to
+  // 0, and then using push_back, which will increase the count back to the right value
+
+  if (n_prts_by_patch[0] == 0) {
+    for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+      sp->np = 0;
+    }
+  } else {
+#if 0
+    int cur_n_prts_by_patch[n_patches];
+    vpic_mparticles_get_size_all(vmprts, n_patches, cur_n_prts_by_patch);
+
+    mprintf("vpic_mparticles_resize_all: ignoring %d -> %d\n",
+	    cur_n_prts_by_patch[0], n_prts_by_patch[0]);
+#endif
+  }
+}
+
+// ----------------------------------------------------------------------
+// Simulation_mprts_get_size_all
+
+void Simulation_mprts_get_size_all(Simulation* sim, Particles *vmprts, int n_patches,
+				   int *n_prts_by_patch)
+{
+  assert(n_patches == 1);
+  n_prts_by_patch[0] = sim->mprts_get_nr_particles(*vmprts);
+}
+
+// ----------------------------------------------------------------------
+// Simulation_mprts_get_grid_nx_dx
+
+void Simulation_mprts_get_grid_nx_dx(Simulation* sim, Particles* vmprts, int *nx, float *dx)
+{
+  Grid *g = vmprts->grid();
+  nx[0] = g->nx;
+  nx[1] = g->ny;
+  nx[2] = g->nz;
+  dx[0] = g->dx;
+  dx[1] = g->dy;
+  dx[2] = g->dz;
+}
+
+// ----------------------------------------------------------------------
+// Simulation_mprts_push_back
+
+void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct vpic_mparticles_prt *prt)
+{
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    if (sp->id == prt->kind) {
+      assert(sp->np < sp->max_np);
+      // the below is inject_particle_raw()
+      Particles::Particle * RESTRICT p = sp->p + (sp->np++);
+      p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
+      p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
+      return;
+    }
+  }
+  mprintf("prt->kind %d not found in species list!\n", prt->kind);
+  assert(0);
+}
+
 // ----------------------------------------------------------------------
 // Simulation_accumulate_rho_p
 

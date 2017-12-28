@@ -21,16 +21,17 @@ static void
 copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
+  Particles *vmprts = sub->vmprts;
   
   int n_prts_by_patch[mprts->nr_patches];
-  vpic_mparticles_get_size_all(vmprts, mprts->nr_patches, n_prts_by_patch);
+  Simulation_mprts_get_size_all(sub->sim, vmprts, mprts->nr_patches, n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy_ctx ctx = { .mprts = mprts_to, .p = p };
-    vpic_mparticles_get_grid_nx_dx(vmprts, ctx.im, ctx.dx);
+    Simulation_mprts_get_grid_nx_dx(sub->sim, vmprts, ctx.im, ctx.dx);
     for (int d = 0; d < 3; d++) {
       ctx.im[d] += 2; // add ghost points
     }
@@ -45,19 +46,20 @@ static void
 copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
+  Particles *vmprts = sub->vmprts;
 
   int n_prts_by_patch[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
     n_prts_by_patch[p] = 0;
   }
   // reset particle counts to zero, then use push_back to add back new particles
-  vpic_mparticles_resize_all(vmprts, mprts->nr_patches, n_prts_by_patch);
+  Simulation_mprts_resize_all(sub->sim, vmprts, mprts->nr_patches, n_prts_by_patch);
   psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
   
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
-    vpic_mparticles_get_grid_nx_dx(vmprts, ctx.im, ctx.dx);
+    Simulation_mprts_get_grid_nx_dx(sub->sim, vmprts, ctx.im, ctx.dx);
     for (int d = 0; d < 3; d++) {
       ctx.im[d] += 2; // add ghost points
     }
@@ -67,7 +69,7 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
       get_particle(&prt, n, &ctx);
-      vpic_mparticles_push_back(vmprts, &prt);
+      Simulation_mprts_push_back(sub->sim, vmprts, &prt);
     }
   }
 }
@@ -198,8 +200,7 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
   
-  assert(mprts->nr_patches == 1);
-  n_prts_by_patch[0] = Simulation_mprts_get_nr_particles(sub->sim, sub->vmprts);
+  Simulation_mprts_get_size_all(sub->sim, sub->vmprts, mprts->nr_patches, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -208,9 +209,9 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 static void
 psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 
-  vpic_mparticles_reserve_all(vmprts, mprts->nr_patches, n_prts_by_patch);
+  Simulation_mprts_reserve_all(sub->sim, sub->vmprts, mprts->nr_patches, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -219,9 +220,9 @@ psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 static void
 psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 
-  vpic_mparticles_resize_all(vmprts, mprts->nr_patches, n_prts_by_patch);
+  Simulation_mprts_resize_all(sub->sim, sub->vmprts, mprts->nr_patches, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -243,9 +244,8 @@ psc_mparticles_vpic_inject(struct psc_mparticles *mprts, int p,
 			   const struct psc_particle_inject *prt)
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
 
-  Simulation_inject_particle(sub->sim, vmprts, p, prt);
+  Simulation_inject_particle(sub->sim, sub->vmprts, p, prt);
 }
 
 // ----------------------------------------------------------------------

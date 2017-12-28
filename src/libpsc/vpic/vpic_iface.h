@@ -66,21 +66,12 @@ struct vpic_mparticles_prt {
 
 struct psc_particle_inject;
 
-int vpic_mparticles_get_nr_particles(Particles *vmprts);
-void vpic_mparticles_reserve_all(Particles *vmprts, int n_patches,
-				 int *n_prts_by_patch);
-void vpic_mparticles_resize_all(Particles *vmprts, int n_patches,
-				 int *n_prts_by_patch);
-void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
-				  int *n_prts_by_patch);
 void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*put_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
 void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct vpic_mparticles_prt *, int, void *),
 				   void *ctx);
-void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_prt *prt);
-void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx);
 
 void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts);
 void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts);
@@ -128,8 +119,18 @@ void Simulation_define_field_array(Simulation *sim, double damp);
 struct species * Simulation_define_species(Simulation *sim, const char *name, double q, double m,
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place);
-Particles * Simulation_get_particles(Simulation *sim);
+
+Particles* Simulation_get_particles(Simulation *sim);
 int Simulation_mprts_get_nr_particles(Simulation* sim, Particles* vmprts);
+void Simulation_mprts_reserve_all(Simulation* sim, Particles* vmprts, int n_patches,
+				  int* n_prts_by_patch);
+void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patches,
+				 int* n_prts_by_patch);
+void Simulation_mprts_get_size_all(Simulation* sim, Particles* vmprts, int n_patches,
+				  int *n_prts_by_patch);
+void Simulation_mprts_get_grid_nx_dx(Simulation* sim, Particles* vmprts, int *nx, float *dx);
+void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct vpic_mparticles_prt *prt);
+
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);

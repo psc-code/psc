@@ -9,99 +9,19 @@
 // vpic_mparticles
 
 // ----------------------------------------------------------------------
-// vpic_mparticles_get_nr_particles
-
-int vpic_mparticles_get_nr_particles(Particles *vmprts)
-{
-  int n_prts = 0;
-
-  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    n_prts += sp->np;
-  }
-
-  return n_prts;
-}
-
-// ----------------------------------------------------------------------
-// vpic_mparticles_reserve_all
-//
-// This is a bit iffy, since we don't really want to reallocate stuff here,
-// at least for now, and we wouldn't be able to know how to split this into
-// the different species, anyway.
-
-void vpic_mparticles_reserve_all(Particles *vmprts, int n_patches,
-				 int *n_prts_by_patch)
-{
-  assert(n_patches == 1);
-
-  for (int p = 0; p < n_patches; p++) {
-    int n_prts = 0, n_prts_alloced = 0;
-    for (auto sp = vmprts->cbegin(); sp != vmprts->cend(); ++sp) {
-      n_prts += sp->np;
-      n_prts_alloced += sp->max_np;
-    }
-#if 0
-    if (n_prts_by_patch[p] != n_prts) {
-      mprintf("vpic_mparticles_reserve_all: %d (currently %d max %d)\n",
-	      n_prts_by_patch[p], n_prts, n_prts_alloced);
-    }
-#endif
-    assert(n_prts_by_patch[p] <= n_prts_alloced);
-  }
-}
-
-// ----------------------------------------------------------------------
-// vpic_mparticles_resize_all
-//
-// Even more iffy, since can't really resize the per-species arrays, since we don't
-// know how the total # of particles we're given should be divided up
-
-void vpic_mparticles_resize_all(Particles *vmprts, int n_patches,
-				int *n_prts_by_patch)
-{
-  assert(n_patches == 1);
-  
-  // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
-  // The mparticles conversion function should call resize_all() itself first, resizing to
-  // 0, and then using push_back, which will increase the count back to the right value
-
-  if (n_prts_by_patch[0] == 0) {
-    for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-      sp->np = 0;
-    }
-  } else {
-#if 0
-    int cur_n_prts_by_patch[n_patches];
-    vpic_mparticles_get_size_all(vmprts, n_patches, cur_n_prts_by_patch);
-
-    mprintf("vpic_mparticles_resize_all: ignoring %d -> %d\n",
-	    cur_n_prts_by_patch[0], n_prts_by_patch[0]);
-#endif
-  }
-}
-
-// ----------------------------------------------------------------------
 // vpic_mparticles_get_size_all
 
 void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 				  int *n_prts_by_patch)
 {
   assert(n_patches == 1);
-  n_prts_by_patch[0] = vpic_mparticles_get_nr_particles(vmprts);
-}
+  int n_prts = 0;
 
-// ----------------------------------------------------------------------
-// vpic_mparticles_get_grid_nx_dx
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    n_prts += sp->np;
+  }
 
-void vpic_mparticles_get_grid_nx_dx(Particles *vmprts, int *nx, float *dx)
-{
-  Grid *g = vmprts->grid();
-  nx[0] = g->nx;
-  nx[1] = g->ny;
-  nx[2] = g->nz;
-  dx[0] = g->dx;
-  dx[1] = g->dy;
-  dx[2] = g->dz;
+  n_prts_by_patch[0] = n_prts;
 }
 
 // ----------------------------------------------------------------------
@@ -173,22 +93,6 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 
     v_off += v_n_prts;
   }
-}
-
-void vpic_mparticles_push_back(Particles *vmprts, const struct vpic_mparticles_prt *prt)
-{
-  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    if (sp->id == prt->kind) {
-      assert(sp->np < sp->max_np);
-      // the below is inject_particle_raw()
-      Particles::Particle * RESTRICT p = sp->p + (sp->np++);
-      p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
-      p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
-      return;
-    }
-  }
-  mprintf("prt->kind %d not found in species list!\n", prt->kind);
-  assert(0);
 }
 
 // ----------------------------------------------------------------------
