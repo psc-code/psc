@@ -7,7 +7,7 @@
 // ======================================================================
 // PscSpecies
 
-// FIXME: Eventually particle_t (definitely) and ther other formats
+// FIXME: Eventually particle_t (definitely) and the other formats
 // (maybe) should be opaque and specific to a particular
 // species_advance implementation
 
@@ -47,51 +47,8 @@ struct PscParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-struct PscSpeciesT
-{
-  char * name;                        // Species name
-  float q;                            // Species particle charge
-  float m;                            // Species particle rest mass
-
-  int np, max_np;                     // Number and max local particles
-  PscParticle * ALIGNED(128) p;        // Array of particles for the species
-
-  int nm, max_nm;                     // Number and max local movers in use
-  PscParticleMover * ALIGNED(128) pm; // Particle movers
-
-  int64_t last_sorted;                // Step when the particles were last
-                                      // sorted.
-  int sort_interval;                  // How often to sort the species
-  int sort_out_of_place;              // Sort method
-  int * ALIGNED(128) partition;       // Static array indexed 0:
-  /**/                                // (nx+2)*(ny+2)*(nz+2).  Each value
-  /**/                                // corresponds to the associated particle
-  /**/                                // array index of the first particle in
-  /**/                                // the cell.  Array is allocated and
-  /**/                                // values computed in sort_p.  Purpose is
-  /**/                                // for implementing collision models
-  /**/                                // This is given in terms of the
-  /**/                                // underlying's grids space filling
-  /**/                                // curve indexing.  Thus, immediately
-  /**/                                // after a sort:
-  /**/                                //   sp->p[sp->partition[g->sfc[i]  ]:
-  /**/                                //         sp->partition[g->sfc[i]+1]-1]
-  /**/                                // are all the particles in voxel
-  /**/                                // with local index i, while:
-  /**/                                //   sp->p[ sp->partition[ j   ]:
-  /**/                                //          sp->partition[ j+1 ] ]
-  /**/                                // are all the particles in voxel
-  /**/                                // with space filling curve index j.
-  /**/                                // Note: SFC NOT IN USE RIGHT NOW THUS
-  /**/                                // g->sfc[i]=i ABOVE.
-
-  void* g;                            // FIXME Underlying grid
-  SpeciesId id;                       // Unique identifier for a species
-  PscSpeciesT* next;                  // Next species in the list
-};
-
 template<class G>
-struct PscSpecies : PscSpeciesT
+struct PscSpecies
 {
   typedef G Grid;
   
@@ -144,6 +101,46 @@ struct PscSpecies : PscSpeciesT
   {
     return reinterpret_cast<Grid*>(g);
   }
+
+  char * name;                        // Species name
+  float q;                            // Species particle charge
+  float m;                            // Species particle rest mass
+
+  int np, max_np;                     // Number and max local particles
+  PscParticle * ALIGNED(128) p;       // Array of particles for the species
+
+  int nm, max_nm;                     // Number and max local movers in use
+  PscParticleMover * ALIGNED(128) pm; // Particle movers
+
+  int64_t last_sorted;                // Step when the particles were last
+                                      // sorted.
+  int sort_interval;                  // How often to sort the species
+  int sort_out_of_place;              // Sort method
+  int * ALIGNED(128) partition;       // Static array indexed 0:
+  /**/                                // (nx+2)*(ny+2)*(nz+2).  Each value
+  /**/                                // corresponds to the associated particle
+  /**/                                // array index of the first particle in
+  /**/                                // the cell.  Array is allocated and
+  /**/                                // values computed in sort_p.  Purpose is
+  /**/                                // for implementing collision models
+  /**/                                // This is given in terms of the
+  /**/                                // underlying's grids space filling
+  /**/                                // curve indexing.  Thus, immediately
+  /**/                                // after a sort:
+  /**/                                //   sp->p[sp->partition[g->sfc[i]  ]:
+  /**/                                //         sp->partition[g->sfc[i]+1]-1]
+  /**/                                // are all the particles in voxel
+  /**/                                // with local index i, while:
+  /**/                                //   sp->p[ sp->partition[ j   ]:
+  /**/                                //          sp->partition[ j+1 ] ]
+  /**/                                // are all the particles in voxel
+  /**/                                // with space filling curve index j.
+  /**/                                // Note: SFC NOT IN USE RIGHT NOW THUS
+  /**/                                // g->sfc[i]=i ABOVE.
+
+  void* g;                            // FIXME Underlying grid
+  SpeciesId id;                       // Unique identifier for a species
+  PscSpecies* next;                   // Next species in the list
 };
 
 // ======================================================================
