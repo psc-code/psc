@@ -134,6 +134,11 @@ void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
 
+HydroArray* Simulation_get_HydroArray(Simulation *sim);
+float* Simulation_hydro_getData(Simulation* sim, HydroArray* hydro, int ib[3], int im[3]);
+
+FieldArray* Simulation_get_FieldArray(Simulation *sim);
+float* Simulation_mflds_getData(Simulation* sim, FieldArray* vmflds, int ib[3], int im[3]);
 double Simulation_mflds_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* vmflds);
 void Simulation_mflds_compute_div_b_err(Simulation* sim, FieldArray* vmflds);
 double Simulation_mflds_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds);
