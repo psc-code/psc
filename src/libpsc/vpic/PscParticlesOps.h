@@ -3,6 +3,7 @@
 #define PSC_PARTICLES_OPS
 
 #include "psc_vpic_bits.h"
+#include "src/util/v4/v4.h"
 
 #define HAS_V4_PIPELINE
 
@@ -226,7 +227,7 @@ struct PscParticlesOps {
       store_4x1( sgn_dr, stack_vf ); if( stack_vf[type]>0 ) type += 3;
       neighbor = g->neighbor[ 6*voxel + type ];
 
-      if( UNLIKELY( neighbor==reflect_particles ) ) {
+      if( UNLIKELY( neighbor==Grid::reflect_particles ) ) {
 
 	// Hit a reflecting boundary condition.  Reflect the particle
 	// momentum and remaining displacement and keep moving the
@@ -1566,7 +1567,7 @@ struct PscParticles : ParticlesBase
   {
     using namespace v4;
     const Grid* g = sp->grid();
-    const interpolator_t * ALIGNED(128) f0 = interpolator.data();
+    const typename Interpolator::Element * ALIGNED(128) f0 = interpolator.data();
 
     Particle             * ALIGNED(128) p;
     const float          * ALIGNED(16)  vp0;
@@ -1768,7 +1769,7 @@ struct PscParticles : ParticlesBase
 
     const Grid* g = sp->grid();
 
-    const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
+    const typename Interpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
 
     const float          * RESTRICT ALIGNED(16)  vp0;
     const float          * RESTRICT ALIGNED(16)  vp1;
