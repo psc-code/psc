@@ -234,6 +234,73 @@ void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct
   assert(0);
 }
 
+
+// ======================================================================
+
+double Simulation_mflds_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* vmflds)
+{
+  double err;
+  TIC err = vmflds->synchronize_tang_e_norm_b(); TOC(synchronize_tang_e_norm_b, 1);
+  return err;
+}
+
+void Simulation_mflds_compute_div_b_err(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->compute_div_b_err(); TOC(compute_div_b_err, 1);
+}
+
+double Simulation_mflds_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds)
+{
+  double err;
+  TIC err = vmflds->compute_rms_div_b_err(); TOC(compute_rms_div_b_err, 1);
+  return err;
+}
+
+void Simulation_mflds_clean_div_b(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->clean_div_b(); TOC(clean_div_b, 1);
+}
+
+void Simulation_mflds_compute_div_e_err(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->compute_div_e_err(); TOC(compute_div_e_err, 1);
+}
+
+double Simulation_mflds_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds)
+{
+  double err;
+  TIC err = vmflds->compute_rms_div_e_err(); TOC(compute_rms_div_e_err, 1);
+  return err;
+}
+
+void Simulation_mflds_clean_div_e(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->clean_div_e(); TOC(clean_div_e, 1);
+}
+
+
+void Simulation_mflds_clear_rhof(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->clear_rhof(); TOC(clear_jf, 1);
+}
+
+void Simulation_mflds_synchronize_rho(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->synchronize_rho(); TOC(compute_curl_b, 1);
+}
+
+void Simulation_mflds_compute_rhob(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->compute_rhob(); TOC(compute_rhob, 1);
+}
+
+void Simulation_mflds_compute_curl_b(Simulation* sim, FieldArray* vmflds)
+{
+  TIC vmflds->compute_curl_b(); TOC(compute_curl_b, 1);
+}
+
+// ======================================================================
+
 // ----------------------------------------------------------------------
 // Simulation_accumulate_rho_p
 

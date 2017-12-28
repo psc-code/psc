@@ -34,22 +34,6 @@ void psc_mfields_vpic_setup(struct psc_mfields *mflds);
 void psc_mfields_vpic_destroy(struct psc_mfields *mflds);
 fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
 
-double psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds);
-
-void psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds);
-double psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds);
-void psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds);
-
-void psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds);
-double psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds);
-void psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds);
-
-void psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds);
-void psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds);
-
-void psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds);
-void psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds);
-
 END_C_DECLS
 
 #endif

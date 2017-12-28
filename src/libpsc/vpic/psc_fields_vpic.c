@@ -195,6 +195,88 @@ psc_mfields_vpic_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_
   }
 }
 
+// ----------------------------------------------------------------------
+
+static double psc_mfields_vpic_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  return Simulation_mflds_synchronize_tang_e_norm_b(sub->sim, sub->vmflds_fields);
+}
+
+
+static void psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_compute_div_b_err(sub->sim, sub->vmflds_fields);
+}
+
+static double psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  return Simulation_mflds_compute_rms_div_b_err(sub->sim, sub->vmflds_fields);
+}
+
+static void psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_clean_div_b(sub->sim, sub->vmflds_fields);
+}
+
+
+static void psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_compute_div_e_err(sub->sim, sub->vmflds_fields);
+}
+
+static double psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  return Simulation_mflds_compute_rms_div_e_err(sub->sim, sub->vmflds_fields);
+}
+
+static void psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_clean_div_e(sub->sim, sub->vmflds_fields);
+}
+
+
+static void psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_clear_rhof(sub->sim, sub->vmflds_fields);
+}
+
+static void psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_synchronize_rho(sub->sim, sub->vmflds_fields);
+}
+
+static void psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_compute_rhob(sub->sim, sub->vmflds_fields);
+}
+
+static void psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  Simulation_mflds_compute_curl_b(sub->sim, sub->vmflds_fields);
+}
+
 // ======================================================================
 // psc_mfields: subclass "vpic"
 

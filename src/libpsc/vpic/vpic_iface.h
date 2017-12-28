@@ -133,6 +133,19 @@ void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct
 
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
+
+double Simulation_mflds_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_compute_div_b_err(Simulation* sim, FieldArray* vmflds);
+double Simulation_mflds_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_clean_div_b(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_compute_div_e_err(Simulation* sim, FieldArray* vmflds);
+double Simulation_mflds_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_clean_div_e(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_clear_rhof(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_synchronize_rho(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_compute_rhob(Simulation* sim, FieldArray* vmflds);
+void Simulation_mflds_compute_curl_b(Simulation* sim, FieldArray* vmflds);
+
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
 void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
