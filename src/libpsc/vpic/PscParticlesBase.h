@@ -83,7 +83,7 @@ struct PscSpecies
     this->sort_out_of_place = sort_out_of_place;
     this->partition = new int[grid->nv + 1];
     
-    this->g = grid;
+    this->grid_ = grid;
   }
 
   // ----------------------------------------------------------------------
@@ -97,10 +97,8 @@ struct PscSpecies
     free(name);
   }
 
-  Grid* getGrid()
-  {
-    return reinterpret_cast<Grid*>(g);
-  }
+  const Grid* grid() const { return grid_; }
+  Grid* grid() { return grid_; }
 
   char * name;                        // Species name
   float q;                            // Species particle charge
@@ -137,8 +135,10 @@ struct PscSpecies
   /**/                                // with space filling curve index j.
   /**/                                // Note: SFC NOT IN USE RIGHT NOW THUS
   /**/                                // g->sfc[i]=i ABOVE.
+private:
+  Grid* grid_;                        // Underlying grid
 
-  void* g;                            // FIXME Underlying grid
+public: // FIXME, shouldn't be public
   SpeciesId id;                       // Unique identifier for a species
   PscSpecies* next;                   // Next species in the list
 };
@@ -202,10 +202,10 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     return sp;
   }
   
-  Grid *getGrid()
+  Grid *grid()
   {
     assert(head_);
-    return reinterpret_cast<Grid*>(head_->g);
+    return head_->grid();
   }
   
   Species* head()

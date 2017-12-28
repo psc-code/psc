@@ -12,7 +12,8 @@ struct VpicSpecies : species_t
 {
   typedef G Grid;
   
-  Grid* getGrid() { return static_cast<Grid*>(g); }
+  Grid* grid() { return static_cast<Grid*>(g); }
+  const Grid* grid() const { return static_cast<Grid*>(g); }
 };
 
 template<class G, class BCL>
@@ -62,10 +63,10 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
     return iterator(static_cast<Species*>(sp));
   }
 
-  Grid *getGrid()
+  Grid *grid()
   {
     assert(head_);
-    return reinterpret_cast<Grid*>(head_->g);
+    return head_->grid();
   }
 
   species_t* head()

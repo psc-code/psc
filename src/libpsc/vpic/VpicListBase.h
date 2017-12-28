@@ -24,7 +24,7 @@ public:
   {
     friend class VpicListBase<T>;
 
-    //protected: FIXME, not accessible from derived VpicListBae (?)
+    //protected: FIXME, not accessible from derived VpicListBase (?)
   public:
     iterator(T* node) : node_(node) {}
 

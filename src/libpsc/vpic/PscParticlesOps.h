@@ -401,7 +401,7 @@ struct PscParticlesOps {
 
     int ix, iy, iz;
 
-    const Grid* grid = sp->getGrid();
+    const Grid* grid = sp->grid();
     const double x0 = (double)grid->x0, y0 = (double)grid->y0, z0 = (double)grid->z0;
     const double x1 = (double)grid->x1, y1 = (double)grid->y1, z1 = (double)grid->z1;
     const int    nx = grid->nx,         ny = grid->ny,         nz = grid->nz;
@@ -490,7 +490,7 @@ struct PscParticlesOps {
 			  ParticleMover * ALIGNED(16) pm, int max_nm)
   {
     Particle* ALIGNED(128) p0 = sp->p;
-    const Grid* g = sp->getGrid();
+    const Grid* g = sp->grid();
 
     const typename Interpolator::Element * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
@@ -632,7 +632,7 @@ struct PscParticlesOps {
     using namespace v4;
 
     Particle             * ALIGNED(128) p0 = sp->p;
-    const Grid* g = sp->getGrid();
+    const Grid* g = sp->grid();
 
     float                * ALIGNED(16)  vp0;
     float                * ALIGNED(16)  vp1;
@@ -1193,7 +1193,7 @@ struct PscParticlesOps {
   {
     const Particle * RESTRICT ALIGNED(128) p = sp->p;
 
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     const float q_8V = sp->q*g->r8V;
     const int np = sp->np;
     const int sy = g->sy;
@@ -1368,7 +1368,7 @@ struct PscParticles : ParticlesBase
     float w0, w1, w2, w3, w4, w5, w6, w7, t;
     int i, n;
 
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     const Particle *p = sp->p;
 
     c        = g->cvac;
@@ -1499,7 +1499,7 @@ struct PscParticles : ParticlesBase
   static void uncenter_p_pipeline(Species* sp, /*const*/ Interpolator& interpolator,
 				  int off, int cnt)
   {
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     const typename Interpolator::Element* f;
     // For backward half advance
     const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);
@@ -1565,7 +1565,7 @@ struct PscParticles : ParticlesBase
 				     int off, int cnt)
   {
     using namespace v4;
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     const interpolator_t * ALIGNED(128) f0 = interpolator.data();
 
     Particle             * ALIGNED(128) p;
@@ -1651,7 +1651,7 @@ struct PscParticles : ParticlesBase
 
   static void sort_p(Species* sp)
   {
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     sp->last_sorted = g->step;
 
     int n_prts = sp->np;
@@ -1721,7 +1721,7 @@ struct PscParticles : ParticlesBase
 				  Interpolator &interpolator,
 				  int n0, int n1)
   {
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     const typename Interpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
     const Particle       * RESTRICT ALIGNED(32)  p = sp->p;
     const float qdt_2mc = (sp->q*g->dt)/(2*sp->m*g->cvac);
@@ -1766,7 +1766,7 @@ struct PscParticles : ParticlesBase
   {
     using namespace v4;
 
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
 
     const interpolator_t * RESTRICT ALIGNED(128) f = interpolator.data();
 
@@ -1831,7 +1831,7 @@ struct PscParticles : ParticlesBase
 
   static double energy_p(const_iterator sp, Interpolator& interpolator)
   {
-    Grid *g = reinterpret_cast<Grid*>(sp->g); // FIXME
+    const Grid* g = sp->grid();
     int cnt = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
     double local = energy_p_pipeline_v4(sp, interpolator, 0, cnt);
