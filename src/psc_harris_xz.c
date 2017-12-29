@@ -602,8 +602,6 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
   struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
-  
   double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
   double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
   double weight_s = phys->weight_s;
@@ -619,6 +617,8 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
     }
     return;
   }
+  
+  struct psc_mparticles *mprts = psc->particles;
   
   // LOAD PARTICLES
 
@@ -707,8 +707,6 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
   }
 
   mpi_printf(comm, "Finished loading particles\n");
-
-  psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
 // ----------------------------------------------------------------------
