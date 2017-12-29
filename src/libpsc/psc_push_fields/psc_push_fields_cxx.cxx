@@ -73,12 +73,14 @@ private:
 
 // ----------------------------------------------------------------------
 
-template<typename R>
-struct params_push_fields
+template<typename Fields>
+struct PushE
 {
-  using real_t = R;
+  using real_t = typename Fields::real_t;
+  using fields_t = typename Fields::fields_t;
   
-  params_push_fields(struct psc* psc, double dt_fac)
+  PushE(const fields_t& flds, struct psc* psc, double dt_fac)
+    : F(flds)
   {
     for (int p = 1; p < psc->nr_patches; p++) {
       for (int d = 0; d < 3; d++) {
@@ -107,11 +109,28 @@ struct params_push_fields
       ldims[d] = psc->patch[0].ldims[d];
     }
   }
+
+  void x(int i, int j,int k)
+  {
+    F(EX, i,j,k) += (cny * (F(HZ, i,j,k) - F(HZ, i,j-1,k)) - cnz * (F(HY, i,j,k) - F(HY, i,j,k-1)) -
+    		     dth * F(JXI, i,j,k));
+  }
+
+  void y(int i, int j, int k)
+  {
+    F(EY, i,j,k) += (cnz * (F(HX, i,j,k) - F(HX, i,j,k-1)) - cnx * (F(HZ, i,j,k) - F(HZ, i-1,j,k)) -
+		     dth * F(JYI, i,j,k));
+  }
+
+  void z(int i, int j, int k)
+  {
+    F(EZ, i,j,k) += (cnx * (F(HY, i,j,k) - F(HY, i-1,j,k)) - cny * (F(HX, i,j,k) - F(HX, i,j-1,k)) -
+		     dth * F(JZI, i,j,k));
+  }
   
+  Fields F;
   real_t dth;
-  real_t cnx;
-  real_t cny;
-  real_t cnz;
+  real_t cnx, cny, cnz;
   int ldims[3];
 };
 
@@ -122,26 +141,13 @@ template<typename Fields>
 void psc_push_fields_push_E(struct psc_push_fields *push, typename Fields::fields_t flds,
 			    struct psc *psc, double dt_fac)
 {
-  struct params_push_fields<typename Fields::real_t> prm(psc, dt_fac);
-
-  Fields F(flds);
+  PushE<Fields> push_E(flds, psc, dt_fac);
 
   MHERE;
   foreach_3d(ppsc, 0, i,j,k, 1, 2) {
-    F(EX, i,j,k) +=
-      prm.cny * (F(HZ, i,j,k) - F(HZ, i,j-1,k)) -
-      prm.cnz * (F(HY, i,j,k) - F(HY, i,j,k-1)) -
-      prm.dth * F(JXI, i,j,k);
-
-    F(EY, i,j,k) +=
-      prm.cnz * (F(HX, i,j,k) - F(HX, i,j,k-1)) -
-      prm.cnx * (F(HZ, i,j,k) - F(HZ, i-1,j,k)) -
-      prm.dth * F(JYI, i,j,k);
-
-    F(EZ, i,j,k) +=
-      prm.cnx * (F(HY, i,j,k) - F(HY, i-1,j,k)) -
-      prm.cny * (F(HX, i,j,k) - F(HX, i,j-1,k)) -
-      prm.dth * F(JZI, i,j,k);
+    push_E.x(i, j, k);
+    push_E.y(i, j, k);
+    push_E.z(i, j, k);
   } foreach_3d_end;
 }
 
