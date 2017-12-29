@@ -6,8 +6,7 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_push_fields.c \
-	psc_push_fields_c.cxx \
-	psc_push_fields_single.cxx \
+	psc_push_fields_impl.cxx \
 	psc_push_fields_none.cxx \
 	psc_marder.c \
 	psc_marder_c.c \
