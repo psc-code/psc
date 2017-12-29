@@ -1,7 +1,11 @@
 
+#include <mrc_common.h>
+
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+
+BEGIN_C_DECLS
 
 #define FTYPE_SINGLE          1
 #define FTYPE_C               2
@@ -251,8 +255,6 @@ fields_c_t_mflds(struct psc_mfields *mflds, int p)
 
 #elif FTYPE == FTYPE_VPIC
 
-BEGIN_C_DECLS
-
 struct psc_mfields;
 fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
 
@@ -261,8 +263,6 @@ fields_vpic_t_mflds(struct psc_mfields *mflds, int p)
 {
   return psc_mfields_vpic_get_field_t(mflds, p);
 }
-
-END_C_DECLS
 
 #elif FTYPE == FTYPE_FORTRAN
 
@@ -317,5 +317,5 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #undef fields_FTYPE_t_size
 #undef fields_FTYPE_t_zero_range
 
-
+END_C_DECLS
 

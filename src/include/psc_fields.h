@@ -4,6 +4,8 @@
 
 #include <mrc_obj.h>
 
+BEGIN_C_DECLS
+
 // ----------------------------------------------------------------------
 // psc_mfields class
 
@@ -104,6 +106,8 @@ void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
 extern list_t psc_mfields_base_list;
+
+END_C_DECLS
 
 #endif
 
