@@ -6,6 +6,39 @@
 
 #define F3(flds, m, i,j,k) _F3(flds, m, i,0,k)
 
+class Field3d
+{
+public:
+  using real_t = float;
+
+  Field3d(const fields_t& f)
+  {
+    data = f.data;
+    for (int d = 0; d < 3; d++) {
+      ib[d] = f.ib[d];
+      im[d] = f.im[d];
+    }
+    nr_comp = f.nr_comp;
+    first_comp = f.first_comp;
+  }
+
+  const real_t operator()(int m, int i, int j, int k) const
+  {
+    return F3(*this, m, i,j,k);
+  }
+
+  real_t& operator()(int m, int i, int j, int k)
+  {
+    return F3(*this, m, i,j,k);
+  }
+
+private:
+  real_t *data;
+  int ib[3], im[3];
+  int nr_comp;
+  int first_comp;
+};
+
 struct params_push_fields {
   fields_real_t dth;
   fields_real_t cnx;
@@ -58,22 +91,24 @@ psc_push_fields_single_push_E_xz(struct psc_push_fields *push, fields_t flds,
 				 struct psc *psc, double dt_fac)
 {
   params_push_fields_set(psc, dt_fac);
+
+  Field3d F(flds);
   MHERE;
   foreach_3d(ppsc, 0, i,j,k, 1, 2) {
-    F3(flds, EX, i,j,k) +=
-      prm.cny * (F3(flds, HZ, i,j,k) - F3(flds, HZ, i,j-1,k)) -
-      prm.cnz * (F3(flds, HY, i,j,k) - F3(flds, HY, i,j,k-1)) -
-      prm.dth * F3(flds, JXI, i,j,k);
+    F(EX, i,j,k) +=
+      prm.cny * (F(HZ, i,j,k) - F(HZ, i,j-1,k)) -
+      prm.cnz * (F(HY, i,j,k) - F(HY, i,j,k-1)) -
+      prm.dth * F(JXI, i,j,k);
 
-    F3(flds, EY, i,j,k) +=
-      prm.cnz * (F3(flds, HX, i,j,k) - F3(flds, HX, i,j,k-1)) -
-      prm.cnx * (F3(flds, HZ, i,j,k) - F3(flds, HZ, i-1,j,k)) -
-      prm.dth * F3(flds, JYI, i,j,k);
+    F(EY, i,j,k) +=
+      prm.cnz * (F(HX, i,j,k) - F(HX, i,j,k-1)) -
+      prm.cnx * (F(HZ, i,j,k) - F(HZ, i-1,j,k)) -
+      prm.dth * F(JYI, i,j,k);
 
-    F3(flds, EZ, i,j,k) +=
-      prm.cnx * (F3(flds, HY, i,j,k) - F3(flds, HY, i-1,j,k)) -
-      prm.cny * (F3(flds, HX, i,j,k) - F3(flds, HX, i,j-1,k)) -
-      prm.dth * F3(flds, JZI, i,j,k);
+    F(EZ, i,j,k) +=
+      prm.cnx * (F(HY, i,j,k) - F(HY, i-1,j,k)) -
+      prm.cny * (F(HX, i,j,k) - F(HX, i,j-1,k)) -
+      prm.dth * F(JZI, i,j,k);
   } foreach_3d_end;
 }
 
