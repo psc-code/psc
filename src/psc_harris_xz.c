@@ -593,7 +593,6 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
 static void
 psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
-  assert(!count_only);
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
@@ -608,6 +607,13 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
   double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
   double weight_b = phys->weight_b;
   int n_global_patches = sub->n_global_patches;
+
+  if (count_only) {
+    for (int p = 0; p < psc->nr_patches; p++) {
+      nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
+    }
+    return;
+  }
   
   // LOAD PARTICLES
 
