@@ -171,15 +171,8 @@ psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfield
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_sub_push_E_yz(push, flds);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-#ifdef PSC_FIELDS_AS_SINGLE
-      using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
+      using Fields = Fields3d<fields_real_t, fields_t, DIM_XZ>;
       psc_push_fields_push_E<Fields>(push, flds, ppsc, dt_fac);
-#elif PSC_FIELDS_AS_C
-      using Fields = Fields3d<fields_c_real_t, fields_c_t, DIM_XZ>;
-      psc_push_fields_push_E<Fields>(push, flds, ppsc, dt_fac);
-#else
-      psc_push_fields_sub_push_E_xz(push, flds);
-#endif
     } else {
       assert(0);
     }
@@ -208,15 +201,8 @@ psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push, struct psc_mfield
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_sub_push_H_yz(push, flds);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-#ifdef PSC_FIELDS_AS_SINGLE
-      using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
+      using Fields = Fields3d<fields_real_t, fields_t, DIM_XZ>;
       psc_push_fields_push_H<Fields>(push, flds, ppsc, dt_fac);
-#elif PSC_FIELDS_AS_C
-      using Fields = Fields3d<fields_c_real_t, fields_c_t, DIM_XZ>;
-      psc_push_fields_push_H<Fields>(push, flds, ppsc, dt_fac);
-#else
-      psc_push_fields_sub_push_H_xz(push, flds);
-#endif
     } else {
       assert(0);
     }
