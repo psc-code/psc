@@ -153,6 +153,43 @@ protected:
   using Base::cnz;
 };
 
+template<typename Fields>
+class PushH : PushBase<Fields>
+{
+public:
+  using Base = PushBase<Fields>;
+  using typename Base::real_t;
+  using typename Base::fields_t;
+  
+  PushH(const fields_t& flds, struct psc* psc, double dt_fac)
+    : Base(psc, dt_fac),
+      F(flds)
+  {
+  }
+  
+  void x(int i, int j,int k)
+  {
+    F(HX, i,j,k) -= (cny * (F(EZ, i,j+1,k) - F(EZ, i,j,k)) - cnz * (F(EY, i,j,k+1) - F(EY, i,j,k)));
+  }
+
+  void y(int i, int j, int k)
+  {
+    F(HY, i,j,k) -= (cnz * (F(EX, i,j,k+1) - F(EX, i,j,k)) - cnx * (F(EZ, i+1,j,k) - F(EZ, i,j,k)));
+  }
+
+  void z(int i, int j, int k)
+  {
+    F(HZ, i,j,k) -= (cnx * (F(EY, i+1,j,k) - F(EY, i,j,k)) - cny * (F(EX, i,j+1,k) - F(EX, i,j,k)));
+  }
+
+protected:
+  Fields F;
+  using Base::dth;
+  using Base::cnx;
+  using Base::cny;
+  using Base::cnz;
+};
+
 // ----------------------------------------------------------------------
 // psc_push_fields_push_E
 
@@ -162,8 +199,16 @@ void psc_push_fields_push_E(struct psc_push_fields* push, typename Fields::field
 {
   PushE<Fields> push_E(flds, psc, dt_fac);
 
-  MHERE;
   Foreach_3d(push_E, 1, 2);
+}
+
+template<typename Fields>
+void psc_push_fields_push_H(struct psc_push_fields* push, typename Fields::fields_t flds,
+			    struct psc *psc, double dt_fac)
+{
+  PushH<Fields> push_H(flds, psc, dt_fac);
+
+  Foreach_3d(push_H, 2, 1);
 }
 
 void psc_push_fields_single_push_E_xz(struct psc_push_fields* push, fields_single_t flds,
@@ -171,5 +216,12 @@ void psc_push_fields_single_push_E_xz(struct psc_push_fields* push, fields_singl
 {
   using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
   psc_push_fields_push_E<Fields>(push, flds, psc, dt_fac);
+}
+
+void psc_push_fields_single_push_H_xz(struct psc_push_fields* push, fields_single_t flds,
+				      struct psc* psc, double dt_fac)
+{
+  using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
+  psc_push_fields_push_H<Fields>(push, flds, psc, dt_fac);
 }
 
