@@ -85,15 +85,14 @@ static void Foreach_3d(F f, int l, int r)
 // ----------------------------------------------------------------------
 
 template<typename Fields>
-class PushE
+class PushBase
 {
 public:
   using real_t = typename Fields::real_t;
   using fields_t = typename Fields::fields_t;
   using DIM = typename Fields::DIM;
   
-  PushE(const fields_t& flds, struct psc* psc, double dt_fac)
-    : F(flds)
+  PushBase(struct psc* psc, double dt_fac)
   {
     for (int p = 1; p < psc->nr_patches; p++) {
       for (int d = 0; d < 3; d++) {
@@ -109,6 +108,25 @@ public:
     cnz = DIM::InvarZ::value ? 0 : dth / psc->patch[0].dx[2];
   }
 
+protected:
+  real_t dth;
+  real_t cnx, cny, cnz;
+};
+  
+template<typename Fields>
+class PushE : PushBase<Fields>
+{
+public:
+  using Base = PushBase<Fields>;
+  using typename Base::real_t;
+  using typename Base::fields_t;
+  
+  PushE(const fields_t& flds, struct psc* psc, double dt_fac)
+    : Base(psc, dt_fac),
+      F(flds)
+  {
+  }
+  
   void x(int i, int j,int k)
   {
     F(EX, i,j,k) += (cny * (F(HZ, i,j,k) - F(HZ, i,j-1,k)) - cnz * (F(HY, i,j,k) - F(HY, i,j,k-1)) -
@@ -127,17 +145,19 @@ public:
 		     dth * F(JZI, i,j,k));
   }
 
-private:
+protected:
   Fields F;
-  real_t dth;
-  real_t cnx, cny, cnz;
+  using Base::dth;
+  using Base::cnx;
+  using Base::cny;
+  using Base::cnz;
 };
 
 // ----------------------------------------------------------------------
 // psc_push_fields_push_E
 
 template<typename Fields>
-void psc_push_fields_push_E(struct psc_push_fields *push, typename Fields::fields_t flds,
+void psc_push_fields_push_E(struct psc_push_fields* push, typename Fields::fields_t flds,
 			    struct psc *psc, double dt_fac)
 {
   PushE<Fields> push_E(flds, psc, dt_fac);
@@ -146,9 +166,8 @@ void psc_push_fields_push_E(struct psc_push_fields *push, typename Fields::field
   Foreach_3d(push_E, 1, 2);
 }
 
-void
-psc_push_fields_single_push_E_xz(struct psc_push_fields *push, fields_single_t flds,
-				 struct psc *psc, double dt_fac)
+void psc_push_fields_single_push_E_xz(struct psc_push_fields* push, fields_single_t flds,
+				      struct psc* psc, double dt_fac)
 {
   using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
   psc_push_fields_push_E<Fields>(push, flds, psc, dt_fac);
