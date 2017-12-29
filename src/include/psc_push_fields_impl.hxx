@@ -15,14 +15,21 @@ struct Invar
 };
 
 using DIM_XYZ = Invar<false, false, false>;
-using DIM_XZ = Invar<false, true, false>;
+using DIM_XY  = Invar<false, false, true >;
+using DIM_XZ  = Invar<false, true , false>;
+using DIM_YZ  = Invar<true , false, false>;
 
-template<typename R, typename F, typename D = DIM_XYZ>
+template<typename F>
+struct fields_traits
+{
+};
+
+template<typename F, typename D = DIM_XYZ>
 class Fields3d
 {
 public:
-  using real_t = R;
   using fields_t = F;
+  using real_t = typename fields_traits<F>::real_t;
   using DIM = D;
 
   Fields3d(const fields_t& f)
@@ -73,6 +80,23 @@ private:
   int first_comp_;
 };
 
+#include "psc_fields_single.h"
+#include "psc_fields_c.h"
+
+template<>
+struct fields_traits<fields_single_t>
+{
+  using real_t = fields_single_real_t;
+  static constexpr const char* name = "single";
+};
+
+template<>
+struct fields_traits<fields_c_t>
+{
+  using real_t = fields_c_real_t;
+  static constexpr const char* name = "c";
+};
+
 // ----------------------------------------------------------------------
 // Foreach_3d
 
@@ -106,7 +130,9 @@ public:
     }
     
     dth = dt_fac * psc->dt;
-    
+
+    // FIXME, it'd be even better to not even calculate derivates
+    // that will be multiplied by 0 
     cnx = DIM::InvarX::value ? 0 : dth / psc->patch[0].dx[0];
     cny = DIM::InvarY::value ? 0 : dth / psc->patch[0].dx[1];
     cnz = DIM::InvarZ::value ? 0 : dth / psc->patch[0].dx[2];
@@ -198,10 +224,11 @@ protected:
 // ----------------------------------------------------------------------
 // psc_push_fields_push_E
 
-template<typename Fields>
-void psc_push_fields_push_E(struct psc_push_fields* push, typename Fields::fields_t flds,
+template<typename DIM, typename fields_t>
+void psc_push_fields_push_E(struct psc_push_fields* push, fields_t flds,
 			    struct psc *psc, double dt_fac)
 {
+  using Fields = Fields3d<fields_t, DIM>;
   PushE<Fields> push_E(flds, psc, dt_fac);
 
   Foreach_3d(push_E, 1, 2);
@@ -210,13 +237,84 @@ void psc_push_fields_push_E(struct psc_push_fields* push, typename Fields::field
 // ----------------------------------------------------------------------
 // psc_push_fields_push_H
 
-template<typename Fields>
-void psc_push_fields_push_H(struct psc_push_fields* push, typename Fields::fields_t flds,
+template<typename DIM, typename fields_t>
+void psc_push_fields_push_H(struct psc_push_fields* push, fields_t flds,
 			    struct psc *psc, double dt_fac)
 {
+  using Fields = Fields3d<fields_t, DIM>;
   PushH<Fields> push_H(flds, psc, dt_fac);
 
   Foreach_3d(push_H, 2, 1);
+}
+
+// ----------------------------------------------------------------------
+// psc_push_fields_sub_push_mflds_E
+//
+// E-field propagation E^(n)    , H^(n), j^(n) 
+//                  -> E^(n+0.5), H^(n), j^(n)
+// Ex^{n}[-.5:+.5][-1:1][-1:1] -> Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
+// using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
+//       jx^{n+1}[-.5:.5][-1:1][-1:1]
+
+
+template<typename fields_t>
+static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
+					     struct psc_mfields *mflds_base,
+					     double dt_fac)
+{
+  const char* fields_type = fields_traits<fields_t>::name;
+
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, fields_type, JXI, HX + 3);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    fields_t flds = fields_t_mflds(mflds, p);
+    int *gdims = ppsc->domain.gdims;
+    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+      psc_push_fields_push_E<DIM_XYZ>(push, flds, ppsc, dt_fac);
+    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+      psc_push_fields_push_E<DIM_YZ>(push, flds, ppsc, dt_fac);
+    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+      psc_push_fields_push_E<DIM_XZ>(push, flds, ppsc, dt_fac);
+    } else {
+      assert(0);
+    }
+  }
+
+  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
+}
+
+// ----------------------------------------------------------------------
+// psc_push_fields_sub_push_mflds_H
+//
+// B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
+//                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
+// Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
+// using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
+
+template<typename fields_t>
+static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
+					     struct psc_mfields *mflds_base,
+					     double dt_fac)
+{
+  const char* fields_type = fields_traits<fields_t>::name;
+
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, fields_type, EX, HX + 3);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    fields_t flds = fields_t_mflds(mflds, p);
+    int *gdims = ppsc->domain.gdims;
+    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+      psc_push_fields_push_H<DIM_XYZ>(push, flds, ppsc, dt_fac);
+    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+      psc_push_fields_push_H<DIM_YZ>(push, flds, ppsc, dt_fac);
+    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+      psc_push_fields_push_H<DIM_XZ>(push, flds, ppsc, dt_fac);
+    } else {
+      assert(0);
+    }
+  }
+
+  psc_mfields_put_as(mflds, mflds_base, HX, HX + 3);
 }
 
 #endif

@@ -9,6 +9,6 @@
 
 struct psc_push_fields_ops psc_push_fields_single_ops = {
   .name                  = "single",
-  .push_mflds_E          = psc_push_fields_sub_push_mflds_E,
-  .push_mflds_H          = psc_push_fields_sub_push_mflds_H,
+  .push_mflds_E          = psc_push_fields_sub_push_mflds_E<fields_t>,
+  .push_mflds_H          = psc_push_fields_sub_push_mflds_H<fields_t>,
 };
