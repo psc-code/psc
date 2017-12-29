@@ -102,6 +102,7 @@ libpsc_la_SOURCES = \
 	psc_stats.c \
 	psc_dump.c \
 	psc_checkpoint.c \
+	rngpool.cxx \
 	psc_main.c
 
 #	psc_particles_cbe.c

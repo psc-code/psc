@@ -16,6 +16,8 @@
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
 
+#include "rngpool_iface.h"
+
 #include <psc_particles_as_single.h>
 #include <psc_particles_vpic.h>
 
@@ -23,6 +25,9 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
+
+static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
 // ----------------------------------------------------------------------
 
@@ -621,10 +626,12 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
 
   // Do a fast load of the particles
 
+  rngpool = RngPool_create(); // FIXME, should be part of ctor (of struct psc, really)
+
   int rank;
   MPI_Comm_rank(comm, &rank);
-  Simulation_rngPool_seed(sub->sim, rank);  //Generators desynchronized
-  Rng *rng = Simulation_rngPool_get(sub->sim, 0);
+  RngPool_seed(rngpool, rank);
+  Rng *rng = RngPool_get(rngpool, 0);
 
   assert(psc->nr_patches > 0);
   struct psc_patch *patch = &psc->patch[0];
