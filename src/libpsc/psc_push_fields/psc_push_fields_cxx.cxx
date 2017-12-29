@@ -2,7 +2,6 @@
 #include "psc_push_fields_iface.h"
 
 #include "psc.h"
-#include "psc_fields_as_single.h"
 
 #include <type_traits>
 
@@ -17,13 +16,14 @@ struct Invar
 using DIM_XYZ = Invar<false, false, false>;
 using DIM_XZ = Invar<false, true, false>;
 
-template<typename R, typename DIM = DIM_XYZ>
-class Field3d
+template<typename R, typename F, typename DIM = DIM_XYZ>
+class Fields3d
 {
 public:
   using real_t = R;
+  using fields_t = F;
 
-  Field3d(const fields_t& f)
+  Fields3d(const fields_t& f)
     : data_(f.data),
       n_comp_(f.nr_comp),
       first_comp_(f.first_comp)
@@ -71,64 +71,61 @@ private:
   int first_comp_;
 };
 
-using Field = Field3d<float, DIM_XZ>;
-
 // ----------------------------------------------------------------------
 
-struct params_push_fields {
-  fields_real_t dth;
-  fields_real_t cnx;
-  fields_real_t cny;
-  fields_real_t cnz;
+template<typename R>
+struct params_push_fields
+{
+  using real_t = R;
+  
+  params_push_fields(struct psc* psc, double dt_fac)
+  {
+    for (int p = 1; p < psc->nr_patches; p++) {
+      for (int d = 0; d < 3; d++) {
+	assert(psc->patch[0].ldims[d] == psc->patch[p].ldims[d]);
+	assert(psc->patch[0].dx[d] == psc->patch[p].dx[d]);
+      }
+    }
+    
+    dth = dt_fac * psc->dt;
+    
+    cnx = dth / psc->patch[0].dx[0];
+    cny = dth / psc->patch[0].dx[1];
+    cnz = dth / psc->patch[0].dx[2];
+    
+    if (psc->domain.gdims[0] == 1) {
+      cnx = 0.;
+    }
+    if (psc->domain.gdims[1] == 1) {
+      cny = 0.;
+    }
+    if (psc->domain.gdims[2] == 1) {
+      cnz = 0.;
+    }
+    
+    for (int d = 0; d < 3; d++) {
+      ldims[d] = psc->patch[0].ldims[d];
+    }
+  }
+  
+  real_t dth;
+  real_t cnx;
+  real_t cny;
+  real_t cnz;
   int ldims[3];
 };
 
-static struct params_push_fields prm;
-
 // ----------------------------------------------------------------------
-// params_push_fields_set
+// psc_push_fields_push_E
 
-static void
-params_push_fields_set(struct psc *psc, double dt_fac)
+template<typename Fields>
+void psc_push_fields_push_E(struct psc_push_fields *push, typename Fields::fields_t flds,
+			    struct psc *psc, double dt_fac)
 {
-  for (int p = 1; p < psc->nr_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      assert(psc->patch[0].ldims[d] == psc->patch[p].ldims[d]);
-      assert(psc->patch[0].dx[d] == psc->patch[p].dx[d]);
-    }
-  }
+  struct params_push_fields<typename Fields::real_t> prm(psc, dt_fac);
 
-  prm.dth = dt_fac * psc->dt;
+  Fields F(flds);
 
-  prm.cnx = prm.dth / psc->patch[0].dx[0];
-  prm.cny = prm.dth / psc->patch[0].dx[1];
-  prm.cnz = prm.dth / psc->patch[0].dx[2];
-
-  if (psc->domain.gdims[0] == 1) {
-    prm.cnx = 0.;
-  }
-  if (psc->domain.gdims[1] == 1) {
-    prm.cny = 0.;
-  }
-  if (psc->domain.gdims[2] == 1) {
-    prm.cnz = 0.;
-  }
-
-  for (int d = 0; d < 3; d++) {
-    prm.ldims[d] = psc->patch[0].ldims[d];
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_push_fields_single_push_E_xz
-
-void
-psc_push_fields_single_push_E_xz(struct psc_push_fields *push, fields_t flds,
-				 struct psc *psc, double dt_fac)
-{
-  params_push_fields_set(psc, dt_fac);
-
-  Field F(flds);
   MHERE;
   foreach_3d(ppsc, 0, i,j,k, 1, 2) {
     F(EX, i,j,k) +=
@@ -146,5 +143,13 @@ psc_push_fields_single_push_E_xz(struct psc_push_fields *push, fields_t flds,
       prm.cny * (F(HX, i,j,k) - F(HX, i,j-1,k)) -
       prm.dth * F(JZI, i,j,k);
   } foreach_3d_end;
+}
+
+void
+psc_push_fields_single_push_E_xz(struct psc_push_fields *push, fields_single_t flds,
+				 struct psc *psc, double dt_fac)
+{
+  using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
+  psc_push_fields_push_E<Fields>(push, flds, psc, dt_fac);
 }
 
