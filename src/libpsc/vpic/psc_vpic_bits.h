@@ -63,12 +63,10 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
     
 #define LOG_WARN(fmt...) do {						\
     mprintf("WARNING at %s:%d (%s): ", __FILE__, __LINE__, __func__); printf(fmt); \
-    abort();								\
   } while (0)
     
 #define LOG_INFO(fmt...) do {						\
     mprintf("INFO at %s:%d (%s): ", __FILE__, __LINE__, __func__); printf(fmt); \
-    abort();								\
   } while (0)
     
 

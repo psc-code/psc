@@ -388,7 +388,7 @@ struct PscParticlesOps {
 #endif
 
   // ----------------------------------------------------------------------
-  // inject_particles
+  // inject_particle
   
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
 		       const struct psc_particle_inject *prt)
