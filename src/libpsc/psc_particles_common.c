@@ -252,6 +252,8 @@ PFX(inject)(struct psc_mparticles *mprts, int p,
     assert(new_prt->x[d] <= patch->xb[d] + patch->ldims[d] * patch->dx[d]);
   }
   
+  float dVi = 1.f / (patch->dx[0] * patch->dx[1] * patch->dx[2]);
+
   particle_t prt;
   prt.xi      = new_prt->x[0] - patch->xb[0];
   prt.yi      = new_prt->x[1] - patch->xb[1];
@@ -259,7 +261,7 @@ PFX(inject)(struct psc_mparticles *mprts, int p,
   prt.pxi     = new_prt->u[0];
   prt.pyi     = new_prt->u[1];
   prt.pzi     = new_prt->u[2];
-  prt.qni_wni = new_prt->w * ppsc->kinds[kind].q;
+  prt.qni_wni = new_prt->w * ppsc->kinds[kind].q * dVi;
   prt.kind    = kind;
   
   mparticles_patch_push_back(mprts, p, prt);
