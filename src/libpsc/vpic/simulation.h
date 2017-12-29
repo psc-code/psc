@@ -316,8 +316,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
   int num_comm_round_;
   
-  RngPool rng_pool;
-
   //private:
   Grid*& grid_;
   MaterialList& material_list_;

@@ -85,29 +85,6 @@ void Simulation_diagnostics_run(Simulation* sim)
 }
 
 // ----------------------------------------------------------------------
-// Rng
-
-void Simulation_rngPool_seed(Simulation* sim, int base)
-{
-  sim->rng_pool.seed(base, 0);
-}
-
-Rng *Simulation_rngPool_get(Simulation* sim, int n)
-{
-  return sim->rng_pool[n];
-}
-
-double Rng_uniform(Rng *rng, double lo, double hi)
-{
-  return rng->uniform(lo, hi);
-}
-
-double Rng_normal(Rng *rng, double mu, double sigma)
-{
-  return rng->normal(mu, sigma);
-}
-
-// ----------------------------------------------------------------------
 // Simulation_set_params
 
 void Simulation_set_params(Simulation* sim, int num_step, int status_interval,

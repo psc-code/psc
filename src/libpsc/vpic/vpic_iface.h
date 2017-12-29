@@ -49,7 +49,6 @@ typedef struct FieldArray_ FieldArray;
 typedef struct Particles_ Particles;
 typedef struct Simulation_ Simulation;
 typedef struct HydroArray_ HydroArray;
-typedef struct Rng_ Rng;
 
 #endif
 
@@ -186,12 +185,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct material *resistive);
 
 
-
-void Simulation_rngPool_seed(Simulation *sim, int base);
-Rng *Simulation_rngPool_get(Simulation *sim, int n);
-
-double Rng_uniform(Rng *rng, double lo, double hi);
-double Rng_normal(Rng *rng, double mu, double sigma);
 
 // ----------------------------------------------------------------------
 // vpic_harris_params

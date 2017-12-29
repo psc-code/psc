@@ -6,6 +6,8 @@ using RngPool = PscRngPool<Rng>;
 
 #include "rngpool_iface.h"
 
+// ----------------------------------------------------------------------
+// RngPool
 
 RngPool* RngPool_create()
 {
@@ -26,6 +28,20 @@ Rng* RngPool_get(RngPool* rngpool, int n)
 {
   return (*rngpool)[n];
 }
+
+// ----------------------------------------------------------------------
+// Rng
+
+double Rng_uniform(Rng *rng, double lo, double hi)
+{
+  return rng->uniform(lo, hi);
+}
+
+double Rng_normal(Rng *rng, double mu, double sigma)
+{
+  return rng->normal(mu, sigma);
+}
+
 
 
 
