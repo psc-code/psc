@@ -16,12 +16,13 @@ struct Invar
 using DIM_XYZ = Invar<false, false, false>;
 using DIM_XZ = Invar<false, true, false>;
 
-template<typename R, typename F, typename DIM = DIM_XYZ>
+template<typename R, typename F, typename D = DIM_XYZ>
 class Fields3d
 {
 public:
   using real_t = R;
   using fields_t = F;
+  using DIM = D;
 
   Fields3d(const fields_t& f)
     : data_(f.data),
@@ -71,13 +72,25 @@ private:
   int first_comp_;
 };
 
+template<class F>
+static void Foreach_3d(F f, int l, int r)
+{
+  foreach_3d(ppsc, 0, i,j,k, l, r) {
+    f.x(i,j,k);
+    f.y(i,j,k);
+    f.z(i,j,k);
+  } foreach_3d_end;
+}
+
 // ----------------------------------------------------------------------
 
 template<typename Fields>
-struct PushE
+class PushE
 {
+public:
   using real_t = typename Fields::real_t;
   using fields_t = typename Fields::fields_t;
+  using DIM = typename Fields::DIM;
   
   PushE(const fields_t& flds, struct psc* psc, double dt_fac)
     : F(flds)
@@ -91,23 +104,9 @@ struct PushE
     
     dth = dt_fac * psc->dt;
     
-    cnx = dth / psc->patch[0].dx[0];
-    cny = dth / psc->patch[0].dx[1];
-    cnz = dth / psc->patch[0].dx[2];
-    
-    if (psc->domain.gdims[0] == 1) {
-      cnx = 0.;
-    }
-    if (psc->domain.gdims[1] == 1) {
-      cny = 0.;
-    }
-    if (psc->domain.gdims[2] == 1) {
-      cnz = 0.;
-    }
-    
-    for (int d = 0; d < 3; d++) {
-      ldims[d] = psc->patch[0].ldims[d];
-    }
+    cnx = DIM::InvarX::value ? 0 : dth / psc->patch[0].dx[0];
+    cny = DIM::InvarY::value ? 0 : dth / psc->patch[0].dx[1];
+    cnz = DIM::InvarZ::value ? 0 : dth / psc->patch[0].dx[2];
   }
 
   void x(int i, int j,int k)
@@ -127,11 +126,11 @@ struct PushE
     F(EZ, i,j,k) += (cnx * (F(HY, i,j,k) - F(HY, i-1,j,k)) - cny * (F(HX, i,j,k) - F(HX, i,j-1,k)) -
 		     dth * F(JZI, i,j,k));
   }
-  
+
+private:
   Fields F;
   real_t dth;
   real_t cnx, cny, cnz;
-  int ldims[3];
 };
 
 // ----------------------------------------------------------------------
@@ -144,11 +143,7 @@ void psc_push_fields_push_E(struct psc_push_fields *push, typename Fields::field
   PushE<Fields> push_E(flds, psc, dt_fac);
 
   MHERE;
-  foreach_3d(ppsc, 0, i,j,k, 1, 2) {
-    push_E.x(i, j, k);
-    push_E.y(i, j, k);
-    push_E.z(i, j, k);
-  } foreach_3d_end;
+  Foreach_3d(push_E, 1, 2);
 }
 
 void
