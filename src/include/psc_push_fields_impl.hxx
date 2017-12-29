@@ -88,6 +88,7 @@ struct fields_traits<fields_single_t>
 {
   using real_t = fields_single_real_t;
   static constexpr const char* name = "single";
+  static fields_single_t get_patch(struct psc_mfields *mflds, int p) { return fields_single_t_mflds(mflds, p); }
 };
 
 template<>
@@ -95,6 +96,7 @@ struct fields_traits<fields_c_t>
 {
   using real_t = fields_c_real_t;
   static constexpr const char* name = "c";
+  static fields_c_t get_patch(struct psc_mfields *mflds, int p) { return fields_c_t_mflds(mflds, p); }
 };
 
 // ----------------------------------------------------------------------
@@ -267,7 +269,7 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, fields_type, JXI, HX + 3);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = fields_traits<fields_t>::get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_push_E<DIM_XYZ>(push, flds, ppsc, dt_fac);
@@ -301,7 +303,7 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, fields_type, EX, HX + 3);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = fields_traits<fields_t>::get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_push_H<DIM_XYZ>(push, flds, ppsc, dt_fac);
