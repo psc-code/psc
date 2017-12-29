@@ -1,7 +1,7 @@
 
 #include "psc.h"
 
-#include "psc_push_fields_iface.h"
+#include "psc_push_fields_impl.hxx"
 
 struct params_push_fields {
   fields_real_t dth;
@@ -124,11 +124,6 @@ MAKE_PUSH_E(psc_push_fields_sub_push_E_xyz)
 MAKE_PUSH_H(psc_push_fields_sub_push_H_xyz)
 #undef F3
 
-#define F3(flds, m, i,j,k) _F3(flds, m, i,0,k)
-MAKE_PUSH_E(psc_push_fields_sub_push_E_xz)
-MAKE_PUSH_H(psc_push_fields_sub_push_H_xz)
-#undef F3
-
 static void
 psc_push_fields_sub_push_H_yz(struct psc_push_fields *push, fields_t flds)
 {
@@ -177,7 +172,11 @@ psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfield
       psc_push_fields_sub_push_E_yz(push, flds);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
 #ifdef PSC_FIELDS_AS_SINGLE
-      psc_push_fields_single_push_E_xz(push, flds, ppsc, dt_fac);
+      using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
+      psc_push_fields_push_E<Fields>(push, flds, ppsc, dt_fac);
+#elif PSC_FIELDS_AS_C
+      using Fields = Fields3d<fields_c_real_t, fields_c_t, DIM_XZ>;
+      psc_push_fields_push_E<Fields>(push, flds, ppsc, dt_fac);
 #else
       psc_push_fields_sub_push_E_xz(push, flds);
 #endif
@@ -210,7 +209,11 @@ psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push, struct psc_mfield
       psc_push_fields_sub_push_H_yz(push, flds);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
 #ifdef PSC_FIELDS_AS_SINGLE
-      psc_push_fields_single_push_H_xz(push, flds, ppsc, dt_fac);
+      using Fields = Fields3d<fields_single_real_t, fields_single_t, DIM_XZ>;
+      psc_push_fields_push_H<Fields>(push, flds, ppsc, dt_fac);
+#elif PSC_FIELDS_AS_C
+      using Fields = Fields3d<fields_c_real_t, fields_c_t, DIM_XZ>;
+      psc_push_fields_push_H<Fields>(push, flds, ppsc, dt_fac);
 #else
       psc_push_fields_sub_push_H_xz(push, flds);
 #endif
