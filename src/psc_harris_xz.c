@@ -487,13 +487,6 @@ psc_harris_setup(struct psc *psc)
   struct globals_physics *phys = &sub->phys;
   MPI_Comm comm = psc_comm(psc);
 
-  bool split;
-  psc_method_get_param_bool(psc->method, "split", &split);
-  if (!split) {
-    psc_setup_super(psc);
-    return;
-  }
-
   psc_harris_setup_ic(psc);
 
   // Determine the time step
@@ -505,6 +498,19 @@ psc_harris_setup(struct psc *psc)
   psc->dt = phys->dt;
 
   psc->prm.nmax = (int) (sub->prm.taui / (phys->wci*phys->dt)); // number of steps from taui
+
+  if (strcmp(psc_method_type(psc->method), "vpic") != 0) {
+    psc_setup_super(psc);
+    psc_harris_setup_log(psc);
+    return;
+  }
+  bool split;
+  psc_method_get_param_bool(psc->method, "split", &split);
+  if (!split) {
+    psc_setup_super(psc);
+    psc_harris_setup_log(psc);
+    return;
+  }
 
   sub->sim = Simulation_create();
   psc_method_set_param_ptr(psc->method, "sim", sub->sim);

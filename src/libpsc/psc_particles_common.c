@@ -238,6 +238,35 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
   return n_prts;
 }
 
+#if PSC_PARTICLES_AS_SINGLE
+
+static void
+PFX(inject)(struct psc_mparticles *mprts, int p,
+	    const struct psc_particle_inject *new_prt)
+{
+  int kind = new_prt->kind;
+
+  struct psc_patch *patch = &ppsc->patch[p];
+  for (int d = 0; d < 3; d++) {
+    assert(new_prt->x[d] >= patch->xb[d]);
+    assert(new_prt->x[d] <= patch->xb[d] + patch->ldims[d] * patch->dx[d]);
+  }
+  
+  particle_t prt;
+  prt.xi      = new_prt->x[0] - patch->xb[0];
+  prt.yi      = new_prt->x[1] - patch->xb[1];
+  prt.zi      = new_prt->x[2] - patch->xb[2];
+  prt.pxi     = new_prt->u[0];
+  prt.pyi     = new_prt->u[1];
+  prt.pzi     = new_prt->u[2];
+  prt.qni_wni = new_prt->w * ppsc->kinds[kind].q;
+  prt.kind    = kind;
+  
+  mparticles_patch_push_back(mprts, p, prt);
+}
+
+#endif
+
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
@@ -253,5 +282,8 @@ struct psc_mparticles_ops PFX(ops) = {
   .resize_all              = PFX(resize_all),
   .get_size_all            = PFX(get_size_all),
   .get_nr_particles        = PFX(get_nr_particles),
+#if PSC_PARTICLES_AS_SINGLE
+  .inject                  = PFX(inject),
+#endif
 };
 
