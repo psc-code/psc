@@ -4,40 +4,76 @@
 #include "psc.h"
 #include "psc_fields_as_single.h"
 
-#define F3(flds, m, i,j,k) _F3(flds, m, i,0,k)
+#include <type_traits>
 
+template<bool IX = false, bool IY = false, bool IZ = false>
+struct Invar
+{
+  using InvarX = std::integral_constant<bool, IX>;
+  using InvarY = std::integral_constant<bool, IY>;
+  using InvarZ = std::integral_constant<bool, IZ>;
+};
+
+using DIM_XYZ = Invar<false, false, false>;
+using DIM_XZ = Invar<false, true, false>;
+
+template<typename R, typename DIM = DIM_XYZ>
 class Field3d
 {
 public:
-  using real_t = float;
+  using real_t = R;
 
   Field3d(const fields_t& f)
+    : data_(f.data),
+      n_comp_(f.nr_comp),
+      first_comp_(f.first_comp)
   {
-    data = f.data;
     for (int d = 0; d < 3; d++) {
       ib[d] = f.ib[d];
       im[d] = f.im[d];
     }
-    nr_comp = f.nr_comp;
-    first_comp = f.first_comp;
   }
 
   const real_t operator()(int m, int i, int j, int k) const
   {
-    return F3(*this, m, i,j,k);
+    return data_[index(m, i, j, k)];
   }
 
   real_t& operator()(int m, int i, int j, int k)
   {
-    return F3(*this, m, i,j,k);
+    return data_[index(m, i, j, k)];
   }
 
 private:
-  real_t *data;
+  int index(int m, int i_, int j_, int k_)
+  {
+    int i = DIM::InvarX::value ? 0 : i_;
+    int j = DIM::InvarY::value ? 0 : j_;
+    int k = DIM::InvarZ::value ? 0 : k_;
+
+#ifdef BOUNDS_CHECK
+    assert(m >= first_comp_ && m < n_comp_);
+    assert(i >= ib[0] && i < ib[0] + im[0]);
+    assert(j >= ib[1] && j < ib[1] + im[1]);
+    assert(k >= ib[2] && k < ib[2] + im[2]);
+#endif
+  
+      return ((((((m) - first_comp_)
+	       * im[2] + (k - ib[2]))
+	      * im[1] + (j - ib[1]))
+	     * im[0] + (i - ib[0])));
+      }
+
+private:
+  real_t *data_;
   int ib[3], im[3];
-  int nr_comp;
-  int first_comp;
+  int n_comp_;
+  int first_comp_;
 };
+
+using Field = Field3d<float, DIM_XZ>;
+
+// ----------------------------------------------------------------------
 
 struct params_push_fields {
   fields_real_t dth;
@@ -92,7 +128,7 @@ psc_push_fields_single_push_E_xz(struct psc_push_fields *push, fields_t flds,
 {
   params_push_fields_set(psc, dt_fac);
 
-  Field3d F(flds);
+  Field F(flds);
   MHERE;
   foreach_3d(ppsc, 0, i,j,k, 1, 2) {
     F(EX, i,j,k) +=
