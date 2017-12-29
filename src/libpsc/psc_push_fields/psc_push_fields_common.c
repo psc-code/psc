@@ -1,6 +1,8 @@
 
 #include "psc.h"
 
+#include "psc_push_fields_iface.h"
+
 struct params_push_fields {
   fields_real_t dth;
   fields_real_t cnx;
@@ -174,7 +176,11 @@ psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfield
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_sub_push_E_yz(push, flds);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+#ifdef PSC_FIELDS_AS_SINGLE
+      psc_push_fields_single_push_E_xz(push, flds, ppsc, dt_fac);
+#else
       psc_push_fields_sub_push_E_xz(push, flds);
+#endif
     } else {
       assert(0);
     }
