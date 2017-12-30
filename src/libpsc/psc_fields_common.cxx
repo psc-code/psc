@@ -135,17 +135,21 @@ MPFX(setup)(struct psc_mfields *mflds)
     size *= sub->im[d];
   }
 
-  sub->data = calloc(mflds->nr_patches, sizeof(*sub->data));
+#if PSC_FIELDS_AS_FORTRAN
+  sub->data = (fields_real_t***) calloc(mflds->nr_patches, sizeof(*sub->data));
+#else
+  sub->data = (fields_real_t**) calloc(mflds->nr_patches, sizeof(*sub->data));
+#endif
   for (int p = 0; p < mflds->nr_patches; p++) {
 #if PSC_FIELDS_AS_FORTRAN
-    fields_real_t **flds = calloc(mflds->nr_fields, sizeof(*flds));
-    flds[0] = calloc(size * mflds->nr_fields, sizeof(flds[0]));
+    fields_real_t **flds = (fields_real_t **) calloc(mflds->nr_fields, sizeof(*flds));
+    flds[0] = (fields_real_t *) calloc(size * mflds->nr_fields, sizeof(flds[0]));
     for (int i = 1; i < mflds->nr_fields; i++) {
       flds[i] = flds[0] + i * size;
     }
     sub->data[p] = flds;
 #else
-    sub->data[p] = calloc(mflds->nr_fields * size, sizeof(fields_real_t));
+    sub->data[p] = (fields_real_t *) calloc(mflds->nr_fields * size, sizeof(fields_real_t));
 #endif
   }
 }
@@ -206,7 +210,11 @@ MPFX(write)(struct psc_mfields *mflds, struct mrc_io *io)
     ierr = H5LTset_attribute_int(group, ".", "im", flds.im, 3); CE;
     ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds.nr_comp, 1); CE;
     // write components separately instead?
-    hsize_t hdims[4] = { flds.nr_comp, flds.im[2], flds.im[1], flds.im[0] };
+    hsize_t hdims[4];
+    hdims[0] = flds.nr_comp;
+    hdims[1] = flds.im[2];
+    hdims[2] = flds.im[1];
+    hdims[3] = flds.im[0];
 #if PSC_FIELDS_AS_SINGLE
     ierr = H5LTmake_dataset_float(group, "fields_single", 4, hdims, flds.data); CE;
 #elif PSC_FIELDS_AS_C

@@ -76,6 +76,7 @@ AC_PROG_LIBTOOL
 
 AX_CHECK_HDF5
 CFLAGS="$H5_CFLAGS $CFLAGS"
+CXXFLAGS="$H5_CFLAGS $CXXFLAGS"
 LIBS="$H5_LIBS $LIBS"
 AS_IF([test "$have_hdf5" != "no"],
       [AC_DEFINE([HAVE_HDF5], [], [we have HDF5 library + headers])])

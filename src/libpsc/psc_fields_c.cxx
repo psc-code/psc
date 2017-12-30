@@ -13,5 +13,5 @@ static struct mrc_obj_method psc_mfields_c_methods[] = {
   {}
 };
 
-#include "psc_fields_common.c"
+#include "psc_fields_common.cxx"
 
