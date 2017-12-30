@@ -13,7 +13,7 @@ struct psc_diag_item_ops {
   
   void (*run)(struct psc_diag_item *item, struct psc *psc, double *result);
   int nr_values;
-  const char *title[];
+  const char *title[6]; // FIXME ugly hardcoded 6
 };
 
 #define psc_diag_item_ops(item) ((struct psc_diag_item_ops *)((item)->obj.ops))
