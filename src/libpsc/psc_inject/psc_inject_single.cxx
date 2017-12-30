@@ -4,8 +4,11 @@
 
 #include <psc_particles_as_single.h>
 #include <psc_fields_as_c.h>
+#include <fields.hxx>
 
 #include <stdlib.h>
+
+using Fields = Fields3d<fields_t>;
 
 void psc_bnd_check_domain(struct psc_bnd *bnd); // FIXME
 
@@ -129,7 +132,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
   
   psc_foreach_patch(psc, p) {
-    fields_t flds_n = fields_t_mflds(mflds_n, p);
+    Fields N(fields_t_mflds(mflds_n, p));
     int *ldims = psc->patch[p].ldims;
     
     int nr_pop = psc->prm.nr_populations;
@@ -166,7 +169,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	    int n_in_cell;
 	    if (kind != psc->prm.neutralizing_population) {
 	      if (psc->timestep >= 0) {
-		npt.n -= _F3(flds_n, kind_n, jx,jy,jz);
+		npt.n -= N(kind_n, jx,jy,jz);
 		if (npt.n < 0) {
 		  n_in_cell = 0;
 		} else {
