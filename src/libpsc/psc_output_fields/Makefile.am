@@ -9,8 +9,8 @@ libsubdir_la_SOURCES = \
 	psc_output_fields_c.c \
 	psc_output_fields_item.c \
 	psc_output_fields_item_jeh.cxx \
-	psc_output_fields_item_flds_c.c \
-	psc_output_fields_item_flds_single.c \
+	psc_output_fields_item_flds_c.cxx \
+	psc_output_fields_item_flds_single.cxx \
 	psc_output_fields_item_moments_1st_single.cxx \
 	psc_output_fields_item_moments_1st_double.cxx \
 	\
