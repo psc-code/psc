@@ -64,7 +64,6 @@
 - proper checkpointing
 - disable checkpointing write
 - creal type
-- fix psc_dump_field
 - generic fld3 sth
 - overview doc: kind of modules
 - --enable-sse2 automatic

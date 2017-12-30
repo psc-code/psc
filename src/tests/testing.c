@@ -243,7 +243,6 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
 	      psc_mfields_comp_name(mflds, m), max_delta, thres);
     }
     if (max_delta > thres) {
-      //      psc_dump_field(diff, 0, "diff");
       assert(0);
     }
   }
@@ -363,27 +362,6 @@ psc_testing_create_test_xz()
 }
 
 void
-psc_testing_dump(struct psc *psc, const char *basename)
-{
-  if (!opt_testing_dump)
-    return;
-
-  static int cnt = 0;
-
-  char s[200];
-  sprintf(s, "part_%s_%d", basename, cnt);
-  psc_dump_particles(psc->particles, s);
-  sprintf(s, "jx_%s_%d", basename, cnt);
-  psc_dump_field(psc->flds, JXI, s);
-  sprintf(s, "jy_%s_%d", basename, cnt);
-  psc_dump_field(psc->flds, JYI, s);
-  sprintf(s, "jz_%s_%d", basename, cnt);
-  psc_dump_field(psc->flds, JZI, s);
-
-  cnt ++;
-}
-
-void
 psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
 {
   if (opt_checks_verbose) {
@@ -394,14 +372,14 @@ psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
 
-  psc_testing_dump(psc, s_push_particles);
+  //  psc_testing_dump(psc, s_push_particles);
 
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
   psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
 
-  psc_testing_dump(psc, s_push_particles);
+  //  psc_testing_dump(psc, s_push_particles);
 }
 
 void

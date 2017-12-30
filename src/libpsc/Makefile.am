@@ -100,7 +100,6 @@ libpsc_la_SOURCES = \
 	psc_method_default.c \
 	integrate.c \
 	psc_stats.c \
-	psc_dump.c \
 	psc_checkpoint.c \
 	rngpool.cxx \
 	psc_main.c

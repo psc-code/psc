@@ -17,11 +17,9 @@ main(int argc, char **argv)
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
   psc_case_setup(_case);
   struct psc_mparticles *particles = ppsc->particles;
-  //  psc_dump_particles("part-0");
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
   psc_save_particles_ref(ppsc, particles);
   psc_save_fields_ref(ppsc, ppsc->flds);
-  //  psc_dump_particles("part-1");
   psc_case_destroy(_case);
 
   _case = psc_create_test_xy();
@@ -29,7 +27,6 @@ main(int argc, char **argv)
   psc_case_setup(_case);
   particles = ppsc->particles;
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  //  psc_dump_particles("part-2");
   psc_check_particles_ref(ppsc, particles, 1e-7, "push_part_xy -- generic_c");
   psc_check_currents_ref(ppsc, ppsc->flds, 1e-7, 3);
   psc_case_destroy(_case);
@@ -40,7 +37,6 @@ main(int argc, char **argv)
   psc_case_setup(_case);
   particles = ppsc->particles;
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  //  psc_dump_particles("part-2");
   psc_check_particles_ref(ppsc, particles, 1e-7, "push_part_xy -- sse2");
   psc_check_currents_ref(ppsc, ppsc->flds, 1e-6, 3);
   psc_case_destroy(_case);
@@ -52,7 +48,6 @@ main(int argc, char **argv)
   psc_case_setup(_case);
   particles = &ppsc->particles;
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  //  psc_dump_particles("part-2");
   psc_check_particles_ref(ppsc, particles, 1e-7, "push_part_xy -- cbe");
   psc_check_currents_ref(ppsc, ppsc->flds, 1e-6, 3);
   psc_case_destroy(_case);

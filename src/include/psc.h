@@ -385,9 +385,6 @@ void psc_setup_domain(struct psc *psc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
 void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 
-void psc_dump_particles(struct psc_mparticles *particles, const char *fname);
-void psc_dump_field(struct psc_mfields *flds, int m, const char *fname);
-
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
 

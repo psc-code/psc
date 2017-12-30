@@ -88,14 +88,8 @@ main(int argc, char **argv)
 
   struct psc *psc = psc_testing_create_test_xz();
   psc_setup(psc);
-  if (opt_testing_dump) {
-    psc_dump_particles(psc->particles, "part-0");
-  }
   int total_num_particles_before = get_total_num_particles(psc->particles);
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
-  if (opt_testing_dump) {
-    psc_dump_particles(psc->particles, "part-1");
-  }
   int total_num_particles_after = get_total_num_particles(psc->particles);
   psc_mparticles_check(psc->particles);
   assert(total_num_particles_before == total_num_particles_after);

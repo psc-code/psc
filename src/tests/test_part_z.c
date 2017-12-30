@@ -15,19 +15,6 @@
 static bool do_dump = false;
 
 static void
-dump(const char *basename, int cnt)
-{
-  if (!do_dump)
-    return;
-
-  char s[200];
-  sprintf(s, "part_%s_%d", basename, cnt);
-  psc_dump_particles(ppsc->particles, s);
-  sprintf(s, "jz_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JZI, s);
-}
-
-static void
 add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi,
 	     double qni, double mni)
 {

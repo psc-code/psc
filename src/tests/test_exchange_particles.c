@@ -163,10 +163,8 @@ main(int argc, char **argv)
 
   struct psc_mparticles *particles = ppsc->particles;
   setup_particles(particles);
-  //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles(particles);
   psc_bnd_exchange_particles(ppsc->bnd, particles);
-  //  psc_dump_particles("part-1");
   int total_num_particles_after = get_total_num_particles(particles);
   check_particles_old_xz(particles);
   assert(total_num_particles_before == total_num_particles_after);
@@ -178,10 +176,8 @@ main(int argc, char **argv)
   particles = ppsc->particles;
 
   setup_particles(particles);
-  //  psc_dump_particles("part-0");
   total_num_particles_before = get_total_num_particles(particles);
   psc_bnd_exchange_particles(ppsc->bnd, particles);
-  //  psc_dump_particles("part-1");
   total_num_particles_after = get_total_num_particles(particles);
   check_particles(particles);
   assert(total_num_particles_before == total_num_particles_after);
