@@ -2,11 +2,14 @@
 #include "psc_marder_private.h"
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
+#include "fields.hxx"
 
 #include <mrc_io.h>
 
+using Fields = Fields3d<fields_t>;
+
 // FIXME: checkpointing won't properly restore state
-// FIXME: if they subclass creates objects, it'd be cleaner to have them
+// FIXME: if the subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
 
 // ----------------------------------------------------------------------
@@ -110,6 +113,7 @@ psc_marder_sub_destroy(struct psc_marder *marder)
 static void
 psc_marder_sub_correct_patch(struct psc_marder *marder, fields_t flds, fields_t f, int p)
 {
+  Fields F(flds), FF(f);
   define_dxdydz(dx, dy, dz);
 
   // FIXME: how to choose diffusion parameter properly?
@@ -143,14 +147,14 @@ psc_marder_sub_correct_patch(struct psc_marder *marder, fields_t flds, fields_t 
 #if 0
   psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
     // FIXME: F3 correct?
-    _F3(flds, EX, ix,iy,iz) += 
-      (_F3(f, DIVE_MARDER, ix+dx,iy,iz) - _F3(f, DIVE_MARDER, ix,iy,iz))
+    F(EX, ix,iy,iz) += 
+      (FF(DIVE_MARDER, ix+dx,iy,iz) - FF(DIVE_MARDER, ix,iy,iz))
       * .5 * ppsc->dt * diffusion / deltax;
-    _F3(flds, EY, ix,iy,iz) += 
-      (_F3(f, DIVE_MARDER, ix,iy+dy,iz) - _F3(f, DIVE_MARDER, ix,iy,iz))
+    F(EY, ix,iy,iz) += 
+      (FF(DIVE_MARDER, ix,iy+dy,iz) - FF(DIVE_MARDER, ix,iy,iz))
       * .5 * ppsc->dt * diffusion / deltay;
-    _F3(flds, EZ, ix,iy,iz) += 
-      (_F3(f, DIVE_MARDER, ix,iy,iz+dz) - _F3(f, DIVE_MARDER, ix,iy,iz))
+    F(EZ, ix,iy,iz) += 
+      (FF(DIVE_MARDER, ix,iy,iz+dz) - FF(DIVE_MARDER, ix,iy,iz))
       * .5 * ppsc->dt * diffusion / deltaz;
   } psc_foreach_3d_more_end;
 #endif
@@ -161,8 +165,8 @@ psc_marder_sub_correct_patch(struct psc_marder *marder, fields_t flds, fields_t 
     int l[3] = { l_nc[0], l_cc[1], l_nc[2] };
     int r[3] = { r_nc[0], r_cc[1], r_nc[2] };
     psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
-      _F3(flds, EY, ix,iy,iz) += 
-	(_F3(f, 0, ix,iy+dy,iz) - _F3(f, 0, ix,iy,iz))
+      F(EY, ix,iy,iz) += 
+	(FF(0, ix,iy+dy,iz) - FF(0, ix,iy,iz))
 	* .5 * ppsc->dt * diffusion / deltay;
     } psc_foreach_3d_more_end;
   }
@@ -171,8 +175,8 @@ psc_marder_sub_correct_patch(struct psc_marder *marder, fields_t flds, fields_t 
     int l[3] = { l_nc[0], l_nc[1], l_cc[2] };
     int r[3] = { r_nc[0], r_nc[1], r_cc[2] };
     psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
-      _F3(flds, EZ, ix,iy,iz) += 
-	(_F3(f, 0, ix,iy,iz+dz) - _F3(f, 0, ix,iy,iz))
+      F(EZ, ix,iy,iz) += 
+	(FF(0, ix,iy,iz+dz) - FF(0, ix,iy,iz))
 	* .5 * ppsc->dt * diffusion / deltaz;
     } psc_foreach_3d_more_end;
   }

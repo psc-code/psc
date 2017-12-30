@@ -9,8 +9,8 @@ libsubdir_la_SOURCES = \
 	psc_push_fields_impl.cxx \
 	psc_push_fields_none.cxx \
 	psc_marder.c \
-	psc_marder_c.c \
-	psc_marder_single.c
+	psc_marder_c.cxx \
+	psc_marder_single.cxx
 
 if USE_FORTRAN
 libsubdir_la_SOURCES += \
