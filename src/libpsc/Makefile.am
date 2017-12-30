@@ -84,7 +84,7 @@ libpsc_la_LIBADD += \
 endif
 
 libpsc_la_SOURCES = \
-	mfields.c \
+	mfields.cxx \
 	mparticles.c \
 	psc_fields_fortran.c \
 	psc_fields_c.c \

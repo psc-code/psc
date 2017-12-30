@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "fields.hxx"
 #include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
@@ -7,6 +8,8 @@
 #include <mrc_io.h>
 #include <stdlib.h>
 #include <string.h>
+
+using Fields = Fields3d<fields_t, DIM_XYZ>;
 
 // ======================================================================
 // _psc_mfields_setup
@@ -16,7 +19,7 @@ _psc_mfields_setup(struct psc_mfields *mflds)
 {
   assert(mflds->domain);
   
-  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
+  mflds->comp_name = new char* [mflds->nr_fields]();
 }
 
 // ======================================================================
@@ -29,7 +32,7 @@ _psc_mfields_destroy(struct psc_mfields *mflds)
     for (int m = 0; m < mflds->nr_fields; m++) {
       free(mflds->comp_name[m]);
     }
-    free(mflds->comp_name);
+    delete[] mflds->comp_name;
   }
 }
 
@@ -49,7 +52,7 @@ _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
   mflds->domain = mrc_io_read_ref(io, mflds, "domain", mrc_domain);
   mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
 
-  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
+  mflds->comp_name = new char* [mflds->nr_fields];
   for (int m = 0; m < mflds->nr_fields; m++) {
     char name[20]; sprintf(name, "comp_name_%d", m);
     char *s;
@@ -274,11 +277,11 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
   struct psc_mfields *mflds = 
     psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, mflds_base->nr_fields);
   psc_foreach_patch(ppsc, p) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    Fields F(fields_t_mflds(mflds, p));
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < mflds->nr_fields; m++) {
-	MRC_M3(m3p ,m, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
+	MRC_M3(m3p ,m, ix,iy,iz) = F(m, ix,iy,iz);
       }
     } mrc_fld_foreach_end;
     mrc_fld_patch_put(m3);
@@ -392,7 +395,7 @@ psc_mfields_put_as(struct psc_mfields *mflds, struct psc_mfields *mflds_base,
 void
 psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p)
 {
-  struct psc_mfields_list_entry *p = malloc(sizeof(*p));
+  struct psc_mfields_list_entry *p = new struct psc_mfields_list_entry;
   p->flds_p = flds_p;
   list_add_tail(&p->entry, head);
 }
@@ -404,7 +407,7 @@ psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p)
   __list_for_each_entry(p, head, entry, struct psc_mfields_list_entry) {
     if (p->flds_p == flds_p) {
       list_del(&p->entry);
-      free(p);
+      delete p;
       return;
     }
   }
