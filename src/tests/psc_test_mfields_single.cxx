@@ -1,6 +1,9 @@
 
 #include "psc_fields.h"
 #include "psc_fields_as_single.h"
+#include "fields.hxx"
+
+using Fields = Fields3d<fields_t>;
 
 #include "psc.h"
 
@@ -67,6 +70,7 @@ test_print(MPI_Comm comm)
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
+    Fields F(flds);
 
     for (int m = 0; m < flds.nr_comp; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -74,7 +78,7 @@ test_print(MPI_Comm comm)
 	  mprintf("mflds[%d, %d:%d,%d,%d, %d] =",
 		  m, flds.ib[0], flds.ib[0] + flds.im[0], jy, jz, p);
 	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	    printf(" %g", _F3(flds, m, jx,jy,jz));
+	    printf(" %g", F(m, jx,jy,jz));
 	  }
 	  printf("\n");
 	}

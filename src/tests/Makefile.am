@@ -17,14 +17,20 @@ noinst_PROGRAMS = \
 	psc_test_em_wave \
 	test_psc_mparticles \
 	test_part_yz \
+	test_field \
+	test_bnd \
+	test_bnd_multi \
 	test_exchange_particles_multi
+
+psc_test_mfields_single_SOURCES = psc_test_mfields_single.cxx
+psc_test_em_wave_SOURCES = psc_test_em_wave.cxx
+test_field_SOURCES = test_field.cxx
+test_bnd_SOURCES = test_bnd.cxx
+test_bnd_multi_SOURCES = test_bnd_multi.cxx
 
 #	test_part_xy \
 	test_part_xz \
 	test_part_z \
-	test_field \
-	test_bnd \
-	test_bnd_multi \
 	test_exchange_particles \
 	test_sort
 
@@ -90,18 +96,13 @@ CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math -arch=sm_30
 	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 # HACK to have automake use the CXX linker 
-nodist_EXTRA_psc_test_mfields_single_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_cyclo_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_accel_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_em_wave_SOURCES = dummy.cxx
 nodist_EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
 nodist_EXTRA_test_part_yz_SOURCES = dummy.cxx
 #nodist_EXTRA_test_part_xy_SOURCES = dummy.cxx
 #nodist_EXTRA_test_part_xz_SOURCES = dummy.cxx
 #nodist_EXTRA_test_part_z_SOURCES = dummy.cxx
-#nodist_EXTRA_test_field_SOURCES = dummy.cxx
-#nodist_EXTRA_test_bnd_SOURCES = dummy.cxx
-#nodist_EXTRA_test_bnd_multi_SOURCES = dummy.cxx
 #nodist_EXTRA_test_exchange_particles_SOURCES = dummy.cxx
 nodist_EXTRA_test_exchange_particles_multi_SOURCES = dummy.cxx
 #nodist_EXTRA_test_sort_SOURCES = dummy.cxx

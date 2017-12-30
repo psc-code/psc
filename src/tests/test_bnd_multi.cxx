@@ -15,11 +15,11 @@ setup_jx(struct psc_mfields *mflds_base)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
   psc_foreach_patch(ppsc, p) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    Fields F(fields_t_mflds(mflds, p));
     psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
-      _F3(flds, JXI, jx,jy,jz) = iz * 10000 + iy * 100 + ix;
+      F(JXI, jx,jy,jz) = iz * 10000 + iy * 100 + ix;
     } foreach_3d_end;
   }
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 1);
@@ -34,7 +34,7 @@ check_jx(struct psc_mfields *mflds_base)
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 1);
   psc_foreach_patch(ppsc, p) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    Fields F(fields_t_mflds(mflds, p))
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
@@ -78,12 +78,12 @@ check_jx(struct psc_mfields *mflds_base)
 	}
       }
 
-      if (_F3(flds, JXI, jx,jy,jz) != iz * 10000 + iy * 100 + ix) {
+      if (F(JXI, jx,jy,jz) != iz * 10000 + iy * 100 + ix) {
 	printf("ix %d %d %d jx %d %d %d\n", ix, iy, iz, jx, jy, jz);
 	printf("exp: %d actual: %g\n", iz * 10000 + iy * 100 + ix,
-	       _F3(flds, JXI, jx,jy,jz));
+	       F(JXI, jx,jy,jz));
       }
-      assert(_F3(flds, JXI, jx,jy,jz) == iz * 10000 + iy * 100 + ix);
+      assert(F(JXI, jx,jy,jz) == iz * 10000 + iy * 100 + ix);
     } foreach_3d_end;
   }
   psc_mfields_put_as(mflds, mflds_base, 0, 0);

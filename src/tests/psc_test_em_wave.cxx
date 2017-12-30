@@ -7,10 +7,13 @@
 
 #include <psc_fields_as_c.h>
 #include <psc_fields_single.h>
+#include "fields.hxx"
 
 #include <mrc_params.h>
 
 #include <math.h>
+
+using Fields = Fields3d<fields_t>;
 
 struct psc_test_em_wave {
   // params
@@ -142,24 +145,24 @@ psc_test_em_wave_check(struct psc *psc)
 
   int failed = 0;
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    Fields F(fields_t_mflds(mflds, p));
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      failed += is_equal_tol(tol, _F3(flds, EX, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EX, jx,jy,jz),
 			     E[0] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz         ))));
-      failed += is_equal_tol(tol, _F3(flds, EY, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EY, jx,jy,jz),
 			     E[1] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
-      failed += is_equal_tol(tol, _F3(flds, EZ, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EZ, jx,jy,jz),
 			     E[2] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
 
-      failed += is_equal_tol(tol, _F3(flds, HX, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HX, jx,jy,jz),
 			     B[0] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz + .5f*dz))));
-      failed += is_equal_tol(tol, _F3(flds, HY, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HY, jx,jy,jz),
 			     B[1] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
-      failed += is_equal_tol(tol, _F3(flds, HZ, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HZ, jx,jy,jz),
 			     B[2] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
     } foreach_3d_end;
   }
@@ -185,24 +188,24 @@ psc_test_em_wave_check_single(struct psc *psc)
 
   int failed = 0;
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_single_t flds = fields_single_t_mflds(mflds, p);
+    Fields3d<fields_single_t> F(fields_single_t_mflds(mflds, p));
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      failed += is_equal_tol(tol, _F3_S(flds, EX, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EX, jx,jy,jz),
 			     E[0] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz         ))));
-      failed += is_equal_tol(tol, _F3_S(flds, EY, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EY, jx,jy,jz),
 			     E[1] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
-      failed += is_equal_tol(tol, _F3_S(flds, EZ, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EZ, jx,jy,jz),
 			     E[2] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
 
-      failed += is_equal_tol(tol, _F3_S(flds, HX, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HX, jx,jy,jz),
 			     B[0] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz + .5f*dz))));
-      failed += is_equal_tol(tol, _F3_S(flds, HY, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HY, jx,jy,jz),
 			     B[1] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
-      failed += is_equal_tol(tol, _F3_S(flds, HZ, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HZ, jx,jy,jz),
 			     B[2] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
     } foreach_3d_end;
   }
@@ -237,18 +240,18 @@ psc_test_em_wave_check_vpic(struct psc *psc)
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      failed += is_equal_tol(tol, _F3_S(flds, EX, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EX, jx,jy,jz),
 			     E[0] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz         ))));
-      failed += is_equal_tol(tol, _F3_S(flds, EY, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EY, jx,jy,jz),
 			     E[1] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
-      failed += is_equal_tol(tol, _F3_S(flds, EZ, jx,jy,jz),
+      failed += is_equal_tol(tol, F(EZ, jx,jy,jz),
 			     E[2] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
 
-      failed += is_equal_tol(tol, _F3_S(flds, HX, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HX, jx,jy,jz),
 			     B[0] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz + .5f*dz))));
-      failed += is_equal_tol(tol, _F3_S(flds, HY, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HY, jx,jy,jz),
 			     B[1] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
-      failed += is_equal_tol(tol, _F3_S(flds, HZ, jx,jy,jz),
+      failed += is_equal_tol(tol, F(HZ, jx,jy,jz),
 			     B[2] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
     } foreach_3d_end;
   }
