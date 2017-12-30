@@ -278,9 +278,9 @@ psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p,
 
 #if PTYPE == PTYPE_SINGLE_BY_BLOCK
   free(patch->prt_array_alt);
-  patch->prt_array_alt = malloc(new_capacity * sizeof(*patch->prt_array_alt));
-  patch->b_idx = realloc(patch->b_idx, new_capacity * sizeof(*patch->b_idx));
-  patch->b_ids = realloc(patch->b_ids, new_capacity * sizeof(*patch->b_ids));
+  patch->prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*patch->prt_array_alt));
+  patch->b_idx = (unsigned int *) realloc(patch->b_idx, new_capacity * sizeof(*patch->b_idx));
+  patch->b_ids = (unsigned int *) realloc(patch->b_ids, new_capacity * sizeof(*patch->b_ids));
 #endif
 }
 

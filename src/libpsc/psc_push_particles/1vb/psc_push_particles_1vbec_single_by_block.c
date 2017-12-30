@@ -3,14 +3,7 @@
 
 #include "psc_particles_as_single_by_block.h"
 #include "psc_fields_as_single.h"
-
-// FIXME -> some header
-void psc_push_particles_1vbec_single_by_block_push_mprts_yz(struct psc_push_particles *push,
-							    struct psc_mparticles *mprts,
-							    struct psc_mfields *mflds);
-void psc_push_particles_1vbec_single_by_block_push_mprts_xyz(struct psc_push_particles *push,
-							     struct psc_mparticles *mprts,
-							     struct psc_mfields *mflds);
+#include "1vb/psc_push_particles_1vb.h"
 
 // ======================================================================
 // psc_push_particles: subclass "1vbec_single_by_block"

@@ -3,8 +3,9 @@
 
 #include "psc_particles_as_single_by_block.h"
 #include "psc_fields_as_single.h"
+#include "1vb/psc_push_particles_1vb.h"
 
-#define DIM DIM_XYZ
+#define DIM DIM_YZ
 
 #include "../inc_defs.h"
 
@@ -13,8 +14,8 @@
 #define CALC_J CALC_J_1VB_SPLIT
 #define PUSHER_BY_BLOCK
 
-#define psc_push_particles_push_mprts_xyz psc_push_particles_1vbec_single_by_block_push_mprts_xyz
-#define psc_push_particles_stagger_mprts_xyz psc_push_particles_1vbec_single_by_block_stagger_mprts_xyz
+#define psc_push_particles_push_mprts_yz psc_push_particles_1vbec_single_by_block_push_mprts_yz
+#define psc_push_particles_stagger_mprts_yz psc_push_particles_1vbec_single_by_block_stagger_mprts_yz
 
 #include "1vb.c"
 

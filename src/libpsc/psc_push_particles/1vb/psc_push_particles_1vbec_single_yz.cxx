@@ -3,6 +3,7 @@
 
 #include "psc_particles_as_single.h"
 #include "psc_fields_as_single.h"
+#include "1vb/psc_push_particles_1vb.h"
 
 #define DIM DIM_YZ
 

@@ -62,15 +62,17 @@ particle_single_by_block_calc_vxi(particle_single_by_block_real_t vxi[3],
 
 static inline void
 particle_single_by_block_get_relative_pos(particle_single_by_block_t *p, double xb[3],
-				 particle_single_by_block_real_t xi[3])
+					  particle_single_by_block_real_t xi[3])
 {
   particle_single_by_block_real_t vxi[3];
   particle_single_by_block_calc_vxi(vxi, p);
-  particle_single_by_block_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  particle_single_by_block_real_t dth[3];
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
     if (ppsc->domain.gdims[d] == 1) {
       dth[d] = 0.;
+    } else {
+      dth[d] = .5 * ppsc->dt;
     }
   }
   xi[0] = p->xi - dth[0] * vxi[0];

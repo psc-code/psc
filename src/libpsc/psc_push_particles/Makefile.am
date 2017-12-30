@@ -1,5 +1,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libsubdir.la
 
@@ -7,12 +8,12 @@ libsubdir_la_SOURCES = \
 	psc_push_particles.c \
 	psc_generic_c.h \
 	psc_push_particles_generic_c.c \
-	push_part_xyz.c \
-	push_part_xy.c \
-	push_part_xz.c \
-	push_part_yz.c \
-	push_part_y.c \
-	push_part_z.c \
+	push_part_xyz.cxx \
+	push_part_xy.cxx \
+	push_part_xz.cxx \
+	push_part_yz.cxx \
+	push_part_y.cxx \
+	push_part_z.cxx \
 	\
 	psc_push_particles_2nd.h \
 	psc_push_particles_2nd.c \
@@ -29,21 +30,21 @@ libsubdir_la_SOURCES = \
 	push_part_1sff_xz.c \
 	push_part_single2_1vb_yz.c \
 	\
-	1vb/psc_push_particles_1vb_single.c \
-	1vb/psc_push_particles_1vbec_single.c \
-	1vb/psc_push_particles_1vbec_single_yz.c \
-	1vb/psc_push_particles_1vbec_single_xyz.c \
-	1vb/psc_push_particles_1vbec_single_xyz_xz.c \
-	1vb/psc_push_particles_1vbec_single_1.c \
-	1vb/psc_push_particles_1vbec_single_by_block.c \
-	1vb/psc_push_particles_1vbec_single_by_block_yz.c \
-	1vb/psc_push_particles_1vbec_single_by_block_xyz.c \
+	1vb/psc_push_particles_1vb_single.cxx \
+	1vb/psc_push_particles_1vbec_single.cxx \
+	1vb/psc_push_particles_1vbec_single_yz.cxx \
+	1vb/psc_push_particles_1vbec_single_xyz.cxx \
+	1vb/psc_push_particles_1vbec_single_xyz_xz.cxx \
+	1vb/psc_push_particles_1vbec_single_1.cxx \
+	1vb/psc_push_particles_1vbec_single_by_block.cxx \
+	1vb/psc_push_particles_1vbec_single_by_block_yz.cxx \
+	1vb/psc_push_particles_1vbec_single_by_block_xyz.cxx \
 	\
-	1vb/psc_push_particles_1vb_double.c \
-	1vb/psc_push_particles_1vbec_double.c \
-	1vb/psc_push_particles_1vbec_double_yz.c \
-	1vb/psc_push_particles_1vbec_double_xyz.c \
-	1vb/psc_push_particles_1vbec_double_1.c \
+	1vb/psc_push_particles_1vb_double.cxx \
+	1vb/psc_push_particles_1vbec_double.cxx \
+	1vb/psc_push_particles_1vbec_double_yz.cxx \
+	1vb/psc_push_particles_1vbec_double_xyz.cxx \
+	1vb/psc_push_particles_1vbec_double_1.cxx \
 	\
 	psc_push_particles_1st.h \
 	psc_push_particles_double.h \

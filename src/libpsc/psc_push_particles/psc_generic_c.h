@@ -6,6 +6,8 @@
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_double.h"
 
+BEGIN_C_DECLS
+
 void psc_push_particles_generic_c_push_mprts_y(struct psc_push_particles *push,
 					       struct psc_mparticles *mprts,
 					       struct psc_mfields *mflds);
@@ -26,5 +28,7 @@ void psc_push_particles_generic_c_push_mprts_yz(struct psc_push_particles *push,
 void psc_push_particles_generic_c_push_mprts_xyz(struct psc_push_particles *push,
 						 struct psc_mparticles *mprts,
 						 struct psc_mfields *mflds);
+
+END_C_DECLS
 
 #endif
