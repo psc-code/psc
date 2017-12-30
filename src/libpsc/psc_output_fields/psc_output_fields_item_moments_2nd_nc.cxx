@@ -15,6 +15,7 @@ using Fields = Fields3d<fields_t>;
 static void
 add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
 {
+  Fields F(flds);
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
@@ -22,8 +23,8 @@ add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy+1,iz) += _F3(flds, m, ix,iy-1,iz);
-	    _F3(flds, m, ix,iy-1,iz) = 0.;
+	    F(m, ix,iy+1,iz) += F(m, ix,iy-1,iz);
+	    F(m, ix,iy-1,iz) = 0.;
 	  }
 	}
       }
@@ -33,8 +34,8 @@ add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy,iz+1) += _F3(flds, m, ix,iy,iz-1);
-	    _F3(flds, m, ix,iy,iz-1) = 0.;
+	    F(m, ix,iy,iz+1) += F(m, ix,iy,iz-1);
+	    F(m, ix,iy,iz-1) = 0.;
 	  }
 	}
       }
@@ -47,6 +48,7 @@ add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
 static void
 add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
 {
+  Fields F(flds);
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
@@ -54,8 +56,8 @@ add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iy = patch->ldims[1]; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy-1,iz) += _F3(flds, m, ix,iy+1,iz);
-	    _F3(flds, m, ix,iy+1,iz) = 0.;
+	    F(m, ix,iy-1,iz) += F(m, ix,iy+1,iz);
+	    F(m, ix,iy+1,iz) = 0.;
 	  }
 	}
       }
@@ -65,8 +67,8 @@ add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iz = patch->ldims[2]; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy,iz-1) += _F3(flds, m, ix,iy,iz+1);
-	    _F3(flds, m, ix,iy,iz+1) += 0.;
+	    F(m, ix,iy,iz-1) += F(m, ix,iy,iz+1);
+	    F(m, ix,iy,iz+1) += 0.;
 	  }
 	}
       }

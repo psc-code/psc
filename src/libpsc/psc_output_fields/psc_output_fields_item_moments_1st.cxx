@@ -15,6 +15,7 @@ using Fields = Fields3d<fields_t>;
 static void
 add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
 {
+  Fields F(flds);
   struct psc_patch *patch = ppsc->patch + p;
 
   int bx = patch->ldims[0] == 1 ? 0 : 1;
@@ -23,7 +24,7 @@ add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy-1,iz);
+	    F(m, ix,iy,iz) += F(m, ix,iy-1,iz);
 	  }
 	}
       }
@@ -33,7 +34,7 @@ add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy,iz-1);
+	    F(m, ix,iy,iz) += F(m, ix,iy,iz-1);
 	  }
 	}
       }
@@ -46,6 +47,7 @@ add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
 static void
 add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
 {
+  Fields F(flds);
   struct psc_patch *patch = ppsc->patch + p;
 
   int bx = patch->ldims[0] == 1 ? 0 : 1;
@@ -54,7 +56,7 @@ add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iy = patch->ldims[1] - 1; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy+1,iz);
+	    F(m, ix,iy,iz) += F(m, ix,iy+1,iz);
 	  }
 	}
       }
@@ -64,7 +66,7 @@ add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = patch->ldims[2] - 1; {
 	  for (int m = mb; m < me; m++) {
-	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy,iz+1);
+	    F(m, ix,iy,iz) += F(m, ix,iy,iz+1);
 	  }
 	}
       }
@@ -328,6 +330,7 @@ do_nvt_a_1st_run(int p, fields_t flds, particle_range_t prts)
 static void
 do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
 {
+  Fields F(flds);
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
@@ -373,14 +376,14 @@ do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
     particle_calc_vxi(prt, vxi);
     for (int d = 0; d < 3; d++) {
       int m = mm + 1 + d;
-      double vavg = (g0x*g0y*g0z * _F3(flds, m, jx    ,jy    ,jz    ) +
-		     g1x*g0y*g0z * _F3(flds, m, jx+jxd,jy    ,jz    ) +
-		     g0x*g1y*g0z * _F3(flds, m, jx    ,jy+jyd,jz    ) +
-		     g1x*g1y*g0z * _F3(flds, m, jx+jxd,jy+jyd,jz    ) +
-		     g0x*g0y*g1z * _F3(flds, m, jx    ,jy    ,jz+jzd) +
-		     g1x*g0y*g1z * _F3(flds, m, jx+jxd,jy    ,jz+jzd) +
-		     g0x*g1y*g1z * _F3(flds, m, jx    ,jy+jyd,jz+jzd) +
-		     g1x*g1y*g1z * _F3(flds, m, jx+jxd,jy+jyd,jz+jzd));
+      double vavg = (g0x*g0y*g0z * F(m, jx    ,jy    ,jz    ) +
+		     g1x*g0y*g0z * F(m, jx+jxd,jy    ,jz    ) +
+		     g0x*g1y*g0z * F(m, jx    ,jy+jyd,jz    ) +
+		     g1x*g1y*g0z * F(m, jx+jxd,jy+jyd,jz    ) +
+		     g0x*g0y*g1z * F(m, jx    ,jy    ,jz+jzd) +
+		     g1x*g0y*g1z * F(m, jx+jxd,jy    ,jz+jzd) +
+		     g0x*g1y*g1z * F(m, jx    ,jy+jyd,jz+jzd) +
+		     g1x*g1y*g1z * F(m, jx+jxd,jy+jyd,jz+jzd));
       vxi[d] -= vavg;
     }
     particle_real_t *pxi = vxi;
@@ -396,6 +399,7 @@ do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
 static void
 do_nvp_1st_run(int p, fields_t flds, particle_range_t prts)
 {
+  Fields F(flds);
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
@@ -454,12 +458,13 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     fields_t res = fields_t_mflds(mres, p);
+    Fields R(res);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
-	if (_F3(res, 10*m, ix,iy,iz) == 0.0) {
-	  _F3(res, 10*m, ix,iy,iz) = 0.00001;
+	if (R(10*m, ix,iy,iz) == 0.0) {
+	  R(10*m, ix,iy,iz) = 0.00001;
 	} psc_foreach_3d_end;
       }
     }    
@@ -468,7 +473,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
-	  _F3(res, 10*m + mm + 1, ix,iy,iz) /= _F3(res, 10*m, ix,iy,iz);
+	  R(10*m + mm + 1, ix,iy,iz) /= R(10*m, ix,iy,iz);
 	} psc_foreach_3d_end;
       }
     }
@@ -506,12 +511,13 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     fields_t res = fields_t_mflds(mflds, p);
+    Fields R(res);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
-	if (_F3(res, 10*m, ix,iy,iz) == 0.0) {
-	  _F3(res, 10*m, ix,iy,iz) = 0.00001;
+	if (R(10*m, ix,iy,iz) == 0.0) {
+	  R(10*m, ix,iy,iz) = 0.00001;
 	} foreach_3d_end;
       }
     }    
@@ -520,7 +526,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
 	foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
-	  _F3(res, 10*m + mm + 1, ix,iy,iz) /= _F3(res, 10*m, ix,iy,iz);
+	  R(10*m + mm + 1, ix,iy,iz) /= R(10*m, ix,iy,iz);
 	} foreach_3d_end;
       }
     }
@@ -530,9 +536,9 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
       for (int mm = 0; mm < 6; mm++) {
 	int mx = mm2mx[mm], my = mm2my[mm];
 	foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
-	  _F3(res, 10*m + 4 + mm, ix,iy,iz) =
-	    _F3(res, 10*m + 4 + mm, ix,iy,iz) / _F3(res, 10*m, ix,iy,iz) - 
-	    _F3(res, 10*m + 1 + mx, ix,iy,iz) * _F3(res, 10*m + 1 + my, ix,iy,iz);
+	  R(10*m + 4 + mm, ix,iy,iz) =
+	    R(10*m + 4 + mm, ix,iy,iz) / R(10*m, ix,iy,iz) - 
+	    R(10*m + 1 + mx, ix,iy,iz) * R(10*m + 1 + my, ix,iy,iz);
 	} foreach_3d_end;
       }
     }
