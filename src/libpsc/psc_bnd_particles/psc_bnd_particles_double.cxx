@@ -2,7 +2,7 @@
 #include "psc_bnd_particles_private.h"
 #include "psc_particles_as_double.h"
 
-#include "psc_bnd_particles_common.c"
+#include "psc_bnd_particles_common.cxx"
 
 // ======================================================================
 // psc_bnd_particles: subclass "double"

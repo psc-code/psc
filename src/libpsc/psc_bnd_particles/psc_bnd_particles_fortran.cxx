@@ -3,7 +3,7 @@
 #include "psc_particles_as_fortran.h"
 
 #define NO_OPEN_BC
-#include "psc_bnd_particles_common.c"
+#include "psc_bnd_particles_common.cxx"
 
 // ======================================================================
 // psc_bnd_particles: subclass "fortran"

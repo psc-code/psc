@@ -54,23 +54,27 @@ particle_buf_copy(particle_t *from_begin, particle_t *from_end, particle_t *to_b
 // ----------------------------------------------------------------------
 // ddcp_info
 
+struct ddcp_send_entry {
+  int patch; // source patch (source rank is this rank)
+  int nei_patch; // target patch (target rank is index in send_entry)
+  int dir1;  // direction
+  int dir1neg;
+};
+
+struct ddcp_recv_entry { // needs to be same as send_entry with different order!
+  int nei_patch;
+  int patch;
+  int dir1neg;
+  int dir1;
+};
+
 struct ddcp_info_by_rank {
-  struct ddcp_send_entry {
-    int patch; // source patch (source rank is this rank)
-    int nei_patch; // target patch (target rank is index in send_entry)
-    int dir1;  // direction
-    int dir1neg;
-  } *send_entry;
+  struct ddcp_send_entry *send_entry;
   int *send_cnts;
   int n_send_entries;
   int n_send;
 
-  struct ddcp_recv_entry { // needs to be same as send_entry with different order!
-    int nei_patch;
-    int patch;
-    int dir1neg;
-    int dir1;
-  } *recv_entry;
+  struct ddcp_recv_entry *recv_entry;
   int *recv_cnts;
   int n_recv_entries;
   int n_recv;
@@ -110,11 +114,11 @@ struct ddc_particles {
 static struct ddc_particles *
 ddc_particles_create(struct mrc_domain *domain)
 {
-  struct ddc_particles *ddcp = calloc(1, sizeof(*ddcp));
+  struct ddc_particles *ddcp = (struct ddc_particles *) calloc(1, sizeof(*ddcp));
 
   ddcp->domain = domain;
   mrc_domain_get_patches(domain, &ddcp->nr_patches);
-  ddcp->patches = calloc(ddcp->nr_patches, sizeof(*ddcp->patches));
+  ddcp->patches = (struct ddcp_patch *) calloc(ddcp->nr_patches, sizeof(*ddcp->patches));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -143,7 +147,7 @@ ddc_particles_create(struct mrc_domain *domain)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  ddcp->by_rank = calloc(size, sizeof(*ddcp->by_rank));
+  ddcp->by_rank = (struct ddcp_info_by_rank *) calloc(size, sizeof(*ddcp->by_rank));
   struct ddcp_info_by_rank *info = ddcp->by_rank;
 
   int dir[3];
@@ -170,9 +174,9 @@ ddc_particles_create(struct mrc_domain *domain)
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       info[r].recv_entry =
-	malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
+	(struct ddcp_recv_entry *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
       info[r].recv_cnts =
-	malloc(info[r].n_recv_entries * sizeof(*info[r].recv_cnts));
+	(int *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_cnts));
     }
   }
 
@@ -223,9 +227,9 @@ ddc_particles_create(struct mrc_domain *domain)
   // alloc send_entries
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
-      info[r].send_entry =
+      info[r].send_entry = (struct ddcp_send_entry *)
 	malloc(info[r].n_send_entries * sizeof(*info[r].send_entry));
-      info[r].send_cnts = 
+      info[r].send_cnts = (int *)
 	malloc(info[r].n_send_entries * sizeof(*info[r].send_cnts));
       info[r].n_send_entries = 0;
     }
@@ -269,8 +273,8 @@ ddc_particles_create(struct mrc_domain *domain)
   assert(n_send_ranks == n_recv_ranks);
   ddcp->n_ranks = n_send_ranks;
 
-  ddcp->send_reqs = malloc(ddcp->n_ranks * sizeof(*ddcp->send_reqs));
-  ddcp->recv_reqs = malloc(ddcp->n_ranks * sizeof(*ddcp->recv_reqs));
+  ddcp->send_reqs = (MPI_Request *) malloc(ddcp->n_ranks * sizeof(*ddcp->send_reqs));
+  ddcp->recv_reqs = (MPI_Request *) malloc(ddcp->n_ranks * sizeof(*ddcp->recv_reqs));
 
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
@@ -293,7 +297,7 @@ ddc_particles_create(struct mrc_domain *domain)
   // FIXME / OPT, we're copying alloc'd pointers over,
   // fragile, though correct. info could be free'd here or even
   // earlier
-  ddcp->cinfo = malloc(ddcp->n_ranks * sizeof(*ddcp->cinfo));
+  ddcp->cinfo = (struct ddcp_info_by_rank *) malloc(ddcp->n_ranks * sizeof(*ddcp->cinfo));
   struct ddcp_info_by_rank *cinfo = ddcp->cinfo;
   int i = 0;
   for (int r = 0; r < size; r++) {
@@ -499,7 +503,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   //          --------------      new particles go here (# = patch->n_recvs)
   //          ----------          locally exchanged particles go here
   //                    ----      remote particles go here
-  particle_t **it_recv = malloc(ddcp->nr_patches * sizeof(*it_recv));
+  particle_t **it_recv = (particle_t **) malloc(ddcp->nr_patches * sizeof(*it_recv));
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -711,7 +715,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	  }
 	} else {
 	  switch (psc->domain.bnd_part_hi[d]) {
-	  case BND_PART_REFLECTING:
+	  case BND_PART_REFLECTING: {
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
@@ -720,6 +724,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	      xi[d] *= (1. - 1e-6);
 	    }
 	    break;
+	  }
 	  case BND_PART_ABSORBING:
 	    drop = true;
 	    break;

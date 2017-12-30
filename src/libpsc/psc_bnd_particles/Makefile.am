@@ -1,16 +1,17 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_bnd_particles.c \
 	psc_bnd_particles_auto.c \
-	psc_bnd_particles_single.c \
-	psc_bnd_particles_double.c \
+	psc_bnd_particles_single.cxx \
+	psc_bnd_particles_double.cxx \
 	psc_bnd_particles_double_omp.c \
 	psc_bnd_particles_single2.c \
-	psc_bnd_particles_fortran.c
+	psc_bnd_particles_fortran.cxx
 
 EXTRA_libsubdir_la_SOURCES = \
 	psc_bnd_particles_common.c \
