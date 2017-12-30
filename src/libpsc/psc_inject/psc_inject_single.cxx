@@ -10,7 +10,11 @@
 
 using Fields = Fields3d<fields_t>;
 
+BEGIN_C_DECLS
+
 void psc_bnd_check_domain(struct psc_bnd *bnd); // FIXME
+
+END_C_DECLS
 
 // ======================================================================
 // psc_inject subclass "single"
