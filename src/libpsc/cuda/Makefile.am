@@ -1,5 +1,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 if USE_CUDA
 
@@ -17,7 +18,7 @@ libsubdir_la_SOURCES = \
 	psc_output_fields_item_flds_cuda.c \
 	psc_output_fields_item_moments_1st_nc_cuda.c \
 	psc_heating_cuda.c \
-	psc_inject_cuda.c \
+	psc_inject_cuda.cxx \
 	b40c/kernel_utils.h \
 	b40c/radixsort_kernel_common.h \
 	b40c/radixsort_key_conversion.h \

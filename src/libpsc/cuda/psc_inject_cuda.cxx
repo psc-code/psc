@@ -3,10 +3,13 @@
 #include <psc_balance.h>
 
 #include <psc_fields_as_single.h>
+#include <fields.hxx>
 
 #include <cuda_iface.h>
 
 #include <stdlib.h>
+
+using Fields = Fields3d<fields_t>;
 
 void psc_bnd_check_domain(struct psc_bnd *bnd); // FIXME
 
@@ -133,14 +136,14 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
   static unsigned int buf_n_alloced;
   if (!buf) {
     buf_n_alloced = 1000;
-    buf = calloc(buf_n_alloced, sizeof(*buf));
+    buf = (struct cuda_mparticles_prt *) calloc(buf_n_alloced, sizeof(*buf));
   }
   unsigned int buf_n_by_patch[psc->nr_patches];
 
   unsigned int buf_n = 0;
   psc_foreach_patch(psc, p) {
     buf_n_by_patch[p] = 0;
-    fields_t flds_n = fields_t_mflds(mflds_n, p);
+    Fields N(fields_t_mflds(mflds_n, p));
     int *ldims = psc->patch[p].ldims;
     
     int nr_pop = psc->prm.nr_populations;
@@ -177,7 +180,7 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 	    int n_in_cell;
 	    if (kind != psc->prm.neutralizing_population) {
 	      if (psc->timestep >= 0) {
-		npt.n -= _F3(flds_n, kind_n, jx,jy,jz);
+		npt.n -= N(kind_n, jx,jy,jz);
 		if (npt.n < 0) {
 		  n_in_cell = 0;
 		} else {
@@ -196,7 +199,7 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 
 	    if (buf_n + n_in_cell > buf_n_alloced) {
 	      buf_n_alloced = 2 * (buf_n + n_in_cell);
-	      buf = realloc(buf, buf_n_alloced * sizeof(*buf));
+	      buf = (struct cuda_mparticles_prt *) realloc(buf, buf_n_alloced * sizeof(*buf));
 	    }
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      _psc_setup_particle(psc, &buf[buf_n + cnt], &npt, p, xx);
