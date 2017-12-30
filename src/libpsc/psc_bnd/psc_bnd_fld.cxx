@@ -1,7 +1,11 @@
 
 #include "psc.h"
+#include "fields.hxx"
+
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
+
+using Fields = Fields3d<fields_t, DIM_XYZ>;
 
 // ======================================================================
 // ddc funcs
@@ -9,15 +13,15 @@
 void
 psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  struct psc_mfields *mflds = ctx;
-  fields_t flds = fields_t_mflds(mflds, p);
-  fields_real_t *buf = _buf;
+  struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+  Fields F(fields_t_mflds(mflds, p));
+  fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
 	}
       }
     }
@@ -27,15 +31,15 @@ psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void 
 void
 psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  struct psc_mfields *mflds = ctx;
-  fields_t flds = fields_t_mflds(mflds, p);
-  fields_real_t *buf = _buf;
+  struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+  Fields F(fields_t_mflds(mflds, p));
+  fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  _F3(flds, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F(m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -45,15 +49,15 @@ psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 void
 psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  struct psc_mfields *mflds = ctx;
-  fields_t flds = fields_t_mflds(mflds, p);
-  fields_real_t *buf = _buf;
+  struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+  Fields F(fields_t_mflds(mflds, p));
+  fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  _F3(flds, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }

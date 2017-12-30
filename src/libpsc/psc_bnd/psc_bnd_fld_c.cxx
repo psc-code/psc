@@ -10,5 +10,5 @@
 #define psc_bnd_fld_sub_copy_from_buf psc_bnd_fld_c_copy_from_buf
 #define psc_bnd_fld_sub_add_from_buf  psc_bnd_fld_c_add_from_buf
 
-#include "psc_bnd_fld.c"
+#include "psc_bnd_fld.cxx"
 
