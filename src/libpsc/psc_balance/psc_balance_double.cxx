@@ -4,7 +4,7 @@
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
-#include "psc_balance_common.c"
+#include "psc_balance_common.cxx"
 
 // ======================================================================
 // psc_balance subclass "double"

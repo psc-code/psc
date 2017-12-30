@@ -1,6 +1,10 @@
 
+#include "fields.hxx"
+
 #include <mrc_profile.h>
 #include <string.h>
+
+using Fields = Fields3d<fields_t, DIM_XYZ>;
 
 static void
 psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
@@ -26,7 +30,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
   assert(sizeof(particle_t) % sizeof(particle_real_t) == 0); // FIXME
 
   // recv for new local patches
-  MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
+  MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new];
   int nr_recv_reqs = 0;
 
   for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
@@ -47,7 +51,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
   prof_start(pr_B);
   // send from old local patches
-  MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
+  MPI_Request *send_reqs = new MPI_Request[ctx->nr_patches_old]();
   int nr_send_reqs = 0;
 
   for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
@@ -97,8 +101,8 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
   prof_start(pr_D);
   MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
-  free(send_reqs);
-  free(recv_reqs);
+  delete[] send_reqs;
+  delete[] recv_reqs;
   prof_stop(pr_D);
 
   prof_stop(pr);
@@ -118,26 +122,27 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
   assert(ctx->nr_patches_old > 0);
   
   // send from old local patches
-  MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
-  int *nr_patches_new_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
+  MPI_Request *send_reqs = new MPI_Request[ctx->nr_patches_old]();
+  int *nr_patches_new_by_rank = new int[ctx->mpi_size]();
   for (int p = 0; p < ctx->nr_patches_old; p++) {
     int new_rank = ctx->send_info[p].rank;
     if (new_rank == ctx->mpi_rank || new_rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       fields_t flds_old = fields_t_mflds(mflds_old, p);
+      Fields F_old(flds_old);
       int nn = fields_t_size(flds_old) * flds_old.nr_comp;
       int *ib = flds_old.ib;
-      void *addr_old = &_F3(flds_old, 0, ib[0], ib[1], ib[2]);
+      void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_new_by_rank[new_rank]++;
       MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, new_rank, tag, ctx->comm, &send_reqs[p]);
     }
   }
-  free(nr_patches_new_by_rank);
+  delete[] nr_patches_new_by_rank;
 
   // recv for new local patches
-  MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
-  int *nr_patches_old_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
+  MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new]();
+  int *nr_patches_old_by_rank = new int[ctx->mpi_size];
   for (int p = 0; p < ctx->nr_patches_new; p++) {
     int old_rank = ctx->recv_info[p].rank;
     if (old_rank == ctx->mpi_rank) {
@@ -147,15 +152,16 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       //Seed new data
     } else {
       fields_t flds_new = fields_t_mflds(mflds_new, p);
+      Fields F_new(flds_new);
       int nn = fields_t_size(flds_new) * flds_new.nr_comp;
       int *ib = flds_new.ib;
-      void *addr_new = &_F3(flds_new, 0, ib[0], ib[1], ib[2]);
+      void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_old_by_rank[old_rank]++;
       MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, old_rank,
 		tag, ctx->comm, &recv_reqs[p]);
     }
   }
-  free(nr_patches_old_by_rank);
+  delete[] nr_patches_old_by_rank;
 
   static int pr;
   if (!pr) {
@@ -172,20 +178,20 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
 
     fields_t flds_old = fields_t_mflds(mflds_old, ctx->recv_info[p].patch);
     fields_t flds_new = fields_t_mflds(mflds_new, p);
-
+    Fields F_old(flds_old), F_new(flds_new);
     assert(flds_old.nr_comp == flds_new.nr_comp);
     assert(fields_t_size(flds_old) == fields_t_size(flds_new));
     int size = fields_t_size(flds_old) * flds_old.nr_comp;
     int *ib = flds_new.ib;
-    void *addr_new = &_F3(flds_new, 0, ib[0], ib[1], ib[2]);
-    void *addr_old = &_F3(flds_old, 0, ib[0], ib[1], ib[2]);
+    void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
+    void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
     memcpy(addr_new, addr_old, size * sizeof(fields_real_t));
   }
   prof_stop(pr);
 
   MPI_Waitall(ctx->nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ctx->nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
-  free(send_reqs);
-  free(recv_reqs);
+  delete[] send_reqs;
+  delete[] recv_reqs;
 }
 
