@@ -1,9 +1,12 @@
 
 #include "psc_collision_private.h"
 #include "psc_output_fields_item_private.h"
+#include "fields.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
+
+using Fields = Fields3d<fields_t, DIM_XYZ>;
 
 struct psc_collision_sub {
   // parameters
@@ -502,7 +505,7 @@ psc_collision_sub_run(struct psc_collision *collision,
     
     find_cell_offsets(offsets, mprts, p);
     
-    fields_t flds = fields_t_mflds(coll->mflds, p);
+    Fields F(fields_t_mflds(coll->mflds, p));
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       int c = (iz * ldims[1] + iy) * ldims[0] + ix;
       randomize_in_cell(prts, offsets[c], offsets[c+1]);
@@ -511,7 +514,7 @@ psc_collision_sub_run(struct psc_collision *collision,
       collide_in_cell(collision, prts, offsets[c], offsets[c+1], &stats);
       
       for (int s = 0; s < NR_STATS; s++) {
-	_F3(flds, s, ix,iy,iz) = stats.s[s];
+	F(s, ix,iy,iz) = stats.s[s];
 	stats_total.s[s] += stats.s[s];
       }
     } psc_foreach_3d_end;
