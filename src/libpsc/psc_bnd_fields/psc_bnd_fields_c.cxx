@@ -2,7 +2,7 @@
 #include "psc_bnd_fields_private.h"
 #include "psc_fields_as_c.h"
 
-#include "psc_bnd_fields_common.c"
+#include "psc_bnd_fields_common.cxx"
 
 // ======================================================================
 // psc_bnd_fields: subclass "c"
