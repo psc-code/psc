@@ -44,7 +44,8 @@ struct psc_collision_stats {
 static int
 compare(const void *_a, const void *_b)
 {
-  const particle_real_t *a = _a, *b = _b;
+  const particle_real_t *a = (const particle_real_t *) _a;
+  const particle_real_t *b = (const particle_real_t *) _b;
 
   if (*a < *b) {
     return -1;
@@ -101,9 +102,10 @@ find_cell_offsets(int offsets[], struct psc_mparticles *mprts, int p)
 {
   particle_range_t prts = particle_range_mprts(mprts, p);
 
-  particle_real_t dxi[3] = { 1.f / ppsc->patch[p].dx[0],
-			     1.f / ppsc->patch[p].dx[1],
-			     1.f / ppsc->patch[p].dx[2] };
+  particle_real_t dxi[3];
+  for (int d = 0; d < 3; d++) {
+    dxi[d] = 1.f / ppsc->patch[p].dx[d];
+  }
   int *ldims = ppsc->patch[p].ldims;
   int last = 0;
   offsets[last] = 0;
@@ -416,7 +418,7 @@ collide_in_cell(struct psc_collision *collision,
   particle_real_t wni = particle_wni(particle_iter_at(prts.begin, n_start));
   particle_real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
-  particle_real_t *nudts = malloc((nn / 2 + 2) * sizeof(*nudts));
+  particle_real_t *nudts = (particle_real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
   int cnt = 0;
 
   if (nn % 2 == 1) { // odd # of particles: do 3-collision
@@ -495,7 +497,7 @@ psc_collision_sub_run(struct psc_collision *collision,
   
     int *ldims = ppsc->patch[p].ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];
-    int *offsets = calloc(nr_cells + 1, sizeof(*offsets));
+    int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
     struct psc_collision_stats stats_total = {};
     
     find_cell_offsets(offsets, mprts, p);

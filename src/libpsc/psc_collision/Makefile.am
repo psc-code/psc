@@ -1,12 +1,13 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_collision.c \
 	psc_collision_none.c \
-	psc_collision_single.c
+	psc_collision_single.cxx
 
 if USE_FORTRAN
 libsubdir_la_SOURCES += \
@@ -14,4 +15,4 @@ libsubdir_la_SOURCES += \
 endif
 
 EXTRA_libsubdir_la_SOURCES = \
-	psc_collision_common.c
+	psc_collision_common.cxx
