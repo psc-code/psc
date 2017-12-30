@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+BEGIN_C_DECLS
+
 // ----------------------------------------------------------------------
 // cell_map
 
@@ -438,5 +440,7 @@ extern int st_time_field;    //< time spent in field computation
 // other bits and hacks...
 
 #define sqr(a) ((a) * (a))
+
+END_C_DECLS
 
 #endif

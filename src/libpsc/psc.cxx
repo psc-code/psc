@@ -201,7 +201,7 @@ static void
 _psc_set_from_options(struct psc *psc)
 {
   // make comma separated list of current kinds
-  char *s = calloc(100, 1);
+  char *s = new char[100]();
   char *s_save = s;
   if (psc->nr_kinds > 0) {
     strcpy(s, psc->kinds[0].name);
@@ -257,7 +257,7 @@ _psc_set_from_options(struct psc *psc)
     mrc_params_get_option_double_help(s, &kind->T, 
 				      "default temperature of this particle kind");
   }
-  free(s);
+  delete[] s;
 }
 
 // ======================================================================
@@ -368,7 +368,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   int gdims[3];
   mrc_domain_get_global_dims(domain, gdims);
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
-  psc->patch = calloc(psc->nr_patches, sizeof(*psc->patch));
+  psc->patch = new psc_patch[psc->nr_patches]();
   psc_foreach_patch(psc, p) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(domain, p, &info);
@@ -472,7 +472,7 @@ _psc_setup(struct psc *psc)
   psc_method_do_setup(psc->method, psc);
 
   // partition and initial balancing
-  int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
+  int *n_prts_by_patch = new int[psc->nr_patches]();
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
     
@@ -482,7 +482,7 @@ _psc_setup(struct psc *psc)
   // set particles x^{n+1/2}, p^{n+1/2}
   psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch);
 
-  free(n_prts_by_patch);
+  delete[] n_prts_by_patch;
 
   // create and set up base mflds
   psc_setup_base_mflds(psc);
@@ -560,7 +560,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
   mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds);
 
-  psc->kinds = calloc(psc->nr_kinds, sizeof(*psc->kinds));
+  psc->kinds = new psc_kind[psc->nr_kinds]();
   for (int k = 0; k < psc->nr_kinds; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
@@ -935,7 +935,7 @@ psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
   }
     
   psc->nr_kinds = nr_kinds;
-  psc->kinds = calloc(nr_kinds, sizeof(*psc->kinds));
+  psc->kinds = new psc_kind[nr_kinds]();
   if (kinds) {
     for (int k = 0; k < nr_kinds; k++) {
       psc->kinds[k] = kinds[k];

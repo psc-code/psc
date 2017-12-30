@@ -8,6 +8,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include <mrc_common.h>
+
+BEGIN_C_DECLS
+
 enum param_type {
   PT_INT,   // 0
   PT_UINT,
@@ -157,5 +161,7 @@ void mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm);
 // FIXME!!!
 // This function should go away and users should convert to proper mrc_params infrastructure
 int parse_float_array(const char *str, float *arr, int n);
+
+END_C_DECLS
 
 #endif

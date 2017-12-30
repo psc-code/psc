@@ -95,7 +95,7 @@ libpsc_la_SOURCES = \
 	psc_particles_single_by_block.c \
 	psc_particles_single_by_kind.c \
 	bk_mparticles.cxx \
-	psc.c \
+	psc.cxx \
 	psc_method.c \
 	psc_method_default.c \
 	integrate.c \
