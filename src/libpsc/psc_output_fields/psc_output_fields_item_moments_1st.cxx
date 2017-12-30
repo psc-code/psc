@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#include "common_moments.c"
+#include "common_moments.cxx"
 
 // ======================================================================
 // boundary stuff FIXME, should go elsewhere...
@@ -240,16 +240,14 @@ do_T_1st_run(int p, fields_t flds, particle_range_t prts)
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
     particle_real_t *pxi = &prt->pxi;
-    particle_real_t vx[3] = {
-      vxi[0] * cos(ppsc->prm.theta_xz) - vxi[2] * sin(ppsc->prm.theta_xz),
-      vxi[1],
-      vxi[0] * sin(ppsc->prm.theta_xz) + vxi[2] * cos(ppsc->prm.theta_xz),
-    };
-    particle_real_t px[3] = {
-      pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz),
-      pxi[1],
-      pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz),
-    };
+    particle_real_t vx[3];
+    vx[0] = vxi[0] * cos(ppsc->prm.theta_xz) - vxi[2] * sin(ppsc->prm.theta_xz);
+    vx[1] = vxi[1];
+    vx[2] = vxi[0] * sin(ppsc->prm.theta_xz) + vxi[2] * cos(ppsc->prm.theta_xz);
+    particle_real_t px[3];
+    px[0] = pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz);
+    px[1] = pxi[1];
+    px[2] = pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, particle_mni(prt) * px[0] * vx[0]);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, particle_mni(prt) * px[1] * vx[1]);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, particle_mni(prt) * px[2] * vx[2]);

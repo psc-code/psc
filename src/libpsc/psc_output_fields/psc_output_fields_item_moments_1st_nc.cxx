@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include "common_moments.c"
+#include "common_moments.cxx"
 
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,

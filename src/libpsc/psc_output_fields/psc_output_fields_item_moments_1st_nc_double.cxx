@@ -10,7 +10,7 @@
 // node-centered moments -- probably mostly useful for testing
 // charge continuity
 
-#include "psc_output_fields_item_moments_1st_nc.c"
+#include "psc_output_fields_item_moments_1st_nc.cxx"
 
 // ======================================================================
 // psc_output_fields_item: subclass "n_1st_nc_double"

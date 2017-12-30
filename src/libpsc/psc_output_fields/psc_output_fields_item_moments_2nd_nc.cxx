@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include "common_moments.c"
+#include "common_moments.cxx"
 
 // ======================================================================
 // boundary stuff FIXME, should go elsewhere, and FIXME, duplicated, kinda,
