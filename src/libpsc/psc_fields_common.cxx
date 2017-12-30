@@ -1,5 +1,9 @@
 
+#include "fields.hxx"
+
 #include <math.h>
+
+using Fields = Fields3d<fields_t, DIM_XYZ>;
 
 // ----------------------------------------------------------------------
 // fields_t_zero_comp
@@ -7,10 +11,11 @@
 static inline void
 fields_t_zero_comp(fields_t flds, int m)
 {
+  Fields F(flds);
   for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
     for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
       for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	_F3(flds, m, jx,jy,jz) = 0;
+	F(m, jx,jy,jz) = 0;
       }
     }
   }
@@ -22,10 +27,11 @@ fields_t_zero_comp(fields_t flds, int m)
 static inline void
 fields_t_set_comp(fields_t flds, int m, fields_real_t val)
 {
+  Fields F(flds);
   for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
     for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
       for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	_F3(flds, m, jx,jy,jz) = val;
+	F(m, jx,jy,jz) = val;
       }
     }
   }
@@ -37,10 +43,11 @@ fields_t_set_comp(fields_t flds, int m, fields_real_t val)
 static inline void
 fields_t_scale_comp(fields_t flds, int m, fields_real_t val)
 {
+  Fields F(flds);
   for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
     for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
       for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	_F3(flds, m, jx, jy, jz) *= val;
+	F(m, jx, jy, jz) *= val;
       }
     }
   }
@@ -52,10 +59,11 @@ fields_t_scale_comp(fields_t flds, int m, fields_real_t val)
 static inline void
 fields_t_copy_comp(fields_t to, int m_to, fields_t from, int m_from)
 {
+  Fields F_to(to), F_from(from);
   for (int jz = to.ib[2]; jz < to.ib[2] + to.im[2]; jz++) {
     for (int jy = to.ib[1]; jy < to.ib[1] + to.im[1]; jy++) {
       for (int jx = to.ib[0]; jx < to.ib[0] + to.im[0]; jx++) {
-	_F3(to, m_to, jx,jy,jz) = _F3(from, m_from, jx,jy,jz);
+	F_to(m_to, jx,jy,jz) = F_from(m_from, jx,jy,jz);
       }
     }
   }
@@ -67,10 +75,11 @@ fields_t_copy_comp(fields_t to, int m_to, fields_t from, int m_from)
 static inline void
 fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 {
+  Fields X(x), Y(y);
   for (int jz = y.ib[2]; jz < y.ib[2] + y.im[2]; jz++) {
     for (int jy = y.ib[1]; jy < y.ib[1] + y.im[1]; jy++) {
       for (int jx = y.ib[0]; jx < y.ib[0] + y.im[0]; jx++) {
-	_F3(y, m_y, jx,jy,jz) += a * _F3(x, m_x, jx,jy,jz);
+	Y(m_y, jx,jy,jz) += a * X(m_x, jx,jy,jz);
       }
     }
   }
@@ -83,11 +92,12 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 static inline double
 fields_t_max_comp(fields_t f, int m)
 {
+  Fields F(f);
   fields_real_t rv = -1e-37; // FIXME
   for (int jz = f.ib[2]; jz < f.ib[2] + f.im[2]; jz++) {
     for (int jy = f.ib[1]; jy < f.ib[1] + f.im[1]; jy++) {
       for (int jx = f.ib[0]; jx < f.ib[0] + f.im[0]; jx++) {
-	rv = fmaxf(rv, _F3(f, m, jx,jy,jz)); // FIXME, should be based on fields_real_t
+	rv = fmaxf(rv, F(m, jx,jy,jz)); // FIXME, should be based on fields_real_t
       }
     }
   }
