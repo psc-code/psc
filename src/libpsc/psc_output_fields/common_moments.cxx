@@ -1,6 +1,6 @@
 
 #define DEPOSIT_TO_GRID_1ST_CC(part, flds, m, val) do {			\
-    /*    Fields F(flds); */						\
+    Fields F(flds);							\
     particle_real_t *xi = &part->xi; /* don't shift back in time */	\
     /*    particle_real_t xi[3];					\
 	  particle_get_relative_pos(part, patch->xb, xi);		*/ \
@@ -38,17 +38,18 @@
     									\
     particle_real_t fnq = particle_wni(part) * fnqs;			\
 									\
-    _F3(flds, m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);	\
-    _F3(flds, m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);	\
+    F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);	\
+    F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);	\
+    F(m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);	\
+    F(m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);	\
+    F(m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);	\
+    F(m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);	\
+    F(m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);	\
+    F(m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);	\
   } while (0)
 
 #define DEPOSIT_TO_GRID_1ST_NC(part, flds, m, val) do {			\
+    Fields F(flds);							\
     particle_real_t *xi = &part->xi; /* don't shift back in time */	\
     particle_real_t u = xi[0] * dxi;					\
     particle_real_t v = xi[1] * dyi;					\
@@ -84,17 +85,18 @@
     									\
     particle_real_t fnq = particle_wni(part) * fnqs;			\
 									\
-    _F3(flds, m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);	\
-    _F3(flds, m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);	\
+    F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);	\
+    F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);	\
+    F(m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);	\
+    F(m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);	\
+    F(m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);	\
+    F(m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);	\
+    F(m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);	\
+    F(m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);	\
   } while (0)
 
 #define DEPOSIT_TO_GRID_2ND_NC(part, flds, m, val) do {			\
+    Fields F(flds);							\
     particle_real_t *xi = &part->xi; /* don't shift back in time */	\
     particle_real_t u = xi[0] * dxi;					\
     particle_real_t v = xi[1] * dyi;					\
@@ -133,33 +135,33 @@
     									\
     particle_real_t fnq = particle_wni(part) * fnqs;			\
 					     				\
-    _F3(flds, m, jx-jxd,jy-jyd,jz-jzd) += fnq*gmx*gmy*gmz * (val);	\
-    _F3(flds, m, jx    ,jy-jyd,jz-jzd) += fnq*g0x*gmy*gmz * (val);	\
-    _F3(flds, m, jx+jxd,jy-jyd,jz-jzd) += fnq*g1x*gmy*gmz * (val);	\
-    _F3(flds, m, jx-jxd,jy    ,jz-jzd) += fnq*gmx*g0y*gmz * (val);	\
-    _F3(flds, m, jx    ,jy    ,jz-jzd) += fnq*g0x*g0y*gmz * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz-jzd) += fnq*g1x*g0y*gmz * (val);	\
-    _F3(flds, m, jx-jxd,jy+jyd,jz-jzd) += fnq*gmx*g1y*gmz * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz-jzd) += fnq*g0x*g1y*gmz * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz-jzd) += fnq*g1x*g1y*gmz * (val);	\
-    _F3(flds, m, jx-jxd,jy-jyd,jz    ) += fnq*gmx*gmy*g0z * (val);	\
-    _F3(flds, m, jx    ,jy-jyd,jz    ) += fnq*g0x*gmy*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy-jyd,jz    ) += fnq*g1x*gmy*g0z * (val);	\
-    _F3(flds, m, jx-jxd,jy    ,jz    ) += fnq*gmx*g0y*g0z * (val);	\
-    _F3(flds, m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);	\
-    _F3(flds, m, jx-jxd,jy+jyd,jz    ) += fnq*gmx*g1y*g0z * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);	\
-    _F3(flds, m, jx-jxd,jy-jyd,jz+jzd) += fnq*gmx*gmy*g1z * (val);	\
-    _F3(flds, m, jx    ,jy-jyd,jz+jzd) += fnq*g0x*gmy*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy-jyd,jz+jzd) += fnq*g1x*gmy*g1z * (val);	\
-    _F3(flds, m, jx-jxd,jy    ,jz+jzd) += fnq*gmx*g0y*g1z * (val);	\
-    _F3(flds, m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);	\
-    _F3(flds, m, jx-jxd,jy+jyd,jz+jzd) += fnq*gmx*g1y*g1z * (val);	\
-    _F3(flds, m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);	\
-    _F3(flds, m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);	\
+    F(m, jx-jxd,jy-jyd,jz-jzd) += fnq*gmx*gmy*gmz * (val);	\
+    F(m, jx    ,jy-jyd,jz-jzd) += fnq*g0x*gmy*gmz * (val);	\
+    F(m, jx+jxd,jy-jyd,jz-jzd) += fnq*g1x*gmy*gmz * (val);	\
+    F(m, jx-jxd,jy    ,jz-jzd) += fnq*gmx*g0y*gmz * (val);	\
+    F(m, jx    ,jy    ,jz-jzd) += fnq*g0x*g0y*gmz * (val);	\
+    F(m, jx+jxd,jy    ,jz-jzd) += fnq*g1x*g0y*gmz * (val);	\
+    F(m, jx-jxd,jy+jyd,jz-jzd) += fnq*gmx*g1y*gmz * (val);	\
+    F(m, jx    ,jy+jyd,jz-jzd) += fnq*g0x*g1y*gmz * (val);	\
+    F(m, jx+jxd,jy+jyd,jz-jzd) += fnq*g1x*g1y*gmz * (val);	\
+    F(m, jx-jxd,jy-jyd,jz    ) += fnq*gmx*gmy*g0z * (val);	\
+    F(m, jx    ,jy-jyd,jz    ) += fnq*g0x*gmy*g0z * (val);	\
+    F(m, jx+jxd,jy-jyd,jz    ) += fnq*g1x*gmy*g0z * (val);	\
+    F(m, jx-jxd,jy    ,jz    ) += fnq*gmx*g0y*g0z * (val);	\
+    F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);	\
+    F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);	\
+    F(m, jx-jxd,jy+jyd,jz    ) += fnq*gmx*g1y*g0z * (val);	\
+    F(m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);	\
+    F(m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);	\
+    F(m, jx-jxd,jy-jyd,jz+jzd) += fnq*gmx*gmy*g1z * (val);	\
+    F(m, jx    ,jy-jyd,jz+jzd) += fnq*g0x*gmy*g1z * (val);	\
+    F(m, jx+jxd,jy-jyd,jz+jzd) += fnq*g1x*gmy*g1z * (val);	\
+    F(m, jx-jxd,jy    ,jz+jzd) += fnq*gmx*g0y*g1z * (val);	\
+    F(m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);	\
+    F(m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);	\
+    F(m, jx-jxd,jy+jyd,jz+jzd) += fnq*gmx*g1y*g1z * (val);	\
+    F(m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);	\
+    F(m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);	\
   } while (0)
 
 // FIXME, this function exists about 100x all over the place, should

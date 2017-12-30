@@ -1,5 +1,8 @@
 
 #include "psc_output_fields_item_private.h"
+#include "fields.hxx"
+
+using Fields = Fields3d<fields_t>;
 
 #include <math.h>
 

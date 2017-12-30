@@ -1,10 +1,13 @@
 
 #include "psc_output_fields_item_private.h"
 #include <psc_bnd.h>
+#include <fields.hxx>
 
 #include <math.h>
 
 #include "common_moments.cxx"
+
+using Fields = Fields3d<fields_t>;
 
 // ======================================================================
 // boundary stuff FIXME, should go elsewhere...
