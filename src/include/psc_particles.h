@@ -5,6 +5,8 @@
 #include <mrc_obj.h>
 #include <assert.h>
 
+BEGIN_C_DECLS
+
 // ----------------------------------------------------------------------
 // psc_mparticles class
 
@@ -80,5 +82,7 @@ void psc_mparticles_put_as(struct psc_mparticles *mparticles,
 			   struct psc_mparticles *mparticles_base,
 			   unsigned int flags);
 void psc_mparticles_check(struct psc_mparticles *mparticles);
+
+END_C_DECLS
 
 #endif

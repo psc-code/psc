@@ -24,7 +24,7 @@ libsubdir_la_SOURCES = \
 	psc_marder_vpic.c \
 	psc_particles_vpic.c \
 	psc_fields_vpic.c \
-	psc_output_fields_item_vpic.c \
+	psc_output_fields_item_vpic.cxx \
 	\
 	psc_vpic_bits.cxx \
 	vpic_base.cxx \

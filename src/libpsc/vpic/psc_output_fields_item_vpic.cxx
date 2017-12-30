@@ -1,12 +1,14 @@
 
 #include "psc_output_fields_item_private.h"
 
+#include "vpic_config.h"
+#include "fields.hxx"
 #include "psc_fields_as_c.h"
 #include "psc_fields_vpic.h"
 #include "psc_particles_vpic.h"
 #include "psc_method.h"
-#include "vpic_iface.h"
 
+using Fields = Fields3d<fields_t, DIM_XYZ>;
 
 // ----------------------------------------------------------------------
 // run_all_vpic_fields
@@ -18,11 +20,10 @@ run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mfl
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, 16);
   
   for (int p = 0; p < mres->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
-    fields_t res = fields_t_mflds(mres, p);
+    Fields F(fields_t_mflds(mflds, p)), R(fields_t_mflds(mres, p));
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       for (int m = 0; m < 16; m++) {
-	_F3(res, m, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
+	R(m, ix,iy,iz) = F(m, ix,iy,iz);
       }
     } foreach_3d_end;
   }
@@ -78,11 +79,10 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
     struct psc_mfields *mflds = psc_mfields_get_as(mflds_hydro, FIELDS_TYPE, 0, VPIC_HYDRO_N_COMP);
   
     for (int p = 0; p < mres->nr_patches; p++) {
-      fields_t flds = fields_t_mflds(mflds, p);
-      fields_t res = fields_t_mflds(mres, p);
+      Fields F(fields_t_mflds(mflds, p)), R(fields_t_mflds(mres, p));
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
-	  _F3(res, m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
+	  R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
 	}
       } foreach_3d_end;
     }

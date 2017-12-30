@@ -63,11 +63,13 @@ particle_single_get_relative_pos(particle_single_t *p, double xb[3],
 {
   particle_single_real_t vxi[3];
   __calc_vxi(vxi, p);
-  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  particle_single_real_t dth[3];
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
     if (ppsc->domain.gdims[d] == 1) {
       dth[d] = 0.;
+    } else {
+      dth[d] = .5 * ppsc->dt;
     }
   }
   xi[0] = p->xi - dth[0] * vxi[0];

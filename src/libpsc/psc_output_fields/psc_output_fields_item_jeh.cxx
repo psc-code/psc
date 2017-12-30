@@ -1,7 +1,6 @@
 #include "psc_output_fields_item_private.h"
 
 #include "fields.hxx"
-
 #include "psc_fields_as_c.h"
 
 using Fields = Fields3d<fields_t, DIM_XYZ>;
