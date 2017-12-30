@@ -4,6 +4,8 @@
 
 #include "psc.h"
 
+BEGIN_C_DECLS
+
 #define assert_equal(x, y, thres) __assert_equal(x, y, #x, #y, thres)
 
 void __assert_equal(double x, double y, const char *xs, const char *ys, double thres);
@@ -33,6 +35,7 @@ struct psc *psc_testing_create_test_xz();
 // psc_test
 
 struct psc_test {
+  int dummy;
 };
 
 void psc_test_create(struct psc *psc);
@@ -49,5 +52,7 @@ void psc_testing_init(int *argc, char ***argv);
 void psc_testing_finalize(void);
 
 extern bool opt_testing_dump;
+
+END_C_DECLS
 
 #endif

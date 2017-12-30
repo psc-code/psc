@@ -51,12 +51,4 @@ void mrc_view_printf(MPI_Comm comm, const char *fmt, ...);
   #endif
 #endif
 
-#ifdef __cplusplus
-# define BEGIN_C_DECLS extern "C" {
-# define END_C_DECLS }
-#else
-# define BEGIN_C_DECLS /* empty */
-# define END_C_DECLS /* empty */
-#endif
-
 #endif
