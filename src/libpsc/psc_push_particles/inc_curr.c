@@ -6,10 +6,7 @@
 #define CURR_CACHE CURR_CACHE_NONE
 #endif
 
-#ifndef F3_CURR
-#define F3_CURR _F3
 typedef fields_t flds_curr_t;
-#endif
 
 // ----------------------------------------------------------------------
 
