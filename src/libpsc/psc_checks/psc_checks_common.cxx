@@ -7,7 +7,7 @@
 
 #include <mrc_io.h>
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 // FIXME, duplicated
 

@@ -32,7 +32,7 @@
 #include <assert.h>
 #include <time.h>
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 struct psc *ppsc;
 

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 // ======================================================================
 // _psc_mfields_setup

@@ -3,7 +3,7 @@
 #include "fields.hxx"
 #include "psc_fields_as_c.h"
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 // FIXME, we're assuming that the result fields are "c" type
 

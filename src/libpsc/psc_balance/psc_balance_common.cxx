@@ -4,7 +4,7 @@
 #include <mrc_profile.h>
 #include <string.h>
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 static void
 psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,

@@ -1,7 +1,7 @@
 
 #include "fields.hxx"
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 static const int debug_every_step = 10;
 

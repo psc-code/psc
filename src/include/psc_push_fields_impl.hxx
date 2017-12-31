@@ -27,7 +27,7 @@ class PushBase
 public:
   using real_t = typename Fields::real_t;
   using fields_t = typename Fields::fields_t;
-  using DIM = typename Fields::DIM;
+  using dim = typename Fields::dim;
   
   PushBase(struct psc* psc, double dt_fac)
   {
@@ -42,9 +42,9 @@ public:
 
     // FIXME, it'd be even better to not even calculate derivates
     // that will be multiplied by 0 
-    cnx = DIM::InvarX::value ? 0 : dth / psc->patch[0].dx[0];
-    cny = DIM::InvarY::value ? 0 : dth / psc->patch[0].dx[1];
-    cnz = DIM::InvarZ::value ? 0 : dth / psc->patch[0].dx[2];
+    cnx = dim::InvarX::value ? 0 : dth / psc->patch[0].dx[0];
+    cny = dim::InvarY::value ? 0 : dth / psc->patch[0].dx[1];
+    cnz = dim::InvarZ::value ? 0 : dth / psc->patch[0].dx[2];
   }
 
 protected:
@@ -179,11 +179,11 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
     fields_t flds = fields_traits<fields_t>::get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_E<DIM_XYZ>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_E<dim_xyz>(push, flds, ppsc, dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_E<DIM_YZ>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_E<dim_yz>(push, flds, ppsc, dt_fac);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      psc_push_fields_push_E<DIM_XZ>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_E<dim_xz>(push, flds, ppsc, dt_fac);
     } else {
       assert(0);
     }
@@ -213,11 +213,11 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
     fields_t flds = fields_traits<fields_t>::get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_H<DIM_XYZ>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_H<dim_xyz>(push, flds, ppsc, dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_H<DIM_YZ>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_H<dim_yz>(push, flds, ppsc, dt_fac);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      psc_push_fields_push_H<DIM_XZ>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_H<dim_xz>(push, flds, ppsc, dt_fac);
     } else {
       assert(0);
     }

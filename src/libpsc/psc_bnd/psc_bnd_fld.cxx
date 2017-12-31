@@ -5,7 +5,7 @@
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 // ======================================================================
 // ddc funcs

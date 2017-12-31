@@ -8,7 +8,7 @@
 #include "psc_particles_vpic.h"
 #include "psc_method.h"
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 // ----------------------------------------------------------------------
 // run_all_vpic_fields

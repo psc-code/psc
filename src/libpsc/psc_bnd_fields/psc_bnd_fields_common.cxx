@@ -8,7 +8,7 @@
 // FIXME, needs public access to Fields::ib, im
 //#define DEBUG
 
-using Fields = Fields3d<fields_t, DIM_XZ>; // FIXME DIM_XZ
+using Fields = Fields3d<fields_t, dim_xz>; // FIXME dim_xz
 
 static void
 conducting_wall_E_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)

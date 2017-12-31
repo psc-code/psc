@@ -6,7 +6,7 @@
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
-using Fields = Fields3d<fields_t, DIM_XYZ>;
+using Fields = Fields3d<fields_t>;
 
 struct psc_collision_sub {
   // parameters

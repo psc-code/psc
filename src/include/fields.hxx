@@ -12,23 +12,23 @@ struct Invar
   using InvarZ = std::integral_constant<bool, IZ>;
 };
 
-using DIM_XYZ = Invar<false, false, false>;
-using DIM_XY  = Invar<false, false, true >;
-using DIM_XZ  = Invar<false, true , false>;
-using DIM_YZ  = Invar<true , false, false>;
+using dim_xyz = Invar<false, false, false>;
+using dim_xy  = Invar<false, false, true >;
+using dim_xz  = Invar<false, true , false>;
+using dim_yz  = Invar<true , false, false>;
 
 template<typename F>
 struct fields_traits
 {
 };
 
-template<typename F, typename D = DIM_XYZ>
+template<typename F, typename D = dim_xyz>
 class Fields3d
 {
 public:
   using fields_t = F;
   using real_t = typename fields_traits<F>::real_t;
-  using DIM = D;
+  using dim = D;
 
   Fields3d(const fields_t& f)
     : data_(f.data),
@@ -54,9 +54,9 @@ public:
 private:
   int index(int m, int i_, int j_, int k_)
   {
-    int i = DIM::InvarX::value ? 0 : i_;
-    int j = DIM::InvarY::value ? 0 : j_;
-    int k = DIM::InvarZ::value ? 0 : k_;
+    int i = dim::InvarX::value ? 0 : i_;
+    int j = dim::InvarY::value ? 0 : j_;
+    int k = dim::InvarZ::value ? 0 : k_;
 
 #ifdef BOUNDS_CHECK
     assert(m >= first_comp_ && m < n_comp_);
