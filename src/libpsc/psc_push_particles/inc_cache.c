@@ -53,53 +53,7 @@ em_cache_create(flds_em_t flds_em, int ci0[3])
   return flds_em;
 }
 
-// ----------------------------------------------------------------------
-#elif EM_CACHE == EM_CACHE_CUDA
-
-typedef fields_real_t *em_cache_t;
-
-__device__ static em_cache_t
-cache_fields(em_cache_t flds_em_block, flds_em_t flds_em, int *ci0)
-{
-  Fields3d<flds_em_t> EM(flds_em);
-  em_cache_t em_cache = flds_em_block + ((((-EX) * 
-				       BLOCKGSIZE_Z + -ci0[2] + BLOCKBND_Z) *
-				      BLOCKGSIZE_Y + -ci0[1] + BLOCKBND_Y) *
-				     BLOCKGSIZE_X + -ci0[0] + BLOCKBND_X);
-
-  int n = BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z;
-  // if we're not actually running on the GPU, we're not multi-threaded, so
-  // the caching wouldn't all be initialized first (and then __syncthreads()),
-  // so instead we have the first "thread" do all of the caching.
-#ifdef __CUDACC__
-  for (int ti = threadIdx.x; ti < n; ti += THREADS_PER_BLOCK) {
 #else
-  if (threadIdx.x == 0) for (int ti = 0; ti < n; ti ++) {
-#endif
-    int tmp = ti;
-#if DIM == DIM_XYZ
-    int jx = tmp % BLOCKGSIZE_X - BLOCKBND_X;
-    tmp /= BLOCKGSIZE_X;
-#endif
-    int jy = tmp % BLOCKGSIZE_Y - BLOCKBND_Y;
-    tmp /= BLOCKGSIZE_Y;
-    int jz = tmp % BLOCKGSIZE_Z - BLOCKBND_Z;
-    // OPT? currently it seems faster to do the loop rather than do m by threadidx
-    for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(em_cache, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]) = 
-	EM(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
-    }
-  }
-  return em_cache;
-}
-
-CUDA_SHARED fields_real_t flds_em_block[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z];
-
-CUDA_DEVICE static inline em_cache_t
-em_cache_create(flds_em_t flds_em, int ci0[3])
-{
-  return cache_fields(flds_em_block, flds_em, ci0);
-}
-
+#error unhandled EM_CACHE
 #endif
 
