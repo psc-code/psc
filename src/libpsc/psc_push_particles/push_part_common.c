@@ -448,6 +448,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
   c_prm_set(ppsc);
 
+  Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
   Fields3d<fields_t> J(flds);
 
   IP_VARIANT_SFF_PREP;
