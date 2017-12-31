@@ -223,9 +223,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     jyh -= fnqy*wy;						\
     particle_real_t jzh = fnqzz*wz;				\
     								\
-    _F3(flds, JXI, 0,lg2+l2,0) += jxh;				\
-    _F3(flds, JYI, 0,lg2+l2,0) += jyh;				\
-    _F3(flds, JZI, 0,lg2+l2,0) += jzh;				\
+    J(JXI, 0,lg2+l2,0) += jxh;					\
+    J(JYI, 0,lg2+l2,0) += jyh;				\
+    J(JZI, 0,lg2+l2,0) += jzh;				\
   }
 
 #define CURRENT_2ND_Z						\
@@ -239,9 +239,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     particle_real_t jyh = fnqyy*wy;				\
     jzh -= fnqz*wz;						\
     								\
-    _F3(flds, JXI, 0,0,lg3+l3) += jxh;				\
-    _F3(flds, JYI, 0,0,lg3+l3) += jyh;				\
-    _F3(flds, JZI, 0,0,lg3+l3) += jzh;				\
+    J(JXI, 0,0,lg3+l3) += jxh;				\
+    J(JYI, 0,0,lg3+l3) += jyh;				\
+    J(JZI, 0,0,lg3+l3) += jzh;				\
   }
 
 #define CURRENT_2ND_XY							\
@@ -255,8 +255,8 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ (1.f/3.f) * S(s1x, l1) * S(s1y, l2);				\
       									\
       jxh -= fnqx*wx;							\
-      _F3(flds, JXI, lg1+l1,lg2+l2,0) += jxh;				\
-      _F3(flds, JZI, lg1+l1,lg2+l2,0) += fnqzz * wz;			\
+      J(JXI, lg1+l1,lg2+l2,0) += jxh;				\
+      J(JZI, lg1+l1,lg2+l2,0) += fnqzz * wz;			\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
@@ -265,7 +265,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
       particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       									\
       jyh -= fnqy*wy;							\
-      _F3(flds, JYI, lg1+l1,lg2+l2,0) += jyh;				\
+      J(JYI, lg1+l1,lg2+l2,0) += jyh;				\
     }									\
   }
 
@@ -275,7 +275,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l1 = l1min; l1 < l1max; l1++) {				\
       particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jxh -= fnqx*wx;							\
-      _F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;				\
+      J(JXI, lg1+l1,0,lg3+l3) += jxh;				\
     }									\
   }									\
 									\
@@ -286,7 +286,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ .5f * S(s0x, l1) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1x, l1) * S(s1z, l3);				\
       particle_real_t jyh = fnqyy * wy;					\
-      _F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;				\
+      J(JYI, lg1+l1,0,lg3+l3) += jyh;				\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
@@ -294,7 +294,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l3 = l3min; l3 < l3max; l3++) {				\
       particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       jzh -= fnqz*wz;							\
-      _F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;				\
+      J(JZI, lg1+l1,0,lg3+l3) += jzh;				\
     }									\
   }
 
@@ -306,7 +306,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ .5f * S(s0y, l2) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
       particle_real_t jxh = fnqxx * wx;					\
-      _F3(flds, JXI, 0,lg2+l2,lg3+l3) += jxh;				\
+      J(JXI, 0,lg2+l2,lg3+l3) += jxh;				\
     }									\
   }									\
   									\
@@ -315,7 +315,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l2 = l2min; l2 < l2max; l2++) {				\
       particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jyh -= fnqy*wy;							\
-      _F3(flds, JYI, 0,lg2+l2,lg3+l3) += jyh;				\
+      J(JYI, 0,lg2+l2,lg3+l3) += jyh;				\
     }									\
   }									\
 									\
@@ -324,7 +324,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l3 = l3min; l3 < l3max; l3++) {				\
       particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
       jzh -= fnqz*wz;							\
-      _F3(flds, JZI, 0,lg2+l2,lg3+l3) += jzh;				\
+      J(JZI, 0,lg2+l2,lg3+l3) += jzh;				\
     }									\
   }
 
@@ -351,9 +351,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	jyh -= fnqy*wy;							\
 	JZH(l2) -= fnqz*wz;						\
 									\
-	_F3(flds, JXI, 0,lg2+l2,lg3+l3) += jxh;				\
-	_F3(flds, JYI, 0,lg2+l2,lg3+l3) += jyh;				\
-	_F3(flds, JZI, 0,lg2+l2,lg3+l3) += JZH(l2);			\
+	J(JXI, 0,lg2+l2,lg3+l3) += jxh;				\
+	J(JYI, 0,lg2+l2,lg3+l3) += jyh;				\
+	J(JZI, 0,lg2+l2,lg3+l3) += JZH(l2);			\
       }									\
     }									\
 
@@ -368,7 +368,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1y, l2) * S(s1z, l3)); \
 									\
 	jxh -= fnqx*wx;							\
-	_F3(flds, JXI, lg1+l1,lg2+l2,lg3+l3) += jxh;			\
+	J(JXI, lg1+l1,lg2+l2,lg3+l3) += jxh;			\
       }									\
     }									\
   }									\
@@ -383,7 +383,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1x, l1)*S(s1z, l3)); \
 									\
 	jyh -= fnqy*wy;							\
-	_F3(flds, JYI, lg1+l1,lg2+l2,lg3+l3) += jyh;			\
+	J(JYI, lg1+l1,lg2+l2,lg3+l3) += jyh;			\
       }									\
     }									\
   }									\
@@ -398,7 +398,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1x, l1)*S(s1y, l2)); \
 									\
 	jzh -= fnqz*wz;							\
-	_F3(flds, JZI, lg1+l1,lg2+l2,lg3+l3) += jzh;			\
+	J(JZI, lg1+l1,lg2+l2,lg3+l3) += jzh;			\
       }									\
     }									\
   }
@@ -447,6 +447,8 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 #endif
 
   c_prm_set(ppsc);
+
+  Fields3d<fields_t> J(flds);
 
   IP_VARIANT_SFF_PREP;
   
@@ -521,18 +523,19 @@ static fields_t
 cache_fields_from_em(fields_t flds)
 {
   fields_t fld = fields_t_ctor(flds.ib, flds.im, 9);
+  Fields3d<fields_t> F(flds), CACHE(fld);
   // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
   // Has to be at least -2 .. +3 because of staggering
   // FIXME, get rid of caching since it's no different from the actual
   // fields...
   for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
     for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
-      _F3(fld, EX, 0,iy,iz) = _F3(flds, EX, 0,iy,iz);
-      _F3(fld, EY, 0,iy,iz) = _F3(flds, EY, 0,iy,iz);
-      _F3(fld, EZ, 0,iy,iz) = _F3(flds, EZ, 0,iy,iz);
-      _F3(fld, HX, 0,iy,iz) = _F3(flds, HX, 0,iy,iz);
-      _F3(fld, HY, 0,iy,iz) = _F3(flds, HY, 0,iy,iz);
-      _F3(fld, HZ, 0,iy,iz) = _F3(flds, HZ, 0,iy,iz);
+      CACHE(fld, EX, 0,iy,iz) = F(EX, 0,iy,iz);
+      CACHE(fld, EY, 0,iy,iz) = F(EY, 0,iy,iz);
+      CACHE(fld, EZ, 0,iy,iz) = F(EZ, 0,iy,iz);
+      CACHE(fld, HX, 0,iy,iz) = F(HX, 0,iy,iz);
+      CACHE(fld, HY, 0,iy,iz) = F(HY, 0,iy,iz);
+      CACHE(fld, HZ, 0,iy,iz) = F(HZ, 0,iy,iz);
     }
   }
   return fld;
@@ -541,11 +544,12 @@ cache_fields_from_em(fields_t flds)
 static void
 cache_fields_to_j(fields_t fld, fields_t flds)
 {
+  Fields3d<fields_t> F(flds), CACHE(fld);
   for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
     for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
-      _F3(flds, JXI, 0,iy,iz) += _F3(fld, JXI, 0,iy,iz);
-      _F3(flds, JYI, 0,iy,iz) += _F3(fld, JYI, 0,iy,iz);
-      _F3(flds, JZI, 0,iy,iz) += _F3(fld, JZI, 0,iy,iz);
+      F(JXI, 0,iy,iz) += CACHE(JXI, 0,iy,iz);
+      F(JYI, 0,iy,iz) += CACHE(JYI, 0,iy,iz);
+      F(JZI, 0,iy,iz) += CACHE(JZI, 0,iy,iz);
     }
   }
 }
