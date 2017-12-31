@@ -16,6 +16,7 @@ using dim_xyz = Invar<false, false, false>;
 using dim_xy  = Invar<false, false, true >;
 using dim_xz  = Invar<false, true , false>;
 using dim_yz  = Invar<true , false, false>;
+using dim_1   = Invar<true , true , true >;
 
 template<typename F>
 struct fields_traits

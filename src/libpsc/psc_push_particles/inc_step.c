@@ -62,12 +62,6 @@ typedef particle_iter_t mprts_array_t;
 
 #endif
 
-#if PSC_FIELDS_AS_CUDA2
-typedef fields_real_t * flds_em_t;
-#else
-typedef fields_t flds_em_t;
-#endif
-
 // ======================================================================
 // EXT_PREPARE_SORT
 //
@@ -139,6 +133,7 @@ CUDA_DEVICE static void
 push_one(mprts_array_t mprts_arr, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
+  FieldsEM EM(flds_em);
 #if PSC_PARTICLES_AS_CUDA2
   particle_t _prt, *prt = &_prt;
   PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);
@@ -255,6 +250,7 @@ CUDA_DEVICE static void
 stagger_one(mprts_array_t mprts_arr, int n,
 	    em_cache_t flds_em)
 {
+  FieldsEM EM(flds_em);
   particle_t *prt;
   PARTICLE_LOAD(prt, mprts_arr, n);
   

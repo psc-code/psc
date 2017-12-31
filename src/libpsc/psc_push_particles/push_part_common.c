@@ -5,6 +5,7 @@
 
 #define CACHE_EM_J 1
 
+#include "fields.hxx"
 #include "inc_params.c"
 #include "inc_push.c"
 #include "inc_cache.c"

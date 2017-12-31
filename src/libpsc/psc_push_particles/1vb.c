@@ -7,6 +7,8 @@
 
 #define USE_1VB
 
+#include "fields.hxx"
+
 #include "inc_params.c"
 #include "inc_cache.c"
 #include "inc_interpolate.c"

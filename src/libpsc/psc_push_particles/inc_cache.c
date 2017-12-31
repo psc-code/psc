@@ -38,11 +38,11 @@ typedef flds_em_t em_cache_t;
 #endif
 
 #if EM_CACHE_DIM == DIM_XYZ
-#define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, i,j,k))
+using FieldsEM = Fields3d<em_cache_t, dim_xyz>;
 #elif EM_CACHE_DIM == DIM_XZ
-#define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, i,0,k))
+using FieldsEM = Fields3d<em_cache_t, dim_xz>;
 #elif EM_CACHE_DIM == DIM_1
-#define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, 0,0,0))
+using FieldsEM = Fields3d<em_cache_t, dim_1>;
 #else
 #error unhandled EM_CACHE_DIM
 #endif
@@ -58,22 +58,10 @@ em_cache_create(flds_em_t flds_em, int ci0[3])
 
 typedef fields_real_t *em_cache_t;
 
-#if DIM == DIM_YZ
-#define F3_CACHE(em_cache, m, jx, jy, jz)				\
-  ((em_cache)[(((m)							\
-	       *BLOCKGSIZE_Z + (jz))					\
-	      *BLOCKGSIZE_Y + (jy))])
-#elif DIM == DIM_XYZ
-#define F3_CACHE(em_cache, m, jx, jy, jz)				\
-  ((em_cache)[((((m)							\
-		*BLOCKGSIZE_Z + (jz))					\
-	       *BLOCKGSIZE_Y + (jy))					\
-	      *BLOCKGSIZE_X + (jx))])
-#endif
-
 __device__ static em_cache_t
 cache_fields(em_cache_t flds_em_block, flds_em_t flds_em, int *ci0)
 {
+  Fields3d<flds_em_t> EM(flds_em);
   em_cache_t em_cache = flds_em_block + ((((-EX) * 
 				       BLOCKGSIZE_Z + -ci0[2] + BLOCKBND_Z) *
 				      BLOCKGSIZE_Y + -ci0[1] + BLOCKBND_Y) *
@@ -99,7 +87,7 @@ cache_fields(em_cache_t flds_em_block, flds_em_t flds_em, int *ci0)
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
       F3_CACHE(em_cache, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]) = 
-	F3_EM(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+	EM(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
   }
   return em_cache;
