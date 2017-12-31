@@ -6,13 +6,6 @@
 #define EM_CACHE EM_CACHE_NONE
 #endif
 
-#ifndef F3_EM
-#define F3_EM _F3
-typedef fields_t flds_em_t;
-#endif
-
-// FIXME, shared between em and curr cache currently
-
 // OPT, shouldn't we be able to do with less ghosts?
 #if DIM == DIM_YZ
 #define BLOCKBND_X 0
@@ -31,7 +24,7 @@ typedef fields_t flds_em_t;
 // ----------------------------------------------------------------------
 #if EM_CACHE == EM_CACHE_NONE
 
-typedef flds_em_t em_cache_t;
+typedef fields_t em_cache_t;
 
 #ifndef EM_CACHE_DIM
 #define EM_CACHE_DIM DIM_XYZ
@@ -48,7 +41,7 @@ using FieldsEM = Fields3d<em_cache_t, dim_1>;
 #endif
 
 CUDA_DEVICE static inline em_cache_t
-em_cache_create(flds_em_t flds_em, int ci0[3])
+em_cache_create(fields_t flds_em, int ci0[3])
 {
   return flds_em;
 }
