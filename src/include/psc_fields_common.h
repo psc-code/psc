@@ -123,22 +123,7 @@ typedef double fields_FTYPE_real_t;
 
 #ifndef BOUNDS_CHECK // ------------------------------
 
-#if FTYPE == FTYPE_SINGLE
-
-#define _F3_S(flds, m, i,j,k)			\
-  ((flds).data[_F3_OFF(flds, m, i,j,k)])
-
-#elif FTYPE == FTYPE_C
-
-#define _F3_C(flds, m, i,j,k)			\
-  ((flds).data[_F3_OFF(flds, m, i,j,k)])
-
-#elif FTYPE == FTYPE_FORTRAN
-
-#define _F3_FORTRAN(flds, m, i,j,k)		\
-  ((flds).data[_F3_OFF(flds, m, i,j,k)])
-
-#elif FTYPE == FTYPE_VPIC
+#if FTYPE == FTYPE_VPIC
 
 #define _F3_VPIC(flds, m, i,j,k)		\
   ((flds).data[_F3_VPIC_OFF(flds, m, i,j,k)])
@@ -147,37 +132,7 @@ typedef double fields_FTYPE_real_t;
 
 #else // BOUNDS_CHECK ------------------------------
 
-#if FTYPE == FTYPE_SINGLE
-
-#define _F3_S(flds, m, i,j,k)						\
-  (*({assert(m >= 0 && m < (flds).nr_comp);				\
-      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
-      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
-      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
-      &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
-    }))
-
-#elif FTYPE == FTYPE_C
-
-#define _F3_C(flds, m, i,j,k)						\
-  (*({assert(m >= 0 && m < (flds).nr_comp);				\
-      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
-      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
-      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
-      &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
-    }))
-
-#elif FTYPE == FTYPE_FORTRAN
-
-#define _F3_FORTRAN(flds, m, i,j,k)					\
-  (*({assert(m >= 0 && m < (flds).nr_comp);				\
-      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
-      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
-      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
-      &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
-    }))
-
-#elif FTYPE == FTYPE_VPIC
+#if FTYPE == FTYPE_VPIC
 
 #define _F3_VPIC(flds, m, i,j,k)					\
   (*({assert(m >= 0 && m < (flds).nr_comp);				\
@@ -196,9 +151,15 @@ typedef double fields_FTYPE_real_t;
 // ======================================================================
 // fields_FTYPE_t
 
-struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
-{
-};
+#if FTYPE == VPIC
+
+struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {};
+
+#else
+
+struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t> {};
+
+#endif
 
 // ----------------------------------------------------------------------
 // fields_t_ctor
