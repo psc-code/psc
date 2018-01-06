@@ -6,9 +6,9 @@
 #define THREADS_PER_BLOCK (512)
 
 #define F3_CURR F3_DEV
-typedef fields_real_t *flds_curr_t;
+typedef fields_t::real_t *flds_curr_t;
 #define F3_EM F3_DEV
-typedef fields_real_t *flds_em_t;
+typedef fields_t::real_t *flds_em_t;
 
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_cache.c"
@@ -56,12 +56,12 @@ push_mprts_ab(mprts_array_t mprts_arr,
 	      unsigned int *b_off,
 	      float *d_flds0, unsigned int size)
 {
-  CUDA_SHARED fields_real_t *flds_em;
+  CUDA_SHARED fields_t::real_t *flds_em;
   CUDA_SHARED curr_cache_t curr_cache;
   {
     int ci0[3]; find_ci0(ci0);
     int p = find_patch();
-    fields_real_t *d_flds = d_flds0 + p * size;
+    fields_t::real_t *d_flds = d_flds0 + p * size;
     flds_em = em_cache_create(d_flds, ci0);
     curr_cache = curr_cache_create(d_flds, ci0);
   }
@@ -85,7 +85,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
   {
     int ci0[3]; find_ci0(ci0);
     int p = find_patch();
-    fields_real_t *d_flds = d_flds0 + p * size;
+    fields_t::real_t *d_flds = d_flds0 + p * size;
     curr_cache_destroy(curr_cache, d_flds, ci0);
   }
 }

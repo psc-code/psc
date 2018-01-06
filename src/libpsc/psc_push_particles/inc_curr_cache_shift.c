@@ -21,7 +21,7 @@
 #define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz)	\
   ((d_flds)[F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz)])
 
-typedef struct { fields_real_t * arr_shift; } curr_cache_t;
+typedef struct { fields_t::real_t * arr_shift; } curr_cache_t;
 
 CUDA_DEVICE static inline curr_cache_t
 curr_cache_shift(curr_cache_t curr_cache, int m, int dx, int dy, int dz)

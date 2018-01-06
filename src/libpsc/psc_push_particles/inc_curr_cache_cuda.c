@@ -13,7 +13,7 @@
 
 #define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z * CURR_CACHE_N_REDUNDANT)
 
-typedef fields_real_t * curr_cache_t;
+typedef fields_t::real_t * curr_cache_t;
 
 CUDA_DEVICE static inline curr_cache_t
 curr_cache_shift(curr_cache_t curr_cache, int m, int dx, int dy, int dz)
@@ -21,8 +21,8 @@ curr_cache_shift(curr_cache_t curr_cache, int m, int dx, int dy, int dz)
   return curr_cache + F3_DEV_SHIFT_OFF(m, dx,dy,dz, 0);
 }
 
-CUDA_DEVICE static fields_real_t *
-init_curr_cache(fields_real_t *curr_cache, int ci0[3])
+CUDA_DEVICE static fields_t::real_t *
+init_curr_cache(fields_t::real_t *curr_cache, int ci0[3])
 {
 #ifdef __CUDACC__
   for (int i = threadIdx.x; i < CURR_CACHE_SIZE; i += THREADS_PER_BLOCK) {
@@ -45,7 +45,7 @@ init_curr_cache(fields_real_t *curr_cache, int ci0[3])
 #if CURR_CACHE_GMEM
 #define NR_BLOCKS ((512/4) * (512/4))
 
-__device__ static fields_real_t curr_cache_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
+__device__ static fields_t::real_t curr_cache_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
 
 CUDA_DEVICE static int find_bid();
 
@@ -58,7 +58,7 @@ curr_cache_create(flds_curr_t flds_curr, int ci0[3])
 
 #else
 
-CUDA_SHARED fields_real_t curr_cache_block[CURR_CACHE_SIZE];
+CUDA_SHARED fields_t::real_t curr_cache_block[CURR_CACHE_SIZE];
 
 CUDA_DEVICE static inline curr_cache_t
 curr_cache_create(flds_curr_t flds_curr, int ci0[3])
@@ -95,11 +95,11 @@ curr_cache_destroy(curr_cache_t curr_cache, flds_curr_t flds_curr, int ci0[3])
     iy -= BLOCKBND_Y;
     iz -= BLOCKBND_Z;
     for (int m = 0; m < 3; m++) {
-      fields_real_t val = 0.f;
+      fields_t::real_t val = 0.f;
       for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {
 	val += F3_DEV_SHIFT(curr_cache, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2], wid);
       }
-      fields_real_t *addr = &F(JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]);
+      fields_t::real_t *addr = &F(JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]);
       atomicAdd(addr, val);
     }
   }
@@ -111,7 +111,7 @@ curr_cache_destroy(curr_cache_t curr_cache, flds_curr_t flds_curr, int ci0[3])
     for (int iz = -BLOCKBND_Z; iz < BLOCKSIZE_Z + BLOCKBND_Z; iz++) {
       for (int iy = -BLOCKBND_Y; iy < BLOCKSIZE_Y + BLOCKBND_Y; iy++) {
 	for (int ix = -BLOCKBND_X; ix < BLOCKSIZE_X + BLOCKBND_X; ix++) {
-	  fields_real_t val = 0.f;
+	  fields_t::real_t val = 0.f;
 	  for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {
 	    val += F3_DEV_SHIFT(curr_cache, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2], wid);
 	  }

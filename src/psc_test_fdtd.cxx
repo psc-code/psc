@@ -157,7 +157,7 @@ psc_bnd_amr_create_ddc(struct psc_bnd *bnd)
 
   bnd_amr->ddc_E = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_param_int(bnd_amr->ddc_E, "sw", 3);
-  mrc_ddc_set_param_int(bnd_amr->ddc_E, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_set_param_int(bnd_amr->ddc_E, "size_of_type", sizeof(fields_t::real_t));
   mrc_ddc_setup(bnd_amr->ddc_E);
   mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_E, EX, 2, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
   mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_E, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
@@ -166,7 +166,7 @@ psc_bnd_amr_create_ddc(struct psc_bnd *bnd)
 
   bnd_amr->ddc_H = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_param_int(bnd_amr->ddc_H, "sw", 3);
-  mrc_ddc_set_param_int(bnd_amr->ddc_H, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_set_param_int(bnd_amr->ddc_H, "size_of_type", sizeof(fields_t::real_t));
   mrc_ddc_setup(bnd_amr->ddc_H);
   mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_H, HX, 2, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
   mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
@@ -176,7 +176,7 @@ psc_bnd_amr_create_ddc(struct psc_bnd *bnd)
   // FIXME, this psc_bnd::ddc is fake, not really usable (need E, H separately)
   struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_param_int(ddc, "sw", 3);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_t::real_t));
   mrc_ddc_setup(ddc);
   bnd->ddc = ddc;
 }
@@ -222,7 +222,7 @@ psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds, int mb, 
   mfields_t mf(mflds);
   struct psc_bnd_amr *bnd_amr = psc_bnd_amr(bnd);
 
-  fields_real_t **fldp = malloc(mflds->nr_patches * sizeof(*fldp));
+  fields_t::real_t **fldp = malloc(mflds->nr_patches * sizeof(*fldp));
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_t flds = mf[p];
     fldp[p] = flds.data;

@@ -189,7 +189,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     int *ib = flds_new.ib;
     void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
     void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
-    memcpy(addr_new, addr_old, size * sizeof(fields_real_t));
+    memcpy(addr_new, addr_old, size * sizeof(fields_t::real_t));
   }
   prof_stop(pr);
 

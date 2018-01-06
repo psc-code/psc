@@ -16,7 +16,7 @@ psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void 
   struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
   mfields_t mf(mflds);
   Fields F(mf[p]);
-  fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
+  fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -35,7 +35,7 @@ psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
   struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
   mfields_t mf(mflds);
   Fields F(mf[p]);
-  fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
+  fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -54,7 +54,7 @@ psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], voi
   struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
   mfields_t mf(mflds);
   Fields F(mf[p]);
-  fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
+  fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -83,7 +83,7 @@ psc_bnd_fld_sub_create(struct psc_bnd *bnd)
   mrc_ddc_set_funcs(ddc, &ddc_funcs);
   mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_t::real_t));
   mrc_ddc_setup(ddc);
   bnd->ddc = ddc;
 }

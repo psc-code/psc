@@ -235,7 +235,7 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
   for (int m = JXI; m <= JZI; m++){
-    fields_real_t max_delta = 0.;
+    fields_t::real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
       Fields F(mf[p]);
       Fields R(mf_ref[p]);

@@ -1,6 +1,8 @@
 
 #include "fields.hxx"
 
+#include <limits>
+#include <algorithm>
 #include <math.h>
 
 using Fields = Fields3d<fields_t>;
@@ -25,7 +27,7 @@ fields_t_zero_comp(fields_t flds, int m)
 // fields_t_set_comp
 
 static inline void
-fields_t_set_comp(fields_t flds, int m, fields_real_t val)
+fields_t_set_comp(fields_t flds, int m, fields_t::real_t val)
 {
   Fields F(flds);
   for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -41,7 +43,7 @@ fields_t_set_comp(fields_t flds, int m, fields_real_t val)
 // fields_t_scale_comp
 
 static inline void
-fields_t_scale_comp(fields_t flds, int m, fields_real_t val)
+fields_t_scale_comp(fields_t flds, int m, fields_t::real_t val)
 {
   Fields F(flds);
   for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -73,7 +75,7 @@ fields_t_copy_comp(fields_t to, int m_to, fields_t from, int m_from)
 // fields_t_axpy_comp
 
 static inline void
-fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
+fields_t_axpy_comp(fields_t y, int m_y, fields_t::real_t a, fields_t x, int m_x)
 {
   Fields X(x), Y(y);
   for (int jz = y.ib[2]; jz < y.ib[2] + y.im[2]; jz++) {
@@ -93,11 +95,11 @@ static inline double
 fields_t_max_comp(fields_t f, int m)
 {
   Fields F(f);
-  fields_real_t rv = -1e-37; // FIXME
+  fields_t::real_t rv = std::numeric_limits<fields_t::real_t>::min();
   for (int jz = f.ib[2]; jz < f.ib[2] + f.im[2]; jz++) {
     for (int jy = f.ib[1]; jy < f.ib[1] + f.im[1]; jy++) {
       for (int jx = f.ib[0]; jx < f.ib[0] + f.im[0]; jx++) {
-	rv = fmaxf(rv, F(m, jx,jy,jz)); // FIXME, should be based on fields_real_t
+	rv = std::max(rv, F(m, jx,jy,jz));
       }
     }
   }
@@ -111,9 +113,9 @@ fields_t_max_comp(fields_t f, int m)
 
 struct MPFX(sub) {
 #if PSC_FIELDS_AS_FORTRAN
-  fields_real_t ***data;
+  fields_t::real_t ***data;
 #else
-  fields_real_t **data;
+  fields_t::real_t **data;
 #endif
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
@@ -146,20 +148,20 @@ MPFX(setup)(struct psc_mfields *mflds)
   }
 
 #if PSC_FIELDS_AS_FORTRAN
-  sub->data = (fields_real_t***) calloc(mflds->nr_patches, sizeof(*sub->data));
+  sub->data = (fields_t::real_t***) calloc(mflds->nr_patches, sizeof(*sub->data));
 #else
-  sub->data = (fields_real_t**) calloc(mflds->nr_patches, sizeof(*sub->data));
+  sub->data = (fields_t::real_t**) calloc(mflds->nr_patches, sizeof(*sub->data));
 #endif
   for (int p = 0; p < mflds->nr_patches; p++) {
 #if PSC_FIELDS_AS_FORTRAN
-    fields_real_t **flds = (fields_real_t **) calloc(mflds->nr_fields, sizeof(*flds));
-    flds[0] = (fields_real_t *) calloc(size * mflds->nr_fields, sizeof(flds[0]));
+    fields_t::real_t **flds = (fields_t::real_t **) calloc(mflds->nr_fields, sizeof(*flds));
+    flds[0] = (fields_t::real_t *) calloc(size * mflds->nr_fields, sizeof(flds[0]));
     for (int i = 1; i < mflds->nr_fields; i++) {
       flds[i] = flds[0] + i * size;
     }
     sub->data[p] = flds;
 #else
-    sub->data[p] = (fields_real_t *) calloc(mflds->nr_fields * size, sizeof(fields_real_t));
+    sub->data[p] = (fields_t::real_t *) calloc(mflds->nr_fields * size, sizeof(fields_t::real_t));
 #endif
   }
 }
@@ -174,7 +176,7 @@ MPFX(destroy)(struct psc_mfields *mflds)
 
   for (int p = 0; p < mflds->nr_patches; p++) {
 #if PSC_FIELDS_AS_FORTRAN
-    fields_real_t **flds = sub->data[p];
+    fields_t::real_t **flds = sub->data[p];
     free(flds[0]);
     
     for (int i = 0; i < mflds->nr_fields; i++) {

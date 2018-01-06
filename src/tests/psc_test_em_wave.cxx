@@ -119,7 +119,7 @@ psc_test_em_wave_init_field(struct psc *psc, double crd[3], int m)
 // is_equal_tol
 
 static int
-is_equal_tol(fields_real_t tol, fields_real_t v1, fields_real_t v2)
+is_equal_tol(fields_t::real_t tol, fields_t::real_t v1, fields_t::real_t v2)
 {
   if (fabs(v1 - v2) < tol) {
     return 0;

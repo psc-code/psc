@@ -4,7 +4,6 @@
 
 #include "psc_fields_single.h"
 
-typedef fields_single_real_t fields_real_t;
 typedef fields_single_t      fields_t;
 typedef mfields_single_t     mfields_t;
 

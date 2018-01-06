@@ -102,7 +102,7 @@ do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
 {
   Fields F(flds), Div_J(div_j);
   define_dxdydz(dx, dy, dz);
-  fields_real_t h[3];
+  fields_t::real_t h[3];
   for (int d = 0; d < 3; d++) {
     if (psc->domain.gdims[d] == 1) {
       h[d] = 0.;
