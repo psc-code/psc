@@ -242,7 +242,9 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
     ierr = H5LTset_attribute_int(group, ".", "im", flds.im, 3); CE;
     ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds.nr_comp, 1); CE;
     // write components separately instead?
-    hsize_t hdims[4] = { flds.nr_comp, flds.im[2], flds.im[1], flds.im[0] };
+    hsize_t hdims[4];
+    hdims[0] = flds.nr_comp;
+    hdims[1] = flds.im[2]; hdims[2] = flds.im[1]; hdims[3] = flds.im[0];
     ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, flds.data); CE;
     ierr = H5Gclose(group); CE;
   }
