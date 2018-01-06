@@ -5,7 +5,7 @@
 #include "psc_particles_private.h"
 
 struct psc_mparticles_single_by_kind {
-  struct bk_mparticles *bkmprts;
+  bk_mparticles *bkmprts;
 };
 
 #define psc_mparticles_single_by_kind(mprts)({				\

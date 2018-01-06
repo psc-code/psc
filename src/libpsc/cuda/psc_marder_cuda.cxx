@@ -101,7 +101,10 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   assert(ppsc->domain.gdims[0] == 1);
     
   // FIXME: how to choose diffusion parameter properly?
-  float dx[3] = { ppsc->patch[0].dx[0], ppsc->patch[0].dx[1], ppsc->patch[0].dx[2] };
+  float dx[3];
+  for (int d = 0; d < 3; d++) {
+    dx[d] = ppsc->patch[0].dx[d];
+  }
   float inv_sum = 0.;
   int nr_levels;
   mrc_domain_get_nr_levels(ppsc->mrc_domain, &nr_levels);
@@ -113,9 +116,10 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
   float diffusion     = diffusion_max * marder->diffusion;
     
-  float fac[3] = { 0.f,
-		   .5 * ppsc->dt * diffusion / dx[1],
-		   .5 * ppsc->dt * diffusion / dx[2] };
+  float fac[3];
+  fac[0] = 0.f;
+  fac[1] = .5 * ppsc->dt * diffusion / dx[1];
+  fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
   struct psc_mfields *mf = psc_mfields_get_as(mf_base, "cuda", 0, 1);

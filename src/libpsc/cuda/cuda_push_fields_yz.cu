@@ -82,7 +82,7 @@ push_fields_H_yz(float *d_flds0, float cny, float cnz,
 #define BLOCKSIZE_Y 16
 #define BLOCKSIZE_Z 16
 
-EXTERN_C void
+void
 cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
 {
   if (cmflds->n_patches == 0) {
@@ -106,7 +106,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   cuda_sync_if_enabled();
 }
 
-EXTERN_C void
+void
 cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
 {
   if (cmflds->n_patches == 0) {

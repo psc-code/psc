@@ -39,7 +39,7 @@ fill_ghosts_periodic_yz(float *d_flds, int mb, int me)
   }
 }
 
-EXTERN_C void
+void
 cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
@@ -73,7 +73,7 @@ fill_ghosts_periodic_z(float *d_flds, int mb, int me)
   }
 }
 
-EXTERN_C void
+void
 cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
@@ -146,7 +146,7 @@ add_ghosts_periodic_yz(float *d_flds, int mb, int me)
   }
 }
 
-EXTERN_C void
+void
 cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
@@ -182,7 +182,7 @@ add_ghosts_periodic_z(float *d_flds, int mb, int me)
   }
 }
 
-EXTERN_C void
+void
 cuda_add_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
@@ -309,55 +309,55 @@ cuda_conducting_wall_J_y(struct cuda_mfields *cmflds, int p)
   cuda_sync_if_enabled();			       
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_H_lo_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_H_y<true, false>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_H_hi_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_H_y<false, true>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_H_lo_hi_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_H_y<true, true>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_E_lo_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_E_y<true, false>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_E_hi_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_E_y<false, true>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_E_lo_hi_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_E_y<true, true>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_J_lo_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_J_y<true, false>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_J_hi_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_J_y<false, true>(cmflds, p);
 }
 
-EXTERN_C void
+void
 cuda_conducting_wall_J_lo_hi_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_conducting_wall_J_y<true, true>(cmflds, p);

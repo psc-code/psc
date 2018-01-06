@@ -2,13 +2,6 @@
 #ifndef CUDA_IFACE_BND_H
 #define CUDA_IFACE_BND_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-#if 0 // hack to fix indentation
-}
-#endif
-
 // FIXME, better call it cuda_mfields_real_t
 typedef float fields_cuda_real_t;
 
@@ -108,13 +101,5 @@ void cuda_conducting_wall_E_hi_y(struct cuda_mfields *cmflds, int p);
 void cuda_conducting_wall_J_lo_y(struct cuda_mfields *cmflds, int p);
 void cuda_conducting_wall_J_hi_y(struct cuda_mfields *cmflds, int p);
 
-
-
-#if 0
-{
-#endif
-#ifdef __cplusplus
-}
-#endif
 
 #endif

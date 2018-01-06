@@ -5,9 +5,9 @@ AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
-	psc_push_particles.c \
+	psc_push_particles.cxx \
 	psc_generic_c.h \
-	psc_push_particles_generic_c.c \
+	psc_push_particles_generic_c.cxx \
 	push_part_xyz.cxx \
 	push_part_xy.cxx \
 	push_part_xz.cxx \
@@ -16,19 +16,19 @@ libsubdir_la_SOURCES = \
 	push_part_z.cxx \
 	\
 	psc_push_particles_2nd.h \
-	psc_push_particles_2nd.c \
-	push_part_double_2nd_yz.c \
+	psc_push_particles_2nd.cxx \
+	push_part_double_2nd_yz.cxx \
 	\
 	psc_1p5_double.h \
-	psc_push_particles_1p5_double.c \
-	push_part_1p5_double_yz.c \
-	psc_push_particles_1st.c \
+	psc_push_particles_1p5_double.cxx \
+	push_part_1p5_double_yz.cxx \
+	psc_push_particles_1st.cxx \
 	\
-	push_part_1st_xz.c \
-	push_part_1st_yz.c \
-	push_part_1vb.c \
-	push_part_1sff_xz.c \
-	push_part_single2_1vb_yz.c \
+	push_part_1st_xz.cxx \
+	push_part_1st_yz.cxx \
+	push_part_1vb.cxx \
+	push_part_1sff_xz.cxx \
+	push_part_single2_1vb_yz.cxx \
 	\
 	1vb/psc_push_particles_1vb_single.cxx \
 	1vb/psc_push_particles_1vbec_single.cxx \
@@ -52,8 +52,8 @@ libsubdir_la_SOURCES = \
 
 if USE_FORTRAN
 libsubdir_la_SOURCES += \
-	psc_push_particles_fortran.c \
-	psc_push_particles_vay.c
+	psc_push_particles_fortran.cxx \
+	psc_push_particles_vay.cxx
 endif USE_FORTRAN
 
 EXTRA_libsubdir_la_SOURCES = \

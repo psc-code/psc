@@ -2,12 +2,6 @@
 #ifndef CUDA_BITS_H
 #define CUDA_BITS_H
 
-#ifdef __cplusplus
-#define EXTERN_C extern "C"
-#else
-#define EXTERN_C
-#endif
-
 #define cudaCheck(ierr) do {						\
     if (ierr != cudaSuccess)						\
       fprintf(stderr, "IERR = %d (%s)\n", ierr, cudaGetErrorName(ierr)); \

@@ -6,13 +6,6 @@
 #include "psc_particle_buf_cuda.h"
 #include "psc_fields_single.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-#if 0 // hack to fix indentation
-}
-#endif
-
 // ----------------------------------------------------------------------
 // cuda_base
 
@@ -132,12 +125,5 @@ void cuda_heating_run_foil(struct cuda_mparticles *cmprts);
 
 // FIXME, mv elsewhere
 #define HERE printf("HERE: in %s() at %s:%d\n", __FUNCTION__, __FILE__, __LINE__)
-
-#if 0
-{
-#endif
-#ifdef __cplusplus
-}
-#endif
 
 #endif

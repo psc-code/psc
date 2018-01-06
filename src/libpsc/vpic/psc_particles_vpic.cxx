@@ -80,7 +80,7 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 static void
 get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = _ctx;
+  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
 
   assert(part->kind < ppsc->nr_kinds);
@@ -106,7 +106,7 @@ get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 static void
 put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = _ctx;
+  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
 
   assert(prt->kind < ppsc->nr_kinds);
@@ -154,7 +154,7 @@ psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
-  struct bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
+  bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
 
   vpic_mparticles_copy_from_single_by_kind(vmprts, bkmprts);
 }
@@ -164,7 +164,7 @@ psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
-  struct bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
+  bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
 
   vpic_mparticles_copy_to_single_by_kind(vmprts, bkmprts);
 }

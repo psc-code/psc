@@ -19,10 +19,10 @@ struct psc_bnd_cuda {
 void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_bnd *bnd = _ctx;
+  struct psc_bnd *bnd = (struct psc_bnd *) _ctx;
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
-  fields_cuda_real_t *buf = _buf;
+  fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
 
   me -= mb; // FIXME, the "mix" bnd needs this adjustment
   mb = 0;
@@ -40,10 +40,10 @@ psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_bnd *bnd = _ctx;
+  struct psc_bnd *bnd = (struct psc_bnd *) _ctx;
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
-  fields_cuda_real_t *buf = _buf;
+  fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
 
   me -= mb;
   mb = 0;
@@ -61,10 +61,10 @@ psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], voi
 void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_bnd *bnd = _ctx;
+  struct psc_bnd *bnd = (struct psc_bnd *) _ctx;
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
-  fields_cuda_real_t *buf = _buf;
+  fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
 
   me -= mb;
   mb = 0;
@@ -127,7 +127,7 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   struct mrc_ddc_rank_info *ri = patt2->ri;
     
   prm.n_recv_entries = ri[multi->mpi_rank].n_recv_entries;
-  prm.recv_entry = calloc(prm.n_recv_entries, sizeof(*prm.recv_entry));
+  prm.recv_entry = (struct cuda_mfields_bnd_entry *) calloc(prm.n_recv_entries, sizeof(*prm.recv_entry));
 
   for (int i = 0; i < prm.n_recv_entries; i++) {
     struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];

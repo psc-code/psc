@@ -21,8 +21,8 @@ struct psc_heating {
 
 #define VAR(x) (void *)offsetof(struct psc_heating, x)
 static struct param psc_heating_descr[] _mrc_unused = {
-  { "tb"                , VAR(tb)                , PARAM_INT(0.)                 },
-  { "te"                , VAR(te)                , PARAM_INT(0.)                 },
+  { "tb"                , VAR(tb)                , PARAM_INT(0)                  },
+  { "te"                , VAR(te)                , PARAM_INT(0)                  },
   { "kind"              , VAR(kind)              , PARAM_INT(-1)                 },
   { "every_step"        , VAR(every_step)        , PARAM_INT(20)                 },
 
