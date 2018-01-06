@@ -247,9 +247,9 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   struct psc_patch *patch = &ppsc->patch[p];			\
   								\
   /* FIXME, eventually no ghost points should be needed (?) */	\
-  fields_t flds_em = fields_t_ctor((int[3]) { -1, 0, -1 },		\
-				    (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },\
-				    6);					\
+  fields_t flds_em = fields_t((int[3]) { -1, 0, -1 },		\
+			      (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },	\
+			      6);					\
   Fields3d<fields_t> F_EM(flds_em);					\
 									\
   for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {			\

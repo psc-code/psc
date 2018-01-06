@@ -154,7 +154,7 @@ cuda_mfields_dump(struct cuda_mfields *cmflds, const char *filename)
 fields_single_t
 cuda_mfields_get_host_fields(struct cuda_mfields *cmflds)
 {
-  return fields_single_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
+  return fields_single_t(cmflds->ib, cmflds->im, cmflds->n_fields);
 }
 
 // ----------------------------------------------------------------------

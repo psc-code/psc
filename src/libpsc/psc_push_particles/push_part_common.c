@@ -523,7 +523,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 static fields_t
 cache_fields_from_em(fields_t flds)
 {
-  fields_t fld = fields_t_ctor(flds.ib, flds.im, 9);
+  fields_t fld = fields_t(flds.ib, flds.im, 9);
   Fields3d<fields_t> F(flds), CACHE(fld);
   // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
   // Has to be at least -2 .. +3 because of staggering
