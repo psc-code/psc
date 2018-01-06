@@ -13,6 +13,9 @@
 
 #include "vpic_iface.h"
 
+using Fields = Fields3d<fields_vpic_t>;
+using FieldsS = Fields3d<fields_single_t>;
+
 static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
   [JXI] = VPIC_MFIELDS_JFX, [JYI] = VPIC_MFIELDS_JFY, [JZI] = VPIC_MFIELDS_JFZ,
   [EX]  = VPIC_MFIELDS_EX , [EY]  = VPIC_MFIELDS_EY , [EZ]  = VPIC_MFIELDS_EZ,
@@ -48,6 +51,8 @@ psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields 
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+    Fields F(flds);
+    FieldsS F_s(flds_single);
 
     // FIXME, hacky way to distinguish whether we want
     // to copy the field into the standard PSC component numbering
@@ -57,7 +62,7 @@ psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields 
 	for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	  for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
 	    for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	      _F3_VPIC(flds, m_vpic, jx,jy,jz) = _F3_S(flds_single, m, jx,jy,jz);
+	      F(m_vpic, jx,jy,jz) = F_s(m, jx,jy,jz);
 	    }
 	  }
 	}
@@ -75,6 +80,8 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+    Fields F(flds);
+    FieldsS F_s(flds_single);
 
     int ib[3], ie[3];
     for (int d = 0; d < 3; d++) {
@@ -90,7 +97,7 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
 	    for (int jx = ib[0]; jx < ie[0]; jx++) {
-	      _F3_S(flds_single, m, jx,jy,jz) = _F3_VPIC(flds, m, jx,jy,jz);
+	      F_s(m, jx,jy,jz) = F(m, jx,jy,jz);
 	    }
 	  }
 	}
@@ -101,7 +108,7 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
 	    for (int jx = ib[0]; jx < ie[0]; jx++) {
-	      _F3_S(flds_single, m, jx,jy,jz) = _F3_VPIC(flds, m_vpic, jx,jy,jz);
+	      F_s(m, jx,jy,jz) = F(m_vpic, jx,jy,jz);
 	    }
 	  }
 	}
