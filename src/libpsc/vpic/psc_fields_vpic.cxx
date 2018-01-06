@@ -49,8 +49,9 @@ psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields 
 				  int mb, int me)
 {
   mfields_single_t mf_single(mflds_single);
+  mfields_vpic_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+    fields_vpic_t flds = mf[p];
     Fields F(flds);
     FieldsS F_s(mf_single[p]);
 
@@ -78,8 +79,9 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 			   int mb, int me)
 {
   mfields_single_t mf_single(mflds_single);
+  mfields_vpic_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+    fields_vpic_t flds = mf[p];
     fields_single_t flds_single = mf_single[p];
     Fields F(flds);
     FieldsS F_s(flds_single);

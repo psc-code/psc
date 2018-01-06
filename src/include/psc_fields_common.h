@@ -56,7 +56,7 @@
 
 #define fields_FTYPE_real_t fields_vpic_real_t
 #define fields_FTYPE_t fields_vpic_t
-#define mfields_FTYPE_t mfields_cuda_t
+#define mfields_FTYPE_t mfields_vpic_t
 
 #endif
 
