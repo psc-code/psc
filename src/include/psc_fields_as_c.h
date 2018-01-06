@@ -9,7 +9,6 @@ typedef fields_c_t      fields_t;
 typedef mfields_c_t     mfields_t;
 #define fields_t_dtor            fields_c_t_dtor
 
-#define fields_t_set_nan              double_set_nan
 #define FIELDS_TYPE                   "c"
 
 #define PSC_FIELDS_AS_C 1
