@@ -17,21 +17,18 @@
 
 #define fields_FTYPE_real_t fields_single_real_t
 #define fields_FTYPE_t fields_single_t
-#define fields_FTYPE_t_dtor fields_single_t_dtor
 #define mfields_FTYPE_t mfields_single_t
 
 #elif FTYPE == FTYPE_C
 
 #define fields_FTYPE_real_t fields_c_real_t
 #define fields_FTYPE_t fields_c_t
-#define fields_FTYPE_t_dtor fields_c_t_dtor
 #define mfields_FTYPE_t mfields_c_t
 
 #elif FTYPE == FTYPE_FORTRAN
 
 #define fields_FTYPE_real_t fields_fortran_real_t
 #define fields_FTYPE_t fields_fortran_t
-#define fields_FTYPE_t_dtor fields_fortran_t_dtor
 #define mfields_FTYPE_t mfields_fortran_t
 
 #elif FTYPE == FTYPE_CUDA
@@ -144,16 +141,6 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
 #endif
 
 // ----------------------------------------------------------------------
-// fields_t_dtor
-
-static inline void
-fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
-{
-  free(flds->data);
-  flds->data = NULL;
-}
-
-// ----------------------------------------------------------------------
 // mfields_t
 
 using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
@@ -164,6 +151,5 @@ using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
 
 #undef fields_FTYPE_real_t
 #undef fields_FTYPE_t
-#undef fields_FTYPE_t_dtor
 #undef mfields_FTYPE_t
 
