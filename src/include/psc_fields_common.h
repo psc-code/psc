@@ -92,19 +92,6 @@ typedef double fields_FTYPE_real_t;
 
 #endif
 
-// ----------------------------------------------------------------------
-// _F3
-
-// Lower bounds and dims are intentionally not called ilg, ihg, img,
-// to lessen confusion with psc.ilg, psc.ihg, etc.. These bounds may
-// be psc.ilo, psc.ihi or psc.ilg, psc.ihg, or something yet different.
-
-#define _F3_OFF(flds, m, i,j,k)						\
-  (((((((m) - (flds).first_comp)					\
-       * (flds).im[2] + ((k)-(flds).ib[2]))				\
-      * (flds).im[1] + ((j)-(flds).ib[1]))				\
-     * (flds).im[0] + ((i)-(flds).ib[0]))))
-
 #if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN || FTYPE == FTYPE_VPIC
 
 // ======================================================================
