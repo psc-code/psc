@@ -9,7 +9,6 @@ typedef fields_c_t      fields_t;
 typedef mfields_c_t     mfields_t;
 #define fields_t_ctor            fields_c_t_ctor
 #define fields_t_dtor            fields_c_t_dtor
-#define fields_t_mflds           fields_c_t_mflds
 #define fields_t_size            fields_c_t_size
 #define fields_t_zero_range      fields_c_t_zero_range
 

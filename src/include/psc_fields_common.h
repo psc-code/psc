@@ -175,43 +175,9 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 }
 
 // ----------------------------------------------------------------------
-// fields_t_mflds
+// mfields_t
 
 using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
-
-#if FTYPE == FTYPE_SINGLE
-
-static inline fields_FTYPE_t
-fields_single_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return mfields_FTYPE_t(mflds)[p];
-}
-
-#elif FTYPE == FTYPE_C
-
-static inline fields_FTYPE_t
-fields_c_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return mfields_FTYPE_t(mflds)[p];
-}
-
-#elif FTYPE == FTYPE_FORTRAN
-
-static inline fields_FTYPE_t
-fields_fortran_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return mfields_FTYPE_t(mflds)[p];
-}
-
-#elif FTYPE == FTYPE_VPIC
-
-static inline fields_FTYPE_t
-fields_vpic_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return mfields_FTYPE_t(mflds)[p];
-}
-
-#endif
 
 // ----------------------------------------------------------------------
 // fields_t_size
