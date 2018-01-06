@@ -7,6 +7,7 @@
 #include <psc_diag.h>
 #include <psc_diag_item_private.h>
 #include <psc_fields_c.h>
+#include "fields.hxx"
 
 #include <mrc_params.h>
 
@@ -77,11 +78,12 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
     struct psc_patch *patch = &psc->patch[p];
     double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
     fields_c_t flds = fields_c_t_mflds(mflds, p);
+    Fields3d<fields_c_t> F(flds);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       result[0] += 
-	(sqr(_F3_C(flds, HX, ix,iy,iz) - HX0) +
-	 sqr(_F3_C(flds, HY, ix,iy,iz) - HY0) +
-	 sqr(_F3_C(flds, HZ, ix,iy,iz) - HZ0)) * fac;
+	(sqr(F(HX, ix,iy,iz) - HX0) +
+	 sqr(F(HY, ix,iy,iz) - HY0) +
+	 sqr(F(HZ, ix,iy,iz) - HZ0)) * fac;
     } foreach_3d_end;
   }
   psc_mfields_put_as(mflds, psc->flds, 0, 0);

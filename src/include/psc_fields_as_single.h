@@ -12,8 +12,6 @@ typedef fields_single_t      fields_t;
 
 #define MPI_FIELDS_REAL MPI_FIELDS_SINGLE_REAL
 
-#define _F3(fld, m, i,j,k) _F3_S(fld, m, i,j,k)
-
 #define fields_t_set_nan              float_set_nan
 #define FIELDS_TYPE                   "single"
 

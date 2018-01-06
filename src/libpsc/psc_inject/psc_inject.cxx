@@ -1,5 +1,6 @@
 
 #include "psc_inject_private.h"
+#include "fields.hxx"
 
 #include <mrc_profile.h>
 #include <stdlib.h>
@@ -40,10 +41,11 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds)
 {
   psc_foreach_patch(ppsc, p) {
     fields_t flds = fields_t_mflds(mflds, p);
+    Fields3d<fields_t> F(flds);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < mflds->nr_fields; m++) {
-	MRC_M3(m3p, m, ix,iy,iz) = _F3_C(flds, m, ix,iy,iz);
+	MRC_M3(m3p, m, ix,iy,iz) = F(m, ix,iy,iz);
       }
     } mrc_fld_foreach_end;
     mrc_fld_patch_put(m3);

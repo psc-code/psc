@@ -1,5 +1,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
 SUBDIRS = include libmrc libpsc tests
 
@@ -28,6 +29,8 @@ bin_PROGRAMS = \
 	psc_test_lb \
 	psc_test_open
 
+psc_mirror_SOURCES = psc_mirror.cxx
+
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
 # HACK to have automake use the CXX linker
@@ -41,7 +44,6 @@ nodist_EXTRA_psc_spitzer_SOURCES = dummy.cxx
 nodist_EXTRA_psc_island_coalescence_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_double_SOURCES = dummy.cxx
-nodist_EXTRA_psc_mirror_SOURCES = dummy.cxx
 nodist_EXTRA_psc_harris_SOURCES = dummy.cxx
 nodist_EXTRA_psc_harris_xz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bubble_SOURCES = dummy.cxx

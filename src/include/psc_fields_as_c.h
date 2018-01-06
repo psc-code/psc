@@ -14,8 +14,6 @@ typedef fields_c_t      fields_t;
 
 #define MPI_FIELDS_REAL MPI_FIELDS_C_REAL
 
-#define _F3(fld, m, i,j,k) _F3_C(fld, m, i,j,k)
-
 #define fields_t_set_nan              double_set_nan
 #define FIELDS_TYPE                   "c"
 
