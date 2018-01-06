@@ -295,17 +295,7 @@ fields_FTYPE_t_size(fields_FTYPE_t flds)
 static inline void
 fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 {
-  for (int m = mb; m < me; m++) {
-#if FTYPE == FTYPE_SINGLE
-    memset(&_F3_S(flds, m, flds.ib[0], flds.ib[1], flds.ib[2]), 0,
-	   flds.im[0] * flds.im[1] * flds.im[2] * sizeof(fields_FTYPE_real_t));
-#elif FTYPE == FTYPE_C
-    memset(&_F3_C(flds, m, flds.ib[0], flds.ib[1], flds.ib[2]), 0,
-	   flds.im[0] * flds.im[1] * flds.im[2] * sizeof(fields_FTYPE_real_t));
-#else
-    assert(0);
-#endif
-  }
+  flds.zero(mb, me);
 }
 
 #endif // FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN
