@@ -17,7 +17,6 @@
 
 #define fields_FTYPE_real_t fields_single_real_t
 #define fields_FTYPE_t fields_single_t
-#define fields_FTYPE_t_ctor fields_single_t_ctor
 #define fields_FTYPE_t_dtor fields_single_t_dtor
 #define mfields_FTYPE_t mfields_single_t
 
@@ -25,7 +24,6 @@
 
 #define fields_FTYPE_real_t fields_c_real_t
 #define fields_FTYPE_t fields_c_t
-#define fields_FTYPE_t_ctor fields_c_t_ctor
 #define fields_FTYPE_t_dtor fields_c_t_dtor
 #define mfields_FTYPE_t mfields_c_t
 
@@ -33,7 +31,6 @@
 
 #define fields_FTYPE_real_t fields_fortran_real_t
 #define fields_FTYPE_t fields_fortran_t
-#define fields_FTYPE_t_ctor fields_fortran_t_ctor
 #define fields_FTYPE_t_dtor fields_fortran_t_dtor
 #define mfields_FTYPE_t mfields_fortran_t
 
@@ -147,15 +144,6 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
 #endif
 
 // ----------------------------------------------------------------------
-// fields_t_ctor
-
-static inline fields_FTYPE_t
-fields_FTYPE_t_ctor(int ib[3], int im[3], int n_comps)
-{
-  return fields_FTYPE_t(ib, im, n_comps);
-}
-
-// ----------------------------------------------------------------------
 // fields_t_dtor
 
 static inline void
@@ -176,7 +164,6 @@ using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
 
 #undef fields_FTYPE_real_t
 #undef fields_FTYPE_t
-#undef fields_FTYPE_t_ctor
 #undef fields_FTYPE_t_dtor
 #undef mfields_FTYPE_t
 
