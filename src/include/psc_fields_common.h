@@ -7,12 +7,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#ifndef __cplusplus
-#error need C++
-#endif
-
-BEGIN_C_DECLS
-
 #define FTYPE_SINGLE          1
 #define FTYPE_C               2
 #define FTYPE_FORTRAN         3
@@ -228,6 +222,4 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #undef fields_FTYPE_t_mflds
 #undef fields_FTYPE_t_size
 #undef fields_FTYPE_t_zero_range
-
-END_C_DECLS
 
