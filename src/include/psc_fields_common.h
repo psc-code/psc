@@ -1,6 +1,8 @@
 
 #include <mrc_common.h>
 
+#include "fields3d.hxx"
+
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -194,12 +196,9 @@ typedef double fields_FTYPE_real_t;
 // ======================================================================
 // fields_FTYPE_t
 
-typedef struct {
-  fields_FTYPE_real_t *data;
-  int ib[3], im[3]; //> lower bounds and length per direction
-  int nr_comp; //> nr of components
-  int first_comp; // first component
-} fields_FTYPE_t;
+struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
+{
+};
 
 // ----------------------------------------------------------------------
 // fields_t_ctor
