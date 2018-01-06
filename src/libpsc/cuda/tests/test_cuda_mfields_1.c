@@ -1,7 +1,12 @@
 
 #include "cuda_iface.h"
 
-#include <psc.h> // FIXME
+enum { // FIXME, duplicated
+  JXI, JYI, JZI,
+  EX , EY , EZ ,
+  HX , HY , HZ ,
+  NR_FIELDS,
+};
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,7 +55,6 @@ main(void)
 				   "}                                           ");
   mrc_json_print(json, 0);
   // FIXME, leaked
-
   struct cuda_mfields *cmflds = cuda_mfields_create();
   cuda_mfields_ctor(cmflds, json);
 
