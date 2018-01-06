@@ -8,16 +8,16 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_fields_cuda.cxx \
-	psc_particles_cuda.c \
-	psc_push_particles_cuda.c \
-	psc_push_fields_cuda.c \
-	psc_marder_cuda.c \
-	psc_bnd_cuda.c \
-	psc_bnd_particles_cuda.c \
-	psc_bnd_fields_cuda.c \
-	psc_output_fields_item_flds_cuda.c \
-	psc_output_fields_item_moments_1st_nc_cuda.c \
-	psc_heating_cuda.c \
+	psc_particles_cuda.cxx \
+	psc_push_particles_cuda.cxx \
+	psc_push_fields_cuda.cxx \
+	psc_marder_cuda.cxx \
+	psc_bnd_cuda.cxx \
+	psc_bnd_particles_cuda.cxx \
+	psc_bnd_fields_cuda.cxx \
+	psc_output_fields_item_flds_cuda.cxx \
+	psc_output_fields_item_moments_1st_nc_cuda.cxx \
+	psc_heating_cuda.cxx \
 	psc_inject_cuda.cxx \
 	b40c/kernel_utils.h \
 	b40c/radixsort_kernel_common.h \

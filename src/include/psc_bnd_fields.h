@@ -8,8 +8,12 @@
 
 MRC_CLASS_DECLARE(psc_bnd_fields, struct psc_bnd_fields);
 
+BEGIN_C_DECLS
+
 void psc_bnd_fields_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds);
 void psc_bnd_fields_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds);
 void psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds);
+
+END_C_DECLS
 
 #endif

@@ -1,4 +1,5 @@
 
+
 #if PTYPE == PTYPE_SINGLE
 
 #define particle_PTYPE_real_t particle_single_real_t
@@ -163,6 +164,8 @@
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
 #endif
+
+BEGIN_C_DECLS
 
 // ======================================================================
 
@@ -435,6 +438,8 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #include <math.h>
 
 #endif // PTYPE_CUDA
+
+END_C_DECLS
 
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t

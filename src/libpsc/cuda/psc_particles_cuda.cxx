@@ -100,7 +100,7 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 static void
 get_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = _ctx;
+  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
 
   prt->xi[0]   = part->xi;
@@ -116,7 +116,7 @@ get_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 static void
 put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = _ctx;
+  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
   
   part->xi      = prt->xi[0];
@@ -149,7 +149,7 @@ psc_mparticles_cuda_copy_to_single(struct psc_mparticles *mprts_cuda,
 static void
 get_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = _ctx;
+  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_double_t *part = psc_mparticles_double_get_one(ctx->mprts, ctx->p, n);
 
   prt->xi[0]   = part->xi;
@@ -165,7 +165,7 @@ get_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 static void
 put_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = _ctx;
+  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_double_t *part = psc_mparticles_double_get_one(ctx->mprts, ctx->p, n);
   
   part->xi      = prt->xi[0];
@@ -345,12 +345,13 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
     int n_prts = n_prts_by_patch[p];
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
-      float_4 *xi4  = calloc(n_prts, sizeof(*xi4));
-      float_4 *pxi4 = calloc(n_prts, sizeof(*pxi4));
+      float_4 *xi4  = (float_4 *) calloc(n_prts, sizeof(*xi4));
+      float_4 *pxi4 = (float_4 *) calloc(n_prts, sizeof(*pxi4));
       
       cuda_mparticles_from_device(cmprts, xi4, pxi4, n_prts, off);
       
-      hsize_t hdims[2] = { n_prts, 4 };
+      hsize_t hdims[2];
+      hdims[0] = n_prts; hdims[1] = 4;
       ierr = H5LTmake_dataset_float(pgroup, "xi4", 2, hdims, (float *) xi4); CE;
       ierr = H5LTmake_dataset_float(pgroup, "pxi4", 2, hdims, (float *) pxi4); CE;
       
@@ -398,8 +399,8 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts = n_prts_by_patch[p];
     if (n_prts > 0) {
-      float_4 *xi4  = calloc(n_prts, sizeof(float_4));
-      float_4 *pxi4 = calloc(n_prts, sizeof(float_4));
+      float_4 *xi4  = (float_4*) calloc(n_prts, sizeof(float_4));
+      float_4 *pxi4 = (float_4*) calloc(n_prts, sizeof(float_4));
       
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;

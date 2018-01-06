@@ -23,9 +23,12 @@ struct psc_method_ops {
 extern struct psc_method_ops psc_method_ops_default;
 extern struct psc_method_ops psc_method_ops_vpic;
 
+BEGIN_C_DECLS
 
 // maybe useful for non-default subclasses
 
 void psc_method_default_output(struct psc_method *method, struct psc *psc);
+
+END_C_DECLS
 
 #endif
