@@ -89,7 +89,7 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = mf[p];
 
-    fields_t_zero_range(flds, JXI, JXI + 3);
+    flds.zero(JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);
     do_push_part_1vb_yz(flds, mprts, p);
   }
@@ -106,7 +106,7 @@ SFX(psc_push_particles_stagger_mprts)(struct psc_push_particles *push,
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = mf[p];
 
-    fields_t_zero_range(flds, JXI, JXI + 3);
+    flds.zero(JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);
     do_stagger_part_1vb_yz(flds, mprts, p);
   }

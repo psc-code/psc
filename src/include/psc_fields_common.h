@@ -21,7 +21,6 @@
 #define fields_FTYPE_t_dtor fields_single_t_dtor
 #define fields_FTYPE_t_mflds fields_single_t_mflds
 #define fields_FTYPE_t_size fields_single_t_size
-#define fields_FTYPE_t_zero_range fields_single_t_zero_range
 #define mfields_FTYPE_t mfields_single_t
 
 #elif FTYPE == FTYPE_C
@@ -32,7 +31,6 @@
 #define fields_FTYPE_t_dtor fields_c_t_dtor
 #define fields_FTYPE_t_mflds fields_c_t_mflds
 #define fields_FTYPE_t_size fields_c_t_size
-#define fields_FTYPE_t_zero_range fields_c_t_zero_range
 #define mfields_FTYPE_t mfields_c_t
 
 #elif FTYPE == FTYPE_FORTRAN
@@ -43,7 +41,6 @@
 #define fields_FTYPE_t_dtor fields_fortran_t_dtor
 #define fields_FTYPE_t_mflds fields_fortran_t_mflds
 #define fields_FTYPE_t_size fields_fortran_t_size
-#define fields_FTYPE_t_zero_range fields_fortran_t_zero_range
 #define mfields_FTYPE_t mfields_fortran_t
 
 #elif FTYPE == FTYPE_CUDA
@@ -179,15 +176,6 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 
 using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
 
-// ----------------------------------------------------------------------
-// fields_t_zero_range
-
-static inline void
-fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
-{
-  flds.zero(mb, me);
-}
-
 #endif // FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN
 
 // ----------------------------------------------------------------------
@@ -198,6 +186,5 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #undef fields_FTYPE_t_dtor
 #undef fields_FTYPE_t_mflds
 #undef fields_FTYPE_t_size
-#undef fields_FTYPE_t_zero_range
 #undef mfields_FTYPE_t
 

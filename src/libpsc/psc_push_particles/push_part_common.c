@@ -587,13 +587,13 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
     particle_range_t prts = particle_range_mprts(mprts, p);
 #if CACHE == CACHE_EM_J
     // FIXME, can't we just skip this and just set j when copying back?
-    fields_t_zero_range(flds, JXI, JXI + 3);
+    flds.zero(JXI, JXI + 3);
     fields_t flds_cache = cache_fields_from_em(flds);
     do_push_part(p, flds_cache, prts);
     cache_fields_to_j(flds_cache, flds);
     fields_t_dtor(&flds_cache);
 #else
-    fields_t_zero_range(flds, JXI, JXI + 3);
+    flds.zero(JXI, JXI + 3);
     do_push_part(p, flds, prts);
 #endif
   }
