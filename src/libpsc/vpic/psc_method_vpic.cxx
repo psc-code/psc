@@ -55,7 +55,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   psc->prm.nmax = info.num_step;
   psc->prm.stats_every = info.status_interval;
   
-  struct psc_kind *kinds = calloc(info.n_kinds, sizeof(*kinds));
+  struct psc_kind *kinds = (struct psc_kind *) calloc(info.n_kinds, sizeof(*kinds));
   for (int m = 0; m < info.n_kinds; m++) {
     kinds[m].q = info.kinds[m].q;
     kinds[m].m = info.kinds[m].m;

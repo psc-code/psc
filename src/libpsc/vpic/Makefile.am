@@ -13,16 +13,16 @@ AM_CXXFLAGS += \
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
-	psc_method_vpic.c \
-	psc_sort_vpic.c \
-	psc_collision_vpic.c \
-	psc_push_particles_vpic.c \
-	psc_bnd_particles_vpic.c \
-	psc_push_fields_vpic.c \
-	psc_bnd_vpic.c \
-	psc_bnd_fields_vpic.c \
-	psc_marder_vpic.c \
-	psc_particles_vpic.c \
+	psc_method_vpic.cxx \
+	psc_sort_vpic.cxx \
+	psc_collision_vpic.cxx \
+	psc_push_particles_vpic.cxx \
+	psc_bnd_particles_vpic.cxx \
+	psc_push_fields_vpic.cxx \
+	psc_bnd_vpic.cxx \
+	psc_bnd_fields_vpic.cxx \
+	psc_marder_vpic.cxx \
+	psc_particles_vpic.cxx \
 	psc_fields_vpic.cxx \
 	psc_output_fields_item_vpic.cxx \
 	\
