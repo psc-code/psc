@@ -5,7 +5,6 @@
 #include "psc_fields_acc.h"
 
 typedef fields_acc_real_t fields_real_t;
-#define MPI_FIELDS_REAL MPI_FIELDS_ACC_REAL
 
 #define FIELDS_TYPE                   "acc"
 

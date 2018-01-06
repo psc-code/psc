@@ -58,31 +58,6 @@ typedef double fields_FTYPE_real_t;
 
 #endif
 
-// ----------------------------------------------------------------------
-// MPI_FIELDS_FTYPE_REAL
-
-#if FTYPE == FTYPE_SINGLE
-
-#define MPI_FIELDS_SINGLE_REAL MPI_FLOAT
-
-#elif FTYPE == FTYPE_C
-
-#define MPI_FIELDS_C_REAL MPI_DOUBLE
-
-#elif FTYPE == FTYPE_FORTRAN
-
-#define MPI_FIELDS_FORTRAN_REAL MPI_DOUBLE
-
-#elif FTYPE == FTYPE_CUDA
-
-#define MPI_FIELDS_CUDA_REAL MPI_FLOAT
-
-#elif FTYPE == FTYPE_VPIC
-
-#define MPI_FIELDS_VPIC_REAL MPI_FLOAT
-
-#endif
-
 #if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN || FTYPE == FTYPE_VPIC
 
 // ======================================================================

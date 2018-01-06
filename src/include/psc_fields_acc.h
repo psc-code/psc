@@ -6,8 +6,6 @@
 
 typedef float fields_acc_real_t;
 
-#define MPI_FIELDS_ACC_REAL MPI_FLOAT
-
 struct psc_fields_acc {
 };
 

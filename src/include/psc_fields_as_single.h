@@ -8,8 +8,6 @@ typedef fields_single_real_t fields_real_t;
 typedef fields_single_t      fields_t;
 typedef mfields_single_t     mfields_t;
 
-#define MPI_FIELDS_REAL MPI_FIELDS_SINGLE_REAL
-
 #define fields_t_set_nan              float_set_nan
 #define FIELDS_TYPE                   "single"
 
