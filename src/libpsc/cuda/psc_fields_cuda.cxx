@@ -22,13 +22,13 @@ static void
 psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			    int mb, int me)
 {
+  mfields_c_t mf_c(mflds_c);
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
   FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
-    FieldsC F_c(flds_c);
+    FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
@@ -49,13 +49,13 @@ static void
 psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			  int mb, int me)
 {
+  mfields_c_t mf_c(mflds_c);
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
   FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
-    FieldsC F_c(flds_c);
+    FieldsC F_c(mf_c[p]);
     cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {

@@ -74,11 +74,11 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   //  double HZ0 = B0 * cos(mirror->theta_0);
 
   struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", HX, HX + 3);
+  mfields_c_t mf(mflds);
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
-    fields_c_t flds = fields_c_t_mflds(mflds, p);
-    Fields3d<fields_c_t> F(flds);
+    Fields3d<fields_c_t> F(mf[p]);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       result[0] += 
 	(sqr(F(HX, ix,iy,iz) - HX0) +

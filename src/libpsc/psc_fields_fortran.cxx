@@ -20,9 +20,10 @@ static void
 psc_mfields_fortran_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
 			     int mb, int me)
 {
+  mfields_c_t mf_c(mflds_c);
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
-    fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
+    fields_c_t flds_c = mf_c[p];
     Fields F(flds);
     FieldsC F_c(flds_c);
     for (int m = mb; m < me; m++) {
@@ -41,9 +42,10 @@ static void
 psc_mfields_fortran_copy_from_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
 			       int mb, int me)
 {
+  mfields_c_t mf_c(mflds_c);
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
-    fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
+    fields_c_t flds_c = mf_c[p];
     Fields F(flds);
     FieldsC F_c(flds_c);
     for (int m = mb; m < me; m++) {

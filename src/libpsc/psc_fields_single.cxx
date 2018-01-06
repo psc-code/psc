@@ -21,11 +21,11 @@ static void
 psc_mfields_single_copy_from_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
 			       int mb, int me)
 {
+  mfields_c_t mf_c(mflds_c);
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
-    fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
     Fields F(flds);
-    FieldsC F_c(flds_c);
+    FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
@@ -42,11 +42,11 @@ void
 psc_mfields_single_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
 			     int mb, int me)
 {
+  mfields_c_t mf_c(mflds_c);
   for (int p = 0; p < mflds->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
-    fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
     Fields F(flds);
-    FieldsC F_c(flds_c);
+    FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
