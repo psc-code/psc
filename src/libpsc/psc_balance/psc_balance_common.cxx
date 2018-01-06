@@ -133,7 +133,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     } else {
       fields_t flds_old = mf_old[p];
       Fields F_old(flds_old);
-      int nn = fields_t_size(flds_old) * flds_old.nr_comp;
+      int nn = flds_old.size();
       int *ib = flds_old.ib;
       void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_new_by_rank[new_rank]++;
@@ -155,7 +155,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     } else {
       fields_t flds_new = mf_new[p];
       Fields F_new(flds_new);
-      int nn = fields_t_size(flds_new) * flds_new.nr_comp;
+      int nn = flds_new.size();
       int *ib = flds_new.ib;
       void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_old_by_rank[old_rank]++;
@@ -182,8 +182,8 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     fields_t flds_new = mf_new[p];
     Fields F_old(flds_old), F_new(flds_new);
     assert(flds_old.nr_comp == flds_new.nr_comp);
-    assert(fields_t_size(flds_old) == fields_t_size(flds_new));
-    int size = fields_t_size(flds_old) * flds_old.nr_comp;
+    assert(flds_old.size() == flds_new.size());
+    int size = flds_old.size();
     int *ib = flds_new.ib;
     void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
     void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);

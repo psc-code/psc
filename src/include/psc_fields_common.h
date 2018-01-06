@@ -180,15 +180,6 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
 
 // ----------------------------------------------------------------------
-// fields_t_size
-
-static inline unsigned int
-fields_FTYPE_t_size(fields_FTYPE_t flds)
-{
-  return flds.im[0] * flds.im[1] * flds.im[2];
-}
-
-// ----------------------------------------------------------------------
 // fields_t_zero_range
 
 static inline void
