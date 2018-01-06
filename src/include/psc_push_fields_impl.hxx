@@ -171,19 +171,20 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
+  using mfields_t = typename fields_t::mfields_t;
   const char* fields_type = fields_traits<fields_t>::name;
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, fields_type, JXI, HX + 3);
+  mfields_t mf = mfields_t(mflds);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_traits<fields_t>::get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_E<dim_xyz>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_E<dim_xyz>(push, mf[p], ppsc, dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_E<dim_yz>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_E<dim_yz>(push, mf[p], ppsc, dt_fac);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      psc_push_fields_push_E<dim_xz>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_E<dim_xz>(push, mf[p], ppsc, dt_fac);
     } else {
       assert(0);
     }
@@ -205,19 +206,20 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
+  using mfields_t = typename fields_t::mfields_t;
   const char* fields_type = fields_traits<fields_t>::name;
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, fields_type, EX, HX + 3);
+  mfields_t mf = mfields_t(mflds);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_traits<fields_t>::get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_H<dim_xyz>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_H<dim_xyz>(push, mf[p], ppsc, dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      psc_push_fields_push_H<dim_yz>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_H<dim_yz>(push, mf[p], ppsc, dt_fac);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      psc_push_fields_push_H<dim_xz>(push, flds, ppsc, dt_fac);
+      psc_push_fields_push_H<dim_xz>(push, mf[p], ppsc, dt_fac);
     } else {
       assert(0);
     }

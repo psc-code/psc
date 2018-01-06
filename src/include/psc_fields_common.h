@@ -105,7 +105,10 @@ typedef double fields_FTYPE_real_t;
 
 #if FTYPE == VPIC
 
-struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {
+struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS>
+{
+  using mfields_t = mfields3d<fields_FTYPE_t>;
+  
   using fields3d<fields_FTYPE_real_t>::fields3d;
 
   static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
@@ -119,6 +122,8 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {
 
 struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
 {
+  using mfields_t = mfields3d<fields_FTYPE_t>;
+
   using fields3d<fields_FTYPE_real_t>::fields3d;
 
 #if FTYPE == FTYPE_SINGLE
