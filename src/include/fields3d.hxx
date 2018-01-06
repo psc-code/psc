@@ -44,6 +44,12 @@ struct fields3d {
     data = (real_t *) calloc(size * nr_comp, sizeof(*data));
   }
 
+  void dtor()
+  {
+    free(data);
+    data = NULL;
+  }
+
   real_t  operator()(int m, int i, int j, int k) const { return data[index(m, i, j, k)];  }
   real_t& operator()(int m, int i, int j, int k)       { return data[index(m, i, j, k)];  }
 

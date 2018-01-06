@@ -265,7 +265,7 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   }
 
 #define IP_VARIANT_SFF_POST			\
-  fields_t_dtor(&flds_em)
+  flds_em.dtor()
 
 /* FIXME, we don't really need h coeffs in this case, either, though
  * the compiler may be smart enough to figure that out */

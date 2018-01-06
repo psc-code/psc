@@ -42,7 +42,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
     cuda_mfields_copy_to_device(cmflds, p, flds, mb, me);
   }
   
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 }
 
 static void
@@ -69,7 +69,7 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
     }
   }
 
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 }
 
 // ======================================================================
@@ -100,7 +100,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
     cuda_mfields_copy_to_device(cmflds, p, flds, mb, me);
   }
   
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 }
 
 static void
@@ -127,7 +127,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
     }
   }
 
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 }
 
 // ======================================================================
@@ -261,7 +261,7 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
     ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, flds.data); CE;
     ierr = H5Gclose(group); CE;
   }
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 
   ierr = H5Gclose(group0); CE;
 }
@@ -302,7 +302,7 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
     cuda_mfields_copy_to_device(cmflds, p, flds, 0, flds.nr_comp);
     ierr = H5Gclose(group); CE;
   }
-  fields_single_t_dtor(&flds);
+  flds.dtor();
   ierr = H5Gclose(group0); CE;
 }
 

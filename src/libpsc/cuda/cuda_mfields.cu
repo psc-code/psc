@@ -121,7 +121,7 @@ cuda_mfields_to_json(struct cuda_mfields *cmflds)
       }
     }
   }
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 
   return json;
 }

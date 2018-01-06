@@ -591,7 +591,7 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
     fields_t flds_cache = cache_fields_from_em(flds);
     do_push_part(p, flds_cache, prts);
     cache_fields_to_j(flds_cache, flds);
-    fields_t_dtor(&flds_cache);
+    flds_cache.dtor();
 #else
     flds.zero(JXI, JXI + 3);
     do_push_part(p, flds, prts);

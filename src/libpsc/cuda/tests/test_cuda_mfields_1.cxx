@@ -92,7 +92,7 @@ main(void)
     }
     cuda_mfields_copy_to_device(cmflds, p, flds, 0, n_fields);
   }
-  fields_single_t_dtor(&flds);
+  flds.dtor();
 
   cuda_mfields_dump(cmflds, "cmflds_wave.json");
 
