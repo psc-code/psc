@@ -19,7 +19,6 @@
 #define fields_FTYPE_t fields_single_t
 #define fields_FTYPE_t_ctor fields_single_t_ctor
 #define fields_FTYPE_t_dtor fields_single_t_dtor
-#define fields_FTYPE_t_size fields_single_t_size
 #define mfields_FTYPE_t mfields_single_t
 
 #elif FTYPE == FTYPE_C
@@ -28,7 +27,6 @@
 #define fields_FTYPE_t fields_c_t
 #define fields_FTYPE_t_ctor fields_c_t_ctor
 #define fields_FTYPE_t_dtor fields_c_t_dtor
-#define fields_FTYPE_t_size fields_c_t_size
 #define mfields_FTYPE_t mfields_c_t
 
 #elif FTYPE == FTYPE_FORTRAN
@@ -37,7 +35,6 @@
 #define fields_FTYPE_t fields_fortran_t
 #define fields_FTYPE_t_ctor fields_fortran_t_ctor
 #define fields_FTYPE_t_dtor fields_fortran_t_dtor
-#define fields_FTYPE_t_size fields_fortran_t_size
 #define mfields_FTYPE_t mfields_fortran_t
 
 #elif FTYPE == FTYPE_CUDA
@@ -181,6 +178,5 @@ using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
 #undef fields_FTYPE_t
 #undef fields_FTYPE_t_ctor
 #undef fields_FTYPE_t_dtor
-#undef fields_FTYPE_t_size
 #undef mfields_FTYPE_t
 
