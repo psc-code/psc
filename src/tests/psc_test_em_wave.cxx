@@ -188,7 +188,7 @@ psc_test_em_wave_check_single(struct psc *psc)
 
   int failed = 0;
   for (int p = 0; p < mflds->nr_patches; p++) {
-    Fields3d<fields_single_t> F(fields_single_t_mflds(mflds, p));
+    Fields3d<fields_single_t> F(mfields_single_t(mflds)[p]);
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
@@ -234,7 +234,7 @@ psc_test_em_wave_check_vpic(struct psc *psc)
 #if 0
   int failed = 0;
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_single_t flds = fields_single_t_mflds(mflds, p);
+    fields_single_t flds = mfields_single_t(mflds)[p];
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];

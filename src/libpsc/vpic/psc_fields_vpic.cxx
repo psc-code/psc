@@ -48,11 +48,11 @@ static void
 psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
 				  int mb, int me)
 {
+  mfields_single_t mf_single(mflds_single);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
     Fields F(flds);
-    FieldsS F_s(flds_single);
+    FieldsS F_s(mf_single[p]);
 
     // FIXME, hacky way to distinguish whether we want
     // to copy the field into the standard PSC component numbering
@@ -77,9 +77,10 @@ static void
 psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
 			   int mb, int me)
 {
+  mfields_single_t mf_single(mflds_single);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     fields_vpic_t flds = fields_vpic_t_mflds(mflds, p);
+    fields_single_t flds_single = mf_single[p];
     Fields F(flds);
     FieldsS F_s(flds_single);
 
