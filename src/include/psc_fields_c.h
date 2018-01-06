@@ -3,12 +3,13 @@
 #define PSC_FIELD_C_H
 
 #include "psc_fields_private.h"
+#include "fields_traits.hxx"
 
 #define FTYPE FTYPE_C
 #include "psc_fields_common.h"
 #undef FTYPE
 
-#include "fields_traits.hxx"
+using mfields_c_t = mfields3d<fields_c_t>;
 
 template<>
 inline fields_c_t mfields_c_t::operator[](int p)

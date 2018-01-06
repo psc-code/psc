@@ -2,11 +2,13 @@
 #ifndef PSC_FIELD_SINGLE_H
 #define PSC_FIELD_SINGLE_H
 
+#include "fields_traits.hxx"
+
 #define FTYPE FTYPE_SINGLE
 #include "psc_fields_common.h"
 #undef FTYPE
 
-#include "fields_traits.hxx"
+using mfields_single_t = mfields3d<fields_single_t>;
 
 template<>
 inline fields_single_t mfields_single_t::operator[](int p)

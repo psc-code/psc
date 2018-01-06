@@ -81,11 +81,6 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
 
 };
 
-// ----------------------------------------------------------------------
-// mfields_t
-
-using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
-
 #endif // FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN
 
 // ----------------------------------------------------------------------

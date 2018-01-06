@@ -10,6 +10,8 @@
 #include "psc_fields_common.h"
 #undef FTYPE
 
+using mfields_vpic_t = mfields3d<fields_vpic_t>;
+
 template<>
 inline fields_vpic_t mfields_vpic_t::operator[](int p)
 {

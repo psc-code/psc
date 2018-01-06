@@ -8,6 +8,8 @@
 #include "psc_fields_common.h"
 #undef FTYPE
 
+using mfields_fortran_t = mfields3d<fields_fortran_t>;
+
 template<>
 inline fields_fortran_t mfields_fortran_t::operator[](int p)
 {
