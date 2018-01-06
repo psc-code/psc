@@ -22,6 +22,7 @@
 #define fields_FTYPE_t_mflds fields_single_t_mflds
 #define fields_FTYPE_t_size fields_single_t_size
 #define fields_FTYPE_t_zero_range fields_single_t_zero_range
+#define mfields_FTYPE_t mfields_single_t
 
 #elif FTYPE == FTYPE_C
 
@@ -32,6 +33,7 @@
 #define fields_FTYPE_t_mflds fields_c_t_mflds
 #define fields_FTYPE_t_size fields_c_t_size
 #define fields_FTYPE_t_zero_range fields_c_t_zero_range
+#define mfields_FTYPE_t mfields_c_t
 
 #elif FTYPE == FTYPE_FORTRAN
 
@@ -42,15 +44,19 @@
 #define fields_FTYPE_t_mflds fields_fortran_t_mflds
 #define fields_FTYPE_t_size fields_fortran_t_size
 #define fields_FTYPE_t_zero_range fields_fortran_t_zero_range
+#define mfields_FTYPE_t mfields_fortran_t
 
 #elif FTYPE == FTYPE_CUDA
 
 #define fields_FTYPE_real_t fields_cuda_real_t
+#define fields_FTYPE_t fields_cuda_t
+#define mfields_FTYPE_t mfields_cuda_t
 
 #elif FTYPE == FTYPE_VPIC
 
 #define fields_FTYPE_real_t fields_vpic_real_t
 #define fields_FTYPE_t fields_vpic_t
+#define mfields_FTYPE_t mfields_cuda_t
 
 #endif
 
@@ -101,6 +107,12 @@ typedef double fields_FTYPE_real_t;
 
 struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {
   using fields3d<fields_FTYPE_real_t>::fields3d;
+
+  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
+  {
+    fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
+    return psc_mfields_vpic_get_field_t(mflds, p);
+  }
 };
 
 #else
@@ -108,6 +120,32 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {
 struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
 {
   using fields3d<fields_FTYPE_real_t>::fields3d;
+
+#if FTYPE == FTYPE_SINGLE
+  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
+  {
+    fields_FTYPE_t psc_mfields_single_get_field_t(struct psc_mfields *mflds, int p);
+    return psc_mfields_single_get_field_t(mflds, p);
+  }
+#elif FTYPE == FTYPE_C
+  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
+  {
+    fields_c_t psc_mfields_c_get_field_t(struct psc_mfields *mflds, int p);
+    return psc_mfields_c_get_field_t(mflds, p);
+  }
+#elif FTYPE == FTYPE_FORTRAN
+  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
+  {
+    fields_FTYPE_t psc_mfields_fortran_get_field_t(struct psc_mfields *mflds, int p);
+    return psc_mfields_fortran_get_field_t(mflds, p);
+  }
+#elif FTYPE == FTYPE_VPIC
+  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
+  {
+    fields_FTYPE_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
+    return psc_mfields_vpic_get_field_t(mflds, p);
+  }
+#endif
 };
 
 #endif
@@ -134,48 +172,38 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 // ----------------------------------------------------------------------
 // fields_t_mflds
 
+using mfields_FTYPE_t = mfields3d<fields_FTYPE_t>;
+
 #if FTYPE == FTYPE_SINGLE
 
-struct psc_mfields;
-fields_single_t psc_mfields_single_get_field_t(struct psc_mfields *mflds, int p);
-
-static inline fields_single_t
+static inline fields_FTYPE_t
 fields_single_t_mflds(struct psc_mfields *mflds, int p)
 {
-  return psc_mfields_single_get_field_t(mflds, p);
+  return mfields_FTYPE_t(mflds)[p];
 }
 
 #elif FTYPE == FTYPE_C
 
-struct psc_mfields;
-fields_c_t psc_mfields_c_get_field_t(struct psc_mfields *mflds, int p);
-
-static inline fields_c_t
+static inline fields_FTYPE_t
 fields_c_t_mflds(struct psc_mfields *mflds, int p)
 {
-  return psc_mfields_c_get_field_t(mflds, p);
-}
-
-#elif FTYPE == FTYPE_VPIC
-
-struct psc_mfields;
-fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
-
-static inline fields_vpic_t
-fields_vpic_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return psc_mfields_vpic_get_field_t(mflds, p);
+  return mfields_FTYPE_t(mflds)[p];
 }
 
 #elif FTYPE == FTYPE_FORTRAN
 
-struct psc_mfields;
-fields_fortran_t psc_mfields_fortran_get_field_t(struct psc_mfields *mflds, int p);
-
-static inline fields_fortran_t
+static inline fields_FTYPE_t
 fields_fortran_t_mflds(struct psc_mfields *mflds, int p)
 {
-  return psc_mfields_fortran_get_field_t(mflds, p);
+  return mfields_FTYPE_t(mflds)[p];
+}
+
+#elif FTYPE == FTYPE_VPIC
+
+static inline fields_FTYPE_t
+fields_vpic_t_mflds(struct psc_mfields *mflds, int p)
+{
+  return mfields_FTYPE_t(mflds)[p];
 }
 
 #endif
@@ -209,4 +237,5 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #undef fields_FTYPE_t_mflds
 #undef fields_FTYPE_t_size
 #undef fields_FTYPE_t_zero_range
+#undef mfields_FTYPE_t
 

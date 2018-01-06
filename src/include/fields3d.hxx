@@ -13,6 +13,9 @@ struct Layout
 using LayoutAOS = Layout<true>;
 using LayoutSOA = Layout<false>;
 
+// ======================================================================
+// fields3d
+
 template<typename R, typename L=LayoutSOA>
 struct fields3d {
   using real_t = R;
@@ -95,6 +98,30 @@ int fields3d<R, L>::index(int m, int i, int j, int k)
 	     (i - ib[0])));
   }
 }
+
+// ======================================================================
+// mfields3d
+
+template<typename F>
+struct mfields3d
+{
+  using fields = F;
+  
+  mfields3d(struct psc_mfields *mflds)
+    : mflds_(mflds)
+  {
+    //assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_single_ops);
+  }
+
+  fields operator[](int p)
+  {
+    return fields::psc_mfields_get_field_t(mflds_, p);
+  }
+  
+private:
+  struct psc_mfields *mflds_;
+};
+
 
 #endif
 
