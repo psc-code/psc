@@ -88,7 +88,7 @@ struct fields_traits<fields_single_t>
 {
   using real_t = fields_single_real_t;
   static constexpr const char* name = "single";
-  static fields_single_t get_patch(struct psc_mfields *mflds, int p) { return fields_single_t_mflds(mflds, p); }
+  static fields_single_t get_patch(struct psc_mfields *mflds, int p) { return mfields_single_t(mflds)[p]; }
 };
 
 template<>
@@ -96,7 +96,7 @@ struct fields_traits<fields_c_t>
 {
   using real_t = fields_c_real_t;
   static constexpr const char* name = "c";
-  static fields_c_t get_patch(struct psc_mfields *mflds, int p) { return fields_c_t_mflds(mflds, p); }
+  static fields_c_t get_patch(struct psc_mfields *mflds, int p) { return mfields_c_t(mflds)[p]; }
 };
 
 template<>
@@ -104,7 +104,7 @@ struct fields_traits<fields_fortran_t>
 {
   using real_t = fields_fortran_real_t;
   static constexpr const char* name = "fortran";
-  static fields_fortran_t get_patch(struct psc_mfields *mflds, int p) { return fields_fortran_t_mflds(mflds, p); }
+  static fields_fortran_t get_patch(struct psc_mfields *mflds, int p) { return mfields_fortran_t(mflds)[p]; }
 };
 
 
