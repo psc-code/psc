@@ -69,11 +69,6 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS>
   
   using fields3d<fields_FTYPE_real_t>::fields3d;
 
-  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
-  {
-    fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
-    return psc_mfields_vpic_get_field_t(mflds, p);
-  }
 };
 
 #else
@@ -84,31 +79,6 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
 
   using fields3d<fields_FTYPE_real_t>::fields3d;
 
-#if FTYPE == FTYPE_SINGLE
-  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
-  {
-    fields_FTYPE_t psc_mfields_single_get_field_t(struct psc_mfields *mflds, int p);
-    return psc_mfields_single_get_field_t(mflds, p);
-  }
-#elif FTYPE == FTYPE_C
-  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
-  {
-    fields_c_t psc_mfields_c_get_field_t(struct psc_mfields *mflds, int p);
-    return psc_mfields_c_get_field_t(mflds, p);
-  }
-#elif FTYPE == FTYPE_FORTRAN
-  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
-  {
-    fields_FTYPE_t psc_mfields_fortran_get_field_t(struct psc_mfields *mflds, int p);
-    return psc_mfields_fortran_get_field_t(mflds, p);
-  }
-#elif FTYPE == FTYPE_VPIC
-  static fields_FTYPE_t psc_mfields_get_field_t(struct psc_mfields *mflds, int p)
-  {
-    fields_FTYPE_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
-    return psc_mfields_vpic_get_field_t(mflds, p);
-  }
-#endif
 };
 
 // ----------------------------------------------------------------------

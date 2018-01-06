@@ -10,6 +10,13 @@
 #include "psc_fields_common.h"
 #undef FTYPE
 
+template<>
+inline fields_vpic_t mfields_vpic_t::operator[](int p)
+{
+  fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
+  return psc_mfields_vpic_get_field_t(mflds_, p);
+}
+
 #include "vpic_iface.h"
 
 BEGIN_C_DECLS
