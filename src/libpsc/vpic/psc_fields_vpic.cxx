@@ -6,6 +6,7 @@
 #include "psc.h"
 #include "psc_method.h"
 #include "psc_particles_vpic.h"
+#include "fields.hxx"
 
 #include "mrc_domain.h"
 #include "mrc_bits.h"

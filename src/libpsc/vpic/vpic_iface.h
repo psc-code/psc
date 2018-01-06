@@ -37,11 +37,7 @@ enum {
   VPIC_HYDRO_N_COMP = 16,
 };
 
-#ifdef __cplusplus
-
-#ifndef VPIC_CONFIG_H
-#warning Things will go wrong if you do not include "vpic_config.h" before "vpic_iface.h" in C++ code!
-#endif
+#if defined(__cplusplus) && defined(VPIC_CONFIG_H)
 
 #else
 
