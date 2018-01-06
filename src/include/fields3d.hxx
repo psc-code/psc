@@ -23,6 +23,24 @@ struct fields3d {
   int nr_comp; //> nr of components
   int first_comp; // first component
 
+  fields3d() // FIXME, shouldn't have this
+    : data(0)
+  {
+  }
+  
+  fields3d(const int _ib[3], const int _im[3], int _n_comps)
+  {
+    unsigned int size = 1;
+    for (int d = 0; d < 3; d++) {
+      ib[d] = _ib[d];
+      im[d] = _im[d];
+      size *= im[d];
+    }
+    nr_comp = _n_comps;
+    first_comp = 0;
+    data = (real_t *) calloc(size * nr_comp, sizeof(*data));
+  }
+
   real_t  operator()(int m, int i, int j, int k) const { return data[index(m, i, j, k)];  }
   real_t& operator()(int m, int i, int j, int k)       { return data[index(m, i, j, k)];  }
 

@@ -111,41 +111,6 @@ typedef double fields_FTYPE_real_t;
       * (flds).im[1] + ((j)-(flds).ib[1]))				\
      * (flds).im[0] + ((i)-(flds).ib[0]))))
 
-#if FTYPE == FTYPE_VPIC
-
-#define _F3_VPIC_OFF(flds, m, i,j,k)					\
-  ((((((k)-(flds).ib[2])) * (flds).im[1] +				\
-     ((j)-(flds).ib[1])) * (flds).im[0] +				\
-    ((i)-(flds).ib[0])) * (flds).nr_comp +				\
-   m)
-
-#endif
-
-#ifndef BOUNDS_CHECK // ------------------------------
-
-#if FTYPE == FTYPE_VPIC
-
-#define _F3_VPIC(flds, m, i,j,k)		\
-  ((flds).data[_F3_VPIC_OFF(flds, m, i,j,k)])
-
-#endif
-
-#else // BOUNDS_CHECK ------------------------------
-
-#if FTYPE == FTYPE_VPIC
-
-#define _F3_VPIC(flds, m, i,j,k)					\
-  (*({assert(m >= 0 && m < (flds).nr_comp);				\
-      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
-      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
-      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
-      &((flds).data[_F3_VPIC_OFF(flds, m, i,j,k)]);			\
-    }))
-
-#endif
-
-#endif // BOUNDS_CHECK ------------------------------
-
 #if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN || FTYPE == FTYPE_VPIC
 
 // ======================================================================
@@ -153,11 +118,16 @@ typedef double fields_FTYPE_real_t;
 
 #if FTYPE == VPIC
 
-struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {};
+struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t, LayoutAOS> {
+  using fields3d<fields_FTYPE_real_t>::fields3d;
+};
 
 #else
 
-struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t> {};
+struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t>
+{
+  using fields3d<fields_FTYPE_real_t>::fields3d;
+};
 
 #endif
 
@@ -167,19 +137,7 @@ struct fields_FTYPE_t : fields3d<fields_FTYPE_real_t> {};
 static inline fields_FTYPE_t
 fields_FTYPE_t_ctor(int ib[3], int im[3], int n_comps)
 {
-  fields_FTYPE_t flds;
-
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    flds.ib[d] = ib[d];
-    flds.im[d] = im[d];
-    size *= im[d];
-  }
-  flds.nr_comp = n_comps;
-  flds.first_comp = 0;
-  flds.data = (fields_FTYPE_real_t *) calloc(size * flds.nr_comp, sizeof(*flds.data));
-
-  return flds;
+  return fields_FTYPE_t(ib, im, n_comps);
 }
 
 // ----------------------------------------------------------------------
