@@ -12,17 +12,6 @@
 
 #include "vpic_iface.h"
 
-#ifdef __cplusplus
-#include "fields.hxx"
-
-template<>
-struct fields_traits<fields_vpic_t>
-{
-  using real_t = fields_vpic_real_t;
-};
-#endif
-
-
 BEGIN_C_DECLS
 
 // ----------------------------------------------------------------------

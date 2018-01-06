@@ -6,4 +6,12 @@
 #include "psc_fields_common.h"
 #undef FTYPE
 
+#include "fields_traits.hxx"
+
+template<>
+struct fields_traits<fields_single_t>
+{
+  static constexpr const char* name = "single";
+};
+
 #endif

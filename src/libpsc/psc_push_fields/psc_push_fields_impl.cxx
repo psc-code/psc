@@ -1,6 +1,9 @@
 
 #include "psc_push_fields_private.h"
 
+#include "psc_fields_single.h"
+#include "psc_fields_c.h"
+
 #include "psc_push_fields_impl.hxx"
 
 // ======================================================================

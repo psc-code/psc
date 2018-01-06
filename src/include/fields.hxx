@@ -18,11 +18,6 @@ using dim_xz  = Invar<false, true , false>;
 using dim_yz  = Invar<true , false, false>;
 using dim_1   = Invar<true , true , true >;
 
-template<typename F>
-struct fields_traits
-{
-};
-
 template<typename F, typename D = dim_xyz>
 class Fields3d
 {
@@ -78,28 +73,5 @@ private:
   int n_comp_;
   int first_comp_;
 };
-
-#include "psc_fields_single.h"
-#include "psc_fields_c.h"
-#include "psc_fields_fortran.h"
-
-template<>
-struct fields_traits<fields_single_t>
-{
-  static constexpr const char* name = "single";
-};
-
-template<>
-struct fields_traits<fields_c_t>
-{
-  static constexpr const char* name = "c";
-};
-
-template<>
-struct fields_traits<fields_fortran_t>
-{
-  static constexpr const char* name = "fortran";
-};
-
 
 #endif
