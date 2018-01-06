@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifndef __cplusplus
+#error need C++
+#endif
+
 BEGIN_C_DECLS
 
 #define FTYPE_SINGLE          1

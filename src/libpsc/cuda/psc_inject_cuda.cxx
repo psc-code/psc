@@ -107,12 +107,8 @@ _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
 // ----------------------------------------------------------------------
 // psc_inject_cuda_run
 
-BEGIN_C_DECLS
-
 void psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
 				unsigned int *buf_n_by_patch); // FIXME
-
-END_C_DECLS
 
 static void
 psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,

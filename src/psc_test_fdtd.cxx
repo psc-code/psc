@@ -5,6 +5,7 @@
 #include <psc_sort.h>
 #include <psc_balance.h>
 #include <psc_collision.h>
+#include <psc_bnd.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -12,6 +13,7 @@
 #include <math.h>
 #include <time.h>
 
+#if 0
 
 // ======================================================================
 // psc_bnd "amr"
@@ -257,6 +259,8 @@ struct psc_bnd_ops psc_bnd_amr_ops = {
   .add_ghosts              = psc_bnd_amr_add_ghosts,
 };
 
+#endif
+
 // ======================================================================
 // psc_test_fdtd
 
@@ -337,9 +341,9 @@ psc_test_fdtd_setup_mrc_domain(struct psc *psc, int nr_patches)
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "amr_uniform");
   mrc_crds_set_param_int(crds, "sw", 3);
-  mrc_crds_set_param_float3(crds, "l",  (float[3]) { psc->domain.corner[0],
+  mrc_crds_set_param_double3(crds, "l",  (double[3]) { psc->domain.corner[0],
 	psc->domain.corner[1], psc->domain.corner[2] });
-  mrc_crds_set_param_float3(crds, "h",  (float[3]) {
+  mrc_crds_set_param_double3(crds, "h",  (double[3]) {
       psc->domain.corner[0] + psc->domain.length[0],
       psc->domain.corner[1] + psc->domain.length[1],
       psc->domain.corner[2] + psc->domain.length[2] });
@@ -411,7 +415,9 @@ struct psc_ops psc_test_fdtd_ops = {
 int
 main(int argc, char **argv)
 {
+#if 0
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_amr_ops);
+#endif
 
   return psc_main(&argc, &argv, &psc_test_fdtd_ops);
 }

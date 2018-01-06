@@ -29,32 +29,29 @@ bin_PROGRAMS = \
 	psc_test_lb \
 	psc_test_open
 
+psc_shear_SOURCES = psc_shear.cxx
+psc_turbulence_SOURCES = psc_turbulence.cxx
+psc_es1_SOURCES = psc_es1.cxx
+psc_em_wave_SOURCES = psc_em_wave.cxx
+psc_shocks_SOURCES = psc_shocks.cxx
+psc_bohm_SOURCES = psc_bohm.cxx
+psc_spitzer_SOURCES = psc_spitzer.cxx
+psc_island_coalescence_SOURCES = psc_island_coalescence.cxx
+psc_kelvin_helmholtz_SOURCES = psc_kelvin_helmholtz.cxx
+psc_kelvin_helmholtz_double_SOURCES = psc_kelvin_helmholtz_double.cxx
 psc_mirror_SOURCES = psc_mirror.cxx
+psc_harris_SOURCES = psc_harris.cxx
+psc_harris_xz_SOURCES = psc_harris_xz.cxx
+psc_bubble_SOURCES = psc_bubble.cxx
+psc_bubble_yz_SOURCES = psc_bubble_yz.cxx
+psc_flatfoil_yz_SOURCES = psc_flatfoil_yz.cxx
+psc_test_singlepart_SOURCES = psc_test_singlepart.cxx
+psc_test_microsphere_SOURCES = psc_test_microsphere.cxx
+psc_test_twoparticles_SOURCES = psc_test_twoparticles.cxx
+psc_test_heating_SOURCES = psc_test_heating.cxx
+psc_test_fdtd_SOURCES = psc_test_fdtd.cxx
+psc_test_lb_SOURCES = psc_test_lb.cxx
+psc_test_open_SOURCES = psc_test_open.cxx
 
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
-
-# HACK to have automake use the CXX linker
-nodist_EXTRA_psc_shear_SOURCES = dummy.cxx
-nodist_EXTRA_psc_turbulence_SOURCES = dummy.cxx
-nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
-nodist_EXTRA_psc_em_wave_SOURCES = dummy.cxx
-nodist_EXTRA_psc_shocks_SOURCES = dummy.cxx
-nodist_EXTRA_psc_bohm_SOURCES = dummy.cxx
-nodist_EXTRA_psc_spitzer_SOURCES = dummy.cxx
-nodist_EXTRA_psc_island_coalescence_SOURCES = dummy.cxx
-nodist_EXTRA_psc_kelvin_helmholtz_SOURCES = dummy.cxx
-nodist_EXTRA_psc_kelvin_helmholtz_double_SOURCES = dummy.cxx
-nodist_EXTRA_psc_harris_SOURCES = dummy.cxx
-nodist_EXTRA_psc_harris_xz_SOURCES = dummy.cxx
-nodist_EXTRA_psc_bubble_SOURCES = dummy.cxx
-nodist_EXTRA_psc_bubble_yz_SOURCES = dummy.cxx
-nodist_EXTRA_psc_flatfoil_yz_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_singlepart_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_microsphere_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_twoparticles_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_heating_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_fdtd_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_lb_SOURCES = dummy.cxx
-nodist_EXTRA_psc_test_open_SOURCES = dummy.cxx
-
 
