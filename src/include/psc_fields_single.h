@@ -12,6 +12,7 @@ template<>
 struct fields_traits<fields_single_t>
 {
   static constexpr const char* name = "single";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
 #endif

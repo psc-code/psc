@@ -123,6 +123,8 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
   assert(ctx->nr_patches_old == mflds_old->nr_patches);
   assert(ctx->nr_patches_old > 0);
   
+  MPI_Datatype mpi_dtype = fields_traits<fields_t>::mpi_dtype();
+
   // send from old local patches
   MPI_Request *send_reqs = new MPI_Request[ctx->nr_patches_old]();
   int *nr_patches_new_by_rank = new int[ctx->mpi_size]();
@@ -137,7 +139,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       int *ib = flds_old.ib;
       void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_new_by_rank[new_rank]++;
-      MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, new_rank, tag, ctx->comm, &send_reqs[p]);
+      MPI_Isend(addr_old, nn, mpi_dtype, new_rank, tag, ctx->comm, &send_reqs[p]);
     }
   }
   delete[] nr_patches_new_by_rank;
@@ -159,7 +161,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       int *ib = flds_new.ib;
       void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_old_by_rank[old_rank]++;
-      MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, old_rank,
+      MPI_Irecv(addr_new, nn, mpi_dtype, old_rank,
 		tag, ctx->comm, &recv_reqs[p]);
     }
   }

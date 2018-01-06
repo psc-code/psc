@@ -14,6 +14,7 @@ template<>
 struct fields_traits<fields_c_t>
 {
   static constexpr const char* name = "c";
+  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
 };
 
 #endif
