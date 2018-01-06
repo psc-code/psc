@@ -28,7 +28,7 @@ class Fields3d
 {
 public:
   using fields_t = F;
-  using real_t = typename fields_traits<F>::real_t;
+  using real_t = typename fields_t::real_t;
   using dim = D;
 
   Fields3d(const fields_t& f)
@@ -86,21 +86,18 @@ private:
 template<>
 struct fields_traits<fields_single_t>
 {
-  using real_t = fields_single_real_t;
   static constexpr const char* name = "single";
 };
 
 template<>
 struct fields_traits<fields_c_t>
 {
-  using real_t = fields_c_real_t;
   static constexpr const char* name = "c";
 };
 
 template<>
 struct fields_traits<fields_fortran_t>
 {
-  using real_t = fields_fortran_real_t;
   static constexpr const char* name = "fortran";
 };
 
