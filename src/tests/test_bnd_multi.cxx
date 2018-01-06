@@ -14,8 +14,9 @@ static void
 setup_jx(struct psc_mfields *mflds_base)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
+  mfields_t mf(mflds);
   psc_foreach_patch(ppsc, p) {
-    Fields F(fields_t_mflds(mflds, p));
+    Fields F(mf[p]);
     psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
@@ -33,8 +34,9 @@ check_jx(struct psc_mfields *mflds_base)
   mrc_domain_get_global_dims(ppsc->mrc_domain, gdims);
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 1);
+  mfields_t mf(mflds);
   psc_foreach_patch(ppsc, p) {
-    Fields F(fields_t_mflds(mflds, p))
+    Fields F(mf[p]);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);

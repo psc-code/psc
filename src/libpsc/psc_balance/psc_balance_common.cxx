@@ -115,6 +115,8 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
   //HACK: Don't communicate output fields if they don't correspond to the domain
   //This is needed e.g. for the boosted output which handles its MPI communication internally
   //printf("Field: %s\n", flds->f[0].name);
+
+  mfields_t mf_old(mflds_old), mf_new(mflds_new);
   
   if (ctx->nr_patches_old != mflds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
 	
@@ -129,7 +131,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     if (new_rank == ctx->mpi_rank || new_rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_t flds_old = fields_t_mflds(mflds_old, p);
+      fields_t flds_old = mf_old[p];
       Fields F_old(flds_old);
       int nn = fields_t_size(flds_old) * flds_old.nr_comp;
       int *ib = flds_old.ib;
@@ -151,7 +153,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       recv_reqs[p] = MPI_REQUEST_NULL;
       //Seed new data
     } else {
-      fields_t flds_new = fields_t_mflds(mflds_new, p);
+      fields_t flds_new = mf_new[p];
       Fields F_new(flds_new);
       int nn = fields_t_size(flds_new) * flds_new.nr_comp;
       int *ib = flds_new.ib;
@@ -176,8 +178,8 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       continue;
     }
 
-    fields_t flds_old = fields_t_mflds(mflds_old, ctx->recv_info[p].patch);
-    fields_t flds_new = fields_t_mflds(mflds_new, p);
+    fields_t flds_old = mf_old[ctx->recv_info[p].patch];
+    fields_t flds_new = mf_new[p];
     Fields F_old(flds_old), F_new(flds_new);
     assert(flds_old.nr_comp == flds_new.nr_comp);
     assert(fields_t_size(flds_old) == fields_t_size(flds_new));

@@ -139,9 +139,10 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
   unsigned int buf_n_by_patch[psc->nr_patches];
 
   unsigned int buf_n = 0;
+  mfields_t mf_n(mflds_n);
   psc_foreach_patch(psc, p) {
     buf_n_by_patch[p] = 0;
-    Fields N(fields_t_mflds(mflds_n, p));
+    Fields N(mf_n[p]);
     int *ldims = psc->patch[p].ldims;
     
     int nr_pop = psc->prm.nr_populations;

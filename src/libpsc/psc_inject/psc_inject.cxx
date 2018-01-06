@@ -39,9 +39,9 @@ _psc_inject_destroy(struct psc_inject *inject)
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds)
 {
+  mfields_t mf(mflds);
   psc_foreach_patch(ppsc, p) {
-    fields_t flds = fields_t_mflds(mflds, p);
-    Fields3d<fields_t> F(flds);
+    Fields3d<fields_t> F(mf[p]);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < mflds->nr_fields; m++) {

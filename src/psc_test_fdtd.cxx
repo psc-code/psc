@@ -219,11 +219,12 @@ psc_bnd_amr_destroy(struct psc_bnd *bnd)
 static void
 psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds, int mb, int me)
 {
+  mfields_t mf(mflds);
   struct psc_bnd_amr *bnd_amr = psc_bnd_amr(bnd);
 
   fields_real_t **fldp = malloc(mflds->nr_patches * sizeof(*fldp));
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = mf[p];
     fldp[p] = flds.data;
   }
 

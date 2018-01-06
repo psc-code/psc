@@ -105,12 +105,12 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	void (*do_run)(int p, fields_t res, particle_range_t prts))
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-
+  mfields_t mf_res(mres);
+  
   for (int p = 0; p < mprts->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mres, p);
-    fields_t_zero_range(res, 0, mres->nr_fields);
-    do_run(p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, p, 0, mres->nr_fields);
+    fields_t_zero_range(mf_res[p], 0, mres->nr_fields);
+    do_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -445,20 +445,19 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mfields_t mf_res(mres);
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mres, p);
-    fields_t_zero_range(res, 0, mres->nr_fields);
-    do_nvt_a_1st_run(p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, p, 0, mres->nr_fields);
+    fields_t_zero_range(mf_res[p], 0, mres->nr_fields);
+    do_nvt_a_1st_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
   psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mres, p);
-    Fields R(res);
+    Fields R(mf_res[p]);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
@@ -479,7 +478,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     }
 
     // calculate <(v-U)(v-U)> moments
-    do_nvt_b_1st_run(p, res, particle_range_mprts(mprts, p));
+    do_nvt_b_1st_run(p, mf_res[p], particle_range_mprts(mprts, p));
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -495,12 +494,12 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mfields_t mf_res(mres);
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mres, p);
-    fields_t_zero_range(res, 0, mres->nr_fields);
-    do_nvp_1st_run(p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, p, 0, mres->nr_fields);
+    fields_t_zero_range(mf_res[p], 0, mres->nr_fields);
+    do_nvp_1st_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
@@ -510,8 +509,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   const int mm2my[6] = { 0, 1, 2, 1, 2, 0 };
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mflds, p);
-    Fields R(res);
+    Fields R(mf_res[p]);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {

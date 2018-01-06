@@ -276,8 +276,9 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
 {
   struct psc_mfields *mflds = 
     psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, mflds_base->nr_fields);
+  mfields_t mf(mflds);
   psc_foreach_patch(ppsc, p) {
-    Fields F(fields_t_mflds(mflds, p));
+    Fields F(mf[p]);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < mflds->nr_fields; m++) {

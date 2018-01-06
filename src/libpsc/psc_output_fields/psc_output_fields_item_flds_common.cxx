@@ -21,9 +21,9 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   define_dxdydz(dx, dy, dz);
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, EX + 3);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, FIELDS_TYPE, 0, 0);
+  mfields_t mf(mflds), mf_res(mres);
   for (int p = 0; p < mres_base->nr_patches; p++) {
-    Fields F(fields_t_mflds(mflds, p));
-    Fields R(fields_t_mflds(mres, p));
+    Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = 
 	((F(EX, ix,iy,iz) - F(EX, ix-dx,iy,iz)) / ppsc->patch[p].dx[0] +

@@ -105,12 +105,12 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	void (*do_run)(int p, fields_t flds, particle_range_t prts))
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-
+  mfields_t mf_res(mres);
+  
   for (int p = 0; p < mprts->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mres, p);
-    fields_t_zero_range(res, 0, mres->nr_fields);
-    do_run(p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(p, res, 0, mres->nr_fields);
+    fields_t_zero_range(mf_res[p], 0, mres->nr_fields);
+    do_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    add_ghosts_boundary(p, mf_res[p], 0, mres->nr_fields);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);

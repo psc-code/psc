@@ -495,6 +495,7 @@ psc_collision_sub_run(struct psc_collision *collision,
 
   prof_start(pr);
 
+  mfields_t mf_coll(coll->mflds);
   for (int p = 0; p < mprts->nr_patches; p++) {
     particle_range_t prts = particle_range_mprts(mprts, p);
   
@@ -505,7 +506,7 @@ psc_collision_sub_run(struct psc_collision *collision,
     
     find_cell_offsets(offsets, mprts, p);
     
-    Fields F(fields_t_mflds(coll->mflds, p));
+    Fields F(mf_coll[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       int c = (iz * ldims[1] + iy) * ldims[0] + ix;
       randomize_in_cell(prts, offsets[c], offsets[c+1]);

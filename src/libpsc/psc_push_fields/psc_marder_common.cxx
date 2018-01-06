@@ -193,10 +193,10 @@ psc_marder_sub_correct(struct psc_marder *marder, struct psc_mfields *mflds_base
 		       struct psc_mfields *div_e)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, EX + 3);
-
+  mfields_t mf(mflds), mf_div_e(div_e);
+  
   for (int p = 0; p < div_e->nr_patches; p++) {
-    psc_marder_sub_correct_patch(marder, fields_t_mflds(mflds, p),
-				 fields_t_mflds(div_e, p), p);
+    psc_marder_sub_correct_patch(marder, mf[p], mf_div_e[p], p);
   }
 
   psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);

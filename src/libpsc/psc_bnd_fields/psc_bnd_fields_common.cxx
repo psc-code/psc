@@ -493,7 +493,8 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields 
 {
   // FIXME/OPT, if we don't need to do anything, we don't need to get
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, EX + 3);
-
+  mfields_t mf(mflds);
+  
   for (int p = 0; p < mflds->nr_patches; p++) {
     // lo
     for (int d = 0; d < 3; d++) {
@@ -502,7 +503,7 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_E_lo(bnd, fields_t_mflds(mflds, p), p, d);
+	  conducting_wall_E_lo(bnd, mf[p], p, d);
 	break;
 	case BND_FLD_OPEN:
 	  break;
@@ -519,7 +520,7 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_E_hi(bnd, fields_t_mflds(mflds, p), p, d);
+	  conducting_wall_E_hi(bnd, mf[p], p, d);
 	  break;
 	case BND_FLD_OPEN:
 	  break;
@@ -540,7 +541,8 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
 {
   // FIXME/OPT, if we don't need to do anything, we don't need to get
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, HX, HX + 3);
-
+  mfields_t mf(mflds);
+  
   for (int p = 0; p < mflds->nr_patches; p++) {
     // lo
     for (int d = 0; d < 3; d++) {
@@ -549,10 +551,10 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_H_lo(bnd, fields_t_mflds(mflds, p), p, d);
+	  conducting_wall_H_lo(bnd, mf[p], p, d);
 	  break;
 	case BND_FLD_OPEN:
-	  open_H_lo(bnd, fields_t_mflds(mflds, p), p, d);
+	  open_H_lo(bnd, mf[p], p, d);
 	  break;
 	default:
 	  assert(0);
@@ -566,10 +568,10 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_H_hi(bnd, fields_t_mflds(mflds, p), p, d);
+	  conducting_wall_H_hi(bnd, mf[p], p, d);
 	break;
 	case BND_FLD_OPEN:
-	  open_H_hi(bnd, fields_t_mflds(mflds, p), p, d);
+	  open_H_hi(bnd, mf[p], p, d);
 	  break;
 	default:
 	assert(0);
@@ -585,6 +587,7 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *
 {
   // FIXME/OPT, if we don't need to do anything, we don't need to get
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, JXI + 3);
+  mfields_t mf(mflds);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     // lo
@@ -595,7 +598,7 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *
 	case BND_FLD_OPEN:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_J_lo(bnd, fields_t_mflds(mflds, p), p, d);
+	  conducting_wall_J_lo(bnd, mf[p], p, d);
 	  break;
 	default:
 	  assert(0);
@@ -610,7 +613,7 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *
 	case BND_FLD_OPEN:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_J_hi(bnd, fields_t_mflds(mflds, p), p, d);
+	  conducting_wall_J_hi(bnd, mf[p], p, d);
 	  break;
 	default:
 	  assert(0);

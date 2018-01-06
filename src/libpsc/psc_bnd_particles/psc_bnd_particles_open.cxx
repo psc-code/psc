@@ -17,8 +17,9 @@ random1()
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds)
 {
+  mfields_t mf(mflds);
   psc_foreach_patch(ppsc, p) {
-    Fields F(fields_t_mflds(mflds, p));
+    Fields F(mf[p]);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < mflds->nr_fields; m++) {
@@ -53,10 +54,10 @@ static void
 average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 {
   const int b = 1;
+  mfields_t mf_av(mflds_av), mf(mflds);
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    Fields F(fields_t_mflds(mflds, p));
-    Fields F_av(fields_t_mflds(mflds_av, p));
+    Fields F(mf[p]), F_av(mf_av[p]);
     
     if (at_lo_boundary(p, 1) && ppsc->domain.bnd_part_lo[1] == BND_PART_OPEN) {
       for (int m = 0; m < mflds->nr_fields; m++) {
@@ -230,11 +231,11 @@ static void
 average_in_time(struct psc_bnd_particles *bnd,
 		struct psc_mfields *mflds_av, struct psc_mfields *mflds_last)
 {
+  mfields_t mf_av(mflds_av), mf_last(mflds_last);
   const double R = bnd->time_relax;
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    Fields F_av(fields_t_mflds(mflds_av, p));
-    Fields F_last(fields_t_mflds(mflds_last, p));
+    Fields F_av(mf_av[p]), F_last(mf_last[p]);
     
     for (int m = 0; m < mflds_av->nr_fields; m++) {
       if (bnd->first_time) {
@@ -574,12 +575,13 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 
   prof_start(pr_A);
   int nr_kinds = ppsc->nr_kinds;
+  mfields_t mf_nvt_av(bnd->mflds_nvt_av), mf_n_in(bnd->mflds_n_in), mf(mflds);
 
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    fields_t flds_nvt_av = fields_t_mflds(bnd->mflds_nvt_av, p);
-    Fields F_n_in(fields_t_mflds(bnd->mflds_n_in, p));
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds_nvt_av = mf_nvt_av[p];
+    Fields F_n_in(mf_n_in[p]);
+    fields_t flds = mf[p];
 
     for (int m = 0; m < nr_kinds; m++) {
       // inject at y lo

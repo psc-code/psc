@@ -19,8 +19,9 @@ static void
 setup_fields(struct psc_mfields *flds_base)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
+  mfields_t mf(mflds);
   psc_foreach_patch(ppsc, p) {
-    Fields F(fields_t_mflds(mflds, p));
+    Fields F(mf[p]);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);

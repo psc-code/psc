@@ -207,13 +207,14 @@ MPFX(destroy)(struct psc_mfields *mflds)
 static void
 MPFX(write)(struct psc_mfields *mflds, struct mrc_io *io)
 {
+  mfields_t mf(mflds);
   herr_t ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = mf[p];
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     ierr = H5LTset_attribute_int(group, ".", "ib", flds.ib, 3); CE;
@@ -246,13 +247,15 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 
   psc_mfields_setup(mflds);
 
+  mfields_t mf(mflds);
+
   herr_t ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = mf[p];
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
     int ib[3], im[3], nr_comp;
@@ -283,8 +286,9 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 static void
 MPFX(zero_comp)(struct psc_mfields *mflds, int m)
 {
+  mfields_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t_zero_comp(fields_t_mflds(mflds, p), m);
+    fields_t_zero_comp(mf[p], m);
   }
 }
 
@@ -294,8 +298,9 @@ MPFX(zero_comp)(struct psc_mfields *mflds, int m)
 static void
 MPFX(set_comp)(struct psc_mfields *mflds, int m, double alpha)
 {
+  mfields_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t_set_comp(fields_t_mflds(mflds, p), m, alpha);
+    fields_t_set_comp(mf[p], m, alpha);
   }
 }
 
@@ -305,8 +310,9 @@ MPFX(set_comp)(struct psc_mfields *mflds, int m, double alpha)
 static void
 MPFX(scale_comp)(struct psc_mfields *mflds, int m, double alpha)
 {
+  mfields_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t_scale_comp(fields_t_mflds(mflds, p), m, alpha);
+    fields_t_scale_comp(mf[p], m, alpha);
   }
 }
 
@@ -317,9 +323,9 @@ static void
 MPFX(copy_comp)(struct psc_mfields *to, int mto,
 		struct psc_mfields *fr, int mfr)
 {
+  mfields_t mf_to(to), mf_from(fr);
   for (int p = 0; p < to->nr_patches; p++) {
-    fields_t_copy_comp(fields_t_mflds(to, p), mto,
-		       fields_t_mflds(fr, p), mfr);
+    fields_t_copy_comp(mf_to[p], mto, mf_from[p], mfr);
   }
 }
 
@@ -330,9 +336,9 @@ static void
 MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 		struct psc_mfields *x, int mx)
 {
+  mfields_t mf_y(y), mf_x(x);
   for (int p = 0; p < y->nr_patches; p++) {
-    fields_t_axpy_comp(fields_t_mflds(y, p), my, alpha,
-		       fields_t_mflds(x, p), mx);
+    fields_t_axpy_comp(mf_y[p], my, alpha, mf_x[p], mx);
   }
 }
 
@@ -342,9 +348,10 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 static double
 MPFX(max_comp)(struct psc_mfields *mflds, int m)
 {
+  mfields_t mf(mflds);
   double rv = -1e37; // FIXME
   for (int p = 0; p < mflds->nr_patches; p++) {
-    rv = fmax(rv, fields_t_max_comp(fields_t_mflds(mflds, p), m));
+    rv = fmax(rv, fields_t_max_comp(mf[p], m));
   }
   return rv;
 }

@@ -12,12 +12,11 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, FIELDS_TYPE, 0, 0);
-
+  mfields_t mf_res(mres);
   psc_mfields_view(mres);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    fields_t res = fields_t_mflds(mres, p);
-    fields_t_zero_range(res, 0, mres->nr_fields);
-    do_run(p, res, particle_range_mprts(mprts, p));
+    fields_t_zero_range(mf_res[p], 0, mres->nr_fields);
+    do_run(p, mf_res[p], particle_range_mprts(mprts, p));
   }
 
   psc_mfields_put_as(mres, mres_base, 0, mres->nr_fields);

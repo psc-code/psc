@@ -6,6 +6,7 @@
 
 typedef fields_fortran_real_t fields_real_t;
 typedef fields_fortran_t      fields_t;
+typedef mfields_fortran_t     mfields_t;
 #define fields_t_mflds           fields_fortran_t_mflds
 #define fields_t_zero_range      fields_fortran_t_zero_range
 

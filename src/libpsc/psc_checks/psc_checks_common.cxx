@@ -123,8 +123,9 @@ static void
 calc_div_j(struct psc *psc, struct psc_mfields *mflds_base, struct psc_mfields *div_j)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, JXI + 3);
+  mfields_t mf(mflds), mf_div_j(div_j);
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, fields_t_mflds(mflds, p), fields_t_mflds(div_j, p));
+    do_calc_div_j(psc, p, mf[p], mf_div_j[p]);
   }
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
@@ -142,6 +143,7 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
   struct psc_mfields *d_rho = fld_create(psc, 1);
   psc_mfields_set_name(d_rho, "d_rho");
   psc_mfields_set_comp_name(d_rho, 0, "d_rho");
+  mfields_t mf_div_j(div_j), mf_d_rho(d_rho);
 
   psc_mfields_axpy(d_rho,  1., rho_p);
   psc_mfields_axpy(d_rho, -1., rho_m);
@@ -152,8 +154,8 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
   double eps = checks->continuity_threshold;
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    Fields D_rho(fields_t_mflds(d_rho, p));
-    Fields Div_J(fields_t_mflds(div_j, p));
+    Fields D_rho(mf_d_rho[p]);
+    Fields Div_J(mf_div_j[p]);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
       double d_rho = D_rho(0, jx,jy,jz);
       double div_j = Div_J(0, jx,jy,jz);
@@ -268,6 +270,7 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
   struct psc_mfields *rho = fld_create(psc, 1);
   psc_mfields_set_name(rho, "rho");
   psc_mfields_set_comp_name(rho, 0, "rho");
+  mfields_t mf_dive(dive), mf_rho(rho);
 
   calc_rho(psc, psc->particles, rho);
   calc_dive(psc, psc->flds, dive);
@@ -275,8 +278,7 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
   double eps = checks->gauss_threshold;
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    Fields Rho(fields_t_mflds(rho, p));
-    Fields DivE(fields_t_mflds(dive, p));
+    Fields Rho(mf_rho[p]), DivE(mf_dive[p]);
 
     int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {

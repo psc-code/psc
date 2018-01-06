@@ -68,8 +68,9 @@ test_print(MPI_Comm comm)
   struct psc_mfields *mflds = make_mfields(comm);
   psc_mfields_view(mflds);
 
+  mfields_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = mf[p];
     Fields F(flds);
 
     for (int m = 0; m < flds.nr_comp; m++) {

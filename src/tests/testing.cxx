@@ -112,9 +112,10 @@ psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
   }
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, me);
+  mfields_t mf(mflds), mf_ref(mflds_ref);
   psc_foreach_patch(psc, p) {
-    Fields F = fields_t_mflds(mflds, p);
-    Fields R = fields_t_mflds(mflds_ref, p);
+    Fields F = mf[p];
+    Fields R = mf_ref[p];
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	R(m, ix,iy,iz) = F(m, ix,iy,iz);
@@ -185,9 +186,10 @@ void
 psc_check_fields_ref(struct psc *psc, struct psc_mfields *mflds_base, int *m_flds, double thres)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 12);
+  mfields_t mf(mflds), mf_ref(mflds_ref);
   psc_foreach_patch(psc, p) {
-    Fields F(fields_t_mflds(mflds, p));
-    Fields R(fields_t_mflds(mflds_ref, p));
+    Fields F(mf[p]);
+    Fields R(mf_ref[p]);
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
@@ -209,8 +211,9 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
 {
 #if 0
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
+  mfields_t mf(mflds);
   foreach_patch(p) {
-    Fields F(fields_t_mflds(mflds, p));
+    Fields F(mf[p]);
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
 	double val = F(m, ix,iy,iz);
@@ -222,20 +225,21 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
     }
   }
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
-#endif
   struct psc_mfields *diff = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_param_obj(diff, "domain", psc->mrc_domain);
   psc_mfields_set_param_int3(diff, "ibn", psc->ibn);
   psc_mfields_setup(diff);
   // FIXME, make funcs for this (waxpy, norm)
 
+  mfields_t mf(mflds), mf_ref(mflds_ref), mf_diff(diff);
+
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
   for (int m = JXI; m <= JZI; m++){
     fields_real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
-      Fields F(fields_t_mflds(mflds, p));
-      Fields R(fields_t_mflds(mflds_ref, p));
-      Fields D(fields_t_mflds(diff, p));
+      Fields F(mf[p]);
+      Fields R(mf_ref[p]);
+      Fields D(mf_diff[p]);
       psc_foreach_3d(psc, p, ix, iy, iz, sw, sw) {
 	D(0, ix,iy,iz) = F(m, ix,iy,iz) - R(m, ix,iy,iz);
 	max_delta = fmax(max_delta, fabs(D(0, ix,iy,iz)));
@@ -251,6 +255,7 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
   }
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
   psc_mfields_destroy(diff);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -273,12 +278,13 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
 
   // dens -= dens_ref
   psc_mfields_axpy(dens, -1., dens_ref);
+  mfields_t mf_dens(dens);
 
   // FIXME, do this generically
   for (int m = 0; m < 2; m++) {
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
-      Fields D(fields_t_mflds(dens, p));
+      Fields D(mf_dens[p]);
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
 	fields_c_real_t val = D(m, jx,jy,jz);
 	max_err = fmax(max_err, fabs(val));

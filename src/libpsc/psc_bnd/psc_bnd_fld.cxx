@@ -14,7 +14,8 @@ void
 psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
-  Fields F(fields_t_mflds(mflds, p));
+  mfields_t mf(mflds);
+  Fields F(mf[p]);
   fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
@@ -32,7 +33,8 @@ void
 psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
-  Fields F(fields_t_mflds(mflds, p));
+  mfields_t mf(mflds);
+  Fields F(mf[p]);
   fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {
@@ -50,7 +52,8 @@ void
 psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
-  Fields F(fields_t_mflds(mflds, p));
+  mfields_t mf(mflds);
+  Fields F(mf[p]);
   fields_real_t *buf = reinterpret_cast<fields_real_t*>(_buf);
 
   for (int m = mb; m < me; m++) {

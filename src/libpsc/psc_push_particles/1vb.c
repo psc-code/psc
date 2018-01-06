@@ -83,10 +83,11 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
 				   struct psc_mparticles *mprts,
 				   struct psc_mfields *mflds)
 {
+  mfields_t mf(mflds);
   c_prm_set(ppsc);
   params_1vb_set(ppsc, NULL, NULL);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = mf[p];
 
     fields_t_zero_range(flds, JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);
@@ -99,10 +100,11 @@ SFX(psc_push_particles_stagger_mprts)(struct psc_push_particles *push,
 				      struct psc_mparticles *mprts,
 				      struct psc_mfields *mflds)
 {
+  mfields_t mf(mflds);
   c_prm_set(ppsc);
   params_1vb_set(ppsc, NULL, NULL);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds = mf[p];
 
     fields_t_zero_range(flds, JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);

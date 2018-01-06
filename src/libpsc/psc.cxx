@@ -853,9 +853,10 @@ psc_set_ic_fields_default(struct psc *psc)
     return;
 
   struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", 0, 0);
+  mfields_t mf(mflds);
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    Fields F(fields_t_mflds(mflds, p));
+    Fields F(mf[p]);
 
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];

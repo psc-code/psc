@@ -18,9 +18,10 @@ run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mfl
 		   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, 16);
+  mfields_t mf(mflds), mf_res(mres);
   
   for (int p = 0; p < mres->nr_patches; p++) {
-    Fields F(fields_t_mflds(mflds, p)), R(fields_t_mflds(mres, p));
+    Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       for (int m = 0; m < 16; m++) {
 	R(m, ix,iy,iz) = F(m, ix,iy,iz);
@@ -77,9 +78,9 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
     Simulation_moments_run(sim, vmflds_hydro, vmprts, kind);
     
     struct psc_mfields *mflds = psc_mfields_get_as(mflds_hydro, FIELDS_TYPE, 0, VPIC_HYDRO_N_COMP);
-  
+    mfields_t mf(mflds), mf_res(mres);
     for (int p = 0; p < mres->nr_patches; p++) {
-      Fields F(fields_t_mflds(mflds, p)), R(fields_t_mflds(mres, p));
+      Fields F(mf[p]), R(mf_res[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
 	  R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
