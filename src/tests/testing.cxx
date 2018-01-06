@@ -286,7 +286,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
     psc_foreach_patch(psc, p) {
       Fields D(mf_dens[p]);
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-	fields_c_real_t val = D(m, jx,jy,jz);
+	fields_t::real_t val = D(m, jx,jy,jz);
 	max_err = fmax(max_err, fabs(val));
 	if (fabs(val) > eps) {
 	  printf("(%d,%d,%d): diff %g\n", jx, jy, jz, val);

@@ -45,6 +45,9 @@ init_wave(double x, double y, int m)
 int
 main(void)
 {
+  using fields_t = fields_single_t;
+  using real_t = fields_t::real_t;
+  
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "
 				   "    \"n_patches\" : 1,                      "
@@ -71,16 +74,16 @@ main(void)
 
   cuda_mfields_dump(cmflds, "cmflds.json");
 
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
-  Fields3d<fields_single_t> F(flds);
+  fields_t flds = cuda_mfields_get_host_fields(cmflds);
+  Fields3d<fields_t> F(flds);
   for (int p = 0; p < n_patches; p++) {
     for (int k = flds.ib[2]; k < flds.ib[2] + flds.im[2]; k++) {
       for (int j = flds.ib[1]; j < flds.ib[1] + flds.im[1]; j++) {
 	for (int i = flds.ib[0]; i < flds.ib[0] + flds.im[0]; i++) {
-	  fields_single_real_t x_cc = (i + .5) * dx[0];
-	  fields_single_real_t y_cc = (j + .5) * dx[1];
-	  fields_single_real_t x_nc = i * dx[0];
-	  fields_single_real_t y_nc = j * dx[1];
+	  real_t x_cc = (i + .5) * dx[0];
+	  real_t y_cc = (j + .5) * dx[1];
+	  real_t x_nc = i * dx[0];
+	  real_t y_nc = j * dx[1];
 	  F(EX, i,j,k) = init_wave(x_cc, y_nc, EX);
 	  F(EY, i,j,k) = init_wave(x_nc, y_cc, EY);
 	  F(EZ, i,j,k) = init_wave(x_nc, y_nc, EZ);
