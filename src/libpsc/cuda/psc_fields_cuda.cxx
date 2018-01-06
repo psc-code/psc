@@ -5,8 +5,13 @@
 #include "psc_fields_cuda.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
+#include "fields.hxx"
 
 #include <mrc_params.h>
+
+using FieldsH = Fields3d<fields_single_t>; // host
+using FieldsS = Fields3d<fields_single_t> ;// host
+using FieldsC = Fields3d<fields_c_t>; // host
 
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
@@ -19,14 +24,16 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
+    FieldsC F_c(flds_c);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
 	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	    _F3_S(flds, m, jx,jy,jz) = _F3_C(flds_c, m, jx,jy,jz);
+	    F(m, jx,jy,jz) = F_c( m, jx,jy,jz);
 	  }
 	}
       }
@@ -44,16 +51,18 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
+    FieldsC F_c(flds_c);
     cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
 	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	    _F3_C(flds_c, m, jx,jy,jz) = _F3_S(flds, m, jx,jy,jz);
+	    F_c(m, jx,jy,jz) = F(m, jx,jy,jz);
 	  }
 	}
       }
@@ -72,15 +81,17 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
+    FieldsS F_s(flds_single);
 
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
 	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	    _F3_S(flds, m, jx,jy,jz) = _F3_S(flds_single, m, jx,jy,jz);
+	    F(m, jx,jy,jz) = F_s(m, jx,jy,jz);
 	  }
 	}
       }
@@ -98,16 +109,18 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
+    FieldsS F_s(flds_single);
     cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
 	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
 	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	    _F3_S(flds_single, m, jx,jy,jz) = _F3_S(flds, m, jx,jy,jz);
+	    F_s(m, jx,jy,jz) = F(m, jx,jy,jz);
 	  }
 	}
       }

@@ -1,6 +1,8 @@
 
 #include "cuda_iface.h"
 
+#include "fields.hxx"
+
 enum { // FIXME, duplicated
   JXI, JYI, JZI,
   EX , EY , EZ ,
@@ -70,6 +72,7 @@ main(void)
   cuda_mfields_dump(cmflds, "cmflds.json");
 
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  Fields3d<fields_single_t> F(flds);
   for (int p = 0; p < n_patches; p++) {
     for (int k = flds.ib[2]; k < flds.ib[2] + flds.im[2]; k++) {
       for (int j = flds.ib[1]; j < flds.ib[1] + flds.im[1]; j++) {
@@ -78,12 +81,12 @@ main(void)
 	  fields_single_real_t y_cc = (j + .5) * dx[1];
 	  fields_single_real_t x_nc = i * dx[0];
 	  fields_single_real_t y_nc = j * dx[1];
-	  _F3_S(flds, EX, i,j,k) = init_wave(x_cc, y_nc, EX);
-	  _F3_S(flds, EY, i,j,k) = init_wave(x_nc, y_cc, EY);
-	  _F3_S(flds, EZ, i,j,k) = init_wave(x_nc, y_nc, EZ);
-	  _F3_S(flds, HX, i,j,k) = init_wave(x_nc, y_cc, HX);
-	  _F3_S(flds, HY, i,j,k) = init_wave(x_cc, y_nc, HY);
-	  _F3_S(flds, HZ, i,j,k) = init_wave(x_cc, y_cc, HZ);
+	  F(EX, i,j,k) = init_wave(x_cc, y_nc, EX);
+	  F(EY, i,j,k) = init_wave(x_nc, y_cc, EY);
+	  F(EZ, i,j,k) = init_wave(x_nc, y_nc, EZ);
+	  F(HX, i,j,k) = init_wave(x_nc, y_cc, HX);
+	  F(HY, i,j,k) = init_wave(x_cc, y_nc, HY);
+	  F(HZ, i,j,k) = init_wave(x_cc, y_cc, HZ);
 	}
       }
     }

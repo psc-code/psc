@@ -2,6 +2,8 @@
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
 
+#include "fields.hxx"
+
 #include <cstdio>
 #include <cassert>
 
@@ -97,6 +99,7 @@ cuda_mfields_to_json(struct cuda_mfields *cmflds)
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  Fields3d<fields_single_t> F(flds);
   for (int p = 0; p < cmflds->n_patches; p++) {
     cuda_mfields_copy_from_device(cmflds, p, flds, 0, cmflds->n_fields);
 
@@ -112,7 +115,7 @@ cuda_mfields_to_json(struct cuda_mfields *cmflds)
 	  mrc_json_t json_fld_x = mrc_json_array_new(cmflds->im[0]);
 	  mrc_json_array_push(json_fld_y, json_fld_x);
 	  for (int i = cmflds->ib[0]; i < cmflds->ib[0] + cmflds->im[0]; i++) {
-	    mrc_json_array_push_double(json_fld_x, _F3_S(flds, m, i,j,k));
+	    mrc_json_array_push_double(json_fld_x, F(m, i,j,k));
 	  }
 	}
       }

@@ -3,6 +3,8 @@
 #include "cuda_mfields.h"
 #include "cuda_mfields_const.h"
 
+#include "fields.hxx"
+
 #include <psc.h>
 
 // the loops include 2 levels of ghost cells
@@ -134,7 +136,9 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 			    int lz[3], int rz[3])
 {
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  Fields3d<fields_single_t> Flds(flds);
   fields_single_t f = cuda_mfields_get_host_fields(cmf);
+  Fields3d<fields_single_t> F(f);
   
   cuda_mfields_copy_from_device(cmflds, p, flds, EX, EX + 3);
   cuda_mfields_copy_from_device(cmf, p, f, 0, 1);
@@ -143,14 +147,12 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
     for (int iy = -1; iy < cmflds->ldims[1]; iy++) {
       if (iy >= -ly[1] && iy < ry[1] &&
 	  iz >= -ly[2] && iz < ry[2]) {
-	_F3_S(flds, EY, 0,iy,iz) += 
-	  fac[1] * (_F3_S(f, 0, 0,iy+1,iz) - _F3_S(f, 0, 0,iy,iz));
+	Flds(EY, 0,iy,iz) += fac[1] * (F(0, 0,iy+1,iz) - F(0, 0,iy,iz));
 	}
       
       if (iy >= -lz[1] && iy < rz[1] &&
 	  iz >= -lz[2] && iz < rz[2]) {
-	_F3_S(flds, EZ, 0,iy,iz) += 
-	  fac[2] * (_F3_S(f, 0, 0,iy,iz+1) - _F3_S(f, 0, 0,iy,iz));
+	Flds(EZ, 0,iy,iz) += fac[2] * (F(0, 0,iy,iz+1) - F(0, 0,iy,iz));
       }
     }
   }
