@@ -466,6 +466,8 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     push_x(x, vv, .5f * c_prm.dt);
 #endif
     
+    IP ip;
+
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
     SET_IP_COEFFS_OPT_DEPOSIT;

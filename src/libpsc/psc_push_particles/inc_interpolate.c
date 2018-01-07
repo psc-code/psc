@@ -312,7 +312,6 @@ struct IP
 #endif
 
 #define INTERPOLATE_FIELDS(flds)					\
-  IP ip;								\
   ip.E[0] = IP_FIELD_EX(flds);						\
   ip.E[1] = IP_FIELD_EY(flds);						\
   ip.E[2] = IP_FIELD_EZ(flds);						\

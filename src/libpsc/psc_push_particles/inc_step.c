@@ -187,6 +187,8 @@ push_one(mprts_array_t mprts_arr, int n,
     xm[d] = xi[d] * c_prm.dxi[d];
   }
 
+  IP ip;
+
   SET_IP_COEFFS_OPT_DEPOSIT;
   
   // FIELD INTERPOLATION
@@ -258,6 +260,8 @@ stagger_one(mprts_array_t mprts_arr, int n,
   for (int d = 0; d < 3; d++) {
     xm[d] = xi[d] * c_prm.dxi[d];
   }
+
+  IP ip;
 
   SET_IP_COEFFS_OPT_DEPOSIT;
   
