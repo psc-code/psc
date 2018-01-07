@@ -9,13 +9,16 @@
 // ======================================================================
 // psc_push_particles: subclass "1vbec_single"
 
+template<typename dim_t>
+using push_p_ops_single = push_particles_ops<push_p_config<mfields_single_t, dim_t>>;
+
 struct psc_push_particles_ops psc_push_particles_1vbec_single_ops = {
   .name                  = "1vbec_single",
   .push_mprts_xyz        = psc_push_particles_1vbec_single_push_mprts_xyz,
   .push_mprts_xz         = psc_push_particles_1vbec_single_push_mprts_xyz_xz,
   .push_mprts_yz         = psc_push_particles_1vbec_single_push_mprts_yz,
   .push_mprts_1          = psc_push_particles_1vbec_single_push_mprts_1,
-  .stagger_mprts_yz      = push_particles_ops<mfields_single_t, dim_yz>::stagger_mprts,
+  .stagger_mprts_yz      = push_p_ops_single<dim_yz>::stagger_mprts,
   .particles_type        = PARTICLE_TYPE,
 };
 

@@ -41,8 +41,14 @@ void psc_push_particles_1vbec_double_stagger_mprts_1(struct psc_push_particles *
 						     struct psc_mparticles *mprts,
 						     struct psc_mfields *mflds);
 
+template<typename MF, typename D>
+struct push_p_config
+{
+  using mfields_t = MF;
+  using dim_t = D;
+};
 
-template<typename MF, typename dim>
+template<typename C>
 struct push_particles_ops
 {
   static void stagger_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
