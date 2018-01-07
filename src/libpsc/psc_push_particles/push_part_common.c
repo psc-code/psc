@@ -5,6 +5,8 @@
 
 #define CACHE_EM_J 1
 
+#define IP_DEPOSIT
+
 #include "fields.hxx"
 #include "inc_params.c"
 #include "inc_push.c"
@@ -466,9 +468,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi[0], s0x); );
-    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dxi[1], s0y); );
-    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dxi[2], s0z); );
+    SET_IP_COEFFS_OPT_DEPOSIT;
 
     // FIELD INTERPOLATION
 

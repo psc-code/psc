@@ -299,6 +299,18 @@ struct IP
   particle_real_t H[3];
 };
 
+#ifdef IP_DEPOSIT
+#define SET_IP_COEFFS_OPT_DEPOSIT \
+  IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi[0], s0x); );\
+  IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dxi[1], s0y); );\
+  IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dxi[2], s0z); );
+#else
+#define SET_IP_COEFFS_OPT_DEPOSIT \
+  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );\
+  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );\
+  IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+#endif
+
 #define INTERPOLATE_FIELDS(flds)					\
   IP ip;								\
   ip.E[0] = IP_FIELD_EX(flds);						\

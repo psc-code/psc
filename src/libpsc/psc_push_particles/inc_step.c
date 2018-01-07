@@ -141,7 +141,6 @@ push_one(mprts_array_t mprts_arr, int n,
   // here we have x^{n+.5}, p^n
 
   // field interpolation
-  real E[3], H[3];
   int lg[3];
   real og[3];
   find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
@@ -188,9 +187,7 @@ push_one(mprts_array_t mprts_arr, int n,
     xm[d] = xi[d] * c_prm.dxi[d];
   }
 
-  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
-  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
-  IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+  SET_IP_COEFFS_OPT_DEPOSIT;
   
   // FIELD INTERPOLATION
 
@@ -262,9 +259,7 @@ stagger_one(mprts_array_t mprts_arr, int n,
     xm[d] = xi[d] * c_prm.dxi[d];
   }
 
-  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
-  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
-  IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+  SET_IP_COEFFS_OPT_DEPOSIT;
   
   // FIELD INTERPOLATION
 
