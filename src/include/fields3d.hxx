@@ -135,6 +135,11 @@ struct mfields3d
   {
     psc_mfields_put_as(mflds_, mflds_base, mb, me);
   }
+
+  struct psc_mfields *mflds()
+  {
+    return mflds_;
+  }
   
 private:
   struct psc_mfields *mflds_;

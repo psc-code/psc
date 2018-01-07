@@ -94,9 +94,9 @@ psc_bnd_fld_sub_create(struct psc_bnd *bnd)
 void
 psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, mb, me);
-  mrc_ddc_add_ghosts(bnd->ddc, mb, me, mflds);
-  psc_mfields_put_as(mflds, mflds_base, mb, me);
+  mfields_t mf = mflds_base->get_as<mfields_t>(mb, me);
+  mrc_ddc_add_ghosts(bnd->ddc, mb, me, mf.mflds());
+  mf.put_as(mflds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -105,10 +105,10 @@ psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, 
 void
 psc_bnd_fld_sub_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, mb, me);
+  mfields_t mf = mflds_base->get_as<mfields_t>(mb, me);
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mflds);
-  psc_mfields_put_as(mflds, mflds_base, mb, me);
+  mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mf.mflds());
+  mf.put_as(mflds_base, mb, me);
 }

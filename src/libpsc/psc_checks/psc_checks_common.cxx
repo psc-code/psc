@@ -122,12 +122,12 @@ do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
 static void
 calc_div_j(struct psc *psc, struct psc_mfields *mflds_base, struct psc_mfields *div_j)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, JXI + 3);
-  mfields_t mf(mflds), mf_div_j(div_j);
+  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
+  mfields_t mf_div_j(div_j);
   psc_foreach_patch(psc, p) {
     do_calc_div_j(psc, p, mf[p], mf_div_j[p]);
   }
-  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+  mf.put_as(mflds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------

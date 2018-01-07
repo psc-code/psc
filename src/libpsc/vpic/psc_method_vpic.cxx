@@ -184,8 +184,8 @@ psc_method_vpic_set_ic_fields(struct psc_method *method, struct psc *psc)
     // the initial condition.
     // So let's copy the vpic-internal fields into the base fields in this somewhat
     // odd fashion.
-    struct psc_mfields *mflds_vpic = psc_mfields_get_as(psc->flds, "vpic", 0, 0);
-    psc_mfields_put_as(mflds_vpic, psc->flds, 0, VPIC_MFIELDS_N_COMP);
+    mfields_vpic_t mf_vpic = psc->flds->get_as<mfields_vpic_t>(0, 0);
+    mf_vpic.put_as(psc->flds, 0, VPIC_MFIELDS_N_COMP);
   } else {
     // While the fields may already have been initialized by the deck,
     // we'll initialize them the PSC way now.  And in case PSC doesn't
@@ -206,50 +206,50 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 
   struct psc_mfields *mflds_base = psc->flds;
   struct psc_mparticles *mprts_base = psc->particles;
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", 0, VPIC_MFIELDS_N_COMP);
+  mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(0, VPIC_MFIELDS_N_COMP);
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
   
   // Do some consistency checks on user initialized fields
 
   mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
-  double err = psc_mfields_synchronize_tang_e_norm_b(mflds);
+  double err = psc_mfields_synchronize_tang_e_norm_b(mf.mflds());
   mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
   
   mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
-  psc_mfields_compute_div_b_err(mflds);
-  err = psc_mfields_compute_rms_div_b_err(mflds);
+  psc_mfields_compute_div_b_err(mf.mflds());
+  err = psc_mfields_compute_rms_div_b_err(mf.mflds());
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-  psc_mfields_clean_div_b(mflds);
+  psc_mfields_clean_div_b(mf.mflds());
   
   // Load fields not initialized by the user
 
   mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
-  psc_mfields_compute_curl_b(mflds);
+  psc_mfields_compute_curl_b(mf.mflds());
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
-  psc_mfields_clear_rhof(mflds);
-  psc_mfields_accumulate_rho_p(mflds, mprts);
-  psc_mfields_synchronize_rho(mflds);
-  psc_mfields_compute_rhob(mflds);
+  psc_mfields_clear_rhof(mf.mflds());
+  psc_mfields_accumulate_rho_p(mf.mflds(), mprts);
+  psc_mfields_synchronize_rho(mf.mflds());
+  psc_mfields_compute_rhob(mf.mflds());
 
   // Internal sanity checks
 
   mpi_printf(psc_comm(psc), "Checking electric field divergence\n");
-  psc_mfields_compute_div_e_err(mflds);
-  err = psc_mfields_compute_rms_div_e_err(mflds);
+  psc_mfields_compute_div_e_err(mf.mflds());
+  err = psc_mfields_compute_rms_div_e_err(mf.mflds());
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-  psc_mfields_clean_div_e(mflds);
+  psc_mfields_clean_div_e(mf.mflds());
 
   mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
-  err = psc_mfields_synchronize_tang_e_norm_b(mflds);
+  err = psc_mfields_synchronize_tang_e_norm_b(mf.mflds());
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
+  FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
   Simulation_initialize(sub->sim, vmprts, vmflds);
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
-  psc_mfields_put_as(mflds, mflds_base, 0, VPIC_MFIELDS_N_COMP);
+  mf.put_as(mflds_base, 0, VPIC_MFIELDS_N_COMP);
 
   // First output / stats
   

@@ -13,8 +13,7 @@
 static void
 setup_jx(struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
-  mfields_t mf(mflds);
+  mfields_t mf = mflds_base->get_as<mfields_t>(0, 0);
   psc_foreach_patch(ppsc, p) {
     Fields F(mf[p]);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
@@ -25,14 +24,13 @@ setup_jx(struct psc_mfields *mflds_base)
       F(JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_g_end;
   }
-  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 1);
+  mf.put_as(mflds_base, JXI, JXI + 1);
 }
 
 static void
 setup_jx_noghost(struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
-  mfields_t mf(mflds);
+  mfields_t mf = mflds_base->get_as<mfields_t>(0, 0);
   psc_foreach_patch(ppsc, p) {
     Fields F(mf[p]);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
@@ -43,7 +41,7 @@ setup_jx_noghost(struct psc_mfields *mflds_base)
       F(JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_end;
   }
-  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 1);
+  mf.put_as(mflds_base, JXI, JXI + 1);
 }
 #endif
 

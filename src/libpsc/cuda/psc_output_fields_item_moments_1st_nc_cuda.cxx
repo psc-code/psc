@@ -12,16 +12,16 @@ rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	    struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "cuda", 0);
-  struct psc_mfields *mres = psc_mfields_get_as(mres_base, "cuda", 0, 0);
+  mfields_cuda_t mf_res = mres_base->get_as<mfields_cuda_t>(0, 0);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmres = psc_mfields_cuda(mres)->cmflds;
+  struct cuda_mfields *cmres = psc_mfields_cuda(mf_res.mflds())->cmflds;
     
-  psc_mfields_zero_range(mres, 0, mres->nr_fields);
+  psc_mfields_zero_range(mf_res.mflds(), 0, mres_base->nr_fields);
 
   cuda_moments_yz_rho_1st_nc(cmprts, cmres);
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
-  psc_mfields_put_as(mres, mres_base, 0, 1);
+  mf_res.put_as(mres_base, 0, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -46,16 +46,16 @@ n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 	      struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "cuda", 0);
-  struct psc_mfields *mres = psc_mfields_get_as(mres_base, "cuda", 0, 0);
+  mfields_cuda_t mf_res = mres_base->get_as<mfields_cuda_t>(0, 0);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmres = psc_mfields_cuda(mres)->cmflds;
+  struct cuda_mfields *cmres = psc_mfields_cuda(mf_res.mflds())->cmflds;
 
-  psc_mfields_zero_range(mres, 0, mres->nr_fields);
+  psc_mfields_zero_range(mf_res.mflds(), 0, mf_res.mflds()->nr_fields);
 
   cuda_moments_yz_n_1st(cmprts, cmres);
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
-  psc_mfields_put_as(mres, mres_base, 0, mres->nr_fields);
+  mf_res.put_as(mres_base, 0, 1);
 }
 
 // ----------------------------------------------------------------------

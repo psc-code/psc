@@ -17,12 +17,12 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
   // it's difficult to convert mprts because of the ordering constraints (?)
   assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
 
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);
+  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(EX, EX + 6);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
   int bs[3] = { 1, 4, 4 };
   cuda_push_mprts_yz(cmprts, cmflds, bs, false, false, false);
-  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
+  mf.put_as(mflds_base, JXI, JXI + 3);
 }
 
 // ----------------------------------------------------------------------
@@ -47,13 +47,12 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   /* it's difficult to convert mprts due to ordering constraints (?) */	\
   assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);		\
 									\
-  struct psc_mfields *mflds =						\
-    psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);			\
+  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(EX, EX + 6);   \
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;	\
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;	\
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;	\
   int bs[3] = { 1, BY, BZ };						\
   cuda_push_mprts_yz(cmprts, cmflds, bs, true, true, CURRMEM_GLOBAL);	\
-  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);			\
+  mf.put_as(mflds_base, JXI, JXI + 3);					\
   }									\
 									\
   /* --------------------------------------------------------------- */	\

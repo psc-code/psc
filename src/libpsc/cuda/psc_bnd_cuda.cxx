@@ -162,8 +162,8 @@ void
 psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", mb, me);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(mb, me);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -185,7 +185,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
     cuda_mfields_bnd_to_device_inside(cbnd, cmflds, mb, me);
   }
 
-  psc_mfields_put_as(mflds, mflds_base, mb, me);
+  mf.put_as(mflds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -205,8 +205,8 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
   }
 
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", mb, me);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(mb, me);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -240,7 +240,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
 #endif
     prof_stop(pr3);
     prof_start(pr4);
-    mrc_ddc_fill_ghosts_end(bnd->ddc, 0, me - mb, mflds);
+    mrc_ddc_fill_ghosts_end(bnd->ddc, 0, me - mb, mf.mflds());
     prof_stop(pr4);
 
     prof_start(pr5);
@@ -248,7 +248,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     prof_stop(pr5);
   }
 
-  psc_mfields_put_as(mflds, mflds_base, mb, me);
+  mf.put_as(mflds_base, mb, me);
 }
 
 // ======================================================================

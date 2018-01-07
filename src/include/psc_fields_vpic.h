@@ -18,6 +18,13 @@ inline fields_vpic_t mfields_vpic_t::operator[](int p)
   return psc_mfields_vpic_get_field_t(mflds_, p);
 }
 
+template<>
+struct fields_traits<fields_vpic_t>
+{
+  static constexpr const char* name = "vpic";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
+
 #include "vpic_iface.h"
 
 BEGIN_C_DECLS

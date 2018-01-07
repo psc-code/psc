@@ -111,8 +111,8 @@ psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
     psc_mfields_setup(mflds_ref);
   }
 
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, me);
-  mfields_t mf(mflds), mf_ref(mflds_ref);
+  mfields_t mf = mflds_base->get_as<mfields_t>(0, me);
+  mfields_t mf_ref(mflds_ref);
   psc_foreach_patch(psc, p) {
     Fields F = mf[p];
     Fields R = mf_ref[p];
@@ -185,8 +185,8 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
 void
 psc_check_fields_ref(struct psc *psc, struct psc_mfields *mflds_base, int *m_flds, double thres)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 12);
-  mfields_t mf(mflds), mf_ref(mflds_ref);
+  mfields_t mf = mflds_base->get_as<mfields_t>(0, 12);
+  mfields_t mf_ref(mflds_ref);
   psc_foreach_patch(psc, p) {
     Fields F(mf[p]);
     Fields R(mf_ref[p]);
@@ -210,8 +210,7 @@ void
 psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double thres, int sw)
 {
 #if 0
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
-  mfields_t mf(mflds);
+  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI+3);
   foreach_patch(p) {
     Fields F(mf[p]);
     for (int m = JXI; m <= JZI; m++){
@@ -231,9 +230,8 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
   psc_mfields_setup(diff);
   // FIXME, make funcs for this (waxpy, norm)
 
-  mfields_t mf(mflds), mf_ref(mflds_ref), mf_diff(diff);
-
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
+  mfields_t mf_ref(mflds_ref), mf_diff(diff);
+  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
   for (int m = JXI; m <= JZI; m++){
     fields_t::real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {

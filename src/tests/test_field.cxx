@@ -18,8 +18,7 @@
 static void
 setup_fields(struct psc_mfields *flds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
-  mfields_t mf(mflds);
+  mfields_t mf = mflds_base->get_as<mfields_t>(0, 0);
   psc_foreach_patch(ppsc, p) {
     Fields F(mf[p]);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
@@ -32,7 +31,7 @@ setup_fields(struct psc_mfields *flds_base)
       F(JZI, jx,jy,jz) = cos(xx) * cos(yy);
     } foreach_3d_g_end;
   }
-  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
+  mf.put_as(mflds_base, JXI, JXI + 3);
 }
 #endif
 

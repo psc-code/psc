@@ -121,10 +121,10 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   fac[1] = .5 * ppsc->dt * diffusion / dx[1];
   fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
-  struct psc_mfields *mf = psc_mfields_get_as(mf_base, "cuda", 0, 1);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
+  mfields_cuda_t mflds = mflds_base->get_as<mfields_cuda_t>(EX, EX + 3);
+  mfields_cuda_t mf = mf_base->get_as<mfields_cuda_t>(0, 1);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds.mflds())->cmflds;
+  struct cuda_mfields *cmf = psc_mfields_cuda(mf.mflds())->cmflds;
 
   // OPT, do all patches in one kernel
   for (int p = 0; p < mf_base->nr_patches; p++) {
@@ -152,8 +152,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
     cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
   }
 
-  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
-  psc_mfields_put_as(mf, mf_base, 0, 0);
+  mflds.put_as(mflds_base, EX, EX + 3);
+  mf.put_as(mf_base, 0, 0);
 }
 
 // ======================================================================

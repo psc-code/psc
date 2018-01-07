@@ -128,7 +128,7 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 
   int kind_n = inject->kind_n;
   
-  struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
+  mfields_t mf_n = inject->mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
   static struct cuda_mparticles_prt *buf;
   static unsigned int buf_n_alloced;
@@ -139,7 +139,6 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
   unsigned int buf_n_by_patch[psc->nr_patches];
 
   unsigned int buf_n = 0;
-  mfields_t mf_n(mflds_n);
   psc_foreach_patch(psc, p) {
     buf_n_by_patch[p] = 0;
     Fields N(mf_n[p]);
@@ -212,7 +211,7 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
     }
   }
 
-  psc_mfields_put_as(mflds_n, inject->mflds_n, 0, 0);
+  mf_n.put_as(inject->mflds_n, 0, 0);
 
   psc_mparticles_cuda_inject(mprts_base, buf, buf_n_by_patch);
 }

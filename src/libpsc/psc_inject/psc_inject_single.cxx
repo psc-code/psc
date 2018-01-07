@@ -127,8 +127,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   int kind_n = inject->kind_n;
   
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-  struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
-  mfields_t mf_n(mflds_n);
+  mfields_t mf_n = inject->mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
   psc_foreach_patch(psc, p) {
     Fields N(mf_n[p]);
@@ -200,7 +199,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
-  psc_mfields_put_as(mflds_n, inject->mflds_n, 0, 0);
+  mf_n.put_as(inject->mflds_n, 0, 0);
 }
 
 // ----------------------------------------------------------------------

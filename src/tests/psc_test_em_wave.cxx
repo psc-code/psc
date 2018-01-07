@@ -141,11 +141,10 @@ psc_test_em_wave_check(struct psc *psc)
   double tol = sub->tol;
 
   printf("=== checking EM fields at time step %d\n", psc->timestep);
-  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, FIELDS_TYPE, EX, EX + 6);
-  mfields_t mf(mflds);
+  mfields_t mf = psc->flds->get_as(EX, EX + 6);
 
   int failed = 0;
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  for (int p = 0; p < mf.nr_patches(); p++) {
     Fields F(mf[p]);
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
@@ -169,7 +168,7 @@ psc_test_em_wave_check(struct psc *psc)
   }
   assert(failed == 0);
 
-  psc_mfields_put_as(mflds, psc->flds, 0, 0);
+  mf.put_as(psc->flds, 0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -185,11 +184,10 @@ psc_test_em_wave_check_single(struct psc *psc)
   double tol = sub->tol;
 
   printf("=== single: checking EM fields at time step %d\n", psc->timestep);
-  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "single", EX, EX + 6);
+  mfields_single_t mf = psc->flds->get_as<mfields_single_t>(EX, EX + 6);
 
   int failed = 0;
-  mfields_single_t mf(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  for (int p = 0; p < mf.nr_patches(); p++) {
     Fields3d<fields_single_t> F(mf[p]);
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
@@ -213,7 +211,7 @@ psc_test_em_wave_check_single(struct psc *psc)
   }
   assert(failed == 0);
 
-  psc_mfields_put_as(mflds, psc->flds, 0, 0);
+  mf.put_as(psc->flds, 0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -231,11 +229,11 @@ psc_test_em_wave_check_vpic(struct psc *psc)
 #endif
 
   printf("=== vpic: checking EM fields at time step %d\n", psc->timestep);
-  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "vpic", EX, EX + 6);
+  mfields_single_t mf = psc->flds->get_as<mfields_single_t>(EX, EX + 6);
   
 #if 0
   int failed = 0;
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  for (int p = 0; p < mf.nr_patches(); p++) {
     fields_single_t flds = mfields_single_t(mflds)[p];
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
@@ -260,7 +258,7 @@ psc_test_em_wave_check_vpic(struct psc *psc)
   assert(failed == 0);
 #endif
 
-  psc_mfields_put_as(mflds, psc->flds, 0, 0);
+  mf.put_as(psc->flds, 0, 0);
 }
 
 // ----------------------------------------------------------------------

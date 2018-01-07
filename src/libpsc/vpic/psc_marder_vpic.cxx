@@ -69,14 +69,14 @@ psc_marder_vpic_run(struct psc_marder *marder,
     return;
   }
   
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "vpic", EX, VPIC_MFIELDS_N_COMP);
+  mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(EX, VPIC_MFIELDS_N_COMP);
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
 
   // Divergence clean e
   if (clean_div_e) {
     // needs E, rhof, rhob, material
-    psc_marder_vpic_clean_div_e(marder, mflds, mprts);
+    psc_marder_vpic_clean_div_e(marder, mf.mflds(), mprts);
     // upates E, rhof, div_e_err
   }
 
@@ -85,7 +85,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
   // Divergence clean b
   if (clean_div_b) {
     // needs B
-    psc_marder_vpic_clean_div_b(marder, mflds);
+    psc_marder_vpic_clean_div_b(marder, mf.mflds());
     // updates B, div_b_err
   }
   
@@ -93,12 +93,12 @@ psc_marder_vpic_run(struct psc_marder *marder,
   if (sync_shared) {
     // needs E, B, TCA
     mpi_printf(psc_marder_comm(marder), "Synchronizing shared tang e, norm b\n");
-    double err = psc_mfields_synchronize_tang_e_norm_b(mflds);
+    double err = psc_mfields_synchronize_tang_e_norm_b(mf.mflds());
     mpi_printf(psc_marder_comm(marder), "Domain desynchronization error = %e (arb units)\n", err);
     // updates E, B, TCA
   }
 
-  psc_mfields_put_as(mflds, mflds_base, EX, 16);
+  mf.put_as(mflds_base, EX, 16);
 }
 
 // ----------------------------------------------------------------------

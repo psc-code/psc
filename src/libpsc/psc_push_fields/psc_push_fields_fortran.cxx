@@ -12,11 +12,11 @@ static void
 psc_push_fields_fortran_push_E(struct psc_push_fields *push,
 			       struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "fortran", JXI, HZ + 1);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    PIC_msa_e(psc_mfields_get_patch(mflds, p));
+  mfields_fortran_t mf = mflds_base->get_as(JXI, HZ + 1);
+  for (int p = 0; p < mf.nr_patches(); p++) {
+    PIC_msa_e(psc_mfields_get_patch(mf.mflds(), p));
   }
-  psc_mfields_put_as(mflds, mflds_base, EX, HZ + 1);
+  mf.put_as(mflds_base, EX, HZ + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -26,11 +26,11 @@ static void
 psc_push_fields_fortran_push_H(struct psc_push_fields *push,
 			       struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "fortran", JXI, HZ + 1);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    PIC_msa_h(psc_mfields_get_patch(mflds, p));
+  mfields_fortran_t mf = mflds_base->get_as(JXI, HZ + 1);
+  for (int p = 0; p < mf.nr_patches(); p++) {
+    PIC_msa_h(psc_mfields_get_patch(mf.mflds(), p));
   }
-  psc_mfields_put_as(mflds, mflds_base, EX, HZ + 1);
+  mf.put_as(mflds_base, EX, HZ + 1);
 }
 
 // ======================================================================

@@ -274,21 +274,20 @@ psc_mfields_compute_curl_b(struct psc_mfields *mflds)
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
 {
-  struct psc_mfields *mflds = 
-    psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, mflds_base->nr_fields);
-  mfields_t mf(mflds);
+  mfields_t mf = mflds_base->get_as<mfields_t>(0, mflds_base->nr_fields);
+
   psc_foreach_patch(ppsc, p) {
     Fields F(mf[p]);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
-      for (int m = 0; m < mflds->nr_fields; m++) {
+      for (int m = 0; m < mflds_base->nr_fields; m++) {
 	MRC_M3(m3p ,m, ix,iy,iz) = F(m, ix,iy,iz);
       }
     } mrc_fld_foreach_end;
     mrc_fld_patch_put(m3);
   }
 
-  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+  mf.put_as(mflds_base, 0, 0);
 }
 
 void
