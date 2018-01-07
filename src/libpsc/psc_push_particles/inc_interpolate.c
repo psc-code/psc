@@ -66,6 +66,45 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   ip_coeff(&ip.lg1, &ip.gx, xm);
 #endif
     
+// ----------------------------------------------------------------------
+// ip_coeff_g
+
+static inline void
+ip_coeff_g(int *lg, struct ip_coeff *gg, particle_real_t u)
+{
+  ip_coeff(lg, gg, u);
+}
+
+// ----------------------------------------------------------------------
+// ip_coeff_h
+
+static inline void
+ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
+{
+#if ORDER == ORDER_1ST || ORDER == ORDER_2ND
+  ip_coeff(lh, hh, u - .5f);
+#elif ORDER == ORDER_1P5
+  // 1+1/2 method from Sokolov paper
+  // FIXME, this is almost certainly buggy
+  int l;
+  particle_real_t h;
+  
+  get_nint_remainder(&l, &h, u - .5f);
+
+  if (h >= 0) { //0 FIXME???
+    hh->vm = h;
+    hh->v0 = 1.f - h;
+    hh->vp = 0;
+  } else { // h < 0
+    hh->vm = 0;
+    hh->v0 = 1.f + h;
+    hh->vp = -h;
+  }
+  *lh = l;
+  assert(0);
+#endif
+}
+
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm, s0x)	\
   struct ip_coeff gx, hx;					\
   ip_coeff_g(&ip.lg1, &gx, xm);					\
@@ -298,6 +337,64 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 #define IP_FIELD_HZ(flds) IP_FIELD(flds, HZ, h, h, g)
 
 #endif
+
+// ----------------------------------------------------------------------
+// charge density 
+
+#if ORDER == ORDER_1ST
+
+#define N_RHO 4
+#define S_OFF 1
+
+#elif ORDER == ORDER_2ND
+
+#define N_RHO 5
+#define S_OFF 2
+
+#endif
+
+#define S(s, off) s[off + S_OFF]
+
+// ----------------------------------------------------------------------
+// ZERO_S1
+
+#define ZERO_S1 do {				\
+    for (int i = -S_OFF; i < -S_OFF + N_RHO; i++) {	\
+      IF_DIM_X( S(s1x, i) = 0.f; );		\
+      IF_DIM_Y( S(s1y, i) = 0.f; );		\
+      IF_DIM_Z( S(s1z, i) = 0.f; );		\
+    }						\
+  } while (0)
+
+// ----------------------------------------------------------------------
+// SUBTR_S1_S0
+
+#define SUBTR_S1_S0 do {			\
+    for (int i = -S_OFF + 1; i <= 1; i++) {	\
+      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
+      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
+      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
+    }						\
+  } while (0)
+
+// ----------------------------------------------------------------------
+// set_S
+
+static inline void
+set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
+{
+#if ORDER == ORDER_1ST
+  S(s0, shift  ) = gg.v0;
+  S(s0, shift+1) = gg.v1;
+#elif ORDER == ORDER_2ND
+  // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
+  // but it needs checking.
+  particle_real_t h = gg.h;
+  S(s0, shift-1) = .5f*(1.5f-particle_real_abs(h-1.f))*(1.5f-particle_real_abs(h-1.f));
+  S(s0, shift  ) = .75f-particle_real_abs(h)*particle_real_abs(h);
+  S(s0, shift+1) = .5f*(1.5f-particle_real_abs(h+1.f))*(1.5f-particle_real_abs(h+1.f));
+#endif
+}
 
 struct IP
 {
