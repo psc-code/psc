@@ -80,11 +80,14 @@ do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 
 #endif
 
-void
-SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
-				   struct psc_mparticles *mprts,
-				   struct psc_mfields *mflds_base)
+template<typename C>
+void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
+			       struct psc_mparticles *mprts,
+			       struct psc_mfields *mflds_base)
 {
+  using mfields_t = typename C::mfields_t;
+  using fields_t = typename mfields_t::fields_t;
+  
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   c_prm_set(ppsc);
   params_1vb_set(ppsc, NULL, NULL);
@@ -99,7 +102,7 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
 }
 
 template<typename C>
-void push_particles_ops<C>::stagger_mprts(struct psc_push_particles *push,
+void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
 					  struct psc_mparticles *mprts,
 					  struct psc_mfields *mflds_base)
 {
@@ -120,4 +123,5 @@ void push_particles_ops<C>::stagger_mprts(struct psc_push_particles *push,
 }
 
 using push_p_conf = push_p_config<mfields_t, dim_t>;
-template struct push_particles_ops<push_p_conf>;
+
+template struct push_p_ops<push_p_conf>;

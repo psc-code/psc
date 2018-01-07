@@ -11,17 +11,17 @@
 #define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
 
-#define psc_push_particles_push_mprts_yz psc_push_particles_1vb_single_push_mprts_yz
-#define psc_push_particles_stagger_mprts_yz psc_push_particles_1vb_single_stagger_mprts_yz
-
 #include "1vb.c"
+
+template<typename dim_t>
+using push_p_ops_1vb_single = push_p_ops<push_p_config<mfields_single_t, dim_t>>;
 
 // ======================================================================
 // psc_push_particles: subclass "1vb_single"
 
 struct psc_push_particles_ops psc_push_particles_1vb_single_ops = {
   .name                  = "1vb_single",
-  .push_mprts_yz         = psc_push_particles_push_mprts_yz,
+  .push_mprts_yz         = push_p_ops_1vb_single<dim_yz>::push_mprts,
   .particles_type        = PARTICLE_TYPE,
 };
 
