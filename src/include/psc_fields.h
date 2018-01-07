@@ -95,7 +95,7 @@ void psc_mfields_compute_curl_b(struct psc_mfields *mflds);
 template<typename MF>
 inline MF psc_mfields::get_as(int mb, int me)
 {
-  const char *type = fields_traits<typename MF::fields>::name;
+  const char *type = fields_traits<typename MF::fields_t>::name;
   struct psc_mfields *mflds = psc_mfields_get_as(this, type, mb, me);
   return MF(mflds);
 }

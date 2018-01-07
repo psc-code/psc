@@ -8,6 +8,7 @@
 
 struct fields_cuda_t
 {
+  using real_t = float;
   using mfields_t = mfields3d<fields_cuda_t>;
 };
 

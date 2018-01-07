@@ -113,7 +113,8 @@ int fields3d<R, L>::index(int m, int i, int j, int k)
 template<typename F>
 struct mfields3d
 {
-  using fields = F;
+  using fields_t = F;
+  using real_t = typename fields_t::real_t;
   
   mfields3d(struct psc_mfields *mflds)
     : mflds_(mflds)
@@ -131,9 +132,9 @@ struct mfields3d
     return mflds_->nr_fields;
   }
 
-  fields operator[](int p)
+  fields_t operator[](int p)
   {
-    return fields::psc_mfields_get_field_t(mflds_, p);
+    return fields_t::psc_mfields_get_field_t(mflds_, p);
   }
 
   void put_as(struct psc_mfields *mflds_base, int mb, int me)
