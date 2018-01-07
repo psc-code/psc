@@ -4,6 +4,8 @@
 
 #include <type_traits>
 
+#include "psc_fields.h"
+
 template<bool AOS>
 struct Layout
 {
@@ -117,6 +119,11 @@ struct mfields3d
     : mflds_(mflds)
   {
     //assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_single_ops);
+  }
+
+  unsigned int nr_patches() const
+  {
+    return mflds_->nr_patches;
   }
 
   fields operator[](int p)

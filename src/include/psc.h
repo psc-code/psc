@@ -5,6 +5,9 @@
 
 #include <config.h>
 
+#include "psc_particles.h"
+#include "psc_fields.h"
+
 #include <mrc_domain.h>
 
 #include <stdbool.h>
@@ -49,9 +52,6 @@ typedef float real;
 
 typedef double f_real;
 typedef int f_int;
-
-#include "psc_particles.h"
-#include "psc_fields.h"
 
 ///User specified parameters
 ///

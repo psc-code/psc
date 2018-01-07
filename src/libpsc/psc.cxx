@@ -852,8 +852,8 @@ psc_set_ic_fields_default(struct psc *psc)
   if (!init_field)
     return;
 
-  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", 0, 0);
-  mfields_t mf(mflds);
+  mfields_t mf = psc->flds->get_as<mfields_t>("c", 0, 0); //psc_mfields_get_as(psc->flds, "c", 0, 0);
+  //  mfields_t mf(mflds);
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
     Fields F(mf[p]);

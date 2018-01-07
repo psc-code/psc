@@ -4,12 +4,6 @@
 
 #include <mrc_obj.h>
 
-#ifndef __cplusplus
-#error not C++
-#endif
-
-BEGIN_C_DECLS
-
 // ----------------------------------------------------------------------
 // psc_mfields class
 
@@ -25,6 +19,9 @@ struct psc_mfields {
   int nr_fields; //> number of field components
   int ibn[3]; //> number of ghost points
   int first_comp; //> The first component in this field (normally 0)
+
+  template<typename MF>
+  MF get_as(const char *type, int mb, int me);
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
@@ -93,6 +90,13 @@ void psc_mfields_synchronize_rho(struct psc_mfields *mflds);
 void psc_mfields_compute_rhob(struct psc_mfields *mflds);
 void psc_mfields_compute_curl_b(struct psc_mfields *mflds);
 
+template<typename MF>
+inline MF psc_mfields::get_as(const char *type, int mb, int me)
+{
+  struct psc_mfields *mflds = psc_mfields_get_as(this, type, mb, me);
+  return MF(mflds);
+}
+
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_single_ops;
@@ -110,8 +114,6 @@ void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
 extern list_t psc_mfields_base_list;
-
-END_C_DECLS
 
 #endif
 
