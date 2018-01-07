@@ -7,72 +7,6 @@
 
 using Fields = Fields3d<fields_t>;
 
-// ======================================================================
-// ddc funcs
-
-void
-psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
-{
-  struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
-  mfields_t mf(mflds);
-  Fields F(mf[p]);
-  fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-void
-psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
-{
-  struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
-  mfields_t mf(mflds);
-  Fields F(mf[p]);
-  fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F(m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-void
-psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
-{
-  struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
-  mfields_t mf(mflds);
-  Fields F(mf[p]);
-  fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-static struct mrc_ddc_funcs ddc_funcs = {
-  .copy_to_buf   = psc_bnd_fld_sub_copy_to_buf,
-  .copy_from_buf = psc_bnd_fld_sub_copy_from_buf,
-  .add_from_buf  = psc_bnd_fld_sub_add_from_buf,
-};
-
 template<typename MF>
 struct psc_bnd_fld_ops
 {
@@ -81,6 +15,12 @@ struct psc_bnd_fld_ops
   
   static void create(struct psc_bnd *bnd)
   {
+    static struct mrc_ddc_funcs ddc_funcs = {
+      .copy_to_buf   = copy_to_buf,
+      .copy_from_buf = copy_from_buf,
+      .add_from_buf  = add_from_buf,
+    };
+
     struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
     mrc_ddc_set_funcs(ddc, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
@@ -113,6 +53,66 @@ struct psc_bnd_fld_ops
     // rather then box
     mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mf.mflds());
     mf.put_as(mflds_base, mb, me);
+  }
+
+  // ----------------------------------------------------------------------
+  // copy_to_buf
+
+  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			  void *_buf, void *ctx)
+  {
+    struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+    mfields_t mf(mflds);
+    Fields F(mf[p]);
+    fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
+    
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
+	  }
+	}
+      }
+    }
+  }
+
+  static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			   void *_buf, void *ctx)
+  {
+    struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+    mfields_t mf(mflds);
+    Fields F(mf[p]);
+    fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
+    
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    F(m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  }
+	}
+      }
+    }
+  }
+  
+  static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			    void *_buf, void *ctx)
+  {
+    struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+    mfields_t mf(mflds);
+    Fields F(mf[p]);
+    fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
+    
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  }
+	}
+      }
+    }
   }
 
 };
