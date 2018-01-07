@@ -17,8 +17,8 @@
 
 struct psc_bnd_ops psc_bnd_single_ops = {
   .name                    = "single",
-  .create_ddc              = psc_bnd_fld_single_create,
-  .add_ghosts              = psc_bnd_fld_single_add_ghosts,
-  .fill_ghosts             = psc_bnd_fld_single_fill_ghosts,
+  .create_ddc              = psc_bnd_fld_single_create<mfields_single_t>,
+  .add_ghosts              = psc_bnd_fld_single_add_ghosts<mfields_single_t>,
+  .fill_ghosts             = psc_bnd_fld_single_fill_ghosts<mfields_single_t>,
 };
 
