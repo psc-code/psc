@@ -57,18 +57,14 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   *lg = l;
 }
 
-#define IP_COEFFS_G(lg1, gx, xm) \
-  ip_coeff(&ip.lg1, &ip.gx, xm)
-
 #if IP_VARIANT != IP_VARIANT_EC
-#define IP_COEFFS_H(lh1, hx, xm) IP_COEFFS_G(lh1, hx, xm - .5f)
-#else
-#define IP_COEFFS_H(lh1, hx, xm) do {} while (0)
-#endif
-
 #define IP_COEFFS(lg1, lh1, gx, hx, xm) \
-  IP_COEFFS_G(lg1, gx, xm);		\
-  IP_COEFFS_H(lh1, hx, xm)
+  ip_coeff(&ip.lg1, &ip.gx, xm);	\
+  ip_coeff(&ip.lh1, &ip.hx, xm - .5f)
+#else
+#define IP_COEFFS(lg1, lh1, gx, hx, xm) \
+  ip_coeff(&ip.lg1, &ip.gx, xm);
+#endif
     
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm, s0x)	\
   struct ip_coeff gx, hx;					\
