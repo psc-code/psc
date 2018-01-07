@@ -2,12 +2,17 @@
 #ifndef PSC_FIELD_C_H
 #define PSC_FIELD_C_H
 
-#include "psc_fields_private.h"
+#include <mpi.h>
+#include "fields3d.hxx"
 #include "fields_traits.hxx"
 
-#define FTYPE FTYPE_C
-#include "psc_fields_common.h"
-#undef FTYPE
+struct fields_c_t : fields3d<double>
+{
+  using Base = fields3d<double>;
+  using mfields_t = mfields3d<fields_c_t>;
+
+  using Base::Base;
+};
 
 using mfields_c_t = mfields3d<fields_c_t>;
 

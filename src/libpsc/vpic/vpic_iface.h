@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include <mpi.h>
+#include <mrc_common.h>
 
 #include "../bk_mparticles_iface.h" // FIXME, path
 

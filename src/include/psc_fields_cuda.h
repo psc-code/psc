@@ -2,11 +2,7 @@
 #ifndef PSC_FIELDS_CUDA_H
 #define PSC_FIELDS_CUDA_H
 
-#include "psc_fields_private.h"
-
-#define FTYPE FTYPE_CUDA
-#include "psc_fields_common.h"
-#undef FTYPE
+#include "fields3d.hxx"
 
 // ----------------------------------------------------------------------
 

@@ -2,13 +2,12 @@
 #ifndef PSC_FIELDS_VPIC_H
 #define PSC_FIELDS_VPIC_H
 
-#include "psc_fields_private.h"
+#include "fields3d.hxx"
 
-#include <mrc_common.h>
-
-#define FTYPE FTYPE_VPIC
-#include "psc_fields_common.h"
-#undef FTYPE
+struct fields_vpic_t : fields3d<float, LayoutAOS>
+{
+  using mfields_t = mfields3d<fields_vpic_t>;
+};
 
 using mfields_vpic_t = mfields3d<fields_vpic_t>;
 

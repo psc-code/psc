@@ -2,11 +2,15 @@
 #ifndef PSC_FIELD_FORTRAN_H
 #define PSC_FIELD_FORTRAN_H
 
-#include "psc_fields_private.h"
+#include "fields3d.hxx"
 
-#define FTYPE FTYPE_FORTRAN
-#include "psc_fields_common.h"
-#undef FTYPE
+struct fields_fortran_t : fields3d<double>
+{
+  using Base = fields3d<double>;
+  using mfields_t = mfields3d<fields_fortran_t>;
+
+  using Base::Base;
+};
 
 using mfields_fortran_t = mfields3d<fields_fortran_t>;
 

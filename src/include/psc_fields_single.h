@@ -2,11 +2,17 @@
 #ifndef PSC_FIELD_SINGLE_H
 #define PSC_FIELD_SINGLE_H
 
+#include <mpi.h>
+#include "fields3d.hxx"
 #include "fields_traits.hxx"
 
-#define FTYPE FTYPE_SINGLE
-#include "psc_fields_common.h"
-#undef FTYPE
+struct fields_single_t : fields3d<float>
+{
+  using Base = fields3d<float>;
+  using mfields_t = mfields3d<fields_single_t>;
+
+  using Base::Base;
+};
 
 using mfields_single_t = mfields3d<fields_single_t>;
 
