@@ -8,8 +8,6 @@ libsubdir_la_SOURCES = \
 	psc_bnd.cxx \
 	psc_bnd_fld_c.cxx \
 	psc_bnd_fld_single.cxx \
-	psc_bnd_c.cxx \
-	psc_bnd_single.cxx \
 	psc_bnd_fld.h
 
 EXTRA_libsubdir_la_SOURCES = \
