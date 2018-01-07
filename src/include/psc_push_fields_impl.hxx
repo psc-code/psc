@@ -167,13 +167,11 @@ void psc_push_fields_push_H(struct psc_push_fields* push, fields_t flds,
 //       jx^{n+1}[-.5:.5][-1:1][-1:1]
 
 
-template<typename fields_t>
+template<typename mfields_t>
 static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
-  using mfields_t = typename fields_t::mfields_t;
-
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
 
   for (int p = 0; p < mf.n_patches(); p++) {
@@ -200,13 +198,11 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
 // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
-template<typename fields_t>
+template<typename mfields_t>
 static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
-  using mfields_t = typename fields_t::mfields_t;
-
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
 
   for (int p = 0; p < mf.n_patches(); p++) {
