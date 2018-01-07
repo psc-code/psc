@@ -5,11 +5,14 @@
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
-using Fields = Fields3d<fields_t>;
-
 template<typename MF>
 struct psc_bnd_fld_ops
 {
+  using mfields_t = MF;
+  using fields_t = typename mfields_t::fields_t;
+  using real_t = typename mfields_t::real_t;
+  using Fields = Fields3d<fields_t>;
+
   // ----------------------------------------------------------------------
   // create
   
@@ -25,7 +28,7 @@ struct psc_bnd_fld_ops
     mrc_ddc_set_funcs(ddc, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
     mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
-    mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(mfields_t::real_t));
+    mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(real_t));
     mrc_ddc_setup(ddc);
     bnd->ddc = ddc;
   }
@@ -61,10 +64,10 @@ struct psc_bnd_fld_ops
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
   {
-    struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+    struct psc_mfields *mflds = static_cast<struct psc_mfields*>(ctx);
     mfields_t mf(mflds);
     Fields F(mf[p]);
-    fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
+    real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -80,10 +83,10 @@ struct psc_bnd_fld_ops
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			   void *_buf, void *ctx)
   {
-    struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+    struct psc_mfields *mflds = static_cast<struct psc_mfields*>(ctx);
     mfields_t mf(mflds);
     Fields F(mf[p]);
-    fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
+    real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -99,10 +102,10 @@ struct psc_bnd_fld_ops
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			    void *_buf, void *ctx)
   {
-    struct psc_mfields *mflds = reinterpret_cast<struct psc_mfields*>(ctx);
+    struct psc_mfields *mflds = static_cast<struct psc_mfields*>(ctx);
     mfields_t mf(mflds);
     Fields F(mf[p]);
-    fields_t::real_t *buf = reinterpret_cast<fields_t::real_t*>(_buf);
+    real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
