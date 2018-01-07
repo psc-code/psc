@@ -328,15 +328,15 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 static void
 do_push_part(int p, fields_t flds, particle_range_t prts)
 {
-  //#if (DIM & DIM_X)
+#if (DIM & DIM_X)
   particle_real_t s0x[N_RHO] = {}, s1x[N_RHO];
-  //#endif
-  //#if (DIM & DIM_Y)
+#endif
+#if (DIM & DIM_Y)
   particle_real_t s0y[N_RHO] = {}, s1y[N_RHO];
-  //#endif
-  //#if (DIM & DIM_Z)
+#endif
+#if (DIM & DIM_Z)
   particle_real_t s0z[N_RHO] = {}, s1z[N_RHO];
-  //#endif
+#endif
 
   c_prm_set(ppsc);
 
@@ -365,6 +365,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     }
     IP<NNN> ip;
     INTERPOLATE_FIELDS(flds_em);
+    IF_DIM_X( set_S(s0x, 0, ip.gx); );
+    IF_DIM_Y( set_S(s0y, 0, ip.gy); );
+    IF_DIM_Z( set_S(s0z, 0, ip.gz); );
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = c_prm.dqs * particle_qni_div_mni(part);

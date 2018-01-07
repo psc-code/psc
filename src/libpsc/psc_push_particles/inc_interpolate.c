@@ -401,25 +401,18 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
 template<int N>
 struct IP
 {
-#ifdef IP_DEPOSIT
-  void set_coeffs(particle_real_t xm[3], particle_real_t s0x[],
-		  particle_real_t s0y[], particle_real_t s0z[])
+  void set_coeffs(particle_real_t xm[3])
   {
+#ifdef IP_DEPOSIT
     IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
     IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
     IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
-    IF_DIM_X( set_S(s0x, 0, gx); );
-    IF_DIM_Y( set_S(s0y, 0, gy); );
-    IF_DIM_Z( set_S(s0z, 0, gz); );
-  }
 #else
-  void set_coeffs(particle_real_t xm[3])
-  {
     IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
     IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
     IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
-  }
 #endif
+  }
   
   particle_real_t E[3];
   particle_real_t H[3];
@@ -430,16 +423,6 @@ struct IP
   struct ip_coeff hx, hy, hz;
 };
 
-#ifdef IP_DEPOSIT
-#define INTERPOLATE_FIELDS(flds)					\
-  ip.set_coeffs(xm, s0x, s0y, s0z);					\
-  ip.E[0] = IP_FIELD_EX(flds);						\
-  ip.E[1] = IP_FIELD_EY(flds);						\
-  ip.E[2] = IP_FIELD_EZ(flds);						\
-  ip.H[0] = IP_FIELD_HX(flds);						\
-  ip.H[1] = IP_FIELD_HY(flds);						\
-  ip.H[2] = IP_FIELD_HZ(flds);
-#else
 #define INTERPOLATE_FIELDS(flds)					\
   ip.set_coeffs(xm);							\
   ip.E[0] = IP_FIELD_EX(flds);						\
@@ -448,5 +431,5 @@ struct IP
   ip.H[0] = IP_FIELD_HX(flds);						\
   ip.H[1] = IP_FIELD_HY(flds);						\
   ip.H[2] = IP_FIELD_HZ(flds);
-#endif
+
 
