@@ -7,8 +7,7 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_bnd_fields.cxx \
 	psc_bnd_fields_none.cxx \
-	psc_bnd_fields_c.cxx \
-	psc_bnd_fields_single.cxx
+	psc_bnd_fields_impl.cxx
 
 if USE_FORTRAN
 libsubdir_la_SOURCES += \
@@ -16,4 +15,4 @@ libsubdir_la_SOURCES += \
 endif USE_FORTRAN
 
 EXTRA_libsubdir_la_SOURCES = \
-	psc_bnd_fields_common.c
+	psc_bnd_fields_impl.hxx

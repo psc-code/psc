@@ -3,7 +3,7 @@
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
 
-#include "psc_bnd_fields_common.cxx"
+#include "psc_bnd_fields_impl.hxx"
 
 // ======================================================================
 // psc_bnd_fields: subclass "c"
