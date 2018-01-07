@@ -123,6 +123,11 @@ struct mfields3d
   {
     return fields::psc_mfields_get_field_t(mflds_, p);
   }
+
+  void put_as(struct psc_mfields *mflds_base, int mb, int me)
+  {
+    psc_mfields_put_as(mflds_, mflds_base, mb, me);
+  }
   
 private:
   struct psc_mfields *mflds_;

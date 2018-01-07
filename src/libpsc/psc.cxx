@@ -885,7 +885,7 @@ psc_set_ic_fields_default(struct psc *psc)
 
     } foreach_3d_g_end;
   }
-  psc_mfields_put_as(mflds, psc->flds, JXI, HX + 3);
+  mf.put_as(psc->flds, JXI, HX + 3);
 }
 
 // ----------------------------------------------------------------------

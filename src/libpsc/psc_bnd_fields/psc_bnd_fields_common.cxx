@@ -586,7 +586,7 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
       }
     }
   }
-  psc_mfields_put_as(mflds, mflds_base, HX, HX + 3);
+  mf.put_as(mflds_base, HX, HX + 3);
 }
 
 static void
