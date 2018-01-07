@@ -501,7 +501,7 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields 
   // FIXME/OPT, if we don't need to do anything, we don't need to get
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     // lo
     for (int d = 0; d < 3; d++) {
       if (ppsc->patch[p].off[d] == 0) {
@@ -549,7 +549,7 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
   // FIXME/OPT, if we don't need to do anything, we don't need to get
   mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     // lo
     for (int d = 0; d < 3; d++) {
       if (ppsc->patch[p].off[d] == 0) {
@@ -594,7 +594,7 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *
   // FIXME/OPT, if we don't need to do anything, we don't need to get
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
 
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     // lo
     for (int d = 0; d < 3; d++) {
       if (ppsc->patch[p].off[d] == 0) {

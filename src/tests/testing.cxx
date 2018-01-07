@@ -251,7 +251,7 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
       assert(0);
     }
   }
-  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+  mf.put_as(mflds_base, 0, 0);
   psc_mfields_destroy(diff);
 #endif
 }

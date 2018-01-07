@@ -27,7 +27,7 @@ psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     int d = 1;
-    for (int p = 0; p < mf.nr_patches(); p++) {
+    for (int p = 0; p < mf.n_patches(); p++) {
       if (ppsc->patch[p].off[d] == 0) {
 	cuda_conducting_wall_E_lo_y(cmflds, p);
       }
@@ -60,7 +60,7 @@ psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     int d = 1;
-    for (int p = 0; p < mf.nr_patches(); p++) {
+    for (int p = 0; p < mf.n_patches(); p++) {
       if (ppsc->patch[p].off[d] == 0) {
 	cuda_conducting_wall_H_lo_y(cmflds, p);
       }
@@ -94,7 +94,7 @@ psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields 
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     int d = 1;
-    for (int p = 0; p < mf.nr_patches(); p++) {
+    for (int p = 0; p < mf.n_patches(); p++) {
       if (ppsc->patch[p].off[d] == 0) {
 	cuda_conducting_wall_J_lo_y(cmflds, p);
       }

@@ -176,7 +176,7 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
 
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_push_E<dim_xyz>(push, mf[p], ppsc, dt_fac);
@@ -209,7 +209,7 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
 
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
 
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_push_H<dim_xyz>(push, mf[p], ppsc, dt_fac);

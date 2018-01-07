@@ -121,9 +121,14 @@ struct mfields3d
     //assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_single_ops);
   }
 
-  unsigned int nr_patches() const
+  unsigned int n_patches() const
   {
     return mflds_->nr_patches;
+  }
+
+  unsigned int n_fields() const
+  {
+    return mflds_->nr_fields;
   }
 
   fields operator[](int p)
