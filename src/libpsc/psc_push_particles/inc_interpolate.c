@@ -57,15 +57,6 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   *lg = l;
 }
 
-#if IP_VARIANT != IP_VARIANT_EC
-#define IP_COEFFS(lg1, lh1, gx, hx, xm) \
-  ip_coeff(&lg1, &gx, xm);	\
-  ip_coeff(&lh1, &hx, xm - .5f)
-#else
-#define IP_COEFFS(lg1, lh1, gx, hx, xm) \
-  ip_coeff(&lg1, &gx, xm);
-#endif
-    
 // ----------------------------------------------------------------------
 // ip_coeff_g
 
@@ -408,9 +399,14 @@ struct IP
     IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
     IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
 #else
-    IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
-    IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
-    IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+    IF_DIM_X( ip_coeff(&lg1, &gx, xm[0]); );
+    IF_DIM_Y( ip_coeff(&lg2, &gy, xm[1]); );
+    IF_DIM_Z( ip_coeff(&lg3, &gz, xm[2]); );
+#if IP_VARIANT != IP_VARIANT_EC
+    IF_DIM_X( ip_coeff(&lh1, &hx, xm[0] - .5f); );
+    IF_DIM_Y( ip_coeff(&lh2, &hy, xm[1] - .5f); );
+    IF_DIM_Z( ip_coeff(&lh3, &hz, xm[2] - .5f); );
+#endif
 #endif
   }
   
