@@ -58,7 +58,6 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 }
 
 #define IP_COEFFS_G(lg1, gx, xm) \
-  int lg1;		       \
   struct ip_coeff gx;	       \
   ip_coeff(&lg1, &gx, xm)
 
@@ -305,13 +304,17 @@ struct IP
   IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dxi[1], s0y); );\
   IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dxi[2], s0z); );
 #else
-#define SET_IP_COEFFS_OPT_DEPOSIT \
-  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );\
-  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );\
+#define SET_IP_COEFFS_OPT_DEPOSIT					\
+  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );			\
+  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );			\
   IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
 #endif
 
 #define INTERPOLATE_FIELDS(flds)					\
+  IF_DIM_X(int lg1; int lh1;);						\
+  IF_DIM_Y(int lg2; int lh2;);						\
+  IF_DIM_Z(int lg3; int lh3;);						\
+  SET_IP_COEFFS_OPT_DEPOSIT;						\
   ip.E[0] = IP_FIELD_EX(flds);						\
   ip.E[1] = IP_FIELD_EY(flds);						\
   ip.E[2] = IP_FIELD_EZ(flds);						\

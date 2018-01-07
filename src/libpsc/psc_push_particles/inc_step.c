@@ -187,12 +187,9 @@ push_one(mprts_array_t mprts_arr, int n,
     xm[d] = xi[d] * c_prm.dxi[d];
   }
 
-  IP ip;
-
-  SET_IP_COEFFS_OPT_DEPOSIT;
-  
   // FIELD INTERPOLATION
 
+  IP ip;
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
@@ -261,12 +258,9 @@ stagger_one(mprts_array_t mprts_arr, int n,
     xm[d] = xi[d] * c_prm.dxi[d];
   }
 
-  IP ip;
-
-  SET_IP_COEFFS_OPT_DEPOSIT;
-  
   // FIELD INTERPOLATION
 
+  IP ip;
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}

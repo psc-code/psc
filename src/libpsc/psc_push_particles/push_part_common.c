@@ -185,7 +185,6 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 }
 
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, dxi, s0x)	\
-  int lg1, lh1;							\
   struct ip_coeff gx, hx;					\
   ip_coeff_g(&lg1, &gx, x[d] * dxi);				\
   set_S(s0x, 0, gx);						\
@@ -466,14 +465,10 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     push_x(x, vv, .5f * c_prm.dt);
 #endif
     
-    IP ip;
-
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
-
-    SET_IP_COEFFS_OPT_DEPOSIT;
-
     // FIELD INTERPOLATION
 
+    IP ip;
     INTERPOLATE_FIELDS(flds_em);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
