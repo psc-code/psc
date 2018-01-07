@@ -305,8 +305,8 @@ struct IP
 #ifdef IP_DEPOSIT
 #define SET_IP_COEFFS_OPT_DEPOSIT \
   IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi[0], s0x); );\
-  IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dxi[1], s0y); );\
-  IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dxi[2], s0z); );
+  IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 1, c_prm.dxi[1], s0y); );\
+  IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 2, c_prm.dxi[2], s0z); );
 #else
 #define SET_IP_COEFFS_OPT_DEPOSIT					\
   IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );			\
