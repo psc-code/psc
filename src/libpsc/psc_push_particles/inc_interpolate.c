@@ -59,11 +59,11 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 #if IP_VARIANT != IP_VARIANT_EC
 #define IP_COEFFS(lg1, lh1, gx, hx, xm) \
-  ip_coeff(&ip.lg1, &ip.gx, xm);	\
-  ip_coeff(&ip.lh1, &ip.hx, xm - .5f)
+  ip_coeff(&lg1, &gx, xm);	\
+  ip_coeff(&lh1, &hx, xm - .5f)
 #else
 #define IP_COEFFS(lg1, lh1, gx, hx, xm) \
-  ip_coeff(&ip.lg1, &ip.gx, xm);
+  ip_coeff(&lg1, &gx, xm);
 #endif
     
 // ----------------------------------------------------------------------
@@ -106,9 +106,9 @@ ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
 }
 
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm, s0x)	\
-  ip_coeff_g(&ip.lg1, &ip.gx, xm);				\
-  set_S(s0x, 0, ip.gx);						\
-  ip_coeff_h(&ip.lh1, &ip.hx, xm)
+  ip_coeff_g(&lg1, &gx, xm);					\
+  set_S(s0x, 0, gx);						\
+  ip_coeff_h(&lh1, &hx, xm)
   
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
@@ -397,6 +397,23 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
 
 struct IP
 {
+#ifdef IP_DEPOSIT
+  void set_coeffs(particle_real_t xm[3], particle_real_t s0x[],
+		  particle_real_t s0y[], particle_real_t s0z[])
+  {
+    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm[0], s0x); );
+    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, xm[1], s0y); );
+    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, xm[2], s0z); );
+  }
+#else
+  void set_coeffs(particle_real_t xm[3])
+  {
+    IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
+    IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
+    IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+  }
+#endif
+  
   particle_real_t E[3];
   particle_real_t H[3];
   int lg1, lh1;
@@ -407,23 +424,22 @@ struct IP
 };
 
 #ifdef IP_DEPOSIT
-#define SET_IP_COEFFS_OPT_DEPOSIT \
-  IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm[0], s0x); );	\
-  IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, xm[1], s0y); );	\
-  IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, xm[2], s0z); );
-#else
-#define SET_IP_COEFFS_OPT_DEPOSIT					\
-  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );			\
-  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );			\
-  IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
-#endif
-
 #define INTERPOLATE_FIELDS(flds)					\
-  SET_IP_COEFFS_OPT_DEPOSIT;						\
+  ip.set_coeffs(xm, s0x, s0y, s0z);					\
   ip.E[0] = IP_FIELD_EX(flds);						\
   ip.E[1] = IP_FIELD_EY(flds);						\
   ip.E[2] = IP_FIELD_EZ(flds);						\
   ip.H[0] = IP_FIELD_HX(flds);						\
   ip.H[1] = IP_FIELD_HY(flds);						\
-  ip.H[2] = IP_FIELD_HZ(flds);						\
+  ip.H[2] = IP_FIELD_HZ(flds);
+#else
+#define INTERPOLATE_FIELDS(flds)					\
+  ip.set_coeffs(xm);							\
+  ip.E[0] = IP_FIELD_EX(flds);						\
+  ip.E[1] = IP_FIELD_EY(flds);						\
+  ip.E[2] = IP_FIELD_EZ(flds);						\
+  ip.H[0] = IP_FIELD_HX(flds);						\
+  ip.H[1] = IP_FIELD_HY(flds);						\
+  ip.H[2] = IP_FIELD_HZ(flds);
+#endif
 
