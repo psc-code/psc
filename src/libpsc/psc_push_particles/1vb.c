@@ -7,6 +7,8 @@
 
 #define USE_1VB
 
+#include "1vb/psc_push_particles_1vb.h"
+
 #include "fields.hxx"
 
 #include "inc_params.c"
@@ -96,17 +98,17 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-void
-SFX(psc_push_particles_stagger_mprts)(struct psc_push_particles *push,
-				      struct psc_mparticles *mprts,
-				      struct psc_mfields *mflds_base)
+template<typename MF>
+void push_particles_ops<MF>::SFX(stagger_mprts)(struct psc_push_particles *push,
+						struct psc_mparticles *mprts,
+						struct psc_mfields *mflds_base)
 {
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   c_prm_set(ppsc);
   params_1vb_set(ppsc, NULL, NULL);
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = mf[p];
-
+    
     flds.zero(JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);
     do_stagger_part_1vb_yz(flds, mprts, p);
@@ -114,3 +116,4 @@ SFX(psc_push_particles_stagger_mprts)(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
+template struct push_particles_ops<mfields_t>;
