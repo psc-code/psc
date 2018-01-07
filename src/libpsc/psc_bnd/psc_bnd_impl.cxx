@@ -1,10 +1,9 @@
 
-#include "psc_bnd_fld.h"
 #include "psc_bnd_private.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
 
-#include "psc_bnd_fld.cxx"
+#include "psc_bnd_impl.hxx"
 
 // ======================================================================
 // psc_bnd: subclass "c"
