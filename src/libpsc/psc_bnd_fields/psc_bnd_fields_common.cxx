@@ -547,7 +547,7 @@ static void
 psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
 {
   // FIXME/OPT, if we don't need to do anything, we don't need to get
-  mfields_t mf = mflds_base->get_as<mfields_t>(FIELDS_TYPE, HX, HX + 3);
+  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   
   for (int p = 0; p < mf.nr_patches(); p++) {
     // lo

@@ -4,6 +4,8 @@
 
 #include <mrc_obj.h>
 
+#include "fields_traits.hxx"
+
 // ----------------------------------------------------------------------
 // psc_mfields class
 
@@ -21,7 +23,7 @@ struct psc_mfields {
   int first_comp; //> The first component in this field (normally 0)
 
   template<typename MF>
-  MF get_as(const char *type, int mb, int me);
+  MF get_as(int mb, int me);
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
@@ -91,8 +93,9 @@ void psc_mfields_compute_rhob(struct psc_mfields *mflds);
 void psc_mfields_compute_curl_b(struct psc_mfields *mflds);
 
 template<typename MF>
-inline MF psc_mfields::get_as(const char *type, int mb, int me)
+inline MF psc_mfields::get_as(int mb, int me)
 {
+  const char *type = fields_traits<typename MF::fields>::name;
   struct psc_mfields *mflds = psc_mfields_get_as(this, type, mb, me);
   return MF(mflds);
 }
