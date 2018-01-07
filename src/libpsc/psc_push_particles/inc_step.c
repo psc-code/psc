@@ -220,9 +220,9 @@ push_one(mprts_array_t mprts_arr, int n,
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   int lg[3];
-  IF_DIM_X( lg[0] = lg1; );
-  IF_DIM_Y( lg[1] = lg2; );
-  IF_DIM_Z( lg[2] = lg3; );
+  IF_DIM_X( lg[0] = ip.lg1; );
+  IF_DIM_Y( lg[1] = ip.lg2; );
+  IF_DIM_Z( lg[2] = ip.lg3; );
   calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
 #if !(PUSH_DIM & DIM_X)

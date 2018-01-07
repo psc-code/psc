@@ -186,9 +186,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, dxi, s0x)	\
   struct ip_coeff gx, hx;					\
-  ip_coeff_g(&lg1, &gx, x[d] * dxi);				\
+  ip_coeff_g(&ip.lg1, &gx, x[d] * dxi);				\
   set_S(s0x, 0, gx);						\
-  ip_coeff_h(&lh1, &hx, x[d] * dxi)
+  ip_coeff_h(&ip.lh1, &hx, x[d] * dxi)
   
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
@@ -200,7 +200,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 // current
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs)	\
-    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, lg1);	\
+    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, ip.lg1);	\
     particle_real_t fnqx = particle_qni_wni(part) * c_prm.fnqxs;	\
 
 #define CURRENT_PREP							\
@@ -224,9 +224,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     jyh -= fnqy*wy;						\
     particle_real_t jzh = fnqzz*wz;				\
     								\
-    J(JXI, 0,lg2+l2,0) += jxh;					\
-    J(JYI, 0,lg2+l2,0) += jyh;				\
-    J(JZI, 0,lg2+l2,0) += jzh;				\
+    J(JXI, 0,ip.lg2+l2,0) += jxh;					\
+    J(JYI, 0,ip.lg2+l2,0) += jyh;				\
+    J(JZI, 0,ip.lg2+l2,0) += jzh;				\
   }
 
 #define CURRENT_2ND_Z						\
@@ -240,9 +240,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     particle_real_t jyh = fnqyy*wy;				\
     jzh -= fnqz*wz;						\
     								\
-    J(JXI, 0,0,lg3+l3) += jxh;				\
-    J(JYI, 0,0,lg3+l3) += jyh;				\
-    J(JZI, 0,0,lg3+l3) += jzh;				\
+    J(JXI, 0,0,ip.lg3+l3) += jxh;				\
+    J(JYI, 0,0,ip.lg3+l3) += jyh;				\
+    J(JZI, 0,0,ip.lg3+l3) += jzh;				\
   }
 
 #define CURRENT_2ND_XY							\
@@ -256,8 +256,8 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ (1.f/3.f) * S(s1x, l1) * S(s1y, l2);				\
       									\
       jxh -= fnqx*wx;							\
-      J(JXI, lg1+l1,lg2+l2,0) += jxh;				\
-      J(JZI, lg1+l1,lg2+l2,0) += fnqzz * wz;			\
+      J(JXI, ip.lg1+l1,ip.lg2+l2,0) += jxh;				\
+      J(JZI, ip.lg1+l1,ip.lg2+l2,0) += fnqzz * wz;			\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
@@ -266,7 +266,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
       particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       									\
       jyh -= fnqy*wy;							\
-      J(JYI, lg1+l1,lg2+l2,0) += jyh;				\
+      J(JYI, ip.lg1+l1,ip.lg2+l2,0) += jyh;				\
     }									\
   }
 
@@ -276,7 +276,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l1 = l1min; l1 < l1max; l1++) {				\
       particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jxh -= fnqx*wx;							\
-      J(JXI, lg1+l1,0,lg3+l3) += jxh;				\
+      J(JXI, ip.lg1+l1,0,ip.lg3+l3) += jxh;				\
     }									\
   }									\
 									\
@@ -287,7 +287,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ .5f * S(s0x, l1) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1x, l1) * S(s1z, l3);				\
       particle_real_t jyh = fnqyy * wy;					\
-      J(JYI, lg1+l1,0,lg3+l3) += jyh;				\
+      J(JYI, ip.lg1+l1,0,ip.lg3+l3) += jyh;				\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
@@ -295,7 +295,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l3 = l3min; l3 < l3max; l3++) {				\
       particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       jzh -= fnqz*wz;							\
-      J(JZI, lg1+l1,0,lg3+l3) += jzh;				\
+      J(JZI, ip.lg1+l1,0,ip.lg3+l3) += jzh;				\
     }									\
   }
 
@@ -307,7 +307,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ .5f * S(s0y, l2) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
       particle_real_t jxh = fnqxx * wx;					\
-      J(JXI, 0,lg2+l2,lg3+l3) += jxh;				\
+      J(JXI, 0,ip.lg2+l2,ip.lg3+l3) += jxh;				\
     }									\
   }									\
   									\
@@ -316,7 +316,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l2 = l2min; l2 < l2max; l2++) {				\
       particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jyh -= fnqy*wy;							\
-      J(JYI, 0,lg2+l2,lg3+l3) += jyh;				\
+      J(JYI, 0,ip.lg2+l2,ip.lg3+l3) += jyh;				\
     }									\
   }									\
 									\
@@ -325,7 +325,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l3 = l3min; l3 < l3max; l3++) {				\
       particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
       jzh -= fnqz*wz;							\
-      J(JZI, 0,lg2+l2,lg3+l3) += jzh;				\
+      J(JZI, 0,ip.lg2+l2,ip.lg3+l3) += jzh;				\
     }									\
   }
 
@@ -352,9 +352,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	jyh -= fnqy*wy;							\
 	JZH(l2) -= fnqz*wz;						\
 									\
-	J(JXI, 0,lg2+l2,lg3+l3) += jxh;				\
-	J(JYI, 0,lg2+l2,lg3+l3) += jyh;				\
-	J(JZI, 0,lg2+l2,lg3+l3) += JZH(l2);			\
+	J(JXI, 0,ip.lg2+l2,ip.lg3+l3) += jxh;				\
+	J(JYI, 0,ip.lg2+l2,ip.lg3+l3) += jyh;				\
+	J(JZI, 0,ip.lg2+l2,ip.lg3+l3) += JZH(l2);			\
       }									\
     }									\
 
@@ -369,7 +369,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1y, l2) * S(s1z, l3)); \
 									\
 	jxh -= fnqx*wx;							\
-	J(JXI, lg1+l1,lg2+l2,lg3+l3) += jxh;			\
+	J(JXI, ip.lg1+l1,ip.lg2+l2,ip.lg3+l3) += jxh;			\
       }									\
     }									\
   }									\
@@ -384,7 +384,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1x, l1)*S(s1z, l3)); \
 									\
 	jyh -= fnqy*wy;							\
-	J(JYI, lg1+l1,lg2+l2,lg3+l3) += jyh;			\
+	J(JYI, ip.lg1+l1,ip.lg2+l2,ip.lg3+l3) += jyh;			\
       }									\
     }									\
   }									\
@@ -399,7 +399,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1x, l1)*S(s1y, l2)); \
 									\
 	jzh -= fnqz*wz;							\
-	J(JZI, lg1+l1,lg2+l2,lg3+l3) += jzh;			\
+	J(JZI, ip.lg1+l1,ip.lg2+l2,ip.lg3+l3) += jzh;			\
       }									\
     }									\
   }
@@ -484,9 +484,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(x, k1, gx, 0, c_prm.dxi[0], s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, c_prm.dxi[1], s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, c_prm.dxi[2], s1z, lg3); );
+    IF_DIM_X( DEPOSIT(x, k1, gx, 0, c_prm.dxi[0], s1x, ip.lg1); );
+    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, c_prm.dxi[1], s1y, ip.lg2); );
+    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, c_prm.dxi[2], s1z, ip.lg3); );
 
 #else
     push_x(x, vv, .5f * c_prm.dt);
@@ -497,9 +497,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, lg3); );
+    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, ip.lg1); );
+    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, ip.lg2); );
+    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, ip.lg3); );
 #endif
     
     // CURRENT DENSITY AT (n+1.0)*dt
