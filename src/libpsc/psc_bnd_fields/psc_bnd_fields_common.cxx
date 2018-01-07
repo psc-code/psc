@@ -1,6 +1,5 @@
 
 #include "psc.h"
-#include "psc_debug.h"
 #include "fields.hxx"
 
 #include <mrc_bits.h>
@@ -16,6 +15,9 @@ template<typename MF>
 struct bnd_fields_ops
 {
   using mfields_t = MF;
+  using fields_t = typename mfields_t::fields_t;
+  using real_t = typename mfields_t::real_t;
+  using Fields = Fields3d<fields_t, dim>;
   
   // ----------------------------------------------------------------------
   // fill_ghosts_E
@@ -155,11 +157,9 @@ struct bnd_fields_ops
     mf.put_as(mflds_base, JXI, JXI + 3);
   }
 
-  using Fields = Fields3d<fields_t, dim>; // FIXME dim_xz
-
-  static inline void fields_t_set_nan(fields_t::real_t *f)
+  static void fields_t_set_nan(real_t *f)
   {
-    *f = std::numeric_limits<fields_t::real_t>::quiet_NaN();
+    *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
   static void
@@ -522,7 +522,7 @@ struct bnd_fields_ops
 	}
       }
 #endif
-      fields_t::real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+      real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
       for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
 	for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
 	  F(HX, ix,-1,iz) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
@@ -550,7 +550,7 @@ struct bnd_fields_ops
 	}
       }
 #endif
-      fields_t::real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+      real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
       for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
 	for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
 	  F(HY, ix,iy,-1) = (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
@@ -589,7 +589,7 @@ struct bnd_fields_ops
 	}
       }
 #endif
-      fields_t::real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+      real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
       for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
 	for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
 	  F(HX, ix,my,iz) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
@@ -617,7 +617,7 @@ struct bnd_fields_ops
 	}
       }
 #endif
-      fields_t::real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+      real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
       for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
 	for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
 	  F(HY, ix,iy,mz) = (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
