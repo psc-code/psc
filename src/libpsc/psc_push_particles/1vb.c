@@ -98,10 +98,10 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-template<typename MF>
-void push_particles_ops<MF>::SFX(stagger_mprts)(struct psc_push_particles *push,
-						struct psc_mparticles *mprts,
-						struct psc_mfields *mflds_base)
+template<typename MF, typename dim>
+void push_particles_ops<MF,dim>::stagger_mprts(struct psc_push_particles *push,
+					       struct psc_mparticles *mprts,
+					       struct psc_mfields *mflds_base)
 {
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   c_prm_set(ppsc);
@@ -116,4 +116,4 @@ void push_particles_ops<MF>::SFX(stagger_mprts)(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-template struct push_particles_ops<mfields_t>;
+template struct push_particles_ops<mfields_t, dim_t>;

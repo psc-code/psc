@@ -52,6 +52,18 @@
 
 // ----------------------------------------------------------------------
 
+#if DIM == DIM_1
+#define dim_t dim_1
+#elif DIM == DIM_X
+#define dim_t dim_x
+#elif DIM == DIM_XZ
+#define dim_t dim_xz
+#elif DIM == DIM_YZ
+#define dim_t dim_yz
+#elif DIM == DIM_XYZ
+#define dim_t dim_xyz
+#endif
+
 #if (DIM & DIM_X)
 #define IF_DIM_X(s) s do{} while(0)
 #define IF_NOT_DIM_X(s) do{} while(0)
