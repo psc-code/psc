@@ -293,11 +293,18 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 #endif
 
+struct IP
+{
+  particle_real_t E[3];
+  particle_real_t H[3];
+};
+
 #define INTERPOLATE_FIELDS(flds)					\
-  particle_real_t E[3] = { IP_FIELD_EX(flds),				\
-                           IP_FIELD_EY(flds),				\
-                           IP_FIELD_EZ(flds), };			\
-  particle_real_t H[3] = { IP_FIELD_HX(flds),				\
-                           IP_FIELD_HY(flds),				\
-                           IP_FIELD_HZ(flds), }
+  IP ip;								\
+  ip.E[0] = IP_FIELD_EX(flds);						\
+  ip.E[1] = IP_FIELD_EY(flds);						\
+  ip.E[2] = IP_FIELD_EZ(flds);						\
+  ip.H[0] = IP_FIELD_HX(flds);						\
+  ip.H[1] = IP_FIELD_HY(flds);						\
+  ip.H[2] = IP_FIELD_HZ(flds);						\
 

@@ -199,7 +199,7 @@ push_one(mprts_array_t mprts_arr, int n,
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
-  push_p(&particle_px(prt), E, H, dq);
+  push_p(&particle_px(prt), ip.E, ip.H, dq);
 
   particle_real_t vxi[3];
   calc_v(vxi, &particle_px(prt));
@@ -273,7 +273,7 @@ stagger_one(mprts_array_t mprts_arr, int n,
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
-  push_p(&particle_px(prt), E, H, -.5f * dq);
+  push_p(&particle_px(prt), ip.E, ip.H, -.5f * dq);
 
   PARTICLE_STORE(prt, mprts_arr, n);
 }
