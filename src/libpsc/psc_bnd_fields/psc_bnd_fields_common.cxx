@@ -492,141 +492,145 @@ open_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
   }
 }
 
-// ----------------------------------------------------------------------
-// psc_bnd_fields_sub_fill_ghosts_E
-
-static void
-psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
-{
-  // FIXME/OPT, if we don't need to do anything, we don't need to get
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
+template<typename MF>
+struct bnd_fields_ops {
+  using mfields_t = MF;
   
-  for (int p = 0; p < mf.n_patches(); p++) {
-    // lo
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] == 0) {
-	switch (ppsc->domain.bnd_fld_lo[d]) {
-	case BND_FLD_PERIODIC:
-	  break;
-	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_E_lo(bnd, mf[p], p, d);
-	break;
-	case BND_FLD_OPEN:
-	  break;
-	default:
-	  assert(0);
-	}
-      }
-    }
+  // ----------------------------------------------------------------------
+  // fill_ghosts_E
 
-    // hi
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	switch (ppsc->domain.bnd_fld_hi[d]) {
-	case BND_FLD_PERIODIC:
-	  break;
-	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_E_hi(bnd, mf[p], p, d);
-	  break;
-	case BND_FLD_OPEN:
-	  break;
-	default:
-	  assert(0);
-	}
-      }
-    }
-  }
-
-  mf.put_as(mflds_base, EX, EX + 3);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_fields_sub_fill_ghosts_H
-
-static void
-psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
-{
-  // FIXME/OPT, if we don't need to do anything, we don't need to get
-  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
+  static void fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  {
+    // FIXME/OPT, if we don't need to do anything, we don't need to get
+    mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   
-  for (int p = 0; p < mf.n_patches(); p++) {
-    // lo
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] == 0) {
-	switch (ppsc->domain.bnd_fld_lo[d]) {
-	case BND_FLD_PERIODIC:
-	  break;
-	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_H_lo(bnd, mf[p], p, d);
-	  break;
-	case BND_FLD_OPEN:
-	  open_H_lo(bnd, mf[p], p, d);
-	  break;
-	default:
-	  assert(0);
+    for (int p = 0; p < mf.n_patches(); p++) {
+      // lo
+      for (int d = 0; d < 3; d++) {
+	if (ppsc->patch[p].off[d] == 0) {
+	  switch (ppsc->domain.bnd_fld_lo[d]) {
+	  case BND_FLD_PERIODIC:
+	    break;
+	  case BND_FLD_CONDUCTING_WALL:
+	    conducting_wall_E_lo(bnd, mf[p], p, d);
+	    break;
+	  case BND_FLD_OPEN:
+	    break;
+	  default:
+	    assert(0);
+	  }
 	}
       }
-    }
-    // hi
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	switch (ppsc->domain.bnd_fld_hi[d]) {
-	case BND_FLD_PERIODIC:
-	  break;
-	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_H_hi(bnd, mf[p], p, d);
-	break;
-	case BND_FLD_OPEN:
-	  open_H_hi(bnd, mf[p], p, d);
-	  break;
-	default:
-	assert(0);
-	}
-      }
-    }
-  }
-  mf.put_as(mflds_base, HX, HX + 3);
-}
 
-static void
-psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
-{
-  // FIXME/OPT, if we don't need to do anything, we don't need to get
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
+      // hi
+      for (int d = 0; d < 3; d++) {
+	if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	  switch (ppsc->domain.bnd_fld_hi[d]) {
+	  case BND_FLD_PERIODIC:
+	    break;
+	  case BND_FLD_CONDUCTING_WALL:
+	    conducting_wall_E_hi(bnd, mf[p], p, d);
+	    break;
+	  case BND_FLD_OPEN:
+	    break;
+	  default:
+	    assert(0);
+	  }
+	}
+      }
+    }
 
-  for (int p = 0; p < mf.n_patches(); p++) {
-    // lo
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] == 0) {
-	switch (ppsc->domain.bnd_fld_lo[d]) {
-	case BND_FLD_PERIODIC:
-	case BND_FLD_OPEN:
-	  break;
-	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_J_lo(bnd, mf[p], p, d);
-	  break;
-	default:
-	  assert(0);
-	}
-      }
-    }
-    // hi
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	switch (ppsc->domain.bnd_fld_hi[d]) {
-	case BND_FLD_PERIODIC:
-	case BND_FLD_OPEN:
-	  break;
-	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_J_hi(bnd, mf[p], p, d);
-	  break;
-	default:
-	  assert(0);
-	}
-      }
-    }
+    mf.put_as(mflds_base, EX, EX + 3);
   }
 
-  mf.put_as(mflds_base, JXI, JXI + 3);
-}
+  // ----------------------------------------------------------------------
+  // fill_ghosts_H
 
+  static void fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  {
+    // FIXME/OPT, if we don't need to do anything, we don't need to get
+    mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
+  
+    for (int p = 0; p < mf.n_patches(); p++) {
+      // lo
+      for (int d = 0; d < 3; d++) {
+	if (ppsc->patch[p].off[d] == 0) {
+	  switch (ppsc->domain.bnd_fld_lo[d]) {
+	  case BND_FLD_PERIODIC:
+	    break;
+	  case BND_FLD_CONDUCTING_WALL:
+	    conducting_wall_H_lo(bnd, mf[p], p, d);
+	    break;
+	  case BND_FLD_OPEN:
+	    open_H_lo(bnd, mf[p], p, d);
+	    break;
+	  default:
+	    assert(0);
+	  }
+	}
+      }
+      // hi
+      for (int d = 0; d < 3; d++) {
+	if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	  switch (ppsc->domain.bnd_fld_hi[d]) {
+	  case BND_FLD_PERIODIC:
+	    break;
+	  case BND_FLD_CONDUCTING_WALL:
+	    conducting_wall_H_hi(bnd, mf[p], p, d);
+	    break;
+	  case BND_FLD_OPEN:
+	    open_H_hi(bnd, mf[p], p, d);
+	    break;
+	  default:
+	    assert(0);
+	  }
+	}
+      }
+    }
+    mf.put_as(mflds_base, HX, HX + 3);
+  }
+
+  // ----------------------------------------------------------------------
+  // add_ghosts_J
+
+  static void add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  {
+    // FIXME/OPT, if we don't need to do anything, we don't need to get
+    mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
+    
+    for (int p = 0; p < mf.n_patches(); p++) {
+      // lo
+      for (int d = 0; d < 3; d++) {
+	if (ppsc->patch[p].off[d] == 0) {
+	  switch (ppsc->domain.bnd_fld_lo[d]) {
+	  case BND_FLD_PERIODIC:
+	  case BND_FLD_OPEN:
+	    break;
+	  case BND_FLD_CONDUCTING_WALL:
+	    conducting_wall_J_lo(bnd, mf[p], p, d);
+	    break;
+	  default:
+	    assert(0);
+	  }
+	}
+      }
+      // hi
+      for (int d = 0; d < 3; d++) {
+	if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	  switch (ppsc->domain.bnd_fld_hi[d]) {
+	  case BND_FLD_PERIODIC:
+	  case BND_FLD_OPEN:
+	    break;
+	  case BND_FLD_CONDUCTING_WALL:
+	    conducting_wall_J_hi(bnd, mf[p], p, d);
+	    break;
+	  default:
+	    assert(0);
+	  }
+	}
+      }
+    }
+    
+    mf.put_as(mflds_base, JXI, JXI + 3);
+  }
+};

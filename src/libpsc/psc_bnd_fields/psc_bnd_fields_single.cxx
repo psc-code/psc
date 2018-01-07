@@ -7,9 +7,11 @@
 // ======================================================================
 // psc_bnd_fields: subclass "single"
 
+using bnd_fields_ops_single = bnd_fields_ops<mfields_single_t>;
+
 struct psc_bnd_fields_ops psc_bnd_fields_single_ops = {
   .name                  = "single",
-  .fill_ghosts_E         = psc_bnd_fields_sub_fill_ghosts_E,
-  .fill_ghosts_H         = psc_bnd_fields_sub_fill_ghosts_H,
-  .add_ghosts_J          = psc_bnd_fields_sub_add_ghosts_J,
+  .fill_ghosts_E         = bnd_fields_ops_single::fill_ghosts_E,
+  .fill_ghosts_H         = bnd_fields_ops_single::fill_ghosts_H,
+  .add_ghosts_J          = bnd_fields_ops_single::add_ghosts_J,
 };
