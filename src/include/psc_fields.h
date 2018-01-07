@@ -61,8 +61,6 @@ struct psc_mfields_ops {
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
 					int, int);
 
-void psc_mfields_zero_comp(struct psc_mfields *flds, int m);
-void psc_mfields_zero_range(struct psc_mfields *flds, int mb, int me);
 void psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha);
 void psc_mfields_scale(struct psc_mfields *flds, double alpha);
 void psc_mfields_copy_comp(struct psc_mfields *to, int mto,

@@ -190,7 +190,7 @@ psc_method_vpic_set_ic_fields(struct psc_method *method, struct psc *psc)
     // While the fields may already have been initialized by the deck,
     // we'll initialize them the PSC way now.  And in case PSC doesn't
     // specificy a field i.c., clear out whatever the deck did first.
-    psc_mfields_zero_range(psc->flds, 0, psc->flds->nr_fields);
+    psc->flds->zero();
     // This does the usual PSC initialization.
     psc_set_ic_fields(psc);
   }

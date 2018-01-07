@@ -11,17 +11,22 @@
 
 void psc_mfields::zero(int mb, int me)
 {
-  return psc_mfields_zero_range(this, mb, me);
+  for (int m = mb; m < me; m++) {
+    zero(m);
+  }
 }
 
 void psc_mfields::zero(int m)
 {
-  return psc_mfields_zero_comp(this, m);
+  struct psc_mfields_ops *ops = psc_mfields_ops(this);
+
+  assert(ops && ops->zero_comp);
+  ops->zero_comp(this, m);
 }
 
 void psc_mfields::zero()
 {
-  return psc_mfields_zero_range(this, 0, nr_fields);
+  zero(0, nr_fields);
 }
 
 using Fields = Fields3d<fields_t>;
@@ -93,15 +98,6 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 }
 
 void
-psc_mfields_zero_comp(struct psc_mfields *mflds, int m)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->zero_comp);
-  ops->zero_comp(mflds, m);
-}
-
-void
 psc_mfields_set_comp(struct psc_mfields *mflds, int m, double alpha)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
@@ -139,14 +135,6 @@ psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
 
   assert(ops && ops->axpy_comp);
   ops->axpy_comp(yf, ym, alpha, xf, xm);
-}
-
-void
-psc_mfields_zero_range(struct psc_mfields *mflds, int mb, int me)
-{
-  for (int m = mb; m < me; m++) {
-    psc_mfields_zero_comp(mflds, m);
-  }
 }
 
 void

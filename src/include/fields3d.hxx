@@ -134,17 +134,17 @@ struct mfields3d
 
   void zero(int mb, int me)
   {
-    psc_mfields_zero_range(mflds_, mb, me);
+    mflds_->zero(mb, me);
   }
 
   void zero(int m)
   {
-    psc_mfields_zero_comp(mflds_, m);
+    mflds_->zero(m);
   }
 
   void zero()
   {
-    psc_mfields_zero_range(mflds_, 0, n_fields());
+    mflds_->zero();
   }
 
   fields_t operator[](int p)
