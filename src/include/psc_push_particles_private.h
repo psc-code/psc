@@ -39,7 +39,6 @@ struct psc_push_particles_ops {
   
   unsigned int mp_flags; //< flags for _get_as(CUDA), alloc
   const char *particles_type;
-  const char *fields_type;
 };
 
 // ======================================================================

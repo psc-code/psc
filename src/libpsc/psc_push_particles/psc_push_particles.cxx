@@ -54,47 +54,41 @@ psc_push_particles_run(struct psc_push_particles *push,
   } else {
     mprts = mprts_base;
   }
-  struct psc_mfields *mflds;
-  if (ops->fields_type) {
-    mflds = psc_mfields_get_as(mflds_base, ops->fields_type, EX, EX + 6);
-  } else {
-    mflds = mflds_base;
-  }
   
   prof_start(pr);
   prof_restart(pr_time_step_no_comm);
   psc_stats_start(st_time_particle);
 
   if (ops->push_mprts) {
-    ops->push_mprts(push, mprts, mflds);
+    ops->push_mprts(push, mprts, mflds_base);
   } else {
 
   int *im = ppsc->domain.gdims;
 
   if (im[0] > 1 && im[1] == 1 && im[2] == 1) { // x
     assert(ops->push_mprts_x);
-    ops->push_mprts_x(push, mprts, mflds);
+    ops->push_mprts_x(push, mprts, mflds_base);
   } else if (im[0] == 1 && im[1] > 1 && im[2] == 1) { // y
     assert(ops->push_mprts_y);
-    ops->push_mprts_y(push, mprts, mflds);
+    ops->push_mprts_y(push, mprts, mflds_base);
   } else if (im[0] == 1 && im[1] == 1 && im[2] > 1) { // y
     assert(ops->push_mprts_z);
-    ops->push_mprts_z(push, mprts, mflds);
+    ops->push_mprts_z(push, mprts, mflds_base);
   } else if (im[0] > 1 && im[1] > 1 && im[2] == 1) { // xy
     assert(ops->push_mprts_xy);
-    ops->push_mprts_xy(push, mprts, mflds);
+    ops->push_mprts_xy(push, mprts, mflds_base);
   } else if (im[0] > 1 && im[1] == 1 && im[2] > 1) { // xz
     assert(ops->push_mprts_xz);
-    ops->push_mprts_xz(push, mprts, mflds);
+    ops->push_mprts_xz(push, mprts, mflds_base);
   } else if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
     assert(ops->push_mprts_yz);
-    ops->push_mprts_yz(push, mprts, mflds);
+    ops->push_mprts_yz(push, mprts, mflds_base);
   } else if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
     assert(ops->push_mprts_xyz);
-    ops->push_mprts_xyz(push, mprts, mflds);
+    ops->push_mprts_xyz(push, mprts, mflds_base);
   } else {
     assert(ops->push_mprts_1);
-    ops->push_mprts_1(push, mprts, mflds);
+    ops->push_mprts_1(push, mprts, mflds_base);
   }
 
   }
@@ -105,9 +99,6 @@ psc_push_particles_run(struct psc_push_particles *push,
 
   if (ops->particles_type) {
     psc_mparticles_put_as(mprts, mprts_base, 0);
-  }
-  if (ops->fields_type) {
-    psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
   }
 }
 
@@ -123,15 +114,9 @@ psc_push_particles_stagger(struct psc_push_particles *push,
   } else {
     mprts = mprts_base;
   }
-  struct psc_mfields *mflds;
-  if (ops->fields_type) {
-    mflds = psc_mfields_get_as(mflds_base, ops->fields_type, EX, EX + 6);
-  } else {
-    mflds = mflds_base;
-  }
 
   if (ops->stagger_mprts) {
-    ops->stagger_mprts(push, mprts, mflds);
+    ops->stagger_mprts(push, mprts, mflds_base);
   } else {
 
     int *im = ppsc->domain.gdims;
@@ -140,13 +125,13 @@ psc_push_particles_stagger(struct psc_push_particles *push,
       if (!ops->stagger_mprts_yz) {
 	mprintf("WARNING: no stagger_mprts() method!\n");
       } else {
-	ops->stagger_mprts_yz(push, mprts, mflds);
+	ops->stagger_mprts_yz(push, mprts, mflds_base);
       }
     } else if (im[0] == 1 && im[1] == 1 && im[2] == 1) { // 1
       if (!ops->stagger_mprts_1) {
 	mprintf("WARNING: no stagger_mprts() method!\n");
       } else {
-	ops->stagger_mprts_1(push, mprts, mflds);
+	ops->stagger_mprts_1(push, mprts, mflds_base);
       }
     } else {
       mprintf("WARNING: no stagger_mprts() case!\n");
@@ -155,9 +140,6 @@ psc_push_particles_stagger(struct psc_push_particles *push,
   
   if (ops->particles_type) {
     psc_mparticles_put_as(mprts, mprts_base, 0);
-  }
-  if (ops->fields_type) {
-    psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
   }
 }
 
