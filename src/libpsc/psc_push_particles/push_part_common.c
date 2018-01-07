@@ -184,7 +184,6 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 #endif
 }
 
-
 // ======================================================================
 // current
 
@@ -457,6 +456,10 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
     // FIELD INTERPOLATION
 
+    particle_real_t xm[3];
+    for (int d = 0; d < 3; d++) {
+      xm[d] = x[d] * c_prm.dxi[d];
+    }
     IP ip;
     INTERPOLATE_FIELDS(flds_em);
 

@@ -70,17 +70,18 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   IP_COEFFS_G(lg1, gx, xm);		\
   IP_COEFFS_H(lh1, hx, xm)
     
-#define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, dxi, s0x)	\
+#define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, s0x)	\
   struct ip_coeff gx, hx;					\
-  ip_coeff_g(&ip.lg1, &gx, x[d] * dxi);				\
+  ip_coeff_g(&ip.lg1, &gx, xm[d]);				\
   set_S(s0x, 0, gx);						\
-  ip_coeff_h(&ip.lh1, &hx, x[d] * dxi)
+  ip_coeff_h(&ip.lh1, &hx, xm[d])
   
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
     ip_coeff_g(&k1, &gx, xx[d] * dxi);			\
     set_S(s1x, k1-lg1, gx)
     
+
 // ----------------------------------------------------------------------
 
 #if ORDER == ORDER_1ST
@@ -315,9 +316,9 @@ struct IP
 
 #ifdef IP_DEPOSIT
 #define SET_IP_COEFFS_OPT_DEPOSIT \
-  IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi[0], s0x); );\
-  IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 1, c_prm.dxi[1], s0y); );\
-  IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 2, c_prm.dxi[2], s0z); );
+  IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, s0x); );	\
+  IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 1, s0y); );	\
+  IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 2, s0z); );
 #else
 #define SET_IP_COEFFS_OPT_DEPOSIT					\
   IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );			\
