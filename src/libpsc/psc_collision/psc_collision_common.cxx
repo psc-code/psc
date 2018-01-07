@@ -560,7 +560,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
   for (int m = 0; m < NR_STATS; m++) {
     // FIXME, copy could be avoided (?)
-    psc_mfields_copy_comp(mres, m, coll->mflds, m);
+    mres->copy(m, coll->mflds, m);
   }
 }
 

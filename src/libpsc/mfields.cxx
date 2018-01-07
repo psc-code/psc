@@ -29,6 +29,54 @@ void psc_mfields::zero()
   zero(0, nr_fields);
 }
 
+void psc_mfields::set(int m, double alpha)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(this);
+
+  assert(ops && ops->set_comp);
+  ops->set_comp(this, m, alpha);
+}
+
+void psc_mfields::scale(double alpha)
+{
+  for (int m = first_comp; m < first_comp + nr_fields; m++) {
+    scale(m, alpha);
+  }
+}
+
+void psc_mfields::scale(int m, double alpha)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(this);
+
+  assert(ops && ops->scale_comp);
+  ops->scale_comp(this, m, alpha);
+}
+
+void psc_mfields::copy(int mto, struct psc_mfields *from, int mfrom)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(this);
+  assert(ops == psc_mfields_ops(from));
+
+  assert(ops && ops->copy_comp);
+  ops->copy_comp(this, mto, from, mfrom);
+}
+
+void psc_mfields::axpy(double alpha, struct psc_mfields *x)
+{
+  for (int m = first_comp; m < first_comp + nr_fields; m++) {
+    axpy(m, alpha, x, m);
+  }
+}
+
+void psc_mfields::axpy(int my, double alpha, struct psc_mfields *x, int mx)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(this);
+  assert(ops == psc_mfields_ops(x));
+
+  assert(ops && ops->axpy_comp);
+  ops->axpy_comp(this, my, alpha, x, mx);
+}
+
 using Fields = Fields3d<fields_t>;
 
 // ======================================================================
@@ -95,63 +143,6 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 {
   assert(m >= flds->first_comp && m < flds->first_comp + flds->nr_fields);
   return flds->comp_name[m - flds->first_comp];
-}
-
-void
-psc_mfields_set_comp(struct psc_mfields *mflds, int m, double alpha)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->set_comp);
-  ops->set_comp(mflds, m, alpha);
-}
-
-void
-psc_mfields_scale_comp(struct psc_mfields *mflds, int m, double alpha)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->scale_comp);
-  ops->scale_comp(mflds, m, alpha);
-}
-
-void
-psc_mfields_copy_comp(struct psc_mfields *to, int mto,
-		      struct psc_mfields *from, int mfrom)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(to);
-  assert(ops == psc_mfields_ops(from));
-
-  assert(ops && ops->copy_comp);
-  ops->copy_comp(to, mto, from, mfrom);
-}
-
-void
-psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
-		      struct psc_mfields *xf, int xm)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(yf);
-  assert(ops == psc_mfields_ops(xf));
-
-  assert(ops && ops->axpy_comp);
-  ops->axpy_comp(yf, ym, alpha, xf, xm);
-}
-
-void
-psc_mfields_scale(struct psc_mfields *flds, double alpha)
-{
-  for (int m = flds->first_comp; m < flds->first_comp + flds->nr_fields; m++) {
-    psc_mfields_scale_comp(flds, m, alpha);
-  }
-}
-
-void
-psc_mfields_axpy(struct psc_mfields *yf, double alpha,
-		 struct psc_mfields *xf)
-{
-  for (int m = yf->first_comp; m < yf->first_comp + yf->nr_fields; m++) {
-    psc_mfields_axpy_comp(yf, m, alpha, xf, m);
-  }
 }
 
 double

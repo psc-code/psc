@@ -275,7 +275,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
   psc_output_fields_item_destroy(item);
 
   // dens -= dens_ref
-  psc_mfields_axpy(dens, -1., dens_ref);
+  dens.axpy(-1., dens_ref);
   mfields_t mf_dens(dens);
 
   // FIXME, do this generically

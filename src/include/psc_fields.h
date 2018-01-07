@@ -28,6 +28,12 @@ struct psc_mfields {
   void zero();
   void zero(int m);
   void zero(int mb, int me);
+  void set(int m, double alpha);
+  void scale(double alpha);
+  void scale(int m, double alpha);
+  void copy(int mto, struct psc_mfields *from, int mfrom);
+  void axpy(double alpha, struct psc_mfields *x);
+  void axpy(int my, double alpha, struct psc_mfields *x, int mx);
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
@@ -60,15 +66,6 @@ struct psc_mfields_ops {
 
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
 					int, int);
-
-void psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha);
-void psc_mfields_scale(struct psc_mfields *flds, double alpha);
-void psc_mfields_copy_comp(struct psc_mfields *to, int mto,
-			   struct psc_mfields *from, int mfrom);
-void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
-		      struct psc_mfields *xf);
-void psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
-			   struct psc_mfields *xf, int xm);
 
 double psc_mfields_max_comp(struct psc_mfields *mflds, int m);
 
