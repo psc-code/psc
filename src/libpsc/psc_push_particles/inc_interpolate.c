@@ -70,6 +70,17 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   IP_COEFFS_G(lg1, gx, xm);		\
   IP_COEFFS_H(lh1, hx, xm)
     
+#define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, dxi, s0x)	\
+  struct ip_coeff gx, hx;					\
+  ip_coeff_g(&ip.lg1, &gx, x[d] * dxi);				\
+  set_S(s0x, 0, gx);						\
+  ip_coeff_h(&ip.lh1, &hx, x[d] * dxi)
+  
+#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
+    int k1;						\
+    ip_coeff_g(&k1, &gx, xx[d] * dxi);			\
+    set_S(s1x, k1-lg1, gx)
+    
 // ----------------------------------------------------------------------
 
 #if ORDER == ORDER_1ST
