@@ -1,5 +1,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libsubdir.la
 
@@ -49,6 +50,6 @@ CLEANFILES = *.fatbin.c *.cudafe1.c *.cudafe2.c *.stub.c *.cubin *.i *.ii *.ptx 
 else !USE_CUDA2
 
 libsubdir_la_SOURCES += \
-	cuda2_util_host.c
+	cuda2_util_host.cxx
 
 endif !USE_CUDA2

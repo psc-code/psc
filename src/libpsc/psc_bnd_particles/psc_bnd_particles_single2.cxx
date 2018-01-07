@@ -2,7 +2,7 @@
 #include "psc_bnd_particles_private.h"
 #include "psc_particles_as_single.h"
 
-#include "psc_bnd_particles_common2.c"
+#include "psc_bnd_particles_common2.cxx"
 
 // ======================================================================
 // psc_bnd_particles: subclass "single2"

@@ -85,23 +85,23 @@ endif
 
 libpsc_la_SOURCES = \
 	mfields.cxx \
-	mparticles.c \
+	mparticles.cxx \
 	psc_fields_fortran.cxx \
 	psc_fields_c.cxx \
 	psc_fields_single.cxx \
-	psc_particles_fortran.c \
-	psc_particles_single.c \
-	psc_particles_double.c \
-	psc_particles_single_by_block.c \
-	psc_particles_single_by_kind.c \
+	psc_particles_fortran.cxx \
+	psc_particles_single.cxx \
+	psc_particles_double.cxx \
+	psc_particles_single_by_block.cxx \
+	psc_particles_single_by_kind.cxx \
 	bk_mparticles.cxx \
 	psc.cxx \
-	psc_method.c \
-	psc_method_default.c \
-	integrate.c \
-	psc_stats.c \
-	psc_checkpoint.c \
+	psc_method.cxx \
+	psc_method_default.cxx \
+	integrate.cxx \
+	psc_stats.cxx \
+	psc_checkpoint.cxx \
 	rngpool.cxx \
-	psc_main.c
+	psc_main.cxx
 
 #	psc_particles_cbe.c

@@ -6,7 +6,8 @@
 #include <mrc_params.h>
 
 #include <string.h>
-#include <psc_sort_common.c>
+
+#include "psc_sort_common.cxx"
 
 // ======================================================================
 // psc_sort: subclass "qsort_single"

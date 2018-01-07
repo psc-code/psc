@@ -77,7 +77,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
   }
   mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);
-    double *result = calloc(nr_values, sizeof(*result));
+    double *result = (double *) calloc(nr_values, sizeof(*result));
     psc_diag_item_run(item, psc, result);
     if (rank == 0) {
       MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));

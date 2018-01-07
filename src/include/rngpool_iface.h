@@ -4,7 +4,7 @@
 
 #include <mrc_common.h>
 
-#ifndef __cplusplus
+#ifndef VPIC_CONFIG_H
 typedef struct RngPool_ RngPool;
 typedef struct Rng_ Rng;
 #endif

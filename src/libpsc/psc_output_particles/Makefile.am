@@ -1,16 +1,17 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
-	psc_output_particles.c \
-	psc_output_particles_none.c \
-	psc_output_particles_ascii.c
+	psc_output_particles.cxx \
+	psc_output_particles_none.cxx \
+	psc_output_particles_ascii.cxx
 
 if HAVE_HDF5
 libsubdir_la_SOURCES += \
-	psc_output_particles_hdf5_single.c \
-	psc_output_particles_hdf5_double.c
+	psc_output_particles_hdf5_single.cxx \
+	psc_output_particles_hdf5_double.cxx
 endif
 

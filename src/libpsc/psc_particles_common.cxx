@@ -24,13 +24,13 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
   }
 #if PSC_PARTICLES_AS_SINGLE
   patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
-  patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
+  patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
   patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
-  patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
-  patch->b_off = calloc(patch->nr_blocks + 2, sizeof(*patch->b_off));
+  patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
+  patch->b_off = (unsigned int *) calloc(patch->nr_blocks + 2, sizeof(*patch->b_off));
 #endif
 }
 
@@ -71,7 +71,17 @@ PFX(setup)(struct psc_mparticles *mprts)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   psc_mparticles_setup_super(mprts);
-  sub->patch = calloc(mprts->nr_patches, sizeof(*sub->patch));
+#if PSC_PARTICLES_AS_SINGLE
+  sub->patch = (struct psc_mparticles_single_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
+#elif PSC_PARTICLES_AS_DOUBLE
+  sub->patch = (struct psc_mparticles_double_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
+#elif PSC_PARTICLES_AS_FORTRAN
+  sub->patch = (struct psc_mparticles_fortran_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
+#elif PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  sub->patch = (struct psc_mparticles_single_by_block_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
+#else
+  sub->patch = (struct psc_mparticles_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
+#endif
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p);
@@ -113,7 +123,9 @@ PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
       // in a rather ugly way, we write the int "kind" member as a float / double
-      hsize_t hdims[2] = { n_prts, 8 };
+      hsize_t hdims[2];
+      hdims[0] = n_prts;
+      hdims[1] = 8;
 #if PSC_PARTICLES_AS_DOUBLE
       ierr = H5LTmake_dataset_double(pgroup, "data", 2, hdims,
 				    (double *) particle_iter_deref(prts.begin)); CE;

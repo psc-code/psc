@@ -1,6 +1,8 @@
 
 #include "vpic/PscRng.h" // FIXME path
 
+#define VPIC_CONFIG_H // FIXME, bad hack
+
 using Rng = PscRng;
 using RngPool = PscRngPool<Rng>;
 

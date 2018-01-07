@@ -10,5 +10,5 @@ static struct mrc_obj_method psc_mparticles_double_methods[] = {
   {}
 };
 
-#include "psc_particles_common.c"
+#include "psc_particles_common.cxx"
 

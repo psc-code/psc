@@ -4,6 +4,10 @@
 
 #include <mrc_obj.h>
 
+#ifndef __cplusplus
+#error not C++
+#endif
+
 BEGIN_C_DECLS
 
 // ----------------------------------------------------------------------

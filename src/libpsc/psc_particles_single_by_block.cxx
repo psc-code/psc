@@ -221,5 +221,5 @@ static struct mrc_obj_method psc_mparticles_single_by_block_methods[] = {
   {}
 };
 
-#include "psc_particles_common.c"
+#include "psc_particles_common.cxx"
 

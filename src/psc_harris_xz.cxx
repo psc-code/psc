@@ -531,7 +531,7 @@ psc_harris_setup(struct psc *psc)
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
 
   // partition and initial balancing
-  int *n_prts_by_patch = calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
+  int *n_prts_by_patch = (int *) calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
 

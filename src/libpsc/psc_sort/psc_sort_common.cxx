@@ -49,7 +49,7 @@ get_cell_index_2x2x2(int p, const particle_t *part)
 static int
 compare(const void *_a, const void *_b)
 {
-  const particle_t *a = _a, *b = _b;
+  const particle_t *a = (const particle_t *) _a, *b = (const particle_t *) _b;
 
   if (get_cell_index(0, a) < get_cell_index(0, b)) {
     return -1;
@@ -103,7 +103,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     for (int d = 0; d < 3; d++) {
       N *= patch->ldims[d] + 2 * ppsc->ibn[d];
     }
-    unsigned int *cnts = malloc(N * sizeof(*cnts));
+    unsigned int *cnts = (unsigned int *) malloc(N * sizeof(*cnts));
     memset(cnts, 0, N * sizeof(*cnts));
     
     // count
@@ -123,7 +123,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     assert(cur == n_prts);
     
     // move into new position
-    particle_t *particles2 = malloc(n_prts * sizeof(*particles2));
+    particle_t *particles2 = (particle_t *) malloc(n_prts * sizeof(*particles2));
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
       unsigned int cni = get_cell_index(0, particle_iter_deref(prt_iter));
       memcpy(&particles2[cnts[cni]], particle_iter_deref(prt_iter), sizeof(*particles2));
@@ -183,7 +183,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     struct cell_map map;
     int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
 
-    unsigned int *cnis = malloc(n_prts * sizeof(*cnis));
+    unsigned int *cnis = (unsigned int *) malloc(n_prts * sizeof(*cnis));
     int i = 0;
     for (particle_iter_t prt_iter = prts.begin;
 	 !particle_iter_equal(prt_iter, prts.end);
@@ -210,7 +210,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     }
     cell_map_free(&map);
     
-    unsigned int *cnts = malloc(N * sizeof(*cnts));
+    unsigned int *cnts = (unsigned int *) malloc(N * sizeof(*cnts));
     memset(cnts, 0, N * sizeof(*cnts));
     
     // count
@@ -229,7 +229,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     assert(cur == n_prts);
     
     // move into new position
-    particle_t *particles2 = malloc(n_prts * sizeof(*particles2));
+    particle_t *particles2 = (particle_t *) malloc(n_prts * sizeof(*particles2));
     for (int i = 0; i < n_prts; i++) {
       unsigned int cni = cnis[i];
       int n = 1;
