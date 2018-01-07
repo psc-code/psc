@@ -106,10 +106,9 @@ ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
 }
 
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm, s0x)	\
-  struct ip_coeff gx, hx;					\
-  ip_coeff_g(&ip.lg1, &gx, xm);					\
-  set_S(s0x, 0, gx);						\
-  ip_coeff_h(&ip.lh1, &hx, xm)
+  ip_coeff_g(&ip.lg1, &ip.gx, xm);				\
+  set_S(s0x, 0, ip.gx);						\
+  ip_coeff_h(&ip.lh1, &ip.hx, xm)
   
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\

@@ -379,9 +379,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(x, k1, gx, 0, c_prm.dxi[0], s1x, ip.lg1); );
-    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, c_prm.dxi[1], s1y, ip.lg2); );
-    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, c_prm.dxi[2], s1z, ip.lg3); );
+    IF_DIM_X( DEPOSIT(x, k1, ip.gx, 0, c_prm.dxi[0], s1x, ip.lg1); );
+    IF_DIM_Y( DEPOSIT(x, k2, ip.gy, 1, c_prm.dxi[1], s1y, ip.lg2); );
+    IF_DIM_Z( DEPOSIT(x, k3, ip.gz, 2, c_prm.dxi[2], s1z, ip.lg3); );
 
 #else
     push_x(x, vv, .5f * c_prm.dt);
