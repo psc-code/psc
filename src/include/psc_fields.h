@@ -24,6 +24,10 @@ struct psc_mfields {
 
   template<typename MF>
   MF get_as(int mb, int me);
+
+  void zero();
+  void zero(int m);
+  void zero(int mb, int me);
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);

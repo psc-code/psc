@@ -9,6 +9,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+void psc_mfields::zero(int mb, int me)
+{
+  return psc_mfields_zero_range(this, mb, me);
+}
+
+void psc_mfields::zero(int m)
+{
+  return psc_mfields_zero_comp(this, m);
+}
+
+void psc_mfields::zero()
+{
+  return psc_mfields_zero_range(this, 0, nr_fields);
+}
+
 using Fields = Fields3d<fields_t>;
 
 // ======================================================================

@@ -132,6 +132,21 @@ struct mfields3d
     return mflds_->nr_fields;
   }
 
+  void zero(int mb, int me)
+  {
+    psc_mfields_zero_range(mflds_, mb, me);
+  }
+
+  void zero(int m)
+  {
+    psc_mfields_zero_comp(mflds_, m);
+  }
+
+  void zero()
+  {
+    psc_mfields_zero_range(mflds_, 0, n_fields());
+  }
+
   fields_t operator[](int p)
   {
     return fields_t::psc_mfields_get_field_t(mflds_, p);
