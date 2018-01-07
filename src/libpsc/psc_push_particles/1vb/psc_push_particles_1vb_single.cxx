@@ -23,6 +23,5 @@ struct psc_push_particles_ops psc_push_particles_1vb_single_ops = {
   .name                  = "1vb_single",
   .push_mprts_yz         = psc_push_particles_push_mprts_yz,
   .particles_type        = PARTICLE_TYPE,
-  .fields_type           = FIELDS_TYPE,
 };
 

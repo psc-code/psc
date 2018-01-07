@@ -118,5 +118,4 @@ struct psc_push_particles_ops psc_push_particles_fortran_ops = {
   .push_a_yz             = psc_push_particles_fortran_push_a_yz,
   .push_a_xyz            = psc_push_particles_fortran_push_a_xyz,
   .particles_type        = "fortran",
-  .fields_type           = "fortran",
 };

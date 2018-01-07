@@ -33,5 +33,4 @@ struct psc_push_particles_ops psc_push_particles_vay_ops = {
   .name                  = "vay",
   .push_a_z              = psc_push_particles_vay_push_a_z,
   .particles_type        = "fortran",
-  .fields_type           = "fortran",
 };

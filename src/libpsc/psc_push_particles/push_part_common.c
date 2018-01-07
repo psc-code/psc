@@ -567,14 +567,14 @@ void
 #ifdef SFX
 SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
 				   struct psc_mparticles *mprts,
-				   struct psc_mfields *mflds)
+				   struct psc_mfields *mflds_base)
 #else
 psc_push_particles_push_mprts(struct psc_push_particles *push,
 			      struct psc_mparticles *mprts,
-			      struct psc_mfields *mflds)
+			      struct psc_mfields *mflds_base)
 #endif
 {
-  mfields_t mf(mflds);
+  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
 
   static int pr;
   if (!pr) {
@@ -598,6 +598,8 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
 #endif
   }
   prof_stop(pr);
+
+  mf.put_as(mflds_base, JXI, JXI+3);
 }
 
 #endif

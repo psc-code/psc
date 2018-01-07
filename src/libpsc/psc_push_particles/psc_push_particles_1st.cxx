@@ -10,7 +10,6 @@ struct psc_push_particles_ops psc_push_particles_1st_ops = {
   .push_mprts_xz         = psc_push_particles_push_mprts_1st_xz,
   .push_mprts_yz         = psc_push_particles_push_mprts_1st_yz,
   .particles_type        = "double",
-  .fields_type           = "c",
 };
 
 // ======================================================================
@@ -22,5 +21,4 @@ struct psc_push_particles_ops psc_push_particles_1sff_ops = {
   .name                  = "1sff",
   .push_mprts_xz         = psc_push_particles_push_mprts_1sff_xz,
   .particles_type        = "double",
-  .fields_type           = "c",
 };

@@ -13,6 +13,5 @@ struct psc_push_particles_ops psc_push_particles_1vbec_single_by_block_ops = {
   .push_mprts_yz         = psc_push_particles_1vbec_single_by_block_push_mprts_yz,
   .push_mprts_xyz        = psc_push_particles_1vbec_single_by_block_push_mprts_xyz,
   .particles_type        = PARTICLE_TYPE,
-  .fields_type           = FIELDS_TYPE,
 };
 

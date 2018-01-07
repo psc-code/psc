@@ -16,6 +16,5 @@ struct psc_push_particles_ops psc_push_particles_1vbec_single_ops = {
   .push_mprts_1          = psc_push_particles_1vbec_single_push_mprts_1,
   .stagger_mprts_yz      = psc_push_particles_1vbec_single_stagger_mprts_yz,
   .particles_type        = PARTICLE_TYPE,
-  .fields_type           = FIELDS_TYPE,
 };
 
