@@ -73,42 +73,46 @@ static struct mrc_ddc_funcs ddc_funcs = {
   .add_from_buf  = psc_bnd_fld_sub_add_from_buf,
 };
 
-// ----------------------------------------------------------------------
-// psc_bnd_fld_sub_create
-
 template<typename MF>
-void psc_bnd_fld_sub_create(struct psc_bnd *bnd)
+struct psc_bnd_fld_ops
 {
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
-  mrc_ddc_set_funcs(ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(mfields_t::real_t));
-  mrc_ddc_setup(ddc);
-  bnd->ddc = ddc;
-}
+  // ----------------------------------------------------------------------
+  // create
+  
+  static void create(struct psc_bnd *bnd)
+  {
+    struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
+    mrc_ddc_set_funcs(ddc, &ddc_funcs);
+    mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
+    mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
+    mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(mfields_t::real_t));
+    mrc_ddc_setup(ddc);
+    bnd->ddc = ddc;
+  }
 
-// ----------------------------------------------------------------------
-// psc_bnd_fld_sub_add_ghosts
+  // ----------------------------------------------------------------------
+  // add_ghosts
+  
+  static void add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base,
+			 int mb, int me)
+  {
+    mfields_t mf = mflds_base->get_as<MF>(mb, me);
+    mrc_ddc_add_ghosts(bnd->ddc, mb, me, mf.mflds());
+    mf.put_as(mflds_base, mb, me);
+  }
 
-template<typename MF>
-void psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
-{
-  mfields_t mf = mflds_base->get_as<MF>(mb, me);
-  mrc_ddc_add_ghosts(bnd->ddc, mb, me, mf.mflds());
-  mf.put_as(mflds_base, mb, me);
-}
+  // ----------------------------------------------------------------------
+  // fill_ghosts
 
-// ----------------------------------------------------------------------
-// psc_bnd_fld_sub_fill_ghosts
+  static void fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base,
+			  int mb, int me)
+  {
+    mfields_t mf = mflds_base->get_as<MF>(mb, me);
+    // FIXME
+    // I don't think we need as many points, and only stencil star
+    // rather then box
+    mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mf.mflds());
+    mf.put_as(mflds_base, mb, me);
+  }
 
-template<typename MF>
-void psc_bnd_fld_sub_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
-{
-  mfields_t mf = mflds_base->get_as<MF>(mb, me);
-  // FIXME
-  // I don't think we need as many points, and only stencil star
-  // rather then box
-  mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mf.mflds());
-  mf.put_as(mflds_base, mb, me);
-}
+};
