@@ -40,7 +40,7 @@ struct psc_bnd_fld_ops
 			 int mb, int me)
   {
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
-    mrc_ddc_add_ghosts(bnd->ddc, mb, me, mf.mflds());
+    mrc_ddc_add_ghosts(bnd->ddc, mb, me, &mf);
     mf.put_as(mflds_base, mb, me);
   }
 
@@ -54,7 +54,7 @@ struct psc_bnd_fld_ops
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mf.mflds());
+    mrc_ddc_fill_ghosts(bnd->ddc, mb, me, &mf);
     mf.put_as(mflds_base, mb, me);
   }
 
@@ -64,8 +64,7 @@ struct psc_bnd_fld_ops
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
   {
-    struct psc_mfields *mflds = static_cast<struct psc_mfields*>(ctx);
-    mfields_t mf(mflds);
+    mfields_t mf = *static_cast<mfields_t*>(ctx);
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -83,8 +82,7 @@ struct psc_bnd_fld_ops
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			   void *_buf, void *ctx)
   {
-    struct psc_mfields *mflds = static_cast<struct psc_mfields*>(ctx);
-    mfields_t mf(mflds);
+    mfields_t mf = *static_cast<mfields_t*>(ctx);
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -102,8 +100,7 @@ struct psc_bnd_fld_ops
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			    void *_buf, void *ctx)
   {
-    struct psc_mfields *mflds = static_cast<struct psc_mfields*>(ctx);
-    mfields_t mf(mflds);
+    mfields_t mf = *static_cast<mfields_t*>(ctx);
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
