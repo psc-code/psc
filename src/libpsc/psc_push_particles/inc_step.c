@@ -193,7 +193,12 @@ push_one(mprts_array_t mprts_arr, int n,
 
   IP ip;
   ip.set_coeffs(xm);
-  INTERPOLATE_FIELDS(flds_em);
+  ip.E[0] = ip.ex(flds_em);
+  ip.E[1] = ip.ey(flds_em);
+  ip.E[2] = ip.ez(flds_em);
+  ip.H[0] = ip.hx(flds_em);
+  ip.H[1] = ip.hy(flds_em);
+  ip.H[2] = ip.hz(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
@@ -265,7 +270,12 @@ stagger_one(mprts_array_t mprts_arr, int n,
 
   IP ip;
   ip.set_coeffs(xm);
-  INTERPOLATE_FIELDS(flds_em);
+  ip.E[0] = ip.ex(flds_em); // FIXME, we're not using EM instead flds_em
+  ip.E[1] = ip.ey(flds_em);
+  ip.E[2] = ip.ez(flds_em);
+  ip.H[0] = ip.hx(flds_em);
+  ip.H[1] = ip.hy(flds_em);
+  ip.H[2] = ip.hz(flds_em);
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
   int kind = particle_kind(prt);

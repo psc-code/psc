@@ -427,7 +427,12 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     }
     IP ip;
     ip.set_coeffs(xm);
-    INTERPOLATE_FIELDS(EM);
+    ip.E[0] = ip.ex(EM);
+    ip.E[1] = ip.ey(EM);
+    ip.E[2] = ip.ez(EM);
+    ip.H[0] = ip.hx(EM);
+    ip.H[1] = ip.hy(EM);
+    ip.H[2] = ip.hz(EM);
     IF_DIM_X( set_S(s0x, 0, ip.cx.g); );
     IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
     IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );

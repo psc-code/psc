@@ -521,12 +521,3 @@ struct InterpolateEM
 
 using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, dim_t, NNN>;
 
-#define INTERPOLATE_FIELDS(flds)					\
-  ip.E[0] = ip.ex(flds);						\
-  ip.E[1] = ip.ey(flds);						\
-  ip.E[2] = ip.ez(flds);						\
-  ip.H[0] = ip.hx(flds);						\
-  ip.H[1] = ip.hy(flds);						\
-  ip.H[2] = ip.hz(flds);						\
-
-
