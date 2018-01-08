@@ -183,7 +183,7 @@ push_one(mprts_array_t mprts_arr, int n,
   PARTICLE_LOAD(prt, mprts_arr, n);
   
   // field interpolation
-  particle_real_t *xi = &particle_x(prt);
+  particle_real_t *xi = &prt->xi;
 
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++) {
@@ -221,7 +221,7 @@ push_one(mprts_array_t mprts_arr, int n,
   
   int lf[3];
   particle_real_t of[3], xp[3];
-  find_idx_off_pos_1st_rel(&particle_x(prt), lf, of, xp, particle_real_t(0.));
+  find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, particle_real_t(0.));
   //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
@@ -258,7 +258,7 @@ stagger_one(mprts_array_t mprts_arr, int n,
   PARTICLE_LOAD(prt, mprts_arr, n);
   
   // field interpolation
-  particle_real_t *xi = &particle_x(prt);
+  particle_real_t *xi = &prt->xi;
 
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++) {

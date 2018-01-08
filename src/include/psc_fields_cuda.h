@@ -17,7 +17,7 @@ using mfields_cuda_t = mfields3d<fields_cuda_t>;
 template<>
 struct fields_traits<fields_cuda_t>
 {
-  static constexpr const char* name = "cudax`x`";
+  static constexpr const char* name = "cuda";
 };
 
 // ----------------------------------------------------------------------

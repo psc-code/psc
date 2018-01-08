@@ -121,24 +121,30 @@ particle_PTYPE_real_fint(particle_PTYPE_real_t x)
 
 #if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_DOUBLE || PTYPE == PTYPE_CUDA
 
-typedef struct psc_particle_PTYPE {
-  particle_PTYPE_real_t xi, yi, zi;
-  particle_PTYPE_real_t qni_wni;
-  particle_PTYPE_real_t pxi, pyi, pzi;
+struct particle_PTYPE_t
+{
+  using real_t = particle_PTYPE_real_t;
+
+  real_t xi, yi, zi;
+  real_t qni_wni;
+  real_t pxi, pyi, pzi;
   int kind;
-} particle_PTYPE_t;
+};
 
 #elif PTYPE == PTYPE_FORTRAN
 
-typedef struct psc_particle_PTYPE {
-  particle_PTYPE_real_t xi, yi, zi;
-  particle_PTYPE_real_t pxi, pyi, pzi;
-  particle_PTYPE_real_t qni;
-  particle_PTYPE_real_t mni;
-  particle_PTYPE_real_t cni;
-  particle_PTYPE_real_t lni;
-  particle_PTYPE_real_t wni;
-} particle_PTYPE_t;
+struct particle_PTYPE_t
+{
+  using real_t = particle_PTYPE_real_t;
+
+  real_t xi, yi, zi;
+  real_t pxi, pyi, pzi;
+  real_t qni;
+  real_t mni;
+  real_t cni;
+  real_t lni;
+  real_t wni;
+};
 
 #endif
 

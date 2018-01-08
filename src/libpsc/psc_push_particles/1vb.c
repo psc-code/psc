@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define USE_1VB
-
 #include "1vb/psc_push_particles_1vb.h"
 
 #include "fields.hxx"

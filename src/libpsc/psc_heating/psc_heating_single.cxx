@@ -74,9 +74,9 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
       }
       
       double xx[3] = {
-	(&particle_x(prt))[0] + patch->xb[0],
-	(&particle_x(prt))[1] + patch->xb[1],
-	(&particle_x(prt))[2] + patch->xb[2],
+	prt->xi + patch->xb[0],
+	prt->yi + patch->xb[1],
+	prt->zi + patch->xb[2],
       };
 
       double H = psc_heating_spot_get_H(heating->spot, xx);

@@ -38,7 +38,6 @@
 
 #define particle_single_qni_wni(prt) ((prt)->qni_wni)
 
-#define particle_single_x(prt) ((prt)->xi)
 #define particle_single_px(prt) ((prt)->pxi)
 
 static inline int

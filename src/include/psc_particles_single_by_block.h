@@ -34,7 +34,6 @@
       rv;								\
     })
 
-#define particle_single_by_block_x(prt) ((prt)->xi)
 #define particle_single_by_block_px(prt) ((prt)->pxi)
 
 static inline particle_single_by_block_real_t

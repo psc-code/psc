@@ -37,7 +37,6 @@
       rv;							\
     })
 
-#define particle_double_x(prt) ((prt)->xi)
 #define particle_double_px(prt) ((prt)->pxi)
 
 static inline particle_double_real_t
