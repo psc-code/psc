@@ -189,7 +189,7 @@ push_one(mprts_array_t mprts_arr, int n,
 
   // FIELD INTERPOLATION
 
-  IP<NNN> ip;
+  IP ip;
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
@@ -260,7 +260,7 @@ stagger_one(mprts_array_t mprts_arr, int n,
 
   // FIELD INTERPOLATION
 
-  IP<NNN> ip;
+  IP ip;
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}

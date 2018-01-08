@@ -4,14 +4,6 @@
 // ----------------------------------------------------------------------
 // interpolation
 
-struct ip_coeff {
-#if ORDER == ORDER_1ST
-  particle_real_t v0, v1;
-#elif ORDER == ORDER_2ND || ORDER == ORDER_1P5
-  particle_real_t vm, v0, vp, h;
-#endif
-};
-
 // ----------------------------------------------------------------------
 // get_fint_remainder
 
@@ -37,25 +29,45 @@ get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 // ----------------------------------------------------------------------
 // ip_coeff
 
+#if ORDER == ORDER_1ST
+
+struct ip_coeff {
+  particle_real_t v0, v1;
+};
+
 static inline void
 ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 {
   int l;
   particle_real_t h;
 
-#if ORDER == ORDER_1ST
   get_fint_remainder(&l, &h, u);
   gg->v0 = 1.f - h;
   gg->v1 = h;
+  *lg = l;
+}
+
 #elif ORDER == ORDER_2ND
+
+struct ip_coeff {
+  particle_real_t vm, v0, vp, h;
+};
+
+static inline void
+ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
+{
+  int l;
+  particle_real_t h;
+
   get_nint_remainder(&l, &h, u);
   gg->h  = h;
   gg->vm = .5f * (.5f+h)*(.5f+h);
   gg->v0 = .75f - h*h;
   gg->vp = .5f * (.5f-h)*(.5f-h);
-#endif
   *lg = l;
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 // ip_coeff_g
@@ -381,12 +393,8 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
 #endif
 }
 
-#ifndef NNN
-#define NNN 0
-#endif
-
 template<int N>
-struct IP
+struct InterpolateEM
 {
   void set_coeffs(particle_real_t xm[3])
   {
@@ -417,6 +425,12 @@ struct IP
   struct ip_coeff gx, gy, gz;
   struct ip_coeff hx, hy, hz;
 };
+
+#ifndef NNN
+#define NNN 0
+#endif
+
+using IP = InterpolateEM<NNN>;
 
 #define INTERPOLATE_FIELDS(flds)					\
   ip.set_coeffs(xm);							\
