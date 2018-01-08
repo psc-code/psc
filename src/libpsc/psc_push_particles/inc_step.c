@@ -129,6 +129,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 // - it does spread the particles loads/stores as necessary
 // - it doesn't handle 1VB_2D
 
+template<typename C>
 CUDA_DEVICE static void
 push_one(mprts_array_t mprts_arr, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
@@ -247,6 +248,7 @@ push_one(mprts_array_t mprts_arr, int n,
 // ----------------------------------------------------------------------
 // stagger_one
 
+template<typename C>
 CUDA_DEVICE static void
 stagger_one(mprts_array_t mprts_arr, int n,
 	    em_cache_t flds_em)

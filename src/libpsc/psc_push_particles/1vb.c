@@ -20,6 +20,7 @@
 
 // ======================================================================
 
+template<typename C>
 static void
 do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 {
@@ -27,10 +28,11 @@ do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
   unsigned int n_prts = particle_range_size(prts);
   
   for (int n = 0; n < n_prts; n++) {
-    push_one(prts.begin, n, flds, flds);
+    push_one<C>(prts.begin, n, flds, flds);
   }
 }
 
+template<typename C>
 static void
 do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 {
@@ -38,7 +40,7 @@ do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
   unsigned int n_prts = particle_range_size(prts);
   
   for (int n = 0; n < n_prts; n++) {
-    stagger_one(prts.begin, n, flds);
+    stagger_one<C>(prts.begin, n, flds);
   }
 }
 
@@ -58,7 +60,7 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 
     flds.zero(JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);
-    do_push_part_1vb_yz(flds, mprts, p);
+    do_push_part_1vb_yz<C>(flds, mprts, p);
   }
   mf.put_as(mflds_base, JXI, JXI+3);
 }
@@ -79,7 +81,7 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
     
     flds.zero(JXI, JXI + 3);
     ext_prepare_sort_before(mprts, p);
-    do_stagger_part_1vb_yz(flds, mprts, p);
+    do_stagger_part_1vb_yz<C>(flds, mprts, p);
   }
   mf.put_as(mflds_base, JXI, JXI+3);
 }
