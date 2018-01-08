@@ -513,10 +513,6 @@ struct InterpolateEM
 #ifndef NNN
 #define NNN 0
 #endif
-#ifndef dim_t
-#define dim_t dim_1
-//#warning FIXME dim_t not defined
-#endif
 
 #if ORDER == ORDER_1ST
 #if IP_VARIANT == IP_VARIANT_EC
