@@ -76,12 +76,6 @@ particle_acc_real_fint(particle_acc_real_t x)
 #endif
 }
 
-static inline particle_acc_real_t
-particle_acc_real_sqrt(particle_acc_real_t x)
-{
-  return sqrtf(x);
-}
-
 #define PARTICLE_ACC_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\
     (prt).xi[0] = xi4.x;						\

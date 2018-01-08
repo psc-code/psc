@@ -169,7 +169,7 @@ static inline void
 particle_calc_vxi(particle_t *part, particle_real_t vxi[3])
 {
   particle_real_t root =
-    1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    1.f / std::sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;
   vxi[2] = part->pzi * root;

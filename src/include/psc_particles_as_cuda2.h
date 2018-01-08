@@ -16,7 +16,6 @@ typedef particle_cuda2_t particle_t;
 #define particle_kind               particle_cuda2_kind
 #define particle_real_nint          particle_cuda2_real_nint
 #define particle_real_fint          particle_cuda2_real_fint
-#define particle_real_sqrt          particle_cuda2_real_sqrt
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_CUDA2_REAL
 #define PARTICLE_TYPE               "cuda2"

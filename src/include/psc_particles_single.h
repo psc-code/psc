@@ -50,10 +50,4 @@ particle_single_real_nint(particle_single_real_t x)
   return floorf(x + .5f); // FIXME use roundf()?
 }
 
-static inline particle_single_real_t
-particle_single_real_sqrt(particle_single_real_t x)
-{
-  return sqrtf(x);
-}
-
 #endif

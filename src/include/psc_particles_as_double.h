@@ -36,7 +36,6 @@ typedef particle_double_t particle_t;
 #define particle_kind               particle_double_kind
 #define particle_real_nint          particle_double_real_nint
 #define particle_real_fint          particle_double_real_fint
-#define particle_real_sqrt          particle_double_real_sqrt
 
 #define particle_iter_t             psc_particle_double_iter_t
 #define particle_iter_equal         psc_particle_double_iter_equal
