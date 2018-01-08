@@ -2,8 +2,6 @@
 #define DEPOSIT_TO_GRID_1ST_CC(part, flds, m, val) do {			\
     Fields F(flds);							\
     particle_real_t *xi = &part->xi; /* don't shift back in time */	\
-    /*    particle_real_t xi[3];					\
-	  particle_get_relative_pos(part, patch->xb, xi);		*/ \
     particle_real_t u = xi[0] * dxi - .5;				\
     particle_real_t v = xi[1] * dyi - .5;				\
     particle_real_t w = xi[2] * dzi - .5;				\

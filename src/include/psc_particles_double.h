@@ -49,34 +49,6 @@ particle_double_kind(particle_double_t *prt)
   return prt->kind;
 }
 
-static inline void
-particle_double_calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
-{
-  particle_double_real_t root =
-    1.f / sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-  vxi[0] = part->pxi * root;
-  vxi[1] = part->pyi * root;
-  vxi[2] = part->pzi * root;
-}
-
-static inline void
-particle_double_get_relative_pos(particle_double_t *p, double xb[3],
-				 particle_double_real_t xi[3])
-{
-  particle_double_real_t vxi[3];
-  particle_double_calc_vxi(vxi, p);
-  particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
-  // don't shift in invariant directions
-  for (int d = 0; d < 3; d++) {
-    if (ppsc->domain.gdims[d] == 1) {
-      dth[d] = 0.;
-    }
-  }
-  xi[0] = p->xi - dth[0] * vxi[0];
-  xi[1] = p->yi - dth[1] * vxi[1];
-  xi[2] = p->zi - dth[2] * vxi[2];
-}
-
 static inline int
 particle_double_real_nint(particle_double_real_t x)
 {
