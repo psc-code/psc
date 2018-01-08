@@ -96,10 +96,6 @@ ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
 #endif
 }
 
-#define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm)		\
-  ip_coeff_g(&lg1, &gx, xm);					\
-  ip_coeff_h(&lh1, &hx, xm)
-  
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
     ip_coeff_g(&k1, &gx, xx[d] * dxi);			\
@@ -395,9 +391,12 @@ struct IP
   void set_coeffs(particle_real_t xm[3])
   {
 #ifdef IP_DEPOSIT
-    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
-    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
-    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+    IF_DIM_X( ip_coeff_g(&lg1, &gx, xm[0]); );
+    IF_DIM_Y( ip_coeff_g(&lg2, &gy, xm[1]); );
+    IF_DIM_Z( ip_coeff_g(&lg3, &gz, xm[2]); );
+    IF_DIM_X( ip_coeff_h(&lh1, &hx, xm[0]); );
+    IF_DIM_Y( ip_coeff_h(&lh2, &hy, xm[1]); );
+    IF_DIM_Z( ip_coeff_h(&lh3, &hz, xm[2]); );
 #else
     IF_DIM_X( ip_coeff(&lg1, &gx, xm[0]); );
     IF_DIM_Y( ip_coeff(&lg2, &gy, xm[1]); );
