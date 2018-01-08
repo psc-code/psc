@@ -102,6 +102,18 @@ ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
     
 struct ip_coeffs
 {
+  void set(int* lg1, int* lh1, particle_real_t xm)
+  {
+    g.set(lg1, xm);
+#ifdef IP_DEPOSIT
+    ip_coeff_h(lh1, &h, xm);
+#else
+#if IP_VARIANT != IP_VARIANT_EC
+    h.set(lh1, xm - .5f);
+#endif
+#endif
+  }
+  
   struct ip_coeff g;
   struct ip_coeff h;
 };
@@ -390,20 +402,9 @@ struct InterpolateEM
 {
   void set_coeffs(particle_real_t xm[3])
   {
-    IF_DIM_X( cx.g.set(&lg1, xm[0]); );
-    IF_DIM_Y( cy.g.set(&lg2, xm[1]); );
-    IF_DIM_Z( cz.g.set(&lg3, xm[2]); );
-#ifdef IP_DEPOSIT
-    IF_DIM_X( ip_coeff_h(&lh1, &cx.h, xm[0]); );
-    IF_DIM_Y( ip_coeff_h(&lh2, &cy.h, xm[1]); );
-    IF_DIM_Z( ip_coeff_h(&lh3, &cz.h, xm[2]); );
-#else
-#if IP_VARIANT != IP_VARIANT_EC
-    IF_DIM_X( cx.h.set(&lh1, xm[0] - .5f); );
-    IF_DIM_Y( cy.h.set(&lh2, xm[1] - .5f); );
-    IF_DIM_Z( cz.h.set(&lh3, xm[2] - .5f); );
-#endif
-#endif
+    IF_DIM_X( cx.set(&lg1, &lh1, xm[0]); );
+    IF_DIM_Y( cy.set(&lg2, &lh2, xm[1]); );
+    IF_DIM_Z( cz.set(&lg3, &lh3, xm[2]); );
   }
   
   particle_real_t E[3];
