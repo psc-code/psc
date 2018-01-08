@@ -29,9 +29,7 @@ get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 // ----------------------------------------------------------------------
 // ip_coeff
 
-#if ORDER == ORDER_1ST
-
-struct ip_coeff {
+struct ip_coeff_1st {
   particle_real_t v0, v1;
 
   void set(int *lg, particle_real_t u)
@@ -46,9 +44,7 @@ struct ip_coeff {
   }
 };
 
-#elif ORDER == ORDER_2ND
-
-struct ip_coeff {
+struct ip_coeff_2nd {
   particle_real_t vm, v0, vp, h;
 
   void set(int *lg, particle_real_t u)
@@ -63,25 +59,44 @@ struct ip_coeff {
   }
 };
 
-#endif
-
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
     gx.set(&k1, xx[d] * dxi);				\
     set_S(s1x, k1-lg1, gx)
     
-struct ip_coeffs
+struct ip_coeffs_1st
 {
   void set(int* lg1, int* lh1, particle_real_t xm)
   {
     g.set(lg1, xm);
-#if !(ORDER == ORDER_1ST && IP_VARIANT == IP_VARIANT_EC)
     h.set(lh1, xm - .5f);
-#endif
   }
   
-  struct ip_coeff g;
-  struct ip_coeff h;
+  struct ip_coeff_1st g;
+  struct ip_coeff_1st h;
+};
+  
+struct ip_coeffs_1st_ec
+{
+  void set(int* lg1, int* lh1, particle_real_t xm)
+  {
+    g.set(lg1, xm);
+  }
+  
+  struct ip_coeff_1st g;
+  struct ip_coeff_1st h;
+};
+  
+struct ip_coeffs_2nd
+{
+  void set(int* lg1, int* lh1, particle_real_t xm)
+  {
+    g.set(lg1, xm);
+    h.set(lh1, xm - .5f);
+  }
+  
+  struct ip_coeff_2nd g;
+  struct ip_coeff_2nd h;
 };
   
 // ----------------------------------------------------------------------
@@ -347,25 +362,34 @@ struct ip_coeffs
 // ----------------------------------------------------------------------
 // set_S
 
-static inline void
-set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
-{
 #if ORDER == ORDER_1ST
+static inline void
+set_S(particle_real_t *s0, int shift, struct ip_coeff_1st gg)
+{
   S(s0, shift  ) = gg.v0;
   S(s0, shift+1) = gg.v1;
+}
+
 #elif ORDER == ORDER_2ND
+
+static inline void
+set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd gg)
+{
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
   // but it needs checking.
   particle_real_t h = gg.h;
   S(s0, shift-1) = .5f*(1.5f-particle_real_abs(h-1.f))*(1.5f-particle_real_abs(h-1.f));
   S(s0, shift  ) = .75f-particle_real_abs(h)*particle_real_abs(h);
   S(s0, shift+1) = .5f*(1.5f-particle_real_abs(h+1.f))*(1.5f-particle_real_abs(h+1.f));
-#endif
 }
 
-template<int N>
+#endif
+
+template<typename IP_COEFFS, int N>
 struct InterpolateEM
 {
+  using ip_coeffs_t = IP_COEFFS;
+  
   void set_coeffs(particle_real_t xm[3])
   {
     IF_DIM_X( cx.set(&lg1, &lh1, xm[0]); );
@@ -378,14 +402,23 @@ struct InterpolateEM
   int lg1, lh1;
   int lg2, lh2;
   int lg3, lh3;
-  struct ip_coeffs cx, cy, cz;
+  ip_coeffs_t cx, cy, cz;
 };
 
 #ifndef NNN
 #define NNN 0
 #endif
+#if ORDER == ORDER_1ST
+#if IP_VARIANT == IP_VARIANT_EC
+using ip_coeffs_t = ip_coeffs_1st_ec;
+#else
+using ip_coeffs_t = ip_coeffs_1st;
+#endif
+#elif ORDER == ORDER_2ND
+using ip_coeffs_t = ip_coeffs_2nd;
+#endif
 
-using IP = InterpolateEM<NNN>;
+using IP = InterpolateEM<ip_coeffs_t, NNN>;
 
 #define INTERPOLATE_FIELDS(flds)					\
   ip.set_coeffs(xm);							\
