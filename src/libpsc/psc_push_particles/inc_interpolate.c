@@ -67,6 +67,22 @@ struct ip_coeff_2nd
 // ----------------------------------------------------------------------
 // ip_coeffs
 
+template<typename OPT_IP>
+struct ip_coeffs {};
+
+template<>
+struct ip_coeffs<opt_ip_1st_ec>
+{
+  using ip_coeff_t = ip_coeff_1st;
+  
+  void set(particle_real_t xm)
+  {
+    g.set(xm);
+  }
+  
+  ip_coeff_t g;
+};
+
 template<typename IP_COEFF>
 struct ip_coeffs_std
 {
@@ -82,41 +98,11 @@ struct ip_coeffs_std
   ip_coeff_t h;
 };
 
-using ip_coeffs_1st = ip_coeffs_std<ip_coeff_1st>;
-using ip_coeffs_2nd = ip_coeffs_std<ip_coeff_2nd>;
-  
-struct ip_coeffs_1st_ec
-{
-  using ip_coeff_t = ip_coeff_1st;
-  
-  void set(particle_real_t xm)
-  {
-    g.set(xm);
-  }
-  
-  ip_coeff_t g;
-};
-
-template<typename opt_ip>
-struct opt_ip_traits {};
+template<>
+struct ip_coeffs<opt_ip_1st> : ip_coeffs_std<ip_coeff_1st> {};
 
 template<>
-struct opt_ip_traits<opt_ip_1st_ec>
-{
-  using ip_coeffs_t = ip_coeffs_1st_ec;
-};
-  
-template<>
-struct opt_ip_traits<opt_ip_1st>
-{
-  using ip_coeffs_t = ip_coeffs_1st;
-};
-  
-template<>
-struct opt_ip_traits<opt_ip_2nd>
-{
-  using ip_coeffs_t = ip_coeffs_2nd;
-};
+struct ip_coeffs<opt_ip_2nd> : ip_coeffs_std<ip_coeff_2nd> {};
 
 // ======================================================================
 // InterpolateEM_Helper
@@ -141,7 +127,7 @@ struct InterpolateEM_Helper
 // InterpolateEM_Helper: 1st EC, dim_xyz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_xyz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_1st_ec>, dim_xyz>
 {
   using real_t = particle_real_t;
 
@@ -192,7 +178,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_xyz>
 // InterpolateEM_Helper: 1st EC, dim_yz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_yz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_1st_ec>, dim_yz>
 {
   using real_t = particle_real_t;
 
@@ -241,7 +227,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_yz>
 // InterpolateEM_Helper: 1st std, dim_xz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_xz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_1st>, dim_xz>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -267,7 +253,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_xz>
 // InterpolateEM_Helper: 1st std, dim_yz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_yz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_1st>, dim_yz>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -312,7 +298,7 @@ struct InterpolateEM_Helper<F, IP, IP_COEFFS, dim_1>
 // InterpolateEM_Helper: 2nd std, dim_y
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_y>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_2nd>, dim_y>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -337,7 +323,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_y>
 // InterpolateEM_Helper: 2nd std, dim_z
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_z>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_2nd>, dim_z>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -362,7 +348,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_z>
 // InterpolateEM_Helper: 2nd std, dim_xy
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xy>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_2nd>, dim_xy>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -393,7 +379,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xy>
 // InterpolateEM_Helper: 2nd std, dim_xz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_2nd>, dim_xz>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -424,7 +410,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xz>
 // InterpolateEM_Helper: 2nd std, dim_yz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_yz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_2nd>, dim_yz>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -455,7 +441,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_yz>
 // InterpolateEM_Helper: 2nd std, dim_xyz
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xyz>
+struct InterpolateEM_Helper<F, IP, ip_coeffs<opt_ip_2nd>, dim_xyz>
 {
   using real_t = particle_real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -503,11 +489,11 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xyz>
 // ======================================================================
 // InterpolateEM
 
-template<typename F, typename IP_COEFFS, typename dim, int N>
+template<typename F, typename OPT_IP, typename dim, int N>
 struct InterpolateEM
 {
-  using IP = InterpolateEM<F, IP_COEFFS, dim, N>;
-  using ip_coeffs_t = IP_COEFFS;
+  using IP = InterpolateEM<F, OPT_IP, dim, N>;
+  using ip_coeffs_t = ip_coeffs<OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
   using real_t = particle_real_t;
   
@@ -535,9 +521,7 @@ struct InterpolateEM
 #define NNN 0
 #endif
 
-using ip_coeffs_t = opt_ip_traits<opt_ip>::ip_coeffs_t;
-  
-using IP = InterpolateEM<Fields3d<fields_t>, ip_coeffs_t, dim_t, NNN>;
+using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, dim_t, NNN>;
 
 #define INTERPOLATE_FIELDS(flds)					\
   ip.set_coeffs(xm);							\
