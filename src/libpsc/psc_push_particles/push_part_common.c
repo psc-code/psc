@@ -363,7 +363,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     for (int d = 0; d < 3; d++) {
       xm[d] = x[d] * c_prm.dxi[d];
     }
-    IP ip;
+    IP<NNN> ip;
     INTERPOLATE_FIELDS(flds_em);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 

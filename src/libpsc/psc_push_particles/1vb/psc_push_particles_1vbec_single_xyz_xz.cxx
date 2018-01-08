@@ -18,5 +18,7 @@
 #define IP_VARIANT IP_VARIANT_EC
 #define CALC_J CALC_J_1VB_SPLIT
 
+#define NNN 99
+
 #include "1vb.c"
 

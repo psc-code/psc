@@ -395,6 +395,11 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
 #endif
 }
 
+#ifndef NNN
+#define NNN 0
+#endif
+
+template<int N>
 struct IP
 {
 #ifdef IP_DEPOSIT
