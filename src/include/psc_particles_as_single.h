@@ -34,7 +34,6 @@ typedef particle_single_t particle_t;
 #define particle_mni                particle_single_mni
 #define particle_wni                particle_single_wni
 #define particle_kind               particle_single_kind
-#define particle_px                 particle_single_px
 #define particle_get_relative_pos   particle_single_get_relative_pos
 #define particle_real_nint          particle_single_real_nint
 #define particle_real_fint          particle_single_real_fint

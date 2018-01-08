@@ -34,8 +34,6 @@
       rv;								\
     })
 
-#define particle_single_by_block_px(prt) ((prt)->pxi)
-
 static inline particle_single_by_block_real_t
 particle_single_by_block_qni_wni(particle_single_by_block_t *p)
 {

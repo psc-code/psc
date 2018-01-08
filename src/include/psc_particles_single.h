@@ -38,8 +38,6 @@
 
 #define particle_single_qni_wni(prt) ((prt)->qni_wni)
 
-#define particle_single_px(prt) ((prt)->pxi)
-
 static inline int
 particle_single_kind(particle_single_t *prt)
 {

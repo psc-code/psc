@@ -74,8 +74,6 @@ particle_cuda2_kind(particle_cuda2_t *prt)
 
 #define particle_cuda2_qni_wni(prt) ((prt)->qni_wni)
 
-#define particle_cuda2_px(prt) ((prt)->pxi[0])
-
 CUDA_DEVICE static inline int
 particle_cuda2_real_fint(particle_cuda2_real_t x)
 {

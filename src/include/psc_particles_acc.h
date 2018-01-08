@@ -66,8 +66,6 @@ particle_acc_kind(particle_acc_t *prt)
 
 #define particle_acc_qni_wni(prt) ((prt)->qni_wni)
 
-#define particle_acc_px(prt) ((prt)->pxi[0])
-
 static inline int
 particle_acc_real_fint(particle_acc_real_t x)
 {
