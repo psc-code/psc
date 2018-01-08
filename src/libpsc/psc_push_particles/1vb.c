@@ -103,8 +103,8 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 
 template<typename C>
 void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
-					  struct psc_mparticles *mprts,
-					  struct psc_mfields *mflds_base)
+				  struct psc_mparticles *mprts,
+				  struct psc_mfields *mflds_base)
 {
   using mfields_t = typename C::mfields_t;
   using fields_t = typename mfields_t::fields_t;

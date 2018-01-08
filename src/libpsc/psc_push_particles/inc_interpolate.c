@@ -487,10 +487,10 @@ struct InterpolateEM_Helper<F, IP, opt_ip_2nd, dim_xyz>
 // ======================================================================
 // InterpolateEM
 
-template<typename F, typename OPT_IP, typename dim, int N>
+template<typename F, typename OPT_IP, typename OPT_DIM>
 struct InterpolateEM
 {
-  using IP = InterpolateEM<F, OPT_IP, dim, N>;
+  using IP = InterpolateEM<F, OPT_IP, OPT_DIM>;
   using real_t = typename F::real_t;
   using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
@@ -502,7 +502,7 @@ struct InterpolateEM
     IF_DIM_Z( cz.set(xm[2]); );
   }
 
-  using Helper = InterpolateEM_Helper<F, IP, OPT_IP, dim>;
+  using Helper = InterpolateEM_Helper<F, IP, OPT_IP, OPT_DIM>;
   real_t ex(F EM) { return Helper::ex(*this, EM); }
   real_t ey(F EM) { return Helper::ey(*this, EM); }
   real_t ez(F EM) { return Helper::ez(*this, EM); }
@@ -513,9 +513,5 @@ struct InterpolateEM
   ip_coeffs_t cx, cy, cz;
 };
 
-#ifndef NNN
-#define NNN 0
-#endif
-
-using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim, NNN>;
+using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 
