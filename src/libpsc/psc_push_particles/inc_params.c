@@ -1,20 +1,20 @@
 
 #if DIM == DIM_1
-using dim_t = dim_1;
+using opt_dim = dim_1;
 #elif DIM == DIM_X
-using dim_t = dim_x;
+using opt_dim = dim_x;
 #elif DIM == DIM_Y
-using dim_t = dim_y;
+using opt_dim = dim_y;
 #elif DIM == DIM_Z
-using dim_t = dim_z;
+using opt_dim = dim_z;
 #elif DIM == DIM_XY
-using dim_t = dim_xy;
+using opt_dim = dim_xy;
 #elif DIM == DIM_XZ
-using dim_t = dim_xz;
+using opt_dim = dim_xz;
 #elif DIM == DIM_YZ
-using dim_t = dim_yz;
+using opt_dim = dim_yz;
 #elif DIM == DIM_XYZ
-using dim_t = dim_xyz;
+using opt_dim = dim_xyz;
 #endif
 
 #if ORDER == ORDER_1ST

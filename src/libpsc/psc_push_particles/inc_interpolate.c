@@ -517,5 +517,5 @@ struct InterpolateEM
 #define NNN 0
 #endif
 
-using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, dim_t, NNN>;
+using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim, NNN>;
 
