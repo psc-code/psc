@@ -61,10 +61,4 @@ particle_double_real_sqrt(particle_double_real_t x)
   return sqrt(x);
 }
 
-static inline particle_double_real_t
-particle_double_real_abs(particle_double_real_t x)
-{
-  return fabs(x);
-}
-
 #endif

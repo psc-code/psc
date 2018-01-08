@@ -97,7 +97,7 @@ calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
     } else {
       dx1[1] = dx[1] / dx[0] * dx1[0];
     }
-    if (particle_real_abs(x[1] + dx1[1]) > .5f) {
+    if (std::abs(x[1] + dx1[1]) > .5f) {
       first_dir = 1;
     } else {
       first_dir = 0;

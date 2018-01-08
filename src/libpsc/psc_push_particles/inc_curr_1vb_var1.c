@@ -146,7 +146,7 @@ calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
 
   real x1 = x[1] * idiff[1];
   real x2 = x[2] * idiff[2];
-  int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
+  int d_first = (std::abs(dx[2]) * (.5f - x1) >= std::abs(dx[1]) * (.5f - x2));
 
   if (d_first == 0) {
     off[1] = idiff[1];
@@ -184,7 +184,7 @@ calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
     } else {
       dx1[2] = dx[2] / dx[1] * dx1[1];
     }
-    if (particle_real_abs(x[2] + dx1[2]) > .5f) {
+    if (std::abs(x[2] + dx1[2]) > .5f) {
       first_dir = 2;
     } else {
       first_dir = 1;

@@ -144,9 +144,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
   // but it needs checking.
   particle_real_t h = gg.h;
-  S(s0, shift-1) = .5f*(1.5f-particle_real_abs(h-1.f))*(1.5f-particle_real_abs(h-1.f));
-  S(s0, shift  ) = .75f-particle_real_abs(h)*particle_real_abs(h);
-  S(s0, shift+1) = .5f*(1.5f-particle_real_abs(h+1.f))*(1.5f-particle_real_abs(h+1.f));
+  S(s0, shift-1) = .5f * (1.5f-std::abs(h-1.f)) * (1.5f-std::abs(h-1.f));
+  S(s0, shift  ) = .75f - std::abs(h) * std::abs(h);
+  S(s0, shift+1) = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
 }
 
 #endif
