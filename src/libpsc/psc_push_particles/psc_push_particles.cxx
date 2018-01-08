@@ -159,7 +159,6 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_generic_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_2nd_double_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1st_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1sff_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_double_ops);

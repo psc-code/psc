@@ -18,17 +18,10 @@
 #if ORDER == ORDER_1ST
 
 #if DIM == DIM_XZ
-#if IP_VARIANT == IP_VARIANT_SFF
-#define SFX(x) x ## _1sff_xz
-#define psc_push_particles_push_mprts
-#define do_push_part do_push_part_1sff_xz
-#define PROF_NAME "push_mprts_1sff_xz"
-#else
 #define SFX(x) x ## _1st_xz
 #define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1st_xz
 #define PROF_NAME "push_mprts_1st_xz"
-#endif
 #elif DIM == DIM_YZ
 #define SFX(x) x ## _1st_yz
 #define psc_push_particles_push_mprts
@@ -343,8 +336,6 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
   Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
   Fields3d<fields_t> J(flds);
 
-  IP_VARIANT_SFF_PREP;
-  
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
     particle_real_t *x = &part->xi;
@@ -407,7 +398,6 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     CURRENT;
   }
 
-  IP_VARIANT_SFF_POST;
 }
 
 #endif

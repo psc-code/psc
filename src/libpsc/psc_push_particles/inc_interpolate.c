@@ -97,64 +97,6 @@ struct ip_coeffs_1st_ec
   ip_coeff_t g;
 };
 
-// ======================================================================
-// IP_VARIANT SFF
-
-#if IP_VARIANT == IP_VARIANT_SFF
-
-// FIXME, calculation of f_avg could be done at the level where we do caching, too
-// (if that survives, anyway...)
-
-#define IP_VARIANT_SFF_PREP					\
-  struct psc_patch *patch = &ppsc->patch[p];			\
-  								\
-  /* FIXME, eventually no ghost points should be needed (?) */	\
-  fields_t flds_em = fields_t((int[3]) { -1, 0, -1 },		\
-			      (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },	\
-			      6);					\
-  Fields3d<fields_t> F_EM(flds_em);					\
-									\
-  for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {			\
-    for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {			\
-      F_EM(0, ix,0,iz) = .5 * (EM(EX, ix,0,iz) + EM(EX, ix-1,0,iz)); \
-      F_EM(1, ix,0,iz) = EM(EY, ix,0,iz);		\
-      F_EM(2, ix,0,iz) = .5 * (EM(EZ, ix,0,iz) + EM(EZ, ix,0,iz-1)); \
-      F_EM(3, ix,0,iz) = .5 * (EM(HX, ix,0,iz) + EM(HX, ix,0,iz-1)); \
-      F_EM(4, ix,0,iz) = .25 * (EM(HY, ix  ,0,iz) + EM(HY, ix  ,0,iz-1) + \
-				EM(HY, ix-1,0,iz) + EM(HY, ix-1,0,iz-1)); \
-      F_EM(5, ix,0,iz) = .5 * (EM(HZ, ix,0,iz) + EM(HZ, ix-1,0,iz)); \
-    }									\
-  }
-
-#define IP_VARIANT_SFF_POST			\
-  flds_em.dtor()
-
-/* FIXME, we don't really need h coeffs in this case, either, though
- * the compiler may be smart enough to figure that out */
-
-#define IP_FIELD_EX(flds) IP_FIELD(flds, EX-EX, g, g, g)
-#define IP_FIELD_EY(flds) IP_FIELD(flds, EY-EX, g, g, g)
-#define IP_FIELD_EZ(flds) IP_FIELD(flds, EZ-EX, g, g, g)
-#define IP_FIELD_HX(flds) IP_FIELD(flds, HX-EX, g, g, g)
-#define IP_FIELD_HY(flds) IP_FIELD(flds, HY-EX, g, g, g)
-#define IP_FIELD_HZ(flds) IP_FIELD(flds, HZ-EX, g, g, g)
-
-#elif IP_VARIANT == IP_VARIANT_EC
-// IP_FIELD_* has already been defined earlier
-#else
-
-#define IP_VARIANT_SFF_PREP do {} while (0)
-#define IP_VARIANT_SFF_POST do {} while (0)
-
-#define IP_FIELD_EX(flds) IP_FIELD(flds, EX, h, g, g)
-#define IP_FIELD_EY(flds) IP_FIELD(flds, EY, g, h, g)
-#define IP_FIELD_EZ(flds) IP_FIELD(flds, EZ, g, g, h)
-#define IP_FIELD_HX(flds) IP_FIELD(flds, HX, g, h, h)
-#define IP_FIELD_HY(flds) IP_FIELD(flds, HY, h, g, h)
-#define IP_FIELD_HZ(flds) IP_FIELD(flds, HZ, h, h, g)
-
-#endif
-
 // ----------------------------------------------------------------------
 // charge density 
 

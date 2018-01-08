@@ -12,13 +12,3 @@ struct psc_push_particles_ops psc_push_particles_1st_ops = {
   .particles_type        = "double",
 };
 
-// ======================================================================
-// psc_push_particles: subclass "1sff"
-//
-// 1st order, self-force free
-
-struct psc_push_particles_ops psc_push_particles_1sff_ops = {
-  .name                  = "1sff",
-  .push_mprts_xz         = psc_push_particles_push_mprts_1sff_xz,
-  .particles_type        = "double",
-};
