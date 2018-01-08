@@ -34,7 +34,6 @@
 
 #define ORDER_1ST 1
 #define ORDER_2ND 2
-#define ORDER_1P5 2
 
 // ----------------------------------------------------------------------
 // IP_VARIANT

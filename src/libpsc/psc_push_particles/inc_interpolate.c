@@ -71,28 +71,7 @@ struct ip_coeff {
 static inline void
 ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
 {
-#if ORDER == ORDER_1ST || ORDER == ORDER_2ND
   hh->set(lh, u - .5f);
-#elif ORDER == ORDER_1P5
-  // 1+1/2 method from Sokolov paper
-  // FIXME, this is almost certainly buggy
-  int l;
-  particle_real_t h;
-  
-  get_nint_remainder(&l, &h, u - .5f);
-
-  if (h >= 0) { //0 FIXME???
-    hh->vm = h;
-    hh->v0 = 1.f - h;
-    hh->vp = 0;
-  } else { // h < 0
-    hh->vm = 0;
-    hh->v0 = 1.f + h;
-    hh->vp = -h;
-  }
-  *lh = l;
-  assert(0);
-#endif
 }
 
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\

@@ -19,9 +19,6 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_2nd.cxx \
 	push_part_double_2nd_yz.cxx \
 	\
-	psc_1p5_double.h \
-	psc_push_particles_1p5_double.cxx \
-	push_part_1p5_double_yz.cxx \
 	psc_push_particles_1st.cxx \
 	\
 	push_part_1st_xz.cxx \
