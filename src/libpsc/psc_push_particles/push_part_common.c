@@ -130,7 +130,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #if ORDER == ORDER_1ST
 static inline void
-set_S(particle_real_t *s0, int shift, struct ip_coeff_1st gg)
+set_S(particle_real_t *s0, int shift, struct ip_coeff_1st<particle_real_t> gg)
 {
   S(s0, shift  ) = gg.v0;
   S(s0, shift+1) = gg.v1;
@@ -139,7 +139,7 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_1st gg)
 #elif ORDER == ORDER_2ND
 
 static inline void
-set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd gg)
+set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 {
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
   // but it needs checking.
