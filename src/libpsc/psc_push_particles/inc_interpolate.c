@@ -58,12 +58,6 @@ struct ip_coeff_2nd
   int l;
 };
 
-#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
-    int k1;						\
-    gx.set(xx[d] * dxi);				\
-    k1 = gx.l;						\
-    set_S(s1x, k1-lg1, gx)
-
 // ----------------------------------------------------------------------
 // ip_coeffs
 

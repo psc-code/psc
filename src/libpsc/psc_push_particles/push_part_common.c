@@ -97,6 +97,12 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #define S(s, off) s[off + S_OFF]
 
+#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
+    int k1;						\
+    gx.set(xx[d] * dxi);				\
+    k1 = gx.l;						\
+    set_S(s1x, k1-lg1, gx)
+
 // ----------------------------------------------------------------------
 // ZERO_S1
 
