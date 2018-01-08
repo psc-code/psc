@@ -364,7 +364,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
       xm[d] = x[d] * c_prm.dxi[d];
     }
     IP ip;
-    INTERPOLATE_FIELDS(flds_em);
+    INTERPOLATE_FIELDS(EM);
     IF_DIM_X( set_S(s0x, 0, ip.cx.g); );
     IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
     IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );

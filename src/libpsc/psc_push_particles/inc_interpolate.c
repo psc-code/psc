@@ -381,10 +381,74 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd gg)
 
 #endif
 
-template<typename IP_COEFFS, int N>
+template<typename F, typename IP, typename IP_COEFFS, typename dim>
+struct InterpolateEM_Helper
+{
+  using real_t = particle_real_t;
+
+  static real_t ex(const IP& ip, F EM) { assert(0); }
+  static real_t ey(const IP& ip, F EM) { assert(0); }
+  static real_t ez(const IP& ip, F EM) { assert(0); }
+  static real_t hx(const IP& ip, F EM) { assert(0); }
+  static real_t hy(const IP& ip, F EM) { assert(0); }
+  static real_t hz(const IP& ip, F EM) { assert(0); }
+};
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_xyz>
+{
+  using real_t = particle_real_t;
+
+  static real_t ex(const IP& ip, F EM)
+  {
+    return (ip.cz.g.v0*(ip.cy.g.v0*EM(EX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
+			ip.cy.g.v1*EM(EX, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  )) +
+	    ip.cz.g.v1*(ip.cy.g.v0*EM(EX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1) +
+			ip.cy.g.v1*EM(EX, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l+1)));
+  }
+
+  static real_t ey(const IP& ip, F EM)
+  {
+    return (ip.cx.g.v0*(ip.cz.g.v0*EM(EY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
+			ip.cz.g.v1*EM(EY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1)) +
+	    ip.cx.g.v1*(ip.cz.g.v0*EM(EY, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  ) +
+			ip.cz.g.v1*EM(EY, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l+1)));
+  }
+
+  static real_t ez(const IP& ip, F EM)
+  {
+    return (ip.cy.g.v0*(ip.cx.g.v0*EM(EZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
+			ip.cx.g.v1*EM(EZ, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  )) +
+	    ip.cy.g.v1*(ip.cx.g.v0*EM(EZ, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  ) +
+			ip.cx.g.v1*EM(EZ, ip.cx.g.l+1,ip.cy.g.l+1,ip.cz.g.l  )));
+  }
+
+  static real_t hx(const IP& ip, F EM)
+  {
+    return (ip.cx.g.v0*EM(HX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
+	    ip.cx.g.v1*EM(HX, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  ));
+  }
+
+  static real_t hy(const IP& ip, F EM)
+  {
+    return (ip.cy.g.v0*EM(HY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
+	    ip.cy.g.v1*EM(HY, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  ));	     
+  }
+
+  static real_t hz(const IP& ip, F EM)
+  {
+    return (ip.cz.g.v0*EM(HZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
+	    ip.cz.g.v1*EM(HZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1));	     
+  }
+};
+
+
+template<typename F, typename IP_COEFFS, typename dim, int N>
 struct InterpolateEM
 {
+  using IP = InterpolateEM<F, IP_COEFFS, dim, N>;
   using ip_coeffs_t = IP_COEFFS;
+  using real_t = particle_real_t;
   
   void set_coeffs(particle_real_t xm[3])
   {
@@ -392,6 +456,14 @@ struct InterpolateEM
     IF_DIM_Y( cy.set(xm[1]); );
     IF_DIM_Z( cz.set(xm[2]); );
   }
+
+  using Helper = InterpolateEM_Helper<F, IP, ip_coeffs_t, dim>;
+  real_t ex(F EM) { return Helper::ex(*this, EM); }
+  real_t ey(F EM) { return Helper::ey(*this, EM); }
+  real_t ez(F EM) { return Helper::ez(*this, EM); }
+  real_t hx(F EM) { return Helper::hx(*this, EM); }
+  real_t hy(F EM) { return Helper::hy(*this, EM); }
+  real_t hz(F EM) { return Helper::hz(*this, EM); }
   
   particle_real_t E[3];
   particle_real_t H[3];
@@ -401,6 +473,7 @@ struct InterpolateEM
 #ifndef NNN
 #define NNN 0
 #endif
+
 #if ORDER == ORDER_1ST
 #if IP_VARIANT == IP_VARIANT_EC
 using ip_coeffs_t = ip_coeffs_1st_ec;
@@ -411,15 +484,15 @@ using ip_coeffs_t = ip_coeffs_1st;
 using ip_coeffs_t = ip_coeffs_2nd;
 #endif
 
-using IP = InterpolateEM<ip_coeffs_t, NNN>;
+using IP = InterpolateEM<Fields3d<fields_t>, ip_coeffs_t, dim_xyz, NNN>;
 
 #define INTERPOLATE_FIELDS(flds)					\
   ip.set_coeffs(xm);							\
-  ip.E[0] = IP_FIELD_EX(flds);						\
-  ip.E[1] = IP_FIELD_EY(flds);						\
-  ip.E[2] = IP_FIELD_EZ(flds);						\
-  ip.H[0] = IP_FIELD_HX(flds);						\
-  ip.H[1] = IP_FIELD_HY(flds);						\
-  ip.H[2] = IP_FIELD_HZ(flds);
+  ip.E[0] = ip.ex(flds);						\
+  ip.E[1] = ip.ey(flds);						\
+  ip.E[2] = ip.ez(flds);						\
+  ip.H[0] = ip.hx(flds);						\
+  ip.H[1] = ip.hy(flds);						\
+  ip.H[2] = ip.hz(flds);						\
 
 
