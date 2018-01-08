@@ -33,41 +33,43 @@ get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 
 struct ip_coeff {
   particle_real_t v0, v1;
+
+  void set(int *lg, particle_real_t u)
+  {
+    int l;
+    particle_real_t h;
+    
+    get_fint_remainder(&l, &h, u);
+    v0 = 1.f - h;
+    v1 = h;
+    *lg = l;
+  }
 };
-
-static inline void
-ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
-{
-  int l;
-  particle_real_t h;
-
-  get_fint_remainder(&l, &h, u);
-  gg->v0 = 1.f - h;
-  gg->v1 = h;
-  *lg = l;
-}
 
 #elif ORDER == ORDER_2ND
 
 struct ip_coeff {
   particle_real_t vm, v0, vp, h;
+
+  void set(int *lg, particle_real_t u)
+  {
+    int l;
+    
+    get_nint_remainder(&l, &h, u);
+    vm = .5f * (.5f+h)*(.5f+h);
+    v0 = .75f - h*h;
+    vp = .5f * (.5f-h)*(.5f-h);
+    *lg = l;
+  }
 };
+
+#endif
 
 static inline void
 ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 {
-  int l;
-  particle_real_t h;
-
-  get_nint_remainder(&l, &h, u);
-  gg->h  = h;
-  gg->vm = .5f * (.5f+h)*(.5f+h);
-  gg->v0 = .75f - h*h;
-  gg->vp = .5f * (.5f-h)*(.5f-h);
-  *lg = l;
+  gg->set(lg, u);
 }
-
-#endif
 
 // ----------------------------------------------------------------------
 // ip_coeff_g
