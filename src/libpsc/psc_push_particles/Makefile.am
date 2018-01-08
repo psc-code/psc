@@ -32,9 +32,6 @@ libsubdir_la_SOURCES = \
 	1vb/psc_push_particles_1vbec_single_xyz.cxx \
 	1vb/psc_push_particles_1vbec_single_xyz_xz.cxx \
 	1vb/psc_push_particles_1vbec_single_1.cxx \
-	1vb/psc_push_particles_1vbec_single_by_block.cxx \
-	1vb/psc_push_particles_1vbec_single_by_block_yz.cxx \
-	1vb/psc_push_particles_1vbec_single_by_block_xyz.cxx \
 	\
 	1vb/psc_push_particles_1vb_double.cxx \
 	1vb/psc_push_particles_1vbec_double.cxx \

@@ -20,42 +20,6 @@
 
 // ======================================================================
 
-#ifdef PUSHER_BY_BLOCK
-
-static void
-do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
-{
-#ifdef PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
-  struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
-#endif
-
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  for (int b = 0; b < patch->nr_blocks; b++) {
-    for (int n = patch->b_off[b]; n < patch->b_off[b+1]; n++) {
-      push_one(prts.begin, n, flds, flds);
-    }
-  }
-}
-
-static void
-do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
-{
-#ifdef PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
-  struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
-#endif
-
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  for (int b = 0; b < patch->nr_blocks; b++) {
-    for (int n = patch->b_off[b]; n < patch->b_off[b+1]; n++) {
-      stagger_one(prts.begin, n, flds);
-    }
-  }
-}
-
-#else
-
 static void
 do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 {
@@ -77,8 +41,6 @@ do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
     stagger_one(prts.begin, n, flds);
   }
 }
-
-#endif
 
 template<typename C>
 void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
