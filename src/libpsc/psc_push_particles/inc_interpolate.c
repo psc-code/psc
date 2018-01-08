@@ -29,39 +29,39 @@ get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 // ----------------------------------------------------------------------
 // ip_coeff
 
-struct ip_coeff_1st {
-  particle_real_t v0, v1;
-
-  void set(int *lg, particle_real_t u)
+struct ip_coeff_1st
+{
+  void set(particle_real_t u)
   {
-    int l;
     particle_real_t h;
     
     get_fint_remainder(&l, &h, u);
     v0 = 1.f - h;
     v1 = h;
-    *lg = l;
   }
+
+  particle_real_t v0, v1;
+  int l;
 };
 
-struct ip_coeff_2nd {
-  particle_real_t vm, v0, vp, h;
-
-  void set(int *lg, particle_real_t u)
+struct ip_coeff_2nd
+{
+  void set(particle_real_t u)
   {
-    int l;
-    
     get_nint_remainder(&l, &h, u);
     vm = .5f * (.5f+h)*(.5f+h);
     v0 = .75f - h*h;
     vp = .5f * (.5f-h)*(.5f-h);
-    *lg = l;
   }
+
+  particle_real_t vm, v0, vp, h;
+  int l;
 };
 
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
-    gx.set(&k1, xx[d] * dxi);				\
+    gx.set(xx[d] * dxi);				\
+    k1 = gx.l;						\
     set_S(s1x, k1-lg1, gx)
 
 // ----------------------------------------------------------------------
@@ -72,10 +72,10 @@ struct ip_coeffs_std
 {
   using ip_coeff_t = IP_COEFF;
   
-  void set(int* lg1, int* lh1, particle_real_t xm)
+  void set(particle_real_t xm)
   {
-    g.set(lg1, xm);
-    h.set(lh1, xm - .5f);
+    g.set(xm);
+    h.set(xm - .5f);
   }
   
   ip_coeff_t g;
@@ -87,9 +87,9 @@ using ip_coeffs_2nd = ip_coeffs_std<ip_coeff_2nd>;
   
 struct ip_coeffs_1st_ec
 {
-  void set(int* lg1, int* lh1, particle_real_t xm)
+  void set(particle_real_t xm)
   {
-    g.set(lg1, xm);
+    g.set(xm);
   }
   
   ip_coeff_1st g;
@@ -113,51 +113,51 @@ struct ip_coeffs_1st_ec
 #elif DIM == DIM_YZ
 
 #define IP_FIELD_EX(flds)					\
-  (ip.cz.g.v0*(ip.cy.g.v0*EM(EX, 0,ip.lg2  ,ip.lg3  ) +				\
-	  ip.cy.g.v1*EM(EX, 0,ip.lg2+1,ip.lg3  )) +			\
-   ip.cz.g.v1*(ip.cy.g.v0*EM(EX, 0,ip.lg2  ,ip.lg3+1) +				\
-	  ip.cy.g.v1*EM(EX, 0,ip.lg2+1,ip.lg3+1)))
+  (ip.cz.g.v0*(ip.cy.g.v0*EM(EX, 0,ip.cy.g.l  ,ip.cz.g.l  ) +				\
+	  ip.cy.g.v1*EM(EX, 0,ip.cy.g.l+1,ip.cz.g.l  )) +			\
+   ip.cz.g.v1*(ip.cy.g.v0*EM(EX, 0,ip.cy.g.l  ,ip.cz.g.l+1) +				\
+	  ip.cy.g.v1*EM(EX, 0,ip.cy.g.l+1,ip.cz.g.l+1)))
 #define IP_FIELD_EY(flds)					\
-  (ip.cz.g.v0*EM(EY, 0,ip.lg2  ,ip.lg3  ) +				\
-   ip.cz.g.v1*EM(EY, 0,ip.lg2  ,ip.lg3+1))
+  (ip.cz.g.v0*EM(EY, 0,ip.cy.g.l  ,ip.cz.g.l  ) +				\
+   ip.cz.g.v1*EM(EY, 0,ip.cy.g.l  ,ip.cz.g.l+1))
 #define IP_FIELD_EZ(flds)					\
-  (ip.cy.g.v0*EM(EZ, 0,ip.lg2  ,ip.lg3  ) +				\
-   ip.cy.g.v1*EM(EZ, 0,ip.lg2+1,ip.lg3  ))
+  (ip.cy.g.v0*EM(EZ, 0,ip.cy.g.l  ,ip.cz.g.l  ) +				\
+   ip.cy.g.v1*EM(EZ, 0,ip.cy.g.l+1,ip.cz.g.l  ))
 #define IP_FIELD_HX(flds)			                \
-  (EM(HX, 0,ip.lg2  ,ip.lg3  ))
+  (EM(HX, 0,ip.cy.g.l  ,ip.cz.g.l  ))
 #define IP_FIELD_HY(flds)					\
-  (ip.cy.g.v0*EM(HY, 0,ip.lg2  ,ip.lg3  ) +				\
-   ip.cy.g.v1*EM(HY, 0,ip.lg2+1,ip.lg3  ))
+  (ip.cy.g.v0*EM(HY, 0,ip.cy.g.l  ,ip.cz.g.l  ) +				\
+   ip.cy.g.v1*EM(HY, 0,ip.cy.g.l+1,ip.cz.g.l  ))
 #define IP_FIELD_HZ(flds)					\
-  (ip.cz.g.v0*EM(HZ, 0,ip.lg2  ,ip.lg3  ) +				\
-   ip.cz.g.v1*EM(HZ, 0,ip.lg2  ,ip.lg3+1))
+  (ip.cz.g.v0*EM(HZ, 0,ip.cy.g.l  ,ip.cz.g.l  ) +				\
+   ip.cz.g.v1*EM(HZ, 0,ip.cy.g.l  ,ip.cz.g.l+1))
 
 #elif DIM == DIM_XYZ
 
 #define IP_FIELD_EX(flds)					\
-  (ip.cz.g.v0*(ip.cy.g.v0*EM(EX, ip.lg1  ,ip.lg2  ,ip.lg3  ) +			\
-	  ip.cy.g.v1*EM(EX, ip.lg1  ,ip.lg2+1,ip.lg3  )) +			\
-   ip.cz.g.v1*(ip.cy.g.v0*EM(EX, ip.lg1  ,ip.lg2  ,ip.lg3+1) +			\
-	  ip.cy.g.v1*EM(EX, ip.lg1  ,ip.lg2+1,ip.lg3+1)))
+  (ip.cz.g.v0*(ip.cy.g.v0*EM(EX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +			\
+	  ip.cy.g.v1*EM(EX, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  )) +			\
+   ip.cz.g.v1*(ip.cy.g.v0*EM(EX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1) +			\
+	  ip.cy.g.v1*EM(EX, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l+1)))
 #define IP_FIELD_EY(flds)					\
-  (ip.cx.g.v0*(ip.cz.g.v0*EM(EY, ip.lg1  ,ip.lg2  ,ip.lg3  ) +			\
-	  ip.cz.g.v1*EM(EY, ip.lg1  ,ip.lg2  ,ip.lg3+1)) +			\
-   ip.cx.g.v1*(ip.cz.g.v0*EM(EY, ip.lg1+1,ip.lg2  ,ip.lg3  ) +			\
-	  ip.cz.g.v1*EM(EY, ip.lg1+1,ip.lg2  ,ip.lg3+1)))	     
+  (ip.cx.g.v0*(ip.cz.g.v0*EM(EY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +			\
+	  ip.cz.g.v1*EM(EY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1)) +			\
+   ip.cx.g.v1*(ip.cz.g.v0*EM(EY, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  ) +			\
+	  ip.cz.g.v1*EM(EY, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l+1)))	     
 #define IP_FIELD_EZ(flds)					\
-  (ip.cy.g.v0*(ip.cx.g.v0*EM(EZ, ip.lg1  ,ip.lg2  ,ip.lg3  ) +			\
-	  ip.cx.g.v1*EM(EZ, ip.lg1+1,ip.lg2  ,ip.lg3  )) +			\
-   ip.cy.g.v1*(ip.cx.g.v0*EM(EZ, ip.lg1  ,ip.lg2+1,ip.lg3  ) +			\
-	  ip.cx.g.v1*EM(EZ, ip.lg1+1,ip.lg2+1,ip.lg3  )))
+  (ip.cy.g.v0*(ip.cx.g.v0*EM(EZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +			\
+	  ip.cx.g.v1*EM(EZ, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  )) +			\
+   ip.cy.g.v1*(ip.cx.g.v0*EM(EZ, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  ) +			\
+	  ip.cx.g.v1*EM(EZ, ip.cx.g.l+1,ip.cy.g.l+1,ip.cz.g.l  )))
 #define IP_FIELD_HX(flds)			\
-  (ip.cx.g.v0*EM(HX, ip.lg1  ,ip.lg2  ,ip.lg3  ) +		\
-   ip.cx.g.v1*EM(HX, ip.lg1+1,ip.lg2  ,ip.lg3  ))
+  (ip.cx.g.v0*EM(HX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +		\
+   ip.cx.g.v1*EM(HX, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  ))
 #define IP_FIELD_HY(flds)			\
-  (ip.cy.g.v0*EM(HY, ip.lg1  ,ip.lg2  ,ip.lg3  ) +		\
-   ip.cy.g.v1*EM(HY, ip.lg1  ,ip.lg2+1,ip.lg3  ))	     
+  (ip.cy.g.v0*EM(HY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +		\
+   ip.cy.g.v1*EM(HY, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  ))	     
 #define IP_FIELD_HZ(flds)			\
-  (ip.cz.g.v0*EM(HZ, ip.lg1  ,ip.lg2  ,ip.lg3  ) +		\
-   ip.cz.g.v1*EM(HZ, ip.lg1  ,ip.lg2  ,ip.lg3+1))	     
+  (ip.cz.g.v0*EM(HZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +		\
+   ip.cz.g.v1*EM(HZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1))	     
 
 #endif
 
@@ -165,16 +165,16 @@ struct ip_coeffs_1st_ec
 
 #if DIM == DIM_XZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.v0*(ip.cx.gx.v0*EM(m, ip.l##gx##1  ,0,ip.l##gz##3  ) +		\
-	     ip.cx.gx.v1*EM(m, ip.l##gx##1+1,0,ip.l##gz##3  )) +		\
-   ip.cz.gz.v1*(ip.cx.gx.v0*EM(m, ip.l##gx##1  ,0,ip.l##gz##3+1) +		\
-	     ip.cx.gx.v1*EM(m, ip.l##gx##1+1,0,ip.l##gz##3+1)))
+  (ip.cz.gz.v0*(ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l  ) +		\
+	     ip.cx.gx.v1*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l  )) +		\
+   ip.cz.gz.v1*(ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l+1) +		\
+	     ip.cx.gx.v1*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l+1)))
 #elif DIM == DIM_YZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.v0*(ip.cy.gy.v0*EM(m, 0,ip.l##gy##2  ,ip.l##gz##3  ) +			\
-	     ip.cy.gy.v1*EM(m, 0,ip.l##gy##2+1,ip.l##gz##3  )) +			\
-   ip.cz.gz.v1*(ip.cy.gy.v0*EM(m, 0,ip.l##gy##2  ,ip.l##gz##3+1) +			\
-	     ip.cy.gy.v1*EM(m, 0,ip.l##gy##2+1,ip.l##gz##3+1)))
+  (ip.cz.gz.v0*(ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l  ) +			\
+	     ip.cy.gy.v1*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l  )) +			\
+   ip.cz.gz.v1*(ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l+1) +			\
+	     ip.cy.gy.v1*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l+1)))
 #endif
 
 #endif // IP_VARIANT
@@ -183,76 +183,76 @@ struct ip_coeffs_1st_ec
 
 #if DIM == DIM_Y
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cy.gy.vm*EM(m, 0,ip.l##gy##2-1,0) +				\
-   ip.cy.gy.v0*EM(m, 0,ip.l##gy##2  ,0) +				\
-   ip.cy.gy.vp*EM(m, 0,ip.l##gy##2+1,0))
+  (ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,0) +				\
+   ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,0) +				\
+   ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,0))
 #elif DIM == DIM_Z
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*EM(m, 0,0,ip.l##gz##3-1) +				\
-   ip.cz.gz.v0*EM(m, 0,0,ip.l##gz##3  ) +				\
-   ip.cz.gz.vp*EM(m, 0,0,ip.l##gz##3+1))
+  (ip.cz.gz.vm*EM(m, 0,0,ip.cz.gz.l-1) +				\
+   ip.cz.gz.v0*EM(m, 0,0,ip.cz.gz.l  ) +				\
+   ip.cz.gz.vp*EM(m, 0,0,ip.cz.gz.l+1))
 #elif DIM == DIM_XY
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2-1,0) +		\
-	     ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2-1,0) +		\
-	     ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2-1,0)) +		\
-   ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2  ,0) +		\
-	     ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2  ,0) +		\
-	     ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2  ,0)) +		\
-   ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2+1,0) +		\
-	     ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2+1,0) +		\
-	     ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2+1,0)))
+  (ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,0) +		\
+	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,0) +		\
+	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,0)) +		\
+   ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,0) +		\
+	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,0) +		\
+	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,0)) +		\
+   ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,0) +		\
+	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,0) +		\
+	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,0)))
 #elif DIM == DIM_XZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,0,ip.l##gz##3-1) +		\
-	     ip.cx.gx.v0*EM(m, ip.l##gx##1  ,0,ip.l##gz##3-1) +		\
-	     ip.cx.gx.vp*EM(m, ip.l##gx##1+1,0,ip.l##gz##3-1)) +		\
-   ip.cz.gz.v0*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,0,ip.l##gz##3  ) +		\
-	     ip.cx.gx.v0*EM(m, ip.l##gx##1  ,0,ip.l##gz##3  ) +		\
-	     ip.cx.gx.vp*EM(m, ip.l##gx##1+1,0,ip.l##gz##3  )) +		\
-   ip.cz.gz.vp*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,0,ip.l##gz##3+1) +		\
-	     ip.cx.gx.v0*EM(m, ip.l##gx##1  ,0,ip.l##gz##3+1) +		\
-	     ip.cx.gx.vp*EM(m, ip.l##gx##1+1,0,ip.l##gz##3+1)))
+  (ip.cz.gz.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,0,ip.cz.gz.l-1) +		\
+	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l-1) +		\
+	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l-1)) +		\
+   ip.cz.gz.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,0,ip.cz.gz.l  ) +		\
+	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l  ) +		\
+	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l  )) +		\
+   ip.cz.gz.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,0,ip.cz.gz.l+1) +		\
+	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l+1) +		\
+	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l+1)))
 #elif DIM == DIM_YZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*(ip.cy.gy.vm*EM(m, 0,ip.l##gy##2-1,ip.l##gz##3-1) +		\
-	     ip.cy.gy.v0*EM(m, 0,ip.l##gy##2  ,ip.l##gz##3-1) +		\
-	     ip.cy.gy.vp*EM(m, 0,ip.l##gy##2+1,ip.l##gz##3-1)) +		\
-   ip.cz.gz.v0*(ip.cy.gy.vm*EM(m, 0,ip.l##gy##2-1,ip.l##gz##3  ) +		\
-	     ip.cy.gy.v0*EM(m, 0,ip.l##gy##2  ,ip.l##gz##3  ) +		\
-	     ip.cy.gy.vp*EM(m, 0,ip.l##gy##2+1,ip.l##gz##3  )) +		\
-   ip.cz.gz.vp*(ip.cy.gy.vm*EM(m, 0,ip.l##gy##2-1,ip.l##gz##3+1) +		\
-	     ip.cy.gy.v0*EM(m, 0,ip.l##gy##2  ,ip.l##gz##3+1) +		\
-	     ip.cy.gy.vp*EM(m, 0,ip.l##gy##2+1,ip.l##gz##3+1)))
+  (ip.cz.gz.vm*(ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,ip.cz.gz.l-1) +		\
+	     ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l-1) +		\
+	     ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l-1)) +		\
+   ip.cz.gz.v0*(ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,ip.cz.gz.l  ) +		\
+	     ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l  ) +		\
+	     ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l  )) +		\
+   ip.cz.gz.vp*(ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,ip.cz.gz.l+1) +		\
+	     ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l+1) +		\
+	     ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l+1)))
 #elif DIM == DIM_XYZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2-1,ip.l##gz##3-1) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2-1,ip.l##gz##3-1) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2-1,ip.l##gz##3-1)) + \
-	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2  ,ip.l##gz##3-1) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2  ,ip.l##gz##3-1) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2  ,ip.l##gz##3-1)) + \
-	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2+1,ip.l##gz##3-1) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2+1,ip.l##gz##3-1) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2+1,ip.l##gz##3-1))) + \
-   ip.cz.gz.v0*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2-1,ip.l##gz##3  ) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2-1,ip.l##gz##3  ) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2-1,ip.l##gz##3  )) + \
-	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2  ,ip.l##gz##3  ) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2  ,ip.l##gz##3  ) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2  ,ip.l##gz##3  )) + \
-	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2+1,ip.l##gz##3  ) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2+1,ip.l##gz##3  ) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2+1,ip.l##gz##3  ))) + \
-   ip.cz.gz.vp*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2-1,ip.l##gz##3+1) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2-1,ip.l##gz##3+1) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2-1,ip.l##gz##3+1)) + \
-	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2  ,ip.l##gz##3+1) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2  ,ip.l##gz##3+1) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2  ,ip.l##gz##3+1)) + \
-	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.l##gx##1-1,ip.l##gy##2+1,ip.l##gz##3+1) + \
-		       ip.cx.gx.v0*EM(m, ip.l##gx##1  ,ip.l##gy##2+1,ip.l##gz##3+1) + \
-		       ip.cx.gx.vp*EM(m, ip.l##gx##1+1,ip.l##gy##2+1,ip.l##gz##3+1))))
+  (ip.cz.gz.vm*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,ip.cz.gz.l-1) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,ip.cz.gz.l-1) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,ip.cz.gz.l-1)) + \
+	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,ip.cz.gz.l-1) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,ip.cz.gz.l-1) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,ip.cz.gz.l-1)) + \
+	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,ip.cz.gz.l-1) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,ip.cz.gz.l-1) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,ip.cz.gz.l-1))) + \
+   ip.cz.gz.v0*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,ip.cz.gz.l  ) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,ip.cz.gz.l  ) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,ip.cz.gz.l  )) + \
+	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,ip.cz.gz.l  ) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,ip.cz.gz.l  ) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,ip.cz.gz.l  )) + \
+	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,ip.cz.gz.l  ) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,ip.cz.gz.l  ) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,ip.cz.gz.l  ))) + \
+   ip.cz.gz.vp*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,ip.cz.gz.l+1) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,ip.cz.gz.l+1) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,ip.cz.gz.l+1)) + \
+	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,ip.cz.gz.l+1) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,ip.cz.gz.l+1) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,ip.cz.gz.l+1)) + \
+	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,ip.cz.gz.l+1) + \
+		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,ip.cz.gz.l+1) + \
+		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,ip.cz.gz.l+1))))
 
 #endif
 
@@ -388,16 +388,13 @@ struct InterpolateEM
   
   void set_coeffs(particle_real_t xm[3])
   {
-    IF_DIM_X( cx.set(&lg1, &lh1, xm[0]); );
-    IF_DIM_Y( cy.set(&lg2, &lh2, xm[1]); );
-    IF_DIM_Z( cz.set(&lg3, &lh3, xm[2]); );
+    IF_DIM_X( cx.set(xm[0]); );
+    IF_DIM_Y( cy.set(xm[1]); );
+    IF_DIM_Z( cz.set(xm[2]); );
   }
   
   particle_real_t E[3];
   particle_real_t H[3];
-  int lg1, lh1;
-  int lg2, lh2;
-  int lg3, lh3;
   ip_coeffs_t cx, cy, cz;
 };
 

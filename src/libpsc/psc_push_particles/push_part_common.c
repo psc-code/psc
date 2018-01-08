@@ -90,14 +90,14 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 // ======================================================================
 // current
 
-#define CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs)	\
-    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, ip.lg1);	\
+#define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
+    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, ip.cxyz.g.l);	\
     particle_real_t fnqx = particle_qni_wni(part) * c_prm.fnqxs;	\
 
 #define CURRENT_PREP							\
-  IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs); );	\
-  IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, lg2, fnqy, fnqys); );	\
-  IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, lg3, fnqz, fnqzs); );	\
+  IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );	\
+  IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );	\
+  IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );	\
 									\
   IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * particle_qni_wni(part) * c_prm.fnqs; ); \
   IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * particle_qni_wni(part) * c_prm.fnqs; ); \
@@ -115,9 +115,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     jyh -= fnqy*wy;						\
     particle_real_t jzh = fnqzz*wz;				\
     								\
-    J(JXI, 0,ip.lg2+l2,0) += jxh;					\
-    J(JYI, 0,ip.lg2+l2,0) += jyh;				\
-    J(JZI, 0,ip.lg2+l2,0) += jzh;				\
+    J(JXI, 0,ip.cy.g.l+l2,0) += jxh;					\
+    J(JYI, 0,ip.cy.g.l+l2,0) += jyh;				\
+    J(JZI, 0,ip.cy.g.l+l2,0) += jzh;				\
   }
 
 #define CURRENT_2ND_Z						\
@@ -131,9 +131,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     particle_real_t jyh = fnqyy*wy;				\
     jzh -= fnqz*wz;						\
     								\
-    J(JXI, 0,0,ip.lg3+l3) += jxh;				\
-    J(JYI, 0,0,ip.lg3+l3) += jyh;				\
-    J(JZI, 0,0,ip.lg3+l3) += jzh;				\
+    J(JXI, 0,0,ip.cz.g.l+l3) += jxh;				\
+    J(JYI, 0,0,ip.cz.g.l+l3) += jyh;				\
+    J(JZI, 0,0,ip.cz.g.l+l3) += jzh;				\
   }
 
 #define CURRENT_2ND_XY							\
@@ -147,8 +147,8 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ (1.f/3.f) * S(s1x, l1) * S(s1y, l2);				\
       									\
       jxh -= fnqx*wx;							\
-      J(JXI, ip.lg1+l1,ip.lg2+l2,0) += jxh;				\
-      J(JZI, ip.lg1+l1,ip.lg2+l2,0) += fnqzz * wz;			\
+      J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jxh;				\
+      J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += fnqzz * wz;			\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
@@ -157,7 +157,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
       particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       									\
       jyh -= fnqy*wy;							\
-      J(JYI, ip.lg1+l1,ip.lg2+l2,0) += jyh;				\
+      J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jyh;				\
     }									\
   }
 
@@ -167,7 +167,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l1 = l1min; l1 < l1max; l1++) {				\
       particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jxh -= fnqx*wx;							\
-      J(JXI, ip.lg1+l1,0,ip.lg3+l3) += jxh;				\
+      J(JXI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jxh;				\
     }									\
   }									\
 									\
@@ -178,7 +178,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ .5f * S(s0x, l1) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1x, l1) * S(s1z, l3);				\
       particle_real_t jyh = fnqyy * wy;					\
-      J(JYI, ip.lg1+l1,0,ip.lg3+l3) += jyh;				\
+      J(JYI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
@@ -186,7 +186,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l3 = l3min; l3 < l3max; l3++) {				\
       particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       jzh -= fnqz*wz;							\
-      J(JZI, ip.lg1+l1,0,ip.lg3+l3) += jzh;				\
+      J(JZI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jzh;				\
     }									\
   }
 
@@ -198,7 +198,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	+ .5f * S(s0y, l2) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
       particle_real_t jxh = fnqxx * wx;					\
-      J(JXI, 0,ip.lg2+l2,ip.lg3+l3) += jxh;				\
+      J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
     }									\
   }									\
   									\
@@ -207,7 +207,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l2 = l2min; l2 < l2max; l2++) {				\
       particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jyh -= fnqy*wy;							\
-      J(JYI, 0,ip.lg2+l2,ip.lg3+l3) += jyh;				\
+      J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
 									\
@@ -216,7 +216,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     for (int l3 = l3min; l3 < l3max; l3++) {				\
       particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
       jzh -= fnqz*wz;							\
-      J(JZI, 0,ip.lg2+l2,ip.lg3+l3) += jzh;				\
+      J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;				\
     }									\
   }
 
@@ -243,9 +243,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 	jyh -= fnqy*wy;							\
 	JZH(l2) -= fnqz*wz;						\
 									\
-	J(JXI, 0,ip.lg2+l2,ip.lg3+l3) += jxh;				\
-	J(JYI, 0,ip.lg2+l2,ip.lg3+l3) += jyh;				\
-	J(JZI, 0,ip.lg2+l2,ip.lg3+l3) += JZH(l2);			\
+	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
+	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
+	J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += JZH(l2);			\
       }									\
     }									\
 
@@ -260,7 +260,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1y, l2) * S(s1z, l3)); \
 									\
 	jxh -= fnqx*wx;							\
-	J(JXI, ip.lg1+l1,ip.lg2+l2,ip.lg3+l3) += jxh;			\
+	J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
       }									\
     }									\
   }									\
@@ -275,7 +275,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1x, l1)*S(s1z, l3)); \
 									\
 	jyh -= fnqy*wy;							\
-	J(JYI, ip.lg1+l1,ip.lg2+l2,ip.lg3+l3) += jyh;			\
+	J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
       }									\
     }									\
   }									\
@@ -290,7 +290,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 					   (1.f/3.f) * S(s1x, l1)*S(s1y, l2)); \
 									\
 	jzh -= fnqz*wz;							\
-	J(JZI, ip.lg1+l1,ip.lg2+l2,ip.lg3+l3) += jzh;			\
+	J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;			\
       }									\
     }									\
   }
@@ -382,9 +382,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(x, k1, ip.cx.g, 0, c_prm.dxi[0], s1x, ip.lg1); );
-    IF_DIM_Y( DEPOSIT(x, k2, ip.cy.g, 1, c_prm.dxi[1], s1y, ip.lg2); );
-    IF_DIM_Z( DEPOSIT(x, k3, ip.cz.g, 2, c_prm.dxi[2], s1z, ip.lg3); );
+    IF_DIM_X( DEPOSIT(x, k1, ip.cx.g, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
+    IF_DIM_Y( DEPOSIT(x, k2, ip.cy.g, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
+    IF_DIM_Z( DEPOSIT(x, k3, ip.cz.g, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
 
 #else
     push_x(x, vv, .5f * c_prm.dt);
@@ -395,9 +395,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, ip.lg1); );
-    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, ip.lg2); );
-    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, ip.lg3); );
+    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
+    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
+    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
 #endif
     
     // CURRENT DENSITY AT (n+1.0)*dt
