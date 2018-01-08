@@ -522,7 +522,6 @@ struct InterpolateEM
 using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, dim_t, NNN>;
 
 #define INTERPOLATE_FIELDS(flds)					\
-  ip.set_coeffs(xm);							\
   ip.E[0] = ip.ex(flds);						\
   ip.E[1] = ip.ey(flds);						\
   ip.E[2] = ip.ez(flds);						\

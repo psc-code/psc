@@ -145,6 +145,8 @@ push_one(mprts_array_t mprts_arr, int n,
   real og[3];
   find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
 
+  IP ip;
+  ip.set_coeffs(xm);
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
@@ -190,6 +192,7 @@ push_one(mprts_array_t mprts_arr, int n,
   // FIELD INTERPOLATION
 
   IP ip;
+  ip.set_coeffs(xm);
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
@@ -261,6 +264,7 @@ stagger_one(mprts_array_t mprts_arr, int n,
   // FIELD INTERPOLATION
 
   IP ip;
+  ip.set_coeffs(xm);
   INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
