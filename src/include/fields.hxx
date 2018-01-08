@@ -16,6 +16,9 @@ using dim_xyz = Invar<false, false, false>;
 using dim_xy  = Invar<false, false, true >;
 using dim_xz  = Invar<false, true , false>;
 using dim_yz  = Invar<true , false, false>;
+using dim_x   = Invar<false, true , true >;
+using dim_y   = Invar<true , false, true >;
+using dim_z   = Invar<true , true , false>;
 using dim_1   = Invar<true , true , true >;
 
 template<typename F, typename D = dim_xyz>

@@ -97,89 +97,6 @@ struct ip_coeffs_1st_ec
   ip_coeff_t g;
 };
 
-// ----------------------------------------------------------------------
-
-#if ORDER == ORDER_1ST
-
-#else // ORDER == ORDER_2ND
-
-#if DIM == DIM_Y
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,0) +				\
-   ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,0) +				\
-   ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,0))
-#elif DIM == DIM_Z
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*EM(m, 0,0,ip.cz.gz.l-1) +				\
-   ip.cz.gz.v0*EM(m, 0,0,ip.cz.gz.l  ) +				\
-   ip.cz.gz.vp*EM(m, 0,0,ip.cz.gz.l+1))
-#elif DIM == DIM_XY
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,0) +		\
-	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,0) +		\
-	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,0)) +		\
-   ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,0) +		\
-	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,0) +		\
-	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,0)) +		\
-   ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,0) +		\
-	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,0) +		\
-	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,0)))
-#elif DIM == DIM_XZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,0,ip.cz.gz.l-1) +		\
-	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l-1) +		\
-	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l-1)) +		\
-   ip.cz.gz.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,0,ip.cz.gz.l  ) +		\
-	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l  ) +		\
-	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l  )) +		\
-   ip.cz.gz.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,0,ip.cz.gz.l+1) +		\
-	     ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,0,ip.cz.gz.l+1) +		\
-	     ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,0,ip.cz.gz.l+1)))
-#elif DIM == DIM_YZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*(ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,ip.cz.gz.l-1) +		\
-	     ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l-1) +		\
-	     ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l-1)) +		\
-   ip.cz.gz.v0*(ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,ip.cz.gz.l  ) +		\
-	     ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l  ) +		\
-	     ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l  )) +		\
-   ip.cz.gz.vp*(ip.cy.gy.vm*EM(m, 0,ip.cy.gy.l-1,ip.cz.gz.l+1) +		\
-	     ip.cy.gy.v0*EM(m, 0,ip.cy.gy.l  ,ip.cz.gz.l+1) +		\
-	     ip.cy.gy.vp*EM(m, 0,ip.cy.gy.l+1,ip.cz.gz.l+1)))
-#elif DIM == DIM_XYZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (ip.cz.gz.vm*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,ip.cz.gz.l-1) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,ip.cz.gz.l-1) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,ip.cz.gz.l-1)) + \
-	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,ip.cz.gz.l-1) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,ip.cz.gz.l-1) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,ip.cz.gz.l-1)) + \
-	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,ip.cz.gz.l-1) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,ip.cz.gz.l-1) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,ip.cz.gz.l-1))) + \
-   ip.cz.gz.v0*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,ip.cz.gz.l  ) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,ip.cz.gz.l  ) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,ip.cz.gz.l  )) + \
-	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,ip.cz.gz.l  ) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,ip.cz.gz.l  ) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,ip.cz.gz.l  )) + \
-	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,ip.cz.gz.l  ) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,ip.cz.gz.l  ) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,ip.cz.gz.l  ))) + \
-   ip.cz.gz.vp*(ip.cy.gy.vm*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l-1,ip.cz.gz.l+1) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l-1,ip.cz.gz.l+1) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l-1,ip.cz.gz.l+1)) + \
-	     ip.cy.gy.v0*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l  ,ip.cz.gz.l+1) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l  ,ip.cz.gz.l+1) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l  ,ip.cz.gz.l+1)) + \
-	     ip.cy.gy.vp*(ip.cx.gx.vm*EM(m, ip.cx.gx.l-1,ip.cy.gy.l+1,ip.cz.gz.l+1) + \
-		       ip.cx.gx.v0*EM(m, ip.cx.gx.l  ,ip.cy.gy.l+1,ip.cz.gz.l+1) + \
-		       ip.cx.gx.vp*EM(m, ip.cx.gx.l+1,ip.cy.gy.l+1,ip.cz.gz.l+1))))
-
-#endif
-
-#endif // ORDER
-
 // ======================================================================
 // IP_VARIANT SFF
 
@@ -303,21 +220,27 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd gg)
 
 #endif
 
+// ======================================================================
+// InterpolateEM_Helper
+//
+// empty general class, partially specialized for
+// interpolation order and dim
+//
+// FIXME: the repeated ex/y/z, functions that just call
+// cc() should be consolidated.
+// It'd also be possible to consolidate the various dim versions based
+// on just 1-d interpolation and some fancy template metaprogramming...
+
 template<typename F, typename IP, typename IP_COEFFS, typename dim>
 struct InterpolateEM_Helper
 {
-  using real_t = particle_real_t;
-
-  static real_t ex(const IP& ip, F EM) { assert(0); }
-  static real_t ey(const IP& ip, F EM) { assert(0); }
-  static real_t ez(const IP& ip, F EM) { assert(0); }
-  static real_t hx(const IP& ip, F EM) { assert(0); }
-  static real_t hy(const IP& ip, F EM) { assert(0); }
-  static real_t hz(const IP& ip, F EM) { assert(0); }
 };
 
+// ======================================================================
+// InterpolateEM_Helper: 1st EC
+
 // ----------------------------------------------------------------------
-// InterpolateEM_Helper: 1st EC, xyz
+// InterpolateEM_Helper: 1st EC, dim_xyz
 
 template<typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_xyz>
@@ -368,7 +291,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_xyz>
 };
 
 // ----------------------------------------------------------------------
-// InterpolateEM_Helper: 1st EC, yz
+// InterpolateEM_Helper: 1st EC, dim_yz
 
 template<typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_yz>
@@ -413,8 +336,11 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st_ec, dim_yz>
   }
 };
 
+// ======================================================================
+// InterpolateEM_Helper: 1st std
+
 // ----------------------------------------------------------------------
-// InterpolateEM_Helper: 1st std, xz
+// InterpolateEM_Helper: 1st std, dim_xz
 
 template<typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_xz>
@@ -440,7 +366,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_xz>
 };
 
 // ----------------------------------------------------------------------
-// InterpolateEM_Helper: 1st std, yz
+// InterpolateEM_Helper: 1st std, dim_yz
 
 template<typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_yz>
@@ -466,7 +392,7 @@ struct InterpolateEM_Helper<F, IP, ip_coeffs_1st, dim_yz>
 };
 
 // ----------------------------------------------------------------------
-// dim_1, any interpolation
+// InterpolateEM_Helper: dim_1, any interpolation
 
 template<typename F, typename IP, typename IP_COEFFS>
 struct InterpolateEM_Helper<F, IP, IP_COEFFS, dim_1>
@@ -479,6 +405,201 @@ struct InterpolateEM_Helper<F, IP, IP_COEFFS, dim_1>
   static real_t hx(const IP& ip, F EM) { return EM(HX, 0,0,0); }
   static real_t hy(const IP& ip, F EM) { return EM(HY, 0,0,0); }
   static real_t hz(const IP& ip, F EM) { return EM(HZ, 0,0,0); }
+};
+
+// ======================================================================
+// InterpolateEM_Helper: 2nd std
+
+// ----------------------------------------------------------------------
+// InterpolateEM_Helper: 2nd std, dim_y
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_y>
+{
+  using real_t = particle_real_t;
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+		   F EM, int m)
+  {
+    return (gy.vm*EM(m, 0,gy.l-1,0) +
+	    gy.v0*EM(m, 0,gy.l  ,0) +
+	    gy.vp*EM(m, 0,gy.l+1,0));
+  }
+
+  static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+};
+
+// ----------------------------------------------------------------------
+// InterpolateEM_Helper: 2nd std, dim_z
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_z>
+{
+  using real_t = particle_real_t;
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+		   F EM, int m)
+  {
+    return (gz.vm*EM(m, 0,0,gz.l-1) +
+	    gz.v0*EM(m, 0,0,gz.l  ) +
+	    gz.vp*EM(m, 0,0,gz.l+1));
+  }
+
+  static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+};
+
+// ----------------------------------------------------------------------
+// InterpolateEM_Helper: 2nd std, dim_xy
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xy>
+{
+  using real_t = particle_real_t;
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+		   F EM, int m)
+  {
+    return (gy.vm*(gx.vm*EM(m, gx.l-1,gy.l-1,0) +
+		   gx.v0*EM(m, gx.l  ,gy.l-1,0) +
+		   gx.vp*EM(m, gx.l+1,gy.l-1,0)) +
+	    gy.v0*(gx.vm*EM(m, gx.l-1,gy.l  ,0) +
+		   gx.v0*EM(m, gx.l  ,gy.l  ,0) +
+		   gx.vp*EM(m, gx.l+1,gy.l  ,0)) +
+	    gy.vp*(gx.vm*EM(m, gx.l-1,gy.l+1,0) +
+		   gx.v0*EM(m, gx.l  ,gy.l+1,0) +
+		   gx.vp*EM(m, gx.l+1,gy.l+1,0)));
+  }
+
+  static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+};
+
+// ----------------------------------------------------------------------
+// InterpolateEM_Helper: 2nd std, dim_xz
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xz>
+{
+  using real_t = particle_real_t;
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+		   F EM, int m)
+  {
+    return (gz.vm*(gx.vm*EM(m, gx.l-1,0,gz.l-1) +
+		   gx.v0*EM(m, gx.l  ,0,gz.l-1) +
+		   gx.vp*EM(m, gx.l+1,0,gz.l-1)) +
+	    gz.v0*(gx.vm*EM(m, gx.l-1,0,gz.l  ) +
+		   gx.v0*EM(m, gx.l  ,0,gz.l  ) +
+		   gx.vp*EM(m, gx.l+1,0,gz.l  )) +
+	    gz.vp*(gx.vm*EM(m, gx.l-1,0,gz.l+1) +
+		   gx.v0*EM(m, gx.l  ,0,gz.l+1) +
+		   gx.vp*EM(m, gx.l+1,0,gz.l+1)));
+  }
+
+  static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+};
+
+// ----------------------------------------------------------------------
+// InterpolateEM_Helper: 2nd std, dim_yz
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_yz>
+{
+  using real_t = particle_real_t;
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+		   F EM, int m)
+  {
+    return (gz.vm*(gy.vm*EM(m, 0,gy.l-1,gz.l-1) +
+		   gy.v0*EM(m, 0,gy.l  ,gz.l-1) +
+		   gy.vp*EM(m, 0,gy.l+1,gz.l-1)) +
+	    gz.v0*(gy.vm*EM(m, 0,gy.l-1,gz.l  ) +
+		   gy.v0*EM(m, 0,gy.l  ,gz.l  ) +
+		   gy.vp*EM(m, 0,gy.l+1,gz.l  )) +
+	    gz.vp*(gy.vm*EM(m, 0,gy.l-1,gz.l+1) +
+		   gy.v0*EM(m, 0,gy.l  ,gz.l+1) +
+		   gy.vp*EM(m, 0,gy.l+1,gz.l+1)));
+  }
+
+  static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+};
+
+// ----------------------------------------------------------------------
+// InterpolateEM_Helper: 2nd std, dim_xyz
+
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, ip_coeffs_2nd, dim_xyz>
+{
+  using real_t = particle_real_t;
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+		   F EM, int m)
+  {
+    return (gz.vm*(gy.vm*(gx.vm*EM(m, gx.l-1,gy.l-1,gz.l-1) +
+			  gx.v0*EM(m, gx.l  ,gy.l-1,gz.l-1) +
+			  gx.vp*EM(m, gx.l+1,gy.l-1,gz.l-1)) +
+		   gy.v0*(gx.vm*EM(m, gx.l-1,gy.l  ,gz.l-1) +
+			  gx.v0*EM(m, gx.l  ,gy.l  ,gz.l-1) +
+			  gx.vp*EM(m, gx.l+1,gy.l  ,gz.l-1)) +
+		   gy.vp*(gx.vm*EM(m, gx.l-1,gy.l+1,gz.l-1) +
+			  gx.v0*EM(m, gx.l  ,gy.l+1,gz.l-1) +
+			  gx.vp*EM(m, gx.l+1,gy.l+1,gz.l-1))) +
+	    gz.v0*(gy.vm*(gx.vm*EM(m, gx.l-1,gy.l-1,gz.l  ) +
+			  gx.v0*EM(m, gx.l  ,gy.l-1,gz.l  ) +
+			  gx.vp*EM(m, gx.l+1,gy.l-1,gz.l  )) +
+		   gy.v0*(gx.vm*EM(m, gx.l-1,gy.l  ,gz.l  ) +
+			  gx.v0*EM(m, gx.l  ,gy.l  ,gz.l  ) +
+			  gx.vp*EM(m, gx.l+1,gy.l  ,gz.l  )) +
+		   gy.vp*(gx.vm*EM(m, gx.l-1,gy.l+1,gz.l  ) +
+			  gx.v0*EM(m, gx.l  ,gy.l+1,gz.l  ) +
+			  gx.vp*EM(m, gx.l+1,gy.l+1,gz.l  ))) +
+	    gz.vp*(gy.vm*(gx.vm*EM(m, gx.l-1,gy.l-1,gz.l+1) +
+			  gx.v0*EM(m, gx.l  ,gy.l-1,gz.l+1) +
+			  gx.vp*EM(m, gx.l+1,gy.l-1,gz.l+1)) +
+		   gy.v0*(gx.vm*EM(m, gx.l-1,gy.l  ,gz.l+1) +
+			  gx.v0*EM(m, gx.l  ,gy.l  ,gz.l+1) +
+			  gx.vp*EM(m, gx.l+1,gy.l  ,gz.l+1)) +
+		   gy.vp*(gx.vm*EM(m, gx.l-1,gy.l+1,gz.l+1) +
+			  gx.v0*EM(m, gx.l  ,gy.l+1,gz.l+1) +
+			  gx.vp*EM(m, gx.l+1,gy.l+1,gz.l+1))));
+  }
+
+  static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
 };
 
 // ======================================================================
