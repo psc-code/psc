@@ -193,17 +193,14 @@ push_one(mprts_array_t mprts_arr, int n,
 
   IP ip;
   ip.set_coeffs(xm);
-  ip.E[0] = ip.ex(flds_em);
-  ip.E[1] = ip.ey(flds_em);
-  ip.E[2] = ip.ez(flds_em);
-  ip.H[0] = ip.hx(flds_em);
-  ip.H[1] = ip.hy(flds_em);
-  ip.H[2] = ip.hz(flds_em);
+  // FIXME, we're not using EM instead flds_em
+  particle_real_t E[3] = { ip.ex(flds_em), ip.ey(flds_em), ip.ez(flds_em) };
+  particle_real_t H[3] = { ip.hx(flds_em), ip.hy(flds_em), ip.hz(flds_em) };
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
-  push_p(&particle_px(prt), ip.E, ip.H, dq);
+  push_p(&particle_px(prt), E, H, dq);
 
   particle_real_t vxi[3];
   calc_v(vxi, &particle_px(prt));
@@ -270,17 +267,14 @@ stagger_one(mprts_array_t mprts_arr, int n,
 
   IP ip;
   ip.set_coeffs(xm);
-  ip.E[0] = ip.ex(flds_em); // FIXME, we're not using EM instead flds_em
-  ip.E[1] = ip.ey(flds_em);
-  ip.E[2] = ip.ez(flds_em);
-  ip.H[0] = ip.hx(flds_em);
-  ip.H[1] = ip.hy(flds_em);
-  ip.H[2] = ip.hz(flds_em);
+  // FIXME, we're not using EM instead flds_em
+  particle_real_t E[3] = { ip.ex(flds_em), ip.ey(flds_em), ip.ez(flds_em) };
+  particle_real_t H[3] = { ip.hx(flds_em), ip.hy(flds_em), ip.hz(flds_em) };
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
-  push_p(&particle_px(prt), ip.E, ip.H, -.5f * dq);
+  push_p(&particle_px(prt), E, H, -.5f * dq);
 
   PARTICLE_STORE(prt, mprts_arr, n);
 }

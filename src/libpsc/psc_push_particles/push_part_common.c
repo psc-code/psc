@@ -427,19 +427,17 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     }
     IP ip;
     ip.set_coeffs(xm);
-    ip.E[0] = ip.ex(EM);
-    ip.E[1] = ip.ey(EM);
-    ip.E[2] = ip.ez(EM);
-    ip.H[0] = ip.hx(EM);
-    ip.H[1] = ip.hy(EM);
-    ip.H[2] = ip.hz(EM);
+
     IF_DIM_X( set_S(s0x, 0, ip.cx.g); );
     IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
     IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );
 
+    particle_real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
+    particle_real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
+
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = c_prm.dqs * particle_qni_div_mni(part);
-    push_p(&part->pxi, ip.E, ip.H, dq);
+    push_p(&part->pxi, E, H, dq);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_v(vv, &part->pxi);

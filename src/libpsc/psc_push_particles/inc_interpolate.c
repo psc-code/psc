@@ -494,7 +494,7 @@ struct InterpolateEM
   using real_t = typename F::real_t;
   using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
-  
+
   void set_coeffs(real_t xm[3])
   {
     IF_DIM_X( cx.set(xm[0]); );
@@ -509,9 +509,7 @@ struct InterpolateEM
   real_t hx(F EM) { return Helper::hx(*this, EM); }
   real_t hy(F EM) { return Helper::hy(*this, EM); }
   real_t hz(F EM) { return Helper::hz(*this, EM); }
-  
-  real_t E[3];
-  real_t H[3];
+
   ip_coeffs_t cx, cy, cz;
 };
 
