@@ -65,15 +65,6 @@ struct ip_coeff {
 
 #endif
 
-// ----------------------------------------------------------------------
-// ip_coeff_h
-
-static inline void
-ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
-{
-  hh->set(lh, u - .5f);
-}
-
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
     gx.set(&k1, xx[d] * dxi);				\
@@ -84,12 +75,8 @@ struct ip_coeffs
   void set(int* lg1, int* lh1, particle_real_t xm)
   {
     g.set(lg1, xm);
-#ifdef IP_DEPOSIT
-    ip_coeff_h(lh1, &h, xm);
-#else
-#if IP_VARIANT != IP_VARIANT_EC
+#if !(ORDER == ORDER_1ST && IP_VARIANT == IP_VARIANT_EC)
     h.set(lh1, xm - .5f);
-#endif
 #endif
   }
   
@@ -181,7 +168,7 @@ struct ip_coeffs
 
 #endif // IP_VARIANT
 
-#else // ORDER == ORDER_2ND or ORDER_1P5
+#else // ORDER == ORDER_2ND
 
 #if DIM == DIM_Y
 #define IP_FIELD(flds, m, gx, gy, gz)					\
