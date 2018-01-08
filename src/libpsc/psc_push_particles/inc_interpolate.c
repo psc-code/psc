@@ -63,18 +63,27 @@ struct ip_coeff_2nd {
     int k1;						\
     gx.set(&k1, xx[d] * dxi);				\
     set_S(s1x, k1-lg1, gx)
-    
-struct ip_coeffs_1st
+
+// ----------------------------------------------------------------------
+// ip_coeffs
+
+template<typename IP_COEFF>
+struct ip_coeffs_std
 {
+  using ip_coeff_t = IP_COEFF;
+  
   void set(int* lg1, int* lh1, particle_real_t xm)
   {
     g.set(lg1, xm);
     h.set(lh1, xm - .5f);
   }
   
-  struct ip_coeff_1st g;
-  struct ip_coeff_1st h;
+  ip_coeff_t g;
+  ip_coeff_t h;
 };
+
+using ip_coeffs_1st = ip_coeffs_std<ip_coeff_1st>;
+using ip_coeffs_2nd = ip_coeffs_std<ip_coeff_2nd>;
   
 struct ip_coeffs_1st_ec
 {
@@ -83,22 +92,9 @@ struct ip_coeffs_1st_ec
     g.set(lg1, xm);
   }
   
-  struct ip_coeff_1st g;
-  struct ip_coeff_1st h;
+  ip_coeff_1st g;
 };
-  
-struct ip_coeffs_2nd
-{
-  void set(int* lg1, int* lh1, particle_real_t xm)
-  {
-    g.set(lg1, xm);
-    h.set(lh1, xm - .5f);
-  }
-  
-  struct ip_coeff_2nd g;
-  struct ip_coeff_2nd h;
-};
-  
+
 // ----------------------------------------------------------------------
 
 #if ORDER == ORDER_1ST
