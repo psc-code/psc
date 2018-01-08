@@ -17,6 +17,17 @@ using dim_t = dim_yz;
 using dim_t = dim_xyz;
 #endif
 
+#if ORDER == ORDER_1ST
+#if IP_VARIANT == IP_VARIANT_EC
+using opt_ip = opt_ip_1st_ec;
+#else
+using opt_ip = opt_ip_1st;
+#endif
+#elif ORDER == ORDER_2ND
+using opt_ip = opt_ip_2nd;
+#else
+#error unknown ORDER
+#endif
 
 #define CUDA_CONSTANT
 #define CUDA_DEVICE

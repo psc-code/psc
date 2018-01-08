@@ -97,6 +97,27 @@ struct ip_coeffs_1st_ec
   ip_coeff_t g;
 };
 
+template<typename opt_ip>
+struct opt_ip_traits {};
+
+template<>
+struct opt_ip_traits<opt_ip_1st_ec>
+{
+  using ip_coeffs_t = ip_coeffs_1st_ec;
+};
+  
+template<>
+struct opt_ip_traits<opt_ip_1st>
+{
+  using ip_coeffs_t = ip_coeffs_1st;
+};
+  
+template<>
+struct opt_ip_traits<opt_ip_2nd>
+{
+  using ip_coeffs_t = ip_coeffs_2nd;
+};
+
 // ======================================================================
 // InterpolateEM_Helper
 //
@@ -514,16 +535,8 @@ struct InterpolateEM
 #define NNN 0
 #endif
 
-#if ORDER == ORDER_1ST
-#if IP_VARIANT == IP_VARIANT_EC
-using ip_coeffs_t = ip_coeffs_1st_ec;
-#else
-using ip_coeffs_t = ip_coeffs_1st;
-#endif
-#elif ORDER == ORDER_2ND
-using ip_coeffs_t = ip_coeffs_2nd;
-#endif
-
+using ip_coeffs_t = opt_ip_traits<opt_ip>::ip_coeffs_t;
+  
 using IP = InterpolateEM<Fields3d<fields_t>, ip_coeffs_t, dim_t, NNN>;
 
 #define INTERPOLATE_FIELDS(flds)					\

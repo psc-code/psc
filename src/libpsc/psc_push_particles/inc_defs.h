@@ -35,6 +35,10 @@
 #define ORDER_1ST 1
 #define ORDER_2ND 2
 
+struct opt_ip_1st;
+struct opt_ip_1st_ec;
+struct opt_ip_2nd;
+
 // ----------------------------------------------------------------------
 // IP_VARIANT
 
