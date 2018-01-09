@@ -127,6 +127,9 @@ void
 psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 		       bool count_only)
 {
+  assert(0);
+
+#if 0
   struct psc_es1 *es1 = to_psc_es1(psc);
 
   if (count_only) {
@@ -153,8 +156,6 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   mparticles_t mprts = psc->particles->get_as<mparticles_t>(MP_DONT_COPY);
 
-  assert(0);
-#if 0
   psc_foreach_patch(psc, p) {
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
@@ -172,8 +173,8 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       } 
     }
   }
-#endif
   mprts.put_as(psc->particles);
+#endif
 }
 
 // ======================================================================

@@ -85,8 +85,8 @@ psc_turb_create(struct psc *psc)
   psc->prm.cfl = 0.98;
 
   struct psc_kind kinds[NR_T_KINDS] = {
-    [T_ELECTRON] = { .name = "e", .q = -1., .m = 1, },
-    [T_ION]      = { .name = "i", .q =  1.,         },
+    [T_ELECTRON] = { .name = strdup("e"), .q = -1., .m = 1, },
+    [T_ION]      = { .name = strdup("i"), .q =  1.,         },
   };
   psc_set_kinds(psc, NR_T_KINDS, kinds);
 

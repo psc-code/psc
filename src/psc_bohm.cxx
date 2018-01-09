@@ -182,7 +182,7 @@ static void
 seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
 {
   struct psc_bohm *bohm = to_psc_bohm(psc);
-  particle_range_t prts = mparticles_t(mprts)[p].range();
+  //particle_range_t prts = mparticles_t(mprts)[p].range();
   
   psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 

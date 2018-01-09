@@ -75,6 +75,7 @@ microsphere_dens(struct psc *psc, double x[3])
 static void
 psc_test_microsphere_set_from_options(struct psc *psc)
 {
+#if 0
   struct psc_test_microsphere *msphere = mrc_to_subobj(psc, struct psc_test_microsphere);
 
   double *length  = ppsc->domain.length;
@@ -83,7 +84,6 @@ psc_test_microsphere_set_from_options(struct psc *psc)
 
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
 
-#if 0
   struct psc_pulse *pulse_x1 = psc_bnd_fields_get_pulse_x1(bnd_fields);
   psc_pulse_set_type(pulse_x1, "gauss");
   psc_pulse_set_param_double3(pulse_x1, "m",  (double[3]) { 0., .5 * length[1], .5 * length[2] });

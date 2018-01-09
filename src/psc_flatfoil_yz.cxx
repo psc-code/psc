@@ -156,11 +156,11 @@ psc_flatfoil_setup(struct psc *psc)
   // last population is neutralizing
   psc->kinds[MY_ELECTRON].q = -1.;
   psc->kinds[MY_ELECTRON].m = 1.;
-  psc->kinds[MY_ELECTRON].name = "e";
+  psc->kinds[MY_ELECTRON].name = strdup("e");
 
   psc->kinds[MY_ION     ].q = sub->Zi;
   psc->kinds[MY_ION     ].m = 100. * sub->Zi;  // FIXME, hardcoded mass ratio 100
-  psc->kinds[MY_ION     ].name = "i";
+  psc->kinds[MY_ION     ].name = strdup("i");
 
   sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
 

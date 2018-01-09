@@ -345,8 +345,8 @@ psc_harris_setup_species(struct psc *psc)
   double sort_method = 1;   // 0=in place and 1=out of place
 
   struct psc_kind kinds[2] = {
-    [KIND_ELECTRON] = { .name = "e", .q = -phys->ec, .m = phys->me, },
-    [KIND_ION     ] = { .name = "i", .q =  phys->ec, .m = phys->mi, },
+    [KIND_ELECTRON] = { .name = strdup("e"), .q = -phys->ec, .m = phys->me, },
+    [KIND_ION     ] = { .name = strdup("i"), .q =  phys->ec, .m = phys->mi, },
   };
   psc_set_kinds(psc, 2, kinds);
 

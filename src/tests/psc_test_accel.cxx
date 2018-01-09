@@ -115,7 +115,7 @@ psc_test_accel_setup(struct psc *psc)
   psc->domain.length[2] = sub->L;
 
   struct psc_kind kinds[N_KINDS] = {
-    { .q = 1., .m = 1., .name = "test_species", },
+    { .q = 1., .m = 1., .name = strdup("test_species"), },
   };
   psc_set_kinds(psc, N_KINDS, kinds);
 

@@ -73,10 +73,10 @@ psc_kh_create(struct psc *psc)
   psc->prm.initial_momentum_gamma_correction = true;
 
   struct psc_kind kinds[NR_KH_KINDS] = {
-    [KH_ELECTRON1] = { .name = "e1", .q = -1., .m = 1, },
-    [KH_ELECTRON2] = { .name = "e2", .q = -1., .m = 1, },
-    [KH_ION1]      = { .name = "i1", .q =  1.,         },
-    [KH_ION2]      = { .name = "i2", .q =  1.,         },
+    [KH_ELECTRON1] = { .name = strdup("e1"), .q = -1., .m = 1, },
+    [KH_ELECTRON2] = { .name = strdup("e2"), .q = -1., .m = 1, },
+    [KH_ION1]      = { .name = strdup("i1"), .q =  1.,         },
+    [KH_ION2]      = { .name = strdup("i2"), .q =  1.,         },
   };
   psc_set_kinds(psc, NR_KH_KINDS, kinds);
 

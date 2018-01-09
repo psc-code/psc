@@ -118,9 +118,9 @@ psc_mirror_create(struct psc *psc)
   psc->prm.nicell = 800;
 
   struct psc_kind kinds[NR_MIRROR_KINDS] = {
-    [MIRROR_ELECTRON] = { .name = "e", .q = -1.,          },
-    [MIRROR_ION]      = { .name = "i", .q =  1., .m = 1., },
-    [MIRROR_HELIUM]   = { .name = "h", .q =  1.,          },
+    [MIRROR_ELECTRON] = { .name = strdup("e"), .q = -1.,          },
+    [MIRROR_ION]      = { .name = strdup("i"), .q =  1., .m = 1., },
+    [MIRROR_HELIUM]   = { .name = strdup("h"), .q =  1.,          },
   };
   psc_set_kinds(psc, NR_MIRROR_KINDS, kinds);
 

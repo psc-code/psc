@@ -62,9 +62,9 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
     // map "electron" -> "e", "ion"-> "i" to avoid even more confusion with
     // how moments etc are named.
     if (strcmp(info.kinds[m].name, "electron") == 0) {
-      kinds[m].name = "e";
+      kinds[m].name = strdup("e");
     } else if (strcmp(info.kinds[m].name, "ion") == 0) {
-      kinds[m].name = "i";
+      kinds[m].name = strdup("i");
     } else {
       kinds[m].name = info.kinds[m].name;
     }
