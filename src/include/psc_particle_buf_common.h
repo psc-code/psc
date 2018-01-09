@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <mrc_bits.h>
+#include <algorithm>
 
 #if PTYPE == PTYPE_SINGLE
 
@@ -14,7 +15,6 @@
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_buf_dtor
 #define psc_particle_PTYPE_buf_size psc_particle_single_buf_size
-#define psc_particle_PTYPE_buf_resize psc_particle_single_buf_resize
 #define psc_particle_PTYPE_buf_reserve psc_particle_single_buf_reserve
 #define psc_particle_PTYPE_buf_capacity psc_particle_single_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_single_buf_push_back
@@ -30,7 +30,6 @@
 #define psc_particle_PTYPE_buf_ctor psc_particle_double_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_double_buf_dtor
 #define psc_particle_PTYPE_buf_size psc_particle_double_buf_size
-#define psc_particle_PTYPE_buf_resize psc_particle_double_buf_resize
 #define psc_particle_PTYPE_buf_reserve psc_particle_double_buf_reserve
 #define psc_particle_PTYPE_buf_capacity psc_particle_double_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_double_buf_push_back
@@ -46,7 +45,6 @@
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_by_block_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_by_block_buf_dtor
 #define psc_particle_PTYPE_buf_size psc_particle_single_by_block_buf_size
-#define psc_particle_PTYPE_buf_resize psc_particle_single_by_block_buf_resize
 #define psc_particle_PTYPE_buf_reserve psc_particle_single_by_block_buf_reserve
 #define psc_particle_PTYPE_buf_capacity psc_particle_single_by_block_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_single_by_block_buf_push_back
@@ -62,7 +60,6 @@
 #define psc_particle_PTYPE_buf_ctor psc_particle_fortran_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_fortran_buf_dtor
 #define psc_particle_PTYPE_buf_size psc_particle_fortran_buf_size
-#define psc_particle_PTYPE_buf_resize psc_particle_fortran_buf_resize
 #define psc_particle_PTYPE_buf_reserve psc_particle_fortran_buf_reserve
 #define psc_particle_PTYPE_buf_capacity psc_particle_fortran_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_fortran_buf_push_back
@@ -77,7 +74,6 @@
 #define psc_particle_PTYPE_buf_ctor psc_particle_cuda_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_cuda_buf_dtor
 #define psc_particle_PTYPE_buf_size psc_particle_cuda_buf_size
-#define psc_particle_PTYPE_buf_resize psc_particle_cuda_buf_resize
 #define psc_particle_PTYPE_buf_reserve psc_particle_cuda_buf_reserve
 #define psc_particle_PTYPE_buf_capacity psc_particle_cuda_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_cuda_buf_push_back
@@ -100,6 +96,41 @@ struct psc_particle_PTYPE_buf_t
   particle_PTYPE_t *m_data;
   unsigned int m_size;
   unsigned int m_capacity;
+
+  unsigned int size() const { return m_size; }
+  unsigned int capacity() const { return m_capacity; }
+
+  void resize(unsigned int new_size)
+  {
+    assert(new_size <= m_capacity);
+    m_size = new_size;
+  }
+
+  void reserve(unsigned int new_capacity)
+  {
+    if (new_capacity <= m_capacity)
+      return;
+
+    new_capacity = std::max(new_capacity, m_capacity * 2);
+    
+    m_data = (particle_PTYPE_t *) realloc(m_data, new_capacity * sizeof(*m_data));
+    m_capacity = new_capacity;
+  }
+
+  void push_back(const particle_PTYPE_t& prt)
+  {
+    unsigned int n = m_size;
+    if (n >= m_capacity) {
+      reserve(n + 1);
+    }
+    m_data[n++] = prt;
+    m_size = n;
+  }
+
+  particle_PTYPE_t& operator[](int n)
+  {
+    return m_data[n];
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -129,16 +160,6 @@ static inline unsigned int
 psc_particle_PTYPE_buf_size(const psc_particle_PTYPE_buf_t *buf)
 {
   return buf->m_size;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_resize
-
-static inline void
-psc_particle_PTYPE_buf_resize(psc_particle_PTYPE_buf_t *buf, unsigned int new_size)
-{
-  assert(new_size <= buf->m_capacity);
-  buf->m_size = new_size;
 }
 
 // ----------------------------------------------------------------------
@@ -197,7 +218,6 @@ psc_particle_PTYPE_buf_at_ptr(psc_particle_PTYPE_buf_t *buf, unsigned int n)
 #undef psc_particle_PTYPE_buf_ctor
 #undef psc_particle_PTYPE_buf_dtor
 #undef psc_particle_PTYPE_buf_size
-#undef psc_particle_PTYPE_buf_resize
 #undef psc_particle_PTYPE_buf_reserve
 #undef psc_particle_PTYPE_buf_capacity
 #undef psc_particle_PTYPE_buf_push_back

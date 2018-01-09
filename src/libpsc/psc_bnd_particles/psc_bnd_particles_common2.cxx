@@ -166,7 +166,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
     dpatch->m_begin = particle_buf_size(dpatch->m_buf);
 
     unsigned int n_send = patch->b_cnt[patch->nr_blocks];
-    particle_buf_resize(dpatch->m_buf, dpatch->m_begin + n_send);
+    dpatch->m_buf->resize(dpatch->m_begin + n_send);
   }
 }
 

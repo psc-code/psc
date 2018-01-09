@@ -513,7 +513,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     // this is dangerous: we keep using the iterator, knowing that
     // it won't become invalid due to a realloc since we reserved enough space...
     it_recv[p] = particle_buf_end(patch->m_buf);
-    particle_buf_resize(patch->m_buf, size + patch->n_recv);
+    patch->m_buf->resize(size + patch->n_recv);
   }
 
   // overlap: copy particles from local proc to the end of recv range
@@ -654,7 +654,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   
   struct ddcp_patch *dpatch = &ddcp->patches[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-    particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
+    dpatch->nei[dir1].send_buf.resize(0);
   }
 
   unsigned int n_begin = dpatch->m_begin;
@@ -757,7 +757,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       }
     }
   }
-  particle_buf_resize(dpatch->m_buf, head);
+  dpatch->m_buf->resize(head);
 }
 
 // ----------------------------------------------------------------------

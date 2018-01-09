@@ -247,7 +247,7 @@ psc_mparticles_PTYPE_patch_resize(struct psc_mparticles *mprts, int p, int n_prt
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  psc_particle_PTYPE_buf_resize(&patch->buf, n_prts);
+  patch->buf.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------

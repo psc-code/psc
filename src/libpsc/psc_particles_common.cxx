@@ -226,7 +226,7 @@ PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct PFX(patch) *patch = &sub->patch[p];
-    PARTICLE_BUF(resize)(&patch->buf, n_prts_by_patch[p]);
+    patch->buf.resize(n_prts_by_patch[p]);
   }
 }
 
