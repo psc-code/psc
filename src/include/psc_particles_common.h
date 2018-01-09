@@ -26,7 +26,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
-#define psc_particle_PTYPE_iter_equal psc_particle_single_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_single_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
@@ -56,7 +55,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_double_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_double_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
-#define psc_particle_PTYPE_iter_equal psc_particle_double_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_double_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
 
@@ -86,7 +84,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_by_block_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_by_block_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
-#define psc_particle_PTYPE_iter_equal psc_particle_single_by_block_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_single_by_block_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
 
@@ -116,7 +113,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_fortran_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_fortran_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
-#define psc_particle_PTYPE_iter_equal psc_particle_fortran_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_fortran_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 
@@ -344,21 +340,22 @@ struct psc_particle_PTYPE_iter_t
   {
     return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(mprts), p, n + m);
   }
+
+  bool operator==(const psc_particle_PTYPE_iter_t& other)
+  {
+    assert(mprts == other.mprts && p == other.p);
+    return n == other.n;
+  }
+  
+  bool operator!=(const psc_particle_PTYPE_iter_t& other)
+  {
+    return !(*this == other);
+  }
   
   int n;
   int p;
   const struct psc_mparticles *mprts;
 };
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_iter_equal
-
-static inline bool
-psc_particle_PTYPE_iter_equal(psc_particle_PTYPE_iter_t iter, psc_particle_PTYPE_iter_t iter2)
-{
-  assert(iter.mprts == iter2.mprts && iter.p == iter2.p);
-  return iter.n == iter2.n;
-}
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_iter_next
@@ -435,7 +432,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef psc_mparticles_PTYPE_patch_get_b_dxi
 #undef psc_mparticles_PTYPE_patch_get_b_mx
 #undef psc_particle_PTYPE_iter_t
-#undef psc_particle_PTYPE_iter_equal
 #undef psc_particle_PTYPE_iter_next 
 #undef psc_particle_PTYPE_range_t 
 

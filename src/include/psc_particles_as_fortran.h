@@ -30,7 +30,6 @@ using mparticles_t = mparticles_fortran_t;
 #define particle_buf_at_ptr         psc_particle_fortran_buf_at_ptr
 
 #define particle_iter_t               psc_particle_fortran_iter_t
-#define particle_iter_equal           psc_particle_fortran_iter_equal
 #define particle_iter_next            psc_particle_fortran_iter_next 
 #define particle_range_t              psc_particle_fortran_range_t
 
