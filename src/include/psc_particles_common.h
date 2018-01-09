@@ -75,6 +75,41 @@
 struct psc_particle_PTYPE_range_t;
 
 // ----------------------------------------------------------------------
+// psc_particle_PTYPE_iter_t
+
+struct psc_particle_PTYPE_iter_t
+{
+  psc_particle_PTYPE_iter_t(particle_PTYPE_t* ptr)
+    : ptr_(ptr)
+  {
+  }
+  
+  particle_PTYPE_t& operator*()
+  {
+    return *ptr_;
+  }
+
+  bool operator==(const psc_particle_PTYPE_iter_t& other)
+  {
+    return ptr_ == other.ptr_;
+  }
+  
+  bool operator!=(const psc_particle_PTYPE_iter_t& other)
+  {
+    return !(*this == other);
+  }
+
+  psc_particle_PTYPE_iter_t operator++()
+  {
+    ptr_++;
+    return *this;;
+  }
+
+private:
+  particle_PTYPE_t *ptr_;
+};
+
+// ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
 
 struct psc_mparticles_PTYPE_patch
@@ -177,41 +212,6 @@ struct psc_mparticles_PTYPE
   using patch_t = psc_mparticles_PTYPE_patch;
   
   patch_t *patch;
-};
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_iter_t
-
-struct psc_particle_PTYPE_iter_t
-{
-  psc_particle_PTYPE_iter_t(particle_PTYPE_t* ptr)
-    : ptr_(ptr)
-  {
-  }
-  
-  particle_PTYPE_t& operator*()
-  {
-    return *ptr_;
-  }
-
-  bool operator==(const psc_particle_PTYPE_iter_t& other)
-  {
-    return ptr_ == other.ptr_;
-  }
-  
-  bool operator!=(const psc_particle_PTYPE_iter_t& other)
-  {
-    return !(*this == other);
-  }
-
-  psc_particle_PTYPE_iter_t operator++()
-  {
-    ptr_++;
-    return *this;;
-  }
-
-private:
-  particle_PTYPE_t *ptr_;
 };
 
 // ----------------------------------------------------------------------
