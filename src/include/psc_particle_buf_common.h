@@ -14,7 +14,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_buf_dtor
-#define psc_particle_PTYPE_buf_at_ptr psc_particle_single_buf_at_ptr
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
 #elif PTYPE == PTYPE_DOUBLE
@@ -25,7 +24,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_double_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_double_buf_dtor
-#define psc_particle_PTYPE_buf_at_ptr psc_particle_double_buf_at_ptr
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
@@ -36,7 +34,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_by_block_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_by_block_buf_dtor
-#define psc_particle_PTYPE_buf_at_ptr psc_particle_single_by_block_buf_at_ptr
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t
 
 #elif PTYPE == PTYPE_FORTRAN
@@ -47,7 +44,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_fortran_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_fortran_buf_dtor
-#define psc_particle_PTYPE_buf_at_ptr psc_particle_fortran_buf_at_ptr
 
 #elif PTYPE == PTYPE_CUDA
 
@@ -57,7 +53,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_cuda_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_cuda_buf_dtor
-#define psc_particle_PTYPE_buf_at_ptr psc_particle_cuda_buf_at_ptr
 
 #endif
 
@@ -133,23 +128,11 @@ psc_particle_PTYPE_buf_dtor(psc_particle_PTYPE_buf_t *buf)
   free(buf->m_data);
 }
 
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_at_ptr
-
-static inline particle_PTYPE_t *
-psc_particle_PTYPE_buf_at_ptr(psc_particle_PTYPE_buf_t *buf, unsigned int n)
-{
-  // FIXME? could do bounds check here...
-  return &buf->m_data[n];
-}
-
-
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t
 
 #undef psc_particle_PTYPE_buf_t
 #undef psc_particle_PTYPE_buf_ctor
 #undef psc_particle_PTYPE_buf_dtor
-#undef psc_particle_PTYPE_buf_at_ptr
 #undef psc_particle_PTYPE_range_t
 

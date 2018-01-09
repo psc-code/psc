@@ -662,7 +662,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
-    particle_t *prt = particle_buf_at_ptr(dpatch->m_buf, n);
+    particle_t *prt = &(*dpatch->m_buf)[n];
     particle_real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     particle_real_t *pxi = &prt->pxi;
     
@@ -674,7 +674,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
-      *particle_buf_at_ptr(dpatch->m_buf, head++) = *prt;
+      (*dpatch->m_buf)[head++] = *prt;
       continue;
     }
 
@@ -750,7 +750,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	*particle_buf_at_ptr(dpatch->m_buf, head++) = *prt;
+	(*dpatch->m_buf)[head++] = *prt;
       } else {
 	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	nei->send_buf.push_back(*prt);

@@ -19,7 +19,6 @@ using mparticles_t = mparticles_single_t;
 #define particle_buf_t              psc_particle_single_buf_t
 #define particle_buf_ctor           psc_particle_single_buf_ctor
 #define particle_buf_dtor           psc_particle_single_buf_dtor
-#define particle_buf_at_ptr         psc_particle_single_buf_at_ptr
 
 #define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni

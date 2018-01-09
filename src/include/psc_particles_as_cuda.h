@@ -12,7 +12,6 @@ using mparticles_t = mparticles_cuda_t;
 #define particle_buf_t              psc_particle_cuda_buf_t
 #define particle_buf_ctor           psc_particle_cuda_buf_ctor
 #define particle_buf_dtor           psc_particle_cuda_buf_dtor
-#define particle_buf_at_ptr         psc_particle_cuda_buf_at_ptr
 
 #define PARTICLE_TYPE               "cuda"
 
