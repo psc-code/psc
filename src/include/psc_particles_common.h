@@ -201,29 +201,24 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, unsigned int n
 
 struct psc_particle_PTYPE_iter_t
 {
-  psc_particle_PTYPE_iter_t() // FIXME
-    : mprts(), p(), n()
-  {
-  }
-  
-  psc_particle_PTYPE_iter_t(struct psc_mparticles *_mprts, int _p, int _n)
-    : mprts(_mprts), p(_p), n(_n)
+  psc_particle_PTYPE_iter_t(psc_mparticles_PTYPE_patch *patch,
+			    int _n)
+    : patch_(patch), n(_n)
   {
   }
   
   particle_PTYPE_t& operator*()
   {
-    return *psc_mparticles_PTYPE_get_one(mprts, p, n);
+    return (*patch_)[n];
   }
 
   particle_PTYPE_t& operator[](int m)
   {
-    return *psc_mparticles_PTYPE_get_one(mprts, p, n + m);
+    return (*patch_)[n + m];
   }
 
   bool operator==(const psc_particle_PTYPE_iter_t& other)
   {
-    assert(mprts == other.mprts && p == other.p);
     return n == other.n;
   }
   
@@ -238,8 +233,7 @@ struct psc_particle_PTYPE_iter_t
     return *this;;
   }
   
-  struct psc_mparticles *mprts;
-  int p;
+  psc_mparticles_PTYPE_patch *patch_;
   int n;
 };
 
@@ -256,12 +250,12 @@ struct psc_particle_PTYPE_range_t
   
   psc_particle_PTYPE_iter_t begin()
   {
-    return psc_particle_PTYPE_iter_t(mprts_, p_, 0);
+    return psc_particle_PTYPE_iter_t(patch_, 0);
   }
 
   psc_particle_PTYPE_iter_t end()
   {
-    return psc_particle_PTYPE_iter_t(mprts_, p_, patch_->size());
+    return psc_particle_PTYPE_iter_t(patch_, patch_->size());
   }
 
   unsigned int size() { return patch_->size(); }
