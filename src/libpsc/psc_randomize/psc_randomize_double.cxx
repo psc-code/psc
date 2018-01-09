@@ -17,7 +17,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
 
   for (int p = 0; p < mprts.n_patches(); p++) {
     particle_range_t prts = mprts[p].range();
-    unsigned int n_prts = particle_range_size(prts);
+    unsigned int n_prts = prts.size();
     for (int i = 0; i < n_prts; i++) {
       int j = random() % n_prts;
       particle_t tmp = *particle_iter_at(prts.begin, i);

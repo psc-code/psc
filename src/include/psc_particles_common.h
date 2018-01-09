@@ -31,7 +31,6 @@
 #define psc_particle_PTYPE_iter_deref psc_particle_single_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_single_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
-#define psc_particle_PTYPE_range_size psc_particle_single_range_size
 
 #elif PTYPE == PTYPE_DOUBLE
 
@@ -64,7 +63,6 @@
 #define psc_particle_PTYPE_iter_deref psc_particle_double_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_double_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
-#define psc_particle_PTYPE_range_size psc_particle_double_range_size 
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -97,7 +95,6 @@
 #define psc_particle_PTYPE_iter_deref psc_particle_single_by_block_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_single_by_block_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
-#define psc_particle_PTYPE_range_size psc_particle_single_by_block_range_size 
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -130,7 +127,6 @@
 #define psc_particle_PTYPE_iter_deref psc_particle_fortran_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_fortran_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
-#define psc_particle_PTYPE_range_size psc_particle_fortran_range_size
 
 #elif PTYPE == PTYPE_CUDA
 
@@ -422,15 +418,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
   return rv;
 }
 
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_range_size
-
-static inline unsigned int
-psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
-{
-  return prts.size();
-}
-
 #include <math.h>
 
 #endif // PTYPE_CUDA
@@ -464,5 +451,4 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef psc_particle_PTYPE_iter_deref 
 #undef psc_particle_PTYPE_iter_at 
 #undef psc_particle_PTYPE_range_t 
-#undef psc_particle_PTYPE_range_size
 

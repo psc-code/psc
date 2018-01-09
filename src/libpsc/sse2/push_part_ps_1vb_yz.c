@@ -195,7 +195,7 @@ ip_fields_from_em(int p, fields_ip_t *fld, fields_t pf)
 
 void
 psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
-				    struct psc_mparticles *mprts,
+				    struct psc_mparticles *_mprts,
 				    struct psc_mfields *mflds,
 				    int p)
 {
@@ -204,7 +204,8 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
     pr = prof_register("ps_1vb_push_yz", 1., 0, 0);
   }
 
-  struct psc_particle *_prts = psc_mparticles_get_patch(mprts, p);
+  mparticles_t mprts = mparticles_t(_mprts);
+
   struct psc_particles_single *sngl = psc_particles_single(_prts);
   assert(!sngl->need_reorder);
 
@@ -219,16 +220,16 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
   fields_ip_alloc(&fld_ip, ib, ie, 9, 0); // JXI .. HZ
   ip_fields_from_em(p, &fld_ip, flds);
 
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  unsigned int n_prts = particle_range_size(prts);
+  particle_range_t prts = mprts[p].range();
+  unsigned int n_prts = prts.size();
 #if 1
-  sb2_ps_1vb_yz_pxx_jxyz(p, &fld_ip, _prts, 0);
-  sb0_ps_1vb_yz_pxx_jxyz(p, &fld_ip, _prts, n_prts & ~3);
+  sb2_ps_1vb_yz_pxx_jxyz(p, &fld_ip, prts, 0);
+  sb0_ps_1vb_yz_pxx_jxyz(p, &fld_ip, prts, n_prts & ~3);
 #else
-  sb2_ps_1vb_yz_p(p, &fld_ip, _prts, 0);
-  sb0_ps_1vb_yz_p(p, &fld_ip, _prts, n_prts & ~3);
+  sb2_ps_1vb_yz_p(p, &fld_ip, prts, 0);
+  sb0_ps_1vb_yz_p(p, &fld_ip, prts, n_prts & ~3);
 
-  sb0_ps_1vb_yz_xx_jxyz(p, &fld_ip, _prts, 0);
+  sb0_ps_1vb_yz_xx_jxyz(p, &fld_ip, prts, 0);
 #endif
 
   ip_fields_to_j(p, &fld_ip, flds);

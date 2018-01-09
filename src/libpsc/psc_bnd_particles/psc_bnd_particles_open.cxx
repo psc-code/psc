@@ -461,7 +461,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
 		 sqrt(M_PI) * v[Z] / vsz * (erf((vzdin - v[Z]) / vsz) + erf(v[Z] / vsz))) / gs0;
     }
     for (int n = 0; n < ninjc; n++) {
-      unsigned int i = particle_range_size(prts);
+      unsigned int i = prts.size();
       mparticles_patch_resize(mprts, p, i + 1);
       particle_t *prt = particle_iter_at(prts.begin, i); 
       prt->kind_ = kind;

@@ -35,8 +35,6 @@ using mparticles_t = mparticles_fortran_t;
 #define particle_iter_deref           psc_particle_fortran_iter_deref 
 #define particle_iter_at              psc_particle_fortran_iter_at
 #define particle_range_t              psc_particle_fortran_range_t
-#define particle_range_mprts          psc_particle_fortran_range_mprts
-#define particle_range_size           psc_particle_fortran_range_size
 
 #define PARTICLE_TYPE                 "fortran"
 

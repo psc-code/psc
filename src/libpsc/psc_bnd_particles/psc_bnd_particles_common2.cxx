@@ -24,7 +24,7 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts,
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
 
   particle_range_t prts = mparticles_t(mprts)[p].range();
-  unsigned int n_prts = particle_range_size(prts);
+  unsigned int n_prts = prts.size();
   int *b_mx = patch->b_mx;
   for (int i = off; i < n_prts; i++) {
     particle_t *part = particle_iter_at(prts.begin, i);
@@ -47,7 +47,7 @@ find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
   particle_range_t prts = mparticles_t(mprts)[p].range();
-  unsigned int n_prts = particle_range_size(prts);
+  unsigned int n_prts = prts.size();
   unsigned int cnt = n_prts;
   int *b_mx = patch->b_mx;
   memset(patch->b_cnt, 0, (patch->nr_blocks + 1) * sizeof(*patch->b_cnt));
@@ -77,7 +77,7 @@ count_and_reorder_to_back(struct psc_mparticles *mprts, int p)
   particle_range_t prts = mparticles_t(mprts)[p].range();
 
   memset(patch->b_cnt, 0, (patch->nr_blocks + 1) * sizeof(*patch->b_cnt));
-  unsigned int n_prts = particle_range_size(prts);
+  unsigned int n_prts = prts.size();
   unsigned int cnt = n_prts;
   for (int i = 0; i < n_prts; i++) {
     if (patch->b_idx[i] == patch->nr_blocks) {
@@ -95,7 +95,7 @@ reorder_to_back(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
   particle_range_t prts = mparticles_t(mprts)[p].range();
 
-  unsigned int n_prts = particle_range_size(prts);
+  unsigned int n_prts = prts.size();
   unsigned int cnt = n_prts;
   for (int i = 0; i < n_prts; i++) {
     if (patch->b_idx[i] == patch->nr_blocks) {

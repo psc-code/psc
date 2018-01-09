@@ -112,7 +112,8 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
   int *ldims = ppsc->patch[p].ldims;
   int last = 0;
   offsets[last] = 0;
-  for (int n = 0; n < particle_range_size(prts); n++) {
+  int n_prts = prts.size();
+  for (int n = 0; n < n_prts; n++) {
     particle_t *prt = particle_iter_at(prts.begin, n);
     int cell_index = find_cell_index(prt, dxi, ldims);
     assert(cell_index >= last);
@@ -121,7 +122,7 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
     }
   }
   while (last < ldims[0] * ldims[1] * ldims[2]) {
-    offsets[++last] = particle_range_size(prts);
+    offsets[++last] = n_prts;
   }
 }
 

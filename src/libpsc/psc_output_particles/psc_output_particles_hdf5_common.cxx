@@ -154,7 +154,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
     particle_range_t prts = mprts[p].range();
-    unsigned int n_prts = particle_range_size(prts);
+    unsigned int n_prts = prts.size();
 
     // counting sort to get map 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {

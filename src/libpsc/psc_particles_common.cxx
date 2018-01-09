@@ -123,7 +123,7 @@ PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
     particle_range_t prts = mparticles_t(mprts)[p].range();
     char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
-    int n_prts = particle_range_size(prts);
+    int n_prts = prts.size();
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
       // in a rather ugly way, we write the int "kind" member as a float / double

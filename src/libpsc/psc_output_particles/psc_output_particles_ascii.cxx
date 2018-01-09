@@ -50,7 +50,8 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
   FILE *file = fopen(filename, "w");
   for (int p = 0; p < mprts.n_patches(); p++) {
     particle_range_t prts = mprts[p].range();
-    for (int n = 0; n < particle_range_size(prts); n++) {
+    int n_prts = prts.size();
+    for (int n = 0; n < n_prts; n++) {
       particle_t *part = particle_iter_at(prts.begin, n);
       fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
 	      n, part->xi, part->yi, part->zi,

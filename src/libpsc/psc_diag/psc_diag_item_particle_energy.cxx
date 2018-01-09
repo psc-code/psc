@@ -12,7 +12,8 @@ do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
 
   struct psc_patch *patch = &psc->patch[p];
   double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
-  for (int n = 0; n < particle_range_size(prts); n++) {
+  int n_prts = prts.size();
+  for (int n = 0; n < n_prts; n++) {
     particle_t *part = particle_iter_at(prts.begin, n);
       
     double gamma = sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));

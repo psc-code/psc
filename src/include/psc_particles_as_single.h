@@ -41,8 +41,6 @@ using mparticles_t = mparticles_single_t;
 #define particle_iter_deref         psc_particle_single_iter_deref
 #define particle_iter_at            psc_particle_single_iter_at
 #define particle_range_t            psc_particle_single_range_t
-#define particle_range_mprts        psc_particle_single_range_mprts
-#define particle_range_size         psc_particle_single_range_size
 
 #define PARTICLE_TYPE               "single"
 
