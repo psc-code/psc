@@ -44,10 +44,4 @@ particle_single_kind(particle_single_t *prt)
   return prt->kind;
 }
 
-static inline int
-particle_single_real_nint(particle_single_real_t x)
-{
-  return floorf(x + .5f); // FIXME use roundf()?
-}
-
 #endif

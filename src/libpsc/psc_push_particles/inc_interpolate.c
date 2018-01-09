@@ -23,7 +23,7 @@ template<typename R>
 static inline void
 get_nint_remainder(int *lg1, R *h1, R u)
 {
-  int l = particle_real_nint(u);
+  int l = nint(u);
   *lg1 = l;
   *h1 = l-u;
 }

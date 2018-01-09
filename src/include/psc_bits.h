@@ -17,6 +17,12 @@ int fint(T val)
 #endif
 }
 
+template<typename T>
+int nint(T val)
+{
+  return (int) std::round(val);
+}
+
 
 #endif
 

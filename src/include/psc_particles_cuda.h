@@ -11,10 +11,4 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-static inline int
-particle_cuda_real_nint(particle_cuda_real_t x)
-{
-  return (int)(x + 10.5f) - 10;
-}
-
 #endif

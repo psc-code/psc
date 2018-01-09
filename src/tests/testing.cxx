@@ -326,9 +326,9 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *particles_bas
       particle_real_t u = part->xi * dxi;
       particle_real_t v = part->yi * dyi;
       particle_real_t w = part->zi * dzi;
-      int j0 = particle_real_nint(u) + ibn[0];
-      int j1 = particle_real_nint(v) + ibn[1];
-      int j2 = particle_real_nint(w) + ibn[2];
+      int j0 = nint(u) + ibn[0];
+      int j1 = nint(v) + ibn[1];
+      int j2 = nint(w) + ibn[2];
       
       assert(j0 >= 0 && j0 < ldims[0] + 2*ibn[0]);
       assert(j1 >= 0 && j1 < ldims[1] + 2*ibn[1]);

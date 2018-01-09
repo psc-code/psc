@@ -16,9 +16,9 @@ get_cell_index(int p, const particle_t *part)
   particle_real_t u = part->xi * dxi;
   particle_real_t v = part->yi * dyi;
   particle_real_t w = part->zi * dzi;
-  int j0 = particle_real_nint(u) + ibn[0];
-  int j1 = particle_real_nint(v) + ibn[1];
-  int j2 = particle_real_nint(w) + ibn[2];
+  int j0 = nint(u) + ibn[0];
+  int j1 = nint(v) + ibn[1];
+  int j2 = nint(w) + ibn[2];
     
   return ((j2) * (ldims[1] + 2*ibn[1]) + j1) * (ldims[0] + 2*ibn[0]) + j0;
 }
@@ -36,9 +36,9 @@ get_cell_index_2x2x2(int p, const particle_t *part)
   particle_real_t u = part->xi * dxi;
   particle_real_t v = part->yi * dyi;
   particle_real_t w = part->zi * dzi;
-  int j0 = particle_real_nint(u) + ibn[0];
-  int j1 = particle_real_nint(v) + ibn[1];
-  int j2 = particle_real_nint(w) + ibn[2];
+  int j0 = nint(u) + ibn[0];
+  int j1 = nint(v) + ibn[1];
+  int j2 = nint(w) + ibn[2];
     
   return ((((j2 >> 1) * (ldims[1] + 2*ibn[1]) +
 	   (j1 >> 1)) * (ldims[0] + 2*ibn[0]) +

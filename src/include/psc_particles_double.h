@@ -49,10 +49,4 @@ particle_double_kind(particle_double_t *prt)
   return prt->kind;
 }
 
-static inline int
-particle_double_real_nint(particle_double_real_t x)
-{
-  return floor(x + .5);
-}
-
 #endif

@@ -99,9 +99,9 @@
     particle_real_t u = xi[0] * dxi;					\
     particle_real_t v = xi[1] * dyi;					\
     particle_real_t w = xi[2] * dzi;					\
-    int jx = particle_real_nint(u);					\
-    int jy = particle_real_nint(v);					\
-    int jz = particle_real_nint(w);					\
+    int jx = nint(u);							\
+    int jy = nint(v);							\
+    int jz = nint(w);							\
     particle_real_t h1 = jx - u;					\
     particle_real_t h2 = jy - v;					\
     particle_real_t h3 = jz - w;					\

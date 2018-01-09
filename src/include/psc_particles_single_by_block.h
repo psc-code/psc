@@ -46,10 +46,4 @@ particle_single_by_block_kind(particle_single_by_block_t *prt)
   return prt->kind;
 }
 
-static inline int
-particle_single_by_block_real_nint(particle_single_by_block_real_t x)
-{
-  return floorf(x + .5f); // FIXME use roundf()?
-}
-
 #endif
