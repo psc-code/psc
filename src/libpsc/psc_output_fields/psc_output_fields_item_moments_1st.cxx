@@ -498,7 +498,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     mf_res[p].zero();
-    do_nvp_1st_run(p, mf_res[p], particle_range_mprts(mprts.mprts(), p));
+    do_nvp_1st_run(p, mf_res[p], mprts.range(p));
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 

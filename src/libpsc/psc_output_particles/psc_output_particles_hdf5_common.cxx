@@ -211,7 +211,7 @@ find_patch_bounds(struct psc_output_particles_hdf5 *hdf5,
 
 static struct hdf5_prt *
 make_local_particle_array(struct psc_output_particles *out,
-			  struct psc_mparticles *mprts, int **off, int **map,
+			  mparticles_t mprts, int **off, int **map,
 			  size_t **idx, size_t *p_n_write, size_t *p_n_off, size_t *p_n_total)
 {
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
@@ -221,7 +221,7 @@ make_local_particle_array(struct psc_output_particles *out,
 
   // count all particles to be written locally
   size_t n_write = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -246,8 +246,8 @@ make_local_particle_array(struct psc_output_particles *out,
 
   // copy particles to be written into temp array
   int nn = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    particle_range_t prts = mprts.range(p);
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -417,7 +417,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   // find local particle and idx arrays
   size_t n_write, n_off, n_total;
   struct hdf5_prt *arr =
-    make_local_particle_array(out, mprts.mprts(), map, off, idx, &n_write, &n_off, &n_total);
+    make_local_particle_array(out, mprts, map, off, idx, &n_write, &n_off, &n_total);
   prof_stop(pr_A);
 
   prof_start(pr_B);
