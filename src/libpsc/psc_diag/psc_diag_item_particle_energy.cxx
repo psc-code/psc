@@ -7,7 +7,7 @@
 static void
 do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
 {
-  particle_range_t prts = mprts.range(p);
+  particle_range_t prts = mprts[p].range();
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
   struct psc_patch *patch = &psc->patch[p];

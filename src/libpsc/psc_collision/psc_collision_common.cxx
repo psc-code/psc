@@ -103,7 +103,7 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 static void
 find_cell_offsets(int offsets[], mparticles_t mprts, int p)
 {
-  particle_range_t prts = mprts.range(p);
+  particle_range_t prts = mprts[p].range();
 
   particle_real_t dxi[3];
   for (int d = 0; d < 3; d++) {
@@ -497,7 +497,7 @@ psc_collision_sub_run(struct psc_collision *collision,
 
   mfields_t mf_coll(coll->mflds);
   for (int p = 0; p < mprts.n_patches(); p++) {
-    particle_range_t prts = mprts.range(p);
+    particle_range_t prts = mprts[p].range();
   
     int *ldims = ppsc->patch[p].ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];

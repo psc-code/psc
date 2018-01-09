@@ -14,7 +14,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mfields_t mf_res = mres_base->get_as<mfields_t>(0, 0);
   for (int p = 0; p < mprts.n_patches(); p++) {
     mf_res[p].zero();
-    do_run(p, mf_res[p], mprts.range(p));
+    do_run(p, mf_res[p], mprts[p].range());
   }
 
   mf_res.put_as(mres_base, 0, mres_base->nr_fields);

@@ -181,6 +181,8 @@ const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int
 
 #else // PTYPE != PTYPE_CUDA
 
+struct psc_particle_PTYPE_range_t;
+
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
 
@@ -190,6 +192,10 @@ struct psc_mparticles_PTYPE_patch
 
   int b_mx[3];
   particle_PTYPE_real_t b_dxi[3];
+
+  struct psc_mparticles *mprts;
+  int p;
+  
 #if PTYPE == PTYPE_SINGLE
   particle_PTYPE_t *prt_array_alt;
   int nr_blocks;
@@ -211,6 +217,8 @@ struct psc_mparticles_PTYPE_patch
 
   void reserve(unsigned int new_capacity);
 
+  psc_particle_PTYPE_range_t range();
+
   unsigned int size()
   {
     return psc_particle_PTYPE_buf_size(&buf);
@@ -220,6 +228,7 @@ struct psc_mparticles_PTYPE_patch
   {
     psc_particle_PTYPE_buf_push_back(&buf, prt);
   }
+
 };
 
 // ----------------------------------------------------------------------
@@ -430,6 +439,19 @@ struct psc_particle_PTYPE_range_t {
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_range_mprts
+
+inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
+{
+  psc_particle_PTYPE_range_t rv;
+  rv.begin.n     = 0;
+  rv.begin.p     = p;
+  rv.begin.mprts = mprts;
+  rv.end.n       = size();
+  rv.end.p       = p;
+  rv.end.mprts   = mprts;
+
+  return rv;
+}
 
 static inline psc_particle_PTYPE_range_t
 psc_particle_PTYPE_range_mprts(struct psc_mparticles *mprts, int p)

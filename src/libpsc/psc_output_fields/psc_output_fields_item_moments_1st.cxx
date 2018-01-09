@@ -109,7 +109,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   
   for (int p = 0; p < mprts.n_patches(); p++) {
     mf_res[p].zero();
-    do_run(p, mf_res[p], mprts.range(p));
+    do_run(p, mf_res[p], mprts[p].range());
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
@@ -449,7 +449,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     mf_res[p].zero();
-    do_nvt_a_1st_run(p, mf_res[p], mprts.range(p));
+    do_nvt_a_1st_run(p, mf_res[p], mprts[p].range());
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
@@ -478,7 +478,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     }
 
     // calculate <(v-U)(v-U)> moments
-    do_nvt_b_1st_run(p, mf_res[p], mprts.range(p));
+    do_nvt_b_1st_run(p, mf_res[p], mprts[p].range());
   }
 
   mprts.put_as(mprts_base, MP_DONT_COPY);
@@ -498,7 +498,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     mf_res[p].zero();
-    do_nvp_1st_run(p, mf_res[p], mprts.range(p));
+    do_nvp_1st_run(p, mf_res[p], mprts[p].range());
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
