@@ -85,11 +85,14 @@
 // ======================================================================
 // psc_particle_PTYPE_buf_t
 
-typedef struct {
+struct psc_particle_PTYPE_buf_t
+{
+  using particle_t = particle_PTYPE_t;
+  
   particle_PTYPE_t *m_data;
   unsigned int m_size;
   unsigned int m_capacity;
-} psc_particle_PTYPE_buf_t;
+};
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_buf_ctor

@@ -5,12 +5,15 @@
 #include "psc_particles_private.h"
 #include "psc.h"
 
+#include "particles.hxx"
 #include "particles_traits.hxx"
 
 #define PTYPE PTYPE_DOUBLE
 #include "psc_particle_buf_common.h"
 #include "psc_particles_common.h"
 #undef PTYPE
+
+using mparticles_double_t = mparticles<psc_particle_double_buf_t>;
 
 template<>
 struct mparticles_traits<particle_double_t>

@@ -5,7 +5,8 @@
 #include <mrc_obj.h>
 #include <assert.h>
 
-BEGIN_C_DECLS
+#include "particles_traits.hxx"
+#include "particles.hxx"
 
 // ----------------------------------------------------------------------
 // psc_mparticles class
@@ -14,6 +15,9 @@ struct psc_mparticles {
   struct mrc_obj obj;
   int nr_patches;
   unsigned int flags;          // flags, like MP_NEED_CELL_OFFSETS, ...
+
+  template<typename MP>
+  MP get_as(unsigned int flags = 0);
 };
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
@@ -83,6 +87,12 @@ void psc_mparticles_put_as(struct psc_mparticles *mprts,
 			   unsigned int flags);
 void psc_mparticles_check(struct psc_mparticles *mprts);
 
-END_C_DECLS
+template<typename MP>
+inline MP psc_mparticles::get_as(unsigned int flags)
+{
+  const char *type = mparticles_traits<typename MP::buf_t::particle_t>::name;
+  struct psc_mparticles *mprts = psc_mparticles_get_as(this, type, flags);
+  return MP(mprts);
+}
 
 #endif

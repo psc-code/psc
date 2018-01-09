@@ -769,7 +769,8 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // FIXME, why does this do anything to the random seed?
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, MP_DONT_COPY);
+  //struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, MP_DONT_COPY);
+  mparticles_double_t mprts = psc->particles->get_as<mparticles_double_t>(MP_DONT_COPY);
 
   if (psc->prm.seed_by_time) {
     srandom(10*rank + time(NULL));
@@ -826,17 +827,17 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
 	      } else {
 		prt.qni_wni = psc->kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }
-	      mparticles_patch_push_back(mprts, p, prt);
+	      mparticles_patch_push_back(mprts.mprts(), p, prt);
 	    }
 	  }
 	}
       }
     }
     if (!psc->prm.fractional_n_particles_per_cell) {
-      assert(mparticles_get_n_prts(mprts, p) == nr_particles_by_patch[p]);
+      assert(mparticles_get_n_prts(mprts.mprts(), p) == nr_particles_by_patch[p]);
     }
   }
-  psc_mparticles_put_as(mprts, psc->particles, 0);
+  mprts.put_as(psc->particles);
 }
 
 // ----------------------------------------------------------------------
