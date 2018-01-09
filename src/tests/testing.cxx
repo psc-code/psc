@@ -147,8 +147,7 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
   
     assert(prts.size() == prts_ref.size());
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
-	 prt_iter != prts.end;
-	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
+	 prt_iter != prts.end; ++prt_iter, ++prt_ref_iter) {
       *prt_ref_iter = *prt_iter;
       particle_t *part = &*prt_iter;
       particle_t *part_ref = &*prt_ref_iter;

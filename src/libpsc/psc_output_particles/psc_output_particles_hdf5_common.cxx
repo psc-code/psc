@@ -175,9 +175,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
     // sort a map only, not the actual particles
     map[p] = (int *) malloc(n_prts * sizeof(*map[p]));
     int n = 0;
-    for (particle_iter_t prt_iter = prts.begin;
-	 prt_iter != prts.end;
-	 prt_iter = particle_iter_next(prt_iter), n++) {
+    for (particle_iter_t prt_iter = prts.begin; prt_iter != prts.end; ++prt_iter, n++) {
       particle_t *part = &*prt_iter;
       int si = get_sort_index(p, part);
       map[p][off2[si]++] = n;

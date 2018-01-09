@@ -36,7 +36,6 @@ using mparticles_t = mparticles_single_t;
 #define particle_wni                particle_single_wni
 
 #define particle_iter_t             psc_particle_single_iter_t
-#define particle_iter_next          psc_particle_single_iter_next
 #define particle_range_t            psc_particle_single_range_t
 
 #define PARTICLE_TYPE               "single"

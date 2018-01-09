@@ -26,7 +26,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
-#define psc_particle_PTYPE_iter_next psc_particle_single_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
 #elif PTYPE == PTYPE_DOUBLE
@@ -55,7 +54,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_double_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_double_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
-#define psc_particle_PTYPE_iter_next psc_particle_double_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
@@ -84,7 +82,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_by_block_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_by_block_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
-#define psc_particle_PTYPE_iter_next psc_particle_single_by_block_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
 
 #elif PTYPE == PTYPE_FORTRAN
@@ -113,7 +110,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_fortran_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_fortran_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
-#define psc_particle_PTYPE_iter_next psc_particle_fortran_iter_next 
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 
 #elif PTYPE == PTYPE_CUDA
@@ -351,25 +347,17 @@ struct psc_particle_PTYPE_iter_t
   {
     return !(*this == other);
   }
+
+  psc_particle_PTYPE_iter_t operator++()
+  {
+    n++;
+    return *this;;
+  }
   
   int n;
   int p;
   const struct psc_mparticles *mprts;
 };
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_iter_next
-
-static inline psc_particle_PTYPE_iter_t
-psc_particle_PTYPE_iter_next(psc_particle_PTYPE_iter_t iter)
-{
-  psc_particle_PTYPE_iter_t rv;
-  rv.n     = iter.n + 1;
-  rv.p     = iter.p;
-  rv.mprts = iter.mprts;
-
-  return rv;
-}
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_range_t
@@ -432,6 +420,5 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef psc_mparticles_PTYPE_patch_get_b_dxi
 #undef psc_mparticles_PTYPE_patch_get_b_mx
 #undef psc_particle_PTYPE_iter_t
-#undef psc_particle_PTYPE_iter_next 
 #undef psc_particle_PTYPE_range_t 
 
