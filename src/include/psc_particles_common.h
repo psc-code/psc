@@ -13,7 +13,6 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_get_one
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_patch_resize
-#define psc_mparticles_PTYPE_patch_capacity psc_mparticles_single_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
@@ -30,7 +29,6 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_double_get_one
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_double_patch_resize
-#define psc_mparticles_PTYPE_patch_capacity psc_mparticles_double_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
 
@@ -47,7 +45,6 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_by_block_get_one
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_by_block_patch_resize
-#define psc_mparticles_PTYPE_patch_capacity psc_mparticles_single_by_block_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
 
@@ -64,7 +61,6 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_fortran_get_one
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_fortran_patch_resize
-#define psc_mparticles_PTYPE_patch_capacity psc_mparticles_fortran_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 
@@ -209,18 +205,6 @@ psc_mparticles_PTYPE_patch_resize(struct psc_mparticles *mprts, int p, int n_prt
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
   patch->buf.resize(n_prts);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch_capacity
-
-static inline unsigned int
-psc_mparticles_PTYPE_patch_capacity(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
-
-  return patch->buf.capacity();
 }
 
 // ----------------------------------------------------------------------
