@@ -8,7 +8,7 @@
 // mparticles
 
 template<typename T>
-struct mparticles {
+struct mparticles_ {
   typedef T particle_buf_type;
   typedef typename T::value_type particle_type;
 
@@ -18,7 +18,7 @@ struct mparticles {
   // ----------------------------------------------------------------------
   // mparticles::ctor
 
-  mparticles(int _n_patches)
+  mparticles_(int _n_patches)
     : n_patches(_n_patches), buf(_n_patches)
   {
   }

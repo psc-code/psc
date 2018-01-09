@@ -66,22 +66,22 @@ extern struct psc_mparticles_ops psc_mparticles_vpic_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_by_kind_ops;
 
 
-int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
-void psc_mparticles_get_size_all(struct psc_mparticles *mparticles, int *n_prts_by_patch);
-void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
+int  psc_mparticles_nr_particles(struct psc_mparticles *mprts);
+void psc_mparticles_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
+void psc_mparticles_setup_internals(struct psc_mparticles *mprts);
 void psc_mparticles_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
 void psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
 
 void psc_mparticles_inject(struct psc_mparticles *mprts, int p,
 			   const struct psc_particle_inject *prt);
 
-struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
+struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mprts_base,
 					     const char *type,
 					     unsigned int flags);
-void psc_mparticles_put_as(struct psc_mparticles *mparticles,
-			   struct psc_mparticles *mparticles_base,
+void psc_mparticles_put_as(struct psc_mparticles *mprts,
+			   struct psc_mparticles *mprts_base,
 			   unsigned int flags);
-void psc_mparticles_check(struct psc_mparticles *mparticles);
+void psc_mparticles_check(struct psc_mparticles *mprts);
 
 END_C_DECLS
 

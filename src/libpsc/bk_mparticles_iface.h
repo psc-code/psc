@@ -17,7 +17,7 @@ struct particle_single_by_kind {
 };
 
 typedef std::vector<particle_single_by_kind> particle_single_by_kind_buf;
-typedef mparticles<particle_single_by_kind_buf> bk_mparticles;
+typedef mparticles_<particle_single_by_kind_buf> bk_mparticles;
 
 #else
 
