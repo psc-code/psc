@@ -481,25 +481,19 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_patch_get_b_dxi
+// mparticles_cuda_t::patch_t::get_b_mx
 
-const particle_cuda_real_t *
-psc_mparticles_cuda_patch_get_b_dxi(struct psc_mparticles *mprts, int p)
+const int* mparticles_cuda_t::patch_t::get_b_mx() const
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  return cuda_mparticles_patch_get_b_dxi(cmprts, p);
+  return cuda_mparticles_patch_get_b_mx(mp_.sub()->cmprts, p_);
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_patch_get_b_mx
+// mparticles_cuda_t::patch_t::get_b_dxi
 
-const int *
-psc_mparticles_cuda_patch_get_b_mx(struct psc_mparticles *mprts, int p)
+const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  return cuda_mparticles_patch_get_b_mx(cmprts, p);
+  return cuda_mparticles_patch_get_b_dxi(mp_.sub()->cmprts, p_);
 }
 
 // ----------------------------------------------------------------------
