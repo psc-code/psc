@@ -18,6 +18,8 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
   int rank;
   MPI_Comm_rank(psc_comm(psc), &rank);
 
+  mparticles_t mprts(psc->particles);
+
   for (int p = 0; p < psc->nr_patches; p++) {
     struct psc_patch *patch = &ppsc->patch[p];
  
@@ -37,13 +39,13 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 	      prt.xi = (ix + .5) * patch->dx[0];
 	      prt.yi = (iy + .5) * patch->dx[1];
 	      prt.zi = (iz + .5) * patch->dx[2];
-	      mparticles_patch_push_back(psc->particles, p, prt);
+	      mprts[p].push_back(prt);
 	      
 	      prt.qni = 1.; prt.mni = 100.; prt.wni = 1.;
 	      prt.xi = (ix + .5) * patch->dx[0];
 	      prt.yi = (iy + .5) * patch->dx[1];
 	      prt.zi = (iz + .5) * patch->dx[2];
-	      mparticles_patch_push_back(psc->particles, p, prt);
+	      mprts[p].push_back(prt);
 	    }
 	  }
 	}

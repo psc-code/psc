@@ -17,11 +17,12 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     return;
   }
 
+  mparticles_t mprts(psc->particles);
   for (int n = 0; n < nr_particles_by_patch[0]; n++) {
     particle_t prt;
     prt.qni = 1.; prt.mni = 1.; prt.wni = 1.;
     prt.yi = prt.zi = .5;
-    mparticles_patch_push_back(psc->particles, 0, prt);
+    mprts[0].push_back(prt);
   }
 #endif
 }

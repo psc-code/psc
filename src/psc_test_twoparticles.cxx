@@ -169,7 +169,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	prt.qni = s->q;
 	prt.mni = s->m;
 	prt.wni = 1.;
-	mparticles_patch_push_back(mprts, p, prt);
+	mprts[p].push_back(prt);
       } 
     }
   }

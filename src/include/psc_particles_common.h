@@ -12,7 +12,6 @@
 #define psc_mparticles_PTYPE psc_mparticles_single
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_get_one
-#define psc_mparticles_PTYPE_patch_push_back psc_mparticles_single_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_single_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
@@ -30,7 +29,6 @@
 #define psc_mparticles_PTYPE psc_mparticles_double
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_double_get_one
-#define psc_mparticles_PTYPE_patch_push_back psc_mparticles_double_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_double_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_double_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
@@ -48,7 +46,6 @@
 #define psc_mparticles_PTYPE psc_mparticles_single_by_block
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_by_block_get_one
-#define psc_mparticles_PTYPE_patch_push_back psc_mparticles_single_by_block_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_by_block_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_single_by_block_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
@@ -66,7 +63,6 @@
 #define psc_mparticles_PTYPE psc_mparticles_fortran
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_fortran_get_one
-#define psc_mparticles_PTYPE_patch_push_back psc_mparticles_fortran_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_fortran_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_fortran_patch_capacity
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
@@ -228,18 +224,6 @@ psc_mparticles_PTYPE_patch_capacity(struct psc_mparticles *mprts, int p)
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch_push_back
-
-static inline void
-psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
-				     particle_PTYPE_t prt)
-{
-  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-
-  sub->patch[p].push_back(prt);
-}
-
-// ----------------------------------------------------------------------
 // psc_particle_PTYPE_iter_t
 
 struct psc_particle_PTYPE_iter_t
@@ -324,7 +308,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef psc_mparticles_PTYPE_ops
 #undef psc_mparticles_PTYPE_get_one
 #undef psc_mparticles_PTYPE_patch_capacity
-#undef psc_mparticles_PTYPE_patch_push_back
 #undef psc_mparticles_PTYPE_patch_resize
 #undef psc_particle_PTYPE_iter_t
 #undef psc_particle_PTYPE_range_t 

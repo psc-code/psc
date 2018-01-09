@@ -277,8 +277,8 @@ PFX(inject)(struct psc_mparticles *mprts, int p,
   prt.pzi     = new_prt->u[2];
   prt.qni_wni = new_prt->w * ppsc->kinds[kind].q * dVi;
   prt.kind_   = kind;
-  
-  mparticles_patch_push_back(mprts, p, prt);
+
+  mparticles_t(mprts)[p].push_back(prt);
 }
 
 #endif

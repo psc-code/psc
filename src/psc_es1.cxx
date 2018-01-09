@@ -310,7 +310,7 @@ psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
     prt.mni = s->m;
     prt.wni = 1.;
     prt.kind = kind;
-    mparticles_patch_push_back(mprts, p, prt);
+    mprts[p].push_back(prt);
   }
 #endif
   
