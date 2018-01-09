@@ -753,7 +753,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	*particle_buf_at_ptr(dpatch->m_buf, head++) = *prt;
       } else {
 	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
-	particle_buf_push_back(&nei->send_buf, *prt);
+	nei->send_buf.push_back(*prt);
       }
     }
   }

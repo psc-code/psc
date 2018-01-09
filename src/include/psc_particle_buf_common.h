@@ -14,7 +14,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_single_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_single_buf_at_ptr
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
@@ -26,7 +25,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_double_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_double_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_double_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_double_buf_at_ptr
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t
 
@@ -38,7 +36,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_by_block_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_by_block_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_single_by_block_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_single_by_block_buf_at_ptr
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t
 
@@ -50,7 +47,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_fortran_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_fortran_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_fortran_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_fortran_buf_at_ptr
 
 #elif PTYPE == PTYPE_CUDA
@@ -61,7 +57,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_cuda_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_cuda_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_cuda_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_cuda_buf_at_ptr
 
 #endif
@@ -139,20 +134,6 @@ psc_particle_PTYPE_buf_dtor(psc_particle_PTYPE_buf_t *buf)
 }
 
 // ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_push_back
-
-static inline void
-psc_particle_PTYPE_buf_push_back(psc_particle_PTYPE_buf_t *buf, particle_PTYPE_t prt)
-{
-  unsigned int n = buf->m_size;
-  if (n >= buf->m_capacity) {
-    buf->reserve(n + 1);
-  }
-  buf->m_data[n++] = prt;
-  buf->m_size = n;
-}
-
-// ----------------------------------------------------------------------
 // psc_particle_PTYPE_buf_at_ptr
 
 static inline particle_PTYPE_t *
@@ -169,7 +150,6 @@ psc_particle_PTYPE_buf_at_ptr(psc_particle_PTYPE_buf_t *buf, unsigned int n)
 #undef psc_particle_PTYPE_buf_t
 #undef psc_particle_PTYPE_buf_ctor
 #undef psc_particle_PTYPE_buf_dtor
-#undef psc_particle_PTYPE_buf_push_back
 #undef psc_particle_PTYPE_buf_at_ptr
 #undef psc_particle_PTYPE_range_t
 

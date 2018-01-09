@@ -19,7 +19,6 @@ using mparticles_t = mparticles_double_t;
 #define particle_buf_t              psc_particle_double_buf_t
 #define particle_buf_ctor           psc_particle_double_buf_ctor
 #define particle_buf_dtor           psc_particle_double_buf_dtor
-#define particle_buf_push_back      psc_particle_double_buf_push_back
 #define particle_buf_at_ptr         psc_particle_double_buf_at_ptr
 
 #define particle_qni_div_mni        particle_double_qni_div_mni

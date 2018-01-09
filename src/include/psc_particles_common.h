@@ -8,7 +8,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_single_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_single_buf_at_ptr
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_patch
@@ -29,7 +28,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_double_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_double_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_double_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_double_buf_at_ptr
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_double_patch
@@ -50,7 +48,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_single_by_block_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_by_block_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_single_by_block_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_single_by_block_buf_at_ptr
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_by_block_patch
@@ -71,7 +68,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_fortran_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_fortran_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_fortran_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_fortran_buf_at_ptr
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_fortran_patch
@@ -92,7 +88,6 @@
 #define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
 #define psc_particle_PTYPE_buf_ctor psc_particle_cuda_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_cuda_buf_dtor
-#define psc_particle_PTYPE_buf_push_back psc_particle_cuda_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_cuda_buf_at_ptr
 
 #define psc_mparticles_PTYPE psc_mparticles_cuda
@@ -148,7 +143,7 @@ struct psc_mparticles_PTYPE_patch
 
   void push_back(const particle_PTYPE_t& prt)
   {
-    psc_particle_PTYPE_buf_push_back(&buf, prt);
+    buf.push_back(prt);
   }
 
   psc_particle_PTYPE_buf_t& get_buf()
@@ -334,7 +329,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef psc_particle_PTYPE_buf_t
 #undef psc_particle_PTYPE_buf_ctor
 #undef psc_particle_PTYPE_buf_dtor
-#undef psc_particle_PTYPE_buf_push_back
 #undef psc_particle_PTYPE_buf_at_ptr
 
 #undef psc_mparticles_PTYPE_patch

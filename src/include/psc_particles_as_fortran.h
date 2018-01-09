@@ -19,7 +19,6 @@ using mparticles_t = mparticles_fortran_t;
 #define particle_buf_t              psc_particle_fortran_buf_t
 #define particle_buf_ctor           psc_particle_fortran_buf_ctor
 #define particle_buf_dtor           psc_particle_fortran_buf_dtor
-#define particle_buf_push_back      psc_particle_fortran_buf_push_back
 #define particle_buf_at_ptr         psc_particle_fortran_buf_at_ptr
 
 #define particle_iter_t               psc_particle_fortran_iter_t
