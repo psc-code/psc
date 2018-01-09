@@ -191,7 +191,7 @@ psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
     sort_indices(patch->b_idx, patch->b_cnt, patch->b_ids, n_prts);
 
     // FIXME, why?
-    mparticles_patch_resize(mprts, p, patch->b_cnt[patch->nr_blocks - 1]);
+    mparticles_t(mprts)[p].resize(patch->b_cnt[patch->nr_blocks - 1]);
     patch->need_reorder = true; // FIXME, need to honor before get()/put()
   }
 }

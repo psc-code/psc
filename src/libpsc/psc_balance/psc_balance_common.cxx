@@ -24,7 +24,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
   prof_start(pr_A);
   for (int p = 0; p < mprts_new->nr_patches; p++) {
-    mparticles_patch_resize(mprts_new, p, nr_particles_by_patch_new[p]);
+    mparticles_t(mprts_new)[p].resize(nr_particles_by_patch_new[p]);
   }
 
   assert(sizeof(particle_t) % sizeof(particle_real_t) == 0); // FIXME

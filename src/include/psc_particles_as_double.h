@@ -11,9 +11,6 @@ using mparticles_t = mparticles_double_t;
 #define mparticles_get_one          psc_mparticles_double_get_one
 #define mparticles_get_n_prts       psc_mparticles_double_get_n_prts
 #define mparticles_patch_reserve    psc_mparticles_double_patch_reserve
-#define mparticles_patch_push_back  psc_mparticles_double_patch_push_back
-#define mparticles_patch_resize     psc_mparticles_double_patch_resize
-#define mparticles_patch_capacity   psc_mparticles_double_patch_capacity
 
 #define particle_buf_t              psc_particle_double_buf_t
 #define particle_buf_dtor           psc_particle_double_buf_dtor
