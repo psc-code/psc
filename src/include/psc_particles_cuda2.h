@@ -62,16 +62,6 @@ struct psc_mparticles_cuda2 {
       rv;							\
     })
 
-CUDA_DEVICE static inline int
-particle_cuda2_kind(particle_cuda2_t *prt)
-{
-#ifdef __CUDACC__
-  return __float_as_int(prt->kind_as_float);
-#else
-  return cuda_float_as_int(prt->kind_as_float);
-#endif
-}
-
 #define particle_cuda2_qni_wni(prt) ((prt)->qni_wni)
 
 #define PARTICLE_CUDA2_LOAD_POS(prt, d_xi4, n) do {			\

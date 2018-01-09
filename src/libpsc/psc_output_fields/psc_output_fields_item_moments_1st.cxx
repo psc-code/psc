@@ -128,7 +128,7 @@ do_n_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int m = particle_kind(prt);
+    int m = prt->kind();
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
   }
 }
@@ -152,7 +152,7 @@ do_v_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 3;
+    int mm = prt->kind() * 3;
 
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
@@ -182,7 +182,7 @@ do_p_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 3;
+    int mm = prt->kind() * 3;
     particle_real_t *pxi = &prt->pxi;
 
     for (int m = 0; m < 3; m++) {
@@ -210,7 +210,7 @@ do_vv_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 3;
+    int mm = prt->kind() * 3;
 
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
@@ -240,7 +240,7 @@ do_T_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 6;
+    int mm = prt->kind() * 6;
 
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
@@ -281,7 +281,7 @@ do_Tvv_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 6;
+    int mm = prt->kind() * 6;
 
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
@@ -313,7 +313,7 @@ do_nvt_a_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 10;
+    int mm = prt->kind() * 10;
 
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
@@ -337,7 +337,7 @@ do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 10;
+    int mm = prt->kind() * 10;
 
     particle_real_t *xi = &prt->xi;					\
     particle_real_t u = xi[0] * dxi - .5;				\
@@ -406,7 +406,7 @@ do_nvp_1st_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int mm = particle_kind(prt) * 10;
+    int mm = prt->kind() * 10;
 
     particle_real_t *xi = &prt->xi;					\
     particle_real_t u = xi[0] * dxi - .5;				\

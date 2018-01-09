@@ -92,9 +92,9 @@ _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *n
   }
   
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
-  prt->kind = npt->kind;
-  assert(npt->q == psc->kinds[prt->kind].q);
-  assert(npt->m == psc->kinds[prt->kind].m);
+  prt->kind_ = npt->kind;
+  assert(npt->q == psc->kinds[prt->kind_].q);
+  assert(npt->m == psc->kinds[prt->kind_].m);
   /* prt->qni = psc->kinds[prt->kind].q; */
   /* prt->mni = psc->kinds[prt->kind].m; */
   prt->xi = xx[0] - psc->patch[p].xb[0];
@@ -188,7 +188,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      assert(psc->prm.fractional_n_particles_per_cell);
 	      particle_t prt;
 	      _psc_setup_particle(psc, &prt, &npt, p, xx);
-	      prt.qni_wni = psc->kinds[prt.kind].q; // ??? FIXME
+	      prt.qni_wni = psc->kinds[prt.kind_].q; // ??? FIXME
 
 	      mparticles_patch_push_back(mprts, p, prt);
 	    }

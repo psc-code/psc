@@ -45,7 +45,7 @@ put_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_
   prt_dbl->pyi     = prt->pyi;
   prt_dbl->pzi     = prt->pzi;
   prt_dbl->qni_wni = prt->qni_wni;
-  prt_dbl->kind    = prt->kind;
+  prt_dbl->kind_   = prt->kind_;
 }
 
 static void
@@ -60,7 +60,7 @@ get_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_
   prt->pyi     = prt_dbl->pyi;
   prt->pzi     = prt_dbl->pzi;
   prt->qni_wni = prt_dbl->qni_wni;
-  prt->kind    = prt_dbl->kind;
+  prt->kind_   = prt_dbl->kind_;
 }
 
 static void

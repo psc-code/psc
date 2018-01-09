@@ -14,34 +14,28 @@
 // can't do this as inline function since struct psc isn't known yet
 #define particle_single_qni_div_mni(p) ({			\
       particle_single_real_t rv;				\
-      rv = ppsc->kinds[p->kind].q / ppsc->kinds[p->kind].m;	\
+      rv = ppsc->kinds[p->kind_].q / ppsc->kinds[p->kind_].m;	\
       rv;							\
     })
 
 #define particle_single_qni(p) ({				\
       particle_single_real_t rv;				\
-      rv = ppsc->kinds[p->kind].q;				\
+      rv = ppsc->kinds[p->kind_].q;				\
       rv;							\
     })
 
 #define particle_single_mni(p) ({				\
       particle_single_real_t rv;				\
-      rv = ppsc->kinds[p->kind].m;				\
+      rv = ppsc->kinds[p->kind_].m;				\
       rv;							\
     })
 
 #define particle_single_wni(p) ({				\
       particle_single_real_t rv;				\
-      rv = p->qni_wni / ppsc->kinds[p->kind].q;			\
+      rv = p->qni_wni / ppsc->kinds[p->kind_].q;			\
       rv;							\
     })
 
 #define particle_single_qni_wni(prt) ((prt)->qni_wni)
-
-static inline int
-particle_single_kind(particle_single_t *prt)
-{
-  return prt->kind;
-}
 
 #endif

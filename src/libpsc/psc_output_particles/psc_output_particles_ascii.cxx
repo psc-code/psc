@@ -55,7 +55,7 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
       fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
 	      n, part->xi, part->yi, part->zi,
 	      part->pxi, part->pyi, part->pzi,
-	      part->qni_wni, part->kind);
+	      part->qni_wni, part->kind());
     }
   }
 

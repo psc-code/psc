@@ -109,7 +109,7 @@ get_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   prt->pxi[0]  = part->pxi;
   prt->pxi[1]  = part->pyi;
   prt->pxi[2]  = part->pzi;
-  prt->kind    = part->kind;
+  prt->kind    = part->kind_;
   prt->qni_wni = part->qni_wni;
 }
 
@@ -122,7 +122,7 @@ put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];
   part->zi      = prt->xi[2];
-  part->kind    = prt->kind;
+  part->kind_   = prt->kind;
   part->pxi     = prt->pxi[0];
   part->pyi     = prt->pxi[1];
   part->pzi     = prt->pxi[2];
@@ -158,7 +158,7 @@ get_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   prt->pxi[0]  = part->pxi;
   prt->pxi[1]  = part->pyi;
   prt->pxi[2]  = part->pzi;
-  prt->kind    = part->kind;
+  prt->kind    = part->kind_;
   prt->qni_wni = part->qni_wni;
 }
 
@@ -171,7 +171,7 @@ put_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];
   part->zi      = prt->xi[2];
-  part->kind    = prt->kind;
+  part->kind_   = prt->kind;
   part->pxi     = prt->pxi[0];
   part->pyi     = prt->pxi[1];
   part->pzi     = prt->pxi[2];

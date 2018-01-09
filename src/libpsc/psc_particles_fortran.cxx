@@ -43,7 +43,7 @@ put_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts
   prt_dbl->pyi     = prt->pyi;
   prt_dbl->pzi     = prt->pzi;
   prt_dbl->qni_wni = prt->qni * prt->wni;;
-  prt_dbl->kind    = prt->qni > 0 ? 1 : 0;
+  prt_dbl->kind_   = prt->qni > 0 ? 1 : 0;
 }
 
 static void
@@ -59,8 +59,8 @@ get_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts
   
   particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
 
-  particle_fortran_real_t qni = ppsc->kinds[prt_dbl->kind].q;
-  particle_fortran_real_t mni = ppsc->kinds[prt_dbl->kind].m;
+  particle_fortran_real_t qni = ppsc->kinds[prt_dbl->kind_].q;
+  particle_fortran_real_t mni = ppsc->kinds[prt_dbl->kind_].m;
   particle_fortran_real_t wni = prt_dbl->qni_wni / qni;
   
   prt->xi  = prt_dbl->xi;

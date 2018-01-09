@@ -128,7 +128,7 @@ do_n_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int m = particle_kind(prt);
+    int m = prt->kind();
     DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
   }
 }
@@ -152,7 +152,7 @@ do_rho_run(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
-    int m = particle_kind(prt);
+    int m = prt->kind();
     DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, ppsc->kinds[m].q);
   }
 }

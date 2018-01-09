@@ -58,12 +58,6 @@ struct psc_mparticles_acc {
       rv;							\
     })
 
-static inline int
-particle_acc_kind(particle_acc_t *prt)
-{
-  return cuda_float_as_int(prt->kind_as_float);
-}
-
 #define particle_acc_qni_wni(prt) ((prt)->qni_wni)
 
 #define PARTICLE_ACC_LOAD_POS(prt, d_xi4, n) do {			\

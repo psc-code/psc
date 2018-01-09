@@ -463,7 +463,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
       unsigned int i = particle_range_size(prts);
       mparticles_patch_resize(mprts, p, i + 1);
       particle_t *prt = particle_iter_at(prts.begin, i); 
-      prt->kind = kind;
+      prt->kind_ = kind;
       prt->qni_wni = ppsc->kinds[kind].q;
 
       particle_real_t *pxi = &prt->pxi;

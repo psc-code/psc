@@ -15,25 +15,25 @@
 // can't do this as inline function since struct psc isn't known yet
 #define particle_double_qni_div_mni(p) ({			\
       particle_double_real_t rv;				\
-      rv = ppsc->kinds[p->kind].q / ppsc->kinds[p->kind].m;	\
+      rv = ppsc->kinds[p->kind_].q / ppsc->kinds[p->kind_].m;	\
       rv;							\
     })
 
 #define particle_double_qni(p) ({				\
       particle_double_real_t rv;				\
-      rv = ppsc->kinds[p->kind].q;				\
+      rv = ppsc->kinds[p->kind_].q;				\
       rv;							\
     })
 
 #define particle_double_mni(p) ({				\
       particle_double_real_t rv;				\
-      rv = ppsc->kinds[p->kind].m;				\
+      rv = ppsc->kinds[p->kind_].m;				\
       rv;							\
     })
 
 #define particle_double_wni(p) ({				\
       particle_double_real_t rv;				\
-      rv = p->qni_wni / ppsc->kinds[p->kind].q;			\
+      rv = p->qni_wni / ppsc->kinds[p->kind_].q;			\
       rv;							\
     })
 
@@ -46,7 +46,7 @@ particle_double_qni_wni(particle_double_t *p)
 static inline int
 particle_double_kind(particle_double_t *prt)
 {
-  return prt->kind;
+  return prt->kind_;
 }
 
 #endif

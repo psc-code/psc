@@ -33,7 +33,6 @@ typedef particle_double_t particle_t;
 #define particle_qni                particle_double_qni
 #define particle_mni                particle_double_mni
 #define particle_wni                particle_double_wni
-#define particle_kind               particle_double_kind
 
 #define particle_iter_t             psc_particle_double_iter_t
 #define particle_iter_equal         psc_particle_double_iter_equal

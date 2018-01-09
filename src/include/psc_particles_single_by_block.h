@@ -40,10 +40,4 @@ particle_single_by_block_qni_wni(particle_single_by_block_t *p)
   return p->qni_wni;
 }
 
-static inline int
-particle_single_by_block_kind(particle_single_by_block_t *prt)
-{
-  return prt->kind;
-}
-
 #endif

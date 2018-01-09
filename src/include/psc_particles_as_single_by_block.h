@@ -16,7 +16,6 @@ typedef particle_single_by_block_t particle_t;
 #define particle_qni                particle_single_by_block_qni
 #define particle_mni                particle_single_by_block_mni
 #define particle_wni                particle_single_by_block_wni
-#define particle_kind               particle_single_by_block_kind
 
 #define particle_iter_t             psc_particle_single_by_block_iter_t
 #define particle_iter_equal         psc_particle_single_by_block_iter_equal

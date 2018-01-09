@@ -69,7 +69,7 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
     struct psc_patch *patch = &psc->patch[p];
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
       particle_t *prt = particle_iter_deref(prt_iter);
-      if (particle_kind(prt) != kind) {
+      if (prt->kind() != kind) {
 	continue;
       }
       

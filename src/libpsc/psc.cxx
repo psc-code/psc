@@ -739,9 +739,9 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   }
   
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
-  prt->kind = npt->kind;
-  assert(npt->q == psc->kinds[prt->kind].q);
-  assert(npt->m == psc->kinds[prt->kind].m);
+  prt->kind_ = npt->kind;
+  assert(npt->q == psc->kinds[prt->kind_].q);
+  assert(npt->m == psc->kinds[prt->kind_].m);
   /* prt->qni = psc->kinds[prt->kind].q; */
   /* prt->mni = psc->kinds[prt->kind].m; */
   prt->xi = xx[0] - psc->patch[p].xb[0];
@@ -822,9 +822,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
 	      psc_setup_particle(psc, &prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fractional_n_particles_per_cell) {
-		prt.qni_wni = psc->kinds[prt.kind].q;
+		prt.qni_wni = psc->kinds[prt.kind_].q;
 	      } else {
-		prt.qni_wni = psc->kinds[prt.kind].q * npt.n / (n_in_cell * psc->coeff.cori);
+		prt.qni_wni = psc->kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }
 	      mparticles_patch_push_back(mprts, p, prt);
 	    }

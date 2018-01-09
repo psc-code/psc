@@ -179,7 +179,7 @@ put_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticle
   prt_sngl->pyi     = prt->pyi;
   prt_sngl->pzi     = prt->pzi;
   prt_sngl->qni_wni = prt->qni_wni;
-  prt_sngl->kind    = prt->kind;
+  prt_sngl->kind_   = prt->kind_;
 }
 
 static void
@@ -194,7 +194,7 @@ get_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticle
   prt->pyi     = prt_sngl->pyi;
   prt->pzi     = prt_sngl->pzi;
   prt->qni_wni = prt_sngl->qni_wni;
-  prt->kind    = prt_sngl->kind;
+  prt->kind_   = prt_sngl->kind_;
 }
 
 static void

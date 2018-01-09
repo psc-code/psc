@@ -83,7 +83,7 @@ get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
 
-  assert(part->kind < ppsc->nr_kinds);
+  assert(part->kind() < ppsc->nr_kinds);
   int *im = ctx->im;
   float *dx = ctx->dx;
   int i3[3];
@@ -99,8 +99,8 @@ get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   prt->ux[0] = part->pxi;
   prt->ux[1] = part->pyi;
   prt->ux[2] = part->pzi;
-  prt->w     = part->qni_wni / ppsc->kinds[part->kind].q / ctx->dVi;
-  prt->kind  = part->kind;
+  prt->w     = part->qni_wni / ppsc->kinds[part->kind_].q / ctx->dVi;
+  prt->kind  = part->kind();
 }
 
 static void
@@ -125,7 +125,7 @@ put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
     printf("w %g im %d i3 %d dx %g\n", w, im[2], i3[2], prt->dx[2]);
   }
   assert(w >= 0 && w <= im[2] - 2);
-  part->kind    = prt->kind;
+  part->kind_   = prt->kind;
   part->pxi     = prt->ux[0];
   part->pyi     = prt->ux[1];
   part->pzi     = prt->ux[2];

@@ -152,7 +152,7 @@ push_one(mprts_array_t mprts_arr, int n,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n);
-  int kind = particle_kind(prt);
+  int kind = prt->kind();
   real dq = prm.dq_kind[kind];
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   PARTICLE_CUDA2_STORE_MOM(*prt, mprts_arr.pxi4, n);
@@ -199,7 +199,7 @@ push_one(mprts_array_t mprts_arr, int n,
   particle_real_t H[3] = { ip.hx(flds_em), ip.hy(flds_em), ip.hz(flds_em) };
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-  int kind = particle_kind(prt);
+  int kind = prt->kind();
   particle_real_t dq = prm.dq_kind[kind];
   push_p(&prt->pxi, E, H, dq);
 
@@ -274,7 +274,7 @@ stagger_one(mprts_array_t mprts_arr, int n,
   particle_real_t H[3] = { ip.hx(flds_em), ip.hy(flds_em), ip.hz(flds_em) };
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
-  int kind = particle_kind(prt);
+  int kind = prt->kind();
   particle_real_t dq = prm.dq_kind[kind];
   push_p(&prt->pxi, E, H, -.5f * dq);
 

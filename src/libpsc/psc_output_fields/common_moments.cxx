@@ -175,15 +175,3 @@ particle_calc_vxi(particle_t *part, particle_real_t vxi[3])
   vxi[2] = part->pzi * root;
 }
 
-static inline int
-particle_kind_ei(particle_t *part)
-{
-  if (particle_qni_div_mni(part) < 0.) {
-    return 0;
-  } else if (particle_qni_div_mni(part) > 0.) {
-    return 1;
-  } else {
-    assert(0);
-  }
-}
-

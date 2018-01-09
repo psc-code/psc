@@ -96,7 +96,9 @@ struct particle_PTYPE_t
   real_t xi, yi, zi;
   real_t qni_wni;
   real_t pxi, pyi, pzi;
-  int kind;
+  int kind_;
+
+  int kind() { return kind_; }
 };
 
 #elif PTYPE == PTYPE_FORTRAN
