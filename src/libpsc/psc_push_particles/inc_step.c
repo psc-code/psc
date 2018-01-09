@@ -53,7 +53,7 @@ typedef struct { float4 *xi4; float4 *pxi4; } mprts_array_t;
 
 #else
 
-typedef particle_iter_t mprts_array_t;
+typedef particle_range_t mprts_array_t;
 
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
   prt = &mprts_arr[n]

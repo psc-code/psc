@@ -26,7 +26,7 @@ do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
   unsigned int n_prts = prts.size();
   
   for (int n = 0; n < n_prts; n++) {
-    push_one<C>(prts.begin(), n, flds, flds);
+    push_one<C>(prts, n, flds, flds);
   }
 }
 
@@ -38,7 +38,7 @@ do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
   unsigned int n_prts = prts.size();
   
   for (int n = 0; n < n_prts; n++) {
-    stagger_one<C>(prts.begin(), n, flds);
+    stagger_one<C>(prts, n, flds);
   }
 }
 

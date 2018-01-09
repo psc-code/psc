@@ -212,11 +212,6 @@ struct psc_particle_PTYPE_iter_t
     return (*patch_)[n];
   }
 
-  particle_PTYPE_t& operator[](int m)
-  {
-    return (*patch_)[n + m];
-  }
-
   bool operator==(const psc_particle_PTYPE_iter_t& other)
   {
     return n == other.n;
