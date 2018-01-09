@@ -146,6 +146,16 @@ struct psc_mparticles_PTYPE_patch
     return buf[n];
   }
   
+  psc_particle_PTYPE_iter_t begin()
+  {
+    return psc_particle_PTYPE_iter_t(&(*this)[0]);
+  }
+
+  psc_particle_PTYPE_iter_t end()
+  {
+    return psc_particle_PTYPE_iter_t(&(*this)[size()]);
+  }
+
   unsigned int size() const
   {
     return buf.size();
