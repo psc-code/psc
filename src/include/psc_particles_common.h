@@ -242,9 +242,8 @@ struct psc_particle_PTYPE_iter_t
 
 struct psc_particle_PTYPE_range_t
 {
-  psc_particle_PTYPE_range_t(struct psc_mparticles *mprts,
-			     struct psc_mparticles_PTYPE_patch *patch, int p)
-    : mprts_(mprts), patch_(patch), p_(p)
+  psc_particle_PTYPE_range_t(struct psc_mparticles_PTYPE_patch *patch)
+    : patch_(patch)
   {
   }
   
@@ -262,13 +261,11 @@ struct psc_particle_PTYPE_range_t
 
   particle_PTYPE_t& operator[](int m)
   {
-    return *psc_mparticles_PTYPE_get_one(mprts_, p_, m);
+    return (*patch_)[m];
   }
 
 private:
-  struct psc_mparticles *mprts_;
   struct psc_mparticles_PTYPE_patch *patch_;
-  int p_;
 };
 
 // ----------------------------------------------------------------------
@@ -276,7 +273,7 @@ private:
 
 inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 {
-  return psc_particle_PTYPE_range_t(mprts, this, p);
+  return psc_particle_PTYPE_range_t(this);
 }
 
 #include <math.h>
