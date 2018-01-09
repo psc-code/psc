@@ -85,7 +85,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     assert(prts_old.size() == prts_new.size());
 #if 1
     for (int n = 0; n < prts_new.size(); n++) {
-      *particle_iter_at(prts_new.begin, n) = *particle_iter_at(prts_old.begin, n);
+      prts_new.begin[n] = prts_old.begin[n];
     }
 #else
     // FIXME, this needs at least a proper interface -- if not separately alloc'ed, bad things

@@ -38,7 +38,6 @@ using mparticles_t = mparticles_double_t;
 #define particle_iter_t             psc_particle_double_iter_t
 #define particle_iter_equal         psc_particle_double_iter_equal
 #define particle_iter_next          psc_particle_double_iter_next 
-#define particle_iter_at            psc_particle_double_iter_at
 #define particle_range_t            psc_particle_double_range_t
 
 #define PARTICLE_TYPE               "double"

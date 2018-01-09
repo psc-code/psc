@@ -51,7 +51,7 @@ struct mparticles_traits<particle_single_t>
 
 #define particle_single_wni(p) ({				\
       particle_single_real_t rv;				\
-      rv = p->qni_wni / ppsc->kinds[p->kind_].q;			\
+      rv = (p)->qni_wni / ppsc->kinds[(p)->kind_].q;		\
       rv;							\
     })
 

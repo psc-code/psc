@@ -20,9 +20,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
     unsigned int n_prts = prts.size();
     for (int i = 0; i < n_prts; i++) {
       int j = random() % n_prts;
-      particle_t tmp = *particle_iter_at(prts.begin, i);
-      *particle_iter_at(prts.begin, i) = *particle_iter_at(prts.begin, j);
-      *particle_iter_at(prts.begin, j) = tmp;
+      std::swap(prts.begin[i], prts.begin[j]);
     }
   }
 

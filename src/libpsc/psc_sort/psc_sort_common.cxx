@@ -235,7 +235,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
       while (i+n < n_prts && cnis[i+n] == cni) {
 	n++;
       }
-      memcpy(&particles2[cnts[cni]], particle_iter_at(prts.begin, i), n * sizeof(*particles2));
+      memcpy(&particles2[cnts[cni]], &prts.begin[i], n * sizeof(*particles2));
       cnts[cni] += n;
       i += n - 1;
     }

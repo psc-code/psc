@@ -14,7 +14,7 @@ do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
   double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
   int n_prts = prts.size();
   for (int n = 0; n < n_prts; n++) {
-    particle_t *part = particle_iter_at(prts.begin, n);
+    particle_t *part = &prts.begin[n];
       
     double gamma = sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     double Ekin = (gamma - 1.) * particle_mni(part) * particle_wni(part) * fnqs;

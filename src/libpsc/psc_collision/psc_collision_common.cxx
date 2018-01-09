@@ -114,7 +114,7 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
   offsets[last] = 0;
   int n_prts = prts.size();
   for (int n = 0; n < n_prts; n++) {
-    particle_t *prt = particle_iter_at(prts.begin, n);
+    particle_t *prt = &prts.begin[n];
     int cell_index = find_cell_index(prt, dxi, ldims);
     assert(cell_index >= last);
     while (last < cell_index) {
@@ -137,9 +137,7 @@ randomize_in_cell(particle_range_t prts, int n_start, int n_end)
     int n_partner = n + random() % (nn - n);
     if (n != n_partner) {
       // swap n, n_partner
-      particle_t tmp = *particle_iter_at(prts.begin, n_start + n);
-      *particle_iter_at(prts.begin, n_start + n) = *particle_iter_at(prts.begin, n_start + n_partner);    
-      *particle_iter_at(prts.begin, n_start + n_partner) = tmp;
+      std::swap(prts.begin[n_start + n], prts.begin[n_start + n_partner]);
     }
   }
 }
@@ -177,8 +175,8 @@ bc(particle_range_t prts, particle_real_t nudt1, int n1, int n2)
   particle_real_t m12,q12;
   particle_real_t ran1,ran2;
     
-  particle_t *prt1 = particle_iter_at(prts.begin, n1);
-  particle_t *prt2 = particle_iter_at(prts.begin, n2);
+  particle_t *prt1 = &prts.begin[n1];
+  particle_t *prt2 = &prts.begin[n2];
   
   
   px1=prt1->pxi;
@@ -419,7 +417,7 @@ collide_in_cell(struct psc_collision *collision,
   }
 
   // all particles need to have same weight!
-  particle_real_t wni = particle_wni(particle_iter_at(prts.begin, n_start));
+  particle_real_t wni = particle_wni(&prts.begin[n_start]);
   particle_real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
   particle_real_t *nudts = (particle_real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));

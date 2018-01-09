@@ -56,7 +56,7 @@ typedef struct { float4 *xi4; float4 *pxi4; } mprts_array_t;
 typedef particle_iter_t mprts_array_t;
 
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
-  prt = particle_iter_at(mprts_arr, n)
+  prt = &mprts_arr[n]
 
 #define PARTICLE_STORE(prt, mprts_arr, n) do {} while (0)
 
@@ -96,7 +96,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
   } else { /* out of bounds */
     patch->b_idx[n] = patch->nr_blocks;
     /* append to back */
-    *particle_iter_at(prts.begin, n_prts + patch->b_cnt[patch->nr_blocks]) = *prt;
+    prts.begin[n_prts + patch->b_cnt[patch->nr_blocks]] = *prt;
   }
   patch->b_cnt[patch->b_idx[n]]++;
 }

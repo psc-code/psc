@@ -21,7 +21,6 @@ using mparticles_t = mparticles_single_by_block_t;
 #define particle_iter_t             psc_particle_single_by_block_iter_t
 #define particle_iter_equal         psc_particle_single_by_block_iter_equal
 #define particle_iter_next          psc_particle_single_by_block_iter_next
-#define particle_iter_at            psc_particle_single_by_block_iter_at
 #define particle_range_t            psc_particle_single_by_block_range_t
 
 #define PARTICLE_TYPE               "single_by_block"

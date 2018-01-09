@@ -28,7 +28,6 @@
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_single_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_single_iter_next 
-#define psc_particle_PTYPE_iter_at psc_particle_single_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
 #elif PTYPE == PTYPE_DOUBLE
@@ -59,7 +58,6 @@
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_double_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_double_iter_next 
-#define psc_particle_PTYPE_iter_at psc_particle_double_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
@@ -90,7 +88,6 @@
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_single_by_block_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_single_by_block_iter_next 
-#define psc_particle_PTYPE_iter_at psc_particle_single_by_block_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
 
 #elif PTYPE == PTYPE_FORTRAN
@@ -121,7 +118,6 @@
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_fortran_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_fortran_iter_next 
-#define psc_particle_PTYPE_iter_at psc_particle_fortran_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 
 #elif PTYPE == PTYPE_CUDA
@@ -343,6 +339,11 @@ struct psc_particle_PTYPE_iter_t
   {
     return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(mprts), p, n);
   }
+
+  particle_PTYPE_t& operator[](int m)
+  {
+    return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(mprts), p, n + m);
+  }
   
   int n;
   int p;
@@ -371,16 +372,6 @@ psc_particle_PTYPE_iter_next(psc_particle_PTYPE_iter_t iter)
   rv.mprts = iter.mprts;
 
   return rv;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_iter_at
-
-static inline particle_PTYPE_t *
-psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
-{
-  // FIXME, shouldn't have to cast away const
-  return psc_mparticles_PTYPE_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n + m);
 }
 
 // ----------------------------------------------------------------------
@@ -440,6 +431,5 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef psc_particle_PTYPE_iter_t
 #undef psc_particle_PTYPE_iter_equal
 #undef psc_particle_PTYPE_iter_next 
-#undef psc_particle_PTYPE_iter_at 
 #undef psc_particle_PTYPE_range_t 
 
