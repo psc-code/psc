@@ -162,7 +162,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
       //      find_block_indices_count_reorderx(prts);
       count_and_reorder_to_back(mprts, p);
     }
-    dpatch->m_buf = mp[p].get_buf();
+    dpatch->m_buf = &mp[p].get_buf();
     dpatch->m_begin = particle_buf_size(dpatch->m_buf);
 
     unsigned int n_send = patch->b_cnt[patch->nr_blocks];

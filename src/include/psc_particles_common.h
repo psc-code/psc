@@ -171,9 +171,9 @@ struct psc_mparticles_PTYPE_patch
     psc_particle_PTYPE_buf_push_back(&buf, prt);
   }
 
-  psc_particle_PTYPE_buf_t* get_buf()
+  psc_particle_PTYPE_buf_t& get_buf()
   {
-    return &buf;
+    return buf;
   }
 
   const int* get_b_mx() const
