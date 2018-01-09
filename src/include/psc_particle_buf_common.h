@@ -54,14 +54,9 @@
 // ======================================================================
 // psc_particle_PTYPE_buf_t
 
-struct psc_particle_PTYPE_range_t;
-
 struct psc_particle_PTYPE_buf_t
 {
   using particle_t = particle_PTYPE_t;
-#ifdef psc_particle_PTYPE_range_t
-  using range_t = psc_particle_PTYPE_range_t;
-#endif
 
   psc_particle_PTYPE_buf_t()
     : m_data(), m_size(), m_capacity()
