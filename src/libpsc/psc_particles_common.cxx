@@ -16,8 +16,6 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
   struct PFX(patch) *patch = &sub->patch[p];
 
-  PARTICLE_BUF(ctor)(&patch->buf);
-
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
     patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];

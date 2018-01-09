@@ -16,8 +16,6 @@ using mparticles_t = mparticles_fortran_t;
 #define mparticles_patch_capacity     psc_mparticles_fortran_patch_capacity
 
 #define particle_buf_t              psc_particle_fortran_buf_t
-#define particle_buf_t              psc_particle_fortran_buf_t
-#define particle_buf_ctor           psc_particle_fortran_buf_ctor
 #define particle_buf_dtor           psc_particle_fortran_buf_dtor
 
 #define particle_iter_t               psc_particle_fortran_iter_t

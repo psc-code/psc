@@ -129,7 +129,6 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
   for (int p = 0; p < cmprts->n_patches; p++) {
     psc_particle_cuda_buf_t& buf = cmprts->bnd.bpatch[p].buf;
     unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
-    psc_particle_cuda_buf_ctor(&buf);
     buf.reserve(n_send);
     buf.resize(n_send);
 

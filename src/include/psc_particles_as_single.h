@@ -16,8 +16,6 @@ using mparticles_t = mparticles_single_t;
 #define mparticles_patch_capacity   psc_mparticles_single_patch_capacity
 
 #define particle_buf_t              psc_particle_single_buf_t
-#define particle_buf_t              psc_particle_single_buf_t
-#define particle_buf_ctor           psc_particle_single_buf_ctor
 #define particle_buf_dtor           psc_particle_single_buf_dtor
 
 #define particle_qni_div_mni        particle_single_qni_div_mni

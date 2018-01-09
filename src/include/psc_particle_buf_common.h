@@ -12,7 +12,6 @@
 #define particle_PTYPE_t particle_single_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
-#define psc_particle_PTYPE_buf_ctor psc_particle_single_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_buf_dtor
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
@@ -22,7 +21,6 @@
 #define particle_PTYPE_t particle_double_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
-#define psc_particle_PTYPE_buf_ctor psc_particle_double_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_double_buf_dtor
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t
 
@@ -32,7 +30,6 @@
 #define particle_PTYPE_t particle_single_by_block_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
-#define psc_particle_PTYPE_buf_ctor psc_particle_single_by_block_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_single_by_block_buf_dtor
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t
 
@@ -42,7 +39,6 @@
 #define particle_PTYPE_t particle_fortran_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
-#define psc_particle_PTYPE_buf_ctor psc_particle_fortran_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_fortran_buf_dtor
 
 #elif PTYPE == PTYPE_CUDA
@@ -51,7 +47,6 @@
 #define particle_PTYPE_t particle_cuda_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
-#define psc_particle_PTYPE_buf_ctor psc_particle_cuda_buf_ctor
 #define psc_particle_PTYPE_buf_dtor psc_particle_cuda_buf_dtor
 
 #endif
@@ -67,14 +62,14 @@ struct psc_particle_PTYPE_buf_t
 #ifdef psc_particle_PTYPE_range_t
   using range_t = psc_particle_PTYPE_range_t;
 #endif
+
+  psc_particle_PTYPE_buf_t()
+    : m_data(), m_size(), m_capacity()
+  {
+  }
+
+  psc_particle_PTYPE_buf_t(const psc_particle_PTYPE_buf_t&) = delete;
   
-  particle_PTYPE_t *m_data;
-  unsigned int m_size;
-  unsigned int m_capacity;
-
-  unsigned int size() const { return m_size; }
-  unsigned int capacity() const { return m_capacity; }
-
   void resize(unsigned int new_size)
   {
     assert(new_size <= m_capacity);
@@ -106,18 +101,15 @@ struct psc_particle_PTYPE_buf_t
   {
     return m_data[n];
   }
+
+  particle_PTYPE_t *m_data;
+  unsigned int m_size;
+  unsigned int m_capacity;
+
+  unsigned int size() const { return m_size; }
+  unsigned int capacity() const { return m_capacity; }
+
 };
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_ctor
-
-static inline void
-psc_particle_PTYPE_buf_ctor(psc_particle_PTYPE_buf_t *buf)
-{
-  buf->m_data = NULL;
-  buf->m_size = 0;
-  buf->m_capacity = 0;
-}
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_buf_dtor
@@ -132,7 +124,6 @@ psc_particle_PTYPE_buf_dtor(psc_particle_PTYPE_buf_t *buf)
 #undef particle_PTYPE_t
 
 #undef psc_particle_PTYPE_buf_t
-#undef psc_particle_PTYPE_buf_ctor
 #undef psc_particle_PTYPE_buf_dtor
 #undef psc_particle_PTYPE_range_t
 

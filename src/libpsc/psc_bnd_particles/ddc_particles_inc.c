@@ -129,8 +129,6 @@ ddc_particles_create(struct mrc_domain *domain)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 
-	  particle_buf_ctor(&nei->send_buf);
-
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	    // use this one as buffer for particles that stay in the same patch
 	    nei->rank = -1;
@@ -462,7 +460,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
   // post sends
   particle_buf_t send_buf;
-  particle_buf_ctor(&send_buf);
   send_buf.reserve(n_send);
   particle_t *it = particle_buf_begin(&send_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
@@ -484,7 +481,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
   // post receives
   particle_buf_t recv_buf;
-  particle_buf_ctor(&recv_buf);
   recv_buf.reserve(n_recv);
   it = particle_buf_begin(&recv_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
