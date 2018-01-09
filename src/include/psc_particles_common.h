@@ -72,8 +72,6 @@
 
 #if PTYPE != PTYPE_CUDA
 
-struct psc_particle_PTYPE_range_t;
-
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_iter_t
 
@@ -108,6 +106,10 @@ struct psc_particle_PTYPE_iter_t
 private:
   particle_PTYPE_t *ptr_;
 };
+
+struct psc_mparticles_PTYPE_patch;
+
+using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch&;
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
@@ -225,39 +227,11 @@ struct psc_mparticles_PTYPE
 };
 
 // ----------------------------------------------------------------------
-// psc_particle_PTYPE_range_t
-
-struct psc_particle_PTYPE_range_t
-{
-  psc_particle_PTYPE_range_t(struct psc_mparticles_PTYPE_patch *patch)
-    : patch_(*patch)
-  {
-  }
-  
-  psc_particle_PTYPE_iter_t begin()
-  {
-    return psc_particle_PTYPE_iter_t(&patch_[0]);
-  }
-
-  psc_particle_PTYPE_iter_t end()
-  {
-    return psc_particle_PTYPE_iter_t(&patch_[patch_.size()]);
-  }
-
-  unsigned int size() { return patch_.size(); }
-
-  particle_PTYPE_t& operator[](int m) { return patch_[m]; }
-
-private:
-  struct psc_mparticles_PTYPE_patch& patch_;
-};
-
-// ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch::range
 
 inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 {
-  return psc_particle_PTYPE_range_t(this);
+  return psc_particle_PTYPE_range_t(*this);
 }
 
 #include <math.h>
