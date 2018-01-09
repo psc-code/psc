@@ -101,9 +101,9 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 // find_cell_offsets
 
 static void
-find_cell_offsets(int offsets[], struct psc_mparticles *mprts, int p)
+find_cell_offsets(int offsets[], mparticles_t mprts, int p)
 {
-  particle_range_t prts = particle_range_mprts(mprts, p);
+  particle_range_t prts = mprts.range(p);
 
   particle_real_t dxi[3];
   for (int d = 0; d < 3; d++) {
@@ -504,7 +504,7 @@ psc_collision_sub_run(struct psc_collision *collision,
     int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
     struct psc_collision_stats stats_total = {};
     
-    find_cell_offsets(offsets, mprts.mprts(), p);
+    find_cell_offsets(offsets, mprts, p);
     
     Fields F(mf_coll[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {

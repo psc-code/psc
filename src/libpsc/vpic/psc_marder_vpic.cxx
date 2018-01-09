@@ -9,23 +9,23 @@
 // psc_marder_vpic_clean_div_e
 
 static void
-psc_marder_vpic_clean_div_e(struct psc_marder *marder, struct psc_mfields *mflds,
-			    struct psc_mparticles *mprts)
+psc_marder_vpic_clean_div_e(struct psc_marder *marder, mfields_vpic_t mflds,
+			    mparticles_vpic_t mprts)
 {
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning electric field\n");
   
-  psc_mfields_clear_rhof(mflds);
-  psc_mfields_accumulate_rho_p(mflds, mprts);
-  psc_mfields_synchronize_rho(mflds);
+  psc_mfields_clear_rhof(mflds.mflds());
+  psc_mfields_accumulate_rho_p(mflds.mflds(), mprts.mprts());
+  psc_mfields_synchronize_rho(mflds.mflds());
   
   for (int round = 0; round < marder->num_div_e_round; round++ ) {
-    psc_mfields_compute_div_e_err(mflds);
+    psc_mfields_compute_div_e_err(mflds.mflds());
     if (round == 0 || round == marder->num_div_e_round - 1) {
-      double err = psc_mfields_compute_rms_div_e_err(mflds);
+      double err = psc_mfields_compute_rms_div_e_err(mflds.mflds());
       mpi_printf(psc_marder_comm(marder), "%s rms error = %e (charge/volume)\n",
 		 round == 0 ? "Initial" : "Cleaned", err);
     }
-    psc_mfields_clean_div_e(mflds);
+    psc_mfields_clean_div_e(mflds.mflds());
   }
 }
 
@@ -33,18 +33,18 @@ psc_marder_vpic_clean_div_e(struct psc_marder *marder, struct psc_mfields *mflds
 // psc_marder_vpic_clean_div_b
 
 static void
-psc_marder_vpic_clean_div_b(struct psc_marder *marder, struct psc_mfields *mflds)
+psc_marder_vpic_clean_div_b(struct psc_marder *marder, mfields_vpic_t mflds)
 {
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning magnetic field\n");
   
   for (int round = 0; round < marder->num_div_b_round; round++) {
-    psc_mfields_compute_div_b_err(mflds);
+    psc_mfields_compute_div_b_err(mflds.mflds());
     if (round == 0 || round == marder->num_div_b_round - 1) {
-      double err = psc_mfields_compute_rms_div_b_err(mflds);
+      double err = psc_mfields_compute_rms_div_b_err(mflds.mflds());
       mpi_printf(psc_marder_comm(marder), "%s rms error = %e (charge/volume)\n",
 		 round == 0 ? "Initial" : "Cleaned", err);
     }
-    psc_mfields_clean_div_b(mflds);
+    psc_mfields_clean_div_b(mflds.mflds());
   }
 }
 
@@ -76,7 +76,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
   // Divergence clean e
   if (clean_div_e) {
     // needs E, rhof, rhob, material
-    psc_marder_vpic_clean_div_e(marder, mf.mflds(), mprts.mprts());
+    psc_marder_vpic_clean_div_e(marder, mf, mprts);
     // upates E, rhof, div_e_err
   }
 
@@ -85,7 +85,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
   // Divergence clean b
   if (clean_div_b) {
     // needs B
-    psc_marder_vpic_clean_div_b(marder, mf.mflds());
+    psc_marder_vpic_clean_div_b(marder, mf);
     // updates B, div_b_err
   }
   

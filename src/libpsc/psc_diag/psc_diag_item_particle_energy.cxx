@@ -5,9 +5,9 @@
 #include <math.h>
 
 static void
-do_particle_energy(struct psc *psc, struct psc_mparticles *mprts, int p, double *result)
+do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
 {
-  particle_range_t prts = particle_range_mprts(mprts, p);
+  particle_range_t prts = mprts.range(p);
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
   struct psc_patch *patch = &psc->patch[p];
@@ -34,7 +34,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
   mparticles_t mprts = psc->particles->get_as<mparticles_t>();
 
   for (int p = 0; p < mprts.n_patches(); p++) {
-    do_particle_energy(psc, mprts.mprts(), p, result);
+    do_particle_energy(psc, mprts, p, result);
   }
 
   mprts.put_as(psc->particles, MP_DONT_COPY);

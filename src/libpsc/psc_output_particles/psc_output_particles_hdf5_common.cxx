@@ -145,15 +145,15 @@ get_sort_index(int p, particle_t *part)
 // count_sort
 
 static void
-count_sort(struct psc_mparticles *mprts, int **off, int **map)
+count_sort(mparticles_t mprts, int **off, int **map)
 {
   int nr_kinds = ppsc->nr_kinds;
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     int *ldims = ppsc->patch[p].ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = mprts.range(p);
     unsigned int n_prts = particle_range_size(prts);
 
     // counting sort to get map 
@@ -392,7 +392,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   int **off = (int **) malloc(mprts.n_patches() * sizeof(*off));
   int **map = (int **) malloc(mprts.n_patches() * sizeof(*off));
 
-  count_sort(mprts.mprts(), map, off);
+  count_sort(mprts, map, off);
 
   size_t **idx = (size_t **) malloc(mprts.n_patches() * sizeof(*idx));
 
