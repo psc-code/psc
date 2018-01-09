@@ -135,14 +135,7 @@ get_sort_index(int p, particle_t *part)
   }
   assert(j2 >= 0 && j2 < ldims[2]);
 
-  int kind;
-  if (particle_qni(part) < 0.) {
-    kind = 0; // electron
-  } else if (particle_qni(part) > 0.) {
-    kind = 1; // ion
-  } else {
-    kind = 2; // neutral
-  }
+  int kind = part->kind;
   assert(kind < ppsc->nr_kinds);
  
   return cell_index_3_to_1(ldims, j0, j1, j2) * ppsc->nr_kinds + kind;
