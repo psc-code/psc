@@ -28,7 +28,6 @@ typedef particle_fortran_t particle_t;
 #define particle_buf_push_back      psc_particle_fortran_buf_push_back
 #define particle_buf_at_ptr         psc_particle_fortran_buf_at_ptr
 
-#define particle_real_fint            particle_fortran_real_fint
 #define particle_iter_t               psc_particle_fortran_iter_t
 #define particle_iter_equal           psc_particle_fortran_iter_equal
 #define particle_iter_next            psc_particle_fortran_iter_next 

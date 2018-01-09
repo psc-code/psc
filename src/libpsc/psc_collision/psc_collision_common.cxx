@@ -91,7 +91,7 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
   int pos[3];
   particle_real_t *xi = &prt->xi;
   for (int d = 0; d < 3; d++) {
-    pos[d] = particle_real_fint(xi[d] * dxi[d]);
+    pos[d] = fint(xi[d] * dxi[d]);
     assert(pos[d] >= 0 && pos[d] < ldims[d]);
   }
   return (pos[2] * ldims[1] + pos[1]) * ldims[0] + pos[0];

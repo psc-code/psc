@@ -75,7 +75,7 @@ find_idx_off_1st_rel(R xi[3], int lg[3], R og[3], R shift)
 {
   for (int d = 0; d < 3; d++) {
     R pos = xi[d] * c_prm.dxi[d] + shift;
-    lg[d] = particle_real_fint(pos);
+    lg[d] = fint(pos);
     og[d] = pos - lg[d];
   }
 }
@@ -89,7 +89,7 @@ find_idx_off_pos_1st_rel(R xi[3], int lg[3], R og[3], R pos[3], R shift)
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * c_prm.dxi[d] + shift;
-    lg[d] = particle_real_fint(pos[d]);
+    lg[d] = fint(pos[d]);
     og[d] = pos[d] - lg[d];
   }
 }

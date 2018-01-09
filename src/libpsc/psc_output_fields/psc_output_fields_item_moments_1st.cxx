@@ -343,9 +343,9 @@ do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
     particle_real_t u = xi[0] * dxi - .5;				\
     particle_real_t v = xi[1] * dyi - .5;				\
     particle_real_t w = xi[2] * dzi - .5;				\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
+    int jx = fint(u);							\
+    int jy = fint(v);							\
+    int jz = fint(w);							\
     particle_real_t h1 = u - jx;					\
     particle_real_t h2 = v - jy;					\
     particle_real_t h3 = w - jz;					\
@@ -412,9 +412,9 @@ do_nvp_1st_run(int p, fields_t flds, particle_range_t prts)
     particle_real_t u = xi[0] * dxi - .5;				\
     particle_real_t v = xi[1] * dyi - .5;				\
     particle_real_t w = xi[2] * dzi - .5;				\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
+    int jx = fint(u);							\
+    int jy = fint(v);							\
+    int jz = fint(w);							\
     									\
     assert(jx >= -1 && jx < patch->ldims[0]);				\
     assert(jy >= -1 && jy < patch->ldims[1]);				\

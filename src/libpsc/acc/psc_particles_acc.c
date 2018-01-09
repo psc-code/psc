@@ -22,7 +22,7 @@ find_idx_off_1st_rel(particle_acc_real_t xi[3], int lg[3], particle_acc_real_t o
 {
   for (int d = 0; d < 3; d++) {
     particle_acc_real_t pos = xi[d] * dxi[d] + shift;
-    lg[d] = particle_acc_real_fint(pos);
+    lg[d] = fint(pos);
     og[d] = pos - lg[d];
   }
 }

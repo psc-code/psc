@@ -685,7 +685,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	if (!at_lo_boundary(p, d) || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
-	  int bi = particle_real_fint(xi[d] * b_dxi[d]);
+	  int bi = fint(xi[d] * b_dxi[d]);
 	  if (bi >= b_mx[d]) {
 	    xi[d] = 0.;
 	    dir[d] = 0;
@@ -709,7 +709,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	    psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
-	  int bi = particle_real_fint(xi[d] * b_dxi[d]);
+	  int bi = fint(xi[d] * b_dxi[d]);
 	  if (bi < 0) {
 	    xi[d] = 0.;
 	  }
@@ -719,7 +719,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
-	    int bi = particle_real_fint(xi[d] * b_dxi[d]);
+	    int bi = fint(xi[d] * b_dxi[d]);
 	    if (bi >= b_mx[d]) {
 	      xi[d] *= (1. - 1e-6);
 	    }

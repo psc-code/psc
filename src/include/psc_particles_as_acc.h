@@ -15,7 +15,6 @@ typedef particle_acc_t particle_t;
 #define particle_wni                particle_acc_wni
 #define particle_kind               particle_acc_kind
 #define particle_real_nint          particle_acc_real_nint
-#define particle_real_fint          particle_acc_real_fint
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_ACC_REAL
 #define PARTICLE_TYPE               "acc"

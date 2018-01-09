@@ -122,9 +122,9 @@ get_sort_index(int p, particle_t *part)
   particle_real_t u = part->xi * dxi;
   particle_real_t v = part->yi * dyi;
   particle_real_t w = part->zi * dzi;
-  int j0 = particle_real_fint(u);
-  int j1 = particle_real_fint(v);
-  int j2 = particle_real_fint(w);
+  int j0 = fint(u);
+  int j1 = fint(v);
+  int j2 = fint(w);
   if (u == ldims[0]) j0--;
   if (v == ldims[1]) j1--;
   if (w == ldims[2]) j2--;

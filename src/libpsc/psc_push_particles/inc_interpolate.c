@@ -11,7 +11,7 @@ template<typename R>
 static inline void
 get_fint_remainder(int *lg, R *h, R u)
 {
-  int l = particle_real_fint(u);
+  int l = fint(u);
   *lg = l;
   *h = u - l;
 }

@@ -195,7 +195,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
       particle_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
       int pos[3];
       for (int d = 0; d < 3; d++) {
-	pos[d] = particle_real_fint(xi[d]);
+	pos[d] = fint(xi[d]);
 #if 1
 	if (pos[d] < 0 || pos[d] >= patch->ldims[d]) {
 	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",

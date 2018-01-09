@@ -74,16 +74,6 @@ particle_cuda2_kind(particle_cuda2_t *prt)
 
 #define particle_cuda2_qni_wni(prt) ((prt)->qni_wni)
 
-CUDA_DEVICE static inline int
-particle_cuda2_real_fint(particle_cuda2_real_t x)
-{
-#ifdef __CUDACC__
-  return __float2int_rd(x);
-#else
-  return floorf(x);
-#endif
-}
-
 #define PARTICLE_CUDA2_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\
     (prt).xi[0] = xi4.x;						\

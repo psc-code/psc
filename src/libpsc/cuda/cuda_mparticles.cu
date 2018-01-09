@@ -2,6 +2,8 @@
 #include "cuda_mparticles.h"
 #include "cuda_bits.h"
 
+#include "psc_bits.h"
+
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
@@ -857,7 +859,7 @@ cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
     get_particle(&prt, n, ctx);
 
     for (int d = 0; d < 3; d++) {
-      int bi = floorf(prt.xi[d] * cmprts->b_dxi[d]); // FIXME, consolidate the fint stuff
+      int bi = fint(prt.xi[d] * cmprts->b_dxi[d]);
       if (bi < 0 || bi >= cmprts->b_mx[d]) {
 	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
 	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
@@ -917,7 +919,7 @@ cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
 
 #if 0
     for (int d = 0; d < 3; d++) {
-      int bi = particle_cuda_real_fint(prt.xi[d] * cmprts->b_dxi[d]);
+      int bi = fint(prt.xi[d] * cmprts->b_dxi[d]);
       if (bi < 0 || bi >= cmprts->b_mx[d]) {
 	MHERE;
 	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);

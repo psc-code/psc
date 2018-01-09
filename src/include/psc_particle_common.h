@@ -1,5 +1,5 @@
 
-#include <math.h>
+#include <cmath>
 
 #define PTYPE_SINGLE          1
 #define PTYPE_DOUBLE          2
@@ -11,35 +11,30 @@
 #if PTYPE == PTYPE_SINGLE
 
 #define particle_PTYPE_real_t particle_single_real_t
-#define particle_PTYPE_real_fint particle_single_real_fint
 #define particle_PTYPE_t particle_single_t
 #define psc_particle_PTYPE psc_particle_single
 
 #elif PTYPE == PTYPE_DOUBLE
 
 #define particle_PTYPE_real_t particle_double_real_t
-#define particle_PTYPE_real_fint particle_double_real_fint
 #define particle_PTYPE_t particle_double_t
 #define psc_particle_PTYPE psc_particle_double
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
 #define particle_PTYPE_real_t particle_single_by_block_real_t
-#define particle_PTYPE_real_fint particle_single_by_block_real_fint
 #define particle_PTYPE_t particle_single_by_block_t
 #define psc_particle_PTYPE psc_particle_single_by_block
 
 #elif PTYPE == PTYPE_FORTRAN
 
 #define particle_PTYPE_real_t particle_fortran_real_t
-#define particle_PTYPE_real_fint particle_fortran_real_fint
 #define particle_PTYPE_t particle_fortran_t
 #define psc_particle_PTYPE psc_particle_fortran
 
 #elif PTYPE == PTYPE_CUDA
 
 #define particle_PTYPE_real_t particle_cuda_real_t
-#define particle_PTYPE_real_fint particle_cuda_real_fint
 #define particle_PTYPE_t particle_cuda_t
 #define psc_particle_PTYPE psc_particle_cuda
 
@@ -55,33 +50,6 @@ typedef float particle_PTYPE_real_t;
 #elif PTYPE == PTYPE_DOUBLE || PTYPE == PTYPE_FORTRAN
 
 typedef double particle_PTYPE_real_t;
-
-#endif
-
-#if PTYPE == PTYPE_FORTRAN || PTYPE == PYTPE_CUDA
-
-// FIXME, this version is hacky, so why not always use floor/floorf?
-static inline int
-particle_PTYPE_real_fint(particle_PTYPE_real_t x)
-{
-  return (int)(x + 10.f) - 10;
-}
-
-#elif PTYPE == PTYPE_DOUBLE
-
-static inline int
-particle_PTYPE_real_fint(particle_PTYPE_real_t x)
-{
-  return floor(x);
-}
-
-//#elif PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK
-#else
-static inline int
-particle_PTYPE_real_fint(particle_PTYPE_real_t x)
-{
-  return floorf(x);
-}
 
 #endif
 
@@ -149,7 +117,6 @@ struct particle_PTYPE_t
 #endif
 
 #undef particle_PTYPE_real_t
-#undef particle_PTYPE_real_fint
 #undef particle_PTYPE_t
 #undef psc_particle_PTYPE
 

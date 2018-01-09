@@ -66,16 +66,6 @@ particle_acc_kind(particle_acc_t *prt)
 
 #define particle_acc_qni_wni(prt) ((prt)->qni_wni)
 
-static inline int
-particle_acc_real_fint(particle_acc_real_t x)
-{
-#ifdef __CUDACC__
-  return __float2int_rd(x);
-#else
-  return floorf(x);
-#endif
-}
-
 #define PARTICLE_ACC_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\
     (prt).xi[0] = xi4.x;						\

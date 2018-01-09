@@ -21,8 +21,6 @@ typedef particle_cuda_t particle_t;
 #define particle_buf_push_back      psc_particle_cuda_buf_push_back
 #define particle_buf_at_ptr         psc_particle_cuda_buf_at_ptr
 
-#define particle_real_fint          particle_cuda_real_fint
-
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_CUDA_REAL
 #define PARTICLE_TYPE               "cuda"
 

@@ -5,6 +5,7 @@
 
 #include <config.h>
 
+#include "psc_bits.h"
 #include "psc_particles.h"
 #include "psc_fields.h"
 
@@ -13,6 +14,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
+#include <cmath>
 
 BEGIN_C_DECLS
 

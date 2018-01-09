@@ -25,7 +25,7 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
   particle_c_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
   int pos[3];
   for (int d = 0; d < 3; d++) {
-    pos[d] = particle_c_real_fint(xi[d]);
+    pos[d] = fint(xi[d]);
   }
   
   return cell_map_3to1(map, pos);

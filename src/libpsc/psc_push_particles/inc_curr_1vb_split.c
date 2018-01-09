@@ -16,7 +16,7 @@ calc_j2_one_cell(curr_cache_t curr_cache, particle_real_t qni_wni,
 
   int i[3];
   for (int d = 0; d < 3; d++) {
-    i[d] = particle_real_fint(xa[d]);
+    i[d] = fint(xa[d]);
   }
 
 #ifdef CURR_CACHE_HAVE_SHIFT
@@ -73,7 +73,7 @@ calc_j2_one_cell(curr_cache_t curr_cache, particle_real_t qni_wni,
 
   int i[3] = {};
   for (int d = 0; d < 3; d++) {
-    i[d] = particle_real_fint(xa[d]);
+    i[d] = fint(xa[d]);
     xa[d] -= i[d];
   }
 
@@ -129,7 +129,7 @@ calc_j2_split_dim(curr_cache_t curr_cache, particle_real_t qni_wni,
   if (dim == 0) {
     calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
   } else {
-    int im = particle_real_fint(xm[dim]);
+    int im = fint(xm[dim]);
     if (xp[dim] > im + 1 || xp[dim] < im) {
       particle_real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
@@ -147,7 +147,7 @@ calc_j2_split_dim_y(curr_cache_t curr_cache, particle_real_t qni_wni,
 		    particle_real_t *xm, particle_real_t *xp)
 {
   const int dim = 1;
-  int im = particle_real_fint(xm[dim]);
+  int im = fint(xm[dim]);
   if (xp[dim] > im + 1 || xp[dim] < im) {
     particle_real_t x1[3];
     calc_j2_split_along_dim(dim, im, x1, xm, xp);
@@ -163,7 +163,7 @@ calc_j2_split_dim_z(curr_cache_t curr_cache, particle_real_t qni_wni,
 		    particle_real_t *xm, particle_real_t *xp)
 {
   const int dim = 2;
-  int im = particle_real_fint(xm[dim]);
+  int im = fint(xm[dim]);
   if (xp[dim] > im + 1 || xp[dim] < im) {
     particle_real_t x1[3];
     calc_j2_split_along_dim(dim, im, x1, xm, xp);
@@ -184,7 +184,7 @@ calc_j2_split_dim(curr_cache_t curr_cache, particle_real_t qni_wni,
   if (dim == -1) {
     calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
   } else {
-    int im = particle_real_fint(xm[dim]);
+    int im = fint(xm[dim]);
     if (xp[dim] > im + 1 || xp[dim] < im) {
       particle_real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
@@ -202,7 +202,7 @@ calc_j2_split_dim_x(curr_cache_t curr_cache, particle_real_t qni_wni,
 		    particle_real_t *xm, particle_real_t *xp)
 {
   const int dim = 0;
-  int im = particle_real_fint(xm[dim]);
+  int im = fint(xm[dim]);
   if (xp[dim] > im + 1 || xp[dim] < im) {
     particle_real_t x1[3];
     calc_j2_split_along_dim(dim, im, x1, xm, xp);
@@ -218,7 +218,7 @@ calc_j2_split_dim_y(curr_cache_t curr_cache, particle_real_t qni_wni,
 		    particle_real_t *xm, particle_real_t *xp)
 {
   const int dim = 1;
-  int im = particle_real_fint(xm[dim]);
+  int im = fint(xm[dim]);
   if (xp[dim] > im + 1 || xp[dim] < im) {
     particle_real_t x1[3];
     calc_j2_split_along_dim(dim, im, x1, xm, xp);
@@ -234,7 +234,7 @@ calc_j2_split_dim_z(curr_cache_t curr_cache, particle_real_t qni_wni,
 		    particle_real_t *xm, particle_real_t *xp)
 {
   const int dim = 2;
-  int im = particle_real_fint(xm[dim]);
+  int im = fint(xm[dim]);
   if (xp[dim] > im + 1 || xp[dim] < im) {
     particle_real_t x1[3];
     calc_j2_split_along_dim(dim, im, x1, xm, xp);

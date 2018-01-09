@@ -5,9 +5,9 @@
     particle_real_t u = xi[0] * dxi - .5;				\
     particle_real_t v = xi[1] * dyi - .5;				\
     particle_real_t w = xi[2] * dzi - .5;				\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
+    int jx = fint(u);							\
+    int jy = fint(v);							\
+    int jz = fint(w);							\
     particle_real_t h1 = u - jx;					\
     particle_real_t h2 = v - jy;					\
     particle_real_t h3 = w - jz;					\
@@ -52,9 +52,9 @@
     particle_real_t u = xi[0] * dxi;					\
     particle_real_t v = xi[1] * dyi;					\
     particle_real_t w = xi[2] * dzi;					\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
+    int jx = fint(u);							\
+    int jy = fint(v);							\
+    int jz = fint(w);							\
     particle_real_t h1 = u - jx;					\
     particle_real_t h2 = v - jy;					\
     particle_real_t h3 = w - jz;					\
