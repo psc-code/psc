@@ -127,18 +127,18 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    psc_particle_cuda_buf_t *buf = &cmprts->bnd.bpatch[p].buf;
+    psc_particle_cuda_buf_t& buf = cmprts->bnd.bpatch[p].buf;
     unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
-    psc_particle_cuda_buf_ctor(buf);
-    psc_particle_cuda_buf_reserve(buf, n_send);
-    psc_particle_cuda_buf_resize(buf, n_send);
+    psc_particle_cuda_buf_ctor(&buf);
+    buf.reserve(n_send);
+    buf.resize(n_send);
 
     for (int n = 0; n < n_send; n++) {
-      particle_cuda_t *prt = psc_particle_cuda_buf_at_ptr(buf, n);
+      particle_cuda_t *prt = &buf[n];
       prt->xi      = h_bnd_xi4[n + off].x;
       prt->yi      = h_bnd_xi4[n + off].y;
       prt->zi      = h_bnd_xi4[n + off].z;
-      prt->kind    = cuda_float_as_int(h_bnd_xi4[n + off].w);
+      prt->kind_   = cuda_float_as_int(h_bnd_xi4[n + off].w);
       prt->pxi     = h_bnd_pxi4[n + off].x;
       prt->pyi     = h_bnd_pxi4[n + off].y;
       prt->pzi     = h_bnd_pxi4[n + off].z;
@@ -162,7 +162,7 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
   
   unsigned int n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    n_recv += psc_particle_cuda_buf_size(&cmprts->bnd.bpatch[p].buf);
+    n_recv += cmprts->bnd.bpatch[p].buf.size();
   }
 
   thrust::host_vector<float4> h_bnd_xi4(n_recv);
@@ -174,7 +174,7 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
   
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    int n_recv = psc_particle_cuda_buf_size(&cmprts->bnd.bpatch[p].buf);
+    int n_recv = cmprts->bnd.bpatch[p].buf.size();
     cmprts->bnd.bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
@@ -182,7 +182,7 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
       h_bnd_xi4[n + off].x  = prt->xi;
       h_bnd_xi4[n + off].y  = prt->yi;
       h_bnd_xi4[n + off].z  = prt->zi;
-      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt->kind);
+      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt->kind_);
       h_bnd_pxi4[n + off].x = prt->pxi;
       h_bnd_pxi4[n + off].y = prt->pyi;
       h_bnd_pxi4[n + off].z = prt->pzi;
