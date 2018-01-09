@@ -463,7 +463,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   // post sends
   particle_buf_t send_buf;
   particle_buf_ctor(&send_buf);
-  particle_buf_reserve(&send_buf, n_send);
+  send_buf.reserve(n_send);
   particle_t *it = particle_buf_begin(&send_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
     if (cinfo[r].n_send == 0)
@@ -485,7 +485,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   // post receives
   particle_buf_t recv_buf;
   particle_buf_ctor(&recv_buf);
-  particle_buf_reserve(&recv_buf, n_recv);
+  recv_buf.reserve(n_recv);
   it = particle_buf_begin(&recv_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
     if (cinfo[r].n_recv == 0)
@@ -509,7 +509,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     int size = patch->m_buf->size();
-    particle_buf_reserve(patch->m_buf, size + patch->n_recv);
+    patch->m_buf->reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
     // it won't become invalid due to a realloc since we reserved enough space...
     it_recv[p] = particle_buf_end(patch->m_buf);
