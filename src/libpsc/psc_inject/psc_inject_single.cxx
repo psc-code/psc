@@ -183,14 +183,14 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      assert(psc->prm.neutralizing_population == nr_pop - 1);
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
-	    mparticles_patch_reserve(mprts.mprts(), p, mparticles_get_n_prts(mprts.mprts(), p) + n_in_cell);
+	    mprts.reserve(p, mprts.size(p) + n_in_cell);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      assert(psc->prm.fractional_n_particles_per_cell);
 	      particle_t prt;
 	      _psc_setup_particle(psc, &prt, &npt, p, xx);
 	      prt.qni_wni = psc->kinds[prt.kind_].q; // ??? FIXME
 
-	      mparticles_patch_push_back(mprts.mprts(), p, prt);
+	      mprts.push_back(p, prt);
 	    }
 	  }
 	}

@@ -207,14 +207,25 @@ struct psc_mparticles_PTYPE_patch {
   unsigned int *b_off;
   bool need_reorder;
 #endif
+
+  void reserve(unsigned int new_capacity);
+
+  unsigned int size()
+  {
+    return psc_particle_PTYPE_buf_size(&buf);
+  }
+
+  void push_back(const particle_PTYPE_t& prt)
+  {
+    psc_particle_PTYPE_buf_push_back(&buf, prt);
+  }
 };
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE
 
-struct psc_particle_PTYPE_range_t;
-
-struct psc_mparticles_PTYPE {
+struct psc_mparticles_PTYPE
+{
   struct psc_mparticles_PTYPE_patch *patch;
 };
 
@@ -246,45 +257,49 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, unsigned int n
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_get_n_prts
 
-static inline int
+static inline unsigned int
 psc_mparticles_PTYPE_get_n_prts(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
 
-  return psc_particle_PTYPE_buf_size(&sub->patch[p].buf);
+  return sub->patch[p].size();
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch_reserve
 
-static inline void
-psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p,
-				   unsigned int new_capacity)
+inline void psc_mparticles_PTYPE_patch::reserve(unsigned int new_capacity)
 {
-  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
-
-  unsigned int old_capacity = psc_particle_PTYPE_buf_capacity(&patch->buf);
-  psc_particle_PTYPE_buf_reserve(&patch->buf, new_capacity);
-  new_capacity = psc_particle_PTYPE_buf_capacity(&patch->buf);
+  unsigned int old_capacity = psc_particle_PTYPE_buf_capacity(&buf);
+  psc_particle_PTYPE_buf_reserve(&buf, new_capacity);
+  new_capacity = psc_particle_PTYPE_buf_capacity(&buf);
 
   if (new_capacity == old_capacity) {
     return;
   }
 
 #if PTYPE == PTYPE_SINGLE
-  free(patch->prt_array_alt);
-  patch->prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*patch->prt_array_alt));
-  patch->b_idx = (unsigned int *) realloc(patch->b_idx, new_capacity * sizeof(*patch->b_idx));
-  patch->b_ids = (unsigned int *) realloc(patch->b_ids, new_capacity * sizeof(*patch->b_ids));
+  free(prt_array_alt);
+  prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
+  b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
+  b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
 #endif
 
 #if PTYPE == PTYPE_SINGLE_BY_BLOCK
-  free(patch->prt_array_alt);
-  patch->prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*patch->prt_array_alt));
-  patch->b_idx = (unsigned int *) realloc(patch->b_idx, new_capacity * sizeof(*patch->b_idx));
-  patch->b_ids = (unsigned int *) realloc(patch->b_ids, new_capacity * sizeof(*patch->b_ids));
+  free(prt_array_alt);
+  prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
+  b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
+  b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
 #endif
+}
+
+static inline void
+psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p,
+				   unsigned int new_capacity)
+{
+  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
+
+  sub->patch[p].reserve(new_capacity);
 }
 
 // ----------------------------------------------------------------------
@@ -319,9 +334,8 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
 				     particle_PTYPE_t prt)
 {
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  psc_particle_PTYPE_buf_push_back(&patch->buf, prt);
+  sub->patch[p].push_back(prt);
 }
 
 // ----------------------------------------------------------------------

@@ -826,14 +826,14 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
 	      } else {
 		prt.qni_wni = psc->kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }
-	      mparticles_patch_push_back(mprts.mprts(), p, prt);
+	      mprts.push_back(p, prt);
 	    }
 	  }
 	}
       }
     }
     if (!psc->prm.fractional_n_particles_per_cell) {
-      assert(mparticles_get_n_prts(mprts.mprts(), p) == nr_particles_by_patch[p]);
+      assert(mprts.size(p) == nr_particles_by_patch[p]);
     }
   }
   mprts.put_as(psc->particles);
