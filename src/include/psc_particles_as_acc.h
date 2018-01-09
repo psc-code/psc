@@ -7,7 +7,6 @@
 typedef particle_acc_real_t particle_real_t;
 typedef particle_acc_t particle_t;
 
-#define particles_get_one           particles_acc_get_one
 #define particle_qni_div_mni        particle_acc_qni_div_mni
 #define particle_qni_wni            particle_acc_qni_wni
 #define particle_qni                particle_acc_qni

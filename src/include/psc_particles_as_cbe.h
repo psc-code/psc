@@ -7,8 +7,6 @@
 typedef particle_cbe_t particle_t;
 typedef particles_cbe_t particles_t;
 
-#define particles_get_one      particles_cbe_get_one
-
 #endif
 
 

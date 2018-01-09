@@ -8,8 +8,6 @@ typedef particle_fortran_real_t particle_real_t;
 typedef particle_fortran_t particle_t;
 using mparticles_t = mparticles_fortran_t;
 
-#define mparticles_get_one            psc_mparticles_fortran_get_one
-
 #define particle_buf_t              psc_particle_fortran_buf_t
 #define particle_buf_dtor           psc_particle_fortran_buf_dtor
 
