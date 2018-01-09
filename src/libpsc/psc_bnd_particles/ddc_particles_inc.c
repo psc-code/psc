@@ -634,17 +634,18 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
-					      struct psc_mparticles *mprts, int p)
+					      struct psc_mparticles *_mprts, int p)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
+  mparticles_t mprts(_mprts);
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
   struct psc_patch *ppatch = &psc->patch[p];
-  const particle_real_t *b_dxi = mparticles_patch_get_b_dxi(mprts, p);
-  const int *b_mx = mparticles_patch_get_b_mx(mprts, p);
+  const particle_real_t *b_dxi = mprts[p].get_b_dxi();
+  const int *b_mx = mprts[p].get_b_mx();
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
     xm[d] = ppatch->ldims[d] * ppatch->dx[d];

@@ -15,8 +15,6 @@ using mparticles_t = mparticles_single_t;
 #define mparticles_patch_push_back  psc_mparticles_single_patch_push_back
 #define mparticles_patch_resize     psc_mparticles_single_patch_resize
 #define mparticles_patch_capacity   psc_mparticles_single_patch_capacity
-#define mparticles_patch_get_b_mx   psc_mparticles_single_patch_get_b_mx
-#define mparticles_patch_get_b_dxi  psc_mparticles_single_patch_get_b_dxi
 
 #define particle_buf_t              psc_particle_single_buf_t
 #define particle_buf_t              psc_particle_single_buf_t

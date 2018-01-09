@@ -23,8 +23,6 @@
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_single_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_single_patch_capacity
-#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_patch_get_b_dxi 
-#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
@@ -51,8 +49,6 @@
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_double_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_double_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_double_patch_capacity
-#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_double_patch_get_b_dxi 
-#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_double_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
 
@@ -79,8 +75,6 @@
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_single_by_block_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_by_block_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_single_by_block_patch_capacity
-#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_by_block_patch_get_b_dxi 
-#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_by_block_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
 
@@ -107,8 +101,6 @@
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_fortran_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_fortran_patch_resize
 #define psc_mparticles_PTYPE_patch_capacity psc_mparticles_fortran_patch_capacity
-#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_fortran_patch_get_b_dxi 
-#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_fortran_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 
@@ -128,26 +120,12 @@
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_cuda_buf_at_ptr
 
 #define psc_mparticles_PTYPE psc_mparticles_cuda
-#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
-#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
 #endif
 
 // ======================================================================
 
-#if PTYPE == PTYPE_CUDA
-
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE
-
-struct psc_mparticles_PTYPE {
-  struct cuda_mparticles *cmprts;
-};
-
-const particle_PTYPE_real_t *psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p);
-const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p);
-
-#else // PTYPE != PTYPE_CUDA
+#if PTYPE != PTYPE_CUDA
 
 struct psc_particle_PTYPE_range_t;
 
@@ -187,7 +165,7 @@ struct psc_mparticles_PTYPE_patch
 
   psc_particle_PTYPE_range_t range();
 
-  unsigned int size()
+  unsigned int size() const
   {
     return psc_particle_PTYPE_buf_size(&buf);
   }
@@ -197,6 +175,15 @@ struct psc_mparticles_PTYPE_patch
     psc_particle_PTYPE_buf_push_back(&buf, prt);
   }
 
+  const int* get_b_mx() const
+  {
+    return b_mx;
+  }
+
+  const particle_PTYPE_real_t* get_b_dxi() const
+  {
+    return b_dxi;
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -299,30 +286,6 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch_get_b_mx
-
-static inline const int *
-psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
-
-  return patch->b_mx;
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch_get_b_dxi
-
-static inline const particle_PTYPE_real_t *
-psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
-
-  return patch->b_dxi;
-}
-
-// ----------------------------------------------------------------------
 // psc_particle_PTYPE_iter_t
 
 struct psc_particle_PTYPE_iter_t
@@ -417,8 +380,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef psc_mparticles_PTYPE_patch_push_back
 #undef psc_mparticles_PTYPE_patch_resize
 #undef psc_mparticles_PTYPE_patch_capacity
-#undef psc_mparticles_PTYPE_patch_get_b_dxi
-#undef psc_mparticles_PTYPE_patch_get_b_mx
 #undef psc_particle_PTYPE_iter_t
 #undef psc_particle_PTYPE_range_t 
 
