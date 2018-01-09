@@ -37,7 +37,6 @@ typedef particle_fortran_t particle_t;
 #define particle_range_mprts          psc_particle_fortran_range_mprts
 #define particle_range_size           psc_particle_fortran_range_size
 
-#define MPI_PARTICLES_REAL            MPI_PARTICLES_FORTRAN_REAL
 #define PARTICLE_TYPE                 "fortran"
 
 #define PSC_PARTICLES_AS_FORTRAN 1

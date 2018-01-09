@@ -8,8 +8,6 @@
 
 typedef float particle_cuda2_real_t;
 
-#define MPI_PARTICLES_CUDA2_REAL MPI_FLOAT
-
 typedef struct psc_particle_cuda2 {
   particle_cuda2_real_t xi[3];
   particle_cuda2_real_t kind_as_float;

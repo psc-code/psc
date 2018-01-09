@@ -5,8 +5,6 @@
 
 typedef cbe_real particle_cbe_real_t;
 
-#define MPI_PARTICLES_CBE_REAL MPI_CBE_REAL
-
 #if CBE_DOUBLE
 
 typedef struct psc_particle_cbe {

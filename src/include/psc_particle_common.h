@@ -54,32 +54,25 @@ typedef double particle_PTYPE_real_t;
 #endif
 
 // ----------------------------------------------------------------------
-// MPI_PARTICLES_PTYPE_REAL
-// annoying, but need to use a macro, which means we can't consolidate float/double
 
 #if PTYPE == PTYPE_SINGLE
 
-#define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
 #define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
 
 #elif PTYPE == PTYPE_DOUBLE
 
-#define MPI_PARTICLES_DOUBLE_REAL MPI_DOUBLE
 #define psc_mparticles_double(prts) mrc_to_subobj(prts, struct psc_mparticles_double)
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
-#define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
 #define psc_mparticles_single_by_block(prts) mrc_to_subobj(prts, struct psc_mparticles_single_by_block)
 
 #elif PTYPE == PTYPE_FORTRAN
 
-#define MPI_PARTICLES_FORTRAN_REAL MPI_DOUBLE
 #define psc_mparticles_fortran(prts) mrc_to_subobj(prts, struct psc_mparticles_fortran)
 
 #elif PTYPE == PTYPE_CUDA
 
-#define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
 
 #endif

@@ -26,7 +26,6 @@ typedef particle_single_by_block_t particle_t;
 #define particle_range_mprts        psc_particle_single_by_block_range_mprts
 #define particle_range_size         psc_particle_single_by_block_range_size
 
-#define MPI_PARTICLES_REAL          MPI_PARTICLES_SINGLE_BY_BLOCK_REAL
 #define PARTICLE_TYPE               "single_by_block"
 
 #define PSC_PARTICLES_AS_SINGLE_BY_BLOCK 1

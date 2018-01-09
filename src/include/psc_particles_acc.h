@@ -10,8 +10,6 @@
 typedef float particle_acc_real_t;
 
 
-#define MPI_PARTICLES_ACC_REAL MPI_FLOAT
-
 typedef struct psc_particle_acc {
   particle_acc_real_t xi[3];
   particle_acc_real_t kind_as_float;
