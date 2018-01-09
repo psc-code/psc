@@ -8,7 +8,6 @@ typedef particle_single_real_t particle_real_t;
 typedef particle_single_t particle_t;
 using mparticles_t = mparticles_single_t;
 
-#define mparticles_patch_get_buf    psc_mparticles_single_patch_get_buf
 #define mparticles_get_one          psc_mparticles_single_get_one
 #define mparticles_get_n_prts       psc_mparticles_single_get_n_prts
 #define mparticles_patch_reserve    psc_mparticles_single_patch_reserve

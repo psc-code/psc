@@ -603,10 +603,11 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  mparticles_t mp(mprts);
   struct ddc_particles *ddcp = bnd->ddcp;
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mp.n_patches(); p++) {
     struct ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = mparticles_patch_get_buf(mprts, p);
+    dpatch->m_buf = mp[p].get_buf();
     dpatch->m_begin = 0;
   }
 #endif
