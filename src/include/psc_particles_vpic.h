@@ -10,21 +10,18 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
-struct mparticles_vpic_t : mparticles_base
-{
-  using mparticles_base::mparticles_base;
+struct psc_mparticles_vpic {
+  Particles *vmprts;
+  Simulation *sim;
 };
+
+using mparticles_vpic_t = mparticles_base<psc_mparticles_vpic>;
 
 template<>
 struct mparticles_traits<mparticles_vpic_t>
 {
   static constexpr const char* name = "vpic";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
-};
-
-struct psc_mparticles_vpic {
-  Particles *vmprts;
-  Simulation *sim;
 };
 
 #define psc_mparticles_vpic(mprts)({					\

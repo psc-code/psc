@@ -13,7 +13,7 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-using mparticles_single_t = mparticles<psc_particle_single_buf_t>;
+using mparticles_single_t = mparticles<psc_particle_single_buf_t, psc_mparticles_single>;
 
 template<>
 struct mparticles_traits<mparticles_single_t>

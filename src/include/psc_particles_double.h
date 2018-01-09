@@ -13,7 +13,7 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-using mparticles_double_t = mparticles<psc_particle_double_buf_t>;
+using mparticles_double_t = mparticles<psc_particle_double_buf_t, psc_mparticles_double>;
 
 template<>
 struct mparticles_traits<mparticles_double_t>

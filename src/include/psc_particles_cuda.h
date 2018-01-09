@@ -14,10 +14,7 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct mparticles_cuda_t : mparticles_base
-{
-  using mparticles_base::mparticles_base;
-};
+using mparticles_cuda_t = mparticles_base<psc_mparticles_cuda>;
 
 template<>
 struct mparticles_traits<mparticles_cuda_t>

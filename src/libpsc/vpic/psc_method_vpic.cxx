@@ -244,9 +244,8 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   err = psc_mfields_synchronize_tang_e_norm_b(mf.mflds());
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
-  Particles *vmprts = psc_mparticles_vpic(mprts.mprts())->vmprts;
   FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
-  Simulation_initialize(sub->sim, vmprts, vmflds);
+  Simulation_initialize(sub->sim, mprts.sub()->vmprts, vmflds);
 
   mprts.put_as(mprts_base);
   mf.put_as(mflds_base, 0, VPIC_MFIELDS_N_COMP);
