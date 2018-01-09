@@ -67,17 +67,17 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   if (!pr) {
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
     qsort(particle_iter_deref(prts.begin), particle_range_size(prts),
 	  sizeof(*particle_iter_deref(prts.begin)), compare);
   }
   prof_stop(pr);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ======================================================================
@@ -91,12 +91,12 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     pr = prof_register("countsort_sort", 1., 0, 0);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
     unsigned int n_prts = particle_range_size(prts);
     
     int N = 1;
@@ -139,7 +139,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   
   prof_stop(pr);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 
@@ -171,12 +171,12 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     pr = prof_register("countsort2_sort", 1., 0, 0);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
     unsigned int n_prts = particle_range_size(prts);
 
     unsigned int mask = cs2->mask;
@@ -251,7 +251,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
 
   prof_stop(pr);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 

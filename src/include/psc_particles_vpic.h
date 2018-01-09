@@ -5,7 +5,22 @@
 #include "psc_particles_private.h"
 #include "psc_particles_single.h"
 
+#include "particles.hxx"
+#include "particles_traits.hxx"
+
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
+
+struct mparticles_vpic_t : mparticles_base
+{
+  using mparticles_base::mparticles_base;
+};
+
+template<>
+struct mparticles_traits<mparticles_vpic_t>
+{
+  static constexpr const char* name = "vpic";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
 
 struct psc_mparticles_vpic {
   Particles *vmprts;

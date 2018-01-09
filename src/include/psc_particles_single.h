@@ -16,6 +16,14 @@
 using mparticles_single_t = mparticles<psc_particle_single_buf_t>;
 
 template<>
+struct mparticles_traits<mparticles_single_t>
+{
+  static constexpr const char* name = "single";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
+
+// FIXME, needs to eventually
+template<>
 struct mparticles_traits<particle_single_t>
 {
   static constexpr const char* name = "single";

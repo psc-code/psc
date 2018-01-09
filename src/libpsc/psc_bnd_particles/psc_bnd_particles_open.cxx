@@ -343,11 +343,11 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   struct psc_mfields *mflds_nvt = psc_output_fields_item_create_mfields(bnd->item_nvt);
 
   prof_start(pr_B);
-  psc_output_fields_item_run(bnd->item_nvt, ppsc->flds, mprts, mflds_nvt);
+  psc_output_fields_item_run(bnd->item_nvt, ppsc->flds, mprts.mprts(), mflds_nvt);
   prof_stop(pr_B);
 
   //debug_dump(io, mflds_nvt);
@@ -363,7 +363,7 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 
   bnd->first_time = false;
 
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
 
   if (ppsc->timestep % debug_every_step == 0) {
     mrc_io_close(io);

@@ -16,6 +16,13 @@
 using mparticles_double_t = mparticles<psc_particle_double_buf_t>;
 
 template<>
+struct mparticles_traits<mparticles_double_t>
+{
+  static constexpr const char* name = "double";
+  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
+};
+
+template<>
 struct mparticles_traits<particle_double_t>
 {
   static constexpr const char* name = "double";

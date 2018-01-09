@@ -83,14 +83,14 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
     psc_mparticles_reserve_all(mprts_ref, n_prts_by_patch);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
+  mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
   psc_foreach_patch(psc, p) {
     int n_prts = mparticles_get_n_prts(mprts, p);
     for (int n = 0; n < n_prts; n++) {
       mparticles_patch_push_back(mprts_ref, p, *mparticles_get_one(mprts, p, n));
     }
   }
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  mprts->put_as(mprts_base, MP_DONT_COPY);
 }
 
 // ----------------------------------------------------------------------
@@ -131,7 +131,7 @@ psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
+psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
 			double thres, const char *test_str)
 {
   if (!opt_testing_check_particles) {
@@ -139,7 +139,7 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
   }
 
   assert(mprts_ref);
-  struct psc_mparticles *mprts = psc_mparticles_get_as(particles_base, "c", 0);
+  mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
     particle_range_t prts = particle_range_mprts(mprts, p);
@@ -167,7 +167,7 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
       assert_equal(part->pzi, part_ref->pzi, thres);
     }
   }
-  psc_mparticles_put_as(mprts, particles_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, 0);
 
   if (opt_checks_verbose) {
     mprintf("max delta: (%s)\n", test_str);
@@ -304,11 +304,11 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
 // checks particles are sorted by cell index
 
 void
-psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *particles_base)
+psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
 {
   int last = INT_MIN;
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(particles_base, "c", 0);
+  mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
@@ -339,7 +339,7 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *particles_bas
       last = cni;
     }
   }
-  psc_mparticles_put_as(mprts, particles_base, 0);
+  mprts.put_as(mprts_base, 0);
 }
 
 // ======================================================================

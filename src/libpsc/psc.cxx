@@ -769,7 +769,6 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // FIXME, why does this do anything to the random seed?
-  //struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, MP_DONT_COPY);
   mparticles_double_t mprts = psc->particles->get_as<mparticles_double_t>(MP_DONT_COPY);
 
   if (psc->prm.seed_by_time) {

@@ -491,20 +491,20 @@ psc_collision_sub_run(struct psc_collision *collision,
     return;
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
 
   mfields_t mf_coll(coll->mflds);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
   
     int *ldims = ppsc->patch[p].ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];
     int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
     struct psc_collision_stats stats_total = {};
     
-    find_cell_offsets(offsets, mprts, p);
+    find_cell_offsets(offsets, mprts.mprts(), p);
     
     Fields F(mf_coll[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
@@ -532,7 +532,7 @@ psc_collision_sub_run(struct psc_collision *collision,
     
   prof_stop(pr);
     
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ======================================================================

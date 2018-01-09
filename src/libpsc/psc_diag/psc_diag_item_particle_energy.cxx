@@ -31,13 +31,13 @@ static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  struct psc *psc, double *result)
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, 0);
+  mparticles_t mprts = psc->particles->get_as<mparticles_t>();
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    do_particle_energy(psc, mprts, p, result);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    do_particle_energy(psc, mprts.mprts(), p, result);
   }
 
-  psc_mparticles_put_as(mprts, psc->particles, MP_DONT_COPY);
+  mprts.put_as(psc->particles, MP_DONT_COPY);
 }
 
 // ======================================================================

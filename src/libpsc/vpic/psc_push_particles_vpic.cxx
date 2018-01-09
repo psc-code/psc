@@ -60,14 +60,14 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
   // needs E, B (not really, because they're already in interpolator), rhob?
   mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(EX, HX + 6);
   FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
+  Particles *vmprts = psc_mparticles_vpic(mprts.mprts())->vmprts;
 
   Simulation_push_mprts(sub->sim, vmprts, vmflds);
 
   // update jf FIXME: rhob too, probably, depending on b.c.
   mf.put_as(mflds_base, JXI, JXI + 3);
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ----------------------------------------------------------------------

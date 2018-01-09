@@ -16,7 +16,7 @@ psc_collision_fortran_run(struct psc_collision *collision,
     pr = prof_register("fort_collision", 1., 0, 0);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "fortran", 0);
+  mparticles_fortran_t mprts = mprts_base->get_as<mparticles_fortran_t>();
 
   prof_start(pr);
 
@@ -27,7 +27,7 @@ psc_collision_fortran_run(struct psc_collision *collision,
 
   prof_stop(pr);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ======================================================================

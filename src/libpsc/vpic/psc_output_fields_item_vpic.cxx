@@ -67,14 +67,14 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_mfields_set_param_int3(mflds_hydro, "ibn", (int [3]) { 1, 1, 1});
   psc_mfields_setup(mflds_hydro);
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
+  mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
 
   Simulation *sim;
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
 
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
     HydroArray *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds_hydro;
-    Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+    Particles *vmprts = psc_mparticles_vpic(mprts.mprts())->vmprts;
     Simulation_moments_run(sim, vmflds_hydro, vmprts, kind);
     
     mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
@@ -90,7 +90,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
     mf.put_as(mflds_hydro, 0, 0);
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
   
   psc_mfields_destroy(mflds_hydro);
 }

@@ -16,7 +16,7 @@ psc_randomize_fortran_run(struct psc_randomize *randomize,
     pr = prof_register("fort_randomize", 1., 0, 0);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "fortran", 0);
+  mparticles_fortran_t mprts = mprts_base->get_as<mparticles_fortran_t>();
 
   prof_start(pr);
   assert(mprts->nr_patches == 1);
@@ -24,7 +24,7 @@ psc_randomize_fortran_run(struct psc_randomize *randomize,
   PIC_randomize(prts);
   prof_stop(pr);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ======================================================================

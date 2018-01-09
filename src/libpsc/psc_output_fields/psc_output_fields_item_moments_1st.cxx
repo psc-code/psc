@@ -104,16 +104,16 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
 	void (*do_run)(int p, fields_t res, particle_range_t prts))
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   mfields_t mf_res(mres);
   
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     mf_res[p].zero();
-    do_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    do_run(p, mf_res[p], particle_range_mprts(mprts.mprts(), p));
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
 }
 
 // ======================================================================
@@ -444,12 +444,12 @@ static void
 nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   mfields_t mf_res(mres);
 
   for (int p = 0; p < mres->nr_patches; p++) {
     mf_res[p].zero();
-    do_nvt_a_1st_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    do_nvt_a_1st_run(p, mf_res[p], particle_range_mprts(mprts.mprts(), p));
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
@@ -478,10 +478,10 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     }
 
     // calculate <(v-U)(v-U)> moments
-    do_nvt_b_1st_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    do_nvt_b_1st_run(p, mf_res[p], particle_range_mprts(mprts.mprts(), p));
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
 
   for (int m = 0; m < ppsc->nr_kinds; m++) {
     psc_bnd_add_ghosts(item->bnd, mres, 10*m + 4, 10*m + 10);
@@ -493,12 +493,12 @@ static void
 nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   mfields_t mf_res(mres);
 
   for (int p = 0; p < mres->nr_patches; p++) {
     mf_res[p].zero();
-    do_nvp_1st_run(p, mf_res[p], particle_range_mprts(mprts, p));
+    do_nvp_1st_run(p, mf_res[p], particle_range_mprts(mprts.mprts(), p));
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
@@ -542,7 +542,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     }
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
 }
 
 // ======================================================================

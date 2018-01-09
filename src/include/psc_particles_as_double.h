@@ -6,6 +6,7 @@
 
 typedef particle_double_real_t particle_real_t;
 typedef particle_double_t particle_t;
+using mparticles_t = mparticles_double_t;
 
 #define mparticles_patch_get_buf    psc_mparticles_double_patch_get_buf
 #define mparticles_get_one          psc_mparticles_double_get_one

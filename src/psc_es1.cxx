@@ -339,7 +339,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     return;
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
+  mparticles_c_t mprts = psc->particles->get_as<mparticles_c_t>();
   assert(mprts->nr_patches == 1);
   psc_foreach_patch(psc, p) {
     int il1 = 0;
@@ -347,7 +347,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       psc_es1_init_species(psc, kind, &es1->species[kind], mprts, p, &il1);
     }
   }
-  psc_mparticles_put_as(mprts, psc->particles, 0);
+  mprts.put_as(psc->particles);
 }
 
 // ======================================================================

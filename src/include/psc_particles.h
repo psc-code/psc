@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include "particles_traits.hxx"
-#include "particles.hxx"
 
 // ----------------------------------------------------------------------
 // psc_mparticles class
@@ -90,7 +89,7 @@ void psc_mparticles_check(struct psc_mparticles *mprts);
 template<typename MP>
 inline MP psc_mparticles::get_as(unsigned int flags)
 {
-  const char *type = mparticles_traits<typename MP::buf_t::particle_t>::name;
+  const char *type = mparticles_traits<MP>::name;
   struct psc_mparticles *mprts = psc_mparticles_get_as(this, type, flags);
   return MP(mprts);
 }

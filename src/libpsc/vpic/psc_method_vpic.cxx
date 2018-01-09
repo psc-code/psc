@@ -159,11 +159,11 @@ psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
   // set up particles
-    if (sub->use_deck_particle_ic) {
+  if (sub->use_deck_particle_ic) {
     // If we want to use the deck particle i.c., we need to copy the
     // already set up "vpic" particles over to the base particles.
-    struct psc_mparticles *mprts_vpic = psc_mparticles_get_as(psc->particles, "vpic", MP_DONT_COPY | MP_DONT_RESIZE);
-    psc_mparticles_put_as(mprts_vpic, psc->particles, 0);
+    mparticles_vpic_t mprts = psc->particles->get_as<mparticles_vpic_t>(MP_DONT_COPY | MP_DONT_RESIZE);
+    mprts.put_as(psc->particles);
   } else {
     psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
     psc_setup_particles(psc, n_prts_by_patch);
@@ -207,7 +207,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   struct psc_mfields *mflds_base = psc->flds;
   struct psc_mparticles *mprts_base = psc->particles;
   mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(0, VPIC_MFIELDS_N_COMP);
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "vpic", 0);
+  mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
   
   // Do some consistency checks on user initialized fields
 
@@ -228,7 +228,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
   psc_mfields_clear_rhof(mf.mflds());
-  psc_mfields_accumulate_rho_p(mf.mflds(), mprts);
+  psc_mfields_accumulate_rho_p(mf.mflds(), mprts.mprts());
   psc_mfields_synchronize_rho(mf.mflds());
   psc_mfields_compute_rhob(mf.mflds());
 
@@ -244,11 +244,11 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   err = psc_mfields_synchronize_tang_e_norm_b(mf.mflds());
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
+  Particles *vmprts = psc_mparticles_vpic(mprts.mprts())->vmprts;
   FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
   Simulation_initialize(sub->sim, vmprts, vmflds);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
   mf.put_as(mflds_base, 0, VPIC_MFIELDS_N_COMP);
 
   // First output / stats

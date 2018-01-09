@@ -62,10 +62,10 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
 
   int kind = heating->kind;
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
   psc_foreach_patch(psc, p) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
     struct psc_patch *patch = &psc->patch[p];
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
       particle_t *prt = particle_iter_deref(prt_iter);
@@ -86,7 +86,7 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
     }
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ----------------------------------------------------------------------

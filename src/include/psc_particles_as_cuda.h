@@ -6,6 +6,7 @@
 
 typedef particle_cuda_real_t particle_real_t;
 typedef particle_cuda_t particle_t;
+using mparticles_t = mparticles_cuda_t;
 
 #define mparticles_patch_get_b_mx   psc_mparticles_cuda_patch_get_b_mx
 #define mparticles_patch_get_b_dxi  psc_mparticles_cuda_patch_get_b_dxi

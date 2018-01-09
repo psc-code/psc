@@ -13,10 +13,10 @@ static void
 psc_randomize_c_run(struct psc_randomize *randomize,
 		    struct psc_mparticles *mprts_base)
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
     unsigned int n_prts = particle_range_size(prts);
     for (int i = 0; i < n_prts; i++) {
       int j = random() % n_prts;
@@ -26,7 +26,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
     }
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base);
 }
 
 // ======================================================================
