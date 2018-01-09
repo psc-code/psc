@@ -184,7 +184,8 @@ const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
 
-struct psc_mparticles_PTYPE_patch {
+struct psc_mparticles_PTYPE_patch
+{
   psc_particle_PTYPE_buf_t buf;
 
   int b_mx[3];
@@ -226,7 +227,9 @@ struct psc_mparticles_PTYPE_patch {
 
 struct psc_mparticles_PTYPE
 {
-  struct psc_mparticles_PTYPE_patch *patch;
+  using patch_t = psc_mparticles_PTYPE_patch;
+  
+  patch_t *patch;
 };
 
 // ----------------------------------------------------------------------
