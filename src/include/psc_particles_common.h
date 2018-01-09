@@ -163,7 +163,7 @@ struct psc_mparticles_PTYPE_patch
 
   unsigned int size() const
   {
-    return psc_particle_PTYPE_buf_size(&buf);
+    return buf.size();
   }
 
   void push_back(const particle_PTYPE_t& prt)

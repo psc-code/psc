@@ -19,7 +19,6 @@ using mparticles_t = mparticles_fortran_t;
 #define particle_buf_t              psc_particle_fortran_buf_t
 #define particle_buf_ctor           psc_particle_fortran_buf_ctor
 #define particle_buf_dtor           psc_particle_fortran_buf_dtor
-#define particle_buf_size           psc_particle_fortran_buf_size
 #define particle_buf_resize         psc_particle_fortran_buf_resize
 #define particle_buf_reserve        psc_particle_fortran_buf_reserve
 #define particle_buf_capacity       psc_particle_fortran_buf_capacity

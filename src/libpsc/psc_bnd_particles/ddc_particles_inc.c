@@ -392,7 +392,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
       struct ddcp_nei *nei = &patch->nei[se->dir1];
-      unsigned int n_send = particle_buf_size(&nei->send_buf);
+      unsigned int n_send = nei->send_buf.size();
       cinfo[r].send_cnts[i] = n_send;
       cinfo[r].n_send += n_send;
     }
@@ -414,7 +414,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	  }
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
-	  patch->n_recv += particle_buf_size(&nei_send->send_buf);
+	  patch->n_recv += nei_send->send_buf.size();
 	}
       }
     }
@@ -475,7 +475,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
       particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
       particle_buf_copy(particle_buf_begin(send_buf_nei), particle_buf_end(send_buf_nei), it);
-      it += particle_buf_size(send_buf_nei);
+      it += send_buf_nei->size();
     }
     MPI_Isend(it0, sz * cinfo[r].n_send, mpi_dtype,
 	      cinfo[r].rank, 1, comm, &ddcp->send_reqs[r]);
@@ -508,7 +508,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    int size = particle_buf_size(patch->m_buf);
+    int size = patch->m_buf->size();
     particle_buf_reserve(patch->m_buf, size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
     // it won't become invalid due to a realloc since we reserved enough space...
@@ -533,7 +533,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
 			    it_recv[p]);
-	  it_recv[p] += particle_buf_size(nei_send_buf);
+	  it_recv[p] += nei_send_buf->size();
 	}
       }
     }
@@ -658,7 +658,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   }
 
   unsigned int n_begin = dpatch->m_begin;
-  unsigned int n_end = particle_buf_size(dpatch->m_buf);
+  unsigned int n_end = dpatch->m_buf->size();
   unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {

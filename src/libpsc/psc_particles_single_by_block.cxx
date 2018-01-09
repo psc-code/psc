@@ -84,7 +84,7 @@ psc_particles_single_by_block_check(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
   struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
 
-  int n_prts = PARTICLE_BUF(size)(&patch->buf);
+  int n_prts = patch->buf.size();
   assert(n_prts <= PARTICLE_BUF(capacity)(&patch->buf));
 
   int block = 0;

@@ -163,7 +163,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
       count_and_reorder_to_back(mprts, p);
     }
     dpatch->m_buf = &mp[p].get_buf();
-    dpatch->m_begin = particle_buf_size(dpatch->m_buf);
+    dpatch->m_begin = dpatch->m_buf->size();
 
     unsigned int n_send = patch->b_cnt[patch->nr_blocks];
     dpatch->m_buf->resize(dpatch->m_begin + n_send);
@@ -184,7 +184,7 @@ psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
     struct psc_mparticles_single_patch *patch = &sub->patch[p];
     struct ddcp_patch *dpatch = &ddcp->patches[p];
 
-    int n_prts = particle_buf_size(dpatch->m_buf);
+    int n_prts = dpatch->m_buf->size();
     
     find_block_indices_count(patch->b_idx, patch->b_cnt, mprts, p, dpatch->m_begin);
     exclusive_scan(patch->b_cnt, patch->nr_blocks + 1);
