@@ -158,7 +158,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
 
     // counting sort to get map 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
-      particle_t *part = particle_iter_deref(prt_iter);
+      particle_t *part = &*prt_iter;
       int si = get_sort_index(p, part);
       off[p][si]++;
     }
@@ -178,7 +178,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
     for (particle_iter_t prt_iter = prts.begin;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), n++) {
-      particle_t *part = particle_iter_deref(prt_iter);
+      particle_t *part = &*prt_iter;
       int si = get_sort_index(p, part);
       map[p][off2[si]++] = n;
     }

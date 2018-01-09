@@ -38,7 +38,6 @@ using mparticles_t = mparticles_single_t;
 #define particle_iter_t             psc_particle_single_iter_t
 #define particle_iter_equal         psc_particle_single_iter_equal
 #define particle_iter_next          psc_particle_single_iter_next
-#define particle_iter_deref         psc_particle_single_iter_deref
 #define particle_iter_at            psc_particle_single_iter_at
 #define particle_range_t            psc_particle_single_range_t
 

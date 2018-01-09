@@ -132,10 +132,10 @@ PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
       hdims[1] = 8;
 #if PSC_PARTICLES_AS_DOUBLE
       ierr = H5LTmake_dataset_double(pgroup, "data", 2, hdims,
-				    (double *) particle_iter_deref(prts.begin)); CE;
+				    (double *) &*prts.begin); CE;
 #elif PSC_PARTICLES_AS_SINGLE
       ierr = H5LTmake_dataset_float(pgroup, "data", 2, hdims,
-				    (float *) particle_iter_deref(prts.begin)); CE;
+				    (float *) &*prts.begin); CE;
 #else
       assert(0);
 #endif
@@ -171,10 +171,10 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
       ierr = H5LTread_dataset_float(pgroup, "data",
-				    (float *) particle_iter_deref(prts.begin)); CE;
+				    (float *) &*prts.begin); CE;
 #elif PSC_PARTICLES_AS_DOUBLE
       ierr = H5LTread_dataset_double(pgroup, "data",
-				    (double *) particle_iter_deref(prts.begin)); CE;
+				    (double *) &*prts.begin); CE;
 #else
       assert(0);
 #endif

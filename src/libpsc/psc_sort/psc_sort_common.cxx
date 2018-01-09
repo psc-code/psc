@@ -72,8 +72,7 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   prof_start(pr);
   for (int p = 0; p < mprts.n_patches(); p++) {
     particle_range_t prts = mprts[p].range();
-    qsort(particle_iter_deref(prts.begin), prts.size(),
-	  sizeof(*particle_iter_deref(prts.begin)), compare);
+    qsort(&*prts.begin, prts.size(), sizeof(*prts.begin), compare);
   }
   prof_stop(pr);
 
@@ -108,7 +107,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     
     // count
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
-      unsigned int cni = get_cell_index(p, particle_iter_deref(prt_iter));
+      unsigned int cni = get_cell_index(p, &*prt_iter);
       assert(cni < N);
       cnts[cni]++;
     }
@@ -125,13 +124,13 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     // move into new position
     particle_t *particles2 = (particle_t *) malloc(n_prts * sizeof(*particles2));
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
-      unsigned int cni = get_cell_index(0, particle_iter_deref(prt_iter));
-      memcpy(&particles2[cnts[cni]], particle_iter_deref(prt_iter), sizeof(*particles2));
+      unsigned int cni = get_cell_index(0, &*prt_iter);
+      memcpy(&particles2[cnts[cni]], &*prt_iter, sizeof(*particles2));
       cnts[cni]++;
     }
     
     // back to in-place
-    memcpy(particle_iter_deref(prts.begin), particles2, n_prts * sizeof(*particles2));
+    memcpy(&*prts.begin, particles2, n_prts * sizeof(*particles2));
     
     free(particles2);
     free(cnts);
@@ -188,7 +187,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     for (particle_iter_t prt_iter = prts.begin;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), i++) {
-      particle_t *p = particle_iter_deref(prt_iter);
+      particle_t *p = &*prt_iter;
       particle_real_t dxi = 1.f / patch->dx[0];
       particle_real_t dyi = 1.f / patch->dx[1];
       particle_real_t dzi = 1.f / patch->dx[2];
@@ -242,7 +241,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     }
     
     // back to in-place
-    memcpy(particle_iter_deref(prts.begin), particles2, n_prts * sizeof(*particles2));
+    memcpy(&*prts.begin, particles2, n_prts * sizeof(*particles2));
     
     free(particles2);
     free(cnis);

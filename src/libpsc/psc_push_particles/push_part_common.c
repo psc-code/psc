@@ -408,7 +408,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
   Fields3d<fields_t> J(flds);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
-    particle_t *part = particle_iter_deref(prt_iter);
+    particle_t *part = &*prt_iter;
     particle_real_t *x = &part->xi;
     particle_real_t vv[3];
 

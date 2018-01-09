@@ -149,9 +149,9 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
-      *particle_iter_deref(prt_ref_iter) = *particle_iter_deref(prt_iter);
-      particle_t *part = particle_iter_deref(prt_iter);
-      particle_t *part_ref = particle_iter_deref(prt_ref_iter);
+      *prt_ref_iter = *prt_iter;
+      particle_t *part = &*prt_iter;
+      particle_t *part_ref = &*prt_ref_iter;
       //    printf("i = %d\n", i);
       xi  = fmax(xi , fabs(part->xi  - part_ref->xi));
       yi  = fmax(yi , fabs(part->yi  - part_ref->yi));
@@ -320,7 +320,7 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
     int *ldims = patch->ldims;
 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
-      particle_t *part = particle_iter_deref(prt_iter);
+      particle_t *part = &*prt_iter;
       // FIXME, duplicated
 
       particle_real_t u = part->xi * dxi;
