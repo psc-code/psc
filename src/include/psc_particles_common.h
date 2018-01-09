@@ -267,17 +267,6 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, unsigned int n
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_get_n_prts
-
-static inline unsigned int
-psc_mparticles_PTYPE_get_n_prts(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
-
-  return sub->patch[p].size();
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch_reserve
 
 inline void psc_mparticles_PTYPE_patch::reserve(unsigned int new_capacity)
@@ -433,8 +422,6 @@ psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
 struct psc_particle_PTYPE_range_t {
   psc_particle_PTYPE_iter_t begin;
   psc_particle_PTYPE_iter_t end;
-
-  static psc_particle_PTYPE_range_t range(struct psc_mparticles *mprts, int p);
 };
 
 // ----------------------------------------------------------------------
@@ -451,25 +438,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
   rv.end.mprts   = mprts;
 
   return rv;
-}
-
-static inline psc_particle_PTYPE_range_t
-psc_particle_PTYPE_range_mprts(struct psc_mparticles *mprts, int p)
-{
-  psc_particle_PTYPE_range_t rv;
-  rv.begin.n     = 0;
-  rv.begin.p     = p;
-  rv.begin.mprts = mprts;
-  rv.end.n       = psc_mparticles_PTYPE_get_n_prts(mprts, p);
-  rv.end.p       = p;
-  rv.end.mprts   = mprts;
-
-  return rv;
-}
-
-inline psc_particle_PTYPE_range_t psc_particle_PTYPE_range_t::range(struct psc_mparticles *mprts, int p)
-{
-  return psc_particle_PTYPE_range_mprts(mprts, p);
 }
 
 // ----------------------------------------------------------------------

@@ -4,10 +4,14 @@
 
 #include "psc_particles_private.h"
 
+#include "particles.hxx"
+
 #define PTYPE PTYPE_SINGLE_BY_BLOCK
 #include "psc_particle_buf_common.h"
 #include "psc_particles_common.h"
 #undef PTYPE
+
+using mparticles_single_by_block_t = mparticles<psc_particle_single_by_block_buf_t, psc_mparticles_single_by_block>;
 
 // can't do this as inline function since struct psc isn't known yet
 #define particle_single_by_block_qni_div_mni(p) ({			\

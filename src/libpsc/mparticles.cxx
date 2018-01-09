@@ -209,7 +209,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
   
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = mparticles_t(mprts)[p].range();
 
     f_real xb[3], xe[3];
     

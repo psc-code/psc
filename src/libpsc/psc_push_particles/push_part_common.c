@@ -544,7 +544,7 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = mf[p];
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = mparticles_t(mprts)[p].range();
 #if CACHE == CACHE_EM_J
     // FIXME, can't we just skip this and just set j when copying back?
     flds.zero(JXI, JXI + 3);

@@ -85,7 +85,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 
   mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
   psc_foreach_patch(psc, p) {
-    int n_prts = mparticles_get_n_prts(mprts, p);
+    int n_prts = mprts[p].size();
     for (int n = 0; n < n_prts; n++) {
       mparticles_patch_push_back(mprts_ref, p, *mparticles_get_one(mprts, p, n));
     }

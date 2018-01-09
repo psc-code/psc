@@ -42,7 +42,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
     for (int pi = 0; pi < recv->nr_patches; pi++) {
       int p = recv->pi_to_patch[pi];
-      particle_range_t prts_new = particle_range_mprts(mprts_new, p);
+      particle_range_t prts_new = mparticles_t(mprts_new)[p].range();
       int nn = particle_range_size(prts_new) * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Irecv(particle_iter_deref(prts_new.begin), nn, mpi_dtype, recv->rank,
 		pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
@@ -63,7 +63,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
     for (int pi = 0; pi < send->nr_patches; pi++) {
       int p = send->pi_to_patch[pi];
-      particle_range_t prts_old = particle_range_mprts(mprts_old, p);
+      particle_range_t prts_old = mparticles_t(mprts_old)[p].range();
       int nn = particle_range_size(prts_old) * (sizeof(particle_t)  / sizeof(particle_real_t));
       //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
       MPI_Isend(particle_iter_deref(prts_old.begin), nn, mpi_dtype, send->rank,
@@ -80,8 +80,8 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
       continue;
     }
 
-    particle_range_t prts_old = particle_range_mprts(mprts_old, ctx->recv_info[p].patch);
-    particle_range_t prts_new = particle_range_mprts(mprts_new, p);
+    particle_range_t prts_old = mparticles_t(mprts_old)[ctx->recv_info[p].patch].range();
+    particle_range_t prts_new = mparticles_t(mprts_new)[p].range();
     assert(particle_range_size(prts_old) == particle_range_size(prts_new));
 #if 1
     for (int n = 0; n < particle_range_size(prts_new); n++) {

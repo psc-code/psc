@@ -12,10 +12,7 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct mparticles_fortran_t : mparticles_base<psc_mparticles_fortran>
-{
-  using mparticles_base::mparticles_base;
-};
+using mparticles_fortran_t = mparticles<psc_particle_fortran_buf_t, psc_mparticles_fortran>;
 
 template<>
 struct mparticles_traits<mparticles_fortran_t>

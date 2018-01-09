@@ -211,7 +211,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       q-= f;
     }
 
-    mparticles_patch_reserve(mprts, p, mparticles_get_n_prts(mprts, p) + 2*N_new);
+    mprts[p].reserve(mprts[p].size() + 2*N_new);
 
     assert(0);
 #if 0
