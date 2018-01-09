@@ -110,10 +110,6 @@ struct psc_mparticles_PTYPE_patch
   bool need_reorder;
 #endif
 
-  void reserve(unsigned int new_capacity);
-
-  psc_particle_PTYPE_range_t range();
-
   unsigned int size() const
   {
     return buf.size();
@@ -122,6 +118,31 @@ struct psc_mparticles_PTYPE_patch
   void resize(unsigned int new_size)
   {
     buf.resize(new_size);
+  }
+
+  void reserve(unsigned int new_capacity)
+  {
+    unsigned int old_capacity = buf.capacity();
+    buf.reserve(new_capacity);
+    new_capacity = buf.capacity();
+    
+    if (new_capacity == old_capacity) {
+      return;
+    }
+    
+#if PTYPE == PTYPE_SINGLE
+    free(prt_array_alt);
+    prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
+    b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
+    b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
+#endif
+    
+#if PTYPE == PTYPE_SINGLE_BY_BLOCK
+    free(prt_array_alt);
+    prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
+    b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
+    b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
+#endif
   }
 
   void push_back(const particle_PTYPE_t& prt)
@@ -133,6 +154,8 @@ struct psc_mparticles_PTYPE_patch
   {
     return buf;
   }
+
+  psc_particle_PTYPE_range_t range();
 
   const int* get_b_mx() const
   {
@@ -166,34 +189,6 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, unsigned int n
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
   return &patch->buf[n];
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch::reserve
-
-inline void psc_mparticles_PTYPE_patch::reserve(unsigned int new_capacity)
-{
-  unsigned int old_capacity = buf.capacity();
-  buf.reserve(new_capacity);
-  new_capacity = buf.capacity();
-
-  if (new_capacity == old_capacity) {
-    return;
-  }
-
-#if PTYPE == PTYPE_SINGLE
-  free(prt_array_alt);
-  prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
-  b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
-  b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
-#endif
-
-#if PTYPE == PTYPE_SINGLE_BY_BLOCK
-  free(prt_array_alt);
-  prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
-  b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
-  b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
-#endif
 }
 
 // ----------------------------------------------------------------------

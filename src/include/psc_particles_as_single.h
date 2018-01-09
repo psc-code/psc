@@ -10,7 +10,6 @@ using mparticles_t = mparticles_single_t;
 
 #define mparticles_get_one          psc_mparticles_single_get_one
 #define mparticles_get_n_prts       psc_mparticles_single_get_n_prts
-#define mparticles_patch_reserve    psc_mparticles_single_patch_reserve
 
 #define particle_buf_t              psc_particle_single_buf_t
 #define particle_buf_dtor           psc_particle_single_buf_dtor
