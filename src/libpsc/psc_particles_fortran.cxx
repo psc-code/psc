@@ -31,7 +31,7 @@ put_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts
     }
   }
   
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
+  particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
 
   particle_double_real_t vxi[3];
   calc_vxi(vxi, prt);
@@ -57,7 +57,7 @@ get_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts
     }
   }
   
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
+  particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
 
   particle_fortran_real_t qni = ppsc->kinds[prt_dbl->kind_].q;
   particle_fortran_real_t mni = ppsc->kinds[prt_dbl->kind_].m;

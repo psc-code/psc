@@ -36,7 +36,7 @@ f
 static void
 put_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
+  particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
   
   prt_dbl->xi      = prt->xi;
   prt_dbl->yi      = prt->yi;
@@ -51,7 +51,7 @@ put_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_
 static void
 get_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
+  particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
 
   prt->xi      = prt_dbl->xi;
   prt->yi      = prt_dbl->yi;

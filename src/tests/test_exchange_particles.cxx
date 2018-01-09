@@ -38,13 +38,13 @@ setup_particles(struct psc_mparticles *particles_base)
     for (int iz = ilo[2]-1; iz < ihi[2]+1; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
 	for (int ix = ilo[0]-1; ix < ihi[0]+1; ix++) {
-	  particle_t *p = particles_get_one(prts, i++);
+	  particle_t *p = prts[i++];
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix + .51) * ppsc->dx[0];
 	  p->yi = (iy + .51) * ppsc->dx[1];
 	  p->zi = (iz + .51) * ppsc->dx[2];
 
-	  p = particles_get_one(prts, i++);
+	  p = prts[i++];
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix + .49) * ppsc->dx[0];
 	  p->yi = (iy + .49) * ppsc->dx[1];
@@ -86,7 +86,7 @@ check_particles_old_xz(struct psc_mparticles *particles_base)
   int fail_cnt = 0;
   struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
   for (int i = 0; i < prts->n_part; i++) {
-    particle_t *p = particles_get_one(prts, i);
+    particle_t *p = prts[i];
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {
@@ -122,7 +122,7 @@ check_particles(struct psc_mparticles *particles_base)
 
   int fail_cnt = 0;
   for (int i = 0; i < prts->n_part; i++) {
-    particle_t *p = particles_get_one(prts, i);
+    particle_t *p = prts[i];
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {

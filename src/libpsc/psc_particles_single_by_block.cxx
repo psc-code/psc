@@ -53,7 +53,7 @@ psc_particles_single_by_block_get_b_idx(struct psc_mparticles *mprts, int p, int
   struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
   struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
   
-  particle_single_by_block_t *prt = psc_mparticles_single_by_block_get_one(mprts, p, n);
+  particle_single_by_block_t *prt = &mparticles_t(mprts)[p][n];
   particle_real_t of[3];
   int b_pos[3], *b_mx = patch->b_mx;
   find_idx_off_1st_rel(&prt->xi, b_pos, of, 0.f, patch->b_dxi);
@@ -170,7 +170,7 @@ psc_particles_single_by_block_sort(struct psc_mparticles *mprts, int p)
 static void
 put_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticles *mprts_sngl, int p)
 {
-  particle_single_t *prt_sngl = psc_mparticles_single_get_one(mprts_sngl, p, n);
+  particle_single_t *prt_sngl = &mparticles_single_t(mprts_sngl)[p][n];
   
   prt_sngl->xi      = prt->xi;
   prt_sngl->yi      = prt->yi;
@@ -185,7 +185,7 @@ put_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticle
 static void
 get_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticles *mprts_sngl, int p)
 {
-  particle_single_t *prt_sngl = psc_mparticles_single_get_one(mprts_sngl, p, n);
+  particle_single_t *prt_sngl = &mparticles_single_t(mprts_sngl)[p][n];
 
   prt->xi      = prt_sngl->xi;
   prt->yi      = prt_sngl->yi;

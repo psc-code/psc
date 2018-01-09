@@ -110,6 +110,11 @@ struct psc_mparticles_PTYPE_patch
   bool need_reorder;
 #endif
 
+  particle_PTYPE_t& operator[](int n)
+  {
+    return buf[n];
+  }
+  
   unsigned int size() const
   {
     return buf.size();

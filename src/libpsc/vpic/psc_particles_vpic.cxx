@@ -81,7 +81,7 @@ static void
 get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
+  particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
 
   assert(part->kind() < ppsc->nr_kinds);
   int *im = ctx->im;
@@ -107,7 +107,7 @@ static void
 put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
+  particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
 
   assert(prt->kind < ppsc->nr_kinds);
   int *im = ctx->im;
