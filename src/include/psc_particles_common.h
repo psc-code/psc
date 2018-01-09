@@ -201,14 +201,24 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, unsigned int n
 
 struct psc_particle_PTYPE_iter_t
 {
+  psc_particle_PTYPE_iter_t() // FIXME
+    : mprts(), p(), n()
+  {
+  }
+  
+  psc_particle_PTYPE_iter_t(struct psc_mparticles *_mprts, int _p, int _n)
+    : mprts(_mprts), p(_p), n(_n)
+  {
+  }
+  
   particle_PTYPE_t& operator*()
   {
-    return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(mprts), p, n);
+    return *psc_mparticles_PTYPE_get_one(mprts, p, n);
   }
 
   particle_PTYPE_t& operator[](int m)
   {
-    return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(mprts), p, n + m);
+    return *psc_mparticles_PTYPE_get_one(mprts, p, n + m);
   }
 
   bool operator==(const psc_particle_PTYPE_iter_t& other)
@@ -228,9 +238,9 @@ struct psc_particle_PTYPE_iter_t
     return *this;;
   }
   
-  int n;
+  struct psc_mparticles *mprts;
   int p;
-  const struct psc_mparticles *mprts;
+  int n;
 };
 
 // ----------------------------------------------------------------------
@@ -238,16 +248,33 @@ struct psc_particle_PTYPE_iter_t
 
 struct psc_particle_PTYPE_range_t
 {
-  psc_particle_PTYPE_iter_t begin;
-  psc_particle_PTYPE_iter_t end;
+  psc_particle_PTYPE_range_t(struct psc_mparticles *mprts,
+			     struct psc_mparticles_PTYPE_patch *patch, int p)
+    : mprts_(mprts), patch_(patch), p_(p)
+  {
+  }
+  
+  psc_particle_PTYPE_iter_t begin()
+  {
+    return psc_particle_PTYPE_iter_t(mprts_, p_, 0);
+  }
 
-  unsigned int size() { return end.n - begin.n; }
+  psc_particle_PTYPE_iter_t end()
+  {
+    return psc_particle_PTYPE_iter_t(mprts_, p_, patch_->size());
+  }
+
+  unsigned int size() { return patch_->size(); }
 
   particle_PTYPE_t& operator[](int m)
   {
-    assert(begin.n == 0);
-    return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(begin.mprts), begin.p, m);
+    return *psc_mparticles_PTYPE_get_one(mprts_, p_, m);
   }
+
+private:
+  struct psc_mparticles *mprts_;
+  struct psc_mparticles_PTYPE_patch *patch_;
+  int p_;
 };
 
 // ----------------------------------------------------------------------
@@ -255,15 +282,7 @@ struct psc_particle_PTYPE_range_t
 
 inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 {
-  psc_particle_PTYPE_range_t rv;
-  rv.begin.n     = 0;
-  rv.begin.p     = p;
-  rv.begin.mprts = mprts;
-  rv.end.n       = size();
-  rv.end.p       = p;
-  rv.end.mprts   = mprts;
-
-  return rv;
+  return psc_particle_PTYPE_range_t(mprts, this, p);
 }
 
 #include <math.h>

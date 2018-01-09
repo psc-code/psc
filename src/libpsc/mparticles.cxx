@@ -221,7 +221,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
       xe[d] = patch->xb[d] + patch->ldims[d] * patch->dx[d];
     }
 
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
       particle_t *part = &*prt_iter;
       if (part->xi < 0.f || part->xi >= xe[0] - xb[0] || // FIXME xz only!
 	  part->zi < 0.f || part->zi >= xe[2] - xb[2]) {

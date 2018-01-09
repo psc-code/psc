@@ -126,7 +126,7 @@ do_n_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int m = prt->kind();
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
@@ -150,7 +150,7 @@ do_v_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
 
@@ -180,7 +180,7 @@ do_p_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
     particle_real_t *pxi = &prt->pxi;
@@ -208,7 +208,7 @@ do_vv_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
 
@@ -238,7 +238,7 @@ do_T_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 6;
 
@@ -279,7 +279,7 @@ do_Tvv_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 6;
 
@@ -311,7 +311,7 @@ do_nvt_a_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 10;
 
@@ -335,7 +335,7 @@ do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 10;
 
@@ -404,7 +404,7 @@ do_nvp_1st_run(int p, fields_t flds, particle_range_t prts)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 10;
 
