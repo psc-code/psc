@@ -443,6 +443,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   MPI_Waitall(ddcp->n_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ddcp->n_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
 
+  MPI_Datatype mpi_dtype = mparticles_traits<particle_t>::mpi_dtype();
 
   // add remote # particles
   int n_send = 0, n_recv = 0;
@@ -476,7 +477,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
       particle_buf_copy(particle_buf_begin(send_buf_nei), particle_buf_end(send_buf_nei), it);
       it += particle_buf_size(send_buf_nei);
     }
-    MPI_Isend(it0, sz * cinfo[r].n_send, MPI_PARTICLES_REAL,
+    MPI_Isend(it0, sz * cinfo[r].n_send, mpi_dtype,
 	      cinfo[r].rank, 1, comm, &ddcp->send_reqs[r]);
   }
   assert(it == particle_buf_begin(&send_buf) + n_send);
@@ -490,7 +491,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     if (cinfo[r].n_recv == 0)
       continue;
 
-    MPI_Irecv(it, sz * cinfo[r].n_recv, MPI_PARTICLES_REAL,
+    MPI_Irecv(it, sz * cinfo[r].n_recv, mpi_dtype,
 	      cinfo[r].rank, 1, comm, &ddcp->recv_reqs[r]);
     it += cinfo[r].n_recv;
   }

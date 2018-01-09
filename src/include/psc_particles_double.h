@@ -3,14 +3,21 @@
 #define PSC_PARTICLE_DOUBLE_H
 
 #include "psc_particles_private.h"
+#include "psc.h"
+
+#include "particles_traits.hxx"
 
 #define PTYPE PTYPE_DOUBLE
 #include "psc_particle_buf_common.h"
 #include "psc_particles_common.h"
 #undef PTYPE
 
-#include <math.h>
-#include "psc.h"
+template<>
+struct mparticles_traits<particle_double_t>
+{
+  static constexpr const char* name = "double";
+  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
+};
 
 // can't do this as inline function since struct psc isn't known yet
 #define particle_double_qni_div_mni(p) ({			\
