@@ -165,8 +165,6 @@
 
 #endif
 
-BEGIN_C_DECLS
-
 // ======================================================================
 
 #if PTYPE == PTYPE_CUDA
@@ -213,6 +211,8 @@ struct psc_mparticles_PTYPE_patch {
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE
+
+struct psc_particle_PTYPE_range_t;
 
 struct psc_mparticles_PTYPE {
   struct psc_mparticles_PTYPE_patch *patch;
@@ -404,10 +404,12 @@ psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_range_t
 
-typedef struct {
+struct psc_particle_PTYPE_range_t {
   psc_particle_PTYPE_iter_t begin;
   psc_particle_PTYPE_iter_t end;
-} psc_particle_PTYPE_range_t;
+
+  static psc_particle_PTYPE_range_t range(struct psc_mparticles *mprts, int p);
+};
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_range_mprts
@@ -426,6 +428,11 @@ psc_particle_PTYPE_range_mprts(struct psc_mparticles *mprts, int p)
   return rv;
 }
 
+inline psc_particle_PTYPE_range_t psc_particle_PTYPE_range_t::range(struct psc_mparticles *mprts, int p)
+{
+  return psc_particle_PTYPE_range_mprts(mprts, p);
+}
+
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_range_size
 
@@ -438,8 +445,6 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #include <math.h>
 
 #endif // PTYPE_CUDA
-
-END_C_DECLS
 
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t

@@ -497,7 +497,7 @@ psc_collision_sub_run(struct psc_collision *collision,
 
   mfields_t mf_coll(coll->mflds);
   for (int p = 0; p < mprts.n_patches(); p++) {
-    particle_range_t prts = particle_range_mprts(mprts.mprts(), p);
+    particle_range_t prts = mprts.range(p);
   
     int *ldims = ppsc->patch[p].ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];

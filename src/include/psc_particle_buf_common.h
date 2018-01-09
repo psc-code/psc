@@ -19,6 +19,7 @@
 #define psc_particle_PTYPE_buf_capacity psc_particle_single_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_single_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_single_buf_at_ptr
+#define psc_particle_PTYPE_range_t psc_particle_single_range_t
 
 #elif PTYPE == PTYPE_DOUBLE
 
@@ -34,6 +35,7 @@
 #define psc_particle_PTYPE_buf_capacity psc_particle_double_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_double_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_double_buf_at_ptr
+#define psc_particle_PTYPE_range_t psc_particle_double_range_t
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -49,6 +51,7 @@
 #define psc_particle_PTYPE_buf_capacity psc_particle_single_by_block_buf_capacity
 #define psc_particle_PTYPE_buf_push_back psc_particle_single_by_block_buf_push_back
 #define psc_particle_PTYPE_buf_at_ptr psc_particle_single_by_block_buf_at_ptr
+#define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -85,9 +88,14 @@
 // ======================================================================
 // psc_particle_PTYPE_buf_t
 
+struct psc_particle_PTYPE_range_t;
+
 struct psc_particle_PTYPE_buf_t
 {
   using particle_t = particle_PTYPE_t;
+#ifdef psc_particle_PTYPE_range_t
+  using range_t = psc_particle_PTYPE_range_t;
+#endif
   
   particle_PTYPE_t *m_data;
   unsigned int m_size;
@@ -194,4 +202,5 @@ psc_particle_PTYPE_buf_at_ptr(psc_particle_PTYPE_buf_t *buf, unsigned int n)
 #undef psc_particle_PTYPE_buf_capacity
 #undef psc_particle_PTYPE_buf_push_back
 #undef psc_particle_PTYPE_buf_at_ptr
+#undef psc_particle_PTYPE_range_t
 
