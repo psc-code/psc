@@ -15,9 +15,6 @@ static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
   {}
 };
 
-void psc_mparticles_single_by_kind_patch_reserve(struct psc_mparticles *mprts, int p,
-						 unsigned int new_capacity);
-
 // ----------------------------------------------------------------------
 // psc_mparticles_sub_setup
 

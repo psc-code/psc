@@ -166,7 +166,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    PFX(patch_reserve)(mprts, p, n_prts);
+    mparticles_t(mprts)[p].reserve(n_prts);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
@@ -215,7 +215,7 @@ static void
 PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    PFX(patch_reserve)(mprts, p, n_prts_by_patch[p]);
+    mparticles_t(mprts)[p].reserve(n_prts_by_patch[p]);
   }
 }
 
