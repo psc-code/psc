@@ -83,14 +83,14 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
     psc_mparticles_reserve_all(mprts_ref, n_prts_by_patch);
   }
 
-  mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   psc_foreach_patch(psc, p) {
     int n_prts = mprts[p].size();
     for (int n = 0; n < n_prts; n++) {
-      mparticles_patch_push_back(mprts_ref, p, *mparticles_get_one(mprts, p, n));
+      mparticles_patch_push_back(mprts_ref, p, *mparticles_get_one(mprts.mprts(), p, n));
     }
   }
-  mprts->put_as(mprts_base, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
 }
 
 // ----------------------------------------------------------------------
@@ -122,7 +122,7 @@ psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
       } psc_foreach_3d_g_end;
     }
   }
-  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+  mf.put_as(mflds_base, 0, 0);
 } 
 
 // ----------------------------------------------------------------------
@@ -139,13 +139,13 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
   }
 
   assert(mprts_ref);
-  mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
-    particle_range_t prts_ref = particle_range_mprts(mprts_ref, p);
+    particle_range_t prts = mprts[p].range();
+    particle_range_t prts_ref = mparticles_t(mprts_ref)[p].range();
   
-    assert(particle_range_size(prts) == particle_range_size(prts_ref));
+    assert(prts.size() == prts_ref.size());
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
@@ -198,7 +198,7 @@ psc_check_fields_ref(struct psc *psc, struct psc_mfields *mflds_base, int *m_fld
       } psc_foreach_3d_end;
     }
   }
-  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+  mf.put_as(mflds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -275,7 +275,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
   psc_output_fields_item_destroy(item);
 
   // dens -= dens_ref
-  dens.axpy(-1., dens_ref);
+  dens->axpy(-1., dens_ref);
   mfields_t mf_dens(dens);
 
   // FIXME, do this generically
@@ -308,11 +308,11 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
 {
   int last = INT_MIN;
 
-  mparticles_c_t mprts = mprts_base->get_as<mparticles_c_t>();
+  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
-    particle_range_t prts = particle_range_mprts(mprts, p);
+    particle_range_t prts = mprts[p].range();
     particle_real_t dxi = 1.f / patch->dx[0];
     particle_real_t dyi = 1.f / patch->dx[1];
     particle_real_t dzi = 1.f / patch->dx[2];

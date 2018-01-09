@@ -142,7 +142,7 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
   struct psc_es1 *es1 = to_psc_es1(psc);
 
   switch (m) {
-  case EZ: ;
+  case EZ: {
     double ez = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
@@ -150,7 +150,7 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
       ez -= s->q * s->x1 * cos(theta + s->thetax);
     }
     return ez;
-
+  }
   default: return 0.;
   }
 }
@@ -183,8 +183,8 @@ psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
   double lg = l / s->nlg;
   double ddx = l / n;
 
-  double *x = calloc(n, sizeof(*x));
-  double *vx = calloc(n, sizeof(*vx));
+  double *x = (double*) calloc(n, sizeof(*x));
+  double *vx = (double*) calloc(n, sizeof(*vx));
 
   // load evenly spaced, with drift.
   // also does cold case.
@@ -339,12 +339,12 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     return;
   }
 
-  mparticles_c_t mprts = psc->particles->get_as<mparticles_c_t>();
-  assert(mprts->nr_patches == 1);
+  mparticles_t mprts = psc->particles->get_as<mparticles_t>();
+  assert(mprts.n_patches() == 1);
   psc_foreach_patch(psc, p) {
     int il1 = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
-      psc_es1_init_species(psc, kind, &es1->species[kind], mprts, p, &il1);
+      psc_es1_init_species(psc, kind, &es1->species[kind], mprts.mprts(), p, &il1);
     }
   }
   mprts.put_as(psc->particles);

@@ -398,9 +398,12 @@ psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_range_t
 
-struct psc_particle_PTYPE_range_t {
+struct psc_particle_PTYPE_range_t
+{
   psc_particle_PTYPE_iter_t begin;
   psc_particle_PTYPE_iter_t end;
+
+  unsigned int size() { return end.n - begin.n; }
 };
 
 // ----------------------------------------------------------------------
@@ -425,7 +428,7 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 static inline unsigned int
 psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 {
-  return prts.end.n - prts.begin.n;
+  return prts.size();
 }
 
 #include <math.h>

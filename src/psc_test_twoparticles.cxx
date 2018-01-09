@@ -151,7 +151,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   double l = psc->domain.length[2];
 
-  mparticles_c_t mprts = psc->particles->get_as<mparticles_c_t>(MP_DONT_COPY);
+  mparticles_t mprts = psc->particles->get_as<mparticles_t>(MP_DONT_COPY);
 
   assert(0);
 #if 0

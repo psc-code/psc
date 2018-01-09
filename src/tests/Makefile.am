@@ -6,7 +6,7 @@ noinst_LTLIBRARIES = libpsctest.la
 
 libpsctest_la_SOURCES = \
 	testing.cxx \
-	testing_psc_test.c
+	testing_psc_test.cxx
 
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
@@ -22,11 +22,16 @@ noinst_PROGRAMS = \
 	test_bnd_multi \
 	test_exchange_particles_multi
 
+psc_test_cyclo_SOURCES = psc_test_cyclo.cxx
+psc_test_accel_SOURCES = psc_test_accel.cxx
 psc_test_mfields_single_SOURCES = psc_test_mfields_single.cxx
 psc_test_em_wave_SOURCES = psc_test_em_wave.cxx
+test_psc_mparticles_SOURCES = test_psc_mparticles.cxx
+test_part_yz_SOURCES = test_part_yz.cxx
 test_field_SOURCES = test_field.cxx
 test_bnd_SOURCES = test_bnd.cxx
 test_bnd_multi_SOURCES = test_bnd_multi.cxx
+test_exchange_particles_multi_SOURCES = test_exchange_particles_multi.cxx
 
 #	test_part_xy \
 	test_part_xz \
@@ -34,21 +39,21 @@ test_bnd_multi_SOURCES = test_bnd_multi.cxx
 	test_exchange_particles \
 	test_sort
 
-if USE_CUDA
+# if USE_CUDA
 
-noinst_PROGRAMS += \
-	test_cuda_mparticles \
-	thrust1
+# noinst_PROGRAMS += \
+# 	test_cuda_mparticles \
+# 	thrust1
 
-test_cuda_mparticles_SOURCES =
-test_cuda_mparticles_LDADD = test_cuda_mparticles.lo cuda_mparticles.lo
-nodist_EXTRA_test_cuda_mparticles_SOURCES = dummy.cxx
+# test_cuda_mparticles_SOURCES =
+# test_cuda_mparticles_LDADD = test_cuda_mparticles.lo cuda_mparticles.lo
+# nodist_EXTRA_test_cuda_mparticles_SOURCES = dummy.cxx
 
-thrust1_SOURCES =
-thrust1_LDADD = thrust1.lo
-nodist_EXTRA_thrust1_SOURCES = dummy.cxx
+# thrust1_SOURCES =
+# thrust1_LDADD = thrust1.lo
+# nodist_EXTRA_thrust1_SOURCES = dummy.cxx
 
-endif
+# endif
 
 TESTS = \
 	psc_test_mfields_single \

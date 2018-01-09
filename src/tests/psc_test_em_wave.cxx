@@ -141,10 +141,10 @@ psc_test_em_wave_check(struct psc *psc)
   double tol = sub->tol;
 
   printf("=== checking EM fields at time step %d\n", psc->timestep);
-  mfields_t mf = psc->flds->get_as(EX, EX + 6);
+  mfields_t mf = psc->flds->get_as<mfields_t>(EX, EX + 6);
 
   int failed = 0;
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     Fields F(mf[p]);
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
@@ -187,7 +187,7 @@ psc_test_em_wave_check_single(struct psc *psc)
   mfields_single_t mf = psc->flds->get_as<mfields_single_t>(EX, EX + 6);
 
   int failed = 0;
-  for (int p = 0; p < mf.nr_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     Fields3d<fields_single_t> F(mf[p]);
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {

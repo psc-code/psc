@@ -228,7 +228,7 @@ psc_turb_setup(struct psc *psc)
   mpi_printf(MPI_COMM_WORLD,"Total modes: %i\n", nmodes);
 
   // allocate the arrays
-  struct phase_grid *pg = malloc(sizeof( *pg));
+  struct phase_grid *pg = (struct phase_grid*) malloc(sizeof( *pg));
   turb->amp = (double*) malloc(sizeof(double)*nmodes*2);
   turb->absk = (double*) malloc(sizeof(double)*nmodes);
   turb->dbx = (double*) malloc(sizeof(double)*nmodes*2);
