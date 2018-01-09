@@ -264,7 +264,7 @@ make_local_particle_array(struct psc_output_particles *out,
 	    idx[p][jj     ] = nn + n_off;
 	    idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	    for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-	      particle_t *part = &prts.begin[map[p][n]];
+	      particle_t *part = &prts[map[p][n]];
 	      arr[nn].x  = part->xi + patch->xb[0];
 	      arr[nn].y  = part->yi + patch->xb[1];
 	      arr[nn].z  = part->zi + patch->xb[2];

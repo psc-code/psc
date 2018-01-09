@@ -463,7 +463,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
     for (int n = 0; n < ninjc; n++) {
       unsigned int i = prts.size();
       mparticles_patch_resize(mprts, p, i + 1);
-      particle_t *prt = &prts.begin[i]; 
+      particle_t *prt = &prts[i]; 
       prt->kind_ = kind;
       prt->qni_wni = ppsc->kinds[kind].q;
 

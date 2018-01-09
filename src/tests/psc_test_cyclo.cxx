@@ -227,7 +227,7 @@ psc_test_cyclo_step(struct psc *psc)
     unsigned int n_prts = prts.size();
 
     for (int n = 0; n < n_prts; n++) {
-      particle_t *p = &prts.begin[n];
+      particle_t *p = &prts[n];
       if (fabs(p->pxi - ux) > tol ||
           fabs(p->pyi - uy) > tol ||
           fabs(p->pzi - uz) > tol) {

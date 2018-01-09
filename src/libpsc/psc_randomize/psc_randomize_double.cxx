@@ -20,7 +20,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
     unsigned int n_prts = prts.size();
     for (int i = 0; i < n_prts; i++) {
       int j = random() % n_prts;
-      std::swap(prts.begin[i], prts.begin[j]);
+      std::swap(prts[i], prts[j]);
     }
   }
 

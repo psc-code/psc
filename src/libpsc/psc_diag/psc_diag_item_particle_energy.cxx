@@ -14,13 +14,13 @@ do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
   double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
   int n_prts = prts.size();
   for (int n = 0; n < n_prts; n++) {
-    particle_t *part = &prts.begin[n];
+    particle_t& prt = prts[n];
       
-    double gamma = sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    double Ekin = (gamma - 1.) * particle_mni(part) * particle_wni(part) * fnqs;
-    if (particle_qni(part) < 0.) {
+    double gamma = sqrt(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+    double Ekin = (gamma - 1.) * particle_mni(&prt) * particle_wni(&prt) * fnqs;
+    if (particle_qni(&prt) < 0.) {
       result[0] += Ekin * fac;
-    } else if (particle_qni(part) > 0.) {
+    } else if (particle_qni(&prt) > 0.) {
       result[1] += Ekin * fac;
     } else {
       assert(0);

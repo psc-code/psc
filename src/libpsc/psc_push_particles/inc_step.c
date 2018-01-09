@@ -96,7 +96,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
   } else { /* out of bounds */
     patch->b_idx[n] = patch->nr_blocks;
     /* append to back */
-    prts.begin[n_prts + patch->b_cnt[patch->nr_blocks]] = *prt;
+    prts[n_prts + patch->b_cnt[patch->nr_blocks]] = *prt;
   }
   patch->b_cnt[patch->b_idx[n]]++;
 }

@@ -383,6 +383,12 @@ struct psc_particle_PTYPE_range_t
   psc_particle_PTYPE_iter_t end;
 
   unsigned int size() { return end.n - begin.n; }
+
+  particle_PTYPE_t& operator[](int m)
+  {
+    assert(begin.n == 0);
+    return *psc_mparticles_PTYPE_get_one(const_cast<struct psc_mparticles *>(begin.mprts), begin.p, m);
+  }
 };
 
 // ----------------------------------------------------------------------

@@ -52,11 +52,11 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
     particle_range_t prts = mprts[p].range();
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      particle_t *part = &prts.begin[n];
+      particle_t& prt = prts[n];
       fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
-	      n, part->xi, part->yi, part->zi,
-	      part->pxi, part->pyi, part->pzi,
-	      part->qni_wni, part->kind());
+	      n, prt.xi, prt.yi, prt.zi,
+	      prt.pxi, prt.pyi, prt.pzi,
+	      prt.qni_wni, prt.kind());
     }
   }
 
