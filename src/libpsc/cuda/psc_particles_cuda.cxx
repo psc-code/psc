@@ -265,7 +265,7 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  cuda_mparticles_reserve_all(cmprts, (unsigned int *) n_prts_by_patch);
+  cmprts->reserve_all((unsigned int *) n_prts_by_patch);
 }
 
 #ifdef HAVE_LIBHDF5_HL
