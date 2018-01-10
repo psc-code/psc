@@ -53,7 +53,7 @@ struct psc_particle_iter
 {
   using particle_t = P;
   
-  psc_particle_iter(particle_t* ptr)
+  psc_particle_iter(particle_t* ptr = nullptr)
     : ptr_(ptr)
   {
   }
@@ -79,9 +79,15 @@ struct psc_particle_iter
     return *this;;
   }
 
-  operator particle_t* ()
+  psc_particle_iter operator+=(int n)
   {
-    return ptr_;
+    ptr_ += n;
+    return *this;
+  }
+
+  psc_particle_iter operator+(int n)
+  {
+    return psc_particle_iter(ptr_ + n);
   }
 
 private:
