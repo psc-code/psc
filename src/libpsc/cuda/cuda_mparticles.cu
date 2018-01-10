@@ -16,58 +16,57 @@
 
 cuda_mparticles::cuda_mparticles(mrc_json_t json)
 {
-  cuda_mparticles* cmprts = this;
-  std::memset(cmprts, 0, sizeof(*cmprts)); // FIXME
+  std::memset(this, 0, sizeof(*this)); // FIXME
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
-  cmprts->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  mrc_json_get_object_entry_int3(json_info, "ldims", cmprts->ldims);
-  mrc_json_get_object_entry_int3(json_info, "bs", cmprts->bs);
+  n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
+  mrc_json_get_object_entry_int3(json_info, "ldims", ldims);
+  mrc_json_get_object_entry_int3(json_info, "bs", bs);
   double dx[3];
   mrc_json_get_object_entry_double3(json_info, "dx", dx);
 
   for (int d = 0; d < 3; d++) {
-    cmprts->dx[d] = dx[d];
-    assert(cmprts->ldims[d] % cmprts->bs[d] == 0);
-    cmprts->b_mx[d] = cmprts->ldims[d] / cmprts->bs[d];
-    cmprts->b_dxi[d] = 1.f / (cmprts->bs[d] * cmprts->dx[d]);
+    dx[d] = dx[d];
+    assert(ldims[d] % bs[d] == 0);
+    b_mx[d] = ldims[d] / bs[d];
+    b_dxi[d] = 1.f / (bs[d] * dx[d]);
   }
   
-  cmprts->xb_by_patch = new float_3[cmprts->n_patches];
-  mrc_json_t xb_by_patch = mrc_json_get_object_entry(json_info, "xb_by_patch");
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    mrc_json_get_float3(mrc_json_get_array_entry(xb_by_patch, p), cmprts->xb_by_patch[p]);
+  xb_by_patch = new float_3[n_patches];
+  mrc_json_t json_xb_by_patch = mrc_json_get_object_entry(json_info, "xb_by_patch");
+  for (int p = 0; p < n_patches; p++) {
+    mrc_json_get_float3(mrc_json_get_array_entry(json_xb_by_patch, p), xb_by_patch[p]);
   }
 
-  cmprts->fnqs = mrc_json_get_object_entry_double(json_info, "fnqs");
-  cmprts->eta  = mrc_json_get_object_entry_double(json_info, "eta");
-  cmprts->dt   = mrc_json_get_object_entry_double(json_info, "dt");
+  fnqs = mrc_json_get_object_entry_double(json_info, "fnqs");
+  eta  = mrc_json_get_object_entry_double(json_info, "eta");
+  dt   = mrc_json_get_object_entry_double(json_info, "dt");
 
   mrc_json_t json_kind_q = mrc_json_get_object_entry(json_info, "kind_q");
-  cmprts->n_kinds = mrc_json_get_array_length(json_kind_q);
-  cmprts->kind_q = new float[cmprts->n_kinds];
+  n_kinds = mrc_json_get_array_length(json_kind_q);
+  kind_q = new float[n_kinds];
   // FIXME, could use a mrc_json helper
-  for (int k = 0; k < cmprts->n_kinds; k++) {
-    cmprts->kind_q[k] = mrc_json_get_array_entry_double(json_kind_q, k);
+  for (int k = 0; k < n_kinds; k++) {
+    kind_q[k] = mrc_json_get_array_entry_double(json_kind_q, k);
   }
   mrc_json_t json_kind_m = mrc_json_get_object_entry(json_info, "kind_m");
-  assert(cmprts->n_kinds == mrc_json_get_array_length(json_kind_m));
-  cmprts->kind_m = new float[cmprts->n_kinds];
+  assert(n_kinds == mrc_json_get_array_length(json_kind_m));
+  kind_m = new float[n_kinds];
   // FIXME, could use a mrc_json helper
-  for (int k = 0; k < cmprts->n_kinds; k++) {
-    cmprts->kind_m[k] = mrc_json_get_array_entry_double(json_kind_m, k);
+  for (int k = 0; k < n_kinds; k++) {
+    kind_m[k] = mrc_json_get_array_entry_double(json_kind_m, k);
   }
 
-  cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];
-  cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
+  n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
+  n_blocks = n_patches * n_blocks_per_patch;
 
   cudaError_t ierr;
 
-  ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
-  ierr = cudaMemset(cmprts->d_off, 0, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
+  ierr = cudaMalloc(&d_off, (n_blocks + 1) * sizeof(*d_off)); cudaCheck(ierr);
+  ierr = cudaMemset(d_off, 0, (n_blocks + 1) * sizeof(*d_off)); cudaCheck(ierr);
 
-  cuda_mparticles_bnd_setup(cmprts);
+  cuda_mparticles_bnd_setup(this);
 }
 
 // ----------------------------------------------------------------------
