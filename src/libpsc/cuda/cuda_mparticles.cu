@@ -12,11 +12,11 @@
 #include <cassert>
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_ctor
+// ctor
 
-void
-cuda_mparticles_ctor(struct cuda_mparticles *cmprts, mrc_json_t json)
+cuda_mparticles::cuda_mparticles(mrc_json_t json)
 {
+  cuda_mparticles* cmprts = this;
   std::memset(cmprts, 0, sizeof(*cmprts)); // FIXME
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");

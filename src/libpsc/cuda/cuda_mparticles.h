@@ -62,6 +62,8 @@ void cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts);
 struct cuda_mparticles
 {
 public:
+  cuda_mparticles(mrc_json_t json);
+  cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
     
 public:
