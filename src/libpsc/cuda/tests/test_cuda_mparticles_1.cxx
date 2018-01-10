@@ -102,7 +102,7 @@ get_particles_test(struct cuda_mparticles *cmprts, int n_patches,
 int
 main(void)
 {
-  struct cuda_mparticles *cmprts = cuda_mparticles_create();
+  struct cuda_mparticles *cmprts = new cuda_mparticles;
 
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "

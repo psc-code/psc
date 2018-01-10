@@ -175,7 +175,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   cuda_base_init();
 
-  struct cuda_mparticles *cmprts = cuda_mparticles_create();
+  cuda_mparticles *cmprts = new cuda_mparticles;
+
   mprts_cuda->cmprts = cmprts;
 
   psc_mparticles_setup_super(mprts);

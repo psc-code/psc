@@ -12,23 +12,13 @@
 #include <cassert>
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_create
-
-struct cuda_mparticles *
-cuda_mparticles_create()
-{
-  struct cuda_mparticles *cmprts = new cuda_mparticles;
-  std::memset(cmprts, 0, sizeof(*cmprts));
-
-  return cmprts;
-}
-
-// ----------------------------------------------------------------------
 // cuda_mparticles_ctor
 
 void
 cuda_mparticles_ctor(struct cuda_mparticles *cmprts, mrc_json_t json)
 {
+  std::memset(cmprts, 0, sizeof(*cmprts)); // FIXME
+
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
   cmprts->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
