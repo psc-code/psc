@@ -82,10 +82,11 @@ using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch&;
 struct psc_mparticles_PTYPE_patch
 {
   using particle_t = particle_PTYPE_t;
+  using buf_t = psc_particle_PTYPE_buf_t;
   using iterator = psc_particle_iter<particle_t>;
   //  using iterator = psc_particle_PTYPE_iter_t;
   
-  psc_particle_PTYPE_buf_t buf;
+  buf_t buf;
 
   int b_mx[3];
   particle_PTYPE_real_t b_dxi[3];
@@ -167,7 +168,7 @@ struct psc_mparticles_PTYPE_patch
     buf.push_back(prt);
   }
 
-  psc_particle_PTYPE_buf_t& get_buf()
+  buf_t& get_buf()
   {
     return buf;
   }
