@@ -57,20 +57,9 @@
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 
-#elif PTYPE == PTYPE_CUDA
-
-#define particle_PTYPE_real_t particle_cuda_real_t
-#define particle_PTYPE_t particle_cuda_t
-
-#define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
-
-#define psc_mparticles_PTYPE psc_mparticles_cuda
-
 #endif
 
 // ======================================================================
-
-#if PTYPE != PTYPE_CUDA
 
 struct psc_mparticles_PTYPE_patch;
 
@@ -205,8 +194,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 }
 
 #include <math.h>
-
-#endif // PTYPE_CUDA
 
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t

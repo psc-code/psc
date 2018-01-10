@@ -10,16 +10,14 @@
 
 #include "psc_particle_buf_cuda.h"
 
-#define PTYPE PTYPE_CUDA
-#include "psc_particles_common.h"
-#undef PTYPE
-
 // ======================================================================
 // psc_mparticles_cuda
 
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
 };
+
+#define psc_mparticles_cuda(mprts) mrc_to_subobj(mprts, struct psc_mparticles_cuda)
 
 // ======================================================================
 // mparticles_cuda_t
