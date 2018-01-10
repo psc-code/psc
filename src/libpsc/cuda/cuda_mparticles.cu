@@ -105,25 +105,6 @@ cuda_mparticles::~cuda_mparticles()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_destroy
-
-void
-cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
-{
-  cudaError_t ierr;
-
-  ierr = cudaFree(cmprts->d_off); cudaCheck(ierr);
-
-  cuda_mparticles_free_particle_mem(cmprts);
-  cuda_mparticles_bnd_destroy(cmprts);
-  
-  delete[] cmprts->xb_by_patch;
-  delete[] cmprts->kind_q;
-  delete[] cmprts->kind_m;
-  delete cmprts;
-}
-
-// ----------------------------------------------------------------------
 // cuda_mparticles_reserve_all
 
 void
