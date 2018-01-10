@@ -84,7 +84,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
   }
 
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-  mparticles_t mp_ref = mparticles_t<mprts_ref>;
+  mparticles_t mp_ref = mparticles_t(mprts_ref);
   psc_foreach_patch(psc, p) {
     int n_prts = mprts[p].size();
     for (int n = 0; n < n_prts; n++) {
@@ -147,8 +147,8 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
     particle_range_t prts_ref = mparticles_t(mprts_ref)[p].range();
   
     assert(prts.size() == prts_ref.size());
-    for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
-	 prt_iter != prts.end; ++prt_iter, ++prt_ref_iter) {
+    for (auto prt_iter = prts.begin(), prt_ref_iter = prts_ref.begin();
+	 prt_iter != prts.end(); ++prt_iter, ++prt_ref_iter) {
       *prt_ref_iter = *prt_iter;
       particle_t *part = &*prt_iter;
       particle_t *part_ref = &*prt_ref_iter;
@@ -319,7 +319,7 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
 
     int *ldims = patch->ldims;
 
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
       particle_t *part = &*prt_iter;
       // FIXME, duplicated
 
