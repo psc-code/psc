@@ -25,22 +25,8 @@ at_hi_boundary(int p, int d)
   return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
 }
 
-// ======================================================================
-// particle_buf_t
-//
-// FIXME, those could be made generally available...
-
-static particle_t *
-particle_buf_begin(particle_buf_t *buf)
-{
-  return buf->m_data;
-}
-
-static particle_t *
-particle_buf_end(particle_buf_t *buf)
-{
-  return buf->m_data + buf->m_size;
-}
+// ----------------------------------------------------------------------
+// particle_buf_copy
 
 static void
 particle_buf_copy(particle_t *from_begin, particle_t *from_end, particle_t *to_begin)
@@ -461,7 +447,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   // post sends
   particle_buf_t send_buf;
   send_buf.reserve(n_send);
-  particle_t *it = particle_buf_begin(&send_buf);
+  particle_t *it = &*send_buf.begin();
   for (int r = 0; r < ddcp->n_ranks; r++) {
     if (cinfo[r].n_send == 0)
       continue;
@@ -471,18 +457,18 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
       particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
-      particle_buf_copy(particle_buf_begin(send_buf_nei), particle_buf_end(send_buf_nei), it);
+      particle_buf_copy(&*send_buf_nei->begin(), &*send_buf_nei->end(), it);
       it += send_buf_nei->size();
     }
     MPI_Isend(it0, sz * cinfo[r].n_send, mpi_dtype,
 	      cinfo[r].rank, 1, comm, &ddcp->send_reqs[r]);
   }
-  assert(it == particle_buf_begin(&send_buf) + n_send);
+  assert(it == send_buf.begin() + n_send);
 
   // post receives
   particle_buf_t recv_buf;
   recv_buf.reserve(n_recv);
-  it = particle_buf_begin(&recv_buf);
+  it = recv_buf.begin();
   for (int r = 0; r < ddcp->n_ranks; r++) {
     if (cinfo[r].n_recv == 0)
       continue;
@@ -491,7 +477,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	      cinfo[r].rank, 1, comm, &ddcp->recv_reqs[r]);
     it += cinfo[r].n_recv;
   }
-  assert(it == particle_buf_begin(&recv_buf) + n_recv);
+  assert(it == recv_buf.begin() + n_recv);
 
   // leave room for receives (FIXME? just change order)
   // each patch's array looks like:
@@ -508,7 +494,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     patch->m_buf->reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
     // it won't become invalid due to a realloc since we reserved enough space...
-    it_recv[p] = particle_buf_end(patch->m_buf);
+    it_recv[p] = patch->m_buf->end();
     patch->m_buf->resize(size + patch->n_recv);
   }
 
@@ -527,8 +513,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	  }
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
 
-	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
-			    it_recv[p]);
+	  particle_buf_copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
 	  it_recv[p] += nei_send_buf->size();
 	}
       }
@@ -540,7 +525,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
   // copy received particles into right place
 
-  it = particle_buf_begin(&recv_buf);
+  it = recv_buf.begin();
   for (int r = 0; r < ddcp->n_ranks; r++) {
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
@@ -549,11 +534,11 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
       it_recv[re->patch] += cinfo[r].recv_cnts[i];
     }
   }
-  assert(it == particle_buf_begin(&recv_buf) + n_recv);
+  assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    assert(it_recv[p] == particle_buf_end(patch->m_buf));
+    assert(it_recv[p] == patch->m_buf->end());
   }
   
   free(it_recv);

@@ -46,7 +46,7 @@ struct psc_particle
 };
 
 // ======================================================================
-// psc_particle_PTYPE_iter_t
+// psc_particle_iter
 
 template<class P>
 struct psc_particle_iter
@@ -79,6 +79,11 @@ struct psc_particle_iter
     return *this;;
   }
 
+  operator particle_t* ()
+  {
+    return ptr_;
+  }
+
 private:
   particle_t *ptr_;
 };
@@ -90,6 +95,7 @@ template<typename P>
 struct psc_particle_buf
 {
   using particle_t = P;
+  using iterator = psc_particle_iter<particle_t>;
 
   psc_particle_buf()
     : m_data(), m_size(), m_capacity()
@@ -128,6 +134,16 @@ struct psc_particle_buf
     }
     m_data[n++] = prt;
     m_size = n;
+  }
+
+  iterator begin()
+  {
+    return m_data;
+  }
+
+  iterator end()
+  {
+    return &m_data[m_size];
   }
 
   particle_t& operator[](int n)
