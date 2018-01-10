@@ -61,6 +61,10 @@ void cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts);
 
 struct cuda_mparticles
 {
+public:
+  ~cuda_mparticles();
+    
+public:
   // per particle
   float4 *d_xi4, *d_pxi4;         // current particle data
   float4 *d_alt_xi4, *d_alt_pxi4; // storage for out-of-place reordering of particle data

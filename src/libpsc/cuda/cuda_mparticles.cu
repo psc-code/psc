@@ -89,6 +89,23 @@ cuda_mparticles_free_particle_mem(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
+// dtor
+
+cuda_mparticles::~cuda_mparticles()
+{
+  cudaError_t ierr;
+
+  ierr = cudaFree(d_off); cudaCheck(ierr);
+
+  cuda_mparticles_free_particle_mem(this);
+  cuda_mparticles_bnd_destroy(this);
+  
+  delete[] xb_by_patch;
+  delete[] kind_q;
+  delete[] kind_m;
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_destroy
 
 void
