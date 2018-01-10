@@ -9,6 +9,8 @@
 // ----------------------------------------------------------------------
 // find_block_position
 
+#include "psc_bits.h"
+
 static inline void
 particle_xi_get_block_pos(const particle_real_t xi[3], const particle_real_t b_dxi[3], int b_pos[3])
 {

@@ -30,6 +30,22 @@ private:
 };
 
 // ======================================================================
+// psc_particle
+
+template<class R>
+struct psc_particle
+{
+  using real_t = R;
+
+  real_t xi, yi, zi;
+  real_t qni_wni;
+  real_t pxi, pyi, pzi;
+  int kind_;
+
+  int kind() { return kind_; }
+};
+
+// ======================================================================
 // psc_particle_buf
 
 template<typename P>

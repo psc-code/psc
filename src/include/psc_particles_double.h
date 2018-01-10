@@ -8,9 +8,15 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
-#define PTYPE PTYPE_DOUBLE
-#include "psc_particle_common.h"
+using particle_double_real_t = double;
+
+struct particle_double_t : psc_particle<particle_double_real_t> {};
+
 using psc_particle_double_buf_t = psc_particle_buf<particle_double_t>;
+
+#define psc_mparticles_double(mprts) mrc_to_subobj(mprts, struct psc_mparticles_double)
+
+#define PTYPE PTYPE_DOUBLE
 #include "psc_particles_common.h"
 #undef PTYPE
 

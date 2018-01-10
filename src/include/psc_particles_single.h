@@ -3,14 +3,19 @@
 #define PSC_PARTICLE_SINGLE_H
 
 #include "psc_particles_private.h"
-#include "psc.h"
 
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
-#define PTYPE PTYPE_SINGLE
-#include "psc_particle_common.h"
+using particle_single_real_t = float;
+
+struct particle_single_t : psc_particle<particle_single_real_t> {};
+
 using psc_particle_single_buf_t = psc_particle_buf<particle_single_t>;
+
+#define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
+
+#define PTYPE PTYPE_SINGLE
 #include "psc_particles_common.h"
 #undef PTYPE
 

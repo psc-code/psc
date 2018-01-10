@@ -1,4 +1,9 @@
 
+#define PTYPE_SINGLE          1
+#define PTYPE_DOUBLE          2
+#define PTYPE_SINGLE_BY_BLOCK 3
+#define PTYPE_FORTRAN         5
+#define PTYPE_CUDA            6
 
 #if PTYPE == PTYPE_SINGLE
 
