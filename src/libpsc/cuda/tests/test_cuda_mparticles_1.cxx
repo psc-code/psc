@@ -102,8 +102,6 @@ get_particles_test(struct cuda_mparticles *cmprts, int n_patches,
 int
 main(void)
 {
-  struct cuda_mparticles *cmprts = new cuda_mparticles;
-
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "
 				   "    \"n_patches\" : 1,                      "
@@ -120,7 +118,7 @@ main(void)
 				   "}                                           ");
   mrc_json_print(json, 0);
 
-  cuda_mparticles_ctor(cmprts, json);
+  struct cuda_mparticles *cmprts = new cuda_mparticles(json);
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   int n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");

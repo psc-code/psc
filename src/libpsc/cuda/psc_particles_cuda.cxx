@@ -175,10 +175,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   cuda_base_init();
 
-  cuda_mparticles *cmprts = new cuda_mparticles;
-
-  mprts_cuda->cmprts = cmprts;
-
   psc_mparticles_setup_super(mprts);
 
   int n_patches = mprts->nr_patches;
@@ -242,7 +238,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
   mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
-  cuda_mparticles_ctor(cmprts, json);
+  cuda_mparticles *cmprts = new cuda_mparticles(json);
+  mprts_cuda->cmprts = cmprts;
 
   // FIXME json_builder_free(obj);
 }

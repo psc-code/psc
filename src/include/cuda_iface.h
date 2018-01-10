@@ -34,7 +34,6 @@ struct cuda_mparticles_prt {
 
 struct cuda_mparticles;
 
-void cuda_mparticles_ctor(struct cuda_mparticles *cuda_mprts, mrc_json_t json);
 void cuda_mparticles_reserve_all(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);
 void cuda_mparticles_dump_by_patch(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
