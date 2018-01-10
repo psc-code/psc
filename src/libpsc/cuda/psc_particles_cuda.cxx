@@ -13,44 +13,6 @@
 
 // FIXME, should go away and always be done within cuda for consistency
 
-#if 0
-static inline int
-find_cellIdx(struct psc_patch *patch, struct cell_map *map,
-	     struct psc_mparticles *mprts, int p, int n)
-{
-  particle_c_t *p = particles_c_get_one(pp, n);
-  particle_c_real_t dxi = 1.f / patch->dx[0];
-  particle_c_real_t dyi = 1.f / patch->dx[1];
-  particle_c_real_t dzi = 1.f / patch->dx[2];
-  particle_c_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
-  int pos[3];
-  for (int d = 0; d < 3; d++) {
-    pos[d] = fint(xi[d]);
-  }
-  
-  return cell_map_3to1(map, pos);
-}
-
-static inline int
-find_blockIdx(struct psc_patch *patch, struct cell_map *map,
-	      struct psc_mparticles *mprts, int p, int n, int blocksize[3])
-{
-  int cell_idx = find_cellIdx(patch, map, pp, n);
-  return cell_idx / (blocksize[0] * blocksize[1] * blocksize[2]);
-}
-
-static inline void
-blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
-		     int bidx, int bi[3], int blocksize[3])
-{
-  int cidx = bidx * (blocksize[0] * blocksize[1] * blocksize[2]);
-  cell_map_1to3(map, cidx, bi);
-  for (int d = 0; d < 3; d++) {
-    bi[d] /= blocksize[d];
-  }
-}
-#endif
-
 struct copy_ctx {
   struct psc_mparticles *mprts;
   int p;
