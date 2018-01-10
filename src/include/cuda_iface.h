@@ -6,6 +6,8 @@
 #include "psc_particle_buf_cuda.h"
 #include "psc_fields_single.h"
 
+#include "cuda_mparticles.h"
+
 // ----------------------------------------------------------------------
 // cuda_base
 

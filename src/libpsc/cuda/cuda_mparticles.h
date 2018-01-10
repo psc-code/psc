@@ -6,6 +6,10 @@
 
 #include "psc_particle_buf_cuda.h"
 
+#ifndef __CUDACC__
+struct float4 { float x; float y; float z; float w; };
+#endif
+
 // ----------------------------------------------------------------------
 // float_3
 
@@ -55,7 +59,8 @@ void cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts);
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
-struct cuda_mparticles {
+struct cuda_mparticles
+{
   // per particle
   float4 *d_xi4, *d_pxi4;         // current particle data
   float4 *d_alt_xi4, *d_alt_pxi4; // storage for out-of-place reordering of particle data
