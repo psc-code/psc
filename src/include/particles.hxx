@@ -4,6 +4,9 @@
 
 #include "psc_particles.h"
 
+// ======================================================================
+// mparticles_base
+
 template<typename S>
 struct mparticles_base
 {
@@ -26,17 +29,75 @@ private:
   psc_mparticles *mprts_;
 };
 
+// ======================================================================
+// psc_particle_buf
+
+template<typename P>
+struct psc_particle_buf
+{
+  using particle_t = P;
+
+  psc_particle_buf()
+    : m_data(), m_size(), m_capacity()
+  {
+  }
+
+  psc_particle_buf(const psc_particle_buf&) = delete;
+  
+  void resize(unsigned int new_size)
+  {
+    assert(new_size <= m_capacity);
+    m_size = new_size;
+  }
+
+  void reserve(unsigned int new_capacity)
+  {
+    if (new_capacity <= m_capacity)
+      return;
+
+    new_capacity = std::max(new_capacity, m_capacity * 2);
+    
+    m_data = (particle_t *) realloc(m_data, new_capacity * sizeof(*m_data));
+    m_capacity = new_capacity;
+  }
+
+  void push_back(const particle_t& prt)
+  {
+    unsigned int n = m_size;
+    if (n >= m_capacity) {
+      reserve(n + 1);
+    }
+    m_data[n++] = prt;
+    m_size = n;
+  }
+
+  particle_t& operator[](int n)
+  {
+    return m_data[n];
+  }
+
+  particle_t *m_data;
+  unsigned int m_size;
+  unsigned int m_capacity;
+
+  unsigned int size() const { return m_size; }
+  unsigned int capacity() const { return m_capacity; }
+};
+
+// ======================================================================
+// mparticles
+
 template<typename P, typename S>
 struct mparticles : mparticles_base<S>
 {
   using Base = mparticles_base<S>;
-  using mparticles_patch_t = typename Base::sub_t::patch_t;
+  using particles_t = typename Base::sub_t::particles_t;
   using buf_t = P;
   using particle_t = typename buf_t::particle_t;
   
   mparticles(psc_mparticles *mprts) : mparticles_base<S>(mprts) { }
 
-  mparticles_patch_t& operator[](int p)
+  particles_t& operator[](int p)
   {
     return this->sub()->patch[p];
   }

@@ -1,6 +1,8 @@
 
 #include "psc_particle_common.h"
 
+#include "particles.hxx"
+
 #include <stdlib.h>
 #include <assert.h>
 #include <mrc_bits.h>
@@ -51,60 +53,7 @@
 
 #endif
 
-// ======================================================================
-// psc_particle_PTYPE_buf_t
-
-struct psc_particle_PTYPE_buf_t
-{
-  using particle_t = particle_PTYPE_t;
-
-  psc_particle_PTYPE_buf_t()
-    : m_data(), m_size(), m_capacity()
-  {
-  }
-
-  psc_particle_PTYPE_buf_t(const psc_particle_PTYPE_buf_t&) = delete;
-  
-  void resize(unsigned int new_size)
-  {
-    assert(new_size <= m_capacity);
-    m_size = new_size;
-  }
-
-  void reserve(unsigned int new_capacity)
-  {
-    if (new_capacity <= m_capacity)
-      return;
-
-    new_capacity = std::max(new_capacity, m_capacity * 2);
-    
-    m_data = (particle_PTYPE_t *) realloc(m_data, new_capacity * sizeof(*m_data));
-    m_capacity = new_capacity;
-  }
-
-  void push_back(const particle_PTYPE_t& prt)
-  {
-    unsigned int n = m_size;
-    if (n >= m_capacity) {
-      reserve(n + 1);
-    }
-    m_data[n++] = prt;
-    m_size = n;
-  }
-
-  particle_PTYPE_t& operator[](int n)
-  {
-    return m_data[n];
-  }
-
-  particle_PTYPE_t *m_data;
-  unsigned int m_size;
-  unsigned int m_capacity;
-
-  unsigned int size() const { return m_size; }
-  unsigned int capacity() const { return m_capacity; }
-
-};
+using psc_particle_PTYPE_buf_t = psc_particle_buf<particle_PTYPE_t>;
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_buf_dtor

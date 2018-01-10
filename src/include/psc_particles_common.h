@@ -221,9 +221,9 @@ struct psc_mparticles_PTYPE_patch
 
 struct psc_mparticles_PTYPE
 {
-  using patch_t = psc_mparticles_PTYPE_patch;
+  using particles_t = psc_mparticles_PTYPE_patch;
   
-  patch_t *patch;
+  particles_t *patch;
 };
 
 // ----------------------------------------------------------------------
