@@ -3,6 +3,8 @@
 
 #include "fields.hxx"
 
+#include <cmath>
+
 enum { // FIXME, duplicated
   JXI, JYI, JZI,
   EX , EY , EZ ,
