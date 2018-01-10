@@ -254,10 +254,9 @@ static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  assert(cmprts);
+  assert(mprts_cuda->cmprts);
   
-  cuda_mparticles_destroy(cmprts);
+  delete mprts_cuda->cmprts;
   mprts_cuda->cmprts = NULL;
 }
 

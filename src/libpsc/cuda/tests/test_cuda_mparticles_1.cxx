@@ -136,5 +136,5 @@ main(void)
   printf("get_particles_test\n");
   get_particles_test(cmprts, n_patches, n_prts_by_patch);
 
-  cuda_mparticles_destroy(cmprts);
+  delete cmprts;
 }
