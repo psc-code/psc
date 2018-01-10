@@ -9,7 +9,8 @@
 #include "particles_traits.hxx"
 
 #define PTYPE PTYPE_SINGLE
-#include "psc_particle_buf_common.h"
+#include "psc_particle_common.h"
+using psc_particle_single_buf_t = psc_particle_buf<particle_single_t>;
 #include "psc_particles_common.h"
 #undef PTYPE
 

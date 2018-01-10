@@ -8,7 +8,8 @@
 #include "particles_traits.hxx"
 
 #define PTYPE PTYPE_FORTRAN
-#include "psc_particle_buf_common.h"
+#include "psc_particle_common.h"
+using psc_particle_fortran_buf_t = psc_particle_buf<particle_fortran_t>;
 #include "psc_particles_common.h"
 #undef PTYPE
 

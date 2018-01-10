@@ -9,7 +9,8 @@
 #include "particles_traits.hxx"
 
 #define PTYPE PTYPE_DOUBLE
-#include "psc_particle_buf_common.h"
+#include "psc_particle_common.h"
+using psc_particle_double_buf_t = psc_particle_buf<particle_double_t>;
 #include "psc_particles_common.h"
 #undef PTYPE
 

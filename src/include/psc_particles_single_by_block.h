@@ -7,7 +7,8 @@
 #include "particles.hxx"
 
 #define PTYPE PTYPE_SINGLE_BY_BLOCK
-#include "psc_particle_buf_common.h"
+#include "psc_particle_common.h"
+using psc_particle_single_by_block_buf_t = psc_particle_buf<particle_single_by_block_t>;
 #include "psc_particles_common.h"
 #undef PTYPE
 
