@@ -42,6 +42,11 @@ struct psc_particle_buf
   {
   }
 
+  ~psc_particle_buf()
+  {
+    free(m_data);
+  }
+
   psc_particle_buf(const psc_particle_buf&) = delete;
   
   void resize(unsigned int new_size)

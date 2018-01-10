@@ -6,7 +6,6 @@
 #define particle_PTYPE_t particle_single_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
-#define psc_particle_PTYPE_buf_dtor psc_particle_single_buf_dtor
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_patch
 #define psc_mparticles_PTYPE psc_mparticles_single
@@ -20,7 +19,6 @@
 #define particle_PTYPE_t particle_double_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
-#define psc_particle_PTYPE_buf_dtor psc_particle_double_buf_dtor
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_double_patch
 #define psc_mparticles_PTYPE psc_mparticles_double
@@ -34,7 +32,6 @@
 #define particle_PTYPE_t particle_single_by_block_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
-#define psc_particle_PTYPE_buf_dtor psc_particle_single_by_block_buf_dtor
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_by_block_patch
 #define psc_mparticles_PTYPE psc_mparticles_single_by_block
@@ -48,7 +45,6 @@
 #define particle_PTYPE_t particle_fortran_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
-#define psc_particle_PTYPE_buf_dtor psc_particle_fortran_buf_dtor
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_fortran_patch
 #define psc_mparticles_PTYPE psc_mparticles_fortran
@@ -62,7 +58,6 @@
 #define particle_PTYPE_t particle_cuda_t
 
 #define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
-#define psc_particle_PTYPE_buf_dtor psc_particle_cuda_buf_dtor
 
 #define psc_mparticles_PTYPE psc_mparticles_cuda
 
@@ -242,7 +237,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef particle_PTYPE_t
 
 #undef psc_particle_PTYPE_buf_t
-#undef psc_particle_PTYPE_buf_dtor
 
 #undef psc_mparticles_PTYPE_patch
 #undef psc_mparticles_PTYPE

@@ -8,6 +8,8 @@ typedef particle_single_by_block_real_t particle_real_t;
 typedef particle_single_by_block_t particle_t;
 using mparticles_t = mparticles_single_by_block_t;
 
+#define particle_buf_t              psc_particle_single_by_block_buf_t
+
 #define particle_qni_div_mni        particle_single_by_block_qni_div_mni
 #define particle_qni_wni            particle_single_by_block_qni_wni
 #define particle_qni                particle_single_by_block_qni

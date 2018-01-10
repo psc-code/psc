@@ -9,7 +9,6 @@ typedef particle_cuda_t particle_t;
 using mparticles_t = mparticles_cuda_t;
 
 #define particle_buf_t              psc_particle_cuda_buf_t
-#define particle_buf_dtor           psc_particle_cuda_buf_dtor
 
 #define PARTICLE_TYPE               "cuda"
 

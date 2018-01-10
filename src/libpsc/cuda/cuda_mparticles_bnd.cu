@@ -360,10 +360,6 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
   cmprts->need_reorder = true;
 #endif
   prof_stop(pr_E);
-
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    psc_particle_cuda_buf_dtor(&cmprts->bnd.bpatch[p].buf);
-  }
 }
 
 // ----------------------------------------------------------------------

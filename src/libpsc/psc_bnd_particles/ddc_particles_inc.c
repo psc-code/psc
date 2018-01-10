@@ -330,7 +330,7 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 
-	  particle_buf_dtor(&nei->send_buf);
+	  nei->send_buf.~particle_buf_t();
 	}
       }
     }
@@ -557,9 +557,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   }
   
   free(it_recv);
-  
-  particle_buf_dtor(&send_buf);
-  particle_buf_dtor(&recv_buf);
 }
 
 // ======================================================================

@@ -46,7 +46,7 @@ PFX(destroy_patch)(struct psc_mparticles *mprts, int p)
   struct PFX(patch) *patch = &sub->patch[p];
 
   // need to free structures created in ::patch_setup and ::patch_reserve
-  PARTICLE_BUF(dtor)(&patch->buf);
+  patch->buf.~particle_buf_t();
 
 #if PSC_PARTICLES_AS_SINGLE
   free(patch->prt_array_alt);
