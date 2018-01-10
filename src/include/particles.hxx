@@ -46,6 +46,44 @@ struct psc_particle
 };
 
 // ======================================================================
+// psc_particle_PTYPE_iter_t
+
+template<class P>
+struct psc_particle_iter
+{
+  using particle_t = P;
+  
+  psc_particle_iter(particle_t* ptr)
+    : ptr_(ptr)
+  {
+  }
+  
+  particle_t& operator*()
+  {
+    return *ptr_;
+  }
+
+  bool operator==(const psc_particle_iter& other)
+  {
+    return ptr_ == other.ptr_;
+  }
+  
+  bool operator!=(const psc_particle_iter& other)
+  {
+    return !(*this == other);
+  }
+
+  psc_particle_iter operator++()
+  {
+    ptr_++;
+    return *this;;
+  }
+
+private:
+  particle_t *ptr_;
+};
+
+// ======================================================================
 // psc_particle_buf
 
 template<typename P>

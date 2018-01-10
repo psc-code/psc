@@ -184,7 +184,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
 
     unsigned int *cnis = (unsigned int *) malloc(n_prts * sizeof(*cnis));
     int i = 0;
-    for (particle_iter_t prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
       particle_t *p = &*prt_iter;
       particle_real_t dxi = 1.f / patch->dx[0];
       particle_real_t dyi = 1.f / patch->dx[1];

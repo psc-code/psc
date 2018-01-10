@@ -72,41 +72,6 @@
 
 #if PTYPE != PTYPE_CUDA
 
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_iter_t
-
-struct psc_particle_PTYPE_iter_t
-{
-  psc_particle_PTYPE_iter_t(particle_PTYPE_t* ptr)
-    : ptr_(ptr)
-  {
-  }
-  
-  particle_PTYPE_t& operator*()
-  {
-    return *ptr_;
-  }
-
-  bool operator==(const psc_particle_PTYPE_iter_t& other)
-  {
-    return ptr_ == other.ptr_;
-  }
-  
-  bool operator!=(const psc_particle_PTYPE_iter_t& other)
-  {
-    return !(*this == other);
-  }
-
-  psc_particle_PTYPE_iter_t operator++()
-  {
-    ptr_++;
-    return *this;;
-  }
-
-private:
-  particle_PTYPE_t *ptr_;
-};
-
 struct psc_mparticles_PTYPE_patch;
 
 using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch&;
@@ -116,6 +81,10 @@ using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch&;
 
 struct psc_mparticles_PTYPE_patch
 {
+  using particle_t = particle_PTYPE_t;
+  using iterator = psc_particle_iter<particle_t>;
+  //  using iterator = psc_particle_PTYPE_iter_t;
+  
   psc_particle_PTYPE_buf_t buf;
 
   int b_mx[3];
@@ -148,14 +117,14 @@ struct psc_mparticles_PTYPE_patch
     return buf[n];
   }
   
-  psc_particle_PTYPE_iter_t begin()
+  iterator begin()
   {
-    return psc_particle_PTYPE_iter_t(&(*this)[0]);
+    return iterator(&(*this)[0]);
   }
 
-  psc_particle_PTYPE_iter_t end()
+  iterator end()
   {
-    return psc_particle_PTYPE_iter_t(&(*this)[size()]);
+    return iterator(&(*this)[size()]);
   }
 
   unsigned int size() const
