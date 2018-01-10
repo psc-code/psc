@@ -13,7 +13,7 @@
 struct psc_mparticles {
   struct mrc_obj obj;
   int nr_patches;
-  unsigned int flags;          // flags, like MP_NEED_CELL_OFFSETS, ...
+  unsigned int flags;
 
   template<typename MP>
   MP get_as(unsigned int flags = 0);
@@ -47,14 +47,11 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 
 #define MP_DONT_COPY (0x1)
 #define MP_DONT_RESIZE (0x2)
-#define MP_NEED_BLOCK_OFFSETS (0x0100)
-#define MP_NEED_CELL_OFFSETS  (0x0200)
 #define MP_BLOCKSIZE_MASK     (0x7000)
 #define MP_BLOCKSIZE_1X1X1    (0x1000)
 #define MP_BLOCKSIZE_2X2X2    (0x2000)
 #define MP_BLOCKSIZE_4X4X4    (0x3000)
 #define MP_BLOCKSIZE_8X8X8    (0x4000)
-#define MP_NO_CHECKERBOARD    (0x10000)
 
 extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_ops;

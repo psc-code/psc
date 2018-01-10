@@ -31,7 +31,7 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   .name                  = "1vb_4x4_cuda",
   .push_mprts_yz         = psc_push_particles_1vb_4x4_cuda_push_mprts_yz,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD,
+  .mp_flags              = MP_BLOCKSIZE_4X4X4,
 };
 
 #define MAKE_1VBEC3D_YZ(BY, BZ, MP_BS, CURRMEM_GLOBAL, MEM)		\
@@ -62,7 +62,7 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_ops = {	\
     .name                  = "1vbec3d_" #BY "x" #BZ #MEM "_cuda",	\
     .push_mprts_yz         = psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_push_mprts_yz, \
-    .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BS | MP_NO_CHECKERBOARD, \
+    .mp_flags              = MP_BS, \
   };
 
 MAKE_1VBEC3D_YZ(2, 2, MP_BLOCKSIZE_2X2X2, false, );

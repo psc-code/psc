@@ -185,7 +185,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   
   if (!mprts->flags) {
     // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
-    mprts->flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
+    mprts->flags = MP_BLOCKSIZE_4X4X4;
   }
 
   int *ldims = ppsc->patch[0].ldims;
