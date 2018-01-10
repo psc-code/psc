@@ -92,13 +92,11 @@ struct psc_particle_buf
 // ======================================================================
 // mparticles
 
-template<typename P, typename S>
+template<typename S>
 struct mparticles : mparticles_base<S>
 {
   using Base = mparticles_base<S>;
   using particles_t = typename Base::sub_t::particles_t;
-  using buf_t = P;
-  using particle_t = typename buf_t::particle_t;
   
   mparticles(psc_mparticles *mprts) : mparticles_base<S>(mprts) { }
 

@@ -12,7 +12,7 @@ using psc_particle_single_by_block_buf_t = psc_particle_buf<particle_single_by_b
 #include "psc_particles_common.h"
 #undef PTYPE
 
-using mparticles_single_by_block_t = mparticles<psc_particle_single_by_block_buf_t, psc_mparticles_single_by_block>;
+using mparticles_single_by_block_t = mparticles<psc_mparticles_single_by_block>;
 
 // can't do this as inline function since struct psc isn't known yet
 #define particle_single_by_block_qni_div_mni(p) ({			\

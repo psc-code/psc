@@ -13,7 +13,7 @@ using psc_particle_fortran_buf_t = psc_particle_buf<particle_fortran_t>;
 #include "psc_particles_common.h"
 #undef PTYPE
 
-using mparticles_fortran_t = mparticles<psc_particle_fortran_buf_t, psc_mparticles_fortran>;
+using mparticles_fortran_t = mparticles<psc_mparticles_fortran>;
 
 template<>
 struct mparticles_traits<mparticles_fortran_t>
