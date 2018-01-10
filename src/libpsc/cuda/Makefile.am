@@ -76,12 +76,11 @@ nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
 CUDACC_FLAGS = -std=c++11 -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
 CUDA_DEPS = \
-	cuda_iface.h \
         cuda_mparticles.h \
         cuda_mfields.h \
-	cuda_bits.h
-
-#        psc_particles_cuda.h FIXME
+	cuda_bits.h \
+	../../include/cuda_iface.h  \
+	../../include/psc_particles_cuda.h 
 
 cuda_moments_1st_nc.lo: cuda_mparticles_const.h
 cuda_push_mprts_yz.lo: cuda_mparticles_const.h
