@@ -4,6 +4,7 @@
 #include "cuda_mfields.h"
 #include "cuda_mparticles_const.h"
 #include "cuda_bits.h"
+#include "psc_bits.h"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>

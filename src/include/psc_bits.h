@@ -4,9 +4,6 @@
 
 #include <cmath>
 
-#ifdef __CUDACC__
-#endif
-
 template<typename T>
 int fint(T val)
 {
@@ -22,6 +19,8 @@ int nint(T val)
 {
   return (int) std::round(val);
 }
+
+#define sqr(a) ((a) * (a))
 
 
 #endif

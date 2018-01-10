@@ -438,8 +438,6 @@ extern int st_time_field;    //< time spent in field computation
 // ----------------------------------------------------------------------
 // other bits and hacks...
 
-#define sqr(a) ((a) * (a))
-
 END_C_DECLS
 
 #endif
