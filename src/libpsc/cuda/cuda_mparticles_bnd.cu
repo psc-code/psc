@@ -177,7 +177,7 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
     cmprts->bnd.bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      particle_cuda_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
+      particle_cuda_t *prt = &cmprts->bnd.bpatch[p].buf[n];
       h_bnd_xi4[n + off].x  = prt->xi;
       h_bnd_xi4[n + off].y  = prt->yi;
       h_bnd_xi4[n + off].z  = prt->zi;

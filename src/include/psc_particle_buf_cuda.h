@@ -4,10 +4,12 @@
 
 #include "particles.hxx"
 
+#include <vector>
+
 using particle_cuda_real_t = float;
 
 struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
 
-using psc_particle_cuda_buf_t = psc_particle_buf<particle_cuda_t>;
+using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
 
 #endif
