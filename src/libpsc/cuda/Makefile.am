@@ -92,10 +92,10 @@ cuda_bnd.lo: cuda_iface_bnd.h
 
 %.lo: %.cu $(CUDA_DEPS)
 	@echo "Tricking libtool"
-	echo "void lotrickdummy() {}" > dummy.c
-	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ dummy.c
-	rm ${@:.lo=.o}
-	rm dummy.c
+	TMPFILE=${<:.cu=.cu.c}
+	echo "void lotrickdummy() {}" > ${<:.cu=.cu.c}
+	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ ${<:.cu=.cu.c}
+	rm ${@:.lo=.o} ${<:.cu=.cu.c}
 	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 %.o: %.cu 
