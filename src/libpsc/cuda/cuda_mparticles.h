@@ -65,7 +65,9 @@ public:
   cuda_mparticles(mrc_json_t json);
   cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
-    
+
+  void reserve_all(unsigned int *n_prts_by_patch);
+  
 public:
   // per particle
   float4 *d_xi4, *d_pxi4;         // current particle data
