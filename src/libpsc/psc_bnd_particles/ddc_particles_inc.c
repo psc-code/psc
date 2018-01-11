@@ -7,6 +7,7 @@
 #include <mrc_ddc.h>
 
 #include <string.h>
+#include <cstring>
 
 #define N_DIR (27)
 
@@ -86,12 +87,12 @@ struct ddc_particles {
 };
 
 // ----------------------------------------------------------------------
-// ddc_particles_create
+// ddc_particles_ctor
 
-static struct ddc_particles *
-ddc_particles_create(struct mrc_domain *domain)
+static void
+ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
 {
-  struct ddc_particles *ddcp = (struct ddc_particles *) calloc(1, sizeof(*ddcp));
+  std::memset(ddcp, 0, sizeof(*ddcp));
 
   ddcp->domain = domain;
   mrc_domain_get_patches(domain, &ddcp->nr_patches);
@@ -284,19 +285,14 @@ ddc_particles_create(struct mrc_domain *domain)
     }
   }
   assert(i == ddcp->n_ranks);
-
-  return ddcp;
 }
 
 // ----------------------------------------------------------------------
-// ddc_particles_destroy
+// ddc_particles_dtor
 
 static void
-ddc_particles_destroy(struct ddc_particles *ddcp)
+ddc_particles_dtor(struct ddc_particles *ddcp)
 {
-  if (!ddcp)
-    return;
-
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -329,8 +325,6 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
   free(ddcp->cinfo);
   free(ddcp->recv_reqs);
   free(ddcp->send_reqs);
-
-  free(ddcp);
 }
 
 // ----------------------------------------------------------------------
@@ -546,7 +540,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 static void
 psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 {
-  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain);
+  bnd->ddcp = new ddc_particles;
+  ddc_particles_ctor(bnd->ddcp, bnd->psc->mrc_domain);
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON
   psc_bnd_particles_open_setup(bnd);
@@ -559,7 +554,8 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 static void
 psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 {
-  ddc_particles_destroy(bnd->ddcp);
+  ddc_particles_dtor(bnd->ddcp);
+  delete bnd->ddcp;
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON
   psc_bnd_particles_open_unsetup(bnd);
