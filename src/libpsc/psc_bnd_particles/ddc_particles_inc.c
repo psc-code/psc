@@ -26,14 +26,17 @@ at_hi_boundary(int p, int d)
   return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
 }
 
+#undef particle_buf_t
+
 // ======================================================================
-// ddcp
+// ddc_particles
 
-// ----------------------------------------------------------------------
-// ddcp_info
+struct ddc_particles_base {};
 
-struct ddc_particles
+template<class MP>
+struct ddc_particles : ddc_particles_base
 {
+  using particle_buf_t = typename MP::particle_buf_t;
   ddc_particles(struct mrc_domain *domain);
   ~ddc_particles();
 
@@ -95,7 +98,8 @@ struct ddc_particles
 // ----------------------------------------------------------------------
 // ctor
 
-inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
+template<typename MP>
+inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 {
   std::memset(this, 0, sizeof(*this));
 
@@ -294,7 +298,8 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 // ----------------------------------------------------------------------
 // dtor
 
-inline ddc_particles::~ddc_particles()
+template<typename MP>
+inline ddc_particles<MP>::~ddc_particles()
 {
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches[p];
@@ -338,9 +343,10 @@ inline ddc_particles::~ddc_particles()
 // OPT: 1d instead of 3d loops
 // OPT: make the status buffers only as large as needed?
 
-inline void ddc_particles::comm(struct psc_mparticles *mprts)
+template<typename MP>
+inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
 {
-  using iterator_t = particle_buf_t::iterator;
+  using iterator_t = typename particle_buf_t::iterator;
   
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int rank, size;
@@ -540,7 +546,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
 static void
 psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 {
-  bnd->ddcp = new ddc_particles(bnd->psc->mrc_domain);
+  bnd->ddcp = new ddc_particles<mparticles_t>(bnd->psc->mrc_domain);
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON
   psc_bnd_particles_open_setup(bnd);
@@ -569,9 +575,9 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   mparticles_t mp(mprts);
-  struct ddc_particles *ddcp = bnd->ddcp;
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < mp.n_patches(); p++) {
-    ddc_particles::patch *dpatch = &ddcp->patches[p];
+    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = &mp[p].get_buf();
     dpatch->m_begin = 0;
   }
@@ -582,9 +588,9 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 
   cuda_mparticles_bnd_prep(cmprts);
   
-  struct ddc_particles *ddcp = bnd->ddcp;
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddc_particles::patch *dpatch = &ddcp->patches[p];
+    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = cuda_mparticles_bnd_get_buffer(cmprts, p);
     dpatch->m_begin = 0;
   }
@@ -602,7 +608,7 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *_mprts, int p)
 {
-  struct ddc_particles *ddcp = bnd->ddcp;
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   struct psc *psc = bnd->psc;
   mparticles_t mprts(_mprts);
 
@@ -617,7 +623,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     xm[d] = ppatch->ldims[d] * ppatch->dx[d];
   }
   
-  ddc_particles::patch *dpatch = &ddcp->patches[p];
+  ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     dpatch->nei[dir1].send_buf.resize(0);
   }
@@ -717,7 +723,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	(*dpatch->m_buf)[head++] = *prt;
       } else {
-	ddc_particles::dnei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
+	ddc_particles<mparticles_t>::dnei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	nei->send_buf.push_back(*prt);
       }
     }
@@ -739,7 +745,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 
   cuda_mparticles_bnd_post(cmprts);
 
-  struct ddc_particles *ddcp = bnd->ddcp;
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddcp->patches[p].m_buf = NULL;
   }
@@ -818,7 +824,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
     pr_D = prof_register("xchg_post", 1., 0, 0);
   }
   
-  struct ddc_particles *ddcp = bnd->ddcp;
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);

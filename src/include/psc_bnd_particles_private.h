@@ -7,7 +7,7 @@
 struct psc_bnd_particles {
   struct mrc_obj obj;
   struct psc *psc;
-  struct ddc_particles *ddcp;
+  struct ddc_particles_base *ddcp;
 
   // for open b.c.
   double time_relax;
