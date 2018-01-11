@@ -8,8 +8,6 @@ typedef particle_double_real_t particle_real_t;
 typedef particle_double_t particle_t;
 using mparticles_t = mparticles_double_t;
 
-#define particle_buf_t              psc_particle_double_buf_t
-
 #define particle_qni_div_mni        particle_double_qni_div_mni
 #define particle_qni_wni            particle_double_qni_wni
 #define particle_qni                particle_double_qni

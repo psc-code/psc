@@ -13,8 +13,6 @@ using particle_single_real_t = float;
 
 struct particle_single_t : psc_particle<particle_single_real_t> {};
 
-using psc_particle_single_buf_t = std::vector<particle_single_t>;
-
 #define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
 
 #define PTYPE PTYPE_SINGLE

@@ -177,8 +177,6 @@ inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t
 
-#undef psc_particle_PTYPE_buf_t
-
 #undef psc_mparticles_PTYPE_patch
 #undef psc_mparticles_PTYPE
 #undef psc_mparticles_PTYPE_ops

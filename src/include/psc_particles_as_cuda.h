@@ -8,8 +8,6 @@ typedef particle_cuda_real_t particle_real_t;
 typedef particle_cuda_t particle_t;
 using mparticles_t = mparticles_cuda_t;
 
-#define particle_buf_t              psc_particle_cuda_buf_t
-
 #define PARTICLE_TYPE               "cuda"
 
 #define PSC_PARTICLES_AS_CUDA 1

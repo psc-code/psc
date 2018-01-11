@@ -24,8 +24,6 @@ struct particle_fortran_t
   real_t wni;
 };
 
-using psc_particle_fortran_buf_t = std::vector<particle_fortran_t>;
-
 #define psc_mparticles_fortran(mprts) mrc_to_subobj(mprts, struct psc_mparticles_fortran)
 
 #define PTYPE PTYPE_FORTRAN

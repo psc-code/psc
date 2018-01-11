@@ -26,8 +26,6 @@ at_hi_boundary(int p, int d)
   return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
 }
 
-#undef particle_buf_t
-
 // ======================================================================
 // ddc_particles
 
