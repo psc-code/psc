@@ -22,6 +22,7 @@ struct psc_mparticles_cuda {
 struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
 {
   using Base = mparticles_base<psc_mparticles_cuda>;
+  using particle_t = particle_cuda_t;
   using real_t = particle_cuda_real_t;
   using particle_buf_t = psc_particle_cuda_buf_t;
 
