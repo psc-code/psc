@@ -13,7 +13,9 @@ psc_output_particles_none_run(struct psc_output_particles *out,
 // ======================================================================
 // psc_output_particles: subclass "none"
 
-struct psc_output_particles_ops psc_output_particles_none_ops = {
-  .name                  = "none",
-  .run                   = psc_output_particles_none_run,
-};
+struct psc_output_particles_ops_none : psc_output_particles_ops {
+  psc_output_particles_ops_none() {
+    name                  = "none";
+    run                   = psc_output_particles_none_run;
+  }
+} psc_output_particles_none_ops;

@@ -205,9 +205,11 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 // ----------------------------------------------------------------------
 // psc_inject "single"
 
-struct psc_inject_ops psc_inject_ops_single = {
-  .name                = "single",
-  .create              = psc_inject_single_create,
-  .run                 = psc_inject_single_run,
-};
+struct psc_inject_ops_single : psc_inject_ops {
+  psc_inject_ops_single() {
+    name                = "single";
+    create              = psc_inject_single_create;
+    run                 = psc_inject_single_run;
+  }
+} psc_inject_ops_single;
 

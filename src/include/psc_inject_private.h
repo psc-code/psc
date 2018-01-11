@@ -47,8 +47,5 @@ struct psc_inject_ops {
 
 #define psc_inject_ops(inject) ((struct psc_inject_ops *)((inject)->obj.ops))
 
-extern struct psc_inject_ops psc_inject_ops_single;
-extern struct psc_inject_ops psc_inject_ops_cuda;
-
 #endif
 

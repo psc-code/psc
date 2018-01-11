@@ -29,6 +29,15 @@ psc_sort_run(struct psc_sort *sort, struct psc_mparticles *mprts)
 // ======================================================================
 // psc_sort_init
 
+extern struct psc_sort_ops psc_sort_none_ops;
+extern struct psc_sort_ops psc_sort_qsort_single_ops;
+extern struct psc_sort_ops psc_sort_countsort_single_ops;
+extern struct psc_sort_ops psc_sort_countsort2_single_ops;
+extern struct psc_sort_ops psc_sort_qsort_double_ops;
+extern struct psc_sort_ops psc_sort_countsort_double_ops;
+extern struct psc_sort_ops psc_sort_countsort2_double_ops;
+extern struct psc_sort_ops psc_sort_vpic_ops;
+
 static void
 psc_sort_init()
 {
@@ -54,10 +63,12 @@ static struct param psc_sort_descr[] = {
 };
 #undef VAR
 
-struct mrc_class_psc_sort mrc_class_psc_sort = {
-  .name             = "psc_sort",
-  .size             = sizeof(struct psc_sort),
-  .param_descr      = psc_sort_descr,
-  .init             = psc_sort_init,
-};
+struct mrc_class_psc_sort_ : mrc_class_psc_sort {
+  mrc_class_psc_sort_() {
+    name             = "psc_sort";
+    size             = sizeof(struct psc_sort);
+    param_descr      = psc_sort_descr;
+    init             = psc_sort_init;
+  }
+} mrc_class_psc_sort;
 

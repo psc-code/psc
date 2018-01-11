@@ -40,6 +40,11 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_checks_init
 
+extern struct psc_checks_ops psc_checks_1st_double_ops;
+extern struct psc_checks_ops psc_checks_1st_single_ops;
+extern struct psc_checks_ops psc_checks_2nd_double_ops;
+extern struct psc_checks_ops psc_checks_2nd_single_ops;
+
 static void
 psc_checks_init()
 {
@@ -75,11 +80,13 @@ static struct param psc_checks_descr[] = {
 // ----------------------------------------------------------------------
 // psc_checks class
 
-struct mrc_class_psc_checks mrc_class_psc_checks = {
-  .name             = "psc_checks",
-  .size             = sizeof(struct psc_checks),
-  .param_descr      = psc_checks_descr,
-  .init             = psc_checks_init,
-};
+struct mrc_class_psc_checks_ : mrc_class_psc_checks {
+  mrc_class_psc_checks_() {
+    name             = "psc_checks";
+    size             = sizeof(struct psc_checks);
+    param_descr      = psc_checks_descr;
+    init             = psc_checks_init;
+  }
+} mrc_class_psc_checks;
 
 

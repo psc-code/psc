@@ -116,12 +116,14 @@ static struct param psc_output_fields_collection_descr[] = {
 // ======================================================================
 // psc_output_fields_collection class
 
-struct mrc_class_psc_output_fields_collection mrc_class_psc_output_fields_collection = {
-  .name             = "psc_output_fields_collection",
-  .size             = sizeof(struct psc_output_fields_collection),
-  .param_descr      = psc_output_fields_collection_descr,
-  .setup            = _psc_output_fields_collection_setup,
-  .write            = _psc_output_fields_collection_write,
-  .read             = _psc_output_fields_collection_read,
-};
+struct mrc_class_psc_output_fields_collection_ : mrc_class_psc_output_fields_collection {
+  mrc_class_psc_output_fields_collection_() {
+    name             = "psc_output_fields_collection";
+    size             = sizeof(struct psc_output_fields_collection);
+    param_descr      = psc_output_fields_collection_descr;
+    setup            = _psc_output_fields_collection_setup;
+    write            = _psc_output_fields_collection_write;
+    read             = _psc_output_fields_collection_read;
+  }
+} mrc_class_psc_output_fields_collection;
 

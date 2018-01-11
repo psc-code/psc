@@ -111,9 +111,11 @@ psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields 
 // ======================================================================
 // psc_bnd_fields: subclass "cuda"
 
-struct psc_bnd_fields_ops psc_bnd_fields_cuda_ops = {
-  .name                  = "cuda",
-  .fill_ghosts_E         = psc_bnd_fields_cuda_fill_ghosts_E,
-  .fill_ghosts_H         = psc_bnd_fields_cuda_fill_ghosts_H,
-  .add_ghosts_J          = psc_bnd_fields_cuda_add_ghosts_J,
-};
+struct psc_bnd_fields_ops_cuda : psc_bnd_fields_ops {
+  psc_bnd_fields_ops_cuda() {
+    name                  = "cuda";
+    fill_ghosts_E         = psc_bnd_fields_cuda_fill_ghosts_E;
+    fill_ghosts_H         = psc_bnd_fields_cuda_fill_ghosts_H;
+    add_ghosts_J          = psc_bnd_fields_cuda_add_ghosts_J;
+  }
+} psc_bnd_fields_cuda_ops;

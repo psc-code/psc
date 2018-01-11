@@ -9,10 +9,13 @@
 // ======================================================================
 // psc_balance subclass "double"
 
-struct psc_balance_ops psc_balance_double_ops = {
-  .name                  = "double",
-  .mprts_type            = "double",
-  .mflds_type            = "c",
-  .communicate_particles = psc_balance_sub_communicate_particles,
-  .communicate_fields    = psc_balance_sub_communicate_fields,
-};
+struct psc_balance_ops_double : psc_balance_ops
+{
+  psc_balance_ops_double() {
+    name                  = "double";
+    mprts_type            = "double";
+    mflds_type            = "c";
+    communicate_particles = psc_balance_sub_communicate_particles;
+    communicate_fields    = psc_balance_sub_communicate_fields;
+  }
+} psc_balance_double_ops;

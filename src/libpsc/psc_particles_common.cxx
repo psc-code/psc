@@ -266,20 +266,22 @@ PFX(inject)(struct psc_mparticles *mprts, int p,
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
-struct psc_mparticles_ops PFX(ops) = {
-  .name                    = PARTICLE_TYPE,
-  .size                    = sizeof(struct psc_mparticles_sub),
-  .methods                 = PFX(methods),
-  .setup                   = PFX(setup),
-  .destroy                 = PFX(destroy),
-  .write                   = PFX(write),
-  .read                    = PFX(read),
-  .reserve_all             = PFX(reserve_all),
-  .resize_all              = PFX(resize_all),
-  .get_size_all            = PFX(get_size_all),
-  .get_nr_particles        = PFX(get_nr_particles),
+struct PFX(OPS) : psc_mparticles_ops {
+  PFX(OPS)() {
+    name                    = PARTICLE_TYPE;
+    size                    = sizeof(struct psc_mparticles_sub);
+    methods                 = PFX(methods);
+    setup                   = PFX(setup);
+    destroy                 = PFX(destroy);
+    write                   = PFX(write);
+    read                    = PFX(read);
+    reserve_all             = PFX(reserve_all);
+    resize_all              = PFX(resize_all);
+    get_size_all            = PFX(get_size_all);
+    get_nr_particles        = PFX(get_nr_particles);
 #if PSC_PARTICLES_AS_SINGLE
-  .inject                  = PFX(inject),
+    inject                  = PFX(inject);
 #endif
-};
+  }
+} PFX(ops);
 

@@ -9,7 +9,6 @@ struct psc_mparticles_single_by_kind {
 };
 
 #define psc_mparticles_single_by_kind(mprts)({				\
-      assert((struct psc_mparticles_ops *) mprts->obj.ops == &psc_mparticles_single_by_kind_ops); \
       mrc_to_subobj(mprts, struct psc_mparticles_single_by_kind);	\
 })
 

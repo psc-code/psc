@@ -174,11 +174,22 @@ enum {
 };
 int mrc_obj_print_class_info(int verbosity);
 
-#define MRC_CLASS_DECLARE(pfx, obj_type)                                \
+#ifdef __cplusplus
+#define MRC_CLASS_DECLARE_1(pfx, obj_type)				\
   obj_type;                                                             \
-  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);                         \
-                                                                        \
-  extern struct mrc_class_ ##pfx mrc_class_ ## pfx;                     \
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);				\
+  extern struct mrc_class_ ##pfx##_ mrc_class_ ## pfx;			\
+  
+#else
+#define MRC_CLASS_DECLARE_1(pfx, obj_type)				\
+  obj_type;                                                             \
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);				\
+  extern struct mrc_class_ ##pfx mrc_class_ ## pfx;			\
+  
+#endif
+
+#define MRC_CLASS_DECLARE(pfx, obj_type)                                \
+  MRC_CLASS_DECLARE_1(pfx, obj_type)					\
   static inline obj_type *                                              \
   pfx ## _create(MPI_Comm comm)                                         \
   {                                                                     \

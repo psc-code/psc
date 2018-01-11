@@ -288,9 +288,9 @@ psc_bnd_particles_open_setup(struct psc_bnd_particles *bnd)
   psc_bnd_setup(bnd->flds_bnd);
 
   bnd->item_nvt = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
-  psc_output_fields_item_set_type(bnd->item_nvt, "nvp_1st_double");
-  psc_output_fields_item_set_psc_bnd(bnd->item_nvt, bnd->flds_bnd);
-  psc_output_fields_item_setup(bnd->item_nvt);
+  //psc_output_fields_item_set_type(bnd->item_nvt, "nvp_1st_double"); FIXME
+  //psc_output_fields_item_set_psc_bnd(bnd->item_nvt, bnd->flds_bnd);
+  //psc_output_fields_item_setup(bnd->item_nvt);
 
   bnd->mflds_nvt_av = psc_output_fields_item_create_mfields(bnd->item_nvt);
   bnd->mflds_nvt_last = psc_output_fields_item_create_mfields(bnd->item_nvt);

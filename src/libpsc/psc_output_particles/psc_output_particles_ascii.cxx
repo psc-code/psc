@@ -68,9 +68,11 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 // ======================================================================
 // psc_output_particles: subclass "ascii"
 
-struct psc_output_particles_ops psc_output_particles_ascii_ops = {
-  .name                  = "ascii",
-  .size                  = sizeof(struct psc_output_particles_ascii),
-  .param_descr           = psc_output_particles_ascii_descr,
-  .run                   = psc_output_particles_ascii_run,
-};
+struct psc_output_particles_ops_ascii : psc_output_particles_ops {
+  psc_output_particles_ops_ascii() {
+    name                  = "ascii";
+    size                  = sizeof(struct psc_output_particles_ascii);
+    param_descr           = psc_output_particles_ascii_descr;
+    run                   = psc_output_particles_ascii_run;
+  }
+} psc_output_particles_ascii_ops;

@@ -3,6 +3,8 @@
 #define FIELDS3D_HXX
 
 #include <type_traits>
+#include <cstdlib>
+#include <cstring>
 
 #include "psc_fields.h"
 

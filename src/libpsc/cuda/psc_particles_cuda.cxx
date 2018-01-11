@@ -458,18 +458,20 @@ const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
 // ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
-struct psc_mparticles_ops psc_mparticles_cuda_ops = {
-  .name                    = "cuda",
-  .size                    = sizeof(struct psc_mparticles_cuda),
-  .methods                 = psc_mparticles_cuda_methods,
-  .setup                   = psc_mparticles_cuda_setup,
-  .destroy                 = psc_mparticles_cuda_destroy,
-  .read                    = psc_mparticles_cuda_read,
-  .write                   = psc_mparticles_cuda_write,
-  .setup_internals         = psc_mparticles_cuda_setup_internals,
-  .reserve_all             = psc_mparticles_cuda_reserve_all,
-  .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
-  .resize_all              = psc_mparticles_cuda_resize_all,
-  .get_size_all            = psc_mparticles_cuda_get_size_all,
-};
+struct psc_mparticles_ops_cuda : psc_mparticles_ops {
+  psc_mparticles_ops_cuda() {
+    name                    = "cuda";
+    size                    = sizeof(struct psc_mparticles_cuda);
+    methods                 = psc_mparticles_cuda_methods;
+    setup                   = psc_mparticles_cuda_setup;
+    destroy                 = psc_mparticles_cuda_destroy;
+    read                    = psc_mparticles_cuda_read;
+    write                   = psc_mparticles_cuda_write;
+    setup_internals         = psc_mparticles_cuda_setup_internals;
+    reserve_all             = psc_mparticles_cuda_reserve_all;
+    get_nr_particles        = psc_mparticles_cuda_get_nr_particles;
+    resize_all              = psc_mparticles_cuda_resize_all;
+    get_size_all            = psc_mparticles_cuda_get_size_all;
+  }
+} psc_mparticles_cuda_ops;
 

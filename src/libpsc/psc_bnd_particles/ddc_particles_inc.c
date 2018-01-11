@@ -40,14 +40,14 @@ struct ddc_particles : ddc_particles_base
 
   void comm(struct psc_mparticles *mprts);
 
-  struct send_entry {
+  struct dsend_entry {
     int patch; // source patch (source rank is this rank)
     int nei_patch; // target patch (target rank is index in send_entry)
     int dir1;  // direction
     int dir1neg;
   };
   
-  struct recv_entry { // needs to be same as send_entry with different order!
+  struct drecv_entry { // needs to be same as send_entry with different order!
     int nei_patch;
     int patch;
     int dir1neg;
@@ -55,12 +55,12 @@ struct ddc_particles : ddc_particles_base
   };
   
   struct ddcp_info_by_rank {
-    send_entry *send_entry;
+    dsend_entry *send_entry;
     int *send_cnts;
     int n_send_entries;
     int n_send;
     
-    recv_entry *recv_entry;
+    drecv_entry *recv_entry;
     int *recv_cnts;
     int n_recv_entries;
     int n_recv;
@@ -157,7 +157,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       info[r].recv_entry =
-	(recv_entry *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
+	(drecv_entry *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
       info[r].recv_cnts =
 	(int *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_cnts));
     }
@@ -210,7 +210,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   // alloc send_entries
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
-      info[r].send_entry = (send_entry *)
+      info[r].send_entry = (dsend_entry *)
 	malloc(info[r].n_send_entries * sizeof(*info[r].send_entry));
       info[r].send_cnts = (int *)
 	malloc(info[r].n_send_entries * sizeof(*info[r].send_cnts));
@@ -226,12 +226,13 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
+	  int dir1neg = mrc_ddc_dir2idx(dirneg);
 	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  send_entry *se =
+	  dsend_entry *se =
 	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
 	  se->patch = p;
 	  se->nei_patch = nei->patch;
@@ -263,7 +264,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       MPI_Irecv(info[r].recv_entry,
-		sizeof(recv_entry) / sizeof(int) * info[r].n_recv_entries,
+		sizeof(drecv_entry) / sizeof(int) * info[r].n_recv_entries,
 		MPI_INT, r, 111, comm, &recv_reqs[n_recv_ranks++]);
     }
   }  
@@ -272,7 +273,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
       MPI_Isend(info[r].send_entry,
-		sizeof(send_entry) / sizeof(int) * info[r].n_send_entries,
+		sizeof(dsend_entry) / sizeof(int) * info[r].n_send_entries,
 		MPI_INT, r, 111, comm, &send_reqs[n_send_ranks++]);
     }
   }  
@@ -364,7 +365,7 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
   for (int r = 0; r < n_ranks; r++) {
     cinfo[r].n_send = 0;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
-      send_entry *se = &cinfo[r].send_entry[i];
+      dsend_entry *se = &cinfo[r].send_entry[i];
       patch *patch = &patches[se->patch];
       dnei *nei = &patch->nei[se->dir1];
       unsigned int n_send = nei->send_buf.size();
@@ -387,7 +388,8 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
+	  int dir1neg = mrc_ddc_dir2idx(dirneg);
 	  dnei *nei_send = &patches[nei->patch].nei[dir1neg];
 	  patch->n_recv += nei_send->send_buf.size();
 	}
@@ -426,7 +428,7 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
   for (int r = 0; r < n_ranks; r++) {
     cinfo[r].n_recv = 0;
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
-      recv_entry *re = &cinfo[r].recv_entry[i];
+      drecv_entry *re = &cinfo[r].recv_entry[i];
       patch *patch = &patches[re->patch];
       patch->n_recv += cinfo[r].recv_cnts[i];
       cinfo[r].n_recv += cinfo[r].recv_cnts[i];
@@ -445,7 +447,7 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
 
     iterator_t it0 = it;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
-      send_entry *se = &cinfo[r].send_entry[i];
+      dsend_entry *se = &cinfo[r].send_entry[i];
       patch *patch = &patches[se->patch];
       particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
@@ -497,7 +499,8 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
+	  int dir1neg = mrc_ddc_dir2idx(dirneg);
 	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank != rank) {
 	    continue;
@@ -519,7 +522,7 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
-      recv_entry *re = &cinfo[r].recv_entry[i];
+      drecv_entry *re = &cinfo[r].recv_entry[i];
       std::copy(it, it + cinfo[r].recv_cnts[i], it_recv[re->patch]);
       it += cinfo[r].recv_cnts[i];
       it_recv[re->patch] += cinfo[r].recv_cnts[i];

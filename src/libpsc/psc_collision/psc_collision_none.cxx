@@ -15,7 +15,9 @@ psc_collision_none_run(struct psc_collision *collision,
 // ======================================================================
 // psc_collision: subclass "none"
 
-struct psc_collision_ops psc_collision_none_ops = {
-  .name                  = "none",
-  .run                   = psc_collision_none_run,
-};
+struct psc_collision_ops_none : psc_collision_ops {
+  psc_collision_ops_none() {
+    name                  = "none";
+    run                   = psc_collision_none_run;
+  }
+} psc_collision_none_ops;

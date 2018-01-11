@@ -254,13 +254,15 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
 // ======================================================================
 // psc_bnd: subclass "cuda"
 
-struct psc_bnd_ops psc_bnd_cuda_ops = {
-  .name                    = "cuda",
-  .size                    = sizeof(struct psc_bnd_cuda),
-  .setup                   = psc_bnd_cuda_setup,
-  .destroy                 = psc_bnd_cuda_destroy,
-  .create_ddc              = psc_bnd_cuda_create_ddc,
-  .add_ghosts              = psc_bnd_cuda_add_ghosts,
-  .fill_ghosts             = psc_bnd_cuda_fill_ghosts,
-};
+struct psc_bnd_ops_cuda : psc_bnd_ops {
+  psc_bnd_ops_cuda() {
+    name                    = "cuda";
+    size                    = sizeof(struct psc_bnd_cuda);
+    setup                   = psc_bnd_cuda_setup;
+    destroy                 = psc_bnd_cuda_destroy;
+    create_ddc              = psc_bnd_cuda_create_ddc;
+    add_ghosts              = psc_bnd_cuda_add_ghosts;
+    fill_ghosts             = psc_bnd_cuda_fill_ghosts;
+  }
+} psc_bnd_cuda_ops;
 

@@ -180,15 +180,27 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 
   iterator find(int id)
   {
-    return std::find_if(begin(), end(),
-			[&id](const Species &sp) { return sp.id == id; });
+    for (iterator sp = begin(); sp != end(); ++sp) {
+      if (sp->id == id) {
+	return sp;
+      }
+    }
+    return end();
+    /* return std::find_if(begin(), end(), */
+    /* 			[&id](const Species &sp) { return sp.id == id; }); */
   }
   
   iterator find(const char *name)
   {
     assert(name);
-    return std::find_if(begin(), end(),
-			[&name](const Species &sp) { return strcmp(sp.name, name) == 0; });
+    for (iterator sp = begin(); sp != end(); ++sp) {
+      if (strcmp(sp->name, name) == 0) {
+	return sp;
+      }
+    }
+    return end();
+    /* return std::find_if(begin(), end(), */
+    /* 			[&name](const Species &sp) { return strcmp(sp.name, name) == 0; }); */
   }
   
   Species *append(Species *sp)

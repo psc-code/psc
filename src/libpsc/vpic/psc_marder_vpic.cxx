@@ -104,9 +104,11 @@ psc_marder_vpic_run(struct psc_marder *marder,
 // ----------------------------------------------------------------------
 // psc_marder: subclass "vpic"
 
-struct psc_marder_ops psc_marder_vpic_ops = {
-  .name                  = "vpic",
-  .size                  = sizeof(struct psc_marder_vpic),
-  .run                   = psc_marder_vpic_run,
-};
+struct psc_marder_ops_vpic : psc_marder_ops {
+  psc_marder_ops_vpic() {
+    name                  = "vpic";
+    size                  = sizeof(struct psc_marder_vpic);
+    run                   = psc_marder_vpic_run;
+  }
+} psc_marder_vpic_ops;
 

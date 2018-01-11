@@ -41,10 +41,12 @@ struct output_flds_ops
   }
 };
 
-struct psc_output_fields_item_ops psc_output_fields_item_dive_ops = {
-  .name      = "dive_" FIELDS_TYPE,
-  .nr_comp   = 1,
-  .fld_names = { "dive" },
-  .run_all   = output_flds_ops<mfields_t>::calc_dive_nc,
-};
+struct psc_output_fields_item_dive_ops : psc_output_fields_item_ops {
+  psc_output_fields_item_dive_ops() {
+    name      = "dive_" FIELDS_TYPE;
+    nr_comp   = 1;
+    fld_names[0] = "dive";
+    run_all   = output_flds_ops<mfields_t>::calc_dive_nc;
+  }
+} psc_output_fields_item_dive_ops;
 

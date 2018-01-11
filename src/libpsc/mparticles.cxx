@@ -239,6 +239,18 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
 
 // ======================================================================
 
+extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
+extern struct psc_mparticles_ops psc_mparticles_single_ops;
+extern struct psc_mparticles_ops psc_mparticles_double_ops;
+extern struct psc_mparticles_ops psc_mparticles_sse2_ops;
+extern struct psc_mparticles_ops psc_mparticles_cbe_ops;
+extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
+extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
+extern struct psc_mparticles_ops psc_mparticles_cuda2_ops;
+extern struct psc_mparticles_ops psc_mparticles_acc_ops;
+extern struct psc_mparticles_ops psc_mparticles_vpic_ops;
+extern struct psc_mparticles_ops psc_mparticles_single_by_kind_ops;
+
 static void
 psc_mparticles_init()
 {
@@ -269,11 +281,13 @@ static struct param psc_mparticles_descr[] = {
 };
 #undef VAR
 
-struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
-  .name             = "psc_mparticles",
-  .size             = sizeof(struct psc_mparticles),
-  .param_descr      = psc_mparticles_descr,
-  .init             = psc_mparticles_init,
-  .view             = _psc_mparticles_view,
-};
+struct mrc_class_psc_mparticles_ : mrc_class_psc_mparticles {
+  mrc_class_psc_mparticles_() {
+    name             = "psc_mparticles";
+    size             = sizeof(struct psc_mparticles);
+    param_descr      = psc_mparticles_descr;
+    init             = psc_mparticles_init;
+    view             = _psc_mparticles_view;
+  }
+} mrc_class_psc_mparticles;
 

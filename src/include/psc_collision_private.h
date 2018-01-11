@@ -15,11 +15,6 @@ struct psc_collision_ops {
 
 // ======================================================================
 
-extern struct psc_collision_ops psc_collision_none_ops;
-extern struct psc_collision_ops psc_collision_fortran_ops;
-extern struct psc_collision_ops psc_collision_single_ops;
-extern struct psc_collision_ops psc_collision_vpic_ops;
-
 #define psc_collision_ops(collision) ((struct psc_collision_ops *)((collision)->obj.ops))
 
 #endif

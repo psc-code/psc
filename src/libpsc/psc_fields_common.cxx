@@ -364,7 +364,7 @@ MPFX(max_comp)(struct psc_mfields *mflds, int m)
 fields_t
 MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 {
-  assert((struct psc_mfields_ops *) mflds->obj.ops == &MPFX(ops));
+  //assert((struct psc_mfields_ops *) mflds->obj.ops == &MPFX(ops));
   struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
   fields_t flds;
 
@@ -386,21 +386,23 @@ MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 // ----------------------------------------------------------------------
 // psc_mfields: subclass ops
   
-struct psc_mfields_ops MPFX(ops) = {
-  .name                  = FIELDS_TYPE,
-  .size                  = sizeof(struct MPFX(sub)),
-  .methods               = MPFX(methods),
-  .setup                 = MPFX(setup),
-  .destroy               = MPFX(destroy),
+struct MPFX(psc_mfields_ops) : psc_mfields_ops {
+  MPFX(psc_mfields_ops)() {
+    name                  = FIELDS_TYPE;
+    size                  = sizeof(struct MPFX(sub));
+    methods               = MPFX(methods);
+    setup                 = MPFX(setup);
+    destroy               = MPFX(destroy);
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
-  .write                 = MPFX(write),
-  .read                  = MPFX(read),
+    write                 = MPFX(write);
+    read                  = MPFX(read);
 #endif
-  .zero_comp             = MPFX(zero_comp),
-  .set_comp              = MPFX(set_comp),
-  .scale_comp            = MPFX(scale_comp),
-  .copy_comp             = MPFX(copy_comp),
-  .axpy_comp             = MPFX(axpy_comp),
-  .max_comp              = MPFX(max_comp),
-};
+    zero_comp             = MPFX(zero_comp);
+    set_comp              = MPFX(set_comp);
+    scale_comp            = MPFX(scale_comp);
+    copy_comp             = MPFX(copy_comp);
+    axpy_comp             = MPFX(axpy_comp);
+    max_comp              = MPFX(max_comp);
+  }
+} MPFX(ops);
 

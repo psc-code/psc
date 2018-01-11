@@ -109,6 +109,15 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mp
 // ----------------------------------------------------------------------
 // psc_bnd_particles_init
 
+extern struct psc_bnd_particles_ops psc_bnd_particles_auto_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_single_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_double_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_double_omp_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_single2_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_fortran_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_cuda_ops;
+extern struct psc_bnd_particles_ops psc_bnd_particles_vpic_ops;
+
 static void
 psc_bnd_particles_init()
 {
@@ -139,13 +148,16 @@ static struct param psc_bnd_particles_descr[] = {
 // ======================================================================
 // psc_bnd_particles class
 
-struct mrc_class_psc_bnd_particles mrc_class_psc_bnd_particles = {
-  .name             = "psc_bnd_particles",
-  .size             = sizeof(struct psc_bnd_particles),
-  .param_descr      = psc_bnd_particles_descr,
-  .init             = psc_bnd_particles_init,
-  .destroy          = _psc_bnd_particles_destroy,
-  .write            = _psc_bnd_particles_write,
-  .read             = _psc_bnd_particles_read,
-};
+struct mrc_class_psc_bnd_particles_ : mrc_class_psc_bnd_particles {
+  mrc_class_psc_bnd_particles_()
+  {
+    name             = "psc_bnd_particles";
+    size             = sizeof(struct psc_bnd_particles);
+    param_descr      = psc_bnd_particles_descr;
+    init             = psc_bnd_particles_init;
+    destroy          = _psc_bnd_particles_destroy;
+    write            = _psc_bnd_particles_write;
+    read             = _psc_bnd_particles_read;
+  }
+} mrc_class_psc_bnd_particles;
 

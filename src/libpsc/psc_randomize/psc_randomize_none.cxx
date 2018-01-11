@@ -15,7 +15,9 @@ psc_randomize_none_run(struct psc_randomize *randomize,
 // ======================================================================
 // psc_randomize: subclass "none"
 
-struct psc_randomize_ops psc_randomize_none_ops = {
-  .name                  = "none",
-  .run                   = psc_randomize_none_run,
-};
+struct psc_randomize_ops_none : psc_randomize_ops {
+  psc_randomize_ops_none() {
+    name                  = "none";
+    run                   = psc_randomize_none_run;
+  }
+} psc_randomize_none_ops;

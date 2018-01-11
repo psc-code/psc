@@ -89,7 +89,7 @@ mrc_ts_vec_norm(struct mrc_ts *ts, struct mrc_obj *vec)
 static inline void
 mrc_ts_vec_set(struct mrc_ts *ts, struct mrc_obj *vec, float val)
 {
-  return ts->vec_set(vec, val);
+  ts->vec_set(vec, val);
 }
 
 // ----------------------------------------------------------------------

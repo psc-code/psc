@@ -10,22 +10,26 @@
 
 using psc_bnd_fld_ops_c = psc_bnd_fld_ops<mfields_c_t>;
 
-struct psc_bnd_ops psc_bnd_c_ops = {
-  .name                    = "c",
-  .create_ddc              = psc_bnd_fld_ops_c::create,
-  .add_ghosts              = psc_bnd_fld_ops_c::add_ghosts,
-  .fill_ghosts             = psc_bnd_fld_ops_c::fill_ghosts,
-};
+struct psc_bnd_ops_c : psc_bnd_ops {
+  psc_bnd_ops_c() {
+    name                    = "c";
+    create_ddc              = psc_bnd_fld_ops_c::create;
+    add_ghosts              = psc_bnd_fld_ops_c::add_ghosts;
+    fill_ghosts             = psc_bnd_fld_ops_c::fill_ghosts;
+  }
+} psc_bnd_c_ops;
 
 // ======================================================================
 // psc_bnd: subclass "single"
 
 using psc_bnd_fld_ops_single = psc_bnd_fld_ops<mfields_single_t>;
 
-struct psc_bnd_ops psc_bnd_single_ops = {
-  .name                    = "single",
-  .create_ddc              = psc_bnd_fld_ops_single::create,
-  .add_ghosts              = psc_bnd_fld_ops_single::add_ghosts,
-  .fill_ghosts             = psc_bnd_fld_ops_single::fill_ghosts,
-};
+struct psc_bnd_ops_single : psc_bnd_ops {
+  psc_bnd_ops_single() {
+    name                    = "single";
+    create_ddc              = psc_bnd_fld_ops_single::create;
+    add_ghosts              = psc_bnd_fld_ops_single::add_ghosts;
+    fill_ghosts             = psc_bnd_fld_ops_single::fill_ghosts;
+  }
+} psc_bnd_single_ops;
 

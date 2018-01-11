@@ -43,33 +43,6 @@ struct psc_push_particles_ops {
 
 // ======================================================================
 
-extern struct psc_push_particles_ops psc_push_particles_generic_c_ops;
-extern struct psc_push_particles_ops psc_push_particles_2nd_double_ops;
-extern struct psc_push_particles_ops psc_push_particles_1st_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_single_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_double_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_ps_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_ps2_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb2_single_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec_single_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec_double_ops;
-extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
-extern struct psc_push_particles_ops psc_push_particles_vay_ops;
-extern struct psc_push_particles_ops psc_push_particles_sse2_ops;
-extern struct psc_push_particles_ops psc_push_particles_cbe_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_2x2_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_4x4_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_8x8_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_2x2_gmem_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_4x4_gmem_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_8x8_gmem_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec_cuda2_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec_cuda2_host_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec_acc_ops;
-extern struct psc_push_particles_ops psc_push_particles_vpic_ops;
-
 #define psc_push_particles_ops(push_particles) ((struct psc_push_particles_ops *)((push_particles)->obj.ops))
 
 #endif

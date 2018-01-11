@@ -28,11 +28,13 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
 // ----------------------------------------------------------------------
 // psc_push_particles: subclass "1vb_4x4_cuda"
 
-struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
-  .name                  = "1vb_4x4_cuda",
-  .push_mprts_yz         = psc_push_particles_1vb_4x4_cuda_push_mprts_yz,
-  .mp_flags              = MP_BLOCKSIZE_4X4X4,
-};
+struct psc_push_particles_ops_cuda : psc_push_particles_ops {
+  psc_push_particles_ops_cuda() {
+    name                  = "1vb_4x4_cuda";
+    push_mprts_yz         = psc_push_particles_1vb_4x4_cuda_push_mprts_yz;
+    mp_flags              = MP_BLOCKSIZE_4X4X4;
+  }
+} psc_push_particles_1vb_4x4_cuda_ops;
 
 #define MAKE_1VBEC3D_YZ(BY, BZ, MP_BS, CURRMEM_GLOBAL, MEM)		\
 									\
@@ -58,12 +60,15 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   /* --------------------------------------------------------------- */	\
   /* psc_push_particles: subclass "1vbec3d_BYxBZ_MEM_cuda"           */ \
 									\
-  struct psc_push_particles_ops						\
-  psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_ops = {	\
-    .name                  = "1vbec3d_" #BY "x" #BZ #MEM "_cuda",	\
-    .push_mprts_yz         = psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_push_mprts_yz, \
-    .mp_flags              = MP_BS, \
-  };
+  struct psc_push_particles_ops_##BY## x ##BZ## MEM## _cuda :		\
+    psc_push_particles_ops {						\
+    psc_push_particles_ops_##BY## x ##BZ## MEM## _cuda() {		\
+      name                  = "1vbec3d_" #BY "x" #BZ #MEM "_cuda";	\
+      push_mprts_yz         = psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_push_mprts_yz; \
+      mp_flags              = MP_BS;					\
+    }									\
+  } psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_ops;
+
 
 MAKE_1VBEC3D_YZ(2, 2, MP_BLOCKSIZE_2X2X2, false, );
 MAKE_1VBEC3D_YZ(4, 4, MP_BLOCKSIZE_4X4X4, false, );

@@ -32,8 +32,10 @@ psc_target_init_npt(struct psc_target *target, int pop, double x[3],
 // ----------------------------------------------------------------------
 // psc_target class
 
-struct mrc_class_psc_target mrc_class_psc_target = {
-  .name             = "psc_target",
-  .size             = sizeof(struct psc_target),
-};
+struct mrc_class_psc_target_ : mrc_class_psc_target {
+  mrc_class_psc_target_() {
+    name             = "psc_target";
+    size             = sizeof(struct psc_target);
+  }
+} mrc_class_psc_target;
 

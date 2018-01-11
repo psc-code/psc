@@ -16,7 +16,9 @@ psc_event_generator_none_run(struct psc_event_generator *gen,
 // ======================================================================
 // psc_event_generator: subclass "none"
 
-struct psc_event_generator_ops psc_event_generator_none_ops = {
-  .name                  = "none",
-  .run                   = psc_event_generator_none_run,
-};
+struct psc_event_generator_ops_none : psc_event_generator_ops {
+  psc_event_generator_ops_none() {
+    name                  = "none";
+    run                   = psc_event_generator_none_run;
+  }
+} psc_event_generator_none_ops;

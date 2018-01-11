@@ -114,6 +114,16 @@ psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *mflds)
 // ======================================================================
 // psc_push_fields_init
 
+extern struct psc_push_fields_ops psc_push_fields_c_ops;
+extern struct psc_push_fields_ops psc_push_fields_single_ops;
+extern struct psc_push_fields_ops psc_push_fields_fortran_ops;
+extern struct psc_push_fields_ops psc_push_fields_cbe_ops;
+extern struct psc_push_fields_ops psc_push_fields_cuda_ops;
+extern struct psc_push_fields_ops psc_push_fields_cuda2_ops;
+extern struct psc_push_fields_ops psc_push_fields_acc_ops;
+extern struct psc_push_fields_ops psc_push_fields_vpic_ops;
+extern struct psc_push_fields_ops psc_push_fields_none_ops;
+
 static void
 psc_push_fields_init()
 {
@@ -159,10 +169,12 @@ static struct param psc_push_fields_descr[] = {
 // ======================================================================
 // psc_push_fields class
 
-struct mrc_class_psc_push_fields mrc_class_psc_push_fields = {
-  .name             = "psc_push_fields",
-  .size             = sizeof(struct psc_push_fields),
-  .param_descr      = psc_push_fields_descr,
-  .init             = psc_push_fields_init,
-};
+struct mrc_class_psc_push_fields_ : mrc_class_psc_push_fields {
+  mrc_class_psc_push_fields_() {
+    name             = "psc_push_fields";
+    size             = sizeof(struct psc_push_fields);
+    param_descr      = psc_push_fields_descr;
+    init             = psc_push_fields_init;
+  }
+} mrc_class_psc_push_fields;
 

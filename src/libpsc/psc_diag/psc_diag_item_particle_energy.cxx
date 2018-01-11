@@ -44,10 +44,13 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 // ======================================================================
 // psc_diag_item_particle_energy
 
-struct psc_diag_item_ops psc_diag_item_particle_energy_ops = {
-  .name      = "particle_energy",
-  .run       = psc_diag_item_particle_energy_run,
-  .nr_values = 2,
-  .title     = { "E_electron", "E_ion" },
-};
+struct psc_diag_item_ops_p : psc_diag_item_ops {
+  psc_diag_item_ops_p() {
+    name      = "particle_energy";
+    run       = psc_diag_item_particle_energy_run;
+    nr_values = 2;
+    title[0]  = "E_electron";
+    title[1]  = "E_ion";
+  }
+} psc_diag_item_particle_energy_ops;
 

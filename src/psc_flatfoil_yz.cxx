@@ -10,6 +10,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 // ======================================================================
 // psc subclass "flatfoil"
@@ -258,16 +259,18 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 // ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
-struct psc_ops psc_flatfoil_ops = {
-  .name             = "flatfoil",
-  .size             = sizeof(struct psc_flatfoil),
-  .param_descr      = psc_flatfoil_descr,
-  .create           = psc_flatfoil_create,
-  .setup            = psc_flatfoil_setup,
-  .read             = psc_flatfoil_read,
-  .init_field       = psc_flatfoil_init_field,
-  .init_npt         = psc_flatfoil_init_npt,
-};
+struct psc_ops_flatfoil : psc_ops {
+  psc_ops_flatfoil() {
+    name             = "flatfoil";
+    size             = sizeof(struct psc_flatfoil);
+    param_descr      = psc_flatfoil_descr;
+    create           = psc_flatfoil_create;
+    setup            = psc_flatfoil_setup;
+    read             = psc_flatfoil_read;
+    init_field       = psc_flatfoil_init_field;
+    init_npt         = psc_flatfoil_init_npt;
+  }
+} psc_flatfoil_ops;
 
 // ======================================================================
 // psc_event_generator subclass "flatfoil"
@@ -289,10 +292,12 @@ psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
 // ----------------------------------------------------------------------
 // psc_event_generator_ops "flatfoil"
 
-struct psc_event_generator_ops psc_event_generator_flatfoil_ops = {
-  .name                  = "flatfoil",
-  .run                   = psc_event_generator_flatfoil_run,
-};
+struct psc_event_generator_ops_flatfoil : psc_event_generator_ops {
+  psc_event_generator_ops_flatfoil() {
+    name                  = "flatfoil";
+    run                   = psc_event_generator_flatfoil_run;
+  }
+} psc_event_generator_flatfoil_ops;
 
 
 // ======================================================================
@@ -371,13 +376,15 @@ psc_target_foil_init_npt(struct psc_target *target, int pop, double x[3],
 // ----------------------------------------------------------------------
 // psc_target "foil"
 
-static struct psc_target_ops psc_target_ops_foil = {
-  .name                = "foil",
-  .size                = sizeof(struct psc_target_foil),
-  .param_descr         = psc_target_foil_descr,
-  .is_inside           = psc_target_foil_is_inside,
-  .init_npt            = psc_target_foil_init_npt,
-};
+struct psc_target_ops_foil : psc_target_ops {
+  psc_target_ops_foil() {
+    name                = "foil";
+    size                = sizeof(struct psc_target_foil);
+    param_descr         = psc_target_foil_descr;
+    is_inside           = psc_target_foil_is_inside;
+    init_npt            = psc_target_foil_init_npt;
+  }
+} psc_target_ops_foil;
 
 // ======================================================================
 // psc_heating_spot subclass "foil"
@@ -452,13 +459,15 @@ static struct param psc_heating_spot_foil_descr[] _mrc_unused = {
 // ----------------------------------------------------------------------
 // psc_heating_spot "foil"
 
-static struct psc_heating_spot_ops psc_heating_spot_ops_foil = {
-  .name                = "foil",
-  .size                = sizeof(struct psc_heating_spot_foil),
-  .param_descr         = psc_heating_spot_foil_descr,
-  .setup               = psc_heating_spot_foil_setup,
-  .get_H               = psc_heating_spot_foil_get_H,
-};
+struct psc_heating_spot_ops_foil : psc_heating_spot_ops {
+  psc_heating_spot_ops_foil() {
+    name                = "foil";
+    size                = sizeof(struct psc_heating_spot_foil);
+    param_descr         = psc_heating_spot_foil_descr;
+    setup               = psc_heating_spot_foil_setup;
+    get_H               = psc_heating_spot_foil_get_H;
+  }
+} psc_heating_spot_ops_foil;
 
 // ======================================================================
 // main

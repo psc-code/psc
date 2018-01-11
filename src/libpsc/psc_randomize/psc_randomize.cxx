@@ -24,6 +24,10 @@ psc_randomize_run(struct psc_randomize *randomize, struct psc_mparticles *mprts)
 // ======================================================================
 // psc_randomize_init
 
+extern struct psc_randomize_ops psc_randomize_none_ops;
+extern struct psc_randomize_ops psc_randomize_c_ops;
+extern struct psc_randomize_ops psc_randomize_fortran_ops;
+
 static void
 psc_randomize_init()
 {
@@ -37,9 +41,11 @@ psc_randomize_init()
 // ======================================================================
 // psc_randomize class
 
-struct mrc_class_psc_randomize mrc_class_psc_randomize = {
-  .name             = "psc_randomize",
-  .size             = sizeof(struct psc_randomize),
-  .init             = psc_randomize_init,
-};
+struct mrc_class_psc_randomize_ : mrc_class_psc_randomize {
+  mrc_class_psc_randomize_() {
+    name             = "psc_randomize";
+    size             = sizeof(struct psc_randomize);
+    init             = psc_randomize_init;
+  }
+} mrc_class_psc_randomize;
 

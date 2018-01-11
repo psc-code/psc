@@ -47,6 +47,8 @@ psc_output_fields_run(struct psc_output_fields *output_fields,
 // ======================================================================
 // psc_output_fields_init
 
+extern struct psc_output_fields_ops psc_output_fields_c_ops;
+
 static void
 psc_output_fields_init()
 {
@@ -56,11 +58,13 @@ psc_output_fields_init()
 // ======================================================================
 // psc_output_fields class
 
-struct mrc_class_psc_output_fields mrc_class_psc_output_fields = {
-  .name             = "psc_output_fields",
-  .size             = sizeof(struct psc_output_fields),
-  .init             = psc_output_fields_init,
-  .write            = _psc_output_fields_write,
-  .read             = _psc_output_fields_read,
-};
+struct mrc_class_psc_output_fields_ : mrc_class_psc_output_fields {
+  mrc_class_psc_output_fields_() {
+    name             = "psc_output_fields";
+    size             = sizeof(struct psc_output_fields);
+    init             = psc_output_fields_init;
+    write            = _psc_output_fields_write;
+    read             = _psc_output_fields_read;
+  }
+} mrc_class_psc_output_fields;
 

@@ -410,6 +410,12 @@ psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p)
 
 // ======================================================================
 
+extern struct psc_mfields_ops psc_mfields_c_ops;
+extern struct psc_mfields_ops psc_mfields_fortran_ops;
+extern struct psc_mfields_ops psc_mfields_single_ops;
+extern struct psc_mfields_ops psc_mfields_vpic_ops;
+extern struct psc_mfields_ops psc_mfields_cuda_ops;
+
 static void
 psc_mfields_init()
 {
@@ -442,14 +448,16 @@ static struct param psc_mfields_descr[] = {
 };
 #undef VAR
 
-struct mrc_class_psc_mfields mrc_class_psc_mfields = {
-  .name             = "psc_mfields",
-  .size             = sizeof(struct psc_mfields),
-  .init             = psc_mfields_init,
-  .param_descr      = psc_mfields_descr,
-  .setup            = _psc_mfields_setup,
-  .destroy          = _psc_mfields_destroy,
-  .read             = _psc_mfields_read,
-  .write            = _psc_mfields_write,
-};
+struct mrc_class_psc_mfields_ : mrc_class_psc_mfields {
+  mrc_class_psc_mfields_() {
+    name             = "psc_mfields";
+    size             = sizeof(struct psc_mfields);
+    init             = psc_mfields_init;
+    param_descr      = psc_mfields_descr;
+    setup            = _psc_mfields_setup;
+    destroy          = _psc_mfields_destroy;
+    read             = _psc_mfields_read;
+    write            = _psc_mfields_write;
+  }
+} mrc_class_psc_mfields;
 

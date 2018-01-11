@@ -67,11 +67,13 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
 // ----------------------------------------------------------------------
 // psc_push_fields: subclass "vpic"
 
-struct psc_push_fields_ops psc_push_fields_vpic_ops = {
-  .name                  = "vpic",
-  .size                  = sizeof(struct psc_push_fields_vpic),
-  .setup                 = psc_push_fields_vpic_setup,
-  .push_mflds_H          = psc_push_fields_vpic_push_mflds_H,
-  .push_mflds_E          = psc_push_fields_vpic_push_mflds_E,
-};
+struct psc_push_fields_ops_vpic : psc_push_fields_ops {
+  psc_push_fields_ops_vpic() {
+    name                  = "vpic";
+    size                  = sizeof(struct psc_push_fields_vpic);
+    setup                 = psc_push_fields_vpic_setup;
+    push_mflds_H          = psc_push_fields_vpic_push_mflds_H;
+    push_mflds_E          = psc_push_fields_vpic_push_mflds_E;
+  }
+} psc_push_fields_vpic_ops;
 

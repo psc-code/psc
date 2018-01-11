@@ -23,13 +23,15 @@ struct push_p_ops_1vbec_single_xz
 			    struct psc_mfields *mflds_base);
 };
 
-struct psc_push_particles_ops psc_push_particles_1vbec_single_ops = {
-  .name                  = "1vbec_single",
-  .push_mprts_xyz        = push_p_ops_1vbec_single_<dim_xyz>::push_mprts,
-  .push_mprts_xz         = push_p_ops_1vbec_single_xz<push_p_config<mfields_single_t, dim_xyz>>::push_mprts,
-  .push_mprts_yz         = push_p_ops_1vbec_single_<dim_yz>::push_mprts,
-  .push_mprts_1          = push_p_ops_1vbec_single_<dim_1>::push_mprts,
-  .stagger_mprts_yz      = push_p_ops_1vbec_single_<dim_yz>::stagger_mprts,
-  .particles_type        = PARTICLE_TYPE,
-};
+struct psc_push_particles_ops_1vbec_single : psc_push_particles_ops {
+  psc_push_particles_ops_1vbec_single() {
+    name                  = "1vbec_single";
+    push_mprts_xyz        = push_p_ops_1vbec_single_<dim_xyz>::push_mprts;
+    push_mprts_xz         = push_p_ops_1vbec_single_xz<push_p_config<mfields_single_t, dim_xyz>>::push_mprts;
+    push_mprts_yz         = push_p_ops_1vbec_single_<dim_yz>::push_mprts;
+    push_mprts_1          = push_p_ops_1vbec_single_<dim_1>::push_mprts;
+    stagger_mprts_yz      = push_p_ops_1vbec_single_<dim_yz>::stagger_mprts;
+    particles_type        = PARTICLE_TYPE;
+  }
+} psc_push_particles_1vbec_single_ops;
 

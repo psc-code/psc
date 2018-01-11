@@ -49,10 +49,12 @@ psc_push_particles_1vb_push_mprts_yz(struct psc_push_particles *push,
 // ======================================================================
 // psc_push_particles: subclass "1vb"
 
-struct psc_push_particles_ops psc_push_particles_1vb_ops = {
-  .name                  = "1vb",
-  .size                  = sizeof(struct sub),
-  .setup                 = psc_push_particles_1vb_setup,
-  .push_mprts_yz         = psc_push_particles_1vb_push_mprts_yz,
-};
+struct psc_push_particles_ops_1vb : psc_push_particles_ops {
+  psc_push_particles_ops_1vb() {
+    name                  = "1vb";
+    size                  = sizeof(struct sub);
+    setup                 = psc_push_particles_1vb_setup;
+    push_mprts_yz         = psc_push_particles_1vb_push_mprts_yz;
+  }
+} psc_push_particles_1vb_ops;
 

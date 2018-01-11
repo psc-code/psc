@@ -1,4 +1,6 @@
 
+#include <cstdlib>
+
 #define PTYPE_SINGLE          1
 #define PTYPE_DOUBLE          2
 #define PTYPE_SINGLE_BY_BLOCK 3

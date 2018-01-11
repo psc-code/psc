@@ -16,9 +16,6 @@ struct psc_event_generator_ops {
 
 // ======================================================================
 
-extern struct psc_event_generator_ops psc_event_generator_none_ops;
-extern struct psc_event_generator_ops psc_event_generator_demo_ops;
-
 #define psc_event_generator_ops(event_generator) ((struct psc_event_generator_ops *)((event_generator)->obj.ops))
 
 #endif

@@ -299,14 +299,16 @@ static struct param psc_output_fields_c_descr[] = {
 };
 #undef VAR
 
-struct psc_output_fields_ops psc_output_fields_c_ops = {
-  .name                  = "c",
-  .size                  = sizeof(struct psc_output_fields_c),
-  .param_descr           = psc_output_fields_c_descr,
-  .create                = psc_output_fields_c_create,
-  .setup                 = psc_output_fields_c_setup,
-  .destroy               = psc_output_fields_c_destroy,
-  .write                 = psc_output_fields_c_write,
-  .read                  = psc_output_fields_c_read,
-  .run                   = psc_output_fields_c_run,
-};
+struct psc_output_fields_ops_c : psc_output_fields_ops {
+  psc_output_fields_ops_c() {
+    name                  = "c";
+    size                  = sizeof(struct psc_output_fields_c);
+    param_descr           = psc_output_fields_c_descr;
+    create                = psc_output_fields_c_create;
+    setup                 = psc_output_fields_c_setup;
+    destroy               = psc_output_fields_c_destroy;
+    write                 = psc_output_fields_c_write;
+    read                  = psc_output_fields_c_read;
+    run                   = psc_output_fields_c_run;
+  }
+} psc_output_fields_c_ops;

@@ -20,9 +20,6 @@ struct psc_method_ops {
 
 #define psc_method_ops(method) ((struct psc_method_ops *)((method)->obj.ops))
 
-extern struct psc_method_ops psc_method_ops_default;
-extern struct psc_method_ops psc_method_ops_vpic;
-
 BEGIN_C_DECLS
 
 // maybe useful for non-default subclasses

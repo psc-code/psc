@@ -27,13 +27,15 @@ rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // ----------------------------------------------------------------------
 // psc_output_fields_item: subclass "rho_1st_nc_cuda"
 
-struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_ops = {
-  .name               = "rho_1st_nc_cuda",
-  .nr_comp            = 1,
-  .fld_names          = { "rho_nc_cuda" }, // FIXME
-  .run_all            = rho_run_all,
-  .flags              = POFI_ADD_GHOSTS,
-};
+struct psc_output_fields_item_ops_cuda : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_cuda() {
+    name               = "rho_1st_nc_cuda";
+    nr_comp            = 1;
+    fld_names[0]       = "rho_nc_cuda"; // FIXME
+    run_all            = rho_run_all;
+    flags              = POFI_ADD_GHOSTS;
+  }
+} psc_output_fields_item_rho_1st_nc_cuda_ops;
 
 // ======================================================================
 // n_1st
@@ -61,11 +63,13 @@ n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // ----------------------------------------------------------------------
 // psc_output_fields_item: subclass "n_1st_cuda"
 
-struct psc_output_fields_item_ops psc_output_fields_item_n_1st_cuda_ops = {
-  .name               = "n_1st_cuda",
-  .nr_comp            = 1,
-  .fld_names          = { "n" },
-  .run_all            = n_1st_run_all,
-  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,
-};
+struct psc_output_fields_item_ops_n_1st_cuda : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_n_1st_cuda() {
+    name               = "n_1st_cuda";
+    nr_comp            = 1;
+    fld_names[0]       = "n";
+    run_all            = n_1st_run_all;
+    flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  }
+} psc_output_fields_item_n_1st_cuda_ops;
 

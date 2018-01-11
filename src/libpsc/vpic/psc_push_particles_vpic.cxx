@@ -72,11 +72,13 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 // ----------------------------------------------------------------------
 // psc_push_particles: subclass "vpic"
 
-struct psc_push_particles_ops psc_push_particles_vpic_ops = {
-  .name                  = "vpic",
-  .size                  = sizeof(struct psc_push_particles_vpic),
-  .setup                 = psc_push_particles_vpic_setup,
-  .prep                  = psc_push_particles_vpic_prep,
-  .push_mprts            = psc_push_particles_vpic_push_mprts,
-};
+struct psc_push_particles_ops_vpic : psc_push_particles_ops {
+  psc_push_particles_ops_vpic() {
+    name                  = "vpic";
+    size                  = sizeof(struct psc_push_particles_vpic);
+    setup                 = psc_push_particles_vpic_setup;
+    prep                  = psc_push_particles_vpic_prep;
+    push_mprts            = psc_push_particles_vpic_push_mprts;
+  }
+} psc_push_particles_vpic_ops;
 

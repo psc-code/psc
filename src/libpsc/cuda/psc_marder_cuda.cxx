@@ -159,10 +159,12 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 // ======================================================================
 // psc_marder: subclass "cuda"
 
-struct psc_marder_ops psc_marder_cuda_ops = {
-  .name                  = "cuda",
-  .setup                 = psc_marder_cuda_setup,
-  .destroy               = psc_marder_cuda_destroy,
-  .correct               = psc_marder_cuda_correct,
-};
+struct psc_marder_ops_cuda : psc_marder_ops {
+  psc_marder_ops_cuda() {
+    name                  = "cuda";
+    setup                 = psc_marder_cuda_setup;
+    destroy               = psc_marder_cuda_destroy;
+    correct               = psc_marder_cuda_correct;
+  }
+} psc_marder_cuda_ops;
 

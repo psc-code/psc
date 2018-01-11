@@ -87,6 +87,11 @@ psc_marder_run(struct psc_marder *marder,
 // ----------------------------------------------------------------------
 // psc_marder_init
 
+extern struct psc_marder_ops psc_marder_c_ops;
+extern struct psc_marder_ops psc_marder_single_ops;
+extern struct psc_marder_ops psc_marder_cuda_ops;
+extern struct psc_marder_ops psc_marder_vpic_ops;
+
 static void
 psc_marder_init()
 {
@@ -122,10 +127,12 @@ static struct param psc_marder_descr[] = {
 // ----------------------------------------------------------------------
 // psc_marder class description
 
-struct mrc_class_psc_marder mrc_class_psc_marder = {
-  .name             = "psc_marder",
-  .size             = sizeof(struct psc_marder),
-  .param_descr      = psc_marder_descr,
-  .init             = psc_marder_init,
-};
+struct mrc_class_psc_marder_ : mrc_class_psc_marder {
+  mrc_class_psc_marder_() {
+    name             = "psc_marder";
+    size             = sizeof(struct psc_marder);
+    param_descr      = psc_marder_descr;
+    init             = psc_marder_init;
+  }
+} mrc_class_psc_marder;
 

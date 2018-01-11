@@ -71,19 +71,21 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
-struct psc_mparticles_ops PFX(ops) = {
-  .name                    = PARTICLE_TYPE,
-  .size                    = sizeof(struct psc_mparticles_sub),
-  .methods                 = PFX(methods),
-  .setup                   = PFX(setup),
-  .destroy                 = PFX(destroy),
+struct PFX(ops) : psc_mparticles_ops {
+  PFX(ops)() {
+    name                    = PARTICLE_TYPE;
+    size                    = sizeof(struct psc_mparticles_sub);
+    methods                 = PFX(methods);
+    setup                   = PFX(setup);
+    destroy                 = PFX(destroy);
 #if 0
-  .write                   = PFX(write),
-  .read                    = PFX(read),
+    write                   = PFX(write);
+    read                    = PFX(read);
 #endif
-  .reserve_all             = PFX(reserve_all),
-  .resize_all              = PFX(resize_all),
-  .get_size_all            = PFX(get_size_all),
-  .get_nr_particles        = PFX(get_nr_particles),
-};
+    reserve_all             = PFX(reserve_all);
+    resize_all              = PFX(resize_all);
+    get_size_all            = PFX(get_size_all);
+    get_nr_particles        = PFX(get_nr_particles);
+  }
+} PFX(ops);
 

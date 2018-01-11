@@ -125,6 +125,11 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int m
 // ======================================================================
 // psc_bnd_init
 
+extern struct psc_bnd_ops psc_bnd_c_ops;
+extern struct psc_bnd_ops psc_bnd_single_ops;
+extern struct psc_bnd_ops psc_bnd_cuda_ops;
+extern struct psc_bnd_ops psc_bnd_vpic_ops;
+
 static void
 psc_bnd_init()
 {
@@ -141,13 +146,17 @@ psc_bnd_init()
 // ======================================================================
 // psc_bnd class
 
-struct mrc_class_psc_bnd mrc_class_psc_bnd = {
-  .name             = "psc_bnd",
-  .size             = sizeof(struct psc_bnd),
-  .init             = psc_bnd_init,
-  .setup            = _psc_bnd_setup,
-  .destroy          = _psc_bnd_destroy,
-  .write            = _psc_bnd_write,
-  .read             = _psc_bnd_read,
-};
+struct mrc_class_psc_bnd_ : mrc_class_psc_bnd
+{
+  mrc_class_psc_bnd_()
+  {
+    name             = "psc_bnd";
+    size             = sizeof(struct psc_bnd);
+    init             = psc_bnd_init;
+    setup            = _psc_bnd_setup;
+    destroy          = _psc_bnd_destroy;
+    write            = _psc_bnd_write;
+    read             = _psc_bnd_read;
+  }
+} mrc_class_psc_bnd;
 

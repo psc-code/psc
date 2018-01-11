@@ -16,6 +16,8 @@ psc_event_generator_run(struct psc_event_generator *gen,
 // ======================================================================
 // psc_event_generator_init
 
+extern struct psc_event_generator_ops psc_event_generator_none_ops;
+
 static void
 psc_event_generator_init()
 {
@@ -25,9 +27,11 @@ psc_event_generator_init()
 // ======================================================================
 // psc_event_generator class
 
-struct mrc_class_psc_event_generator mrc_class_psc_event_generator = {
-  .name             = "psc_event_generator",
-  .size             = sizeof(struct psc_event_generator),
-  .init             = psc_event_generator_init,
-};
+struct mrc_class_psc_event_generator_ : mrc_class_psc_event_generator {
+  mrc_class_psc_event_generator_() {
+    name             = "psc_event_generator";
+    size             = sizeof(struct psc_event_generator);
+    init             = psc_event_generator_init;
+  }
+} mrc_class_psc_event_generator;
 

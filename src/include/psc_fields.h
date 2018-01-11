@@ -99,12 +99,6 @@ inline MF psc_mfields::get_as(int mb, int me)
   return MF(mflds);
 }
 
-extern struct psc_mfields_ops psc_mfields_c_ops;
-extern struct psc_mfields_ops psc_mfields_fortran_ops;
-extern struct psc_mfields_ops psc_mfields_single_ops;
-extern struct psc_mfields_ops psc_mfields_vpic_ops;
-extern struct psc_mfields_ops psc_mfields_cuda_ops;
-
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;
   list_t entry;

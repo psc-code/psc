@@ -34,24 +34,28 @@ run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mfl
 // ----------------------------------------------------------------------
 // psc_output_fields_item "vpic_fields"
 
-struct psc_output_fields_item_ops psc_output_fields_item_vpic_fields_ops = {
-  .name      = "vpic_fields",
-  .nr_comp   = 16,
+struct psc_output_fields_item_ops_vpic : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_vpic() {
+    name      = "vpic_fields";
+    nr_comp   = 16;
 #if 0
-  .fld_names = { "ex_ec", "ey_ec", "ez_ec", "dive_nc",
-                 "hx_fc", "hy_fc", "hz_fc", "divb_cc",
-                 "tcax", "tcay", "tcaz", "rhob_nc",
-                 "jx_ec", "jy_ec", "jz_ec", "rho_nc", },
+#if 0
+    fld_names = { "ex_ec", "ey_ec", "ez_ec", "dive_nc",
+		   "hx_fc", "hy_fc", "hz_fc", "divb_cc",
+		   "tcax", "tcay", "tcaz", "rhob_nc",
+		   "jx_ec", "jy_ec", "jz_ec", "rho_nc", };
 #else
-  .fld_names = { "jx_ec", "jy_ec", "jz_ec",
-		 "ex_ec", "ey_ec", "ez_ec",
-                 "hx_fc", "hy_fc", "hz_fc",
-		 "tcax_ec", "tcay_ec", "tcaz_ec",
-                 "div_e_err_nc", "div_b_err_cc",
-		 "rhob_nc", "rhof_nc", },
+    fld_names = { "jx_ec", "jy_ec", "jz_ec",
+		   "ex_ec", "ey_ec", "ez_ec",
+		   "hx_fc", "hy_fc", "hz_fc",
+		   "tcax_ec", "tcay_ec", "tcaz_ec",
+		   "div_e_err_nc", "div_b_err_cc",
+		   "rhob_nc", "rhof_nc", };
 #endif
-  .run_all   = run_all_vpic_fields,
-};
+#endif
+    run_all   = run_all_vpic_fields;
+  }
+} psc_output_fields_item_vpic_fields_ops;
 
 // ----------------------------------------------------------------------
 // run_all_vpic_hydro
@@ -64,7 +68,8 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_mfields_set_type(mflds_hydro, "vpic");
   psc_mfields_set_param_obj(mflds_hydro, "domain", mres->domain);
   psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
-  psc_mfields_set_param_int3(mflds_hydro, "ibn", (int [3]) { 1, 1, 1});
+  int ibn[3] = { 1, 1, 1 };
+  psc_mfields_set_param_int3(mflds_hydro, "ibn", ibn);
   psc_mfields_setup(mflds_hydro);
 
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
@@ -97,14 +102,18 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
 // ----------------------------------------------------------------------
 // psc_output_fields_item "vpic_hydro"
 
-struct psc_output_fields_item_ops psc_output_fields_item_vpic_hydro_ops = {
-  .name      = "vpic_hydro",
-  .nr_comp   = VPIC_HYDRO_N_COMP,
-  .fld_names = { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
-                 "px_nc", "py_nc", "pz_nc", "ke_nc",
-                 "txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",
-                 "tzx_nc", "txy_nc", "_pad0", "_pad1", },
-  .run_all   = run_all_vpic_hydro,
-  .flags     = POFI_BY_KIND,
-};
+struct psc_output_fields_item_ops_vpic_hydro : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_vpic_hydro() {
+    name      = "vpic_hydro";
+    nr_comp   = VPIC_HYDRO_N_COMP;
+#if 0
+    fld_names = { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
+		  "px_nc", "py_nc", "pz_nc", "ke_nc",
+		  "txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",
+		  "tzx_nc", "txy_nc", "_pad0", "_pad1", };
+#endif
+    run_all   = run_all_vpic_hydro;
+    flags     = POFI_BY_KIND;
+  }
+} psc_output_fields_item_vpic_hydro_ops;
 

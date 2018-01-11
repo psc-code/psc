@@ -8,9 +8,11 @@
 // ======================================================================
 // psc_bnd_particles: subclass "fortran"
 
-struct psc_bnd_particles_ops psc_bnd_particles_fortran_ops = {
-  .name                    = "fortran",
-  .setup                   = psc_bnd_particles_sub_setup,
-  .unsetup                 = psc_bnd_particles_sub_unsetup,
-  .exchange_particles      = psc_bnd_particles_sub_exchange_particles,
-};
+struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
+  psc_bnd_particles_ops_fortran() {
+    name                    = "fortran";
+    setup                   = psc_bnd_particles_sub_setup;
+    unsetup                 = psc_bnd_particles_sub_unsetup;
+    exchange_particles      = psc_bnd_particles_sub_exchange_particles;
+  }
+} psc_bnd_particles_fortran_ops;

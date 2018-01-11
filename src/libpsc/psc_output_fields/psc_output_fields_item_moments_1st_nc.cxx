@@ -101,3 +101,43 @@ v_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
 
 
+#define MAKE_OP1(TYPE, NAME, FNAME, RUN)				\
+  struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
+  psc_output_fields_item_ops_##NAME##TYPE() {					\
+    name               = #NAME #TYPE;					\
+    nr_comp	       = 1;						\
+    fld_names[0]       = FNAME;						\
+    run_all            = RUN;						\
+    flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
+  }									\
+  } psc_output_fields_item_##NAME##TYPE##_ops;
+
+#define MAKE_OP1a(TYPE, NAME, FNAME, RUN)				\
+  struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
+  psc_output_fields_item_ops_##NAME##TYPE() {					\
+    name               = #NAME #TYPE;					\
+    nr_comp	       = 3;						\
+    fld_names[0]       = FNAME;						\
+    run_all            = RUN;						\
+    flags              = POFI_ADD_GHOSTS;				\
+  }									\
+  } psc_output_fields_item_##NAME##TYPE##_ops;
+
+#define MAKE_OP3(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, RUN)		\
+  struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
+  psc_output_fields_item_ops_##NAME##TYPE() {					\
+    name               = #NAME #TYPE;					\
+    nr_comp	       = 6;						\
+    fld_names[0]       = FNAMEX;					\
+    fld_names[1]       = FNAMEY;					\
+    fld_names[2]       = FNAMEZ;					\
+    run_all            = RUN;						\
+    flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
+  }									\
+  } psc_output_fields_item_##NAME##TYPE##_ops;
+
+#define MAKE_POFI_OPS(TYPE)						\
+  MAKE_OP1(TYPE, n_1st_nc_, "n_nc", n_run_all)				\
+  MAKE_OP1a(TYPE, rho_1st_nc_, "rho_nc", rho_run_all)			\
+  MAKE_OP3(TYPE, v_1st_nc_, "vx_nc", "vy_nc", "vz_nc", v_run_all)	\
+

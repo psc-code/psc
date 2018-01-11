@@ -112,11 +112,13 @@ static struct param psc_diag_descr[] = {
 // ======================================================================
 // psc_diag class
 
-struct mrc_class_psc_diag mrc_class_psc_diag = {
-  .name             = "psc_diag",
-  .size             = sizeof(struct psc_diag),
-  .param_descr      = psc_diag_descr,
-  .setup            = _psc_diag_setup,
-  .destroy          = _psc_diag_destroy,
-};
+struct mrc_class_psc_diag_ : mrc_class_psc_diag {
+  mrc_class_psc_diag_() {
+    name             = "psc_diag";
+    size             = sizeof(struct psc_diag);
+    param_descr      = psc_diag_descr;
+    setup            = _psc_diag_setup;
+    destroy          = _psc_diag_destroy;
+  }
+} mrc_class_psc_diag;
 

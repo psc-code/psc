@@ -38,12 +38,16 @@ calc_j_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops = {
-  .name      = "j_nc",
-  .nr_comp   = 3,
-  .fld_names = { "jx_nc", "jy_nc", "jz_nc" },
-  .run_all   = calc_j_nc,
-};
+struct psc_output_fields_item_ops_j_nc : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_j_nc() {
+    name      = "j_nc";
+    nr_comp   = 3;
+    fld_names[0] = "jx_nc";
+    fld_names[1] = "jy_nc";
+    fld_names[2] = "jz_nc";
+    run_all   = calc_j_nc;
+  }
+} psc_output_fields_item_j_nc_ops;
 
 // ======================================================================
 
@@ -72,12 +76,16 @@ calc_j(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_j_ops = {
-  .name      = "j",
-  .nr_comp   = 3,
-  .fld_names = { "jx", "jy", "jz" },
-  .run_all   = calc_j,
-};
+struct psc_output_fields_item_ops_j : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_j() {
+    name      = "j";
+    nr_comp   = 3;
+    fld_names[0] = "jx";
+    fld_names[1] = "jy";
+    fld_names[2] = "jz";
+    run_all   = calc_j;
+  }
+} psc_output_fields_item_j_ops;
 
 // ======================================================================
 
@@ -99,12 +107,16 @@ calc_j_ec(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_j_ec_ops = {
-  .name      = "j_ec",
-  .nr_comp   = 3,
-  .fld_names = { "jx_ec", "jy_ec", "jz_ec" },
-  .run_all   = calc_j_ec,
-};
+struct psc_output_fields_item_ops_j_ec : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_j_ec() {
+    name      = "j_ec";
+    nr_comp   = 3;
+    fld_names[0] = "jx_ec";
+    fld_names[1] = "jy_ec";
+    fld_names[2] = "jz_ec";
+    run_all   = calc_j_ec;
+  }
+} psc_output_fields_item_j_ec_ops;
 
 // ======================================================================
 
@@ -130,12 +142,16 @@ calc_E_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_e_nc_ops = {
-  .name      = "e_nc",
-  .nr_comp   = 3,
-  .fld_names = { "ex_nc", "ey_nc", "ez_nc" },
-  .run_all   = calc_E_nc,
-};
+struct psc_output_fields_item_ops_e_nc : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_e_nc() {
+    name      = "e_nc";
+    nr_comp   = 3;
+    fld_names[0] = "ex_nc";
+    fld_names[1] = "ey_nc";
+    fld_names[2] = "ez_nc";
+    run_all   = calc_E_nc;
+  }
+} psc_output_fields_item_e_nc_ops;
 
 // ======================================================================
 
@@ -164,12 +180,16 @@ calc_E_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_e_ops = {
-  .name      = "e",
-  .nr_comp   = 3,
-  .fld_names = { "ex", "ey", "ez" },
-  .run_all   = calc_E_cc,
-};
+struct psc_output_fields_item_ops_e : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_e() {
+    name      = "e";
+    nr_comp   = 3;
+    fld_names[0] = "ex";
+    fld_names[1] = "ey";
+    fld_names[2] = "ez";
+    run_all   = calc_E_cc;
+  }
+} psc_output_fields_item_e_ops;
 
 // ======================================================================
 
@@ -191,12 +211,16 @@ calc_E_ec(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_e_ec_ops = {
-  .name      = "e_ec",
-  .nr_comp   = 3,
-  .fld_names = { "ex_ec", "ey_ec", "ez_ec" },
-  .run_all   = calc_E_ec,
-};
+struct psc_output_fields_item_ops_e_ec : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_e_ec() {
+    name      = "e_ec";
+    nr_comp   = 3;
+    fld_names[0] = "ex_ec";
+    fld_names[1] = "ey_ec";
+    fld_names[2] = "ez_ec";
+    run_all   = calc_E_ec;
+  }
+} psc_output_fields_item_e_ec_ops;
 
 // ======================================================================
 
@@ -225,12 +249,16 @@ calc_H_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_h_nc_ops = {
-  .name      = "h_nc",
-  .nr_comp   = 3,
-  .fld_names = { "hx_nc", "hy_nc", "hz_nc" },
-  .run_all   = calc_H_nc,
-};
+struct psc_output_fields_item_ops_h_nc : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_h_nc() {
+    name      = "h_nc";
+    nr_comp   = 3;
+    fld_names[0] = "hx_nc";
+    fld_names[1] = "hy_nc";
+    fld_names[2] = "hz_nc";
+    run_all   = calc_H_nc;
+  }
+} psc_output_fields_item_h_nc_ops;
 
 // ======================================================================
 
@@ -256,12 +284,16 @@ calc_H_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_h_ops = {
-  .name      = "h",
-  .nr_comp   = 3,
-  .fld_names = { "hx", "hy", "hz" },
-  .run_all   = calc_H_cc,
-};
+struct psc_output_fields_item_ops_h : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_h() {
+    name      = "h";
+    nr_comp   = 3;
+    fld_names[0] = "hx";
+    fld_names[1] = "hy";
+    fld_names[2] = "hz";
+    run_all   = calc_H_cc;
+  }
+} psc_output_fields_item_h_ops;
 
 // ======================================================================
 
@@ -283,12 +315,16 @@ calc_H_fc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_h_fc_ops = {
-  .name      = "h_fc",
-  .nr_comp   = 3,
-  .fld_names = { "hx_fc", "hy_fc", "hz_fc" },
-  .run_all   = calc_H_fc,
-};
+struct psc_output_fields_item_ops_h_fc : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_h_fc() {
+    name      = "h_fc";
+    nr_comp   = 3;
+    fld_names[0] = "hx_fc";
+    fld_names[1] = "hy_fc";
+    fld_names[2] = "hz_fc";
+    run_all   = calc_H_fc;
+  }
+} psc_output_fields_item_h_fc_ops;
 
 // ======================================================================
 
@@ -310,12 +346,16 @@ calc_jdote_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_jdote_ops = {
-  .name      = "jdote",
-  .nr_comp   = 3,
-  .fld_names = { "jxex", "jyey", "jzez" },
-  .run_all   = calc_jdote_cc,
-};
+struct psc_output_fields_item_ops_jdote : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_jdote() {
+    name      = "jdote";
+    nr_comp   = 3;
+    fld_names[0] = "jxex";
+    fld_names[1] = "jyey";
+    fld_names[2] = "jzez";
+    run_all   = calc_jdote_cc;
+  }
+} psc_output_fields_item_jdote_ops;
 
 // ======================================================================
 
@@ -340,12 +380,16 @@ calc_poyn_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_poyn_ops = {
-  .name      = "poyn",
-  .nr_comp   = 3,
-  .fld_names = { "poynx", "poyny", "poynz" },
-  .run_all   = calc_poyn_cc,
-};
+struct psc_output_fields_item_ops_poyn : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_poyn() {
+    name      = "poyn";
+    nr_comp   = 3;
+    fld_names[0] = "poynx";
+    fld_names[1] = "poyny";
+    fld_names[2] = "poynz";
+    run_all   = calc_poyn_cc;
+  }
+} psc_output_fields_item_poyn_ops;
 
 // ======================================================================
 
@@ -367,12 +411,16 @@ calc_E2_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_e2_ops = {
-  .name      = "e2",
-  .nr_comp   = 3,
-  .fld_names = { "ex2", "ey2", "ez2" },
-  .run_all   = calc_E2_cc,
-};
+struct psc_output_fields_item_ops_e2 : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_e2() {
+    name      = "e2";
+    nr_comp   = 3;
+    fld_names[0] = "ex2";
+    fld_names[1] = "ey2";
+    fld_names[2] = "ez2";
+    run_all   = calc_E2_cc;
+  }
+} psc_output_fields_item_e2_ops;
 
 // ======================================================================
 
@@ -394,12 +442,16 @@ calc_H2_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_h2_ops = {
-  .name      = "h2",
-  .nr_comp   = 3,
-  .fld_names = { "hx2", "hy2", "hz2" },
-  .run_all   = calc_H2_cc,
-};
+struct psc_output_fields_item_ops_h2 : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_h2() {
+    name      = "h2";
+    nr_comp   = 3;
+    fld_names[0] = "hx2";
+    fld_names[1] = "hy2";
+    fld_names[2] = "hz2";
+    run_all   = calc_H2_cc;
+  }
+} psc_output_fields_item_h2_ops;
 
 // ======================================================================
 
@@ -422,12 +474,14 @@ calc_divb(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_divb_ops = {
-  .name      = "divb",
-  .nr_comp   = 1,
-  .fld_names = { "divb" },
-  .run_all   = calc_divb,
-};
+struct psc_output_fields_item_ops_divb : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_divb() {
+    name      = "divb";
+    nr_comp   = 1;
+    fld_names[0] = "divb";
+    run_all   = calc_divb;
+  }
+} psc_output_fields_item_divb_ops;
 
 // ======================================================================
 
@@ -450,10 +504,12 @@ calc_divj_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   mf.put_as(mflds_base, 0, 0);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_divj_ops = {
-  .name      = "divj",
-  .nr_comp   = 1,
-  .fld_names = { "divj" },
-  .run_all   = calc_divj_nc,
-};
+struct psc_output_fields_item_ops_divj : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_divj() {
+    name      = "divj";
+    nr_comp   = 1;
+    fld_names[0] = "divj";
+    run_all   = calc_divj_nc;
+  }
+} psc_output_fields_item_divj_ops;
 

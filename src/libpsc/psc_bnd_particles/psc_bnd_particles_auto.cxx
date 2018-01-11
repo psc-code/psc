@@ -60,10 +60,12 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, struct p
 // ======================================================================
 // psc_bnd_particles: subclass "auto"
 
-struct psc_bnd_particles_ops psc_bnd_particles_auto_ops = {
-  .name                    = "auto",
-  .size                    = sizeof(struct sub),
-  .setup                   = psc_bnd_particles_sub_setup,
-  .unsetup                 = psc_bnd_particles_sub_unsetup,
-  .exchange_particles      = psc_bnd_particles_sub_exchange_particles,
-};
+struct psc_bnd_particles_ops_auto : psc_bnd_particles_ops {
+  psc_bnd_particles_ops_auto() {
+    name                    = "auto";
+    size                    = sizeof(struct sub);
+    setup                   = psc_bnd_particles_sub_setup;
+    unsetup                 = psc_bnd_particles_sub_unsetup;
+    exchange_particles      = psc_bnd_particles_sub_exchange_particles;
+  }
+} psc_bnd_particles_auto_ops;

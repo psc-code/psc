@@ -19,9 +19,11 @@ psc_heating_spot_get_H(struct psc_heating_spot *spot, double *xx)
 // ----------------------------------------------------------------------
 // psc_heating_spot class
 
-struct mrc_class_psc_heating_spot mrc_class_psc_heating_spot = {
-  .name             = "psc_heating_spot",
-  .size             = sizeof(struct psc_heating_spot),
-};
+struct mrc_class_psc_heating_spot_ : mrc_class_psc_heating_spot {
+  mrc_class_psc_heating_spot_() {
+    name             = "psc_heating_spot";
+    size             = sizeof(struct psc_heating_spot);
+  }
+} mrc_class_psc_heating_spot;
 
 

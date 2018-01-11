@@ -319,17 +319,19 @@ static struct mrc_obj_method psc_mfields_cuda_methods[] = {
   {}
 };
 
-struct psc_mfields_ops psc_mfields_cuda_ops = {
-  .name                  = "cuda",
-  .size                  = sizeof(struct psc_mfields_cuda),
-  .methods               = psc_mfields_cuda_methods,
-  .setup                 = psc_mfields_cuda_setup,
-  .destroy               = psc_mfields_cuda_destroy,
+struct psc_mfields_ops_cuda : psc_mfields_ops {
+  psc_mfields_ops_cuda() {
+    name                  = "cuda";
+    size                  = sizeof(struct psc_mfields_cuda);
+    methods               = psc_mfields_cuda_methods;
+    setup                 = psc_mfields_cuda_setup;
+    destroy               = psc_mfields_cuda_destroy;
 #ifdef HAVE_LIBHDF5_HL
-  .write                 = psc_mfields_cuda_write,
-  .read                  = psc_mfields_cuda_read,
+    write                 = psc_mfields_cuda_write;
+    read                  = psc_mfields_cuda_read;
 #endif
-  .zero_comp             = psc_mfields_cuda_zero_comp,
-  .axpy_comp             = psc_mfields_cuda_axpy_comp,
-};
+    zero_comp             = psc_mfields_cuda_zero_comp;
+    axpy_comp             = psc_mfields_cuda_axpy_comp;
+  }
+} psc_mfields_cuda_ops;
 

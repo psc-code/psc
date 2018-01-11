@@ -251,15 +251,17 @@ psc_mparticles_vpic_inject(struct psc_mparticles *mprts, int p,
 // ----------------------------------------------------------------------
 // psc_mparticles: subclass "vpic"
   
-struct psc_mparticles_ops psc_mparticles_vpic_ops = {
-  .name                    = "vpic",
-  .size                    = sizeof(struct psc_mparticles_vpic),
-  .methods                 = psc_mparticles_vpic_methods,
-  .setup                   = psc_mparticles_vpic_setup,
-  .reserve_all             = psc_mparticles_vpic_reserve_all,
-  .get_size_all            = psc_mparticles_vpic_get_size_all,
-  .resize_all              = psc_mparticles_vpic_resize_all,
-  .get_nr_particles        = psc_mparticles_vpic_get_nr_particles,
-  .inject                  = psc_mparticles_vpic_inject,
-};
+struct psc_mparticles_ops_vpic : psc_mparticles_ops {
+  psc_mparticles_ops_vpic() {
+    name                    = "vpic";
+    size                    = sizeof(struct psc_mparticles_vpic);
+    methods                 = psc_mparticles_vpic_methods;
+    setup                   = psc_mparticles_vpic_setup;
+    reserve_all             = psc_mparticles_vpic_reserve_all;
+    get_size_all            = psc_mparticles_vpic_get_size_all;
+    resize_all              = psc_mparticles_vpic_resize_all;
+    get_nr_particles        = psc_mparticles_vpic_get_nr_particles;
+    inject                  = psc_mparticles_vpic_inject;
+  }
+} psc_mparticles_vpic_ops;
 

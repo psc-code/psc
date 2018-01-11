@@ -40,10 +40,12 @@ psc_collision_vpic_run(struct psc_collision *collision,
 // ----------------------------------------------------------------------
 // psc_collision: subclass "vpic"
 
-struct psc_collision_ops psc_collision_vpic_ops = {
-  .name                  = "vpic",
-  .size                  = sizeof(struct psc_collision_vpic),
-  .setup                 = psc_collision_vpic_setup,
-  .run                   = psc_collision_vpic_run,
-};
+struct psc_collision_ops_vpic : psc_collision_ops {
+  psc_collision_ops_vpic() {
+    name                  = "vpic";
+    size                  = sizeof(struct psc_collision_vpic);
+    setup                 = psc_collision_vpic_setup;
+    run                   = psc_collision_vpic_run;
+  }
+} psc_collision_vpic_ops;
 

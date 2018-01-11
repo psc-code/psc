@@ -53,18 +53,6 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 #define MP_BLOCKSIZE_4X4X4    (0x3000)
 #define MP_BLOCKSIZE_8X8X8    (0x4000)
 
-extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
-extern struct psc_mparticles_ops psc_mparticles_single_ops;
-extern struct psc_mparticles_ops psc_mparticles_double_ops;
-extern struct psc_mparticles_ops psc_mparticles_sse2_ops;
-extern struct psc_mparticles_ops psc_mparticles_cbe_ops;
-extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
-extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
-extern struct psc_mparticles_ops psc_mparticles_cuda2_ops;
-extern struct psc_mparticles_ops psc_mparticles_acc_ops;
-extern struct psc_mparticles_ops psc_mparticles_vpic_ops;
-extern struct psc_mparticles_ops psc_mparticles_single_by_kind_ops;
-
 
 int  psc_mparticles_nr_particles(struct psc_mparticles *mprts);
 void psc_mparticles_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch);

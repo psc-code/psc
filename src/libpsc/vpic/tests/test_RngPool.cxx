@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <random>
 #include <cassert>
+#include <typeinfo>
 #include "mrc_common.h"
 
 // ----------------------------------------------------------------------

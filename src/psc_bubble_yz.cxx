@@ -238,16 +238,18 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
 // ======================================================================
 // psc_bubble_ops
 
-struct psc_ops psc_bubble_ops = {
-  .name             = "bubble",
-  .size             = sizeof(struct psc_bubble),
-  .param_descr      = psc_bubble_descr,
-  .create           = psc_bubble_create,
-  .setup            = psc_bubble_setup,
-  .read             = psc_bubble_read,
-  .init_field       = psc_bubble_init_field,
-  .init_npt         = psc_bubble_init_npt,
-};
+struct psc_ops_bubble : psc_ops {
+  psc_ops_bubble() {
+    name             = "bubble";
+    size             = sizeof(struct psc_bubble);
+    param_descr      = psc_bubble_descr;
+    create           = psc_bubble_create;
+    setup            = psc_bubble_setup;
+    read             = psc_bubble_read;
+    init_field       = psc_bubble_init_field;
+    init_npt         = psc_bubble_init_npt;
+  }
+} psc_bubble_ops;
 
 // ======================================================================
 // main

@@ -25,9 +25,11 @@ psc_bnd_particles_vpic_unsetup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles: subclass "vpic"
 
-struct psc_bnd_particles_ops psc_bnd_particles_vpic_ops = {
-  .name                  = "vpic",
-  .exchange_particles    = psc_bnd_particles_vpic_exchange_particles,
-  .unsetup               = psc_bnd_particles_vpic_unsetup,
-};
+struct psc_bnd_particles_ops_vpic : psc_bnd_particles_ops {
+  psc_bnd_particles_ops_vpic() {
+    name                  = "vpic";
+    exchange_particles    = psc_bnd_particles_vpic_exchange_particles;
+    unsetup               = psc_bnd_particles_vpic_unsetup;
+  }
+} psc_bnd_particles_vpic_ops;
 

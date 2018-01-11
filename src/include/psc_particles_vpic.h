@@ -25,7 +25,6 @@ struct mparticles_traits<mparticles_vpic_t>
 };
 
 #define psc_mparticles_vpic(mprts)({					\
-      assert((struct psc_mparticles_ops *) mprts->obj.ops == &psc_mparticles_vpic_ops); \
       mrc_to_subobj(mprts, struct psc_mparticles_vpic);			\
 })
 

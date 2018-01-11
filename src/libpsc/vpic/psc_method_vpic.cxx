@@ -292,14 +292,16 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_method "vpic"
 
-struct psc_method_ops psc_method_ops_vpic = {
-  .name                          = "vpic",
-  .size                          = sizeof(struct psc_method_vpic),
-  .param_descr                   = psc_method_vpic_descr,
-  .do_setup                      = psc_method_vpic_do_setup,
-  .setup_partition               = psc_method_vpic_setup_partition,
-  .set_ic_particles              = psc_method_vpic_set_ic_particles,
-  .set_ic_fields                 = psc_method_vpic_set_ic_fields,
-  .initialize                    = psc_method_vpic_initialize,
-  .output                        = psc_method_vpic_output,
-};
+struct psc_method_ops_vpic : psc_method_ops {
+  psc_method_ops_vpic() {
+    name                          = "vpic";
+    size                          = sizeof(struct psc_method_vpic);
+    param_descr                   = psc_method_vpic_descr;
+    do_setup                      = psc_method_vpic_do_setup;
+    setup_partition               = psc_method_vpic_setup_partition;
+    set_ic_particles              = psc_method_vpic_set_ic_particles;
+    set_ic_fields                 = psc_method_vpic_set_ic_fields;
+    initialize                    = psc_method_vpic_initialize;
+    output                        = psc_method_vpic_output;
+  }
+} psc_method_ops_vpic;

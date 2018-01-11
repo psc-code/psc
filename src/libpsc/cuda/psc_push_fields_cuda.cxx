@@ -44,8 +44,10 @@ psc_push_fields_cuda_push_mflds_H(struct psc_push_fields *push, struct psc_mfiel
 // ======================================================================
 // psc_push_fields: subclass "cuda"
 
-struct psc_push_fields_ops psc_push_fields_cuda_ops = {
-  .name                  = "cuda",
-  .push_mflds_E          = psc_push_fields_cuda_push_mflds_E,
-  .push_mflds_H          = psc_push_fields_cuda_push_mflds_H,
-};
+struct psc_push_fields_ops_cuda : psc_push_fields_ops {
+  psc_push_fields_ops_cuda() {
+    name                  = "cuda";
+    push_mflds_E          = psc_push_fields_cuda_push_mflds_E;
+    push_mflds_H          = psc_push_fields_cuda_push_mflds_H;
+  }
+} psc_push_fields_cuda_ops;

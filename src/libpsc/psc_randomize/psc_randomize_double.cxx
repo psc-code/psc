@@ -30,7 +30,9 @@ psc_randomize_c_run(struct psc_randomize *randomize,
 // ======================================================================
 // psc_randomize: subclass "c"
 
-struct psc_randomize_ops psc_randomize_c_ops = {
-  .name                  = "c",
-  .run                   = psc_randomize_c_run,
-};
+struct psc_randomize_ops_double : psc_randomize_ops {
+  psc_randomize_ops_double() {
+    name                  = "c";
+    run                   = psc_randomize_c_run;
+  }
+} psc_randomize_c_ops;

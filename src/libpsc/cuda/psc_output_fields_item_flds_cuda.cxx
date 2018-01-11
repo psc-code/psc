@@ -25,10 +25,12 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   mf_res.put_as(mres_base, 0, 1);
 }
 
-struct psc_output_fields_item_ops psc_output_fields_item_dive_cuda_ops = {
-  .name      = "dive_cuda",
-  .nr_comp   = 1,
-  .fld_names = { "dive" },
-  .run_all   = calc_dive_nc,
-};
+struct psc_output_fields_item_ops_dive_cuda : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_dive_cuda() {
+    name         = "dive_cuda";
+    nr_comp      = 1;
+    fld_names[0] = "dive";
+    run_all      = calc_dive_nc;
+  }
+} psc_output_fields_item_dive_cuda_ops;
 

@@ -9,10 +9,13 @@
 // ======================================================================
 // psc_balance subclass "single"
 
-struct psc_balance_ops psc_balance_single_ops = {
-  .name                  = "single",
-  .mprts_type            = "single",
-  .mflds_type            = "single",
-  .communicate_particles = psc_balance_sub_communicate_particles,
-  .communicate_fields    = psc_balance_sub_communicate_fields,
-};
+struct psc_balance_ops_single : psc_balance_ops
+{
+  psc_balance_ops_single() {
+    name                  = "single";
+    mprts_type            = "single";
+    mflds_type            = "single";
+    communicate_particles = psc_balance_sub_communicate_particles;
+    communicate_fields    = psc_balance_sub_communicate_fields;
+  }
+} psc_balance_single_ops;

@@ -293,32 +293,34 @@ static struct mrc_obj_method psc_mfields_vpic_methods[] = {
   {}
 };
 
-struct psc_mfields_ops psc_mfields_vpic_ops = {
-  .name                  = "vpic",
-  .size                  = sizeof(struct psc_mfields_vpic),
-  .methods               = psc_mfields_vpic_methods,
-  .setup                 = psc_mfields_vpic_setup,
-  .destroy               = psc_mfields_vpic_destroy,
+struct psc_mfields_ops_vpic : psc_mfields_ops {
+  psc_mfields_ops_vpic() {
+    name                  = "vpic";
+    size                  = sizeof(struct psc_mfields_vpic);
+    methods               = psc_mfields_vpic_methods;
+    setup                 = psc_mfields_vpic_setup;
+    destroy               = psc_mfields_vpic_destroy;
 #if 0
 #ifdef HAVE_LIBHDF5_HL
-  .write                 = psc_mfields_vpic_write,
-  .read                  = psc_mfields_vpic_read,
+    write                 = psc_mfields_vpic_write;
+    read                  = psc_mfields_vpic_read;
 #endif
-  .zero_comp             = psc_mfields_vpic_zero_comp,
-  .axpy_comp             = psc_mfields_vpic_axpy_comp,
+    zero_comp             = psc_mfields_vpic_zero_comp;
+    axpy_comp             = psc_mfields_vpic_axpy_comp;
 #endif
-  .synchronize_tang_e_norm_b = psc_mfields_vpic_synchronize_tang_e_norm_b,
-  .compute_div_b_err         = psc_mfields_vpic_compute_div_b_err,
-  .compute_rms_div_b_err     = psc_mfields_vpic_compute_rms_div_b_err,
-  .clean_div_b               = psc_mfields_vpic_clean_div_b,
-  .compute_div_e_err         = psc_mfields_vpic_compute_div_e_err,
-  .compute_rms_div_e_err     = psc_mfields_vpic_compute_rms_div_e_err,
-  .clean_div_e               = psc_mfields_vpic_clean_div_e,
-  .clear_rhof                = psc_mfields_vpic_clear_rhof,
-  .accumulate_rho_p          = psc_mfields_vpic_accumulate_rho_p,
-  .synchronize_rho           = psc_mfields_vpic_synchronize_rho,
-  .compute_rhob              = psc_mfields_vpic_compute_rhob,
-  .compute_curl_b            = psc_mfields_vpic_compute_curl_b,
-};
+    synchronize_tang_e_norm_b = psc_mfields_vpic_synchronize_tang_e_norm_b;
+    compute_div_b_err         = psc_mfields_vpic_compute_div_b_err;
+    compute_rms_div_b_err     = psc_mfields_vpic_compute_rms_div_b_err;
+    clean_div_b               = psc_mfields_vpic_clean_div_b;
+    compute_div_e_err         = psc_mfields_vpic_compute_div_e_err;
+    compute_rms_div_e_err     = psc_mfields_vpic_compute_rms_div_e_err;
+    clean_div_e               = psc_mfields_vpic_clean_div_e;
+    clear_rhof                = psc_mfields_vpic_clear_rhof;
+    accumulate_rho_p          = psc_mfields_vpic_accumulate_rho_p;
+    synchronize_rho           = psc_mfields_vpic_synchronize_rho;
+    compute_rhob              = psc_mfields_vpic_compute_rhob;
+    compute_curl_b            = psc_mfields_vpic_compute_curl_b;
+  }
+} psc_mfields_vpic_ops;
 
 

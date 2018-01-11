@@ -72,9 +72,10 @@ psc_heating_cuda_run(struct psc_heating *heating, struct psc_mparticles *mprts_b
 // ----------------------------------------------------------------------
 // psc_heating "cuda"
 
-struct psc_heating_ops psc_heating_ops_cuda = {
-  .name                = "cuda",
-  .setup               = psc_heating_cuda_setup,
-  .run                 = psc_heating_cuda_run,
-};
-
+struct psc_heating_ops_cuda : psc_heating_ops {
+  psc_heating_ops_cuda() {
+    name                = "cuda";
+    setup               = psc_heating_cuda_setup;
+    run                 = psc_heating_cuda_run;
+  }
+} psc_heating_ops_cuda;

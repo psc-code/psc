@@ -537,14 +537,16 @@ psc_collision_sub_run(struct psc_collision *collision,
 // ======================================================================
 // psc_collision: subclass "c" / "single"
 
-struct psc_collision_ops psc_collision_sub_ops = {
-  .name                  = PARTICLE_TYPE,
-  .size                  = sizeof(struct psc_collision_sub),
-  .param_descr           = psc_collision_sub_descr,
-  .setup                 = psc_collision_sub_setup,
-  .destroy               = psc_collision_sub_destroy,
-  .run                   = psc_collision_sub_run,
-};
+struct psc_collision_ops_ : psc_collision_ops {
+  psc_collision_ops_() {
+    name                  = PARTICLE_TYPE;
+    size                  = sizeof(struct psc_collision_sub);
+    param_descr           = psc_collision_sub_descr;
+    setup                 = psc_collision_sub_setup;
+    destroy               = psc_collision_sub_destroy;
+    run                   = psc_collision_sub_run;
+  }
+} psc_collision_sub_ops;
 
 // ======================================================================
 
@@ -566,11 +568,16 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // ======================================================================
 // psc_output_fields_item: subclass "coll_stats"
 
-struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_ops = {
-  .name      = "coll_stats_" FIELDS_TYPE,
-  .nr_comp   = NR_STATS,
-  .fld_names = { "coll_nudt_min", "coll_nudt_med", "coll_nudt_max",
-		 "coll_nudt_large", "coll_ncoll" },
-  .run_all   = copy_stats,
-};
+struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_coll() {
+    name      = "coll_stats_" FIELDS_TYPE;
+    nr_comp   = NR_STATS;
+    fld_names[0] = "coll_nudt_min";
+    fld_names[1] = "coll_nudt_med";
+    fld_names[2] = "coll_nudt_max";
+    fld_names[3] = "coll_nudt_large";
+    fld_names[4] = "coll_ncoll";
+    run_all   = copy_stats;
+  }
+} psc_output_fields_item_coll_stats_ops;
 

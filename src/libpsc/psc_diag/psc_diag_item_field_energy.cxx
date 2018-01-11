@@ -32,10 +32,17 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
 // ======================================================================
 // psc_diag_item_field_energy
 
-struct psc_diag_item_ops psc_diag_item_field_energy_ops = {
-  .name      = "field_energy",
-  .run       = psc_diag_item_field_energy_run,
-  .nr_values = 6,
-  .title     = { "EX2", "EY2", "EZ2", "HX2", "HY2", "HZ2" },
-};
+struct psc_diag_item_ops_fe : psc_diag_item_ops {
+  psc_diag_item_ops_fe() {
+    name      = "field_energy";
+    run       = psc_diag_item_field_energy_run;
+    nr_values = 6;
+    title[0]  = "EX2";
+    title[1]  = "EXY";
+    title[2]  = "EXZ";
+    title[3]  = "HX2";
+    title[4]  = "HXY";
+    title[5]  = "HXZ";
+  }
+} psc_diag_item_field_energy_ops;
 

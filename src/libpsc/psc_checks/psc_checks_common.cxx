@@ -338,12 +338,13 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_checks_sub_ops
 
-struct psc_checks_ops psc_checks_sub_ops = {
-  // makes, e.g., "1st_single"
-  .name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE,
-  .setup                           = psc_checks_sub_setup,
-  .read                            = psc_checks_sub_read,
-  .continuity_before_particle_push = psc_checks_sub_continuity_before_particle_push,
-  .continuity_after_particle_push  = psc_checks_sub_continuity_after_particle_push,
-  .gauss                           = psc_checks_sub_gauss,
-};
+struct psc_checks_ops_sub : psc_checks_ops {
+  psc_checks_ops_sub() {
+    name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE;
+    setup                           = psc_checks_sub_setup;
+    read                            = psc_checks_sub_read;
+    continuity_before_particle_push = psc_checks_sub_continuity_before_particle_push;
+    continuity_after_particle_push  = psc_checks_sub_continuity_after_particle_push;
+    gauss                           = psc_checks_sub_gauss;
+  }
+} psc_checks_sub_ops;

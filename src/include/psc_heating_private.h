@@ -39,7 +39,4 @@ struct psc_heating_ops {
 
 #define psc_heating_ops(heating) ((struct psc_heating_ops *)((heating)->obj.ops))
 
-extern struct psc_heating_ops psc_heating_ops_single;
-extern struct psc_heating_ops psc_heating_ops_cuda;
-
 #endif

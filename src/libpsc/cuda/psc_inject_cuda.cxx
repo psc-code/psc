@@ -219,9 +219,11 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 // ----------------------------------------------------------------------
 // psc_inject "cuda"
 
-struct psc_inject_ops psc_inject_ops_cuda = {
-  .name                = "cuda",
-  .create              = psc_inject_cuda_create,
-  .run                 = psc_inject_cuda_run,
-};
+struct psc_inject_ops_cuda : psc_inject_ops {
+  psc_inject_ops_cuda() {
+    name                = "cuda";
+    create              = psc_inject_cuda_create;
+    run                 = psc_inject_cuda_run;
+  }
+} psc_inject_ops_cuda;
 

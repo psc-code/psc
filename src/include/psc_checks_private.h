@@ -29,11 +29,6 @@ struct psc_checks_ops {
   void (*gauss)(struct psc_checks *checks, struct psc *psc);
 };
 
-extern struct psc_checks_ops psc_checks_1st_double_ops;
-extern struct psc_checks_ops psc_checks_1st_single_ops;
-extern struct psc_checks_ops psc_checks_2nd_double_ops;
-extern struct psc_checks_ops psc_checks_2nd_single_ops;
-
 #define psc_checks_ops(checks) ((struct psc_checks_ops *)((checks)->obj.ops))
 
 #endif

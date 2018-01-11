@@ -867,6 +867,9 @@ _psc_balance_destroy(struct psc_balance *bal)
 // ----------------------------------------------------------------------
 // psc_balance_init
 
+extern struct psc_balance_ops psc_balance_double_ops;
+extern struct psc_balance_ops psc_balance_single_ops;
+
 static void
 psc_balance_init(void)
 {
@@ -888,12 +891,15 @@ static struct param psc_balance_descr[] = {
 };
 #undef VAR
 
-struct mrc_class_psc_balance mrc_class_psc_balance = {
-  .name             = "psc_balance",
-  .size             = sizeof(struct psc_balance),
-  .param_descr      = psc_balance_descr,
-  .init             = psc_balance_init,
-  .destroy          = _psc_balance_destroy,
-  .read             = _psc_balance_read,
-};
-
+struct mrc_class_psc_balance_ : mrc_class_psc_balance
+{
+  mrc_class_psc_balance_()
+  {
+    name        = "psc_balance";
+    size        = sizeof(struct psc_balance);
+    param_descr = psc_balance_descr;
+    init        = psc_balance_init;
+    destroy     = _psc_balance_destroy;
+    read        = _psc_balance_read;
+  }
+} mrc_class_psc_balance;

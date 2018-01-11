@@ -251,16 +251,18 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 // ======================================================================
 // psc_harris_ops
 
-struct psc_ops psc_harris_ops = {
-  .name             = "harris",
-  .size             = sizeof(struct psc_harris),
-  .param_descr      = psc_harris_descr,
-  .create           = psc_harris_create,
-  .setup            = psc_harris_setup,
-  .read             = psc_harris_read,
-  .init_field       = psc_harris_init_field,
-  .init_npt         = psc_harris_init_npt,
-};
+struct psc_ops_harris : psc_ops {
+  psc_ops_harris() {
+    name             = "harris";
+    size             = sizeof(struct psc_harris);
+    param_descr      = psc_harris_descr;
+    create           = psc_harris_create;
+    setup            = psc_harris_setup;
+    read             = psc_harris_read;
+    init_field       = psc_harris_init_field;
+    init_npt         = psc_harris_init_npt;
+  }
+} psc_harris_ops;
 
 // ======================================================================
 // main

@@ -32,10 +32,12 @@ psc_bnd_vpic_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds,
 // ----------------------------------------------------------------------
 // psc_bnd: subclass "vpic"
 
-struct psc_bnd_ops psc_bnd_vpic_ops = {
-  .name                  = "vpic",
-  .create_ddc            = psc_bnd_vpic_create_ddc,
-  .fill_ghosts           = psc_bnd_vpic_fill_ghosts,
-  .add_ghosts            = psc_bnd_vpic_add_ghosts,
-};
+struct psc_bnd_ops_vpic : psc_bnd_ops {
+  psc_bnd_ops_vpic() {
+    name                  = "vpic";
+    create_ddc            = psc_bnd_vpic_create_ddc;
+    fill_ghosts           = psc_bnd_vpic_fill_ghosts;
+    add_ghosts            = psc_bnd_vpic_add_ghosts;
+  }
+} psc_bnd_vpic_ops;
 

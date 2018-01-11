@@ -92,8 +92,10 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
 // ----------------------------------------------------------------------
 // psc_heating "single"
 
-struct psc_heating_ops psc_heating_ops_single = {
-  .name                = "single",
-  .run                 = psc_heating_single_run,
-};
+struct psc_heating_ops_single : psc_heating_ops {
+  psc_heating_ops_single() {
+    name                = "single";
+    run                 = psc_heating_single_run;
+  }
+} psc_heating_ops_single;
 

@@ -81,12 +81,14 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_method "default"
 
-struct psc_method_ops psc_method_ops_default = {
-  .name                          = "default",
-  .do_setup                      = psc_method_default_do_setup,
-  .setup_partition               = psc_method_default_setup_partition,
-  .set_ic_particles              = psc_method_default_set_ic_particles,
-  .set_ic_fields                 = psc_method_default_set_ic_fields,
-  .initialize                    = psc_method_default_initialize,
-  .output                        = psc_method_default_output,
-};
+struct psc_method_ops_default : psc_method_ops {
+  psc_method_ops_default() {
+    name                          = "default";
+    do_setup                      = psc_method_default_do_setup;
+    setup_partition               = psc_method_default_setup_partition;
+    set_ic_particles              = psc_method_default_set_ic_particles;
+    set_ic_fields                 = psc_method_default_set_ic_fields;
+    initialize                    = psc_method_default_initialize;
+    output                        = psc_method_default_output;
+  }
+} psc_method_ops_default;

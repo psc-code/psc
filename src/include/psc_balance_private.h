@@ -32,10 +32,6 @@ struct psc_balance_ops {
 
 #define psc_balance_ops(bal) ((struct psc_balance_ops *)(bal->obj.ops))
 
-extern struct psc_balance_ops psc_balance_double_ops;
-extern struct psc_balance_ops psc_balance_single_ops;
-
-
 struct send_info {
   int rank;
   int patch;

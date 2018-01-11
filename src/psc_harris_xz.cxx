@@ -344,10 +344,13 @@ psc_harris_setup_species(struct psc *psc)
   double nmovers = .1 * nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
 
-  struct psc_kind kinds[2] = {
-    [KIND_ELECTRON] = { .name = strdup("e"), .q = -phys->ec, .m = phys->me, },
-    [KIND_ION     ] = { .name = strdup("i"), .q =  phys->ec, .m = phys->mi, },
-  };
+  struct psc_kind kinds[2];
+  kinds[KIND_ELECTRON].name = strdup("e");
+  kinds[KIND_ELECTRON].q = -phys->ec;
+  kinds[KIND_ELECTRON].m = phys->me;
+  kinds[KIND_ION].name = strdup("i");
+  kinds[KIND_ION].q =  phys->ec;
+  kinds[KIND_ION].m = phys->mi;
   psc_set_kinds(psc, 2, kinds);
 
   Simulation_define_species(sub->sim, "electron", -phys->ec, phys->me, nmax, nmovers,
@@ -738,17 +741,19 @@ psc_harris_destroy(struct psc *psc)
 // ======================================================================
 // psc_harris_ops
 
-struct psc_ops psc_harris_ops = {
-  .name             = "harris",
-  .size             = sizeof(struct psc_harris),
-  .param_descr      = psc_harris_descr,
-  .create           = psc_harris_create,
-  .setup            = psc_harris_setup,
-  .destroy          = psc_harris_destroy,
-  .read             = psc_harris_read,
-  .init_field       = psc_harris_init_field,
-  .setup_particles  = psc_harris_setup_particles,
-};
+struct psc_ops_harris : psc_ops {
+  psc_ops_harris() {
+    name             = "harris";
+    size             = sizeof(struct psc_harris);
+    param_descr      = psc_harris_descr;
+    create           = psc_harris_create;
+    setup            = psc_harris_setup;
+    destroy          = psc_harris_destroy;
+    read             = psc_harris_read;
+    init_field       = psc_harris_init_field;
+    setup_particles  = psc_harris_setup_particles;
+  }
+} psc_harris_ops;
 
 // ======================================================================
 // main

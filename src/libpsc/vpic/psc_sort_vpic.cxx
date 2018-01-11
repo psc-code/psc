@@ -18,9 +18,11 @@ psc_sort_vpic_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 // ----------------------------------------------------------------------
 // psc_sort: subclass "vpic"
 
-struct psc_sort_ops psc_sort_vpic_ops = {
-  .name                  = "vpic",
-  .run                   = psc_sort_vpic_run,
-};
+struct psc_sort_ops_vpic : psc_sort_ops {
+  psc_sort_ops_vpic() {
+    name                  = "vpic";
+    run                   = psc_sort_vpic_run;
+  }
+} psc_sort_vpic_ops;
 
 

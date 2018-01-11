@@ -13,12 +13,14 @@
 // ======================================================================
 // psc_bnd_particles: subclass "cuda"
 
-struct psc_bnd_particles_ops psc_bnd_particles_cuda_ops = {
-  .name                    = "cuda",
-  .setup                   = psc_bnd_particles_sub_setup,
-  .unsetup                 = psc_bnd_particles_sub_unsetup,
-  .exchange_particles      = psc_bnd_particles_sub_exchange_particles,
-  .exchange_mprts_prep     = psc_bnd_particles_sub_exchange_mprts_prep,
-  .exchange_mprts_post     = psc_bnd_particles_sub_exchange_mprts_post,
-};
+struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
+  psc_bnd_particles_ops_cuda() {
+    name                    = "cuda";
+    setup                   = psc_bnd_particles_sub_setup;
+    unsetup                 = psc_bnd_particles_sub_unsetup;
+    exchange_particles      = psc_bnd_particles_sub_exchange_particles;
+    exchange_mprts_prep     = psc_bnd_particles_sub_exchange_mprts_prep;
+    exchange_mprts_post     = psc_bnd_particles_sub_exchange_mprts_post;
+  }
+} psc_bnd_particles_cuda_ops;
 

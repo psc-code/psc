@@ -24,6 +24,11 @@ psc_collision_run(struct psc_collision *collision, struct psc_mparticles *partic
 // ======================================================================
 // psc_collision_init
 
+extern struct psc_collision_ops psc_collision_none_ops;
+extern struct psc_collision_ops psc_collision_fortran_ops;
+extern struct psc_collision_ops psc_collision_single_ops;
+extern struct psc_collision_ops psc_collision_vpic_ops;
+
 static void
 psc_collision_init()
 {
@@ -40,9 +45,11 @@ psc_collision_init()
 // ======================================================================
 // psc_collision class
 
-struct mrc_class_psc_collision mrc_class_psc_collision = {
-  .name             = "psc_collision",
-  .size             = sizeof(struct psc_collision),
-  .init             = psc_collision_init,
-};
+struct mrc_class_psc_collision_ : mrc_class_psc_collision {
+  mrc_class_psc_collision_() {
+    name             = "psc_collision";
+    size             = sizeof(struct psc_collision);
+    init             = psc_collision_init;
+  }
+} mrc_class_psc_collision;
 

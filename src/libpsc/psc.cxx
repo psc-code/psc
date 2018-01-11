@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <time.h>
+#include <array>
 
 using Fields = Fields3d<fields_t>;
 
@@ -38,22 +39,32 @@ struct psc *ppsc;
 
 #define VAR(x) (void *)offsetof(struct psc, x)
 
-static struct mrc_param_select bnd_fld_descr[] = {
-  { .val = BND_FLD_OPEN           , .str = "open"            },
-  { .val = BND_FLD_PERIODIC       , .str = "periodic"        },
-  { .val = BND_FLD_UPML           , .str = "upml"            },
-  { .val = BND_FLD_TIME           , .str = "time"            },
-  { .val = BND_FLD_CONDUCTING_WALL, .str = "conducting_wall" },
-  {},
-};
+static mrc_param_select bnd_fld_descr[5];
+static mrc_param_select bnd_part_descr[4];
 
-static struct mrc_param_select bnd_part_descr[] = {
-  { .val = BND_PART_REFLECTING , .str = "reflecting"  },
-  { .val = BND_PART_PERIODIC   , .str = "periodic"    },
-  { .val = BND_PART_ABSORBING  , .str = "absorbing"    },
-  { .val = BND_PART_OPEN  , .str = "open"    },
-  {},
-};
+static struct select_init {
+  select_init() {
+    bnd_fld_descr[0].str = "open";
+    bnd_fld_descr[0].val = BND_FLD_OPEN;
+    bnd_fld_descr[1].str = "periodic";
+    bnd_fld_descr[1].val = BND_FLD_PERIODIC;
+    bnd_fld_descr[2].str = "upml";
+    bnd_fld_descr[2].val = BND_FLD_UPML;
+    bnd_fld_descr[3].str = "time";
+    bnd_fld_descr[3].val = BND_FLD_TIME;
+    bnd_fld_descr[4].str = "conducting_wall";
+    bnd_fld_descr[4].val = BND_FLD_CONDUCTING_WALL;
+
+    bnd_part_descr[0].str = "reflecting";
+    bnd_part_descr[0].val = BND_PART_REFLECTING;
+    bnd_part_descr[1].str = "periodic";
+    bnd_part_descr[1].val = BND_PART_PERIODIC;
+    bnd_part_descr[2].str = "absorbing";
+    bnd_part_descr[2].val = BND_PART_ABSORBING;
+    bnd_part_descr[3].str = "open";
+    bnd_part_descr[3].val = BND_PART_OPEN;
+  }
+} select_initializer;
 
 static struct param psc_descr[] = {
   // psc_domain
@@ -324,12 +335,13 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_double3(crds, "l",  (double[3]) { psc->domain.corner[0],
-	psc->domain.corner[1], psc->domain.corner[2] });
-  mrc_crds_set_param_double3(crds, "h",  (double[3]) {
+  double l[3] = { psc->domain.corner[0], psc->domain.corner[1], psc->domain.corner[2] };
+  double h[3] = {
       psc->domain.corner[0] + psc->domain.length[0],
       psc->domain.corner[1] + psc->domain.length[1],
-      psc->domain.corner[2] + psc->domain.length[2] });
+      psc->domain.corner[2] + psc->domain.length[2] };
+  mrc_crds_set_param_double3(crds, "l", l);
+  mrc_crds_set_param_double3(crds, "h", h);
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
@@ -862,26 +874,25 @@ psc_set_ic_fields_default(struct psc *psc)
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      F(HX, jx,jy,jz) +=
-	init_field(psc, (double []) { xx        , yy + .5*dy, zz + .5*dz }, HX);
-      F(HY, jx,jy,jz) +=
-	init_field(psc, (double []) { xx + .5*dx, yy        , zz + .5*dz }, HY);
-      F(HZ, jx,jy,jz) +=
-	init_field(psc, (double []) { xx + .5*dx, yy + .5*dy, zz         }, HZ);
+      double ncc[3] = { xx        , yy + .5*dy, zz + .5*dz };
+      double cnc[3] = { xx + .5*dx, yy        , zz + .5*dz };
+      double ccn[3] = { xx + .5*dx, yy + .5*dy, zz         };
 
-      F(EX, jx,jy,jz) +=
-	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, EX);
-      F(EY, jx,jy,jz) +=
-	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, EY);
-      F(EZ, jx,jy,jz) +=
-	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, EZ);
+      double cnn[3] = { xx + .5*dx, yy        , zz         };
+      double ncn[3] = { xx        , yy + .5*dy, zz         };
+      double nnc[3] = { xx        , yy        , zz + .5*dz };
+ 
+      F(HX, jx,jy,jz) += init_field(psc, ncc, HX);
+      F(HY, jx,jy,jz) += init_field(psc, cnc, HY);
+      F(HZ, jx,jy,jz) += init_field(psc, ccn, HZ);
 
-      F(JXI, jx,jy,jz) +=
-	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, JXI);
-      F(JYI, jx,jy,jz) +=
-	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, JYI);
-      F(JZI, jx,jy,jz) +=
-	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, JZI);
+      F(EX, jx,jy,jz) += init_field(psc, cnn, EX);
+      F(EY, jx,jy,jz) += init_field(psc, ncn, EY);
+      F(EZ, jx,jy,jz) += init_field(psc, nnc, EZ);
+
+      F(JXI, jx,jy,jz) += init_field(psc, cnn, JXI);
+      F(JYI, jx,jy,jz) += init_field(psc, ncn, JYI);
+      F(JZI, jx,jy,jz) += init_field(psc, nnc, JZI);
 
     } foreach_3d_g_end;
   }
@@ -969,18 +980,20 @@ psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
 // ======================================================================
 // psc class
 
-struct mrc_class_psc mrc_class_psc = {
-  .name             = "psc",
-  .size             = sizeof(struct psc),
-  .param_descr      = psc_descr,
-  .create           = _psc_create,
-  .set_from_options = _psc_set_from_options,
-  .setup            = _psc_setup,
-  .view             = _psc_view,
-  .destroy          = _psc_destroy,
-  .write            = _psc_write,
-  .read             = _psc_read,
-};
+struct mrc_class_psc_ : mrc_class_psc {
+  mrc_class_psc_() {
+    name             = "psc";
+    size             = sizeof(struct psc);
+    param_descr      = psc_descr;
+    create           = _psc_create;
+    set_from_options = _psc_set_from_options;
+    setup            = _psc_setup;
+    view             = _psc_view;
+    destroy          = _psc_destroy;
+    write            = _psc_write;
+    read             = _psc_read;
+  }
+} mrc_class_psc;
 
 // ======================================================================
 // helpers

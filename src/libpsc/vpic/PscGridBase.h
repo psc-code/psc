@@ -157,9 +157,12 @@ struct PscGridBase
   unsigned int idx_to_rank(const int np[3], Int3 idx)
   {
     int ix = idx[0], iy = idx[1], iz = idx[2];
-    while (ix >= np[0]) ix -= np[0]; while (ix < 0) ix += np[0];
-    while (iy >= np[1]) iy -= np[1]; while (iy < 0) iy += np[1];
-    while (iz >= np[2]) iz -= np[2]; while (iz < 0) iz += np[2];
+    while (ix >= np[0]) ix -= np[0];
+    while (ix < 0) ix += np[0];
+    while (iy >= np[1]) iy -= np[1];
+    while (iy < 0) iy += np[1];
+    while (iz >= np[2]) iz -= np[2];
+    while (iz < 0) iz += np[2];
     return ix + np[0] * (iy + np[1] * iz);
   }
   

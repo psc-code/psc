@@ -103,6 +103,9 @@ psc_inject_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
 // ----------------------------------------------------------------------
 // psc_inject_init
 
+extern struct psc_inject_ops psc_inject_ops_single;
+extern struct psc_inject_ops psc_inject_ops_cuda;
+
 static void
 psc_inject_init(void)
 {
@@ -115,12 +118,14 @@ psc_inject_init(void)
 // ----------------------------------------------------------------------
 // psc_inject class
 
-struct mrc_class_psc_inject mrc_class_psc_inject = {
-  .name             = "psc_inject",
-  .size             = sizeof(struct psc_inject),
-  .param_descr      = psc_inject_descr,
-  .init             = psc_inject_init,
-  .setup            = _psc_inject_setup,
-  .destroy          = _psc_inject_destroy,
-};
+struct mrc_class_psc_inject_ : mrc_class_psc_inject {
+  mrc_class_psc_inject_() {
+    name             = "psc_inject";
+    size             = sizeof(struct psc_inject);
+    param_descr      = psc_inject_descr;
+    init             = psc_inject_init;
+    setup            = _psc_inject_setup;
+    destroy          = _psc_inject_destroy;
+  }
+} mrc_class_psc_inject;
 
