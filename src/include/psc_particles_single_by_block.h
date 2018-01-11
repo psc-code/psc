@@ -6,11 +6,13 @@
 
 #include "particles.hxx"
 
+#include <vector>
+
 using particle_single_by_block_real_t = float;
 
 struct particle_single_by_block_t : psc_particle<particle_single_by_block_real_t> {};
 
-using psc_particle_single_by_block_buf_t = psc_particle_buf<particle_single_by_block_t>;
+using psc_particle_single_by_block_buf_t = std::vector<particle_single_by_block_t>;
 
 #define psc_mparticles_single_by_block(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single_by_block)
 

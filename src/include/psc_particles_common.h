@@ -10,8 +10,6 @@
 #define particle_PTYPE_real_t particle_single_real_t
 #define particle_PTYPE_t particle_single_t
 
-#define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
-
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_patch
 #define psc_mparticles_PTYPE psc_mparticles_single
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
@@ -22,8 +20,6 @@
 
 #define particle_PTYPE_real_t particle_double_real_t
 #define particle_PTYPE_t particle_double_t
-
-#define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_double_patch
 #define psc_mparticles_PTYPE psc_mparticles_double
@@ -36,8 +32,6 @@
 #define particle_PTYPE_real_t particle_single_by_block_real_t
 #define particle_PTYPE_t particle_single_by_block_t
 
-#define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
-
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_by_block_patch
 #define psc_mparticles_PTYPE psc_mparticles_single_by_block
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
@@ -48,8 +42,6 @@
 
 #define particle_PTYPE_real_t particle_fortran_real_t
 #define particle_PTYPE_t particle_fortran_t
-
-#define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
 
 #define psc_mparticles_PTYPE_patch psc_mparticles_fortran_patch
 #define psc_mparticles_PTYPE psc_mparticles_fortran
@@ -71,9 +63,8 @@ using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch&;
 struct psc_mparticles_PTYPE_patch
 {
   using particle_t = particle_PTYPE_t;
-  using buf_t = psc_particle_PTYPE_buf_t;
-  using iterator = psc_particle_iter<particle_t>;
-  //  using iterator = psc_particle_PTYPE_iter_t;
+  using buf_t = std::vector<particle_t>;
+  using iterator = typename buf_t::iterator;
   
   buf_t buf;
 
@@ -102,28 +93,14 @@ struct psc_mparticles_PTYPE_patch
   bool need_reorder;
 #endif
 
-  particle_PTYPE_t& operator[](int n)
-  {
-    return buf[n];
-  }
-  
-  iterator begin()
-  {
-    return iterator(&(*this)[0]);
-  }
-
-  iterator end()
-  {
-    return iterator(&(*this)[size()]);
-  }
-
-  unsigned int size() const
-  {
-    return buf.size();
-  }
+  particle_PTYPE_t& operator[](int n) { return buf[n]; }
+  iterator begin() { return buf.begin(); }
+  iterator end() { return buf.end(); }
+  unsigned int size() const { return buf.size(); }
 
   void resize(unsigned int new_size)
   {
+    assert(new_size <= buf.capacity());
     buf.resize(new_size);
   }
 

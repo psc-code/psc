@@ -7,6 +7,8 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
+#include <vector>
+
 using particle_fortran_real_t = double;
 
 struct particle_fortran_t
@@ -22,7 +24,7 @@ struct particle_fortran_t
   real_t wni;
 };
 
-using psc_particle_fortran_buf_t = psc_particle_buf<particle_fortran_t>;
+using psc_particle_fortran_buf_t = std::vector<particle_fortran_t>;
 
 #define psc_mparticles_fortran(mprts) mrc_to_subobj(mprts, struct psc_mparticles_fortran)
 
