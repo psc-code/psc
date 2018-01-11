@@ -74,7 +74,11 @@ struct ddcp_patch {
   int n_recv;
 };
 
-struct ddc_particles {
+struct ddc_particles
+{
+  ddc_particles(struct mrc_domain *domain);
+  ~ddc_particles();
+  
   int nr_patches;
   struct ddcp_patch *patches;
   struct ddcp_info_by_rank *by_rank;
@@ -87,18 +91,17 @@ struct ddc_particles {
 };
 
 // ----------------------------------------------------------------------
-// ddc_particles_ctor
+// ctor
 
-static void
-ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
+inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 {
-  std::memset(ddcp, 0, sizeof(*ddcp));
+  std::memset(this, 0, sizeof(*this));
 
-  ddcp->domain = domain;
-  mrc_domain_get_patches(domain, &ddcp->nr_patches);
-  ddcp->patches = (struct ddcp_patch *) calloc(ddcp->nr_patches, sizeof(*ddcp->patches));
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
+  domain = _domain;
+  mrc_domain_get_patches(domain, &nr_patches);
+  patches = (struct ddcp_patch *) calloc(nr_patches, sizeof(*patches));
+  for (int p = 0; p < nr_patches; p++) {
+    struct ddcp_patch *patch = &patches[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -123,14 +126,14 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  ddcp->by_rank = (struct ddcp_info_by_rank *) calloc(size, sizeof(*ddcp->by_rank));
-  struct ddcp_info_by_rank *info = ddcp->by_rank;
+  by_rank = (struct ddcp_info_by_rank *) calloc(size, sizeof(*by_rank));
+  struct ddcp_info_by_rank *info = by_rank;
 
   int dir[3];
 
   // count how many recv_entries per rank
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
+  for (int p = 0; p < nr_patches; p++) {
+    struct ddcp_patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -158,8 +161,8 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
 
 #if 0
   // set up recv_entries
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
+  for (int p = 0; p < nr_patches; p++) {
+    struct ddcp_patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -183,8 +186,8 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
 #endif
 
   // count send_entries
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
+  for (int p = 0; p < nr_patches; p++) {
+    struct ddcp_patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -212,8 +215,8 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
   }
 
   // set up send_entries
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
+  for (int p = 0; p < nr_patches; p++) {
+    struct ddcp_patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -247,17 +250,17 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
   }
 
   assert(n_send_ranks == n_recv_ranks);
-  ddcp->n_ranks = n_send_ranks;
+  n_ranks = n_send_ranks;
 
-  ddcp->send_reqs = (MPI_Request *) malloc(ddcp->n_ranks * sizeof(*ddcp->send_reqs));
-  ddcp->recv_reqs = (MPI_Request *) malloc(ddcp->n_ranks * sizeof(*ddcp->recv_reqs));
+  send_reqs = (MPI_Request *) malloc(n_ranks * sizeof(*send_reqs));
+  recv_reqs = (MPI_Request *) malloc(n_ranks * sizeof(*recv_reqs));
 
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       MPI_Irecv(info[r].recv_entry,
 		sizeof(struct ddcp_recv_entry) / sizeof(int) * info[r].n_recv_entries,
-		MPI_INT, r, 111, comm, &ddcp->recv_reqs[n_recv_ranks++]);
+		MPI_INT, r, 111, comm, &recv_reqs[n_recv_ranks++]);
     }
   }  
 
@@ -266,15 +269,14 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
     if (info[r].n_send_entries) {
       MPI_Isend(info[r].send_entry,
 		sizeof(struct ddcp_send_entry) / sizeof(int) * info[r].n_send_entries,
-		MPI_INT, r, 111, comm, &ddcp->send_reqs[n_send_ranks++]);
+		MPI_INT, r, 111, comm, &send_reqs[n_send_ranks++]);
     }
   }  
 
   // FIXME / OPT, we're copying alloc'd pointers over,
   // fragile, though correct. info could be free'd here or even
   // earlier
-  ddcp->cinfo = (struct ddcp_info_by_rank *) malloc(ddcp->n_ranks * sizeof(*ddcp->cinfo));
-  struct ddcp_info_by_rank *cinfo = ddcp->cinfo;
+  cinfo = (struct ddcp_info_by_rank *) malloc(n_ranks * sizeof(*cinfo));
   int i = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
@@ -284,17 +286,16 @@ ddc_particles_ctor(struct ddc_particles *ddcp, struct mrc_domain *domain)
       i++;
     }
   }
-  assert(i == ddcp->n_ranks);
+  assert(i == n_ranks);
 }
 
 // ----------------------------------------------------------------------
-// ddc_particles_dtor
+// dtor
 
-static void
-ddc_particles_dtor(struct ddc_particles *ddcp)
+inline ddc_particles::~ddc_particles()
 {
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
+  for (int p = 0; p < nr_patches; p++) {
+    struct ddcp_patch *patch = &patches[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -308,23 +309,23 @@ ddc_particles_dtor(struct ddc_particles *ddcp)
       }
     }
   }
-  free(ddcp->patches);
+  free(patches);
 
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int size;
   MPI_Comm_size(comm, &size);
 
-  struct ddcp_info_by_rank *info = ddcp->by_rank;
+  struct ddcp_info_by_rank *info = by_rank;
   for (int r = 0; r < size; r++) {
     free(info[r].send_entry);
     free(info[r].recv_entry);
     free(info[r].send_cnts);
     free(info[r].recv_cnts);
   }
-  free(ddcp->by_rank);
-  free(ddcp->cinfo);
-  free(ddcp->recv_reqs);
-  free(ddcp->send_reqs);
+  free(by_rank);
+  free(cinfo);
+  free(recv_reqs);
+  free(send_reqs);
 }
 
 // ----------------------------------------------------------------------
@@ -540,8 +541,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 static void
 psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 {
-  bnd->ddcp = new ddc_particles;
-  ddc_particles_ctor(bnd->ddcp, bnd->psc->mrc_domain);
+  bnd->ddcp = new ddc_particles(bnd->psc->mrc_domain);
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON
   psc_bnd_particles_open_setup(bnd);
@@ -554,7 +554,6 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 static void
 psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 {
-  ddc_particles_dtor(bnd->ddcp);
   delete bnd->ddcp;
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON
