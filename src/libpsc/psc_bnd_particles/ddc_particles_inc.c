@@ -60,13 +60,6 @@ struct ddcp_info_by_rank {
   int rank;
 };
 
-struct ddcp_nei {
-  particle_buf_t send_buf;
-  int n_recv;
-  int rank;
-  int patch;
-};
-
 struct ddc_particles
 {
   ddc_particles(struct mrc_domain *domain);
@@ -74,10 +67,17 @@ struct ddc_particles
 
   void comm(struct psc_mparticles *mprts);
 
+  struct dnei {
+    particle_buf_t send_buf;
+    int n_recv;
+    int rank;
+    int patch;
+  };
+
   struct patch {
     particle_buf_t *m_buf;
     unsigned int m_begin;
-    struct ddcp_nei nei[N_DIR];
+    dnei nei[N_DIR];
     int n_recv;
   };
   
@@ -110,7 +110,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	    // use this one as buffer for particles that stay in the same patch
@@ -141,7 +141,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
@@ -170,7 +170,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
@@ -195,7 +195,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
@@ -225,7 +225,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
@@ -304,7 +304,7 @@ inline ddc_particles::~ddc_particles()
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 
 	  nei->send_buf.~particle_buf_t();
 	}
@@ -362,7 +362,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       patch *patch = &patches[se->patch];
-      struct ddcp_nei *nei = &patch->nei[se->dir1];
+      dnei *nei = &patch->nei[se->dir1];
       unsigned int n_send = nei->send_buf.size();
       cinfo[r].send_cnts[i] = n_send;
       cinfo[r].n_send += n_send;
@@ -379,12 +379,12 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank != rank) {
 	    continue;
 	  }
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct ddcp_nei *nei_send = &patches[nei->patch].nei[dir1neg];
+	  dnei *nei_send = &patches[nei->patch].nei[dir1neg];
 	  patch->n_recv += nei_send->send_buf.size();
 	}
       }
@@ -494,7 +494,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  dnei *nei = &patch->nei[dir1];
 	  if (nei->rank != rank) {
 	    continue;
 	  }
@@ -717,7 +717,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	(*dpatch->m_buf)[head++] = *prt;
       } else {
-	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
+	ddc_particles::dnei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	nei->send_buf.push_back(*prt);
       }
     }
