@@ -93,6 +93,8 @@ struct psc_mparticles_PTYPE_patch
   bool need_reorder;
 #endif
 
+  ~psc_mparticles_PTYPE_patch();
+
   particle_PTYPE_t& operator[](int n) { return buf[n]; }
   iterator begin() { return buf.begin(); }
   iterator end() { return buf.end(); }

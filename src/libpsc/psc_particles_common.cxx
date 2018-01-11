@@ -39,28 +39,21 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 // ----------------------------------------------------------------------
 // psc_mparticles_sub_destroy_patch
 
-static void
-PFX(destroy_patch)(struct psc_mparticles *mprts, int p)
+PFX(patch)::~PFX(patch)()
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  struct PFX(patch) *patch = &sub->patch[p];
-
-  // need to free structures created in ::patch_setup and ::patch_reserve
-  patch->buf.~particle_buf_t();
-
 #if PSC_PARTICLES_AS_SINGLE
-  free(patch->prt_array_alt);
-  free(patch->b_idx);
-  free(patch->b_ids);
-  free(patch->b_cnt);
+  free(prt_array_alt);
+  free(b_idx);
+  free(b_ids);
+  free(b_cnt);
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  free(patch->prt_array_alt);
-  free(patch->b_idx);
-  free(patch->b_ids);
-  free(patch->b_cnt);
-  free(patch->b_off);
+  free(prt_array_alt);
+  free(b_idx);
+  free(b_ids);
+  free(b_cnt);
+  free(b_off);
 #endif
 }
 
@@ -73,17 +66,7 @@ PFX(setup)(struct psc_mparticles *mprts)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   psc_mparticles_setup_super(mprts);
-#if PSC_PARTICLES_AS_SINGLE
-  sub->patch = (struct psc_mparticles_single_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
-#elif PSC_PARTICLES_AS_DOUBLE
-  sub->patch = (struct psc_mparticles_double_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
-#elif PSC_PARTICLES_AS_FORTRAN
-  sub->patch = (struct psc_mparticles_fortran_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
-#elif PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  sub->patch = (struct psc_mparticles_single_by_block_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
-#else
-  sub->patch = (struct psc_mparticles_patch *) calloc(mprts->nr_patches, sizeof(*sub->patch));
-#endif
+  sub->patch = new PFX(patch)[mprts->nr_patches]();
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p);
@@ -203,10 +186,7 @@ PFX(destroy)(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    PFX(destroy_patch)(mprts, p);
-  }
-  free(sub->patch);
+  delete[] sub->patch;
 }
 
 static void
