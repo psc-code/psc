@@ -156,7 +156,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
     struct psc_mparticles_single_patch *patch = &sub->patch[p];
-    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    ddc_particles::patch *dpatch = &ddcp->patches[p];
 
     if (1) {
       //      find_block_indices_count_reorderx(prts);
@@ -182,7 +182,7 @@ psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
     struct psc_mparticles_single_patch *patch = &sub->patch[p];
-    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    ddc_particles::patch *dpatch = &ddcp->patches[p];
 
     int n_prts = dpatch->m_buf->size();
     

@@ -67,22 +67,22 @@ struct ddcp_nei {
   int patch;
 };
 
-struct ddcp_patch {
-  particle_buf_t *m_buf;
-  unsigned int m_begin;
-  struct ddcp_nei nei[N_DIR];
-  int n_recv;
-};
-
 struct ddc_particles
 {
   ddc_particles(struct mrc_domain *domain);
   ~ddc_particles();
 
   void comm(struct psc_mparticles *mprts);
+
+  struct patch {
+    particle_buf_t *m_buf;
+    unsigned int m_begin;
+    struct ddcp_nei nei[N_DIR];
+    int n_recv;
+  };
   
   int nr_patches;
-  struct ddcp_patch *patches;
+  patch *patches;
   struct ddcp_info_by_rank *by_rank;
   struct ddcp_info_by_rank *cinfo; // compressed info
   int n_ranks;
@@ -101,9 +101,9 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 
   domain = _domain;
   mrc_domain_get_patches(domain, &nr_patches);
-  patches = (struct ddcp_patch *) calloc(nr_patches, sizeof(*patches));
+  patches = (patch *) calloc(nr_patches, sizeof(*patches));
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -135,7 +135,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 
   // count how many recv_entries per rank
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -164,7 +164,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 #if 0
   // set up recv_entries
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    ddc_particles::patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -189,7 +189,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 
   // count send_entries
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -218,7 +218,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 
   // set up send_entries
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -297,7 +297,7 @@ inline ddc_particles::ddc_particles(struct mrc_domain *_domain)
 inline ddc_particles::~ddc_particles()
 {
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -361,7 +361,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
     cinfo[r].n_send = 0;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
-      struct ddcp_patch *patch = &patches[se->patch];
+      patch *patch = &patches[se->patch];
       struct ddcp_nei *nei = &patch->nei[se->dir1];
       unsigned int n_send = nei->send_buf.size();
       cinfo[r].send_cnts[i] = n_send;
@@ -373,7 +373,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
 
   // overlap: count local # particles
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
     patch->n_recv = 0;
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -423,7 +423,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
     cinfo[r].n_recv = 0;
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
-      struct ddcp_patch *patch = &patches[re->patch];
+      patch *patch = &patches[re->patch];
       patch->n_recv += cinfo[r].recv_cnts[i];
       cinfo[r].n_recv += cinfo[r].recv_cnts[i];
     }
@@ -442,7 +442,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
     iterator_t it0 = it;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
-      struct ddcp_patch *patch = &patches[se->patch];
+      patch *patch = &patches[se->patch];
       particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
@@ -476,7 +476,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
   iterator_t *it_recv = new iterator_t[nr_patches];
 
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
     int size = patch->m_buf->size();
     patch->m_buf->reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
@@ -487,7 +487,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
 
   // overlap: copy particles from local proc to the end of recv range
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -524,7 +524,7 @@ inline void ddc_particles::comm(struct psc_mparticles *mprts)
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *patch = &patches[p];
+    patch *patch = &patches[p];
     assert(it_recv[p] == patch->m_buf->end());
   }
   
@@ -571,7 +571,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   mparticles_t mp(mprts);
   struct ddc_particles *ddcp = bnd->ddcp;
   for (int p = 0; p < mp.n_patches(); p++) {
-    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    ddc_particles::patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = &mp[p].get_buf();
     dpatch->m_begin = 0;
   }
@@ -584,7 +584,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   
   struct ddc_particles *ddcp = bnd->ddcp;
   for (int p = 0; p < nr_patches; p++) {
-    struct ddcp_patch *dpatch = &patches[p];
+    ddc_particles::patch *dpatch = &patches[p];
     dpatch->m_buf = cuda_mparticles_bnd_get_buffer(cmprts, p);
     dpatch->m_begin = 0;
   }
@@ -617,7 +617,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     xm[d] = ppatch->ldims[d] * ppatch->dx[d];
   }
   
-  struct ddcp_patch *dpatch = &ddcp->patches[p];
+  ddc_particles::patch *dpatch = &ddcp->patches[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     dpatch->nei[dir1].send_buf.resize(0);
   }
