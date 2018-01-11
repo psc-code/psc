@@ -50,7 +50,7 @@ AC_OPENMP
 CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 AC_PROG_CXX([openmpicxx mpicxx])
-AX_CXX_COMPILE_STDCXX([11],[ext],[optional])
+AX_CXX_COMPILE_STDCXX([11],[noext],[optional])
 
 
 # add -Wall if possible
