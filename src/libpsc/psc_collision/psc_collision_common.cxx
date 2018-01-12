@@ -15,6 +15,7 @@ struct psc_collision_sub {
 
   // internal
   struct psc_mfields *mflds;
+  struct psc_mfields *mflds_rei;
 };
 
 #define psc_collision_sub(o) mrc_to_subobj(o, struct psc_collision_sub)
@@ -400,6 +401,54 @@ bc(particle_range_t prts, particle_real_t nudt1, int n1, int n2)
 }
 
 // ----------------------------------------------------------------------
+// update_rei_before
+
+static void
+update_rei_before(struct psc_collision *collision,
+		  particle_range_t prts, int n_start, int n_end,
+		  int p, int i, int j, int k)
+{
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
+
+  particle_real_t fnqs = ppsc->coeff.cori;
+  mfields_t mf_rei(coll->mflds_rei);
+  Fields F(mf_rei[p]);
+  F(0, i,j,k) = 0.;
+  F(1, i,j,k) = 0.;
+  F(2, i,j,k) = 0.;
+  for (int n = n_start; n < n_end; n++) {
+    particle_t& prt = prts[n];
+    F(0, i,j,k) -= prt.pxi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+    F(1, i,j,k) -= prt.pyi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+    F(2, i,j,k) -= prt.pzi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+  }
+}
+
+// ----------------------------------------------------------------------
+// update_rei_after
+
+static void
+update_rei_after(struct psc_collision *collision,
+		 particle_range_t prts, int n_start, int n_end,
+		 int p, int i, int j, int k)
+{
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
+
+  particle_real_t fnqs = ppsc->coeff.cori;
+  mfields_t mf_rei(coll->mflds_rei);
+  Fields F(mf_rei[p]);
+  for (int n = n_start; n < n_end; n++) {
+    particle_t& prt = prts[n];
+    F(0, i,j,k) += prt.pxi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+    F(1, i,j,k) += prt.pyi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+    F(2, i,j,k) += prt.pzi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+  }
+  F(0, i,j,k) /= (coll->every * ppsc->dt);
+  F(1, i,j,k) /= (coll->every * ppsc->dt);
+  F(2, i,j,k) /= (coll->every * ppsc->dt);
+}
+
+// ----------------------------------------------------------------------
 // collide_in_cell
 
 static void
@@ -448,7 +497,7 @@ psc_collision_sub_setup(struct psc_collision *collision)
   coll->mflds = psc_mfields_create(psc_collision_comm(collision));
   psc_mfields_set_type(coll->mflds, FIELDS_TYPE);
   psc_mfields_set_param_obj(coll->mflds, "domain", ppsc->mrc_domain);
-  psc_mfields_set_param_int(coll->mflds, "nr_fields", 5);
+  psc_mfields_set_param_int(coll->mflds, "nr_fields", NR_STATS);
   psc_mfields_set_param_int3(coll->mflds, "ibn", ppsc->ibn);
   psc_mfields_setup(coll->mflds);
   psc_mfields_set_comp_name(coll->mflds, 0, "coll_nudt_min");
@@ -457,6 +506,17 @@ psc_collision_sub_setup(struct psc_collision *collision)
   psc_mfields_set_comp_name(coll->mflds, 3, "coll_nudt_nlarge");
   psc_mfields_set_comp_name(coll->mflds, 4, "coll_nudt_ncoll");
   psc_mfields_list_add(&psc_mfields_base_list, &coll->mflds);
+
+  coll->mflds_rei = psc_mfields_create(psc_collision_comm(collision));
+  psc_mfields_set_type(coll->mflds_rei, FIELDS_TYPE);
+  psc_mfields_set_param_obj(coll->mflds_rei, "domain", ppsc->mrc_domain);
+  psc_mfields_set_param_int(coll->mflds_rei, "nr_fields", 3);
+  psc_mfields_set_param_int3(coll->mflds_rei, "ibn", ppsc->ibn);
+  psc_mfields_setup(coll->mflds_rei);
+  psc_mfields_set_comp_name(coll->mflds_rei, 0, "coll_rei_x");
+  psc_mfields_set_comp_name(coll->mflds_rei, 1, "coll_rei_y");
+  psc_mfields_set_comp_name(coll->mflds_rei, 2, "coll_rei_z");
+  psc_mfields_list_add(&psc_mfields_base_list, &coll->mflds_rei);
 }
 
 // ----------------------------------------------------------------------
@@ -468,6 +528,7 @@ psc_collision_sub_destroy(struct psc_collision *collision)
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
   psc_mfields_destroy(coll->mflds);
+  psc_mfields_destroy(coll->mflds_rei);
 }
 
 // ----------------------------------------------------------------------
@@ -509,10 +570,14 @@ psc_collision_sub_run(struct psc_collision *collision,
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       int c = (iz * ldims[1] + iy) * ldims[0] + ix;
       randomize_in_cell(prts, offsets[c], offsets[c+1]);
+
+      update_rei_before(collision, prts, offsets[c], offsets[c+1], p, ix,iy,iz);
       
       struct psc_collision_stats stats = {};
       collide_in_cell(collision, prts, offsets[c], offsets[c+1], &stats);
       
+      update_rei_after(collision, prts, offsets[c], offsets[c+1], p, ix,iy,iz);
+
       for (int s = 0; s < NR_STATS; s++) {
 	F(s, ix,iy,iz) = stats.s[s];
 	stats_total.s[s] += stats.s[s];
@@ -586,4 +651,39 @@ struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
     run_all   = copy_stats;
   }
 } psc_output_fields_item_coll_stats_ops;
+
+// ======================================================================
+
+static void
+copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+	 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+{
+  struct psc_collision *collision = ppsc->collision;
+  assert(psc_collision_ops(collision) == &psc_collision_single_ops);
+
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
+
+  mfields_t mr = mres->get_as<mfields_t>(0, 0);
+
+  for (int m = 0; m < 3; m++) {
+    // FIXME, copy could be avoided (?)
+    mr.mflds()->copy(m, coll->mflds_rei, m);
+  }
+
+  mr.put_as(mres, 0, 3);
+}
+
+// ======================================================================
+// psc_output_fields_item: subclass "coll_rei"
+
+struct psc_output_fields_item_ops_coll_rei : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_coll_rei() {
+    name      = "coll_rei_" FIELDS_TYPE;
+    nr_comp   = 3;
+    fld_names[0] = "coll_rei_x";
+    fld_names[1] = "coll_rei_y";
+    fld_names[2] = "coll_rei_z";
+    run_all   = copy_rei;
+  }
+} psc_output_fields_item_coll_rei_ops;
 
