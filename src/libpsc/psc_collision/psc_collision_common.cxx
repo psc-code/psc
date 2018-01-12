@@ -561,10 +561,14 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
+  mfields_t mr = mres->get_as<mfields_t>(0, 0);
+
   for (int m = 0; m < NR_STATS; m++) {
     // FIXME, copy could be avoided (?)
-    mres->copy(m, coll->mflds, m);
+    mr.mflds()->copy(m, coll->mflds, m);
   }
+
+  mr.put_as(mres, 0, NR_STATS);
 }
 
 // ======================================================================
