@@ -230,7 +230,7 @@ mrc_json_get_object_entry_int3(mrc_json_t json, const char *name, int arr[3])
     fprintf(stderr, "%s: entry \"%s\" not found!\n", __func__, name);
     assert(0);
   }
-  return mrc_json_get_int3(entry, arr);
+  mrc_json_get_int3(entry, arr);
 }
 
 void
@@ -241,7 +241,7 @@ mrc_json_get_object_entry_double3(mrc_json_t json, const char *name, double arr[
     fprintf(stderr, "%s: entry \"%s\" not found!\n", __func__, name);
     assert(0);
   }
-  return mrc_json_get_double3(entry, arr);
+  mrc_json_get_double3(entry, arr);
 }
 
 int
