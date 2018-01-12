@@ -133,7 +133,7 @@ mrc_vec_put_array(struct mrc_vec *vec, void *arr)
 
   struct mrc_vec_ops *ops = mrc_vec_ops(vec);
   assert(ops && ops->put_array);
-  return ops->put_array(vec, arr);
+  ops->put_array(vec, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -269,7 +269,7 @@ mrc_vec_size_of_type(struct mrc_vec *x)
     MRC_OBJ_METHOD("waxpy", mrc_vec_##type##_waxpy),			\
     MRC_OBJ_METHOD("set", mrc_vec_##type##_set),			\
     MRC_OBJ_METHOD("copy", mrc_vec_##type##_copy),			\
-    {},									\
+    { NULL },									\
   };									\
 									\
   static struct mrc_vec_ops mrc_vec_##type##_ops = {			\
@@ -315,7 +315,7 @@ static struct param mrc_vec_descr[] = {
 
   { "size_of_type"    , VAR(size_of_type) , MRC_VAR_INT           },
   { "with_array"      , VAR(with_array)   , MRC_VAR_BOOL          },
-  {},
+  { NULL },
 };
 #undef VAR
 

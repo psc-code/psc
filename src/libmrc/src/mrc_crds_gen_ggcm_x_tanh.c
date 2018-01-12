@@ -77,7 +77,7 @@ static struct param mrc_crds_gen_ggcm_x_tanh_descr[] = {
   { "b1"              , VAR(b1)              , PARAM_DOUBLE(.15)      },
   { "b2"              , VAR(b2)              , PARAM_DOUBLE(.025)     },
   { "b3"              , VAR(b3)              , PARAM_DOUBLE(.3)       },
-  {},
+  { NULL },
 };
 #undef VAR
 

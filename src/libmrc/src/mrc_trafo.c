@@ -371,7 +371,7 @@ MB_CorrectChristoffel(struct mrc_trafo *trafo)
   int sw = trafo->_jac->_nr_ghosts;
   mrc_fld_foreach_patch(trafo->_jac, patch) {
     mrc_fld_foreach(trafo->_jac, jx, jy, jz, sw-1, sw-1) {
-      double gam[3][3][3] = {};
+      double gam[3][3][3] = { 0 };
       for (int i = 0; i < 3; i++) {
 	for (int k = 0; k < 3; k++) {
 	  for (int l = 0; l < 3; l++) {
@@ -593,7 +593,7 @@ static struct param mrc_trafo_descr[] = {
   { "guu"             , VAR(_guu)         , MRC_VAR_OBJ(mrc_fld)   },
   { "gll"             , VAR(_gll)         , MRC_VAR_OBJ(mrc_fld)   },
   { "gam"             , VAR(_gam)         , MRC_VAR_OBJ(mrc_fld)   },
-  {},
+  { NULL },
 };
 #undef VAR
 

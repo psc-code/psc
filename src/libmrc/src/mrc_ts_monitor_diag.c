@@ -17,7 +17,7 @@ struct mrc_ts_monitor_diag {
 #define VAR(x) (void *)offsetof(struct mrc_ts_monitor_diag, x)
 static struct param mrc_ts_monitor_diag_descr[] = {
   { "filename"      , VAR(filename)      , PARAM_STRING("diag.asc")             },
-  {},
+  { NULL },
 };
 #undef VAR
 

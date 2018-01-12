@@ -655,7 +655,7 @@ mrc_mat_mcsr_mpi_print(struct mrc_mat *mat)
 static struct param mrc_mat_mcsr_mpi_descr[] = {
   { "verbose"           , VAR(verbose)           , PARAM_BOOL(false)    },
   { "do_profiling"      , VAR(do_profiling)      , PARAM_BOOL(false)    },  
-  {},
+  { NULL },
 };
 #undef VAR
 

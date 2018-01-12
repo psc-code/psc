@@ -144,7 +144,7 @@ mrc_json_from_json_parser(void *value)
 mrc_json_t
 mrc_json_parse(const char *buf)
 {
-  json_settings settings = {};
+  json_settings settings = { 0 };
   settings.value_extra = json_builder_extra;  /* space for json-builder state */
 
   char error[json_error_max];

@@ -45,7 +45,7 @@ mrc_ts_monitor_init()
 static struct param mrc_ts_monitor_descr[] = {
   { "every_steps"    , VAR(every_steps)    , PARAM_INT(0)             },
   { "every_time"     , VAR(every_time)     , PARAM_FLOAT(0.1)         },
-  {},
+  { NULL },
 };
 #undef VAR
 

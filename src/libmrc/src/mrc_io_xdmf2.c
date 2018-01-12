@@ -30,14 +30,14 @@ struct xdmf {
 #define VAR(x) (void *)offsetof(struct xdmf, x)
 static struct param xdmf2_descr[] = {
   { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
-  {},
+  { NULL },
 };
 #undef VAR
 
 #define VAR(x) (void *)offsetof(struct xdmf, x)
 static struct param xdmf_parallel_descr[] = {
   { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
-  {},
+  { NULL },
 };
 #undef VAR
 
@@ -1189,7 +1189,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   mrc_domain_get_global_dims(m3->_domain, gdims);
 
   if (!xs) {
-    int off[3] = {};
+    int off[3] = { 0, 0, 0 };
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->_domain),
 					 m3->_domain, off, gdims, io);

@@ -28,7 +28,7 @@ static struct param mrc_ts_ode45_descr[] = {
   { "safety_factor"   , VAR(safety_factor) , PARAM_FLOAT(.8)        },
   { "dt_min"          , VAR(dt_min)        , PARAM_FLOAT(0.)        },
   { "dt_max"          , VAR(dt_max)        , PARAM_FLOAT(0.)        },
-  {},
+  { NULL },
 };
 #undef VAR
 
@@ -36,7 +36,7 @@ static struct param mrc_ts_ode45_descr[] = {
 
 // Dormand-Prince 4(5) coefficients:
 static const float a[7][6] = {
-  { },
+  { 0. },
   { 1./5, },
   { 3./40., 9./40. },
   { 44./45., -56./15., 32./9. },

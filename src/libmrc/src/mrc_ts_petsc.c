@@ -366,7 +366,7 @@ _mrc_ts_petsc_solve(struct mrc_ts *ts)
 
 static struct mrc_obj_method mrc_ts_petsc_methods[] = {
   MRC_OBJ_METHOD("set_jac", mrc_ts_petsc_set_jacobian_function),
-  {}
+  { NULL }
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_petsc, x)
@@ -375,7 +375,7 @@ static struct param mrc_ts_petsc_param_descr[] = {
   .help = "the preconditioner will be calculated from a matrix other than the jacobian" },
   { "pre_mat_structure" , VAR(pre_mat_structure) , PARAM_PTR(NULL),
     .help = "A pointer to the petsc structure flag describing the preconditioner matrix. NOT FOR COMMAND LINE USE!" },
-  {},
+  { NULL },
 };
 #undef VAR
 

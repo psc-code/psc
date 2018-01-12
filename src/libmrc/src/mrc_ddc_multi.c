@@ -606,7 +606,7 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 #define VAR(x) (void *)offsetof(struct mrc_ddc_multi, x)
 static struct param mrc_ddc_multi_descr[] = {
   { "domain"          , VAR(domain)       , PARAM_OBJ(mrc_domain) },
-  {},
+  { NULL },
 };
 #undef VAR
 

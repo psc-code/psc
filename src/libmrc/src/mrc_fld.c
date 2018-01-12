@@ -633,7 +633,7 @@ mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
   mrc_fld_set_param_bool(fld_new, "c_order", fld->_c_order);
 
   fld_new->_view_base = fld;
-  int offs[MRC_FLD_MAXDIMS] = {};
+  int offs[MRC_FLD_MAXDIMS] = { 0 };
   offs[3] = mb;
   fld_new->_view_offs = offs;
   mrc_fld_setup(fld_new);
@@ -961,18 +961,18 @@ mrc_fld_float_copy_to_double(struct mrc_fld *from, struct mrc_fld *to)
 static struct mrc_obj_method mrc_fld_float_methods[] = {
   MRC_OBJ_METHOD("copy_to_double",   mrc_fld_float_copy_to_double),
   MRC_OBJ_METHOD("copy_from_double", mrc_fld_float_copy_from_double),
-  {}
+  { NULL }
 };
 
 // ----------------------------------------------------------------------
 // mrc_fld_*_methods
 
 static struct mrc_obj_method mrc_fld_double_methods[] = {
-  {}
+  { NULL }
 };
 
 static struct mrc_obj_method mrc_fld_int_methods[] = {
-  {}
+  { NULL }
 };
 
 // no ddc support for mrc_fld "int" (though it could be added)
@@ -1045,7 +1045,7 @@ static struct param mrc_fld_descr[] = {
   //  { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
   { "c_order"         , VAR(_c_order)        , PARAM_BOOL(false)     },
-  {},
+  { NULL },
 };
 #undef VAR
 
@@ -1061,7 +1061,7 @@ static struct mrc_obj_method mrc_fld_methods[] = {
   MRC_OBJ_METHOD("get_petsc_vec", mrc_fld_get_petsc_vec),
   MRC_OBJ_METHOD("put_petsc_vec", mrc_fld_put_petsc_vec),
 #endif
-  {}
+  { NULL }
 };
 
 // ----------------------------------------------------------------------
