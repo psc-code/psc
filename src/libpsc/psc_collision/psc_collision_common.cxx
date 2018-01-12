@@ -519,13 +519,15 @@ psc_collision_sub_run(struct psc_collision *collision,
       }
     } psc_foreach_3d_end;
     
+#if 0
     mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", p,
 	    stats_total.s[STATS_MIN] / nr_cells,
 	    stats_total.s[STATS_MED] / nr_cells,
 	    stats_total.s[STATS_MAX] / nr_cells,
 	    stats_total.s[STATS_NLARGE] / nr_cells,
 	    stats_total.s[STATS_NCOLL] / nr_cells);
-    
+#endif
+  
     free(offsets);
   }
     
