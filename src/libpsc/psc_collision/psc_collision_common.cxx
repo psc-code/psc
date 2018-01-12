@@ -456,7 +456,7 @@ psc_collision_sub_setup(struct psc_collision *collision)
   psc_mfields_set_comp_name(coll->mflds, 2, "coll_nudt_max");
   psc_mfields_set_comp_name(coll->mflds, 3, "coll_nudt_nlarge");
   psc_mfields_set_comp_name(coll->mflds, 4, "coll_nudt_ncoll");
-  // FIXME, needs to be registered for rebalancing
+  psc_mfields_list_add(&psc_mfields_base_list, &coll->mflds);
 }
 
 // ----------------------------------------------------------------------
