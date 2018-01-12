@@ -67,9 +67,18 @@ public:
   ~cuda_mparticles();
 
   void reserve_all(unsigned int *n_prts_by_patch);
+  void get_size_all(unsigned int *n_prts_by_patch);
+  void setup_internals();
 
   void dump();
   void dump_by_patch(unsigned int *n_prts_by_patch);
+
+public:
+  void find_block_indices_ids();
+  void reorder_and_offsets();
+  void check_in_patch_unordered_slow(unsigned int *nr_prts_by_patch);
+  void check_bidx_id_unordered_slow(unsigned int *n_prts_by_patch);
+  void check_ordered();
   
 public:
   // per particle
@@ -109,9 +118,6 @@ public:
 };
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
-void cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts);
-void cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts);
-void cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts);
 void cuda_mparticles_reorder(struct cuda_mparticles *cmprts);
 
 #endif

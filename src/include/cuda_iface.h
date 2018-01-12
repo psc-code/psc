@@ -34,9 +34,7 @@ struct cuda_mparticles_prt {
 
 struct cuda_mparticles;
 
-void cuda_mparticles_setup_internals(struct cuda_mparticles *cmprts);
 unsigned int cuda_mparticles_get_n_prts(struct cuda_mparticles *cmprts);
-void cuda_mparticles_get_size_all(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_resize_all(struct cuda_mparticles *cmprts, const unsigned int *n_prts_by_patch);
 void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),

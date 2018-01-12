@@ -127,7 +127,7 @@ main(void)
   printf("added particles\n");
   cmprts->dump_by_patch(n_prts_by_patch);
 
-  cuda_mparticles_setup_internals(cmprts);
+  cmprts->setup_internals();
   printf("set up internals\n");
   cmprts->dump();
 

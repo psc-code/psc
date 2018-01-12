@@ -342,7 +342,7 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
 
   prof_start(pr_D);
   unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
+  cmprts->get_size_all(n_prts_by_patch);
   cuda_mparticles_sort(cmprts, (int *) n_prts_by_patch); // FIXME cast
   // FIXME, is this necessary, or doesn't update_offsets() do this, too?
   cuda_mparticles_resize_all(cmprts, n_prts_by_patch);
