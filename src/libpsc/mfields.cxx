@@ -389,7 +389,7 @@ psc_mfields_put_as(struct psc_mfields *mflds, struct psc_mfields *mflds_base,
 void
 psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p)
 {
-  struct psc_mfields_list_entry *p = new struct psc_mfields_list_entry;
+  struct psc_mfields_list_entry *p = new struct psc_mfields_list_entry();
   p->flds_p = flds_p;
   list_add_tail(&p->entry, head);
 }

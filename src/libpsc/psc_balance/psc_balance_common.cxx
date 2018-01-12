@@ -31,7 +31,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
   MPI_Datatype mpi_dtype = mparticles_traits<particle_t>::mpi_dtype();
   // recv for new local patches
-  MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new];
+  MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new]();
   int nr_recv_reqs = 0;
 
   for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
@@ -147,7 +147,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
 
   // recv for new local patches
   MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new]();
-  int *nr_patches_old_by_rank = new int[ctx->mpi_size];
+  int *nr_patches_old_by_rank = new int[ctx->mpi_size]();
   for (int p = 0; p < ctx->nr_patches_new; p++) {
     int old_rank = ctx->recv_info[p].rank;
     if (old_rank == ctx->mpi_rank) {
