@@ -67,6 +67,9 @@ public:
   ~cuda_mparticles();
 
   void reserve_all(unsigned int *n_prts_by_patch);
+
+  void dump();
+  void dump_by_patch(unsigned int *n_prts_by_patch);
   
 public:
   // per particle

@@ -125,11 +125,11 @@ main(void)
   unsigned int n_prts_by_patch[n_patches];
   cuda_mparticles_add_particles_test_1(cmprts, n_patches, n_prts_by_patch, json_info);
   printf("added particles\n");
-  cuda_mparticles_dump_by_patch(cmprts, n_prts_by_patch);
+  cmprts->dump_by_patch(n_prts_by_patch);
 
   cuda_mparticles_setup_internals(cmprts);
   printf("set up internals\n");
-  cuda_mparticles_dump(cmprts);
+  cmprts->dump();
 
   printf("get_particles_test\n");
   get_particles_test(cmprts, n_patches, n_prts_by_patch);
