@@ -158,7 +158,7 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int gp, int i[3])
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
 
-  int dir[3], dirx[3] = {};
+  int dir[3], dirx[3] = {0};
   for (int d = 0; d < 3; d++) {
     if (i[d] < 0) {
       return true;
@@ -235,7 +235,7 @@ mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, 
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
 
-  int dir[3], dirx[3] = {};
+  int dir[3], dirx[3] = {0};
   for (int d = 0; d < 3; d++) {
     if (i[d] < 0) {
       dir[d] = -1;
@@ -300,7 +300,7 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
   struct mrc_patch_info pi;
   mrc_domain_get_global_patch_info(domain, gp, &pi);
     
-  int ii[3], dir[3], dirx[3] = {};
+  int ii[3], dir[3], dirx[3] = {0};
   for (int d = 0; d < 3; d++) {
     ii[d] = i[d] + ((pi.idx3[d] & 1) ? ldims[d] / 2 : 0);
 

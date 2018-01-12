@@ -888,12 +888,17 @@ static struct param psc_balance_descr[] = {
 };
 #undef VAR
 
-struct mrc_class_psc_balance mrc_class_psc_balance = {
-  .name             = "psc_balance",
-  .size             = sizeof(struct psc_balance),
-  .param_descr      = psc_balance_descr,
-  .init             = psc_balance_init,
-  .destroy          = _psc_balance_destroy,
-  .read             = _psc_balance_read,
+struct hack : mrc_class_psc_balance {
+  hack()
+  {
+  name             = "psc_balance",
+  size             = sizeof(struct psc_balance),
+  param_descr      = psc_balance_descr,
+  init             = psc_balance_init,
+  destroy          = _psc_balance_destroy,
+  read             = _psc_balance_read;
+  }
 };
+
+hack mrc_class_psc_balance;
 

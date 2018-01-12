@@ -18,7 +18,7 @@ struct mrc_ts_rkf45 {
 static struct param mrc_ts_rkf45_param_descr[] = {
   { "max_error"      , VAR(max_error)      , PARAM_DOUBLE(1e-7)           },
   { "dt_min"         , VAR(dt_min)         , PARAM_DOUBLE(1e-10)           },
-  {},
+  { NULL },
 };
 #undef VAR
 

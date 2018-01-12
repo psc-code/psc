@@ -39,7 +39,7 @@ libmrc_finalize()
     { .val = CLASS_INFO_VERB_DIFF,   .str = "diff"    },
     { .val = CLASS_INFO_VERB_ACTIVE, .str = "active"  },
     { .val = CLASS_INFO_VERB_FULL,   .str = "full"    },
-    {},
+    { NULL },
   };
   mrc_params_get_option_select_help("class_info_verb", class_info_verb_options,
     &class_info_verbosity, "class info verbosity level, useful for leak checking");

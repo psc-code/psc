@@ -30,14 +30,14 @@ struct xdmf {
 #define VAR(x) (void *)offsetof(struct xdmf, x)
 static struct param xdmf2_descr[] = {
   { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
-  {},
+  { NULL },
 };
 #undef VAR
 
 #define VAR(x) (void *)offsetof(struct xdmf, x)
 static struct param xdmf_parallel_descr[] = {
   { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
-  {},
+  { NULL },
 };
 #undef VAR
 

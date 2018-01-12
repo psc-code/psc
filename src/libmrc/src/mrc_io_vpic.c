@@ -611,7 +611,7 @@ mrc_io_vpic_write_attr(struct mrc_io *io, const char *path, int type,
 static struct param mrc_io_vpic_descr[] = {
   { "proc_field_len"     , VAR(proc_field_len)       , PARAM_INT(6)            },
   { "time_field_len"     , VAR(time_field_len)       , PARAM_INT(8)            },
-  {},
+  { NULL },
 };
 #undef VAR
 

@@ -593,7 +593,7 @@ static struct param mrc_trafo_descr[] = {
   { "guu"             , VAR(_guu)         , MRC_VAR_OBJ(mrc_fld)   },
   { "gll"             , VAR(_gll)         , MRC_VAR_OBJ(mrc_fld)   },
   { "gam"             , VAR(_gam)         , MRC_VAR_OBJ(mrc_fld)   },
-  {},
+  { NULL },
 };
 #undef VAR
 

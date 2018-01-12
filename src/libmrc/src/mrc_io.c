@@ -736,7 +736,7 @@ mrc_io_init()
 static struct param mrc_io_params_descr[] = {
   { "outdir"          , VAR(outdir)       , PARAM_STRING(".")      },
   { "basename"        , VAR(basename)     , PARAM_STRING("run")    },
-  {},
+  { NULL },
 };
 #undef VAR
 

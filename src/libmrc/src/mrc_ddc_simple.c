@@ -299,7 +299,7 @@ static struct param mrc_ddc_simple_params_descr[] = {
   { "ilo"             , VAR(ilo)          , PARAM_INT3(0, 0, 0)    },
   { "ihi"             , VAR(ihi)          , PARAM_INT3(0, 0, 0)    },
   { "bc"              , VAR(bc)           , PARAM_INT3(0, 0, 0)    }, // FIXME, select
-  {}
+  { NULL }
 };
 
 struct mrc_ddc_ops mrc_ddc_simple_ops = {

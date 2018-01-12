@@ -206,7 +206,7 @@ static struct param mrc_ddc_params_descr[] = {
   { "size_of_type"    , VAR(size_of_type) , PARAM_INT(0)           },
   { "max_n_fields"    , VAR(max_n_fields) , PARAM_INT(1)           },
   { "ibn"             , VAR(ibn)          , PARAM_INT3(0, 0, 0)    },
-  {},
+  { NULL },
 };
 #undef VAR
 

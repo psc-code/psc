@@ -4,6 +4,8 @@
 
 #include "psc_particles.h"
 
+#include <algorithm>
+
 // ======================================================================
 // mparticles_base
 

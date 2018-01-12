@@ -59,7 +59,7 @@ static struct param mrctest_domain_params_descr[] = {
   { "npy"             , VAR(nproc[1])        , PARAM_INT(1)          },
   { "npz"             , VAR(nproc[2])        , PARAM_INT(1)          },
   { "use_diagsrv"     , VAR(use_diagsrv)     , PARAM_BOOL(false)     },
-  {},
+  { NULL },
 };
 #undef VAR
 

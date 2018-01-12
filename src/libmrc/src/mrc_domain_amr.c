@@ -526,7 +526,7 @@ static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
   { .val = CURVE_HILBERT , .str = "hilbert"  },
-  {},
+  { NULL },
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_domain_amr, x)
@@ -535,7 +535,7 @@ static struct param mrc_domain_amr_params_descr[] = {
   { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr) },
   { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
-  {},
+  { NULL },
 };
 #undef VAR
 

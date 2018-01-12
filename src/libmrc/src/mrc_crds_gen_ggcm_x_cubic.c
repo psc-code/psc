@@ -71,7 +71,7 @@ static struct param mrc_crds_gen_ggcm_x_cubic_descr[] = {
   { "w2", VAR(w2), PARAM_DOUBLE(2.0)   },
   { "a2", VAR(a2), PARAM_DOUBLE(-8.0)  },
   { "b2", VAR(b2), PARAM_DOUBLE(-30.0) },
-  {},
+  { NULL },
 };
 #undef VAR
 

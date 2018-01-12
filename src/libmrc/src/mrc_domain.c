@@ -270,7 +270,7 @@ mrc_domain_init()
 static struct mrc_param_select bc_descr[] = {
   { .val = BC_NONE       , .str = "none"     },
   { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
+  { NULL },
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_domain, x)
@@ -280,7 +280,7 @@ static struct param mrc_domain_descr[] = {
   { "bcx"            , VAR(bc[0])         , PARAM_SELECT(BC_NONE, bc_descr) },
   { "bcy"            , VAR(bc[1])         , PARAM_SELECT(BC_NONE, bc_descr) },
   { "bcz"            , VAR(bc[2])         , PARAM_SELECT(BC_NONE, bc_descr) },
-  {},
+  { NULL },
 };
 #undef VAR
 

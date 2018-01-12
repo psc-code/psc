@@ -54,7 +54,7 @@ static struct param mrc_bf_simple_param_descr[] = {
   { "coord_gen_x"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
   { "coord_gen_y"       , VAR(coord_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)},
   { "coord_gen_z"       , VAR(coord_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)},
-  {}
+  { NULL }
 };
 #undef VAR
 
