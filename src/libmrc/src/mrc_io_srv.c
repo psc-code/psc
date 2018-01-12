@@ -53,7 +53,7 @@ struct diagc_combined_params {
 
 static struct param diagc_combined_params_descr[] = {
   { "rank_diagsrv"        , VAR(rank_diagsrv)      , PARAM_INT(0)       },
-  { NULL },
+  {},
 };
 
 #undef VAR
@@ -885,7 +885,7 @@ mrc_io_server(const char *ds_format, const char *ds_srv, int nr_procs)
 static struct param diagsrv_params_descr[] = {
   { "diagsrv_format"     , VAR(format)          , PARAM_STRING(NULL)      },
   { "diagsrv_server"     , VAR(server)          , PARAM_STRING(NULL)      },
-  { NULL },
+  {},
 };
 #undef VAR
 
@@ -923,7 +923,7 @@ static struct param diagsrv_params_descr[] = {
     }
 
     if (icmd[0] == DIAG_CMD_CREATE) {
-      char s[256] = { 0 };
+      char s[256] = {};
       MPI_Recv(s, 255, MPI_CHAR, 0, ID_DIAGS_CREATE_OUTDIR, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       char *outdir = strdup(s);
       MPI_Recv(s, 255, MPI_CHAR, 0, ID_DIAGS_CREATE_BASENAME, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -939,7 +939,7 @@ static struct param diagsrv_params_descr[] = {
 
     int outtag = stat.MPI_TAG;
 
-    char s[256] = { 0 };
+    char s[256] = {};
     MPI_Recv(s, 255, MPI_CHAR, 0, ID_DIAGS_BASENAME, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     struct mrc_io_entry *io_entry = find_diagsrv_io(&ds, s);
     assert(io_entry);

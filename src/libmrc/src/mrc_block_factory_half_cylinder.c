@@ -51,7 +51,7 @@ static struct param mrc_bf_hc_param_descr[] = {
   { "coord_gen_r"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
   { "coord_gen_th"      , VAR(coord_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)},
   { "coord_gen_z"       , VAR(coord_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)},
-  { NULL }
+  {}
 };
 #undef VAR
 // FIXME: Just a 2D plane for now..

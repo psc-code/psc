@@ -361,7 +361,7 @@ static struct param mrc_domain_mb_params_descr[] = {
   { "block_factory"   , VAR(_block_factory)   , PARAM_OBJ(mrc_block_factory) },
   { "ppb"             , VAR(ppb)             , PARAM_INT3(1,1,1),
     .help = " number of patches per block in x, y, z direction" },
-  { NULL },
+  {},
 };
 #undef VAR
 

@@ -49,7 +49,7 @@ static struct param mrc_crds_gen_descr[] = {
   { "sw"              , VAR(sw)              , PARAM_INT(0)          },
   { "xl"              , VAR(xl)              , PARAM_DOUBLE(0.0)      },
   { "xh"              , VAR(xh)              , PARAM_DOUBLE(0.0)      },
-  { NULL },
+  {},
 };
 #undef VAR
 

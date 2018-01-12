@@ -105,7 +105,7 @@ mrc_mat_init()
 static struct param mrc_mat_descr[] = {
   { "m"                 , VAR(m)                 , PARAM_INT(0) },
   { "n"                 , VAR(n)                 , PARAM_INT(0) },
-  { NULL },
+  {},
 };
 #undef VAR
 

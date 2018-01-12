@@ -196,7 +196,7 @@ mrc_json_get_object_entry(mrc_json_t json, const char *name)
       return mrc_json_get_object_entry_value(json, i);
     }
   }
-  return (mrc_json_t) { 0 };
+  return (mrc_json_t) {};
 }
 
 int

@@ -688,7 +688,7 @@ static struct param mrc_mat_csr_mpi_descr[] = {
   .help = "How many empty columnts to use for each new row" },
   { "growth_factor"     , VAR(growth_factor)     , PARAM_FLOAT(0.5),
   .help = "Fraction of current nr_cols to add to rows" },
-  { NULL },
+  {},
 };
 #undef VAR
 

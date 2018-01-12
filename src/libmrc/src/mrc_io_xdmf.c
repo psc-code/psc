@@ -68,7 +68,7 @@ struct diag_hdf5_params {
 
 static struct param diag_hdf5_params_descr[] = {
   { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
-  { NULL },
+  {},
 };
 
 #undef VAR

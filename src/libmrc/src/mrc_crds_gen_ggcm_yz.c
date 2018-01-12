@@ -74,7 +74,7 @@ static struct param mrc_crds_gen_ggcm_yz_descr[] = {
   { "center_shift"    , VAR(xshift)          , PARAM_DOUBLE(0.)       },
   { "xn"              , VAR(xn)              , PARAM_DOUBLE(2.)       },
   { "xm"              , VAR(xm)              , PARAM_DOUBLE(.5)       },
-  { NULL },
+  {},
 };
 #undef VAR
 

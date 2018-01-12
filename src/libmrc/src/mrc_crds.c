@@ -109,7 +109,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       // FIXME, this is really too hacky... should per m1 / m3, not per mrc_io
       struct mrc_fld *crd_nc = crds->crd_nc[d];
       mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
-      int slab_dims[3] = { 0, 0, 0 };
+      int slab_dims[3] = {};
       slab_dims[d] = gdims[d] + 1;
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
       mrc_fld_write(crd_nc, io);
@@ -517,7 +517,7 @@ static struct param mrc_crds_params_descr[] = {
   { "crds_gen_y"     , VAR(crds_gen[1])   , MRC_VAR_OBJ(mrc_crds_gen)},
   { "crds_gen_z"     , VAR(crds_gen[2])   , MRC_VAR_OBJ(mrc_crds_gen)},
 
-  { NULL },
+  {},
 };
 #undef VAR
 

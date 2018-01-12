@@ -29,7 +29,7 @@ static struct param ph5_descr[] = {
   { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
   { "independent"            , VAR(use_independent_io)      , PARAM_BOOL(true)       },
   { "separator"              , VAR(separator)               , PARAM_STRING(".")      },
-  { NULL },
+  {},
 };
 #undef VAR
 

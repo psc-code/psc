@@ -291,7 +291,7 @@ static struct param mrc_ts_param_descr[] = {
   { "dt"             , VAR(dt)             , PARAM_FLOAT(1e-2)  },
   { "norm_time"      , VAR(norm_time)      , PARAM_DOUBLE(1.)   },
   { "norm_time_scale", VAR(norm_time_scale), PARAM_DOUBLE(1.)   },
-  { NULL },
+  {},
 };
 #undef VAR
 

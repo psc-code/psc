@@ -812,14 +812,14 @@ map_global_patch_index_to_global(struct mrc_domain *mb, int k1, int i1x, int i1y
 #define VAR(x) (void *)offsetof(struct mrc_ddc_mb, x)
 static struct param mrc_ddc_mb_descr[] = {
   { "domain"          , VAR(domain)       , PARAM_OBJ(mrc_domain) },
-  { NULL },
+  {},
 };
 #undef VAR
 
 static struct mrc_obj_method mrc_ddc_mb_methods[] = {
   MRC_OBJ_METHOD("map_patch_interior_index_to_global", map_patch_interior_index_to_global),
   MRC_OBJ_METHOD("map_global_patch_index_to_global", map_global_patch_index_to_global),
-  { NULL }
+  {}
 };
 
 struct mrc_ddc_ops mrc_ddc_mb_ops = {

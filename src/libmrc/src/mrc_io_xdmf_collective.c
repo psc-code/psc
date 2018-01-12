@@ -39,7 +39,7 @@ static struct param xdmf_collective_descr[] = {
   { "romio_ds_write"         , VAR(romio_ds_write)          , PARAM_STRING(NULL)     },
   { "slab_dims"              , VAR(slab_dims)               , PARAM_INT3(0, 0, 0)    },
   { "slab_off"               , VAR(slab_off)                , PARAM_INT3(0, 0, 0)    },
-  { NULL },
+  {},
 };
 #undef VAR
 

@@ -557,7 +557,7 @@ static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
   { .val = CURVE_HILBERT , .str = "hilbert"  },
-  { NULL },
+  {},
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_domain_multi, x)
@@ -571,7 +571,7 @@ static struct param mrc_domain_multi_params_descr[] = {
     .help = "Type of spacing filling curve to use for distributing patches." },
   { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
   { "activepatches"   , VAR(p_activepatches) , PARAM_PTR(NULL) },
-  { NULL },
+  {},
 };
 #undef VAR
 

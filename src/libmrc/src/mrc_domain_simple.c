@@ -74,7 +74,7 @@ mrc_domain_simple_do_setup(struct mrc_domain *domain)
   for (int d = 0; d < 3; d++) {
     // get local offset from left neighbor
     if (proc[d] > 0) {
-      int dir[3] = { 0, 0, 0 };
+      int dir[3] = {};
       dir[d] = -1;
       int rank_nei = mrc_domain_simple_get_neighbor_rank(domain, dir);
       MPI_Recv(&simple->patch.off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
@@ -86,7 +86,7 @@ mrc_domain_simple_do_setup(struct mrc_domain *domain)
     // then send next offset to the right
     if (proc[d] < simple->nr_procs[d] - 1) {
       int off_nei = simple->patch.off[d] + simple->patch.ldims[d];
-      int dir[3] = { 0, 0, 0 };
+      int dir[3] = {};
       dir[d] = 1;
       int rank_nei = mrc_domain_simple_get_neighbor_rank(domain, dir);
       MPI_Send(&off_nei, 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm);
@@ -251,7 +251,7 @@ static struct param mrc_domain_simple_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32),
   .help = "global number of grid points in x, y, z direction" },
   { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
-  { NULL },
+  {},
 };
 #undef VAR
 

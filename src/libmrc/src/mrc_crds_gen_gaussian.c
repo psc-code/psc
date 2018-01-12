@@ -82,7 +82,7 @@ static struct param mrc_crds_gen_gaussian_param_descr[] = {
   { "gc_r"              , VAR(gc_r)             , PARAM_DOUBLE(1.0)       },
   { "gc_w"              , VAR(gc_w)             , PARAM_DOUBLE(1.0)       },
   { "bc_cyl"            , VAR(bc_cyl)           , PARAM_BOOL(false)       },
-  { NULL }
+  {}
 };
 #undef VAR
 
@@ -170,7 +170,7 @@ static struct param mrc_crds_gen_two_gaussian_param_descr[] = {
   { "gc_rx"             , VAR(gc_rx)            , PARAM_DOUBLE(1.0)       },
   { "gc_wx"             , VAR(gc_wx)            , PARAM_DOUBLE(1.0)       },
   { "bc_cyl"            , VAR(bc_cyl)           , PARAM_BOOL(false)       },
-  { NULL }
+  {}
 };
 #undef VAR
 

@@ -131,7 +131,7 @@ mrc_vec_petsc_create(struct mrc_vec *vec)
 #define VAR(x) (void *)offsetof(struct mrc_vec_petsc, x)
 static struct param mrc_vec_petsc_descr[] = {
   { "block_size"     , VAR(block_size)     , PARAM_INT(0)    },
-  { NULL },
+  {},
 };
 #undef VAR
 
@@ -226,7 +226,7 @@ static struct mrc_obj_method mrc_vec_petsc_methods[] = {
   MRC_OBJ_METHOD("norm", mrc_vec_petsc_norm),
   MRC_OBJ_METHOD("set", mrc_vec_petsc_set),
   MRC_OBJ_METHOD("copy", mrc_vec_petsc_copy),
-  { NULL },
+  {},
 };
 
 

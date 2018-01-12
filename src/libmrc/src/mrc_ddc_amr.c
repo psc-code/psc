@@ -147,7 +147,7 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 static struct param mrc_ddc_amr_descr[] = {
   { "sw"                     , VAR(sw)                      , PARAM_INT3(0, 0, 0)    },
   { "n_comp"                 , VAR(im[3])                   , PARAM_INT(0)           },
-  { NULL },
+  {},
 };
 #undef VAR
 

@@ -377,7 +377,7 @@ static struct param mrc_ndarray_descr[] = {
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(len)            , MRC_VAR_INT           },
   { "vec"             , VAR(vec)            , MRC_VAR_OBJ(mrc_vec)  },
-  { NULL },
+  {},
 };
 #undef VAR
 
