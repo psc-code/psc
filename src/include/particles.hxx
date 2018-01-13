@@ -4,6 +4,53 @@
 
 #include "psc_particles.h"
 
+#include <vector>
+
+// ======================================================================
+// particles_base
+
+template<typename P>
+struct particles_base
+{
+  using particle_t = P;
+  using real_t = typename particle_t::real_t;
+  using buf_t = std::vector<particle_t>;
+  using iterator = typename buf_t::iterator;
+  
+  buf_t buf;
+
+  int b_mx[3];
+  real_t b_dxi[3];
+
+  struct psc_mparticles *mprts;
+  int p;
+  
+  ~particles_base()
+  {
+  }
+
+  particle_t& operator[](int n) { return buf[n]; }
+  iterator begin() { return buf.begin(); }
+  iterator end() { return buf.end(); }
+  unsigned int size() const { return buf.size(); }
+  void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
+  void push_back(const particle_t& prt) { buf.push_back(prt); }
+
+  void resize(unsigned int new_size)
+  {
+    assert(new_size <= buf.capacity());
+    buf.resize(new_size);
+  }
+
+  buf_t& get_buf()
+  {
+    return buf;
+  }
+
+  const int* get_b_mx() const { return b_mx; }
+  const real_t* get_b_dxi() const { return b_dxi; }
+};
+
 // ======================================================================
 // mparticles_base
 

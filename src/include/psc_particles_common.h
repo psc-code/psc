@@ -48,32 +48,10 @@ struct psc_mparticles_PTYPE_patch;
 
 using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch<particle_PTYPE_t>&;
 
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch
-
 template<typename P>
-struct psc_mparticles_PTYPE_patch
+struct psc_mparticles_PTYPE_patch : particles_base<P>
 {
-  using particle_t = P;
-  using buf_t = std::vector<particle_t>;
-  using iterator = typename buf_t::iterator;
-  
-  buf_t buf;
-
-  int b_mx[3];
-  particle_PTYPE_real_t b_dxi[3];
-
-  struct psc_mparticles *mprts;
-  int p;
-  
-#if PTYPE == PTYPE_SINGLE
-  particle_PTYPE_t *prt_array_alt;
-  int nr_blocks;
-  unsigned int *b_idx;
-  unsigned int *b_ids;
-  unsigned int *b_cnt;
-  bool need_reorder;
-#endif
+  using Base = particles_base<P>;
   
   ~psc_mparticles_PTYPE_patch()
   {
@@ -85,56 +63,36 @@ struct psc_mparticles_PTYPE_patch
 #endif
   }
 
-  particle_PTYPE_t& operator[](int n) { return buf[n]; }
-  iterator begin() { return buf.begin(); }
-  iterator end() { return buf.end(); }
-  unsigned int size() const { return buf.size(); }
-
-  void resize(unsigned int new_size)
+  psc_particle_PTYPE_range_t range()
   {
-    assert(new_size <= buf.capacity());
-    buf.resize(new_size);
+    return psc_particle_PTYPE_range_t(*this);
   }
 
   void reserve(unsigned int new_capacity)
   {
-    unsigned int old_capacity = buf.capacity();
-    buf.reserve(new_capacity);
-    new_capacity = buf.capacity();
-    
-    if (new_capacity == old_capacity) {
-      return;
-    }
-    
+    unsigned int old_capacity = Base::buf.capacity();
+    Base::reserve(new_capacity);
+
+    new_capacity = Base::buf.capacity();
+    if (new_capacity != old_capacity) {
 #if PTYPE == PTYPE_SINGLE
-    free(prt_array_alt);
-    prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
-    b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
-    b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
+      free(prt_array_alt);
+      prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
+      b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
+      b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
 #endif
+    }
   }
 
-  void push_back(const particle_PTYPE_t& prt)
-  {
-    buf.push_back(prt);
-  }
+#if PTYPE == PTYPE_SINGLE
+  particle_PTYPE_t *prt_array_alt;
+  int nr_blocks;
+  unsigned int *b_idx;
+  unsigned int *b_ids;
+  unsigned int *b_cnt;
+  bool need_reorder;
+#endif
 
-  buf_t& get_buf()
-  {
-    return buf;
-  }
-
-  psc_particle_PTYPE_range_t range();
-
-  const int* get_b_mx() const
-  {
-    return b_mx;
-  }
-
-  const particle_PTYPE_real_t* get_b_dxi() const
-  {
-    return b_dxi;
-  }
 };
 
 // ----------------------------------------------------------------------
@@ -146,15 +104,6 @@ struct psc_mparticles_PTYPE
   
   particles_t *patch;
 };
-
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch::range
-
-template<typename P>
-inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch<P>::range()
-{
-  return psc_particle_PTYPE_range_t(*this);
-}
 
 #include <math.h>
 
