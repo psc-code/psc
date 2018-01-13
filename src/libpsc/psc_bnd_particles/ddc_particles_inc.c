@@ -592,7 +592,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = cuda_mparticles_bnd_get_buffer(cmprts, p);
+    dpatch->m_buf = cmprts->bnd_get_buffer( p);
     dpatch->m_begin = 0;
   }
 #endif

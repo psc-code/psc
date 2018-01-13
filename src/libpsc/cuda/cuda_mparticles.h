@@ -92,6 +92,8 @@ public:
   void inject(cuda_mparticles_prt *buf, unsigned int *buf_n_by_patch);
   const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
+
+  psc_particle_cuda_buf_t *bnd_get_buffer(int p);
   
   void dump();
   void dump_by_patch(unsigned int *n_prts_by_patch);

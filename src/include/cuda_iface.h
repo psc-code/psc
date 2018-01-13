@@ -18,7 +18,6 @@ void cuda_base_init(void);
 
 struct cuda_mparticles;
 
-psc_particle_cuda_buf_t *cuda_mparticles_bnd_get_buffer(struct cuda_mparticles *cmprts, int p);
 void cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts);
 void cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts);
 

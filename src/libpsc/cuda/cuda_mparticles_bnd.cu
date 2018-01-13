@@ -365,9 +365,8 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // cuda_mparticles_bnd_get_buffer
 
-psc_particle_cuda_buf_t *
-cuda_mparticles_bnd_get_buffer(struct cuda_mparticles *cmprts, int p)
+psc_particle_cuda_buf_t *cuda_mparticles::bnd_get_buffer(int p)
 {
-  return &cmprts->bnd.bpatch[p].buf;
+  return &bnd.bpatch[p].buf;
 }
 

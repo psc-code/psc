@@ -900,7 +900,7 @@ void cuda_mparticles::get_particles(unsigned int n_prts, unsigned int off,
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_patch_get_b_dxi
+// patch_get_b_dxi
 
 const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 {
@@ -908,7 +908,7 @@ const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_patch_get_b_mx
+// patch_get_b_mx
 
 const int* cuda_mparticles::patch_get_b_mx(int p)
 {
