@@ -169,20 +169,20 @@ static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
 // psc_mparticles_cuda_setup
 
 static void
-psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
+psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  mparticles_cuda_t mprts(_mprts);
 
   cuda_base_init();
 
-  psc_mparticles_setup_super(mprts);
+  psc_mparticles_setup_super(_mprts);
 
-  int n_patches = mprts->nr_patches;
+  int n_patches = mprts.n_patches();
   assert(n_patches != 0);
   
-  if (!mprts->flags) {
+  if (!_mprts->flags) {
     // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
-    mprts->flags = MP_BLOCKSIZE_4X4X4;
+    _mprts->flags = MP_BLOCKSIZE_4X4X4;
   }
 
   int *ldims = ppsc->patch[0].ldims;
@@ -198,7 +198,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    switch (mprts->flags & MP_BLOCKSIZE_MASK) {
+    switch (_mprts->flags & MP_BLOCKSIZE_MASK) {
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
@@ -238,8 +238,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
   mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
-  cuda_mparticles *cmprts = new cuda_mparticles(json);
-  mprts_cuda->cmprts = cmprts;
+  mprts.sub()->cmprts = new cuda_mparticles(json);
 
   // FIXME json_builder_free(obj);
 }
@@ -248,24 +247,24 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 // psc_mparticles_cuda_destroy
 
 static void
-psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
+psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  assert(mprts_cuda->cmprts);
+  mparticles_cuda_t mprts(_mprts);
+  assert(mprts.sub()->cmprts);
   
-  delete mprts_cuda->cmprts;
-  mprts_cuda->cmprts = NULL;
+  delete mprts.sub()->cmprts;
+  mprts.sub()->cmprts = NULL;
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_reserve_all
 
 static void
-psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_cuda_reserve_all(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
 
-  cmprts->reserve_all((unsigned int *) n_prts_by_patch);
+  mprts.cmprts()->reserve_all((unsigned int *) n_prts_by_patch);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -283,21 +282,21 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 // psc_mparticles_cuda_write
 
 static void
-psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
+psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
   int ierr;
   
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
-  unsigned int n_prts_by_patch[mprts->nr_patches];
-  cmprts->get_size_all(n_prts_by_patch);
+  unsigned int n_prts_by_patch[mprts.n_patches()];
+  mprts.cmprts()->get_size_all(n_prts_by_patch);
 
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, _mprts), H5P_DEFAULT); H5_CHK(group);
   unsigned int off = 0;
   // FIXME, reorder first if necessary
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
@@ -307,7 +306,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
       float_4 *xi4  = (float_4 *) calloc(n_prts, sizeof(*xi4));
       float_4 *pxi4 = (float_4 *) calloc(n_prts, sizeof(*pxi4));
       
-      cmprts->from_device(xi4, pxi4, n_prts, off);
+      mprts.cmprts()->from_device(xi4, pxi4, n_prts, off);
       
       hsize_t hdims[2];
       hdims[0] = n_prts; hdims[1] = 4;
@@ -327,18 +326,20 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
 // psc_mparticles_cuda_read
 
 static void
-psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
+psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 {
-  psc_mparticles_read_super(mprts, io);
+  mparticles_cuda_t mprts(_mprts);
+
+  psc_mparticles_read_super(_mprts, io);
 
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, _mprts), H5P_DEFAULT); H5_CHK(group);
 
-  int n_prts_by_patch[mprts->nr_patches];
+  int n_prts_by_patch[mprts.n_patches()];
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
@@ -348,11 +349,11 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     ierr = H5Gclose(pgroup); CE;
   }
 
-  psc_mparticles_setup(mprts);
-  psc_mparticles_reserve_all(mprts, n_prts_by_patch);
+  psc_mparticles_setup(_mprts);
+  psc_mparticles_reserve_all(_mprts, n_prts_by_patch);
 
   unsigned int off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
@@ -364,7 +365,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
       
-      struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+      struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts).sub()->cmprts;
       
       cmprts->to_device(xi4, pxi4, n_prts, off);
       
@@ -377,7 +378,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   }
 
   ierr = H5Gclose(group); CE;
-  psc_mparticles_setup_internals(mprts);
+  psc_mparticles_setup_internals(_mprts);
 }
 
 #endif
@@ -386,57 +387,56 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 // psc_mparticles_cuda_setup_internals
 
 static void
-psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
+psc_mparticles_cuda_setup_internals(struct psc_mparticles *_mprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
 
-  cmprts->setup_internals();
+  mprts.cmprts()->setup_internals();
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_get_nr_particles
 
 static unsigned int
-psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
+psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *_mprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
 
-  return cmprts->get_n_prts();
+  return mprts.cmprts()->get_n_prts();
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_get_size_all
 
 static void
-psc_mparticles_cuda_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_cuda_get_size_all(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
 
-  cmprts->get_size_all((unsigned int *) n_prts_by_patch);
+  mprts.cmprts()->get_size_all((unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_resize_all
 
 static void
-psc_mparticles_cuda_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_cuda_resize_all(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
 
-  cmprts->resize_all((unsigned int *) n_prts_by_patch);
+  mprts.cmprts()->resize_all((unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_inject
 
 void
-psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_prt *buf,
+psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles_prt *buf,
 			   unsigned int *buf_n_by_patch)
 {
-  assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  mparticles_cuda_t mprts(_mprts);
 
-  cmprts->inject(buf, buf_n_by_patch);
+  mprts.cmprts()->inject(buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -444,7 +444,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_
 
 const int* mparticles_cuda_t::patch_t::get_b_mx() const
 {
-  return mp_.sub()->cmprts->patch_get_b_mx(p_);
+  return mp_.cmprts()->patch_get_b_mx(p_);
 }
 
 // ----------------------------------------------------------------------
@@ -452,7 +452,7 @@ const int* mparticles_cuda_t::patch_t::get_b_mx() const
 
 const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
 {
-  return mp_.sub()->cmprts->patch_get_b_dxi(p_);
+  return mp_.cmprts()->patch_get_b_dxi(p_);
 }
 
 // ----------------------------------------------------------------------
