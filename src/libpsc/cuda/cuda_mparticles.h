@@ -81,6 +81,7 @@ public:
   void reserve_all(const unsigned int *n_prts_by_patch);
   void get_size_all(unsigned int *n_prts_by_patch);
   void resize_all(const unsigned int *n_prts_by_patch);
+  unsigned int get_n_prts();
   void set_particles(unsigned int n_prts, unsigned int off,
 		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
 		     void *ctx);
@@ -88,8 +89,7 @@ public:
 		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
 		     void *ctx);
   void setup_internals();
-
-  unsigned int get_n_prts();
+  void inject(cuda_mparticles_prt *buf, unsigned int *buf_n_by_patch);
   
   void dump();
   void dump_by_patch(unsigned int *n_prts_by_patch);

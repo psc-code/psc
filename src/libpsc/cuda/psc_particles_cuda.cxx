@@ -436,7 +436,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_
   assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  cuda_mparticles_inject(cmprts, buf, buf_n_by_patch);
+  cmprts->inject(buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------

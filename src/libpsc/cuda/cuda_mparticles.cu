@@ -728,19 +728,18 @@ cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_inject
+// inject
 
-void
-cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_prt *buf,
-		       unsigned int *buf_n_by_patch)
+void cuda_mparticles::inject(cuda_mparticles_prt *buf,
+			     unsigned int *buf_n_by_patch)
 {
-  if (cmprts->need_reorder) {
-    cuda_mparticles_reorder(cmprts);
-    cmprts->need_reorder = false;
+  if (need_reorder) {
+    cuda_mparticles_reorder(this);
+    need_reorder = false;
   }
   
   unsigned int buf_n = 0;
-  for (int p = 0; p < cmprts->n_patches; p++) {
+  for (int p = 0; p < n_patches; p++) {
     buf_n += buf_n_by_patch[p];
     //    printf("p %d buf_n_by_patch %d\n", p, buf_n_by_patch[p]);
   }
@@ -752,7 +751,7 @@ cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_pr
   thrust::host_vector<unsigned int> h_id(buf_n);
 
   unsigned int off = 0;
-  for (int p = 0; p < cmprts->n_patches; p++) {
+  for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
       float4 *xi4 = &h_xi4[off + n];
       float4 *pxi4 = &h_pxi4[off + n];
@@ -767,32 +766,32 @@ cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_pr
       pxi4->z = prt->pxi[2];
       pxi4->w = prt->qni_wni;
 
-      h_bidx[off + n] = get_block_idx(cmprts, *xi4, p);
-      h_id[off + n] = cmprts->n_prts + off + n;
+      h_bidx[off + n] = get_block_idx(this, *xi4, p);
+      h_id[off + n] = n_prts + off + n;
     }
     off += buf_n_by_patch[p];
   }
   assert(off == buf_n);
 
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  cmprts->get_size_all(n_prts_by_patch);
+  unsigned int n_prts_by_patch[n_patches];
+  get_size_all(n_prts_by_patch);
 
-  //cuda_mparticles_check_in_patch_unordered_slow(cmprts, n_prts_by_patch);
+  // check_in_patch_unordered_slow(n_prts_by_patch);
 
-  cmprts->find_block_indices_ids();
-  //cuda_mparticles_check_bidx_id_unordered_slow(cmprts, n_prts_by_patch);
+  find_block_indices_ids();
+  // check_bidx_id_unordered_slow(n_prts_by_patch);
 
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<float4> d_xi4(this->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(this->d_pxi4);
+  thrust::device_ptr<unsigned int> d_bidx(this->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(this->d_id);
 
-  assert(cmprts->n_prts + buf_n <= cmprts->n_alloced);
-  thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4 + cmprts->n_prts);
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4 + cmprts->n_prts);
-  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx + cmprts->n_prts);
-  //thrust::copy(h_id.begin(), h_id.end(), d_id + cmprts->n_prts);
-  thrust::sequence(d_id, d_id + cmprts->n_prts + buf_n);
+  assert(n_prts + buf_n <= n_alloced);
+  thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4 + n_prts);
+  thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4 + n_prts);
+  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx + n_prts);
+  //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
+  thrust::sequence(d_id, d_id + n_prts + buf_n);
 
   // for (int i = -5; i <= 5; i++) {
   //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
@@ -803,10 +802,10 @@ cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_pr
 
   // cmprts->check_ordered(cmprts);
 
-  cmprts->n_prts += buf_n;
+  n_prts += buf_n;
 
-  thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
-  cmprts->reorder_and_offsets();
+  thrust::stable_sort_by_key(d_bidx, d_bidx + n_prts, d_id);
+  reorder_and_offsets();
 
   // cmprts->check_ordered(cmprts);
 }

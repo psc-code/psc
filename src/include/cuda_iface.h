@@ -18,9 +18,6 @@ void cuda_base_init(void);
 
 struct cuda_mparticles;
 
-void cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_prt *buf,
-			    unsigned int *buf_n_by_patch);
-
 const particle_cuda_real_t *cuda_mparticles_patch_get_b_dxi(struct cuda_mparticles *cmprts, int p);
 const int *cuda_mparticles_patch_get_b_mx(struct cuda_mparticles *cmprts, int p);
 
