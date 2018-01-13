@@ -14,21 +14,10 @@
 void cuda_base_init(void);
 
 // ----------------------------------------------------------------------
-// double3 / float_4
-
-typedef double double_3[3];
-typedef float float_4[4];
-
-// ----------------------------------------------------------------------
 // cuda_mparticles
 
 struct cuda_mparticles;
 
-void cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float_4 *xi4, float_4 *pxi4,
-			       unsigned int n_prts, unsigned int off);
-void cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float_4 *xi4, float_4 *pxi4,
-				 unsigned int n_prts, unsigned int off);
-  
 void cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_prt *buf,
 			    unsigned int *buf_n_by_patch);
 

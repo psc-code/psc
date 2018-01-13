@@ -307,7 +307,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
       float_4 *xi4  = (float_4 *) calloc(n_prts, sizeof(*xi4));
       float_4 *pxi4 = (float_4 *) calloc(n_prts, sizeof(*pxi4));
       
-      cuda_mparticles_from_device(cmprts, xi4, pxi4, n_prts, off);
+      cmprts->from_device(xi4, pxi4, n_prts, off);
       
       hsize_t hdims[2];
       hdims[0] = n_prts; hdims[1] = 4;
@@ -366,7 +366,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       
       struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
       
-      cuda_mparticles_to_device(cmprts, xi4, pxi4, n_prts, off);
+      cmprts->to_device(xi4, pxi4, n_prts, off);
       
       free(xi4);
       free(pxi4);

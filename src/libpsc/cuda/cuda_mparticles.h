@@ -11,9 +11,11 @@ struct float4 { float x; float y; float z; float w; };
 #endif
 
 // ----------------------------------------------------------------------
-// float_3
+// float_3 etc
 
 typedef float float_3[3];
+typedef double double_3[3];
+typedef float float_4[4];
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_prt
@@ -93,6 +95,11 @@ public:
   void dump_by_patch(unsigned int *n_prts_by_patch);
 
 public:
+  void to_device(float_4 *xi4, float_4 *pxi4,
+		 unsigned int n_prts, unsigned int off);
+  void from_device(float_4 *xi4, float_4 *pxi4,
+		   unsigned int n_prts, unsigned int off);
+  
   void find_block_indices_ids();
   void reorder_and_offsets();
   void check_in_patch_unordered_slow(unsigned int *nr_prts_by_patch);
