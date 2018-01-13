@@ -66,10 +66,13 @@ public:
   cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
 
-  void reserve_all(unsigned int *n_prts_by_patch);
+  void reserve_all(const unsigned int *n_prts_by_patch);
   void get_size_all(unsigned int *n_prts_by_patch);
+  void resize_all(const unsigned int *n_prts_by_patch);
   void setup_internals();
 
+  unsigned int get_n_prts();
+  
   void dump();
   void dump_by_patch(unsigned int *n_prts_by_patch);
 

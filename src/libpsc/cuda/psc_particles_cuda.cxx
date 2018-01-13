@@ -401,7 +401,7 @@ psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  return cuda_mparticles_get_n_prts(cmprts);
+  return cmprts->get_n_prts();
 }
 
 // ----------------------------------------------------------------------
@@ -423,7 +423,7 @@ psc_mparticles_cuda_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  cuda_mparticles_resize_all(cmprts, (unsigned int *) n_prts_by_patch);
+  cmprts->resize_all((unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------

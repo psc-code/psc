@@ -107,7 +107,7 @@ cuda_mparticles::~cuda_mparticles()
 // ----------------------------------------------------------------------
 // reserve_all
 
-void cuda_mparticles::reserve_all(unsigned int *n_prts_by_patch)
+void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
 {
   cudaError_t ierr;
 
@@ -640,7 +640,7 @@ void cuda_mparticles::setup_internals()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_resize_all
+// resize_all
 //
 // FIXME, this function currently is used in two contexts:
 // - to implement mprts::resize_all(), but in this case we
@@ -654,32 +654,29 @@ void cuda_mparticles::setup_internals()
 //   in that case, we supposedly know what we're doing, so we at most need
 //   to check that we aren't beyond our allocated space
 
-void
-cuda_mparticles_resize_all(struct cuda_mparticles *cmprts,
-			   const unsigned int *n_prts_by_patch)
+void cuda_mparticles::resize_all(const unsigned int *n_prts_by_patch)
 {
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::host_vector<unsigned int> h_off(cmprts->n_blocks + 1);
+  thrust::device_ptr<unsigned int> d_off(this->d_off);
+  thrust::host_vector<unsigned int> h_off(this->n_blocks + 1);
 
   unsigned int off = 0;
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    h_off[p * cmprts->n_blocks_per_patch] = off;
+  for (int p = 0; p < n_patches; p++) {
+    h_off[p * n_blocks_per_patch] = off;
     off += n_prts_by_patch[p];
     // printf("set_n_prts p%d: %d\n", p, n_prts_by_patch[p]);
   }
-  h_off[cmprts->n_blocks] = off;
-  cmprts->n_prts = off;
+  h_off[n_blocks] = off;
+  n_prts = off;
 
   thrust::copy(h_off.begin(), h_off.end(), d_off);
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_get_n_prts
+// get_n_prts
 
-unsigned int
-cuda_mparticles_get_n_prts(struct cuda_mparticles *cmprts)
+unsigned int cuda_mparticles::get_n_prts()
 {
-  return cmprts->n_prts;
+  return n_prts;
 }
 
 // ----------------------------------------------------------------------

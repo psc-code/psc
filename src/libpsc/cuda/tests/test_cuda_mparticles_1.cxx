@@ -62,7 +62,7 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
   }
 
   cmprts->reserve_all(n_prts_by_patch);
-  cuda_mparticles_resize_all(cmprts, n_prts_by_patch);
+  cmprts->resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
