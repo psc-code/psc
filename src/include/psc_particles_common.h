@@ -43,16 +43,18 @@
 
 // ======================================================================
 
+template<typename P>
 struct psc_mparticles_PTYPE_patch;
 
-using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch&;
+using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch<particle_PTYPE_t>&;
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
 
+template<typename P>
 struct psc_mparticles_PTYPE_patch
 {
-  using particle_t = particle_PTYPE_t;
+  using particle_t = P;
   using buf_t = std::vector<particle_t>;
   using iterator = typename buf_t::iterator;
   
@@ -73,7 +75,15 @@ struct psc_mparticles_PTYPE_patch
   bool need_reorder;
 #endif
   
-  ~psc_mparticles_PTYPE_patch();
+  ~psc_mparticles_PTYPE_patch()
+  {
+#if PTYPE == PTYPE_SINGLE
+    free(prt_array_alt);
+    free(b_idx);
+    free(b_ids);
+    free(b_cnt);
+#endif
+  }
 
   particle_PTYPE_t& operator[](int n) { return buf[n]; }
   iterator begin() { return buf.begin(); }
@@ -132,7 +142,7 @@ struct psc_mparticles_PTYPE_patch
 
 struct psc_mparticles_PTYPE
 {
-  using particles_t = psc_mparticles_PTYPE_patch;
+  using particles_t = psc_mparticles_PTYPE_patch<particle_PTYPE_t>;
   
   particles_t *patch;
 };
@@ -140,7 +150,8 @@ struct psc_mparticles_PTYPE
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch::range
 
-inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch::range()
+template<typename P>
+inline psc_particle_PTYPE_range_t psc_mparticles_PTYPE_patch<P>::range()
 {
   return psc_particle_PTYPE_range_t(*this);
 }

@@ -14,7 +14,7 @@ static void
 PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  struct PFX(patch) *patch = &sub->patch[p];
+  auto *patch = &sub->patch[p];
 
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
@@ -31,19 +31,6 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_sub_destroy_patch
-
-PFX(patch)::~PFX(patch)()
-{
-#if PSC_PARTICLES_AS_SINGLE
-  free(prt_array_alt);
-  free(b_idx);
-  free(b_ids);
-  free(b_cnt);
-#endif
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_sub_setup
 
 static void
@@ -52,7 +39,7 @@ PFX(setup)(struct psc_mparticles *mprts)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   psc_mparticles_setup_super(mprts);
-  sub->patch = new PFX(patch)[mprts->nr_patches]();
+  sub->patch = new mparticles_t::particles_t[mprts->nr_patches]();
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p);
@@ -189,8 +176,7 @@ PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    patch->buf.resize(n_prts_by_patch[p]);
+    sub->patch[p].buf.resize(n_prts_by_patch[p]);
   }
 }
 
@@ -200,8 +186,7 @@ PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    n_prts_by_patch[p] = patch->buf.size();
+    n_prts_by_patch[p] = sub->patch[p].buf.size();
   }
 }
 
@@ -212,8 +197,7 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
 
   int n_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct PFX(patch) *patch = &sub->patch[p];
-    n_prts += patch->buf.size();
+    n_prts += sub->patch[p].buf.size();
   }
   return n_prts;
 }

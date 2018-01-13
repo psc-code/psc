@@ -75,7 +75,7 @@ static inline void
 ext_prepare_sort_before(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  mparticles_single_t::particles_t *patch = &sub->patch[p];
   
   memset(patch->b_cnt, 0, (patch->nr_blocks + 1) * sizeof(*patch->b_cnt));
 }
@@ -85,7 +85,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 		 int *b_pos)
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  mparticles_single_t::particles_t *patch = &sub->patch[p];
   particle_range_t prts = mparticles_t(mprts)[p].range();
   unsigned int n_prts = prts.size();
   /* FIXME, only if blocksize == 1! */

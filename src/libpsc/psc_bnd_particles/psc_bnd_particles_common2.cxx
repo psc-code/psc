@@ -21,7 +21,7 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts,
 			 struct psc_mparticles *mprts, int p, int off)
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  mparticles_single_t::particles_t *patch = &sub->patch[p];
 
   particle_range_t prts = mparticles_t(mprts)[p].range();
   unsigned int n_prts = prts.size();
@@ -45,7 +45,7 @@ static void _mrc_unused
 find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  mparticles_single_t::particles_t *patch = &sub->patch[p];
   particle_range_t prts = mparticles_t(mprts)[p].range();
   unsigned int n_prts = prts.size();
   unsigned int cnt = n_prts;
@@ -73,7 +73,7 @@ static void _mrc_unused
 count_and_reorder_to_back(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  mparticles_single_t::particles_t *patch = &sub->patch[p];
   particle_range_t prts = mparticles_t(mprts)[p].range();
 
   memset(patch->b_cnt, 0, (patch->nr_blocks + 1) * sizeof(*patch->b_cnt));
@@ -92,7 +92,7 @@ static void _mrc_unused
 reorder_to_back(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  mparticles_single_t::particles_t *patch = &sub->patch[p];
   particle_range_t prts = mparticles_t(mprts)[p].range();
 
   unsigned int n_prts = prts.size();
@@ -155,7 +155,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-    struct psc_mparticles_single_patch *patch = &sub->patch[p];
+    mparticles_single_t::particles_t *patch = &sub->patch[p];
     ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
 
     if (1) {
@@ -181,7 +181,7 @@ psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-    struct psc_mparticles_single_patch *patch = &sub->patch[p];
+    mparticles_single_t::particles_t *patch = &sub->patch[p];
     ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
 
     int n_prts = dpatch->m_buf->size();
