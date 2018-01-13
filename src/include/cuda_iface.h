@@ -20,26 +20,10 @@ typedef double double_3[3];
 typedef float float_4[4];
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_prt
-
-struct cuda_mparticles_prt {
-  float xi[3];
-  float pxi[3];
-  int kind;
-  float qni_wni;
-};
-
-// ----------------------------------------------------------------------
 // cuda_mparticles
 
 struct cuda_mparticles;
 
-void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
-				   void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
-				   void *ctx);
-void cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
-				   void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
-				   void *ctx);
 void cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float_4 *xi4, float_4 *pxi4,
 			       unsigned int n_prts, unsigned int off);
 void cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float_4 *xi4, float_4 *pxi4,

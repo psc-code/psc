@@ -814,12 +814,11 @@ cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_pr
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_set_particles
+// set_particles
 
-void
-cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
-			      void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
-			      void *ctx)
+void cuda_mparticles::set_particles(unsigned int n_prts, unsigned int off,
+				    void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
+				    void *ctx)
 {
   float4 *xi4  = new float4[n_prts];
   float4 *pxi4 = new float4[n_prts];
@@ -829,19 +828,19 @@ cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
     get_particle(&prt, n, ctx);
 
     for (int d = 0; d < 3; d++) {
-      int bi = fint(prt.xi[d] * cmprts->b_dxi[d]);
-      if (bi < 0 || bi >= cmprts->b_mx[d]) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
 	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
 	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
-	       n, d, prt.xi[d], bi, cmprts->b_mx[d]);
+	       n, d, prt.xi[d], bi, b_mx[d]);
 	if (bi < 0) {
 	  prt.xi[d] = 0.f;
 	} else {
 	  prt.xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = floorf(prt.xi[d] * cmprts->b_dxi[d]);
-      assert(bi >= 0 && bi < cmprts->b_mx[d]);
+      bi = floorf(prt.xi[d] * b_dxi[d]);
+      assert(bi >= 0 && bi < b_mx[d]);
     }
 
     xi4[n].x  = prt.xi[0];
@@ -854,25 +853,24 @@ cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
     pxi4[n].w = prt.qni_wni;
   }
 
-  cuda_mparticles_to_device(cmprts, (float_4 *) xi4, (float_4 *) pxi4, n_prts, off);
+  cuda_mparticles_to_device(this, (float_4 *) xi4, (float_4 *) pxi4, n_prts, off);
   
   delete[] xi4;
   delete[] pxi4;
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_get_particles
+// get_particles
 
-void
-cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
-			      void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
-			      void *ctx)
+void cuda_mparticles::get_particles(unsigned int n_prts, unsigned int off,
+				    void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
+				    void *ctx)
 {
   float4 *xi4  = new float4[n_prts];
   float4 *pxi4 = new float4[n_prts];
 
-  cuda_mparticles_reorder(cmprts);
-  cuda_mparticles_from_device(cmprts, (float_4 *) xi4, (float_4 *) pxi4, n_prts, off);
+  cuda_mparticles_reorder(this);
+  cuda_mparticles_from_device(this, (float_4 *) xi4, (float_4 *) pxi4, n_prts, off);
   
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt;
@@ -889,12 +887,12 @@ cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
 
 #if 0
     for (int d = 0; d < 3; d++) {
-      int bi = fint(prt.xi[d] * cmprts->b_dxi[d]);
-      if (bi < 0 || bi >= cmprts->b_mx[d]) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
 	MHERE;
 	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
 	mprintf("XXX n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
-		n, d, prt.xi[d] * cmprts->b_dxi[d], cmprts->b_dxi[d], bi, cmprts->b_mx[d]);
+		n, d, prt.xi[d] * b_dxi[d], b_dxi[d], bi, b_mx[d]);
       }
     }
 #endif

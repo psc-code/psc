@@ -31,7 +31,7 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
-    cuda_mparticles_set_particles(cmprts, n_prts, off, get_particle, &ctx);
+    cmprts->set_particles(n_prts, off, get_particle, &ctx);
 
     off += n_prts;
   }
@@ -50,7 +50,7 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy_ctx ctx = { .mprts = mprts_to, .p = p };
-    cuda_mparticles_get_particles(cmprts, n_prts, off, put_particle, &ctx);
+    cmprts->get_particles(n_prts, off, put_particle, &ctx);
 
     off += n_prts;
   }

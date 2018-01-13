@@ -66,8 +66,8 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
   
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
-    cuda_mparticles_set_particles(cmprts, n_prts_by_patch[p], off,
-				  set_particle_test_1, &json_info);
+    cmprts->set_particles(n_prts_by_patch[p], off, set_particle_test_1,
+			  &json_info);
     off += n_prts_by_patch[p];
   }
 }
@@ -90,8 +90,7 @@ get_particles_test(struct cuda_mparticles *cmprts, int n_patches,
 {
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
-    cuda_mparticles_get_particles(cmprts, n_prts_by_patch[p], off,
-				  get_particle, NULL);
+    cmprts->get_particles(n_prts_by_patch[p], off, get_particle, NULL);
     off += n_prts_by_patch[p];
   }
 }

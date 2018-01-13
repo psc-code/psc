@@ -15,6 +15,16 @@ struct float4 { float x; float y; float z; float w; };
 
 typedef float float_3[3];
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_prt
+
+struct cuda_mparticles_prt {
+  float xi[3];
+  float pxi[3];
+  int kind;
+  float qni_wni;
+};
+
 // ======================================================================
 // bnd
 
@@ -69,6 +79,12 @@ public:
   void reserve_all(const unsigned int *n_prts_by_patch);
   void get_size_all(unsigned int *n_prts_by_patch);
   void resize_all(const unsigned int *n_prts_by_patch);
+  void set_particles(unsigned int n_prts, unsigned int off,
+		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
+		     void *ctx);
+  void get_particles(unsigned int n_prts, unsigned int off,
+		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
+		     void *ctx);
   void setup_internals();
 
   unsigned int get_n_prts();
