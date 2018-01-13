@@ -902,18 +902,16 @@ void cuda_mparticles::get_particles(unsigned int n_prts, unsigned int off,
 // ----------------------------------------------------------------------
 // cuda_mparticles_patch_get_b_dxi
 
-const particle_cuda_real_t *
-cuda_mparticles_patch_get_b_dxi(struct cuda_mparticles *cmprts, int p)
+const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 {
-  return cmprts->b_dxi;
+  return b_dxi;
 }
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_patch_get_b_mx
 
-const int *
-cuda_mparticles_patch_get_b_mx(struct cuda_mparticles *cmprts, int p)
+const int* cuda_mparticles::patch_get_b_mx(int p)
 {
-  return cmprts->b_mx;
+  return b_mx;
 }
 
