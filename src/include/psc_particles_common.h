@@ -3,7 +3,6 @@
 
 #define PTYPE_SINGLE          1
 #define PTYPE_DOUBLE          2
-#define PTYPE_SINGLE_BY_BLOCK 3
 #define PTYPE_FORTRAN         5
 #define PTYPE_CUDA            6
 
@@ -28,17 +27,6 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 #define psc_particle_PTYPE_range_t psc_particle_double_range_t 
-
-#elif PTYPE == PTYPE_SINGLE_BY_BLOCK
-
-#define particle_PTYPE_real_t particle_single_by_block_real_t
-#define particle_PTYPE_t particle_single_by_block_t
-
-#define psc_mparticles_PTYPE_patch psc_mparticles_single_by_block_patch
-#define psc_mparticles_PTYPE psc_mparticles_single_by_block
-#define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
-#define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
-#define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -85,16 +73,6 @@ struct psc_mparticles_PTYPE_patch
   bool need_reorder;
 #endif
   
-#if PTYPE == PTYPE_SINGLE_BY_BLOCK
-  particle_PTYPE_t *prt_array_alt;
-  int nr_blocks;
-  unsigned int *b_idx;
-  unsigned int *b_ids;
-  unsigned int *b_cnt;
-  unsigned int *b_off;
-  bool need_reorder;
-#endif
-
   ~psc_mparticles_PTYPE_patch();
 
   particle_PTYPE_t& operator[](int n) { return buf[n]; }
@@ -119,13 +97,6 @@ struct psc_mparticles_PTYPE_patch
     }
     
 #if PTYPE == PTYPE_SINGLE
-    free(prt_array_alt);
-    prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
-    b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
-    b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
-#endif
-    
-#if PTYPE == PTYPE_SINGLE_BY_BLOCK
     free(prt_array_alt);
     prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
     b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));

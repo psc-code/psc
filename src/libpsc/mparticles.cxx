@@ -245,7 +245,6 @@ extern struct psc_mparticles_ops psc_mparticles_double_ops;
 extern struct psc_mparticles_ops psc_mparticles_sse2_ops;
 extern struct psc_mparticles_ops psc_mparticles_cbe_ops;
 extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
-extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
 extern struct psc_mparticles_ops psc_mparticles_cuda2_ops;
 extern struct psc_mparticles_ops psc_mparticles_acc_ops;
 extern struct psc_mparticles_ops psc_mparticles_vpic_ops;
@@ -256,7 +255,6 @@ psc_mparticles_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_double_ops);
-  mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_single_by_block_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_single_by_kind_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_fortran_ops);
 #ifdef USE_CUDA

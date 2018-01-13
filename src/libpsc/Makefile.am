@@ -92,7 +92,6 @@ libpsc_la_SOURCES = \
 	psc_particles_fortran.cxx \
 	psc_particles_single.cxx \
 	psc_particles_double.cxx \
-	psc_particles_single_by_block.cxx \
 	psc_particles_single_by_kind.cxx \
 	bk_mparticles.cxx \
 	psc.cxx \

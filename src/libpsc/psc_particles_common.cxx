@@ -28,12 +28,6 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
   patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
   patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
 #endif
-
-#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
-  patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
-  patch->b_off = (unsigned int *) calloc(patch->nr_blocks + 2, sizeof(*patch->b_off));
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -46,14 +40,6 @@ PFX(patch)::~PFX(patch)()
   free(b_idx);
   free(b_ids);
   free(b_cnt);
-#endif
-
-#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  free(prt_array_alt);
-  free(b_idx);
-  free(b_ids);
-  free(b_cnt);
-  free(b_off);
 #endif
 }
 
