@@ -287,10 +287,9 @@ cuda_mparticles_update_offsets_gold(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_bnd_prep
+// bnd_prep
 
-void
-cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
+void cuda_mparticles::bnd_prep()
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -306,27 +305,26 @@ cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
   //prof_stop(pr_A);
   
   prof_start(pr_B0);
-  cuda_mparticles_spine_reduce(cmprts);
+  cuda_mparticles_spine_reduce(this);
   prof_stop(pr_B0);
 
   prof_start(pr_B1);
-  cuda_mparticles_find_n_send(cmprts);
+  cuda_mparticles_find_n_send(this);
   prof_stop(pr_B1);
 
   prof_start(pr_B);
-  cuda_mparticles_scan_send_buf_total(cmprts);
+  cuda_mparticles_scan_send_buf_total(this);
   prof_stop(pr_B);
 
   prof_start(pr_D);
-  cuda_mparticles_copy_from_dev_and_convert(cmprts);
+  cuda_mparticles_copy_from_dev_and_convert(this);
   prof_stop(pr_D);
 }
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_bnd_post
 
-void
-cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
+void cuda_mparticles::bnd_post()
 {
   static int pr_A, pr_D, pr_E, pr_D1;
   if (!pr_A) {
@@ -337,27 +335,27 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
   }
 
   prof_start(pr_A);
-  cuda_mparticles_convert_and_copy_to_dev(cmprts);
+  cuda_mparticles_convert_and_copy_to_dev(this);
   prof_stop(pr_A);
 
   prof_start(pr_D);
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  cmprts->get_size_all(n_prts_by_patch);
-  cuda_mparticles_sort(cmprts, (int *) n_prts_by_patch); // FIXME cast
+  unsigned int n_prts_by_patch[n_patches];
+  get_size_all(n_prts_by_patch);
+  cuda_mparticles_sort(this, (int *) n_prts_by_patch); // FIXME cast
   // FIXME, is this necessary, or doesn't update_offsets() do this, too?
-  cmprts->resize_all(n_prts_by_patch);
+  resize_all(n_prts_by_patch);
   prof_stop(pr_D);
 
   prof_start(pr_D1);
-  cuda_mparticles_update_offsets(cmprts);
+  cuda_mparticles_update_offsets(this);
   prof_stop(pr_D1);
   
   prof_start(pr_E);
 #if 0
-  cuda_mparticles_reorder(cmprts);
-  //  cuda_mprts_check_ordered_total(mprts);
+  cuda_mparticles_reorder(this);
+  //  check_ordered_total();
 #else
-  cmprts->need_reorder = true;
+  need_reorder = true;
 #endif
   prof_stop(pr_E);
 }

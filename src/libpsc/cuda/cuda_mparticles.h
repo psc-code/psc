@@ -94,6 +94,8 @@ public:
   const int *patch_get_b_mx(int p);
 
   psc_particle_cuda_buf_t *bnd_get_buffer(int p);
+  void bnd_prep();
+  void bnd_post();
   
   void dump();
   void dump_by_patch(unsigned int *n_prts_by_patch);

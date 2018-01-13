@@ -587,7 +587,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 #if DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  cuda_mparticles_bnd_prep(cmprts);
+  cmprts->bnd_prep();
   
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
@@ -744,7 +744,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  cuda_mparticles_bnd_post(cmprts);
+  cmprts->bnd_post();
 
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {

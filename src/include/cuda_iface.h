@@ -14,14 +14,6 @@
 void cuda_base_init(void);
 
 // ----------------------------------------------------------------------
-// cuda_mparticles
-
-struct cuda_mparticles;
-
-void cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts);
-void cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts);
-
-// ----------------------------------------------------------------------
 // cuda_mfields
 
 struct cuda_mfields;
