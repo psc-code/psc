@@ -27,7 +27,7 @@ cuda_mparticles::cuda_mparticles(mrc_json_t json)
   mrc_json_get_object_entry_double3(json_info, "dx", dx);
 
   for (int d = 0; d < 3; d++) {
-    dx[d] = dx[d];
+    this->dx[d] = dx[d];
     assert(ldims[d] % bs[d] == 0);
     b_mx[d] = ldims[d] / bs[d];
     b_dxi[d] = 1.f / (bs[d] * dx[d]);
