@@ -62,6 +62,7 @@ template<typename S>
 struct mparticles_base
 {
   using sub_t = S;
+  using particle_t = typename sub_t::particle_t;
 
   explicit mparticles_base(psc_mparticles *mprts) : mprts_(mprts) { }
 

@@ -11,6 +11,7 @@
 // psc_mparticles_cuda
 
 struct psc_mparticles_cuda {
+  using particle_t = particle_cuda_t;
   struct cuda_mparticles *cmprts;
 };
 
@@ -59,14 +60,6 @@ struct mparticles_traits<mparticles_cuda_t>
   static constexpr const char* name = "cuda";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
-
-template<>
-struct mparticles_traits<particle_cuda_t>
-{
-  static constexpr const char* name = "cuda";
-  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
-};
-
 
 
 #endif

@@ -5,11 +5,8 @@
 #include "psc_particles_fortran.h"
 
 typedef particle_fortran_real_t particle_real_t;
-typedef particle_fortran_t particle_t;
 using mparticles_t = mparticles_fortran_t;
-
-#define particle_iter_t               psc_particle_fortran_iter_t
-#define particle_range_t              psc_particle_fortran_range_t
+using particle_t = mparticles_t::particle_t;
 
 #define PARTICLE_TYPE                 "fortran"
 

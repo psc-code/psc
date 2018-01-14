@@ -10,7 +10,10 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
-struct psc_mparticles_vpic {
+struct psc_mparticles_vpic
+{
+  using particle_t = void; // FIXME, don't have it, but needed here...
+  
   Particles *vmprts;
   Simulation *sim;
 };
@@ -24,8 +27,6 @@ struct mparticles_traits<mparticles_vpic_t>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-#define psc_mparticles_vpic(mprts)({					\
-      mrc_to_subobj(mprts, struct psc_mparticles_vpic);			\
-})
+#define psc_mparticles_vpic(mprts) mrc_to_subobj(mprts, struct psc_mparticles_vpic)
 
 #endif
