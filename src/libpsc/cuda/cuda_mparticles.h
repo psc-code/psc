@@ -4,7 +4,7 @@
 
 #include "cuda_iface.h"
 
-#include "psc_particle_buf_cuda.h"
+#include "psc_particles_cuda.h"
 
 #ifndef __CUDACC__
 struct float4 { float x; float y; float z; float w; };

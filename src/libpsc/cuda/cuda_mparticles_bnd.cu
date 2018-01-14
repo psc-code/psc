@@ -6,7 +6,6 @@
 #include <thrust/host_vector.h>
 #include <thrust/scan.h>
 
-#include "psc_particle_buf_cuda.h"
 #include "psc_bits.h"
 
 #include <mrc_profile.h>

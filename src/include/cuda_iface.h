@@ -3,7 +3,6 @@
 #define CUDA_IFACE_H
 
 #include "mrc_json.h"
-#include "psc_particle_buf_cuda.h"
 #include "psc_fields_single.h"
 
 #include "cuda_mparticles.h"
