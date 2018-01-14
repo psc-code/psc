@@ -3,6 +3,8 @@
 
 #include <psc_particles_as_single.h>
 
+using real_t = mparticles_t::real_t;
+
 #include <stdlib.h>
 
 // ======================================================================
@@ -12,11 +14,11 @@
 // psc_heating_particle_kick
 
 static void
-psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, particle_real_t H)
+psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, real_t H)
 {
   struct psc *psc = ppsc;
 
-  particle_real_t heating_dt = heating->every_step * psc->dt;
+  real_t heating_dt = heating->every_step * psc->dt;
 
   float ran1, ran2, ran3, ran4, ran5, ran6;
   do {
@@ -29,13 +31,13 @@ psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, particle
   } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
 	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
 
-  particle_real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-  particle_real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-  particle_real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+  real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
+  real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
+  real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
 
-  particle_real_t Dpxi = sqrtf(H * heating_dt);
-  particle_real_t Dpyi = sqrtf(H * heating_dt);
-  particle_real_t Dpzi = sqrtf(H * heating_dt);
+  real_t Dpxi = sqrtf(H * heating_dt);
+  real_t Dpyi = sqrtf(H * heating_dt);
+  real_t Dpzi = sqrtf(H * heating_dt);
 
   prt->pxi += Dpxi * ranx;
   prt->pyi += Dpyi * rany;

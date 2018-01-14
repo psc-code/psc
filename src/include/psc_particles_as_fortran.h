@@ -4,7 +4,6 @@
 
 #include "psc_particles_fortran.h"
 
-typedef particle_fortran_real_t particle_real_t;
 using mparticles_t = mparticles_fortran_t;
 using particle_t = mparticles_t::particle_t;
 

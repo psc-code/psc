@@ -3,6 +3,8 @@
 
 #include <math.h>
 
+using real_t = mparticles_t::real_t;
+
 #include "common_moments.cxx"
 
 static void
@@ -28,8 +30,8 @@ static void
 do_n_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
@@ -52,8 +54,8 @@ static void
 do_rho_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
@@ -76,14 +78,14 @@ static void
 do_v_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
 
-    particle_real_t vxi[3];
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
 
     for (int m = 0; m < 3; m++) {

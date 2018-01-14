@@ -84,6 +84,7 @@ struct mparticles_base
 {
   using sub_t = S;
   using particle_t = typename sub_t::particle_t;
+  using real_t = typename particle_t::real_t;
 
   explicit mparticles_base(psc_mparticles *mprts) : mprts_(mprts) { }
 

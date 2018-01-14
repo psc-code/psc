@@ -5,6 +5,7 @@
 #include <string.h>
 
 using Fields = Fields3d<fields_t>;
+using real_t = mparticles_t::real_t;
 
 static void
 psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
@@ -27,7 +28,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     mparticles_t(mprts_new)[p].resize(nr_particles_by_patch_new[p]);
   }
 
-  assert(sizeof(particle_t) % sizeof(particle_real_t) == 0); // FIXME
+  assert(sizeof(particle_t) % sizeof(real_t) == 0); // FIXME
 
   MPI_Datatype mpi_dtype = mparticles_traits<mparticles_t>::mpi_dtype();
   // recv for new local patches
@@ -43,7 +44,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     for (int pi = 0; pi < recv->nr_patches; pi++) {
       int p = recv->pi_to_patch[pi];
       mparticles_t::patch_t& prts_new = mparticles_t(mprts_new)[p];
-      int nn = prts_new.size() * (sizeof(particle_t)  / sizeof(particle_real_t));
+      int nn = prts_new.size() * (sizeof(particle_t)  / sizeof(real_t));
       MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank,
 		pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
     }
@@ -64,7 +65,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     for (int pi = 0; pi < send->nr_patches; pi++) {
       int p = send->pi_to_patch[pi];
       mparticles_t::patch_t& prts_old = mparticles_t(mprts_old)[p];
-      int nn = prts_old.size() * (sizeof(particle_t)  / sizeof(particle_real_t));
+      int nn = prts_old.size() * (sizeof(particle_t)  / sizeof(real_t));
       //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
       MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank,
       		pi, ctx->comm, &send_reqs[nr_send_reqs++]);

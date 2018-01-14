@@ -2,6 +2,7 @@
 #include "fields.hxx"
 
 using Fields = Fields3d<fields_t>;
+using real_t = mparticles_t::real_t;
 
 static const int debug_every_step = 10;
 
@@ -467,8 +468,8 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
       prt->kind_ = kind;
       prt->qni_wni = ppsc->kinds[kind].q;
 
-      particle_real_t *pxi = &prt->pxi;
-      particle_real_t *xi  = &prt->xi;
+      real_t *pxi = &prt->pxi;
+      real_t *xi  = &prt->xi;
 
       int nnm = 0;
       do {

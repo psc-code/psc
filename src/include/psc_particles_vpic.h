@@ -10,9 +10,14 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
+struct particle_vpic_t
+{
+  using real_t = float;
+};
+
 struct psc_mparticles_vpic
 {
-  using particle_t = void; // FIXME, don't have it, but needed here...
+  using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
   
   Particles *vmprts;
   Simulation *sim;

@@ -141,7 +141,7 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
 
   assert(mprts_ref);
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-  particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
+  real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
     particle_range_t prts = mprts[p].range();
     particle_range_t prts_ref = mparticles_t(mprts_ref)[p].range();
@@ -313,9 +313,9 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     particle_range_t prts = mprts[p].range();
-    particle_real_t dxi = 1.f / patch->dx[0];
-    particle_real_t dyi = 1.f / patch->dx[1];
-    particle_real_t dzi = 1.f / patch->dx[2];
+    real_t dxi = 1.f / patch->dx[0];
+    real_t dyi = 1.f / patch->dx[1];
+    real_t dzi = 1.f / patch->dx[2];
 
     int *ldims = patch->ldims;
 
@@ -323,9 +323,9 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
       particle_t *part = &*prt_iter;
       // FIXME, duplicated
 
-      particle_real_t u = part->xi * dxi;
-      particle_real_t v = part->yi * dyi;
-      particle_real_t w = part->zi * dzi;
+      real_t u = part->xi * dxi;
+      real_t v = part->yi * dyi;
+      real_t w = part->zi * dzi;
       int j0 = nint(u) + ibn[0];
       int j1 = nint(v) + ibn[1];
       int j2 = nint(w) + ibn[2];

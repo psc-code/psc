@@ -5,9 +5,10 @@
 
 #include <math.h>
 
-#include "common_moments.cxx"
-
 using Fields = Fields3d<fields_t>;
+using real_t = mparticles_t::real_t;
+
+#include "common_moments.cxx"
 
 // ======================================================================
 // boundary stuff FIXME, should go elsewhere...
@@ -123,8 +124,8 @@ static void
 do_n_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
@@ -147,14 +148,14 @@ static void
 do_v_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
 
-    particle_real_t vxi[3];
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
 
     for (int m = 0; m < 3; m++) {
@@ -177,13 +178,13 @@ static void
 do_p_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
-    particle_real_t *pxi = &prt->pxi;
+    real_t *pxi = &prt->pxi;
 
     for (int m = 0; m < 3; m++) {
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, particle_mni(prt) * pxi[m]);
@@ -205,14 +206,14 @@ static void
 do_vv_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 3;
 
-    particle_real_t vxi[3];
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
 
     for (int m = 0; m < 3; m++) {
@@ -235,21 +236,21 @@ static void
 do_T_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 6;
 
-    particle_real_t vxi[3];
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
-    particle_real_t *pxi = &prt->pxi;
-    particle_real_t vx[3];
+    real_t *pxi = &prt->pxi;
+    real_t vx[3];
     vx[0] = vxi[0] * cos(ppsc->prm.theta_xz) - vxi[2] * sin(ppsc->prm.theta_xz);
     vx[1] = vxi[1];
     vx[2] = vxi[0] * sin(ppsc->prm.theta_xz) + vxi[2] * cos(ppsc->prm.theta_xz);
-    particle_real_t px[3];
+    real_t px[3];
     px[0] = pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz);
     px[1] = pxi[1];
     px[2] = pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz);
@@ -276,14 +277,14 @@ static void
 do_Tvv_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 6;
 
-    particle_real_t vxi[3];
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, particle_mni(prt) * vxi[0] * vxi[0]);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, particle_mni(prt) * vxi[1] * vxi[1]);
@@ -310,14 +311,14 @@ static void
 do_nvt_a_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 10;
 
-    particle_real_t vxi[3];
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
 
     // density
@@ -334,47 +335,47 @@ do_nvt_b_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   Fields F(flds);
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 10;
 
-    particle_real_t *xi = &prt->xi;					\
-    particle_real_t u = xi[0] * dxi - .5;				\
-    particle_real_t v = xi[1] * dyi - .5;				\
-    particle_real_t w = xi[2] * dzi - .5;				\
-    int jx = fint(u);							\
-    int jy = fint(v);							\
-    int jz = fint(w);							\
-    particle_real_t h1 = u - jx;					\
-    particle_real_t h2 = v - jy;					\
-    particle_real_t h3 = w - jz;					\
-    									\
-    particle_real_t g0x = 1.f - h1;					\
-    particle_real_t g0y = 1.f - h2;					\
-    particle_real_t g0z = 1.f - h3;					\
-    particle_real_t g1x = h1;						\
-    particle_real_t g1y = h2;						\
-    particle_real_t g1z = h3;						\
-    									\
-    int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->domain.gdims[0] == 1) {					\
-      jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
-    }									\
-    if (ppsc->domain.gdims[1] == 1) {					\
-      jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
-    }									\
-    if (ppsc->domain.gdims[2] == 1) {					\
-      jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
-    }									\
-    									\
-    assert(jx >= -1 && jx < patch->ldims[0]);				\
-    assert(jy >= -1 && jy < patch->ldims[1]);				\
-    assert(jz >= -1 && jz < patch->ldims[2]);				\
-    									\
-    particle_real_t vxi[3];
+    real_t *xi = &prt->xi;
+    real_t u = xi[0] * dxi - .5;
+    real_t v = xi[1] * dyi - .5;
+    real_t w = xi[2] * dzi - .5;
+    int jx = fint(u);
+    int jy = fint(v);
+    int jz = fint(w);
+    real_t h1 = u - jx;
+    real_t h2 = v - jy;
+    real_t h3 = w - jz;
+
+    real_t g0x = 1.f - h1;
+    real_t g0y = 1.f - h2;
+    real_t g0z = 1.f - h3;
+    real_t g1x = h1;
+    real_t g1y = h2;
+    real_t g1z = h3;
+
+    int jxd = 1, jyd = 1, jzd = 1;
+    if (ppsc->domain.gdims[0] == 1) {
+      jx = 0; g0x = 1.; g1x = 0.; jxd = 0;
+    }
+    if (ppsc->domain.gdims[1] == 1) {
+      jy = 0; g0y = 1.; g1y = 0.; jyd = 0;
+    }
+    if (ppsc->domain.gdims[2] == 1) {
+      jz = 0; g0z = 1.; g1z = 0.; jzd = 0;
+    }
+
+    assert(jx >= -1 && jx < patch->ldims[0]);
+    assert(jy >= -1 && jy < patch->ldims[1]);
+    assert(jz >= -1 && jz < patch->ldims[2]);
+
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
     for (int d = 0; d < 3; d++) {
       int m = mm + 1 + d;
@@ -388,7 +389,7 @@ do_nvt_b_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 		     g1x*g1y*g1z * F(m, jx+jxd,jy+jyd,jz+jzd));
       vxi[d] -= vavg;
     }
-    particle_real_t *pxi = vxi;
+    real_t *pxi = vxi;
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 0, pxi[0] * vxi[0]);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 1, pxi[1] * vxi[1]);
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 2, pxi[2] * vxi[2]);
@@ -403,28 +404,28 @@ do_nvp_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   Fields F(flds);
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
     int mm = prt->kind() * 10;
 
-    particle_real_t *xi = &prt->xi;					\
-    particle_real_t u = xi[0] * dxi - .5;				\
-    particle_real_t v = xi[1] * dyi - .5;				\
-    particle_real_t w = xi[2] * dzi - .5;				\
-    int jx = fint(u);							\
-    int jy = fint(v);							\
-    int jz = fint(w);							\
-    									\
-    assert(jx >= -1 && jx < patch->ldims[0]);				\
-    assert(jy >= -1 && jy < patch->ldims[1]);				\
-    assert(jz >= -1 && jz < patch->ldims[2]);				\
-    									\
-    particle_real_t vxi[3];
+    real_t *xi = &prt->xi;
+    real_t u = xi[0] * dxi - .5;
+    real_t v = xi[1] * dyi - .5;
+    real_t w = xi[2] * dzi - .5;
+    int jx = fint(u);
+    int jy = fint(v);
+    int jz = fint(w);
+
+    assert(jx >= -1 && jx < patch->ldims[0]);
+    assert(jy >= -1 && jy < patch->ldims[1]);
+    assert(jz >= -1 && jz < patch->ldims[2]);
+
+    real_t vxi[3];
     particle_calc_vxi(prt, vxi);
-    particle_real_t *pxi = vxi;
+    real_ty *pxi = vxi;
     // density
     DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm, 1.f);
     // velocity

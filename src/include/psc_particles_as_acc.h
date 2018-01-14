@@ -4,7 +4,6 @@
 
 #include "psc_particles_acc.h"
 
-typedef particle_acc_real_t particle_real_t;
 typedef particle_acc_t particle_t;
 
 #define particle_qni_div_mni        particle_acc_qni_div_mni

@@ -4,7 +4,6 @@
 
 #include "psc_particles_single.h"
 
-typedef particle_single_real_t particle_real_t;
 using mparticles_t = mparticles_single_t;
 using particle_t = mparticles_t::particle_t;
 

@@ -42,16 +42,16 @@ using opt_ip = opt_ip_2nd;
 #define MAX_NR_KINDS (10)
 
 struct const_params {
-  particle_real_t dt; // FIXME, do we need both dt and dqs? or maybe get rid of xl/yl/zl
-  particle_real_t dqs;
-  particle_real_t fnqs;
-  particle_real_t fnqxs, fnqys, fnqzs;
-  particle_real_t dxi[3];
+  real_t dt; // FIXME, do we need both dt and dqs? or maybe get rid of xl/yl/zl
+  real_t dqs;
+  real_t fnqs;
+  real_t fnqxs, fnqys, fnqzs;
+  real_t dxi[3];
 };
 
 struct params_1vb {
   // particle-related
-  particle_real_t dq_kind[MAX_NR_KINDS];
+  real_t dq_kind[MAX_NR_KINDS];
   int b_mx[3];
 
   // field-related
@@ -100,7 +100,7 @@ params_1vb_set(struct psc *psc,
 {
   struct params_1vb params;
 
-  particle_real_t dt = psc->dt;
+  real_t dt = psc->dt;
 
 #if CALC_J == CALC_J_1VB_2D && DIM != DIM_YZ
 #error inc_params.c: CALC_J_1VB_2D only works for DIM_YZ

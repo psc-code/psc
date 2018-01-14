@@ -34,7 +34,10 @@ struct ddc_particles_base {};
 template<class MP>
 struct ddc_particles : ddc_particles_base
 {
-  using particle_buf_t = typename MP::particle_buf_t;
+  using mparticles_t = MP;
+  using particle_buf_t = typename mparticles_t::particle_buf_t;
+  using real_t = typename mparticles_t::real_t;
+  
   ddc_particles(struct mrc_domain *domain);
   ~ddc_particles();
 
@@ -353,8 +356,8 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
   MPI_Comm_size(comm, &size);
 
   // FIXME, this is assuming our struct is equiv to an array of real_type
-  assert(sizeof(particle_t) % sizeof(particle_real_t) == 0);
-  int sz = sizeof(particle_t) / sizeof(particle_real_t);
+  assert(sizeof(particle_t) % sizeof(real_t) == 0);
+  int sz = sizeof(particle_t) / sizeof(real_t);
   int dir[3];
 
   for (int r = 0; r < n_ranks; r++) {
@@ -609,6 +612,7 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *_mprts, int p)
 {
+  using real_t = typename mparticles_t::real_t;
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   struct psc *psc = bnd->psc;
   mparticles_t mprts(_mprts);
@@ -617,9 +621,9 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   // These will need revisiting when it comes to non-periodic domains.
 
   struct psc_patch *ppatch = &psc->patch[p];
-  const particle_real_t *b_dxi = mprts[p].get_b_dxi();
+  const real_t *b_dxi = mprts[p].get_b_dxi();
   const int *b_mx = mprts[p].get_b_mx();
-  particle_real_t xm[3];
+  real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
     xm[d] = ppatch->ldims[d] * ppatch->dx[d];
   }
@@ -635,8 +639,8 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
   for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = &(*dpatch->m_buf)[n];
-    particle_real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
-    particle_real_t *pxi = &prt->pxi;
+    real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
+    real_t *pxi = &prt->pxi;
     
     int b_pos[3];
     mprts[p].get_block_pos(xi, b_pos);

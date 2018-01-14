@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <math.h>
 
+using real_t = mparticles_t::real_t;
+
 // ======================================================================
 // psc_mparticles "single" / "double" / "c"
 
@@ -67,7 +69,7 @@ static void
 PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   int ierr;
-  assert(sizeof(particle_t) / sizeof(particle_real_t) == 8);
+  assert(sizeof(particle_t) / sizeof(real_t) == 8);
 
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);

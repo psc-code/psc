@@ -4,7 +4,6 @@
 
 #include "psc_particles_cuda2.h"
 
-typedef particle_cuda2_real_t particle_real_t;
 typedef particle_cuda2_t particle_t;
 
 #define particle_qni_div_mni        particle_cuda2_qni_div_mni

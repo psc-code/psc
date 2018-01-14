@@ -13,7 +13,7 @@
 // calc_dx1
 
 static inline void
-calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], int off[2])
+calc_dx1(real_t dx1[2], real_t x[2], real_t dx[2], int off[2])
 {
   if (off[1] == 0) {
     dx1[0] = .5f * off[0] - x[0];
@@ -33,8 +33,8 @@ calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], in
 }
 
 static inline void
-curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], particle_real_t x[2], particle_real_t dx[2],
-		particle_real_t fnq[2], particle_real_t dxt[2], int off[2])
+curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
+		real_t fnq[2], real_t dxt[2], int off[2])
 {
   curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]  , fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]));
   curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]+1, fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]));
@@ -55,13 +55,13 @@ curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], particle_real_t x[2], particl
 // calc_j_oop
 
 static inline void
-calc_j_oop(curr_cache_t curr_cache, particle_t *prt, particle_real_t *vxi)
+calc_j_oop(curr_cache_t curr_cache, particle_t *prt, real_t *vxi)
 {
   int lf[3];
-  particle_real_t of[3];
-  find_idx_off_1st_rel(&prt->xi, lf, of, particle_real_t(0.));
+  real_t of[3];
+  find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
 
-  particle_real_t fnqx = vxi[0] * particle_qni_wni(prt) * c_prm.fnqs;
+  real_t fnqx = vxi[0] * particle_qni_wni(prt) * c_prm.fnqs;
   curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
   curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
   curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
@@ -72,15 +72,15 @@ calc_j_oop(curr_cache_t curr_cache, particle_t *prt, particle_real_t *vxi)
 // calc_j
 
 static inline void
-calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
-       int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
+calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+       int *lf, int *lg, particle_t *prt, real_t *vxi)
 {
   int i[2] = { lg[1], lg[2] };
   int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
-  particle_real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-  particle_real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) }; 
+  real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
+  real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) }; 
 
-  particle_real_t dx1[2];
+  real_t dx1[2];
   int off[2];
   int first_dir, second_dir = -1;
   /* FIXME, make sure we never div-by-zero? */
@@ -105,8 +105,8 @@ calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
     second_dir = 1 - first_dir;
   }
 
-  particle_real_t fnq[2] = { particle_qni_wni(prt) * c_prm.fnqys,
-			     particle_qni_wni(prt) * c_prm.fnqzs };
+  real_t fnq[2] = { particle_qni_wni(prt) * c_prm.fnqys,
+		    particle_qni_wni(prt) * c_prm.fnqzs };
 
   if (first_dir >= 0) {
     off[1-first_dir] = 0;

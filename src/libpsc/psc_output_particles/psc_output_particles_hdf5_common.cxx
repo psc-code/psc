@@ -1,5 +1,6 @@
 
-// when changing the following struct, the HDF5 compound data type prt_type
+using real_t = mparticles_t::real_t;
+
 // needs to be changed accordingly
 
 struct hdf5_prt {
@@ -114,14 +115,14 @@ static inline int
 get_sort_index(int p, particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t dxi = 1.f / patch->dx[0];
-  particle_real_t dyi = 1.f / patch->dx[1];
-  particle_real_t dzi = 1.f / patch->dx[2];
+  real_t dxi = 1.f / patch->dx[0];
+  real_t dyi = 1.f / patch->dx[1];
+  real_t dzi = 1.f / patch->dx[2];
   int *ldims = patch->ldims;
   
-  particle_real_t u = part->xi * dxi;
-  particle_real_t v = part->yi * dyi;
-  particle_real_t w = part->zi * dzi;
+  real_t u = part->xi * dxi;
+  real_t v = part->yi * dyi;
+  real_t w = part->zi * dzi;
   int j0 = fint(u);
   int j1 = fint(v);
   int j2 = fint(w);

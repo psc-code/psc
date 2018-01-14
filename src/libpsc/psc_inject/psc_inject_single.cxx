@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 using Fields = Fields3d<fields_t>;
+using real_t = mparticles_t::real_t;
 
 // ======================================================================
 // psc_inject subclass "single"
@@ -114,7 +115,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 {
   struct psc *psc = ppsc;
     
-  particle_real_t fac = 1. / psc->coeff.cori * 
+  real_t fac = 1. / psc->coeff.cori * 
     (inject->every_step * psc->dt / inject->tau) /
     (1. + inject->every_step * psc->dt / inject->tau);
 

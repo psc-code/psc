@@ -1,4 +1,5 @@
 
+using real_t = mparticles_t::real_t;
 
 // ======================================================================
 // quicksort
@@ -7,15 +8,15 @@ static inline int
 get_cell_index(int p, const particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t dxi = 1.f / patch->dx[0];
-  particle_real_t dyi = 1.f / patch->dx[1];
-  particle_real_t dzi = 1.f / patch->dx[2];
+  real_t dxi = 1.f / patch->dx[0];
+  real_t dyi = 1.f / patch->dx[1];
+  real_t dzi = 1.f / patch->dx[2];
   int *ldims = patch->ldims;
   int *ibn = ppsc->ibn;
   
-  particle_real_t u = part->xi * dxi;
-  particle_real_t v = part->yi * dyi;
-  particle_real_t w = part->zi * dzi;
+  real_t u = part->xi * dxi;
+  real_t v = part->yi * dyi;
+  real_t w = part->zi * dzi;
   int j0 = nint(u) + ibn[0];
   int j1 = nint(v) + ibn[1];
   int j2 = nint(w) + ibn[2];
@@ -27,15 +28,15 @@ static inline int
 get_cell_index_2x2x2(int p, const particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t dxi = 1.f / patch->dx[0];
-  particle_real_t dyi = 1.f / patch->dx[1];
-  particle_real_t dzi = 1.f / patch->dx[2];
+  real_t dxi = 1.f / patch->dx[0];
+  real_t dyi = 1.f / patch->dx[1];
+  real_t dzi = 1.f / patch->dx[2];
   int *ldims = patch->ldims;
   int ibn[3] = { 2, 2, 2 }; // must be divisible by 2
   
-  particle_real_t u = part->xi * dxi;
-  particle_real_t v = part->yi * dyi;
-  particle_real_t w = part->zi * dzi;
+  real_t u = part->xi * dxi;
+  real_t v = part->yi * dyi;
+  real_t w = part->zi * dzi;
   int j0 = nint(u) + ibn[0];
   int j1 = nint(v) + ibn[1];
   int j2 = nint(w) + ibn[2];
@@ -186,10 +187,10 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     int i = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
       particle_t *p = &*prt_iter;
-      particle_real_t dxi = 1.f / patch->dx[0];
-      particle_real_t dyi = 1.f / patch->dx[1];
-      particle_real_t dzi = 1.f / patch->dx[2];
-      particle_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
+      real_t dxi = 1.f / patch->dx[0];
+      real_t dyi = 1.f / patch->dx[1];
+      real_t dzi = 1.f / patch->dx[2];
+      real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
       int pos[3];
       for (int d = 0; d < 3; d++) {
 	pos[d] = fint(xi[d]);

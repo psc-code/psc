@@ -7,6 +7,8 @@
 
 #define IP_DEPOSIT
 
+using real_t = mparticles_t::real_t;
+
 #include "fields.hxx"
 #include "inc_params.c"
 #include "inc_push.c"
@@ -130,7 +132,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #if ORDER == ORDER_1ST
 static inline void
-set_S(particle_real_t *s0, int shift, struct ip_coeff_1st<particle_real_t> gg)
+set_S(real_t *s0, int shift, struct ip_coeff_1st<real_t> gg)
 {
   S(s0, shift  ) = gg.v0;
   S(s0, shift+1) = gg.v1;
@@ -139,11 +141,11 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_1st<particle_real_t> gg)
 #elif ORDER == ORDER_2ND
 
 static inline void
-set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
+set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 {
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
   // but it needs checking.
-  particle_real_t h = gg.h;
+  real_t h = gg.h;
   S(s0, shift-1) = .5f * (1.5f-std::abs(h-1.f)) * (1.5f-std::abs(h-1.f));
   S(s0, shift  ) = .75f - std::abs(h) * std::abs(h);
   S(s0, shift+1) = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
@@ -156,28 +158,28 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
     int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, ip.cxyz.g.l);	\
-    particle_real_t fnqx = particle_qni_wni(part) * c_prm.fnqxs;	\
+    real_t fnqx = particle_qni_wni(part) * c_prm.fnqxs;	\
 
 #define CURRENT_PREP							\
   IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );	\
   IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );	\
   IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );	\
 									\
-  IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * particle_qni_wni(part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * particle_qni_wni(part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Z( particle_real_t fnqzz = vv[2] * particle_qni_wni(part) * c_prm.fnqs; )
+  IF_NOT_DIM_X( real_t fnqxx = vv[0] * particle_qni_wni(part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Y( real_t fnqyy = vv[1] * particle_qni_wni(part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Z( real_t fnqzz = vv[2] * particle_qni_wni(part) * c_prm.fnqs; )
 
 #define CURRENT_2ND_Y						\
-  particle_real_t jyh = 0.f;					\
+  real_t jyh = 0.f;					\
 								\
   for (int l2 = l2min; l2 <= l2max; l2++) {			\
-    particle_real_t wx = S(s0y, l2) + .5f * S(s1y, l2);		\
-    particle_real_t wy = S(s1y, l2);				\
-    particle_real_t wz = S(s0y, l2) + .5f * S(s1y, l2);		\
+    real_t wx = S(s0y, l2) + .5f * S(s1y, l2);		\
+    real_t wy = S(s1y, l2);				\
+    real_t wz = S(s0y, l2) + .5f * S(s1y, l2);		\
     								\
-    particle_real_t jxh = fnqxx*wx;				\
+    real_t jxh = fnqxx*wx;				\
     jyh -= fnqy*wy;						\
-    particle_real_t jzh = fnqzz*wz;				\
+    real_t jzh = fnqzz*wz;				\
     								\
     J(JXI, 0,ip.cy.g.l+l2,0) += jxh;					\
     J(JYI, 0,ip.cy.g.l+l2,0) += jyh;				\
@@ -185,14 +187,14 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
   }
 
 #define CURRENT_2ND_Z						\
-  particle_real_t jzh = 0.f;					\
+  real_t jzh = 0.f;					\
   for (int l3 = l3min; l3 <= l3max; l3++) {			\
-    particle_real_t wx = S(s0z, l3) + .5f * S(s1z, l3);		\
-    particle_real_t wy = S(s0z, l3) + .5f * S(s1z, l3);		\
-    particle_real_t wz = S(s1z, l3);				\
+    real_t wx = S(s0z, l3) + .5f * S(s1z, l3);		\
+    real_t wy = S(s0z, l3) + .5f * S(s1z, l3);		\
+    real_t wz = S(s1z, l3);				\
     								\
-    particle_real_t jxh = fnqxx*wx;				\
-    particle_real_t jyh = fnqyy*wy;				\
+    real_t jxh = fnqxx*wx;				\
+    real_t jyh = fnqyy*wy;				\
     jzh -= fnqz*wz;						\
     								\
     J(JXI, 0,0,ip.cz.g.l+l3) += jxh;				\
@@ -202,10 +204,10 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 
 #define CURRENT_2ND_XY							\
   for (int l2 = l2min; l2 <= l2max; l2++) {				\
-    particle_real_t jxh = 0.f;						\
+    real_t jxh = 0.f;						\
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
-      particle_real_t wx = S(s1x, l1) * (S(s0y, l2) + .5f*S(s1y, l2));	\
-      particle_real_t wz = S(s0x, l1) * S(s0y, l2)			\
+      real_t wx = S(s1x, l1) * (S(s0y, l2) + .5f*S(s1y, l2));	\
+      real_t wz = S(s0x, l1) * S(s0y, l2)			\
 	+ .5f * S(s1x, l1) * S(s0y, l2)					\
 	+ .5f * S(s0x, l1) * S(s1y, l2)					\
 	+ (1.f/3.f) * S(s1x, l1) * S(s1y, l2);				\
@@ -216,9 +218,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
-    particle_real_t jyh = 0.f;						\
+    real_t jyh = 0.f;						\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
-      particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
+      real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       									\
       jyh -= fnqy*wy;							\
       J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jyh;				\
@@ -227,9 +229,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 
 #define CURRENT_XZ				\
   for (int l3 = l3min; l3 <= l3max; l3++) {	\
-    particle_real_t jxh = 0.f;						\
+    real_t jxh = 0.f;						\
     for (int l1 = l1min; l1 < l1max; l1++) {				\
-      particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
+      real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jxh -= fnqx*wx;							\
       J(JXI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jxh;				\
     }									\
@@ -237,18 +239,18 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 									\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
-      particle_real_t wy = S(s0x, l1) * S(s0z, l3)			\
+      real_t wy = S(s0x, l1) * S(s0z, l3)			\
 	+ .5f * S(s1x, l1) * S(s0z, l3)					\
 	+ .5f * S(s0x, l1) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1x, l1) * S(s1z, l3);				\
-      particle_real_t jyh = fnqyy * wy;					\
+      real_t jyh = fnqyy * wy;					\
       J(JYI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
-    particle_real_t jzh = 0.f;						\
+    real_t jzh = 0.f;						\
     for (int l3 = l3min; l3 < l3max; l3++) {				\
-      particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
+      real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
       jzh -= fnqz*wz;							\
       J(JZI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jzh;				\
     }									\
@@ -257,28 +259,28 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 #define CURRENT_1ST_YZ							\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
-      particle_real_t wx = S(s0y, l2) * S(s0z, l3)			\
+      real_t wx = S(s0y, l2) * S(s0z, l3)			\
 	+ .5f * S(s1y, l2) * S(s0z, l3)					\
 	+ .5f * S(s0y, l2) * S(s1z, l3)					\
 	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
-      particle_real_t jxh = fnqxx * wx;					\
+      real_t jxh = fnqxx * wx;					\
       J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
     }									\
   }									\
   									\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
-    particle_real_t jyh = 0.f;						\
+    real_t jyh = 0.f;						\
     for (int l2 = l2min; l2 < l2max; l2++) {				\
-      particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
+      real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
       jyh -= fnqy*wy;							\
       J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
 									\
   for (int l2 = l2min; l2 <= l2max; l2++) {				\
-    particle_real_t jzh = 0.f;						\
+    real_t jzh = 0.f;						\
     for (int l3 = l3min; l3 < l3max; l3++) {				\
-      particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
+      real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
       jzh -= fnqz*wz;							\
       J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;				\
     }									\
@@ -286,9 +288,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 
 #define JZH(i) jzh[i+2]
 #define CURRENT_2ND_YZ							\
-    particle_real_t jxh;						\
-    particle_real_t jyh;						\
-    particle_real_t jzh[5];						\
+    real_t jxh;						\
+    real_t jyh;						\
+    real_t jzh[5];						\
 									\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
       JZH(l2) = 0.f;							\
@@ -296,12 +298,12 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
     for (int l3 = l3min; l3 <= l3max; l3++) {				\
       jyh = 0.f;							\
       for (int l2 = l2min; l2 <= l2max; l2++) {				\
-	particle_real_t wx = S(s0y, l2) * S(s0z, l3)			\
+	real_t wx = S(s0y, l2) * S(s0z, l3)			\
 	  + .5f * S(s1y, l2) * S(s0z, l3)				\
 	  + .5f * S(s0y, l2) * S(s1z, l3)				\
 	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
-	particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3)); \
-	particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2)); \
+	real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3)); \
+	real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2)); \
 									\
 	jxh = fnqxx*wx;							\
 	jyh -= fnqy*wy;							\
@@ -316,9 +318,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 #define CURRENT_2ND_XYZ							\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
-      particle_real_t jxh = 0.f;					\
+      real_t jxh = 0.f;					\
       for (int l1 = l1min; l1 <= l1max; l1++) {				\
-	particle_real_t wx = S(s1x, l1) * (S(s0y, l2) * S(s0z, l3) +	\
+	real_t wx = S(s1x, l1) * (S(s0y, l2) * S(s0z, l3) +	\
 					   .5f * S(s1y, l2) * S(s0z, l3) + \
 					   .5f * S(s0y, l2) * S(s1z, l3) + \
 					   (1.f/3.f) * S(s1y, l2) * S(s1z, l3)); \
@@ -331,9 +333,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
   									\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
-      particle_real_t jyh = 0.f;					\
+      real_t jyh = 0.f;					\
       for (int l2 = l2min; l2 <= l2max; l2++) {				\
-	particle_real_t wy = S(s1y, l2) * (S(s0x, l1) * S(s0z, l3) +	\
+	real_t wy = S(s1y, l2) * (S(s0x, l1) * S(s0z, l3) +	\
 					   .5f * S(s1x, l1) * S(s0z, l3) + \
 					   .5f * S(s0x, l1) * S(s1z, l3) + \
 					   (1.f/3.f) * S(s1x, l1)*S(s1z, l3)); \
@@ -346,9 +348,9 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 									\
   for (int l2 = l2min; l2 <= l2max; l2++) {				\
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
-      particle_real_t jzh = 0.f;					\
+      real_t jzh = 0.f;					\
       for (int l3 = l3min; l3 <= l3max; l3++) {				\
-	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) * S(s0y, l2) +	\
+	real_t wz = S(s1z, l3) * (S(s0x, l1) * S(s0y, l2) +	\
 					   .5f * S(s1x, l1) * S(s0y, l2) +\
 					   .5f * S(s0x, l1) * S(s1y, l2) +\
 					   (1.f/3.f) * S(s1x, l1)*S(s1y, l2)); \
@@ -393,13 +395,13 @@ static void
 do_push_part(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
 #if (DIM & DIM_X)
-  particle_real_t s0x[N_RHO] = {}, s1x[N_RHO];
+  real_t s0x[N_RHO] = {}, s1x[N_RHO];
 #endif
 #if (DIM & DIM_Y)
-  particle_real_t s0y[N_RHO] = {}, s1y[N_RHO];
+  real_t s0y[N_RHO] = {}, s1y[N_RHO];
 #endif
 #if (DIM & DIM_Z)
-  particle_real_t s0z[N_RHO] = {}, s1z[N_RHO];
+  real_t s0z[N_RHO] = {}, s1z[N_RHO];
 #endif
 
   c_prm_set(ppsc);
@@ -409,8 +411,8 @@ do_push_part(int p, fields_t flds, mparticles_t::patch_t& prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *part = &*prt_iter;
-    particle_real_t *x = &part->xi;
-    particle_real_t vv[3];
+    real_t *x = &part->xi;
+    real_t vv[3];
 
 #if PRTS != PRTS_STAGGERED
     // x^n, p^n -> x^(n+.5), p^n
@@ -421,7 +423,7 @@ do_push_part(int p, fields_t flds, mparticles_t::patch_t& prts)
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
     // FIELD INTERPOLATION
 
-    particle_real_t xm[3];
+    real_t xm[3];
     for (int d = 0; d < 3; d++) {
       xm[d] = x[d] * c_prm.dxi[d];
     }
@@ -432,11 +434,11 @@ do_push_part(int p, fields_t flds, mparticles_t::patch_t& prts)
     IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
     IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );
 
-    particle_real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
-    particle_real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
+    real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
+    real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    particle_real_t dq = c_prm.dqs * particle_qni_div_mni(part);
+    real_t dq = c_prm.dqs * particle_qni_div_mni(part);
     push_p(&part->pxi, E, H, dq);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
@@ -456,7 +458,7 @@ do_push_part(int p, fields_t flds, mparticles_t::patch_t& prts)
     push_x(x, vv, .5f * c_prm.dt);
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-    particle_real_t xn[3] = { x[0], x[1], x[2] };
+    real_t xn[3] = { x[0], x[1], x[2] };
     push_x(xn, vv, .5f * c_prm.dt);
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 

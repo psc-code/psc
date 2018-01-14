@@ -3,6 +3,7 @@
 #include "fields.hxx"
 
 using Fields = Fields3d<fields_t>;
+using real_t = mparticles_t::real_t;
 
 #include <math.h>
 
@@ -123,8 +124,8 @@ static void
 do_n_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;
@@ -147,8 +148,8 @@ static void
 do_rho_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
     particle_t *prt = &*prt_iter;

@@ -4,7 +4,6 @@
 
 #include "psc_particles_double.h"
 
-typedef particle_double_real_t particle_real_t;
 using mparticles_t = mparticles_double_t;
 using particle_t = mparticles_t::particle_t;
 

@@ -9,6 +9,8 @@
 
 #include "fields.hxx"
 
+using real_t = mparticles_t::real_t;
+
 #include "inc_params.c"
 #include "inc_cache.c"
 #include "inc_interpolate.c"
