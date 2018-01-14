@@ -50,10 +50,6 @@ struct psc_mparticles_patch<particle_single_t> : particles_base<particle_single_
   bool need_reorder;
 };
 
-#define PTYPE PTYPE_SINGLE
-#include "psc_particles_common.h"
-#undef PTYPE
-
 using psc_mparticles_single = psc_mparticles_<particle_single_t>;
 using mparticles_single_t = mparticles<psc_mparticles_single>;
 
