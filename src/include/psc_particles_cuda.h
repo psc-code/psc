@@ -41,8 +41,9 @@ struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
     {
     }
 
-    void get_block_pos(const real_t xi[3], const real_t b_dxi[3], int b_pos[3])
+    void get_block_pos(const real_t xi[3], int b_pos[3])
     {
+      const real_t* b_dxi = get_b_dxi();
       for (int d = 0; d < 3; d++) {
 	b_pos[d] = fint(xi[d] * b_dxi[d]);
       }

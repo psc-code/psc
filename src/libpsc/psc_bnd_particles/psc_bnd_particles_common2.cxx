@@ -27,7 +27,7 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts,
   for (int i = off; i < n_prts; i++) {
     particle_t *part = &prts[i];
     int b_pos[3];
-    prts.get_block_pos(&part->xi, prts.b_dxi, b_pos);
+    prts.get_block_pos(&part->xi, b_pos);
     assert(b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	   b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	   b_pos[2] >= 0 && b_pos[2] < b_mx[2]);
@@ -52,7 +52,7 @@ find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
   for (int i = 0; i < n_prts; i++) {
     particle_t *part = &prts[i];
     int b_pos[3];
-    prts.get_block_pos(&part->xi, prts.b_dxi, b_pos);
+    prts.get_block_pos(&part->xi, b_pos);
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
