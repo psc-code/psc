@@ -39,7 +39,7 @@ PFX(setup)(struct psc_mparticles *mprts)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   psc_mparticles_setup_super(mprts);
-  sub->patch = new mparticles_t::particles_t[mprts->nr_patches]();
+  sub->patch = new mparticles_t::patch_t[mprts->nr_patches]();
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p);

@@ -48,9 +48,9 @@
 
 struct psc_mparticles_PTYPE
 {
-  using particles_t = psc_mparticles_patch<particle_PTYPE_t>;
+  using patch_t = psc_mparticles_patch<particle_PTYPE_t>;
   
-  particles_t *patch;
+  patch_t *patch;
 };
 
 #include <math.h>

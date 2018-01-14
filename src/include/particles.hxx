@@ -103,13 +103,12 @@ template<typename S>
 struct mparticles : mparticles_base<S>
 {
   using Base = mparticles_base<S>;
-  using particles_t = typename Base::sub_t::particles_t;
-  using patch_t = particles_t;
-  using particle_buf_t = typename particles_t::buf_t;
+  using patch_t = typename Base::sub_t::patch_t;
+  using particle_buf_t = typename patch_t::buf_t;
   
   mparticles(psc_mparticles *mprts) : mparticles_base<S>(mprts) { }
 
-  particles_t& operator[](int p)
+  patch_t& operator[](int p)
   {
     return this->sub()->patch[p];
   }
