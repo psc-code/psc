@@ -7,10 +7,26 @@
 #include <vector>
 
 // ======================================================================
-// particles_base
+// psc_particle
+
+template<class R>
+struct psc_particle
+{
+  using real_t = R;
+
+  real_t xi, yi, zi;
+  real_t qni_wni;
+  real_t pxi, pyi, pzi;
+  int kind_;
+
+  int kind() { return kind_; }
+};
+
+// ======================================================================
+// mparticles_patch_base
 
 template<typename P>
-struct particles_base
+struct mparticles_patch_base
 {
   using particle_t = P;
   using real_t = typename particle_t::real_t;
@@ -25,8 +41,8 @@ struct particles_base
   struct psc_mparticles *mprts;
   int p;
 
-  particles_base() = default;
-  particles_base(const particles_base&) = delete;
+  mparticles_patch_base() = default;
+  mparticles_patch_base(const mparticles_patch_base&) = delete;
   
   particle_t& operator[](int n) { return buf[n]; }
   iterator begin() { return buf.begin(); }
@@ -51,9 +67,7 @@ struct particles_base
 };
 
 template<typename P>
-struct psc_mparticles_patch : particles_base<P>
-{
-};
+struct mparticles_patch : mparticles_patch_base<P> { };
 
 // ======================================================================
 // mparticles_base
@@ -82,29 +96,13 @@ private:
 };
 
 // ======================================================================
-// psc_particle
-
-template<class R>
-struct psc_particle
-{
-  using real_t = R;
-
-  real_t xi, yi, zi;
-  real_t qni_wni;
-  real_t pxi, pyi, pzi;
-  int kind_;
-
-  int kind() { return kind_; }
-};
-
-// ======================================================================
 // psc_mparticles_
 
 template<typename P>
 struct psc_mparticles_
 {
   using particle_t = P;
-  using patch_t = psc_mparticles_patch<particle_t>;
+  using patch_t = mparticles_patch<particle_t>;
   
   patch_t *patch;
 };

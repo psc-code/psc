@@ -16,11 +16,11 @@ struct particle_single_t : psc_particle<particle_single_real_t> {};
 #define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
 
 template<>
-struct psc_mparticles_patch<particle_single_t> : particles_base<particle_single_t>
+struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_single_t>
 {
-  using Base = particles_base<particle_single_t>;
+  using Base = mparticles_patch_base<particle_single_t>;
   
-  ~psc_mparticles_patch()
+  ~mparticles_patch()
   {
     free(prt_array_alt);
     free(b_idx);
