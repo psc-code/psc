@@ -238,7 +238,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
   mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
-  new(&mprts->cmprts) cuda_mparticles(json);
+  new(mprts.sub_) psc_mparticles_cuda(json);
 
   // FIXME json_builder_free(obj);
 }

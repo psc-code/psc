@@ -50,7 +50,7 @@ struct mparticles_base
   
   sub_t* operator->() { return sub_; }
 
-protected:
+public:
   psc_mparticles *mprts_;
   sub_t *sub_;
 };
