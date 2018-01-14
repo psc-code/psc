@@ -639,7 +639,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     particle_real_t *pxi = &prt->pxi;
     
     int b_pos[3];
-    particle_xi_get_block_pos(xi, b_dxi, b_pos);
+    mprts[p].get_block_pos(xi, b_dxi, b_pos);
     
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
