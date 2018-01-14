@@ -32,7 +32,11 @@ struct mparticles_base
   using particle_t = typename sub_t::particle_t;
   using real_t = typename particle_t::real_t;
 
-  explicit mparticles_base(psc_mparticles *mprts) : mprts_(mprts) { }
+  explicit mparticles_base(psc_mparticles *mprts)
+    : mprts_(mprts),
+      sub_(mrc_to_subobj(mprts, sub_t))
+  {
+  }
 
   void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
   {
@@ -43,10 +47,13 @@ struct mparticles_base
   
   psc_mparticles *mprts() { return mprts_; }
   
-  sub_t* sub() { return mrc_to_subobj(mprts(), sub_t); }
+  sub_t* sub() { return sub_; }
+
+  sub_t* operator->() { return sub_; }
 
 private:
   psc_mparticles *mprts_;
+  sub_t *sub_;
 };
 
 // ======================================================================

@@ -29,11 +29,6 @@ struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
 
   using Base::Base;
 
-  struct cuda_mparticles* cmprts()
-  {
-    return sub()->cmprts;
-  }
-  
   struct patch_t
   {
     patch_t(mparticles_cuda_t& mp, int p)

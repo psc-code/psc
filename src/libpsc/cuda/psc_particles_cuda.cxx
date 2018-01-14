@@ -238,7 +238,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
   mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
-  mprts.sub()->cmprts = new cuda_mparticles(json);
+  mprts->cmprts = new cuda_mparticles(json);
 
   // FIXME json_builder_free(obj);
 }
@@ -250,10 +250,9 @@ static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 {
   mparticles_cuda_t mprts(_mprts);
-  assert(mprts.sub()->cmprts);
   
-  delete mprts.sub()->cmprts;
-  mprts.sub()->cmprts = NULL;
+  delete mprts->cmprts;
+  mprts->cmprts = NULL;
 }
 
 // ----------------------------------------------------------------------
@@ -264,7 +263,7 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *_mprts, int *n_prts_by_pa
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts.cmprts()->reserve_all((unsigned int *) n_prts_by_patch);
+  mprts->cmprts->reserve_all((unsigned int *) n_prts_by_patch);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -291,7 +290,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
 
   unsigned int n_prts_by_patch[mprts.n_patches()];
-  mprts.cmprts()->get_size_all(n_prts_by_patch);
+  mprts->cmprts->get_size_all(n_prts_by_patch);
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, _mprts), H5P_DEFAULT); H5_CHK(group);
   unsigned int off = 0;
@@ -306,7 +305,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
       float_4 *xi4  = (float_4 *) calloc(n_prts, sizeof(*xi4));
       float_4 *pxi4 = (float_4 *) calloc(n_prts, sizeof(*pxi4));
       
-      mprts.cmprts()->from_device(xi4, pxi4, n_prts, off);
+      mprts->cmprts->from_device(xi4, pxi4, n_prts, off);
       
       hsize_t hdims[2];
       hdims[0] = n_prts; hdims[1] = 4;
@@ -365,7 +364,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
       
-      struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts).sub()->cmprts;
+      struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts)->cmprts;
       
       cmprts->to_device(xi4, pxi4, n_prts, off);
       
@@ -391,7 +390,7 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *_mprts)
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts.cmprts()->setup_internals();
+  mprts->cmprts->setup_internals();
 }
 
 // ----------------------------------------------------------------------
@@ -402,7 +401,7 @@ psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *_mprts)
 {
   mparticles_cuda_t mprts(_mprts);
 
-  return mprts.cmprts()->get_n_prts();
+  return mprts->cmprts->get_n_prts();
 }
 
 // ----------------------------------------------------------------------
@@ -413,7 +412,7 @@ psc_mparticles_cuda_get_size_all(struct psc_mparticles *_mprts, int *n_prts_by_p
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts.cmprts()->get_size_all((unsigned int *) n_prts_by_patch);
+  mprts->cmprts->get_size_all((unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -424,7 +423,7 @@ psc_mparticles_cuda_resize_all(struct psc_mparticles *_mprts, int *n_prts_by_pat
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts.cmprts()->resize_all((unsigned int *) n_prts_by_patch);
+  mprts->cmprts->resize_all((unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -436,7 +435,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts.cmprts()->inject(buf, buf_n_by_patch);
+  mprts->cmprts->inject(buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -444,7 +443,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles
 
 const int* mparticles_cuda_t::patch_t::get_b_mx() const
 {
-  return mp_.cmprts()->patch_get_b_mx(p_);
+  return mp_->cmprts->patch_get_b_mx(p_);
 }
 
 // ----------------------------------------------------------------------
@@ -452,7 +451,7 @@ const int* mparticles_cuda_t::patch_t::get_b_mx() const
 
 const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
 {
-  return mp_.cmprts()->patch_get_b_dxi(p_);
+  return mp_->cmprts->patch_get_b_dxi(p_);
 }
 
 // ----------------------------------------------------------------------
