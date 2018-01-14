@@ -23,6 +23,33 @@ struct psc_particle
 };
 
 // ======================================================================
+// mparticles_base
+
+template<typename S>
+struct mparticles_base
+{
+  using sub_t = S;
+  using particle_t = typename sub_t::particle_t;
+  using real_t = typename particle_t::real_t;
+
+  explicit mparticles_base(psc_mparticles *mprts) : mprts_(mprts) { }
+
+  void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
+  {
+    psc_mparticles_put_as(mprts_, mprts_base, flags);
+  }
+
+  unsigned int n_patches() { return mprts_->nr_patches; }
+  
+  psc_mparticles *mprts() { return mprts_; }
+  
+  sub_t* sub() { return mrc_to_subobj(mprts(), sub_t); }
+
+private:
+  psc_mparticles *mprts_;
+};
+
+// ======================================================================
 // mparticles_patch_base
 
 template<typename P>
@@ -75,33 +102,6 @@ struct mparticles_patch_base
 
 template<typename P>
 struct mparticles_patch : mparticles_patch_base<P> { };
-
-// ======================================================================
-// mparticles_base
-
-template<typename S>
-struct mparticles_base
-{
-  using sub_t = S;
-  using particle_t = typename sub_t::particle_t;
-  using real_t = typename particle_t::real_t;
-
-  explicit mparticles_base(psc_mparticles *mprts) : mprts_(mprts) { }
-
-  void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
-  {
-    psc_mparticles_put_as(mprts_, mprts_base, flags);
-  }
-
-  unsigned int n_patches() { return mprts_->nr_patches; }
-  
-  psc_mparticles *mprts() { return mprts_; }
-  
-  sub_t* sub() { return mrc_to_subobj(mprts(), sub_t); }
-
-private:
-  psc_mparticles *mprts_;
-};
 
 // ======================================================================
 // psc_mparticles_
