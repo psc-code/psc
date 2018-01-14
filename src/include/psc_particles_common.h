@@ -51,16 +51,25 @@ using psc_particle_PTYPE_range_t = psc_mparticles_PTYPE_patch<particle_PTYPE_t>&
 template<typename P>
 struct psc_mparticles_PTYPE_patch : particles_base<P>
 {
-  using Base = particles_base<P>;
+  psc_particle_PTYPE_range_t range()
+  {
+    return psc_particle_PTYPE_range_t(*this);
+  }
+};
+
+#if PTYPE == PTYPE_SINGLE
+
+template<>
+struct psc_mparticles_PTYPE_patch<particle_single_t> : particles_base<particle_single_t>
+{
+  using Base = particles_base<particle_single_t>;
   
   ~psc_mparticles_PTYPE_patch()
   {
-#if PTYPE == PTYPE_SINGLE
     free(prt_array_alt);
     free(b_idx);
     free(b_ids);
     free(b_cnt);
-#endif
   }
 
   psc_particle_PTYPE_range_t range()
@@ -75,25 +84,22 @@ struct psc_mparticles_PTYPE_patch : particles_base<P>
 
     new_capacity = Base::buf.capacity();
     if (new_capacity != old_capacity) {
-#if PTYPE == PTYPE_SINGLE
       free(prt_array_alt);
       prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*prt_array_alt));
       b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
       b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
-#endif
     }
   }
 
-#if PTYPE == PTYPE_SINGLE
   particle_PTYPE_t *prt_array_alt;
   int nr_blocks;
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
   bool need_reorder;
-#endif
-
 };
+
+#endif
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE
