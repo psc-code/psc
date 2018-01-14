@@ -28,7 +28,7 @@ psc_mparticles_copy_from(struct psc_mparticles *mprts,
 			 void (*get_particle)(particle_t *prt, int n, struct psc_mparticles *mprts, int p))
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
+    mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
       get_particle(&prts[n], n, mprts_from, p);
@@ -42,7 +42,7 @@ psc_mparticles_copy_to(struct psc_mparticles *mprts,
 		       void (*put_particle)(particle_t *prt, int n, struct psc_mparticles *mprts, int p))
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
+    mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
       put_particle(&prts[n], n, mprts_to, p);

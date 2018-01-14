@@ -71,7 +71,7 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 
   prof_start(pr);
   for (int p = 0; p < mprts.n_patches(); p++) {
-    mparticles_t::patch_t prts = mprts[p].range();
+    mparticles_t::patch_t& prts = mprts[p];
     qsort(&*prts.begin(), prts.size(), sizeof(*prts.begin()), compare);
   }
   prof_stop(pr);
@@ -95,7 +95,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   prof_start(pr);
   for (int p = 0; p < mprts.n_patches(); p++) {
     struct psc_patch *patch = &ppsc->patch[p];
-    mparticles_t::patch_t prts = mprts[p].range();
+    mparticles_t::patch_t& prts = mprts[p];
     unsigned int n_prts = prts.size();
     
     int N = 1;
@@ -175,7 +175,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   prof_start(pr);
   for (int p = 0; p < mprts.n_patches(); p++) {
     struct psc_patch *patch = &ppsc->patch[p];
-    mparticles_t::patch_t prts = mprts[p].range();
+    mparticles_t::patch_t& prts = mprts[p];
     unsigned int n_prts = prts.size();
 
     unsigned int mask = cs2->mask;

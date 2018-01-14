@@ -8,13 +8,13 @@
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres_base,
-	void (*do_run)(int p, fields_t flds, mparticles_t::patch_t prts))
+	void (*do_run)(int p, fields_t flds, mparticles_t::patch_t& prts))
 {
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   mfields_t mf_res = mres_base->get_as<mfields_t>(0, 0);
   for (int p = 0; p < mprts.n_patches(); p++) {
     mf_res[p].zero();
-    do_run(p, mf_res[p], mprts[p].range());
+    do_run(p, mf_res[p], mprts[p]);
   }
 
   mf_res.put_as(mres_base, 0, mres_base->nr_fields);
@@ -25,7 +25,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // n
 
 static void
-do_n_run(int p, fields_t flds, mparticles_t::patch_t prts)
+do_n_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -49,7 +49,7 @@ n_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 // rho
 
 static void
-do_rho_run(int p, fields_t flds, mparticles_t::patch_t prts)
+do_rho_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -73,7 +73,7 @@ rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 // v
 
 static void
-do_v_run(int p, fields_t flds, mparticles_t::patch_t prts)
+do_v_run(int p, fields_t flds, mparticles_t::patch_t& prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;

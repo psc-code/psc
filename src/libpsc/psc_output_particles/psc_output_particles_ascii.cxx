@@ -49,7 +49,7 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 
   FILE *file = fopen(filename, "w");
   for (int p = 0; p < mprts.n_patches(); p++) {
-    mparticles_t::patch_t prts = mprts[p].range();
+    mparticles_t::patch_t& prts = mprts[p];
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
       particle_t& prt = prts[n];

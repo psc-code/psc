@@ -24,11 +24,10 @@ struct particles_base
 
   struct psc_mparticles *mprts;
   int p;
-  
-  ~particles_base()
-  {
-  }
 
+  particles_base() = default;
+  particles_base(const particles_base&) = delete;
+  
   particle_t& operator[](int n) { return buf[n]; }
   iterator begin() { return buf.begin(); }
   iterator end() { return buf.end(); }
@@ -52,18 +51,8 @@ struct particles_base
 };
 
 template<typename P>
-struct psc_mparticles_patch;
-
-template<typename P>
-using psc_particle_range_t = psc_mparticles_patch<P>&;
-
-template<typename P>
 struct psc_mparticles_patch : particles_base<P>
 {
-  psc_particle_range_t<P> range()
-  {
-    return psc_particle_range_t<P>(*this);
-  }
 };
 
 // ======================================================================

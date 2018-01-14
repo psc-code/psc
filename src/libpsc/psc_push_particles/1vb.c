@@ -22,7 +22,7 @@ template<typename C>
 static void
 do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 {
-  mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
+  mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
   unsigned int n_prts = prts.size();
   
   for (int n = 0; n < n_prts; n++) {
@@ -34,7 +34,7 @@ template<typename C>
 static void
 do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 {
-  mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
+  mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
   unsigned int n_prts = prts.size();
   
   for (int n = 0; n < n_prts; n++) {

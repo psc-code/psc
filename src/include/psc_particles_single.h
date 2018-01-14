@@ -28,11 +28,6 @@ struct psc_mparticles_patch<particle_single_t> : particles_base<particle_single_
     free(b_cnt);
   }
 
-  psc_particle_range_t<particle_single_t> range()
-  {
-    return psc_particle_range_t<particle_single_t>(*this);
-  }
-
   void reserve(unsigned int new_capacity)
   {
     unsigned int old_capacity = Base::buf.capacity();

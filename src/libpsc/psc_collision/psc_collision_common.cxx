@@ -104,7 +104,7 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 static void
 find_cell_offsets(int offsets[], mparticles_t mprts, int p)
 {
-  mparticles_t::patch_t prts = mprts[p].range();
+  mparticles_t::patch_t& prts = mprts[p];
 
   particle_real_t dxi[3];
   for (int d = 0; d < 3; d++) {
@@ -131,7 +131,7 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
 // randomize_in_cell
 
 static void
-randomize_in_cell(mparticles_t::patch_t prts, int n_start, int n_end)
+randomize_in_cell(mparticles_t::patch_t& prts, int n_start, int n_end)
 {
   int nn = n_end - n_start;
   for (int n = 0; n < nn - 1; n++) {
@@ -147,7 +147,7 @@ randomize_in_cell(mparticles_t::patch_t prts, int n_start, int n_end)
 // bc
 
 static particle_real_t
-bc(mparticles_t::patch_t prts, particle_real_t nudt1, int n1, int n2)
+bc(mparticles_t::patch_t& prts, particle_real_t nudt1, int n1, int n2)
 {
   particle_real_t nudt;
     
@@ -405,7 +405,7 @@ bc(mparticles_t::patch_t prts, particle_real_t nudt1, int n1, int n2)
 
 static void
 update_rei_before(struct psc_collision *collision,
-		  mparticles_t::patch_t prts, int n_start, int n_end,
+		  mparticles_t::patch_t& prts, int n_start, int n_end,
 		  int p, int i, int j, int k)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
@@ -429,7 +429,7 @@ update_rei_before(struct psc_collision *collision,
 
 static void
 update_rei_after(struct psc_collision *collision,
-		 mparticles_t::patch_t prts, int n_start, int n_end,
+		 mparticles_t::patch_t& prts, int n_start, int n_end,
 		 int p, int i, int j, int k)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
@@ -453,7 +453,7 @@ update_rei_after(struct psc_collision *collision,
 
 static void
 collide_in_cell(struct psc_collision *collision,
-		mparticles_t::patch_t prts, int n_start, int n_end,
+		mparticles_t::patch_t& prts, int n_start, int n_end,
 		struct psc_collision_stats *stats)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
@@ -557,7 +557,7 @@ psc_collision_sub_run(struct psc_collision *collision,
 
   mfields_t mf_coll(coll->mflds);
   for (int p = 0; p < mprts.n_patches(); p++) {
-    mparticles_t::patch_t prts = mprts[p].range();
+    mparticles_t::patch_t& prts = mprts[p];
   
     int *ldims = ppsc->patch[p].ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];
