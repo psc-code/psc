@@ -102,7 +102,7 @@ add_ghosts_boundary(fields_t res, int p, int mb, int me)
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
-	void (*do_run)(int p, fields_t res, particle_range_t prts))
+	void (*do_run)(int p, fields_t res, mparticles_t::patch_t prts))
 {
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   mfields_t mf_res(mres);
@@ -120,7 +120,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // n_1st
 
 static void
-do_n_1st_run(int p, fields_t flds, particle_range_t prts)
+do_n_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -144,7 +144,7 @@ n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // v_1st
 
 static void
-do_v_1st_run(int p, fields_t flds, particle_range_t prts)
+do_v_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -174,7 +174,7 @@ v_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // p_1st
 
 static void
-do_p_1st_run(int p, fields_t flds, particle_range_t prts)
+do_p_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -202,7 +202,7 @@ p_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // vv_1st
 
 static void
-do_vv_1st_run(int p, fields_t flds, particle_range_t prts)
+do_vv_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -232,7 +232,7 @@ vv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_ba
 // T_1st
 
 static void
-do_T_1st_run(int p, fields_t flds, particle_range_t prts)
+do_T_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -273,7 +273,7 @@ T_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // Tvv_1st
 
 static void
-do_Tvv_1st_run(int p, fields_t flds, particle_range_t prts)
+do_Tvv_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -307,7 +307,7 @@ Tvv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_b
 // nvt_1st
 
 static void
-do_nvt_a_1st_run(int p, fields_t flds, particle_range_t prts)
+do_nvt_a_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -330,7 +330,7 @@ do_nvt_a_1st_run(int p, fields_t flds, particle_range_t prts)
 }
 
 static void
-do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
+do_nvt_b_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   Fields F(flds);
   struct psc_patch *patch = &ppsc->patch[p];
@@ -399,7 +399,7 @@ do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
 }
 
 static void
-do_nvp_1st_run(int p, fields_t flds, particle_range_t prts)
+do_nvp_1st_run(int p, fields_t flds, mparticles_t::patch_t prts)
 {
   Fields F(flds);
   struct psc_patch *patch = &ppsc->patch[p];

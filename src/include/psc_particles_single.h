@@ -15,6 +15,46 @@ struct particle_single_t : psc_particle<particle_single_real_t> {};
 
 #define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
 
+template<>
+struct psc_mparticles_patch<particle_single_t> : particles_base<particle_single_t>
+{
+  using Base = particles_base<particle_single_t>;
+  
+  ~psc_mparticles_patch()
+  {
+    free(prt_array_alt);
+    free(b_idx);
+    free(b_ids);
+    free(b_cnt);
+  }
+
+  psc_particle_range_t<particle_single_t> range()
+  {
+    return psc_particle_range_t<particle_single_t>(*this);
+  }
+
+  void reserve(unsigned int new_capacity)
+  {
+    unsigned int old_capacity = Base::buf.capacity();
+    Base::reserve(new_capacity);
+
+    new_capacity = Base::buf.capacity();
+    if (new_capacity != old_capacity) {
+      free(prt_array_alt);
+      prt_array_alt = (particle_single_t *) malloc(new_capacity * sizeof(*prt_array_alt));
+      b_idx = (unsigned int *) realloc(b_idx, new_capacity * sizeof(*b_idx));
+      b_ids = (unsigned int *) realloc(b_ids, new_capacity * sizeof(*b_ids));
+    }
+  }
+
+  particle_single_t *prt_array_alt;
+  int nr_blocks;
+  unsigned int *b_idx;
+  unsigned int *b_ids;
+  unsigned int *b_cnt;
+  bool need_reorder;
+};
+
 #define PTYPE PTYPE_SINGLE
 #include "psc_particles_common.h"
 #undef PTYPE

@@ -417,7 +417,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
 {
   Fields F(flds), F_nvt_av(flds_nvt_av);
   mparticles_t mp(mprts);
-  particle_range_t prts = mp[p].range();
+  mparticles_t::patch_t prts = mp[p].range();
 
   double n     =         F_nvt_av(10*kind + NVT_N     , ix,iy,iz);
   double v[3]  = {       F_nvt_av(10*kind + NVT_VX, ix,iy,iz),

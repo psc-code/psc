@@ -74,7 +74,7 @@ PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    particle_range_t prts = mparticles_t(mprts)[p].range();
+    mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
     char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts = prts.size();
@@ -115,7 +115,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    particle_range_t prts = mparticles_t(mprts)[p].range();
+    mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
     char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;

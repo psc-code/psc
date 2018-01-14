@@ -390,7 +390,7 @@ set_S(particle_real_t *s0, int shift, struct ip_coeff_2nd<particle_real_t> gg)
 #ifdef do_push_part
 
 static void
-do_push_part(int p, fields_t flds, particle_range_t prts)
+do_push_part(int p, fields_t flds, mparticles_t::patch_t prts)
 {
 #if (DIM & DIM_X)
   particle_real_t s0x[N_RHO] = {}, s1x[N_RHO];
@@ -544,7 +544,7 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = mf[p];
-    particle_range_t prts = mparticles_t(mprts)[p].range();
+    mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
 #if CACHE == CACHE_EM_J
     // FIXME, can't we just skip this and just set j when copying back?
     flds.zero(JXI, JXI + 3);

@@ -53,7 +53,7 @@ typedef struct { float4 *xi4; float4 *pxi4; } mprts_array_t;
 
 #else
 
-typedef particle_range_t mprts_array_t;
+typedef mparticles_t::patch_t mprts_array_t;
 
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
   prt = &mprts_arr[n]
@@ -86,7 +86,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 {
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   mparticles_single_t::particles_t *patch = &sub->patch[p];
-  particle_range_t prts = mparticles_t(mprts)[p].range();
+  mparticles_t::patch_t prts = mparticles_t(mprts)[p].range();
   unsigned int n_prts = prts.size();
   /* FIXME, only if blocksize == 1! */
   int *b_mx = patch->b_mx;

@@ -51,6 +51,21 @@ struct particles_base
   const real_t* get_b_dxi() const { return b_dxi; }
 };
 
+template<typename P>
+struct psc_mparticles_patch;
+
+template<typename P>
+using psc_particle_range_t = psc_mparticles_patch<P>&;
+
+template<typename P>
+struct psc_mparticles_patch : particles_base<P>
+{
+  psc_particle_range_t<P> range()
+  {
+    return psc_particle_range_t<P>(*this);
+  }
+};
+
 // ======================================================================
 // mparticles_base
 
@@ -100,6 +115,7 @@ struct mparticles : mparticles_base<S>
 {
   using Base = mparticles_base<S>;
   using particles_t = typename Base::sub_t::particles_t;
+  using patch_t = particles_t;
   using particle_buf_t = typename particles_t::buf_t;
   
   mparticles(psc_mparticles *mprts) : mparticles_base<S>(mprts) { }
