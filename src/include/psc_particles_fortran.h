@@ -36,11 +36,4 @@ struct mparticles_traits<mparticles_fortran_t>
   static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
 };
 
-template<>
-struct mparticles_traits<particle_fortran_t>
-{
-  static constexpr const char* name = "fortran";
-  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
-};
-
 #endif

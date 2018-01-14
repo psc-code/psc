@@ -26,13 +26,6 @@ struct mparticles_traits<mparticles_double_t>
   static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
 };
 
-template<>
-struct mparticles_traits<particle_double_t>
-{
-  static constexpr const char* name = "double";
-  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
-};
-
 // can't do this as inline function since struct psc isn't known yet
 #define particle_double_qni_div_mni(p) ({			\
       particle_double_real_t rv;				\

@@ -420,7 +420,7 @@ inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
   MPI_Waitall(n_ranks, recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(n_ranks, send_reqs, MPI_STATUSES_IGNORE);
 
-  MPI_Datatype mpi_dtype = mparticles_traits<particle_t>::mpi_dtype();
+  MPI_Datatype mpi_dtype = mparticles_traits<mparticles_t>::mpi_dtype();
 
   // add remote # particles
   int n_send = 0, n_recv = 0;

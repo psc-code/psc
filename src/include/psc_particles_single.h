@@ -60,14 +60,6 @@ struct mparticles_traits<mparticles_single_t>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-// FIXME, needs to eventually
-template<>
-struct mparticles_traits<particle_single_t>
-{
-  static constexpr const char* name = "single";
-  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
-};
-
 // can't do this as inline function since struct psc isn't known yet
 #define particle_single_qni_div_mni(p) ({			\
       particle_single_real_t rv;				\
