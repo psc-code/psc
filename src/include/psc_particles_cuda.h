@@ -8,21 +8,7 @@
 
 #include <vector>
 
-using particle_cuda_real_t = float;
-
-struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
-
-using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
-
-// ======================================================================
-// psc_mparticles_cuda
-
-struct psc_mparticles_cuda {
-  using particle_t = particle_cuda_t;
-  struct cuda_mparticles *cmprts;
-};
-
-#define psc_mparticles_cuda(mprts) mrc_to_subobj(mprts, struct psc_mparticles_cuda)
+#include "cuda_mparticles.h"
 
 // ======================================================================
 // mparticles_cuda_t

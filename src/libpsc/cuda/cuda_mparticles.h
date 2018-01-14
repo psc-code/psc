@@ -4,7 +4,14 @@
 
 #include "cuda_iface.h"
 
-#include "psc_particles_cuda.h"
+#include "particles.hxx"
+
+using particle_cuda_real_t = float;
+
+struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
+
+using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
+
 
 #ifndef __CUDACC__
 struct float4 { float x; float y; float z; float w; };
@@ -151,5 +158,13 @@ public:
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 void cuda_mparticles_reorder(struct cuda_mparticles *cmprts);
+
+// ======================================================================
+// psc_mparticles_cuda
+
+struct psc_mparticles_cuda {
+  using particle_t = particle_cuda_t;
+  struct cuda_mparticles cmprts;
+};
 
 #endif
