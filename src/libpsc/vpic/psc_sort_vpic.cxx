@@ -10,7 +10,7 @@ psc_sort_vpic_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
   struct psc *psc = ppsc; // FIXME
 
-  Simulation_sort_mprts(mprts.sub()->sim, mprts.sub()->vmprts, psc->timestep);
+  Simulation_sort_mprts(mprts->sim, mprts->vmprts, psc->timestep);
 
   mprts.put_as(mprts_base);
 }

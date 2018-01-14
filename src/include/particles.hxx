@@ -41,17 +41,16 @@ struct mparticles_base
   void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
   {
     psc_mparticles_put_as(mprts_, mprts_base, flags);
+    mprts_ = nullptr;
   }
 
   unsigned int n_patches() { return mprts_->nr_patches; }
   
   psc_mparticles *mprts() { return mprts_; }
   
-  sub_t* sub() { return sub_; }
-
   sub_t* operator->() { return sub_; }
 
-private:
+protected:
   psc_mparticles *mprts_;
   sub_t *sub_;
 };
@@ -136,7 +135,7 @@ struct mparticles : mparticles_base<S>
 
   patch_t& operator[](int p)
   {
-    return this->sub()->patch[p];
+    return this->sub_->patch[p];
   }
 
 };

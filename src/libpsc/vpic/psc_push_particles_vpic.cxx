@@ -62,7 +62,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
   FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
 
-  Simulation_push_mprts(sub->sim, mprts.sub()->vmprts, vmflds);
+  Simulation_push_mprts(sub->sim, mprts->vmprts, vmflds);
 
   // update jf FIXME: rhob too, probably, depending on b.c.
   mf.put_as(mflds_base, JXI, JXI + 3);

@@ -22,7 +22,7 @@ static void
 copy_from(mparticles_cuda_t mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  struct cuda_mparticles *cmprts = mprts.sub()->cmprts;
+  struct cuda_mparticles *cmprts = mprts->cmprts;
 
   unsigned int n_prts_by_patch[mprts.n_patches()];
   cmprts->get_size_all(n_prts_by_patch);
@@ -41,7 +41,7 @@ static void
 copy_to(mparticles_cuda_t mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  struct cuda_mparticles *cmprts = mprts.sub()->cmprts;
+  struct cuda_mparticles *cmprts = mprts->cmprts;
   
   unsigned int n_prts_by_patch[mprts.n_patches()];
   cmprts->get_size_all(n_prts_by_patch);

@@ -13,17 +13,17 @@ using real_t = mparticles_t::real_t;
 // psc_mparticles_sub_setup_patch
 
 static void
-PFX(setup_patch)(struct psc_mparticles *mprts, int p)
+PFX(setup_patch)(struct psc_mparticles *_mprts, int p)
 {
-  auto *sub = mparticles_t(mprts).sub();
-  auto *patch = &sub->patch[p];
+  mparticles_t mprts(_mprts);
+  mparticles_t::patch_t *patch = &mprts->patch[p];
 
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
     patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
   }
 
-  patch->mprts = mprts;
+  patch->mprts = _mprts;
   patch->p = p;
   
 #if PSC_PARTICLES_AS_SINGLE
@@ -36,15 +36,15 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 // psc_mparticles_sub_setup
 
 static void
-PFX(setup)(struct psc_mparticles *mprts)
+PFX(setup)(struct psc_mparticles *_mprts)
 {
-  auto *sub = mparticles_t(mprts).sub();
+  mparticles_t mprts(_mprts);
 
-  psc_mparticles_setup_super(mprts);
-  sub->patch = new mparticles_t::patch_t[mprts->nr_patches]();
+  psc_mparticles_setup_super(_mprts);
+  mprts->patch = new mparticles_t::patch_t[mprts.n_patches()]();
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    PFX(setup_patch)(mprts, p);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    PFX(setup_patch)(_mprts, p);
   }
 }
 
@@ -157,49 +157,51 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 #endif
 
 static void
-PFX(destroy)(struct psc_mparticles *mprts)
+PFX(destroy)(struct psc_mparticles *_mprts)
 {
-  auto *sub = mparticles_t(mprts).sub();
+  mparticles_t mprts(_mprts);
 
-  delete[] sub->patch;
+  delete[] mprts->patch;
 }
 
 static void
-PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(reserve_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    mparticles_t(mprts)[p].reserve(n_prts_by_patch[p]);
+  mparticles_t mprts(_mprts);
+
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    mprts[p].reserve(n_prts_by_patch[p]);
   }
 }
 
 static void
-PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(resize_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
-  auto *sub = mparticles_t(mprts).sub();
+  mparticles_t mprts(_mprts);
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    sub->patch[p].buf.resize(n_prts_by_patch[p]);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    mprts[p].resize(n_prts_by_patch[p]);
   }
 }
 
 static void
-PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(get_size_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
-  auto *sub = mparticles_t(mprts).sub();
+  mparticles_t mprts(_mprts);
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts_by_patch[p] = sub->patch[p].buf.size();
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    n_prts_by_patch[p] = mprts[p].size();
   }
 }
 
 static unsigned int
-PFX(get_nr_particles)(struct psc_mparticles *mprts)
+PFX(get_nr_particles)(struct psc_mparticles *_mprts)
 {
-  auto *sub = mparticles_t(mprts).sub();
+  mparticles_t mprts(_mprts);
 
   int n_prts = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts += sub->patch[p].buf.size();
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    n_prts += mprts[p].size();
   }
   return n_prts;
 }

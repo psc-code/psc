@@ -79,7 +79,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
 
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
     HydroArray *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds_hydro;
-    Simulation_moments_run(sim, vmflds_hydro, mprts.sub()->vmprts, kind);
+    Simulation_moments_run(sim, vmflds_hydro, mprts->vmprts, kind);
     
     mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
     mfields_t mf_res(mres);
