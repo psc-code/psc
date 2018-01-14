@@ -97,6 +97,18 @@ struct psc_particle
 };
 
 // ======================================================================
+// psc_mparticles_
+
+template<typename P>
+struct psc_mparticles_
+{
+  using particle_t = P;
+  using patch_t = psc_mparticles_patch<particle_t>;
+  
+  patch_t *patch;
+};
+
+// ======================================================================
 // mparticles
 
 template<typename S>

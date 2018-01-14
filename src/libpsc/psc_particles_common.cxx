@@ -13,7 +13,7 @@
 static void
 PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  auto *sub = mparticles_t(mprts).sub();
   auto *patch = &sub->patch[p];
 
   for (int d = 0; d < 3; d++) {
@@ -36,7 +36,7 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 static void
 PFX(setup)(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  auto *sub = mparticles_t(mprts).sub();
 
   psc_mparticles_setup_super(mprts);
   sub->patch = new mparticles_t::patch_t[mprts->nr_patches]();
@@ -157,7 +157,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 static void
 PFX(destroy)(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  auto *sub = mparticles_t(mprts).sub();
 
   delete[] sub->patch;
 }
@@ -173,7 +173,7 @@ PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 static void
 PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  auto *sub = mparticles_t(mprts).sub();
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     sub->patch[p].buf.resize(n_prts_by_patch[p]);
@@ -183,7 +183,7 @@ PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 static void
 PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  auto *sub = mparticles_t(mprts).sub();
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     n_prts_by_patch[p] = sub->patch[p].buf.size();
@@ -193,7 +193,7 @@ PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 static unsigned int
 PFX(get_nr_particles)(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  auto *sub = mparticles_t(mprts).sub();
 
   int n_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -239,7 +239,7 @@ PFX(inject)(struct psc_mparticles *mprts, int p,
 struct PFX(OPS) : psc_mparticles_ops {
   PFX(OPS)() {
     name                    = PARTICLE_TYPE;
-    size                    = sizeof(struct psc_mparticles_sub);
+    size                    = sizeof(psc_mparticles_sub);
     methods                 = PFX(methods);
     setup                   = PFX(setup);
     destroy                 = PFX(destroy);

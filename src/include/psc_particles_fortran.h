@@ -30,6 +30,7 @@ struct particle_fortran_t
 #include "psc_particles_common.h"
 #undef PTYPE
 
+using psc_mparticles_fortran = psc_mparticles_<particle_fortran_t>;
 using mparticles_fortran_t = mparticles<psc_mparticles_fortran>;
 
 template<>

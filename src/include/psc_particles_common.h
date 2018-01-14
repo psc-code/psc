@@ -41,18 +41,6 @@
 
 #endif
 
-// ======================================================================
-
-// ----------------------------------------------------------------------
-// psc_mparticles_PTYPE
-
-struct psc_mparticles_PTYPE
-{
-  using patch_t = psc_mparticles_patch<particle_PTYPE_t>;
-  
-  patch_t *patch;
-};
-
 #include <math.h>
 
 #undef particle_PTYPE_real_t
