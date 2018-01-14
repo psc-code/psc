@@ -588,7 +588,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 #endif
 
 #if DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = _mparticles_cuda_t(mprts).cmprts();
+  struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts).cmprts();
 
   cmprts->bnd_prep();
   
@@ -615,11 +615,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   using real_t = typename mparticles_t::real_t;
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   struct psc *psc = bnd->psc;
-#if DDCP_TYPE == DDCP_TYPE_CUDA
-  mparticles_t& mprts = _mparticles_t(_mprts);
-#else
   mparticles_t mprts(_mprts);
-#endif
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
