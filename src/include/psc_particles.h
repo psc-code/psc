@@ -71,6 +71,8 @@ void psc_mparticles_put_as(struct psc_mparticles *mprts,
 			   unsigned int flags);
 void psc_mparticles_check(struct psc_mparticles *mprts);
 
+struct mparticles_cuda_t;
+
 template<typename MP>
 inline MP psc_mparticles::get_as(unsigned int flags)
 {
