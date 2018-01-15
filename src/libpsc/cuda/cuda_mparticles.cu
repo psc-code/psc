@@ -14,7 +14,7 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles::cuda_mparticles(mrc_json_t json)
+cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
 {
   std::memset(this, 0, sizeof(*this)); // FIXME
 

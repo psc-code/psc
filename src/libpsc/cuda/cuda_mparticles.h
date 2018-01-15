@@ -6,6 +6,63 @@
 
 #include "particles.hxx"
 
+#include <array>
+
+// ======================================================================
+// Vec3
+
+template<typename T>
+struct Vec3 : std::array<T, 3>
+{
+  using Base = std::array<T, 3>;
+
+  using Base::data;
+  
+  Vec3() = default;
+  Vec3(const T *p)
+  {
+    for (int i = 0; i < 3; i++) {
+      new (&(*this)[i])	T(p[i]); // placement new -- not really necessary for int
+    }
+  }
+  
+  Vec3(std::initializer_list<T> l)
+  {
+    assert(l.size() == 3);
+    std::uninitialized_copy(l.begin(), l.end(), data());
+  }
+  
+  operator const T* () const { return data(); }
+  operator T* ()             { return data(); }
+};
+
+using Int3 = Vec3<int>;
+  
+// ======================================================================
+// Grid
+
+template<class T>
+struct Grid
+{
+  using real_t = T;
+  using Real3 = Vec3<real_t>;
+  
+  struct Patch
+  {
+  };
+  
+  Int3 gdims;
+  Int3 ldims;
+  Real3 dx;
+  int n_patches;
+  std::vector<Patch> patches;
+
+  Grid() = default;
+  Grid(const Grid& grid) = delete;
+};
+
+
+
 using particle_cuda_real_t = float;
 
 struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
@@ -82,8 +139,10 @@ struct cuda_mparticles
 {
 public:
   using particle_t = particle_cuda_t;
+  using real_t = particle_t::real_t;
+  using Real3 = Vec3<real_t>;
 
-  cuda_mparticles(mrc_json_t json);
+  cuda_mparticles(const Grid<double>& grid, mrc_json_t json);
   cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
 
@@ -138,11 +197,11 @@ public:
   unsigned int n_blocks_per_patch;// number of blocks per patch
   unsigned int n_blocks;          // number of blocks in all patches in mprts
 
-  int ldims[3];                   // number of cells per direction in each patch
-  int b_mx[3];                    // number of blocks per direction in each patch
-  int bs[3];
-  float dx[3];                    // cell size (in actual length units)
-  float b_dxi[3];                 // inverse of block size (in actual length units)
+  Int3 ldims;                     // number of cells per direction in each patch
+  Int3 b_mx;                      // number of blocks per direction in each patch
+  Int3 bs;
+  Real3 dx;                       // cell size (in actual length units)
+  Real3 b_dxi;                    // inverse of block size (in actual length units)
   float_3 *xb_by_patch;           // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order

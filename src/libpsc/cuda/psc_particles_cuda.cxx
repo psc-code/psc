@@ -234,7 +234,12 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
   mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
-  new(mprts.sub_) cuda_mparticles(json);
+  Grid<double> grid;
+  grid.gdims = ppsc->domain.gdims;
+  grid.ldims = ldims;
+  grid.dx = dx;
+  grid.n_patches = ppsc->nr_patches;
+  new(mprts.sub_) cuda_mparticles(grid, json);
 
   // FIXME json_builder_free(obj);
 }

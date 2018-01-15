@@ -741,14 +741,14 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
-					  struct psc_mparticles *mprts)
+					  struct psc_mparticles *_mprts)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
-  psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, mprts);
+  psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, _mprts);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts).sub_;
+  mparticles_t mprts(_mprts);
 
-  cmprts->bnd_post();
+  mprts->bnd_post();
 
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {

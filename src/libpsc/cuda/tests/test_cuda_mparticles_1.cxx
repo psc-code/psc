@@ -117,7 +117,8 @@ main(void)
 				   "}                                           ");
   mrc_json_print(json, 0);
 
-  struct cuda_mparticles *cmprts = new cuda_mparticles(json);
+  Grid<double> grid;
+  struct cuda_mparticles *cmprts = new cuda_mparticles(grid, json);
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   int n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
