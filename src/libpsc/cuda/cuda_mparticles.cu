@@ -15,8 +15,9 @@
 // ctor
 
 cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
+  : grid_(grid)
 {
-  std::memset(this, 0, sizeof(*this)); // FIXME
+  //  std::memset(this, 0, sizeof(*this)); // FIXME
 
   n_patches = grid.patches.size();
   ldims = grid.ldims;

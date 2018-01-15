@@ -160,6 +160,9 @@ public:
   float *kind_m;
 
   struct cuda_mparticles_bnd bnd;
+
+protected:
+  const Grid_t& grid_;
 };
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
