@@ -64,7 +64,7 @@ psc_heating_cuda_run(struct psc_heating *heating, struct psc_mparticles *mprts_b
   assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
   struct psc_mparticles *mprts = mprts_base;
 
-  struct cuda_mparticles *cmprts = &mparticles_cuda_t(mprts)->cmprts;
+  struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts).sub_;
   assert(strcmp(psc_heating_spot_type(heating->spot), "foil") == 0);
   cuda_heating_run_foil(cmprts);
 }

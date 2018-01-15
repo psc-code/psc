@@ -166,11 +166,9 @@ struct psc_mparticles_cuda : cuda_mparticles {
   using particle_t = particle_cuda_t;
 
   psc_mparticles_cuda(mrc_json_t info)
-    : cuda_mparticles(info), cmprts(*static_cast<cuda_mparticles*>(this))
+    : cuda_mparticles(info)
   {
   }
-  
-  struct cuda_mparticles& cmprts;
 };
 
 #endif
