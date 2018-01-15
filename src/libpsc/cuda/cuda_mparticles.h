@@ -59,9 +59,10 @@ struct cuda_mparticles;
 
 struct cuda_mparticles_bnd
 {
+  ~cuda_mparticles_bnd();
+
   void setup(cuda_mparticles *cmprts);
   void free_particle_mem();
-  void destroy();
   void reserve_all(cuda_mparticles *cmprts);
 
   void scan_send_buf_total(cuda_mparticles *cmprts);

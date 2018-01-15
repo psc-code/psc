@@ -73,7 +73,6 @@ cuda_mparticles::~cuda_mparticles()
   ierr = cudaFree(d_off); cudaCheck(ierr);
 
   cuda_mparticles_free_particle_mem(this);
-  bnd.destroy();
 }
 
 // ----------------------------------------------------------------------

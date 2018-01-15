@@ -57,9 +57,9 @@ void cuda_mparticles_bnd::free_particle_mem()
 }
 
 // ----------------------------------------------------------------------
-// destroy
+// dtor
 
-void cuda_mparticles_bnd::destroy()
+cuda_mparticles_bnd::~cuda_mparticles_bnd()
 {
   cudaError_t ierr;
 
