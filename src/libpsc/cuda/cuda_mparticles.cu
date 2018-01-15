@@ -20,14 +20,12 @@ cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
-  n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  mrc_json_get_object_entry_int3(json_info, "ldims", ldims);
+  n_patches = grid.n_patches;
+  ldims = grid.ldims;
   mrc_json_get_object_entry_int3(json_info, "bs", bs);
-  double dx[3];
-  mrc_json_get_object_entry_double3(json_info, "dx", dx);
+  dx = grid.dx;
 
   for (int d = 0; d < 3; d++) {
-    this->dx[d] = dx[d];
     assert(ldims[d] % bs[d] == 0);
     b_mx[d] = ldims[d] / bs[d];
     b_dxi[d] = 1.f / (bs[d] * dx[d]);

@@ -22,14 +22,23 @@ struct Vec3 : std::array<T, 3>
   Vec3(const T *p)
   {
     for (int i = 0; i < 3; i++) {
-      new (&(*this)[i])	T(p[i]); // placement new -- not really necessary for int
+      new (&(*this)[i])	T(p[i]); // placement new -- not really necessary
     }
   }
-  
+
   Vec3(std::initializer_list<T> l)
   {
     assert(l.size() == 3);
     std::uninitialized_copy(l.begin(), l.end(), data());
+  }
+
+  // convert from different type (e.g., float -> double)
+  template<typename U>
+  Vec3(const Vec3<U>& u)
+  {
+    for (int i = 0; i < 3; i++) {
+      new (&(*this)[i])	T(u[i]); // placement new -- not really necessary
+    }
   }
   
   operator const T* () const { return data(); }

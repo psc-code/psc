@@ -25,12 +25,10 @@ prof_register(const char *name, float simd, int flops, int bytes)
 static void
 set_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
-  mrc_json_t json_info = *(mrc_json_t *) ctx;
+  const Grid<double>& grid = *static_cast<Grid<double>*>(ctx);
 
-  int ldims[3];
-  double dx[3];
-  mrc_json_get_object_entry_int3(json_info, "ldims", ldims);
-  mrc_json_get_object_entry_double3(json_info, "dx", dx);
+  Int3 ldims = grid.ldims;
+  Vec3<double> dx = grid.dx;
 
   int k = n % ldims[2];
   n /= ldims[2];
@@ -50,14 +48,12 @@ set_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
 
 void
 cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
-				     int n_patches,
-				     unsigned int *n_prts_by_patch,
-				     mrc_json_t json_info)
+				     const Grid<double>& grid,
+				     unsigned int *n_prts_by_patch)
 {
-  int ldims[3];
-  mrc_json_get_object_entry_int3(json_info, "ldims", ldims);
+  Int3 ldims = grid.ldims;
 
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < grid.n_patches; p++) {
     n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
   }
 
@@ -65,9 +61,9 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
   cmprts->resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < grid.n_patches; p++) {
     cmprts->set_particles(n_prts_by_patch[p], off, set_particle_test_1,
-			  &json_info);
+			  (void*) &grid);
     off += n_prts_by_patch[p];
   }
 }
@@ -103,10 +99,7 @@ main(void)
 {
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "
-				   "    \"n_patches\" : 1,                      "
-				   "    \"ldims\" : [ 1, 4, 2 ],                "
 				   "    \"bs\" : [ 1, 1, 1 ],                   "
-				   "    \"dx\" : [ 1.0, 10.0, 10.0 ],           "
 				   "    \"xb_by_patch\" : [ [ 0.0, 0.0, 0.0 ] ],"
 				   "    \"fnqs\" : 1.0,                         "
 				   "    \"eta\" : 1.0,                          "
@@ -117,13 +110,16 @@ main(void)
 				   "}                                           ");
   mrc_json_print(json, 0);
 
-  Grid<double> grid;
+  Grid<double> grid{};
+  grid.gdims = { 1, 4, 2 };
+  grid.ldims = { 1, 4, 2 };
+  grid.dx = { 1.0, 10.0, 10.0 };
+  grid.n_patches = 1;
   struct cuda_mparticles *cmprts = new cuda_mparticles(grid, json);
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
-  int n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  unsigned int n_prts_by_patch[n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts, n_patches, n_prts_by_patch, json_info);
+  unsigned int n_prts_by_patch[grid.n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts, grid, n_prts_by_patch);
   printf("added particles\n");
   cmprts->dump_by_patch(n_prts_by_patch);
 
@@ -132,7 +128,7 @@ main(void)
   cmprts->dump();
 
   printf("get_particles_test\n");
-  get_particles_test(cmprts, n_patches, n_prts_by_patch);
+  get_particles_test(cmprts, grid.n_patches, n_prts_by_patch);
 
   delete cmprts;
 }
