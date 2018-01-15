@@ -207,17 +207,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   }
 
   Grid_t& grid = ppsc->grid;
-  grid.gdims = ppsc->domain.gdims;
-  grid.ldims = ldims;
-  grid.dx = dx;
-  grid.fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  grid.eta = ppsc->coeff.eta;
-  grid.dt = ppsc->dt;
-  
-  grid.patches.resize(n_patches);
-  for (int p = 0; p < n_patches; p++) {
-    grid.patches[p].xb = ppsc->patch[p].xb;
-  }
 
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));

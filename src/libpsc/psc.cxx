@@ -378,11 +378,9 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
 
-  // set up index bounds,
-  // sanity checks for the decomposed domain
-  int gdims[3];
-  mrc_domain_get_global_dims(domain, gdims);
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
+
+  // set up psc->patch
   psc->patch = new psc_patch[psc->nr_patches]();
   psc_foreach_patch(psc, p) {
     struct mrc_patch_info info;
@@ -393,6 +391,29 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
       patch->off[d] = patches[p].off[d];
       patch->dx[d]  = dx[d] / (1 << info.level);
       patch->xb[d]  = patches[p].off[d] * patch->dx[d] + psc->domain.corner[d] / psc->coeff.ld;
+    }
+  }
+
+  // set up grid
+  Grid_t& grid = psc->grid;
+  mrc_domain_get_global_dims(domain, grid.gdims);
+
+  assert(psc->nr_patches > 0);
+  grid.ldims = patches[0].ldims;
+  for (int p = 1; p < psc->nr_patches; p++) {
+    assert(grid.ldims == patches[p].ldims);
+  }
+  grid.dx = dx;
+  grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  grid.eta = psc->coeff.eta;
+  grid.dt = psc->dt;
+  
+  grid.patches.resize(psc->nr_patches);
+  for (int p = 0; p < psc->nr_patches; p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(domain, p, &info);
+    for (int d = 0; d < 3; d++) {
+      grid.patches[p].xb[d] = patches[p].off[d] * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
     }
   }
 }
