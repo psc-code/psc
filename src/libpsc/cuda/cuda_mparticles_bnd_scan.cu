@@ -39,37 +39,35 @@ mprts_reorder_send_by_id(unsigned int nr_prts_send, unsigned int *d_xchg_ids,
 }
 
 
-void
-cuda_mparticles_reorder_send_by_id(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 {
-  if (cmprts->bnd.n_prts_send == 0) {
+  if (n_prts_send == 0) {
     return;
   }
 
-  int dimGrid = (cmprts->bnd.n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  int dimGrid = (n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
-    (cmprts->bnd.n_prts_send, cmprts->d_id + cmprts->n_prts - cmprts->bnd.n_prts_send,
+    (n_prts_send, cmprts->d_id + cmprts->n_prts - n_prts_send,
      cmprts->d_xi4, cmprts->d_pxi4,
      cmprts->d_xi4 + cmprts->n_prts, cmprts->d_pxi4 + cmprts->n_prts);
   cuda_sync_if_enabled();
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_reorder_send_by_id_gold
+// reorder_send_by_id_gold
 
-void
-cuda_mparticles_reorder_send_by_id_gold(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
 {
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::host_vector<unsigned int> h_id(d_id, d_id + cmprts->n_prts);
-  thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts + cmprts->bnd.n_prts_send);
-  thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + cmprts->n_prts + cmprts->bnd.n_prts_send);
+  thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts + n_prts_send);
+  thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + cmprts->n_prts + n_prts_send);
   
-  for (int n = 0; n < cmprts->bnd.n_prts_send; n++) {
-    unsigned int id = h_id[cmprts->n_prts - cmprts->bnd.n_prts_send + n];
+  for (int n = 0; n < n_prts_send; n++) {
+    unsigned int id = h_id[cmprts->n_prts - n_prts_send + n];
     h_xi4[cmprts->n_prts + n]  = h_xi4[id];
     h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
   }
@@ -79,7 +77,7 @@ cuda_mparticles_reorder_send_by_id_gold(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_reorder_send_buf_total
+// reorder_send_buf_total
 
 __global__ static void
 mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
@@ -98,21 +96,20 @@ mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
   }
 }
 
-void
-cuda_mparticles_reorder_send_buf_total(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 {
   if (cmprts->n_patches == 0)
     return;
 
   float4 *xchg_xi4 = cmprts->d_xi4 + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4 + cmprts->n_prts;
-  assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
+  assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
   
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
   
   mprts_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
-						      cmprts->d_bidx, cmprts->bnd.d_sums,
+						      cmprts->d_bidx, d_sums,
 						      cmprts->d_xi4, cmprts->d_pxi4,
 						      xchg_xi4, xchg_pxi4);
   cuda_sync_if_enabled();
@@ -165,35 +162,34 @@ void cuda_mparticles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 		       NopFunctor<K>,
 		       64, 64> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (cmprts->bnd.d_bnd_spine_sums, cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_bnd_spine_sums, cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
                        NopFunctor<K>,
                        NopFunctor<K>,
                        128, 128>
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (cmprts->bnd.d_bnd_spine_sums, cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_bnd_spine_sums, cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
   } else {
     printf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
     assert(0);
   }
   cuda_sync_if_enabled();
 
-  cuda_mparticles_reorder_send_by_id(cmprts);
+  reorder_send_by_id(cmprts);
 }
 
 // ----------------------------------------------------------------------
-// cuda_mprts_scan_send_buf_total_gold
+// scan_send_buf_total_gold
 
-void
-cuda_mparticles_scan_send_buf_total_gold(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
 {
   unsigned int n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_sums(cmprts->bnd.d_sums);
+  thrust::device_ptr<unsigned int> d_sums(this->d_sums);
   thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
+  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
   thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
   thrust::host_vector<unsigned int> h_sums(d_sums, d_sums + cmprts->n_prts);
@@ -210,6 +206,6 @@ cuda_mparticles_scan_send_buf_total_gold(struct cuda_mparticles *cmprts)
 
   thrust::copy(h_sums.begin(), h_sums.end(), d_sums);
 
-  cuda_mparticles_reorder_send_buf_total(cmprts);
+  reorder_send_buf_total(cmprts);
 }
 

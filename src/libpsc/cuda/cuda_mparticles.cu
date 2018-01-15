@@ -42,25 +42,24 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   ierr = cudaMalloc(&d_off, (n_blocks + 1) * sizeof(*d_off)); cudaCheck(ierr);
   ierr = cudaMemset(d_off, 0, (n_blocks + 1) * sizeof(*d_off)); cudaCheck(ierr);
 
-  bnd.setup(this);
+  cuda_mparticles_bnd::setup(this);
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_free_particle_mem
+// free_particle_mem
 
-static void
-cuda_mparticles_free_particle_mem(struct cuda_mparticles *cmprts)
+void cuda_mparticles::free_particle_mem()
 {
   cudaError_t ierr;
 
-  ierr = cudaFree(cmprts->d_xi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_pxi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_alt_xi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_alt_pxi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
+  ierr = cudaFree(d_xi4); cudaCheck(ierr);
+  ierr = cudaFree(d_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(d_alt_xi4); cudaCheck(ierr);
+  ierr = cudaFree(d_alt_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(d_bidx); cudaCheck(ierr);
+  ierr = cudaFree(d_id); cudaCheck(ierr);
 
-  cmprts->bnd.free_particle_mem();
+  cuda_mparticles_bnd::free_particle_mem();
 }
 
 // ----------------------------------------------------------------------
@@ -72,7 +71,7 @@ cuda_mparticles::~cuda_mparticles()
 
   ierr = cudaFree(d_off); cudaCheck(ierr);
 
-  cuda_mparticles_free_particle_mem(this);
+  free_particle_mem();
 }
 
 // ----------------------------------------------------------------------
@@ -95,7 +94,7 @@ void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
   unsigned int new_n_alloced = std::max(size, 2 * n_alloced);
 
   if (new_n_alloced > 0) {
-    cuda_mparticles_free_particle_mem(this);
+    free_particle_mem();
   }
   n_alloced = new_n_alloced;
 
@@ -106,7 +105,7 @@ void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
   ierr = cudaMalloc((void **) &d_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &d_id, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
 
-  bnd.reserve_all(this);
+  cuda_mparticles_bnd::reserve_all(this);
 }
 
 // ----------------------------------------------------------------------

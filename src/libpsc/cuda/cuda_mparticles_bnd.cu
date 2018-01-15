@@ -72,24 +72,23 @@ cuda_mparticles_bnd::~cuda_mparticles_bnd()
 // ----------------------------------------------------------------------
 // reserve_all
 
-void cuda_mparticles_bnd::reserve_all(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
   int n_alloced = cmprts->n_alloced;
-  ierr = cudaMalloc((void **) &cmprts->bnd.d_alt_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->bnd.d_sums, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &d_alt_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &d_sums, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_find_n_send
+// find_n_send
 
-void
-cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::find_n_send(cuda_mparticles *cmprts)
 {
   unsigned int n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
+  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
   thrust::host_vector<unsigned int> h_spine_sums(n_blocks + 1);
 
   thrust::copy(d_spine_sums + n_blocks * 10,
@@ -99,34 +98,32 @@ cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts)
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     unsigned int n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
-    cmprts->bnd.bpatch[p].n_send = n_send - off;
+    bpatch[p].n_send = n_send - off;
     off = n_send;
   }
-  cmprts->bnd.n_prts_send = off;
+  n_prts_send = off;
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_copy_from_dev_and_convert
+// copy_from_dev_and_convert
 
-void
-cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
 
-  unsigned int n_send = cmprts->bnd.n_prts_send;
-  thrust::host_vector<float4> h_bnd_xi4(n_send);
-  thrust::host_vector<float4> h_bnd_pxi4(n_send);
+  thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
+  thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
 
-  assert(cmprts->n_prts + n_send <= cmprts->n_alloced);
+  assert(cmprts->n_prts + n_prts_send <= cmprts->n_alloced);
 
-  thrust::copy(d_xi4  + cmprts->n_prts, d_xi4  + cmprts->n_prts + n_send, h_bnd_xi4.begin());
-  thrust::copy(d_pxi4 + cmprts->n_prts, d_pxi4 + cmprts->n_prts + n_send, h_bnd_pxi4.begin());
+  thrust::copy(d_xi4  + cmprts->n_prts, d_xi4  + cmprts->n_prts + n_prts_send, h_bnd_xi4.begin());
+  thrust::copy(d_pxi4 + cmprts->n_prts, d_pxi4 + cmprts->n_prts + n_prts_send, h_bnd_pxi4.begin());
 
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    psc_particle_cuda_buf_t& buf = cmprts->bnd.bpatch[p].buf;
-    unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
+    psc_particle_cuda_buf_t& buf = bpatch[p].buf;
+    unsigned int n_send = bpatch[p].n_send;
     buf.reserve(n_send);
     buf.resize(n_send);
 
@@ -146,20 +143,19 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_convert_and_copy_to_dev
+// convert_and_copy_to_dev
 
-void
-cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_alt_bidx(cmprts->bnd.d_alt_bidx);
-  thrust::device_ptr<unsigned int> d_bnd_spine_cnts(cmprts->bnd.d_bnd_spine_cnts);
+  thrust::device_ptr<unsigned int> d_alt_bidx(this->d_alt_bidx);
+  thrust::device_ptr<unsigned int> d_bnd_spine_cnts(this->d_bnd_spine_cnts);
   
   unsigned int n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    n_recv += cmprts->bnd.bpatch[p].buf.size();
+    n_recv += bpatch[p].buf.size();
   }
 
   thrust::host_vector<float4> h_bnd_xi4(n_recv);
@@ -171,11 +167,11 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
   
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    int n_recv = cmprts->bnd.bpatch[p].buf.size();
-    cmprts->bnd.bpatch[p].n_recv = n_recv;
+    int n_recv = bpatch[p].buf.size();
+    bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      particle_cuda_t *prt = &cmprts->bnd.bpatch[p].buf[n];
+      particle_cuda_t *prt = &bpatch[p].buf[n];
       h_bnd_xi4[n + off].x  = prt->xi;
       h_bnd_xi4[n + off].y  = prt->yi;
       h_bnd_xi4[n + off].z  = prt->zi;
@@ -225,25 +221,24 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
   thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_alt_bidx + cmprts->n_prts);
 
   cmprts->n_prts += n_recv;
-  cmprts->bnd.n_prts_recv = n_recv;
+  n_prts_recv = n_recv;
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_sort
+// cuda_mparticles_bnd::sort
 
-void
-cuda_mparticles_sort(struct cuda_mparticles *cmprts, int *n_prts_by_patch)
+void cuda_mparticles_bnd::sort(cuda_mparticles *cmprts, int *n_prts_by_patch)
 {
-  cmprts->bnd.sort_pairs_device(cmprts);
+  sort_pairs_device(cmprts);
 
   for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] += cmprts->bnd.bpatch[p].n_recv - cmprts->bnd.bpatch[p].n_send;
+    n_prts_by_patch[p] += bpatch[p].n_recv - bpatch[p].n_send;
   }
-  cmprts->n_prts -= cmprts->bnd.n_prts_send;
+  cmprts->n_prts -= n_prts_send;
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_update_offsets
+// update_offsets
 
 __global__ static void
 mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_spine_sums)
@@ -255,23 +250,21 @@ mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_s
   }
 }
 
-void
-cuda_mparticles_update_offsets(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::update_offsets(cuda_mparticles *cmprts)
 {
   unsigned int n_blocks = cmprts->n_blocks;
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_blocks, cmprts->d_off, cmprts->bnd.d_bnd_spine_sums);
+    (n_blocks, cmprts->d_off, d_bnd_spine_sums);
   cuda_sync_if_enabled();
 }
 
-void
-cuda_mparticles_update_offsets_gold(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
 {
   unsigned int n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
+  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
   thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
 
   thrust::host_vector<unsigned int> h_spine_sums(d_spine_sums, d_spine_sums + 1 + n_blocks * (10 + 1));
@@ -303,19 +296,19 @@ void cuda_mparticles::bnd_prep()
   //prof_stop(pr_A);
   
   prof_start(pr_B0);
-  bnd.spine_reduce(this);
+  spine_reduce(this);
   prof_stop(pr_B0);
 
   prof_start(pr_B1);
-  cuda_mparticles_find_n_send(this);
+  find_n_send(this);
   prof_stop(pr_B1);
 
   prof_start(pr_B);
-  bnd.scan_send_buf_total(this);
+  scan_send_buf_total(this);
   prof_stop(pr_B);
 
   prof_start(pr_D);
-  cuda_mparticles_copy_from_dev_and_convert(this);
+  copy_from_dev_and_convert(this);
   prof_stop(pr_D);
 }
 
@@ -333,19 +326,19 @@ void cuda_mparticles::bnd_post()
   }
 
   prof_start(pr_A);
-  cuda_mparticles_convert_and_copy_to_dev(this);
+  convert_and_copy_to_dev(this);
   prof_stop(pr_A);
 
   prof_start(pr_D);
   unsigned int n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
-  cuda_mparticles_sort(this, (int *) n_prts_by_patch); // FIXME cast
+  sort(this, (int *) n_prts_by_patch); // FIXME cast
   // FIXME, is this necessary, or doesn't update_offsets() do this, too?
   resize_all(n_prts_by_patch);
   prof_stop(pr_D);
 
   prof_start(pr_D1);
-  cuda_mparticles_update_offsets(this);
+  update_offsets(this);
   prof_stop(pr_D1);
   
   prof_start(pr_E);
@@ -363,6 +356,6 @@ void cuda_mparticles::bnd_post()
 
 psc_particle_cuda_buf_t *cuda_mparticles::bnd_get_buffer(int p)
 {
-  return &bnd.bpatch[p].buf;
+  return &bpatch[p].buf;
 }
 

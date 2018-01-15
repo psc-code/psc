@@ -66,11 +66,26 @@ struct cuda_mparticles_bnd
   void reserve_all(cuda_mparticles *cmprts);
 
   void scan_send_buf_total(cuda_mparticles *cmprts);
+  void scan_send_buf_total_gold(cuda_mparticles *cmprts);
   void spine_reduce(cuda_mparticles *cmprts);
   void sort_pairs_device(cuda_mparticles *cmprts);
 
   void spine_reduce_gold(cuda_mparticles *cmprts);
   void sort_pairs_gold(cuda_mparticles *cmprts);
+
+  void reorder_send_by_id(struct cuda_mparticles *cmprts);
+  void find_n_send(cuda_mparticles *cmprts);
+  void copy_from_dev_and_convert(cuda_mparticles *cmprts);
+  void reorder_send_by_id_gold(cuda_mparticles *cmprts);
+  void convert_and_copy_to_dev(cuda_mparticles *cmprts);
+  void sort(cuda_mparticles *cmprts, int *n_prts_by_patch);
+  void update_offsets(cuda_mparticles *cmprts);
+  void update_offsets_gold(cuda_mparticles *cmprts);
+  void count_received(cuda_mparticles *cmprts);
+  void count_received_gold(cuda_mparticles *cmprts);
+  void scan_scatter_received(cuda_mparticles *cmprts);
+  void scan_scatter_received_gold(cuda_mparticles *cmprts);
+  void reorder_send_buf_total(cuda_mparticles *cmprts);
   
 public:
   unsigned int *d_alt_bidx;
@@ -88,7 +103,7 @@ public:
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
-struct cuda_mparticles
+struct cuda_mparticles : cuda_mparticles_bnd
 {
 public:
   using particle_t = particle_cuda_t;
@@ -98,6 +113,8 @@ public:
   cuda_mparticles(const Grid_t& grid, const Int3& bs);
   cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
+
+  void free_particle_mem();
 
   void reserve_all(const unsigned int *n_prts_by_patch);
   void get_size_all(unsigned int *n_prts_by_patch);
@@ -156,8 +173,6 @@ public:
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order
-
-  struct cuda_mparticles_bnd bnd;
 
 public:
   const Grid_t& grid_;
