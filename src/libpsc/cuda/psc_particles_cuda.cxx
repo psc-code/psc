@@ -234,7 +234,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
   mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
-  new(mprts.sub_) psc_mparticles_cuda(json);
+  new(mprts.sub_) cuda_mparticles(json);
 
   // FIXME json_builder_free(obj);
 }
@@ -247,7 +247,7 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 {
   mparticles_cuda_t mprts(_mprts);
   
-  mprts.sub_->~psc_mparticles_cuda();
+  mprts.sub_->~cuda_mparticles();
 }
 
 // ----------------------------------------------------------------------
@@ -454,7 +454,7 @@ const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
 struct psc_mparticles_ops_cuda : psc_mparticles_ops {
   psc_mparticles_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(struct psc_mparticles_cuda);
+    size                    = sizeof(struct cuda_mparticles);
     methods                 = psc_mparticles_cuda_methods;
     setup                   = psc_mparticles_cuda_setup;
     destroy                 = psc_mparticles_cuda_destroy;

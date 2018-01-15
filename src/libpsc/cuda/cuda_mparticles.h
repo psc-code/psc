@@ -81,6 +81,8 @@ void cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts);
 struct cuda_mparticles
 {
 public:
+  using particle_t = particle_cuda_t;
+
   cuda_mparticles(mrc_json_t json);
   cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
@@ -158,17 +160,5 @@ public:
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 void cuda_mparticles_reorder(struct cuda_mparticles *cmprts);
-
-// ======================================================================
-// psc_mparticles_cuda
-
-struct psc_mparticles_cuda : cuda_mparticles {
-  using particle_t = particle_cuda_t;
-
-  psc_mparticles_cuda(mrc_json_t info)
-    : cuda_mparticles(info)
-  {
-  }
-};
 
 #endif
