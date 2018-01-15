@@ -14,7 +14,7 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles::cuda_mparticles(const Grid<double>& grid, const Int3& bs)
+cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
 {
   std::memset(this, 0, sizeof(*this)); // FIXME
 

@@ -6,10 +6,10 @@
 #include <vector>
 
 // ======================================================================
-// Grid
+// Grid_
 
 template<class T>
-struct Grid
+struct Grid_
 {
   using real_t = T;
   using Real3 = Vec3<real_t>;
@@ -47,8 +47,8 @@ struct Grid
     const char *name;
   };
   
-  Grid() = default;
-  Grid(const Grid& grid) = delete;
+  Grid_() = default;
+  Grid_(const Grid_& grid) = delete;
 
   Int3 gdims;
   Int3 ldims;
@@ -59,6 +59,8 @@ struct Grid
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
 };
+
+using Grid_t = Grid_<double>;
 
 #endif
 

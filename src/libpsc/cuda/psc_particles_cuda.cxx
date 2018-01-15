@@ -206,7 +206,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  Grid<double> grid;
+  Grid_t grid;
   grid.gdims = ppsc->domain.gdims;
   grid.ldims = ldims;
   grid.dx = dx;
@@ -220,7 +220,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   }
 
   for (int k = 0; k < ppsc->nr_kinds; k++) {
-    grid.kinds.push_back(Grid<double>::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
+    grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
   new(mprts.sub_) cuda_mparticles(grid, bs);

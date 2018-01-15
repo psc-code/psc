@@ -87,7 +87,7 @@ public:
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
 
-  cuda_mparticles(const Grid<double>& grid, const Int3& bs);
+  cuda_mparticles(const Grid_t& grid, const Int3& bs);
   cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
 

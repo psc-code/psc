@@ -25,7 +25,7 @@ prof_register(const char *name, float simd, int flops, int bytes)
 static void
 set_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
-  const Grid<double>& grid = *static_cast<Grid<double>*>(ctx);
+  const Grid_t& grid = *static_cast<Grid_t*>(ctx);
 
   Int3 ldims = grid.ldims;
   Vec3<double> dx = grid.dx;
@@ -48,7 +48,7 @@ set_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
 
 void
 cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
-				     const Grid<double>& grid,
+				     const Grid_t& grid,
 				     unsigned int *n_prts_by_patch)
 {
   Int3 ldims = grid.ldims;
@@ -97,7 +97,7 @@ get_particles_test(struct cuda_mparticles *cmprts, int n_patches,
 int
 main(void)
 {
-  Grid<double> grid{};
+  Grid_t grid{};
   grid.gdims = { 1, 4, 2 };
   grid.ldims = { 1, 4, 2 };
   grid.dx = { 1., 10., 10. };
@@ -105,12 +105,12 @@ main(void)
   grid.eta = 1.;
   grid.dt = 1.;
 
-  Grid<double>::Patch patch{};
+  Grid_t::Patch patch{};
   patch.xb = { 0., 0., 0. };
   grid.patches.push_back(patch);
 
-  grid.kinds.push_back(Grid<double>::Kind(-1.,  1., "electron"));
-  grid.kinds.push_back(Grid<double>::Kind( 1., 25., "ion"));
+  grid.kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid.kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   Int3 bs = { 1, 1, 1 };
   
