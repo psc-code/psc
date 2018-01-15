@@ -212,14 +212,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   mrc_json_object_push(json, "info", info);
   mrc_json_object_push_integer_array(info, "bs", 3, bs);
 
-  double kind_q[ppsc->nr_kinds], kind_m[ppsc->nr_kinds];
-  for (int k = 0; k < ppsc->nr_kinds; k++) {
-    kind_q[k] = ppsc->kinds[k].q;
-    kind_m[k] = ppsc->kinds[k].m;
-  }
-  mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
-  mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
-
   Grid<double> grid;
   grid.gdims = ppsc->domain.gdims;
   grid.ldims = ldims;
@@ -232,6 +224,11 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   for (int p = 0; p < n_patches; p++) {
     grid.patches[p].xb = ppsc->patch[p].xb;
   }
+
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
+    grid.kinds.push_back(Grid<double>::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
+  }
+
   new(mprts.sub_) cuda_mparticles(grid, json);
 
   // FIXME json_builder_free(obj);

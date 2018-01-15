@@ -60,7 +60,38 @@ struct Grid
   {
     Real3 xb;
   };
+
+  struct Kind
+  {
+    Kind(real_t q_, real_t m_, const char *name_)
+      : q(q_), m(m_), name(strdup(name_))
+    {
+    };
+
+    Kind(const Kind& k)
+      : q(k.q), m(k.m), name(strdup(k.name))
+    {
+    }
+
+    Kind(Kind&& k)
+      : q(k.q), m(k.m), name(k.name)
+    {
+      k.name = nullptr;
+    }
+
+    ~Kind()
+    {
+      free((void*) name);
+    }
+    
+    real_t q;
+    real_t m;
+    const char *name;
+  };
   
+  Grid() = default;
+  Grid(const Grid& grid) = delete;
+
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
@@ -68,9 +99,7 @@ struct Grid
   real_t eta;
   real_t dt;
   std::vector<Patch> patches;
-
-  Grid() = default;
-  Grid(const Grid& grid) = delete;
+  std::vector<Kind> kinds;
 };
 
 

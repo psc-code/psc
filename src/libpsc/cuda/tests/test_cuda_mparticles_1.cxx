@@ -100,8 +100,6 @@ main(void)
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "
 				   "    \"bs\" : [ 1, 1, 1 ],                   "
-				   "    \"kind_q\" : [ -1.0, 1.0 ],             "
-				   "    \"kind_m\" : [  1.0, 25.0 ]             "
 				   "  }                                         "
 				   "}                                           ");
   mrc_json_print(json, 0);
@@ -118,7 +116,8 @@ main(void)
   patch.xb = { 0., 0., 0. };
   grid.patches.push_back(patch);
 
-
+  grid.kinds.push_back(Grid<double>::Kind(-1.,  1., "electron"));
+  grid.kinds.push_back(Grid<double>::Kind( 1., 25., "ion"));
   
   struct cuda_mparticles *cmprts = new cuda_mparticles(grid, json);
 

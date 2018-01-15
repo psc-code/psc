@@ -25,34 +25,28 @@ cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
   mrc_json_get_object_entry_int3(json_info, "bs", bs);
   dx = grid.dx;
 
-  for (int d = 0; d < 3; d++) {
-    assert(ldims[d] % bs[d] == 0);
-    b_mx[d] = ldims[d] / bs[d];
-    b_dxi[d] = 1.f / (bs[d] * dx[d]);
-  }
+  fnqs = grid.fnqs;
+  eta  = grid.eta;
+  dt   = grid.dt;
 
   xb_by_patch.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
     xb_by_patch[p] = grid.patches[p].xb;
   }
 
-  fnqs = grid.fnqs;
-  eta  = grid.eta;
-  dt   = grid.dt;
-
-  mrc_json_t json_kind_q = mrc_json_get_object_entry(json_info, "kind_q");
-  n_kinds = mrc_json_get_array_length(json_kind_q);
+  n_kinds = grid.kinds.size();
   kind_q = new float[n_kinds];
-  // FIXME, could use a mrc_json helper
-  for (int k = 0; k < n_kinds; k++) {
-    kind_q[k] = mrc_json_get_array_entry_double(json_kind_q, k);
-  }
-  mrc_json_t json_kind_m = mrc_json_get_object_entry(json_info, "kind_m");
-  assert(n_kinds == mrc_json_get_array_length(json_kind_m));
   kind_m = new float[n_kinds];
-  // FIXME, could use a mrc_json helper
+
   for (int k = 0; k < n_kinds; k++) {
-    kind_m[k] = mrc_json_get_array_entry_double(json_kind_m, k);
+    kind_q[k] = grid.kinds[k].q;
+    kind_m[k] = grid.kinds[k].m;
+  }
+
+  for (int d = 0; d < 3; d++) {
+    assert(ldims[d] % bs[d] == 0);
+    b_mx[d] = ldims[d] / bs[d];
+    b_dxi[d] = 1.f / (bs[d] * dx[d]);
   }
 
   n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
