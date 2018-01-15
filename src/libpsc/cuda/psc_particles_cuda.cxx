@@ -210,21 +210,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 
   mrc_json_t info = mrc_json_object_new(0);
   mrc_json_object_push(json, "info", info);
-  mrc_json_object_push_integer(info, "n_patches", n_patches);
-  mrc_json_object_push_integer_array(info, "ldims", 3, ldims);
   mrc_json_object_push_integer_array(info, "bs", 3, bs);
-  mrc_json_object_push_double_array(info, "dx", 3, dx);
-  
-  mrc_json_t json_xb_by_patch = mrc_json_array_new(n_patches);
-  mrc_json_object_push(info, "xb_by_patch", json_xb_by_patch);
-  for (int p = 0; p < n_patches; p++) {
-    mrc_json_array_push_double_array(json_xb_by_patch, 3, ppsc->patch[p].xb);
-  }
-
-  double fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  mrc_json_object_push_double(info, "fnqs", fnqs);
-  mrc_json_object_push_double(info, "eta", ppsc->coeff.eta);
-  mrc_json_object_push_double(info, "dt", ppsc->dt);
 
   double kind_q[ppsc->nr_kinds], kind_m[ppsc->nr_kinds];
   for (int k = 0; k < ppsc->nr_kinds; k++) {
@@ -238,6 +224,10 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   grid.gdims = ppsc->domain.gdims;
   grid.ldims = ldims;
   grid.dx = dx;
+  grid.fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  grid.eta = ppsc->coeff.eta;
+  grid.dt = ppsc->dt;
+  
   grid.patches.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
     grid.patches[p].xb = ppsc->patch[p].xb;

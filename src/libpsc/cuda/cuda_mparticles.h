@@ -64,6 +64,9 @@ struct Grid
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
+  real_t fnqs;
+  real_t eta;
+  real_t dt;
   std::vector<Patch> patches;
 
   Grid() = default;

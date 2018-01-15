@@ -100,9 +100,6 @@ main(void)
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "
 				   "    \"bs\" : [ 1, 1, 1 ],                   "
-				   "    \"fnqs\" : 1.0,                         "
-				   "    \"eta\" : 1.0,                          "
-				   "    \"dt\" : 1.0,                           "
 				   "    \"kind_q\" : [ -1.0, 1.0 ],             "
 				   "    \"kind_m\" : [  1.0, 25.0 ]             "
 				   "  }                                         "
@@ -113,10 +110,15 @@ main(void)
   grid.gdims = { 1, 4, 2 };
   grid.ldims = { 1, 4, 2 };
   grid.dx = { 1., 10., 10. };
+  grid.fnqs = 1.;
+  grid.eta = 1.;
+  grid.dt = 1.;
 
   Grid<double>::Patch patch{};
   patch.xb = { 0., 0., 0. };
   grid.patches.push_back(patch);
+
+
   
   struct cuda_mparticles *cmprts = new cuda_mparticles(grid, json);
 

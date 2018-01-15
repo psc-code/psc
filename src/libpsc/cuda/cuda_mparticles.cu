@@ -36,9 +36,9 @@ cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
     xb_by_patch[p] = grid.patches[p].xb;
   }
 
-  fnqs = mrc_json_get_object_entry_double(json_info, "fnqs");
-  eta  = mrc_json_get_object_entry_double(json_info, "eta");
-  dt   = mrc_json_get_object_entry_double(json_info, "dt");
+  fnqs = grid.fnqs;
+  eta  = grid.eta;
+  dt   = grid.dt;
 
   mrc_json_t json_kind_q = mrc_json_get_object_entry(json_info, "kind_q");
   n_kinds = mrc_json_get_array_length(json_kind_q);
