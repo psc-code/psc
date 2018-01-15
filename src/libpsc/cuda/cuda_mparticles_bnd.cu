@@ -27,53 +27,52 @@
 #include <cstdio>
 #include <cassert>
 
-// ----------------------------------------------------------------------
-// cuda_mparticles_bnd_setup
+// ======================================================================
+// cuda_mparticles_bnd
 
-void
-cuda_mparticles_bnd_setup(struct cuda_mparticles *cmprts)
+// ----------------------------------------------------------------------
+// setup
+
+void cuda_mparticles_bnd::setup(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
-  ierr = cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_cnts,
+  ierr = cudaMalloc((void **) &d_bnd_spine_cnts,
 		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_sums,
+  ierr = cudaMalloc((void **) &d_bnd_spine_sums,
 		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
 
-  cmprts->bnd.bpatch = new cuda_bnd[cmprts->n_patches];
+  bpatch = new cuda_bnd[cmprts->n_patches];
 }  
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_bnd_free_particle_mem
+// free_particle_mem
 
-void
-cuda_mparticles_bnd_free_particle_mem(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::free_particle_mem()
 {
   cudaError_t ierr;
 
-  ierr = cudaFree(cmprts->bnd.d_alt_bidx); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->bnd.d_sums); cudaCheck(ierr);
+  ierr = cudaFree(d_alt_bidx); cudaCheck(ierr);
+  ierr = cudaFree(d_sums); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_bnd_destroy
+// destroy
 
-void
-cuda_mparticles_bnd_destroy(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::destroy()
 {
   cudaError_t ierr;
 
-  ierr = cudaFree(cmprts->bnd.d_bnd_spine_cnts); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->bnd.d_bnd_spine_sums); cudaCheck(ierr);
+  ierr = cudaFree(d_bnd_spine_cnts); cudaCheck(ierr);
+  ierr = cudaFree(d_bnd_spine_sums); cudaCheck(ierr);
 
-  delete[] cmprts->bnd.bpatch;
+  delete[] bpatch;
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_bnd_reserve_all
+// reserve_all
 
-void
-cuda_mparticles_bnd_reserve_all(struct cuda_mparticles *cmprts)
+void cuda_mparticles_bnd::reserve_all(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
@@ -235,7 +234,7 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
 void
 cuda_mparticles_sort(struct cuda_mparticles *cmprts, int *n_prts_by_patch)
 {
-  cuda_mparticles_sort_pairs_device(cmprts);
+  cmprts->bnd.sort_pairs_device(cmprts);
 
   for (int p = 0; p < cmprts->n_patches; p++) {
     n_prts_by_patch[p] += cmprts->bnd.bpatch[p].n_recv - cmprts->bnd.bpatch[p].n_send;
@@ -304,7 +303,7 @@ void cuda_mparticles::bnd_prep()
   //prof_stop(pr_A);
   
   prof_start(pr_B0);
-  cuda_mparticles_spine_reduce(this);
+  bnd.spine_reduce(this);
   prof_stop(pr_B0);
 
   prof_start(pr_B1);
@@ -312,7 +311,7 @@ void cuda_mparticles::bnd_prep()
   prof_stop(pr_B1);
 
   prof_start(pr_B);
-  cuda_mparticles_scan_send_buf_total(this);
+  bnd.scan_send_buf_total(this);
   prof_stop(pr_B);
 
   prof_start(pr_D);

@@ -42,7 +42,7 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   ierr = cudaMalloc(&d_off, (n_blocks + 1) * sizeof(*d_off)); cudaCheck(ierr);
   ierr = cudaMemset(d_off, 0, (n_blocks + 1) * sizeof(*d_off)); cudaCheck(ierr);
 
-  cuda_mparticles_bnd_setup(this);
+  bnd.setup(this);
 }
 
 // ----------------------------------------------------------------------
@@ -60,7 +60,7 @@ cuda_mparticles_free_particle_mem(struct cuda_mparticles *cmprts)
   ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
   ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
 
-  cuda_mparticles_bnd_free_particle_mem(cmprts);
+  cmprts->bnd.free_particle_mem();
 }
 
 // ----------------------------------------------------------------------
@@ -73,7 +73,7 @@ cuda_mparticles::~cuda_mparticles()
   ierr = cudaFree(d_off); cudaCheck(ierr);
 
   cuda_mparticles_free_particle_mem(this);
-  cuda_mparticles_bnd_destroy(this);
+  bnd.destroy();
 }
 
 // ----------------------------------------------------------------------
@@ -107,7 +107,7 @@ void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
   ierr = cudaMalloc((void **) &d_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &d_id, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
 
-  cuda_mparticles_bnd_reserve_all(this);
+  bnd.reserve_all(this);
 }
 
 // ----------------------------------------------------------------------
