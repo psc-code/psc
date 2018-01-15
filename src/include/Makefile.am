@@ -42,7 +42,6 @@ include_HEADERS = \
 	psc_particles_as_fortran.h \
 	psc_particles_as_single.h \
 	psc_particles_cbe.h \
-	psc_particles_cuda.h \
 	psc_particles_double.h \
 	psc_particles_fortran.h \
 	psc_particles_mix.h \

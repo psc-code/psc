@@ -79,8 +79,8 @@ CUDA_DEPS = \
         cuda_mparticles.h \
         cuda_mfields.h \
 	cuda_bits.h \
-	../../include/cuda_iface.h  \
-	../../include/psc_particles_cuda.h 
+	cuda_iface.h  \
+	psc_particles_cuda.h 
 
 cuda_moments_1st_nc.lo: cuda_mparticles_const.h
 cuda_push_mprts_yz.lo: cuda_mparticles_const.h
