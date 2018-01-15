@@ -142,7 +142,6 @@ public:
   unsigned int n_blocks_per_patch;// number of blocks per patch
   unsigned int n_blocks;          // number of blocks in all patches in mprts
 
-  Int3 ldims;                     // number of cells per direction in each patch
   Int3 b_mx;                      // number of blocks per direction in each patch
   Int3 bs;
   Real3 b_dxi;                    // inverse of block size (in actual length units)

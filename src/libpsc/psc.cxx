@@ -401,7 +401,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   assert(psc->nr_patches > 0);
   grid.ldims = patches[0].ldims;
   for (int p = 1; p < psc->nr_patches; p++) {
-    assert(grid.ldims == patches[p].ldims);
+    assert(grid.ldims == Int3(patches[p].ldims));
   }
   grid.dx = dx;
   grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;

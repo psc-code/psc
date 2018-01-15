@@ -20,7 +20,6 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   //  std::memset(this, 0, sizeof(*this)); // FIXME
 
   n_patches = grid.patches.size();
-  ldims = grid.ldims;
 
   xb_by_patch.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
@@ -30,8 +29,8 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   this->bs = bs;
 
   for (int d = 0; d < 3; d++) {
-    assert(ldims[d] % bs[d] == 0);
-    b_mx[d] = ldims[d] / bs[d];
+    assert(grid.ldims[d] % bs[d] == 0);
+    b_mx[d] = grid.ldims[d] / bs[d];
     b_dxi[d] = 1.f / (bs[d] * grid.dx[d]);
   }
 

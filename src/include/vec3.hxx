@@ -40,6 +40,11 @@ struct Vec3 : std::array<T, 3>
   
   operator const T* () const { return data(); }
   operator T* ()             { return data(); }
+
+  bool operator==(const Vec3& other) const
+  {
+    return *static_cast<const Base*>(this) == other;
+  }
 };
 
 using Int3 = Vec3<int>;
