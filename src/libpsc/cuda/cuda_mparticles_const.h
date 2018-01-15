@@ -46,10 +46,11 @@ cuda_mparticles_const_set(struct cuda_mparticles *cmprts)
   c.fnqzs = grid.dx[2] * c.fnqs / grid.dt;
   c.dqs = .5f * grid.eta * grid.dt;
 
-  assert(cmprts->n_kinds <= MAX_KINDS);
-  for (int k = 0; k < cmprts->n_kinds; k++) {
-    c.dq[k] = c.dqs * cmprts->kind_q[k] / cmprts->kind_m[k];
-    c.q_inv[k] = 1.f / cmprts->kind_q[k];
+  int n_kinds = grid.kinds.size();
+  assert(n_kinds <= MAX_KINDS);
+  for (int k = 0; k < n_kinds; k++) {
+    c.dq[k] = c.dqs * grid.kinds[k].q / grid.kinds[k].m;
+    c.q_inv[k] = 1.f / grid.kinds[k].q;
   }
 
   cudaError_t ierr = cudaMemcpyToSymbol(d_cmprts_const, &c, sizeof(c)); cudaCheck(ierr);

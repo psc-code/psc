@@ -27,15 +27,6 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
     xb_by_patch[p] = grid.patches[p].xb;
   }
 
-  n_kinds = grid.kinds.size();
-  kind_q = new float[n_kinds];
-  kind_m = new float[n_kinds];
-
-  for (int k = 0; k < n_kinds; k++) {
-    kind_q[k] = grid.kinds[k].q;
-    kind_m[k] = grid.kinds[k].m;
-  }
-
   this->bs = bs;
 
   for (int d = 0; d < 3; d++) {
@@ -84,9 +75,6 @@ cuda_mparticles::~cuda_mparticles()
 
   cuda_mparticles_free_particle_mem(this);
   cuda_mparticles_bnd_destroy(this);
-  
-  delete[] kind_q;
-  delete[] kind_m;
 }
 
 // ----------------------------------------------------------------------

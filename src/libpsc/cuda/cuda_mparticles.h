@@ -150,10 +150,6 @@ public:
 
   bool need_reorder;              // particles haven't yet been put into their sorted order
 
-  int n_kinds;
-  float *kind_q;
-  float *kind_m;
-
   struct cuda_mparticles_bnd bnd;
 
 public:
