@@ -14,15 +14,12 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
+cuda_mparticles::cuda_mparticles(const Grid<double>& grid, const Int3& bs)
 {
   std::memset(this, 0, sizeof(*this)); // FIXME
 
-  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
-  
   n_patches = grid.patches.size();
   ldims = grid.ldims;
-  mrc_json_get_object_entry_int3(json_info, "bs", bs);
   dx = grid.dx;
 
   fnqs = grid.fnqs;
@@ -42,6 +39,8 @@ cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
     kind_q[k] = grid.kinds[k].q;
     kind_m[k] = grid.kinds[k].m;
   }
+
+  this->bs = bs;
 
   for (int d = 0; d < 3; d++) {
     assert(ldims[d] % bs[d] == 0);

@@ -97,13 +97,6 @@ get_particles_test(struct cuda_mparticles *cmprts, int n_patches,
 int
 main(void)
 {
-  mrc_json_t json = mrc_json_parse("{                                           "
-				   "  \"info\" : {                              "
-				   "    \"bs\" : [ 1, 1, 1 ],                   "
-				   "  }                                         "
-				   "}                                           ");
-  mrc_json_print(json, 0);
-
   Grid<double> grid{};
   grid.gdims = { 1, 4, 2 };
   grid.ldims = { 1, 4, 2 };
@@ -118,8 +111,10 @@ main(void)
 
   grid.kinds.push_back(Grid<double>::Kind(-1.,  1., "electron"));
   grid.kinds.push_back(Grid<double>::Kind( 1., 25., "ion"));
+
+  Int3 bs = { 1, 1, 1 };
   
-  struct cuda_mparticles *cmprts = new cuda_mparticles(grid, json);
+  struct cuda_mparticles *cmprts = new cuda_mparticles(grid, bs);
 
   unsigned int n_prts_by_patch[grid.patches.size()];
   cuda_mparticles_add_particles_test_1(cmprts, grid, n_prts_by_patch);

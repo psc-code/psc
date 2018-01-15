@@ -206,12 +206,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  mrc_json_t json = mrc_json_object_new(0);
-
-  mrc_json_t info = mrc_json_object_new(0);
-  mrc_json_object_push(json, "info", info);
-  mrc_json_object_push_integer_array(info, "bs", 3, bs);
-
   Grid<double> grid;
   grid.gdims = ppsc->domain.gdims;
   grid.ldims = ldims;
@@ -229,9 +223,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     grid.kinds.push_back(Grid<double>::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
-  new(mprts.sub_) cuda_mparticles(grid, json);
-
-  // FIXME json_builder_free(obj);
+  new(mprts.sub_) cuda_mparticles(grid, bs);
 }
 
 // ----------------------------------------------------------------------
