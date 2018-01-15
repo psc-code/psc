@@ -168,13 +168,9 @@ extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_vay_ops;
 extern struct psc_push_particles_ops psc_push_particles_sse2_ops;
 extern struct psc_push_particles_ops psc_push_particles_cbe_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_2x2_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_4x4_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_8x8_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_2x2_gmem_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_4x4_gmem_cuda_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_8x8_gmem_cuda_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vb_cuda_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec3d_cuda_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec3d_gmem_cuda_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_cuda2_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_cuda2_host_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_acc_ops;
@@ -204,13 +200,9 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cbe_ops);
 #endif
 #ifdef USE_CUDA
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_4x4_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_2x2_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_4x4_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_8x8_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_2x2_gmem_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_4x4_gmem_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_8x8_gmem_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_gmem_cuda_ops);
 #endif
 #ifdef USE_CUDA2
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_cuda2_host_ops);

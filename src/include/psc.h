@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <cmath>
+#include <vector>
 
 BEGIN_C_DECLS
 
