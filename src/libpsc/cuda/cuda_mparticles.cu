@@ -21,11 +21,6 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
 
   n_patches = grid.patches.size();
   ldims = grid.ldims;
-  dx = grid.dx;
-
-  fnqs = grid.fnqs;
-  eta  = grid.eta;
-  dt   = grid.dt;
 
   xb_by_patch.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
@@ -46,7 +41,7 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   for (int d = 0; d < 3; d++) {
     assert(ldims[d] % bs[d] == 0);
     b_mx[d] = ldims[d] / bs[d];
-    b_dxi[d] = 1.f / (bs[d] * dx[d]);
+    b_dxi[d] = 1.f / (bs[d] * grid.dx[d]);
   }
 
   n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];

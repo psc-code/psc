@@ -145,15 +145,10 @@ public:
   Int3 ldims;                     // number of cells per direction in each patch
   Int3 b_mx;                      // number of blocks per direction in each patch
   Int3 bs;
-  Real3 dx;                       // cell size (in actual length units)
   Real3 b_dxi;                    // inverse of block size (in actual length units)
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order
-
-  float fnqs;                     // normalization constant
-  float eta;                      // another normalization constant
-  float dt;                       // timestep (FIXME, shouldn't really be here, but it's constant...)
 
   int n_kinds;
   float *kind_q;
@@ -161,7 +156,7 @@ public:
 
   struct cuda_mparticles_bnd bnd;
 
-protected:
+public:
   const Grid_t& grid_;
 };
 
