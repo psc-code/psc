@@ -58,6 +58,7 @@ struct Grid
   
   struct Patch
   {
+    Real3 xb;
   };
   
   Int3 gdims;
@@ -211,7 +212,7 @@ public:
   Int3 bs;
   Real3 dx;                       // cell size (in actual length units)
   Real3 b_dxi;                    // inverse of block size (in actual length units)
-  float_3 *xb_by_patch;           // lower left corner for each patch
+  std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order
 

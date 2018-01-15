@@ -238,7 +238,11 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   grid.gdims = ppsc->domain.gdims;
   grid.ldims = ldims;
   grid.dx = dx;
-  grid.n_patches = ppsc->nr_patches;
+  grid.n_patches = n_patches;
+  grid.patches.resize(n_patches);
+  for (int p = 0; p < n_patches; p++) {
+    grid.patches[p].xb = ppsc->patch[p].xb;
+  }
   new(mprts.sub_) cuda_mparticles(grid, json);
 
   // FIXME json_builder_free(obj);

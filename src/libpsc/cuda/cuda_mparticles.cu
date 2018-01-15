@@ -30,11 +30,10 @@ cuda_mparticles::cuda_mparticles(const Grid<double>& grid, mrc_json_t json)
     b_mx[d] = ldims[d] / bs[d];
     b_dxi[d] = 1.f / (bs[d] * dx[d]);
   }
-  
-  xb_by_patch = new float_3[n_patches];
-  mrc_json_t json_xb_by_patch = mrc_json_get_object_entry(json_info, "xb_by_patch");
+
+  xb_by_patch.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
-    mrc_json_get_float3(mrc_json_get_array_entry(json_xb_by_patch, p), xb_by_patch[p]);
+    xb_by_patch[p] = grid.patches[p].xb;
   }
 
   fnqs = mrc_json_get_object_entry_double(json_info, "fnqs");
@@ -97,7 +96,6 @@ cuda_mparticles::~cuda_mparticles()
   cuda_mparticles_free_particle_mem(this);
   cuda_mparticles_bnd_destroy(this);
   
-  delete[] xb_by_patch;
   delete[] kind_q;
   delete[] kind_m;
 }

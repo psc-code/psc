@@ -37,7 +37,7 @@ cuda_heating_params_set(struct cuda_mparticles *cmprts)
 
   ierr = cudaMalloc(&h_prm.d_xb_by_patch, cmprts->n_patches * sizeof(float_3));
   cudaCheck(ierr);
-  ierr = cudaMemcpy(h_prm.d_xb_by_patch, cmprts->xb_by_patch,
+  ierr = cudaMemcpy(h_prm.d_xb_by_patch, cmprts->xb_by_patch.data(),
 		    cmprts->n_patches * sizeof(float_3), cudaMemcpyHostToDevice);
   cudaCheck(ierr);
 }
