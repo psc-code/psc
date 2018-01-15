@@ -206,7 +206,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  Grid_t grid;
+  Grid_t& grid = ppsc->grid;
   grid.gdims = ppsc->domain.gdims;
   grid.ldims = ldims;
   grid.dx = dx;

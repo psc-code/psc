@@ -8,6 +8,7 @@
 #include "psc_bits.h"
 #include "psc_particles.h"
 #include "psc_fields.h"
+#include "grid.hxx"
 
 #include <mrc_domain.h>
 
@@ -242,6 +243,8 @@ struct psc {
   // did we allocate the fields / particles (otherwise, Fortran did)
 
   double time_start;
+
+  Grid_t grid;
 };
 
 MRC_CLASS_DECLARE(psc, struct psc);
