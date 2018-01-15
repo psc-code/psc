@@ -53,7 +53,7 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
 {
   Int3 ldims = grid.ldims;
 
-  for (int p = 0; p < grid.n_patches; p++) {
+  for (int p = 0; p < grid.patches.size(); p++) {
     n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
   }
 
@@ -61,7 +61,7 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
   cmprts->resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
-  for (int p = 0; p < grid.n_patches; p++) {
+  for (int p = 0; p < grid.patches.size(); p++) {
     cmprts->set_particles(n_prts_by_patch[p], off, set_particle_test_1,
 			  (void*) &grid);
     off += n_prts_by_patch[p];
@@ -113,14 +113,14 @@ main(void)
   grid.gdims = { 1, 4, 2 };
   grid.ldims = { 1, 4, 2 };
   grid.dx = { 1., 10., 10. };
-  grid.n_patches = 1;
+
   Grid<double>::Patch patch{};
   patch.xb = { 0., 0., 0. };
   grid.patches.push_back(patch);
   
   struct cuda_mparticles *cmprts = new cuda_mparticles(grid, json);
 
-  unsigned int n_prts_by_patch[grid.n_patches];
+  unsigned int n_prts_by_patch[grid.patches.size()];
   cuda_mparticles_add_particles_test_1(cmprts, grid, n_prts_by_patch);
   printf("added particles\n");
   cmprts->dump_by_patch(n_prts_by_patch);
@@ -130,7 +130,7 @@ main(void)
   cmprts->dump();
 
   printf("get_particles_test\n");
-  get_particles_test(cmprts, grid.n_patches, n_prts_by_patch);
+  get_particles_test(cmprts, grid.patches.size(), n_prts_by_patch);
 
   delete cmprts;
 }
