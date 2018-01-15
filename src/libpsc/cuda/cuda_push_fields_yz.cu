@@ -17,7 +17,7 @@
 
 __global__ static void
 push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
-		 unsigned int size, int gridy)
+		 uint size, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
@@ -50,7 +50,7 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
 
 __global__ static void
 push_fields_H_yz(float *d_flds0, float cny, float cnz,
-		 unsigned int size, int gridy)
+		 uint size, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
@@ -95,7 +95,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   float cnz = dt / cmflds->dx[2];
   assert(cmflds->ldims[0] == 1);
 
-  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
+  uint size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
@@ -118,7 +118,7 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   float cny = dt / cmflds->dx[1];
   float cnz = dt / cmflds->dx[2];
 
-  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
+  uint size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
@@ -202,7 +202,7 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
     return;
   }
 
-  unsigned int size = cmflds->n_cells_per_patch;
+  uint size = cmflds->n_cells_per_patch;
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 

@@ -140,9 +140,9 @@ cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
 
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
@@ -186,7 +186,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 k_heating_run_foil(struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
-		   unsigned int *d_off, curandState *d_curand_states)
+		   uint *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos, ci0);

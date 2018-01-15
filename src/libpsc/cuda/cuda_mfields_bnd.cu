@@ -71,7 +71,7 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_par
     cbnd->ib[d] = prm->ib[d];
   }
   
-  unsigned int buf_size = 0;
+  uint buf_size = 0;
   for (int p = 0; p < cbnd->n_patches; p++) {
     if (cbnd->im[0] == 1) {// + 2*BND) {
       int B = 2*BND;
@@ -177,7 +177,7 @@ __global__ static void
 k_fields_device_pack_yz(float *d_buf, float *d_flds, int gmy, int gmz,
 			int nr_patches, int nr_fields)
 {
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  uint buf_size = 2*B * (gmy + gmz - 2*B);
   int gmx = 1;//2*BND + 1;
   int jx = 0;//BND;
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
@@ -221,7 +221,7 @@ __global__ static void
 k_fields_device_pack2_yz(float *d_buf, float *d_flds, int *d_nei_patch_by_dir1,
 			 int gmy, int gmz, int nr_patches, int nr_fields)
 {
-  unsigned int nr_ghosts = 2*B * (gmy + gmz - 2*B);
+  uint nr_ghosts = 2*B * (gmy + gmz - 2*B);
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
   int p = tid / nr_ghosts;
   if (p >= nr_patches)
@@ -334,9 +334,9 @@ static void
 fields_device_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 		      int mb, int me)
 {
-  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  uint buf_size = 2*B * (gmy + gmz - 2*B);
   int n_threads = buf_size * (me - mb) * cmflds->n_patches;
 
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
@@ -461,7 +461,7 @@ fields_host_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 		    int mb, int me)
 {
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  uint buf_size = 2*B * (gmy + gmz - 2*B);
 
   for (int p = 0; p < cmflds->n_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
@@ -578,7 +578,7 @@ __fields_cuda_from_device_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bn
   }
     
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  uint buf_size = 2*B * (gmy + gmz - 2*B);
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib[1] == -BND);
   assert(cmflds->im[1] >= 2 * B);
@@ -614,7 +614,7 @@ __fields_cuda_to_device_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd 
   }
   
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  uint buf_size = 2*B * (gmy + gmz - 2*B);
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib[1] == -BND);
   assert(cmflds->im[1] >= 2 * B);
@@ -737,7 +737,7 @@ cuda_mfields_bnd_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_m
   } else {
     for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
-      unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+      uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
       ierr = cudaMemcpy(cf->arr,
 			cmflds->d_flds_by_patch[p] + mb * size,
@@ -756,7 +756,7 @@ cuda_mfields_bnd_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct c
   } else {
     for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
-      unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+      uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
       ierr = cudaMemcpy(cf->arr,
 			cmflds->d_flds_by_patch[p] + mb * size,
@@ -775,7 +775,7 @@ cuda_mfields_bnd_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mf
   } else {
     for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
-      unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+      uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
       ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 			cf->arr,
@@ -794,7 +794,7 @@ cuda_mfields_bnd_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfi
   } else {
     for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
-      unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+      uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
       ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 			cf->arr,

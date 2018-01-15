@@ -140,11 +140,11 @@ ip1_to_grid_p(float h)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP>
 __device__ static void
-push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
+push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      float *fld_cache, int ci0[3])
 {
-  unsigned int id;
+  uint id;
   if (REORDER) {
     id = d_ids[n];
     LOAD_PARTICLE_POS(*prt, d_xi4, id);
@@ -298,12 +298,12 @@ public:
 
   __device__ float operator()(int wid, int jy, int jz, int m) const
   {
-    unsigned int off = CBLOCK_OFF(jy, jz, m, wid);
+    uint off = CBLOCK_OFF(jy, jz, m, wid);
     return scurr[off];
   }
   __device__ float& operator()(int wid, int jy, int jz, int m)
   {
-    unsigned int off = CBLOCK_OFF(jy, jz, m, wid);
+    uint off = CBLOCK_OFF(jy, jz, m, wid);
     return scurr[off];
   }
 
@@ -440,7 +440,7 @@ __device__ static void
 yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
 	  int nr_total_blocks, int p_nr,
-	  unsigned int *d_bidx, int bid, int *ci0)
+	  uint *d_bidx, int bid, int *ci0)
 {
   float vxi[3];
   calc_vxi(vxi, *prt);
@@ -480,8 +480,8 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   }
 
   // save block_idx for new particle position at x^(n+1.5)
-  unsigned int block_pos_y = __float2int_rd(prt->xi[1] * d_cmprts_const.b_dxi[1]);
-  unsigned int block_pos_z = __float2int_rd(prt->xi[2] * d_cmprts_const.b_dxi[2]);
+  uint block_pos_y = __float2int_rd(prt->xi[1] * d_cmprts_const.b_dxi[1]);
+  uint block_pos_z = __float2int_rd(prt->xi[2] * d_cmprts_const.b_dxi[2]);
   int nr_blocks = d_cmprts_const.b_mx[1] * d_cmprts_const.b_mx[2];
 
   int block_idx;
@@ -571,8 +571,8 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
-	      float *d_flds0, unsigned int size)
+	      uint *d_off, int nr_total_blocks, uint *d_ids, uint *d_bidx,
+	      float *d_flds0, uint size)
 {
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
   DECLARE_AND_CACHE_FIELDS;
@@ -607,7 +607,7 @@ zero_currents(struct cuda_mfields *cmflds)
 {
   // OPT: j as separate field, so we can use a single memset?
   for (int p = 0; p < cmflds->n_patches; p++) {
-    unsigned int size = cmflds->n_cells_per_patch;
+    uint size = cmflds->n_cells_per_patch;
     cudaError ierr = cudaMemset(cmflds->d_flds + p * size * cmflds->n_fields + JXI * size, 0,
 				3 * size * sizeof(*cmflds->d_flds));
     cudaCheck(ierr);
@@ -625,7 +625,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   cuda_mfields_const_set(cmflds);
   cuda_mparticles_const_set(cmprts);
 
-  unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
+  uint fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
   zero_currents(cmflds);
 

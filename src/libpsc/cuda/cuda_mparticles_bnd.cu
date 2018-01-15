@@ -38,9 +38,9 @@ void cuda_mparticles_bnd::setup(struct cuda_mparticles *cmprts)
   cudaError_t ierr;
 
   ierr = cudaMalloc((void **) &d_bnd_spine_cnts,
-		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
+		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(uint)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &d_bnd_spine_sums,
-		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
+		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(uint)); cudaCheck(ierr);
 
   bpatch = new cuda_bnd[cmprts->n_patches];
 }  
@@ -77,8 +77,8 @@ void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
   cudaError_t ierr;
 
   int n_alloced = cmprts->n_alloced;
-  ierr = cudaMalloc((void **) &d_alt_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &d_sums, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &d_alt_bidx, n_alloced * sizeof(uint)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &d_sums, n_alloced * sizeof(uint)); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
@@ -86,18 +86,18 @@ void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::find_n_send(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
-  thrust::host_vector<unsigned int> h_spine_sums(n_blocks + 1);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
+  thrust::host_vector<uint> h_spine_sums(n_blocks + 1);
 
   thrust::copy(d_spine_sums + n_blocks * 10,
 	       d_spine_sums + n_blocks * 11 + 1,
 	       h_spine_sums.begin());
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    unsigned int n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
+    uint n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
     bpatch[p].n_send = n_send - off;
     off = n_send;
   }
@@ -120,10 +120,10 @@ void cuda_mparticles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
   thrust::copy(d_xi4  + cmprts->n_prts, d_xi4  + cmprts->n_prts + n_prts_send, h_bnd_xi4.begin());
   thrust::copy(d_pxi4 + cmprts->n_prts, d_pxi4 + cmprts->n_prts + n_prts_send, h_bnd_pxi4.begin());
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     psc_particle_cuda_buf_t& buf = bpatch[p].buf;
-    unsigned int n_send = bpatch[p].n_send;
+    uint n_send = bpatch[p].n_send;
     buf.reserve(n_send);
     buf.resize(n_send);
 
@@ -149,23 +149,23 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_alt_bidx(this->d_alt_bidx);
-  thrust::device_ptr<unsigned int> d_bnd_spine_cnts(this->d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_alt_bidx(this->d_alt_bidx);
+  thrust::device_ptr<uint> d_bnd_spine_cnts(this->d_bnd_spine_cnts);
   
-  unsigned int n_recv = 0;
+  uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     n_recv += bpatch[p].buf.size();
   }
 
   thrust::host_vector<float4> h_bnd_xi4(n_recv);
   thrust::host_vector<float4> h_bnd_pxi4(n_recv);
-  thrust::host_vector<unsigned int> h_bnd_idx(n_recv);
-  thrust::host_vector<unsigned int> h_bnd_off(n_recv);
+  thrust::host_vector<uint> h_bnd_idx(n_recv);
+  thrust::host_vector<uint> h_bnd_off(n_recv);
 
-  thrust::host_vector<unsigned int> h_bnd_cnt(cmprts->n_blocks, 0);
+  thrust::host_vector<uint> h_bnd_cnt(cmprts->n_blocks, 0);
   
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     int n_recv = bpatch[p].buf.size();
     bpatch[p].n_recv = n_recv;
@@ -198,7 +198,7 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 	b_pos[d] = fint(xi[d] * cmprts->b_dxi[d]);
 	assert(b_pos[d] >= 0 && b_pos[d] < cmprts->b_mx[d]);
       }
-      unsigned int b = (b_pos[2] * cmprts->b_mx[1] + b_pos[1]) * cmprts->b_mx[0] + b_pos[0];
+      uint b = (b_pos[2] * cmprts->b_mx[1] + b_pos[1]) * cmprts->b_mx[0] + b_pos[0];
       assert(b < cmprts->n_blocks_per_patch);
       b += p * cmprts->n_blocks_per_patch;
       h_bnd_idx[n + off] = b;
@@ -241,7 +241,7 @@ void cuda_mparticles_bnd::sort(cuda_mparticles *cmprts, int *n_prts_by_patch)
 // update_offsets
 
 __global__ static void
-mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_spine_sums)
+mprts_update_offsets(int nr_total_blocks, uint *d_off, uint *d_spine_sums)
 {
   int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   
@@ -252,7 +252,7 @@ mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_s
 
 void cuda_mparticles_bnd::update_offsets(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
@@ -262,13 +262,13 @@ void cuda_mparticles_bnd::update_offsets(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
 
-  thrust::host_vector<unsigned int> h_spine_sums(d_spine_sums, d_spine_sums + 1 + n_blocks * (10 + 1));
-  thrust::host_vector<unsigned int> h_off(n_blocks + 1);
+  thrust::host_vector<uint> h_spine_sums(d_spine_sums, d_spine_sums + 1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_off(n_blocks + 1);
 
   for (int bid = 0; bid <= n_blocks; bid++) {
     h_off[bid] = h_spine_sums[bid * 10];
@@ -330,7 +330,7 @@ void cuda_mparticles::bnd_post()
   prof_stop(pr_A);
 
   prof_start(pr_D);
-  unsigned int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
   sort(this, (int *) n_prts_by_patch); // FIXME cast
   // FIXME, is this necessary, or doesn't update_offsets() do this, too?

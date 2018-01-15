@@ -108,7 +108,7 @@ _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
 // psc_inject_cuda_run
 
 void psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
-				unsigned int *buf_n_by_patch); // FIXME
+				uint *buf_n_by_patch); // FIXME
 
 static void
 psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
@@ -131,14 +131,14 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
   mfields_t mf_n = inject->mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
   static struct cuda_mparticles_prt *buf;
-  static unsigned int buf_n_alloced;
+  static uint buf_n_alloced;
   if (!buf) {
     buf_n_alloced = 1000;
     buf = (struct cuda_mparticles_prt *) calloc(buf_n_alloced, sizeof(*buf));
   }
-  unsigned int buf_n_by_patch[psc->nr_patches];
+  uint buf_n_by_patch[psc->nr_patches];
 
-  unsigned int buf_n = 0;
+  uint buf_n = 0;
   psc_foreach_patch(psc, p) {
     buf_n_by_patch[p] = 0;
     Fields N(mf_n[p]);

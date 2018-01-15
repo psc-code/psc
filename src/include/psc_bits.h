@@ -22,6 +22,8 @@ int nint(T val)
 
 #define sqr(a) ((a) * (a))
 
+using uint = unsigned int;
+
 
 #endif
 

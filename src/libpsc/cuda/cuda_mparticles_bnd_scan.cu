@@ -10,8 +10,8 @@
 
 using namespace b40c_thrust;
 
-typedef unsigned int K;
-typedef unsigned int V;
+typedef uint K;
+typedef uint V;
 
 static const int RADIX_BITS = 4;
 
@@ -24,7 +24,7 @@ static const int RADIX_BITS = 4;
 // cuda_mparticles_reorder_send_by_id
 
 static void __global__
-mprts_reorder_send_by_id(unsigned int nr_prts_send, unsigned int *d_xchg_ids,
+mprts_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 			 float4 *d_xi4, float4 *d_pxi4,
 			 float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
 {
@@ -33,7 +33,7 @@ mprts_reorder_send_by_id(unsigned int nr_prts_send, unsigned int *d_xchg_ids,
     return;
   }
 
-  unsigned int id = d_xchg_ids[n];
+  uint id = d_xchg_ids[n];
   d_xchg_xi4[n]  = d_xi4[id];
   d_xchg_pxi4[n] = d_pxi4[id];
 }
@@ -59,15 +59,15 @@ void cuda_mparticles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
 {
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-  thrust::host_vector<unsigned int> h_id(d_id, d_id + cmprts->n_prts);
+  thrust::host_vector<uint> h_id(d_id, d_id + cmprts->n_prts);
   thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts + n_prts_send);
   thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + cmprts->n_prts + n_prts_send);
   
   for (int n = 0; n < n_prts_send; n++) {
-    unsigned int id = h_id[cmprts->n_prts - n_prts_send + n];
+    uint id = h_id[cmprts->n_prts - n_prts_send + n];
     h_xi4[cmprts->n_prts + n]  = h_xi4[id];
     h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
   }
@@ -81,7 +81,7 @@ void cuda_mparticles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
 
 __global__ static void
 mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
-			     unsigned int *d_bidx, unsigned int *d_sums,
+			     uint *d_bidx, uint *d_sums,
 			     float4 *d_xi4, float4 *d_pxi4,
 			     float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
 {
@@ -120,12 +120,12 @@ void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;
 
   // OPT, we could do this from the beginning and adapt find_n_send()
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
   thrust::exclusive_scan(d_spine_cnts + n_blocks * 10,
 			 d_spine_cnts + n_blocks * 11 + 1,
 			 d_spine_sums + n_blocks * 10,
@@ -184,18 +184,18 @@ void cuda_mparticles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_sums(this->d_sums);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
-  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_sums(d_sums, d_sums + cmprts->n_prts);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_sums(this->d_sums);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
+  thrust::host_vector<uint> h_off(d_off, d_off + n_blocks + 1);
+  thrust::host_vector<uint> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
+  thrust::host_vector<uint> h_sums(d_sums, d_sums + cmprts->n_prts);
   
-  for (unsigned int bid = 0; bid < n_blocks; bid++) {
-    unsigned int sum = d_spine_sums[n_blocks * 10 + bid];
+  for (uint bid = 0; bid < n_blocks; bid++) {
+    uint sum = d_spine_sums[n_blocks * 10 + bid];
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
       if (h_bidx[n] == CUDA_BND_S_OOB) {
 	h_sums[n] = sum;

@@ -170,7 +170,7 @@ cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t 
   }
   assert(mb < me);
 
-  unsigned int size = cmflds->n_cells_per_patch;
+  uint size = cmflds->n_cells_per_patch;
   ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 		    h_flds.data + mb * size,
 		    (me - mb) * size * sizeof(float),
@@ -190,7 +190,7 @@ cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_
   }
   assert(mb < me);
 
-  unsigned int size = cmflds->n_cells_per_patch;
+  uint size = cmflds->n_cells_per_patch;
   ierr = cudaMemcpy(h_flds.data + mb * size,
 		    cmflds->d_flds_by_patch[p] + mb * size,
 		    (me - mb) * size * sizeof(float),

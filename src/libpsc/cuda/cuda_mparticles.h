@@ -88,14 +88,14 @@ struct cuda_mparticles_bnd
   void reorder_send_buf_total(cuda_mparticles *cmprts);
   
 public:
-  unsigned int *d_alt_bidx;
-  unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
+  uint *d_alt_bidx;
+  uint *d_sums; // FIXME, too many arrays, consolidation would be good
 
-  unsigned int n_prts_send;
-  unsigned int n_prts_recv;
+  uint n_prts_send;
+  uint n_prts_recv;
 
-  unsigned int *d_bnd_spine_cnts;
-  unsigned int *d_bnd_spine_sums;
+  uint *d_bnd_spine_cnts;
+  uint *d_bnd_spine_sums;
 
   struct cuda_bnd *bpatch;
 };
@@ -116,18 +116,18 @@ public:
 
   void free_particle_mem();
 
-  void reserve_all(const unsigned int *n_prts_by_patch);
-  void get_size_all(unsigned int *n_prts_by_patch);
-  void resize_all(const unsigned int *n_prts_by_patch);
-  unsigned int get_n_prts();
-  void set_particles(unsigned int n_prts, unsigned int off,
+  void reserve_all(const uint *n_prts_by_patch);
+  void get_size_all(uint *n_prts_by_patch);
+  void resize_all(const uint *n_prts_by_patch);
+  uint get_n_prts();
+  void set_particles(uint n_prts, uint off,
 		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
 		     void *ctx);
-  void get_particles(unsigned int n_prts, unsigned int off,
+  void get_particles(uint n_prts, uint off,
 		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
 		     void *ctx);
   void setup_internals();
-  void inject(cuda_mparticles_prt *buf, unsigned int *buf_n_by_patch);
+  void inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
 
@@ -136,36 +136,36 @@ public:
   void bnd_post();
   
   void dump();
-  void dump_by_patch(unsigned int *n_prts_by_patch);
+  void dump_by_patch(uint *n_prts_by_patch);
 
 public:
   void to_device(float_4 *xi4, float_4 *pxi4,
-		 unsigned int n_prts, unsigned int off);
+		 uint n_prts, uint off);
   void from_device(float_4 *xi4, float_4 *pxi4,
-		   unsigned int n_prts, unsigned int off);
+		   uint n_prts, uint off);
   
   void find_block_indices_ids();
   void reorder_and_offsets();
-  void check_in_patch_unordered_slow(unsigned int *nr_prts_by_patch);
-  void check_bidx_id_unordered_slow(unsigned int *n_prts_by_patch);
+  void check_in_patch_unordered_slow(uint *nr_prts_by_patch);
+  void check_bidx_id_unordered_slow(uint *n_prts_by_patch);
   void check_ordered();
   
 public:
   // per particle
   float4 *d_xi4, *d_pxi4;         // current particle data
   float4 *d_alt_xi4, *d_alt_pxi4; // storage for out-of-place reordering of particle data
-  unsigned int *d_bidx;           // block index (incl patch) per particle
-  unsigned int *d_id;             // particle id for sorting
+  uint *d_bidx;                   // block index (incl patch) per particle
+  uint *d_id;                     // particle id for sorting
 
   // per block
-  unsigned int *d_off;            // particles per block
+  uint *d_off;                    // particles per block
                                   // are at indices [offsets[block] .. offsets[block+1]-1[
 
-  unsigned int n_prts;            // total # of particles across all patches
-  unsigned int n_alloced;         // size of particle-related arrays as allocated
-  unsigned int n_patches;         // # of patches
-  unsigned int n_blocks_per_patch;// number of blocks per patch
-  unsigned int n_blocks;          // number of blocks in all patches in mprts
+  uint n_prts;                    // total # of particles across all patches
+  uint n_alloced;                 // size of particle-related arrays as allocated
+  uint n_patches;                 // # of patches
+  uint n_blocks_per_patch;        // number of blocks per patch
+  uint n_blocks;                  // number of blocks in all patches in mprts
 
   Int3 b_mx;                      // number of blocks per direction in each patch
   Int3 bs;

@@ -125,14 +125,14 @@ find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], floa
 // (but the compiler should figure it out on its own)
 
 template<int NBLOCKS_X, int NBLOCKS_Y, int NBLOCKS_Z>
-static __device__ __host__ __forceinline__ unsigned int
+static __device__ __host__ __forceinline__ uint
 block_pos_to_block_idx(int block_pos[3])
 {
   return (block_pos[2] *  NBLOCKS_Y) | block_pos[1];
 }
 
 #define NO_CHECKERBOARD
-static __device__ inline unsigned int
+static __device__ inline uint
 block_pos_to_block_idx(int block_pos[3], int b_mx[3])
 {
 #if 1 // DIM == DIM_YZ FIXME

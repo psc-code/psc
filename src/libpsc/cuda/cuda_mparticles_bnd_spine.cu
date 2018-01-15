@@ -13,8 +13,8 @@
 
 using namespace b40c_thrust;
 
-typedef unsigned int K;
-typedef unsigned int V;
+typedef uint K;
+typedef uint V;
 
 static const int RADIX_BITS = 4;
 
@@ -25,13 +25,13 @@ static const int RADIX_BITS = 4;
 
 void cuda_mparticles_bnd::spine_reduce(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;
 
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
 
   // OPT?
   thrust::fill(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
@@ -81,35 +81,35 @@ void cuda_mparticles_bnd::spine_reduce(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
-  unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
+  uint n_blocks = cmprts->n_blocks;
+  uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
   int *b_mx = cmprts->b_mx;
 
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
 
   thrust::fill(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
 
-  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
-  thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (CUDA_BND_STRIDE + 1));
+  thrust::host_vector<uint> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
+  thrust::host_vector<uint> h_off(d_off, d_off + n_blocks + 1);
+  thrust::host_vector<uint> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
   
   for (int p = 0; p < cmprts->n_patches; p++) {
     for (int b = 0; b < n_blocks_per_patch; b++) {
-      unsigned int bid = b + p * n_blocks_per_patch;
+      uint bid = b + p * n_blocks_per_patch;
       for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-	unsigned int key = h_bidx[n];
+	uint key = h_bidx[n];
 	if (key < 9) {
 	  int dy = key % 3;
 	  int dz = key / 3;
 	  int by = b % b_mx[1];
 	  int bz = b / b_mx[1];
-	  unsigned int bby = by + 1 - dy;
-	  unsigned int bbz = bz + 1 - dz;
-	  unsigned int bb = bbz * b_mx[1] + bby;
+	  uint bby = by + 1 - dy;
+	  uint bbz = bz + 1 - dz;
+	  uint bb = bbz * b_mx[1] + bby;
 	  if (bby < b_mx[1] && bbz < b_mx[2]) {
 	    h_spine_cnts[(bb + p * n_blocks_per_patch) * 10 + key]++;
 	  } else {
@@ -132,7 +132,7 @@ void cuda_mparticles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
 // cuda_mparticles_count_received
 
 __global__ static void
-mprts_count_received(int nr_total_blocks, unsigned int *d_alt_bidx, unsigned int *d_spine_cnts)
+mprts_count_received(int nr_total_blocks, uint *d_alt_bidx, uint *d_spine_cnts)
 {
   int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
@@ -143,7 +143,7 @@ mprts_count_received(int nr_total_blocks, unsigned int *d_alt_bidx, unsigned int
 
 void cuda_mparticles_bnd::count_received(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
   
   mprts_count_received<<<n_blocks, THREADS_PER_BLOCK>>>
     (n_blocks, d_bnd_spine_cnts + 10 * n_blocks, d_bnd_spine_cnts);
@@ -153,9 +153,9 @@ void cuda_mparticles_bnd::count_received_gold(cuda_mparticles *cmprts)
 {
   int n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
 
-  thrust::host_vector<unsigned int> h_spine_cnts(1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_spine_cnts(1 + n_blocks * (10 + 1));
 
   thrust::copy(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (10 + 1), h_spine_cnts.begin());
 
@@ -171,11 +171,11 @@ void cuda_mparticles_bnd::count_received_v1(cuda_mparticles *cmprts)
 {
   int n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
 
-  thrust::host_vector<unsigned int> h_bidx(cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_spine_cnts(1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_bidx(cmprts->n_prts);
+  thrust::host_vector<uint> h_spine_cnts(1 + n_blocks * (10 + 1));
 
   thrust::copy(d_bidx, d_bidx + cmprts->n_prts, h_bidx.begin());
   thrust::copy(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (10 + 1), h_spine_cnts.begin());
@@ -191,9 +191,9 @@ void cuda_mparticles_bnd::count_received_v1(cuda_mparticles *cmprts)
 // cuda_mparticles_scan_scatter_received
 
 static void __global__
-mprts_scan_scatter_received(unsigned int nr_recv, unsigned int nr_prts_prev,
-			    unsigned int *d_spine_sums, unsigned int *d_alt_bidx,
-			    unsigned int *d_bidx, unsigned int *d_ids)
+mprts_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
+			    uint *d_spine_sums, uint *d_alt_bidx,
+			    uint *d_bidx, uint *d_ids)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (n >= nr_recv) {
@@ -226,17 +226,17 @@ void cuda_mparticles_bnd::scan_scatter_received(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_alt_bidx(this->d_alt_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_alt_bidx(this->d_alt_bidx);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
 
-  thrust::host_vector<unsigned int> h_bidx(cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_alt_bidx(cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_id(cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_spine_sums(1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_bidx(cmprts->n_prts);
+  thrust::host_vector<uint> h_alt_bidx(cmprts->n_prts);
+  thrust::host_vector<uint> h_id(cmprts->n_prts);
+  thrust::host_vector<uint> h_spine_sums(1 + n_blocks * (10 + 1));
 
   thrust::copy(d_spine_sums, d_spine_sums + n_blocks * 11, h_spine_sums.begin());
   thrust::copy(d_bidx, d_bidx + cmprts->n_prts, h_bidx.begin());
@@ -261,7 +261,7 @@ void cuda_mparticles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
     pr_D = prof_register("xchg_bottom_scan", 1., 0, 0);
   }
 
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks = cmprts->n_blocks;
 
   prof_start(pr_A);
   count_received(cmprts);
@@ -269,8 +269,8 @@ void cuda_mparticles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
 
   prof_start(pr_B);
   // FIXME why isn't 10 + 0 enough?
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
   thrust::exclusive_scan(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (10 + 1), d_spine_sums);
   prof_stop(pr_B);
 
@@ -327,22 +327,22 @@ void cuda_mparticles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::sort_pairs_gold(cuda_mparticles *cmprts)
 {
-  unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
-  unsigned int n_blocks = cmprts->n_blocks;
+  uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
+  uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;
 
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::device_ptr<unsigned int> d_spine_cnts(d_bnd_spine_cnts);
-  thrust::device_ptr<unsigned int> d_spine_sums(d_bnd_spine_sums);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_spine_cnts(d_bnd_spine_cnts);
+  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
 
-  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_id(cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
-  thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
+  thrust::host_vector<uint> h_id(cmprts->n_prts);
+  thrust::host_vector<uint> h_off(d_off, d_off + n_blocks + 1);
+  thrust::host_vector<uint> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (10 + 1));
 
-  thrust::host_vector<unsigned int> h_spine_sums(1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_spine_sums(1 + n_blocks * (10 + 1));
 
   for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
     assert(h_bidx[n] < n_blocks);
@@ -356,16 +356,16 @@ void cuda_mparticles_bnd::sort_pairs_gold(cuda_mparticles *cmprts)
     int b = bid % n_blocks_per_patch;
     int p = bid / n_blocks_per_patch;
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      unsigned int key = h_bidx[n];
+      uint key = h_bidx[n];
       if (key < 9) {
 	int dy = key % 3;
 	int dz = key / 3;
 	int by = b % b_mx[1];
 	int bz = b / b_mx[1];
-	unsigned int bby = by + 1 - dy;
-	unsigned int bbz = bz + 1 - dz;
+	uint bby = by + 1 - dy;
+	uint bbz = bz + 1 - dz;
 	assert(bby < b_mx[1] && bbz < b_mx[2]);
-	unsigned int bb = bbz * b_mx[1] + bby;
+	uint bb = bbz * b_mx[1] + bby;
 	int nn = h_spine_sums[(bb + p * n_blocks_per_patch) * 10 + key]++;
 	h_id[nn] = n;
       } else { // OOB

@@ -29,7 +29,7 @@ cuda_domain_info_set_test_1(struct cuda_domain_info *info)
 
 void
 cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
-				     unsigned int *n_prts_by_patch)
+				     uint *n_prts_by_patch)
 {
   for (int p = 0; p < cmprts->n_patches; p++) {
     n_prts_by_patch[p] = cmprts->ldims[0] * cmprts->ldims[1] * cmprts->ldims[2];
@@ -65,8 +65,8 @@ get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
   int *b_mx = cmprts->b_mx;
   
   float4 xi4 = d_xi4[n];
-  unsigned int block_pos_y = (int) floor(xi4.y * b_dxi[1]);
-  unsigned int block_pos_z = (int) floor(xi4.z * b_dxi[2]);
+  uint block_pos_y = (int) floor(xi4.y * b_dxi[1]);
+  uint block_pos_z = (int) floor(xi4.z * b_dxi[2]);
 
   int bidx;
   if (block_pos_y >= b_mx[1] || block_pos_z >= b_mx[2]) {
@@ -80,9 +80,9 @@ get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
 
 static void
 cuda_mparticles_check_in_patch_unordered(struct cuda_mparticles *cmprts,
-					 unsigned int *nr_prts_by_patch)
+					 uint *nr_prts_by_patch)
 {
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     for (int n = 0; n < nr_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(cmprts, off + n, p);
@@ -96,12 +96,12 @@ cuda_mparticles_check_in_patch_unordered(struct cuda_mparticles *cmprts,
 
 static void
 cuda_mparticles_check_bidx_id_unordered(struct cuda_mparticles *cmprts,
-					unsigned int *n_prts_by_patch)
+					uint *n_prts_by_patch)
 {
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(cmprts, off + n, p);
@@ -123,7 +123,7 @@ main(void)
   cuda_domain_info_set_test_1(&info);
 
   cuda_mparticles_set_domain_info(cmprts, &info);
-  unsigned int n_prts_by_patch[cmprts->n_patches];
+  uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
   printf("added particles\n");
   cuda_mparticles_dump(cmprts);
@@ -134,8 +134,8 @@ main(void)
   cuda_mparticles_dump(cmprts);
   cuda_mparticles_check_bidx_id_unordered(cmprts, n_prts_by_patch);
 
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
   cuda_mparticles_dump(cmprts);
 

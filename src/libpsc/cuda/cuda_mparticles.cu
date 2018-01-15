@@ -77,11 +77,11 @@ cuda_mparticles::~cuda_mparticles()
 // ----------------------------------------------------------------------
 // reserve_all
 
-void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
+void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 {
   cudaError_t ierr;
 
-  unsigned int size = 0;
+  uint size = 0;
   for (int p = 0; p < n_patches; p++) {
     size += n_prts_by_patch[p];
   }
@@ -91,7 +91,7 @@ void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
   }
 
   size *= 1.2;// FIXME hack
-  unsigned int new_n_alloced = std::max(size, 2 * n_alloced);
+  uint new_n_alloced = std::max(size, 2 * n_alloced);
 
   if (new_n_alloced > 0) {
     free_particle_mem();
@@ -102,8 +102,8 @@ void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
   ierr = cudaMalloc((void **) &d_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &d_alt_xi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &d_alt_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &d_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &d_id, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &d_bidx, n_alloced * sizeof(uint)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &d_id, n_alloced * sizeof(uint)); cudaCheck(ierr);
 
   cuda_mparticles_bnd::reserve_all(this);
 }
@@ -112,7 +112,7 @@ void cuda_mparticles::reserve_all(const unsigned int *n_prts_by_patch)
 // to_device
 
 void cuda_mparticles::to_device(float_4 *xi4, float_4 *pxi4,
-				unsigned int n_prts, unsigned int off)
+				uint n_prts, uint off)
 {
   cudaError_t ierr;
 
@@ -127,7 +127,7 @@ void cuda_mparticles::to_device(float_4 *xi4, float_4 *pxi4,
 // from_device
 
 void cuda_mparticles::from_device(float_4 *xi4, float_4 *pxi4,
-				  unsigned int n_prts, unsigned int off)
+				  uint n_prts, uint off)
 {
   cudaError_t ierr;
 
@@ -141,20 +141,20 @@ void cuda_mparticles::from_device(float_4 *xi4, float_4 *pxi4,
 // ----------------------------------------------------------------------
 // dump_by_patch
 
-void cuda_mparticles::dump_by_patch(unsigned int *n_prts_by_patch)
+void cuda_mparticles::dump_by_patch(uint *n_prts_by_patch)
 {
   thrust::device_ptr<float4> d_xi4(this->d_xi4);
   thrust::device_ptr<float4> d_pxi4(this->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(this->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(this->d_id);
+  thrust::device_ptr<uint> d_bidx(this->d_bidx);
+  thrust::device_ptr<uint> d_id(this->d_id);
 
   printf("cuda_mparticles_dump_by_patch: n_prts = %d\n", n_prts);
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     float *xb = &xb_by_patch[p][0];
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       float4 xi4 = d_xi4[n + off], pxi4 = d_pxi4[n + off];
-      unsigned int bidx = d_bidx[n + off], id = d_id[n + off];
+      uint bidx = d_bidx[n + off], id = d_id[n + off];
       printf("cuda_mparticles_dump_by_patch: [%d/%d] %g %g %g // %d // %g %g %g // %g b_idx %d id %d\n",
 	     p, n, xi4.x + xb[0], xi4.y + xb[1], xi4.z + xb[2],
 	     cuda_float_as_int(xi4.w),
@@ -172,20 +172,20 @@ void cuda_mparticles::dump()
 {
   thrust::device_ptr<float4> d_xi4(this->d_xi4);
   thrust::device_ptr<float4> d_pxi4(this->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(this->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(this->d_id);
-  thrust::device_ptr<unsigned int> d_off(this->d_off);
+  thrust::device_ptr<uint> d_bidx(this->d_bidx);
+  thrust::device_ptr<uint> d_id(this->d_id);
+  thrust::device_ptr<uint> d_off(this->d_off);
 
   printf("cuda_mparticles_dump: n_prts = %d\n", n_prts);
-  unsigned int off = 0;
+  uint off = 0;
   for (int b = 0; b < n_blocks; b++) {
-    unsigned int off_b = d_off[b], off_e = d_off[b+1];
+    uint off_b = d_off[b], off_e = d_off[b+1];
     int p = b / n_blocks_per_patch;
     printf("cuda_mparticles_dump: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
     assert(d_off[b] == off);
     for (int n = d_off[b]; n < d_off[b+1]; n++) {
       float4 xi4 = d_xi4[n], pxi4 = d_pxi4[n];
-      unsigned int bidx = d_bidx[n], id = d_id[n];
+      uint bidx = d_bidx[n], id = d_id[n];
       printf("cuda_mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d\n",
 	     n, xi4.x, xi4.y, xi4.z, cuda_float_as_int(xi4.w), pxi4.x, pxi4.y, pxi4.z, pxi4.w,
 	     bidx, id);
@@ -213,7 +213,7 @@ cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts)
 // cuda_params2
 
 struct cuda_params2 {
-  unsigned int b_mx[3];
+  uint b_mx[3];
   float b_dxi[3];
 };
 
@@ -243,8 +243,8 @@ get_block_idx(struct cuda_mparticles *cmprts, float4 xi4, int p)
   float *b_dxi = cmprts->b_dxi;
   int *b_mx = cmprts->b_mx;
   
-  unsigned int block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
-  unsigned int block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
+  uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
+  uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
 
   int bidx;
   if (block_pos_y >= b_mx[1] || block_pos_z >= b_mx[2]) {
@@ -260,20 +260,20 @@ get_block_idx(struct cuda_mparticles *cmprts, float4 xi4, int p)
 // cuda_mprts_find_block_indices_ids
 
 __global__ static void
-mprts_find_block_indices_ids(struct cuda_params2 prm, float4 *d_xi4, unsigned int *d_off,
-			     unsigned int *d_bidx, unsigned int *d_ids, int n_patches,
+mprts_find_block_indices_ids(struct cuda_params2 prm, float4 *d_xi4, uint *d_off,
+			     uint *d_bidx, uint *d_ids, int n_patches,
 			     int n_blocks_per_patch)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
   for (int p = 0; p < n_patches; p++) {
-    unsigned int off = d_off[p * n_blocks_per_patch];
-    unsigned int n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
+    uint off = d_off[p * n_blocks_per_patch];
+    uint n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
       float4 xi4 = d_xi4[n + off];
-      unsigned int block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
-      unsigned int block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
+      uint block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
+      uint block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
       
       int block_idx;
       if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
@@ -296,7 +296,7 @@ void cuda_mparticles::find_block_indices_ids()
   // OPT: if we didn't need max_n_prts, we wouldn't have to get the
   // sizes / offsets at all, and it seems likely we could do a better
   // job here in general
-  unsigned int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
   
   int max_n_prts = 0;
@@ -328,7 +328,7 @@ void cuda_mparticles::find_block_indices_ids()
 
 __global__ static void
 mprts_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
-			  unsigned int *d_bidx, unsigned int *d_ids, unsigned int *d_off, int last_block)
+			  uint *d_bidx, uint *d_ids, uint *d_off, int last_block)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
@@ -386,21 +386,21 @@ cuda_mparticles_reorder_and_offsets_slow(struct cuda_mparticles *cmprts)
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::device_ptr<float4> d_alt_xi4(cmprts->d_alt_xi4);
   thrust::device_ptr<float4> d_alt_pxi4(cmprts->d_alt_pxi4);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
 
   thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts);
   thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + cmprts->n_prts);
   thrust::host_vector<float4> h_alt_xi4(d_alt_xi4, d_alt_xi4 + cmprts->n_prts);
   thrust::host_vector<float4> h_alt_pxi4(d_alt_pxi4, d_alt_pxi4 + cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + cmprts->n_blocks + 1);
-  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_id(d_id, d_id + cmprts->n_prts);
+  thrust::host_vector<uint> h_off(d_off, d_off + cmprts->n_blocks + 1);
+  thrust::host_vector<uint> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
+  thrust::host_vector<uint> h_id(d_id, d_id + cmprts->n_prts);
 
   for (int i = 0; i <= cmprts->n_prts; i++) {
-    //    unsigned int bidx;
-    unsigned int block;
+    //    uint bidx;
+    uint block;
     if (i < cmprts->n_prts) {
       h_alt_xi4[i] = h_xi4[h_id[i]];
       h_alt_pxi4[i] = h_pxi4[h_id[i]];
@@ -430,11 +430,11 @@ cuda_mparticles_reorder_and_offsets_slow(struct cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // check_in_patch_unordered_slow
 
-void cuda_mparticles::check_in_patch_unordered_slow(unsigned int *nr_prts_by_patch)
+void cuda_mparticles::check_in_patch_unordered_slow(uint *nr_prts_by_patch)
 {
   thrust::device_ptr<float4> d_xi4(this->d_xi4);
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < nr_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(this, d_xi4[off + n], p);
@@ -450,13 +450,13 @@ void cuda_mparticles::check_in_patch_unordered_slow(unsigned int *nr_prts_by_pat
 // ----------------------------------------------------------------------
 // check_bix_id_unordered_slow
 
-void cuda_mparticles::check_bidx_id_unordered_slow(unsigned int *n_prts_by_patch)
+void cuda_mparticles::check_bidx_id_unordered_slow(uint *n_prts_by_patch)
 {
   thrust::device_ptr<float4> d_xi4(this->d_xi4);
-  thrust::device_ptr<unsigned int> d_bidx(this->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(this->d_id);
+  thrust::device_ptr<uint> d_bidx(this->d_bidx);
+  thrust::device_ptr<uint> d_id(this->d_id);
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(this, d_xi4[off + n], p);
@@ -479,13 +479,13 @@ cuda_mparticles_check_ordered_slow(struct cuda_mparticles *cmprts)
   bool need_reorder = cmprts->need_reorder;
   
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
-    unsigned int off_b = d_off[b], off_e = d_off[b+1];
+    uint off_b = d_off[b], off_e = d_off[b+1];
     assert(off_e >= off_b);
     // printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
     assert(d_off[b] == off);
@@ -496,13 +496,13 @@ cuda_mparticles_check_ordered_slow(struct cuda_mparticles *cmprts)
       } else {
 	xi4 = d_xi4[n];
       }
-      unsigned int bidx = get_block_idx(cmprts, xi4, p);
+      uint bidx = get_block_idx(cmprts, xi4, p);
       //printf("cuda_mparticles_check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	unsigned int block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
-	unsigned int block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
+	uint block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
+	uint block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
 	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * cmprts->b_dxi[1],
 	       xi4.z * cmprts->b_dxi[2]);
       }
@@ -523,23 +523,23 @@ cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
   bool need_reorder = cmprts->need_reorder;
 
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
-  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<uint> d_off(cmprts->d_off);
+  thrust::device_ptr<uint> d_id(cmprts->d_id);
+  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
   thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + cmprts->n_blocks + 1);
-  thrust::host_vector<unsigned int> h_id(d_id, d_id + cmprts->n_prts);
+  thrust::host_vector<uint> h_off(d_off, d_off + cmprts->n_blocks + 1);
+  thrust::host_vector<uint> h_id(d_id, d_id + cmprts->n_prts);
 
   //printf("cuda_mparticles_check_ordered: need_reorder %s\n", need_reorder ? "true" : "false");
 
   // for (int n = 0; n < 10; n++) {
-  //   unsigned int bidx = d_bidx[n];
+  //   uint bidx = d_bidx[n];
   //   printf("n %d bidx %d xi4 %g %g\n", n, bidx, h_xi4[n].y, h_xi4[n].z);
   // }
-  unsigned int off = 0;
+  uint off = 0;
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
-    unsigned int off_b = h_off[b], off_e = h_off[b+1];
+    uint off_b = h_off[b], off_e = h_off[b+1];
     assert(off_e >= off_b);
     //printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
     assert(off_b == off);
@@ -550,13 +550,13 @@ cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
       } else {
 	xi4 = h_xi4[n];
       }
-      unsigned int bidx = get_block_idx(cmprts, xi4, p);
+      uint bidx = get_block_idx(cmprts, xi4, p);
       //printf("cuda_mparticles_check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	unsigned int block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
-	unsigned int block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
+	uint block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
+	uint block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
 	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * cmprts->b_dxi[1],
 	       xi4.z * cmprts->b_dxi[2]);
       }
@@ -573,7 +573,7 @@ cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
 
 void
 cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
-			     unsigned int *n_prts_by_patch)
+			     uint *n_prts_by_patch)
 {
 }
 
@@ -584,20 +584,20 @@ void cuda_mparticles::setup_internals()
 {
   static int first_time = false;
   if (first_time) {
-    unsigned int n_prts_by_patch[n_patches];
+    uint n_prts_by_patch[n_patches];
     get_size_all(n_prts_by_patch);
     check_in_patch_unordered_slow(n_prts_by_patch);
   }
 
   find_block_indices_ids();
   if (first_time) {
-    unsigned int n_prts_by_patch[n_patches];
+    uint n_prts_by_patch[n_patches];
     get_size_all(n_prts_by_patch);
     check_bidx_id_unordered_slow(n_prts_by_patch);
   }
 
-  thrust::device_ptr<unsigned int> d_bidx(this->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(this->d_id);
+  thrust::device_ptr<uint> d_bidx(this->d_bidx);
+  thrust::device_ptr<uint> d_id(this->d_id);
   thrust::stable_sort_by_key(d_bidx, d_bidx + n_prts, d_id);
   reorder_and_offsets();
 
@@ -622,12 +622,12 @@ void cuda_mparticles::setup_internals()
 //   in that case, we supposedly know what we're doing, so we at most need
 //   to check that we aren't beyond our allocated space
 
-void cuda_mparticles::resize_all(const unsigned int *n_prts_by_patch)
+void cuda_mparticles::resize_all(const uint *n_prts_by_patch)
 {
-  thrust::device_ptr<unsigned int> d_off(this->d_off);
-  thrust::host_vector<unsigned int> h_off(this->n_blocks + 1);
+  thrust::device_ptr<uint> d_off(this->d_off);
+  thrust::host_vector<uint> h_off(this->n_blocks + 1);
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     h_off[p * n_blocks_per_patch] = off;
     off += n_prts_by_patch[p];
@@ -642,7 +642,7 @@ void cuda_mparticles::resize_all(const unsigned int *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // get_n_prts
 
-unsigned int cuda_mparticles::get_n_prts()
+uint cuda_mparticles::get_n_prts()
 {
   return n_prts;
 }
@@ -650,10 +650,10 @@ unsigned int cuda_mparticles::get_n_prts()
 // ----------------------------------------------------------------------
 // get_size_all
 
-void cuda_mparticles::get_size_all(unsigned int *n_prts_by_patch)
+void cuda_mparticles::get_size_all(uint *n_prts_by_patch)
 {
-  thrust::device_ptr<unsigned int> d_off(this->d_off);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
+  thrust::device_ptr<uint> d_off(this->d_off);
+  thrust::host_vector<uint> h_off(d_off, d_off + n_blocks + 1);
 
   for (int p = 0; p < n_patches; p++) {
     n_prts_by_patch[p] = h_off[(p+1) * n_blocks_per_patch] - h_off[p * n_blocks_per_patch];
@@ -665,7 +665,7 @@ void cuda_mparticles::get_size_all(unsigned int *n_prts_by_patch)
 // cuda_mparticles_reorder
 
 __global__ static void
-k_cuda_mparticles_reorder(int nr_prts, unsigned int *d_ids,
+k_cuda_mparticles_reorder(int nr_prts, uint *d_ids,
 		 float4 *xi4, float4 *pxi4,
 		 float4 *alt_xi4, float4 *alt_pxi4)
 {
@@ -701,14 +701,14 @@ cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
 // inject
 
 void cuda_mparticles::inject(cuda_mparticles_prt *buf,
-			     unsigned int *buf_n_by_patch)
+			     uint *buf_n_by_patch)
 {
   if (need_reorder) {
     cuda_mparticles_reorder(this);
     need_reorder = false;
   }
   
-  unsigned int buf_n = 0;
+  uint buf_n = 0;
   for (int p = 0; p < n_patches; p++) {
     buf_n += buf_n_by_patch[p];
     //    printf("p %d buf_n_by_patch %d\n", p, buf_n_by_patch[p]);
@@ -717,10 +717,10 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
 
   thrust::host_vector<float4> h_xi4(buf_n);
   thrust::host_vector<float4> h_pxi4(buf_n);
-  thrust::host_vector<unsigned int> h_bidx(buf_n);
-  thrust::host_vector<unsigned int> h_id(buf_n);
+  thrust::host_vector<uint> h_bidx(buf_n);
+  thrust::host_vector<uint> h_id(buf_n);
 
-  unsigned int off = 0;
+  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
       float4 *xi4 = &h_xi4[off + n];
@@ -743,7 +743,7 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
   }
   assert(off == buf_n);
 
-  unsigned int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
 
   // check_in_patch_unordered_slow(n_prts_by_patch);
@@ -753,8 +753,8 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
 
   thrust::device_ptr<float4> d_xi4(this->d_xi4);
   thrust::device_ptr<float4> d_pxi4(this->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(this->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(this->d_id);
+  thrust::device_ptr<uint> d_bidx(this->d_bidx);
+  thrust::device_ptr<uint> d_id(this->d_id);
 
   assert(n_prts + buf_n <= n_alloced);
   thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4 + n_prts);
@@ -765,8 +765,8 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
 
   // for (int i = -5; i <= 5; i++) {
   //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
-  //   unsigned int bidx = d_bidx[cmprts->n_prts + i];
-  //   unsigned int id = d_id[cmprts->n_prts + i];
+  //   uint bidx = d_bidx[cmprts->n_prts + i];
+  //   uint id = d_id[cmprts->n_prts + i];
   //   printf("i %d bidx %d %d\n", i, bidx, id);
   // }
 
@@ -783,7 +783,7 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
 // ----------------------------------------------------------------------
 // set_particles
 
-void cuda_mparticles::set_particles(unsigned int n_prts, unsigned int off,
+void cuda_mparticles::set_particles(uint n_prts, uint off,
 				    void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
 				    void *ctx)
 {
@@ -829,7 +829,7 @@ void cuda_mparticles::set_particles(unsigned int n_prts, unsigned int off,
 // ----------------------------------------------------------------------
 // get_particles
 
-void cuda_mparticles::get_particles(unsigned int n_prts, unsigned int off,
+void cuda_mparticles::get_particles(uint n_prts, uint off,
 				    void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
 				    void *ctx)
 {

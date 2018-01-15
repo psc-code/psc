@@ -48,8 +48,8 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 rho_1st_nc_cuda_run(int block_start,
 		    float4 *d_xi4, float4 *d_pxi4,
-		    unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
-		    float *d_flds0, unsigned int size)
+		    uint *d_off, int nr_total_blocks, uint *d_ids,
+		    float *d_flds0, uint size)
 {
   int block_pos[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
@@ -66,7 +66,7 @@ rho_1st_nc_cuda_run(int block_start,
     }
     struct d_particle prt;
     if (REORDER) {
-      unsigned int id = d_ids[n];
+      uint id = d_ids[n];
       LOAD_PARTICLE_POS(prt, d_xi4, id);
       LOAD_PARTICLE_MOM(prt, d_pxi4, id);
     } else {
@@ -95,8 +95,8 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 n_1st_cuda_run(int block_start,
 	       float4 *d_xi4, float4 *d_pxi4,
-	       unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
-	       float *d_flds0, unsigned int size)
+	       uint *d_off, int nr_total_blocks, uint *d_ids,
+	       float *d_flds0, uint size)
 {
   int block_pos[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
@@ -113,7 +113,7 @@ n_1st_cuda_run(int block_start,
     }
     struct d_particle prt;
     if (REORDER) {
-      unsigned int id = d_ids[n];
+      uint id = d_ids[n];
       LOAD_PARTICLE_POS(prt, d_xi4, id);
       LOAD_PARTICLE_MOM(prt, d_pxi4, id);
     } else {
@@ -146,7 +146,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cu
   cuda_mparticles_const_set(cmprts);
   cuda_mfields_const_set(cmres);
   
-  unsigned int fld_size = cmres->n_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
+  uint fld_size = cmres->n_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
   dim3 dimGrid(cmprts->b_mx[1], cmprts->b_mx[2] * cmprts->n_patches);
 
@@ -169,7 +169,7 @@ n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mf
   cuda_mparticles_const_set(cmprts);
   cuda_mfields_const_set(cmres);
 
-  unsigned int fld_size = cmres->n_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
+  uint fld_size = cmres->n_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
   dim3 dimGrid(cmprts->b_mx[1], cmprts->b_mx[2] * cmprts->n_patches);
 
