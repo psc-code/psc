@@ -469,20 +469,17 @@ void cuda_mparticles::check_bidx_id_unordered_slow(uint *n_prts_by_patch)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_check_ordered_slow
+// check_ordered_slow
 
-void
-cuda_mparticles_check_ordered_slow(struct cuda_mparticles *cmprts)
+void cuda_mparticles::check_ordered_slow()
 {
-  bool need_reorder = cmprts->need_reorder;
-  
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<uint> d_off(cmprts->d_off);
-  thrust::device_ptr<uint> d_id(cmprts->d_id);
+  thrust::device_ptr<float4> d_xi4(this->d_xi4);
+  thrust::device_ptr<uint> d_off(this->d_off);
+  thrust::device_ptr<uint> d_id(this->d_id);
 
   uint off = 0;
-  for (int b = 0; b < cmprts->n_blocks; b++) {
-    int p = b / cmprts->n_blocks_per_patch;
+  for (int b = 0; b < n_blocks; b++) {
+    int p = b / n_blocks_per_patch;
     uint off_b = d_off[b], off_e = d_off[b+1];
     assert(off_e >= off_b);
     // printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
@@ -494,39 +491,36 @@ cuda_mparticles_check_ordered_slow(struct cuda_mparticles *cmprts)
       } else {
 	xi4 = d_xi4[n];
       }
-      uint bidx = get_block_idx(cmprts, xi4, p);
+      uint bidx = get_block_idx(this, xi4, p);
       //printf("cuda_mparticles_check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	uint block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
-	uint block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
-	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * cmprts->b_dxi[1],
-	       xi4.z * cmprts->b_dxi[2]);
+	uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
+	uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
+	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * b_dxi[1],
+	       xi4.z * b_dxi[2]);
       }
       assert(b == bidx);
     }
     off += off_e - off_b;
   }
-  assert(off == cmprts->n_prts);
+  assert(off == n_prts);
   printf("cuda_mparticles_check_ordered: PASS\n");
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_check_ordered
+// check_ordered
 
-void
-cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
+void cuda_mparticles::check_ordered()
 {
-  bool need_reorder = cmprts->need_reorder;
-
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<uint> d_off(cmprts->d_off);
-  thrust::device_ptr<uint> d_id(cmprts->d_id);
-  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
-  thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts);
-  thrust::host_vector<uint> h_off(d_off, d_off + cmprts->n_blocks + 1);
-  thrust::host_vector<uint> h_id(d_id, d_id + cmprts->n_prts);
+  thrust::device_ptr<float4> d_xi4(this->d_xi4);
+  thrust::device_ptr<uint> d_off(this->d_off);
+  thrust::device_ptr<uint> d_id(this->d_id);
+  thrust::device_ptr<uint> d_bidx(this->d_bidx);
+  thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + n_prts);
+  thrust::host_vector<uint> h_off(d_off, d_off + n_blocks + 1);
+  thrust::host_vector<uint> h_id(d_id, d_id + n_prts);
 
   //printf("cuda_mparticles_check_ordered: need_reorder %s\n", need_reorder ? "true" : "false");
 
@@ -535,8 +529,8 @@ cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
   //   printf("n %d bidx %d xi4 %g %g\n", n, bidx, h_xi4[n].y, h_xi4[n].z);
   // }
   uint off = 0;
-  for (int b = 0; b < cmprts->n_blocks; b++) {
-    int p = b / cmprts->n_blocks_per_patch;
+  for (int b = 0; b < n_blocks; b++) {
+    int p = b / n_blocks_per_patch;
     uint off_b = h_off[b], off_e = h_off[b+1];
     assert(off_e >= off_b);
     //printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
@@ -548,21 +542,21 @@ cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
       } else {
 	xi4 = h_xi4[n];
       }
-      uint bidx = get_block_idx(cmprts, xi4, p);
+      uint bidx = get_block_idx(this, xi4, p);
       //printf("cuda_mparticles_check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	uint block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
-	uint block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
-	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * cmprts->b_dxi[1],
-	       xi4.z * cmprts->b_dxi[2]);
+	uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
+	uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
+	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * b_dxi[1],
+	       xi4.z * b_dxi[2]);
       }
       assert(b == bidx);
     }
     off += off_e - off_b;
   }
-  assert(off == cmprts->n_prts);
+  assert(off == n_prts);
   printf("cuda_mparticles_check_ordered: PASS\n");
 }
 

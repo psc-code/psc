@@ -122,6 +122,7 @@ public:
   void check_in_patch_unordered_slow(uint *nr_prts_by_patch);
   void check_bidx_id_unordered_slow(uint *n_prts_by_patch);
   void check_ordered();
+  void check_ordered_slow();
   
 public:
   // per particle
