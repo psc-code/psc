@@ -7,7 +7,7 @@
 #include "grid.hxx"
 #include "particles.hxx"
 
-#include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 
 // ======================================================================
 // bnd
@@ -61,7 +61,7 @@ struct cuda_mparticles_bnd
   void reorder_send_buf_total(cuda_mparticles *cmprts);
   
 public:
-  thrust::device_ptr<uint> d_alt_bidx;
+  thrust::device_vector<uint> d_alt_bidx;
   uint *d_sums = {}; // FIXME, too many arrays, consolidation would be good
 
   uint n_prts_send;

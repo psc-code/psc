@@ -219,7 +219,7 @@ void cuda_mparticles_bnd::scan_scatter_received(cuda_mparticles *cmprts)
   int dimGrid = (nr_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
-    (nr_recv, nr_prts_prev, d_bnd_spine_sums, d_alt_bidx.get(),
+    (nr_recv, nr_prts_prev, d_bnd_spine_sums, d_alt_bidx.data().get(),
      cmprts->d_bidx, cmprts->d_id);
   cuda_sync_if_enabled();
 }
@@ -229,7 +229,6 @@ void cuda_mparticles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts)
   uint n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<uint> d_alt_bidx(this->d_alt_bidx);
   thrust::device_ptr<uint> d_id(cmprts->d_id);
   thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
 
@@ -240,7 +239,7 @@ void cuda_mparticles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts)
 
   thrust::copy(d_spine_sums, d_spine_sums + n_blocks * 11, h_spine_sums.begin());
   thrust::copy(d_bidx, d_bidx + cmprts->n_prts, h_bidx.begin());
-  thrust::copy(d_alt_bidx, d_alt_bidx + cmprts->n_prts, h_alt_bidx.begin());
+  thrust::copy(d_alt_bidx.data(), d_alt_bidx.data() + cmprts->n_prts, h_alt_bidx.begin());
   for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
     int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n];
     h_id[nn] = n;

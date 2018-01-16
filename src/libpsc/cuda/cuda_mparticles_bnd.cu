@@ -46,17 +46,6 @@ void cuda_mparticles_bnd::setup(struct cuda_mparticles *cmprts)
 }  
 
 // ----------------------------------------------------------------------
-// free_particle_mem
-
-void cuda_mparticles_bnd::free_particle_mem()
-{
-  cudaError_t ierr;
-
-  ierr = cudaFree(d_alt_bidx.get()); cudaCheck(ierr);
-  ierr = cudaFree(d_sums); cudaCheck(ierr);
-}
-
-// ----------------------------------------------------------------------
 // dtor
 
 cuda_mparticles_bnd::~cuda_mparticles_bnd()
@@ -70,6 +59,16 @@ cuda_mparticles_bnd::~cuda_mparticles_bnd()
 }
 
 // ----------------------------------------------------------------------
+// free_particle_mem
+
+void cuda_mparticles_bnd::free_particle_mem()
+{
+  cudaError_t ierr;
+
+  ierr = cudaFree(d_sums); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
 // reserve_all
 
 void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
@@ -77,7 +76,7 @@ void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
   cudaError_t ierr;
 
   int n_alloced = cmprts->n_alloced;
-  ierr = cudaMalloc((void **) &d_alt_bidx, n_alloced * sizeof(uint)); cudaCheck(ierr);
+  d_alt_bidx.resize(n_alloced);
   ierr = cudaMalloc((void **) &d_sums, n_alloced * sizeof(uint)); cudaCheck(ierr);
 }
 
@@ -150,7 +149,6 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<uint> d_alt_bidx(this->d_alt_bidx);
   thrust::device_ptr<uint> d_bnd_spine_cnts(this->d_bnd_spine_cnts);
   
   uint n_recv = 0;
@@ -218,7 +216,7 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   // slight abuse of the now unused last part of spine_cnts
   thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(),
 	       d_bnd_spine_cnts + 10 * cmprts->n_blocks);
-  thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_alt_bidx + cmprts->n_prts);
+  thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_alt_bidx.begin() + cmprts->n_prts);
 
   cmprts->n_prts += n_recv;
   n_prts_recv = n_recv;
