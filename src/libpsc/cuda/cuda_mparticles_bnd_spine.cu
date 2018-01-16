@@ -219,7 +219,7 @@ void cuda_mparticles_bnd::scan_scatter_received(cuda_mparticles *cmprts)
   int dimGrid = (nr_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
-    (nr_recv, nr_prts_prev, d_bnd_spine_sums, d_alt_bidx,
+    (nr_recv, nr_prts_prev, d_bnd_spine_sums, d_alt_bidx.get(),
      cmprts->d_bidx, cmprts->d_id);
   cuda_sync_if_enabled();
 }

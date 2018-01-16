@@ -52,7 +52,7 @@ void cuda_mparticles_bnd::free_particle_mem()
 {
   cudaError_t ierr;
 
-  ierr = cudaFree(d_alt_bidx); cudaCheck(ierr);
+  ierr = cudaFree(d_alt_bidx.get()); cudaCheck(ierr);
   ierr = cudaFree(d_sums); cudaCheck(ierr);
 }
 

@@ -56,11 +56,12 @@ check_PROGRAMS = \
 #  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo
 #nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
 
-tests_test_cuda_mparticles_1_SOURCES = tests/test_cuda_mparticles_1.cxx
-tests_test_cuda_mparticles_1_LDADD = cuda_mparticles.lo \
+tests_test_cuda_mparticles_1_SOURCES = 
+tests_test_cuda_mparticles_1_LDADD = tests/test_cuda_mparticles_1.lo cuda_mparticles.lo \
   cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
+nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
 
 tests_test_cuda_mfields_1_SOURCES = tests/test_cuda_mfields_1.cxx
 tests_test_cuda_mfields_1_LDADD = cuda_mfields.lo \
@@ -95,7 +96,8 @@ cuda_bnd.lo: cuda_iface_bnd.h
 	@echo "Tricking libtool"
 	TMPFILE=${<:.cu=.cu.c}
 	echo "void lotrickdummy() {}" > ${<:.cu=.cu.c}
-	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ ${<:.cu=.cu.c}
+	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
+	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ ${<:.cu=.cu.c}
 	rm ${@:.lo=.o} ${<:.cu=.cu.c}
 	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
