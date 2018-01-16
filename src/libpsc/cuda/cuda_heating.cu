@@ -138,13 +138,10 @@ d_particle_kick(float4 *pxi4, float H, curandState *state)
 void
 cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
 {
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
     for (int n = cmprts->d_off[b]; n < cmprts->d_off[b+1]; n++) {
-      float4 xi4 = d_xi4[n];
+      float4 xi4 = cmprts->d_xi4[n];
 
       int prt_kind = cuda_float_as_int(xi4.w);
       if (prt_kind != foil.kind) {
@@ -166,9 +163,9 @@ cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
       // pxi4.w = H;
       // d_pxi4[n] = pxi4;
       if (H > 0) {
-	float4 pxi4 = d_pxi4[n];
+	float4 pxi4 = cmprts->d_pxi4[n];
 	particle_kick(&pxi4, H);
-	d_pxi4[n] = pxi4;
+	cmprts->d_pxi4[n] = pxi4;
 	// printf("H xx = %g %g %g H = %g px = %g %g %g\n", xx[0], xx[1], xx[2], H,
 	//        pxi4.x, pxi4.y, pxi4.z);
       }
@@ -251,7 +248,7 @@ heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
 
   k_heating_run_foil<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-    (h_prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off.data().get(),
+    (h_prm, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
      d_curand_states);
   cuda_sync_if_enabled();
 }

@@ -126,15 +126,15 @@ public:
   
 public:
   // per particle
-  float4 *d_xi4 = {};             // current particle data
-  float4 *d_pxi4 = {};
-  float4 *d_alt_xi4  = {};        // storage for out-of-place reordering of particle data
-  float4 *d_alt_pxi4 = {};
-  thrust::device_vector<uint> d_bidx;     // block index (incl patch) per particle
-  thrust::device_vector<uint> d_id;       // particle id for sorting
+  thrust::device_vector<float4> d_xi4;      // current particle data
+  thrust::device_vector<float4> d_pxi4;     // current particle data
+  thrust::device_vector<float4> d_alt_xi4;  // storage for out-of-place reordering of particle data
+  thrust::device_vector<float4> d_alt_pxi4;
+  thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
+  thrust::device_vector<uint> d_id;         // particle id for sorting
 
   // per block
-  thrust::device_vector<uint> d_off;      // particles per block
+  thrust::device_vector<uint> d_off;        // particles per block
                                   // are at indices [offsets[block] .. offsets[block+1]-1[
 
   uint n_prts = {};               // total # of particles across all patches

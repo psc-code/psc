@@ -49,8 +49,8 @@ void cuda_mparticles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 
   mprts_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
     (n_prts_send, cmprts->d_id.data().get() + cmprts->n_prts - n_prts_send,
-     cmprts->d_xi4, cmprts->d_pxi4,
-     cmprts->d_xi4 + cmprts->n_prts, cmprts->d_pxi4 + cmprts->n_prts);
+     cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
+     cmprts->d_xi4.data().get() + cmprts->n_prts, cmprts->d_pxi4.data().get() + cmprts->n_prts);
   cuda_sync_if_enabled();
 }
 
@@ -59,11 +59,9 @@ void cuda_mparticles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
 {
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::host_vector<uint> h_id(cmprts->d_id.data(), cmprts->d_id.data() + cmprts->n_prts);
-  thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + cmprts->n_prts + n_prts_send);
-  thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + cmprts->n_prts + n_prts_send);
+  thrust::host_vector<float4> h_xi4(cmprts->d_xi4.data(), cmprts->d_xi4.data() + cmprts->n_prts + n_prts_send);
+  thrust::host_vector<float4> h_pxi4(cmprts->d_pxi4.data(), cmprts->d_pxi4.data() + cmprts->n_prts + n_prts_send);
   
   for (int n = 0; n < n_prts_send; n++) {
     uint id = h_id[cmprts->n_prts - n_prts_send + n];
@@ -71,8 +69,8 @@ void cuda_mparticles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
     h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
   }
 
-  thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4);
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4);
+  thrust::copy(h_xi4.begin(), h_xi4.end(), cmprts->d_xi4.data());
+  thrust::copy(h_pxi4.begin(), h_pxi4.end(), cmprts->d_pxi4.data());
 }
 
 // ----------------------------------------------------------------------
@@ -100,8 +98,8 @@ void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
   if (cmprts->n_patches == 0)
     return;
 
-  float4 *xchg_xi4 = cmprts->d_xi4 + cmprts->n_prts;
-  float4 *xchg_pxi4 = cmprts->d_pxi4 + cmprts->n_prts;
+  float4 *xchg_xi4 = cmprts->d_xi4.data().get() + cmprts->n_prts;
+  float4 *xchg_pxi4 = cmprts->d_pxi4.data().get() + cmprts->n_prts;
   assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
   
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
@@ -109,7 +107,7 @@ void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
   
   mprts_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
 						      cmprts->d_bidx.data().get(), d_sums.data().get(),
-						      cmprts->d_xi4, cmprts->d_pxi4,
+						      cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
 						      xchg_xi4, xchg_pxi4);
   cuda_sync_if_enabled();
 }

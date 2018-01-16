@@ -93,16 +93,13 @@ void cuda_mparticles_bnd::find_n_send(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
 {
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-
   thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
   thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
 
   assert(cmprts->n_prts + n_prts_send <= cmprts->n_alloced);
 
-  thrust::copy(d_xi4  + cmprts->n_prts, d_xi4  + cmprts->n_prts + n_prts_send, h_bnd_xi4.begin());
-  thrust::copy(d_pxi4 + cmprts->n_prts, d_pxi4 + cmprts->n_prts + n_prts_send, h_bnd_pxi4.begin());
+  thrust::copy(cmprts->d_xi4.data()  + cmprts->n_prts, cmprts->d_xi4.data()  + cmprts->n_prts + n_prts_send, h_bnd_xi4.begin());
+  thrust::copy(cmprts->d_pxi4.data() + cmprts->n_prts, cmprts->d_pxi4.data() + cmprts->n_prts + n_prts_send, h_bnd_pxi4.begin());
 
   uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -131,9 +128,6 @@ void cuda_mparticles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
 
 void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-  
   uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     n_recv += bpatch[p].buf.size();
@@ -190,8 +184,8 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 
   assert(cmprts->n_prts + n_recv <= cmprts->n_alloced);
 
-  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), d_xi4 + cmprts->n_prts);
-  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), d_pxi4 + cmprts->n_prts);
+  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->d_xi4.data() + cmprts->n_prts);
+  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->d_pxi4.data() + cmprts->n_prts);
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
