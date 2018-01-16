@@ -35,12 +35,8 @@
 
 void cuda_mparticles_bnd::setup(struct cuda_mparticles *cmprts)
 {
-  cudaError_t ierr;
-
-  ierr = cudaMalloc((void **) &d_bnd_spine_cnts,
-		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(uint)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &d_bnd_spine_sums,
-		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(uint)); cudaCheck(ierr);
+  d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
+  d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
 
   bpatch = new cuda_bnd[cmprts->n_patches];
 }  
@@ -50,11 +46,6 @@ void cuda_mparticles_bnd::setup(struct cuda_mparticles *cmprts)
 
 cuda_mparticles_bnd::~cuda_mparticles_bnd()
 {
-  cudaError_t ierr;
-
-  ierr = cudaFree(d_bnd_spine_cnts); cudaCheck(ierr);
-  ierr = cudaFree(d_bnd_spine_sums); cudaCheck(ierr);
-
   delete[] bpatch;
 }
 
@@ -70,8 +61,6 @@ void cuda_mparticles_bnd::free_particle_mem()
 
 void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 {
-  cudaError_t ierr;
-
   int n_alloced = cmprts->n_alloced;
   d_alt_bidx.resize(n_alloced);
   d_sums.resize(n_alloced);
@@ -84,11 +73,10 @@ void cuda_mparticles_bnd::find_n_send(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
   thrust::host_vector<uint> h_spine_sums(n_blocks + 1);
 
-  thrust::copy(d_spine_sums + n_blocks * 10,
-	       d_spine_sums + n_blocks * 11 + 1,
+  thrust::copy(d_spine_sums.data() + n_blocks * 10,
+	       d_spine_sums.data() + n_blocks * 11 + 1,
 	       h_spine_sums.begin());
 
   uint off = 0;
@@ -146,7 +134,6 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<uint> d_bnd_spine_cnts(this->d_bnd_spine_cnts);
   
   uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -212,7 +199,7 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), d_bidx + cmprts->n_prts);
   // slight abuse of the now unused last part of spine_cnts
   thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(),
-	       d_bnd_spine_cnts + 10 * cmprts->n_blocks);
+	       d_spine_cnts.data() + 10 * cmprts->n_blocks);
   thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_alt_bidx.begin() + cmprts->n_prts);
 
   cmprts->n_prts += n_recv;
@@ -251,7 +238,7 @@ void cuda_mparticles_bnd::update_offsets(cuda_mparticles *cmprts)
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_blocks, cmprts->d_off, d_bnd_spine_sums);
+    (n_blocks, cmprts->d_off, d_spine_sums.data().get());
   cuda_sync_if_enabled();
 }
 
@@ -259,10 +246,9 @@ void cuda_mparticles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
 
-  thrust::device_ptr<uint> d_spine_sums(d_bnd_spine_sums);
   thrust::device_ptr<uint> d_off(cmprts->d_off);
 
-  thrust::host_vector<uint> h_spine_sums(d_spine_sums, d_spine_sums + 1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_spine_sums(d_spine_sums.data(), d_spine_sums.data() + 1 + n_blocks * (10 + 1));
   thrust::host_vector<uint> h_off(n_blocks + 1);
 
   for (int bid = 0; bid <= n_blocks; bid++) {

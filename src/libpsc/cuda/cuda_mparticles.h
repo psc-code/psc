@@ -67,8 +67,8 @@ public:
   uint n_prts_send;
   uint n_prts_recv;
 
-  uint *d_bnd_spine_cnts = {};
-  uint *d_bnd_spine_sums = {};
+  thrust::device_vector<uint> d_spine_cnts;
+  thrust::device_vector<uint> d_spine_sums;
 
   struct cuda_bnd *bpatch;
 };
