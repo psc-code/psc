@@ -63,9 +63,6 @@ cuda_mparticles_bnd::~cuda_mparticles_bnd()
 
 void cuda_mparticles_bnd::free_particle_mem()
 {
-  cudaError_t ierr;
-
-  ierr = cudaFree(d_sums); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
@@ -77,7 +74,7 @@ void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 
   int n_alloced = cmprts->n_alloced;
   d_alt_bidx.resize(n_alloced);
-  ierr = cudaMalloc((void **) &d_sums, n_alloced * sizeof(uint)); cudaCheck(ierr);
+  d_sums.resize(n_alloced);
 }
 
 // ----------------------------------------------------------------------
