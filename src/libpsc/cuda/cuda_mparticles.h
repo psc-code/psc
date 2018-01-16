@@ -14,18 +14,55 @@
 
 struct cuda_mparticles_base
 {
-  cuda_mparticles_base(const Grid_t& grid) : grid_(grid)
+  cuda_mparticles_base(const Grid_t& grid, const Int3& bs)
+    : grid_(grid),
+      n_patches(grid.patches.size())
   {
+    this->bs = bs;
+
+    for (int d = 0; d < 3; d++) {
+      assert(grid.ldims[d] % bs[d] == 0);
+      b_mx[d] = grid.ldims[d] / bs[d];
+    }
+    
+    n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
+    n_blocks = n_patches * n_blocks_per_patch;
+    
+    d_off.resize(n_blocks + 1);
   }
 
   // copy constructor would work fine, be don't want to copy everything
   // by accident
   cuda_mparticles_base(const cuda_mparticles&) = delete;
 
+  // ----------------------------------------------------------------------
+  // reserve_all
+  //
+  // FIXME, eventually should do its own thing, but for now we better keep the size
+  // the same as for the rest of the arrays
+  
+  void reserve_all(uint new_n_alloced)
+  {
+    d_xi4.resize(new_n_alloced);
+    d_pxi4.resize(new_n_alloced);
+  }
+
+  // per particle
   thrust::device_vector<float4> d_xi4;
   thrust::device_vector<float4> d_pxi4;
-  uint n_prts = {};               // total # of particles across all patches
 
+  // per block
+  thrust::device_vector<uint> d_off;     // particles per block
+                                         // are at indices [offsets[block] .. offsets[block+1]-1[
+
+  uint n_prts = {};                      // total # of particles across all patches
+  uint n_alloced = {};                   // size of particle-related arrays as allocated
+  Int3 b_mx;                             // number of blocks per direction in each patch
+  Int3 bs;                               // number of blocks per patch
+  uint n_blocks_per_patch;               // number of blocks per patch
+  uint n_blocks;                         // number of blocks in all patches in mprts
+
+  const uint n_patches;
   const Grid_t& grid_;
 };
 
@@ -150,17 +187,6 @@ public:
   thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
-  // per block
-  thrust::device_vector<uint> d_off;        // particles per block
-                                  // are at indices [offsets[block] .. offsets[block+1]-1[
-
-  uint n_alloced = {};            // size of particle-related arrays as allocated
-  uint n_patches;                 // # of patches
-  uint n_blocks_per_patch;        // number of blocks per patch
-  uint n_blocks;                  // number of blocks in all patches in mprts
-
-  Int3 b_mx;                      // number of blocks per direction in each patch
-  Int3 bs;
   Real3 b_dxi;                    // inverse of block size (in actual length units)
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 

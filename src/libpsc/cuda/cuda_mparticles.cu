@@ -15,28 +15,17 @@
 // ctor
 
 cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
-  : cuda_mparticles_base(grid)
+  : cuda_mparticles_base(grid, bs)
 {
-  n_patches = grid.patches.size();
-
   xb_by_patch.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {
     xb_by_patch[p] = grid.patches[p].xb;
   }
 
-  this->bs = bs;
-
   for (int d = 0; d < 3; d++) {
-    assert(grid.ldims[d] % bs[d] == 0);
-    b_mx[d] = grid.ldims[d] / bs[d];
     b_dxi[d] = 1.f / (bs[d] * grid.dx[d]);
   }
-
-  n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
-  n_blocks = n_patches * n_blocks_per_patch;
-
-  d_off.resize(n_blocks + 1);
-
+  
   cuda_mparticles_bnd::setup(this);
 }
 
@@ -73,13 +62,13 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
   size *= 1.2;// FIXME hack
   uint new_n_alloced = std::max(size, 2 * n_alloced);
 
+  cuda_mparticles_base::reserve_all(new_n_alloced);
+
   if (new_n_alloced > 0) {
     free_particle_mem();
   }
   n_alloced = new_n_alloced;
 
-  d_xi4.resize(n_alloced);
-  d_pxi4.resize(n_alloced);
   d_alt_xi4.resize(n_alloced);
   d_alt_pxi4.resize(n_alloced);
   d_bidx.resize(n_alloced);
