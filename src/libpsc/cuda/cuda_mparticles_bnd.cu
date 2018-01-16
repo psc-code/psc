@@ -238,15 +238,13 @@ void cuda_mparticles_bnd::update_offsets(cuda_mparticles *cmprts)
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_blocks, cmprts->d_off, d_spine_sums.data().get());
+    (n_blocks, cmprts->d_off.data().get(), d_spine_sums.data().get());
   cuda_sync_if_enabled();
 }
 
 void cuda_mparticles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
-
-  thrust::device_ptr<uint> d_off(cmprts->d_off);
 
   thrust::host_vector<uint> h_spine_sums(d_spine_sums.data(), d_spine_sums.data() + 1 + n_blocks * (10 + 1));
   thrust::host_vector<uint> h_off(n_blocks + 1);
@@ -255,7 +253,7 @@ void cuda_mparticles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
     h_off[bid] = h_spine_sums[bid * 10];
   }
 
-  thrust::copy(h_off.begin(), h_off.end(), d_off);
+  thrust::copy(h_off.begin(), h_off.end(), cmprts->d_off.begin());
 }
 
 // ----------------------------------------------------------------------

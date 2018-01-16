@@ -134,7 +134,7 @@ public:
   uint *d_id = {};                // particle id for sorting
 
   // per block
-  uint *d_off = {};               // particles per block
+  thrust::device_vector<uint> d_off;      // particles per block
                                   // are at indices [offsets[block] .. offsets[block+1]-1[
 
   uint n_prts = {};               // total # of particles across all patches

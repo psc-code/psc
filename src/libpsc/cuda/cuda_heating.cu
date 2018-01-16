@@ -142,11 +142,10 @@ cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<uint> d_id(cmprts->d_id);
-  thrust::device_ptr<uint> d_off(cmprts->d_off);
 
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
-    for (int n = d_off[b]; n < d_off[b+1]; n++) {
+    for (int n = cmprts->d_off[b]; n < cmprts->d_off[b+1]; n++) {
       float4 xi4 = d_xi4[n];
 
       int prt_kind = cuda_float_as_int(xi4.w);
@@ -254,8 +253,8 @@ heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
 
   k_heating_run_foil<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (h_prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
-       d_curand_states);
+    (h_prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off.data().get(),
+     d_curand_states);
   cuda_sync_if_enabled();
 }
 

@@ -138,35 +138,35 @@ void cuda_mparticles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 		       NopFunctor<K>,
 		       8, 8> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off.data().get(), n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 16 && b_mx[2] == 16) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       16, 16> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off.data().get(), n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 32 && b_mx[2] == 32) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       32, 32> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off.data().get(), n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       64, 64> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off.data().get(), n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
                        NopFunctor<K>,
                        NopFunctor<K>,
                        128, 128>
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off, n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx, cmprts->d_id, cmprts->d_off.data().get(), n_blocks);
   } else {
     printf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
     assert(0);
@@ -184,8 +184,7 @@ void cuda_mparticles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
   uint n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
-  thrust::device_ptr<uint> d_off(cmprts->d_off);
-  thrust::host_vector<uint> h_off(d_off, d_off + n_blocks + 1);
+  thrust::host_vector<uint> h_off(cmprts->d_off);
   thrust::host_vector<uint> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
   thrust::host_vector<uint> h_sums(d_sums.data(), d_sums.data() + cmprts->n_prts);
   
