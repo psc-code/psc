@@ -3,6 +3,7 @@
 #define VEC3_HXX
 
 #include <array>
+#include <memory>
 #include <cassert>
 
 // ======================================================================

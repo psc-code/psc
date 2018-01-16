@@ -4,6 +4,7 @@
 
 #include "vec3.hxx"
 #include <vector>
+#include <cstring>
 
 // ======================================================================
 // Grid_
