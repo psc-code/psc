@@ -133,7 +133,6 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
-  thrust::device_ptr<uint> d_bidx(cmprts->d_bidx);
   
   uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -196,7 +195,7 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
-  thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), d_bidx + cmprts->n_prts);
+  thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), cmprts->d_bidx.data() + cmprts->n_prts);
   // slight abuse of the now unused last part of spine_cnts
   thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(),
 	       d_spine_cnts.data() + 10 * cmprts->n_blocks);
