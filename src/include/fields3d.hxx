@@ -57,7 +57,7 @@ struct fields3d {
   real_t  operator()(int m, int i, int j, int k) const { return data[index(m, i, j, k)];  }
   real_t& operator()(int m, int i, int j, int k)       { return data[index(m, i, j, k)];  }
 
-  int index(int m, int i, int j, int k);
+  int index(int m, int i, int j, int k) const;
 
   int size()
   {
@@ -88,7 +88,7 @@ struct fields3d {
 };
 
 template<typename R, typename L>
-int fields3d<R, L>::index(int m, int i, int j, int k)
+int fields3d<R, L>::index(int m, int i, int j, int k) const
 {
 #ifdef BOUNDS_CHECK
   assert(m >= first_comp_ && m < n_comp_);

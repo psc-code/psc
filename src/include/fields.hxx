@@ -51,7 +51,7 @@ public:
   }
 
 private:
-  int index(int m, int i_, int j_, int k_)
+  int index(int m, int i_, int j_, int k_) const
   {
     int i = dim::InvarX::value ? 0 : i_;
     int j = dim::InvarY::value ? 0 : j_;
