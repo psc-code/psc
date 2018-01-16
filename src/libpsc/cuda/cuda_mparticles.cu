@@ -15,7 +15,7 @@
 // ctor
 
 cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
-  : grid_(grid)
+  : cuda_mparticles_base(grid)
 {
   n_patches = grid.patches.size();
 

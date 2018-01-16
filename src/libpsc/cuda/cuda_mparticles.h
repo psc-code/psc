@@ -10,6 +10,26 @@
 #include <thrust/device_vector.h>
 
 // ======================================================================
+// cuda_mparticles_base
+
+struct cuda_mparticles_base
+{
+  cuda_mparticles_base(const Grid_t& grid) : grid_(grid)
+  {
+  }
+
+  // copy constructor would work fine, be don't want to copy everything
+  // by accident
+  cuda_mparticles_base(const cuda_mparticles&) = delete;
+
+  thrust::device_vector<float4> d_xi4;
+  thrust::device_vector<float4> d_pxi4;
+  uint n_prts = {};               // total # of particles across all patches
+
+  const Grid_t& grid_;
+};
+
+// ======================================================================
 // bnd
 
 #define CUDA_BND_S_NEW (9)
@@ -76,7 +96,7 @@ public:
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
-struct cuda_mparticles : cuda_mparticles_bnd
+struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
 {
 public:
   using particle_t = particle_cuda_t;
@@ -84,7 +104,6 @@ public:
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles(const Grid_t& grid, const Int3& bs);
-  cuda_mparticles(const cuda_mparticles&) = delete;
   ~cuda_mparticles();
 
   void free_particle_mem();
@@ -126,8 +145,6 @@ public:
   
 public:
   // per particle
-  thrust::device_vector<float4> d_xi4;      // current particle data
-  thrust::device_vector<float4> d_pxi4;     // current particle data
   thrust::device_vector<float4> d_alt_xi4;  // storage for out-of-place reordering of particle data
   thrust::device_vector<float4> d_alt_pxi4;
   thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
@@ -137,7 +154,6 @@ public:
   thrust::device_vector<uint> d_off;        // particles per block
                                   // are at indices [offsets[block] .. offsets[block+1]-1[
 
-  uint n_prts = {};               // total # of particles across all patches
   uint n_alloced = {};            // size of particle-related arrays as allocated
   uint n_patches;                 // # of patches
   uint n_blocks_per_patch;        // number of blocks per patch
@@ -149,9 +165,6 @@ public:
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order
-
-public:
-  const Grid_t& grid_;
 };
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
