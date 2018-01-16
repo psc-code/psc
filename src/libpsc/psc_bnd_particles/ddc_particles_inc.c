@@ -588,14 +588,14 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 #endif
 
 #if DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts).sub_;
+  mparticles_cuda_t mp(mprts);
 
-  cmprts->bnd_prep();
+  mp->bnd_prep();
   
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = cmprts->bnd_get_buffer( p);
+    dpatch->m_buf = mp->bnd_get_buffer(p);
     dpatch->m_begin = 0;
   }
 #endif

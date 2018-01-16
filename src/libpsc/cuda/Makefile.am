@@ -31,6 +31,7 @@ libsubdir_la_SOURCES = \
 
 libsubdir_la_LIBADD = \
 	cuda_base.lo \
+	cuda_mparticles_iface.lo \
 	cuda_mparticles.lo \
 	cuda_mparticles_bnd.lo \
 	cuda_mparticles_bnd_scan.lo \

@@ -17,8 +17,6 @@
 cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   : grid_(grid)
 {
-  //  std::memset(this, 0, sizeof(*this)); // FIXME
-
   n_patches = grid.patches.size();
 
   xb_by_patch.resize(n_patches);

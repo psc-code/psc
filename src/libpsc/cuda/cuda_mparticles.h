@@ -7,34 +7,9 @@
 #include "grid.hxx"
 #include "particles.hxx"
 
-
-using particle_cuda_real_t = float;
-
-struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
-
-using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
-
-
 #ifndef __CUDACC__
 struct float4 { float x; float y; float z; float w; };
 #endif
-
-// ----------------------------------------------------------------------
-// float_3 etc
-
-typedef float float_3[3];
-typedef double double_3[3];
-typedef float float_4[4];
-
-// ----------------------------------------------------------------------
-// cuda_mparticles_prt
-
-struct cuda_mparticles_prt {
-  float xi[3];
-  float pxi[3];
-  int kind;
-  float qni_wni;
-};
 
 // ======================================================================
 // bnd
@@ -88,14 +63,14 @@ struct cuda_mparticles_bnd
   void reorder_send_buf_total(cuda_mparticles *cmprts);
   
 public:
-  uint *d_alt_bidx;
-  uint *d_sums; // FIXME, too many arrays, consolidation would be good
+  uint *d_alt_bidx = {};
+  uint *d_sums = {}; // FIXME, too many arrays, consolidation would be good
 
   uint n_prts_send;
   uint n_prts_recv;
 
-  uint *d_bnd_spine_cnts;
-  uint *d_bnd_spine_sums;
+  uint *d_bnd_spine_cnts = {};
+  uint *d_bnd_spine_sums = {};
 
   struct cuda_bnd *bpatch;
 };
@@ -152,17 +127,19 @@ public:
   
 public:
   // per particle
-  float4 *d_xi4, *d_pxi4;         // current particle data
-  float4 *d_alt_xi4, *d_alt_pxi4; // storage for out-of-place reordering of particle data
-  uint *d_bidx;                   // block index (incl patch) per particle
-  uint *d_id;                     // particle id for sorting
+  float4 *d_xi4 = {};             // current particle data
+  float4 *d_pxi4 = {};
+  float4 *d_alt_xi4  = {};        // storage for out-of-place reordering of particle data
+  float4 *d_alt_pxi4 = {};
+  uint *d_bidx = {};              // block index (incl patch) per particle
+  uint *d_id = {};                // particle id for sorting
 
   // per block
-  uint *d_off;                    // particles per block
+  uint *d_off = {};               // particles per block
                                   // are at indices [offsets[block] .. offsets[block+1]-1[
 
-  uint n_prts;                    // total # of particles across all patches
-  uint n_alloced;                 // size of particle-related arrays as allocated
+  uint n_prts = {};               // total # of particles across all patches
+  uint n_alloced = {};            // size of particle-related arrays as allocated
   uint n_patches;                 // # of patches
   uint n_blocks_per_patch;        // number of blocks per patch
   uint n_blocks;                  // number of blocks in all patches in mprts

@@ -22,7 +22,7 @@ static void
 copy_from(mparticles_cuda_t mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  uint n_prts_by_patch[mprts->n_patches];
+  uint n_prts_by_patch[mprts->n_patches()];
   mprts->get_size_all(n_prts_by_patch);
   
   uint off = 0;
@@ -39,7 +39,7 @@ static void
 copy_to(mparticles_cuda_t mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  uint n_prts_by_patch[mprts->n_patches];
+  uint n_prts_by_patch[mprts->n_patches()];
   mprts->get_size_all(n_prts_by_patch);
   
   uint off = 0;
@@ -212,7 +212,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
-  new(mprts.sub_) cuda_mparticles(grid, bs);
+  new(mprts.sub_) psc_mparticles_cuda(grid, bs);
 }
 
 // ----------------------------------------------------------------------
@@ -223,7 +223,7 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 {
   mparticles_cuda_t mprts(_mprts);
   
-  mprts.sub_->~cuda_mparticles();
+  mprts.sub_->~psc_mparticles_cuda();
 }
 
 // ----------------------------------------------------------------------
@@ -430,7 +430,7 @@ const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
 struct psc_mparticles_ops_cuda : psc_mparticles_ops {
   psc_mparticles_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(struct cuda_mparticles);
+    size                    = sizeof(struct psc_mparticles_cuda);
     methods                 = psc_mparticles_cuda_methods;
     setup                   = psc_mparticles_cuda_setup;
     destroy                 = psc_mparticles_cuda_destroy;

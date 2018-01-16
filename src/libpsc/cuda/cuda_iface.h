@@ -5,7 +5,8 @@
 #include "mrc_json.h"
 #include "psc_fields_single.h"
 
-#include "cuda_mparticles.h"
+#include <particles.hxx>
+#include <grid.hxx>
 
 struct BS
 {
@@ -15,9 +16,75 @@ struct BS
 };
 
 // ----------------------------------------------------------------------
+// float_3 etc
+
+typedef float float_3[3];
+typedef double double_3[3];
+typedef float float_4[4];
+
+// ----------------------------------------------------------------------
 // cuda_base
 
 void cuda_base_init(void);
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda
+
+using particle_cuda_real_t = float;
+
+struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
+
+using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_prt
+
+struct cuda_mparticles_prt {
+  float xi[3];
+  float pxi[3];
+  int kind;
+  float qni_wni;
+};
+
+struct cuda_mparticles;
+
+struct psc_mparticles_cuda
+{
+  using particle_t = particle_cuda_t;
+  
+  psc_mparticles_cuda(Grid_t& grid, const Int3& bs);
+  psc_mparticles_cuda(const psc_mparticles_cuda&) = delete;
+  ~psc_mparticles_cuda();
+
+  uint n_patches();
+  void reserve_all(const uint *n_prts_by_patch);
+  void get_size_all(uint *n_prts_by_patch);
+  void resize_all(const uint *n_prts_by_patch);
+  uint get_n_prts();
+  void set_particles(uint n_prts, uint off,
+		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
+		     void *ctx);
+  void get_particles(uint n_prts, uint off,
+		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
+		     void *ctx);
+  void to_device(float_4 *xi4, float_4 *pxi4,
+		 uint n_prts, uint off);
+  void from_device(float_4 *xi4, float_4 *pxi4,
+		   uint n_prts, uint off);
+  void setup_internals();
+  void inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
+
+  const particle_cuda_real_t *patch_get_b_dxi(int p);
+  const int *patch_get_b_mx(int p);
+  psc_particle_cuda_buf_t *bnd_get_buffer(int p);
+  void bnd_prep();
+  void bnd_post();
+  
+  cuda_mparticles* cmprts() { return cmprts_; }
+
+private:
+  cuda_mparticles* cmprts_;
+};
 
 // ----------------------------------------------------------------------
 // cuda_mfields

@@ -1,5 +1,5 @@
 
-#include "cuda_iface.h"
+#include "cuda_mparticles.h"
 
 #include <stdio.h>
 #include <stdlib.h>
