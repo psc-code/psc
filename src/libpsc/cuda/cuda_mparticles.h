@@ -131,7 +131,7 @@ public:
   float4 *d_alt_xi4  = {};        // storage for out-of-place reordering of particle data
   float4 *d_alt_pxi4 = {};
   uint *d_bidx = {};              // block index (incl patch) per particle
-  uint *d_id = {};                // particle id for sorting
+  thrust::device_vector<uint> d_id;       // particle id for sorting
 
   // per block
   thrust::device_vector<uint> d_off;      // particles per block
