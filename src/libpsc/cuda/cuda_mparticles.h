@@ -14,6 +14,10 @@
 
 struct cuda_mparticles_base
 {
+  using particle_t = particle_cuda_t;
+  using real_t = particle_t::real_t;
+  using Real3 = Vec3<real_t>;
+
   cuda_mparticles_base(const Grid_t& grid, const Int3& bs);
   // copy constructor would work fine, be don't want to copy everything
   // by accident
@@ -37,6 +41,7 @@ struct cuda_mparticles_base
   Int3 bs;                               // number of blocks per patch
   uint n_blocks_per_patch;               // number of blocks per patch
   uint n_blocks;                         // number of blocks in all patches in mprts
+  Real3 b_dxi;                           // inverse of block size (in actual length units)
 
   const uint n_patches;
   const Grid_t& grid_;
@@ -110,11 +115,6 @@ public:
 
 struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
 {
-public:
-  using particle_t = particle_cuda_t;
-  using real_t = particle_t::real_t;
-  using Real3 = Vec3<real_t>;
-
   cuda_mparticles(const Grid_t& grid, const Int3& bs);
 
   void reserve_all(const uint *n_prts_by_patch);
@@ -157,7 +157,6 @@ public:
   thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
-  Real3 b_dxi;                    // inverse of block size (in actual length units)
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order

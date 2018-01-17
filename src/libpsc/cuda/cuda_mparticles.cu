@@ -22,10 +22,6 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
     xb_by_patch[p] = grid.patches[p].xb;
   }
 
-  for (int d = 0; d < 3; d++) {
-    b_dxi[d] = 1.f / (bs[d] * grid.dx[d]);
-  }
-  
   cuda_mparticles_bnd::setup(this);
 }
 

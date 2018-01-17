@@ -16,6 +16,7 @@ cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid, const Int3& bs)
   for (int d = 0; d < 3; d++) {
     assert(grid.ldims[d] % bs[d] == 0);
     b_mx[d] = grid.ldims[d] / bs[d];
+    b_dxi[d] = 1.f / (bs[d] * grid.dx[d]);
   }
   
   n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
