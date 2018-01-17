@@ -129,8 +129,15 @@ void psc_mparticles_cuda::bnd_post()
 // ======================================================================
 // conversion
 
-struct copy_ctx {
-  struct psc_mparticles *mprts;
+template<typename MP>
+struct copy_ctx
+{
+  copy_ctx(MP& _mprts_other, int _p)
+    : mprts_other(_mprts_other), p(_p)
+  {
+  }
+  
+  MP& mprts_other;
   int p;
 };
 
@@ -144,9 +151,7 @@ static void copy_from(mparticles_cuda_t mprts, MP mprts_other,
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx;
-    ctx.mprts = mprts_other.mprts();
-    ctx.p = p;
+    copy_ctx<MP> ctx(mprts_other, p);
     mprts->set_particles(n_prts, off, get_particle, &ctx);
 
     off += n_prts;
@@ -163,9 +168,7 @@ static void copy_to(mparticles_cuda_t mprts, MP mprts_other,
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx;
-    ctx.mprts = mprts_other.mprts();
-    ctx.p = p;
+    copy_ctx<MP> ctx(mprts_other, p);
     mprts->get_particles(n_prts, off, put_particle, &ctx);
 
     off += n_prts;
@@ -176,8 +179,8 @@ template<typename MP>
 static void get_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
   using particle_t = typename MP::particle_t;
-  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_t *part = &MP(ctx->mprts)[ctx->p][n];
+  struct copy_ctx<MP> *ctx = (struct copy_ctx<MP> *) _ctx;
+  particle_t *part = &ctx->mprts_other[ctx->p][n];
 
   prt->xi[0]   = part->xi;
   prt->xi[1]   = part->yi;
@@ -193,8 +196,8 @@ template<typename MP>
 static void put_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
   using particle_t = typename MP::particle_t;
-  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_t *part = &MP(ctx->mprts)[ctx->p][n];
+  struct copy_ctx<MP> *ctx = (struct copy_ctx<MP> *) _ctx;
+  particle_t *part = &ctx->mprts_other[ctx->p][n];
   
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];
@@ -227,12 +230,12 @@ void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 void psc_mparticles_cuda::copy_from_double(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(mparticles_cuda_t(mprts_cuda), mparticles_single_t(mprts), get_particle<mparticles_double_t>);
+  copy_from(mparticles_cuda_t(mprts_cuda), mparticles_double_t(mprts), get_particle<mparticles_double_t>);
 }
 
 void psc_mparticles_cuda::copy_to_double(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(mparticles_cuda_t(mprts_cuda), mparticles_single_t(mprts), put_particle<mparticles_double_t>);
+  copy_to(mparticles_cuda_t(mprts_cuda), mparticles_double_t(mprts), put_particle<mparticles_double_t>);
 }
 
