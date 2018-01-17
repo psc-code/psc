@@ -78,7 +78,7 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 // conversion to "single"
 
 static void
-get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+convert_from_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
@@ -104,7 +104,7 @@ get_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 }
 
 static void
-put_particle_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+convert_to_single(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
@@ -136,14 +136,14 @@ static void
 psc_mparticles_vpic_copy_from_single(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single, unsigned int flags)
 {
-  copy_from(mprts, mprts_single, get_particle_single);
+  copy_from(mprts, mprts_single, convert_from_single);
 }
 
 static void
 psc_mparticles_vpic_copy_to_single(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single, unsigned int flags)
 {
-  copy_to(mprts, mprts_single, put_particle_single);
+  copy_to(mprts, mprts_single, convert_to_single);
 }
 
 // ======================================================================

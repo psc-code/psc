@@ -21,7 +21,7 @@ calc_vxi(particle_fortran_real_t vxi[3], particle_fortran_t *part)
 }
 
 static void
-put_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
+convert_to_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
   particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -47,7 +47,7 @@ put_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts
 }
 
 static void
-get_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
+convert_from_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
   particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -84,14 +84,14 @@ static void
 psc_mparticles_fortran_copy_to_double(struct psc_mparticles *mprts_fortran,
 				      struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
-  psc_mparticles_copy_to(mprts_fortran, mprts_dbl, flags, put_particle_double);
+  psc_mparticles_copy_to(mprts_fortran, mprts_dbl, flags, convert_to_double);
 }
 
 static void
 psc_mparticles_fortran_copy_from_double(struct psc_mparticles *mprts_fortran,
 					struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
-  psc_mparticles_copy_from(mprts_fortran, mprts_dbl, flags, get_particle_double);
+  psc_mparticles_copy_from(mprts_fortran, mprts_dbl, flags, convert_from_double);
 }
 
 static struct mrc_obj_method psc_mparticles_fortran_methods[] = {

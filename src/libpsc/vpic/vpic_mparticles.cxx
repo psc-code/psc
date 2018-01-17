@@ -140,7 +140,7 @@ copy_to(Particles *vmprts, bk_mparticles *bkmprts,
 }
 
 static void
-get_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+convert_from_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_by_kind *part = &ctx->bkmprts->at(ctx->p, n);
@@ -158,7 +158,7 @@ get_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 }
 
 static void
-put_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+convert_to_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
   particle_single_by_kind *part = &ctx->bkmprts->at(ctx->p, n);
@@ -177,12 +177,12 @@ put_particle_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 
 void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
 {
-  copy_from(vmprts, bkmprts, get_particle_single_by_kind);
+  copy_from(vmprts, bkmprts, convert_from_single_by_kind);
 }
 
 void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
 {
-  copy_to(vmprts, bkmprts, put_particle_single_by_kind);
+  copy_to(vmprts, bkmprts, convert_to_single_by_kind);
 }
 
 
