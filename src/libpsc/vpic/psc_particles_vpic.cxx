@@ -139,10 +139,17 @@ static void copy2_from(mparticles_vpic_t mprts, MP mprts_from, F convert_from)
   }
 }
 
+template<typename MP>
+struct ConvertToVpic;
+
+template<typename MP>
+struct ConvertFromVpic;
+
 // ======================================================================
 // conversion to "single"
 
-struct ConvertToVpic
+template<>
+struct ConvertToVpic<mparticles_single_t>
 {
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -170,7 +177,8 @@ struct ConvertToVpic
   }
 };
 
-struct ConvertFromVpic
+template<>
+struct ConvertFromVpic<mparticles_single_t>
 {
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -201,7 +209,8 @@ struct ConvertFromVpic
   }
 };
 
-struct ConvertToVpic2
+template<>
+struct ConvertToVpic<mparticles_single_by_kind_t>
 {
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -221,7 +230,8 @@ struct ConvertToVpic2
   }
 };
 
-struct ConvertFromVpic2
+template<>
+struct ConvertFromVpic<mparticles_single_by_kind_t>
 {
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -245,7 +255,7 @@ static void
 psc_mparticles_vpic_copy_from_single(struct psc_mparticles *mprts,
 				     struct psc_mparticles *mprts_single, unsigned int flags)
 {
-  ConvertToVpic convert_to_vpic;
+  ConvertToVpic<mparticles_single_t> convert_to_vpic;
   copy_from(mparticles_vpic_t(mprts), mparticles_single_t(mprts_single), convert_to_vpic);
 }
 
@@ -253,7 +263,7 @@ static void
 psc_mparticles_vpic_copy_to_single(struct psc_mparticles *mprts,
 				   struct psc_mparticles *mprts_single, unsigned int flags)
 {
-  ConvertFromVpic convert_from_vpic;
+  ConvertFromVpic<mparticles_single_t> convert_from_vpic;
   copy_to(mparticles_vpic_t(mprts), mparticles_single_t(mprts_single), convert_from_vpic);
 }
 
@@ -264,7 +274,7 @@ static void
 psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  ConvertToVpic2 convert_to_vpic;
+  ConvertToVpic<mparticles_single_by_kind_t> convert_to_vpic;
   copy2_from(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
 	     convert_to_vpic);
 }
@@ -273,7 +283,7 @@ static void
 psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  ConvertFromVpic2 convert_from_vpic;
+  ConvertFromVpic<mparticles_single_by_kind_t> convert_from_vpic;
   copy2_to(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
 	   convert_from_vpic);
 }
