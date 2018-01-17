@@ -273,8 +273,8 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
     int n_prts = n_prts_by_patch[p];
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
-      float_4 *xi4  = (float_4 *) calloc(n_prts, sizeof(*xi4));
-      float_4 *pxi4 = (float_4 *) calloc(n_prts, sizeof(*pxi4));
+      float4 *xi4  = (float4 *) calloc(n_prts, sizeof(*xi4));
+      float4 *pxi4 = (float4 *) calloc(n_prts, sizeof(*pxi4));
       
       mprts->from_device(xi4, pxi4, n_prts, off);
       
@@ -329,8 +329,8 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts = n_prts_by_patch[p];
     if (n_prts > 0) {
-      float_4 *xi4  = (float_4*) calloc(n_prts, sizeof(float_4));
-      float_4 *pxi4 = (float_4*) calloc(n_prts, sizeof(float_4));
+      float4 *xi4  = (float4*) calloc(n_prts, sizeof(float4));
+      float4 *pxi4 = (float4*) calloc(n_prts, sizeof(float4));
       
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;

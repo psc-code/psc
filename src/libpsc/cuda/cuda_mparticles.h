@@ -138,10 +138,8 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
   void dump_by_patch(uint *n_prts_by_patch);
 
 public:
-  void to_device(float_4 *xi4, float_4 *pxi4,
-		 uint n_prts, uint off);
-  void from_device(float_4 *xi4, float_4 *pxi4,
-		   uint n_prts, uint off);
+  void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
+  void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   
   void find_block_indices_ids();
   void reorder_and_offsets();

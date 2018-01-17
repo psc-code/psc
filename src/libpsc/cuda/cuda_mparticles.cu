@@ -55,7 +55,7 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // to_device
 
-void cuda_mparticles::to_device(float_4 *xi4, float_4 *pxi4,
+void cuda_mparticles::to_device(float4 *xi4, float4 *pxi4,
 				uint n_prts, uint off)
 {
   cudaError_t ierr;
@@ -70,7 +70,7 @@ void cuda_mparticles::to_device(float_4 *xi4, float_4 *pxi4,
 // ----------------------------------------------------------------------
 // from_device
 
-void cuda_mparticles::from_device(float_4 *xi4, float_4 *pxi4,
+void cuda_mparticles::from_device(float4 *xi4, float4 *pxi4,
 				  uint n_prts, uint off)
 {
   cudaError_t ierr;
@@ -667,7 +667,7 @@ void cuda_mparticles::set_particles(uint n_prts, uint off,
     pxi4[n].w = prt.qni_wni;
   }
 
-  to_device((float_4 *) xi4, (float_4 *) pxi4, n_prts, off);
+  to_device(xi4, pxi4, n_prts, off);
   
   delete[] xi4;
   delete[] pxi4;
@@ -684,7 +684,7 @@ void cuda_mparticles::get_particles(uint n_prts, uint off,
   float4 *pxi4 = new float4[n_prts];
 
   cuda_mparticles_reorder(this);
-  from_device((float_4 *) xi4, (float_4 *) pxi4, n_prts, off);
+  from_device(xi4, pxi4, n_prts, off);
   
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt;

@@ -20,7 +20,9 @@ struct BS
 
 typedef float float_3[3];
 typedef double double_3[3];
-typedef float float_4[4];
+#ifndef __CUDACC__
+typedef struct { float x; float y; float z; float w; } float4;
+#endif
 
 // ----------------------------------------------------------------------
 // cuda_base
@@ -67,10 +69,8 @@ struct psc_mparticles_cuda
   void get_particles(uint n_prts, uint off,
 		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
 		     void *ctx);
-  void to_device(float_4 *xi4, float_4 *pxi4,
-		 uint n_prts, uint off);
-  void from_device(float_4 *xi4, float_4 *pxi4,
-		   uint n_prts, uint off);
+  void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
+  void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void setup_internals();
   void inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
 

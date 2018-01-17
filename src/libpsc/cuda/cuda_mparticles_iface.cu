@@ -72,15 +72,13 @@ void psc_mparticles_cuda::get_particles(uint n_prts, uint off,
   cmprts_->get_particles(n_prts, off, put_particle, ctx);
 }
 
-void psc_mparticles_cuda::to_device(float_4 *xi4, float_4 *pxi4,
-				    uint n_prts, uint off)
+void psc_mparticles_cuda::to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
 {
   dprintf("CMPRTS: to_device\n");
   cmprts_->to_device(xi4, pxi4, n_prts, off);
 }
 
-void psc_mparticles_cuda::from_device(float_4 *xi4, float_4 *pxi4,
-				      uint n_prts, uint off)
+void psc_mparticles_cuda::from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
 {
   dprintf("CMPRTS: from_device\n");
   cmprts_->from_device(xi4, pxi4, n_prts, off);
