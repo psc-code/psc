@@ -201,7 +201,7 @@ struct ConvertFromVpic
   }
 };
 
-struct ConvertFromSingleByKind
+struct ConvertToVpic2
 {
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -221,7 +221,7 @@ struct ConvertFromSingleByKind
   }
 };
 
-struct ConvertToSingleByKind
+struct ConvertFromVpic2
 {
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -264,18 +264,18 @@ static void
 psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  ConvertFromSingleByKind convert_from_single_by_kind;
+  ConvertToVpic2 convert_to_vpic;
   copy2_from(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
-	     convert_from_single_by_kind);
+	     convert_to_vpic);
 }
 
 static void
 psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  ConvertToSingleByKind convert_to_single_by_kind;
+  ConvertFromVpic2 convert_from_vpic;
   copy2_to(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
-	   convert_to_single_by_kind);
+	   convert_from_vpic);
 }
 
 // ----------------------------------------------------------------------
