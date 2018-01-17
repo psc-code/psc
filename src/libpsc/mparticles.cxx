@@ -88,6 +88,19 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 {
   psc_mparticles_copy_func_t copy_to, copy_from;
 
+  // if we're copying, we better resize, too
+  // (but resizing w/o copying is fine)
+  if (!(flags & MP_DONT_COPY)) {
+    assert(!(flags & MP_DONT_RESIZE));
+  }
+
+  if (!(flags & MP_DONT_RESIZE)) {
+    int n_prts_by_patch[mprts->nr_patches];
+    psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
+    psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
+    psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
+  }
+  
   if (flags & MP_DONT_COPY) {
     return;
   }
@@ -139,13 +152,6 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
   psc_mparticles_set_param_int(mprts, "flags", flags);
   psc_mparticles_setup(mprts);
 
-  if (!(flags & MP_DONT_RESIZE)) {
-    int nr_particles_by_patch[mprts_from->nr_patches];
-    psc_mparticles_get_size_all(mprts_from, nr_particles_by_patch);
-    psc_mparticles_reserve_all(mprts, nr_particles_by_patch);
-    psc_mparticles_resize_all(mprts, nr_particles_by_patch);
-  }
-  
   copy(mprts_from, mprts, type_from, type, flags);
 
   //  mprintf("get_as %s -> %s to\n", type_from, type);
@@ -194,13 +200,6 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
     }
 
     flags |= MP_DONT_RESIZE;
-  }
-  
-  if (!(flags & MP_DONT_RESIZE)) {
-    int n_prts_by_patch[mprts->nr_patches];
-    psc_mparticles_get_size_all(mprts, n_prts_by_patch);
-    psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
-    psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
   }
   
   copy(mprts, mprts_to, type, type_to, flags);
