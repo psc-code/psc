@@ -63,7 +63,7 @@ static void copy_to(mparticles_vpic_t mprts, MP mprts_to, F convert_from)
   Particles *vmprts = mprts->vmprts;
   
   int n_prts_by_patch[mprts.n_patches()];
-  Simulation_mprts_get_size_all(mprts->sim, vmprts, mprts.n_patches(), n_prts_by_patch);
+  vpic_mparticles_get_size_all(vmprts, mprts.n_patches(), n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
@@ -127,7 +127,7 @@ static void copy2_from(mparticles_vpic_t mprts, MP mprts_from, F convert_from)
   bk_mparticles *bkmprts = mprts_from->bkmprts;
 
   int n_prts_by_patch[mprts.n_patches()];
-  vpic_mparticles_get_size_all(vmprts, mprts.n_patches(), n_prts_by_patch);
+  psc_mparticles_get_size_all(mprts_from.mprts(), n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
@@ -303,7 +303,7 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
   
-  Simulation_mprts_get_size_all(sub->sim, sub->vmprts, mprts->nr_patches, n_prts_by_patch);
+  vpic_mparticles_get_size_all(sub->vmprts, mprts->nr_patches, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------

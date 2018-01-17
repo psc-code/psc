@@ -169,16 +169,6 @@ void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patch
 }
 
 // ----------------------------------------------------------------------
-// Simulation_mprts_get_size_all
-
-void Simulation_mprts_get_size_all(Simulation* sim, Particles *vmprts, int n_patches,
-				   int *n_prts_by_patch)
-{
-  assert(n_patches == 1);
-  n_prts_by_patch[0] = sim->mprts_get_nr_particles(*vmprts);
-}
-
-// ----------------------------------------------------------------------
 // Simulation_mprts_get_grid_nx_dx
 
 void Simulation_mprts_get_grid_nx_dx(Simulation* sim, Particles* vmprts, int *nx, float *dx)
