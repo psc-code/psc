@@ -41,10 +41,10 @@ struct cuda_mparticles_base
   // FIXME, eventually should do its own thing, but for now we better keep the size
   // the same as for the rest of the arrays
   
-  void reserve_all(uint new_n_alloced)
+  void reserve_all()
   {
-    d_xi4.resize(new_n_alloced);
-    d_pxi4.resize(new_n_alloced);
+    d_xi4.resize(n_alloced);
+    d_pxi4.resize(n_alloced);
   }
 
   // per particle

@@ -44,14 +44,9 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
   }
 
   size *= 1.2;// FIXME hack
-  uint new_n_alloced = std::max(size, 2 * n_alloced);
+  n_alloced = std::max(size, 2 * n_alloced);
 
-  cuda_mparticles_base::reserve_all(new_n_alloced);
-
-  if (new_n_alloced > 0) {
-    free_particle_mem();
-  }
-  n_alloced = new_n_alloced;
+  cuda_mparticles_base::reserve_all();
 
   d_alt_xi4.resize(n_alloced);
   d_alt_pxi4.resize(n_alloced);
