@@ -25,15 +25,17 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 // ======================================================================
 // conversion
 
-struct copy_ctx {
-  struct psc_mparticles *mprts;
-  int p;
+struct copy_ctx
+{
+  struct psc_mparticles *mprts_;
+  int p_;
   int im[3];
   float dx[3];
   float dVi;
 };
 
-struct copy2_ctx {
+struct copy2_ctx
+{
   bk_mparticles *bkmprts;
   int p;
 };
@@ -51,7 +53,9 @@ static void copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_t
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx = { .mprts = mprts_to, .p = p };
+    struct copy_ctx ctx;
+    ctx.mprts_ = mprts_to;
+    ctx.p_ = p;
     Simulation_mprts_get_grid_nx_dx(sub->sim, vmprts, ctx.im, ctx.dx);
     for (int d = 0; d < 3; d++) {
       ctx.im[d] += 2; // add ghost points
@@ -96,7 +100,9 @@ static void copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
   
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
+    struct copy_ctx ctx;
+    ctx.mprts_ = mprts_from;
+    ctx.p_ = p;
     Simulation_mprts_get_grid_nx_dx(sub->sim, vmprts, ctx.im, ctx.dx);
     for (int d = 0; d < 3; d++) {
       ctx.im[d] += 2; // add ghost points
@@ -137,7 +143,7 @@ struct ConvertFromSingle
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
     struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-    particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
+    particle_single_t *part = &mparticles_single_t(ctx->mprts_)[ctx->p_][n];
     
     assert(part->kind() < ppsc->nr_kinds);
     int *im = ctx->im;
@@ -165,7 +171,7 @@ struct ConvertToSingle
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
     struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-    particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
+    particle_single_t *part = &mparticles_single_t(ctx->mprts_)[ctx->p_][n];
     
     assert(prt->kind < ppsc->nr_kinds);
     int *im = ctx->im;
