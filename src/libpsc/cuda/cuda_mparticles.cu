@@ -53,28 +53,6 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 }
 
 // ----------------------------------------------------------------------
-// to_device
-
-void cuda_mparticles::to_device(float4 *xi4, float4 *pxi4,
-				uint n_prts, uint off)
-{
-  assert(off + n_prts <= n_alloced);
-  thrust::copy(xi4, xi4 + n_prts, d_xi4.begin() + off);
-  thrust::copy(pxi4, pxi4 + n_prts, d_pxi4.begin() + off);
-}
-
-// ----------------------------------------------------------------------
-// from_device
-
-void cuda_mparticles::from_device(float4 *xi4, float4 *pxi4,
-				  uint n_prts, uint off)
-{
-  assert(off + n_prts <= n_alloced);
-  thrust::copy(d_xi4.begin() + off, d_xi4.begin() + off + n_prts, xi4);
-  thrust::copy(d_pxi4.begin() + off, d_pxi4.begin() + off + n_prts, pxi4);
-}
-
-// ----------------------------------------------------------------------
 // dump_by_patch
 
 void cuda_mparticles::dump_by_patch(uint *n_prts_by_patch)

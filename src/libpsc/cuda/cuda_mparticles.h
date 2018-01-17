@@ -27,6 +27,10 @@ struct cuda_mparticles_base
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
+  // protected:
+  void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
+  void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
+  
   // per particle
   thrust::device_vector<float4> d_xi4;
   thrust::device_vector<float4> d_pxi4;
@@ -138,9 +142,6 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
   void dump_by_patch(uint *n_prts_by_patch);
 
 public:
-  void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
-  void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
-  
   void find_block_indices_ids();
   void reorder_and_offsets();
   void check_in_patch_unordered_slow(uint *nr_prts_by_patch);

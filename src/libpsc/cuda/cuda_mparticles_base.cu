@@ -81,3 +81,25 @@ void cuda_mparticles_base::get_size_all(uint *n_prts_by_patch)
   }
 }
 
+// ----------------------------------------------------------------------
+// to_device
+
+void cuda_mparticles_base::to_device(float4 *xi4, float4 *pxi4,
+				     uint n_prts, uint off)
+{
+  assert(off + n_prts <= n_alloced);
+  thrust::copy(xi4, xi4 + n_prts, d_xi4.begin() + off);
+  thrust::copy(pxi4, pxi4 + n_prts, d_pxi4.begin() + off);
+}
+
+// ----------------------------------------------------------------------
+// from_device
+
+void cuda_mparticles_base::from_device(float4 *xi4, float4 *pxi4,
+				       uint n_prts, uint off)
+{
+  assert(off + n_prts <= n_alloced);
+  thrust::copy(d_xi4.begin() + off, d_xi4.begin() + off + n_prts, xi4);
+  thrust::copy(d_pxi4.begin() + off, d_pxi4.begin() + off + n_prts, pxi4);
+}
+
