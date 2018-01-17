@@ -73,7 +73,7 @@ struct ConvertToVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
 
   using Base::Base;
   
-  void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+  void operator()(struct vpic_mparticles_prt *prt, int n)
   {
     particle_single_t *part = &mprts_other_[p_][n];
     
@@ -103,7 +103,7 @@ struct ConvertFromVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
 
   using Base::Base;
   
-  void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+  void operator()(struct vpic_mparticles_prt *prt, int n)
   {
     particle_single_t *part = &mprts_other_[p_][n];
     
@@ -152,7 +152,7 @@ struct ConvertToVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_singl
 
   using Base::Base;
   
-  void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+  void operator()(struct vpic_mparticles_prt *prt, int n)
   {
     particle_single_by_kind *part = &mprts_other_->bkmprts->at(p_, n);
     
@@ -176,7 +176,7 @@ struct ConvertFromVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_sin
 
   using Base::Base;
   
-  void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+  void operator()(struct vpic_mparticles_prt *prt, int n)
   {
     particle_single_by_kind *part = &mprts_other_->bkmprts->at(p_, n);
     
@@ -205,7 +205,7 @@ void copy_to<mparticles_single_t>(mparticles_vpic_t mprts, mparticles_single_t m
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     ConvertFromVpic<mparticles_single_t> convert_from_vpic(mprts_to, *vmprts->grid(), p);
-    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic, NULL);
+    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic);
 
     off += n_prts;
   }
@@ -224,7 +224,7 @@ void copy_to<mparticles_single_by_kind_t>(mparticles_vpic_t mprts, mparticles_si
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     ConvertFromVpic<mparticles_single_by_kind_t> convert_from_vpic(mprts_to, *vmprts->grid(), p);
-    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic, NULL);
+    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic);
 
     off += n_prts;
   }
@@ -249,7 +249,7 @@ void copy_from<mparticles_single_t>(mparticles_vpic_t mprts, mparticles_single_t
 
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
-      convert_to_vpic(&prt, n, NULL);
+      convert_to_vpic(&prt, n);
       Simulation_mprts_push_back(mprts->sim, vmprts, &prt);
     }
   }
@@ -267,7 +267,7 @@ void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts, mparticles_
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     ConvertToVpic<mparticles_single_by_kind_t> convert_to_vpic(mprts_from, *vmprts->grid(), p);
-    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic, NULL);
+    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic);
 
     off += n_prts;
   }
