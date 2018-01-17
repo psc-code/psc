@@ -61,22 +61,6 @@ uint psc_mparticles_cuda::get_n_prts()
   return cmprts_->get_n_prts();
 }
 
-void psc_mparticles_cuda::set_particles(uint n_prts, uint off,
-					void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
-					void *ctx)
-{
-  dprintf("CMPRTS: set_particles\n");
-  cmprts_->set_particles(n_prts, off, get_particle, ctx);
-}
-
-void psc_mparticles_cuda::get_particles(uint n_prts, uint off,
-					void (*put_particle)(cuda_mparticles_prt *, int, void *),
-					void *ctx)
-{
-  dprintf("CMPRTS: get_particles\n");
-  cmprts_->get_particles(n_prts, off, put_particle, ctx);
-}
-
 void psc_mparticles_cuda::to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
 {
   dprintf("CMPRTS: to_device\n");
