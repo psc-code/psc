@@ -88,6 +88,10 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 {
   psc_mparticles_copy_func_t copy_to, copy_from;
 
+  if (flags & MP_DONT_COPY) {
+    return;
+  }
+
   char s[strlen(type_to) + 12];
   sprintf(s, "copy_to_%s", type_to);
   copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_from, s);
@@ -142,9 +146,7 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
     psc_mparticles_resize_all(mprts, nr_particles_by_patch);
   }
   
-  if (!(flags & MP_DONT_COPY)) {
-    copy(mprts_from, mprts, type_from, type, flags);
-  }
+  copy(mprts_from, mprts, type_from, type, flags);
 
   //  mprintf("get_as %s -> %s to\n", type_from, type);
   //  psc_mparticles_view(mprts);
@@ -192,9 +194,7 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
       assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
     }
   }
-  if (!(flags & MP_DONT_COPY)) {
-    copy(mprts, mprts_to, type, type_to, flags);
-  }
+  copy(mprts, mprts_to, type, type_to, flags);
   
   psc_mparticles_destroy(mprts);
 
