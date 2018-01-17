@@ -75,11 +75,12 @@ static void copy_to(mparticles_vpic_t mprts, MP mprts_to, F convert_from)
   }
 }
 
-template<typename F>
-static void copy2_to(mparticles_vpic_t mprts, bk_mparticles *bkmprts, F convert_to)
+template<typename MP, typename F>
+static void copy2_to(mparticles_vpic_t mprts, MP mprts_to, F convert_to)
 {
   Particles *vmprts = mprts->vmprts;
-  
+  bk_mparticles *bkmprts = mprts_to->bkmprts;
+
   assert(mprts.n_patches() == 1);
   int n_prts_by_patch[mprts.n_patches()];
   vpic_mparticles_get_size_all(vmprts, mprts.n_patches(), n_prts_by_patch);
@@ -119,10 +120,11 @@ static void copy_from(mparticles_vpic_t mprts, MP mprts_from, F convert_to)
   }
 }
 
-template<typename F>
-static void copy2_from(mparticles_vpic_t mprts, bk_mparticles *bkmprts, F convert_from)
+template<typename MP, typename F>
+static void copy2_from(mparticles_vpic_t mprts, MP mprts_from, F convert_from)
 {
   Particles *vmprts = mprts->vmprts;
+  bk_mparticles *bkmprts = mprts_from->bkmprts;
 
   int n_prts_by_patch[mprts.n_patches()];
   vpic_mparticles_get_size_all(vmprts, mprts.n_patches(), n_prts_by_patch);
@@ -258,18 +260,16 @@ static void
 psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
-
-  copy2_from(mparticles_vpic_t(mprts), bkmprts, convert_from_single_by_kind);
+  copy2_from(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
+	     convert_from_single_by_kind);
 }
 
 static void
 psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
-  bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
-
-  copy2_to(mparticles_vpic_t(mprts), bkmprts, convert_to_single_by_kind);
+  copy2_to(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
+	   convert_to_single_by_kind);
 }
 
 // ----------------------------------------------------------------------
