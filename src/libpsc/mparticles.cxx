@@ -192,6 +192,8 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
       }
       assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
     }
+
+    flags |= MP_DONT_RESIZE;
   }
   
   if (!(flags & MP_DONT_RESIZE)) {
