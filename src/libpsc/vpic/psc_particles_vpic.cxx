@@ -26,6 +26,9 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 // conversion
 
 template<typename MP>
+struct ConvertVpic;
+
+template<typename MP>
 struct ConvertToVpic;
 
 template<typename MP>
@@ -136,24 +139,29 @@ private:
 // ----------------------------------------------------------------------
 // conversion to "single_by_kind"
 
-struct copy2_ctx
+template<>
+struct ConvertVpic<mparticles_single_by_kind_t>
 {
-  copy2_ctx(mparticles_single_by_kind_t& mprts_other, Grid& grid, int p)
+  ConvertVpic(mparticles_single_by_kind_t& mprts_other, Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
   }
-  
+
+protected:
   mparticles_single_by_kind_t& mprts_other_;
   int p_;
 };
 
 template<>
-struct ConvertToVpic<mparticles_single_by_kind_t>
+struct ConvertToVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_single_by_kind_t>
 {
+  using Base = ConvertVpic<mparticles_single_by_kind_t>;
+
+  using Base::Base;
+  
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
-    struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
-    particle_single_by_kind *part = &ctx->mprts_other_->bkmprts->at(ctx->p_, n);
+    particle_single_by_kind *part = &mprts_other_->bkmprts->at(p_, n);
     
     //  assert(part->kind < ppsc->nr_kinds);
     prt->dx[0] = part->dx[0];
@@ -169,12 +177,15 @@ struct ConvertToVpic<mparticles_single_by_kind_t>
 };
 
 template<>
-struct ConvertFromVpic<mparticles_single_by_kind_t>
+struct ConvertFromVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_single_by_kind_t>
 {
+  using Base = ConvertVpic<mparticles_single_by_kind_t>;
+
+  using Base::Base;
+  
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
-    struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
-    particle_single_by_kind *part = &ctx->mprts_other_->bkmprts->at(ctx->p_, n);
+    particle_single_by_kind *part = &mprts_other_->bkmprts->at(p_, n);
     
     assert(prt->kind < 2); // FIXMEppsc->nr_kinds);
     part->dx[0] = prt->dx[0];
@@ -219,9 +230,8 @@ void copy_to<mparticles_single_by_kind_t>(mparticles_vpic_t mprts, mparticles_si
   unsigned int off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy2_ctx ctx(mprts_to, *vmprts->grid(), p);
-    ConvertFromVpic<mparticles_single_by_kind_t> convert_from_vpic;
-    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic, &ctx);
+    ConvertFromVpic<mparticles_single_by_kind_t> convert_from_vpic(mprts_to, *vmprts->grid(), p);
+    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic, NULL);
 
     off += n_prts;
   }
@@ -263,9 +273,8 @@ void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts, mparticles_
   unsigned int off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy2_ctx ctx(mprts_from, *vmprts->grid(), p);
-    ConvertToVpic<mparticles_single_by_kind_t> convert_to_vpic;
-    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic, &ctx);
+    ConvertToVpic<mparticles_single_by_kind_t> convert_to_vpic(mprts_from, *vmprts->grid(), p);
+    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic, NULL);
 
     off += n_prts;
   }
