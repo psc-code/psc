@@ -142,40 +142,6 @@ struct copy_ctx
 };
 
 template<typename MP>
-static void copy_from(mparticles_cuda_t mprts, MP mprts_other,
-		      void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
-{
-  uint n_prts_by_patch[mprts->n_patches()];
-  mprts->get_size_all(n_prts_by_patch);
-  
-  uint off = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    int n_prts = n_prts_by_patch[p];
-    copy_ctx<MP> ctx(mprts_other, p);
-    mprts->set_particles(n_prts, off, get_particle, &ctx);
-
-    off += n_prts;
-  }
-}
-
-template<typename MP>
-static void copy_to(mparticles_cuda_t mprts, MP mprts_other,
-		    void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
-{
-  uint n_prts_by_patch[mprts->n_patches()];
-  mprts->get_size_all(n_prts_by_patch);
-  
-  uint off = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    int n_prts = n_prts_by_patch[p];
-    copy_ctx<MP> ctx(mprts_other, p);
-    mprts->get_particles(n_prts, off, put_particle, &ctx);
-
-    off += n_prts;
-  }
-}
-
-template<typename MP>
 static void get_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
   using particle_t = typename MP::particle_t;
@@ -207,6 +173,40 @@ static void put_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   part->pyi     = prt->pxi[1];
   part->pzi     = prt->pxi[2];
   part->qni_wni = prt->qni_wni;
+}
+
+template<typename MP>
+static void copy_from(mparticles_cuda_t mprts, MP mprts_other,
+		      void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
+{
+  uint n_prts_by_patch[mprts->n_patches()];
+  mprts->get_size_all(n_prts_by_patch);
+  
+  uint off = 0;
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    int n_prts = n_prts_by_patch[p];
+    copy_ctx<MP> ctx(mprts_other, p);
+    mprts->set_particles(n_prts, off, get_particle, &ctx);
+
+    off += n_prts;
+  }
+}
+
+template<typename MP>
+static void copy_to(mparticles_cuda_t mprts, MP mprts_other,
+		    void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
+{
+  uint n_prts_by_patch[mprts->n_patches()];
+  mprts->get_size_all(n_prts_by_patch);
+  
+  uint off = 0;
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    int n_prts = n_prts_by_patch[p];
+    copy_ctx<MP> ctx(mprts_other, p);
+    mprts->get_particles(n_prts, off, put_particle, &ctx);
+
+    off += n_prts;
+  }
 }
 
 // ======================================================================
