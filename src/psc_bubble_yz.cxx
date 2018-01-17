@@ -45,15 +45,15 @@ psc_bubble_create(struct psc *psc)
   psc_default_dimensionless(psc);
 
   psc->prm.nmax = 32000;
-  psc->prm.nicell = 50;
+  psc->prm.nicell = 10;
 
   psc->kinds[KIND_ELECTRON].T = .02;
   psc->kinds[KIND_ION].m = 100.;
   psc->kinds[KIND_ION].T = .02;
 
   psc->domain.gdims[0] = 1;
-  psc->domain.gdims[1] = 160;
-  psc->domain.gdims[2] = 240;
+  psc->domain.gdims[1] = 64;
+  psc->domain.gdims[2] = 256;
 
   psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
