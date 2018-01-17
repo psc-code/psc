@@ -201,42 +201,46 @@ struct ConvertToSingle
   }
 };
 
-static void
-convert_from_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+struct ConvertFromSingleByKind
 {
-  struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
-  particle_single_by_kind *part = &ctx->bkmprts_->at(ctx->p_, n);
+  void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+  {
+    struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
+    particle_single_by_kind *part = &ctx->bkmprts_->at(ctx->p_, n);
+    
+    //  assert(part->kind < ppsc->nr_kinds);
+    prt->dx[0] = part->dx[0];
+    prt->dx[1] = part->dx[1];
+    prt->dx[2] = part->dx[2];
+    prt->i     = part->i;
+    prt->ux[0] = part->ux[0];
+    prt->ux[1] = part->ux[1];
+    prt->ux[2] = part->ux[2];
+    prt->w     = part->w;
+    prt->kind  = part->kind;
+  }
+};
 
-  //  assert(part->kind < ppsc->nr_kinds);
-  prt->dx[0] = part->dx[0];
-  prt->dx[1] = part->dx[1];
-  prt->dx[2] = part->dx[2];
-  prt->i     = part->i;
-  prt->ux[0] = part->ux[0];
-  prt->ux[1] = part->ux[1];
-  prt->ux[2] = part->ux[2];
-  prt->w     = part->w;
-  prt->kind  = part->kind;
-}
-
-static void
-convert_to_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+struct ConvertToSingleByKind
 {
-  struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
-  particle_single_by_kind *part = &ctx->bkmprts_->at(ctx->p_, n);
-
-  assert(prt->kind < 2); // FIXMEppsc->nr_kinds);
-  part->dx[0] = prt->dx[0];
-  part->dx[1] = prt->dx[1];
-  part->dx[2] = prt->dx[2];
-  part->i     = prt->i;
-  part->ux[0] = prt->ux[0];
-  part->ux[1] = prt->ux[1];
-  part->ux[2] = prt->ux[2];
-  part->w     = prt->w;
-  part->kind  = prt->kind;
-}
-
+  void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
+  {
+    struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
+    particle_single_by_kind *part = &ctx->bkmprts_->at(ctx->p_, n);
+    
+    assert(prt->kind < 2); // FIXMEppsc->nr_kinds);
+    part->dx[0] = prt->dx[0];
+    part->dx[1] = prt->dx[1];
+    part->dx[2] = prt->dx[2];
+    part->i     = prt->i;
+    part->ux[0] = prt->ux[0];
+    part->ux[1] = prt->ux[1];
+    part->ux[2] = prt->ux[2];
+    part->w     = prt->w;
+    part->kind  = prt->kind;
+  }
+};
+  
 static void
 psc_mparticles_vpic_copy_from_single(struct psc_mparticles *mprts,
 				     struct psc_mparticles *mprts_single, unsigned int flags)
@@ -260,6 +264,7 @@ static void
 psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
+  ConvertFromSingleByKind convert_from_single_by_kind;
   copy2_from(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
 	     convert_from_single_by_kind);
 }
@@ -268,6 +273,7 @@ static void
 psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
 {
+  ConvertToSingleByKind convert_to_single_by_kind;
   copy2_to(mparticles_vpic_t(mprts), mparticles_single_by_kind_t(mprts_single_by_kind),
 	   convert_to_single_by_kind);
 }
