@@ -152,3 +152,46 @@ void cuda_mparticles_base::set_particles(uint n_prts, uint off,
   delete[] pxi4;
 }
 
+// ----------------------------------------------------------------------
+// get_particles
+
+void cuda_mparticles_base::get_particles(uint n_prts, uint off,
+					 void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
+					 void *ctx)
+{
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+
+  cuda_mparticles_reorder(static_cast<cuda_mparticles*>(this)); // FIXME
+  from_device(xi4, pxi4, n_prts, off);
+  
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt;
+    prt.xi[0]   = xi4[n].x;
+    prt.xi[1]   = xi4[n].y;
+    prt.xi[2]   = xi4[n].z;
+    prt.kind    = cuda_float_as_int(xi4[n].w);
+    prt.pxi[0]  = pxi4[n].x;
+    prt.pxi[1]  = pxi4[n].y;
+    prt.pxi[2]  = pxi4[n].z;
+    prt.qni_wni = pxi4[n].w;
+
+    put_particle(&prt, n, ctx);
+
+#if 0
+    for (int d = 0; d < 3; d++) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
+	MHERE;
+	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	mprintf("XXX n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
+		n, d, prt.xi[d] * b_dxi[d], b_dxi[d], bi, b_mx[d]);
+      }
+    }
+#endif
+  }
+
+  delete[] (xi4);
+  delete[] (pxi4);
+}
+

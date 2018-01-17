@@ -32,6 +32,13 @@ struct cuda_mparticles_base
 
   template<typename F>
   void set_particles(uint n_prts, uint off, F getter);
+
+  void get_particles(uint n_prts, uint off,
+		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
+		     void *ctx);
+
+  template<typename F>
+  void get_particles(uint n_prts, uint off, F setter);
   
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
@@ -129,9 +136,6 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
 
   void reserve_all(const uint *n_prts_by_patch);
   uint get_n_prts();
-  void get_particles(uint n_prts, uint off,
-		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
-		     void *ctx);
   void setup_internals();
   void inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   const particle_cuda_real_t *patch_get_b_dxi(int p);

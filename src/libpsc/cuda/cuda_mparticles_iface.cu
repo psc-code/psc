@@ -171,17 +171,47 @@ void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter)
   delete[] pxi4;
 }
 
-template<typename MP>
-struct copy_ctx
+// ----------------------------------------------------------------------
+// get_particles
+
+template<typename F>
+void cuda_mparticles_base::get_particles(uint n_prts, uint off, F setter)
 {
-  copy_ctx(MP& _mprts_other, int _p)
-    : mprts_other(_mprts_other), p(_p)
-  {
-  }
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+
+  cuda_mparticles_reorder(static_cast<cuda_mparticles*>(this)); // FIXME
+  from_device(xi4, pxi4, n_prts, off);
   
-  MP& mprts_other;
-  int p;
-};
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt;
+    prt.xi[0]   = xi4[n].x;
+    prt.xi[1]   = xi4[n].y;
+    prt.xi[2]   = xi4[n].z;
+    prt.kind    = cuda_float_as_int(xi4[n].w);
+    prt.pxi[0]  = pxi4[n].x;
+    prt.pxi[1]  = pxi4[n].y;
+    prt.pxi[2]  = pxi4[n].z;
+    prt.qni_wni = pxi4[n].w;
+
+    setter(n, prt);
+
+#if 0
+    for (int d = 0; d < 3; d++) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
+	MHERE;
+	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	mprintf("XXX n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
+		n, d, prt.xi[d] * b_dxi[d], b_dxi[d], bi, b_mx[d]);
+      }
+    }
+#endif
+  }
+
+  delete[] (xi4);
+  delete[] (pxi4);
+}
 
 template<typename MP>
 struct ParticleGetter
@@ -216,21 +246,33 @@ private:
 };
 
 template<typename MP>
-static void put_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
+struct ParticleSetter
 {
   using particle_t = typename MP::particle_t;
-  struct copy_ctx<MP> *ctx = (struct copy_ctx<MP> *) _ctx;
-  particle_t *part = &ctx->mprts_other[ctx->p][n];
-  
-  part->xi      = prt->xi[0];
-  part->yi      = prt->xi[1];
-  part->zi      = prt->xi[2];
-  part->kind_   = prt->kind;
-  part->pxi     = prt->pxi[0];
-  part->pyi     = prt->pxi[1];
-  part->pzi     = prt->pxi[2];
-  part->qni_wni = prt->qni_wni;
-}
+
+  ParticleSetter(MP& mprts_other, int p)
+    : mprts_other_(mprts_other), p_(p)
+  {
+  }
+
+  void operator()(int n, const cuda_mparticles_prt &prt)
+  {
+    particle_t& prt_other = mprts_other_[p_][n];
+
+    prt_other.xi      = prt.xi[0];
+    prt_other.yi      = prt.xi[1];
+    prt_other.zi      = prt.xi[2];
+    prt_other.kind_   = prt.kind;
+    prt_other.pxi     = prt.pxi[0];
+    prt_other.pyi     = prt.pxi[1];
+    prt_other.pzi     = prt.pxi[2];
+    prt_other.qni_wni = prt.qni_wni;
+  }
+
+private:
+  MP& mprts_other_;
+  int p_;
+};
 
 template<typename MP>
 static void copy_from(mparticles_cuda_t mprts, MP mprts_other)
@@ -257,8 +299,8 @@ static void copy_to(mparticles_cuda_t mprts, MP mprts_other)
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    copy_ctx<MP> ctx(mprts_other, p);
-    mprts->get_particles(n_prts, off, put_particle<MP>, &ctx);
+    ParticleSetter<MP> setter(mprts_other, p);
+    mprts.sub_->cmprts()->get_particles(n_prts, off, setter);
 
     off += n_prts;
   }
