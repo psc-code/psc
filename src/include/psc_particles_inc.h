@@ -19,30 +19,30 @@ using mparticles_t = mparticles_fortran_t;
 
 #endif
 
-static inline void
-psc_mparticles_copy_from(struct psc_mparticles *mprts,
-			 struct psc_mparticles *mprts_from, unsigned int flags,
-			 void (*get_particle)(particle_t *prt, int n, struct psc_mparticles *mprts, int p))
+template<typename F>
+void psc_mparticles_copy_from(struct psc_mparticles *mprts,
+			      struct psc_mparticles *mprts_from, unsigned int flags,
+			      F convert_from)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      get_particle(&prts[n], n, mprts_from, p);
+      convert_from(&prts[n], n, mprts_from, p);
     }
   }
 }
 
-static inline void
-psc_mparticles_copy_to(struct psc_mparticles *mprts,
-		       struct psc_mparticles *mprts_to, unsigned int flags,
-		       void (*put_particle)(particle_t *prt, int n, struct psc_mparticles *mprts, int p))
+template<typename F>
+void psc_mparticles_copy_to(struct psc_mparticles *mprts,
+			    struct psc_mparticles *mprts_to, unsigned int flags,
+			    F convert_to)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      put_particle(&prts[n], n, mprts_to, p);
+      convert_to(&prts[n], n, mprts_to, p);
     }
   }
 }
