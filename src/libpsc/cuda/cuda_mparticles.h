@@ -6,6 +6,8 @@
 
 #include "grid.hxx"
 #include "particles.hxx"
+#include "psc_bits.h"
+#include "cuda_bits.h"
 
 #include <thrust/device_vector.h>
 
@@ -170,5 +172,97 @@ public:
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 void cuda_mparticles_reorder(struct cuda_mparticles *cmprts);
+
+
+// ======================================================================
+// cuda_mparticles_base implementation
+
+// ----------------------------------------------------------------------
+// set_particles
+
+template<typename F>
+void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter)
+{
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+  
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt = getter(n);
+
+    for (int d = 0; d < 3; d++) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
+	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
+	       n, d, prt.xi[d], bi, b_mx[d]);
+	if (bi < 0) {
+	  prt.xi[d] = 0.f;
+	} else {
+	  prt.xi[d] *= (1. - 1e-6);
+	}
+      }
+      bi = floorf(prt.xi[d] * b_dxi[d]);
+      assert(bi >= 0 && bi < b_mx[d]);
+    }
+
+    xi4[n].x  = prt.xi[0];
+    xi4[n].y  = prt.xi[1];
+    xi4[n].z  = prt.xi[2];
+    xi4[n].w  = cuda_int_as_float(prt.kind);
+    pxi4[n].x = prt.pxi[0];
+    pxi4[n].y = prt.pxi[1];
+    pxi4[n].z = prt.pxi[2];
+    pxi4[n].w = prt.qni_wni;
+  }
+
+  to_device(xi4, pxi4, n_prts, off);
+  
+  delete[] xi4;
+  delete[] pxi4;
+}
+
+// ----------------------------------------------------------------------
+// get_particles
+
+template<typename F>
+void cuda_mparticles_base::get_particles(uint n_prts, uint off, F setter)
+{
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+
+  cuda_mparticles_reorder(static_cast<cuda_mparticles*>(this)); // FIXME
+  from_device(xi4, pxi4, n_prts, off);
+  
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt;
+    prt.xi[0]   = xi4[n].x;
+    prt.xi[1]   = xi4[n].y;
+    prt.xi[2]   = xi4[n].z;
+    prt.kind    = cuda_float_as_int(xi4[n].w);
+    prt.pxi[0]  = pxi4[n].x;
+    prt.pxi[1]  = pxi4[n].y;
+    prt.pxi[2]  = pxi4[n].z;
+    prt.qni_wni = pxi4[n].w;
+
+    setter(n, prt);
+
+#if 0
+    for (int d = 0; d < 3; d++) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
+	MHERE;
+	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	mprintf("XXX n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
+		n, d, prt.xi[d] * b_dxi[d], b_dxi[d], bi, b_mx[d]);
+      }
+    }
+#endif
+  }
+
+  delete[] (xi4);
+  delete[] (pxi4);
+}
+
+
 
 #endif
