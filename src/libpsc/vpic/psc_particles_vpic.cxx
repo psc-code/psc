@@ -246,16 +246,6 @@ psc_mparticles_vpic_copy_to_single(struct psc_mparticles *mprts,
 // ======================================================================
 // conversion to "single_by_kind"
 
-static void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
-{
-  copy2_from(vmprts, bkmprts, convert_from_single_by_kind);
-}
-
-static void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
-{
-  copy2_to(vmprts, bkmprts, convert_to_single_by_kind);
-}
-
 static void
 psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_single_by_kind, unsigned int flags)
@@ -263,7 +253,7 @@ psc_mparticles_vpic_copy_from_single_by_kind(struct psc_mparticles *mprts,
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
   bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
 
-  vpic_mparticles_copy_from_single_by_kind(vmprts, bkmprts);
+  copy2_from(vmprts, bkmprts, convert_from_single_by_kind);
 }
 
 static void
@@ -273,7 +263,7 @@ psc_mparticles_vpic_copy_to_single_by_kind(struct psc_mparticles *mprts,
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
   bk_mparticles *bkmprts = psc_mparticles_single_by_kind(mprts_single_by_kind)->bkmprts;
 
-  vpic_mparticles_copy_to_single_by_kind(vmprts, bkmprts);
+  copy2_to(vmprts, bkmprts, convert_to_single_by_kind);
 }
 
 // ----------------------------------------------------------------------
