@@ -30,22 +30,6 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
 }
 
 // ----------------------------------------------------------------------
-// free_particle_mem
-
-void cuda_mparticles::free_particle_mem()
-{
-  cuda_mparticles_bnd::free_particle_mem();
-}
-
-// ----------------------------------------------------------------------
-// dtor
-
-cuda_mparticles::~cuda_mparticles()
-{
-  free_particle_mem();
-}
-
-// ----------------------------------------------------------------------
 // reserve_all
 
 void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)

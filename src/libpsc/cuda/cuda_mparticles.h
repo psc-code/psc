@@ -92,7 +92,6 @@ struct cuda_mparticles_bnd
   ~cuda_mparticles_bnd();
 
   void setup(cuda_mparticles *cmprts);
-  void free_particle_mem();
   void reserve_all(cuda_mparticles *cmprts);
 
   void scan_send_buf_total(cuda_mparticles *cmprts);
@@ -141,9 +140,6 @@ public:
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles(const Grid_t& grid, const Int3& bs);
-  ~cuda_mparticles();
-
-  void free_particle_mem();
 
   void reserve_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);

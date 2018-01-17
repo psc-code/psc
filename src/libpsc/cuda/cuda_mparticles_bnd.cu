@@ -50,13 +50,6 @@ cuda_mparticles_bnd::~cuda_mparticles_bnd()
 }
 
 // ----------------------------------------------------------------------
-// free_particle_mem
-
-void cuda_mparticles_bnd::free_particle_mem()
-{
-}
-
-// ----------------------------------------------------------------------
 // reserve_all
 
 void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
