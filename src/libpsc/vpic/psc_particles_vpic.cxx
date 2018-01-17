@@ -44,9 +44,9 @@ static void copy_from(mparticles_vpic_t mprts, MP mprts_from);
 // conversion to "single"
 
 template<>
-struct ConvertToVpic<mparticles_single_t>
+struct ConvertVpic<mparticles_single_t>
 {
-  ConvertToVpic(mparticles_single_t& mprts_other, Grid& grid, int p)
+  ConvertVpic(mparticles_single_t& mprts_other, Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
     im[0] = grid.nx + 2;
@@ -57,6 +57,21 @@ struct ConvertToVpic<mparticles_single_t>
     dx[2] = grid.dz;
     dVi = 1.f / (dx[0] * dx[1] * dx[2]);
   }
+
+protected:
+  mparticles_single_t& mprts_other_;
+  int p_;
+  int im[3];
+  float dx[3];
+  float dVi;
+};
+
+template<>
+struct ConvertToVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
+{
+  using Base = ConvertVpic<mparticles_single_t>;
+
+  using Base::Base;
   
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -79,29 +94,14 @@ struct ConvertToVpic<mparticles_single_t>
     prt->w     = part->qni_wni / ppsc->kinds[part->kind_].q / dVi;
     prt->kind  = part->kind();
   }
-
-private:
-  mparticles_single_t& mprts_other_;
-  int p_;
-  int im[3];
-  float dx[3];
-  float dVi;
 };
 
 template<>
-struct ConvertFromVpic<mparticles_single_t>
+struct ConvertFromVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
 {
-  ConvertFromVpic(mparticles_single_t& mprts_other, Grid& grid, int p)
-    : mprts_other_(mprts_other), p_(p)
-  {
-    im[0] = grid.nx + 2;
-    im[1] = grid.ny + 2;
-    im[2] = grid.nz + 2;
-    dx[0] = grid.dx;
-    dx[1] = grid.dy;
-    dx[2] = grid.dz;
-    dVi = 1.f / (dx[0] * dx[1] * dx[2]);
-  }
+  using Base = ConvertVpic<mparticles_single_t>;
+
+  using Base::Base;
   
   void operator()(struct vpic_mparticles_prt *prt, int n, void *_ctx)
   {
@@ -127,13 +127,6 @@ struct ConvertFromVpic<mparticles_single_t>
     part->pzi     = prt->ux[2];
     part->qni_wni = ppsc->kinds[prt->kind].q * prt->w * dVi;
   }
-
-private:
-  mparticles_single_t& mprts_other_;
-  int p_;
-  int im[3];
-  float dx[3];
-  float dVi;
 };
 
 // ----------------------------------------------------------------------
