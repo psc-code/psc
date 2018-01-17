@@ -1,6 +1,7 @@
 
 #include "cuda_iface.h"
 #include "cuda_mparticles.h"
+#include "cuda_bits.h"
 
 #include "psc_particles_cuda.h"
 #include "psc_particles_single.h"
@@ -129,6 +130,47 @@ void psc_mparticles_cuda::bnd_post()
 // ======================================================================
 // conversion
 
+template<typename F>
+void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter, void *ctx)
+{
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+  
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt = getter(n, ctx);
+
+    for (int d = 0; d < 3; d++) {
+      int bi = fint(prt.xi[d] * b_dxi[d]);
+      if (bi < 0 || bi >= b_mx[d]) {
+	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
+	       n, d, prt.xi[d], bi, b_mx[d]);
+	if (bi < 0) {
+	  prt.xi[d] = 0.f;
+	} else {
+	  prt.xi[d] *= (1. - 1e-6);
+	}
+      }
+      bi = floorf(prt.xi[d] * b_dxi[d]);
+      assert(bi >= 0 && bi < b_mx[d]);
+    }
+
+    xi4[n].x  = prt.xi[0];
+    xi4[n].y  = prt.xi[1];
+    xi4[n].z  = prt.xi[2];
+    xi4[n].w  = cuda_int_as_float(prt.kind);
+    pxi4[n].x = prt.pxi[0];
+    pxi4[n].y = prt.pxi[1];
+    pxi4[n].z = prt.pxi[2];
+    pxi4[n].w = prt.qni_wni;
+  }
+
+  to_device(xi4, pxi4, n_prts, off);
+  
+  delete[] xi4;
+  delete[] pxi4;
+}
+
 template<typename MP>
 struct copy_ctx
 {
@@ -142,21 +184,28 @@ struct copy_ctx
 };
 
 template<typename MP>
-static void get_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
+struct ParticleGetter
 {
   using particle_t = typename MP::particle_t;
-  struct copy_ctx<MP> *ctx = (struct copy_ctx<MP> *) _ctx;
-  particle_t *part = &ctx->mprts_other[ctx->p][n];
 
-  prt->xi[0]   = part->xi;
-  prt->xi[1]   = part->yi;
-  prt->xi[2]   = part->zi;
-  prt->pxi[0]  = part->pxi;
-  prt->pxi[1]  = part->pyi;
-  prt->pxi[2]  = part->pzi;
-  prt->kind    = part->kind_;
-  prt->qni_wni = part->qni_wni;
-}
+  cuda_mparticles_prt operator()(int n, void *_ctx)
+  {
+    struct copy_ctx<MP> *ctx = (struct copy_ctx<MP> *) _ctx;
+    const particle_t& prt_other = ctx->mprts_other[ctx->p][n];
+
+    cuda_mparticles_prt prt;
+    prt.xi[0]   = prt_other.xi;
+    prt.xi[1]   = prt_other.yi;
+    prt.xi[2]   = prt_other.zi;
+    prt.pxi[0]  = prt_other.pxi;
+    prt.pxi[1]  = prt_other.pyi;
+    prt.pxi[2]  = prt_other.pzi;
+    prt.kind    = prt_other.kind_;
+    prt.qni_wni = prt_other.qni_wni;
+
+    return prt;
+  }
+};
 
 template<typename MP>
 static void put_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
@@ -185,7 +234,8 @@ static void copy_from(mparticles_cuda_t mprts, MP mprts_other)
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     copy_ctx<MP> ctx(mprts_other, p);
-    mprts->set_particles(n_prts, off, get_particle<MP>, &ctx);
+    ParticleGetter<MP> getter;
+    mprts.sub_->cmprts()->set_particles(n_prts, off, getter, &ctx);
 
     off += n_prts;
   }

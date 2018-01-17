@@ -30,6 +30,9 @@ struct cuda_mparticles_base
 		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
 		     void *ctx);
 
+  template<typename F>
+  void set_particles(uint n_prts, uint off, F getter, void *ctx);
+  
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
