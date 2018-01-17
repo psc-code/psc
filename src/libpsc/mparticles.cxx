@@ -88,22 +88,21 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 {
   psc_mparticles_copy_func_t copy_to, copy_from;
 
-  // if we're copying, we better resize, too
-  // (but resizing w/o copying is fine)
-  if (!(flags & MP_DONT_COPY)) {
-    assert(!(flags & MP_DONT_RESIZE));
-  }
-
-  if (!(flags & MP_DONT_RESIZE)) {
-    int n_prts_by_patch[mprts->nr_patches];
-    psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
-    psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
-    psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
-  }
-  
   if (flags & MP_DONT_COPY) {
+    if (!(flags & MP_DONT_RESIZE)) {
+      int n_prts_by_patch[mprts_from->nr_patches];
+      psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
+      psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
+      psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
+    }
     return;
   }
+
+  assert(!(flags & MP_DONT_RESIZE));
+  int n_prts_by_patch[mprts_from->nr_patches];
+  psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
+  psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
+  psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
 
   char s[strlen(type_to) + 12];
   sprintf(s, "copy_to_%s", type_to);
