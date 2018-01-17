@@ -58,9 +58,6 @@ template <typename F>
 void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   F getter, void *ctx);
 
-void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts);
-void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts);
-
 // ----------------------------------------------------------------------
 // vpic_push_particles
 
