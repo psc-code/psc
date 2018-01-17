@@ -11,40 +11,6 @@
 #include "cuda_iface.h"
 
 // ======================================================================
-// mparticles_base
-// specialized for cuda to override sub_ handling (FIXME)
-
-template<>
-struct mparticles_base<psc_mparticles_cuda>
-{
-  using sub_t = psc_mparticles_cuda;
-  using particle_t = typename sub_t::particle_t;
-  using real_t = typename particle_t::real_t;
-
-  explicit mparticles_base(psc_mparticles *mprts)
-    : mprts_(mprts),
-      sub_(mrc_to_subobj(mprts, sub_t))
-  {
-  }
-
-  void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
-  {
-    psc_mparticles_put_as(mprts_, mprts_base, flags);
-    mprts_ = nullptr;
-  }
-
-  unsigned int n_patches() { return mprts_->nr_patches; }
-  
-  psc_mparticles *mprts() { return mprts_; }
-  
-  sub_t* operator->() { return sub_; }
-
-public:
-  psc_mparticles *mprts_;
-  sub_t *sub_;
-};
-
-// ======================================================================
 // mparticles_cuda_t
 
 struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
