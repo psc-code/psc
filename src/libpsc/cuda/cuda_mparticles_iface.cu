@@ -168,14 +168,12 @@ copy_to(mparticles_cuda_t mprts, struct psc_mparticles *mprts_to,
   }
 }
 
-// ======================================================================
-// conversion to "single"
-
-static void
-get_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
+template<typename MP>
+static void get_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
+  using particle_t = typename MP::particle_t;
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
+  particle_t *part = &MP(ctx->mprts)[ctx->p][n];
 
   prt->xi[0]   = part->xi;
   prt->xi[1]   = part->yi;
@@ -187,11 +185,12 @@ get_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   prt->qni_wni = part->qni_wni;
 }
 
-static void
-put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
+template<typename MP>
+static void put_particle(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
+  using particle_t = typename MP::particle_t;
   struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_single_t *part = &mparticles_single_t(ctx->mprts)[ctx->p][n];
+  particle_t *part = &MP(ctx->mprts)[ctx->p][n];
   
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];
@@ -203,62 +202,33 @@ put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   part->qni_wni = prt->qni_wni;
 }
 
+// ======================================================================
+// conversion to "single"
+
 void psc_mparticles_cuda::copy_from_single(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(mparticles_cuda_t(mprts_cuda), mprts, get_particle_single);
+  copy_from(mparticles_cuda_t(mprts_cuda), mprts, get_particle<mparticles_single_t>);
 }
 
 void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(mparticles_cuda_t(mprts_cuda), mprts, put_particle_single);
+  copy_to(mparticles_cuda_t(mprts_cuda), mprts, put_particle<mparticles_single_t>);
 }
 
 // ======================================================================
 // conversion to "double"
 
-static void
-get_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
-{
-  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_double_t *part = &mparticles_double_t(ctx->mprts)[ctx->p][n];
-
-  prt->xi[0]   = part->xi;
-  prt->xi[1]   = part->yi;
-  prt->xi[2]   = part->zi;
-  prt->pxi[0]  = part->pxi;
-  prt->pxi[1]  = part->pyi;
-  prt->pxi[2]  = part->pzi;
-  prt->kind    = part->kind_;
-  prt->qni_wni = part->qni_wni;
-}
-
-static void
-put_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
-{
-  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
-  particle_double_t *part = &mparticles_double_t(ctx->mprts)[ctx->p][n];
-  
-  part->xi      = prt->xi[0];
-  part->yi      = prt->xi[1];
-  part->zi      = prt->xi[2];
-  part->kind_   = prt->kind;
-  part->pxi     = prt->pxi[0];
-  part->pyi     = prt->pxi[1];
-  part->pzi     = prt->pxi[2];
-  part->qni_wni = prt->qni_wni;
-}
-
 void psc_mparticles_cuda::copy_from_double(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(mparticles_cuda_t(mprts_cuda), mprts, get_particle_double);
+  copy_from(mparticles_cuda_t(mprts_cuda), mprts, get_particle<mparticles_double_t>);
 }
 
 void psc_mparticles_cuda::copy_to_double(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(mparticles_cuda_t(mprts_cuda), mprts, put_particle_double);
+  copy_to(mparticles_cuda_t(mprts_cuda), mprts, put_particle<mparticles_double_t>);
 }
 
