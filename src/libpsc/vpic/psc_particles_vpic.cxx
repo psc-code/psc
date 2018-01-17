@@ -57,9 +57,8 @@ struct copy2_ctx
   int p_;
 };
 
-template<typename F>
-static void copy_to(mparticles_vpic_t mprts, struct psc_mparticles *mprts_to,
-		    F convert_from)
+template<typename MP, typename F>
+static void copy_to(mparticles_vpic_t mprts, MP mprts_to, F convert_from)
 {
   Particles *vmprts = mprts->vmprts;
   
@@ -69,7 +68,7 @@ static void copy_to(mparticles_vpic_t mprts, struct psc_mparticles *mprts_to,
   unsigned int off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx(mprts_to, *vmprts->grid(), p);
+    struct copy_ctx ctx(mprts_to.mprts(), *vmprts->grid(), p);
     vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from, &ctx);
 
     off += n_prts;
@@ -95,9 +94,8 @@ static void copy2_to(mparticles_vpic_t mprts, bk_mparticles *bkmprts, F convert_
   }
 }
 
-template<typename F>
-static void copy_from(mparticles_vpic_t mprts, struct psc_mparticles *mprts_from,
-		      F convert_to)
+template<typename MP, typename F>
+static void copy_from(mparticles_vpic_t mprts, MP mprts_from, F convert_to)
 {
   Particles *vmprts = mprts->vmprts;
 
@@ -107,10 +105,10 @@ static void copy_from(mparticles_vpic_t mprts, struct psc_mparticles *mprts_from
   }
   // reset particle counts to zero, then use push_back to add back new particles
   Simulation_mprts_resize_all(mprts->sim, vmprts, mprts.n_patches(), n_prts_by_patch);
-  psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
+  psc_mparticles_get_size_all(mprts_from.mprts(), n_prts_by_patch);
   
   for (int p = 0; p < mprts.n_patches(); p++) {
-    struct copy_ctx ctx(mprts_from, *vmprts->grid(), p);
+    struct copy_ctx ctx(mprts_from.mprts(), *vmprts->grid(), p);
     struct vpic_mparticles_prt prt;
 
     int n_prts = n_prts_by_patch[p];
@@ -239,18 +237,18 @@ convert_to_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 
 static void
 psc_mparticles_vpic_copy_from_single(struct psc_mparticles *mprts,
-				    struct psc_mparticles *mprts_single, unsigned int flags)
+				     struct psc_mparticles *mprts_single, unsigned int flags)
 {
   ConvertFromSingle convert_from_single;
-  copy_from(mparticles_vpic_t(mprts), mprts_single, convert_from_single);
+  copy_from(mparticles_vpic_t(mprts), mparticles_single_t(mprts_single), convert_from_single);
 }
 
 static void
 psc_mparticles_vpic_copy_to_single(struct psc_mparticles *mprts,
-				  struct psc_mparticles *mprts_single, unsigned int flags)
+				   struct psc_mparticles *mprts_single, unsigned int flags)
 {
   ConvertToSingle convert_to_single;
-  copy_to(mparticles_vpic_t(mprts), mprts_single, convert_to_single);
+  copy_to(mparticles_vpic_t(mprts), mparticles_single_t(mprts_single), convert_to_single);
 }
 
 // ======================================================================
