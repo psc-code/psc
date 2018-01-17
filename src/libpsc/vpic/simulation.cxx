@@ -169,20 +169,6 @@ void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patch
 }
 
 // ----------------------------------------------------------------------
-// Simulation_mprts_get_grid_nx_dx
-
-void Simulation_mprts_get_grid_nx_dx(Simulation* sim, Particles* vmprts, int *nx, float *dx)
-{
-  Grid *g = vmprts->grid();
-  nx[0] = g->nx;
-  nx[1] = g->ny;
-  nx[2] = g->nz;
-  dx[0] = g->dx;
-  dx[1] = g->dy;
-  dx[2] = g->dz;
-}
-
-// ----------------------------------------------------------------------
 // Simulation_mprts_push_back
 
 void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct vpic_mparticles_prt *prt)

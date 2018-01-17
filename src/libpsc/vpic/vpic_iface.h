@@ -108,7 +108,6 @@ void Simulation_mprts_reserve_all(Simulation* sim, Particles* vmprts, int n_patc
 				  int* n_prts_by_patch);
 void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patches,
 				 int* n_prts_by_patch);
-void Simulation_mprts_get_grid_nx_dx(Simulation* sim, Particles* vmprts, int *nx, float *dx);
 void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct vpic_mparticles_prt *prt);
 
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
