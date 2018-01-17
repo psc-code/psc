@@ -87,16 +87,14 @@ put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   part->qni_wni = prt->qni_wni;
 }
 
-static void
-psc_mparticles_cuda_copy_from_single(struct psc_mparticles *mprts_cuda,
-				    struct psc_mparticles *mprts, uint flags)
+void psc_mparticles_cuda::copy_from_single(struct psc_mparticles *mprts_cuda,
+					   struct psc_mparticles *mprts, uint flags)
 {
   copy_from(mparticles_cuda_t(mprts_cuda), mprts, get_particle_single);
 }
 
-static void
-psc_mparticles_cuda_copy_to_single(struct psc_mparticles *mprts_cuda,
-				  struct psc_mparticles *mprts, uint flags)
+void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
+					 struct psc_mparticles *mprts, uint flags)
 {
   copy_to(mparticles_cuda_t(mprts_cuda), mprts, put_particle_single);
 }
@@ -136,16 +134,14 @@ put_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
   part->qni_wni = prt->qni_wni;
 }
 
-static void
-psc_mparticles_cuda_copy_from_double(struct psc_mparticles *mprts_cuda,
-				    struct psc_mparticles *mprts, uint flags)
+void psc_mparticles_cuda::copy_from_double(struct psc_mparticles *mprts_cuda,
+					   struct psc_mparticles *mprts, uint flags)
 {
   copy_from(mparticles_cuda_t(mprts_cuda), mprts, get_particle_double);
 }
 
-static void
-psc_mparticles_cuda_copy_to_double(struct psc_mparticles *mprts_cuda,
-				  struct psc_mparticles *mprts, uint flags)
+void psc_mparticles_cuda::copy_to_double(struct psc_mparticles *mprts_cuda,
+					 struct psc_mparticles *mprts, uint flags)
 {
   copy_to(mparticles_cuda_t(mprts_cuda), mprts, put_particle_double);
 }
@@ -154,10 +150,10 @@ psc_mparticles_cuda_copy_to_double(struct psc_mparticles *mprts_cuda,
 // psc_mparticles_cuda_methods
 
 static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_cuda_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_mparticles_cuda_copy_from_single),
-  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_cuda_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_cuda_copy_from_double),
+  MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_cuda::copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", psc_mparticles_cuda::copy_from_single),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_cuda::copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_cuda::copy_from_double),
   {}
 };
 

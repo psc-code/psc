@@ -74,6 +74,15 @@ struct psc_mparticles_cuda
   void setup_internals();
   void inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
 
+  static void copy_from_single(struct psc_mparticles *mprts_cuda,
+			       struct psc_mparticles *mprts, uint flags);
+  static void copy_to_single(struct psc_mparticles *mprts_cuda,
+			     struct psc_mparticles *mprts, uint flags);
+  static void copy_from_double(struct psc_mparticles *mprts_cuda,
+			       struct psc_mparticles *mprts, uint flags);
+  static void copy_to_double(struct psc_mparticles *mprts_cuda,
+			     struct psc_mparticles *mprts, uint flags);
+  
   const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
   psc_particle_cuda_buf_t *bnd_get_buffer(int p);
