@@ -27,14 +27,13 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 // ----------------------------------------------------------------------
 // conversions
 
-struct copy_ctx {
+struct copy2_ctx {
   bk_mparticles *bkmprts;
   int p;
 };
 
-static void
-copy_from(Particles *vmprts, bk_mparticles *bkmprts,
-	  void (*get_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
+template<typename F>
+static void copy2_from(Particles *vmprts, bk_mparticles *bkmprts, F convert_from)
 {
   int n_patches = 1; // FIXME
   int n_prts_by_patch[n_patches];
@@ -43,16 +42,15 @@ copy_from(Particles *vmprts, bk_mparticles *bkmprts,
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx = { .bkmprts = bkmprts, .p = p };
-    vpic_mparticles_set_particles(vmprts, n_prts, off, get_particle, &ctx);
+    struct copy2_ctx ctx = { .bkmprts = bkmprts, .p = p };
+    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_from, &ctx);
 
     off += n_prts;
   }
 }
- 
-static void
-copy_to(Particles *vmprts, bk_mparticles *bkmprts,
-	void (*put_particle)(struct vpic_mparticles_prt *prt, int n, void *ctx))
+
+template<typename F>
+static void copy2_to(Particles *vmprts, bk_mparticles *bkmprts, F convert_to)
 {
   int n_patches = 1; // FIXME
   int n_prts_by_patch[n_patches];
@@ -61,8 +59,8 @@ copy_to(Particles *vmprts, bk_mparticles *bkmprts,
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx = { .bkmprts = bkmprts, .p = p };
-    vpic_mparticles_get_particles(vmprts, n_prts, off, put_particle, &ctx);
+    struct copy2_ctx ctx = { .bkmprts = bkmprts, .p = p };
+    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_to, &ctx);
 
     off += n_prts;
   }
@@ -71,7 +69,7 @@ copy_to(Particles *vmprts, bk_mparticles *bkmprts,
 static void
 convert_from_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
+  struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
   particle_single_by_kind *part = &ctx->bkmprts->at(ctx->p, n);
 
   //  assert(part->kind < ppsc->nr_kinds);
@@ -89,7 +87,7 @@ convert_from_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 static void
 convert_to_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct copy_ctx *ctx = (struct copy_ctx *) _ctx;
+  struct copy2_ctx *ctx = (struct copy2_ctx *) _ctx;
   particle_single_by_kind *part = &ctx->bkmprts->at(ctx->p, n);
 
   assert(prt->kind < 2); // FIXMEppsc->nr_kinds);
@@ -106,12 +104,12 @@ convert_to_single_by_kind(struct vpic_mparticles_prt *prt, int n, void *_ctx)
 
 void vpic_mparticles_copy_from_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
 {
-  copy_from(vmprts, bkmprts, convert_from_single_by_kind);
+  copy2_from(vmprts, bkmprts, convert_from_single_by_kind);
 }
 
 void vpic_mparticles_copy_to_single_by_kind(Particles *vmprts, bk_mparticles *bkmprts)
 {
-  copy_to(vmprts, bkmprts, convert_to_single_by_kind);
+  copy2_to(vmprts, bkmprts, convert_to_single_by_kind);
 }
 
 
