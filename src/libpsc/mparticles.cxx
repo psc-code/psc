@@ -178,7 +178,6 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   if (!(flags & MP_DONT_COPY)) {
     psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
     psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
-    copy(mprts, mprts_to, type, type_to, flags);
   } else {
     // let's check that the size of the particle arrays hasn't changed, since
     // it's not obvious what we should do in case it did...
@@ -193,6 +192,10 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
       assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
     }
   }
+  if (!(flags & MP_DONT_COPY)) {
+    copy(mprts, mprts_to, type, type_to, flags);
+  }
+  
   psc_mparticles_destroy(mprts);
 
   //  mprintf("put_as %s -> %s to\n", type, type_to);
