@@ -58,13 +58,9 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 void cuda_mparticles::to_device(float4 *xi4, float4 *pxi4,
 				uint n_prts, uint off)
 {
-  cudaError_t ierr;
-
   assert(off + n_prts <= n_alloced);
-  ierr = cudaMemcpy(d_xi4.data().get() + off, xi4, n_prts * sizeof(*xi4),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
-  ierr = cudaMemcpy(d_pxi4.data().get() + off, pxi4, n_prts * sizeof(*pxi4),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+  thrust::copy(xi4, xi4 + n_prts, d_xi4.begin() + off);
+  thrust::copy(pxi4, pxi4 + n_prts, d_pxi4.begin() + off);
 }
 
 // ----------------------------------------------------------------------
@@ -73,13 +69,9 @@ void cuda_mparticles::to_device(float4 *xi4, float4 *pxi4,
 void cuda_mparticles::from_device(float4 *xi4, float4 *pxi4,
 				  uint n_prts, uint off)
 {
-  cudaError_t ierr;
-
   assert(off + n_prts <= n_alloced);
-  ierr = cudaMemcpy(xi4, d_xi4.data().get() + off, n_prts * sizeof(*xi4),
-		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
-  ierr = cudaMemcpy(pxi4, d_pxi4.data().get() + off, n_prts * sizeof(*pxi4),
-		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
+  thrust::copy(d_xi4.begin() + off, d_xi4.begin() + off + n_prts, xi4);
+  thrust::copy(d_pxi4.begin() + off, d_pxi4.begin() + off + n_prts, pxi4);
 }
 
 // ----------------------------------------------------------------------
