@@ -175,14 +175,16 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   //  mprintf("put_as %s -> %s from\n", type, type_to);
   //  psc_mparticles_view(mprts);
   
-  int n_prts_by_patch[mprts->nr_patches];
-  psc_mparticles_get_size_all(mprts, n_prts_by_patch);
   if (flags & MP_DONT_COPY) {
     // let's check that the size of the particle arrays hasn't changed, since
     // it's not obvious what we should do in case it did...
+    int n_prts_by_patch[mprts->nr_patches];
     int n_prts_by_patch_to[mprts_to->nr_patches];
+
+    psc_mparticles_get_size_all(mprts, n_prts_by_patch);
     psc_mparticles_get_size_all(mprts_to, n_prts_by_patch_to);
     assert(mprts_to->nr_patches == mprts->nr_patches);
+
     for (int p = 0; p < mprts->nr_patches; p++) {
       if (n_prts_by_patch[p] != n_prts_by_patch_to[p]) {
 	mprintf("psc_mparticles_put_as: p = %d n_prts %d -- %d\n",
@@ -192,9 +194,13 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
     }
   }
   
-  psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
-  psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
-
+  if (!(flags & MP_DONT_RESIZE)) {
+    int n_prts_by_patch[mprts->nr_patches];
+    psc_mparticles_get_size_all(mprts, n_prts_by_patch);
+    psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
+    psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
+  }
+  
   copy(mprts, mprts_to, type, type_to, flags);
   
   psc_mparticles_destroy(mprts);
