@@ -216,7 +216,6 @@ void copy_to<mparticles_single_by_kind_t>(mparticles_vpic_t mprts, mparticles_si
 {
   Particles *vmprts = mprts->vmprts;
 
-  assert(mprts.n_patches() == 1);
   int n_prts_by_patch[mprts.n_patches()];
   vpic_mparticles_get_size_all(vmprts, mprts.n_patches(), n_prts_by_patch);
   
