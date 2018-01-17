@@ -33,6 +33,7 @@ libsubdir_la_LIBADD = \
 	cuda_base.lo \
 	cuda_mparticles_iface.lo \
 	cuda_mparticles.lo \
+	cuda_mparticles_base.lo \
 	cuda_mparticles_bnd.lo \
 	cuda_mparticles_bnd_scan.lo \
 	cuda_mparticles_bnd_spine.lo \
@@ -57,7 +58,8 @@ check_PROGRAMS = \
 #nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
 
 tests_test_cuda_mparticles_1_SOURCES = 
-tests_test_cuda_mparticles_1_LDADD = tests/test_cuda_mparticles_1.lo cuda_mparticles.lo \
+tests_test_cuda_mparticles_1_LDADD = tests/test_cuda_mparticles_1.lo \
+  cuda_mparticles.lo cuda_mparticles_base.lo \
   cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
