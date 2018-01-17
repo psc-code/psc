@@ -25,6 +25,12 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 // ======================================================================
 // conversion
 
+template<typename MP>
+struct ConvertToVpic;
+
+template<typename MP>
+struct ConvertFromVpic;
+
 struct copy_ctx
 {
   copy_ctx(psc_mparticles *mprts, Grid& grid, int p)
@@ -57,8 +63,8 @@ struct copy2_ctx
   int p_;
 };
 
-template<typename MP, typename F>
-static void copy_to(mparticles_vpic_t mprts, MP mprts_to, F convert_from_vpic)
+template<typename MP>
+static void copy_to(mparticles_vpic_t mprts, MP mprts_to)
 {
   Particles *vmprts = mprts->vmprts;
   
@@ -69,14 +75,15 @@ static void copy_to(mparticles_vpic_t mprts, MP mprts_to, F convert_from_vpic)
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy_ctx ctx(mprts_to.mprts(), *vmprts->grid(), p);
+    ConvertFromVpic<MP> convert_from_vpic;
     vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic, &ctx);
 
     off += n_prts;
   }
 }
 
-template<typename MP, typename F>
-static void copy2_to(mparticles_vpic_t mprts, MP mprts_to, F convert_to)
+template<typename MP>
+static void copy2_to(mparticles_vpic_t mprts, MP mprts_to)
 {
   Particles *vmprts = mprts->vmprts;
   bk_mparticles *bkmprts = mprts_to->bkmprts;
@@ -89,14 +96,15 @@ static void copy2_to(mparticles_vpic_t mprts, MP mprts_to, F convert_to)
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy2_ctx ctx(bkmprts, *vmprts->grid(), p);
-    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_to, &ctx);
+    ConvertFromVpic<MP> convert_from_vpic;
+    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic, &ctx);
 
     off += n_prts;
   }
 }
 
-template<typename MP, typename F>
-static void copy_from(mparticles_vpic_t mprts, MP mprts_from, F convert_to_vpic)
+template<typename MP>
+static void copy_from(mparticles_vpic_t mprts, MP mprts_from)
 {
   Particles *vmprts = mprts->vmprts;
 
@@ -110,6 +118,7 @@ static void copy_from(mparticles_vpic_t mprts, MP mprts_from, F convert_to_vpic)
   
   for (int p = 0; p < mprts.n_patches(); p++) {
     struct copy_ctx ctx(mprts_from.mprts(), *vmprts->grid(), p);
+    ConvertToVpic<MP> convert_to_vpic;
     struct vpic_mparticles_prt prt;
 
     int n_prts = n_prts_by_patch[p];
@@ -120,8 +129,8 @@ static void copy_from(mparticles_vpic_t mprts, MP mprts_from, F convert_to_vpic)
   }
 }
 
-template<typename MP, typename F>
-static void copy2_from(mparticles_vpic_t mprts, MP mprts_from, F convert_from)
+template<typename MP>
+static void copy2_from(mparticles_vpic_t mprts, MP mprts_from)
 {
   Particles *vmprts = mprts->vmprts;
   bk_mparticles *bkmprts = mprts_from->bkmprts;
@@ -133,17 +142,12 @@ static void copy2_from(mparticles_vpic_t mprts, MP mprts_from, F convert_from)
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     struct copy2_ctx ctx(bkmprts, *vmprts->grid(), p);
-    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_from, &ctx);
+    ConvertToVpic<MP> convert_to_vpic;
+    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic, &ctx);
 
     off += n_prts;
   }
 }
-
-template<typename MP>
-struct ConvertToVpic;
-
-template<typename MP>
-struct ConvertFromVpic;
 
 // ======================================================================
 // conversion to "single"
@@ -256,8 +260,7 @@ static void psc_mparticles_vpic_copy_from(struct psc_mparticles *mprts,
 					  struct psc_mparticles *mprts_other,
 					  unsigned int flags)
 {
-  ConvertToVpic<MP> convert_to_vpic;
-  copy_from(mparticles_vpic_t(mprts), MP(mprts_other), convert_to_vpic);
+  copy_from(mparticles_vpic_t(mprts), MP(mprts_other));
 }
 
 template<typename MP>
@@ -265,8 +268,7 @@ static void psc_mparticles_vpic_copy_to(struct psc_mparticles *mprts,
 					struct psc_mparticles *mprts_other,
 					unsigned int flags)
 {
-  ConvertFromVpic<MP> convert_from_vpic;
-  copy_to(mparticles_vpic_t(mprts), MP(mprts_other), convert_from_vpic);
+  copy_to(mparticles_vpic_t(mprts), MP(mprts_other));
 }
 
 // ======================================================================
@@ -277,8 +279,7 @@ static void psc_mparticles_vpic_copy2_from(struct psc_mparticles *mprts,
 					   struct psc_mparticles *mprts_other,
 					   unsigned int flags)
 {
-  ConvertToVpic<MP> convert_to_vpic;
-  copy2_from(mparticles_vpic_t(mprts), MP(mprts_other), convert_to_vpic);
+  copy2_from(mparticles_vpic_t(mprts), MP(mprts_other));
 }
 
 template<typename MP>
@@ -286,8 +287,7 @@ static void psc_mparticles_vpic_copy2_to(struct psc_mparticles *mprts,
 					 struct psc_mparticles *mprts_other,
 					 unsigned int flags)
 {
-  ConvertFromVpic<MP> convert_from_vpic;
-  copy2_to(mparticles_vpic_t(mprts), MP(mprts_other), convert_from_vpic);
+  copy2_to(mparticles_vpic_t(mprts), MP(mprts_other));
 }
 
 // ----------------------------------------------------------------------
