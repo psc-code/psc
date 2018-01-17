@@ -47,6 +47,37 @@ struct cuda_mparticles_base
     d_pxi4.resize(n_alloced);
   }
 
+  // ----------------------------------------------------------------------
+  // resize_all
+  //
+  // FIXME, this function currently is used in two contexts:
+  // - to implement mprts::resize_all(), but in this case we
+  //   need to be careful. It's destructive, which is unexpected.
+  //   we might want to only support (and check for) the case of
+  //   resizing from 0 size.
+  //   in this case, we also should check that things fit into what's
+  //   alloced (also: a very similar issues is cuda_mparticles_reserve_all()
+  //   which doesn't realloc but destroy, again that's unexpected behavior
+  // - to reset the internal n_prts_by_patch as part of sorting etc.
+  //   in that case, we supposedly know what we're doing, so we at most need
+  //   to check that we aren't beyond our allocated space
+  
+  void resize_all(const uint *n_prts_by_patch)
+  {
+    thrust::host_vector<uint> h_off(this->n_blocks + 1);
+    
+    uint off = 0;
+    for (int p = 0; p < n_patches; p++) {
+      h_off[p * n_blocks_per_patch] = off;
+      off += n_prts_by_patch[p];
+      // printf("set_n_prts p%d: %d\n", p, n_prts_by_patch[p]);
+    }
+    h_off[n_blocks] = off;
+    n_prts = off;
+    
+    thrust::copy(h_off.begin(), h_off.end(), d_off.begin());
+  }
+
   // per particle
   thrust::device_vector<float4> d_xi4;
   thrust::device_vector<float4> d_pxi4;
@@ -143,7 +174,6 @@ public:
 
   void reserve_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
-  void resize_all(const uint *n_prts_by_patch);
   uint get_n_prts();
   void set_particles(uint n_prts, uint off,
 		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
