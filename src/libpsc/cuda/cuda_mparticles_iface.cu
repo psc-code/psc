@@ -115,11 +115,11 @@ void psc_mparticles_cuda::bnd_post()
 // conversion
 
 template<typename MP>
-struct ParticleGetter
+struct ConvertToCuda
 {
   using particle_t = typename MP::particle_t;
 
-  ParticleGetter(MP& mprts_other, int p)
+  ConvertToCuda(MP& mprts_other, int p)
     : mprts_other_(mprts_other), p_(p)
   {
   }
@@ -147,11 +147,11 @@ private:
 };
 
 template<typename MP>
-struct ParticleSetter
+struct ConvertFromCuda
 {
   using particle_t = typename MP::particle_t;
 
-  ParticleSetter(MP& mprts_other, int p)
+  ConvertFromCuda(MP& mprts_other, int p)
     : mprts_other_(mprts_other), p_(p)
   {
   }
@@ -184,8 +184,8 @@ static void copy_from(mparticles_cuda_t mprts, MP mprts_other)
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    ParticleGetter<MP> getter(mprts_other, p);
-    mprts.sub_->cmprts()->set_particles(n_prts, off, getter);
+    ConvertToCuda<MP> convert_to_cuda(mprts_other, p);
+    mprts.sub_->cmprts()->set_particles(n_prts, off, convert_to_cuda);
 
     off += n_prts;
   }
@@ -200,8 +200,8 @@ static void copy_to(mparticles_cuda_t mprts, MP mprts_other)
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    ParticleSetter<MP> setter(mprts_other, p);
-    mprts.sub_->cmprts()->get_particles(n_prts, off, setter);
+    ConvertFromCuda<MP> convert_from_cuda(mprts_other, p);
+    mprts.sub_->cmprts()->get_particles(n_prts, off, convert_from_cuda);
 
     off += n_prts;
   }
