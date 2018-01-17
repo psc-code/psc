@@ -17,16 +17,14 @@ static bool CUDA_SYNC = true;
     }									\
   } while(0)
 
-static inline float
-cuda_int_as_float(int i)
+static inline float cuda_int_as_float(int i)
 {
   union { int i; float f; } u;
   u.i = i;
   return u.f;
 };
 
-static inline int
-cuda_float_as_int(float f)
+static inline int cuda_float_as_int(float f)
 {
   union { int i; float f; } u;
   u.f = f;

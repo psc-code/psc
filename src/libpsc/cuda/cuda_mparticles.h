@@ -26,6 +26,9 @@ struct cuda_mparticles_base
   void reserve_all();
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
+  void set_particles(uint n_prts, uint off,
+		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
+		     void *ctx);
 
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
@@ -123,9 +126,6 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
 
   void reserve_all(const uint *n_prts_by_patch);
   uint get_n_prts();
-  void set_particles(uint n_prts, uint off,
-		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
-		     void *ctx);
   void get_particles(uint n_prts, uint off,
 		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
 		     void *ctx);
