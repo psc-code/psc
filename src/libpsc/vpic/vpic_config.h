@@ -46,6 +46,8 @@
 
 #ifdef HAVE_VPIC
 
+#define particle_t __vpic_particle_t
+
 #include "VpicRng.h"
 
 #include "VpicGridBase.h"
@@ -73,6 +75,9 @@
 #include "VpicDiag.h"
 
 #include "VpicSimulationBase.h"
+
+#undef particle_t
+
 #endif
 
 

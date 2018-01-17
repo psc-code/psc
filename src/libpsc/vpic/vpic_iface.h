@@ -2,14 +2,14 @@
 #ifndef VPIC_IFACE_H
 #define VPIC_IFACE_H
 
+#include "vpic_config.h"
+
 #include <stdbool.h>
 
 #include <mpi.h>
 #include <mrc_common.h>
 
 #include "../bk_mparticles_iface.h" // FIXME, path
-
-BEGIN_C_DECLS
 
 // ----------------------------------------------------------------------
 // vpic_mfields
@@ -37,17 +37,6 @@ enum {
 enum {
   VPIC_HYDRO_N_COMP = 16,
 };
-
-#if defined(__cplusplus) && defined(VPIC_CONFIG_H)
-
-#else
-
-typedef struct FieldArray_ FieldArray;
-typedef struct Particles_ Particles;
-typedef struct Simulation_ Simulation;
-typedef struct HydroArray_ HydroArray;
-
-#endif
 
 // ----------------------------------------------------------------------
 // vpic_mparticles
@@ -324,8 +313,6 @@ void vpic_base_init(int *pargc, char ***pargv);
 
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
-
-END_C_DECLS
 
 #ifndef mprintf
 

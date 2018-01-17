@@ -2,6 +2,14 @@
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
+if USE_VPIC # FIXME
+
+AM_CXXFLAGS += \
+	-I$(VPICDIR)/src \
+	-I$(VPICDIR)
+
+endif
+
 SUBDIRS = include libmrc libpsc #tests
 
 bin_PROGRAMS = \

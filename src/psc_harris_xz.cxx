@@ -16,10 +16,10 @@
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
 
-#include "rngpool_iface.h"
-
 #include <psc_particles_as_single.h>
 #include <psc_particles_vpic.h>
+
+#include "rngpool_iface.h"
 
 #include <mrc_params.h>
 

@@ -2,6 +2,14 @@
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
+if USE_VPIC # FIXME
+
+AM_CXXFLAGS += \
+	-I$(VPICDIR)/src \
+	-I$(VPICDIR)
+
+endif
+
 SUBDIRS = \
 	psc_balance \
 	psc_bnd \
