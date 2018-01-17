@@ -37,6 +37,9 @@ static void copy_to(mparticles_vpic_t mprts, MP mprts_to);
 template<typename MP>
 static void copy_from(mparticles_vpic_t mprts, MP mprts_from);
 
+// ----------------------------------------------------------------------
+// conversion to "single"
+
 struct copy_ctx
 {
   copy_ctx(psc_mparticles *mprts, Grid& grid, int p)
@@ -57,20 +60,6 @@ struct copy_ctx
   float dx[3];
   float dVi;
 };
-
-struct copy2_ctx
-{
-  copy2_ctx(bk_mparticles *bkmprts, Grid& grid, int p)
-    : bkmprts_(bkmprts), p_(p)
-  {
-  }
-  
-  bk_mparticles *bkmprts_;
-  int p_;
-};
-
-// ======================================================================
-// conversion to "single"
 
 template<>
 struct ConvertToVpic<mparticles_single_t>
@@ -131,6 +120,20 @@ struct ConvertFromVpic<mparticles_single_t>
     part->pzi     = prt->ux[2];
     part->qni_wni = ppsc->kinds[prt->kind].q * prt->w * ctx->dVi;
   }
+};
+
+// ----------------------------------------------------------------------
+// conversion to "single_by_kind"
+
+struct copy2_ctx
+{
+  copy2_ctx(bk_mparticles *bkmprts, Grid& grid, int p)
+    : bkmprts_(bkmprts), p_(p)
+  {
+  }
+  
+  bk_mparticles *bkmprts_;
+  int p_;
 };
 
 template<>
