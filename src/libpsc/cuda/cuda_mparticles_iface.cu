@@ -131,13 +131,13 @@ void psc_mparticles_cuda::bnd_post()
 // conversion
 
 template<typename F>
-void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter, void *ctx)
+void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter)
 {
   float4 *xi4  = new float4[n_prts];
   float4 *pxi4 = new float4[n_prts];
   
   for (int n = 0; n < n_prts; n++) {
-    struct cuda_mparticles_prt prt = getter(n, ctx);
+    struct cuda_mparticles_prt prt = getter(n);
 
     for (int d = 0; d < 3; d++) {
       int bi = fint(prt.xi[d] * b_dxi[d]);
@@ -188,10 +188,14 @@ struct ParticleGetter
 {
   using particle_t = typename MP::particle_t;
 
-  cuda_mparticles_prt operator()(int n, void *_ctx)
+  ParticleGetter(MP& mprts_other, int p)
+    : mprts_other_(mprts_other), p_(p)
   {
-    struct copy_ctx<MP> *ctx = (struct copy_ctx<MP> *) _ctx;
-    const particle_t& prt_other = ctx->mprts_other[ctx->p][n];
+  }
+
+  cuda_mparticles_prt operator()(int n)
+  {
+    const particle_t& prt_other = mprts_other_[p_][n];
 
     cuda_mparticles_prt prt;
     prt.xi[0]   = prt_other.xi;
@@ -205,6 +209,10 @@ struct ParticleGetter
 
     return prt;
   }
+
+private:
+  MP& mprts_other_;
+  int p_;
 };
 
 template<typename MP>
@@ -233,9 +241,8 @@ static void copy_from(mparticles_cuda_t mprts, MP mprts_other)
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
-    copy_ctx<MP> ctx(mprts_other, p);
-    ParticleGetter<MP> getter;
-    mprts.sub_->cmprts()->set_particles(n_prts, off, getter, &ctx);
+    ParticleGetter<MP> getter(mprts_other, p);
+    mprts.sub_->cmprts()->set_particles(n_prts, off, getter);
 
     off += n_prts;
   }
@@ -246,7 +253,7 @@ static void copy_to(mparticles_cuda_t mprts, MP mprts_other)
 {
   uint n_prts_by_patch[mprts->n_patches()];
   mprts->get_size_all(n_prts_by_patch);
-  
+
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];

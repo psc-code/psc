@@ -31,7 +31,7 @@ struct cuda_mparticles_base
 		     void *ctx);
 
   template<typename F>
-  void set_particles(uint n_prts, uint off, F getter, void *ctx);
+  void set_particles(uint n_prts, uint off, F getter);
   
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
