@@ -27,6 +27,18 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 
 struct copy_ctx
 {
+  copy_ctx(psc_mparticles *mprts, Grid& grid, int p)
+    : mprts_(mprts), p_(p)
+  {
+    im[0] = grid.nx + 2;
+    im[1] = grid.ny + 2;
+    im[2] = grid.nz + 2;
+    dx[0] = grid.dx;
+    dx[1] = grid.dy;
+    dx[2] = grid.dz;
+    dVi = 1.f / (dx[0] * dx[1] * dx[2]);
+  }
+  
   struct psc_mparticles *mprts_;
   int p_;
   int im[3];
@@ -53,14 +65,7 @@ static void copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_t
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    struct copy_ctx ctx;
-    ctx.mprts_ = mprts_to;
-    ctx.p_ = p;
-    Simulation_mprts_get_grid_nx_dx(sub->sim, vmprts, ctx.im, ctx.dx);
-    for (int d = 0; d < 3; d++) {
-      ctx.im[d] += 2; // add ghost points
-    }
-    ctx.dVi = 1.f / (ctx.dx[0] * ctx.dx[1] * ctx.dx[2]);
+    struct copy_ctx ctx(mprts_to, *vmprts->grid(), p);
     vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from, &ctx);
 
     off += n_prts;
@@ -100,14 +105,7 @@ static void copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
   
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct copy_ctx ctx;
-    ctx.mprts_ = mprts_from;
-    ctx.p_ = p;
-    Simulation_mprts_get_grid_nx_dx(sub->sim, vmprts, ctx.im, ctx.dx);
-    for (int d = 0; d < 3; d++) {
-      ctx.im[d] += 2; // add ghost points
-    }
-    ctx.dVi = 1.f / (ctx.dx[0] * ctx.dx[1] * ctx.dx[2]);
+    struct copy_ctx ctx(mprts_from, *vmprts->grid(), p);
     struct vpic_mparticles_prt prt;
 
     int n_prts = n_prts_by_patch[p];
