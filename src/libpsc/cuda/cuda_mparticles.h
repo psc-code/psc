@@ -21,6 +21,7 @@ struct cuda_mparticles_base
 
   void reserve_all();
   void resize_all(const uint *n_prts_by_patch);
+  void get_size_all(uint *n_prts_by_patch);
 
   // per particle
   thrust::device_vector<float4> d_xi4;
@@ -117,7 +118,6 @@ public:
   cuda_mparticles(const Grid_t& grid, const Int3& bs);
 
   void reserve_all(const uint *n_prts_by_patch);
-  void get_size_all(uint *n_prts_by_patch);
   uint get_n_prts();
   void set_particles(uint n_prts, uint off,
 		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),

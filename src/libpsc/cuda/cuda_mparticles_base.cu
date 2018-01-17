@@ -67,3 +67,16 @@ void cuda_mparticles_base::resize_all(const uint *n_prts_by_patch)
   thrust::copy(h_off.begin(), h_off.end(), d_off.begin());
 }
 
+// ----------------------------------------------------------------------
+// get_size_all
+
+void cuda_mparticles_base::get_size_all(uint *n_prts_by_patch)
+{
+  thrust::host_vector<uint> h_off(d_off);
+
+  for (int p = 0; p < n_patches; p++) {
+    n_prts_by_patch[p] = h_off[(p+1) * n_blocks_per_patch] - h_off[p * n_blocks_per_patch];
+    //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
+  }
+}
+

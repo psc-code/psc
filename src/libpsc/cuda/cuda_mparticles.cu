@@ -518,19 +518,6 @@ uint cuda_mparticles::get_n_prts()
 }
 
 // ----------------------------------------------------------------------
-// get_size_all
-
-void cuda_mparticles::get_size_all(uint *n_prts_by_patch)
-{
-  thrust::host_vector<uint> h_off(d_off);
-
-  for (int p = 0; p < n_patches; p++) {
-    n_prts_by_patch[p] = h_off[(p+1) * n_blocks_per_patch] - h_off[p * n_blocks_per_patch];
-    //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
-  }
-}
-
-// ----------------------------------------------------------------------
 // cuda_mparticles_reorder
 
 __global__ static void
