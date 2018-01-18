@@ -180,8 +180,12 @@ static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
 {
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
+  mprts_from.get_size_all((int*) n_prts_by_patch); // FIXME cast
+  mprts_to.reserve_all((int*) n_prts_by_patch); // FIXME cast
+  mprts_to.resize_all((int*) n_prts_by_patch); // FIXME cast
+
   mprts_to->get_size_all(n_prts_by_patch);
-  
+
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
@@ -195,8 +199,12 @@ static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
 template<typename MP>
 static void copy_to(mparticles_cuda_t mprts_from, MP mprts_to)
 {
-  int n_patches = mprts_from.n_patches();
+  int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
+  mprts_from.get_size_all((int*) n_prts_by_patch); // FIXME cast
+  mprts_to.reserve_all((int*) n_prts_by_patch); // FIXME cast
+  mprts_to.resize_all((int*) n_prts_by_patch); // FIXME cast
+
   mprts_from->get_size_all(n_prts_by_patch);
 
   uint off = 0;

@@ -88,6 +88,8 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 {
   psc_mparticles_copy_func_t copy_to, copy_from;
 
+  assert(mprts_from->nr_patches == mprts_to->nr_patches);
+
   if (flags & MP_DONT_COPY) {
     if (!(flags & MP_DONT_RESIZE)) {
       int n_prts_by_patch[mprts_from->nr_patches];
@@ -99,10 +101,6 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
   }
 
   assert(!(flags & MP_DONT_RESIZE));
-  int n_prts_by_patch[mprts_from->nr_patches];
-  psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
-  psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
-  psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
 
   char s[strlen(type_to) + 12];
   sprintf(s, "copy_to_%s", type_to);
