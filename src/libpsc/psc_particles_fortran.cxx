@@ -22,7 +22,7 @@ calc_vxi(particle_fortran_real_t vxi[3], const particle_fortran_t &prt)
 
 struct ConvertToDouble
 {
-  void operator()(const particle_fortran_t& prt, int n, mparticles_double_t mprts_dbl, int p)
+  void operator()(mparticles_double_t mprts_dbl, int p, int n, const particle_fortran_t& prt)
   {
     particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
     // don't shift in invariant directions

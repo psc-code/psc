@@ -35,7 +35,7 @@ f
 
 struct ConvertFromSingle
 {
-  void operator()(const particle_single_t& prt, int n, mparticles_double_t mprts_dbl, int p)
+  void operator()(mparticles_double_t mprts_dbl, int p, int n, const particle_single_t& prt)
   {
     particle_double_t& prt_dbl = mprts_dbl[p][n];
     
