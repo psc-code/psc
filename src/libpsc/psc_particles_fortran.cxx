@@ -11,18 +11,18 @@
 // conversion to/from "double"
 
 static inline void
-calc_vxi(particle_fortran_real_t vxi[3], particle_fortran_t *part)
+calc_vxi(particle_fortran_real_t vxi[3], const particle_fortran_t &prt)
 {
   particle_fortran_real_t root =
-    1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-  vxi[0] = part->pxi * root;
-  vxi[1] = part->pyi * root;
-  vxi[2] = part->pzi * root;
+    1.f / sqrtf(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+  vxi[0] = prt.pxi * root;
+  vxi[1] = prt.pyi * root;
+  vxi[2] = prt.pzi * root;
 }
 
 struct ConvertToDouble
 {
-  void operator()(particle_fortran_t *prt, int n, mparticles_double_t mprts_dbl, int p)
+  void operator()(const particle_fortran_t& prt, int n, mparticles_double_t mprts_dbl, int p)
   {
     particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
     // don't shift in invariant directions
@@ -32,19 +32,19 @@ struct ConvertToDouble
       }
     }
     
-    particle_double_t *prt_dbl = &mprts_dbl[p][n];
+    particle_double_t& prt_dbl = mprts_dbl[p][n];
     
     particle_double_real_t vxi[3];
     calc_vxi(vxi, prt);
     
-    prt_dbl->xi      = prt->xi + dth[0] * vxi[0];
-    prt_dbl->yi      = prt->yi + dth[1] * vxi[1];
-    prt_dbl->zi      = prt->zi + dth[2] * vxi[2];
-    prt_dbl->pxi     = prt->pxi;
-    prt_dbl->pyi     = prt->pyi;
-    prt_dbl->pzi     = prt->pzi;
-    prt_dbl->qni_wni = prt->qni * prt->wni;;
-    prt_dbl->kind_   = prt->qni > 0 ? 1 : 0;
+    prt_dbl.xi      = prt.xi + dth[0] * vxi[0];
+    prt_dbl.yi      = prt.yi + dth[1] * vxi[1];
+    prt_dbl.zi      = prt.zi + dth[2] * vxi[2];
+    prt_dbl.pxi     = prt.pxi;
+    prt_dbl.pyi     = prt.pyi;
+    prt_dbl.pzi     = prt.pzi;
+    prt_dbl.qni_wni = prt.qni * prt.wni;;
+    prt_dbl.kind_   = prt.qni > 0 ? 1 : 0;
   }
 };
 
@@ -78,7 +78,7 @@ struct ConvertFromDouble
     prt.wni = wni;
     
     particle_fortran_real_t vxi[3];
-    calc_vxi(vxi, &prt);
+    calc_vxi(vxi, prt);
     prt.xi -= dth[0] * vxi[0];
     prt.yi -= dth[1] * vxi[1];
     prt.zi -= dth[2] * vxi[2];
