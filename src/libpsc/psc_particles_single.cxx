@@ -72,7 +72,7 @@ psc_mparticles_single_copy_to_double(struct psc_mparticles *mprts,
 				     struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertFromSingle convert_from_single;
-  psc_mparticles_copy_to(mprts, mprts_dbl, flags, convert_from_single);
+  psc_mparticles_copy_to(mparticles_t(mprts), mprts_dbl, flags, convert_from_single);
 }
 
 static void
@@ -80,7 +80,7 @@ psc_mparticles_single_copy_from_double(struct psc_mparticles *mprts,
 				       struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertToSingle convert_to_single;
-  psc_mparticles_copy_from(mprts, mprts_dbl, flags, convert_to_single);
+  psc_mparticles_copy_from(mparticles_t(mprts), mprts_dbl, flags, convert_to_single);
 }
 
 static struct mrc_obj_method psc_mparticles_single_methods[] = {

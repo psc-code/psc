@@ -89,7 +89,7 @@ psc_mparticles_fortran_copy_to_double(struct psc_mparticles *mprts_fortran,
 				      struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertToDouble convert_to_double;
-  psc_mparticles_copy_to(mprts_fortran, mprts_dbl, flags, convert_to_double);
+  psc_mparticles_copy_to(mparticles_t(mprts_fortran), mprts_dbl, flags, convert_to_double);
 }
 
 static void
@@ -97,7 +97,7 @@ psc_mparticles_fortran_copy_from_double(struct psc_mparticles *mprts_fortran,
 					struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertFromDouble convert_from_double;
-  psc_mparticles_copy_from(mprts_fortran, mprts_dbl, flags, convert_from_double);
+  psc_mparticles_copy_from(mparticles_t(mprts_fortran), mprts_dbl, flags, convert_from_double);
 }
 
 static struct mrc_obj_method psc_mparticles_fortran_methods[] = {
