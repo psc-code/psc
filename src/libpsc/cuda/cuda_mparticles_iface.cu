@@ -176,32 +176,34 @@ private:
 };
 
 template<typename MP>
-static void copy_from(mparticles_cuda_t mprts, MP mprts_other)
+static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
 {
-  uint n_prts_by_patch[mprts->n_patches()];
-  mprts->get_size_all(n_prts_by_patch);
+  int n_patches = mprts_to.n_patches();
+  uint n_prts_by_patch[n_patches];
+  mprts_to->get_size_all(n_prts_by_patch);
   
   uint off = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertToCuda<MP> convert_to_cuda(mprts_other, p);
-    mprts.sub_->cmprts()->set_particles(n_prts, off, convert_to_cuda);
+    ConvertToCuda<MP> convert_to_cuda(mprts_from, p);
+    mprts_to->cmprts()->set_particles(n_prts, off, convert_to_cuda);
 
     off += n_prts;
   }
 }
 
 template<typename MP>
-static void copy_to(mparticles_cuda_t mprts, MP mprts_other)
+static void copy_to(mparticles_cuda_t mprts_from, MP mprts_to)
 {
-  uint n_prts_by_patch[mprts->n_patches()];
-  mprts->get_size_all(n_prts_by_patch);
+  int n_patches = mprts_from.n_patches();
+  uint n_prts_by_patch[n_patches];
+  mprts_from->get_size_all(n_prts_by_patch);
 
   uint off = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertFromCuda<MP> convert_from_cuda(mprts_other, p);
-    mprts.sub_->cmprts()->get_particles(n_prts, off, convert_from_cuda);
+    ConvertFromCuda<MP> convert_from_cuda(mprts_to, p);
+    mprts_from->cmprts()->get_particles(n_prts, off, convert_from_cuda);
 
     off += n_prts;
   }
