@@ -35,9 +35,9 @@ f
 
 struct ConvertFromSingle
 {
-  void operator()(particle_single_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
+  void operator()(particle_single_t *prt, int n, mparticles_double_t mprts_dbl, int p)
   {
-    particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
+    particle_double_t *prt_dbl = &mprts_dbl[p][n];
     
     prt_dbl->xi      = prt->xi;
     prt_dbl->yi      = prt->yi;
@@ -52,9 +52,9 @@ struct ConvertFromSingle
 
 struct ConvertToSingle
 {
-  void operator()(particle_single_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
+  void operator()(particle_single_t *prt, int n, mparticles_double_t mprts_dbl, int p)
   {
-    particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
+    particle_double_t *prt_dbl = &mprts_dbl[p][n];
     
     prt->xi      = prt_dbl->xi;
     prt->yi      = prt_dbl->yi;
@@ -72,7 +72,8 @@ psc_mparticles_single_copy_to_double(struct psc_mparticles *mprts,
 				     struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertFromSingle convert_from_single;
-  psc_mparticles_copy_to(mparticles_t(mprts), mprts_dbl, flags, convert_from_single);
+  psc_mparticles_copy_to(mparticles_t(mprts), mparticles_double_t(mprts_dbl),
+			 flags, convert_from_single);
 }
 
 static void
@@ -80,7 +81,8 @@ psc_mparticles_single_copy_from_double(struct psc_mparticles *mprts,
 				       struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertToSingle convert_to_single;
-  psc_mparticles_copy_from(mparticles_t(mprts), mprts_dbl, flags, convert_to_single);
+  psc_mparticles_copy_from(mparticles_t(mprts), mparticles_double_t(mprts_dbl),
+			   flags, convert_to_single);
 }
 
 static struct mrc_obj_method psc_mparticles_single_methods[] = {

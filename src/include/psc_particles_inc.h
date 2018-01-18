@@ -19,9 +19,8 @@ using mparticles_t = mparticles_fortran_t;
 
 #endif
 
-template<typename F>
-void psc_mparticles_copy_from(mparticles_t mprts_to,
-			      struct psc_mparticles *mprts_from, unsigned int flags,
+template<typename MP, typename F>
+void psc_mparticles_copy_from(mparticles_t mprts_to, MP mprts_from, unsigned int flags,
 			      F convert_from)
 {
   int n_patches = mprts_to.n_patches();
@@ -35,9 +34,8 @@ void psc_mparticles_copy_from(mparticles_t mprts_to,
   }
 }
 
-template<typename F>
-void psc_mparticles_copy_to(mparticles_t mprts_from,
-			    struct psc_mparticles *mprts_to, unsigned int flags,
+template<typename MP, typename F>
+void psc_mparticles_copy_to(mparticles_t mprts_from, MP mprts_to, unsigned int flags,
 			    F convert_to)
 {
   int n_patches = mprts_from.n_patches();

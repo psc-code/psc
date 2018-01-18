@@ -22,7 +22,7 @@ calc_vxi(particle_fortran_real_t vxi[3], particle_fortran_t *part)
 
 struct ConvertToDouble
 {
-  void operator()(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
+  void operator()(particle_fortran_t *prt, int n, mparticles_double_t mprts_dbl, int p)
   {
     particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
     // don't shift in invariant directions
@@ -32,7 +32,7 @@ struct ConvertToDouble
       }
     }
     
-    particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
+    particle_double_t *prt_dbl = &mprts_dbl[p][n];
     
     particle_double_real_t vxi[3];
     calc_vxi(vxi, prt);
@@ -50,7 +50,7 @@ struct ConvertToDouble
 
 struct ConvertFromDouble
 {
-  void operator()(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
+  void operator()(particle_fortran_t *prt, int n, mparticles_double_t mprts_dbl, int p)
   {
     particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
     // don't shift in invariant directions
@@ -60,7 +60,7 @@ struct ConvertFromDouble
       }
     }
   
-    particle_double_t *prt_dbl = &mparticles_double_t(mprts_dbl)[p][n];
+    particle_double_t *prt_dbl = &mprts_dbl[p][n];
     
     particle_fortran_real_t qni = ppsc->kinds[prt_dbl->kind_].q;
     particle_fortran_real_t mni = ppsc->kinds[prt_dbl->kind_].m;
@@ -89,7 +89,8 @@ psc_mparticles_fortran_copy_to_double(struct psc_mparticles *mprts_fortran,
 				      struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertToDouble convert_to_double;
-  psc_mparticles_copy_to(mparticles_t(mprts_fortran), mprts_dbl, flags, convert_to_double);
+  psc_mparticles_copy_to(mparticles_t(mprts_fortran), mparticles_double_t(mprts_dbl),
+			 flags, convert_to_double);
 }
 
 static void
@@ -97,7 +98,8 @@ psc_mparticles_fortran_copy_from_double(struct psc_mparticles *mprts_fortran,
 					struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   ConvertFromDouble convert_from_double;
-  psc_mparticles_copy_from(mparticles_t(mprts_fortran), mprts_dbl, flags, convert_from_double);
+  psc_mparticles_copy_from(mparticles_t(mprts_fortran), mparticles_double_t(mprts_dbl),
+			   flags, convert_from_double);
 }
 
 static struct mrc_obj_method psc_mparticles_fortran_methods[] = {
