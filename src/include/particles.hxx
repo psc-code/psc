@@ -44,6 +44,21 @@ struct mparticles_base
     mprts_ = nullptr;
   }
 
+  void get_size_all(int *n_prts_by_patch)
+  {
+    psc_mparticles_get_size_all(mprts_, n_prts_by_patch);
+  }
+
+  void reserve_all(int *n_prts_by_patch)
+  {
+    psc_mparticles_reserve_all(mprts_, n_prts_by_patch);
+  }
+
+  void resize_all(int *n_prts_by_patch)
+  {
+    psc_mparticles_resize_all(mprts_, n_prts_by_patch);
+  }
+
   unsigned int n_patches() { return mprts_->nr_patches; }
   
   psc_mparticles *mprts() { return mprts_; }
