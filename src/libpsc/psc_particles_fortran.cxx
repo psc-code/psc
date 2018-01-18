@@ -50,8 +50,9 @@ struct ConvertToDouble
 
 struct ConvertFromDouble
 {
-  void operator()(particle_fortran_t *prt, int n, mparticles_double_t mprts_dbl, int p)
+  particle_fortran_t operator()(int n, mparticles_double_t mprts_dbl, int p)
   {
+    particle_fortran_t prt;
     particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
     // don't shift in invariant directions
     for (int d = 0; d < 3; d++) {
@@ -60,27 +61,29 @@ struct ConvertFromDouble
       }
     }
   
-    particle_double_t *prt_dbl = &mprts_dbl[p][n];
+    const particle_double_t& prt_dbl = mprts_dbl[p][n];
     
-    particle_fortran_real_t qni = ppsc->kinds[prt_dbl->kind_].q;
-    particle_fortran_real_t mni = ppsc->kinds[prt_dbl->kind_].m;
-    particle_fortran_real_t wni = prt_dbl->qni_wni / qni;
+    particle_fortran_real_t qni = ppsc->kinds[prt_dbl.kind_].q;
+    particle_fortran_real_t mni = ppsc->kinds[prt_dbl.kind_].m;
+    particle_fortran_real_t wni = prt_dbl.qni_wni / qni;
     
-    prt->xi  = prt_dbl->xi;
-    prt->yi  = prt_dbl->yi;
-    prt->zi  = prt_dbl->zi;
-    prt->pxi = prt_dbl->pxi;
-    prt->pyi = prt_dbl->pyi;
-    prt->pzi = prt_dbl->pzi;
-    prt->qni = qni;
-    prt->mni = mni;
-    prt->wni = wni;
+    prt.xi  = prt_dbl.xi;
+    prt.yi  = prt_dbl.yi;
+    prt.zi  = prt_dbl.zi;
+    prt.pxi = prt_dbl.pxi;
+    prt.pyi = prt_dbl.pyi;
+    prt.pzi = prt_dbl.pzi;
+    prt.qni = qni;
+    prt.mni = mni;
+    prt.wni = wni;
     
     particle_fortran_real_t vxi[3];
-    calc_vxi(vxi, prt);
-    prt->xi -= dth[0] * vxi[0];
-    prt->yi -= dth[1] * vxi[1];
-    prt->zi -= dth[2] * vxi[2];
+    calc_vxi(vxi, &prt);
+    prt.xi -= dth[0] * vxi[0];
+    prt.yi -= dth[1] * vxi[1];
+    prt.zi -= dth[2] * vxi[2];
+
+    return prt;
   }
 };
 

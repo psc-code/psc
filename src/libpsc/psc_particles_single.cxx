@@ -52,18 +52,21 @@ struct ConvertFromSingle
 
 struct ConvertToSingle
 {
-  void operator()(particle_single_t *prt, int n, mparticles_double_t mprts_dbl, int p)
+  particle_single_t operator()(int n, mparticles_double_t mprts_dbl, int p)
   {
-    particle_double_t *prt_dbl = &mprts_dbl[p][n];
+    particle_single_t prt;
+    const particle_double_t& prt_dbl = mprts_dbl[p][n];
     
-    prt->xi      = prt_dbl->xi;
-    prt->yi      = prt_dbl->yi;
-    prt->zi      = prt_dbl->zi;
-    prt->pxi     = prt_dbl->pxi;
-    prt->pyi     = prt_dbl->pyi;
-    prt->pzi     = prt_dbl->pzi;
-    prt->qni_wni = prt_dbl->qni_wni;
-    prt->kind_   = prt_dbl->kind_;
+    prt.xi      = prt_dbl.xi;
+    prt.yi      = prt_dbl.yi;
+    prt.zi      = prt_dbl.zi;
+    prt.pxi     = prt_dbl.pxi;
+    prt.pyi     = prt_dbl.pyi;
+    prt.pzi     = prt_dbl.pzi;
+    prt.qni_wni = prt_dbl.qni_wni;
+    prt.kind_   = prt_dbl.kind_;
+
+    return prt;
   }
 };
 
