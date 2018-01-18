@@ -33,7 +33,7 @@ void psc_mparticles_copy_from(mparticles_t mprts_to, MP mprts_from, unsigned int
     mparticles_t::patch_t& prts = mprts_to[p];
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      prts[n] = convert_from(n, mprts_from, p);
+      prts[n] = convert_from(mprts_from, p, n);
     }
   }
 }

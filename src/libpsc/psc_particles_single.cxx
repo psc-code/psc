@@ -52,7 +52,7 @@ struct ConvertFromSingle
 
 struct ConvertToSingle
 {
-  particle_single_t operator()(int n, mparticles_double_t mprts_dbl, int p)
+  particle_single_t operator()(mparticles_double_t mprts_dbl, int p, int n)
   {
     particle_single_t prt;
     const particle_double_t& prt_dbl = mprts_dbl[p][n];

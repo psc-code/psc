@@ -50,7 +50,7 @@ struct ConvertToDouble
 
 struct ConvertFromDouble
 {
-  particle_fortran_t operator()(int n, mparticles_double_t mprts_dbl, int p)
+  particle_fortran_t operator()(mparticles_double_t mprts_dbl, int p, int n)
   {
     particle_fortran_t prt;
     particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
