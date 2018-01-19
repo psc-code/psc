@@ -71,7 +71,7 @@ main(void)
 
   cmflds->dump("cmflds.json");
 
-  fields_t flds = cuda_mfields_get_host_fields(cmflds);
+  fields_t flds = cmflds->get_host_fields();
   Fields3d<fields_t> F(flds);
   for (int p = 0; p < n_patches; p++) {
     for (int k = flds.ib[2]; k < flds.ib[2] + flds.im[2]; k++) {

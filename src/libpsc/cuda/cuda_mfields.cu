@@ -73,7 +73,7 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json_flds_patches = mrc_json_array_new(n_patches);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
-  fields_single_t flds = cuda_mfields_get_host_fields(this);
+  fields_single_t flds = get_host_fields();
   Fields3d<fields_single_t> F(flds);
   for (int p = 0; p < n_patches; p++) {
     cuda_mfields_copy_from_device(this, p, flds, 0, n_fields);
@@ -123,12 +123,11 @@ void cuda_mfields::dump(const char *filename)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_get_host_fields
+// get_host_fields
 
-fields_single_t
-cuda_mfields_get_host_fields(struct cuda_mfields *cmflds)
+fields_single_t cuda_mfields::get_host_fields()
 {
-  return fields_single_t(cmflds->ib, cmflds->im, cmflds->n_fields);
+  return fields_single_t(ib, im, n_fields);
 }
 
 // ----------------------------------------------------------------------

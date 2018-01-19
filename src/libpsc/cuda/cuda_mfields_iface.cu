@@ -23,4 +23,9 @@ psc_mfields_cuda::~psc_mfields_cuda()
   delete cmflds;
 }
 
+fields_single_t psc_mfields_cuda::get_host_fields()
+{
+  dprintf("CMFLDS: get_host_fields\n");
+  return cmflds->get_host_fields();
+}
 

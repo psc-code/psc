@@ -94,7 +94,6 @@ private:
 
 struct cuda_mfields;
 
-fields_single_t cuda_mfields_get_host_fields(struct cuda_mfields *cmflds);
 void cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me);
 void cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me);
 void cuda_mfields_axpy_comp_yz(struct cuda_mfields *y, int ym, float a, struct cuda_mfields *x, int xm);

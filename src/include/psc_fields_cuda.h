@@ -6,6 +6,8 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
+#include "psc_fields_single.h"
+
 #include "mrc_json.h"
 
 struct fields_cuda_t
@@ -21,6 +23,8 @@ struct psc_mfields_cuda
   psc_mfields_cuda(Grid_t& grid, int n_fields, const Int3& ibn);
   psc_mfields_cuda(const psc_mfields_cuda&) = delete;
   ~psc_mfields_cuda();
+
+  fields_single_t get_host_fields();
 
   struct cuda_mfields *cmflds;
 };

@@ -47,6 +47,8 @@ struct cuda_mfields
   cuda_mfields(const cuda_mfields&) = delete;
   ~cuda_mfields();
 
+  fields_single_t get_host_fields();
+
   mrc_json_t to_json();
   void dump(const char *filename);
 
