@@ -11,10 +11,10 @@
 #define dprintf(...) do {} while (0)
 #endif
 
-psc_mfields_cuda::psc_mfields_cuda(Grid_t& grid, mrc_json_t json)
+psc_mfields_cuda::psc_mfields_cuda(Grid_t& grid, int n_fields, const Int3& ibn)
 {
   dprintf("CMFLDS: ctor\n");
-  cmflds = new cuda_mfields(grid, json);
+  cmflds = new cuda_mfields(grid, n_fields, ibn);
 }
 
 psc_mfields_cuda::~psc_mfields_cuda()

@@ -43,7 +43,7 @@ struct cuda_mfields_bnd {
 
 struct cuda_mfields
 {
-  cuda_mfields(Grid_t& grid, mrc_json_t json);
+  cuda_mfields(Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
   ~cuda_mfields();
   

@@ -142,39 +142,9 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
 
   psc_mfields_setup_super(_mflds);
 
-  struct mrc_patch *patches = mrc_domain_get_patches(_mflds->domain,
-						     &_mflds->nr_patches);
-
-  Grid_t& grid = ppsc->grid;
-
-  int im[3], ib[3];
-  assert(_mflds->nr_patches > 0);
-  for (int p = 0; p < _mflds->nr_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      if (p == 0) {
-	ib[d] = -_mflds->ibn[d];
-	im[d] = patches[0].ldims[d] + 2 * _mflds->ibn[d];
-      } else {
-	assert(patches[p].ldims[d] == patches[0].ldims[d]);
-      }
-    }
-  }
-  
   cuda_base_init();
 
-  mrc_json_t json = mrc_json_object_new(0);
-
-  mrc_json_t info = mrc_json_object_new(0);
-  mrc_json_object_push(json, "info", info);
-  mrc_json_object_push_integer(info, "n_fields", mflds.n_fields());
-  mrc_json_object_push_integer_array(info, "ib", 3, ib);
-  mrc_json_object_push_integer_array(info, "im", 3, im);
-
-  mrc_json_print(json, 0);
-
-  new(mflds.sub_) psc_mfields_cuda(grid, json);
-
-  // FIXME json_builder_free(obj);
+  new(mflds.sub_) psc_mfields_cuda(ppsc->grid, mflds.n_fields(), _mflds->ibn);
 }
 
 // ----------------------------------------------------------------------

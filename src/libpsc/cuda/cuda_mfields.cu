@@ -13,18 +13,16 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mfields::cuda_mfields(Grid_t& grid, mrc_json_t json)
+cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
 {
   cudaError_t ierr;
 
-  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
-  
   n_patches = grid.patches.size();
-  n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
-  mrc_json_get_object_entry_int3(json_info, "ib", ib);
-  mrc_json_get_object_entry_int3(json_info, "im", im);
+  n_fields = _n_fields;
   ldims = grid.ldims;
   for (int d = 0; d < 3; d++) {
+    ib[d] = -ibn[d];
+    im[d] = ldims[d] + 2 * ibn[d];
     dx[d] = grid.dx[d];
   }
 
