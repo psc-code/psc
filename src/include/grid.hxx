@@ -18,6 +18,7 @@ struct Grid_
   struct Patch
   {
     Real3 xb;
+    Real3 xe;
   };
 
   struct Kind

@@ -414,6 +414,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     mrc_domain_get_local_patch_info(domain, p, &info);
     for (int d = 0; d < 3; d++) {
       grid.patches[p].xb[d] = patches[p].off[d] * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
+      grid.patches[p].xe[d] = (patches[p].off[d] + patches[p].ldims[d]) * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
     }
   }
 }
