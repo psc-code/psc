@@ -157,13 +157,6 @@ struct psc_domain {
 struct psc_patch {
   int ldims[3];       ///< size of local domain (w/o ghost points)
   int off[3];         ///< local to global offset
-  
-  //! @brief lower left corner of this patch in the domain
-  //! 
-  //! This value is given in the internal coordinates and is consistent with those given to pulses, particles etc.
-  //! \code double xx = psc.patch[i]->xb[0] + x * psc.dx[0]; \endcode
-  //! Use the macros CRDX, CRDY, CRDZ to get the internal positions of any grid-point on this patch
-  double dx[3];
 };
 
 ///Describes the different particle kinds

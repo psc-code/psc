@@ -7,11 +7,11 @@ using real_t = mparticles_t::real_t;
 static inline int
 get_cell_index(int p, const particle_t *part)
 {
-  struct psc_patch *patch = &ppsc->patch[p];
-  real_t dxi = 1.f / patch->dx[0];
-  real_t dyi = 1.f / patch->dx[1];
-  real_t dzi = 1.f / patch->dx[2];
-  int *ldims = patch->ldims;
+  Grid_t& grid = ppsc->grid;
+  real_t dxi = 1.f / grid.dx[0];
+  real_t dyi = 1.f / grid.dx[1];
+  real_t dzi = 1.f / grid.dx[2];
+  int *ldims = grid.ldims;
   int *ibn = ppsc->ibn;
   
   real_t u = part->xi * dxi;
@@ -27,11 +27,11 @@ get_cell_index(int p, const particle_t *part)
 static inline int
 get_cell_index_2x2x2(int p, const particle_t *part)
 {
-  struct psc_patch *patch = &ppsc->patch[p];
-  real_t dxi = 1.f / patch->dx[0];
-  real_t dyi = 1.f / patch->dx[1];
-  real_t dzi = 1.f / patch->dx[2];
-  int *ldims = patch->ldims;
+  Grid_t& grid = ppsc->grid;
+  real_t dxi = 1.f / grid.dx[0];
+  real_t dyi = 1.f / grid.dx[1];
+  real_t dzi = 1.f / grid.dx[2];
+  int *ldims = grid.ldims;
   int ibn[3] = { 2, 2, 2 }; // must be divisible by 2
   
   real_t u = part->xi * dxi;
@@ -174,31 +174,31 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
+  const Grid_t& grid = ppsc->grid;
   for (int p = 0; p < mprts.n_patches(); p++) {
-    struct psc_patch *patch = &ppsc->patch[p];
     mparticles_t::patch_t& prts = mprts[p];
     unsigned int n_prts = prts.size();
 
     unsigned int mask = cs2->mask;
     struct cell_map map;
-    int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
+    int N = cell_map_init(&map, grid.ldims, cs2->blocksize);
 
     unsigned int *cnis = (unsigned int *) malloc(n_prts * sizeof(*cnis));
     int i = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
       particle_t *p = &*prt_iter;
-      real_t dxi = 1.f / patch->dx[0];
-      real_t dyi = 1.f / patch->dx[1];
-      real_t dzi = 1.f / patch->dx[2];
+      real_t dxi = 1.f / grid.dx[0];
+      real_t dyi = 1.f / grid.dx[1];
+      real_t dzi = 1.f / grid.dx[2];
       real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
       int pos[3];
       for (int d = 0; d < 3; d++) {
 	pos[d] = fint(xi[d]);
 #if 1
-	if (pos[d] < 0 || pos[d] >= patch->ldims[d]) {
+	if (pos[d] < 0 || pos[d] >= grid.ldims[d]) {
 	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",
-		 i, d, pos[d], patch->ldims[d],
-		 (&p->xi)[d], 1. / patch->dx[d]);
+		 i, d, pos[d], grid.ldims[d],
+		 (&p->xi)[d], 1. / grid.dx[d]);
 	}
 #endif
       }

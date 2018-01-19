@@ -99,18 +99,19 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 			struct psc_mfields *mflds_base, struct psc_mfields *mf_base)
 {
   assert(ppsc->domain.gdims[0] == 1);
-    
+
+  const Grid_t& grid = ppsc->grid;
   // FIXME: how to choose diffusion parameter properly?
   float dx[3];
   for (int d = 0; d < 3; d++) {
-    dx[d] = ppsc->patch[0].dx[d];
+    dx[d] = grid.dx[d];
   }
   float inv_sum = 0.;
   int nr_levels;
   mrc_domain_get_nr_levels(ppsc->mrc_domain, &nr_levels);
   for (int d = 0; d < 3; d++) {
       if (ppsc->domain.gdims[d] > 1) {
-	inv_sum += 1. / sqr(ppsc->patch[0].dx[d] / (1 << (nr_levels - 1)));
+	inv_sum += 1. / sqr(grid.dx[d] / (1 << (nr_levels - 1)));
       }
     }
   float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;

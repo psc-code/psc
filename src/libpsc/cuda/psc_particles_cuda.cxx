@@ -41,13 +41,12 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   }
 
   int *ldims = ppsc->patch[0].ldims;
-  double *dx = ppsc->patch[0].dx;
+  Grid_t& grid = ppsc->grid;
 
     // check that all patches have equal size
   for (int p = 1; p < n_patches; p++) {
     for (int d = 0; d < 3; d++) {
       assert(ppsc->patch[p].ldims[d] == ldims[d]);
-      assert(ppsc->patch[p].dx[d] == dx[d]);
     }
   }
 
@@ -66,8 +65,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   }
 
   grid.kinds.resize(0);
-  Grid_t& grid = ppsc->grid;
-
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }

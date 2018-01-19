@@ -20,7 +20,7 @@ PFX(setup_patch)(struct psc_mparticles *_mprts, int p)
 
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
-    patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
+    patch->b_dxi[d] = 1.f / ppsc->grid.dx[d];
   }
 
   patch->mprts = _mprts;

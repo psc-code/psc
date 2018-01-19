@@ -109,7 +109,7 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
 
   real_t dxi[3];
   for (int d = 0; d < 3; d++) {
-    dxi[d] = 1.f / ppsc->patch[p].dx[d];
+    dxi[d] = 1.f / ppsc->grid.dx[d];
   }
   int *ldims = ppsc->patch[p].ldims;
   int last = 0;

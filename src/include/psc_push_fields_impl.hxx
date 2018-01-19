@@ -32,10 +32,10 @@ public:
   
   PushBase(struct psc* psc, double dt_fac)
   {
+    const Grid_t& grid = psc->grid;
     for (int p = 1; p < psc->nr_patches; p++) {
       for (int d = 0; d < 3; d++) {
 	assert(psc->patch[0].ldims[d] == psc->patch[p].ldims[d]);
-	assert(psc->patch[0].dx[d] == psc->patch[p].dx[d]);
       }
     }
     
@@ -43,9 +43,9 @@ public:
 
     // FIXME, it'd be even better to not even calculate derivates
     // that will be multiplied by 0 
-    cnx = dim::InvarX::value ? 0 : dth / psc->patch[0].dx[0];
-    cny = dim::InvarY::value ? 0 : dth / psc->patch[0].dx[1];
-    cnz = dim::InvarZ::value ? 0 : dth / psc->patch[0].dx[2];
+    cnx = dim::InvarX::value ? 0 : dth / grid.dx[0];
+    cny = dim::InvarY::value ? 0 : dth / grid.dx[1];
+    cnz = dim::InvarZ::value ? 0 : dth / grid.dx[2];
   }
 
 protected:

@@ -7,11 +7,11 @@
 static void
 do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
 {
+  const Grid_t& grid = psc->grid;
   mparticles_t::patch_t& prts = mprts[p];
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
-  struct psc_patch *patch = &psc->patch[p];
-  double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
+  double fac = grid.dx[0] * grid.dx[1] * grid.dx[2];
   int n_prts = prts.size();
   for (int n = 0; n < n_prts; n++) {
     particle_t& prt = prts[n];

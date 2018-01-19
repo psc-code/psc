@@ -114,11 +114,11 @@ cell_index_3_to_1(int *ldims, int j0, int j1, int j2)
 static inline int
 get_sort_index(int p, particle_t *part)
 {
-  struct psc_patch *patch = &ppsc->patch[p];
-  real_t dxi = 1.f / patch->dx[0];
-  real_t dyi = 1.f / patch->dx[1];
-  real_t dzi = 1.f / patch->dx[2];
-  int *ldims = patch->ldims;
+  Grid_t& grid = ppsc->grid;
+  real_t dxi = 1.f / grid.dx[0];
+  real_t dyi = 1.f / grid.dx[1];
+  real_t dzi = 1.f / grid.dx[2];
+  int *ldims = grid.ldims;
   
   real_t u = part->xi * dxi;
   real_t v = part->yi * dyi;

@@ -435,6 +435,8 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
 
   v[Z] *= dir;
 
+  const Grid_t& grid = ppsc->grid;
+  
   double W[6];
   calc_W(W, vv);
 
@@ -443,7 +445,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
   double gs0 = exp(-sqr(v[Z]) / sqr(vsz)) - exp(-sqr(c - v[Z]) / sqr(vsz))
     +sqrt(M_PI) * v[Z] / vsz * (erf((c - v[Z]) / vsz) + erf(v[Z] / vsz));
   double ninjn = ninjo + ppsc->dt * gs0 * n
-    * vsz / sqrt(M_PI) / 2. / ppsc->patch[p].dx[Z] / ppsc->coeff.cori;
+    * vsz / sqrt(M_PI) / 2. / grid.dx[Z] / ppsc->coeff.cori;
 
   int ninjc = (int) ninjn;
   /* mprintf("n ele %g ninjo %g ninjn %g ninjon %g ninjc %d\n", n, */
@@ -514,9 +516,9 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
       } while (sqr(pxi[X]) + sqr(pxi[Y]) + sqr(pxi[Z]) > 1.);
 
       double xr = random1();
-      xi[X] = pos[X] + xr * ppsc->patch[p].dx[X];
+      xi[X] = pos[X] + xr * grid.dx[X];
       double yr = random1();
-      xi[Y] = pos[Y] + yr * ppsc->patch[p].dx[Y];
+      xi[Y] = pos[Y] + yr * grid.dx[Y];
       double zr = random1();
       double dz = dir * zr * pxi[Z] * ppsc->dt;
       xi[Z] = pos[Z] + dz;
@@ -576,11 +578,11 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   }
 
   prof_start(pr_A);
+  const Grid_t& grid = ppsc->grid;
   int nr_kinds = ppsc->nr_kinds;
   mfields_t mf_nvt_av(bnd->mflds_nvt_av), mf_n_in(bnd->mflds_n_in), mf(mflds);
 
   for (int p = 0; p < ppsc->nr_patches; p++) {
-    struct psc_patch *ppatch = &ppsc->patch[p];
     fields_t flds_nvt_av = mf_nvt_av[p];
     Fields F_n_in(mf_n_in[p]);
     fields_t flds = mf[p];
@@ -589,19 +591,19 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       // inject at y lo
       if (at_lo_boundary(p, 1) && ppsc->domain.bnd_part_lo[1] == BND_PART_OPEN) {
 	int iy = 0;
-	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
+	for (int iz = 0; iz < grid.ldims[2]; iz++) {
 	  double ninjo = F_n_in(m, 0,iy,iz);
-	  double pos[3] = { 0., 0., iz * ppatch->dx[2], };
+	  double pos[3] = { 0., 0., iz * grid.dx[2], };
 	  F_n_in(m, 0,iy,iz) =
 	    inject_particles_y(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
       // inject at y hi
       if (at_hi_boundary(p, 1) && ppsc->domain.bnd_part_hi[1] == BND_PART_OPEN) {
-	int iy = ppatch->ldims[1] - 1;
-	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
+	int iy = grid.ldims[1] - 1;
+	for (int iz = 0; iz < grid.ldims[2]; iz++) {
 	  double ninjo = F_n_in(m, 0,iy,iz);
-	  double pos[3] = { 0., (iy + 1) * (1-1e-6) * ppatch->dx[1], iz * ppatch->dx[2] };
+	  double pos[3] = { 0., (iy + 1) * (1-1e-6) * grid.dx[1], iz * grid.dx[2] };
 	  F_n_in(m, 0,iy,iz) =
 	    inject_particles_y(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
@@ -609,19 +611,19 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       // inject at z lo
       if (at_lo_boundary(p, 2) && ppsc->domain.bnd_part_lo[2] == BND_PART_OPEN) {
 	int iz = 0;
-	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
+	for (int iy = 0; iy < grid.ldims[1]; iy++) {
 	  double ninjo = F_n_in(m, 0,iy,iz);
-	  double pos[3] = { 0., iy * ppatch->dx[1], 0. };
+	  double pos[3] = { 0., iy * grid.dx[1], 0. };
 	  F_n_in(m, 0,iy,iz) =
 	    inject_particles_z(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
       // inject at z hi
       if (at_hi_boundary(p, 2) && ppsc->domain.bnd_part_hi[2] == BND_PART_OPEN) {
-	int iz = ppatch->ldims[2] - 1;
-	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
+	int iz = grid.ldims[2] - 1;
+	for (int iy = 0; iy < grid.ldims[1]; iy++) {
 	  double ninjo = F_n_in(m, 0,iy,iz);
-	  double pos[3] = { 0., iy * ppatch->dx[1], (iz + 1) * (1-1e-6) * ppatch->dx[2] };
+	  double pos[3] = { 0., iy * grid.dx[1], (iz + 1) * (1-1e-6) * grid.dx[2] };
 	  F_n_in(m, 0,iy,iz) =
 	    inject_particles_z(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}

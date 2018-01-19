@@ -383,13 +383,10 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   // set up psc->patch
   psc->patch = new psc_patch[psc->nr_patches]();
   psc_foreach_patch(psc, p) {
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(domain, p, &info);
     struct psc_patch *patch = &psc->patch[p];
     for (int d = 0; d < 3; d++) {
       patch->ldims[d] = patches[p].ldims[d];
       patch->off[d] = patches[p].off[d];
-      patch->dx[d]  = dx[d] / (1 << info.level);
     }
   }
 
@@ -409,8 +406,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   
   grid.patches.resize(psc->nr_patches);
   for (int p = 0; p < psc->nr_patches; p++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(domain, p, &info);
     for (int d = 0; d < 3; d++) {
       grid.patches[p].xb[d] = patches[p].off[d] * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
       grid.patches[p].xe[d] = (patches[p].off[d] + patches[p].ldims[d]) * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
@@ -892,7 +887,7 @@ psc_set_ic_fields_default(struct psc *psc)
     Fields F(mf[p]);
 
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
+      double dx = psc->grid.dx[0], dy = psc->grid.dx[1], dz = psc->grid.dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
       double ncc[3] = { xx        , yy + .5*dy, zz + .5*dz };

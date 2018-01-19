@@ -145,6 +145,8 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
 						     &mflds->nr_patches);
 
+  const Grid_t& grid = ppsc->grid;
+
   int im[3], ib[3];
   assert(mflds->nr_patches > 0);
   for (int p = 0; p < mflds->nr_patches; p++) {
@@ -169,7 +171,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   mrc_json_object_push_integer_array(info, "ib", 3, ib);
   mrc_json_object_push_integer_array(info, "im", 3, im);
   mrc_json_object_push_integer_array(info, "ldims", 3, ppsc->patch[0].ldims);
-  mrc_json_object_push_double_array(info, "dx", 3, ppsc->patch[0].dx);
+  mrc_json_object_push_double_array(info, "dx", 3, (double*) static_cast<const double*>(grid.dx)); // FIXME const hack
 
   mrc_json_print(json, 0);
 
