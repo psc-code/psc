@@ -69,7 +69,7 @@ main(void)
     cuda_mfields_zero_comp_yz(cmflds, m);
   }
 
-  cuda_mfields_dump(cmflds, "cmflds.json");
+  cmflds->dump("cmflds.json");
 
   fields_t flds = cuda_mfields_get_host_fields(cmflds);
   Fields3d<fields_t> F(flds);
@@ -94,14 +94,14 @@ main(void)
   }
   flds.dtor();
 
-  cuda_mfields_dump(cmflds, "cmflds_wave.json");
+  cmflds->dump("cmflds_wave.json");
 
   float dt = dx[1];
   cuda_push_fields_E_yz(cmflds, .5 * dt);
   cuda_push_fields_H_yz(cmflds, dt);
   cuda_push_fields_E_yz(cmflds, .5 * dt);
   
-  cuda_mfields_dump(cmflds, "cmflds_wave_1.json");
+  cmflds->dump("cmflds_wave_1.json");
   
   delete cmflds;
 }

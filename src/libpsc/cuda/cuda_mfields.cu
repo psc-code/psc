@@ -51,46 +51,45 @@ cuda_mfields::~cuda_mfields()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_to_json
+// to_json
 
-mrc_json_t
-cuda_mfields_to_json(struct cuda_mfields *cmflds)
+mrc_json_t cuda_mfields::to_json()
 {
   mrc_json_t json = mrc_json_object_new(9);
-  mrc_json_object_push_integer(json, "n_patches", cmflds->n_patches);
-  mrc_json_object_push_integer(json, "n_fields", cmflds->n_fields);
-  mrc_json_object_push_integer(json, "n_cells_per_patch", cmflds->n_cells_per_patch);
-  mrc_json_object_push_integer(json, "n_cells", cmflds->n_cells);
+  mrc_json_object_push_integer(json, "n_patches", n_patches);
+  mrc_json_object_push_integer(json, "n_fields", n_fields);
+  mrc_json_object_push_integer(json, "n_cells_per_patch", n_cells_per_patch);
+  mrc_json_object_push_integer(json, "n_cells", n_cells);
 
-  mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, cmflds->ib));
-  mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, cmflds->im));
-  mrc_json_object_push(json, "ldims", mrc_json_integer_array_new(3, cmflds->ldims));
-  double dx[3] = { cmflds->dx[0], cmflds->dx[1], cmflds->dx[2] };
+  mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib));
+  mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im));
+  mrc_json_object_push(json, "ldims", mrc_json_integer_array_new(3, ldims));
+  double dx[3] = { this->dx[0], this->dx[1], this->dx[2] };
   mrc_json_object_push(json, "dx", mrc_json_double_array_new(3, dx));
 
   mrc_json_t json_flds = mrc_json_object_new(2);
   mrc_json_object_push(json, "flds", json_flds);
   mrc_json_object_push_boolean(json_flds, "__field5d__", true);
-  mrc_json_t json_flds_patches = mrc_json_array_new(cmflds->n_patches);
+  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  fields_single_t flds = cuda_mfields_get_host_fields(this);
   Fields3d<fields_single_t> F(flds);
-  for (int p = 0; p < cmflds->n_patches; p++) {
-    cuda_mfields_copy_from_device(cmflds, p, flds, 0, cmflds->n_fields);
+  for (int p = 0; p < n_patches; p++) {
+    cuda_mfields_copy_from_device(this, p, flds, 0, n_fields);
 
-    mrc_json_t json_flds_comps = mrc_json_array_new(cmflds->n_fields);
+    mrc_json_t json_flds_comps = mrc_json_array_new(n_fields);
     mrc_json_array_push(json_flds_patches, json_flds_comps);
-    for (int m = 0; m < cmflds->n_fields; m++) {
-      mrc_json_t json_fld_z = mrc_json_array_new(cmflds->im[2]);
+    for (int m = 0; m < n_fields; m++) {
+      mrc_json_t json_fld_z = mrc_json_array_new(im[2]);
       mrc_json_array_push(json_flds_comps, json_fld_z);
-      for (int k = cmflds->ib[2]; k < cmflds->ib[2] + cmflds->im[2]; k++) {
-	mrc_json_t json_fld_y = mrc_json_array_new(cmflds->im[1]);
+      for (int k = ib[2]; k < ib[2] + im[2]; k++) {
+	mrc_json_t json_fld_y = mrc_json_array_new(im[1]);
 	mrc_json_array_push(json_fld_z, json_fld_y);
-	for (int j = cmflds->ib[1]; j < cmflds->ib[1] + cmflds->im[1]; j++) {
-	  mrc_json_t json_fld_x = mrc_json_array_new(cmflds->im[0]);
+	for (int j = ib[1]; j < ib[1] + im[1]; j++) {
+	  mrc_json_t json_fld_x = mrc_json_array_new(im[0]);
 	  mrc_json_array_push(json_fld_y, json_fld_x);
-	  for (int i = cmflds->ib[0]; i < cmflds->ib[0] + cmflds->im[0]; i++) {
+	  for (int i = ib[0]; i < ib[0] + im[0]; i++) {
 	    mrc_json_array_push_double(json_fld_x, F(m, i,j,k));
 	  }
 	}
@@ -103,12 +102,11 @@ cuda_mfields_to_json(struct cuda_mfields *cmflds)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_dump
+// dump
 
-void
-cuda_mfields_dump(struct cuda_mfields *cmflds, const char *filename)
+void cuda_mfields::dump(const char *filename)
 {
-  mrc_json_t json = cuda_mfields_to_json(cmflds);
+  mrc_json_t json = to_json();
 
   const char *buf = mrc_json_to_string(json);
   if (filename) {
