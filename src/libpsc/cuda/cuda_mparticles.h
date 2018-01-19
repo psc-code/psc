@@ -28,16 +28,9 @@ struct cuda_mparticles_base
   void reserve_all();
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
-  void set_particles(uint n_prts, uint off,
-		     void (*get_particle)(cuda_mparticles_prt *prt, int n, void *ctx),
-		     void *ctx);
 
   template<typename F>
   void set_particles(uint p, F getter);
-
-  void get_particles(uint n_prts, uint off,
-		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
-		     void *ctx);
 
   template<typename F>
   void get_particles(uint p, F setter);
