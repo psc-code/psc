@@ -163,7 +163,6 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
 {
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(mb, me);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -172,17 +171,17 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
-    cuda_add_ghosts_periodic_yz(cmflds, 0, mb, me);
+    cuda_add_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
   } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // z-periodic single patch
-    cuda_add_ghosts_periodic_z(cmflds, 0, mb, me);
+    cuda_add_ghosts_periodic_z(mf->cmflds, 0, mb, me);
   } else {
-    cuda_mfields_bnd_from_device_inside(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_from_device_inside(cbnd, mf->cmflds, mb, me);
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, bnd);
-    cuda_mfields_bnd_to_device_inside(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_to_device_inside(cbnd, mf->cmflds, mb, me);
   }
 
   mf.put_as(mflds_base, mb, me);
@@ -206,7 +205,6 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
   }
 
   mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(mb, me);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -216,16 +214,16 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
-    cuda_fill_ghosts_periodic_yz(cmflds, 0, mb, me);
+    cuda_fill_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
   } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // z-periodic single patch
-    cuda_fill_ghosts_periodic_z(cmflds, 0, mb, me);
+    cuda_fill_ghosts_periodic_z(mf->cmflds, 0, mb, me);
   } else {
     prof_start(pr1);
-    cuda_mfields_bnd_from_device_inside(cbnd, cmflds, mb, me); // FIXME _only
+    cuda_mfields_bnd_from_device_inside(cbnd, mf->cmflds, mb, me); // FIXME _only
     prof_stop(pr1);
 
     prof_start(pr2);
@@ -236,7 +234,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     mrc_ddc_fill_ghosts_local(bnd->ddc, 0, me - mb, mflds);
 #endif
 #if 1
-    cuda_mfields_bnd_fill_ghosts_local(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_fill_ghosts_local(cbnd, mf->cmflds, mb, me);
 #endif
     prof_stop(pr3);
     prof_start(pr4);
@@ -244,7 +242,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     prof_stop(pr4);
 
     prof_start(pr5);
-    cuda_mfields_bnd_to_device_outside(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_to_device_outside(cbnd, mf->cmflds, mb, me);
     prof_stop(pr5);
   }
 

@@ -11,10 +11,9 @@ psc_push_fields_cuda_push_mflds_E(struct psc_push_fields *push, struct psc_mfiel
 				  double dt_fac)
 {
   mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(JXI, HX + 3);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
   
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_E_yz(cmflds, dt_fac * ppsc->dt);
+    cuda_push_fields_E_yz(mf->cmflds, dt_fac * ppsc->dt);
   } else {
     assert(0);
   }
@@ -30,10 +29,9 @@ psc_push_fields_cuda_push_mflds_H(struct psc_push_fields *push, struct psc_mfiel
 				  double dt_fac)
 {
   mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(JXI, HX + 3);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mf.mflds())->cmflds;
 
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_H_yz(cmflds, dt_fac * ppsc->dt);
+    cuda_push_fields_H_yz(mf->cmflds, dt_fac * ppsc->dt);
   } else {
     assert(0);
   }

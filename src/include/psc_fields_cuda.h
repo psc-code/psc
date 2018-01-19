@@ -35,6 +35,4 @@ struct fields_traits<fields_cuda_t>
 
 // ----------------------------------------------------------------------
 
-#define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
-
 #endif

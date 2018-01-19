@@ -5,8 +5,6 @@
 
 #include "psc_fields_cuda.h"
 
-#undef psc_mfields_cuda // FIXME
-
 #if 1
 #define dprintf(...) mprintf(__VA_ARGS__)
 #else

@@ -124,8 +124,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 
   mfields_cuda_t mflds = mflds_base->get_as<mfields_cuda_t>(EX, EX + 3);
   mfields_cuda_t mf = mf_base->get_as<mfields_cuda_t>(0, 1);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds.mflds())->cmflds;
-  struct cuda_mfields *cmf = psc_mfields_cuda(mf.mflds())->cmflds;
+  cuda_mfields *cmflds = mflds->cmflds;
+  cuda_mfields *cmf = mf->cmflds;
 
   // OPT, do all patches in one kernel
   for (int p = 0; p < mf_base->nr_patches; p++) {

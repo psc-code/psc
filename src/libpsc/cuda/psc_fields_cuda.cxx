@@ -7,8 +7,6 @@
 #include "psc_fields_single.h"
 #include "fields.hxx"
 
-#undef psc_mfields_cuda // FIXME, will be unnecessary eventually
-
 #include <mrc_params.h>
 
 using FieldsH = Fields3d<fields_single_t>; // host
