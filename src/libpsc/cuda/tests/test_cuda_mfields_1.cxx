@@ -52,9 +52,7 @@ main(void)
   
   mrc_json_t json = mrc_json_parse("{                                           "
 				   "  \"info\" : {                              "
-				   "    \"n_patches\" : 1,                      "
 				   "    \"n_fields\" : 9,                       "
-				   "    \"ldims\" : [ 1, 8, 8 ],                "
 				   "    \"ib\" : [ 0, -2, -2 ],                 "
 				   "    \"im\" : [ 1, 12, 12 ],                 "
 				   "    \"dx\" : [ 1.0, 10.0, 10.0 ],           "
@@ -63,11 +61,16 @@ main(void)
   mrc_json_print(json, 0);
   // FIXME, leaked
   Grid_t grid{};
-  
+  grid.ldims = { 1, 8, 8 };
+
+  Grid_t::Patch patch{};
+  patch.xb = { 0., 0., 0. };
+  grid.patches.push_back(patch);
+
   struct cuda_mfields *cmflds = new cuda_mfields(grid, json);
 
   mrc_json_t json_cmflds = cuda_mfields_to_json(cmflds); // FIXME, leaked
-  int n_patches = mrc_json_get_object_entry_integer(json_cmflds, "n_patches");
+  int n_patches = cmflds->n_patches;
   int n_fields = mrc_json_get_object_entry_integer(json_cmflds, "n_fields");
   double dx[3]; mrc_json_get_object_entry_double3(json_cmflds, "dx", dx);
 

@@ -19,11 +19,11 @@ cuda_mfields::cuda_mfields(Grid_t& grid, mrc_json_t json)
 
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
-  n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
+  n_patches = grid.patches.size();
   n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
   mrc_json_get_object_entry_int3(json_info, "ib", ib);
   mrc_json_get_object_entry_int3(json_info, "im", im);
-  mrc_json_get_object_entry_int3(json_info, "ldims", ldims);
+  ldims = grid.ldims;
   double dx[3];
   mrc_json_get_object_entry_double3(json_info, "dx", dx);
   for (int d = 0; d < 3; d++) {

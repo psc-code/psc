@@ -54,7 +54,7 @@ struct cuda_mfields
   int n_cells_per_patch;
   int n_cells;
   fields_cuda_real_t **d_flds_by_patch;
-  int ldims[3];                   // number of cells per direction in each patch
+  Int3 ldims;                     // number of cells per direction in each patch
   float dx[3];                    // cell size (in actual length units)
 };
 
