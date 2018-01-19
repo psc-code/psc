@@ -183,8 +183,8 @@ void cuda_mparticles_base::set_particles(uint p, F getter)
   uint off = h_off[p * n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
   
-  float4 *xi4  = new float4[n_prts];
-  float4 *pxi4 = new float4[n_prts];
+  thrust::host_vector<float4> xi4(n_prts);
+  thrust::host_vector<float4> pxi4(n_prts);
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
@@ -215,10 +215,8 @@ void cuda_mparticles_base::set_particles(uint p, F getter)
     pxi4[n].w = prt.qni_wni;
   }
 
-  to_device(xi4, pxi4, n_prts, off);
-  
-  delete[] xi4;
-  delete[] pxi4;
+  thrust::copy(xi4.begin(), xi4.end(), &d_xi4[off]);
+  thrust::copy(pxi4.begin(), pxi4.end(), &d_pxi4[off]);
 }
 
 // ----------------------------------------------------------------------
@@ -234,12 +232,11 @@ void cuda_mparticles_base::get_particles(uint p, F setter)
   uint off = h_off[p * n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
   
-  float4 *xi4  = new float4[n_prts];
-  float4 *pxi4 = new float4[n_prts];
-
   cuda_mparticles_reorder(static_cast<cuda_mparticles*>(this)); // FIXME
-  from_device(xi4, pxi4, n_prts, off);
-  
+
+  thrust::host_vector<float4> xi4(&d_xi4[off], &d_xi4[off + n_prts]);
+  thrust::host_vector<float4> pxi4(&d_pxi4[off], &d_pxi4[off + n_prts]);
+
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt;
     prt.xi[0]   = xi4[n].x;
@@ -266,8 +263,6 @@ void cuda_mparticles_base::get_particles(uint p, F setter)
 #endif
   }
 
-  delete[] (xi4);
-  delete[] (pxi4);
 }
 
 
