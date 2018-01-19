@@ -121,7 +121,6 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
   } else {
     copy_from(mprts_to, mprts_from, flags);
   }
-  psc_mparticles_setup_internals(mprts_to);
 }
 
 struct psc_mparticles *

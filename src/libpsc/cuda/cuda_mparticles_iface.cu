@@ -188,6 +188,8 @@ static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
     ConvertToCuda<MP> convert_to_cuda(mprts_from, p);
     mprts_to->cmprts()->set_particles(p, convert_to_cuda);
   }
+
+  mprts_to->setup_internals();
 }
 
 template<typename MP>

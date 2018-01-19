@@ -206,7 +206,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
   }
 
   ierr = H5Gclose(group); CE;
-  psc_mparticles_setup_internals(_mprts);
+  mprts->setup_internals();
 }
 
 #endif
