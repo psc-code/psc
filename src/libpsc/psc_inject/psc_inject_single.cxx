@@ -91,16 +91,17 @@ _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *n
       pzi *= gam;
     }
   }
-  
+
+  const Grid_t& grid = psc->grid;
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
   prt->kind_ = npt->kind;
   assert(npt->q == psc->kinds[prt->kind_].q);
   assert(npt->m == psc->kinds[prt->kind_].m);
   /* prt->qni = psc->kinds[prt->kind].q; */
   /* prt->mni = psc->kinds[prt->kind].m; */
-  prt->xi = xx[0] - psc->patch[p].xb[0];
-  prt->yi = xx[1] - psc->patch[p].xb[1];
-  prt->zi = xx[2] - psc->patch[p].xb[2];
+  prt->xi = xx[0] - grid.patches[p].xb[0];
+  prt->yi = xx[1] - grid.patches[p].xb[1];
+  prt->zi = xx[2] - grid.patches[p].xb[2];
   prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
   prt->pyi = pyi;
   prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);

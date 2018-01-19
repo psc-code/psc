@@ -68,7 +68,7 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
   
   psc_foreach_patch(psc, p) {
     mparticles_t::patch_t& prts = mprts[p];
-    struct psc_patch *patch = &psc->patch[p];
+    Grid_t::Patch& patch = psc->grid.patches[p];
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
       particle_t *prt = &*prt_iter;
       if (prt->kind() != kind) {
@@ -76,9 +76,9 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
       }
       
       double xx[3] = {
-	prt->xi + patch->xb[0],
-	prt->yi + patch->xb[1],
-	prt->zi + patch->xb[2],
+	prt->xi + patch.xb[0],
+	prt->yi + patch.xb[1],
+	prt->zi + patch.xb[2],
       };
 
       double H = psc_heating_spot_get_H(heating->spot, xx);

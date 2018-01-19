@@ -204,9 +204,10 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
   int fail_cnt = 0;
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
+  const Grid_t& grid = ppsc->grid;
   
   psc_foreach_patch(ppsc, p) {
-    struct psc_patch *patch = &ppsc->patch[p];
+    Grid_t::Patch& patch = ppsc->grid.patches[p];
     mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
 
     f_real xb[3], xe[3];
@@ -215,8 +216,8 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
     // These will need revisiting when it comes to non-periodic domains.
     
     for (int d = 0; d < 3; d++) {
-      xb[d] = patch->xb[d];
-      xe[d] = patch->xb[d] + patch->ldims[d] * patch->dx[d];
+      xb[d] = patch.xb[d];
+      xe[d] = patch.xb[d] + grid.ldims[d] * grid.dx[d];
     }
 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {

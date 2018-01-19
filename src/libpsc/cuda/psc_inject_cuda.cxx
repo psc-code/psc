@@ -60,6 +60,7 @@ static void
 _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
 		    struct psc_particle_npt *npt, int p, double xx[3])
 {
+  const Grid_t& grid = psc->grid;
   double beta = psc->coeff.beta;
 
   float ran1, ran2, ran3, ran4, ran5, ran6;
@@ -94,9 +95,9 @@ _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
   assert(npt->q == psc->kinds[npt->kind].q);
   assert(npt->m == psc->kinds[npt->kind].m);
 
-  cprt->xi[0] = xx[0] - psc->patch[p].xb[0];
-  cprt->xi[1] = xx[1] - psc->patch[p].xb[1];
-  cprt->xi[2] = xx[2] - psc->patch[p].xb[2];
+  cprt->xi[0] = xx[0] - grid.patches[p].xb[0];
+  cprt->xi[1] = xx[1] - grid.patches[p].xb[1];
+  cprt->xi[2] = xx[2] - grid.patches[p].xb[2];
   cprt->pxi[0] = pxi;
   cprt->pxi[1] = pyi;
   cprt->pxi[2] = pzi;

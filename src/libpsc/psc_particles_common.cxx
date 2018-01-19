@@ -214,18 +214,19 @@ PFX(inject)(struct psc_mparticles *mprts, int p,
 {
   int kind = new_prt->kind;
 
-  struct psc_patch *patch = &ppsc->patch[p];
+  const Grid_t& grid = ppsc->grid;
+  const Grid_t::Patch& patch = grid.patches[p];
   for (int d = 0; d < 3; d++) {
-    assert(new_prt->x[d] >= patch->xb[d]);
-    assert(new_prt->x[d] <= patch->xb[d] + patch->ldims[d] * patch->dx[d]);
+    assert(new_prt->x[d] >= patch.xb[d]);
+    assert(new_prt->x[d] <= patch.xe[d]);
   }
   
-  float dVi = 1.f / (patch->dx[0] * patch->dx[1] * patch->dx[2]);
+  float dVi = 1.f / (grid.dx[0] * grid.dx[1] * grid.dx[2]);
 
   particle_t prt;
-  prt.xi      = new_prt->x[0] - patch->xb[0];
-  prt.yi      = new_prt->x[1] - patch->xb[1];
-  prt.zi      = new_prt->x[2] - patch->xb[2];
+  prt.xi      = new_prt->x[0] - patch.xb[0];
+  prt.yi      = new_prt->x[1] - patch.xb[1];
+  prt.zi      = new_prt->x[2] - patch.xb[2];
   prt.pxi     = new_prt->u[0];
   prt.pyi     = new_prt->u[1];
   prt.pzi     = new_prt->u[2];

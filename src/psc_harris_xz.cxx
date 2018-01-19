@@ -643,10 +643,11 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
   Rng *rng = RngPool_get(rngpool, 0);
 
   assert(psc->nr_patches > 0);
-  struct psc_patch *patch = &psc->patch[0];
-  double xmin = patch->xb[0], xmax = patch->xb[0] + patch->dx[0] * patch->ldims[0];
-  double ymin = patch->xb[1], ymax = patch->xb[1] + patch->dx[1] * patch->ldims[1];
-  double zmin = patch->xb[2], zmax = patch->xb[2] + patch->dx[2] * patch->ldims[2];
+  const Grid_t& grid = psc->grid;
+  const Grid_t::Patch& patch = grid.patches[0];
+  double xmin = patch.xb[0], xmax = patch.xe[0];
+  double ymin = patch.xb[1], ymax = patch.xe[1];
+  double zmin = patch.xb[2], zmax = patch.xe[2];
 
   // Load Harris population
 

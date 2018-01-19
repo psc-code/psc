@@ -390,7 +390,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
       patch->ldims[d] = patches[p].ldims[d];
       patch->off[d] = patches[p].off[d];
       patch->dx[d]  = dx[d] / (1 << info.level);
-      patch->xb[d]  = patches[p].off[d] * patch->dx[d] + psc->domain.corner[d] / psc->coeff.ld;
     }
   }
 
@@ -778,9 +777,9 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   assert(npt->m == psc->kinds[prt->kind_].m);
   /* prt->qni = psc->kinds[prt->kind].q; */
   /* prt->mni = psc->kinds[prt->kind].m; */
-  prt->xi = xx[0] - psc->patch[p].xb[0];
-  prt->yi = xx[1] - psc->patch[p].xb[1];
-  prt->zi = xx[2] - psc->patch[p].xb[2];
+  prt->xi = xx[0] - psc->grid.patches[p].xb[0];
+  prt->yi = xx[1] - psc->grid.patches[p].xb[1];
+  prt->zi = xx[2] - psc->grid.patches[p].xb[2];
   prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
   prt->pyi = pyi;
   prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
