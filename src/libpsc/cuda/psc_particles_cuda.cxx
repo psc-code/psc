@@ -65,6 +65,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
+  grid.kinds.resize(0);
   Grid_t& grid = ppsc->grid;
 
   for (int k = 0; k < ppsc->nr_kinds; k++) {

@@ -23,6 +23,10 @@ struct Grid_
 
   struct Kind
   {
+    Kind() // FIXME, do we want to keep this ctor?
+    {
+    }
+    
     Kind(real_t q_, real_t m_, const char *name_)
       : q(q_), m(m_), name(strdup(name_))
     {
