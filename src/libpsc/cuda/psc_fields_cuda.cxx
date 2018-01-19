@@ -145,7 +145,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
 						     &mflds->nr_patches);
 
-  const Grid_t& grid = ppsc->grid;
+  Grid_t& grid = ppsc->grid;
 
   int im[3], ib[3];
   assert(mflds->nr_patches > 0);
@@ -175,7 +175,10 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   mrc_json_print(json, 0);
 
-  sub->cmflds = cuda_mfields_create();
+#undef psc_mfields_cuda
+  new(mfields_cuda_t(mflds).sub_) psc_mfields_cuda(grid, json);
+#define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
+  
   cuda_mfields_ctor(sub->cmflds, json);
 
   // FIXME json_builder_free(obj);
@@ -190,7 +193,9 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
 
   cuda_mfields_dtor(sub->cmflds);
-  cuda_mfields_destroy(sub->cmflds);
+#undef psc_mfields_cuda
+  mfields_cuda_t(mflds).sub_->~psc_mfields_cuda();
+#define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
   sub->cmflds = NULL;
 }
 

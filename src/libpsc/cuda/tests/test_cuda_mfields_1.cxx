@@ -1,5 +1,5 @@
 
-#include "cuda_iface.h"
+#include "cuda_mfields.h"
 
 #include "fields.hxx"
 
@@ -62,7 +62,7 @@ main(void)
 				   "}                                           ");
   mrc_json_print(json, 0);
   // FIXME, leaked
-  struct cuda_mfields *cmflds = cuda_mfields_create();
+  struct cuda_mfields *cmflds = new cuda_mfields();
   cuda_mfields_ctor(cmflds, json);
 
   mrc_json_t json_cmflds = cuda_mfields_to_json(cmflds); // FIXME, leaked
@@ -109,5 +109,5 @@ main(void)
   cuda_mfields_dump(cmflds, "cmflds_wave_1.json");
   
   cuda_mfields_dtor(cmflds);
-  cuda_mfields_destroy(cmflds);
+  delete cmflds;
 }

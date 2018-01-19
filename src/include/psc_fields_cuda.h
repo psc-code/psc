@@ -6,6 +6,8 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
+#include "mrc_json.h"
+
 struct fields_cuda_t
 {
   using real_t = float;
@@ -16,6 +18,10 @@ struct psc_mfields_cuda
 {
   using fields_t = fields_cuda_t;
   
+  psc_mfields_cuda(Grid_t& grid, mrc_json_t json);
+  psc_mfields_cuda(const psc_mfields_cuda&) = delete;
+  ~psc_mfields_cuda();
+
   struct cuda_mfields *cmflds;
 };
 

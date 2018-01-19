@@ -120,7 +120,8 @@ struct mfields_base
   using real_t = typename fields_t::real_t;
   
   mfields_base(struct psc_mfields *mflds)
-    : mflds_(mflds)
+    : mflds_(mflds),
+      sub_(mrc_to_subobj(mflds, sub_t))
   {
     //assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_single_ops);
   }
@@ -167,6 +168,8 @@ struct mfields_base
   
 private:
   struct psc_mfields *mflds_;
+public:
+  sub_t *sub_;
 };
 
 

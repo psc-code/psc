@@ -41,7 +41,12 @@ struct cuda_mfields_bnd {
 // ----------------------------------------------------------------------
 // cuda_mfields
 
-struct cuda_mfields {
+struct cuda_mfields
+{
+  cuda_mfields();
+  cuda_mfields(const cuda_mfields&) = delete;
+  ~cuda_mfields();
+  
   fields_cuda_real_t *d_flds;
   int ib[3], im[3]; // FIXME, should be called off, ldims
   int n_patches;

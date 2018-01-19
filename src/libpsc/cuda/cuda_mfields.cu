@@ -7,25 +7,21 @@
 #include <cstdio>
 #include <cassert>
 
+// ======================================================================
+// cuda_mfields
+
 // ----------------------------------------------------------------------
-// cuda_mfields_create
+// ctor
 
-struct cuda_mfields *
-cuda_mfields_create()
+cuda_mfields::cuda_mfields()
 {
-  struct cuda_mfields *cmflds = 
-    (struct cuda_mfields *) calloc(1, sizeof(*cmflds));
-
-  return cmflds;
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_destroy
+// dtor
 
-void
-cuda_mfields_destroy(struct cuda_mfields *cmflds)
+cuda_mfields::~cuda_mfields()
 {
-  free(cmflds);
 }
 
 // ----------------------------------------------------------------------

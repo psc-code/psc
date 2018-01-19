@@ -37,6 +37,7 @@ libsubdir_la_LIBADD = \
 	cuda_mparticles_bnd.lo \
 	cuda_mparticles_bnd_scan.lo \
 	cuda_mparticles_bnd_spine.lo \
+	cuda_mfields_iface.lo \
 	cuda_mfields.lo \
 	cuda_mfields_bnd.lo \
 	cuda_push_mprts_yz.lo \
