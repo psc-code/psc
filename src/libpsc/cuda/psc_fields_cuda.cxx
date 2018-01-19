@@ -7,6 +7,8 @@
 #include "psc_fields_single.h"
 #include "fields.hxx"
 
+#undef psc_mfields_cuda // FIXME, will be unnecessary eventually
+
 #include <mrc_params.h>
 
 using FieldsH = Fields3d<fields_single_t>; // host
@@ -23,11 +25,11 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
 			    int mb, int me)
 {
   mfields_c_t mf_c(mflds_c);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  mfields_cuda_t mf_cuda(mflds_cuda);
+  fields_single_t flds = cuda_mfields_get_host_fields(mf_cuda->cmflds);
   FieldsH F(flds);
 
-  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+  for (int p = 0; p < mf_cuda.n_patches(); p++) {
     FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -39,7 +41,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
       }
     }
 
-    cuda_mfields_copy_to_device(cmflds, p, flds, mb, me);
+    cuda_mfields_copy_to_device(mf_cuda->cmflds, p, flds, mb, me);
   }
   
   flds.dtor();
@@ -50,13 +52,13 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 			  int mb, int me)
 {
   mfields_c_t mf_c(mflds_c);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  mfields_cuda_t mf_cuda(mflds_cuda);
+  fields_single_t flds = cuda_mfields_get_host_fields(mf_cuda->cmflds);
   FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     FieldsC F_c(mf_c[p]);
-    cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
+    cuda_mfields_copy_from_device(mf_cuda->cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -80,8 +82,8 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
 				  int mb, int me)
 {
   mfields_single_t mf_single(mflds_single);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  mfields_cuda_t mf_cuda(mflds_cuda);
+  fields_single_t flds = cuda_mfields_get_host_fields(mf_cuda->cmflds);
   FieldsH F(flds);
   
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
@@ -97,7 +99,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
       }
     }
 
-    cuda_mfields_copy_to_device(cmflds, p, flds, mb, me);
+    cuda_mfields_copy_to_device(mf_cuda->cmflds, p, flds, mb, me);
   }
   
   flds.dtor();
@@ -108,13 +110,13 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 				int mb, int me)
 {
   mfields_single_t mf_single(mflds_single);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  mfields_cuda_t mf_cuda(mflds_cuda);
+  fields_single_t flds = cuda_mfields_get_host_fields(mf_cuda->cmflds);
   FieldsH F(flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     FieldsS F_s(mf_single[p]);
-    cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
+    cuda_mfields_copy_from_device(mf_cuda->cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -136,24 +138,24 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 // psc_mfields_cuda_setup
 
 static void
-psc_mfields_cuda_setup(struct psc_mfields *mflds)
+psc_mfields_cuda_setup(struct psc_mfields *_mflds)
 {
-  struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
+  mfields_cuda_t mflds(_mflds);
 
-  psc_mfields_setup_super(mflds);
+  psc_mfields_setup_super(_mflds);
 
-  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
-						     &mflds->nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(_mflds->domain,
+						     &_mflds->nr_patches);
 
   Grid_t& grid = ppsc->grid;
 
   int im[3], ib[3];
-  assert(mflds->nr_patches > 0);
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  assert(_mflds->nr_patches > 0);
+  for (int p = 0; p < _mflds->nr_patches; p++) {
     for (int d = 0; d < 3; d++) {
       if (p == 0) {
-	ib[d] = -mflds->ibn[d];
-	im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
+	ib[d] = -_mflds->ibn[d];
+	im[d] = patches[0].ldims[d] + 2 * _mflds->ibn[d];
       } else {
 	assert(patches[p].ldims[d] == patches[0].ldims[d]);
       }
@@ -166,8 +168,8 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   mrc_json_t info = mrc_json_object_new(0);
   mrc_json_object_push(json, "info", info);
-  mrc_json_object_push_integer(info, "n_patches", mflds->nr_patches);
-  mrc_json_object_push_integer(info, "n_fields", mflds->nr_fields);
+  mrc_json_object_push_integer(info, "n_patches", mflds.n_patches());
+  mrc_json_object_push_integer(info, "n_fields", mflds.n_fields());
   mrc_json_object_push_integer_array(info, "ib", 3, ib);
   mrc_json_object_push_integer_array(info, "im", 3, im);
   mrc_json_object_push_integer_array(info, "ldims", 3, ppsc->patch[0].ldims);
@@ -175,11 +177,8 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   mrc_json_print(json, 0);
 
-#undef psc_mfields_cuda
-  new(mfields_cuda_t(mflds).sub_) psc_mfields_cuda(grid, json);
-#define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
-  
-  cuda_mfields_ctor(sub->cmflds, json);
+  new(mflds.sub_) psc_mfields_cuda(grid, json);
+  cuda_mfields_ctor(mflds->cmflds, json);
 
   // FIXME json_builder_free(obj);
 }
@@ -188,41 +187,38 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 // psc_mfields_cuda_destroy
 
 static void
-psc_mfields_cuda_destroy(struct psc_mfields *mflds)
+psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
 {
-  struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
+  mfields_cuda_t mflds(_mflds);
 
-  cuda_mfields_dtor(sub->cmflds);
-#undef psc_mfields_cuda
-  mfields_cuda_t(mflds).sub_->~psc_mfields_cuda();
-#define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
-  sub->cmflds = NULL;
+  cuda_mfields_dtor(mflds->cmflds);
+  mflds.sub_->~psc_mfields_cuda();
 }
 
 // ----------------------------------------------------------------------
 // psc_mfields_cuda_zero_comp
 
 static void
-psc_mfields_cuda_zero_comp(struct psc_mfields *mflds, int m)
+psc_mfields_cuda_zero_comp(struct psc_mfields *_mflds, int m)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  mfields_cuda_t mflds(_mflds);
 
   assert(ppsc->domain.gdims[0] == 1);
-  cuda_mfields_zero_comp_yz(cmflds, m);
+  cuda_mfields_zero_comp_yz(mflds->cmflds, m);
 }
 
 // ----------------------------------------------------------------------
 // psc_mfields_cuda_axpy_comp
 
 static void
-psc_mfields_cuda_axpy_comp(struct psc_mfields *mflds_y, int my, double alpha,
-			   struct psc_mfields *mflds_x, int mx)
+psc_mfields_cuda_axpy_comp(struct psc_mfields *_mflds_y, int my, double alpha,
+			   struct psc_mfields *_mflds_x, int mx)
 {
-  struct cuda_mfields *cmflds_y = psc_mfields_cuda(mflds_y)->cmflds;
-  struct cuda_mfields *cmflds_x = psc_mfields_cuda(mflds_x)->cmflds;
+  mfields_cuda_t mflds_y(_mflds_y);
+  mfields_cuda_t mflds_x(_mflds_x);
 
   assert(ppsc->domain.gdims[0] == 1);
-  cuda_mfields_axpy_comp_yz(cmflds_y, my, alpha, cmflds_x, mx);
+  cuda_mfields_axpy_comp_yz(mflds_y->cmflds, my, alpha, mflds_x->cmflds, mx);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -242,19 +238,19 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *mflds_y, int my, double alpha,
 // psc_mfields_write
 
 static void
-psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
+psc_mfields_cuda_write(struct psc_mfields *_mflds, struct mrc_io *io)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  mfields_cuda_t mflds(_mflds);
 
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
+  hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, _mflds), H5P_DEFAULT); H5_CHK(group0);
 
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  fields_single_t flds = cuda_mfields_get_host_fields(mflds->cmflds);
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    cuda_mfields_copy_from_device(cmflds, p, flds, 0, flds.nr_comp);
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    cuda_mfields_copy_from_device(mflds->cmflds, p, flds, 0, flds.nr_comp);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     
@@ -277,21 +273,21 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
 // psc_mfields_cuda_read
 
 static void
-psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
+psc_mfields_cuda_read(struct psc_mfields *_mflds, struct mrc_io *io)
 {
-  psc_mfields_read_super(mflds, io);
+  psc_mfields_read_super(_mflds, io);
   
-  psc_mfields_cuda_setup(mflds);
+  psc_mfields_cuda_setup(_mflds);
 
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  mfields_cuda_t mflds(_mflds);
 
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
+  hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, _mflds), H5P_DEFAULT); H5_CHK(group0);
 
-  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  fields_single_t flds = cuda_mfields_get_host_fields(mflds->cmflds);
+  for (int p = 0; p < mflds.n_patches(); p++) {
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
 
@@ -306,7 +302,7 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
     assert(nr_comp == flds.nr_comp);
 
     ierr = H5LTread_dataset_float(group, "fields_cuda", flds.data); CE;
-    cuda_mfields_copy_to_device(cmflds, p, flds, 0, flds.nr_comp);
+    cuda_mfields_copy_to_device(mflds->cmflds, p, flds, 0, flds.nr_comp);
     ierr = H5Gclose(group); CE;
   }
   flds.dtor();

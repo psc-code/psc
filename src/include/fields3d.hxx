@@ -166,6 +166,8 @@ struct mfields_base
     return mflds_;
   }
   
+  sub_t* operator->() { return sub_; }
+
 private:
   struct psc_mfields *mflds_;
 public:
