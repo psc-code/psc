@@ -70,10 +70,8 @@ void cuda_mparticles_add_particles_test_1(cuda_mparticles *cmprts, uint *n_prts_
   cmprts->reserve_all(n_prts_by_patch);
   cmprts->resize_all(n_prts_by_patch);
   
-  uint off = 0;
   for (int p = 0; p < grid.patches.size(); p++) {
-    cmprts->set_particles(n_prts_by_patch[p], off, set_particles);
-    off += n_prts_by_patch[p];
+    cmprts->set_particles(p, set_particles);
   }
 }
 
@@ -91,13 +89,11 @@ struct GetParticlesTest1
 };
 
 void
-get_particles_test(cuda_mparticles *cmprts, uint *n_prts_by_patch)
+get_particles_test(cuda_mparticles *cmprts)
 {
   GetParticlesTest1 get_particles;
-  uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    cmprts->get_particles(n_prts_by_patch[p], off, get_particles);
-    off += n_prts_by_patch[p];
+    cmprts->get_particles(p, get_particles);
   }
 }
 
@@ -136,7 +132,7 @@ main(void)
   cmprts->dump();
 
   printf("get_particles_test\n");
-  get_particles_test(cmprts, n_prts_by_patch);
+  get_particles_test(cmprts);
 
   delete cmprts;
 }

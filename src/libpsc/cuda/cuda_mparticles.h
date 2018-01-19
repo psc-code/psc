@@ -33,14 +33,14 @@ struct cuda_mparticles_base
 		     void *ctx);
 
   template<typename F>
-  void set_particles(uint n_prts, uint off, F getter);
+  void set_particles(uint p, F getter);
 
   void get_particles(uint n_prts, uint off,
 		     void (*put_particle)(cuda_mparticles_prt *, int, void *),
 		     void *ctx);
 
   template<typename F>
-  void get_particles(uint n_prts, uint off, F setter);
+  void get_particles(uint p, F setter);
   
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
@@ -181,11 +181,18 @@ void cuda_mparticles_reorder(struct cuda_mparticles *cmprts);
 // set_particles
 
 template<typename F>
-void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter)
+void cuda_mparticles_base::set_particles(uint p, F getter)
 {
+  // FIXME, doing the copy here all the time would be nice to avoid
+  // making sue we actually have a valid d_off would't hurt, either
+  thrust::host_vector<uint> h_off(d_off);
+
+  uint off = h_off[p * n_blocks_per_patch];
+  uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
+  
   float4 *xi4  = new float4[n_prts];
   float4 *pxi4 = new float4[n_prts];
-  
+
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
 
@@ -225,8 +232,15 @@ void cuda_mparticles_base::set_particles(uint n_prts, uint off, F getter)
 // get_particles
 
 template<typename F>
-void cuda_mparticles_base::get_particles(uint n_prts, uint off, F setter)
+void cuda_mparticles_base::get_particles(uint p, F setter)
 {
+  // FIXME, doing the copy here all the time would be nice to avoid
+  // making sue we actually have a valid d_off would't hurt, either
+  thrust::host_vector<uint> h_off(d_off);
+
+  uint off = h_off[p * n_blocks_per_patch];
+  uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
+  
   float4 *xi4  = new float4[n_prts];
   float4 *pxi4 = new float4[n_prts];
 

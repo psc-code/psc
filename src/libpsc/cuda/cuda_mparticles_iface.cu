@@ -184,13 +184,9 @@ static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
   mprts_to.reserve_all((int*) n_prts_by_patch); // FIXME cast
   mprts_to.resize_all((int*) n_prts_by_patch); // FIXME cast
 
-  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
-    int n_prts = n_prts_by_patch[p];
     ConvertToCuda<MP> convert_to_cuda(mprts_from, p);
-    mprts_to->cmprts()->set_particles(n_prts, off, convert_to_cuda);
-
-    off += n_prts;
+    mprts_to->cmprts()->set_particles(p, convert_to_cuda);
   }
 }
 
@@ -203,13 +199,9 @@ static void copy_to(mparticles_cuda_t mprts_from, MP mprts_to)
   mprts_to.reserve_all((int*) n_prts_by_patch); // FIXME cast
   mprts_to.resize_all((int*) n_prts_by_patch); // FIXME cast
 
-  uint off = 0;
   for (int p = 0; p < n_patches; p++) {
-    int n_prts = n_prts_by_patch[p];
     ConvertFromCuda<MP> convert_from_cuda(mprts_to, p);
-    mprts_from->cmprts()->get_particles(n_prts, off, convert_from_cuda);
-
-    off += n_prts;
+    mprts_from->cmprts()->get_particles(p, convert_from_cuda);
   }
 }
 
