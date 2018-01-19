@@ -62,8 +62,9 @@ main(void)
 				   "}                                           ");
   mrc_json_print(json, 0);
   // FIXME, leaked
-  struct cuda_mfields *cmflds = new cuda_mfields();
-  cuda_mfields_ctor(cmflds, json);
+  Grid_t grid{};
+  
+  struct cuda_mfields *cmflds = new cuda_mfields(grid, json);
 
   mrc_json_t json_cmflds = cuda_mfields_to_json(cmflds); // FIXME, leaked
   int n_patches = mrc_json_get_object_entry_integer(json_cmflds, "n_patches");
@@ -108,6 +109,5 @@ main(void)
   
   cuda_mfields_dump(cmflds, "cmflds_wave_1.json");
   
-  cuda_mfields_dtor(cmflds);
   delete cmflds;
 }

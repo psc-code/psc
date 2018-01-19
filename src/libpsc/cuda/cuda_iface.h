@@ -94,8 +94,6 @@ private:
 
 struct cuda_mfields;
 
-void cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json);
-void cuda_mfields_dtor(struct cuda_mfields *cmflds);
 mrc_json_t cuda_mfields_to_json(struct cuda_mfields *cmflds);
 void cuda_mfields_dump(struct cuda_mfields *cmflds, const char *filename);
 

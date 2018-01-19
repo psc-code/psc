@@ -176,7 +176,6 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
   mrc_json_print(json, 0);
 
   new(mflds.sub_) psc_mfields_cuda(grid, json);
-  cuda_mfields_ctor(mflds->cmflds, json);
 
   // FIXME json_builder_free(obj);
 }
@@ -189,7 +188,6 @@ psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
 {
   mfields_cuda_t mflds(_mflds);
 
-  cuda_mfields_dtor(mflds->cmflds);
   mflds.sub_->~psc_mfields_cuda();
 }
 

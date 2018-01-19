@@ -14,7 +14,7 @@
 psc_mfields_cuda::psc_mfields_cuda(Grid_t& grid, mrc_json_t json)
 {
   dprintf("CMFLDS: ctor\n");
-  cmflds = new cuda_mfields() ;//grid, json);
+  cmflds = new cuda_mfields(grid, json);
 }
 
 psc_mfields_cuda::~psc_mfields_cuda()

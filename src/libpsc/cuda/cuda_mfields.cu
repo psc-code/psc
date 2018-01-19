@@ -13,8 +13,33 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mfields::cuda_mfields()
+cuda_mfields::cuda_mfields(Grid_t& grid, mrc_json_t json)
 {
+  cudaError_t ierr;
+
+  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
+  
+  n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
+  n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
+  mrc_json_get_object_entry_int3(json_info, "ib", ib);
+  mrc_json_get_object_entry_int3(json_info, "im", im);
+  mrc_json_get_object_entry_int3(json_info, "ldims", ldims);
+  double dx[3];
+  mrc_json_get_object_entry_double3(json_info, "dx", dx);
+  for (int d = 0; d < 3; d++) {
+    this->dx[d] = dx[d];
+  }
+
+  n_cells_per_patch = im[0] * im[1] * im[2];
+  n_cells = n_patches * n_cells_per_patch;
+
+  ierr = cudaMalloc((void **) &d_flds,
+		    n_fields * n_cells * sizeof(*d_flds)); cudaCheck(ierr);
+
+  d_flds_by_patch = new fields_cuda_real_t *[n_patches];
+  for (int p = 0; p < n_patches; p++) {
+    d_flds_by_patch[p] = d_flds + p * n_fields * n_cells_per_patch;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -22,52 +47,11 @@ cuda_mfields::cuda_mfields()
 
 cuda_mfields::~cuda_mfields()
 {
-}
-
-// ----------------------------------------------------------------------
-// cuda_mfields_ctor
-
-void
-cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json)
-{
   cudaError_t ierr;
 
-  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
+  ierr = cudaFree(d_flds); cudaCheck(ierr);
   
-  cmflds->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  cmflds->n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
-  mrc_json_get_object_entry_int3(json_info, "ib", cmflds->ib);
-  mrc_json_get_object_entry_int3(json_info, "im", cmflds->im);
-  mrc_json_get_object_entry_int3(json_info, "ldims", cmflds->ldims);
-  double dx[3];
-  mrc_json_get_object_entry_double3(json_info, "dx", dx);
-  for (int d = 0; d < 3; d++) {
-    cmflds->dx[d] = dx[d];
-  }
-
-  cmflds->n_cells_per_patch = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-  cmflds->n_cells = cmflds->n_patches * cmflds->n_cells_per_patch;
-
-  ierr = cudaMalloc((void **) &cmflds->d_flds,
-		    cmflds->n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)); cudaCheck(ierr);
-
-  cmflds->d_flds_by_patch = new fields_cuda_real_t *[cmflds->n_patches];
-  for (int p = 0; p < cmflds->n_patches; p++) {
-    cmflds->d_flds_by_patch[p] = cmflds->d_flds + p * cmflds->n_fields * cmflds->n_cells_per_patch;
-  }
-}
-
-// ----------------------------------------------------------------------
-// cuda_mfields_dtor
-
-void
-cuda_mfields_dtor(struct cuda_mfields *cmflds)
-{
-  cudaError_t ierr;
-
-  ierr = cudaFree(cmflds->d_flds); cudaCheck(ierr);
-  
-  delete[] cmflds->d_flds_by_patch;
+  delete[] d_flds_by_patch;
 }
 
 // ----------------------------------------------------------------------
