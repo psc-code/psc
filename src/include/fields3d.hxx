@@ -110,15 +110,15 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 }
 
 // ======================================================================
-// mfields3d
+// mfields_base
 
 template<typename F>
-struct mfields3d
+struct mfields_base
 {
   using fields_t = F;
   using real_t = typename fields_t::real_t;
   
-  mfields3d(struct psc_mfields *mflds)
+  mfields_base(struct psc_mfields *mflds)
     : mflds_(mflds)
   {
     //assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_single_ops);

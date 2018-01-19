@@ -6,10 +6,10 @@
 
 struct fields_vpic_t : fields3d<float, LayoutAOS>
 {
-  using mfields_t = mfields3d<fields_vpic_t>;
+  using mfields_t = mfields_base<fields_vpic_t>;
 };
 
-using mfields_vpic_t = mfields3d<fields_vpic_t>;
+using mfields_vpic_t = mfields_base<fields_vpic_t>;
 
 template<>
 inline fields_vpic_t mfields_vpic_t::operator[](int p)

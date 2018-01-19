@@ -7,12 +7,12 @@
 struct fields_fortran_t : fields3d<double>
 {
   using Base = fields3d<double>;
-  using mfields_t = mfields3d<fields_fortran_t>;
+  using mfields_t = mfields_base<fields_fortran_t>;
 
   using Base::Base;
 };
 
-using mfields_fortran_t = mfields3d<fields_fortran_t>;
+using mfields_fortran_t = mfields_base<fields_fortran_t>;
 
 template<>
 inline fields_fortran_t mfields_fortran_t::operator[](int p)

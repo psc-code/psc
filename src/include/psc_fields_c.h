@@ -9,12 +9,12 @@
 struct fields_c_t : fields3d<double>
 {
   using Base = fields3d<double>;
-  using mfields_t = mfields3d<fields_c_t>;
+  using mfields_t = mfields_base<fields_c_t>;
 
   using Base::Base;
 };
 
-using mfields_c_t = mfields3d<fields_c_t>;
+using mfields_c_t = mfields_base<fields_c_t>;
 
 template<>
 inline fields_c_t mfields_c_t::operator[](int p)

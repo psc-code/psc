@@ -9,12 +9,12 @@
 struct fields_single_t : fields3d<float>
 {
   using Base = fields3d<float>;
-  using mfields_t = mfields3d<fields_single_t>;
+  using mfields_t = mfields_base<fields_single_t>;
 
   using Base::Base;
 };
 
-using mfields_single_t = mfields3d<fields_single_t>;
+using mfields_single_t = mfields_base<fields_single_t>;
 
 template<>
 inline fields_single_t mfields_single_t::operator[](int p)

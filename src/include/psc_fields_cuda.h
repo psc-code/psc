@@ -9,10 +9,10 @@
 struct fields_cuda_t
 {
   using real_t = float;
-  using mfields_t = mfields3d<fields_cuda_t>;
+  using mfields_t = mfields_base<fields_cuda_t>;
 };
 
-using mfields_cuda_t = mfields3d<fields_cuda_t>;
+using mfields_cuda_t = mfields_base<fields_cuda_t>;
 
 template<>
 struct fields_traits<fields_cuda_t>
