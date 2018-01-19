@@ -12,7 +12,14 @@ struct fields_cuda_t
   using mfields_t = mfields_base<fields_cuda_t>;
 };
 
-using mfields_cuda_t = mfields_base<fields_cuda_t>;
+struct psc_mfields_cuda
+{
+  using fields_t = fields_cuda_t;
+  
+  struct cuda_mfields *cmflds;
+};
+
+using mfields_cuda_t = mfields_base<psc_mfields_cuda>;
 
 template<>
 struct fields_traits<fields_cuda_t>
@@ -21,10 +28,6 @@ struct fields_traits<fields_cuda_t>
 };
 
 // ----------------------------------------------------------------------
-
-struct psc_mfields_cuda {
-  struct cuda_mfields *cmflds;
-};
 
 #define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
 

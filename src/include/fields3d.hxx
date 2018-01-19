@@ -112,10 +112,11 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 // ======================================================================
 // mfields_base
 
-template<typename F>
+template<typename S>
 struct mfields_base
 {
-  using fields_t = F;
+  using sub_t = S;
+  using fields_t = typename sub_t::fields_t;
   using real_t = typename fields_t::real_t;
   
   mfields_base(struct psc_mfields *mflds)

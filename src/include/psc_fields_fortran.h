@@ -12,7 +12,16 @@ struct fields_fortran_t : fields3d<double>
   using Base::Base;
 };
 
-using mfields_fortran_t = mfields_base<fields_fortran_t>;
+struct psc_mfields_fortran_sub
+{
+  using fields_t = fields_fortran_t;
+  
+  fields_t::real_t ***data;
+  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
+  int im[3]; //> extent for each patch (incl. ghostpoints)
+};
+
+using mfields_fortran_t = mfields_base<psc_mfields_fortran_sub>;
 
 template<>
 inline fields_fortran_t mfields_fortran_t::operator[](int p)

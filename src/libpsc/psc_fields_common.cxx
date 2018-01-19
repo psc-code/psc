@@ -111,16 +111,6 @@ fields_t_max_comp(fields_t f, int m)
 // ======================================================================
 // psc_mfields
 
-struct MPFX(sub) {
-#if PSC_FIELDS_AS_FORTRAN
-  fields_t::real_t ***data;
-#else
-  fields_t::real_t **data;
-#endif
-  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
-  int im[3]; //> extent for each patch (incl. ghostpoints)
-};
-
 // ----------------------------------------------------------------------
 // psc_mfields_setup
 

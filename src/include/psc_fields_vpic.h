@@ -4,12 +4,23 @@
 
 #include "fields3d.hxx"
 
+#include "../libpsc/vpic/vpic_iface.h" // FIXME path
+
 struct fields_vpic_t : fields3d<float, LayoutAOS>
 {
   using mfields_t = mfields_base<fields_vpic_t>;
 };
 
-using mfields_vpic_t = mfields_base<fields_vpic_t>;
+struct psc_mfields_vpic
+{
+  using fields_t = fields_vpic_t;
+  
+  Simulation *sim;
+  FieldArray *vmflds_fields;
+  HydroArray *vmflds_hydro;
+};
+
+using mfields_vpic_t = mfields_base<psc_mfields_vpic>;
 
 template<>
 inline fields_vpic_t mfields_vpic_t::operator[](int p)
@@ -30,12 +41,6 @@ struct fields_traits<fields_vpic_t>
 BEGIN_C_DECLS
 
 // ----------------------------------------------------------------------
-
-struct psc_mfields_vpic {
-  Simulation *sim;
-  FieldArray *vmflds_fields;
-  HydroArray *vmflds_hydro;
-};
 
 #define psc_mfields_vpic(mflds) ({					\
       mrc_to_subobj(mflds, struct psc_mfields_vpic);			\
