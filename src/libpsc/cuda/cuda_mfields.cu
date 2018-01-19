@@ -24,10 +24,8 @@ cuda_mfields::cuda_mfields(Grid_t& grid, mrc_json_t json)
   mrc_json_get_object_entry_int3(json_info, "ib", ib);
   mrc_json_get_object_entry_int3(json_info, "im", im);
   ldims = grid.ldims;
-  double dx[3];
-  mrc_json_get_object_entry_double3(json_info, "dx", dx);
   for (int d = 0; d < 3; d++) {
-    this->dx[d] = dx[d];
+    dx[d] = grid.dx[d];
   }
 
   n_cells_per_patch = im[0] * im[1] * im[2];

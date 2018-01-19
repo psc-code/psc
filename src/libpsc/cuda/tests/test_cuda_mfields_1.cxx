@@ -55,13 +55,13 @@ main(void)
 				   "    \"n_fields\" : 9,                       "
 				   "    \"ib\" : [ 0, -2, -2 ],                 "
 				   "    \"im\" : [ 1, 12, 12 ],                 "
-				   "    \"dx\" : [ 1.0, 10.0, 10.0 ],           "
 				   "  }                                         "
 				   "}                                           ");
   mrc_json_print(json, 0);
   // FIXME, leaked
   Grid_t grid{};
   grid.ldims = { 1, 8, 8 };
+  grid.dx = { 1., 10., 10. };
 
   Grid_t::Patch patch{};
   patch.xb = { 0., 0., 0. };

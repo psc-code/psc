@@ -169,7 +169,6 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
   mrc_json_object_push_integer(info, "n_fields", mflds.n_fields());
   mrc_json_object_push_integer_array(info, "ib", 3, ib);
   mrc_json_object_push_integer_array(info, "im", 3, im);
-  mrc_json_object_push_double_array(info, "dx", 3, (double*) static_cast<const double*>(grid.dx)); // FIXME const hack
 
   mrc_json_print(json, 0);
 
