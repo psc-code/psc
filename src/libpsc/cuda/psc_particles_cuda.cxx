@@ -212,17 +212,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_setup_internals
-
-static void
-psc_mparticles_cuda_setup_internals(struct psc_mparticles *_mprts)
-{
-  mparticles_cuda_t mprts(_mprts);
-
-  mprts->setup_internals();
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_cuda_get_nr_particles
 
 static uint
@@ -295,7 +284,6 @@ struct psc_mparticles_ops_cuda : psc_mparticles_ops {
     destroy                 = psc_mparticles_cuda_destroy;
     read                    = psc_mparticles_cuda_read;
     write                   = psc_mparticles_cuda_write;
-    setup_internals         = psc_mparticles_cuda_setup_internals;
     reserve_all             = psc_mparticles_cuda_reserve_all;
     get_nr_particles        = psc_mparticles_cuda_get_nr_particles;
     resize_all              = psc_mparticles_cuda_resize_all;

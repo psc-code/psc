@@ -55,15 +55,6 @@ psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 void
-psc_mparticles_setup_internals(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  if (ops->setup_internals) {
-    ops->setup_internals(mprts);
-  }
-}
-
-void
 psc_mparticles_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
