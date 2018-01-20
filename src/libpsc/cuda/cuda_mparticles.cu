@@ -204,6 +204,10 @@ void cuda_mparticles::find_block_indices_ids()
     }
   }
 
+  if (max_n_prts == 0) {
+    return;
+  }
+  
   struct cuda_params2 prm;
   cuda_params2_set(&prm, this);
     
@@ -587,14 +591,14 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
   //   printf("i %d bidx %d %d\n", i, bidx, id);
   // }
 
-  // cmprts->check_ordered(cmprts);
+  // check_ordered();
 
   n_prts += buf_n;
 
   thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
   reorder_and_offsets();
 
-  // cmprts->check_ordered(cmprts);
+  // check_ordered();
 }
 
 // ----------------------------------------------------------------------
