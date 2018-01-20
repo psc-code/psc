@@ -94,9 +94,6 @@ private:
 
 struct cuda_mfields;
 
-void cuda_mfields_axpy_comp_yz(struct cuda_mfields *y, int ym, float a, struct cuda_mfields *x, int xm);
-void cuda_mfields_zero_comp_yz(struct cuda_mfields *x, int xm);
-
 void cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p);
 
 void cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt);

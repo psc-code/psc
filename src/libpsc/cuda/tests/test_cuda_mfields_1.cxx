@@ -66,7 +66,7 @@ main(void)
   const Vec3<double>& dx = grid.dx;
 
   for (int m = 0; m < n_fields; m++) {
-    cuda_mfields_zero_comp_yz(cmflds, m);
+    cmflds->zero_comp_yz(m);
   }
 
   cmflds->dump("cmflds.json");

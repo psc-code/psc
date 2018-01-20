@@ -40,3 +40,15 @@ void psc_mfields_cuda::copy_from_device(int p, fields_single_t h_flds, int mb, i
   dprintf("CMFLDS: copy_from_device\n");
   cmflds->copy_from_device(p, h_flds, mb, me);
 }
+
+void psc_mfields_cuda::axpy_comp_yz(int ym, float a, mfields_cuda_t mflds_x, int xm)
+{
+  dprintf("CMFLDS: axpy_comp_yz\n");
+  cmflds->axpy_comp_yz(ym, a, mflds_x->cmflds, xm);
+}
+
+void psc_mfields_cuda::zero_comp_yz(int xm)
+{
+  dprintf("CMFLDS: zero_comp_yz\n");
+  cmflds->zero_comp_yz(xm);
+}
