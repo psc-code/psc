@@ -39,7 +39,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
       }
     }
 
-    cuda_mfields_copy_to_device(mf_cuda->cmflds, p, flds, mb, me);
+    mf_cuda->copy_to_device(p, flds, mb, me);
   }
   
   flds.dtor();
@@ -56,7 +56,7 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     FieldsC F_c(mf_c[p]);
-    cuda_mfields_copy_from_device(mf_cuda->cmflds, p, flds, mb, me);
+    mf_cuda->copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -97,7 +97,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
       }
     }
 
-    cuda_mfields_copy_to_device(mf_cuda->cmflds, p, flds, mb, me);
+    mf_cuda->copy_to_device(p, flds, mb, me);
   }
   
   flds.dtor();
@@ -114,7 +114,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     FieldsS F_s(mf_single[p]);
-    cuda_mfields_copy_from_device(mf_cuda->cmflds, p, flds, mb, me);
+    mf_cuda->copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -213,7 +213,7 @@ psc_mfields_cuda_write(struct psc_mfields *_mflds, struct mrc_io *io)
   fields_single_t flds = mflds->get_host_fields();
 
   for (int p = 0; p < mflds.n_patches(); p++) {
-    cuda_mfields_copy_from_device(mflds->cmflds, p, flds, 0, flds.nr_comp);
+    mflds->copy_from_device(p, flds, 0, flds.nr_comp);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     
@@ -265,7 +265,7 @@ psc_mfields_cuda_read(struct psc_mfields *_mflds, struct mrc_io *io)
     assert(nr_comp == flds.nr_comp);
 
     ierr = H5LTread_dataset_float(group, "fields_cuda", flds.data); CE;
-    cuda_mfields_copy_to_device(mflds->cmflds, p, flds, 0, flds.nr_comp);
+    mflds->copy_to_device(p, flds, 0, flds.nr_comp);
     ierr = H5Gclose(group); CE;
   }
   flds.dtor();

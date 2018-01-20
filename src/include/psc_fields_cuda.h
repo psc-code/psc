@@ -25,6 +25,8 @@ struct psc_mfields_cuda
   ~psc_mfields_cuda();
 
   fields_single_t get_host_fields();
+  void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
+  void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
 
   struct cuda_mfields *cmflds;
 };

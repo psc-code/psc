@@ -90,7 +90,7 @@ main(void)
 	}
       }
     }
-    cuda_mfields_copy_to_device(cmflds, p, flds, 0, n_fields);
+    cmflds->copy_to_device(p, flds, 0, n_fields);
   }
   flds.dtor();
 

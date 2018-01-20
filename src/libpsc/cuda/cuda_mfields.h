@@ -48,6 +48,8 @@ struct cuda_mfields
   ~cuda_mfields();
 
   fields_single_t get_host_fields();
+  void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
+  void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
 
   mrc_json_t to_json();
   void dump(const char *filename);

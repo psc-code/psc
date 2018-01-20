@@ -76,7 +76,7 @@ mrc_json_t cuda_mfields::to_json()
   fields_single_t flds = get_host_fields();
   Fields3d<fields_single_t> F(flds);
   for (int p = 0; p < n_patches; p++) {
-    cuda_mfields_copy_from_device(this, p, flds, 0, n_fields);
+    copy_from_device(p, flds, 0, n_fields);
 
     mrc_json_t json_flds_comps = mrc_json_array_new(n_fields);
     mrc_json_array_push(json_flds_patches, json_flds_comps);
@@ -131,10 +131,9 @@ fields_single_t cuda_mfields::get_host_fields()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_copy_to_device
+// copy_to_device
 
-void
-cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me)
+void cuda_mfields::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
 {
   cudaError_t ierr;
   
@@ -143,18 +142,17 @@ cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t 
   }
   assert(mb < me);
 
-  uint size = cmflds->n_cells_per_patch;
-  ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
+  uint size = n_cells_per_patch;
+  ierr = cudaMemcpy(d_flds_by_patch[p] + mb * size,
 		    h_flds.data + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_copy_from_device
+// copy_from_device
 
-void
-cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me)
+void cuda_mfields::copy_from_device(int p, fields_single_t h_flds, int mb, int me)
 {
   cudaError_t ierr;
 
@@ -163,9 +161,9 @@ cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_
   }
   assert(mb < me);
 
-  uint size = cmflds->n_cells_per_patch;
+  uint size = n_cells_per_patch;
   ierr = cudaMemcpy(h_flds.data + mb * size,
-		    cmflds->d_flds_by_patch[p] + mb * size,
+		    d_flds_by_patch[p] + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }

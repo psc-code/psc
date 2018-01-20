@@ -29,3 +29,14 @@ fields_single_t psc_mfields_cuda::get_host_fields()
   return cmflds->get_host_fields();
 }
 
+void psc_mfields_cuda::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
+{
+  dprintf("CMFLDS: copy_to_device\n");
+  cmflds->copy_to_device(p, h_flds, mb, me);
+}
+
+void psc_mfields_cuda::copy_from_device(int p, fields_single_t h_flds, int mb, int me)
+{
+  dprintf("CMFLDS: copy_from_device\n");
+  cmflds->copy_from_device(p, h_flds, mb, me);
+}
