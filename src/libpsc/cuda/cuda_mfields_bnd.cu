@@ -343,7 +343,7 @@ fields_device_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd
   dim3 dimBlock(THREADS_PER_BLOCK);
     
   float *d_bnd_buf = cbnd->d_bnd_buf;
-  float *d_flds = cmflds->d_flds + mb * size;
+  float *d_flds = cmflds->d_flds.data().get() + mb * size;
   if (me - mb == 3) {
     k_fields_device_pack_yz<B, pack, 3> <<<dimGrid, dimBlock>>>
       (d_bnd_buf, d_flds, gmy, gmz,
@@ -381,7 +381,7 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
-  float *d_flds = cmflds->d_flds + mb * im[1] * im[2];
+  float *d_flds = cmflds->d_flds.data().get() + mb * im[1] * im[2];
   k_fields_device_pack2_yz<B, pack, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
     (cbnd->d_bnd_buf, d_flds, cbnd->d_nei_patch,
      im[1], im[2], n_patches, n_fields);
@@ -403,7 +403,7 @@ cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mf
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
-  float *d_flds = cmflds->d_flds + mb * im[1] * im[2];
+  float *d_flds = cmflds->d_flds.data().get() + mb * im[1] * im[2];
   if (me - mb == 3) {
     k_fill_ghosts_local_yz<B, 3> <<<dimGrid, dimBlock>>>
       (d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
@@ -1168,7 +1168,7 @@ fields_device_pack3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
   dim3 dimGrid((n_map + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
-  float *d_flds = cmflds->d_flds + mb * im[1] * im[2];
+  float *d_flds = cmflds->d_flds.data().get() + mb * im[1] * im[2];
   if (me - mb == 3) {
     k_fields_device_pack3_yz<pack> <<<dimGrid, dimBlock>>>
       (cbnd->d_bnd_buf, d_flds, d_map, cbnd->d_nei_patch,

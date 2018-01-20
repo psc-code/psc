@@ -17,8 +17,6 @@ cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
   : n_patches(grid.patches.size()),
     d_flds_by_patch(n_patches)
 {
-  cudaError_t ierr;
-
   n_fields = _n_fields;
   ldims = grid.ldims;
   for (int d = 0; d < 3; d++) {
@@ -30,22 +28,11 @@ cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
   n_cells_per_patch = im[0] * im[1] * im[2];
   n_cells = n_patches * n_cells_per_patch;
 
-  ierr = cudaMalloc((void **) &d_flds,
-		    n_fields * n_cells * sizeof(*d_flds)); cudaCheck(ierr);
+  d_flds.resize(n_fields * n_cells);
 
   for (int p = 0; p < n_patches; p++) {
-    d_flds_by_patch[p] = d_flds + p * n_fields * n_cells_per_patch;
+    d_flds_by_patch[p] = d_flds.data().get() + p * n_fields * n_cells_per_patch;
   }
-}
-
-// ----------------------------------------------------------------------
-// dtor
-
-cuda_mfields::~cuda_mfields()
-{
-  cudaError_t ierr;
-
-  ierr = cudaFree(d_flds); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------

@@ -608,8 +608,8 @@ zero_currents(struct cuda_mfields *cmflds)
   // OPT: j as separate field, so we can use a single memset?
   for (int p = 0; p < cmflds->n_patches; p++) {
     uint size = cmflds->n_cells_per_patch;
-    cudaError ierr = cudaMemset(cmflds->d_flds + p * size * cmflds->n_fields + JXI * size, 0,
-				3 * size * sizeof(*cmflds->d_flds));
+    cudaError ierr = cudaMemset(cmflds->d_flds.data().get() + p * size * cmflds->n_fields + JXI * size, 0,
+				3 * size * sizeof(fields_cuda_real_t));
     cudaCheck(ierr);
   }
 }
@@ -647,7 +647,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 	(block_start, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
 	 cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
 	 cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
-	 cmflds->d_flds, fld_size);
+	 cmflds->d_flds.data().get(), fld_size);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
@@ -657,7 +657,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
        cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
        cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
-       cmflds->d_flds, fld_size);
+       cmflds->d_flds.data().get(), fld_size);
     cuda_sync_if_enabled();
   } else {
     assert(0);

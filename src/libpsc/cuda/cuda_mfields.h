@@ -8,6 +8,8 @@
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
 
+#include <thrust/device_vector.h>
+
 // ----------------------------------------------------------------------
 // cuda_mfields_bnd_map
 //
@@ -45,7 +47,6 @@ struct cuda_mfields
 {
   cuda_mfields(Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
-  ~cuda_mfields();
 
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
   void zero_comp_yz(int xm);
@@ -57,7 +58,7 @@ struct cuda_mfields
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  fields_cuda_real_t *d_flds;
+  thrust::device_vector<fields_cuda_real_t> d_flds;
   int ib[3], im[3]; // FIXME, should be called off, ldims
   int n_patches;
   int n_fields;

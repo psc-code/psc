@@ -66,8 +66,9 @@ tests_test_cuda_mparticles_1_LDADD = tests/test_cuda_mparticles_1.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
 nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
 
-tests_test_cuda_mfields_1_SOURCES = tests/test_cuda_mfields_1.cxx
-tests_test_cuda_mfields_1_LDADD = cuda_mfields.lo \
+tests_test_cuda_mfields_1_SOURCES = 
+tests_test_cuda_mfields_1_LDADD = tests/test_cuda_mfields_1.lo \
+  cuda_mfields.lo \
   cuda_push_fields_yz.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
