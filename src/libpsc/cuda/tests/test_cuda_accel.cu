@@ -4,6 +4,11 @@
 #include "cuda_mfields.h"
 #include "cuda_mparticles.h"
 
+#include "../vpic/PscRng.h"
+
+using Rng = PscRng;
+using RngPool = PscRngPool<Rng>;
+
 #include "mrc_profile.h"
 
 struct prof_globals prof_globals; // FIXME
@@ -79,6 +84,9 @@ public:
 
   void init_cmprts()
   {
+    RngPool rngpool;
+    Rng *rng = rngpool[0];
+
     uint n_prts_by_patch[1] = { n_prts };
     
     cmprts_ = new cuda_mparticles(grid_, { 1, 1, 1 });
@@ -89,14 +97,16 @@ public:
     
     for (int n = 0; n < n_prts; n++) {
       cuda_mparticles_prt prt = {};
+      prt.xi[0] = rng->uniform(0, L);
+      prt.xi[1] = rng->uniform(0, L);
+      prt.xi[2] = rng->uniform(0, L);
+      prt.qni_wni = 1.;
+
       prts.push_back(prt);
-      // inject_particle( sp,
-      //                uniform( rng(0), 0, L ),
-      //                uniform( rng(0), 0, L ),
-      //                uniform( rng(0), 0, L ),
-      //                0., 0., 0., 1., 0., 0 );
     }
     cmprts_->inject(prts.data(), n_prts_by_patch);
+
+    cmprts_->dump();
   }
   
 
