@@ -146,7 +146,7 @@ psc_test_cyclo_init_field(struct psc *psc, double crd[3], int m)
 // psc_test_cyclo_setup_particles
 
 #define inject_particle(knd, x, y, z, ux, uy, uz, weight, a, b) do {	\
-    double Vi = 1./(psc->patch[0].dx[0] * psc->patch[0].dx[1] * psc->patch[0].dx[2]); \
+    double Vi = 1./(psc->grid.dx[0] * psc->grid.dx[1] * psc->grid.dx[2]); \
     Vi = 1.; /* FIXME HACK */						\
     particle_t prt;							\
     prt.xi = x - xmin;							\
@@ -178,10 +178,10 @@ psc_test_cyclo_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool
   mparticles_t mprts = psc->particles->get_as<mparticles_t>(MP_DONT_COPY);
 
   for (int p = 0; p < psc->nr_patches; p++) {
-    struct psc_patch *patch = &psc->patch[p];
-    double xmin = patch->xb[0], xmax = patch->xb[0] + patch->ldims[0] * patch->dx[0];
-    double ymin = patch->xb[1], ymax = patch->xb[1] + patch->ldims[1] * patch->dx[1];
-    double zmin = patch->xb[2], zmax = patch->xb[2] + patch->ldims[2] * patch->dx[2];
+    const Grid_t& grid = psc->grid;
+    double xmin = grid.patches[0].xb[0], xmax = grid.patches[0].xe[0];
+    double ymin = grid.patches[0].xb[1], ymax = grid.patches[0].xe[1];
+    double zmin = grid.patches[0].xb[2], zmax = grid.patches[0].xe[2];
 
     for (int n = 0; n < sub->n_prts; n++) {
       double x = uniform(rng(0), xmin, xmax);
@@ -223,7 +223,7 @@ psc_test_cyclo_step(struct psc *psc)
   mparticles_t mprts = psc->particles->get_as<mparticles_t>();
 
   for (int p = 0; p < psc->nr_patches; p++) {
-    particle_range_t prts = mprts[p].range();
+    auto& prts = mprts[p];
     unsigned int n_prts = prts.size();
 
     for (int n = 0; n < n_prts; n++) {

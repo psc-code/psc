@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 using Fields = Fields3d<fields_t>;
+using real_t = Fields::real_t;
 
 bool opt_checks_verbose = false;
 bool opt_testing_dump = false;
@@ -143,8 +144,8 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base,
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    particle_range_t prts = mprts[p].range();
-    particle_range_t prts_ref = mparticles_t(mprts_ref)[p].range();
+    auto& prts = mprts[p];
+    auto& prts_ref = mparticles_t(mprts_ref)[p];
   
     assert(prts.size() == prts_ref.size());
     for (auto prt_iter = prts.begin(), prt_ref_iter = prts_ref.begin();
@@ -311,13 +312,12 @@ psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *mprts_base)
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
-    struct psc_patch *patch = &psc->patch[p];
-    particle_range_t prts = mprts[p].range();
-    real_t dxi = 1.f / patch->dx[0];
-    real_t dyi = 1.f / patch->dx[1];
-    real_t dzi = 1.f / patch->dx[2];
+    auto& prts = mprts[p];
+    real_t dxi = 1.f / psc->grid.dx[0];
+    real_t dyi = 1.f / psc->grid.dx[1];
+    real_t dzi = 1.f / psc->grid.dx[2];
 
-    int *ldims = patch->ldims;
+    int *ldims = psc->grid.ldims;
 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
       particle_t *part = &*prt_iter;
