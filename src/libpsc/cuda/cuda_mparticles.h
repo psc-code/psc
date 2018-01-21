@@ -160,7 +160,7 @@ public:
 
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
-  bool need_reorder;              // particles haven't yet been put into their sorted order
+  bool need_reorder = { false };            // particles haven't yet been put into their sorted order
 };
 
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
