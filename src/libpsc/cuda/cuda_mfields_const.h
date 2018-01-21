@@ -27,8 +27,8 @@ cuda_mfields_const_set(struct cuda_mfields *cmflds)
     c.ib[d] = cmflds->ib[d];
     c.im[d] = cmflds->im[d];
   }
-  assert(c.im[0] == 1);
-  assert(c.ib[0] == 0 && c.ib[1] == -2 && c.ib[2] == -2);
+  /* assert(c.im[0] == 1); */
+  /* assert(c.ib[0] == 0 && c.ib[1] == -2 && c.ib[2] == -2); */
 
   cudaError_t ierr = cudaMemcpyToSymbol(d_cmflds_const, &c, sizeof(c)); cudaCheck(ierr);
 }

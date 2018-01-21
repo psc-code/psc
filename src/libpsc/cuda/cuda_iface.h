@@ -103,10 +103,12 @@ void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 			    int ly[3], int ry[3], int lz[3], int rz[3]);
 
 // ----------------------------------------------------------------------
-// cuda_push_mprts_yz
+// cuda_push_mprts
 
 void cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
 			int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
+
+void cuda_push_mprts_xyz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds);
 
 // ----------------------------------------------------------------------
 // cuda_moments

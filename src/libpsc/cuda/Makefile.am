@@ -64,6 +64,7 @@ tests_test_cuda_accel_LDADD = tests/test_cuda_accel.lo \
   cuda_mfields.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
   cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
+  cuda_push_mprts_xyz.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
 nodist_EXTRA_tests_test_cuda_accel_SOURCES = dummy.cxx
