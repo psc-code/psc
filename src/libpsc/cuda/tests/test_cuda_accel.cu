@@ -135,7 +135,7 @@ public:
 
     for (int n = 0; n < n_steps; n++) {
       printf("advancing step %d\n", n);
-      cuda_push_mprts_xyz(cmprts_, cmflds_);
+      cuda_push_mprts_yz(cmprts_, cmflds_, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
       cmprts_->get_particles(0,
 			     [&] (int i, const cuda_mparticles_prt &prt) {
 			       if (std::abs(prt.pxi[0] - 1*(n+1)) > eps ||
