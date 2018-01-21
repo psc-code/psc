@@ -51,6 +51,8 @@ check_PROGRAMS = \
 	tests/test_cuda_mfields_1 \
 	tests/test_cuda_mparticles_1
 
+TESTS = $(check_PROGRAMS)
+
 #	tests/test_cuda_mparticles
 #	tests/test_cuda_heating
 
@@ -89,6 +91,8 @@ nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
 #tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo \
 #  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo
 #nodist_EXTRA_tests_test_cuda_heating_SOURCES = dummy.cxx
+
+LDFLAGS += -Wl,-rpath /usr/local/cuda/lib
 
 CUDACC_FLAGS = -std=c++11 -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
