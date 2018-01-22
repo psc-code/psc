@@ -48,6 +48,7 @@ class TestAccel
 
 public:
   TestAccel()
+    : grid_({ 1, 1, 1 }, { L, L, L })
   {
     bs_ = { 1, 1, 1 };
     init_grid();
@@ -63,14 +64,6 @@ public:
 
   void init_grid()
   {
-    Grid_t::Patch patch{};
-    grid_.ldims = { 1, 1, 1 };
-    grid_.dx = { L, L, L };
-    
-    patch.xb = { 0., 0., 0. };
-    patch.xe = { L,  L,  L  };
-    grid_.patches.push_back(patch);
-
     grid_.kinds.push_back(Grid_t::Kind(1.,  1., "test_species"));
   }
   
@@ -176,6 +169,7 @@ class TestCyclo
 
 public:
   TestCyclo()
+    : grid_({ 1, 1, 1 }, { L, L, L })
   {
     bs_ = { 1, 1, 1 };
     init_grid();
@@ -191,14 +185,6 @@ public:
 
   void init_grid()
   {
-    Grid_t::Patch patch{};
-    grid_.ldims = { 1, 1, 1 };
-    grid_.dx = { L, L, L };
-    
-    patch.xb = { 0., 0., 0. };
-    patch.xe = { L,  L,  L  };
-    grid_.patches.push_back(patch);
-
     grid_.kinds.push_back(Grid_t::Kind(2.,  1., "test_species"));
   }
   
