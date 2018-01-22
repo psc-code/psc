@@ -58,9 +58,11 @@ struct PushMprtsTest : ::testing::Test
   cuda_mparticles* cmprts_;
   cuda_mfields* cmflds_;
 
+  RngPool rngpool;
+  
   const double L = 1e10;
   const Int3 bs_ = { 1, 1, 1 };
-  
+
   void SetUp()
   {
     grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
@@ -104,6 +106,16 @@ struct PushMprtsTest : ::testing::Test
   
     return cmflds;
   }
+
+  cuda_mparticles* make_cmprts(uint n_prts)
+  {
+    cuda_mparticles* cmprts = new cuda_mparticles(*grid_, bs_);
+
+    uint n_prts_by_patch[1] = { n_prts };
+    cmprts->reserve_all(n_prts_by_patch);
+  
+    return cmprts;
+  }
 };
 
 // ======================================================================
@@ -126,14 +138,10 @@ TEST_F(PushMprtsTest, Accel)
     });
 
   // init particles
-  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  cmprts_ = new cuda_mparticles(*grid_, bs_);
-  RngPool rngpool;
   Rng *rng = rngpool[0];
-  
-  uint n_prts_by_patch[1] = { n_prts };
-  
-  cmprts_->reserve_all(n_prts_by_patch);
+
+  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
+  cmprts_ = make_cmprts(n_prts);
   
   std::vector<cuda_mparticles_prt> prts;
   prts.reserve(n_prts);
@@ -147,6 +155,7 @@ TEST_F(PushMprtsTest, Accel)
     
     prts.push_back(prt);
   }
+  uint n_prts_by_patch[1] = { n_prts };
   cmprts_->inject(prts.data(), n_prts_by_patch);
   //cmprts_->dump();
   
@@ -186,16 +195,11 @@ TEST_F(PushMprtsTest, Cyclo)
       }
     });
 
-  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  cmprts_ = new cuda_mparticles(*grid_, bs_);
-
   // init particles
-  RngPool rngpool;
   Rng *rng = rngpool[0];
-  
-  uint n_prts_by_patch[1] = { n_prts };
-  
-  cmprts_->reserve_all(n_prts_by_patch);
+
+  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
+  cmprts_ = make_cmprts(n_prts);
   
   std::vector<cuda_mparticles_prt> prts;
   prts.reserve(n_prts);
@@ -212,6 +216,7 @@ TEST_F(PushMprtsTest, Cyclo)
     
     prts.push_back(prt);
   }
+  uint n_prts_by_patch[1] = { n_prts };
   cmprts_->inject(prts.data(), n_prts_by_patch);
   //cmprts_->dump();
   
