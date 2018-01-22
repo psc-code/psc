@@ -35,7 +35,7 @@ struct Vec3 : std::array<T, 3>
 
   // convert from different type (e.g., float -> double)
   template<typename U>
-  Vec3(const Vec3<U>& u)
+  explicit Vec3(const Vec3<U>& u)
   {
     for (int i = 0; i < 3; i++) {
       new (&(*this)[i])	T(u[i]); // placement new -- not really necessary
