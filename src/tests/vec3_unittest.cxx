@@ -15,14 +15,18 @@ TEST(Int3Test, ConstructorInitList)
   EXPECT_EQ(i[2], 3);
 }
 
+TEST(Int3Test, OperatorEqual)
+{
+  EXPECT_EQ((Int3{ 1, 2, 3 }), (Int3{ 1, 2, 3 }));
+  EXPECT_NE((Int3{ 1, 2, 3}), (Int3{ 1, 3, 2 }));
+}
+
 TEST(Int3Test, ConstructorConstIntPtr)
 {
   const int iarr[3] = { 1, 2, 3 };
   Int3 i(iarr);
 
-  EXPECT_EQ(i[0], 1);
-  EXPECT_EQ(i[1], 2);
-  EXPECT_EQ(i[2], 3);
+  EXPECT_EQ(i, (Int3{ 1, 2, 3 }));
 }
 
 TEST(Int3Test, ConstructorCopy)
@@ -30,19 +34,15 @@ TEST(Int3Test, ConstructorCopy)
   Int3 i = { 1, 2, 3 };
   Int3 j(i);
 
-  EXPECT_EQ(j[0], 1);
-  EXPECT_EQ(j[1], 2);
-  EXPECT_EQ(j[2], 3);
+  EXPECT_EQ(j, (Int3{ 1, 2, 3 }));
 }
 
-TEST(Int3Test, ConstructorConvertType)
+TEST(Int3Test, ConstructorConvertFromFloat3)
 {
-  Vec3<float> farr = { 1.2, 2.5, 3.8 };
-  Int3 i(farr);
+  Vec3<float> f = { 1.2, 2.5, 3.8 };
+  Int3 i(f);
 
-  EXPECT_EQ(i[0], 1);
-  EXPECT_EQ(i[1], 2);
-  EXPECT_EQ(i[2], 3);
+  EXPECT_EQ(i, (Int3{ 1, 2, 3 }));
 }
 
 
@@ -66,7 +66,7 @@ TEST(Int3Test, ConstructorConvertType)
 
     v /= w;
     
-    EXPECT_TRUE(v == Double3({ 1.5, 0.5, 3. }));
+    EXPECT_EQ(v, (Double3{ 1.5, 0.5, 3. }));
   }
 
   TEST(Double3Test, Divide)
@@ -74,7 +74,7 @@ TEST(Int3Test, ConstructorConvertType)
     Double3 v = { 1.5, 2., -3. };
     Double3 w = { 1.,  4., -1. };
 
-    EXPECT_EQ(v / w, Double3({ 1.5, 0.5, 3. }));
+    EXPECT_EQ(v / w, (Double3{ 1.5, 0.5, 3. }));
   }
 
 }  // namespace
