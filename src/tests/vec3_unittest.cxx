@@ -77,5 +77,13 @@ TEST(Int3Test, ConstructorConvertFromFloat3)
     EXPECT_EQ(v / w, (Double3{ 1.5, 0.5, 3. }));
   }
 
+  TEST(MixedArithmetic, DoubleDividedByInt)
+  {
+    Double3 v = { 1.5, 2., -3. };
+    Int3    i = { 1,  4, -1 };
+
+    EXPECT_EQ(v / i, (Double3{ 1.5, 0.5, 3. }));
+  }
+
 }  // namespace
 
