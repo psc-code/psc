@@ -6,10 +6,14 @@
 
 #include "../vpic/PscRng.h"
 
+#include "gtest/gtest.h"
+
+// Rng hackiness
+
 using Rng = PscRng;
 using RngPool = PscRngPool<Rng>;
 
-#include "mrc_profile.h"
+// enum hackiness
 
 enum IP { // FIXME, dup
   IP_STD, // standard interpolation
@@ -25,6 +29,10 @@ enum CURRMEM { // FIXME, dup
   CURRMEM_SHARED,
   CURRMEM_GLOBAL,
 };
+
+// profile hackiness
+
+#include "mrc_profile.h"
 
 struct prof_globals prof_globals; // FIXME
 
@@ -271,17 +279,15 @@ private:
   cuda_mparticles* cmprts_;
 };
 
-// ----------------------------------------------------------------------
-// main
-
-int
-main(void)
+TEST(TestPushMprts, Accel)
 {
-  printf("=== Test: accel\n");
   TestAccel test_accel;
   test_accel.run();
+}
 
-  printf("=== Test: cyclo\n");
-  TestCyclo test_cyclo;
+TEST(TestPushMprts, Cyclo)
+{
+  TestAccel test_cyclo;
   test_cyclo.run();
 }
+

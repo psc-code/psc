@@ -2,6 +2,9 @@
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
+GTEST_ROOT = $(HOME)/build/googletest/googletest
+AM_CXXFLAGS += -I$(GTEST_ROOT)/include
+
 if USE_CUDA
 
 noinst_LTLIBRARIES = libsubdir.la
@@ -68,7 +71,8 @@ tests_test_cuda_accel_LDADD = tests/test_cuda_accel.lo \
   cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
   cuda_push_mprts_xyz.lo cuda_push_mprts_yz.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
-  ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
+  ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo \
+  $(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
 nodist_EXTRA_tests_test_cuda_accel_SOURCES = dummy.cxx
 
 tests_test_cuda_mparticles_1_SOURCES = 
@@ -94,7 +98,7 @@ nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
 
 LDFLAGS += -Wl,-rpath /usr/local/cuda/lib
 
-CUDACC_FLAGS = -std=c++11 -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
+CUDACC_FLAGS = -std=c++11 -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CXXFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
 CUDA_DEPS = \
         cuda_mparticles.h \
