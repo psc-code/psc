@@ -17,4 +17,5 @@ test_part_z
 test_sort
 test_cuda_mparticles
 thrust1
+vec3_unittest
 *.trs

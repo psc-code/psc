@@ -17,6 +17,9 @@ struct Vec3 : std::array<T, 3>
   using Base::data;
   
   Vec3() = default;
+
+  Vec3(const Vec3&) = default;
+
   Vec3(const T *p)
   {
     for (int i = 0; i < 3; i++) {

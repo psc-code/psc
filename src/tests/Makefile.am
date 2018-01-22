@@ -1,6 +1,8 @@
 
+GTEST_ROOT = $(HOME)/build/googletest/googletest
+
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
-AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include -I$(GTEST_ROOT)/include
 LDFLAGS += -Wl,-rpath /usr/local/cuda/lib
 
 noinst_LTLIBRARIES = libpsctest.la
@@ -42,7 +44,6 @@ test_bnd_SOURCES = test_bnd.cxx
 test_bnd_multi_SOURCES = test_bnd_multi.cxx
 test_exchange_particles_multi_SOURCES = test_exchange_particles_multi.cxx
 
-
 # if USE_CUDA
 
 # noinst_PROGRAMS += \
@@ -79,6 +80,12 @@ TESTS = \
 	test_bnd \
 	test_exchange_particles \
 	test_sort.sh
+
+check_PROGRAMS = 
+check_PROGRAMS += vec3_unittest
+TESTS += vec3_unittest
+vec3_unittest_SOURCES = vec3_unittest.cxx
+vec3_unittest_LDADD = $(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
 
 # if USE_CUDA
 # TESTS += \
