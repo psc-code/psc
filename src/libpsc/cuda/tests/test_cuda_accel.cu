@@ -55,8 +55,6 @@ prof_register(const char *name, float simd, int flops, int bytes)
 struct PushMprtsTest : ::testing::Test
 {
   Grid_t* grid_;
-  cuda_mparticles* cmprts_;
-  cuda_mfields* cmflds_;
 
   RngPool rngpool;
   
@@ -128,7 +126,7 @@ TEST_F(PushMprtsTest, Accel)
   const cuda_mparticles::real_t eps = 1e-5;
 
   // init fields
-  cmflds_ = make_cmflds([&] (int m) -> cuda_mfields::real_t {
+  cuda_mfields* cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
       switch(m) {
       case EX: return 1.;
       case EY: return 2.;
@@ -141,7 +139,7 @@ TEST_F(PushMprtsTest, Accel)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  cmprts_ = make_cmprts(n_prts);
+  cuda_mparticles* cmprts = make_cmprts(n_prts);
   
   std::vector<cuda_mparticles_prt> prts;
   prts.reserve(n_prts);
@@ -156,13 +154,13 @@ TEST_F(PushMprtsTest, Accel)
     prts.push_back(prt);
   }
   uint n_prts_by_patch[1] = { n_prts };
-  cmprts_->inject(prts.data(), n_prts_by_patch);
-  //cmprts_->dump();
+  cmprts->inject(prts.data(), n_prts_by_patch);
+  //cmprts->dump();
   
   int n_failed = 0;
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts_, cmflds_, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
-    cmprts_->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
+    cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	if (std::abs(prt.pxi[0] - 1*(n+1)) > eps ||
 	    std::abs(prt.pxi[1] - 2*(n+1)) > eps ||
 	    std::abs(prt.pxi[2] - 3*(n+1)) > eps) {
@@ -173,7 +171,7 @@ TEST_F(PushMprtsTest, Accel)
 	}
       });
     
-    //cmprts_->dump();
+    //cmprts->dump();
   }
   EXPECT_EQ(n_failed, 0);
 }
@@ -188,7 +186,7 @@ TEST_F(PushMprtsTest, Cyclo)
   const cuda_mparticles::real_t eps = 1e-2;
 
   // init fields
-  cmflds_ = make_cmflds([&] (int m) -> cuda_mfields::real_t {
+  cuda_mfields* cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
       switch(m) {
       case HZ: return 2. * M_PI / n_steps;
       default: return 0.;
@@ -199,7 +197,7 @@ TEST_F(PushMprtsTest, Cyclo)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  cmprts_ = make_cmprts(n_prts);
+  cuda_mparticles* cmprts = make_cmprts(n_prts);
   
   std::vector<cuda_mparticles_prt> prts;
   prts.reserve(n_prts);
@@ -217,19 +215,19 @@ TEST_F(PushMprtsTest, Cyclo)
     prts.push_back(prt);
   }
   uint n_prts_by_patch[1] = { n_prts };
-  cmprts_->inject(prts.data(), n_prts_by_patch);
-  //cmprts_->dump();
+  cmprts->inject(prts.data(), n_prts_by_patch);
+  //cmprts->dump();
   
   int n_failed = 0;
   
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts_, cmflds_, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
-    cmprts_->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
+    cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	if (std::abs(prt.pxi[0] - ux) > eps ||
 	    std::abs(prt.pxi[1] - uy) > eps ||
 	    std::abs(prt.pxi[2] - uz) > eps) {
@@ -239,7 +237,7 @@ TEST_F(PushMprtsTest, Cyclo)
 	}
       });
     
-    //cmprts_->dump();
+    //cmprts->dump();
   }
   EXPECT_EQ(n_failed, 0);
 }
