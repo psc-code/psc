@@ -65,6 +65,45 @@ struct PushMprtsTest : ::testing::Test
   {
     grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
   }
+
+  template<typename S>
+  cuda_mfields *make_cmflds(S set)
+  {
+    cuda_mfields *cmflds = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
+
+    fields_single_t flds = cmflds->get_host_fields();
+    Fields3d<fields_single_t> F(flds);
+
+    F(EX, 0,0,0) = set(EX);
+    F(EX, 0,1,0) = set(EX);
+    F(EX, 0,0,1) = set(EX);
+    F(EX, 0,1,1) = set(EX);
+    
+    F(EY, 0,0,0) = set(EY);
+    F(EY, 0,0,1) = set(EY);
+    //    F(EY, 1,0,0) = set(EY);
+    //    F(EY, 1,0,1) = set(EY);
+    
+    F(EZ, 0,0,0) = set(EZ);
+    //    F(EZ, 1,0,0) = set(EZ);
+    F(EZ, 0,1,0) = set(EZ);
+    //    F(EZ, 1,1,0) = set(EZ);
+
+    F(HX, 0,0,0) = set(HX);
+    F(HX, 1,0,0) = set(HX);
+
+    F(HY, 0,0,0) = set(HY);
+    F(HY, 0,1,0) = set(HY);
+
+    F(HZ, 0,0,0) = set(HZ);
+    F(HZ, 0,0,1) = set(HZ);
+
+    cmflds->copy_to_device(0, flds, 0, N_FIELDS);
+    cmflds->dump("accel.fld.json");
+    flds.dtor();
+  
+    return cmflds;
+  }
 };
 
 // ======================================================================
@@ -76,34 +115,19 @@ TEST_F(PushMprtsTest, Accel)
   const int n_steps = 10;
   const cuda_mparticles::real_t eps = 1e-5;
 
-  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
-  cmprts_ = new cuda_mparticles(*grid_, bs_);
-
   // init fields
-  fields_single_t flds = cmflds_->get_host_fields();
-  Fields3d<fields_single_t> F(flds);
-  
-  F(EX, 0,0,0) = 1;
-  F(EX, 0,1,0) = 1;
-  F(EX, 0,0,1) = 1;
-  F(EX, 0,1,1) = 1;
-  
-  F(EY, 0,0,0) = 2;
-  F(EY, 0,0,1) = 2;
-  //    F(EY, 1,0,0) = 2;
-  //    F(EY, 1,0,1) = 2;
-  
-  F(EZ, 0,0,0) = 3;
-  //    F(EZ, 1,0,0) = 3;
-  F(EZ, 0,1,0) = 3;
-  //    F(EZ, 1,1,0) = 3;
-  
-  cmflds_->copy_to_device(0, flds, 0, N_FIELDS);
-  cmflds_->dump("accel.fld.json");
-  flds.dtor();
-  
+  cmflds_ = make_cmflds([&] (int m) -> cuda_mfields::real_t {
+      switch(m) {
+      case EX: return 1.;
+      case EY: return 2.;
+      case EZ: return 3.;
+      default: return 0.;
+      }
+    });
+
   // init particles
+  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
+  cmprts_ = new cuda_mparticles(*grid_, bs_);
   RngPool rngpool;
   Rng *rng = rngpool[0];
   
@@ -154,20 +178,16 @@ TEST_F(PushMprtsTest, Cyclo)
   const int n_steps = 64;
   const cuda_mparticles::real_t eps = 1e-2;
 
-  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
-  cmprts_ = new cuda_mparticles(*grid_, bs_);
-
   // init fields
-  fields_single_t flds = cmflds_->get_host_fields();
-  Fields3d<fields_single_t> F(flds);
-  
-  F(HZ, 0,0,0) = 2. * M_PI / n_steps;
-  F(HZ, 0,0,1) = 2. * M_PI / n_steps;
-  
-  cmflds_->copy_to_device(0, flds, 0, N_FIELDS);
-  cmflds_->dump("cyclo.fld.json");
-  flds.dtor();
+  cmflds_ = make_cmflds([&] (int m) -> cuda_mfields::real_t {
+      switch(m) {
+      case HZ: return 2. * M_PI / n_steps;
+      default: return 0.;
+      }
+    });
+
+  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
+  cmprts_ = new cuda_mparticles(*grid_, bs_);
 
   // init particles
   RngPool rngpool;

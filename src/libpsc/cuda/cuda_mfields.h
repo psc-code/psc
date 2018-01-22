@@ -45,6 +45,8 @@ struct cuda_mfields_bnd {
 
 struct cuda_mfields
 {
+  using real_t = float;
+
   cuda_mfields(Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
 
