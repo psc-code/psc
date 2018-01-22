@@ -13,6 +13,7 @@ template<typename T>
 struct Vec3 : std::array<T, 3>
 {
   using Base = std::array<T, 3>;
+  using value_type = typename Base::value_type;
 
   using Base::data;
   

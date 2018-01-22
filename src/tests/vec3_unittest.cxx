@@ -4,81 +4,93 @@
 
 namespace {
 
-// Tests Int3 == Vec3<int>
-
-TEST(Int3Test, ConstructorInitList)
-{
-  Int3 i = { 1, 2, 3 };
-
-  EXPECT_EQ(i[0], 1);
-  EXPECT_EQ(i[1], 2);
-  EXPECT_EQ(i[2], 3);
-}
-
-TEST(Int3Test, OperatorEqual)
-{
-  EXPECT_EQ((Int3{ 1, 2, 3 }), (Int3{ 1, 2, 3 }));
-  EXPECT_NE((Int3{ 1, 2, 3}), (Int3{ 1, 3, 2 }));
-}
-
-TEST(Int3Test, ConstructorConstIntPtr)
-{
-  const int iarr[3] = { 1, 2, 3 };
-  Int3 i(iarr);
-
-  EXPECT_EQ(i, (Int3{ 1, 2, 3 }));
-}
-
-TEST(Int3Test, ConstructorCopy)
-{
-  Int3 i = { 1, 2, 3 };
-  Int3 j(i);
-
-  EXPECT_EQ(j, (Int3{ 1, 2, 3 }));
-}
-
-TEST(Int3Test, ConstructorConvertFromFloat3)
-{
-  Vec3<float> f = { 1.2, 2.5, 3.8 };
-  Int3 i(f);
-
-  EXPECT_EQ(i, (Int3{ 1, 2, 3 }));
-}
-
-
-  // Tests Double3 == Vec3<double>
-
-  using Double3 = Vec3<double>;
-
-  TEST(Double3Test, ConstructorInitList)
+  // ----------------------------------------------------------------------
+  // Vec3Test
+  
+  template <typename T>
+  class Vec3Test : public ::testing::Test
   {
-    Double3 v = { 1.5, 2., -3. };
+  };
+
+  using Vec3Types = ::testing::Types<int, float, double>;
+
+  TYPED_TEST_CASE(Vec3Test, Vec3Types);
+
+  TYPED_TEST(Vec3Test, ConstructorInitList)
+  {
+    using V3 = Vec3<TypeParam>;
+    V3 v = { 1, 2, 3 };
     
-    EXPECT_EQ(v[0], 1.5);
-    EXPECT_EQ(v[1], 2.);
-    EXPECT_EQ(v[2], -3.);
+    EXPECT_EQ(v[0], 1);
+    EXPECT_EQ(v[1], 2);
+    EXPECT_EQ(v[2], 3);
   }
 
-  TEST(Double3Test, DivideAssign)
+  TYPED_TEST(Vec3Test, OperatorEqual)
   {
-    Double3 v = { 1.5, 2., -3. };
-    Double3 w = { 1.,  4., -1. };
+    using V3 = Vec3<TypeParam>;
+    EXPECT_EQ((V3{ 1, 2, 3 }), (V3{ 1, 2, 3 }));
+    EXPECT_NE((V3{ 1, 2, 3 }), (V3{ 1, 3, 2 }));
+  }
+  
+  TYPED_TEST(Vec3Test, ConstructorConstValuePtr)
+  {
+    using V3 = Vec3<TypeParam>;
+    const TypeParam arr[3] = { 1, 2, 3 };
+    V3 v(arr);
+    
+    EXPECT_EQ(v, (V3{ 1, 2, 3 }));
+  }
+  
+  TYPED_TEST(Vec3Test, ConstructorCopy)
+  {
+    using V3 = Vec3<TypeParam>;
+    V3 v = { 1, 2, 3 };
+    V3 v2(v);
+    
+    EXPECT_EQ(v2, v);
+  }
+
+  TYPED_TEST(Vec3Test, ConstructorConvertFromFloat3)
+  {
+    using T = TypeParam;
+    using V3 = Vec3<TypeParam>;
+    Vec3<float> f = { 1.2f, 2.5f, 3.8f };
+    V3 v(f);
+    
+    EXPECT_EQ(v, (V3{ T(1.2f), T(2.5f), T(3.8f) }));
+  }
+
+  TYPED_TEST(Vec3Test, DivideAssign)
+  {
+    using T = TypeParam;
+    using V3 = Vec3<TypeParam>;
+    V3 v0 = { T(1.5), T(2.), T(-3.) };
+    V3 v = v0;
+    V3 w = { T(1.),  T(4.), T(-1.) };
 
     v /= w;
     
-    EXPECT_EQ(v, (Double3{ 1.5, 0.5, 3. }));
+    EXPECT_EQ(v, (V3{ v0[0]/w[0], v0[1]/w[1], v0[2]/w[2] }));
   }
 
-  TEST(Double3Test, Divide)
+  TYPED_TEST(Vec3Test, Divide)
   {
-    Double3 v = { 1.5, 2., -3. };
-    Double3 w = { 1.,  4., -1. };
+    using T = TypeParam;
+    using V3 = Vec3<TypeParam>;
+    V3 v = { T(1.5), T(2.), T(-3.) };
+    V3 w = { T(1.),  T(4.), T(-1.) };
 
-    EXPECT_EQ(v / w, (Double3{ 1.5, 0.5, 3. }));
+    EXPECT_EQ(v / w, (V3{ v[0]/w[0], v[1]/w[1], v[2]/w[2] }));
   }
 
-  TEST(MixedArithmetic, DoubleDividedByInt)
+  // ----------------------------------------------------------------------
+  // Vec3MixedArithmetic
+
+  TEST(Vec3MixedArithmetic, DoubleDividedByInt)
   {
+    using Double3 = Vec3<double>;
+
     Double3 v = { 1.5, 2., -3. };
     Int3    i = { 1,  4, -1 };
 
