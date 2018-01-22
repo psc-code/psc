@@ -59,5 +59,23 @@ TEST(Int3Test, ConstructorConvertType)
     EXPECT_EQ(v[2], -3.);
   }
 
+  TEST(Double3Test, DivideAssign)
+  {
+    Double3 v = { 1.5, 2., -3. };
+    Double3 w = { 1.,  4., -1. };
+
+    v /= w;
+    
+    EXPECT_TRUE(v == Double3({ 1.5, 0.5, 3. }));
+  }
+
+  TEST(Double3Test, Divide)
+  {
+    Double3 v = { 1.5, 2., -3. };
+    Double3 w = { 1.,  4., -1. };
+
+    EXPECT_EQ(v / w, Double3({ 1.5, 0.5, 3. }));
+  }
+
 }  // namespace
 

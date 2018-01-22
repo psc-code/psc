@@ -41,6 +41,25 @@ struct Vec3 : std::array<T, 3>
       new (&(*this)[i])	T(u[i]); // placement new -- not really necessary
     }
   }
+
+  // arithmetic
+
+  Vec3& operator/=(const Vec3& w) {
+    for (int i = 0; i < 3; i++) {
+      (*this)[i] /= w[i];
+    }
+    return *this;
+  }
+  
+  Vec3 operator/(const Vec3& w) const {
+    Vec3 res;
+    for (int i = 0; i < 3; i++) {
+      res[i] = (*this)[i] / w[i];
+    }
+    return res;
+  }
+  
+  // conversion to pointer
   
   operator const T* () const { return data(); }
   operator T* ()             { return data(); }
