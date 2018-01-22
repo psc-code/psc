@@ -1,6 +1,7 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 AM_CXXFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
+LDFLAGS += -Wl,-rpath /usr/local/cuda/lib
 
 noinst_LTLIBRARIES = libpsctest.la
 
@@ -12,8 +13,9 @@ LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
 	psc_test_mfields_single \
-	psc_test_cyclo \
-	psc_test_accel \
+	psc_test_cyclo
+
+#	psc_test_accel \
 	psc_test_em_wave \
 	test_psc_mparticles \
 	test_part_yz \
@@ -21,6 +23,13 @@ noinst_PROGRAMS = \
 	test_bnd \
 	test_bnd_multi \
 	test_exchange_particles_multi
+
+#	test_part_xy \
+	test_part_xz \
+	test_part_z \
+	test_exchange_particles \
+	test_sort
+
 
 psc_test_cyclo_SOURCES = psc_test_cyclo.cxx
 psc_test_accel_SOURCES = psc_test_accel.cxx
@@ -33,11 +42,6 @@ test_bnd_SOURCES = test_bnd.cxx
 test_bnd_multi_SOURCES = test_bnd_multi.cxx
 test_exchange_particles_multi_SOURCES = test_exchange_particles_multi.cxx
 
-#	test_part_xy \
-	test_part_xz \
-	test_part_z \
-	test_exchange_particles \
-	test_sort
 
 # if USE_CUDA
 
@@ -56,8 +60,9 @@ test_exchange_particles_multi_SOURCES = test_exchange_particles_multi.cxx
 # endif
 
 TESTS = \
-	psc_test_mfields_single \
-	psc_test_cyclo \
+	psc_test_mfields_single
+
+#	psc_test_cyclo \
 	psc_test_accel \
 	psc_test_em_wave
 
