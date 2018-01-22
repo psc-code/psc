@@ -677,7 +677,7 @@ static void
 yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
   if (!cmprts->need_reorder) {
-    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
+    //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   } else {
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
