@@ -64,18 +64,9 @@ struct PushMprtsTestParam
 class TestAccel
 {
 public:
-  TestAccel()
-    : grid_({ 1, 1, 1 }, { L, L, L })
-  {
-  }
-
-  double L = 1e10;
   unsigned int n_prts = 131;
   int n_steps = 10;
   cuda_mparticles::real_t eps = 1e-5;
-  Int3 bs_ = { 1, 1, 1 };
-  
-  Grid_t grid_;
 };
 
 // ======================================================================
@@ -83,58 +74,60 @@ public:
 
 class TestCyclo
 {
-
 public:
-  TestCyclo()
-    : grid_({ 1, 1, 1 }, { L, L, L })
-  {
-  }
-
-  double L = 1e10;
   unsigned int n_prts = 131;
   int n_steps = 64;
   cuda_mparticles::real_t eps = 1e-2;
-  Int3 bs_ = { 1, 1, 1 };
-  
-  Grid_t grid_;
 };
 
 struct PushMprtsAccelTest : ::testing::TestWithParam<PushMprtsTestParam>
 {
   TestAccel test;
+  Grid_t* grid_;
   cuda_mparticles* cmprts_;
   cuda_mfields* cmflds_;
 
+  const double L = 1e10;
+  const Int3 bs_ = { 1, 1, 1 };
+  
   void SetUp()
   {
     PushMprtsTestParam prm = GetParam();
   
-    test.grid_.kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
+    grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
+    grid_->kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
 
-    cmflds_ = new cuda_mfields(test.grid_, N_FIELDS, { 0, 2, 2 });
-    cmprts_ = new cuda_mparticles(test.grid_, test.bs_);
+    cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
+    cmprts_ = new cuda_mparticles(*grid_, bs_);
   }
 };
 
 struct PushMprtsCycloTest : ::testing::TestWithParam<PushMprtsTestParam>
 {
   TestCyclo test;
+  Grid_t *grid_;
   cuda_mparticles *cmprts_;
   cuda_mfields *cmflds_;
+
+  const double L = 1e10;
+  const Int3 bs_ = { 1, 1, 1 };
   
   void SetUp()
   {
     PushMprtsTestParam prm = GetParam();
   
-    test.grid_.kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
+    grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
+    grid_->kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
 
-    cmflds_ = new cuda_mfields(test.grid_, N_FIELDS, { 0, 2, 2 });
-    cmprts_ = new cuda_mparticles(test.grid_, test.bs_);
+    cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
+    cmprts_ = new cuda_mparticles(*grid_, bs_);
   }
 };
 
 TEST_P(PushMprtsAccelTest, Accel)
 {
+  PushMprtsTestParam prm = GetParam();
+
   // init fields
   fields_single_t flds = cmflds_->get_host_fields();
   Fields3d<fields_single_t> F(flds);
@@ -171,9 +164,9 @@ TEST_P(PushMprtsAccelTest, Accel)
   
   for (int i = 0; i < test.n_prts; i++) {
     cuda_mparticles_prt prt = {};
-    prt.xi[0] = rng->uniform(0, test.L);
-    prt.xi[1] = rng->uniform(0, test.L);
-    prt.xi[2] = rng->uniform(0, test.L);
+    prt.xi[0] = rng->uniform(0, L);
+    prt.xi[1] = rng->uniform(0, L);
+    prt.xi[2] = rng->uniform(0, L);
     prt.qni_wni = 1.;
     
     prts.push_back(prt);
@@ -185,7 +178,7 @@ TEST_P(PushMprtsAccelTest, Accel)
   int n_steps = test.n_steps;
   
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts_, cmflds_, test.bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts_, cmflds_, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
     cmprts_->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	if (std::abs(prt.pxi[0] - 1*(n+1)) > test.eps ||
 	    std::abs(prt.pxi[1] - 2*(n+1)) > test.eps ||
@@ -204,6 +197,8 @@ TEST_P(PushMprtsAccelTest, Accel)
 
 TEST_P(PushMprtsCycloTest, Cyclo)
 {
+  PushMprtsTestParam prm = GetParam();
+
   // init fields
   fields_single_t flds = cmflds_->get_host_fields();
   Fields3d<fields_single_t> F(flds);
@@ -228,9 +223,9 @@ TEST_P(PushMprtsCycloTest, Cyclo)
   
   for (int i = 0; i < test.n_prts; i++) {
     cuda_mparticles_prt prt = {};
-    prt.xi[0] = rng->uniform(0, test.L);
-    prt.xi[1] = rng->uniform(0, test.L);
-    prt.xi[2] = rng->uniform(0, test.L);
+    prt.xi[0] = rng->uniform(0, L);
+    prt.xi[1] = rng->uniform(0, L);
+    prt.xi[2] = rng->uniform(0, L);
     prt.pxi[0] = 1.; // gamma = 2
     prt.pxi[1] = 1.;
     prt.pxi[2] = 1.;
@@ -245,7 +240,7 @@ TEST_P(PushMprtsCycloTest, Cyclo)
   int n_steps = test.n_steps;
   
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts_, cmflds_, test.bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts_, cmflds_, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /

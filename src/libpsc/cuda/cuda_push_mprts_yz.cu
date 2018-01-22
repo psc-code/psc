@@ -690,7 +690,7 @@ yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 
 void
 cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
-		   int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
+		   const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
 {
   if (!ip_ec && !deposit_vb_3d && !currmem_global) {
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
