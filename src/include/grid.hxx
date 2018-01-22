@@ -59,9 +59,12 @@ struct Grid_
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
-  real_t fnqs;
-  real_t eta;
-  real_t dt;
+  // FIXME? these defaults, in particular for dt, might be a bit
+  // dangerous, as they're useful for testing but might hide if one
+  // forgets to init them correctly for an real simulation
+  real_t fnqs = { 1. };
+  real_t eta = { 1. };
+  real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
 };

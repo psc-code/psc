@@ -107,9 +107,6 @@ main(void)
   grid.gdims = { 1, 4, 2 };
   grid.ldims = { 1, 4, 2 };
   grid.dx = { 1., 10., 10. };
-  grid.fnqs = 1.;
-  grid.eta = 1.;
-  grid.dt = 1.;
 
   Grid_t::Patch patch{};
   patch.xb = { 0., 0., 0. };

@@ -63,10 +63,6 @@ public:
 
   void init_grid()
   {
-    grid_.dt = 1.;
-    grid_.fnqs = 1.;
-    grid_.eta = 1.;
-
     Grid_t::Patch patch{};
     grid_.ldims = { 1, 1, 1 };
     grid_.dx = { L, L, L };
@@ -195,10 +191,6 @@ public:
 
   void init_grid()
   {
-    grid_.dt = 1.;
-    grid_.fnqs = 1.;
-    grid_.eta = 1.;
-
     Grid_t::Patch patch{};
     grid_.ldims = { 1, 1, 1 };
     grid_.dx = { L, L, L };
