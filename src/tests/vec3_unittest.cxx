@@ -45,5 +45,19 @@ TEST(Int3Test, ConstructorConvertType)
   EXPECT_EQ(i[2], 3);
 }
 
+
+  // Tests Double3 == Vec3<double>
+
+  using Double3 = Vec3<double>;
+
+  TEST(Double3Test, ConstructorInitList)
+  {
+    Double3 v = { 1.5, 2., -3. };
+    
+    EXPECT_EQ(v[0], 1.5);
+    EXPECT_EQ(v[1], 2.);
+    EXPECT_EQ(v[2], -3.);
+  }
+
 }  // namespace
 
