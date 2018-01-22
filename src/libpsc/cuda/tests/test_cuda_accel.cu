@@ -54,14 +54,12 @@ prof_register(const char *name, float simd, int flops, int bytes)
 
 struct PushMprtsTestParam
 {
-  double q;
-  double m;
   unsigned int n_prts;
   unsigned int n_steps;
   cuda_mparticles::real_t eps;
 };
 
-struct PushMprtsAccelTest : ::testing::TestWithParam<PushMprtsTestParam>
+struct PushMprtsTest : ::testing::Test
 {
   Grid_t* grid_;
   cuda_mparticles* cmprts_;
@@ -72,40 +70,20 @@ struct PushMprtsAccelTest : ::testing::TestWithParam<PushMprtsTestParam>
   
   void SetUp()
   {
-    PushMprtsTestParam prm = GetParam();
-  
     grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
-    grid_->kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
-
-    cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
-    cmprts_ = new cuda_mparticles(*grid_, bs_);
   }
 };
 
-struct PushMprtsCycloTest : ::testing::TestWithParam<PushMprtsTestParam>
+// ======================================================================
+// Accel test
+
+TEST_F(PushMprtsTest, Accel)
 {
-  Grid_t *grid_;
-  cuda_mparticles *cmprts_;
-  cuda_mfields *cmflds_;
+  PushMprtsTestParam prm = { 131, 10, 1e-5 };
 
-  const double L = 1e10;
-  const Int3 bs_ = { 1, 1, 1 };
-  
-  void SetUp()
-  {
-    PushMprtsTestParam prm = GetParam();
-  
-    grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
-    grid_->kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
-
-    cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
-    cmprts_ = new cuda_mparticles(*grid_, bs_);
-  }
-};
-
-TEST_P(PushMprtsAccelTest, Accel)
-{
-  PushMprtsTestParam prm = GetParam();
+  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
+  cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
+  cmprts_ = new cuda_mparticles(*grid_, bs_);
 
   // init fields
   fields_single_t flds = cmflds_->get_host_fields();
@@ -172,10 +150,17 @@ TEST_P(PushMprtsAccelTest, Accel)
   EXPECT_EQ(n_failed, 0);
 }
 
-TEST_P(PushMprtsCycloTest, Cyclo)
+// ======================================================================
+// Cyclo test
+
+TEST_F(PushMprtsTest, Cyclo)
 {
-  PushMprtsTestParam prm = GetParam();
+  PushMprtsTestParam prm = { 131, 64, 1e-2 };
   int n_steps = prm.n_steps;
+
+  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
+  cmflds_ = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
+  cmprts_ = new cuda_mparticles(*grid_, bs_);
 
   // init fields
   fields_single_t flds = cmflds_->get_host_fields();
@@ -238,9 +223,3 @@ TEST_P(PushMprtsCycloTest, Cyclo)
   EXPECT_EQ(n_failed, 0);
 }
 
-INSTANTIATE_TEST_CASE_P(T1,
-                        PushMprtsAccelTest,
-                        ::testing::Values(PushMprtsTestParam{ 1., 1., 131, 10, 1e-5 }));
-INSTANTIATE_TEST_CASE_P(T1,
-                        PushMprtsCycloTest,
-                        ::testing::Values(PushMprtsTestParam{ 2., 1., 131, 64, 1e-2 }));
