@@ -30,6 +30,13 @@ enum CURRMEM { // FIXME, dup
   CURRMEM_GLOBAL,
 };
 
+enum { // FIXME, duplicated
+  JXI, JYI, JZI,
+  EX , EY , EZ ,
+  HX , HY , HZ ,
+  N_FIELDS,
+};
+
 // profile hackiness
 
 #include "mrc_profile.h"
@@ -56,49 +63,11 @@ struct PushMprtsTestParam
 
 class TestAccel
 {
-  enum { // FIXME, duplicated
-    JXI, JYI, JZI,
-    EX , EY , EZ ,
-    HX , HY , HZ ,
-    N_FIELDS,
-  };
-
 public:
   TestAccel()
     : grid_({ 1, 1, 1 }, { L, L, L })
   {
   }
-
-  ~TestAccel()
-  {
-    delete cmflds_;
-  }
-
-  void init_cmflds()
-  {
-    cmflds_ = new cuda_mfields(grid_, N_FIELDS, { 0, 2, 2 });
-    fields_single_t flds = cmflds_->get_host_fields();
-    Fields3d<fields_single_t> F(flds);
-
-    F(EX, 0,0,0) = 1;
-    F(EX, 0,1,0) = 1;
-    F(EX, 0,0,1) = 1;
-    F(EX, 0,1,1) = 1;
-    
-    F(EY, 0,0,0) = 2;
-    F(EY, 0,0,1) = 2;
-    //    F(EY, 1,0,0) = 2;
-    //    F(EY, 1,0,1) = 2;
-    
-    F(EZ, 0,0,0) = 3;
-    //    F(EZ, 1,0,0) = 3;
-    F(EZ, 0,1,0) = 3;
-    //    F(EZ, 1,1,0) = 3;
-
-    cmflds_->copy_to_device(0, flds, 0, N_FIELDS);
-    cmflds_->dump("accel.fld.json");
-    flds.dtor();
-  };
 
   double L = 1e10;
   unsigned int n_prts = 131;
@@ -107,7 +76,6 @@ public:
   Int3 bs_ = { 1, 1, 1 };
   
   Grid_t grid_;
-  cuda_mfields* cmflds_;
 };
 
 // ======================================================================
@@ -115,37 +83,12 @@ public:
 
 class TestCyclo
 {
-  enum { // FIXME, duplicated
-    JXI, JYI, JZI,
-    EX , EY , EZ ,
-    HX , HY , HZ ,
-    N_FIELDS,
-  };
 
 public:
   TestCyclo()
     : grid_({ 1, 1, 1 }, { L, L, L })
   {
   }
-
-  ~TestCyclo()
-  {
-    delete cmflds_;
-  }
-
-  void init_cmflds()
-  {
-    cmflds_ = new cuda_mfields(grid_, N_FIELDS, { 0, 2, 2 });
-    fields_single_t flds = cmflds_->get_host_fields();
-    Fields3d<fields_single_t> F(flds);
-
-    F(HZ, 0,0,0) = 2. * M_PI / n_steps;
-    F(HZ, 0,0,1) = 2. * M_PI / n_steps;
-
-    cmflds_->copy_to_device(0, flds, 0, N_FIELDS);
-    cmflds_->dump("cyclo.fld.json");
-    flds.dtor();
-  };
 
   double L = 1e10;
   unsigned int n_prts = 131;
@@ -154,23 +97,22 @@ public:
   Int3 bs_ = { 1, 1, 1 };
   
   Grid_t grid_;
-  cuda_mfields* cmflds_;
 };
 
 struct PushMprtsAccelTest : ::testing::TestWithParam<PushMprtsTestParam>
 {
   TestAccel test;
   cuda_mparticles* cmprts_;
+  cuda_mfields* cmflds_;
 
   void SetUp()
   {
     PushMprtsTestParam prm = GetParam();
   
     test.grid_.kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
-    test.init_cmflds();
 
+    cmflds_ = new cuda_mfields(test.grid_, N_FIELDS, { 0, 2, 2 });
     cmprts_ = new cuda_mparticles(test.grid_, test.bs_);
-    test.init_cmprts(cmprts_);
   }
 };
 
@@ -178,21 +120,44 @@ struct PushMprtsCycloTest : ::testing::TestWithParam<PushMprtsTestParam>
 {
   TestCyclo test;
   cuda_mparticles *cmprts_;
+  cuda_mfields *cmflds_;
   
   void SetUp()
   {
     PushMprtsTestParam prm = GetParam();
   
     test.grid_.kinds.push_back(Grid_t::Kind(prm.q, prm.m, "test_species"));
-    test.init_cmflds();
 
+    cmflds_ = new cuda_mfields(test.grid_, N_FIELDS, { 0, 2, 2 });
     cmprts_ = new cuda_mparticles(test.grid_, test.bs_);
-    test.init_cmprts(cmprts_);
   }
 };
 
 TEST_P(PushMprtsAccelTest, Accel)
 {
+  // init fields
+  fields_single_t flds = cmflds_->get_host_fields();
+  Fields3d<fields_single_t> F(flds);
+  
+  F(EX, 0,0,0) = 1;
+  F(EX, 0,1,0) = 1;
+  F(EX, 0,0,1) = 1;
+  F(EX, 0,1,1) = 1;
+  
+  F(EY, 0,0,0) = 2;
+  F(EY, 0,0,1) = 2;
+  //    F(EY, 1,0,0) = 2;
+  //    F(EY, 1,0,1) = 2;
+  
+  F(EZ, 0,0,0) = 3;
+  //    F(EZ, 1,0,0) = 3;
+  F(EZ, 0,1,0) = 3;
+  //    F(EZ, 1,1,0) = 3;
+  
+  cmflds_->copy_to_device(0, flds, 0, N_FIELDS);
+  cmflds_->dump("accel.fld.json");
+  flds.dtor();
+  
   // init particles
   RngPool rngpool;
   Rng *rng = rngpool[0];
@@ -220,7 +185,7 @@ TEST_P(PushMprtsAccelTest, Accel)
   int n_steps = test.n_steps;
   
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts_, test.cmflds_, test.bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts_, cmflds_, test.bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
     cmprts_->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	if (std::abs(prt.pxi[0] - 1*(n+1)) > test.eps ||
 	    std::abs(prt.pxi[1] - 2*(n+1)) > test.eps ||
@@ -239,6 +204,17 @@ TEST_P(PushMprtsAccelTest, Accel)
 
 TEST_P(PushMprtsCycloTest, Cyclo)
 {
+  // init fields
+  fields_single_t flds = cmflds_->get_host_fields();
+  Fields3d<fields_single_t> F(flds);
+  
+  F(HZ, 0,0,0) = 2. * M_PI / test.n_steps;
+  F(HZ, 0,0,1) = 2. * M_PI / test.n_steps;
+  
+  cmflds_->copy_to_device(0, flds, 0, N_FIELDS);
+  cmflds_->dump("cyclo.fld.json");
+  flds.dtor();
+
   // init particles
   RngPool rngpool;
   Rng *rng = rngpool[0];
@@ -269,7 +245,7 @@ TEST_P(PushMprtsCycloTest, Cyclo)
   int n_steps = test.n_steps;
   
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts_, test.cmflds_, test.bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts_, cmflds_, test.bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
