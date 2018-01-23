@@ -156,9 +156,13 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
 
-  // cmprts->dump();
+  {
+    uint n_prts_by_patch[cmprts->n_patches];
+    cmprts->get_size_all(n_prts_by_patch);
+    cmprts->check_in_patch_unordered_slow(n_prts_by_patch);
+  }
+
   cmprts->setup_internals();
-  // cmprts->dump();
   
   // check that particles are now in Fortran order
   cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
@@ -170,10 +174,7 @@ TEST_F(CudaMparticlesTest, SetupInternals)
       EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
     });
 
-  // FIXME, we should also check that h_off has been set correctly,
-  // but really all of this should just call a consistency check
-  // within cuda_mparticles
-  // cmprts->dump();
+  cmprts->check_ordered();
 }
 
 // ---------------------------------------------------------------------
