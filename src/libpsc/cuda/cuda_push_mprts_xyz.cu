@@ -206,8 +206,8 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   uint fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
   int gx, gy;
-  gx = cmprts->b_mx[1];
-  gy = cmprts->b_mx[2] * cmprts->n_patches;
+  gx = cmprts->indexer.b_mx_[1];
+  gy = cmprts->indexer.b_mx_[2] * cmprts->n_patches;
   dim3 dimGrid(gx, gy);
 
   for (int block_start = 0; block_start < 4; block_start++) {

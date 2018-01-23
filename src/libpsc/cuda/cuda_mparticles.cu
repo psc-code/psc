@@ -120,8 +120,8 @@ static void
 cuda_params2_set(struct cuda_params2 *prm, const struct cuda_mparticles *cuda_mprts)
 {
   for (int d = 0; d < 3; d++) {
-    prm->b_mx[d]  = cuda_mprts->b_mx[d];
-    prm->b_dxi[d] = cuda_mprts->b_dxi[d];
+    prm->b_mx[d]  = cuda_mprts->indexer.b_mx_[d];
+    prm->b_dxi[d] = cuda_mprts->indexer.b_dxi_[d];
   }
 }
 
@@ -138,8 +138,8 @@ cuda_params2_free(struct cuda_params2 *prm)
 static int
 get_block_idx(struct cuda_mparticles *cmprts, float4 xi4, int p)
 {
-  float *b_dxi = cmprts->b_dxi;
-  int *b_mx = cmprts->b_mx;
+  float *b_dxi = cmprts->indexer.b_dxi_;
+  int *b_mx = cmprts->indexer.b_mx_;
   
   uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
   uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
@@ -382,10 +382,10 @@ void cuda_mparticles::check_ordered_slow()
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
-	uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
-	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * b_dxi[1],
-	       xi4.z * b_dxi[2]);
+	uint block_pos_y = (int) floorf(xi4.y * indexer.b_dxi_[1]);
+	uint block_pos_z = (int) floorf(xi4.z * indexer.b_dxi_[2]);
+	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * indexer.b_dxi_[1],
+	       xi4.z * indexer.b_dxi_[2]);
       }
       assert(b == bidx);
     }
@@ -429,10 +429,10 @@ void cuda_mparticles::check_ordered()
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
-	uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
-	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * b_dxi[1],
-	       xi4.z * b_dxi[2]);
+	uint block_pos_y = (int) floorf(xi4.y * indexer.b_dxi_[1]);
+	uint block_pos_z = (int) floorf(xi4.z * indexer.b_dxi_[2]);
+	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * indexer.b_dxi_[1],
+	       xi4.z * indexer.b_dxi_[2]);
       }
       assert(b == bidx);
     }
@@ -606,7 +606,7 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
 
 const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 {
-  return b_dxi;
+  return indexer.b_dxi_;
 }
 
 // ----------------------------------------------------------------------
@@ -614,6 +614,6 @@ const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 
 const int* cuda_mparticles::patch_get_b_mx(int p)
 {
-  return b_mx;
+  return indexer.b_mx_;
 }
 

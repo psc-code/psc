@@ -26,7 +26,7 @@ static const int RADIX_BITS = 4;
 void cuda_mparticles_bnd::spine_reduce(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
-  int *b_mx = cmprts->b_mx;
+  int *b_mx = cmprts->indexer.b_mx_;
 
   // OPT?
   thrust::fill(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
@@ -78,7 +78,7 @@ void cuda_mparticles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
   uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
-  int *b_mx = cmprts->b_mx;
+  int *b_mx = cmprts->indexer.b_mx_;
 
   thrust::fill(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
 
@@ -259,7 +259,7 @@ void cuda_mparticles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
   prof_stop(pr_C);
 
   prof_start(pr_D);
-  int *b_mx = cmprts->b_mx;
+  int *b_mx = cmprts->indexer.b_mx_;
   if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
@@ -309,7 +309,7 @@ void cuda_mparticles_bnd::sort_pairs_gold(cuda_mparticles *cmprts)
 {
   uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
   uint n_blocks = cmprts->n_blocks;
-  int *b_mx = cmprts->b_mx;
+  int *b_mx = cmprts->indexer.b_mx_;
 
   thrust::host_vector<uint> h_bidx(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts);
   thrust::host_vector<uint> h_id(cmprts->n_prts);

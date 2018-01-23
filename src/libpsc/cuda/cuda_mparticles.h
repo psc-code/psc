@@ -12,6 +12,25 @@
 #include <thrust/device_vector.h>
 
 // ======================================================================
+// cuda_mparticles_indexer
+
+struct cuda_mparticles_indexer
+{
+  using particle_t = particle_cuda_t;
+  using real_t = particle_t::real_t;
+  using Real3 = Vec3<real_t>;
+
+  cuda_mparticles_indexer() = default; // FIXME, should go away
+  
+  cuda_mparticles_indexer(const Int3& b_mx, const Real3& b_dxi)
+    : b_mx_(b_mx), b_dxi_(b_dxi)
+  {}
+  
+  Int3 b_mx_;          // number of blocks per direction in each patch
+  Real3 b_dxi_;        // inverse of block size (in actual length units)
+};
+
+// ======================================================================
 // cuda_mparticles_base
 
 struct cuda_mparticles_base
@@ -49,11 +68,10 @@ struct cuda_mparticles_base
 
   uint n_prts = {};                      // total # of particles across all patches
   uint n_alloced = {};                   // size of particle-related arrays as allocated
-  Int3 b_mx;                             // number of blocks per direction in each patch
-  Int3 bs;                               // number of blocks per patch
+  Int3 bs;                               // block size
   uint n_blocks_per_patch;               // number of blocks per patch
   uint n_blocks;                         // number of blocks in all patches in mprts
-  Real3 b_dxi;                           // inverse of block size (in actual length units)
+  cuda_mparticles_indexer indexer;
 
   const uint n_patches;
   const Grid_t& grid_;
@@ -190,19 +208,19 @@ void cuda_mparticles_base::set_particles(uint p, F getter)
     struct cuda_mparticles_prt prt = getter(n);
 
     for (int d = 0; d < 3; d++) {
-      int bi = fint(prt.xi[d] * b_dxi[d]);
-      if (bi < 0 || bi >= b_mx[d]) {
+      int bi = fint(prt.xi[d] * indexer.b_dxi_[d]);
+      if (bi < 0 || bi >= indexer.b_mx_[d]) {
 	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
 	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
-	       n, d, prt.xi[d], bi, b_mx[d]);
+	       n, d, prt.xi[d], bi, indexer.b_mx_[d]);
 	if (bi < 0) {
 	  prt.xi[d] = 0.f;
 	} else {
 	  prt.xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = floorf(prt.xi[d] * b_dxi[d]);
-      assert(bi >= 0 && bi < b_mx[d]);
+      bi = floorf(prt.xi[d] * indexer.b_dxi_[d]);
+      assert(bi >= 0 && bi < indexer.b_mx_[d]);
     }
 
     xi4[n].x  = prt.xi[0];

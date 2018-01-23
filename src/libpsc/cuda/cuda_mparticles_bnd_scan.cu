@@ -118,7 +118,7 @@ void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 void cuda_mparticles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
-  int *b_mx = cmprts->b_mx;
+  int *b_mx = cmprts->indexer.b_mx_;
 
   // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::exclusive_scan(d_spine_cnts.data() + n_blocks * 10,

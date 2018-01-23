@@ -12,17 +12,17 @@
 
 cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid, const Int3& bs)
   : grid_(grid),
-  n_patches(grid.patches.size())
+    n_patches(grid.patches.size())
 {
   this->bs = bs;
   
   for (int d = 0; d < 3; d++) {
     assert(grid.ldims[d] % bs[d] == 0);
-    b_mx[d] = grid.ldims[d] / bs[d];
-    b_dxi[d] = 1.f / (bs[d] * grid.dx[d]);
+    indexer.b_mx_[d] = grid.ldims[d] / bs[d];
+    indexer.b_dxi_[d] = 1.f / (bs[d] * grid.dx[d]);
   }
   
-  n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
+  n_blocks_per_patch = indexer.b_mx_[0] * indexer.b_mx_[1] * indexer.b_mx_[2];
   n_blocks = n_patches * n_blocks_per_patch;
   
   d_off.resize(n_blocks + 1);
