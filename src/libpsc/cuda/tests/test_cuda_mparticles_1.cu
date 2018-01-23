@@ -58,12 +58,12 @@ private:
   const Grid_t& grid_;
 };
 
-void cuda_mparticles_add_particles_test_1(cuda_mparticles *cmprts, uint *n_prts_by_patch)
+void cuda_mparticles_add_particles_test_1(cuda_mparticles* cmprts, uint *n_prts_by_patch)
 {
   const Grid_t& grid = cmprts->grid_;
   Int3 ldims = grid.ldims;
 
-  for (int p = 0; p < grid.patches.size(); p++) {
+  for (int p = 0; p < cmprts->n_patches; p++) {
     n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
   }
 
@@ -91,7 +91,7 @@ struct GetParticlesTest1
 };
 
 void
-get_particles_test(cuda_mparticles *cmprts)
+get_particles_test(cuda_mparticles* cmprts)
 {
   GetParticlesTest1 get_particles;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -99,19 +99,44 @@ get_particles_test(cuda_mparticles *cmprts)
   }
 }
 
-TEST(CudaMparticles, FullInitialSetup)
+// ======================================================================
+// CudaMparticlesTest
+
+struct CudaMparticlesTest : ::testing::Test
 {
-  Grid_t grid({ 1, 4, 2 }, { 1, 40., 20. });
+  std::unique_ptr<Grid_t> grid_;
 
-  grid.kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
-  grid.kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+  const Int3 bs_ = { 1, 1, 1 };
 
-  Int3 bs = { 1, 1, 1 };
-  
-  struct cuda_mparticles *cmprts = new cuda_mparticles(grid, bs);
+  void SetUp()
+  {
+    grid_.reset(new Grid_t({ 1, 4, 2 }, { 1., 40., 20. }));
+  }
 
-  uint n_prts_by_patch[grid.patches.size()];
-  cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
+  cuda_mparticles* make_cmprts()
+  {
+    grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+    grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+    struct cuda_mparticles *cmprts = new cuda_mparticles(*grid_, bs_);
+    
+    return cmprts;
+  }
+};
+
+// ----------------------------------------------------------------------
+TEST_F(CudaMparticlesTest, ConstructorDestructor)
+{
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+  EXPECT_EQ(cmprts->n_patches, 1);
+}
+
+// ----------------------------------------------------------------------
+TEST_F(CudaMparticlesTest, FullInitialSetup)
+{
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+
+  uint n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
   printf("added particles\n");
   cmprts->dump_by_patch(n_prts_by_patch);
 
@@ -120,7 +145,5 @@ TEST(CudaMparticles, FullInitialSetup)
   cmprts->dump();
 
   printf("get_particles_test\n");
-  get_particles_test(cmprts);
-
-  delete cmprts;
+  get_particles_test(cmprts.get());
 }
