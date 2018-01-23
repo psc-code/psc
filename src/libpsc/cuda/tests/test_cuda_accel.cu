@@ -66,6 +66,8 @@ struct PushMprtsTest : ::testing::Test
     grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
   }
 
+  // FIXME, convenient interfaces like make_cmflds, make_cmprts
+  // should be available generally
   template<typename S>
   cuda_mfields *make_cmflds(S set)
   {
@@ -105,12 +107,24 @@ struct PushMprtsTest : ::testing::Test
     return cmflds;
   }
 
-  cuda_mparticles* make_cmprts(uint n_prts)
+  template<typename S>
+  cuda_mparticles* make_cmprts(uint n_prts, S set)
   {
     cuda_mparticles* cmprts = new cuda_mparticles(*grid_, bs_);
 
     uint n_prts_by_patch[1] = { n_prts };
     cmprts->reserve_all(n_prts_by_patch);
+  
+    std::vector<cuda_mparticles_prt> prts;
+    prts.reserve(n_prts);
+  
+    for (int i = 0; i < n_prts; i++) {
+      cuda_mparticles_prt prt = set(i);
+      prts.push_back(prt);
+    }
+
+    cmprts->inject(prts.data(), n_prts_by_patch);
+    //cmprts->dump();
   
     return cmprts;
   }
@@ -139,24 +153,16 @@ TEST_F(PushMprtsTest, Accel)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  cuda_mparticles* cmprts = make_cmprts(n_prts);
+  cuda_mparticles* cmprts = make_cmprts(n_prts, [&](int i) -> cuda_mparticles_prt {
+      cuda_mparticles_prt prt = {};
+      prt.xi[0] = rng->uniform(0, L);
+      prt.xi[1] = rng->uniform(0, L);
+      prt.xi[2] = rng->uniform(0, L);
+      prt.qni_wni = 1.;
+      return prt;
+    });
   
-  std::vector<cuda_mparticles_prt> prts;
-  prts.reserve(n_prts);
-  
-  for (int i = 0; i < n_prts; i++) {
-    cuda_mparticles_prt prt = {};
-    prt.xi[0] = rng->uniform(0, L);
-    prt.xi[1] = rng->uniform(0, L);
-    prt.xi[2] = rng->uniform(0, L);
-    prt.qni_wni = 1.;
-    
-    prts.push_back(prt);
-  }
-  uint n_prts_by_patch[1] = { n_prts };
-  cmprts->inject(prts.data(), n_prts_by_patch);
-  //cmprts->dump();
-  
+  // run test
   int n_failed = 0;
   for (int n = 0; n < n_steps; n++) {
     cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
@@ -197,27 +203,19 @@ TEST_F(PushMprtsTest, Cyclo)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  cuda_mparticles* cmprts = make_cmprts(n_prts);
-  
-  std::vector<cuda_mparticles_prt> prts;
-  prts.reserve(n_prts);
-  
-  for (int i = 0; i < n_prts; i++) {
-    cuda_mparticles_prt prt = {};
-    prt.xi[0] = rng->uniform(0, L);
-    prt.xi[1] = rng->uniform(0, L);
-    prt.xi[2] = rng->uniform(0, L);
-    prt.pxi[0] = 1.; // gamma = 2
-    prt.pxi[1] = 1.;
-    prt.pxi[2] = 1.;
-    prt.qni_wni = rng->uniform(0, 1.);;
-    
-    prts.push_back(prt);
-  }
-  uint n_prts_by_patch[1] = { n_prts };
-  cmprts->inject(prts.data(), n_prts_by_patch);
-  //cmprts->dump();
-  
+  cuda_mparticles* cmprts = make_cmprts(n_prts, [&](int i) -> cuda_mparticles_prt {
+      cuda_mparticles_prt prt = {};
+      prt.xi[0] = rng->uniform(0, L);
+      prt.xi[1] = rng->uniform(0, L);
+      prt.xi[2] = rng->uniform(0, L);
+      prt.pxi[0] = 1.; // gamma = 2
+      prt.pxi[1] = 1.;
+      prt.pxi[2] = 1.;
+      prt.qni_wni = rng->uniform(0, 1.);;
+      return prt;
+    });
+
+  // run test
   int n_failed = 0;
   
   for (int n = 0; n < n_steps; n++) {
