@@ -121,6 +121,29 @@ struct CudaMparticlesTest : ::testing::Test
     
     return cmprts;
   }
+
+  // FIXME, duplicated
+  template<typename S>
+  std::unique_ptr<cuda_mparticles> make_cmprts(uint n_prts, S set)
+  {
+    auto cmprts = std::unique_ptr<cuda_mparticles>(new cuda_mparticles(*grid_, bs_));
+
+    uint n_prts_by_patch[1] = { n_prts };
+    cmprts->reserve_all(n_prts_by_patch);
+  
+    std::vector<cuda_mparticles_prt> prts;
+    prts.reserve(n_prts);
+  
+    for (int i = 0; i < n_prts; i++) {
+      cuda_mparticles_prt prt = set(i);
+      prts.push_back(prt);
+    }
+
+    cmprts->inject(prts.data(), n_prts_by_patch);
+    //cmprts->dump();
+  
+    return cmprts;
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -176,5 +199,18 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   // but really all of this should just call a consistency check
   // within cuda_mparticles
   // cmprts->dump();
+}
+
+// ----------------------------------------------------------------------
+TEST_F(CudaMparticlesTest, FindBlockIndicesIds)
+{
+  std::vector<cuda_mparticles_prt> prts = {
+    { 0.5, 0.5, 0.5 },
+  };
+  auto cmprts = make_cmprts(prts.size(), [&](int i) -> cuda_mparticles_prt {
+      return prts[i];
+    });
+
+  cmprts->dump();
 }
 
