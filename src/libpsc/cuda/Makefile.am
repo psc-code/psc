@@ -54,6 +54,10 @@ check_PROGRAMS = \
 	tests/test_cuda_mfields_1 \
 	tests/test_cuda_mparticles_1
 
+tests/test_cuda_accel.lo: tests/cuda_test.hxx
+tests/test_cuda_mparticles_1.lo: tests/cuda_test.hxx
+tests/test_cuda_mfields_1.lo: tests/cuda_test.hxx
+
 TESTS = $(check_PROGRAMS)
 
 #	tests/test_cuda_mparticles

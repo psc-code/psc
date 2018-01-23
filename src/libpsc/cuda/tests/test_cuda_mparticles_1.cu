@@ -183,12 +183,25 @@ TEST_F(CudaMparticlesTest, FindBlockIndicesIds)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    { 0.5, 0.5, 0.5 },
+    { .5,  5.,  5. },
+    { .5, 35., 15. },
   };
-  auto cmprts = make_cmprts(*grid_, prts.size(), [&](int i) -> cuda_mparticles_prt {
-      return prts[i];
+  uint n_prts_by_patch[1];
+  n_prts_by_patch[0] = prts.size();
+  
+  auto cmprts = make_cmprts(*grid_);
+  cmprts->reserve_all(n_prts_by_patch);
+  cmprts->resize_all(n_prts_by_patch);
+  cmprts->set_particles(0, [&](int n) {
+      return prts[n];
     });
 
-  cmprts->dump();
+  cmprts->find_block_indices_ids();
+  
+  EXPECT_EQ(cmprts->d_bidx[0], 0);
+  EXPECT_EQ(cmprts->d_bidx[1], 7);
+
+  EXPECT_EQ(cmprts->d_id[0], 0);
+  EXPECT_EQ(cmprts->d_id[1], 1);
 }
 

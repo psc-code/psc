@@ -525,7 +525,7 @@ cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // inject
 
-void cuda_mparticles::inject(cuda_mparticles_prt *buf,
+void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 			     uint *buf_n_by_patch)
 {
   if (need_reorder) {
@@ -550,7 +550,7 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
       float4 *xi4 = &h_xi4[off + n];
       float4 *pxi4 = &h_pxi4[off + n];
-      cuda_mparticles_prt *prt = &buf[off + n];
+      const cuda_mparticles_prt *prt = &buf[off + n];
       
       xi4->x  = prt->xi[0];
       xi4->y  = prt->xi[1];
