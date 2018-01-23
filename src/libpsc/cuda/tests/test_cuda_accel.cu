@@ -6,6 +6,8 @@
 
 #include "../vpic/PscRng.h"
 
+#include <memory>
+
 #include "gtest/gtest.h"
 
 // Rng hackiness
@@ -54,7 +56,7 @@ prof_register(const char *name, float simd, int flops, int bytes)
 
 struct PushMprtsTest : ::testing::Test
 {
-  Grid_t* grid_;
+  std::unique_ptr<Grid_t> grid_;
 
   RngPool rngpool;
   
@@ -63,15 +65,15 @@ struct PushMprtsTest : ::testing::Test
 
   void SetUp()
   {
-    grid_ = new Grid_t({ 1, 1, 1 }, { L, L, L });
+    grid_.reset(new Grid_t({ 1, 1, 1 }, { L, L, L }));
   }
 
   // FIXME, convenient interfaces like make_cmflds, make_cmprts
   // should be available generally
   template<typename S>
-  cuda_mfields *make_cmflds(S set)
+  std::unique_ptr<cuda_mfields> make_cmflds(S set)
   {
-    cuda_mfields *cmflds = new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 });
+    auto cmflds = std::unique_ptr<cuda_mfields>(new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 }));
 
     fields_single_t flds = cmflds->get_host_fields();
     Fields3d<fields_single_t> F(flds);
@@ -108,9 +110,9 @@ struct PushMprtsTest : ::testing::Test
   }
 
   template<typename S>
-  cuda_mparticles* make_cmprts(uint n_prts, S set)
+  std::unique_ptr<cuda_mparticles> make_cmprts(uint n_prts, S set)
   {
-    cuda_mparticles* cmprts = new cuda_mparticles(*grid_, bs_);
+    auto cmprts = std::unique_ptr<cuda_mparticles>(new cuda_mparticles(*grid_, bs_));
 
     uint n_prts_by_patch[1] = { n_prts };
     cmprts->reserve_all(n_prts_by_patch);
@@ -140,7 +142,7 @@ TEST_F(PushMprtsTest, Accel)
   const cuda_mparticles::real_t eps = 1e-6;
 
   // init fields
-  cuda_mfields* cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
+  auto cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
       switch(m) {
       case EX: return 1.;
       case EY: return 2.;
@@ -153,7 +155,7 @@ TEST_F(PushMprtsTest, Accel)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  cuda_mparticles* cmprts = make_cmprts(n_prts, [&](int i) -> cuda_mparticles_prt {
+  auto cmprts = make_cmprts(n_prts, [&](int i) -> cuda_mparticles_prt {
       cuda_mparticles_prt prt = {};
       prt.xi[0] = rng->uniform(0, L);
       prt.xi[1] = rng->uniform(0, L);
@@ -164,7 +166,7 @@ TEST_F(PushMprtsTest, Accel)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts.get(), cmflds.get(), bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
 
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	EXPECT_NEAR(prt.pxi[0], 1*(n+1), eps);
@@ -188,7 +190,7 @@ TEST_F(PushMprtsTest, Cyclo)
   const cuda_mparticles::real_t eps = 1e-2;
 
   // init fields
-  cuda_mfields* cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
+  auto cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
       switch(m) {
       case HZ: return 2. * M_PI / n_steps;
       default: return 0.;
@@ -199,7 +201,7 @@ TEST_F(PushMprtsTest, Cyclo)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  cuda_mparticles* cmprts = make_cmprts(n_prts, [&](int i) -> cuda_mparticles_prt {
+  auto cmprts = make_cmprts(n_prts, [&](int i) -> cuda_mparticles_prt {
       cuda_mparticles_prt prt = {};
       prt.xi[0] = rng->uniform(0, L);
       prt.xi[1] = rng->uniform(0, L);
@@ -213,7 +215,7 @@ TEST_F(PushMprtsTest, Cyclo)
 
   // run test
   for (int n = 0; n < n_steps; n++) {
-    cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    cuda_push_mprts_yz(cmprts.get(), cmflds.get(), bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
