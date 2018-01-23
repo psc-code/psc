@@ -176,15 +176,19 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   // cmprts->dump();
 }
 
-// ----------------------------------------------------------------------
-TEST_F(CudaMparticlesTest, FindBlockIndicesIds)
+// ---------------------------------------------------------------------
+// SetupInternalsPieces
+//
+// Tests the pieces that go into setup_internals()
+
+TEST_F(CudaMparticlesTest, SetupInternalsPieces)
 {
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    { .5,  5.,  5. },
     { .5, 35., 15. },
+    { .5,  5.,  5. },
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
@@ -196,12 +200,37 @@ TEST_F(CudaMparticlesTest, FindBlockIndicesIds)
       return prts[n];
     });
 
+  EXPECT_EQ(cmprts->d_bidx[0], 0);
+  EXPECT_EQ(cmprts->d_bidx[1], 0);
+  EXPECT_EQ(cmprts->d_id[0], 0);
+  EXPECT_EQ(cmprts->d_id[1], 0);
+  
   cmprts->find_block_indices_ids();
+  
+  EXPECT_EQ(cmprts->d_bidx[0], 7);
+  EXPECT_EQ(cmprts->d_bidx[1], 0);
+  EXPECT_EQ(cmprts->d_id[0], 0);
+  EXPECT_EQ(cmprts->d_id[1], 1);
+
+  cmprts->stable_sort_by_key();
   
   EXPECT_EQ(cmprts->d_bidx[0], 0);
   EXPECT_EQ(cmprts->d_bidx[1], 7);
+  EXPECT_EQ(cmprts->d_id[0], 1);
+  EXPECT_EQ(cmprts->d_id[1], 0);
 
-  EXPECT_EQ(cmprts->d_id[0], 0);
-  EXPECT_EQ(cmprts->d_id[1], 1);
+  cmprts->reorder_and_offsets();
+
+  float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1];
+  EXPECT_FLOAT_EQ(xi4_0.y, 5.);
+  EXPECT_FLOAT_EQ(xi4_0.z, 5.);
+  EXPECT_FLOAT_EQ(xi4_1.y, 35.);
+  EXPECT_FLOAT_EQ(xi4_1.z, 15.);
+
+  EXPECT_EQ(cmprts->d_off[0], 0);
+  for (int b = 1; b < 8; b++) {
+    EXPECT_EQ(cmprts->d_off[b], 1) << "where b = " << b;
+  }
+  EXPECT_EQ(cmprts->d_off[8], 2);
 }
 

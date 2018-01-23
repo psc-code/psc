@@ -451,6 +451,14 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 }
 
 // ----------------------------------------------------------------------
+// stable_sort_by_key
+
+void cuda_mparticles::stable_sort_by_key()
+{
+  thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
+}
+
+// ----------------------------------------------------------------------
 // setup_internals
 
 void cuda_mparticles::setup_internals()
@@ -469,7 +477,7 @@ void cuda_mparticles::setup_internals()
     check_bidx_id_unordered_slow(n_prts_by_patch);
   }
 
-  thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
+  stable_sort_by_key();
   reorder_and_offsets();
 
   if (first_time) {

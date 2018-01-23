@@ -163,6 +163,7 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
 
 public:
   void find_block_indices_ids();
+  void stable_sort_by_key();
   void reorder_and_offsets();
   void check_in_patch_unordered_slow(uint *nr_prts_by_patch);
   void check_bidx_id_unordered_slow(uint *n_prts_by_patch);
