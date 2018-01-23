@@ -127,13 +127,13 @@ struct CudaMparticlesTest : ::testing::Test
 TEST_F(CudaMparticlesTest, ConstructorDestructor)
 {
   std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+  EXPECT_EQ(cmprts->n_patches, 1);
 }
 
 // ----------------------------------------------------------------------
 TEST_F(CudaMparticlesTest, SetParticles)
 {
   std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
-  EXPECT_EQ(cmprts->n_patches, 1);
 
   uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
@@ -178,20 +178,3 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   // cmprts->dump();
 }
 
-// ----------------------------------------------------------------------
-TEST_F(CudaMparticlesTest, FullInitialSetup)
-{
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
-
-  uint n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
-  printf("added particles\n");
-  cmprts->dump_by_patch(n_prts_by_patch);
-
-  cmprts->setup_internals();
-  printf("set up internals\n");
-  cmprts->dump();
-
-  printf("get_particles_test\n");
-  get_particles_test(cmprts.get());
-}
