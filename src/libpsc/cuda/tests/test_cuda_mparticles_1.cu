@@ -127,7 +127,55 @@ struct CudaMparticlesTest : ::testing::Test
 TEST_F(CudaMparticlesTest, ConstructorDestructor)
 {
   std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+}
+
+// ----------------------------------------------------------------------
+TEST_F(CudaMparticlesTest, SetParticles)
+{
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
   EXPECT_EQ(cmprts->n_patches, 1);
+
+  uint n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
+
+  // check that particles are in C order
+  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
+      int k = n % grid_->ldims[2]; n /= grid_->ldims[2];
+      int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
+      int i = n;
+      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->dx[0]);
+      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->dx[1]);
+      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
+    });
+}
+
+// ----------------------------------------------------------------------
+TEST_F(CudaMparticlesTest, SetupInternals)
+{
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+  EXPECT_EQ(cmprts->n_patches, 1);
+
+  uint n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
+
+  // cmprts->dump();
+  cmprts->setup_internals();
+  // cmprts->dump();
+  
+  // check that particles are now in Fortran order
+  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
+      int i = n % grid_->ldims[0]; n /= grid_->ldims[0];
+      int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
+      int k = n;
+      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->dx[0]);
+      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->dx[1]);
+      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
+    });
+
+  // FIXME, we should also check that h_off has been set correctly,
+  // but really all of this should just call a consistency check
+  // within cuda_mparticles
+  // cmprts->dump();
 }
 
 // ----------------------------------------------------------------------
