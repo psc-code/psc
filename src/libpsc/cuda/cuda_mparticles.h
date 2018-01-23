@@ -168,6 +168,7 @@ public:
   void check_bidx_id_unordered_slow(uint *n_prts_by_patch);
   void check_ordered();
   void check_ordered_slow();
+  int get_block_idx(float4 xi4, int p);
   
 public:
   // per particle

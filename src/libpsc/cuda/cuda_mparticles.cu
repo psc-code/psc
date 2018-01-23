@@ -135,11 +135,10 @@ cuda_params2_free(struct cuda_params2 *prm)
 // ----------------------------------------------------------------------
 // get_block_idx
 
-static int
-get_block_idx(struct cuda_mparticles *cmprts, float4 xi4, int p)
+int cuda_mparticles::get_block_idx(float4 xi4, int p)
 {
-  float *b_dxi = cmprts->indexer.b_dxi_;
-  int *b_mx = cmprts->indexer.b_mx_;
+  float *b_dxi = indexer.b_dxi_;
+  int *b_mx = indexer.b_mx_;
   
   uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
   uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
@@ -329,7 +328,7 @@ void cuda_mparticles::check_in_patch_unordered_slow(uint *nr_prts_by_patch)
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < nr_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(this, d_xi4[off + n], p);
+      int bidx = get_block_idx(d_xi4[off + n], p);
       assert(bidx >= 0 && bidx <= n_blocks);
     }
     off += nr_prts_by_patch[p];
@@ -347,7 +346,7 @@ void cuda_mparticles::check_bidx_id_unordered_slow(uint *n_prts_by_patch)
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(this, d_xi4[off + n], p);
+      int bidx = get_block_idx(d_xi4[off + n], p);
       assert(bidx == d_bidx[off+n]);
       assert(off+n == d_id[off+n]);
     }
@@ -377,7 +376,7 @@ void cuda_mparticles::check_ordered_slow()
       } else {
 	xi4 = d_xi4[n];
       }
-      uint bidx = get_block_idx(this, xi4, p);
+      uint bidx = get_block_idx(xi4, p);
       //printf("cuda_mparticles_check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
@@ -424,7 +423,7 @@ void cuda_mparticles::check_ordered()
       } else {
 	xi4 = h_xi4[n];
       }
-      uint bidx = get_block_idx(this, xi4, p);
+      uint bidx = get_block_idx(xi4, p);
       //printf("cuda_mparticles_check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
@@ -562,7 +561,7 @@ void cuda_mparticles::inject(cuda_mparticles_prt *buf,
       pxi4->z = prt->pxi[2];
       pxi4->w = prt->qni_wni;
 
-      h_bidx[off + n] = get_block_idx(this, *xi4, p);
+      h_bidx[off + n] = get_block_idx(*xi4, p);
       h_id[off + n] = n_prts + off + n;
     }
     off += buf_n_by_patch[p];
