@@ -137,7 +137,7 @@ TEST_F(PushMprtsTest, Accel)
 {
   const int n_prts = 131;
   const int n_steps = 10;
-  const cuda_mparticles::real_t eps = 1e-5;
+  const cuda_mparticles::real_t eps = 1e-6;
 
   // init fields
   cuda_mfields* cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
@@ -163,23 +163,15 @@ TEST_F(PushMprtsTest, Accel)
     });
   
   // run test
-  int n_failed = 0;
   for (int n = 0; n < n_steps; n++) {
     cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
-	if (std::abs(prt.pxi[0] - 1*(n+1)) > eps ||
-	    std::abs(prt.pxi[1] - 2*(n+1)) > eps ||
-	    std::abs(prt.pxi[2] - 3*(n+1)) > eps) {
-	  printf("FAIL: n %d i %d px %g %g %g // exp %g %g %g\n", n, i,
-		 prt.pxi[0], prt.pxi[1], prt.pxi[2],
-		 1.*(n+1), 2.*(n+1), 3.*(n+1));
-	  n_failed++;
-	}
+	EXPECT_NEAR(prt.pxi[0], 1*(n+1), eps);
+	EXPECT_NEAR(prt.pxi[1], 2*(n+1), eps);
+	EXPECT_NEAR(prt.pxi[2], 3*(n+1), eps);
       });
-    
-    //cmprts->dump();
   }
-  EXPECT_EQ(n_failed, 0);
 }
 
 // ======================================================================
@@ -189,6 +181,10 @@ TEST_F(PushMprtsTest, Cyclo)
 {
   const int n_prts = 131;
   const int n_steps = 64;
+  // the errors here are (substantial) truncation error, not
+  // finite precision, and they add up
+  // (but that's okay, if a reminder that the 6th order Boris would
+  //  be good)
   const cuda_mparticles::real_t eps = 1e-2;
 
   // init fields
@@ -216,27 +212,19 @@ TEST_F(PushMprtsTest, Cyclo)
     });
 
   // run test
-  int n_failed = 0;
-  
   for (int n = 0; n < n_steps; n++) {
     cuda_push_mprts_yz(cmprts, cmflds, bs_, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
-	if (std::abs(prt.pxi[0] - ux) > eps ||
-	    std::abs(prt.pxi[1] - uy) > eps ||
-	    std::abs(prt.pxi[2] - uz) > eps) {
-	  printf("FAIL: n %d i %d px %g %g %g // exp %g %g %g\n", n, i,
-		 prt.pxi[0], prt.pxi[1], prt.pxi[2], ux, uy, uz);
-	  n_failed++;
-	}
+	EXPECT_NEAR(prt.pxi[0], ux, eps);
+	EXPECT_NEAR(prt.pxi[1], uy, eps);
+	EXPECT_NEAR(prt.pxi[2], uz, eps);
       });
-    
-    //cmprts->dump();
   }
-  EXPECT_EQ(n_failed, 0);
 }
 
