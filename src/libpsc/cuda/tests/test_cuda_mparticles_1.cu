@@ -1,5 +1,6 @@
 
 #include "cuda_mparticles.h"
+#include "cuda_test.hxx"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,7 +103,7 @@ get_particles_test(cuda_mparticles* cmprts)
 // ======================================================================
 // CudaMparticlesTest
 
-struct CudaMparticlesTest : ::testing::Test
+struct CudaMparticlesTest : TestBase, ::testing::Test
 {
   std::unique_ptr<Grid_t> grid_;
 
@@ -112,51 +113,23 @@ struct CudaMparticlesTest : ::testing::Test
   {
     grid_.reset(new Grid_t({ 1, 4, 2 }, { 1., 40., 20. }));
   }
-
-  cuda_mparticles* make_cmprts()
-  {
-    grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
-    grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
-    struct cuda_mparticles *cmprts = new cuda_mparticles(*grid_, bs_);
-    
-    return cmprts;
-  }
-
-  // FIXME, duplicated
-  template<typename S>
-  std::unique_ptr<cuda_mparticles> make_cmprts(uint n_prts, S set)
-  {
-    auto cmprts = std::unique_ptr<cuda_mparticles>(new cuda_mparticles(*grid_, bs_));
-
-    uint n_prts_by_patch[1] = { n_prts };
-    cmprts->reserve_all(n_prts_by_patch);
-  
-    std::vector<cuda_mparticles_prt> prts;
-    prts.reserve(n_prts);
-  
-    for (int i = 0; i < n_prts; i++) {
-      cuda_mparticles_prt prt = set(i);
-      prts.push_back(prt);
-    }
-
-    cmprts->inject(prts.data(), n_prts_by_patch);
-    //cmprts->dump();
-  
-    return cmprts;
-  }
 };
 
 // ----------------------------------------------------------------------
 TEST_F(CudaMparticlesTest, ConstructorDestructor)
 {
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
   EXPECT_EQ(cmprts->n_patches, 1);
 }
 
 // ----------------------------------------------------------------------
 TEST_F(CudaMparticlesTest, SetParticles)
 {
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
 
   uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
@@ -175,7 +148,9 @@ TEST_F(CudaMparticlesTest, SetParticles)
 // ----------------------------------------------------------------------
 TEST_F(CudaMparticlesTest, SetupInternals)
 {
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts());
+  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
   EXPECT_EQ(cmprts->n_patches, 1);
 
   uint n_prts_by_patch[cmprts->n_patches];
@@ -204,10 +179,13 @@ TEST_F(CudaMparticlesTest, SetupInternals)
 // ----------------------------------------------------------------------
 TEST_F(CudaMparticlesTest, FindBlockIndicesIds)
 {
+  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+
   std::vector<cuda_mparticles_prt> prts = {
     { 0.5, 0.5, 0.5 },
   };
-  auto cmprts = make_cmprts(prts.size(), [&](int i) -> cuda_mparticles_prt {
+  auto cmprts = make_cmprts(*grid_, prts.size(), [&](int i) -> cuda_mparticles_prt {
       return prts[i];
     });
 
