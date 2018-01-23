@@ -323,15 +323,18 @@ cuda_mparticles_reorder_and_offsets_slow(struct cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // check_in_patch_unordered_slow
 
-void cuda_mparticles::check_in_patch_unordered_slow(uint *nr_prts_by_patch)
+void cuda_mparticles::check_in_patch_unordered_slow()
 {
+  uint n_prts_by_patch[n_patches];
+  get_size_all(n_prts_by_patch);
+
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
-    for (int n = 0; n < nr_prts_by_patch[p]; n++) {
+    for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(d_xi4[off + n], p);
       assert(bidx >= 0 && bidx <= n_blocks);
     }
-    off += nr_prts_by_patch[p];
+    off += n_prts_by_patch[p];
   }
 
   assert(off == n_prts);
@@ -465,9 +468,7 @@ void cuda_mparticles::setup_internals()
 {
   static int first_time = false;
   if (first_time) {
-    uint n_prts_by_patch[n_patches];
-    get_size_all(n_prts_by_patch);
-    check_in_patch_unordered_slow(n_prts_by_patch);
+    check_in_patch_unordered_slow();
   }
 
   find_block_indices_ids();
@@ -576,10 +577,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   }
   assert(off == buf_n);
 
-  uint n_prts_by_patch[n_patches];
-  get_size_all(n_prts_by_patch);
-
-  // check_in_patch_unordered_slow(n_prts_by_patch);
+  // check_in_patch_unordered_slow();
 
   find_block_indices_ids();
   // check_bidx_id_unordered_slow(n_prts_by_patch);

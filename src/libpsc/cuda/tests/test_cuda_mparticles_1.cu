@@ -151,16 +151,11 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
   std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
-  EXPECT_EQ(cmprts->n_patches, 1);
 
   uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
 
-  {
-    uint n_prts_by_patch[cmprts->n_patches];
-    cmprts->get_size_all(n_prts_by_patch);
-    cmprts->check_in_patch_unordered_slow(n_prts_by_patch);
-  }
+  cmprts->check_in_patch_unordered_slow();
 
   cmprts->setup_internals();
   
