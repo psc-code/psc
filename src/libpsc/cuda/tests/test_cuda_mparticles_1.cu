@@ -7,6 +7,8 @@
 
 #include <mrc_profile.h>
 
+#include "gtest/gtest.h"
+
 struct prof_globals prof_globals; // FIXME
 
 int
@@ -97,20 +99,9 @@ get_particles_test(cuda_mparticles *cmprts)
   }
 }
 
-// ----------------------------------------------------------------------
-// main
-
-int
-main(void)
+TEST(CudaMparticles, FullInitialSetup)
 {
-  Grid_t grid{};
-  grid.gdims = { 1, 4, 2 };
-  grid.ldims = { 1, 4, 2 };
-  grid.dx = { 1., 10., 10. };
-
-  Grid_t::Patch patch{};
-  patch.xb = { 0., 0., 0. };
-  grid.patches.push_back(patch);
+  Grid_t grid({ 1, 4, 2 }, { 1, 40., 20. });
 
   grid.kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid.kinds.push_back(Grid_t::Kind( 1., 25., "ion"));

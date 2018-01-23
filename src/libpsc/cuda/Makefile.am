@@ -64,23 +64,25 @@ TESTS = $(check_PROGRAMS)
 #  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo
 #nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
 
+CUDA_GTEST_OBJS := \
+	../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
+	../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo \
+	$(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
+
 tests_test_cuda_accel_SOURCES = 
 tests_test_cuda_accel_LDADD = tests/test_cuda_accel.lo \
   cuda_mfields.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
   cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
   cuda_push_mprts_xyz.lo cuda_push_mprts_yz.lo \
-  ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
-  ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo \
-  $(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
+  $(CUDA_GTEST_OBJS)
 nodist_EXTRA_tests_test_cuda_accel_SOURCES = dummy.cxx
 
 tests_test_cuda_mparticles_1_SOURCES = 
 tests_test_cuda_mparticles_1_LDADD = tests/test_cuda_mparticles_1.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
   cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
-  ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
-  ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
+  $(CUDA_GTEST_OBJS)
 nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
 
 tests_test_cuda_mfields_1_SOURCES = 
