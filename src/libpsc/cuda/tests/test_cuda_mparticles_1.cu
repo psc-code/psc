@@ -174,7 +174,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   EXPECT_EQ(cmprts->d_id[0], 0);
   EXPECT_EQ(cmprts->d_id[1], 0);
   
-  cmprts->check_in_patch_unordered_slow();
+  EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
   cmprts->find_block_indices_ids();
   
   EXPECT_EQ(cmprts->d_bidx[0], 7);
@@ -182,7 +182,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   EXPECT_EQ(cmprts->d_id[0], 0);
   EXPECT_EQ(cmprts->d_id[1], 1);
 
-  cmprts->check_bidx_id_unordered_slow();
+  EXPECT_TRUE(cmprts->check_bidx_id_unordered_slow());
   cmprts->stable_sort_by_key();
   
   EXPECT_EQ(cmprts->d_bidx[0], 0);
@@ -204,7 +204,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   }
   EXPECT_EQ(cmprts->d_off[8], 2);
 
-  cmprts->check_ordered();
+  EXPECT_TRUE(cmprts->check_ordered());
 }
 
 // ----------------------------------------------------------------------
