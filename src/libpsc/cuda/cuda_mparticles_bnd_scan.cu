@@ -21,10 +21,10 @@ static const int RADIX_BITS = 4;
 #define THREADS_PER_BLOCK 256
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_reorder_send_by_id
+// k_reorder_send_by_id
 
 static void __global__
-mprts_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
+k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 			 float4 *d_xi4, float4 *d_pxi4,
 			 float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
 {
@@ -38,6 +38,8 @@ mprts_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
   d_xchg_pxi4[n] = d_pxi4[id];
 }
 
+// ----------------------------------------------------------------------
+// reorder_send_by_id
 
 void cuda_mparticles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 {
@@ -47,7 +49,7 @@ void cuda_mparticles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 
   int dimGrid = (n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-  mprts_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
+  k_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
     (n_prts_send, cmprts->d_id.data().get() + cmprts->n_prts - n_prts_send,
      cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
      cmprts->d_xi4.data().get() + cmprts->n_prts, cmprts->d_pxi4.data().get() + cmprts->n_prts);
@@ -74,10 +76,10 @@ void cuda_mparticles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// reorder_send_buf_total
+// k_send_buf_total
 
 __global__ static void
-mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
+k_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
 			     uint *d_bidx, uint *d_sums,
 			     float4 *d_xi4, float4 *d_pxi4,
 			     float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
@@ -93,6 +95,9 @@ mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
   }
 }
 
+// ----------------------------------------------------------------------
+// reorder_send_buf_total
+
 void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 {
   if (cmprts->n_patches == 0)
@@ -105,10 +110,10 @@ void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
   
-  mprts_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
-						      cmprts->d_bidx.data().get(), d_sums.data().get(),
-						      cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
-						      xchg_xi4, xchg_pxi4);
+  k_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
+						  cmprts->d_bidx.data().get(), d_sums.data().get(),
+						  cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
+						  xchg_xi4, xchg_pxi4);
   cuda_sync_if_enabled();
 }
 
