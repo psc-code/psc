@@ -323,7 +323,7 @@ cuda_mparticles_reorder_and_offsets_slow(struct cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // check_in_patch_unordered_slow
 
-void cuda_mparticles::check_in_patch_unordered_slow()
+bool cuda_mparticles::check_in_patch_unordered_slow()
 {
   uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
@@ -332,13 +332,14 @@ void cuda_mparticles::check_in_patch_unordered_slow()
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(d_xi4[off + n], p);
-      assert(bidx >= 0 && bidx <= n_blocks);
+      if (!(bidx >= 0 && bidx <= n_blocks)) return false;
     }
     off += n_prts_by_patch[p];
   }
 
-  assert(off == n_prts);
-  printf("PASS: cuda_mparticles_check_in_patch_unordered_slow()\n");
+  if (!(off == n_prts)) return false;
+  // printf("PASS: cuda_mparticles_check_in_patch_unordered_slow()\n");
+  return true;
 }
 
 // ----------------------------------------------------------------------
@@ -347,7 +348,7 @@ void cuda_mparticles::check_in_patch_unordered_slow()
 // checks that block indices are correct,
 // id is just enumerating particles
 
-void cuda_mparticles::check_bidx_id_unordered_slow()
+bool cuda_mparticles::check_bidx_id_unordered_slow()
 {
   uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
@@ -356,28 +357,29 @@ void cuda_mparticles::check_bidx_id_unordered_slow()
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = get_block_idx(d_xi4[off + n], p);
-      assert(bidx == d_bidx[off+n]);
-      assert(off+n == d_id[off+n]);
+      if (!(bidx == d_bidx[off+n])) return false;
+      if (!(off+n == d_id[off+n])) return false;
     }
     off += n_prts_by_patch[p];
   }
 
-  assert(off == n_prts);
-  printf("PASS: cuda_mparticles_check_bidx_id_unordered_slow()\n");
+  if (!(off == n_prts)) return false;
+  // printf("PASS: cuda_mparticles_check_bidx_id_unordered_slow()\n");
+  return true;
 }
 
 // ----------------------------------------------------------------------
 // check_ordered_slow
 
-void cuda_mparticles::check_ordered_slow()
+bool cuda_mparticles::check_ordered_slow()
 {
   uint off = 0;
   for (int b = 0; b < n_blocks; b++) {
     int p = b / n_blocks_per_patch;
     uint off_b = d_off[b], off_e = d_off[b+1];
-    assert(off_e >= off_b);
+    if (!(off_e >= off_b)) return false;
     // printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
-    assert(d_off[b] == off);
+    if (!(d_off[b] == off)) return false;
     for (int n = d_off[b]; n < d_off[b+1]; n++) {
       float4 xi4;
       if (need_reorder) {
@@ -395,18 +397,20 @@ void cuda_mparticles::check_ordered_slow()
 	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * indexer.b_dxi_[1],
 	       xi4.z * indexer.b_dxi_[2]);
       }
-      assert(b == bidx);
+      if (!(b == bidx)) return false;
     }
     off += off_e - off_b;
   }
-  assert(off == n_prts);
-  printf("cuda_mparticles_check_ordered: PASS\n");
+  if (!(off == n_prts)) return false;
+
+  // printf("PASS: cuda_mparticles_check_ordered()\n");
+  return true;
 }
 
 // ----------------------------------------------------------------------
 // check_ordered
 
-void cuda_mparticles::check_ordered()
+bool cuda_mparticles::check_ordered()
 {
   thrust::host_vector<float4> h_xi4(d_xi4.data(), d_xi4.data() + n_prts);
   thrust::host_vector<uint> h_off(d_off);
@@ -422,9 +426,9 @@ void cuda_mparticles::check_ordered()
   for (int b = 0; b < n_blocks; b++) {
     int p = b / n_blocks_per_patch;
     uint off_b = h_off[b], off_e = h_off[b+1];
-    assert(off_e >= off_b);
+    if (!(off_e >= off_b)) return false;
     //printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
-    assert(off_b == off);
+    if (!(off_b == off)) return false;
     for (int n = h_off[b]; n < h_off[b+1]; n++) {
       float4 xi4;
       if (need_reorder) {
@@ -442,12 +446,13 @@ void cuda_mparticles::check_ordered()
 	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * indexer.b_dxi_[1],
 	       xi4.z * indexer.b_dxi_[2]);
       }
-      assert(b == bidx);
+      if (!(b == bidx)) return false;
     }
     off += off_e - off_b;
   }
-  assert(off == n_prts);
-  printf("cuda_mparticles_check_ordered: PASS\n");
+  if (!(off == n_prts)) return false;
+  // printf("PASS: cuda_mparticles_check_ordered:\n");
+  return true;
 }
 
 // ----------------------------------------------------------------------
@@ -475,11 +480,11 @@ void cuda_mparticles::setup_internals()
   // pre-condition: particles sorted by patch, d_off being used to
   // describe patch boundaries
 
-  // check_in_patch_unordered_slow();
+  // assert(check_in_patch_unordered_slow());
 
   find_block_indices_ids();
 
-  // check_bidx_id_unordered_slow();
+  // assert(check_bidx_id_unordered_slow());
 
   stable_sort_by_key();
 
@@ -490,7 +495,7 @@ void cuda_mparticles::setup_internals()
   // - d_off describes block boundaries
   // - UNUSED: d_bidx has each particle's block index
 
-  // check_ordered();
+  // assert(check_ordered());
 }
 
 // ----------------------------------------------------------------------
@@ -583,10 +588,10 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   }
   assert(off == buf_n);
 
-  // check_in_patch_unordered_slow();
+  // assert(check_in_patch_unordered_slow());
 
   find_block_indices_ids();
-  // check_bidx_id_unordered_slow();
+  // assert(check_bidx_id_unordered_slow());
 
   assert(n_prts + buf_n <= n_alloced);
   thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4.data() + n_prts);
@@ -602,7 +607,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   //   printf("i %d bidx %d %d\n", i, bidx, id);
   // }
 
-  // check_ordered();
+  // assert(check_ordered());
 
   n_prts += buf_n;
 
@@ -610,7 +615,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 
   reorder_and_offsets();
 
-  // check_ordered();
+  // assert(check_ordered());
 }
 
 // ----------------------------------------------------------------------

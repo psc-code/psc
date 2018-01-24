@@ -165,11 +165,12 @@ public:
   void find_block_indices_ids();
   void stable_sort_by_key();
   void reorder_and_offsets();
-  void check_in_patch_unordered_slow();
-  void check_bidx_id_unordered_slow();
-  void check_ordered();
-  void check_ordered_slow();
   int get_block_idx(float4 xi4, int p);
+
+  bool check_in_patch_unordered_slow();
+  bool check_bidx_id_unordered_slow();
+  bool check_ordered();
+  bool check_ordered_slow();
   
 public:
   // per particle
