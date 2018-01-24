@@ -818,6 +818,7 @@ static void
 psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 						 struct psc_mparticles *mprts)
 {
+  struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
@@ -833,7 +834,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  psc_bnd_particles_sub_exchange_mprts_prep(bnd, mprts);
+  ops->exchange_mprts_prep(bnd, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -856,7 +857,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_D);
-  psc_bnd_particles_sub_exchange_mprts_post(bnd, mprts);
+  ops->exchange_mprts_post(bnd, mprts);
   prof_stop(pr_D);
   prof_stop(pr_time_step_no_comm);
 
