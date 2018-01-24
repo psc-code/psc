@@ -145,33 +145,6 @@ TEST_F(CudaMparticlesTest, SetParticles)
     });
 }
 
-// ----------------------------------------------------------------------
-TEST_F(CudaMparticlesTest, SetupInternals)
-{
-  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
-  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
-
-  uint n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
-
-  cmprts->check_in_patch_unordered_slow();
-
-  cmprts->setup_internals();
-  
-  // check that particles are now in Fortran order
-  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      int i = n % grid_->ldims[0]; n /= grid_->ldims[0];
-      int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
-      int k = n;
-      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->dx[0]);
-      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->dx[1]);
-      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
-    });
-
-  cmprts->check_ordered();
-}
-
 // ---------------------------------------------------------------------
 // SetupInternalsPieces
 //
@@ -201,6 +174,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   EXPECT_EQ(cmprts->d_id[0], 0);
   EXPECT_EQ(cmprts->d_id[1], 0);
   
+  cmprts->check_in_patch_unordered_slow();
   cmprts->find_block_indices_ids();
   
   EXPECT_EQ(cmprts->d_bidx[0], 7);
@@ -208,6 +182,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   EXPECT_EQ(cmprts->d_id[0], 0);
   EXPECT_EQ(cmprts->d_id[1], 1);
 
+  cmprts->check_bidx_id_unordered_slow();
   cmprts->stable_sort_by_key();
   
   EXPECT_EQ(cmprts->d_bidx[0], 0);
@@ -228,5 +203,38 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
     EXPECT_EQ(cmprts->d_off[b], 1) << "where b = " << b;
   }
   EXPECT_EQ(cmprts->d_off[8], 2);
+
+  cmprts->check_ordered();
+}
+
+// ----------------------------------------------------------------------
+// SetupInternals
+//
+// tests setup_internals() itself, on a slightly bigger set of particles
+
+TEST_F(CudaMparticlesTest, SetupInternals)
+{
+  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
+
+  uint n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
+
+  cmprts->check_in_patch_unordered_slow();
+
+  cmprts->setup_internals();
+  
+  // check that particles are now in Fortran order
+  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
+      int i = n % grid_->ldims[0]; n /= grid_->ldims[0];
+      int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
+      int k = n;
+      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->dx[0]);
+      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->dx[1]);
+      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
+    });
+
+  cmprts->check_ordered();
 }
 

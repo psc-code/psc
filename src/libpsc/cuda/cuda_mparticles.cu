@@ -343,9 +343,15 @@ void cuda_mparticles::check_in_patch_unordered_slow()
 
 // ----------------------------------------------------------------------
 // check_bix_id_unordered_slow
+//
+// checks that block indices are correct,
+// id is just enumerating particles
 
-void cuda_mparticles::check_bidx_id_unordered_slow(uint *n_prts_by_patch)
+void cuda_mparticles::check_bidx_id_unordered_slow()
 {
+  uint n_prts_by_patch[n_patches];
+  get_size_all(n_prts_by_patch);
+
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
@@ -466,25 +472,25 @@ void cuda_mparticles::stable_sort_by_key()
 
 void cuda_mparticles::setup_internals()
 {
-  static int first_time = false;
-  if (first_time) {
-    check_in_patch_unordered_slow();
-  }
+  // pre-condition: particles sorted by patch, d_off being used to
+  // describe patch boundaries
+
+  // check_in_patch_unordered_slow();
 
   find_block_indices_ids();
-  if (first_time) {
-    uint n_prts_by_patch[n_patches];
-    get_size_all(n_prts_by_patch);
-    check_bidx_id_unordered_slow(n_prts_by_patch);
-  }
+
+  // check_bidx_id_unordered_slow();
 
   stable_sort_by_key();
+
   reorder_and_offsets();
 
-  if (first_time) {
-    check_ordered();
-    first_time = false;
-  }
+  // post-condition:
+  // - particles now sorted by block
+  // - d_off describes block boundaries
+  // - UNUSED: d_bidx has each particle's block index
+
+  // check_ordered();
 }
 
 // ----------------------------------------------------------------------
@@ -580,7 +586,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   // check_in_patch_unordered_slow();
 
   find_block_indices_ids();
-  // check_bidx_id_unordered_slow(n_prts_by_patch);
+  // check_bidx_id_unordered_slow();
 
   assert(n_prts + buf_n <= n_alloced);
   thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4.data() + n_prts);
@@ -600,7 +606,8 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 
   n_prts += buf_n;
 
-  thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
+  stable_sort_by_key();
+
   reorder_and_offsets();
 
   // check_ordered();

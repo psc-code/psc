@@ -166,7 +166,7 @@ public:
   void stable_sort_by_key();
   void reorder_and_offsets();
   void check_in_patch_unordered_slow();
-  void check_bidx_id_unordered_slow(uint *n_prts_by_patch);
+  void check_bidx_id_unordered_slow();
   void check_ordered();
   void check_ordered_slow();
   int get_block_idx(float4 xi4, int p);
