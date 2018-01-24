@@ -328,15 +328,6 @@ void cuda_mparticles::reorder_and_offsets_slow()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_sort_initial
-
-void
-cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
-			     uint *n_prts_by_patch)
-{
-}
-
-// ----------------------------------------------------------------------
 // stable_sort_by_key
 
 void cuda_mparticles::stable_sort_by_key()
