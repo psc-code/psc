@@ -188,7 +188,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 rho_1st_nc_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  cuda_mparticles_reorder(cmprts); // FIXME/OPT?
+  cmprts->reorder(); // FIXME/OPT?
 
   if (!cmprts->need_reorder) {
     rho_1st_nc_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(cmprts, cmres);
@@ -204,7 +204,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 n_1st_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  cuda_mparticles_reorder(cmprts); // FIXME/OPT?
+  cmprts->reorder(); // FIXME/OPT?
 
   if (!cmprts->need_reorder) {
     n_1st_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(cmprts, cmres);

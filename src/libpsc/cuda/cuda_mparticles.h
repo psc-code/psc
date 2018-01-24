@@ -164,8 +164,11 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
 public:
   void find_block_indices_ids();
   void stable_sort_by_key();
+  void reorder();
   void reorder_and_offsets();
+  void reorder_and_offsets_slow();
   int get_block_idx(float4 xi4, int p);
+  void swap_alt();
 
   bool check_in_patch_unordered_slow();
   bool check_bidx_id_unordered_slow();
@@ -182,10 +185,6 @@ public:
 
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
 };
-
-void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
-void cuda_mparticles_reorder(struct cuda_mparticles *cmprts);
-
 
 // ======================================================================
 // cuda_mparticles_base implementation
@@ -251,8 +250,8 @@ void cuda_mparticles_base::get_particles(uint p, F setter)
 
   uint off = h_off[p * n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
-  
-  cuda_mparticles_reorder(static_cast<cuda_mparticles*>(this)); // FIXME
+
+  static_cast<cuda_mparticles*>(this)->reorder(); // FIXME
 
   thrust::host_vector<float4> xi4(&d_xi4[off], &d_xi4[off + n_prts]);
   thrust::host_vector<float4> pxi4(&d_pxi4[off], &d_pxi4[off + n_prts]);

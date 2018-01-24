@@ -664,7 +664,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   }
 
   if (REORDER) {
-    cuda_mparticles_swap_alt(cmprts);
+    cmprts->swap_alt();
   }
 }
 

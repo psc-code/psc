@@ -299,7 +299,7 @@ cuda_heating_run_foil(struct cuda_mparticles *cmprts)
   }
 
   if (cmprts->need_reorder) { 
-    cuda_mparticles_reorder(cmprts);
+    cmprts->reorder();
     cmprts->need_reorder = false;
   }
 
