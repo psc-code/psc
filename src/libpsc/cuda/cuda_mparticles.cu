@@ -227,6 +227,14 @@ void cuda_mparticles::find_block_indices_ids()
 }
 
 // ----------------------------------------------------------------------
+// stable_sort_by_key
+
+void cuda_mparticles::stable_sort_by_key()
+{
+  thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
+}
+
+// ----------------------------------------------------------------------
 // k_reorder_and_offsets
 
 __global__ static void
@@ -328,11 +336,39 @@ void cuda_mparticles::reorder_and_offsets_slow()
 }
 
 // ----------------------------------------------------------------------
-// stable_sort_by_key
+// k_reorder
 
-void cuda_mparticles::stable_sort_by_key()
+__global__ static void
+k_reorder(int n_prts, uint *d_ids, float4 *xi4, float4 *pxi4,
+	  float4 *alt_xi4, float4 *alt_pxi4)
 {
-  thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i < n_prts) {
+    int j = d_ids[i];
+    alt_xi4[i] = xi4[j];
+    alt_pxi4[i] = pxi4[j];
+  }
+}
+
+// ----------------------------------------------------------------------
+// reorder
+
+void cuda_mparticles::reorder()
+{
+  if (!need_reorder) {
+    return;
+  }
+  
+  dim3 dimGrid((n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  
+  k_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
+    (n_prts, d_id.data().get(), d_xi4.data().get(), d_pxi4.data().get(),
+     d_alt_xi4.data().get(), d_alt_pxi4.data().get());
+  
+  swap_alt();
+
+  need_reorder = false;
 }
 
 // ----------------------------------------------------------------------
@@ -367,42 +403,6 @@ void cuda_mparticles::setup_internals()
 uint cuda_mparticles::get_n_prts()
 {
   return n_prts;
-}
-
-// ----------------------------------------------------------------------
-// k_reorder
-
-__global__ static void
-k_reorder(int n_prts, uint *d_ids, float4 *xi4, float4 *pxi4,
-	  float4 *alt_xi4, float4 *alt_pxi4)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
-  if (i < n_prts) {
-    int j = d_ids[i];
-    alt_xi4[i] = xi4[j];
-    alt_pxi4[i] = pxi4[j];
-  }
-}
-
-// ----------------------------------------------------------------------
-// reorder
-
-void cuda_mparticles::reorder()
-{
-  if (!need_reorder) {
-    return;
-  }
-  
-  dim3 dimGrid((n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-  
-  k_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_prts, d_id.data().get(), d_xi4.data().get(), d_pxi4.data().get(),
-     d_alt_xi4.data().get(), d_alt_pxi4.data().get());
-  
-  swap_alt();
-
-  need_reorder = false;
 }
 
 // ----------------------------------------------------------------------
