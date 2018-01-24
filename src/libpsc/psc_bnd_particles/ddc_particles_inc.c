@@ -573,6 +573,7 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_mprts_prep
 
+#if DDCP_TYPE != DDCP_TYPE_CUDA
 static void
 psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
@@ -591,6 +592,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
 #endif
 }
+#endif
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
@@ -726,6 +728,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_mprts_post
 
+#if DDCP_TYPE != DDCP_TYPE_CUDA
 static void
 psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *_mprts)
@@ -734,6 +737,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, _mprts);
 #endif
 }
+#endif
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_general
@@ -797,6 +801,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
+#if DDCP_TYPE != DDCP_TYPE_CUDA
 static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
 			       struct psc_mparticles *mprts_base)
@@ -809,3 +814,4 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
 
   mprts.put_as(mprts_base);
 }
+#endif
