@@ -129,7 +129,14 @@ void cuda_mparticles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
   // this should make sure at least those within bounds don't screw anything up
   thrust::fill(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 10, 0);
 
-  if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+  if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
+    ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
+		       NopFunctor<K>,
+		       NopFunctor<K>,
+		       4, 4> 
+      <<<n_blocks, B40C_RADIXSORT_THREADS>>>
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,

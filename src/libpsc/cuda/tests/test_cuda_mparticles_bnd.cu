@@ -36,25 +36,31 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   }
 };
 
-TEST_F(CudaMparticlesBndTest, SpineReduce)
+TEST_F(CudaMparticlesBndTest, BndPrep)
 {
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
 
   std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
 
+  // (ab)use kind to track particle more easily in the test
   std::vector<cuda_mparticles_prt> prts = {
-    { .5,  5., 5. },
-    { .5, 35., 5. },
+    { .5,  5., 5., 0., 0., 0., 0 },
+    { .5, 35., 5., 0., 0., 0., 1 },
 
-    { .5,  5., 5. },
-    { .5, 35., 5. },
+    { .5,  5., 5., 0., 0., 0., 2 },
+    { .5, 35., 5., 0., 0., 0., 3 },
   };
 
   uint n_prts_by_patch[cmprts->n_patches];
   n_prts_by_patch[0] = 2;
   n_prts_by_patch[1] = 2;
+
+  // FIXME eventually shouldn't have to reserve additional room for sending here
+  uint n_prts_reserve_by_patch[cmprts->n_patches];
+  n_prts_reserve_by_patch[0] = 2;
+  n_prts_reserve_by_patch[1] = 4;
   
-  cmprts->reserve_all(n_prts_by_patch);
+  cmprts->reserve_all(n_prts_reserve_by_patch);
   cmprts->inject(prts.data(), n_prts_by_patch);
 
   // move every particle one full cell to the right (+y, that is)
@@ -73,7 +79,8 @@ TEST_F(CudaMparticlesBndTest, SpineReduce)
   cmprts->dump();
 #endif
 
-  cmprts->spine_reduce_gold(cmprts.get());
+  // test spine_reduce
+  cmprts->spine_reduce(cmprts.get());
 
 #if 0
   for (int b = 0; b < cmprts->n_blocks; b++) {
@@ -138,4 +145,51 @@ TEST_F(CudaMparticlesBndTest, SpineReduce)
       EXPECT_EQ(cnt, 2) << "where b = " << b;
     }
   }
+
+  // test find_n_send
+  cmprts->find_n_send(cmprts.get());
+
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
+    EXPECT_EQ(cmprts->bpatch[p].n_send, 1);
+  }
+  EXPECT_EQ(cmprts->n_prts_send, 2);
+
+  // test scan_send_buf_total
+  cmprts->scan_send_buf_total_gold(cmprts.get());
+
+#if 1
+  printf("sums: ");
+  for (int n = 0; n < cmprts->n_prts; n++) {
+    int sum = cmprts->d_sums[n];
+    printf(" %3d", sum);
+  }
+  printf("\n");
+#endif
+
+  // where in the send region at the tail the OOB particles should go
+  EXPECT_EQ(cmprts->d_sums[1], 0);
+  EXPECT_EQ(cmprts->d_sums[3], 1);
+
+  // particles 1, 3, which need to be exchanged, should now be at the
+  // end of the regular array
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[cmprts->n_prts  ]).w), 1);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[cmprts->n_prts+1]).w), 3);
+
+  // test copy_from_dev_and_convert
+  cmprts->copy_from_dev_and_convert(cmprts.get());
+
+#if 0
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    printf("from_dev: p %d\n", p);
+    for (auto& prt : cmprts->bpatch[p].buf) {
+      printf("  prt xyz %g %g %g kind %d\n", prt.xi, prt.yi, prt.zi, prt.kind_);
+    }
+  }
+#endif
+
+  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
 }
