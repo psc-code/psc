@@ -2,4 +2,5 @@ test_cuda_accel
 test_cuda_mparticles
 test_cuda_mfields_1
 test_cuda_mparticles_1
+test_cuda_mparticles_bnd
 test_cuda_heating

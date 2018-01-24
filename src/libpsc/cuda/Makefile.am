@@ -52,11 +52,13 @@ libsubdir_la_LIBADD = \
 check_PROGRAMS = \
 	tests/test_cuda_accel \
 	tests/test_cuda_mfields_1 \
-	tests/test_cuda_mparticles_1
+	tests/test_cuda_mparticles_1 \
+	tests/test_cuda_mparticles_bnd
 
 tests/test_cuda_accel.lo: tests/cuda_test.hxx
 tests/test_cuda_mparticles_1.lo: tests/cuda_test.hxx
 tests/test_cuda_mfields_1.lo: tests/cuda_test.hxx
+tests/test_cuda_mparticles_bnd.lo: tests/cuda_test.hxx
 
 TESTS = $(check_PROGRAMS)
 
@@ -96,6 +98,13 @@ tests_test_cuda_mfields_1_LDADD = tests/test_cuda_mfields_1.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
 nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
+
+tests_test_cuda_mparticles_bnd_SOURCES = 
+tests_test_cuda_mparticles_bnd_LDADD = tests/test_cuda_mparticles_bnd.lo \
+  cuda_mparticles.lo cuda_mparticles_base.lo \
+  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
+  $(CUDA_GTEST_OBJS)
+nodist_EXTRA_tests_test_cuda_mparticles_bnd_SOURCES = dummy.cxx
 
 #tests_test_cuda_heating_SOURCES = 
 #tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo \
