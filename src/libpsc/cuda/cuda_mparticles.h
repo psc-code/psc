@@ -48,12 +48,6 @@ struct cuda_mparticles_base
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
-  template<typename F>
-  void set_particles(uint p, F getter);
-
-  template<typename F>
-  void get_particles(uint p, F setter);
-  
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
@@ -154,6 +148,12 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
   const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
 
+  template<typename F>
+  void set_particles(uint p, F getter);
+
+  template<typename F>
+  void get_particles(uint p, F setter);
+  
   psc_particle_cuda_buf_t *bnd_get_buffer(int p);
   void bnd_prep();
   void bnd_post();
@@ -187,13 +187,13 @@ public:
 };
 
 // ======================================================================
-// cuda_mparticles_base implementation
+// cuda_mparticles implementation
 
 // ----------------------------------------------------------------------
 // set_particles
 
 template<typename F>
-void cuda_mparticles_base::set_particles(uint p, F getter)
+void cuda_mparticles::set_particles(uint p, F getter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
@@ -242,7 +242,7 @@ void cuda_mparticles_base::set_particles(uint p, F getter)
 // get_particles
 
 template<typename F>
-void cuda_mparticles_base::get_particles(uint p, F setter)
+void cuda_mparticles::get_particles(uint p, F setter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
@@ -251,7 +251,7 @@ void cuda_mparticles_base::get_particles(uint p, F setter)
   uint off = h_off[p * n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
 
-  static_cast<cuda_mparticles*>(this)->reorder(); // FIXME
+  reorder();
 
   thrust::host_vector<float4> xi4(&d_xi4[off], &d_xi4[off + n_prts]);
   thrust::host_vector<float4> pxi4(&d_pxi4[off], &d_pxi4[off + n_prts]);
