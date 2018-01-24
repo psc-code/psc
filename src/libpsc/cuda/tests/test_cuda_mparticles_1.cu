@@ -78,28 +78,6 @@ void cuda_mparticles_add_particles_test_1(cuda_mparticles* cmprts, uint *n_prts_
   }
 }
 
-// ----------------------------------------------------------------------
-// get_particles_test
-
-struct GetParticlesTest1
-{
-  void operator()(int n, cuda_mparticles_prt& prt) {
-    printf("prt[%d] xi %g %g %g // pxi %g %g %g // kind %d // qni_wni %g\n",
-	   n, prt.xi[0], prt.xi[1], prt.xi[2],
-	   prt.pxi[0], prt.pxi[1], prt.pxi[2],
-	   prt.kind, prt.qni_wni);
-  }
-};
-
-void
-get_particles_test(cuda_mparticles* cmprts)
-{
-  GetParticlesTest1 get_particles;
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    cmprts->get_particles(p, get_particles);
-  }
-}
-
 // ======================================================================
 // CudaMparticlesTest
 
@@ -161,8 +139,9 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
-  
-  auto cmprts = make_cmprts(*grid_);
+
+  // can't use make_cmprts() from vector here, since that'll sort etc
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
   cmprts->reserve_all(n_prts_by_patch);
   cmprts->resize_all(n_prts_by_patch);
   cmprts->set_particles(0, [&](int n) {
@@ -214,8 +193,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
 
 TEST_F(CudaMparticlesTest, SetupInternals)
 {
-  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
-  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+  grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
   std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
 
   uint n_prts_by_patch[cmprts->n_patches];
