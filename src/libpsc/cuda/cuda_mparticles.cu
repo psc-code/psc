@@ -89,10 +89,9 @@ void cuda_mparticles::dump()
     for (int n = d_off[b]; n < d_off[b+1]; n++) {
       float4 xi4 = d_xi4[n], pxi4 = d_pxi4[n];
       uint bidx = d_bidx[n], id = d_id[n];
-      printf("cuda_mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d\n",
+      printf("cuda_mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d %s\n",
 	     n, xi4.x, xi4.y, xi4.z, cuda_float_as_int(xi4.w), pxi4.x, pxi4.y, pxi4.z, pxi4.w,
-	     bidx, id);
-      assert(b == bidx);
+	     bidx, id, b == bidx ? "" : "BIDX MISMATCH!");
     }
     off += off_e - off_b;
   }
