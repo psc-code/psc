@@ -345,10 +345,33 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   
   cmprts->sort(cmprts.get(), n_prts_by_patch);
 
-  // // bnd_post doesn't do the actually final reordering
-  // EXPECT_TRUE(cmprts->need_reorder);
-  // cmprts->reorder();
-  // EXPECT_TRUE(cmprts->check_ordered());
+  EXPECT_EQ(cmprts->n_prts, 4);
+  EXPECT_EQ(cmprts->d_id[0], 4);
+  EXPECT_EQ(cmprts->d_id[1], 0);
+  EXPECT_EQ(cmprts->d_id[2], 5);
+  EXPECT_EQ(cmprts->d_id[3], 2);
+
+  cmprts->update_offsets(cmprts.get());
+  for (int b = 0; b <= cmprts->n_blocks; b++) {
+    if (b < 1) {
+      EXPECT_EQ(cmprts->d_off[b], 0) << "where b = " << b;
+    } else if (b < 2) {
+      EXPECT_EQ(cmprts->d_off[b], 1) << "where b = " << b;
+    } else if (b < 17) {
+      EXPECT_EQ(cmprts->d_off[b], 2) << "where b = " << b;
+    } else if (b < 18) {
+      EXPECT_EQ(cmprts->d_off[b], 3) << "where b = " << b;
+    } else {
+      EXPECT_EQ(cmprts->d_off[b], 4) << "where b = " << b;
+    }
+  }
+
+  cmprts->need_reorder = true;
+
+  // bnd_post doesn't do the actually final reordering, but
+  // let's do it here for a final check
+  cmprts->reorder();
+  EXPECT_TRUE(cmprts->check_ordered());
 
 #if 0
   cmprts->dump();
