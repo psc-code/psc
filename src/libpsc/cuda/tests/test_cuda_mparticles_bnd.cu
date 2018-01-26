@@ -238,3 +238,120 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
 }
 
+// ----------------------------------------------------------------------
+// BndPost
+//
+// tests cuda_mparticles::bnd_post()
+
+TEST_F(CudaMparticlesBndTest, BndPost)
+{
+  // BndPost expects the work done by bnd_prep()
+  cmprts->bnd_prep();
+
+  // particles 0 and 2 remain in their patch,
+  // particles 1 and 3 leave their patch and need special handling
+  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+
+  // Mock what the actual boundary exchange does, ie., move
+  // particles to their new patch and adjust the relative position.
+  // This assumes periodic b.c.
+  particle_cuda_t prt1 = cmprts->bpatch[0].buf[0];
+  particle_cuda_t prt3 = cmprts->bpatch[1].buf[0];
+  prt1.yi -= 40.;
+  prt3.yi -= 40.;
+  cmprts->bpatch[0].buf[0] = prt3;
+  cmprts->bpatch[1].buf[0] = prt1;
+  
+  cmprts->bnd_post();
+
+  // bnd_post doesn't do the actually final reordering
+  EXPECT_TRUE(cmprts->need_reorder);
+  cmprts->reorder();
+  EXPECT_TRUE(cmprts->check_ordered());
+
+#if 0
+  cmprts->dump();
+#endif
+}
+
+// ----------------------------------------------------------------------
+// BndPostDetail
+//
+// tests the pieces that go into cuda_mparticles::bnd_post()
+
+TEST_F(CudaMparticlesBndTest, BndPostDetail)
+{
+  // BndPost expects the work done by bnd_prep()
+  cmprts->bnd_prep();
+
+  // particles 0 and 2 remain in their patch,
+  // particles 1 and 3 leave their patch and need special handling
+  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+
+  // Mock what the actual boundary exchange does, ie., move
+  // particles to their new patch and adjust the relative position.
+  // This assumes periodic b.c.
+  particle_cuda_t prt1 = cmprts->bpatch[0].buf[0];
+  particle_cuda_t prt3 = cmprts->bpatch[1].buf[0];
+  prt1.yi -= 40.;
+  prt3.yi -= 40.;
+  cmprts->bpatch[0].buf[0] = prt3;
+  cmprts->bpatch[1].buf[0] = prt1;
+
+  // === test convert_and_copy_to_dev()
+  cmprts->convert_and_copy_to_dev(cmprts.get());
+
+  // n_recv should be set for each patch, and its total
+  EXPECT_EQ(cmprts->bpatch[0].n_recv, 1);
+  EXPECT_EQ(cmprts->bpatch[1].n_recv, 1);
+  EXPECT_EQ(cmprts->n_prts_recv, 2);
+
+  // the received particle have been added to the previous total
+  EXPECT_EQ(cmprts->n_prts, 6);
+
+  // and the particle have been appended after the old end of the particle list
+  int n_prts_old = cmprts->n_prts - cmprts->n_prts_recv;
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old  ]).w), 3);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old+1]).w), 1);
+
+  // block indices have been calculated
+  EXPECT_EQ(cmprts->d_bidx[n_prts_old  ], 0);  // 0th block in 0th patch
+  EXPECT_EQ(cmprts->d_bidx[n_prts_old+1], 16); // 0th block in 1st patch
+
+  // received particles per block have been counted
+  for (int b = 0; b < cmprts->n_blocks; b++) {
+    if (b == 0 || b == 16) {
+      EXPECT_EQ(cmprts->d_spine_cnts[10*cmprts->n_blocks + b], 1);
+    } else {
+      EXPECT_EQ(cmprts->d_spine_cnts[10*cmprts->n_blocks + b], 0);
+    }
+  }
+
+  // both particles are the 0th (and only) particle added to their respective block
+  EXPECT_EQ(cmprts->d_alt_bidx[n_prts_old  ], 0);
+  EXPECT_EQ(cmprts->d_alt_bidx[n_prts_old+1], 0);
+
+  // === test sort
+  uint n_prts_by_patch[cmprts->n_patches];
+  cmprts->get_size_all(n_prts_by_patch);
+  EXPECT_EQ(n_prts_by_patch[0], 2);
+  EXPECT_EQ(n_prts_by_patch[1], 2);
+  
+  cmprts->sort(cmprts.get(), (int *) n_prts_by_patch); // FIXME cast
+
+  // // bnd_post doesn't do the actually final reordering
+  // EXPECT_TRUE(cmprts->need_reorder);
+  // cmprts->reorder();
+  // EXPECT_TRUE(cmprts->check_ordered());
+
+#if 0
+  cmprts->dump();
+#endif
+}
+

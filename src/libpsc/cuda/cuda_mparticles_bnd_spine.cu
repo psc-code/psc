@@ -260,7 +260,14 @@ void cuda_mparticles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
 
   prof_start(pr_D);
   int *b_mx = cmprts->indexer.b_mx_;
-  if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+  if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
+    ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
+			NopFunctor<K>,
+			NopFunctor<K>,
+			4, 4> 
+      <<<n_blocks, B40C_RADIXSORT_THREADS>>>
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
 			NopFunctor<K>,

@@ -308,8 +308,8 @@ void cuda_mparticles::bnd_post()
   
   prof_start(pr_E);
 #if 0
-  cuda_mparticles_reorder(this);
-  //  check_ordered_total();
+  reorder();
+  assert(check_ordered());
 #else
   need_reorder = true;
 #endif
