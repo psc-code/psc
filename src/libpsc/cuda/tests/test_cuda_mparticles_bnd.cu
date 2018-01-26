@@ -36,7 +36,65 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   }
 };
 
+
+// ----------------------------------------------------------------------
+// BndPrep
+//
+// tests cuda_mparticles::bnd_prep()
+
 TEST_F(CudaMparticlesBndTest, BndPrep)
+{
+  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
+
+  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
+
+  // (ab)use kind to track particle more easily in the test
+  std::vector<cuda_mparticles_prt> prts = {
+    { .5,  5., 5., 0., 0., 0., 0 },
+    { .5, 35., 5., 0., 0., 0., 1 },
+
+    { .5,  5., 5., 0., 0., 0., 2 },
+    { .5, 35., 5., 0., 0., 0., 3 },
+  };
+
+  uint n_prts_by_patch[cmprts->n_patches];
+  n_prts_by_patch[0] = 2;
+  n_prts_by_patch[1] = 2;
+
+  // FIXME eventually shouldn't have to reserve additional room for sending here
+  uint n_prts_reserve_by_patch[cmprts->n_patches];
+  n_prts_reserve_by_patch[0] = 2;
+  n_prts_reserve_by_patch[1] = 4;
+  
+  cmprts->reserve_all(n_prts_reserve_by_patch);
+  cmprts->inject(prts.data(), n_prts_by_patch);
+
+  // move every particle one full cell to the right (+y, that is)
+  // (position doesn't actually matter since we'll only look at bidx)
+  for (int n = 0; n < cmprts->n_prts; n++) {
+    float4 xi4 = cmprts->d_xi4[n];
+    xi4.y += 10.;
+    cmprts->d_xi4[n] = xi4;
+  }
+  cmprts->d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
+  cmprts->d_bidx[1] = CUDA_BND_S_OOB;
+  cmprts->d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
+  cmprts->d_bidx[3] = CUDA_BND_S_OOB;
+
+  cmprts->bnd_prep();
+
+  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+}
+
+// ----------------------------------------------------------------------
+// BndPrepDetail
+//
+// tests the pieces that go into cuda_mparticles::bnd_prep()
+
+TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
 
@@ -213,3 +271,4 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
   EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
   EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
 }
+
