@@ -343,7 +343,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
-  cmprts->sort(cmprts.get(), (int *) n_prts_by_patch); // FIXME cast
+  cmprts->sort(cmprts.get(), n_prts_by_patch);
 
   // // bnd_post doesn't do the actually final reordering
   // EXPECT_TRUE(cmprts->need_reorder);
