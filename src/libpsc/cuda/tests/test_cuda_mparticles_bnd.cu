@@ -21,18 +21,60 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 {
   using Double3 = Vec3<double>;
   
-  std::unique_ptr<Grid_t> grid_;
+  std::unique_ptr<Grid_t> grid;
+  std::unique_ptr<cuda_mparticles> cmprts;
 
   const Int3 bs_ = { 1, 1, 1 };
 
   void SetUp()
   {
-    grid_.reset(new Grid_t());
-    grid_->gdims = { 1, 8, 8 };
-    grid_->ldims = { 1, 4, 4 };
-    grid_->dx = Double3{ 1., 80., 80. } / Double3(grid_->gdims);
-    grid_->patches.emplace_back(Grid_t::Patch({ 0.,  0.,  0.}, { 1., 40., 40. }));
-    grid_->patches.emplace_back(Grid_t::Patch({ 0., 40.,  0.}, { 1., 80., 40. }));
+    grid.reset(new Grid_t());
+    grid->gdims = { 1, 8, 8 };
+    grid->ldims = { 1, 4, 4 };
+    grid->dx = Double3{ 1., 80., 80. } / Double3(grid->gdims);
+    grid->patches.emplace_back(Grid_t::Patch({ 0.,  0.,  0.}, { 1., 40., 40. }));
+    grid->patches.emplace_back(Grid_t::Patch({ 0., 40.,  0.}, { 1., 80., 40. }));
+
+    grid->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
+
+    cmprts.reset(make_cmprts(*grid));
+
+    // (ab)use kind to track particle more easily in the test
+    std::vector<cuda_mparticles_prt> prts = {
+      { .5,  5., 5., 0., 0., 0., 0 },
+      { .5, 35., 5., 0., 0., 0., 1 },
+      
+      { .5,  5., 5., 0., 0., 0., 2 },
+      { .5, 35., 5., 0., 0., 0., 3 },
+    };
+
+    uint n_prts_by_patch[cmprts->n_patches];
+    n_prts_by_patch[0] = 2;
+    n_prts_by_patch[1] = 2;
+    
+    // FIXME eventually shouldn't have to reserve additional room for sending here
+    uint n_prts_reserve_by_patch[cmprts->n_patches];
+    n_prts_reserve_by_patch[0] = 2;
+    n_prts_reserve_by_patch[1] = 4;
+    
+    cmprts->reserve_all(n_prts_reserve_by_patch);
+    cmprts->inject(prts.data(), n_prts_by_patch);
+
+    // move every particle one full cell to the right (+y, that is)
+    // (position doesn't actually matter since we'll only look at bidx)
+    for (int n = 0; n < cmprts->n_prts; n++) {
+      float4 xi4 = cmprts->d_xi4[n];
+      xi4.y += 10.;
+      cmprts->d_xi4[n] = xi4;
+    }
+    cmprts->d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
+    cmprts->d_bidx[1] = CUDA_BND_S_OOB;
+    cmprts->d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
+    cmprts->d_bidx[3] = CUDA_BND_S_OOB;
+    
+#if 0
+    cmprts->dump();
+#endif
   }
 };
 
@@ -44,45 +86,10 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
-  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
-
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
-
-  // (ab)use kind to track particle more easily in the test
-  std::vector<cuda_mparticles_prt> prts = {
-    { .5,  5., 5., 0., 0., 0., 0 },
-    { .5, 35., 5., 0., 0., 0., 1 },
-
-    { .5,  5., 5., 0., 0., 0., 2 },
-    { .5, 35., 5., 0., 0., 0., 3 },
-  };
-
-  uint n_prts_by_patch[cmprts->n_patches];
-  n_prts_by_patch[0] = 2;
-  n_prts_by_patch[1] = 2;
-
-  // FIXME eventually shouldn't have to reserve additional room for sending here
-  uint n_prts_reserve_by_patch[cmprts->n_patches];
-  n_prts_reserve_by_patch[0] = 2;
-  n_prts_reserve_by_patch[1] = 4;
-  
-  cmprts->reserve_all(n_prts_reserve_by_patch);
-  cmprts->inject(prts.data(), n_prts_by_patch);
-
-  // move every particle one full cell to the right (+y, that is)
-  // (position doesn't actually matter since we'll only look at bidx)
-  for (int n = 0; n < cmprts->n_prts; n++) {
-    float4 xi4 = cmprts->d_xi4[n];
-    xi4.y += 10.;
-    cmprts->d_xi4[n] = xi4;
-  }
-  cmprts->d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
-  cmprts->d_bidx[1] = CUDA_BND_S_OOB;
-  cmprts->d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
-  cmprts->d_bidx[3] = CUDA_BND_S_OOB;
-
   cmprts->bnd_prep();
 
+  // particles 0 and 2 remain in their patch,
+  // particles 1 and 3 leave their patch and need special handling
   EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
   EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
   EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
@@ -96,47 +103,6 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
-  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
-
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
-
-  // (ab)use kind to track particle more easily in the test
-  std::vector<cuda_mparticles_prt> prts = {
-    { .5,  5., 5., 0., 0., 0., 0 },
-    { .5, 35., 5., 0., 0., 0., 1 },
-
-    { .5,  5., 5., 0., 0., 0., 2 },
-    { .5, 35., 5., 0., 0., 0., 3 },
-  };
-
-  uint n_prts_by_patch[cmprts->n_patches];
-  n_prts_by_patch[0] = 2;
-  n_prts_by_patch[1] = 2;
-
-  // FIXME eventually shouldn't have to reserve additional room for sending here
-  uint n_prts_reserve_by_patch[cmprts->n_patches];
-  n_prts_reserve_by_patch[0] = 2;
-  n_prts_reserve_by_patch[1] = 4;
-  
-  cmprts->reserve_all(n_prts_reserve_by_patch);
-  cmprts->inject(prts.data(), n_prts_by_patch);
-
-  // move every particle one full cell to the right (+y, that is)
-  // (position doesn't actually matter since we'll only look at bidx)
-  for (int n = 0; n < cmprts->n_prts; n++) {
-    float4 xi4 = cmprts->d_xi4[n];
-    xi4.y += 10.;
-    cmprts->d_xi4[n] = xi4;
-  }
-  cmprts->d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
-  cmprts->d_bidx[1] = CUDA_BND_S_OOB;
-  cmprts->d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
-  cmprts->d_bidx[3] = CUDA_BND_S_OOB;
-
-#if 0
-  cmprts->dump();
-#endif
-
   // test spine_reduce
   cmprts->spine_reduce(cmprts.get());
 
