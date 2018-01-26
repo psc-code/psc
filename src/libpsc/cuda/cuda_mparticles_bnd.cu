@@ -282,18 +282,8 @@ void cuda_mparticles::bnd_post()
   prof_stop(pr_A);
 
   prof_start(pr_D);
-  uint n_prts_by_patch[n_patches];
-  get_size_all(n_prts_by_patch);
-
   sort_pairs_device(this);
-
-  for (int p = 0; p < n_patches; p++) {
-    n_prts_by_patch[p] += bpatch[p].n_recv - bpatch[p].n_send;
-  }
   n_prts -= n_prts_send;
-
-  // FIXME, is this necessary, or doesn't update_offsets() do this, too?
-  resize_all(n_prts_by_patch);
   prof_stop(pr_D);
 
   prof_start(pr_D1);
