@@ -201,6 +201,9 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
 		 (&p->xi)[d], 1. / grid.dx[d]);
 	}
 #endif
+	if (pos[d] == grid.ldims[d]) {
+	  pos[d]--;
+	}
       }
       
       cnis[i] = cell_map_3to1(&map, pos) & ~mask;
