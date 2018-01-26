@@ -193,19 +193,6 @@ void cuda_mparticles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_bnd::sort
-
-void cuda_mparticles_bnd::sort(cuda_mparticles *cmprts, uint *n_prts_by_patch)
-{
-  sort_pairs_device(cmprts);
-
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] += bpatch[p].n_recv - bpatch[p].n_send;
-  }
-  cmprts->n_prts -= n_prts_send;
-}
-
-// ----------------------------------------------------------------------
 // update_offsets
 
 __global__ static void
@@ -297,7 +284,14 @@ void cuda_mparticles::bnd_post()
   prof_start(pr_D);
   uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
-  sort(this, n_prts_by_patch);
+
+  sort_pairs_device(this);
+
+  for (int p = 0; p < n_patches; p++) {
+    n_prts_by_patch[p] += bpatch[p].n_recv - bpatch[p].n_send;
+  }
+  n_prts -= n_prts_send;
+
   // FIXME, is this necessary, or doesn't update_offsets() do this, too?
   resize_all(n_prts_by_patch);
   prof_stop(pr_D);

@@ -112,7 +112,6 @@ struct cuda_mparticles_bnd
   void copy_from_dev_and_convert(cuda_mparticles *cmprts);
   void reorder_send_by_id_gold(cuda_mparticles *cmprts);
   void convert_and_copy_to_dev(cuda_mparticles *cmprts);
-  void sort(cuda_mparticles *cmprts, uint *n_prts_by_patch);
   void update_offsets(cuda_mparticles *cmprts);
   void update_offsets_gold(cuda_mparticles *cmprts);
   void count_received(cuda_mparticles *cmprts);
