@@ -150,15 +150,34 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
   cmprts->find_n_send(cmprts.get());
 
   for (int p = 0; p < cmprts->n_patches; p++) {
-    printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
+    //printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
     EXPECT_EQ(cmprts->bpatch[p].n_send, 1);
   }
   EXPECT_EQ(cmprts->n_prts_send, 2);
 
   // test scan_send_buf_total
-  cmprts->scan_send_buf_total_gold(cmprts.get());
-
 #if 1
+  cmprts->scan_send_buf_total(cmprts.get());
+
+#if 0
+  printf("ids: ");
+  for (int n = cmprts->n_prts - cmprts->n_prts_send; n < cmprts->n_prts; n++) {
+    int id = cmprts->d_id[n];
+    printf(" %3d", id);
+  }
+  printf("\n");
+#endif
+  EXPECT_EQ(cmprts->n_prts, 4);
+  EXPECT_EQ(cmprts->n_prts_send, 2);
+  EXPECT_EQ(cmprts->d_id[2], 1);
+  EXPECT_EQ(cmprts->d_id[3], 3);
+
+#else
+  cmprts->scan_send_buf_total_gold(cmprts.get());
+  // the intermediate scan_send_buf_total_gold result
+  // can be tested here, but the non-gold version works differently
+  // and has different intermediate results
+#if 0
   printf("sums: ");
   for (int n = 0; n < cmprts->n_prts; n++) {
     int sum = cmprts->d_sums[n];
@@ -170,6 +189,7 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
   // where in the send region at the tail the OOB particles should go
   EXPECT_EQ(cmprts->d_sums[1], 0);
   EXPECT_EQ(cmprts->d_sums[3], 1);
+#endif
 
   // particles 1, 3, which need to be exchanged, should now be at the
   // end of the regular array
