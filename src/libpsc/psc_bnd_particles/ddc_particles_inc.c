@@ -578,14 +578,12 @@ struct mparticles_ddcp
   // ----------------------------------------------------------------------
   // psc_bnd_particles_sub_exchange_mprts_prep
 
-  static void exchange_mprts_prep(struct psc_bnd_particles *bnd,
-				  struct psc_mparticles *mprts)
+  static void exchange_mprts_prep(struct psc_bnd_particles *bnd, mparticles_t mprts)
   {
-    mparticles_t mp(mprts);
     ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
-    for (int p = 0; p < mp.n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       typename ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
-      dpatch->m_buf = &mp[p].get_buf();
+      dpatch->m_buf = &mprts[p].get_buf();
       dpatch->m_begin = 0;
     }
   }
@@ -593,8 +591,7 @@ struct mparticles_ddcp
   // ----------------------------------------------------------------------
   // psc_bnd_particles_sub_exchange_mprts_post
 
-  static void exchange_mprts_post(struct psc_bnd_particles *bnd,
-				  struct psc_mparticles *_mprts)
+  static void exchange_mprts_post(struct psc_bnd_particles *bnd, mparticles_t mprts)
   {
   }
 };
@@ -604,12 +601,11 @@ struct mparticles_ddcp
 
 static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
-					      struct psc_mparticles *_mprts, int p)
+					      mparticles_t mprts, int p)
 {
   using real_t = typename mparticles_t::real_t;
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
   struct psc *psc = bnd->psc;
-  mparticles_t mprts(_mprts);
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
@@ -739,7 +735,7 @@ extern double *psc_balance_comp_time_by_patch;
 template<typename MP>
 static void
 psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
-						 struct psc_mparticles *mprts)
+						 mparticles_t mprts)
 {
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
@@ -763,7 +759,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 #if DDCP_TYPE == DDCP_TYPE_COMMON
 #pragma omp parallel for
 #endif
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
     psc_bnd_particles_sub_exchange_particles_prep(bnd, mprts, p);
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
@@ -773,7 +769,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
 
   prof_start(pr_C);
-  ddcp->comm(mprts);
+  ddcp->comm(mprts.mprts());
   prof_stop(pr_C);
   
 
@@ -800,7 +796,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
-  psc_bnd_particles_sub_exchange_particles_general<mparticles_t>(bnd, mprts.mprts());
+  psc_bnd_particles_sub_exchange_particles_general<mparticles_t>(bnd, mprts);
 #endif
 
   mprts.put_as(mprts_base);
