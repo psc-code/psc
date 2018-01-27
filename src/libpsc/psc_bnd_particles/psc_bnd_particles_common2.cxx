@@ -7,23 +7,23 @@
 
 #include "ddc_particles_inc.c"
 
-static void psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
+static void psc_bnd_particles_sub_exchange_mprts_prep_common2(psc_bnd_particles_sub<mparticles_t>* sub,
 							      mparticles_t mprts);
-static void psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
+static void psc_bnd_particles_sub_exchange_mprts_post_common2(psc_bnd_particles_sub<mparticles_t>* sub,
 							      mparticles_t mprts);
 
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(struct psc_bnd_particles *bnd,
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_sub<mparticles_t>* sub,
 							      mparticles_t mprts)
 {
-  psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
+  psc_bnd_particles_sub_exchange_mprts_prep_common2(sub, mprts);
 }
 
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(struct psc_bnd_particles *bnd,
-				  mparticles_t mprts)
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(psc_bnd_particles_sub<mparticles_t>* sub,
+							      mparticles_t mprts)
 {
-  psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, mprts);
+  psc_bnd_particles_sub_exchange_mprts_post_common2(sub, mprts);
 }
   
 // ----------------------------------------------------------------------
@@ -153,11 +153,9 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 // psc_bnd_particles_sub_exchange_mprts_prep_common2
 
 static void
-psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
+psc_bnd_particles_sub_exchange_mprts_prep_common2(psc_bnd_particles_sub<mparticles_t>* sub,
 						  mparticles_t mprts)
 {
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_single_t::patch_t& prts = mprts[p];
     ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
@@ -178,11 +176,9 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
 // psc_bnd_particles_sub_exchange_mprts_post_common2
 
 static void
-psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
+psc_bnd_particles_sub_exchange_mprts_post_common2(psc_bnd_particles_sub<mparticles_t>* sub,
 						  mparticles_t mprts)
 {
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_single_t::patch_t& prts = mprts[p];
     ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];

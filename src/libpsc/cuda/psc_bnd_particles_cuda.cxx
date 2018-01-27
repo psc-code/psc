@@ -17,11 +17,9 @@
 // psc_bnd_particles_cuda_exchange_mprts_prep
   
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(struct psc_bnd_particles *bnd,
-							     mparticles_t mprts)
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_sub<mparticles_t>* sub,
+							      mparticles_t mprts)
 {
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-  
   mprts->bnd_prep();
   
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
@@ -36,11 +34,9 @@ void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(struct psc_bnd_par
 // psc_bnd_particles_cuda_exchange_mprts_post
 
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(struct psc_bnd_particles *bnd,
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(psc_bnd_particles_sub<mparticles_t>* sub,
 							      mparticles_t mprts)
 {
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-  
   mprts->bnd_post();
   
   ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
