@@ -5,30 +5,27 @@
 
 #define DDCP_TYPE DDCP_TYPE_COMMON2
 
-static void psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
-							      struct psc_mparticles *mprts);
-static void psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
-							      struct psc_mparticles *mprts);
-
 #include "ddc_particles_inc.c"
 
+static void psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
+							      mparticles_t mprts);
+static void psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
+							      mparticles_t mprts);
+
 template<>
-struct mparticles_ddcp<mparticles_t>
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(struct psc_bnd_particles *bnd,
+							      mparticles_t mprts)
 {
-  static void exchange_mprts_prep(struct psc_bnd_particles *bnd,
-				  mparticles_t mprts)
-  {
-    psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts.mprts());
-  }
+  psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
+}
 
-  static void exchange_mprts_post(struct psc_bnd_particles *bnd,
+template<>
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(struct psc_bnd_particles *bnd,
 				  mparticles_t mprts)
-  {
-    psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, mprts.mprts());
-  }
+{
+  psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, mprts);
+}
   
-};
-
 // ----------------------------------------------------------------------
 // find_block_indices_count
 
@@ -157,20 +154,17 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 
 static void
 psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
-						  struct psc_mparticles *mprts)
+						  mparticles_t mprts)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
 
-  mparticles_t mp(mprts);
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    mparticles_single_t::patch_t& prts = mp[p];
-    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    mparticles_single_t::patch_t& prts = mprts[p];
+    ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
 
     if (1) {
       //      find_block_indices_count_reorderx(prts);
-      count_and_reorder_to_back(mprts, p);
+      count_and_reorder_to_back(mprts.mprts(), p);
     }
     dpatch->m_buf = &prts.get_buf();
     dpatch->m_begin = dpatch->m_buf->size();
@@ -185,18 +179,17 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
-						  struct psc_mparticles *mprts)
+						  mparticles_t mprts)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    mparticles_single_t::patch_t& prts = mparticles_t(mprts)[p];
-    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    mparticles_single_t::patch_t& prts = mprts[p];
+    ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
 
     int n_prts = dpatch->m_buf->size();
     
-    find_block_indices_count(prts.b_idx, prts.b_cnt, mprts, p, dpatch->m_begin);
+    find_block_indices_count(prts.b_idx, prts.b_cnt, mprts.mprts(), p, dpatch->m_begin);
     exclusive_scan(prts.b_cnt, prts.nr_blocks + 1);
     sort_indices(prts.b_idx, prts.b_cnt, prts.b_ids, n_prts);
 

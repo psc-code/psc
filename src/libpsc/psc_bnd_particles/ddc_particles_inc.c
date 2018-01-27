@@ -550,6 +550,9 @@ struct psc_bnd_particles_sub
   void setup(struct mrc_domain *domain);
   void unsetup();
 
+  static void exchange_mprts_prep(struct psc_bnd_particles *bnd, mparticles_t mprts);
+  static void exchange_mprts_post(struct psc_bnd_particles *bnd, mparticles_t mprts);
+    
   ddc_particles<mparticles_t> *ddcp;
 };
 
@@ -593,32 +596,30 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
   //psc_bnd_particles_open_unsetup(bnd);
 }
 
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_exchange_mprts_prep
+
 template<typename MP>
-struct mparticles_ddcp
+void psc_bnd_particles_sub<MP>::exchange_mprts_prep(struct psc_bnd_particles *bnd,
+						    mparticles_t mprts)
 {
-  using mparticles_t = MP;
-  
-  // ----------------------------------------------------------------------
-  // psc_bnd_particles_sub_exchange_mprts_prep
-
-  static void exchange_mprts_prep(struct psc_bnd_particles *bnd, mparticles_t mprts)
-  {
-    psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
     
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      typename ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
-      dpatch->m_buf = &mprts[p].get_buf();
-      dpatch->m_begin = 0;
-    }
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    typename ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
+    dpatch->m_buf = &mprts[p].get_buf();
+    dpatch->m_begin = 0;
   }
+}
 
-  // ----------------------------------------------------------------------
-  // psc_bnd_particles_sub_exchange_mprts_post
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_exchange_mprts_post
 
-  static void exchange_mprts_post(struct psc_bnd_particles *bnd, mparticles_t mprts)
-  {
-  }
-};
+template<typename MP>
+void psc_bnd_particles_sub<MP>::exchange_mprts_post(struct psc_bnd_particles *bnd,
+						    mparticles_t mprts)
+{
+}
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
@@ -777,7 +778,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  mparticles_ddcp<MP>::exchange_mprts_prep(bnd, mprts);
+  psc_bnd_particles_sub<MP>::exchange_mprts_prep(bnd, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -800,7 +801,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_D);
-  mparticles_ddcp<MP>::exchange_mprts_post(bnd, mprts);
+  psc_bnd_particles_sub<MP>::exchange_mprts_post(bnd, mprts);
   prof_stop(pr_D);
   prof_stop(pr_time_step_no_comm);
 
