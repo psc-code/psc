@@ -21,7 +21,8 @@ struct bnd_particles_policy_cuda
   using mparticles_t = MP;
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
-  
+
+protected:
   // ----------------------------------------------------------------------
   // exchange_mprts_prep
   

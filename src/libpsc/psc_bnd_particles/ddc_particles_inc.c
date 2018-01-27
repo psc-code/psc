@@ -34,7 +34,8 @@ struct bnd_particles_policy_default
   using mparticles_t = MP;
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
-  
+
+protected:
   // ----------------------------------------------------------------------
   // exchange_mprts_prep
   
@@ -65,12 +66,14 @@ struct psc_bnd_particles_sub : P
   using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
 
+  // ----------------------------------------------------------------------
   // interface to psc_bnd_particles_ops
   static void setup(struct psc_bnd_particles *bnd);
   static void unsetup(struct psc_bnd_particles *bnd);
   static void exchange_particles(struct psc_bnd_particles *bnd,
 				 struct psc_mparticles *mprts_base);
 
+protected:
   // ----------------------------------------------------------------------
   // ctor
 
@@ -103,19 +106,20 @@ struct psc_bnd_particles_sub : P
     ddcp = nullptr;
   }
 
-  void exchange_particles_prep(mparticles_t mprts, int p);
+  void process_patch(mparticles_t mprts, int p);
   void exchange_particles(mparticles_t mprts);
-  
+
+private:
   ddc_particles<mparticles_t> *ddcp;
 };
 
 #define psc_bnd_particles_sub(bnd, MP, P) mrc_to_subobj(bnd, (psc_bnd_particles_sub<MP, P>))
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub::exchange_particles_prep
+// psc_bnd_particles_sub::process_patch
 
 template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::exchange_particles_prep(mparticles_t mprts, int p)
+void psc_bnd_particles_sub<MP, P>::process_patch(mparticles_t mprts, int p)
 {
   struct psc *psc = ppsc;
 
@@ -269,7 +273,7 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 #endif
   for (int p = 0; p < mprts.n_patches(); p++) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-    exchange_particles_prep(mprts, p);
+    process_patch(mprts, p);
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
   }
   prof_stop(pr_B);
