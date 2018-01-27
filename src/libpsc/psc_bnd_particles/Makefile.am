@@ -9,8 +9,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_particles_auto.cxx \
 	psc_bnd_particles_impl.cxx \
 	psc_bnd_particles_double_omp.cxx \
-	psc_bnd_particles_single2.cxx \
-	psc_bnd_particles_fortran.cxx
+	psc_bnd_particles_single2.cxx
 
 EXTRA_libsubdir_la_SOURCES = \
 	psc_bnd_particles_common.cxx \
