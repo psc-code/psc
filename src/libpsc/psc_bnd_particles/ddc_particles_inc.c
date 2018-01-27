@@ -546,7 +546,13 @@ template<class MP>
 struct psc_bnd_particles_sub
 {
   using mparticles_t = MP;
-  
+
+  // interface to psc_bnd_particles_ops
+  static void setup(struct psc_bnd_particles *bnd);
+  static void unsetup(struct psc_bnd_particles *bnd);
+  static void exchange_particles(struct psc_bnd_particles *bnd,
+				 struct psc_mparticles *mprts_base);
+
   void setup(struct mrc_domain *domain);
   void unsetup();
 
@@ -787,10 +793,10 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_setup
+// psc_bnd_particles_sub::setup
 
-static void
-psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::setup(struct psc_bnd_particles *bnd)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
 
@@ -801,8 +807,8 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_unsetup
 
-static void
-psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::unsetup(struct psc_bnd_particles *bnd)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
 
@@ -813,9 +819,9 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
-static void
-psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
-			       struct psc_mparticles *mprts_base)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::exchange_particles(struct psc_bnd_particles *bnd,
+						   struct psc_mparticles *mprts_base)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();

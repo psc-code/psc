@@ -10,8 +10,8 @@
 struct psc_bnd_particles_ops_single2 : psc_bnd_particles_ops {
   psc_bnd_particles_ops_single2() {
     name                    = "single2";
-    setup                   = psc_bnd_particles_sub_setup;
-    unsetup                 = psc_bnd_particles_sub_unsetup;
-    exchange_particles      = psc_bnd_particles_sub_exchange_particles;
+    setup                   = psc_bnd_particles_sub<mparticles_t>::setup;
+    unsetup                 = psc_bnd_particles_sub<mparticles_t>::unsetup;
+    exchange_particles      = psc_bnd_particles_sub<mparticles_t>::exchange_particles;
   }
 } psc_bnd_particles_single2_ops;
