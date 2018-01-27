@@ -29,10 +29,8 @@ at_hi_boundary(int p, int d)
 // ======================================================================
 // ddc_particles
 
-struct ddc_particles_base {};
-
 template<typename MP>
-struct ddc_particles : ddc_particles_base
+struct ddc_particles
 {
   using mparticles_t = MP;
   using particle_buf_t = typename mparticles_t::particle_buf_t;
@@ -547,7 +545,7 @@ inline void ddc_particles<MP>::comm()
 template<class MP>
 struct psc_bnd_particles_sub
 {
-  struct ddc_particles_base *ddcp;
+  ddc_particles<MP> *ddcp;
 };
 
 #define psc_bnd_particles_sub(bnd) mrc_to_subobj(bnd, psc_bnd_particles_sub<mparticles_t>)
@@ -594,9 +592,8 @@ struct mparticles_ddcp
   {
     psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
     
-    ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
     for (int p = 0; p < mprts.n_patches(); p++) {
-      typename ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
+      typename ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
       dpatch->m_buf = &mprts[p].get_buf();
       dpatch->m_begin = 0;
     }
@@ -620,7 +617,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   using real_t = typename mparticles_t::real_t;
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
 
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
   struct psc *psc = bnd->psc;
 
   // New-style boundary requirements.
@@ -634,7 +630,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     xm[d] = gpatch.xe[d] - gpatch.xb[d];
   }
   
-  ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
+  ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     dpatch->nei[dir1].send_buf.resize(0);
   }
@@ -766,8 +762,6 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
     pr_D = prof_register("xchg_post", 1., 0, 0);
   }
   
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
-
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
   mparticles_ddcp<MP>::exchange_mprts_prep(bnd, mprts);
@@ -787,7 +781,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
 
   prof_start(pr_C);
-  ddcp->comm();
+  sub->ddcp->comm();
   prof_stop(pr_C);
   
 
