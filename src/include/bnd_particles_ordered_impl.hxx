@@ -6,6 +6,7 @@ template<typename MP>
 struct bnd_particles_policy_ordered
 {
   using mparticles_t = MP;
+  using particle_t = typename mparticles_t::particle_t;
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
   
