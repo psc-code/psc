@@ -22,9 +22,11 @@ struct mparticles_ddcp<mparticles_cuda_t>
   static void exchange_mprts_prep(struct psc_bnd_particles *bnd,
 				  mparticles_t mprts)
   {
+    psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+    
     mprts->bnd_prep();
     
-    ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
+    ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
     for (int p = 0; p < ddcp->nr_patches; p++) {
       ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
       dpatch->m_buf = mprts->bnd_get_buffer(p);
@@ -38,9 +40,11 @@ struct mparticles_ddcp<mparticles_cuda_t>
   static void exchange_mprts_post(struct psc_bnd_particles *bnd,
 				  mparticles_t mprts)
   {
+    psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+
     mprts->bnd_post();
 
-    ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
+    ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
     for (int p = 0; p < ddcp->nr_patches; p++) {
       ddcp->patches[p].m_buf = NULL;
     }
@@ -130,6 +134,7 @@ struct mparticles_ddcp<mparticles_cuda_t>
 struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
   psc_bnd_particles_ops_cuda() {
     name                    = "cuda";
+    size                    = sizeof(psc_bnd_particles_sub<mparticles_cuda_t>);
     setup                   = psc_bnd_particles_sub_setup;
     unsetup                 = psc_bnd_particles_sub_unsetup;
     exchange_particles      = mparticles_ddcp<mparticles_cuda_t>::exchange_particles;

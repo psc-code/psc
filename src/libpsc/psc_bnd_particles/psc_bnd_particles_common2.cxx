@@ -159,8 +159,10 @@ static void
 psc_bnd_particles_sub_exchange_mprts_prep_common2(struct psc_bnd_particles *bnd,
 						  struct psc_mparticles *mprts)
 {
+  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+
   mparticles_t mp(mprts);
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     mparticles_single_t::patch_t& prts = mp[p];
@@ -185,7 +187,8 @@ static void
 psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_particles *bnd,
 						  struct psc_mparticles *mprts)
 {
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
+  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     mparticles_single_t::patch_t& prts = mparticles_t(mprts)[p];

@@ -56,10 +56,6 @@ psc_bnd_particles_set_psc(struct psc_bnd_particles *bnd, struct psc *psc)
 void
 psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd)
 {
-  if (!bnd->ddcp) {
-    return;
-  }
-
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
 
   ops->unsetup(bnd);
