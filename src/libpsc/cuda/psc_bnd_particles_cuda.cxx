@@ -15,31 +15,37 @@ using mparticles_t = mparticles_cuda_t;
 // ======================================================================
 // psc_bnd_particles: subclass "cuda"
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_cuda_exchange_mprts_prep
-  
-template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(mparticles_t mprts)
+template<typename MP>
+struct bnd_particles_policy_cuda
 {
-  mprts->bnd_prep();
+  using mparticles_t = MP;
+  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_patch = typename ddcp_t::patch;
   
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = mprts->bnd_get_buffer(p);
-    dpatch->m_begin = 0;
+  // ----------------------------------------------------------------------
+  // exchange_mprts_prep
+  
+  void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
+  {
+    mprts->bnd_prep();
+    
+    for (int p = 0; p < ddcp->nr_patches; p++) {
+      ddcp_patch *dpatch = &ddcp->patches[p];
+      dpatch->m_buf = mprts->bnd_get_buffer(p);
+      dpatch->m_begin = 0;
+    }
   }
-}
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_cuda_exchange_mprts_post
-
-template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(mparticles_t mprts)
-{
-  mprts->bnd_post();
+  // ----------------------------------------------------------------------
+  // exchange_mprts_post
   
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp->patches[p].m_buf = NULL;
+  void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
+  {
+    mprts->bnd_post();
+    
+    for (int p = 0; p < ddcp->nr_patches; p++) {
+      ddcp->patches[p].m_buf = NULL;
+    }
   }
 };
 
@@ -47,12 +53,14 @@ void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(mparticles_t mprts
 // psc_bnd_particles: subclass "cuda"
 
 struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
+  using sub_t = psc_bnd_particles_sub<mparticles_t,
+				      bnd_particles_policy_cuda<mparticles_t>>;
   psc_bnd_particles_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(psc_bnd_particles_sub<mparticles_t>);
-    setup                   = psc_bnd_particles_sub<mparticles_t>::setup;
-    unsetup                 = psc_bnd_particles_sub<mparticles_t>::unsetup;
-    exchange_particles      = psc_bnd_particles_sub<mparticles_t>::exchange_particles;
+    size                    = sizeof(sub_t);
+    setup                   = sub_t::setup;
+    unsetup                 = sub_t::unsetup;
+    exchange_particles      = sub_t::exchange_particles;
   }
 } psc_bnd_particles_cuda_ops;
 

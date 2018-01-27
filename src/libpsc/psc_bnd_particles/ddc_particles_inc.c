@@ -31,6 +31,27 @@ at_hi_boundary(int p, int d)
 template<typename MP>
 struct bnd_particles_policy_default
 {
+  using mparticles_t = MP;
+  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_patch = typename ddcp_t::patch;
+  
+  // ----------------------------------------------------------------------
+  // exchange_mprts_prep
+  
+  void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      ddcp_patch *dpatch = &ddcp->patches[p];
+      dpatch->m_buf = &mprts[p].get_buf();
+      dpatch->m_begin = 0;
+    }
+  }
+  
+  // ----------------------------------------------------------------------
+  // exchange_mprts_post
+  
+  void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
+  {}
 };
 
 // ======================================================================
@@ -67,37 +88,13 @@ struct psc_bnd_particles_sub : P
     ddcp = nullptr;
   }
 
-  void exchange_mprts_prep(mparticles_t mprts);
-  void exchange_mprts_post(mparticles_t mprts);
-
   void exchange_particles_prep(mparticles_t mprts, int p);
   void exchange_particles(mparticles_t mprts);
   
   ddc_particles<mparticles_t> *ddcp;
 };
 
-#define psc_bnd_particles_sub(bnd) mrc_to_subobj(bnd, psc_bnd_particles_sub<mparticles_t>)
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::exchange_mprts_prep
-
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::exchange_mprts_prep(mparticles_t mprts)
-{
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    typename ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = &mprts[p].get_buf();
-    dpatch->m_begin = 0;
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::exchange_mprts_post
-
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::exchange_mprts_post(mparticles_t mprts)
-{
-}
+#define psc_bnd_particles_sub(bnd, MP, P) mrc_to_subobj(bnd, (psc_bnd_particles_sub<MP, P>))
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::exchange_particles_prep
@@ -248,7 +245,7 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  exchange_mprts_prep(mprts);
+  this->exchange_mprts_prep(ddcp, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -271,7 +268,7 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_D);
-  exchange_mprts_post(mprts);
+  this->exchange_mprts_post(ddcp, mprts);
   prof_stop(pr_D);
   prof_stop(pr_time_step_no_comm);
 
@@ -287,7 +284,7 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 template<typename MP, typename P>
 void psc_bnd_particles_sub<MP, P>::setup(struct psc_bnd_particles *bnd)
 {
-  psc_bnd_particles_sub<MP, P>* sub = psc_bnd_particles_sub(bnd);
+  psc_bnd_particles_sub<MP, P>* sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
 
   sub->setup(bnd->psc->mrc_domain);
   //psc_bnd_particles_open_setup(bnd);
@@ -299,7 +296,7 @@ void psc_bnd_particles_sub<MP, P>::setup(struct psc_bnd_particles *bnd)
 template<typename MP, typename P>
 void psc_bnd_particles_sub<MP, P>::unsetup(struct psc_bnd_particles *bnd)
 {
-  psc_bnd_particles_sub<MP, P>* sub = psc_bnd_particles_sub(bnd);
+  psc_bnd_particles_sub<MP, P>* sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
 
   sub->unsetup();
   //psc_bnd_particles_open_unsetup(bnd);
@@ -312,7 +309,7 @@ template<typename MP, typename P>
 void psc_bnd_particles_sub<MP, P>::exchange_particles(struct psc_bnd_particles *bnd,
 						      struct psc_mparticles *mprts_base)
 {
-  psc_bnd_particles_sub<MP, P>* sub = psc_bnd_particles_sub(bnd);
+  psc_bnd_particles_sub<MP, P>* sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
   mparticles_t mprts = mprts_base->get_as<MP>();
   
   sub->exchange_particles(mprts);
