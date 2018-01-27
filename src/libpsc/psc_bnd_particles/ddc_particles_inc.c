@@ -554,6 +554,7 @@ struct psc_bnd_particles_sub
   void exchange_mprts_post(mparticles_t mprts);
 
   void exchange_particles_prep(mparticles_t mprts, int p);
+  void exchange_particles(mparticles_t mprts);
   
   ddc_particles<mparticles_t> *ddcp;
 };
@@ -749,18 +750,14 @@ void psc_bnd_particles_sub<MP>::exchange_particles_prep(mparticles_t mprts, int 
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles_general
+// psc_bnd_particles_sub_exchange_particles
 
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 template<typename MP>
-static void
-psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
-						 mparticles_t mprts)
+void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 {
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
@@ -774,7 +771,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  sub->exchange_mprts_prep(mprts);
+  exchange_mprts_prep(mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -783,7 +780,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 #endif
   for (int p = 0; p < mprts.n_patches(); p++) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-    sub->exchange_particles_prep(mprts, p);
+    exchange_particles_prep(mprts, p);
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
   }
   prof_stop(pr_B);
@@ -791,13 +788,13 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
 
   prof_start(pr_C);
-  sub->ddcp->comm();
+  ddcp->comm();
   prof_stop(pr_C);
   
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_D);
-  sub->exchange_mprts_post(mprts);
+  exchange_mprts_post(mprts);
   prof_stop(pr_D);
   prof_stop(pr_time_step_no_comm);
 
@@ -814,9 +811,10 @@ static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
 			       struct psc_mparticles *mprts_base)
 {
+  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
-  psc_bnd_particles_sub_exchange_particles_general<mparticles_t>(bnd, mprts);
+  sub->exchange_particles(mprts);
 
   mprts.put_as(mprts_base);
 }
