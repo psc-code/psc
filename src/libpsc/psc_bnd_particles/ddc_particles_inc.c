@@ -562,7 +562,7 @@ struct psc_bnd_particles_sub
 #define psc_bnd_particles_sub(bnd) mrc_to_subobj(bnd, psc_bnd_particles_sub<mparticles_t>)
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_setup
+// psc_bnd_particles_sub::setup
 
 template<class MP>
 void psc_bnd_particles_sub<MP>::setup(struct mrc_domain *domain)
@@ -571,17 +571,8 @@ void psc_bnd_particles_sub<MP>::setup(struct mrc_domain *domain)
 
 }
 
-static void
-psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
-{
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-
-  sub->setup(bnd->psc->mrc_domain);
-  //psc_bnd_particles_open_setup(bnd);
-}
-
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_unsetup
+// psc_bnd_particles_sub::unsetup
 
 template<class MP>
 void psc_bnd_particles_sub<MP>::unsetup()
@@ -590,17 +581,8 @@ void psc_bnd_particles_sub<MP>::unsetup()
   
 }
 
-static void
-psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
-{
-  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
-
-  sub->unsetup();
-  //psc_bnd_particles_open_unsetup(bnd);
-}
-
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_mprts_prep
+// psc_bnd_particles_sub::exchange_mprts_prep
 
 template<typename MP>
 void psc_bnd_particles_sub<MP>::exchange_mprts_prep(mparticles_t mprts)
@@ -613,7 +595,7 @@ void psc_bnd_particles_sub<MP>::exchange_mprts_prep(mparticles_t mprts)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_mprts_post
+// psc_bnd_particles_sub::exchange_mprts_post
 
 template<typename MP>
 void psc_bnd_particles_sub<MP>::exchange_mprts_post(mparticles_t mprts)
@@ -621,7 +603,7 @@ void psc_bnd_particles_sub<MP>::exchange_mprts_post(mparticles_t mprts)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles_prep
+// psc_bnd_particles_sub::exchange_particles_prep
 
 template<typename MP>
 void psc_bnd_particles_sub<MP>::exchange_particles_prep(mparticles_t mprts, int p)
@@ -750,7 +732,7 @@ void psc_bnd_particles_sub<MP>::exchange_particles_prep(mparticles_t mprts, int 
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles
+// psc_bnd_particles_sub::exchange_particles
 
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
@@ -803,6 +785,30 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
   //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
 }
 
+
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_setup
+
+static void
+psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
+{
+  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+
+  sub->setup(bnd->psc->mrc_domain);
+  //psc_bnd_particles_open_setup(bnd);
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_unsetup
+
+static void
+psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
+{
+  psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
+
+  sub->unsetup();
+  //psc_bnd_particles_open_unsetup(bnd);
+}
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
