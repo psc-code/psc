@@ -5,8 +5,6 @@
 
 //#include "psc_bnd_particles_open.cxx"
 
-#define DDCP_TYPE DDCP_TYPE_COMMON
-
 #include "ddc_particles_inc.c"
 
 // ======================================================================

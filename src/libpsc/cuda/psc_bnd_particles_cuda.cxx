@@ -6,8 +6,6 @@
 
 #include <mrc_profile.h>
 
-#define DDCP_TYPE DDCP_TYPE_CUDA
-
 #include "../psc_bnd_particles/ddc_particles_inc.c"
 
 using mparticles_t = mparticles_cuda_t;

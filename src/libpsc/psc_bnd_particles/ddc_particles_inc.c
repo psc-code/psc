@@ -1,9 +1,5 @@
 
 #include <mrc_profile.h>
-#define DDCP_TYPE_COMMON     1
-#define DDCP_TYPE_COMMON2    2
-#define DDCP_TYPE_COMMON_OMP 3
-#define DDCP_TYPE_CUDA       4
 
 #include <cstring>
 
@@ -269,9 +265,7 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
   prof_stop(pr_A);
 
   prof_start(pr_B);
-#if DDCP_TYPE == DDCP_TYPE_COMMON
 #pragma omp parallel for
-#endif
   for (int p = 0; p < mprts.n_patches(); p++) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
     process_patch(mprts, p);
