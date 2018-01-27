@@ -72,6 +72,21 @@ struct psc_bnd_particles_sub : P
 				 struct psc_mparticles *mprts_base);
 
   // ----------------------------------------------------------------------
+  // ctor
+
+  psc_bnd_particles_sub()
+    : ddcp(nullptr)
+  {}
+
+  // ----------------------------------------------------------------------
+  // dtor -- FIXME: never called, so ddcp is leaked
+
+  ~psc_bnd_particles_sub()
+  {
+    delete ddcp;
+  }
+
+  // ----------------------------------------------------------------------
   // setup
   
   void setup(struct mrc_domain *domain)

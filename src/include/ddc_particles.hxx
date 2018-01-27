@@ -421,7 +421,7 @@ inline void ddc_particles<MP>::comm()
 
   // post sends
   particle_buf_t send_buf;
-  send_buf.reserve(n_send);
+  send_buf.resize(n_send);
   iterator_t it = send_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
     if (cinfo[r].n_send == 0)
@@ -442,7 +442,7 @@ inline void ddc_particles<MP>::comm()
 
   // post receives
   particle_buf_t recv_buf;
-  recv_buf.reserve(n_recv);
+  recv_buf.resize(n_recv);
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
     if (cinfo[r].n_recv == 0)

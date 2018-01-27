@@ -7,17 +7,6 @@
 #include <mrc_domain_private.h> // FIXME
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_destroy
-
-static void
-_psc_bnd_particles_destroy(struct psc_bnd_particles *bnd)
-{
-  struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
-  assert(ops->unsetup);
-  ops->unsetup(bnd);
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_particles_write
 
 static void
@@ -151,7 +140,6 @@ struct mrc_class_psc_bnd_particles_ : mrc_class_psc_bnd_particles {
     size             = sizeof(struct psc_bnd_particles);
     param_descr      = psc_bnd_particles_descr;
     init             = psc_bnd_particles_init;
-    destroy          = _psc_bnd_particles_destroy;
     write            = _psc_bnd_particles_write;
     read             = _psc_bnd_particles_read;
   }
