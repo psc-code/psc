@@ -6,7 +6,7 @@
 
 //#include "psc_bnd_particles_open.cxx"
 
-#include "ddc_particles_inc.c"
+#include "bnd_particles_impl.hxx"
 #include "bnd_particles_ordered_impl.hxx"
 
 // ======================================================================

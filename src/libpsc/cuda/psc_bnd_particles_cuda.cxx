@@ -6,7 +6,7 @@
 
 #include <mrc_profile.h>
 
-#include "../psc_bnd_particles/ddc_particles_inc.c"
+#include "bnd_particles_impl.hxx"
 
 using mparticles_t = mparticles_cuda_t;
 
