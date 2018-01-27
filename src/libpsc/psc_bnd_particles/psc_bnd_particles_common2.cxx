@@ -7,25 +7,6 @@
 
 #include "ddc_particles_inc.c"
 
-static void psc_bnd_particles_sub_exchange_mprts_prep_common2(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts);
-static void psc_bnd_particles_sub_exchange_mprts_post_common2(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts);
-
-template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts)
-{
-  psc_bnd_particles_sub_exchange_mprts_prep_common2(sub, mprts);
-}
-
-template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts)
-{
-  psc_bnd_particles_sub_exchange_mprts_post_common2(sub, mprts);
-}
-  
 // ----------------------------------------------------------------------
 // find_block_indices_count
 
@@ -150,11 +131,11 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_mprts_prep_common2
+// exchange_mprts_prep
 
-static void
-psc_bnd_particles_sub_exchange_mprts_prep_common2(psc_bnd_particles_sub<mparticles_t>* sub,
-						  mparticles_t mprts)
+template<>
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_sub<mparticles_t>* sub,
+							      mparticles_t mprts)
 {
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_single_t::patch_t& prts = mprts[p];
@@ -173,11 +154,11 @@ psc_bnd_particles_sub_exchange_mprts_prep_common2(psc_bnd_particles_sub<mparticl
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_mprts_post_common2
+// exchange_mprts_post
 
-static void
-psc_bnd_particles_sub_exchange_mprts_post_common2(psc_bnd_particles_sub<mparticles_t>* sub,
-						  mparticles_t mprts)
+template<>
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(psc_bnd_particles_sub<mparticles_t>* sub,
+							      mparticles_t mprts)
 {
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_single_t::patch_t& prts = mprts[p];
@@ -190,7 +171,7 @@ psc_bnd_particles_sub_exchange_mprts_post_common2(psc_bnd_particles_sub<mparticl
     sort_indices(prts.b_idx, prts.b_cnt, prts.b_ids, n_prts);
 
     // FIXME, why?
-    mparticles_t(mprts)[p].resize(prts.b_cnt[prts.nr_blocks - 1]);
+    mprts[p].resize(prts.b_cnt[prts.nr_blocks - 1]);
     prts.need_reorder = true; // FIXME, need to honor before get()/put()
   }
 }
