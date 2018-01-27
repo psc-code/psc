@@ -121,7 +121,7 @@ struct mparticles_ddcp<mparticles_cuda_t>
 	ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
       exchange_particles_serial_periodic(bnd, mprts.mprts());
     } else {
-      psc_bnd_particles_sub_exchange_particles_general(bnd, mprts.mprts());
+      psc_bnd_particles_sub_exchange_particles_general<mparticles_cuda_t>(bnd, mprts.mprts());
     }
 
     mprts.put_as(mprts_base);
@@ -137,8 +137,6 @@ struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
     setup                   = psc_bnd_particles_sub_setup;
     unsetup                 = psc_bnd_particles_sub_unsetup;
     exchange_particles      = mparticles_ddcp<mparticles_cuda_t>::exchange_particles;
-    exchange_mprts_prep     = mparticles_ddcp<mparticles_cuda_t>::exchange_mprts_prep;
-    exchange_mprts_post     = mparticles_ddcp<mparticles_cuda_t>::exchange_mprts_post;
   }
 } psc_bnd_particles_cuda_ops;
 

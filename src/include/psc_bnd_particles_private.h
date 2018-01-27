@@ -24,8 +24,6 @@ struct psc_bnd_particles_ops {
 
   void (*unsetup)(struct psc_bnd_particles *bnd);
   void (*exchange_particles)(struct psc_bnd_particles *bnd, struct psc_mparticles *particles);
-  void (*exchange_mprts_prep)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
-  void (*exchange_mprts_post)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
   void (*open_calc_moments)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
 };
 

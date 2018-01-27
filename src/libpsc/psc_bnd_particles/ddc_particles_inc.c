@@ -31,7 +31,7 @@ at_hi_boundary(int p, int d)
 
 struct ddc_particles_base {};
 
-template<class MP>
+template<typename MP>
 struct ddc_particles : ddc_particles_base
 {
   using mparticles_t = MP;
@@ -570,7 +570,7 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 #endif
 }
 
-template<class MP>
+template<typename MP>
 struct mparticles_ddcp {
   // ----------------------------------------------------------------------
   // psc_bnd_particles_sub_exchange_mprts_prep
@@ -746,11 +746,11 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
+template<typename MP>
 static void
 psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 						 struct psc_mparticles *mprts)
 {
-  struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
@@ -766,7 +766,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  ops->exchange_mprts_prep(bnd, mprts);
+  mparticles_ddcp<MP>::exchange_mprts_prep(bnd, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -789,7 +789,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_D);
-  ops->exchange_mprts_post(bnd, mprts);
+  mparticles_ddcp<MP>::exchange_mprts_post(bnd, mprts);
   prof_stop(pr_D);
   prof_stop(pr_time_step_no_comm);
 
@@ -810,7 +810,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
-  psc_bnd_particles_sub_exchange_particles_general(bnd, mprts.mprts());
+  psc_bnd_particles_sub_exchange_particles_general<mparticles_t>(bnd, mprts.mprts());
 #endif
 
   mprts.put_as(mprts_base);
