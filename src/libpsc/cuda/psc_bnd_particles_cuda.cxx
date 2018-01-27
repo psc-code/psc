@@ -51,56 +51,6 @@ struct mparticles_ddcp<mparticles_cuda_t>
   }
 
   // ----------------------------------------------------------------------
-  // psc_bnd_particles_sub_exchange_particles_serial_periodic
-  //
-  // specialized version if there's only one single patch,
-  // with all periodic b.c.
-  //
-  // TODO: a lot of consolidation with the generic case should
-  // be possible. In particular, optimizations carry over, like
-  // calculating new offsets as part of the spine, not calculating
-  // new block indices, not calculates old ids.
-  // The most significant stumbling block to make them pretty much the same
-  // is that this case here needs to handle the odd periodic spine.
-  //
-  // or maybe (probably) this special case should just be killed, since we don't
-  // care about the single GPU case that much...
-
-  static void exchange_particles_serial_periodic(struct psc_bnd_particles *psc_bnd_particles,
-						 struct psc_mparticles *mprts)
-  {
-    assert(0);
-#if 0
-    static int pr_F, pr_G, pr_H;
-    if (!pr_F) {
-      pr_F = prof_register("xchg_bidx_ids", 1., 0, 0);
-      pr_G = prof_register("xchg_sort_pairs", 1., 0, 0);
-      pr_H = prof_register("xchg_reorder_off", 1., 0, 0);
-    }
-
-    cuda_exchange_particles(0, psc_mparticles_get_patch(particles, 0));
-
-    // sort
-    for (int p = 0; p < particles->nr_patches; p++) {
-      prof_start(pr_F);
-      cuda_find_block_indices(prts, cuda->h_dev->bidx);
-      prof_stop(pr_F);
-
-      prof_start(pr_G);
-      sort_pairs_device_2(cuda->sort_ctx, cuda->h_dev->bidx,
-			  cuda->h_dev->alt_ids,
-			  mprts_cuda->n_prts_by_patch[p],
-			  cuda->h_dev->offsets);
-      prof_stop(pr_G);
-
-      prof_start(pr_H);
-      cuda_reorder(prts, cuda->h_dev->alt_ids);
-      prof_stop(pr_H);
-    }
-#endif
-  }
-
-  // ----------------------------------------------------------------------
   // psc_bnd_particles_cuda_exchange_particles
 
   static void exchange_particles(struct psc_bnd_particles *bnd,
@@ -112,17 +62,7 @@ struct mparticles_ddcp<mparticles_cuda_t>
     assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
-    int size;
-    MPI_Comm_size(psc_bnd_particles_comm(bnd), &size);
-
-    if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
-	ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
-      exchange_particles_serial_periodic(bnd, mprts.mprts());
-    } else {
-      psc_bnd_particles_sub_exchange_particles_general<mparticles_cuda_t>(bnd, mprts);
-    }
+    psc_bnd_particles_sub_exchange_particles_general<mparticles_cuda_t>(bnd, mprts);
 
     mprts.put_as(mprts_base);
   }
