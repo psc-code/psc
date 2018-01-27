@@ -7,7 +7,7 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_bnd_particles.cxx \
 	psc_bnd_particles_auto.cxx \
-	psc_bnd_particles_single.cxx \
+	psc_bnd_particles_impl.cxx \
 	psc_bnd_particles_double.cxx \
 	psc_bnd_particles_double_omp.cxx \
 	psc_bnd_particles_single2.cxx \
