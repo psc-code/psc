@@ -8,11 +8,13 @@
 // psc_bnd_particles: subclass "single"
 
 struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
+  using sub = psc_bnd_particles_sub<mparticles_single_t>;
   psc_bnd_particles_ops_single() {
     name                    = "single";
-    setup                   = psc_bnd_particles_sub<mparticles_single_t>::setup;
-    unsetup                 = psc_bnd_particles_sub<mparticles_single_t>::unsetup;
-    exchange_particles      = psc_bnd_particles_sub<mparticles_single_t>::exchange_particles;
+    size                    = sizeof(sub);
+    setup                   = sub::setup;
+    unsetup                 = sub::unsetup;
+    exchange_particles      = sub::exchange_particles;
     //open_calc_moments       = psc_bnd_particles_sub_open_calc_moments;
   }
 } psc_bnd_particles_single_ops;
