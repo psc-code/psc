@@ -13,6 +13,8 @@ struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
     name                    = "fortran";
     setup                   = psc_bnd_particles_sub_setup;
     unsetup                 = psc_bnd_particles_sub_unsetup;
+    exchange_mprts_prep     = psc_bnd_particles_sub_exchange_mprts_prep;
+    exchange_mprts_post     = psc_bnd_particles_sub_exchange_mprts_post;
     exchange_particles      = psc_bnd_particles_sub_exchange_particles;
   }
 } psc_bnd_particles_fortran_ops;
