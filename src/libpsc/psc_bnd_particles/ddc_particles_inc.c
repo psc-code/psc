@@ -41,7 +41,7 @@ struct ddc_particles : ddc_particles_base
   ddc_particles(struct mrc_domain *domain);
   ~ddc_particles();
 
-  void comm(struct psc_mparticles *mprts);
+  void comm();
 
   struct dsend_entry {
     int patch; // source patch (source rank is this rank)
@@ -346,7 +346,7 @@ inline ddc_particles<MP>::~ddc_particles()
 // OPT: make the status buffers only as large as needed?
 
 template<typename MP>
-inline void ddc_particles<MP>::comm(struct psc_mparticles *mprts)
+inline void ddc_particles<MP>::comm()
 {
   using iterator_t = typename particle_buf_t::iterator;
   
@@ -769,7 +769,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
 
   prof_start(pr_C);
-  ddcp->comm(mprts.mprts());
+  ddcp->comm();
   prof_stop(pr_C);
   
 
