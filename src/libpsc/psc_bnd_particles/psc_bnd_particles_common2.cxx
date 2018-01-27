@@ -134,12 +134,11 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 // exchange_mprts_prep
 
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts)
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(mparticles_t mprts)
 {
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_single_t::patch_t& prts = mprts[p];
-    ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
+    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
 
     if (1) {
       //      find_block_indices_count_reorderx(prts);
@@ -157,12 +156,11 @@ void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_
 // exchange_mprts_post
 
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts)
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(mparticles_t mprts)
 {
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_single_t::patch_t& prts = mprts[p];
-    ddc_particles<mparticles_t>::patch *dpatch = &sub->ddcp->patches[p];
+    ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
 
     int n_prts = dpatch->m_buf->size();
     

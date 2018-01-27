@@ -17,12 +17,10 @@
 // psc_bnd_particles_cuda_exchange_mprts_prep
   
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts)
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(mparticles_t mprts)
 {
   mprts->bnd_prep();
   
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = mprts->bnd_get_buffer(p);
@@ -34,12 +32,10 @@ void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_prep(psc_bnd_particles_
 // psc_bnd_particles_cuda_exchange_mprts_post
 
 template<>
-void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(psc_bnd_particles_sub<mparticles_t>* sub,
-							      mparticles_t mprts)
+void psc_bnd_particles_sub<mparticles_t>::exchange_mprts_post(mparticles_t mprts)
 {
   mprts->bnd_post();
   
-  ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(sub->ddcp);
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddcp->patches[p].m_buf = NULL;
   }
