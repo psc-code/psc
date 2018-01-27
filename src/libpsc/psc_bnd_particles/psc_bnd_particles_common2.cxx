@@ -12,6 +12,22 @@ static void psc_bnd_particles_sub_exchange_mprts_post_common2(struct psc_bnd_par
 
 #include "ddc_particles_inc.c"
 
+template<>
+struct mparticles_ddcp<mparticles_t>
+{
+  static void exchange_mprts_prep(struct psc_bnd_particles *bnd,
+				  struct psc_mparticles *mprts)
+  {
+    psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
+  }
+
+  static void exchange_mprts_post(struct psc_bnd_particles *bnd,
+				  struct psc_mparticles *_mprts)
+  {
+    psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, _mprts);
+  }
+  
+};
 
 // ----------------------------------------------------------------------
 // find_block_indices_count

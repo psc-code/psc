@@ -571,42 +571,32 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 }
 
 template<typename MP>
-struct mparticles_ddcp {
+struct mparticles_ddcp
+{
+  using mparticles_t = MP;
+  
   // ----------------------------------------------------------------------
   // psc_bnd_particles_sub_exchange_mprts_prep
 
-#if DDCP_TYPE != DDCP_TYPE_CUDA
   static void exchange_mprts_prep(struct psc_bnd_particles *bnd,
 				  struct psc_mparticles *mprts)
   {
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
     mparticles_t mp(mprts);
     ddc_particles<mparticles_t>* ddcp = static_cast<ddc_particles<mparticles_t>*>(bnd->ddcp);
     for (int p = 0; p < mp.n_patches(); p++) {
-      ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
+      typename ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
       dpatch->m_buf = &mp[p].get_buf();
       dpatch->m_begin = 0;
     }
-#endif
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-    psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
-#endif
   }
-#endif
 
   // ----------------------------------------------------------------------
   // psc_bnd_particles_sub_exchange_mprts_post
 
-#if DDCP_TYPE != DDCP_TYPE_CUDA
   static void exchange_mprts_post(struct psc_bnd_particles *bnd,
 				  struct psc_mparticles *_mprts)
   {
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-    psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, _mprts);
-#endif
   }
-#endif
 };
 
 // ----------------------------------------------------------------------
