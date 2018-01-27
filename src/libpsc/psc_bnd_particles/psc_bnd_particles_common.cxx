@@ -8,7 +8,7 @@
 #include <mrc_io.h>
 #include <string.h>
 
-#include "psc_bnd_particles_open.cxx"
+//#include "psc_bnd_particles_open.cxx"
 
 #define DDCP_TYPE DDCP_TYPE_COMMON
 
