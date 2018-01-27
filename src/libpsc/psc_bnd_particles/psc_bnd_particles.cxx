@@ -94,7 +94,6 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mp
 // ----------------------------------------------------------------------
 // psc_bnd_particles_init
 
-extern struct psc_bnd_particles_ops psc_bnd_particles_auto_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_single_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_double_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_single2_ops;
@@ -105,7 +104,6 @@ extern struct psc_bnd_particles_ops psc_bnd_particles_vpic_ops;
 static void
 psc_bnd_particles_init()
 {
-  mrc_class_register_subclass(&mrc_class_psc_bnd_particles, &psc_bnd_particles_auto_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_particles, &psc_bnd_particles_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_particles, &psc_bnd_particles_single2_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_particles, &psc_bnd_particles_double_ops);
