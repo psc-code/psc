@@ -271,7 +271,7 @@ average_in_time(struct psc_bnd_particles *bnd,
 // ----------------------------------------------------------------------
 // psc_bnd_particles_open_setup
 
-static void
+static void _mrc_unused
 psc_bnd_particles_open_setup(struct psc_bnd_particles *bnd)
 {
   // open b.c. setup (FIXME: only when necessary)
@@ -308,7 +308,7 @@ psc_bnd_particles_open_setup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_open_unsetup
 
-static void
+static void _mrc_unused
 psc_bnd_particles_open_unsetup(struct psc_bnd_particles *bnd)
 {
   psc_mfields_destroy(bnd->mflds_nvt_av);

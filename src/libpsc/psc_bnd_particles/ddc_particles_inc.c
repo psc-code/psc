@@ -545,7 +545,12 @@ inline void ddc_particles<MP>::comm()
 template<class MP>
 struct psc_bnd_particles_sub
 {
-  ddc_particles<MP> *ddcp;
+  using mparticles_t = MP;
+  
+  void setup(struct mrc_domain *domain);
+  void unsetup();
+
+  ddc_particles<mparticles_t> *ddcp;
 };
 
 #define psc_bnd_particles_sub(bnd) mrc_to_subobj(bnd, psc_bnd_particles_sub<mparticles_t>)
@@ -553,31 +558,39 @@ struct psc_bnd_particles_sub
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_setup
 
+template<class MP>
+void psc_bnd_particles_sub<MP>::setup(struct mrc_domain *domain)
+{
+  ddcp = new ddc_particles<mparticles_t>(domain);
+
+}
+
 static void
 psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
 
-  sub->ddcp = new ddc_particles<mparticles_t>(bnd->psc->mrc_domain);
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON
-  psc_bnd_particles_open_setup(bnd);
-#endif
+  sub->setup(bnd->psc->mrc_domain);
+  //psc_bnd_particles_open_setup(bnd);
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_unsetup
+
+template<class MP>
+void psc_bnd_particles_sub<MP>::unsetup()
+{
+  delete ddcp;
+  
+}
 
 static void
 psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 {
   psc_bnd_particles_sub<mparticles_t>* sub = psc_bnd_particles_sub(bnd);
 
-  delete sub->ddcp;
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON
-  psc_bnd_particles_open_unsetup(bnd);
-#endif
+  sub->unsetup();
+  //psc_bnd_particles_open_unsetup(bnd);
 }
 
 template<typename MP>
