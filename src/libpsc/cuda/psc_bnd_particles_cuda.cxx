@@ -49,23 +49,6 @@ struct mparticles_ddcp<mparticles_cuda_t>
       ddcp->patches[p].m_buf = NULL;
     }
   }
-
-  // ----------------------------------------------------------------------
-  // psc_bnd_particles_cuda_exchange_particles
-
-  static void exchange_particles(struct psc_bnd_particles *bnd,
-				 struct psc_mparticles *mprts_base)
-  {
-    // This function only makes sense if it's called for particles already being of cuda
-    // type. If particles aren't in the right patches, the conversion in get_as would fail...
-
-    assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-  
-    psc_bnd_particles_sub_exchange_particles_general<mparticles_cuda_t>(bnd, mprts);
-
-    mprts.put_as(mprts_base);
-  }
 };
 
 // ----------------------------------------------------------------------
@@ -77,7 +60,7 @@ struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
     size                    = sizeof(psc_bnd_particles_sub<mparticles_cuda_t>);
     setup                   = psc_bnd_particles_sub_setup;
     unsetup                 = psc_bnd_particles_sub_unsetup;
-    exchange_particles      = mparticles_ddcp<mparticles_cuda_t>::exchange_particles;
+    exchange_particles      = psc_bnd_particles_sub_exchange_particles;
   }
 } psc_bnd_particles_cuda_ops;
 

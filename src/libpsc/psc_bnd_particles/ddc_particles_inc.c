@@ -800,17 +800,13 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
-#if DDCP_TYPE != DDCP_TYPE_CUDA
 static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
 			       struct psc_mparticles *mprts_base)
 {
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
   psc_bnd_particles_sub_exchange_particles_general<mparticles_t>(bnd, mprts);
-#endif
 
   mprts.put_as(mprts_base);
 }
-#endif
