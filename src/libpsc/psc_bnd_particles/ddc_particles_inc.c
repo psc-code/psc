@@ -1,12 +1,13 @@
 
+#include <mrc_profile.h>
 #define DDCP_TYPE_COMMON     1
 #define DDCP_TYPE_COMMON2    2
 #define DDCP_TYPE_COMMON_OMP 3
 #define DDCP_TYPE_CUDA       4
 
-#include "ddc_particles.hxx"
-
 #include <cstring>
+
+#include "ddc_particles.hxx"
 
 // ----------------------------------------------------------------------
 // at_lo/hi_boundary
