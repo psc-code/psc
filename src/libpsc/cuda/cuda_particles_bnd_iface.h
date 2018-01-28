@@ -22,6 +22,7 @@ struct bnd_particles_policy_cuda
   // ctor
   
   bnd_particles_policy_cuda()
+    : cbnd_(new cuda_particles_bnd())
   {}
 
 protected:
@@ -31,10 +32,10 @@ protected:
   void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
   {
     if (!is_setup_) {
-      cbnd.setup(ddcp, mprts->cmprts_);
+      cbnd_->setup(ddcp, mprts->cmprts_);
       is_setup_ = true;
     }
-    cbnd.prep(ddcp, mprts->cmprts_);
+    cbnd_->prep(ddcp, mprts->cmprts_);
   }
 
   // ----------------------------------------------------------------------
@@ -42,11 +43,11 @@ protected:
   
   void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
   {
-    cbnd.post(ddcp, mprts->cmprts_);
+    cbnd_->post(ddcp, mprts->cmprts_);
   }
 
 private:
-  cuda_particles_bnd cbnd;
+  std::unique_ptr<cuda_particles_bnd> cbnd_;
   bool is_setup_ = false; // FIXME, setup should be done at ctor time
 };
 
