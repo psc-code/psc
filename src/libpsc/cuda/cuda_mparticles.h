@@ -85,7 +85,6 @@ public:
   thrust::device_vector<uint> d_sums; // FIXME, too many arrays, consolidation would be good
 
   uint n_prts_send;
-  uint n_prts_recv;
 };
 
 // ----------------------------------------------------------------------

@@ -310,19 +310,19 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cbnd->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  cmprts->n_prts_recv = cbnd->convert_and_copy_to_dev(cmprts.get());
-  cmprts->n_prts += cmprts->n_prts_recv;
+  uint n_prts_recv = cbnd->convert_and_copy_to_dev(cmprts.get());
+  cmprts->n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
   EXPECT_EQ(cbnd->bpatch[0].n_recv, 1);
   EXPECT_EQ(cbnd->bpatch[1].n_recv, 1);
-  EXPECT_EQ(cmprts->n_prts_recv, 2);
+  EXPECT_EQ(n_prts_recv, 2);
 
   // the received particle have been added to the previous total
   EXPECT_EQ(cmprts->n_prts, 6);
 
   // and the particle have been appended after the old end of the particle list
-  int n_prts_old = cmprts->n_prts - cmprts->n_prts_recv;
+  int n_prts_old = cmprts->n_prts - n_prts_recv;
   EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old  ]).w), 3);
   EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old+1]).w), 1);
 
@@ -349,7 +349,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
-  cbnd->sort_pairs_device(cmprts.get(), cmprts->n_prts_recv);
+  cbnd->sort_pairs_device(cmprts.get(), n_prts_recv);
   cmprts->n_prts -= cmprts->n_prts_send;
 
   EXPECT_EQ(cmprts->n_prts, 4);

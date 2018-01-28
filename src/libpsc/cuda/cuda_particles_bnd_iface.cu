@@ -69,12 +69,12 @@ void cuda_particles_bnd::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
   }
 
   prof_start(pr_A);
-  cmprts->n_prts_recv = convert_and_copy_to_dev(cmprts);
-  cmprts->n_prts += cmprts->n_prts_recv;
+  uint n_prts_recv = convert_and_copy_to_dev(cmprts);
+  cmprts->n_prts += n_prts_recv;
   prof_stop(pr_A);
 
   prof_start(pr_D);
-  sort_pairs_device(cmprts, cmprts->n_prts_recv);
+  sort_pairs_device(cmprts, n_prts_recv);
   cmprts->n_prts -= cmprts->n_prts_send;
   prof_stop(pr_D);
 
