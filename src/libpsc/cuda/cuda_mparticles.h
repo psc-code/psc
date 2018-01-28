@@ -86,9 +86,6 @@ public:
 
   uint n_prts_send;
   uint n_prts_recv;
-
-  thrust::device_vector<uint> d_spine_cnts;
-  thrust::device_vector<uint> d_spine_sums;
 };
 
 // ----------------------------------------------------------------------

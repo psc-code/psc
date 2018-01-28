@@ -60,6 +60,9 @@ struct cuda_particles_bnd
   void scan_scatter_received_gold(cuda_mparticles *cmprts);
   void update_offsets_gold(cuda_mparticles *cmprts);
 
+  thrust::device_vector<uint> d_spine_cnts;
+  thrust::device_vector<uint> d_spine_sums;
+
   std::vector<cuda_bnd> bpatch;
 };
 

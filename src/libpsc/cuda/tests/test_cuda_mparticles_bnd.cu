@@ -115,7 +115,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   for (int b = 0; b < cmprts->n_blocks; b++) {
     printf("b %d:", b);
     for (int n = 0; n < 10; n++) {
-      int cnt = cmprts->d_spine_cnts[10*b + n];
+      int cnt = cbnd->d_spine_cnts[10*b + n];
       printf(" %3d", cnt);
     }
     printf("\n");
@@ -124,7 +124,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   for (int b = 0; b < cmprts->n_blocks; b++) {
     for (int n = 0; n < 10; n++) {
-      int cnt = cmprts->d_spine_cnts[10*b + n];
+      int cnt = cbnd->d_spine_cnts[10*b + n];
       // one particle each moves to block 1, 17, respectively, from the left (-y: 3)
       if ((b ==  1 && n == 3) ||
 	  (b == 17 && n == 3)) {
@@ -138,14 +138,14 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #if 0
   printf("oob: ");
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cmprts->d_spine_cnts[10*cmprts->n_blocks + b];
+    int cnt = cbnd->d_spine_cnts[10*cmprts->n_blocks + b];
     printf(" %3d", cnt);
   }
   printf("\n");
 #endif
 
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cmprts->d_spine_cnts[10*cmprts->n_blocks + b];
+    int cnt = cbnd->d_spine_cnts[10*cmprts->n_blocks + b];
     // the particles in cell 3 and 19 went out of bounds
     if (b == 3 || b == 19) {
       EXPECT_EQ(cnt, 1) << "where b = " << b;
@@ -157,14 +157,14 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #if 0
   printf("sum: ");
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cmprts->d_spine_sums[10*cmprts->n_blocks + b];
+    int cnt = cbnd->d_spine_sums[10*cmprts->n_blocks + b];
     printf(" %3d", cnt);
   }
   printf("\n");
 #endif
   
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cmprts->d_spine_sums[10*cmprts->n_blocks + b];
+    int cnt = cbnd->d_spine_sums[10*cmprts->n_blocks + b];
     // the particles in cell 3 and 19 went out of bounds
     if (b <= 3) {
       EXPECT_EQ(cnt, 0) << "where b = " << b;
@@ -332,9 +332,9 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // received particles per block have been counted
   for (int b = 0; b < cmprts->n_blocks; b++) {
     if (b == 0 || b == 16) {
-      EXPECT_EQ(cmprts->d_spine_cnts[10*cmprts->n_blocks + b], 1);
+      EXPECT_EQ(cbnd->d_spine_cnts[10*cmprts->n_blocks + b], 1);
     } else {
-      EXPECT_EQ(cmprts->d_spine_cnts[10*cmprts->n_blocks + b], 0);
+      EXPECT_EQ(cbnd->d_spine_cnts[10*cmprts->n_blocks + b], 0);
     }
   }
 

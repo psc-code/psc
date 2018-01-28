@@ -124,9 +124,6 @@ void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 
 void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 {
-  thrust::device_vector<uint>& d_spine_cnts = cmprts->d_spine_cnts;
-  thrust::device_vector<uint>& d_spine_sums = cmprts->d_spine_sums;
-
   uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->indexer.b_mx_;
 
@@ -195,8 +192,6 @@ void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
 
 void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
 {
-  thrust::device_vector<uint>& d_spine_sums = cmprts->d_spine_sums;
-
   uint n_blocks = cmprts->n_blocks;
 
   thrust::host_vector<uint> h_off(cmprts->d_off);

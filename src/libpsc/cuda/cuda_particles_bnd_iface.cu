@@ -7,8 +7,8 @@
 
 void cuda_particles_bnd::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
 {
-  cmprts->d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
-  cmprts->d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
+  d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
+  d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
 
   bpatch.resize(cmprts->n_patches);
 }
