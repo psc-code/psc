@@ -7,16 +7,7 @@
 #include "psc_bnd_particles_private.h"
 
 #include "bnd_particles_impl.hxx"
-
-struct cuda_particles_bnd
-{
-  using mparticles_t = mparticles_cuda_t;
-  using ddcp_t = ddc_particles<mparticles_t>;
-  using ddcp_patch = typename ddcp_t::patch;
-
-  void prep(ddcp_t* ddcp, cuda_mparticles* cmprts);
-  void post(ddcp_t* ddcp, cuda_mparticles* cmprts);
-};
+#include "cuda_particles_bnd.h"
 
 struct psc_bnd_particles_cuda;
 
