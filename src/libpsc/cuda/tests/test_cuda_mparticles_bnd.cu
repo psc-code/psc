@@ -310,7 +310,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cbnd->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  cbnd->convert_and_copy_to_dev(cmprts.get());
+  cmprts->n_prts_recv = cbnd->convert_and_copy_to_dev(cmprts.get());
+  cmprts->n_prts += cmprts->n_prts_recv;
 
   // n_recv should be set for each patch, and its total
   EXPECT_EQ(cbnd->bpatch[0].n_recv, 1);

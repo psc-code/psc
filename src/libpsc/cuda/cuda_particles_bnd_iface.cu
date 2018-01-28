@@ -69,7 +69,8 @@ void cuda_particles_bnd::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
   }
 
   prof_start(pr_A);
-  convert_and_copy_to_dev(cmprts);
+  cmprts->n_prts_recv = convert_and_copy_to_dev(cmprts);
+  cmprts->n_prts += cmprts->n_prts_recv;
   prof_stop(pr_A);
 
   prof_start(pr_D);

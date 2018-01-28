@@ -45,7 +45,7 @@ struct cuda_particles_bnd
   void copy_from_dev_and_convert(cuda_mparticles *cmprts);
 
   // pieces for post
-  void convert_and_copy_to_dev(cuda_mparticles *cmprts);
+  uint convert_and_copy_to_dev(cuda_mparticles *cmprts);
   void sort_pairs_device(cuda_mparticles *cmprts);
   void count_received(cuda_mparticles *cmprts);
   void scan_scatter_received(cuda_mparticles *cmprts);

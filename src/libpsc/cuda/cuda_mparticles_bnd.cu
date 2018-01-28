@@ -102,7 +102,7 @@ void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // convert_and_copy_to_dev
 
-void cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
+uint cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
   uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -171,8 +171,7 @@ void cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 	       d_spine_cnts.data() + 10 * cmprts->n_blocks);
   thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), cmprts->d_alt_bidx.begin() + cmprts->n_prts);
 
-  cmprts->n_prts += n_recv;
-  cmprts->n_prts_recv = n_recv;
+  return n_recv;
 }
 
 // ----------------------------------------------------------------------
