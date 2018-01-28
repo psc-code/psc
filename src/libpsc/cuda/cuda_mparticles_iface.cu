@@ -100,17 +100,6 @@ psc_particle_cuda_buf_t* psc_mparticles_cuda::bnd_get_buffer(int p)
   return cmprts_->bnd_get_buffer(p);
 }
 
-void psc_mparticles_cuda::bnd_prep()
-{
-  cmprts_->bnd_prep();
-}
-
-void psc_mparticles_cuda::bnd_post()
-{
-  cmprts_->bnd_post();
-}
-
-
 // ======================================================================
 // conversion
 

@@ -80,8 +80,6 @@ struct psc_mparticles_cuda
   const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
   psc_particle_cuda_buf_t *bnd_get_buffer(int p);
-  void bnd_prep();
-  void bnd_post();
   
   cuda_mparticles* cmprts() { return cmprts_; }
 

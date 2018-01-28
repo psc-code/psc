@@ -76,20 +76,22 @@ CUDA_GTEST_OBJS := \
 	../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo \
 	$(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
 
+CUDA_BNDP_OBJS := \
+	cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
+	cuda_particles_bnd_iface.lo
+
 tests_test_cuda_accel_SOURCES = 
 tests_test_cuda_accel_LDADD = tests/test_cuda_accel.lo \
   cuda_mfields.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
-  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
   cuda_push_mprts_xyz.lo cuda_push_mprts_yz.lo \
-  $(CUDA_GTEST_OBJS)
+  $(CUDA_BNDP_OBJS) $(CUDA_GTEST_OBJS)
 nodist_EXTRA_tests_test_cuda_accel_SOURCES = dummy.cxx
 
 tests_test_cuda_mparticles_1_SOURCES = 
 tests_test_cuda_mparticles_1_LDADD = tests/test_cuda_mparticles_1.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
-  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
-  $(CUDA_GTEST_OBJS)
+  $(CUDA_BNDP_OBJS) $(CUDA_GTEST_OBJS)
 nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
 
 tests_test_cuda_mfields_1_SOURCES = 
@@ -103,8 +105,7 @@ nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
 tests_test_cuda_mparticles_bnd_SOURCES = 
 tests_test_cuda_mparticles_bnd_LDADD = tests/test_cuda_mparticles_bnd.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
-  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
-  $(CUDA_GTEST_OBJS)
+  $(CUDA_BNDP_OBJS) $(CUDA_GTEST_OBJS)
 nodist_EXTRA_tests_test_cuda_mparticles_bnd_SOURCES = dummy.cxx
 
 #tests_test_cuda_heating_SOURCES = 

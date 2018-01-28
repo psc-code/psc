@@ -1,5 +1,6 @@
 
 #include "cuda_mparticles.h"
+#include "cuda_particles_bnd_iface.h"
 #include "cuda_test.hxx"
 
 #include <mrc_profile.h>
@@ -23,6 +24,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   
   std::unique_ptr<Grid_t> grid;
   std::unique_ptr<cuda_mparticles> cmprts;
+  std::unique_ptr<cuda_particles_bnd> cbnd;
 
   const Int3 bs_ = { 1, 1, 1 };
 
@@ -75,6 +77,8 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 #if 0
     cmprts->dump();
 #endif
+
+    cbnd.reset(new cuda_particles_bnd());
   }
 };
 
@@ -82,11 +86,11 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 // ----------------------------------------------------------------------
 // BndPrep
 //
-// tests cuda_mparticles::bnd_prep()
+// tests cuda_particles_bnd::prep()
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
-  cmprts->bnd_prep();
+  cbnd->prep(nullptr, cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -99,7 +103,7 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 // ----------------------------------------------------------------------
 // BndPrepDetail
 //
-// tests the pieces that go into cuda_mparticles::bnd_prep()
+// tests the pieces that go into cuda_particles_bnd::prep()
 
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
@@ -241,12 +245,12 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 // ----------------------------------------------------------------------
 // BndPost
 //
-// tests cuda_mparticles::bnd_post()
+// tests cuda_particles_bnd::post()
 
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
   // BndPost expects the work done by bnd_prep()
-  cmprts->bnd_prep();
+  cbnd->prep(nullptr, cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -265,7 +269,7 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   cmprts->bpatch[0].buf[0] = prt3;
   cmprts->bpatch[1].buf[0] = prt1;
   
-  cmprts->bnd_post();
+  cbnd->post(nullptr, cmprts.get());
 
   // bnd_post doesn't do the actually final reordering
   EXPECT_TRUE(cmprts->need_reorder);
@@ -280,12 +284,12 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 // ----------------------------------------------------------------------
 // BndPostDetail
 //
-// tests the pieces that go into cuda_mparticles::bnd_post()
+// tests the pieces that go into cuda_particles_bnd::post()
 
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
   // BndPost expects the work done by bnd_prep()
-  cmprts->bnd_prep();
+  cbnd->prep(nullptr, cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
