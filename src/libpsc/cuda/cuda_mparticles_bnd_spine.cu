@@ -176,7 +176,7 @@ void cuda_mparticles_bnd::count_received_v1(cuda_mparticles *cmprts)
 #endif
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_scan_scatter_received
+// scan_scatter_received
 
 static void __global__
 mprts_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
@@ -194,25 +194,23 @@ mprts_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
   d_ids[nn] = n;
 }
 
-void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts)
+void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_prts_recv)
 {
-  int nr_recv = cmprts->n_prts_recv;
-
-  if (nr_recv == 0) {
+  if (n_prts_recv == 0) {
     return;
   }
   
-  int nr_prts_prev = cmprts->n_prts - nr_recv;
+  uint n_prts_prev = cmprts->n_prts - n_prts_recv;
 
-  int dimGrid = (nr_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  int dimGrid = (n_prts_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
-    (nr_recv, nr_prts_prev, d_spine_sums.data().get(), cmprts->d_alt_bidx.data().get(),
+    (n_prts_recv, n_prts_prev, d_spine_sums.data().get(), cmprts->d_alt_bidx.data().get(),
      cmprts->d_bidx.data().get(), cmprts->d_id.data().get());
   cuda_sync_if_enabled();
 }
 
-void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts)
+void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   uint n_blocks = cmprts->n_blocks;
 
@@ -224,7 +222,7 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts)
   thrust::copy(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 11, h_spine_sums.begin());
   thrust::copy(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts, h_bidx.begin());
   thrust::copy(cmprts->d_alt_bidx.data(), cmprts->d_alt_bidx.data() + cmprts->n_prts, h_alt_bidx.begin());
-  for (int n = cmprts->n_prts - cmprts->n_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
     int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n];
     h_id[nn] = n;
   }
@@ -234,7 +232,7 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // sort_pairs_device
 
-void cuda_particles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
+void cuda_particles_bnd::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   static int pr_A, pr_B, pr_C, pr_D;
   if (!pr_B) {
@@ -256,7 +254,7 @@ void cuda_particles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
   prof_stop(pr_B);
 
   prof_start(pr_C);
-  scan_scatter_received(cmprts);
+  scan_scatter_received(cmprts, n_prts_recv);
   prof_stop(pr_C);
 
   prof_start(pr_D);
@@ -313,7 +311,7 @@ void cuda_particles_bnd::sort_pairs_device(cuda_mparticles *cmprts)
   // d_ids now contains the indices to reorder by
 }
 
-void cuda_particles_bnd::sort_pairs_gold(cuda_mparticles *cmprts)
+void cuda_particles_bnd::sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
   uint n_blocks = cmprts->n_blocks;
@@ -326,7 +324,7 @@ void cuda_particles_bnd::sort_pairs_gold(cuda_mparticles *cmprts)
 
   thrust::host_vector<uint> h_spine_sums(1 + n_blocks * (10 + 1));
 
-  for (int n = cmprts->n_prts - cmprts->n_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
     assert(h_bidx[n] < n_blocks);
     h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
   }
@@ -355,7 +353,7 @@ void cuda_particles_bnd::sort_pairs_gold(cuda_mparticles *cmprts)
       }
     }
   }
-  for (int n = cmprts->n_prts - cmprts->n_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
       int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
       h_id[nn] = n;
   }

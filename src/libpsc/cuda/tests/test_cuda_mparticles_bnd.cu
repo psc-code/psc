@@ -349,7 +349,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
-  cbnd->sort_pairs_device(cmprts.get());
+  cbnd->sort_pairs_device(cmprts.get(), cmprts->n_prts_recv);
   cmprts->n_prts -= cmprts->n_prts_send;
 
   EXPECT_EQ(cmprts->n_prts, 4);

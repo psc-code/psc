@@ -46,18 +46,18 @@ struct cuda_particles_bnd
 
   // pieces for post
   uint convert_and_copy_to_dev(cuda_mparticles *cmprts);
-  void sort_pairs_device(cuda_mparticles *cmprts);
+  void sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv);
   void count_received(cuda_mparticles *cmprts);
-  void scan_scatter_received(cuda_mparticles *cmprts);
+  void scan_scatter_received(cuda_mparticles *cmprts, uint n_prts_recv);
   void update_offsets(cuda_mparticles *cmprts);
 
   // gold
   void spine_reduce_gold(cuda_mparticles *cmprts);
   void scan_send_buf_total_gold(cuda_mparticles *cmprts);
   void reorder_send_by_id_gold(cuda_mparticles *cmprts);
-  void sort_pairs_gold(cuda_mparticles *cmprts);
+  void sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv);
   void count_received_gold(cuda_mparticles *cmprts);
-  void scan_scatter_received_gold(cuda_mparticles *cmprts);
+  void scan_scatter_received_gold(cuda_mparticles *cmprts, uint n_prts_recv);
   void update_offsets_gold(cuda_mparticles *cmprts);
 
   thrust::device_vector<uint> d_spine_cnts;
