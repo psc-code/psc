@@ -77,7 +77,7 @@ protected:
   // ctor
 
   psc_bnd_particles_sub()
-    : ddcp(nullptr)
+    : policy_t(*this), ddcp(nullptr)
   {}
 
   // ----------------------------------------------------------------------
