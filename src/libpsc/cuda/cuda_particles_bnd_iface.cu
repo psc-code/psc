@@ -58,16 +58,16 @@ void cuda_particles_bnd::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
   }
 
   prof_start(pr_A);
-  cmprts->convert_and_copy_to_dev(cmprts);
+  convert_and_copy_to_dev(cmprts);
   prof_stop(pr_A);
 
   prof_start(pr_D);
-  cmprts->sort_pairs_device(cmprts);
+  sort_pairs_device(cmprts);
   cmprts->n_prts -= cmprts->n_prts_send;
   prof_stop(pr_D);
 
   prof_start(pr_D1);
-  cmprts->update_offsets(cmprts);
+  update_offsets(cmprts);
   prof_stop(pr_D1);
   
   prof_start(pr_E);

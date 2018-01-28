@@ -309,7 +309,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cmprts->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  cmprts->convert_and_copy_to_dev(cmprts.get());
+  cbnd->convert_and_copy_to_dev(cmprts.get());
 
   // n_recv should be set for each patch, and its total
   EXPECT_EQ(cmprts->bpatch[0].n_recv, 1);
@@ -347,7 +347,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
-  cmprts->sort_pairs_device(cmprts.get());
+  cbnd->sort_pairs_device(cmprts.get());
   cmprts->n_prts -= cmprts->n_prts_send;
 
   EXPECT_EQ(cmprts->n_prts, 4);
@@ -356,7 +356,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cmprts->d_id[2], 5);
   EXPECT_EQ(cmprts->d_id[3], 2);
 
-  cmprts->update_offsets(cmprts.get());
+  cbnd->update_offsets(cmprts.get());
   for (int b = 0; b <= cmprts->n_blocks; b++) {
     if (b < 1) {
       EXPECT_EQ(cmprts->d_off[b], 0) << "where b = " << b;

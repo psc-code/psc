@@ -99,17 +99,6 @@ struct cuda_mparticles_bnd
   void setup(cuda_mparticles *cmprts);
   void reserve_all(cuda_mparticles *cmprts);
 
-  void sort_pairs_device(cuda_mparticles *cmprts);
-
-  void sort_pairs_gold(cuda_mparticles *cmprts);
-
-  void convert_and_copy_to_dev(cuda_mparticles *cmprts);
-  void update_offsets(cuda_mparticles *cmprts);
-  void update_offsets_gold(cuda_mparticles *cmprts);
-  void count_received(cuda_mparticles *cmprts);
-  void count_received_gold(cuda_mparticles *cmprts);
-  void scan_scatter_received(cuda_mparticles *cmprts);
-  void scan_scatter_received_gold(cuda_mparticles *cmprts);
   void reorder_send_buf_total(cuda_mparticles *cmprts);
   
 public:
