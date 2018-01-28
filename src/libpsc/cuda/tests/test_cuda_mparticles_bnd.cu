@@ -340,8 +340,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   }
 
   // both particles are the 0th (and only) particle added to their respective block
-  EXPECT_EQ(cmprts->d_alt_bidx[n_prts_old  ], 0);
-  EXPECT_EQ(cmprts->d_alt_bidx[n_prts_old+1], 0);
+  EXPECT_EQ(cmprts->d_bnd_off[0], 0);
+  EXPECT_EQ(cmprts->d_bnd_off[1], 0);
 
   // === test sort
   uint n_prts_by_patch[cmprts->n_patches];
