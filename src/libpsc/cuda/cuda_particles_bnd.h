@@ -19,6 +19,7 @@ struct cuda_particles_bnd
   void find_n_send(cuda_mparticles *cmprts);
   void scan_send_buf_total(cuda_mparticles *cmprts);
   void reorder_send_by_id(cuda_mparticles *cmprts);
+  void reorder_send_buf_total(cuda_mparticles *cmprts);
   void copy_from_dev_and_convert(cuda_mparticles *cmprts);
 
   // pieces for post

@@ -99,8 +99,6 @@ struct cuda_mparticles_bnd
   void setup(cuda_mparticles *cmprts);
   void reserve_all(cuda_mparticles *cmprts);
 
-  void reorder_send_buf_total(cuda_mparticles *cmprts);
-  
 public:
   thrust::device_vector<uint> d_alt_bidx;
   thrust::device_vector<uint> d_sums; // FIXME, too many arrays, consolidation would be good

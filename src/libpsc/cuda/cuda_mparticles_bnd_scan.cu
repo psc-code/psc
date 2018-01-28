@@ -100,20 +100,20 @@ k_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
 // ----------------------------------------------------------------------
 // reorder_send_buf_total
 
-void cuda_mparticles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
+void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 {
   if (cmprts->n_patches == 0)
     return;
 
   float4 *xchg_xi4 = cmprts->d_xi4.data().get() + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4.data().get() + cmprts->n_prts;
-  assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
+  assert(cmprts->n_prts + cmprts->n_prts_send < cmprts->n_alloced);
   
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
   
   k_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
-						  cmprts->d_bidx.data().get(), d_sums.data().get(),
+						  cmprts->d_bidx.data().get(), cmprts->d_sums.data().get(),
 						  cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
 						  xchg_xi4, xchg_pxi4);
   cuda_sync_if_enabled();
@@ -215,6 +215,6 @@ void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
 
   thrust::copy(h_sums.begin(), h_sums.end(), cmprts->d_sums.begin());
 
-  cmprts->reorder_send_buf_total(cmprts);
+  reorder_send_buf_total(cmprts);
 }
 
