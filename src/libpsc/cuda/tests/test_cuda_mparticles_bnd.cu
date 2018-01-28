@@ -176,17 +176,17 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 
   // test find_n_send
-  cmprts->n_prts_send = cbnd->find_n_send(cmprts.get());
+  cbnd->n_prts_send = cbnd->find_n_send(cmprts.get());
 
   for (int p = 0; p < cmprts->n_patches; p++) {
     //printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
     EXPECT_EQ(cbnd->bpatch[p].n_send, 1);
   }
-  EXPECT_EQ(cmprts->n_prts_send, 2);
+  EXPECT_EQ(cbnd->n_prts_send, 2);
 
   // test scan_send_buf_total
 #if 1
-  cbnd->scan_send_buf_total(cmprts.get(), cmprts->n_prts_send);
+  cbnd->scan_send_buf_total(cmprts.get(), cbnd->n_prts_send);
 
 #if 0
   printf("ids: ");
@@ -197,7 +197,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   printf("\n");
 #endif
   EXPECT_EQ(cmprts->n_prts, 4);
-  EXPECT_EQ(cmprts->n_prts_send, 2);
+  EXPECT_EQ(cbnd->n_prts_send, 2);
   EXPECT_EQ(cmprts->d_id[2], 1);
   EXPECT_EQ(cmprts->d_id[3], 3);
 
@@ -226,7 +226,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[cmprts->n_prts+1]).w), 3);
 
   // test copy_from_dev_and_convert
-  cbnd->copy_from_dev_and_convert(cmprts.get(), cmprts->n_prts_send);
+  cbnd->copy_from_dev_and_convert(cmprts.get(), cbnd->n_prts_send);
 
 #if 0
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -350,7 +350,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
   cbnd->sort_pairs_device(cmprts.get(), n_prts_recv);
-  cmprts->n_prts -= cmprts->n_prts_send;
+  cmprts->n_prts -= cbnd->n_prts_send;
 
   EXPECT_EQ(cmprts->n_prts, 4);
   EXPECT_EQ(cmprts->d_id[0], 4);

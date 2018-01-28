@@ -83,8 +83,6 @@ struct cuda_mparticles_bnd
 public:
   thrust::device_vector<uint> d_alt_bidx;
   thrust::device_vector<uint> d_sums; // FIXME, too many arrays, consolidation would be good
-
-  uint n_prts_send;
 };
 
 // ----------------------------------------------------------------------
