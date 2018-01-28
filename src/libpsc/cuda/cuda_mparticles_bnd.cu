@@ -1,4 +1,5 @@
 
+#include "cuda_particles_bnd.h"
 #include "cuda_mparticles.h"
 #include "cuda_bits.h"
 
@@ -62,8 +63,10 @@ void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // find_n_send
 
-void cuda_mparticles_bnd::find_n_send(cuda_mparticles *cmprts)
+void cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
 {
+  thrust::device_vector<uint>& d_spine_sums = cmprts->d_spine_sums;
+
   uint n_blocks = cmprts->n_blocks;
 
   thrust::host_vector<uint> h_spine_sums(n_blocks + 1);
@@ -75,29 +78,30 @@ void cuda_mparticles_bnd::find_n_send(cuda_mparticles *cmprts)
   uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     uint n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
-    bpatch[p].n_send = n_send - off;
+    cmprts->bpatch[p].n_send = n_send - off;
     off = n_send;
   }
-  n_prts_send = off;
+  cmprts->n_prts_send = off;
 }
 
 // ----------------------------------------------------------------------
 // copy_from_dev_and_convert
 
-void cuda_mparticles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
+void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
 {
+  uint n_prts = cmprts->n_prts, n_prts_send = cmprts->n_prts_send;
   thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
   thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
 
-  assert(cmprts->n_prts + n_prts_send <= cmprts->n_alloced);
+  assert(n_prts + n_prts_send <= cmprts->n_alloced);
 
-  thrust::copy(cmprts->d_xi4.data()  + cmprts->n_prts, cmprts->d_xi4.data()  + cmprts->n_prts + n_prts_send, h_bnd_xi4.begin());
-  thrust::copy(cmprts->d_pxi4.data() + cmprts->n_prts, cmprts->d_pxi4.data() + cmprts->n_prts + n_prts_send, h_bnd_pxi4.begin());
+  thrust::copy(cmprts->d_xi4.data()  + n_prts, cmprts->d_xi4.data()  + n_prts + n_prts_send, h_bnd_xi4.begin());
+  thrust::copy(cmprts->d_pxi4.data() + n_prts, cmprts->d_pxi4.data() + n_prts + n_prts_send, h_bnd_pxi4.begin());
 
   uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    psc_particle_cuda_buf_t& buf = bpatch[p].buf;
-    uint n_send = bpatch[p].n_send;
+    psc_particle_cuda_buf_t& buf = cmprts->bpatch[p].buf;
+    uint n_send = cmprts->bpatch[p].n_send;
     buf.reserve(n_send);
     buf.resize(n_send);
 

@@ -25,15 +25,15 @@ void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   prof_stop(pr_B0);
 
   prof_start(pr_B1);
-  cmprts->find_n_send(cmprts);
+  find_n_send(cmprts);
   prof_stop(pr_B1);
 
   prof_start(pr_B);
-  cmprts->scan_send_buf_total(cmprts);
+  scan_send_buf_total(cmprts);
   prof_stop(pr_B);
 
   prof_start(pr_D);
-  cmprts->copy_from_dev_and_convert(cmprts);
+  copy_from_dev_and_convert(cmprts);
   prof_stop(pr_D);
 
   if (!ddcp) return; // FIXME testing hack
