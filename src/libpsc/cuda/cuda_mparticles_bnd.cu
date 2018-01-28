@@ -44,7 +44,7 @@ void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // find_n_send
 
-void cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
+uint cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
 
@@ -60,15 +60,15 @@ void cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
     bpatch[p].n_send = n_send - off;
     off = n_send;
   }
-  cmprts->n_prts_send = off;
+  return off;
 }
 
 // ----------------------------------------------------------------------
 // copy_from_dev_and_convert
 
-void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
+void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_send)
 {
-  uint n_prts = cmprts->n_prts, n_prts_send = cmprts->n_prts_send;
+  uint n_prts = cmprts->n_prts;
   thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
   thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
 

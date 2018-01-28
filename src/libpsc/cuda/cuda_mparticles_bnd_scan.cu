@@ -42,16 +42,16 @@ k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 // ----------------------------------------------------------------------
 // reorder_send_by_id
 
-void cuda_particles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
+void cuda_particles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
-  if (cmprts->n_prts_send == 0) {
+  if (n_prts_send == 0) {
     return;
   }
 
-  int dimGrid = (cmprts->n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  int dimGrid = (n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   k_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
-    (cmprts->n_prts_send, cmprts->d_id.data().get() + cmprts->n_prts - cmprts->n_prts_send,
+    (n_prts_send, cmprts->d_id.data().get() + cmprts->n_prts - n_prts_send,
      cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
      cmprts->d_xi4.data().get() + cmprts->n_prts, cmprts->d_pxi4.data().get() + cmprts->n_prts);
   cuda_sync_if_enabled();
@@ -60,9 +60,8 @@ void cuda_particles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // reorder_send_by_id_gold
 
-void cuda_particles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts)
+void cuda_particles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts, uint n_prts_send)
 {
-  uint n_prts_send = cmprts->n_prts_send;
   thrust::host_vector<uint> h_id(cmprts->d_id.data(), cmprts->d_id.data() + cmprts->n_prts);
   thrust::host_vector<float4> h_xi4(cmprts->d_xi4.data(), cmprts->d_xi4.data() + cmprts->n_prts + n_prts_send);
   thrust::host_vector<float4> h_pxi4(cmprts->d_pxi4.data(), cmprts->d_pxi4.data() + cmprts->n_prts + n_prts_send);
@@ -100,14 +99,14 @@ k_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
 // ----------------------------------------------------------------------
 // reorder_send_buf_total
 
-void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
+void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send)
 {
   if (cmprts->n_patches == 0)
     return;
 
   float4 *xchg_xi4 = cmprts->d_xi4.data().get() + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4.data().get() + cmprts->n_prts;
-  assert(cmprts->n_prts + cmprts->n_prts_send < cmprts->n_alloced);
+  assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
   
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
@@ -122,7 +121,7 @@ void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // scan_send_buf_total
 
-void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
+void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
   uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->indexer.b_mx_;
@@ -131,7 +130,7 @@ void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
   thrust::exclusive_scan(d_spine_cnts.data() + n_blocks * 10,
 			 d_spine_cnts.data() + n_blocks * 11 + 1,
 			 d_spine_sums.data() + n_blocks * 10,
-			 cmprts->n_prts - cmprts->n_prts_send);
+			 cmprts->n_prts - n_prts_send);
   // OPT, we could somehow not fill in ids for not oob at all
   // this should make sure at least those within bounds don't screw anything up
   thrust::fill(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 10, 0);
@@ -184,13 +183,13 @@ void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts)
   }
   cuda_sync_if_enabled();
 
-  reorder_send_by_id(cmprts);
+  reorder_send_by_id(cmprts, n_prts_send);
 }
 
 // ----------------------------------------------------------------------
 // scan_send_buf_total_gold
 
-void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
+void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts, uint n_prts_send)
 {
   uint n_blocks = cmprts->n_blocks;
 
@@ -210,6 +209,6 @@ void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts)
 
   thrust::copy(h_sums.begin(), h_sums.end(), cmprts->d_sums.begin());
 
-  reorder_send_buf_total(cmprts);
+  reorder_send_buf_total(cmprts, n_prts_send);
 }
 
