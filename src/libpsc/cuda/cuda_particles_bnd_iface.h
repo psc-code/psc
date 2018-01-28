@@ -10,7 +10,12 @@
 
 struct cuda_particles_bnd
 {
-  void prep(cuda_mparticles* cmprts);
+  using mparticles_t = mparticles_cuda_t;
+  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_patch = typename ddcp_t::patch;
+
+  void prep(ddcp_t* ddcp, cuda_mparticles* cmprts);
+  void post(ddcp_t* ddcp, cuda_mparticles* cmprts);
 };
 
 struct psc_bnd_particles_cuda;
@@ -34,13 +39,7 @@ protected:
   
   void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
   {
-    cbnd.prep(mprts->cmprts_);
-    
-    for (int p = 0; p < ddcp->nr_patches; p++) {
-      ddcp_patch *dpatch = &ddcp->patches[p];
-      dpatch->m_buf = mprts->bnd_get_buffer(p);
-      dpatch->m_begin = 0;
-    }
+    cbnd.prep(ddcp, mprts->cmprts_);
   }
 
   // ----------------------------------------------------------------------
@@ -48,11 +47,7 @@ protected:
   
   void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
   {
-    mprts->bnd_post();
-    
-    for (int p = 0; p < ddcp->nr_patches; p++) {
-      ddcp->patches[p].m_buf = NULL;
-    }
+    cbnd.post(ddcp, mprts->cmprts_);
   }
 
 private:
