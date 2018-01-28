@@ -21,7 +21,7 @@ void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   //prof_stop(pr_A);
   
   prof_start(pr_B0);
-  cmprts->spine_reduce(cmprts);
+  spine_reduce(cmprts);
   prof_stop(pr_B0);
 
   prof_start(pr_B1);

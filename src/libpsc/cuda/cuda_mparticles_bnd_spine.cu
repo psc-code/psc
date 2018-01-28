@@ -1,4 +1,5 @@
 
+#include "cuda_particles_bnd.h"
 #include "cuda_mparticles.h"
 #include "cuda_bits.h"
 
@@ -23,8 +24,11 @@ static const int RADIX_BITS = 4;
 // ----------------------------------------------------------------------
 // spine_reduce
 
-void cuda_mparticles_bnd::spine_reduce(cuda_mparticles *cmprts)
+void cuda_particles_bnd::spine_reduce(cuda_mparticles *cmprts)
 {
+  thrust::device_vector<uint>& d_spine_cnts = cmprts->d_spine_cnts;
+  thrust::device_vector<uint>& d_spine_sums = cmprts->d_spine_sums;
+
   uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->indexer.b_mx_;
 
@@ -74,8 +78,11 @@ void cuda_mparticles_bnd::spine_reduce(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // cuda_mprts_spine_reduce_gold
 
-void cuda_mparticles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
+void cuda_particles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
 {
+  thrust::device_vector<uint>& d_spine_cnts = cmprts->d_spine_cnts;
+  thrust::device_vector<uint>& d_spine_sums = cmprts->d_spine_sums;
+
   uint n_blocks = cmprts->n_blocks;
   uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
   int *b_mx = cmprts->indexer.b_mx_;

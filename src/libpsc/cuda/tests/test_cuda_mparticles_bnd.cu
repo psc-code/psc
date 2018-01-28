@@ -108,7 +108,7 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
   // test spine_reduce
-  cmprts->spine_reduce(cmprts.get());
+  cbnd->spine_reduce(cmprts.get());
 
 #if 0
   for (int b = 0; b < cmprts->n_blocks; b++) {
