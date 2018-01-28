@@ -87,6 +87,9 @@ struct psc_mparticles_cuda
 
 private:
   cuda_mparticles* cmprts_;
+
+  template<typename MP>
+  friend struct bnd_particles_policy_cuda;
 };
 
 // ----------------------------------------------------------------------
