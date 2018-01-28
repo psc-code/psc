@@ -227,15 +227,17 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uin
   uint n_blocks = cmprts->n_blocks;
 
   thrust::host_vector<uint> h_bidx(cmprts->n_prts);
-  thrust::host_vector<uint> h_alt_bidx(cmprts->n_prts);
+  thrust::host_vector<uint> h_alt_bidx(n_prts_recv);
   thrust::host_vector<uint> h_id(cmprts->n_prts);
   thrust::host_vector<uint> h_spine_sums(1 + n_blocks * (10 + 1));
 
   thrust::copy(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 11, h_spine_sums.begin());
   thrust::copy(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts, h_bidx.begin());
-  thrust::copy(cmprts->d_alt_bidx.data(), cmprts->d_alt_bidx.data() + cmprts->n_prts, h_alt_bidx.begin());
+  thrust::copy(cmprts->d_alt_bidx.data() + cmprts->n_prts - n_prts_recv,
+	       cmprts->d_alt_bidx.data() + cmprts->n_prts,
+	       h_alt_bidx.begin());
   for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
-    int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n];
+    int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n - (cmprts->n_prts - n_prts_recv)];
     h_id[nn] = n;
   }
   thrust::copy(h_id.begin(), h_id.end(), cmprts->d_id.begin());
