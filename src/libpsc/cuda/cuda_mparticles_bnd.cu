@@ -163,13 +163,14 @@ uint cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->d_xi4.data() + cmprts->n_prts);
   thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->d_pxi4.data() + cmprts->n_prts);
 
+  auto d_bnd_off = cmprts->d_alt_bidx.begin() + cmprts->n_prts;
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
   thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), cmprts->d_bidx.data() + cmprts->n_prts);
   // slight abuse of the now unused last part of spine_cnts
   thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(),
 	       d_spine_cnts.data() + 10 * cmprts->n_blocks);
-  thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), cmprts->d_alt_bidx.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_bnd_off);
 
   return n_recv;
 }

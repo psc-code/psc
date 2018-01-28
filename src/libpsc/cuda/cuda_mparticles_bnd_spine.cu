@@ -186,17 +186,17 @@ void cuda_mparticles_bnd::count_received_v1(cuda_mparticles *cmprts)
 
 static void __global__
 k_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
-			    uint *d_spine_sums, uint *d_alt_bidx,
+			    uint *d_spine_sums, uint *d_bnd_off,
 			    uint *d_bidx, uint *d_ids)
 {
-  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  if (n >= nr_recv) {
+  int n0 = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  if (n0 >= nr_recv) {
     return;
   }
 
-  n += nr_prts_prev;
+  int n = n0 + nr_prts_prev;
 
-  int nn = d_spine_sums[d_bidx[n] * 10 + CUDA_BND_S_NEW] + d_alt_bidx[n];
+  int nn = d_spine_sums[d_bidx[n] * 10 + CUDA_BND_S_NEW] + d_bnd_off[n0];
   d_ids[nn] = n;
 }
 
@@ -213,8 +213,9 @@ void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_p
 
   int dimGrid = (n_prts_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
+  auto d_bnd_off = cmprts->d_alt_bidx.data() + n_prts_prev;
   k_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_prts_recv, n_prts_prev, d_spine_sums.data().get(), cmprts->d_alt_bidx.data().get(),
+    (n_prts_recv, n_prts_prev, d_spine_sums.data().get(), d_bnd_off.get(),
      cmprts->d_bidx.data().get(), cmprts->d_id.data().get());
   cuda_sync_if_enabled();
 }
@@ -233,11 +234,12 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uin
 
   thrust::copy(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 11, h_spine_sums.begin());
   thrust::copy(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts, h_bidx.begin());
-  thrust::copy(cmprts->d_alt_bidx.data() + cmprts->n_prts - n_prts_recv,
-	       cmprts->d_alt_bidx.data() + cmprts->n_prts,
-	       h_alt_bidx.begin());
+
+  uint n_prts_prev = cmprts->n_prts - n_prts_recv;
+  auto d_bnd_off = cmprts->d_alt_bidx.begin() + n_prts_prev;
+  thrust::copy(d_bnd_off, d_bnd_off + n_prts_recv, h_alt_bidx.begin());
   for (int n0 = 0; n0 < n_prts_recv; n0++) {
-    int n = cmprts->n_prts - n_prts_recv + n0;
+    int n = n0 + n_prts_prev;
     int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n0];
     h_id[nn] = n;
   }
