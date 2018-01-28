@@ -129,8 +129,6 @@ struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
   template<typename F>
   void get_particles(uint p, F setter);
   
-  psc_particle_cuda_buf_t *bnd_get_buffer(int p);
-  
   void dump();
   void dump_by_patch(uint *n_prts_by_patch);
 

@@ -216,11 +216,3 @@ void cuda_particles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
   thrust::copy(h_off.begin(), h_off.end(), cmprts->d_off.begin());
 }
 
-// ----------------------------------------------------------------------
-// cuda_mparticles_bnd_get_buffer
-
-psc_particle_cuda_buf_t *cuda_mparticles::bnd_get_buffer(int p)
-{
-  return &bpatch[p].buf;
-}
-

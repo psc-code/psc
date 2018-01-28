@@ -58,7 +58,7 @@ void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   if (!ddcp) return; // FIXME testing hack
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = cmprts->bnd_get_buffer(p);
+    dpatch->m_buf = &cmprts->bpatch[p].buf;
     dpatch->m_begin = 0;
   }
 }

@@ -95,11 +95,6 @@ const int* psc_mparticles_cuda::patch_get_b_mx(int p)
   return cmprts_->patch_get_b_mx(p);
 }
 
-psc_particle_cuda_buf_t* psc_mparticles_cuda::bnd_get_buffer(int p)
-{
-  return cmprts_->bnd_get_buffer(p);
-}
-
 // ======================================================================
 // conversion
 
