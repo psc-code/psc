@@ -213,7 +213,7 @@ void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_p
 
   int dimGrid = (n_prts_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-  auto d_bnd_off = cmprts->d_alt_bidx.data() + n_prts_prev;
+  auto d_bnd_off = cmprts->d_alt_bidx.data();
   k_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
     (n_prts_recv, n_prts_prev, d_spine_sums.data().get(), d_bnd_off.get(),
      cmprts->d_bidx.data().get(), cmprts->d_id.data().get());
@@ -236,7 +236,7 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uin
   thrust::copy(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts, h_bidx.begin());
 
   uint n_prts_prev = cmprts->n_prts - n_prts_recv;
-  auto d_bnd_off = cmprts->d_alt_bidx.begin() + n_prts_prev;
+  auto d_bnd_off = cmprts->d_alt_bidx.begin();
   thrust::copy(d_bnd_off, d_bnd_off + n_prts_recv, h_alt_bidx.begin());
   for (int n0 = 0; n0 < n_prts_recv; n0++) {
     int n = n0 + n_prts_prev;
