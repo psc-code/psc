@@ -5,6 +5,8 @@
 #include "psc_particles_cuda.h"
 #include "ddc_particles.hxx"
 
+#include <thrust/device_vector.h>
+
 // ======================================================================
 // bnd
 

@@ -16,7 +16,6 @@ libsubdir_la_SOURCES = \
 	psc_push_fields_cuda.cxx \
 	psc_marder_cuda.cxx \
 	psc_bnd_cuda.cxx \
-	psc_bnd_particles_cuda.cxx \
 	psc_bnd_fields_cuda.cxx \
 	psc_output_fields_item_flds_cuda.cxx \
 	psc_output_fields_item_moments_1st_nc_cuda.cxx \
@@ -33,6 +32,7 @@ libsubdir_la_SOURCES = \
 	b40c/vector_types.h
 
 libsubdir_la_LIBADD = \
+	psc_bnd_particles_cuda.lo \
 	cuda_base.lo \
 	cuda_mparticles_iface.lo \
 	cuda_mparticles.lo \
@@ -130,11 +130,18 @@ cuda_heating.lo: cuda_mparticles_const.h
 cuda_transfer.lo: cuda_iface_bnd.h
 cuda_bnd.lo: cuda_iface_bnd.h
 
+psc_bnd_particles_cuda.lo: %.lo: %.cxx $(CUDA_DEPS)
+	@echo "Tricking libtool"
+	echo "void lotrickdummy() {}" > ${<:.cxx=.c}
+	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
+	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ ${<:.cxx=.c}
+	rm ${@:.lo=.o} ${<:.cxx=.c}
+	$(CUDACC) -x cu $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
+
 #FIXME, this is just really too hacky...
 
 %.lo: %.cu $(CUDA_DEPS)
 	@echo "Tricking libtool"
-	TMPFILE=${<:.cu=.cu.c}
 	echo "void lotrickdummy() {}" > ${<:.cu=.cu.c}
 	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
 	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ ${<:.cu=.cu.c}
