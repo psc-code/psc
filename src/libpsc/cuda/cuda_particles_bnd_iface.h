@@ -18,10 +18,8 @@ struct bnd_particles_policy_cuda
   // ----------------------------------------------------------------------
   // ctor
   
-  bnd_particles_policy_cuda(psc_bnd_particles_cuda& bndp)
-    : bndp_(bndp)
-  {
-  }
+  bnd_particles_policy_cuda()
+  {}
 
 protected:
   // ----------------------------------------------------------------------
@@ -49,15 +47,11 @@ protected:
       ddcp->patches[p].m_buf = NULL;
     }
   }
-
-private:
-  psc_bnd_particles_cuda& bndp_;
 };
 
 struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
 						      bnd_particles_policy_cuda<mparticles_cuda_t>>
 {
-
   // ======================================================================
   // interface to psc_bnd_particles
   // repeated here since there's no way to do this somehow virtual at
