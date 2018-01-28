@@ -5,13 +5,30 @@
 #include "psc_particles_cuda.h"
 #include "ddc_particles.hxx"
 
+// ======================================================================
+// bnd
+
+#define CUDA_BND_S_NEW (9)
+#define CUDA_BND_S_OOB (10)
+#define CUDA_BND_STRIDE (10)
+
+// ----------------------------------------------------------------------
+// cuda_bnd
+
+struct cuda_bnd {
+  psc_particle_cuda_buf_t buf;
+  int n_recv;
+  int n_send;
+};
+
+// ----------------------------------------------------------------------
+// cuda_particles_bnd
+
 struct cuda_particles_bnd
 {
   using mparticles_t = mparticles_cuda_t;
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
-
-  ~cuda_particles_bnd();
 
   void setup(ddcp_t* ddcp, cuda_mparticles* cmprts);
   void prep(ddcp_t* ddcp, cuda_mparticles* cmprts);
@@ -41,7 +58,7 @@ struct cuda_particles_bnd
   void scan_scatter_received_gold(cuda_mparticles *cmprts);
   void update_offsets_gold(cuda_mparticles *cmprts);
 
-  struct cuda_bnd *bpatch;
+  std::vector<cuda_bnd> bpatch;
 };
 
 #endif

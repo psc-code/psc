@@ -71,22 +71,6 @@ struct cuda_mparticles_base
   const Grid_t& grid_;
 };
 
-// ======================================================================
-// bnd
-
-#define CUDA_BND_S_NEW (9)
-#define CUDA_BND_S_OOB (10)
-#define CUDA_BND_STRIDE (10)
-
-// ----------------------------------------------------------------------
-// cuda_bnd
-
-struct cuda_bnd {
-  psc_particle_cuda_buf_t buf;
-  int n_recv;
-  int n_send;
-};
-
 // ----------------------------------------------------------------------
 // cuda_mparticles_bnd
 
