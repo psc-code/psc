@@ -10,7 +10,7 @@ void cuda_particles_bnd::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
   cmprts->d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
   cmprts->d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
 
-  cmprts->bpatch = new cuda_bnd[cmprts->n_patches];
+  bpatch = new cuda_bnd[cmprts->n_patches];
 }
 
 // ----------------------------------------------------------------------
@@ -58,7 +58,7 @@ void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   if (!ddcp) return; // FIXME testing hack
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = &cmprts->bpatch[p].buf;
+    dpatch->m_buf = &bpatch[p].buf;
     dpatch->m_begin = 0;
   }
 }

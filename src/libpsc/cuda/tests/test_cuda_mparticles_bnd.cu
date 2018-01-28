@@ -95,10 +95,10 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -180,7 +180,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   for (int p = 0; p < cmprts->n_patches; p++) {
     //printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
-    EXPECT_EQ(cmprts->bpatch[p].n_send, 1);
+    EXPECT_EQ(cbnd->bpatch[p].n_send, 1);
   }
   EXPECT_EQ(cmprts->n_prts_send, 2);
 
@@ -237,10 +237,10 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 #endif
 
-  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -255,20 +255,20 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  particle_cuda_t prt1 = cmprts->bpatch[0].buf[0];
-  particle_cuda_t prt3 = cmprts->bpatch[1].buf[0];
+  particle_cuda_t prt1 = cbnd->bpatch[0].buf[0];
+  particle_cuda_t prt3 = cbnd->bpatch[1].buf[0];
   prt1.yi -= 40.;
   prt3.yi -= 40.;
-  cmprts->bpatch[0].buf[0] = prt3;
-  cmprts->bpatch[1].buf[0] = prt1;
+  cbnd->bpatch[0].buf[0] = prt3;
+  cbnd->bpatch[1].buf[0] = prt1;
   
   cbnd->post(nullptr, cmprts.get());
 
@@ -294,27 +294,27 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cmprts->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cmprts->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cmprts->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  particle_cuda_t prt1 = cmprts->bpatch[0].buf[0];
-  particle_cuda_t prt3 = cmprts->bpatch[1].buf[0];
+  particle_cuda_t prt1 = cbnd->bpatch[0].buf[0];
+  particle_cuda_t prt3 = cbnd->bpatch[1].buf[0];
   prt1.yi -= 40.;
   prt3.yi -= 40.;
-  cmprts->bpatch[0].buf[0] = prt3;
-  cmprts->bpatch[1].buf[0] = prt1;
+  cbnd->bpatch[0].buf[0] = prt3;
+  cbnd->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
   cbnd->convert_and_copy_to_dev(cmprts.get());
 
   // n_recv should be set for each patch, and its total
-  EXPECT_EQ(cmprts->bpatch[0].n_recv, 1);
-  EXPECT_EQ(cmprts->bpatch[1].n_recv, 1);
+  EXPECT_EQ(cbnd->bpatch[0].n_recv, 1);
+  EXPECT_EQ(cbnd->bpatch[1].n_recv, 1);
   EXPECT_EQ(cmprts->n_prts_recv, 2);
 
   // the received particle have been added to the previous total

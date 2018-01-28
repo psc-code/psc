@@ -59,7 +59,7 @@ void cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
   uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     uint n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
-    cmprts->bpatch[p].n_send = n_send - off;
+    bpatch[p].n_send = n_send - off;
     off = n_send;
   }
   cmprts->n_prts_send = off;
@@ -81,8 +81,8 @@ void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts)
 
   uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    psc_particle_cuda_buf_t& buf = cmprts->bpatch[p].buf;
-    uint n_send = cmprts->bpatch[p].n_send;
+    psc_particle_cuda_buf_t& buf = bpatch[p].buf;
+    uint n_send = bpatch[p].n_send;
     buf.reserve(n_send);
     buf.resize(n_send);
 
@@ -110,7 +110,7 @@ void cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 
   uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    n_recv += cmprts->bpatch[p].buf.size();
+    n_recv += bpatch[p].buf.size();
   }
 
   thrust::host_vector<float4> h_bnd_xi4(n_recv);
@@ -122,11 +122,11 @@ void cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   
   uint off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    int n_recv = cmprts->bpatch[p].buf.size();
-    cmprts->bpatch[p].n_recv = n_recv;
+    int n_recv = bpatch[p].buf.size();
+    bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      particle_cuda_t *prt = &cmprts->bpatch[p].buf[n];
+      particle_cuda_t *prt = &bpatch[p].buf[n];
       h_bnd_xi4[n + off].x  = prt->xi;
       h_bnd_xi4[n + off].y  = prt->yi;
       h_bnd_xi4[n + off].z  = prt->zi;

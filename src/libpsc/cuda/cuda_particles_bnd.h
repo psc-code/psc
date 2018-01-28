@@ -40,6 +40,8 @@ struct cuda_particles_bnd
   void count_received_gold(cuda_mparticles *cmprts);
   void scan_scatter_received_gold(cuda_mparticles *cmprts);
   void update_offsets_gold(cuda_mparticles *cmprts);
+
+  struct cuda_bnd *bpatch;
 };
 
 #endif

@@ -105,8 +105,6 @@ public:
 
   thrust::device_vector<uint> d_spine_cnts;
   thrust::device_vector<uint> d_spine_sums;
-
-  struct cuda_bnd *bpatch;
 };
 
 // ----------------------------------------------------------------------
