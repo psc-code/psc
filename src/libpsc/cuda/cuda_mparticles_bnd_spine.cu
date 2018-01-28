@@ -120,25 +120,31 @@ void cuda_particles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_count_received
+// k_count_received
 
 __global__ static void
-mprts_count_received(int nr_total_blocks, uint *d_alt_bidx, uint *d_spine_cnts)
+k_count_received(int nr_total_blocks, uint *d_n_recv_by_block, uint *d_spine_cnts)
 {
   int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
   if (bid < nr_total_blocks) {
-    d_spine_cnts[bid * 10 + CUDA_BND_S_NEW] = d_alt_bidx[bid];
+    d_spine_cnts[bid * 10 + CUDA_BND_S_NEW] = d_n_recv_by_block[bid];
   }
 }
+
+// ----------------------------------------------------------------------
+// count_received
 
 void cuda_particles_bnd::count_received(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
   
-  mprts_count_received<<<n_blocks, THREADS_PER_BLOCK>>>
+  k_count_received<<<n_blocks, THREADS_PER_BLOCK>>>
     (n_blocks, d_spine_cnts.data().get() + 10 * n_blocks, d_spine_cnts.data().get());
 }
+
+// ----------------------------------------------------------------------
+// count_received_gold
 
 void cuda_particles_bnd::count_received_gold(cuda_mparticles *cmprts)
 {
@@ -176,10 +182,10 @@ void cuda_mparticles_bnd::count_received_v1(cuda_mparticles *cmprts)
 #endif
 
 // ----------------------------------------------------------------------
-// scan_scatter_received
+// k_scan_scatter_received
 
 static void __global__
-mprts_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
+k_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
 			    uint *d_spine_sums, uint *d_alt_bidx,
 			    uint *d_bidx, uint *d_ids)
 {
@@ -194,6 +200,9 @@ mprts_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
   d_ids[nn] = n;
 }
 
+// ----------------------------------------------------------------------
+// scan_scatter_received
+
 void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   if (n_prts_recv == 0) {
@@ -204,11 +213,14 @@ void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_p
 
   int dimGrid = (n_prts_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-  mprts_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
+  k_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
     (n_prts_recv, n_prts_prev, d_spine_sums.data().get(), cmprts->d_alt_bidx.data().get(),
      cmprts->d_bidx.data().get(), cmprts->d_id.data().get());
   cuda_sync_if_enabled();
 }
+
+// ----------------------------------------------------------------------
+// scan_scatter_received_gold
 
 void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
