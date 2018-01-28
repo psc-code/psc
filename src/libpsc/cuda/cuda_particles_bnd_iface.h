@@ -30,6 +30,10 @@ protected:
   
   void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
   {
+    if (!is_setup_) {
+      cbnd.setup(ddcp, mprts->cmprts_);
+      is_setup_ = true;
+    }
     cbnd.prep(ddcp, mprts->cmprts_);
   }
 
@@ -43,6 +47,7 @@ protected:
 
 private:
   cuda_particles_bnd cbnd;
+  bool is_setup_ = false; // FIXME, setup should be done at ctor time
 };
 
 struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,

@@ -79,6 +79,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 #endif
 
     cbnd.reset(new cuda_particles_bnd());
+    cbnd->setup(nullptr, cmprts.get());
   }
 };
 

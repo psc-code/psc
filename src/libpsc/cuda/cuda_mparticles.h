@@ -94,9 +94,6 @@ struct cuda_mparticles;
 
 struct cuda_mparticles_bnd
 {
-  ~cuda_mparticles_bnd();
-
-  void setup(cuda_mparticles *cmprts);
   void reserve_all(cuda_mparticles *cmprts);
 
 public:

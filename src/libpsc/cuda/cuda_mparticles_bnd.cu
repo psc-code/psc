@@ -32,25 +32,6 @@
 // cuda_mparticles_bnd
 
 // ----------------------------------------------------------------------
-// setup
-
-void cuda_mparticles_bnd::setup(struct cuda_mparticles *cmprts)
-{
-  d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
-  d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
-
-  bpatch = new cuda_bnd[cmprts->n_patches];
-}  
-
-// ----------------------------------------------------------------------
-// dtor
-
-cuda_mparticles_bnd::~cuda_mparticles_bnd()
-{
-  delete[] bpatch;
-}
-
-// ----------------------------------------------------------------------
 // reserve_all
 
 void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)

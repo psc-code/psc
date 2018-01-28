@@ -3,6 +3,25 @@
 #include "cuda_mparticles.h"
 
 // ----------------------------------------------------------------------
+// setup
+
+void cuda_particles_bnd::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
+{
+  cmprts->d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
+  cmprts->d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
+
+  cmprts->bpatch = new cuda_bnd[cmprts->n_patches];
+}
+
+// ----------------------------------------------------------------------
+// dtor
+
+cuda_particles_bnd::~cuda_particles_bnd()
+{
+  //delete[] bpatch; FIXME, can be done when bpatch is moved into this class
+}
+
+// ----------------------------------------------------------------------
 // prep
 
 void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)

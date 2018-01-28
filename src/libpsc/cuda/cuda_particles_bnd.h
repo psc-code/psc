@@ -11,6 +11,9 @@ struct cuda_particles_bnd
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
 
+  ~cuda_particles_bnd();
+
+  void setup(ddcp_t* ddcp, cuda_mparticles* cmprts);
   void prep(ddcp_t* ddcp, cuda_mparticles* cmprts);
   void post(ddcp_t* ddcp, cuda_mparticles* cmprts);
 

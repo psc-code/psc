@@ -21,8 +21,6 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
   for (int p = 0; p < n_patches; p++) {
     xb_by_patch[p] = Real3(grid.patches[p].xb);
   }
-
-  cuda_mparticles_bnd::setup(this);
 }
 
 // ----------------------------------------------------------------------
