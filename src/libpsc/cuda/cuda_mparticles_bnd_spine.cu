@@ -236,8 +236,9 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uin
   thrust::copy(cmprts->d_alt_bidx.data() + cmprts->n_prts - n_prts_recv,
 	       cmprts->d_alt_bidx.data() + cmprts->n_prts,
 	       h_alt_bidx.begin());
-  for (int n = cmprts->n_prts - n_prts_recv; n < cmprts->n_prts; n++) {
-    int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n - (cmprts->n_prts - n_prts_recv)];
+  for (int n0 = 0; n0 < n_prts_recv; n0++) {
+    int n = cmprts->n_prts - n_prts_recv + n0;
+    int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n0];
     h_id[nn] = n;
   }
   thrust::copy(h_id.begin(), h_id.end(), cmprts->d_id.begin());
