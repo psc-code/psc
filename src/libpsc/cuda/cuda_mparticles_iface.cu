@@ -120,7 +120,7 @@ struct ConvertToCuda
     prt.pxi[1]  = prt_other.pyi;
     prt.pxi[2]  = prt_other.pzi;
     prt.kind    = prt_other.kind_;
-    prt.qni_wni = prt_other.qni_wni;
+    prt.qni_wni = prt_other.qni_wni_;
 
     return prt;
   }
@@ -151,7 +151,7 @@ struct ConvertFromCuda
     prt_other.pxi     = prt.pxi[0];
     prt_other.pyi     = prt.pxi[1];
     prt_other.pzi     = prt.pxi[2];
-    prt_other.qni_wni = prt.qni_wni;
+    prt_other.qni_wni_ = prt.qni_wni;
   }
 
 private:

@@ -177,7 +177,7 @@ void cuda_bndp::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_s
       prt->pxi     = h_bnd_pxi4[n + off].x;
       prt->pyi     = h_bnd_pxi4[n + off].y;
       prt->pzi     = h_bnd_pxi4[n + off].z;
-      prt->qni_wni = h_bnd_pxi4[n + off].w;
+      prt->qni_wni_ = h_bnd_pxi4[n + off].w;
     }
     off += n_send;
   }
@@ -216,7 +216,7 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
       h_bnd_pxi4[n + off].x = prt->pxi;
       h_bnd_pxi4[n + off].y = prt->pyi;
       h_bnd_pxi4[n + off].z = prt->pzi;
-      h_bnd_pxi4[n + off].w = prt->qni_wni;
+      h_bnd_pxi4[n + off].w = prt->qni_wni_;
 
       int b_pos[3];
       for (int d = 0; d < 3; d++) {
