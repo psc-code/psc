@@ -38,9 +38,9 @@ libsubdir_la_LIBADD = \
 	cuda_mparticles.lo \
 	cuda_mparticles_base.lo \
         cuda_particles_bnd_iface.lo \
-	cuda_mparticles_bnd.lo \
-	cuda_mparticles_bnd_scan.lo \
-	cuda_mparticles_bnd_spine.lo \
+	cuda_bndp.lo \
+	cuda_bndp_scan.lo \
+	cuda_bndp_spine.lo \
 	cuda_mfields_iface.lo \
 	cuda_mfields.lo \
 	cuda_mfields_bnd.lo \
@@ -54,22 +54,17 @@ check_PROGRAMS = \
 	tests/test_cuda_accel \
 	tests/test_cuda_mfields_1 \
 	tests/test_cuda_mparticles_1 \
-	tests/test_cuda_mparticles_bnd
+	tests/test_cuda_bndp
 
 tests/test_cuda_accel.lo: tests/cuda_test.hxx
 tests/test_cuda_mparticles_1.lo: tests/cuda_test.hxx
 tests/test_cuda_mfields_1.lo: tests/cuda_test.hxx
-tests/test_cuda_mparticles_bnd.lo: tests/cuda_test.hxx
+tests/test_cuda_bndp.lo: tests/cuda_test.hxx
 
 TESTS = $(check_PROGRAMS)
 
 #	tests/test_cuda_mparticles
 #	tests/test_cuda_heating
-
-#tests_test_cuda_mparticles_SOURCES =
-#tests_test_cuda_mparticles_LDADD = tests/test_cuda_mparticles.o cuda_mparticles.lo \
-#  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo
-#nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
 
 CUDA_GTEST_OBJS := \
 	../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
@@ -77,7 +72,7 @@ CUDA_GTEST_OBJS := \
 	$(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
 
 CUDA_BNDP_OBJS := \
-	cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo cuda_mparticles_bnd_spine.lo \
+	cuda_bndp.lo cuda_bndp_scan.lo cuda_bndp_spine.lo \
 	cuda_particles_bnd_iface.lo
 
 tests_test_cuda_accel_SOURCES = 
@@ -102,11 +97,11 @@ tests_test_cuda_mfields_1_LDADD = tests/test_cuda_mfields_1.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
 nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
 
-tests_test_cuda_mparticles_bnd_SOURCES = 
-tests_test_cuda_mparticles_bnd_LDADD = tests/test_cuda_mparticles_bnd.lo \
+tests_test_cuda_bndp_SOURCES = 
+tests_test_cuda_bndp_LDADD = tests/test_cuda_bndp.lo \
   cuda_mparticles.lo cuda_mparticles_base.lo \
   $(CUDA_BNDP_OBJS) $(CUDA_GTEST_OBJS)
-nodist_EXTRA_tests_test_cuda_mparticles_bnd_SOURCES = dummy.cxx
+nodist_EXTRA_tests_test_cuda_bndp_SOURCES = dummy.cxx
 
 #tests_test_cuda_heating_SOURCES = 
 #tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo \
