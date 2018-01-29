@@ -54,14 +54,6 @@ private:
 struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
 						      bnd_particles_policy_cuda<mparticles_cuda_t>>
 {
-  using Base = psc_bnd_particles_sub<mparticles_cuda_t,
-				     bnd_particles_policy_cuda<mparticles_cuda_t>>;
-  
-  psc_bnd_particles_cuda(struct mrc_domain *domain)
-  {
-    Base::setup(domain);
-  }
-  
   // ======================================================================
   // interface to psc_bnd_particles
   // repeated here since there's no way to do this somehow virtual at
@@ -69,21 +61,12 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
   
   // ----------------------------------------------------------------------
   // create
-  //
-  // we actually really create this object only at setup time
 
   static void create(struct psc_bnd_particles *bnd)
   {
-  }
-  
-  // ----------------------------------------------------------------------
-  // setup
-
-  static void setup(struct psc_bnd_particles *bnd)
-  {
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
 
-    new(sub) psc_bnd_particles_cuda(bnd->psc->mrc_domain);
+    new(sub) psc_bnd_particles_cuda();
   }
   
   // ----------------------------------------------------------------------
