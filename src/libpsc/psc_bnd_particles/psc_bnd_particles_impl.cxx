@@ -17,7 +17,6 @@ struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
   psc_bnd_particles_ops_single() {
     name                    = "single";
     size                    = sizeof(sub_t);
-    create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
     unsetup                 = sub_t::unsetup;
@@ -34,7 +33,6 @@ struct psc_bnd_particles_ops_double : psc_bnd_particles_ops {
   psc_bnd_particles_ops_double() {
     name                    = "double";
     size                    = sizeof(sub_t);
-    create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
     unsetup                 = sub_t::unsetup;
@@ -51,7 +49,6 @@ struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
   psc_bnd_particles_ops_fortran() {
     name                    = "fortran";
     size                    = sizeof(sub_t);
-    create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
     unsetup                 = sub_t::unsetup;
@@ -69,7 +66,6 @@ struct psc_bnd_particles_ops_single2 : psc_bnd_particles_ops {
   psc_bnd_particles_ops_single2() {
     name                    = "single2";
     size                    = sizeof(sub_t);
-    create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
     unsetup                 = sub_t::unsetup;
