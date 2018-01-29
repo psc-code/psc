@@ -16,44 +16,9 @@ struct psc_bnd_particles_cuda;
 template<typename MP>
 struct bnd_particles_policy_cuda
 {
-  using mparticles_t = MP;
-  using ddcp_t = ddc_particles<mparticles_t>;
-  using ddcp_patch = typename ddcp_t::patch;
-
-  // ----------------------------------------------------------------------
-  // ctor
-  
-  bnd_particles_policy_cuda()
-    : cbndp_(new cuda_bndp())
-  {}
-
-  // ----------------------------------------------------------------------
-  // setup
-
   void setup(Grid_t& grid)
   {
-    cbndp_->setup(grid);
   }
-
-protected:
-  // ----------------------------------------------------------------------
-  // exchange_mprts_prep
-  
-  void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
-  {
-    cbndp_->prep(ddcp, mprts->cmprts_);
-  }
-
-  // ----------------------------------------------------------------------
-  // exchange_mprts_post
-  
-  void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
-  {
-    cbndp_->post(ddcp, mprts->cmprts_);
-  }
-
-private:
-  std::unique_ptr<cuda_bndp> cbndp_;
 };
 
 struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
