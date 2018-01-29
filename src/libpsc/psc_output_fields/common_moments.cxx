@@ -34,7 +34,7 @@
     assert(jy >= -1 && jy < patch->ldims[1]);				\
     assert(jz >= -1 && jz < patch->ldims[2]);				\
     									\
-    real_t fnq = particle_wni(part) * fnqs;				\
+    real_t fnq = mprts->prt_wni(*part) * fnqs;				\
     									\
     F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);		\
     F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);		\
@@ -81,7 +81,7 @@
     assert(jy >= -1 && jy < patch->ldims[1]);				\
     assert(jz >= -1 && jz < patch->ldims[2]);				\
     									\
-    real_t fnq = particle_wni(part) * fnqs;				\
+    real_t fnq = mprts->prt_wni(*part) * fnqs;				\
 									\
     F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);		\
     F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);		\
@@ -131,7 +131,7 @@
     assert(jy >= 0 && jy <= patch->ldims[1]);				\
     assert(jz >= 0 && jz <= patch->ldims[2]);				\
     									\
-    real_t fnq = particle_wni(part) * fnqs;				\
+    real_t fnq = mprts->prt_wni(*part) * fnqs;				\
 					     				\
     F(m, jx-jxd,jy-jyd,jz-jzd) += fnq*gmx*gmy*gmz * (val);		\
     F(m, jx    ,jy-jyd,jz-jzd) += fnq*g0x*gmy*gmz * (val);		\
