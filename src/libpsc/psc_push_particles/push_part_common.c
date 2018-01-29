@@ -158,16 +158,16 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
     int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, ip.cxyz.g.l);	\
-    real_t fnqx = particle_qni_wni(part) * c_prm.fnqxs;	\
+    real_t fnqx = mprts->prt_qni_wni(*part) * c_prm.fnqxs;	\
 
 #define CURRENT_PREP							\
   IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );	\
   IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );	\
   IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );	\
 									\
-  IF_NOT_DIM_X( real_t fnqxx = vv[0] * particle_qni_wni(part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Y( real_t fnqyy = vv[1] * particle_qni_wni(part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Z( real_t fnqzz = vv[2] * particle_qni_wni(part) * c_prm.fnqs; )
+  IF_NOT_DIM_X( real_t fnqxx = vv[0] * mprts->prt_qni_wni(*part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Y( real_t fnqyy = vv[1] * mprts->prt_qni_wni(*part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Z( real_t fnqzz = vv[2] * mprts->prt_qni_wni(*part) * c_prm.fnqs; )
 
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\

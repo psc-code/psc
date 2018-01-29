@@ -6,8 +6,6 @@
 
 typedef particle_acc_t particle_t;
 
-#define particle_qni_wni            particle_acc_qni_wni
-
 #define PARTICLE_TYPE               "acc"
 
 #define PSC_PARTICLES_AS_ACC 1
