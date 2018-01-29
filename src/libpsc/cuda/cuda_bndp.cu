@@ -37,14 +37,10 @@ void cuda_bndp::setup(Grid_t& grid)
   *static_cast<cuda_mparticles_indexer*>(this) =
     cuda_mparticles_indexer(grid);
   
-  n_patches_ = grid.patches.size();
-  n_blocks_per_patch_ = b_mx_[0] * b_mx_[1] * b_mx_[2];
-  n_blocks_ = n_patches_ * n_blocks_per_patch_;
+  d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
+  d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
-  d_spine_cnts.resize(1 + n_blocks_ * (CUDA_BND_STRIDE + 1));
-  d_spine_sums.resize(1 + n_blocks_ * (CUDA_BND_STRIDE + 1));
-
-  bpatch.resize(n_patches_);
+  bpatch.resize(n_patches);
 }
 
 // ----------------------------------------------------------------------
@@ -136,15 +132,15 @@ void cuda_bndp::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
 
 uint cuda_bndp::find_n_send(cuda_mparticles *cmprts)
 {
-  thrust::host_vector<uint> h_spine_sums(n_blocks_ + 1);
+  thrust::host_vector<uint> h_spine_sums(n_blocks + 1);
 
-  thrust::copy(d_spine_sums.data() + n_blocks_ * 10,
-	       d_spine_sums.data() + n_blocks_ * 11 + 1,
+  thrust::copy(d_spine_sums.data() + n_blocks * 10,
+	       d_spine_sums.data() + n_blocks * 11 + 1,
 	       h_spine_sums.begin());
 
   uint off = 0;
-  for (int p = 0; p < n_patches_; p++) {
-    uint n_send = h_spine_sums[(p + 1) * n_blocks_per_patch_];
+  for (int p = 0; p < n_patches; p++) {
+    uint n_send = h_spine_sums[(p + 1) * n_blocks_per_patch];
     bpatch[p].n_send = n_send - off;
     off = n_send;
   }
@@ -166,7 +162,7 @@ void cuda_bndp::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_s
   thrust::copy(cmprts->d_pxi4.data() + n_prts, cmprts->d_pxi4.data() + n_prts + n_prts_send, h_bnd_pxi4.begin());
 
   uint off = 0;
-  for (int p = 0; p < n_patches_; p++) {
+  for (int p = 0; p < n_patches; p++) {
     psc_particle_cuda_buf_t& buf = bpatch[p].buf;
     uint n_send = bpatch[p].n_send;
     buf.reserve(n_send);
@@ -193,7 +189,7 @@ void cuda_bndp::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_s
 uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
   uint n_recv = 0;
-  for (int p = 0; p < n_patches_; p++) {
+  for (int p = 0; p < n_patches; p++) {
     n_recv += bpatch[p].buf.size();
   }
 
@@ -202,10 +198,10 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   thrust::host_vector<uint> h_bnd_idx(n_recv);
   thrust::host_vector<uint> h_bnd_off(n_recv);
 
-  thrust::host_vector<uint> h_bnd_cnt(n_blocks_, 0);
+  thrust::host_vector<uint> h_bnd_cnt(n_blocks, 0);
   
   uint off = 0;
-  for (int p = 0; p < n_patches_; p++) {
+  for (int p = 0; p < n_patches; p++) {
     int n_recv = bpatch[p].buf.size();
     bpatch[p].n_recv = n_recv;
     
@@ -238,8 +234,8 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 	assert(b_pos[d] >= 0 && b_pos[d] < cmprts->b_mx_[d]);
       }
       uint b = (b_pos[2] * cmprts->b_mx_[1] + b_pos[1]) * cmprts->b_mx_[0] + b_pos[0];
-      assert(b < n_blocks_per_patch_);
-      b += p * n_blocks_per_patch_;
+      assert(b < n_blocks_per_patch);
+      b += p * n_blocks_per_patch;
       h_bnd_idx[n + off] = b;
       h_bnd_off[n + off] = h_bnd_cnt[b]++;
     }
@@ -279,19 +275,19 @@ mprts_update_offsets(int nr_total_blocks, uint *d_off, uint *d_spine_sums)
 
 void cuda_bndp::update_offsets(cuda_mparticles *cmprts)
 {
-  int dimGrid = (n_blocks_ + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_blocks_, cmprts->d_off.data().get(), d_spine_sums.data().get());
+    (n_blocks, cmprts->d_off.data().get(), d_spine_sums.data().get());
   cuda_sync_if_enabled();
 }
 
 void cuda_bndp::update_offsets_gold(cuda_mparticles *cmprts)
 {
-  thrust::host_vector<uint> h_spine_sums(d_spine_sums.data(), d_spine_sums.data() + 1 + n_blocks_ * (10 + 1));
-  thrust::host_vector<uint> h_off(n_blocks_ + 1);
+  thrust::host_vector<uint> h_spine_sums(d_spine_sums.data(), d_spine_sums.data() + 1 + n_blocks * (10 + 1));
+  thrust::host_vector<uint> h_off(n_blocks + 1);
 
-  for (int bid = 0; bid <= n_blocks_; bid++) {
+  for (int bid = 0; bid <= n_blocks; bid++) {
     h_off[bid] = h_spine_sums[bid * 10];
   }
 

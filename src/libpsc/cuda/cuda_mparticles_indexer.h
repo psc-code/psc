@@ -24,6 +24,9 @@ struct cuda_mparticles_indexer
       b_mx_[d] = grid.ldims[d] / grid.bs[d];
       b_dxi_[d] = 1.f / (grid.bs[d] * grid.dx[d]);
     }
+
+    n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
+    n_blocks = n_patches * n_blocks_per_patch;
   }
 
   uint n_patches;                // number of patches
