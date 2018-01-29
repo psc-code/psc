@@ -303,9 +303,10 @@ cuda_heating_run_foil(struct cuda_mparticles *cmprts)
     cmprts->need_reorder = false;
   }
 
-  if (cmprts->bs[0] == 1 && cmprts->bs[1] == 2 && cmprts->bs[2] == 2) {
+  const Int3& bs = cmprts->grid_.bs;
+  if (bs[0] == 1 && bs[1] == 2 && bs[2] == 2) {
     heating_run_foil<1, 2, 2>(cmprts, d_curand_states);
-  } else if (cmprts->bs[0] == 1 && cmprts->bs[1] == 4 && cmprts->bs[2] == 4) {
+  } else if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
     heating_run_foil<1, 4, 4>(cmprts, d_curand_states);
   } else {
     assert(0);
