@@ -31,7 +31,7 @@
 // ----------------------------------------------------------------------
 // setup
 
-void cuda_bndp::setup(Grid_t& grid, cuda_mparticles* cmprts)
+void cuda_bndp::setup(Grid_t& grid)
 {
   // FIXME, mostly duplicated from cuda_mparticles
   Int3 b_mx;

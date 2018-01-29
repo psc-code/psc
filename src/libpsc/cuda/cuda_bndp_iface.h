@@ -32,7 +32,7 @@ protected:
   void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
   {
     if (!is_setup_) {
-      cbndp_->setup(ppsc->grid, mprts->cmprts_);
+      cbndp_->setup(ppsc->grid);
       is_setup_ = true;
     }
     cbndp_->prep(ddcp, mprts->cmprts_);
