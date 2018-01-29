@@ -93,7 +93,7 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 
   assert(!(flags & MP_DONT_RESIZE));
 
-  char s[strlen(type_to) + 12];
+  char s[std::max(strlen(type_from),strlen(type_to)) + 12];
   sprintf(s, "copy_to_%s", type_to);
   copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_from, s);
   if (!copy_to) {
