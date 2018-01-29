@@ -32,7 +32,7 @@ struct cuda_bndp
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
 
-  void setup(ddcp_t* ddcp, cuda_mparticles* cmprts);
+  void setup(Grid_t& grid, cuda_mparticles* cmprts);
   void prep(ddcp_t* ddcp, cuda_mparticles* cmprts);
   void post(ddcp_t* ddcp, cuda_mparticles* cmprts);
 

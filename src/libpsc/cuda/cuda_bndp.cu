@@ -31,7 +31,7 @@
 // ----------------------------------------------------------------------
 // setup
 
-void cuda_bndp::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
+void cuda_bndp::setup(Grid_t& grid, cuda_mparticles* cmprts)
 {
   d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
   d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
