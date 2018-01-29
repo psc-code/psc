@@ -81,7 +81,6 @@ struct cuda_mparticles_bnd
   void reserve_all(cuda_mparticles *cmprts);
 
 public:
-  thrust::device_vector<uint> d_bnd_off;
   thrust::device_vector<uint> d_sums; // FIXME, too many arrays, consolidation would be good
 };
 

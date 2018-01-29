@@ -63,6 +63,7 @@ struct cuda_particles_bnd
   thrust::device_vector<uint> d_spine_cnts;
   thrust::device_vector<uint> d_spine_sums;
   uint n_prts_send;
+  thrust::device_vector<uint> d_bnd_off;
 
   std::vector<cuda_bnd> bpatch;
 };
