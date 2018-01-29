@@ -112,10 +112,6 @@ void cuda_mparticles::swap_alt()
 {
   thrust::swap(d_xi4, d_alt_xi4);
   thrust::swap(d_pxi4, d_alt_pxi4);
-
-  uint n_prts = d_xi4.size();
-  d_bidx.resize(n_prts);
-  d_id.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -289,6 +285,8 @@ void cuda_mparticles::reorder_and_offsets()
   cuda_sync_if_enabled();
 
   swap_alt();
+  d_bidx.resize(n_prts);
+  d_id.resize(n_prts);
   need_reorder = false;
 }
 
@@ -326,6 +324,8 @@ void cuda_mparticles::reorder()
      d_alt_xi4.data().get(), d_alt_pxi4.data().get());
   
   swap_alt();
+  d_bidx.resize(n_prts);
+  d_id.resize(n_prts);
   need_reorder = false;
 }
 
