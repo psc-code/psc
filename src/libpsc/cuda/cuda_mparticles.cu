@@ -42,8 +42,6 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 
   cuda_mparticles_base::reserve_all(size);
 
-  d_alt_xi4.resize(n_alloced);
-  d_alt_pxi4.resize(n_alloced);
   d_bidx.resize(n_alloced);
   d_id.resize(n_alloced);
 }
@@ -261,6 +259,9 @@ void cuda_mparticles::reorder_and_offsets()
     return;
   }
 
+  d_alt_xi4.resize(n_prts);
+  d_alt_pxi4.resize(n_prts);
+
   dim3 dimGrid((n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
@@ -272,8 +273,6 @@ void cuda_mparticles::reorder_and_offsets()
 
   swap_alt();
   need_reorder = false;
-  d_xi4.resize(n_prts);
-  d_pxi4.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -301,6 +300,9 @@ void cuda_mparticles::reorder()
     return;
   }
   
+  d_alt_xi4.resize(n_prts);
+  d_alt_pxi4.resize(n_prts);
+
   dim3 dimGrid((n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
   k_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
@@ -309,8 +311,6 @@ void cuda_mparticles::reorder()
   
   swap_alt();
   need_reorder = false;
-  d_xi4.resize(n_prts);
-  d_pxi4.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------

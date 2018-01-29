@@ -639,6 +639,11 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   }
   dim3 dimGrid(gx, gy);
 
+  if (REORDER) {
+    cmprts->d_alt_xi4.resize(cmprts->n_prts);
+    cmprts->d_alt_pxi4.resize(cmprts->n_prts);
+  }
+
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
       push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT, CURRMEM,
@@ -665,6 +670,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 
   if (REORDER) {
     cmprts->swap_alt();
+    cmprts->need_reorder = false;
   }
 }
 
@@ -681,7 +687,6 @@ yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   } else {
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
-    cmprts->need_reorder = false;
   }
 }
 
