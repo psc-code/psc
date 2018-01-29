@@ -37,7 +37,6 @@ libsubdir_la_LIBADD = \
 	cuda_mparticles_iface.lo \
 	cuda_mparticles.lo \
 	cuda_mparticles_base.lo \
-        cuda_particles_bnd_iface.lo \
 	cuda_bndp.lo \
 	cuda_bndp_scan.lo \
 	cuda_bndp_spine.lo \
@@ -72,8 +71,7 @@ CUDA_GTEST_OBJS := \
 	$(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
 
 CUDA_BNDP_OBJS := \
-	cuda_bndp.lo cuda_bndp_scan.lo cuda_bndp_spine.lo \
-	cuda_particles_bnd_iface.lo
+	cuda_bndp.lo cuda_bndp_scan.lo cuda_bndp_spine.lo
 
 tests_test_cuda_accel_SOURCES = 
 tests_test_cuda_accel_LDADD = tests/test_cuda_accel.lo \

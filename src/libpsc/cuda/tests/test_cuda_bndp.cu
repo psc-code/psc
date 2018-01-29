@@ -1,6 +1,6 @@
 
 #include "cuda_mparticles.h"
-#include "cuda_particles_bnd_iface.h"
+#include "cuda_bndp.h"
 #include "cuda_test.hxx"
 
 #include <mrc_profile.h>

@@ -2,7 +2,7 @@
 #include "psc_bnd_particles_private.h"
 #include "psc_particles_cuda.h"
 
-#include "cuda_particles_bnd_iface.h"
+#include "cuda_bndp_iface.h"
 
 #include <mrc_profile.h>
 
