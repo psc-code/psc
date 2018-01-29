@@ -24,23 +24,12 @@ at_hi_boundary(int p, int d)
 }
 
 // ======================================================================
-// bnd_particles_policy default
-//
-// FIXME, not a good name
-
-template<typename MP>
-struct bnd_particles_policy_default
-{
-};
-
-// ======================================================================
 // psc_bnd_particles
 
-template<typename MP, typename P = bnd_particles_policy_default<MP>>
-struct psc_bnd_particles_sub : P
+template<typename MP>
+struct psc_bnd_particles_sub
 {
   using mparticles_t = MP;
-  using policy_t = P;
   using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
   using ddcp_t = ddc_particles<mparticles_t>;
@@ -96,13 +85,11 @@ protected:
   ddcp_t* ddcp;
 };
 
-#define psc_bnd_particles_sub(bnd, MP, P) mrc_to_subobj(bnd, (psc_bnd_particles_sub<MP, P>))
-
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::process_patch
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::process_patch(mparticles_t mprts, int p)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 {
   struct psc *psc = ppsc;
 
@@ -228,8 +215,8 @@ void psc_bnd_particles_sub<MP, P>::process_patch(mparticles_t mprts, int p)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::process_and_exchange
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::process_and_exchange(mparticles_t mprts)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
 {
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
@@ -259,8 +246,8 @@ void psc_bnd_particles_sub<MP, P>::process_and_exchange(mparticles_t mprts)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::exchange_particles
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 {
   for (int p = 0; p < mprts.n_patches(); p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
@@ -279,32 +266,32 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::create
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::create(struct psc_bnd_particles *bnd)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::create(struct psc_bnd_particles *bnd)
 {
-  auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
+  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
   
-  new(sub) psc_bnd_particles_sub<MP, P>();
+  new(sub) psc_bnd_particles_sub<MP>();
 }
   
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::destroy
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::destroy(struct psc_bnd_particles *bnd)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::destroy(struct psc_bnd_particles *bnd)
 {
-  auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
+  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
   
-  sub->~psc_bnd_particles_sub<MP, P>();
+  sub->~psc_bnd_particles_sub<MP>();
 }
   
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::setup
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::setup(struct psc_bnd_particles *bnd)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::setup(struct psc_bnd_particles *bnd)
 {
-  auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
+  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
 
   sub->setup(bnd->psc->mrc_domain);
   //psc_bnd_particles_open_setup(bnd);
@@ -313,10 +300,10 @@ void psc_bnd_particles_sub<MP, P>::setup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_unsetup
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::unsetup(struct psc_bnd_particles *bnd)
+template<typename MP>
+void psc_bnd_particles_sub<MP>::unsetup(struct psc_bnd_particles *bnd)
 {
-  auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
+  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
 
   sub->unsetup();
   //psc_bnd_particles_open_unsetup(bnd);
@@ -325,11 +312,11 @@ void psc_bnd_particles_sub<MP, P>::unsetup(struct psc_bnd_particles *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
-template<typename MP, typename P>
-void psc_bnd_particles_sub<MP, P>::exchange_particles(struct psc_bnd_particles *bnd,
+template<typename MP>
+void psc_bnd_particles_sub<MP>::exchange_particles(struct psc_bnd_particles *bnd,
 						      struct psc_mparticles *mprts_base)
 {
-  auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
+  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
   mparticles_t mprts = mprts_base->get_as<MP>();
   
   sub->exchange_particles(mprts);
