@@ -64,12 +64,10 @@ struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
 // psc_bnd_particles: subclass "single2"
 
 struct psc_bnd_particles_ops_single2 : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_sub<mparticles_single_t,
-				      bnd_particles_policy_ordered<mparticles_single_t>>;
+  using sub_t = psc_bnd_particles_ordered<mparticles_single_t>;
   psc_bnd_particles_ops_single2() {
     name                    = "single2";
     size                    = sizeof(sub_t);
-    create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
     unsetup                 = sub_t::unsetup;
