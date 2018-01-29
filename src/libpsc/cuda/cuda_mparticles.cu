@@ -131,10 +131,8 @@ cuda_params2_free(struct cuda_params2 *prm)
 
 int cuda_mparticles::get_block_idx(float4 xi4, int p)
 {
-  float *b_dxi = b_dxi_;
-  
-  int bpos_y = (int) floorf(xi4.y * b_dxi[1]);
-  int bpos_z = (int) floorf(xi4.z * b_dxi[2]);
+  int bpos_y = fint(xi4.y * b_dxi_[1]);
+  int bpos_z = fint(xi4.z * b_dxi_[2]);
 
   return get_bidx({0, bpos_y, bpos_z}, p);
 }
