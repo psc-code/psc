@@ -81,6 +81,9 @@ public:
   bool check_in_patch_unordered_slow();
   bool check_bidx_id_unordered_slow();
   bool check_ordered();
+
+  void resize(uint n_prts);
+  void resize_alt(uint n_prts);
   
 public:
   // per particle

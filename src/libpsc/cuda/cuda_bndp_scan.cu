@@ -115,9 +115,7 @@ void cuda_bndp::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send
     return;
   }
 
-  cmprts->d_xi4.resize(cmprts->n_prts + n_prts_send);
-  cmprts->d_pxi4.resize(cmprts->n_prts + n_prts_send);
-  assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
+  cmprts->resize(cmprts->n_prts + n_prts_send);
 
   float4 *xchg_xi4 = cmprts->d_xi4.data().get() + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4.data().get() + cmprts->n_prts;

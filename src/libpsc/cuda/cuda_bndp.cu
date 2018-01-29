@@ -182,8 +182,7 @@ void cuda_bndp::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_s
     off += n_send;
   }
 
-  cmprts->d_xi4.resize(n_prts);
-  cmprts->d_pxi4.resize(n_prts);
+  cmprts->resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -244,8 +243,7 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
     off += n_recv;
   }
 
-  cmprts->d_xi4.resize(cmprts->n_prts + n_recv);
-  cmprts->d_pxi4.resize(cmprts->n_prts + n_recv);
+  cmprts->resize(cmprts->n_prts + n_recv);
 
   thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->d_xi4.begin() + cmprts->n_prts);
   thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->d_pxi4.begin() + cmprts->n_prts);

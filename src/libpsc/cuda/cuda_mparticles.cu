@@ -47,6 +47,24 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 }
 
 // ----------------------------------------------------------------------
+// resize
+
+void cuda_mparticles::resize(uint n_prts)
+{
+  d_xi4.resize(n_prts);
+  d_pxi4.resize(n_prts);
+}
+
+// ----------------------------------------------------------------------
+// resize_alt
+
+void cuda_mparticles::resize_alt(uint n_prts)
+{
+  d_alt_xi4.resize(n_prts);
+  d_alt_pxi4.resize(n_prts);
+}
+
+// ----------------------------------------------------------------------
 // dump_by_patch
 
 void cuda_mparticles::dump_by_patch(uint *n_prts_by_patch)
@@ -259,8 +277,7 @@ void cuda_mparticles::reorder_and_offsets()
     return;
   }
 
-  d_alt_xi4.resize(n_prts);
-  d_alt_pxi4.resize(n_prts);
+  resize_alt(n_prts);
 
   dim3 dimGrid((n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
@@ -300,8 +317,7 @@ void cuda_mparticles::reorder()
     return;
   }
   
-  d_alt_xi4.resize(n_prts);
-  d_alt_pxi4.resize(n_prts);
+  resize_alt(n_prts);
 
   dim3 dimGrid((n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
@@ -397,13 +413,13 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   find_block_indices_ids();
   // assert(check_bidx_id_unordered_slow());
 
-  d_xi4.resize(n_prts + buf_n);
-  d_pxi4.resize(n_prts + buf_n);
-  
-  thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4.data() + n_prts);
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4.data() + n_prts);
-  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx.data() + n_prts);
+  resize(n_prts + buf_n);
+
+  thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4.begin() + n_prts);
+  thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4.begin() + n_prts);
+  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx.begin() + n_prts);
   //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
+  // FIXME, looks like ids up until n_prts have already been set above
   thrust::sequence(d_id.data(), d_id.data() + n_prts + buf_n);
 
   // for (int i = -5; i <= 5; i++) {
