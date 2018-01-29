@@ -411,6 +411,10 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
       grid.patches[p].xe[d] = (patches[p].off[d] + patches[p].ldims[d]) * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
     }
   }
+
+  for (int d = 0; d < 3; d++) {
+    grid.bs[d] = psc->domain.gdims[d] == 1 ? 1 : 4;
+  }
 }
 
 // ----------------------------------------------------------------------

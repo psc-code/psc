@@ -45,10 +45,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  for (int d = 0; d < 3; d++) {
-    grid.bs[d] = ppsc->domain.gdims[d] == 1 ? 1 : 4;
-  }
-
   grid.kinds.resize(0);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
