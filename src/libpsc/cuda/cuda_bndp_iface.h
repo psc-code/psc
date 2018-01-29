@@ -62,6 +62,14 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
 
   using Base::setup;
   
+  // ----------------------------------------------------------------------
+  // exchange_particles
+
+  void exchange_particles(mparticles_cuda_t mprts)
+  {
+    Base::exchange_particles(mprts);
+  }
+
   // ======================================================================
   // interface to psc_bnd_particles
   // repeated here since there's no way to do this somehow virtual at
@@ -98,6 +106,19 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
     sub->~psc_bnd_particles_cuda();
   }
   
+  // ----------------------------------------------------------------------
+  // exchange_particles
+
+  static void exchange_particles(struct psc_bnd_particles *bnd,
+				 struct psc_mparticles *mprts_base)
+  {
+    auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    
+    sub->exchange_particles(mprts);
+    
+    mprts.put_as(mprts_base);
+  }
 };
 
 #endif
