@@ -24,7 +24,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   
   std::unique_ptr<Grid_t> grid;
   std::unique_ptr<cuda_mparticles> cmprts;
-  std::unique_ptr<cuda_bndp> cbnd;
+  std::unique_ptr<cuda_bndp> cbndp;
 
   const Int3 bs_ = { 1, 1, 1 };
 
@@ -78,8 +78,8 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
     cmprts->dump();
 #endif
 
-    cbnd.reset(new cuda_bndp());
-    cbnd->setup(nullptr, cmprts.get());
+    cbndp.reset(new cuda_bndp());
+    cbndp->setup(nullptr, cmprts.get());
   }
 };
 
@@ -91,14 +91,14 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
-  cbnd->prep(nullptr, cmprts.get());
+  cbndp->prep(nullptr, cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -109,13 +109,13 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
   // test spine_reduce
-  cbnd->spine_reduce(cmprts.get());
+  cbndp->spine_reduce(cmprts.get());
 
 #if 0
   for (int b = 0; b < cmprts->n_blocks; b++) {
     printf("b %d:", b);
     for (int n = 0; n < 10; n++) {
-      int cnt = cbnd->d_spine_cnts[10*b + n];
+      int cnt = cbndp->d_spine_cnts[10*b + n];
       printf(" %3d", cnt);
     }
     printf("\n");
@@ -124,7 +124,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   for (int b = 0; b < cmprts->n_blocks; b++) {
     for (int n = 0; n < 10; n++) {
-      int cnt = cbnd->d_spine_cnts[10*b + n];
+      int cnt = cbndp->d_spine_cnts[10*b + n];
       // one particle each moves to block 1, 17, respectively, from the left (-y: 3)
       if ((b ==  1 && n == 3) ||
 	  (b == 17 && n == 3)) {
@@ -138,14 +138,14 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #if 0
   printf("oob: ");
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbnd->d_spine_cnts[10*cmprts->n_blocks + b];
+    int cnt = cbndp->d_spine_cnts[10*cmprts->n_blocks + b];
     printf(" %3d", cnt);
   }
   printf("\n");
 #endif
 
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbnd->d_spine_cnts[10*cmprts->n_blocks + b];
+    int cnt = cbndp->d_spine_cnts[10*cmprts->n_blocks + b];
     // the particles in cell 3 and 19 went out of bounds
     if (b == 3 || b == 19) {
       EXPECT_EQ(cnt, 1) << "where b = " << b;
@@ -157,14 +157,14 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #if 0
   printf("sum: ");
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbnd->d_spine_sums[10*cmprts->n_blocks + b];
+    int cnt = cbndp->d_spine_sums[10*cmprts->n_blocks + b];
     printf(" %3d", cnt);
   }
   printf("\n");
 #endif
   
   for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbnd->d_spine_sums[10*cmprts->n_blocks + b];
+    int cnt = cbndp->d_spine_sums[10*cmprts->n_blocks + b];
     // the particles in cell 3 and 19 went out of bounds
     if (b <= 3) {
       EXPECT_EQ(cnt, 0) << "where b = " << b;
@@ -176,17 +176,17 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 
   // test find_n_send
-  cbnd->n_prts_send = cbnd->find_n_send(cmprts.get());
+  cbndp->n_prts_send = cbndp->find_n_send(cmprts.get());
 
   for (int p = 0; p < cmprts->n_patches; p++) {
     //printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
-    EXPECT_EQ(cbnd->bpatch[p].n_send, 1);
+    EXPECT_EQ(cbndp->bpatch[p].n_send, 1);
   }
-  EXPECT_EQ(cbnd->n_prts_send, 2);
+  EXPECT_EQ(cbndp->n_prts_send, 2);
 
   // test scan_send_buf_total
 #if 1
-  cbnd->scan_send_buf_total(cmprts.get(), cbnd->n_prts_send);
+  cbndp->scan_send_buf_total(cmprts.get(), cbndp->n_prts_send);
 
 #if 0
   printf("ids: ");
@@ -197,12 +197,12 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   printf("\n");
 #endif
   EXPECT_EQ(cmprts->n_prts, 4);
-  EXPECT_EQ(cbnd->n_prts_send, 2);
+  EXPECT_EQ(cbndp->n_prts_send, 2);
   EXPECT_EQ(cmprts->d_id[2], 1);
   EXPECT_EQ(cmprts->d_id[3], 3);
 
 #else
-  cbnd->scan_send_buf_total_gold(cmprts.get(), cbnd->n_prts_send);
+  cbndp->scan_send_buf_total_gold(cmprts.get(), cbndp->n_prts_send);
   // the intermediate scan_send_buf_total_gold result
   // can be tested here, but the non-gold version works differently
   // and has different intermediate results
@@ -216,8 +216,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #endif
 
   // where in the send region at the tail the OOB particles should go
-  EXPECT_EQ(cbnd->d_sums[1], 0);
-  EXPECT_EQ(cbnd->d_sums[3], 1);
+  EXPECT_EQ(cbndp->d_sums[1], 0);
+  EXPECT_EQ(cbndp->d_sums[3], 1);
 #endif
 
   // particles 1, 3, which need to be exchanged, should now be at the
@@ -226,7 +226,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[cmprts->n_prts+1]).w), 3);
 
   // test copy_from_dev_and_convert
-  cbnd->copy_from_dev_and_convert(cmprts.get(), cbnd->n_prts_send);
+  cbndp->copy_from_dev_and_convert(cmprts.get(), cbndp->n_prts_send);
 
 #if 0
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -237,10 +237,10 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 #endif
 
-  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -251,26 +251,26 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
   // BndPost expects the work done by bnd_prep()
-  cbnd->prep(nullptr, cmprts.get());
+  cbndp->prep(nullptr, cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  particle_cuda_t prt1 = cbnd->bpatch[0].buf[0];
-  particle_cuda_t prt3 = cbnd->bpatch[1].buf[0];
+  particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
+  particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
   prt1.yi -= 40.;
   prt3.yi -= 40.;
-  cbnd->bpatch[0].buf[0] = prt3;
-  cbnd->bpatch[1].buf[0] = prt1;
+  cbndp->bpatch[0].buf[0] = prt3;
+  cbndp->bpatch[1].buf[0] = prt1;
   
-  cbnd->post(nullptr, cmprts.get());
+  cbndp->post(nullptr, cmprts.get());
 
   // bnd_post doesn't do the actually final reordering
   EXPECT_TRUE(cmprts->need_reorder);
@@ -290,32 +290,32 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
   // BndPost expects the work done by bnd_prep()
-  cbnd->prep(nullptr, cmprts.get());
+  cbndp->prep(nullptr, cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cbnd->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbnd->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbnd->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  particle_cuda_t prt1 = cbnd->bpatch[0].buf[0];
-  particle_cuda_t prt3 = cbnd->bpatch[1].buf[0];
+  particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
+  particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
   prt1.yi -= 40.;
   prt3.yi -= 40.;
-  cbnd->bpatch[0].buf[0] = prt3;
-  cbnd->bpatch[1].buf[0] = prt1;
+  cbndp->bpatch[0].buf[0] = prt3;
+  cbndp->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  uint n_prts_recv = cbnd->convert_and_copy_to_dev(cmprts.get());
+  uint n_prts_recv = cbndp->convert_and_copy_to_dev(cmprts.get());
   cmprts->n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
-  EXPECT_EQ(cbnd->bpatch[0].n_recv, 1);
-  EXPECT_EQ(cbnd->bpatch[1].n_recv, 1);
+  EXPECT_EQ(cbndp->bpatch[0].n_recv, 1);
+  EXPECT_EQ(cbndp->bpatch[1].n_recv, 1);
   EXPECT_EQ(n_prts_recv, 2);
 
   // the received particle have been added to the previous total
@@ -333,15 +333,15 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // received particles per block have been counted
   for (int b = 0; b < cmprts->n_blocks; b++) {
     if (b == 0 || b == 16) {
-      EXPECT_EQ(cbnd->d_spine_cnts[10*cmprts->n_blocks + b], 1);
+      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts->n_blocks + b], 1);
     } else {
-      EXPECT_EQ(cbnd->d_spine_cnts[10*cmprts->n_blocks + b], 0);
+      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts->n_blocks + b], 0);
     }
   }
 
   // both particles are the 0th (and only) particle added to their respective block
-  EXPECT_EQ(cbnd->d_bnd_off[0], 0);
-  EXPECT_EQ(cbnd->d_bnd_off[1], 0);
+  EXPECT_EQ(cbndp->d_bnd_off[0], 0);
+  EXPECT_EQ(cbndp->d_bnd_off[1], 0);
 
   // === test sort
   uint n_prts_by_patch[cmprts->n_patches];
@@ -349,8 +349,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
-  cbnd->sort_pairs_device(cmprts.get(), n_prts_recv);
-  cmprts->n_prts -= cbnd->n_prts_send;
+  cbndp->sort_pairs_device(cmprts.get(), n_prts_recv);
+  cmprts->n_prts -= cbndp->n_prts_send;
 
   EXPECT_EQ(cmprts->n_prts, 4);
   EXPECT_EQ(cmprts->d_id[0], 4);
@@ -358,7 +358,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cmprts->d_id[2], 5);
   EXPECT_EQ(cmprts->d_id[3], 2);
 
-  cbnd->update_offsets(cmprts.get());
+  cbndp->update_offsets(cmprts.get());
   for (int b = 0; b <= cmprts->n_blocks; b++) {
     if (b < 1) {
       EXPECT_EQ(cmprts->d_off[b], 0) << "where b = " << b;
