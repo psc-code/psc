@@ -182,6 +182,53 @@ struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP,
 {
   using Base = psc_bnd_particles_sub<MP,
 				     bnd_particles_policy_ordered<MP>>;
+  using mparticles_t = MP;
+
+  using Base::ddcp;
+
+  // ----------------------------------------------------------------------
+  // exchange_particles
+
+  void exchange_particles(mparticles_t mprts)
+  {
+    static int pr_A, pr_B;
+    if (!pr_A) {
+      pr_A = prof_register("xchg_mprts_prep", 1., 0, 0);
+      pr_B = prof_register("xchg_mprts_post", 1., 0, 0);
+    }
+    
+    prof_restart(pr_time_step_no_comm);
+    prof_start(pr_A);
+    this->exchange_mprts_prep(ddcp, mprts);
+    prof_stop(pr_A);
+    
+    this->process_and_exchange(mprts);
+    
+    prof_restart(pr_time_step_no_comm);
+    prof_start(pr_B);
+    this->exchange_mprts_post(ddcp, mprts);
+    prof_stop(pr_B);
+    prof_stop(pr_time_step_no_comm);
+  }
+
+  // ======================================================================
+  // interface to psc_bnd_particles
+  // repeated here since there's no way to do this somehow virtual at
+  // this spoint
+  
+  // ----------------------------------------------------------------------
+  // exchange_particles
+
+  static void exchange_particles(struct psc_bnd_particles *bnd,
+				 struct psc_mparticles *mprts_base)
+  {
+    auto sub = static_cast<psc_bnd_particles_ordered*>(bnd->obj.subctx);
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    
+    sub->exchange_particles(mprts);
+    
+    mprts.put_as(mprts_base);
+  }
 };
 
 #endif
