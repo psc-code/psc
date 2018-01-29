@@ -10,7 +10,6 @@ typedef particle_cuda2_t particle_t;
 #define particle_qni_wni            particle_cuda2_qni_wni
 #define particle_qni                particle_cuda2_qni
 #define particle_mni                particle_cuda2_mni
-#define particle_wni                particle_cuda2_wni
 
 #define PARTICLE_TYPE               "cuda2"
 

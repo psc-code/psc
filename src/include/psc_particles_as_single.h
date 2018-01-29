@@ -11,7 +11,6 @@ using particle_t = mparticles_t::particle_t;
 #define particle_qni_wni            particle_single_qni_wni
 #define particle_qni                particle_single_qni
 #define particle_mni                particle_single_mni
-#define particle_wni                particle_single_wni
 
 #define PARTICLE_TYPE               "single"
 
