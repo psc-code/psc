@@ -146,11 +146,11 @@ struct bnd_particles_policy_ordered
 	//      find_block_indices_count_reorderx(prts);
 	count_and_reorder_to_back(mprts.mprts(), p);
       }
-      dpatch->m_buf = &prts.get_buf();
-      dpatch->m_begin = dpatch->m_buf->size();
+      dpatch->buf = prts.get_buf();
+      dpatch->begin = dpatch->buf.size();
       
       unsigned int n_send = prts.b_cnt[prts.nr_blocks];
-      dpatch->m_buf->resize(dpatch->m_begin + n_send);
+      dpatch->buf.resize(dpatch->begin + n_send);
     }
   }
   
@@ -163,9 +163,9 @@ struct bnd_particles_policy_ordered
       mparticles_single_t::patch_t& prts = mprts[p];
       ddcp_patch *dpatch = &ddcp->patches[p];
       
-      int n_prts = dpatch->m_buf->size();
+      int n_prts = dpatch->buf.size();
       
-      find_block_indices_count(prts.b_idx, prts.b_cnt, mprts.mprts(), p, dpatch->m_begin);
+      find_block_indices_count(prts.b_idx, prts.b_cnt, mprts.mprts(), p, dpatch->begin);
       exclusive_scan(prts.b_cnt, prts.nr_blocks + 1);
       sort_indices(prts.b_idx, prts.b_cnt, prts.b_ids, n_prts);
       

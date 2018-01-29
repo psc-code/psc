@@ -109,12 +109,12 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
     dpatch->nei[dir1].send_buf.resize(0);
   }
 
-  unsigned int n_begin = dpatch->m_begin;
-  unsigned int n_end = dpatch->m_buf->size();
+  unsigned int n_begin = dpatch->begin;
+  unsigned int n_end = dpatch->buf.size();
   unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
-    particle_t *prt = &(*dpatch->m_buf)[n];
+    particle_t *prt = &dpatch->buf[n];
     real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     real_t *pxi = &prt->pxi;
     
@@ -126,7 +126,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
-      (*dpatch->m_buf)[head++] = *prt;
+      dpatch->buf[head++] = *prt;
       continue;
     }
 
@@ -202,14 +202,14 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	(*dpatch->m_buf)[head++] = *prt;
+	dpatch->buf[head++] = *prt;
       } else {
 	typename ddc_particles<mparticles_t>::dnei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	nei->send_buf.push_back(*prt);
       }
     }
   }
-  dpatch->m_buf->resize(head);
+  dpatch->buf.resize(head);
 }
 
 // ----------------------------------------------------------------------
@@ -251,8 +251,8 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 {
   for (int p = 0; p < mprts.n_patches(); p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = &mprts[p].get_buf();
-    dpatch->m_begin = 0;
+    dpatch->buf = mprts[p].get_buf();
+    dpatch->begin = 0;
   }
 
   process_and_exchange(mprts);

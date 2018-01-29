@@ -58,8 +58,8 @@ struct ddc_particles
   };
 
   struct patch {
-    particle_buf_t *m_buf;
-    unsigned int m_begin;
+    particle_buf_t& buf;
+    unsigned int begin;
     dnei nei[N_DIR];
     int n_recv;
   };
@@ -465,12 +465,12 @@ inline void ddc_particles<MP>::comm()
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches[p];
-    int size = patch->m_buf->size();
-    patch->m_buf->reserve(size + patch->n_recv);
+    int size = patch->buf.size();
+    patch->buf.reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
     // it won't become invalid due to a realloc since we reserved enough space...
-    it_recv[p] = patch->m_buf->end();
-    patch->m_buf->resize(size + patch->n_recv);
+    it_recv[p] = patch->buf.end();
+    patch->buf.resize(size + patch->n_recv);
   }
 
   // overlap: copy particles from local proc to the end of recv range
@@ -514,7 +514,7 @@ inline void ddc_particles<MP>::comm()
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches[p];
-    assert(it_recv[p] == patch->m_buf->end());
+    assert(it_recv[p] == patch->buf.end());
   }
   
   delete[] it_recv;
