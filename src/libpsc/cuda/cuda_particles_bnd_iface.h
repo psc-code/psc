@@ -7,7 +7,7 @@
 #include "psc_bnd_particles_private.h"
 
 #include "bnd_particles_impl.hxx"
-#include "cuda_particles_bnd.h"
+#include "cuda_bndp.h"
 
 struct psc_bnd_particles_cuda;
 

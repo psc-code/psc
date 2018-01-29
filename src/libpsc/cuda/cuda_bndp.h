@@ -1,6 +1,6 @@
 
-#ifndef CUDA_PARTICLES_BND_H
-#define CUDA_PARTICLES_BND_H
+#ifndef CUDA_BNDP_H
+#define CUDA_BNDP_H
 
 #include "psc_particles_cuda.h"
 #include "ddc_particles.hxx"
