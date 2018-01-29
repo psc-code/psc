@@ -202,7 +202,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   EXPECT_EQ(cmprts->d_id[3], 3);
 
 #else
-  cmprts->scan_send_buf_total_gold(cmprts.get());
+  cbnd->scan_send_buf_total_gold(cmprts.get(), cbnd->n_prts_send);
   // the intermediate scan_send_buf_total_gold result
   // can be tested here, but the non-gold version works differently
   // and has different intermediate results

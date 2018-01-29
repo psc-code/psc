@@ -77,7 +77,7 @@ void cuda_particles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts, uint n
 }
 
 // ----------------------------------------------------------------------
-// k_send_buf_total
+// k_reorder_send_buf_total
 
 __global__ static void
 k_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
@@ -195,7 +195,7 @@ void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts, uint 
 
   thrust::host_vector<uint> h_off(cmprts->d_off);
   thrust::host_vector<uint> h_bidx(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts);
-  thrust::host_vector<uint> h_sums(cmprts->d_sums.data(), cmprts->d_sums.data() + cmprts->n_prts);
+  thrust::host_vector<uint> h_sums(cmprts->n_prts);
   
   for (uint bid = 0; bid < n_blocks; bid++) {
     uint sum = d_spine_sums[n_blocks * 10 + bid];
@@ -207,6 +207,7 @@ void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts, uint 
     }
   }
 
+  cmprts->d_sums.resize(cmprts->n_prts);
   thrust::copy(h_sums.begin(), h_sums.end(), cmprts->d_sums.begin());
 
   reorder_send_buf_total(cmprts, n_prts_send);

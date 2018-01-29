@@ -46,8 +46,6 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
   d_alt_pxi4.resize(n_alloced);
   d_bidx.resize(n_alloced);
   d_id.resize(n_alloced);
-
-  cuda_mparticles_bnd::reserve_all(this);
 }
 
 // ----------------------------------------------------------------------

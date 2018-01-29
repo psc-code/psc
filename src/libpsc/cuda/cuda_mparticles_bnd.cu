@@ -28,18 +28,6 @@
 #include <cstdio>
 #include <cassert>
 
-// ======================================================================
-// cuda_mparticles_bnd
-
-// ----------------------------------------------------------------------
-// reserve_all
-
-void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
-{
-  int n_alloced = cmprts->n_alloced;
-  d_sums.resize(n_alloced);
-}
-
 // ----------------------------------------------------------------------
 // find_n_send
 
