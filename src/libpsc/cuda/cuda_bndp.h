@@ -68,6 +68,11 @@ struct cuda_bndp
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
   std::vector<cuda_bnd> bpatch;
+
+private:
+  uint n_patches_;
+  uint n_blocks_per_patch_;
+  uint n_blocks_;
 };
 
 #endif
