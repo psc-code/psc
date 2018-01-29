@@ -40,7 +40,7 @@ struct psc_bnd_particles_sub
   static void create(struct psc_bnd_particles *bnd);
   static void destroy(struct psc_bnd_particles *bnd);
   static void setup(struct psc_bnd_particles *bnd);
-  static void unsetup(struct psc_bnd_particles *bnd);
+  static void reset(struct psc_bnd_particles *bnd);
   static void exchange_particles(struct psc_bnd_particles *bnd,
 				 struct psc_mparticles *mprts_base);
 
@@ -69,12 +69,12 @@ protected:
   }
 
   // ----------------------------------------------------------------------
-  // unsetup
+  // reset
 
-  void unsetup()
+  void reset(struct mrc_domain *domain)
   {
     delete ddcp;
-    ddcp = nullptr;
+    setup(domain);
   }
 
   void process_patch(mparticles_t mprts, int p);
@@ -298,15 +298,15 @@ void psc_bnd_particles_sub<MP>::setup(struct psc_bnd_particles *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub_unsetup
+// psc_bnd_particles_sub_reset
 
 template<typename MP>
-void psc_bnd_particles_sub<MP>::unsetup(struct psc_bnd_particles *bnd)
+void psc_bnd_particles_sub<MP>::reset(struct psc_bnd_particles *bnd)
 {
   auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
 
-  sub->unsetup();
-  //psc_bnd_particles_open_unsetup(bnd);
+  sub->reset(bnd->psc->mrc_domain);
+  //psc_bnd_particles_open_reset(bnd);
 }
 
 // ----------------------------------------------------------------------

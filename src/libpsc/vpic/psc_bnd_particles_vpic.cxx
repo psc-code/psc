@@ -15,10 +15,10 @@ psc_bnd_particles_vpic_exchange_particles(struct psc_bnd_particles *bnd,
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_vpic_unsetup
+// psc_bnd_particles_vpic_reset
 
 static void
-psc_bnd_particles_vpic_unsetup(struct psc_bnd_particles *bnd)
+psc_bnd_particles_vpic_reset(struct psc_bnd_particles *bnd)
 {
 }
 
@@ -29,7 +29,7 @@ struct psc_bnd_particles_ops_vpic : psc_bnd_particles_ops {
   psc_bnd_particles_ops_vpic() {
     name                  = "vpic";
     exchange_particles    = psc_bnd_particles_vpic_exchange_particles;
-    unsetup               = psc_bnd_particles_vpic_unsetup;
+    reset                 = psc_bnd_particles_vpic_reset;
   }
 } psc_bnd_particles_vpic_ops;
 

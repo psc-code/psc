@@ -47,8 +47,7 @@ psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd)
 {
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
 
-  ops->unsetup(bnd);
-  ops->setup(bnd);
+  ops->reset(bnd);
 }
 
 // ----------------------------------------------------------------------

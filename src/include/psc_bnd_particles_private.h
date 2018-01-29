@@ -21,7 +21,7 @@ struct psc_bnd_particles {
 struct psc_bnd_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_bnd_particles);
 
-  void (*unsetup)(struct psc_bnd_particles *bnd);
+  void (*reset)(struct psc_bnd_particles *bnd);
   void (*exchange_particles)(struct psc_bnd_particles *bnd, struct psc_mparticles *particles);
   void (*open_calc_moments)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
 };

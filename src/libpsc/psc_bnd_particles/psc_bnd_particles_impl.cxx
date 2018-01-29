@@ -20,7 +20,7 @@ struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
     create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
-    unsetup                 = sub_t::unsetup;
+    reset                   = sub_t::reset;
     exchange_particles      = sub_t::exchange_particles;
     //open_calc_moments       = psc_bnd_particles_sub_open_calc_moments;
   }
@@ -37,7 +37,7 @@ struct psc_bnd_particles_ops_double : psc_bnd_particles_ops {
     create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
-    unsetup                 = sub_t::unsetup;
+    reset                   = sub_t::reset;
     exchange_particles      = sub_t::exchange_particles;
     //open_calc_moments       = psc_bnd_particles_sub_open_calc_moments;
   }
@@ -54,7 +54,7 @@ struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
     create                  = sub_t::create;
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
-    unsetup                 = sub_t::unsetup;
+    reset                   = sub_t::reset;
     exchange_particles      = sub_t::exchange_particles;
     //open_calc_moments       = psc_bnd_particles_sub_open_calc_moments;
   }
@@ -70,7 +70,7 @@ struct psc_bnd_particles_ops_single2 : psc_bnd_particles_ops {
     size                    = sizeof(sub_t);
     destroy                 = sub_t::destroy;
     setup                   = sub_t::setup;
-    unsetup                 = sub_t::unsetup;
+    reset                   = sub_t::reset;
     exchange_particles      = sub_t::exchange_particles;
   }
 } psc_bnd_particles_single2_ops;

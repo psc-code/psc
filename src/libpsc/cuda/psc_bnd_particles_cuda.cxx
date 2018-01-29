@@ -18,7 +18,7 @@ struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
     create                  = psc_bnd_particles_cuda::create;
     destroy                 = psc_bnd_particles_cuda::destroy;
     setup                   = psc_bnd_particles_cuda::setup;
-    unsetup                 = psc_bnd_particles_cuda::unsetup;
+    reset                   = psc_bnd_particles_cuda::reset;
     exchange_particles      = psc_bnd_particles_cuda::exchange_particles;
   }
 } psc_bnd_particles_cuda_ops;
