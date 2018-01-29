@@ -272,7 +272,7 @@ make_local_particle_array(struct psc_output_particles *out,
 	      arr[nn].pz = part->pzi;
 	      arr[nn].q  = particle_qni(part);
 	      arr[nn].m  = particle_mni(part);
-	      arr[nn].w  = particle_wni(part);
+	      arr[nn].w  = mprts->prt_wni(*part);
 	    }
 	  }
 	}

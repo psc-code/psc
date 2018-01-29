@@ -406,11 +406,12 @@ bc(mparticles_t::patch_t& prts, real_t nudt1, int n1, int n2)
 
 static void
 update_rei_before(struct psc_collision *collision,
-		  mparticles_t::patch_t& prts, int n_start, int n_end,
+		  mparticles_t& mprts, int n_start, int n_end,
 		  int p, int i, int j, int k)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
+  mparticles_t::patch_t& prts = mprts[p];
   real_t fnqs = ppsc->coeff.cori;
   mfields_t mf_rei(coll->mflds_rei);
   Fields F(mf_rei[p]);
@@ -419,9 +420,9 @@ update_rei_before(struct psc_collision *collision,
   F(2, i,j,k) = 0.;
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
-    F(0, i,j,k) -= prt.pxi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
-    F(1, i,j,k) -= prt.pyi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
-    F(2, i,j,k) -= prt.pzi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+    F(0, i,j,k) -= prt.pxi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
+    F(1, i,j,k) -= prt.pyi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
+    F(2, i,j,k) -= prt.pzi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
   }
 }
 
@@ -430,19 +431,20 @@ update_rei_before(struct psc_collision *collision,
 
 static void
 update_rei_after(struct psc_collision *collision,
-		 mparticles_t::patch_t& prts, int n_start, int n_end,
+		 mparticles_t& mprts, int n_start, int n_end,
 		 int p, int i, int j, int k)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
+  mparticles_t::patch_t& prts = mprts[p];
   real_t fnqs = ppsc->coeff.cori;
   mfields_t mf_rei(coll->mflds_rei);
   Fields F(mf_rei[p]);
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
-    F(0, i,j,k) += prt.pxi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
-    F(1, i,j,k) += prt.pyi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
-    F(2, i,j,k) += prt.pzi * particle_mni((&prt)) * particle_wni(&prt) * fnqs;
+    F(0, i,j,k) += prt.pxi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
+    F(1, i,j,k) += prt.pyi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
+    F(2, i,j,k) += prt.pzi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
   }
   F(0, i,j,k) /= (coll->every * ppsc->dt);
   F(1, i,j,k) /= (coll->every * ppsc->dt);
@@ -454,11 +456,12 @@ update_rei_after(struct psc_collision *collision,
 
 static void
 collide_in_cell(struct psc_collision *collision,
-		mparticles_t::patch_t& prts, int n_start, int n_end,
-		struct psc_collision_stats *stats)
+		mparticles_t& mprts, int n_start, int n_end,
+		struct psc_collision_stats *stats, int p)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
+  mparticles_t::patch_t& prts = mprts[p];
   int nn = n_end - n_start;
   
   int n = 0;
@@ -467,7 +470,7 @@ collide_in_cell(struct psc_collision *collision,
   }
 
   // all particles need to have same weight!
-  real_t wni = particle_wni(&prts[n_start]);
+  real_t wni = mprts->prt_wni(prts[n_start]);
   real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
   real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
@@ -572,12 +575,12 @@ psc_collision_sub_run(struct psc_collision *collision,
       int c = (iz * ldims[1] + iy) * ldims[0] + ix;
       randomize_in_cell(prts, offsets[c], offsets[c+1]);
 
-      update_rei_before(collision, prts, offsets[c], offsets[c+1], p, ix,iy,iz);
+      update_rei_before(collision, mprts, offsets[c], offsets[c+1], p, ix,iy,iz);
       
       struct psc_collision_stats stats = {};
-      collide_in_cell(collision, prts, offsets[c], offsets[c+1], &stats);
+      collide_in_cell(collision, mprts, offsets[c], offsets[c+1], &stats, p);
       
-      update_rei_after(collision, prts, offsets[c], offsets[c+1], p, ix,iy,iz);
+      update_rei_after(collision, mprts, offsets[c], offsets[c+1], p, ix,iy,iz);
 
       for (int s = 0; s < NR_STATS; s++) {
 	F(s, ix,iy,iz) = stats.s[s];
