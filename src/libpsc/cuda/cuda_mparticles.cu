@@ -33,13 +33,7 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
     size += n_prts_by_patch[p];
   }
 
-  if (size <= n_alloced) {
-    return;
-  }
-
-  size *= 1.2;// FIXME hack
-  n_alloced = std::max(size, 2 * n_alloced);
-
+  // FIXME, arguably this should just reserve here, not actually resize
   resize(size);
 }
 

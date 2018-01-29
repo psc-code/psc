@@ -42,7 +42,6 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
                                          // are at indices [offsets[block] .. offsets[block+1]-1[
 
   uint n_prts = 0;                       // total # of particles across all patches
-  uint n_alloced = 0;                    // size of particle-related arrays as allocated
   const Grid_t& grid_;
 };
 
