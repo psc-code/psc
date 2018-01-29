@@ -32,6 +32,15 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
   }
 
   // ----------------------------------------------------------------------
+  // reset
+  
+  void reset(struct mrc_domain *domain, Grid_t& grid)
+  {
+    Base::reset(domain);
+    //cbndp_->setup(grid);
+  }
+
+  // ----------------------------------------------------------------------
   // exchange_particles
 
   void exchange_particles(mparticles_cuda_t mprts)
@@ -83,6 +92,16 @@ public:
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
     
     sub->setup(bnd->psc->mrc_domain, bnd->psc->grid);
+  }
+
+  // ----------------------------------------------------------------------
+  // reset
+  
+  static void reset(struct psc_bnd_particles *bnd)
+  {
+    auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
+    
+    sub->reset(bnd->psc->mrc_domain, bnd->psc->grid);
   }
 
   // ----------------------------------------------------------------------
