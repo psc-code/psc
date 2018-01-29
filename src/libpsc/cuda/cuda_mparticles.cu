@@ -245,8 +245,8 @@ k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, f
 
   int block, prev_block;
   if (i < nr_prts) {
-    alt_xi4[i] = xi4[d_ids[i]];
-    alt_pxi4[i] = pxi4[d_ids[i]];
+    xi4[i] = alt_xi4[d_ids[i]];
+    pxi4[i] = alt_pxi4[d_ids[i]];
     
     block = d_bidx[i];
   } else { // needed if there is no particle in the last block
@@ -274,6 +274,7 @@ void cuda_mparticles::reorder_and_offsets()
   }
 
   resize_alt(n_prts);
+  swap_alt();
 
   dim3 dimGrid((n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
@@ -284,7 +285,6 @@ void cuda_mparticles::reorder_and_offsets()
 					       d_off.data().get(), n_blocks);
   cuda_sync_if_enabled();
 
-  swap_alt();
   d_bidx.resize(n_prts);
   d_id.resize(n_prts);
   need_reorder = false;
@@ -301,8 +301,8 @@ k_reorder(int n_prts, uint *d_ids, float4 *xi4, float4 *pxi4,
 
   if (i < n_prts) {
     int j = d_ids[i];
-    alt_xi4[i] = xi4[j];
-    alt_pxi4[i] = pxi4[j];
+    xi4[i] = alt_xi4[j];
+    pxi4[i] = alt_pxi4[j];
   }
 }
 
@@ -316,6 +316,7 @@ void cuda_mparticles::reorder()
   }
   
   resize_alt(n_prts);
+  swap_alt();
 
   dim3 dimGrid((n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
@@ -323,7 +324,6 @@ void cuda_mparticles::reorder()
     (n_prts, d_id.data().get(), d_xi4.data().get(), d_pxi4.data().get(),
      d_alt_xi4.data().get(), d_alt_pxi4.data().get());
   
-  swap_alt();
   d_bidx.resize(n_prts);
   d_id.resize(n_prts);
   need_reorder = false;
