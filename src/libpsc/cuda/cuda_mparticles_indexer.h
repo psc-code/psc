@@ -29,6 +29,22 @@ struct cuda_mparticles_indexer
     n_blocks = n_patches * n_blocks_per_patch;
   }
 
+  int get_bidx(Int3 bpos, int p)
+  {
+    if (uint(bpos[0]) >= b_mx_[0] ||
+	uint(bpos[1]) >= b_mx_[1] ||
+	uint(bpos[2]) >= b_mx_[2]) {
+      return -1;
+    } else {
+      return ((p * b_mx_[2] + bpos[2]) * b_mx_[1] + bpos[1]) * b_mx_[0] + bpos[0];
+    }
+  }
+
+  int get_bidx(Int3 bpos)
+  {
+    return get_bidx(bpos, 0);
+  }
+
   uint n_patches;                // number of patches
   uint n_blocks_per_patch;       // number of blocks per patch
   uint n_blocks;                 // number of blocks in all patches in mprts

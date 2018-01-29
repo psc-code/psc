@@ -178,15 +178,8 @@ void cuda_mparticles::get_particles(uint p, F setter)
     setter(n, prt);
 
 #if 0
-    for (int d = 0; d < 3; d++) {
-      int bi = fint(prt.xi[d] * b_dxi[d]);
-      if (bi < 0 || bi >= b_mx[d]) {
-	MHERE;
-	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
-	mprintf("XXX n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
-		n, d, prt.xi[d] * b_dxi[d], b_dxi[d], bi, b_mx[d]);
-      }
-    }
+    uint b = get_block_idx(xi4[n], p);
+    assert(b < n_blocks);
 #endif
   }
 

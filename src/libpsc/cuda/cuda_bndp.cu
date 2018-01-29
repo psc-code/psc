@@ -233,9 +233,8 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 	b_pos[d] = fint(xi[d] * b_dxi_[d]);
 	assert(b_pos[d] >= 0 && b_pos[d] < b_mx_[d]);
       }
-      uint b = (b_pos[2] * b_mx_[1] + b_pos[1]) * b_mx_[0] + b_pos[0];
-      assert(b < n_blocks_per_patch);
-      b += p * n_blocks_per_patch;
+      uint b = get_bidx(b_pos, p);
+      assert(b < n_blocks);
       h_bnd_idx[n + off] = b;
       h_bnd_off[n + off] = h_bnd_cnt[b]++;
     }
