@@ -11,8 +11,9 @@
 // ctor
 
 cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
-  : grid_(grid),
-    indexer(grid),
+  : cuda_mparticles_indexer(grid),
+    grid_(grid),
+    indexer(*static_cast<cuda_mparticles_indexer*>(this)),
     n_patches(grid.patches.size())
 {
   bs = grid.bs;

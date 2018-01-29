@@ -38,7 +38,7 @@ struct cuda_mparticles_indexer
 // ======================================================================
 // cuda_mparticles_base
 
-struct cuda_mparticles_base
+struct cuda_mparticles_base : cuda_mparticles_indexer
 {
   using particle_t = particle_cuda_t;
   using real_t = particle_t::real_t;
@@ -70,7 +70,7 @@ struct cuda_mparticles_base
   Int3 bs;                               // block size
   uint n_blocks_per_patch;               // number of blocks per patch
   uint n_blocks;                         // number of blocks in all patches in mprts
-  cuda_mparticles_indexer indexer;
+  cuda_mparticles_indexer& indexer;
 
   const uint n_patches;
   const Grid_t& grid_;
