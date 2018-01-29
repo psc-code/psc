@@ -19,14 +19,11 @@ cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
 
 // ----------------------------------------------------------------------
 // reserve_all
-//
-// FIXME, eventually should do its own thing, but for now we better keep the size
-// the same as for the rest of the arrays
   
-void cuda_mparticles_base::reserve_all()
+void cuda_mparticles_base::reserve_all(uint size)
 {
-  d_xi4.resize(n_alloced);
-  d_pxi4.resize(n_alloced);
+  d_xi4.resize(size);
+  d_pxi4.resize(size);
 }
 
 // ----------------------------------------------------------------------
@@ -79,7 +76,7 @@ void cuda_mparticles_base::get_size_all(uint *n_prts_by_patch)
 void cuda_mparticles_base::to_device(float4 *xi4, float4 *pxi4,
 				     uint n_prts, uint off)
 {
-  assert(off + n_prts <= n_alloced);
+  assert(off + n_prts <= d_xi4.size());
   thrust::copy(xi4, xi4 + n_prts, d_xi4.begin() + off);
   thrust::copy(pxi4, pxi4 + n_prts, d_pxi4.begin() + off);
 }
@@ -90,7 +87,7 @@ void cuda_mparticles_base::to_device(float4 *xi4, float4 *pxi4,
 void cuda_mparticles_base::from_device(float4 *xi4, float4 *pxi4,
 				       uint n_prts, uint off)
 {
-  assert(off + n_prts <= n_alloced);
+  assert(off + n_prts <= d_xi4.size());
   thrust::copy(d_xi4.begin() + off, d_xi4.begin() + off + n_prts, xi4);
   thrust::copy(d_pxi4.begin() + off, d_pxi4.begin() + off + n_prts, pxi4);
 }

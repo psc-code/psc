@@ -25,7 +25,7 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   // by accident
   cuda_mparticles_base(const cuda_mparticles&) = delete;
 
-  void reserve_all();
+  void reserve_all(uint sinze);
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
@@ -41,8 +41,8 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   thrust::device_vector<uint> d_off;     // particles per block
                                          // are at indices [offsets[block] .. offsets[block+1]-1[
 
-  uint n_prts = {};                      // total # of particles across all patches
-  uint n_alloced = {};                   // size of particle-related arrays as allocated
+  uint n_prts = 0;                       // total # of particles across all patches
+  uint n_alloced = 0;                    // size of particle-related arrays as allocated
   const Grid_t& grid_;
 };
 

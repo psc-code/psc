@@ -26,8 +26,8 @@ static const int RADIX_BITS = 4;
 
 static void __global__
 k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
-			 float4 *d_xi4, float4 *d_pxi4,
-			 float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
+		     float4 *d_xi4, float4 *d_pxi4,
+		     float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (n >= nr_prts_send) {
@@ -41,9 +41,19 @@ k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 
 // ----------------------------------------------------------------------
 // reorder_send_by_id
+//
+// copies particles to be sent to contiguous area following
+// the existing n_prts particles
+//
+// in: d_id[n_prts - n_prts_send:n_prts_send[
+// in: d_xi4, d_pxi4[0:n_prts[
+// out: d_xi4, d_pxi4[n_prts:n_prts_send[
 
 void cuda_bndp::reorder_send_by_id(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
+  cmprts->d_xi4.resize(cmprts->n_prts + n_prts_send);
+  cmprts->d_pxi4.resize(cmprts->n_prts + n_prts_send);
+  
   if (n_prts_send == 0) {
     return;
   }
@@ -104,10 +114,13 @@ void cuda_bndp::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send
   if (n_patches == 0) {
     return;
   }
-  
+
+  cmprts->d_xi4.resize(cmprts->n_prts + n_prts_send);
+  cmprts->d_pxi4.resize(cmprts->n_prts + n_prts_send);
+  assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
+
   float4 *xchg_xi4 = cmprts->d_xi4.data().get() + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4.data().get() + cmprts->n_prts;
-  assert(cmprts->n_prts + n_prts_send < cmprts->n_alloced);
   
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
@@ -121,6 +134,10 @@ void cuda_bndp::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send
 
 // ----------------------------------------------------------------------
 // scan_send_buf_total
+//
+// in: d_spine_cnts
+// out: d_spine_sums, d_id[n_prts - n_prts_send: n_prts[
+//
 
 void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
@@ -133,6 +150,8 @@ void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_
   // this should make sure at least those within bounds don't screw anything up
   thrust::fill(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 10, 0);
 
+  cmprts->d_id.resize(cmprts->n_prts);
+  
   if (b_mx_[0] == 1 && b_mx_[1] == 4 && b_mx_[2] == 4) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,

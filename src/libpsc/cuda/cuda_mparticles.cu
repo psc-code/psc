@@ -40,7 +40,7 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
   size *= 1.2;// FIXME hack
   n_alloced = std::max(size, 2 * n_alloced);
 
-  cuda_mparticles_base::reserve_all();
+  cuda_mparticles_base::reserve_all(size);
 
   d_alt_xi4.resize(n_alloced);
   d_alt_pxi4.resize(n_alloced);
@@ -394,6 +394,9 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   find_block_indices_ids();
   // assert(check_bidx_id_unordered_slow());
 
+  d_xi4.resize(n_prts + buf_n);
+  d_pxi4.resize(n_prts + buf_n);
+  
   assert(n_prts + buf_n <= n_alloced);
   thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4.data() + n_prts);
   thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4.data() + n_prts);
