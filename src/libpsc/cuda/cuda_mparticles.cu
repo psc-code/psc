@@ -272,6 +272,8 @@ void cuda_mparticles::reorder_and_offsets()
 
   swap_alt();
   need_reorder = false;
+  d_xi4.resize(n_prts);
+  d_pxi4.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -306,8 +308,9 @@ void cuda_mparticles::reorder()
      d_alt_xi4.data().get(), d_alt_pxi4.data().get());
   
   swap_alt();
-
   need_reorder = false;
+  d_xi4.resize(n_prts);
+  d_pxi4.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -397,7 +400,6 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   d_xi4.resize(n_prts + buf_n);
   d_pxi4.resize(n_prts + buf_n);
   
-  assert(n_prts + buf_n <= n_alloced);
   thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4.data() + n_prts);
   thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4.data() + n_prts);
   thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx.data() + n_prts);
