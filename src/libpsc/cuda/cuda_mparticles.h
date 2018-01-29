@@ -82,7 +82,6 @@ public:
   bool check_ordered();
 
   void resize(uint n_prts);
-  void resize_alt(uint n_prts);
   
 public:
   // per particle

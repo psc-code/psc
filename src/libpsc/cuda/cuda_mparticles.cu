@@ -41,23 +41,13 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 // resize
 //
 // the goal here is to have d_xi4, d_pxi4, d_bidx and d_id always
-// have the same size. That's complicated by the alt handling
-// (see swap_alt)
+// have the same size.
 
 void cuda_mparticles::resize(uint n_prts)
 {
   cuda_mparticles_base::reserve_all(n_prts);
   d_bidx.resize(n_prts);
   d_id.resize(n_prts);
-}
-
-// ----------------------------------------------------------------------
-// resize_alt
-
-void cuda_mparticles::resize_alt(uint n_prts)
-{
-  d_alt_xi4.resize(n_prts);
-  d_alt_pxi4.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -273,8 +263,8 @@ void cuda_mparticles::reorder_and_offsets()
     return;
   }
 
-  resize_alt(n_prts);
   swap_alt();
+  resize(n_prts);
 
   dim3 dimGrid((n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
@@ -285,8 +275,6 @@ void cuda_mparticles::reorder_and_offsets()
 					       d_off.data().get(), n_blocks);
   cuda_sync_if_enabled();
 
-  d_bidx.resize(n_prts);
-  d_id.resize(n_prts);
   need_reorder = false;
 }
 
@@ -315,8 +303,8 @@ void cuda_mparticles::reorder()
     return;
   }
   
-  resize_alt(n_prts);
   swap_alt();
+  resize(n_prts);
 
   dim3 dimGrid((n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
@@ -324,8 +312,6 @@ void cuda_mparticles::reorder()
     (n_prts, d_id.data().get(), d_xi4.data().get(), d_pxi4.data().get(),
      d_alt_xi4.data().get(), d_alt_pxi4.data().get());
   
-  d_bidx.resize(n_prts);
-  d_id.resize(n_prts);
   need_reorder = false;
 }
 
