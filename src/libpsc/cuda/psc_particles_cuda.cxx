@@ -35,11 +35,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   int n_patches = mprts.n_patches();
   assert(n_patches != 0);
   
-  if (!_mprts->flags) {
-    // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
-    _mprts->flags = MP_BLOCKSIZE_4X4X4;
-  }
-
   int *ldims = ppsc->patch[0].ldims;
   Grid_t& grid = ppsc->grid;
 
@@ -50,15 +45,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  int bs[3];
+  int bs[3] = { 4, 4, 4 };
   for (int d = 0; d < 3; d++) {
-    switch (_mprts->flags & MP_BLOCKSIZE_MASK) {
-    case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
-    case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
-    case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
-    case MP_BLOCKSIZE_8X8X8: bs[d] = 8; break;
-    default: assert(0);
-    }
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }

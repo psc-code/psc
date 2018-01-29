@@ -273,7 +273,6 @@ psc_mparticles_init()
 #define VAR(x) (void *)offsetof(struct psc_mparticles, x)
 static struct param psc_mparticles_descr[] = {
   { "nr_patches"        , VAR(nr_patches)      , PARAM_INT(0)       },
-  { "flags"             , VAR(flags)           , PARAM_INT(0)       },
   {},
 };
 #undef VAR
