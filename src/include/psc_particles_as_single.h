@@ -7,7 +7,6 @@
 using mparticles_t = mparticles_single_t;
 using particle_t = mparticles_t::particle_t;
 
-#define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni
 
 #define PARTICLE_TYPE               "single"
