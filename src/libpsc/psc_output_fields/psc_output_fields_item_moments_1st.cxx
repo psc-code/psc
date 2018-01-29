@@ -193,7 +193,7 @@ do_p_1st_run(int p, fields_t flds, mparticles_t& mprts)
     real_t *pxi = &prt->pxi;
 
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, particle_mni(prt) * pxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, mprts->prt_mni(*prt) * pxi[m]);
     }
   }
 }
@@ -264,12 +264,12 @@ do_T_1st_run(int p, fields_t flds, mparticles_t& mprts)
     px[0] = pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz);
     px[1] = pxi[1];
     px[2] = pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, particle_mni(prt) * px[0] * vx[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, particle_mni(prt) * px[1] * vx[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, particle_mni(prt) * px[2] * vx[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, particle_mni(prt) * px[0] * vx[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, particle_mni(prt) * px[0] * vx[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, particle_mni(prt) * px[1] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * px[0] * vx[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * px[1] * vx[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * px[2] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * px[0] * vx[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * px[0] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * px[1] * vx[2]);
   }
 }
 
@@ -298,12 +298,12 @@ do_Tvv_1st_run(int p, fields_t flds, mparticles_t& mprts)
 
     real_t vxi[3];
     particle_calc_vxi(prt, vxi);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, particle_mni(prt) * vxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, particle_mni(prt) * vxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, particle_mni(prt) * vxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, particle_mni(prt) * vxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, particle_mni(prt) * vxi[0] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, particle_mni(prt) * vxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * vxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * vxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * vxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * vxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * vxi[0] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * vxi[1] * vxi[2]);
   }
 }
 

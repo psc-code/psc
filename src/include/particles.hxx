@@ -22,6 +22,7 @@ struct psc_particle
 
   int kind() { return kind_; }
   real_t qni(const Grid_t& grid) const { return grid.kinds[kind_].q; }
+  real_t mni(const Grid_t& grid) const { return grid.kinds[kind_].m; }
   real_t wni(const Grid_t& grid) const { return qni_wni / qni(grid); }
 };
 
@@ -145,6 +146,7 @@ struct psc_mparticles_
   const Grid_t& grid_;
 
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
+  particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
   particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(grid_); }
 };
 

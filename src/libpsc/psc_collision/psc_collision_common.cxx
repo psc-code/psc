@@ -186,13 +186,13 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   py1=prt1->pyi;
   pz1=prt1->pzi;
   q1 =mprts->prt_qni(*prt1);
-  m1 =particle_mni(prt1);
+  m1 =mprts->prt_mni(*prt1);
 
   px2=prt2->pxi;
   py2=prt2->pyi;
   pz2=prt2->pzi;
   q2 =mprts->prt_qni(*prt2);
-  m2 =particle_mni(prt2);
+  m2 =mprts->prt_mni(*prt2);
 
   if (q1*q2 == 0.) {
     return 0.; // no Coulomb collisions with neutrals
@@ -421,9 +421,9 @@ update_rei_before(struct psc_collision *collision,
   F(2, i,j,k) = 0.;
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
-    F(0, i,j,k) -= prt.pxi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
-    F(1, i,j,k) -= prt.pyi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
-    F(2, i,j,k) -= prt.pzi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
+    F(0, i,j,k) -= prt.pxi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+    F(1, i,j,k) -= prt.pyi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+    F(2, i,j,k) -= prt.pzi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
   }
 }
 
@@ -443,9 +443,9 @@ update_rei_after(struct psc_collision *collision,
   Fields F(mf_rei[p]);
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
-    F(0, i,j,k) += prt.pxi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
-    F(1, i,j,k) += prt.pyi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
-    F(2, i,j,k) += prt.pzi * particle_mni((&prt)) * mprts->prt_wni(prt) * fnqs;
+    F(0, i,j,k) += prt.pxi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+    F(1, i,j,k) += prt.pyi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+    F(2, i,j,k) += prt.pzi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
   }
   F(0, i,j,k) /= (coll->every * ppsc->dt);
   F(1, i,j,k) /= (coll->every * ppsc->dt);
