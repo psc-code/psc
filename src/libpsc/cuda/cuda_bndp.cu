@@ -33,10 +33,21 @@
 
 void cuda_bndp::setup(Grid_t& grid, cuda_mparticles* cmprts)
 {
-  d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
-  d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
+  // FIXME, mostly duplicated from cuda_mparticles
+  Int3 b_mx;
+  for (int d = 0; d < 3; d++) {
+    assert(grid.ldims[d] % grid.bs[d] == 0);
+    b_mx[d] = grid.ldims[d] / grid.bs[d];
+  }
 
-  bpatch.resize(cmprts->n_patches);
+  uint n_patches = grid.patches.size();
+  uint n_blocks_per_patch = b_mx[0] * b_mx[1] * b_mx[2];
+  uint n_blocks = n_patches * n_blocks_per_patch;
+
+  d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
+  d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
+
+  bpatch.resize(n_patches);
 }
 
 // ----------------------------------------------------------------------
