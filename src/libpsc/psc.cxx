@@ -152,8 +152,6 @@ static struct param psc_descr[] = {
 
   { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
   { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("double") },
-  { "particles_base_flags"
-                    , VAR(prm.particles_base_flags)  , PARAM_INT(0) },
   { "stats_every"
                     , VAR(prm.stats_every)        , PARAM_INT(1),
     .help = "sets every how many steps we log timing and other stats." },
@@ -413,7 +411,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   }
 
   for (int d = 0; d < 3; d++) {
-    grid.bs[d] = psc->domain.gdims[d] == 1 ? 1 : 4;
+    grid.bs[d] = grid.gdims[d] == 1 ? 1 : 4;
   }
 }
 
@@ -480,7 +478,7 @@ psc_setup_base_mflds(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_base_mprts
+// psc_setup_base_mplrts
 
 static void
 psc_setup_base_mprts(struct psc *psc)
@@ -491,10 +489,6 @@ psc_setup_base_mprts(struct psc *psc)
   int nr_patches;
   mrc_domain_get_patches(psc->mrc_domain, &nr_patches);
   psc_mparticles_set_param_int(psc->particles, "nr_patches", nr_patches);
-  if (psc->prm.particles_base_flags == 0) {
-    psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
-  }
-  psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
 }
 
@@ -510,7 +504,7 @@ _psc_setup(struct psc *psc)
   int *n_prts_by_patch = new int[psc->nr_patches]();
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
-    
+
   // create base particle data structure
   psc_setup_base_mprts(psc);
   

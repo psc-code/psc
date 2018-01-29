@@ -136,7 +136,6 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
   struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_from));
   psc_mparticles_set_type(mprts, type);
   psc_mparticles_set_param_int(mprts, "nr_patches", mprts_from->nr_patches);
-  psc_mparticles_set_param_int(mprts, "flags", flags);
   psc_mparticles_setup(mprts);
 
   copy(mprts_from, mprts, type_from, type, flags);

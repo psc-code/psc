@@ -437,10 +437,6 @@ psc_setup_base_mprts(struct psc *psc)
   int nr_patches;
   mrc_domain_get_patches(psc->mrc_domain, &nr_patches);
   psc_mparticles_set_param_int(psc->particles, "nr_patches", nr_patches);
-  if (psc->prm.particles_base_flags == 0) {
-    psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
-  }
-  psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
 }
 

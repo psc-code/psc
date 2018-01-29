@@ -88,7 +88,6 @@ struct psc_param {
   int write_checkpoint_every_step;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
   char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
-  unsigned int particles_base_flags; ///< additional flags for the particles base type
   int stats_every; ///< output timing and other info every so many steps
   bool detailed_profiling; ///< output profiling info for each process separately
   double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
