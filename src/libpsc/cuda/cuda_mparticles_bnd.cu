@@ -37,7 +37,6 @@
 void cuda_mparticles_bnd::reserve_all(cuda_mparticles *cmprts)
 {
   int n_alloced = cmprts->n_alloced;
-  d_bnd_off.resize(n_alloced);
   d_sums.resize(n_alloced);
 }
 
@@ -169,6 +168,8 @@ uint cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
   // slight abuse of the now unused last part of spine_cnts
   thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(),
 	       d_spine_cnts.data() + 10 * cmprts->n_blocks);
+
+  cmprts->d_bnd_off.resize(n_recv);
   thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), cmprts->d_bnd_off.begin());
 
   return n_recv;
