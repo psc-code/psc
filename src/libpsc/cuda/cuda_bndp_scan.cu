@@ -148,8 +148,6 @@ void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_
   // this should make sure at least those within bounds don't screw anything up
   thrust::fill(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 10, 0);
 
-  cmprts->d_id.resize(cmprts->n_prts);
-  
   if (b_mx_[0] == 1 && b_mx_[1] == 4 && b_mx_[2] == 4) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,

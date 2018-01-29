@@ -40,19 +40,21 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
   size *= 1.2;// FIXME hack
   n_alloced = std::max(size, 2 * n_alloced);
 
-  cuda_mparticles_base::reserve_all(size);
-
-  d_bidx.resize(n_alloced);
-  d_id.resize(n_alloced);
+  resize(size);
 }
 
 // ----------------------------------------------------------------------
 // resize
+//
+// the goal here is to have d_xi4, d_pxi4, d_bidx and d_id always
+// have the same size. That's complicated by the alt handling
+// (see swap_alt)
 
 void cuda_mparticles::resize(uint n_prts)
 {
-  d_xi4.resize(n_prts);
-  d_pxi4.resize(n_prts);
+  cuda_mparticles_base::reserve_all(n_prts);
+  d_bidx.resize(n_prts);
+  d_id.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -116,6 +118,10 @@ void cuda_mparticles::swap_alt()
 {
   thrust::swap(d_xi4, d_alt_xi4);
   thrust::swap(d_pxi4, d_alt_pxi4);
+
+  uint n_prts = d_xi4.size();
+  d_bidx.resize(n_prts);
+  d_id.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
