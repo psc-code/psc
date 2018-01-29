@@ -89,6 +89,7 @@ struct Grid_
   real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
+  Int3 bs;
 };
 
 using Grid_t = Grid_<double>;

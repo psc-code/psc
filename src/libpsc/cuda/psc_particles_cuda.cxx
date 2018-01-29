@@ -45,11 +45,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  int bs[3] = { 4, 4, 4 };
   for (int d = 0; d < 3; d++) {
-    if (ppsc->domain.gdims[d] == 1) {
-      bs[d] = 1;
-    }
+    grid.bs[d] = ppsc->domain.gdims[d] == 1 ? 1 : 4;
   }
 
   grid.kinds.resize(0);
@@ -57,7 +54,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
-  new(mprts.sub_) psc_mparticles_cuda(grid, bs);
+  new(mprts.sub_) psc_mparticles_cuda(grid, grid.bs);
 }
 
 // ----------------------------------------------------------------------
