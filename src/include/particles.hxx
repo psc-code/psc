@@ -3,6 +3,7 @@
 #define PARTICLES_HXX
 
 #include "psc_particles.h"
+#include "grid.hxx"
 
 #include <vector>
 
@@ -131,9 +132,15 @@ template<typename P>
 struct psc_mparticles_
 {
   using particle_t = P;
+  using particle_real_t = typename particle_t::real_t;
   using patch_t = mparticles_patch<particle_t>;
+
+  psc_mparticles_(const Grid_t& grid)
+    : grid_(grid)
+  {}
   
   patch_t *patch;
+  const Grid_t& grid_;
 };
 
 // ======================================================================

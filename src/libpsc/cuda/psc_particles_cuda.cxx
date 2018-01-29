@@ -45,11 +45,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     }
   }
 
-  grid.kinds.resize(0);
-  for (int k = 0; k < ppsc->nr_kinds; k++) {
-    grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
-  }
-
   new(mprts.sub_) psc_mparticles_cuda(grid);
 }
 

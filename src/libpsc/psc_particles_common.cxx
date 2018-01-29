@@ -40,6 +40,8 @@ PFX(setup)(struct psc_mparticles *_mprts)
 {
   mparticles_t mprts(_mprts);
 
+  new(mprts.sub_) mparticles_t::sub_t(ppsc->grid);
+
   psc_mparticles_setup_super(_mprts);
   mprts->patch = new mparticles_t::patch_t[mprts.n_patches()]();
 

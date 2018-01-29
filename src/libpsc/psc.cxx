@@ -483,6 +483,12 @@ psc_setup_base_mflds(struct psc *psc)
 static void
 psc_setup_base_mprts(struct psc *psc)
 {
+  // FIXME arguably this whole kinds stuff shouldn't be in grid in the first place, though
+  psc->grid.kinds.resize(0);
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
+    psc->grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
+  }
+
   psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
   psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
