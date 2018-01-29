@@ -148,8 +148,9 @@ randomize_in_cell(mparticles_t::patch_t& prts, int n_start, int n_end)
 // bc
 
 static real_t
-bc(mparticles_t::patch_t& prts, real_t nudt1, int n1, int n2)
+bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
 {
+  mparticles_t::patch_t& prts = mprts[p];
   real_t nudt;
     
   real_t pn1,pn2,pn3,pn4;
@@ -184,13 +185,13 @@ bc(mparticles_t::patch_t& prts, real_t nudt1, int n1, int n2)
   px1=prt1->pxi;
   py1=prt1->pyi;
   pz1=prt1->pzi;
-  q1 =particle_qni(prt1);
+  q1 =mprts->prt_qni(*prt1);
   m1 =particle_mni(prt1);
 
   px2=prt2->pxi;
   py2=prt2->pyi;
   pz2=prt2->pzi;
-  q2 =particle_qni(prt2);
+  q2 =mprts->prt_qni(*prt2);
   m2 =particle_mni(prt2);
 
   if (q1*q2 == 0.) {
@@ -477,13 +478,13 @@ collide_in_cell(struct psc_collision *collision,
   int cnt = 0;
 
   if (nn % 2 == 1) { // odd # of particles: do 3-collision
-    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 1);
-    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 2);
-    nudts[cnt++] = bc(prts, .5 * nudt1, n_start + 1, n_start + 2);
+    nudts[cnt++] = bc(mprts, p, .5 * nudt1, n_start    , n_start + 1);
+    nudts[cnt++] = bc(mprts, p, .5 * nudt1, n_start    , n_start + 2);
+    nudts[cnt++] = bc(mprts, p, .5 * nudt1, n_start + 1, n_start + 2);
     n = 3;
   }
   for (; n < nn;  n += 2) { // do remaining particles as pair
-    nudts[cnt++] = bc(prts, nudt1, n_start + n, n_start + n + 1);
+    nudts[cnt++] = bc(mprts, p, nudt1, n_start + n, n_start + n + 1);
   }
 
   calc_stats(stats, nudts, cnt);

@@ -18,9 +18,10 @@ do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
       
     double gamma = sqrt(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
     double Ekin = (gamma - 1.) * particle_mni(&prt) * mprts->prt_wni(prt) * fnqs;
-    if (particle_qni(&prt) < 0.) {
+    double qni = mprts->prt_qni(prt);
+    if (qni < 0.) {
       result[0] += Ekin * fac;
-    } else if (particle_qni(&prt) > 0.) {
+    } else if (qni > 0.) {
       result[1] += Ekin * fac;
     } else {
       assert(0);
