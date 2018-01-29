@@ -21,6 +21,9 @@ struct psc_particle
   int kind_;
 
   int kind() { return kind_; }
+
+  // FIXME, grid is always double precision, so this will switch precision
+  // where not desired. should use same info stored in mprts at right precision
   real_t qni(const Grid_t& grid) const { return grid.kinds[kind_].q; }
   real_t mni(const Grid_t& grid) const { return grid.kinds[kind_].m; }
   real_t wni(const Grid_t& grid) const { return qni_wni_ / qni(grid); }
