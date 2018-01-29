@@ -11,21 +11,9 @@
 
 extern int pr_time_step_no_comm;
 
-struct psc_bnd_particles_cuda;
-
-template<typename MP>
-struct bnd_particles_policy_cuda
+struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
 {
-  void setup(Grid_t& grid)
-  {
-  }
-};
-
-struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
-						      bnd_particles_policy_cuda<mparticles_cuda_t>>
-{
-  using Base = psc_bnd_particles_sub<mparticles_cuda_t,
-				     bnd_particles_policy_cuda<mparticles_cuda_t>>;
+  using Base = psc_bnd_particles_sub<mparticles_cuda_t>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -95,7 +83,6 @@ public:
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
     
     sub->setup(bnd->psc->mrc_domain, bnd->psc->grid);
-    static_cast<policy_t*>(sub)->setup(bnd->psc->grid);
   }
 
   // ----------------------------------------------------------------------
