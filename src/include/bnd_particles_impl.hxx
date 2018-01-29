@@ -65,6 +65,7 @@ struct psc_bnd_particles_sub : P
 
   // ----------------------------------------------------------------------
   // interface to psc_bnd_particles_ops
+  static void create(struct psc_bnd_particles *bnd);
   static void destroy(struct psc_bnd_particles *bnd);
   static void setup(struct psc_bnd_particles *bnd);
   static void unsetup(struct psc_bnd_particles *bnd);
@@ -294,6 +295,17 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 
 
 // ----------------------------------------------------------------------
+// psc_bnd_particles_sub::create
+
+template<typename MP, typename P>
+void psc_bnd_particles_sub<MP, P>::create(struct psc_bnd_particles *bnd)
+{
+  auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
+  
+  new(sub) psc_bnd_particles_sub<MP, P>();
+}
+  
+// ----------------------------------------------------------------------
 // psc_bnd_particles_sub::destroy
 
 template<typename MP, typename P>
@@ -312,7 +324,6 @@ void psc_bnd_particles_sub<MP, P>::setup(struct psc_bnd_particles *bnd)
 {
   auto sub = static_cast<psc_bnd_particles_sub<MP, P>*>(bnd->obj.subctx);
 
-  new(sub) psc_bnd_particles_sub<MP, P>();
   sub->setup(bnd->psc->mrc_domain);
   //psc_bnd_particles_open_setup(bnd);
 }

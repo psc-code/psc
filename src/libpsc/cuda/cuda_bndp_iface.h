@@ -68,6 +68,15 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
   // this spoint
   
   // ----------------------------------------------------------------------
+  // create
+  //
+  // we actually really create this object only at setup time
+
+  static void create(struct psc_bnd_particles *bnd)
+  {
+  }
+  
+  // ----------------------------------------------------------------------
   // setup
 
   static void setup(struct psc_bnd_particles *bnd)
