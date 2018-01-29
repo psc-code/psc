@@ -114,8 +114,8 @@ static void
 cuda_params2_set(struct cuda_params2 *prm, const struct cuda_mparticles *cuda_mprts)
 {
   for (int d = 0; d < 3; d++) {
-    prm->b_mx[d]  = cuda_mprts->indexer.b_mx_[d];
-    prm->b_dxi[d] = cuda_mprts->indexer.b_dxi_[d];
+    prm->b_mx[d]  = cuda_mprts->b_mx_[d];
+    prm->b_dxi[d] = cuda_mprts->b_dxi_[d];
   }
 }
 
@@ -131,8 +131,8 @@ cuda_params2_free(struct cuda_params2 *prm)
 
 int cuda_mparticles::get_block_idx(float4 xi4, int p)
 {
-  float *b_dxi = indexer.b_dxi_;
-  int *b_mx = indexer.b_mx_;
+  float *b_dxi = b_dxi_;
+  int *b_mx = b_mx_;
   
   uint block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
   uint block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
@@ -434,7 +434,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 
 const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 {
-  return indexer.b_dxi_;
+  return b_dxi_;
 }
 
 // ----------------------------------------------------------------------
@@ -442,7 +442,7 @@ const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
 
 const int* cuda_mparticles::patch_get_b_mx(int p)
 {
-  return indexer.b_mx_;
+  return b_mx_;
 }
 
 #include "cuda_mparticles_gold.cu"

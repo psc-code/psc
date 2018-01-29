@@ -35,8 +35,8 @@ cuda_mparticles_const_set(struct cuda_mparticles *cmprts)
   struct cuda_mparticles_const c;
   for (int d = 0; d < 3; d++) {
     c.dxi[d] = 1.f / grid.dx[d];
-    c.b_mx[d] = cmprts->indexer.b_mx_[d];
-    c.b_dxi[d] = cmprts->indexer.b_dxi_[d];
+    c.b_mx[d] = cmprts->b_mx_[d];
+    c.b_dxi[d] = cmprts->b_dxi_[d];
   }
 
   c.dt = grid.dt;

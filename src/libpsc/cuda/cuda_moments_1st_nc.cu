@@ -148,7 +148,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cu
   
   uint fld_size = cmres->n_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
-  dim3 dimGrid(cmprts->indexer.b_mx_[1], cmprts->indexer.b_mx_[2] * cmprts->n_patches);
+  dim3 dimGrid(cmprts->b_mx_[1], cmprts->b_mx_[2] * cmprts->n_patches);
 
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -171,7 +171,7 @@ n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mf
 
   uint fld_size = cmres->n_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
-  dim3 dimGrid(cmprts->indexer.b_mx_[1], cmprts->indexer.b_mx_[2] * cmprts->n_patches);
+  dim3 dimGrid(cmprts->b_mx_[1], cmprts->b_mx_[2] * cmprts->n_patches);
 
   n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>

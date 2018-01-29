@@ -13,12 +13,11 @@
 cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
   : cuda_mparticles_indexer(grid),
     grid_(grid),
-    indexer(*static_cast<cuda_mparticles_indexer*>(this)),
     n_patches(grid.patches.size())
 {
   bs = grid.bs;
 
-  n_blocks_per_patch = indexer.b_mx_[0] * indexer.b_mx_[1] * indexer.b_mx_[2];
+  n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
   n_blocks = n_patches * n_blocks_per_patch;
   
   d_off.resize(n_blocks + 1);

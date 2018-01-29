@@ -631,11 +631,11 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 
   int gx, gy;
   if (CURRMEM == CURRMEM_SHARED) {
-    gx =  (cmprts->indexer.b_mx_[1] + 1) / 2;
-    gy = ((cmprts->indexer.b_mx_[2] + 1) / 2) * cmprts->n_patches;
+    gx =  (cmprts->b_mx_[1] + 1) / 2;
+    gy = ((cmprts->b_mx_[2] + 1) / 2) * cmprts->n_patches;
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    gx = cmprts->indexer.b_mx_[1];
-    gy = cmprts->indexer.b_mx_[2] * cmprts->n_patches;
+    gx = cmprts->b_mx_[1];
+    gy = cmprts->b_mx_[2] * cmprts->n_patches;
   }
   dim3 dimGrid(gx, gy);
 

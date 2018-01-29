@@ -226,21 +226,21 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
       int b_pos[3];
       for (int d = 0; d < 3; d++) {
 	float *xi = &h_bnd_xi4[n + off].x;
-	b_pos[d] = fint(xi[d] * cmprts->indexer.b_dxi_[d]);
-	if (b_pos[d] < 0 || b_pos[d] >= cmprts->indexer.b_mx_[d]) {
+	b_pos[d] = fint(xi[d] * cmprts->b_dxi_[d]);
+	if (b_pos[d] < 0 || b_pos[d] >= cmprts->b_mx_[d]) {
 	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
 	  printf("!!! d %d xi4[n] %g biy %d // %d\n",
-		 d, xi[d], b_pos[d], cmprts->indexer.b_mx_[d]);
+		 d, xi[d], b_pos[d], cmprts->b_mx_[d]);
 	  if (b_pos[d] < 0) {
 	    xi[d] = 0.f;
 	  } else {
 	    xi[d] *= (1. - 1e-6);
 	  }
 	}
-	b_pos[d] = fint(xi[d] * cmprts->indexer.b_dxi_[d]);
-	assert(b_pos[d] >= 0 && b_pos[d] < cmprts->indexer.b_mx_[d]);
+	b_pos[d] = fint(xi[d] * cmprts->b_dxi_[d]);
+	assert(b_pos[d] >= 0 && b_pos[d] < cmprts->b_mx_[d]);
       }
-      uint b = (b_pos[2] * cmprts->indexer.b_mx_[1] + b_pos[1]) * cmprts->indexer.b_mx_[0] + b_pos[0];
+      uint b = (b_pos[2] * cmprts->b_mx_[1] + b_pos[1]) * cmprts->b_mx_[0] + b_pos[0];
       assert(b < n_blocks_per_patch_);
       b += p * n_blocks_per_patch_;
       h_bnd_idx[n + off] = b;

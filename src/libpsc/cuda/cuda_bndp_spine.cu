@@ -26,7 +26,7 @@ static const int RADIX_BITS = 4;
 
 void cuda_bndp::spine_reduce(cuda_mparticles *cmprts)
 {
-  int *b_mx = cmprts->indexer.b_mx_;
+  int *b_mx = cmprts->b_mx_;
 
   // OPT?
   thrust::fill(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks_ * (CUDA_BND_STRIDE + 1), 0);
@@ -76,7 +76,7 @@ void cuda_bndp::spine_reduce(cuda_mparticles *cmprts)
 
 void cuda_bndp::spine_reduce_gold(cuda_mparticles *cmprts)
 {
-  int *b_mx = cmprts->indexer.b_mx_;
+  int *b_mx = cmprts->b_mx_;
 
   thrust::fill(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks_ * (CUDA_BND_STRIDE + 1), 0);
 
@@ -261,7 +261,7 @@ void cuda_bndp::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
   prof_stop(pr_C);
 
   prof_start(pr_D);
-  int *b_mx = cmprts->indexer.b_mx_;
+  int *b_mx = cmprts->b_mx_;
   if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
@@ -316,7 +316,7 @@ void cuda_bndp::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
 
 void cuda_bndp::sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
-  int *b_mx = cmprts->indexer.b_mx_;
+  int *b_mx = cmprts->b_mx_;
 
   thrust::host_vector<uint> h_bidx(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts);
   thrust::host_vector<uint> h_id(cmprts->n_prts);

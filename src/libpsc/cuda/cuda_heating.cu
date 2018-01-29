@@ -244,7 +244,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
 {
-  dim3 dimGrid(cmprts->indexer.b_mx_[1], cmprts->indexer.b_mx_[2] * cmprts->n_patches);
+  dim3 dimGrid(cmprts->b_mx_[1], cmprts->b_mx_[2] * cmprts->n_patches);
 
   k_heating_run_foil<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -285,14 +285,14 @@ cuda_heating_run_foil(struct cuda_mparticles *cmprts)
     cuda_mparticles_const_set(cmprts);
     cuda_heating_params_set(cmprts);
 
-    dim3 dimGrid(cmprts->indexer.b_mx_[1], cmprts->indexer.b_mx_[2] * cmprts->n_patches);
+    dim3 dimGrid(cmprts->b_mx_[1], cmprts->b_mx_[2] * cmprts->n_patches);
     
     cudaError_t ierr;
     int n_threads = dimGrid.x * dimGrid. y * THREADS_PER_BLOCK;
     ierr = cudaMalloc(&d_curand_states, n_threads * sizeof(*d_curand_states));
     cudaCheck(ierr);
 
-    k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states, cmprts->indexer.b_mx_[1]);
+    k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states, cmprts->b_mx_[1]);
     cuda_sync_if_enabled();
 
     first_time = false;
