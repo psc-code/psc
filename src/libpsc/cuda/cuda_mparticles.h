@@ -44,10 +44,6 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   uint n_prts = {};                      // total # of particles across all patches
   uint n_alloced = {};                   // size of particle-related arrays as allocated
   Int3 bs;                               // block size
-  uint n_blocks_per_patch;               // number of blocks per patch
-  uint n_blocks;                         // number of blocks in all patches in mprts
-
-  const uint n_patches;
   const Grid_t& grid_;
 };
 

@@ -12,8 +12,7 @@
 
 cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
   : cuda_mparticles_indexer(grid),
-    grid_(grid),
-    n_patches(grid.patches.size())
+    grid_(grid)
 {
   bs = grid.bs;
 
