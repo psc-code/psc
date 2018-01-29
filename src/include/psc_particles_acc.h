@@ -49,15 +49,6 @@ struct psc_mparticles_acc {
 
 #define psc_mparticles_acc(prts) mrc_to_subobj(prts, struct psc_mparticles_acc)
 
-#define particle_acc_wni(p) ({				\
-      particle_acc_real_t rv;					\
-      int kind = particle_acc_kind(p);			\
-      rv = p->qni_wni / ppsc->kinds[kind].q;			\
-      rv;							\
-    })
-
-#define particle_acc_qni_wni(prt) ((prt)->qni_wni)
-
 #define PARTICLE_ACC_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\
     (prt).xi[0] = xi4.x;						\

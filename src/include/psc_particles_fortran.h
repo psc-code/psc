@@ -7,8 +7,6 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
-#include <vector>
-
 using particle_fortran_real_t = double;
 
 struct particle_fortran_t

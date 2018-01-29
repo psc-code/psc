@@ -7,8 +7,6 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
-#include <vector>
-
 using particle_single_real_t = float;
 
 struct particle_single_t : psc_particle<particle_single_real_t> {};
@@ -59,31 +57,6 @@ struct mparticles_traits<mparticles_single_t>
   static constexpr const char* name = "single";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
-
-// can't do this as inline function since struct psc isn't known yet
-#define particle_single_qni_div_mni(p) ({			\
-      particle_single_real_t rv;				\
-      rv = ppsc->kinds[p->kind_].q / ppsc->kinds[p->kind_].m;	\
-      rv;							\
-    })
-
-#define particle_single_qni(p) ({				\
-      particle_single_real_t rv;				\
-      rv = ppsc->kinds[p->kind_].q;				\
-      rv;							\
-    })
-
-#define particle_single_mni(p) ({				\
-      particle_single_real_t rv;				\
-      rv = ppsc->kinds[p->kind_].m;				\
-      rv;							\
-    })
-
-#define particle_single_wni(p) ({				\
-      particle_single_real_t rv;				\
-      rv = (p)->qni_wni / ppsc->kinds[(p)->kind_].q;		\
-      rv;							\
-    })
 
 #define particle_single_qni_wni(prt) ((prt)->qni_wni_)
 

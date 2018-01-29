@@ -53,15 +53,6 @@ struct psc_mparticles_cuda2 {
 
 #define psc_mparticles_cuda2(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda2)
 
-#define particle_cuda2_wni(p) ({				\
-      particle_cuda2_real_t rv;					\
-      int kind = particle_cuda2_kind(p);			\
-      rv = p->qni_wni / ppsc->kinds[kind].q;			\
-      rv;							\
-    })
-
-#define particle_cuda2_qni_wni(prt) ((prt)->qni_wni)
-
 #define PARTICLE_CUDA2_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\
     (prt).xi[0] = xi4.x;						\
