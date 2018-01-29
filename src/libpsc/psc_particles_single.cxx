@@ -45,7 +45,7 @@ struct ConvertFromSingle
     prt_dbl.pxi     = prt.pxi;
     prt_dbl.pyi     = prt.pyi;
     prt_dbl.pzi     = prt.pzi;
-    prt_dbl.qni_wni = prt.qni_wni;
+    prt_dbl.qni_wni_ = prt.qni_wni_;
     prt_dbl.kind_   = prt.kind_;
   }
 };
@@ -63,7 +63,7 @@ struct ConvertToSingle
     prt.pxi     = prt_dbl.pxi;
     prt.pyi     = prt_dbl.pyi;
     prt.pzi     = prt_dbl.pzi;
-    prt.qni_wni = prt_dbl.qni_wni;
+    prt.qni_wni_ = prt_dbl.qni_wni_;
     prt.kind_   = prt_dbl.kind_;
 
     return prt;

@@ -190,7 +190,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      assert(psc->prm.fractional_n_particles_per_cell);
 	      particle_t prt;
 	      _psc_setup_particle(psc, &prt, &npt, p, xx);
-	      prt.qni_wni = psc->kinds[prt.kind_].q; // ??? FIXME
+	      prt.qni_wni_ = psc->kinds[prt.kind_].q; // ??? FIXME
 
 	      mprts[p].push_back(prt);
 	    }

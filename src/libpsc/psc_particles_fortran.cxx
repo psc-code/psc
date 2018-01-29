@@ -43,7 +43,7 @@ struct ConvertToDouble
     prt_dbl.pxi     = prt.pxi;
     prt_dbl.pyi     = prt.pyi;
     prt_dbl.pzi     = prt.pzi;
-    prt_dbl.qni_wni = prt.qni * prt.wni;;
+    prt_dbl.qni_wni_ = prt.qni * prt.wni;
     prt_dbl.kind_   = prt.qni > 0 ? 1 : 0;
   }
 };
@@ -65,7 +65,7 @@ struct ConvertFromDouble
     
     particle_fortran_real_t qni = ppsc->kinds[prt_dbl.kind_].q;
     particle_fortran_real_t mni = ppsc->kinds[prt_dbl.kind_].m;
-    particle_fortran_real_t wni = prt_dbl.qni_wni / qni;
+    particle_fortran_real_t wni = prt_dbl.qni_wni_ / qni;
     
     prt.xi  = prt_dbl.xi;
     prt.yi  = prt_dbl.yi;

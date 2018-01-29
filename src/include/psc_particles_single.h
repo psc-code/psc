@@ -85,6 +85,6 @@ struct mparticles_traits<mparticles_single_t>
       rv;							\
     })
 
-#define particle_single_qni_wni(prt) ((prt)->qni_wni)
+#define particle_single_qni_wni(prt) ((prt)->qni_wni_)
 
 #endif

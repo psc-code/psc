@@ -88,7 +88,7 @@ struct ConvertToVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
     prt->ux[0] = part->pxi;
     prt->ux[1] = part->pyi;
     prt->ux[2] = part->pzi;
-    prt->w     = part->qni_wni / ppsc->kinds[part->kind_].q / dVi;
+    prt->w     = part->qni_wni_ / ppsc->kinds[part->kind_].q / dVi;
     prt->kind  = part->kind();
   }
 };
@@ -122,7 +122,7 @@ struct ConvertFromVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
     part->pxi     = prt->ux[0];
     part->pyi     = prt->ux[1];
     part->pzi     = prt->ux[2];
-    part->qni_wni = ppsc->kinds[prt->kind].q * prt->w * dVi;
+    part->qni_wni_ = ppsc->kinds[prt->kind].q * prt->w * dVi;
   }
 };
 

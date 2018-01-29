@@ -854,9 +854,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
 	      psc_setup_particle(psc, &prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fractional_n_particles_per_cell) {
-		prt.qni_wni = psc->kinds[prt.kind_].q;
+		prt.qni_wni_ = psc->kinds[prt.kind_].q;
 	      } else {
-		prt.qni_wni = psc->kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
+		prt.qni_wni_ = psc->kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }
 	      mprts[p].push_back(prt);
 	    }

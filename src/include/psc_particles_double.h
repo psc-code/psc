@@ -54,7 +54,7 @@ struct mparticles_traits<mparticles_double_t>
 static inline particle_double_real_t
 particle_double_qni_wni(particle_double_t *p)
 {
-  return p->qni_wni;
+  return p->qni_wni_;
 }
 
 static inline int
