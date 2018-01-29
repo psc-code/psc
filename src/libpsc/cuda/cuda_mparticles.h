@@ -72,18 +72,9 @@ struct cuda_mparticles_base
 };
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_bnd
-
-struct cuda_mparticles;
-
-struct cuda_mparticles_bnd
-{
-};
-
-// ----------------------------------------------------------------------
 // cuda_mparticles
 
-struct cuda_mparticles : cuda_mparticles_base, cuda_mparticles_bnd
+struct cuda_mparticles : cuda_mparticles_base
 {
   cuda_mparticles(const Grid_t& grid, const Int3& bs);
 
