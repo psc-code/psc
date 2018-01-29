@@ -9,6 +9,8 @@
 #include "bnd_particles_impl.hxx"
 #include "cuda_bndp.h"
 
+extern int pr_time_step_no_comm;
+
 struct psc_bnd_particles_cuda;
 
 template<typename MP>
@@ -60,16 +62,51 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
   using Base = psc_bnd_particles_sub<mparticles_cuda_t,
 				     bnd_particles_policy_cuda<mparticles_cuda_t>>;
 
-  using Base::setup;
+  // ----------------------------------------------------------------------
+  // ctor
   
+  psc_bnd_particles_cuda()
+    : cbndp_(new cuda_bndp)
+  {}
+
+  // ----------------------------------------------------------------------
+  // setup
+  
+  void setup(struct mrc_domain *domain, Grid_t& grid)
+  {
+    Base::setup(domain);
+    cbndp_->setup(grid);
+  }
+
   // ----------------------------------------------------------------------
   // exchange_particles
 
   void exchange_particles(mparticles_cuda_t mprts)
   {
-    Base::exchange_particles(mprts);
+    static int pr_A, pr_B;
+    if (!pr_A) {
+      pr_A = prof_register("xchg_mprts_prep", 1., 0, 0);
+      pr_B = prof_register("xchg_mprts_post", 1., 0, 0);
+    }
+    
+    prof_restart(pr_time_step_no_comm);
+    prof_start(pr_A);
+    this->exchange_mprts_prep(ddcp, mprts);
+    prof_stop(pr_A);
+    
+    process_and_exchange(mprts);
+    
+    prof_restart(pr_time_step_no_comm);
+    prof_start(pr_B);
+    this->exchange_mprts_post(ddcp, mprts);
+    prof_stop(pr_B);
+    prof_stop(pr_time_step_no_comm);
   }
 
+private:
+  std::unique_ptr<cuda_bndp> cbndp_;
+
+public:
   // ======================================================================
   // interface to psc_bnd_particles
   // repeated here since there's no way to do this somehow virtual at
@@ -92,7 +129,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
   {
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
     
-    sub->setup(bnd->psc->mrc_domain);
+    sub->setup(bnd->psc->mrc_domain, bnd->psc->grid);
     static_cast<policy_t*>(sub)->setup(bnd->psc->grid);
   }
 

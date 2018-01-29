@@ -112,7 +112,7 @@ protected:
   void process_and_exchange(mparticles_t mprts);
   void exchange_particles(mparticles_t mprts);
 
-private:
+protected:
   ddc_particles<mparticles_t> *ddcp;
 };
 
@@ -260,6 +260,7 @@ void psc_bnd_particles_sub<MP, P>::process_and_exchange(mparticles_t mprts)
     pr_C = prof_register("xchg_comm", 1., 0, 0);
   }
   
+  prof_restart(pr_time_step_no_comm);
   prof_start(pr_B);
 #pragma omp parallel for
   for (int p = 0; p < mprts.n_patches(); p++) {
@@ -281,9 +282,6 @@ void psc_bnd_particles_sub<MP, P>::process_and_exchange(mparticles_t mprts)
 template<typename MP, typename P>
 void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 {
-  // FIXME we should make sure (assert) we don't quietly drop particle which left
-  // in the invariant direction
-
   static int pr_A, pr_D;
   if (!pr_A) {
     pr_A = prof_register("xchg_pre", 1., 0, 0);
@@ -294,6 +292,7 @@ void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
   prof_start(pr_A);
   this->exchange_mprts_prep(ddcp, mprts);
   prof_stop(pr_A);
+  prof_stop(pr_time_step_no_comm);
 
   process_and_exchange(mprts);
 
