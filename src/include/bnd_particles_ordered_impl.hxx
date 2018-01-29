@@ -214,6 +214,26 @@ struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_poli
   // this spoint
   
   // ----------------------------------------------------------------------
+  // create
+
+  static void create(struct psc_bnd_particles *bnd)
+  {
+    auto sub = static_cast<psc_bnd_particles_ordered*>(bnd->obj.subctx);
+
+    new(sub) psc_bnd_particles_ordered();
+  }
+  
+  // ----------------------------------------------------------------------
+  // destroy
+
+  static void destroy(struct psc_bnd_particles *bnd)
+  {
+    auto sub = static_cast<psc_bnd_particles_ordered*>(bnd->obj.subctx);
+
+    sub->~psc_bnd_particles_ordered();
+  }
+  
+  // ----------------------------------------------------------------------
   // exchange_particles
 
   static void exchange_particles(struct psc_bnd_particles *bnd,
