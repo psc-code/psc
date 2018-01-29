@@ -91,14 +91,14 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t,
     
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_A);
-    this->exchange_mprts_prep(ddcp, mprts);
+    cbndp_->prep(ddcp, mprts->cmprts());
     prof_stop(pr_A);
     
     process_and_exchange(mprts);
     
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_B);
-    this->exchange_mprts_post(ddcp, mprts);
+    cbndp_->post(ddcp, mprts->cmprts());
     prof_stop(pr_B);
     prof_stop(pr_time_step_no_comm);
   }
