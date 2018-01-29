@@ -2,6 +2,7 @@
 #ifndef CUDA_BNDP_H
 #define CUDA_BNDP_H
 
+#include "cuda_mparticles_indexer.h"
 #include "psc_particles_cuda.h"
 #include "ddc_particles.hxx"
 
@@ -26,7 +27,7 @@ struct cuda_bnd {
 // ----------------------------------------------------------------------
 // cuda_bndp
 
-struct cuda_bndp
+struct cuda_bndp : cuda_mparticles_indexer
 {
   using mparticles_t = mparticles_cuda_t;
   using ddcp_t = ddc_particles<mparticles_t>;

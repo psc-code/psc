@@ -33,15 +33,12 @@
 
 void cuda_bndp::setup(Grid_t& grid)
 {
-  // FIXME, mostly duplicated from cuda_mparticles
-  Int3 b_mx;
-  for (int d = 0; d < 3; d++) {
-    assert(grid.ldims[d] % grid.bs[d] == 0);
-    b_mx[d] = grid.ldims[d] / grid.bs[d];
-  }
-
+  // FIXME, in the ctor this would be much less hacky
+  *static_cast<cuda_mparticles_indexer*>(this) =
+    cuda_mparticles_indexer(grid);
+  
   n_patches_ = grid.patches.size();
-  n_blocks_per_patch_ = b_mx[0] * b_mx[1] * b_mx[2];
+  n_blocks_per_patch_ = b_mx_[0] * b_mx_[1] * b_mx_[2];
   n_blocks_ = n_patches_ * n_blocks_per_patch_;
 
   d_spine_cnts.resize(1 + n_blocks_ * (CUDA_BND_STRIDE + 1));

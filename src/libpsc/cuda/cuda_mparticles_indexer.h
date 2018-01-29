@@ -3,6 +3,7 @@
 #define CUDA_MPARTICLES_INDEXER_H
 
 #include "grid.hxx"
+#include "psc_particles_cuda.h"
 
 // ======================================================================
 // cuda_mparticles_indexer
