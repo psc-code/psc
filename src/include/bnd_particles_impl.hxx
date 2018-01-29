@@ -31,28 +31,6 @@ at_hi_boundary(int p, int d)
 template<typename MP>
 struct bnd_particles_policy_default
 {
-  using mparticles_t = MP;
-  using ddcp_t = ddc_particles<mparticles_t>;
-  using ddcp_patch = typename ddcp_t::patch;
-
-protected:
-  // ----------------------------------------------------------------------
-  // exchange_mprts_prep
-  
-  void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      ddcp_patch *dpatch = &ddcp->patches[p];
-      dpatch->m_buf = &mprts[p].get_buf();
-      dpatch->m_begin = 0;
-    }
-  }
-  
-  // ----------------------------------------------------------------------
-  // exchange_mprts_post
-  
-  void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
-  {}
 };
 
 // ======================================================================
@@ -65,6 +43,8 @@ struct psc_bnd_particles_sub : P
   using policy_t = P;
   using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
+  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_patch = typename ddcp_t::patch;
 
   // ----------------------------------------------------------------------
   // interface to psc_bnd_particles_ops
@@ -113,7 +93,7 @@ protected:
   void exchange_particles(mparticles_t mprts);
 
 protected:
-  ddc_particles<mparticles_t> *ddcp;
+  ddcp_t* ddcp;
 };
 
 #define psc_bnd_particles_sub(bnd, MP, P) mrc_to_subobj(bnd, (psc_bnd_particles_sub<MP, P>))
@@ -282,25 +262,13 @@ void psc_bnd_particles_sub<MP, P>::process_and_exchange(mparticles_t mprts)
 template<typename MP, typename P>
 void psc_bnd_particles_sub<MP, P>::exchange_particles(mparticles_t mprts)
 {
-  static int pr_A, pr_D;
-  if (!pr_A) {
-    pr_A = prof_register("xchg_pre", 1., 0, 0);
-    pr_D = prof_register("xchg_post", 1., 0, 0);
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    ddcp_patch *dpatch = &ddcp->patches[p];
+    dpatch->m_buf = &mprts[p].get_buf();
+    dpatch->m_begin = 0;
   }
-  
-  prof_restart(pr_time_step_no_comm);
-  prof_start(pr_A);
-  this->exchange_mprts_prep(ddcp, mprts);
-  prof_stop(pr_A);
-  prof_stop(pr_time_step_no_comm);
 
   process_and_exchange(mprts);
-
-  prof_restart(pr_time_step_no_comm);
-  prof_start(pr_D);
-  this->exchange_mprts_post(ddcp, mprts);
-  prof_stop(pr_D);
-  prof_stop(pr_time_step_no_comm);
 
   //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
   //psc_bnd_particles_open_boundary(bnd, particles, mflds);
