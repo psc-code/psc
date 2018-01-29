@@ -24,9 +24,9 @@ struct cuda_bnd {
 };
 
 // ----------------------------------------------------------------------
-// cuda_particles_bnd
+// cuda_bndp
 
-struct cuda_particles_bnd
+struct cuda_bndp
 {
   using mparticles_t = mparticles_cuda_t;
   using ddcp_t = ddc_particles<mparticles_t>;

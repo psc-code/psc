@@ -24,7 +24,7 @@ static const int RADIX_BITS = 4;
 // ----------------------------------------------------------------------
 // spine_reduce
 
-void cuda_particles_bnd::spine_reduce(cuda_mparticles *cmprts)
+void cuda_bndp::spine_reduce(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->indexer.b_mx_;
@@ -75,7 +75,7 @@ void cuda_particles_bnd::spine_reduce(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // cuda_mprts_spine_reduce_gold
 
-void cuda_particles_bnd::spine_reduce_gold(cuda_mparticles *cmprts)
+void cuda_bndp::spine_reduce_gold(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
   uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
@@ -135,7 +135,7 @@ k_count_received(int nr_total_blocks, uint *d_n_recv_by_block, uint *d_spine_cnt
 // ----------------------------------------------------------------------
 // count_received
 
-void cuda_particles_bnd::count_received(cuda_mparticles *cmprts)
+void cuda_bndp::count_received(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
   
@@ -146,7 +146,7 @@ void cuda_particles_bnd::count_received(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // count_received_gold
 
-void cuda_particles_bnd::count_received_gold(cuda_mparticles *cmprts)
+void cuda_bndp::count_received_gold(cuda_mparticles *cmprts)
 {
   int n_blocks = cmprts->n_blocks;
   thrust::host_vector<uint> h_spine_cnts(1 + n_blocks * (10 + 1));
@@ -203,7 +203,7 @@ k_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
 // ----------------------------------------------------------------------
 // scan_scatter_received
 
-void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_prts_recv)
+void cuda_bndp::scan_scatter_received(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   if (n_prts_recv == 0) {
     return;
@@ -222,7 +222,7 @@ void cuda_particles_bnd::scan_scatter_received(cuda_mparticles *cmprts, uint n_p
 // ----------------------------------------------------------------------
 // scan_scatter_received_gold
 
-void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uint n_prts_recv)
+void cuda_bndp::scan_scatter_received_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   uint n_blocks = cmprts->n_blocks;
 
@@ -247,7 +247,7 @@ void cuda_particles_bnd::scan_scatter_received_gold(cuda_mparticles *cmprts, uin
 // ----------------------------------------------------------------------
 // sort_pairs_device
 
-void cuda_particles_bnd::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
+void cuda_bndp::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   static int pr_A, pr_B, pr_C, pr_D;
   if (!pr_B) {
@@ -326,7 +326,7 @@ void cuda_particles_bnd::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_
   // d_ids now contains the indices to reorder by
 }
 
-void cuda_particles_bnd::sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv)
+void cuda_bndp::sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
   uint n_blocks_per_patch = cmprts->n_blocks_per_patch;
   uint n_blocks = cmprts->n_blocks;

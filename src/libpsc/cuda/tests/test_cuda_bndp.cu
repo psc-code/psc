@@ -24,7 +24,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   
   std::unique_ptr<Grid_t> grid;
   std::unique_ptr<cuda_mparticles> cmprts;
-  std::unique_ptr<cuda_particles_bnd> cbnd;
+  std::unique_ptr<cuda_bndp> cbnd;
 
   const Int3 bs_ = { 1, 1, 1 };
 
@@ -78,7 +78,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
     cmprts->dump();
 #endif
 
-    cbnd.reset(new cuda_particles_bnd());
+    cbnd.reset(new cuda_bndp());
     cbnd->setup(nullptr, cmprts.get());
   }
 };
@@ -87,7 +87,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 // ----------------------------------------------------------------------
 // BndPrep
 //
-// tests cuda_particles_bnd::prep()
+// tests cuda_bndp::prep()
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
@@ -104,7 +104,7 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 // ----------------------------------------------------------------------
 // BndPrepDetail
 //
-// tests the pieces that go into cuda_particles_bnd::prep()
+// tests the pieces that go into cuda_bndp::prep()
 
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
@@ -246,7 +246,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 // ----------------------------------------------------------------------
 // BndPost
 //
-// tests cuda_particles_bnd::post()
+// tests cuda_bndp::post()
 
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
@@ -285,7 +285,7 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 // ----------------------------------------------------------------------
 // BndPostDetail
 //
-// tests the pieces that go into cuda_particles_bnd::post()
+// tests the pieces that go into cuda_bndp::post()
 
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {

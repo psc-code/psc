@@ -42,7 +42,7 @@ k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 // ----------------------------------------------------------------------
 // reorder_send_by_id
 
-void cuda_particles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::reorder_send_by_id(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
   if (n_prts_send == 0) {
     return;
@@ -60,7 +60,7 @@ void cuda_particles_bnd::reorder_send_by_id(struct cuda_mparticles *cmprts, uint
 // ----------------------------------------------------------------------
 // reorder_send_by_id_gold
 
-void cuda_particles_bnd::reorder_send_by_id_gold(cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::reorder_send_by_id_gold(cuda_mparticles *cmprts, uint n_prts_send)
 {
   thrust::host_vector<uint> h_id(cmprts->d_id.data(), cmprts->d_id.data() + cmprts->n_prts);
   thrust::host_vector<float4> h_xi4(cmprts->d_xi4.data(), cmprts->d_xi4.data() + cmprts->n_prts + n_prts_send);
@@ -99,7 +99,7 @@ k_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
 // ----------------------------------------------------------------------
 // reorder_send_buf_total
 
-void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send)
 {
   if (cmprts->n_patches == 0)
     return;
@@ -121,7 +121,7 @@ void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_
 // ----------------------------------------------------------------------
 // scan_send_buf_total
 
-void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
   uint n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->indexer.b_mx_;
@@ -189,7 +189,7 @@ void cuda_particles_bnd::scan_send_buf_total(struct cuda_mparticles *cmprts, uin
 // ----------------------------------------------------------------------
 // scan_send_buf_total_gold
 
-void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::scan_send_buf_total_gold(cuda_mparticles *cmprts, uint n_prts_send)
 {
   uint n_blocks = cmprts->n_blocks;
 

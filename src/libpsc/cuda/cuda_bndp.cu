@@ -31,7 +31,7 @@
 // ----------------------------------------------------------------------
 // setup
 
-void cuda_particles_bnd::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
+void cuda_bndp::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
 {
   d_spine_cnts.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
   d_spine_sums.resize(1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1));
@@ -42,7 +42,7 @@ void cuda_particles_bnd::setup(ddcp_t* ddcp, cuda_mparticles* cmprts)
 // ----------------------------------------------------------------------
 // prep
 
-void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
+void cuda_bndp::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -84,7 +84,7 @@ void cuda_particles_bnd::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
 // ----------------------------------------------------------------------
 // post
 
-void cuda_particles_bnd::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
+void cuda_bndp::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
 {
   static int pr_A, pr_D, pr_E, pr_D1;
   if (!pr_A) {
@@ -126,7 +126,7 @@ void cuda_particles_bnd::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
 // ----------------------------------------------------------------------
 // find_n_send
 
-uint cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
+uint cuda_bndp::find_n_send(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
 
@@ -148,7 +148,7 @@ uint cuda_particles_bnd::find_n_send(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // copy_from_dev_and_convert
 
-void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_send)
 {
   uint n_prts = cmprts->n_prts;
   thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
@@ -184,7 +184,7 @@ void cuda_particles_bnd::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint
 // ----------------------------------------------------------------------
 // convert_and_copy_to_dev
 
-uint cuda_particles_bnd::convert_and_copy_to_dev(cuda_mparticles *cmprts)
+uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 {
   uint n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -271,7 +271,7 @@ mprts_update_offsets(int nr_total_blocks, uint *d_off, uint *d_spine_sums)
   }
 }
 
-void cuda_particles_bnd::update_offsets(cuda_mparticles *cmprts)
+void cuda_bndp::update_offsets(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -281,7 +281,7 @@ void cuda_particles_bnd::update_offsets(cuda_mparticles *cmprts)
   cuda_sync_if_enabled();
 }
 
-void cuda_particles_bnd::update_offsets_gold(cuda_mparticles *cmprts)
+void cuda_bndp::update_offsets_gold(cuda_mparticles *cmprts)
 {
   uint n_blocks = cmprts->n_blocks;
 
