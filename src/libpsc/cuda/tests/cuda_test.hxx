@@ -6,14 +6,14 @@ struct TestBase
 {
   cuda_mparticles* make_cmprts(Grid_t& grid)
   {
-    auto cmprts = new cuda_mparticles(grid, bs_);
+    auto cmprts = new cuda_mparticles(grid);
     
     return cmprts;
   }
 
   cuda_mparticles* make_cmprts(Grid_t& grid, const std::vector<cuda_mparticles_prt>& prts)
   {
-    auto cmprts = new cuda_mparticles(grid, bs_);
+    auto cmprts = new cuda_mparticles(grid);
 
     uint n_prts_by_patch[1];
     n_prts_by_patch[0] = prts.size();

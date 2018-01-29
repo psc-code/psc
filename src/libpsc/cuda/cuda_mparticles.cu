@@ -14,8 +14,8 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles::cuda_mparticles(const Grid_t& grid, const Int3& bs)
-  : cuda_mparticles_base(grid, bs)
+cuda_mparticles::cuda_mparticles(const Grid_t& grid)
+  : cuda_mparticles_base(grid)
 {
   xb_by_patch.resize(n_patches);
   for (int p = 0; p < n_patches; p++) {

@@ -50,7 +50,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
     grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
-  new(mprts.sub_) psc_mparticles_cuda(grid, grid.bs);
+  new(mprts.sub_) psc_mparticles_cuda(grid);
 }
 
 // ----------------------------------------------------------------------

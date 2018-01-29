@@ -13,10 +13,10 @@
 #define dprintf(...) do {} while (0)
 #endif
 
-psc_mparticles_cuda::psc_mparticles_cuda(Grid_t& grid, const Int3& bs)
+psc_mparticles_cuda::psc_mparticles_cuda(Grid_t& grid)
 {
   dprintf("CMPRTS: ctor\n");
-  cmprts_ = new cuda_mparticles(grid, bs);
+  cmprts_ = new cuda_mparticles(grid);
 }
 
 psc_mparticles_cuda::~psc_mparticles_cuda()

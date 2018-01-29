@@ -54,7 +54,7 @@ struct psc_mparticles_cuda
 {
   using particle_t = particle_cuda_t;
   
-  psc_mparticles_cuda(Grid_t& grid, const Int3& bs);
+  psc_mparticles_cuda(Grid_t& grid);
   psc_mparticles_cuda(const psc_mparticles_cuda&) = delete;
   ~psc_mparticles_cuda();
 

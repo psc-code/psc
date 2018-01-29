@@ -39,7 +39,7 @@ struct cuda_mparticles_base
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
 
-  cuda_mparticles_base(const Grid_t& grid, const Int3& bs);
+  cuda_mparticles_base(const Grid_t& grid);
   // copy constructor would work fine, be don't want to copy everything
   // by accident
   cuda_mparticles_base(const cuda_mparticles&) = delete;
@@ -76,7 +76,7 @@ struct cuda_mparticles_base
 
 struct cuda_mparticles : cuda_mparticles_base
 {
-  cuda_mparticles(const Grid_t& grid, const Int3& bs);
+  cuda_mparticles(const Grid_t& grid);
 
   void reserve_all(const uint *n_prts_by_patch);
   uint get_n_prts();

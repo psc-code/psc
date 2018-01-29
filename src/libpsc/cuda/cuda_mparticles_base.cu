@@ -10,11 +10,11 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid, const Int3& bs)
+cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
   : grid_(grid),
     n_patches(grid.patches.size())
 {
-  this->bs = bs;
+  bs = grid.bs;
   
   for (int d = 0; d < 3; d++) {
     assert(grid.ldims[d] % bs[d] == 0);
