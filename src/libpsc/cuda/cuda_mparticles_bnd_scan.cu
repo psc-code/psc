@@ -112,7 +112,7 @@ void cuda_particles_bnd::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
   
   k_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
-						  cmprts->d_bidx.data().get(), cmprts->d_sums.data().get(),
+						  cmprts->d_bidx.data().get(), d_sums.data().get(),
 						  cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
 						  xchg_xi4, xchg_pxi4);
   cuda_sync_if_enabled();
@@ -207,8 +207,8 @@ void cuda_particles_bnd::scan_send_buf_total_gold(cuda_mparticles *cmprts, uint 
     }
   }
 
-  cmprts->d_sums.resize(cmprts->n_prts);
-  thrust::copy(h_sums.begin(), h_sums.end(), cmprts->d_sums.begin());
+  d_sums.resize(cmprts->n_prts);
+  thrust::copy(h_sums.begin(), h_sums.end(), d_sums.begin());
 
   reorder_send_buf_total(cmprts, n_prts_send);
 }

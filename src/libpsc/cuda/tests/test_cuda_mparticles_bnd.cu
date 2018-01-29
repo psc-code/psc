@@ -216,8 +216,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #endif
 
   // where in the send region at the tail the OOB particles should go
-  EXPECT_EQ(cmprts->d_sums[1], 0);
-  EXPECT_EQ(cmprts->d_sums[3], 1);
+  EXPECT_EQ(cbnd->d_sums[1], 0);
+  EXPECT_EQ(cbnd->d_sums[3], 1);
 #endif
 
   // particles 1, 3, which need to be exchanged, should now be at the

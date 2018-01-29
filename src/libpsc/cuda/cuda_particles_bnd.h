@@ -65,6 +65,8 @@ struct cuda_particles_bnd
   uint n_prts_send;
   thrust::device_vector<uint> d_bnd_off;
 
+  thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
+
   std::vector<cuda_bnd> bpatch;
 };
 
