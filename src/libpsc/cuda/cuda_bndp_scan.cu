@@ -124,8 +124,6 @@ void cuda_bndp::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send
 
 void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_send)
 {
-  int *b_mx = cmprts->b_mx_;
-
   // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::exclusive_scan(d_spine_cnts.data() + n_blocks * 10,
 			 d_spine_cnts.data() + n_blocks * 11 + 1,
@@ -135,42 +133,42 @@ void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_
   // this should make sure at least those within bounds don't screw anything up
   thrust::fill(d_spine_sums.data(), d_spine_sums.data() + n_blocks * 10, 0);
 
-  if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
+  if (b_mx_[0] == 1 && b_mx_[1] == 4 && b_mx_[2] == 4) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       4, 4> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 8 && b_mx_[2] == 8) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       8, 8> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 16 && b_mx[2] == 16) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 16 && b_mx_[2] == 16) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       16, 16> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 32 && b_mx[2] == 32) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 32 && b_mx_[2] == 32) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       32, 32> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 64 && b_mx_[2] == 64) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       64, 64> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 128 && b_mx_[2] == 128) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
                        NopFunctor<K>,
                        NopFunctor<K>,
@@ -178,7 +176,7 @@ void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
   } else {
-    printf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
+    printf("no support for b_mx %d x %d x %d!\n", b_mx_[0], b_mx_[1], b_mx_[2]);
     assert(0);
   }
   cuda_sync_if_enabled();

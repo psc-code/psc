@@ -26,42 +26,40 @@ static const int RADIX_BITS = 4;
 
 void cuda_bndp::spine_reduce(cuda_mparticles *cmprts)
 {
-  int *b_mx = cmprts->b_mx_;
-
   // OPT?
   thrust::fill(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
 
   const int threads = B40C_RADIXSORT_THREADS;
-  if (b_mx[0] == 1 && b_mx[1] == 2 && b_mx[2] == 2) {
+  if (b_mx_[0] == 1 && b_mx_[1] == 2 && b_mx_[2] == 2) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 2, 2> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 4 && b_mx_[2] == 4) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 4, 4> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 8 && b_mx_[2] == 8) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 8, 8> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 16 && b_mx[2] == 16) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 16 && b_mx_[2] == 16) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 16, 16> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 32 && b_mx[2] == 32) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 32 && b_mx_[2] == 32) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 32, 32> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 64 && b_mx_[2] == 64) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 64, 64> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 128 && b_mx_[2] == 128) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
                       NopFunctor<K>, 128, 128> <<<n_blocks, threads>>>
       (d_spine_cnts.data().get(), cmprts->d_bidx.data().get(), cmprts->d_off.data().get(), n_blocks);
   } else {
-    printf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
+    printf("no support for b_mx %d x %d x %d!\n", b_mx_[0], b_mx_[1], b_mx_[2]);
     assert(0);
   }
   cuda_sync_if_enabled();
@@ -76,8 +74,6 @@ void cuda_bndp::spine_reduce(cuda_mparticles *cmprts)
 
 void cuda_bndp::spine_reduce_gold(cuda_mparticles *cmprts)
 {
-  int *b_mx = cmprts->b_mx_;
-
   thrust::fill(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
 
   thrust::host_vector<uint> h_bidx(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts);
@@ -93,18 +89,18 @@ void cuda_bndp::spine_reduce_gold(cuda_mparticles *cmprts)
 	if (key < 9) {
 	  int dy = key % 3;
 	  int dz = key / 3;
-	  int by = b % b_mx[1];
-	  int bz = b / b_mx[1];
+	  int by = b % b_mx_[1];
+	  int bz = b / b_mx_[1];
 	  uint bby = by + 1 - dy;
 	  uint bbz = bz + 1 - dz;
-	  uint bb = bbz * b_mx[1] + bby;
-	  if (bby < b_mx[1] && bbz < b_mx[2]) {
+	  uint bb = bbz * b_mx_[1] + bby;
+	  if (bby < b_mx_[1] && bbz < b_mx_[2]) {
 	    h_spine_cnts[(bb + p * n_blocks_per_patch) * 10 + key]++;
 	  } else {
 	    assert(0);
 	  }
 	} else if (key == CUDA_BND_S_OOB) {
-	  h_spine_cnts[b_mx[1]*b_mx[2]*n_patches * 10 + bid]++;
+	  h_spine_cnts[b_mx_[1]*b_mx_[2]*n_patches * 10 + bid]++;
 	}
       }
     }
@@ -261,43 +257,42 @@ void cuda_bndp::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
   prof_stop(pr_C);
 
   prof_start(pr_D);
-  int *b_mx = cmprts->b_mx_;
-  if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
+  if (b_mx_[0] == 1 && b_mx_[1] == 4 && b_mx_[2] == 4) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
 			NopFunctor<K>,
 			4, 4> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 8 && b_mx_[2] == 8) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
 			NopFunctor<K>,
 			8, 8> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 16 && b_mx[2] == 16) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 16 && b_mx_[2] == 16) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
 			NopFunctor<K>,
 			16, 16> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 32 && b_mx[2] == 32) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 32 && b_mx_[2] == 32) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
 			NopFunctor<K>,
 			32, 32> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 64 && b_mx_[2] == 64) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
 			NopFunctor<K>,
 			64, 64> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
-  } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
+  } else if (b_mx_[0] == 1 && b_mx_[1] == 128 && b_mx_[2] == 128) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
                         NopFunctor<K>,
                         NopFunctor<K>,
@@ -305,7 +300,7 @@ void cuda_bndp::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->d_off.data().get(), n_blocks);
   } else {
-    printf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
+    printf("no support for b_mx %d x %d x %d!\n", b_mx_[0], b_mx_[1], b_mx_[2]);
     assert(0);
   }
   cuda_sync_if_enabled();
@@ -316,8 +311,6 @@ void cuda_bndp::sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv)
 
 void cuda_bndp::sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv)
 {
-  int *b_mx = cmprts->b_mx_;
-
   thrust::host_vector<uint> h_bidx(cmprts->d_bidx.data(), cmprts->d_bidx.data() + cmprts->n_prts);
   thrust::host_vector<uint> h_id(cmprts->n_prts);
   thrust::host_vector<uint> h_off(cmprts->d_off);
@@ -341,12 +334,12 @@ void cuda_bndp::sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv)
       if (key < 9) {
 	int dy = key % 3;
 	int dz = key / 3;
-	int by = b % b_mx[1];
-	int bz = b / b_mx[1];
+	int by = b % b_mx_[1];
+	int bz = b / b_mx_[1];
 	uint bby = by + 1 - dy;
 	uint bbz = bz + 1 - dz;
-	assert(bby < b_mx[1] && bbz < b_mx[2]);
-	uint bb = bbz * b_mx[1] + bby;
+	assert(bby < b_mx_[1] && bbz < b_mx_[2]);
+	uint bb = bbz * b_mx_[1] + bby;
 	int nn = h_spine_sums[(bb + p * n_blocks_per_patch) * 10 + key]++;
 	h_id[nn] = n;
       } else { // OOB
