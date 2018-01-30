@@ -44,7 +44,7 @@ enum CURRMEM {
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 struct FldCache
 {
-  __device__ void fill(float *d_flds0, int size, int *ci0, int p)
+  __device__ void load(float *d_flds0, int size, int *ci0, int p)
   {
     float *d_flds = d_flds0 + p * size;
     
@@ -562,8 +562,6 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   CURR scurr(_scurr, d_flds0 + p * size)				\
 
 #define DECLARE_AND_CACHE_FIELDS					\
-  __shared__ FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> fld_cache;	\
-  fld_cache.fill(d_flds0, size, ci0, p);
 
 #define FIND_BLOCK_RANGE_CURRMEM(CURRMEM)				\
   int block_pos[3], ci0[3];						\
@@ -596,7 +594,8 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
 	      float *d_flds0, uint size)
 {
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
-  DECLARE_AND_CACHE_FIELDS;
+  __shared__ FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> fld_cache;
+  fld_cache.load(d_flds0, size, ci0, p);
   DECLARE_AND_ZERO_SCURR;
   
   __syncthreads();
