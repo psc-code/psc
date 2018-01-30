@@ -42,6 +42,45 @@ enum CURRMEM {
 		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+struct FldCache
+{
+  float data[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+
+  __device__ float  operator[](int i) const { return data[i]; }
+  __device__ float& operator[](int i)       { return data[i]; }
+
+  __device__ void fill(float *d_flds0, int size, int *ci0, int p)
+  {
+    float *d_flds = d_flds0 + p * size;
+    
+    int ti = threadIdx.x;
+    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+    while (ti < n) {
+      int tmp = ti;
+      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+      tmp /= BLOCKSIZE_Y + 4;
+      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+      // OPT? currently it seems faster to do the loop rather than do m by threadidx
+      for (int m = EX; m <= HZ; m++) {
+	(*this)(m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+      }
+      ti += THREADS_PER_BLOCK;
+    }
+  }
+
+  __device__ float operator()(int m, int j, int k) const
+  {
+    return F3_CACHE((*this), m, j, k);
+  }
+
+  __device__ float& operator()(int m, int j, int k)
+  {
+    return F3_CACHE((*this), m, j, k);
+  }
+
+};
+
 // ----------------------------------------------------------------------
 // push_xi
 //
@@ -511,45 +550,6 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
     
   curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, ci0);
 }
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-struct FldCache
-{
-  float data[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-
-  __device__ float  operator[](int i) const { return data[i]; }
-  __device__ float& operator[](int i)       { return data[i]; }
-
-  __device__ void fill(float *d_flds0, int size, int *ci0, int p)
-  {
-    float *d_flds = d_flds0 + p * size;
-    
-    int ti = threadIdx.x;
-    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-    while (ti < n) {
-      int tmp = ti;
-      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-      tmp /= BLOCKSIZE_Y + 4;
-      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-      // OPT? currently it seems faster to do the loop rather than do m by threadidx
-      for (int m = EX; m <= HZ; m++) {
-	(*this)(m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
-      }
-      ti += THREADS_PER_BLOCK;
-    }
-  }
-
-  __device__ float operator()(int m, int j, int k) const
-  {
-    return F3_CACHE((*this), m, j, k);
-  }
-
-  __device__ float& operator()(int m, int j, int k)
-  {
-    return F3_CACHE((*this), m, j, k);
-  }
-
-};
 
 // ======================================================================
 
