@@ -190,6 +190,16 @@ struct IP1<IP_STD>
   float og[3];
   int lh[3];
   float oh[3];
+
+  __device__ void set_coeffs(float* xi, int *ci0)
+  {
+    find_idx_off_1st(xi, lg, og, float(0.));
+    lg[1] -= ci0[1];
+    lg[2] -= ci0[2];
+    find_idx_off_1st(xi, lh, oh, float(-.5));
+    lh[1] -= ci0[1];
+    lh[2] -= ci0[2];
+  }
 };
 
 template<>
@@ -199,6 +209,13 @@ struct IP1<IP_EC>
   float og[3];
   int lh[3];// FIXME rm
   float oh[3];// FIXME rm
+
+  __device__ void set_coeffs(float* xi, int *ci0)
+  {
+    find_idx_off_1st(xi, lg, og, float(0.));
+    lg[1] -= ci0[1];
+    lg[2] -= ci0[2];
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -223,14 +240,9 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   // field interpolation
   float exq, eyq, ezq, hxq, hyq, hzq;
   IP1<IP> ip;
-  find_idx_off_1st(prt->xi, ip.lg, ip.og, float(0.));
-  ip.lg[1] -= ci0[1];
-  ip.lg[2] -= ci0[2];
+  ip.set_coeffs(prt->xi, ci0);
   
   if (IP == IP_STD) {
-    find_idx_off_1st(prt->xi, ip.lh, ip.oh, float(-.5));
-    ip.lh[1] -= ci0[1];
-    ip.lh[2] -= ci0[2];
     INTERP_FIELD_1ST(fld_cache, exq, EX, g, g);
     INTERP_FIELD_1ST(fld_cache, eyq, EY, h, g);
     INTERP_FIELD_1ST(fld_cache, ezq, EZ, g, h);
