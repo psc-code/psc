@@ -48,9 +48,11 @@ protected:
   // ----------------------------------------------------------------------
   // ctor
 
-  psc_bnd_particles_sub()
+  psc_bnd_particles_sub(struct mrc_domain *domain)
     : ddcp(nullptr)
-  {}
+  {
+    ddcp = new ddc_particles<mparticles_t>(domain);
+  }
 
   // ----------------------------------------------------------------------
   // dtor
@@ -61,20 +63,12 @@ protected:
   }
 
   // ----------------------------------------------------------------------
-  // setup
-  
-  void setup(struct mrc_domain *domain)
-  {
-    ddcp = new ddc_particles<mparticles_t>(domain);
-  }
-
-  // ----------------------------------------------------------------------
   // reset
 
   void reset(struct mrc_domain *domain)
   {
     delete ddcp;
-    setup(domain);
+    ddcp = new ddc_particles<mparticles_t>(domain);
   }
 
   void process_patch(mparticles_t mprts, int p);
@@ -269,9 +263,6 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 template<typename MP>
 void psc_bnd_particles_sub<MP>::create(struct psc_bnd_particles *bnd)
 {
-  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
-  
-  new(sub) psc_bnd_particles_sub<MP>();
 }
   
 // ----------------------------------------------------------------------
@@ -293,7 +284,7 @@ void psc_bnd_particles_sub<MP>::setup(struct psc_bnd_particles *bnd)
 {
   auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
 
-  sub->setup(bnd->psc->mrc_domain);
+  new(sub) psc_bnd_particles_sub<MP>(bnd->psc->mrc_domain);
   //psc_bnd_particles_open_setup(bnd);
 }
 
