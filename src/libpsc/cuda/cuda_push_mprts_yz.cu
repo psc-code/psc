@@ -193,13 +193,13 @@ ip1_to_grid_p(float h)
      fld_cache(fldnr, ddy+1, ddz+1));					\
   })
 
-template<enum IP IP>
+template<typename F, enum IP IP>
 struct IP1
 {
 };
 
-template<>
-struct IP1<IP_STD>
+template<typename F>
+struct IP1<F, IP_STD>
 {
   int lg[3];
   float og[3];
@@ -216,16 +216,16 @@ struct IP1<IP_STD>
     lh[2] -= ci0[2];
   }
 
-  template<typename F> __device__ float ex(F EM) { return _INTERP_FIELD_1ST(EM, EX, g, g); }
-  template<typename F> __device__ float ey(F EM) { return _INTERP_FIELD_1ST(EM, EY, h, g); }
-  template<typename F> __device__ float ez(F EM) { return _INTERP_FIELD_1ST(EM, EZ, g, h); }
-  template<typename F> __device__ float hx(F EM) { return _INTERP_FIELD_1ST(EM, HX, h, h); }
-  template<typename F> __device__ float hy(F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
-  template<typename F> __device__ float hz(F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
+  __device__ float ex(F EM) { return _INTERP_FIELD_1ST(EM, EX, g, g); }
+  __device__ float ey(F EM) { return _INTERP_FIELD_1ST(EM, EY, h, g); }
+  __device__ float ez(F EM) { return _INTERP_FIELD_1ST(EM, EZ, g, h); }
+  __device__ float hx(F EM) { return _INTERP_FIELD_1ST(EM, HX, h, h); }
+  __device__ float hy(F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
+  __device__ float hz(F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
 };
 
-template<>
-struct IP1<IP_EC>
+template<typename F>
+struct IP1<F, IP_EC>
 {
   int lg[3];
   float og[3];
@@ -239,7 +239,7 @@ struct IP1<IP_EC>
     lg[2] -= ci0[2];
   }
 
-  template<typename F> __device__ float ex(F EM)
+  __device__ float ex(F EM)
   {
     return ((1.f - og[1]) * (1.f - og[2]) * EM(EX, lg[1]+0, lg[2]+0) +
 	    (      og[1]) * (1.f - og[2]) * EM(EX, lg[1]+1, lg[2]+0) +
@@ -247,30 +247,30 @@ struct IP1<IP_EC>
 	    (      og[1]) * (      og[2]) * EM(EX, lg[1]+1, lg[2]+1));
   }
 
-  template<typename F> __device__ float ey(F EM)
+  __device__ float ey(F EM)
   {
     return ((1.f - og[2]) * EM(EY, lg[1]  , lg[2]+0) +
 	    (      og[2]) * EM(EY, lg[1]  , lg[2]+1));
   }
 
-  template<typename F> __device__ float ez(F EM)
+  __device__ float ez(F EM)
   {
     return ((1.f - og[1]) * EM(EZ, lg[1]+0, lg[2]  ) +
 	    (      og[1]) * EM(EZ, lg[1]+1, lg[2]  ));
   }
   
-  template<typename F> __device__ float hx(F EM)
+  __device__ float hx(F EM)
   {
     return (EM(HX, lg[1]  , lg[2]  ));
   }
   
-  template<typename F> __device__ float hy(F EM)
+  __device__ float hy(F EM)
   {
     return ((1.f - og[1]) * EM(HY, lg[1]+0, lg[2]  ) +
 	    (      og[1]) * EM(HY, lg[1]+1, lg[2]  ));
   }
   
-  template<typename F> __device__ float hz(F EM)
+  __device__ float hz(F EM)
   {
     return ((1.f - og[2]) * EM(HZ, lg[1]  , lg[2]+0) +
 	    (      og[2]) * EM(HZ, lg[1]  , lg[2]+1));
@@ -299,7 +299,7 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
 
   // field interpolation
   float exq, eyq, ezq, hxq, hyq, hzq;
-  IP1<IP> ip;
+  IP1<FldCache_t, IP> ip;
   ip.set_coeffs(prt->xi, ci0);
   
   exq = ip.ex(fld_cache);
