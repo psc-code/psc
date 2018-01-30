@@ -517,10 +517,10 @@ struct FldCache
 {
   float data[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
-  float  operator[](int i) const { return data[i]; }
-  float& operator[](int i)       { return data[i]; }
+  __device__ float  operator[](int i) const { return data[i]; }
+  __device__ float& operator[](int i)       { return data[i]; }
 
-  __device__ static void cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+  __device__ void fill(float *d_flds0, int size, int *ci0, int p)
   {
     float *d_flds = d_flds0 + p * size;
     
@@ -533,7 +533,7 @@ struct FldCache
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       // OPT? currently it seems faster to do the loop rather than do m by threadidx
       for (int m = EX; m <= HZ; m++) {
-	F3_CACHE(fld_cache, m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+	F3_CACHE((*this), m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
@@ -549,8 +549,7 @@ struct FldCache
 
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> fld_cache;	\
-  FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>::cache_fields		\
-  (fld_cache.data, d_flds0, size, ci0, p)
+  fld_cache.fill(d_flds0, size, ci0, p);
 
 #define FIND_BLOCK_RANGE_CURRMEM(CURRMEM)				\
   int block_pos[3], ci0[3];						\
