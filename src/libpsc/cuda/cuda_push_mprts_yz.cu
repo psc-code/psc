@@ -34,6 +34,10 @@ enum CURRMEM {
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
+// OPT: passing shared memory cache etc around is probably sub-optimal
+// OPT: fld cache is much bigger than needed
+// OPT: precalculating IP coeffs could be a gain, too
+
 // ======================================================================
 // field caching
 
@@ -159,7 +163,7 @@ ip1_to_grid_p(float h)
   return h;
 }
 
-#define INTERP_FIELD_1ST(cache, exq, fldnr, g1, g2)			\
+#define INTERP_FIELD_1ST(fld_cache, exq, fldnr, g1, g2)			\
   do {									\
     int ddy = l##g1[1], ddz = l##g2[2];			\
     /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
@@ -181,7 +185,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum I
 __device__ static void
 push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-	      float *fld_cache, int ci0[3])
+	      FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>& fld_cache, int ci0[3])
 {
   uint id;
   if (REORDER) {
@@ -207,12 +211,12 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
     find_idx_off_1st(prt->xi, lh, oh, float(-.5));
     lh[1] -= ci0[1];
     lh[2] -= ci0[2];
-    INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
-    INTERP_FIELD_1ST(cached_flds, eyq, EY, h, g);
-    INTERP_FIELD_1ST(cached_flds, ezq, EZ, g, h);
-    INTERP_FIELD_1ST(cached_flds, hxq, HX, h, h);
-    INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
-    INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
+    INTERP_FIELD_1ST(fld_cache, exq, EX, g, g);
+    INTERP_FIELD_1ST(fld_cache, eyq, EY, h, g);
+    INTERP_FIELD_1ST(fld_cache, ezq, EZ, g, h);
+    INTERP_FIELD_1ST(fld_cache, hxq, HX, h, h);
+    INTERP_FIELD_1ST(fld_cache, hyq, HY, g, h);
+    INTERP_FIELD_1ST(fld_cache, hzq, HZ, h, g);
   } else if (IP == IP_EC) {
 #if 0
     if (lg[1] < -2 || lg[1] >= BLOCKSIZE_Y + 1) {
@@ -602,7 +606,7 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP>
-      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache.data, ci0);
+      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
