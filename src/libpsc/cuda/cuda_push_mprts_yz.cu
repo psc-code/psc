@@ -178,12 +178,27 @@ ip1_to_grid_p(float h)
       fld_cache(fldnr, ddy+1, ddz+1);					\
   } while(0)
 
+template<enum IP IP>
 struct IP1
+{
+};
+
+template<>
+struct IP1<IP_STD>
 {
   int lg[3];
   float og[3];
   int lh[3];
   float oh[3];
+};
+
+template<>
+struct IP1<IP_EC>
+{
+  int lg[3];
+  float og[3];
+  int lh[3];// FIXME rm
+  float oh[3];// FIXME rm
 };
 
 // ----------------------------------------------------------------------
@@ -207,7 +222,7 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
 
   // field interpolation
   float exq, eyq, ezq, hxq, hyq, hzq;
-  IP1 ip;
+  IP1<IP> ip;
   find_idx_off_1st(prt->xi, ip.lg, ip.og, float(0.));
   ip.lg[1] -= ci0[1];
   ip.lg[2] -= ci0[2];
