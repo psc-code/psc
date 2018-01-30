@@ -181,11 +181,12 @@ ip1_to_grid_p(float h)
 // ----------------------------------------------------------------------
 // push_part_one
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP,
+	 typename FldCache_t>
 __device__ static void
 push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-	      FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>& fld_cache, int ci0[3])
+	      FldCache_t& fld_cache, int ci0[3])
 {
   uint id;
   if (REORDER) {
@@ -593,8 +594,10 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
 	      uint *d_off, int nr_total_blocks, uint *d_ids, uint *d_bidx,
 	      float *d_flds0, uint size)
 {
+  using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
+
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
-  __shared__ FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> fld_cache;
+  __shared__ FldCache_t fld_cache;
   fld_cache.load(d_flds0, size, ci0, p);
   DECLARE_AND_ZERO_SCURR;
   
