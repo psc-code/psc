@@ -13,54 +13,10 @@
 
 #endif // !SFX
 
-// ----------------------------------------------------------------------
-// the following macros are convoluted, as they handle two quite different
-// cases for now:
-// - cuda2/acc particles provide the mprts-based array, so n
-//   includes the patch offset
-// - otherwise, we provide per-patch particles, so n is the patch-local
-//   particle number
-
-#if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
-
-typedef struct { float4 *xi4; float4 *pxi4; } mprts_array_t;
-
-#if PSC_PARTICLES_AS_CUDA2
-
-#define PARTICLE_LOAD(prt, mprts_arr, n)		\
-  particle_t _prt;					\
-  prt = &_prt;						\
-  PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);	\
-  PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n)
-
-#define PARTICLE_STORE(prt, mprts_arr, n)		\
-  PARTICLE_CUDA2_STORE_POS(*prt, mprts_arr.xi4, n);	\
-  PARTICLE_CUDA2_STORE_MOM(*prt, mprts_arr.pxi4, n)	\
-
-#elif PSC_PARTICLES_AS_ACC
-
-#define PARTICLE_LOAD(prt, mprts_arr, n)		\
-  particle_t _prt;					\
-  prt = &_prt;						\
-  PARTICLE_ACC_LOAD_POS(*prt, mprts_arr.xi4, n);	\
-  PARTICLE_ACC_LOAD_MOM(*prt, mprts_arr.pxi4, n)
-
-#define PARTICLE_STORE(prt, mprts_arr, n)		\
-  PARTICLE_ACC_STORE_POS(*prt, mprts_arr.xi4, n);	\
-  PARTICLE_ACC_STORE_MOM(*prt, mprts_arr.pxi4, n)
-
-#endif
-
-#else
-
-typedef mparticles_t::patch_t& mprts_array_t;
-
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
   prt = &mprts_arr[n]
 
 #define PARTICLE_STORE(prt, mprts_arr, n) do {} while (0)
-
-#endif
 
 // ======================================================================
 // EXT_PREPARE_SORT
@@ -117,67 +73,16 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 
 // ----------------------------------------------------------------------
 // push_one
-//
-// as opposed to what the name implies, mprts_arr may actually be the
-// per-patch particles, in which case n needs to be the patch-local
-// patch number (see also above)
-//
-// the cuda2 version is very similar to the generic one, except
-// - it does spread the particles loads/stores as necessary
-// - it doesn't handle 1VB_2D
 
 template<typename C>
 CUDA_DEVICE static void
-push_one(mprts_array_t mprts_arr, int n,
+push_one(mparticles_t::patch_t& prts, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
   FieldsEM EM(flds_em);
-#if PSC_PARTICLES_AS_CUDA2
-  particle_t _prt, *prt = &_prt;
-  PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);
-
-  // here we have x^{n+.5}, p^n
-
-  // field interpolation
-  int lg[3];
-  real og[3];
-  find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
-
-  IP ip;
-  ip.set_coeffs(xm);
-  INTERPOLATE_FIELDS(flds_em);
-
-  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n);
-  int kind = prt->kind();
-  real dq = prm.dq_kind[kind];
-  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
-  PARTICLE_CUDA2_STORE_MOM(*prt, mprts_arr.pxi4, n);
-
-  real vxi[3];
-  calc_vxi(vxi, prt);
-
-  real_t xm[3], xp[3];
-  int lf[3];
-
-  // position xm at x^(n+.5)
-  real h0[3];
-  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
-
-  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(prt, vxi, prm.dt);
-  PARTICLE_CUDA2_STORE_POS(*prt, mprts_arr.xi4, n);
-
-  // position xp at x^(n+.5)
-  real h1[3];
-  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
-
-  calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
-
-#else
 
   particle_t *prt;
-  PARTICLE_LOAD(prt, mprts_arr, n);
+  PARTICLE_LOAD(prt, prts, n);
   
   // field interpolation
   real_t *xi = &prt->xi;
@@ -239,7 +144,6 @@ push_one(mprts_array_t mprts_arr, int n,
 #endif
 
   PARTICLE_STORE(prt, mprts_arr, n);
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -247,12 +151,11 @@ push_one(mprts_array_t mprts_arr, int n,
 
 template<typename C>
 CUDA_DEVICE static void
-stagger_one(mprts_array_t mprts_arr, int n,
-	    em_cache_t flds_em)
+stagger_one(mparticles_t::patch_t& prts, int n, em_cache_t flds_em)
 {
   FieldsEM EM(flds_em);
   particle_t *prt;
-  PARTICLE_LOAD(prt, mprts_arr, n);
+  PARTICLE_LOAD(prt, prts, n);
   
   // field interpolation
   real_t *xi = &prt->xi;
