@@ -533,6 +533,15 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, ci0);
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+struct FldCache
+{
+  float data[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+
+  float  operator[](int i) const { return data[i]; }
+  float& operator[](int i)       { return data[i]; }
+};
+
 // ======================================================================
 
 #define DECLARE_AND_ZERO_SCURR						\
@@ -540,9 +549,9 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   CURR scurr(_scurr, d_flds0 + p * size)				\
 
 #define DECLARE_AND_CACHE_FIELDS					\
-  __shared__ float fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
+  __shared__ FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> fld_cache;	\
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>			\
-  (fld_cache, d_flds0, size, ci0, p)
+  (fld_cache.data, d_flds0, size, ci0, p)
 
 #define FIND_BLOCK_RANGE_CURRMEM(CURRMEM)				\
   int block_pos[3], ci0[3];						\
@@ -585,7 +594,7 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP>
-      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
+      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache.data, ci0);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
