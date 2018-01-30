@@ -32,20 +32,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 
   psc_mparticles_setup_super(_mprts);
 
-  int n_patches = mprts.n_patches();
-  assert(n_patches != 0);
-  
-  int *ldims = ppsc->patch[0].ldims;
-  Grid_t& grid = ppsc->grid;
-
-    // check that all patches have equal size
-  for (int p = 1; p < n_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      assert(ppsc->patch[p].ldims[d] == ldims[d]);
-    }
-  }
-
-  new(mprts.sub_) psc_mparticles_cuda(grid);
+  new(mprts.sub_) psc_mparticles_cuda(ppsc->grid);
 }
 
 // ----------------------------------------------------------------------
