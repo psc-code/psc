@@ -44,8 +44,6 @@ enum CURRMEM {
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 struct FldCache
 {
-  float data[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-
   __device__ void fill(float *d_flds0, int size, int *ci0, int p)
   {
     float *d_flds = d_flds0 + p * size;
@@ -67,13 +65,13 @@ struct FldCache
 
   __device__ float operator()(int m, int j, int k) const
   {
-    return data[index(m, j, k)];
+    return data_[index(m, j, k)];
   }
 
   //private: // it's supposed to be a (read-only) cache, after all
   __device__ float& operator()(int m, int j, int k)
   {
-    return data[index(m, j, k)];
+    return data_[index(m, j, k)];
   }
 
 private:
@@ -83,6 +81,8 @@ private:
 	     + (k-(-2))) *(BLOCKSIZE_Y + 4)
 	    + (j-(-2)));
   }
+
+  float data_[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 };
 
 // ----------------------------------------------------------------------
