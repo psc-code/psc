@@ -533,10 +533,20 @@ struct FldCache
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       // OPT? currently it seems faster to do the loop rather than do m by threadidx
       for (int m = EX; m <= HZ; m++) {
-	F3_CACHE((*this), m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+	(*this)(m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
+  }
+
+  __device__ float operator()(int m, int j, int k) const
+  {
+    return F3_CACHE((*this), m, j, k);
+  }
+
+  __device__ float& operator()(int m, int j, int k)
+  {
+    return F3_CACHE((*this), m, j, k);
   }
 
 };
