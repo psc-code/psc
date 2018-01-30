@@ -18,14 +18,8 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
   // ----------------------------------------------------------------------
   // ctor
   
-  psc_bnd_particles_cuda()
+  psc_bnd_particles_cuda(struct mrc_domain *domain, Grid_t& grid)
     : cbndp_(new cuda_bndp)
-  {}
-
-  // ----------------------------------------------------------------------
-  // setup
-  
-  void setup(struct mrc_domain *domain, Grid_t& grid)
   {
     Base::setup(domain);
     cbndp_->setup(grid);
@@ -81,8 +75,7 @@ public:
   {
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
 
-    new(sub) psc_bnd_particles_cuda();
-    sub->setup(bnd->psc->mrc_domain, bnd->psc->grid);
+    new(sub) psc_bnd_particles_cuda(bnd->psc->mrc_domain, bnd->psc->grid);
   }
 
   // ----------------------------------------------------------------------
