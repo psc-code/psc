@@ -37,7 +37,7 @@ struct psc_bnd_particles_sub
 
   // ----------------------------------------------------------------------
   // interface to psc_bnd_particles_ops
-  static void create(struct psc_bnd_particles *bnd);
+
   static void destroy(struct psc_bnd_particles *bnd);
   static void setup(struct psc_bnd_particles *bnd);
   static void reset(struct psc_bnd_particles *bnd);
@@ -257,14 +257,6 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 }
 
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::create
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::create(struct psc_bnd_particles *bnd)
-{
-}
-  
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub::destroy
 

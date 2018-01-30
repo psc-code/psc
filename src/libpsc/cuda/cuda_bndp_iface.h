@@ -19,9 +19,9 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
   // ctor
   
   psc_bnd_particles_cuda(struct mrc_domain *domain, Grid_t& grid)
-    : cbndp_(new cuda_bndp)
+    : Base(domain),
+      cbndp_(new cuda_bndp)
   {
-    Base::setup(domain);
     cbndp_->setup(grid);
   }
 
