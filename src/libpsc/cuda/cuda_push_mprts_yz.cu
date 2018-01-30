@@ -149,7 +149,7 @@ push_pxi_dt(struct d_particle *p,
   p->pxi[2] = pzp + dq * ezq;
 }
 
-#define OFF(g, d) o##g[d]
+#define OFF(g, d) ip.o##g[d]
   
 __device__ static float
 ip1_to_grid_0(float h)
@@ -165,7 +165,7 @@ ip1_to_grid_p(float h)
 
 #define INTERP_FIELD_1ST(fld_cache, exq, fldnr, g1, g2)			\
   do {									\
-    int ddy = l##g1[1], ddz = l##g2[2];			\
+    int ddy = ip.l##g1[1], ddz = ip.l##g2[2];				\
     /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
     exq =								\
       ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
@@ -177,6 +177,14 @@ ip1_to_grid_p(float h)
       ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
       fld_cache(fldnr, ddy+1, ddz+1);					\
   } while(0)
+
+struct IP1
+{
+  int lg[3];
+  float og[3];
+  int lh[3];
+  float oh[3];
+};
 
 // ----------------------------------------------------------------------
 // push_part_one
@@ -199,19 +207,15 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
 
   // field interpolation
   float exq, eyq, ezq, hxq, hyq, hzq;
-  int lg[3];
-  float og[3];
-  find_idx_off_1st(prt->xi, lg, og, float(0.));
-  lg[1] -= ci0[1];
-  lg[2] -= ci0[2];
+  IP1 ip;
+  find_idx_off_1st(prt->xi, ip.lg, ip.og, float(0.));
+  ip.lg[1] -= ci0[1];
+  ip.lg[2] -= ci0[2];
   
   if (IP == IP_STD) {
-    int lh[3];
-    float oh[3];
-    
-    find_idx_off_1st(prt->xi, lh, oh, float(-.5));
-    lh[1] -= ci0[1];
-    lh[2] -= ci0[2];
+    find_idx_off_1st(prt->xi, ip.lh, ip.oh, float(-.5));
+    ip.lh[1] -= ci0[1];
+    ip.lh[2] -= ci0[2];
     INTERP_FIELD_1ST(fld_cache, exq, EX, g, g);
     INTERP_FIELD_1ST(fld_cache, eyq, EY, h, g);
     INTERP_FIELD_1ST(fld_cache, ezq, EZ, g, h);
@@ -227,19 +231,19 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
       printf("lg[2] %d\n", lg[2]);
     }
 #endif
-    exq = ((1.f - og[1]) * (1.f - og[2]) * fld_cache(EX, lg[1]+0, lg[2]+0) +
-	   (      og[1]) * (1.f - og[2]) * fld_cache(EX, lg[1]+1, lg[2]+0) +
-	   (1.f - og[1]) * (      og[2]) * fld_cache(EX, lg[1]+0, lg[2]+1) +
-	   (      og[1]) * (      og[2]) * fld_cache(EX, lg[1]+1, lg[2]+1));
-    eyq = ((1.f - og[2]) * fld_cache(EY, lg[1]  , lg[2]+0) +
-	   (      og[2]) * fld_cache(EY, lg[1]  , lg[2]+1));
-    ezq = ((1.f - og[1]) * fld_cache(EZ, lg[1]+0, lg[2]  ) +
-	   (      og[1]) * fld_cache(EZ, lg[1]+1, lg[2]  ));
-    hxq = (fld_cache(HX, lg[1]  , lg[2]  ));
-    hyq = ((1.f - og[1]) * fld_cache(HY, lg[1]+0, lg[2]  ) +
-	   (      og[1]) * fld_cache(HY, lg[1]+1, lg[2]  ));
-    hzq = ((1.f - og[2]) * fld_cache(HZ, lg[1]  , lg[2]+0) +
-	   (      og[2]) * fld_cache(HZ, lg[1]  , lg[2]+1));
+    exq = ((1.f - ip.og[1]) * (1.f - ip.og[2]) * fld_cache(EX, ip.lg[1]+0, ip.lg[2]+0) +
+	   (      ip.og[1]) * (1.f - ip.og[2]) * fld_cache(EX, ip.lg[1]+1, ip.lg[2]+0) +
+	   (1.f - ip.og[1]) * (      ip.og[2]) * fld_cache(EX, ip.lg[1]+0, ip.lg[2]+1) +
+	   (      ip.og[1]) * (      ip.og[2]) * fld_cache(EX, ip.lg[1]+1, ip.lg[2]+1));
+    eyq = ((1.f - ip.og[2]) * fld_cache(EY, ip.lg[1]  , ip.lg[2]+0) +
+	   (      ip.og[2]) * fld_cache(EY, ip.lg[1]  , ip.lg[2]+1));
+    ezq = ((1.f - ip.og[1]) * fld_cache(EZ, ip.lg[1]+0, ip.lg[2]  ) +
+	   (      ip.og[1]) * fld_cache(EZ, ip.lg[1]+1, ip.lg[2]  ));
+    hxq = (fld_cache(HX, ip.lg[1]  , ip.lg[2]  ));
+    hyq = ((1.f - ip.og[1]) * fld_cache(HY, ip.lg[1]+0, ip.lg[2]  ) +
+	   (      ip.og[1]) * fld_cache(HY, ip.lg[1]+1, ip.lg[2]  ));
+    hzq = ((1.f - ip.og[2]) * fld_cache(HZ, ip.lg[1]  , ip.lg[2]+0) +
+	   (      ip.og[2]) * fld_cache(HZ, ip.lg[1]  , ip.lg[2]+1));
   } else {
     assert(0);
   }
