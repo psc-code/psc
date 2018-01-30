@@ -169,11 +169,11 @@ ip1_to_grid_p(float h)
     /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
     exq =								\
       ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
-      F3_CACHE(fld_cache, fldnr, ddy+0, ddz+0) +			\
+      fld_cache(fldnr, ddy+0, ddz+0) +					\
       ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
-      F3_CACHE(fld_cache, fldnr, ddy+1, ddz+0) +			\
+      fld_cache(fldnr, ddy+1, ddz+0) +					\
       ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
-      F3_CACHE(fld_cache, fldnr, ddy+0, ddz+1) +			\
+      fld_cache(fldnr, ddy+0, ddz+1) +					\
       ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
       F3_CACHE(fld_cache, fldnr, ddy+1, ddz+1);				\
   } while(0)
@@ -226,19 +226,19 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
       printf("lg[2] %d\n", lg[2]);
     }
 #endif
-    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+0) +
-	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+0) +
-	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+1) +
-	   (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+1));
-    eyq = ((1.f - og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+0) +
-	   (      og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+1));
-    ezq = ((1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+0, lg[2]  ) +
-	   (      og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+1, lg[2]  ));
-    hxq = (F3_CACHE(fld_cache, HX, lg[1]  , lg[2]  ));
-    hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[1]+0, lg[2]  ) +
-	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[1]+1, lg[2]  ));
-    hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+0) +
-	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+1));
+    exq = ((1.f - og[1]) * (1.f - og[2]) * fld_cache(EX, lg[1]+0, lg[2]+0) +
+	   (      og[1]) * (1.f - og[2]) * fld_cache(EX, lg[1]+1, lg[2]+0) +
+	   (1.f - og[1]) * (      og[2]) * fld_cache(EX, lg[1]+0, lg[2]+1) +
+	   (      og[1]) * (      og[2]) * fld_cache(EX, lg[1]+1, lg[2]+1));
+    eyq = ((1.f - og[2]) * fld_cache(EY, lg[1]  , lg[2]+0) +
+	   (      og[2]) * fld_cache(EY, lg[1]  , lg[2]+1));
+    ezq = ((1.f - og[1]) * fld_cache(EZ, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * fld_cache(EZ, lg[1]+1, lg[2]  ));
+    hxq = (fld_cache(HX, lg[1]  , lg[2]  ));
+    hyq = ((1.f - og[1]) * fld_cache(HY, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * fld_cache(HY, lg[1]+1, lg[2]  ));
+    hzq = ((1.f - og[2]) * fld_cache(HZ, lg[1]  , lg[2]+0) +
+	   (      og[2]) * fld_cache(HZ, lg[1]  , lg[2]+1));
   } else {
     assert(0);
   }
