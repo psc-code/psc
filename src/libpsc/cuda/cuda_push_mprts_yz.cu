@@ -178,6 +178,21 @@ ip1_to_grid_p(float h)
       fld_cache(fldnr, ddy+1, ddz+1);					\
   } while(0)
 
+#define _INTERP_FIELD_1ST(fld_cache, fldnr, g1, g2)			\
+  ({									\
+    int ddy = l##g1[1], ddz = l##g2[2];				\
+    /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
+    									\
+    (ip1_to_grid_0(o##g1[1]) * ip1_to_grid_0(o##g2[2]) *		\
+     fld_cache(fldnr, ddy+0, ddz+0) +					\
+     ip1_to_grid_p(o##g1[1]) * ip1_to_grid_0(o##g2[2]) *		\
+     fld_cache(fldnr, ddy+1, ddz+0) +					\
+     ip1_to_grid_0(o##g1[1]) * ip1_to_grid_p(o##g2[2]) *		\
+     fld_cache(fldnr, ddy+0, ddz+1) +					\
+     ip1_to_grid_p(o##g1[1]) * ip1_to_grid_p(o##g2[2]) *		\
+     fld_cache(fldnr, ddy+1, ddz+1));					\
+  })
+
 template<enum IP IP>
 struct IP1
 {
@@ -200,6 +215,13 @@ struct IP1<IP_STD>
     lh[1] -= ci0[1];
     lh[2] -= ci0[2];
   }
+
+  template<typename F> __device__ float ex(F EM) { return _INTERP_FIELD_1ST(EM, EX, g, g); }
+  template<typename F> __device__ float ey(F EM) { return _INTERP_FIELD_1ST(EM, EY, h, g); }
+  template<typename F> __device__ float ez(F EM) { return _INTERP_FIELD_1ST(EM, EZ, g, h); }
+  template<typename F> __device__ float hx(F EM) { return _INTERP_FIELD_1ST(EM, HX, h, h); }
+  template<typename F> __device__ float hy(F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
+  template<typename F> __device__ float hz(F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
 };
 
 template<>
@@ -216,6 +238,44 @@ struct IP1<IP_EC>
     lg[1] -= ci0[1];
     lg[2] -= ci0[2];
   }
+
+  template<typename F> __device__ float ex(F EM)
+  {
+    return ((1.f - og[1]) * (1.f - og[2]) * EM(EX, lg[1]+0, lg[2]+0) +
+	    (      og[1]) * (1.f - og[2]) * EM(EX, lg[1]+1, lg[2]+0) +
+	    (1.f - og[1]) * (      og[2]) * EM(EX, lg[1]+0, lg[2]+1) +
+	    (      og[1]) * (      og[2]) * EM(EX, lg[1]+1, lg[2]+1));
+  }
+
+  template<typename F> __device__ float ey(F EM)
+  {
+    return ((1.f - og[2]) * EM(EY, lg[1]  , lg[2]+0) +
+	    (      og[2]) * EM(EY, lg[1]  , lg[2]+1));
+  }
+
+  template<typename F> __device__ float ez(F EM)
+  {
+    return ((1.f - og[1]) * EM(EZ, lg[1]+0, lg[2]  ) +
+	    (      og[1]) * EM(EZ, lg[1]+1, lg[2]  ));
+  }
+  
+  template<typename F> __device__ float hx(F EM)
+  {
+    return (EM(HX, lg[1]  , lg[2]  ));
+  }
+  
+  template<typename F> __device__ float hy(F EM)
+  {
+    return ((1.f - og[1]) * EM(HY, lg[1]+0, lg[2]  ) +
+	    (      og[1]) * EM(HY, lg[1]+1, lg[2]  ));
+  }
+  
+  template<typename F> __device__ float hz(F EM)
+  {
+    return ((1.f - og[2]) * EM(HZ, lg[1]  , lg[2]+0) +
+	    (      og[2]) * EM(HZ, lg[1]  , lg[2]+1));
+  }
+  
 };
 
 // ----------------------------------------------------------------------
@@ -242,38 +302,12 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   IP1<IP> ip;
   ip.set_coeffs(prt->xi, ci0);
   
-  if (IP == IP_STD) {
-    INTERP_FIELD_1ST(fld_cache, exq, EX, g, g);
-    INTERP_FIELD_1ST(fld_cache, eyq, EY, h, g);
-    INTERP_FIELD_1ST(fld_cache, ezq, EZ, g, h);
-    INTERP_FIELD_1ST(fld_cache, hxq, HX, h, h);
-    INTERP_FIELD_1ST(fld_cache, hyq, HY, g, h);
-    INTERP_FIELD_1ST(fld_cache, hzq, HZ, h, g);
-  } else if (IP == IP_EC) {
-#if 0
-    if (lg[1] < -2 || lg[1] >= BLOCKSIZE_Y + 1) {
-      printf("lg[1] %d\n", lg[1]);
-    }
-    if (lg[2] < -2 || lg[2] >= BLOCKSIZE_Z + 1) {
-      printf("lg[2] %d\n", lg[2]);
-    }
-#endif
-    exq = ((1.f - ip.og[1]) * (1.f - ip.og[2]) * fld_cache(EX, ip.lg[1]+0, ip.lg[2]+0) +
-	   (      ip.og[1]) * (1.f - ip.og[2]) * fld_cache(EX, ip.lg[1]+1, ip.lg[2]+0) +
-	   (1.f - ip.og[1]) * (      ip.og[2]) * fld_cache(EX, ip.lg[1]+0, ip.lg[2]+1) +
-	   (      ip.og[1]) * (      ip.og[2]) * fld_cache(EX, ip.lg[1]+1, ip.lg[2]+1));
-    eyq = ((1.f - ip.og[2]) * fld_cache(EY, ip.lg[1]  , ip.lg[2]+0) +
-	   (      ip.og[2]) * fld_cache(EY, ip.lg[1]  , ip.lg[2]+1));
-    ezq = ((1.f - ip.og[1]) * fld_cache(EZ, ip.lg[1]+0, ip.lg[2]  ) +
-	   (      ip.og[1]) * fld_cache(EZ, ip.lg[1]+1, ip.lg[2]  ));
-    hxq = (fld_cache(HX, ip.lg[1]  , ip.lg[2]  ));
-    hyq = ((1.f - ip.og[1]) * fld_cache(HY, ip.lg[1]+0, ip.lg[2]  ) +
-	   (      ip.og[1]) * fld_cache(HY, ip.lg[1]+1, ip.lg[2]  ));
-    hzq = ((1.f - ip.og[2]) * fld_cache(HZ, ip.lg[1]  , ip.lg[2]+0) +
-	   (      ip.og[2]) * fld_cache(HZ, ip.lg[1]  , ip.lg[2]+1));
-  } else {
-    assert(0);
-  }
+  exq = ip.ex(fld_cache);
+  eyq = ip.ey(fld_cache);
+  ezq = ip.ez(fld_cache);
+  hxq = ip.hx(fld_cache);
+  hyq = ip.hy(fld_cache);
+  hzq = ip.hz(fld_cache);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   if (REORDER) {
