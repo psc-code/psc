@@ -75,22 +75,13 @@ public:
   // this spoint
   
   // ----------------------------------------------------------------------
-  // create
-
-  static void create(struct psc_bnd_particles *bnd)
-  {
-    auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
-
-    new(sub) psc_bnd_particles_cuda();
-  }
-  
-  // ----------------------------------------------------------------------
   // setup
   
   static void setup(struct psc_bnd_particles *bnd)
   {
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
-    
+
+    new(sub) psc_bnd_particles_cuda();
     sub->setup(bnd->psc->mrc_domain, bnd->psc->grid);
   }
 

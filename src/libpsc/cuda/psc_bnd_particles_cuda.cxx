@@ -15,7 +15,6 @@ struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
   psc_bnd_particles_ops_cuda() {
     name                    = "cuda";
     size                    = sizeof(psc_bnd_particles_cuda);
-    create                  = psc_bnd_particles_cuda::create;
     destroy                 = psc_bnd_particles_cuda::destroy;
     setup                   = psc_bnd_particles_cuda::setup;
     reset                   = psc_bnd_particles_cuda::reset;
