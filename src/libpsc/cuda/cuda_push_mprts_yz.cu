@@ -194,12 +194,12 @@ ip1_to_grid_p(float h)
   })
 
 template<typename F, enum IP IP>
-struct IP1
+struct InterpolateEM
 {
 };
 
 template<typename F>
-struct IP1<F, IP_STD>
+struct InterpolateEM<F, IP_STD>
 {
   int lg[3];
   float og[3];
@@ -225,7 +225,7 @@ struct IP1<F, IP_STD>
 };
 
 template<typename F>
-struct IP1<F, IP_EC>
+struct InterpolateEM<F, IP_EC>
 {
   int lg[3];
   float og[3];
@@ -299,7 +299,7 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
 
   // field interpolation
   float exq, eyq, ezq, hxq, hyq, hzq;
-  IP1<FldCache_t, IP> ip;
+  InterpolateEM<FldCache_t, IP> ip;
   ip.set_coeffs(prt->xi, ci0);
   
   exq = ip.ex(fld_cache);
