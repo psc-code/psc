@@ -150,12 +150,10 @@ push_pxi_dt(struct d_particle *p,
 // get_fint_remainder
 
 template<typename R>
-static inline void
-get_fint_remainder(int *lg, R *h, R u)
+void __device__ get_fint_remainder(int *lg, R *h, R u)
 {
-  int l = fint(u);
-  *lg = l;
-  *h = u - l;
+  *lg = __float2int_rd(u);
+  *h = u - *lg;
 }
 
 // ======================================================================
@@ -282,28 +280,17 @@ struct InterpolateEM<F, opt_ip_1st>
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
-    int lg[3];
-    int lh[3];
-    float og[3];
-    float oh[3];
-    find_idx_off_1st(xi, lg, og, float(0.));
-    lg[1] -= ci0[1];
-    lg[2] -= ci0[2];
-    cx.g.l  = lg[0];
-    cx.g.v1 = og[0];
-    cy.g.l  = lg[1];
-    cy.g.v1 = og[1];
-    cz.g.l  = lg[2];
-    cz.g.v1 = og[2];
-    find_idx_off_1st(xi, lh, oh, float(-.5));
-    lh[1] -= ci0[1];
-    lh[2] -= ci0[2];
-    cx.h.l  = lh[0];
-    cx.h.v1 = oh[0];
-    cy.h.l  = lh[1];
-    cy.h.v1 = oh[1];
-    cz.h.l  = lh[2];
-    cz.h.v1 = oh[2];
+    get_fint_remainder(&cy.g.l, &cy.g.v1, xi[1] * d_cmprts_const.dxi[1]);
+    cy.g.l -= ci0[1];
+
+    get_fint_remainder(&cz.g.l, &cz.g.v1, xi[2] * d_cmprts_const.dxi[2]);
+    cz.g.l -= ci0[2];
+
+    get_fint_remainder(&cy.h.l, &cy.h.v1, xi[1] * d_cmprts_const.dxi[1] - .5f);
+    cy.h.l -= ci0[1];
+
+    get_fint_remainder(&cz.h.l, &cz.h.v1, xi[2] * d_cmprts_const.dxi[2] - .5f);
+    cz.h.l -= ci0[2];
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st>;
@@ -326,17 +313,11 @@ struct InterpolateEM<F, opt_ip_1st_ec>
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
-    int lg[3];
-    float og[3];
-    find_idx_off_1st(xi, lg, og, float(0.));
-    lg[1] -= ci0[1];
-    lg[2] -= ci0[2];
-    cx.g.l = lg[0];
-    cx.g.v1 = og[0];
-    cy.g.l  = lg[1];
-    cy.g.v1 = og[1];
-    cz.g.l  = lg[2];
-    cz.g.v1 = og[2];
+    get_fint_remainder(&cy.g.l, &cy.g.v1, xi[1] * d_cmprts_const.dxi[1]);
+    cy.g.l -= ci0[1];
+
+    get_fint_remainder(&cz.g.l, &cz.g.v1, xi[2] * d_cmprts_const.dxi[2]);
+    cz.g.l -= ci0[2];
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st_ec>;
