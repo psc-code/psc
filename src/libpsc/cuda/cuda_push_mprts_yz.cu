@@ -5,16 +5,13 @@
 #include "cuda_mparticles_const.h"
 #include "cuda_mfields_const.h"
 
+#include "../psc_push_particles/inc_defs.h"
+
 #include "psc.h" // FIXME
 
 #define BND (2) // FIXME
 
 #define THREADS_PER_BLOCK (512)
-
-enum IP {
-  IP_STD, // standard interpolation
-  IP_EC,  // energy-conserving interpolation
-};
 
 enum DEPOSIT {
   DEPOSIT_VB_2D,
@@ -181,30 +178,30 @@ ip1_to_grid_p(float h)
 // ======================================================================
 // InterpolateEM_Helper
 
-template<typename F, typename _IP, enum IP IP_ORDER>
+template<typename F, typename IP, typename OPT_IP>
 struct InterpolateEM_Helper
 {
 };
 
-template<typename F, typename _IP>
-struct InterpolateEM_Helper<F, _IP, IP_STD>
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, opt_ip_1st>
 {
   using real_t = float;
 
-  __device__ static real_t ex(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EX, g, g); }
-  __device__ static real_t ey(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EY, h, g); }
-  __device__ static real_t ez(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EZ, g, h); }
-  __device__ static real_t hx(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HX, h, h); }
-  __device__ static real_t hy(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
-  __device__ static real_t hz(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
+  __device__ static real_t ex(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EX, g, g); }
+  __device__ static real_t ey(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EY, h, g); }
+  __device__ static real_t ez(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EZ, g, h); }
+  __device__ static real_t hx(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HX, h, h); }
+  __device__ static real_t hy(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
+  __device__ static real_t hz(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
 };
 
-template<typename F, typename _IP>
-struct InterpolateEM_Helper<F, _IP, IP_EC>
+template<typename F, typename IP>
+struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 {
   using real_t = float;
 
-  __device__ static real_t ex(const _IP& ip, F EM)
+  __device__ static real_t ex(const IP& ip, F EM)
   {
     return ((1.f - ip.og[1]) * (1.f - ip.og[2]) * EM(EX, ip.lg[1]+0, ip.lg[2]+0) +
 	    (      ip.og[1]) * (1.f - ip.og[2]) * EM(EX, ip.lg[1]+1, ip.lg[2]+0) +
@@ -212,30 +209,30 @@ struct InterpolateEM_Helper<F, _IP, IP_EC>
 	    (      ip.og[1]) * (      ip.og[2]) * EM(EX, ip.lg[1]+1, ip.lg[2]+1));
   }
 
-  __device__ static real_t ey(const _IP& ip, F EM)
+  __device__ static real_t ey(const IP& ip, F EM)
   {
     return ((1.f - ip.og[2]) * EM(EY, ip.lg[1]  , ip.lg[2]+0) +
 	    (      ip.og[2]) * EM(EY, ip.lg[1]  , ip.lg[2]+1));
   }
 
-  __device__ static real_t ez(const _IP& ip, F EM)
+  __device__ static real_t ez(const IP& ip, F EM)
   {
     return ((1.f - ip.og[1]) * EM(EZ, ip.lg[1]+0, ip.lg[2]  ) +
 	    (      ip.og[1]) * EM(EZ, ip.lg[1]+1, ip.lg[2]  ));
   }
   
-  __device__ static real_t hx(const _IP& ip, F EM)
+  __device__ static real_t hx(const IP& ip, F EM)
   {
     return (EM(HX, ip.lg[1]  , ip.lg[2]  ));
   }
   
-  __device__ static real_t hy(const _IP& ip, F EM)
+  __device__ static real_t hy(const IP& ip, F EM)
   {
     return ((1.f - ip.og[1]) * EM(HY, ip.lg[1]+0, ip.lg[2]  ) +
 	    (      ip.og[1]) * EM(HY, ip.lg[1]+1, ip.lg[2]  ));
   }
   
-  __device__ static real_t hz(const _IP& ip, F EM)
+  __device__ static real_t hz(const IP& ip, F EM)
   {
     return ((1.f - ip.og[2]) * EM(HZ, ip.lg[1]  , ip.lg[2]+0) +
 	    (      ip.og[2]) * EM(HZ, ip.lg[1]  , ip.lg[2]+1));
@@ -245,16 +242,15 @@ struct InterpolateEM_Helper<F, _IP, IP_EC>
 // ======================================================================
 // InterpolateEM
 
-
-template<typename F, enum IP IP>
+template<typename F, typename OPT_IP>
 struct InterpolateEM
 {
 };
 
 template<typename F>
-struct InterpolateEM<F, IP_STD>
+struct InterpolateEM<F, opt_ip_1st>
 {
-  using IP = InterpolateEM<F, IP_STD>;
+  using IP = InterpolateEM<F, opt_ip_1st>;
   using real_t = float;
   
   int lg[3];
@@ -272,7 +268,7 @@ struct InterpolateEM<F, IP_STD>
     lh[2] -= ci0[2];
   }
 
-  using Helper = InterpolateEM_Helper<F, IP, IP_STD>;
+  using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st>;
   __device__ real_t ex(F EM) { return Helper::ex(*this, EM); }
   __device__ real_t ey(F EM) { return Helper::ey(*this, EM); }
   __device__ real_t ez(F EM) { return Helper::ez(*this, EM); }
@@ -282,9 +278,9 @@ struct InterpolateEM<F, IP_STD>
 };
 
 template<typename F>
-struct InterpolateEM<F, IP_EC>
+struct InterpolateEM<F, opt_ip_1st_ec>
 {
-  using IP = InterpolateEM<F, IP_EC>;
+  using IP = InterpolateEM<F, opt_ip_1st_ec>;
   using real_t = float;
   
   int lg[3];
@@ -299,7 +295,7 @@ struct InterpolateEM<F, IP_EC>
     lg[2] -= ci0[2];
   }
 
-  using Helper = InterpolateEM_Helper<F, IP, IP_EC>;
+  using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st_ec>;
   __device__ real_t ex(F EM) { return Helper::ex(*this, EM); }
   __device__ real_t ey(F EM) { return Helper::ey(*this, EM); }
   __device__ real_t ez(F EM) { return Helper::ez(*this, EM); }
@@ -311,8 +307,8 @@ struct InterpolateEM<F, IP_EC>
 // ----------------------------------------------------------------------
 // push_part_one
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP,
-	 typename FldCache_t>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
+	 typename OPT_IP, typename FldCache_t>
 __device__ static void
 push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
@@ -329,7 +325,7 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
 
   // field interpolation
   float exq, eyq, ezq, hxq, hyq, hzq;
-  InterpolateEM<FldCache_t, IP> ip;
+  InterpolateEM<FldCache_t, OPT_IP> ip;
   ip.set_coeffs(prt->xi, ci0);
   
   exq = ip.ex(fld_cache);
@@ -681,7 +677,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 // push_mprts_ab
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
-	 enum IP IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
+	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
@@ -702,7 +698,7 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
       continue;
     }
     struct d_particle prt;
-    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP>
+    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP>
       (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
 
     if (REORDER) {
@@ -736,7 +732,7 @@ zero_currents(struct cuda_mfields *cmflds)
 // cuda_push_mprts_ab
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
-	 enum IP IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
@@ -764,7 +760,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
-      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT, CURRMEM,
+      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
 	(block_start, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
@@ -774,7 +770,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT, CURRMEM,
+    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
@@ -795,7 +791,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 // ----------------------------------------------------------------------
 // yz_cuda_push_mprts
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, enum IP IP, enum DEPOSIT DEPOSIT,
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, typename IP, enum DEPOSIT DEPOSIT,
 	 enum CURRMEM CURRMEM>
 static void
 yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
@@ -817,25 +813,25 @@ cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
 {
   if (!ip_ec && !deposit_vb_3d && !currmem_global) {
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-      return yz_cuda_push_mprts<1, 4, 4, IP_STD, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
+      return yz_cuda_push_mprts<1, 4, 4, opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
     }
   }
 
   if (ip_ec && deposit_vb_3d && !currmem_global) {
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+      return yz_cuda_push_mprts<1, 4, 4, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
     }
     if (bs[0] == 1 && bs[1] == 8 && bs[2] == 8) {
-      return yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+      return yz_cuda_push_mprts<1, 8, 8, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
     }
   }
 
   if (ip_ec && deposit_vb_3d && currmem_global) {
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+      return yz_cuda_push_mprts<1, 4, 4, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
     }
     if (bs[0] == 1 && bs[1] == 1 && bs[2] == 1) {
-      return yz_cuda_push_mprts<1, 1, 1, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+      return yz_cuda_push_mprts<1, 1, 1, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
     }
   }
 
