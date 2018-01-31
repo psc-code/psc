@@ -178,6 +178,9 @@ ip1_to_grid_p(float h)
      fld_cache(fldnr, ddy+1, ddz+1));					\
   })
 
+// ======================================================================
+// InterpolateEM_Helper
+
 template<typename F, typename _IP, enum IP IP_ORDER>
 struct InterpolateEM_Helper
 {
@@ -195,6 +198,53 @@ struct InterpolateEM_Helper<F, _IP, IP_STD>
   __device__ static real_t hy(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
   __device__ static real_t hz(const _IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
 };
+
+template<typename F, typename _IP>
+struct InterpolateEM_Helper<F, _IP, IP_EC>
+{
+  using real_t = float;
+
+  __device__ static real_t ex(const _IP& ip, F EM)
+  {
+    return ((1.f - ip.og[1]) * (1.f - ip.og[2]) * EM(EX, ip.lg[1]+0, ip.lg[2]+0) +
+	    (      ip.og[1]) * (1.f - ip.og[2]) * EM(EX, ip.lg[1]+1, ip.lg[2]+0) +
+	    (1.f - ip.og[1]) * (      ip.og[2]) * EM(EX, ip.lg[1]+0, ip.lg[2]+1) +
+	    (      ip.og[1]) * (      ip.og[2]) * EM(EX, ip.lg[1]+1, ip.lg[2]+1));
+  }
+
+  __device__ static real_t ey(const _IP& ip, F EM)
+  {
+    return ((1.f - ip.og[2]) * EM(EY, ip.lg[1]  , ip.lg[2]+0) +
+	    (      ip.og[2]) * EM(EY, ip.lg[1]  , ip.lg[2]+1));
+  }
+
+  __device__ static real_t ez(const _IP& ip, F EM)
+  {
+    return ((1.f - ip.og[1]) * EM(EZ, ip.lg[1]+0, ip.lg[2]  ) +
+	    (      ip.og[1]) * EM(EZ, ip.lg[1]+1, ip.lg[2]  ));
+  }
+  
+  __device__ static real_t hx(const _IP& ip, F EM)
+  {
+    return (EM(HX, ip.lg[1]  , ip.lg[2]  ));
+  }
+  
+  __device__ static real_t hy(const _IP& ip, F EM)
+  {
+    return ((1.f - ip.og[1]) * EM(HY, ip.lg[1]+0, ip.lg[2]  ) +
+	    (      ip.og[1]) * EM(HY, ip.lg[1]+1, ip.lg[2]  ));
+  }
+  
+  __device__ static real_t hz(const _IP& ip, F EM)
+  {
+    return ((1.f - ip.og[2]) * EM(HZ, ip.lg[1]  , ip.lg[2]+0) +
+	    (      ip.og[2]) * EM(HZ, ip.lg[1]  , ip.lg[2]+1));
+  }
+};
+
+// ======================================================================
+// InterpolateEM
+
 
 template<typename F, enum IP IP>
 struct InterpolateEM
@@ -234,6 +284,9 @@ struct InterpolateEM<F, IP_STD>
 template<typename F>
 struct InterpolateEM<F, IP_EC>
 {
+  using IP = InterpolateEM<F, IP_EC>;
+  using real_t = float;
+  
   int lg[3];
   float og[3];
   int lh[3];// FIXME rm
@@ -246,43 +299,13 @@ struct InterpolateEM<F, IP_EC>
     lg[2] -= ci0[2];
   }
 
-  __device__ float ex(F EM)
-  {
-    return ((1.f - og[1]) * (1.f - og[2]) * EM(EX, lg[1]+0, lg[2]+0) +
-	    (      og[1]) * (1.f - og[2]) * EM(EX, lg[1]+1, lg[2]+0) +
-	    (1.f - og[1]) * (      og[2]) * EM(EX, lg[1]+0, lg[2]+1) +
-	    (      og[1]) * (      og[2]) * EM(EX, lg[1]+1, lg[2]+1));
-  }
-
-  __device__ float ey(F EM)
-  {
-    return ((1.f - og[2]) * EM(EY, lg[1]  , lg[2]+0) +
-	    (      og[2]) * EM(EY, lg[1]  , lg[2]+1));
-  }
-
-  __device__ float ez(F EM)
-  {
-    return ((1.f - og[1]) * EM(EZ, lg[1]+0, lg[2]  ) +
-	    (      og[1]) * EM(EZ, lg[1]+1, lg[2]  ));
-  }
-  
-  __device__ float hx(F EM)
-  {
-    return (EM(HX, lg[1]  , lg[2]  ));
-  }
-  
-  __device__ float hy(F EM)
-  {
-    return ((1.f - og[1]) * EM(HY, lg[1]+0, lg[2]  ) +
-	    (      og[1]) * EM(HY, lg[1]+1, lg[2]  ));
-  }
-  
-  __device__ float hz(F EM)
-  {
-    return ((1.f - og[2]) * EM(HZ, lg[1]  , lg[2]+0) +
-	    (      og[2]) * EM(HZ, lg[1]  , lg[2]+1));
-  }
-  
+  using Helper = InterpolateEM_Helper<F, IP, IP_EC>;
+  __device__ real_t ex(F EM) { return Helper::ex(*this, EM); }
+  __device__ real_t ey(F EM) { return Helper::ey(*this, EM); }
+  __device__ real_t ez(F EM) { return Helper::ez(*this, EM); }
+  __device__ real_t hx(F EM) { return Helper::hx(*this, EM); }
+  __device__ real_t hy(F EM) { return Helper::hy(*this, EM); }
+  __device__ real_t hz(F EM) { return Helper::hz(*this, EM); }
 };
 
 // ----------------------------------------------------------------------
