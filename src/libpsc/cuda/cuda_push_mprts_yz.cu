@@ -175,6 +175,52 @@ ip1_to_grid_p(float h)
      fld_cache(fldnr, ddy+1, ddz+1));					\
   })
 
+// ----------------------------------------------------------------------
+// get_fint_remainder
+
+template<typename R>
+static inline void
+get_fint_remainder(int *lg, R *h, R u)
+{
+  int l = fint(u);
+  *lg = l;
+  *h = u - l;
+}
+
+// ======================================================================
+// ip_coeff_1st
+
+template<typename R>
+struct ip_coeff_1st
+{
+  void set(R u)
+  {
+    R h;
+    
+    get_fint_remainder(&l, &h, u);
+    v0 = 1.f - h;
+    v1 = h;
+  }
+
+  R v0, v1;
+  int l;
+};
+
+// ======================================================================
+// ip_coeffs
+
+template<typename R, typename OPT_IP>
+struct ip_coeffs {
+  using ip_coeff_t = ip_coeff_1st<R>;
+  
+  void set(R xm)
+  {
+    g.set(xm);
+  }
+  
+  ip_coeff_t g;
+};
+
 // ======================================================================
 // InterpolateEM_Helper
 
@@ -203,39 +249,39 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 
   __device__ static real_t ex(const IP& ip, F EM)
   {
-    return ((1.f - ip.og[1]) * (1.f - ip.og[2]) * EM(EX, ip.lg[1]+0, ip.lg[2]+0) +
-	    (      ip.og[1]) * (1.f - ip.og[2]) * EM(EX, ip.lg[1]+1, ip.lg[2]+0) +
-	    (1.f - ip.og[1]) * (      ip.og[2]) * EM(EX, ip.lg[1]+0, ip.lg[2]+1) +
-	    (      ip.og[1]) * (      ip.og[2]) * EM(EX, ip.lg[1]+1, ip.lg[2]+1));
+    return ((1.f - ip.cy.g.v1) * (1.f - ip.cz.g.v1) * EM(EX, ip.cy.g.l+0, ip.cz.g.l+0) +
+	    (      ip.cy.g.v1) * (1.f - ip.cz.g.v1) * EM(EX, ip.cy.g.l+1, ip.cz.g.l+0) +
+	    (1.f - ip.cy.g.v1) * (      ip.cz.g.v1) * EM(EX, ip.cy.g.l+0, ip.cz.g.l+1) +
+	    (      ip.cy.g.v1) * (      ip.cz.g.v1) * EM(EX, ip.cy.g.l+1, ip.cz.g.l+1));
   }
 
   __device__ static real_t ey(const IP& ip, F EM)
   {
-    return ((1.f - ip.og[2]) * EM(EY, ip.lg[1]  , ip.lg[2]+0) +
-	    (      ip.og[2]) * EM(EY, ip.lg[1]  , ip.lg[2]+1));
+    return ((1.f - ip.cz.g.v1) * EM(EY, ip.cy.g.l  , ip.cz.g.l+0) +
+	    (      ip.cz.g.v1) * EM(EY, ip.cy.g.l  , ip.cz.g.l+1));
   }
 
   __device__ static real_t ez(const IP& ip, F EM)
   {
-    return ((1.f - ip.og[1]) * EM(EZ, ip.lg[1]+0, ip.lg[2]  ) +
-	    (      ip.og[1]) * EM(EZ, ip.lg[1]+1, ip.lg[2]  ));
+    return ((1.f - ip.cy.g.v1) * EM(EZ, ip.cy.g.l+0, ip.cz.g.l  ) +
+	    (      ip.cy.g.v1) * EM(EZ, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
   __device__ static real_t hx(const IP& ip, F EM)
   {
-    return (EM(HX, ip.lg[1]  , ip.lg[2]  ));
+    return (EM(HX, ip.cy.g.l  , ip.cz.g.l  ));
   }
   
   __device__ static real_t hy(const IP& ip, F EM)
   {
-    return ((1.f - ip.og[1]) * EM(HY, ip.lg[1]+0, ip.lg[2]  ) +
-	    (      ip.og[1]) * EM(HY, ip.lg[1]+1, ip.lg[2]  ));
+    return ((1.f - ip.cy.g.v1) * EM(HY, ip.cy.g.l+0, ip.cz.g.l  ) +
+	    (      ip.cy.g.v1) * EM(HY, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
   __device__ static real_t hz(const IP& ip, F EM)
   {
-    return ((1.f - ip.og[2]) * EM(HZ, ip.lg[1]  , ip.lg[2]+0) +
-	    (      ip.og[2]) * EM(HZ, ip.lg[1]  , ip.lg[2]+1));
+    return ((1.f - ip.cz.g.v1) * EM(HZ, ip.cy.g.l  , ip.cz.g.l+0) +
+	    (      ip.cz.g.v1) * EM(HZ, ip.cy.g.l  , ip.cz.g.l+1));
   }
 };
 
@@ -252,7 +298,9 @@ struct InterpolateEM<F, opt_ip_1st>
 {
   using IP = InterpolateEM<F, opt_ip_1st>;
   using real_t = float;
-  
+  using ip_coeffs_t = ip_coeffs<real_t, opt_ip_1st>;
+
+  ip_coeffs_t cx, cy, cz;
   int lg[3];
   float og[3];
   int lh[3];
@@ -282,17 +330,23 @@ struct InterpolateEM<F, opt_ip_1st_ec>
 {
   using IP = InterpolateEM<F, opt_ip_1st_ec>;
   using real_t = float;
+  using ip_coeffs_t = ip_coeffs<real_t, opt_ip_1st_ec>;
   
-  int lg[3];
-  float og[3];
-  int lh[3];// FIXME rm
-  float oh[3];// FIXME rm
+  ip_coeffs_t cx, cy, cz;
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
+    int lg[3];
+    float og[3];
     find_idx_off_1st(xi, lg, og, float(0.));
     lg[1] -= ci0[1];
     lg[2] -= ci0[2];
+    cx.g.l = lg[0];
+    cx.g.v1 = og[0];
+    cy.g.l  = lg[1];
+    cy.g.v1 = og[1];
+    cz.g.l  = lg[2];
+    cz.g.v1 = og[2];
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st_ec>;
