@@ -146,35 +146,6 @@ push_pxi_dt(struct d_particle *p,
   p->pxi[2] = pzp + dq * ezq;
 }
 
-#define OFF(g, d) ip.o##g[d]
-  
-__device__ static float
-ip1_to_grid_0(float h)
-{
-  return float(1.) - h;
-}
-
-__device__ static float
-ip1_to_grid_p(float h)
-{
-  return h;
-}
-
-#define _INTERP_FIELD_1ST(fld_cache, fldnr, g1, g2)			\
-  ({									\
-    int ddy = g1.l, ddz = g2.l;						\
-    /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
-    									\
-    (ip1_to_grid_0(g1.v1) * ip1_to_grid_0(g2.v1) *			\
-     fld_cache(fldnr, ddy+0, ddz+0) +					\
-     ip1_to_grid_p(g1.v1) * ip1_to_grid_0(g2.v1) *			\
-     fld_cache(fldnr, ddy+1, ddz+0) +					\
-     ip1_to_grid_0(g1.v1) * ip1_to_grid_p(g2.v1) *			\
-     fld_cache(fldnr, ddy+0, ddz+1) +					\
-     ip1_to_grid_p(g1.v1) * ip1_to_grid_p(g2.v1) *			\
-     fld_cache(fldnr, ddy+1, ddz+1));					\
-  })
-
 // ----------------------------------------------------------------------
 // get_fint_remainder
 
@@ -229,13 +200,23 @@ template<typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_1st>
 {
   using real_t = float;
+  using ip_coeff_t = typename IP::ip_coeff_t;
 
-  __device__ static real_t ex(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EX, ip.cy.g, ip.cz.g); }
-  __device__ static real_t ey(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EY, ip.cy.h, ip.cz.g); }
-  __device__ static real_t ez(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EZ, ip.cy.g, ip.cz.h); }
-  __device__ static real_t hx(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HX, ip.cy.h, ip.cz.h); }
-  __device__ static real_t hy(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HY, ip.cy.g, ip.cz.h); }
-  __device__ static real_t hz(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HZ, ip.cy.h, ip.cz.g); }
+  __device__ static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
+			      F EM, int m)
+  {
+    return (((1.f-gz.v1)*((1.f-gy.v1)*EM(m, gy.l  ,gz.l  ) +
+			  (    gy.v1)*EM(m, gy.l+1,gz.l  )) +
+	     (    gz.v1)*((1.f-gy.v1)*EM(m, gy.l  ,gz.l+1) +
+			  (    gy.v1)*EM(m, gy.l+1,gz.l+1))));
+  }
+
+  __device__ static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  __device__ static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  __device__ static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  __device__ static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  __device__ static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  __device__ static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
 };
 
 template<typename F, typename IP>
@@ -295,6 +276,7 @@ struct InterpolateEM<F, opt_ip_1st>
   using IP = InterpolateEM<F, opt_ip_1st>;
   using real_t = float;
   using ip_coeffs_t = ip_coeffs<real_t, opt_ip_1st>;
+  using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
 
   ip_coeffs_t cx, cy, cz;
 
