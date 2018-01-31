@@ -292,14 +292,9 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 template<typename F, typename OPT_IP>
 struct InterpolateEM
 {
-};
-
-template<typename F>
-struct InterpolateEM<F, opt_ip_1st>
-{
-  using IP = InterpolateEM<F, opt_ip_1st>;
+  using IP = InterpolateEM<F, OPT_IP>;
   using real_t = float;
-  using ip_coeffs_t = ip_coeffs<real_t, opt_ip_1st>;
+  using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
 
   ip_coeffs_t cx, cy, cz;
@@ -310,31 +305,7 @@ struct InterpolateEM<F, opt_ip_1st>
     cz.set(xm[2], ci0[2]);
   }
 
-  using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st>;
-  __device__ real_t ex(F EM) { return Helper::ex(*this, EM); }
-  __device__ real_t ey(F EM) { return Helper::ey(*this, EM); }
-  __device__ real_t ez(F EM) { return Helper::ez(*this, EM); }
-  __device__ real_t hx(F EM) { return Helper::hx(*this, EM); }
-  __device__ real_t hy(F EM) { return Helper::hy(*this, EM); }
-  __device__ real_t hz(F EM) { return Helper::hz(*this, EM); }
-};
-
-template<typename F>
-struct InterpolateEM<F, opt_ip_1st_ec>
-{
-  using IP = InterpolateEM<F, opt_ip_1st_ec>;
-  using real_t = float;
-  using ip_coeffs_t = ip_coeffs<real_t, opt_ip_1st_ec>;
-  
-  ip_coeffs_t cx, cy, cz;
-
-  __device__ void set_coeffs(float* xi, int *ci0)
-  {
-    cy.set(xi[1] * d_cmprts_const.dxi[1], ci0[1]);
-    cz.set(xi[2] * d_cmprts_const.dxi[2], ci0[2]);
-  }
-
-  using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st_ec>;
+  using Helper = InterpolateEM_Helper<F, IP, OPT_IP>;
   __device__ real_t ex(F EM) { return Helper::ex(*this, EM); }
   __device__ real_t ey(F EM) { return Helper::ey(*this, EM); }
   __device__ real_t ez(F EM) { return Helper::ez(*this, EM); }
