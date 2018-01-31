@@ -162,7 +162,7 @@ void __device__ get_fint_remainder(int *lg, R *h, R u)
 template<typename R>
 struct ip_coeff_1st
 {
-  void set(R u)
+  __device__ void set(R u)
   {
     R h;
     
@@ -179,11 +179,37 @@ struct ip_coeff_1st
 // ip_coeffs
 
 template<typename R, typename OPT_IP>
-struct ip_coeffs {
+struct ip_coeffs {};
+
+template<typename R>
+struct ip_coeffs<R, opt_ip_1st>
+{
   using ip_coeff_t = ip_coeff_1st<R>;
   
   ip_coeff_t g;
   ip_coeff_t h;
+
+  __device__ void set(float xi, float dxi, int ci0)
+  {
+    g.set(xi * dxi);
+    g.l -= ci0;
+    h.set(xi * dxi - R(.5));
+    h.l -= ci0;
+  }
+};
+
+template<typename R>
+struct ip_coeffs<R, opt_ip_1st_ec>
+{
+  using ip_coeff_t = ip_coeff_1st<R>;
+  
+  ip_coeff_t g;
+
+  __device__ void set(float xi, float dxi, int ci0)
+  {
+    g.set(xi * dxi);
+    g.l -= ci0;
+  }
 };
 
 // ======================================================================
@@ -280,17 +306,8 @@ struct InterpolateEM<F, opt_ip_1st>
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
-    get_fint_remainder(&cy.g.l, &cy.g.v1, xi[1] * d_cmprts_const.dxi[1]);
-    cy.g.l -= ci0[1];
-
-    get_fint_remainder(&cz.g.l, &cz.g.v1, xi[2] * d_cmprts_const.dxi[2]);
-    cz.g.l -= ci0[2];
-
-    get_fint_remainder(&cy.h.l, &cy.h.v1, xi[1] * d_cmprts_const.dxi[1] - .5f);
-    cy.h.l -= ci0[1];
-
-    get_fint_remainder(&cz.h.l, &cz.h.v1, xi[2] * d_cmprts_const.dxi[2] - .5f);
-    cz.h.l -= ci0[2];
+    cy.set(xi[1], d_cmprts_const.dxi[1], ci0[1]);
+    cz.set(xi[2], d_cmprts_const.dxi[2], ci0[2]);
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st>;
@@ -313,11 +330,8 @@ struct InterpolateEM<F, opt_ip_1st_ec>
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
-    get_fint_remainder(&cy.g.l, &cy.g.v1, xi[1] * d_cmprts_const.dxi[1]);
-    cy.g.l -= ci0[1];
-
-    get_fint_remainder(&cz.g.l, &cz.g.v1, xi[2] * d_cmprts_const.dxi[2]);
-    cz.g.l -= ci0[2];
+    cy.set(xi[1], d_cmprts_const.dxi[1], ci0[1]);
+    cz.set(xi[2], d_cmprts_const.dxi[2], ci0[2]);
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st_ec>;
