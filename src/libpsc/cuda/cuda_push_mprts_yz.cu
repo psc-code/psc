@@ -162,16 +162,16 @@ ip1_to_grid_p(float h)
 
 #define _INTERP_FIELD_1ST(fld_cache, fldnr, g1, g2)			\
   ({									\
-    int ddy = ip.cy.g1.l, ddz = ip.cz.g2.l;				\
+    int ddy = g1.l, ddz = g2.l;						\
     /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
     									\
-    (ip1_to_grid_0(ip.cy.g1.v1) * ip1_to_grid_0(ip.cz.g2.v1) *		\
+    (ip1_to_grid_0(g1.v1) * ip1_to_grid_0(g2.v1) *			\
      fld_cache(fldnr, ddy+0, ddz+0) +					\
-     ip1_to_grid_p(ip.cy.g1.v1) * ip1_to_grid_0(ip.cz.g2.v1) *		\
+     ip1_to_grid_p(g1.v1) * ip1_to_grid_0(g2.v1) *			\
      fld_cache(fldnr, ddy+1, ddz+0) +					\
-     ip1_to_grid_0(ip.cy.g1.v1) * ip1_to_grid_p(ip.cz.g2.v1) *		\
+     ip1_to_grid_0(g1.v1) * ip1_to_grid_p(g2.v1) *			\
      fld_cache(fldnr, ddy+0, ddz+1) +					\
-     ip1_to_grid_p(ip.cy.g1.v1) * ip1_to_grid_p(ip.cz.g2.v1) *		\
+     ip1_to_grid_p(g1.v1) * ip1_to_grid_p(g2.v1) *			\
      fld_cache(fldnr, ddy+1, ddz+1));					\
   })
 
@@ -230,12 +230,12 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st>
 {
   using real_t = float;
 
-  __device__ static real_t ex(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EX, g, g); }
-  __device__ static real_t ey(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EY, h, g); }
-  __device__ static real_t ez(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EZ, g, h); }
-  __device__ static real_t hx(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HX, h, h); }
-  __device__ static real_t hy(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HY, g, h); }
-  __device__ static real_t hz(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HZ, h, g); }
+  __device__ static real_t ex(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EX, ip.cy.g, ip.cz.g); }
+  __device__ static real_t ey(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EY, ip.cy.h, ip.cz.g); }
+  __device__ static real_t ez(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, EZ, ip.cy.g, ip.cz.h); }
+  __device__ static real_t hx(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HX, ip.cy.h, ip.cz.h); }
+  __device__ static real_t hy(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HY, ip.cy.g, ip.cz.h); }
+  __device__ static real_t hz(const IP& ip, F EM) { return _INTERP_FIELD_1ST(EM, HZ, ip.cy.h, ip.cz.g); }
 };
 
 template<typename F, typename IP>
