@@ -89,7 +89,7 @@ struct ip_coeffs_std
   void set(R xm)
   {
     g.set(xm);
-    h.set(xm - .5f);
+    h.set(xm - R(.5));
   }
   
   ip_coeff_t g;

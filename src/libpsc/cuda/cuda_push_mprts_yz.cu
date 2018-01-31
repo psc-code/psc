@@ -182,34 +182,34 @@ template<typename R, typename OPT_IP>
 struct ip_coeffs {};
 
 template<typename R>
-struct ip_coeffs<R, opt_ip_1st>
-{
-  using ip_coeff_t = ip_coeff_1st<R>;
-  
-  ip_coeff_t g;
-  ip_coeff_t h;
-
-  __device__ void set(float xi, float dxi, int ci0)
-  {
-    g.set(xi * dxi);
-    g.l -= ci0;
-    h.set(xi * dxi - R(.5));
-    h.l -= ci0;
-  }
-};
-
-template<typename R>
 struct ip_coeffs<R, opt_ip_1st_ec>
 {
   using ip_coeff_t = ip_coeff_1st<R>;
   
-  ip_coeff_t g;
-
-  __device__ void set(float xi, float dxi, int ci0)
+  __device__ void set(R xm, int ci0)
   {
-    g.set(xi * dxi);
+    g.set(xm);
     g.l -= ci0;
   }
+
+  ip_coeff_t g;
+};
+
+template<typename R>
+struct ip_coeffs<R, opt_ip_1st>
+{
+  using ip_coeff_t = ip_coeff_1st<R>;
+  
+  __device__ void set(R xm, int ci0)
+  {
+    g.set(xm);
+    g.l -= ci0;
+    h.set(xm - R(.5));
+    h.l -= ci0;
+  }
+
+  ip_coeff_t g;
+  ip_coeff_t h;
 };
 
 // ======================================================================
@@ -304,10 +304,10 @@ struct InterpolateEM<F, opt_ip_1st>
 
   ip_coeffs_t cx, cy, cz;
 
-  __device__ void set_coeffs(float* xi, int *ci0)
+  __device__ void set_coeffs(real_t xm[3], int ci0[3])
   {
-    cy.set(xi[1], d_cmprts_const.dxi[1], ci0[1]);
-    cz.set(xi[2], d_cmprts_const.dxi[2], ci0[2]);
+    cy.set(xm[1], ci0[1]);
+    cz.set(xm[2], ci0[2]);
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st>;
@@ -330,8 +330,8 @@ struct InterpolateEM<F, opt_ip_1st_ec>
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
-    cy.set(xi[1], d_cmprts_const.dxi[1], ci0[1]);
-    cz.set(xi[2], d_cmprts_const.dxi[2], ci0[2]);
+    cy.set(xi[1] * d_cmprts_const.dxi[1], ci0[1]);
+    cz.set(xi[2] * d_cmprts_const.dxi[2], ci0[2]);
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st_ec>;
@@ -363,10 +363,13 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   // here we have x^{n+.5}, p^n
 
   // field interpolation
-  float exq, eyq, ezq, hxq, hyq, hzq;
+  float xm[3];
+  xm[1] = prt->xi[1] * d_cmprts_const.dxi[1];
+  xm[2] = prt->xi[2] * d_cmprts_const.dxi[2];
   InterpolateEM<FldCache_t, OPT_IP> ip;
-  ip.set_coeffs(prt->xi, ci0);
+  ip.set_coeffs(xm, ci0);
   
+  float exq, eyq, ezq, hxq, hyq, hzq;
   exq = ip.ex(fld_cache);
   eyq = ip.ey(fld_cache);
   ezq = ip.ez(fld_cache);
