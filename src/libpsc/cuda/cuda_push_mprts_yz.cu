@@ -162,16 +162,16 @@ ip1_to_grid_p(float h)
 
 #define _INTERP_FIELD_1ST(fld_cache, fldnr, g1, g2)			\
   ({									\
-    int ddy = ip.l##g1[1], ddz = ip.l##g2[2];				\
+    int ddy = ip.cy.g1.l, ddz = ip.cz.g2.l;				\
     /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
     									\
-    (ip1_to_grid_0(ip.o##g1[1]) * ip1_to_grid_0(ip.o##g2[2]) *		\
+    (ip1_to_grid_0(ip.cy.g1.v1) * ip1_to_grid_0(ip.cz.g2.v1) *		\
      fld_cache(fldnr, ddy+0, ddz+0) +					\
-     ip1_to_grid_p(ip.o##g1[1]) * ip1_to_grid_0(ip.o##g2[2]) *		\
+     ip1_to_grid_p(ip.cy.g1.v1) * ip1_to_grid_0(ip.cz.g2.v1) *		\
      fld_cache(fldnr, ddy+1, ddz+0) +					\
-     ip1_to_grid_0(ip.o##g1[1]) * ip1_to_grid_p(ip.o##g2[2]) *		\
+     ip1_to_grid_0(ip.cy.g1.v1) * ip1_to_grid_p(ip.cz.g2.v1) *		\
      fld_cache(fldnr, ddy+0, ddz+1) +					\
-     ip1_to_grid_p(ip.o##g1[1]) * ip1_to_grid_p(ip.o##g2[2]) *		\
+     ip1_to_grid_p(ip.cy.g1.v1) * ip1_to_grid_p(ip.cz.g2.v1) *		\
      fld_cache(fldnr, ddy+1, ddz+1));					\
   })
 
@@ -213,12 +213,8 @@ template<typename R, typename OPT_IP>
 struct ip_coeffs {
   using ip_coeff_t = ip_coeff_1st<R>;
   
-  void set(R xm)
-  {
-    g.set(xm);
-  }
-  
   ip_coeff_t g;
+  ip_coeff_t h;
 };
 
 // ======================================================================
@@ -301,19 +297,31 @@ struct InterpolateEM<F, opt_ip_1st>
   using ip_coeffs_t = ip_coeffs<real_t, opt_ip_1st>;
 
   ip_coeffs_t cx, cy, cz;
-  int lg[3];
-  float og[3];
-  int lh[3];
-  float oh[3];
 
   __device__ void set_coeffs(float* xi, int *ci0)
   {
+    int lg[3];
+    int lh[3];
+    float og[3];
+    float oh[3];
     find_idx_off_1st(xi, lg, og, float(0.));
     lg[1] -= ci0[1];
     lg[2] -= ci0[2];
+    cx.g.l  = lg[0];
+    cx.g.v1 = og[0];
+    cy.g.l  = lg[1];
+    cy.g.v1 = og[1];
+    cz.g.l  = lg[2];
+    cz.g.v1 = og[2];
     find_idx_off_1st(xi, lh, oh, float(-.5));
     lh[1] -= ci0[1];
     lh[2] -= ci0[2];
+    cx.h.l  = lh[0];
+    cx.h.v1 = oh[0];
+    cy.h.l  = lh[1];
+    cy.h.v1 = oh[1];
+    cz.h.l  = lh[2];
+    cz.h.v1 = oh[2];
   }
 
   using Helper = InterpolateEM_Helper<F, IP, opt_ip_1st>;
