@@ -77,5 +77,45 @@ struct ip_coeff_2nd
   int l;
 };
 
+// ======================================================================
+// ip_coeffs
+
+template<typename R, typename OPT_IP>
+struct ip_coeffs {};
+
+template<typename R>
+struct ip_coeffs<R, opt_ip_1st_ec>
+{
+  using ip_coeff_t = ip_coeff_1st<R>;
+  
+  __host__ __device__ void set(R xm)
+  {
+    g.set(xm);
+  }
+  
+  ip_coeff_t g;
+};
+
+template<typename R, typename IP_COEFF>
+struct ip_coeffs_std
+{
+  using ip_coeff_t = IP_COEFF;
+  
+  __host__ __device__ void set(R xm)
+  {
+    g.set(xm);
+    h.set(xm - R(.5));
+  }
+  
+  ip_coeff_t g;
+  ip_coeff_t h;
+};
+
+template<typename R>
+struct ip_coeffs<R, opt_ip_1st> : ip_coeffs_std<R, ip_coeff_1st<R>> {};
+
+template<typename R>
+struct ip_coeffs<R, opt_ip_2nd> : ip_coeffs_std<R, ip_coeff_2nd<R>> {};
+
 #endif
 

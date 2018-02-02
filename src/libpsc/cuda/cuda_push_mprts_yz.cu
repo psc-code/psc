@@ -156,37 +156,6 @@ push_pxi_dt(struct d_particle *p,
 // ======================================================================
 // ip_coeffs
 
-template<typename R, typename OPT_IP>
-struct ip_coeffs {};
-
-template<typename R>
-struct ip_coeffs<R, opt_ip_1st_ec>
-{
-  using ip_coeff_t = ip_coeff_1st<R>;
-  
-  __device__ void set(R xm)
-  {
-    g.set(xm);
-  }
-
-  ip_coeff_t g;
-};
-
-template<typename R>
-struct ip_coeffs<R, opt_ip_1st>
-{
-  using ip_coeff_t = ip_coeff_1st<R>;
-  
-  __device__ void set(R xm)
-  {
-    g.set(xm);
-    h.set(xm - R(.5));
-  }
-
-  ip_coeff_t g;
-  ip_coeff_t h;
-};
-
 // ======================================================================
 // InterpolateEM_Helper
 
