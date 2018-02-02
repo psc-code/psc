@@ -45,6 +45,8 @@ struct FldCache
 {
   __device__ void load(float *d_flds0, int size, int *ci0, int p)
   {
+    ci0y_ = ci0[1];
+    ci0z_ = ci0[2];
     float *d_flds = d_flds0 + p * size;
     
     int ti = threadIdx.x;
@@ -56,10 +58,20 @@ struct FldCache
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       // OPT? currently it seems faster to do the loop rather than do m by threadidx
       for (int m = EX; m <= HZ; m++) {
-	(*this)(m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+	at(m, jy+ci0[1], jz+ci0[2]) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
+  }
+
+  __device__ float at(int m, int j, int k) const
+  {
+    return data_[index(m, j-ci0y_, k-ci0z_)];
+  }
+
+  __device__ float& at(int m, int j, int k)
+  {
+    return data_[index(m, j-ci0y_, k-ci0z_)];
   }
 
   __device__ float operator()(int m, int j, int k) const
@@ -82,6 +94,7 @@ private:
   }
 
   float data_[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  int ci0y_, ci0z_;
 };
 
 // ----------------------------------------------------------------------
