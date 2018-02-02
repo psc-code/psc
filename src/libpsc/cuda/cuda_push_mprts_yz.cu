@@ -48,8 +48,8 @@ struct FldCache
   
   __device__ void load(float *d_flds0, int size, int *ci0, int p)
   {
-    ci0y_ = ci0[1];
-    ci0z_ = ci0[2];
+    off_ = (-(ci0[2] - 2) * (BLOCKSIZE_Y + 4) +
+	    -(ci0[1] - 2));
     float *d_flds = d_flds0 + p * size;
     
     int ti = threadIdx.x;
@@ -81,13 +81,13 @@ private: // it's supposed to be a (read-only) cache, after all
 private:
   __device__ int index(int m, int j, int k) const
   {
-    return (((m-EX) * (BLOCKSIZE_Z + 4)
-	     + (k-(ci0z_-2))) *(BLOCKSIZE_Y + 4)
-	    + (j-(ci0y_-2)));
+    return (((m - EX) * (BLOCKSIZE_Z + 4)
+	     + k) * (BLOCKSIZE_Y + 4)
+	    + j) + off_;
   }
 
   float data_[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  int ci0y_, ci0z_;
+  int off_;
 };
 
 // ----------------------------------------------------------------------
