@@ -164,7 +164,7 @@ struct ip_coeffs<R, opt_ip_1st_ec>
 {
   using ip_coeff_t = ip_coeff_1st<R>;
   
-  __device__ void set(R xm, int ci0)
+  __device__ void set(R xm)
   {
     g.set(xm);
   }
@@ -177,7 +177,7 @@ struct ip_coeffs<R, opt_ip_1st>
 {
   using ip_coeff_t = ip_coeff_1st<R>;
   
-  __device__ void set(R xm, int ci0)
+  __device__ void set(R xm)
   {
     g.set(xm);
     h.set(xm - R(.5));
@@ -274,10 +274,10 @@ struct InterpolateEM
 
   ip_coeffs_t cx, cy, cz;
 
-  __device__ void set_coeffs(real_t xm[3], int ci0[3])
+  __device__ void set_coeffs(real_t xm[3])
   {
-    cy.set(xm[1], ci0[1]);
-    cz.set(xm[2], ci0[2]);
+    cy.set(xm[1]);
+    cz.set(xm[2]);
   }
 
   using Helper = InterpolateEM_Helper<F, IP, OPT_IP>;
@@ -313,7 +313,7 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   xm[1] = prt->xi[1] * d_cmprts_const.dxi[1];
   xm[2] = prt->xi[2] * d_cmprts_const.dxi[2];
   InterpolateEM<FldCache_t, OPT_IP> ip;
-  ip.set_coeffs(xm, ci0);
+  ip.set_coeffs(xm);
   
   float exq, eyq, ezq, hxq, hyq, hzq;
   exq = ip.ex(fld_cache);
