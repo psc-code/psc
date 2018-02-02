@@ -43,6 +43,9 @@ enum CURRMEM {
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 struct FldCache
 {
+  __device__ FldCache() = default;
+  __device__ FldCache(const FldCache&) = delete;
+  
   __device__ void load(float *d_flds0, int size, int *ci0, int p)
   {
     ci0y_ = ci0[1];
@@ -221,12 +224,12 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st>
 		   gy.v1*EM(m, gy.l+1,gz.l+1)));
   }
 
-  __device__ static real_t ex(const IP& ip, const F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
-  __device__ static real_t ey(const IP& ip, const F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
-  __device__ static real_t ez(const IP& ip, const F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
-  __device__ static real_t hx(const IP& ip, const F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
-  __device__ static real_t hy(const IP& ip, const F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
-  __device__ static real_t hz(const IP& ip, const F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+  __device__ static real_t ex(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  __device__ static real_t ey(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  __device__ static real_t ez(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  __device__ static real_t hx(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  __device__ static real_t hy(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  __device__ static real_t hz(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
 };
 
 template<typename F, typename IP>
@@ -234,7 +237,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 {
   using real_t = float;
 
-  __device__ static real_t ex(const IP& ip, const F EM)
+  __device__ static real_t ex(const IP& ip, const F& EM)
   {
     return (ip.cy.g.v0 * ip.cz.g.v0 * EM(EX, ip.cy.g.l+0, ip.cz.g.l+0) +
 	    ip.cy.g.v1 * ip.cz.g.v0 * EM(EX, ip.cy.g.l+1, ip.cz.g.l+0) +
@@ -242,30 +245,30 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 	    ip.cy.g.v1 * ip.cz.g.v1 * EM(EX, ip.cy.g.l+1, ip.cz.g.l+1));
   }
 
-  __device__ static real_t ey(const IP& ip, const F EM)
+  __device__ static real_t ey(const IP& ip, const F& EM)
   {
     return (ip.cz.g.v0 * EM(EY, ip.cy.g.l  , ip.cz.g.l+0) +
 	    ip.cz.g.v1 * EM(EY, ip.cy.g.l  , ip.cz.g.l+1));
   }
 
-  __device__ static real_t ez(const IP& ip, const F EM)
+  __device__ static real_t ez(const IP& ip, const F& EM)
   {
     return (ip.cy.g.v0 * EM(EZ, ip.cy.g.l+0, ip.cz.g.l  ) +
 	    ip.cy.g.v1 * EM(EZ, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
-  __device__ static real_t hx(const IP& ip, const F EM)
+  __device__ static real_t hx(const IP& ip, const F& EM)
   {
     return (EM(HX, ip.cy.g.l  , ip.cz.g.l  ));
   }
   
-  __device__ static real_t hy(const IP& ip, const F EM)
+  __device__ static real_t hy(const IP& ip, const F& EM)
   {
     return (ip.cy.g.v0 * EM(HY, ip.cy.g.l+0, ip.cz.g.l  ) +
 	    ip.cy.g.v1 * EM(HY, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
-  __device__ static real_t hz(const IP& ip, const F EM)
+  __device__ static real_t hz(const IP& ip, const F& EM)
   {
     return (ip.cz.g.v0 * EM(HZ, ip.cy.g.l  , ip.cz.g.l+0) +
 	    ip.cz.g.v1 * EM(HZ, ip.cy.g.l  , ip.cz.g.l+1));
@@ -292,12 +295,12 @@ struct InterpolateEM
   }
 
   using Helper = InterpolateEM_Helper<F, IP, OPT_IP>;
-  __device__ real_t ex(F EM) { return Helper::ex(*this, EM); }
-  __device__ real_t ey(F EM) { return Helper::ey(*this, EM); }
-  __device__ real_t ez(F EM) { return Helper::ez(*this, EM); }
-  __device__ real_t hx(F EM) { return Helper::hx(*this, EM); }
-  __device__ real_t hy(F EM) { return Helper::hy(*this, EM); }
-  __device__ real_t hz(F EM) { return Helper::hz(*this, EM); }
+  __device__ real_t ex(const F& EM) { return Helper::ex(*this, EM); }
+  __device__ real_t ey(const F& EM) { return Helper::ey(*this, EM); }
+  __device__ real_t ez(const F& EM) { return Helper::ez(*this, EM); }
+  __device__ real_t hx(const F& EM) { return Helper::hx(*this, EM); }
+  __device__ real_t hy(const F& EM) { return Helper::hy(*this, EM); }
+  __device__ real_t hz(const F& EM) { return Helper::hz(*this, EM); }
 };
 
 // ----------------------------------------------------------------------
@@ -308,7 +311,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 __device__ static void
 push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-	      FldCache_t& fld_cache, int ci0[3])
+	      const FldCache_t& fld_cache, int ci0[3])
 {
   uint id;
   if (REORDER) {
