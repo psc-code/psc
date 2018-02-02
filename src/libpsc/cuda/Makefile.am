@@ -118,7 +118,7 @@ CUDA_DEPS = \
 	psc_particles_cuda.h 
 
 cuda_moments_1st_nc.lo: cuda_mparticles_const.h
-cuda_push_mprts_yz.lo: cuda_mparticles_const.h
+cuda_push_mprts_yz.lo: cuda_mparticles_const.h ../../include/interpolate.hxx
 cuda_heating.lo: cuda_mparticles_const.h
 cuda_transfer.lo: cuda_iface_bnd.h
 cuda_bnd.lo: cuda_iface_bnd.h

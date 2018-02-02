@@ -1,66 +1,7 @@
 
 #include "psc_debug.h"
 
-// ----------------------------------------------------------------------
-// interpolation
-
-// ----------------------------------------------------------------------
-// get_fint_remainder
-
-template<typename R>
-static inline void
-get_fint_remainder(int *lg, R *h, R u)
-{
-  int l = fint(u);
-  *lg = l;
-  *h = u - l;
-}
-
-// ----------------------------------------------------------------------
-// get_nint_remainder
-
-template<typename R>
-static inline void
-get_nint_remainder(int *lg1, R *h1, R u)
-{
-  int l = nint(u);
-  *lg1 = l;
-  *h1 = l-u;
-}
-
-// ----------------------------------------------------------------------
-// ip_coeff
-
-template<typename R>
-struct ip_coeff_1st
-{
-  void set(R u)
-  {
-    R h;
-    
-    get_fint_remainder(&l, &h, u);
-    v0 = 1.f - h;
-    v1 = h;
-  }
-
-  R v0, v1;
-  int l;
-};
-
-template<typename R>
-struct ip_coeff_2nd
-{
-  void set(R u)
-  {
-    get_nint_remainder(&l, &h, u);
-    vm = .5f * (.5f+h)*(.5f+h);
-    v0 = .75f - h*h;
-    vp = .5f * (.5f-h)*(.5f-h);
-  }
-
-  R vm, v0, vp, h;
-  int l;
-};
+#include "interpolate.hxx"
 
 // ----------------------------------------------------------------------
 // ip_coeffs

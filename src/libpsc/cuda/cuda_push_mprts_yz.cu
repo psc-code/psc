@@ -9,6 +9,8 @@
 
 #include "psc.h" // FIXME
 
+#include "interpolate.hxx"
+
 #define BND (2) // FIXME
 
 #define THREADS_PER_BLOCK (512)
@@ -145,35 +147,6 @@ push_pxi_dt(struct d_particle *p,
   p->pxi[1] = pyp + dq * eyq;
   p->pxi[2] = pzp + dq * ezq;
 }
-
-// ----------------------------------------------------------------------
-// get_fint_remainder
-
-template<typename R>
-void __device__ get_fint_remainder(int *lg, R *h, R u)
-{
-  *lg = __float2int_rd(u);
-  *h = u - *lg;
-}
-
-// ======================================================================
-// ip_coeff_1st
-
-template<typename R>
-struct ip_coeff_1st
-{
-  __device__ void set(R u)
-  {
-    R h;
-    
-    get_fint_remainder(&l, &h, u);
-    v0 = 1.f - h;
-    v1 = h;
-  }
-
-  R v0, v1;
-  int l;
-};
 
 // ======================================================================
 // ip_coeffs
