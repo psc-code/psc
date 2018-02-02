@@ -79,7 +79,7 @@ struct FldCache
     return data_[index(m, j, k)];
   }
 
-  //private: // it's supposed to be a (read-only) cache, after all
+private: // it's supposed to be a (read-only) cache, after all
   __device__ float& operator()(int m, int j, int k)
   {
     return data_[index(m, j, k)];
@@ -213,7 +213,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st>
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   __device__ static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
-			      F EM, int m)
+			      const F EM, int m)
   {
     return (gz.v0*(gy.v0*EM(m, gy.l  ,gz.l  ) +
 		   gy.v1*EM(m, gy.l+1,gz.l  )) +
@@ -221,12 +221,12 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st>
 		   gy.v1*EM(m, gy.l+1,gz.l+1)));
   }
 
-  __device__ static real_t ex(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
-  __device__ static real_t ey(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
-  __device__ static real_t ez(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
-  __device__ static real_t hx(const IP& ip, F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
-  __device__ static real_t hy(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
-  __device__ static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
+  __device__ static real_t ex(const IP& ip, const F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
+  __device__ static real_t ey(const IP& ip, const F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
+  __device__ static real_t ez(const IP& ip, const F EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
+  __device__ static real_t hx(const IP& ip, const F EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
+  __device__ static real_t hy(const IP& ip, const F EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
+  __device__ static real_t hz(const IP& ip, const F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
 };
 
 template<typename F, typename IP>
@@ -234,7 +234,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 {
   using real_t = float;
 
-  __device__ static real_t ex(const IP& ip, F EM)
+  __device__ static real_t ex(const IP& ip, const F EM)
   {
     return (ip.cy.g.v0 * ip.cz.g.v0 * EM(EX, ip.cy.g.l+0, ip.cz.g.l+0) +
 	    ip.cy.g.v1 * ip.cz.g.v0 * EM(EX, ip.cy.g.l+1, ip.cz.g.l+0) +
@@ -242,30 +242,30 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 	    ip.cy.g.v1 * ip.cz.g.v1 * EM(EX, ip.cy.g.l+1, ip.cz.g.l+1));
   }
 
-  __device__ static real_t ey(const IP& ip, F EM)
+  __device__ static real_t ey(const IP& ip, const F EM)
   {
     return (ip.cz.g.v0 * EM(EY, ip.cy.g.l  , ip.cz.g.l+0) +
 	    ip.cz.g.v1 * EM(EY, ip.cy.g.l  , ip.cz.g.l+1));
   }
 
-  __device__ static real_t ez(const IP& ip, F EM)
+  __device__ static real_t ez(const IP& ip, const F EM)
   {
     return (ip.cy.g.v0 * EM(EZ, ip.cy.g.l+0, ip.cz.g.l  ) +
 	    ip.cy.g.v1 * EM(EZ, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
-  __device__ static real_t hx(const IP& ip, F EM)
+  __device__ static real_t hx(const IP& ip, const F EM)
   {
     return (EM(HX, ip.cy.g.l  , ip.cz.g.l  ));
   }
   
-  __device__ static real_t hy(const IP& ip, F EM)
+  __device__ static real_t hy(const IP& ip, const F EM)
   {
     return (ip.cy.g.v0 * EM(HY, ip.cy.g.l+0, ip.cz.g.l  ) +
 	    ip.cy.g.v1 * EM(HY, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
-  __device__ static real_t hz(const IP& ip, F EM)
+  __device__ static real_t hz(const IP& ip, const F EM)
   {
     return (ip.cz.g.v0 * EM(HZ, ip.cy.g.l  , ip.cz.g.l+0) +
 	    ip.cz.g.v1 * EM(HZ, ip.cy.g.l  , ip.cz.g.l+1));
