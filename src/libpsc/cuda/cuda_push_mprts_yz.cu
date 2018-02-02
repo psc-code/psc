@@ -69,21 +69,21 @@ struct FldCache
 
   __device__ float at(int m, int j, int k) const
   {
-    return data_[index(m, j-ci0y_, k-ci0z_)];
+    return data_[index(m, j, k)];
   }
 
 private: // it's supposed to be a (read-only) cache, after all
   __device__ float& at(int m, int j, int k)
   {
-    return data_[index(m, j-ci0y_, k-ci0z_)];
+    return data_[index(m, j, k)];
   }
 
 private:
   __device__ int index(int m, int j, int k) const
   {
     return (((m-EX) * (BLOCKSIZE_Z + 4)
-	     + (k-(-2))) *(BLOCKSIZE_Y + 4)
-	    + (j-(-2)));
+	     + (k-(ci0z_-2))) *(BLOCKSIZE_Y + 4)
+	    + (j-(ci0y_-2)));
   }
 
   float data_[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
