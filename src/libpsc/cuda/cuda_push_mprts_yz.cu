@@ -60,25 +60,25 @@ struct FldCache
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       // OPT? currently it seems faster to do the loop rather than do m by threadidx
       for (int m = EX; m <= HZ; m++) {
-	(*this)(m, jy+ci0[1], jz+ci0[2]) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+	(*this)(m, 0, jy+ci0[1], jz+ci0[2]) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
   }
 
-  __device__ float operator()(int m, int j, int k) const
+  __device__ float operator()(int m, int i, int j, int k) const
   {
-    return data_[index(m, j, k)];
+    return data_[index(m, i,j,k)];
   }
 
 private: // it's supposed to be a (read-only) cache, after all
-  __device__ float& operator()(int m, int j, int k)
+  __device__ float& operator()(int m, int i, int j, int k)
   {
-    return data_[index(m, j, k)];
+    return data_[index(m, i,j,k)];
   }
 
 private:
-  __device__ int index(int m, int j, int k) const
+  __device__ int index(int m, int i, int j, int k) const
   {
     return (((m - EX) * (BLOCKSIZE_Z + 4)
 	     + k) * (BLOCKSIZE_Y + 4)
@@ -173,10 +173,10 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st, dim_yz>
   __device__ static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
 			      const F EM, int m)
   {
-    return (gz.v0*(gy.v0*EM(m, gy.l  ,gz.l  ) +
-		   gy.v1*EM(m, gy.l+1,gz.l  )) +
-	    gz.v1*(gy.v1*EM(m, gy.l  ,gz.l+1) +
-		   gy.v1*EM(m, gy.l+1,gz.l+1)));
+    return (gz.v0*(gy.v0*EM(m, 0, gy.l  ,gz.l  ) +
+		   gy.v1*EM(m, 0, gy.l+1,gz.l  )) +
+	    gz.v1*(gy.v1*EM(m, 0, gy.l  ,gz.l+1) +
+		   gy.v1*EM(m, 0, gy.l+1,gz.l+1)));
   }
 
   __device__ static real_t ex(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
@@ -194,39 +194,39 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_yz>
 
   __device__ static real_t ex(const IP& ip, const F& EM)
   {
-    return (ip.cy.g.v0 * ip.cz.g.v0 * EM(EX, ip.cy.g.l+0, ip.cz.g.l+0) +
-	    ip.cy.g.v1 * ip.cz.g.v0 * EM(EX, ip.cy.g.l+1, ip.cz.g.l+0) +
-	    ip.cy.g.v0 * ip.cz.g.v1 * EM(EX, ip.cy.g.l+0, ip.cz.g.l+1) +
-	    ip.cy.g.v1 * ip.cz.g.v1 * EM(EX, ip.cy.g.l+1, ip.cz.g.l+1));
+    return (ip.cy.g.v0 * ip.cz.g.v0 * EM(EX, 0, ip.cy.g.l+0, ip.cz.g.l+0) +
+	    ip.cy.g.v1 * ip.cz.g.v0 * EM(EX, 0, ip.cy.g.l+1, ip.cz.g.l+0) +
+	    ip.cy.g.v0 * ip.cz.g.v1 * EM(EX, 0, ip.cy.g.l+0, ip.cz.g.l+1) +
+	    ip.cy.g.v1 * ip.cz.g.v1 * EM(EX, 0, ip.cy.g.l+1, ip.cz.g.l+1));
   }
 
   __device__ static real_t ey(const IP& ip, const F& EM)
   {
-    return (ip.cz.g.v0 * EM(EY, ip.cy.g.l  , ip.cz.g.l+0) +
-	    ip.cz.g.v1 * EM(EY, ip.cy.g.l  , ip.cz.g.l+1));
+    return (ip.cz.g.v0 * EM(EY, 0, ip.cy.g.l  , ip.cz.g.l+0) +
+	    ip.cz.g.v1 * EM(EY, 0, ip.cy.g.l  , ip.cz.g.l+1));
   }
 
   __device__ static real_t ez(const IP& ip, const F& EM)
   {
-    return (ip.cy.g.v0 * EM(EZ, ip.cy.g.l+0, ip.cz.g.l  ) +
-	    ip.cy.g.v1 * EM(EZ, ip.cy.g.l+1, ip.cz.g.l  ));
+    return (ip.cy.g.v0 * EM(EZ, 0, ip.cy.g.l+0, ip.cz.g.l  ) +
+	    ip.cy.g.v1 * EM(EZ, 0, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
   __device__ static real_t hx(const IP& ip, const F& EM)
   {
-    return (EM(HX, ip.cy.g.l  , ip.cz.g.l  ));
+    return (EM(HX, 0, ip.cy.g.l  , ip.cz.g.l  ));
   }
   
   __device__ static real_t hy(const IP& ip, const F& EM)
   {
-    return (ip.cy.g.v0 * EM(HY, ip.cy.g.l+0, ip.cz.g.l  ) +
-	    ip.cy.g.v1 * EM(HY, ip.cy.g.l+1, ip.cz.g.l  ));
+    return (ip.cy.g.v0 * EM(HY, 0, ip.cy.g.l+0, ip.cz.g.l  ) +
+	    ip.cy.g.v1 * EM(HY, 0, ip.cy.g.l+1, ip.cz.g.l  ));
   }
   
   __device__ static real_t hz(const IP& ip, const F& EM)
   {
-    return (ip.cz.g.v0 * EM(HZ, ip.cy.g.l  , ip.cz.g.l+0) +
-	    ip.cz.g.v1 * EM(HZ, ip.cy.g.l  , ip.cz.g.l+1));
+    return (ip.cz.g.v0 * EM(HZ, 0, ip.cy.g.l  , ip.cz.g.l+0) +
+	    ip.cz.g.v1 * EM(HZ, 0, ip.cy.g.l  , ip.cz.g.l+1));
   }
 };
 
