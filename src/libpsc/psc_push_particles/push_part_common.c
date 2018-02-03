@@ -13,7 +13,8 @@ using real_t = mparticles_t::real_t;
 #include "inc_params.c"
 #include "inc_push.c"
 #include "inc_cache.c"
-#include "inc_interpolate.c"
+#include "interpolate.hxx"
+using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 
 // ----------------------------------------------------------------------
 
