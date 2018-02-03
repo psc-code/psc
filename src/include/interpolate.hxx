@@ -2,6 +2,8 @@
 #ifndef INTERPOLATE_HXX
 #define INTERPOLATE_HXX
 
+#include "fields.hxx" // for dim_xyz etc, FIXME
+
 // ----------------------------------------------------------------------
 // cuda compatibility stuff
 

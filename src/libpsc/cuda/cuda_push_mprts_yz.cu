@@ -159,13 +159,13 @@ push_pxi_dt(struct d_particle *p,
 // ======================================================================
 // InterpolateEM_Helper
 
-template<typename F, typename IP, typename OPT_IP>
+template<typename F, typename IP, typename OPT_IP, typename OPT_DIM>
 struct InterpolateEM_Helper
 {
 };
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, opt_ip_1st>
+struct InterpolateEM_Helper<F, IP, opt_ip_1st, dim_yz>
 {
   using real_t = float;
   using ip_coeff_t = typename IP::ip_coeff_t;
@@ -188,7 +188,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st>
 };
 
 template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
+struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_yz>
 {
   using real_t = float;
 
@@ -233,10 +233,10 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec>
 // ======================================================================
 // InterpolateEM
 
-template<typename F, typename OPT_IP>
+template<typename F, typename OPT_IP, typename OPT_DIM>
 struct InterpolateEM
 {
-  using IP = InterpolateEM<F, OPT_IP>;
+  using IP = InterpolateEM<F, OPT_IP, dim_yz>;
   using real_t = float;
   using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
@@ -249,7 +249,7 @@ struct InterpolateEM
     cz.set(xm[2]);
   }
 
-  using Helper = InterpolateEM_Helper<F, IP, OPT_IP>;
+  using Helper = InterpolateEM_Helper<F, IP, OPT_IP, OPT_DIM>;
   __device__ real_t ex(const F& EM) { return Helper::ex(*this, EM); }
   __device__ real_t ey(const F& EM) { return Helper::ey(*this, EM); }
   __device__ real_t ez(const F& EM) { return Helper::ez(*this, EM); }
@@ -281,7 +281,7 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   float xm[3];
   xm[1] = prt->xi[1] * d_cmprts_const.dxi[1];
   xm[2] = prt->xi[2] * d_cmprts_const.dxi[2];
-  InterpolateEM<FldCache_t, OPT_IP> ip;
+  InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
   ip.set_coeffs(xm);
   
   float exq, eyq, ezq, hxq, hyq, hzq;
