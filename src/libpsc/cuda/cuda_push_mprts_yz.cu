@@ -42,6 +42,8 @@ enum CURRMEM {
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 struct FldCache
 {
+  using real_t = float;
+  
   __device__ FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
   
@@ -66,19 +68,19 @@ struct FldCache
     }
   }
 
-  __device__ float operator()(int m, int i, int j, int k) const
+  __host__ __device__ float operator()(int m, int i, int j, int k) const
   {
     return data_[index(m, i,j,k)];
   }
 
 private: // it's supposed to be a (read-only) cache, after all
-  __device__ float& operator()(int m, int i, int j, int k)
+  __host__ __device__ float& operator()(int m, int i, int j, int k)
   {
     return data_[index(m, i,j,k)];
   }
 
 private:
-  __device__ int index(int m, int i, int j, int k) const
+  __host__ __device__ int index(int m, int i, int j, int k) const
   {
     return (((m - EX) * (BLOCKSIZE_Z + 4)
 	     + k) * (BLOCKSIZE_Y + 4)
@@ -174,49 +176,6 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st, dim_yz>
   __device__ static real_t hx(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
   __device__ static real_t hy(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
   __device__ static real_t hz(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
-};
-
-template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_yz>
-{
-  using real_t = float;
-
-  __device__ static real_t ex(const IP& ip, const F& EM)
-  {
-    return (ip.cy.g.v0 * ip.cz.g.v0 * EM(EX, 0, ip.cy.g.l+0, ip.cz.g.l+0) +
-	    ip.cy.g.v1 * ip.cz.g.v0 * EM(EX, 0, ip.cy.g.l+1, ip.cz.g.l+0) +
-	    ip.cy.g.v0 * ip.cz.g.v1 * EM(EX, 0, ip.cy.g.l+0, ip.cz.g.l+1) +
-	    ip.cy.g.v1 * ip.cz.g.v1 * EM(EX, 0, ip.cy.g.l+1, ip.cz.g.l+1));
-  }
-
-  __device__ static real_t ey(const IP& ip, const F& EM)
-  {
-    return (ip.cz.g.v0 * EM(EY, 0, ip.cy.g.l  , ip.cz.g.l+0) +
-	    ip.cz.g.v1 * EM(EY, 0, ip.cy.g.l  , ip.cz.g.l+1));
-  }
-
-  __device__ static real_t ez(const IP& ip, const F& EM)
-  {
-    return (ip.cy.g.v0 * EM(EZ, 0, ip.cy.g.l+0, ip.cz.g.l  ) +
-	    ip.cy.g.v1 * EM(EZ, 0, ip.cy.g.l+1, ip.cz.g.l  ));
-  }
-  
-  __device__ static real_t hx(const IP& ip, const F& EM)
-  {
-    return (EM(HX, 0, ip.cy.g.l  , ip.cz.g.l  ));
-  }
-  
-  __device__ static real_t hy(const IP& ip, const F& EM)
-  {
-    return (ip.cy.g.v0 * EM(HY, 0, ip.cy.g.l+0, ip.cz.g.l  ) +
-	    ip.cy.g.v1 * EM(HY, 0, ip.cy.g.l+1, ip.cz.g.l  ));
-  }
-  
-  __device__ static real_t hz(const IP& ip, const F& EM)
-  {
-    return (ip.cz.g.v0 * EM(HZ, 0, ip.cy.g.l  , ip.cz.g.l+0) +
-	    ip.cz.g.v1 * EM(HZ, 0, ip.cy.g.l  , ip.cz.g.l+1));
-  }
 };
 
 // ======================================================================
