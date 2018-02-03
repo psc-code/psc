@@ -155,29 +155,6 @@ push_pxi_dt(struct d_particle *p,
   p->pxi[2] = pzp + dq * ezq;
 }
 
-template<typename F, typename IP>
-struct InterpolateEM_Helper<F, IP, opt_ip_1st, dim_yz>
-{
-  using real_t = float;
-  using ip_coeff_t = typename IP::ip_coeff_t;
-
-  __device__ static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy, const ip_coeff_t& gz,
-			      const F EM, int m)
-  {
-    return (gz.v0*(gy.v0*EM(m, 0, gy.l  ,gz.l  ) +
-		   gy.v1*EM(m, 0, gy.l+1,gz.l  )) +
-	    gz.v1*(gy.v1*EM(m, 0, gy.l  ,gz.l+1) +
-		   gy.v1*EM(m, 0, gy.l+1,gz.l+1)));
-  }
-
-  __device__ static real_t ex(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.g, EM, EX); }
-  __device__ static real_t ey(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.g, EM, EY); }
-  __device__ static real_t ez(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.g, ip.cz.h, EM, EZ); }
-  __device__ static real_t hx(const IP& ip, const F& EM) { return cc(ip.cx.g, ip.cy.h, ip.cz.h, EM, HX); }
-  __device__ static real_t hy(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.g, ip.cz.h, EM, HY); }
-  __device__ static real_t hz(const IP& ip, const F& EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
-};
-
 // ======================================================================
 // InterpolateEM
 
