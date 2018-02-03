@@ -155,34 +155,6 @@ push_pxi_dt(struct d_particle *p,
   p->pxi[2] = pzp + dq * ezq;
 }
 
-// ======================================================================
-// InterpolateEM
-
-template<typename F, typename OPT_IP, typename OPT_DIM>
-struct InterpolateEM
-{
-  using IP = InterpolateEM<F, OPT_IP, dim_yz>;
-  using real_t = float;
-  using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
-  using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
-
-  ip_coeffs_t cx, cy, cz;
-
-  __device__ void set_coeffs(real_t xm[3])
-  {
-    cy.set(xm[1]);
-    cz.set(xm[2]);
-  }
-
-  using Helper = InterpolateEM_Helper<F, IP, OPT_IP, OPT_DIM>;
-  __device__ real_t ex(const F& EM) { return Helper::ex(*this, EM); }
-  __device__ real_t ey(const F& EM) { return Helper::ey(*this, EM); }
-  __device__ real_t ez(const F& EM) { return Helper::ez(*this, EM); }
-  __device__ real_t hx(const F& EM) { return Helper::hx(*this, EM); }
-  __device__ real_t hy(const F& EM) { return Helper::hy(*this, EM); }
-  __device__ real_t hz(const F& EM) { return Helper::hz(*this, EM); }
-};
-
 // ----------------------------------------------------------------------
 // push_part_one
 

@@ -501,5 +501,35 @@ struct InterpolateEM_Helper<F, IP, opt_ip_2nd, dim_xyz>
   static real_t hz(const IP& ip, F EM) { return cc(ip.cx.h, ip.cy.h, ip.cz.g, EM, HZ); }
 };
 
+// ======================================================================
+// InterpolateEM
+
+template<typename F, typename OPT_IP, typename OPT_DIM>
+struct InterpolateEM
+{
+  using IP = InterpolateEM<F, OPT_IP, OPT_DIM>;
+  using real_t = typename F::real_t;
+  using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
+  using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
+
+  __host__ __device__ void set_coeffs(real_t xm[3])
+  {
+    cx.set(xm[0]);
+    cy.set(xm[1]);
+    cz.set(xm[2]);
+  }
+
+  using Helper = InterpolateEM_Helper<F, IP, OPT_IP, OPT_DIM>;
+  __host__ __device__ real_t ex(const F& EM) { return Helper::ex(*this, EM); }
+  __host__ __device__ real_t ey(const F& EM) { return Helper::ey(*this, EM); }
+  __host__ __device__ real_t ez(const F& EM) { return Helper::ez(*this, EM); }
+  __host__ __device__ real_t hx(const F& EM) { return Helper::hx(*this, EM); }
+  __host__ __device__ real_t hy(const F& EM) { return Helper::hy(*this, EM); }
+  __host__ __device__ real_t hz(const F& EM) { return Helper::hz(*this, EM); }
+
+  ip_coeffs_t cx, cy, cz;
+};
+
+
 #endif
 
