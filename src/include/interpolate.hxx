@@ -119,5 +119,21 @@ struct ip_coeffs<R, opt_ip_1st> : ip_coeffs_std<R, ip_coeff_1st<R>> {};
 template<typename R>
 struct ip_coeffs<R, opt_ip_2nd> : ip_coeffs_std<R, ip_coeff_2nd<R>> {};
 
+// ======================================================================
+// InterpolateEM_Helper
+//
+// empty general class, partially specialized for
+// interpolation order and dim
+//
+// FIXME: the repeated ex/y/z, functions that just call
+// cc() should be consolidated.
+// It'd also be possible to consolidate the various dim versions based
+// on just 1-d interpolation and some fancy template metaprogramming...
+
+template<typename F, typename IP, typename OPT_IP, typename OPT_DIM>
+struct InterpolateEM_Helper
+{
+};
+
 #endif
 

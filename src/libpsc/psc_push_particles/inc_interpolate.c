@@ -4,22 +4,6 @@
 #include "interpolate.hxx"
 
 // ======================================================================
-// InterpolateEM_Helper
-//
-// empty general class, partially specialized for
-// interpolation order and dim
-//
-// FIXME: the repeated ex/y/z, functions that just call
-// cc() should be consolidated.
-// It'd also be possible to consolidate the various dim versions based
-// on just 1-d interpolation and some fancy template metaprogramming...
-
-template<typename F, typename IP, typename IP_COEFFS, typename dim>
-struct InterpolateEM_Helper
-{
-};
-
-// ======================================================================
 // InterpolateEM_Helper: 1st EC
 
 // ----------------------------------------------------------------------

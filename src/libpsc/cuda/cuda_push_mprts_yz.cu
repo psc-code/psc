@@ -153,17 +153,6 @@ push_pxi_dt(struct d_particle *p,
   p->pxi[2] = pzp + dq * ezq;
 }
 
-// ======================================================================
-// ip_coeffs
-
-// ======================================================================
-// InterpolateEM_Helper
-
-template<typename F, typename IP, typename OPT_IP, typename OPT_DIM>
-struct InterpolateEM_Helper
-{
-};
-
 template<typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_1st, dim_yz>
 {
