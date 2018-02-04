@@ -81,18 +81,6 @@ struct Vec3 : std::array<T, 3>
     return *this;
   }
   
-  Vec3 operator*(const Vec3& w) const {
-    Vec3 res = *this;
-    res *= w;
-    return res;
-  }
-  
-  Vec3 operator/(const Vec3& w) const {
-    Vec3 res = *this;
-    res /= w;
-    return res;
-  }
-  
   // conversion to pointer
   
   operator const T* () const { return data(); }
@@ -104,6 +92,20 @@ struct Vec3 : std::array<T, 3>
   }
 };
 
+template<typename T>
+Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w) {
+  Vec3<T> res = v;
+  res *= w;
+  return res;
+}
+
+template<typename T>
+Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w) {
+  Vec3<T> res = v;
+  res /= w;
+  return res;
+}
+  
 using Int3 = Vec3<int>;
 
 #endif
