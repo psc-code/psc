@@ -23,7 +23,7 @@ PFX(setup_patch)(struct psc_mparticles *_mprts, int p)
     patch->b_dxi[d] = 1.f / ppsc->grid.dx[d];
   }
 
-  patch->mprts = _mprts;
+  patch->mprts = mprts.sub_;
   patch->p = p;
   
 #if PSC_PARTICLES_AS_SINGLE
@@ -42,12 +42,11 @@ PFX(setup)(struct psc_mparticles *_mprts)
 
   new(mprts.sub_) mparticles_t::sub_t(ppsc->grid);
 
-  psc_mparticles_setup_super(_mprts);
-  mprts->patch = new mparticles_t::patch_t[mprts.n_patches()]();
-
   for (int p = 0; p < mprts.n_patches(); p++) {
     PFX(setup_patch)(_mprts, p);
   }
+
+  psc_mparticles_setup_super(_mprts);
 }
 
 // ----------------------------------------------------------------------

@@ -82,6 +82,9 @@ public:
 // mparticles_patch_base
 
 template<typename P>
+struct psc_mparticles_;
+
+template<typename P>
 struct mparticles_patch_base
 {
   using particle_t = P;
@@ -94,7 +97,7 @@ struct mparticles_patch_base
   int b_mx[3];
   real_t b_dxi[3];
 
-  struct psc_mparticles *mprts;
+  psc_mparticles_<P>* mprts;
   int p;
 
   mparticles_patch_base() = default;
@@ -144,7 +147,9 @@ struct psc_mparticles_
 
   psc_mparticles_(const Grid_t& grid)
     : grid_(grid)
-  {}
+  {
+    patch = new patch_t[grid.patches.size()]();
+  }
   
   patch_t *patch;
   const Grid_t& grid_;
