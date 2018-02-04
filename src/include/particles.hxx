@@ -133,7 +133,6 @@ struct mparticles_patch_base
   buf_t buf;
 
   int b_mx[3];
-  real_t b_dxi[3];
   ParticleIndexer<real_t> pi_;
 
   psc_mparticles_<P>* mprts;
@@ -151,7 +150,6 @@ struct mparticles_patch_base
   {
     for (int d = 0; d < 3; d++) {
       b_mx[d] = mprts->grid_.ldims[d];
-      //b_dxi[d] = 1.f / mprts->grid_.dx[d];
     }
   }
 
@@ -176,12 +174,12 @@ struct mparticles_patch_base
   void get_block_pos(const real_t xi[3], int b_pos[3])
   {
     for (int d = 0; d < 3; d++) {
-      b_pos[d] = fint(xi[d] * b_dxi[d]);
+      b_pos[d] = fint(xi[d] * pi_.b_dxi_[d]);
     }
   }
   
   const int* get_b_mx() const { return b_mx; }
-  const real_t* get_b_dxi() const { return b_dxi; }
+  const real_t* get_b_dxi() const { return pi_.b_dxi_; }
 };
 
 template<typename P>
