@@ -19,8 +19,24 @@ struct Vec3 : std::array<T, 3>
   
   Vec3() = default;
 
+  // ----------------------------------------------------------------------
+  // copy ctor
+
   Vec3(const Vec3&) = default;
 
+  // ----------------------------------------------------------------------
+  // construct by broadcasting single value
+
+  Vec3(T val)
+  {
+    for (int i = 0; i < 3; i++) {
+      new (&(*this)[i])	T(val); // placement new -- not really necessary
+    }    
+  }
+
+  // ----------------------------------------------------------------------
+  // construct from pointer to values
+  
   Vec3(const T *p)
   {
     for (int i = 0; i < 3; i++) {
@@ -28,13 +44,18 @@ struct Vec3 : std::array<T, 3>
     }
   }
 
+  // ----------------------------------------------------------------------
+  // construct from initializer list
+  
   Vec3(std::initializer_list<T> l)
   {
     assert(l.size() == 3);
     std::uninitialized_copy(l.begin(), l.end(), data());
   }
 
-  // convert from different type (e.g., float -> double)
+  // ----------------------------------------------------------------------
+  // construct by converting from different type (e.g., float -> double)
+
   template<typename U>
   explicit Vec3(const Vec3<U>& u)
   {
@@ -53,10 +74,8 @@ struct Vec3 : std::array<T, 3>
   }
   
   Vec3 operator/(const Vec3& w) const {
-    Vec3 res;
-    for (int i = 0; i < 3; i++) {
-      res[i] = (*this)[i] / w[i];
-    }
+    Vec3 res = *this;
+    res /= w;
     return res;
   }
   
