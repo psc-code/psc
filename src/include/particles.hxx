@@ -103,6 +103,22 @@ struct mparticles_patch_base
   mparticles_patch_base() = default;
   mparticles_patch_base(const mparticles_patch_base&) = delete;
   
+  void setup(psc_mparticles_<P>* mprts, int p)
+  {
+    this->mprts = mprts;
+    this->p = p;
+    
+    for (int d = 0; d < 3; d++) {
+      b_mx[d] = mprts->grid_.ldims[d];
+      b_dxi[d] = 1.f / mprts->grid_.dx[d];
+    }
+    
+#if PSC_PARTICLES_AS_SINGLE
+    patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
+    patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
+#endif
+  }
+
   particle_t& operator[](int n) { return buf[n]; }
   iterator begin() { return buf.begin(); }
   iterator end() { return buf.end(); }
@@ -141,35 +157,16 @@ struct mparticles_patch : mparticles_patch_base<P> { };
 template<typename P>
 struct psc_mparticles_
 {
-  using Self = psc_mparticles_<P>;
   using particle_t = P;
   using particle_real_t = typename particle_t::real_t;
   using patch_t = mparticles_patch<particle_t>;
-
-  static void setup_patch(Self* mprts, int p)
-  {
-    patch_t *patch = &mprts->patch[p];
-    
-    for (int d = 0; d < 3; d++) {
-      patch->b_mx[d] = mprts->grid_.ldims[d];
-      patch->b_dxi[d] = 1.f / mprts->grid_.dx[d];
-    }
-    
-    patch->mprts = mprts;
-    patch->p = p;
-    
-#if PSC_PARTICLES_AS_SINGLE
-    patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
-    patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
-#endif
-  }
 
   psc_mparticles_(const Grid_t& grid)
     : grid_(grid)
   {
     patch = new patch_t[grid.patches.size()]();
     for (int p = 0; p < grid.patches.size(); p++) {
-      setup_patch(this, p);
+      patch[p].setup(this, p);
     }
   }
   
