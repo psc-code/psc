@@ -31,7 +31,7 @@ struct ParticleIndexer
     return fint(x * b_dxi_[d]);
   }
 
-  Int3 blockIndex(Real3 pos)
+  Int3 blockPosition(Real3 pos)
   {
     Int3 idx;
     for (int d = 0; d < 3; d++) {
@@ -173,8 +173,9 @@ struct mparticles_patch_base
 
   void get_block_pos(const real_t xi[3], int b_pos[3])
   {
+    Int3 pos = pi_.blockPosition(xi);
     for (int d = 0; d < 3; d++) {
-      b_pos[d] = fint(xi[d] * pi_.b_dxi_[d]);
+      b_pos[d] = pos[d];
     }
   }
   
