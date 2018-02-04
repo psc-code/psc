@@ -130,14 +130,6 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 #endif
 
 static void
-PFX(destroy)(struct psc_mparticles *_mprts)
-{
-  mparticles_t mprts(_mprts);
-
-  delete[] mprts->patch;
-}
-
-static void
 PFX(reserve_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
@@ -220,7 +212,6 @@ struct PFX(OPS) : psc_mparticles_ops {
     size                    = sizeof(psc_mparticles_sub);
     methods                 = PFX(methods);
     setup                   = PFX(setup);
-    destroy                 = PFX(destroy);
     write                   = PFX(write);
     read                    = PFX(read);
     reserve_all             = PFX(reserve_all);

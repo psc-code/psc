@@ -100,8 +100,8 @@ struct mparticles_patch_base
   psc_mparticles_<P>* mprts;
   int p;
 
-  mparticles_patch_base() = default;
-  mparticles_patch_base(const mparticles_patch_base&) = delete;
+  // mparticles_patch_base() = default;
+  // mparticles_patch_base(const mparticles_patch_base&) = delete;
   
   void setup(psc_mparticles_<P>* mprts, int p)
   {
@@ -164,13 +164,17 @@ struct psc_mparticles_
   psc_mparticles_(const Grid_t& grid)
     : grid_(grid)
   {
-    patch = new patch_t[grid.patches.size()]();
+    patches_.reserve(grid.patches.size());
     for (int p = 0; p < grid.patches.size(); p++) {
-      patch[p].setup(this, p);
+      patches_.emplace_back();
+      patches_[p].setup(this, p);
     }
   }
+
+  const patch_t& operator[](int p) const { return patches_[p]; }
+  patch_t&       operator[](int p)       { return patches_[p]; }
   
-  patch_t *patch;
+  std::vector<patch_t> patches_;
   const Grid_t& grid_;
 
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
@@ -193,7 +197,7 @@ struct mparticles : mparticles_base<S>
 
   patch_t& operator[](int p)
   {
-    return this->sub_->patch[p];
+    return (*this->sub_)[p];
   }
 
 };
