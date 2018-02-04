@@ -18,9 +18,14 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
 {
   using Base = mparticles_patch_base<particle_single_t>;
 
-  using Base::Base;
-  
-  ~mparticles_patch()
+  mparticles_patch(psc_mparticles_<particle_single_t>* mprts, int p)
+    : Base(mprts, p)
+  {
+    nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
+    b_cnt = (unsigned int *) calloc(nr_blocks + 1, sizeof(*b_cnt));
+  }
+
+    ~mparticles_patch()
   {
     free(prt_array_alt);
     free(b_idx);

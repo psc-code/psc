@@ -113,11 +113,6 @@ struct mparticles_patch_base
       b_mx[d] = mprts->grid_.ldims[d];
       b_dxi[d] = 1.f / mprts->grid_.dx[d];
     }
-    
-#if PSC_PARTICLES_AS_SINGLE
-    patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
-    patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
-#endif
   }
 
   particle_t& operator[](int n) { return buf[n]; }
