@@ -81,6 +81,12 @@ struct Vec3 : std::array<T, 3>
     return *this;
   }
   
+  Vec3 operator*(const Vec3& w) const {
+    Vec3 res = *this;
+    res *= w;
+    return res;
+  }
+  
   Vec3 operator/(const Vec3& w) const {
     Vec3 res = *this;
     res /= w;
