@@ -100,10 +100,12 @@ struct mparticles_patch_base
   psc_mparticles_<P>* mprts;
   int p;
 
-  // mparticles_patch_base() = default;
+  // FIXME, I would like to delete the copy ctor because I don't
+  // want to copy patch_t by mistake, but that doesn't play well with
+  // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
-  
-  void setup(psc_mparticles_<P>* mprts, int p)
+
+  mparticles_patch_base(psc_mparticles_<P>* mprts, int p)
   {
     this->mprts = mprts;
     this->p = p;
@@ -149,7 +151,11 @@ struct mparticles_patch_base
 };
 
 template<typename P>
-struct mparticles_patch : mparticles_patch_base<P> { };
+struct mparticles_patch : mparticles_patch_base<P> {
+  using Base = mparticles_patch_base<P>;
+  
+  using Base::Base;
+};
 
 // ======================================================================
 // psc_mparticles_
@@ -166,8 +172,7 @@ struct psc_mparticles_
   {
     patches_.reserve(grid.patches.size());
     for (int p = 0; p < grid.patches.size(); p++) {
-      patches_.emplace_back();
-      patches_[p].setup(this, p);
+      patches_.emplace_back(this, p);
     }
   }
 

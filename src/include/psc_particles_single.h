@@ -17,6 +17,8 @@ template<>
 struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_single_t>
 {
   using Base = mparticles_patch_base<particle_single_t>;
+
+  using Base::Base;
   
   ~mparticles_patch()
   {
