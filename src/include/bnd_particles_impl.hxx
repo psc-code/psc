@@ -112,8 +112,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
     real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     real_t *pxi = &prt->pxi;
     
-    int b_pos[3];
-    mprts[p].get_block_pos(xi, b_pos);
+    Int3 b_pos = mprts[p].blockPosition(xi);
     
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
