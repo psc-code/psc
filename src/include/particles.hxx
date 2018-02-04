@@ -164,7 +164,8 @@ template<typename P>
 struct psc_mparticles_
 {
   using particle_t = P;
-  using particle_real_t = typename particle_t::real_t;
+  using particle_real_t = typename particle_t::real_t; // FIXME, should go away
+  using real_t = particle_real_t;
   using patch_t = mparticles_patch<particle_t>;
 
   psc_mparticles_(const Grid_t& grid)
@@ -179,13 +180,13 @@ struct psc_mparticles_
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
   
-  std::vector<patch_t> patches_;
-  const Grid_t& grid_;
-
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
   particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
   particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(grid_); }
   particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
+
+  std::vector<patch_t> patches_;
+  const Grid_t& grid_;
 };
 
 // ======================================================================
