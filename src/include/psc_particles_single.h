@@ -42,12 +42,12 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
     }
   }
 
-  particle_single_t *prt_array_alt;
-  int nr_blocks;
-  unsigned int *b_idx;
-  unsigned int *b_ids;
-  unsigned int *b_cnt;
-  bool need_reorder;
+  particle_single_t *prt_array_alt = {};
+  int nr_blocks = {};
+  unsigned int *b_idx = {};
+  unsigned int *b_ids = {};
+  unsigned int *b_cnt = {};
+  bool need_reorder = {};
 };
 
 using psc_mparticles_single = psc_mparticles_<particle_single_t>;

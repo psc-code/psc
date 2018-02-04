@@ -92,7 +92,7 @@ struct mparticles_patch_base
   using buf_t = std::vector<particle_t>;
   using iterator = typename buf_t::iterator;
   
-  buf_t buf = {};
+  buf_t buf;
 
   int b_mx[3];
   real_t b_dxi[3];
@@ -105,11 +105,10 @@ struct mparticles_patch_base
   // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
-  mparticles_patch_base(psc_mparticles_<P>* mprts, int p)
+  mparticles_patch_base(psc_mparticles_<P>* _mprts, int _p)
+    : mprts(_mprts),
+      p(_p)
   {
-    this->mprts = mprts;
-    this->p = p;
-    
     for (int d = 0; d < 3; d++) {
       b_mx[d] = mprts->grid_.ldims[d];
       b_dxi[d] = 1.f / mprts->grid_.dx[d];
