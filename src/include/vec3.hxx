@@ -64,8 +64,16 @@ struct Vec3 : std::array<T, 3>
     }
   }
 
+  // ----------------------------------------------------------------------
   // arithmetic
 
+  Vec3& operator*=(const Vec3& w) {
+    for (int i = 0; i < 3; i++) {
+      (*this)[i] *= w[i];
+    }
+    return *this;
+  }
+  
   Vec3& operator/=(const Vec3& w) {
     for (int i = 0; i < 3; i++) {
       (*this)[i] /= w[i];

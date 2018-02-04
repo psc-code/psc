@@ -74,9 +74,9 @@ namespace {
   {
     using T = TypeParam;
     using V3 = Vec3<TypeParam>;
-    V3 v0 = { T(1.5), T(2.), T(-3.) };
-    V3 v = v0;
+    V3 v = { T(1.5), T(2.), T(-3.) };
     V3 w = { T(1.),  T(4.), T(-1.) };
+    V3 v0 = v;
 
     v /= w;
     
@@ -91,6 +91,19 @@ namespace {
     V3 w = { T(1.),  T(4.), T(-1.) };
 
     EXPECT_EQ(v / w, (V3{ v[0]/w[0], v[1]/w[1], v[2]/w[2] }));
+  }
+
+  TYPED_TEST(Vec3Test, MultiplyAssign)
+  {
+    using T = TypeParam;
+    using V3 = Vec3<TypeParam>;
+    V3 v = { T(1.5), T(2.), T(-3.) };
+    V3 w = { T(1.),  T(4.), T(-1.) };
+    V3 v0 = v;
+
+    v *= w;
+    
+    EXPECT_EQ(v, (V3{ v0[0]*w[0], v0[1]*w[1], v0[2]*w[2] }));
   }
 
   // ----------------------------------------------------------------------
