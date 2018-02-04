@@ -10,41 +10,13 @@ using real_t = mparticles_t::real_t;
 // psc_mparticles "single" / "double" / "c"
 
 // ----------------------------------------------------------------------
-// psc_mparticles_sub_setup_patch
-
-static void
-PFX(setup_patch)(struct psc_mparticles *_mprts, int p)
-{
-  mparticles_t mprts(_mprts);
-  mparticles_t::patch_t *patch = &mprts->patch[p];
-
-  for (int d = 0; d < 3; d++) {
-    patch->b_mx[d] = ppsc->patch[p].ldims[d];
-    patch->b_dxi[d] = 1.f / ppsc->grid.dx[d];
-  }
-
-  patch->mprts = mprts.sub_;
-  patch->p = p;
-  
-#if PSC_PARTICLES_AS_SINGLE
-  patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
-  patch->b_cnt = (unsigned int *) calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
-#endif
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_sub_setup
 
 static void
 PFX(setup)(struct psc_mparticles *_mprts)
 {
   mparticles_t mprts(_mprts);
-
   new(mprts.sub_) mparticles_t::sub_t(ppsc->grid);
-
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    PFX(setup_patch)(_mprts, p);
-  }
 
   psc_mparticles_setup_super(_mprts);
 }
