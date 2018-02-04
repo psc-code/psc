@@ -226,14 +226,6 @@ const int* mparticles_cuda_t::patch_t::get_b_mx() const
 }
 
 // ----------------------------------------------------------------------
-// mparticles_cuda_t::patch_t::get_b_dxi
-
-const mparticles_cuda_t::real_t* mparticles_cuda_t::patch_t::get_b_dxi() const
-{
-  return mp_->patch_get_b_dxi(p_);
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
 struct psc_mparticles_ops_cuda : psc_mparticles_ops {

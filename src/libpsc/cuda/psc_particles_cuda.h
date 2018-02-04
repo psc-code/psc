@@ -26,26 +26,26 @@ struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
   struct patch_t
   {
     patch_t(mparticles_cuda_t& mp, int p)
-      : mp_(mp), p_(p)
+      : mp_(mp), p_(p), pi_(mp->grid())
     {
     }
 
     Int3 blockPosition(const Real3& xi) const
     {
-      Int3 b_pos;
-      const real_t* b_dxi = get_b_dxi();
-      for (int d = 0; d < 3; d++) {
-	b_pos[d] = fint(xi[d] * b_dxi[d]);
-      }
-      return b_pos;
+      return pi_.blockPosition(xi);
     }
   
     const int* get_b_mx() const;
-    const real_t* get_b_dxi() const;
+
+    const real_t* get_b_dxi() const
+    {
+      return pi_.b_dxi_;
+    }
     
   private:
     mparticles_cuda_t& mp_;
     int p_;
+    ParticleIndexer<real_t> pi_;
   };
 
   patch_t operator[](int p) {

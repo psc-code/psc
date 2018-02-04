@@ -14,6 +14,7 @@
 #endif
 
 psc_mparticles_cuda::psc_mparticles_cuda(Grid_t& grid)
+: grid_(grid)
 {
   dprintf("CMPRTS: ctor\n");
   cmprts_ = new cuda_mparticles(grid);

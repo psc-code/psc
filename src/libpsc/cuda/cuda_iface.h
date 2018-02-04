@@ -81,9 +81,11 @@ struct psc_mparticles_cuda
   const int *patch_get_b_mx(int p);
   
   cuda_mparticles* cmprts() { return cmprts_; }
+  const Grid_t& grid() const { return grid_; }
 
 private:
   cuda_mparticles* cmprts_;
+  Grid_t& grid_;
 
   template<typename MP>
   friend struct bnd_particles_policy_cuda;

@@ -4,6 +4,7 @@
 
 #include "psc_particles.h"
 #include "grid.hxx"
+#include "psc_bits.h"
 
 #include <vector>
 
