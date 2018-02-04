@@ -92,7 +92,7 @@ struct mparticles_patch_base
   using buf_t = std::vector<particle_t>;
   using iterator = typename buf_t::iterator;
   
-  buf_t buf;
+  buf_t buf = {};
 
   int b_mx[3];
   real_t b_dxi[3];
