@@ -8,6 +8,44 @@
 #include <vector>
 
 // ======================================================================
+// ParticleIndexer
+
+template<class R>
+struct ParticleIndexer
+{
+  using real_t = R;
+  using Real3 = Vec3<real_t>;
+
+  ParticleIndexer(const Grid_t& grid)
+    : dxi_(Real3(1.) / Real3(grid.dx)),
+      b_dxi_(dxi_) // FIXME, need to support blocks bigger than single cell
+  {}
+
+  int cellIndex(real_t x, int d)
+  {
+    return fint(x * dxi_[d]);
+  }
+
+  int blockIndex(real_t x, int d)
+  {
+    return fint(x * b_dxi_[d]);
+  }
+
+  Int3 blockIndex(Real3 pos)
+  {
+    Int3 idx;
+    for (int d = 0; d < 3; d++) {
+      idx[d] = blockIndex(pos[d], d);
+    }
+    return pos;
+  }
+
+  //private:
+  Real3 dxi_;
+  Real3 b_dxi_;
+};
+
+// ======================================================================
 // psc_particle
 
 template<class R>
@@ -96,6 +134,7 @@ struct mparticles_patch_base
 
   int b_mx[3];
   real_t b_dxi[3];
+  ParticleIndexer<real_t> pi_;
 
   psc_mparticles_<P>* mprts;
   int p;
@@ -106,12 +145,13 @@ struct mparticles_patch_base
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
   mparticles_patch_base(psc_mparticles_<P>* _mprts, int _p)
-    : mprts(_mprts),
+    : pi_(_mprts->grid_),
+      mprts(_mprts),
       p(_p)
   {
     for (int d = 0; d < 3; d++) {
       b_mx[d] = mprts->grid_.ldims[d];
-      b_dxi[d] = 1.f / mprts->grid_.dx[d];
+      //b_dxi[d] = 1.f / mprts->grid_.dx[d];
     }
   }
 
