@@ -19,7 +19,7 @@ struct ParticleIndexer
 
   ParticleIndexer(const Grid_t& grid)
     : dxi_(Real3(1.) / Real3(grid.dx)),
-      b_dxi_(dxi_) // FIXME, need to support blocks bigger than single cell
+      b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.dx)))
   {}
 
   int cellIndex(real_t x, int d) const
@@ -150,8 +150,11 @@ struct mparticles_patch_base
       mprts(_mprts),
       p(_p)
   {
+    const Grid_t& grid = mprts->grid_;
+    
     for (int d = 0; d < 3; d++) {
-      b_mx[d] = mprts->grid_.ldims[d];
+      assert(grid.ldims[d] % grid.bs[d] == 0);
+      b_mx[d] = grid.ldims[d] / grid.bs[d];
     }
   }
 
