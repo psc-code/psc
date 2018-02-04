@@ -176,6 +176,7 @@ struct mparticles_patch_base
     return buf;
   }
 
+  int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
   Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     
   const int* get_b_mx() const { return b_mx; }

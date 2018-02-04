@@ -91,7 +91,6 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
   // These will need revisiting when it comes to non-periodic domains.
 
   const Grid_t::Patch& gpatch = psc->grid.patches[p];
-  const real_t *b_dxi = mprts[p].get_b_dxi();
   const int *b_mx = mprts[p].get_b_mx();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
@@ -133,7 +132,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 	if (!at_lo_boundary(p, d) || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
-	  int bi = fint(xi[d] * b_dxi[d]);
+	  int bi = mprts[p].blockPosition(xi[d], d);
 	  if (bi >= b_mx[d]) {
 	    xi[d] = 0.;
 	    dir[d] = 0;
@@ -157,7 +156,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 	    psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
-	  int bi = fint(xi[d] * b_dxi[d]);
+	  int bi = mprts[p].blockPosition(xi[d], d);
 	  if (bi < 0) {
 	    xi[d] = 0.;
 	  }
@@ -167,7 +166,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
-	    int bi = fint(xi[d] * b_dxi[d]);
+	    int bi = mprts[p].blockPosition(xi[d], d);
 	    if (bi >= b_mx[d]) {
 	      xi[d] *= (1. - 1e-6);
 	    }

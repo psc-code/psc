@@ -30,10 +30,8 @@ struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
     {
     }
 
-    Int3 blockPosition(const Real3& xi) const
-    {
-      return pi_.blockPosition(xi);
-    }
+    int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
+    Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
   
     const int* get_b_mx() const;
 
