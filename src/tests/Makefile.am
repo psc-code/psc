@@ -14,10 +14,10 @@ libpsctest_la_SOURCES = \
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
-	psc_test_mfields_single \
-	psc_test_cyclo
+	psc_test_mfields_single
 
-#	psc_test_accel \
+#	psc_test_cyclo \
+	psc_test_accel \
 	psc_test_em_wave \
 	test_psc_mparticles \
 	test_part_yz \
