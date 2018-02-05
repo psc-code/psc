@@ -187,13 +187,9 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     int i = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
       particle_t *p = &*prt_iter;
-      real_t dxi = 1.f / grid.dx[0];
-      real_t dyi = 1.f / grid.dx[1];
-      real_t dzi = 1.f / grid.dx[2];
-      real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
       int pos[3];
       for (int d = 0; d < 3; d++) {
-	pos[d] = fint(xi[d]);
+	pos[d] = prts.cellPosition((&p->xi)[d], d);
 #if 1
 	if (pos[d] < 0 || pos[d] >= grid.ldims[d]) {
 	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",

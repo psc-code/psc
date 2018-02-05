@@ -112,28 +112,20 @@ cell_index_3_to_1(int *ldims, int j0, int j1, int j2)
 }
 
 static inline int
-get_sort_index(int p, particle_t *part)
+get_sort_index(mparticles_t::patch_t prts, particle_t *part)
 {
   Grid_t& grid = ppsc->grid;
-  real_t dxi = 1.f / grid.dx[0];
-  real_t dyi = 1.f / grid.dx[1];
-  real_t dzi = 1.f / grid.dx[2];
   int *ldims = grid.ldims;
   
-  real_t u = part->xi * dxi;
-  real_t v = part->yi * dyi;
-  real_t w = part->zi * dzi;
-  int j0 = fint(u);
-  int j1 = fint(v);
-  int j2 = fint(w);
-  if (u == ldims[0]) j0--;
-  if (v == ldims[1]) j1--;
-  if (w == ldims[2]) j2--;
+  int j0 = prts.cellPosition(part->xi, 0);
+  int j1 = prts.cellPosition(part->yi, 1);
+  int j2 = prts.cellPosition(part->zi, 2);
+  // FIXME, this is hoping that reason is that we were just on the right bnd...
+  if (j0 == ldims[0]) j0--;
+  if (j1 == ldims[1]) j1--;
+  if (j2 == ldims[2]) j2--;
   assert(j0 >= 0 && j0 < ldims[0]);
   assert(j1 >= 0 && j1 < ldims[1]);
-  if (!(j2 >= 0 && j2 < ldims[2])) {
-    mprintf("j2 %d ldims %d w %g\n", j2, ldims[2], w);
-  }
   assert(j2 >= 0 && j2 < ldims[2]);
 
   int kind = part->kind();
@@ -160,7 +152,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
     // counting sort to get map 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
       particle_t *part = &*prt_iter;
-      int si = get_sort_index(p, part);
+      int si = get_sort_index(prts, part);
       off[p][si]++;
     }
     // prefix sum to get offsets
@@ -178,7 +170,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
     int n = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, n++) {
       particle_t *part = &*prt_iter;
-      int si = get_sort_index(p, part);
+      int si = get_sort_index(prts, part);
       map[p][off2[si]++] = n;
     }
     free(off2);

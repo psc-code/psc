@@ -22,7 +22,7 @@ struct ParticleIndexer
       b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.dx)))
   {}
 
-  int cellIndex(real_t x, int d) const
+  int cellPosition(real_t x, int d) const
   {
     return fint(x * dxi_[d]);
   }
@@ -176,6 +176,7 @@ struct mparticles_patch_base
     return buf;
   }
 
+  int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
   int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
   Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     
