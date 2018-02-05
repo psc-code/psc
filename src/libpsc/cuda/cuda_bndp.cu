@@ -217,8 +217,7 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
       h_bnd_pxi4[n + off].w = prt.qni_wni_;
 
       pi_.checkInPatchMod(&h_bnd_xi4[n + off].x);
-      Int3 b_pos = pi_.blockPosition(&h_bnd_xi4[n + off].x);
-      uint b = blockIndex(b_pos, p);
+      uint b = blockIndex(h_bnd_xi4[n + off], p);
       assert(b < n_blocks);
       h_bnd_idx[n + off] = b;
       h_bnd_off[n + off] = h_bnd_cnt[b]++;

@@ -29,8 +29,6 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
-  int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
-
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
