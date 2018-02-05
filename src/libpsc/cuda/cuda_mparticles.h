@@ -21,7 +21,7 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles_base(const Grid_t& grid);
-  // copy constructor would work fine, be don't want to copy everything
+  // copy constructor would work fine, but we don't want to copy everything
   // by accident
   cuda_mparticles_base(const cuda_mparticles&) = delete;
 

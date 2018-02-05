@@ -15,6 +15,7 @@ struct cuda_mparticles_indexer
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles_indexer(const Grid_t& grid)
+    : pi_(grid)
   {
     n_patches = grid.patches.size();
     for (int d = 0; d < 3; d++) {
@@ -48,6 +49,7 @@ struct cuda_mparticles_indexer
   uint n_blocks;                 // number of blocks in all patches in mprts
   Int3 b_mx_;                    // number of blocks per direction in each patch
   Real3 b_dxi_;                  // inverse of block size (in actual length units)
+  ParticleIndexer<real_t> pi_;
 };
 
 
