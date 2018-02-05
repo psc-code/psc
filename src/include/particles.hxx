@@ -74,6 +74,7 @@ struct ParticleIndexer
 
   ParticleIndexer(const Grid_t& grid)
     : dxi_(Real3(1.) / Real3(grid.dx)),
+      ldims_(grid.ldims),
       b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.dx))),
       b_mx_(grid.ldims / grid.bs)
   {}
@@ -88,6 +89,15 @@ struct ParticleIndexer
     return fint(x * b_dxi_[d]);
   }
 
+  Int3 cellPosition(const real_t* pos) const
+  {
+    Int3 idx;
+    for (int d = 0; d < 3; d++) {
+      idx[d] = cellPosition(pos[d], d);
+    }
+    return idx;
+  }
+
   Int3 blockPosition(const real_t* pos) const
   {
     Int3 idx;
@@ -97,6 +107,17 @@ struct ParticleIndexer
     return idx;
   }
 
+  int cellIndex(const Int3& cpos) const
+  {
+    if (uint(cpos[0]) >= ldims_[0] ||
+	uint(cpos[1]) >= ldims_[1] ||
+	uint(cpos[2]) >= ldims_[2]) {
+      return -1;
+    } else {
+      return (cpos[2] * ldims_[1] + cpos[1]) * ldims_[0] + cpos[0];
+    }
+  }
+  
   int blockIndex(const Int3& bpos) const
   {
     if (uint(bpos[0]) >= b_mx_[0] ||
@@ -108,6 +129,12 @@ struct ParticleIndexer
     }
   }
   
+  int cellIndex(const real_t* pos) const
+  {
+    Int3 cpos = cellPosition(pos);
+    return cellIndex(cpos);
+  }
+
   int blockIndex(const real_t* pos) const
   {
     Int3 bpos = blockPosition(pos);
@@ -135,6 +162,7 @@ struct ParticleIndexer
   
   //private:
   Real3 dxi_;
+  Int3 ldims_;
   Real3 b_dxi_;
   Int3 b_mx_;
 };
