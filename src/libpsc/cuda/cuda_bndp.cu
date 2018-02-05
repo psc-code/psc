@@ -205,33 +205,19 @@ uint cuda_bndp::convert_and_copy_to_dev(cuda_mparticles *cmprts)
     bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      particle_cuda_t *prt = &bpatch[p].buf[n];
-      h_bnd_xi4[n + off].x  = prt->xi;
-      h_bnd_xi4[n + off].y  = prt->yi;
-      h_bnd_xi4[n + off].z  = prt->zi;
-      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt->kind_);
-      h_bnd_pxi4[n + off].x = prt->pxi;
-      h_bnd_pxi4[n + off].y = prt->pyi;
-      h_bnd_pxi4[n + off].z = prt->pzi;
-      h_bnd_pxi4[n + off].w = prt->qni_wni_;
+      const particle_cuda_t& prt = bpatch[p].buf[n];
 
-      int b_pos[3];
-      for (int d = 0; d < 3; d++) {
-	float *xi = &h_bnd_xi4[n + off].x;
-	b_pos[d] = cmprts->blockPosition(xi[d], d);
-	if (b_pos[d] < 0 || b_pos[d] >= b_mx_[d]) {
-	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
-	  printf("!!! d %d xi4[n] %g biy %d // %d\n",
-		 d, xi[d], b_pos[d], b_mx_[d]);
-	  if (b_pos[d] < 0) {
-	    xi[d] = 0.f;
-	  } else {
-	    xi[d] *= (1. - 1e-6);
-	  }
-	  b_pos[d] = cmprts->blockPosition(xi[d], d);
-	  assert(b_pos[d] >= 0 && b_pos[d] < b_mx_[d]);
-	}
-      }
+      h_bnd_xi4[n + off].x  = prt.xi;
+      h_bnd_xi4[n + off].y  = prt.yi;
+      h_bnd_xi4[n + off].z  = prt.zi;
+      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt.kind_);
+      h_bnd_pxi4[n + off].x = prt.pxi;
+      h_bnd_pxi4[n + off].y = prt.pyi;
+      h_bnd_pxi4[n + off].z = prt.pzi;
+      h_bnd_pxi4[n + off].w = prt.qni_wni_;
+
+      pi_.checkInPatchMod(&h_bnd_xi4[n + off].x);
+      Int3 b_pos = pi_.blockPosition(&h_bnd_xi4[n + off].x);
       uint b = get_bidx(b_pos, p);
       assert(b < n_blocks);
       h_bnd_idx[n + off] = b;
