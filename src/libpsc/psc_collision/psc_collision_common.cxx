@@ -88,7 +88,7 @@ calc_stats(struct psc_collision_stats *stats, real_t *nudts, int cnt)
 // find_cell_index
 
 static inline int
-find_cell_index(mparticles_t::patch_t prts, particle_t *prt, int ldims[3])
+find_cell_index(mparticles_t::patch_t& prts, particle_t *prt, int ldims[3])
 {
   int pos[3];
   real_t *xi = &prt->xi;
