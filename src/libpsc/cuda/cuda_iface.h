@@ -77,7 +77,6 @@ struct psc_mparticles_cuda
   static void copy_to_double(struct psc_mparticles *mprts_cuda,
 			     struct psc_mparticles *mprts, uint flags);
   
-  const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
   
   cuda_mparticles* cmprts() { return cmprts_; }

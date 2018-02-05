@@ -427,14 +427,6 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 }
 
 // ----------------------------------------------------------------------
-// patch_get_b_dxi
-
-const particle_cuda_real_t* cuda_mparticles::patch_get_b_dxi(int p)
-{
-  return b_dxi_;
-}
-
-// ----------------------------------------------------------------------
 // patch_get_b_mx
 
 const int* cuda_mparticles::patch_get_b_mx(int p)

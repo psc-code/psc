@@ -56,7 +56,6 @@ struct cuda_mparticles : cuda_mparticles_base
   uint get_n_prts();
   void setup_internals();
   void inject(const cuda_mparticles_prt *buf, uint *buf_n_by_patch);
-  const particle_cuda_real_t *patch_get_b_dxi(int p);
   const int *patch_get_b_mx(int p);
 
   template<typename F>

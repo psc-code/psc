@@ -180,7 +180,6 @@ struct mparticles_patch_base
   Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     
   const int* get_b_mx() const { return b_mx; }
-  const real_t* get_b_dxi() const { return pi_.b_dxi_; }
 };
 
 template<typename P>

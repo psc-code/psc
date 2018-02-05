@@ -35,11 +35,6 @@ struct mparticles_cuda_t : mparticles_base<psc_mparticles_cuda>
   
     const int* get_b_mx() const;
 
-    const real_t* get_b_dxi() const
-    {
-      return pi_.b_dxi_;
-    }
-    
   private:
     mparticles_cuda_t& mp_;
     int p_;

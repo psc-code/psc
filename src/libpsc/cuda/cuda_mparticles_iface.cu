@@ -86,11 +86,6 @@ void psc_mparticles_cuda::inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
   cmprts_->inject(buf, buf_n_by_patch);
 }
 
-const particle_cuda_real_t* psc_mparticles_cuda::patch_get_b_dxi(int p)
-{
-  return cmprts_->patch_get_b_dxi(p);
-}
-
 const int* psc_mparticles_cuda::patch_get_b_mx(int p)
 {
   return cmprts_->patch_get_b_mx(p);
