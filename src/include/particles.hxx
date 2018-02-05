@@ -97,6 +97,25 @@ struct ParticleIndexer
     return idx;
   }
 
+  void checkInPatchMod(Real3 xi) const
+  {
+    for (int d = 0; d < 3; d++) {
+      int bpos = blockPosition(xi[d], d);
+      if (bpos < 0 || bpos >= b_mx_[d]) {
+	printf("checkInPatchMod xi %g %g %g\n", xi[0], xi[1], xi[2]);
+	printf("checkInPatchMod d %d xi %g bpos %d // %d\n",
+	       d, xi[d], bpos, b_mx_[d]);
+	if (bpos < 0) {
+	  xi[d] = 0.f;
+	} else {
+	  xi[d] *= (1. - 1e-6);
+	}
+	bpos = blockPosition(xi[d], d);
+      }
+      assert(bpos >= 0 && bpos < b_mx_[d]);
+    }
+  } 
+  
   //private:
   Real3 dxi_;
   Real3 b_dxi_;
@@ -215,22 +234,7 @@ struct mparticles_patch_base
 
   void push_back(particle_t& prt) // FIXME, should this be const?
   {
-    for (int d = 0; d < 3; d++) {
-      int bi = blockPosition((&prt.xi)[d], d);
-      if (bi < 0 || bi >= pi_.b_mx_[d]) {
-	printf("XXX xi %g %g %g\n", prt.xi, prt.yi, prt.zi);
-	printf("XXX d %d xi4[n] %g biy %d // %d\n",
-	       d, (&prt.xi)[d], bi, pi_.b_mx_[d]);
-	if (bi < 0) {
-	  (&prt.xi)[d] = 0.f;
-	} else {
-	  (&prt.xi)[d] *= (1. - 1e-6);
-	}
-	bi = blockPosition((&prt.xi)[d], d);
-      }
-      assert(bi >= 0 && bi < pi_.b_mx_[d]);
-    }
-    
+    checkInPatchMod(prt);
     buf.push_back(prt);
   }
 
@@ -245,9 +249,11 @@ struct mparticles_patch_base
     return buf;
   }
 
+  // ParticleIndexer functionality
   int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
   int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
   Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
+  void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(&prt.xi); }
     
   const int* get_b_mx() const { return pi_.b_mx_; }
 };
