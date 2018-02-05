@@ -141,6 +141,7 @@ struct psc_domain {
   double corner[3];
   int gdims[3];		///<Number of grid-points in each dimension
   int np[3];		///<Number of patches in each dimension
+  int bs[3];
   int bnd_fld_lo[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
   int bnd_fld_hi[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
   int bnd_part_lo[3];	///<Boundary conditions of the particles. Can be any value of BND_PART.

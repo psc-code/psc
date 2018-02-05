@@ -80,6 +80,7 @@ static struct param psc_descr[] = {
   { "np_x"	    , VAR(domain.np[0])	          , PARAM_INT(1)	 },
   { "np_y"	    , VAR(domain.np[1])	          , PARAM_INT(1)	 },
   { "np_z"	    , VAR(domain.np[2])	          , PARAM_INT(1)	 },
+  { "bs"            , VAR(domain.bs)              , PARAM_INT3(1, 1, 1)  },
 
   { "bnd_field_lo_x", VAR(domain.bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
@@ -411,7 +412,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   }
 
   for (int d = 0; d < 3; d++) {
-    grid.bs[d] = grid.gdims[d] == 1 ? 1 : 4;
+    grid.bs[d] = grid.gdims[d] == 1 ? 1 : psc->domain.bs[d];
   }
 }
 
