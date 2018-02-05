@@ -22,7 +22,7 @@ void cuda_mparticles::reorder_and_offsets_slow()
     if (i < n_prts) {
       h_alt_xi4[i] = h_xi4[h_id[i]];
       h_alt_pxi4[i] = h_pxi4[h_id[i]];
-      //bidx = get_block_idx(cmprts, h_alt_xi4[i], 0);
+      //bidx = blockIndex(h_alt_xi4[i], 0);
       block = h_bidx[i];
     } else {
       //bidx = n_blocks;

@@ -33,9 +33,9 @@ struct cuda_mparticles_indexer
     return p * n_blocks_per_patch + bidx;
   }
 
-  int blockIndex(const real_t* pos, int p)
+  int blockIndex(const float4& xi4, int p)
   {
-    Int3 bpos = pi_.blockPosition(pos);
+    Int3 bpos = pi_.blockPosition(&xi4.x);
     return blockIndex(bpos, p);
   }
 

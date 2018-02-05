@@ -13,7 +13,7 @@ bool cuda_mparticles::check_in_patch_unordered_slow()
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(d_xi4[off + n], p);
+      int bidx = blockIndex(d_xi4[off + n], p);
       if (!(bidx >= 0 && bidx <= n_blocks)) return false;
     }
     off += n_prts_by_patch[p];
@@ -38,7 +38,7 @@ bool cuda_mparticles::check_bidx_id_unordered_slow()
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(d_xi4[off + n], p);
+      int bidx = blockIndex(d_xi4[off + n], p);
       if (!(bidx == d_bidx[off+n])) return false;
       if (!(off+n == d_id[off+n])) return false;
     }
@@ -75,7 +75,7 @@ bool cuda_mparticles::check_ordered()
       } else {
 	xi4 = h_xi4[n];
       }
-      uint bidx = get_block_idx(xi4, p);
+      uint bidx = blockIndex(xi4, p);
       //printf("check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",

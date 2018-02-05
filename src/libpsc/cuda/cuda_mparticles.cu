@@ -129,14 +129,6 @@ cuda_params2_free(struct cuda_params2 *prm)
 #define THREADS_PER_BLOCK 256
 
 // ----------------------------------------------------------------------
-// get_block_idx
-
-int cuda_mparticles::get_block_idx(float4 xi4, int p)
-{
-  return blockIndex(&xi4.x, p);
-}
-
-// ----------------------------------------------------------------------
 // k_find_block_indices_ids
 
 __global__ static void
@@ -384,7 +376,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
       pxi4->z = prt->pxi[2];
       pxi4->w = prt->qni_wni;
 
-      h_bidx[off + n] = get_block_idx(*xi4, p);
+      h_bidx[off + n] = blockIndex(*xi4, p);
       h_id[off + n] = n_prts + off + n;
     }
     off += buf_n_by_patch[p];

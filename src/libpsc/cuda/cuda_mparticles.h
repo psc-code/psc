@@ -75,7 +75,6 @@ public:
   void reorder();
   void reorder_and_offsets();
   void reorder_and_offsets_slow();
-  int get_block_idx(float4 xi4, int p);
   void swap_alt();
 
   bool check_in_patch_unordered_slow();
@@ -165,7 +164,7 @@ void cuda_mparticles::get_particles(uint p, F setter)
     setter(n, prt);
 
 #if 0
-    uint b = get_block_idx(xi4[n], p);
+    uint b = blockIndex(xi4[n], p);
     assert(b < n_blocks);
 #endif
   }
