@@ -6,22 +6,16 @@ using real_t = mparticles_t::real_t;
 
 static mparticles_t::patch_t *s_prts;
 
-static inline int
-get_cell_index(int p, const particle_t *part)
-{
-  int cidx = s_prts->pi_.cellIndex(&part->xi);
-  assert(cidx >= 0);
-  return cidx;
-}
-
 static int
 compare(const void *_a, const void *_b)
 {
   const particle_t *a = (const particle_t *) _a, *b = (const particle_t *) _b;
 
-  if (get_cell_index(0, a) < get_cell_index(0, b)) {
+  int cni_a = s_prts->validCellIndex(*a);
+  int cni_b = s_prts->validCellIndex(*b);
+  if (cni_a < cni_b) {
     return -1;
-  } else if (get_cell_index(0, a) == get_cell_index(0, b)) {
+  } else if (cni_a == cni_b) {
     return 0;
   } else {
     return 1;
@@ -63,28 +57,22 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 
   prof_start(pr);
   for (int p = 0; p < mprts.n_patches(); p++) {
-    struct psc_patch *patch = &ppsc->patch[p];
     mparticles_t::patch_t& prts = mprts[p];
-    s_prts = &prts;
     unsigned int n_prts = prts.size();
-    
-    int N = 1;
-    for (int d = 0; d < 3; d++) {
-      N *= patch->ldims[d] + 2 * ppsc->ibn[d];
-    }
-    unsigned int *cnts = (unsigned int *) malloc(N * sizeof(*cnts));
-    memset(cnts, 0, N * sizeof(*cnts));
+
+    unsigned int n_cells = prts.pi_.n_cells_;
+    unsigned int *cnts = (unsigned int *) malloc(n_cells * sizeof(*cnts));
+    memset(cnts, 0, n_cells * sizeof(*cnts));
     
     // count
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      unsigned int cni = get_cell_index(p, &*prt_iter);
-      assert(cni < N);
+      int cni = prts.validCellIndex(*prt_iter);
       cnts[cni]++;
     }
     
     // calc offsets
     int cur = 0;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < n_cells; i++) {
       int n = cnts[i];
       cnts[i] = cur;
     cur += n;
@@ -94,7 +82,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     // move into new position
     particle_t *particles2 = (particle_t *) malloc(n_prts * sizeof(*particles2));
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      unsigned int cni = get_cell_index(0, &*prt_iter);
+      unsigned int cni = prts.validCellIndex(*prt_iter);
       memcpy(&particles2[cnts[cni]], &*prt_iter, sizeof(*particles2));
       cnts[cni]++;
     }
@@ -150,7 +138,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     // FIXME, might as well merge counting here, too
     int i = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
-      int cni = prts.cellIndex(*prt_iter);
+      int cni = prts.validCellIndex(*prt_iter);
       assert(cni >= 0);
       cnis[i] = cni;
     }
