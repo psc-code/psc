@@ -116,7 +116,7 @@ static void
 cuda_params2_set(struct cuda_params2 *prm, const struct cuda_mparticles *cuda_mprts)
 {
   for (int d = 0; d < 3; d++) {
-    prm->b_mx[d]  = cuda_mprts->b_mx_[d];
+    prm->b_mx[d]  = cuda_mprts->pi_.b_mx_[d];
     prm->b_dxi[d] = cuda_mprts->pi_.b_dxi_[d];
   }
 }
@@ -431,7 +431,7 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 
 const int* cuda_mparticles::patch_get_b_mx(int p)
 {
-  return b_mx_;
+  return pi_.b_mx_;
 }
 
 #include "cuda_mparticles_gold.cu"

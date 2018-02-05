@@ -117,22 +117,7 @@ void cuda_mparticles::set_particles(uint p, F getter)
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
-
-    for (int d = 0; d < 3; d++) {
-      int bi = blockPosition(prt.xi[d], d);
-      if (bi < 0 || bi >= b_mx_[d]) {
-	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
-	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
-	       n, d, prt.xi[d], bi, b_mx_[d]);
-	if (bi < 0) {
-	  prt.xi[d] = 0.f;
-	} else {
-	  prt.xi[d] *= (1. - 1e-6);
-	}
-      }
-      bi = blockPosition(prt.xi[d], d);
-      assert(bi >= 0 && bi < b_mx_[d]);
-    }
+    pi_.checkInPatchMod(prt.xi);
 
     xi4[n].x  = prt.xi[0];
     xi4[n].y  = prt.xi[1];

@@ -17,12 +17,8 @@ struct cuda_mparticles_indexer
   cuda_mparticles_indexer(const Grid_t& grid)
     : pi_(grid)
   {
+    b_mx_ = pi_.b_mx_;
     n_patches = grid.patches.size();
-    for (int d = 0; d < 3; d++) {
-      assert(grid.ldims[d] % grid.bs[d] == 0);
-      b_mx_[d] = grid.ldims[d] / grid.bs[d];
-    }
-
     n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
     n_blocks = n_patches * n_blocks_per_patch;
   }
