@@ -150,7 +150,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     // FIXME, might as well merge counting here, too
     int i = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
-      int cni = prts.pi_.cellIndex(&prt_iter->xi);
+      int cni = prts.cellIndex(*prt_iter);
       assert(cni >= 0);
       cnis[i] = cni;
     }

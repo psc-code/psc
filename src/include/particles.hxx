@@ -299,6 +299,8 @@ struct mparticles_patch_base
 
   // ParticleIndexer functionality
   int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
+  int cellIndex(const particle_t& prt) const { return pi_.cellIndex(&prt.xi); }
+
   int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
   Int3 blockPosition(const real_t* xi) const { return pi_.blockPosition(xi); }
   int blockIndex(const real_t* xi) const { return pi_.blockIndex(xi); }
