@@ -74,6 +74,10 @@ struct Grid_
     dx = length / Real3(gdims);
 
     patches.emplace_back(Patch({ 0., 0., 0.}, length));
+
+    for (int d = 0; d < 3; d++) {
+      assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
+    }
   }
   
   Grid_(const Grid_& grid) = delete;

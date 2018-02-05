@@ -74,7 +74,8 @@ struct ParticleIndexer
 
   ParticleIndexer(const Grid_t& grid)
     : dxi_(Real3(1.) / Real3(grid.dx)),
-      b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.dx)))
+      b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.dx))),
+      b_mx_(grid.ldims / grid.bs)
   {}
 
   int cellPosition(real_t x, int d) const
@@ -99,6 +100,7 @@ struct ParticleIndexer
   //private:
   Real3 dxi_;
   Real3 b_dxi_;
+  UInt3 b_mx_;
 };
 
 // ======================================================================
