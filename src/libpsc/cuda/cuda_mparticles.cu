@@ -136,7 +136,7 @@ int cuda_mparticles::get_block_idx(float4 xi4, int p)
   int bpos_y = blockPosition(xi4.y, 1);
   int bpos_z = blockPosition(xi4.z, 2);
 
-  return get_bidx({0, bpos_y, bpos_z}, p);
+  return blockIndex({0, bpos_y, bpos_z}, p);
 }
 
 // ----------------------------------------------------------------------

@@ -23,7 +23,7 @@ struct cuda_mparticles_indexer
     n_blocks = n_patches * n_blocks_per_patch;
   }
 
-  int get_bidx(Int3 bpos, int p)
+  int blockIndex(Int3 bpos, int p)
   {
     int bidx = pi_.blockIndex(bpos);
     if (bidx < 0) {
