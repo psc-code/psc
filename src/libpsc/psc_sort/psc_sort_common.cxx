@@ -4,24 +4,14 @@ using real_t = mparticles_t::real_t;
 // ======================================================================
 // quicksort
 
+static mparticles_t::patch_t *s_prts;
+
 static inline int
 get_cell_index(int p, const particle_t *part)
 {
-  Grid_t& grid = ppsc->grid;
-  real_t dxi = 1.f / grid.dx[0];
-  real_t dyi = 1.f / grid.dx[1];
-  real_t dzi = 1.f / grid.dx[2];
-  int *ldims = grid.ldims;
-  int *ibn = ppsc->ibn;
-  
-  real_t u = part->xi * dxi;
-  real_t v = part->yi * dyi;
-  real_t w = part->zi * dzi;
-  int j0 = nint(u) + ibn[0];
-  int j1 = nint(v) + ibn[1];
-  int j2 = nint(w) + ibn[2];
-    
-  return ((j2) * (ldims[1] + 2*ibn[1]) + j1) * (ldims[0] + 2*ibn[0]) + j0;
+  int cidx = s_prts->pi_.cellIndex(&part->xi);
+  assert(cidx >= 0);
+  return cidx;
 }
 
 static int
@@ -41,6 +31,7 @@ compare(const void *_a, const void *_b)
 static void
 psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 {
+  // FIXME, using a C++ sort would be much nicer...
   static int pr;
   if (!pr) {
     pr = prof_register("qsort_sort", 1., 0, 0);
@@ -49,8 +40,8 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 
   prof_start(pr);
   for (int p = 0; p < mprts.n_patches(); p++) {
-    mparticles_t::patch_t& prts = mprts[p];
-    qsort(&*prts.begin(), prts.size(), sizeof(*prts.begin()), compare);
+    s_prts = &mprts[p];
+    qsort(&*s_prts->begin(), s_prts->size(), sizeof(*s_prts->begin()), compare);
   }
   prof_stop(pr);
 
@@ -74,6 +65,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   for (int p = 0; p < mprts.n_patches(); p++) {
     struct psc_patch *patch = &ppsc->patch[p];
     mparticles_t::patch_t& prts = mprts[p];
+    s_prts = &prts;
     unsigned int n_prts = prts.size();
     
     int N = 1;
