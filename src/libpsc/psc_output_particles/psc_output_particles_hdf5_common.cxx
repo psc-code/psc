@@ -112,7 +112,7 @@ cell_index_3_to_1(int *ldims, int j0, int j1, int j2)
 }
 
 static inline int
-get_sort_index(mparticles_t::patch_t prts, particle_t *part)
+get_sort_index(mparticles_t::patch_t& prts, particle_t *part)
 {
   Grid_t& grid = ppsc->grid;
   int *ldims = grid.ldims;
