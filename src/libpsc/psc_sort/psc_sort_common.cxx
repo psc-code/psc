@@ -133,8 +133,6 @@ static struct param psc_sort_countsort2_descr[] = {
 static void
 psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 {
-  struct psc_sort_countsort2 *cs2 = mrc_to_subobj(sort, struct psc_sort_countsort2);
-
   static int pr;
   if (!pr) {
     pr = prof_register("countsort2_sort", 1., 0, 0);
@@ -143,41 +141,22 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  const Grid_t& grid = ppsc->grid;
   for (int p = 0; p < mprts.n_patches(); p++) {
     mparticles_t::patch_t& prts = mprts[p];
     unsigned int n_prts = prts.size();
 
-    unsigned int mask = cs2->mask;
-    struct cell_map map;
-    int N = cell_map_init(&map, grid.ldims, cs2->blocksize);
-
+    unsigned int n_cells = prts.pi_.n_cells_;
     unsigned int *cnis = (unsigned int *) malloc(n_prts * sizeof(*cnis));
+    // FIXME, might as well merge counting here, too
     int i = 0;
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
-      particle_t *p = &*prt_iter;
-      int pos[3];
-      for (int d = 0; d < 3; d++) {
-	pos[d] = prts.cellPosition((&p->xi)[d], d);
-#if 1
-	if (pos[d] < 0 || pos[d] >= grid.ldims[d]) {
-	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",
-		 i, d, pos[d], grid.ldims[d],
-		 (&p->xi)[d], 1. / grid.dx[d]);
-	}
-#endif
-	if (pos[d] == grid.ldims[d]) {
-	  pos[d]--;
-	}
-      }
-      
-      cnis[i] = cell_map_3to1(&map, pos) & ~mask;
-      assert(cnis[i] < N);
+      int cni = prts.pi_.cellIndex(&prt_iter->xi);
+      assert(cni >= 0);
+      cnis[i] = cni;
     }
-    cell_map_free(&map);
     
-    unsigned int *cnts = (unsigned int *) malloc(N * sizeof(*cnts));
-    memset(cnts, 0, N * sizeof(*cnts));
+    unsigned int *cnts = (unsigned int *) malloc(n_cells * sizeof(*cnts));
+    memset(cnts, 0, n_cells * sizeof(*cnts));
     
     // count
     for (int i = 0; i < n_prts; i++) {
@@ -187,7 +166,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     
     // calc offsets
     int cur = 0;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < n_cells; i++) {
       int n = cnts[i];
       cnts[i] = cur;
       cur += n;
