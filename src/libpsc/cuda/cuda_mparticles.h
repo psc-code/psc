@@ -29,6 +29,8 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
+  int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
+
   // protected:
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
@@ -117,7 +119,7 @@ void cuda_mparticles::set_particles(uint p, F getter)
     struct cuda_mparticles_prt prt = getter(n);
 
     for (int d = 0; d < 3; d++) {
-      int bi = fint(prt.xi[d] * b_dxi_[d]);
+      int bi = blockPosition(prt.xi[d], d);
       if (bi < 0 || bi >= b_mx_[d]) {
 	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
 	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
@@ -128,7 +130,7 @@ void cuda_mparticles::set_particles(uint p, F getter)
 	  prt.xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = floorf(prt.xi[d] * b_dxi_[d]);
+      bi = blockPosition(prt.xi[d], d);
       assert(bi >= 0 && bi < b_mx_[d]);
     }
 
