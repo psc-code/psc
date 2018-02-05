@@ -21,7 +21,7 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
   mparticles_patch(psc_mparticles_<particle_single_t>* mprts, int p)
     : Base(mprts, p)
   {
-    nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
+    nr_blocks = pi_.b_mx_[0] * pi_.b_mx_[1] * pi_.b_mx_[2];
     b_cnt = (unsigned int *) calloc(nr_blocks + 1, sizeof(*b_cnt));
   }
 

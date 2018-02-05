@@ -20,7 +20,7 @@ struct bnd_particles_policy_ordered
     typename mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
 
     unsigned int n_prts = prts.size();
-    int *b_mx = prts.b_mx;
+    int *b_mx = prts.pi_.b_mx_;
     for (int i = off; i < n_prts; i++) {
       particle_t *part = &prts[i];
       Int3 b_pos = prts.blockPosition(&part->xi);

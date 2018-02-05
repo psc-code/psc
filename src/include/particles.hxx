@@ -100,7 +100,7 @@ struct ParticleIndexer
   //private:
   Real3 dxi_;
   Real3 b_dxi_;
-  UInt3 b_mx_;
+  Int3 b_mx_;
 };
 
 // ======================================================================
@@ -191,7 +191,6 @@ struct mparticles_patch_base
   
   buf_t buf;
 
-  int b_mx[3];
   ParticleIndexer<real_t> pi_;
 
   psc_mparticles_<P>* mprts;
@@ -206,14 +205,7 @@ struct mparticles_patch_base
     : pi_(_mprts->grid_),
       mprts(_mprts),
       p(_p)
-  {
-    const Grid_t& grid = mprts->grid_;
-    
-    for (int d = 0; d < 3; d++) {
-      assert(grid.ldims[d] % grid.bs[d] == 0);
-      b_mx[d] = grid.ldims[d] / grid.bs[d];
-    }
-  }
+  {}
 
   particle_t& operator[](int n) { return buf[n]; }
   iterator begin() { return buf.begin(); }
@@ -225,10 +217,10 @@ struct mparticles_patch_base
   {
     for (int d = 0; d < 3; d++) {
       int bi = blockPosition((&prt.xi)[d], d);
-      if (bi < 0 || bi >= b_mx[d]) {
+      if (bi < 0 || bi >= pi_.b_mx_[d]) {
 	printf("XXX xi %g %g %g\n", prt.xi, prt.yi, prt.zi);
 	printf("XXX d %d xi4[n] %g biy %d // %d\n",
-	       d, (&prt.xi)[d], bi, b_mx[d]);
+	       d, (&prt.xi)[d], bi, pi_.b_mx_[d]);
 	if (bi < 0) {
 	  (&prt.xi)[d] = 0.f;
 	} else {
@@ -236,7 +228,7 @@ struct mparticles_patch_base
 	}
 	bi = blockPosition((&prt.xi)[d], d);
       }
-      assert(bi >= 0 && bi < b_mx[d]);
+      assert(bi >= 0 && bi < pi_.b_mx_[d]);
     }
     
     buf.push_back(prt);
@@ -257,7 +249,7 @@ struct mparticles_patch_base
   int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
   Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     
-  const int* get_b_mx() const { return b_mx; }
+  const int* get_b_mx() const { return pi_.b_mx_; }
 };
 
 template<typename P>

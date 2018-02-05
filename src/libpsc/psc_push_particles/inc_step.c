@@ -42,7 +42,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
   mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
   unsigned int n_prts = prts.size();
   /* FIXME, only if blocksize == 1! */
-  int *b_mx = prts.b_mx;
+  int *b_mx = prts.pi_.b_mx_;
   if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
       b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
     prts.b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
