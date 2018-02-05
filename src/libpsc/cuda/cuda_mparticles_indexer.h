@@ -21,7 +21,6 @@ struct cuda_mparticles_indexer
     for (int d = 0; d < 3; d++) {
       assert(grid.ldims[d] % grid.bs[d] == 0);
       b_mx_[d] = grid.ldims[d] / grid.bs[d];
-      b_dxi_[d] = 1.f / (grid.bs[d] * grid.dx[d]);
     }
 
     n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
@@ -48,7 +47,6 @@ struct cuda_mparticles_indexer
   uint n_blocks_per_patch;       // number of blocks per patch
   uint n_blocks;                 // number of blocks in all patches in mprts
   Int3 b_mx_;                    // number of blocks per direction in each patch
-  Real3 b_dxi_;                  // inverse of block size (in actual length units)
   ParticleIndexer<real_t> pi_;
 };
 

@@ -117,7 +117,7 @@ cuda_params2_set(struct cuda_params2 *prm, const struct cuda_mparticles *cuda_mp
 {
   for (int d = 0; d < 3; d++) {
     prm->b_mx[d]  = cuda_mprts->b_mx_[d];
-    prm->b_dxi[d] = cuda_mprts->b_dxi_[d];
+    prm->b_dxi[d] = cuda_mprts->pi_.b_dxi_[d];
   }
 }
 
