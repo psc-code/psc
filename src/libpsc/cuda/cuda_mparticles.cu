@@ -133,8 +133,7 @@ cuda_params2_free(struct cuda_params2 *prm)
 
 int cuda_mparticles::get_block_idx(float4 xi4, int p)
 {
-  Int3 bpos = pi_.blockPosition(&xi4.x);
-  return blockIndex(bpos, p);
+  return blockIndex(&xi4.x, p);
 }
 
 // ----------------------------------------------------------------------

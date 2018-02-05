@@ -33,6 +33,12 @@ struct cuda_mparticles_indexer
     return p * n_blocks_per_patch + bidx;
   }
 
+  int blockIndex(const real_t* pos, int p)
+  {
+    Int3 bpos = pi_.blockPosition(pos);
+    return blockIndex(bpos, p);
+  }
+
   uint n_patches;                // number of patches
   uint n_blocks_per_patch;       // number of blocks per patch
   uint n_blocks;                 // number of blocks in all patches in mprts
