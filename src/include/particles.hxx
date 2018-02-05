@@ -8,6 +8,61 @@
 
 #include <vector>
 
+
+// ======================================================================
+// Particle positions in cell / patch
+
+// Particle positions are stored as patch-relative positions, however,
+// it is required to know the exact cell a particle is in in a number of places:
+// - for performance sorting particles
+// - for keeping particles sorted in, e.g., the CUDA particle pusher
+// - for finding the appropriate EM fields to interpolate
+// - for correctly depositing currents
+// - for collisions
+//
+// The goal here is to establish rules / invariants of the position of
+// particles to where (in which patch) they are stored and how to
+// recover the cell they are in.
+//
+// To complicate things, there are currently two aspects to this: Cell
+// position and block position, where the former refers to the
+// computational mesh that E, B and J live on, whereas a block refers
+// to a fixed-size super-cell (e.g., 4x4x4 cells), motivated by
+// performance considerations. It is currently not necessarily clear
+// that the calculated block indices and cell indices satisfy the
+// anticipated relation (bpos[d] = cpos[d] / bs[d]) because of potential
+// finite precision arithmetic
+//
+// Rules / invariants:
+//
+// for all particles in a given patch,
+// (1) the cell position cpos
+//     calculated in a given dimension d will satisfy 0 <= cpos < ldims[d]
+// (2) the patch relative position xi satisfies
+//     0 <= xi <= xm[d] = ldims[d] * dx[d]
+//     with the equality at the upper limit only being allowed at a right/top
+//     non-periodic boundary
+//
+// These invariants will be temporarily violated after the particle push, but will
+// be restored by the bnd exchange.
+//
+// Tricky issues to deal with:
+// - (1) and (2) should be closely related, but finite precision
+//   arithmetic can cause surprises.
+//
+//   E.g.: dx = 1 ldims = 100. Particle ends up at position -1e-7. It
+//   gets sent to the left, where it's new position will be -1e-7 +
+//   100., which is actually = 100. (in single precision), meaning that
+//   particle violates (1) and (2) in its new patch.
+//
+// - Calculating cpos correctly when legally xi == ldims[d] * xi[d] at a right boundary
+//
+// TODO:
+// - have cell index be the primary quantity computed, always, and find
+//   block index from that
+// - boundary exchange should be based on cell, not block index
+//   (though if the two indices are always consistent, it becomes a non-issue)
+
 // ======================================================================
 // ParticleIndexer
 
