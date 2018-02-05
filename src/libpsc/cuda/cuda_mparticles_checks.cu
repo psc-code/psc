@@ -80,8 +80,8 @@ bool cuda_mparticles::check_ordered()
       if (b != bidx) {
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
-	uint block_pos_y = (int) floorf(xi4.y * b_dxi_[1]);
-	uint block_pos_z = (int) floorf(xi4.z * b_dxi_[2]);
+	uint block_pos_y = blockPosition(xi4.y, 1);
+	uint block_pos_z = blockPosition(xi4.z, 2);
 	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * b_dxi_[1],
 	       xi4.z * b_dxi_[2]);
       }

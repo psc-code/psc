@@ -65,8 +65,8 @@ get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
   int *b_mx = cmprts->b_mx;
   
   float4 xi4 = d_xi4[n];
-  uint block_pos_y = (int) floor(xi4.y * b_dxi[1]);
-  uint block_pos_z = (int) floor(xi4.z * b_dxi[2]);
+  uint block_pos_y = cmprts->blockPosition(xi4.y, 1);
+  uint block_pos_z = cmprts->blockPosition(xi4.z, 2);
 
   int bidx;
   if (block_pos_y >= b_mx[1] || block_pos_z >= b_mx[2]) {
