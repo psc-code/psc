@@ -97,9 +97,8 @@ struct ParticleIndexer
     return idx;
   }
 
-  int blockIndex(const real_t* pos) const
+  int blockIndex(const Int3& bpos) const
   {
-    Int3 bpos = blockPosition(pos);
     if (uint(bpos[0]) >= b_mx_[0] ||
 	uint(bpos[1]) >= b_mx_[1] ||
 	uint(bpos[2]) >= b_mx_[2]) {
@@ -107,6 +106,12 @@ struct ParticleIndexer
     } else {
       return (bpos[2] * b_mx_[1] + bpos[1]) * b_mx_[0] + bpos[0];
     }
+  }
+  
+  int blockIndex(const real_t* pos) const
+  {
+    Int3 bpos = blockPosition(pos);
+    return blockIndex(bpos);
   }
 
   void checkInPatchMod(real_t* pos) const
