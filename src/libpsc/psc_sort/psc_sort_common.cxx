@@ -24,29 +24,6 @@ get_cell_index(int p, const particle_t *part)
   return ((j2) * (ldims[1] + 2*ibn[1]) + j1) * (ldims[0] + 2*ibn[0]) + j0;
 }
 
-static inline int
-get_cell_index_2x2x2(int p, const particle_t *part)
-{
-  Grid_t& grid = ppsc->grid;
-  real_t dxi = 1.f / grid.dx[0];
-  real_t dyi = 1.f / grid.dx[1];
-  real_t dzi = 1.f / grid.dx[2];
-  int *ldims = grid.ldims;
-  int ibn[3] = { 2, 2, 2 }; // must be divisible by 2
-  
-  real_t u = part->xi * dxi;
-  real_t v = part->yi * dyi;
-  real_t w = part->zi * dzi;
-  int j0 = nint(u) + ibn[0];
-  int j1 = nint(v) + ibn[1];
-  int j2 = nint(w) + ibn[2];
-    
-  return ((((j2 >> 1) * (ldims[1] + 2*ibn[1]) +
-	   (j1 >> 1)) * (ldims[0] + 2*ibn[0]) +
-	   (j0 >> 1)) << 0);// | ((j2 & 1) << 2) | ((j1 & 1) << 1) | (j0 & 1);
-}
-
-
 static int
 compare(const void *_a, const void *_b)
 {
