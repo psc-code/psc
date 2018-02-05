@@ -14,8 +14,6 @@ struct cuda_mparticles_indexer
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
 
-  cuda_mparticles_indexer() = default; // FIXME, should go away
-
   cuda_mparticles_indexer(const Grid_t& grid)
   {
     n_patches = grid.patches.size();

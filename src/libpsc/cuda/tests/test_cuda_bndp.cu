@@ -78,8 +78,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
     cmprts->dump();
 #endif
 
-    cbndp.reset(new cuda_bndp());
-    cbndp->setup(*grid);
+    cbndp.reset(new cuda_bndp(*grid));
   }
 };
 

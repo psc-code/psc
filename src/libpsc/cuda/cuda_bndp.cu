@@ -29,14 +29,11 @@
 #include <cassert>
 
 // ----------------------------------------------------------------------
-// setup
+// ctor
 
-void cuda_bndp::setup(Grid_t& grid)
+cuda_bndp::cuda_bndp(Grid_t& grid)
+  : cuda_mparticles_indexer(grid)
 {
-  // FIXME, in the ctor this would be much less hacky
-  *static_cast<cuda_mparticles_indexer*>(this) =
-    cuda_mparticles_indexer(grid);
-  
   d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
   d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
