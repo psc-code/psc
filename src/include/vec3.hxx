@@ -107,7 +107,7 @@ Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w) {
 }
   
 using Int3 = Vec3<int>;
-using UInt3 = Vec3<uint>;
+using UInt3 = Vec3<unsigned int>;
 
 #endif
 
