@@ -218,7 +218,27 @@ struct mparticles_patch_base
   iterator end() { return buf.end(); }
   unsigned int size() const { return buf.size(); }
   void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
-  void push_back(const particle_t& prt) { buf.push_back(prt); }
+
+  void push_back(particle_t& prt) // FIXME, should this be const?
+  {
+    for (int d = 0; d < 3; d++) {
+      int bi = blockPosition((&prt.xi)[d], d);
+      if (bi < 0 || bi >= b_mx[d]) {
+	printf("XXX xi %g %g %g\n", prt.xi, prt.yi, prt.zi);
+	printf("XXX d %d xi4[n] %g biy %d // %d\n",
+	       d, (&prt.xi)[d], bi, b_mx[d]);
+	if (bi < 0) {
+	  (&prt.xi)[d] = 0.f;
+	} else {
+	  (&prt.xi)[d] *= (1. - 1e-6);
+	}
+	bi = blockPosition((&prt.xi)[d], d);
+      }
+      assert(bi >= 0 && bi < b_mx[d]);
+    }
+    
+    buf.push_back(prt);
+  }
 
   void resize(unsigned int new_size)
   {
