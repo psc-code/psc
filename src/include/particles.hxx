@@ -120,19 +120,6 @@ struct ParticleIndexer
     return (cpos[2] * ldims_[1] + cpos[1]) * ldims_[0] + cpos[0];
   }
   
-  int validCellIndex(const Int3& cpos) const
-  {
-    for (int d = 0; d < 3; d++) {
-      if (uint(cpos[d]) >= ldims_[d]) {
-	printf("validCellIndex: cpos[%d] = %d ldims_[%d] = %d\n",
-	       d, cpos[d], d, ldims_[d]);
-	assert(0);
-      }
-    }
-
-    return (cpos[2] * ldims_[1] + cpos[1]) * ldims_[0] + cpos[0];
-  }
-  
   int blockIndex(const Int3& bpos) const
   {
     if (uint(bpos[0]) >= b_mx_[0] ||
@@ -153,7 +140,14 @@ struct ParticleIndexer
   int validCellIndex(const real_t* pos) const
   {
     Int3 cpos = cellPosition(pos);
-    return validCellIndex(cpos);
+    for (int d = 0; d < 3; d++) {
+      if (uint(cpos[d]) >= ldims_[d]) {
+	printf("validCellIndex: cpos[%d] = %d ldims_[%d] = %d // pos[%d] = %g pos[%d]*dxi_[%d] = %g\n",
+	       d, cpos[d], d, ldims_[d], d, pos[d], d, d, pos[d] * dxi_[d]);
+	assert(0);
+      }
+    }
+    return cellIndex(cpos);
   }
 
   int blockIndex(const real_t* pos) const
