@@ -25,6 +25,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
   prof_start(pr_A);
   for (int p = 0; p < mprts_new->nr_patches; p++) {
+    mparticles_t(mprts_new)[p].reserve(nr_particles_by_patch_new[p]);
     mparticles_t(mprts_new)[p].resize(nr_particles_by_patch_new[p]);
   }
 
