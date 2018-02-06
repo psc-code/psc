@@ -313,6 +313,13 @@ struct mparticles_patch_base
     return buf;
   }
 
+  void check() const
+  {
+    for (auto& prt : buf) {
+      validCellIndex(prt);
+    }
+  }
+
   // ParticleIndexer functionality
   int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
   int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
@@ -354,6 +361,13 @@ struct psc_mparticles_
 
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
+
+  void check() const
+  {
+    for (auto& patch: patches_) {
+      patch.check();
+    }
+  }
   
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
   particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }

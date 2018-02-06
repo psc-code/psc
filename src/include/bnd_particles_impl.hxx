@@ -235,6 +235,8 @@ void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
   prof_start(pr_C);
   ddcp->comm();
   prof_stop(pr_C);
+
+  //mprts->check();
 }
 
 // ----------------------------------------------------------------------
