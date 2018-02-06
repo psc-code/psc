@@ -7,7 +7,8 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_collision.cxx \
 	psc_collision_none.cxx \
-	psc_collision_single.cxx
+	psc_collision_single.cxx \
+	psc_collision_double.cxx
 
 if USE_FORTRAN
 libsubdir_la_SOURCES += \

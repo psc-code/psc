@@ -118,8 +118,11 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_rho_2nd_nc_doubl
 extern struct psc_output_fields_item_ops psc_output_fields_item_v_1st_nc_single_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_v_1st_nc_double_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_n_photon_ops;
+
 extern struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_single_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_coll_rei_single_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_double_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_coll_rei_double_ops;
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_c_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_single_ops;
@@ -177,6 +180,8 @@ psc_output_fields_item_init()
 
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_coll_stats_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_coll_rei_single_ops);
+  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_coll_stats_double_ops);
+  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_coll_rei_double_ops);
 
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_dive_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_dive_single_ops);

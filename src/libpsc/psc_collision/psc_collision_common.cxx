@@ -6,6 +6,8 @@
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
+#include <cmath>
+
 using Fields = Fields3d<fields_t>;
 using real_t = mparticles_t::real_t;
 
@@ -208,8 +210,8 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   
 // determine absolute value of pre-collision momentum in cm-frame
     
-  p01=sqrt(m1*m1+px1*px1+py1*py1+pz1*pz1);
-  p02=sqrt(m2*m2+px2*px2+py2*py2+pz2*pz2);
+  p01=std::sqrt(m1*m1+px1*px1+py1*py1+pz1*pz1);
+  p02=std::sqrt(m2*m2+px2*px2+py2*py2+pz2*pz2);
   h1=p01*p02-px1*px2-py1*py2-pz1*pz2;
   ss=m1*m1+m2*m2+2.0*h1;
   h2=ss-m1*m1-m2*m2;
@@ -219,7 +221,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
 	    ss, (m1+m2)*(m1+m2));
     return 0.; // nudt = 0 because no collision
   }
-  ppc=sqrt(h3);
+  ppc=std::sqrt(h3);
   
   
 // determine cm-velocity
@@ -228,7 +230,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   vcy=(py1+py2)/(p01+p02);
   vcz=(pz1+pz2)/(p01+p02);
   
-  nnorm=sqrt(vcx*vcx+vcy*vcy+vcz*vcz);
+  nnorm=std::sqrt(vcx*vcx+vcy*vcy+vcz*vcz);
   if (nnorm>0.0) {
     nx=vcx/nnorm;
     ny=vcy/nnorm;
@@ -239,7 +241,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
     nz=0.0;
   }
   bet=nnorm;
-  gam=1.0/sqrt(1.0-bet*bet);
+  gam=1.0/std::sqrt(1.0-bet*bet);
   
   
 // determine pre-collision momenta in cm-frame
@@ -247,11 +249,11 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
       
   pn1=px1*nx+py1*ny+pz1*nz;
   pn2=px2*nx+py2*ny+pz2*nz;
-  pc01=sqrt(m1*m1+ppc*ppc);
+  pc01=std::sqrt(m1*m1+ppc*ppc);
   pcx1=px1+(gam-1.0)*pn1*nx-gam*vcx*p01;
   pcy1=py1+(gam-1.0)*pn1*ny-gam*vcy*p01;
   pcz1=pz1+(gam-1.0)*pn1*nz-gam*vcz*p01;
-  pc02=sqrt(m2*m2+ppc*ppc);
+  pc02=std::sqrt(m2*m2+ppc*ppc);
   pcx2=px2+(gam-1.0)*pn2*nx-gam*vcx*p02;
   pcy2=py2+(gam-1.0)*pn2*ny-gam*vcy*p02;
   pcz2=pz2+(gam-1.0)*pn2*nz-gam*vcz*p02;
@@ -260,8 +262,8 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
 //  introduce right-handed coordinate system
       
       
-  nn1=sqrt(pcx1*pcx1+pcy1*pcy1+pcz1*pcz1);
-  nn2=sqrt(pcx1*pcx1+pcy1*pcy1);
+  nn1=std::sqrt(pcx1*pcx1+pcy1*pcy1+pcz1*pcz1);
+  nn2=std::sqrt(pcx1*pcx1+pcy1*pcy1);
   nn3=nn1*nn2;
   
   if (nn2 != 0.0) {
@@ -305,7 +307,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   vcxr=vcn*(vcx1-vcx2);
   vcyr=vcn*(vcy1-vcy2);
   vczr=vcn*(vcz1-vcz2);
-  vcr = sqrt(vcxr*vcxr+vcyr*vcyr+vczr*vczr);
+  vcr = std::sqrt(vcxr*vcxr+vcyr*vcyr+vczr*vczr);
   if (vcr < 1.0e-20) {
     vcr=1.0e-20;
   }
@@ -328,7 +330,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
     return 0.; // nudt = 0 because no collision
   }
           
-  qqc=sqrt(h3);
+  qqc=std::sqrt(h3);
   m12=m1*m2/(m1+m2);
   q12=q1*q2;
     
@@ -345,7 +347,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   nu = 6.28318530717958623200 * ran1;
   
   if(nudt<1.0) {                   // small angle collision
-    psi=2.0*atan(sqrt(-0.5*nudt*log(1.0-ran2)));
+    psi=2.0*atan(std::sqrt(-0.5*nudt*log(1.0-ran2)));
   } else {
     psi=acos(1.0-2.0*ran2);          // isotropic angles
   }
@@ -357,12 +359,12 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   h3=sin(nu);
   h4=cos(nu);
   
-  pc03=sqrt(m3*m3+qqc*qqc);
+  pc03=std::sqrt(m3*m3+qqc*qqc);
   pcx3=qqc*(h1*nx1+h2*h3*nx2+h2*h4*nx3);
   pcy3=qqc*(h1*ny1+h2*h3*ny2+h2*h4*ny3);
   pcz3=qqc*(h1*nz1+h2*h3*nz2+h2*h4*nz3);
   
-  pc04=sqrt(m4*m4+qqc*qqc);
+  pc04=std::sqrt(m4*m4+qqc*qqc);
 //  c      pcx4=-qqc*(h1*nx1+h2*h3*nx2+h2*h4*nx3)
 //  c      pcy4=-qqc*(h1*ny1+h2*h3*ny2+h2*h4*ny3)
 //  c      pcz4=-qqc*(h1*nz1+h2*h3*nz2+h2*h4*nz3)
@@ -627,7 +629,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_collision *collision = ppsc->collision;
-  assert(psc_collision_ops(collision) == &psc_collision_single_ops);
+  assert(psc_collision_ops(collision) == &psc_collision_sub_ops);
 
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
@@ -646,7 +648,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
 struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
   psc_output_fields_item_ops_coll() {
-    name      = "coll_stats_" FIELDS_TYPE;
+    name      = "coll_stats_" PARTICLE_TYPE;
     nr_comp   = NR_STATS;
     fld_names[0] = "coll_nudt_min";
     fld_names[1] = "coll_nudt_med";
@@ -664,7 +666,7 @@ copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_collision *collision = ppsc->collision;
-  assert(psc_collision_ops(collision) == &psc_collision_single_ops);
+  assert(psc_collision_ops(collision) == &psc_collision_sub_ops);
 
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
@@ -683,7 +685,7 @@ copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
 struct psc_output_fields_item_ops_coll_rei : psc_output_fields_item_ops {
   psc_output_fields_item_ops_coll_rei() {
-    name      = "coll_rei_" FIELDS_TYPE;
+    name      = "coll_rei_" PARTICLE_TYPE;
     nr_comp   = 3;
     fld_names[0] = "coll_rei_x";
     fld_names[1] = "coll_rei_y";
