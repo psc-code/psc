@@ -147,7 +147,9 @@ struct ParticleIndexer
 	assert(0);
       }
     }
-    return cellIndex(cpos);
+    int cidx = cellIndex(cpos);
+    assert(cidx >= 0);
+    return cidx;
   }
 
   int blockIndex(const real_t* pos) const
