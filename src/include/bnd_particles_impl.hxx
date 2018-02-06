@@ -118,6 +118,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
+      mprts[p].validCellIndex(*prt);
       (*dpatch->m_buf)[head++] = *prt;
       continue;
     }
@@ -194,6 +195,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	mprts[p].validCellIndex(*prt);
 	(*dpatch->m_buf)[head++] = *prt;
       } else {
 	typename ddc_particles<mparticles_t>::dnei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
