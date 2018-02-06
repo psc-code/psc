@@ -295,9 +295,10 @@ struct mparticles_patch_base
   unsigned int size() const { return buf.size(); }
   void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
 
-  void push_back(particle_t& prt) // FIXME, should this be const?
+  void push_back(particle_t& prt) // FIXME, should particle_t be const?
   {
     checkInPatchMod(prt);
+    validCellIndex(prt);
     buf.push_back(prt);
   }
 
