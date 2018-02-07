@@ -208,7 +208,6 @@ k_fields_device_pack_yz(float *d_buf, DMFields d_flds, int mb, int gmy, int gmz,
     jz += gmz - B;
   }
   
-  // FIXME, should use D_F3
   if (WHAT == PACK) {
     d_buf[tid] = d_flds[p](mb + m, jx,jy,jz);
   } else if (WHAT == UNPACK) {
@@ -218,7 +217,7 @@ k_fields_device_pack_yz(float *d_buf, DMFields d_flds, int mb, int gmy, int gmz,
 
 template<int B, int WHAT, int NR_COMPONENTS>
 __global__ static void
-k_fields_device_pack2_yz(float *d_buf, float *d_flds, int *d_nei_patch_by_dir1,
+k_fields_device_pack2_yz(float *d_buf, DMFields d_flds, int mb, int *d_nei_patch_by_dir1,
 			 int gmy, int gmz, int nr_patches, int nr_fields)
 {
   uint nr_ghosts = 2*B * (gmy + gmz - 2*B);
@@ -263,11 +262,10 @@ k_fields_device_pack2_yz(float *d_buf, float *d_flds, int *d_nei_patch_by_dir1,
   // copy only ghost areas that interface with remote patches
   if (1||s_p < 0) {
     for (int m = 0; m < NR_COMPONENTS; m++) {
-      // FIXME, should use D_F3
       if (WHAT == PACK) {
-	d_buf[m * nr_ghosts * nr_patches + tid] = d_flds[((p * nr_fields + m) * gmz + jz) * gmy + jy];
+	d_buf[m * nr_ghosts * nr_patches + tid] = d_flds[p](m + mb, 0,jy,jz);
       } else if (WHAT == UNPACK) {
-	d_flds[((p * nr_fields + m) * gmz + jz) * gmy + jy] = d_buf[m * nr_ghosts * nr_patches + tid]; 
+	d_flds[p](m + mb, 0,jy,jz) = d_buf[m * nr_ghosts * nr_patches + tid]; 
       }
     }
   }
@@ -378,9 +376,8 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
-  float *d_flds = cmflds->d_flds.data().get() + mb * im[1] * im[2];
   k_fields_device_pack2_yz<B, pack, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
-    (cbnd->d_bnd_buf, d_flds, cbnd->d_nei_patch,
+    (cbnd->d_bnd_buf, DMFields(cmflds), mb, cbnd->d_nei_patch,
      im[1], im[2], n_patches, n_fields);
   cuda_sync_if_enabled();
 }
