@@ -32,7 +32,6 @@ noinst_PROGRAMS = \
 	test_exchange_particles \
 	test_sort
 
-
 psc_test_cyclo_SOURCES = psc_test_cyclo.cxx
 psc_test_accel_SOURCES = psc_test_accel.cxx
 psc_test_mfields_single_SOURCES = psc_test_mfields_single.cxx
@@ -82,10 +81,16 @@ TESTS = \
 	test_sort.sh
 
 check_PROGRAMS = 
+
 check_PROGRAMS += vec3_unittest
 TESTS += vec3_unittest
 vec3_unittest_SOURCES = vec3_unittest.cxx
 vec3_unittest_LDADD = $(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
+
+check_PROGRAMS += interpolate_unittest
+TESTS += interpolate_unittest
+interpolate_unittest_SOURCES = interpolate_unittest.cxx
+interpolate_unittest_LDADD = $(GTEST_ROOT)/src/gtest-all.lo $(GTEST_ROOT)/src/gtest_main.lo
 
 # if USE_CUDA
 # TESTS += \
