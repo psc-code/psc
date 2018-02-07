@@ -50,6 +50,7 @@ libsubdir_la_LIBADD = \
 	cuda_moments_1st_nc.lo
 
 check_PROGRAMS = \
+	tests/test_cuda_mfields \
 	tests/test_cuda_accel \
 	tests/test_cuda_mfields_1 \
 	tests/test_cuda_mparticles_1 \
@@ -72,6 +73,11 @@ CUDA_GTEST_OBJS := \
 
 CUDA_BNDP_OBJS := \
 	cuda_bndp.lo cuda_bndp_scan.lo cuda_bndp_spine.lo
+
+tests_test_cuda_mfields_SOURCES = 
+tests_test_cuda_mfields_LDADD = tests/test_cuda_mfields.lo \
+  $(CUDA_GTEST_OBJS)
+nodist_EXTRA_tests_test_cuda_mfields_SOURCES = dummy.cxx
 
 tests_test_cuda_accel_SOURCES = 
 tests_test_cuda_accel_LDADD = tests/test_cuda_accel.lo \
