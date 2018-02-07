@@ -73,7 +73,6 @@ public:
   int n_fields;
   int n_cells_per_patch;
   int n_cells;
-  float dx[3];                    // cell size (in actual length units)
   Grid_t& grid_;
 };
 

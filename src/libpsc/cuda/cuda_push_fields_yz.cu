@@ -90,8 +90,8 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   cuda_mfields_const_set(cmflds);
   assert(cmflds->n_fields == NR_FIELDS);
 
-  float cny = dt / cmflds->dx[1];
-  float cnz = dt / cmflds->dx[2];
+  float cny = dt / cmflds->grid_.dx[1];
+  float cnz = dt / cmflds->grid_.dx[2];
   assert(cmflds->im[0] == 1);
   assert(cmflds->ib[1] == -BND);
   assert(cmflds->ib[2] == -BND);
@@ -114,8 +114,8 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
 
   cuda_mfields_const_set(cmflds);
 
-  float cny = dt / cmflds->dx[1];
-  float cnz = dt / cmflds->dx[2];
+  float cny = dt / cmflds->grid_.dx[1];
+  float cnz = dt / cmflds->grid_.dx[2];
 
   int grid[2]  = { (cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
@@ -236,8 +236,8 @@ calc_dive_yz(DFields flds, DFields f, float dy, float dz,
 void
 cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p)
 {
-  float dy = cmflds->dx[1];
-  float dz = cmflds->dx[2];
+  float dy = cmflds->grid_.dx[1];
+  float dz = cmflds->grid_.dx[2];
 
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
