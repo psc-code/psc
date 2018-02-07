@@ -1,6 +1,7 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_mfields_const.h"
 #include "cuda_bits.h"
 
 #include <mrc_profile.h>
@@ -174,12 +175,11 @@ enum {
 
 template<int B, int WHAT, int NR_COMPONENTS>
 __global__ static void
-k_fields_device_pack_yz(float *d_buf, float *d_flds, int gmy, int gmz,
+k_fields_device_pack_yz(float *d_buf, DMFields d_flds, int gmy, int gmz,
 			int nr_patches, int nr_fields)
 {
   uint buf_size = 2*B * (gmy + gmz - 2*B);
-  int gmx = 1;//2*BND + 1;
-  int jx = 0;//BND;
+  int jx = 0;
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
   int n_threads = NR_COMPONENTS * buf_size;
   int p = tid / n_threads;
@@ -210,9 +210,9 @@ k_fields_device_pack_yz(float *d_buf, float *d_flds, int gmy, int gmz,
   
   // FIXME, should use D_F3
   if (WHAT == PACK) {
-    d_buf[tid] = d_flds[(((p * nr_fields + m) * gmz + jz) * gmy + jy) * gmx + jx];
+    d_buf[tid] = d_flds[p](m, jx,jy,jz);
   } else if (WHAT == UNPACK) {
-    d_flds[(((p * nr_fields + m) * gmz + jz) * gmy + jy) * gmx + jx] = d_buf[tid]; 
+    d_flds[p](m, jx,jy,jz) = d_buf[tid]; 
   }
 }
 
@@ -346,15 +346,15 @@ fields_device_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd
   float *d_flds = cmflds->d_flds.data().get() + mb * size;
   if (me - mb == 3) {
     k_fields_device_pack_yz<B, pack, 3> <<<dimGrid, dimBlock>>>
-      (d_bnd_buf, d_flds, gmy, gmz,
+      (d_bnd_buf, DMFields(cmflds, mb), gmy, gmz,
        cmflds->n_patches, cmflds->n_fields);
   } else if (me - mb == 2) {
     k_fields_device_pack_yz<B, pack, 2> <<<dimGrid, dimBlock>>>
-      (d_bnd_buf, d_flds, gmy, gmz,
+      (d_bnd_buf, DMFields(cmflds, mb), gmy, gmz,
        cmflds->n_patches, cmflds->n_fields);
   } else if (me - mb == 1) {
     k_fields_device_pack_yz<B, pack, 1> <<<dimGrid, dimBlock>>>
-      (d_bnd_buf, d_flds, gmy, gmz,
+      (d_bnd_buf, DMFields(cmflds, mb), gmy, gmz,
        cmflds->n_patches, cmflds->n_fields);
   } else {
     printf("mb %d me %d\n", mb, me);
