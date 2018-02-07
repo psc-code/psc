@@ -17,7 +17,7 @@
 
 __global__ static void
 push_fields_E_yz(DMFields<NR_FIELDS> MF, float dt, float cny, float cnz,
-		 uint size, int gridy)
+		 int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
@@ -49,8 +49,8 @@ push_fields_E_yz(DMFields<NR_FIELDS> MF, float dt, float cny, float cnz,
 }
 
 __global__ static void
-push_fields_H_yz(float *d_flds0, float cny, float cnz,
-		 uint size, int gridy)
+push_fields_H_yz(DMFields<NR_FIELDS> MF, float cny, float cnz,
+		 int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
@@ -63,19 +63,19 @@ push_fields_H_yz(float *d_flds0, float cny, float cnz,
   iy -= BND;
   iz -= BND;
 
-  float *d_flds = d_flds0 + p * size;
+  DFields<NR_FIELDS> F = MF[p];
 
-  D_F3(d_flds, HX, 0,iy,iz) -=
-    cny * (D_F3(d_flds, EZ, 0,iy+1,iz) - D_F3(d_flds, EZ, 0,iy,iz)) -
-    cnz * (D_F3(d_flds, EY, 0,iy,iz+1) - D_F3(d_flds, EY, 0,iy,iz));
+  F(HX, 0,iy,iz) -=
+    cny * (F(EZ, 0,iy+1,iz) - F(EZ, 0,iy,iz)) -
+    cnz * (F(EY, 0,iy,iz+1) - F(EY, 0,iy,iz));
   
-  D_F3(d_flds, HY, 0,iy,iz) -=
-    cnz * (D_F3(d_flds, EX, 0,iy,iz+1) - D_F3(d_flds, EX, 0,iy,iz)) -
+  F(HY, 0,iy,iz) -=
+    cnz * (F(EX, 0,iy,iz+1) - F(EX, 0,iy,iz)) -
     0.f;
   
-  D_F3(d_flds, HZ, 0,iy,iz) -=
+  F(HZ, 0,iy,iz) -=
     0.f -
-    cny * (D_F3(d_flds, EX, 0,iy+1,iz) - D_F3(d_flds, EX, 0,iy,iz));
+    cny * (F(EX, 0,iy+1,iz) - F(EX, 0,iy,iz));
 }
 
 #define BLOCKSIZE_X 1
@@ -103,7 +103,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(DMFields<NR_FIELDS>(cmflds), dt, cny, cnz, size, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(DMFields<NR_FIELDS>(cmflds), dt, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
@@ -126,7 +126,7 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_H_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds.data().get(), cny, cnz, size, grid[1]);
+  push_fields_H_yz<<<dimGrid, dimBlock>>>(DMFields<NR_FIELDS>(cmflds), cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
