@@ -35,19 +35,6 @@ cuda_mfields_const_set(struct cuda_mfields *cmflds)
   cudaError_t ierr = cudaMemcpyToSymbol(d_cmflds_const, &c, sizeof(c)); cudaCheck(ierr);
 }
 
-// ----------------------------------------------------------------------
-// D_F3
-//
-// field access on the device
-
-#define D_F3_OFF_YZ(m, jy,jz)						\
-  ((((m)								\
-     *d_cmflds_const.im[2] + ((jz)+2))					\
-    *d_cmflds_const.im[1] + ((jy)+2))					\
-   *1 + (0))
-
-#define D_F3(d_flds, m, jx,jy,jz) ((d_flds)[D_F3_OFF_YZ(m, jy,jz)])
-
 // ======================================================================
 // DFields
 
@@ -59,8 +46,16 @@ struct DFields
     : d_flds_(d_flds)
   {}
   
-  __device__ real_t  operator()(int m, int i, int j, int k) const { return D_F3(d_flds_, m, i,j,k); }
-  __device__ real_t& operator()(int m, int i, int j, int k)       { return D_F3(d_flds_, m, i,j,k); }
+  __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
+  __device__ real_t& operator()(int m, int i, int j, int k)       { return d_flds_[index(m, i,j,k)]; }
+
+  __device__ int index(int m, int i, int j, int k) const
+  {
+    return ((((m)
+	      *d_cmflds_const.im[2] + (k + 2))
+	     *d_cmflds_const.im[1] + (j + 2))
+	    *1 + (0));
+  }
 
   real_t *d_flds_;
 };
@@ -77,9 +72,6 @@ struct DMFields
       stride_(cmflds->n_cells_per_patch * cmflds->n_fields)
   {}
   
-  __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
-  __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
-
   __host__ __device__ DFields operator[](int p) { return DFields(d_flds_ + p * stride_); }
   
   real_t *d_flds_;
