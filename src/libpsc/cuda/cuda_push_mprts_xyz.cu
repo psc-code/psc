@@ -216,7 +216,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       (block_start, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
        cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
        cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
-       DMFields(cmflds), fld_size);
+       cmflds->d_mflds(), fld_size);
     cuda_sync_if_enabled();
   }
 }

@@ -115,12 +115,12 @@ struct DMFields
 {
   using real_t = float;
   
-  __host__ DMFields(cuda_mfields *cmflds)
-    : d_flds_(cmflds->d_flds_.data().get()),
-      stride_(cmflds->n_cells_per_patch * cmflds->n_fields),
-      im_{ cmflds->im[0], cmflds->im[1], cmflds->im[2] }
+  __host__ DMFields(real_t* d_flds, uint stride, int im[3])
+    : d_flds_(d_flds),
+      stride_(stride),
+      im_{ im[0], im[1], im[2] }
   {}
-  
+
   __host__ __device__ DFields operator[](int p)
   {
     return DFields(d_flds_ + p * stride_, im_); }

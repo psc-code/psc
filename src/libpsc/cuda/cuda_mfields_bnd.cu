@@ -344,13 +344,13 @@ fields_device_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd
   float *d_flds = cmflds->d_flds_.data().get() + mb * size;
   if (me - mb == 3) {
     k_fields_device_pack_yz<B, pack, 3> <<<dimGrid, dimBlock>>>
-      (d_bnd_buf, DMFields(cmflds), mb, gmy, gmz, cmflds->n_patches);
+      (d_bnd_buf, cmflds->d_mflds(), mb, gmy, gmz, cmflds->n_patches);
   } else if (me - mb == 2) {
     k_fields_device_pack_yz<B, pack, 2> <<<dimGrid, dimBlock>>>
-      (d_bnd_buf, DMFields(cmflds), mb, gmy, gmz, cmflds->n_patches);
+      (d_bnd_buf, cmflds->d_mflds(), mb, gmy, gmz, cmflds->n_patches);
   } else if (me - mb == 1) {
     k_fields_device_pack_yz<B, pack, 1> <<<dimGrid, dimBlock>>>
-      (d_bnd_buf, DMFields(cmflds), mb, gmy, gmz, cmflds->n_patches);
+      (d_bnd_buf, cmflds->d_mflds(), mb, gmy, gmz, cmflds->n_patches);
   } else {
     printf("mb %d me %d\n", mb, me);
     assert(0);
@@ -377,7 +377,7 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
   dim3 dimBlock(THREADS_PER_BLOCK);
     
   k_fields_device_pack2_yz<B, pack, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
-    (cbnd->d_bnd_buf, DMFields(cmflds), mb, cbnd->d_nei_patch,
+    (cbnd->d_bnd_buf, cmflds->d_mflds(), mb, cbnd->d_nei_patch,
      im[1], im[2], n_patches, n_fields);
   cuda_sync_if_enabled();
 }
@@ -733,8 +733,7 @@ cuda_mfields_bnd_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_m
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
-      ierr = cudaMemcpy(cf->arr,
-			DMFields(cmflds)[p].d_flds() + mb * size,
+      ierr = cudaMemcpy(cf->arr, cmflds->d_mflds()[p].d_flds() + mb * size,
 			(me - mb) * size * sizeof(float),
 			cudaMemcpyDeviceToHost); cudaCheck(ierr);
     }
@@ -752,8 +751,7 @@ cuda_mfields_bnd_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct c
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
-      ierr = cudaMemcpy(cf->arr,
-			DMFields(cmflds)[p].d_flds() + mb * size,
+      ierr = cudaMemcpy(cf->arr, cmflds->d_mflds()[p].d_flds() + mb * size,
 			(me - mb) * size * sizeof(float),
 			cudaMemcpyDeviceToHost); cudaCheck(ierr);
     }
@@ -771,7 +769,7 @@ cuda_mfields_bnd_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mf
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
-      ierr = cudaMemcpy(DMFields(cmflds)[p].d_flds() + mb * size,
+      ierr = cudaMemcpy(cmflds->d_mflds()[p].d_flds() + mb * size,
 			cf->arr,
 			(me - mb) * size * sizeof(float),
 			cudaMemcpyHostToDevice); cudaCheck(ierr);
@@ -790,7 +788,7 @@ cuda_mfields_bnd_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfi
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       uint size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
-      ierr = cudaMemcpy(DMFields(cmflds)[p].d_flds() + mb * size,
+      ierr = cudaMemcpy(cmflds->d_mflds()[p].d_flds() + mb * size,
 			cf->arr,
 			(me - mb) * size * sizeof(float),
 			cudaMemcpyHostToDevice); cudaCheck(ierr);

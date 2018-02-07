@@ -153,7 +153,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cu
     (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
      cmprts->d_off.data().get(),
      cmprts->n_blocks, cmprts->d_id.data().get(),
-     DMFields(cmres));
+     cmres->d_mflds());
   cuda_sync_if_enabled();
 }
 
@@ -173,7 +173,7 @@ n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mf
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
      cmprts->n_blocks, cmprts->d_id.data().get(),
-     DMFields(cmres));
+     cmres->d_mflds());
   cuda_sync_if_enabled();
 }
 

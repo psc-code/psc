@@ -99,7 +99,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds), dt, cny, cnz, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds(), dt, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
@@ -120,7 +120,7 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_H_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds), cny, cnz, grid[1]);
+  push_fields_H_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds(), cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
@@ -205,7 +205,7 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  marder_correct_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds)[p], DMFields(cmf)[p],
+  marder_correct_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], cmf->d_mflds()[p],
 					   fac[1], fac[2],
 					   ly[1], ly[2], ry[1], ry[2],
 					   lz[1], lz[2], rz[1], rz[2], my, mz);
@@ -244,7 +244,7 @@ cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  calc_dive_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds)[p], DMFields(cmf)[p], dy, dz,
+  calc_dive_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], cmf->d_mflds()[p], dy, dz,
 				      cmflds->ldims[1], cmflds->ldims[2], my, mz);
   cuda_sync_if_enabled();
 }
