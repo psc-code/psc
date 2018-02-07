@@ -42,8 +42,9 @@ struct DFields
 {
   using real_t = float;
   
-  __host__ __device__ DFields(real_t* d_flds)
-    : d_flds_(d_flds)
+  __host__ __device__ DFields(real_t* d_flds, int im[3])
+    : d_flds_(d_flds),
+      im_{ im[0], im[1], im[2] }
   {}
   
   __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
@@ -55,13 +56,14 @@ private:
   __device__ int index(int m, int i, int j, int k) const
   {
     return ((((m)
-	      *d_cmflds_const.im[2] + (k + 2))
-	     *d_cmflds_const.im[1] + (j + 2))
+	      *im_[2] + (k + 2))
+	     *im_[1] + (j + 2))
 	    *1 + (0));
   }
 
 private:
   real_t *d_flds_;
+  int im_[3];
 };
 
 // ======================================================================
@@ -73,14 +75,18 @@ struct DMFields
   
   __host__ DMFields(cuda_mfields *cmflds)
     : d_flds_(cmflds->d_flds.data().get()),
-      stride_(cmflds->n_cells_per_patch * cmflds->n_fields)
+      stride_(cmflds->n_cells_per_patch * cmflds->n_fields),
+      im_{ cmflds->im[0], cmflds->im[1], cmflds->im[2] }
   {}
   
-  __host__ __device__ DFields operator[](int p) { return DFields(d_flds_ + p * stride_); }
+  __host__ __device__ DFields operator[](int p)
+  {
+    return DFields(d_flds_ + p * stride_, im_); }
 
 private:
   real_t *d_flds_;
   uint stride_;
+  int im_[3];
 };
 
 #endif
