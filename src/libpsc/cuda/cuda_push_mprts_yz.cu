@@ -228,9 +228,9 @@ public:
   static const int shared_size = 3 * CBLOCK_SIZE;
 
   float *scurr;
-  float *d_flds;
+  DFields d_flds;
 
-  __device__ SCurr(float *_scurr, float *_d_flds) :
+  __device__ SCurr(float *_scurr, DFields _d_flds) :
     scurr(_scurr), d_flds(_d_flds)
   {
     int i = threadIdx.x;
@@ -258,7 +258,7 @@ public:
 	for (int wid = 0; wid < NR_CBLOCKS; wid++) {
 	  val += (*this)(wid, jy, jz, m);
 	}
-	D_F3(d_flds, JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
+	d_flds(JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
 	i += THREADS_PER_BLOCK;
       }
     }
@@ -291,9 +291,9 @@ public:
   static const int shared_size = 1;
 
   float *scurr;
-  float *d_flds;
+  DFields d_flds;
 
-  __device__ GCurr(float *_scurr, float *_d_flds) :
+  __device__ GCurr(float *_scurr, DFields _d_flds) :
     scurr(_scurr), d_flds(_d_flds)
   {
   }
@@ -304,7 +304,7 @@ public:
 
   __device__ void add(int m, int jy, int jz, float val, int *ci0)
   {
-    float *addr = &D_F3(d_flds, JXI+m, 0,jy+ci0[1],jz+ci0[2]);
+    float *addr = &d_flds(JXI+m, 0,jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
   }
 };
@@ -505,7 +505,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 #define DECLARE_AND_ZERO_SCURR						\
   __shared__ float _scurr[CURR::shared_size];				\
-  CURR scurr(_scurr, d_flds0[p].d_flds_)				\
+  CURR scurr(_scurr, d_flds0[p])					\
 
 #define DECLARE_AND_CACHE_FIELDS					\
 
