@@ -15,8 +15,7 @@
 // ctor
 
 cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
-  : n_patches(grid.patches.size()),
-    d_flds_by_patch(n_patches)
+  : n_patches(grid.patches.size())
 {
   n_fields = _n_fields;
   ldims = grid.ldims;
@@ -30,10 +29,6 @@ cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
   n_cells = n_patches * n_cells_per_patch;
 
   d_flds.resize(n_fields * n_cells);
-
-  for (int p = 0; p < n_patches; p++) {
-    d_flds_by_patch[p] = d_flds.data().get() + p * n_fields * n_cells_per_patch;
-  }
 }
 
 // ----------------------------------------------------------------------
