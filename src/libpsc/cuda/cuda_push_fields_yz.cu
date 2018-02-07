@@ -17,11 +17,27 @@
 
 
 template<int N_COMPS>
+struct DFieldsPatch
+{
+  using real_t = float;
+  
+  __device__ DFieldsPatch(real_t* d_flds)
+    : d_flds_(d_flds)
+  {}
+  
+  __device__ real_t  operator()(int m, int i, int j, int k) const { return D_F3(d_flds_, m, i,j,k); }
+  __device__ real_t& operator()(int m, int i, int j, int k)       { return D_F3(d_flds_, m, i,j,k); }
+
+  real_t *d_flds_;
+  uint stride_;
+};
+
+template<int N_COMPS>
 struct DFields
 {
   using real_t = float;
   
-  __device__ DFields(real_t *d_flds)
+  __device__ DFields(real_t* d_flds)
     : d_flds_(d_flds),
       stride_(d_cmflds_const.n_cells_per_patch * N_COMPS)
   {}
@@ -31,6 +47,8 @@ struct DFields
   __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
   __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
 
+  __device__ DFieldsPatch<N_COMPS> operator[](int p) { return DFieldsPatch<N_COMPS>(d_flds_ + p * stride_); }
+  
   real_t *d_flds_;
   uint stride_;
 };
@@ -39,7 +57,7 @@ __global__ static void
 push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
 		 uint size, int gridy)
 {
-  DFields<NR_FIELDS> F(d_flds0);
+  DFields<NR_FIELDS> MF(d_flds0);
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
@@ -51,22 +69,22 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
   iy -= BND;
   iz -= BND;
 
-  float *d_flds = d_flds0 + p * size;
+  DFieldsPatch<NR_FIELDS> F = MF[p];
 
-  D_F3(d_flds, EX, 0,iy,iz) +=
-    cny * (D_F3(d_flds, HZ, 0,iy,iz) - D_F3(d_flds, HZ, 0,iy-1,iz)) -
-    cnz * (D_F3(d_flds, HY, 0,iy,iz) - D_F3(d_flds, HY, 0,iy,iz-1)) -
-    dt * D_F3(d_flds, JXI, 0,iy,iz);
+  F(EX, 0,iy,iz) +=
+    cny * (F(HZ, 0,iy,iz) - F(HZ, 0,iy-1,iz)) -
+    cnz * (F(HY, 0,iy,iz) - F(HY, 0,iy,iz-1)) -
+    dt * F(JXI, 0,iy,iz);
   
-  D_F3(d_flds, EY, 0,iy,iz) +=
-    cnz * (D_F3(d_flds, HX, 0,iy,iz) - D_F3(d_flds, HX, 0,iy,iz-1)) -
+  F(EY, 0,iy,iz) +=
+    cnz * (F(HX, 0,iy,iz) - F(HX, 0,iy,iz-1)) -
     0.f -
-    dt * D_F3(d_flds, JYI, 0,iy,iz);
+    dt * F(JYI, 0,iy,iz);
   
-  D_F3(d_flds, EZ, 0,iy,iz) +=
+  F(EZ, 0,iy,iz) +=
     0.f -
-    cny * (D_F3(d_flds, HX, 0,iy,iz) - D_F3(d_flds, HX, 0,iy-1,iz)) -
-    dt * D_F3(d_flds, JZI, 0,iy,iz);
+    cny * (F(HX, 0,iy,iz) - F(HX, 0,iy-1,iz)) -
+    dt * F(JZI, 0,iy,iz);
 }
 
 __global__ static void
