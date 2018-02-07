@@ -42,7 +42,10 @@ struct DFields
       stride_(d_cmflds_const.n_cells_per_patch * N_COMPS)
   {}
   
-  DFields(const DFields&) = delete;
+  __host__ DFields(cuda_mfields *cmflds)
+    : d_flds_(cmflds->d_flds.data().get()),
+      stride_(cmflds->n_cells_per_patch * N_COMPS)
+  {}
   
   __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
   __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
@@ -54,7 +57,7 @@ struct DFields
 };
 
 __global__ static void
-push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
+push_fields_E_yz(DFields<NR_FIELDS> MF2, float *d_flds0, float dt, float cny, float cnz,
 		 uint size, int gridy)
 {
   DFields<NR_FIELDS> MF(d_flds0);
@@ -69,7 +72,7 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
   iy -= BND;
   iz -= BND;
 
-  DFieldsPatch<NR_FIELDS> F = MF[p];
+  DFieldsPatch<NR_FIELDS> F = MF2[p];
 
   F(EX, 0,iy,iz) +=
     cny * (F(HZ, 0,iy,iz) - F(HZ, 0,iy-1,iz)) -
@@ -142,7 +145,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds.data().get(), dt, cny, cnz, size, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(DFields<NR_FIELDS>(cmflds), cmflds->d_flds.data().get(), dt, cny, cnz, size, grid[1]);
   cuda_sync_if_enabled();
 }
 
