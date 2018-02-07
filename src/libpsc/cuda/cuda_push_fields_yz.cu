@@ -15,10 +15,31 @@
 
 // OPT: precalc offset
 
+
+template<int N_COMPS>
+struct DFields
+{
+  using real_t = float;
+  
+  __device__ DFields(real_t *d_flds)
+    : d_flds_(d_flds),
+      stride_(d_cmflds_const.n_cells_per_patch * N_COMPS)
+  {}
+  
+  DFields(const DFields&) = delete;
+  
+  __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
+  __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
+
+  real_t *d_flds_;
+  uint stride_;
+};
+
 __global__ static void
 push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
 		 uint size, int gridy)
 {
+  DFields<NR_FIELDS> F(d_flds0);
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
@@ -90,6 +111,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   }
 
   cuda_mfields_const_set(cmflds);
+  assert(cmflds->n_fields == NR_FIELDS);
 
   float cny = dt / cmflds->dx[1];
   float cnz = dt / cmflds->dx[2];
