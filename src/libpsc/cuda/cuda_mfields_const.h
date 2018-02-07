@@ -48,5 +48,46 @@ cuda_mfields_const_set(struct cuda_mfields *cmflds)
 
 #define D_F3(d_flds, m, jx,jy,jz) ((d_flds)[D_F3_OFF_YZ(m, jy,jz)])
 
+// ======================================================================
+// DFields
+
+template<int N_COMPS>
+struct DFields
+{
+  using real_t = float;
+  
+  __device__ DFields(real_t* d_flds)
+    : d_flds_(d_flds)
+  {}
+  
+  __device__ real_t  operator()(int m, int i, int j, int k) const { return D_F3(d_flds_, m, i,j,k); }
+  __device__ real_t& operator()(int m, int i, int j, int k)       { return D_F3(d_flds_, m, i,j,k); }
+
+  real_t *d_flds_;
+  uint stride_;
+};
+
+// ======================================================================
+// DMFields
+
+template<int N_COMPS>
+struct DMFields
+{
+  using real_t = float;
+  
+  __host__ DMFields(cuda_mfields *cmflds)
+    : d_flds_(cmflds->d_flds.data().get()),
+      stride_(cmflds->n_cells_per_patch * N_COMPS)
+  {}
+  
+  __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
+  __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
+
+  __device__ DFields<N_COMPS> operator[](int p) { return DFields<N_COMPS>(d_flds_ + p * stride_); }
+  
+  real_t *d_flds_;
+  uint stride_;
+};
+
 #endif
 
