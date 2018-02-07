@@ -16,6 +16,7 @@
 
 cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
   : n_patches(grid.patches.size()),
+    n_fields(_n_fields),
     grid_(grid)
 {
   n_fields = _n_fields;
