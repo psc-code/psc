@@ -244,7 +244,7 @@ cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  calc_dive_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], cmf->d_flds_by_patch[p], dy, dz,
+  calc_dive_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds)[p], DMFields(cmf)[p], dy, dz,
 				      cmflds->ldims[1], cmflds->ldims[2], my, mz);
   cuda_sync_if_enabled();
 }
