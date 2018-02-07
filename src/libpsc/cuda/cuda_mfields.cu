@@ -15,13 +15,13 @@
 // ctor
 
 cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
-  : n_patches(grid.patches.size())
+  : n_patches(grid.patches.size()),
+    grid_(grid)
 {
   n_fields = _n_fields;
-  ldims = grid.ldims;
   for (int d = 0; d < 3; d++) {
     ib[d] = -ibn[d];
-    im[d] = ldims[d] + 2 * ibn[d];
+    im[d] = grid.ldims[d] + 2 * ibn[d];
     dx[d] = grid.dx[d];
   }
 
@@ -44,7 +44,6 @@ mrc_json_t cuda_mfields::to_json()
 
   mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib));
   mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im));
-  mrc_json_object_push(json, "ldims", mrc_json_integer_array_new(3, ldims));
   double dx[3] = { this->dx[0], this->dx[1], this->dx[2] };
   mrc_json_object_push(json, "dx", mrc_json_double_array_new(3, dx));
 
@@ -195,9 +194,11 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 {
   int my = im[1];
   int mz = im[2];
+  assert(ib[1] == -BND);
+  assert(ib[2] == -BND);
 
-  dim3 dimGrid((ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   for (int p = 0; p < n_patches; p++) {
@@ -232,9 +233,11 @@ void cuda_mfields::zero_comp_yz(int xm)
 {
   int my = im[1];
   int mz = im[2];
+  assert(ib[1] == -BND);
+  assert(ib[2] == -BND);
 
-  dim3 dimGrid((ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   // OPT, should be done in a single kernel

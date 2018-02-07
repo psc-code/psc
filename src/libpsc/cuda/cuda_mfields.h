@@ -68,13 +68,13 @@ public:
   thrust::device_vector<fields_cuda_real_t> d_flds_;
 
 public:
-  int ib[3], im[3]; // FIXME, should be called off, ldims
+  int ib[3], im[3];
   int n_patches;
   int n_fields;
   int n_cells_per_patch;
   int n_cells;
-  Int3 ldims;                     // number of cells per direction in each patch
   float dx[3];                    // cell size (in actual length units)
+  Grid_t& grid_;
 };
 
 // ======================================================================

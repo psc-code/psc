@@ -43,10 +43,12 @@ void
 cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
+  assert(cmflds->ib[1] == -SW);
+  assert(cmflds->ib[2] == -SW);
 
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->ldims[1] + 2*SW + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (cmflds->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   fill_ghosts_periodic_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], mb, me);
   cuda_sync_if_enabled();
 }
@@ -79,8 +81,8 @@ cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
   cuda_mfields_const_set(cmflds);
 
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->ldims[1] + 2*SW + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (cmflds->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   fill_ghosts_periodic_z<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], mb, me);
   cuda_sync_if_enabled();
 }
@@ -151,9 +153,10 @@ cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
 
+  int *ldims = cmflds->grid_.ldims;
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (cmflds->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
 
   add_ghosts_periodic_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], mb, me);
   cuda_sync_if_enabled();
@@ -187,9 +190,10 @@ cuda_add_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
 
+  int *ldims = cmflds->grid_.ldims;
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (cmflds->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   add_ghosts_periodic_z<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], mb, me);
   cuda_sync_if_enabled();
 }
@@ -282,7 +286,7 @@ cuda_conducting_wall_H_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_mfields_const_set(cmflds);
 
-  int dimGrid  = (cmflds->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_H_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_mflds()[p]);
   cuda_sync_if_enabled();			       
 }
@@ -293,7 +297,7 @@ cuda_conducting_wall_E_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_mfields_const_set(cmflds);
 
-  int dimGrid  = (cmflds->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_E_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_mflds()[p]);
   cuda_sync_if_enabled();			       
 }
@@ -304,7 +308,7 @@ cuda_conducting_wall_J_y(struct cuda_mfields *cmflds, int p)
 {
   cuda_mfields_const_set(cmflds);
 
-  int dimGrid  = (cmflds->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_J_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_mflds()[p]);
   cuda_sync_if_enabled();			       
 }
