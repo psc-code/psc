@@ -19,9 +19,9 @@
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+cache_fields(float *fld_cache, DMFields d_flds0, int *ci0, int p)
 {
-  float *d_flds = d_flds0 + p * size;
+  DFields d_flds = d_flds0[p];
 
   int ti = threadIdx.x;
   int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
@@ -32,7 +32,7 @@ cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
     int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(fld_cache, m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(fld_cache, m, jy, jz) = d_flds(m, 0,jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -166,7 +166,7 @@ __global__ static void
 push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      uint *d_off, int nr_total_blocks, uint *d_ids, uint *d_bidx,
-	      float *d_flds0, uint size)
+	      DMFields d_flds0, uint size)
 {
   int block_pos[3], ci0[3];						\
   int p, bid;								\
@@ -181,7 +181,7 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
     
   __shared__ float fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (fld_cache, d_flds0, size, ci0, p);
+    (fld_cache, d_flds0, ci0, p);
     
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -216,7 +216,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       (block_start, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
        cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
        cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
-       cmflds->d_flds.data().get(), fld_size);
+       DMFields(cmflds), fld_size);
     cuda_sync_if_enabled();
   }
 }

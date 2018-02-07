@@ -159,7 +159,7 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 }
 
 __global__ static void
-marder_correct_yz(float *d_flds, float *d_f, float facy, float facz,
+marder_correct_yz(DFields d_flds, DFields d_f, float facy, float facz,
 		  int lyy, int lyz, int ryy, int ryz,
 		  int lzy, int lzz, int rzy, int rzz, int my, int mz)
 {
@@ -171,14 +171,14 @@ marder_correct_yz(float *d_flds, float *d_f, float facy, float facz,
 
   if (iy >= -lyy && iy < ryy &&
       iz >= -lyz && iz < ryz) {
-    D_F3(d_flds, EY, 0,iy,iz) += 
-      facy * (D_F3(d_f, 0, 0,iy+1,iz) - D_F3(d_f, 0, 0,iy,iz));
+    d_flds(EY, 0,iy,iz) += 
+      facy * (d_f(0, 0,iy+1,iz) - d_f(0, 0,iy,iz));
   }
   
   if (iy >= -lzy && iy < rzy &&
       iz >= -lzz && iz < rzz) {
-    D_F3(d_flds, EZ, 0,iy,iz) += 
-      facz * (D_F3(d_f, 0, 0,iy,iz+1) - D_F3(d_f, 0, 0,iy,iz));
+    d_flds(EZ, 0,iy,iz) += 
+      facz * (d_f(0, 0,iy,iz+1) - d_f(0, 0,iy,iz));
   }
 }
 
@@ -197,7 +197,6 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
     return;
   }
 
-  uint size = cmflds->n_cells_per_patch;
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
@@ -206,8 +205,8 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  marder_correct_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds.data().get() + p * size * cmflds->n_fields,
-					   cmf->d_flds.data().get() + p * size * cmf->n_fields, fac[1], fac[2],
+  marder_correct_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds)[p], DMFields(cmf)[p],
+					   fac[1], fac[2],
 					   ly[1], ly[2], ry[1], ry[2],
 					   lz[1], lz[2], rz[1], rz[2], my, mz);
   cuda_sync_if_enabled();
@@ -216,7 +215,7 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
 // ======================================================================
 
 __global__ static void
-calc_dive_yz(float *flds, float *f, float dy, float dz,
+calc_dive_yz(DFields flds, DFields f, float dy, float dz,
 	     int ldimsy, int ldimsz, int my, int mz)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
@@ -226,9 +225,9 @@ calc_dive_yz(float *flds, float *f, float dy, float dz,
     return;
   }
 
-  D_F3(f, 0, 0,iy,iz) = 
-    ((D_F3(flds, EY, 0,iy,iz) - D_F3(flds, EY, 0,iy-1,iz)) / dy +
-     (D_F3(flds, EZ, 0,iy,iz) - D_F3(flds, EZ, 0,iy,iz-1)) / dz);
+  f(0, 0,iy,iz) = 
+    ((flds(EY, 0,iy,iz) - flds(EY, 0,iy-1,iz)) / dy +
+     (flds(EZ, 0,iy,iz) - flds(EZ, 0,iy,iz-1)) / dz);
 }
 
 void
