@@ -47,11 +47,11 @@ struct FldCache
   __device__ FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
   
-  __device__ void load(DMFields<NR_FIELDS> d_flds0, int size, int *ci0, int p)
+  __device__ void load(DMFields d_flds0, int size, int *ci0, int p)
   {
     off_ = (-(ci0[2] - 2) * (BLOCKSIZE_Y + 4) +
 	    -(ci0[1] - 2));
-    DFields<NR_FIELDS> d_flds = d_flds0[p];
+    DFields d_flds = d_flds0[p];
     
     int ti = threadIdx.x;
     int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
@@ -537,7 +537,7 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      uint *d_off, int nr_total_blocks, uint *d_ids, uint *d_bidx,
-	      DMFields<NR_FIELDS> d_flds0, uint size)
+	      DMFields d_flds0, uint size)
 {
   using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
 
@@ -620,7 +620,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 	(block_start, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
 	 cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
 	 cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
-	 DMFields<NR_FIELDS>(cmflds), fld_size);
+	 DMFields(cmflds), fld_size);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
@@ -630,7 +630,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
        cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
        cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
-       DMFields<NR_FIELDS>(cmflds), fld_size);
+       DMFields(cmflds), fld_size);
     cuda_sync_if_enabled();
   } else {
     assert(0);

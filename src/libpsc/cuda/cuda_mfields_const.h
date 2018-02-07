@@ -51,7 +51,6 @@ cuda_mfields_const_set(struct cuda_mfields *cmflds)
 // ======================================================================
 // DFields
 
-template<int N_COMPS>
 struct DFields
 {
   using real_t = float;
@@ -70,20 +69,19 @@ struct DFields
 // ======================================================================
 // DMFields
 
-template<int N_COMPS>
 struct DMFields
 {
   using real_t = float;
   
   __host__ DMFields(cuda_mfields *cmflds)
     : d_flds_(cmflds->d_flds.data().get()),
-      stride_(cmflds->n_cells_per_patch * N_COMPS)
+      stride_(cmflds->n_cells_per_patch * cmflds->n_fields)
   {}
   
   __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
   __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
 
-  __device__ DFields<N_COMPS> operator[](int p) { return DFields<N_COMPS>(d_flds_ + p * stride_); }
+  __device__ DFields operator[](int p) { return DFields(d_flds_ + p * stride_); }
   
   real_t *d_flds_;
   uint stride_;

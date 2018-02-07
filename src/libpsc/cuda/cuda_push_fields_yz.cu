@@ -16,8 +16,7 @@
 // OPT: precalc offset
 
 __global__ static void
-push_fields_E_yz(DMFields<NR_FIELDS> MF, float dt, float cny, float cnz,
-		 int gridy)
+push_fields_E_yz(DMFields MF, float dt, float cny, float cnz, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
@@ -30,7 +29,7 @@ push_fields_E_yz(DMFields<NR_FIELDS> MF, float dt, float cny, float cnz,
   iy -= BND;
   iz -= BND;
 
-  DFields<NR_FIELDS> F = MF[p];
+  DFields F = MF[p];
 
   F(EX, 0,iy,iz) +=
     cny * (F(HZ, 0,iy,iz) - F(HZ, 0,iy-1,iz)) -
@@ -49,8 +48,7 @@ push_fields_E_yz(DMFields<NR_FIELDS> MF, float dt, float cny, float cnz,
 }
 
 __global__ static void
-push_fields_H_yz(DMFields<NR_FIELDS> MF, float cny, float cnz,
-		 int gridy)
+push_fields_H_yz(DMFields MF, float cny, float cnz, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
@@ -63,7 +61,7 @@ push_fields_H_yz(DMFields<NR_FIELDS> MF, float cny, float cnz,
   iy -= BND;
   iz -= BND;
 
-  DFields<NR_FIELDS> F = MF[p];
+  DFields F = MF[p];
 
   F(HX, 0,iy,iz) -=
     cny * (F(EZ, 0,iy+1,iz) - F(EZ, 0,iy,iz)) -
@@ -96,14 +94,12 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   float cnz = dt / cmflds->dx[2];
   assert(cmflds->ldims[0] == 1);
 
-  uint size = cmflds->n_fields * cmflds->n_cells_per_patch;
-
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(DMFields<NR_FIELDS>(cmflds), dt, cny, cnz, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds), dt, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
@@ -119,14 +115,12 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   float cny = dt / cmflds->dx[1];
   float cnz = dt / cmflds->dx[2];
 
-  uint size = cmflds->n_fields * cmflds->n_cells_per_patch;
-
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_H_yz<<<dimGrid, dimBlock>>>(DMFields<NR_FIELDS>(cmflds), cny, cnz, grid[1]);
+  push_fields_H_yz<<<dimGrid, dimBlock>>>(DMFields(cmflds), cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
