@@ -40,8 +40,10 @@ struct cuda_mfields_bnd {
   struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // cuda_mfields
+
+struct DMFields;
 
 struct cuda_mfields
 {
@@ -60,7 +62,12 @@ struct cuda_mfields
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  thrust::device_vector<fields_cuda_real_t> d_flds;
+  DMFields d_mflds();
+
+public:
+  thrust::device_vector<fields_cuda_real_t> d_flds_;
+
+public:
   int ib[3], im[3]; // FIXME, should be called off, ldims
   int n_patches;
   int n_fields;
@@ -68,6 +75,60 @@ struct cuda_mfields
   int n_cells;
   Int3 ldims;                     // number of cells per direction in each patch
   float dx[3];                    // cell size (in actual length units)
+};
+
+// ======================================================================
+// DFields
+
+struct DFields
+{
+  using real_t = float;
+  
+  __host__ __device__ DFields(real_t* d_flds, int im[3])
+    : d_flds_(d_flds),
+      im_{ im[0], im[1], im[2] }
+  {}
+  
+  __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
+  __device__ real_t& operator()(int m, int i, int j, int k)       { return d_flds_[index(m, i,j,k)]; }
+
+  __host__ real_t *d_flds() { return d_flds_; }
+
+private:
+  __device__ int index(int m, int i, int j, int k) const
+  {
+    return ((((m)
+	      *im_[2] + (k + 2))
+	     *im_[1] + (j + 2))
+	    *1 + (0));
+  }
+
+private:
+  real_t *d_flds_;
+  int im_[3];
+};
+
+// ======================================================================
+// DMFields
+
+struct DMFields
+{
+  using real_t = float;
+  
+  __host__ DMFields(cuda_mfields *cmflds)
+    : d_flds_(cmflds->d_flds_.data().get()),
+      stride_(cmflds->n_cells_per_patch * cmflds->n_fields),
+      im_{ cmflds->im[0], cmflds->im[1], cmflds->im[2] }
+  {}
+  
+  __host__ __device__ DFields operator[](int p)
+  {
+    return DFields(d_flds_ + p * stride_, im_); }
+
+private:
+  real_t *d_flds_;
+  uint stride_;
+  int im_[3];
 };
 
 #endif

@@ -28,7 +28,7 @@ cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
   n_cells_per_patch = im[0] * im[1] * im[2];
   n_cells = n_patches * n_cells_per_patch;
 
-  d_flds.resize(n_fields * n_cells);
+  d_flds_.resize(n_fields * n_cells);
 }
 
 // ----------------------------------------------------------------------
