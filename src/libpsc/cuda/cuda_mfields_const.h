@@ -49,6 +49,7 @@ struct DFields
   __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
   __device__ real_t& operator()(int m, int i, int j, int k)       { return d_flds_[index(m, i,j,k)]; }
 
+private:
   __device__ int index(int m, int i, int j, int k) const
   {
     return ((((m)
@@ -57,6 +58,7 @@ struct DFields
 	    *1 + (0));
   }
 
+private:
   real_t *d_flds_;
 };
 
@@ -73,7 +75,8 @@ struct DMFields
   {}
   
   __host__ __device__ DFields operator[](int p) { return DFields(d_flds_ + p * stride_); }
-  
+
+private:
   real_t *d_flds_;
   uint stride_;
 };
