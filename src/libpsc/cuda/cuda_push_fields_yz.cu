@@ -17,11 +17,11 @@
 
 
 template<int N_COMPS>
-struct DFieldsPatch
+struct DFields
 {
   using real_t = float;
   
-  __device__ DFieldsPatch(real_t* d_flds)
+  __device__ DFields(real_t* d_flds)
     : d_flds_(d_flds)
   {}
   
@@ -33,16 +33,11 @@ struct DFieldsPatch
 };
 
 template<int N_COMPS>
-struct DFields
+struct DMFields
 {
   using real_t = float;
   
-  __device__ DFields(real_t* d_flds)
-    : d_flds_(d_flds),
-      stride_(d_cmflds_const.n_cells_per_patch * N_COMPS)
-  {}
-  
-  __host__ DFields(cuda_mfields *cmflds)
+  __host__ DMFields(cuda_mfields *cmflds)
     : d_flds_(cmflds->d_flds.data().get()),
       stride_(cmflds->n_cells_per_patch * N_COMPS)
   {}
@@ -50,17 +45,16 @@ struct DFields
   __device__ real_t  operator()(int m, int i, int j, int k, int p) const { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
   __device__ real_t& operator()(int m, int i, int j, int k, int p)       { return D_F3(d_flds_ + p * stride_, m, i,j,k); }
 
-  __device__ DFieldsPatch<N_COMPS> operator[](int p) { return DFieldsPatch<N_COMPS>(d_flds_ + p * stride_); }
+  __device__ DFields<N_COMPS> operator[](int p) { return DFields<N_COMPS>(d_flds_ + p * stride_); }
   
   real_t *d_flds_;
   uint stride_;
 };
 
 __global__ static void
-push_fields_E_yz(DFields<NR_FIELDS> MF2, float *d_flds0, float dt, float cny, float cnz,
+push_fields_E_yz(DMFields<NR_FIELDS> MF, float dt, float cny, float cnz,
 		 uint size, int gridy)
 {
-  DFields<NR_FIELDS> MF(d_flds0);
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
@@ -72,7 +66,7 @@ push_fields_E_yz(DFields<NR_FIELDS> MF2, float *d_flds0, float dt, float cny, fl
   iy -= BND;
   iz -= BND;
 
-  DFieldsPatch<NR_FIELDS> F = MF2[p];
+  DFields<NR_FIELDS> F = MF[p];
 
   F(EX, 0,iy,iz) +=
     cny * (F(HZ, 0,iy,iz) - F(HZ, 0,iy-1,iz)) -
@@ -145,7 +139,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(DFields<NR_FIELDS>(cmflds), cmflds->d_flds.data().get(), dt, cny, cnz, size, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(DMFields<NR_FIELDS>(cmflds), dt, cny, cnz, size, grid[1]);
   cuda_sync_if_enabled();
 }
 
