@@ -65,15 +65,13 @@ struct cuda_mfields
   DMFields d_mflds();
 
 public:
-  thrust::device_vector<fields_cuda_real_t> d_flds_;
-
-public:
   Int3 ib;
   Int3 im;
   int n_patches;
   int n_fields;
   int n_cells_per_patch;
   int n_cells;
+  thrust::device_vector<fields_cuda_real_t> d_flds_;
   Grid_t& grid_;
 };
 

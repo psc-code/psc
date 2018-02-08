@@ -15,21 +15,15 @@
 // ctor
 
 cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
-  : n_patches(grid.patches.size()),
+  : ib(-ibn),
+    im(grid.ldims + 2 * ibn),
+    n_patches(grid.patches.size()),
     n_fields(_n_fields),
+    n_cells_per_patch(im[0] * im[1] * im[2]),
+    n_cells(n_patches * n_cells_per_patch),
+    d_flds_(n_fields * n_cells),
     grid_(grid)
-{
-  n_fields = _n_fields;
-  for (int d = 0; d < 3; d++) {
-    ib[d] = -ibn[d];
-    im[d] = grid.ldims[d] + 2 * ibn[d];
-  }
-
-  n_cells_per_patch = im[0] * im[1] * im[2];
-  n_cells = n_patches * n_cells_per_patch;
-
-  d_flds_.resize(n_fields * n_cells);
-}
+{}
 
 // ----------------------------------------------------------------------
 // to_json
