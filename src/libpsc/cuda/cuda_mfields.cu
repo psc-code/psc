@@ -94,11 +94,18 @@ void cuda_mfields::dump(const char *filename)
   // FIXME free json
 }
 
-
 // ----------------------------------------------------------------------
 // d_mflds
 
 DMFields cuda_mfields::d_mflds()
+{
+  return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im);
+}
+
+// ----------------------------------------------------------------------
+// cast to DMFields
+
+cuda_mfields::operator DMFields()
 {
   return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im);
 }

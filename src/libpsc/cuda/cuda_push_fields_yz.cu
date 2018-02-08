@@ -101,7 +101,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds(), dt, cny, cnz, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(*cmflds, dt, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 
@@ -122,7 +122,7 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_H_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds(), cny, cnz, grid[1]);
+  push_fields_H_yz<<<dimGrid, dimBlock>>>(*cmflds, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
 }
 

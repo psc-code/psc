@@ -63,6 +63,7 @@ struct cuda_mfields
   void dump(const char *filename);
 
   DMFields d_mflds();
+  operator DMFields();
   const Grid_t& grid() const { return grid_; }
 
 public:
