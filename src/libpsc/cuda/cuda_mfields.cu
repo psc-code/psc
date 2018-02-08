@@ -111,6 +111,14 @@ cuda_mfields::operator DMFields()
 }
 
 // ----------------------------------------------------------------------
+// operator[]
+
+DFields cuda_mfields::operator[](int p)
+{
+  return d_mflds()[p];
+}
+
+// ----------------------------------------------------------------------
 // get_host_fields
 
 fields_single_t cuda_mfields::get_host_fields()

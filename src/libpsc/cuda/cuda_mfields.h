@@ -44,6 +44,7 @@ struct cuda_mfields_bnd {
 // cuda_mfields
 
 struct DMFields;
+struct DFields;
 
 struct cuda_mfields
 {
@@ -64,6 +65,7 @@ struct cuda_mfields
 
   DMFields d_mflds();
   operator DMFields();
+  DFields operator[](int p);
   const Grid_t& grid() const { return grid_; }
 
 public:
