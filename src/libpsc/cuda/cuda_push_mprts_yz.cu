@@ -576,7 +576,7 @@ zero_currents(struct cuda_mfields *cmflds)
   // OPT: j as separate field, so we can use a single memset?
   for (int p = 0; p < cmflds->n_patches; p++) {
     uint size = cmflds->n_cells_per_patch;
-    cudaError ierr = cudaMemset(cmflds->d_mflds()[p].d_flds() + JXI * size, 0,
+    cudaError ierr = cudaMemset((*cmflds)[p].d_flds() + JXI * size, 0,
 				3 * size * sizeof(fields_cuda_real_t));
     cudaCheck(ierr);
   }

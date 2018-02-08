@@ -208,7 +208,7 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  marder_correct_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], cmf->d_mflds()[p],
+  marder_correct_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], (*cmf)[p],
 					   fac[1], fac[2],
 					   ly[1], ly[2], ry[1], ry[2],
 					   lz[1], lz[2], rz[1], rz[2], my, mz);
@@ -247,7 +247,7 @@ cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  calc_dive_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], cmf->d_mflds()[p], dy, dz,
+  calc_dive_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], (*cmf)[p], dy, dz,
 				      cmflds->grid().ldims[1], cmflds->grid().ldims[2], my, mz);
   cuda_sync_if_enabled();
 }

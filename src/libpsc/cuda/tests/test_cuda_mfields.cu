@@ -70,7 +70,7 @@ struct _DMFields
   using real_t = float;
   
   __host__ _DMFields(cuda_mfields *cmflds)
-    : d_flds_(cmflds->d_mflds()[0].d_flds()),
+    : d_flds_(cmflds->data()),
       stride_(cmflds->n_cells_per_patch * cmflds->n_fields)
   {}
   

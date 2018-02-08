@@ -63,7 +63,7 @@ struct cuda_mfields
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  DMFields d_mflds();
+  real_t *data() { return d_flds_.data().get(); }
   operator DMFields();
   DFields operator[](int p);
   const Grid_t& grid() const { return grid_; }

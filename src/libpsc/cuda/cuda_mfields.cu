@@ -95,14 +95,6 @@ void cuda_mfields::dump(const char *filename)
 }
 
 // ----------------------------------------------------------------------
-// d_mflds
-
-DMFields cuda_mfields::d_mflds()
-{
-  return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im);
-}
-
-// ----------------------------------------------------------------------
 // cast to DMFields
 
 cuda_mfields::operator DMFields()
@@ -115,7 +107,7 @@ cuda_mfields::operator DMFields()
 
 DFields cuda_mfields::operator[](int p)
 {
-  return d_mflds()[p];
+  return static_cast<DMFields>(*this)[p];
 }
 
 // ----------------------------------------------------------------------
@@ -139,7 +131,7 @@ void cuda_mfields::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
   assert(mb < me);
 
   uint size = n_cells_per_patch;
-  ierr = cudaMemcpy(d_mflds()[p].d_flds() + mb * size,
+  ierr = cudaMemcpy((*this)[p].d_flds() + mb * size,
 		    h_flds.data + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
@@ -159,7 +151,7 @@ void cuda_mfields::copy_from_device(int p, fields_single_t h_flds, int mb, int m
 
   uint size = n_cells_per_patch;
   ierr = cudaMemcpy(h_flds.data + mb * size,
-		    d_mflds()[p].d_flds() + mb * size,
+		    (*this)[p].d_flds() + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }
@@ -209,8 +201,8 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   for (int p = 0; p < n_patches; p++) {
-    k_axpy_comp_yz<<<dimGrid, dimBlock>>>(d_mflds()[p].d_flds(), ym, a,
-					  cmflds_x->d_mflds()[p].d_flds(), xm, my, mz);
+    k_axpy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].d_flds(), ym, a,
+					  (*cmflds_x)[p].d_flds(), xm, my, mz);
   }
   cuda_sync_if_enabled();
 }
@@ -249,7 +241,7 @@ void cuda_mfields::zero_comp_yz(int xm)
 
   // OPT, should be done in a single kernel
   for (int p = 0; p < n_patches; p++) {
-    k_zero_comp_yz<<<dimGrid, dimBlock>>>(d_mflds()[p].d_flds(), xm, my, mz);
+    k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].d_flds(), xm, my, mz);
   }
   cuda_sync_if_enabled();
 }
