@@ -63,6 +63,7 @@ struct cuda_mfields
   void dump(const char *filename);
 
   DMFields d_mflds();
+  const Grid_t& grid() const { return grid_; }
 
 public:
   Int3 ib;
@@ -73,7 +74,6 @@ public:
   int n_cells;
 private:
   thrust::device_vector<fields_cuda_real_t> d_flds_;
-public:
   Grid_t& grid_;
 };
 

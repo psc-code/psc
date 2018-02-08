@@ -90,8 +90,8 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   cuda_mfields_const_set(cmflds);
   assert(cmflds->n_fields == NR_FIELDS);
 
-  float cny = dt / cmflds->grid_.dx[1];
-  float cnz = dt / cmflds->grid_.dx[2];
+  float cny = dt / cmflds->grid().dx[1];
+  float cnz = dt / cmflds->grid().dx[2];
   assert(cmflds->im[0] == 1);
   assert(cmflds->ib[1] == -BND);
   assert(cmflds->ib[2] == -BND);
@@ -114,8 +114,8 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
 
   cuda_mfields_const_set(cmflds);
 
-  float cny = dt / cmflds->grid_.dx[1];
-  float cnz = dt / cmflds->grid_.dx[2];
+  float cny = dt / cmflds->grid().dx[1];
+  float cnz = dt / cmflds->grid().dx[2];
 
   int grid[2]  = { (cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
@@ -140,7 +140,7 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
   cmflds->copy_from_device(p, flds, EX, EX + 3);
   cmf->copy_from_device(p, f, 0, 1);
 
-  int *ldims = cmflds->grid_.ldims;
+  Int3 ldims = cmflds->grid().ldims;
   for (int iz = -1; iz < ldims[2]; iz++) {
     for (int iy = -1; iy < ldims[1]; iy++) {
       if (iy >= -ly[1] && iy < ry[1] &&
@@ -236,8 +236,8 @@ calc_dive_yz(DFields flds, DFields f, float dy, float dz,
 void
 cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p)
 {
-  float dy = cmflds->grid_.dx[1];
-  float dz = cmflds->grid_.dx[2];
+  float dy = cmflds->grid().dx[1];
+  float dz = cmflds->grid().dx[2];
 
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
@@ -248,7 +248,7 @@ cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   dim3 dimGrid(grid[0], grid[1]);
 
   calc_dive_yz<<<dimGrid, dimBlock>>>(cmflds->d_mflds()[p], cmf->d_mflds()[p], dy, dz,
-				      cmflds->grid_.ldims[1], cmflds->grid_.ldims[2], my, mz);
+				      cmflds->grid().ldims[1], cmflds->grid().ldims[2], my, mz);
   cuda_sync_if_enabled();
 }
 

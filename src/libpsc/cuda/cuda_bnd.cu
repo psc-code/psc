@@ -153,7 +153,7 @@ cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
 
-  int *ldims = cmflds->grid_.ldims;
+  Int3 ldims = cmflds->grid().ldims;
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
@@ -190,7 +190,7 @@ cuda_add_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   cuda_mfields_const_set(cmflds);
 
-  int *ldims = cmflds->grid_.ldims;
+  Int3 ldims = cmflds->grid().ldims;
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
