@@ -67,14 +67,49 @@ struct Vec3 : std::array<T, 3>
   // ----------------------------------------------------------------------
   // arithmetic
 
-  Vec3& operator*=(const Vec3& w) {
+  Vec3 operator-() const
+  {
+    Vec3 res;
+    for (int i = 0; i < 3; i++) {
+      res[i] = -(*this)[i];
+    }
+    return res;
+  }
+
+  Vec3& operator+=(const Vec3& w)
+  {
+    for (int i = 0; i < 3; i++) {
+      (*this)[i] += w[i];
+    }
+    return *this;
+  }
+  
+  Vec3& operator-=(const Vec3& w)
+  {
+    for (int i = 0; i < 3; i++) {
+      (*this)[i] -= w[i];
+    }
+    return *this;
+  }
+  
+  Vec3& operator*=(const Vec3& w)
+  {
     for (int i = 0; i < 3; i++) {
       (*this)[i] *= w[i];
     }
     return *this;
   }
   
-  Vec3& operator/=(const Vec3& w) {
+  Vec3& operator*=(T s)
+  {
+    for (int i = 0; i < 3; i++) {
+      (*this)[i] *= s;
+    }
+    return *this;
+  }
+  
+  Vec3& operator/=(const Vec3& w)
+  {
     for (int i = 0; i < 3; i++) {
       (*this)[i] /= w[i];
     }
@@ -93,9 +128,30 @@ struct Vec3 : std::array<T, 3>
 };
 
 template<typename T>
+Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w) {
+  Vec3<T> res = v;
+  res += w;
+  return res;
+}
+
+template<typename T>
+Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w) {
+  Vec3<T> res = v;
+  res -= w;
+  return res;
+}
+
+template<typename T>
 Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w) {
   Vec3<T> res = v;
   res *= w;
+  return res;
+}
+
+template<typename T>
+Vec3<T> operator*(T s, const Vec3<T>& v) {
+  Vec3<T> res = v;
+  res *= s;
   return res;
 }
 
