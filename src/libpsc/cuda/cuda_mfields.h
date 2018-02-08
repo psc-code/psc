@@ -95,7 +95,7 @@ struct DFields
   __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
   __device__ real_t& operator()(int m, int i, int j, int k)       { return d_flds_[index(m, i,j,k)]; }
 
-  __host__ real_t *d_flds() { return d_flds_; }
+  __host__ real_t *data() { return d_flds_; }
 
 private:
   __device__ int index(int m, int i, int j, int k) const
