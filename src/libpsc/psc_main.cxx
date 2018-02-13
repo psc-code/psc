@@ -1,7 +1,9 @@
 
 #include <psc.h>
 
+#ifdef USE_VPIC
 #include "vpic/vpic_iface.h"
+#endif
 
 #include <mrc_params.h>
 

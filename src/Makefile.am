@@ -13,11 +13,11 @@ endif
 SUBDIRS = include libmrc libpsc #tests
 
 bin_PROGRAMS = \
-	psc_harris_xz \
 	psc_bubble_yz \
 	psc_flatfoil_yz
 
 #       psc_shear \
+	psc_harris_xz \
 	psc_turbulence \
 	psc_es1 \
 	psc_em_wave \
