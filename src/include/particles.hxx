@@ -353,8 +353,8 @@ struct psc_mparticles_
   psc_mparticles_(const Grid_t& grid)
     : grid_(grid)
   {
-    patches_.reserve(grid.patches.size());
-    for (int p = 0; p < grid.patches.size(); p++) {
+    patches_.reserve(grid.n_patches());
+    for (int p = 0; p < grid.n_patches(); p++) {
       patches_.emplace_back(this, p);
     }
   }

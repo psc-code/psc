@@ -73,7 +73,7 @@ void cuda_mparticles_add_particles_test_1(cuda_mparticles* cmprts, uint *n_prts_
   cmprts->reserve_all(n_prts_by_patch);
   cmprts->resize_all(n_prts_by_patch);
   
-  for (int p = 0; p < grid.patches.size(); p++) {
+  for (int p = 0; p < grid.n_patches(); p++) {
     cmprts->set_particles(p, set_particles);
   }
 }

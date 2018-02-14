@@ -17,7 +17,7 @@
 cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
   : ib(-ibn),
     im(grid.ldims + 2 * ibn),
-    n_patches(grid.patches.size()),
+    n_patches(grid.n_patches()),
     n_fields(_n_fields),
     n_cells_per_patch(im[0] * im[1] * im[2]),
     n_cells(n_patches * n_cells_per_patch),

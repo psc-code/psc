@@ -82,6 +82,8 @@ struct Grid_
   
   Grid_(const Grid_& grid) = delete;
 
+  int n_patches() const { return patches.size(); }
+
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
