@@ -37,5 +37,9 @@ target_link_libraries(mrc
     MPI::MPI_C
     HDF5::HL
 )
+target_compile_features(mrc
+  PRIVATE
+    c_std_99
+)
 
 add_subdirectory(tests)

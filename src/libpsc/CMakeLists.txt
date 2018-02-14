@@ -117,5 +117,5 @@ add_library(psc
   )
 target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC mrc)
-
+target_compile_features(psc PUBLIC cxx_std_11)
 
