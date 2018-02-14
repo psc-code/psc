@@ -2,7 +2,7 @@
 #ifndef VPIC_GRID_BASE_H
 #define VPIC_GRID_BASE_H
 
-#include <vpic.h>
+#include "vpic/vpic.h"
 
 // ======================================================================
 // VpicGridBase

@@ -132,3 +132,7 @@ if (USE_CUDA)
   target_link_libraries(psc PRIVATE psccuda)
 endif()
 
+if (USE_VPIC)
+  add_subdirectory(vpic)
+  target_link_libraries(psc PUBLIC pscvpic)
+endif()

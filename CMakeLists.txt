@@ -5,10 +5,19 @@ add_subdirectory(src/libmrc)
 
 project(PSC)
 
-option (USE_CUDA "Build CUDA components" OFF) 
+option(USE_CUDA "Build CUDA components" OFF)
 
 if(USE_CUDA)
   enable_language(CUDA)
+endif()
+
+option(USE_VPIC "Interface with VPIC" OFF)
+if(USE_VPIC)
+  add_library(VPIC::VPIC INTERFACE IMPORTED)
+  set_target_properties(VPIC::VPIC PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "/Users/kai/build/vpic/src"
+    INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
+  )
 endif()
 
 find_package(MPI REQUIRED)

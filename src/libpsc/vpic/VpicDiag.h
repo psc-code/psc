@@ -2,8 +2,7 @@
 #ifndef VPIC_DIAG_H
 #define VPIC_DIAG_H
 
-#include "vpic.h"
-
+#include "vpic/vpic.h"
 #include "util/io/FileUtils.h"
 #include "vpic/dumpmacros.h"
 

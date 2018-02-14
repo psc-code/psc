@@ -2,7 +2,7 @@
 #ifndef VPIC_INTERPOLATOR_BASE_H
 #define VPIC_INTERPOLATOR_BASE_H
 
-#include "src/sf_interface/sf_interface.h"
+#include "sf_interface/sf_interface.h"
 
 // ======================================================================
 // VpicInterpolatorBase

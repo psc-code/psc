@@ -4,6 +4,8 @@
 
 #include <mpi.h>
 
+#include <cstdint>
+
 extern MPI_Comm psc_comm_world;
 extern int psc_world_rank;
 extern int psc_world_size;

@@ -3,7 +3,7 @@
 #define VPIC_FIELD_ARRAY_LOCAL_OPS_H
 
 #define IN_sfa
-#include "src/field_advance/standard/sfa_private.h"
+#include "field_advance/standard/sfa_private.h"
 
 template<class FA>
 struct VpicFieldArrayLocalOps {

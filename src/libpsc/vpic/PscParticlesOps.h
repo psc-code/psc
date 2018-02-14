@@ -3,7 +3,7 @@
 #define PSC_PARTICLES_OPS
 
 #include "psc_vpic_bits.h"
-#include "src/util/v4/v4.h"
+#include "util/v4/v4.h"
 
 #define HAS_V4_PIPELINE
 
