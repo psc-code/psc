@@ -235,8 +235,10 @@ struct psc_mparticles_ops_cuda : psc_mparticles_ops {
     methods                 = psc_mparticles_cuda_methods;
     setup                   = psc_mparticles_cuda_setup;
     destroy                 = psc_mparticles_cuda_destroy;
+#ifdef HAVE_LIBHDF5_HL
     read                    = psc_mparticles_cuda_read;
     write                   = psc_mparticles_cuda_write;
+#endif
     reserve_all             = psc_mparticles_cuda_reserve_all;
     get_nr_particles        = psc_mparticles_cuda_get_nr_particles;
     resize_all              = psc_mparticles_cuda_resize_all;

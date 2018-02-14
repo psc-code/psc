@@ -16,6 +16,7 @@ okfile
 build
 .ipynb_checkpoints
 .libs
+src/include/psc_config.h
 BACKUP
 SELECT
 src/VLI

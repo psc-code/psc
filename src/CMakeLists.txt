@@ -1,9 +1,12 @@
 
 add_subdirectory(libpsc)
 
-add_executable(psc_bubble_yz psc_bubble_yz.cxx)
-target_include_directories(psc_bubble_yz PRIVATE include)
-target_link_libraries(psc_bubble_yz psc)
+macro(add_psc_executable name)
+  add_executable(${name} ${name}.cxx)
+  target_link_libraries(${name} psc)
+endmacro(add_psc_executable)
 
-#target_compile_features(mylib PUBLIC cxx_std_11)
+add_psc_executable(psc_bubble_yz)
+add_psc_executable(psc_flatfoil_yz)
+#add_psc_executable(psc_harris_xz)
 

@@ -5,7 +5,7 @@
 #include <psc_fields_as_single.h>
 #include <fields.hxx>
 
-#include <cuda_iface.h>
+#include "cuda_iface.h"
 
 #include <stdlib.h>
 

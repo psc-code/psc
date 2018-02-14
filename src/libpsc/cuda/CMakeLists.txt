@@ -33,6 +33,11 @@ add_library(psccuda
   psc_output_fields_item_flds_cuda.cxx
   psc_output_fields_item_moments_1st_nc_cuda.cxx
   cuda_moments_1st_nc.cu
+
+  psc_heating_cuda.cxx
+  cuda_heating.cu
+  
+  psc_inject_cuda.cxx
   )
 target_include_directories(psccuda
   PRIVATE ${PROJECT_SOURCE_DIR}/src/include
