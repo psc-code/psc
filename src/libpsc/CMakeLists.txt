@@ -130,6 +130,7 @@ target_compile_features(psc PUBLIC cxx_std_11)
 if (USE_CUDA)
   add_subdirectory(cuda)
   target_link_libraries(psc PRIVATE psccuda)
+  target_include_directories(psc PRIVATE vpic) # FIXME!
 endif()
 
 if (USE_VPIC)
