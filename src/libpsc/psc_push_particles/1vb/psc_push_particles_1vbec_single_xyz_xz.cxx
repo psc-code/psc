@@ -5,7 +5,7 @@
 #include "psc_fields_as_single.h"
 
 #define push_p_ops push_p_ops_1vbec_single_xz
-#include "1vb/psc_push_particles_1vb.h"
+#include "psc_push_particles_1vb.h"
 
 #define DIM DIM_XYZ
 
@@ -18,5 +18,5 @@
 #define IP_VARIANT IP_VARIANT_EC
 #define CALC_J CALC_J_1VB_SPLIT
 
-#include "1vb.c"
+#include "../1vb.c"
 

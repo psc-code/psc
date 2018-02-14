@@ -13,6 +13,7 @@ okfile
 *.orig
 *.dSYM
 *.trs
+build
 .ipynb_checkpoints
 .libs
 BACKUP

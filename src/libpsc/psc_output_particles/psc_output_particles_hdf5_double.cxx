@@ -10,7 +10,7 @@
 #include <hdf5_hl.h>
 #include <string.h>
 
-#include <psc_output_particles_hdf5_common.cxx>
+#include "psc_output_particles_hdf5_common.cxx"
 
 // ======================================================================
 // psc_output_particles: subclass "hdf5_double"

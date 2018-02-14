@@ -11,7 +11,7 @@
 #define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
 
-#include "1vb.c"
+#include "../1vb.c"
 
 template<typename dim_t>
 using push_p_ops_1vb_single = push_p_ops<push_p_config<mfields_single_t, dim_t>>;

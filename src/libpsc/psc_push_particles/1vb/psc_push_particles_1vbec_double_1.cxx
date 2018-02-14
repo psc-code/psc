@@ -15,5 +15,5 @@
 #define psc_push_particles_push_mprts_1 psc_push_particles_1vbec_double_push_mprts_1
 #define psc_push_particles_stagger_mprts_1 psc_push_particles_1vbec_double_stagger_mprts_1
 
-#include "1vb.c"
+#include "../1vb.c"
 

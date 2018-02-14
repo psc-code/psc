@@ -5,7 +5,7 @@
 #include "psc_fields_single.h"
 
 #define push_p_ops push_p_ops_1vbec_single
-#include "1vb/psc_push_particles_1vb.h"
+#include "psc_push_particles_1vb.h"
 
 // ======================================================================
 // psc_push_particles: subclass "1vbec_single"

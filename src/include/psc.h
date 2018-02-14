@@ -3,7 +3,7 @@
 #ifndef PSC_H
 #define PSC_H
 
-#include <config.h>
+//#include <config.h>
 
 #include "psc_bits.h"
 #include "psc_particles.h"

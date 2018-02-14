@@ -3,7 +3,7 @@
 
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
-#include "1vb/psc_push_particles_1vb.h"
+#include "psc_push_particles_1vb.h"
 
 // ======================================================================
 // psc_push_particles: subclass "1vbec_double"
