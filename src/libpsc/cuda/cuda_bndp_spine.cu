@@ -7,8 +7,8 @@
 #include <thrust/host_vector.h>
 #include <thrust/scan.h>
 
-#include <b40c/radixsort_reduction_kernel.h>
-#include <b40c/radixsort_scanscatter_kernel3.h>
+#include "b40c/radixsort_reduction_kernel.h"
+#include "b40c/radixsort_scanscatter_kernel3.h"
 
 #include <mrc_profile.h>
 

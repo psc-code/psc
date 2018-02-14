@@ -7,7 +7,7 @@
 #include <thrust/host_vector.h>
 #include <thrust/scan.h>
 
-#include <b40c/radixsort_scanscatter_kernel4.h>
+#include "b40c/radixsort_scanscatter_kernel4.h"
 
 using namespace b40c_thrust;
 

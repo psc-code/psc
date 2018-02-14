@@ -129,13 +129,13 @@ cuda_heating.lo: cuda_mparticles_const.h
 cuda_transfer.lo: cuda_iface_bnd.h
 cuda_bnd.lo: cuda_iface_bnd.h
 
-psc_bnd_particles_cuda.lo: %.lo: %.cxx $(CUDA_DEPS)
-	@echo "Tricking libtool"
-	echo "void lotrickdummy() {}" > ${<:.cxx=.c}
-	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
-	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ ${<:.cxx=.c}
-	rm ${@:.lo=.o} ${<:.cxx=.c}
-	$(CUDACC) -x cu $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
+# psc_bnd_particles_cuda.lo: %.lo: %.cxx $(CUDA_DEPS)
+# 	@echo "Tricking libtool"
+# 	echo "void lotrickdummy() {}" > ${<:.cxx=.c}
+# 	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
+# 	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ ${<:.cxx=.c}
+# 	rm ${@:.lo=.o} ${<:.cxx=.c}
+# 	$(CUDACC) -x cu $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 #FIXME, this is just really too hacky...
 

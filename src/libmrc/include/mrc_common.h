@@ -2,7 +2,7 @@
 #ifndef MRC_COMMON_H
 #define MRC_COMMON_H
 
-#include <config.h>
+//#include <config.h>
 #include <mrc.h>
 
 #include <mpi.h>

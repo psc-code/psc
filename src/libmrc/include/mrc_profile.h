@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <mpi.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+/* #ifdef HAVE_CONFIG_H */
+/* #include "config.h" */
+/* #endif */
 
 #define NR_EVENTS (0)
 

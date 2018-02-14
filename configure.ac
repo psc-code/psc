@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT([psc], [1.94])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([src/include/psc_config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 dnl Source any special site-specific file

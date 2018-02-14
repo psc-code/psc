@@ -2,7 +2,7 @@
 #ifndef CUDA_MFIELDS_CONST_H
 #define CUDA_MFIELDS_CONST_H
 
-#include <cuda_bits.h>
+#include "cuda_bits.h"
 
 #include <cstdio>
 
