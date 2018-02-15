@@ -130,32 +130,31 @@ calc_vxi(float vxi[3], struct d_particle p)
 // advance moments according to EM fields
 
 __device__ static void
-push_pxi_dt(struct d_particle *p,
-	    float exq, float eyq, float ezq, float hxq, float hyq, float hzq)
+push_pxi_dt(struct d_particle *p, real_t E[3], real_t H[3])
 {
   int kind = __float_as_int(p->kind_as_float);
-  float dq = d_cmprts_const.dq[kind];
-  float pxm = p->pxi[0] + dq*exq;
-  float pym = p->pxi[1] + dq*eyq;
-  float pzm = p->pxi[2] + dq*ezq;
+  real_t dq = d_cmprts_const.dq[kind];
+  real_t pxm = p->pxi[0] + dq*E[0];
+  real_t pym = p->pxi[1] + dq*E[1];
+  real_t pzm = p->pxi[2] + dq*E[2];
   
-  float root = dq * rsqrtf(float(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
-  float taux = hxq * root, tauy = hyq * root, tauz = hzq * root;
+  real_t root = dq * rsqrtf(real_t(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
+  real_t taux = H[0] * root, tauy = H[1] * root, tauz = H[2] * root;
   
-  float tau = float(1.) / (float(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
-  float pxp = ( (float(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
-	       +(float(2.)*taux*tauy + float(2.)*tauz)*pym
-	       +(float(2.)*taux*tauz - float(2.)*tauy)*pzm)*tau;
-  float pyp = ( (float(2.)*taux*tauy - float(2.)*tauz)*pxm
-	       +(float(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
-	       +(float(2.)*tauy*tauz + float(2.)*taux)*pzm)*tau;
-  float pzp = ( (float(2.)*taux*tauz + float(2.)*tauy)*pxm
-	       +(float(2.)*tauy*tauz - float(2.)*taux)*pym
-	       +(float(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
+  real_t tau = real_t(1.) / (real_t(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
+  real_t pxp = ( (real_t(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
+	        +(real_t(2.)*taux*tauy + real_t(2.)*tauz)*pym
+	        +(real_t(2.)*taux*tauz - real_t(2.)*tauy)*pzm)*tau;
+  real_t pyp = ( (real_t(2.)*taux*tauy - real_t(2.)*tauz)*pxm
+	        +(real_t(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
+	        +(real_t(2.)*tauy*tauz + real_t(2.)*taux)*pzm)*tau;
+  real_t pzp = ( (real_t(2.)*taux*tauz + real_t(2.)*tauy)*pxm
+		+(real_t(2.)*tauy*tauz - real_t(2.)*taux)*pym
+		+(real_t(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
   
-  p->pxi[0] = pxp + dq * exq;
-  p->pxi[1] = pyp + dq * eyq;
-  p->pxi[2] = pzp + dq * ezq;
+  p->pxi[0] = pxp + dq * E[0];
+  p->pxi[1] = pyp + dq * E[1];
+  p->pxi[2] = pzp + dq * E[2];
 }
 
 // ----------------------------------------------------------------------
@@ -190,12 +189,12 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   if (REORDER) {
     LOAD_PARTICLE_MOM(*prt, d_pxi4, id);
-    push_pxi_dt(prt, E[0], E[1], E[2], H[0], H[1], H[2]);
+    push_pxi_dt(prt, E, H);
     STORE_PARTICLE_MOM(*prt, d_alt_pxi4, n);
   } else {
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     LOAD_PARTICLE_MOM(*prt, d_pxi4, n);
-    push_pxi_dt(prt, E[0], E[1], E[2], H[0], H[1], H[2]);
+    push_pxi_dt(prt, E, H);
     STORE_PARTICLE_MOM(*prt, d_pxi4, n);
   }
 }
