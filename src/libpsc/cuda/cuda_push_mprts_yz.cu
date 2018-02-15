@@ -125,37 +125,6 @@ calc_vxi(float vxi[3], struct d_particle p)
 }
 
 // ----------------------------------------------------------------------
-// push_pxi_dt
-//
-// advance moments according to EM fields
-
-__device__ static void
-push_pxi_dt(struct d_particle& p, const real_t E[3], const real_t H[3], real_t dq)
-{
-  real_t pxm = p.pxi[0] + dq*E[0];
-  real_t pym = p.pxi[1] + dq*E[1];
-  real_t pzm = p.pxi[2] + dq*E[2];
-  
-  real_t root = dq * rsqrtf(real_t(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
-  real_t taux = H[0] * root, tauy = H[1] * root, tauz = H[2] * root;
-  
-  real_t tau = real_t(1.) / (real_t(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
-  real_t pxp = ( (real_t(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
-	        +(real_t(2.)*taux*tauy + real_t(2.)*tauz)*pym
-	        +(real_t(2.)*taux*tauz - real_t(2.)*tauy)*pzm)*tau;
-  real_t pyp = ( (real_t(2.)*taux*tauy - real_t(2.)*tauz)*pxm
-	        +(real_t(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
-	        +(real_t(2.)*tauy*tauz + real_t(2.)*taux)*pzm)*tau;
-  real_t pzp = ( (real_t(2.)*taux*tauz + real_t(2.)*tauy)*pxm
-		+(real_t(2.)*tauy*tauz - real_t(2.)*taux)*pym
-		+(real_t(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
-  
-  p.pxi[0] = pxp + dq * E[0];
-  p.pxi[1] = pyp + dq * E[1];
-  p.pxi[2] = pzp + dq * E[2];
-}
-
-// ----------------------------------------------------------------------
 // push_part_one
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
@@ -189,11 +158,11 @@ push_part_one(struct d_particle& prt, int n, uint *d_ids, float4 *d_xi4, float4 
   real_t dq = d_cmprts_const.dq[kind];
   if (REORDER) {
     LOAD_PARTICLE_MOM(prt, d_pxi4, id);
-    push_pxi_dt(prt, E, H, dq);
+    push_pxi_dt(prt.pxi, E, H, dq);
     STORE_PARTICLE_MOM(prt, d_alt_pxi4, n);
   } else {
     LOAD_PARTICLE_MOM(prt, d_pxi4, n);
-    push_pxi_dt(prt, E, H, dq);
+    push_pxi_dt(prt.pxi, E, H, dq);
     STORE_PARTICLE_MOM(prt, d_pxi4, n);
   }
 }
