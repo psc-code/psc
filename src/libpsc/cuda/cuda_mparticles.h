@@ -50,13 +50,17 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
 
 struct DMParticles
 {
-  DMParticles(float4* xi4, float4* pxi4)
+  DMParticles(float4* xi4, float4* pxi4, float4* alt_xi4, float4 *alt_pxi4)
     : xi4_(xi4),
-      pxi4_(pxi4)
+      pxi4_(pxi4),
+      alt_xi4_(alt_xi4),
+      alt_pxi4_(alt_pxi4)
   {}
   
   float4 *xi4_;
   float4 *pxi4_;
+  float4 *alt_xi4_;
+  float4 *alt_pxi4_;
 };
 
 // ----------------------------------------------------------------------

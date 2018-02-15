@@ -500,7 +500,6 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMParticles d_mprts,
-	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      uint *d_off, int nr_total_blocks, uint *d_ids, uint *d_bidx,
 	      DMFields d_flds0, uint size)
 {
@@ -518,11 +517,11 @@ push_mprts_ab(int block_start, DMParticles d_mprts,
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP>
-      (prt, n, d_ids, d_mprts.xi4_, d_mprts.pxi4_, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
+      (prt, n, d_ids, d_mprts.xi4_, d_mprts.pxi4_, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, fld_cache, ci0);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(&prt, n, d_alt_xi4, d_alt_pxi4, scurr, nr_total_blocks, p, d_bidx, bid, ci0);
+	(&prt, n, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, scurr, nr_total_blocks, p, d_bidx, bid, ci0);
     } else {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
 	(&prt, n, d_mprts.xi4_, d_mprts.pxi4_, scurr, nr_total_blocks, p, d_bidx, bid, ci0);
@@ -583,7 +582,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
 	(block_start, *cmprts,
-	 cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
+	 cmprts->d_off.data().get(),
 	 cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
 	 *cmflds, fld_size);
       cuda_sync_if_enabled();
@@ -593,7 +592,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, *cmprts,
-       cmprts->d_alt_xi4.data().get(), cmprts->d_alt_pxi4.data().get(), cmprts->d_off.data().get(),
+       cmprts->d_off.data().get(),
        cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
        *cmflds, fld_size);
     cuda_sync_if_enabled();

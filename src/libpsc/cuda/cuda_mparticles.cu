@@ -428,7 +428,8 @@ const int* cuda_mparticles::patch_get_b_mx(int p)
 
 cuda_mparticles::operator DMParticles()
 {
-  return DMParticles(d_xi4.data().get(), d_pxi4.data().get());
+  return DMParticles(d_xi4.data().get(), d_pxi4.data().get(),
+		     d_alt_xi4.data().get(), d_alt_pxi4.data().get());
 }
 
 
