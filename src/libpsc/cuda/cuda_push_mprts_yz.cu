@@ -130,11 +130,11 @@ calc_vxi(float vxi[3], struct d_particle p)
 // advance moments according to EM fields
 
 __device__ static void
-push_pxi_dt(struct d_particle *p, const real_t E[3], const real_t H[3], real_t dq)
+push_pxi_dt(struct d_particle& p, const real_t E[3], const real_t H[3], real_t dq)
 {
-  real_t pxm = p->pxi[0] + dq*E[0];
-  real_t pym = p->pxi[1] + dq*E[1];
-  real_t pzm = p->pxi[2] + dq*E[2];
+  real_t pxm = p.pxi[0] + dq*E[0];
+  real_t pym = p.pxi[1] + dq*E[1];
+  real_t pzm = p.pxi[2] + dq*E[2];
   
   real_t root = dq * rsqrtf(real_t(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
   real_t taux = H[0] * root, tauy = H[1] * root, tauz = H[2] * root;
@@ -150,9 +150,9 @@ push_pxi_dt(struct d_particle *p, const real_t E[3], const real_t H[3], real_t d
 		+(real_t(2.)*tauy*tauz - real_t(2.)*taux)*pym
 		+(real_t(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
   
-  p->pxi[0] = pxp + dq * E[0];
-  p->pxi[1] = pyp + dq * E[1];
-  p->pxi[2] = pzp + dq * E[2];
+  p.pxi[0] = pxp + dq * E[0];
+  p.pxi[1] = pyp + dq * E[1];
+  p.pxi[2] = pzp + dq * E[2];
 }
 
 // ----------------------------------------------------------------------
@@ -161,23 +161,23 @@ push_pxi_dt(struct d_particle *p, const real_t E[3], const real_t H[3], real_t d
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, typename FldCache_t>
 __device__ static void
-push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
+push_part_one(struct d_particle& prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      const FldCache_t& fld_cache, int ci0[3])
 {
   uint id;
   if (REORDER) {
     id = d_ids[n];
-    LOAD_PARTICLE_POS(*prt, d_xi4, id);
+    LOAD_PARTICLE_POS(prt, d_xi4, id);
   } else {
-    LOAD_PARTICLE_POS(*prt, d_xi4, n);
+    LOAD_PARTICLE_POS(prt, d_xi4, n);
   }
   // here we have x^{n+.5}, p^n
 
   // field interpolation
   float xm[3];
-  xm[1] = prt->xi[1] * d_cmprts_const.dxi[1];
-  xm[2] = prt->xi[2] * d_cmprts_const.dxi[2];
+  xm[1] = prt.xi[1] * d_cmprts_const.dxi[1];
+  xm[2] = prt.xi[2] * d_cmprts_const.dxi[2];
   InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
   ip.set_coeffs(xm);
   
@@ -185,16 +185,16 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  int kind = __float_as_int(prt->kind_as_float);
+  int kind = __float_as_int(prt.kind_as_float);
   real_t dq = d_cmprts_const.dq[kind];
   if (REORDER) {
-    LOAD_PARTICLE_MOM(*prt, d_pxi4, id);
+    LOAD_PARTICLE_MOM(prt, d_pxi4, id);
     push_pxi_dt(prt, E, H, dq);
-    STORE_PARTICLE_MOM(*prt, d_alt_pxi4, n);
+    STORE_PARTICLE_MOM(prt, d_alt_pxi4, n);
   } else {
-    LOAD_PARTICLE_MOM(*prt, d_pxi4, n);
+    LOAD_PARTICLE_MOM(prt, d_pxi4, n);
     push_pxi_dt(prt, E, H, dq);
-    STORE_PARTICLE_MOM(*prt, d_pxi4, n);
+    STORE_PARTICLE_MOM(prt, d_pxi4, n);
   }
 }
 
@@ -549,7 +549,7 @@ push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP>
-      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
+      (prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
