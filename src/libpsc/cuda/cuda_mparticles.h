@@ -46,6 +46,20 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
 };
 
 // ----------------------------------------------------------------------
+// DMParticles
+
+struct DMParticles
+{
+  DMParticles(float4* xi4, float4* pxi4)
+    : xi4_(xi4),
+      pxi4_(pxi4)
+  {}
+  
+  float4 *xi4_;
+  float4 *pxi4_;
+};
+
+// ----------------------------------------------------------------------
 // cuda_mparticles
 
 struct cuda_mparticles : cuda_mparticles_base
@@ -80,6 +94,8 @@ public:
   bool check_ordered();
 
   void resize(uint n_prts);
+
+  operator DMParticles();
   
 public:
   // per particle

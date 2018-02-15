@@ -423,5 +423,14 @@ const int* cuda_mparticles::patch_get_b_mx(int p)
   return pi_.b_mx_;
 }
 
+// ----------------------------------------------------------------------
+// cast to DMParticles
+
+cuda_mparticles::operator DMParticles()
+{
+  return DMParticles(d_xi4.data().get(), d_pxi4.data().get());
+}
+
+
 #include "cuda_mparticles_gold.cu"
 #include "cuda_mparticles_checks.cu"
