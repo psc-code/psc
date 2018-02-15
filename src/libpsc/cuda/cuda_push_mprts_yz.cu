@@ -130,10 +130,8 @@ calc_vxi(float vxi[3], struct d_particle p)
 // advance moments according to EM fields
 
 __device__ static void
-push_pxi_dt(struct d_particle *p, real_t E[3], real_t H[3])
+push_pxi_dt(struct d_particle *p, const real_t E[3], const real_t H[3], real_t dq)
 {
-  int kind = __float_as_int(p->kind_as_float);
-  real_t dq = d_cmprts_const.dq[kind];
   real_t pxm = p->pxi[0] + dq*E[0];
   real_t pym = p->pxi[1] + dq*E[1];
   real_t pzm = p->pxi[2] + dq*E[2];
@@ -187,14 +185,15 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+  int kind = __float_as_int(prt->kind_as_float);
+  real_t dq = d_cmprts_const.dq[kind];
   if (REORDER) {
     LOAD_PARTICLE_MOM(*prt, d_pxi4, id);
-    push_pxi_dt(prt, E, H);
+    push_pxi_dt(prt, E, H, dq);
     STORE_PARTICLE_MOM(*prt, d_alt_pxi4, n);
   } else {
-    // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     LOAD_PARTICLE_MOM(*prt, d_pxi4, n);
-    push_pxi_dt(prt, E, H);
+    push_pxi_dt(prt, E, H, dq);
     STORE_PARTICLE_MOM(*prt, d_pxi4, n);
   }
 }
