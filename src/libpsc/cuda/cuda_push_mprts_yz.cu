@@ -158,11 +158,11 @@ push_part_one(struct d_particle& prt, int n, uint *d_ids, float4 *d_xi4, float4 
   real_t dq = d_cmprts_const.dq[kind];
   if (REORDER) {
     LOAD_PARTICLE_MOM(prt, d_pxi4, id);
-    push_pxi_dt(prt.pxi, E, H, dq);
+    push_p(prt.pxi, E, H, dq);
     STORE_PARTICLE_MOM(prt, d_alt_pxi4, n);
   } else {
     LOAD_PARTICLE_MOM(prt, d_pxi4, n);
-    push_pxi_dt(prt.pxi, E, H, dq);
+    push_p(prt.pxi, E, H, dq);
     STORE_PARTICLE_MOM(prt, d_pxi4, n);
   }
 }
