@@ -14,7 +14,7 @@ inline void push_p(R p[3], const R E[3], const R H[3], R dq)
   R pym = p[1] + dq * E[1];
   R pzm = p[2] + dq * E[2];
 
-  R root = dq / std::sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+  R root = dq * rsqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
   R taux = H[0] * root;
   R tauy = H[1] * root;
   R tauz = H[2] * root;
@@ -41,13 +41,13 @@ inline void push_p(R p[3], const R E[3], const R H[3], R dq)
 // advance moments according to EM fields
 
 template<typename R>
-__device__ inline void push_pxi_dt(R pxi[3], const R E[3], const R H[3], R dq)
+__device__ inline void push_pxi_dt(R p[3], const R E[3], const R H[3], R dq)
 {
-  R pxm = pxi[0] + dq*E[0];
-  R pym = pxi[1] + dq*E[1];
-  R pzm = pxi[2] + dq*E[2];
+  R pxm = p[0] + dq*E[0];
+  R pym = p[1] + dq*E[1];
+  R pzm = p[2] + dq*E[2];
   
-  R root = dq * rsqrtf(R(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
+  R root = dq * rsqrt(R(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
   R taux = H[0] * root, tauy = H[1] * root, tauz = H[2] * root;
   
   R tau = R(1.) / (R(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
@@ -61,9 +61,9 @@ __device__ inline void push_pxi_dt(R pxi[3], const R E[3], const R H[3], R dq)
 	   +(R(2.)*tauy*tauz - R(2.)*taux)*pym
 	   +(R(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
   
-  pxi[0] = pxp + dq * E[0];
-  pxi[1] = pyp + dq * E[1];
-  pxi[2] = pzp + dq * E[2];
+  p[0] = pxp + dq * E[0];
+  p[1] = pyp + dq * E[1];
+  p[2] = pzp + dq * E[2];
 }
 
 #endif
