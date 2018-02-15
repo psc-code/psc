@@ -4,13 +4,7 @@
 
 #include "fields.hxx" // for dim_xyz etc, FIXME
 
-// ----------------------------------------------------------------------
-// cuda compatibility stuff
-
-#ifndef __CUDACC__
-#define __host__
-#define __device__
-#endif
+#include "cuda_compat.h"
 
 // ----------------------------------------------------------------------
 // get_fint_remainder
