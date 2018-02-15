@@ -16,6 +16,8 @@
 
 #define THREADS_PER_BLOCK (512)
 
+using real_t = float;
+
 enum DEPOSIT {
   DEPOSIT_VB_2D,
   DEPOSIT_VB_3D,
@@ -182,23 +184,18 @@ push_part_one(struct d_particle *prt, int n, uint *d_ids, float4 *d_xi4, float4 
   InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
   ip.set_coeffs(xm);
   
-  float exq, eyq, ezq, hxq, hyq, hzq;
-  exq = ip.ex(fld_cache);
-  eyq = ip.ey(fld_cache);
-  ezq = ip.ez(fld_cache);
-  hxq = ip.hx(fld_cache);
-  hyq = ip.hy(fld_cache);
-  hzq = ip.hz(fld_cache);
+  real_t E[3] = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
+  real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   if (REORDER) {
     LOAD_PARTICLE_MOM(*prt, d_pxi4, id);
-    push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+    push_pxi_dt(prt, E[0], E[1], E[2], H[0], H[1], H[2]);
     STORE_PARTICLE_MOM(*prt, d_alt_pxi4, n);
   } else {
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     LOAD_PARTICLE_MOM(*prt, d_pxi4, n);
-    push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+    push_pxi_dt(prt, E[0], E[1], E[2], H[0], H[1], H[2]);
     STORE_PARTICLE_MOM(*prt, d_pxi4, n);
   }
 }
