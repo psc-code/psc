@@ -469,7 +469,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 #define DECLARE_AND_ZERO_SCURR						\
   __shared__ float _scurr[CURR::shared_size];				\
-  CURR scurr(_scurr, d_flds0[p])					\
+  CURR scurr(_scurr, d_mflds[p])					\
 
 #define DECLARE_AND_CACHE_FIELDS					\
 
@@ -498,13 +498,13 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_flds0)
+push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_mflds)
 {
   using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
 
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
   __shared__ FldCache_t fld_cache;
-  fld_cache.load(d_flds0[p], ci0);
+  fld_cache.load(d_mflds[p], ci0);
   DECLARE_AND_ZERO_SCURR;
   
   __syncthreads();
