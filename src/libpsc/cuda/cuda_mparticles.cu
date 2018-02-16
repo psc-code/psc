@@ -430,7 +430,8 @@ cuda_mparticles::operator DMParticles()
 {
   return DMParticles(d_xi4.data().get(), d_pxi4.data().get(),
 		     d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
-		     d_off.data().get());
+		     d_off.data().get(), d_bidx.data().get(),
+		     d_id.data().get());
 }
 
 
