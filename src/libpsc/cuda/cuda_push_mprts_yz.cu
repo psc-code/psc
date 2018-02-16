@@ -368,31 +368,31 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 
 template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
-yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
 	  int nr_total_blocks, int p_nr,
 	  uint *d_bidx, int bid, int *ci0)
 {
   float vxi[3];
-  calc_vxi(vxi, *prt);
+  calc_vxi(vxi, prt);
 
   // position xm at x^(n+.5)
   float h0[3], h1[3];
   float xm[3], xp[3];
   int j[3], k[3];
   
-  find_idx_off_pos_1st(prt->xi, j, h0, xm, float(0.));
+  find_idx_off_pos_1st(prt.xi, j, h0, xm, float(0.));
 
   if (DEPOSIT == DEPOSIT_VB_2D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    push_xi(prt, vxi, .5f * d_cmprts_const.dt);
+    push_xi(&prt, vxi, .5f * d_cmprts_const.dt);
 
-    float fnqx = vxi[0] * prt->qni_wni * d_cmprts_const.fnqs;
+    float fnqx = vxi[0] * prt.qni_wni * d_cmprts_const.fnqs;
 
     // out-of-plane currents at intermediate time
     int lf[3];
     float of[3];
-    find_idx_off_1st(prt->xi, lf, of, float(0.));
+    find_idx_off_1st(prt.xi, lf, of, float(0.));
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
 
@@ -402,17 +402,17 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
     scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, ci0);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, .5f * d_cmprts_const.dt);
-    STORE_PARTICLE_POS(*prt, d_xi4, n);
+    push_xi(&prt, vxi, .5f * d_cmprts_const.dt);
+    STORE_PARTICLE_POS(prt, d_xi4, n);
   } else if (DEPOSIT == DEPOSIT_VB_3D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, d_cmprts_const.dt);
-    STORE_PARTICLE_POS(*prt, d_xi4, n);
+    push_xi(&prt, vxi, d_cmprts_const.dt);
+    STORE_PARTICLE_POS(prt, d_xi4, n);
   }
 
   // save block_idx for new particle position at x^(n+1.5)
-  uint block_pos_y = __float2int_rd(prt->xi[1] * d_cmprts_const.b_dxi[1]);
-  uint block_pos_z = __float2int_rd(prt->xi[2] * d_cmprts_const.b_dxi[2]);
+  uint block_pos_y = __float2int_rd(prt.xi[1] * d_cmprts_const.b_dxi[1]);
+  uint block_pos_z = __float2int_rd(prt.xi[2] * d_cmprts_const.b_dxi[2]);
   int nr_blocks = d_cmprts_const.b_mx[1] * d_cmprts_const.b_mx[2];
 
   int block_idx;
@@ -428,7 +428,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   d_bidx[n] = block_idx;
 
   // position xm at x^(n+.5)
-  find_idx_off_pos_1st(prt->xi, k, h1, xp, float(0.));
+  find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
 
   // deposit xm -> xp
   int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
@@ -452,16 +452,16 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   float dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt.qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt.qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt.qni_wni, scurr, ci0);
 }
 
 // ======================================================================
@@ -517,10 +517,10 @@ push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_mflds)
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(&prt, n, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(prt, n, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
     } else {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(&prt, n, d_mprts.xi4_, d_mprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(prt, n, d_mprts.xi4_, d_mprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
     }
   }
   
