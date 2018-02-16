@@ -10,10 +10,10 @@
 // vpic_mparticles_get_size_all
 
 void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
-				  int *n_prts_by_patch)
+				  uint *n_prts_by_patch)
 {
   assert(n_patches == 1);
-  int n_prts = 0;
+  uint n_prts = 0;
 
   for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     n_prts += sp->np;
@@ -195,10 +195,10 @@ void copy_to(mparticles_vpic_t mprts_from, MP mprts_to)
 {
   Particles *vmprts = mprts_from->vmprts;
   int n_patches = mprts_to.n_patches();
-  int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
-  mprts_to.reserve_all(n_prts_by_patch);
-  mprts_to.resize_all(n_prts_by_patch);
+  mprts_to->reserve_all(n_prts_by_patch);
+  mprts_to->resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -215,15 +215,15 @@ void copy_from<mparticles_single_t>(mparticles_vpic_t mprts_to, mparticles_singl
 {
   Particles *vmprts = mprts_to->vmprts;
   int n_patches = mprts_to.n_patches();
-  int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   // reset particle counts to zero, then use push_back to add back new particles
   for (int p = 0; p < n_patches; p++) {
     n_prts_by_patch[p] = 0;
   }
-  mprts_to.resize_all(n_prts_by_patch);
+  mprts_to->resize_all(n_prts_by_patch);
 
   mprts_from->get_size_all(n_prts_by_patch);
-  mprts_to.reserve_all(n_prts_by_patch);
+  mprts_to->reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
     ConvertToVpic<mparticles_single_t> convert_to_vpic(mprts_from, *vmprts->grid(), p);
@@ -242,10 +242,10 @@ void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts_to, mparticl
 {
   Particles *vmprts = mprts_to->vmprts;
   int n_patches = mprts_to.n_patches();
-  int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
-  mprts_to.reserve_all(n_prts_by_patch);
-  mprts_to.resize_all(n_prts_by_patch);
+  mprts_to->reserve_all(n_prts_by_patch);
+  mprts_to->resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -300,7 +300,7 @@ psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
 // psc_mparticles_vpic_get_size_all
 
 static void
-psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
   
@@ -311,7 +311,7 @@ psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 // psc_mparticles_vpic_reserve_all
 
 static void
-psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 
@@ -322,7 +322,7 @@ psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
 // psc_mparticles_vpic_resize_all
 
 static void
-psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
 {
   struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
 

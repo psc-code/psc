@@ -530,7 +530,7 @@ psc_harris_setup(struct psc *psc)
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
 
   // partition and initial balancing
-  int *n_prts_by_patch = (int *) calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
+  uint *n_prts_by_patch = (uint *) calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
 
@@ -601,7 +601,7 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
 // set particles x^{n+1/2}, p^{n+1/2}
 
 static void
-psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
+psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool count_only)
 {
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;

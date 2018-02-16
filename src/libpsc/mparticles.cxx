@@ -19,7 +19,7 @@ _psc_mparticles_view(struct psc_mparticles *mprts)
   mpi_printf(comm, "  n_patches    = %d\n", mprts->nr_patches);
   mpi_printf(comm, "  n_prts_total = %d\n", psc_mparticles_nr_particles(mprts));
 
-  int n_prts_by_patch[mprts->nr_patches];
+  uint n_prts_by_patch[mprts->nr_patches];
   psc_mparticles_get_size_all(mprts, n_prts_by_patch);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -37,7 +37,7 @@ psc_mparticles_nr_particles(struct psc_mparticles *mprts)
 }
 
 void
-psc_mparticles_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_get_size_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
   assert(ops->get_size_all);
@@ -46,7 +46,7 @@ psc_mparticles_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 void
-psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_resize_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
   assert(ops->resize_all);
@@ -55,7 +55,7 @@ psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 void
-psc_mparticles_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_reserve_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
   assert(ops && ops->reserve_all);
@@ -83,7 +83,7 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 
   if (flags & MP_DONT_COPY) {
     if (!(flags & MP_DONT_RESIZE)) {
-      int n_prts_by_patch[mprts_from->nr_patches];
+      uint n_prts_by_patch[mprts_from->nr_patches];
       psc_mparticles_get_size_all(mprts_from, n_prts_by_patch);
       psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
       psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
@@ -170,8 +170,8 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   if (flags & MP_DONT_COPY) {
     // let's check that the size of the particle arrays hasn't changed, since
     // it's not obvious what we should do in case it did...
-    int n_prts_by_patch[mprts->nr_patches];
-    int n_prts_by_patch_to[mprts_to->nr_patches];
+    uint n_prts_by_patch[mprts->nr_patches];
+    uint n_prts_by_patch_to[mprts_to->nr_patches];
 
     psc_mparticles_get_size_all(mprts, n_prts_by_patch);
     psc_mparticles_get_size_all(mprts_to, n_prts_by_patch_to);

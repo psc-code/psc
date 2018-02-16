@@ -23,7 +23,7 @@ struct psc_balance_ops {
 				struct communicate_ctx *ctx,
 				struct psc_mparticles *mprts_old,
 				struct psc_mparticles *mprts_new,
-				int *nr_particles_by_patch_new);
+				uint *nr_particles_by_patch_new);
   void (*communicate_fields)(struct psc_balance *bal,
 			     struct communicate_ctx *ctx,
 			     struct psc_mfields *mflds_old,

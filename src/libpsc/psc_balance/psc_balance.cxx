@@ -32,7 +32,7 @@ capability_jaguar(int p)
 }
 
 static void
-psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch)
+psc_get_loads_initial(struct psc *psc, double *loads, uint *nr_particles_by_patch)
 {
   psc_foreach_patch(psc, p) {
     int *ldims = psc->patch[p].ldims;
@@ -46,7 +46,7 @@ psc_get_loads(struct psc *psc, double *loads)
 {
   struct psc_mparticles *mprts = psc->particles;
   
-  int n_prts_by_patch[mprts->nr_patches];
+  uint n_prts_by_patch[mprts->nr_patches];
   psc_mparticles_get_size_all(mprts, n_prts_by_patch);
   psc_foreach_patch(psc, p) {
     if (psc->balance->factor_fields >= 0.) {
@@ -226,7 +226,7 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
 void
 psc_balance_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
 				  struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
-				  int *nr_particles_by_patch_new)
+				  uint *nr_particles_by_patch_new)
 {
   struct psc_balance_ops *ops = psc_balance_ops(bal);
 
@@ -397,7 +397,7 @@ communicate_free(struct communicate_ctx *ctx)
 }
 
 static void
-communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_by_patch)
+communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_by_patch)
 {
   static int pr;
   if (!pr) {
@@ -406,9 +406,9 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
 
   prof_start(pr);
 
-  int *nr_particles_by_patch_old = *p_nr_particles_by_patch;
-  int *nr_particles_by_patch_new = (int *) calloc(ctx->nr_patches_new,
-					  sizeof(nr_particles_by_patch_new));
+  uint *nr_particles_by_patch_old = *p_nr_particles_by_patch;
+  uint *nr_particles_by_patch_new = (uint *) calloc(ctx->nr_patches_new,
+						   sizeof(nr_particles_by_patch_new));
   // post receives 
 
   MPI_Request *recv_reqs = (MPI_Request *) calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
@@ -523,7 +523,7 @@ extern bool psc_output_fields_check_bnd;
 
 void
 psc_balance_initial(struct psc_balance *bal, struct psc *psc,
-		    int **p_nr_particles_by_patch)
+		    uint **p_nr_particles_by_patch)
 {
   struct mrc_domain *domain_old = psc->mrc_domain;
 
@@ -714,7 +714,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_start(pr_bal_prts);
 
   prof_start(pr_bal_prts_A);
-  int *nr_particles_by_patch = (int *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
+  uint *nr_particles_by_patch = (uint *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
   psc_mparticles_get_size_all(psc->particles, nr_particles_by_patch);
   prof_stop(pr_bal_prts_A);
 

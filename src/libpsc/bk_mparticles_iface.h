@@ -34,9 +34,9 @@ extern "C" {
 
 bk_mparticles *bk_mparticles_new(int n_patches);
 void bk_mparticles_delete(bk_mparticles *bkmprts);
-void bk_mparticles_reserve_all(bk_mparticles *bkmprts, int n_prts_by_patch[]);
-void bk_mparticles_resize_all(bk_mparticles *bkmprts, int n_prts_by_patch[]);
-void bk_mparticles_size_all(bk_mparticles *bkmprts, int n_prts_by_patch[]);
+void bk_mparticles_reserve_all(bk_mparticles *bkmprts, uint n_prts_by_patch[]);
+void bk_mparticles_resize_all(bk_mparticles *bkmprts, uint n_prts_by_patch[]);
+void bk_mparticles_size_all(bk_mparticles *bkmprts, uint n_prts_by_patch[]);
 int bk_mparticles_n_prts(bk_mparticles *bkmprts);
 
 #if 0

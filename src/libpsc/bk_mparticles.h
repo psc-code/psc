@@ -2,6 +2,7 @@
 #ifndef BK_MPARTICLES_H
 #define BK_MPARTICLES_H
 
+#include <psc_bits.h>
 #include <vector>
 
 // ======================================================================
@@ -26,7 +27,7 @@ struct mparticles_ {
   // ----------------------------------------------------------------------
   // mparticles::reserve_all
 
-  void reserve_all(const int n_prts_by_patch[])
+  void reserve_all(const uint n_prts_by_patch[])
   {
     for (int p = 0; p < n_patches; p++) {
       buf[p].reserve(n_prts_by_patch[p]);
@@ -36,7 +37,7 @@ struct mparticles_ {
   // ----------------------------------------------------------------------
   // mparticles::resize_all
   
-  void resize_all(const int n_prts_by_patch[])
+  void resize_all(const uint n_prts_by_patch[])
   {
     for (int p = 0; p < n_patches; p++) {
       buf[p].resize(n_prts_by_patch[p]);
@@ -46,7 +47,7 @@ struct mparticles_ {
   // ----------------------------------------------------------------------
   // mparticles::size_all
   
-  void size_all(int n_prts_by_patch[]) const
+  void size_all(uint n_prts_by_patch[]) const
   {
     for (int p = 0; p < n_patches; p++) {
       n_prts_by_patch[p] = buf[p].size();

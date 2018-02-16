@@ -508,7 +508,8 @@ _psc_setup(struct psc *psc)
   psc_method_do_setup(psc->method, psc);
 
   // partition and initial balancing
-  int *n_prts_by_patch = new int[psc->nr_patches]();
+  uint *n_prts_by_patch = new uint[psc->nr_patches]();
+  
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
 
@@ -671,7 +672,7 @@ find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 // psc_setup_partition
 
 void
-psc_setup_partition(struct psc *psc, int *nr_particles_by_patch)
+psc_setup_partition(struct psc *psc, uint *nr_particles_by_patch)
 {
   if (psc_ops(psc)->setup_particles) {
     psc_ops(psc)->setup_particles(psc, nr_particles_by_patch, true);
@@ -789,7 +790,7 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
 // psc_setup_particles
 
 void
-psc_setup_particles(struct psc *psc, int *nr_particles_by_patch)
+psc_setup_particles(struct psc *psc, uint *nr_particles_by_patch)
 {
   if (psc_ops(psc)->setup_particles) {
     psc_ops(psc)->setup_particles(psc, nr_particles_by_patch, false);

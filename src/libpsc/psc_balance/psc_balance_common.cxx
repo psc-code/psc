@@ -10,7 +10,7 @@ using real_t = mparticles_t::real_t;
 static void
 psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
 				      struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
-				      int *nr_particles_by_patch_new)
+				      uint *nr_particles_by_patch_new)
 {
   static int pr, pr_A, pr_B, pr_C, pr_D;
   if (!pr) {

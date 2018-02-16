@@ -230,16 +230,6 @@ struct mparticles_base
     mprts_ = nullptr;
   }
 
-  void reserve_all(int *n_prts_by_patch)
-  {
-    psc_mparticles_reserve_all(mprts_, n_prts_by_patch);
-  }
-
-  void resize_all(int *n_prts_by_patch)
-  {
-    psc_mparticles_resize_all(mprts_, n_prts_by_patch);
-  }
-
   unsigned int n_patches() { return mprts_->nr_patches; }
   
   psc_mparticles *mprts() { return mprts_; }
@@ -357,21 +347,21 @@ struct psc_mparticles_
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
 
-  void reserve_all(const int *n_prts_by_patch)
+  void reserve_all(const uint *n_prts_by_patch)
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].reserve(n_prts_by_patch[p]);
     }
   }
 
-  void resize_all(const int *n_prts_by_patch)
+  void resize_all(const uint *n_prts_by_patch)
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].resize(n_prts_by_patch[p]);
     }
   }
 
-  void get_size_all(int *n_prts_by_patch) const
+  void get_size_all(uint *n_prts_by_patch) const
   {
     for (int p = 0; p < patches_.size(); p++) {
       n_prts_by_patch[p] = patches_[p].size();

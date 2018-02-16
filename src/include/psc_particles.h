@@ -3,6 +3,7 @@
 #define PSC_PARTICLES_H
 
 #include <mrc_obj.h>
+#include <psc_bits.h>
 #include <assert.h>
 
 #include "particles_traits.hxx"
@@ -30,9 +31,9 @@ typedef struct psc_particle_inject {
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
   unsigned int (*get_nr_particles)(struct psc_mparticles *mprts);
-  void (*reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
-  void (*resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
-  void (*get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
+  void (*reserve_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch);
+  void (*resize_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch);
+  void (*get_size_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch);
   void (*inject)(struct psc_mparticles *mprts, int p,
 		 const struct psc_particle_inject *prt);
 };
@@ -53,9 +54,9 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 
 
 int  psc_mparticles_nr_particles(struct psc_mparticles *mprts);
-void psc_mparticles_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
-void psc_mparticles_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
-void psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch);
+void psc_mparticles_get_size_all(struct psc_mparticles *mprts, uint *n_prts_by_patch);
+void psc_mparticles_reserve_all(struct psc_mparticles *mprts, uint *n_prts_by_patch);
+void psc_mparticles_resize_all(struct psc_mparticles *mprts, uint *n_prts_by_patch);
 
 void psc_mparticles_inject(struct psc_mparticles *mprts, int p,
 			   const struct psc_particle_inject *prt);

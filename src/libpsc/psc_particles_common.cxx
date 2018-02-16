@@ -130,7 +130,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 #endif
 
 static void
-PFX(reserve_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
+PFX(reserve_all)(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
 
@@ -138,7 +138,7 @@ PFX(reserve_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 }
 
 static void
-PFX(resize_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
+PFX(resize_all)(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
 
@@ -146,7 +146,7 @@ PFX(resize_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 }
 
 static void
-PFX(get_size_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
+PFX(get_size_all)(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
 

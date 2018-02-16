@@ -24,10 +24,10 @@ void psc_mparticles_copy_from(mparticles_t mprts_to, MP mprts_from, unsigned int
 			      F convert_from)
 {
   int n_patches = mprts_to.n_patches();
-  int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
-  mprts_to.reserve_all(n_prts_by_patch);
-  mprts_to.resize_all(n_prts_by_patch);
+  mprts_to->reserve_all(n_prts_by_patch);
+  mprts_to->resize_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
     mparticles_t::patch_t& prts = mprts_to[p];
@@ -43,10 +43,10 @@ void psc_mparticles_copy_to(mparticles_t mprts_from, MP mprts_to, unsigned int f
 			    F convert_to)
 {
   int n_patches = mprts_to.n_patches();
-  int n_prts_by_patch[n_patches];
+  uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
-  mprts_to.reserve_all(n_prts_by_patch);
-  mprts_to.resize_all(n_prts_by_patch);
+  mprts_to->reserve_all(n_prts_by_patch);
+  mprts_to->resize_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
     mparticles_t::patch_t& prts = mprts_from[p];

@@ -50,11 +50,11 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 // psc_mparticles_cuda_reserve_all
 
 static void
-psc_mparticles_cuda_reserve_all(struct psc_mparticles *_mprts, int *n_prts_by_patch)
+psc_mparticles_cuda_reserve_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts->reserve_all((uint *) n_prts_by_patch);
+  mprts->reserve_all(n_prts_by_patch);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -187,22 +187,22 @@ psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *_mprts)
 // psc_mparticles_cuda_get_size_all
 
 static void
-psc_mparticles_cuda_get_size_all(struct psc_mparticles *_mprts, int *n_prts_by_patch)
+psc_mparticles_cuda_get_size_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts->get_size_all((uint *) n_prts_by_patch);
+  mprts->get_size_all(n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_resize_all
 
 static void
-psc_mparticles_cuda_resize_all(struct psc_mparticles *_mprts, int *n_prts_by_patch)
+psc_mparticles_cuda_resize_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts->resize_all((uint *) n_prts_by_patch);
+  mprts->resize_all(n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------

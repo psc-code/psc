@@ -137,7 +137,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 
 static void
 psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
-				int *n_prts_by_patch)
+				uint *n_prts_by_patch)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -154,7 +154,7 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
-				 int *n_prts_by_patch)
+				 uint *n_prts_by_patch)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
