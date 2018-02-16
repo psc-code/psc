@@ -10,7 +10,10 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
-struct particle_vpic_t
+void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
+				  int *n_prts_by_patch);
+
+  struct particle_vpic_t
 {
   using real_t = float;
 };
@@ -21,6 +24,11 @@ struct psc_mparticles_vpic
   
   Particles *vmprts;
   Simulation *sim;
+
+  void get_size_all(int *n_prts_by_patch)
+  {
+    vpic_mparticles_get_size_all(vmprts, 1, n_prts_by_patch);
+  }
 };
 
 using mparticles_vpic_t = mparticles_base<psc_mparticles_vpic>;

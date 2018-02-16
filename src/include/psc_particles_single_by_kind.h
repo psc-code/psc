@@ -18,6 +18,11 @@ struct psc_mparticles_single_by_kind
   using particle_t = particle_single_by_kind_t;
 
   bk_mparticles *bkmprts;
+
+  void get_size_all(int *n_prts_by_patch)
+  {
+    bk_mparticles_size_all(bkmprts, n_prts_by_patch);
+  }
 };
 
 #define psc_mparticles_single_by_kind(mprts)({				\
