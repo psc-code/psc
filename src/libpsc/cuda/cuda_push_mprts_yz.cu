@@ -9,8 +9,11 @@
 
 #include "psc.h" // FIXME
 
+#include "dim.hxx"
 #include "interpolate.hxx"
 #include "pushp.hxx"
+
+using dim = dim_yz;
 
 #define BND (2) // FIXME
 
@@ -101,10 +104,9 @@ private:
 __device__ static void
 push_xi(float *xi, const float vxi[3], float dt)
 {
-  int d;
-  for (d = 1; d < 3; d++) {
-    xi[d] += dt * vxi[d];
-  }
+  if (!dim::InvarX::value) xi[0] += dt * vxi[0];
+  if (!dim::InvarY::value) xi[1] += dt * vxi[1];
+  if (!dim::InvarZ::value) xi[2] += dt * vxi[2];
 }
 
 // ----------------------------------------------------------------------
