@@ -489,8 +489,8 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
       (block_pos, ci0);							\
     bid = find_bid();							\
   }									\
-  int block_begin = d_off[bid];						\
-  int block_end = d_off[bid + 1]					\
+  int block_begin = d_mprts.off_[bid];					\
+  int block_end = d_mprts.off_[bid + 1]					\
     
 // ----------------------------------------------------------------------
 // push_mprts_ab
@@ -500,7 +500,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMParticles d_mprts,
-	      uint *d_off, int nr_total_blocks, uint *d_ids, uint *d_bidx,
+	      int nr_total_blocks, uint *d_ids, uint *d_bidx,
 	      DMFields d_flds0, uint size)
 {
   using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
@@ -582,7 +582,6 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
 	(block_start, *cmprts,
-	 cmprts->d_off.data().get(),
 	 cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
 	 *cmflds, fld_size);
       cuda_sync_if_enabled();
@@ -592,7 +591,6 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, *cmprts,
-       cmprts->d_off.data().get(),
        cmprts->n_blocks, cmprts->d_id.data().get(), cmprts->d_bidx.data().get(),
        *cmflds, fld_size);
     cuda_sync_if_enabled();
