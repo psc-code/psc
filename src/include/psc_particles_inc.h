@@ -25,7 +25,7 @@ void psc_mparticles_copy_from(mparticles_t mprts_to, MP mprts_from, unsigned int
 {
   int n_patches = mprts_to.n_patches();
   int n_prts_by_patch[n_patches];
-  mprts_from.get_size_all(n_prts_by_patch);
+  mprts_from->get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   
@@ -44,7 +44,7 @@ void psc_mparticles_copy_to(mparticles_t mprts_from, MP mprts_to, unsigned int f
 {
   int n_patches = mprts_to.n_patches();
   int n_prts_by_patch[n_patches];
-  mprts_from.get_size_all(n_prts_by_patch);
+  mprts_from->get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   

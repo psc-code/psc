@@ -196,7 +196,7 @@ void copy_to(mparticles_vpic_t mprts_from, MP mprts_to)
   Particles *vmprts = mprts_from->vmprts;
   int n_patches = mprts_to.n_patches();
   int n_prts_by_patch[n_patches];
-  mprts_from.get_size_all(n_prts_by_patch);
+  mprts_from->get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   
@@ -222,7 +222,7 @@ void copy_from<mparticles_single_t>(mparticles_vpic_t mprts_to, mparticles_singl
   }
   mprts_to.resize_all(n_prts_by_patch);
 
-  mprts_from.get_size_all(n_prts_by_patch);
+  mprts_from->get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
@@ -243,7 +243,7 @@ void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts_to, mparticl
   Particles *vmprts = mprts_to->vmprts;
   int n_patches = mprts_to.n_patches();
   int n_prts_by_patch[n_patches];
-  mprts_from.get_size_all(n_prts_by_patch);
+  mprts_from->get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   
