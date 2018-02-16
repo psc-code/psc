@@ -362,6 +362,36 @@ struct psc_mparticles_
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
 
+  void reserve_all(const int *n_prts_by_patch)
+  {
+    for (int p = 0; p < patches_.size(); p++) {
+      patches_[p].reserve(n_prts_by_patch[p]);
+    }
+  }
+
+  void resize_all(const int *n_prts_by_patch)
+  {
+    for (int p = 0; p < patches_.size(); p++) {
+      patches_[p].resize(n_prts_by_patch[p]);
+    }
+  }
+
+  void get_size_all(int *n_prts_by_patch) const
+  {
+    for (int p = 0; p < patches_.size(); p++) {
+      n_prts_by_patch[p] = patches_[p].size();
+    }
+  }
+
+  int get_n_prts() const
+  {
+    int n_prts = 0;
+    for (auto const& patch : patches_) {
+      n_prts += patch.size();
+    }
+    return n_prts;
+  }
+  
   void check() const
   {
     for (auto& patch: patches_) {

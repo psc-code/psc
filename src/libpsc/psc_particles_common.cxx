@@ -134,9 +134,7 @@ PFX(reserve_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
 
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    mprts[p].reserve(n_prts_by_patch[p]);
-  }
+  mprts->reserve_all(n_prts_by_patch);
 }
 
 static void
@@ -144,9 +142,7 @@ PFX(resize_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
 
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    mprts[p].resize(n_prts_by_patch[p]);
-  }
+  mprts->resize_all(n_prts_by_patch);
 }
 
 static void
@@ -154,9 +150,7 @@ PFX(get_size_all)(struct psc_mparticles *_mprts, int *n_prts_by_patch)
 {
   mparticles_t mprts(_mprts);
 
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    n_prts_by_patch[p] = mprts[p].size();
-  }
+  mprts->get_size_all(n_prts_by_patch);
 }
 
 static unsigned int
@@ -164,11 +158,7 @@ PFX(get_nr_particles)(struct psc_mparticles *_mprts)
 {
   mparticles_t mprts(_mprts);
 
-  int n_prts = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    n_prts += mprts[p].size();
-  }
-  return n_prts;
+  return mprts->get_n_prts();
 }
 
 #if PSC_PARTICLES_AS_SINGLE
