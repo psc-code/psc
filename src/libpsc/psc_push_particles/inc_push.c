@@ -31,9 +31,9 @@ template<typename R>
 CUDA_DEVICE static inline void
 push_x(R x[3], const R v[3], R dt)
 {
-  IF_DIM_X( x[0] += v[0] * dt; );
-  IF_DIM_Y( x[1] += v[1] * dt; );
-  IF_DIM_Z( x[2] += v[2] * dt; );
+  if (!dim::InvarX::value) { x[0] += v[0] * dt; }
+  if (!dim::InvarY::value) { x[1] += v[1] * dt; }
+  if (!dim::InvarZ::value) { x[2] += v[2] * dt; }
 }
 
 // ----------------------------------------------------------------------

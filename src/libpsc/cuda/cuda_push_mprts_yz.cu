@@ -5,6 +5,8 @@
 #include "cuda_mparticles_const.h"
 #include "cuda_mfields_const.h"
 
+#define DIM DIM_YZ
+
 #include "../psc_push_particles/inc_defs.h"
 
 #include "psc.h" // FIXME

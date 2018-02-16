@@ -1,4 +1,6 @@
 
+#include "dim.hxx"
+
 // ======================================================================
 // choices that determine which version of the pusher / deposition will
 // be built
@@ -78,6 +80,25 @@ struct opt_ip_2nd;
 #define IF_NOT_DIM_Z(s) s do{} while(0)
 #endif
 
+#if DIM == DIM_1
+using dim = dim_1;
+#elif DIM == DIM_X
+using dim = dim_x;
+#elif DIM == DIM_Y
+using dim = dim_y;
+#elif DIM == DIM_Z
+using dim = dim_z;
+#elif DIM == DIM_XY
+using dim = dim_xy;
+#elif DIM == DIM_XZ
+using dim = dim_xz;
+#elif DIM == DIM_YZ
+using dim = dim_yz;
+#elif DIM == DIM_XYZ
+using dim = dim_xyz;
+#else
+#error DIM needs to be defined
+#endif
 
 
 
