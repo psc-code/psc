@@ -50,11 +50,10 @@ struct FldCache
   __device__ FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
   
-  __device__ void load(DMFields d_flds0, int *ci0, int p)
+  __device__ void load(DFields d_flds, int *ci0)
   {
     off_ = (-(ci0[2] - 2) * (BLOCKSIZE_Y + 4) +
 	    -(ci0[1] - 2));
-    DFields d_flds = d_flds0[p];
     
     int ti = threadIdx.x;
     int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
@@ -505,7 +504,7 @@ push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_flds0)
 
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
   __shared__ FldCache_t fld_cache;
-  fld_cache.load(d_flds0, ci0, p);
+  fld_cache.load(d_flds0[p], ci0);
   DECLARE_AND_ZERO_SCURR;
   
   __syncthreads();
