@@ -129,16 +129,15 @@ calc_vxi(float vxi[3], struct d_particle p)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, typename FldCache_t>
 __device__ static void
-push_part_one(struct d_particle& prt, int n, uint *d_ids, float4 *d_xi4, float4 *d_pxi4,
-	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-	      const FldCache_t& fld_cache, int ci0[3])
+push_part_one(struct d_particle& prt, int n, DMParticles d_mprts,
+	      const FldCache_t& fld_cache)
 {
   uint id;
   if (REORDER) {
-    id = d_ids[n];
-    LOAD_PARTICLE_POS(prt, d_xi4, id);
+    id = d_mprts.id_[n];
+    LOAD_PARTICLE_POS(prt, d_mprts.xi4_, id);
   } else {
-    LOAD_PARTICLE_POS(prt, d_xi4, n);
+    LOAD_PARTICLE_POS(prt, d_mprts.xi4_, n);
   }
   // here we have x^{n+.5}, p^n
 
@@ -156,13 +155,13 @@ push_part_one(struct d_particle& prt, int n, uint *d_ids, float4 *d_xi4, float4 
   int kind = __float_as_int(prt.kind_as_float);
   real_t dq = d_cmprts_const.dq[kind];
   if (REORDER) {
-    LOAD_PARTICLE_MOM(prt, d_pxi4, id);
+    LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, id);
     push_p(prt.pxi, E, H, dq);
-    STORE_PARTICLE_MOM(prt, d_alt_pxi4, n);
+    STORE_PARTICLE_MOM(prt, d_mprts.alt_pxi4_, n);
   } else {
-    LOAD_PARTICLE_MOM(prt, d_pxi4, n);
+    LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, n);
     push_p(prt.pxi, E, H, dq);
-    STORE_PARTICLE_MOM(prt, d_pxi4, n);
+    STORE_PARTICLE_MOM(prt, d_mprts.pxi4_, n);
   }
 }
 
@@ -514,7 +513,7 @@ push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_mflds)
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP>
-      (prt, n, d_mprts.id_, d_mprts.xi4_, d_mprts.pxi4_, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, fld_cache, ci0);
+      (prt, n, d_mprts, fld_cache);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
