@@ -99,19 +99,6 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// push_xi
-//
-// advance position using velocity
-
-__device__ static void
-push_xi(float *xi, const float vxi[3], float dt)
-{
-  if (!dim::InvarX::value) xi[0] += dt * vxi[0];
-  if (!dim::InvarY::value) xi[1] += dt * vxi[1];
-  if (!dim::InvarZ::value) xi[2] += dt * vxi[2];
-}
-
-// ----------------------------------------------------------------------
 // calc_vxi
 //
 // calculate velocity from momentum
@@ -389,7 +376,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   if (DEPOSIT == DEPOSIT_VB_2D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    push_xi(prt.xi, vxi, .5f * d_cmprts_const.dt);
+    push_x(prt.xi, vxi, .5f * d_cmprts_const.dt);
 
     float fnqx = vxi[0] * prt.qni_wni * d_cmprts_const.fnqs;
 
@@ -406,11 +393,11 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
     scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, ci0);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt.xi, vxi, .5f * d_cmprts_const.dt);
+    push_x(prt.xi, vxi, .5f * d_cmprts_const.dt);
     STORE_PARTICLE_POS(prt, d_xi4, n);
   } else if (DEPOSIT == DEPOSIT_VB_3D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt.xi, vxi, d_cmprts_const.dt);
+    push_x(prt.xi, vxi, d_cmprts_const.dt);
     STORE_PARTICLE_POS(prt, d_xi4, n);
   }
 
