@@ -50,7 +50,7 @@ struct FldCache
   __device__ FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
   
-  __device__ void load(DMFields d_flds0, int size, int *ci0, int p)
+  __device__ void load(DMFields d_flds0, int *ci0, int p)
   {
     off_ = (-(ci0[2] - 2) * (BLOCKSIZE_Y + 4) +
 	    -(ci0[1] - 2));
@@ -499,13 +499,13 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_flds0, uint size)
+push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_flds0)
 {
   using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
 
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
   __shared__ FldCache_t fld_cache;
-  fld_cache.load(d_flds0, size, ci0, p);
+  fld_cache.load(d_flds0, ci0, p);
   DECLARE_AND_ZERO_SCURR;
   
   __syncthreads();
@@ -555,8 +555,6 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   cuda_mfields_const_set(cmflds);
   cuda_mparticles_const_set(cmprts);
 
-  uint fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
-
   zero_currents(cmflds);
 
   int gx, gy;
@@ -579,14 +577,14 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, *cmprts, *cmflds, fld_size);
+	(block_start, *cmprts, *cmflds);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
     push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (0, *cmprts, *cmflds, fld_size);
+      (0, *cmprts, *cmflds);
     cuda_sync_if_enabled();
   } else {
     assert(0);
