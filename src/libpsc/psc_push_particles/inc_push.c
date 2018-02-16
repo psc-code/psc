@@ -8,23 +8,6 @@
 #include "pushp.hxx"
 
 // ----------------------------------------------------------------------
-// calc_v
-
-template<typename R>
-CUDA_DEVICE static inline void
-calc_v(R v[3], const R p[3])
-{
-#ifdef __CUDACC__
-  R root = rsqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
-#else
-  R root = 1.f / std::sqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
-#endif
-  for (int d = 0; d < 3; d++) {
-    v[d] = p[d] * root;
-  }
-}
-
-// ----------------------------------------------------------------------
 // find_idx_off_1st_rel
 
 template<typename R>

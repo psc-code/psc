@@ -99,22 +99,6 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// calc_vxi
-//
-// calculate velocity from momentum
-
-__device__ static void
-calc_vxi(float vxi[3], struct d_particle p)
-{
-  float root = rsqrtf(float(1.) + sqr(p.pxi[0]) + sqr(p.pxi[1]) + sqr(p.pxi[2]));
-
-  int d;
-  for (d = 0; d < 3; d++) {
-    vxi[d] = p.pxi[d] * root;
-  }
-}
-
-// ----------------------------------------------------------------------
 // push_part_one
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
@@ -365,7 +349,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  uint *d_bidx, int bid, int *ci0)
 {
   float vxi[3];
-  calc_vxi(vxi, prt);
+  calc_v(vxi, prt.pxi);
 
   // position xm at x^(n+.5)
   float h0[3], h1[3];

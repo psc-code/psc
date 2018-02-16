@@ -46,4 +46,16 @@ __host__ __device__ inline void push_p(R p[3], const R E[3], const R H[3], R dq)
   p[2] = pzp + dq * E[2];
 }
 
+// ----------------------------------------------------------------------
+// calc_v
+
+template<typename R>
+__host__ __device__ inline void calc_v(R v[3], const R p[3])
+{
+  R root = rsqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
+  for (int d = 0; d < 3; d++) {
+    v[d] = p[d] * root;
+  }
+}
+
 #endif
