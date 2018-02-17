@@ -160,7 +160,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
 {
   int fail_cnt = 0;
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
+  mparticles_t mprts = mprts_base->get_as<mparticles_double_t>(0);
   const Grid_t& grid = ppsc->grid;
   
   psc_foreach_patch(ppsc, p) {
@@ -190,7 +190,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
   }
   assert(fail_cnt == 0);
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
+  mprts.put_as(mprts_base, 0);
 }
 
 // ======================================================================
