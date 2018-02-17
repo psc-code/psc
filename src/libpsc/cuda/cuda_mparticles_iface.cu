@@ -74,7 +74,7 @@ void psc_mparticles_cuda::setup_internals()
   cmprts_->setup_internals();
 }
 
-void psc_mparticles_cuda::inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
+void psc_mparticles_cuda::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
   cmprts_->inject(buf, buf_n_by_patch);

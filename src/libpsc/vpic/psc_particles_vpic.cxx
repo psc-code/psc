@@ -299,18 +299,6 @@ psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_vpic_inject
-
-static void
-psc_mparticles_vpic_inject(struct psc_mparticles *mprts, int p,
-			   const struct psc_particle_inject *prt)
-{
-  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
-
-  Simulation_inject_particle(sub->sim, sub->vmprts, p, prt);
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles: subclass "vpic"
   
 struct psc_mparticles_ops_vpic : psc_mparticles_ops {
@@ -319,7 +307,6 @@ struct psc_mparticles_ops_vpic : psc_mparticles_ops {
     size                    = sizeof(struct psc_mparticles_vpic);
     methods                 = psc_mparticles_vpic_methods;
     setup                   = psc_mparticles_vpic_setup;
-    inject                  = psc_mparticles_vpic_inject;
   }
 } psc_mparticles_vpic_ops;
 

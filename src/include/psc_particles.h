@@ -30,8 +30,6 @@ typedef struct psc_particle_inject {
 
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
-  void (*inject)(struct psc_mparticles *mprts, int p,
-		 const struct psc_particle_inject *prt);
 };
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))

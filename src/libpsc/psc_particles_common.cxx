@@ -128,18 +128,6 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 
 #endif
 
-#if PSC_PARTICLES_AS_SINGLE
-
-static void
-PFX(inject)(struct psc_mparticles *_mprts, int p,
-	    const struct psc_particle_inject *new_prt)
-{
-  mparticles_t mprts(_mprts);
-  mprts->inject(p, new_prt);
-}
-
-#endif
-
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
@@ -151,9 +139,6 @@ struct PFX(OPS) : psc_mparticles_ops {
     setup                   = PFX(setup);
     write                   = PFX(write);
     read                    = PFX(read);
-#if PSC_PARTICLES_AS_SINGLE
-    inject                  = PFX(inject);
-#endif
   }
 } PFX(ops);
 

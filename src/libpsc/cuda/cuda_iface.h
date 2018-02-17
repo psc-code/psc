@@ -65,7 +65,7 @@ struct psc_mparticles_cuda : psc_mparticles_base
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void setup_internals();
-  void inject(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
+  void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
 
   static void copy_from_single(struct psc_mparticles *mprts_cuda,
 			       struct psc_mparticles *mprts, uint flags);

@@ -57,14 +57,12 @@ psc_mparticles_reserve_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 }
 
 void
-psc_mparticles_inject(struct psc_mparticles *mprts, int p,
+psc_mparticles_inject(struct psc_mparticles *_mprts, int p,
 		      const struct psc_particle_inject *prt)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops && ops->inject);
-  ops->inject(mprts, p, prt);
+  mparticles_base_t mprts(_mprts);
+  mprts->inject(p, prt);
 }
-
 
 static void
 copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,

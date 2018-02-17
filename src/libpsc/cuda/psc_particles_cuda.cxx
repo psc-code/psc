@@ -168,7 +168,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles
 {
   mparticles_cuda_t mprts(_mprts);
 
-  mprts->inject(buf, buf_n_by_patch);
+  mprts->inject_buf(buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------
