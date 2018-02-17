@@ -13,9 +13,12 @@ struct particle_single_by_kind_t
   using real_t = particle_single_by_kind_real_t;
 };
 
-struct psc_mparticles_single_by_kind
+struct psc_mparticles_single_by_kind : psc_mparticles_base
 {
+  using Base = psc_mparticles_base;
   using particle_t = particle_single_by_kind_t;
+
+  using Base::Base;
 
   bk_mparticles *bkmprts;
 

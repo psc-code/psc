@@ -108,7 +108,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   mfields_t mf_res(mres);
   
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mf_res[p].zero();
     do_run(p, mf_res[p], mprts);
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);

@@ -33,7 +33,7 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     s_prts = &mprts[p];
     qsort(&*s_prts->begin(), s_prts->size(), sizeof(*s_prts->begin()), compare);
   }
@@ -56,7 +56,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mparticles_t::patch_t& prts = mprts[p];
     unsigned int n_prts = prts.size();
 
@@ -129,7 +129,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   mparticles_t mprts = mprts_base->get_as<mparticles_t>();
 
   prof_start(pr);
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mparticles_t::patch_t& prts = mprts[p];
     unsigned int n_prts = prts.size();
 

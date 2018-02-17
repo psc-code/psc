@@ -221,8 +221,7 @@ struct mparticles_base
   explicit mparticles_base(psc_mparticles *mprts)
     : mprts_(mprts),
       sub_(mrc_to_subobj(mprts, sub_t))
-  {
-  }
+  {}
 
   void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
   {
@@ -230,8 +229,6 @@ struct mparticles_base
     mprts_ = nullptr;
   }
 
-  unsigned int n_patches() { return mprts_->nr_patches; }
-  
   psc_mparticles *mprts() { return mprts_; }
   
   sub_t* operator->() { return sub_; }
@@ -269,7 +266,7 @@ struct mparticles_patch_base
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
   mparticles_patch_base(psc_mparticles_<P>* _mprts, int _p)
-    : pi_(_mprts->grid_),
+    : pi_(_mprts->grid()),
       mprts(_mprts),
       p(_p)
   {}
@@ -325,10 +322,26 @@ struct mparticles_patch : mparticles_patch_base<P> {
 };
 
 // ======================================================================
+// psc_mparticles_base
+
+struct psc_mparticles_base
+{
+  psc_mparticles_base(const Grid_t& grid)
+    : grid_(grid)
+  {}
+
+  const Grid_t& grid() const { return grid_; }
+  int n_patches() const { return grid_.n_patches(); }
+
+protected:
+  const Grid_t& grid_;
+};
+
+// ======================================================================
 // psc_mparticles_
 
 template<typename P>
-struct psc_mparticles_
+struct psc_mparticles_ : psc_mparticles_base
 {
   using particle_t = P;
   using particle_real_t = typename particle_t::real_t; // FIXME, should go away
@@ -336,7 +349,7 @@ struct psc_mparticles_
   using patch_t = mparticles_patch<particle_t>;
 
   psc_mparticles_(const Grid_t& grid)
-    : grid_(grid)
+    : psc_mparticles_base(grid)
   {
     patches_.reserve(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
@@ -390,7 +403,6 @@ struct psc_mparticles_
   particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
 
   std::vector<patch_t> patches_;
-  const Grid_t& grid_;
 };
 
 // ======================================================================

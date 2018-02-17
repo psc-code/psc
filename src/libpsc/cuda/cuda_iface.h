@@ -50,7 +50,7 @@ struct cuda_mparticles_prt {
 
 struct cuda_mparticles;
 
-struct psc_mparticles_cuda
+struct psc_mparticles_cuda : psc_mparticles_base
 {
   using particle_t = particle_cuda_t;
   
@@ -58,7 +58,6 @@ struct psc_mparticles_cuda
   psc_mparticles_cuda(const psc_mparticles_cuda&) = delete;
   ~psc_mparticles_cuda();
 
-  uint n_patches();
   void reserve_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
   void resize_all(const uint *n_prts_by_patch);
@@ -80,11 +79,9 @@ struct psc_mparticles_cuda
   const int *patch_get_b_mx(int p);
   
   cuda_mparticles* cmprts() { return cmprts_; }
-  const Grid_t& grid() const { return grid_; }
 
 private:
   cuda_mparticles* cmprts_;
-  Grid_t& grid_;
 
   template<typename MP>
   friend struct bnd_particles_policy_cuda;

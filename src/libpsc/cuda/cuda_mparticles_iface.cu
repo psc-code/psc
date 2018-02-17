@@ -14,7 +14,7 @@
 #endif
 
 psc_mparticles_cuda::psc_mparticles_cuda(Grid_t& grid)
-: grid_(grid)
+: psc_mparticles_base(grid)
 {
   dprintf("CMPRTS: ctor\n");
   cmprts_ = new cuda_mparticles(grid);
@@ -24,12 +24,6 @@ psc_mparticles_cuda::~psc_mparticles_cuda()
 {
   dprintf("CMPRTS: dtor\n");
   delete cmprts_;
-}
-
-uint psc_mparticles_cuda::n_patches()
-{
-  dprintf("CMPRTS: n_patches\n");
-  return cmprts_->n_patches;
 }
 
 void psc_mparticles_cuda::reserve_all(const uint *n_prts_by_patch)
@@ -158,7 +152,7 @@ private:
 template<typename MP>
 static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
 {
-  int n_patches = mprts_to.n_patches();
+  int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
   mprts_to->reserve_all(n_prts_by_patch);
@@ -175,7 +169,7 @@ static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
 template<typename MP>
 static void copy_to(mparticles_cuda_t mprts_from, MP mprts_to)
 {
-  int n_patches = mprts_to.n_patches();
+  int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
   mprts_to->reserve_all(n_prts_by_patch);

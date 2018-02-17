@@ -19,13 +19,15 @@ static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
 // psc_mparticles_sub_setup
 
 static void
-PFX(setup)(struct psc_mparticles *mprts)
+PFX(setup)(struct psc_mparticles *_mprts)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  mparticles_single_by_kind_t mprts(_mprts);
 
-  psc_mparticles_setup_super(mprts);
+  psc_mparticles_setup_super(_mprts);
 
-  sub->bkmprts = bk_mparticles_new(mprts->nr_patches);
+  new(mprts.sub_) psc_mparticles_single_by_kind{ppsc->grid};
+
+  mprts->bkmprts = bk_mparticles_new(mprts->n_patches());
 }
 
 static void

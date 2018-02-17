@@ -194,7 +194,7 @@ template<typename MP>
 void copy_to(mparticles_vpic_t mprts_from, MP mprts_to)
 {
   Particles *vmprts = mprts_from->vmprts;
-  int n_patches = mprts_to.n_patches();
+  int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
   mprts_to->reserve_all(n_prts_by_patch);
@@ -214,7 +214,7 @@ template<>
 void copy_from<mparticles_single_t>(mparticles_vpic_t mprts_to, mparticles_single_t mprts_from)
 {
   Particles *vmprts = mprts_to->vmprts;
-  int n_patches = mprts_to.n_patches();
+  int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
   // reset particle counts to zero, then use push_back to add back new particles
   for (int p = 0; p < n_patches; p++) {
@@ -241,7 +241,7 @@ template<>
 void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts_to, mparticles_single_by_kind_t mprts_from)
 {
   Particles *vmprts = mprts_to->vmprts;
-  int n_patches = mprts_to.n_patches();
+  int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
   mprts_to->reserve_all(n_prts_by_patch);
@@ -287,13 +287,18 @@ static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_setup
 
-static void
-psc_mparticles_vpic_setup(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
+// FIXME
+#define DONTEXPAND
 
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
-  sub->vmprts = Simulation_get_particles(sub->sim);
+static void
+psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
+{
+  mparticles_vpic_t mprts(_mprts);
+
+  new(mprts.sub_) psc_mparticles_vpic{ppsc->grid};
+
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mprts->sim);
+  mprts->vmprts = Simulation_get_particles(mprts->sim);
 }
 
 // ----------------------------------------------------------------------

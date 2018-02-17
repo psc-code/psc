@@ -224,7 +224,7 @@ void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_B);
 #pragma omp parallel for
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
     process_patch(mprts, p);
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
@@ -245,7 +245,7 @@ void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
 template<typename MP>
 void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
 {
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = &mprts[p].get_buf();
     dpatch->m_begin = 0;

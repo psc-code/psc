@@ -136,7 +136,7 @@ struct bnd_particles_policy_ordered
   
   void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
   {
-    for (int p = 0; p < mprts.n_patches(); p++) {
+    for (int p = 0; p < mprts->n_patches(); p++) {
       mparticles_single_t::patch_t& prts = mprts[p];
       ddcp_patch *dpatch = &ddcp->patches[p];
       
@@ -157,7 +157,7 @@ struct bnd_particles_policy_ordered
   
   void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
   {
-    for (int p = 0; p < mprts.n_patches(); p++) {
+    for (int p = 0; p < mprts->n_patches(); p++) {
       mparticles_single_t::patch_t& prts = mprts[p];
       ddcp_patch *dpatch = &ddcp->patches[p];
       

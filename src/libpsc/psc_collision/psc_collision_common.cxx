@@ -563,7 +563,7 @@ psc_collision_sub_run(struct psc_collision *collision,
   prof_start(pr);
 
   mfields_t mf_coll(coll->mflds);
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mparticles_t::patch_t& prts = mprts[p];
   
     int *ldims = ppsc->patch[p].ldims;

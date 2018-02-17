@@ -13,14 +13,17 @@
 void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 				  uint *n_prts_by_patch);
 
-  struct particle_vpic_t
+struct particle_vpic_t
 {
   using real_t = float;
 };
 
-struct psc_mparticles_vpic
+struct psc_mparticles_vpic : psc_mparticles_base
 {
+  using Base = psc_mparticles_base;
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
+
+  using Base::Base;
   
   Particles *vmprts;
   Simulation *sim;

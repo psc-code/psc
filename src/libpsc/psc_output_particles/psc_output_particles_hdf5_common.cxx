@@ -142,7 +142,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
 {
   int nr_kinds = ppsc->nr_kinds;
 
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     int *ldims = ppsc->patch[p].ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
@@ -212,7 +212,7 @@ make_local_particle_array(struct psc_output_particles *out,
 
   // count all particles to be written locally
   size_t n_write = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -237,7 +237,7 @@ make_local_particle_array(struct psc_output_particles *out,
 
   // copy particles to be written into temp array
   int nn = 0;
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mparticles_t::patch_t& prts = mprts[p];
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
@@ -380,12 +380,12 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   int nr_kinds = ppsc->nr_kinds;
   int *wdims = hdf5->wdims;
 
-  int **off = (int **) malloc(mprts.n_patches() * sizeof(*off));
-  int **map = (int **) malloc(mprts.n_patches() * sizeof(*off));
+  int **off = (int **) malloc(mprts->n_patches() * sizeof(*off));
+  int **map = (int **) malloc(mprts->n_patches() * sizeof(*off));
 
   count_sort(mprts, map, off);
 
-  size_t **idx = (size_t **) malloc(mprts.n_patches() * sizeof(*idx));
+  size_t **idx = (size_t **) malloc(mprts->n_patches() * sizeof(*idx));
 
   size_t *gidx_begin = NULL, *gidx_end = NULL;
   if (rank == 0) {
@@ -428,7 +428,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     }
 
     // build global idx array, local part
-    for (int p = 0; p < mprts.n_patches(); p++) {
+    for (int p = 0; p < mprts->n_patches(); p++) {
       mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
       int ilo[3], ihi[3], ld[3], sz;
       find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -503,7 +503,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   } else { // rank != 0: send to rank 0
     // FIXME, alloc idx[] as one array in the first place
     int local_sz = 0;
-    for (int p = 0; p < mprts.n_patches(); p++) {
+    for (int p = 0; p < mprts->n_patches(); p++) {
       mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
       int ilo[3], ihi[3], ld[3], sz;
       find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -511,7 +511,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     }
     size_t *l_idx = (size_t *) malloc(2 * local_sz * sizeof(*l_idx));
     size_t *l_idx_p = (size_t *) l_idx;
-    for (int p = 0; p < mprts.n_patches(); p++) {
+    for (int p = 0; p < mprts->n_patches(); p++) {
       mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
       int ilo[3], ihi[3], ld[3], sz;
       find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -584,7 +584,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   free(gidx_begin);
   free(gidx_end);
 
-  for (int p = 0; p < mprts.n_patches(); p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     free(off[p]);
     free(map[p]);
     free(idx[p]);
