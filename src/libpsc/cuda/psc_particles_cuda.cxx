@@ -30,8 +30,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 
   cuda_base_init();
 
-  psc_mparticles_setup_super(_mprts);
-
   new(mprts.sub()) psc_mparticles_cuda(ppsc->grid);
 }
 

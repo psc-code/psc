@@ -23,8 +23,6 @@ PFX(setup)(struct psc_mparticles *_mprts)
 {
   mparticles_single_by_kind_t mprts(_mprts);
 
-  psc_mparticles_setup_super(_mprts);
-
   new(mprts.sub()) psc_mparticles_single_by_kind{ppsc->grid};
 
   mprts->bkmprts = bk_mparticles_new(mprts->n_patches());

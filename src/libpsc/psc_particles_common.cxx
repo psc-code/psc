@@ -16,9 +16,8 @@ static void
 PFX(setup)(struct psc_mparticles *_mprts)
 {
   mparticles_t mprts(_mprts);
-  new(mprts.sub()) mparticles_t::sub_t(ppsc->grid);
 
-  psc_mparticles_setup_super(_mprts);
+  new(mprts.sub()) mparticles_t::sub_t(ppsc->grid);
 }
 
 // ----------------------------------------------------------------------
