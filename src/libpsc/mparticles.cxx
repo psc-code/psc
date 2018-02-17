@@ -29,38 +29,31 @@ _psc_mparticles_view(struct psc_mparticles *_mprts)
 }
 
 int
-psc_mparticles_nr_particles(struct psc_mparticles *mprts)
+psc_mparticles_nr_particles(struct psc_mparticles *_mprts)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops->get_nr_particles);
-
-  return ops->get_nr_particles(mprts);
+  mparticles_base_t mprts(_mprts);
+  return mprts->get_n_prts();
 }
 
 void
-psc_mparticles_get_size_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
+psc_mparticles_get_size_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops->get_size_all);
-
-  return ops->get_size_all(mprts, n_prts_by_patch);
+  mparticles_base_t mprts(_mprts);
+  mprts->get_size_all(n_prts_by_patch);
 }
 
 void
-psc_mparticles_resize_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
+psc_mparticles_resize_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops->resize_all);
-
-  return ops->resize_all(mprts, n_prts_by_patch);
+  mparticles_base_t mprts(_mprts);
+  mprts->resize_all(n_prts_by_patch);
 }
 
 void
-psc_mparticles_reserve_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
+psc_mparticles_reserve_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops && ops->reserve_all);
-  ops->reserve_all(mprts, n_prts_by_patch);
+  mparticles_base_t mprts(_mprts);
+  mprts->reserve_all(n_prts_by_patch);
 }
 
 void
