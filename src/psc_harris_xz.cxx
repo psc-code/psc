@@ -623,7 +623,7 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
     return;
   }
   
-  struct psc_mparticles *mprts = psc->particles;
+  mparticles_base_t mprts(psc->particles);
   
   // LOAD PARTICLES
 
@@ -674,7 +674,7 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
     prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
     prt.w = weight_s;
     prt.kind = KIND_ELECTRON;
-    psc_mparticles_inject(mprts, 0, &prt);
+    mprts->inject(0, &prt);
     //inject_particle(electron, &prt, 0., 0);
 
     ux = Rng_normal(rng, 0, vthi);
@@ -686,7 +686,7 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
 
     prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
     prt.kind = KIND_ION;
-    psc_mparticles_inject(mprts, 0, &prt);
+    mprts->inject(0, &prt);
   }
 
   mpi_printf(comm, "-> Background Population\n");
@@ -703,13 +703,13 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
     prt.u[2] = Rng_normal(rng, 0, vtheb);
     prt.w = weight_b;
     prt.kind = KIND_ELECTRON;
-    psc_mparticles_inject(mprts, 0, &prt);
+    mprts->inject(0, &prt);
     
     prt.u[0] = Rng_normal(rng, 0, vthib);
     prt.u[1] = Rng_normal(rng, 0, vthib);
     prt.u[2] = Rng_normal(rng, 0, vthib);
     prt.kind = KIND_ION;
-    psc_mparticles_inject(mprts, 0, &prt);
+    mprts->inject(0, &prt);
   }
 
   mpi_printf(comm, "Finished loading particles\n");

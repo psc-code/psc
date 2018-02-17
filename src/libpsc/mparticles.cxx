@@ -28,14 +28,6 @@ _psc_mparticles_view(struct psc_mparticles *_mprts)
   }  
 }
 
-void
-psc_mparticles_inject(struct psc_mparticles *_mprts, int p,
-		      const struct psc_particle_inject *prt)
-{
-  mparticles_base_t mprts(_mprts);
-  mprts->inject(p, prt);
-}
-
 static void
 copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
      const char *type_from, const char *type_to,
