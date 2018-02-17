@@ -29,12 +29,12 @@ struct psc_mparticles_single_by_kind : psc_mparticles_base
     bk_mparticles_size_all(bkmprts, n_prts_by_patch);
   }
 
-  void reserve_all(uint *n_prts_by_patch)
+  void reserve_all(const uint *n_prts_by_patch) override
   {
     bk_mparticles_reserve_all(bkmprts, n_prts_by_patch);
   }
 
-  void resize_all(uint *n_prts_by_patch)
+  void resize_all(const uint *n_prts_by_patch) override
   {
     bk_mparticles_resize_all(bkmprts, n_prts_by_patch);
   }

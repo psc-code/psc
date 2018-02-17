@@ -343,6 +343,8 @@ struct psc_mparticles_base
   int n_patches() const { return grid_.n_patches(); }
   virtual int get_n_prts() const = 0;
   virtual void get_size_all(uint *n_prts_by_patch) const = 0;
+  virtual void reserve_all(const uint *n_prts_by_patch) = 0;
+  virtual void resize_all(const uint *n_prts_by_patch) = 0;
 
 protected:
   const Grid_t& grid_;
@@ -373,14 +375,14 @@ struct psc_mparticles_ : psc_mparticles_base
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
 
-  void reserve_all(const uint *n_prts_by_patch)
+  void reserve_all(const uint *n_prts_by_patch) override
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].reserve(n_prts_by_patch[p]);
     }
   }
 
-  void resize_all(const uint *n_prts_by_patch)
+  void resize_all(const uint *n_prts_by_patch) override
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].resize(n_prts_by_patch[p]);

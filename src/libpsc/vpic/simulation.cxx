@@ -118,7 +118,7 @@ int Simulation_mprts_get_nr_particles(Simulation*sim, Particles *vmprts)
 // the different species, anyway.
 
 void Simulation_mprts_reserve_all(Simulation* sim, Particles* vmprts, int n_patches,
-				  uint *n_prts_by_patch)
+				  const uint *n_prts_by_patch)
 {
   assert(n_patches == 1);
 
@@ -145,7 +145,7 @@ void Simulation_mprts_reserve_all(Simulation* sim, Particles* vmprts, int n_patc
 // know how the total # of particles we're given should be divided up
 
 void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patches,
-				 uint *n_prts_by_patch)
+				 const uint *n_prts_by_patch)
 {
   assert(n_patches == 1);
   

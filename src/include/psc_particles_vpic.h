@@ -35,12 +35,12 @@ struct psc_mparticles_vpic : psc_mparticles_base
     vpic_mparticles_get_size_all(vmprts, 1, n_prts_by_patch);
   }
 
-  void reserve_all(uint *n_prts_by_patch)
+  void reserve_all(const uint *n_prts_by_patch) override
   {
     Simulation_mprts_reserve_all(sim, vmprts, 1, n_prts_by_patch);
   }
 
-  void resize_all(uint *n_prts_by_patch)
+  void resize_all(const uint *n_prts_by_patch) override
   {
     Simulation_mprts_resize_all(sim, vmprts, 1, n_prts_by_patch);
   }

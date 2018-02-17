@@ -60,8 +60,8 @@ struct psc_mparticles_cuda : psc_mparticles_base
 
   int get_n_prts() const override;
   void get_size_all(uint *n_prts_by_patch) const override;
-  void reserve_all(const uint *n_prts_by_patch);
-  void resize_all(const uint *n_prts_by_patch);
+  void reserve_all(const uint *n_prts_by_patch) override;
+  void resize_all(const uint *n_prts_by_patch) override;
   void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void setup_internals();
