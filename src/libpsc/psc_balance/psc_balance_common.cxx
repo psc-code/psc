@@ -12,6 +12,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 				      struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
 				      uint *nr_particles_by_patch_new)
 {
+  mparticles_base_t mp_old(mprts_old), mp_new(mprts_new);
   static int pr, pr_A, pr_B, pr_C, pr_D;
   if (!pr) {
     pr   = prof_register("comm prts", 1., 0, 0);
@@ -24,7 +25,8 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
   prof_start(pr);
 
   prof_start(pr_A);
-  for (int p = 0; p < mprts_new->nr_patches; p++) {
+  // FIXME, use _all
+  for (int p = 0; p < mp_new->n_patches(); p++) {
     mparticles_t(mprts_new)[p].reserve(nr_particles_by_patch_new[p]);
     mparticles_t(mprts_new)[p].resize(nr_particles_by_patch_new[p]);
   }

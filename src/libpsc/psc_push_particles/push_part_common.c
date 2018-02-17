@@ -539,17 +539,18 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
 #endif
 {
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-
+  mparticles_t mp = mparticles_t(mprts);
+  
   static int pr;
   if (!pr) {
     pr = prof_register(PROF_NAME, 1., 0, 0);
   }
   
   prof_start(pr);
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mp->n_patches(); p++) {
     fields_t flds = mf[p];
 #if CACHE == CACHE_EM_J
-    mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
+    mparticles_t::patch_t& prts = mp[p];
     // FIXME, can't we just skip this and just set j when copying back?
     flds.zero(JXI, JXI + 3);
     fields_t flds_cache = cache_fields_from_em(flds);

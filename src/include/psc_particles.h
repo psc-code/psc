@@ -13,7 +13,6 @@
 
 struct psc_mparticles {
   struct mrc_obj obj;
-  int nr_patches;
 
   template<typename MP>
   MP get_as(unsigned int flags = 0);

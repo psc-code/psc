@@ -33,14 +33,14 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
      const char *type_from, const char *type_to,
      unsigned int flags)
 {
+  mparticles_base_t mp_from(mprts_from), mp_to(mprts_to);
   psc_mparticles_copy_func_t copy_to, copy_from;
 
-  assert(mprts_from->nr_patches == mprts_to->nr_patches);
+  assert(mp_from->n_patches() == mp_to->n_patches());
 
   if (flags & MP_DONT_COPY) {
     if (!(flags & MP_DONT_RESIZE)) {
-      uint n_prts_by_patch[mprts_from->nr_patches];
-      mparticles_t mp_from(mprts_from), mp_to(mprts_to);
+      uint n_prts_by_patch[mp_from->n_patches()];
       mp_from->get_size_all(n_prts_by_patch);
       mp_to->reserve_all(n_prts_by_patch);
       mp_to->resize_all(n_prts_by_patch);
@@ -75,6 +75,7 @@ struct psc_mparticles *
 psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
 		      unsigned int flags)
 {
+  mparticles_base_t mp_from(mprts_from);
   const char *type_from = psc_mparticles_type(mprts_from);
   // If we're already the subtype, nothing to be done
   if (strcmp(type_from, type) == 0) {
@@ -92,7 +93,6 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
 
   struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_from));
   psc_mparticles_set_type(mprts, type);
-  psc_mparticles_set_param_int(mprts, "nr_patches", mprts_from->nr_patches);
   psc_mparticles_setup(mprts);
 
   copy(mprts_from, mprts, type_from, type, flags);
@@ -108,6 +108,7 @@ void
 psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 		      unsigned int flags)
 {
+  mparticles_base_t mp(mprts), mp_to(mprts_to);
   // If we're already the subtype, nothing to be done
   const char *type = psc_mparticles_type(mprts);
   const char *type_to = psc_mparticles_type(mprts_to);
@@ -127,15 +128,14 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   if (flags & MP_DONT_COPY) {
     // let's check that the size of the particle arrays hasn't changed, since
     // it's not obvious what we should do in case it did...
-    uint n_prts_by_patch[mprts->nr_patches];
-    uint n_prts_by_patch_to[mprts_to->nr_patches];
+    uint n_prts_by_patch[mp->n_patches()];
+    uint n_prts_by_patch_to[mp_to->n_patches()];
 
-    mparticles_t mp(mprts), mp_to(mprts_to);
     mp->get_size_all(n_prts_by_patch);
     mp_to->get_size_all(n_prts_by_patch_to);
-    assert(mprts_to->nr_patches == mprts->nr_patches);
+    assert(mp_to->n_patches() == mp->n_patches());
 
-    for (int p = 0; p < mprts->nr_patches; p++) {
+    for (int p = 0; p < mp->n_patches(); p++) {
       if (n_prts_by_patch[p] != n_prts_by_patch_to[p]) {
 	mprintf("psc_mparticles_put_as: p = %d n_prts %d -- %d\n",
 		p, n_prts_by_patch[p], n_prts_by_patch_to[p]);
@@ -225,18 +225,10 @@ psc_mparticles_init()
 #endif
 }
 
-#define VAR(x) (void *)offsetof(struct psc_mparticles, x)
-static struct param psc_mparticles_descr[] = {
-  { "nr_patches"        , VAR(nr_patches)      , PARAM_INT(0)       },
-  {},
-};
-#undef VAR
-
 struct mrc_class_psc_mparticles_ : mrc_class_psc_mparticles {
   mrc_class_psc_mparticles_() {
     name             = "psc_mparticles";
     size             = sizeof(struct psc_mparticles);
-    param_descr      = psc_mparticles_descr;
     init             = psc_mparticles_init;
     view             = _psc_mparticles_view;
   }

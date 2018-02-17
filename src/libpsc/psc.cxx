@@ -493,9 +493,6 @@ psc_setup_base_mprts(struct psc *psc)
   psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
   psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
-  int nr_patches;
-  mrc_domain_get_patches(psc->mrc_domain, &nr_patches);
-  psc_mparticles_set_param_int(psc->particles, "nr_patches", nr_patches);
   psc_mparticles_setup(psc->particles);
 }
 
