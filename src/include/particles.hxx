@@ -233,7 +233,9 @@ struct mparticles_base
   
   sub_t* operator->() { return sub_; }
 
-public:
+  sub_t* sub() { return sub_; }
+
+private:
   psc_mparticles *mprts_;
   sub_t *sub_;
 };
@@ -419,7 +421,7 @@ struct mparticles : mparticles_base<S>
 
   patch_t& operator[](int p)
   {
-    return (*this->sub_)[p];
+    return (*this->sub())[p];
   }
 
 };

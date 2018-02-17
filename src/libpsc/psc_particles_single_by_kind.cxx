@@ -25,7 +25,7 @@ PFX(setup)(struct psc_mparticles *_mprts)
 
   psc_mparticles_setup_super(_mprts);
 
-  new(mprts.sub_) psc_mparticles_single_by_kind{ppsc->grid};
+  new(mprts.sub()) psc_mparticles_single_by_kind{ppsc->grid};
 
   mprts->bkmprts = bk_mparticles_new(mprts->n_patches());
 }
