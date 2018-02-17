@@ -165,7 +165,8 @@ psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
     mparticles_vpic_t mprts = psc->particles->get_as<mparticles_vpic_t>(MP_DONT_COPY | MP_DONT_RESIZE);
     mprts.put_as(psc->particles);
   } else {
-    psc_mparticles_reserve_all(psc->particles, n_prts_by_patch);
+    mparticles_base_t mprts(psc->particles);
+    mprts->reserve_all(n_prts_by_patch);
     psc_setup_particles(psc, n_prts_by_patch);
   }
 }

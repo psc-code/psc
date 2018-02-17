@@ -127,7 +127,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
   }
 
   psc_mparticles_setup(_mprts);
-  psc_mparticles_reserve_all(_mprts, n_prts_by_patch);
+  mprts->reserve_all(n_prts_by_patch);
 
   uint off = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {

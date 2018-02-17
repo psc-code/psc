@@ -28,27 +28,6 @@ _psc_mparticles_view(struct psc_mparticles *_mprts)
   }  
 }
 
-int
-psc_mparticles_nr_particles(struct psc_mparticles *_mprts)
-{
-  mparticles_base_t mprts(_mprts);
-  return mprts->get_n_prts();
-}
-
-void
-psc_mparticles_resize_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_base_t mprts(_mprts);
-  mprts->resize_all(n_prts_by_patch);
-}
-
-void
-psc_mparticles_reserve_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_base_t mprts(_mprts);
-  mprts->reserve_all(n_prts_by_patch);
-}
-
 void
 psc_mparticles_inject(struct psc_mparticles *_mprts, int p,
 		      const struct psc_particle_inject *prt)
@@ -69,10 +48,10 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
   if (flags & MP_DONT_COPY) {
     if (!(flags & MP_DONT_RESIZE)) {
       uint n_prts_by_patch[mprts_from->nr_patches];
-      mparticles_t mp_from(mprts_from);
+      mparticles_t mp_from(mprts_from), mp_to(mprts_to);
       mp_from->get_size_all(n_prts_by_patch);
-      psc_mparticles_reserve_all(mprts_to, n_prts_by_patch);
-      psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
+      mp_to->reserve_all(n_prts_by_patch);
+      mp_to->resize_all(n_prts_by_patch);
     }
     return;
   }
