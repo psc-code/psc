@@ -30,7 +30,7 @@ struct psc_mparticles_vpic : psc_mparticles_base
 
   int get_n_prts() const override { assert(0); return 0; }
 
-  void get_size_all(uint *n_prts_by_patch)
+  void get_size_all(uint *n_prts_by_patch) const override
   {
     vpic_mparticles_get_size_all(vmprts, 1, n_prts_by_patch);
   }

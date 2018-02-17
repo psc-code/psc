@@ -21,7 +21,7 @@ _psc_mparticles_view(struct psc_mparticles *_mprts)
   mpi_printf(comm, "  n_prts_total = %d\n", mprts->get_n_prts());
 
   uint n_prts_by_patch[mprts->n_patches()];
-  psc_mparticles_get_size_all(_mprts, n_prts_by_patch);
+  mprts->get_size_all(n_prts_by_patch);
 
   for (int p = 0; p < mprts->n_patches(); p++) {
     mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);

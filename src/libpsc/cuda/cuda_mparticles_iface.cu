@@ -35,7 +35,7 @@ void psc_mparticles_cuda::reserve_all(const uint *n_prts_by_patch)
   cmprts_->reserve_all(n_prts_by_patch);
 }
 
-void psc_mparticles_cuda::get_size_all(uint *n_prts_by_patch)
+void psc_mparticles_cuda::get_size_all(uint *n_prts_by_patch) const
 {
   dprintf("CMPRTS: get_size_all\n");
   cmprts_->get_size_all(n_prts_by_patch);
