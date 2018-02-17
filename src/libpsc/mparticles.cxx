@@ -231,7 +231,6 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
 
 // ======================================================================
 
-extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_ops;
 extern struct psc_mparticles_ops psc_mparticles_double_ops;
 extern struct psc_mparticles_ops psc_mparticles_sse2_ops;
@@ -248,7 +247,6 @@ psc_mparticles_init()
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_double_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_single_by_kind_ops);
-  mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_fortran_ops);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_cuda_ops);
 #endif

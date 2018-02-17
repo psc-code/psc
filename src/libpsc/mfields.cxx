@@ -411,7 +411,6 @@ psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p)
 // ======================================================================
 
 extern struct psc_mfields_ops psc_mfields_c_ops;
-extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_single_ops;
 extern struct psc_mfields_ops psc_mfields_vpic_ops;
 extern struct psc_mfields_ops psc_mfields_cuda_ops;
@@ -421,7 +420,6 @@ psc_mfields_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_single_ops);
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_fortran_ops);
 #ifdef USE_VPIC
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_vpic_ops);
 #endif

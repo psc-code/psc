@@ -345,6 +345,10 @@ struct psc_mparticles_base
   virtual void get_size_all(uint *n_prts_by_patch) const = 0;
   virtual void reserve_all(const uint *n_prts_by_patch) = 0;
   virtual void resize_all(const uint *n_prts_by_patch) = 0;
+  virtual void inject(int p, const psc_particle_inject *new_prt)
+  {
+    assert(0);
+  }
 
 protected:
   const Grid_t& grid_;
@@ -410,6 +414,31 @@ struct psc_mparticles_ : psc_mparticles_base
     for (auto& patch: patches_) {
       patch.check();
     }
+  }
+
+  void inject(int p, const psc_particle_inject *new_prt) override
+  {
+    int kind = new_prt->kind;
+
+    const Grid_t::Patch& patch = grid_.patches[p];
+    for (int d = 0; d < 3; d++) {
+      assert(new_prt->x[d] >= patch.xb[d]);
+      assert(new_prt->x[d] <= patch.xe[d]);
+    }
+    
+    float dVi = 1.f / (grid_.dx[0] * grid_.dx[1] * grid_.dx[2]);
+    
+    particle_t prt;
+    prt.xi      = new_prt->x[0] - patch.xb[0];
+    prt.yi      = new_prt->x[1] - patch.xb[1];
+    prt.zi      = new_prt->x[2] - patch.xb[2];
+    prt.pxi     = new_prt->u[0];
+    prt.pyi     = new_prt->u[1];
+    prt.pzi     = new_prt->u[2];
+    prt.qni_wni_ = new_prt->w * grid_.kinds[kind].q * dVi;
+    prt.kind_   = kind;
+    
+    (*this)[p].push_back(prt);
   }
   
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }

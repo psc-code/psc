@@ -7,13 +7,11 @@ add_library(psc
   psc.cxx
   psc_checkpoint.cxx
   psc_fields_c.cxx
-  psc_fields_fortran.cxx
   psc_fields_single.cxx
   psc_main.cxx
   psc_method.cxx
   psc_method_default.cxx
   psc_particles_double.cxx
-  psc_particles_fortran.cxx
   psc_particles_single.cxx
   psc_particles_single_by_kind.cxx
   psc_stats.cxx
