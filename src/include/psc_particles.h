@@ -47,7 +47,6 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 #define MP_BLOCKSIZE_8X8X8    (0x4000)
 
 
-void psc_mparticles_get_size_all(struct psc_mparticles *mprts, uint *n_prts_by_patch);
 void psc_mparticles_reserve_all(struct psc_mparticles *mprts, uint *n_prts_by_patch);
 void psc_mparticles_resize_all(struct psc_mparticles *mprts, uint *n_prts_by_patch);
 

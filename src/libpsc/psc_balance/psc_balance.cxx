@@ -3,6 +3,7 @@
 #include "psc_bnd_fields.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
+#include "particles.hxx"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -45,9 +46,10 @@ static void
 psc_get_loads(struct psc *psc, double *loads)
 {
   struct psc_mparticles *mprts = psc->particles;
+  mparticles_base_t mp(mprts);
   
-  uint n_prts_by_patch[mprts->nr_patches];
-  psc_mparticles_get_size_all(mprts, n_prts_by_patch);
+  uint n_prts_by_patch[mp->n_patches()];
+  mp->get_size_all(n_prts_by_patch);
   psc_foreach_patch(psc, p) {
     if (psc->balance->factor_fields >= 0.) {
       int *ldims = psc->patch[p].ldims;
@@ -714,8 +716,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_start(pr_bal_prts);
 
   prof_start(pr_bal_prts_A);
+  mparticles_base_t mprts(psc->particles);
   uint *nr_particles_by_patch = (uint *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
-  psc_mparticles_get_size_all(psc->particles, nr_particles_by_patch);
+  mprts->get_size_all(nr_particles_by_patch);
   prof_stop(pr_bal_prts_A);
 
   communicate_new_nr_particles(ctx, &nr_particles_by_patch);
