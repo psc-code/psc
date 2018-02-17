@@ -111,7 +111,8 @@ params_1vb_set(struct psc *psc,
     params.dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
   }
 
-  if (mprts && mprts->nr_patches > 0) {
+  mparticles_t mp(mprts);
+  if (mprts && mp->n_patches() > 0) {
 #if PSC_PARTICLES_AS_CUDA2
     struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
     for (int d = 0; d < 3; d++) {

@@ -13,16 +13,17 @@
 // psc_mparticles base class
 
 static void
-_psc_mparticles_view(struct psc_mparticles *mprts)
+_psc_mparticles_view(struct psc_mparticles *_mprts)
 {
-  MPI_Comm comm = psc_mparticles_comm(mprts);
-  mpi_printf(comm, "  n_patches    = %d\n", mprts->nr_patches);
-  mpi_printf(comm, "  n_prts_total = %d\n", psc_mparticles_nr_particles(mprts));
+  MPI_Comm comm = psc_mparticles_comm(_mprts);
+  mparticles_base_t mprts(_mprts);
+  mpi_printf(comm, "  n_patches    = %d\n", mprts->n_patches());
+  mpi_printf(comm, "  n_prts_total = %d\n", psc_mparticles_nr_particles(_mprts));
 
-  uint n_prts_by_patch[mprts->nr_patches];
-  psc_mparticles_get_size_all(mprts, n_prts_by_patch);
+  uint n_prts_by_patch[mprts->n_patches()];
+  psc_mparticles_get_size_all(_mprts, n_prts_by_patch);
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts->n_patches(); p++) {
     mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);
   }  
 }

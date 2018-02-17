@@ -45,14 +45,6 @@ struct psc_mparticles_single_by_kind : psc_mparticles_base
 // ======================================================================
 // mparticles_single_by_kind_t
 
-struct mparticles_single_by_kind_t : mparticles_base<psc_mparticles_single_by_kind>
-{
-  using Base = mparticles_base<psc_mparticles_single_by_kind>;
-  using particle_t = particle_single_by_kind_t;
-  using real_t = particle_single_by_kind_real_t;
-
-  using Base::Base;
-
-};
+using mparticles_single_by_kind_t = mparticles_base<psc_mparticles_single_by_kind>;
 
 #endif
