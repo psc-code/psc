@@ -36,30 +36,6 @@ PFX(destroy)(struct psc_mparticles *mprts)
   bk_mparticles_delete(bkmprts);
 }
 
-static void
-PFX(reserve_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch)
-{
-  bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
-
-  bk_mparticles_reserve_all(bkmprts, n_prts_by_patch);
-}
-
-static void
-PFX(resize_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch)
-{
-  bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
-
-  bk_mparticles_resize_all(bkmprts, n_prts_by_patch);
-}
-
-static void
-PFX(get_size_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch)
-{
-  bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
-
-  bk_mparticles_size_all(bkmprts, n_prts_by_patch);
-}
-
 static unsigned int
 PFX(get_nr_particles)(struct psc_mparticles *mprts)
 {
@@ -82,10 +58,6 @@ struct PFX(ops) : psc_mparticles_ops {
     write                   = PFX(write);
     read                    = PFX(read);
 #endif
-    reserve_all             = PFX(reserve_all);
-    resize_all              = PFX(resize_all);
-    get_size_all            = PFX(get_size_all);
-    get_nr_particles        = PFX(get_nr_particles);
   }
 } PFX(ops);
 

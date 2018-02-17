@@ -44,17 +44,6 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
   mprts.sub()->~psc_mparticles_cuda();
 }
 
-// ----------------------------------------------------------------------
-// psc_mparticles_cuda_reserve_all
-
-static void
-psc_mparticles_cuda_reserve_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_cuda_t mprts(_mprts);
-
-  mprts->reserve_all(n_prts_by_patch);
-}
-
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all
@@ -171,39 +160,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_get_nr_particles
-
-static uint
-psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *_mprts)
-{
-  mparticles_cuda_t mprts(_mprts);
-
-  return mprts->get_n_prts();
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_cuda_get_size_all
-
-static void
-psc_mparticles_cuda_get_size_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_cuda_t mprts(_mprts);
-
-  mprts->get_size_all(n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_cuda_resize_all
-
-static void
-psc_mparticles_cuda_resize_all(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_cuda_t mprts(_mprts);
-
-  mprts->resize_all(n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_cuda_inject
 
 void
@@ -237,10 +193,6 @@ struct psc_mparticles_ops_cuda : psc_mparticles_ops {
     read                    = psc_mparticles_cuda_read;
     write                   = psc_mparticles_cuda_write;
 #endif
-    reserve_all             = psc_mparticles_cuda_reserve_all;
-    get_nr_particles        = psc_mparticles_cuda_get_nr_particles;
-    resize_all              = psc_mparticles_cuda_resize_all;
-    get_size_all            = psc_mparticles_cuda_get_size_all;
   }
 } psc_mparticles_cuda_ops;
 

@@ -287,9 +287,6 @@ static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_setup
 
-// FIXME
-#define DONTEXPAND
-
 static void
 psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
 {
@@ -299,50 +296,6 @@ psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
 
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mprts->sim);
   mprts->vmprts = Simulation_get_particles(mprts->sim);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_vpic_get_size_all
-
-static void
-psc_mparticles_vpic_get_size_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
-{
-  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
-  
-  vpic_mparticles_get_size_all(sub->vmprts, mprts->nr_patches, n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_vpic_reserve_all
-
-static void
-psc_mparticles_vpic_reserve_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
-{
-  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
-
-  Simulation_mprts_reserve_all(sub->sim, sub->vmprts, mprts->nr_patches, n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_vpic_resize_all
-
-static void
-psc_mparticles_vpic_resize_all(struct psc_mparticles *mprts, uint *n_prts_by_patch)
-{
-  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
-
-  Simulation_mprts_resize_all(sub->sim, sub->vmprts, mprts->nr_patches, n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_vpic_get_nr_particles
-
-static unsigned int
-psc_mparticles_vpic_get_nr_particles(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_vpic *sub = psc_mparticles_vpic(mprts);
-  
-  return Simulation_mprts_get_nr_particles(sub->sim, sub->vmprts);
 }
 
 // ----------------------------------------------------------------------
@@ -366,10 +319,6 @@ struct psc_mparticles_ops_vpic : psc_mparticles_ops {
     size                    = sizeof(struct psc_mparticles_vpic);
     methods                 = psc_mparticles_vpic_methods;
     setup                   = psc_mparticles_vpic_setup;
-    reserve_all             = psc_mparticles_vpic_reserve_all;
-    get_size_all            = psc_mparticles_vpic_get_size_all;
-    resize_all              = psc_mparticles_vpic_resize_all;
-    get_nr_particles        = psc_mparticles_vpic_get_nr_particles;
     inject                  = psc_mparticles_vpic_inject;
   }
 } psc_mparticles_vpic_ops;

@@ -28,8 +28,11 @@ struct psc_mparticles_vpic : psc_mparticles_base
   Particles *vmprts;
   Simulation *sim;
 
-  int get_n_prts() const override { assert(0); return 0; }
-
+  int get_n_prts() const override
+  {
+    return Simulation_mprts_get_nr_particles(sim, vmprts);
+  }
+  
   void get_size_all(uint *n_prts_by_patch) const override
   {
     vpic_mparticles_get_size_all(vmprts, 1, n_prts_by_patch);

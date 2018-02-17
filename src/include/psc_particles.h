@@ -30,10 +30,6 @@ typedef struct psc_particle_inject {
 
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
-  unsigned int (*get_nr_particles)(struct psc_mparticles *mprts);
-  void (*reserve_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch);
-  void (*resize_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch);
-  void (*get_size_all)(struct psc_mparticles *mprts, uint *n_prts_by_patch);
   void (*inject)(struct psc_mparticles *mprts, int p,
 		 const struct psc_particle_inject *prt);
 };

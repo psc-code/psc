@@ -128,38 +128,6 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 
 #endif
 
-static void
-PFX(reserve_all)(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_t mprts(_mprts);
-
-  mprts->reserve_all(n_prts_by_patch);
-}
-
-static void
-PFX(resize_all)(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_t mprts(_mprts);
-
-  mprts->resize_all(n_prts_by_patch);
-}
-
-static void
-PFX(get_size_all)(struct psc_mparticles *_mprts, uint *n_prts_by_patch)
-{
-  mparticles_t mprts(_mprts);
-
-  mprts->get_size_all(n_prts_by_patch);
-}
-
-static unsigned int
-PFX(get_nr_particles)(struct psc_mparticles *_mprts)
-{
-  mparticles_t mprts(_mprts);
-
-  return mprts->get_n_prts();
-}
-
 #if PSC_PARTICLES_AS_SINGLE
 
 static void
@@ -203,10 +171,6 @@ struct PFX(OPS) : psc_mparticles_ops {
     setup                   = PFX(setup);
     write                   = PFX(write);
     read                    = PFX(read);
-    reserve_all             = PFX(reserve_all);
-    resize_all              = PFX(resize_all);
-    get_size_all            = PFX(get_size_all);
-    get_nr_particles        = PFX(get_nr_particles);
 #if PSC_PARTICLES_AS_SINGLE
     inject                  = PFX(inject);
 #endif
