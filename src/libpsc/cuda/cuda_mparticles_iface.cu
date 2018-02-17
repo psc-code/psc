@@ -50,7 +50,7 @@ void psc_mparticles_cuda::resize_all(const uint *n_prts_by_patch)
   cmprts_->resize_all(n_prts_by_patch);
 }
 
-uint psc_mparticles_cuda::get_n_prts()
+int psc_mparticles_cuda::get_n_prts() const
 {
   dprintf("CMPRTS: get_n_prts\n");
   return cmprts_->get_n_prts();

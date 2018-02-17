@@ -341,6 +341,7 @@ struct psc_mparticles_base
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }
+  virtual int get_n_prts() const = 0;
 
 protected:
   const Grid_t& grid_;
@@ -392,7 +393,7 @@ struct psc_mparticles_ : psc_mparticles_base
     }
   }
 
-  int get_n_prts() const
+  int get_n_prts() const override
   {
     int n_prts = 0;
     for (auto const& patch : patches_) {

@@ -66,6 +66,8 @@ psc_main(int *argc, char ***argv, struct psc_ops *type)
   // psc_view() will just print a whole lot of info about the psc object and
   // sub-objects, in particular all the parameters.
   psc_view(psc);
+  psc_mparticles_view(psc->particles);
+  psc_mfields_view(psc->flds);
   
   // psc_integrate() uses the standard implementation, which does the regular
   // classic PIC time integration loop

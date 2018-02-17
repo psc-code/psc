@@ -22,6 +22,8 @@ struct psc_mparticles_single_by_kind : psc_mparticles_base
 
   bk_mparticles *bkmprts;
 
+  int get_n_prts() const override { assert(0); return 0; }
+
   void get_size_all(uint *n_prts_by_patch)
   {
     bk_mparticles_size_all(bkmprts, n_prts_by_patch);
