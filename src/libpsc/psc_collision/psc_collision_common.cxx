@@ -637,7 +637,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
   for (int m = 0; m < NR_STATS; m++) {
     // FIXME, copy could be avoided (?)
-    mr.mflds()->copy(m, coll->mflds, m);
+    mr->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
   }
 
   mr.put_as(mres, 0, NR_STATS);
@@ -674,7 +674,7 @@ copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
   for (int m = 0; m < 3; m++) {
     // FIXME, copy could be avoided (?)
-    mr.mflds()->copy(m, coll->mflds_rei, m);
+    mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
   }
 
   mr.put_as(mres, 0, 3);

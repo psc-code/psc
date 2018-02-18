@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void psc_mfields::copy(int mto, struct psc_mfields *from, int mfrom)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(this);
-  assert(ops == psc_mfields_ops(from));
-
-  assert(ops && ops->copy_comp);
-  ops->copy_comp(this, mto, from, mfrom);
-}
-
 void psc_mfields::axpy(double alpha, struct psc_mfields *x)
 {
   for (int m = first_comp; m < first_comp + nr_fields; m++) {
