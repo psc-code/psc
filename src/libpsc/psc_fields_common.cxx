@@ -119,26 +119,6 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mfields_copy_comp
-
-static void
-MPFX(copy_comp)(struct psc_mfields *to, int mto,
-		struct psc_mfields *fr, int mfr)
-{
-  mfields_t(to)->copy_comp(mto, *mfields_t(fr).sub(), mfr);
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_axpy_comp
-
-static void
-MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
-		struct psc_mfields *x, int mx)
-{
-  mfields_t(y)->axpy_comp(my, alpha, *mfields_t(x).sub(), mx);
-}
-
-// ----------------------------------------------------------------------
 // psc_mfields_max_comp
 
 static double
@@ -161,8 +141,6 @@ struct MPFX(psc_mfields_ops) : psc_mfields_ops {
     write                 = MPFX(write);
     read                  = MPFX(read);
 #endif
-    copy_comp             = MPFX(copy_comp);
-    axpy_comp             = MPFX(axpy_comp);
     max_comp              = MPFX(max_comp);
   }
 } MPFX(ops);

@@ -32,9 +32,6 @@ struct psc_mparticles;
 
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
-  void (*copy_comp)(struct psc_mfields *to, int mto, struct psc_mfields *from, int mfrom);
-  void (*axpy_comp)(struct psc_mfields *y, int my, double alpha,
-		    struct psc_mfields *x, int mx);
   double (*max_comp)(struct psc_mfields *mflds, int m);
 
   double (*synchronize_tang_e_norm_b)(struct psc_mfields *mflds);

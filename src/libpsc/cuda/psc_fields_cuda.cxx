@@ -295,7 +295,6 @@ struct psc_mfields_ops_cuda : psc_mfields_ops {
     write                 = psc_mfields_cuda_write;
     read                  = psc_mfields_cuda_read;
 #endif
-    axpy_comp             = psc_mfields_cuda_axpy_comp;
   }
 } psc_mfields_cuda_ops;
 
