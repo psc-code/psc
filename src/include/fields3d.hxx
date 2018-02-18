@@ -145,10 +145,12 @@ struct psc_mfields_
 
   ~psc_mfields_()
   {
-    for (int p = 0; p < n_patches(); p++) {
-      free(data[p]);
+    if (data) { // FIXME, since this object exists without a constructor having been called, for now...
+      for (int p = 0; p < n_patches(); p++) {
+	free(data[p]);
+      }
+      free(data);
     }
-    free(data);
   }
 
   int n_patches() const { return grid_.n_patches(); }
