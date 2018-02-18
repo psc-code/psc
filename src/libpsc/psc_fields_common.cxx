@@ -121,7 +121,7 @@ MPFX(setup)(struct psc_mfields *_mflds)
 
   psc_mfields_setup_super(_mflds);
 
-  new(mflds.sub()) MPFX(sub)(ppsc->grid, mflds.n_fields(), _mflds->ibn);
+  new(mflds.sub()) MPFX(sub)(ppsc->grid, mflds.n_fields(), _mflds->ibn, _mflds->first_comp);
 }
 
 // ----------------------------------------------------------------------
@@ -301,31 +301,6 @@ MPFX(max_comp)(struct psc_mfields *mflds, int m)
     rv = fmax(rv, fields_t_max_comp(mf[p], m));
   }
   return rv;
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_get_field_t
-
-fields_t
-MPFX(get_field_t)(struct psc_mfields *mflds, int p)
-{
-  //assert((struct psc_mfields_ops *) mflds->obj.ops == &MPFX(ops));
-  MPFX(sub) *sub = mrc_to_subobj(mflds, MPFX(sub));
-  fields_t flds;
-
-#if PSC_FIELDS_AS_FORTRAN
-  flds.data = sub->data[p][0];
-#else
-  flds.data = sub->data[p];
-#endif
-  for (int d = 0; d < 3; d++) {
-    flds.ib[d] = sub->ib[d];
-    flds.im[d] = sub->im[d];
-  }
-  flds.nr_comp = mflds->nr_fields;
-  flds.first_comp = mflds->first_comp;
-
-  return flds;
 }
 
 // ----------------------------------------------------------------------

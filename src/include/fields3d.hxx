@@ -119,8 +119,10 @@ struct psc_mfields_
   using fields_t = F;
   using real_t = typename fields_t::real_t;
 
-  psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3])
-    : grid_(grid)
+  psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3], int first_comp)
+    : grid_(grid),
+      n_fields_(n_fields),
+      first_comp_(first_comp)
   {
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
@@ -142,11 +144,28 @@ struct psc_mfields_
     }
     free(data);
   }
+
+  fields_t operator[](int p)
+  {
+    fields_t flds;
+
+    flds.data = data[p];
+    for (int d = 0; d < 3; d++) {
+      flds.ib[d] = ib[d];
+      flds.im[d] = im[d];
+    }
+    flds.nr_comp = n_fields_;
+    flds.first_comp = first_comp_;
+    
+    return flds;
+  }
   
   real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
 private:
+  int n_fields_;
+  int first_comp_;
   const Grid_t& grid_;
 };
 
@@ -174,7 +193,7 @@ struct mfields_base
 
   fields_t operator[](int p)
   {
-    return fields_t::psc_mfields_get_field_t(mflds_, p);
+    return (*sub_)[p];
   }
 
   void put_as(struct psc_mfields *mflds_base, int mb, int me)

@@ -20,13 +20,6 @@ using psc_mfields_c_sub = psc_mfields_<fields_c_t>;
 using mfields_c_t = mfields_base<psc_mfields_c_sub>;
 
 template<>
-inline fields_c_t mfields_c_t::operator[](int p)
-{
-  fields_c_t psc_mfields_c_get_field_t(struct psc_mfields *mflds, int p);
-  return psc_mfields_c_get_field_t(mflds_, p);
-}
-
-template<>
 struct fields_traits<fields_c_t>
 {
   static constexpr const char* name = "c";

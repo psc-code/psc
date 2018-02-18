@@ -20,13 +20,6 @@ using psc_mfields_single_sub = psc_mfields_<fields_single_t>;
 using mfields_single_t = mfields_base<psc_mfields_single_sub>;
 
 template<>
-inline fields_single_t mfields_single_t::operator[](int p)
-{
-  fields_single_t psc_mfields_single_get_field_t(struct psc_mfields *mflds, int p);
-  return psc_mfields_single_get_field_t(mflds_, p);
-}
-
-template<>
 struct fields_traits<fields_single_t>
 {
   static constexpr const char* name = "single";
