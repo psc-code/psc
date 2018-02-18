@@ -179,6 +179,9 @@ struct psc_mfields_base
   virtual void zero_comp(int m) = 0;
   virtual void set_comp(int m, double val) = 0;
   virtual void scale_comp(int m, double val) = 0;
+  virtual void copy_comp(int mto, psc_mfields_base& from, int mfrom) = 0;
+  virtual void axpy_comp(int m_y, double alpha, psc_mfields_base& x, int m_x) = 0;
+  virtual double max_comp(int m) = 0;
   
 protected:
   int n_fields_;
@@ -247,21 +250,24 @@ struct psc_mfields_ : psc_mfields_base
     }
   }
 
-  void copy_comp(int mto, psc_mfields_&from, int mfrom)
+  void copy_comp(int mto, psc_mfields_base& from_base, int mfrom) override
   {
+    // FIXME? dynamic_cast would actually be more appropriate
+    psc_mfields_& from = static_cast<psc_mfields_&>(from_base);
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].copy_comp(mto, from[p], mfrom);
     }
   }
   
-  void axpy_comp(int m_y, real_t alpha, psc_mfields_&x, int m_x)
+  void axpy_comp(int m_y, double alpha, psc_mfields_base& x_base, int m_x) override
   {
+    psc_mfields_& x = static_cast<psc_mfields_&>(x_base);
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
     }
   }
 
-  double max_comp(int m)
+  double max_comp(int m) override
   {
     double rv = -std::numeric_limits<double>::max();
     for (int p = 0; p < n_patches(); p++) {
