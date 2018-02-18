@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void psc_mfields::axpy(int my, double alpha, struct psc_mfields *x, int mx)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(this);
-  assert(ops == psc_mfields_ops(x));
-
-  assert(ops && ops->axpy_comp);
-  ops->axpy_comp(this, my, alpha, x, mx);
-}
-
 using Fields = Fields3d<fields_t>;
 
 // ======================================================================

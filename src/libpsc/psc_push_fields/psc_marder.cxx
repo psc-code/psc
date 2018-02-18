@@ -2,6 +2,7 @@
 #include "psc_marder_private.h"
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
+#include "fields3d.hxx"
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
@@ -27,7 +28,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
     mrc_io_close(marder->io);
   }
 
-  div_e->axpy(0, -1., rho, 0);
+  mfields_base_t(div_e)->axpy_comp(0, -1., *mfields_base_t(rho).sub(), 0);
   // FIXME, why is this necessary?
   psc_bnd_fill_ghosts(marder->bnd, div_e, 0, 1);
 }

@@ -24,8 +24,6 @@ struct psc_mfields {
 
   template<typename MF>
   MF get_as(int mb, int me);
-
-  void axpy(int my, double alpha, struct psc_mfields *x, int mx);
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
