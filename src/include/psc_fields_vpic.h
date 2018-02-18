@@ -20,6 +20,11 @@ struct psc_mfields_vpic : psc_mfields_base
   using Base = psc_mfields_base;
 
   using Base::Base;
+
+  double synchronize_tang_e_norm_b()
+  {
+    return Simulation_mflds_synchronize_tang_e_norm_b(sim, vmflds_fields);
+  }
   
   Simulation *sim;
   FieldArray *vmflds_fields;

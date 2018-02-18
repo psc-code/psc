@@ -77,15 +77,6 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
   return flds->comp_name[m - flds->first_comp];
 }
 
-double
-psc_mfields_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->synchronize_tang_e_norm_b);
-  return ops->synchronize_tang_e_norm_b(mflds);
-}
-
 void
 psc_mfields_compute_div_b_err(struct psc_mfields *mflds)
 {

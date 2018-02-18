@@ -93,7 +93,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
   if (sync_shared) {
     // needs E, B, TCA
     mpi_printf(psc_marder_comm(marder), "Synchronizing shared tang e, norm b\n");
-    double err = psc_mfields_synchronize_tang_e_norm_b(mf.mflds());
+    double err = mf->synchronize_tang_e_norm_b();
     mpi_printf(psc_marder_comm(marder), "Domain desynchronization error = %e (arb units)\n", err);
     // updates E, B, TCA
   }
