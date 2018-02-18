@@ -27,10 +27,8 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
   [16]  = 16, [17] = 17, [18] = 18, [19] = 19,
 };
 
-void psc_mfields_vpic::accumulate_rho_p(struct psc_mparticles *mprts)
+void psc_mfields_vpic::accumulate_rho_p(Particles *vmprts)
 {
-  Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
-  
   Simulation_accumulate_rho_p(sim, vmprts, vmflds_fields);
 }
 

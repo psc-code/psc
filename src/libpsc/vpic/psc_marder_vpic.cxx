@@ -15,7 +15,7 @@ psc_marder_vpic_clean_div_e(struct psc_marder *marder, mfields_vpic_t mflds,
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning electric field\n");
   
   mflds->clear_rhof();
-  mflds->accumulate_rho_p(mprts.mprts());
+  mflds->accumulate_rho_p(mprts->vmprts);
   mflds->synchronize_rho();
   
   for (int round = 0; round < marder->num_div_e_round; round++ ) {

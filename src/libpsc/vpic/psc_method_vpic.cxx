@@ -229,7 +229,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
   mf->clear_rhof();
-  mf->accumulate_rho_p(mprts.mprts());
+  mf->accumulate_rho_p(mprts->vmprts);
   mf->synchronize_rho();
   mf->compute_rhob();
 

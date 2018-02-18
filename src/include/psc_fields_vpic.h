@@ -76,7 +76,7 @@ struct psc_mfields_vpic : psc_mfields_base
     Simulation_mflds_compute_curl_b(sim, vmflds_fields);
   }
 
-  void accumulate_rho_p(struct psc_mparticles *mprts);
+  void accumulate_rho_p(Particles* vmprts);
 
   Simulation *sim;
   FieldArray *vmflds_fields;
