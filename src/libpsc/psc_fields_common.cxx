@@ -122,41 +122,7 @@ MPFX(setup)(struct psc_mfields *_mflds)
 
   psc_mfields_setup_super(_mflds);
 
-  new(mflds.sub()) MPFX(sub); //(ppsc->grid, mflds.n_fields(), _mflds->ibn);
-
-  struct mrc_patch *patches = mrc_domain_get_patches(_mflds->domain,
-						     &_mflds->nr_patches);
-  assert(mflds.n_patches() > 0);
-  for (int p = 1; p < mflds.n_patches(); p++) {
-    for (int d = 0; d < 3; d++) {
-      assert(patches[p].ldims[d] == patches[0].ldims[d]);
-    }
-  }
-  
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    sub->ib[d] = -_mflds->ibn[d];
-    sub->im[d] = patches[0].ldims[d] + 2 * _mflds->ibn[d];
-    size *= sub->im[d];
-  }
-
-#if PSC_FIELDS_AS_FORTRAN
-  sub->data = (fields_t::real_t***) calloc(mflds.n_patches(), sizeof(*sub->data));
-#else
-  sub->data = (fields_t::real_t**) calloc(mflds.n_patches(), sizeof(*sub->data));
-#endif
-  for (int p = 0; p < mflds.n_patches(); p++) {
-#if PSC_FIELDS_AS_FORTRAN
-    fields_t::real_t **flds = (fields_t::real_t **) calloc(mflds.n_fields(), sizeof(*flds));
-    flds[0] = (fields_t::real_t *) calloc(size * mflds.n_fields(), sizeof(flds[0]));
-    for (int i = 1; i < mflds.n_fields(); i++) {
-      flds[i] = flds[0] + i * size;
-    }
-    sub->data[p] = flds;
-#else
-    sub->data[p] = (fields_t::real_t *) calloc(mflds.n_fields() * size, sizeof(fields_t::real_t));
-#endif
-  }
+  new(mflds.sub()) MPFX(sub)(ppsc->grid, mflds.n_fields(), _mflds->ibn);
 }
 
 // ----------------------------------------------------------------------

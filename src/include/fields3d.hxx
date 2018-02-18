@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "grid.hxx"
 #include "psc_fields.h"
 
 template<bool AOS>
@@ -116,10 +117,29 @@ template<typename F>
 struct psc_mfields_
 {
   using fields_t = F;
+  using real_t = typename fields_t::real_t;
 
-  typename fields_t::real_t **data;
+  psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3])
+    : grid_(grid)
+  {
+    unsigned int size = 1;
+    for (int d = 0; d < 3; d++) {
+      ib[d] = -ibn[d];
+      im[d] = grid_.ldims[d] + 2 * ibn[d];
+      size *= im[d];
+    }
+
+    data = (real_t**) calloc(grid_.n_patches(), sizeof(*data));
+    for (int p = 0; p < grid_.n_patches(); p++) {
+      data[p] = (real_t *) calloc(n_fields * size, sizeof(real_t));
+    }
+  }
+  
+  real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
+private:
+  const Grid_t& grid_;
 };
 
 // ======================================================================
