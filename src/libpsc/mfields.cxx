@@ -78,15 +78,6 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 }
 
 double
-psc_mfields_max_comp(struct psc_mfields *mflds, int m)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->max_comp);
-  return ops->max_comp(mflds, m);
-}
-
-double
 psc_mfields_synchronize_tang_e_norm_b(struct psc_mfields *mflds)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(mflds);

@@ -57,8 +57,6 @@ struct psc_mfields_ops {
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
 					int, int);
 
-double psc_mfields_max_comp(struct psc_mfields *mflds, int m);
-
 void psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s);
 const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
 struct psc_mfields *psc_mfields_get_as(struct psc_mfields *mflds_base,
