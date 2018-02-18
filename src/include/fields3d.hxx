@@ -40,11 +40,7 @@ struct fields3d {
       data(_data)
   {
     if (!data) {
-      unsigned int size = 1;
-      for (int d = 0; d < 3; d++) {
-	size *= im[d];
-      }
-      data = (real_t *) calloc(size * nr_comp, sizeof(*data));
+      data = (real_t *) calloc(size(), sizeof(*data));
     }
   }
 
@@ -84,6 +80,17 @@ struct fields3d {
   void zero()
   {
     memset(data, 0, sizeof(real_t) * size());
+  }
+
+  void set(int m, real_t val)
+  {
+    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
+      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
+	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  (*this)(m, i,j,k) = val;
+	}
+      }
+    }
   }
 };
 
@@ -130,34 +137,41 @@ struct psc_mfields_
       size *= im[d];
     }
 
-    data = (real_t**) calloc(grid_.n_patches(), sizeof(*data));
-    for (int p = 0; p < grid_.n_patches(); p++) {
+    data = (real_t**) calloc(n_patches(), sizeof(*data));
+    for (int p = 0; p < n_patches(); p++) {
       data[p] = (real_t *) calloc(n_fields * size, sizeof(real_t));
     }
   }
 
   ~psc_mfields_()
   {
-    for (int p = 0; p < grid_.n_patches(); p++) {
+    for (int p = 0; p < n_patches(); p++) {
       free(data[p]);
     }
     free(data);
   }
 
+  int n_patches() const { return grid_.n_patches(); }
+
   fields_t operator[](int p)
   {
-    fields_t flds(ib, im, n_fields_, first_comp_);
-
-    flds.data = data[p];
-    for (int d = 0; d < 3; d++) {
-      flds.ib[d] = ib[d];
-      flds.im[d] = im[d];
-    }
-    flds.nr_comp = n_fields_;
-    flds.first_comp = first_comp_;
-    
-    return flds;
+    return fields_t(ib, im, n_fields_, first_comp_);
   }
+
+  void zero_comp(int m)
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].zero(m);
+    }
+  }
+
+  void set_comp(int m, double val)
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].set(m, val);
+    }
+  }
+  
   
   real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
@@ -209,7 +223,6 @@ private:
   struct psc_mfields *mflds_;
   sub_t *sub_;
 };
-
 
 #endif
 

@@ -8,38 +8,6 @@
 using Fields = Fields3d<fields_t>;
 
 // ----------------------------------------------------------------------
-// fields_t_zero_comp
-
-static inline void
-fields_t_zero_comp(fields_t flds, int m)
-{
-  Fields F(flds);
-  for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
-    for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
-      for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	F(m, jx,jy,jz) = 0;
-      }
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
-// fields_t_set_comp
-
-static inline void
-fields_t_set_comp(fields_t flds, int m, fields_t::real_t val)
-{
-  Fields F(flds);
-  for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
-    for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
-      for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	F(m, jx,jy,jz) = val;
-      }
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
 // fields_t_scale_comp
 
 static inline void
@@ -233,10 +201,7 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 static void
 MPFX(zero_comp)(struct psc_mfields *mflds, int m)
 {
-  mfields_t mf(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t_zero_comp(mf[p], m);
-  }
+  mfields_t(mflds)->zero_comp(m);
 }
 
 // ----------------------------------------------------------------------
@@ -245,10 +210,7 @@ MPFX(zero_comp)(struct psc_mfields *mflds, int m)
 static void
 MPFX(set_comp)(struct psc_mfields *mflds, int m, double alpha)
 {
-  mfields_t mf(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t_set_comp(mf[p], m, alpha);
-  }
+  mfields_t(mflds)->set_comp(m, alpha);
 }
 
 // ----------------------------------------------------------------------
