@@ -1,32 +1,4 @@
 
-#include "fields.hxx"
-
-#include <limits>
-#include <algorithm>
-#include <math.h>
-
-using Fields = Fields3d<fields_t>;
-
-// ----------------------------------------------------------------------
-// fields_t_max_comp
-
-static inline double
-fields_t_max_comp(fields_t f, int m)
-{
-  Fields F(f);
-  fields_t::real_t rv = std::numeric_limits<fields_t::real_t>::min();
-  for (int jz = f.ib[2]; jz < f.ib[2] + f.im[2]; jz++) {
-    for (int jy = f.ib[1]; jy < f.ib[1] + f.im[1]; jy++) {
-      for (int jx = f.ib[0]; jx < f.ib[0] + f.im[0]; jx++) {
-	rv = std::max(rv, F(m, jx,jy,jz));
-      }
-    }
-  }
-
-  return rv;
-}
-
-
 // ======================================================================
 // psc_mfields
 
@@ -199,12 +171,7 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 static double
 MPFX(max_comp)(struct psc_mfields *mflds, int m)
 {
-  mfields_t mf(mflds);
-  double rv = -1e37; // FIXME
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    rv = fmax(rv, fields_t_max_comp(mf[p], m));
-  }
-  return rv;
+  return mfields_t(mflds)->max_comp(m);
 }
 
 // ----------------------------------------------------------------------

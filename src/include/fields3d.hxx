@@ -5,6 +5,8 @@
 #include <type_traits>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
+#include <algorithm>
 
 #include "grid.hxx"
 #include "psc_fields.h"
@@ -125,6 +127,19 @@ struct fields3d {
       }
     }
   }
+
+  real_t max_comp(int m)
+  {
+    real_t rv = -std::numeric_limits<real_t>::max();
+    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
+      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
+	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  rv = std::max(rv, (*this)(m, i,j,k));
+	}
+      }
+    }
+    return rv;
+  }
 };
 
 template<typename R, typename L>
@@ -227,7 +242,16 @@ struct psc_mfields_
       (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
     }
   }
-  
+
+  double max_comp(int m)
+  {
+    double rv = -std::numeric_limits<double>::max();
+    for (int p = 0; p < n_patches(); p++) {
+      rv = std::max(rv, double((*this)[p].max_comp(m)));
+    }
+    return rv;
+  }
+
   real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
