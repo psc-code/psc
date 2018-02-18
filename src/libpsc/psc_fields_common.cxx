@@ -119,15 +119,6 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mfields_max_comp
-
-static double
-MPFX(max_comp)(struct psc_mfields *mflds, int m)
-{
-  return mfields_t(mflds)->max_comp(m);
-}
-
-// ----------------------------------------------------------------------
 // psc_mfields: subclass ops
   
 struct MPFX(psc_mfields_ops) : psc_mfields_ops {
@@ -141,7 +132,6 @@ struct MPFX(psc_mfields_ops) : psc_mfields_ops {
     write                 = MPFX(write);
     read                  = MPFX(read);
 #endif
-    max_comp              = MPFX(max_comp);
   }
 } MPFX(ops);
 

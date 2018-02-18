@@ -32,8 +32,6 @@ struct psc_mparticles;
 
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
-  double (*max_comp)(struct psc_mfields *mflds, int m);
-
   double (*synchronize_tang_e_norm_b)(struct psc_mfields *mflds);
   void (*compute_div_b_err)(struct psc_mfields *mflds);
   double (*compute_rms_div_b_err)(struct psc_mfields *mflds);
