@@ -9,26 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void psc_mfields::zero(int mb, int me)
-{
-  for (int m = mb; m < me; m++) {
-    zero(m);
-  }
-}
-
-void psc_mfields::zero(int m)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(this);
-
-  assert(ops && ops->zero_comp);
-  ops->zero_comp(this, m);
-}
-
-void psc_mfields::zero()
-{
-  zero(0, nr_fields);
-}
-
 void psc_mfields::set(int m, double alpha)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(this);

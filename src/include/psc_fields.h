@@ -25,9 +25,6 @@ struct psc_mfields {
   template<typename MF>
   MF get_as(int mb, int me);
 
-  void zero();
-  void zero(int m);
-  void zero(int mb, int me);
   void set(int m, double alpha);
   void scale(double alpha);
   void scale(int m, double alpha);

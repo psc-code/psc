@@ -259,7 +259,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       write_fields(out_c, &out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);
 
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	out_c->tfd.flds[m]->zero();
+	mfields_base_t(out_c->tfd.flds[m])->zero();
       }
       out_c->naccum = 0;
     }

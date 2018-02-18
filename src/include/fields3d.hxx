@@ -169,6 +169,11 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 
 struct psc_mfields_base
 {
+  struct fields_t
+  {
+    struct real_t {};
+  };
+  
   psc_mfields_base(const Grid_t& grid, int n_fields)
     : grid_(grid),
       n_fields_(n_fields)
@@ -182,6 +187,8 @@ struct psc_mfields_base
   virtual void copy_comp(int mto, psc_mfields_base& from, int mfrom) = 0;
   virtual void axpy_comp(int m_y, double alpha, psc_mfields_base& x, int m_x) = 0;
   virtual double max_comp(int m) = 0;
+
+  void zero() { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
   
 protected:
   int n_fields_;
