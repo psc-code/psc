@@ -12,6 +12,7 @@
 #endif
 
 psc_mfields_cuda::psc_mfields_cuda(Grid_t& grid, int n_fields, const Int3& ibn)
+  : psc_mfields_base(grid, n_fields)
 {
   dprintf("CMFLDS: ctor\n");
   cmflds = new cuda_mfields(grid, n_fields, ibn);
@@ -47,16 +48,17 @@ void psc_mfields_cuda::axpy_comp_yz(int ym, float a, mfields_cuda_t mflds_x, int
   cmflds->axpy_comp_yz(ym, a, mflds_x->cmflds, xm);
 }
 
-void psc_mfields_cuda::zero_comp_yz(int xm)
+void psc_mfields_cuda::zero_comp(int m)
 {
-  dprintf("CMFLDS: zero_comp_yz\n");
-  cmflds->zero_comp_yz(xm);
+  dprintf("CMFLDS: zero_comp\n");
+  assert(grid_.gdims[0] == 1);
+  cmflds->zero_comp_yz(m);
 }
 
 void psc_mfields_cuda::zero()
 {
   dprintf("CMFLDS: zero\n");
   for (int m = 0; m < cmflds->n_fields; m++) {
-    cmflds->zero_comp_yz(m);
+    zero_comp(m);
   }
 }

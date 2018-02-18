@@ -166,8 +166,7 @@ psc_mfields_cuda_zero_comp(struct psc_mfields *_mflds, int m)
 {
   mfields_cuda_t mflds(_mflds);
 
-  assert(ppsc->domain.gdims[0] == 1);
-  mflds->zero_comp_yz(m);
+  mflds->zero_comp(m);
 }
 
 // ----------------------------------------------------------------------

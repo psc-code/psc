@@ -14,9 +14,12 @@ struct fields_vpic_t : fields3d<float, LayoutAOS>
   using Base::Base;
 };
 
-struct psc_mfields_vpic
+struct psc_mfields_vpic : psc_mfields_base
 {
   using fields_t = fields_vpic_t;
+  using Base = psc_mfields_base;
+
+  using Base::Base;
   
   Simulation *sim;
   FieldArray *vmflds_fields;

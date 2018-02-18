@@ -165,17 +165,35 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 }
 
 // ======================================================================
+// psc_mfields_base
+
+struct psc_mfields_base
+{
+  psc_mfields_base(const Grid_t& grid, int n_fields)
+    : grid_(grid),
+      n_fields_(n_fields)
+  {}
+
+  int n_patches() const { return grid_.n_patches(); }
+
+  virtual void zero_comp(int m) = 0;
+  
+protected:
+  int n_fields_;
+  const Grid_t& grid_;
+};
+
+// ======================================================================
 // psc_mfields_
 
 template<typename F>
-struct psc_mfields_
+struct psc_mfields_ : psc_mfields_base
 {
   using fields_t = F;
   using real_t = typename fields_t::real_t;
 
   psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3], int first_comp)
-    : grid_(grid),
-      n_fields_(n_fields),
+    : psc_mfields_base(grid, n_fields),
       first_comp_(first_comp)
   {
     unsigned int size = 1;
@@ -201,14 +219,12 @@ struct psc_mfields_
     }
   }
 
-  int n_patches() const { return grid_.n_patches(); }
-
   fields_t operator[](int p)
   {
     return fields_t(ib, im, n_fields_, first_comp_);
   }
 
-  void zero_comp(int m)
+  void zero_comp(int m) override
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].zero(m);
@@ -256,9 +272,7 @@ struct psc_mfields_
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
 private:
-  int n_fields_;
   int first_comp_;
-  const Grid_t& grid_;
 };
 
 // ======================================================================
@@ -270,6 +284,9 @@ struct mfields_base
   using sub_t = S;
   using fields_t = typename sub_t::fields_t;
   using real_t = typename fields_t::real_t;
+
+  static_assert(std::is_convertible<sub_t*, psc_mfields_base*>::value,
+		"sub classes used in mfields_t must derive from psc_mfields_base");
   
   mfields_base(struct psc_mfields *mflds)
     : mflds_(mflds),
@@ -298,6 +315,8 @@ private:
   struct psc_mfields *mflds_;
   sub_t *sub_;
 };
+
+using mfields_base_t = mfields_base<psc_mfields_base>;
 
 #endif
 

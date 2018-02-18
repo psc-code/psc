@@ -15,7 +15,7 @@ struct fields_cuda_t
   using real_t = float;
 };
 
-struct psc_mfields_cuda
+struct psc_mfields_cuda : psc_mfields_base
 {
   using fields_t = fields_cuda_t;
   using mfields_t = mfields_base<psc_mfields_cuda>;
@@ -24,9 +24,10 @@ struct psc_mfields_cuda
   psc_mfields_cuda(const psc_mfields_cuda&) = delete;
   ~psc_mfields_cuda();
 
+  void zero_comp(int m) override;
+
   void zero();
   void axpy_comp_yz(int ym, float a, mfields_t x, int xm);
-  void zero_comp_yz(int xm);
 
   fields_single_t get_host_fields();
   void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
