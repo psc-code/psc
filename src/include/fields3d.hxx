@@ -110,6 +110,19 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 }
 
 // ======================================================================
+// psc_mfields_
+
+template<typename F>
+struct psc_mfields_
+{
+  using fields_t = F;
+
+  typename fields_t::real_t **data;
+  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
+  int im[3]; //> extent for each patch (incl. ghostpoints)
+};
+
+// ======================================================================
 // mfields_base
 
 template<typename S>

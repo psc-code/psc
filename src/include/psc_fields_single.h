@@ -16,15 +16,7 @@ struct fields_single_t : fields3d<fields_single_real_t>
   using Base::Base;
 };
 
-struct psc_mfields_single_sub
-{
-  using fields_t = fields_single_t;
-  
-  fields_t::real_t **data;
-  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
-  int im[3]; //> extent for each patch (incl. ghostpoints)
-};
-
+using psc_mfields_single_sub = psc_mfields_<fields_single_t>;
 using mfields_single_t = mfields_base<psc_mfields_single_sub>;
 
 template<>

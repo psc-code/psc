@@ -165,7 +165,7 @@ MPFX(setup)(struct psc_mfields *_mflds)
 static void
 MPFX(destroy)(struct psc_mfields *mflds)
 {
-  struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
+  MPFX(sub) *sub = mrc_to_subobj(mflds, MPFX(sub));
 
   for (int p = 0; p < mflds->nr_patches; p++) {
 #if PSC_FIELDS_AS_FORTRAN
@@ -358,7 +358,7 @@ fields_t
 MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 {
   //assert((struct psc_mfields_ops *) mflds->obj.ops == &MPFX(ops));
-  struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
+  MPFX(sub) *sub = mrc_to_subobj(mflds, MPFX(sub));
   fields_t flds;
 
 #if PSC_FIELDS_AS_FORTRAN
@@ -382,7 +382,7 @@ MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 struct MPFX(psc_mfields_ops) : psc_mfields_ops {
   MPFX(psc_mfields_ops)() {
     name                  = FIELDS_TYPE;
-    size                  = sizeof(struct MPFX(sub));
+    size                  = sizeof(MPFX(sub));
     methods               = MPFX(methods);
     setup                 = MPFX(setup);
     destroy               = MPFX(destroy);
