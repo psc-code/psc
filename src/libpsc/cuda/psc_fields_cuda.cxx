@@ -144,7 +144,7 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
 
   cuda_base_init();
 
-  new(mflds.sub_) psc_mfields_cuda(ppsc->grid, mflds.n_fields(), _mflds->ibn);
+  new(mflds.sub()) psc_mfields_cuda(ppsc->grid, mflds.n_fields(), _mflds->ibn);
 }
 
 // ----------------------------------------------------------------------
@@ -155,7 +155,7 @@ psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
 {
   mfields_cuda_t mflds(_mflds);
 
-  mflds.sub_->~psc_mfields_cuda();
+  mflds->~psc_mfields_cuda();
 }
 
 // ----------------------------------------------------------------------

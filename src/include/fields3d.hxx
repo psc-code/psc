@@ -144,10 +144,10 @@ struct mfields_base
   struct psc_mfields *mflds() { return mflds_; }
   
   sub_t* operator->() { return sub_; }
+  sub_t* sub() { return sub_; }
   
 private:
   struct psc_mfields *mflds_;
-public:
   sub_t *sub_;
 };
 
