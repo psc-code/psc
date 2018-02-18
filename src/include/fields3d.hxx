@@ -92,6 +92,28 @@ struct fields3d {
       }
     }
   }
+
+  void scale(int m, real_t val)
+  {
+    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
+      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
+	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  (*this)(m, i,j,k) *= val;
+	}
+      }
+    }
+  }
+
+  void copy_comp(int mto, const fields3d& from, int mfrom)
+  {
+    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
+      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
+	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  (*this)(mto, i,j,k) = from(mfrom, i,j,k);
+	}
+      }
+    }
+  }
 };
 
 template<typename R, typename L>
@@ -174,6 +196,19 @@ struct psc_mfields_
     }
   }
   
+  void scale_comp(int m, double val)
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].scale(m, val);
+    }
+  }
+
+  void copy_comp(int mto, psc_mfields_&from, int mfrom)
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].copy_comp(mto, from[p], mfrom);
+    }
+  }
   
   real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)

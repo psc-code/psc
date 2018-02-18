@@ -8,38 +8,6 @@
 using Fields = Fields3d<fields_t>;
 
 // ----------------------------------------------------------------------
-// fields_t_scale_comp
-
-static inline void
-fields_t_scale_comp(fields_t flds, int m, fields_t::real_t val)
-{
-  Fields F(flds);
-  for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
-    for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
-      for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
-	F(m, jx, jy, jz) *= val;
-      }
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
-// fields_t_copy_comp
-
-static inline void
-fields_t_copy_comp(fields_t to, int m_to, fields_t from, int m_from)
-{
-  Fields F_to(to), F_from(from);
-  for (int jz = to.ib[2]; jz < to.ib[2] + to.im[2]; jz++) {
-    for (int jy = to.ib[1]; jy < to.ib[1] + to.im[1]; jy++) {
-      for (int jx = to.ib[0]; jx < to.ib[0] + to.im[0]; jx++) {
-	F_to(m_to, jx,jy,jz) = F_from(m_from, jx,jy,jz);
-      }
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
 // fields_t_axpy_comp
 
 static inline void
@@ -219,10 +187,7 @@ MPFX(set_comp)(struct psc_mfields *mflds, int m, double alpha)
 static void
 MPFX(scale_comp)(struct psc_mfields *mflds, int m, double alpha)
 {
-  mfields_t mf(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t_scale_comp(mf[p], m, alpha);
-  }
+  mfields_t(mflds)->scale_comp(m, alpha);
 }
 
 // ----------------------------------------------------------------------
@@ -232,10 +197,7 @@ static void
 MPFX(copy_comp)(struct psc_mfields *to, int mto,
 		struct psc_mfields *fr, int mfr)
 {
-  mfields_t mf_to(to), mf_from(fr);
-  for (int p = 0; p < to->nr_patches; p++) {
-    fields_t_copy_comp(mf_to[p], mto, mf_from[p], mfr);
-  }
+  mfields_t(to)->copy_comp(mto, *mfields_t(fr).sub(), mfr);
 }
 
 // ----------------------------------------------------------------------
