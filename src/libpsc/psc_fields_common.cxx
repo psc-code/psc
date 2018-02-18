@@ -119,15 +119,6 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mfields_zero_comp
-
-static void
-MPFX(zero_comp)(struct psc_mfields *mflds, int m)
-{
-  mfields_t(mflds)->zero_comp(m);
-}
-
-// ----------------------------------------------------------------------
 // psc_mfields_set_comp
 
 static void
@@ -188,7 +179,6 @@ struct MPFX(psc_mfields_ops) : psc_mfields_ops {
     write                 = MPFX(write);
     read                  = MPFX(read);
 #endif
-    zero_comp             = MPFX(zero_comp);
     set_comp              = MPFX(set_comp);
     scale_comp            = MPFX(scale_comp);
     copy_comp             = MPFX(copy_comp);
