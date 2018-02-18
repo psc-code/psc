@@ -149,7 +149,7 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
   d_rho->axpy(-1., rho_m);
 
   calc_div_j(psc, psc->flds, div_j);
-  div_j->scale(psc->dt);
+  mf_div_j->scale(psc->dt);
 
   double eps = checks->continuity_threshold;
   double max_err = 0.;

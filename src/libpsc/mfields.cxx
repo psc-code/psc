@@ -9,29 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void psc_mfields::set(int m, double alpha)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(this);
-
-  assert(ops && ops->set_comp);
-  ops->set_comp(this, m, alpha);
-}
-
-void psc_mfields::scale(double alpha)
-{
-  for (int m = first_comp; m < first_comp + nr_fields; m++) {
-    scale(m, alpha);
-  }
-}
-
-void psc_mfields::scale(int m, double alpha)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(this);
-
-  assert(ops && ops->scale_comp);
-  ops->scale_comp(this, m, alpha);
-}
-
 void psc_mfields::copy(int mto, struct psc_mfields *from, int mfrom)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(this);

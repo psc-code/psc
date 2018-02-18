@@ -253,7 +253,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
       // convert accumulated values to correct temporal mean
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	out_c->tfd.flds[m]->scale(1./out_c->naccum);
+	mfields_base_t(out_c->tfd.flds[m])->scale(1./out_c->naccum);
       }
 
       write_fields(out_c, &out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);

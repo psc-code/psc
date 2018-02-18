@@ -25,9 +25,6 @@ struct psc_mfields {
   template<typename MF>
   MF get_as(int mb, int me);
 
-  void set(int m, double alpha);
-  void scale(double alpha);
-  void scale(int m, double alpha);
   void copy(int mto, struct psc_mfields *from, int mfrom);
   void axpy(double alpha, struct psc_mfields *x);
   void axpy(int my, double alpha, struct psc_mfields *x, int mx);

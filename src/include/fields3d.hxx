@@ -188,7 +188,8 @@ struct psc_mfields_base
   virtual void axpy_comp(int m_y, double alpha, psc_mfields_base& x, int m_x) = 0;
   virtual double max_comp(int m) = 0;
 
-  void zero() { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
+  void zero()            { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
+  void scale(double val) { for (int m = 0; m < n_fields_; m++) scale_comp(m, val); }
   
 protected:
   int n_fields_;
