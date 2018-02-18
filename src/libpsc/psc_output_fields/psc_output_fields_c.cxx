@@ -244,7 +244,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
    if (doaccum_tfield) {
     // tfd += pfd
     for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-      out_c->tfd.flds[m]->axpy(1., out_c->pfd.flds[m]);
+      mfields_base_t(out_c->tfd.flds[m])->axpy(1., *mfields_base_t(out_c->pfd.flds[m]).sub());
     }
     out_c->naccum++;
    }

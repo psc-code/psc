@@ -145,8 +145,8 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
   psc_mfields_set_comp_name(d_rho, 0, "d_rho");
   mfields_t mf_div_j(div_j), mf_d_rho(d_rho);
 
-  d_rho->axpy( 1., rho_p);
-  d_rho->axpy(-1., rho_m);
+  mf_d_rho->axpy( 1., *mfields_t(rho_p).sub());
+  mf_d_rho->axpy(-1., *mfields_t(rho_m).sub());
 
   calc_div_j(psc, psc->flds, div_j);
   mf_div_j->scale(psc->dt);

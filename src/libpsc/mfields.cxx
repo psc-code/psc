@@ -9,13 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void psc_mfields::axpy(double alpha, struct psc_mfields *x)
-{
-  for (int m = first_comp; m < first_comp + nr_fields; m++) {
-    axpy(m, alpha, x, m);
-  }
-}
-
 void psc_mfields::axpy(int my, double alpha, struct psc_mfields *x, int mx)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(this);

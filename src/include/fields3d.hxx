@@ -190,6 +190,12 @@ struct psc_mfields_base
 
   void zero()            { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
   void scale(double val) { for (int m = 0; m < n_fields_; m++) scale_comp(m, val); }
+  void axpy(double alpha, psc_mfields_base& x)
+  {
+    for (int m = 0; m < n_fields_; m++) {
+      axpy_comp(m, alpha, x, m);
+    }
+  }
   
 protected:
   int n_fields_;
