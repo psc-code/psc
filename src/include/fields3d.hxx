@@ -279,10 +279,6 @@ struct mfields_base
   unsigned int n_patches() const { return mflds_->nr_patches; }
   unsigned int n_fields() const { return mflds_->nr_fields; }
 
-  void zero(int mb, int me) { mflds_->zero(mb, me); }
-  void zero(int m) { mflds_->zero(m); }
-  void zero() { mflds_->zero(); }
-
   fields_t operator[](int p)
   {
     return (*sub_)[p];

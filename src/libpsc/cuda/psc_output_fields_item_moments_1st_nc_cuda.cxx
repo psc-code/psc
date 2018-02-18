@@ -16,7 +16,7 @@ rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   cuda_mparticles *cmprts = mprts->cmprts();
   cuda_mfields *cmres = mf_res->cmflds;
     
-  mf_res.zero();
+  mf_res->zero();
 
   cuda_moments_yz_rho_1st_nc(cmprts, cmres);
 
@@ -52,7 +52,7 @@ n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
   cuda_mparticles *cmprts = mprts->cmprts();
   cuda_mfields *cmres = mf_res->cmflds;
 
-  mf_res.zero();
+  mf_res->zero();
 
   cuda_moments_yz_n_1st(cmprts, cmres);
 

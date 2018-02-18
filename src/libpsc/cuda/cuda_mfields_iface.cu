@@ -52,3 +52,11 @@ void psc_mfields_cuda::zero_comp_yz(int xm)
   dprintf("CMFLDS: zero_comp_yz\n");
   cmflds->zero_comp_yz(xm);
 }
+
+void psc_mfields_cuda::zero()
+{
+  dprintf("CMFLDS: zero\n");
+  for (int m = 0; m < cmflds->n_fields; m++) {
+    cmflds->zero_comp_yz(m);
+  }
+}

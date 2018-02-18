@@ -24,6 +24,7 @@ struct psc_mfields_cuda
   psc_mfields_cuda(const psc_mfields_cuda&) = delete;
   ~psc_mfields_cuda();
 
+  void zero();
   void axpy_comp_yz(int ym, float a, mfields_t x, int xm);
   void zero_comp_yz(int xm);
 
