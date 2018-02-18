@@ -122,34 +122,14 @@ struct mfields_base
   mfields_base(struct psc_mfields *mflds)
     : mflds_(mflds),
       sub_(mrc_to_subobj(mflds, sub_t))
-  {
-    //assert((struct psc_mfields_ops *) mflds->obj.ops == &psc_mfields_single_ops);
-  }
+  {}
 
-  unsigned int n_patches() const
-  {
-    return mflds_->nr_patches;
-  }
+  unsigned int n_patches() const { return mflds_->nr_patches; }
+  unsigned int n_fields() const { return mflds_->nr_fields; }
 
-  unsigned int n_fields() const
-  {
-    return mflds_->nr_fields;
-  }
-
-  void zero(int mb, int me)
-  {
-    mflds_->zero(mb, me);
-  }
-
-  void zero(int m)
-  {
-    mflds_->zero(m);
-  }
-
-  void zero()
-  {
-    mflds_->zero();
-  }
+  void zero(int mb, int me) { mflds_->zero(mb, me); }
+  void zero(int m) { mflds_->zero(m); }
+  void zero() { mflds_->zero(); }
 
   fields_t operator[](int p)
   {
@@ -161,13 +141,10 @@ struct mfields_base
     psc_mfields_put_as(mflds_, mflds_base, mb, me);
   }
 
-  struct psc_mfields *mflds()
-  {
-    return mflds_;
-  }
+  struct psc_mfields *mflds() { return mflds_; }
   
   sub_t* operator->() { return sub_; }
-
+  
 private:
   struct psc_mfields *mflds_;
 public:
