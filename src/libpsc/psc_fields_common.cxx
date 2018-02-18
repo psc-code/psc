@@ -118,7 +118,6 @@ static void
 MPFX(setup)(struct psc_mfields *_mflds)
 {
   mfields_t mflds(_mflds);
-  MPFX(sub) *sub = mflds.sub();
 
   psc_mfields_setup_super(_mflds);
 
@@ -129,24 +128,11 @@ MPFX(setup)(struct psc_mfields *_mflds)
 // psc_mfields_destroy
 
 static void
-MPFX(destroy)(struct psc_mfields *mflds)
+MPFX(destroy)(struct psc_mfields *_mflds)
 {
-  MPFX(sub) *sub = mrc_to_subobj(mflds, MPFX(sub));
+  mfields_t mflds(_mflds);
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-#if PSC_FIELDS_AS_FORTRAN
-    fields_t::real_t **flds = sub->data[p];
-    free(flds[0]);
-    
-    for (int i = 0; i < mflds->nr_fields; i++) {
-      flds[i] = NULL;
-    }
-    free(flds);
-#else
-    free(sub->data[p]);
-#endif
-  }
-  free(sub->data);
+  mflds->~MPFX(sub)();
 }
 
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
