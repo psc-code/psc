@@ -27,7 +27,6 @@ struct psc_mfields_cuda : psc_mfields_base
   void zero_comp(int m) override;
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
-  void copy_comp(int mto, psc_mfields_base& from, int mfrom) override { assert(0); }
   void axpy_comp(int m_y, double alpha, psc_mfields_base& x, int m_x) override { assert(0); }
   double max_comp(int m) override { assert(0); return 0.; }
 
