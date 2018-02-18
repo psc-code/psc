@@ -9,6 +9,9 @@
 struct fields_vpic_t : fields3d<float, LayoutAOS>
 {
   using mfields_t = mfields_base<fields_vpic_t>;
+  using Base = fields3d<float, LayoutAOS>;
+
+  using Base::Base;
 };
 
 struct psc_mfields_vpic

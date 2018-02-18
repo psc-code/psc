@@ -31,22 +31,21 @@ struct fields3d {
   int nr_comp; //> nr of components
   int first_comp; // first component
 
-  fields3d() // FIXME, shouldn't have this
-    : data(0)
+  fields3d(const int _ib[3], const int _im[3], int _n_comps, int _first_comp=0,
+	   real_t *_data=nullptr)
+    : ib{ _ib[0], _ib[1], _ib[2] },
+      im{ _im[0], _im[1], _im[2] },
+      nr_comp{_n_comps},
+      first_comp{_first_comp},
+      data(_data)
   {
-  }
-  
-  fields3d(const int _ib[3], const int _im[3], int _n_comps)
-  {
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      ib[d] = _ib[d];
-      im[d] = _im[d];
-      size *= im[d];
+    if (!data) {
+      unsigned int size = 1;
+      for (int d = 0; d < 3; d++) {
+	size *= im[d];
+      }
+      data = (real_t *) calloc(size * nr_comp, sizeof(*data));
     }
-    nr_comp = _n_comps;
-    first_comp = 0;
-    data = (real_t *) calloc(size * nr_comp, sizeof(*data));
   }
 
   void dtor()
@@ -147,7 +146,7 @@ struct psc_mfields_
 
   fields_t operator[](int p)
   {
-    fields_t flds;
+    fields_t flds(ib, im, n_fields_, first_comp_);
 
     flds.data = data[p];
     for (int d = 0; d < 3; d++) {
