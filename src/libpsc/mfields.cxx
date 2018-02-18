@@ -78,60 +78,6 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 }
 
 void
-psc_mfields_compute_div_b_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->compute_div_b_err);
-  ops->compute_div_b_err(mflds);
-}
-
-double
-psc_mfields_compute_rms_div_b_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->compute_rms_div_b_err);
-  return ops->compute_rms_div_b_err(mflds);
-}
-
-void
-psc_mfields_clean_div_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->clean_div_b);
-  ops->clean_div_b(mflds);
-}
-
-void
-psc_mfields_compute_div_e_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->compute_div_e_err);
-  ops->compute_div_e_err(mflds);
-}
-
-double
-psc_mfields_compute_rms_div_e_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->compute_rms_div_e_err);
-  return ops->compute_rms_div_e_err(mflds);
-}
-
-void
-psc_mfields_clean_div_e(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->clean_div_e);
-  ops->clean_div_e(mflds);
-}
-
-void
 psc_mfields_clear_rhof(struct psc_mfields *mflds)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(mflds);

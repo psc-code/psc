@@ -26,6 +26,37 @@ struct psc_mfields_vpic : psc_mfields_base
     return Simulation_mflds_synchronize_tang_e_norm_b(sim, vmflds_fields);
   }
   
+  void compute_div_b_err()
+  {
+    Simulation_mflds_compute_div_b_err(sim, vmflds_fields);
+  }
+  
+  double compute_rms_div_b_err()
+  {
+    return Simulation_mflds_compute_rms_div_b_err(sim, vmflds_fields);
+  }
+
+  void clean_div_b()
+  {
+    Simulation_mflds_clean_div_b(sim, vmflds_fields);
+  }
+
+  void compute_div_e_err()
+  {
+    Simulation_mflds_compute_div_e_err(sim, vmflds_fields);
+  }
+
+  double compute_rms_div_e_err()
+  {
+    return Simulation_mflds_compute_rms_div_e_err(sim, vmflds_fields);
+  }
+
+  void clean_div_e()
+  {
+    Simulation_mflds_clean_div_e(sim, vmflds_fields);
+  }
+
+
   Simulation *sim;
   FieldArray *vmflds_fields;
   HydroArray *vmflds_hydro;

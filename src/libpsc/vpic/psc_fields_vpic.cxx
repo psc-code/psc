@@ -203,50 +203,6 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 // ----------------------------------------------------------------------
 // forwards
 
-static void psc_mfields_vpic_compute_div_b_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_compute_div_b_err(sub->sim, sub->vmflds_fields);
-}
-
-static double psc_mfields_vpic_compute_rms_div_b_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  return Simulation_mflds_compute_rms_div_b_err(sub->sim, sub->vmflds_fields);
-}
-
-static void psc_mfields_vpic_clean_div_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_clean_div_b(sub->sim, sub->vmflds_fields);
-}
-
-
-static void psc_mfields_vpic_compute_div_e_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_compute_div_e_err(sub->sim, sub->vmflds_fields);
-}
-
-static double psc_mfields_vpic_compute_rms_div_e_err(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  return Simulation_mflds_compute_rms_div_e_err(sub->sim, sub->vmflds_fields);
-}
-
-static void psc_mfields_vpic_clean_div_e(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_clean_div_e(sub->sim, sub->vmflds_fields);
-}
-
-
 static void psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
 {
   struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
@@ -299,12 +255,6 @@ struct psc_mfields_ops_vpic : psc_mfields_ops {
     zero_comp             = psc_mfields_vpic_zero_comp;
     axpy_comp             = psc_mfields_vpic_axpy_comp;
 #endif
-    compute_div_b_err         = psc_mfields_vpic_compute_div_b_err;
-    compute_rms_div_b_err     = psc_mfields_vpic_compute_rms_div_b_err;
-    clean_div_b               = psc_mfields_vpic_clean_div_b;
-    compute_div_e_err         = psc_mfields_vpic_compute_div_e_err;
-    compute_rms_div_e_err     = psc_mfields_vpic_compute_rms_div_e_err;
-    clean_div_e               = psc_mfields_vpic_clean_div_e;
     clear_rhof                = psc_mfields_vpic_clear_rhof;
     accumulate_rho_p          = psc_mfields_vpic_accumulate_rho_p;
     synchronize_rho           = psc_mfields_vpic_synchronize_rho;

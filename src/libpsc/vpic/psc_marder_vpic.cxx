@@ -19,13 +19,13 @@ psc_marder_vpic_clean_div_e(struct psc_marder *marder, mfields_vpic_t mflds,
   psc_mfields_synchronize_rho(mflds.mflds());
   
   for (int round = 0; round < marder->num_div_e_round; round++ ) {
-    psc_mfields_compute_div_e_err(mflds.mflds());
+    mflds->compute_div_e_err();
     if (round == 0 || round == marder->num_div_e_round - 1) {
-      double err = psc_mfields_compute_rms_div_e_err(mflds.mflds());
+      double err = mflds->compute_rms_div_e_err();
       mpi_printf(psc_marder_comm(marder), "%s rms error = %e (charge/volume)\n",
 		 round == 0 ? "Initial" : "Cleaned", err);
     }
-    psc_mfields_clean_div_e(mflds.mflds());
+    mflds->clean_div_e();
   }
 }
 
@@ -38,13 +38,13 @@ psc_marder_vpic_clean_div_b(struct psc_marder *marder, mfields_vpic_t mflds)
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning magnetic field\n");
   
   for (int round = 0; round < marder->num_div_b_round; round++) {
-    psc_mfields_compute_div_b_err(mflds.mflds());
+    mflds->compute_div_b_err();
     if (round == 0 || round == marder->num_div_b_round - 1) {
-      double err = psc_mfields_compute_rms_div_b_err(mflds.mflds());
+      double err = mflds->compute_rms_div_b_err();
       mpi_printf(psc_marder_comm(marder), "%s rms error = %e (charge/volume)\n",
 		 round == 0 ? "Initial" : "Cleaned", err);
     }
-    psc_mfields_clean_div_b(mflds.mflds());
+    mflds->clean_div_b();
   }
 }
 
