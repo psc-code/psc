@@ -177,6 +177,8 @@ struct psc_mfields_base
   int n_patches() const { return grid_.n_patches(); }
 
   virtual void zero_comp(int m) = 0;
+  virtual void set_comp(int m, double val) = 0;
+  virtual void scale_comp(int m, double val) = 0;
   
 protected:
   int n_fields_;
@@ -231,14 +233,14 @@ struct psc_mfields_ : psc_mfields_base
     }
   }
 
-  void set_comp(int m, double val)
+  void set_comp(int m, double val) override
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].set(m, val);
     }
   }
   
-  void scale_comp(int m, double val)
+  void scale_comp(int m, double val) override
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].scale(m, val);

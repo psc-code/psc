@@ -25,6 +25,8 @@ struct psc_mfields_cuda : psc_mfields_base
   ~psc_mfields_cuda();
 
   void zero_comp(int m) override;
+  void set_comp(int m, double val) override { assert(0); }
+  void scale_comp(int m, double val) override { assert(0); }
 
   void zero();
   void axpy_comp_yz(int ym, float a, mfields_t x, int xm);
