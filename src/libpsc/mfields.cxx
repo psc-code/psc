@@ -77,52 +77,6 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
   return flds->comp_name[m - flds->first_comp];
 }
 
-void
-psc_mfields_clear_rhof(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->clear_rhof);
-  ops->clear_rhof(mflds);
-}
-
-void
-psc_mfields_accumulate_rho_p(struct psc_mfields *mflds,
-			     struct psc_mparticles *mprts)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->accumulate_rho_p);
-  ops->accumulate_rho_p(mflds, mprts);
-}
-
-void
-psc_mfields_synchronize_rho(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->synchronize_rho);
-  ops->synchronize_rho(mflds);
-}
-
-void
-psc_mfields_compute_rhob(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->compute_rhob);
-  ops->compute_rhob(mflds);
-}
-
-void
-psc_mfields_compute_curl_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
-  assert(ops && ops->compute_curl_b);
-  ops->compute_curl_b(mflds);
-}
-
 // ----------------------------------------------------------------------
 
 static void

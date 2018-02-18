@@ -225,13 +225,13 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   // Load fields not initialized by the user
 
   mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
-  psc_mfields_compute_curl_b(mf.mflds());
+  mf->compute_curl_b();
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
-  psc_mfields_clear_rhof(mf.mflds());
-  psc_mfields_accumulate_rho_p(mf.mflds(), mprts.mprts());
-  psc_mfields_synchronize_rho(mf.mflds());
-  psc_mfields_compute_rhob(mf.mflds());
+  mf->clear_rhof();
+  mf->accumulate_rho_p(mprts.mprts());
+  mf->synchronize_rho();
+  mf->compute_rhob();
 
   // Internal sanity checks
 

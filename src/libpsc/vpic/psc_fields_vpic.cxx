@@ -27,18 +27,11 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
   [16]  = 16, [17] = 17, [18] = 18, [19] = 19,
 };
 
-// ----------------------------------------------------------------------
-// forward to vmflds
-
-static void
-psc_mfields_vpic_accumulate_rho_p(struct psc_mfields *mflds,
-				  struct psc_mparticles *mprts)
+void psc_mfields_vpic::accumulate_rho_p(struct psc_mparticles *mprts)
 {
-  Simulation *sim = psc_mfields_vpic(mflds)->sim;
-  FieldArray *vmflds = psc_mfields_vpic(mflds)->vmflds_fields;
   Particles *vmprts = psc_mparticles_vpic(mprts)->vmprts;
-
-  Simulation_accumulate_rho_p(sim, vmprts, vmflds);
+  
+  Simulation_accumulate_rho_p(sim, vmprts, vmflds_fields);
 }
 
 // ======================================================================
@@ -55,6 +48,7 @@ psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields 
     Fields F(flds);
     FieldsS F_s(mf_single[p]);
 
+    
     // FIXME, hacky way to distinguish whether we want
     // to copy the field into the standard PSC component numbering
     if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
@@ -203,34 +197,6 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 // ----------------------------------------------------------------------
 // forwards
 
-static void psc_mfields_vpic_clear_rhof(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_clear_rhof(sub->sim, sub->vmflds_fields);
-}
-
-static void psc_mfields_vpic_synchronize_rho(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_synchronize_rho(sub->sim, sub->vmflds_fields);
-}
-
-static void psc_mfields_vpic_compute_rhob(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_compute_rhob(sub->sim, sub->vmflds_fields);
-}
-
-static void psc_mfields_vpic_compute_curl_b(struct psc_mfields *mflds)
-{
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
-
-  Simulation_mflds_compute_curl_b(sub->sim, sub->vmflds_fields);
-}
-
 // ======================================================================
 // psc_mfields: subclass "vpic"
 
@@ -247,19 +213,10 @@ struct psc_mfields_ops_vpic : psc_mfields_ops {
     methods               = psc_mfields_vpic_methods;
     setup                 = psc_mfields_vpic_setup;
     destroy               = psc_mfields_vpic_destroy;
-#if 0
 #ifdef HAVE_LIBHDF5_HL
     write                 = psc_mfields_vpic_write;
     read                  = psc_mfields_vpic_read;
 #endif
-    zero_comp             = psc_mfields_vpic_zero_comp;
-    axpy_comp             = psc_mfields_vpic_axpy_comp;
-#endif
-    clear_rhof                = psc_mfields_vpic_clear_rhof;
-    accumulate_rho_p          = psc_mfields_vpic_accumulate_rho_p;
-    synchronize_rho           = psc_mfields_vpic_synchronize_rho;
-    compute_rhob              = psc_mfields_vpic_compute_rhob;
-    compute_curl_b            = psc_mfields_vpic_compute_curl_b;
   }
 } psc_mfields_vpic_ops;
 

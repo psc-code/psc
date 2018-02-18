@@ -32,11 +32,6 @@ struct psc_mparticles;
 
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
-  void (*clear_rhof)(struct psc_mfields *mflds);
-  void (*accumulate_rho_p)(struct psc_mfields *mflds, struct psc_mparticles *mprts);
-  void (*synchronize_rho)(struct psc_mfields *mflds);
-  void (*compute_rhob)(struct psc_mfields *mflds);
-  void (*compute_curl_b)(struct psc_mfields *mflds);
 };
 
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
@@ -50,12 +45,6 @@ void psc_mfields_put_as(struct psc_mfields *mflds,
 			struct psc_mfields *mflds_base, int mb, int me);
 
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
-
-void psc_mfields_clear_rhof(struct psc_mfields *mflds);
-void psc_mfields_accumulate_rho_p(struct psc_mfields *mflds, struct psc_mparticles *mprts);
-void psc_mfields_synchronize_rho(struct psc_mfields *mflds);
-void psc_mfields_compute_rhob(struct psc_mfields *mflds);
-void psc_mfields_compute_curl_b(struct psc_mfields *mflds);
 
 template<typename MF>
 inline MF psc_mfields::get_as(int mb, int me)

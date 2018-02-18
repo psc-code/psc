@@ -56,6 +56,27 @@ struct psc_mfields_vpic : psc_mfields_base
     Simulation_mflds_clean_div_e(sim, vmflds_fields);
   }
 
+  void clear_rhof()
+  {
+    Simulation_mflds_clear_rhof(sim, vmflds_fields);
+  }
+
+  void synchronize_rho()
+  {
+    Simulation_mflds_synchronize_rho(sim, vmflds_fields);
+  }
+  
+  void compute_rhob()
+  {
+    Simulation_mflds_compute_rhob(sim, vmflds_fields);
+  }
+  
+  void compute_curl_b()
+  {
+    Simulation_mflds_compute_curl_b(sim, vmflds_fields);
+  }
+
+  void accumulate_rho_p(struct psc_mparticles *mprts);
 
   Simulation *sim;
   FieldArray *vmflds_fields;
