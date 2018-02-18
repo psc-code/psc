@@ -114,6 +114,17 @@ struct fields3d {
       }
     }
   }
+
+  void axpy_comp(int m_y, real_t alpha, const fields3d& x, int m_x)
+  {
+    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
+      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
+	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  (*this)(m_y, i,j,k) += alpha * x(m_x, i,j,k);
+	}
+      }
+    }
+  }
 };
 
 template<typename R, typename L>
@@ -207,6 +218,13 @@ struct psc_mfields_
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].copy_comp(mto, from[p], mfrom);
+    }
+  }
+  
+  void axpy_comp(int m_y, real_t alpha, psc_mfields_&x, int m_x)
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
     }
   }
   

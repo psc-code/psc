@@ -8,23 +8,6 @@
 using Fields = Fields3d<fields_t>;
 
 // ----------------------------------------------------------------------
-// fields_t_axpy_comp
-
-static inline void
-fields_t_axpy_comp(fields_t y, int m_y, fields_t::real_t a, fields_t x, int m_x)
-{
-  Fields X(x), Y(y);
-  for (int jz = y.ib[2]; jz < y.ib[2] + y.im[2]; jz++) {
-    for (int jy = y.ib[1]; jy < y.ib[1] + y.im[1]; jy++) {
-      for (int jx = y.ib[0]; jx < y.ib[0] + y.im[0]; jx++) {
-	Y(m_y, jx,jy,jz) += a * X(m_x, jx,jy,jz);
-      }
-    }
-  }
-}
-
-
-// ----------------------------------------------------------------------
 // fields_t_max_comp
 
 static inline double
@@ -207,10 +190,7 @@ static void
 MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 		struct psc_mfields *x, int mx)
 {
-  mfields_t mf_y(y), mf_x(x);
-  for (int p = 0; p < y->nr_patches; p++) {
-    fields_t_axpy_comp(mf_y[p], my, alpha, mf_x[p], mx);
-  }
+  mfields_t(y)->axpy_comp(my, alpha, *mfields_t(x).sub(), mx);
 }
 
 // ----------------------------------------------------------------------
