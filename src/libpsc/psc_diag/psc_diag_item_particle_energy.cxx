@@ -7,7 +7,7 @@
 static void
 do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
 {
-  const Grid_t& grid = psc->grid;
+  const Grid_t& grid = psc->grid();
   mparticles_t::patch_t& prts = mprts[p];
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 

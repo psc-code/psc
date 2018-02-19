@@ -90,7 +90,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  const Grid_t::Patch& gpatch = psc->grid.patches[p];
+  const Grid_t::Patch& gpatch = psc->grid().patches[p];
   const int *b_mx = mprts[p].get_b_mx();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {

@@ -639,7 +639,7 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
   Rng *rng = RngPool_get(rngpool, 0);
 
   assert(psc->nr_patches > 0);
-  const Grid_t& grid = psc->grid;
+  const Grid_t& grid = psc->grid();
   const Grid_t::Patch& patch = grid.patches[0];
   double xmin = patch.xb[0], xmax = patch.xe[0];
   double ymin = patch.xb[1], ymax = patch.xe[1];
