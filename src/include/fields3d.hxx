@@ -239,7 +239,7 @@ struct psc_mfields_ : psc_mfields_base
 
   fields_t operator[](int p)
   {
-    return fields_t(ib, im, n_fields_, first_comp_);
+    return fields_t(ib, im, n_fields_, first_comp_, data[p]);
   }
 
   void zero_comp(int m) override
