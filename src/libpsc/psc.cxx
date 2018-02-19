@@ -390,7 +390,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   }
 
   // set up grid
-  Grid_t& grid = psc->grid();
+  Grid_t& grid = psc->grid;
   mrc_domain_get_global_dims(domain, grid.gdims);
 
   assert(psc->nr_patches > 0);
@@ -479,15 +479,15 @@ psc_setup_base_mflds(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_base_mprts
+// psc_setup_base_mplrts
 
 static void
 psc_setup_base_mprts(struct psc *psc)
 {
   // FIXME arguably this whole kinds stuff shouldn't be in grid in the first place, though
-  psc->grid().kinds.resize(0);
+  psc->grid.kinds.resize(0);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
-    psc->grid().kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
+    psc->grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
   psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
@@ -775,9 +775,9 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   assert(npt->m == psc->kinds[prt->kind_].m);
   /* prt->qni = psc->kinds[prt->kind].q; */
   /* prt->mni = psc->kinds[prt->kind].m; */
-  prt->xi = xx[0] - psc->grid().patches[p].xb[0];
-  prt->yi = xx[1] - psc->grid().patches[p].xb[1];
-  prt->zi = xx[2] - psc->grid().patches[p].xb[2];
+  prt->xi = xx[0] - psc->grid.patches[p].xb[0];
+  prt->yi = xx[1] - psc->grid.patches[p].xb[1];
+  prt->zi = xx[2] - psc->grid.patches[p].xb[2];
   prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
   prt->pyi = pyi;
   prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
@@ -890,7 +890,7 @@ psc_set_ic_fields_default(struct psc *psc)
     Fields F(mf[p]);
 
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dx = psc->grid().dx[0], dy = psc->grid().dx[1], dz = psc->grid().dx[2];
+      double dx = psc->grid.dx[0], dy = psc->grid.dx[1], dz = psc->grid.dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
       double ncc[3] = { xx        , yy + .5*dy, zz + .5*dz };

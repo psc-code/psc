@@ -100,7 +100,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 {
   assert(ppsc->domain.gdims[0] == 1);
 
-  const Grid_t& grid = ppsc->grid();
+  const Grid_t& grid = ppsc->grid;
   // FIXME: how to choose diffusion parameter properly?
   float dx[3];
   for (int d = 0; d < 3; d++) {

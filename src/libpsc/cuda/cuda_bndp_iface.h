@@ -73,7 +73,7 @@ public:
   {
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
 
-    new(sub) psc_bnd_particles_cuda(bnd->psc->mrc_domain, bnd->psc->grid());
+    new(sub) psc_bnd_particles_cuda(bnd->psc->mrc_domain, bnd->psc->grid);
   }
 
   // ----------------------------------------------------------------------
@@ -83,7 +83,7 @@ public:
   {
     auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
     
-    sub->reset(bnd->psc->mrc_domain, bnd->psc->grid());
+    sub->reset(bnd->psc->mrc_domain, bnd->psc->grid);
   }
 
   // ----------------------------------------------------------------------

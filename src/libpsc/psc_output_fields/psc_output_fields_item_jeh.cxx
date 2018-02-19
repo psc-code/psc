@@ -466,9 +466,9 @@ calc_divb(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = 
-	((F(HX, ix+dx,iy,iz) - F(HX, ix,iy,iz)) / ppsc->grid().dx[0] +
-	 (F(HY, ix,iy+dy,iz) - F(HY, ix,iy,iz)) / ppsc->grid().dx[1] +
-	 (F(HZ, ix,iy,iz+dz) - F(HZ, ix,iy,iz)) / ppsc->grid().dx[2]);
+	((F(HX, ix+dx,iy,iz) - F(HX, ix,iy,iz)) / ppsc->grid.dx[0] +
+	 (F(HY, ix,iy+dy,iz) - F(HY, ix,iy,iz)) / ppsc->grid.dx[1] +
+	 (F(HZ, ix,iy,iz+dz) - F(HZ, ix,iy,iz)) / ppsc->grid.dx[2]);
     } foreach_3d_end;
   }
   mf.put_as(mflds_base, 0, 0);
@@ -496,9 +496,9 @@ calc_divj_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = 
-	((F(JXI, ix,iy,iz) - F(JXI, ix-dx,iy,iz)) / ppsc->grid().dx[0] +
-	 (F(JYI, ix,iy,iz) - F(JYI, ix,iy-dy,iz)) / ppsc->grid().dx[1] +
-	 (F(JZI, ix,iy,iz) - F(JZI, ix,iy,iz-dz)) / ppsc->grid().dx[2]);
+	((F(JXI, ix,iy,iz) - F(JXI, ix-dx,iy,iz)) / ppsc->grid.dx[0] +
+	 (F(JYI, ix,iy,iz) - F(JYI, ix,iy-dy,iz)) / ppsc->grid.dx[1] +
+	 (F(JZI, ix,iy,iz) - F(JZI, ix,iy,iz-dz)) / ppsc->grid.dx[2]);
     } foreach_3d_end;
   }
   mf.put_as(mflds_base, 0, 0);

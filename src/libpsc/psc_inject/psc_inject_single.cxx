@@ -92,7 +92,7 @@ _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *n
     }
   }
 
-  const Grid_t& grid = psc->grid();
+  const Grid_t& grid = psc->grid;
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
   prt->kind_ = npt->kind;
   assert(npt->q == psc->kinds[prt->kind_].q);

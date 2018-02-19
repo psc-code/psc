@@ -60,7 +60,7 @@ static void
 _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
 		    struct psc_particle_npt *npt, int p, double xx[3])
 {
-  const Grid_t& grid = psc->grid();
+  const Grid_t& grid = psc->grid;
   double beta = psc->coeff.beta;
 
   float ran1, ran2, ran3, ran4, ran5, ran6;

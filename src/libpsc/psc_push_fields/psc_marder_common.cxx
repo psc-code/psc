@@ -125,14 +125,14 @@ struct marder_ops {
 
     // FIXME: how to choose diffusion parameter properly?
     //double deltax = ppsc->patch[p].dx[0];
-    double deltay = ppsc->grid().dx[1]; // FIXME double/float
-    double deltaz = ppsc->grid().dx[2];
+    double deltay = ppsc->grid.dx[1]; // FIXME double/float
+    double deltaz = ppsc->grid.dx[2];
     double inv_sum = 0.;
     int nr_levels;
     mrc_domain_get_nr_levels(ppsc->mrc_domain, &nr_levels);
     for (int d=0;d<3;d++) {
       if (ppsc->domain.gdims[d] > 1) {
-	inv_sum += 1. / sqr(ppsc->grid().dx[d] / (1 << (nr_levels - 1)));
+	inv_sum += 1. / sqr(ppsc->grid.dx[d] / (1 << (nr_levels - 1)));
       }
     }
     double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;

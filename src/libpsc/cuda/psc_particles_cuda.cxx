@@ -28,7 +28,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 {
   mparticles_cuda_t mprts(_mprts);
 
-  new(mprts.sub()) psc_mparticles_cuda(ppsc->grid());
+  new(mprts.sub()) psc_mparticles_cuda(ppsc->grid);
 }
 
 // ----------------------------------------------------------------------

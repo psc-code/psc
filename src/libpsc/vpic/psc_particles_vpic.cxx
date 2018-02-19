@@ -292,7 +292,7 @@ psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
 {
   mparticles_vpic_t mprts(_mprts);
 
-  new(mprts.sub()) psc_mparticles_vpic{ppsc->grid()};
+  new(mprts.sub()) psc_mparticles_vpic{ppsc->grid};
 
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mprts->sim);
   mprts->vmprts = Simulation_get_particles(mprts->sim);
