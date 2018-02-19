@@ -34,6 +34,8 @@ configure_file (
   "${PROJECT_BINARY_DIR}/src/include/psc_config.h"
   )
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
+# FIXME, this seems too ugly to find mrc_config.h
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
 
 add_subdirectory(src)
 
