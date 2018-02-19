@@ -30,10 +30,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    grid.reset(new Grid_t());
-    grid->gdims = { 1, 8, 8 };
-    grid->ldims = { 1, 4, 4 };
-    grid->dx = Double3{ 1., 80., 80. } / Double3(grid->gdims);
+    grid.reset(new Grid_t({ 1, 8, 8 }, { 1., 80, 80. }, { 1, 4, 4 }));
     grid->patches.emplace_back(Grid_t::Patch({ 0.,  0.,  0.}, { 1., 40., 40. }));
     grid->patches.emplace_back(Grid_t::Patch({ 0., 40.,  0.}, { 1., 80., 40. }));
 
