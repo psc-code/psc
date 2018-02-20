@@ -104,12 +104,14 @@ psc_inject_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
 // psc_inject_init
 
 extern struct psc_inject_ops psc_inject_ops_single;
+extern struct psc_inject_ops psc_inject_ops_double;
 extern struct psc_inject_ops psc_inject_ops_cuda;
 
 static void
 psc_inject_init(void)
 {
   mrc_class_register_subclass(&mrc_class_psc_inject, &psc_inject_ops_single);
+  mrc_class_register_subclass(&mrc_class_psc_inject, &psc_inject_ops_double);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_inject, &psc_inject_ops_cuda);
 #endif
