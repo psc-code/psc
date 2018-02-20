@@ -59,7 +59,7 @@ struct Grid_
 
   // FIXME, default constructor should maybe go away, since it doesn't
   // guarantee a consistent state
-  Grid_() = default;
+  Grid_() = delete;
 
   // Construct a single patch covering the whole domain
   // Args: global dimensions, and length of the domain in all 3 dims

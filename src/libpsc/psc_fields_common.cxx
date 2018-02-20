@@ -12,7 +12,7 @@ MPFX(setup)(struct psc_mfields *_mflds)
 
   psc_mfields_setup_super(_mflds);
 
-  new(mflds.sub()) MPFX(sub)(ppsc->grid, mflds.n_fields(), _mflds->ibn, _mflds->first_comp);
+  new(mflds.sub()) MPFX(sub)(ppsc->grid(), mflds.n_fields(), _mflds->ibn, _mflds->first_comp);
 }
 
 // ----------------------------------------------------------------------

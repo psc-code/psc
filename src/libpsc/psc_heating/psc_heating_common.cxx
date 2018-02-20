@@ -66,7 +66,7 @@ psc_heating_sub_run(struct psc_heating *heating, struct psc_mparticles *mprts_ba
   
   psc_foreach_patch(psc, p) {
     mparticles_t::patch_t& prts = mprts[p];
-    Grid_t::Patch& patch = psc->grid.patches[p];
+    Grid_t::Patch& patch = psc->grid().patches[p];
     PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
       particle_t *prt = &*prt_iter;
       if (prt->kind() != kind) {

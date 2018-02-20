@@ -31,9 +31,9 @@ struct output_flds_ops
       Fields F(mf[p]), R(mf_res[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	R(0, ix,iy,iz) = 
-	  ((F(EX, ix,iy,iz) - F(EX, ix-dx,iy,iz)) / ppsc->grid.dx[0] +
-	   (F(EY, ix,iy,iz) - F(EY, ix,iy-dy,iz)) / ppsc->grid.dx[1] +
-	   (F(EZ, ix,iy,iz) - F(EZ, ix,iy,iz-dz)) / ppsc->grid.dx[2]);
+	  ((F(EX, ix,iy,iz) - F(EX, ix-dx,iy,iz)) / ppsc->grid().dx[0] +
+	   (F(EY, ix,iy,iz) - F(EY, ix,iy-dy,iz)) / ppsc->grid().dx[1] +
+	   (F(EZ, ix,iy,iz) - F(EZ, ix,iy,iz-dz)) / ppsc->grid().dx[2]);
       } foreach_3d_end;
     }
     mf.put_as(mflds_base, 0, 0);

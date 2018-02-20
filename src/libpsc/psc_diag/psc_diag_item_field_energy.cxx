@@ -12,7 +12,7 @@ static void
 psc_diag_item_field_energy_run(struct psc_diag_item *item,
 			       struct psc *psc, double *EH2)
 {
-  const Grid_t& grid = psc->grid;
+  const Grid_t& grid = psc->grid();
   mfields_t mf = psc->flds->get_as<mfields_t>(EX, HX + 3);
   psc_foreach_patch(psc, p) {
     double fac = grid.dx[0] * grid.dx[1] * grid.dx[2];

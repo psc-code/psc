@@ -123,7 +123,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 static void
 do_n_run(int p, fields_t flds, mparticles_t& mprts)
 {
-  const Grid_t& grid = ppsc->grid;
+  const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
   struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -149,7 +149,7 @@ n_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 static void
 do_rho_run(int p, fields_t flds, mparticles_t& mprts)
 {
-  const Grid_t& grid = ppsc->grid;
+  const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
   struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
