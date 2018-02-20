@@ -102,10 +102,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
-    {int _lg1 = lg1;					\
     gx.set(xx[d] * dxi);				\
     k1 = gx.l;						\
-    set_S(s1x, k1-_lg1, gx); }
+    set_S(s1x, k1-lg1, gx)
 
 // ----------------------------------------------------------------------
 // ZERO_S1
@@ -453,9 +452,10 @@ do_push_part(int p, fields_t flds, mparticles_t mprts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(x, k1, ip.cx.g, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
-    IF_DIM_Y( DEPOSIT(x, k2, ip.cy.g, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
-    IF_DIM_Z( DEPOSIT(x, k3, ip.cz.g, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
+    IP ip2;
+    IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
+    IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
+    IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
 
 #else
     push_x(x, vv, .5f * c_prm.dt);
