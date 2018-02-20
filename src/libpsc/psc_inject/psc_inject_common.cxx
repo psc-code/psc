@@ -183,7 +183,6 @@ psc_inject_sub_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
 	      assert(psc->prm.neutralizing_population == nr_pop - 1);
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
-	    mprts[p].reserve(mprts[p].size() + n_in_cell);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      assert(psc->prm.fractional_n_particles_per_cell);
 	      particle_t prt;
