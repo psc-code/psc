@@ -115,6 +115,7 @@ add_library(psc
 
   psc_heating/psc_heating.cxx
   psc_heating/psc_heating_single.cxx
+  psc_heating/psc_heating_double.cxx
   psc_heating/psc_heating_spot.cxx
 
   psc_inject/psc_inject.cxx

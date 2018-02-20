@@ -43,12 +43,14 @@ psc_heating_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
 // psc_heating_init
 
 extern struct psc_heating_ops psc_heating_ops_single;
+extern struct psc_heating_ops psc_heating_ops_double;
 extern struct psc_heating_ops psc_heating_ops_cuda;
 
 static void
 psc_heating_init(void)
 {
   mrc_class_register_subclass(&mrc_class_psc_heating, &psc_heating_ops_single);
+  mrc_class_register_subclass(&mrc_class_psc_heating, &psc_heating_ops_double);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_heating, &psc_heating_ops_cuda);
 #endif
