@@ -84,11 +84,9 @@ struct Grid_
   // really usable. doesn't initializes patches
   Grid_(const Int3& _gdims, const Real3& length, const Int3& _ldims)
     : gdims(_gdims),
-      ldims(_ldims)
+      ldims(_ldims),
+      dx(length / Real3(gdims))
   {
-    ldims = gdims;
-    dx = length / Real3(gdims);
-
     for (int d = 0; d < 3; d++) {
       assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
     }

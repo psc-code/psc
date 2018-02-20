@@ -354,6 +354,18 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 void
 psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
+  // set up grid
+  Int3 gdims;
+  mrc_domain_get_global_dims(domain, gdims);
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
+  assert(psc->nr_patches > 0);
+  for (int p = 1; p < psc->nr_patches; p++) {
+    assert(Int3(patches[0].ldims) == Int3(patches[p].ldims));
+  }
+
+  psc->grid_ = new Grid_t(gdims, psc->domain.length, patches[0].ldims);
+  Grid_t& grid = psc->grid();
+  
   double dx[3];
   for (int d = 0; d < 3; d++) {
     assert(psc->coeff.ld == 1.);
@@ -378,8 +390,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
 
-  struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
-
   // set up psc->patch
   psc->patch = new psc_patch[psc->nr_patches]();
   psc_foreach_patch(psc, p) {
@@ -390,18 +400,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     }
   }
 
-  // set up grid
-  assert(psc->nr_patches > 0);
-  for (int p = 1; p < psc->nr_patches; p++) {
-    assert(patches[0].ldims == Int3(patches[p].ldims));
-  }
-
-  psc->grid_ = new Grid_t(psc->domain.gdims, psc->domain.length, patches[0].ldims);
-  Grid_t& grid = psc->grid();
-  mrc_domain_get_global_dims(domain, grid.gdims);
-  grid.ldims = patches[0].ldims;
-
-  grid.dx = dx;
   grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   grid.eta = psc->coeff.eta;
   grid.dt = psc->dt;
