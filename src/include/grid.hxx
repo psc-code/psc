@@ -80,13 +80,17 @@ struct Grid_
     }
   }
 
-  // FIXME, this is more of a hack for testing right now, rather than
-  // really usable. doesn't initializes patches
-  Grid_(const Int3& _gdims, const Real3& length, const Int3& _ldims)
+  Grid_(const Int3& _gdims, const Int3& _ldims, const Real3& length,
+	const Real3& corner, const std::vector<Int3>& offs)
     : gdims(_gdims),
       ldims(_ldims),
       dx(length / Real3(gdims))
   {
+    for (auto off : offs) {
+      patches.push_back(Patch(Vec3<double>(off        ) * dx + corner,
+			      Vec3<double>(off + ldims) * dx + corner));
+    }
+
     for (int d = 0; d < 3; d++) {
       assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
     }

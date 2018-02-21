@@ -360,29 +360,19 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
   assert(psc->nr_patches > 0);
   Int3 ldims = patches[0].ldims;
-  for (int p = 1; p < psc->nr_patches; p++) {
+  std::vector<Int3> offs;
+  for (int p = 0; p < psc->nr_patches; p++) {
     assert(ldims == Int3(patches[p].ldims));
-  }
+    offs.push_back(patches[p].off);
+  }  
 
-  psc->grid_ = new Grid_t(gdims, psc->domain.length, ldims);
+  psc->grid_ = new Grid_t(gdims, ldims, psc->domain.length, psc->domain.corner, offs);
   Grid_t& grid = *psc->grid_;
 
   assert(psc->coeff.ld == 1.);
   grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   grid.eta = psc->coeff.eta;
   grid.dt = psc->dt;
-
-  std::vector<Int3> offs;
-  for (int p = 0; p < psc->nr_patches; p++) {
-    offs.push_back(patches[p].off);
-  }  
-  
-  grid.patches.resize(psc->nr_patches);
-  Vec3<double> corner = psc->domain.corner;
-  for (int p = 0; p < psc->nr_patches; p++) {
-    grid.patches[p].xb = Vec3<double>(offs[p]        ) * grid.dx + corner;
-    grid.patches[p].xe = Vec3<double>(offs[p] + ldims) * grid.dx + corner;
-  }
 
   for (int d = 0; d < 3; d++) {
     grid.bs[d] = grid.gdims[d] == 1 ? 1 : psc->domain.bs[d];

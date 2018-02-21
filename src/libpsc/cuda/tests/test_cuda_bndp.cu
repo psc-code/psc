@@ -30,9 +30,10 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    grid.reset(new Grid_t({ 1, 8, 8 }, { 1., 80, 80. }, { 1, 4, 4 }));
-    grid->patches.emplace_back(Grid_t::Patch({ 0.,  0.,  0.}, { 1., 40., 40. }));
-    grid->patches.emplace_back(Grid_t::Patch({ 0., 40.,  0.}, { 1., 80., 40. }));
+    std::vector<Int3> offs = { { 0, 0, 0 }, { 0, 4, 0 } };
+    grid.reset(new Grid_t({ 1, 8, 8 }, { 1, 4, 4 },
+			  { 1., 80, 80. }, { 0., 0., 0. },
+			  offs));
 
     grid->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
 

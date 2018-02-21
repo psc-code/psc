@@ -24,6 +24,7 @@ struct PscParticleBcList : public VpicListBase<PscParticleBc>
   ParticleBc* append(ParticleBc* pbc)
   {
     assert(0);
+    return nullptr;
   }
 
   /* operator const particle_bc_t* () const */
