@@ -116,17 +116,14 @@ struct psc_sort_countsort2
       unsigned int n_prts = prts.size();
       
       unsigned int n_cells = prts.pi_.n_cells_;
-      unsigned int *cnis = (unsigned int *) malloc(n_prts * sizeof(*cnis));
+      unsigned int *cnis = new unsigned int[n_prts];
       // FIXME, might as well merge counting here, too
       int i = 0;
       for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, ++i) {
-	int cni = prts.validCellIndex(*prt_iter);
-	assert(cni >= 0);
-	cnis[i] = cni;
+	cnis[i] = prts.validCellIndex(*prt_iter);
       }
       
-      unsigned int *cnts = (unsigned int *) malloc(n_cells * sizeof(*cnts));
-      memset(cnts, 0, n_cells * sizeof(*cnts));
+      unsigned int *cnts = new unsigned int[n_cells]{};
 	
       // count
       for (int i = 0; i < n_prts; i++) {
@@ -144,7 +141,7 @@ struct psc_sort_countsort2
       assert(cur == n_prts);
       
       // move into new position
-      particle_t *particles2 = (particle_t *) malloc(n_prts * sizeof(*particles2));
+      particle_t *particles2 = new particle_t[n_prts];
       for (int i = 0; i < n_prts; i++) {
 	unsigned int cni = cnis[i];
 	int n = 1;
@@ -159,9 +156,9 @@ struct psc_sort_countsort2
       // back to in-place
       memcpy(&*prts.begin(), particles2, n_prts * sizeof(*particles2));
       
-      free(particles2);
-      free(cnis);
-      free(cnts);
+      delete[] particles2;
+      delete[] cnis;
+      delete[] cnts;
     }
   }
  
