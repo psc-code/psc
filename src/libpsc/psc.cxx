@@ -380,10 +380,9 @@ Grid_t* psc_make_grid(psc* psc, mrc_domain* domain)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_patches
+// psc_set_dt
 
-void
-psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
+void psc_set_dt(psc* psc)
 {
   Vec3<double> dx = Vec3<double>(psc->domain.length) / Vec3<double>(Int3(psc->domain.gdims));
   if (!psc->dt) {
@@ -403,8 +402,16 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
+}
 
-  // set up grid
+// ----------------------------------------------------------------------
+// psc_setup_patches
+
+void
+psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
+{
+  psc_set_dt(psc);
+  
   psc->grid_ = psc_make_grid(psc, domain);
   psc->nr_patches = psc->grid().n_patches();
 }
