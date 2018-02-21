@@ -1,4 +1,6 @@
 
+#include "particle_iter.h"
+
 // ======================================================================
 // counting sort
 
@@ -6,6 +8,7 @@ template<typename M>
 struct psc_sort_countsort
 {
   using mparticles_t = M;
+  using particle_t = typename mparticles_t::particle_t;
   
   void operator()(mparticles_t mprts)
   {
@@ -73,6 +76,7 @@ template<typename M>
 struct psc_sort_countsort2
 {
   using mparticles_t = M;
+  using particle_t = typename mparticles_t::particle_t;
   
   void operator()(mparticles_t mprts)
   {

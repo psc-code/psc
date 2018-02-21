@@ -1,13 +1,13 @@
 
 #include "psc_sort_private.h"
-#include "psc_particles_as_single.h"
-
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
 #include <string.h>
 
-#include "psc_sort_common.cxx"
+#include "psc_sort_impl.hxx"
+
+#include "psc_particles_as_single.h"
 
 // ======================================================================
 // psc_sort: subclass "countsort_single"
