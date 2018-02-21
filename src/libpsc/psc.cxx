@@ -349,24 +349,34 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 }
 
 // ----------------------------------------------------------------------
+// psc_make_grid
+
+Grid_t* psc_make_grid(psc* psc, mrc_domain* domain)
+{
+  Int3 gdims;
+  mrc_domain_get_global_dims(domain, gdims);
+  int n_patches;
+  mrc_patch *patches = mrc_domain_get_patches(domain, &n_patches);
+  assert(n_patches > 0);
+  Int3 ldims = patches[0].ldims;
+  std::vector<Int3> offs;
+  for (int p = 0; p < n_patches; p++) {
+    assert(ldims == Int3(patches[p].ldims));
+    offs.push_back(patches[p].off);
+  }  
+
+  return new Grid_t(gdims, ldims, psc->domain.length, psc->domain.corner, offs);
+}
+
+// ----------------------------------------------------------------------
 // psc_setup_patches
 
 void
 psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
   // set up grid
-  Int3 gdims;
-  mrc_domain_get_global_dims(domain, gdims);
-  struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
-  assert(psc->nr_patches > 0);
-  Int3 ldims = patches[0].ldims;
-  std::vector<Int3> offs;
-  for (int p = 0; p < psc->nr_patches; p++) {
-    assert(ldims == Int3(patches[p].ldims));
-    offs.push_back(patches[p].off);
-  }  
-
-  psc->grid_ = new Grid_t(gdims, ldims, psc->domain.length, psc->domain.corner, offs);
+  mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
+  psc->grid_ = psc_make_grid(psc, domain);
   Grid_t& grid = *psc->grid_;
 
   assert(psc->coeff.ld == 1.);
