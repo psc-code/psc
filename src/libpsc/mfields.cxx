@@ -19,7 +19,7 @@ _psc_mfields_setup(struct psc_mfields *mflds)
 {
   assert(mflds->domain);
 
-  mflds->nr_patches = ppsc->nr_patches;
+  mflds->nr_patches = ppsc->n_patches();
   
   mflds->comp_name = new char* [mflds->nr_fields]();
 }

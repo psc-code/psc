@@ -137,7 +137,7 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
     buf_n_alloced = 1000;
     buf = (struct cuda_mparticles_prt *) calloc(buf_n_alloced, sizeof(*buf));
   }
-  uint buf_n_by_patch[psc->nr_patches];
+  uint buf_n_by_patch[psc->n_patches()];
 
   uint buf_n = 0;
   psc_foreach_patch(psc, p) {

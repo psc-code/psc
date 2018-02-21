@@ -33,7 +33,7 @@ public:
   PushBase(struct psc* psc, double dt_fac)
   {
     const Grid_t& grid = psc->grid();
-    for (int p = 1; p < psc->nr_patches; p++) {
+    for (int p = 1; p < psc->n_patches(); p++) {
       for (int d = 0; d < 3; d++) {
 	assert(psc->patch[0].ldims[d] == psc->patch[p].ldims[d]);
       }

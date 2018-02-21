@@ -114,7 +114,7 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   struct cuda_mfields_bnd_params prm;
 
   struct psc *psc = bnd->psc;
-  prm.n_patches = psc->nr_patches;
+  prm.n_patches = psc->n_patches();
   assert(prm.n_patches > 0);
   // FIXME, it'd be nicer if the interface was ldims / ibn based
   for (int d = 0; d < 3; d++) {
@@ -166,13 +166,13 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
-  if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+  if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
     cuda_add_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
-  } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+  } else if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
@@ -209,13 +209,13 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
 
-  if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+  if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
     cuda_fill_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
-  } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+  } else if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {

@@ -411,7 +411,6 @@ void
 psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
   psc->grid_ = psc_make_grid(psc, domain);
-  psc->nr_patches = psc->grid().n_patches();
 }
 
 // ----------------------------------------------------------------------
@@ -505,7 +504,7 @@ _psc_setup(struct psc *psc)
   psc_method_do_setup(psc->method, psc);
 
   // partition and initial balancing
-  uint *n_prts_by_patch = new uint[psc->nr_patches]();
+  uint *n_prts_by_patch = new uint[psc->n_patches()];
   
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);

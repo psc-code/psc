@@ -223,8 +223,9 @@ struct psc {
   ///Use this to access the global list of patches \sa \ref patches
 
   struct mrc_domain *mrc_domain;
-  
-  int nr_patches;	///< Number of patches (on this processor)
+
+  int n_patches() { return grid().n_patches(); }
+
   int ibn[3];         ///< number of ghost points
 
   double time_start;
@@ -340,7 +341,7 @@ psc_foreach_3d(p, jx, jy, jz, 0, 0) {
   } } }
 
 #define psc_foreach_patch(psc, p)		\
-  for (int p = 0; p < (psc)->nr_patches; p++)
+  for (int p = 0; p < (psc)->n_patches(); p++)
 
 
 // ----------------------------------------------------------------------

@@ -530,7 +530,7 @@ psc_harris_setup(struct psc *psc)
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
 
   // partition and initial balancing
-  uint *n_prts_by_patch = (uint *) calloc(psc->nr_patches, sizeof(*n_prts_by_patch));
+  uint *n_prts_by_patch = (uint *) calloc(psc->n_patches(), sizeof(*n_prts_by_patch));
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
   psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
 
@@ -617,7 +617,7 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
   int n_global_patches = sub->n_global_patches;
 
   if (count_only) {
-    for (int p = 0; p < psc->nr_patches; p++) {
+    for (int p = 0; p < psc->n_patches(); p++) {
       nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
     }
     return;
