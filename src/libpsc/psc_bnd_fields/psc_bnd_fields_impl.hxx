@@ -30,7 +30,7 @@ struct bnd_fields_ops
     for (int p = 0; p < mf.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
-	if (ppsc->patch[p].off[d] == 0) {
+	if (psc_at_boundary_lo(ppsc, p, d)) {
 	  switch (ppsc->domain.bnd_fld_lo[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
@@ -47,7 +47,7 @@ struct bnd_fields_ops
 
       // hi
       for (int d = 0; d < 3; d++) {
-	if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	if (psc_at_boundary_hi(ppsc, p, d)) {
 	  switch (ppsc->domain.bnd_fld_hi[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
@@ -77,7 +77,7 @@ struct bnd_fields_ops
     for (int p = 0; p < mf.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
-	if (ppsc->patch[p].off[d] == 0) {
+	if (psc_at_boundary_lo(ppsc, p, d)) {
 	  switch (ppsc->domain.bnd_fld_lo[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
@@ -94,7 +94,7 @@ struct bnd_fields_ops
       }
       // hi
       for (int d = 0; d < 3; d++) {
-	if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	if (psc_at_boundary_hi(ppsc, p, d)) {
 	  switch (ppsc->domain.bnd_fld_hi[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
@@ -124,7 +124,7 @@ struct bnd_fields_ops
     for (int p = 0; p < mf.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
-	if (ppsc->patch[p].off[d] == 0) {
+	if (psc_at_boundary_lo(ppsc, p, d)) {
 	  switch (ppsc->domain.bnd_fld_lo[d]) {
 	  case BND_FLD_PERIODIC:
 	  case BND_FLD_OPEN:
@@ -139,7 +139,7 @@ struct bnd_fields_ops
       }
       // hi
       for (int d = 0; d < 3; d++) {
-	if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	if (psc_at_boundary_hi(ppsc, p, d)) {
 	  switch (ppsc->domain.bnd_fld_hi[d]) {
 	  case BND_FLD_PERIODIC:
 	  case BND_FLD_OPEN:

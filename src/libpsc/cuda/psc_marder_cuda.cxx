@@ -132,11 +132,13 @@ psc_marder_cuda_correct(struct psc_marder *marder,
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
-      if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] == 0) {
+      if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+	  psc_at_boundary_lo(ppsc, p, d)) {
 	l_cc[d] = -1;
 	l_nc[d] = -1;
       }
-      if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+      if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
+	  psc_at_boundary_hi(ppsc, p, d)) {
 	r_cc[d] = -1;
 	r_nc[d] = 0;
       }

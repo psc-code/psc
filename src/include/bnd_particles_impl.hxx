@@ -8,21 +8,6 @@
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
-// ----------------------------------------------------------------------
-// at_lo/hi_boundary
-
-static inline bool
-at_lo_boundary(int p, int d)
-{
-  return ppsc->patch[p].off[d] == 0;
-}
-
-static inline bool
-at_hi_boundary(int p, int d)
-{
-  return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
-}
-
 // ======================================================================
 // psc_bnd_particles
 
@@ -130,7 +115,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
     int dir[3];
     for (int d = 0; d < 3; d++) {
       if (b_pos[d] < 0) {
-	if (!at_lo_boundary(p, d) || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	if (!psc_at_boundary_lo(ppsc, p, d) || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
 	  int bi = mprts[p].blockPosition(xi[d], d);
@@ -153,7 +138,7 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
 	  }
 	}
       } else if (b_pos[d] >= b_mx[d]) {
-	if (!at_hi_boundary(p, d) ||
+	if (!psc_at_boundary_hi(ppsc, p, d) ||
 	    psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;

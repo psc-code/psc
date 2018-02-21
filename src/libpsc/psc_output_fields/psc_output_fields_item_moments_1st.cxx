@@ -82,7 +82,7 @@ add_ghosts_boundary(fields_t res, int p, int mb, int me)
 {
   // lo
   for (int d = 0; d < 3; d++) {
-    if (ppsc->patch[p].off[d] == 0) {
+    if (psc_at_boundary_lo(ppsc, p, d)) {
       if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING ||
 	  ppsc->domain.bnd_part_lo[d] == BND_PART_OPEN) {
 	add_ghosts_reflecting_lo(res, p, d, mb, me);
@@ -91,7 +91,7 @@ add_ghosts_boundary(fields_t res, int p, int mb, int me)
   }
   // hi
   for (int d = 0; d < 3; d++) {
-    if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+    if (psc_at_boundary_hi(ppsc, p, d)) {
       if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING ||
 	  ppsc->domain.bnd_part_hi[d] == BND_PART_OPEN) {
 	add_ghosts_reflecting_hi(res, p, d, mb, me);
