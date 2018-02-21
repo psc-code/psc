@@ -501,22 +501,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
   prof_stop(pr);
 }
 
-static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_domain *domain_new)
-{
-  int nr_patches_new;
-  mrc_domain_get_patches(domain_new, &nr_patches_new);
-    
-  for (int p = 0; p < nr_patches_new; p++) {
-    struct mrc_patch_info info, info_old;
-    mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
-    if (info_old.rank < 0)	//Patch has to be seeded
-    {
-      assert(0);
-    }
-  }
-}
-
 void psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd);
 BEGIN_C_DECLS
 void psc_bnd_check_domain(struct psc_bnd *bnd);
@@ -609,8 +593,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   }
 
   communicate_free(ctx);
-
-  psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
 
   psc->mrc_domain = domain_new;
   psc_bnd_particles_check_domain(psc->bnd_particles);
@@ -830,8 +812,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_stop(pr_bal_flds);
   
   communicate_free(ctx);
-
-  psc_balance_seed_patches(domain_old, domain_new);
 
   delete psc->grid_;
   psc->grid_ = new_grid;
