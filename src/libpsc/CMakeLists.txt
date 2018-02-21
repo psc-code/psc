@@ -52,9 +52,8 @@ add_library(psc
   psc_push_fields/psc_push_fields_none.cxx
 
   psc_sort/psc_sort.cxx
-  psc_sort/psc_sort_double.cxx
+  psc_sort/psc_sort_impl.cxx
   psc_sort/psc_sort_none.cxx
-  psc_sort/psc_sort_single.cxx
 
   psc_randomize/psc_randomize.cxx
   psc_randomize/psc_randomize_double.cxx

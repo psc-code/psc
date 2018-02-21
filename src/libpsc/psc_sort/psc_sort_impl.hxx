@@ -1,5 +1,11 @@
 
-#include "particle_iter.h"
+#include "psc_sort_private.h"
+
+#include <particle_iter.h>
+#include <psc_particles.h>
+
+#include <mrc_profile.h>
+#include <cassert>
 
 // ======================================================================
 // counting sort
