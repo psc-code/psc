@@ -17,10 +17,11 @@ struct Grid_
   
   struct Patch
   {
-    Patch(const Real3& _xb, const Real3& _xe)
-      : xb(_xb), xe(_xe)
+    Patch(const Int3& _off, const Real3& _xb, const Real3& _xe)
+      : off(_off), xb(_xb), xe(_xe)
     {}
-    
+
+    Int3 off;
     Real3 xb;
     Real3 xe;
   };
@@ -70,7 +71,7 @@ struct Grid_
     ldims = gdims;
     dx = length / Real3(gdims);
 
-    patches.emplace_back(Patch({ 0., 0., 0.}, length));
+    patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, length));
 
     for (int d = 0; d < 3; d++) {
       assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
@@ -84,7 +85,8 @@ struct Grid_
       dx(length / Real3(gdims))
   {
     for (auto off : offs) {
-      patches.push_back(Patch(Vec3<double>(off        ) * dx + corner,
+      patches.push_back(Patch(off,
+			      Vec3<double>(off        ) * dx + corner,
 			      Vec3<double>(off + ldims) * dx + corner));
     }
   }
