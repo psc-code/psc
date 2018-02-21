@@ -611,8 +611,8 @@ psc_collision_sub_run(struct psc_collision *collision,
 // ======================================================================
 // psc_collision: subclass "c" / "single"
 
-struct psc_collision_ops_ : psc_collision_ops {
-  psc_collision_ops_() {
+struct psc_collision_sub_ops : psc_collision_ops {
+  psc_collision_sub_ops() {
     name                  = PARTICLE_TYPE;
     size                  = sizeof(struct psc_collision_sub);
     param_descr           = psc_collision_sub_descr;
