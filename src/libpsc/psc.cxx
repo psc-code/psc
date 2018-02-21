@@ -405,15 +405,6 @@ void psc_set_dt(psc* psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_patches
-
-void
-psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
-{
-  psc->grid_ = psc_make_grid(psc, domain);
-}
-
-// ----------------------------------------------------------------------
 // psc_setup_domain
 
 void
@@ -457,7 +448,8 @@ psc_setup_domain(struct psc *psc)
     psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
   }
   psc_set_dt(psc);
-  psc_setup_patches(psc, psc->mrc_domain);
+
+  psc->grid_ = psc_make_grid(psc, psc->mrc_domain);
 }
 
 // ----------------------------------------------------------------------

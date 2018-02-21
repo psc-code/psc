@@ -368,7 +368,7 @@ void psc_integrate(struct psc *psc);
 void psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
-void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
+Grid_t* psc_make_grid(psc* psc, mrc_domain* domain);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);

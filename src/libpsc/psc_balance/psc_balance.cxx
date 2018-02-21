@@ -546,7 +546,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
-  psc_setup_patches(psc, domain_new);
+  psc->grid_ = psc_make_grid(psc, domain_new);
   psc_balance_comp_time_by_patch = (double *) calloc(nr_patches_new,
 					  sizeof(*psc_balance_comp_time_by_patch));
 
@@ -688,7 +688,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_stop(pr_bal_decomp_B);
   prof_start(pr_bal_decomp_C);
   //  mrc_domain_view(domain_new);
-  psc_setup_patches(psc, domain_new);
+  psc->grid_ = psc_make_grid(psc, domain_new);
   prof_stop(pr_bal_decomp_C);
   prof_start(pr_bal_decomp_D);
   free(psc_balance_comp_time_by_patch);
