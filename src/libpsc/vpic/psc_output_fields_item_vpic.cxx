@@ -20,7 +20,7 @@ run_all_vpic_fields(struct psc_output_fields_item *item, struct psc_mfields *mfl
   mfields_t mf = mflds_base->get_as<mfields_t>(0, 16);
   mfields_t mf_res(mres);
   
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       for (int m = 0; m < 16; m++) {
@@ -83,7 +83,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
     
     mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
     mfields_t mf_res(mres);
-    for (int p = 0; p < mres->nr_patches; p++) {
+    for (int p = 0; p < mf_res->n_patches(); p++) {
       Fields F(mf[p]), R(mf_res[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {

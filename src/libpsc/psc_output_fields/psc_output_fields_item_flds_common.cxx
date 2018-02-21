@@ -27,7 +27,7 @@ struct output_flds_ops
     define_dxdydz(dx, dy, dz);
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
     mfields_t mf_res = mres_base->get_as<mfields_t>(0, 0);
-    for (int p = 0; p < mres_base->nr_patches; p++) {
+    for (int p = 0; p < mf_res->n_patches(); p++) {
       Fields F(mf[p]), R(mf_res[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	R(0, ix,iy,iz) = 

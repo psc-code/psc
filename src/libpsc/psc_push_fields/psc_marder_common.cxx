@@ -204,7 +204,7 @@ struct marder_ops {
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
     mfields_t mf_div_e(div_e);
   
-    for (int p = 0; p < div_e->nr_patches; p++) {
+    for (int p = 0; p < mf_div_e->n_patches(); p++) {
       correct_patch(marder, mf[p], mf_div_e[p], p);
     }
 

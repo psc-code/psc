@@ -19,8 +19,6 @@ _psc_mfields_setup(struct psc_mfields *mflds)
 {
   assert(mflds->domain);
 
-  mflds->nr_patches = ppsc->n_patches();
-  
   mflds->comp_name = new char* [mflds->nr_fields]();
 }
 
@@ -52,7 +50,8 @@ static void
 _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
 {
   mflds->domain = mrc_io_read_ref(io, mflds, "domain", mrc_domain);
-  mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
+  int n_patches;
+  mrc_domain_get_patches(mflds->domain, &n_patches);
 
   mflds->comp_name = new char* [mflds->nr_fields];
   for (int m = 0; m < mflds->nr_fields; m++) {
@@ -256,8 +255,6 @@ static struct param psc_mfields_descr[] = {
   { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
   { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
   { "first_comp"     , VAR(first_comp)      , PARAM_INT(0)        },
-
-  { "nr_patches"     , VAR(nr_patches)      , MRC_VAR_INT         },
   {},
 };
 #undef VAR

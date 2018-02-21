@@ -41,7 +41,7 @@ psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields 
 {
   mfields_single_t mf_single(mflds_single);
   mfields_vpic_t mf(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  for (int p = 0; p < mf->n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     Fields F(flds);
     FieldsS F_s(mf_single[p]);
@@ -72,7 +72,7 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 {
   mfields_single_t mf_single(mflds_single);
   mfields_vpic_t mf(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  for (int p = 0; p < mf->n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     fields_single_t flds_single = mf_single[p];
     Fields F(flds);
@@ -127,8 +127,9 @@ static void psc_mfields_vpic_setup(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
-  mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
-  assert(mflds->nr_patches == 1);
+  int n_patches;
+  mrc_domain_get_patches(mflds->domain, &n_patches);
+  assert(n_patches == 1);
   assert(mflds->ibn[0] == 1);
   assert(mflds->ibn[1] == 1);
   assert(mflds->ibn[2] == 1);

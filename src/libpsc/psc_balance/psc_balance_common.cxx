@@ -123,9 +123,9 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
 
   mfields_t mf_old(mflds_old), mf_new(mflds_new);
   
-  if (ctx->nr_patches_old != mflds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
+  if (ctx->nr_patches_old != mf_old->n_patches()) return;
 	
-  assert(ctx->nr_patches_old == mflds_old->nr_patches);
+  assert(ctx->nr_patches_old == mf_old->n_patches());
   assert(ctx->nr_patches_old > 0);
   
   MPI_Datatype mpi_dtype = fields_traits<fields_t>::mpi_dtype();

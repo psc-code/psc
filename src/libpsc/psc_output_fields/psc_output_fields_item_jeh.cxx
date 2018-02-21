@@ -27,7 +27,7 @@ calc_j_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = JX_NC(ix,iy,iz);
@@ -65,7 +65,7 @@ calc_j(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = JX_CC(ix,iy,iz);
@@ -96,7 +96,7 @@ calc_j_ec(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = F(JXI, ix,iy,iz);
@@ -131,7 +131,7 @@ calc_E_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = EX_NC(ix,iy,iz);
@@ -169,7 +169,7 @@ calc_E_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = EX_CC(ix,iy,iz);
@@ -200,7 +200,7 @@ calc_E_ec(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = F(EX, ix,iy,iz);
@@ -238,7 +238,7 @@ calc_H_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = HX_NC(ix,iy,iz);
@@ -273,7 +273,7 @@ calc_H_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = HX_CC(ix,iy,iz);
@@ -304,7 +304,7 @@ calc_H_fc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = F(HX, ix,iy,iz);
@@ -335,7 +335,7 @@ calc_jdote_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, EX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
@@ -366,7 +366,7 @@ calc_poyn_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
@@ -400,7 +400,7 @@ calc_E2_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
@@ -431,7 +431,7 @@ calc_H2_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
@@ -462,7 +462,7 @@ calc_divb(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = 
@@ -492,7 +492,7 @@ calc_divj_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   define_dxdydz(dx, dy, dz);
   mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
   mfields_t mf_res(mres);
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     Fields F(mf[p]), R(mf_res[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       R(0, ix,iy,iz) = 

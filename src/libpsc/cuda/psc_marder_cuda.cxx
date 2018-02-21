@@ -128,7 +128,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   cuda_mfields *cmf = mf->cmflds;
 
   // OPT, do all patches in one kernel
-  for (int p = 0; p < mf_base->nr_patches; p++) {
+  for (int p = 0; p < mf->n_patches(); p++) {
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {

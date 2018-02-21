@@ -13,7 +13,6 @@ struct psc_mfields {
   struct mrc_obj obj;
 
   // state
-  int nr_patches;
   char **comp_name; //> name for each field component
 
   // parameters

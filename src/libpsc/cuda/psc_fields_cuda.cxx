@@ -54,7 +54,7 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
 
-  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+  for (int p = 0; p < mf_cuda->n_patches(); p++) {
     FieldsC F_c(mf_c[p]);
     mf_cuda->copy_from_device(p, flds, mb, me);
   
@@ -84,7 +84,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
   
-  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+  for (int p = 0; p < mf_cuda->n_patches(); p++) {
     FieldsS F_s(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
@@ -112,7 +112,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
 
-  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+  for (int p = 0; p < mf_cuda->n_patches(); p++) {
     FieldsS F_s(mf_single[p]);
     mf_cuda->copy_from_device(p, flds, mb, me);
   
