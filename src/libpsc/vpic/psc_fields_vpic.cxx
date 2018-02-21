@@ -190,6 +190,7 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
   } else {
     assert(0);
   }
+  abort();
 }
 
 // ----------------------------------------------------------------------

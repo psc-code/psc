@@ -231,7 +231,7 @@ struct psc {
 
   const Grid_t& grid() const { assert(grid_); return *grid_; }
 
-  Grid_t* grid_;
+  Grid_t* grid_ = {};
 };
 
 MRC_CLASS_DECLARE(psc, struct psc);
