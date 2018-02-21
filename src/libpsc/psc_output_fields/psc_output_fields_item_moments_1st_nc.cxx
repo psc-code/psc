@@ -31,7 +31,6 @@ do_n_run(int p, fields_t flds, mparticles_t& mprts)
 {
   const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
-  struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 
@@ -57,7 +56,6 @@ do_rho_run(int p, fields_t flds, mparticles_t& mprts)
 {
   const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
-  struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 
@@ -83,7 +81,6 @@ do_v_run(int p, fields_t flds, mparticles_t& mprts)
 {
   const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
-  struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 

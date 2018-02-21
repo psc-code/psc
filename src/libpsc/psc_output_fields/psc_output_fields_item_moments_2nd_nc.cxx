@@ -18,7 +18,6 @@ add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
 {
   Fields F(flds);
   const int *ldims = ppsc->grid().ldims;
-  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     for (int iz = -2; iz < ldims[2] + 2; iz++) {
@@ -52,7 +51,6 @@ add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
 {
   Fields F(flds);
   const int *ldims = ppsc->grid().ldims;
-  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     for (int iz = -2; iz < ldims[2] + 2; iz++) {
@@ -127,7 +125,6 @@ do_n_run(int p, fields_t flds, mparticles_t& mprts)
 {
   const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
-  struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 
@@ -153,7 +150,6 @@ do_rho_run(int p, fields_t flds, mparticles_t& mprts)
 {
   const Grid_t& grid = ppsc->grid();
   mparticles_t::patch_t& prts = mprts[p];
-  struct psc_patch *patch = &ppsc->patch[p];
   real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 

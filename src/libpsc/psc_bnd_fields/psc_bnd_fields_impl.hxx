@@ -167,7 +167,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
 #ifdef DEBUG
@@ -238,7 +237,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
       int my  _mrc_unused = ldims[1];
@@ -307,7 +305,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
 #ifdef DEBUG
@@ -369,7 +366,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
       int my _mrc_unused = ldims[1];
@@ -433,7 +429,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
@@ -470,7 +465,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
       int my _mrc_unused = ldims[1];
@@ -514,7 +508,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
 #ifdef DEBUG
@@ -582,7 +575,6 @@ struct bnd_fields_ops
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
-    struct psc_patch *patch = ppsc->patch + p;
 
     if (d == 1) {
       int my _mrc_unused = ldims[1];

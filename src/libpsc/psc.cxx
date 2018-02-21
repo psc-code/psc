@@ -389,9 +389,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   psc->grid_ = psc_make_grid(psc, domain);
   psc->nr_patches = psc->grid().n_patches();
 
-  // set up psc->patch
-  psc->patch = new psc_patch[psc->nr_patches]();
-
   auto& dx = psc->grid().dx;
   if (!psc->dt) {
     double inv_sum = 0.;
@@ -538,7 +535,6 @@ _psc_destroy(struct psc *psc)
   psc_mparticles_destroy(psc->particles);
 
   mrc_domain_destroy(psc->mrc_domain);
-  free(psc->patch);
 
   if (psc->kinds) {
     for (int k = 0; k < psc->nr_kinds; k++) {
@@ -656,7 +652,6 @@ get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
 static void
 find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 {
-  struct psc_patch *patch = &psc->patch[p];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
     ihi[d] = psc->grid().ldims[d];

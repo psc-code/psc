@@ -544,7 +544,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   free(loads_all);
 
-  free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
   psc_setup_patches(psc, domain_new);
@@ -685,7 +684,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_start(pr_bal_decomp_B);
   free(loads_all);
 
-  free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   prof_stop(pr_bal_decomp_B);
   prof_start(pr_bal_decomp_C);

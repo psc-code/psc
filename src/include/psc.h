@@ -154,10 +154,6 @@ struct psc_domain {
 // FIXME, the randomize / sort interaction needs more work
 // In particular, it's better to randomize just per-cell after the sorting
 
-struct psc_patch {
-  int dummy;
-};
-
 ///Describes the different particle kinds
 ///
 struct psc_kind {
@@ -229,9 +225,7 @@ struct psc {
   struct mrc_domain *mrc_domain;
   
   int nr_patches;	///< Number of patches (on this processor)
-  struct psc_patch *patch;	///< List of patches (on this processor)
   int ibn[3];         ///< number of ghost points
-  // did we allocate the fields / particles (otherwise, Fortran did)
 
   double time_start;
 
