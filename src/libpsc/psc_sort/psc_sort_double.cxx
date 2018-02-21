@@ -15,7 +15,8 @@
 struct psc_sort_ops_countsort_double : psc_sort_ops {
   psc_sort_ops_countsort_double() {
     name                  = "countsort_double";
-    run                   = psc_sort_countsort_run;
+    size                  = sizeof(psc_sort_countsort<mparticles_t>);
+    run                   = psc_sort_countsort<mparticles_t>::run;
   }
 } psc_sort_countsort_double_ops;
 
