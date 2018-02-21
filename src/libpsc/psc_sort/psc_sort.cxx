@@ -30,10 +30,8 @@ psc_sort_run(struct psc_sort *sort, struct psc_mparticles *mprts)
 // psc_sort_init
 
 extern struct psc_sort_ops psc_sort_none_ops;
-extern struct psc_sort_ops psc_sort_qsort_single_ops;
 extern struct psc_sort_ops psc_sort_countsort_single_ops;
 extern struct psc_sort_ops psc_sort_countsort2_single_ops;
-extern struct psc_sort_ops psc_sort_qsort_double_ops;
 extern struct psc_sort_ops psc_sort_countsort_double_ops;
 extern struct psc_sort_ops psc_sort_countsort2_double_ops;
 extern struct psc_sort_ops psc_sort_vpic_ops;
@@ -42,10 +40,8 @@ static void
 psc_sort_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_none_ops);
-  mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_qsort_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort2_single_ops);
-  mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_qsort_double_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort_double_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort2_double_ops);
 #ifdef USE_VPIC

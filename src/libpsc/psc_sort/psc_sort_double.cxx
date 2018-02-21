@@ -10,16 +10,6 @@
 #include "psc_sort_common.cxx"
 
 // ======================================================================
-// psc_sort: subclass "qsort_double"
-
-struct psc_sort_ops_qsort_double : psc_sort_ops {
-  psc_sort_ops_qsort_double() {
-    name                  = "qsort_double";
-    run                   = psc_sort_qsort_run;
-  }
-} psc_sort_qsort_double_ops;
-
-// ======================================================================
 // psc_sort: subclass "countsort_double"
 
 struct psc_sort_ops_countsort_double : psc_sort_ops {

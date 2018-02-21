@@ -2,47 +2,6 @@
 using real_t = mparticles_t::real_t;
 
 // ======================================================================
-// quicksort
-
-static mparticles_t::patch_t *s_prts;
-
-static int
-compare(const void *_a, const void *_b)
-{
-  const particle_t *a = (const particle_t *) _a, *b = (const particle_t *) _b;
-
-  int cni_a = s_prts->validCellIndex(*a);
-  int cni_b = s_prts->validCellIndex(*b);
-  if (cni_a < cni_b) {
-    return -1;
-  } else if (cni_a == cni_b) {
-    return 0;
-  } else {
-    return 1;
-  }
-}
-
-static void
-psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
-{
-  // FIXME, using a C++ sort would be much nicer...
-  static int pr;
-  if (!pr) {
-    pr = prof_register("qsort_sort", 1., 0, 0);
-  }
-  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-
-  prof_start(pr);
-  for (int p = 0; p < mprts->n_patches(); p++) {
-    s_prts = &mprts[p];
-    qsort(&*s_prts->begin(), s_prts->size(), sizeof(*s_prts->begin()), compare);
-  }
-  prof_stop(pr);
-
-  mprts.put_as(mprts_base);
-}
-
-// ======================================================================
 // counting sort
 
 static void

@@ -10,16 +10,6 @@
 #include "psc_sort_common.cxx"
 
 // ======================================================================
-// psc_sort: subclass "qsort_single"
-
-struct psc_sort_ops_qsort_single : psc_sort_ops {
-  psc_sort_ops_qsort_single() {
-    name                  = "qsort_single";
-    run                   = psc_sort_qsort_run;
-  }
-} psc_sort_qsort_single_ops;
-
-// ======================================================================
 // psc_sort: subclass "countsort_single"
 
 struct psc_sort_ops_countsort_single : psc_sort_ops {
