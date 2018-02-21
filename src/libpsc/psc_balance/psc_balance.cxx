@@ -546,6 +546,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
+  delete psc->grid_;
   psc->grid_ = psc->make_grid(domain_new);
   psc_balance_comp_time_by_patch = (double *) calloc(nr_patches_new,
 					  sizeof(*psc_balance_comp_time_by_patch));
@@ -688,7 +689,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_stop(pr_bal_decomp_B);
   prof_start(pr_bal_decomp_C);
   //  mrc_domain_view(domain_new);
-  psc->grid_ = psc->make_grid(domain_new);
+  Grid_t* new_grid = psc->make_grid(domain_new);
   prof_stop(pr_bal_decomp_C);
   prof_start(pr_bal_decomp_D);
   free(psc_balance_comp_time_by_patch);
@@ -698,7 +699,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   //If there are no active patches, exit here
   int n_global_patches;
   mrc_domain_get_nr_global_patches(domain_new, &n_global_patches);
-  if(n_global_patches < 1) exit(0);
+  if(n_global_patches < 1) abort();
   prof_stop(pr_bal_decomp_D);
 
   // OPT: if local patches didn't change at all, no need to do anything...
@@ -728,7 +729,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   struct psc_mparticles *mprts_base_new = 
     psc_mparticles_create(mrc_domain_comm(domain_new));
   psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
-  psc_mparticles_set_param_int(mprts_base_new, "nr_patches", nr_patches_new);
+  mprts_base_new->grid = new_grid;
+  psc_mparticles_setup(mprts_base_new);
 
   struct psc_mparticles *mprts_old = psc_mparticles_get_as(psc->particles, ops->mprts_type, 0);
   if (mprts_old != psc->particles) { // FIXME hacky: destroy old particles early if we just got a copy
@@ -736,7 +738,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   }
 
   prof_start(pr_bal_prts_B1);
-  psc_mparticles_setup(mprts_base_new);
   mparticles_base_t(mprts_base_new)->reserve_all(nr_particles_by_patch);
   prof_stop(pr_bal_prts_B1);
 
@@ -763,6 +764,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_stop(pr_bal_prts_C);
 
   prof_stop(pr_bal_prts);
+
+  //delete psc->grid_; // FIXME
+  psc->grid_ = new_grid;
 
   // ----------------------------------------------------------------------
   // fields

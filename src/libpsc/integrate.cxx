@@ -142,7 +142,6 @@ psc_step(struct psc *psc)
 void
 psc_integrate(struct psc *psc)
 {
-  mparticles_base_t mprts(psc->particles);
   psc_method_initialize(psc->method, psc);
   mpi_printf(psc_comm(psc), "Initialization complete.\n");
   
@@ -183,6 +182,7 @@ psc_integrate(struct psc *psc)
     psc_stats_stop(st_time_step);
     prof_stop(pr);
 
+    mparticles_base_t mprts(psc->particles);
     psc_stats_val[st_nr_particles] = mprts->get_n_prts();
 
     if (psc->timestep % psc->prm.stats_every == 0) {
