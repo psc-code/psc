@@ -351,12 +351,12 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 // ----------------------------------------------------------------------
 // psc_make_grid
 
-Grid_t* psc_make_grid(psc* psc, mrc_domain* domain)
+Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
 {
   Int3 gdims;
-  mrc_domain_get_global_dims(domain, gdims);
+  mrc_domain_get_global_dims(mrc_domain, gdims);
   int n_patches;
-  mrc_patch *patches = mrc_domain_get_patches(domain, &n_patches);
+  mrc_patch *patches = mrc_domain_get_patches(mrc_domain, &n_patches);
   assert(n_patches > 0);
   Int3 ldims = patches[0].ldims;
   std::vector<Int3> offs;
@@ -365,16 +365,16 @@ Grid_t* psc_make_grid(psc* psc, mrc_domain* domain)
     offs.push_back(patches[p].off);
   }  
 
-  Grid_t *grid = new Grid_t(gdims, ldims, psc->domain.length, psc->domain.corner, offs);
+  Grid_t *grid = new Grid_t(gdims, ldims, domain.length, domain.corner, offs);
 
   for (int d = 0; d < 3; d++) {
-    grid->bs[d] = grid->gdims[d] == 1 ? 1 : psc->domain.bs[d];
+    grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain.bs[d];
   }
   
   assert(psc->coeff.ld == 1.);
-  grid->fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  grid->eta = psc->coeff.eta;
-  grid->dt = psc->dt;
+  grid->fnqs = sqr(coeff.alpha) * coeff.cori / coeff.eta;
+  grid->eta = coeff.eta;
+  grid->dt = dt;
 
   return grid;
 }
@@ -449,7 +449,7 @@ psc_setup_domain(struct psc *psc)
   }
   psc_set_dt(psc);
 
-  psc->grid_ = psc_make_grid(psc, psc->mrc_domain);
+  psc->grid_ = psc->make_grid(psc->mrc_domain);
 }
 
 // ----------------------------------------------------------------------

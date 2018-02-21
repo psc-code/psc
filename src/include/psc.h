@@ -18,8 +18,6 @@
 #include <cmath>
 #include <vector>
 
-BEGIN_C_DECLS
-
 // ----------------------------------------------------------------------
 // cell_map
 
@@ -224,6 +222,7 @@ struct psc {
 
   struct mrc_domain *mrc_domain;
 
+  Grid_t* make_grid(struct mrc_domain* domain);
   int n_patches() { return grid().n_patches(); }
 
   int ibn[3];         ///< number of ghost points
@@ -368,7 +367,6 @@ void psc_integrate(struct psc *psc);
 void psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
-Grid_t* psc_make_grid(psc* psc, mrc_domain* domain);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
@@ -420,7 +418,5 @@ extern int st_time_field;    //< time spent in field computation
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
-
-END_C_DECLS
 
 #endif
