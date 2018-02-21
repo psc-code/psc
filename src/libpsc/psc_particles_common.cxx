@@ -17,7 +17,8 @@ PFX(setup)(struct psc_mparticles *_mprts)
 {
   mparticles_t mprts(_mprts);
 
-  new(mprts.sub()) mparticles_t::sub_t(ppsc->grid());
+  assert(_mprts->grid);
+  new(mprts.sub()) mparticles_t::sub_t(*_mprts->grid);
 }
 
 // ----------------------------------------------------------------------

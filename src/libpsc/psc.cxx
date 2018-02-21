@@ -483,6 +483,7 @@ psc_setup_base_mprts(struct psc *psc)
   psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
   psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
+  psc->particles->grid = &psc->grid();
   psc_mparticles_setup(psc->particles);
 }
 

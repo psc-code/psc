@@ -6,6 +6,7 @@
 #include <psc_bits.h>
 #include <assert.h>
 
+#include "grid.hxx"
 #include "particles_traits.hxx"
 
 // ----------------------------------------------------------------------
@@ -16,6 +17,8 @@ struct psc_mparticles {
 
   template<typename MP>
   MP get_as(unsigned int flags = 0);
+
+  const Grid_t* grid;
 };
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
