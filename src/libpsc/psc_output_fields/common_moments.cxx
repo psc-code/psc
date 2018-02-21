@@ -30,9 +30,9 @@
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
-    assert(jx >= -1 && jx < patch->ldims[0]);				\
-    assert(jy >= -1 && jy < patch->ldims[1]);				\
-    assert(jz >= -1 && jz < patch->ldims[2]);				\
+    assert(jx >= -1 && jx < grid.ldims[0]);				\
+    assert(jy >= -1 && jy < grid.ldims[1]);				\
+    assert(jz >= -1 && jz < grid.ldims[2]);				\
     									\
     real_t fnq = mprts->prt_wni(*part) * fnqs;				\
     									\
@@ -77,9 +77,9 @@
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
-    assert(jx >= -1 && jx < patch->ldims[0]);				\
-    assert(jy >= -1 && jy < patch->ldims[1]);				\
-    assert(jz >= -1 && jz < patch->ldims[2]);				\
+    assert(jx >= -1 && jx < grid.ldims[0]);				\
+    assert(jy >= -1 && jy < grid.ldims[1]);				\
+    assert(jz >= -1 && jz < grid.ldims[2]);				\
     									\
     real_t fnq = mprts->prt_wni(*part) * fnqs;				\
 									\
@@ -127,9 +127,9 @@
       jz = 0; g0z = 1.; g1z = 0.; gmz = 0.; jzd = 0;			\
     }									\
     									\
-    assert(jx >= 0 && jx <= patch->ldims[0]);				\
-    assert(jy >= 0 && jy <= patch->ldims[1]);				\
-    assert(jz >= 0 && jz <= patch->ldims[2]);				\
+    assert(jx >= 0 && jx <= grid.ldims[0]);				\
+    assert(jy >= 0 && jy <= grid.ldims[1]);				\
+    assert(jz >= 0 && jz <= grid.ldims[2]);				\
     									\
     real_t fnq = mprts->prt_wni(*part) * fnqs;				\
 					     				\

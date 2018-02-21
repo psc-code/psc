@@ -142,7 +142,7 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
   if (sub->use_deck_particle_ic) {
-    assert(psc->nr_patches == 1);
+    assert(psc->n_patches() == 1);
     n_prts_by_patch[0] = 1; // fake, but not possible to balance, anyway
   } else {
     psc_setup_partition(psc, n_prts_by_patch);

@@ -74,7 +74,7 @@ c_prm_set(struct psc *psc)
   prm.dqs = .5f * ppsc->coeff.eta * prm.dt;
   prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
-  assert(psc->nr_patches > 0);
+  assert(psc->n_patches() > 0);
 
   for (int d = 0; d < 3; d++) {
     prm.dxi[d] = 1.f / psc->grid().dx[d];

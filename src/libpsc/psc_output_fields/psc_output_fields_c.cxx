@@ -149,7 +149,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    assert(psc->nr_patches > 0);
+    assert(psc->n_patches() > 0);
     // FIXME, shouldn't we use item_create_mfields(), too?
     struct psc_mfields *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_set_type(flds, "c");

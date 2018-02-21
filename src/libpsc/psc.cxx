@@ -371,7 +371,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
     grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain.bs[d];
   }
   
-  assert(psc->coeff.ld == 1.);
+  assert(coeff.ld == 1.);
   grid->fnqs = sqr(coeff.alpha) * coeff.cori / coeff.eta;
   grid->eta = coeff.eta;
   grid->dt = dt;
