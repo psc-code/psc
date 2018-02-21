@@ -36,8 +36,7 @@ struct psc_sort_ops_countsort2_single : psc_sort_ops {
   psc_sort_ops_countsort2_single() {
     name                  = "countsort2_single";
     size                  = sizeof(struct psc_sort_countsort2);
-    param_descr           = psc_sort_countsort2_descr;
-    run                   = psc_sort_countsort2_run;
+    run                   = psc_sort_countsort2::run;
   }
 } psc_sort_countsort2_single_ops;
 

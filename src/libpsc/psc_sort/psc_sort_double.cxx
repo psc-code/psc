@@ -36,8 +36,7 @@ struct psc_sort_ops_countsort2_double : psc_sort_ops {
   psc_sort_ops_countsort2_double() {
     name                  = "countsort2_double";
     size                  = sizeof(struct psc_sort_countsort2);
-    param_descr           = psc_sort_countsort2_descr;
-    run                   = psc_sort_countsort2_run;
+    run                   = psc_sort_countsort2::run;
   }
 } psc_sort_countsort2_double_ops;
 

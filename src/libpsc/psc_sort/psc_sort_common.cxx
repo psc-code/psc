@@ -102,24 +102,16 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 
 // ======================================================================
 // counting sort 2
-// use a separate array of cell indices 
+// use a separate array of cell indices
 
-struct psc_sort_countsort2 {
-  int blocksize[3];
-  int mask;
+namespace {
+
+struct psc_sort_countsort2
+{
+  static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base);
 };
 
-#define VAR(x) (void *)offsetof(struct psc_sort_countsort2, x)
-static struct param psc_sort_countsort2_descr[] = {
-  { "blocksize"     , VAR(blocksize)       , PARAM_INT3(1, 1, 1)   },
-  { "mask"          , VAR(mask)            , PARAM_INT(0)          },
-  {},
-};
-#undef VAR
-
-
-static void
-psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
+void psc_sort_countsort2::run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 {
   static int pr;
   if (!pr) {
@@ -187,4 +179,5 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   mprts.put_as(mprts_base);
 }
 
+}
 
