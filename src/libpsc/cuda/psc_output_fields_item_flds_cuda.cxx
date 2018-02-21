@@ -17,7 +17,7 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   cuda_mfields *cmflds = mf->cmflds;
   cuda_mfields *cmres = mf_res->cmflds;
 
-  for (int p = 0; p < mf_res.n_patches(); p++) {
+  for (int p = 0; p < mf_res->n_patches(); p++) {
     cuda_mfields_calc_dive_yz(cmflds, cmres, p);
   }
 

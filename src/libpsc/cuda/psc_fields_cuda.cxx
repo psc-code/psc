@@ -27,7 +27,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
 
-  for (int p = 0; p < mf_cuda.n_patches(); p++) {
+  for (int p = 0; p < mf_cuda->n_patches(); p++) {
     FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {

@@ -27,7 +27,7 @@ struct bnd_fields_ops
     // FIXME/OPT, if we don't need to do anything, we don't need to get
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
   
-    for (int p = 0; p < mf.n_patches(); p++) {
+    for (int p = 0; p < mf->n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -74,7 +74,7 @@ struct bnd_fields_ops
     // FIXME/OPT, if we don't need to do anything, we don't need to get
     mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
   
-    for (int p = 0; p < mf.n_patches(); p++) {
+    for (int p = 0; p < mf->n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -121,7 +121,7 @@ struct bnd_fields_ops
     // FIXME/OPT, if we don't need to do anything, we don't need to get
     mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
     
-    for (int p = 0; p < mf.n_patches(); p++) {
+    for (int p = 0; p < mf->n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {

@@ -313,7 +313,6 @@ struct mfields_base
       sub_(mrc_to_subobj(mflds, sub_t))
   {}
 
-  unsigned int n_patches() const { return sub_->n_patches(); }
   unsigned int n_fields() const { return mflds_->nr_fields; }
 
   fields_t operator[](int p)
