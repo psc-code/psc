@@ -17,9 +17,6 @@ struct Grid_
   
   struct Patch
   {
-    // FIXME, default ctor should go away
-    Patch() = default;
-    
     Patch(const Real3& _xb, const Real3& _xe)
       : xb(_xb), xe(_xe)
     {}
@@ -89,10 +86,6 @@ struct Grid_
     for (auto off : offs) {
       patches.push_back(Patch(Vec3<double>(off        ) * dx + corner,
 			      Vec3<double>(off + ldims) * dx + corner));
-    }
-
-    for (int d = 0; d < 3; d++) {
-      assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
     }
   }
   
