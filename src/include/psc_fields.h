@@ -23,6 +23,8 @@ struct psc_mfields {
 
   template<typename MF>
   MF get_as(int mb, int me);
+
+  const Grid_t* grid;
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);

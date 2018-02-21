@@ -169,6 +169,7 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   psc_mfields_set_param_int(mflds, "nr_fields", mflds_base->nr_fields);
   psc_mfields_set_param_int3(mflds, "ibn", mflds_base->ibn);
   psc_mfields_set_param_int(mflds, "first_comp", mflds_base->first_comp);
+  mflds->grid = mflds_base->grid;
   psc_mfields_setup(mflds);
 
   copy(mflds_base, mflds, type_base, type, mb, me);

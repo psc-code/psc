@@ -157,6 +157,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_mfields_set_param_obj(flds, "domain", psc->mrc_domain);
     psc_mfields_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
     psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
+    flds->grid = &ppsc->grid();
     psc_mfields_setup(flds);
     tfd->flds[i] = flds;
     // FIXME, should be del'd eventually

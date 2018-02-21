@@ -577,6 +577,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
     psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
     psc_mfields_set_param_int(flds_base_new, "first_comp", flds_base_old->first_comp);
     psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
+    flds_base_new->grid = &psc->grid();
     psc_mfields_setup(flds_base_new);
     for (int m = flds_base_old->first_comp;
 	 m < flds_base_old->first_comp + flds_base_old->nr_fields; m++) {
@@ -797,6 +798,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
 
     prof_start(pr_bal_flds_A);
+    flds_base_new->grid = new_grid;
     psc_mfields_setup(flds_base_new);
     prof_stop(pr_bal_flds_A);
     for (int m = flds_base_old->first_comp;

@@ -26,6 +26,7 @@ fld_create(struct psc *psc, const char *name)
   psc_mfields_set_param_obj(fld, "domain", psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
   psc_mfields_set_param_int(fld, "nr_fields", 1);
+  fld->grid = &psc->grid();
   psc_mfields_setup(fld);
   psc_mfields_set_comp_name(fld, 0, name);
 

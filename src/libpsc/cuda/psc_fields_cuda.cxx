@@ -144,7 +144,8 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
 
   cuda_base_init();
 
-  new(mflds.sub()) psc_mfields_cuda(ppsc->grid(), mflds.n_fields(), _mflds->ibn);
+  assert(_mflds->grid);
+  new(mflds.sub()) psc_mfields_cuda(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
 }
 
 // ----------------------------------------------------------------------

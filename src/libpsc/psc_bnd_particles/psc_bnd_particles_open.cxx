@@ -302,6 +302,7 @@ psc_bnd_particles_open_setup(struct psc_bnd_particles *bnd)
   psc_mfields_set_param_obj(bnd->mflds_n_in, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(bnd->mflds_n_in, "nr_fields", ppsc->nr_kinds);
   psc_mfields_set_param_int3(bnd->mflds_n_in, "ibn", ppsc->ibn);
+  bnd->mflds_n_in->grid = &ppsc->grid();
   psc_mfields_setup(bnd->mflds_n_in);
 }
 

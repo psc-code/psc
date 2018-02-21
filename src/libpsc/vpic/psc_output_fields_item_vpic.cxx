@@ -70,6 +70,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
   int ibn[3] = { 1, 1, 1 };
   psc_mfields_set_param_int3(mflds_hydro, "ibn", ibn);
+  mflds_hydro->grid = &ppsc->grid();
   psc_mfields_setup(mflds_hydro);
 
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();

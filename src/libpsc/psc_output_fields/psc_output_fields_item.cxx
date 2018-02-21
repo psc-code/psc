@@ -36,6 +36,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   }
   psc_mfields_set_param_int(flds, "nr_fields", nr_comp);
   psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
+  flds->grid = &ppsc->grid();
   psc_mfields_setup(flds);
   assert(ops->nr_comp <= POFI_MAX_COMPS);
   for (int m = 0; m < nr_comp; m++) {

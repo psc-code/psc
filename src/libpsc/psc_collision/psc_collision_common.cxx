@@ -506,6 +506,7 @@ psc_collision_sub_setup(struct psc_collision *collision)
   psc_mfields_set_param_obj(coll->mflds, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(coll->mflds, "nr_fields", NR_STATS);
   psc_mfields_set_param_int3(coll->mflds, "ibn", ppsc->ibn);
+  coll->mflds->grid = &ppsc->grid();
   psc_mfields_setup(coll->mflds);
   psc_mfields_set_comp_name(coll->mflds, 0, "coll_nudt_min");
   psc_mfields_set_comp_name(coll->mflds, 1, "coll_nudt_med");
@@ -519,6 +520,7 @@ psc_collision_sub_setup(struct psc_collision *collision)
   psc_mfields_set_param_obj(coll->mflds_rei, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(coll->mflds_rei, "nr_fields", 3);
   psc_mfields_set_param_int3(coll->mflds_rei, "ibn", ppsc->ibn);
+  coll->mflds_rei->grid = &ppsc->grid();
   psc_mfields_setup(coll->mflds_rei);
   psc_mfields_set_comp_name(coll->mflds_rei, 0, "coll_rei_x");
   psc_mfields_set_comp_name(coll->mflds_rei, 1, "coll_rei_y");

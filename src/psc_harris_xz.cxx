@@ -455,6 +455,7 @@ psc_setup_base_mflds(struct psc *psc)
   psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
   psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
   psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
+  psc->flds->grid = &psc->grid();
   psc_mfields_setup(psc->flds);
 }
 
