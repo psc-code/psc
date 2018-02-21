@@ -104,14 +104,15 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 // counting sort 2
 // use a separate array of cell indices
 
-namespace {
-  
+template<typename M>
 struct psc_sort_countsort2
 {
+  using mparticles_t = M;
+  
   void operator()(mparticles_t mprts)
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
-      mparticles_t::patch_t& prts = mprts[p];
+      auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
       
       unsigned int n_cells = prts.pi_.n_cells_;
@@ -164,26 +165,21 @@ struct psc_sort_countsort2
     }
   }
  
-  static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base);
-};
-
-void psc_sort_countsort2::run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("countsort2_sort", 1., 0, 0);
+  static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
+  {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("countsort2_sort", 1., 0, 0);
+    }
+    
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    
+    prof_start(pr);
+    psc_sort_countsort2& sub = *mrc_to_subobj(sort, psc_sort_countsort2);
+    sub(mprts);
+    prof_stop(pr);
+    
+    mprts.put_as(mprts_base);
   }
-
-  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-
-  prof_start(pr);
-  psc_sort_countsort2& sub = *mrc_to_subobj(sort, psc_sort_countsort2);
-  sub(mprts);
-
-  prof_stop(pr);
-
-  mprts.put_as(mprts_base);
-}
-
-}
+};
 

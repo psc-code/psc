@@ -35,8 +35,8 @@ struct psc_sort_ops_countsort_single : psc_sort_ops {
 struct psc_sort_ops_countsort2_single : psc_sort_ops {
   psc_sort_ops_countsort2_single() {
     name                  = "countsort2_single";
-    size                  = sizeof(struct psc_sort_countsort2);
-    run                   = psc_sort_countsort2::run;
+    size                  = sizeof(psc_sort_countsort2<mparticles_t>);
+    run                   = psc_sort_countsort2<mparticles_t>::run;
   }
 } psc_sort_countsort2_single_ops;
 
