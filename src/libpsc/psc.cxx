@@ -378,11 +378,10 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   }  
   
   grid.patches.resize(psc->nr_patches);
+  Vec3<double> corner = psc->domain.corner;
   for (int p = 0; p < psc->nr_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      grid.patches[p].xb[d] =  offs[p][d]             * grid.dx[d] + psc->domain.corner[d];
-      grid.patches[p].xe[d] = (offs[p][d] + ldims[d]) * grid.dx[d] + psc->domain.corner[d];
-    }
+    grid.patches[p].xb = Vec3<double>(offs[p]        ) * grid.dx + corner;
+    grid.patches[p].xe = Vec3<double>(offs[p] + ldims) * grid.dx + corner;
   }
 
   for (int d = 0; d < 3; d++) {
