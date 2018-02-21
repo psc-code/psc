@@ -365,7 +365,18 @@ Grid_t* psc_make_grid(psc* psc, mrc_domain* domain)
     offs.push_back(patches[p].off);
   }  
 
-  return new Grid_t(gdims, ldims, psc->domain.length, psc->domain.corner, offs);
+  Grid_t *grid = new Grid_t(gdims, ldims, psc->domain.length, psc->domain.corner, offs);
+
+  for (int d = 0; d < 3; d++) {
+    grid->bs[d] = grid->gdims[d] == 1 ? 1 : psc->domain.bs[d];
+  }
+  
+  assert(psc->coeff.ld == 1.);
+  grid->fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  grid->eta = psc->coeff.eta;
+  grid->dt = psc->dt;
+
+  return grid;
 }
 
 // ----------------------------------------------------------------------
@@ -376,36 +387,26 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
   // set up grid
   psc->grid_ = psc_make_grid(psc, domain);
-  Grid_t& grid = *psc->grid_;
+  psc->nr_patches = psc->grid().n_patches();
 
-  psc->nr_patches = grid.n_patches();
-
-  assert(psc->coeff.ld == 1.);
-  grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  grid.eta = psc->coeff.eta;
-  grid.dt = psc->dt;
-
-  for (int d = 0; d < 3; d++) {
-    grid.bs[d] = grid.gdims[d] == 1 ? 1 : psc->domain.bs[d];
-  }
-  
   // set up psc->patch
   psc->patch = new psc_patch[psc->nr_patches]();
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     for (int d = 0; d < 3; d++) {
-      patch->ldims[d] = grid.ldims[d];
-      patch->off[d] = grid.patches[p].off[d];
+      patch->ldims[d] = psc->grid().ldims[d];
+      patch->off[d] = psc->grid().patches[p].off[d];
     }
   }
 
+  auto& dx = psc->grid().dx;
   if (!psc->dt) {
     double inv_sum = 0.;
     int nr_levels;
     mrc_domain_get_nr_levels(psc->mrc_domain, &nr_levels);
     for (int d=0;d<3;d++) {
       if (psc->domain.gdims[d] > 1) {
-	inv_sum += 1. / sqr(grid.dx[d] / (1 << (nr_levels - 1)));
+	inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
       }
     }
     if (!inv_sum) { // simulation has 0 dimensions
@@ -413,10 +414,10 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     }
     psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
   }
+  psc->grid_->dt = psc->dt;
 
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
-  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", grid.dx[0], grid.dx[1], grid.dx[2]);
-
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
 }
 
 // ----------------------------------------------------------------------
