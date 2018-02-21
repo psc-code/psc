@@ -31,7 +31,7 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_bndp::cuda_bndp(Grid_t& grid)
+cuda_bndp::cuda_bndp(const Grid_t& grid)
   : cuda_mparticles_indexer(grid)
 {
   d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));

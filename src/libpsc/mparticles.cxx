@@ -164,7 +164,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
   const Grid_t& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {
-    Grid_t::Patch& patch = ppsc->grid().patches[p];
+    auto& patch = ppsc->grid().patches[p];
     mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
 
     f_real xb[3], xe[3];

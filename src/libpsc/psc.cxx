@@ -364,7 +364,23 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   }
 
   psc->grid_ = new Grid_t(gdims, psc->domain.length, patches[0].ldims);
-  Grid_t& grid = psc->grid();
+  Grid_t& grid = *psc->grid_;
+
+  grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  grid.eta = psc->coeff.eta;
+  grid.dt = psc->dt;
+  
+  grid.patches.resize(psc->nr_patches);
+  for (int p = 0; p < psc->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      grid.patches[p].xb[d] = patches[p].off[d] * grid.dx[d] + psc->domain.corner[d] / psc->coeff.ld;
+      grid.patches[p].xe[d] = (patches[p].off[d] + patches[p].ldims[d]) * grid.dx[d] + psc->domain.corner[d] / psc->coeff.ld;
+    }
+  }
+
+  for (int d = 0; d < 3; d++) {
+    grid.bs[d] = grid.gdims[d] == 1 ? 1 : psc->domain.bs[d];
+  }
   
   double dx[3];
   for (int d = 0; d < 3; d++) {
@@ -400,21 +416,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     }
   }
 
-  grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  grid.eta = psc->coeff.eta;
-  grid.dt = psc->dt;
-  
-  grid.patches.resize(psc->nr_patches);
-  for (int p = 0; p < psc->nr_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      grid.patches[p].xb[d] = patches[p].off[d] * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
-      grid.patches[p].xe[d] = (patches[p].off[d] + patches[p].ldims[d]) * dx[d] + psc->domain.corner[d] / psc->coeff.ld;
-    }
-  }
-
-  for (int d = 0; d < 3; d++) {
-    grid.bs[d] = grid.gdims[d] == 1 ? 1 : psc->domain.bs[d];
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -486,9 +487,10 @@ static void
 psc_setup_base_mprts(struct psc *psc)
 {
   // FIXME arguably this whole kinds stuff shouldn't be in grid in the first place, though
-  psc->grid().kinds.resize(0);
+  Grid_t& grid = *psc->grid_;
+  grid.kinds.resize(0);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
-    psc->grid().kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
+    grid.kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
   }
 
   psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));

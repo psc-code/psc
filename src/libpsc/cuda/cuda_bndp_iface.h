@@ -18,7 +18,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
   // ----------------------------------------------------------------------
   // ctor
   
-  psc_bnd_particles_cuda(struct mrc_domain *domain, Grid_t& grid)
+  psc_bnd_particles_cuda(struct mrc_domain *domain, const Grid_t& grid)
     : Base(domain),
       cbndp_(new cuda_bndp(grid))
   {}
@@ -26,7 +26,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
   // ----------------------------------------------------------------------
   // reset
   
-  void reset(struct mrc_domain *domain, Grid_t& grid)
+  void reset(struct mrc_domain *domain, const Grid_t& grid)
   {
     Base::reset(domain);
     //cbndp_->setup(grid);

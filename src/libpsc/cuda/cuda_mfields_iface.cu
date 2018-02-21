@@ -11,7 +11,7 @@
 #define dprintf(...) do {} while (0)
 #endif
 
-psc_mfields_cuda::psc_mfields_cuda(Grid_t& grid, int n_fields, const Int3& ibn)
+psc_mfields_cuda::psc_mfields_cuda(const Grid_t& grid, int n_fields, const Int3& ibn)
   : psc_mfields_base(grid, n_fields)
 {
   dprintf("CMFLDS: ctor\n");

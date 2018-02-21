@@ -106,7 +106,7 @@ psc_output_particles_hdf5_destroy(struct psc_output_particles *out)
 // FIXME, lots of stuff here is pretty much duplicated from countsort2
 
 static inline int
-cell_index_3_to_1(int *ldims, int j0, int j1, int j2)
+cell_index_3_to_1(const int *ldims, int j0, int j1, int j2)
 {
   return ((j2) * ldims[1] + j1) * ldims[0] + j0;
 }
@@ -114,8 +114,8 @@ cell_index_3_to_1(int *ldims, int j0, int j1, int j2)
 static inline int
 get_sort_index(mparticles_t::patch_t& prts, particle_t *part)
 {
-  Grid_t& grid = ppsc->grid();
-  int *ldims = grid.ldims;
+  const Grid_t& grid = ppsc->grid();
+  const int *ldims = grid.ldims;
   
   int j0 = prts.cellPosition(part->xi, 0);
   int j1 = prts.cellPosition(part->yi, 1);
@@ -243,7 +243,7 @@ make_local_particle_array(struct psc_output_particles *out,
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
     idx[p] = (size_t *) malloc(2 * sz * sizeof(*idx));
-    Grid_t::Patch& patch = ppsc->grid().patches[p];
+    auto& patch = ppsc->grid().patches[p];
 
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {

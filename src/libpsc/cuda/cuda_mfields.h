@@ -50,7 +50,7 @@ struct cuda_mfields
 {
   using real_t = float;
 
-  cuda_mfields(Grid_t& grid, int n_fields, const Int3& ibn);
+  cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
 
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
@@ -77,7 +77,7 @@ public:
   int n_cells;
 private:
   thrust::device_vector<fields_cuda_real_t> d_flds_;
-  Grid_t& grid_;
+  const Grid_t& grid_;
 };
 
 // ======================================================================

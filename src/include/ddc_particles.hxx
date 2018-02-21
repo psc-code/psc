@@ -513,8 +513,7 @@ inline void ddc_particles<MP>::comm()
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
-    assert(it_recv[p] == patch->m_buf->end());
+    assert(it_recv[p] == patches[p].m_buf->end());
   }
   
   delete[] it_recv;

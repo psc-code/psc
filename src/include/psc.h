@@ -236,7 +236,7 @@ struct psc {
 
   double time_start;
 
-  Grid_t& grid() { assert(grid_); return *grid_; }
+  const Grid_t& grid() const { assert(grid_); return *grid_; }
 
   Grid_t* grid_;
 };

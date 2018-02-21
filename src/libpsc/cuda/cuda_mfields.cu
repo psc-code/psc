@@ -14,7 +14,7 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mfields::cuda_mfields(Grid_t& grid, int _n_fields, const Int3& ibn)
+cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
   : ib(-ibn),
     im(grid.ldims + 2 * ibn),
     n_patches(grid.n_patches()),
