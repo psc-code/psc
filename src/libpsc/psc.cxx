@@ -395,7 +395,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     struct psc_patch *patch = &psc->patch[p];
     for (int d = 0; d < 3; d++) {
       patch->ldims[d] = psc->grid().ldims[d];
-      patch->off[d] = psc->grid().patches[p].off[d];
     }
   }
 

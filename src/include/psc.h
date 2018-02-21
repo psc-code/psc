@@ -156,7 +156,6 @@ struct psc_domain {
 
 struct psc_patch {
   int ldims[3];       ///< size of local domain (w/o ghost points)
-  int off[3];         ///< local to global offset
 };
 
 ///Describes the different particle kinds
@@ -355,15 +354,6 @@ psc_foreach_3d(p, jx, jy, jz, 0, 0) {
 
 extern struct psc *ppsc;
 
-static inline void
-psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
-			    int *ix, int *iy, int *iz)
-{
-  *ix = jx + psc->patch[p].off[0];
-  *iy = jy + psc->patch[p].off[1];
-  *iz = jz + psc->patch[p].off[2];
-}
-
 struct psc *psc_create(MPI_Comm comm);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
@@ -398,12 +388,12 @@ int psc_main(int *argc, char ***argv, struct psc_ops *type);
 
 static inline bool psc_at_boundary_lo(struct psc *psc, int p, int d)
 {
-  return psc->patch[p].off[d] == 0;
+  return psc->grid().patches[p].off[d] == 0;
 }
 
 static inline bool psc_at_boundary_hi(struct psc *psc, int p, int d)
 {
-  return psc->patch[p].off[d] + psc->patch[p].ldims[d] == psc->domain.gdims[d];
+  return psc->grid().patches[p].off[d] + psc->grid().ldims[d] == psc->grid().gdims[d];
 }
 
 // ----------------------------------------------------------------------
