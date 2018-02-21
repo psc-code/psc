@@ -766,9 +766,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   prof_stop(pr_bal_prts);
 
-  //delete psc->grid_; // FIXME
-  psc->grid_ = new_grid;
-
   // ----------------------------------------------------------------------
   // fields
 
@@ -836,6 +833,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   psc_balance_seed_patches(domain_old, domain_new);
 
+  delete psc->grid_;
+  psc->grid_ = new_grid;
   psc->mrc_domain = domain_new;
   psc_bnd_particles_check_domain(psc->bnd_particles);
   psc_bnd_check_domain(psc->bnd);
