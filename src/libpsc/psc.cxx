@@ -359,22 +359,29 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   mrc_domain_get_global_dims(domain, gdims);
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
   assert(psc->nr_patches > 0);
+  Int3 ldims = patches[0].ldims;
   for (int p = 1; p < psc->nr_patches; p++) {
-    assert(Int3(patches[0].ldims) == Int3(patches[p].ldims));
+    assert(ldims == Int3(patches[p].ldims));
   }
 
-  psc->grid_ = new Grid_t(gdims, psc->domain.length, patches[0].ldims);
+  psc->grid_ = new Grid_t(gdims, psc->domain.length, ldims);
   Grid_t& grid = *psc->grid_;
 
+  assert(psc->coeff.ld == 1.);
   grid.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   grid.eta = psc->coeff.eta;
   grid.dt = psc->dt;
+
+  std::vector<Int3> offs;
+  for (int p = 0; p < psc->nr_patches; p++) {
+    offs.push_back(patches[p].off);
+  }  
   
   grid.patches.resize(psc->nr_patches);
   for (int p = 0; p < psc->nr_patches; p++) {
     for (int d = 0; d < 3; d++) {
-      grid.patches[p].xb[d] = patches[p].off[d] * grid.dx[d] + psc->domain.corner[d] / psc->coeff.ld;
-      grid.patches[p].xe[d] = (patches[p].off[d] + patches[p].ldims[d]) * grid.dx[d] + psc->domain.corner[d] / psc->coeff.ld;
+      grid.patches[p].xb[d] =  offs[p][d]             * grid.dx[d] + psc->domain.corner[d];
+      grid.patches[p].xe[d] = (offs[p][d] + ldims[d]) * grid.dx[d] + psc->domain.corner[d];
     }
   }
 
@@ -382,19 +389,13 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
     grid.bs[d] = grid.gdims[d] == 1 ? 1 : psc->domain.bs[d];
   }
   
-  double dx[3];
-  for (int d = 0; d < 3; d++) {
-    assert(psc->coeff.ld == 1.);
-    dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
-  }
-
   if (!psc->dt) {
     double inv_sum = 0.;
     int nr_levels;
     mrc_domain_get_nr_levels(psc->mrc_domain, &nr_levels);
     for (int d=0;d<3;d++) {
       if (psc->domain.gdims[d] > 1) {
-	inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
+	inv_sum += 1. / sqr(grid.dx[d] / (1 << (nr_levels - 1)));
       }
     }
     if (!inv_sum) { // simulation has 0 dimensions
@@ -404,7 +405,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   }
 
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
-  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", grid.dx[0], grid.dx[1], grid.dx[2]);
 
   // set up psc->patch
   psc->patch = new psc_patch[psc->nr_patches]();
