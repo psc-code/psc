@@ -143,7 +143,7 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
   psc_foreach_patch(psc, p) {
     buf_n_by_patch[p] = 0;
     Fields N(mf_n[p]);
-    int *ldims = psc->patch[p].ldims;
+    const int *ldims = psc->grid().ldims;
     
     int nr_pop = psc->prm.nr_populations;
     for (int jz = 0; jz < ldims[2]; jz++) {

@@ -17,12 +17,13 @@ static void
 add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
 {
   Fields F(flds);
+  const int *ldims = ppsc->grid().ldims;
   struct psc_patch *patch = ppsc->patch + p;
 
-  int bx = patch->ldims[0] == 1 ? 0 : 1;
+  int bx = ldims[0] == 1 ? 0 : 1;
   if (d == 1) {
-    for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
+    for (int iz = -1; iz < ldims[2] + 1; iz++) {
+      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy,iz) += F(m, ix,iy-1,iz);
@@ -31,8 +32,8 @@ add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0*-1; iy < patch->ldims[1] + 0*1; iy++) {
-      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
+    for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
+      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy,iz) += F(m, ix,iy,iz-1);
@@ -49,13 +50,14 @@ static void
 add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
 {
   Fields F(flds);
+  const int *ldims = ppsc->grid().ldims;
   struct psc_patch *patch = ppsc->patch + p;
 
-  int bx = patch->ldims[0] == 1 ? 0 : 1;
+  int bx = ldims[0] == 1 ? 0 : 1;
   if (d == 1) {
-    for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
-	int iy = patch->ldims[1] - 1; {
+    for (int iz = -1; iz < ldims[2] + 1; iz++) {
+      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+	int iy = ldims[1] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy,iz) += F(m, ix,iy+1,iz);
 	  }
@@ -63,9 +65,9 @@ add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0*-1; iy < patch->ldims[1] + 0*1; iy++) {
-      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
-	int iz = patch->ldims[2] - 1; {
+    for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
+      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+	int iz = ldims[2] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy,iz) += F(m, ix,iy,iz+1);
 	  }
@@ -385,9 +387,9 @@ do_nvt_b_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;
     }
 
-    assert(jx >= -1 && jx < patch->ldims[0]);
-    assert(jy >= -1 && jy < patch->ldims[1]);
-    assert(jz >= -1 && jz < patch->ldims[2]);
+    assert(jx >= -1 && jx < ldims[0]);
+    assert(jy >= -1 && jy < ldims[1]);
+    assert(jz >= -1 && jz < ldims[2]);
 
     real_t vxi[3];
     particle_calc_vxi(prt, vxi);
@@ -434,9 +436,9 @@ do_nvp_1st_run(int p, fields_t flds, mparticles_t::patch_t& prts)
     int jy = fint(v);
     int jz = fint(w);
 
-    assert(jx >= -1 && jx < patch->ldims[0]);
-    assert(jy >= -1 && jy < patch->ldims[1]);
-    assert(jz >= -1 && jz < patch->ldims[2]);
+    assert(jx >= -1 && jx < ldims[0]);
+    assert(jy >= -1 && jy < ldims[1]);
+    assert(jz >= -1 && jz < ldims[2]);
 
     real_t vxi[3];
     particle_calc_vxi(prt, vxi);

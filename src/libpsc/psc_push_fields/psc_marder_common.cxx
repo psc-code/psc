@@ -107,9 +107,9 @@ struct marder_ops {
 
 #define psc_foreach_3d_more(psc, p, ix, iy, iz, l, r) {	\
   int __ilo[3] = { -l[0], -l[1], -l[2] };		\
-  int __ihi[3] = { psc->patch[p].ldims[0] + r[0],	\
-		   psc->patch[p].ldims[1] + r[1],	\
-		   psc->patch[p].ldims[2] + r[2] };	\
+  int __ihi[3] = { psc->grid().ldims[0] + r[0],		\
+		   psc->grid().ldims[1] + r[1],		\
+		   psc->grid().ldims[2] + r[2] };	\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {	\
   for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {	\
   for (int ix = __ilo[0]; ix < __ihi[0]; ix++)

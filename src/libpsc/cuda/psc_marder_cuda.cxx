@@ -144,7 +144,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
       }
     }
     
-    int *ldims = ppsc->patch[p].ldims;
+    const int *ldims = ppsc->grid().ldims;
     
     int ly[3] = { l_nc[0], l_cc[1], l_nc[2] };
     int ry[3] = { r_nc[0] + ldims[0], r_cc[1] + ldims[1], r_nc[2] + ldims[2] };

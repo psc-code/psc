@@ -155,7 +155,7 @@ struct psc_domain {
 // In particular, it's better to randomize just per-cell after the sorting
 
 struct psc_patch {
-  int ldims[3];       ///< size of local domain (w/o ghost points)
+  int dummy;
 };
 
 ///Describes the different particle kinds
@@ -288,9 +288,9 @@ Always close this expression with foreach_3d_end
   int __ilo[3] = { (psc)->domain.gdims[0] == 1 ? 0 : -l ,              \
                   (psc)->domain.gdims[1] == 1 ? 0 : -l,                        \
                   (psc)->domain.gdims[2] == 1 ? 0 : -l };              \
-  int __ihi[3] = { (psc)->patch[p].ldims[0] + ((psc)->domain.gdims[0] == 1 ? 0 : r), \
-                  (psc)->patch[p].ldims[1] + ((psc)->domain.gdims[1] == 1 ? 0 : r), \
-                  (psc)->patch[p].ldims[2] + ((psc)->domain.gdims[2] == 1 ? 0 : r) }; \
+  int __ihi[3] = { (psc)->grid().ldims[0] + ((psc)->domain.gdims[0] == 1 ? 0 : r), \
+		   (psc)->grid().ldims[1] + ((psc)->domain.gdims[1] == 1 ? 0 : r), \
+		   (psc)->grid().ldims[2] + ((psc)->domain.gdims[2] == 1 ? 0 : r) }; \
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -311,9 +311,9 @@ psc_foreach_3d(p, jx, jy, jz, 0, 0) {
 
 #define psc_foreach_3d(psc, p, ix, iy, iz, l, r) {			\
   int __ilo[3] = { -l, -l, -l };					\
-  int __ihi[3] = { psc->patch[p].ldims[0] + r,				\
-		   psc->patch[p].ldims[1] + r,				\
-		   psc->patch[p].ldims[2] + r };				\
+  int __ihi[3] = { psc->grid().ldims[0] + r,				\
+		   psc->grid().ldims[1] + r,				\
+		   psc->grid().ldims[2] + r };				\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -335,9 +335,9 @@ psc_foreach_3d(p, jx, jy, jz, 0, 0) {
 
 #define psc_foreach_3d_g(psc, p, ix, iy, iz) {				\
   int __ilo[3] = { -psc->ibn[0], -psc->ibn[1], -psc->ibn[2] };		\
-  int __ihi[3] = { psc->patch[p].ldims[0] + psc->ibn[0],			\
-		   psc->patch[p].ldims[1] + psc->ibn[1],			\
-		   psc->patch[p].ldims[2] + psc->ibn[2] };		\
+  int __ihi[3] = { psc->grid().ldims[0] + psc->ibn[0],			\
+		   psc->grid().ldims[1] + psc->ibn[1],			\
+		   psc->grid().ldims[2] + psc->ibn[2] };		\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)

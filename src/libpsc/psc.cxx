@@ -391,12 +391,6 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 
   // set up psc->patch
   psc->patch = new psc_patch[psc->nr_patches]();
-  psc_foreach_patch(psc, p) {
-    struct psc_patch *patch = &psc->patch[p];
-    for (int d = 0; d < 3; d++) {
-      patch->ldims[d] = psc->grid().ldims[d];
-    }
-  }
 
   auto& dx = psc->grid().dx;
   if (!psc->dt) {
@@ -665,7 +659,7 @@ find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
   struct psc_patch *patch = &psc->patch[p];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
-    ihi[d] = patch->ldims[d];
+    ihi[d] = psc->grid().ldims[d];
   }
 }
 

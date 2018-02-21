@@ -131,7 +131,7 @@ psc_inject_sub_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
 
   psc_foreach_patch(psc, p) {
     Fields N(mf_n[p]);
-    int *ldims = psc->patch[p].ldims;
+    const int *ldims = psc->grid().ldims;
     
     int nr_pop = psc->prm.nr_populations;
     for (int jz = 0; jz < ldims[2]; jz++) {

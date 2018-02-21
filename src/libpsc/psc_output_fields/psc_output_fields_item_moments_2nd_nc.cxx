@@ -17,11 +17,12 @@ static void
 add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
 {
   Fields F(flds);
+  const int *ldims = ppsc->grid().ldims;
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
-    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+    for (int iz = -2; iz < ldims[2] + 2; iz++) {
+      for (int ix = 0; ix < ldims[0]; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy+1,iz) += F(m, ix,iy-1,iz);
@@ -31,8 +32,8 @@ add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0; iy < patch->ldims[1]; iy++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+    for (int iy = 0; iy < ldims[1]; iy++) {
+      for (int ix = 0; ix < ldims[0]; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy,iz+1) += F(m, ix,iy,iz-1);
@@ -50,12 +51,13 @@ static void
 add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
 {
   Fields F(flds);
+  const int *ldims = ppsc->grid().ldims;
   struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
-    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
-	int iy = patch->ldims[1]; {
+    for (int iz = -2; iz < ldims[2] + 2; iz++) {
+      for (int ix = 0; ix < ldims[0]; ix++) {
+	int iy = ldims[1]; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy-1,iz) += F(m, ix,iy+1,iz);
 	    F(m, ix,iy+1,iz) = 0.;
@@ -64,9 +66,9 @@ add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0; iy < patch->ldims[1]; iy++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
-	int iz = patch->ldims[2]; {
+    for (int iy = 0; iy < ldims[1]; iy++) {
+      for (int ix = 0; ix < ldims[0]; ix++) {
+	int iz = ldims[2]; {
 	  for (int m = mb; m < me; m++) {
 	    F(m, ix,iy,iz-1) += F(m, ix,iy,iz+1);
 	    F(m, ix,iy,iz+1) += 0.;

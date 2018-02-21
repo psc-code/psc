@@ -90,7 +90,7 @@ calc_stats(struct psc_collision_stats *stats, real_t *nudts, int cnt)
 // find_cell_index
 
 static inline int
-find_cell_index(mparticles_t::patch_t& prts, particle_t *prt, int ldims[3])
+find_cell_index(mparticles_t::patch_t& prts, particle_t *prt, const int ldims[3])
 {
   int pos[3];
   real_t *xi = &prt->xi;
@@ -113,7 +113,7 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
   for (int d = 0; d < 3; d++) {
     dxi[d] = 1.f / ppsc->grid().dx[d];
   }
-  int *ldims = ppsc->patch[p].ldims;
+  const int *ldims = ppsc->grid().ldims;
   int last = 0;
   offsets[last] = 0;
   int n_prts = prts.size();
@@ -566,7 +566,7 @@ psc_collision_sub_run(struct psc_collision *collision,
   for (int p = 0; p < mprts->n_patches(); p++) {
     mparticles_t::patch_t& prts = mprts[p];
   
-    int *ldims = ppsc->patch[p].ldims;
+    const int *ldims = ppsc->grid().ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];
     int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
     struct psc_collision_stats stats_total = {};

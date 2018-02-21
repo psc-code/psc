@@ -290,8 +290,8 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
       if (jy < l[1] || jz < l[2] ||
-	  jy >= psc->patch[p].ldims[1] - r[1] ||
-	  jz >= psc->patch[p].ldims[2] - r[2]) {
+	  jy >= psc->grid().ldims[1] - r[1] ||
+	  jz >= psc->grid().ldims[2] - r[2]) {
 	continue;
       }
       double v_rho = Rho(0, jx,jy,jz);

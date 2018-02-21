@@ -119,7 +119,7 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   // FIXME, it'd be nicer if the interface was ldims / ibn based
   for (int d = 0; d < 3; d++) {
     prm.ib[d] = -psc->ibn[d];
-    prm.im[d] = psc->patch[0].ldims[d] + 2 * psc->ibn[d];
+    prm.im[d] = psc->grid().ldims[d] + 2 * psc->ibn[d];
   }
   
   struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);

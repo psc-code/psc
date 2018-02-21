@@ -143,7 +143,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
   int nr_kinds = ppsc->nr_kinds;
 
   for (int p = 0; p < mprts->n_patches(); p++) {
-    int *ldims = ppsc->patch[p].ldims;
+    const int *ldims = ppsc->grid().ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
     mparticles_t::patch_t& prts = mprts[p];
