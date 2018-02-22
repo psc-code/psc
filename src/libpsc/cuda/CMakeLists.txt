@@ -40,7 +40,9 @@ add_library(psccuda
   psc_inject_cuda.cxx
   )
 target_include_directories(psccuda
-  PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+  PUBLIC
+  ${PROJECT_SOURCE_DIR}/src/include
+  ${PROJECT_SOURCE_DIR}/src/libpsc/cuda
   )
 target_link_libraries(psccuda
   mrc
@@ -50,10 +52,9 @@ target_compile_features(psccuda
   )
 
 macro(add_cuda_test name)
-  add_test(NAME ${name} COMMAND ${name})
   add_executable(${name} tests/${name}.cu)
-  target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/src/include ${PROJECT_SOURCE_DIR}/src/libpsc/cuda)
   target_link_libraries(${name} psccuda GTest::GTest GTest::Main)
+  gtest_discover_tests(${name})
 endmacro()
 
 add_cuda_test(test_cuda_accel)
