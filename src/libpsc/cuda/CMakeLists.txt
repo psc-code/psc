@@ -49,16 +49,11 @@ target_compile_features(psccuda
   PUBLIC cxx_std_11
   )
 
-# FIXME, only hackery here...
-set(GTEST_ROOT /Users/kai/build/googletest/googletest)
-
 macro(add_cuda_test name)
   add_test(NAME ${name} COMMAND ${name})
   add_executable(${name} tests/${name}.cu)
   target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/src/include ${PROJECT_SOURCE_DIR}/src/libpsc/cuda)
-  target_link_libraries(${name} psccuda)
-  target_include_directories(${name} PRIVATE ${GTEST_ROOT}/include)
-  target_link_libraries(${name} ${GTEST_ROOT}/src/gtest-all.o ${GTEST_ROOT}/src/gtest_main.o)
+  target_link_libraries(${name} psccuda GTest::GTest GTest::Main)
 endmacro()
 
 add_cuda_test(test_cuda_accel)

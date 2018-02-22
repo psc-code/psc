@@ -31,6 +31,8 @@ find_package(HDF5 REQUIRED C HL) # FIXME, don't make required / how about parall
 include_directories(${HDF5_INCLUDE_DIRS})
 link_libraries(${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
+find_package(GTest REQUIRED)
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/src/include/psc_config.h.in"
   "${PROJECT_BINARY_DIR}/src/include/psc_config.h"
