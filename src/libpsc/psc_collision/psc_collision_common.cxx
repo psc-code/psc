@@ -503,7 +503,6 @@ psc_collision_sub_setup(struct psc_collision *collision)
 
   coll->mflds = psc_mfields_create(psc_collision_comm(collision));
   psc_mfields_set_type(coll->mflds, FIELDS_TYPE);
-  psc_mfields_set_param_obj(coll->mflds, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(coll->mflds, "nr_fields", NR_STATS);
   psc_mfields_set_param_int3(coll->mflds, "ibn", ppsc->ibn);
   coll->mflds->grid = &ppsc->grid();
@@ -517,7 +516,6 @@ psc_collision_sub_setup(struct psc_collision *collision)
 
   coll->mflds_rei = psc_mfields_create(psc_collision_comm(collision));
   psc_mfields_set_type(coll->mflds_rei, FIELDS_TYPE);
-  psc_mfields_set_param_obj(coll->mflds_rei, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(coll->mflds_rei, "nr_fields", 3);
   psc_mfields_set_param_int3(coll->mflds_rei, "ibn", ppsc->ibn);
   coll->mflds_rei->grid = &ppsc->grid();

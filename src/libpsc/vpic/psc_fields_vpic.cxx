@@ -127,9 +127,7 @@ static void psc_mfields_vpic_setup(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
-  int n_patches;
-  mrc_domain_get_patches(mflds->domain, &n_patches);
-  assert(n_patches == 1);
+  assert(mflds->grid->n_patches() == 1);
   assert(mflds->ibn[0] == 1);
   assert(mflds->ibn[1] == 1);
   assert(mflds->ibn[2] == 1);

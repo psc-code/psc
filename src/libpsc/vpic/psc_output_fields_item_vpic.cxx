@@ -66,7 +66,6 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
 {
   struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres));
   psc_mfields_set_type(mflds_hydro, "vpic");
-  psc_mfields_set_param_obj(mflds_hydro, "domain", mres->domain);
   psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
   int ibn[3] = { 1, 1, 1 };
   psc_mfields_set_param_int3(mflds_hydro, "ibn", ibn);

@@ -24,7 +24,6 @@ fld_create(struct psc *psc, int nr_fields)
 {
   struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_type(fld, FIELDS_TYPE);
-  psc_mfields_set_param_obj(fld, "domain", psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
   psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
   fld->grid = &psc->grid();
@@ -64,14 +63,12 @@ static void
 psc_checks_sub_setup(struct psc_checks *checks)
 {
   psc_mfields_set_type(checks->rho_m, FIELDS_TYPE);
-  psc_mfields_set_param_obj(checks->rho_m, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int3(checks->rho_m, "ibn", ppsc->ibn);
   psc_mfields_set_param_int(checks->rho_m, "nr_fields", 1);
   psc_mfields_list_add(&psc_mfields_base_list, &checks->rho_m);
   checks->rho_m->grid = &ppsc->grid();
 
   psc_mfields_set_type(checks->rho_p, FIELDS_TYPE);
-  psc_mfields_set_param_obj(checks->rho_p, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int3(checks->rho_p, "ibn", ppsc->ibn);
   psc_mfields_set_param_int(checks->rho_p, "nr_fields", 1);
   psc_mfields_list_add(&psc_mfields_base_list, &checks->rho_p);

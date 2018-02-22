@@ -23,7 +23,6 @@ fld_create(struct psc *psc, const char *name)
 {
   struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_type(fld, "cuda");
-  psc_mfields_set_param_obj(fld, "domain", psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
   psc_mfields_set_param_int(fld, "nr_fields", 1);
   fld->grid = &psc->grid();

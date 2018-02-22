@@ -27,7 +27,6 @@ struct marder_ops {
   {
     struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
     psc_mfields_set_type(fld, fields_traits<fields_t>::name);
-    psc_mfields_set_param_obj(fld, "domain", psc->mrc_domain);
     psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
     psc_mfields_set_param_int(fld, "nr_fields", 1);
     fld->grid = &ppsc->grid();
