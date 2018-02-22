@@ -18,7 +18,6 @@ struct psc_mfields {
   // parameters
   int nr_fields; //> number of field components
   int ibn[3]; //> number of ghost points
-  int first_comp; //> The first component in this field (normally 0)
 
   template<typename MF>
   MF get_as(int mb, int me);

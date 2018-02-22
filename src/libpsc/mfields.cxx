@@ -60,15 +60,15 @@ _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
 void
 psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s)
 {
-  assert(m >= flds->first_comp && m < flds->first_comp + flds->nr_fields);
-  flds->comp_name[m - flds->first_comp] = strdup(s);
+  assert(m >= 0 && m < flds->nr_fields);
+  flds->comp_name[m] = strdup(s);
 }
 
 const char *
 psc_mfields_comp_name(struct psc_mfields *flds, int m)
 {
-  assert(m >= flds->first_comp && m < flds->first_comp + flds->nr_fields);
-  return flds->comp_name[m - flds->first_comp];
+  assert(m >= 0 && m < flds->nr_fields);
+  return flds->comp_name[m];
 }
 
 // ----------------------------------------------------------------------
@@ -160,7 +160,6 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   psc_mfields_set_type(mflds, type);
   psc_mfields_set_param_int(mflds, "nr_fields", mflds_base->nr_fields);
   psc_mfields_set_param_int3(mflds, "ibn", mflds_base->ibn);
-  psc_mfields_set_param_int(mflds, "first_comp", mflds_base->first_comp);
   mflds->grid = mflds_base->grid;
   psc_mfields_setup(mflds);
 
@@ -246,7 +245,6 @@ psc_mfields_init()
 static struct param psc_mfields_descr[] = {
   { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
   { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
-  { "first_comp"     , VAR(first_comp)      , PARAM_INT(0)        },
   {},
 };
 #undef VAR

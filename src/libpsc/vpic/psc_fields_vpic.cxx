@@ -131,7 +131,6 @@ static void psc_mfields_vpic_setup(struct psc_mfields *mflds)
   assert(mflds->ibn[0] == 1);
   assert(mflds->ibn[1] == 1);
   assert(mflds->ibn[2] == 1);
-  assert(mflds->first_comp == 0);
 
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
 
@@ -175,8 +174,6 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 {
   struct psc_mfields_vpic *sub = mrc_to_subobj(mflds, struct psc_mfields_vpic);
 
-  assert(mflds->first_comp == 0);
-
   // FIXME hacky...
   if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     int ib[3], im[3];
@@ -191,9 +188,6 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
   }
   abort();
 }
-
-// ----------------------------------------------------------------------
-// forwards
 
 // ======================================================================
 // psc_mfields: subclass "vpic"
