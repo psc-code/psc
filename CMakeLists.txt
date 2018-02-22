@@ -5,6 +5,8 @@ add_subdirectory(src/libmrc)
 
 project(PSC)
 
+enable_testing()
+
 option(USE_CUDA "Build CUDA components" OFF)
 
 if(USE_CUDA)
