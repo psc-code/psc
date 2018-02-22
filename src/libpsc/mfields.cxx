@@ -17,8 +17,6 @@ using Fields = Fields3d<fields_t>;
 static void
 _psc_mfields_setup(struct psc_mfields *mflds)
 {
-  assert(mflds->domain);
-
   mflds->comp_name = new char* [mflds->nr_fields]();
 }
 
@@ -39,7 +37,6 @@ _psc_mfields_destroy(struct psc_mfields *mflds)
 static void
 _psc_mfields_write(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, mflds, "domain", mflds->domain);
   for (int m = 0; m < mflds->nr_fields; m++) {
     char name[20]; sprintf(name, "comp_name_%d", m);
     mrc_io_write_string(io, mflds, name, psc_mfields_comp_name(mflds, m));
@@ -49,10 +46,6 @@ _psc_mfields_write(struct psc_mfields *mflds, struct mrc_io *io)
 static void
 _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  mflds->domain = mrc_io_read_ref(io, mflds, "domain", mrc_domain);
-  int n_patches;
-  mrc_domain_get_patches(mflds->domain, &n_patches);
-
   mflds->comp_name = new char* [mflds->nr_fields];
   for (int m = 0; m < mflds->nr_fields; m++) {
     char name[20]; sprintf(name, "comp_name_%d", m);
@@ -165,7 +158,6 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   
   struct psc_mfields *mflds = psc_mfields_create(psc_mfields_comm(mflds_base));
   psc_mfields_set_type(mflds, type);
-  psc_mfields_set_param_obj(mflds, "domain", mflds_base->domain);
   psc_mfields_set_param_int(mflds, "nr_fields", mflds_base->nr_fields);
   psc_mfields_set_param_int3(mflds, "ibn", mflds_base->ibn);
   psc_mfields_set_param_int(mflds, "first_comp", mflds_base->first_comp);
@@ -252,7 +244,6 @@ psc_mfields_init()
 
 #define VAR(x) (void *)offsetof(struct psc_mfields, x)
 static struct param psc_mfields_descr[] = {
-  { "domain"         , VAR(domain)          , PARAM_OBJ(mrc_domain) },
   { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
   { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
   { "first_comp"     , VAR(first_comp)      , PARAM_INT(0)        },

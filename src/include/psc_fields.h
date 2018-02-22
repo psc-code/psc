@@ -16,7 +16,6 @@ struct psc_mfields {
   char **comp_name; //> name for each field component
 
   // parameters
-  struct mrc_domain *domain;
   int nr_fields; //> number of field components
   int ibn[3]; //> number of ghost points
   int first_comp; //> The first component in this field (normally 0)
