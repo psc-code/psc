@@ -31,14 +31,12 @@ struct fields3d {
   real_t *data;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
-  int first_comp; // first component
 
-  fields3d(const int _ib[3], const int _im[3], int _n_comps, int _first_comp=0,
+  fields3d(const int _ib[3], const int _im[3], int _n_comps,
 	   real_t *_data=nullptr)
     : ib{ _ib[0], _ib[1], _ib[2] },
       im{ _im[0], _im[1], _im[2] },
       nr_comp{_n_comps},
-      first_comp{_first_comp},
       data(_data)
   {
     if (!data) {
@@ -146,7 +144,7 @@ template<typename R, typename L>
 int fields3d<R, L>::index(int m, int i, int j, int k) const
 {
 #ifdef BOUNDS_CHECK
-  assert(m >= first_comp_ && m < n_comp_);
+  assert(m >= 0 && m < n_comp_);
   assert(i >= ib[0] && i < ib[0] + im[0]);
   assert(j >= ib[1] && j < ib[1] + im[1]);
   assert(k >= ib[2] && k < ib[2] + im[2]);
@@ -157,7 +155,7 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 	      (j - ib[1])) * im[0] +
 	     (i - ib[0])) * nr_comp + m);
   } else {
-    return (((((m - first_comp) * im[2] +
+    return (((((m) * im[2] +
 	       (k - ib[2])) * im[1] +
 	      (j - ib[1])) * im[0] +
 	     (i - ib[0])));
@@ -210,9 +208,8 @@ struct psc_mfields_ : psc_mfields_base
   using fields_t = F;
   using real_t = typename fields_t::real_t;
 
-  psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3], int first_comp)
-    : psc_mfields_base(grid, n_fields),
-      first_comp_(first_comp)
+  psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3])
+    : psc_mfields_base(grid, n_fields)
   {
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
@@ -239,7 +236,7 @@ struct psc_mfields_ : psc_mfields_base
 
   fields_t operator[](int p)
   {
-    return fields_t(ib, im, n_fields_, first_comp_, data[p]);
+    return fields_t(ib, im, n_fields_, data[p]);
   }
 
   void zero_comp(int m) override
@@ -291,8 +288,6 @@ struct psc_mfields_ : psc_mfields_base
   real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
-private:
-  int first_comp_;
 };
 
 // ======================================================================

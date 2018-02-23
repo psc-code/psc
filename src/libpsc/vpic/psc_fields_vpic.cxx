@@ -178,11 +178,11 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
   if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     int ib[3], im[3];
     float* data = Simulation_mflds_getData(sub->sim, sub->vmflds_fields, ib, im);
-    return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, 0, data);
+    return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
   } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     int ib[3], im[3];
     float* data = Simulation_hydro_getData(sub->sim, sub->vmflds_hydro, ib, im);
-    return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, 0, data);
+    return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
   } else {
     assert(0);
   }

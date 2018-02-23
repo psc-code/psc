@@ -68,7 +68,7 @@ TEST(mfields, Constructor)
   using Mfields = psc_mfields_<fields_single_t>;
 
   Grid_t grid = make_grid();
-  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 }, 0);
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 }
@@ -78,7 +78,7 @@ TEST(mfields, Set)
   using Mfields = psc_mfields_<fields_single_t>;
 
   Grid_t grid = make_grid();
-  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 }, 0);
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
 
   setValues(mflds, [](int m) -> Mfields::real_t {
       switch(m) {
@@ -88,5 +88,8 @@ TEST(mfields, Set)
       default: return 0.;
       }
     });
+
+  auto F = mflds[0];
+  EXPECT_EQ(F(EY, 0, 0, 0), 2.);
 }
 

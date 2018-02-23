@@ -14,8 +14,7 @@ public:
 
   Fields3d(const fields_t& f)
     : data_(f.data),
-      n_comp_(f.nr_comp),
-      first_comp_(f.first_comp)
+      n_comp_(f.nr_comp)
   {
     for (int d = 0; d < 3; d++) {
       ib[d] = f.ib[d];
@@ -41,13 +40,13 @@ private:
     int k = dim::InvarZ::value ? 0 : k_;
 
 #ifdef BOUNDS_CHECK
-    assert(m >= first_comp_ && m < n_comp_);
+    assert(m >= 0 && m < n_comp_);
     assert(i >= ib[0] && i < ib[0] + im[0]);
     assert(j >= ib[1] && j < ib[1] + im[1]);
     assert(k >= ib[2] && k < ib[2] + im[2]);
 #endif
   
-      return ((((((m) - first_comp_)
+      return ((((((m))
 	       * im[2] + (k - ib[2]))
 	      * im[1] + (j - ib[1]))
 	     * im[0] + (i - ib[0])));
