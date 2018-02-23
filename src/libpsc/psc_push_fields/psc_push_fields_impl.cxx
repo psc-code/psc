@@ -12,14 +12,14 @@
 template<typename PushFields_t>
 static void psc_push_fields_sub_setup(struct psc_push_fields *push)
 {
-  PscPushFieldsBase<PushFields_t> pushf(push);
+  PscPushFields<PushFields_t> pushf(push);
   new(pushf.sub()) PushFields_t;
 }
 
 template<typename PushFields_t>
 static void psc_push_fields_sub_destroy(struct psc_push_fields *push)
 {
-  PscPushFieldsBase<PushFields_t> pushf(push);
+  PscPushFields<PushFields_t> pushf(push);
   pushf.sub()->~PushFields_t();
 }
 
@@ -28,7 +28,7 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
-  PscPushFieldsBase<PushFields_t> pushf(push);
+  PscPushFields<PushFields_t> pushf(push);
   pushf->push_E(push, mflds_base, dt_fac);
 }
 
@@ -37,7 +37,7 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
-  PscPushFieldsBase<PushFields_t> pushf(push);
+  PscPushFields<PushFields_t> pushf(push);
   pushf->push_H(push, mflds_base, dt_fac);
 }
 

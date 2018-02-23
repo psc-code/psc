@@ -12,14 +12,14 @@
 extern int pr_time_step_no_comm; // FIXME
 
 // ======================================================================
-// PscPushFieldsBase
+// PscPushFields
 
 template<typename S>
-struct PscPushFieldsBase
+struct PscPushFields
 {
   using sub_t = S;
 
-  explicit PscPushFieldsBase(psc_push_fields *pushf)
+  explicit PscPushFields(psc_push_fields *pushf)
     : pushf_(pushf),
       sub_(mrc_to_subobj(pushf, sub_t))
   {}
