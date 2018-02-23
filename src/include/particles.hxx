@@ -345,7 +345,7 @@ struct psc_mparticles_base
   virtual void get_size_all(uint *n_prts_by_patch) const = 0;
   virtual void reserve_all(const uint *n_prts_by_patch) = 0;
   virtual void resize_all(const uint *n_prts_by_patch) = 0;
-  virtual void inject(int p, const psc_particle_inject *new_prt)
+  virtual void inject_reweight(int p, const psc_particle_inject *new_prt)
   {
     assert(0);
   }
@@ -416,7 +416,7 @@ struct psc_mparticles_ : psc_mparticles_base
     }
   }
 
-  void inject(int p, const psc_particle_inject *new_prt) override
+  void inject_reweight(int p, const psc_particle_inject *new_prt) override
   {
     int kind = new_prt->kind;
 
