@@ -138,8 +138,8 @@ public:
   // push_E
 
   template<typename dim>
-  static void push_E(struct psc_push_fields* push, fields_t flds,
-		     struct psc *psc, double dt_fac)
+  void push_E(struct psc_push_fields* push, fields_t flds,
+	      struct psc *psc, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
     PushE<Fields> push_E(flds, psc, dt_fac);
@@ -151,25 +151,78 @@ public:
   // push_H
 
   template<typename dim>
-  static void push_H(struct psc_push_fields* push, fields_t flds,
-		     struct psc *psc, double dt_fac)
+  void push_H(struct psc_push_fields* push, fields_t flds,
+	      struct psc *psc, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
     PushH<Fields> push_H(flds, psc, dt_fac);
     
     Foreach_3d(push_H, 2, 1);
   }
+
+  // ----------------------------------------------------------------------
+  // push_E
+  //
+  // E-field propagation E^(n)    , H^(n), j^(n) 
+  //                  -> E^(n+0.5), H^(n), j^(n)
+  // Ex^{n}[-.5:+.5][-1:1][-1:1] -> Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
+  // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
+  //       jx^{n+1}[-.5:.5][-1:1][-1:1]
+  
+  void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
+	      double dt_fac)
+  {
+    mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
+    
+    for (int p = 0; p < mf->n_patches(); p++) {
+      int *gdims = ppsc->domain.gdims;
+      if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+	push_E<dim_xyz>(push, mf[p], ppsc, dt_fac);
+      } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+	push_E<dim_yz>(push, mf[p], ppsc, dt_fac);
+      } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+	push_E<dim_xz>(push, mf[p], ppsc, dt_fac);
+      } else {
+	assert(0);
+      }
+    }
+
+    mf.put_as(mflds_base, EX, EX + 3);
+  }
+
+  // ----------------------------------------------------------------------
+  // push_H
+  //
+  // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
+  //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
+  // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
+  // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
+
+  void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
+	      double dt_fac)
+  {
+    mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
+    
+    for (int p = 0; p < mf->n_patches(); p++) {
+      int *gdims = ppsc->domain.gdims;
+      if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+	push_H<dim_xyz>(push, mf[p], ppsc, dt_fac);
+      } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+	push_H<dim_yz>(push, mf[p], ppsc, dt_fac);
+      } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+	push_H<dim_xz>(push, mf[p], ppsc, dt_fac);
+      } else {
+	assert(0);
+      }
+    }
+
+    mf.put_as(mflds_base, HX, HX + 3);
+  }    
 };
 
 // ----------------------------------------------------------------------
 // psc_push_fields_sub_push_mflds_E
 //
-// E-field propagation E^(n)    , H^(n), j^(n) 
-//                  -> E^(n+0.5), H^(n), j^(n)
-// Ex^{n}[-.5:+.5][-1:1][-1:1] -> Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
-// using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
-//       jx^{n+1}[-.5:.5][-1:1][-1:1]
-
 
 template<typename mfields_t>
 static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
@@ -177,31 +230,11 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 					     double dt_fac)
 {
   PscPushFields<mfields_t> pushf;
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
-
-  for (int p = 0; p < mf->n_patches(); p++) {
-    int *gdims = ppsc->domain.gdims;
-    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      pushf.template push_E<dim_xyz>(push, mf[p], ppsc, dt_fac);
-    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      pushf.template push_E<dim_yz>(push, mf[p], ppsc, dt_fac);
-    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      pushf.template push_E<dim_xz>(push, mf[p], ppsc, dt_fac);
-    } else {
-      assert(0);
-    }
-  }
-
-  mf.put_as(mflds_base, EX, EX + 3);
+  pushf.push_E(push, mflds_base, dt_fac);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_fields_sub_push_mflds_H
-//
-// B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
-//                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
-// Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
-// using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
 template<typename mfields_t>
 static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
@@ -209,22 +242,7 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
 					     double dt_fac)
 {
   PscPushFields<mfields_t> pushf;
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
-
-  for (int p = 0; p < mf->n_patches(); p++) {
-    int *gdims = ppsc->domain.gdims;
-    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      pushf.template push_H<dim_xyz>(push, mf[p], ppsc, dt_fac);
-    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      pushf.template push_H<dim_yz>(push, mf[p], ppsc, dt_fac);
-    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      pushf.template push_H<dim_xz>(push, mf[p], ppsc, dt_fac);
-    } else {
-      assert(0);
-    }
-  }
-
-  mf.put_as(mflds_base, HX, HX + 3);
+  pushf.push_H(push, mflds_base, dt_fac);
 }
 
 #endif
