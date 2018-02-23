@@ -36,8 +36,7 @@ struct PscPushFields
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     
-    assert(ops->push_mflds_E);
-    ops->push_mflds_E(pushf_, mflds.mflds(), frac);
+    sub()->push_E(pushf_, mflds.mflds(), frac);
     
     prof_stop(pr_time_step_no_comm);
     prof_stop(pr);
@@ -56,8 +55,7 @@ struct PscPushFields
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     
-    assert(ops->push_mflds_H);
-    ops->push_mflds_H(pushf_, mflds.mflds(), frac);
+    sub()->push_H(pushf_, mflds.mflds(), frac);
     
     prof_stop(pr);
     prof_stop(pr_time_step_no_comm);

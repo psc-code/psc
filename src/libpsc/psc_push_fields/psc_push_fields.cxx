@@ -16,31 +16,6 @@ psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 }
 
 // ======================================================================
-// forward to subclass
-
-void
-psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
-		       double dt_fac)
-{
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_fields_H", 1., 0, 0);
-  }
-  
-  psc_stats_start(st_time_field);
-  prof_start(pr);
-  prof_restart(pr_time_step_no_comm);
-
-  assert(ops->push_mflds_H);
-  ops->push_mflds_H(push, flds, dt_fac);
-
-  prof_stop(pr);
-  prof_stop(pr_time_step_no_comm);
-  psc_stats_stop(st_time_field);
-}
-
-// ======================================================================
 // variant 0: default
 // 
 // That's the traditional way of how things have been done

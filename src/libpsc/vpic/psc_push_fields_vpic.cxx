@@ -68,30 +68,6 @@ psc_push_fields_vpic_destroy(struct psc_push_fields *push)
 }
 
 // ----------------------------------------------------------------------
-// psc_push_fields_vpic_push_mflds_H
-
-static void
-psc_push_fields_vpic_push_mflds_H(struct psc_push_fields *push,
-				  struct psc_mfields *mflds_base,
-				  double dt_fac)
-{
-  PscPushFields<PushFieldsVpic> pushf(push);
-  pushf->push_H(push, mflds_base, dt_fac);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_fields_vpic_push_mflds_E
-
-static void
-psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
-				  struct psc_mfields *mflds_base,
-				  double dt_fac)
-{
-  PscPushFields<PushFieldsVpic> pushf(push);
-  pushf->push_E(push, mflds_base, dt_fac);
-}
-
-// ----------------------------------------------------------------------
 // psc_push_fields: subclass "vpic"
 
 struct psc_push_fields_ops_vpic : psc_push_fields_ops {
@@ -99,8 +75,6 @@ struct psc_push_fields_ops_vpic : psc_push_fields_ops {
     name                  = "vpic";
     size                  = sizeof(struct PushFieldsVpic);
     setup                 = psc_push_fields_vpic_setup;
-    push_mflds_H          = psc_push_fields_vpic_push_mflds_H;
-    push_mflds_E          = psc_push_fields_vpic_push_mflds_E;
   }
 } psc_push_fields_vpic_ops;
 
