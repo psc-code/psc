@@ -4,6 +4,7 @@
 
 #include <mrc_obj.h>
 
+#include "grid.hxx"
 #include "fields_traits.hxx"
 
 // ----------------------------------------------------------------------
