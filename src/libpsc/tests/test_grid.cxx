@@ -29,3 +29,64 @@ TEST(Grid, Domain)
   EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({  40.,   0., 20. }));
 }
 
+#include "psc.h" // FIXME, just for EX, ...
+#include "psc_fields_single.h"
+
+template<typename mfields, typename Set>
+void setValues(mfields& mflds, Set set)
+{
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto F = mflds[p];
+    F(EX, 0,0,0) = set(EX);
+    F(EX, 0,1,0) = set(EX);
+    F(EX, 0,0,1) = set(EX);
+    F(EX, 0,1,1) = set(EX);
+
+    F(EY, 0,0,0) = set(EY);
+    F(EY, 0,0,1) = set(EY);
+    F(EY, 1,0,0) = set(EY);
+    F(EY, 1,0,1) = set(EY);
+    
+    F(EZ, 0,0,0) = set(EZ);
+    F(EZ, 1,0,0) = set(EZ);
+    F(EZ, 0,1,0) = set(EZ);
+    F(EZ, 1,1,0) = set(EZ);
+
+    F(HX, 0,0,0) = set(HX);
+    F(HX, 1,0,0) = set(HX);
+
+    F(HY, 0,0,0) = set(HY);
+    F(HY, 0,1,0) = set(HY);
+
+    F(HZ, 0,0,0) = set(HZ);
+    F(HZ, 0,0,1) = set(HZ);
+  }
+}
+  
+TEST(mfields, Constructor)
+{
+  using Mfields = psc_mfields_<fields_single_t>;
+
+  Grid_t grid = make_grid();
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 }, 0);
+
+  EXPECT_EQ(mflds.n_patches(), grid.n_patches());
+}
+
+TEST(mfields, Set)
+{
+  using Mfields = psc_mfields_<fields_single_t>;
+
+  Grid_t grid = make_grid();
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 }, 0);
+
+  setValues(mflds, [](int m) -> Mfields::real_t {
+      switch(m) {
+      case EX: return 1.;
+      case EY: return 2.;
+      case EZ: return 3.;
+      default: return 0.;
+      }
+    });
+}
+
