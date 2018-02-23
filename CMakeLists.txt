@@ -23,13 +23,7 @@ if(USE_VPIC)
 endif()
 
 find_package(MPI REQUIRED)
-include_directories(${MPI_C_INCLUDE_PATH})
-link_libraries(${MPI_C_LIBRARIES})
 add_definitions(-DOMPI_SKIP_MPICXX)
-
-find_package(HDF5 REQUIRED C HL) # FIXME, don't make required / how about parallel
-include_directories(${HDF5_INCLUDE_DIRS})
-link_libraries(${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 find_package(GTest REQUIRED)
 
