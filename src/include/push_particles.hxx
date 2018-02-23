@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_push_particles_private.h"
+#include "fields3d.hxx"
 
 // ======================================================================
 // PscPushParticlesBase
@@ -16,9 +17,9 @@ struct PscPushParticlesBase
       sub_(mrc_to_subobj(pushp, sub_t))
   {}
 
-  void operator()(struct psc_mparticles *mprts, struct psc_mfields *mfields)
+  void operator()(mparticles_base_t mprts, mfields_base_t mflds)
   {
-    psc_push_particles_run(pushp_, mprts, mfields);
+    psc_push_particles_run(pushp_, mprts.mprts(), mflds.mflds());
   }
 
   psc_push_particles *pushp() { return pushp_; }
