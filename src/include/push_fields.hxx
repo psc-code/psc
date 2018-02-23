@@ -122,3 +122,5 @@ public:
   virtual void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
 		      double dt_fac) = 0;
 };
+
+using PscPushFieldsBase = PscPushFields<PushFieldsBase>;
