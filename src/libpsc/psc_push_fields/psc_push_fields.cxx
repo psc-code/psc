@@ -76,22 +76,6 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 // ======================================================================
 
 void
-psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *mflds)
-{
-  if (push->variant == 0) {
-    psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
-  }
-
-  // push H
-  psc_push_fields_push_H(push, mflds, .5);
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
-  if (push->variant == 0) {
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
-  }
-}
-
-void
 psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   // fill ghosts for H

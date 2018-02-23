@@ -4,6 +4,9 @@
 #include "psc_push_fields_private.h"
 #include "fields3d.hxx"
 
+#include "psc_bnd_fields.h"
+#include "psc_bnd.h"
+
 // ======================================================================
 // PscPushFieldsBase
 
@@ -29,7 +32,17 @@ struct PscPushFieldsBase
 
   void advance_a(mfields_base_t mflds)
   {
-    psc_push_fields_step_a(pushf_, mflds.mflds());
+    if (pushf_->variant == 0) {
+      psc_bnd_fields_fill_ghosts_E(pushf_->bnd_fields, mflds.mflds());
+      psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+    }
+    
+    // push H
+    psc_push_fields_push_H(pushf_, mflds.mflds(), .5);
+    psc_bnd_fields_fill_ghosts_H(pushf_->bnd_fields, mflds.mflds());
+    if (pushf_->variant == 0) {
+      psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+    }
   }
 
   psc_push_fields *pushf() { return pushf_; }
