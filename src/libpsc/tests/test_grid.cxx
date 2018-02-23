@@ -120,31 +120,14 @@ TEST(Rng, RngPool)
 
 #include "psc_particles_single.h"
 
-TEST(mprts, Constructor)
+template<typename Mparticles>
+static void initMparticlesRandom(Mparticles& mprts, int n_prts)
 {
-  using Mparticles = psc_mparticles_<particle_single_t>;
-  
-  Grid_t grid = make_grid();
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-
-  Mparticles mprts(grid);
-}
-
-TEST(mprts, setParticles)
-{
-  using particle_t = particle_single_t;
-  using Mparticles = psc_mparticles_<particle_t>;
-  const int n_prts = 131;
-  
   RngPool rngpool;
   Rng *rng = rngpool[0];
 
-  Grid_t grid = make_grid();
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-
-  Mparticles mprts(grid);
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto patch = grid.patches[p];
+    auto patch = mprts.grid().patches[p];
     for (int n = 0; n < n_prts; n++) {
       psc_particle_inject prt = {};
       prt.x[0] = rng->uniform(patch.xb[0], patch.xe[0]);
@@ -155,6 +138,29 @@ TEST(mprts, setParticles)
       mprts.inject(p, prt);
     }
   }
+}
+
+TEST(Mparticles, Constructor)
+{
+  using Mparticles = psc_mparticles_<particle_single_t>;
+  
+  Grid_t grid = make_grid();
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+  Mparticles mprts(grid);
+}
+
+TEST(Mparticles, setParticles)
+{
+  using particle_t = particle_single_t;
+  using Mparticles = psc_mparticles_<particle_t>;
+  const int n_prts = 131;
+
+  Grid_t grid = make_grid();
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+  Mparticles mprts(grid);
+  initMparticlesRandom(mprts, n_prts);
 
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto& prts = mprts[p];
@@ -162,6 +168,35 @@ TEST(mprts, setParticles)
     for (int n = 0; n < n_prts; n++) {
       particle_t& prt = prts[n];
       EXPECT_EQ(mprts.prt_wni(prt), 1.);
+      EXPECT_EQ(prt.kind(), 0);
+    }
+  }
+}
+
+TEST(PushParticles, Accel)
+{
+  using particle_t = particle_single_t;
+  using Mparticles = psc_mparticles_<particle_t>;
+  const int n_prts = 131;
+  const int n_steps = 10;
+  const Mparticles::real_t eps = 1e-6;
+  
+  Grid_t grid = make_grid();
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+  Mparticles mprts(grid);
+  initMparticlesRandom(mprts, n_prts);
+
+  // run test
+  for (int n = 0; n < n_steps; n++) {
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto& prts = mprts[p];
+      for (int n = 0; n < prts.size(); n++) {
+	particle_t& prt = prts[n];
+    	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
+    	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
+    	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
+      };
     }
   }
 }
