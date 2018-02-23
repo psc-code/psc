@@ -55,10 +55,6 @@ struct Grid_
     const char *name;
   };
 
-  // FIXME, default constructor should maybe go away, since it doesn't
-  // guarantee a consistent state
-  Grid_() = delete;
-
   // Construct a single patch covering the whole domain
   // Args: global dimensions, and length of the domain in all 3 dims
   // -- mostly useful for testing
@@ -91,8 +87,6 @@ struct Grid_
     }
   }
   
-  Grid_(const Grid_& grid) = delete;
-
   int n_patches() const { return patches.size(); }
 
   Int3 gdims;
