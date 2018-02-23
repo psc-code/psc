@@ -129,7 +129,7 @@ protected:
 // class PushFields
 
 template<typename mfields_t>
-class PushFields
+class PushFields : PushFieldsBase
 {
   using fields_t = typename mfields_t::fields_t;
 
@@ -170,7 +170,7 @@ public:
   //       jx^{n+1}[-.5:.5][-1:1][-1:1]
   
   void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac)
+	      double dt_fac) override
   {
     mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
     
@@ -199,7 +199,7 @@ public:
   // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
   void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac)
+	      double dt_fac) override
   {
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
     
