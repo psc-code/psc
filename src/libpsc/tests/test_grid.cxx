@@ -117,3 +117,51 @@ TEST(Rng, RngPool)
     EXPECT_LE(r, 1000.);
   }
 }
+
+#include "psc_particles_single.h"
+
+TEST(mprts, Constructor)
+{
+  using Mparticles = psc_mparticles_<particle_single_t>;
+  
+  Grid_t grid = make_grid();
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+  Mparticles mprts(grid);
+}
+
+TEST(mprts, setParticles)
+{
+  using particle_t = particle_single_t;
+  using Mparticles = psc_mparticles_<particle_t>;
+  const int n_prts = 131;
+  
+  RngPool rngpool;
+  Rng *rng = rngpool[0];
+
+  Grid_t grid = make_grid();
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+  Mparticles mprts(grid);
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto patch = grid.patches[p];
+    for (int n = 0; n < n_prts; n++) {
+      psc_particle_inject prt = {};
+      prt.x[0] = rng->uniform(patch.xb[0], patch.xe[0]);
+      prt.x[1] = rng->uniform(patch.xb[1], patch.xe[1]);
+      prt.x[2] = rng->uniform(patch.xb[2], patch.xe[2]);
+      prt.kind = 0;
+      prt.w = 1.;
+      mprts.inject(p, &prt);
+    }
+  }
+
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto& prts = mprts[p];
+    EXPECT_EQ(prts.size(), n_prts);
+    for (int n = 0; n < n_prts; n++) {
+      particle_t& prt = prts[n];
+      EXPECT_EQ(mprts.prt_wni(prt), 1.);
+    }
+  }
+}
