@@ -6,6 +6,31 @@
 
 #include "psc_push_fields_impl.hxx"
 
+// ----------------------------------------------------------------------
+// psc_push_fields_sub_push_mflds_E
+//
+
+template<typename mfields_t>
+static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
+					     struct psc_mfields *mflds_base,
+					     double dt_fac)
+{
+  PscPushFields<mfields_t> pushf;
+  pushf.push_E(push, mflds_base, dt_fac);
+}
+
+// ----------------------------------------------------------------------
+// psc_push_fields_sub_push_mflds_H
+
+template<typename mfields_t>
+static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
+					     struct psc_mfields *mflds_base,
+					     double dt_fac)
+{
+  PscPushFields<mfields_t> pushf;
+  pushf.push_H(push, mflds_base, dt_fac);
+}
+
 // ======================================================================
 // psc_push_fields: subclass "single"
 
