@@ -13,6 +13,7 @@
 #include "psc_checks.h"
 #include "particles.hxx"
 #include "push_particles.hxx"
+#include "push_fields.hxx"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -84,6 +85,7 @@ psc_step(struct psc *psc)
   // default psc_step() implementation
 
   PscPushParticlesBase<void> pushp(psc->push_particles);
+  PscPushFieldsBase<void> pushf(psc->push_fields);
 #if 0
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	     psc->prm.nmax, psc->timestep * psc->dt);
@@ -110,7 +112,7 @@ psc_step(struct psc *psc)
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
   // field propagation B^{n+1/2} -> B^{n+1}
-  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
+  pushf.advance_H(psc->flds, .5);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
@@ -118,11 +120,11 @@ psc_step(struct psc *psc)
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   
   // field propagation E^{n+1/2} -> E^{n+3/2}
-  psc_push_fields_step_b2(psc->push_fields, psc->flds);
+  pushf.advance_b2(psc->flds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
   // field propagation B^{n+1} -> B^{n+3/2}
-  psc_push_fields_step_a(psc->push_fields, psc->flds);
+  pushf.advance_a(psc->flds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
   psc_checks_continuity_after_particle_push(psc->checks, psc);
