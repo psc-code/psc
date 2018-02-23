@@ -12,6 +12,7 @@
 #include "psc_balance.h"
 #include "psc_checks.h"
 #include "particles.hxx"
+#include "push_particles.hxx"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -82,6 +83,7 @@ psc_step(struct psc *psc)
 
   // default psc_step() implementation
 
+  PscPushParticlesBase<void> pushp(psc->push_particles);
 #if 0
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	     psc->prm.nmax, psc->timestep * psc->dt);
@@ -104,7 +106,7 @@ psc_step(struct psc *psc)
   psc_checks_continuity_before_particle_push(psc->checks, psc);
 
   // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  pushp(psc->particles, psc->flds);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
   // field propagation B^{n+1/2} -> B^{n+1}
