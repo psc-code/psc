@@ -27,7 +27,21 @@ struct PscPushFieldsBase
 
   void advance_b2(mfields_base_t mflds)
   {
-    psc_push_fields_step_b2(pushf_, mflds.mflds());
+    // fill ghosts for H
+    psc_bnd_fields_fill_ghosts_H(pushf_->bnd_fields, mflds.mflds());
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+    
+    // add and fill ghost for J
+    psc_bnd_fields_add_ghosts_J(pushf_->bnd_fields, mflds.mflds());
+    psc_bnd_add_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
+    
+    // push E
+    psc_push_fields_push_E(pushf_, mflds.mflds(), 1.);
+    psc_bnd_fields_fill_ghosts_E(pushf_->bnd_fields, mflds.mflds());
+    if (pushf_->variant == 0) {
+      psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+    }
   }
 
   void advance_a(mfields_base_t mflds)

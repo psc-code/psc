@@ -16,8 +16,6 @@ void psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *fl
 void psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds,
 			    double dt_fac);
 
-void psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *flds);
-
 END_C_DECLS
 
 
