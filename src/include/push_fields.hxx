@@ -7,6 +7,10 @@
 #include "psc_bnd_fields.h"
 #include "psc_bnd.h"
 
+#include <mrc_profile.h>
+
+extern int pr_time_step_no_comm; // FIXME
+
 // ======================================================================
 // PscPushFieldsBase
 
@@ -22,12 +26,42 @@ struct PscPushFieldsBase
 
   void advance_E(mfields_base_t mflds, double frac)
   {
-    psc_push_fields_push_E(pushf_, mflds.mflds(), frac);
+    struct psc_push_fields_ops *ops = psc_push_fields_ops(pushf_);
+    static int pr;
+    if (!pr) {
+      pr = prof_register("push_fields_E", 1., 0, 0);
+    }
+    
+    psc_stats_start(st_time_field);
+    prof_start(pr);
+    prof_restart(pr_time_step_no_comm);
+    
+    assert(ops->push_mflds_E);
+    ops->push_mflds_E(pushf_, mflds.mflds(), frac);
+    
+    prof_stop(pr_time_step_no_comm);
+    prof_stop(pr);
+    psc_stats_stop(st_time_field);
   }
 
   void advance_H(mfields_base_t mflds, double frac)
   {
-    psc_push_fields_push_H(pushf_, mflds.mflds(), frac);
+    struct psc_push_fields_ops *ops = psc_push_fields_ops(pushf_);
+    static int pr;
+    if (!pr) {
+      pr = prof_register("push_fields_H", 1., 0, 0);
+    }
+    
+    psc_stats_start(st_time_field);
+    prof_start(pr);
+    prof_restart(pr_time_step_no_comm);
+    
+    assert(ops->push_mflds_H);
+    ops->push_mflds_H(pushf_, mflds.mflds(), frac);
+    
+    prof_stop(pr);
+    prof_stop(pr_time_step_no_comm);
+    psc_stats_stop(st_time_field);
   }
 
   void advance_b2(mfields_base_t mflds)
