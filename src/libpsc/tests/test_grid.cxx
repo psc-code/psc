@@ -29,6 +29,14 @@ TEST(Grid, Domain)
   EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({  40.,   0., 20. }));
 }
 
+TEST(Grid, Kinds)
+{
+  Grid_t grid = make_grid();
+
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+  EXPECT_EQ(grid.kinds.size(), 1);
+}
+
 #include "psc.h" // FIXME, just for EX, ...
 #include "psc_fields_single.h"
 
