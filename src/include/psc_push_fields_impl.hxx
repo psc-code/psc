@@ -126,10 +126,10 @@ protected:
 };
 
 // ======================================================================
-// class PscPushFields
+// class PushFields
 
 template<typename mfields_t>
-class PscPushFields
+class PushFields
 {
   using fields_t = typename mfields_t::fields_t;
 

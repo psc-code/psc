@@ -15,7 +15,7 @@ static void psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
-  PscPushFields<mfields_t> pushf;
+  PushFields<mfields_t> pushf;
   pushf.push_E(push, mflds_base, dt_fac);
 }
 
@@ -27,7 +27,7 @@ static void psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push,
 					     struct psc_mfields *mflds_base,
 					     double dt_fac)
 {
-  PscPushFields<mfields_t> pushf;
+  PushFields<mfields_t> pushf;
   pushf.push_H(push, mflds_base, dt_fac);
 }
 
