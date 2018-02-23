@@ -766,7 +766,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
     psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
     psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
-    psc_mfields_set_param_obj(flds_base_new, "domain", domain_new);
     psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
     psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
 
