@@ -20,6 +20,11 @@ struct PscPushFieldsBase
       sub_(mrc_to_subobj(pushf, sub_t))
   {}
 
+  void advance_E(mfields_base_t mflds, double frac)
+  {
+    psc_push_fields_push_E(pushf_, mflds.mflds(), frac);
+  }
+
   void advance_H(mfields_base_t mflds, double frac)
   {
     psc_push_fields_push_H(pushf_, mflds.mflds(), frac);
@@ -37,7 +42,8 @@ struct PscPushFieldsBase
     psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
     
     // push E
-    psc_push_fields_push_E(pushf_, mflds.mflds(), 1.);
+    advance_E(mflds, 1.);
+
     psc_bnd_fields_fill_ghosts_E(pushf_->bnd_fields, mflds.mflds());
     if (pushf_->variant == 0) {
       psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
@@ -52,7 +58,8 @@ struct PscPushFieldsBase
     }
     
     // push H
-    psc_push_fields_push_H(pushf_, mflds.mflds(), .5);
+    advance_H(mflds, .5);
+
     psc_bnd_fields_fill_ghosts_H(pushf_->bnd_fields, mflds.mflds());
     if (pushf_->variant == 0) {
       psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
