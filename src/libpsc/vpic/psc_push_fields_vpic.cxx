@@ -10,10 +10,10 @@
 
 // ----------------------------------------------------------------------
 
-class psc_push_fields_vpic : PushFieldsBase
+class PushFieldsVpic : PushFieldsBase
 {
 public:
-  psc_push_fields_vpic()
+  PushFieldsVpic()
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
@@ -53,8 +53,8 @@ private:
 static void
 psc_push_fields_vpic_setup(struct psc_push_fields *push)
 {
-  PscPushFields<psc_push_fields_vpic> pushf(push);
-  new(pushf.sub()) psc_push_fields_vpic;
+  PscPushFields<PushFieldsVpic> pushf(push);
+  new(pushf.sub()) PushFieldsVpic;
 }
 
 // ----------------------------------------------------------------------
@@ -63,8 +63,8 @@ psc_push_fields_vpic_setup(struct psc_push_fields *push)
 static void
 psc_push_fields_vpic_destroy(struct psc_push_fields *push)
 {
-  PscPushFields<psc_push_fields_vpic> pushf(push);
-  pushf.sub()->~psc_push_fields_vpic();
+  PscPushFields<PushFieldsVpic> pushf(push);
+  pushf.sub()->~PushFieldsVpic();
 }
 
 // ----------------------------------------------------------------------
@@ -75,7 +75,7 @@ psc_push_fields_vpic_push_mflds_H(struct psc_push_fields *push,
 				  struct psc_mfields *mflds_base,
 				  double dt_fac)
 {
-  PscPushFields<psc_push_fields_vpic> pushf(push);
+  PscPushFields<PushFieldsVpic> pushf(push);
   pushf->push_H(push, mflds_base, dt_fac);
 }
 
@@ -87,7 +87,7 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
 				  struct psc_mfields *mflds_base,
 				  double dt_fac)
 {
-  PscPushFields<psc_push_fields_vpic> pushf(push);
+  PscPushFields<PushFieldsVpic> pushf(push);
   pushf->push_E(push, mflds_base, dt_fac);
 }
 
@@ -97,7 +97,7 @@ psc_push_fields_vpic_push_mflds_E(struct psc_push_fields *push,
 struct psc_push_fields_ops_vpic : psc_push_fields_ops {
   psc_push_fields_ops_vpic() {
     name                  = "vpic";
-    size                  = sizeof(struct psc_push_fields_vpic);
+    size                  = sizeof(struct PushFieldsVpic);
     setup                 = psc_push_fields_vpic_setup;
     push_mflds_H          = psc_push_fields_vpic_push_mflds_H;
     push_mflds_E          = psc_push_fields_vpic_push_mflds_E;
