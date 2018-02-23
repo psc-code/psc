@@ -11,8 +11,7 @@ public:
   // ----------------------------------------------------------------------
   // push_E
 
-  void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
   {
     mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(JXI, HX + 3);
     
@@ -25,8 +24,7 @@ public:
     mf.put_as(mflds_base, EX, EX + 3);
   }
   
-  void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
   {
     mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(JXI, HX + 3);
     

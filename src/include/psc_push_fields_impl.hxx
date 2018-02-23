@@ -138,8 +138,7 @@ public:
   // push_E
 
   template<typename dim>
-  void push_E(struct psc_push_fields* push, fields_t flds,
-	      struct psc *psc, double dt_fac)
+  void push_E(fields_t flds, struct psc *psc, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
     PushE<Fields> push_E(flds, psc, dt_fac);
@@ -151,8 +150,7 @@ public:
   // push_H
 
   template<typename dim>
-  void push_H(struct psc_push_fields* push, fields_t flds,
-	      struct psc *psc, double dt_fac)
+  void push_H(fields_t flds, struct psc *psc, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
     PushH<Fields> push_H(flds, psc, dt_fac);
@@ -169,19 +167,18 @@ public:
   // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
   //       jx^{n+1}[-.5:.5][-1:1][-1:1]
   
-  void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
   {
     mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
     
     for (int p = 0; p < mf->n_patches(); p++) {
       int *gdims = ppsc->domain.gdims;
       if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_E<dim_xyz>(push, mf[p], ppsc, dt_fac);
+	push_E<dim_xyz>(mf[p], ppsc, dt_fac);
       } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_E<dim_yz>(push, mf[p], ppsc, dt_fac);
+	push_E<dim_yz>(mf[p], ppsc, dt_fac);
       } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-	push_E<dim_xz>(push, mf[p], ppsc, dt_fac);
+	push_E<dim_xz>(mf[p], ppsc, dt_fac);
       } else {
 	assert(0);
       }
@@ -198,19 +195,18 @@ public:
   // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
   // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
-  void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
   {
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
     
     for (int p = 0; p < mf->n_patches(); p++) {
       int *gdims = ppsc->domain.gdims;
       if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_H<dim_xyz>(push, mf[p], ppsc, dt_fac);
+	push_H<dim_xyz>(mf[p], ppsc, dt_fac);
       } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_H<dim_yz>(push, mf[p], ppsc, dt_fac);
+	push_H<dim_yz>(mf[p], ppsc, dt_fac);
       } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-	push_H<dim_xz>(push, mf[p], ppsc, dt_fac);
+	push_H<dim_xz>(mf[p], ppsc, dt_fac);
       } else {
 	assert(0);
       }

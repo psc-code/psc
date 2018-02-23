@@ -18,8 +18,7 @@ public:
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
   {
     // needs J, E, B, TCA, material
     mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(JXI, VPIC_MFIELDS_N_COMP);
@@ -31,8 +30,7 @@ public:
     mf.put_as(mflds_base, EX, 9 + 3);
   }
 
-  void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
   {
     // needs E, B
     mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(EX, HX + 6);

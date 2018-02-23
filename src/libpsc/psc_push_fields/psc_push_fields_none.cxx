@@ -6,12 +6,10 @@
 class PushFieldsNone : PushFieldsBase
 {
 public:
-  void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
   {}
 
-  void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-	      double dt_fac) override
+  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
   {}
 };
 

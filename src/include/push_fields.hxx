@@ -36,7 +36,7 @@ struct PscPushFields
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     
-    sub()->push_E(pushf_, mflds.mflds(), frac);
+    sub()->push_E(mflds.mflds(), frac);
     
     prof_stop(pr_time_step_no_comm);
     prof_stop(pr);
@@ -55,7 +55,7 @@ struct PscPushFields
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     
-    sub()->push_H(pushf_, mflds.mflds(), frac);
+    sub()->push_H(mflds.mflds(), frac);
     
     prof_stop(pr);
     prof_stop(pr_time_step_no_comm);
@@ -115,10 +115,8 @@ private:
 class PushFieldsBase
 {
 public:
-  virtual void push_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-		      double dt_fac) = 0;
-  virtual void push_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
-		      double dt_fac) = 0;
+  virtual void push_E(struct psc_mfields *mflds_base, double dt_fac) = 0;
+  virtual void push_H(struct psc_mfields *mflds_base, double dt_fac) = 0;
 };
 
 using PscPushFieldsBase = PscPushFields<PushFieldsBase>;
