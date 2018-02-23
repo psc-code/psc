@@ -152,7 +152,7 @@ TEST(mprts, setParticles)
       prt.x[2] = rng->uniform(patch.xb[2], patch.xe[2]);
       prt.kind = 0;
       prt.w = 1.;
-      mprts.inject_reweight(p, &prt);
+      mprts.inject_reweight(p, prt);
     }
   }
 

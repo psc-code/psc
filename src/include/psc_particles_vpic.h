@@ -48,9 +48,9 @@ struct psc_mparticles_vpic : psc_mparticles_base
     Simulation_mprts_resize_all(sim, vmprts, 1, n_prts_by_patch);
   }
 
-  void inject_reweight(int p, const psc_particle_inject *prt) override
+  void inject_reweight(int p, const psc_particle_inject& prt) override
   {
-    Simulation_inject_particle(sim, vmprts, p, prt);
+    Simulation_inject_particle(sim, vmprts, p, &prt);
   }
 };
 
