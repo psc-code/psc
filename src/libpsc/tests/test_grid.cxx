@@ -216,13 +216,7 @@ TEST(PushParticles, Accel)
   MPI_Init(0, 0);
 
   psc psc{};
-  psc.dt = 1.;
-  psc.coeff.eta = 1.;
   psc.grid_ = &grid;
-  psc.nr_kinds = 1;
-  psc_kind kinds[1];
-  kinds[0].q = 1.; kinds[0].m = 1.;
-  psc.kinds = kinds;
   ppsc = &psc;
   
   psc_mparticles _mprts[1];

@@ -99,17 +99,17 @@ params_1vb_set(struct psc *psc,
 	       struct psc_mparticles *_mprts, struct psc_mfields *_mflds)
 {
   mparticles_t mprts(_mprts);
+  auto& grid = mprts->grid();
+  auto& kinds = grid.kinds;
   struct params_1vb params;
-
-  real_t dt = psc->dt;
 
 #if CALC_J == CALC_J_1VB_2D && DIM != DIM_YZ
 #error inc_params.c: CALC_J_1VB_2D only works for DIM_YZ
 #endif
 
-  assert(psc->nr_kinds <= MAX_NR_KINDS);
-  for (int k = 0; k < ppsc->nr_kinds; k++) {
-    params.dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
+  assert(kinds.size() <= MAX_NR_KINDS);
+  for (int k = 0; k < kinds.size(); k++) {
+    params.dq_kind[k] = .5f * grid.eta * grid.dt * kinds[k].q / kinds[k].m;
   }
 
 #ifndef __CUDACC__
