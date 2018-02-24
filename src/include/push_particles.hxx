@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_push_particles_private.h"
+#include "particles.hxx"
 #include "fields3d.hxx"
 
 // ======================================================================
