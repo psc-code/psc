@@ -30,12 +30,6 @@ struct psc_push_particles_ops_c : psc_push_particles_ops {
     size                  = PushParticlesWrapper_t::size;
     setup                 = PushParticlesWrapper_t::setup;
     destroy               = PushParticlesWrapper_t::destroy;
-    push_mprts_y          = PushParticlesWrapper_t::push_mprts_y;
-    push_mprts_z          = PushParticlesWrapper_t::push_mprts_z;
-    push_mprts_xy         = PushParticlesWrapper_t::push_mprts_xy;
-    push_mprts_xz         = PushParticlesWrapper_t::push_mprts_xz;
-    push_mprts_yz         = PushParticlesWrapper_t::push_mprts_yz;
-    push_mprts_xyz        = PushParticlesWrapper_t::push_mprts_xyz;
     particles_type        = "double";
   }
 } psc_push_particles_generic_c_ops;

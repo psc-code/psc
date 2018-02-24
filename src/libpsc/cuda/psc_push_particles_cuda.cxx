@@ -60,7 +60,6 @@ public:
       size          = PushParticlesWrapper_t::size;			\
       setup         = PushParticlesWrapper_t::setup;			\
       destroy       = PushParticlesWrapper_t::destroy;			\
-      push_mprts_yz = PushParticlesWrapper_t::push_mprts_yz;		\
       mp_flags      = MP_BS;						\
     }									\
   } psc_push_particles_## NAME ##_ops;

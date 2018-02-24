@@ -21,9 +21,6 @@ struct psc_push_particles_ops_1vbec_double : psc_push_particles_ops {
     size                  = PushParticlesWrapper_t::size;
     setup                 = PushParticlesWrapper_t::setup;
     destroy               = PushParticlesWrapper_t::destroy;
-    push_mprts_xyz        = PushParticlesWrapper_t::push_mprts_xyz;
-    push_mprts_yz         = PushParticlesWrapper_t::push_mprts_yz;
-    push_mprts_1          = PushParticlesWrapper_t::push_mprts_1;
     //stagger_mprts_1      = push_p_ops_1vbec_double<dim_1>::stagger_mprts;
     particles_type        = PARTICLE_TYPE;
   }
