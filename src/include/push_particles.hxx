@@ -48,10 +48,22 @@ public:
   virtual void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
+  virtual void push_mprts_xy(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { assert(0); }
+
   virtual void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
   virtual void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { assert(0); }
+
+  virtual void push_mprts_x(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { assert(0); }
+
+  virtual void push_mprts_y(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { assert(0); }
+
+  virtual void push_mprts_z(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
   virtual void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
@@ -89,6 +101,13 @@ public:
     pushp->push_mprts_xyz(mprts, mflds_base);
   }
 
+  static void push_mprts_xy(struct psc_push_particles *push,
+			    struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<PushParticles_t> pushp(push);
+    pushp->push_mprts_xy(mprts, mflds_base);
+  }
+  
   static void push_mprts_xz(struct psc_push_particles *push,
 			    struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   {
@@ -103,6 +122,27 @@ public:
     pushp->push_mprts_yz(mprts, mflds_base);
   }
   
+  static void push_mprts_x(struct psc_push_particles *push,
+			   struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<PushParticles_t> pushp(push);
+    pushp->push_mprts_x(mprts, mflds_base);
+  }
+
+  static void push_mprts_y(struct psc_push_particles *push,
+			   struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<PushParticles_t> pushp(push);
+    pushp->push_mprts_y(mprts, mflds_base);
+  }
+
+  static void push_mprts_z(struct psc_push_particles *push,
+			   struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<PushParticles_t> pushp(push);
+    pushp->push_mprts_z(mprts, mflds_base);
+  }
+
   static void push_mprts_1(struct psc_push_particles *push,
 			   struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   {
