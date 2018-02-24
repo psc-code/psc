@@ -4,6 +4,8 @@
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
 
+#include "push_particles.hxx"
+
 #include <string.h>
 
 struct IpEc : std::true_type {};
@@ -30,9 +32,8 @@ template<typename Config>
 class PushParticlesCuda
 {
 public:
-  static void push_mprts_yz(struct psc_push_particles *push,
-			    struct psc_mparticles *mprts,
-			    struct psc_mfields *mflds_base)
+  void push_mprts_yz(struct psc_mparticles *mprts,
+		     struct psc_mfields *mflds_base)
   {
     /* it's difficult to convert mprts due to ordering constraints (?) */
     assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
@@ -46,6 +47,29 @@ public:
   }
 };
 
+template<typename PushParticlesCuda_t>
+static void pushp_cuda_setup(struct psc_push_particles *push)
+{
+  PscPushParticlesBase<PushParticlesCuda_t> pushp(push);
+  new(pushp.sub()) PushParticlesCuda_t;
+}
+
+template<typename PushParticlesCuda_t>
+static void pushp_cuda_destroy(struct psc_push_particles *push)
+{
+  PscPushParticlesBase<PushParticlesCuda_t> pushp(push);
+  pushp.sub()->~PushParticlesCuda_t();
+}
+
+template<typename PushParticlesCuda_t>
+static void pushp_cuda_push_mprts_yz(struct psc_push_particles *push,
+				     struct psc_mparticles *mprts,
+				     struct psc_mfields *mflds_base)
+{
+  PscPushParticlesBase<PushParticlesCuda_t> pushp(push);
+  pushp->push_mprts_yz(mprts, mflds_base);
+}
+  
 // ----------------------------------------------------------------------
 // psc_push_particles: subclasses
 
@@ -53,10 +77,12 @@ public:
   struct psc_push_particles_ops_ ## NAME :				\
     psc_push_particles_ops {						\
     psc_push_particles_ops_## NAME () {					\
-      using PushParticlesCuda_t = PushParticlesCuda<CONFIG>;	\
-      name                  = #NAME;					\
-      push_mprts_yz         = PushParticlesCuda_t::push_mprts_yz;	\
-      mp_flags              = MP_BS;					\
+      using PushParticlesCuda_t = PushParticlesCuda<CONFIG>;		\
+      name          = #NAME;						\
+      setup         = pushp_cuda_setup<PushParticlesCuda_t>;		\
+      destroy       = pushp_cuda_destroy<PushParticlesCuda_t>;		\
+      push_mprts_yz = pushp_cuda_push_mprts_yz<PushParticlesCuda_t>;	\
+      mp_flags      = MP_BS;						\
     }									\
   } psc_push_particles_## NAME ##_ops;
 
