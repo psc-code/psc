@@ -61,31 +61,7 @@ psc_push_particles_run(struct psc_push_particles *push,
   prof_restart(pr_time_step_no_comm);
   psc_stats_start(st_time_particle);
 
-  if (ops->push_mprts) {
-    pushp->push_mprts(mprts, mflds_base);
-  } else {
-
-  int *im = ppsc->domain.gdims;
-
-  if (im[0] > 1 && im[1] == 1 && im[2] == 1) { // x
-    pushp->push_mprts_x(mprts, mflds_base);
-  } else if (im[0] == 1 && im[1] > 1 && im[2] == 1) { // y
-    pushp->push_mprts_y(mprts, mflds_base);
-  } else if (im[0] == 1 && im[1] == 1 && im[2] > 1) { // y
-    pushp->push_mprts_z(mprts, mflds_base);
-  } else if (im[0] > 1 && im[1] > 1 && im[2] == 1) { // xy
-    pushp->push_mprts_xy(mprts, mflds_base);
-  } else if (im[0] > 1 && im[1] == 1 && im[2] > 1) { // xz
-    pushp->push_mprts_xz(mprts, mflds_base);
-  } else if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-    pushp->push_mprts_yz(mprts, mflds_base);
-  } else if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    pushp->push_mprts_xyz(mprts, mflds_base);
-  } else {
-    pushp->push_mprts_1(mprts, mflds_base);
-  }
-
-  }
+  pushp->push_mprts(mprts, mflds_base);
   
   psc_stats_stop(st_time_particle);
   prof_stop(pr_time_step_no_comm);
@@ -110,20 +86,7 @@ psc_push_particles_stagger(struct psc_push_particles *push,
     mprts = mprts_base;
   }
 
-  if (ops->stagger_mprts) {
-    pushp->stagger_mprts(mprts, mflds_base);
-  } else {
-
-    int *im = ppsc->domain.gdims;
-
-    if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-      pushp->stagger_mprts_yz(mprts, mflds_base);
-    } else if (im[0] == 1 && im[1] == 1 && im[2] == 1) { // 1
-      pushp->stagger_mprts_1(mprts, mflds_base);
-    } else {
-      mprintf("WARNING: no stagger_mprts() case!\n");
-    }
-  }
+  pushp->stagger_mprts(mprts, mflds_base);
   
   if (ops->particles_type) {
     psc_mparticles_put_as(mprts, mprts_base, 0);

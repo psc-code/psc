@@ -44,7 +44,28 @@ public:
   { assert(0); }
   
   virtual void push_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
-  { assert(0); }
+  {
+    auto gdims = mparticles_base_t(mprts_base)->grid().gdims;
+
+    // if this function has not been overriden, call the pusher for the appropriate dims
+    if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] == 1) { // x
+      push_mprts_x(mprts_base, mflds_base);
+    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] == 1) { // y
+      push_mprts_y(mprts_base, mflds_base);
+    } else if (gdims[0] == 1 && gdims[1] == 1 && gdims[2] > 1) { // y
+      push_mprts_z(mprts_base, mflds_base);
+    } else if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] == 1) { // xy
+      push_mprts_xy(mprts_base, mflds_base);
+    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) { // xz
+      push_mprts_xz(mprts_base, mflds_base);
+    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) { // yz
+      push_mprts_yz(mprts_base, mflds_base);
+    } else if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) { // xyz
+      push_mprts_xyz(mprts_base, mflds_base);
+    } else {
+      push_mprts_1(mprts_base, mflds_base);
+    }
+  }
 
   virtual void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
@@ -70,9 +91,19 @@ public:
   virtual void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
-  virtual void stagger_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
-  { mprintf("WARNING: %s not implemented\n", __func__); }
+  virtual void stagger_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+  {
+    auto gdims = mparticles_base_t(mprts_base)->grid().gdims;
 
+    if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) { // yz
+      stagger_mprts_yz(mprts_base, mflds_base);
+    } else if (gdims[0] == 1 && gdims[1] == 1 && gdims[2] == 1) { // 1
+      stagger_mprts_1(mprts_base, mflds_base);
+    } else {
+      mprintf("WARNING: no stagger_mprts() case!\n");
+    }
+  }
+  
   virtual void stagger_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
