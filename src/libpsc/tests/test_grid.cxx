@@ -215,10 +215,6 @@ TEST(PushParticles, Accel)
 
   MPI_Init(0, 0);
 
-  psc psc{};
-  psc.grid_ = &grid;
-  ppsc = &psc;
-  
   psc_mparticles _mprts[1];
   _mprts->obj.subctx = &mprts;
 
