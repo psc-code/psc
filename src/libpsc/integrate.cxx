@@ -86,7 +86,7 @@ psc_step(struct psc *psc)
 
   mparticles_base_t mprts(psc->particles);
   mfields_base_t mflds(psc->flds);
-  PscPushParticlesBase<void> pushp(psc->push_particles);
+  PscPushParticles<void> pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
 #if 0
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,

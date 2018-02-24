@@ -50,14 +50,14 @@ public:
 template<typename PushParticlesCuda_t>
 static void pushp_cuda_setup(struct psc_push_particles *push)
 {
-  PscPushParticlesBase<PushParticlesCuda_t> pushp(push);
+  PscPushParticles<PushParticlesCuda_t> pushp(push);
   new(pushp.sub()) PushParticlesCuda_t;
 }
 
 template<typename PushParticlesCuda_t>
 static void pushp_cuda_destroy(struct psc_push_particles *push)
 {
-  PscPushParticlesBase<PushParticlesCuda_t> pushp(push);
+  PscPushParticles<PushParticlesCuda_t> pushp(push);
   pushp.sub()->~PushParticlesCuda_t();
 }
 
@@ -66,7 +66,7 @@ static void pushp_cuda_push_mprts_yz(struct psc_push_particles *push,
 				     struct psc_mparticles *mprts,
 				     struct psc_mfields *mflds_base)
 {
-  PscPushParticlesBase<PushParticlesCuda_t> pushp(push);
+  PscPushParticles<PushParticlesCuda_t> pushp(push);
   pushp->push_mprts_yz(mprts, mflds_base);
 }
   

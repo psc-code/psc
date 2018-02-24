@@ -5,14 +5,14 @@
 #include "fields3d.hxx"
 
 // ======================================================================
-// PscPushParticlesBase
+// PscPushParticles
 
 template<typename S>
-struct PscPushParticlesBase
+struct PscPushParticles
 {
   using sub_t = S;
 
-  explicit PscPushParticlesBase(psc_push_particles *pushp)
+  explicit PscPushParticles(psc_push_particles *pushp)
     : pushp_(pushp),
       sub_(mrc_to_subobj(pushp, sub_t))
   {}
