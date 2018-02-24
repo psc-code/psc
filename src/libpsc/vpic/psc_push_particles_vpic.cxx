@@ -8,10 +8,10 @@
 #include "vpic_iface.h"
 
 // ======================================================================
-// psc_push_particles_vpic
+// PushParticlesVpic
 
-struct psc_push_particles_vpic {
-  psc_push_particles_vpic()
+struct PushParticlesVpic {
+  PushParticlesVpic()
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
   }
@@ -53,8 +53,8 @@ psc_push_particles_vpic_setup(struct psc_push_particles *push)
 {
   psc_push_particles_setup_super(push);
 
-  PscPushParticles<psc_push_particles_vpic> pushp(push);
-  new(pushp.sub()) psc_push_particles_vpic;
+  PscPushParticles<PushParticlesVpic> pushp(push);
+  new(pushp.sub()) PushParticlesVpic;
 }
 
 // ----------------------------------------------------------------------
@@ -63,8 +63,8 @@ psc_push_particles_vpic_setup(struct psc_push_particles *push)
 static void
 psc_push_particles_vpic_destroy(struct psc_push_particles *push)
 {
-  PscPushParticles<psc_push_particles_vpic> pushp(push);
-  pushp.sub()->~psc_push_particles_vpic();
+  PscPushParticles<PushParticlesVpic> pushp(push);
+  pushp.sub()->~PushParticlesVpic();
 }
 
 // ----------------------------------------------------------------------
@@ -75,7 +75,7 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
 			     struct psc_mparticles *mprts_base,
 			     struct psc_mfields *mflds_base)
 {
-  PscPushParticles<psc_push_particles_vpic> pushp(push);
+  PscPushParticles<PushParticlesVpic> pushp(push);
   pushp->prep(mprts_base, mflds_base);
 }
 
@@ -87,7 +87,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 				   struct psc_mparticles *mprts_base,
 				   struct psc_mfields *mflds_base)
 {
-  PscPushParticles<psc_push_particles_vpic> pushp(push);
+  PscPushParticles<PushParticlesVpic> pushp(push);
   pushp->push_mprts(mprts_base, mflds_base);
 }
 
@@ -97,7 +97,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 struct psc_push_particles_ops_vpic : psc_push_particles_ops {
   psc_push_particles_ops_vpic() {
     name                  = "vpic";
-    size                  = sizeof(struct psc_push_particles_vpic);
+    size                  = sizeof(struct PushParticlesVpic);
     setup                 = psc_push_particles_vpic_setup;
     destroy               = psc_push_particles_vpic_destroy;
     prep                  = psc_push_particles_vpic_prep;
