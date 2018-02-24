@@ -4,6 +4,7 @@
 #include "psc_push_fields_private.h"
 #include "psc_bnd_fields.h"
 #include "psc_bnd.h"
+#include "push_particles.hxx"
 
 #include <mrc_profile.h>
 
@@ -54,41 +55,35 @@ psc_push_particles_run(struct psc_push_particles *push,
   } else {
     mprts = mprts_base;
   }
+
+  PscPushParticlesBase pushp(push);
   
   prof_start(pr);
   prof_restart(pr_time_step_no_comm);
   psc_stats_start(st_time_particle);
 
   if (ops->push_mprts) {
-    ops->push_mprts(push, mprts, mflds_base);
+    pushp->push_mprts(mprts, mflds_base);
   } else {
 
   int *im = ppsc->domain.gdims;
 
   if (im[0] > 1 && im[1] == 1 && im[2] == 1) { // x
-    assert(ops->push_mprts_x);
-    ops->push_mprts_x(push, mprts, mflds_base);
+    pushp->push_mprts_x(mprts, mflds_base);
   } else if (im[0] == 1 && im[1] > 1 && im[2] == 1) { // y
-    assert(ops->push_mprts_y);
-    ops->push_mprts_y(push, mprts, mflds_base);
+    pushp->push_mprts_y(mprts, mflds_base);
   } else if (im[0] == 1 && im[1] == 1 && im[2] > 1) { // y
-    assert(ops->push_mprts_z);
-    ops->push_mprts_z(push, mprts, mflds_base);
+    pushp->push_mprts_z(mprts, mflds_base);
   } else if (im[0] > 1 && im[1] > 1 && im[2] == 1) { // xy
-    assert(ops->push_mprts_xy);
-    ops->push_mprts_xy(push, mprts, mflds_base);
+    pushp->push_mprts_xy(mprts, mflds_base);
   } else if (im[0] > 1 && im[1] == 1 && im[2] > 1) { // xz
-    assert(ops->push_mprts_xz);
-    ops->push_mprts_xz(push, mprts, mflds_base);
+    pushp->push_mprts_xz(mprts, mflds_base);
   } else if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-    assert(ops->push_mprts_yz);
-    ops->push_mprts_yz(push, mprts, mflds_base);
+    pushp->push_mprts_yz(mprts, mflds_base);
   } else if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    assert(ops->push_mprts_xyz);
-    ops->push_mprts_xyz(push, mprts, mflds_base);
+    pushp->push_mprts_xyz(mprts, mflds_base);
   } else {
-    assert(ops->push_mprts_1);
-    ops->push_mprts_1(push, mprts, mflds_base);
+    pushp->push_mprts_1(mprts, mflds_base);
   }
 
   }
