@@ -47,6 +47,7 @@ psc_push_particles_run(struct psc_push_particles *push,
     pr = prof_register("push_particles_run", 1., 0, 0);
   }  
 
+  PscPushParticlesBase pushp(push);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
   struct psc_mparticles *mprts;
@@ -56,8 +57,6 @@ psc_push_particles_run(struct psc_push_particles *push,
     mprts = mprts_base;
   }
 
-  PscPushParticlesBase pushp(push);
-  
   prof_start(pr);
   prof_restart(pr_time_step_no_comm);
   psc_stats_start(st_time_particle);
@@ -101,6 +100,7 @@ void
 psc_push_particles_stagger(struct psc_push_particles *push,
 			   struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
 {
+  PscPushParticlesBase pushp(push);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
   struct psc_mparticles *mprts;
@@ -111,23 +111,15 @@ psc_push_particles_stagger(struct psc_push_particles *push,
   }
 
   if (ops->stagger_mprts) {
-    ops->stagger_mprts(push, mprts, mflds_base);
+    pushp->stagger_mprts(mprts, mflds_base);
   } else {
 
     int *im = ppsc->domain.gdims;
 
     if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-      if (!ops->stagger_mprts_yz) {
-	mprintf("WARNING: no stagger_mprts() method!\n");
-      } else {
-	ops->stagger_mprts_yz(push, mprts, mflds_base);
-      }
+      pushp->stagger_mprts_yz(mprts, mflds_base);
     } else if (im[0] == 1 && im[1] == 1 && im[2] == 1) { // 1
-      if (!ops->stagger_mprts_1) {
-	mprintf("WARNING: no stagger_mprts() method!\n");
-      } else {
-	ops->stagger_mprts_1(push, mprts, mflds_base);
-      }
+      pushp->stagger_mprts_1(mprts, mflds_base);
     } else {
       mprintf("WARNING: no stagger_mprts() case!\n");
     }

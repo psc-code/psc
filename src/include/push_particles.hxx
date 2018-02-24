@@ -70,8 +70,14 @@ public:
   virtual void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
+  virtual void stagger_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { mprintf("WARNING: %s not implemented\n", __func__); }
+
   virtual void stagger_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
-  { assert(0); }
+  { mprintf("WARNING: %s not implemented\n", __func__); }
+
+  virtual void stagger_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { mprintf("WARNING: %s not implemented\n", __func__); }
 
 };
 
