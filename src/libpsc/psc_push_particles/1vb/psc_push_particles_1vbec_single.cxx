@@ -43,17 +43,19 @@ struct PushParticles_t : PushParticles_<push_p_ops_1vbec_single_>
   }
 };
 
+using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;
+
 struct psc_push_particles_ops_1vbec_single : psc_push_particles_ops {
   psc_push_particles_ops_1vbec_single() {
     name                  = "1vbec_single";
-    size                  = sizeof(PushParticles_t);
-    setup                 = PushParticles_t::setup;
-    destroy               = PushParticles_t::destroy;
-    push_mprts_xyz        = PushParticles_t::push_mprts_xyz;
-    push_mprts_yz         = PushParticles_t::push_mprts_yz;
-    push_mprts_xz         = PushParticles_t::push_mprts_xz;
-    push_mprts_1          = PushParticles_t::push_mprts_1;
-    stagger_mprts_yz      = PushParticles_t::stagger_mprts_yz;
+    size                  = PushParticlesWrapper_t::size;
+    setup                 = PushParticlesWrapper_t::setup;
+    destroy               = PushParticlesWrapper_t::destroy;
+    push_mprts_xyz        = PushParticlesWrapper_t::push_mprts_xyz;
+    push_mprts_yz         = PushParticlesWrapper_t::push_mprts_yz;
+    push_mprts_xz         = PushParticlesWrapper_t::push_mprts_xz;
+    push_mprts_1          = PushParticlesWrapper_t::push_mprts_1;
+    stagger_mprts_yz      = PushParticlesWrapper_t::stagger_mprts_yz;
     particles_type        = PARTICLE_TYPE;
   }
 } psc_push_particles_1vbec_single_ops;
