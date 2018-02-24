@@ -4,6 +4,7 @@
 
 #include <psc_push_particles_private.h>
 
+#include "push_particles.hxx"
 #include "fields.hxx"
 
 template<typename MF, typename D>
@@ -20,6 +21,83 @@ struct push_p_ops
 			 struct psc_mfields *mflds_base);
   static void stagger_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
 			    struct psc_mfields *mflds_base);
+};
+
+// ======================================================================
+// PushParticles_
+
+template<template<class> class PUSH_P_OPS>
+class PushParticles_ : public PushParticlesBase
+{
+  using Self = PushParticles_<PUSH_P_OPS>;
+  
+public:
+  void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base) override
+  { PUSH_P_OPS<dim_xyz>::push_mprts(nullptr, mprts, mflds_base); }
+
+#if 0
+  void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base) override
+  { PUSH_P_OPS<dim_xz>::push_mprts(nullptr, mprts, mflds_base); }
+#endif
+
+  void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base) override
+  { PUSH_P_OPS<dim_yz>::push_mprts(nullptr, mprts, mflds_base); }
+
+  void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base) override
+  { PUSH_P_OPS<dim_1>::push_mprts(nullptr, mprts, mflds_base); }
+
+  void stagger_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base) override
+  { PUSH_P_OPS<dim_yz>::stagger_mprts(nullptr, mprts, mflds_base); }
+
+  static void setup(struct psc_push_particles *push)
+  {
+    PscPushParticles<Self> pushp(push);
+    new(pushp.sub()) Self;
+  }
+
+  static void destroy(struct psc_push_particles *push)
+  {
+    PscPushParticles<Self> pushp(push);
+    pushp.sub()->~Self();
+  }
+
+  static void push_mprts_xyz(struct psc_push_particles *push,
+			     struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<Self> pushp(push);
+    pushp->push_mprts_xyz(mprts, mflds_base);
+  }
+
+#if 0
+  static void push_mprts_xz(struct psc_push_particles *push,
+			    struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<Self> pushp(push);
+    pushp->push_mprts_xz(mprts, mflds_base);
+  }
+#endif
+  
+  static void push_mprts_yz(struct psc_push_particles *push,
+			    struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<Self> pushp(push);
+    pushp->push_mprts_yz(mprts, mflds_base);
+  }
+  
+  static void push_mprts_1(struct psc_push_particles *push,
+			   struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<Self> pushp(push);
+    pushp->push_mprts_1(mprts, mflds_base);
+  }
+
+  static void stagger_mprts_yz(struct psc_push_particles *push,
+			       struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    PscPushParticles<Self> pushp(push);
+    pushp->stagger_mprts_yz(mprts, mflds_base);
+  }
+  
 };
 
 #endif

@@ -48,11 +48,18 @@ public:
   virtual void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
+  virtual void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { assert(0); }
+
   virtual void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
 
   virtual void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
   { assert(0); }
+
+  virtual void stagger_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  { assert(0); }
+
 };
 
 using PscPushParticlesBase = PscPushParticles<PushParticlesBase>;
