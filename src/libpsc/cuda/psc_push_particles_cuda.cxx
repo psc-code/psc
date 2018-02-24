@@ -79,6 +79,7 @@ static void pushp_cuda_push_mprts_yz(struct psc_push_particles *push,
     psc_push_particles_ops_## NAME () {					\
       using PushParticlesCuda_t = PushParticlesCuda<CONFIG>;		\
       name          = #NAME;						\
+      size          = sizeof(PushParticlesCuda_t);			\
       setup         = pushp_cuda_setup<PushParticlesCuda_t>;		\
       destroy       = pushp_cuda_destroy<PushParticlesCuda_t>;		\
       push_mprts_yz = pushp_cuda_push_mprts_yz<PushParticlesCuda_t>;	\
