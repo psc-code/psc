@@ -406,7 +406,7 @@ do_push_part(int p, fields_t flds, mparticles_t mprts)
   real_t s0z[N_RHO] = {}, s1z[N_RHO];
 #endif
 
-  c_prm_set(ppsc);
+  c_prm_set(ppsc->grid());
 
   Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
   Fields3d<fields_t> J(flds);

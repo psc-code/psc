@@ -66,23 +66,23 @@ CUDA_CONSTANT static struct params_1vb prm;
 // c_prm_set
 
 static void
-c_prm_set(struct psc *psc)
+c_prm_set(const Grid_t& grid)
 {
   struct const_params prm;
 
-  prm.dt = psc->dt;
-  prm.dqs = .5f * ppsc->coeff.eta * prm.dt;
-  prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  prm.dt = grid.dt;
+  prm.dqs = .5f * grid.eta * prm.dt;
+  prm.fnqs = grid.fnqs;
 
-  assert(psc->n_patches() > 0);
+  assert(grid.n_patches() > 0);
 
   for (int d = 0; d < 3; d++) {
-    prm.dxi[d] = 1.f / psc->grid().dx[d];
+    prm.dxi[d] = 1.f / grid.dx[d];
   }
 
-  prm.fnqxs = ppsc->grid().dx[0] * prm.fnqs / prm.dt;
-  prm.fnqys = ppsc->grid().dx[1] * prm.fnqs / prm.dt;
-  prm.fnqzs = ppsc->grid().dx[2] * prm.fnqs / prm.dt;
+  prm.fnqxs = grid.dx[0] * grid.fnqs / grid.dt;
+  prm.fnqys = grid.dx[1] * grid.fnqs / grid.dt;
+  prm.fnqzs = grid.dx[2] * grid.fnqs / grid.dt;
 
 #ifndef __CUDACC__
   c_prm = prm;
