@@ -96,8 +96,9 @@ c_prm_set(struct psc *psc)
 
 static void _mrc_unused
 params_1vb_set(struct psc *psc,
-	       struct psc_mparticles *mprts, struct psc_mfields *mflds)
+	       struct psc_mparticles *_mprts, struct psc_mfields *_mflds)
 {
+  mparticles_t mprts(_mprts);
   struct params_1vb params;
 
   real_t dt = psc->dt;
@@ -109,30 +110,6 @@ params_1vb_set(struct psc *psc,
   assert(psc->nr_kinds <= MAX_NR_KINDS);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     params.dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
-  }
-
-  if (mprts && mparticles_t(mprts)->n_patches() > 0) {
-#if PSC_PARTICLES_AS_CUDA2
-    struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-    for (int d = 0; d < 3; d++) {
-      params.b_mx[d] = mprts_sub->b_mx[d];
-    }
-#else
-    assert(0);
-#endif
-  }
-
-  if (mflds) {
-#if PSC_FIELDS_AS_CUDA2
-    struct psc_mfields_cuda2 * mflds_sub = psc_mfields_cuda2(mflds);
-    for (int d = 0; d < 3; d++) {
-      params.mx[d] = mflds_sub->im[d];
-      params.ilg[d] = mflds_sub->ib[d];
-      assert(mflds_sub->ib[d] == -2 || mflds_sub->im[d] == 1); // assumes BND == 2
-    }
-#else
-    assert(0);
-#endif
   }
 
 #ifndef __CUDACC__
