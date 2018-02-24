@@ -47,28 +47,6 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// psc_push_particles_vpic_setup
-
-static void
-psc_push_particles_vpic_setup(struct psc_push_particles *push)
-{
-  psc_push_particles_setup_super(push);
-
-  PscPushParticles<PushParticlesVpic> pushp(push);
-  new(pushp.sub()) PushParticlesVpic;
-}
-
-// ----------------------------------------------------------------------
-// psc_push_particles_vpic_destroy
-
-static void
-psc_push_particles_vpic_destroy(struct psc_push_particles *push)
-{
-  PscPushParticles<PushParticlesVpic> pushp(push);
-  pushp.sub()->~PushParticlesVpic();
-}
-
-// ----------------------------------------------------------------------
 // psc_push_particles_vpic_prep
 
 static void
@@ -81,28 +59,18 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
 }
 
 // ----------------------------------------------------------------------
-// psc_push_particles_vpic_push_mprts
-
-static void
-psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
-				   struct psc_mparticles *mprts_base,
-				   struct psc_mfields *mflds_base)
-{
-  PscPushParticles<PushParticlesVpic> pushp(push);
-  pushp->push_mprts(mprts_base, mflds_base);
-}
-
-// ----------------------------------------------------------------------
 // psc_push_particles: subclass "vpic"
+
+using PushParticlesWrapper_t = PushParticlesWrapper<PushParticlesVpic>;
 
 struct psc_push_particles_ops_vpic : psc_push_particles_ops {
   psc_push_particles_ops_vpic() {
     name                  = "vpic";
-    size                  = sizeof(struct PushParticlesVpic);
-    setup                 = psc_push_particles_vpic_setup;
-    destroy               = psc_push_particles_vpic_destroy;
+    size                  = PushParticlesWrapper_t::size;
+    setup                 = PushParticlesWrapper_t::setup;
+    destroy               = PushParticlesWrapper_t::destroy;
+    push_mprts            = PushParticlesWrapper_t::push_mprts_yz;
     prep                  = psc_push_particles_vpic_prep;
-    push_mprts            = psc_push_particles_vpic_push_mprts;
   }
 } psc_push_particles_vpic_ops;
 
