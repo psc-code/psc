@@ -69,7 +69,6 @@ struct psc_push_particles_ops_vpic : psc_push_particles_ops {
     size                  = PushParticlesWrapper_t::size;
     setup                 = PushParticlesWrapper_t::setup;
     destroy               = PushParticlesWrapper_t::destroy;
-    push_mprts            = PushParticlesWrapper_t::push_mprts;
     prep                  = psc_push_particles_vpic_prep;
   }
 } psc_push_particles_vpic_ops;
