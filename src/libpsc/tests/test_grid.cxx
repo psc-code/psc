@@ -173,10 +173,13 @@ TEST(Mparticles, setParticles)
   }
 }
 
+#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
+
 TEST(PushParticles, Accel)
 {
-  using particle_t = particle_single_t;
-  using Mparticles = psc_mparticles_<particle_t>;
+  using Mparticles = psc_mparticles_<particle_single_t>;
+  using Mfields = psc_mfields_<fields_single_t>;
+  using PushParticles = PushParticles1vbecSingle;
   const int n_prts = 131;
   const int n_steps = 10;
   const Mparticles::real_t eps = 1e-6;
@@ -184,15 +187,44 @@ TEST(PushParticles, Accel)
   Grid_t grid = make_grid();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+
+  setValues(mflds, [](int m) -> Mfields::real_t {
+      switch(m) {
+      case EX: return 1.;
+      case EY: return 2.;
+      case EZ: return 3.;
+      default: return 0.;
+      }
+    });
+
   Mparticles mprts(grid);
   initMparticlesRandom(mprts, n_prts);
+  
+  PushParticles pushp;
 
+  MPI_Init(0, 0);
+
+  psc psc{};
+  psc.dt = 1.;
+  psc.grid_ = &grid;
+  ppsc = &psc;
+  
+  psc_mparticles _mprts[1];
+  _mprts->obj.subctx = &mprts;
+
+  extern struct psc_mfields_ops psc_mfields_single_ops;
+  psc_mfields _mflds[1];
+  _mflds->obj.subctx = &mflds;
+  _mflds->obj.ops = (mrc_obj_ops*) &psc_mfields_single_ops;
+  
   // run test
   for (int n = 0; n < n_steps; n++) {
+    pushp.push_mprts(_mprts, _mflds);
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto& prts = mprts[p];
       for (int n = 0; n < prts.size(); n++) {
-	particle_t& prt = prts[n];
+	auto& prt = prts[n];
     	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
     	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
     	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
