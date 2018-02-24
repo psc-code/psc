@@ -33,3 +33,14 @@ private:
   sub_t *sub_;
 };
 
+// ======================================================================
+// PushParticlesBase
+
+class PushParticlesBase
+{
+public:
+  virtual void push_mprts_yz(struct psc_mparticles *mprts,
+			     struct psc_mfields *mflds_base) = 0;
+};
+
+using PscPushParticlesBase = PscPushParticles<PushParticlesBase>;

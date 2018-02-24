@@ -29,11 +29,11 @@ struct Config
 // psc_push_particles: "1vb_4x4_cuda"
 
 template<typename Config>
-class PushParticlesCuda
+class PushParticlesCuda : PushParticlesBase
 {
 public:
   void push_mprts_yz(struct psc_mparticles *mprts,
-		     struct psc_mfields *mflds_base)
+		     struct psc_mfields *mflds_base) override
   {
     /* it's difficult to convert mprts due to ordering constraints (?) */
     assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
