@@ -13,6 +13,16 @@ static Grid_t make_grid()
   return Grid_t(gdims, ldims, length, corner, offs);
 }
 
+static Grid_t make_grid_1()
+{
+  Int3 gdims = { 1, 1, 1 };
+  Int3 ldims = { 1, 1, 1 };
+  Grid_t::Real3 length = {  10., 10., 10. };
+  Grid_t::Real3 corner = {   0.,  0.,  0. };
+  std::vector<Int3> offs = { { 0, 0, 0 } };
+  return Grid_t(gdims, ldims, length, corner, offs);
+}
+
 TEST(Grid, Domain)
 {
   Grid_t grid = make_grid();
@@ -184,7 +194,7 @@ TEST(PushParticles, Accel)
   const int n_steps = 10;
   const Mparticles::real_t eps = 1e-6;
   
-  Grid_t grid = make_grid();
+  Grid_t grid = make_grid_1();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
   Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
@@ -207,7 +217,12 @@ TEST(PushParticles, Accel)
 
   psc psc{};
   psc.dt = 1.;
+  psc.coeff.eta = 1.;
   psc.grid_ = &grid;
+  psc.nr_kinds = 1;
+  psc_kind kinds[1];
+  kinds[0].q = 1.; kinds[0].m = 1.;
+  psc.kinds = kinds;
   ppsc = &psc;
   
   psc_mparticles _mprts[1];
@@ -223,8 +238,8 @@ TEST(PushParticles, Accel)
     pushp.push_mprts(_mprts, _mflds);
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto& prts = mprts[p];
-      for (int n = 0; n < prts.size(); n++) {
-	auto& prt = prts[n];
+      for (int m = 0; m < prts.size(); m++) {
+	auto& prt = prts[m];
     	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
     	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
     	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
