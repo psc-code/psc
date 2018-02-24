@@ -17,13 +17,20 @@
 template<typename dim_t>
 using push_p_ops_1vb2_single2 = push_p_ops<push_p_config<mfields_single_t, dim_t>>;
 
+using PushParticles_t = PushParticles_<push_p_ops_1vb2_single2>;
+
+using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;
+
 // ======================================================================
 // psc_push_particles: subclass "1vb2_single2"
 
 struct psc_push_particles_ops_1vb2_single2 : psc_push_particles_ops {
   psc_push_particles_ops_1vb2_single2() {
     name                  = "1vb2_single2";
-    push_mprts_yz         = push_p_ops_1vb2_single2<dim_yz>::push_mprts;
+    size                  = PushParticlesWrapper_t::size;
+    setup                 = PushParticlesWrapper_t::setup;
+    destroy               = PushParticlesWrapper_t::destroy;
+    push_mprts_yz         = PushParticlesWrapper_t::push_mprts_yz;
     particles_type        = PARTICLE_TYPE;
   }
 } psc_push_particles_1vb2_single_ops;
