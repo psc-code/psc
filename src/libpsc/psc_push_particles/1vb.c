@@ -53,6 +53,24 @@ struct PushParticles1vb
   
   static void push_mprts(mparticles_t mprts, mfields_t mflds)
   {
+    c_prm_set(mprts->grid());
+    params_1vb_set(mprts);
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      mflds[p].zero(JXI, JXI + 3);
+      ext_prepare_sort_before(mprts[p]);
+      do_push_part_1vb_yz<C>(mflds[p], mprts.mprts(), p);
+    }
+  }
+
+  static void stagger_mprts(mparticles_t mprts, mfields_t mflds)
+  {
+    c_prm_set(mprts->grid());
+    params_1vb_set(mprts);
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      mflds[p].zero(JXI, JXI + 3);
+      ext_prepare_sort_before(mprts[p]);
+      do_stagger_part_1vb_yz<C>(mflds[p], mprts.mprts(), p);
+    }
   }
 };
 
@@ -62,20 +80,11 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 			       struct psc_mfields *mflds_base)
 {
   using mfields_t = typename C::mfields_t;
-  using fields_t = typename mfields_t::fields_t;
+  using mparticles_t = typename C::mparticles_t;
   
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-  mparticles_t mp(mprts);
+  auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
+  auto mp = mparticles_t(mprts);
   PushParticles1vb<C>::push_mprts(mp, mf);
-  c_prm_set(mp->grid());
-  params_1vb_set(mp);
-  for (int p = 0; p < mp->n_patches(); p++) {
-    fields_t flds = mf[p];
-
-    flds.zero(JXI, JXI + 3);
-    ext_prepare_sort_before(mp[p]);
-    do_push_part_1vb_yz<C>(flds, mprts, p);
-  }
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
@@ -85,19 +94,11 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
 				  struct psc_mfields *mflds_base)
 {
   using mfields_t = typename C::mfields_t;
-  using fields_t = typename mfields_t::fields_t;
+  using mparticles_t = typename C::mparticles_t;
   
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-  mparticles_t mp(mprts);
-  c_prm_set(mp->grid());
-  params_1vb_set(mp);
-  for (int p = 0; p < mp->n_patches(); p++) {
-    fields_t flds = mf[p];
-    
-    flds.zero(JXI, JXI + 3);
-    ext_prepare_sort_before(mp[p]);
-    do_stagger_part_1vb_yz<C>(flds, mprts, p);
-  }
+  auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
+  auto mp = mparticles_t(mprts);
+  PushParticles1vb<C>::stagger_mprts(mp, mf);
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
