@@ -46,6 +46,17 @@ do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
 }
 
 template<typename C>
+struct PushParticles1vb
+{
+  using mparticles_t = typename C::mparticles_t;
+  using mfields_t = typename C::mfields_t;
+  
+  static void push_mprts(mparticles_t mprts, mfields_t mflds)
+  {
+  }
+};
+
+template<typename C>
 void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 			       struct psc_mparticles *mprts,
 			       struct psc_mfields *mflds_base)
@@ -55,6 +66,7 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
   
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   mparticles_t mp(mprts);
+  PushParticles1vb<C>::push_mprts(mp, mf);
   c_prm_set(mp->grid());
   params_1vb_set(ppsc, mprts, NULL);
   for (int p = 0; p < mp->n_patches(); p++) {
@@ -89,6 +101,6 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-using push_p_conf = push_p_config<mfields_t, opt_dim, opt_order, opt_calcj>;
+using push_p_conf = push_p_config<mparticles_t, mfields_t, opt_dim, opt_order, opt_calcj>;
 
 template struct push_p_ops<push_p_conf>;

@@ -9,9 +9,10 @@
 
 #include "../inc_defs.h"
 
-template<typename MF, typename D, typename O, typename J>
+template<typename MP, typename MF, typename D, typename O, typename J>
 struct push_p_config
 {
+  using mparticles_t = MP;
   using mfields_t = MF;
   using dim_t = D;
   using order_t = O;
