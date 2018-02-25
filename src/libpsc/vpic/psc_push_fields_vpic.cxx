@@ -22,7 +22,7 @@ public:
   {
     // needs J, E, B, TCA, material
     PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(JXI, VPIC_MFIELDS_N_COMP);
-    FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
+    FieldArray *vmflds = mf->vmflds_fields;
     Simulation_push_mflds_E(sim_, vmflds, dt_fac);
     Simulation_field_injection(sim_); // FIXME, this isn't the place, should have its own psc_field_injection
     
@@ -34,7 +34,7 @@ public:
   {
     // needs E, B
     PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, HX + 6);
-    FieldArray *vmflds = psc_mfields_vpic(mf.mflds())->vmflds_fields;
+    FieldArray *vmflds = mf->vmflds_fields;
     Simulation_push_mflds_H(sim_, vmflds, dt_fac);
     
     // updates B

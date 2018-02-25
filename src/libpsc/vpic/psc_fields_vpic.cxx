@@ -121,33 +121,33 @@ static int ref_count_fields, ref_count_hydro;
 // ----------------------------------------------------------------------
 // psc_mfields_vpic_setup
 
-static void psc_mfields_vpic_setup(struct psc_mfields *mflds)
+static void psc_mfields_vpic_setup(struct psc_mfields *_mflds)
 {
-  struct MfieldsVpic *sub = psc_mfields_vpic(mflds);
+  PscMfieldsVpic mflds(_mflds);
 
-  psc_mfields_setup_super(mflds);
+  psc_mfields_setup_super(_mflds);
 
-  assert(mflds->grid->n_patches() == 1);
-  assert(mflds->ibn[0] == 1);
-  assert(mflds->ibn[1] == 1);
-  assert(mflds->ibn[2] == 1);
+  assert(_mflds->grid->n_patches() == 1);
+  assert(_mflds->ibn[0] == 1);
+  assert(_mflds->ibn[1] == 1);
+  assert(_mflds->ibn[2] == 1);
 
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mflds->sim);
 
-  if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
+  if (_mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_fields == 0);
     ref_count_fields++;
 
-    sub->vmflds_fields = Simulation_get_FieldArray(sub->sim);
-  } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+    mflds->vmflds_fields = Simulation_get_FieldArray(mflds->sim);
+  } else if (_mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    sub->vmflds_hydro = Simulation_get_HydroArray(sub->sim);
+    mflds->vmflds_hydro = Simulation_get_HydroArray(mflds->sim);
   } else {
     assert(0);
   }
@@ -170,18 +170,18 @@ static void psc_mfields_vpic_destroy(struct psc_mfields *mflds)
 // ----------------------------------------------------------------------
 // psc_mfields_vpic_get_field_t
 
-fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
+fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *_mflds, int p)
 {
-  MfieldsVpic *sub = mrc_to_subobj(mflds, MfieldsVpic);
+  PscMfieldsVpic mflds(_mflds);
 
   // FIXME hacky...
-  if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
+  if (_mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     int ib[3], im[3];
-    float* data = Simulation_mflds_getData(sub->sim, sub->vmflds_fields, ib, im);
+    float* data = Simulation_mflds_getData(mflds->sim, mflds->vmflds_fields, ib, im);
     return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
-  } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+  } else if (_mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     int ib[3], im[3];
-    float* data = Simulation_hydro_getData(sub->sim, sub->vmflds_hydro, ib, im);
+    float* data = Simulation_hydro_getData(mflds->sim, mflds->vmflds_hydro, ib, im);
     return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
   } else {
     assert(0);

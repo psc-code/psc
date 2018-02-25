@@ -71,6 +71,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_mfields_set_param_int3(mflds_hydro, "ibn", ibn);
   mflds_hydro->grid = &ppsc->grid();
   psc_mfields_setup(mflds_hydro);
+  PscMfieldsVpic mf_hydro(mflds_hydro);
 
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
 
@@ -78,7 +79,7 @@ run_all_vpic_hydro(struct psc_output_fields_item *item, struct psc_mfields *mfld
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
 
   for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
-    HydroArray *vmflds_hydro = psc_mfields_vpic(mflds_hydro)->vmflds_hydro;
+    HydroArray *vmflds_hydro = mf_hydro->vmflds_hydro;
     Simulation_moments_run(sim, vmflds_hydro, mprts->vmprts, kind);
     
     mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);

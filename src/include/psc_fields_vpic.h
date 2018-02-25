@@ -101,15 +101,4 @@ struct fields_traits<fields_vpic_t>
 
 #include "vpic_iface.h"
 
-BEGIN_C_DECLS
-
-// ----------------------------------------------------------------------
-
-#define psc_mfields_vpic(mflds) ({					\
-      mrc_to_subobj(mflds, struct MfieldsVpic);			\
-    })
-
-
-END_C_DECLS
-
 #endif
