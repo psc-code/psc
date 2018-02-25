@@ -33,7 +33,7 @@ struct PushParticles1vb
     params_1vb_set(mprts);
     for (int p = 0; p < mprts->n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
+      auto& prts = mprts[p];
 
       flds.zero(JXI, JXI + 3);
       ExtPrepareSort<mparticles_t, typename C::ext_t>::before(prts);
@@ -51,7 +51,7 @@ struct PushParticles1vb
     params_1vb_set(mprts);
     for (int p = 0; p < mprts->n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
+      auto& prts = mprts[p];
 
       flds.zero(JXI, JXI + 3);
       ExtPrepareSort<mparticles_t, typename C::ext_t>::before(prts);
