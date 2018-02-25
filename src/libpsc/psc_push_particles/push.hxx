@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "push_config.hxx"
+
 template<typename C>
 struct PushParticles_;
 

@@ -4,11 +4,6 @@
 
 #include "push_particles.hxx"
 
-struct Config2ndXYZ;
-struct Config2ndXY;
-struct Config2ndXZ;
-struct Config2ndYZ;
-
 #include "push.hxx"
 
 struct PushParticlesGenericC : PushParticlesBase
