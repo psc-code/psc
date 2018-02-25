@@ -6,7 +6,7 @@
 
 #include <mrc_profile.h>
 
-using mparticles_t = mparticles_cuda_t;
+using mparticles_t = PscMparticlesCuda;
 
 // ======================================================================
 // psc_bnd_particles: subclass "cuda"

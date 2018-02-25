@@ -10,7 +10,7 @@
 
 static void
 psc_marder_vpic_clean_div_e(struct psc_marder *marder, PscMfieldsVpic mflds,
-			    mparticles_vpic_t mprts)
+			    PscMparticlesVpic mprts)
 {
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning electric field\n");
   
@@ -71,7 +71,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
   
   PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
 
-  mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
+  PscMparticlesVpic mprts = mprts_base->get_as<PscMparticlesVpic>();
 
   // Divergence clean e
   if (clean_div_e) {

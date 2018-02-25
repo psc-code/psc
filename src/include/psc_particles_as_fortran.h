@@ -4,7 +4,7 @@
 
 #include "psc_particles_fortran.h"
 
-using mparticles_t = mparticles_fortran_t;
+using mparticles_t = PscMparticlesFortran;
 using particle_t = mparticles_t::particle_t;
 
 #define PARTICLE_TYPE                 "fortran"

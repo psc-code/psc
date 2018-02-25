@@ -4,7 +4,7 @@
 
 #include "psc_particles_double.h"
 
-using mparticles_t = mparticles_double_t;
+using mparticles_t = PscMparticlesDouble;
 using particle_t = mparticles_t::particle_t;
 
 #define particle_qni_wni            particle_double_qni_wni

@@ -25,10 +25,10 @@ struct particle_fortran_t
 #define psc_mparticles_fortran(mprts) mrc_to_subobj(mprts, struct psc_mparticles_fortran)
 
 using psc_mparticles_fortran = psc_mparticles_<particle_fortran_t>;
-using mparticles_fortran_t = PscMparticles<psc_mparticles_fortran>;
+using PscMparticlesFortran = PscMparticles<psc_mparticles_fortran>;
 
 template<>
-struct mparticles_traits<mparticles_fortran_t>
+struct mparticles_traits<PscMparticlesFortran>
 {
   static constexpr const char* name = "fortran";
   static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }

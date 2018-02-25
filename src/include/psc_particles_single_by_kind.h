@@ -48,8 +48,8 @@ struct psc_mparticles_single_by_kind : psc_mparticles_base
 })
 
 // ======================================================================
-// mparticles_single_by_kind_t
+// MparticlesSingleByKind
 
-using mparticles_single_by_kind_t = PscMparticles<psc_mparticles_single_by_kind>;
+using MparticlesSingleByKind = PscMparticles<psc_mparticles_single_by_kind>;
 
 #endif

@@ -187,7 +187,7 @@ TEST(Mparticles, setParticles)
 
 TEST(PushParticles, Accel)
 {
-  using mparticles_t = mparticles_single_t;
+  using mparticles_t = PscMparticlesSingle;
   using mfields_t = PscMfieldsSingle;
   using Mparticles = mparticles_t::sub_t;
   using Mfields = mfields_t::sub_t;

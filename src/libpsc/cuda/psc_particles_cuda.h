@@ -11,9 +11,9 @@
 #include "cuda_iface.h"
 
 // ======================================================================
-// mparticles_cuda_t
+// PscMparticlesCuda
 
-struct mparticles_cuda_t : PscMparticles<psc_mparticles_cuda>
+struct PscMparticlesCuda : PscMparticles<psc_mparticles_cuda>
 {
   using Base = PscMparticles<psc_mparticles_cuda>;
   using particle_t = particle_cuda_t;
@@ -25,7 +25,7 @@ struct mparticles_cuda_t : PscMparticles<psc_mparticles_cuda>
 
   struct patch_t
   {
-    patch_t(mparticles_cuda_t& mp, int p)
+    patch_t(PscMparticlesCuda& mp, int p)
       : mp_(mp), p_(p), pi_(mp->grid())
     {
     }
@@ -37,7 +37,7 @@ struct mparticles_cuda_t : PscMparticles<psc_mparticles_cuda>
     const int* get_b_mx() const;
 
   private:
-    mparticles_cuda_t& mp_;
+    PscMparticlesCuda& mp_;
     int p_;
     ParticleIndexer<real_t> pi_;
   };
@@ -48,7 +48,7 @@ struct mparticles_cuda_t : PscMparticles<psc_mparticles_cuda>
 };
 
 template<>
-struct mparticles_traits<mparticles_cuda_t>
+struct mparticles_traits<PscMparticlesCuda>
 {
   static constexpr const char* name = "cuda";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

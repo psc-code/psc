@@ -13,7 +13,7 @@
 // psc_bnd_particles: subclass "single"
 
 struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_sub<mparticles_single_t>;
+  using sub_t = psc_bnd_particles_sub<PscMparticlesSingle>;
   psc_bnd_particles_ops_single() {
     name                    = "single";
     size                    = sizeof(sub_t);
@@ -29,7 +29,7 @@ struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
 // psc_bnd_particles: subclass "double"
 
 struct psc_bnd_particles_ops_double : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_sub<mparticles_double_t>;
+  using sub_t = psc_bnd_particles_sub<PscMparticlesDouble>;
   psc_bnd_particles_ops_double() {
     name                    = "double";
     size                    = sizeof(sub_t);
@@ -45,7 +45,7 @@ struct psc_bnd_particles_ops_double : psc_bnd_particles_ops {
 // psc_bnd_particles: subclass "fortran"
 
 struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_sub<mparticles_fortran_t>;
+  using sub_t = psc_bnd_particles_sub<PscMparticlesFortran>;
   psc_bnd_particles_ops_fortran() {
     name                    = "fortran";
     size                    = sizeof(sub_t);
@@ -61,7 +61,7 @@ struct psc_bnd_particles_ops_fortran : psc_bnd_particles_ops {
 // psc_bnd_particles: subclass "single2"
 
 struct psc_bnd_particles_ops_single2 : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_ordered<mparticles_single_t>;
+  using sub_t = psc_bnd_particles_ordered<PscMparticlesSingle>;
   psc_bnd_particles_ops_single2() {
     name                    = "single2";
     size                    = sizeof(sub_t);

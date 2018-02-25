@@ -33,7 +33,7 @@ struct PushParticlesVpic : PushParticlesBase
     // needs E, B (not really, because they're already in interpolator), rhob?
     PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, HX + 6);
     FieldArray *vmflds = mf->vmflds_fields;
-    mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
+    PscMparticlesVpic mprts = mprts_base->get_as<PscMparticlesVpic>();
     
     Simulation_push_mprts(sim_, mprts->vmprts, vmflds);
     

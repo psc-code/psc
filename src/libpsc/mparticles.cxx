@@ -161,7 +161,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
 {
   int fail_cnt = 0;
 
-  mparticles_t mprts = mprts_base->get_as<mparticles_double_t>(0);
+  mparticles_t mprts = mprts_base->get_as<PscMparticlesDouble>(0);
   const Grid_t& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {

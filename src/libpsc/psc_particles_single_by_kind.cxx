@@ -21,7 +21,7 @@ static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
 static void
 PFX(setup)(struct psc_mparticles *_mprts)
 {
-  mparticles_single_by_kind_t mprts(_mprts);
+  MparticlesSingleByKind mprts(_mprts);
 
   new(mprts.sub()) psc_mparticles_single_by_kind{ppsc->grid()};
 

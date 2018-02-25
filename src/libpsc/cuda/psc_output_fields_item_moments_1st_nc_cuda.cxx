@@ -11,7 +11,7 @@ static void
 rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	    struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
-  mparticles_cuda_t mprts = mprts_base->get_as<mparticles_cuda_t>();
+  PscMparticlesCuda mprts = mprts_base->get_as<PscMparticlesCuda>();
   PscMfieldsCuda mf_res = mres_base->get_as<PscMfieldsCuda>(0, 0);
   cuda_mparticles *cmprts = mprts->cmprts();
   cuda_mfields *cmres = mf_res->cmflds;
@@ -47,7 +47,7 @@ static void
 n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	      struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
-  mparticles_cuda_t mprts = mprts_base->get_as<mparticles_cuda_t>();
+  PscMparticlesCuda mprts = mprts_base->get_as<PscMparticlesCuda>();
   PscMfieldsCuda mf_res = mres_base->get_as<PscMfieldsCuda>(0, 0);
   cuda_mparticles *cmprts = mprts->cmprts();
   cuda_mfields *cmres = mf_res->cmflds;

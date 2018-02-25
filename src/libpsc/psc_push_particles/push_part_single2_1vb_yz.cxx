@@ -14,7 +14,7 @@
 #include "1vb.c"
 
 template<typename dim_t>
-using push_p_ops_1vb2_single2 = push_p_ops<push_p_config<mparticles_single_t, PscMfieldsSingle, dim_t, opt_order_1st, opt_calcj_1vb_2d, opt_ext_prepare_sort>>;
+using push_p_ops_1vb2_single2 = push_p_ops<push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_t, opt_order_1st, opt_calcj_1vb_2d, opt_ext_prepare_sort>>;
 
 using PushParticles_t = PushParticles_<push_p_ops_1vb2_single2>;
 

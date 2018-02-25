@@ -150,7 +150,7 @@ private:
 };
 
 template<typename MP>
-static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
+static void copy_from(PscMparticlesCuda mprts_to, MP mprts_from)
 {
   int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
@@ -167,7 +167,7 @@ static void copy_from(mparticles_cuda_t mprts_to, MP mprts_from)
 }
 
 template<typename MP>
-static void copy_to(mparticles_cuda_t mprts_from, MP mprts_to)
+static void copy_to(PscMparticlesCuda mprts_from, MP mprts_to)
 {
   int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
@@ -187,13 +187,13 @@ static void copy_to(mparticles_cuda_t mprts_from, MP mprts_to)
 void psc_mparticles_cuda::copy_from_single(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(mparticles_cuda_t(mprts_cuda), mparticles_single_t(mprts));
+  copy_from(PscMparticlesCuda(mprts_cuda), PscMparticlesSingle(mprts));
 }
 
 void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(mparticles_cuda_t(mprts_cuda), mparticles_single_t(mprts));
+  copy_to(PscMparticlesCuda(mprts_cuda), PscMparticlesSingle(mprts));
 }
 
 // ======================================================================
@@ -202,12 +202,12 @@ void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 void psc_mparticles_cuda::copy_from_double(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(mparticles_cuda_t(mprts_cuda), mparticles_double_t(mprts));
+  copy_from(PscMparticlesCuda(mprts_cuda), PscMparticlesDouble(mprts));
 }
 
 void psc_mparticles_cuda::copy_to_double(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(mparticles_cuda_t(mprts_cuda), mparticles_double_t(mprts));
+  copy_to(PscMparticlesCuda(mprts_cuda), PscMparticlesDouble(mprts));
 }
 

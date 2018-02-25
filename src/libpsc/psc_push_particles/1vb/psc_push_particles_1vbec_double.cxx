@@ -10,7 +10,7 @@
 // psc_push_particles: subclass "1vbec_double"
 
 template<typename dim_t>
-using push_p_ops_1vbec_double = push_p_ops<push_p_config<mparticles_double_t, PscMfieldsC, dim_t, opt_order_1st, opt_calcj_1vb_split>>;
+using push_p_ops_1vbec_double = push_p_ops<push_p_config<PscMparticlesDouble, PscMfieldsC, dim_t, opt_order_1st, opt_calcj_1vb_split>>;
 
 using PushParticles_t = PushParticles_<push_p_ops_1vbec_double>;
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;

@@ -35,15 +35,15 @@ template<typename MP>
 struct ConvertFromVpic;
 
 template<typename MP>
-static void copy_from(mparticles_vpic_t mprts, MP mprts_from);
+static void copy_from(PscMparticlesVpic mprts, MP mprts_from);
 
 // ----------------------------------------------------------------------
 // conversion to "single"
 
 template<>
-struct ConvertVpic<mparticles_single_t>
+struct ConvertVpic<PscMparticlesSingle>
 {
-  ConvertVpic(mparticles_single_t& mprts_other, Grid& grid, int p)
+  ConvertVpic(PscMparticlesSingle& mprts_other, Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
     im[0] = grid.nx + 2;
@@ -56,7 +56,7 @@ struct ConvertVpic<mparticles_single_t>
   }
 
 protected:
-  mparticles_single_t& mprts_other_;
+  PscMparticlesSingle& mprts_other_;
   int p_;
   int im[3];
   float dx[3];
@@ -64,9 +64,9 @@ protected:
 };
 
 template<>
-struct ConvertToVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
+struct ConvertToVpic<PscMparticlesSingle> : ConvertVpic<PscMparticlesSingle>
 {
-  using Base = ConvertVpic<mparticles_single_t>;
+  using Base = ConvertVpic<PscMparticlesSingle>;
 
   using Base::Base;
   
@@ -94,9 +94,9 @@ struct ConvertToVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
 };
 
 template<>
-struct ConvertFromVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
+struct ConvertFromVpic<PscMparticlesSingle> : ConvertVpic<PscMparticlesSingle>
 {
-  using Base = ConvertVpic<mparticles_single_t>;
+  using Base = ConvertVpic<PscMparticlesSingle>;
 
   using Base::Base;
   
@@ -130,22 +130,22 @@ struct ConvertFromVpic<mparticles_single_t> : ConvertVpic<mparticles_single_t>
 // conversion to "single_by_kind"
 
 template<>
-struct ConvertVpic<mparticles_single_by_kind_t>
+struct ConvertVpic<MparticlesSingleByKind>
 {
-  ConvertVpic(mparticles_single_by_kind_t& mprts_other, Grid& grid, int p)
+  ConvertVpic(MparticlesSingleByKind& mprts_other, Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
   }
 
 protected:
-  mparticles_single_by_kind_t& mprts_other_;
+  MparticlesSingleByKind& mprts_other_;
   int p_;
 };
 
 template<>
-struct ConvertToVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_single_by_kind_t>
+struct ConvertToVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByKind>
 {
-  using Base = ConvertVpic<mparticles_single_by_kind_t>;
+  using Base = ConvertVpic<MparticlesSingleByKind>;
 
   using Base::Base;
   
@@ -167,9 +167,9 @@ struct ConvertToVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_singl
 };
 
 template<>
-struct ConvertFromVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_single_by_kind_t>
+struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByKind>
 {
-  using Base = ConvertVpic<mparticles_single_by_kind_t>;
+  using Base = ConvertVpic<MparticlesSingleByKind>;
 
   using Base::Base;
   
@@ -191,7 +191,7 @@ struct ConvertFromVpic<mparticles_single_by_kind_t> : ConvertVpic<mparticles_sin
 };
   
 template<typename MP>
-void copy_to(mparticles_vpic_t mprts_from, MP mprts_to)
+void copy_to(PscMparticlesVpic mprts_from, MP mprts_to)
 {
   Particles *vmprts = mprts_from->vmprts;
   int n_patches = mprts_to->n_patches();
@@ -211,7 +211,7 @@ void copy_to(mparticles_vpic_t mprts_from, MP mprts_to)
 }
 
 template<>
-void copy_from<mparticles_single_t>(mparticles_vpic_t mprts_to, mparticles_single_t mprts_from)
+void copy_from<PscMparticlesSingle>(PscMparticlesVpic mprts_to, PscMparticlesSingle mprts_from)
 {
   Particles *vmprts = mprts_to->vmprts;
   int n_patches = mprts_to->n_patches();
@@ -226,7 +226,7 @@ void copy_from<mparticles_single_t>(mparticles_vpic_t mprts_to, mparticles_singl
   mprts_to->reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
-    ConvertToVpic<mparticles_single_t> convert_to_vpic(mprts_from, *vmprts->grid(), p);
+    ConvertToVpic<PscMparticlesSingle> convert_to_vpic(mprts_from, *vmprts->grid(), p);
 
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
@@ -238,7 +238,7 @@ void copy_from<mparticles_single_t>(mparticles_vpic_t mprts_to, mparticles_singl
 }
 
 template<>
-void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts_to, mparticles_single_by_kind_t mprts_from)
+void copy_from<MparticlesSingleByKind>(PscMparticlesVpic mprts_to, MparticlesSingleByKind mprts_from)
 {
   Particles *vmprts = mprts_to->vmprts;
   int n_patches = mprts_to->n_patches();
@@ -250,7 +250,7 @@ void copy_from<mparticles_single_by_kind_t>(mparticles_vpic_t mprts_to, mparticl
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertToVpic<mparticles_single_by_kind_t> convert_to_vpic(mprts_from, *vmprts->grid(), p);
+    ConvertToVpic<MparticlesSingleByKind> convert_to_vpic(mprts_from, *vmprts->grid(), p);
     vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic);
 
     off += n_prts;
@@ -262,7 +262,7 @@ static void psc_mparticles_vpic_copy_from(struct psc_mparticles *mprts,
 					  struct psc_mparticles *mprts_other,
 					  unsigned int flags)
 {
-  copy_from(mparticles_vpic_t(mprts), MP(mprts_other));
+  copy_from(PscMparticlesVpic(mprts), MP(mprts_other));
 }
 
 template<typename MP>
@@ -270,17 +270,17 @@ static void psc_mparticles_vpic_copy_to(struct psc_mparticles *mprts,
 					struct psc_mparticles *mprts_other,
 					unsigned int flags)
 {
-  copy_to(mparticles_vpic_t(mprts), MP(mprts_other));
+  copy_to(PscMparticlesVpic(mprts), MP(mprts_other));
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
 static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"          , psc_mparticles_vpic_copy_to<mparticles_single_t>),
-  MRC_OBJ_METHOD("copy_from_single"        , psc_mparticles_vpic_copy_from<mparticles_single_t>),
-  MRC_OBJ_METHOD("copy_to_single_by_kind"  , psc_mparticles_vpic_copy_to<mparticles_single_by_kind_t>),
-  MRC_OBJ_METHOD("copy_from_single_by_kind", psc_mparticles_vpic_copy_from<mparticles_single_by_kind_t>),
+  MRC_OBJ_METHOD("copy_to_single"          , psc_mparticles_vpic_copy_to<PscMparticlesSingle>),
+  MRC_OBJ_METHOD("copy_from_single"        , psc_mparticles_vpic_copy_from<PscMparticlesSingle>),
+  MRC_OBJ_METHOD("copy_to_single_by_kind"  , psc_mparticles_vpic_copy_to<MparticlesSingleByKind>),
+  MRC_OBJ_METHOD("copy_from_single_by_kind", psc_mparticles_vpic_copy_from<MparticlesSingleByKind>),
   {}
 };
 
@@ -290,7 +290,7 @@ static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
 static void
 psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
 {
-  mparticles_vpic_t mprts(_mprts);
+  PscMparticlesVpic mprts(_mprts);
 
   assert(_mprts->grid);
   new(mprts.sub()) psc_mparticles_vpic{*_mprts->grid};

@@ -26,7 +26,7 @@ static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
 static void
 psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 {
-  mparticles_cuda_t mprts(_mprts);
+  PscMparticlesCuda mprts(_mprts);
 
   assert(_mprts->grid);
   new(mprts.sub()) psc_mparticles_cuda(*_mprts->grid);
@@ -38,7 +38,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
 static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 {
-  mparticles_cuda_t mprts(_mprts);
+  PscMparticlesCuda mprts(_mprts);
   
   mprts.sub()->~psc_mparticles_cuda();
 }
@@ -60,7 +60,7 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 static void
 psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
 {
-  mparticles_cuda_t mprts(_mprts);
+  PscMparticlesCuda mprts(_mprts);
   int ierr;
   
   long h5_file;
@@ -104,7 +104,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
 static void
 psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 {
-  mparticles_cuda_t mprts(_mprts);
+  PscMparticlesCuda mprts(_mprts);
 
   psc_mparticles_read_super(_mprts, io);
 
@@ -141,7 +141,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
       
-      mparticles_cuda_t mprts = mparticles_cuda_t(_mprts);
+      PscMparticlesCuda mprts = PscMparticlesCuda(_mprts);
       mprts->to_device(xi4, pxi4, n_prts, off);
       
       free(xi4);
@@ -165,15 +165,15 @@ void
 psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles_prt *buf,
 			   uint *buf_n_by_patch)
 {
-  mparticles_cuda_t mprts(_mprts);
+  PscMparticlesCuda mprts(_mprts);
 
   mprts->inject_buf(buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------
-// mparticles_cuda_t::patch_t::get_b_mx
+// PscMparticlesCuda::patch_t::get_b_mx
 
-const int* mparticles_cuda_t::patch_t::get_b_mx() const
+const int* PscMparticlesCuda::patch_t::get_b_mx() const
 {
   return mp_->patch_get_b_mx(p_);
 }

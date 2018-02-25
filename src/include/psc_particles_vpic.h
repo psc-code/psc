@@ -54,10 +54,10 @@ struct psc_mparticles_vpic : psc_mparticles_base
   }
 };
 
-using mparticles_vpic_t = PscMparticles<psc_mparticles_vpic>;
+using PscMparticlesVpic = PscMparticles<psc_mparticles_vpic>;
 
 template<>
-struct mparticles_traits<mparticles_vpic_t>
+struct mparticles_traits<PscMparticlesVpic>
 {
   static constexpr const char* name = "vpic";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

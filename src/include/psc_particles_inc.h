@@ -3,19 +3,19 @@
 
 #define PFX(x) psc_mparticles_double_ ## x
 #define psc_mparticles_sub psc_mparticles_double
-using mparticles_t = mparticles_double_t;
+using mparticles_t = PscMparticlesDouble;
 
 #elif PSC_PARTICLES_AS_SINGLE
 
 #define PFX(x) psc_mparticles_single_ ## x
 #define psc_mparticles_sub psc_mparticles_single
-using mparticles_t = mparticles_single_t;
+using mparticles_t = PscMparticlesSingle;
 
 #elif PSC_PARTICLES_AS_FORTRAN
 
 #define PFX(x) psc_mparticles_fortran_ ## x
 #define psc_mparticles_sub psc_mparticles_fortran
-using mparticles_t = mparticles_fortran_t;
+using mparticles_t = PscMparticlesFortran;
 
 #endif
 

@@ -4,7 +4,7 @@
 
 #include "psc_particles_single.h"
 
-using mparticles_t = mparticles_single_t;
+using mparticles_t = PscMparticlesSingle;
 using particle_t = mparticles_t::particle_t;
 
 #define particle_qni_wni            particle_single_qni_wni

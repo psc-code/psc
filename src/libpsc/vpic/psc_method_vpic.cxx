@@ -162,7 +162,7 @@ psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
   if (sub->use_deck_particle_ic) {
     // If we want to use the deck particle i.c., we need to copy the
     // already set up "vpic" particles over to the base particles.
-    mparticles_vpic_t mprts = psc->particles->get_as<mparticles_vpic_t>(MP_DONT_COPY | MP_DONT_RESIZE);
+    PscMparticlesVpic mprts = psc->particles->get_as<PscMparticlesVpic>(MP_DONT_COPY | MP_DONT_RESIZE);
     mprts.put_as(psc->particles);
   } else {
     mparticles_base_t mprts(psc->particles);
@@ -208,7 +208,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   struct psc_mfields *mflds_base = psc->flds;
   struct psc_mparticles *mprts_base = psc->particles;
   PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
-  mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
+  PscMparticlesVpic mprts = mprts_base->get_as<PscMparticlesVpic>();
   
   // Do some consistency checks on user initialized fields
 

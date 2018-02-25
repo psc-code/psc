@@ -11,9 +11,9 @@
 
 extern int pr_time_step_no_comm;
 
-struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
+struct psc_bnd_particles_cuda : psc_bnd_particles_sub<PscMparticlesCuda>
 {
-  using Base = psc_bnd_particles_sub<mparticles_cuda_t>;
+  using Base = psc_bnd_particles_sub<PscMparticlesCuda>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -35,7 +35,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<mparticles_cuda_t>
   // ----------------------------------------------------------------------
   // exchange_particles
 
-  void exchange_particles(mparticles_cuda_t mprts)
+  void exchange_particles(PscMparticlesCuda mprts)
   {
     static int pr_A, pr_B;
     if (!pr_A) {
