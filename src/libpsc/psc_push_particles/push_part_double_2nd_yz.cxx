@@ -14,7 +14,6 @@
 
 #define DIM DIM_YZ
 #define ORDER ORDER_2ND
-#define PRTS PRTS_STAGGERED
 #define CACHE CACHE_EM_J
 #include "push_part_common.c"
 

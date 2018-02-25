@@ -1,8 +1,6 @@
 
 #include "inc_defs.h"
 
-#define PRTS_STAGGERED 1
-
 #define CACHE_EM_J 1
 
 #define IP_DEPOSIT
@@ -447,12 +445,6 @@ struct PushParticles_
       real_t *x = &part->xi;
       real_t vv[3];
 
-#if PRTS != PRTS_STAGGERED
-      // x^n, p^n -> x^(n+.5), p^n
-      calc_v(vv, &part->pxi);
-      push_x(x, vv, .5f * c_prm.dt);
-#endif
-    
       // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
       // FIELD INTERPOLATION
 
@@ -477,7 +469,6 @@ struct PushParticles_
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
       calc_v(vv, &part->pxi);
 
-#if PRTS == PRTS_STAGGERED
       // FIXME, inelegant way of pushing full dt
       push_x(x, vv, c_prm.dt);
 
@@ -488,20 +479,6 @@ struct PushParticles_
       IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
       IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
 
-#else
-      push_x(x, vv, .5f * c_prm.dt);
-
-      // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-      real_t xn[3] = { x[0], x[1], x[2] };
-      push_x(xn, vv, .5f * c_prm.dt);
-
-      // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-      ZERO_S1;
-      IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
-      IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
-      IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
-#endif
-    
       // CURRENT DENSITY AT (n+1.0)*dt
 
       SUBTR_S1_S0;
