@@ -7,9 +7,7 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
-using particle_single_real_t = float;
-
-struct particle_single_t : psc_particle<particle_single_real_t> {};
+struct particle_single_t : psc_particle<float> {};
 
 template<>
 struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_single_t>

@@ -6,12 +6,9 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
-using fields_single_real_t = float;
-
-struct fields_single_t : fields3d<fields_single_real_t>
+struct fields_single_t : fields3d<float>
 {
-  using Base = fields3d<fields_single_real_t>;
-  using mfields_t = PscMfields<fields_single_t>;
+  using Base = fields3d<float>;
 
   using Base::Base;
 };

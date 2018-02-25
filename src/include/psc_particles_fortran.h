@@ -7,11 +7,9 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 
-using particle_fortran_real_t = double;
-
 struct particle_fortran_t
 {
-  using real_t = particle_fortran_real_t;
+  using real_t = double;
 
   real_t xi, yi, zi;
   real_t pxi, pyi, pzi;

@@ -7,7 +7,6 @@
 struct fields_fortran_t : fields3d<double>
 {
   using Base = fields3d<double>;
-  using mfields_t = PscMfields<fields_fortran_t>;
 
   using Base::Base;
 };

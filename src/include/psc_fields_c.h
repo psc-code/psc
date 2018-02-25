@@ -6,12 +6,9 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
-using fields_c_real_t = double;
-
-struct fields_c_t : fields3d<fields_c_real_t>
+struct fields_c_t : fields3d<double>
 {
-  using Base = fields3d<fields_c_real_t>;
-  using mfields_t = PscMfields<fields_c_t>;
+  using Base = fields3d<double>;
 
   using Base::Base;
 };
