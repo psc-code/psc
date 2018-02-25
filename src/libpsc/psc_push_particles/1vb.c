@@ -68,7 +68,7 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
   mparticles_t mp(mprts);
   PushParticles1vb<C>::push_mprts(mp, mf);
   c_prm_set(mp->grid());
-  params_1vb_set(ppsc, mprts, NULL);
+  params_1vb_set(mp);
   for (int p = 0; p < mp->n_patches(); p++) {
     fields_t flds = mf[p];
 
@@ -90,7 +90,7 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   mparticles_t mp(mprts);
   c_prm_set(mp->grid());
-  params_1vb_set(ppsc, mprts, NULL);
+  params_1vb_set(mp);
   for (int p = 0; p < mp->n_patches(); p++) {
     fields_t flds = mf[p];
     
