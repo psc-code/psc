@@ -5,7 +5,7 @@
 #include "psc_fields_single.h"
 
 typedef fields_single_t      fields_t;
-typedef mfields_single_t     mfields_t;
+typedef PscMfieldsSingle     mfields_t;
 
 #define FIELDS_TYPE                   "single"
 

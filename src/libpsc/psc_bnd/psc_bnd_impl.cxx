@@ -22,7 +22,7 @@ struct psc_bnd_ops_c : psc_bnd_ops {
 // ======================================================================
 // psc_bnd: subclass "single"
 
-using psc_bnd_fld_ops_single = psc_bnd_fld_ops<mfields_single_t>;
+using psc_bnd_fld_ops_single = psc_bnd_fld_ops<PscMfieldsSingle>;
 
 struct psc_bnd_ops_single : psc_bnd_ops {
   psc_bnd_ops_single() {

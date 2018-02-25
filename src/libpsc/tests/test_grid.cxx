@@ -188,7 +188,7 @@ TEST(Mparticles, setParticles)
 TEST(PushParticles, Accel)
 {
   using mparticles_t = mparticles_single_t;
-  using mfields_t = mfields_single_t;
+  using mfields_t = PscMfieldsSingle;
   using Mparticles = mparticles_t::sub_t;
   using Mfields = mfields_t::sub_t;
   using Config = push_p_config<mparticles_t, mfields_t, dim_1, opt_order_1st, opt_calcj_1vb_var1>;

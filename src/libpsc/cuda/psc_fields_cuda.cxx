@@ -79,7 +79,7 @@ static void
 psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
 				  int mb, int me)
 {
-  mfields_single_t mf_single(mflds_single);
+  PscMfieldsSingle mf_single(mflds_single);
   mfields_cuda_t mf_cuda(mflds_cuda);
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
@@ -107,7 +107,7 @@ static void
 psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
 				int mb, int me)
 {
-  mfields_single_t mf_single(mflds_single);
+  PscMfieldsSingle mf_single(mflds_single);
   mfields_cuda_t mf_cuda(mflds_cuda);
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);

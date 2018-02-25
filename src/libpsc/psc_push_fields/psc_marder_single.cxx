@@ -7,7 +7,7 @@
 // ======================================================================
 // psc_marder: single
 
-using marder_ops_single = marder_ops<mfields_single_t>;
+using marder_ops_single = marder_ops<PscMfieldsSingle>;
 
 struct psc_marder_ops_single : psc_marder_ops {
   psc_marder_ops_single() {
