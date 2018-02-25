@@ -238,7 +238,8 @@ struct mparticles_patch_base
   mparticles_patch_base(Mparticles<P>* _mprts, int _p)
     : pi_(_mprts->grid()),
       mprts(_mprts),
-      p(_p)
+      p(_p),
+      grid_(_mprts->grid())
   {}
 
   particle_t& operator[](int n) { return buf[n]; }
@@ -283,8 +284,11 @@ struct mparticles_patch_base
     
   const int* get_b_mx() const { return pi_.b_mx_; }
 
-  real_t prt_qni(const particle_t& prt) const { return prt.qni(mprts->grid()); }
-  real_t prt_mni(const particle_t& prt) const { return prt.mni(mprts->grid()); }
+  real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
+  real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
+
+private:
+  const Grid_t& grid_;
 };
 
 template<typename P>
