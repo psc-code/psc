@@ -4,9 +4,6 @@
 
 #include "push_particles.hxx"
 
-struct Config1stXZ;
-struct Config1stYZ;
-
 #include "push.hxx"
 
 // ======================================================================

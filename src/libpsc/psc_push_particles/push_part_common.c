@@ -530,11 +530,7 @@ struct PushParticles_
 {
   using mparticles_t = typename C::mparticles_t;
   using mfields_t = typename C::mfields_t;
-#if CACHE == CACHE_EM_J
-  using CacheFields_t = CacheFields;
-#else
-  using CacheFields_t = CacheFieldsNone;
-#endif
+  using CacheFields_t = typename C::CacheFields;
   
   static void push_mprts(mparticles_t mprts, mfields_t mflds)
   {

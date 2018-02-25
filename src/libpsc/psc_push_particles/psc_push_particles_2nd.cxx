@@ -4,8 +4,6 @@
 
 #include "push_particles.hxx"
 
-struct Config2ndDoubleYZ;
-
 #include "push.hxx"
 
 // ======================================================================
