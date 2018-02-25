@@ -187,9 +187,12 @@ TEST(Mparticles, setParticles)
 
 TEST(PushParticles, Accel)
 {
-  using Mparticles = psc_mparticles_<particle_single_t>;
-  using Mfields = psc_mfields_<fields_single_t>;
-  using PushParticles = PushParticles1vbecSingle;
+  using mparticles_t = mparticles_single_t;
+  using mfields_t = mfields_single_t;
+  using Mparticles = mparticles_t::sub_t;
+  using Mfields = mfields_t::sub_t;
+  using Config = push_p_config<mparticles_t, mfields_t, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
+  using PushP = push_p_ops<Config>;
   const int n_prts = 131;
   const int n_steps = 10;
   const Mparticles::real_t eps = 1e-6;
@@ -213,7 +216,7 @@ TEST(PushParticles, Accel)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    PushParticles::ops_t<dim_1>::push_mprts(mprts, mflds);
+    PushP::push_mprts(mprts, mflds);
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto& prts = mprts[p];
       for (int m = 0; m < prts.size(); m++) {
