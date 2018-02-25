@@ -383,98 +383,6 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 #endif
 #endif
 
-#ifdef do_push_part
-
-static void
-do_push_part(int p, fields_t flds, mparticles_t mprts)
-{
-  mparticles_t::patch_t& prts = mprts[p];
-#if (DIM & DIM_X)
-  real_t s0x[N_RHO] = {}, s1x[N_RHO];
-#endif
-#if (DIM & DIM_Y)
-  real_t s0y[N_RHO] = {}, s1y[N_RHO];
-#endif
-#if (DIM & DIM_Z)
-  real_t s0z[N_RHO] = {}, s1z[N_RHO];
-#endif
-
-  c_prm_set(ppsc->grid());
-
-  Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
-  Fields3d<fields_t> J(flds);
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *part = &*prt_iter;
-    real_t *x = &part->xi;
-    real_t vv[3];
-
-#if PRTS != PRTS_STAGGERED
-    // x^n, p^n -> x^(n+.5), p^n
-    calc_v(vv, &part->pxi);
-    push_x(x, vv, .5f * c_prm.dt);
-#endif
-    
-    // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
-    // FIELD INTERPOLATION
-
-    real_t xm[3];
-    for (int d = 0; d < 3; d++) {
-      xm[d] = x[d] * c_prm.dxi[d];
-    }
-    IP ip;
-    ip.set_coeffs(xm);
-
-    IF_DIM_X( set_S(s0x, 0, ip.cx.g); );
-    IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
-    IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );
-
-    real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
-    real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
-
-    // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    real_t dq = c_prm.dqs * mprts->prt_qni(*part) / mprts->prt_mni(*part);
-    push_p(&part->pxi, E, H, dq);
-
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    calc_v(vv, &part->pxi);
-
-#if PRTS == PRTS_STAGGERED
-    // FIXME, inelegant way of pushing full dt
-    push_x(x, vv, c_prm.dt);
-
-    // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-    ZERO_S1;
-    IP ip2;
-    IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
-    IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
-    IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
-
-#else
-    push_x(x, vv, .5f * c_prm.dt);
-
-    // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-    real_t xn[3] = { x[0], x[1], x[2] };
-    push_x(xn, vv, .5f * c_prm.dt);
-
-    // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-    ZERO_S1;
-    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
-    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
-    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
-#endif
-    
-    // CURRENT DENSITY AT (n+1.0)*dt
-
-    SUBTR_S1_S0;
-    CURRENT_PREP;
-    CURRENT;
-  }
-
-}
-
-#endif
-
 struct CacheFields
 {
 #if DIM == DIM_YZ
@@ -550,6 +458,94 @@ struct PushParticles_
     } 
     prof_stop(pr);
   }
+
+  static void do_push_part(int p, fields_t flds, mparticles_t mprts)
+  {
+    auto& prts = mprts[p];
+#if (DIM & DIM_X)
+    real_t s0x[N_RHO] = {}, s1x[N_RHO];
+#endif
+#if (DIM & DIM_Y)
+    real_t s0y[N_RHO] = {}, s1y[N_RHO];
+#endif
+#if (DIM & DIM_Z)
+    real_t s0z[N_RHO] = {}, s1z[N_RHO];
+#endif
+
+    c_prm_set(ppsc->grid());
+
+    Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
+    Fields3d<fields_t> J(flds);
+
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *part = &*prt_iter;
+      real_t *x = &part->xi;
+      real_t vv[3];
+
+#if PRTS != PRTS_STAGGERED
+      // x^n, p^n -> x^(n+.5), p^n
+      calc_v(vv, &part->pxi);
+      push_x(x, vv, .5f * c_prm.dt);
+#endif
+    
+      // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
+      // FIELD INTERPOLATION
+
+      real_t xm[3];
+      for (int d = 0; d < 3; d++) {
+	xm[d] = x[d] * c_prm.dxi[d];
+      }
+      IP ip;
+      ip.set_coeffs(xm);
+
+      IF_DIM_X( set_S(s0x, 0, ip.cx.g); );
+      IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
+      IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );
+
+      real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
+      real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
+
+      // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+      real_t dq = c_prm.dqs * mprts->prt_qni(*part) / mprts->prt_mni(*part);
+      push_p(&part->pxi, E, H, dq);
+
+      // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
+      calc_v(vv, &part->pxi);
+
+#if PRTS == PRTS_STAGGERED
+      // FIXME, inelegant way of pushing full dt
+      push_x(x, vv, c_prm.dt);
+
+      // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
+      ZERO_S1;
+      IP ip2;
+      IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
+      IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
+      IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
+
+#else
+      push_x(x, vv, .5f * c_prm.dt);
+
+      // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
+      real_t xn[3] = { x[0], x[1], x[2] };
+      push_x(xn, vv, .5f * c_prm.dt);
+
+      // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
+      ZERO_S1;
+      IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, ip.cx.g.l); );
+      IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, ip.cy.g.l); );
+      IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, ip.cz.g.l); );
+#endif
+    
+      // CURRENT DENSITY AT (n+1.0)*dt
+
+      SUBTR_S1_S0;
+      CURRENT_PREP;
+      CURRENT;
+    }
+
+  }
+
 };
 
 // ----------------------------------------------------------------------
