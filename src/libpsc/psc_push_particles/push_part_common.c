@@ -17,10 +17,12 @@ using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 // ----------------------------------------------------------------------
 // find_l_minmax
 
-static inline void
-find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
+template<typename order>
+static void find_l_minmax(int *l1min, int *l1max, int k1, int lg1);
+
+template<>
+void find_l_minmax<opt_order_1st>(int *l1min, int *l1max, int k1, int lg1)
 {
-#if ORDER == ORDER_1ST
   if (k1 == lg1) {
     *l1min = 0; *l1max = +1;
   } else if (k1 == lg1 - 1) {
@@ -28,7 +30,11 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
   } else { // (k1 == lg1 + 1)
     *l1min = 0; *l1max = +2;
   }
-#elif ORDER == ORDER_2ND
+}
+
+template<>
+void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
+{
   if (k1 == lg1) {
     *l1min = -1; *l1max = +1;
   } else if (k1 == lg1 - 1) {
@@ -36,7 +42,6 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
   } else { // (k1 == lg1 + 1)
     *l1min = -1; *l1max = +2;
   }
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -114,7 +119,7 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 // current
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
-    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, ip.cxyz.g.l);	\
+  int l1min, l1max; find_l_minmax<typename C::order>(&l1min, &l1max, k1, ip.cxyz.g.l); \
     real_t fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;	\
 
 #define CURRENT_PREP							\
