@@ -22,30 +22,6 @@ using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 // ======================================================================
 
 template<typename C>
-static void
-do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
-{
-  mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
-  unsigned int n_prts = prts.size();
-  
-  for (int n = 0; n < n_prts; n++) {
-    push_one<C>(prts, n, flds, flds);
-  }
-}
-
-template<typename C>
-static void
-do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
-{
-  mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
-  unsigned int n_prts = prts.size();
-  
-  for (int n = 0; n < n_prts; n++) {
-    stagger_one<C>(prts, n, flds);
-  }
-}
-
-template<typename C>
 struct PushParticles1vb
 {
   using mparticles_t = typename C::mparticles_t;
@@ -58,7 +34,7 @@ struct PushParticles1vb
     for (int p = 0; p < mprts->n_patches(); p++) {
       mflds[p].zero(JXI, JXI + 3);
       ext_prepare_sort_before(mprts[p]);
-      do_push_part_1vb_yz<C>(mflds[p], mprts.mprts(), p);
+      do_push_part_1vb_yz(mflds[p], mprts.mprts(), p);
     }
   }
 
@@ -69,9 +45,30 @@ struct PushParticles1vb
     for (int p = 0; p < mprts->n_patches(); p++) {
       mflds[p].zero(JXI, JXI + 3);
       ext_prepare_sort_before(mprts[p]);
-      do_stagger_part_1vb_yz<C>(mflds[p], mprts.mprts(), p);
+      do_stagger_part_1vb_yz(mflds[p], mprts.mprts(), p);
     }
   }
+
+  static void do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
+  {
+    auto& prts = mparticles_t(mprts)[p];
+    unsigned int n_prts = prts.size();
+    
+    for (int n = 0; n < n_prts; n++) {
+      push_one<C>(prts, n, flds, flds);
+    }
+  }
+  
+  static void do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
+  {
+    auto& prts = mparticles_t(mprts)[p];
+    unsigned int n_prts = prts.size();
+    
+    for (int n = 0; n < n_prts; n++) {
+      stagger_one<C>(prts, n, flds);
+    }
+  }
+
 };
 
 template<typename C>
