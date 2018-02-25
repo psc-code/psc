@@ -8,7 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Config2ndDoubleYZ;
+struct Config2ndDoubleYZ
+{
+  using mparticles_t = PscMparticlesDouble;
+  using mfields_t = PscMfieldsC;
+};
 
 #define CONFIG Config2ndDoubleYZ
 

@@ -6,7 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Config2ndY;
+struct Config2ndY
+{
+  using mparticles_t = PscMparticlesDouble;
+  using mfields_t = PscMfieldsC;
+};
 
 #define CONFIG Config2ndY
 

@@ -552,6 +552,9 @@ struct PushParticles_
 template<typename C>
 struct PscPushParticles_
 {
+  using mparticles_t = typename C::mparticles_t;
+  using mfields_t = typename C::mfields_t;
+  
   static void push_mprts(struct psc_push_particles *push,
 			 struct psc_mparticles *mprts,
 			 struct psc_mfields *mflds_base)
