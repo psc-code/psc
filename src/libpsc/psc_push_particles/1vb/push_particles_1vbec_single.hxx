@@ -3,23 +3,12 @@
 
 #include "psc_fields_single.h"
 
-#define push_p_ops push_p_ops_1vbec_single
 #include "psc_push_particles_1vb.h"
 
 template<typename dim_t>
-using push_p_ops_1vbec_single_ = push_p_ops_1vbec_single<push_p_config<mfields_single_t, dim_t, opt_order_1st, opt_calcj_1vb_var1>>;
-
-#undef push_p_ops
+using push_p_ops_1vbec_single_ = push_p_ops<push_p_config<mfields_single_t, dim_t, opt_order_1st, opt_calcj_1vb_var1>>;
 
 // FIXME, special hack... for xyz_xz
-template<typename C>
-struct push_p_ops
-{
-  static void push_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
-			 struct psc_mfields *mflds_base);
-  static void stagger_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
-			    struct psc_mfields *mflds_base);
-};
 
 struct PushParticles1vbecSingle : PushParticles_<push_p_ops_1vbec_single_>
 {
