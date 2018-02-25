@@ -10,9 +10,9 @@
 template<typename R>
 __host__ __device__ inline void push_x(R x[3], const R v[3], R dt)
 {
-  if (!dim::InvarX::value) { x[0] += dt * v[0]; }
-  if (!dim::InvarY::value) { x[1] += dt * v[1]; }
-  if (!dim::InvarZ::value) { x[2] += dt * v[2]; }
+  if (!opt_dim::InvarX::value) { x[0] += dt * v[0]; }
+  if (!opt_dim::InvarY::value) { x[1] += dt * v[1]; }
+  if (!opt_dim::InvarZ::value) { x[2] += dt * v[2]; }
 }
 
 // ----------------------------------------------------------------------

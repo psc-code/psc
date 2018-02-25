@@ -12,10 +12,11 @@
 #include "psc.h" // FIXME
 
 #include "dim.hxx"
+
+using opt_dim = dim_yz;
+
 #include "interpolate.hxx"
 #include "pushp.hxx"
-
-using dim = dim_yz;
 
 #define BND (2) // FIXME
 

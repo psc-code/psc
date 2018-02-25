@@ -5,6 +5,7 @@
 
 #include <cmath>
 
+#include "inc_params.c"
 #include "pushp.hxx"
 
 // ----------------------------------------------------------------------

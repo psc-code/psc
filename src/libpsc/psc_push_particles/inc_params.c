@@ -1,4 +1,30 @@
 
+#pragma once
+
+#if (DIM & DIM_X)
+#define IF_DIM_X(s) s do{} while(0)
+#define IF_NOT_DIM_X(s) do{} while(0)
+#else
+#define IF_DIM_X(s) do{} while(0)
+#define IF_NOT_DIM_X(s) s do{} while(0)
+#endif
+
+#if (DIM & DIM_Y)
+#define IF_DIM_Y(s) s do{} while(0)
+#define IF_NOT_DIM_Y(s) do{} while(0)
+#else
+#define IF_DIM_Y(s) do{} while(0)
+#define IF_NOT_DIM_Y(s) s do{} while(0)
+#endif
+
+#if (DIM & DIM_Z)
+#define IF_DIM_Z(s) s do{} while(0)
+#define IF_NOT_DIM_Z(s) do{} while(0)
+#else
+#define IF_DIM_Z(s) do{} while(0)
+#define IF_NOT_DIM_Z(s) s do{} while(0)
+#endif
+
 #if DIM == DIM_1
 using opt_dim = dim_1;
 #elif DIM == DIM_X
@@ -15,6 +41,16 @@ using opt_dim = dim_xz;
 using opt_dim = dim_yz;
 #elif DIM == DIM_XYZ
 using opt_dim = dim_xyz;
+#else
+#error DIM must be defined
+#endif
+
+#if ORDER == ORDER_1ST
+using opt_order = opt_order_1st;
+#elif ORDER == ORDER_2ND
+using opt_order = opt_order_2nd;
+#else
+#error unknown ORDER
 #endif
 
 #if ORDER == ORDER_1ST
@@ -25,8 +61,19 @@ using opt_ip = opt_ip_1st;
 #endif
 #elif ORDER == ORDER_2ND
 using opt_ip = opt_ip_2nd;
+#endif
+
+#if CALC_J == CALC_J_1VB_SPLIT
+#if DIM == DIM_XYZ && PUSH_DIM != DIM_XZ
+// special hack because 1VB_VAR1 isn't available for xyz, but we pretend it is
+using opt_calcj = opt_calcj_1vb_var1;
 #else
-#error unknown ORDER
+using opt_calcj = opt_calcj_1vb_split;
+#endif
+#elif CALC_J == CALC_J_1VB_VAR1
+using opt_calcj = opt_calcj_1vb_var1;
+#elif CALC_J == CALC_J_1VB_2D
+using opt_calcj = opt_calcj_1vb_2d;
 #endif
 
 #define CUDA_CONSTANT

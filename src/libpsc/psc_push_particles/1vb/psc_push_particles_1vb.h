@@ -7,11 +7,15 @@
 #include "push_particles.hxx"
 #include "fields.hxx"
 
-template<typename MF, typename D>
+#include "../inc_defs.h"
+
+template<typename MF, typename D, typename O, typename J>
 struct push_p_config
 {
   using mfields_t = MF;
   using dim_t = D;
+  using order_t = O;
+  using calcj_t = J;
 };
 
 template<typename C>

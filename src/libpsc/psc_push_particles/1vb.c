@@ -89,6 +89,6 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-using push_p_conf = push_p_config<mfields_t, opt_dim>;
+using push_p_conf = push_p_config<mfields_t, opt_dim, opt_order, opt_calcj>;
 
 template struct push_p_ops<push_p_conf>;

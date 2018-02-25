@@ -24,6 +24,10 @@
 #define CALC_J_1VB_VAR1  2 // V-B deposition variant with less code path divergence
 #define CALC_J_1VB_2D    3 // V-B deposition variant with simpler out-of-plane current deposit
 
+struct opt_calcj_1vb_split;
+struct opt_calcj_1vb_var1;
+struct opt_calcj_1vb_2d;
+
 // ----------------------------------------------------------------------
 // EM_CACHE
 
@@ -36,6 +40,9 @@
 
 #define ORDER_1ST 1
 #define ORDER_2ND 2
+
+struct opt_order_1st;
+struct opt_order_2nd;
 
 struct opt_ip_1st;
 struct opt_ip_1st_ec;
@@ -53,53 +60,4 @@ struct opt_ip_2nd;
 #define CURR_CACHE_SHIFT 2
 #define CURR_CACHE_CUDA 3
 #define CURR_CACHE_CUDA2 4
-
-// ----------------------------------------------------------------------
-
-#if (DIM & DIM_X)
-#define IF_DIM_X(s) s do{} while(0)
-#define IF_NOT_DIM_X(s) do{} while(0)
-#else
-#define IF_DIM_X(s) do{} while(0)
-#define IF_NOT_DIM_X(s) s do{} while(0)
-#endif
-
-#if (DIM & DIM_Y)
-#define IF_DIM_Y(s) s do{} while(0)
-#define IF_NOT_DIM_Y(s) do{} while(0)
-#else
-#define IF_DIM_Y(s) do{} while(0)
-#define IF_NOT_DIM_Y(s) s do{} while(0)
-#endif
-
-#if (DIM & DIM_Z)
-#define IF_DIM_Z(s) s do{} while(0)
-#define IF_NOT_DIM_Z(s) do{} while(0)
-#else
-#define IF_DIM_Z(s) do{} while(0)
-#define IF_NOT_DIM_Z(s) s do{} while(0)
-#endif
-
-#if DIM == DIM_1
-using dim = dim_1;
-#elif DIM == DIM_X
-using dim = dim_x;
-#elif DIM == DIM_Y
-using dim = dim_y;
-#elif DIM == DIM_Z
-using dim = dim_z;
-#elif DIM == DIM_XY
-using dim = dim_xy;
-#elif DIM == DIM_XZ
-using dim = dim_xz;
-#elif DIM == DIM_YZ
-using dim = dim_yz;
-#elif DIM == DIM_XYZ
-using dim = dim_xyz;
-#else
-#error DIM needs to be defined
-#endif
-
-
-
 
