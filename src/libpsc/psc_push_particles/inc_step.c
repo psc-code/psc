@@ -70,9 +70,9 @@ struct ExtPrepareSort<mparticles_t, opt_ext_prepare_sort>
 // ----------------------------------------------------------------------
 // push_one
 
-template<typename C>
+template<typename C, typename particles_t>
 CUDA_DEVICE static void
-push_one(mparticles_t::patch_t& prts, int n,
+push_one(particles_t& prts, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
   FieldsEM EM(flds_em);
