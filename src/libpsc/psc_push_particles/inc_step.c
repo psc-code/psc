@@ -25,45 +25,49 @@
 // it's moved, and also append particles that left the block to an extra
 // list at the end of all local particles (hopefully there's enough room...)
 
+namespace {
+
 #ifdef EXT_PREPARE_SORT
 
-static inline void
-ext_prepare_sort_before(mparticles_t::patch_t& prts)
+struct ExtPrepareSort
 {
-  memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
-}
-
-static inline void
-ext_prepare_sort(mparticles_t::patch_t& prts, int n, particle_t *prt,
-		 int *b_pos)
-{
-  unsigned int n_prts = prts.size();
-  /* FIXME, only if blocksize == 1! */
-  int *b_mx = prts.pi_.b_mx_;
-  if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-      b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
-    prts.b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
-  } else { /* out of bounds */
-    prts.b_idx[n] = prts.nr_blocks;
-    /* append to back */
-    prts[n_prts + prts.b_cnt[prts.nr_blocks]] = *prt;
+  static void before(mparticles_t::patch_t& prts)
+  {
+    memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
   }
-  prts.b_cnt[prts.b_idx[n]]++;
-}
+
+  static void sort(mparticles_t::patch_t& prts, int n, particle_t *prt,
+		   int *b_pos)
+  {
+    unsigned int n_prts = prts.size();
+    /* FIXME, only if blocksize == 1! */
+    int *b_mx = prts.pi_.b_mx_;
+    if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
+	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+      prts.b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
+    } else { /* out of bounds */
+      prts.b_idx[n] = prts.nr_blocks;
+      /* append to back */
+      prts[n_prts + prts.b_cnt[prts.nr_blocks]] = *prt;
+    }
+    prts.b_cnt[prts.b_idx[n]]++;
+  }
+};
 
 #else
 
-static inline void
-ext_prepare_sort_before(mparticles_t::patch_t& prtss)
+struct ExtPrepareSort
 {
-}
+  static void before(mparticles_t::patch_t& prtss)
+  {}
 
-static inline void
-ext_prepare_sort(mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
-{
-}
+  static void sort(mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
+  {}
+};
 
 #endif
+
+}
 
 // ======================================================================
 
