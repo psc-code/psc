@@ -73,7 +73,7 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
     fields_t flds = mf[p];
 
     flds.zero(JXI, JXI + 3);
-    ext_prepare_sort_before(mprts, p);
+    ext_prepare_sort_before(mp[p]);
     do_push_part_1vb_yz<C>(flds, mprts, p);
   }
   mf.put_as(mflds_base, JXI, JXI+3);
@@ -95,7 +95,7 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
     fields_t flds = mf[p];
     
     flds.zero(JXI, JXI + 3);
-    ext_prepare_sort_before(mprts, p);
+    ext_prepare_sort_before(mp[p]);
     do_stagger_part_1vb_yz<C>(flds, mprts, p);
   }
   mf.put_as(mflds_base, JXI, JXI+3);

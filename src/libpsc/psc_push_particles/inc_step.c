@@ -28,18 +28,15 @@
 #ifdef EXT_PREPARE_SORT
 
 static inline void
-ext_prepare_sort_before(struct psc_mparticles *mprts, int p)
+ext_prepare_sort_before(mparticles_t::patch_t& prts)
 {
-  mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
-  
   memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
 }
 
 static inline void
-ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
+ext_prepare_sort(mparticles_t::patch_t& prts, int n, particle_t *prt,
 		 int *b_pos)
 {
-  mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
   unsigned int n_prts = prts.size();
   /* FIXME, only if blocksize == 1! */
   int *b_mx = prts.pi_.b_mx_;
@@ -57,13 +54,12 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 #else
 
 static inline void
-ext_prepare_sort_before(struct psc_mparticles *mprts, int p)
+ext_prepare_sort_before(mparticles_t::patch_t& prtss)
 {
 }
 
 static inline void
-ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
-		 int *b_pos)
+ext_prepare_sort(mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
 {
 }
 
