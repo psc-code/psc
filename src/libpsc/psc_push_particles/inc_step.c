@@ -29,14 +29,17 @@ namespace {
 
 #ifdef EXT_PREPARE_SORT
 
+template<typename mparticles_t>
 struct ExtPrepareSort
 {
-  static void before(mparticles_t::patch_t& prts)
+  using particle_t = typename mparticles_t::particle_t;
+  
+  static void before(typename mparticles_t::patch_t& prts)
   {
     memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
   }
 
-  static void sort(mparticles_t::patch_t& prts, int n, particle_t *prt,
+  static void sort(typename mparticles_t::patch_t& prts, int n, particle_t *prt,
 		   int *b_pos)
   {
     unsigned int n_prts = prts.size();
@@ -56,12 +59,15 @@ struct ExtPrepareSort
 
 #else
 
+template<typename mparticles_t>
 struct ExtPrepareSort
 {
-  static void before(mparticles_t::patch_t& prtss)
+  using particle_t = typename mparticles_t::particle_t;
+
+  static void before(typename mparticles_t::patch_t& prtss)
   {}
 
-  static void sort(mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
+  static void sort(typename mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
   {}
 };
 
