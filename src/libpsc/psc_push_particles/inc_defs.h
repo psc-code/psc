@@ -61,3 +61,9 @@ struct opt_ip_2nd;
 #define CURR_CACHE_CUDA 3
 #define CURR_CACHE_CUDA2 4
 
+// ----------------------------------------------------------------------
+
+
+struct opt_ext_none;
+struct opt_ext_prepare_sort;
+

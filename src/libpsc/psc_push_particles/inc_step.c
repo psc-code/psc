@@ -25,12 +25,26 @@
 // it's moved, and also append particles that left the block to an extra
 // list at the end of all local particles (hopefully there's enough room...)
 
-namespace {
-
 #ifdef EXT_PREPARE_SORT
+  using opt_ext = opt_ext_prepare_sort;
+#else
+  using opt_ext = opt_ext_none;
+#endif
+
+template<typename mparticles_t, typename OPT_EXT>
+struct ExtPrepareSort
+{
+  using particle_t = typename mparticles_t::particle_t;
+
+  static void before(typename mparticles_t::patch_t& prtss)
+  {}
+
+  static void sort(typename mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
+  {}
+};
 
 template<typename mparticles_t>
-struct ExtPrepareSort
+struct ExtPrepareSort<mparticles_t, opt_ext_prepare_sort>
 {
   using particle_t = typename mparticles_t::particle_t;
   
@@ -56,24 +70,6 @@ struct ExtPrepareSort
     prts.b_cnt[prts.b_idx[n]]++;
   }
 };
-
-#else
-
-template<typename mparticles_t>
-struct ExtPrepareSort
-{
-  using particle_t = typename mparticles_t::particle_t;
-
-  static void before(typename mparticles_t::patch_t& prtss)
-  {}
-
-  static void sort(typename mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
-  {}
-};
-
-#endif
-
-}
 
 // ======================================================================
 
