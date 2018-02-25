@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct Config2ndXYZ;
+
+#define CONFIG Config2ndXYZ
+
 #define DIM DIM_XYZ
 #define ORDER ORDER_2ND
 #define PRTS PRTS_STAGGERED

@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct Config2ndYZ;
+
+#define CONFIG Config2ndYZ
+
 #define DIM DIM_YZ
 #define ORDER ORDER_2ND
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_yz

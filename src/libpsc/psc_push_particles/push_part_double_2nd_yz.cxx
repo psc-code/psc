@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct Config2ndDoubleXZ;
+
+#define CONFIG Config2ndDoubleXZ
+
 #define DIM DIM_YZ
 #define ORDER ORDER_2ND
 #define PRTS PRTS_STAGGERED

@@ -523,7 +523,13 @@ cache_fields_to_j(fields_t fld, fields_t flds)
 
 #endif
 
-#ifdef psc_push_particles_push_mprts
+template<typename C>
+struct PushParticles_
+{
+  static void push_mprts(mparticles_t mprts, mfields_t mflds)
+  {
+  }
+};
 
 // ----------------------------------------------------------------------
 // psc_push_particles_push_mprts
@@ -541,6 +547,8 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
 {
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   mparticles_t mp = mparticles_t(mprts);
+
+  PushParticles_<CONFIG>::push_mprts(mp, mf);
   
   static int pr;
   if (!pr) {
@@ -568,4 +576,3 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-#endif
