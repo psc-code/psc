@@ -22,8 +22,6 @@ struct particle_fortran_t
   real_t wni;
 };
 
-#define psc_mparticles_fortran(mprts) mrc_to_subobj(mprts, struct psc_mparticles_fortran)
-
 using MparticlesFortran = Mparticles<particle_fortran_t>;
 using PscMparticlesFortran = PscMparticles<MparticlesFortran>;
 

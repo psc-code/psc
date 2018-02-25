@@ -12,8 +12,6 @@ using particle_double_real_t = double;
 
 struct particle_double_t : psc_particle<particle_double_real_t> {};
 
-#define psc_mparticles_double(mprts) mrc_to_subobj(mprts, struct MparticlesDouble)
-
 using MparticlesDouble = Mparticles<particle_double_t>;
 using PscMparticlesDouble = PscMparticles<MparticlesDouble>;
 

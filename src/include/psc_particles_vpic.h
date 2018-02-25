@@ -63,6 +63,4 @@ struct mparticles_traits<PscMparticlesVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-#define psc_mparticles_vpic(mprts) mrc_to_subobj(mprts, struct MparticlesVpic)
-
 #endif

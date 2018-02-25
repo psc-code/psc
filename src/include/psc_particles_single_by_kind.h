@@ -43,10 +43,6 @@ struct MparticlesSingleByKind : MparticlesBase
   }
 };
 
-#define psc_mparticles_single_by_kind(mprts)({				\
-      mrc_to_subobj(mprts, struct MparticlesSingleByKind);	\
-})
-
 // ======================================================================
 // PscMparticlesSingleByKind
 

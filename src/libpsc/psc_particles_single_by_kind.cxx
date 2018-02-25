@@ -29,19 +29,19 @@ PFX(setup)(struct psc_mparticles *_mprts)
 }
 
 static void
-PFX(destroy)(struct psc_mparticles *mprts)
+PFX(destroy)(struct psc_mparticles *_mprts)
 {
-  bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
+  auto mprts = PscMparticlesSingleByKind{_mprts};
 
-  bk_mparticles_delete(bkmprts);
+  bk_mparticles_delete(mprts->bkmprts);
 }
 
 static unsigned int
-PFX(get_nr_particles)(struct psc_mparticles *mprts)
+PFX(get_nr_particles)(struct psc_mparticles *_mprts)
 {
-  bk_mparticles *bkmprts = psc_mparticles_sub(mprts)->bkmprts;
+  auto mprts = PscMparticlesSingleByKind{_mprts};
 
-  return bk_mparticles_n_prts(bkmprts);
+  return bk_mparticles_n_prts(mprts->bkmprts);
 }
 
 // ----------------------------------------------------------------------
