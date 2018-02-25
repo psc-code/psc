@@ -24,10 +24,14 @@ struct push_p_config
 template<typename C>
 struct push_p_ops
 {
+  using mparticles_t = typename C::mparticles_t;
+  using mfields_t = typename C::mfields_t;
+  
   static void push_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
 			 struct psc_mfields *mflds_base);
   static void stagger_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
 			    struct psc_mfields *mflds_base);
+  static void push_mprts(mparticles_t mprts, mfields_t mflds);
 };
 
 // ======================================================================

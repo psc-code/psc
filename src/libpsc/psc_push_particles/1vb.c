@@ -65,6 +65,13 @@ struct PushParticles1vb
 };
 
 template<typename C>
+void push_p_ops<C>::push_mprts(typename C::mparticles_t mprts,
+			       typename C::mfields_t mflds)
+{
+  PushParticles1vb<C>::push_mprts(mprts, mflds);
+}
+
+template<typename C>
 void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 			       struct psc_mparticles *mprts,
 			       struct psc_mfields *mflds_base)
