@@ -8,15 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Config2ndDoubleXZ;
+struct Config2ndDoubleYZ;
 
-#define CONFIG Config2ndDoubleXZ
+#define CONFIG Config2ndDoubleYZ
 
 #define DIM DIM_YZ
 #define ORDER ORDER_2ND
 #define PRTS PRTS_STAGGERED
 //#define CACHE CACHE_EM_J
-#define psc_push_particles_push_mprts psc_push_particles_2nd_double_push_mprts_yz
 #define do_push_part do_push_part_2nd_yz
 #define PROF_NAME "2nd_push_mprts_yz"
 #include "push_part_common.c"

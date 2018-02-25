@@ -4,16 +4,27 @@
 
 #include "push_particles.hxx"
 
+struct Config1stXZ;
+struct Config1stYZ;
+
+template<typename C>
+struct PscPushParticles_
+{
+  static void push_mprts(struct psc_push_particles *push,
+			 struct psc_mparticles *mprts,
+			 struct psc_mfields *mflds_base);
+};
+
 // ======================================================================
 // psc_push_particles: subclass "1st"
 
 struct PushParticles1st : PushParticlesBase
 {
   void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return psc_push_particles_push_mprts_1st_xz(nullptr, mprts, mflds); }
+  { return PscPushParticles_<Config1stXZ>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return psc_push_particles_push_mprts_1st_yz(nullptr, mprts, mflds); }
+  { return PscPushParticles_<Config1stYZ>::push_mprts(nullptr, mprts, mflds); }
 };
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles1st>;

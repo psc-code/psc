@@ -22,12 +22,10 @@ using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 
 #if DIM == DIM_XZ
 #define SFX(x) x ## _1st_xz
-#define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1st_xz
 #define PROF_NAME "push_mprts_1st_xz"
 #elif DIM == DIM_YZ
 #define SFX(x) x ## _1st_yz
-#define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1st_yz
 #define PROF_NAME "push_mprts_1st_yz"
 #endif
@@ -35,23 +33,18 @@ using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 #elif ORDER == ORDER_2ND
 
 #if DIM == DIM_Y
-#define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_y
 #define do_push_part do_push_part_genc_y
 #define PROF_NAME "genc_push_mprts_y"
 #elif DIM == DIM_Z
-#define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_z
 #define do_push_part do_push_part_genc_z
 #define PROF_NAME "genc_push_mprts_z"
 #elif DIM == DIM_XY
-#define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xy
 #define do_push_part do_push_part_genc_xy
 #define PROF_NAME "genc_push_mprts_xy"
 #elif DIM == DIM_XZ
-#define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xz
 #define do_push_part do_push_part_genc_xz
 #define PROF_NAME "genc_push_mprts_xz"
 #elif DIM == DIM_XYZ
-#define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xyz
 #define do_push_part do_push_part_genc_xyz
 #define PROF_NAME "genc_push_mprts_xyz"
 #endif
@@ -532,18 +525,14 @@ struct PushParticles_
 };
 
 // ----------------------------------------------------------------------
-// psc_push_particles_push_mprts
+// PscPushParticles_
 
-void
-#ifdef SFX
-SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
-				   struct psc_mparticles *mprts,
-				   struct psc_mfields *mflds_base)
-#else
-psc_push_particles_push_mprts(struct psc_push_particles *push,
-			      struct psc_mparticles *mprts,
-			      struct psc_mfields *mflds_base)
-#endif
+template<typename C>
+struct PscPushParticles_
+{
+  static void push_mprts(struct psc_push_particles *push,
+			 struct psc_mparticles *mprts,
+			 struct psc_mfields *mflds_base)
 {
   mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   mparticles_t mp = mparticles_t(mprts);
@@ -570,9 +559,12 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
     flds.zero(JXI, JXI + 3);
     do_push_part(p, flds, mparticles_t(mprts));
 #endif
-  }
+  } 
   prof_stop(pr);
 
   mf.put_as(mflds_base, JXI, JXI+3);
 }
+};
+
+template struct PscPushParticles_<CONFIG>;
 
