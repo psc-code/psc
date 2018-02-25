@@ -59,7 +59,15 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 
 #endif
 
-#define S(s, off) s[off + S_OFF]
+class Rho1d
+{
+public:
+  real_t  operator[](int i) const { return s_[i + S_OFF]; }
+  real_t& operator[](int i)       { return s_[i + S_OFF]; }
+  
+private:
+  real_t s_[N_RHO];  
+};
 
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
@@ -70,12 +78,12 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 // ----------------------------------------------------------------------
 // ZERO_S1
 
-#define ZERO_S1 do {				\
+#define ZERO_S1 do {					\
     for (int i = -S_OFF; i < -S_OFF + N_RHO; i++) {	\
-      IF_DIM_X( S(s1x, i) = 0.f; );		\
-      IF_DIM_Y( S(s1y, i) = 0.f; );		\
-      IF_DIM_Z( S(s1z, i) = 0.f; );		\
-    }						\
+      IF_DIM_X( s1x[i] = 0.f; );			\
+      IF_DIM_Y( s1y[i] = 0.f; );			\
+      IF_DIM_Z( s1z[i] = 0.f; );			\
+    }							\
   } while (0)
 
 // ----------------------------------------------------------------------
@@ -83,9 +91,9 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 
 #define SUBTR_S1_S0 do {			\
     for (int i = -S_OFF + 1; i <= 1; i++) {	\
-      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
-      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
-      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
+      IF_DIM_X( s1x[i] -= s0x[i]; );		\
+      IF_DIM_Y( s1y[i] -= s0y[i]; );		\
+      IF_DIM_Z( s1z[i] -= s0z[i]; );		\
     }						\
   } while (0)
 
@@ -94,23 +102,23 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 
 #if ORDER == ORDER_1ST
 static inline void
-set_S(real_t *s0, int shift, struct ip_coeff_1st<real_t> gg)
+set_S(Rho1d& s, int shift, struct ip_coeff_1st<real_t> gg)
 {
-  S(s0, shift  ) = gg.v0;
-  S(s0, shift+1) = gg.v1;
+  s[shift  ] = gg.v0;
+  s[shift+1] = gg.v1;
 }
 
 #elif ORDER == ORDER_2ND
 
 static inline void
-set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
+set_S(Rho1d& s, int shift, struct ip_coeff_2nd<real_t> gg)
 {
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
   // but it needs checking.
   real_t h = gg.h;
-  S(s0, shift-1) = .5f * (1.5f-std::abs(h-1.f)) * (1.5f-std::abs(h-1.f));
-  S(s0, shift  ) = .75f - std::abs(h) * std::abs(h);
-  S(s0, shift+1) = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
+  s[shift-1] = .5f * (1.5f-std::abs(h-1.f)) * (1.5f-std::abs(h-1.f));
+  s[shift  ] = .75f - std::abs(h) * std::abs(h);
+  s[shift+1] = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
 }
 
 #endif
@@ -135,9 +143,9 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
   real_t jyh = 0.f;					\
 								\
   for (int l2 = l2min; l2 <= l2max; l2++) {			\
-    real_t wx = S(s0y, l2) + .5f * S(s1y, l2);		\
-    real_t wy = S(s1y, l2);				\
-    real_t wz = S(s0y, l2) + .5f * S(s1y, l2);		\
+    real_t wx = s0y[l2] + .5f * s1y[l2];		\
+    real_t wy = s1y[l2];				\
+    real_t wz = s0y[l2] + .5f * s1y[l2];		\
     								\
     real_t jxh = fnqxx*wx;				\
     jyh -= fnqy*wy;						\
@@ -149,14 +157,14 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
   }
 
 #define CURRENT_2ND_Z						\
-  real_t jzh = 0.f;					\
+  real_t jzh = 0.f;						\
   for (int l3 = l3min; l3 <= l3max; l3++) {			\
-    real_t wx = S(s0z, l3) + .5f * S(s1z, l3);		\
-    real_t wy = S(s0z, l3) + .5f * S(s1z, l3);		\
-    real_t wz = S(s1z, l3);				\
+    real_t wx = s0z[l3] + .5f * s1z[l3];			\
+    real_t wy = s0z[l3] + .5f * s1z[l3];			\
+    real_t wz = s1z[l3];					\
     								\
-    real_t jxh = fnqxx*wx;				\
-    real_t jyh = fnqyy*wy;				\
+    real_t jxh = fnqxx*wx;					\
+    real_t jyh = fnqyy*wy;					\
     jzh -= fnqz*wz;						\
     								\
     J(JXI, 0,0,ip.cz.g.l+l3) += jxh;				\
@@ -166,26 +174,26 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 
 #define CURRENT_2ND_XY							\
   for (int l2 = l2min; l2 <= l2max; l2++) {				\
-    real_t jxh = 0.f;						\
+    real_t jxh = 0.f;							\
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
-      real_t wx = S(s1x, l1) * (S(s0y, l2) + .5f*S(s1y, l2));	\
-      real_t wz = S(s0x, l1) * S(s0y, l2)			\
-	+ .5f * S(s1x, l1) * S(s0y, l2)					\
-	+ .5f * S(s0x, l1) * S(s1y, l2)					\
-	+ (1.f/3.f) * S(s1x, l1) * S(s1y, l2);				\
+      real_t wx = s1x[l1] * (s0y[l2] + .5f*s1y[l2]);			\
+      real_t wz = s0x[l1] * s0y[l2]					\
+	+ .5f * s1x[l1] * s0y[l2]					\
+	+ .5f * s0x[l1] * s1y[l2]					\
+	+ (1.f/3.f) * s1x[l1] * s1y[l2];				\
       									\
       jxh -= fnqx*wx;							\
-      J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jxh;				\
-      J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += fnqzz * wz;			\
+      J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jxh;			\
+      J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += fnqzz * wz;		\
     }									\
   }									\
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
-    real_t jyh = 0.f;						\
+    real_t jyh = 0.f;							\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
-      real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
+      real_t wy = s1y[l2] * (s0x[l1] + .5f*s1x[l1]);			\
       									\
       jyh -= fnqy*wy;							\
-      J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jyh;				\
+      J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jyh;			\
     }									\
   }
 
@@ -193,7 +201,7 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
   for (int l3 = l3min; l3 <= l3max; l3++) {	\
     real_t jxh = 0.f;						\
     for (int l1 = l1min; l1 < l1max; l1++) {				\
-      real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
+      real_t wx = s1x[l1] * (s0z[l3] + .5f*s1z[l3]);	\
       jxh -= fnqx*wx;							\
       J(JXI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jxh;				\
     }									\
@@ -201,10 +209,10 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 									\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
-      real_t wy = S(s0x, l1) * S(s0z, l3)			\
-	+ .5f * S(s1x, l1) * S(s0z, l3)					\
-	+ .5f * S(s0x, l1) * S(s1z, l3)					\
-	+ (1.f/3.f) * S(s1x, l1) * S(s1z, l3);				\
+      real_t wy = s0x[l1] * s0z[l3]			\
+	+ .5f * s1x[l1] * s0z[l3]					\
+	+ .5f * s0x[l1] * s1z[l3]					\
+	+ (1.f/3.f) * s1x[l1] * s1z[l3];				\
       real_t jyh = fnqyy * wy;					\
       J(JYI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jyh;				\
     }									\
@@ -212,7 +220,7 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
   for (int l1 = l1min; l1 <= l1max; l1++) {				\
     real_t jzh = 0.f;						\
     for (int l3 = l3min; l3 < l3max; l3++) {				\
-      real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
+      real_t wz = s1z[l3] * (s0x[l1] + .5f*s1x[l1]);	\
       jzh -= fnqz*wz;							\
       J(JZI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jzh;				\
     }									\
@@ -221,10 +229,10 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 #define CURRENT_1ST_YZ							\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
-      real_t wx = S(s0y, l2) * S(s0z, l3)			\
-	+ .5f * S(s1y, l2) * S(s0z, l3)					\
-	+ .5f * S(s0y, l2) * S(s1z, l3)					\
-	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
+      real_t wx = s0y[l2] * s0z[l3]			\
+	+ .5f * s1y[l2] * s0z[l3]					\
+	+ .5f * s0y[l2] * s1z[l3]					\
+	+ (1.f/3.f) * s1y[l2] * s1z[l3];				\
       real_t jxh = fnqxx * wx;					\
       J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
     }									\
@@ -233,7 +241,7 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     real_t jyh = 0.f;						\
     for (int l2 = l2min; l2 < l2max; l2++) {				\
-      real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
+      real_t wy = s1y[l2] * (s0z[l3] + .5f*s1z[l3]);	\
       jyh -= fnqy*wy;							\
       J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
     }									\
@@ -242,7 +250,7 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
   for (int l2 = l2min; l2 <= l2max; l2++) {				\
     real_t jzh = 0.f;						\
     for (int l3 = l3min; l3 < l3max; l3++) {				\
-      real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
+      real_t wz = s1z[l3] * (s0y[l2] + .5f*s1y[l2]);	\
       jzh -= fnqz*wz;							\
       J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;				\
     }									\
@@ -250,9 +258,9 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
 
 #define JZH(i) jzh[i+2]
 #define CURRENT_2ND_YZ							\
-    real_t jxh;						\
-    real_t jyh;						\
-    real_t jzh[5];						\
+  real_t jxh;								\
+  real_t jyh;								\
+  real_t jzh[5];							\
 									\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
       JZH(l2) = 0.f;							\
@@ -260,19 +268,19 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
     for (int l3 = l3min; l3 <= l3max; l3++) {				\
       jyh = 0.f;							\
       for (int l2 = l2min; l2 <= l2max; l2++) {				\
-	real_t wx = S(s0y, l2) * S(s0z, l3)			\
-	  + .5f * S(s1y, l2) * S(s0z, l3)				\
-	  + .5f * S(s0y, l2) * S(s1z, l3)				\
-	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
-	real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3)); \
-	real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2)); \
+	real_t wx = s0y[l2] * s0z[l3]					\
+	  + .5f * s1y[l2] * s0z[l3]					\
+	  + .5f * s0y[l2] * s1z[l3]					\
+	+ (1.f/3.f) * s1y[l2] * s1z[l3];				\
+	real_t wy = s1y[l2] * (s0z[l3] + .5f*s1z[l3]);			\
+	real_t wz = s1z[l3] * (s0y[l2] + .5f*s1y[l2]);			\
 									\
 	jxh = fnqxx*wx;							\
 	jyh -= fnqy*wy;							\
 	JZH(l2) -= fnqz*wz;						\
 									\
-	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
-	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
+	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
+	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
 	J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += JZH(l2);			\
       }									\
     }									\
@@ -282,10 +290,10 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
       real_t jxh = 0.f;					\
       for (int l1 = l1min; l1 <= l1max; l1++) {				\
-	real_t wx = S(s1x, l1) * (S(s0y, l2) * S(s0z, l3) +	\
-					   .5f * S(s1y, l2) * S(s0z, l3) + \
-					   .5f * S(s0y, l2) * S(s1z, l3) + \
-					   (1.f/3.f) * S(s1y, l2) * S(s1z, l3)); \
+	real_t wx = s1x[l1] * (s0y[l2] * s0z[l3] +	\
+					   .5f * s1y[l2] * s0z[l3] + \
+					   .5f * s0y[l2] * s1z[l3] + \
+					   (1.f/3.f) * s1y[l2] * s1z[l3]); \
 									\
 	jxh -= fnqx*wx;							\
 	J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
@@ -297,10 +305,10 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
       real_t jyh = 0.f;					\
       for (int l2 = l2min; l2 <= l2max; l2++) {				\
-	real_t wy = S(s1y, l2) * (S(s0x, l1) * S(s0z, l3) +	\
-					   .5f * S(s1x, l1) * S(s0z, l3) + \
-					   .5f * S(s0x, l1) * S(s1z, l3) + \
-					   (1.f/3.f) * S(s1x, l1)*S(s1z, l3)); \
+	real_t wy = s1y[l2] * (s0x[l1] * s0z[l3] +	\
+					   .5f * s1x[l1] * s0z[l3] + \
+					   .5f * s0x[l1] * s1z[l3] + \
+					   (1.f/3.f) * s1x[l1]*s1z[l3]); \
 									\
 	jyh -= fnqy*wy;							\
 	J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
@@ -312,10 +320,10 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
     for (int l1 = l1min; l1 <= l1max; l1++) {				\
       real_t jzh = 0.f;					\
       for (int l3 = l3min; l3 <= l3max; l3++) {				\
-	real_t wz = S(s1z, l3) * (S(s0x, l1) * S(s0y, l2) +	\
-					   .5f * S(s1x, l1) * S(s0y, l2) +\
-					   .5f * S(s0x, l1) * S(s1y, l2) +\
-					   (1.f/3.f) * S(s1x, l1)*S(s1y, l2)); \
+	real_t wz = s1z[l3] * (s0x[l1] * s0y[l2] +	\
+					   .5f * s1x[l1] * s0y[l2] +\
+					   .5f * s0x[l1] * s1y[l2] +\
+					   (1.f/3.f) * s1x[l1]*s1y[l2]); \
 									\
 	jzh -= fnqz*wz;							\
 	J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;			\
@@ -435,13 +443,13 @@ private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
 #if (DIM & DIM_X)
-    real_t s0x[N_RHO] = {}, s1x[N_RHO];
+    Rho1d s0x = {}, s1x;
 #endif
 #if (DIM & DIM_Y)
-    real_t s0y[N_RHO] = {}, s1y[N_RHO];
+    Rho1d s0y = {}, s1y;
 #endif
 #if (DIM & DIM_Z)
-    real_t s0z[N_RHO] = {}, s1z[N_RHO];
+    Rho1d s0z = {}, s1z;
 #endif
 
     c_prm_set(ppsc->grid());
