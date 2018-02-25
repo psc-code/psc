@@ -142,9 +142,8 @@ c_prm_set(const Grid_t& grid)
 // params_1vb
 
 static void _mrc_unused
-params_1vb_set(mparticles_t mprts)
+params_1vb_set(const Grid_t& grid)
 {
-  auto& grid = mprts->grid();
   auto& kinds = grid.kinds;
   struct params_1vb params;
 
