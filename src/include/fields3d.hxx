@@ -291,10 +291,10 @@ struct psc_mfields_ : psc_mfields_base
 };
 
 // ======================================================================
-// mfields_base
+// PscMfields
 
 template<typename S>
-struct mfields_base
+struct PscMfields
 {
   using sub_t = S;
   using fields_t = typename sub_t::fields_t;
@@ -303,7 +303,7 @@ struct mfields_base
   static_assert(std::is_convertible<sub_t*, psc_mfields_base*>::value,
 		"sub classes used in mfields_t must derive from psc_mfields_base");
   
-  mfields_base(struct psc_mfields *mflds)
+  PscMfields(struct psc_mfields *mflds)
     : mflds_(mflds),
       sub_(mrc_to_subobj(mflds, sub_t))
   {}
@@ -330,7 +330,7 @@ private:
   sub_t *sub_;
 };
 
-using mfields_base_t = mfields_base<psc_mfields_base>;
+using mfields_base_t = PscMfields<psc_mfields_base>;
 
 #endif
 

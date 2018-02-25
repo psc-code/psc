@@ -18,7 +18,7 @@ struct fields_cuda_t
 struct psc_mfields_cuda : psc_mfields_base
 {
   using fields_t = fields_cuda_t;
-  using mfields_t = mfields_base<psc_mfields_cuda>;
+  using mfields_t = PscMfields<psc_mfields_cuda>;
   
   psc_mfields_cuda(const Grid_t& grid, int n_fields, const Int3& ibn);
   psc_mfields_cuda(const psc_mfields_cuda&) = delete;
@@ -40,7 +40,7 @@ struct psc_mfields_cuda : psc_mfields_base
   struct cuda_mfields *cmflds;
 };
 
-using mfields_cuda_t = mfields_base<psc_mfields_cuda>;
+using mfields_cuda_t = PscMfields<psc_mfields_cuda>;
 
 template<>
 struct fields_traits<fields_cuda_t>

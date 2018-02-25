@@ -11,13 +11,13 @@ using fields_c_real_t = double;
 struct fields_c_t : fields3d<fields_c_real_t>
 {
   using Base = fields3d<fields_c_real_t>;
-  using mfields_t = mfields_base<fields_c_t>;
+  using mfields_t = PscMfields<fields_c_t>;
 
   using Base::Base;
 };
 
 using psc_mfields_c_sub = psc_mfields_<fields_c_t>;
-using mfields_c_t = mfields_base<psc_mfields_c_sub>;
+using mfields_c_t = PscMfields<psc_mfields_c_sub>;
 
 template<>
 struct fields_traits<fields_c_t>
