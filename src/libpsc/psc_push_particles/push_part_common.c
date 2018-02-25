@@ -531,17 +531,16 @@ struct PushParticles_
     
     prof_start(pr);
     for (int p = 0; p < mprts->n_patches(); p++) {
-      fields_t flds = mflds[p];
 #if CACHE == CACHE_EM_J
-      auto& prts = mprts[p];
       // FIXME, can't we just skip this and just set j when copying back?
-      flds.zero(JXI, JXI + 3);
-      fields_t flds_cache = cache_fields_from_em(flds);
+      mflds[p].zero(JXI, JXI + 3);
+      fields_t flds_cache = cache_fields_from_em(mflds[p]);
       do_push_part(p, flds_cache, mprts);
-      cache_fields_to_j(flds_cache, flds);
+      cache_fields_to_j(flds_cache, mflds[p]);
       flds_cache.dtor();
 #else
-      flds.zero(JXI, JXI + 3);
+      mflds[p].zero(JXI, JXI + 3);
+      fields_t flds = mflds[p];
       do_push_part(p, flds, mprts);
 #endif
     } 
