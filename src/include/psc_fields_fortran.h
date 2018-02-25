@@ -21,10 +21,10 @@ struct psc_mfields_fortran_sub
   int im[3]; //> extent for each patch (incl. ghostpoints)
 };
 
-using mfields_fortran_t = PscMfields<psc_mfields_fortran_sub>;
+using PscMfieldsFortran = PscMfields<psc_mfields_fortran_sub>;
 
 template<>
-inline fields_fortran_t mfields_fortran_t::operator[](int p)
+inline fields_fortran_t PscMfieldsFortran::operator[](int p)
 {
   fields_fortran_t psc_mfields_fortran_get_field_t(struct psc_mfields *mflds, int p);
   return psc_mfields_fortran_get_field_t(mflds_, p);
