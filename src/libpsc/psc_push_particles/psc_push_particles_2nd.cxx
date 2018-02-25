@@ -6,13 +6,7 @@
 
 struct Config2ndDoubleYZ;
 
-template<typename C>
-struct PscPushParticles_
-{
-  static void push_mprts(struct psc_push_particles *push,
-			 struct psc_mparticles *mprts,
-			 struct psc_mfields *mflds_base);
-};
+#include "push.hxx"
 
 // ======================================================================
 // psc_push_particles: subclass "2nd_double"
@@ -23,7 +17,7 @@ struct PscPushParticles_
 struct PushParticles2ndDouble : PushParticlesBase
 {
   void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<Config2ndDoubleYZ>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles_<Config2ndDoubleYZ>>::push_mprts(nullptr, mprts, mflds); }
 };
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles2ndDouble>;

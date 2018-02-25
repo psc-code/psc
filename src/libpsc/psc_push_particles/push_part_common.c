@@ -519,6 +519,9 @@ cache_fields_to_j(fields_t fld, fields_t flds)
 template<typename C>
 struct PushParticles_
 {
+  using mparticles_t = typename C::mparticles_t;
+  using mfields_t = typename C::mfields_t;
+  
   static void push_mprts(mparticles_t mprts, mfields_t mflds)
   {
     static int pr;
@@ -549,11 +552,11 @@ struct PushParticles_
 // ----------------------------------------------------------------------
 // PscPushParticles_
 
-template<typename C>
+template<typename PushParticles_t>
 struct PscPushParticles_
 {
-  using mparticles_t = typename C::mparticles_t;
-  using mfields_t = typename C::mfields_t;
+  using mparticles_t = typename PushParticles_t::mparticles_t;
+  using mfields_t = typename PushParticles_t::mfields_t;
   
   static void push_mprts(struct psc_push_particles *push,
 			 struct psc_mparticles *mprts,
@@ -562,11 +565,11 @@ struct PscPushParticles_
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
     mparticles_t mp = mparticles_t(mprts);
     
-    PushParticles_<CONFIG>::push_mprts(mp, mf);
+    PushParticles_t::push_mprts(mp, mf);
     
     mf.put_as(mflds_base, JXI, JXI+3);
   }
 };
 
-template struct PscPushParticles_<CONFIG>;
+template struct PscPushParticles_<PushParticles_<CONFIG>>;
 
