@@ -17,34 +17,6 @@ using real_t = mparticles_t::real_t;
 using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 
 // ----------------------------------------------------------------------
-
-#if ORDER == ORDER_1ST
-
-#if DIM == DIM_XZ
-#define SFX(x) x ## _1st_xz
-#define PROF_NAME "push_mprts_1st_xz"
-#elif DIM == DIM_YZ
-#define SFX(x) x ## _1st_yz
-#define PROF_NAME "push_mprts_1st_yz"
-#endif
-
-#elif ORDER == ORDER_2ND
-
-#if DIM == DIM_Y
-#define PROF_NAME "genc_push_mprts_y"
-#elif DIM == DIM_Z
-#define PROF_NAME "genc_push_mprts_z"
-#elif DIM == DIM_XY
-#define PROF_NAME "genc_push_mprts_xy"
-#elif DIM == DIM_XZ
-#define PROF_NAME "genc_push_mprts_xz"
-#elif DIM == DIM_XYZ
-#define PROF_NAME "genc_push_mprts_xyz"
-#endif
-
-#endif
-
-// ----------------------------------------------------------------------
 // find_l_minmax
 
 static inline void
@@ -437,7 +409,7 @@ struct PushParticles_
   {
     static int pr;
     if (!pr) {
-      pr = prof_register(PROF_NAME, 1., 0, 0);
+      pr = prof_register(__func__, 1., 0, 0);
     }
     
     prof_start(pr);

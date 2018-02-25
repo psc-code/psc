@@ -16,6 +16,5 @@
 #define ORDER ORDER_2ND
 #define PRTS PRTS_STAGGERED
 #define CACHE CACHE_EM_J
-#define PROF_NAME "2nd_push_mprts_yz"
 #include "push_part_common.c"
 
