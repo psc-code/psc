@@ -32,9 +32,16 @@ struct PushParticles1vb
     c_prm_set(mprts->grid());
     params_1vb_set(mprts);
     for (int p = 0; p < mprts->n_patches(); p++) {
-      mflds[p].zero(JXI, JXI + 3);
-      ext_prepare_sort_before(mprts[p]);
-      do_push_part_1vb_yz(mflds[p], mprts.mprts(), p);
+      auto flds = mflds[p];
+      auto prts = mprts[p];
+
+      flds.zero(JXI, JXI + 3);
+      ext_prepare_sort_before(prts);
+
+      unsigned int n_prts = prts.size();
+      for (int n = 0; n < n_prts; n++) {
+	push_one<C>(prts, n, flds, flds);
+      }
     }
   }
 
@@ -43,32 +50,18 @@ struct PushParticles1vb
     c_prm_set(mprts->grid());
     params_1vb_set(mprts);
     for (int p = 0; p < mprts->n_patches(); p++) {
-      mflds[p].zero(JXI, JXI + 3);
-      ext_prepare_sort_before(mprts[p]);
-      do_stagger_part_1vb_yz(mflds[p], mprts.mprts(), p);
-    }
-  }
+      auto flds = mflds[p];
+      auto prts = mprts[p];
 
-  static void do_push_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
-  {
-    auto& prts = mparticles_t(mprts)[p];
-    unsigned int n_prts = prts.size();
-    
-    for (int n = 0; n < n_prts; n++) {
-      push_one<C>(prts, n, flds, flds);
-    }
-  }
-  
-  static void do_stagger_part_1vb_yz(fields_t flds, struct psc_mparticles *mprts, int p)
-  {
-    auto& prts = mparticles_t(mprts)[p];
-    unsigned int n_prts = prts.size();
-    
-    for (int n = 0; n < n_prts; n++) {
-      stagger_one<C>(prts, n, flds);
-    }
-  }
+      flds.zero(JXI, JXI + 3);
+      ext_prepare_sort_before(prts);
 
+      unsigned int n_prts = prts.size();
+      for (int n = 0; n < n_prts; n++) {
+	stagger_one<C>(prts, n, flds);
+      }
+    }
+  }
 };
 
 template<typename C>
