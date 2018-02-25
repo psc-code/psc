@@ -12,7 +12,7 @@
 #endif
 
 MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, const Int3& ibn)
-  : psc_mfields_base(grid, n_fields)
+  : MfieldsBase(grid, n_fields)
 {
   dprintf("CMFLDS: ctor\n");
   cmflds = new cuda_mfields(grid, n_fields, ibn);

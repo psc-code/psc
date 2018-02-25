@@ -163,16 +163,16 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 }
 
 // ======================================================================
-// psc_mfields_base
+// MfieldsBase
 
-struct psc_mfields_base
+struct MfieldsBase
 {
   struct fields_t
   {
     struct real_t {};
   };
   
-  psc_mfields_base(const Grid_t& grid, int n_fields)
+  MfieldsBase(const Grid_t& grid, int n_fields)
     : grid_(grid),
       n_fields_(n_fields)
   {}
@@ -182,12 +182,12 @@ struct psc_mfields_base
   virtual void zero_comp(int m) = 0;
   virtual void set_comp(int m, double val) = 0;
   virtual void scale_comp(int m, double val) = 0;
-  virtual void axpy_comp(int m_y, double alpha, psc_mfields_base& x, int m_x) = 0;
+  virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
   virtual double max_comp(int m) = 0;
 
   void zero()            { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
   void scale(double val) { for (int m = 0; m < n_fields_; m++) scale_comp(m, val); }
-  void axpy(double alpha, psc_mfields_base& x)
+  void axpy(double alpha, MfieldsBase& x)
   {
     for (int m = 0; m < n_fields_; m++) {
       axpy_comp(m, alpha, x, m);
@@ -203,13 +203,13 @@ protected:
 // Mfields
 
 template<typename F>
-struct Mfields : psc_mfields_base
+struct Mfields : MfieldsBase
 {
   using fields_t = F;
   using real_t = typename fields_t::real_t;
 
   Mfields(const Grid_t& grid, int n_fields, int ibn[3])
-    : psc_mfields_base(grid, n_fields)
+    : MfieldsBase(grid, n_fields)
   {
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
@@ -267,7 +267,7 @@ struct Mfields : psc_mfields_base
     }
   }
   
-  void axpy_comp(int m_y, double alpha, psc_mfields_base& x_base, int m_x) override
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override
   {
     // FIXME? dynamic_cast would actually be more appropriate
     Mfields& x = static_cast<Mfields&>(x_base);
@@ -300,7 +300,7 @@ struct PscMfields
   using fields_t = typename sub_t::fields_t;
   using real_t = typename fields_t::real_t;
 
-  static_assert(std::is_convertible<sub_t*, psc_mfields_base*>::value,
+  static_assert(std::is_convertible<sub_t*, MfieldsBase*>::value,
 		"sub classes used in mfields_t must derive from psc_mfields_base");
   
   PscMfields(struct psc_mfields *mflds)
@@ -330,7 +330,7 @@ private:
   sub_t *sub_;
 };
 
-using PscMfieldsBase = PscMfields<psc_mfields_base>;
+using PscMfieldsBase = PscMfields<MfieldsBase>;
 
 #endif
 

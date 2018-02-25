@@ -15,7 +15,7 @@ struct fields_cuda_t
   using real_t = float;
 };
 
-struct MfieldsCuda : psc_mfields_base
+struct MfieldsCuda : MfieldsBase
 {
   using fields_t = fields_cuda_t;
   using mfields_t = PscMfields<MfieldsCuda>;
@@ -27,7 +27,7 @@ struct MfieldsCuda : psc_mfields_base
   void zero_comp(int m) override;
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
-  void axpy_comp(int m_y, double alpha, psc_mfields_base& x, int m_x) override { assert(0); }
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) override { assert(0); }
   double max_comp(int m) override { assert(0); return 0.; }
 
   void zero();
