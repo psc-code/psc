@@ -482,19 +482,19 @@ static fields_t
 cache_fields_from_em(fields_t flds)
 {
   fields_t fld = fields_t(flds.ib, flds.im, 9);
-  Fields3d<fields_t> F(flds), CACHE(fld);
+  Fields3d<fields_t> F(flds), F_CACHE(fld);
   // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
   // Has to be at least -2 .. +3 because of staggering
   // FIXME, get rid of caching since it's no different from the actual
   // fields...
   for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
     for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
-      CACHE(fld, EX, 0,iy,iz) = F(EX, 0,iy,iz);
-      CACHE(fld, EY, 0,iy,iz) = F(EY, 0,iy,iz);
-      CACHE(fld, EZ, 0,iy,iz) = F(EZ, 0,iy,iz);
-      CACHE(fld, HX, 0,iy,iz) = F(HX, 0,iy,iz);
-      CACHE(fld, HY, 0,iy,iz) = F(HY, 0,iy,iz);
-      CACHE(fld, HZ, 0,iy,iz) = F(HZ, 0,iy,iz);
+      F_CACHE(EX, 0,iy,iz) = F(EX, 0,iy,iz);
+      F_CACHE(EY, 0,iy,iz) = F(EY, 0,iy,iz);
+      F_CACHE(EZ, 0,iy,iz) = F(EZ, 0,iy,iz);
+      F_CACHE(HX, 0,iy,iz) = F(HX, 0,iy,iz);
+      F_CACHE(HY, 0,iy,iz) = F(HY, 0,iy,iz);
+      F_CACHE(HZ, 0,iy,iz) = F(HZ, 0,iy,iz);
     }
   }
   return fld;
@@ -503,12 +503,12 @@ cache_fields_from_em(fields_t flds)
 static void
 cache_fields_to_j(fields_t fld, fields_t flds)
 {
-  Fields3d<fields_t> F(flds), CACHE(fld);
+  Fields3d<fields_t> F(flds), F_CACHE(fld);
   for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
     for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
-      F(JXI, 0,iy,iz) += CACHE(JXI, 0,iy,iz);
-      F(JYI, 0,iy,iz) += CACHE(JYI, 0,iy,iz);
-      F(JZI, 0,iy,iz) += CACHE(JZI, 0,iy,iz);
+      F(JXI, 0,iy,iz) += F_CACHE(JXI, 0,iy,iz);
+      F(JYI, 0,iy,iz) += F_CACHE(JYI, 0,iy,iz);
+      F(JZI, 0,iy,iz) += F_CACHE(JZI, 0,iy,iz);
     }
   }
 }
@@ -537,7 +537,7 @@ struct PushParticles_
       // FIXME, can't we just skip this and just set j when copying back?
       flds.zero(JXI, JXI + 3);
       fields_t flds_cache = cache_fields_from_em(flds);
-      do_push_part(p, flds_cache, prts);
+      do_push_part(p, flds_cache, mprts);
       cache_fields_to_j(flds_cache, flds);
       flds_cache.dtor();
 #else
