@@ -521,6 +521,28 @@ struct PushParticles_
 {
   static void push_mprts(mparticles_t mprts, mfields_t mflds)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register(PROF_NAME, 1., 0, 0);
+    }
+    
+    prof_start(pr);
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      fields_t flds = mflds[p];
+#if CACHE == CACHE_EM_J
+      auto& prts = mprts[p];
+      // FIXME, can't we just skip this and just set j when copying back?
+      flds.zero(JXI, JXI + 3);
+      fields_t flds_cache = cache_fields_from_em(flds);
+      do_push_part(p, flds_cache, prts);
+      cache_fields_to_j(flds_cache, flds);
+      flds_cache.dtor();
+#else
+      flds.zero(JXI, JXI + 3);
+      do_push_part(p, flds, mprts);
+#endif
+    } 
+    prof_stop(pr);
   }
 };
 
@@ -533,37 +555,14 @@ struct PscPushParticles_
   static void push_mprts(struct psc_push_particles *push,
 			 struct psc_mparticles *mprts,
 			 struct psc_mfields *mflds_base)
-{
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-  mparticles_t mp = mparticles_t(mprts);
-
-  PushParticles_<CONFIG>::push_mprts(mp, mf);
-  
-  static int pr;
-  if (!pr) {
-    pr = prof_register(PROF_NAME, 1., 0, 0);
+  {
+    mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
+    mparticles_t mp = mparticles_t(mprts);
+    
+    PushParticles_<CONFIG>::push_mprts(mp, mf);
+    
+    mf.put_as(mflds_base, JXI, JXI+3);
   }
-  
-  prof_start(pr);
-  for (int p = 0; p < mp->n_patches(); p++) {
-    fields_t flds = mf[p];
-#if CACHE == CACHE_EM_J
-    mparticles_t::patch_t& prts = mp[p];
-    // FIXME, can't we just skip this and just set j when copying back?
-    flds.zero(JXI, JXI + 3);
-    fields_t flds_cache = cache_fields_from_em(flds);
-    do_push_part(p, flds_cache, prts);
-    cache_fields_to_j(flds_cache, flds);
-    flds_cache.dtor();
-#else
-    flds.zero(JXI, JXI + 3);
-    do_push_part(p, flds, mparticles_t(mprts));
-#endif
-  } 
-  prof_stop(pr);
-
-  mf.put_as(mflds_base, JXI, JXI+3);
-}
 };
 
 template struct PscPushParticles_<CONFIG>;
