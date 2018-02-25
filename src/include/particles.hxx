@@ -331,9 +331,15 @@ struct particle_base_t
   struct real_t {};
 };
 
+struct patch_base_t
+{
+  struct buf_t {};
+};
+
 struct psc_mparticles_base
 {
   using particle_t = particle_base_t;
+  using patch_t = patch_base_t;
   
   psc_mparticles_base(const Grid_t& grid)
     : grid_(grid)
@@ -351,8 +357,6 @@ struct psc_mparticles_base
 protected:
   const Grid_t& grid_;
 };
-
-using mparticles_base_t = mparticles_base<psc_mparticles_base>;
 
 // ======================================================================
 // psc_mparticles_
@@ -486,8 +490,9 @@ struct mparticles : mparticles_base<S>
   {
     return (*this->sub())[p];
   }
-
 };
+
+using mparticles_base_t = mparticles<psc_mparticles_base>;
 
 #endif
 
