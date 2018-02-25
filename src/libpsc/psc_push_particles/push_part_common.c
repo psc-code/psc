@@ -22,30 +22,23 @@ using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 
 #if DIM == DIM_XZ
 #define SFX(x) x ## _1st_xz
-#define do_push_part do_push_part_1st_xz
 #define PROF_NAME "push_mprts_1st_xz"
 #elif DIM == DIM_YZ
 #define SFX(x) x ## _1st_yz
-#define do_push_part do_push_part_1st_yz
 #define PROF_NAME "push_mprts_1st_yz"
 #endif
 
 #elif ORDER == ORDER_2ND
 
 #if DIM == DIM_Y
-#define do_push_part do_push_part_genc_y
 #define PROF_NAME "genc_push_mprts_y"
 #elif DIM == DIM_Z
-#define do_push_part do_push_part_genc_z
 #define PROF_NAME "genc_push_mprts_z"
 #elif DIM == DIM_XY
-#define do_push_part do_push_part_genc_xy
 #define PROF_NAME "genc_push_mprts_xy"
 #elif DIM == DIM_XZ
-#define do_push_part do_push_part_genc_xz
 #define PROF_NAME "genc_push_mprts_xz"
 #elif DIM == DIM_XYZ
-#define do_push_part do_push_part_genc_xyz
 #define PROF_NAME "genc_push_mprts_xyz"
 #endif
 
