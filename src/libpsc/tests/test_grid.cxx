@@ -183,9 +183,9 @@ TEST(Mparticles, setParticles)
   }
 }
 
-#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
+#include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 
-TEST(PushParticles, Accel)
+TEST(PushParticles, AccelSingle)
 {
   using mparticles_t = PscMparticlesSingle;
   using mfields_t = PscMfieldsSingle;
@@ -228,3 +228,51 @@ TEST(PushParticles, Accel)
     }
   }
 }
+
+#include "psc_particles_double.h"
+#include "psc_fields_c.h"
+
+TEST(PushParticles, AccelDouble)
+{
+  using mparticles_t = PscMparticlesDouble;
+  using mfields_t = PscMfieldsC;
+  using Mparticles = mparticles_t::sub_t;
+  using Mfields = mfields_t::sub_t;
+  using Config = push_p_config<mparticles_t, mfields_t, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
+  using PushP = push_p_ops<Config>;
+  const int n_prts = 131;
+  const int n_steps = 10;
+  const Mparticles::real_t eps = 1e-6;
+  
+  Grid_t grid = make_grid_1();
+  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+
+  setValues(mflds, [](int m) -> Mfields::real_t {
+      switch(m) {
+      case EX: return 1.;
+      case EY: return 2.;
+      case EZ: return 3.;
+      default: return 0.;
+      }
+    });
+
+  Mparticles mprts(grid);
+  initMparticlesRandom(mprts, n_prts);
+  
+  // run test
+  for (int n = 0; n < n_steps; n++) {
+    PushP::push_mprts(mprts, mflds);
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto& prts = mprts[p];
+      for (int m = 0; m < prts.size(); m++) {
+	auto& prt = prts[m];
+    	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
+    	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
+    	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
+      };
+    }
+  }
+}
+
