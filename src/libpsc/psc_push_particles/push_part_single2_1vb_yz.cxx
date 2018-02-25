@@ -10,12 +10,11 @@
 
 #define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
-#define EXT_PREPARE_SORT
 
 #include "1vb.c"
 
 template<typename dim_t>
-using push_p_ops_1vb2_single2 = push_p_ops<push_p_config<mparticles_single_t, mfields_single_t, dim_t, opt_order_1st, opt_calcj_1vb_2d>>;
+using push_p_ops_1vb2_single2 = push_p_ops<push_p_config<mparticles_single_t, mfields_single_t, dim_t, opt_order_1st, opt_calcj_1vb_2d, opt_ext_prepare_sort>>;
 
 using PushParticles_t = PushParticles_<push_p_ops_1vb2_single2>;
 

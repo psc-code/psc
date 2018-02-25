@@ -9,7 +9,8 @@
 
 #include "../inc_defs.h"
 
-template<typename MP, typename MF, typename D, typename O, typename J>
+template<typename MP, typename MF, typename D, typename O, typename J,
+	 typename OPT_EXT = opt_ext_none>
 struct push_p_config
 {
   using mparticles_t = MP;
@@ -17,6 +18,7 @@ struct push_p_config
   using dim_t = D;
   using order_t = O;
   using calcj_t = J;
+  using ext_t = OPT_EXT;
 };
 
 template<typename C>

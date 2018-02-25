@@ -25,12 +25,6 @@
 // it's moved, and also append particles that left the block to an extra
 // list at the end of all local particles (hopefully there's enough room...)
 
-#ifdef EXT_PREPARE_SORT
-  using opt_ext = opt_ext_prepare_sort;
-#else
-  using opt_ext = opt_ext_none;
-#endif
-
 template<typename mparticles_t, typename OPT_EXT>
 struct ExtPrepareSort
 {
