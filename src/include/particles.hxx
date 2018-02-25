@@ -209,38 +209,6 @@ struct psc_particle
 };
 
 // ======================================================================
-// mparticles_base
-
-template<typename S>
-struct mparticles_base
-{
-  using sub_t = S;
-  using particle_t = typename sub_t::particle_t;
-  using real_t = typename particle_t::real_t;
-
-  explicit mparticles_base(psc_mparticles *mprts)
-    : mprts_(mprts),
-      sub_(mrc_to_subobj(mprts, sub_t))
-  {}
-
-  void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
-  {
-    psc_mparticles_put_as(mprts_, mprts_base, flags);
-    mprts_ = nullptr;
-  }
-
-  psc_mparticles *mprts() { return mprts_; }
-  
-  sub_t* operator->() { return sub_; }
-
-  sub_t* sub() { return sub_; }
-
-private:
-  psc_mparticles *mprts_;
-  sub_t *sub_;
-};
-
-// ======================================================================
 // mparticles_patch_base
 
 template<typename P>
@@ -478,18 +446,39 @@ struct psc_mparticles_ : psc_mparticles_base
 // mparticles
 
 template<typename S>
-struct mparticles : mparticles_base<S>
+struct mparticles
 {
-  using Base = mparticles_base<S>;
-  using patch_t = typename Base::sub_t::patch_t;
+  using sub_t = S;
+  using particle_t = typename sub_t::particle_t;
+  using real_t = typename particle_t::real_t;
+  using patch_t = typename sub_t::patch_t;
   using particle_buf_t = typename patch_t::buf_t;
+
+  explicit mparticles(psc_mparticles *mprts)
+    : mprts_(mprts),
+      sub_(mrc_to_subobj(mprts, sub_t))
+  {}
+
+  void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
+  {
+    psc_mparticles_put_as(mprts_, mprts_base, flags);
+    mprts_ = nullptr;
+  }
+
+  psc_mparticles *mprts() { return mprts_; }
   
-  mparticles(psc_mparticles *mprts) : mparticles_base<S>(mprts) { }
+  sub_t* operator->() { return sub_; }
+
+  sub_t* sub() { return sub_; }
 
   patch_t& operator[](int p)
   {
     return (*this->sub())[p];
   }
+
+private:
+  psc_mparticles *mprts_;
+  sub_t *sub_;
 };
 
 using mparticles_base_t = mparticles<psc_mparticles_base>;
