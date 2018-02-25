@@ -22,7 +22,7 @@ psc_mfields_single_copy_from_c(struct psc_mfields *mflds, struct psc_mfields *mf
 			       int mb, int me)
 {
   mfields_t mf(mflds);
-  mfields_c_t mf_c(mflds_c);
+  PscMfieldsC mf_c(mflds_c);
   for (int p = 0; p < mf->n_patches(); p++) {
     fields_t flds = mf[p];
     Fields F(flds);
@@ -44,7 +44,7 @@ psc_mfields_single_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mfld
 			     int mb, int me)
 {
   mfields_t mf(mflds);
-  mfields_c_t mf_c(mflds_c);
+  PscMfieldsC mf_c(mflds_c);
   for (int p = 0; p < mf->n_patches(); p++) {
     fields_t flds = mf[p];
     Fields F(flds);

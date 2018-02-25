@@ -7,7 +7,7 @@
 // ======================================================================
 // psc_marder: c
 
-using marder_ops_c = marder_ops<mfields_c_t>;
+using marder_ops_c = marder_ops<PscMfieldsC>;
 
 struct psc_marder_ops_c : psc_marder_ops {
   psc_marder_ops_c() {

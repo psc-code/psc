@@ -8,7 +8,7 @@
 // ======================================================================
 // psc_bnd_fields: subclass "c"
 
-using bnd_fields_ops_c = bnd_fields_ops<mfields_c_t>;
+using bnd_fields_ops_c = bnd_fields_ops<PscMfieldsC>;
 
 struct psc_bnd_fields_ops_c : psc_bnd_fields_ops {
   psc_bnd_fields_ops_c() {

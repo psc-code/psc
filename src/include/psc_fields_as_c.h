@@ -5,7 +5,7 @@
 #include "psc_fields_c.h"
 
 typedef fields_c_t      fields_t;
-typedef mfields_c_t     mfields_t;
+typedef PscMfieldsC     mfields_t;
 #define fields_t_dtor            fields_c_t_dtor
 
 #define FIELDS_TYPE                   "c"
