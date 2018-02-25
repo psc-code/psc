@@ -12,10 +12,10 @@
 struct PushParticles1st : PushParticlesBase
 {
   void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles_<Config1stXZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles__<Config1stXZ>>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles_<Config1stYZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles__<Config1stYZ>>::push_mprts(nullptr, mprts, mflds); }
 };
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles1st>;

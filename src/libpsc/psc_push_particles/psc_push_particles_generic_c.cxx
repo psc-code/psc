@@ -9,16 +9,16 @@
 struct PushParticlesGenericC : PushParticlesBase
 {
   void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles_<Config2ndXYZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles__<Config2ndXYZ>>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_xy(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles_<Config2ndXY>>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles__<Config2ndXY>>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles_<Config2ndXZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles__<Config2ndXZ>>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles_<Config2ndYZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return PscPushParticles_<PushParticles__<Config2ndYZ>>::push_mprts(nullptr, mprts, mflds); }
 };
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticlesGenericC>;
