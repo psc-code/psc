@@ -83,10 +83,10 @@ struct psc_mfields_vpic : psc_mfields_base
   HydroArray *vmflds_hydro;
 };
 
-using mfields_vpic_t = PscMfields<psc_mfields_vpic>;
+using PscMfieldsVpic = PscMfields<psc_mfields_vpic>;
 
 template<>
-inline fields_vpic_t mfields_vpic_t::operator[](int p)
+inline fields_vpic_t PscMfieldsVpic::operator[](int p)
 {
   fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
   return psc_mfields_vpic_get_field_t(mflds_, p);

@@ -185,7 +185,7 @@ psc_method_vpic_set_ic_fields(struct psc_method *method, struct psc *psc)
     // the initial condition.
     // So let's copy the vpic-internal fields into the base fields in this somewhat
     // odd fashion.
-    mfields_vpic_t mf_vpic = psc->flds->get_as<mfields_vpic_t>(0, 0);
+    PscMfieldsVpic mf_vpic = psc->flds->get_as<PscMfieldsVpic>(0, 0);
     mf_vpic.put_as(psc->flds, 0, VPIC_MFIELDS_N_COMP);
   } else {
     // While the fields may already have been initialized by the deck,
@@ -207,7 +207,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 
   struct psc_mfields *mflds_base = psc->flds;
   struct psc_mparticles *mprts_base = psc->particles;
-  mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(0, VPIC_MFIELDS_N_COMP);
+  PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
   
   // Do some consistency checks on user initialized fields

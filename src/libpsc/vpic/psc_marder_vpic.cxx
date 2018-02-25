@@ -9,7 +9,7 @@
 // psc_marder_vpic_clean_div_e
 
 static void
-psc_marder_vpic_clean_div_e(struct psc_marder *marder, mfields_vpic_t mflds,
+psc_marder_vpic_clean_div_e(struct psc_marder *marder, PscMfieldsVpic mflds,
 			    mparticles_vpic_t mprts)
 {
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning electric field\n");
@@ -33,7 +33,7 @@ psc_marder_vpic_clean_div_e(struct psc_marder *marder, mfields_vpic_t mflds,
 // psc_marder_vpic_clean_div_b
 
 static void
-psc_marder_vpic_clean_div_b(struct psc_marder *marder, mfields_vpic_t mflds)
+psc_marder_vpic_clean_div_b(struct psc_marder *marder, PscMfieldsVpic mflds)
 {
   mpi_printf(psc_marder_comm(marder), "Divergence cleaning magnetic field\n");
   
@@ -69,7 +69,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
     return;
   }
   
-  mfields_vpic_t mf = mflds_base->get_as<mfields_vpic_t>(EX, VPIC_MFIELDS_N_COMP);
+  PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
 
   mparticles_vpic_t mprts = mprts_base->get_as<mparticles_vpic_t>();
 
