@@ -21,9 +21,9 @@ static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
 static void
 PFX(setup)(struct psc_mparticles *_mprts)
 {
-  MparticlesSingleByKind mprts(_mprts);
+  PscMparticlesSingleByKind mprts(_mprts);
 
-  new(mprts.sub()) psc_mparticles_single_by_kind{ppsc->grid()};
+  new(mprts.sub()) MparticlesSingleByKind{ppsc->grid()};
 
   mprts->bkmprts = bk_mparticles_new(mprts->n_patches());
 }
@@ -50,7 +50,7 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
 struct PFX(ops) : psc_mparticles_ops {
   PFX(ops)() {
     name                    = PARTICLE_TYPE;
-    size                    = sizeof(struct psc_mparticles_sub);
+    size                    = sizeof(struct MparticlesSingleByKind);
     methods                 = PFX(methods);
     setup                   = PFX(setup);
     destroy                 = PFX(destroy);

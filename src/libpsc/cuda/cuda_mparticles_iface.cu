@@ -13,20 +13,20 @@
 #define dprintf(...) do {} while (0)
 #endif
 
-psc_mparticles_cuda::psc_mparticles_cuda(const Grid_t& grid)
+MparticlesCuda::MparticlesCuda(const Grid_t& grid)
 : MparticlesBase(grid)
 {
   dprintf("CMPRTS: ctor\n");
   cmprts_ = new cuda_mparticles(grid);
 }
 
-psc_mparticles_cuda::~psc_mparticles_cuda()
+MparticlesCuda::~MparticlesCuda()
 {
   dprintf("CMPRTS: dtor\n");
   delete cmprts_;
 }
 
-void psc_mparticles_cuda::reserve_all(const uint *n_prts_by_patch)
+void MparticlesCuda::reserve_all(const uint *n_prts_by_patch)
 {
   dprintf("CMPRTS: reserve_all\n");
   for (int p = 0; p < cmprts_->n_patches; p++) {
@@ -35,7 +35,7 @@ void psc_mparticles_cuda::reserve_all(const uint *n_prts_by_patch)
   cmprts_->reserve_all(n_prts_by_patch);
 }
 
-void psc_mparticles_cuda::get_size_all(uint *n_prts_by_patch) const
+void MparticlesCuda::get_size_all(uint *n_prts_by_patch) const
 {
   dprintf("CMPRTS: get_size_all\n");
   cmprts_->get_size_all(n_prts_by_patch);
@@ -44,43 +44,43 @@ void psc_mparticles_cuda::get_size_all(uint *n_prts_by_patch) const
   }
 }
 
-void psc_mparticles_cuda::resize_all(const uint *n_prts_by_patch)
+void MparticlesCuda::resize_all(const uint *n_prts_by_patch)
 {
   dprintf("CMPRTS: resize_all\n");
   cmprts_->resize_all(n_prts_by_patch);
 }
 
-int psc_mparticles_cuda::get_n_prts() const
+int MparticlesCuda::get_n_prts() const
 {
   dprintf("CMPRTS: get_n_prts\n");
   return cmprts_->get_n_prts();
 }
 
-void psc_mparticles_cuda::to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
+void MparticlesCuda::to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
 {
   dprintf("CMPRTS: to_device\n");
   cmprts_->to_device(xi4, pxi4, n_prts, off);
 }
 
-void psc_mparticles_cuda::from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
+void MparticlesCuda::from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
 {
   dprintf("CMPRTS: from_device\n");
   cmprts_->from_device(xi4, pxi4, n_prts, off);
 }
 
-void psc_mparticles_cuda::setup_internals()
+void MparticlesCuda::setup_internals()
 {
   dprintf("CMPRTS: setup_internals\n");
   cmprts_->setup_internals();
 }
 
-void psc_mparticles_cuda::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
+void MparticlesCuda::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
   cmprts_->inject(buf, buf_n_by_patch);
 }
 
-const int* psc_mparticles_cuda::patch_get_b_mx(int p)
+const int* MparticlesCuda::patch_get_b_mx(int p)
 {
   return cmprts_->patch_get_b_mx(p);
 }
@@ -184,13 +184,13 @@ static void copy_to(PscMparticlesCuda mprts_from, MP mprts_to)
 // ======================================================================
 // conversion to "single"
 
-void psc_mparticles_cuda::copy_from_single(struct psc_mparticles *mprts_cuda,
+void MparticlesCuda::copy_from_single(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
   copy_from(PscMparticlesCuda(mprts_cuda), PscMparticlesSingle(mprts));
 }
 
-void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
+void MparticlesCuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
   copy_to(PscMparticlesCuda(mprts_cuda), PscMparticlesSingle(mprts));
@@ -199,13 +199,13 @@ void psc_mparticles_cuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 // ======================================================================
 // conversion to "double"
 
-void psc_mparticles_cuda::copy_from_double(struct psc_mparticles *mprts_cuda,
+void MparticlesCuda::copy_from_double(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
   copy_from(PscMparticlesCuda(mprts_cuda), PscMparticlesDouble(mprts));
 }
 
-void psc_mparticles_cuda::copy_to_double(struct psc_mparticles *mprts_cuda,
+void MparticlesCuda::copy_to_double(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
   copy_to(PscMparticlesCuda(mprts_cuda), PscMparticlesDouble(mprts));

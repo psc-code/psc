@@ -18,7 +18,7 @@ struct particle_vpic_t
   using real_t = float;
 };
 
-struct psc_mparticles_vpic : MparticlesBase
+struct MparticlesVpic : MparticlesBase
 {
   using Base = MparticlesBase;
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
@@ -54,7 +54,7 @@ struct psc_mparticles_vpic : MparticlesBase
   }
 };
 
-using PscMparticlesVpic = PscMparticles<psc_mparticles_vpic>;
+using PscMparticlesVpic = PscMparticles<MparticlesVpic>;
 
 template<>
 struct mparticles_traits<PscMparticlesVpic>
@@ -63,6 +63,6 @@ struct mparticles_traits<PscMparticlesVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-#define psc_mparticles_vpic(mprts) mrc_to_subobj(mprts, struct psc_mparticles_vpic)
+#define psc_mparticles_vpic(mprts) mrc_to_subobj(mprts, struct MparticlesVpic)
 
 #endif

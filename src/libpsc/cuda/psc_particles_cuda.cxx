@@ -13,10 +13,10 @@
 // psc_mparticles_cuda_methods
 
 static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_cuda::copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_mparticles_cuda::copy_from_single),
-  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_cuda::copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_cuda::copy_from_double),
+  MRC_OBJ_METHOD("copy_to_single"  , MparticlesCuda::copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", MparticlesCuda::copy_from_single),
+  MRC_OBJ_METHOD("copy_to_double"  , MparticlesCuda::copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", MparticlesCuda::copy_from_double),
   {}
 };
 
@@ -29,7 +29,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
   PscMparticlesCuda mprts(_mprts);
 
   assert(_mprts->grid);
-  new(mprts.sub()) psc_mparticles_cuda(*_mprts->grid);
+  new(mprts.sub()) MparticlesCuda(*_mprts->grid);
 }
 
 // ----------------------------------------------------------------------
@@ -40,7 +40,7 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
 {
   PscMparticlesCuda mprts(_mprts);
   
-  mprts.sub()->~psc_mparticles_cuda();
+  mprts.sub()->~MparticlesCuda();
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -184,7 +184,7 @@ const int* PscMparticlesCuda::patch_t::get_b_mx() const
 struct psc_mparticles_ops_cuda : psc_mparticles_ops {
   psc_mparticles_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(struct psc_mparticles_cuda);
+    size                    = sizeof(MparticlesCuda);
     methods                 = psc_mparticles_cuda_methods;
     setup                   = psc_mparticles_cuda_setup;
     destroy                 = psc_mparticles_cuda_destroy;

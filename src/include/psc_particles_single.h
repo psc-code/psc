@@ -55,8 +55,8 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
   bool need_reorder = {};
 };
 
-using psc_mparticles_single = Mparticles<particle_single_t>;
-using PscMparticlesSingle = PscMparticles<psc_mparticles_single>;
+using MparticlesSingle = Mparticles<particle_single_t>;
+using PscMparticlesSingle = PscMparticles<MparticlesSingle>;
 
 template<>
 struct mparticles_traits<PscMparticlesSingle>

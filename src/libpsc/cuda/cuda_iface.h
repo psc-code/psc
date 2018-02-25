@@ -50,13 +50,13 @@ struct cuda_mparticles_prt {
 
 struct cuda_mparticles;
 
-struct psc_mparticles_cuda : MparticlesBase
+struct MparticlesCuda : MparticlesBase
 {
   using particle_t = particle_cuda_t;
   
-  psc_mparticles_cuda(const Grid_t& grid);
-  psc_mparticles_cuda(const psc_mparticles_cuda&) = delete;
-  ~psc_mparticles_cuda();
+  MparticlesCuda(const Grid_t& grid);
+  MparticlesCuda(const MparticlesCuda&) = delete;
+  ~MparticlesCuda();
 
   int get_n_prts() const override;
   void get_size_all(uint *n_prts_by_patch) const override;

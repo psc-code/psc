@@ -13,7 +13,7 @@ struct particle_single_by_kind_t
   using real_t = particle_single_by_kind_real_t;
 };
 
-struct psc_mparticles_single_by_kind : MparticlesBase
+struct MparticlesSingleByKind : MparticlesBase
 {
   using Base = MparticlesBase;
   using particle_t = particle_single_by_kind_t;
@@ -44,12 +44,12 @@ struct psc_mparticles_single_by_kind : MparticlesBase
 };
 
 #define psc_mparticles_single_by_kind(mprts)({				\
-      mrc_to_subobj(mprts, struct psc_mparticles_single_by_kind);	\
+      mrc_to_subobj(mprts, struct MparticlesSingleByKind);	\
 })
 
 // ======================================================================
-// MparticlesSingleByKind
+// PscMparticlesSingleByKind
 
-using MparticlesSingleByKind = PscMparticles<psc_mparticles_single_by_kind>;
+using PscMparticlesSingleByKind = PscMparticles<MparticlesSingleByKind>;
 
 #endif

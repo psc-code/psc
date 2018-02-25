@@ -135,7 +135,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 struct PFX(OPS) : psc_mparticles_ops {
   PFX(OPS)() {
     name                    = PARTICLE_TYPE;
-    size                    = sizeof(psc_mparticles_sub);
+    size                    = sizeof(mparticles_t::sub_t);
     methods                 = PFX(methods);
     setup                   = PFX(setup);
     write                   = PFX(write);

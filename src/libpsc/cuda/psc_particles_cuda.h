@@ -13,9 +13,9 @@
 // ======================================================================
 // PscMparticlesCuda
 
-struct PscMparticlesCuda : PscMparticles<psc_mparticles_cuda>
+struct PscMparticlesCuda : PscMparticles<MparticlesCuda>
 {
-  using Base = PscMparticles<psc_mparticles_cuda>;
+  using Base = PscMparticles<MparticlesCuda>;
   using particle_t = particle_cuda_t;
   using real_t = particle_cuda_real_t;
   using Real3 = Vec3<real_t>;
