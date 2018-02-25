@@ -211,21 +211,17 @@ TEST(PushParticles, Accel)
   Mparticles mprts(grid);
   initMparticlesRandom(mprts, n_prts);
   
-  PushParticles pushp;
-
   MPI_Init(0, 0);
 
   psc_mparticles _mprts[1];
   _mprts->obj.subctx = &mprts;
 
-  extern struct psc_mfields_ops psc_mfields_single_ops;
   psc_mfields _mflds[1];
   _mflds->obj.subctx = &mflds;
-  _mflds->obj.ops = (mrc_obj_ops*) &psc_mfields_single_ops;
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    pushp.push_mprts(_mprts, _mflds);
+    PushParticles::ops_t<dim_1>::push_mprts(mparticles_single_t(_mprts), mfields_single_t(_mflds));
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto& prts = mprts[p];
       for (int m = 0; m < prts.size(); m++) {
