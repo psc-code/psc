@@ -162,7 +162,7 @@ void
 psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
-  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(mb, me);
+  PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -204,7 +204,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
   }
 
-  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(mb, me);
+  PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);

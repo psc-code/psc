@@ -23,7 +23,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
 			    int mb, int me)
 {
   PscMfieldsC mf_c(mflds_c);
-  mfields_cuda_t mf_cuda(mflds_cuda);
+  PscMfieldsCuda mf_cuda(mflds_cuda);
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
 
@@ -50,7 +50,7 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 			  int mb, int me)
 {
   PscMfieldsC mf_c(mflds_c);
-  mfields_cuda_t mf_cuda(mflds_cuda);
+  PscMfieldsCuda mf_cuda(mflds_cuda);
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
 
@@ -80,7 +80,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
 				  int mb, int me)
 {
   PscMfieldsSingle mf_single(mflds_single);
-  mfields_cuda_t mf_cuda(mflds_cuda);
+  PscMfieldsCuda mf_cuda(mflds_cuda);
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
   
@@ -108,7 +108,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 				int mb, int me)
 {
   PscMfieldsSingle mf_single(mflds_single);
-  mfields_cuda_t mf_cuda(mflds_cuda);
+  PscMfieldsCuda mf_cuda(mflds_cuda);
   fields_single_t flds = mf_cuda->get_host_fields();
   FieldsH F(flds);
 
@@ -138,7 +138,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 static void
 psc_mfields_cuda_setup(struct psc_mfields *_mflds)
 {
-  mfields_cuda_t mflds(_mflds);
+  PscMfieldsCuda mflds(_mflds);
 
   psc_mfields_setup_super(_mflds);
 
@@ -154,7 +154,7 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
 static void
 psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
 {
-  mfields_cuda_t mflds(_mflds);
+  PscMfieldsCuda mflds(_mflds);
 
   mflds->~psc_mfields_cuda();
 }
@@ -165,7 +165,7 @@ psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
 static void
 psc_mfields_cuda_zero_comp(struct psc_mfields *_mflds, int m)
 {
-  mfields_cuda_t mflds(_mflds);
+  PscMfieldsCuda mflds(_mflds);
 
   mflds->zero_comp(m);
 }
@@ -177,8 +177,8 @@ static void
 psc_mfields_cuda_axpy_comp(struct psc_mfields *_mflds_y, int my, double alpha,
 			   struct psc_mfields *_mflds_x, int mx)
 {
-  mfields_cuda_t mflds_y(_mflds_y);
-  mfields_cuda_t mflds_x(_mflds_x);
+  PscMfieldsCuda mflds_y(_mflds_y);
+  PscMfieldsCuda mflds_x(_mflds_x);
 
   assert(ppsc->domain.gdims[0] == 1);
   mflds_y->axpy_comp_yz(my, alpha, mflds_x, mx);
@@ -203,7 +203,7 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *_mflds_y, int my, double alpha,
 static void
 psc_mfields_cuda_write(struct psc_mfields *_mflds, struct mrc_io *io)
 {
-  mfields_cuda_t mflds(_mflds);
+  PscMfieldsCuda mflds(_mflds);
 
   int ierr;
   long h5_file;
@@ -242,7 +242,7 @@ psc_mfields_cuda_read(struct psc_mfields *_mflds, struct mrc_io *io)
   
   psc_mfields_cuda_setup(_mflds);
 
-  mfields_cuda_t mflds(_mflds);
+  PscMfieldsCuda mflds(_mflds);
 
   int ierr;
   long h5_file;

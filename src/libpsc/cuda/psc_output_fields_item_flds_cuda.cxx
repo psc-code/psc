@@ -12,8 +12,8 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
 {
   assert(ppsc->domain.gdims[0] == 1);
 
-  mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(EX, EX+3);
-  mfields_cuda_t mf_res = mres_base->get_as<mfields_cuda_t>(0, 0);
+  PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(EX, EX+3);
+  PscMfieldsCuda mf_res = mres_base->get_as<PscMfieldsCuda>(0, 0);
   cuda_mfields *cmflds = mf->cmflds;
   cuda_mfields *cmres = mf_res->cmflds;
 

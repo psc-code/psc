@@ -40,7 +40,7 @@ struct psc_mfields_cuda : psc_mfields_base
   struct cuda_mfields *cmflds;
 };
 
-using mfields_cuda_t = PscMfields<psc_mfields_cuda>;
+using PscMfieldsCuda = PscMfields<psc_mfields_cuda>;
 
 template<>
 struct fields_traits<fields_cuda_t>

@@ -38,7 +38,7 @@ public:
     /* it's difficult to convert mprts due to ordering constraints (?) */
     assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
     
-    mfields_cuda_t mf = mflds_base->get_as<mfields_cuda_t>(EX, EX + 6);
+    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(EX, EX + 6);
     struct cuda_mparticles *cmprts = mparticles_cuda_t(mprts)->cmprts();
     int bs[3] = { BS::x::value, BS::y::value, BS::z::value };
     cuda_push_mprts_yz(cmprts, mf->cmflds, bs, Config::Ip::value, Config::Deposit::value,

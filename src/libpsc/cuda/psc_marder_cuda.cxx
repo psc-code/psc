@@ -122,8 +122,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   fac[1] = .5 * ppsc->dt * diffusion / dx[1];
   fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
-  mfields_cuda_t mflds = mflds_base->get_as<mfields_cuda_t>(EX, EX + 3);
-  mfields_cuda_t mf = mf_base->get_as<mfields_cuda_t>(0, 1);
+  PscMfieldsCuda mflds = mflds_base->get_as<PscMfieldsCuda>(EX, EX + 3);
+  PscMfieldsCuda mf = mf_base->get_as<PscMfieldsCuda>(0, 1);
   cuda_mfields *cmflds = mflds->cmflds;
   cuda_mfields *cmf = mf->cmflds;
 
