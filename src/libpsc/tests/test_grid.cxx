@@ -81,24 +81,24 @@ void setValues(mfields& mflds, Set set)
   }
 }
   
-TEST(mfields, Constructor)
+TEST(Mfields, Constructor)
 {
-  using Mfields = psc_mfields_<fields_single_t>;
+  using Mfields_t = Mfields<fields_single_t>;
 
   Grid_t grid = make_grid();
-  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+  Mfields_t mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 }
 
-TEST(mfields, Set)
+TEST(Mfields, Set)
 {
-  using Mfields = psc_mfields_<fields_single_t>;
+  using Mfields_t = Mfields<fields_single_t>;
 
   Grid_t grid = make_grid();
-  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+  Mfields_t mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
 
-  setValues(mflds, [](int m) -> Mfields::real_t {
+  setValues(mflds, [](int m) -> Mfields_t::real_t {
       switch(m) {
       case EX: return 1.;
       case EY: return 2.;

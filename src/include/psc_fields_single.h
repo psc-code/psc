@@ -16,7 +16,7 @@ struct fields_single_t : fields3d<fields_single_real_t>
   using Base::Base;
 };
 
-using MfieldsSingle = psc_mfields_<fields_single_t>;
+using MfieldsSingle = Mfields<fields_single_t>;
 using PscMfieldsSingle = PscMfields<MfieldsSingle>;
 
 template<>

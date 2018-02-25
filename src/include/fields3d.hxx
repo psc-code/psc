@@ -200,15 +200,15 @@ protected:
 };
 
 // ======================================================================
-// psc_mfields_
+// Mfields
 
 template<typename F>
-struct psc_mfields_ : psc_mfields_base
+struct Mfields : psc_mfields_base
 {
   using fields_t = F;
   using real_t = typename fields_t::real_t;
 
-  psc_mfields_(const Grid_t& grid, int n_fields, int ibn[3])
+  Mfields(const Grid_t& grid, int n_fields, int ibn[3])
     : psc_mfields_base(grid, n_fields)
   {
     unsigned int size = 1;
@@ -224,7 +224,7 @@ struct psc_mfields_ : psc_mfields_base
     }
   }
 
-  ~psc_mfields_()
+  ~Mfields()
   {
     if (data) { // FIXME, since this object exists without a constructor having been called, for now...
       for (int p = 0; p < n_patches(); p++) {
@@ -260,7 +260,7 @@ struct psc_mfields_ : psc_mfields_base
     }
   }
 
-  void copy_comp(int mto, psc_mfields_& from, int mfrom)
+  void copy_comp(int mto, Mfields& from, int mfrom)
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].copy_comp(mto, from[p], mfrom);
@@ -270,7 +270,7 @@ struct psc_mfields_ : psc_mfields_base
   void axpy_comp(int m_y, double alpha, psc_mfields_base& x_base, int m_x) override
   {
     // FIXME? dynamic_cast would actually be more appropriate
-    psc_mfields_& x = static_cast<psc_mfields_&>(x_base);
+    Mfields& x = static_cast<Mfields&>(x_base);
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
     }
