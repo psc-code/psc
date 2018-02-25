@@ -400,10 +400,12 @@ template<typename C>
 struct PushParticles_
 {
   using mparticles_t = typename C::mparticles_t;
+  using Mparticles = typename mparticles_t::sub_t;
   using mfields_t = typename C::mfields_t;
+  using Mfields = typename mfields_t::sub_t;
   using CacheFields_t = typename C::CacheFields;
   
-  static void push_mprts(mparticles_t mprts, mfields_t mflds)
+  static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
     static int pr;
     if (!pr) {
@@ -411,7 +413,7 @@ struct PushParticles_
     }
     
     prof_start(pr);
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       // FIXME, in the cache case can't we just skip this and just set j when copying back?
       mflds[p].zero(JXI, JXI + 3);
       CacheFields_t cache;
@@ -422,6 +424,7 @@ struct PushParticles_
     prof_stop(pr);
   }
 
+private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
 #if (DIM & DIM_X)
@@ -505,7 +508,7 @@ struct PscPushParticles_
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
     mparticles_t mp = mparticles_t(mprts);
     
-    PushParticles_t::push_mprts(mp, mf);
+    PushParticles_t::push_mprts(*mp.sub(), *mf.sub());
     
     mf.put_as(mflds_base, JXI, JXI+3);
   }
