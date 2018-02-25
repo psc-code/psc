@@ -223,23 +223,16 @@ struct mparticles_patch_base
   using buf_t = std::vector<particle_t>;
   using iterator = typename buf_t::iterator;
   
-  buf_t buf;
-
-  ParticleIndexer<real_t> pi_;
-
-  Mparticles<P>* mprts;
-  int p;
-
   // FIXME, I would like to delete the copy ctor because I don't
   // want to copy patch_t by mistake, but that doesn't play well with
   // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
-  mparticles_patch_base(Mparticles<P>* _mprts, int _p)
-    : pi_(_mprts->grid()),
-      mprts(_mprts),
-      p(_p),
-      grid_(_mprts->grid())
+  mparticles_patch_base(Mparticles<P>* mprts, int p)
+    : pi_(mprts->grid()),
+      mprts_(mprts),
+      p_(p),
+      grid_(mprts->grid())
   {}
 
   particle_t& operator[](int n) { return buf[n]; }
@@ -287,7 +280,12 @@ struct mparticles_patch_base
   real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
   real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
 
+  buf_t buf;
+  ParticleIndexer<real_t> pi_;
+
 private:
+  Mparticles<P>* mprts_;
+  int p_;
   const Grid_t& grid_;
 };
 
