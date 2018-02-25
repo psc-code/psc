@@ -59,7 +59,22 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 
 #endif
 
-class Rho1d
+template<typename order>
+class Rho1d;
+
+template<>
+class Rho1d<opt_order_1st>
+{
+public:
+  real_t  operator[](int i) const { return s_[i + S_OFF]; }
+  real_t& operator[](int i)       { return s_[i + S_OFF]; }
+  
+private:
+  real_t s_[N_RHO];  
+};
+
+template<>
+class Rho1d<opt_order_2nd>
 {
 public:
   real_t  operator[](int i) const { return s_[i + S_OFF]; }
@@ -101,8 +116,9 @@ private:
 // set_S
 
 #if ORDER == ORDER_1ST
+template<typename Rho1d_t>
 static inline void
-set_S(Rho1d& s, int shift, struct ip_coeff_1st<real_t> gg)
+set_S(Rho1d_t& s, int shift, struct ip_coeff_1st<real_t> gg)
 {
   s[shift  ] = gg.v0;
   s[shift+1] = gg.v1;
@@ -110,8 +126,9 @@ set_S(Rho1d& s, int shift, struct ip_coeff_1st<real_t> gg)
 
 #elif ORDER == ORDER_2ND
 
+template<typename Rho1d_t>
 static inline void
-set_S(Rho1d& s, int shift, struct ip_coeff_2nd<real_t> gg)
+set_S(Rho1d_t& s, int shift, struct ip_coeff_2nd<real_t> gg)
 {
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
   // but it needs checking.
@@ -442,14 +459,15 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
+    using Rho1d_t = Rho1d<typename C::order>;
 #if (DIM & DIM_X)
-    Rho1d s0x = {}, s1x;
+    Rho1d_t s0x = {}, s1x;
 #endif
 #if (DIM & DIM_Y)
-    Rho1d s0y = {}, s1y;
+    Rho1d_t s0y = {}, s1y;
 #endif
 #if (DIM & DIM_Z)
-    Rho1d s0z = {}, s1z;
+    Rho1d_t s0z = {}, s1z;
 #endif
 
     c_prm_set(ppsc->grid());
