@@ -16,8 +16,8 @@ struct fields_c_t : fields3d<fields_c_real_t>
   using Base::Base;
 };
 
-using psc_mfields_c_sub = psc_mfields_<fields_c_t>;
-using PscMfieldsC = PscMfields<psc_mfields_c_sub>;
+using MfieldsC = psc_mfields_<fields_c_t>;
+using PscMfieldsC = PscMfields<MfieldsC>;
 
 template<>
 struct fields_traits<fields_c_t>

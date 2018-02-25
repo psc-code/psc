@@ -9,7 +9,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include "psc_fields_inc.h"
+#define PFX(x) psc_fields_single_ ## x
+#define MPFX(x) psc_mfields_single_ ## x
+#define MFIELDS MfieldsSingle
 
 using Fields = Fields3d<fields_t>;
 using FieldsC = Fields3d<fields_c_t>;

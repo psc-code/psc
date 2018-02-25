@@ -13,7 +13,7 @@ MPFX(setup)(struct psc_mfields *_mflds)
   psc_mfields_setup_super(_mflds);
 
   assert(_mflds->grid);
-  new(mflds.sub()) MPFX(sub)(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
+  new(mflds.sub()) MFIELDS(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
 }
 
 // ----------------------------------------------------------------------
@@ -24,7 +24,7 @@ MPFX(destroy)(struct psc_mfields *_mflds)
 {
   mfields_t mflds(_mflds);
 
-  mflds->~MPFX(sub)();
+  mflds->~MFIELDS();
 }
 
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
@@ -125,7 +125,7 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 struct MPFX(psc_mfields_ops) : psc_mfields_ops {
   MPFX(psc_mfields_ops)() {
     name                  = FIELDS_TYPE;
-    size                  = sizeof(MPFX(sub));
+    size                  = sizeof(MFIELDS);
     methods               = MPFX(methods);
     setup                 = MPFX(setup);
     destroy               = MPFX(destroy);
