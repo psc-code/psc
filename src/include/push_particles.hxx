@@ -18,7 +18,7 @@ struct PscPushParticles
       sub_(mrc_to_subobj(pushp, sub_t))
   {}
 
-  void operator()(mparticles_base_t mprts, mfields_base_t mflds)
+  void operator()(mparticles_base_t mprts, PscMfieldsBase mflds)
   {
     psc_push_particles_run(pushp_, mprts.mprts(), mflds.mflds());
   }

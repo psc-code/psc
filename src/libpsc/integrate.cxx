@@ -85,7 +85,7 @@ psc_step(struct psc *psc)
   // default psc_step() implementation
 
   mparticles_base_t mprts(psc->particles);
-  mfields_base_t mflds(psc->flds);
+  PscMfieldsBase mflds(psc->flds);
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
 #if 0

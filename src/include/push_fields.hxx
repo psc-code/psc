@@ -24,7 +24,7 @@ struct PscPushFields
       sub_(mrc_to_subobj(pushf, sub_t))
   {}
 
-  void advance_E(mfields_base_t mflds, double frac)
+  void advance_E(PscMfieldsBase mflds, double frac)
   {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(pushf_);
     static int pr;
@@ -43,7 +43,7 @@ struct PscPushFields
     psc_stats_stop(st_time_field);
   }
 
-  void advance_H(mfields_base_t mflds, double frac)
+  void advance_H(PscMfieldsBase mflds, double frac)
   {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(pushf_);
     static int pr;
@@ -62,7 +62,7 @@ struct PscPushFields
     psc_stats_stop(st_time_field);
   }
 
-  void advance_b2(mfields_base_t mflds)
+  void advance_b2(PscMfieldsBase mflds)
   {
     // fill ghosts for H
     psc_bnd_fields_fill_ghosts_H(pushf_->bnd_fields, mflds.mflds());
@@ -82,7 +82,7 @@ struct PscPushFields
     }
   }
 
-  void advance_a(mfields_base_t mflds)
+  void advance_a(PscMfieldsBase mflds)
   {
     if (pushf_->variant == 0) {
       psc_bnd_fields_fill_ghosts_E(pushf_->bnd_fields, mflds.mflds());

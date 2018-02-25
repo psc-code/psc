@@ -28,7 +28,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
     mrc_io_close(marder->io);
   }
 
-  mfields_base_t(div_e)->axpy_comp(0, -1., *mfields_base_t(rho).sub(), 0);
+  PscMfieldsBase(div_e)->axpy_comp(0, -1., *PscMfieldsBase(rho).sub(), 0);
   // FIXME, why is this necessary?
   psc_bnd_fill_ghosts(marder->bnd, div_e, 0, 1);
 }

@@ -330,7 +330,7 @@ private:
   sub_t *sub_;
 };
 
-using mfields_base_t = PscMfields<psc_mfields_base>;
+using PscMfieldsBase = PscMfields<psc_mfields_base>;
 
 #endif
 

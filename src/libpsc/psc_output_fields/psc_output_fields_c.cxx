@@ -244,7 +244,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
    if (doaccum_tfield) {
     // tfd += pfd
     for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-      mfields_base_t(out_c->tfd.flds[m])->axpy(1., *mfields_base_t(out_c->pfd.flds[m]).sub());
+      PscMfieldsBase(out_c->tfd.flds[m])->axpy(1., *PscMfieldsBase(out_c->pfd.flds[m]).sub());
     }
     out_c->naccum++;
    }
@@ -253,13 +253,13 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
       // convert accumulated values to correct temporal mean
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	mfields_base_t(out_c->tfd.flds[m])->scale(1./out_c->naccum);
+	PscMfieldsBase(out_c->tfd.flds[m])->scale(1./out_c->naccum);
       }
 
       write_fields(out_c, &out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);
 
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	mfields_base_t(out_c->tfd.flds[m])->zero();
+	PscMfieldsBase(out_c->tfd.flds[m])->zero();
       }
       out_c->naccum = 0;
     }
