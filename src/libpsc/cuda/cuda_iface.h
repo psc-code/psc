@@ -50,7 +50,7 @@ struct cuda_mparticles_prt {
 
 struct cuda_mparticles;
 
-struct psc_mparticles_cuda : psc_mparticles_base
+struct psc_mparticles_cuda : MparticlesBase
 {
   using particle_t = particle_cuda_t;
   

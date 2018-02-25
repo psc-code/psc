@@ -292,7 +292,7 @@ struct mparticles_patch : mparticles_patch_base<P> {
 };
 
 // ======================================================================
-// psc_mparticles_base
+// MparticlesBase
 
 struct particle_base_t
 {
@@ -304,12 +304,12 @@ struct patch_base_t
   struct buf_t {};
 };
 
-struct psc_mparticles_base
+struct MparticlesBase
 {
   using particle_t = particle_base_t;
   using patch_t = patch_base_t;
   
-  psc_mparticles_base(const Grid_t& grid)
+  MparticlesBase(const Grid_t& grid)
     : grid_(grid)
   {}
 
@@ -330,7 +330,7 @@ protected:
 // psc_mparticles_
 
 template<typename P>
-struct psc_mparticles_ : psc_mparticles_base
+struct psc_mparticles_ : MparticlesBase
 {
   using particle_t = P;
   using particle_real_t = typename particle_t::real_t; // FIXME, should go away
@@ -338,7 +338,7 @@ struct psc_mparticles_ : psc_mparticles_base
   using patch_t = mparticles_patch<particle_t>;
 
   psc_mparticles_(const Grid_t& grid)
-    : psc_mparticles_base(grid)
+    : MparticlesBase(grid)
   {
     patches_.reserve(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
@@ -481,7 +481,7 @@ private:
   sub_t *sub_;
 };
 
-using mparticles_base_t = PscMparticles<psc_mparticles_base>;
+using mparticles_base_t = PscMparticles<MparticlesBase>;
 
 #endif
 

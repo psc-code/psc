@@ -18,9 +18,9 @@ struct particle_vpic_t
   using real_t = float;
 };
 
-struct psc_mparticles_vpic : psc_mparticles_base
+struct psc_mparticles_vpic : MparticlesBase
 {
-  using Base = psc_mparticles_base;
+  using Base = MparticlesBase;
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
 
   using Base::Base;

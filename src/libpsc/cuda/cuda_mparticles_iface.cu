@@ -14,7 +14,7 @@
 #endif
 
 psc_mparticles_cuda::psc_mparticles_cuda(const Grid_t& grid)
-: psc_mparticles_base(grid)
+: MparticlesBase(grid)
 {
   dprintf("CMPRTS: ctor\n");
   cmprts_ = new cuda_mparticles(grid);
