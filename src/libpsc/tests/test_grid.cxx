@@ -284,7 +284,7 @@ TEST(PushParticles, Accel2ndDouble)
   using mfields_t = PscMfieldsC;
   using Mparticles = mparticles_t::sub_t;
   using Mfields = mfields_t::sub_t;
-  using PushP = PscPushParticles_<PushParticles__<Config2ndXYZ>>;
+  using PushP = PscPushParticles_<PushParticles__<Config2nd1>>;
   const int n_prts = 131;
   const int n_steps = 10;
   const Mparticles::real_t eps = 1e-6;
@@ -309,7 +309,6 @@ TEST(PushParticles, Accel2ndDouble)
   psc psc = {};
   psc.grid_ = &grid;
   ppsc = &psc;
-  
   
   // run test
   for (int n = 0; n < n_steps; n++) {

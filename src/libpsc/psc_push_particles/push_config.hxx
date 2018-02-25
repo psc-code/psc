@@ -26,6 +26,7 @@ using Config2ndXZ = Config<PscMparticlesDouble, PscMfieldsC, dim_xz>;
 using Config2ndYZ = Config<PscMparticlesDouble, PscMfieldsC, dim_yz>;
 using Config2ndY = Config<PscMparticlesDouble, PscMfieldsC, dim_y>;
 using Config2ndZ = Config<PscMparticlesDouble, PscMfieldsC, dim_z>;
+using Config2nd1 = Config<PscMparticlesDouble, PscMfieldsC, dim_1>;
 
 using Config2ndDoubleYZ = Config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_order_2nd, CacheFields>;
 

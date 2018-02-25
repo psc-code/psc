@@ -318,7 +318,9 @@ set_S(real_t *s0, int shift, struct ip_coeff_2nd<real_t> gg)
     }									\
   }
 
-#if DIM == DIM_Y
+#if DIM == DIM1
+#define CURRENT do {} while(0)
+#elif DIM == DIM_Y
 #if ORDER == ORDER_2ND
 #define CURRENT CURRENT_2ND_Y
 #endif
