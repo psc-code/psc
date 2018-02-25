@@ -24,7 +24,7 @@ struct particle_fortran_t
 
 #define psc_mparticles_fortran(mprts) mrc_to_subobj(mprts, struct psc_mparticles_fortran)
 
-using psc_mparticles_fortran = psc_mparticles_<particle_fortran_t>;
+using psc_mparticles_fortran = Mparticles<particle_fortran_t>;
 using PscMparticlesFortran = PscMparticles<psc_mparticles_fortran>;
 
 template<>

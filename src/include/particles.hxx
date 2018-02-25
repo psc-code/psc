@@ -212,7 +212,7 @@ struct psc_particle
 // mparticles_patch_base
 
 template<typename P>
-struct psc_mparticles_;
+struct Mparticles;
 
 template<typename P>
 struct mparticles_patch_base
@@ -227,7 +227,7 @@ struct mparticles_patch_base
 
   ParticleIndexer<real_t> pi_;
 
-  psc_mparticles_<P>* mprts;
+  Mparticles<P>* mprts;
   int p;
 
   // FIXME, I would like to delete the copy ctor because I don't
@@ -235,7 +235,7 @@ struct mparticles_patch_base
   // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
-  mparticles_patch_base(psc_mparticles_<P>* _mprts, int _p)
+  mparticles_patch_base(Mparticles<P>* _mprts, int _p)
     : pi_(_mprts->grid()),
       mprts(_mprts),
       p(_p)
@@ -327,17 +327,17 @@ protected:
 };
 
 // ======================================================================
-// psc_mparticles_
+// Mparticles
 
 template<typename P>
-struct psc_mparticles_ : MparticlesBase
+struct Mparticles : MparticlesBase
 {
   using particle_t = P;
   using particle_real_t = typename particle_t::real_t; // FIXME, should go away
   using real_t = particle_real_t;
   using patch_t = mparticles_patch<particle_t>;
 
-  psc_mparticles_(const Grid_t& grid)
+  Mparticles(const Grid_t& grid)
     : MparticlesBase(grid)
   {
     patches_.reserve(grid.n_patches());

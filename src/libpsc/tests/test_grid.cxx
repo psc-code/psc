@@ -152,24 +152,24 @@ static void initMparticlesRandom(Mparticles& mprts, int n_prts)
 
 TEST(Mparticles, Constructor)
 {
-  using Mparticles = psc_mparticles_<particle_single_t>;
+  using Mparticles_t = Mparticles<particle_single_t>;
   
   Grid_t grid = make_grid();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
-  Mparticles mprts(grid);
+  Mparticles_t mprts(grid);
 }
 
 TEST(Mparticles, setParticles)
 {
   using particle_t = particle_single_t;
-  using Mparticles = psc_mparticles_<particle_t>;
+  using Mparticles_t = Mparticles<particle_t>;
   const int n_prts = 131;
 
   Grid_t grid = make_grid();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
-  Mparticles mprts(grid);
+  Mparticles_t mprts(grid);
   initMparticlesRandom(mprts, n_prts);
 
   for (int p = 0; p < mprts.n_patches(); ++p) {

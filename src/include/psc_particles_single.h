@@ -18,7 +18,7 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
 {
   using Base = mparticles_patch_base<particle_single_t>;
 
-  mparticles_patch(psc_mparticles_<particle_single_t>* mprts, int p)
+  mparticles_patch(Mparticles<particle_single_t>* mprts, int p)
     : Base(mprts, p)
   {
     nr_blocks = pi_.b_mx_[0] * pi_.b_mx_[1] * pi_.b_mx_[2];
@@ -55,7 +55,7 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
   bool need_reorder = {};
 };
 
-using psc_mparticles_single = psc_mparticles_<particle_single_t>;
+using psc_mparticles_single = Mparticles<particle_single_t>;
 using PscMparticlesSingle = PscMparticles<psc_mparticles_single>;
 
 template<>
