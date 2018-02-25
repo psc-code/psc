@@ -15,14 +15,14 @@ struct fields_cuda_t
   using real_t = float;
 };
 
-struct psc_mfields_cuda : psc_mfields_base
+struct MfieldsCuda : psc_mfields_base
 {
   using fields_t = fields_cuda_t;
-  using mfields_t = PscMfields<psc_mfields_cuda>;
+  using mfields_t = PscMfields<MfieldsCuda>;
   
-  psc_mfields_cuda(const Grid_t& grid, int n_fields, const Int3& ibn);
-  psc_mfields_cuda(const psc_mfields_cuda&) = delete;
-  ~psc_mfields_cuda();
+  MfieldsCuda(const Grid_t& grid, int n_fields, const Int3& ibn);
+  MfieldsCuda(const MfieldsCuda&) = delete;
+  ~MfieldsCuda();
 
   void zero_comp(int m) override;
   void set_comp(int m, double val) override { assert(0); }
@@ -40,7 +40,7 @@ struct psc_mfields_cuda : psc_mfields_base
   struct cuda_mfields *cmflds;
 };
 
-using PscMfieldsCuda = PscMfields<psc_mfields_cuda>;
+using PscMfieldsCuda = PscMfields<MfieldsCuda>;
 
 template<>
 struct fields_traits<fields_cuda_t>

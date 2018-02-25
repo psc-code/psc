@@ -14,7 +14,7 @@ struct fields_vpic_t : fields3d<float, LayoutAOS>
   using Base::Base;
 };
 
-struct psc_mfields_vpic : psc_mfields_base
+struct MfieldsVpic : psc_mfields_base
 {
   using fields_t = fields_vpic_t;
   using Base = psc_mfields_base;
@@ -83,7 +83,7 @@ struct psc_mfields_vpic : psc_mfields_base
   HydroArray *vmflds_hydro;
 };
 
-using PscMfieldsVpic = PscMfields<psc_mfields_vpic>;
+using PscMfieldsVpic = PscMfields<MfieldsVpic>;
 
 template<>
 inline fields_vpic_t PscMfieldsVpic::operator[](int p)
@@ -106,7 +106,7 @@ BEGIN_C_DECLS
 // ----------------------------------------------------------------------
 
 #define psc_mfields_vpic(mflds) ({					\
-      mrc_to_subobj(mflds, struct psc_mfields_vpic);			\
+      mrc_to_subobj(mflds, struct MfieldsVpic);			\
     })
 
 

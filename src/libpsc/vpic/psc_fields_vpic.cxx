@@ -27,7 +27,7 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
   [16]  = 16, [17] = 17, [18] = 18, [19] = 19,
 };
 
-void psc_mfields_vpic::accumulate_rho_p(Particles *vmprts)
+void MfieldsVpic::accumulate_rho_p(Particles *vmprts)
 {
   Simulation_accumulate_rho_p(sim, vmprts, vmflds_fields);
 }
@@ -123,7 +123,7 @@ static int ref_count_fields, ref_count_hydro;
 
 static void psc_mfields_vpic_setup(struct psc_mfields *mflds)
 {
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+  struct MfieldsVpic *sub = psc_mfields_vpic(mflds);
 
   psc_mfields_setup_super(mflds);
 
@@ -172,7 +172,7 @@ static void psc_mfields_vpic_destroy(struct psc_mfields *mflds)
 
 fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p)
 {
-  struct psc_mfields_vpic *sub = mrc_to_subobj(mflds, struct psc_mfields_vpic);
+  MfieldsVpic *sub = mrc_to_subobj(mflds, MfieldsVpic);
 
   // FIXME hacky...
   if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
@@ -201,7 +201,7 @@ static struct mrc_obj_method psc_mfields_vpic_methods[] = {
 struct psc_mfields_ops_vpic : psc_mfields_ops {
   psc_mfields_ops_vpic() {
     name                  = "vpic";
-    size                  = sizeof(struct psc_mfields_vpic);
+    size                  = sizeof(MfieldsVpic);
     methods               = psc_mfields_vpic_methods;
     setup                 = psc_mfields_vpic_setup;
     destroy               = psc_mfields_vpic_destroy;

@@ -145,7 +145,7 @@ psc_mfields_cuda_setup(struct psc_mfields *_mflds)
   cuda_base_init();
 
   assert(_mflds->grid);
-  new(mflds.sub()) psc_mfields_cuda(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
+  new(mflds.sub()) MfieldsCuda(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
 }
 
 // ----------------------------------------------------------------------
@@ -156,7 +156,7 @@ psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
 {
   PscMfieldsCuda mflds(_mflds);
 
-  mflds->~psc_mfields_cuda();
+  mflds->~MfieldsCuda();
 }
 
 // ----------------------------------------------------------------------
@@ -288,7 +288,7 @@ static struct mrc_obj_method psc_mfields_cuda_methods[] = {
 struct psc_mfields_ops_cuda : psc_mfields_ops {
   psc_mfields_ops_cuda() {
     name                  = "cuda";
-    size                  = sizeof(struct psc_mfields_cuda);
+    size                  = sizeof(struct MfieldsCuda);
     methods               = psc_mfields_cuda_methods;
     setup                 = psc_mfields_cuda_setup;
     destroy               = psc_mfields_cuda_destroy;
