@@ -475,8 +475,6 @@ do_push_part(int p, fields_t flds, mparticles_t mprts)
 
 #endif
 
-#if CACHE == CACHE_EM_J
-
 struct CacheFields
 {
 #if DIM == DIM_YZ
@@ -516,9 +514,7 @@ struct CacheFields
 #endif
 };
 
-#else
-
-struct CacheFields
+struct CacheFieldsNone
 {
   static fields_t from_em(fields_t flds)
   {
@@ -529,13 +525,16 @@ struct CacheFields
   {}
 };
 
-#endif
-
 template<typename C>
 struct PushParticles_
 {
   using mparticles_t = typename C::mparticles_t;
   using mfields_t = typename C::mfields_t;
+#if CACHE == CACHE_EM_J
+  using CacheFields_t = CacheFields;
+#else
+  using CacheFields_t = CacheFieldsNone;
+#endif
   
   static void push_mprts(mparticles_t mprts, mfields_t mflds)
   {
@@ -548,17 +547,10 @@ struct PushParticles_
     for (int p = 0; p < mprts->n_patches(); p++) {
       // FIXME, in the cache case can't we just skip this and just set j when copying back?
       mflds[p].zero(JXI, JXI + 3);
-#if CACHE == CACHE_EM_J
-      CacheFields cache;
+      CacheFields_t cache;
       fields_t flds = cache.from_em(mflds[p]);
       do_push_part(p, flds, mprts);
       cache.to_j(flds, mflds[p]);
-#else
-      CacheFields cache;
-      fields_t flds = cache.from_em(mflds[p]);
-      do_push_part(p, flds, mprts);
-      cache.to_j(flds, mflds[p]);
-#endif
     } 
     prof_stop(pr);
   }
