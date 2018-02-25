@@ -477,42 +477,57 @@ do_push_part(int p, fields_t flds, mparticles_t mprts)
 
 #if CACHE == CACHE_EM_J
 
+struct CacheFields
+{
 #if DIM == DIM_YZ
-static fields_t
-cache_fields_from_em(fields_t flds)
-{
-  fields_t fld = fields_t(flds.ib, flds.im, 9);
-  Fields3d<fields_t> F(flds), F_CACHE(fld);
-  // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
-  // Has to be at least -2 .. +3 because of staggering
-  // FIXME, get rid of caching since it's no different from the actual
-  // fields...
-  for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
-    for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
-      F_CACHE(EX, 0,iy,iz) = F(EX, 0,iy,iz);
-      F_CACHE(EY, 0,iy,iz) = F(EY, 0,iy,iz);
-      F_CACHE(EZ, 0,iy,iz) = F(EZ, 0,iy,iz);
-      F_CACHE(HX, 0,iy,iz) = F(HX, 0,iy,iz);
-      F_CACHE(HY, 0,iy,iz) = F(HY, 0,iy,iz);
-      F_CACHE(HZ, 0,iy,iz) = F(HZ, 0,iy,iz);
+  static fields_t from_em(fields_t flds)
+  {
+    fields_t fld = fields_t(flds.ib, flds.im, 9);
+    Fields3d<fields_t> F(flds), F_CACHE(fld);
+    // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
+    // Has to be at least -2 .. +3 because of staggering
+    // FIXME, get rid of caching since it's no different from the actual
+    // fields...
+    for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
+      for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
+	F_CACHE(EX, 0,iy,iz) = F(EX, 0,iy,iz);
+	F_CACHE(EY, 0,iy,iz) = F(EY, 0,iy,iz);
+	F_CACHE(EZ, 0,iy,iz) = F(EZ, 0,iy,iz);
+	F_CACHE(HX, 0,iy,iz) = F(HX, 0,iy,iz);
+	F_CACHE(HY, 0,iy,iz) = F(HY, 0,iy,iz);
+	F_CACHE(HZ, 0,iy,iz) = F(HZ, 0,iy,iz);
+      }
     }
+    return fld;
   }
-  return fld;
-}
-
-static void
-cache_fields_to_j(fields_t fld, fields_t flds)
-{
-  Fields3d<fields_t> F(flds), F_CACHE(fld);
-  for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
-    for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
-      F(JXI, 0,iy,iz) += F_CACHE(JXI, 0,iy,iz);
-      F(JYI, 0,iy,iz) += F_CACHE(JYI, 0,iy,iz);
-      F(JZI, 0,iy,iz) += F_CACHE(JZI, 0,iy,iz);
+  
+  static void to_j(fields_t fld, fields_t flds)
+  {
+    Fields3d<fields_t> F(flds), F_CACHE(fld);
+    for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
+      for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
+	F(JXI, 0,iy,iz) += F_CACHE(JXI, 0,iy,iz);
+	F(JYI, 0,iy,iz) += F_CACHE(JYI, 0,iy,iz);
+	F(JZI, 0,iy,iz) += F_CACHE(JZI, 0,iy,iz);
+      }
     }
+    fld.dtor();
   }
-}
 #endif
+};
+
+#else
+
+struct CacheFields
+{
+  static fields_t from_em(fields_t flds)
+  {
+    return flds;
+  }
+  
+  static void to_j(fields_t flds_cache, fields_t flds)
+  {}
+};
 
 #endif
 
@@ -534,13 +549,15 @@ struct PushParticles_
       // FIXME, in the cache case can't we just skip this and just set j when copying back?
       mflds[p].zero(JXI, JXI + 3);
 #if CACHE == CACHE_EM_J
-      fields_t flds = cache_fields_from_em(mflds[p]);
+      CacheFields cache;
+      fields_t flds = cache.from_em(mflds[p]);
       do_push_part(p, flds, mprts);
-      cache_fields_to_j(flds, mflds[p]);
-      flds.dtor();
+      cache.to_j(flds, mflds[p]);
 #else
-      fields_t flds = mflds[p];
+      CacheFields cache;
+      fields_t flds = cache.from_em(mflds[p]);
       do_push_part(p, flds, mprts);
+      cache.to_j(flds, mflds[p]);
 #endif
     } 
     prof_stop(pr);
