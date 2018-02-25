@@ -54,7 +54,7 @@ struct psc_mparticles_vpic : psc_mparticles_base
   }
 };
 
-using mparticles_vpic_t = mparticles<psc_mparticles_vpic>;
+using mparticles_vpic_t = PscMparticles<psc_mparticles_vpic>;
 
 template<>
 struct mparticles_traits<mparticles_vpic_t>

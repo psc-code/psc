@@ -443,10 +443,10 @@ struct psc_mparticles_ : psc_mparticles_base
 };
 
 // ======================================================================
-// mparticles
+// PscMparticles
 
 template<typename S>
-struct mparticles
+struct PscMparticles
 {
   using sub_t = S;
   using particle_t = typename sub_t::particle_t;
@@ -454,7 +454,7 @@ struct mparticles
   using patch_t = typename sub_t::patch_t;
   using particle_buf_t = typename patch_t::buf_t;
 
-  explicit mparticles(psc_mparticles *mprts)
+  explicit PscMparticles(psc_mparticles *mprts)
     : mprts_(mprts),
       sub_(mrc_to_subobj(mprts, sub_t))
   {}
@@ -481,7 +481,7 @@ private:
   sub_t *sub_;
 };
 
-using mparticles_base_t = mparticles<psc_mparticles_base>;
+using mparticles_base_t = PscMparticles<psc_mparticles_base>;
 
 #endif
 

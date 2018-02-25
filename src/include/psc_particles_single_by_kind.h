@@ -50,6 +50,6 @@ struct psc_mparticles_single_by_kind : psc_mparticles_base
 // ======================================================================
 // mparticles_single_by_kind_t
 
-using mparticles_single_by_kind_t = mparticles<psc_mparticles_single_by_kind>;
+using mparticles_single_by_kind_t = PscMparticles<psc_mparticles_single_by_kind>;
 
 #endif
