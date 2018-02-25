@@ -4,7 +4,6 @@
 #include "psc_particles_as_single.h"
 #include "psc_fields_as_single.h"
 
-#define push_p_ops push_p_ops_1vbec_single_xz
 #include "psc_push_particles_1vb.h"
 
 #define DIM DIM_XYZ
