@@ -282,6 +282,9 @@ struct mparticles_patch_base
   void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(&prt.xi); }
     
   const int* get_b_mx() const { return pi_.b_mx_; }
+
+  real_t prt_qni(const particle_t& prt) const { return prt.qni(mprts->grid()); }
+  real_t prt_mni(const particle_t& prt) const { return prt.mni(mprts->grid()); }
 };
 
 template<typename P>

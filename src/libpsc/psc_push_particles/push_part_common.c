@@ -463,7 +463,7 @@ struct PushParticles_
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-      real_t dq = c_prm.dqs * mprts->prt_qni(*part) / mprts->prt_mni(*part);
+      real_t dq = c_prm.dqs * prts.prt_qni(*part) / prts.prt_mni(*part);
       push_p(&part->pxi, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
