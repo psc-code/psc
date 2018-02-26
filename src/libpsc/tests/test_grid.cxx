@@ -195,19 +195,19 @@ template <typename T>
 class PushParticlesTest : public ::testing::Test
 {};
 
-struct Test1vbSingle
+struct Test1vbecSingle
 {
   using Mparticles = MparticlesSingle;
   using Mfields = MfieldsSingle;
-  using Config = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
+  using Config = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>;
   using PushParticles = push_p_ops<Config>;  
 };
 
-struct Test1vbDouble
+struct Test1vbecDouble
 {
   using Mparticles = MparticlesDouble;
   using Mfields = MfieldsC;
-  using Config = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
+  using Config = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_1, opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>;
   using PushParticles = push_p_ops<Config>;  
 };
 
@@ -218,7 +218,7 @@ struct Test2ndDouble
   using PushParticles = PscPushParticles_<PushParticles__<Config2nd1>>;
 };
 
-using PushParticlesTestTypes = ::testing::Types<Test1vbSingle, Test1vbDouble, Test2ndDouble>;
+using PushParticlesTestTypes = ::testing::Types<Test1vbecSingle, Test1vbecDouble, Test2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 

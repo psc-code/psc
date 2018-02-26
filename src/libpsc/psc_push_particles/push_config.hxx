@@ -7,21 +7,22 @@
 struct CacheFieldsNone;
 struct CacheFields;
 
-template<typename MP, typename MF, typename D, typename O, typename J,
-	 typename OPT_EXT = opt_ext_none>
+template<typename MP, typename MF, typename D,
+	 typename IP, typename O,
+	 typename CALCJ, typename OPT_EXT = opt_ext_none>
 struct push_p_config
 {
   using mparticles_t = MP;
   using mfields_t = MF;
   using dim = D;
+  using ip = IP;
   using order = O;
-  using calcj = J;
+  using calcj = CALCJ;
   using ext = OPT_EXT;
 };
 
 template<typename MP, typename MF, typename D,
-	 typename IP,
-	 typename O = opt_order_2nd,
+	 typename IP, typename O = opt_order_2nd,
 	 typename CF = CacheFieldsNone>
 struct Config
 {

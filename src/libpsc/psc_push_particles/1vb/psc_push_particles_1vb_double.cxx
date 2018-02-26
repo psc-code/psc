@@ -12,7 +12,8 @@
 #define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
 
-using push_p_conf = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_order_1st, opt_calcj_1vb_split>;
+using push_p_conf = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_ip_1st, opt_order_1st,
+				  opt_calcj_1vb_split>;
 
 #include "../1vb.c"
 
