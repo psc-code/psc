@@ -108,10 +108,13 @@ private:
   real_t s_[N_RHO];  
 };
 
-#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
-    gx.set(xx[d] * dxi);				\
-    c.k1 = gx.l;						\
-    s1x.set(c.k1-lg1, gx)
+#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)			\
+  do {								\
+    IP ip2;							\
+    gx.set(xx[d] * dxi);					\
+    k1 = gx.l;						\
+    s1x.set(k1-lg1, gx);					\
+  } while(0)
 
 // ======================================================================
 // Current
@@ -119,6 +122,20 @@ private:
 template<typename Rho1d_t, typename C>
 struct Current
 {
+  void charge_before(const IP& ip)
+  {
+    IF_DIM_X( s0x.set(0, ip.cx.g); lg1 = ip.cx.g.l; );
+    IF_DIM_Y( s0y.set(0, ip.cy.g); lg2 = ip.cy.g.l; );
+    IF_DIM_Z( s0z.set(0, ip.cz.g); lg3 = ip.cz.g.l; );
+  }
+
+  void charge_after(real_t x[3])
+  {
+    IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], s1z, lg3); );
+  }
+  
   void zero_s1()
   {
     IF_DIM_X( s1x.zero(); );
@@ -135,36 +152,36 @@ struct Current
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
   find_l_minmax<typename C::order>(&l1min, &l1max, k1, ip.cxyz.g.l); \
-  fnqx = prts.prt_qni_wni(prt) * c_prm.fnqxs;				\
+  fnqx = qni_wni * c_prm.fnqxs;					     \
 
-  void prep(IP& ip, mparticles_t::patch_t& prts, particle_t& prt, real_t vv[3])
+  void prep(IP& ip, real_t qni_wni, real_t vv[3])
   {
     IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );
     IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );
     IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );
 
-    IF_NOT_DIM_X( fnqxx = vv[0] * prts.prt_qni_wni(prt) * c_prm.fnqs; );
-    IF_NOT_DIM_Y( fnqyy = vv[1] * prts.prt_qni_wni(prt) * c_prm.fnqs; );
-    IF_NOT_DIM_Z( fnqzz = vv[2] * prts.prt_qni_wni(prt) * c_prm.fnqs; );
+    IF_NOT_DIM_X( fnqxx = vv[0] * qni_wni * c_prm.fnqs; );
+    IF_NOT_DIM_Y( fnqyy = vv[1] * qni_wni * c_prm.fnqs; );
+    IF_NOT_DIM_Z( fnqzz = vv[2] * qni_wni * c_prm.fnqs; );
   }
 
 #if (DIM & DIM_X)
   Rho1d_t s0x = {}, s1x;
-  int k1, l1min, l1max;
+  int lg1, k1, l1min, l1max;
   real_t fnqx;
 #else
   real_t fnqxx;
 #endif
 #if (DIM & DIM_Y)
   Rho1d_t s0y = {}, s1y;
-  int k2, l2min, l2max;
+  int lg2, k2, l2min, l2max;
   real_t fnqy;
 #else
   real_t fnqyy;
 #endif
 #if (DIM & DIM_Z)
   Rho1d_t s0z = {}, s1z;
-  int k3, l3min, l3max;
+  int lg3, k3, l3min, l3max;
   real_t fnqz;
 #else
   real_t fnqzz;
@@ -531,9 +548,7 @@ private:
       IP ip;
       ip.set_coeffs(xm);
 
-      IF_DIM_X( c.s0x.set(0, ip.cx.g); );
-      IF_DIM_Y( c.s0y.set(0, ip.cy.g); );
-      IF_DIM_Z( c.s0z.set(0, ip.cz.g); );
+      c.charge_before(ip);
 
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
@@ -550,15 +565,11 @@ private:
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
       c.zero_s1();
-      IP ip2;
-      IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], c.s1x, ip.cx.g.l); );
-      IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], c.s1y, ip.cy.g.l); );
-      IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], c.s1z, ip.cz.g.l); );
+      c.charge_after(x);
 
       // CURRENT DENSITY AT (n+1.0)*dt
-
       c.subtr_s1_s0();
-      c.prep(ip, prts, *part, vv);
+      c.prep(ip, prts.prt_qni_wni(*part), vv);
       //CURRENT_PREP;
 #ifdef XYZ
       c.calc(ip, J);
