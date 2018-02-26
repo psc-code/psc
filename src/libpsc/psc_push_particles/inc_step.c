@@ -75,7 +75,7 @@ CUDA_DEVICE static void
 push_one(particles_t& prts, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
-  using IP = InterpolateEM<FieldsEM, opt_ip, opt_dim>;
+  using IP = InterpolateEM<FieldsEM, typename C::ip, typename C::dim>;
   
   FieldsEM EM(flds_em);
 
@@ -151,7 +151,7 @@ template<typename C>
 CUDA_DEVICE static void
 stagger_one(mparticles_t::patch_t& prts, int n, em_cache_t flds_em)
 {
-  using IP = InterpolateEM<FieldsEM, opt_ip, opt_dim>;
+  using IP = InterpolateEM<FieldsEM, typename C::ip, typename C::dim>;
 
   FieldsEM EM(flds_em);
   particle_t *prt;

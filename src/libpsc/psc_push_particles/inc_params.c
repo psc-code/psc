@@ -53,16 +53,6 @@ using opt_order = opt_order_2nd;
 #error unknown ORDER
 #endif
 
-#if ORDER == ORDER_1ST
-#if IP_VARIANT == IP_VARIANT_EC
-using opt_ip = opt_ip_1st_ec;
-#else
-using opt_ip = opt_ip_1st;
-#endif
-#elif ORDER == ORDER_2ND
-using opt_ip = opt_ip_2nd;
-#endif
-
 #if CALC_J == CALC_J_1VB_SPLIT
 using opt_calcj = opt_calcj_1vb_split;
 #elif CALC_J == CALC_J_1VB_VAR1
