@@ -10,6 +10,7 @@
 
 #define CONFIG Config2ndXY
 
+#define XYZ
 #define DIM DIM_XY
 #define ORDER ORDER_2ND
 #include "push_part_common.c"

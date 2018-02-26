@@ -204,7 +204,11 @@ struct Current
   void calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>& J);
   void calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>& J);
   void calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>& J);
+  void calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>& J);
   void calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t>& J);
 
   CurrentDir<order, IP, typename dim::InvarX> x;
   CurrentDir<order, IP, typename dim::InvarY> y;
@@ -267,59 +271,98 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
   }
 };
 
-#define CURRENT_2ND_XY							\
-  for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-    real_t jxh = 0.f;							\
-    for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
-      real_t wx = c.x.s1[l1] * (c.y.s0[l2] + .5f*c.y.s1[l2]);			\
-      real_t wz = c.x.s0[l1] * c.y.s0[l2]					\
-	+ .5f * c.x.s1[l1] * c.y.s0[l2]					\
-	+ .5f * c.x.s0[l1] * c.y.s1[l2]					\
-	+ (1.f/3.f) * c.x.s1[l1] * c.y.s1[l2];				\
-      									\
-      jxh -= c.x.fnq*wx;							\
-      J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jxh;			\
-      J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += c.z.fnqv * wz;		\
-    }									\
-  }									\
-  for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
-    real_t jyh = 0.f;							\
-    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-      real_t wy = c.y.s1[l2] * (c.x.s0[l1] + .5f*c.x.s1[l1]);			\
-      									\
-      jyh -= c.y.fnq*wy;							\
-      J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jyh;			\
-    }									\
-  }
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>& J)
+{
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+    real_t jxh = 0.f;
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+      real_t wx = x.s1[l1] * (y.s0[l2] + .5f*y.s1[l2]);
+      real_t wz = x.s0[l1] * y.s0[l2]
+	+ .5f * x.s1[l1] * y.s0[l2]
+	+ .5f * x.s0[l1] * y.s1[l2]
+	+ (1.f/3.f) * x.s1[l1] * y.s1[l2];
 
-#define CURRENT_XZ				\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {	\
+      jxh -= x.fnq*wx;
+      J(JXI, x.lg+l1,y.lg+l2,0) += jxh;
+      J(JZI, x.lg+l1,y.lg+l2,0) += z.fnqv * wz;
+    }
+  }
+  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+    real_t jyh = 0.f;
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+      real_t wy = y.s1[l2] * (x.s0[l1] + .5f*x.s1[l1]);
+
+      jyh -= y.fnq*wy;
+      J(JYI, x.lg+l1,y.lg+l2,0) += jyh;
+    }
+  }
+}
+
+// FIXME, 1st/2d duplicated
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>& J)
+{
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {	\
     real_t jxh = 0.f;						\
-    for (int l1 = c.x.lmin; l1 < c.x.lmax; l1++) {				\
-      real_t wx = c.x.s1[l1] * (c.z.s0[l3] + .5f*c.z.s1[l3]);	\
-      jxh -= c.x.fnq*wx;							\
-      J(JXI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jxh;				\
+    for (int l1 = x.lmin; l1 < x.lmax; l1++) {				\
+      real_t wx = x.s1[l1] * (z.s0[l3] + .5f*z.s1[l3]);	\
+      jxh -= x.fnq*wx;							\
+      J(JXI, x.lg+l1,0,z.lg+l3) += jxh;				\
     }									\
   }									\
 									\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
-    for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
-      real_t wy = c.x.s0[l1] * c.z.s0[l3]			\
-	+ .5f * c.x.s1[l1] * c.z.s0[l3]					\
-	+ .5f * c.x.s0[l1] * c.z.s1[l3]					\
-	+ (1.f/3.f) * c.x.s1[l1] * c.z.s1[l3];				\
-      real_t jyh = c.y.fnqv * wy;					\
-      J(JYI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jyh;				\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
+      real_t wy = x.s0[l1] * z.s0[l3]			\
+	+ .5f * x.s1[l1] * z.s0[l3]					\
+	+ .5f * x.s0[l1] * z.s1[l3]					\
+	+ (1.f/3.f) * x.s1[l1] * z.s1[l3];				\
+      real_t jyh = y.fnqv * wy;					\
+      J(JYI, x.lg+l1,0,z.lg+l3) += jyh;				\
     }									\
   }									\
-  for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
+  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
     real_t jzh = 0.f;						\
-    for (int l3 = c.z.lmin; l3 < c.z.lmax; l3++) {				\
-      real_t wz = c.z.s1[l3] * (c.x.s0[l1] + .5f*c.x.s1[l1]);	\
-      jzh -= c.z.fnq*wz;							\
-      J(JZI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jzh;				\
+    for (int l3 = z.lmin; l3 < z.lmax; l3++) {				\
+      real_t wz = z.s1[l3] * (x.s0[l1] + .5f*x.s1[l1]);	\
+      jzh -= z.fnq*wz;							\
+      J(JZI, x.lg+l1,0,z.lg+l3) += jzh;				\
     }									\
   }
+}
+
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>& J)
+{
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {	\
+    real_t jxh = 0.f;						\
+    for (int l1 = x.lmin; l1 < x.lmax; l1++) {				\
+      real_t wx = x.s1[l1] * (z.s0[l3] + .5f*z.s1[l3]);	\
+      jxh -= x.fnq*wx;							\
+      J(JXI, x.lg+l1,0,z.lg+l3) += jxh;				\
+    }									\
+  }									\
+									\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
+      real_t wy = x.s0[l1] * z.s0[l3]			\
+	+ .5f * x.s1[l1] * z.s0[l3]					\
+	+ .5f * x.s0[l1] * z.s1[l3]					\
+	+ (1.f/3.f) * x.s1[l1] * z.s1[l3];				\
+      real_t jyh = y.fnqv * wy;					\
+      J(JYI, x.lg+l1,0,z.lg+l3) += jyh;				\
+    }									\
+  }									\
+  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
+    real_t jzh = 0.f;						\
+    for (int l3 = z.lmin; l3 < z.lmax; l3++) {				\
+      real_t wz = z.s1[l3] * (x.s0[l1] + .5f*x.s1[l1]);	\
+      jzh -= z.fnq*wz;							\
+      J(JZI, x.lg+l1,0,z.lg+l3) += jzh;				\
+    }									\
+  }
+}
 
 #define CURRENT_1ST_YZ							\
   for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
@@ -329,7 +372,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
 	+ .5f * c.y.s0[l2] * c.z.s1[l3]					\
 	+ (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3];				\
       real_t jxh = c.x.fnqv * wx;					\
-      J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
+      J(JXI, 0,c.y.lg+l2,c.z.lg+l3) += jxh;				\
     }									\
   }									\
   									\
@@ -338,7 +381,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
     for (int l2 = c.y.lmin; l2 < c.y.lmax; l2++) {				\
       real_t wy = c.y.s1[l2] * (c.z.s0[l3] + .5f*c.z.s1[l3]);	\
       jyh -= c.y.fnq*wy;							\
-      J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
+      J(JYI, 0,c.y.lg+l2,c.z.lg+l3) += jyh;				\
     }									\
   }									\
 									\
@@ -347,7 +390,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
     for (int l3 = c.z.lmin; l3 < c.z.lmax; l3++) {				\
       real_t wz = c.z.s1[l3] * (c.y.s0[l2] + .5f*c.y.s1[l2]);	\
       jzh -= c.z.fnq*wz;							\
-      J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;				\
+      J(JZI, 0,c.y.lg+l2,c.z.lg+l3) += jzh;				\
     }									\
   }
 
@@ -374,9 +417,9 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
 	jyh -= c.y.fnq*wy;							\
 	JZH(l2) -= c.z.fnq*wz;						\
 									\
-	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
-	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
-	J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += JZH(l2);			\
+	J(JXI, 0,c.y.lg+l2,c.z.lg+l3) += jxh;			\
+	J(JYI, 0,c.y.lg+l2,c.z.lg+l3) += jyh;			\
+	J(JZI, 0,c.y.lg+l2,c.z.lg+l3) += JZH(l2);			\
       }									\
     }									\
 
@@ -422,7 +465,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>
 					   (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3]); \
 									\
 	jxh -= c.x.fnq*wx;							\
-	J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
+	J(JXI, c.x.lg+l1,c.y.lg+l2,c.z.lg+l3) += jxh;			\
       }									\
     }									\
   }									\
@@ -437,7 +480,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>
 					   (1.f/3.f) * c.x.s1[l1]*c.z.s1[l3]); \
 									\
 	jyh -= c.y.fnq*wy;							\
-	J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
+	J(JYI, c.x.lg+l1,c.y.lg+l2,c.z.lg+l3) += jyh;			\
       }									\
     }									\
   }									\
@@ -452,7 +495,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>
 					   (1.f/3.f) * c.x.s1[l1]*c.y.s1[l2]); \
 									\
 	jzh -= c.z.fnq*wz;							\
-	J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;			\
+	J(JZI, c.x.lg+l1,c.y.lg+l2,c.z.lg+l3) += jzh;			\
       }									\
     }									\
   }
@@ -573,7 +616,7 @@ private:
 
     c_prm_set(prts.grid());
     IP ip;
-    Current_t c;
+    Current_t c(prts.grid());
 
     Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
     Fields3d<fields_t> J(flds);
