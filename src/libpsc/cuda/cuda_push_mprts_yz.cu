@@ -352,6 +352,8 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
   float vxi[3];
   calc_v(vxi, prt.pxi);
 
+  AdvanceParticle<real_t, dim> advance;
+
   // position xm at x^(n+.5)
   float h0[3], h1[3];
   float xm[3], xp[3];
@@ -361,7 +363,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   if (DEPOSIT == DEPOSIT_VB_2D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    push_x<real_t, dim>(prt.xi, vxi, .5f * d_cmprts_const.dt);
+    advance.push_x(prt.xi, vxi, .5f * d_cmprts_const.dt);
 
     float fnqx = vxi[0] * prt.qni_wni * d_cmprts_const.fnqs;
 
@@ -378,11 +380,11 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
     scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, ci0);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_x<real_t, dim>(prt.xi, vxi, .5f * d_cmprts_const.dt);
+    advance.push_x(prt.xi, vxi, .5f * d_cmprts_const.dt);
     STORE_PARTICLE_POS(prt, d_xi4, n);
   } else if (DEPOSIT == DEPOSIT_VB_3D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_x<real_t, dim>(prt.xi, vxi, d_cmprts_const.dt);
+    advance.push_x(prt.xi, vxi, d_cmprts_const.dt);
     STORE_PARTICLE_POS(prt, d_xi4, n);
   }
 

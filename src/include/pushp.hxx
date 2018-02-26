@@ -4,16 +4,19 @@
 
 #include "cuda_compat.h"
 
-// ----------------------------------------------------------------------
-// push_x
-
 template<typename real_t, typename dim>
-__host__ __device__ inline void push_x(real_t x[3], const real_t v[3], real_t dt)
+struct AdvanceParticle
 {
-  if (!dim::InvarX::value) { x[0] += dt * v[0]; }
-  if (!dim::InvarY::value) { x[1] += dt * v[1]; }
-  if (!dim::InvarZ::value) { x[2] += dt * v[2]; }
-}
+  // ----------------------------------------------------------------------
+  // push_x
+  
+  __host__ __device__ inline void push_x(real_t x[3], const real_t v[3], real_t dt)
+  {
+    if (!dim::InvarX::value) { x[0] += dt * v[0]; }
+    if (!dim::InvarY::value) { x[1] += dt * v[1]; }
+    if (!dim::InvarZ::value) { x[2] += dt * v[2]; }
+  }
+};
 
 // ----------------------------------------------------------------------
 // push_p

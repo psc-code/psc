@@ -65,7 +65,9 @@ push_one(particles_t& prts, int n,
 {
   using dim = typename C::dim;
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
-  
+  using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
+
+  AdvanceParticle_t advance;
   FieldsEM EM(flds_em);
 
   particle_t *prt;
@@ -96,16 +98,16 @@ push_one(particles_t& prts, int n,
   calc_v(vxi, &prt->pxi);
 #if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-  push_x<real_t, dim>(&prt->xi, vxi, .5f * c_prm.dt);
+  advance.push_x(&prt->xi, vxi, .5f * c_prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
   calc_j_oop(curr_cache, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
-  push_x<real_t, dim>(&prt->xi, vxi, .5f * c_prm.dt);
+  advance.push_x(&prt->xi, vxi, .5f * c_prm.dt);
 #else
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-  push_x<real_t, dim>(&prt->xi, vxi, c_prm.dt);
+  advance.push_x(&prt->xi, vxi, c_prm.dt);
 #endif
   
   int lf[3];

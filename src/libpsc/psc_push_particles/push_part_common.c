@@ -568,8 +568,10 @@ private:
     using dim = typename C::dim;
     using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, dim>;
     using Current_t = Current<typename C::order, dim, IP, Fields3d<fields_t>>;
+    using AdvanceParticle_t = AdvanceParticle<particle_t::real_t, dim>;
 
     c_prm_set(prts.grid());
+    AdvanceParticle_t advance;
     IP ip;
     Current_t c(prts.grid());
 
@@ -602,8 +604,7 @@ private:
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
       calc_v(vv, &part->pxi);
 
-      // FIXME, inelegant way of pushing full dt
-      push_x<real_t, dim>(x, vv, c_prm.dt);
+      advance.push_x(x, vv, c_prm.dt);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt
       c.charge_after(x);
