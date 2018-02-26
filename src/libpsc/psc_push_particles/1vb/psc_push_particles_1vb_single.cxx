@@ -7,14 +7,17 @@
 #define DIM DIM_YZ
 
 #include "../inc_defs.h"
+#include "../push_config.hxx"
 
 #define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
 
+using push_p_conf = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_yz, opt_order_1st, opt_calcj_1vb_2d>;
+
 #include "../1vb.c"
 
 template<typename dim_t>
-using push_p_ops_1vb_single = push_p_ops<push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_t, opt_order_1st, opt_calcj_1vb_2d>>;
+using push_p_ops_1vb_single = push_p_ops<push_p_conf>;
 
 using PushParticles_t = PushParticles_<push_p_ops_1vb_single>;
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;

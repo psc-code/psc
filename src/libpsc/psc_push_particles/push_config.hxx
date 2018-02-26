@@ -1,21 +1,35 @@
 
+#pragma once
+
 #include "dim.hxx"
 #include "inc_defs.h"
 
 struct CacheFieldsNone;
 struct CacheFields;
 
-template<typename MP, typename MF, typename DIM,
+template<typename MP, typename MF, typename D, typename O, typename J,
+	 typename OPT_EXT = opt_ext_none>
+struct push_p_config
+{
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using dim = D;
+  using order = O;
+  using calcj = J;
+  using ext = OPT_EXT;
+};
+
+template<typename MP, typename MF, typename D,
 	 typename IP,
-	 typename ORDER = opt_order_2nd,
+	 typename O = opt_order_2nd,
 	 typename CF = CacheFieldsNone>
 struct Config
 {
   using mparticles_t = MP;
   using mfields_t = MF;
-  using dim = DIM;
+  using dim = D;
   using ip = IP;
-  using order = ORDER;
+  using order = O;
   using CacheFields = CF;
 };
 

@@ -8,18 +8,7 @@
 #include "fields.hxx"
 
 #include "../inc_defs.h"
-
-template<typename MP, typename MF, typename D, typename O, typename J,
-	 typename OPT_EXT = opt_ext_none>
-struct push_p_config
-{
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using dim = D;
-  using order = O;
-  using calcj = J;
-  using ext = OPT_EXT;
-};
+#include "../push_config.hxx"
 
 template<typename C>
 struct push_p_ops

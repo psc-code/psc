@@ -9,6 +9,7 @@
 #define DIM DIM_XYZ
 
 #include "../inc_defs.h"
+#include "../push_config.hxx"
 
 #define PUSH_DIM DIM_XZ
 #define EM_CACHE_DIM DIM_XZ
@@ -16,6 +17,8 @@
 #define ORDER ORDER_1ST
 #define IP_VARIANT IP_VARIANT_EC
 #define CALC_J CALC_J_1VB_SPLIT
+
+using push_p_conf = push_p_config<mparticles_t, mfields_t, dim_xyz, opt_order_1st, opt_calcj_1vb_split>;
 
 #include "../1vb.c"
 
