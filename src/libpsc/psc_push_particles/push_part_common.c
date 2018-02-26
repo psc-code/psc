@@ -121,7 +121,6 @@ struct CurrentDir
   
   void charge_after(real_t xx)
   {
-
     ip_coeff_t g;
     g.set(xx);
     k = g.l;
@@ -169,6 +168,11 @@ template<typename order, typename dim, typename IP>
 struct Current
 {
   using Self = Current<order, dim, IP>;
+  using Real3 = Vec3<real_t>;
+
+  Current(const Grid_t& grid)
+    : dxi_{ Real3{1., 1. , 1.} / grid.dx }
+  {}
   
   void charge_before(const IP& ip)
   {
@@ -179,9 +183,9 @@ struct Current
 
   void charge_after(real_t xx[3])
   {
-    x.charge_after(xx[0] * c_prm.dxi[0]);
-    y.charge_after(xx[1] * c_prm.dxi[1]);
-    z.charge_after(xx[2] * c_prm.dxi[2]);
+    x.charge_after(xx[0] * dxi_[0]);
+    y.charge_after(xx[1] * dxi_[1]);
+    z.charge_after(xx[2] * dxi_[2]);
   }
   
   void prep(real_t qni_wni, real_t vv[3])
@@ -205,6 +209,9 @@ struct Current
   CurrentDir<order, IP, typename dim::InvarX> x;
   CurrentDir<order, IP, typename dim::InvarY> y;
   CurrentDir<order, IP, typename dim::InvarZ> z;
+
+private:
+  Real3 dxi_;
 };
 
 // ======================================================================
