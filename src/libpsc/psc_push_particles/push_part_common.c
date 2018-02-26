@@ -110,9 +110,8 @@ private:
 
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)			\
   do {								\
-    IP ip2;							\
     gx.set(xx[d] * dxi);					\
-    k1 = gx.l;						\
+    k1 = gx.l;							\
     s1x.set(k1-lg1, gx);					\
   } while(0)
 
@@ -131,6 +130,9 @@ struct Current
 
   void charge_after(real_t x[3])
   {
+    zero_s1();
+
+    IP ip2;
     IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], s1x, lg1); );
     IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], s1y, lg2); );
     IF_DIM_Z( DEPOSIT(x, k3, ip2.cz.g, 2, c_prm.dxi[2], s1z, lg3); );
@@ -156,6 +158,8 @@ struct Current
 
   void prep(IP& ip, real_t qni_wni, real_t vv[3])
   {
+    subtr_s1_s0();
+    
     IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );
     IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );
     IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );
@@ -564,13 +568,10 @@ private:
       push_x(x, vv, c_prm.dt);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-      c.zero_s1();
       c.charge_after(x);
 
       // CURRENT DENSITY AT (n+1.0)*dt
-      c.subtr_s1_s0();
       c.prep(ip, prts.prt_qni_wni(*part), vv);
-      //CURRENT_PREP;
 #ifdef XYZ
       c.calc(ip, J);
 #else
