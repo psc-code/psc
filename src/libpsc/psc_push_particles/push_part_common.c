@@ -479,36 +479,6 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t
   }
  }
  
-#if DIM == DIM1
-#define CURRENT do {} while(0)
-#elif DIM == DIM_Y
-#if ORDER == ORDER_2ND
-#define CURRENT CURRENT_2ND_Y
-#endif
-#elif DIM == DIM_Z
-#if ORDER == ORDER_2ND
-#define CURRENT CURRENT_2ND_Z
-#endif
-#elif DIM == DIM_XY
-#if ORDER == ORDER_2ND
-#define CURRENT CURRENT_2ND_XY
-#endif
-#elif DIM == DIM_XZ
-#define CURRENT CURRENT_XZ
-#elif DIM == DIM_YZ
-
-#if ORDER == ORDER_1ST
-#define CURRENT CURRENT_1ST_YZ
-#elif ORDER == ORDER_2ND
-#define CURRENT CURRENT_2ND_YZ
-
-#endif
-#elif DIM == DIM_XYZ
-#if ORDER == ORDER_2ND
-#define CURRENT CURRENT_2ND_XYZ
-#endif
-#endif
-
 struct CacheFields
 {
 #if DIM == DIM_YZ
