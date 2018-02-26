@@ -122,6 +122,8 @@ push_part_one(struct d_particle& prt, int n, DMParticles d_mprts,
   xm[1] = prt.xi[1] * d_cmprts_const.dxi[1];
   xm[2] = prt.xi[2] * d_cmprts_const.dxi[2];
   InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
+  AdvanceParticle<real_t, dim> advance{d_cmprts_const.dt};
+
   ip.set_coeffs(xm);
   
   real_t E[3] = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
@@ -132,11 +134,11 @@ push_part_one(struct d_particle& prt, int n, DMParticles d_mprts,
   real_t dq = d_cmprts_const.dq[kind];
   if (REORDER) {
     LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, id);
-    push_p(prt.pxi, E, H, dq);
+    advance.push_p(prt.pxi, E, H, dq);
     STORE_PARTICLE_MOM(prt, d_mprts.alt_pxi4_, n);
   } else {
     LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, n);
-    push_p(prt.pxi, E, H, dq);
+    advance.push_p(prt.pxi, E, H, dq);
     STORE_PARTICLE_MOM(prt, d_mprts.pxi4_, n);
   }
 }

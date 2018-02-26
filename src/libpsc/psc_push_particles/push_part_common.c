@@ -599,7 +599,7 @@ private:
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
       real_t dq = c_prm.dqs * prts.prt_qni(*part) / prts.prt_mni(*part);
-      push_p(&part->pxi, E, H, dq);
+      advance.push_p(&part->pxi, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
       calc_v(vv, &part->pxi);

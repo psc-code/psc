@@ -92,7 +92,7 @@ push_one(particles_t& prts, int n,
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = prt->kind();
   real_t dq = prm.dq_kind[kind];
-  push_p(&prt->pxi, E, H, dq);
+  advance.push_p(&prt->pxi, E, H, dq);
 
   real_t vxi[3];
   calc_v(vxi, &prt->pxi);
@@ -144,7 +144,11 @@ template<typename C>
 CUDA_DEVICE static void
 stagger_one(mparticles_t::patch_t& prts, int n, em_cache_t flds_em)
 {
-  using IP = InterpolateEM<FieldsEM, typename C::ip, typename C::dim>;
+  using dim = typename C::dim;
+  using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
+  using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
+
+  AdvanceParticle_t advance(prts.grid().dt);
 
   FieldsEM EM(flds_em);
   particle_t *prt;
@@ -169,7 +173,7 @@ stagger_one(mparticles_t::patch_t& prts, int n, em_cache_t flds_em)
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
   int kind = prt->kind();
   real_t dq = prm.dq_kind[kind];
-  push_p(&prt->pxi, E, H, -.5f * dq);
+  advance.push_p(&prt->pxi, E, H, -.5f * dq);
 
   PARTICLE_STORE(prt, mprts_arr, n);
 }

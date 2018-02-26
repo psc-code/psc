@@ -21,40 +21,39 @@ struct AdvanceParticle
     if (!dim::InvarZ::value) { x[2] += dt_fac * dt_ * v[2]; }
   }
 
+  // ----------------------------------------------------------------------
+  // push_p
+  //
+  // advance momentum based on Lorentz force from EM fields
+  
+  __host__ __device__ inline void push_p(real_t p[3], const real_t E[3], const real_t H[3], real_t dq)
+  {
+    real_t pxm = p[0] + dq * E[0];
+    real_t pym = p[1] + dq * E[1];
+    real_t pzm = p[2] + dq * E[2];
+    
+    real_t root = dq * rsqrt(real_t(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
+    real_t taux = H[0] * root, tauy = H[1] * root, tauz = H[2] * root;
+    
+    real_t tau = real_t(1.) / (real_t(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
+    real_t pxp = ( (real_t(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
+	      +(real_t(2.)*taux*tauy + real_t(2.)*tauz)*pym
+	      +(real_t(2.)*taux*tauz - real_t(2.)*tauy)*pzm)*tau;
+    real_t pyp = ( (real_t(2.)*taux*tauy - real_t(2.)*tauz)*pxm
+	      +(real_t(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
+	      +(real_t(2.)*tauy*tauz + real_t(2.)*taux)*pzm)*tau;
+    real_t pzp = ( (real_t(2.)*taux*tauz + real_t(2.)*tauy)*pxm
+	      +(real_t(2.)*tauy*tauz - real_t(2.)*taux)*pym
+	      +(real_t(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
+    
+    p[0] = pxp + dq * E[0];
+    p[1] = pyp + dq * E[1];
+    p[2] = pzp + dq * E[2];
+  }
+
 private:
   real_t dt_;
 };
-
-// ----------------------------------------------------------------------
-// push_p
-//
-// advance momentum based on Lorentz force from EM fields
-
-template<typename R>
-__host__ __device__ inline void push_p(R p[3], const R E[3], const R H[3], R dq)
-{
-  R pxm = p[0] + dq * E[0];
-  R pym = p[1] + dq * E[1];
-  R pzm = p[2] + dq * E[2];
-  
-  R root = dq * rsqrt(R(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
-  R taux = H[0] * root, tauy = H[1] * root, tauz = H[2] * root;
-  
-  R tau = R(1.) / (R(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
-  R pxp = ( (R(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
-           +(R(2.)*taux*tauy + R(2.)*tauz)*pym
-	   +(R(2.)*taux*tauz - R(2.)*tauy)*pzm)*tau;
-  R pyp = ( (R(2.)*taux*tauy - R(2.)*tauz)*pxm
-	   +(R(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
-	   +(R(2.)*tauy*tauz + R(2.)*taux)*pzm)*tau;
-  R pzp = ( (R(2.)*taux*tauz + R(2.)*tauy)*pxm
-	   +(R(2.)*tauy*tauz - R(2.)*taux)*pym
-	   +(R(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
-  
-  p[0] = pxp + dq * E[0];
-  p[1] = pyp + dq * E[1];
-  p[2] = pzp + dq * E[2];
-}
 
 // ----------------------------------------------------------------------
 // calc_v
