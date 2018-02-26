@@ -25,14 +25,6 @@
 #define IF_NOT_DIM_Z(s) s do{} while(0)
 #endif
 
-#if ORDER == ORDER_1ST
-using opt_order = opt_order_1st;
-#elif ORDER == ORDER_2ND
-using opt_order = opt_order_2nd;
-#else
-#error unknown ORDER
-#endif
-
 #if CALC_J == CALC_J_1VB_SPLIT
 using opt_calcj = opt_calcj_1vb_split;
 #elif CALC_J == CALC_J_1VB_VAR1
