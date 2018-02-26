@@ -137,28 +137,37 @@ struct Current
 #if (DIM & DIM_X)
   Rho1d_t s0x = {}, s1x;
   int l1min, l1max;
+  real_t fnqx;
+#else
+  real_t fnqxx;
 #endif
 #if (DIM & DIM_Y)
   Rho1d_t s0y = {}, s1y;
   int l2min, l2max;
+  real_t fnqy;
+#else
+  real_t fnqyy;
 #endif
 #if (DIM & DIM_Z)
   Rho1d_t s0z = {}, s1z;
   int l3min, l3max;
+  real_t fnqz;
+#else
+  real_t fnqzz;
 #endif
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
   find_l_minmax<typename C::order>(&c.l1min, &c.l1max, k1, ip.cxyz.g.l); \
-  real_t fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;		     \
+  c.fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;				\
 
 #define CURRENT_PREP							\
   IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );	\
   IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );	\
   IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );	\
 									\
-  IF_NOT_DIM_X( real_t fnqxx = vv[0] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Y( real_t fnqyy = vv[1] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Z( real_t fnqzz = vv[2] * prts.prt_qni_wni(*part) * c_prm.fnqs; )
+  IF_NOT_DIM_X( c.fnqxx = vv[0] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Y( c.fnqyy = vv[1] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Z( c.fnqzz = vv[2] * prts.prt_qni_wni(*part) * c_prm.fnqs; )
 
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
@@ -168,9 +177,9 @@ struct Current
     real_t wy = c.s1y[l2];				\
     real_t wz = c.s0y[l2] + .5f * c.s1y[l2];		\
     								\
-    real_t jxh = fnqxx*wx;				\
-    jyh -= fnqy*wy;						\
-    real_t jzh = fnqzz*wz;				\
+    real_t jxh = c.fnqxx*wx;				\
+    jyh -= c.fnqy*wy;						\
+    real_t jzh = c.fnqzz*wz;				\
     								\
     J(JXI, 0,ip.cy.g.l+l2,0) += jxh;					\
     J(JYI, 0,ip.cy.g.l+l2,0) += jyh;				\
@@ -184,9 +193,9 @@ struct Current
     real_t wy = c.s0z[l3] + .5f * c.s1z[l3];			\
     real_t wz = c.s1z[l3];					\
     								\
-    real_t jxh = fnqxx*wx;					\
-    real_t jyh = fnqyy*wy;					\
-    jzh -= fnqz*wz;						\
+    real_t jxh = c.fnqxx*wx;					\
+    real_t jyh = c.fnqyy*wy;					\
+    jzh -= c.fnqz*wz;						\
     								\
     J(JXI, 0,0,ip.cz.g.l+l3) += jxh;				\
     J(JYI, 0,0,ip.cz.g.l+l3) += jyh;				\
@@ -203,9 +212,9 @@ struct Current
 	+ .5f * c.s0x[l1] * c.s1y[l2]					\
 	+ (1.f/3.f) * c.s1x[l1] * c.s1y[l2];				\
       									\
-      jxh -= fnqx*wx;							\
+      jxh -= c.fnqx*wx;							\
       J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jxh;			\
-      J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += fnqzz * wz;		\
+      J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += c.fnqzz * wz;		\
     }									\
   }									\
   for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
@@ -213,7 +222,7 @@ struct Current
     for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
       real_t wy = c.s1y[l2] * (c.s0x[l1] + .5f*c.s1x[l1]);			\
       									\
-      jyh -= fnqy*wy;							\
+      jyh -= c.fnqy*wy;							\
       J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += jyh;			\
     }									\
   }
@@ -223,7 +232,7 @@ struct Current
     real_t jxh = 0.f;						\
     for (int l1 = c.l1min; l1 < c.l1max; l1++) {				\
       real_t wx = c.s1x[l1] * (c.s0z[l3] + .5f*c.s1z[l3]);	\
-      jxh -= fnqx*wx;							\
+      jxh -= c.fnqx*wx;							\
       J(JXI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jxh;				\
     }									\
   }									\
@@ -234,7 +243,7 @@ struct Current
 	+ .5f * c.s1x[l1] * c.s0z[l3]					\
 	+ .5f * c.s0x[l1] * c.s1z[l3]					\
 	+ (1.f/3.f) * c.s1x[l1] * c.s1z[l3];				\
-      real_t jyh = fnqyy * wy;					\
+      real_t jyh = c.fnqyy * wy;					\
       J(JYI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
@@ -242,7 +251,7 @@ struct Current
     real_t jzh = 0.f;						\
     for (int l3 = c.l3min; l3 < c.l3max; l3++) {				\
       real_t wz = c.s1z[l3] * (c.s0x[l1] + .5f*c.s1x[l1]);	\
-      jzh -= fnqz*wz;							\
+      jzh -= c.fnqz*wz;							\
       J(JZI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jzh;				\
     }									\
   }
@@ -254,7 +263,7 @@ struct Current
 	+ .5f * c.s1y[l2] * c.s0z[l3]					\
 	+ .5f * c.s0y[l2] * c.s1z[l3]					\
 	+ (1.f/3.f) * c.s1y[l2] * c.s1z[l3];				\
-      real_t jxh = fnqxx * wx;					\
+      real_t jxh = c.fnqxx * wx;					\
       J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;				\
     }									\
   }									\
@@ -263,7 +272,7 @@ struct Current
     real_t jyh = 0.f;						\
     for (int l2 = c.l2min; l2 < c.l2max; l2++) {				\
       real_t wy = c.s1y[l2] * (c.s0z[l3] + .5f*c.s1z[l3]);	\
-      jyh -= fnqy*wy;							\
+      jyh -= c.fnqy*wy;							\
       J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
@@ -272,7 +281,7 @@ struct Current
     real_t jzh = 0.f;						\
     for (int l3 = c.l3min; l3 < c.l3max; l3++) {				\
       real_t wz = c.s1z[l3] * (c.s0y[l2] + .5f*c.s1y[l2]);	\
-      jzh -= fnqz*wz;							\
+      jzh -= c.fnqz*wz;							\
       J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;				\
     }									\
   }
@@ -296,9 +305,9 @@ struct Current
 	real_t wy = c.s1y[l2] * (c.s0z[l3] + .5f*c.s1z[l3]);			\
 	real_t wz = c.s1z[l3] * (c.s0y[l2] + .5f*c.s1y[l2]);			\
 									\
-	jxh = fnqxx*wx;							\
-	jyh -= fnqy*wy;							\
-	JZH(l2) -= fnqz*wz;						\
+	jxh = c.fnqxx*wx;							\
+	jyh -= c.fnqy*wy;							\
+	JZH(l2) -= c.fnqz*wz;						\
 									\
 	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
 	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
@@ -307,8 +316,7 @@ struct Current
     }									\
 
 #ifdef XYZ
-  void calc(real_t fnqxx, real_t fnqy, real_t fnqz,
-	    IP& ip, Fields3d<fields_t>& J)
+  void calc(IP& ip, Fields3d<fields_t>& J)
   {
     real_t jxh;
     real_t jyh;
@@ -349,7 +357,7 @@ struct Current
 					   .5f * c.s0y[l2] * c.s1z[l3] + \
 					   (1.f/3.f) * c.s1y[l2] * c.s1z[l3]); \
 									\
-	jxh -= fnqx*wx;							\
+	jxh -= c.fnqx*wx;							\
 	J(JXI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;			\
       }									\
     }									\
@@ -364,7 +372,7 @@ struct Current
 					   .5f * c.s0x[l1] * c.s1z[l3] + \
 					   (1.f/3.f) * c.s1x[l1]*c.s1z[l3]); \
 									\
-	jyh -= fnqy*wy;							\
+	jyh -= c.fnqy*wy;							\
 	J(JYI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;			\
       }									\
     }									\
@@ -379,7 +387,7 @@ struct Current
 					   .5f * c.s0x[l1] * c.s1y[l2] +\
 					   (1.f/3.f) * c.s1x[l1]*c.s1y[l2]); \
 									\
-	jzh -= fnqz*wz;							\
+	jzh -= c.fnqz*wz;							\
 	J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;			\
       }									\
     }									\
@@ -551,7 +559,7 @@ private:
       c.subtr_s1_s0();
       CURRENT_PREP;
 #ifdef XYZ
-      c.calc(fnqxx, fnqy, fnqz, ip, J);
+      c.calc(ip, J);
 #else
       CURRENT;
 #endif
