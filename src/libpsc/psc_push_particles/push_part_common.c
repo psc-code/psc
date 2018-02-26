@@ -109,10 +109,9 @@ private:
 };
 
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
-    int k1;						\
     gx.set(xx[d] * dxi);				\
-    k1 = gx.l;						\
-    s1x.set(k1-lg1, gx)
+    c.k1 = gx.l;						\
+    s1x.set(c.k1-lg1, gx)
 
 // ======================================================================
 // Current
@@ -136,28 +135,28 @@ struct Current
 
 #if (DIM & DIM_X)
   Rho1d_t s0x = {}, s1x;
-  int l1min, l1max;
+  int k1, l1min, l1max;
   real_t fnqx;
 #else
   real_t fnqxx;
 #endif
 #if (DIM & DIM_Y)
   Rho1d_t s0y = {}, s1y;
-  int l2min, l2max;
+  int k2, l2min, l2max;
   real_t fnqy;
 #else
   real_t fnqyy;
 #endif
 #if (DIM & DIM_Z)
   Rho1d_t s0z = {}, s1z;
-  int l3min, l3max;
+  int k3, l3min, l3max;
   real_t fnqz;
 #else
   real_t fnqzz;
 #endif
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
-  find_l_minmax<typename C::order>(&c.l1min, &c.l1max, k1, ip.cxyz.g.l); \
+  find_l_minmax<typename C::order>(&c.l1min, &c.l1max, c.k1, ip.cxyz.g.l); \
   c.fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;				\
 
 #define CURRENT_PREP							\
