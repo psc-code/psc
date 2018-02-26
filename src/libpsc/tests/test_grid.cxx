@@ -200,14 +200,12 @@ class PushParticlesTest : public ::testing::Test
 
 struct Test1vbecSingle
 {
-  using Config = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>;
-  using PushParticles = push_p_ops<Config>;  
+  using PushParticles = push_p_ops<Config1vbecSingle<dim_1>>;
 };
 
 struct Test1vbecDouble
 {
-  using Config = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_1, opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>;
-  using PushParticles = push_p_ops<Config>;  
+  using PushParticles = push_p_ops<Config1vbecDouble<dim_1>>;
 };
 
 struct Test2ndDouble

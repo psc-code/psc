@@ -6,9 +6,8 @@
 
 #include "psc_push_particles_1vb.h"
 
-template<typename dim_t>
-using push_p_ops_1vbec_single_ = push_p_ops<push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_t,
-							  opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>>;
+template<typename dim>
+using push_p_ops_1vbec_single_ = push_p_ops<Config1vbecDouble<dim>>;
 
 // FIXME, special hack... for xyz_xz
 
