@@ -12,7 +12,6 @@ using real_t = mparticles_t::real_t;
 #include "inc_push.c"
 #include "inc_cache.c"
 #include "interpolate.hxx"
-using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
 
 // ----------------------------------------------------------------------
 // find_l_minmax
@@ -563,9 +562,11 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
+    using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
     using Current_t = Current<typename C::order, typename C::dim, IP>;
 
     c_prm_set(prts.grid());
+    IP ip;
     Current_t c;
 
     Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
@@ -583,7 +584,6 @@ private:
       for (int d = 0; d < 3; d++) {
 	xm[d] = x[d] * c_prm.dxi[d];
       }
-      IP ip;
       ip.set_coeffs(xm);
 
       c.charge_before(ip);
