@@ -192,6 +192,18 @@ struct Current
   CurrentDir<order, typename dim::InvarZ> z;
 };
 
+template<>
+inline void Current<opt_order_2nd, dim_1>::calc(Fields3d<fields_t>& J)
+{
+  real_t jxh = x.fnqv;				
+  real_t jyh = y.fnqv;						
+  real_t jzh = z.fnqv;				
+    								
+  J(JXI, 0,0,0) += jxh;					
+  J(JYI, 0,0,0) += jyh;				
+  J(JZI, 0,0,0) += jzh;				
+}
+  
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
 								\
