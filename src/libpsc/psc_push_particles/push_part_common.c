@@ -127,18 +127,28 @@ struct Current
     int lg, k;
     int lmin, lmax;
     real_t fnq;
+
+    template<typename ip_coeff_t>
+    void charge_before(ip_coeff_t g)
+    {
+      s0.set(0, g);
+      lg = g.l;
+    };
   };
 
   struct DirInvar
   {
     real_t fnqv;
+
+    template<typename ip_coeff_t>
+    void charge_before(ip_coeff_t g) {}
   };
   
   void charge_before(const IP& ip)
   {
-    IF_DIM_X( x.s0.set(0, ip.cx.g); x.lg = ip.cx.g.l; );
-    IF_DIM_Y( y.s0.set(0, ip.cy.g); y.lg = ip.cy.g.l; );
-    IF_DIM_Z( z.s0.set(0, ip.cz.g); z.lg = ip.cz.g.l; );
+    x.charge_before(ip.cx.g);
+    y.charge_before(ip.cy.g);
+    z.charge_before(ip.cz.g);
   }
 
   void charge_after(real_t xx[3])
