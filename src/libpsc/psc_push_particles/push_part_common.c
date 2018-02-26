@@ -108,9 +108,11 @@ private:
   real_t s_[N_RHO];  
 };
 
-template<typename Rho1d_t, typename C, typename Invar>
+template<typename order, typename C, typename Invar>
 struct CurrentDir
 {
+  using Rho1d_t = Rho1d<order>;
+  
   template<typename ip_coeff_t>
   void charge_before(ip_coeff_t g)
   {
@@ -132,7 +134,7 @@ struct CurrentDir
     for (int i = -s1.S_OFF + 1; i <= 1; i++) {
       s1[i] -= s0[i];
     }
-    find_l_minmax<typename C::order>(&lmin, &lmax, k, lg);
+    find_l_minmax<order>(&lmin, &lmax, k, lg);
     fnq = qni_wni * fnqxyzs;
   }
   
@@ -142,8 +144,8 @@ struct CurrentDir
   real_t fnq;
 };
 
-template<typename Rho1d_t, typename C>
-struct CurrentDir<Rho1d_t, C, std::true_type>
+template<typename order, typename C>
+struct CurrentDir<order, C, std::true_type>
 {
   template<typename ip_coeff_t>
   void charge_before(ip_coeff_t g) {}
@@ -167,7 +169,6 @@ struct Current
 {
   using dim = typename C::dim;
   using order = typename C::order;
-  using Rho1d_t = Rho1d<order>;
 
   void charge_before(const IP& ip)
   {
@@ -193,9 +194,9 @@ struct Current
 
   void calc(Fields3d<fields_t>& J);
 
-  CurrentDir<Rho1d_t, C, typename dim::InvarX> x;
-  CurrentDir<Rho1d_t, C, typename dim::InvarY> y;
-  CurrentDir<Rho1d_t, C, typename dim::InvarZ> z;
+  CurrentDir<order, C, typename dim::InvarX> x;
+  CurrentDir<order, C, typename dim::InvarY> y;
+  CurrentDir<order, C, typename dim::InvarZ> z;
 };
 
 #define CURRENT_2ND_Y						\
