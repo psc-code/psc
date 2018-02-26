@@ -538,10 +538,8 @@ struct CacheFieldsNone
 template<typename C>
 struct PushParticles__
 {
-  using mparticles_t = typename C::mparticles_t;
-  using Mparticles = typename mparticles_t::sub_t;
-  using mfields_t = typename C::mfields_t;
-  using Mfields = typename mfields_t::sub_t;
+  using Mparticles = typename C::mparticles_t::sub_t;
+  using Mfields = typename C::mfields_t::sub_t;
   using fields_t = typename Mfields::fields_t;
   using CacheFields_t = typename C::CacheFields;
 
@@ -565,7 +563,7 @@ struct PushParticles__
   }
 
 private:
-  static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
+  static void do_push_part(fields_t flds, typename Mparticles::patch_t& prts)
   {
     using dim = typename C::dim;
     using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, dim>;
@@ -624,10 +622,10 @@ private:
 template<typename PushParticles_t>
 struct PscPushParticles_
 {
-  using mparticles_t = typename PushParticles_t::mparticles_t;
-  using mfields_t = typename PushParticles_t::mfields_t;
   using Mparticles = typename mparticles_t::sub_t;
   using Mfields = typename mfields_t::sub_t;
+  using mparticles_t = PscMparticles<Mparticles>;
+  using mfields_t = PscMfields<Mfields>;
 
   static void push_mprts(struct psc_push_particles *push,
 			 struct psc_mparticles *mprts,
