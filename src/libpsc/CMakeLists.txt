@@ -24,12 +24,6 @@ add_library(psc
   psc_push_particles/push_part_1st_xz.cxx
   psc_push_particles/push_part_1st_yz.cxx
   psc_push_particles/push_part_single2_1vb_yz.cxx
-  psc_push_particles/push_part_xy.cxx
-  psc_push_particles/push_part_xyz.cxx
-  psc_push_particles/push_part_xz.cxx
-  psc_push_particles/push_part_y.cxx
-  psc_push_particles/push_part_yz.cxx
-  psc_push_particles/push_part_z.cxx
   psc_push_particles/push_part_1.cxx
   psc_push_particles/1vb/psc_push_particles_1vb_double.cxx
   psc_push_particles/1vb/psc_push_particles_1vb_single.cxx

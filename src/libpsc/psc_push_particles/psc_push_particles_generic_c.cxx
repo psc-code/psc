@@ -3,8 +3,12 @@
 #include "psc_generic_c.h"
 
 #include "push_particles.hxx"
+#include "push_config.hxx"
 
-#include "push.hxx"
+#include "psc_particles_as_double.h"
+#include "psc_fields_as_c.h"
+
+#include "push_part_common.c"
 
 struct PushParticlesGenericC : PushParticlesBase
 {
