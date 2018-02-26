@@ -224,38 +224,50 @@ struct CurrentHelper<opt_order_2nd, dim_1, IP, Current_t>
   }
 };
 
-#define CURRENT_2ND_Y						\
-  real_t jyh = 0.f;					\
-								\
-  for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {			\
-    real_t wx = c.y.s0[l2] + .5f * c.y.s1[l2];		\
-    real_t wy = c.y.s1[l2];				\
-    real_t wz = c.y.s0[l2] + .5f * c.y.s1[l2];		\
-    								\
-    real_t jxh = c.x.fnqv*wx;				\
-    jyh -= c.y.fnq*wy;						\
-    real_t jzh = c.z.fnqv*wz;				\
-    								\
-    J(JXI, 0,ip.cy.g.l+l2,0) += jxh;					\
-    J(JYI, 0,ip.cy.g.l+l2,0) += jyh;				\
-    J(JZI, 0,ip.cy.g.l+l2,0) += jzh;				\
-  }
+template<typename IP, typename Current_t>
+struct CurrentHelper<opt_order_2nd, dim_y, IP, Current_t> 
+{
+  static void calc(Current_t& c, Fields3d<fields_t>& J)
+  {
+    real_t jyh = 0.f;
 
-#define CURRENT_2ND_Z						\
-  real_t jzh = 0.f;						\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {			\
-    real_t wx = c.z.s0[l3] + .5f * c.z.s1[l3];			\
-    real_t wy = c.z.s0[l3] + .5f * c.z.s1[l3];			\
-    real_t wz = c.z.s1[l3];					\
-    								\
-    real_t jxh = c.x.fnqv*wx;					\
-    real_t jyh = c.y.fnqv*wy;					\
-    jzh -= c.z.fnq*wz;						\
-    								\
-    J(JXI, 0,0,ip.cz.g.l+l3) += jxh;				\
-    J(JYI, 0,0,ip.cz.g.l+l3) += jyh;				\
-    J(JZI, 0,0,ip.cz.g.l+l3) += jzh;				\
+    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {
+      real_t wx = c.y.s0[l2] + .5f * c.y.s1[l2];
+      real_t wy = c.y.s1[l2];
+      real_t wz = c.y.s0[l2] + .5f * c.y.s1[l2];
+
+      real_t jxh = c.x.fnqv*wx;
+      jyh -= c.y.fnq*wy;
+      real_t jzh = c.z.fnqv*wz;
+
+      J(JXI, 0,c.y.lg+l2,0) += jxh;
+      J(JYI, 0,c.y.lg+l2,0) += jyh;
+      J(JZI, 0,c.y.lg+l2,0) += jzh;
+    }
   }
+};
+
+template<typename IP, typename Current_t>
+struct CurrentHelper<opt_order_2nd, dim_z, IP, Current_t> 
+{
+  static void calc(Current_t& c, Fields3d<fields_t>& J)
+  {
+    real_t jzh = 0.f;
+    for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {
+      real_t wx = c.z.s0[l3] + .5f * c.z.s1[l3];
+      real_t wy = c.z.s0[l3] + .5f * c.z.s1[l3];
+      real_t wz = c.z.s1[l3];
+
+      real_t jxh = c.x.fnqv*wx;
+      real_t jyh = c.y.fnqv*wy;
+      jzh -= c.z.fnq*wz;
+
+      J(JXI, 0,0,c.z.lg+l3) += jxh;
+      J(JYI, 0,0,c.z.lg+l3) += jyh;
+      J(JZI, 0,0,c.z.lg+l3) += jzh;
+    }
+  }
+};
 
 #define CURRENT_2ND_XY							\
   for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
@@ -562,7 +574,7 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, opt_dim>;
+    using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, typename C::dim>;
     using Current_t = Current<typename C::order, typename C::dim, IP>;
 
     c_prm_set(prts.grid());
