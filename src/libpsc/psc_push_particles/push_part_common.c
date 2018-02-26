@@ -108,61 +108,65 @@ private:
   real_t s_[N_RHO];  
 };
 
+template<typename Rho1d_t, typename C, typename Invar>
+struct CurrentDir
+{
+  template<typename ip_coeff_t>
+  void charge_before(ip_coeff_t g)
+  {
+    lg = g.l;
+    s0.set(0, g);
+  };
+  
+  template<typename ip_coeff_t>
+  void charge_after(real_t xx, ip_coeff_t g)
+  {
+    s1.zero();
+    g.set(xx);
+    k = g.l;
+    s1.set(k - lg, g);
+  }
+  
+  void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
+  {
+    for (int i = -s1.S_OFF + 1; i <= 1; i++) {
+      s1[i] -= s0[i];
+    }
+    find_l_minmax<typename C::order>(&lmin, &lmax, k, lg);
+    fnq = qni_wni * fnqxyzs;
+  }
+  
+  Rho1d_t s0 = {}, s1;
+  int lg, k;
+  int lmin, lmax;
+  real_t fnq;
+};
+
+template<typename Rho1d_t, typename C>
+struct CurrentDir<Rho1d_t, C, std::true_type>
+{
+  template<typename ip_coeff_t>
+  void charge_before(ip_coeff_t g) {}
+  
+  template<typename ip_coeff_t>
+  void charge_after(real_t xx, ip_coeff_t g) {}
+  
+  void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
+  {
+    fnqv = vv * qni_wni * fnqs;
+  }
+  
+  real_t fnqv;
+};
+  
 // ======================================================================
 // Current
 
 template<typename Rho1d_t, typename C>
 struct Current
 {
-  struct Dir
-  {
-    template<typename ip_coeff_t>
-    void charge_before(ip_coeff_t g)
-    {
-      s0.set(0, g);
-      lg = g.l;
-    };
+  using dim = typename C::dim;
 
-    template<typename ip_coeff_t>
-    void charge_after(real_t xx, ip_coeff_t g)
-    {
-      s1.zero();
-      g.set(xx);
-      k = g.l;
-      s1.set(k - lg, g);
-    }
-
-    void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
-    {
-      for (int i = -s1.S_OFF + 1; i <= 1; i++) {
-	s1[i] -= s0[i];
-      }
-      find_l_minmax<typename C::order>(&lmin, &lmax, k, lg);
-      fnq = qni_wni * fnqxyzs;
-    }
-
-    Rho1d_t s0 = {}, s1;
-    int lg, k;
-    int lmin, lmax;
-    real_t fnq;
-  };
-
-  struct DirInvar
-  {
-    template<typename ip_coeff_t>
-    void charge_before(ip_coeff_t g) {}
-
-    template<typename ip_coeff_t>
-    void charge_after(real_t xx, ip_coeff_t g) {}
-
-    void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
-    {
-      fnqv = vv * qni_wni * fnqs;
-    }
-
-    real_t fnqv;
-  };
-  
   void charge_before(const IP& ip)
   {
     x.charge_before(ip.cx.g);
@@ -185,21 +189,9 @@ struct Current
     z.prep(qni_wni, vv[2], c_prm.fnqzs, c_prm.fnqs);
   }
 
-#if (DIM & DIM_X)
-  Dir x;
-#else
-  DirInvar x;
-#endif
-#if (DIM & DIM_Y)
-  Dir y;
-#else
-  DirInvar y;
-#endif
-#if (DIM & DIM_Z)
-  Dir z;
-#else
-  DirInvar z;
-#endif
+  CurrentDir<Rho1d_t, C, typename dim::InvarX> x;
+  CurrentDir<Rho1d_t, C, typename dim::InvarY> y;
+  CurrentDir<Rho1d_t, C, typename dim::InvarZ> z;
 
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
