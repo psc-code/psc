@@ -1,6 +1,5 @@
 
 #include "psc_push_particles_private.h"
-#include "psc_generic_c.h"
 
 #include "push_particles.hxx"
 #include "push_config.hxx"
