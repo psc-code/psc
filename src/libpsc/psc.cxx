@@ -33,7 +33,7 @@
 #include <time.h>
 #include <array>
 
-using Fields = Fields3d<fields_t>;
+using Fields = Fields3d<mfields_t::fields_t>;
 
 struct psc *ppsc;
 

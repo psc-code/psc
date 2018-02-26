@@ -3,7 +3,7 @@
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 
-using Fields = Fields3d<fields_t, dim_xyz>;
+using Fields = Fields3d<mfields_t::fields_t, dim_xyz>;
 
 // ----------------------------------------------------------------------
 // psc_diag_item_field_energy_run

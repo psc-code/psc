@@ -4,6 +4,7 @@
 #include <mrc_profile.h>
 #include <string.h>
 
+using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 using real_t = mparticles_t::real_t;
 

@@ -9,8 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-using Fields = Fields3d<fields_t>;
-
 // ======================================================================
 // _psc_mfields_setup
 
@@ -76,6 +74,8 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
 {
+  using Fields = Fields3d<mfields_t::fields_t>;
+
   mfields_t mf = mflds_base->get_as<mfields_t>(0, mflds_base->nr_fields);
 
   psc_foreach_patch(ppsc, p) {

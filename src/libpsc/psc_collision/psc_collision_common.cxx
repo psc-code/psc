@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-using Fields = Fields3d<fields_t>;
+using Fields = Fields3d<mfields_t::fields_t>;
 using real_t = mparticles_t::real_t;
 
 struct psc_collision_sub {

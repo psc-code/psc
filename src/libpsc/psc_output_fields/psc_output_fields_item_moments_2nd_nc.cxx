@@ -2,6 +2,7 @@
 #include "psc_output_fields_item_private.h"
 #include "fields.hxx"
 
+using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 using real_t = mparticles_t::real_t;
 

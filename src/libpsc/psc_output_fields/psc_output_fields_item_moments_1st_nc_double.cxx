@@ -4,6 +4,7 @@
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 
+using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 
 // ======================================================================

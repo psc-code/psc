@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------
 
-typedef fields_t em_cache_t;
+using em_cache_t = mfields_t::fields_t;
 
 #ifndef EM_CACHE_DIM
 #define EM_CACHE_DIM DIM_XYZ
@@ -38,10 +38,4 @@ using FieldsEM = Fields3d<em_cache_t, dim_1>;
 #else
 #error unhandled EM_CACHE_DIM
 #endif
-
-CUDA_DEVICE static inline em_cache_t
-em_cache_create(fields_t flds_em, int ci0[3])
-{
-  return flds_em;
-}
 

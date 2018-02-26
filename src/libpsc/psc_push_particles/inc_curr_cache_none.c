@@ -13,7 +13,7 @@ curr_cache_create(flds_curr_t flds_curr, int ci0[3])
 
 CUDA_DEVICE static inline void
 curr_cache_add(curr_cache_t curr_cache, int m, int i, int j, int k,
-	       fields_t::real_t val)
+	       curr_cache_t::real_t val)
 {
 #if CURR_CACHE_DIM == DIM_XYZ
   using FieldsJ = Fields3d<flds_curr_t, dim_xyz>;
@@ -26,7 +26,7 @@ curr_cache_add(curr_cache_t curr_cache, int m, int i, int j, int k,
 #endif
 
   FieldsJ J(curr_cache);
-  fields_t::real_t *addr = &J(JXI+m, i,j,k);
+  curr_cache_t::real_t *addr = &J(JXI+m, i,j,k);
   atomicAdd(addr, val);
 }
 

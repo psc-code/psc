@@ -6,7 +6,7 @@
 #define CURR_CACHE CURR_CACHE_NONE
 #endif
 
-typedef fields_t flds_curr_t;
+using flds_curr_t = mfields_t::fields_t;
 
 // ----------------------------------------------------------------------
 

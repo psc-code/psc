@@ -162,10 +162,9 @@ struct CurrentDir<order, IP, std::true_type>
 // ======================================================================
 // Current
 
-template<typename order, typename dim, typename IP>
+template<typename order, typename dim, typename IP, typename Fields>
 struct Current
 {
-  using Self = Current<order, dim, IP>;
   using Real3 = Vec3<real_t>;
 
   Current(const Grid_t& grid)
@@ -193,21 +192,21 @@ struct Current
     z.prep(qni_wni, vv[2], c_prm.fnqzs, c_prm.fnqs);
   }
 
-  void calc(Fields3d<fields_t>& J)
+  void calc(Fields& J)
   {
     // Dispatch by function overloading, which needs to pass order and dim as tags
     calc(order{}, dim{}, J);
   }
 
-  void calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>& J);
-  void calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>& J);
-  void calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>& J);
-  void calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>& J);
-  void calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>& J);
-  void calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>& J);
-  void calc(opt_order_1st o, dim_yz d, Fields3d<fields_t>& J);
-  void calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J);
-  void calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_1 d, Fields& J);
+  void calc(opt_order_2nd o, dim_y d, Fields& J);
+  void calc(opt_order_2nd o, dim_z d, Fields& J);
+  void calc(opt_order_2nd o, dim_xy d, Fields& J);
+  void calc(opt_order_2nd o, dim_xz d, Fields& J);
+  void calc(opt_order_1st o, dim_xz d, Fields& J);
+  void calc(opt_order_1st o, dim_yz d, Fields& J);
+  void calc(opt_order_2nd o, dim_yz d, Fields& J);
+  void calc(opt_order_2nd o, dim_xyz d, Fields& J);
 
   CurrentDir<order, IP, typename dim::InvarX> x;
   CurrentDir<order, IP, typename dim::InvarY> y;
@@ -219,8 +218,8 @@ private:
 
 // ======================================================================
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_1 d, Fields& J)
 {
   real_t jxh = x.fnqv;
   real_t jyh = y.fnqv;
@@ -231,8 +230,8 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>&
   J(JZI, 0,0,0) += jzh;
 };
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_y d, Fields& J)
 {
   real_t jyh = 0.f;
 
@@ -251,8 +250,8 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>&
   }
 }
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_z d, Fields& J)
 {
   real_t jzh = 0.f;
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
@@ -270,8 +269,8 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
   }
 };
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_xy d, Fields& J)
 {
   for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
     real_t jxh = 0.f;
@@ -299,8 +298,8 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>
 }
 
 // FIXME, 1st/2d duplicated
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_1st o, dim_xz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     real_t jxh = 0.f;
@@ -331,8 +330,8 @@ void Current<order, dim, IP>::calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>
   }
 }
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_xz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     real_t jxh = 0.f;
@@ -363,8 +362,8 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>
   }
 }
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_1st o, dim_yz d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_1st o, dim_yz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
@@ -397,8 +396,8 @@ void Current<order, dim, IP>::calc(opt_order_1st o, dim_yz d, Fields3d<fields_t>
 }
 
 #define JZH(i) jzh[i+2]
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_yz d, Fields& J)
 {
   real_t jxh;
   real_t jyh;
@@ -428,8 +427,8 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>
   }
 }
 
-template<typename order, typename dim, typename IP>
-void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t>& J)
+template<typename order, typename dim, typename IP, typename Fields>
+void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_xyz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
@@ -483,6 +482,8 @@ struct CacheFields;
 template<>
 struct CacheFields<dim_yz>
 {
+  using fields_t = typename mfields_t::fields_t;
+  
   static fields_t from_em(fields_t flds)
   {
     fields_t fld = fields_t(flds.ib, flds.im, 9);
@@ -521,6 +522,8 @@ struct CacheFields<dim_yz>
 template<typename dim>
 struct CacheFieldsNone
 {
+  using fields_t = typename mfields_t::fields_t;
+
   static fields_t from_em(fields_t flds)
   {
     return flds;
@@ -537,6 +540,7 @@ struct PushParticles__
   using Mparticles = typename mparticles_t::sub_t;
   using mfields_t = typename C::mfields_t;
   using Mfields = typename mfields_t::sub_t;
+  using fields_t = typename Mfields::fields_t;
   using CacheFields_t = typename C::CacheFields;
 
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
@@ -551,7 +555,7 @@ struct PushParticles__
       // FIXME, in the cache case can't we just skip this and just set j when copying back?
       mflds[p].zero(JXI, JXI + 3);
       CacheFields_t cache;
-      fields_t flds = cache.from_em(mflds[p]);
+      auto flds = cache.from_em(mflds[p]);
       do_push_part(flds, mprts[p]);
       cache.to_j(flds, mflds[p]);
     }
@@ -563,7 +567,7 @@ private:
   {
     using dim = typename C::dim;
     using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, dim>;
-    using Current_t = Current<typename C::order, dim, IP>;
+    using Current_t = Current<typename C::order, dim, IP, Fields3d<fields_t>>;
 
     c_prm_set(prts.grid());
     IP ip;
