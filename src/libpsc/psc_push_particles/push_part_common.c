@@ -116,7 +116,7 @@ private:
 // ======================================================================
 // Current
 
-template<typename Rho1d_t>
+template<typename Rho1d_t, typename C>
 struct Current
 {
   void zero_s1()
@@ -131,6 +131,17 @@ struct Current
     IF_DIM_X( for (int i = -s1x.S_OFF + 1; i <= 1; i++) { s1x[i] -= s0x[i]; } );
     IF_DIM_Y( for (int i = -s1y.S_OFF + 1; i <= 1; i++) { s1y[i] -= s0y[i]; } );
     IF_DIM_Z( for (int i = -s1z.S_OFF + 1; i <= 1; i++) { s1z[i] -= s0z[i]; } );
+  }
+
+#define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
+  find_l_minmax<typename C::order>(&l1min, &l1max, k1, ip.cxyz.g.l); \
+  fnqx = prts.prt_qni_wni(prt) * c_prm.fnqxs;				\
+
+  void prep(IP& ip, mparticles_t::patch_t& prts, particle_t& prt)
+  {
+    IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );
+    IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );
+    IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );
   }
 
 #if (DIM & DIM_X)
@@ -155,14 +166,7 @@ struct Current
   real_t fnqzz;
 #endif
 
-#define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
-  find_l_minmax<typename C::order>(&c.l1min, &c.l1max, c.k1, ip.cxyz.g.l); \
-  c.fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;				\
-
 #define CURRENT_PREP							\
-  IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );	\
-  IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );	\
-  IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );	\
 									\
   IF_NOT_DIM_X( c.fnqxx = vv[0] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
   IF_NOT_DIM_Y( c.fnqyy = vv[1] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
@@ -506,7 +510,7 @@ private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
     using Rho1d_t = Rho1d<typename C::order>;
-    using Current_t = Current<Rho1d_t>;
+    using Current_t = Current<Rho1d_t, C>;
 
     c_prm_set(ppsc->grid());
     Current_t c;
@@ -556,6 +560,7 @@ private:
       // CURRENT DENSITY AT (n+1.0)*dt
 
       c.subtr_s1_s0();
+      c.prep(ip, prts, *part);
       CURRENT_PREP;
 #ifdef XYZ
       c.calc(ip, J);
