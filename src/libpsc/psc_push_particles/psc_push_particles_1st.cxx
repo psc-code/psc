@@ -3,8 +3,12 @@
 #include "psc_push_particles_1st.h"
 
 #include "push_particles.hxx"
+#include "push_config.hxx"
 
-#include "push.hxx"
+#include "psc_particles_as_double.h"
+#include "psc_fields_as_c.h"
+
+#include "push_part_common.c"
 
 // ======================================================================
 // psc_push_particles: subclass "1st"
