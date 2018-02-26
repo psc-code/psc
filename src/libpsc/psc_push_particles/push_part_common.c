@@ -108,7 +108,7 @@ private:
   real_t s_[N_RHO];  
 };
 
-template<typename order, typename C, typename Invar>
+template<typename order, typename Invar>
 struct CurrentDir
 {
   using Rho1d_t = Rho1d<order>;
@@ -143,8 +143,8 @@ struct CurrentDir
   real_t fnq;
 };
 
-template<typename order, typename C>
-struct CurrentDir<order, C, std::true_type>
+template<typename order>
+struct CurrentDir<order, std::true_type>
 {
   void charge_before(IP::ip_coeff_t g) {}
   
@@ -161,12 +161,9 @@ struct CurrentDir<order, C, std::true_type>
 // ======================================================================
 // Current
 
-template<typename C>
+template<typename order, typename dim>
 struct Current
 {
-  using dim = typename C::dim;
-  using order = typename C::order;
-
   void charge_before(const IP& ip)
   {
     x.charge_before(ip.cx.g);
@@ -190,9 +187,9 @@ struct Current
 
   void calc(Fields3d<fields_t>& J);
 
-  CurrentDir<order, C, typename dim::InvarX> x;
-  CurrentDir<order, C, typename dim::InvarY> y;
-  CurrentDir<order, C, typename dim::InvarZ> z;
+  CurrentDir<order, typename dim::InvarX> x;
+  CurrentDir<order, typename dim::InvarY> y;
+  CurrentDir<order, typename dim::InvarZ> z;
 };
 
 #define CURRENT_2ND_Y						\
@@ -341,9 +338,8 @@ struct Current
       }									\
     }									\
 
-#ifdef XYZ
-template<typename C>
-inline void Current<C>::calc(Fields3d<fields_t>& J)
+template<>
+inline void Current<opt_order_2nd, dim_yz>::calc(Fields3d<fields_t>& J)
 {
   real_t jxh;
   real_t jyh;
@@ -372,7 +368,6 @@ inline void Current<C>::calc(Fields3d<fields_t>& J)
     }									
   }									
 }
-#endif
   
 #define CURRENT_2ND_XYZ							\
   for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
@@ -531,7 +526,7 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using Current_t = Current<C>;
+    using Current_t = Current<typename C::order, typename C::dim>;
 
     c_prm_set(ppsc->grid());
     Current_t c;
