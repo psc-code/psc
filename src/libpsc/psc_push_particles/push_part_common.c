@@ -119,11 +119,12 @@ struct CurrentDir
     s0.set(0, g);
   };
   
-  void charge_after(real_t xx, IP::ip_coeff_t g)
+  void charge_after(real_t xx)
   {
-    s1.zero();
+    IP::ip_coeff_t g;
     g.set(xx);
     k = g.l;
+    s1.zero();
     s1.set(k - lg, g);
   }
   
@@ -147,7 +148,7 @@ struct CurrentDir<order, C, std::true_type>
 {
   void charge_before(IP::ip_coeff_t g) {}
   
-  void charge_after(real_t xx, IP::ip_coeff_t g) {}
+  void charge_after(real_t xx) {}
   
   void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
   {
@@ -175,10 +176,9 @@ struct Current
 
   void charge_after(real_t xx[3])
   {
-    IP ip2;
-    x.charge_after(xx[0] * c_prm.dxi[0], ip2.cx.g);
-    y.charge_after(xx[1] * c_prm.dxi[1], ip2.cy.g);
-    z.charge_after(xx[2] * c_prm.dxi[2], ip2.cz.g);
+    x.charge_after(xx[0] * c_prm.dxi[0]);
+    y.charge_after(xx[1] * c_prm.dxi[1]);
+    z.charge_after(xx[2] * c_prm.dxi[2]);
   }
   
   void prep(real_t qni_wni, real_t vv[3])
