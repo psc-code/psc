@@ -15,10 +15,10 @@ struct push_p_config
 {
   using mparticles_t = MP;
   using mfields_t = MF;
-  using dim_t = D;
-  using order_t = O;
-  using calcj_t = J;
-  using ext_t = OPT_EXT;
+  using dim = D;
+  using order = O;
+  using calcj = J;
+  using ext = OPT_EXT;
 };
 
 template<typename C>
