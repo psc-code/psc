@@ -137,11 +137,15 @@ struct Current
   find_l_minmax<typename C::order>(&l1min, &l1max, k1, ip.cxyz.g.l); \
   fnqx = prts.prt_qni_wni(prt) * c_prm.fnqxs;				\
 
-  void prep(IP& ip, mparticles_t::patch_t& prts, particle_t& prt)
+  void prep(IP& ip, mparticles_t::patch_t& prts, particle_t& prt, real_t vv[3])
   {
     IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );
     IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, cy, fnqy, fnqys); );
     IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, cz, fnqz, fnqzs); );
+
+    IF_NOT_DIM_X( fnqxx = vv[0] * prts.prt_qni_wni(prt) * c_prm.fnqs; );
+    IF_NOT_DIM_Y( fnqyy = vv[1] * prts.prt_qni_wni(prt) * c_prm.fnqs; );
+    IF_NOT_DIM_Z( fnqzz = vv[2] * prts.prt_qni_wni(prt) * c_prm.fnqs; );
   }
 
 #if (DIM & DIM_X)
@@ -165,12 +169,6 @@ struct Current
 #else
   real_t fnqzz;
 #endif
-
-#define CURRENT_PREP							\
-									\
-  IF_NOT_DIM_X( c.fnqxx = vv[0] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Y( c.fnqyy = vv[1] * prts.prt_qni_wni(*part) * c_prm.fnqs; ); \
-  IF_NOT_DIM_Z( c.fnqzz = vv[2] * prts.prt_qni_wni(*part) * c_prm.fnqs; )
 
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
@@ -560,8 +558,8 @@ private:
       // CURRENT DENSITY AT (n+1.0)*dt
 
       c.subtr_s1_s0();
-      c.prep(ip, prts, *part);
-      CURRENT_PREP;
+      c.prep(ip, prts, *part, vv);
+      //CURRENT_PREP;
 #ifdef XYZ
       c.calc(ip, J);
 #else
