@@ -171,17 +171,17 @@ struct Current
     IF_DIM_Z( for (int i = -z.s1.S_OFF + 1; i <= 1; i++) { z.s1[i] -= z.s0[i]; } );
   }
 
-#define CURRENT_PREP_DIM(l1min, l1max, lg1, k1, fnqx, fnqxs)    \
-  find_l_minmax<typename C::order>(&l1min, &l1max, k1, lg1);	      \
-  fnqx = qni_wni * c_prm.fnqxs;					     \
+#define CURRENT_PREP_DIM(x, fnqxs)			      \
+  find_l_minmax<typename C::order>(&x.lmin, &x.lmax, x.k, x.lg);      \
+  x.fnq = qni_wni * c_prm.fnqxs;					      \
 
   void prep(real_t qni_wni, real_t vv[3])
   {
     subtr_s1_s0();
     
-    IF_DIM_X( CURRENT_PREP_DIM(x.lmin, x.lmax, x.lg, x.k, x.fnq, fnqxs); );
-    IF_DIM_Y( CURRENT_PREP_DIM(y.lmin, y.lmax, y.lg, y.k, y.fnq, fnqys); );
-    IF_DIM_Z( CURRENT_PREP_DIM(z.lmin, z.lmax, z.lg, z.k, z.fnq, fnqzs); );
+    IF_DIM_X( CURRENT_PREP_DIM(x, fnqxs); );
+    IF_DIM_Y( CURRENT_PREP_DIM(y, fnqys); );
+    IF_DIM_Z( CURRENT_PREP_DIM(z, fnqzs); );
 
     IF_NOT_DIM_X( x.fnqv = vv[0] * qni_wni * c_prm.fnqs; );
     IF_NOT_DIM_Y( y.fnqv = vv[1] * qni_wni * c_prm.fnqs; );
