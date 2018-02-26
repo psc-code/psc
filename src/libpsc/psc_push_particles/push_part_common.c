@@ -111,6 +111,19 @@ private:
 template<typename Rho1d_t>
 struct Current
 {
+  void zero_s1()
+  {
+    IF_DIM_X( s1x.zero(); );
+    IF_DIM_Y( s1y.zero(); );
+    IF_DIM_Z( s1z.zero(); );
+  }
+
+  void subtr_s1_s0()
+  {
+    IF_DIM_X( for (int i = -s1x.S_OFF + 1; i <= 1; i++) { s1x[i] -= s0x[i]; } );
+    IF_DIM_Y( for (int i = -s1y.S_OFF + 1; i <= 1; i++) { s1y[i] -= s0y[i]; } );
+    IF_DIM_Z( for (int i = -s1z.S_OFF + 1; i <= 1; i++) { s1z[i] -= s0z[i]; } );
+  }
   
 #if (DIM & DIM_X)
   Rho1d_t s0x = {}, s1x;
@@ -128,24 +141,6 @@ struct Current
     gx.set(xx[d] * dxi);				\
     k1 = gx.l;						\
     s1x.set(k1-lg1, gx)
-
-// ----------------------------------------------------------------------
-// ZERO_S1
-
-#define ZERO_S1 do {					\
-    IF_DIM_X( c.s1x.zero(); );				\
-    IF_DIM_Y( c.s1y.zero(); );				\
-    IF_DIM_Z( c.s1z.zero(); );				\
-  } while (0)
-
-// ----------------------------------------------------------------------
-// SUBTR_S1_S0
-
-#define SUBTR_S1_S0 do {						\
-    IF_DIM_X( for (int i = -c.s1x.S_OFF + 1; i <= 1; i++) { c.s1x[i] -= c.s0x[i]; } ); \
-    IF_DIM_Y( for (int i = -c.s1y.S_OFF + 1; i <= 1; i++) { c.s1y[i] -= c.s0y[i]; } ); \
-    IF_DIM_Z( for (int i = -c.s1z.S_OFF + 1; i <= 1; i++) { c.s1z[i] -= c.s0z[i]; } ); \
-  } while (0)
 
 // ======================================================================
 // current
@@ -542,7 +537,7 @@ private:
       push_x(x, vv, c_prm.dt);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-      ZERO_S1;
+      c.zero_s1();
       IP ip2;
       IF_DIM_X( DEPOSIT(x, k1, ip2.cx.g, 0, c_prm.dxi[0], c.s1x, ip.cx.g.l); );
       IF_DIM_Y( DEPOSIT(x, k2, ip2.cy.g, 1, c_prm.dxi[1], c.s1y, ip.cy.g.l); );
@@ -550,7 +545,7 @@ private:
 
       // CURRENT DENSITY AT (n+1.0)*dt
 
-      SUBTR_S1_S0;
+      c.subtr_s1_s0();
       CURRENT_PREP;
 #ifdef XYZ
       current_2nd_yz(c.s0y, c.s0z, c.s1y, c.s1z,
