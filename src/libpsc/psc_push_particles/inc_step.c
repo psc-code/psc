@@ -1,18 +1,6 @@
 
 #include "psc_debug.h"
 
-#ifndef SFX
-
-#if DIM == DIM_1
-#define SFX(s) s ## _1
-#elif DIM == DIM_YZ
-#define SFX(s) s ## _yz
-#elif DIM == DIM_XYZ
-#define SFX(s) s ## _xyz
-#endif
-
-#endif // !SFX
-
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
   prt = &mprts_arr[n]
 
@@ -132,6 +120,7 @@ push_one(particles_t& prts, int n,
   IF_DIM_Z( lg[2] = ip.cz.g.l; );
   calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
+#ifdef PUSH_DIM
 #if !(PUSH_DIM & DIM_X)
   prt->xi = 0.f;
 #endif
@@ -140,6 +129,7 @@ push_one(particles_t& prts, int n,
 #endif
 #if !(PUSH_DIM & DIM_Z)
   prt->zi = 0.f;
+#endif
 #endif
 
   PARTICLE_STORE(prt, mprts_arr, n);

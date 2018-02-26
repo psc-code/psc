@@ -1,8 +1,4 @@
 
-#ifndef PUSH_DIM
-#define PUSH_DIM DIM
-#endif
-
 #include <cmath>
 
 #include "inc_params.c"
