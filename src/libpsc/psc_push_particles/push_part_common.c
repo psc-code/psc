@@ -127,6 +127,14 @@ struct Current
       s0.set(0, g);
       lg = g.l;
     };
+
+    template<typename ip_coeff_t>
+    void charge_after(real_t xx, ip_coeff_t g)
+    {
+      g.set(xx);
+      k = g.l;
+      s1.set(k - lg, g);
+    }
   };
 
   struct DirInvar
@@ -144,21 +152,14 @@ struct Current
     z.charge_before(ip.cz.g);
   }
 
-#define DEPOSIT(x, xx, g)					\
-  do {								\
-    g.set(xx);							\
-    x.k = g.l;							\
-    x.s1.set(x.k-x.lg, g);					\
-  } while(0)
-
   void charge_after(real_t xx[3])
   {
     zero_s1();
 
     IP ip2;
-    IF_DIM_X( DEPOSIT(x, xx[0] * c_prm.dxi[0], ip2.cx.g); );
-    IF_DIM_Y( DEPOSIT(y, xx[1] * c_prm.dxi[1], ip2.cy.g); );
-    IF_DIM_Z( DEPOSIT(z, xx[2] * c_prm.dxi[2], ip2.cz.g); );
+    IF_DIM_X( x.charge_after(xx[0] * c_prm.dxi[0], ip2.cx.g); );
+    IF_DIM_Y( y.charge_after(xx[1] * c_prm.dxi[1], ip2.cy.g); );
+    IF_DIM_Z( z.charge_after(xx[2] * c_prm.dxi[2], ip2.cz.g); );
   }
   
   void zero_s1()
