@@ -136,17 +136,20 @@ struct Current
 
 #if (DIM & DIM_X)
   Rho1d_t s0x = {}, s1x;
+  int l1min, l1max;
 #endif
 #if (DIM & DIM_Y)
   Rho1d_t s0y = {}, s1y;
+  int l2min, l2max;
 #endif
 #if (DIM & DIM_Z)
   Rho1d_t s0z = {}, s1z;
+  int l3min, l3max;
 #endif
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
-  int l1min, l1max; find_l_minmax<typename C::order>(&l1min, &l1max, k1, ip.cxyz.g.l); \
-    real_t fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;	\
+  find_l_minmax<typename C::order>(&c.l1min, &c.l1max, k1, ip.cxyz.g.l); \
+  real_t fnqx = prts.prt_qni_wni(*part) * c_prm.fnqxs;		     \
 
 #define CURRENT_PREP							\
   IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, cx, fnqx, fnqxs); );	\
@@ -160,7 +163,7 @@ struct Current
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
 								\
-  for (int l2 = l2min; l2 <= l2max; l2++) {			\
+  for (int l2 = c.l2min; l2 <= c.l2max; l2++) {			\
     real_t wx = c.s0y[l2] + .5f * c.s1y[l2];		\
     real_t wy = c.s1y[l2];				\
     real_t wz = c.s0y[l2] + .5f * c.s1y[l2];		\
@@ -176,7 +179,7 @@ struct Current
 
 #define CURRENT_2ND_Z						\
   real_t jzh = 0.f;						\
-  for (int l3 = l3min; l3 <= l3max; l3++) {			\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {			\
     real_t wx = c.s0z[l3] + .5f * c.s1z[l3];			\
     real_t wy = c.s0z[l3] + .5f * c.s1z[l3];			\
     real_t wz = c.s1z[l3];					\
@@ -191,9 +194,9 @@ struct Current
   }
 
 #define CURRENT_2ND_XY							\
-  for (int l2 = l2min; l2 <= l2max; l2++) {				\
+  for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
     real_t jxh = 0.f;							\
-    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+    for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
       real_t wx = c.s1x[l1] * (c.s0y[l2] + .5f*c.s1y[l2]);			\
       real_t wz = c.s0x[l1] * c.s0y[l2]					\
 	+ .5f * c.s1x[l1] * c.s0y[l2]					\
@@ -205,9 +208,9 @@ struct Current
       J(JZI, ip.cx.g.l+l1,ip.cy.g.l+l2,0) += fnqzz * wz;		\
     }									\
   }									\
-  for (int l1 = l1min; l1 <= l1max; l1++) {				\
+  for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
     real_t jyh = 0.f;							\
-    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+    for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
       real_t wy = c.s1y[l2] * (c.s0x[l1] + .5f*c.s1x[l1]);			\
       									\
       jyh -= fnqy*wy;							\
@@ -216,17 +219,17 @@ struct Current
   }
 
 #define CURRENT_XZ				\
-  for (int l3 = l3min; l3 <= l3max; l3++) {	\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {	\
     real_t jxh = 0.f;						\
-    for (int l1 = l1min; l1 < l1max; l1++) {				\
+    for (int l1 = c.l1min; l1 < c.l1max; l1++) {				\
       real_t wx = c.s1x[l1] * (c.s0z[l3] + .5f*c.s1z[l3]);	\
       jxh -= fnqx*wx;							\
       J(JXI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jxh;				\
     }									\
   }									\
 									\
-  for (int l3 = l3min; l3 <= l3max; l3++) {				\
-    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
+    for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
       real_t wy = c.s0x[l1] * c.s0z[l3]			\
 	+ .5f * c.s1x[l1] * c.s0z[l3]					\
 	+ .5f * c.s0x[l1] * c.s1z[l3]					\
@@ -235,9 +238,9 @@ struct Current
       J(JYI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
-  for (int l1 = l1min; l1 <= l1max; l1++) {				\
+  for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
     real_t jzh = 0.f;						\
-    for (int l3 = l3min; l3 < l3max; l3++) {				\
+    for (int l3 = c.l3min; l3 < c.l3max; l3++) {				\
       real_t wz = c.s1z[l3] * (c.s0x[l1] + .5f*c.s1x[l1]);	\
       jzh -= fnqz*wz;							\
       J(JZI, ip.cx.g.l+l1,0,ip.cz.g.l+l3) += jzh;				\
@@ -245,8 +248,8 @@ struct Current
   }
 
 #define CURRENT_1ST_YZ							\
-  for (int l3 = l3min; l3 <= l3max; l3++) {				\
-    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
+    for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
       real_t wx = c.s0y[l2] * c.s0z[l3]			\
 	+ .5f * c.s1y[l2] * c.s0z[l3]					\
 	+ .5f * c.s0y[l2] * c.s1z[l3]					\
@@ -256,18 +259,18 @@ struct Current
     }									\
   }									\
   									\
-  for (int l3 = l3min; l3 <= l3max; l3++) {				\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
     real_t jyh = 0.f;						\
-    for (int l2 = l2min; l2 < l2max; l2++) {				\
+    for (int l2 = c.l2min; l2 < c.l2max; l2++) {				\
       real_t wy = c.s1y[l2] * (c.s0z[l3] + .5f*c.s1z[l3]);	\
       jyh -= fnqy*wy;							\
       J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;				\
     }									\
   }									\
 									\
-  for (int l2 = l2min; l2 <= l2max; l2++) {				\
+  for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
     real_t jzh = 0.f;						\
-    for (int l3 = l3min; l3 < l3max; l3++) {				\
+    for (int l3 = c.l3min; l3 < c.l3max; l3++) {				\
       real_t wz = c.s1z[l3] * (c.s0y[l2] + .5f*c.s1y[l2]);	\
       jzh -= fnqz*wz;							\
       J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jzh;				\
@@ -280,12 +283,12 @@ struct Current
   real_t jyh;								\
   real_t jzh[5];							\
 									\
-    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+    for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
       JZH(l2) = 0.f;							\
     }									\
-    for (int l3 = l3min; l3 <= l3max; l3++) {				\
+    for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
       jyh = 0.f;							\
-      for (int l2 = l2min; l2 <= l2max; l2++) {				\
+      for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
 	real_t wx = c.s0y[l2] * c.s0z[l3]					\
 	  + .5f * c.s1y[l2] * c.s0z[l3]					\
 	  + .5f * c.s0y[l2] * c.s1z[l3]					\
@@ -304,8 +307,7 @@ struct Current
     }									\
 
 #ifdef XYZ
-  void calc(int l2min, int l2max, int l3min, int l3max,
-	    real_t fnqxx, real_t fnqy, real_t fnqz,
+  void calc(real_t fnqxx, real_t fnqy, real_t fnqz,
 	    IP& ip, Fields3d<fields_t>& J)
   {
     real_t jxh;
@@ -338,10 +340,10 @@ struct Current
 #endif
   
 #define CURRENT_2ND_XYZ							\
-  for (int l3 = l3min; l3 <= l3max; l3++) {				\
-    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
+    for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
       real_t jxh = 0.f;					\
-      for (int l1 = l1min; l1 <= l1max; l1++) {				\
+      for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
 	real_t wx = c.s1x[l1] * (c.s0y[l2] * c.s0z[l3] +	\
 					   .5f * c.s1y[l2] * c.s0z[l3] + \
 					   .5f * c.s0y[l2] * c.s1z[l3] + \
@@ -353,10 +355,10 @@ struct Current
     }									\
   }									\
   									\
-  for (int l3 = l3min; l3 <= l3max; l3++) {				\
-    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+  for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
+    for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
       real_t jyh = 0.f;					\
-      for (int l2 = l2min; l2 <= l2max; l2++) {				\
+      for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
 	real_t wy = c.s1y[l2] * (c.s0x[l1] * c.s0z[l3] +	\
 					   .5f * c.s1x[l1] * c.s0z[l3] + \
 					   .5f * c.s0x[l1] * c.s1z[l3] + \
@@ -368,10 +370,10 @@ struct Current
     }									\
   }									\
 									\
-  for (int l2 = l2min; l2 <= l2max; l2++) {				\
-    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+  for (int l2 = c.l2min; l2 <= c.l2max; l2++) {				\
+    for (int l1 = c.l1min; l1 <= c.l1max; l1++) {				\
       real_t jzh = 0.f;					\
-      for (int l3 = l3min; l3 <= l3max; l3++) {				\
+      for (int l3 = c.l3min; l3 <= c.l3max; l3++) {				\
 	real_t wz = c.s1z[l3] * (c.s0x[l1] * c.s0y[l2] +	\
 					   .5f * c.s1x[l1] * c.s0y[l2] +\
 					   .5f * c.s0x[l1] * c.s1y[l2] +\
@@ -549,9 +551,7 @@ private:
       c.subtr_s1_s0();
       CURRENT_PREP;
 #ifdef XYZ
-      c.calc(l2min, l2max, l3min, l3max,
-	     fnqxx, fnqy, fnqz,
-	     ip, J);
+      c.calc(fnqxx, fnqy, fnqz, ip, J);
 #else
       CURRENT;
 #endif
