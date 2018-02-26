@@ -281,6 +281,8 @@ struct mparticles_patch_base
   real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
   real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
 
+  const Grid_t& grid() { return grid_; }
+
   buf_t buf;
   ParticleIndexer<real_t> pi_;
 

@@ -306,10 +306,6 @@ TEST(PushParticles, Accel2ndDouble)
   Mparticles mprts(grid);
   initMparticlesRandom(mprts, n_prts);
 
-  psc psc = {};
-  psc.grid_ = &grid;
-  ppsc = &psc;
-  
   // run test
   for (int n = 0; n < n_steps; n++) {
     PushP::push_mprts(mprts, mflds);

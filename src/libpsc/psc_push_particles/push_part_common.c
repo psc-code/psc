@@ -540,7 +540,7 @@ private:
   {
     using Current_t = Current<typename C::order, typename C::dim>;
 
-    c_prm_set(ppsc->grid());
+    c_prm_set(prts.grid());
     Current_t c;
 
     Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
