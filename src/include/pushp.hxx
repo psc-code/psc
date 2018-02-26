@@ -51,20 +51,19 @@ struct AdvanceParticle
     p[2] = pzp + dq * E[2];
   }
 
-private:
-  real_t dt_;
-};
-
 // ----------------------------------------------------------------------
 // calc_v
 
-template<typename R>
-__host__ __device__ inline void calc_v(R v[3], const R p[3])
-{
-  R root = rsqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
-  for (int d = 0; d < 3; d++) {
-    v[d] = p[d] * root;
+  __host__ __device__ inline void calc_v(real_t v[3], const real_t p[3])
+  {
+    real_t root = rsqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
+    for (int d = 0; d < 3; d++) {
+      v[d] = p[d] * root;
+    }
   }
-}
+  
+private:
+  real_t dt_;
+};
 
 #endif

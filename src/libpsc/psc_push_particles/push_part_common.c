@@ -602,8 +602,7 @@ private:
       advance.push_p(&part->pxi, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-      calc_v(vv, &part->pxi);
-
+      advance.calc_v(vv, &part->pxi);
       advance.push_x(x, vv);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt

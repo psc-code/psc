@@ -95,7 +95,7 @@ push_one(particles_t& prts, int n,
   advance.push_p(&prt->pxi, E, H, dq);
 
   real_t vxi[3];
-  calc_v(vxi, &prt->pxi);
+  advance.calc_v(vxi, &prt->pxi);
 #if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
   advance.push_x(&prt->xi, vxi, .5f);

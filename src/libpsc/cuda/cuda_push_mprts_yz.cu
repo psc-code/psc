@@ -351,10 +351,10 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  int nr_total_blocks, int p_nr,
 	  uint *d_bidx, int bid, int *ci0)
 {
-  float vxi[3];
-  calc_v(vxi, prt.pxi);
-
   AdvanceParticle<real_t, dim> advance{d_cmprts_const.dt};
+
+  float vxi[3];
+  advance.calc_v(vxi, prt.pxi);
 
   // position xm at x^(n+.5)
   float h0[3], h1[3];
