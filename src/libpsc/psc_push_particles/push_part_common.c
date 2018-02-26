@@ -143,6 +143,9 @@ struct Current
 
     template<typename ip_coeff_t>
     void charge_before(ip_coeff_t g) {}
+
+    template<typename ip_coeff_t>
+    void charge_after(real_t xx, ip_coeff_t g) {}
   };
   
   void charge_before(const IP& ip)
@@ -157,9 +160,9 @@ struct Current
     zero_s1();
 
     IP ip2;
-    IF_DIM_X( x.charge_after(xx[0] * c_prm.dxi[0], ip2.cx.g); );
-    IF_DIM_Y( y.charge_after(xx[1] * c_prm.dxi[1], ip2.cy.g); );
-    IF_DIM_Z( z.charge_after(xx[2] * c_prm.dxi[2], ip2.cz.g); );
+    x.charge_after(xx[0] * c_prm.dxi[0], ip2.cx.g);
+    y.charge_after(xx[1] * c_prm.dxi[1], ip2.cy.g);
+    z.charge_after(xx[2] * c_prm.dxi[2], ip2.cz.g);
   }
   
   void zero_s1()
