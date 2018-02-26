@@ -116,11 +116,6 @@ struct Current
 {
   struct Dir
   {
-    Rho1d_t s0 = {}, s1;
-    int lg, k;
-    int lmin, lmax;
-    real_t fnq;
-
     template<typename ip_coeff_t>
     void charge_before(ip_coeff_t g)
     {
@@ -137,25 +132,35 @@ struct Current
       s1.set(k - lg, g);
     }
 
-    void prep(real_t qni_wni, real_t fnqs)
+    void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
     {
       for (int i = -s1.S_OFF + 1; i <= 1; i++) {
 	s1[i] -= s0[i];
       }
       find_l_minmax<typename C::order>(&lmin, &lmax, k, lg);
-      fnq = qni_wni * fnqs;
+      fnq = qni_wni * fnqxyzs;
     }
+
+    Rho1d_t s0 = {}, s1;
+    int lg, k;
+    int lmin, lmax;
+    real_t fnq;
   };
 
   struct DirInvar
   {
-    real_t fnqv;
-
     template<typename ip_coeff_t>
     void charge_before(ip_coeff_t g) {}
 
     template<typename ip_coeff_t>
     void charge_after(real_t xx, ip_coeff_t g) {}
+
+    void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
+    {
+      fnqv = vv * qni_wni * fnqs;
+    }
+
+    real_t fnqv;
   };
   
   void charge_before(const IP& ip)
@@ -175,13 +180,9 @@ struct Current
   
   void prep(real_t qni_wni, real_t vv[3])
   {
-    IF_DIM_X( x.prep(qni_wni, c_prm.fnqxs); );
-    IF_DIM_Y( y.prep(qni_wni, c_prm.fnqys); );
-    IF_DIM_Z( z.prep(qni_wni, c_prm.fnqzs); );
-
-    IF_NOT_DIM_X( x.fnqv = vv[0] * qni_wni * c_prm.fnqs; );
-    IF_NOT_DIM_Y( y.fnqv = vv[1] * qni_wni * c_prm.fnqs; );
-    IF_NOT_DIM_Z( z.fnqv = vv[2] * qni_wni * c_prm.fnqs; );
+    x.prep(qni_wni, vv[0], c_prm.fnqxs, c_prm.fnqs);
+    y.prep(qni_wni, vv[1], c_prm.fnqys, c_prm.fnqs);
+    z.prep(qni_wni, vv[2], c_prm.fnqzs, c_prm.fnqs);
   }
 
 #if (DIM & DIM_X)
