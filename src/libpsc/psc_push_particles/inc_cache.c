@@ -22,7 +22,6 @@
 #define BLOCKGSIZE_Z (BLOCKSIZE_Z + 2 * BLOCKBND_Z)
 
 // ----------------------------------------------------------------------
-#if EM_CACHE == EM_CACHE_NONE
 
 typedef fields_t em_cache_t;
 
@@ -45,8 +44,4 @@ em_cache_create(fields_t flds_em, int ci0[3])
 {
   return flds_em;
 }
-
-#else
-#error unhandled EM_CACHE
-#endif
 

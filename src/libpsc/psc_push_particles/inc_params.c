@@ -104,10 +104,6 @@ params_1vb_set(const Grid_t& grid)
   auto& kinds = grid.kinds;
   struct params_1vb params;
 
-#if CALC_J == CALC_J_1VB_2D && DIM != DIM_YZ
-#error inc_params.c: CALC_J_1VB_2D only works for DIM_YZ
-#endif
-
   assert(kinds.size() <= MAX_NR_KINDS);
   for (int k = 0; k < kinds.size(); k++) {
     params.dq_kind[k] = .5f * grid.eta * grid.dt * kinds[k].q / kinds[k].m;
