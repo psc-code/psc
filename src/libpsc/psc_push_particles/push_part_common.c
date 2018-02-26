@@ -340,7 +340,7 @@ struct Current
     }									\
 
 #ifdef XYZ
-  void calc(IP& ip, Fields3d<fields_t>& J)
+  void calc(Fields3d<fields_t>& J)
   {
     real_t jxh;
     real_t jyh;
@@ -363,9 +363,9 @@ struct Current
 	jyh -= y.fnq*wy;
 	JZH(l2) -= z.fnq*wz;
 	
-	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;
-	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;
-	J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += JZH(l2);
+	J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
+	J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
+	J(JZI, 0,y.lg+l2,z.lg+l3) += JZH(l2);
       }									
     }									
   }
@@ -575,7 +575,7 @@ private:
       // CURRENT DENSITY AT (n+1.0)*dt
       c.prep(prts.prt_qni_wni(*part), vv);
 #ifdef XYZ
-      c.calc(ip, J);
+      c.calc(J);
 #else
       CURRENT;
 #endif
