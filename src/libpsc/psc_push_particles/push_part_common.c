@@ -131,6 +131,7 @@ struct Current
     template<typename ip_coeff_t>
     void charge_after(real_t xx, ip_coeff_t g)
     {
+      s1.zero();
       g.set(xx);
       k = g.l;
       s1.set(k - lg, g);
@@ -157,21 +158,12 @@ struct Current
 
   void charge_after(real_t xx[3])
   {
-    zero_s1();
-
     IP ip2;
     x.charge_after(xx[0] * c_prm.dxi[0], ip2.cx.g);
     y.charge_after(xx[1] * c_prm.dxi[1], ip2.cy.g);
     z.charge_after(xx[2] * c_prm.dxi[2], ip2.cz.g);
   }
   
-  void zero_s1()
-  {
-    IF_DIM_X( x.s1.zero(); );
-    IF_DIM_Y( y.s1.zero(); );
-    IF_DIM_Z( z.s1.zero(); );
-  }
-
   void subtr_s1_s0()
   {
     IF_DIM_X( for (int i = -x.s1.S_OFF + 1; i <= 1; i++) { x.s1[i] -= x.s0[i]; } );
