@@ -303,39 +303,40 @@ struct Current
       }									\
     }									\
 
-  static void deposit(Rho1d_t& s0y, Rho1d_t& s0z, Rho1d_t& s1y, Rho1d_t& s1z,
-		      int l2min, int l2max, int l3min, int l3max,
-		      real_t fnqxx, real_t fnqy, real_t fnqz,
-		      IP& ip, Fields3d<fields_t>& J)
-{
-  real_t jxh;
-  real_t jyh;
-  real_t jzh[5];							
-
-  for (int l2 = l2min; l2 <= l2max; l2++) {
-    JZH(l2) = 0.f;
-  }
-  for (int l3 = l3min; l3 <= l3max; l3++) {
-    jyh = 0.f;
+#ifdef XYZ
+  void calc(int l2min, int l2max, int l3min, int l3max,
+	    real_t fnqxx, real_t fnqy, real_t fnqz,
+	    IP& ip, Fields3d<fields_t>& J)
+  {
+    real_t jxh;
+    real_t jyh;
+    real_t jzh[5];							
+    
     for (int l2 = l2min; l2 <= l2max; l2++) {
-      real_t wx = s0y[l2] * s0z[l3]
-	+ .5f * s1y[l2] * s0z[l3]
-	+ .5f * s0y[l2] * s1z[l3]
-	+ (1.f/3.f) * s1y[l2] * s1z[l3];
-      real_t wy = s1y[l2] * (s0z[l3] + .5f*s1z[l3]);
-      real_t wz = s1z[l3] * (s0y[l2] + .5f*s1y[l2]);
-
-      jxh = fnqxx*wx;
-      jyh -= fnqy*wy;
-      JZH(l2) -= fnqz*wz;
-      
-      J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;
-      J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;
-      J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += JZH(l2);
+      JZH(l2) = 0.f;
+    }
+    for (int l3 = l3min; l3 <= l3max; l3++) {
+      jyh = 0.f;
+      for (int l2 = l2min; l2 <= l2max; l2++) {
+	real_t wx = s0y[l2] * s0z[l3]
+	  + .5f * s1y[l2] * s0z[l3]
+	  + .5f * s0y[l2] * s1z[l3]
+	  + (1.f/3.f) * s1y[l2] * s1z[l3];
+	real_t wy = s1y[l2] * (s0z[l3] + .5f*s1z[l3]);
+	real_t wz = s1z[l3] * (s0y[l2] + .5f*s1y[l2]);
+	
+	jxh = fnqxx*wx;
+	jyh -= fnqy*wy;
+	JZH(l2) -= fnqz*wz;
+	
+	J(JXI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jxh;
+	J(JYI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += jyh;
+	J(JZI, 0,ip.cy.g.l+l2,ip.cz.g.l+l3) += JZH(l2);
+      }									
     }									
-  }									
-}
-
+  }
+#endif
+  
 #define CURRENT_2ND_XYZ							\
   for (int l3 = l3min; l3 <= l3max; l3++) {				\
     for (int l2 = l2min; l2 <= l2max; l2++) {				\
@@ -548,10 +549,9 @@ private:
       c.subtr_s1_s0();
       CURRENT_PREP;
 #ifdef XYZ
-      c.deposit(c.s0y, c.s0z, c.s1y, c.s1z,
-		l2min, l2max, l3min, l3max,
-		fnqxx, fnqy, fnqz,
-		ip, J);
+      c.calc(l2min, l2max, l3min, l3max,
+	     fnqxx, fnqy, fnqz,
+	     ip, J);
 #else
       CURRENT;
 #endif
