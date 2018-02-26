@@ -36,5 +36,5 @@ using Config2nd = push_p_config<PscMparticlesDouble, PscMfieldsC, dim, opt_ip_2n
 using Config2ndDoubleYZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_ip_2nd, opt_order_2nd,
 					opt_calcj_esirkepov, opt_ext_none, CacheFields<dim_yz>>;
 
-using Config1stXZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_xz, opt_ip_1st, opt_order_1st>;
-using Config1stYZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_ip_1st, opt_order_1st>;
+template<typename dim>
+using Config1st = push_p_config<PscMparticlesDouble, PscMfieldsC, dim, opt_ip_1st, opt_order_1st>;
