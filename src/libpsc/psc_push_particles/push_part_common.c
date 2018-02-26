@@ -113,15 +113,13 @@ struct CurrentDir
 {
   using Rho1d_t = Rho1d<order>;
   
-  template<typename ip_coeff_t>
-  void charge_before(ip_coeff_t g)
+  void charge_before(IP::ip_coeff_t g)
   {
     lg = g.l;
     s0.set(0, g);
   };
   
-  template<typename ip_coeff_t>
-  void charge_after(real_t xx, ip_coeff_t g)
+  void charge_after(real_t xx, IP::ip_coeff_t g)
   {
     s1.zero();
     g.set(xx);
@@ -147,11 +145,9 @@ struct CurrentDir
 template<typename order, typename C>
 struct CurrentDir<order, C, std::true_type>
 {
-  template<typename ip_coeff_t>
-  void charge_before(ip_coeff_t g) {}
+  void charge_before(IP::ip_coeff_t g) {}
   
-  template<typename ip_coeff_t>
-  void charge_after(real_t xx, ip_coeff_t g) {}
+  void charge_after(real_t xx, IP::ip_coeff_t g) {}
   
   void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
   {
