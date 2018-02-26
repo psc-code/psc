@@ -5,7 +5,6 @@
 #include "push_particles.hxx"
 #include "push_config.hxx"
 
-#define DIM DIM_YZ
 #define CACHE CACHE_EM_J
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
