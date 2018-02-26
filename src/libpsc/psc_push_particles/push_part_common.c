@@ -66,6 +66,12 @@ public:
       s_[i] = 0.;
     }
   }
+
+  void set(int shift, struct ip_coeff_1st<real_t> gg)
+{
+  (*this)[shift  ] = gg.v0;
+  (*this)[shift+1] = gg.v1;
+}
   
 private:
   real_t s_[N_RHO];  
@@ -88,6 +94,16 @@ public:
     }
   }
   
+  void set(int shift, struct ip_coeff_2nd<real_t> gg)
+{
+  // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
+  // but it needs checking.
+  real_t h = gg.h;
+  (*this)[shift-1] = .5f * (1.5f-std::abs(h-1.f)) * (1.5f-std::abs(h-1.f));
+  (*this)[shift  ] = .75f - std::abs(h) * std::abs(h);
+  (*this)[shift+1] = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
+}
+  
 private:
   real_t s_[N_RHO];  
 };
@@ -96,7 +112,7 @@ private:
     int k1;						\
     gx.set(xx[d] * dxi);				\
     k1 = gx.l;						\
-    set_S(s1x, k1-lg1, gx)
+    s1x.set(k1-lg1, gx)
 
 // ----------------------------------------------------------------------
 // ZERO_S1
@@ -115,34 +131,6 @@ private:
     IF_DIM_Y( for (int i = -s1y.S_OFF + 1; i <= 1; i++) { s1y[i] -= s0y[i]; } ); \
     IF_DIM_Z( for (int i = -s1z.S_OFF + 1; i <= 1; i++) { s1z[i] -= s0z[i]; } ); \
   } while (0)
-
-// ----------------------------------------------------------------------
-// set_S
-
-#if ORDER == ORDER_1ST
-template<typename Rho1d_t>
-static inline void
-set_S(Rho1d_t& s, int shift, struct ip_coeff_1st<real_t> gg)
-{
-  s[shift  ] = gg.v0;
-  s[shift+1] = gg.v1;
-}
-
-#elif ORDER == ORDER_2ND
-
-template<typename Rho1d_t>
-static inline void
-set_S(Rho1d_t& s, int shift, struct ip_coeff_2nd<real_t> gg)
-{
-  // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
-  // but it needs checking.
-  real_t h = gg.h;
-  s[shift-1] = .5f * (1.5f-std::abs(h-1.f)) * (1.5f-std::abs(h-1.f));
-  s[shift  ] = .75f - std::abs(h) * std::abs(h);
-  s[shift+1] = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
-}
-
-#endif
 
 // ======================================================================
 // current
@@ -494,9 +482,9 @@ private:
       IP ip;
       ip.set_coeffs(xm);
 
-      IF_DIM_X( set_S(s0x, 0, ip.cx.g); );
-      IF_DIM_Y( set_S(s0y, 0, ip.cy.g); );
-      IF_DIM_Z( set_S(s0z, 0, ip.cz.g); );
+      IF_DIM_X( s0x.set(0, ip.cx.g); );
+      IF_DIM_Y( s0y.set(0, ip.cy.g); );
+      IF_DIM_Z( s0z.set(0, ip.cz.g); );
 
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
