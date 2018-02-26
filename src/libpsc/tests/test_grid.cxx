@@ -197,24 +197,24 @@ class PushParticlesTest : public ::testing::Test
 
 struct Test1vbSingle
 {
-  using PscMparticles = PscMparticlesSingle;
-  using PscMfields = PscMfieldsSingle;
-  using Config = push_p_config<PscMparticles, PscMfields, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
+  using Mparticles = MparticlesSingle;
+  using Mfields = MfieldsSingle;
+  using Config = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
   using PushParticles = push_p_ops<Config>;  
 };
 
 struct Test1vbDouble
 {
-  using PscMparticles = PscMparticlesDouble;
-  using PscMfields = PscMfieldsC;
-  using Config = push_p_config<PscMparticles, PscMfields, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
+  using Mparticles = MparticlesDouble;
+  using Mfields = MfieldsC;
+  using Config = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_1, opt_order_1st, opt_calcj_1vb_var1>;
   using PushParticles = push_p_ops<Config>;  
 };
 
 struct Test2ndDouble
 {
-  using PscMparticles = PscMparticlesDouble;
-  using PscMfields = PscMfieldsC;
+  using Mparticles = MparticlesDouble;
+  using Mfields = MfieldsC;
   using PushParticles = PscPushParticles_<PushParticles__<Config2nd1>>;
 };
 
@@ -227,12 +227,10 @@ TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
 TYPED_TEST(PushParticlesTest, Accel)
 {
-  using mparticles_t = typename TypeParam::PscMparticles;
-  using mfields_t = typename TypeParam::PscMfields;
-  using Mparticles = typename mparticles_t::sub_t;
-  using Mfields = typename mfields_t::sub_t;
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
   using real_t = typename Mparticles::real_t;
-  using PushP = typename TypeParam::PushParticles;
+  using PushParticles = typename TypeParam::PushParticles;
   const int n_prts = 131;
   const int n_steps = 10;
   const real_t eps = 1e-6;
@@ -256,7 +254,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    PushP::push_mprts(mprts, mflds);
+    PushParticles::push_mprts(mprts, mflds);
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto& prts = mprts[p];
       for (int m = 0; m < prts.size(); m++) {
@@ -274,12 +272,10 @@ TYPED_TEST(PushParticlesTest, Accel)
 
 TYPED_TEST(PushParticlesTest, Cyclo)
 {
-  using mparticles_t = typename TypeParam::PscMparticles;
-  using mfields_t = typename TypeParam::PscMfields;
-  using Mparticles = typename mparticles_t::sub_t;
-  using Mfields = typename mfields_t::sub_t;
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
   using real_t = typename Mparticles::real_t;
-  using PushP = typename TypeParam::PushParticles;
+  using PushParticles = typename TypeParam::PushParticles;
   const int n_prts = 131;
   const int n_steps = 64;
   // the errors here are (substantial) truncation error, not
@@ -322,7 +318,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    PushP::push_mprts(mprts, mflds);
+    PushParticles::push_mprts(mprts, mflds);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
