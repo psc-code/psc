@@ -5,4 +5,5 @@ macro(add_psc_test name)
   gtest_discover_tests(${name})
 endmacro()
 
+add_psc_test(vec3_unittest)
 add_psc_test(test_grid)
