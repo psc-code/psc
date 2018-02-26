@@ -139,6 +139,9 @@ struct Current
 
     void prep(real_t qni_wni, real_t fnqs)
     {
+      for (int i = -s1.S_OFF + 1; i <= 1; i++) {
+	s1[i] -= s0[i];
+      }
       find_l_minmax<typename C::order>(&lmin, &lmax, k, lg);
       fnq = qni_wni * fnqs;
     }
@@ -170,17 +173,8 @@ struct Current
     z.charge_after(xx[2] * c_prm.dxi[2], ip2.cz.g);
   }
   
-  void subtr_s1_s0()
-  {
-    IF_DIM_X( for (int i = -x.s1.S_OFF + 1; i <= 1; i++) { x.s1[i] -= x.s0[i]; } );
-    IF_DIM_Y( for (int i = -y.s1.S_OFF + 1; i <= 1; i++) { y.s1[i] -= y.s0[i]; } );
-    IF_DIM_Z( for (int i = -z.s1.S_OFF + 1; i <= 1; i++) { z.s1[i] -= z.s0[i]; } );
-  }
-
   void prep(real_t qni_wni, real_t vv[3])
   {
-    subtr_s1_s0();
-    
     IF_DIM_X( x.prep(qni_wni, c_prm.fnqxs); );
     IF_DIM_Y( y.prep(qni_wni, c_prm.fnqys); );
     IF_DIM_Z( z.prep(qni_wni, c_prm.fnqzs); );
