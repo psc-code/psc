@@ -189,9 +189,12 @@ struct Current
     z.prep(qni_wni, vv[2], c_prm.fnqzs, c_prm.fnqs);
   }
 
+  void calc(Fields3d<fields_t>& J);
+
   CurrentDir<Rho1d_t, C, typename dim::InvarX> x;
   CurrentDir<Rho1d_t, C, typename dim::InvarY> y;
   CurrentDir<Rho1d_t, C, typename dim::InvarZ> z;
+};
 
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
@@ -340,35 +343,36 @@ struct Current
     }									\
 
 #ifdef XYZ
-  void calc(Fields3d<fields_t>& J)
-  {
-    real_t jxh;
-    real_t jyh;
-    real_t jzh[5];							
-    
-    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+template<typename Rho1d_t, typename C>
+inline void Current<Rho1d_t, C>::calc(Fields3d<fields_t>& J)
+{
+  real_t jxh;
+  real_t jyh;
+  real_t jzh[5];							
+  
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
       JZH(l2) = 0.f;
-    }
-    for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
-      jyh = 0.f;
-      for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
-	real_t wx = y.s0[l2] * z.s0[l3]
-	  + .5f * y.s1[l2] * z.s0[l3]
-	  + .5f * y.s0[l2] * z.s1[l3]
-	  + (1.f/3.f) * y.s1[l2] * z.s1[l3];
-	real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);
-	real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);
-	
-	jxh = x.fnqv*wx;
-	jyh -= y.fnq*wy;
-	JZH(l2) -= z.fnq*wz;
-	
-	J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
-	J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
-	J(JZI, 0,y.lg+l2,z.lg+l3) += JZH(l2);
-      }									
-    }									
   }
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    jyh = 0.f;
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+      real_t wx = y.s0[l2] * z.s0[l3]
+	+ .5f * y.s1[l2] * z.s0[l3]
+	+ .5f * y.s0[l2] * z.s1[l3]
+	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];
+      real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);
+      real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);
+      
+      jxh = x.fnqv*wx;
+      jyh -= y.fnq*wy;
+      JZH(l2) -= z.fnq*wz;
+      
+      J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
+      J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
+      J(JZI, 0,y.lg+l2,z.lg+l3) += JZH(l2);
+    }									
+  }									
+}
 #endif
   
 #define CURRENT_2ND_XYZ							\
@@ -416,8 +420,6 @@ struct Current
       }									\
     }									\
   }
-
-};
 
 #if DIM == DIM1
 #define CURRENT do {} while(0)
