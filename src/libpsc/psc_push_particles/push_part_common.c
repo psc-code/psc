@@ -162,10 +162,12 @@ struct CurrentDir<Rho1d_t, C, std::true_type>
 // ======================================================================
 // Current
 
-template<typename Rho1d_t, typename C>
+template<typename C>
 struct Current
 {
   using dim = typename C::dim;
+  using order = typename C::order;
+  using Rho1d_t = Rho1d<order>;
 
   void charge_before(const IP& ip)
   {
@@ -343,8 +345,8 @@ struct Current
     }									\
 
 #ifdef XYZ
-template<typename Rho1d_t, typename C>
-inline void Current<Rho1d_t, C>::calc(Fields3d<fields_t>& J)
+template<typename C>
+inline void Current<C>::calc(Fields3d<fields_t>& J)
 {
   real_t jxh;
   real_t jyh;
@@ -532,8 +534,7 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using Rho1d_t = Rho1d<typename C::order>;
-    using Current_t = Current<Rho1d_t, C>;
+    using Current_t = Current<C>;
 
     c_prm_set(ppsc->grid());
     Current_t c;
