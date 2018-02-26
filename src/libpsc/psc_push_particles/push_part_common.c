@@ -207,6 +207,7 @@ struct Current
   void calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>& J);
   void calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>& J);
   void calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>& J);
+  void calc(opt_order_1st o, dim_yz d, Fields3d<fields_t>& J);
   void calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J);
   void calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t>& J);
 
@@ -364,65 +365,40 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>
   }
 }
 
-#define CURRENT_1ST_YZ							\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
-    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-      real_t wx = c.y.s0[l2] * c.z.s0[l3]			\
-	+ .5f * c.y.s1[l2] * c.z.s0[l3]					\
-	+ .5f * c.y.s0[l2] * c.z.s1[l3]					\
-	+ (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3];				\
-      real_t jxh = c.x.fnqv * wx;					\
-      J(JXI, 0,c.y.lg+l2,c.z.lg+l3) += jxh;				\
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_1st o, dim_yz d, Fields3d<fields_t>& J)
+{
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
+      real_t wx = y.s0[l2] * z.s0[l3]			\
+	+ .5f * y.s1[l2] * z.s0[l3]					\
+	+ .5f * y.s0[l2] * z.s1[l3]					\
+	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];				\
+      real_t jxh = x.fnqv * wx;					\
+      J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;				\
     }									\
   }									\
   									\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
     real_t jyh = 0.f;						\
-    for (int l2 = c.y.lmin; l2 < c.y.lmax; l2++) {				\
-      real_t wy = c.y.s1[l2] * (c.z.s0[l3] + .5f*c.z.s1[l3]);	\
-      jyh -= c.y.fnq*wy;							\
-      J(JYI, 0,c.y.lg+l2,c.z.lg+l3) += jyh;				\
+    for (int l2 = y.lmin; l2 < y.lmax; l2++) {				\
+      real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);	\
+      jyh -= y.fnq*wy;							\
+      J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;				\
     }									\
   }									\
 									\
-  for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
     real_t jzh = 0.f;						\
-    for (int l3 = c.z.lmin; l3 < c.z.lmax; l3++) {				\
-      real_t wz = c.z.s1[l3] * (c.y.s0[l2] + .5f*c.y.s1[l2]);	\
-      jzh -= c.z.fnq*wz;							\
-      J(JZI, 0,c.y.lg+l2,c.z.lg+l3) += jzh;				\
+    for (int l3 = z.lmin; l3 < z.lmax; l3++) {				\
+      real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);	\
+      jzh -= z.fnq*wz;							\
+      J(JZI, 0,y.lg+l2,z.lg+l3) += jzh;				\
     }									\
   }
-
+}
+ 
 #define JZH(i) jzh[i+2]
-#define CURRENT_2ND_YZ							\
-  real_t jxh;								\
-  real_t jyh;								\
-  real_t jzh[5];							\
-									\
-    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-      JZH(l2) = 0.f;							\
-    }									\
-    for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
-      jyh = 0.f;							\
-      for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-	real_t wx = c.y.s0[l2] * c.z.s0[l3]					\
-	  + .5f * c.y.s1[l2] * c.z.s0[l3]					\
-	  + .5f * c.y.s0[l2] * c.z.s1[l3]					\
-	+ (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3];				\
-	real_t wy = c.y.s1[l2] * (c.z.s0[l3] + .5f*c.z.s1[l3]);			\
-	real_t wz = c.z.s1[l3] * (c.y.s0[l2] + .5f*c.y.s1[l2]);			\
-									\
-	jxh = c.x.fnqv*wx;							\
-	jyh -= c.y.fnq*wy;							\
-	JZH(l2) -= c.z.fnq*wz;						\
-									\
-	J(JXI, 0,c.y.lg+l2,c.z.lg+l3) += jxh;			\
-	J(JYI, 0,c.y.lg+l2,c.z.lg+l3) += jyh;			\
-	J(JZI, 0,c.y.lg+l2,c.z.lg+l3) += JZH(l2);			\
-      }									\
-    }									\
-
 template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J)
 {
@@ -454,52 +430,55 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>
   }
 }
 
-#define CURRENT_2ND_XYZ							\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
-    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t>& J)
+{
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
       real_t jxh = 0.f;					\
-      for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
-	real_t wx = c.x.s1[l1] * (c.y.s0[l2] * c.z.s0[l3] +	\
-					   .5f * c.y.s1[l2] * c.z.s0[l3] + \
-					   .5f * c.y.s0[l2] * c.z.s1[l3] + \
-					   (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3]); \
+      for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
+	real_t wx = x.s1[l1] * (y.s0[l2] * z.s0[l3] +	\
+					   .5f * y.s1[l2] * z.s0[l3] + \
+					   .5f * y.s0[l2] * z.s1[l3] + \
+					   (1.f/3.f) * y.s1[l2] * z.s1[l3]); \
 									\
-	jxh -= c.x.fnq*wx;							\
-	J(JXI, c.x.lg+l1,c.y.lg+l2,c.z.lg+l3) += jxh;			\
+	jxh -= x.fnq*wx;							\
+	J(JXI, x.lg+l1,y.lg+l2,z.lg+l3) += jxh;			\
       }									\
     }									\
   }									\
   									\
-  for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
-    for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
       real_t jyh = 0.f;					\
-      for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-	real_t wy = c.y.s1[l2] * (c.x.s0[l1] * c.z.s0[l3] +	\
-					   .5f * c.x.s1[l1] * c.z.s0[l3] + \
-					   .5f * c.x.s0[l1] * c.z.s1[l3] + \
-					   (1.f/3.f) * c.x.s1[l1]*c.z.s1[l3]); \
+      for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
+	real_t wy = y.s1[l2] * (x.s0[l1] * z.s0[l3] +	\
+					   .5f * x.s1[l1] * z.s0[l3] + \
+					   .5f * x.s0[l1] * z.s1[l3] + \
+					   (1.f/3.f) * x.s1[l1]*z.s1[l3]); \
 									\
-	jyh -= c.y.fnq*wy;							\
-	J(JYI, c.x.lg+l1,c.y.lg+l2,c.z.lg+l3) += jyh;			\
+	jyh -= y.fnq*wy;							\
+	J(JYI, x.lg+l1,y.lg+l2,z.lg+l3) += jyh;			\
       }									\
     }									\
   }									\
 									\
-  for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
-    for (int l1 = c.x.lmin; l1 <= c.x.lmax; l1++) {				\
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
       real_t jzh = 0.f;					\
-      for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
-	real_t wz = c.z.s1[l3] * (c.x.s0[l1] * c.y.s0[l2] +	\
-					   .5f * c.x.s1[l1] * c.y.s0[l2] +\
-					   .5f * c.x.s0[l1] * c.y.s1[l2] +\
-					   (1.f/3.f) * c.x.s1[l1]*c.y.s1[l2]); \
+      for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
+	real_t wz = z.s1[l3] * (x.s0[l1] * y.s0[l2] +	\
+					   .5f * x.s1[l1] * y.s0[l2] +\
+					   .5f * x.s0[l1] * y.s1[l2] +\
+					   (1.f/3.f) * x.s1[l1]*y.s1[l2]); \
 									\
-	jzh -= c.z.fnq*wz;							\
-	J(JZI, c.x.lg+l1,c.y.lg+l2,c.z.lg+l3) += jzh;			\
+	jzh -= z.fnq*wz;							\
+	J(JZI, x.lg+l1,y.lg+l2,z.lg+l3) += jzh;			\
       }									\
     }									\
   }
-
+ }
+ 
 #if DIM == DIM1
 #define CURRENT do {} while(0)
 #elif DIM == DIM_Y
