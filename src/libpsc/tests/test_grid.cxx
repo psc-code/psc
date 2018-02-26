@@ -200,24 +200,18 @@ class PushParticlesTest : public ::testing::Test
 
 struct Test1vbecSingle
 {
-  using Mparticles = MparticlesSingle;
-  using Mfields = MfieldsSingle;
   using Config = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>;
   using PushParticles = push_p_ops<Config>;  
 };
 
 struct Test1vbecDouble
 {
-  using Mparticles = MparticlesDouble;
-  using Mfields = MfieldsC;
   using Config = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_1, opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_var1>;
   using PushParticles = push_p_ops<Config>;  
 };
 
 struct Test2ndDouble
 {
-  using Mparticles = MparticlesDouble;
-  using Mfields = MfieldsC;
   using PushParticles = PushParticles__<Config2nd<dim_1>>;
 };
 
@@ -230,10 +224,10 @@ TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
 TYPED_TEST(PushParticlesTest, Accel)
 {
-  using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
-  using real_t = typename Mparticles::real_t;
   using PushParticles = typename TypeParam::PushParticles;
+  using Mparticles = typename PushParticles::Mparticles;
+  using Mfields = typename PushParticles::Mfields;
+  using real_t = typename Mparticles::real_t;
   const int n_prts = 131;
   const int n_steps = 10;
   const real_t eps = 1e-6;
@@ -275,10 +269,10 @@ TYPED_TEST(PushParticlesTest, Accel)
 
 TYPED_TEST(PushParticlesTest, Cyclo)
 {
-  using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
-  using real_t = typename Mparticles::real_t;
   using PushParticles = typename TypeParam::PushParticles;
+  using Mparticles = typename PushParticles::Mparticles;
+  using Mfields = typename PushParticles::Mfields;
+  using real_t = typename Mparticles::real_t;
   const int n_prts = 131;
   const int n_steps = 64;
   // the errors here are (substantial) truncation error, not
