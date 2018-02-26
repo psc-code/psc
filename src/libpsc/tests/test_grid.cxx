@@ -218,7 +218,7 @@ struct Test2ndDouble
 {
   using Mparticles = MparticlesDouble;
   using Mfields = MfieldsC;
-  using PushParticles = PushParticles__<Config2nd1>;
+  using PushParticles = PushParticles__<Config2nd<dim_1>>;
 };
 
 using PushParticlesTestTypes = ::testing::Types<Test1vbecSingle, Test1vbecDouble, Test2ndDouble>;

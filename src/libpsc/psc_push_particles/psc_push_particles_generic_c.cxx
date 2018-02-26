@@ -10,28 +10,31 @@
 
 #include "push_part_common.c"
 
+template<typename DIM>
+using Push = PscPushParticles_<PushParticles__<Config2nd<DIM>>>;
+
 struct PushParticlesGenericC : PushParticlesBase
 {
   void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2ndXYZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_xyz>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_xy(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2ndXY>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_xy>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2ndXZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_xz>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2ndYZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_yz>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_y(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2ndY>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_y>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_z(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2ndZ>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_z>::push_mprts(nullptr, mprts, mflds); }
 
   void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
-  { return PscPushParticles_<PushParticles__<Config2nd1>>::push_mprts(nullptr, mprts, mflds); }
+  { return Push<dim_1>::push_mprts(nullptr, mprts, mflds); }
 };
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticlesGenericC>;
