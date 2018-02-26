@@ -108,13 +108,6 @@ private:
   real_t s_[N_RHO];  
 };
 
-#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)			\
-  do {								\
-    gx.set(xx[d] * dxi);					\
-    k1 = gx.l;							\
-    s1x.set(k1-lg1, gx);					\
-  } while(0)
-
 // ======================================================================
 // Current
 
@@ -151,14 +144,21 @@ struct Current
     z.charge_before(ip.cz.g);
   }
 
+#define DEPOSIT(x, xx, g)					\
+  do {								\
+    g.set(xx);							\
+    x.k = g.l;							\
+    x.s1.set(x.k-x.lg, g);					\
+  } while(0)
+
   void charge_after(real_t xx[3])
   {
     zero_s1();
 
     IP ip2;
-    IF_DIM_X( DEPOSIT(xx, x.k, ip2.cx.g, 0, c_prm.dxi[0], x.s1, x.lg); );
-    IF_DIM_Y( DEPOSIT(xx, y.k, ip2.cy.g, 1, c_prm.dxi[1], y.s1, y.lg); );
-    IF_DIM_Z( DEPOSIT(xx, z.k, ip2.cz.g, 2, c_prm.dxi[2], z.s1, z.lg); );
+    IF_DIM_X( DEPOSIT(x, xx[0] * c_prm.dxi[0], ip2.cx.g); );
+    IF_DIM_Y( DEPOSIT(y, xx[1] * c_prm.dxi[1], ip2.cy.g); );
+    IF_DIM_Z( DEPOSIT(z, xx[2] * c_prm.dxi[2], ip2.cz.g); );
   }
   
   void zero_s1()
