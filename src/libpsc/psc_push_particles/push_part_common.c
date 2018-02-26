@@ -47,18 +47,6 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 // ----------------------------------------------------------------------
 // charge density 
 
-#if ORDER == ORDER_1ST
-
-#define N_RHO 4
-#define S_OFF 1
-
-#elif ORDER == ORDER_2ND
-
-#define N_RHO 5
-#define S_OFF 2
-
-#endif
-
 template<typename order>
 class Rho1d;
 
@@ -66,8 +54,18 @@ template<>
 class Rho1d<opt_order_1st>
 {
 public:
+  static const int N_RHO = 4;
+  static const int S_OFF = 1;
+  
   real_t  operator[](int i) const { return s_[i + S_OFF]; }
   real_t& operator[](int i)       { return s_[i + S_OFF]; }
+
+  void zero()
+  {
+    for (int i = 0; i < N_RHO; i++) {
+      s_[i] = 0.;
+    }
+  }
   
 private:
   real_t s_[N_RHO];  
@@ -77,8 +75,18 @@ template<>
 class Rho1d<opt_order_2nd>
 {
 public:
+  static const int N_RHO = 5;
+  static const int S_OFF = 2;
+  
   real_t  operator[](int i) const { return s_[i + S_OFF]; }
   real_t& operator[](int i)       { return s_[i + S_OFF]; }
+  
+  void zero()
+  {
+    for (int i = 0; i < N_RHO; i++) {
+      s_[i] = 0.;
+    }
+  }
   
 private:
   real_t s_[N_RHO];  
@@ -94,22 +102,18 @@ private:
 // ZERO_S1
 
 #define ZERO_S1 do {					\
-    for (int i = -S_OFF; i < -S_OFF + N_RHO; i++) {	\
-      IF_DIM_X( s1x[i] = 0.f; );			\
-      IF_DIM_Y( s1y[i] = 0.f; );			\
-      IF_DIM_Z( s1z[i] = 0.f; );			\
-    }							\
+    IF_DIM_X( s1x.zero(); );				\
+    IF_DIM_Y( s1y.zero(); );				\
+    IF_DIM_Z( s1z.zero(); );				\
   } while (0)
 
 // ----------------------------------------------------------------------
 // SUBTR_S1_S0
 
-#define SUBTR_S1_S0 do {			\
-    for (int i = -S_OFF + 1; i <= 1; i++) {	\
-      IF_DIM_X( s1x[i] -= s0x[i]; );		\
-      IF_DIM_Y( s1y[i] -= s0y[i]; );		\
-      IF_DIM_Z( s1z[i] -= s0z[i]; );		\
-    }						\
+#define SUBTR_S1_S0 do {						\
+    IF_DIM_X( for (int i = -s1x.S_OFF + 1; i <= 1; i++) { s1x[i] -= s0x[i]; } ); \
+    IF_DIM_Y( for (int i = -s1y.S_OFF + 1; i <= 1; i++) { s1y[i] -= s0y[i]; } ); \
+    IF_DIM_Z( for (int i = -s1z.S_OFF + 1; i <= 1; i++) { s1z[i] -= s0z[i]; } ); \
   } while (0)
 
 // ----------------------------------------------------------------------
