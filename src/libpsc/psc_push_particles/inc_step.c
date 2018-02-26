@@ -75,7 +75,8 @@ CUDA_DEVICE static void
 push_one(particles_t& prts, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
-  using IP = InterpolateEM<FieldsEM, typename C::ip, typename C::dim>;
+  using dim = typename C::dim;
+  using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   
   FieldsEM EM(flds_em);
 
@@ -107,16 +108,16 @@ push_one(particles_t& prts, int n,
   calc_v(vxi, &prt->pxi);
 #if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-  push_x(&prt->xi, vxi, .5f * c_prm.dt);
+  push_x<real_t, dim>(&prt->xi, vxi, .5f * c_prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
   calc_j_oop(curr_cache, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
-  push_x(&prt->xi, vxi, .5f * c_prm.dt);
+  push_x<real_t, dim>(&prt->xi, vxi, .5f * c_prm.dt);
 #else
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-  push_x(&prt->xi, vxi, c_prm.dt);
+  push_x<real_t, dim>(&prt->xi, vxi, c_prm.dt);
 #endif
   
   int lf[3];

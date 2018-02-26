@@ -7,12 +7,12 @@
 // ----------------------------------------------------------------------
 // push_x
 
-template<typename R>
-__host__ __device__ inline void push_x(R x[3], const R v[3], R dt)
+template<typename real_t, typename dim>
+__host__ __device__ inline void push_x(real_t x[3], const real_t v[3], real_t dt)
 {
-  if (!opt_dim::InvarX::value) { x[0] += dt * v[0]; }
-  if (!opt_dim::InvarY::value) { x[1] += dt * v[1]; }
-  if (!opt_dim::InvarZ::value) { x[2] += dt * v[2]; }
+  if (!dim::InvarX::value) { x[0] += dt * v[0]; }
+  if (!dim::InvarY::value) { x[1] += dt * v[1]; }
+  if (!dim::InvarZ::value) { x[2] += dt * v[2]; }
 }
 
 // ----------------------------------------------------------------------

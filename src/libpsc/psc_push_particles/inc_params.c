@@ -25,26 +25,6 @@
 #define IF_NOT_DIM_Z(s) s do{} while(0)
 #endif
 
-#if DIM == DIM_1
-using opt_dim = dim_1;
-#elif DIM == DIM_X
-using opt_dim = dim_x;
-#elif DIM == DIM_Y
-using opt_dim = dim_y;
-#elif DIM == DIM_Z
-using opt_dim = dim_z;
-#elif DIM == DIM_XY
-using opt_dim = dim_xy;
-#elif DIM == DIM_XZ
-using opt_dim = dim_xz;
-#elif DIM == DIM_YZ
-using opt_dim = dim_yz;
-#elif DIM == DIM_XYZ
-using opt_dim = dim_xyz;
-#else
-#error DIM must be defined
-#endif
-
 #if ORDER == ORDER_1ST
 using opt_order = opt_order_1st;
 #elif ORDER == ORDER_2ND

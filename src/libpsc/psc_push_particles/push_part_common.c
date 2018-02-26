@@ -558,8 +558,9 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, typename C::dim>;
-    using Current_t = Current<typename C::order, typename C::dim, IP>;
+    using dim = typename C::dim;
+    using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, dim>;
+    using Current_t = Current<typename C::order, dim, IP>;
 
     c_prm_set(prts.grid());
     IP ip;
@@ -595,7 +596,7 @@ private:
       calc_v(vv, &part->pxi);
 
       // FIXME, inelegant way of pushing full dt
-      push_x(x, vv, c_prm.dt);
+      push_x<real_t, dim>(x, vv, c_prm.dt);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt
       c.charge_after(x);
