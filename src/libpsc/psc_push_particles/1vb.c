@@ -23,10 +23,9 @@ using real_t = mparticles_t::real_t;
 template<typename C>
 struct PushParticles1vb
 {
-  using mparticles_t = typename C::mparticles_t;
-  using mfields_t = typename C::mfields_t;
-  using Mparticles = typename C::mparticles_t::sub_t;
-  using Mfields = typename C::mfields_t::sub_t;
+  using Mparticles = typename C::Mparticles;
+  using Mfields = typename C::Mfields;
+  using mparticles_t = PscMparticles<Mparticles>;
   
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
@@ -66,8 +65,8 @@ struct PushParticles1vb
 };
 
 template<typename C>
-void push_p_ops<C>::push_mprts(typename C::mparticles_t::sub_t& mprts,
-			       typename C::mfields_t::sub_t& mflds)
+void push_p_ops<C>::push_mprts(typename C::Mparticles& mprts,
+			       typename C::Mfields& mflds)
 {
   PushParticles1vb<C>::push_mprts(mprts, mflds);
 }
@@ -77,9 +76,6 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 			       struct psc_mparticles *mprts,
 			       struct psc_mfields *mflds_base)
 {
-  using mfields_t = typename C::mfields_t;
-  using mparticles_t = typename C::mparticles_t;
-  
   auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   auto mp = mparticles_t(mprts);
   PushParticles1vb<C>::push_mprts(*mp.sub(), *mf.sub());
@@ -91,9 +87,6 @@ void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
 				  struct psc_mparticles *mprts,
 				  struct psc_mfields *mflds_base)
 {
-  using mfields_t = typename C::mfields_t;
-  using mparticles_t = typename C::mparticles_t;
-  
   auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
   auto mp = mparticles_t(mprts);
   PushParticles1vb<C>::stagger_mprts(*mp.sub(), *mf.sub());

@@ -538,8 +538,8 @@ struct CacheFieldsNone
 template<typename C>
 struct PushParticles__
 {
-  using Mparticles = typename C::mparticles_t::sub_t;
-  using Mfields = typename C::mfields_t::sub_t;
+  using Mparticles = typename C::Mparticles;
+  using Mfields = typename C::Mfields;
   using fields_t = typename Mfields::fields_t;
   using CacheFields_t = typename C::CacheFields;
 
@@ -622,8 +622,8 @@ private:
 template<typename PushParticles_t>
 struct PscPushParticles_
 {
-  using Mparticles = typename mparticles_t::sub_t;
-  using Mfields = typename mfields_t::sub_t;
+  using Mparticles = typename PushParticles_t::Mparticles;
+  using Mfields = typename PushParticles_t::Mfields;
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
 
@@ -637,11 +637,6 @@ struct PscPushParticles_
     PushParticles_t::push_mprts(*mp.sub(), *mf.sub());
 
     mf.put_as(mflds_base, JXI, JXI+3);
-  }
-
-  static void push_mprts(Mparticles& mprts, Mfields& mflds)
-  {
-    PushParticles_t::push_mprts(mprts, mflds);
   }
 };
 

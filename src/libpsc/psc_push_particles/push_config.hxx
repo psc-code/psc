@@ -17,8 +17,8 @@ template<typename MP, typename MF, typename D,
 	 typename CF = CacheFieldsNone<D>>
 struct push_p_config
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
+  using Mparticles = typename MP::sub_t;
+  using Mfields = typename MF::sub_t;
   using dim = D;
   using ip = IP;
   using order = O;

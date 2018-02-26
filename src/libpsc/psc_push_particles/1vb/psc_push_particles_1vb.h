@@ -13,10 +13,10 @@
 template<typename C>
 struct push_p_ops
 {
-  using mparticles_t = typename C::mparticles_t;
-  using mfields_t = typename C::mfields_t;
-  using Mparticles = typename mparticles_t::sub_t;
-  using Mfields = typename mfields_t::sub_t;
+  using Mparticles = typename C::Mparticles;
+  using Mfields = typename C::Mfields;
+  using mparticles_t = PscMparticles<Mparticles>;
+  using mfields_t = PscMfields<Mfields>;
   
   static void push_mprts(struct psc_push_particles *push, struct psc_mparticles *mprts,
 			 struct psc_mfields *mflds_base);
