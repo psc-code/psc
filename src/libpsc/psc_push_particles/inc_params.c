@@ -64,12 +64,7 @@ using opt_ip = opt_ip_2nd;
 #endif
 
 #if CALC_J == CALC_J_1VB_SPLIT
-#if DIM == DIM_XYZ && PUSH_DIM != DIM_XZ
-// special hack because 1VB_VAR1 isn't available for xyz, but we pretend it is
-using opt_calcj = opt_calcj_1vb_var1;
-#else
 using opt_calcj = opt_calcj_1vb_split;
-#endif
 #elif CALC_J == CALC_J_1VB_VAR1
 using opt_calcj = opt_calcj_1vb_var1;
 #elif CALC_J == CALC_J_1VB_2D

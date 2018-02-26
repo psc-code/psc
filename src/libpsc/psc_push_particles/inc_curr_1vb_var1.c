@@ -216,6 +216,8 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 
 #elif DIM == DIM_XYZ
 
+#include "inc_curr_1vb_split.c" // FIXME hack...
+
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
