@@ -9,7 +9,6 @@
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 
-#define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
 
 using push_p_conf = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_ip_1st, opt_order_1st,

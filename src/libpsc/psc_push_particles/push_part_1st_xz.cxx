@@ -11,6 +11,6 @@
 #define CONFIG Config1stXZ
 
 #define DIM DIM_XZ
-#define ORDER ORDER_1ST
+
 #include "push_part_common.c"
 
