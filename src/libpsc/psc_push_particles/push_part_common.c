@@ -3,8 +3,6 @@
 
 #define CACHE_EM_J 1
 
-#define IP_DEPOSIT
-
 using real_t = mparticles_t::real_t;
 
 #include "fields.hxx"
@@ -560,7 +558,7 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using IP = InterpolateEM<Fields3d<fields_t>, opt_ip, typename C::dim>;
+    using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, typename C::dim>;
     using Current_t = Current<typename C::order, typename C::dim, IP>;
 
     c_prm_set(prts.grid());
