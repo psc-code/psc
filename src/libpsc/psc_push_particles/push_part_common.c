@@ -163,12 +163,6 @@ struct CurrentDir<order, IP, std::true_type>
 };
   
 // ======================================================================
-// CurrentHelper
-
-template<typename order, typename dim, typename IP, typename Current_t>
-struct CurrentHelper;
-
-// ======================================================================
 // Current
 
 template<typename order, typename dim, typename IP>
@@ -199,8 +193,14 @@ struct Current
 
   void calc(Fields3d<fields_t>& J)
   {
-    CurrentHelper<order, dim, IP, Self>::calc(*this, J);
+    // Dispatch by function overloading, which needs to pass order and dim as tags
+    calc(order{}, dim{}, J);
   }
+
+  void calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>& J);
+  void calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J);
 
   CurrentDir<order, IP, typename dim::InvarX> x;
   CurrentDir<order, IP, typename dim::InvarY> y;
@@ -209,63 +209,54 @@ struct Current
 
 // ======================================================================
 
-template<typename IP, typename Current_t>
-struct CurrentHelper<opt_order_2nd, dim_1, IP, Current_t> 
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>& J)
 {
-  static void calc(Current_t& c, Fields3d<fields_t>& J)
-  {
-    real_t jxh = c.x.fnqv;
-    real_t jyh = c.y.fnqv;
-    real_t jzh = c.z.fnqv;
-
-    J(JXI, 0,0,0) += jxh;
-    J(JYI, 0,0,0) += jyh;
-    J(JZI, 0,0,0) += jzh;
-  }
+  real_t jxh = x.fnqv;
+  real_t jyh = y.fnqv;
+  real_t jzh = z.fnqv;
+  
+  J(JXI, 0,0,0) += jxh;
+  J(JYI, 0,0,0) += jyh;
+  J(JZI, 0,0,0) += jzh;
 };
 
-template<typename IP, typename Current_t>
-struct CurrentHelper<opt_order_2nd, dim_y, IP, Current_t> 
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>& J)
 {
-  static void calc(Current_t& c, Fields3d<fields_t>& J)
-  {
-    real_t jyh = 0.f;
-
-    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {
-      real_t wx = c.y.s0[l2] + .5f * c.y.s1[l2];
-      real_t wy = c.y.s1[l2];
-      real_t wz = c.y.s0[l2] + .5f * c.y.s1[l2];
-
-      real_t jxh = c.x.fnqv*wx;
-      jyh -= c.y.fnq*wy;
-      real_t jzh = c.z.fnqv*wz;
-
-      J(JXI, 0,c.y.lg+l2,0) += jxh;
-      J(JYI, 0,c.y.lg+l2,0) += jyh;
-      J(JZI, 0,c.y.lg+l2,0) += jzh;
-    }
+  real_t jyh = 0.f;
+  
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+    real_t wx = y.s0[l2] + .5f * y.s1[l2];
+    real_t wy = y.s1[l2];
+    real_t wz = y.s0[l2] + .5f * y.s1[l2];
+    
+    real_t jxh = x.fnqv*wx;
+    jyh -= y.fnq*wy;
+    real_t jzh = z.fnqv*wz;
+    
+    J(JXI, 0,y.lg+l2,0) += jxh;
+    J(JYI, 0,y.lg+l2,0) += jyh;
+    J(JZI, 0,y.lg+l2,0) += jzh;
   }
-};
+}
 
-template<typename IP, typename Current_t>
-struct CurrentHelper<opt_order_2nd, dim_z, IP, Current_t> 
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>& J)
 {
-  static void calc(Current_t& c, Fields3d<fields_t>& J)
-  {
-    real_t jzh = 0.f;
-    for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {
-      real_t wx = c.z.s0[l3] + .5f * c.z.s1[l3];
-      real_t wy = c.z.s0[l3] + .5f * c.z.s1[l3];
-      real_t wz = c.z.s1[l3];
+  real_t jzh = 0.f;
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    real_t wx = z.s0[l3] + .5f * z.s1[l3];
+    real_t wy = z.s0[l3] + .5f * z.s1[l3];
+    real_t wz = z.s1[l3];
 
-      real_t jxh = c.x.fnqv*wx;
-      real_t jyh = c.y.fnqv*wy;
-      jzh -= c.z.fnq*wz;
-
-      J(JXI, 0,0,c.z.lg+l3) += jxh;
-      J(JYI, 0,0,c.z.lg+l3) += jyh;
-      J(JZI, 0,0,c.z.lg+l3) += jzh;
-    }
+    real_t jxh = x.fnqv*wx;
+    real_t jyh = y.fnqv*wy;
+    jzh -= z.fnq*wz;
+    
+    J(JXI, 0,0,z.lg+l3) += jxh;
+    J(JYI, 0,0,z.lg+l3) += jyh;
+    J(JZI, 0,0,z.lg+l3) += jzh;
   }
 };
 
@@ -382,40 +373,36 @@ struct CurrentHelper<opt_order_2nd, dim_z, IP, Current_t>
       }									\
     }									\
 
-template<typename IP, typename Current_t>
-struct CurrentHelper<opt_order_2nd, dim_yz, IP, Current_t> 
+template<typename order, typename dim, typename IP>
+void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J)
 {
-  static void calc(Current_t& c, Fields3d<fields_t>& J)
-  {
-    real_t jxh;
-    real_t jyh;
-    real_t jzh[5];							
-    
-    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {
-      JZH(l2) = 0.f;
-    }
-    for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {
-      jyh = 0.f;
-      for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {
-	real_t wx = c.y.s0[l2] * c.z.s0[l3]
-	  + .5f * c.y.s1[l2] * c.z.s0[l3]
-	  + .5f * c.y.s0[l2] * c.z.s1[l3]
-	  + (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3];
-	real_t wy = c.y.s1[l2] * (c.z.s0[l3] + .5f*c.z.s1[l3]);
-	real_t wz = c.z.s1[l3] * (c.y.s0[l2] + .5f*c.y.s1[l2]);
-	
-	jxh = c.x.fnqv*wx;
-	jyh -= c.y.fnq*wy;
-	JZH(l2) -= c.z.fnq*wz;
-	
-	J(JXI, 0,c.y.lg+l2,c.z.lg+l3) += jxh;
-	J(JYI, 0,c.y.lg+l2,c.z.lg+l3) += jyh;
-	J(JZI, 0,c.y.lg+l2,c.z.lg+l3) += JZH(l2);
-      }									
+  real_t jxh;
+  real_t jyh;
+  real_t jzh[5];							
+  
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+    JZH(l2) = 0.f;
+  }
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    jyh = 0.f;
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+      real_t wx = y.s0[l2] * z.s0[l3]
+	+ .5f * y.s1[l2] * z.s0[l3]
+	+ .5f * y.s0[l2] * z.s1[l3]
+	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];
+      real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);
+      real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);
+      
+      jxh = x.fnqv*wx;
+      jyh -= y.fnq*wy;
+      JZH(l2) -= z.fnq*wz;
+      
+      J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
+      J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
+      J(JZI, 0,y.lg+l2,z.lg+l3) += JZH(l2);
     }									
   }
-};
-
+}
 
 #define CURRENT_2ND_XYZ							\
   for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\

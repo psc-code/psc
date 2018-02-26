@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "dim.hxx"
 
 // ======================================================================
@@ -41,8 +43,8 @@ struct opt_calcj_1vb_2d;
 #define ORDER_1ST 1
 #define ORDER_2ND 2
 
-struct opt_order_1st;
-struct opt_order_2nd;
+struct opt_order_1st {};
+struct opt_order_2nd {};
 
 struct opt_ip_1st;
 struct opt_ip_1st_ec;
