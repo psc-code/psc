@@ -19,6 +19,12 @@ struct PushParticlesGenericC : PushParticlesBase
 
   void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
   { return PscPushParticles_<PushParticles__<Config2ndYZ>>::push_mprts(nullptr, mprts, mflds); }
+
+  void push_mprts_y(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
+  { return PscPushParticles_<PushParticles__<Config2ndY>>::push_mprts(nullptr, mprts, mflds); }
+
+  void push_mprts_z(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
+  { return PscPushParticles_<PushParticles__<Config2ndZ>>::push_mprts(nullptr, mprts, mflds); }
 };
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticlesGenericC>;
