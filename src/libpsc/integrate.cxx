@@ -84,10 +84,6 @@ psc_step(struct psc *psc)
 
   // default psc_step() implementation
 
-  mparticles_base_t mprts(psc->particles);
-  PscMfieldsBase mflds(psc->flds);
-  PscPushParticlesBase pushp(psc->push_particles);
-  PscPushFieldsBase pushf(psc->push_fields);
 #if 0
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	     psc->prm.nmax, psc->timestep * psc->dt);
@@ -96,6 +92,11 @@ psc_step(struct psc *psc)
   // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
   psc_balance_run(psc->balance, psc);
+
+  mparticles_base_t mprts(psc->particles);
+  PscMfieldsBase mflds(psc->flds);
+  PscPushParticlesBase pushp(psc->push_particles);
+  PscPushFieldsBase pushf(psc->push_fields);
 
   psc_randomize_run(psc->randomize, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
