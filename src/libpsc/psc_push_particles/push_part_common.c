@@ -164,11 +164,19 @@ struct CurrentDir<order, IP, std::true_type>
 };
   
 // ======================================================================
+// CurrentHelper
+
+template<typename order, typename dim, typename IP, typename Current_t>
+struct CurrentHelper;
+
+// ======================================================================
 // Current
 
-template<typename order, typename IP, typename dim>
+template<typename order, typename dim, typename IP>
 struct Current
 {
+  using Self = Current<order, dim, IP>;
+  
   void charge_before(const IP& ip)
   {
     x.charge_before(ip.cx.g);
@@ -190,25 +198,33 @@ struct Current
     z.prep(qni_wni, vv[2], c_prm.fnqzs, c_prm.fnqs);
   }
 
-  void calc(Fields3d<fields_t>& J);
+  void calc(Fields3d<fields_t>& J)
+  {
+    CurrentHelper<order, dim, IP, Self>::calc(*this, J);
+  }
 
   CurrentDir<order, IP, typename dim::InvarX> x;
   CurrentDir<order, IP, typename dim::InvarY> y;
   CurrentDir<order, IP, typename dim::InvarZ> z;
 };
 
-template<>
-inline void Current<opt_order_2nd, IP, dim_1>::calc(Fields3d<fields_t>& J)
+// ======================================================================
+
+template<typename IP, typename Current_t>
+struct CurrentHelper<opt_order_2nd, dim_1, IP, Current_t> 
 {
-  real_t jxh = x.fnqv;				
-  real_t jyh = y.fnqv;						
-  real_t jzh = z.fnqv;				
-    								
-  J(JXI, 0,0,0) += jxh;					
-  J(JYI, 0,0,0) += jyh;				
-  J(JZI, 0,0,0) += jzh;				
-}
-  
+  static void calc(Current_t& c, Fields3d<fields_t>& J)
+  {
+    real_t jxh = c.x.fnqv;
+    real_t jyh = c.y.fnqv;
+    real_t jzh = c.z.fnqv;
+
+    J(JXI, 0,0,0) += jxh;
+    J(JYI, 0,0,0) += jyh;
+    J(JZI, 0,0,0) += jzh;
+  }
+};
+
 #define CURRENT_2ND_Y						\
   real_t jyh = 0.f;					\
 								\
@@ -355,37 +371,41 @@ inline void Current<opt_order_2nd, IP, dim_1>::calc(Fields3d<fields_t>& J)
       }									\
     }									\
 
-template<>
-inline void Current<opt_order_2nd, IP, dim_yz>::calc(Fields3d<fields_t>& J)
+template<typename IP, typename Current_t>
+struct CurrentHelper<opt_order_2nd, dim_yz, IP, Current_t> 
 {
-  real_t jxh;
-  real_t jyh;
-  real_t jzh[5];							
-  
-  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+  static void calc(Current_t& c, Fields3d<fields_t>& J)
+  {
+    real_t jxh;
+    real_t jyh;
+    real_t jzh[5];							
+    
+    for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {
       JZH(l2) = 0.f;
-  }
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
-    jyh = 0.f;
-    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
-      real_t wx = y.s0[l2] * z.s0[l3]
-	+ .5f * y.s1[l2] * z.s0[l3]
-	+ .5f * y.s0[l2] * z.s1[l3]
-	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];
-      real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);
-      real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);
-      
-      jxh = x.fnqv*wx;
-      jyh -= y.fnq*wy;
-      JZH(l2) -= z.fnq*wz;
-      
-      J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
-      J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
-      J(JZI, 0,y.lg+l2,z.lg+l3) += JZH(l2);
+    }
+    for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {
+      jyh = 0.f;
+      for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {
+	real_t wx = c.y.s0[l2] * c.z.s0[l3]
+	  + .5f * c.y.s1[l2] * c.z.s0[l3]
+	  + .5f * c.y.s0[l2] * c.z.s1[l3]
+	  + (1.f/3.f) * c.y.s1[l2] * c.z.s1[l3];
+	real_t wy = c.y.s1[l2] * (c.z.s0[l3] + .5f*c.z.s1[l3]);
+	real_t wz = c.z.s1[l3] * (c.y.s0[l2] + .5f*c.y.s1[l2]);
+	
+	jxh = c.x.fnqv*wx;
+	jyh -= c.y.fnq*wy;
+	JZH(l2) -= c.z.fnq*wz;
+	
+	J(JXI, 0,c.y.lg+l2,c.z.lg+l3) += jxh;
+	J(JYI, 0,c.y.lg+l2,c.z.lg+l3) += jyh;
+	J(JZI, 0,c.y.lg+l2,c.z.lg+l3) += JZH(l2);
+      }									
     }									
-  }									
-}
-  
+  }
+};
+
+
 #define CURRENT_2ND_XYZ							\
   for (int l3 = c.z.lmin; l3 <= c.z.lmax; l3++) {				\
     for (int l2 = c.y.lmin; l2 <= c.y.lmax; l2++) {				\
@@ -543,7 +563,7 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using Current_t = Current<typename C::order, IP, typename C::dim>;
+    using Current_t = Current<typename C::order, typename C::dim, IP>;
 
     c_prm_set(prts.grid());
     Current_t c;
