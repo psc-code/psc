@@ -634,13 +634,8 @@ private:
 
       // CURRENT DENSITY AT (n+1.0)*dt
       c.prep(prts.prt_qni_wni(*part), vv);
-#ifdef XYZ
       c.calc(J);
-#else
-      CURRENT;
-#endif
     }
-
   }
 
 };

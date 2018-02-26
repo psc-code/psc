@@ -12,7 +12,6 @@
 
 #define CONFIG Config2ndDoubleYZ
 
-#define XYZ
 #define DIM DIM_YZ
 #define ORDER ORDER_2ND
 #define CACHE CACHE_EM_J
