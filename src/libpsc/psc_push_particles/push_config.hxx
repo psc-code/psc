@@ -4,14 +4,17 @@
 #include "dim.hxx"
 #include "inc_defs.h"
 
+template<typename dim>
 struct CacheFieldsNone;
+
+template<typename dim>
 struct CacheFields;
 
 template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
 	 typename CALCJ = opt_calcj_esirkepov,
 	 typename OPT_EXT = opt_ext_none,
-	 typename CF = CacheFieldsNone>
+	 typename CF = CacheFieldsNone<D>>
 struct push_p_config
 {
   using mparticles_t = MP;
@@ -36,7 +39,7 @@ using Config2ndZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_z, opt_ip
 using Config2nd1 = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_1, opt_ip_2nd, opt_order_2nd>;
 
 using Config2ndDoubleYZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_ip_2nd, opt_order_2nd,
-				 opt_calcj_esirkepov, opt_ext_none, CacheFields>;
+					opt_calcj_esirkepov, opt_ext_none, CacheFields<dim_yz>>;
 
 using Config1stXZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_xz, opt_ip_1st, opt_order_1st>;
 using Config1stYZ = push_p_config<PscMparticlesDouble, PscMfieldsC, dim_yz, opt_ip_1st, opt_order_1st>;

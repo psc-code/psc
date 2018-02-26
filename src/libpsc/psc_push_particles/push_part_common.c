@@ -477,9 +477,12 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t
   }
  }
 
-struct CacheFields
+template<typename dim>
+struct CacheFields;
+
+template<>
+struct CacheFields<dim_yz>
 {
-#if DIM == DIM_YZ
   static fields_t from_em(fields_t flds)
   {
     fields_t fld = fields_t(flds.ib, flds.im, 9);
@@ -513,9 +516,9 @@ struct CacheFields
     }
     fld.dtor();
   }
-#endif
 };
 
+template<typename dim>
 struct CacheFieldsNone
 {
   static fields_t from_em(fields_t flds)
