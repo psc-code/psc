@@ -188,6 +188,9 @@ TEST(Mparticles, setParticles)
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
 
+// ======================================================================
+// PushParticlesTest
+
 template <typename T>
 class PushParticlesTest : public ::testing::Test
 {};
@@ -218,6 +221,9 @@ struct Test2ndDouble
 using PushParticlesTestTypes = ::testing::Types<Test1vbSingle, Test1vbDouble, Test2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
+
+// ----------------------------------------------------------------------
+// Accel test
 
 TYPED_TEST(PushParticlesTest, Accel)
 {
@@ -258,6 +264,79 @@ TYPED_TEST(PushParticlesTest, Accel)
     	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
     	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
     	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
+      };
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// Cyclo test
+
+TYPED_TEST(PushParticlesTest, Cyclo)
+{
+  using mparticles_t = typename TypeParam::PscMparticles;
+  using mfields_t = typename TypeParam::PscMfields;
+  using Mparticles = typename mparticles_t::sub_t;
+  using Mfields = typename mfields_t::sub_t;
+  using real_t = typename Mparticles::real_t;
+  using PushP = typename TypeParam::PushParticles;
+  const int n_prts = 131;
+  const int n_steps = 64;
+  // the errors here are (substantial) truncation error, not
+  // finite precision, and they add up
+  // (but that's okay, if a reminder that the 6th order Boris would
+  //  be good)
+  const real_t eps = 1e-2;
+  
+  Grid_t grid = make_grid_1();
+  grid.kinds.emplace_back(Grid_t::Kind(2., 1., "test_species"));
+
+  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+
+  setValues(mflds, [](int m) -> real_t {
+      switch(m) {
+      case HZ: return 2. * M_PI / n_steps;
+      default: return 0.;
+      }
+    });
+
+  RngPool rngpool;
+  Rng *rng = rngpool[0];
+
+  Mparticles mprts(grid);
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto patch = mprts.grid().patches[p];
+    for (int n = 0; n < n_prts; n++) {
+      psc_particle_inject prt = {};
+      prt.x[0] = rng->uniform(patch.xb[0], patch.xe[0]);
+      prt.x[1] = rng->uniform(patch.xb[1], patch.xe[1]);
+      prt.x[2] = rng->uniform(patch.xb[2], patch.xe[2]);
+      prt.kind = 0;
+      prt.u[0] = 1.; // gamma = 2
+      prt.u[1] = 1.;
+      prt.u[2] = 1.;
+      prt.w = rng->uniform(0, 1.);;
+      mprts.inject(p, prt);
+    }
+  }
+  
+  // run test
+  for (int n = 0; n < n_steps; n++) {
+    PushP::push_mprts(mprts, mflds);
+
+    double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
+		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
+    double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
+		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
+    double uz = 1.;
+
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto& prts = mprts[p];
+      for (int m = 0; m < prts.size(); m++) {
+	auto& prt = prts[m];
+    	EXPECT_NEAR(prt.pxi, ux, eps);
+    	EXPECT_NEAR(prt.pyi, uy, eps);
+    	EXPECT_NEAR(prt.pzi, uz, eps);
       };
     }
   }
