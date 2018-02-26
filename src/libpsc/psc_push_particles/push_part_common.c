@@ -44,7 +44,7 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 }
 
 // ----------------------------------------------------------------------
-// charge density 
+// charge density
 
 template<typename order>
 class Rho1d;
@@ -55,7 +55,7 @@ class Rho1d<opt_order_1st>
 public:
   static const int N_RHO = 4;
   static const int S_OFF = 1;
-  
+
   real_t  operator[](int i) const { return s_[i + S_OFF]; }
   real_t& operator[](int i)       { return s_[i + S_OFF]; }
 
@@ -71,9 +71,9 @@ public:
   (*this)[shift  ] = gg.v0;
   (*this)[shift+1] = gg.v1;
 }
-  
+
 private:
-  real_t s_[N_RHO];  
+  real_t s_[N_RHO];
 };
 
 template<>
@@ -82,17 +82,17 @@ class Rho1d<opt_order_2nd>
 public:
   static const int N_RHO = 5;
   static const int S_OFF = 2;
-  
+
   real_t  operator[](int i) const { return s_[i + S_OFF]; }
   real_t& operator[](int i)       { return s_[i + S_OFF]; }
-  
+
   void zero()
   {
     for (int i = 0; i < N_RHO; i++) {
       s_[i] = 0.;
     }
   }
-  
+
   void set(int shift, struct ip_coeff_2nd<real_t> gg)
 {
   // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
@@ -102,9 +102,9 @@ public:
   (*this)[shift  ] = .75f - std::abs(h) * std::abs(h);
   (*this)[shift+1] = .5f * (1.5f-std::abs(h+1.f)) * (1.5f-std::abs(h+1.f));
 }
-  
+
 private:
-  real_t s_[N_RHO];  
+  real_t s_[N_RHO];
 };
 
 template<typename order, typename IP, typename Invar>
@@ -112,13 +112,13 @@ struct CurrentDir
 {
   using Rho1d_t = Rho1d<order>;
   using ip_coeff_t = typename IP::ip_coeff_t;
-  
+
   void charge_before(ip_coeff_t g)
   {
     lg = g.l;
     s0.set(0, g);
   };
-  
+
   void charge_after(real_t xx)
   {
     ip_coeff_t g;
@@ -127,7 +127,7 @@ struct CurrentDir
     s1.zero();
     s1.set(k - lg, g);
   }
-  
+
   void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
   {
     for (int i = -s1.S_OFF + 1; i <= 1; i++) {
@@ -136,7 +136,7 @@ struct CurrentDir
     find_l_minmax<order>(&lmin, &lmax, k, lg);
     fnq = qni_wni * fnqxyzs;
   }
-  
+
   Rho1d_t s0 = {}, s1;
   int lg, k;
   int lmin, lmax;
@@ -145,22 +145,22 @@ struct CurrentDir
 
 // true_type -> this is an invariant direction
 template<typename order, typename IP>
-struct CurrentDir<order, IP, std::true_type> 
+struct CurrentDir<order, IP, std::true_type>
 {
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   void charge_before(ip_coeff_t g) {}
-  
+
   void charge_after(real_t xx) {}
-  
+
   void prep(real_t qni_wni, real_t vv, real_t fnqxyzs, real_t fnqs)
   {
     fnqv = vv * qni_wni * fnqs;
   }
-  
+
   real_t fnqv;
 };
-  
+
 // ======================================================================
 // Current
 
@@ -173,7 +173,7 @@ struct Current
   Current(const Grid_t& grid)
     : dxi_{ Real3{1., 1. , 1.} / grid.dx }
   {}
-  
+
   void charge_before(const IP& ip)
   {
     x.charge_before(ip.cx.g);
@@ -187,7 +187,7 @@ struct Current
     y.charge_after(xx[1] * dxi_[1]);
     z.charge_after(xx[2] * dxi_[2]);
   }
-  
+
   void prep(real_t qni_wni, real_t vv[3])
   {
     x.prep(qni_wni, vv[0], c_prm.fnqxs, c_prm.fnqs);
@@ -227,7 +227,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_1 d, Fields3d<fields_t>&
   real_t jxh = x.fnqv;
   real_t jyh = y.fnqv;
   real_t jzh = z.fnqv;
-  
+
   J(JXI, 0,0,0) += jxh;
   J(JYI, 0,0,0) += jyh;
   J(JZI, 0,0,0) += jzh;
@@ -237,16 +237,16 @@ template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_2nd o, dim_y d, Fields3d<fields_t>& J)
 {
   real_t jyh = 0.f;
-  
+
   for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
     real_t wx = y.s0[l2] + .5f * y.s1[l2];
     real_t wy = y.s1[l2];
     real_t wz = y.s0[l2] + .5f * y.s1[l2];
-    
+
     real_t jxh = x.fnqv*wx;
     jyh -= y.fnq*wy;
     real_t jzh = z.fnqv*wz;
-    
+
     J(JXI, 0,y.lg+l2,0) += jxh;
     J(JYI, 0,y.lg+l2,0) += jyh;
     J(JZI, 0,y.lg+l2,0) += jzh;
@@ -265,7 +265,7 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_z d, Fields3d<fields_t>&
     real_t jxh = x.fnqv*wx;
     real_t jyh = y.fnqv*wy;
     jzh -= z.fnq*wz;
-    
+
     J(JXI, 0,0,z.lg+l3) += jxh;
     J(JYI, 0,0,z.lg+l3) += jyh;
     J(JZI, 0,0,z.lg+l3) += jzh;
@@ -304,108 +304,108 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xy d, Fields3d<fields_t>
 template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_1st o, dim_xz d, Fields3d<fields_t>& J)
 {
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {	\
-    real_t jxh = 0.f;						\
-    for (int l1 = x.lmin; l1 < x.lmax; l1++) {				\
-      real_t wx = x.s1[l1] * (z.s0[l3] + .5f*z.s1[l3]);	\
-      jxh -= x.fnq*wx;							\
-      J(JXI, x.lg+l1,0,z.lg+l3) += jxh;				\
-    }									\
-  }									\
-									\
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-      real_t wy = x.s0[l1] * z.s0[l3]			\
-	+ .5f * x.s1[l1] * z.s0[l3]					\
-	+ .5f * x.s0[l1] * z.s1[l3]					\
-	+ (1.f/3.f) * x.s1[l1] * z.s1[l3];				\
-      real_t jyh = y.fnqv * wy;					\
-      J(JYI, x.lg+l1,0,z.lg+l3) += jyh;				\
-    }									\
-  }									\
-  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-    real_t jzh = 0.f;						\
-    for (int l3 = z.lmin; l3 < z.lmax; l3++) {				\
-      real_t wz = z.s1[l3] * (x.s0[l1] + .5f*x.s1[l1]);	\
-      jzh -= z.fnq*wz;							\
-      J(JZI, x.lg+l1,0,z.lg+l3) += jzh;				\
-    }									\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    real_t jxh = 0.f;
+    for (int l1 = x.lmin; l1 < x.lmax; l1++) {
+      real_t wx = x.s1[l1] * (z.s0[l3] + .5f*z.s1[l3]);
+      jxh -= x.fnq*wx;
+      J(JXI, x.lg+l1,0,z.lg+l3) += jxh;
+    }
+  }
+
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+      real_t wy = x.s0[l1] * z.s0[l3]
+	+ .5f * x.s1[l1] * z.s0[l3]
+	+ .5f * x.s0[l1] * z.s1[l3]
+	+ (1.f/3.f) * x.s1[l1] * z.s1[l3];
+      real_t jyh = y.fnqv * wy;
+      J(JYI, x.lg+l1,0,z.lg+l3) += jyh;
+    }
+  }
+  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+    real_t jzh = 0.f;
+    for (int l3 = z.lmin; l3 < z.lmax; l3++) {
+      real_t wz = z.s1[l3] * (x.s0[l1] + .5f*x.s1[l1]);
+      jzh -= z.fnq*wz;
+      J(JZI, x.lg+l1,0,z.lg+l3) += jzh;
+    }
   }
 }
 
 template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xz d, Fields3d<fields_t>& J)
 {
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {	\
-    real_t jxh = 0.f;						\
-    for (int l1 = x.lmin; l1 < x.lmax; l1++) {				\
-      real_t wx = x.s1[l1] * (z.s0[l3] + .5f*z.s1[l3]);	\
-      jxh -= x.fnq*wx;							\
-      J(JXI, x.lg+l1,0,z.lg+l3) += jxh;				\
-    }									\
-  }									\
-									\
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-      real_t wy = x.s0[l1] * z.s0[l3]			\
-	+ .5f * x.s1[l1] * z.s0[l3]					\
-	+ .5f * x.s0[l1] * z.s1[l3]					\
-	+ (1.f/3.f) * x.s1[l1] * z.s1[l3];				\
-      real_t jyh = y.fnqv * wy;					\
-      J(JYI, x.lg+l1,0,z.lg+l3) += jyh;				\
-    }									\
-  }									\
-  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-    real_t jzh = 0.f;						\
-    for (int l3 = z.lmin; l3 < z.lmax; l3++) {				\
-      real_t wz = z.s1[l3] * (x.s0[l1] + .5f*x.s1[l1]);	\
-      jzh -= z.fnq*wz;							\
-      J(JZI, x.lg+l1,0,z.lg+l3) += jzh;				\
-    }									\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    real_t jxh = 0.f;
+    for (int l1 = x.lmin; l1 < x.lmax; l1++) {
+      real_t wx = x.s1[l1] * (z.s0[l3] + .5f*z.s1[l3]);
+      jxh -= x.fnq*wx;
+      J(JXI, x.lg+l1,0,z.lg+l3) += jxh;
+    }
+  }
+
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+      real_t wy = x.s0[l1] * z.s0[l3]
+	+ .5f * x.s1[l1] * z.s0[l3]
+	+ .5f * x.s0[l1] * z.s1[l3]
+	+ (1.f/3.f) * x.s1[l1] * z.s1[l3];
+      real_t jyh = y.fnqv * wy;
+      J(JYI, x.lg+l1,0,z.lg+l3) += jyh;
+    }
+  }
+  for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+    real_t jzh = 0.f;
+    for (int l3 = z.lmin; l3 < z.lmax; l3++) {
+      real_t wz = z.s1[l3] * (x.s0[l1] + .5f*x.s1[l1]);
+      jzh -= z.fnq*wz;
+      J(JZI, x.lg+l1,0,z.lg+l3) += jzh;
+    }
   }
 }
 
 template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_1st o, dim_yz d, Fields3d<fields_t>& J)
 {
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
-      real_t wx = y.s0[l2] * z.s0[l3]			\
-	+ .5f * y.s1[l2] * z.s0[l3]					\
-	+ .5f * y.s0[l2] * z.s1[l3]					\
-	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];				\
-      real_t jxh = x.fnqv * wx;					\
-      J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;				\
-    }									\
-  }									\
-  									\
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-    real_t jyh = 0.f;						\
-    for (int l2 = y.lmin; l2 < y.lmax; l2++) {				\
-      real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);	\
-      jyh -= y.fnq*wy;							\
-      J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;				\
-    }									\
-  }									\
-									\
-  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
-    real_t jzh = 0.f;						\
-    for (int l3 = z.lmin; l3 < z.lmax; l3++) {				\
-      real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);	\
-      jzh -= z.fnq*wz;							\
-      J(JZI, 0,y.lg+l2,z.lg+l3) += jzh;				\
-    }									\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+      real_t wx = y.s0[l2] * z.s0[l3]
+	+ .5f * y.s1[l2] * z.s0[l3]
+	+ .5f * y.s0[l2] * z.s1[l3]
+	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];
+      real_t jxh = x.fnqv * wx;
+      J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
+    }
+  }
+
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    real_t jyh = 0.f;
+    for (int l2 = y.lmin; l2 < y.lmax; l2++) {
+      real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);
+      jyh -= y.fnq*wy;
+      J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
+    }
+  }
+
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+    real_t jzh = 0.f;
+    for (int l3 = z.lmin; l3 < z.lmax; l3++) {
+      real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);
+      jzh -= z.fnq*wz;
+      J(JZI, 0,y.lg+l2,z.lg+l3) += jzh;
+    }
   }
 }
- 
+
 #define JZH(i) jzh[i+2]
 template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>& J)
 {
   real_t jxh;
   real_t jyh;
-  real_t jzh[5];							
-  
+  real_t jzh[5];
+
   for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
     JZH(l2) = 0.f;
   }
@@ -418,67 +418,67 @@ void Current<order, dim, IP>::calc(opt_order_2nd o, dim_yz d, Fields3d<fields_t>
 	+ (1.f/3.f) * y.s1[l2] * z.s1[l3];
       real_t wy = y.s1[l2] * (z.s0[l3] + .5f*z.s1[l3]);
       real_t wz = z.s1[l3] * (y.s0[l2] + .5f*y.s1[l2]);
-      
+
       jxh = x.fnqv*wx;
       jyh -= y.fnq*wy;
       JZH(l2) -= z.fnq*wz;
-      
+
       J(JXI, 0,y.lg+l2,z.lg+l3) += jxh;
       J(JYI, 0,y.lg+l2,z.lg+l3) += jyh;
       J(JZI, 0,y.lg+l2,z.lg+l3) += JZH(l2);
-    }									
+    }
   }
 }
 
 template<typename order, typename dim, typename IP>
 void Current<order, dim, IP>::calc(opt_order_2nd o, dim_xyz d, Fields3d<fields_t>& J)
 {
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
-      real_t jxh = 0.f;					\
-      for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-	real_t wx = x.s1[l1] * (y.s0[l2] * z.s0[l3] +	\
-					   .5f * y.s1[l2] * z.s0[l3] + \
-					   .5f * y.s0[l2] * z.s1[l3] + \
-					   (1.f/3.f) * y.s1[l2] * z.s1[l3]); \
-									\
-	jxh -= x.fnq*wx;							\
-	J(JXI, x.lg+l1,y.lg+l2,z.lg+l3) += jxh;			\
-      }									\
-    }									\
-  }									\
-  									\
-  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-      real_t jyh = 0.f;					\
-      for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
-	real_t wy = y.s1[l2] * (x.s0[l1] * z.s0[l3] +	\
-					   .5f * x.s1[l1] * z.s0[l3] + \
-					   .5f * x.s0[l1] * z.s1[l3] + \
-					   (1.f/3.f) * x.s1[l1]*z.s1[l3]); \
-									\
-	jyh -= y.fnq*wy;							\
-	J(JYI, x.lg+l1,y.lg+l2,z.lg+l3) += jyh;			\
-      }									\
-    }									\
-  }									\
-									\
-  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {				\
-    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {				\
-      real_t jzh = 0.f;					\
-      for (int l3 = z.lmin; l3 <= z.lmax; l3++) {				\
-	real_t wz = z.s1[l3] * (x.s0[l1] * y.s0[l2] +	\
-					   .5f * x.s1[l1] * y.s0[l2] +\
-					   .5f * x.s0[l1] * y.s1[l2] +\
-					   (1.f/3.f) * x.s1[l1]*y.s1[l2]); \
-									\
-	jzh -= z.fnq*wz;							\
-	J(JZI, x.lg+l1,y.lg+l2,z.lg+l3) += jzh;			\
-      }									\
-    }									\
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+      real_t jxh = 0.f;
+      for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+	real_t wx = x.s1[l1] * (y.s0[l2] * z.s0[l3] +
+					   .5f * y.s1[l2] * z.s0[l3] +
+					   .5f * y.s0[l2] * z.s1[l3] +
+					   (1.f/3.f) * y.s1[l2] * z.s1[l3]);
+
+	jxh -= x.fnq*wx;
+	J(JXI, x.lg+l1,y.lg+l2,z.lg+l3) += jxh;
+      }
+    }
+  }
+
+  for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+      real_t jyh = 0.f;
+      for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+	real_t wy = y.s1[l2] * (x.s0[l1] * z.s0[l3] +
+					   .5f * x.s1[l1] * z.s0[l3] +
+					   .5f * x.s0[l1] * z.s1[l3] +
+					   (1.f/3.f) * x.s1[l1]*z.s1[l3]);
+
+	jyh -= y.fnq*wy;
+	J(JYI, x.lg+l1,y.lg+l2,z.lg+l3) += jyh;
+      }
+    }
+  }
+
+  for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
+    for (int l1 = x.lmin; l1 <= x.lmax; l1++) {
+      real_t jzh = 0.f;
+      for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
+	real_t wz = z.s1[l3] * (x.s0[l1] * y.s0[l2] +
+					   .5f * x.s1[l1] * y.s0[l2] +
+					   .5f * x.s0[l1] * y.s1[l2] +
+					   (1.f/3.f) * x.s1[l1]*y.s1[l2]);
+
+	jzh -= z.fnq*wz;
+	J(JZI, x.lg+l1,y.lg+l2,z.lg+l3) += jzh;
+      }
+    }
   }
  }
- 
+
 struct CacheFields
 {
 #if DIM == DIM_YZ
@@ -502,7 +502,7 @@ struct CacheFields
     }
     return fld;
   }
-  
+
   static void to_j(fields_t fld, fields_t flds)
   {
     Fields3d<fields_t> F(flds), F_CACHE(fld);
@@ -524,7 +524,7 @@ struct CacheFieldsNone
   {
     return flds;
   }
-  
+
   static void to_j(fields_t flds_cache, fields_t flds)
   {}
 };
@@ -537,14 +537,14 @@ struct PushParticles__
   using mfields_t = typename C::mfields_t;
   using Mfields = typename mfields_t::sub_t;
   using CacheFields_t = typename C::CacheFields;
-  
+
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
     static int pr;
     if (!pr) {
       pr = prof_register(__func__, 1., 0, 0);
     }
-    
+
     prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       // FIXME, in the cache case can't we just skip this and just set j when copying back?
@@ -553,7 +553,7 @@ struct PushParticles__
       fields_t flds = cache.from_em(mflds[p]);
       do_push_part(flds, mprts[p]);
       cache.to_j(flds, mflds[p]);
-    } 
+    }
     prof_stop(pr);
   }
 
@@ -575,7 +575,7 @@ private:
       real_t *x = &part->xi;
       real_t vv[3];
 
-      // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
+      // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
       // FIELD INTERPOLATION
 
       real_t xm[3];
@@ -589,17 +589,17 @@ private:
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
-      // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+      // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
       real_t dq = c_prm.dqs * prts.prt_qni(*part) / prts.prt_mni(*part);
       push_p(&part->pxi, E, H, dq);
 
-      // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
+      // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
       calc_v(vv, &part->pxi);
 
       // FIXME, inelegant way of pushing full dt
       push_x(x, vv, c_prm.dt);
 
-      // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
+      // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt
       c.charge_after(x);
 
       // CURRENT DENSITY AT (n+1.0)*dt
@@ -620,16 +620,16 @@ struct PscPushParticles_
   using mfields_t = typename PushParticles_t::mfields_t;
   using Mparticles = typename mparticles_t::sub_t;
   using Mfields = typename mfields_t::sub_t;
-  
+
   static void push_mprts(struct psc_push_particles *push,
 			 struct psc_mparticles *mprts,
 			 struct psc_mfields *mflds_base)
   {
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
     mparticles_t mp = mparticles_t(mprts);
-    
+
     PushParticles_t::push_mprts(*mp.sub(), *mf.sub());
-    
+
     mf.put_as(mflds_base, JXI, JXI+3);
   }
 
@@ -640,4 +640,3 @@ struct PscPushParticles_
 };
 
 template struct PscPushParticles_<PushParticles__<CONFIG>>;
-
