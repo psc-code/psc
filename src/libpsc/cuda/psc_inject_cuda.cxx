@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 
+using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 
 // ======================================================================

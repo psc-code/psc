@@ -4,7 +4,6 @@
 
 #include "psc_fields_fortran.h"
 
-typedef fields_fortran_t      fields_t;
 typedef PscMfieldsFortran     mfields_t;
 
 #define psc_mfields_get_from          psc_mfields_fortran_get_from
