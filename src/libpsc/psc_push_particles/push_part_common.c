@@ -1,4 +1,6 @@
 
+#include <mrc_profile.h>
+
 #include "inc_defs.h"
 
 #define CACHE_EM_J 1

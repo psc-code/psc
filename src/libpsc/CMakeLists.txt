@@ -23,7 +23,6 @@ add_library(psc
   psc_push_particles/psc_push_particles_generic_c.cxx
   psc_push_particles/push_part_1st_xz.cxx
   psc_push_particles/push_part_1st_yz.cxx
-  psc_push_particles/push_part_double_2nd_yz.cxx
   psc_push_particles/push_part_single2_1vb_yz.cxx
   psc_push_particles/push_part_xy.cxx
   psc_push_particles/push_part_xyz.cxx

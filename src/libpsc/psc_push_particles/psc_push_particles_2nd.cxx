@@ -3,8 +3,16 @@
 #include "psc_push_particles_2nd.h"
 
 #include "push_particles.hxx"
+#include "push_config.hxx"
 
-#include "push.hxx"
+#define CONFIG Config2ndDoubleYZ
+
+#define DIM DIM_YZ
+#define CACHE CACHE_EM_J
+#include "psc_particles_as_double.h"
+#include "psc_fields_as_c.h"
+
+#include "push_part_common.c"
 
 // ======================================================================
 // psc_push_particles: subclass "2nd_double"
