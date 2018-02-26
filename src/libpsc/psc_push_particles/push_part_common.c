@@ -108,12 +108,13 @@ private:
   real_t s_[N_RHO];  
 };
 
-template<typename order, typename Invar>
+template<typename order, typename IP, typename Invar>
 struct CurrentDir
 {
   using Rho1d_t = Rho1d<order>;
+  using ip_coeff_t = typename IP::ip_coeff_t;
   
-  void charge_before(IP::ip_coeff_t g)
+  void charge_before(ip_coeff_t g)
   {
     lg = g.l;
     s0.set(0, g);
@@ -121,7 +122,8 @@ struct CurrentDir
   
   void charge_after(real_t xx)
   {
-    IP::ip_coeff_t g;
+
+    ip_coeff_t g;
     g.set(xx);
     k = g.l;
     s1.zero();
@@ -143,10 +145,13 @@ struct CurrentDir
   real_t fnq;
 };
 
-template<typename order>
-struct CurrentDir<order, std::true_type>
+// true_type -> this is an invariant direction
+template<typename order, typename IP>
+struct CurrentDir<order, IP, std::true_type> 
 {
-  void charge_before(IP::ip_coeff_t g) {}
+  using ip_coeff_t = typename IP::ip_coeff_t;
+
+  void charge_before(ip_coeff_t g) {}
   
   void charge_after(real_t xx) {}
   
@@ -161,7 +166,7 @@ struct CurrentDir<order, std::true_type>
 // ======================================================================
 // Current
 
-template<typename order, typename dim>
+template<typename order, typename IP, typename dim>
 struct Current
 {
   void charge_before(const IP& ip)
@@ -187,13 +192,13 @@ struct Current
 
   void calc(Fields3d<fields_t>& J);
 
-  CurrentDir<order, typename dim::InvarX> x;
-  CurrentDir<order, typename dim::InvarY> y;
-  CurrentDir<order, typename dim::InvarZ> z;
+  CurrentDir<order, IP, typename dim::InvarX> x;
+  CurrentDir<order, IP, typename dim::InvarY> y;
+  CurrentDir<order, IP, typename dim::InvarZ> z;
 };
 
 template<>
-inline void Current<opt_order_2nd, dim_1>::calc(Fields3d<fields_t>& J)
+inline void Current<opt_order_2nd, IP, dim_1>::calc(Fields3d<fields_t>& J)
 {
   real_t jxh = x.fnqv;				
   real_t jyh = y.fnqv;						
@@ -351,7 +356,7 @@ inline void Current<opt_order_2nd, dim_1>::calc(Fields3d<fields_t>& J)
     }									\
 
 template<>
-inline void Current<opt_order_2nd, dim_yz>::calc(Fields3d<fields_t>& J)
+inline void Current<opt_order_2nd, IP, dim_yz>::calc(Fields3d<fields_t>& J)
 {
   real_t jxh;
   real_t jyh;
@@ -538,7 +543,7 @@ struct PushParticles__
 private:
   static void do_push_part(fields_t flds, typename mparticles_t::patch_t& prts)
   {
-    using Current_t = Current<typename C::order, typename C::dim>;
+    using Current_t = Current<typename C::order, IP, typename C::dim>;
 
     c_prm_set(prts.grid());
     Current_t c;
