@@ -184,7 +184,10 @@ TEST(Mparticles, setParticles)
 }
 
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
-#include "../libpsc/psc_push_particles/push.hxx"
+#include "../libpsc/psc_push_particles/push_config.hxx"
+#include "psc_particles_as_double.h"
+#include "psc_fields_as_c.h"
+#include "../libpsc/psc_push_particles/push_part_common.c"
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
 
@@ -215,7 +218,7 @@ struct Test2ndDouble
 {
   using Mparticles = MparticlesDouble;
   using Mfields = MfieldsC;
-  using PushParticles = PscPushParticles_<PushParticles__<Config2nd1>>;
+  using PushParticles = PushParticles__<Config2nd1>;
 };
 
 using PushParticlesTestTypes = ::testing::Types<Test1vbecSingle, Test1vbecDouble, Test2ndDouble>;
