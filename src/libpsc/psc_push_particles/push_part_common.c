@@ -108,6 +108,15 @@ private:
   real_t s_[N_RHO];  
 };
 
+#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
+    int k1;						\
+    gx.set(xx[d] * dxi);				\
+    k1 = gx.l;						\
+    s1x.set(k1-lg1, gx)
+
+// ======================================================================
+// Current
+
 template<typename Rho1d_t>
 struct Current
 {
@@ -124,7 +133,7 @@ struct Current
     IF_DIM_Y( for (int i = -s1y.S_OFF + 1; i <= 1; i++) { s1y[i] -= s0y[i]; } );
     IF_DIM_Z( for (int i = -s1z.S_OFF + 1; i <= 1; i++) { s1z[i] -= s0z[i]; } );
   }
-  
+
 #if (DIM & DIM_X)
   Rho1d_t s0x = {}, s1x;
 #endif
@@ -134,16 +143,6 @@ struct Current
 #if (DIM & DIM_Z)
   Rho1d_t s0z = {}, s1z;
 #endif
-};
-
-#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
-    int k1;						\
-    gx.set(xx[d] * dxi);				\
-    k1 = gx.l;						\
-    s1x.set(k1-lg1, gx)
-
-// ======================================================================
-// current
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, cxyz, fnqx, fnqxs)	\
   int l1min, l1max; find_l_minmax<typename C::order>(&l1min, &l1max, k1, ip.cxyz.g.l); \
@@ -304,11 +303,10 @@ struct Current
       }									\
     }									\
 
-template<typename Rho1d_t>
-static void current_2nd_yz(Rho1d_t& s0y, Rho1d_t& s0z, Rho1d_t& s1y, Rho1d_t& s1z,
-			   int l2min, int l2max, int l3min, int l3max,
-			   real_t fnqxx, real_t fnqy, real_t fnqz,
-			   IP& ip, Fields3d<fields_t>& J)
+  static void deposit(Rho1d_t& s0y, Rho1d_t& s0z, Rho1d_t& s1y, Rho1d_t& s1z,
+		      int l2min, int l2max, int l3min, int l3max,
+		      real_t fnqxx, real_t fnqy, real_t fnqz,
+		      IP& ip, Fields3d<fields_t>& J)
 {
   real_t jxh;
   real_t jyh;
@@ -383,6 +381,8 @@ static void current_2nd_yz(Rho1d_t& s0y, Rho1d_t& s0z, Rho1d_t& s1y, Rho1d_t& s1
       }									\
     }									\
   }
+
+};
 
 #if DIM == DIM1
 #define CURRENT do {} while(0)
@@ -548,10 +548,10 @@ private:
       c.subtr_s1_s0();
       CURRENT_PREP;
 #ifdef XYZ
-      current_2nd_yz(c.s0y, c.s0z, c.s1y, c.s1z,
-		     l2min, l2max, l3min, l3max,
-		     fnqxx, fnqy, fnqz,
-		     ip, J);
+      c.deposit(c.s0y, c.s0z, c.s1y, c.s1z,
+		l2min, l2max, l3min, l3max,
+		fnqxx, fnqy, fnqz,
+		ip, J);
 #else
       CURRENT;
 #endif
