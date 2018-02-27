@@ -567,6 +567,8 @@ private:
     using AdvanceParticle_t = AdvanceParticle<particle_t::real_t, dim>;
 
     c_prm_set(prts.grid());
+    real_t dqs = .5f * prts.grid().eta * prts.grid().dt;
+  
     AdvanceParticle_t advance(prts.grid().dt);
     IP ip;
     Current_t c(prts.grid());
@@ -594,7 +596,7 @@ private:
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-      real_t dq = c_prm.dqs * prts.prt_qni(*part) / prts.prt_mni(*part);
+      real_t dq = dqs * prts.prt_qni(*part) / prts.prt_mni(*part);
       advance.push_p(&part->pxi, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
