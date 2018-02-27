@@ -33,6 +33,7 @@ add_library(psc
   psc_push_particles/1vb/psc_push_particles_1vbec_single_xyz.cxx
   psc_push_particles/1vb/psc_push_particles_1vbec_single_xyz_xz.cxx
   psc_push_particles/1vb/psc_push_particles_1vbec_single_yz.cxx
+  psc_push_particles/1vb/psc_push_particles_1vbec_split_single_yz.cxx
 
   psc_push_fields/psc_marder.cxx
   psc_push_fields/psc_marder_c.cxx
