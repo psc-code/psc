@@ -574,7 +574,6 @@ private:
     using Current_t = Current<typename C::order, dim, IP, Fields3d<fields_t>>;
     using AdvanceParticle_t = AdvanceParticle<particle_t::real_t, dim>;
 
-    c_prm_set(prts.grid());
     real_t dqs = .5f * prts.grid().eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
   

@@ -45,10 +45,6 @@ using opt_calcj = opt_calcj_1vb_2d;
 
 #define MAX_NR_KINDS (10)
 
-struct const_params {
-  real_t dxi[3];
-};
-
 struct params_1vb {
   // particle-related
   real_t dq_kind[MAX_NR_KINDS];
@@ -59,29 +55,7 @@ struct params_1vb {
   int ilg[3];
 };
 
-CUDA_CONSTANT static struct const_params c_prm;
 CUDA_CONSTANT static struct params_1vb prm;
-
-// ----------------------------------------------------------------------
-// c_prm_set
-
-static void
-c_prm_set(const Grid_t& grid)
-{
-  struct const_params prm;
-
-  assert(grid.n_patches() > 0);
-
-  for (int d = 0; d < 3; d++) {
-    prm.dxi[d] = 1.f / grid.dx[d];
-  }
-
-#ifndef __CUDACC__
-  c_prm = prm;
-#else
-  check(cudaMemcpyToSymbol(c_prm, &prm, sizeof(prm)));
-#endif
-}
 
 // ----------------------------------------------------------------------
 // params_1vb

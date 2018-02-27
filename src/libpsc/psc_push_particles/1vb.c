@@ -29,7 +29,6 @@ struct PushParticles1vb
   
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
-    c_prm_set(mprts.grid());
     params_1vb_set(mprts.grid());
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
@@ -47,7 +46,6 @@ struct PushParticles1vb
 
   static void stagger_mprts(Mparticles& mprts, Mfields& mflds)
   {
-    c_prm_set(mprts.grid());
     params_1vb_set(mprts.grid());
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
