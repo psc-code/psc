@@ -46,7 +46,6 @@ using opt_calcj = opt_calcj_1vb_2d;
 #define MAX_NR_KINDS (10)
 
 struct const_params {
-  real_t fnqxs, fnqys, fnqzs;
   real_t dxi[3];
 };
 
@@ -76,10 +75,6 @@ c_prm_set(const Grid_t& grid)
   for (int d = 0; d < 3; d++) {
     prm.dxi[d] = 1.f / grid.dx[d];
   }
-
-  prm.fnqxs = grid.dx[0] * grid.fnqs / grid.dt;
-  prm.fnqys = grid.dx[1] * grid.fnqs / grid.dt;
-  prm.fnqzs = grid.dx[2] * grid.fnqs / grid.dt;
 
 #ifndef __CUDACC__
   c_prm = prm;

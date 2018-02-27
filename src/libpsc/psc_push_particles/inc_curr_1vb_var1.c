@@ -35,6 +35,19 @@ private:
 
 #elif DIM == DIM_YZ
 
+template<typename curr_cache_t>
+struct Current1vb
+{
+  using real_t = typename curr_cache_t::real_t;
+  
+  Current1vb(const Grid_t& grid)
+    : dt_(grid.dt)
+  {
+    fnqxs_ = grid.dx[0] * grid.fnqs / grid.dt;
+    fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
+    fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
+  }
+  
 CUDA_DEVICE static inline void
 calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
 {
@@ -88,9 +101,8 @@ calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
 // ----------------------------------------------------------------------
 // curr_3d_vb_cell
 
-CUDA_DEVICE static void
-curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
-		real_t qni_wni)
+  void curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
+		       real_t qni_wni)
 {
   real_t xa[3] = { 0.,
 			    x[1] + .5f * dx[1],
@@ -99,7 +111,7 @@ curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
   if (dx[0] != 0.f)
 #endif
     {
-      real_t fnqx = qni_wni * c_prm.fnqxs;
+      real_t fnqx = qni_wni * fnqxs_;
       real_t h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
       curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
       curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
@@ -110,7 +122,7 @@ curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
   if (dx[1] != 0.f)
 #endif
     {
-      real_t fnqy = qni_wni * c_prm.fnqys;
+      real_t fnqy = qni_wni * fnqys_;
       curr_cache_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
       curr_cache_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
     }
@@ -118,7 +130,7 @@ curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
   if (dx[2] != 0.f)
 #endif
     {
-      real_t fnqz = qni_wni * c_prm.fnqzs;
+      real_t fnqz = qni_wni * fnqzs_;
       curr_cache_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
       curr_cache_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
     }
@@ -140,18 +152,9 @@ curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
   i[2] += off[2];
 }
 
-// ----------------------------------------------------------------------
-// calc_j
+  // ----------------------------------------------------------------------
+  // calc_j
 
-template<typename curr_cache_t>
-struct Current1vb
-{
-  using real_t = typename curr_cache_t::real_t;
-  
-  Current1vb(const Grid_t& grid)
-    : dt_(grid.dt)
-  {}
-  
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, particle_t *prt, real_t *vxi)
   {
@@ -236,6 +239,7 @@ struct Current1vb
 
 private:
   real_t dt_;
+  real_t fnqxs_, fnqys_, fnqzs_;
 };
 
 #elif DIM == DIM_XYZ

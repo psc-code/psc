@@ -17,7 +17,10 @@ struct Current1vb
   Current1vb(const Grid_t& grid)
     : dt_(grid.dt),
       fnqs_(grid.fnqs)
-  {}
+  {
+    fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
+    fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
+  }
   
 // ----------------------------------------------------------------------
 // calc_dx1
@@ -113,8 +116,8 @@ curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
       second_dir = 1 - first_dir;
     }
 
-    real_t fnq[2] = { particle_qni_wni(prt) * c_prm.fnqys,
-		      particle_qni_wni(prt) * c_prm.fnqzs };
+    real_t fnq[2] = { particle_qni_wni(prt) * fnqys_,
+		      particle_qni_wni(prt) * fnqzs_ };
 
     if (first_dir >= 0) {
       off[1-first_dir] = 0;
@@ -136,6 +139,7 @@ curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
 private:
   real_t dt_;
   real_t fnqs_;
+  real_t fnqys_, fnqzs_;
 };
 
 #endif
