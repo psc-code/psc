@@ -117,7 +117,7 @@ push_one(particles_t& prts, int n,
   
   int lf[3];
   real_t of[3], xp[3];
-  find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, real_t(0.));
+  PI::find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, real_t(0.));
   //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
