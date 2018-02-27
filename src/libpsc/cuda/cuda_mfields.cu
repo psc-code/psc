@@ -132,7 +132,7 @@ void cuda_mfields::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
 
   uint size = n_cells_per_patch;
   ierr = cudaMemcpy((*this)[p].data() + mb * size,
-		    h_flds.data + mb * size,
+		    h_flds.data() + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
@@ -150,7 +150,7 @@ void cuda_mfields::copy_from_device(int p, fields_single_t h_flds, int mb, int m
   assert(mb < me);
 
   uint size = n_cells_per_patch;
-  ierr = cudaMemcpy(h_flds.data + mb * size,
+  ierr = cudaMemcpy(h_flds.data() + mb * size,
 		    (*this)[p].data() + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyDeviceToHost); cudaCheck(ierr);

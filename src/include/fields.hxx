@@ -12,8 +12,8 @@ public:
   using real_t = typename fields_t::real_t;
   using dim = D;
 
-  Fields3d(const fields_t& f)
-    : data_(f.data),
+  Fields3d(fields_t f)
+    : data_(f.data()),
       n_comp_(f.nr_comp)
   {
     for (int d = 0; d < 3; d++) {

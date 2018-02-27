@@ -28,31 +28,31 @@ struct fields3d {
   using real_t = R;
   using layout = L;
 
-  real_t *data;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
 
   fields3d(const int _ib[3], const int _im[3], int _n_comps,
-	   real_t *_data=nullptr)
+	   real_t* data=nullptr)
     : ib{ _ib[0], _ib[1], _ib[2] },
       im{ _im[0], _im[1], _im[2] },
       nr_comp{_n_comps},
-      data(_data)
+      data_(data)
   {
-    if (!data) {
-      data = (real_t *) calloc(size(), sizeof(*data));
+    if (!data_) {
+      data_ = (real_t *) calloc(size(), sizeof(*data_));
     }
   }
 
   void dtor()
   {
-    free(data);
-    data = NULL;
+    free(data_);
+    data_ = NULL;
   }
 
-  real_t  operator()(int m, int i, int j, int k) const { return data[index(m, i, j, k)];  }
-  real_t& operator()(int m, int i, int j, int k)       { return data[index(m, i, j, k)];  }
+  real_t  operator()(int m, int i, int j, int k) const { return data_[index(m, i, j, k)];  }
+  real_t& operator()(int m, int i, int j, int k)       { return data_[index(m, i, j, k)];  }
 
+  real_t* data() { return data_; }
   int index(int m, int i, int j, int k) const;
 
   int size()
@@ -79,7 +79,7 @@ struct fields3d {
 
   void zero()
   {
-    memset(data, 0, sizeof(real_t) * size());
+    memset(data_, 0, sizeof(real_t) * size());
   }
 
   void set(int m, real_t val)
@@ -138,6 +138,8 @@ struct fields3d {
     }
     return rv;
   }
+
+  real_t* data_;
 };
 
 template<typename R, typename L>
