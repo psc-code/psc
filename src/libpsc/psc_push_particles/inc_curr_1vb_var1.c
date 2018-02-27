@@ -13,16 +13,24 @@ namespace {
 
 #if DIM == DIM_1
 
-struct Current1vb {
-
-CUDA_DEVICE static void
-calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-       int *lf, int *lg, particle_t *prt, real_t *vxi)
+template<typename curr_cache_t>
+struct Current1vb
 {
-  // FIXME
-  //assert(0);
-}
+  using real_t = typename curr_cache_t::real_t;
+  
+  Current1vb(real_t dt)
+    : dt_(dt)
+  {}
+  
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+  {
+    // FIXME
+    //assert(0);
+  }
 
+private:
+  real_t dt_;
 };
 
 #elif DIM == DIM_YZ
@@ -135,92 +143,99 @@ curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
 // ----------------------------------------------------------------------
 // calc_j
 
-struct Current1vb {
-
-CUDA_DEVICE static void
-calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-       int *lf, int *lg, particle_t *prt, real_t *vxi)
-
+template<typename curr_cache_t>
+struct Current1vb
 {
-  // deposit xm -> xp
-  int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
-  int i[3] = { 0, lg[1], lg[2] };					
-  real_t dx[3] = { vxi[0] * c_prm.dt * c_prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
-  real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
-
-  real_t dx1[3];
-  int off[3];
-#ifdef __CUDACC__
-
-  real x1 = x[1] * idiff[1];
-  real x2 = x[2] * idiff[2];
-  int d_first = (std::abs(dx[2]) * (.5f - x1) >= std::abs(dx[1]) * (.5f - x2));
-
-  if (d_first == 0) {
-    off[1] = idiff[1];
-    off[2] = 0;
-  } else {
-    off[1] = 0;
-    off[2] = idiff[2];
-  }
-
-  calc_3d_dx1(dx1, x, dx, off);
-  curr_3d_vb_cell(curr_cache, i, x, dx1, prt->qni_wni);
-  curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+  using real_t = typename curr_cache_t::real_t;
   
-  off[1] = idiff[1] - off[1];
-  off[2] = idiff[2] - off[2];
-  calc_3d_dx1(dx1, x, dx, off);
-  curr_3d_vb_cell(curr_cache, i, x, dx1, prt->qni_wni);
-  curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+  Current1vb(real_t dt)
+    : dt_(dt)
+  {}
+  
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+  {
+    // deposit xm -> xp
+    int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
+    int i[3] = { 0, lg[1], lg[2] };					
+    real_t dx[3] = { vxi[0] * c_prm.dt * c_prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+    real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
     
-  curr_3d_vb_cell(curr_cache, i, x, dx, prt->qni_wni);
-
+    real_t dx1[3];
+    int off[3];
+#ifdef __CUDACC__
+    
+    real x1 = x[1] * idiff[1];
+    real x2 = x[2] * idiff[2];
+    int d_first = (std::abs(dx[2]) * (.5f - x1) >= std::abs(dx[1]) * (.5f - x2));
+    
+    if (d_first == 0) {
+      off[1] = idiff[1];
+      off[2] = 0;
+    } else {
+      off[1] = 0;
+      off[2] = idiff[2];
+    }
+    
+    calc_3d_dx1(dx1, x, dx, off);
+    curr_3d_vb_cell(curr_cache, i, x, dx1, prt->qni_wni);
+    curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+    
+    off[1] = idiff[1] - off[1];
+    off[2] = idiff[2] - off[2];
+    calc_3d_dx1(dx1, x, dx, off);
+    curr_3d_vb_cell(curr_cache, i, x, dx1, prt->qni_wni);
+    curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+    
+    curr_3d_vb_cell(curr_cache, i, x, dx, prt->qni_wni);
+    
 #else
-  int first_dir, second_dir = -1;
-  /* FIXME, make sure we never div-by-zero? */
-  if (idiff[1] == 0 && idiff[2] == 0) {
-    first_dir = -1;
-  } else if (idiff[1] == 0) {
-    first_dir = 2;
-  } else if (idiff[2] == 0) {
-    first_dir = 1;
-  } else {
-    dx1[1] = .5f * idiff[1] - x[1];
-    if (dx[1] == 0.f) {
-      dx1[2] = 0.f;
-    } else {
-      dx1[2] = dx[2] / dx[1] * dx1[1];
-    }
-    if (std::abs(x[2] + dx1[2]) > .5f) {
+    int first_dir, second_dir = -1;
+    /* FIXME, make sure we never div-by-zero? */
+    if (idiff[1] == 0 && idiff[2] == 0) {
+      first_dir = -1;
+    } else if (idiff[1] == 0) {
       first_dir = 2;
-    } else {
+    } else if (idiff[2] == 0) {
       first_dir = 1;
+    } else {
+      dx1[1] = .5f * idiff[1] - x[1];
+      if (dx[1] == 0.f) {
+	dx1[2] = 0.f;
+      } else {
+	dx1[2] = dx[2] / dx[1] * dx1[1];
+      }
+      if (std::abs(x[2] + dx1[2]) > .5f) {
+	first_dir = 2;
+      } else {
+	first_dir = 1;
+      }
+      second_dir = 3 - first_dir;
     }
-    second_dir = 3 - first_dir;
-  }
-  real_t qni_wni = particle_qni_wni(prt);
-
-  if (first_dir >= 0) {
-    off[3 - first_dir] = 0;
-    off[first_dir] = idiff[first_dir];
-    calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(curr_cache, i, x, dx1, qni_wni);
-    curr_3d_vb_cell_upd(i, x, dx1, dx, off);
-  }
-
-  if (second_dir >= 0) {
-    off[first_dir] = 0;
-    off[second_dir] = idiff[second_dir];
-    calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(curr_cache, i, x, dx1, qni_wni);
-    curr_3d_vb_cell_upd(i, x, dx1, dx, off);
-  }
-
-  curr_3d_vb_cell(curr_cache, i, x, dx, qni_wni);
+    real_t qni_wni = particle_qni_wni(prt);
+    
+    if (first_dir >= 0) {
+      off[3 - first_dir] = 0;
+      off[first_dir] = idiff[first_dir];
+      calc_3d_dx1(dx1, x, dx, off);
+      curr_3d_vb_cell(curr_cache, i, x, dx1, qni_wni);
+      curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+    }
+    
+    if (second_dir >= 0) {
+      off[first_dir] = 0;
+      off[second_dir] = idiff[second_dir];
+      calc_3d_dx1(dx1, x, dx, off);
+      curr_3d_vb_cell(curr_cache, i, x, dx1, qni_wni);
+      curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+    }
+    
+    curr_3d_vb_cell(curr_cache, i, x, dx, qni_wni);
 #endif
 }
 
+private:
+  real_t dt_;
 };
 
 #elif DIM == DIM_XYZ

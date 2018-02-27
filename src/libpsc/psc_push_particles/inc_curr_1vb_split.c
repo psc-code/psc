@@ -250,22 +250,30 @@ calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
 // ----------------------------------------------------------------------
 // calc_j
 
-struct Current1vb {
-
-CUDA_DEVICE __forceinline__ static void
-calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-       int *lf, int *lg, particle_t *prt, real_t *vxi)
+template<typename curr_cache_t>
+struct Current1vb
 {
-  real_t qni_wni = particle_qni_wni(prt);
-
+  using real_t = typename curr_cache_t::real_t;
+  
+  Current1vb(real_t dt)
+    : dt_(dt)
+  {}
+  
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+  {
+    real_t qni_wni = particle_qni_wni(prt);
+    
 #if DIM == DIM_YZ
-  xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
-  xp[0] = xm[0] + vxi[0] * c_prm.dt * c_prm.dxi[0];
-  calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
+    xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
+    xp[0] = xm[0] + vxi[0] * c_prm.dt * c_prm.dxi[0];
+    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
 #else
-  calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
+    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
 #endif
-}
-
+  }
+  
+private:
+  real_t dt_;
 };
 

@@ -75,7 +75,7 @@ c_prm_set(const Grid_t& grid)
   struct const_params prm;
 
   prm.dt = grid.dt;
-  prm.dqs = .5f * grid.eta * prm.dt;
+  prm.dqs = .5f * grid.eta * grid.dt;
   prm.fnqs = grid.fnqs;
 
   assert(grid.n_patches() > 0);

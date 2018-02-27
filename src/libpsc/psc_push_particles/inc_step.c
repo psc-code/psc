@@ -67,9 +67,11 @@ push_one(particles_t& prts, int n,
   using FieldsEM = typename C::FieldsEM;
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
+  using Current = Current1vb<curr_cache_t>;
 
   AdvanceParticle_t advance(prts.grid().dt);
   FieldsEM EM(flds_em);
+  Current current(prts.grid().dt);
 
   particle_t *prt;
   PARTICLE_LOAD(prt, prts, n);
@@ -121,7 +123,7 @@ push_one(particles_t& prts, int n,
   IF_DIM_X( lg[0] = ip.cx.g.l; );
   IF_DIM_Y( lg[1] = ip.cy.g.l; );
   IF_DIM_Z( lg[2] = ip.cz.g.l; );
-  Current1vb::calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
+  current.calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
 #ifdef PUSH_DIM
 #if !(PUSH_DIM & DIM_X)

@@ -71,61 +71,70 @@ calc_j_oop(curr_cache_t curr_cache, particle_t *prt, real_t *vxi)
 // ----------------------------------------------------------------------
 // calc_j
 
-struct Current1vb {
-
-static inline void
-calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-       int *lf, int *lg, particle_t *prt, real_t *vxi)
+template<typename curr_cache_t>
+struct Current1vb
 {
-  int i[2] = { lg[1], lg[2] };
-  int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
-  real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-  real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) }; 
+  using real_t = typename curr_cache_t::real_t;
+  
+  Current1vb(real_t dt)
+    : dt_(dt)
+  {}
+  
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+  {
+    int i[2] = { lg[1], lg[2] };
+    int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
+    real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
+    real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) }; 
 
-  real_t dx1[2];
-  int off[2];
-  int first_dir, second_dir = -1;
-  /* FIXME, make sure we never div-by-zero? */
-  if (idiff[0] == 0 && idiff[1] == 0) {
-    first_dir = -1;
-  } else if (idiff[0] == 0) {
-    first_dir = 1;							
-  } else if (idiff[1] == 0) {
-    first_dir = 0;
-  } else {
-    dx1[0] = .5f * idiff[0] - x[0];
-    if (dx[0] == 0.f) {
-      dx1[1] = 0.f;
-    } else {
-      dx1[1] = dx[1] / dx[0] * dx1[0];
-    }
-    if (std::abs(x[1] + dx1[1]) > .5f) {
-      first_dir = 1;
-    } else {
+    real_t dx1[2];
+    int off[2];
+    int first_dir, second_dir = -1;
+    /* FIXME, make sure we never div-by-zero? */
+    if (idiff[0] == 0 && idiff[1] == 0) {
+      first_dir = -1;
+    } else if (idiff[0] == 0) {
+      first_dir = 1;							
+    } else if (idiff[1] == 0) {
       first_dir = 0;
+    } else {
+      dx1[0] = .5f * idiff[0] - x[0];
+      if (dx[0] == 0.f) {
+	dx1[1] = 0.f;
+      } else {
+	dx1[1] = dx[1] / dx[0] * dx1[0];
+      }
+      if (std::abs(x[1] + dx1[1]) > .5f) {
+	first_dir = 1;
+      } else {
+	first_dir = 0;
+      }
+      second_dir = 1 - first_dir;
     }
-    second_dir = 1 - first_dir;
+
+    real_t fnq[2] = { particle_qni_wni(prt) * c_prm.fnqys,
+		      particle_qni_wni(prt) * c_prm.fnqzs };
+
+    if (first_dir >= 0) {
+      off[1-first_dir] = 0;
+      off[first_dir] = idiff[first_dir];
+      calc_dx1(dx1, x, dx, off);
+      curr_2d_vb_cell(curr_cache, i, x, dx1, fnq, dx, off);
+    }
+
+    if (second_dir >= 0) {
+      off[first_dir] = 0;
+      off[second_dir] = idiff[second_dir];
+      calc_dx1(dx1, x, dx, off);
+      curr_2d_vb_cell(curr_cache, i, x, dx1, fnq, dx, off);
+    }
+
+    curr_2d_vb_cell(curr_cache, i, x, dx, fnq, NULL, NULL);
   }
 
-  real_t fnq[2] = { particle_qni_wni(prt) * c_prm.fnqys,
-		    particle_qni_wni(prt) * c_prm.fnqzs };
-
-  if (first_dir >= 0) {
-    off[1-first_dir] = 0;
-    off[first_dir] = idiff[first_dir];
-    calc_dx1(dx1, x, dx, off);
-    curr_2d_vb_cell(curr_cache, i, x, dx1, fnq, dx, off);
-  }
-
-  if (second_dir >= 0) {
-    off[first_dir] = 0;
-    off[second_dir] = idiff[second_dir];
-    calc_dx1(dx1, x, dx, off);
-    curr_2d_vb_cell(curr_cache, i, x, dx1, fnq, dx, off);
-  }
-
-  curr_2d_vb_cell(curr_cache, i, x, dx, fnq, NULL, NULL);
-}
+private:
+  real_t dt_;
 
 };
 
