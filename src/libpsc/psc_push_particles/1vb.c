@@ -72,8 +72,7 @@ void push_p_ops<C>::push_mprts(typename C::Mparticles& mprts,
 }
 
 template<typename C>
-void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
-			       struct psc_mparticles *mprts,
+void push_p_ops<C>::push_mprts(struct psc_mparticles *mprts,
 			       struct psc_mfields *mflds_base)
 {
   auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
@@ -83,8 +82,7 @@ void push_p_ops<C>::push_mprts(struct psc_push_particles *push,
 }
 
 template<typename C>
-void push_p_ops<C>::stagger_mprts(struct psc_push_particles *push,
-				  struct psc_mparticles *mprts,
+void push_p_ops<C>::stagger_mprts(struct psc_mparticles *mprts,
 				  struct psc_mfields *mflds_base)
 {
   auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
