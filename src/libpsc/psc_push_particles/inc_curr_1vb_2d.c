@@ -71,7 +71,7 @@ struct Current1vb
   {
     int lf[3];
     real_t of[3];
-    PI::find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
+    PI<real_t>::find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
     
     real_t fnqx = vxi[0] * particle_qni_wni(prt) * fnqs_;
     curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);

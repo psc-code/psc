@@ -4,18 +4,18 @@
 #include "inc_params.c"
 #include "pushp.hxx"
 
+template<typename real_t>
 class PI
 {
 public:
   // ----------------------------------------------------------------------
   // find_idx_off_1st_rel
 
-  template<typename R>
   CUDA_DEVICE static inline void
-  find_idx_off_1st_rel(R xi[3], int lg[3], R og[3], R shift)
+  find_idx_off_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t shift)
   {
     for (int d = 0; d < 3; d++) {
-      R pos = xi[d] * c_prm.dxi[d] + shift;
+      real_t pos = xi[d] * c_prm.dxi[d] + shift;
       lg[d] = fint(pos);
       og[d] = pos - lg[d];
     }
@@ -24,9 +24,8 @@ public:
   // ----------------------------------------------------------------------
   // find_idx_off_pos_1st_rel
 
-  template<typename R>
   CUDA_DEVICE static inline void
-  find_idx_off_pos_1st_rel(R xi[3], int lg[3], R og[3], R pos[3], R shift)
+  find_idx_off_pos_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t pos[3], real_t shift)
   {
     for (int d = 0; d < 3; d++) {
       pos[d] = xi[d] * c_prm.dxi[d] + shift;
