@@ -189,7 +189,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     fields_t flds_old = mf_old[ctx->recv_info[p].patch];
     fields_t flds_new = mf_new[p];
     Fields F_old(flds_old), F_new(flds_new);
-    assert(flds_old.nr_comp == flds_new.nr_comp);
+    assert(flds_old.n_comps() == flds_new.n_comps());
     assert(flds_old.size() == flds_new.size());
     int size = flds_old.size();
     int *ib = flds_new.ib;

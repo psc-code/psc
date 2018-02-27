@@ -14,7 +14,7 @@ public:
 
   Fields3d(fields_t f)
     : data_(f.data()),
-      n_comp_(f.nr_comp)
+      n_comp_(f.n_comps())
   {
     for (int d = 0; d < 3; d++) {
       ib[d] = f.ib[d];

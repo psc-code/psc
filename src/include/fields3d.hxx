@@ -29,14 +29,13 @@ struct fields3d {
   using layout = L;
 
   int ib[3], im[3]; //> lower bounds and length per direction
-  int nr_comp; //> nr of components
 
-  fields3d(const int _ib[3], const int _im[3], int _n_comps,
+  fields3d(const int _ib[3], const int _im[3], int n_comps,
 	   real_t* data=nullptr)
     : ib{ _ib[0], _ib[1], _ib[2] },
       im{ _im[0], _im[1], _im[2] },
-      nr_comp{_n_comps},
-      data_(data)
+      n_comps_{n_comps},
+      data_{data}
   {
     if (!data_) {
       data_ = (real_t *) calloc(size(), sizeof(*data_));
@@ -54,16 +53,9 @@ struct fields3d {
 
   real_t* data() { return data_; }
   int index(int m, int i, int j, int k) const;
-
-  int size()
-  {
-    return nr_comp * im[0] * im[1] * im[2];
-  }
-
-  int n_cells()
-  {
-    return im[0] * im[1] * im[2];
-  }
+  int n_comps() const { return n_comps_; }
+  int n_cells() const { return im[0] * im[1] * im[2]; }
+  int size()    const { return n_comps() * n_cells(); }
 
   void zero(int m)
   {
@@ -140,13 +132,14 @@ struct fields3d {
   }
 
   real_t* data_;
+  int n_comps_; // # of components
 };
 
 template<typename R, typename L>
 int fields3d<R, L>::index(int m, int i, int j, int k) const
 {
 #ifdef BOUNDS_CHECK
-  assert(m >= 0 && m < n_comp_);
+  assert(m >= 0 && m < n_comps_);
   assert(i >= ib[0] && i < ib[0] + im[0]);
   assert(j >= ib[1] && j < ib[1] + im[1]);
   assert(k >= ib[2] && k < ib[2] + im[2]);
@@ -155,7 +148,7 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
   if (L::isAOS::value) {
     return (((((k - ib[2])) * im[1] +
 	      (j - ib[1])) * im[0] +
-	     (i - ib[0])) * nr_comp + m);
+	     (i - ib[0])) * n_comps_ + m);
   } else {
     return (((((m) * im[2] +
 	       (k - ib[2])) * im[1] +
