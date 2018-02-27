@@ -478,14 +478,12 @@ void Current<order, dim, IP, Fields>::calc(opt_order_2nd o, dim_xyz d, Fields& J
   }
  }
 
-template<typename dim>
+template<typename fields_t, typename dim>
 struct CacheFields;
 
-template<>
-struct CacheFields<dim_yz>
+template<typename fields_t>
+struct CacheFields<fields_t, dim_yz>
 {
-  using fields_t = typename mfields_t::fields_t;
-  
   static fields_t from_em(fields_t flds)
   {
     fields_t fld = fields_t(flds.ib, flds.im, 9);
@@ -521,11 +519,9 @@ struct CacheFields<dim_yz>
   }
 };
 
-template<typename dim>
+template<typename fields_t, typename dim>
 struct CacheFieldsNone
 {
-  using fields_t = typename mfields_t::fields_t;
-
   static fields_t from_em(fields_t flds)
   {
     return flds;
