@@ -170,7 +170,8 @@ struct Current
   using Real3 = Vec3<real_t>;
 
   Current(const Grid_t& grid)
-    : dxi_{ Real3{1., 1. , 1.} / grid.dx }
+    : dxi_{ Real3{1., 1. , 1.} / grid.dx },
+      fnqs_{grid.fnqs}
   {}
 
   void charge_before(const IP& ip)
@@ -189,9 +190,9 @@ struct Current
 
   void prep(real_t qni_wni, real_t vv[3])
   {
-    x.prep(qni_wni, vv[0], c_prm.fnqxs, c_prm.fnqs);
-    y.prep(qni_wni, vv[1], c_prm.fnqys, c_prm.fnqs);
-    z.prep(qni_wni, vv[2], c_prm.fnqzs, c_prm.fnqs);
+    x.prep(qni_wni, vv[0], c_prm.fnqxs, fnqs_);
+    y.prep(qni_wni, vv[1], c_prm.fnqys, fnqs_);
+    z.prep(qni_wni, vv[2], c_prm.fnqzs, fnqs_);
   }
 
   void calc(Fields& J)
@@ -216,6 +217,7 @@ struct Current
 
 private:
   Real3 dxi_;
+  real_t fnqs_;
 };
 
 // ======================================================================

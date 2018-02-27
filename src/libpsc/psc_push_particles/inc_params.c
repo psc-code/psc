@@ -46,7 +46,6 @@ using opt_calcj = opt_calcj_1vb_2d;
 #define MAX_NR_KINDS (10)
 
 struct const_params {
-  real_t fnqs;
   real_t fnqxs, fnqys, fnqzs;
   real_t dxi[3];
 };
@@ -71,8 +70,6 @@ static void
 c_prm_set(const Grid_t& grid)
 {
   struct const_params prm;
-
-  prm.fnqs = grid.fnqs;
 
   assert(grid.n_patches() > 0);
 

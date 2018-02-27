@@ -18,8 +18,8 @@ struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
   
-  Current1vb(real_t dt)
-    : dt_(dt)
+  Current1vb(const Grid_t& grid)
+    : dt_(grid.dt)
   {}
   
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
@@ -148,8 +148,8 @@ struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
   
-  Current1vb(real_t dt)
-    : dt_(dt)
+  Current1vb(const Grid_t& grid)
+    : dt_(grid.dt)
   {}
   
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,

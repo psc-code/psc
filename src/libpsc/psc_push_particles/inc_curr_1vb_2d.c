@@ -9,6 +9,16 @@
 
 #if DIM == DIM_YZ
 
+template<typename curr_cache_t>
+struct Current1vb
+{
+  using real_t = typename curr_cache_t::real_t;
+  
+  Current1vb(const Grid_t& grid)
+    : dt_(grid.dt),
+      fnqs_(grid.fnqs)
+  {}
+  
 // ----------------------------------------------------------------------
 // calc_dx1
 
@@ -51,35 +61,25 @@ curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
   }
 }
 
-// ----------------------------------------------------------------------
-// calc_j_oop
+  // ----------------------------------------------------------------------
+  // calc_j_oop
 
-static inline void
-calc_j_oop(curr_cache_t curr_cache, particle_t *prt, real_t *vxi)
-{
-  int lf[3];
-  real_t of[3];
-  find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
+  void calc_j_oop(curr_cache_t curr_cache, particle_t *prt, real_t *vxi)
+  {
+    int lf[3];
+    real_t of[3];
+    find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
+    
+    real_t fnqx = vxi[0] * particle_qni_wni(prt) * fnqs_;
+    curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+    curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+    curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+    curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+  }
 
-  real_t fnqx = vxi[0] * particle_qni_wni(prt) * c_prm.fnqs;
-  curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-  curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-  curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-  curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
-}
+  // ----------------------------------------------------------------------
+  // calc_j
 
-// ----------------------------------------------------------------------
-// calc_j
-
-template<typename curr_cache_t>
-struct Current1vb
-{
-  using real_t = typename curr_cache_t::real_t;
-  
-  Current1vb(real_t dt)
-    : dt_(dt)
-  {}
-  
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, particle_t *prt, real_t *vxi)
   {
@@ -135,7 +135,7 @@ struct Current1vb
 
 private:
   real_t dt_;
-
+  real_t fnqs_;
 };
 
 #endif

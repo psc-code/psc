@@ -71,7 +71,7 @@ push_one(particles_t& prts, int n,
 
   AdvanceParticle_t advance(prts.grid().dt);
   FieldsEM EM(flds_em);
-  Current current(prts.grid().dt);
+  Current current(prts.grid());
 
   particle_t *prt;
   PARTICLE_LOAD(prt, prts, n);
@@ -104,7 +104,7 @@ push_one(particles_t& prts, int n,
   advance.push_x(&prt->xi, vxi, .5f);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-  calc_j_oop(curr_cache, prt, vxi);
+  current.calc_j_oop(curr_cache, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   advance.push_x(&prt->xi, vxi, .5f);
