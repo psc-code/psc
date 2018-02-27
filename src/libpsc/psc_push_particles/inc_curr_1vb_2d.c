@@ -22,47 +22,47 @@ struct Current1vb
     fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
   }
   
-// ----------------------------------------------------------------------
-// calc_dx1
+  // ----------------------------------------------------------------------
+  // calc_dx1
 
-static inline void
-calc_dx1(real_t dx1[2], real_t x[2], real_t dx[2], int off[2])
-{
-  if (off[1] == 0) {
-    dx1[0] = .5f * off[0] - x[0];
-   if (dx[0] == 0.f) {
-    dx1[1] = 0.f;
-   } else {
-    dx1[1] = dx[1] / dx[0] * dx1[0];
-   }
-  } else {
-    dx1[1] = .5f * off[1] - x[1];
-   if (dx[1] == 0.f) {
-    dx1[0] = 0.f;
-   } else {
-    dx1[0] = dx[0] / dx[1] * dx1[1];
-   }
+  static inline void
+  calc_dx1(real_t dx1[2], real_t x[2], real_t dx[2], int off[2])
+  {
+    if (off[1] == 0) {
+      dx1[0] = .5f * off[0] - x[0];
+      if (dx[0] == 0.f) {
+	dx1[1] = 0.f;
+      } else {
+	dx1[1] = dx[1] / dx[0] * dx1[0];
+      }
+    } else {
+      dx1[1] = .5f * off[1] - x[1];
+      if (dx[1] == 0.f) {
+	dx1[0] = 0.f;
+      } else {
+	dx1[0] = dx[0] / dx[1] * dx1[1];
+      }
+    }
   }
-}
 
-static inline void
-curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
-		real_t fnq[2], real_t dxt[2], int off[2])
-{
-  curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]  , fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]));
-  curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]+1, fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]));
-  curr_cache_add(curr_cache, 2, 0,i[0]  ,i[1]  , fnq[1] * dx[1] * (.5f - x[0] - .5f * dx[0]));
-  curr_cache_add(curr_cache, 2, 0,i[0]+1,i[1]  , fnq[1] * dx[1] * (.5f + x[0] + .5f * dx[0]));
+  static inline void
+  curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
+		  real_t fnq[2], real_t dxt[2], int off[2])
+  {
+    curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]  , fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]));
+    curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]+1, fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]));
+    curr_cache_add(curr_cache, 2, 0,i[0]  ,i[1]  , fnq[1] * dx[1] * (.5f - x[0] - .5f * dx[0]));
+    curr_cache_add(curr_cache, 2, 0,i[0]+1,i[1]  , fnq[1] * dx[1] * (.5f + x[0] + .5f * dx[0]));
 
-  if (dxt) {
-    dxt[0] -= dx[0];
-    dxt[1] -= dx[1];
-    x[0] += dx[0] - off[0];
-    x[1] += dx[1] - off[1];
-    i[0] += off[0];
-    i[1] += off[1];
+    if (dxt) {
+      dxt[0] -= dx[0];
+      dxt[1] -= dx[1];
+      x[0] += dx[0] - off[0];
+      x[1] += dx[1] - off[1];
+      i[0] += off[0];
+      i[1] += off[1];
+    }
   }
-}
 
   // ----------------------------------------------------------------------
   // calc_j_oop

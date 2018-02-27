@@ -48,109 +48,109 @@ struct Current1vb
     fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
   }
   
-CUDA_DEVICE static inline void
-calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
-{
+  CUDA_DEVICE static inline void
+  calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
+  {
 #ifdef __CUDACC__
-  if (off[1] == 0) {
-    if (off[2] == 0 || dx[2] == 0.f) {
-      dx1[0] = 0.f;
-      dx1[1] = 0.f;
-      dx1[2] = 0.f;
-    } else {
-      dx1[2] = .5f * off[2] - x[2];
-      dx1[1] = dx[1] / dx[2] * dx1[2];
-      dx1[0] = dx[0] / dx[2] * dx1[2];
+    if (off[1] == 0) {
+      if (off[2] == 0 || dx[2] == 0.f) {
+	dx1[0] = 0.f;
+	dx1[1] = 0.f;
+	dx1[2] = 0.f;
+      } else {
+	dx1[2] = .5f * off[2] - x[2];
+	dx1[1] = dx[1] / dx[2] * dx1[2];
+	dx1[0] = dx[0] / dx[2] * dx1[2];
+      }
+    } else { // off[1] != 0
+      if (dx[1] == 0.f) {
+	dx1[0] = 0.f;
+	dx1[1] = 0.f;
+	dx1[2] = 0.f;
+      } else {
+	dx1[1] = .5f * off[1] - x[1];
+	dx1[2] = dx[2] / dx[1] * dx1[1];
+	dx1[0] = dx[0] / dx[1] * dx1[1];
+      }
     }
-  } else { // off[1] != 0
-    if (dx[1] == 0.f) {
-      dx1[0] = 0.f;
-      dx1[1] = 0.f;
-      dx1[2] = 0.f;
-    } else {
-      dx1[1] = .5f * off[1] - x[1];
-      dx1[2] = dx[2] / dx[1] * dx1[1];
-      dx1[0] = dx[0] / dx[1] * dx1[1];
-    }
-  }
 
 #else
 
-  if (off[2] == 0) {
-    dx1[1] = .5f * off[1] - x[1];
-    if (dx[1] == 0.f) {
-      dx1[0] = 0.f;
-      dx1[2] = 0.f;
+    if (off[2] == 0) {
+      dx1[1] = .5f * off[1] - x[1];
+      if (dx[1] == 0.f) {
+	dx1[0] = 0.f;
+	dx1[2] = 0.f;
+      } else {
+	dx1[0] = dx[0] / dx[1] * dx1[1];
+	dx1[2] = dx[2] / dx[1] * dx1[1];
+      }
     } else {
-      dx1[0] = dx[0] / dx[1] * dx1[1];
-      dx1[2] = dx[2] / dx[1] * dx1[1];
+      dx1[2] = .5f * off[2] - x[2];
+      if (dx[2] == 0.f) {
+	dx1[0] = 0.f;
+	dx1[1] = 0.f;
+      } else {
+	dx1[0] = dx[0] / dx[2] * dx1[2];
+	dx1[1] = dx[1] / dx[2] * dx1[2];
+      }
     }
-  } else {
-    dx1[2] = .5f * off[2] - x[2];
-    if (dx[2] == 0.f) {
-      dx1[0] = 0.f;
-      dx1[1] = 0.f;
-    } else {
-      dx1[0] = dx[0] / dx[2] * dx1[2];
-      dx1[1] = dx[1] / dx[2] * dx1[2];
-    }
-  }
 #endif
-}
+  }
 
-// ----------------------------------------------------------------------
-// curr_3d_vb_cell
+  // ----------------------------------------------------------------------
+  // curr_3d_vb_cell
 
   void curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
 		       real_t qni_wni)
-{
-  real_t xa[3] = { 0.,
-			    x[1] + .5f * dx[1],
-			    x[2] + .5f * dx[2], };
+  {
+    real_t xa[3] = { 0.,
+		     x[1] + .5f * dx[1],
+		     x[2] + .5f * dx[2], };
 #ifdef __CUDACC__
-  if (dx[0] != 0.f)
+    if (dx[0] != 0.f)
 #endif
-    {
-      real_t fnqx = qni_wni * fnqxs_;
-      real_t h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-      curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-      curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
-      curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
-    }
+      {
+	real_t fnqx = qni_wni * fnqxs_;
+	real_t h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
+	curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+	curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+	curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
+	curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
+      }
 #ifdef __CUDACC__
-  if (dx[1] != 0.f)
+    if (dx[1] != 0.f)
 #endif
-    {
-      real_t fnqy = qni_wni * fnqys_;
-      curr_cache_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-      curr_cache_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
-    }
+      {
+	real_t fnqy = qni_wni * fnqys_;
+	curr_cache_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+	curr_cache_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
+      }
 #ifdef __CUDACC__
-  if (dx[2] != 0.f)
+    if (dx[2] != 0.f)
 #endif
-    {
-      real_t fnqz = qni_wni * fnqzs_;
-      curr_cache_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
-      curr_cache_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
-    }
-}
+      {
+	real_t fnqz = qni_wni * fnqzs_;
+	curr_cache_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+	curr_cache_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
+      }
+  }
 
-// ----------------------------------------------------------------------
-// curr_3d_vb_cell_upd
+  // ----------------------------------------------------------------------
+  // curr_3d_vb_cell_upd
 
-CUDA_DEVICE static void
-curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
-		    real_t dx[3], int off[3])
-{
-  dx[0] -= dx1[0];
-  dx[1] -= dx1[1];
-  dx[2] -= dx1[2];
-  x[1] += dx1[1] - off[1];
-  x[2] += dx1[2] - off[2];
-  i[1] += off[1];
-  i[2] += off[2];
-}
+  CUDA_DEVICE static void
+  curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
+		      real_t dx[3], int off[3])
+  {
+    dx[0] -= dx1[0];
+    dx[1] -= dx1[1];
+    dx[2] -= dx1[2];
+    x[1] += dx1[1] - off[1];
+    x[2] += dx1[2] - off[2];
+    i[1] += off[1];
+    i[2] += off[2];
+  }
 
   // ----------------------------------------------------------------------
   // calc_j
@@ -235,7 +235,7 @@ curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
     
     curr_3d_vb_cell(curr_cache, i, x, dx, qni_wni);
 #endif
-}
+  }
 
 private:
   real_t dt_;
@@ -263,22 +263,22 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 // TBD: piece to save block_idx as we go for following sort
 
 #if 0
-  // save block_idx for new particle position at x^(n+1.5)
-  unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
-  unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
-  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+// save block_idx for new particle position at x^(n+1.5)
+unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
+unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
+int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
-  int block_idx;
-  if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
-    block_idx = CUDA_BND_S_OOB;
-  } else {
-    int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
-    int b_diff = bid - bidx + prm.b_mx[1] + 1;
-    int d1 = b_diff % prm.b_mx[1];
-    int d2 = b_diff / prm.b_mx[1];
-    block_idx = d2 * 3 + d1;
-  }
-  d_bidx[n] = block_idx;
+int block_idx;
+if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+  block_idx = CUDA_BND_S_OOB;
+ } else {
+  int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
+  int b_diff = bid - bidx + prm.b_mx[1] + 1;
+  int d1 = b_diff % prm.b_mx[1];
+  int d2 = b_diff / prm.b_mx[1];
+  block_idx = d2 * 3 + d1;
+ }
+d_bidx[n] = block_idx;
 #endif
 
 }
