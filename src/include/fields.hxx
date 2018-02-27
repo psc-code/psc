@@ -14,13 +14,9 @@ public:
 
   Fields3d(fields_t f)
     : data_(f.data()),
-      n_comp_(f.n_comps())
-  {
-    for (int d = 0; d < 3; d++) {
-      ib[d] = f.ib[d];
-      im[d] = f.im[d];
-    }
-  }
+      n_comp_(f.n_comps()),
+      ib(f.ib), im(f.im)
+  {}
 
   const real_t operator()(int m, int i, int j, int k) const
   {
@@ -54,7 +50,7 @@ private:
 
 private:
   real_t *data_;
-  int ib[3], im[3];
+  Int3 ib, im;
   int n_comp_;
   int first_comp_;
 };

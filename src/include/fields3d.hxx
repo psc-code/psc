@@ -28,12 +28,10 @@ struct fields3d {
   using real_t = R;
   using layout = L;
 
-  int ib[3], im[3]; //> lower bounds and length per direction
-
-  fields3d(const int _ib[3], const int _im[3], int n_comps,
-	   real_t* data=nullptr)
-    : ib{ _ib[0], _ib[1], _ib[2] },
-      im{ _im[0], _im[1], _im[2] },
+  Int3 ib, im; //> lower bounds and length per direction
+  
+  fields3d(Int3 _ib, Int3 _im, int n_comps, real_t* data=nullptr)
+    : ib{_ib}, im{_im},
       n_comps_{n_comps},
       data_{data}
   {
