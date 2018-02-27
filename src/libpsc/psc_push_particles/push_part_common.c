@@ -5,8 +5,6 @@
 
 #define CACHE_EM_J 1
 
-using real_t = mparticles_t::real_t;
-
 #include "fields.hxx"
 #include "inc_params.c"
 #include "inc_push.c"
@@ -110,7 +108,8 @@ private:
 template<typename order, typename IP, typename Invar>
 struct CurrentDir
 {
-  using Rho1d_t = Rho1d<typename IP::real_t, order>;
+  using real_t = typename IP::real_t;
+  using Rho1d_t = Rho1d<real_t, order>;
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   void charge_before(ip_coeff_t g)
@@ -147,6 +146,7 @@ struct CurrentDir
 template<typename order, typename IP>
 struct CurrentDir<order, IP, std::true_type>
 {
+  using real_t = typename IP::real_t;
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   void charge_before(ip_coeff_t g) {}
@@ -167,6 +167,7 @@ struct CurrentDir<order, IP, std::true_type>
 template<typename order, typename dim, typename IP, typename Fields>
 struct Current
 {
+  using real_t = typename IP::real_t;
   using Real3 = Vec3<real_t>;
 
   Current(const Grid_t& grid)
@@ -545,6 +546,7 @@ struct PushParticles__
   using Mfields = typename C::Mfields;
   using fields_t = typename Mfields::fields_t;
   using CacheFields_t = typename C::CacheFields;
+  using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
 
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
