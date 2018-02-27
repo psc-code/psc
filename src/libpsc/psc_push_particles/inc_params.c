@@ -40,34 +40,3 @@ using opt_calcj = opt_calcj_1vb_2d;
   do { *(addr) += (val); } while (0)
 
 
-// ----------------------------------------------------------------------
-// c_prm: constant parameters
-
-#define MAX_NR_KINDS (10)
-
-struct params_1vb {
-  // particle-related
-  int b_mx[3];
-
-  // field-related
-  int mx[3];
-  int ilg[3];
-};
-
-CUDA_CONSTANT static struct params_1vb prm;
-
-// ----------------------------------------------------------------------
-// params_1vb
-
-static void _mrc_unused
-params_1vb_set(const Grid_t& grid)
-{
-  struct params_1vb params;
-
-#ifndef __CUDACC__
-  prm = params;
-#else
-  check(cudaMemcpyToSymbol(prm, &params, sizeof(prm)));
-#endif
-}
-

@@ -1,6 +1,8 @@
 
 #include "psc_debug.h"
 
+#define MAX_NR_KINDS (10)
+
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
   prt = &mprts_arr[n]
 
