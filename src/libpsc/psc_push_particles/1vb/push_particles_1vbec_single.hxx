@@ -23,8 +23,7 @@ struct PushParticles1vbecSingle : PushParticles_<push_p_ops_1vbec_single_>
 
   void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base) override
   {
-    push_p_ops<push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_xyz,
-			     opt_ip_1st_ec, opt_order_1st, opt_calcj_1vb_split>>::push_mprts(nullptr, mprts, mflds_base);
+    push_p_ops<Config1vbecSingleXZ>::push_mprts(nullptr, mprts, mflds_base);
   }
 
   static void push_mprts_xz(struct psc_push_particles *push,

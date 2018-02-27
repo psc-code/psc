@@ -10,11 +10,14 @@ struct CacheFieldsNone;
 template<typename dim>
 struct CacheFields;
 
+#include "fields.hxx"
+
 template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
 	 typename CALCJ = opt_calcj_esirkepov,
 	 typename OPT_EXT = opt_ext_none,
-	 typename CF = CacheFieldsNone<D>>
+	 typename CF = CacheFieldsNone<D>,
+	 typename EM = Fields3d<typename MF::fields_t>>
 struct push_p_config
 {
   using Mparticles = typename MP::sub_t;
@@ -25,6 +28,8 @@ struct push_p_config
   using calcj = CALCJ;
   using ext = OPT_EXT;
   using CacheFields = CF;
+
+  using FieldsEM = EM;
 };
 
 #include "psc_particles_double.h"
@@ -49,3 +54,9 @@ template<typename dim>
 using Config1vbecSingle = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim, opt_ip_1st_ec,
 					opt_order_1st, opt_calcj_1vb_var1>;
 
+using Config1vbecSingleXZ = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_xyz, opt_ip_1st_ec, opt_order_1st,
+					  opt_calcj_1vb_split, opt_ext_none, CacheFieldsNone<dim_xyz>,
+					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>>;
+using Config1vbecSingle1 = push_p_config<PscMparticlesSingle, PscMfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st,
+					 opt_calcj_1vb_var1, opt_ext_none, CacheFieldsNone<dim_1>,
+					 Fields3d<typename MfieldsSingle::fields_t, dim_1>>;

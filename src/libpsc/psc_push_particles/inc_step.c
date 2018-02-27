@@ -64,6 +64,7 @@ push_one(particles_t& prts, int n,
 	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
   using dim = typename C::dim;
+  static_assert(std::is_same<FieldsEM, typename C::FieldsEM>::value, "no");
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
 

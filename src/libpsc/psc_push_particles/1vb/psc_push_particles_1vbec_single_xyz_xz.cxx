@@ -16,8 +16,7 @@
 #define CURR_CACHE_DIM DIM_XZ
 #define CALC_J CALC_J_1VB_SPLIT
 
-using push_p_conf = push_p_config<mparticles_t, mfields_t, dim_xyz, opt_ip_1st_ec, opt_order_1st,
-				  opt_calcj_1vb_split>;
+using push_p_conf = Config1vbecSingleXZ;
 
 #include "../1vb.c"
 

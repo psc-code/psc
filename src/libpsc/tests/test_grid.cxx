@@ -200,7 +200,7 @@ class PushParticlesTest : public ::testing::Test
 
 struct Test1vbecSingle
 {
-  using PushParticles = push_p_ops<Config1vbecSingle<dim_1>>;
+  using PushParticles = push_p_ops<Config1vbecSingle1>;
 };
 
 struct Test1vbecDouble
