@@ -121,7 +121,7 @@ push_one(particles_t& prts, int n,
   IF_DIM_X( lg[0] = ip.cx.g.l; );
   IF_DIM_Y( lg[1] = ip.cy.g.l; );
   IF_DIM_Z( lg[2] = ip.cz.g.l; );
-  calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
+  Current1vb::calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
 #ifdef PUSH_DIM
 #if !(PUSH_DIM & DIM_X)

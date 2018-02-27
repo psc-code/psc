@@ -1,4 +1,6 @@
 
+namespace {
+
 // ======================================================================
 // 1vb current deposition "var1"
 //
@@ -11,6 +13,8 @@
 
 #if DIM == DIM_1
 
+struct Current1vb {
+
 CUDA_DEVICE static void
 calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
        int *lf, int *lg, particle_t *prt, real_t *vxi)
@@ -18,6 +22,8 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
   // FIXME
   //assert(0);
 }
+
+};
 
 #elif DIM == DIM_YZ
 
@@ -129,6 +135,8 @@ curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
 // ----------------------------------------------------------------------
 // calc_j
 
+struct Current1vb {
+
 CUDA_DEVICE static void
 calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
        int *lf, int *lg, particle_t *prt, real_t *vxi)
@@ -213,6 +221,7 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 #endif
 }
 
+};
 
 #elif DIM == DIM_XYZ
 
@@ -253,3 +262,4 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
   d_bidx[n] = block_idx;
 #endif
 
+}

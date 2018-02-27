@@ -71,6 +71,8 @@ calc_j_oop(curr_cache_t curr_cache, particle_t *prt, real_t *vxi)
 // ----------------------------------------------------------------------
 // calc_j
 
+struct Current1vb {
+
 static inline void
 calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
        int *lf, int *lg, particle_t *prt, real_t *vxi)
@@ -124,5 +126,7 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 
   curr_2d_vb_cell(curr_cache, i, x, dx, fnq, NULL, NULL);
 }
+
+};
 
 #endif

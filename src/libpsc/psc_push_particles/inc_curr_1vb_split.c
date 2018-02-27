@@ -250,6 +250,8 @@ calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
 // ----------------------------------------------------------------------
 // calc_j
 
+struct Current1vb {
+
 CUDA_DEVICE __forceinline__ static void
 calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
        int *lf, int *lg, particle_t *prt, real_t *vxi)
@@ -264,4 +266,6 @@ calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
   calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
 #endif
 }
+
+};
 
