@@ -16,7 +16,8 @@ struct Current1vb
   
   Current1vb(const Grid_t& grid)
     : dt_(grid.dt),
-      fnqs_(grid.fnqs)
+      fnqs_(grid.fnqs),
+      pi_(grid)
   {
     fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
     fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
@@ -71,8 +72,7 @@ struct Current1vb
   {
     int lf[3];
     real_t of[3];
-    PI<real_t> pi;
-    pi.find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
+    pi_.find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
     
     real_t fnqx = vxi[0] * particle_qni_wni(prt) * fnqs_;
     curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
@@ -141,6 +141,7 @@ private:
   real_t dt_;
   real_t fnqs_;
   real_t fnqys_, fnqzs_;
+  PI<real_t> pi_;
 };
 
 #endif

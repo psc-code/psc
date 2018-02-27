@@ -73,7 +73,7 @@ push_one(particles_t& prts, int n,
   AdvanceParticle_t advance(prts.grid().dt);
   FieldsEM EM(flds_em);
   Current current(prts.grid());
-  PI<real_t> pi;
+  PI<real_t> pi(prts.grid());
   Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
 
   particle_t *prt;

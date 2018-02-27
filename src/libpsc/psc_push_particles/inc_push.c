@@ -8,6 +8,12 @@ template<typename real_t>
 class PI
 {
 public:
+  using Real3 = Vec3<real_t>;
+  
+  PI(const Grid_t& grid)
+    : dxi_{ Real3{ 1., 1., 1. } / Real3(grid.dx) }
+  {}
+  
   // ----------------------------------------------------------------------
   // find_idx_off_1st_rel
 
@@ -31,5 +37,8 @@ public:
       og[d] = pos[d] - lg[d];
     }
   }
+
+private:
+  Real3 dxi_;
 };
 
