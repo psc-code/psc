@@ -21,7 +21,3 @@
 #define BLOCKGSIZE_Y (BLOCKSIZE_Y + 2 * BLOCKBND_Y)
 #define BLOCKGSIZE_Z (BLOCKSIZE_Z + 2 * BLOCKBND_Z)
 
-// ----------------------------------------------------------------------
-
-using em_cache_t = mfields_t::fields_t;
-
