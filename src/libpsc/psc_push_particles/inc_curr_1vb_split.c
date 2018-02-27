@@ -5,9 +5,11 @@ template<typename curr_cache_t>
 struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
+  using Real3 = Vec3<real_t>;
   
-Current1vb(const Grid_t& grid)
-: dt_(grid.dt)
+  Current1vb(const Grid_t& grid)
+    : dt_(grid.dt),
+      dxi_{ Real3{1., 1. , 1.} / Real3(grid.dx) }
   {
     fnqxs_ = grid.dx[0] * grid.fnqs / grid.dt;
     fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
@@ -263,7 +265,7 @@ Current1vb(const Grid_t& grid)
     
 #if DIM == DIM_YZ
     xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
-    xp[0] = xm[0] + vxi[0] * dt_ * c_prm.dxi[0];
+    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
 #else
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
@@ -273,5 +275,6 @@ Current1vb(const Grid_t& grid)
 private:
   real_t dt_;
   real_t fnqxs_, fnqys_, fnqzs_;
+  Real3 dxi_;
 };
 

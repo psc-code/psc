@@ -39,9 +39,11 @@ template<typename curr_cache_t>
 struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
+  using Real3 = Vec3<real_t>;
   
   Current1vb(const Grid_t& grid)
-    : dt_(grid.dt)
+    : dt_(grid.dt),
+      dxi_{ Real3{1., 1. , 1.} / Real3(grid.dx) }
   {
     fnqxs_ = grid.dx[0] * grid.fnqs / grid.dt;
     fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
@@ -161,7 +163,7 @@ struct Current1vb
     // deposit xm -> xp
     int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
     int i[3] = { 0, lg[1], lg[2] };					
-    real_t dx[3] = { vxi[0] * dt_ * c_prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+    real_t dx[3] = { vxi[0] * dt_ * dxi_[0], xp[1] - xm[1], xp[2] - xm[2] };
     real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
     
     real_t dx1[3];
@@ -239,6 +241,7 @@ struct Current1vb
 
 private:
   real_t dt_;
+  Real3 dxi_;
   real_t fnqxs_, fnqys_, fnqzs_;
 };
 

@@ -545,6 +545,7 @@ struct PushParticles__
   using Mfields = typename C::Mfields;
   using fields_t = typename Mfields::fields_t;
   using CacheFields_t = typename C::CacheFields;
+  using Real3 = Vec3<real_t>;
 
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
@@ -575,6 +576,7 @@ private:
 
     c_prm_set(prts.grid());
     real_t dqs = .5f * prts.grid().eta * prts.grid().dt;
+    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
   
     AdvanceParticle_t advance(prts.grid().dt);
     IP ip;
@@ -593,7 +595,7 @@ private:
 
       real_t xm[3];
       for (int d = 0; d < 3; d++) {
-	xm[d] = x[d] * c_prm.dxi[d];
+	xm[d] = x[d] * dxi[d];
       }
       ip.set_coeffs(xm);
 

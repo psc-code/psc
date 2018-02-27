@@ -68,10 +68,12 @@ push_one(particles_t& prts, int n,
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
   using Current = Current1vb<curr_cache_t>;
+  using Real3 = Vec3<real_t>;
 
   AdvanceParticle_t advance(prts.grid().dt);
   FieldsEM EM(flds_em);
   Current current(prts.grid());
+  Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
 
   particle_t *prt;
   PARTICLE_LOAD(prt, prts, n);
@@ -81,7 +83,7 @@ push_one(particles_t& prts, int n,
 
   real_t xm[3];
   for (int d = 0; d < 3; d++) {
-    xm[d] = xi[d] * c_prm.dxi[d];
+    xm[d] = xi[d] * dxi[d];
   }
 
   // FIELD INTERPOLATION
@@ -151,10 +153,12 @@ stagger_one(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t fl
   using FieldsEM = typename C::FieldsEM;
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
+  using Real3 = Vec3<real_t>;
 
   AdvanceParticle_t advance(prts.grid().dt);
-
   FieldsEM EM(flds_em);
+  Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+
   particle_t *prt;
   PARTICLE_LOAD(prt, prts, n);
   
@@ -163,7 +167,7 @@ stagger_one(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t fl
 
   real_t xm[3];
   for (int d = 0; d < 3; d++) {
-    xm[d] = xi[d] * c_prm.dxi[d];
+    xm[d] = xi[d] * dxi[d];
   }
 
   // FIELD INTERPOLATION
