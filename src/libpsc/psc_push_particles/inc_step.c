@@ -75,6 +75,12 @@ push_one(particles_t& prts, int n,
   Current current(prts.grid());
   PI<real_t> pi(prts.grid());
   Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+  real_t dq_kind[MAX_NR_KINDS];
+  auto& kinds = prts.grid().kinds;
+  assert(kinds.size() <= MAX_NR_KINDS);
+  for (int k = 0; k < kinds.size(); k++) {
+    dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+  }
 
   particle_t *prt;
   PARTICLE_LOAD(prt, prts, n);
@@ -97,7 +103,7 @@ push_one(particles_t& prts, int n,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = prt->kind();
-  real_t dq = prm.dq_kind[kind];
+  real_t dq = dq_kind[kind];
   advance.push_p(&prt->pxi, E, H, dq);
 
   real_t vxi[3];
@@ -159,6 +165,12 @@ stagger_one(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t fl
   AdvanceParticle_t advance(prts.grid().dt);
   FieldsEM EM(flds_em);
   Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+  real_t dq_kind[MAX_NR_KINDS];
+  auto& kinds = prts.grid().kinds;
+  assert(kinds.size() <= MAX_NR_KINDS);
+  for (int k = 0; k < kinds.size(); k++) {
+    dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+  }
 
   particle_t *prt;
   PARTICLE_LOAD(prt, prts, n);
@@ -181,7 +193,7 @@ stagger_one(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t fl
 
   // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
   int kind = prt->kind();
-  real_t dq = prm.dq_kind[kind];
+  real_t dq = dq_kind[kind];
   advance.push_p(&prt->pxi, E, H, -.5f * dq);
 
   PARTICLE_STORE(prt, mprts_arr, n);

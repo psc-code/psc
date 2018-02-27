@@ -47,7 +47,6 @@ using opt_calcj = opt_calcj_1vb_2d;
 
 struct params_1vb {
   // particle-related
-  real_t dq_kind[MAX_NR_KINDS];
   int b_mx[3];
 
   // field-related
@@ -63,13 +62,7 @@ CUDA_CONSTANT static struct params_1vb prm;
 static void _mrc_unused
 params_1vb_set(const Grid_t& grid)
 {
-  auto& kinds = grid.kinds;
   struct params_1vb params;
-
-  assert(kinds.size() <= MAX_NR_KINDS);
-  for (int k = 0; k < kinds.size(); k++) {
-    params.dq_kind[k] = .5f * grid.eta * grid.dt * kinds[k].q / kinds[k].m;
-  }
 
 #ifndef __CUDACC__
   prm = params;
