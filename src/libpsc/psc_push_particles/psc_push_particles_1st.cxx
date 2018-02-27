@@ -14,7 +14,7 @@
 // psc_push_particles: subclass "1st"
 
 template<typename DIM>
-using Push = PscPushParticles_<PushParticles__<Config2nd<DIM>>>;
+using Push = PscPushParticles_<PushParticles__<Config1st<DIM>>>;
 
 struct PushParticles1st : PushParticlesBase
 {
