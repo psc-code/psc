@@ -25,17 +25,3 @@
 
 using em_cache_t = mfields_t::fields_t;
 
-#ifndef EM_CACHE_DIM
-#define EM_CACHE_DIM DIM_XYZ
-#endif
-
-#if EM_CACHE_DIM == DIM_XYZ
-using FieldsEM = Fields3d<em_cache_t, dim_xyz>;
-#elif EM_CACHE_DIM == DIM_XZ
-using FieldsEM = Fields3d<em_cache_t, dim_xz>;
-#elif EM_CACHE_DIM == DIM_1
-using FieldsEM = Fields3d<em_cache_t, dim_1>;
-#else
-#error unhandled EM_CACHE_DIM
-#endif
-
