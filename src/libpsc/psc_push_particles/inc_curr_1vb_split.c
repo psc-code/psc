@@ -266,7 +266,7 @@ struct Current1vb
     
 #if DIM == DIM_YZ
     xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
-    xp[0] = xm[0] + vxi[0] * c_prm.dt * c_prm.dxi[0];
+    xp[0] = xm[0] + vxi[0] * dt_ * c_prm.dxi[0];
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
 #else
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);

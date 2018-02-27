@@ -46,7 +46,6 @@ using opt_calcj = opt_calcj_1vb_2d;
 #define MAX_NR_KINDS (10)
 
 struct const_params {
-  real_t dt; // FIXME, do we need both dt and dqs? or maybe get rid of xl/yl/zl
   real_t dqs;
   real_t fnqs;
   real_t fnqxs, fnqys, fnqzs;
@@ -74,7 +73,6 @@ c_prm_set(const Grid_t& grid)
 {
   struct const_params prm;
 
-  prm.dt = grid.dt;
   prm.dqs = .5f * grid.eta * grid.dt;
   prm.fnqs = grid.fnqs;
 
