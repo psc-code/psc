@@ -185,11 +185,7 @@ TEST(Mparticles, setParticles)
 
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 #include "../libpsc/psc_push_particles/push_config.hxx"
-#include "psc_particles_as_double.h"
-#include "psc_fields_as_c.h"
 #include "../libpsc/psc_push_particles/push_part_common.c"
-#include "psc_particles_double.h"
-#include "psc_fields_c.h"
 
 // ======================================================================
 // PushParticlesTest
