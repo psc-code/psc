@@ -44,13 +44,13 @@ void find_l_minmax<opt_order_2nd>(int *l1min, int *l1max, int k1, int lg1)
 }
 
 // ----------------------------------------------------------------------
-// charge density
+// Rho1d: charge density
 
-template<typename order>
+template<typename real_t, typename order>
 class Rho1d;
 
-template<>
-class Rho1d<opt_order_1st>
+template<typename real_t>
+class Rho1d<real_t, opt_order_1st>
 {
 public:
   static const int N_RHO = 4;
@@ -76,8 +76,8 @@ private:
   real_t s_[N_RHO];
 };
 
-template<>
-class Rho1d<opt_order_2nd>
+template<typename real_t>
+class Rho1d<real_t, opt_order_2nd>
 {
 public:
   static const int N_RHO = 5;
@@ -110,7 +110,7 @@ private:
 template<typename order, typename IP, typename Invar>
 struct CurrentDir
 {
-  using Rho1d_t = Rho1d<order>;
+  using Rho1d_t = Rho1d<typename IP::real_t, order>;
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   void charge_before(ip_coeff_t g)
