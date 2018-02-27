@@ -4,8 +4,6 @@
 #include "push_particles.hxx"
 #include "push_config.hxx"
 
-#include "psc_particles_as_double.h"
-
 #include "push_part_common.c"
 
 template<typename DIM>

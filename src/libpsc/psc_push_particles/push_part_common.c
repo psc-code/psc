@@ -11,6 +11,8 @@
 #include "inc_cache.c"
 #include "interpolate.hxx"
 
+#include <particle_iter.h>
+
 // ----------------------------------------------------------------------
 // find_l_minmax
 
@@ -574,7 +576,8 @@ private:
     using dim = typename C::dim;
     using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, dim>;
     using Current_t = Current<typename C::order, dim, IP, Fields3d<fields_t>>;
-    using AdvanceParticle_t = AdvanceParticle<particle_t::real_t, dim>;
+    using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
+    using particle_t = typename Mparticles::particle_t;
 
     real_t dqs = .5f * prts.grid().eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
