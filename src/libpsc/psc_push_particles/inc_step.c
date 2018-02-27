@@ -73,6 +73,7 @@ push_one(particles_t& prts, int n,
   AdvanceParticle_t advance(prts.grid().dt);
   FieldsEM EM(flds_em);
   Current current(prts.grid());
+  PI<real_t> pi;
   Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
 
   particle_t *prt;
@@ -117,7 +118,7 @@ push_one(particles_t& prts, int n,
   
   int lf[3];
   real_t of[3], xp[3];
-  PI<real_t>::find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, real_t(0.));
+  pi.find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, real_t(0.));
   //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt

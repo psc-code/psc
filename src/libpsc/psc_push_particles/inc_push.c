@@ -11,8 +11,7 @@ public:
   // ----------------------------------------------------------------------
   // find_idx_off_1st_rel
 
-  CUDA_DEVICE static inline void
-  find_idx_off_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t shift)
+  void find_idx_off_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t shift)
   {
     for (int d = 0; d < 3; d++) {
       real_t pos = xi[d] * c_prm.dxi[d] + shift;
@@ -24,8 +23,7 @@ public:
   // ----------------------------------------------------------------------
   // find_idx_off_pos_1st_rel
 
-  CUDA_DEVICE static inline void
-  find_idx_off_pos_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t pos[3], real_t shift)
+  void find_idx_off_pos_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t pos[3], real_t shift)
   {
     for (int d = 0; d < 3; d++) {
       pos[d] = xi[d] * c_prm.dxi[d] + shift;
