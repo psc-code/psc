@@ -142,7 +142,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       fields_t flds_old = mf_old[p];
       Fields F_old(flds_old);
       int nn = flds_old.size();
-      int *ib = flds_old.ib;
+      Int3 ib = flds_old.ib();
       void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_new_by_rank[new_rank]++;
       MPI_Isend(addr_old, nn, mpi_dtype, new_rank, tag, ctx->comm, &send_reqs[p]);
@@ -164,7 +164,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       fields_t flds_new = mf_new[p];
       Fields F_new(flds_new);
       int nn = flds_new.size();
-      int *ib = flds_new.ib;
+      Int3 ib = flds_new.ib();
       void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_old_by_rank[old_rank]++;
       MPI_Irecv(addr_new, nn, mpi_dtype, old_rank,
@@ -192,7 +192,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     assert(flds_old.n_comps() == flds_new.n_comps());
     assert(flds_old.size() == flds_new.size());
     int size = flds_old.size();
-    int *ib = flds_new.ib;
+    Int3 ib = flds_new.ib();
     void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
     void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
     memcpy(addr_new, addr_old, size * sizeof(fields_t::real_t));

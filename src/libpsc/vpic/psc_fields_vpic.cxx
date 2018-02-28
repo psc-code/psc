@@ -52,9 +52,9 @@ psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields 
     if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
       for (int m = mb; m < me; m++) {
 	int m_vpic = map_psc2vpic[m];
-	for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
-	  for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
-	    for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	for (int jz = flds.ib_[2]; jz < flds.ib_[2] + flds.im_[2]; jz++) {
+	  for (int jy = flds.ib_[1]; jy < flds.ib_[1] + flds.im_[1]; jy++) {
+	    for (int jx = flds.ib_[0]; jx < flds.ib_[0] + flds.im_[0]; jx++) {
 	      F(m_vpic, jx,jy,jz) = F_s(m, jx,jy,jz);
 	    }
 	  }
@@ -80,8 +80,8 @@ psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *m
 
     int ib[3], ie[3];
     for (int d = 0; d < 3; d++) {
-      ib[d] = MAX(flds.ib[d], flds_single.ib[d]);
-      ie[d] = MIN(flds.ib[d] + flds.im[d], flds_single.ib[d] + flds_single.im[d]);
+      ib[d] = MAX(flds.ib_[d], flds_single.ib_[d]);
+      ie[d] = MIN(flds.ib_[d] + flds.im_[d], flds_single.ib_[d] + flds_single.im_[d]);
     }
 
     // FIXME, hacky way to distinguish whether we want

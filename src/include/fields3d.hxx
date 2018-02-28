@@ -28,10 +28,8 @@ struct fields3d {
   using real_t = R;
   using layout = L;
 
-  Int3 ib, im; //> lower bounds and length per direction
-  
-  fields3d(Int3 _ib, Int3 _im, int n_comps, real_t* data=nullptr)
-    : ib{_ib}, im{_im},
+  fields3d(Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
+    : ib_{ib}, im_{im},
       n_comps_{n_comps},
       data_{data}
   {
@@ -52,12 +50,14 @@ struct fields3d {
   real_t* data() { return data_; }
   int index(int m, int i, int j, int k) const;
   int n_comps() const { return n_comps_; }
-  int n_cells() const { return im[0] * im[1] * im[2]; }
+  int n_cells() const { return im_[0] * im_[1] * im_[2]; }
   int size()    const { return n_comps() * n_cells(); }
+  Int3 ib()     const { return ib_; }
+  Int3 im()     const { return im_; }
 
   void zero(int m)
   {
-    memset(&(*this)(m, ib[0], ib[1], ib[2]), 0, n_cells() * sizeof(real_t));
+    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(real_t));
   }
 
   void zero(int mb, int me)
@@ -74,9 +74,9 @@ struct fields3d {
 
   void set(int m, real_t val)
   {
-    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
 	  (*this)(m, i,j,k) = val;
 	}
       }
@@ -85,9 +85,9 @@ struct fields3d {
 
   void scale(int m, real_t val)
   {
-    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
 	  (*this)(m, i,j,k) *= val;
 	}
       }
@@ -96,9 +96,9 @@ struct fields3d {
 
   void copy_comp(int mto, const fields3d& from, int mfrom)
   {
-    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
 	  (*this)(mto, i,j,k) = from(mfrom, i,j,k);
 	}
       }
@@ -107,9 +107,9 @@ struct fields3d {
 
   void axpy_comp(int m_y, real_t alpha, const fields3d& x, int m_x)
   {
-    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
 	  (*this)(m_y, i,j,k) += alpha * x(m_x, i,j,k);
 	}
       }
@@ -119,9 +119,9 @@ struct fields3d {
   real_t max_comp(int m)
   {
     real_t rv = -std::numeric_limits<real_t>::max();
-    for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-      for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
 	  rv = std::max(rv, (*this)(m, i,j,k));
 	}
       }
@@ -130,6 +130,7 @@ struct fields3d {
   }
 
   real_t* data_;
+  Int3 ib_, im_; //> lower bounds and length per direction
   int n_comps_; // # of components
 };
 
@@ -138,20 +139,20 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 {
 #ifdef BOUNDS_CHECK
   assert(m >= 0 && m < n_comps_);
-  assert(i >= ib[0] && i < ib[0] + im[0]);
-  assert(j >= ib[1] && j < ib[1] + im[1]);
-  assert(k >= ib[2] && k < ib[2] + im[2]);
+  assert(i >= ib_[0] && i < ib_[0] + im_[0]);
+  assert(j >= ib_[1] && j < ib_[1] + im_[1]);
+  assert(k >= ib_[2] && k < ib_[2] + im_[2]);
 #endif
 
   if (L::isAOS::value) {
-    return (((((k - ib[2])) * im[1] +
-	      (j - ib[1])) * im[0] +
-	     (i - ib[0])) * n_comps_ + m);
+    return (((((k - ib_[2])) * im_[1] +
+	      (j - ib_[1])) * im_[0] +
+	     (i - ib_[0])) * n_comps_ + m);
   } else {
-    return (((((m) * im[2] +
-	       (k - ib[2])) * im[1] +
-	      (j - ib[1])) * im[0] +
-	     (i - ib[0])));
+    return (((((m) * im_[2] +
+	       (k - ib_[2])) * im_[1] +
+	      (j - ib_[1])) * im_[0] +
+	     (i - ib_[0])));
   }
 }
 
