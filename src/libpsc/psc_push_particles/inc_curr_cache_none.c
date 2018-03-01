@@ -11,12 +11,6 @@ struct curr_cache_t : flds_curr_t
 #define CURR_CACHE_DIM DIM_XYZ
 #endif
 
-CUDA_DEVICE static inline curr_cache_t
-curr_cache_create(flds_curr_t flds_curr, int ci0[3])
-{
-  return curr_cache_t{flds_curr};
-}
-
 CUDA_DEVICE static inline void
 curr_cache_add(curr_cache_t curr_cache, int m, int i, int j, int k,
 	       curr_cache_t::real_t val)
@@ -34,10 +28,5 @@ curr_cache_add(curr_cache_t curr_cache, int m, int i, int j, int k,
   FieldsJ J(curr_cache);
   curr_cache_t::real_t *addr = &J(JXI+m, i,j,k);
   atomicAdd(addr, val);
-}
-
-CUDA_DEVICE static inline void
-curr_cache_destroy(curr_cache_t curr_cache, flds_curr_t flds_curr, int ci0[3])
-{
 }
 
