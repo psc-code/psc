@@ -69,7 +69,7 @@ push_one(particles_t& prts, int n,
   using FieldsEM = typename C::FieldsEM;
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
-  using Current = Current1vb<typename C::curr_cache_t, dim>;
+  using Current = typename C::Current_t;
   using Real3 = Vec3<real_t>;
 
   AdvanceParticle_t advance(prts.grid().dt);

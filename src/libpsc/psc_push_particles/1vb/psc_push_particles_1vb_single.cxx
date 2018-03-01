@@ -5,14 +5,13 @@
 #include "psc_fields_as_single.h"
 
 #define DIM DIM_YZ
+#define CALC_J CALC_J_1VB_2D
 
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 
-#define CALC_J CALC_J_1VB_2D
-
 using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle, dim_yz, opt_ip_1st, opt_order_1st,
-				  Current1vb, opt_calcj_1vb_2d>;
+				  Current1vb2d, opt_calcj_1vb_2d>;
 
 #include "../1vb.c"
 

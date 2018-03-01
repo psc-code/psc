@@ -8,11 +8,11 @@
 // but charge conservation remains exactly satisfied, anyway.
 
 template<typename curr_cache_t, typename dim_t>
-struct Current1vb
+struct Current1vb2d
 {
   using real_t = typename curr_cache_t::real_t;
   
-  Current1vb(const Grid_t& grid)
+  Current1vb2d(const Grid_t& grid)
     : dt_(grid.dt),
       fnqs_(grid.fnqs),
       pi_(grid)

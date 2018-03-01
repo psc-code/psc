@@ -1,10 +1,4 @@
 
-#if DIM == DIM_XYZ
-
-#include "inc_curr_1vb_split.c" // FIXME hack...
-
-#else
-
 // ======================================================================
 // 1vb current deposition "var1"
 //
@@ -16,12 +10,12 @@
 // calc_3d_dx1
 
 template<typename curr_cache_t, typename dim_t>
-struct Current1vb
+struct Current1vbVar1
 {
   using real_t = typename curr_cache_t::real_t;
   using Real3 = Vec3<real_t>;
   
-  Current1vb(const Grid_t& grid)
+  Current1vbVar1(const Grid_t& grid)
     : dt_(grid.dt),
       dxi_{ Real3{1., 1. , 1.} / Real3(grid.dx) }
   {
@@ -161,6 +155,12 @@ struct Current1vb
   }
 
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_xyz tag_dim)
+  {
+    assert(0); // FIXME
+  }
+  
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, particle_t *prt, real_t *vxi)
   {
     calc_j(curr_cache, xm, xp, lf, lg, prt, vxi, dim_t{});
@@ -173,5 +173,3 @@ private:
 };
 
   
-#endif
- 

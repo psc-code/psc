@@ -1,13 +1,15 @@
 
+#pragma once
+
 // ======================================================================
 
 template<typename curr_cache_t, typename dim_t>
-struct Current1vb
+struct Current1vbSplit
 {
   using real_t = typename curr_cache_t::real_t;
   using Real3 = Vec3<real_t>;
   
-  Current1vb(const Grid_t& grid)
+  Current1vbSplit(const Grid_t& grid)
     : dt_(grid.dt),
       dxi_{ Real3{1., 1. , 1.} / Real3(grid.dx) }
   {
