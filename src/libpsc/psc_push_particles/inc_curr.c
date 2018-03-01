@@ -1,6 +1,9 @@
 
 // ----------------------------------------------------------------------
 
+template<typename curr_cache_t, typename dim_t>
+struct CurrentNone;
+
 #if CALC_J == CALC_J_1VB_SPLIT
 #include "inc_curr_1vb_split.c"
 #elif CALC_J == CALC_J_1VB_VAR1

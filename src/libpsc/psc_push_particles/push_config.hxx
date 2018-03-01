@@ -39,6 +39,7 @@ struct curr_cache_t : fields_t
 
 template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
+	 template<typename, typename> class Current,
 	 typename CALCJ = opt_calcj_esirkepov,
 	 typename OPT_EXT = opt_ext_none,
 	 template<typename, typename> class CF = CacheFieldsNone,
@@ -56,7 +57,7 @@ struct push_p_config
   using CacheFields = CF<typename MF::fields_t, D>;
   using FieldsEM = EM;
   using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
-  using Current = Current1vb<curr_cache_t, D>;
+  using Current_t = Current<curr_cache_t, D>;
 };
 
 #include "psc_particles_double.h"
@@ -65,27 +66,29 @@ struct push_p_config
 #include "psc_fields_single.h"
 
 template<typename dim>
-using Config2nd = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_2nd, opt_order_2nd>;
+using Config2nd = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_2nd, opt_order_2nd,
+				CurrentNone>;
 
 using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC, dim_yz, opt_ip_2nd, opt_order_2nd,
-					opt_calcj_esirkepov, opt_ext_none, CacheFields>;
+					CurrentNone, opt_calcj_esirkepov, opt_ext_none, CacheFields>;
 
 template<typename dim>
-using Config1st = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st, opt_order_1st>;
+using Config1st = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st, opt_order_1st,
+				CurrentNone>;
 
 template<typename dim>
-using Config1vbecDouble = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st_ec,
-					opt_order_1st, opt_calcj_1vb_var1>;
+using Config1vbecDouble = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st_ec, opt_order_1st,
+					Current1vb, opt_calcj_1vb_var1>;
 
 template<typename dim>
-using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle, dim, opt_ip_1st_ec,
-					opt_order_1st, opt_calcj_1vb_var1>;
+using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle, dim, opt_ip_1st_ec, opt_order_1st,
+					Current1vb, opt_calcj_1vb_var1>;
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle, dim_xyz, opt_ip_1st_ec, opt_order_1st,
-					  opt_calcj_1vb_split, opt_ext_none, CacheFieldsNone,
+					  Current1vb, opt_calcj_1vb_split, opt_ext_none, CacheFieldsNone,
 					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>,
 					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st,
-					 opt_calcj_1vb_var1, opt_ext_none, CacheFieldsNone,
+					 Current1vb, opt_calcj_1vb_var1, opt_ext_none, CacheFieldsNone,
 					 Fields3d<typename MfieldsSingle::fields_t, dim_1>,
 					 dim_1>;

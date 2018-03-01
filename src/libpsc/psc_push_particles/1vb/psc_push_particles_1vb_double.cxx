@@ -12,7 +12,7 @@
 #define CALC_J CALC_J_1VB_2D
 
 using push_p_conf = push_p_config<MparticlesDouble, MfieldsC, dim_yz, opt_ip_1st, opt_order_1st,
-				  opt_calcj_1vb_split>;
+				  Current1vb, opt_calcj_1vb_split>;
 
 #include "../1vb.c"
 

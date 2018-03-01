@@ -11,8 +11,8 @@
 
 #define CALC_J CALC_J_1VB_2D
 
-using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle, dim_yz,
-				  opt_ip_1st, opt_order_1st, opt_calcj_1vb_2d, opt_ext_prepare_sort>;
+using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle, dim_yz, opt_ip_1st, opt_order_1st,
+				  Current1vb, opt_calcj_1vb_2d, opt_ext_prepare_sort>;
 
 #include "1vb.c"
 
