@@ -81,7 +81,9 @@ using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle, dim, op
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle, dim_xyz, opt_ip_1st_ec, opt_order_1st,
 					  opt_calcj_1vb_split, opt_ext_none, CacheFieldsNone,
-					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>>;
+					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>,
+					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st,
 					 opt_calcj_1vb_var1, opt_ext_none, CacheFieldsNone,
-					 Fields3d<typename MfieldsSingle::fields_t, dim_1>>;
+					 Fields3d<typename MfieldsSingle::fields_t, dim_1>,
+					 dim_1>;
