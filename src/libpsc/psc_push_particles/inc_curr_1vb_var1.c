@@ -1,6 +1,4 @@
 
-namespace {
-
 #if DIM == DIM_XYZ
 
 #include "inc_curr_1vb_split.c" // FIXME hack...
@@ -176,5 +174,4 @@ private:
 
   
 #endif
-
-}
+ 

@@ -5,6 +5,8 @@
 #include "fields.hxx"
 
 #include "inc_defs.h"
+#include "inc_push.c"
+#include "inc_curr.c"
 
 template<typename fields_t, typename dim>
 struct CacheFieldsNone;
@@ -52,9 +54,9 @@ struct push_p_config
   using calcj = CALCJ;
   using ext = OPT_EXT;
   using CacheFields = CF<typename MF::fields_t, D>;
-  using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
-
   using FieldsEM = EM;
+  using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
+  using Current = Current1vb<curr_cache_t, D>;
 };
 
 #include "psc_particles_double.h"
