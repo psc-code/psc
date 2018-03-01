@@ -115,26 +115,26 @@ struct Current1vb
       {
 	real_t fnqx = qni_wni * fnqxs_;
 	real_t h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-	curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-	curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-	curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
-	curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
+	curr_cache.add(0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+	curr_cache.add(0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+	curr_cache.add(0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
+	curr_cache.add(0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
       }
 #ifdef __CUDACC__
     if (dx[1] != 0.f)
 #endif
       {
 	real_t fnqy = qni_wni * fnqys_;
-	curr_cache_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-	curr_cache_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
+	curr_cache.add(1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+	curr_cache.add(1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
       }
 #ifdef __CUDACC__
     if (dx[2] != 0.f)
 #endif
       {
 	real_t fnqz = qni_wni * fnqzs_;
-	curr_cache_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
-	curr_cache_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
+	curr_cache.add(2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+	curr_cache.add(2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
       }
   }
 

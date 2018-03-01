@@ -50,10 +50,10 @@ struct Current1vb
   curr_2d_vb_cell(curr_cache_t curr_cache, int i[2], real_t x[2], real_t dx[2],
 		  real_t fnq[2], real_t dxt[2], int off[2])
   {
-    curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]  , fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]));
-    curr_cache_add(curr_cache, 1, 0,i[0]  ,i[1]+1, fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]));
-    curr_cache_add(curr_cache, 2, 0,i[0]  ,i[1]  , fnq[1] * dx[1] * (.5f - x[0] - .5f * dx[0]));
-    curr_cache_add(curr_cache, 2, 0,i[0]+1,i[1]  , fnq[1] * dx[1] * (.5f + x[0] + .5f * dx[0]));
+    curr_cache.add(1, 0,i[0]  ,i[1]  , fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]));
+    curr_cache.add(1, 0,i[0]  ,i[1]+1, fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]));
+    curr_cache.add(2, 0,i[0]  ,i[1]  , fnq[1] * dx[1] * (.5f - x[0] - .5f * dx[0]));
+    curr_cache.add(2, 0,i[0]+1,i[1]  , fnq[1] * dx[1] * (.5f + x[0] + .5f * dx[0]));
 
     if (dxt) {
       dxt[0] -= dx[0];
@@ -75,10 +75,10 @@ struct Current1vb
     pi_.find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
     
     real_t fnqx = vxi[0] * particle_qni_wni(prt) * fnqs_;
-    curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-    curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-    curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-    curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+    curr_cache.add(JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+    curr_cache.add(JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+    curr_cache.add(JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+    curr_cache.add(JXI, 0,lf[1]+1,lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
   }
 
   // ----------------------------------------------------------------------
