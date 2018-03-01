@@ -89,17 +89,17 @@ using Config1st = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st, opt
 
 template<typename dim>
 using Config1vbecDouble = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st_ec, opt_order_1st,
-					Current1vbVar1, opt_calcj_1vb_var1>;
+					Current1vbVar1, opt_calcj_1vb>;
 
 template<typename dim>
 using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle, dim, opt_ip_1st_ec, opt_order_1st,
-					Current1vbVar1, opt_calcj_1vb_var1>;
+					Current1vbVar1, opt_calcj_1vb>;
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle, dim_xyz, opt_ip_1st_ec, opt_order_1st,
-					  Current1vbSplit, opt_calcj_1vb_split, opt_ext_none, CacheFieldsNone,
+					  Current1vbSplit, opt_calcj_1vb, opt_ext_none, CacheFieldsNone,
 					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>,
 					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st,
-					 Current1vbVar1, opt_calcj_1vb_var1, opt_ext_none, CacheFieldsNone,
+					 Current1vbVar1, opt_calcj_1vb, opt_ext_none, CacheFieldsNone,
 					 Fields3d<typename MfieldsSingle::fields_t, dim_1>,
 					 dim_1>;

@@ -10,8 +10,7 @@
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 
-using push_p_conf = push_p_config<MparticlesDouble, MfieldsC, dim_1, opt_ip_1st_ec, opt_order_1st,
-				  Current1vbVar1, opt_calcj_1vb_var1>;
+using push_p_conf = Config1vbecDouble<dim_1>;
 
 #include "../1vb.c"
 

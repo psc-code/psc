@@ -27,9 +27,7 @@
 #define CALC_J_1VB_2D    3 // V-B deposition variant with simpler out-of-plane current deposit
 
 struct opt_calcj_esirkepov;
-struct opt_calcj_1vb_split;
-struct opt_calcj_1vb_var1;
-struct opt_calcj_1vb_2d;
+struct opt_calcj_1vb;
 
 // ----------------------------------------------------------------------
 // EM_CACHE

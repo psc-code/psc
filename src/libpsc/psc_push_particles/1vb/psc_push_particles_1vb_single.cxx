@@ -11,7 +11,7 @@
 #include "../push_config.hxx"
 
 using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle, dim_yz, opt_ip_1st, opt_order_1st,
-				  Current1vb2d, opt_calcj_1vb_2d>;
+				  Current1vb2d, opt_calcj_1vb>;
 
 #include "../1vb.c"
 
