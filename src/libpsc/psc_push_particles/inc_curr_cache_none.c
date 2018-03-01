@@ -1,19 +1,10 @@
 
-struct curr_cache_t
+struct curr_cache_t : flds_curr_t
 {
-  using real_t = typename flds_curr_t::real_t;
-
-  curr_cache_t(flds_curr_t& flds)
-    : f_(flds)
+  curr_cache_t(const flds_curr_t& f)
+    : flds_curr_t(f.ib(), f.im(), f.n_comps(), f.data_)
   {}
   
-  real_t* data()      { return f_.data(); }
-  int n_comps() const { return f_.n_comps(); }
-  Int3 ib() const     { return f_.ib(); }
-  Int3 im() const     { return f_.im(); }
-
-private:
-  flds_curr_t f_;
 };
 
 #ifndef CURR_CACHE_DIM
