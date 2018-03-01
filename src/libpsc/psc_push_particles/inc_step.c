@@ -119,7 +119,7 @@ push_one(particles_t& prts, int n,
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
   pi.find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
-  current.calc_j_oop(curr_cache, prt, vxi, lf, of);
+  current.calc_j_oop(curr_cache, particle_qni_wni(prt), vxi, lf, of);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   advance.push_x(&prt->xi, vxi, .5f);

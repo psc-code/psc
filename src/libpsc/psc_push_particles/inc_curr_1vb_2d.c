@@ -65,9 +65,9 @@ struct Current1vb2d
   // ----------------------------------------------------------------------
   // calc_j_oop
 
-  void calc_j_oop(curr_cache_t curr_cache, particle_t *prt, real_t *vxi, int lf[3], real_t of[3])
+  void calc_j_oop(curr_cache_t curr_cache, real_t qni_wni, real_t *vxi, int lf[3], real_t of[3])
   {
-    real_t fnqx = vxi[0] * particle_qni_wni(prt) * fnqs_;
+    real_t fnqx = vxi[0] * qni_wni * fnqs_;
     curr_cache.add(JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
     curr_cache.add(JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
     curr_cache.add(JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
