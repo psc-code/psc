@@ -6,24 +6,13 @@
 
 #include "inc_defs.h"
 #include "inc_push.c"
+#include "inc_curr.c"
 
 template<typename fields_t, typename dim>
 struct CacheFieldsNone;
 
 template<typename fields_t, typename dim>
 struct CacheFields;
-
-template<typename curr_cache_t, typename dim>
-struct Current1vbVar1;
-
-template<typename curr_cache_t, typename dim>
-struct Current1vbSplit;
-
-template<typename curr_cache_t, typename dim>
-struct Current1vb2d;
-
-template<typename curr_cache_t, typename dim>
-struct CurrentNone;
 
 
 #define atomicAdd(addr, val) \
