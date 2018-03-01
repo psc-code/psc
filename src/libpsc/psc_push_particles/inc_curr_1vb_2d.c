@@ -7,8 +7,6 @@
 // deposited is not the same that the 3d V-B algorithm would produce,
 // but charge conservation remains exactly satisfied, anyway.
 
-#if DIM == DIM_YZ
-
 template<typename curr_cache_t, typename dim_t>
 struct Current1vb
 {
@@ -87,6 +85,7 @@ struct Current1vb
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, particle_t *prt, real_t *vxi)
   {
+    static_assert(std::is_same<dim_t, dim_yz>::value, "only dim_yz supported");
     int i[2] = { lg[1], lg[2] };
     int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
     real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
@@ -144,4 +143,3 @@ private:
   PI<real_t> pi_;
 };
 
-#endif
