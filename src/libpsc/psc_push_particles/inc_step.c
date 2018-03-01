@@ -110,12 +110,16 @@ push_one(particles_t& prts, int n,
 
   real_t vxi[3];
   advance.calc_v(vxi, &prt->pxi);
+
+  int lf[3];
+  real_t of[3], xp[3];
 #if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
   advance.push_x(&prt->xi, vxi, .5f);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-  current.calc_j_oop(curr_cache, prt, vxi);
+  pi.find_idx_off_1st_rel(&prt->xi, lf, of, real_t(0.));
+  current.calc_j_oop(curr_cache, prt, vxi, lf, of);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   advance.push_x(&prt->xi, vxi, .5f);
@@ -124,8 +128,6 @@ push_one(particles_t& prts, int n,
   advance.push_x(&prt->xi, vxi);
 #endif
   
-  int lf[3];
-  real_t of[3], xp[3];
   pi.find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, real_t(0.));
   //  ext_prepare_sort(prts, n, prt, lf);
 
