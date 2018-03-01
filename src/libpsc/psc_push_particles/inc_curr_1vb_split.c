@@ -1,7 +1,7 @@
 
 // ======================================================================
 
-template<typename curr_cache_t>
+template<typename curr_cache_t, typename dim_t>
 struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
