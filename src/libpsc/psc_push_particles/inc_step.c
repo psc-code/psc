@@ -63,13 +63,13 @@ struct ExtPrepareSort<mparticles_t, opt_ext_prepare_sort>
 template<typename C, typename particles_t>
 CUDA_DEVICE static void
 push_one(particles_t& prts, int n,
-	 typename C::Mfields::fields_t flds_em, curr_cache_t curr_cache)
+	 typename C::Mfields::fields_t flds_em, typename C::curr_cache_t curr_cache)
 {
   using dim = typename C::dim;
   using FieldsEM = typename C::FieldsEM;
   using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
-  using Current = Current1vb<curr_cache_t>;
+  using Current = Current1vb<typename C::curr_cache_t>;
   using Real3 = Vec3<real_t>;
 
   AdvanceParticle_t advance(prts.grid().dt);

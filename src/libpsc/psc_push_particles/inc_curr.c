@@ -14,7 +14,6 @@ using flds_curr_t = mfields_t::fields_t;
 #define CURR_CACHE_N_REDUNDANT 1
 
 #if CURR_CACHE == CURR_CACHE_NONE
-#include "inc_curr_cache_none.c"
 #elif CURR_CACHE == CURR_CACHE_SHIFT
 #include "inc_curr_cache_shift.c"
 #elif CURR_CACHE == CURR_CACHE_CUDA

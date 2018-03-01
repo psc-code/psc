@@ -2,6 +2,8 @@
 #pragma once
 
 #include "dim.hxx"
+#include "fields.hxx"
+
 #include "inc_defs.h"
 
 template<typename fields_t, typename dim>
@@ -10,6 +12,28 @@ struct CacheFieldsNone;
 template<typename fields_t, typename dim>
 struct CacheFields;
 
+
+#define atomicAdd(addr, val) \
+  do { *(addr) += (val); } while (0)
+
+template<typename flds_curr_t, typename dim_curr>
+struct curr_cache_t : flds_curr_t
+{
+  using Self = curr_cache_t;
+  using real_t = typename flds_curr_t::real_t;
+  
+  curr_cache_t(const flds_curr_t& f)
+    : flds_curr_t(f.ib(), f.im(), f.n_comps(), f.data_)
+  {}
+  
+  void add(int m, int i, int j, int k, real_t val)
+  {
+    Fields3d<Self, dim_curr> J(*this);
+    real_t *addr = &J(JXI+m, i,j,k);
+    atomicAdd(addr, val);
+  }
+};
+
 #include "fields.hxx"
 
 template<typename MP, typename MF, typename D,
@@ -17,7 +41,8 @@ template<typename MP, typename MF, typename D,
 	 typename CALCJ = opt_calcj_esirkepov,
 	 typename OPT_EXT = opt_ext_none,
 	 template<typename, typename> class CF = CacheFieldsNone,
-	 typename EM = Fields3d<typename MF::fields_t>>
+	 typename EM = Fields3d<typename MF::fields_t>,
+	 typename dim_curr = dim_xyz>
 struct push_p_config
 {
   using Mparticles = MP;
@@ -28,6 +53,7 @@ struct push_p_config
   using calcj = CALCJ;
   using ext = OPT_EXT;
   using CacheFields = CF<typename MF::fields_t, D>;
+  using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
 
   using FieldsEM = EM;
 };

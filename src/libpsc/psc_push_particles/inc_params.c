@@ -36,7 +36,5 @@ using opt_calcj = opt_calcj_1vb_2d;
 #define CUDA_CONSTANT
 #define CUDA_DEVICE
 #define __forceinline__
-#define atomicAdd(addr, val) \
-  do { *(addr) += (val); } while (0)
 
 
