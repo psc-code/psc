@@ -25,7 +25,7 @@ struct Current1vbVar1
   }
   
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_1 tag)
+	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_1 tag)
   {
     // FIXME
     //assert(0);
@@ -101,7 +101,7 @@ struct Current1vbVar1
   // calc_j
 
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_yz tag_dim)
+	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_yz tag_dim)
   {
     // deposit xm -> xp
     int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
@@ -133,7 +133,6 @@ struct Current1vbVar1
       }
       second_dir = 3 - first_dir;
     }
-    real_t qni_wni = particle_qni_wni(prt);
     
     if (first_dir >= 0) {
       off[3 - first_dir] = 0;
@@ -155,15 +154,15 @@ struct Current1vbVar1
   }
 
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_xyz tag_dim)
+	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_xyz tag_dim)
   {
     assert(0); // FIXME
   }
   
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+	      int *lf, int *lg, real_t qni_wni, real_t *vxi)
   {
-    calc_j(curr_cache, xm, xp, lf, lg, prt, vxi, dim_t{});
+    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, dim_t{});
   }
   
 private:

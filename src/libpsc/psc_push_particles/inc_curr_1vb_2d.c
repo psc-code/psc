@@ -83,7 +83,7 @@ struct Current1vb2d
   // calc_j
 
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+	      int *lf, int *lg, real_t qni_wni, real_t *vxi)
   {
     static_assert(std::is_same<dim_t, dim_yz>::value, "only dim_yz supported");
     int i[2] = { lg[1], lg[2] };
@@ -116,8 +116,7 @@ struct Current1vb2d
       second_dir = 1 - first_dir;
     }
 
-    real_t fnq[2] = { particle_qni_wni(prt) * fnqys_,
-		      particle_qni_wni(prt) * fnqzs_ };
+    real_t fnq[2] = { qni_wni * fnqys_, qni_wni * fnqzs_ };
 
     if (first_dir >= 0) {
       off[1-first_dir] = 0;
