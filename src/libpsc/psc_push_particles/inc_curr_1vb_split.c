@@ -87,11 +87,7 @@ struct Current1vb
   void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,
 			real_t xm[3], real_t xp[3])
   {
-#if DIM == DIM_YZ
-    calc_j2_one_cell(curr_cache, qni_wni, xm, xp, dim_yz{});
-#elif DIM == DIM_XYZ
-    calc_j2_one_cell(curr_cache, qni_wni, xm, xp, dim_xyz{});
-#endif
+    calc_j2_one_cell(curr_cache, qni_wni, xm, xp, dim_t{});
   }
   
   CUDA_DEVICE __forceinline__ static void
@@ -193,11 +189,23 @@ struct Current1vb
   void calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp)
   {
-#if DIM == DIM_YZ
-    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, dim_yz{});
-#elif DIM == DIM_XYZ
-    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, dim_xyz{});
-#endif
+    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, dim_t{});
+  }
+
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_yz tag)
+  {
+    real_t qni_wni = particle_qni_wni(prt);
+    xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
+    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
+    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
+  }
+  
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_xyz tag)
+  {
+    real_t qni_wni = particle_qni_wni(prt);
+    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
   
   // ----------------------------------------------------------------------
@@ -206,15 +214,7 @@ struct Current1vb
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, particle_t *prt, real_t *vxi)
   {
-    real_t qni_wni = particle_qni_wni(prt);
-    
-#if DIM == DIM_YZ
-    xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
-    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
-    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
-#else
-    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
-#endif
+    calc_j(curr_cache, xm, xp, lf, lg, prt, vxi, dim_t{});
   }
   
 private:

@@ -1,6 +1,12 @@
 
 namespace {
 
+#if DIM == DIM_XYZ
+
+#include "inc_curr_1vb_split.c" // FIXME hack...
+
+#else
+
 // ======================================================================
 // 1vb current deposition "var1"
 //
@@ -11,13 +17,13 @@ namespace {
 // ----------------------------------------------------------------------
 // calc_3d_dx1
 
-#if DIM == DIM_1
-
 template<typename curr_cache_t, typename dim_t>
 struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
   
+#if DIM == DIM_1
+
   Current1vb(const Grid_t& grid)
     : dt_(grid.dt)
   {}
@@ -31,14 +37,9 @@ struct Current1vb
 
 private:
   real_t dt_;
-};
 
 #elif DIM == DIM_YZ
 
-template<typename curr_cache_t, typename dim_t>
-struct Current1vb
-{
-  using real_t = typename curr_cache_t::real_t;
   using Real3 = Vec3<real_t>;
   
   Current1vb(const Grid_t& grid)
@@ -243,24 +244,12 @@ private:
   real_t dt_;
   Real3 dxi_;
   real_t fnqxs_, fnqys_, fnqzs_;
+#endif // DIM
+
 };
 
-#elif DIM == DIM_XYZ
-
-#include "inc_curr_1vb_split.c" // FIXME hack...
-
-#ifdef __CUDACC__
-
-CUDA_DEVICE static void
-calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-       int *lf, int *lg, particle_t *prt, real_t *vxi)
-{
-  assert(0);
-}
-
+  
 #endif
-
-#endif // DIM
 
 // ======================================================================
 // TBD: piece to save block_idx as we go for following sort
