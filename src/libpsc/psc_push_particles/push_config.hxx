@@ -16,19 +16,18 @@ struct CacheFields;
 #define atomicAdd(addr, val) \
   do { *(addr) += (val); } while (0)
 
-template<typename flds_curr_t, typename dim_curr>
-struct curr_cache_t : flds_curr_t
+template<typename fields_t, typename dim_curr>
+struct curr_cache_t : fields_t
 {
-  using Self = curr_cache_t;
-  using real_t = typename flds_curr_t::real_t;
+  using real_t = typename fields_t::real_t;
   
-  curr_cache_t(const flds_curr_t& f)
-    : flds_curr_t(f.ib(), f.im(), f.n_comps(), f.data_)
+  curr_cache_t(const fields_t& f)
+    : fields_t(f.ib(), f.im(), f.n_comps(), f.data_)
   {}
   
   void add(int m, int i, int j, int k, real_t val)
   {
-    Fields3d<Self, dim_curr> J(*this);
+    Fields3d<fields_t, dim_curr> J(*this);
     real_t *addr = &J(JXI+m, i,j,k);
     atomicAdd(addr, val);
   }

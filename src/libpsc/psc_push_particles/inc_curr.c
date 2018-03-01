@@ -6,8 +6,6 @@
 #define CURR_CACHE CURR_CACHE_NONE
 #endif
 
-using flds_curr_t = mfields_t::fields_t;
-
 // ----------------------------------------------------------------------
 
 #define CURR_CACHE_GMEM 1
