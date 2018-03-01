@@ -21,25 +21,6 @@ template<typename curr_cache_t, typename dim_t>
 struct Current1vb
 {
   using real_t = typename curr_cache_t::real_t;
-  
-#if DIM == DIM_1
-
-  Current1vb(const Grid_t& grid)
-    : dt_(grid.dt)
-  {}
-  
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi)
-  {
-    // FIXME
-    //assert(0);
-  }
-
-private:
-  real_t dt_;
-
-#elif DIM == DIM_YZ
-
   using Real3 = Vec3<real_t>;
   
   Current1vb(const Grid_t& grid)
@@ -51,6 +32,13 @@ private:
     fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
   }
   
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_1 tag)
+  {
+    // FIXME
+    //assert(0);
+  }
+
   CUDA_DEVICE static inline void
   calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
   {
@@ -159,7 +147,7 @@ private:
   // calc_j
 
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
-	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+	      int *lf, int *lg, particle_t *prt, real_t *vxi, dim_yz tag_dim)
   {
     // deposit xm -> xp
     int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
@@ -240,12 +228,20 @@ private:
 #endif
   }
 
+  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+	      int *lf, int *lg, particle_t *prt, real_t *vxi)
+  {
+#if DIM == DIM_1
+    calc_j(curr_cache, xm, xp, lf, lg, prt, vxi, dim_1{});
+#elif DIM == DIM_YZ
+    calc_j(curr_cache, xm, xp, lf, lg, prt, vxi, dim_yz{});
+#endif
+  }
+  
 private:
   real_t dt_;
   Real3 dxi_;
   real_t fnqxs_, fnqys_, fnqzs_;
-#endif // DIM
-
 };
 
   
