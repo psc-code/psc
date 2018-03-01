@@ -31,44 +31,23 @@ struct Current1vb
       i[d] = fint(xa[d]);
     }
 
-#ifdef CURR_CACHE_HAVE_SHIFT
-    curr_cache = curr_cache_shift(curr_cache, 0, i[0], i[1], i[2]);
-#endif
-
     for (int d = 0; d < 3; d++) {
       xa[d] -= i[d];
     }
 
     real_t fnqx = qni_wni * fnqxs_;
-#ifdef CURR_CACHE_HAVE_SHIFT
-    curr_cache.add(0, 0,0,0, fnqx * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h));
-    curr_cache.add(0, 0,1,0, fnqx * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h));
-    curr_cache.add(0, 0,0,1, fnqx * (dx[0] * (1.f - xa[1]) * (      xa[2]) - h));
-    curr_cache.add(0, 0,1,1, fnqx * (dx[0] * (      xa[1]) * (      xa[2]) + h));
-#else
     curr_cache.add(0, i[0]  ,i[1]  ,i[2]  , fnqx * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h));
     curr_cache.add(0, i[0]  ,i[1]+1,i[2]  , fnqx * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h));
     curr_cache.add(0, i[0]  ,i[1]  ,i[2]+1, fnqx * (dx[0] * (1.f - xa[1]) * (      xa[2]) - h));
     curr_cache.add(0, i[0]  ,i[1]+1,i[2]+1, fnqx * (dx[0] * (      xa[1]) * (      xa[2]) + h));
-#endif
 
     real_t fnqy = qni_wni * fnqys_;
-#ifdef CURR_CACHE_HAVE_SHIFT
-    curr_cache.add(1, 0,0,0, fnqy * (dx[1] * (1.f - xa[2])));
-    curr_cache.add(1, 0,0,1, fnqy * (dx[1] * (      xa[2])));
-#else
     curr_cache.add(1, i[0]  ,i[1]  ,i[2]  , fnqy * (dx[1] * (1.f - xa[2])));
     curr_cache.add(1, i[0]  ,i[1]  ,i[2]+1, fnqy * (dx[1] * (      xa[2])));
-#endif
 
     real_t fnqz = qni_wni * fnqzs_;
-#ifdef CURR_CACHE_HAVE_SHIFT
-    curr_cache.add(2, 0,0,0, fnqz * (dx[2] * (1.f - xa[1])));
-    curr_cache.add(2, 0,1,0, fnqz * (dx[2] * (      xa[1])));
-#else
     curr_cache.add(2, i[0]  ,i[1]  ,i[2]  , fnqz * (dx[2] * (1.f - xa[1])));
     curr_cache.add(2, i[0]  ,i[1]+1,i[2]  , fnqz * (dx[2] * (      xa[1])));
-#endif
   }
 
   void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,
