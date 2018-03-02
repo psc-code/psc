@@ -23,13 +23,13 @@ struct PushParticles__
     prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       mflds[p].zero(JXI, JXI + 3);
-      do_push_part(mflds[p], mprts[p]);
+      push_mprts_patch(mflds[p], mprts[p]);
     }
     prof_stop(pr);
   }
 
 private:
-  static void do_push_part(fields_t flds, typename Mparticles::patch_t& prts)
+  static void push_mprts_patch(fields_t flds, typename Mparticles::patch_t& prts)
   {
     using dim = typename C::dim;
     using InterpolateEM_t = typename C::InterpolateEM_t;

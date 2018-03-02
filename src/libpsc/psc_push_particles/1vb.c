@@ -154,17 +154,8 @@ struct PushParticles1vb
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds[p];
-      auto& prts = mprts[p];
-
-      flds.zero(JXI, JXI + 3);
-
-      curr_cache_t curr_cache(flds);
-
-      unsigned int n_prts = prts.size();
-      for (int n = 0; n < n_prts; n++) {
-	push(prts, n, flds, curr_cache);
-      }
+      mflds[p].zero(JXI, JXI + 3);
+      push_mprts_patch(mflds[p], mprts[p]);
     }
   }
 
@@ -183,7 +174,32 @@ struct PushParticles1vb
       }
     }
   }
+
+private:
+
+  // ----------------------------------------------------------------------
+  // push_mprts_patch
+  
+  static void push_mprts_patch(typename Mfields::fields_t flds, typename Mparticles::patch_t& prts)
+  {
+    curr_cache_t curr_cache(flds);
+  
+    unsigned int n_prts = prts.size();
+    for (int n = 0; n < n_prts; n++) {
+      push(prts, n, flds, curr_cache);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // stagger_mprts_patch
+  
+  static void stagger_mprts_patch(typename Mfields::fields_t flds, typename Mparticles::patch_t& prts)
+  {
+    curr_cache_t curr_cache(flds);
+  
+    unsigned int n_prts = prts.size();
+    for (int n = 0; n < n_prts; n++) {
+      stagger(prts, n, flds, curr_cache);
+    }
+  }
 };
-
-// ======================================================================
-
