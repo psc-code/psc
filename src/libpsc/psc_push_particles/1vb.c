@@ -187,11 +187,12 @@ struct PushParticles1vb
 
 // ======================================================================
 
-template<typename C>
+template<typename C, template<typename> class PushParticles>
 struct push_p_ops
 {
-  using Mparticles = typename C::Mparticles;
-  using Mfields = typename C::Mfields;
+  using PushParticles_t = PushParticles<C>;
+  using Mparticles = typename PushParticles_t::Mparticles;
+  using Mfields = typename PushParticles_t::Mfields;
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
   
@@ -199,7 +200,7 @@ struct push_p_ops
   {
     auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
     auto mp = mparticles_t(mprts);
-    PushParticles1vb<C>::push_mprts(*mp.sub(), *mf.sub());
+    PushParticles_t::push_mprts(*mp.sub(), *mf.sub());
     mf.put_as(mflds_base, JXI, JXI+3);
   }
   
@@ -207,7 +208,7 @@ struct push_p_ops
   {
     auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
     auto mp = mparticles_t(mprts);
-    PushParticles1vb<C>::stagger_mprts(*mp.sub(), *mf.sub());
+    PushParticles_t::stagger_mprts(*mp.sub(), *mf.sub());
     mf.put_as(mflds_base, JXI, JXI+3);
   }
 };

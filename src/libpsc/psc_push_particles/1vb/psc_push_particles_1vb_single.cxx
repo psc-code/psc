@@ -17,7 +17,7 @@ using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle,
 #include "../1vb.c"
 
 template<typename dim_t>
-using push_p_ops_1vb_single = push_p_ops<push_p_conf>;
+using push_p_ops_1vb_single = push_p_ops<push_p_conf, PushParticles1vb>;
 
 using PushParticles_t = PushParticles_<push_p_ops_1vb_single>;
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;

@@ -16,5 +16,6 @@
 template struct push_p_ops<push_p_config<MparticlesSingle, MfieldsSingle,
 					 InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t>, dim_yz>,
 					 dim_yz, opt_order_1st,
-					 Current1vbSplit>>;
+					 Current1vbSplit>,
+			   PushParticles1vb>;
 
