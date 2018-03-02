@@ -6,6 +6,8 @@
 #include "psc_push_particles_1vb.h"
 #include "push_particles.hxx"
 
+#include "../1vb.c"
+
 // ======================================================================
 // psc_push_particles: subclass "1vbec_double"
 

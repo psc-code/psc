@@ -189,6 +189,19 @@ struct PushParticles1vb
 // ======================================================================
 
 template<typename C>
+struct push_p_ops
+{
+  using Mparticles = typename C::Mparticles;
+  using Mfields = typename C::Mfields;
+  using mparticles_t = PscMparticles<Mparticles>;
+  using mfields_t = PscMfields<Mfields>;
+  
+  static void push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base);
+  static void stagger_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base);
+  static void push_mprts(Mparticles& mprts, Mfields& mflds);
+};
+
+template<typename C>
 void push_p_ops<C>::push_mprts(struct psc_mparticles *mprts,
 			       struct psc_mfields *mflds_base)
 {

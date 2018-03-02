@@ -6,6 +6,8 @@
 
 #include "psc_push_particles_1vb.h"
 
+#include "../1vb.c"
+
 template<typename dim>
 using push_p_ops_1vbec_single_ = push_p_ops<Config1vbecDouble<dim>>;
 
