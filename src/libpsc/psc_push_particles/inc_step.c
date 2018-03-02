@@ -9,53 +9,6 @@
 #define PARTICLE_STORE(prt, mprts_arr, n) do {} while (0)
 
 // ======================================================================
-// EXT_PREPARE_SORT
-//
-// if enabled, calculate the new block position for each particle once
-// it's moved, and also append particles that left the block to an extra
-// list at the end of all local particles (hopefully there's enough room...)
-
-template<typename mparticles_t, typename OPT_EXT>
-struct ExtPrepareSort
-{
-  using particle_t = typename mparticles_t::particle_t;
-
-  static void before(typename mparticles_t::patch_t& prtss)
-  {}
-
-  static void sort(typename mparticles_t::patch_t prts, int n, particle_t *prt, int *b_pos)
-  {}
-};
-
-template<typename mparticles_t>
-struct ExtPrepareSort<mparticles_t, opt_ext_prepare_sort>
-{
-  using particle_t = typename mparticles_t::particle_t;
-  
-  static void before(typename mparticles_t::patch_t& prts)
-  {
-    memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
-  }
-
-  static void sort(typename mparticles_t::patch_t& prts, int n, particle_t *prt,
-		   int *b_pos)
-  {
-    unsigned int n_prts = prts.size();
-    /* FIXME, only if blocksize == 1! */
-    int *b_mx = prts.pi_.b_mx_;
-    if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
-      prts.b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
-    } else { /* out of bounds */
-      prts.b_idx[n] = prts.nr_blocks;
-      /* append to back */
-      prts[n_prts + prts.b_cnt[prts.nr_blocks]] = *prt;
-    }
-    prts.b_cnt[prts.b_idx[n]]++;
-  }
-};
-
-// ======================================================================
 
 // ----------------------------------------------------------------------
 // push_one
@@ -129,7 +82,6 @@ push_one(particles_t& prts, int n,
 #endif
   
   pi.find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, real_t(0.));
-  //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   int lg[3];

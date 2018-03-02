@@ -6,8 +6,6 @@
 
 #include "psc_push_particles_1vb.h"
 
-#define DIM DIM_XYZ
-
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 

@@ -4,8 +4,6 @@
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
-#define DIM DIM_YZ
-
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 

@@ -41,7 +41,6 @@ template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
 	 template<typename, typename> class Current,
 	 typename CALCJ = opt_calcj_esirkepov,
-	 typename OPT_EXT = opt_ext_none,
 	 template<typename, typename> class CF = CacheFieldsNone,
 	 typename EM = Fields3d<typename MF::fields_t>,
 	 typename dim_curr = dim_xyz>
@@ -53,7 +52,6 @@ struct push_p_config
   using ip = IP;
   using order = O;
   using calcj = CALCJ;
-  using ext = OPT_EXT;
   using CacheFields = CF<typename MF::fields_t, D>;
   using FieldsEM = EM;
   using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
@@ -70,7 +68,7 @@ using Config2nd = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_2nd, opt
 				CurrentNone>;
 
 using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC, dim_yz, opt_ip_2nd, opt_order_2nd,
-					CurrentNone, opt_calcj_esirkepov, opt_ext_none, CacheFields>;
+					CurrentNone, opt_calcj_esirkepov, CacheFields>;
 
 template<typename dim>
 using Config1st = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st, opt_order_1st,
@@ -85,10 +83,10 @@ using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle, dim, op
 					Current1vbVar1, opt_calcj_1vb>;
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle, dim_xyz, opt_ip_1st_ec, opt_order_1st,
-					  Current1vbSplit, opt_calcj_1vb, opt_ext_none, CacheFieldsNone,
+					  Current1vbSplit, opt_calcj_1vb, CacheFieldsNone,
 					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>,
 					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st,
-					 Current1vbVar1, opt_calcj_1vb, opt_ext_none, CacheFieldsNone,
+					 Current1vbVar1, opt_calcj_1vb, CacheFieldsNone,
 					 Fields3d<typename MfieldsSingle::fields_t, dim_1>,
 					 dim_1>;

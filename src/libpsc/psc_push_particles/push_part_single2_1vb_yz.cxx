@@ -4,14 +4,13 @@
 #include "psc_particles_as_single.h"
 #include "psc_fields_as_single.h"
 
-#define DIM DIM_YZ
 #define CALC_J CALC_J_1VB_2D
 
 #include "inc_defs.h"
 #include "push_config.hxx"
 
 using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle, dim_yz, opt_ip_1st, opt_order_1st,
-				  Current1vb2d, opt_calcj_1vb, opt_ext_prepare_sort>;
+				  Current1vb2d, opt_calcj_1vb>;
 
 #include "1vb.c"
 

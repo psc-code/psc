@@ -6,7 +6,6 @@
 
 #include "psc_push_particles_1vb.h"
 
-#define DIM DIM_XYZ
 #define CALC_J CALC_J_1VB_VAR1
 
 #include "../inc_defs.h"

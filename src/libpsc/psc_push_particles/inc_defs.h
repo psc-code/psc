@@ -39,9 +39,3 @@ struct opt_ip_1st;
 struct opt_ip_1st_ec;
 struct opt_ip_2nd;
 
-// ----------------------------------------------------------------------
-
-
-struct opt_ext_none;
-struct opt_ext_prepare_sort;
-

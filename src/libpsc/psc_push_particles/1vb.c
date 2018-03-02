@@ -32,7 +32,6 @@ struct PushParticles1vb
       auto& prts = mprts[p];
 
       flds.zero(JXI, JXI + 3);
-      ExtPrepareSort<mparticles_t, typename C::ext>::before(prts);
 
       typename C::curr_cache_t curr_cache(flds);
 
@@ -50,7 +49,6 @@ struct PushParticles1vb
       auto& prts = mprts[p];
 
       flds.zero(JXI, JXI + 3);
-      ExtPrepareSort<mparticles_t, typename C::ext>::before(prts);
 
       unsigned int n_prts = prts.size();
       for (int n = 0; n < n_prts; n++) {
