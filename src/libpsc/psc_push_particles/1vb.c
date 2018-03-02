@@ -9,14 +9,14 @@
 
 #include "fields.hxx"
 
-using real_t = mparticles_t::real_t;
-
 #include "interpolate.hxx"
 #include "inc_push.c"
 #include "inc_curr.c"
-#include "inc_step.c"
+
+#define MAX_NR_KINDS (10)
 
 // ======================================================================
+// PushParticles1vb
 
 template<typename C>
 struct PushParticles1vb
@@ -24,6 +24,13 @@ struct PushParticles1vb
   using Mparticles = typename C::Mparticles;
   using Mfields = typename C::Mfields;
   using mparticles_t = PscMparticles<Mparticles>;
+  using real_t = typename Mparticles::real_t;
+  using Real3 = Vec3<real_t>;
+  using dim = typename C::dim;
+  using FieldsEM = typename C::FieldsEM;
+  using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
+  using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
+  using Current = typename C::Current_t;
   
   // ----------------------------------------------------------------------
   // push
@@ -31,13 +38,6 @@ struct PushParticles1vb
   static void push(typename C::Mparticles::patch_t& prts, int n,
 		   typename C::Mfields::fields_t flds_em, typename C::curr_cache_t curr_cache)
   {
-    using dim = typename C::dim;
-    using FieldsEM = typename C::FieldsEM;
-    using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
-    using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
-    using Current = typename C::Current_t;
-    using Real3 = Vec3<real_t>;
-
     AdvanceParticle_t advance(prts.grid().dt);
     FieldsEM EM(flds_em);
     Current current(prts.grid());
@@ -50,8 +50,7 @@ struct PushParticles1vb
       dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
     }
 
-    particle_t *prt;
-    PARTICLE_LOAD(prt, prts, n);
+    particle_t *prt = &prts[n];
   
     // field interpolation
     real_t *xi = &prt->xi;
@@ -114,8 +113,6 @@ struct PushParticles1vb
     prt->zi = 0.f;
 #endif
 #endif
-
-    PARTICLE_STORE(prt, mprts_arr, n);
   }
 
   // ----------------------------------------------------------------------
@@ -123,12 +120,6 @@ struct PushParticles1vb
 
   static void stagger(typename mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
   {
-    using dim = typename C::dim;
-    using FieldsEM = typename C::FieldsEM;
-    using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
-    using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
-    using Real3 = Vec3<real_t>;
-
     AdvanceParticle_t advance(prts.grid().dt);
     FieldsEM EM(flds_em);
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
@@ -139,8 +130,7 @@ struct PushParticles1vb
       dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
     }
 
-    particle_t *prt;
-    PARTICLE_LOAD(prt, prts, n);
+    particle_t *prt = &prts[n];
   
     // field interpolation
     real_t *xi = &prt->xi;
@@ -162,8 +152,6 @@ struct PushParticles1vb
     int kind = prt->kind();
     real_t dq = dq_kind[kind];
     advance.push_p(&prt->pxi, E, H, -.5f * dq);
-
-    PARTICLE_STORE(prt, mprts_arr, n);
   }
 
   // ----------------------------------------------------------------------
@@ -186,6 +174,7 @@ struct PushParticles1vb
     }
   }
 
+  // ----------------------------------------------------------------------
   // stagger_mprts
   
   static void stagger_mprts(Mparticles& mprts, Mfields& mflds)
@@ -203,6 +192,8 @@ struct PushParticles1vb
     }
   }
 };
+
+// ======================================================================
 
 template<typename C>
 void push_p_ops<C>::push_mprts(typename C::Mparticles& mprts,
