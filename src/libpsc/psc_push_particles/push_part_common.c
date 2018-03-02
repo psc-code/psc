@@ -9,7 +9,6 @@ struct PushParticles__
   using Mparticles = typename C::Mparticles;
   using Mfields = typename C::Mfields;
   using fields_t = typename Mfields::fields_t;
-  using CacheFields_t = typename C::CacheFields;
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
@@ -23,12 +22,8 @@ struct PushParticles__
 
     prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
-      // FIXME, in the cache case can't we just skip this and just set j when copying back?
       mflds[p].zero(JXI, JXI + 3);
-      CacheFields_t cache;
-      auto flds = cache.from_em(mflds[p]);
-      do_push_part(flds, mprts[p]);
-      cache.to_j(flds, mflds[p]);
+      do_push_part(mflds[p], mprts[p]);
     }
     prof_stop(pr);
   }

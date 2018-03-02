@@ -5,7 +5,6 @@
 #include "fields.hxx"
 
 #include "inc_defs.h"
-#include "pushp_cache_fields.hxx"
 #include "interpolate.hxx"
 #include "inc_curr.c"
 #include "pushp_current_esirkepov.hxx"
@@ -35,14 +34,12 @@ template<typename MP, typename MF,
 	 typename IPEM,
 	 typename D, typename O,
 	 template<typename, typename> class CURRENT,
-	 template<typename, typename> class CF = CacheFieldsNone,
 	 typename dim_curr = dim_xyz>
 struct push_p_config
 {
   using Mparticles = MP;
   using Mfields = MF;
   using dim = D;
-  using CacheFields = CF<typename MF::fields_t, D>;
   using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
   using Current_t = CURRENT<curr_cache_t, D>;
 
@@ -65,7 +62,7 @@ using Config2nd = push_p_config<MparticlesDouble, MfieldsC,
 using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC,
 					InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim_yz>,
 					dim_yz, opt_order_2nd,
-					CurrentNone, CacheFields>;
+					CurrentNone>;
 
 template<typename dim>
 using Config1st = push_p_config<MparticlesDouble, MfieldsC,
@@ -88,10 +85,10 @@ using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle,
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle,
 					  InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t, dim_xz>, dim_xyz>,
 					  dim_xyz, opt_order_1st,
-					  Current1vbSplit, CacheFieldsNone,
+					  Current1vbSplit,
 					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle,
 					 InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t, dim_1>, dim_1>,
 					 dim_1, opt_order_1st,
-					 Current1vbVar1, CacheFieldsNone,
+					 Current1vbVar1,
 					 dim_1>;
