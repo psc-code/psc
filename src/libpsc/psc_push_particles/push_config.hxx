@@ -8,6 +8,7 @@
 #include "pushp_cache_fields.hxx"
 #include "interpolate.hxx"
 #include "inc_curr.c"
+#include "pushp_current_esirkepov.hxx"
 #include "inc_push.c"
 
 #define atomicAdd(addr, val) \
