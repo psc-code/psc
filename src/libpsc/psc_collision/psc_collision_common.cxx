@@ -87,21 +87,6 @@ calc_stats(struct psc_collision_stats *stats, real_t *nudts, int cnt)
 }
 
 // ----------------------------------------------------------------------
-// find_cell_index
-
-static inline int
-find_cell_index(mparticles_t::patch_t& prts, particle_t *prt, const int ldims[3])
-{
-  int pos[3];
-  real_t *xi = &prt->xi;
-  for (int d = 0; d < 3; d++) {
-    pos[d] = prts.cellPosition(xi[d], 3);
-    assert(pos[d] >= 0 && pos[d] < ldims[d]);
-  }
-  return (pos[2] * ldims[1] + pos[1]) * ldims[0] + pos[0];
-}
-
-// ----------------------------------------------------------------------
 // find_cell_offsets
 
 static void
@@ -118,8 +103,7 @@ find_cell_offsets(int offsets[], mparticles_t mprts, int p)
   offsets[last] = 0;
   int n_prts = prts.size();
   for (int n = 0; n < n_prts; n++) {
-    particle_t *prt = &prts[n];
-    int cell_index = find_cell_index(prts, prt, ldims);
+    int cell_index = prts.validCellIndex(prts[n]);
     assert(cell_index >= last);
     while (last < cell_index) {
       offsets[++last] = n;
@@ -399,7 +383,7 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   prt2->pxi=px4;
   prt2->pyi=py4;
   prt2->pzi=pz4;
-  
+
   
   return nudt;
 }
