@@ -31,7 +31,6 @@ struct PushParticles__
 private:
   static void push_mprts_patch(fields_t flds, typename Mparticles::patch_t& prts)
   {
-    using dim = typename C::dim;
     using InterpolateEM_t = typename C::InterpolateEM_t;
     using CurrentE_t = typename C::CurrentE_t;
     using particle_t = typename Mparticles::particle_t;
@@ -46,9 +45,9 @@ private:
     Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
     Fields3d<fields_t> J(flds);
 
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *part = &*prt_iter;
-      real_t *x = &part->xi;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      particle_t& prt = *prt_iter;
+      real_t *x = &prt.xi;
       real_t vv[3];
 
       // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
@@ -66,18 +65,18 @@ private:
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-      real_t dq = dqs * prts.prt_qni(*part) / prts.prt_mni(*part);
-      advance.push_p(&part->pxi, E, H, dq);
+      real_t dq = dqs * prts.prt_qni(prt) / prts.prt_mni(prt);
+      advance.push_p(&prt.pxi, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-      advance.calc_v(vv, &part->pxi);
+      advance.calc_v(vv, &prt.pxi);
       advance.push_x(x, vv);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt
       c.charge_after(x);
 
       // CURRENT DENSITY AT (n+1.0)*dt
-      c.prep(prts.prt_qni_wni(*part), vv);
+      c.prep(prts.prt_qni_wni(prt), vv);
       c.calc(J);
     }
   }
