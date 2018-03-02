@@ -23,7 +23,6 @@ struct PushParticles1vb
 {
   using Mparticles = typename C::Mparticles;
   using Mfields = typename C::Mfields;
-  using mparticles_t = PscMparticles<Mparticles>;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using dim = typename C::dim;
@@ -118,7 +117,7 @@ struct PushParticles1vb
   // ----------------------------------------------------------------------
   // stagger
 
-  static void stagger(typename mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
+  static void stagger(typename Mparticles::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
   {
     AdvanceParticle_t advance(prts.grid().dt);
     FieldsEM EM(flds_em);
