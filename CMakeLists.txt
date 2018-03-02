@@ -25,7 +25,7 @@ endif()
 find_package(MPI REQUIRED)
 add_definitions(-DOMPI_SKIP_MPICXX)
 
-find_package(GTest REQUIRED)
+find_package(GTest)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/src/include/psc_config.h.in"

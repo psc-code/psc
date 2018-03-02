@@ -52,9 +52,11 @@ target_compile_features(psccuda
   )
 
 macro(add_cuda_test name)
-  add_executable(${name} tests/${name}.cu)
-  target_link_libraries(${name} psccuda GTest::GTest GTest::Main)
-  gtest_discover_tests(${name})
+  if(GTEST_FOUND)
+    add_executable(${name} tests/${name}.cu)
+    target_link_libraries(${name} psccuda GTest::GTest GTest::Main)
+    gtest_discover_tests(${name})
+  endif()
 endmacro()
 
 add_cuda_test(test_cuda_accel)
