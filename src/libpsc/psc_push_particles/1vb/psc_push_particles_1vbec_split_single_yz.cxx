@@ -13,8 +13,8 @@
 
 #include "../1vb.c"
 
-template struct push_p_ops<PushParticles1vb<push_p_config<MparticlesSingle, MfieldsSingle,
-							  InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t>, dim_yz>,
-							  dim_yz, opt_order_1st,
-							  Current1vbSplit>>>;
+template struct PscPushParticles_<PushParticles1vb<push_p_config<MparticlesSingle, MfieldsSingle,
+								 InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t>, dim_yz>,
+								 dim_yz, opt_order_1st,
+								 Current1vbSplit>>>;
 

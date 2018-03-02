@@ -9,7 +9,7 @@
 #include "../1vb.c"
 
 template<typename dim>
-using push_p_ops_1vbec_single_ = push_p_ops<PushParticles1vb<Config1vbecDouble<dim>>>;
+using push_p_ops_1vbec_single_ = PscPushParticles_<PushParticles1vb<Config1vbecDouble<dim>>>;
 
 // FIXME, special hack... for xyz_xz
 
@@ -25,7 +25,7 @@ struct PushParticles1vbecSingle : PushParticles_<push_p_ops_1vbec_single_>
 
   void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
   {
-    push_p_ops<PushParticles1vb<Config1vbecSingleXZ>>::push_mprts(mprts, mflds);
+    PscPushParticles_<PushParticles1vb<Config1vbecSingleXZ>>::push_mprts(mprts, mflds);
   }
 
   static void push_mprts_xz(struct psc_push_particles *push,
