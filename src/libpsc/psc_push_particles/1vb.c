@@ -54,23 +54,23 @@ private:
   
   static void push_mprts_patch(typename Mfields::fields_t flds, typename Mparticles::patch_t& prts)
   {
+    typename InterpolateEM_t::fields_t EM(flds);
+    InterpolateEM_t ip;
+    AdvanceParticle_t advance(prts.grid().dt);
     curr_cache_t curr_cache(flds);
-  
+    Current current(prts.grid());
+
+    PI<real_t> pi(prts.grid());
+    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+    real_t dq_kind[MAX_NR_KINDS];
+    auto& kinds = prts.grid().kinds;
+    assert(kinds.size() <= MAX_NR_KINDS);
+    for (int k = 0; k < kinds.size(); k++) {
+      dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+    }
+
     unsigned int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      AdvanceParticle_t advance(prts.grid().dt);
-      typename InterpolateEM_t::fields_t EM(flds);
-      Current current(prts.grid());
-      PI<real_t> pi(prts.grid());
-      Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
-      real_t dq_kind[MAX_NR_KINDS];
-      auto& kinds = prts.grid().kinds;
-      assert(kinds.size() <= MAX_NR_KINDS);
-      for (int k = 0; k < kinds.size(); k++) {
-	dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
-      }
-      InterpolateEM_t ip;
-
       particle_t *prt = &prts[n];
   
       // field interpolation
@@ -141,21 +141,21 @@ private:
   
   static void stagger_mprts_patch(typename Mfields::fields_t flds, typename Mparticles::patch_t& prts)
   {
-    curr_cache_t curr_cache(flds);
-  
+    typename InterpolateEM_t::fields_t EM(flds);
+    InterpolateEM_t ip;
+        
+    AdvanceParticle_t advance(prts.grid().dt);
+
+    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+    real_t dq_kind[MAX_NR_KINDS];
+    auto& kinds = prts.grid().kinds;
+    assert(kinds.size() <= MAX_NR_KINDS);
+    for (int k = 0; k < kinds.size(); k++) {
+      dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+    }
+      
     unsigned int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      //stagger(prts, n, flds, curr_cache);
-      AdvanceParticle_t advance(prts.grid().dt);
-      typename InterpolateEM_t::fields_t EM(flds);
-      Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
-      real_t dq_kind[MAX_NR_KINDS];
-      auto& kinds = prts.grid().kinds;
-      assert(kinds.size() <= MAX_NR_KINDS);
-      for (int k = 0; k < kinds.size(); k++) {
-	dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
-      }
-      
       particle_t *prt = &prts[n];
       
       // field interpolation
@@ -168,7 +168,6 @@ private:
       
       // FIELD INTERPOLATION
 
-      InterpolateEM_t ip;
       ip.set_coeffs(xm);
       // FIXME, we're not using EM instead flds_em
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
