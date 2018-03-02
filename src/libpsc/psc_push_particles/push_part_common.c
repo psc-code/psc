@@ -107,6 +107,3 @@ struct PscPushParticles_
   }
 };
 
-#ifdef CONFIG
-template struct PscPushParticles_<PushParticles__<CONFIG>>;
-#endif
