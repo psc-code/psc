@@ -24,6 +24,7 @@ struct PushParticles1vb
   using Mparticles = typename C::Mparticles;
   using Mfields = typename C::Mfields;
   using mparticles_t = PscMparticles<Mparticles>;
+  using PushOne_t = PushOne;
   
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
@@ -37,7 +38,7 @@ struct PushParticles1vb
 
       unsigned int n_prts = prts.size();
       for (int n = 0; n < n_prts; n++) {
-	push_one<C>(prts, n, flds, curr_cache);
+	PushOne_t::push<C>(prts, n, flds, curr_cache);
       }
     }
   }
@@ -52,7 +53,7 @@ struct PushParticles1vb
 
       unsigned int n_prts = prts.size();
       for (int n = 0; n < n_prts; n++) {
-	stagger_one<C>(prts, n, flds);
+	PushOne::stagger<C>(prts, n, flds);
       }
     }
   }
