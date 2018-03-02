@@ -12,7 +12,7 @@
 // psc_push_particles: subclass "1vbec_double"
 
 template<typename dim>
-using push_p_ops_1vbec_double = push_p_ops<Config1vbecDouble<dim>, PushParticles1vb>;
+using push_p_ops_1vbec_double = push_p_ops<PushParticles1vb<Config1vbecDouble<dim>>>;
 
 using PushParticles_t = PushParticles_<push_p_ops_1vbec_double>;
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;

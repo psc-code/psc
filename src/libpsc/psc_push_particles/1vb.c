@@ -187,10 +187,9 @@ struct PushParticles1vb
 
 // ======================================================================
 
-template<typename C, template<typename> class PushParticles>
+template<class PushParticles_t>
 struct push_p_ops
 {
-  using PushParticles_t = PushParticles<C>;
   using Mparticles = typename PushParticles_t::Mparticles;
   using Mfields = typename PushParticles_t::Mfields;
   using mparticles_t = PscMparticles<Mparticles>;
