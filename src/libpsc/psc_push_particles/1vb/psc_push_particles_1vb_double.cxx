@@ -9,7 +9,9 @@
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 
-using push_p_conf = push_p_config<MparticlesDouble, MfieldsC, dim_yz, opt_ip_1st, opt_order_1st,
+using push_p_conf = push_p_config<MparticlesDouble, MfieldsC,
+				  InterpolateEM<Fields3d<MfieldsC::fields_t>, opt_ip_1st, dim_yz>,
+				  dim_yz, opt_ip_1st, opt_order_1st,
 				  Current1vb2d>;
 
 #include "../1vb.c"
