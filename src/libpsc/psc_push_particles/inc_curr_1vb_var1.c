@@ -9,9 +9,10 @@
 // ----------------------------------------------------------------------
 // calc_3d_dx1
 
-template<typename curr_cache_t, typename dim_t>
+template<typename CURR_CACHE, typename dim_t>
 struct Current1vbVar1
 {
+  using curr_cache_t = CURR_CACHE;
   using real_t = typename curr_cache_t::real_t;
   using Real3 = Vec3<real_t>;
   

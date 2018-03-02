@@ -7,9 +7,10 @@
 // deposited is not the same that the 3d V-B algorithm would produce,
 // but charge conservation remains exactly satisfied, anyway.
 
-template<typename curr_cache_t, typename dim_t>
+template<typename CURR_CACHE, typename dim_t>
 struct Current1vb2d
 {
+  using curr_cache_t = CURR_CACHE;
   using real_t = typename curr_cache_t::real_t;
   
   Current1vb2d(const Grid_t& grid)

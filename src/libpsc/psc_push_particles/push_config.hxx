@@ -40,8 +40,8 @@ struct push_p_config
   using Mparticles = MP;
   using Mfields = MF;
   using dim = D;
-  using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
-  using Current_t = CURRENT<curr_cache_t, D>;
+  using xcurr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
+  using Current_t = CURRENT<xcurr_cache_t, D>;
 
   using InterpolateEM_t = IPEM;
   using AdvanceParticle_t = AdvanceParticle<typename MP::real_t, D>;

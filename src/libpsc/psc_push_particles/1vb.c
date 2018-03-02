@@ -24,12 +24,13 @@ struct PushParticles1vb
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using Current = typename C::Current_t;
   using particle_t = typename Mparticles::particle_t;
+  using curr_cache_t = typename Current::curr_cache_t;
   
   // ----------------------------------------------------------------------
   // push
 
   static void push(typename C::Mparticles::patch_t& prts, int n,
-		   typename C::Mfields::fields_t flds_em, typename C::curr_cache_t curr_cache)
+		   typename C::Mfields::fields_t flds_em, curr_cache_t curr_cache)
   {
     AdvanceParticle_t advance(prts.grid().dt);
     typename InterpolateEM_t::fields_t EM(flds_em);
@@ -158,7 +159,7 @@ struct PushParticles1vb
 
       flds.zero(JXI, JXI + 3);
 
-      typename C::curr_cache_t curr_cache(flds);
+      curr_cache_t curr_cache(flds);
 
       unsigned int n_prts = prts.size();
       for (int n = 0; n < n_prts; n++) {
