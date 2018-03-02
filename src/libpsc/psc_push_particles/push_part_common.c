@@ -10,6 +10,7 @@ struct PushParticles__
   using Mfields = typename C::Mfields;
   using fields_t = typename Mfields::fields_t;
   using CacheFields_t = typename C::CacheFields;
+  using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
 
@@ -38,7 +39,6 @@ private:
     using dim = typename C::dim;
     using InterpolateEM_t = typename C::InterpolateEM_t;
     using CurrentE_t = typename C::CurrentE_t;
-    using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
     using particle_t = typename Mparticles::particle_t;
 
     real_t dqs = .5f * prts.grid().eta * prts.grid().dt;

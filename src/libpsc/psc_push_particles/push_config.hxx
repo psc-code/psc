@@ -47,6 +47,7 @@ struct push_p_config
   using Current_t = CURRENT<curr_cache_t, D>;
 
   using InterpolateEM_t = IPEM;
+  using AdvanceParticle_t = AdvanceParticle<typename MP::real_t, D>;
   using CurrentE_t = Current<O, D, InterpolateEM_t, Fields3d<typename MF::fields_t>>;
 };
 
