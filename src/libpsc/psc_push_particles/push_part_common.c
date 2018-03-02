@@ -1,12 +1,6 @@
 
 #include <mrc_profile.h>
 
-#include "inc_defs.h"
-
-#include "fields.hxx"
-#include "inc_push.c"
-#include "interpolate.hxx"
-
 #include <particle_iter.h>
 
 // ----------------------------------------------------------------------

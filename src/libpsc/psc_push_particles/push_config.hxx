@@ -5,8 +5,9 @@
 #include "fields.hxx"
 
 #include "inc_defs.h"
-#include "inc_push.c"
+#include "interpolate.hxx"
 #include "inc_curr.c"
+#include "inc_push.c"
 
 template<typename fields_t, typename dim>
 struct CacheFieldsNone;

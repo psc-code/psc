@@ -7,12 +7,6 @@
 
 #include "1vb/psc_push_particles_1vb.h"
 
-#include "fields.hxx"
-
-#include "interpolate.hxx"
-#include "inc_push.c"
-#include "inc_curr.c"
-
 #define MAX_NR_KINDS (10)
 
 // ======================================================================
