@@ -195,28 +195,20 @@ struct push_p_ops
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
   
-  static void push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base);
-  static void stagger_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base);
-  static void push_mprts(Mparticles& mprts, Mfields& mflds);
+  static void push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
+    auto mp = mparticles_t(mprts);
+    PushParticles1vb<C>::push_mprts(*mp.sub(), *mf.sub());
+    mf.put_as(mflds_base, JXI, JXI+3);
+  }
+  
+  static void stagger_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  {
+    auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
+    auto mp = mparticles_t(mprts);
+    PushParticles1vb<C>::stagger_mprts(*mp.sub(), *mf.sub());
+    mf.put_as(mflds_base, JXI, JXI+3);
+  }
 };
-
-template<typename C>
-void push_p_ops<C>::push_mprts(struct psc_mparticles *mprts,
-			       struct psc_mfields *mflds_base)
-{
-  auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-  auto mp = mparticles_t(mprts);
-  PushParticles1vb<C>::push_mprts(*mp.sub(), *mf.sub());
-  mf.put_as(mflds_base, JXI, JXI+3);
-}
-
-template<typename C>
-void push_p_ops<C>::stagger_mprts(struct psc_mparticles *mprts,
-				  struct psc_mfields *mflds_base)
-{
-  auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-  auto mp = mparticles_t(mprts);
-  PushParticles1vb<C>::stagger_mprts(*mp.sub(), *mf.sub());
-  mf.put_as(mflds_base, JXI, JXI+3);
-}
 
