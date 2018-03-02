@@ -195,22 +195,13 @@ template <typename T>
 class PushParticlesTest : public ::testing::Test
 {};
 
-struct Test1vbecSingle
-{
-  using PushParticles = PushParticles1vb<Config1vbecSingle1>;
-};
+using PushParticles1vbecSingle = PushParticles1vb<Config1vbecSingle1>;
+using PushParticles1vbecDouble = PushParticles1vb<Config1vbecDouble<dim_1>>;
+using PushParticles2ndDouble = PushParticles__<Config2nd<dim_1>>;
 
-struct Test1vbecDouble
-{
-  using PushParticles = PushParticles1vb<Config1vbecDouble<dim_1>>;
-};
-
-struct Test2ndDouble
-{
-  using PushParticles = PushParticles__<Config2nd<dim_1>>;
-};
-
-using PushParticlesTestTypes = ::testing::Types<Test1vbecSingle, Test1vbecDouble, Test2ndDouble>;
+using PushParticlesTestTypes = ::testing::Types<PushParticles1vbecSingle,
+						PushParticles1vbecDouble,
+						PushParticles2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -219,7 +210,7 @@ TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
 TYPED_TEST(PushParticlesTest, Accel)
 {
-  using PushParticles = typename TypeParam::PushParticles;
+  using PushParticles = TypeParam;
   using Mparticles = typename PushParticles::Mparticles;
   using Mfields = typename PushParticles::Mfields;
   using real_t = typename Mparticles::real_t;
@@ -264,7 +255,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 
 TYPED_TEST(PushParticlesTest, Cyclo)
 {
-  using PushParticles = typename TypeParam::PushParticles;
+  using PushParticles = TypeParam;
   using Mparticles = typename PushParticles::Mparticles;
   using Mfields = typename PushParticles::Mfields;
   using real_t = typename Mparticles::real_t;
