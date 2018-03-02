@@ -37,7 +37,7 @@ private:
   {
     using dim = typename C::dim;
     using InterpolateEM_t = typename C::InterpolateEM_t;
-    using Current_t = Current<typename C::order, dim, InterpolateEM_t, Fields3d<fields_t>>;
+    using CurrentE_t = typename C::CurrentE_t;
     using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
     using particle_t = typename Mparticles::particle_t;
 
@@ -46,7 +46,7 @@ private:
   
     AdvanceParticle_t advance(prts.grid().dt);
     InterpolateEM_t ip;
-    Current_t c(prts.grid());
+    CurrentE_t c(prts.grid());
 
     Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
     Fields3d<fields_t> J(flds);

@@ -33,7 +33,7 @@ struct curr_cache_t : fields_t
 
 template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
-	 template<typename, typename> class Current,
+	 template<typename, typename> class CURRENT,
 	 typename CALCJ = opt_calcj_esirkepov,
 	 template<typename, typename> class CF = CacheFieldsNone,
 	 typename EM = Fields3d<typename MF::fields_t>,
@@ -43,14 +43,14 @@ struct push_p_config
   using Mparticles = MP;
   using Mfields = MF;
   using dim = D;
-  using order = O;
   using calcj = CALCJ;
   using CacheFields = CF<typename MF::fields_t, D>;
   using FieldsEM = EM;
   using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
-  using Current_t = Current<curr_cache_t, D>;
+  using Current_t = CURRENT<curr_cache_t, D>;
 
   using InterpolateEM_t = InterpolateEM<FieldsEM, IP, dim>;
+  using CurrentE_t = Current<O, D, InterpolateEM_t, Fields3d<typename MF::fields_t>>;
 };
 
 #include "psc_particles_double.h"
