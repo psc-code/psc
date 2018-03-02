@@ -133,9 +133,9 @@ push_one(particles_t& prts, int n,
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   int lg[3];
-  IF_DIM_X( lg[0] = ip.cx.g.l; );
-  IF_DIM_Y( lg[1] = ip.cy.g.l; );
-  IF_DIM_Z( lg[2] = ip.cz.g.l; );
+  if (!dim::InvarX::value) { lg[0] = ip.cx.g.l; }
+  if (!dim::InvarY::value) { lg[1] = ip.cy.g.l; }
+  if (!dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
   current.calc_j(curr_cache, xm, xp, lf, lg, particle_qni_wni(prt), vxi);
 
 #ifdef PUSH_DIM
