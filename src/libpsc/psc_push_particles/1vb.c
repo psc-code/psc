@@ -114,38 +114,6 @@ struct PushParticles1vb
 
   static void stagger(typename Mparticles::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
   {
-    AdvanceParticle_t advance(prts.grid().dt);
-    typename InterpolateEM_t::fields_t EM(flds_em);
-    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
-    real_t dq_kind[MAX_NR_KINDS];
-    auto& kinds = prts.grid().kinds;
-    assert(kinds.size() <= MAX_NR_KINDS);
-    for (int k = 0; k < kinds.size(); k++) {
-      dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
-    }
-
-    particle_t *prt = &prts[n];
-  
-    // field interpolation
-    real_t *xi = &prt->xi;
-
-    real_t xm[3];
-    for (int d = 0; d < 3; d++) {
-      xm[d] = xi[d] * dxi[d];
-    }
-
-    // FIELD INTERPOLATION
-
-    InterpolateEM_t ip;
-    ip.set_coeffs(xm);
-    // FIXME, we're not using EM instead flds_em
-    real_t E[3] = { ip.ex(flds_em), ip.ey(flds_em), ip.ez(flds_em) };
-    real_t H[3] = { ip.hx(flds_em), ip.hy(flds_em), ip.hz(flds_em) };
-
-    // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
-    int kind = prt->kind();
-    real_t dq = dq_kind[kind];
-    advance.push_p(&prt->pxi, E, H, -.5f * dq);
   }
 
   // ----------------------------------------------------------------------
@@ -199,7 +167,39 @@ private:
   
     unsigned int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      stagger(prts, n, flds, curr_cache);
+      //stagger(prts, n, flds, curr_cache);
+      AdvanceParticle_t advance(prts.grid().dt);
+      typename InterpolateEM_t::fields_t EM(flds);
+      Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+      real_t dq_kind[MAX_NR_KINDS];
+      auto& kinds = prts.grid().kinds;
+      assert(kinds.size() <= MAX_NR_KINDS);
+      for (int k = 0; k < kinds.size(); k++) {
+	dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+      }
+      
+      particle_t *prt = &prts[n];
+      
+      // field interpolation
+      real_t *xi = &prt->xi;
+      
+      real_t xm[3];
+      for (int d = 0; d < 3; d++) {
+	xm[d] = xi[d] * dxi[d];
+      }
+      
+      // FIELD INTERPOLATION
+
+      InterpolateEM_t ip;
+      ip.set_coeffs(xm);
+      // FIXME, we're not using EM instead flds_em
+      real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
+      real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
+      
+      // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
+      int kind = prt->kind();
+      real_t dq = dq_kind[kind];
+      advance.push_p(&prt->pxi, E, H, -.5f * dq);
     }
   }
 };
