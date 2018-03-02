@@ -10,16 +10,14 @@
 
 // ======================================================================
 
+template<typename C>
 struct PushOne
 {
-
   // ----------------------------------------------------------------------
-  // push_one
+  // push
 
-  template<typename C, typename particles_t>
-    static void
-    push(particles_t& prts, int n,
-	 typename C::Mfields::fields_t flds_em, typename C::curr_cache_t curr_cache)
+  static void push(typename C::Mparticles::patch_t& prts, int n,
+		   typename C::Mfields::fields_t flds_em, typename C::curr_cache_t curr_cache)
   {
     using dim = typename C::dim;
     using FieldsEM = typename C::FieldsEM;
@@ -111,9 +109,7 @@ struct PushOne
   // ----------------------------------------------------------------------
   // stagger_one
 
-  template<typename C>
-  static void
-  stagger(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
+  static void stagger(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
   {
     using dim = typename C::dim;
     using FieldsEM = typename C::FieldsEM;
