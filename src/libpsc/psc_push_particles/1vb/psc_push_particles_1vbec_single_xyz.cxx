@@ -11,7 +11,7 @@
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 
-using push_p_conf = Config1vbecSingle<dim_1>;
-
 #include "../1vb.c"
+
+template struct push_p_ops<Config1vbecSingle<dim_1>>;
 

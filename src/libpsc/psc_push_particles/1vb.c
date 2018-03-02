@@ -23,6 +23,7 @@ struct PushParticles1vb
   using InterpolateEM_t = typename C::InterpolateEM_t;
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using Current = typename C::Current_t;
+  using particle_t = typename Mparticles::particle_t;
   
   // ----------------------------------------------------------------------
   // push
@@ -92,7 +93,7 @@ struct PushParticles1vb
     if (!dim::InvarX::value) { lg[0] = ip.cx.g.l; }
     if (!dim::InvarY::value) { lg[1] = ip.cy.g.l; }
     if (!dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
-    current.calc_j(curr_cache, xm, xp, lf, lg, particle_qni_wni(prt), vxi);
+    current.calc_j(curr_cache, xm, xp, lf, lg, prts.prt_qni_wni(*prt), vxi);
 
 #ifdef PUSH_DIM
 #if !(PUSH_DIM & DIM_X)
@@ -188,13 +189,6 @@ struct PushParticles1vb
 // ======================================================================
 
 template<typename C>
-void push_p_ops<C>::push_mprts(typename C::Mparticles& mprts,
-			       typename C::Mfields& mflds)
-{
-  PushParticles1vb<C>::push_mprts(mprts, mflds);
-}
-
-template<typename C>
 void push_p_ops<C>::push_mprts(struct psc_mparticles *mprts,
 			       struct psc_mfields *mflds_base)
 {
@@ -214,4 +208,3 @@ void push_p_ops<C>::stagger_mprts(struct psc_mparticles *mprts,
   mf.put_as(mflds_base, JXI, JXI+3);
 }
 
-template struct push_p_ops<push_p_conf>;

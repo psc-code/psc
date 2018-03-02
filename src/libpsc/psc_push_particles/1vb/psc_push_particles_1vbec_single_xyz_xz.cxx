@@ -14,7 +14,7 @@
 #define CURR_CACHE_DIM DIM_XZ
 #define CALC_J CALC_J_1VB_SPLIT
 
-using push_p_conf = Config1vbecSingleXZ;
-
 #include "../1vb.c"
+
+template struct push_p_ops<Config1vbecSingleXZ>;
 

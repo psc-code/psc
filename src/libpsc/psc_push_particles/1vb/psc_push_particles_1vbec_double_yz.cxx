@@ -9,7 +9,6 @@
 
 #define CALC_J CALC_J_1VB_VAR1
 
-using push_p_conf = Config1vbecDouble<dim_yz>;
-
 #include "../1vb.c"
 
+template struct push_p_ops<Config1vbecDouble<dim_yz>>;

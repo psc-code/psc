@@ -186,6 +186,7 @@ TEST(Mparticles, setParticles)
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 #include "../libpsc/psc_push_particles/push_config.hxx"
 #include "../libpsc/psc_push_particles/push_part_common.c"
+#include "../libpsc/psc_push_particles/1vb.c"
 
 // ======================================================================
 // PushParticlesTest
@@ -196,12 +197,12 @@ class PushParticlesTest : public ::testing::Test
 
 struct Test1vbecSingle
 {
-  using PushParticles = push_p_ops<Config1vbecSingle1>;
+  using PushParticles = PushParticles1vb<Config1vbecSingle1>;
 };
 
 struct Test1vbecDouble
 {
-  using PushParticles = push_p_ops<Config1vbecDouble<dim_1>>;
+  using PushParticles = PushParticles1vb<Config1vbecDouble<dim_1>>;
 };
 
 struct Test2ndDouble

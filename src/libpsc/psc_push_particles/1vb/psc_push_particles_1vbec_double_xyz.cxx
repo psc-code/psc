@@ -9,7 +9,6 @@
 #include "../inc_defs.h"
 #include "../push_config.hxx"
 
-using push_p_conf = Config1vbecDouble<dim_xyz>;
-
 #include "../1vb.c"
 
+template struct push_p_ops<Config1vbecDouble<dim_xyz>>;

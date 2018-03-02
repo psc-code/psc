@@ -13,7 +13,6 @@
 #define CURR_CACHE_DIM DIM_1
 #define CALC_J CALC_J_1VB_VAR1
 
-using push_p_conf = Config1vbecSingle1;
-
 #include "../1vb.c"
 
+template struct push_p_ops<Config1vbecSingle1>;
