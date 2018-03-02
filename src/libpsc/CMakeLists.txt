@@ -21,7 +21,6 @@ add_library(psc
   psc_push_particles/psc_push_particles_1st.cxx
   psc_push_particles/psc_push_particles_2nd.cxx
   psc_push_particles/psc_push_particles_generic_c.cxx
-  psc_push_particles/push_part_single2_1vb_yz.cxx
   psc_push_particles/1vb/psc_push_particles_1vb_double.cxx
   psc_push_particles/1vb/psc_push_particles_1vb_single.cxx
   psc_push_particles/1vb/psc_push_particles_1vbec_double.cxx

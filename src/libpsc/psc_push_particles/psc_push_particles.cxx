@@ -110,7 +110,6 @@ extern struct psc_push_particles_ops psc_push_particles_1vb_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_double_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_ps_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_ps2_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb2_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_double_ops;
 extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
@@ -133,7 +132,6 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1st_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_double_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb2_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_double_ops);
 #ifdef USE_FORTRAN
