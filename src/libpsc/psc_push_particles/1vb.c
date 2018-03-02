@@ -21,7 +21,7 @@ struct PushParticles1vb
   using Real3 = Vec3<real_t>;
   using dim = typename C::dim;
   using FieldsEM = typename C::FieldsEM;
-  using IP = InterpolateEM<FieldsEM, typename C::ip, dim>;
+  using InterpolateEM_t = typename C::InterpolateEM_t;
   using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
   using Current = typename C::Current_t;
   
@@ -55,7 +55,7 @@ struct PushParticles1vb
 
     // FIELD INTERPOLATION
 
-    IP ip;
+    InterpolateEM_t ip;
     ip.set_coeffs(xm);
     // FIXME, we're not using EM instead flds_em
     real_t E[3] = { ip.ex(flds_em), ip.ey(flds_em), ip.ez(flds_em) };
@@ -135,7 +135,7 @@ struct PushParticles1vb
 
     // FIELD INTERPOLATION
 
-    IP ip;
+    InterpolateEM_t ip;
     ip.set_coeffs(xm);
     // FIXME, we're not using EM instead flds_em
     real_t E[3] = { ip.ex(flds_em), ip.ey(flds_em), ip.ez(flds_em) };

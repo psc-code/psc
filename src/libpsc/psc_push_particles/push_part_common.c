@@ -511,8 +511,8 @@ private:
   static void do_push_part(fields_t flds, typename Mparticles::patch_t& prts)
   {
     using dim = typename C::dim;
-    using IP = InterpolateEM<Fields3d<fields_t>, typename C::ip, dim>;
-    using Current_t = Current<typename C::order, dim, IP, Fields3d<fields_t>>;
+    using InterpolateEM_t = typename C::InterpolateEM_t;
+    using Current_t = Current<typename C::order, dim, InterpolateEM_t, Fields3d<fields_t>>;
     using AdvanceParticle_t = AdvanceParticle<real_t, dim>;
     using particle_t = typename Mparticles::particle_t;
 
@@ -520,7 +520,7 @@ private:
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
   
     AdvanceParticle_t advance(prts.grid().dt);
-    IP ip;
+    InterpolateEM_t ip;
     Current_t c(prts.grid());
 
     Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
