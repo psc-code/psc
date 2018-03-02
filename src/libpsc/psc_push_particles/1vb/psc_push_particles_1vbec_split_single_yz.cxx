@@ -12,7 +12,7 @@
 #define CALC_J CALC_J_1VB_SPLIT
 
 using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle, dim_yz, opt_ip_1st_ec, opt_order_1st,
-				  Current1vbSplit, opt_calcj_1vb>;
+				  Current1vbSplit>;
 
 #include "../1vb.c"
 

@@ -10,7 +10,7 @@
 #include "../push_config.hxx"
 
 using push_p_conf = push_p_config<MparticlesDouble, MfieldsC, dim_yz, opt_ip_1st, opt_order_1st,
-				  Current1vb2d, opt_calcj_1vb>;
+				  Current1vb2d>;
 
 #include "../1vb.c"
 

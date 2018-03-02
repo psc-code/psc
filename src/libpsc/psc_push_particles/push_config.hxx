@@ -34,7 +34,6 @@ struct curr_cache_t : fields_t
 template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
 	 template<typename, typename> class CURRENT,
-	 typename CALCJ = opt_calcj_esirkepov,
 	 template<typename, typename> class CF = CacheFieldsNone,
 	 typename EM = Fields3d<typename MF::fields_t>,
 	 typename dim_curr = dim_xyz>
@@ -43,7 +42,6 @@ struct push_p_config
   using Mparticles = MP;
   using Mfields = MF;
   using dim = D;
-  using calcj = CALCJ;
   using CacheFields = CF<typename MF::fields_t, D>;
   using FieldsEM = EM;
   using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
@@ -63,7 +61,7 @@ using Config2nd = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_2nd, opt
 				CurrentNone>;
 
 using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC, dim_yz, opt_ip_2nd, opt_order_2nd,
-					CurrentNone, opt_calcj_esirkepov, CacheFields>;
+					CurrentNone, CacheFields>;
 
 template<typename dim>
 using Config1st = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st, opt_order_1st,
@@ -71,17 +69,17 @@ using Config1st = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st, opt
 
 template<typename dim>
 using Config1vbecDouble = push_p_config<MparticlesDouble, MfieldsC, dim, opt_ip_1st_ec, opt_order_1st,
-					Current1vbVar1, opt_calcj_1vb>;
+					Current1vbVar1>;
 
 template<typename dim>
 using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle, dim, opt_ip_1st_ec, opt_order_1st,
-					Current1vbVar1, opt_calcj_1vb>;
+					Current1vbVar1>;
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle, dim_xyz, opt_ip_1st_ec, opt_order_1st,
-					  Current1vbSplit, opt_calcj_1vb, CacheFieldsNone,
+					  Current1vbSplit, CacheFieldsNone,
 					  Fields3d<typename MfieldsSingle::fields_t, dim_xz>,
 					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle, dim_1, opt_ip_1st_ec, opt_order_1st,
-					 Current1vbVar1, opt_calcj_1vb, CacheFieldsNone,
+					 Current1vbVar1, CacheFieldsNone,
 					 Fields3d<typename MfieldsSingle::fields_t, dim_1>,
 					 dim_1>;
