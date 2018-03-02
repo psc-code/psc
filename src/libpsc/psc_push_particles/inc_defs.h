@@ -32,7 +32,3 @@
 struct opt_order_1st {};
 struct opt_order_2nd {};
 
-struct opt_ip_1st;
-struct opt_ip_1st_ec;
-struct opt_ip_2nd;
-

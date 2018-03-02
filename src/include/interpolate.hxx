@@ -2,9 +2,13 @@
 #ifndef INTERPOLATE_HXX
 #define INTERPOLATE_HXX
 
-#include "fields.hxx" // for dim_xyz etc, FIXME
+#include "dim.hxx"
 
 #include "cuda_compat.h"
+
+struct opt_ip_1st;
+struct opt_ip_1st_ec;
+struct opt_ip_2nd;
 
 // ----------------------------------------------------------------------
 // get_fint_remainder
@@ -524,6 +528,15 @@ struct InterpolateEM
 
   ip_coeffs_t cx, cy, cz;
 };
+
+template<typename fields_t, typename dim>
+using InterpolateEM2nd = InterpolateEM<fields_t, opt_ip_2nd, dim>;
+
+template<typename fields_t, typename dim>
+using InterpolateEM1st = InterpolateEM<fields_t, opt_ip_1st, dim>;
+
+template<typename fields_t, typename dim>
+using InterpolateEM1vbec = InterpolateEM<fields_t, opt_ip_1st_ec, dim>;
 
 
 #endif

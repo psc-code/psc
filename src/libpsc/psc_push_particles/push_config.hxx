@@ -57,40 +57,40 @@ struct push_p_config
 
 template<typename dim>
 using Config2nd = push_p_config<MparticlesDouble, MfieldsC,
-				InterpolateEM<Fields3d<MfieldsC::fields_t>, opt_ip_2nd, dim>,
+				InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim>,
 				dim, opt_order_2nd,
 				CurrentNone>;
 
 using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC,
-					InterpolateEM<Fields3d<MfieldsC::fields_t>, opt_ip_2nd, dim_yz>,
+					InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim_yz>,
 					dim_yz, opt_order_2nd,
 					CurrentNone, CacheFields>;
 
 template<typename dim>
 using Config1st = push_p_config<MparticlesDouble, MfieldsC,
-				InterpolateEM<Fields3d<MfieldsC::fields_t>, opt_ip_1st, dim>,
+				InterpolateEM1st<Fields3d<MfieldsC::fields_t>, dim>,
 				dim, opt_order_1st,
 				CurrentNone>;
 
 template<typename dim>
 using Config1vbecDouble = push_p_config<MparticlesDouble, MfieldsC,
-					InterpolateEM<Fields3d<MfieldsC::fields_t>, opt_ip_1st_ec, dim>,
+					InterpolateEM1vbec<Fields3d<MfieldsC::fields_t>, dim>,
 					dim, opt_order_1st,
 					Current1vbVar1>;
 
 template<typename dim>
 using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle,
-					InterpolateEM<Fields3d<MfieldsSingle::fields_t>, opt_ip_1st_ec, dim>,
+					InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t>, dim>,
 					dim, opt_order_1st,
 					Current1vbVar1>;
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle,
-					  InterpolateEM<Fields3d<MfieldsSingle::fields_t, dim_xz>, opt_ip_1st_ec, dim_xyz>,
+					  InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t, dim_xz>, dim_xyz>,
 					  dim_xyz, opt_order_1st,
 					  Current1vbSplit, CacheFieldsNone,
 					  dim_xz>;
 using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle,
-					 InterpolateEM<Fields3d<MfieldsSingle::fields_t, dim_1>, opt_ip_1st_ec, dim_1>,
+					 InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t, dim_1>, dim_1>,
 					 dim_1, opt_order_1st,
 					 Current1vbVar1, CacheFieldsNone,
 					 dim_1>;

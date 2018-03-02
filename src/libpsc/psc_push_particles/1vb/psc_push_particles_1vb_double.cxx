@@ -10,7 +10,7 @@
 #include "../push_config.hxx"
 
 using push_p_conf = push_p_config<MparticlesDouble, MfieldsC,
-				  InterpolateEM<Fields3d<MfieldsC::fields_t>, opt_ip_1st, dim_yz>,
+				  InterpolateEM1st<Fields3d<MfieldsC::fields_t>, dim_yz>,
 				  dim_yz, opt_order_1st,
 				  Current1vb2d>;
 
