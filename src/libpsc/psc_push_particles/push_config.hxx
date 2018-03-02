@@ -5,16 +5,10 @@
 #include "fields.hxx"
 
 #include "inc_defs.h"
+#include "pushp_cache_fields.hxx"
 #include "interpolate.hxx"
 #include "inc_curr.c"
 #include "inc_push.c"
-
-template<typename fields_t, typename dim>
-struct CacheFieldsNone;
-
-template<typename fields_t, typename dim>
-struct CacheFields;
-
 
 #define atomicAdd(addr, val) \
   do { *(addr) += (val); } while (0)
@@ -35,8 +29,6 @@ struct curr_cache_t : fields_t
     atomicAdd(addr, val);
   }
 };
-
-#include "fields.hxx"
 
 template<typename MP, typename MF, typename D,
 	 typename IP, typename O,
