@@ -31,8 +31,7 @@ struct Current1vbVar1
     //assert(0);
   }
 
-  CUDA_DEVICE static inline void
-  calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
+  static void calc_3d_dx1(real_t dx1[3], real_t x[3], real_t dx[3], int off[3])
   {
     if (off[2] == 0) {
       dx1[1] = .5f * off[1] - x[1];
@@ -84,9 +83,8 @@ struct Current1vbVar1
   // ----------------------------------------------------------------------
   // curr_3d_vb_cell_upd
 
-  CUDA_DEVICE static void
-  curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
-		      real_t dx[3], int off[3])
+  static void curr_3d_vb_cell_upd(int i[3], real_t x[3], real_t dx1[3],
+	 			 real_t dx[3], int off[3])
   {
     dx[0] -= dx1[0];
     dx[1] -= dx1[1];

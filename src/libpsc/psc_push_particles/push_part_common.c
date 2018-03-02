@@ -4,7 +4,6 @@
 #include "inc_defs.h"
 
 #include "fields.hxx"
-#include "inc_params.c"
 #include "inc_push.c"
 #include "interpolate.hxx"
 

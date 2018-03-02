@@ -92,9 +92,8 @@ struct Current1vbSplit
     calc_j2_one_cell(curr_cache, qni_wni, xm, xp, dim_t{});
   }
   
-  CUDA_DEVICE __forceinline__ static void
-  calc_j2_split_along_dim(int dim, int im, real_t x1[3],
-			  real_t xm[3], real_t xp[3])
+  static void calc_j2_split_along_dim(int dim, int im, real_t x1[3],
+				      real_t xm[3], real_t xp[3])
   {
     real_t bnd = 0.f; // quell warning
     if (xp[dim] > im + 1) { // crossed boundary to right

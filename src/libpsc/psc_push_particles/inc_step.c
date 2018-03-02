@@ -61,7 +61,7 @@ struct ExtPrepareSort<mparticles_t, opt_ext_prepare_sort>
 // push_one
 
 template<typename C, typename particles_t>
-CUDA_DEVICE static void
+static void
 push_one(particles_t& prts, int n,
 	 typename C::Mfields::fields_t flds_em, typename C::curr_cache_t curr_cache)
 {
@@ -157,7 +157,7 @@ push_one(particles_t& prts, int n,
 // stagger_one
 
 template<typename C>
-CUDA_DEVICE static void
+static void
 stagger_one(mparticles_t::patch_t& prts, int n, typename C::Mfields::fields_t flds_em)
 {
   using dim = typename C::dim;
