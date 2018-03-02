@@ -30,13 +30,6 @@ struct opt_calcj_esirkepov;
 struct opt_calcj_1vb;
 
 // ----------------------------------------------------------------------
-// EM_CACHE
-
-#define EM_CACHE_NONE 1
-#define EM_CACHE_CUDA 2
-#define EM_CACHE_CUDA2 3
-
-// ----------------------------------------------------------------------
 // ORDER
 
 struct opt_order_1st {};

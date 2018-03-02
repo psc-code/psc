@@ -12,7 +12,6 @@
 using real_t = mparticles_t::real_t;
 
 #include "inc_params.c"
-#include "inc_cache.c"
 #include "interpolate.hxx"
 #include "inc_push.c"
 #include "inc_curr.c"

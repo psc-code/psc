@@ -8,7 +8,6 @@
 #include "fields.hxx"
 #include "inc_params.c"
 #include "inc_push.c"
-#include "inc_cache.c"
 #include "interpolate.hxx"
 
 #include <particle_iter.h>
