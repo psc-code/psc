@@ -13,7 +13,7 @@
 
 using push_p_conf = push_p_config<MparticlesSingle, MfieldsSingle,
 				  InterpolateEM<Fields3d<MfieldsSingle::fields_t>, opt_ip_1st_ec, dim_yz>,
-				  dim_yz, opt_ip_1st_ec, opt_order_1st,
+				  dim_yz, opt_order_1st,
 				  Current1vbSplit>;
 
 #include "../1vb.c"
