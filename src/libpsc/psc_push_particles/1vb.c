@@ -177,8 +177,6 @@ struct PushParticles1vb
       auto flds = mflds[p];
       auto& prts = mprts[p];
 
-      flds.zero(JXI, JXI + 3);
-
       unsigned int n_prts = prts.size();
       for (int n = 0; n < n_prts; n++) {
 	stagger(prts, n, flds);
