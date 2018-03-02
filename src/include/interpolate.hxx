@@ -502,6 +502,7 @@ template<typename F, typename OPT_IP, typename OPT_DIM>
 struct InterpolateEM
 {
   using IP = InterpolateEM<F, OPT_IP, OPT_DIM>;
+  using fields_t = F;
   using real_t = typename F::real_t;
   using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;

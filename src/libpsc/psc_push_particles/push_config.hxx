@@ -43,11 +43,10 @@ struct push_p_config
   using Mfields = MF;
   using dim = D;
   using CacheFields = CF<typename MF::fields_t, D>;
-  using FieldsEM = EM;
   using curr_cache_t = curr_cache_t<typename MF::fields_t, dim_curr>;
   using Current_t = CURRENT<curr_cache_t, D>;
 
-  using InterpolateEM_t = InterpolateEM<FieldsEM, IP, dim>;
+  using InterpolateEM_t = InterpolateEM<EM, IP, dim>;
   using CurrentE_t = Current<O, D, InterpolateEM_t, Fields3d<typename MF::fields_t>>;
 };
 
