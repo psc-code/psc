@@ -136,8 +136,8 @@ find_best_mapping(struct psc_balance *bal, struct mrc_domain *domain,
       }
       double diff = load - load_target * capability[p];
       if (bal->print_loads) {
-	mprintf("p %d # = %d load %g / %g : diff %g\n", p, nr_patches_all_new[p],
-		load, load_target * capability[p], diff);
+	mprintf("p %d # = %d load %g / %g : diff %g %%\n", p, nr_patches_all_new[p],
+		load, load_target * capability[p], 100. * diff / (load_target * capability[p]));
       }
       if (diff < min_diff) {
 	min_diff = diff;
