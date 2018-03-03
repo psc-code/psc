@@ -23,18 +23,21 @@ struct PscSort
     if (ppsc->timestep % sort_->every != 0)
       return;
     
-    static int st_time_sort;
+    static int st_time_sort, pr;
     if (!st_time_sort) {
       st_time_sort = psc_stats_register("time sort");
+      pr = prof_register("sort", 1., 0, 0);
     }
     
     psc_stats_start(st_time_sort);
+    prof_start(pr);
     
     struct psc_sort_ops *ops = psc_sort_ops(sort_);
     assert(ops->run);
     ops->run(sort_, mprts.mprts());
     
     psc_stats_stop(st_time_sort);
+    prof_stop(pr);
   }
   
   sub_t* sub() { return mrc_to_subobj(sort_, sub_t); }
@@ -99,15 +102,8 @@ public:
 
   static void run(struct psc_sort* _sort, struct psc_mparticles* mprts)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("sort", 1., 0, 0);
-    }
-
     PscSort<Sort> sort(_sort);
-    prof_start(pr);
     sort->run(mprts);
-    prof_stop(pr);
   }
 };
 
