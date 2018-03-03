@@ -22,6 +22,17 @@ PFX(setup)(struct psc_mparticles *_mprts)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_sub_destroy
+
+static void
+PFX(destroy)(struct psc_mparticles *_mprts)
+{
+  mparticles_t mprts(_mprts);
+
+  mprts->~Mparticles();
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticls_sub_write/read
   
 #if (PSC_PARTICLES_AS_DOUBLE || PSC_PARTICLES_AS_SINGLE) && HAVE_LIBHDF5_HL
@@ -138,6 +149,7 @@ struct PFX(OPS) : psc_mparticles_ops {
     size                    = sizeof(mparticles_t::sub_t);
     methods                 = PFX(methods);
     setup                   = PFX(setup);
+    destroy                 = PFX(destroy);
     write                   = PFX(write);
     read                    = PFX(read);
   }
