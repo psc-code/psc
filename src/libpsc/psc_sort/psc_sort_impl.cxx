@@ -61,5 +61,19 @@ struct psc_sort_ops_countsort2_double : psc_sort_ops {
   }
 } psc_sort_countsort2_double_ops;
 
+// ======================================================================
+// psc_sort: subclass "none"
+
+struct psc_sort_ops_none : psc_sort_ops {
+  using PscSort = PscSortWrapper<PscSort_<SortNone<PscMparticlesDouble>>>;
+  psc_sort_ops_none() {
+    name                  = "none";
+    size                  = PscSort::size;
+    setup                 = PscSort::setup;
+    destroy               = PscSort::destroy;
+    run                   = PscSort::run;
+  }
+} psc_sort_none_ops;
+
 
 

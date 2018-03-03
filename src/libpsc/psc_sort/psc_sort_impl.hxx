@@ -122,3 +122,14 @@ struct SortCountsort2
   }
 };
 
+// ======================================================================
+// SortNone
+
+template<typename MP>
+struct SortNone
+{
+  using mparticles_t = MP;
+
+  void operator()(mparticles_t mprts) {}
+};
+    
