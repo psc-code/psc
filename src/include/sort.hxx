@@ -20,8 +20,21 @@ struct PscSort
   
   void operator()(PscMparticlesBase mprts)
   {
-    psc_sort_run(sort_, mprts.mprts());
-    // sub()->run(mprts.mprts());
+    if (ppsc->timestep % sort_->every != 0)
+      return;
+    
+    static int st_time_sort;
+    if (!st_time_sort) {
+      st_time_sort = psc_stats_register("time sort");
+    }
+    
+    psc_stats_start(st_time_sort);
+    
+    struct psc_sort_ops *ops = psc_sort_ops(sort_);
+    assert(ops->run);
+    ops->run(sort_, mprts.mprts());
+    
+    psc_stats_stop(st_time_sort);
   }
   
   sub_t* sub() { return mrc_to_subobj(sort_, sub_t); }
