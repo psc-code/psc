@@ -6,7 +6,6 @@
 #include "psc_marder.h"
 #include "psc_bnd_particles.h"
 #include "psc_collision.h"
-#include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
@@ -98,7 +97,6 @@ psc_step(struct psc *psc)
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
 
-  psc_randomize_run(psc->randomize, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
 
   prof_start(pr_time_step_no_comm);

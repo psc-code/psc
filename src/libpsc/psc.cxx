@@ -7,7 +7,6 @@
 #include "psc_bnd_particles.h"
 #include "psc_bnd_fields.h"
 #include "psc_collision.h"
-#include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_marder.h"
 #include "psc_diag.h"
@@ -170,7 +169,6 @@ static struct param psc_descr[] = {
   { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },
   { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
   { "collision"               , VAR(collision)               , MRC_VAR_OBJ(psc_collision) },
-  { "randomize"               , VAR(randomize)               , MRC_VAR_OBJ(psc_randomize) },
   { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
   { "sort"                    , VAR(sort)                    , MRC_VAR_OBJ(psc_sort) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },

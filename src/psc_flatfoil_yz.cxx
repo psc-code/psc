@@ -494,7 +494,6 @@ main(int argc, char **argv)
 // ======================================================================
 
 #include <psc_balance.h>
-#include <psc_randomize.h>
 #include <psc_sort.h>
 #include <psc_collision.h>
 #include <psc_checks.h>
@@ -523,7 +522,6 @@ static void psc_flatfoil_step(struct psc *psc)
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
 
-  psc_randomize_run(psc->randomize, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
 
   prof_start(pr_time_step_no_comm);

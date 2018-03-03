@@ -149,9 +149,6 @@ struct psc_domain {
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
-// FIXME, the randomize / sort interaction needs more work
-// In particular, it's better to randomize just per-cell after the sorting
-
 ///Describes the different particle kinds
 ///
 struct psc_kind {
@@ -185,7 +182,6 @@ struct psc {
   struct psc_bnd *bnd;				///< boundaries
   struct psc_bnd_particles *bnd_particles;	///< boundary particlesxs
   struct psc_collision *collision;		///< collision operator
-  struct psc_randomize *randomize;		///< randomizer
   struct psc_sort *sort;			///< sort operator
   struct psc_marder *marder;                    ///< marder correction
   struct psc_diag *diag;                	///< timeseries diagnostics
