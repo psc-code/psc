@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "particles.hxx"
 #include "psc_sort_private.h"
 
 // ======================================================================
