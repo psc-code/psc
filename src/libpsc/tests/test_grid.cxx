@@ -245,7 +245,7 @@ TYPED_TEST(PushParticlesTest, Accel)
     	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
     	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
     	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
-      };
+      }
     }
   }
 }
