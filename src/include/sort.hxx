@@ -32,9 +32,7 @@ struct PscSort
     psc_stats_start(st_time_sort);
     prof_start(pr);
     
-    struct psc_sort_ops *ops = psc_sort_ops(sort_);
-    assert(ops->run);
-    ops->run(sort_, mprts.mprts());
+    (*this)->run(mprts.mprts());
     
     psc_stats_stop(st_time_sort);
     prof_stop(pr);
@@ -98,12 +96,6 @@ public:
   {
     PscSort<Sort> sort(_sort);
     sort->~Sort();
-  }
-
-  static void run(struct psc_sort* _sort, struct psc_mparticles* mprts)
-  {
-    PscSort<Sort> sort(_sort);
-    sort->run(mprts);
   }
 };
 

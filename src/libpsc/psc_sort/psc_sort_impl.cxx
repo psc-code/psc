@@ -27,7 +27,6 @@ struct psc_sort_ops_countsort_single : psc_sort_ops {
     size                  = PscSort::size;
     setup                 = PscSort::setup;
     destroy               = PscSort::destroy;
-    run                   = PscSort::run;
   }
 } psc_sort_countsort_single_ops;
 
@@ -41,7 +40,6 @@ struct psc_sort_ops_countsort2_single : psc_sort_ops {
     size                  = PscSort::size;
     setup                 = PscSort::setup;
     destroy               = PscSort::destroy;
-    run                   = PscSort::run;
   }
 } psc_sort_countsort2_single_ops;
 
@@ -55,7 +53,6 @@ struct psc_sort_ops_countsort_double : psc_sort_ops {
     size                  = PscSort::size;
     setup                 = PscSort::setup;
     destroy               = PscSort::destroy;
-    run                   = PscSort::run;
   }
 } psc_sort_countsort_double_ops;
 
@@ -69,7 +66,6 @@ struct psc_sort_ops_countsort2_double : psc_sort_ops {
     size                  = PscSort::size;
     setup                 = PscSort::setup;
     destroy               = PscSort::destroy;
-    run                   = PscSort::run;
   }
 } psc_sort_countsort2_double_ops;
 
@@ -83,7 +79,6 @@ struct psc_sort_ops_none : psc_sort_ops {
     size                  = PscSort::size;
     setup                 = PscSort::setup;
     destroy               = PscSort::destroy;
-    run                   = PscSort::run;
   }
 } psc_sort_none_ops;
 

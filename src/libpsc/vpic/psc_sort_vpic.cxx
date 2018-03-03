@@ -3,25 +3,28 @@
 
 #include "psc_particles_vpic.h"
 #include "vpic_iface.h"
+#include "sort.hxx"
 
-static void
-psc_sort_vpic_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
+struct SortVpic
 {
-  PscMparticlesVpic mprts = mprts_base->get_as<PscMparticlesVpic>();
-  struct psc *psc = ppsc; // FIXME
-
-  Simulation_sort_mprts(mprts->sim, mprts->vmprts, psc->timestep);
-
-  mprts.put_as(mprts_base);
-}
+  using mparticles_t = PscMparticlesVpic;
+  
+  void operator()(mparticles_t mprts)
+  {
+    Simulation_sort_mprts(mprts->sim, mprts->vmprts, ppsc->timestep);
+  }
+};
 
 // ----------------------------------------------------------------------
 // psc_sort: subclass "vpic"
 
 struct psc_sort_ops_vpic : psc_sort_ops {
+  using PscSort = PscSortWrapper<PscSort_<SortVpic>>;
   psc_sort_ops_vpic() {
     name                  = "vpic";
-    run                   = psc_sort_vpic_run;
+    size                  = PscSort::size;
+    setup                 = PscSort::setup;
+    destroy               = PscSort::destroy;
   }
 } psc_sort_vpic_ops;
 
