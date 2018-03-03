@@ -1,5 +1,6 @@
 
 #include "psc_sort_private.h"
+#include "sort.hxx"
 
 #include <particle_iter.h>
 #include <psc_particles.h>
@@ -11,7 +12,7 @@
 // counting sort
 
 template<typename M>
-struct psc_sort_countsort
+struct psc_sort_countsort : SortBase
 {
   using mparticles_t = M;
   using particle_t = typename mparticles_t::particle_t;
@@ -56,12 +57,11 @@ struct psc_sort_countsort
     }
   }
 
-  static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
+  void run(struct psc_mparticles *mprts_base) override
   {
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
     
-    psc_sort_countsort& countsort = *mrc_to_subobj(sort, psc_sort_countsort);
-    countsort(mprts);
+    (*this)(mprts);
     
     mprts.put_as(mprts_base);
   }
@@ -72,7 +72,7 @@ struct psc_sort_countsort
 // use a separate array of cell indices
 
 template<typename M>
-struct psc_sort_countsort2
+struct psc_sort_countsort2 : SortBase
 {
   using mparticles_t = M;
   using particle_t = typename mparticles_t::particle_t;
@@ -130,12 +130,11 @@ struct psc_sort_countsort2
     }
   }
  
-  static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
+  void run(struct psc_mparticles *mprts_base) override
   {
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
     
-    psc_sort_countsort2& countsort2 = *mrc_to_subobj(sort, psc_sort_countsort2);
-    countsort2(mprts);
+    (*this)(mprts);
     
     mprts.put_as(mprts_base);
   }

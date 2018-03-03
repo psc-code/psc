@@ -29,7 +29,7 @@ public:
 
     PscSort<Sort> sort(_sort);
     prof_start(pr);
-    sort->run(_sort, mprts);
+    sort->run(mprts);
     prof_stop(pr);
   }
 };
