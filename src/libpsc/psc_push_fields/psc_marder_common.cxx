@@ -43,7 +43,9 @@ struct marder_ops {
   setup(struct psc_marder *marder)
   {
     marder->div_e = fld_create(ppsc, "div_E");
+    psc_mfields_list_add(&psc_mfields_base_list, &marder->div_e);
     marder->rho = fld_create(ppsc, "rho");
+    psc_mfields_list_add(&psc_mfields_base_list, &marder->rho);
 
     marder->bnd = psc_bnd_create(psc_marder_comm(marder));
     psc_bnd_set_name(marder->bnd, "marder_bnd");
