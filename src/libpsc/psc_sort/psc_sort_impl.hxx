@@ -9,12 +9,12 @@
 #include <cassert>
 
 // ======================================================================
-// counting sort
+// SortCountsort
 
-template<typename M>
-struct psc_sort_countsort : SortBase
+template<typename MP>
+struct SortCountsort
 {
-  using mparticles_t = M;
+  using mparticles_t = MP;
   using particle_t = typename mparticles_t::particle_t;
   
   void operator()(mparticles_t mprts)
@@ -56,25 +56,16 @@ struct psc_sort_countsort : SortBase
       delete[] cnts;
     }
   }
-
-  void run(struct psc_mparticles *mprts_base) override
-  {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    
-    (*this)(mprts);
-    
-    mprts.put_as(mprts_base);
-  }
 };
 
 // ======================================================================
-// counting sort 2
+// SortCountsort2
 // use a separate array of cell indices
 
-template<typename M>
-struct psc_sort_countsort2 : SortBase
+template<typename MP>
+struct SortCountsort2
 {
-  using mparticles_t = M;
+  using mparticles_t = MP;
   using particle_t = typename mparticles_t::particle_t;
   
   void operator()(mparticles_t mprts)
@@ -128,15 +119,6 @@ struct psc_sort_countsort2 : SortBase
       delete[] cnis;
       delete[] cnts;
     }
-  }
- 
-  void run(struct psc_mparticles *mprts_base) override
-  {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    
-    (*this)(mprts);
-    
-    mprts.put_as(mprts_base);
   }
 };
 

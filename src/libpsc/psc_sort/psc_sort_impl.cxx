@@ -2,6 +2,30 @@
 #include "psc_sort_impl.hxx"
 #include "sort.hxx"
 
+// ======================================================================
+// PscSort_
+//
+// wraps get_as / put_as
+
+template<class Sort>
+class PscSort_ : SortBase
+{
+public:
+  using mparticles_t = typename Sort::mparticles_t;
+  
+  void run(struct psc_mparticles *mprts_base) override
+  {
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    
+    sort_(mprts);
+    
+    mprts.put_as(mprts_base);
+  }
+
+private:
+  Sort sort_{};
+};
+
 template<typename Sort>
 class PscSortWrapper
 {
@@ -41,7 +65,7 @@ public:
 // psc_sort: subclass "countsort_single"
 
 struct psc_sort_ops_countsort_single : psc_sort_ops {
-  using PscSort = PscSortWrapper<psc_sort_countsort<PscMparticlesSingle>>;
+  using PscSort = PscSortWrapper<PscSort_<SortCountsort<PscMparticlesSingle>>>;
   psc_sort_ops_countsort_single() {
     name                  = "countsort_single";
     size                  = PscSort::size;
@@ -55,7 +79,7 @@ struct psc_sort_ops_countsort_single : psc_sort_ops {
 // psc_sort: subclass "countsort2_single"
 
 struct psc_sort_ops_countsort2_single : psc_sort_ops {
-  using PscSort = PscSortWrapper<psc_sort_countsort2<PscMparticlesSingle>>;
+  using PscSort = PscSortWrapper<PscSort_<SortCountsort2<PscMparticlesSingle>>>;
   psc_sort_ops_countsort2_single() {
     name                  = "countsort2_single";
     size                  = PscSort::size;
@@ -69,7 +93,7 @@ struct psc_sort_ops_countsort2_single : psc_sort_ops {
 // psc_sort: subclass "countsort_double"
 
 struct psc_sort_ops_countsort_double : psc_sort_ops {
-  using PscSort = PscSortWrapper<psc_sort_countsort<PscMparticlesDouble>>;
+  using PscSort = PscSortWrapper<PscSort_<SortCountsort<PscMparticlesDouble>>>;
   psc_sort_ops_countsort_double() {
     name                  = "countsort_double";
     size                  = PscSort::size;
@@ -83,7 +107,7 @@ struct psc_sort_ops_countsort_double : psc_sort_ops {
 // psc_sort: subclass "countsort2_double"
 
 struct psc_sort_ops_countsort2_double : psc_sort_ops {
-  using PscSort = PscSortWrapper<psc_sort_countsort2<PscMparticlesDouble>>;
+  using PscSort = PscSortWrapper<PscSort_<SortCountsort2<PscMparticlesDouble>>>;
   psc_sort_ops_countsort2_double() {
     name                  = "countsort2_double";
     size                  = PscSort::size;
