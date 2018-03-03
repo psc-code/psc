@@ -3,18 +3,29 @@
 #include "sort.hxx"
 
 template<typename Sort>
-static void psc_sort_setup(psc_sort* _sort)
+class PscSortWrapper
 {
-  PscSort<Sort> sort(_sort);
-  new(sort.sub()) Sort;
-}
+public:
+  const static size_t size = sizeof(Sort);
+  
+  static void setup(psc_sort* _sort)
+  {
+    PscSort<Sort> sort(_sort);
+    new(sort.sub()) Sort;
+  }
 
-template<typename Sort>
-static void psc_sort_destroy(psc_sort* _sort)
-{
-  PscSort<Sort> sort(_sort);
-  sort->~Sort();
-}
+  static void destroy(psc_sort* _sort)
+  {
+    PscSort<Sort> sort(_sort);
+    sort->~Sort();
+  }
+
+  static void run(struct psc_sort* _sort, struct psc_mparticles* mprts)
+  {
+    PscSort<Sort> sort(_sort);
+    sort->run(_sort, mprts);
+  }
+};
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
@@ -23,13 +34,13 @@ static void psc_sort_destroy(psc_sort* _sort)
 // psc_sort: subclass "countsort_single"
 
 struct psc_sort_ops_countsort_single : psc_sort_ops {
-  using Sort = psc_sort_countsort<PscMparticlesSingle>;
+  using PscSort = PscSortWrapper<psc_sort_countsort<PscMparticlesSingle>>;
   psc_sort_ops_countsort_single() {
     name                  = "countsort_single";
-    size                  = sizeof(Sort);
-    run                   = Sort::run;
-    setup                 = psc_sort_setup<Sort>;
-    destroy               = psc_sort_destroy<Sort>;
+    size                  = PscSort::size;
+    setup                 = PscSort::setup;
+    destroy               = PscSort::destroy;
+    run                   = PscSort::run;
   }
 } psc_sort_countsort_single_ops;
 
@@ -37,13 +48,13 @@ struct psc_sort_ops_countsort_single : psc_sort_ops {
 // psc_sort: subclass "countsort2_single"
 
 struct psc_sort_ops_countsort2_single : psc_sort_ops {
-  using Sort = psc_sort_countsort2<PscMparticlesSingle>;
+  using PscSort = PscSortWrapper<psc_sort_countsort2<PscMparticlesSingle>>;
   psc_sort_ops_countsort2_single() {
     name                  = "countsort2_single";
-    size                  = sizeof(Sort);
-    run                   = Sort::run;
-    setup                 = psc_sort_setup<Sort>;
-    destroy               = psc_sort_destroy<Sort>;
+    size                  = PscSort::size;
+    setup                 = PscSort::setup;
+    destroy               = PscSort::destroy;
+    run                   = PscSort::run;
   }
 } psc_sort_countsort2_single_ops;
 
@@ -51,13 +62,13 @@ struct psc_sort_ops_countsort2_single : psc_sort_ops {
 // psc_sort: subclass "countsort_double"
 
 struct psc_sort_ops_countsort_double : psc_sort_ops {
-  using Sort = psc_sort_countsort<PscMparticlesDouble>;
+  using PscSort = PscSortWrapper<psc_sort_countsort<PscMparticlesDouble>>;
   psc_sort_ops_countsort_double() {
     name                  = "countsort_double";
-    size                  = sizeof(Sort);
-    run                   = Sort::run;
-    setup                 = psc_sort_setup<Sort>;
-    destroy               = psc_sort_destroy<Sort>;
+    size                  = PscSort::size;
+    setup                 = PscSort::setup;
+    destroy               = PscSort::destroy;
+    run                   = PscSort::run;
   }
 } psc_sort_countsort_double_ops;
 
@@ -65,13 +76,13 @@ struct psc_sort_ops_countsort_double : psc_sort_ops {
 // psc_sort: subclass "countsort2_double"
 
 struct psc_sort_ops_countsort2_double : psc_sort_ops {
-  using Sort = psc_sort_countsort2<PscMparticlesDouble>;
+  using PscSort = PscSortWrapper<psc_sort_countsort2<PscMparticlesDouble>>;
   psc_sort_ops_countsort2_double() {
     name                  = "countsort2_double";
-    size                  = sizeof(Sort);
-    run                   = Sort::run;
-    setup                 = psc_sort_setup<Sort>;
-    destroy               = psc_sort_destroy<Sort>;
+    size                  = PscSort::size;
+    setup                 = PscSort::setup;
+    destroy               = PscSort::destroy;
+    run                   = PscSort::run;
   }
 } psc_sort_countsort2_double_ops;
 
