@@ -18,7 +18,7 @@ struct PscPushParticles
       sub_(mrc_to_subobj(pushp, sub_t))
   {}
 
-  void operator()(mparticles_base_t mprts, PscMfieldsBase mflds)
+  void operator()(PscMparticlesBase mprts, PscMfieldsBase mflds)
   {
     psc_push_particles_run(pushp_, mprts.mprts(), mflds.mflds());
   }
@@ -45,7 +45,7 @@ public:
   
   virtual void push_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
   {
-    auto gdims = mparticles_base_t(mprts_base)->grid().gdims;
+    auto gdims = PscMparticlesBase(mprts_base)->grid().gdims;
 
     // if this function has not been overriden, call the pusher for the appropriate dims
     if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] == 1) { // x
@@ -93,7 +93,7 @@ public:
 
   virtual void stagger_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
   {
-    auto gdims = mparticles_base_t(mprts_base)->grid().gdims;
+    auto gdims = PscMparticlesBase(mprts_base)->grid().gdims;
 
     if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) { // yz
       stagger_mprts_yz(mprts_base, mflds_base);

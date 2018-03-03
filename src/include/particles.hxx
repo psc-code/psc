@@ -489,7 +489,7 @@ private:
   sub_t *sub_;
 };
 
-using mparticles_base_t = PscMparticles<MparticlesBase>;
+using PscMparticlesBase = PscMparticles<MparticlesBase>;
 
 #endif
 

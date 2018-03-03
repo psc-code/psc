@@ -92,7 +92,7 @@ psc_step(struct psc *psc)
 
   psc_balance_run(psc->balance, psc);
 
-  mparticles_base_t mprts(psc->particles);
+  PscMparticlesBase mprts(psc->particles);
   PscMfieldsBase mflds(psc->flds);
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
@@ -187,7 +187,7 @@ psc_integrate(struct psc *psc)
     psc_stats_stop(st_time_step);
     prof_stop(pr);
 
-    mparticles_base_t mprts(psc->particles);
+    PscMparticlesBase mprts(psc->particles);
     psc_stats_val[st_nr_particles] = mprts->get_n_prts();
 
     if (psc->timestep % psc->prm.stats_every == 0) {

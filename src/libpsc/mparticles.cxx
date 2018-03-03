@@ -16,7 +16,7 @@ static void
 _psc_mparticles_view(struct psc_mparticles *_mprts)
 {
   MPI_Comm comm = psc_mparticles_comm(_mprts);
-  mparticles_base_t mprts(_mprts);
+  PscMparticlesBase mprts(_mprts);
   mpi_printf(comm, "  n_patches    = %d\n", mprts->n_patches());
   mpi_printf(comm, "  n_prts_total = %d\n", mprts->get_n_prts());
 
@@ -33,7 +33,7 @@ copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
      const char *type_from, const char *type_to,
      unsigned int flags)
 {
-  mparticles_base_t mp_from(mprts_from), mp_to(mprts_to);
+  PscMparticlesBase mp_from(mprts_from), mp_to(mprts_to);
   psc_mparticles_copy_func_t copy_to, copy_from;
 
   assert(mp_from->n_patches() == mp_to->n_patches());
@@ -75,7 +75,7 @@ struct psc_mparticles *
 psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
 		      unsigned int flags)
 {
-  mparticles_base_t mp_from(mprts_from);
+  PscMparticlesBase mp_from(mprts_from);
   const char *type_from = psc_mparticles_type(mprts_from);
   // If we're already the subtype, nothing to be done
   if (strcmp(type_from, type) == 0) {
@@ -109,7 +109,7 @@ void
 psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 		      unsigned int flags)
 {
-  mparticles_base_t mp(mprts), mp_to(mprts_to);
+  PscMparticlesBase mp(mprts), mp_to(mprts_to);
   // If we're already the subtype, nothing to be done
   const char *type = psc_mparticles_type(mprts);
   const char *type_to = psc_mparticles_type(mprts_to);

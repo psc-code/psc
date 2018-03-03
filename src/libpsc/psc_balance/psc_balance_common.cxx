@@ -13,7 +13,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 				      struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
 				      uint *nr_particles_by_patch_new)
 {
-  mparticles_base_t mp_old(mprts_old), mp_new(mprts_new);
+  PscMparticlesBase mp_old(mprts_old), mp_new(mprts_new);
   static int pr, pr_A, pr_B, pr_C, pr_D;
   if (!pr) {
     pr   = prof_register("comm prts", 1., 0, 0);

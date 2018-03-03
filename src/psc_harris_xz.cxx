@@ -624,7 +624,7 @@ psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool co
     return;
   }
   
-  mparticles_base_t mprts(psc->particles);
+  PscMparticlesBase mprts(psc->particles);
   
   // LOAD PARTICLES
 

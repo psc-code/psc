@@ -46,7 +46,7 @@ static void
 psc_get_loads(struct psc *psc, double *loads)
 {
   struct psc_mparticles *mprts = psc->particles;
-  mparticles_base_t mp(mprts);
+  PscMparticlesBase mp(mprts);
   
   uint n_prts_by_patch[mp->n_patches()];
   mp->get_size_all(n_prts_by_patch);
@@ -693,7 +693,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_start(pr_bal_prts);
 
   prof_start(pr_bal_prts_A);
-  mparticles_base_t mprts(psc->particles);
+  PscMparticlesBase mprts(psc->particles);
   uint *nr_particles_by_patch = (uint *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
   mprts->get_size_all(nr_particles_by_patch);
   prof_stop(pr_bal_prts_A);
@@ -716,7 +716,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   }
 
   prof_start(pr_bal_prts_B1);
-  mparticles_base_t(mprts_base_new)->reserve_all(nr_particles_by_patch);
+  PscMparticlesBase(mprts_base_new)->reserve_all(nr_particles_by_patch);
   prof_stop(pr_bal_prts_B1);
 
   struct psc_mparticles *mprts_new = psc_mparticles_get_as(mprts_base_new, ops->mprts_type, MP_DONT_COPY);

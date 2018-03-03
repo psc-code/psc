@@ -40,7 +40,7 @@ static void
 psc_method_default_set_ic_particles(struct psc_method *method, struct psc *psc,
 				    uint *n_prts_by_patch)
 {
-  mparticles_base_t mprts(psc->particles);
+  PscMparticlesBase mprts(psc->particles);
   mprts->reserve_all(n_prts_by_patch);
   psc_setup_particles(psc, n_prts_by_patch);
 }

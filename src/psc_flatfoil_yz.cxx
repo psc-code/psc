@@ -517,7 +517,7 @@ static void psc_flatfoil_step(struct psc *psc)
 
   psc_balance_run(psc->balance, psc);
 
-  mparticles_base_t mprts(psc->particles);
+  PscMparticlesBase mprts(psc->particles);
   PscMfieldsBase mflds(psc->flds);
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
