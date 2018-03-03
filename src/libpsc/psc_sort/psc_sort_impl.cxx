@@ -22,8 +22,15 @@ public:
 
   static void run(struct psc_sort* _sort, struct psc_mparticles* mprts)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("sort", 1., 0, 0);
+    }
+
     PscSort<Sort> sort(_sort);
+    prof_start(pr);
     sort->run(_sort, mprts);
+    prof_stop(pr);
   }
 };
 

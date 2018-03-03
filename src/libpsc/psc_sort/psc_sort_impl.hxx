@@ -58,17 +58,10 @@ struct psc_sort_countsort
 
   static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("countsort_sort", 1., 0, 0);
-    }
-    
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
     
-    prof_start(pr);
     psc_sort_countsort& countsort = *mrc_to_subobj(sort, psc_sort_countsort);
     countsort(mprts);
-    prof_stop(pr);
     
     mprts.put_as(mprts_base);
   }
@@ -139,17 +132,10 @@ struct psc_sort_countsort2
  
   static void run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("countsort2_sort", 1., 0, 0);
-    }
-    
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
     
-    prof_start(pr);
     psc_sort_countsort2& countsort2 = *mrc_to_subobj(sort, psc_sort_countsort2);
     countsort2(mprts);
-    prof_stop(pr);
     
     mprts.put_as(mprts_base);
   }
