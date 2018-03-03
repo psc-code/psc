@@ -6,6 +6,18 @@
 #include "psc_particles_double.h"
 
 // ======================================================================
+// PscSortNone
+//
+// we could wrap SortNone as usual, but there's really no point to
+// get_as() / put_as()
+
+class PscSortNone : SortBase
+{
+public:
+  void run(struct psc_mparticles *mprts_base) override {}
+};
+
+// ======================================================================
 // psc_sort: subclass "countsort_single"
 
 struct psc_sort_ops_countsort_single : psc_sort_ops {
@@ -65,7 +77,7 @@ struct psc_sort_ops_countsort2_double : psc_sort_ops {
 // psc_sort: subclass "none"
 
 struct psc_sort_ops_none : psc_sort_ops {
-  using PscSort = PscSortWrapper<PscSort_<SortNone<PscMparticlesDouble>>>;
+  using PscSort = PscSortWrapper<PscSortNone>;
   psc_sort_ops_none() {
     name                  = "none";
     size                  = PscSort::size;
