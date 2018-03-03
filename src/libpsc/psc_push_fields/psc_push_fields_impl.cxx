@@ -41,7 +41,7 @@ struct psc_push_fields_ops_single : psc_push_fields_ops {
 
 struct psc_push_fields_ops_c : psc_push_fields_ops {
   psc_push_fields_ops_c() {
-    using PushFields_t = PushFields<PscMfieldsSingle>;
+    using PushFields_t = PushFields<PscMfieldsC>;
     name                  = "c";
     size                  = sizeof(PushFields_t);
     setup                 = psc_push_fields_sub_setup<PushFields_t>;
