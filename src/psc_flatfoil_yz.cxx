@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define USE_OWN_PSC_STEP
+
 // ======================================================================
 // psc subclass "flatfoil"
 
@@ -256,6 +258,8 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
   }
 }
 
+static void psc_flatfoil_step(struct psc *psc);
+
 // ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
@@ -269,6 +273,9 @@ struct psc_ops_flatfoil : psc_ops {
     read             = psc_flatfoil_read;
     init_field       = psc_flatfoil_init_field;
     init_npt         = psc_flatfoil_init_npt;
+#ifdef USE_OWN_PSC_STEP
+    step             = psc_flatfoil_step;
+#endif
   }
 } psc_flatfoil_ops;
 
@@ -483,3 +490,80 @@ main(int argc, char **argv)
 			      &psc_heating_spot_ops_foil);
   return psc_main(&argc, &argv, &psc_flatfoil_ops);
 }
+
+// ======================================================================
+
+#include <psc_balance.h>
+#include <psc_randomize.h>
+#include <psc_sort.h>
+#include <psc_collision.h>
+#include <psc_checks.h>
+#include <psc_bnd_particles.h>
+#include <psc_marder.h>
+
+#include <particles.hxx>
+#include <fields3d.hxx>
+#include <push_particles.hxx>
+#include <push_fields.hxx>
+
+// ----------------------------------------------------------------------
+// psc_flatfoil_step
+
+static void psc_flatfoil_step(struct psc *psc)
+{
+  mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
+	     psc->prm.nmax, psc->timestep * psc->dt);
+
+  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+
+  psc_balance_run(psc->balance, psc);
+
+  mparticles_base_t mprts(psc->particles);
+  PscMfieldsBase mflds(psc->flds);
+  PscPushParticlesBase pushp(psc->push_particles);
+  PscPushFieldsBase pushf(psc->push_fields);
+
+  psc_randomize_run(psc->randomize, psc->particles);
+  psc_sort_run(psc->sort, psc->particles);
+
+  prof_start(pr_time_step_no_comm);
+  prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+
+  psc_collision_run(psc->collision, psc->particles);
+  
+  //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
+
+  psc_checks_continuity_before_particle_push(psc->checks, psc);
+
+  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+  pushp(mprts, mflds);
+  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    
+  // field propagation B^{n+1/2} -> B^{n+1}
+  pushf.advance_H(mflds, .5);
+  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
+  
+  psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
+  
+  // field propagation E^{n+1/2} -> E^{n+3/2}
+  pushf.advance_b2(mflds);
+  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+
+  // field propagation B^{n+1} -> B^{n+3/2}
+  pushf.advance_a(mflds);
+  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
+  psc_checks_continuity_after_particle_push(psc->checks, psc);
+
+  // E at t^{n+3/2}, particles at t^{n+3/2}
+  // B at t^{n+3/2} (Note: that is not it's natural time,
+  // but div B should be == 0 at any time...)
+  psc_marder_run(psc->marder, psc->flds, psc->particles);
+    
+  psc_checks_gauss(psc->checks, psc);
+
+  psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
+}
+
