@@ -161,13 +161,5 @@ public:
     PscPushParticles<PushParticles_t> pushp(push);
     pushp.sub()->~PushParticles_t();
   }
-
-  static void push_mprts(struct psc_push_particles *push,
-			 struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
-  {
-    PscPushParticles<PushParticles_t> pushp(push);
-    pushp->push_mprts(mprts, mflds_base);
-  }
-
 };
 
