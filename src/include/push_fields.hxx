@@ -110,7 +110,7 @@ private:
 };
 
 // ======================================================================
-// class PushFields
+// class PushFieldsBase
 
 class PushFieldsBase
 {

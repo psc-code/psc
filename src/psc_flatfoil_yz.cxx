@@ -504,6 +504,7 @@ main(int argc, char **argv)
 #include <fields3d.hxx>
 #include <push_particles.hxx>
 #include <push_fields.hxx>
+#include <sort.hxx>
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -521,8 +522,9 @@ static void psc_flatfoil_step(struct psc *psc)
   PscMfieldsBase mflds(psc->flds);
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
+  PscSortBase sort(psc->sort);
 
-  psc_sort_run(psc->sort, psc->particles);
+  sort(mprts);
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
