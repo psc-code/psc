@@ -90,10 +90,8 @@ calc_stats(struct psc_collision_stats *stats, real_t *nudts, int cnt)
 // find_cell_offsets
 
 static void
-find_cell_offsets(int offsets[], mparticles_t mprts, int p)
+find_cell_offsets(int offsets[], mparticles_t::patch_t& prts)
 {
-  mparticles_t::patch_t& prts = mprts[p];
-
   real_t dxi[3];
   for (int d = 0; d < 3; d++) {
     dxi[d] = 1.f / ppsc->grid().dx[d];
@@ -134,9 +132,8 @@ randomize_in_cell(mparticles_t::patch_t& prts, int n_start, int n_end)
 // bc
 
 static real_t
-bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
+bc(mparticles_t::patch_t& prts, real_t nudt1, int n1, int n2)
 {
-  mparticles_t::patch_t& prts = mprts[p];
   real_t nudt;
     
   real_t pn1,pn2,pn3,pn4;
@@ -171,14 +168,14 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
   px1=prt1->pxi;
   py1=prt1->pyi;
   pz1=prt1->pzi;
-  q1 =mprts->prt_qni(*prt1);
-  m1 =mprts->prt_mni(*prt1);
+  q1 =prts.prt_qni(*prt1);
+  m1 =prts.prt_mni(*prt1);
 
   px2=prt2->pxi;
   py2=prt2->pyi;
   pz2=prt2->pzi;
-  q2 =mprts->prt_qni(*prt2);
-  m2 =mprts->prt_mni(*prt2);
+  q2 =prts.prt_qni(*prt2);
+  m2 =prts.prt_mni(*prt2);
 
   if (q1*q2 == 0.) {
     return 0.; // no Coulomb collisions with neutrals
@@ -393,12 +390,11 @@ bc(mparticles_t& mprts, int p, real_t nudt1, int n1, int n2)
 
 static void
 update_rei_before(struct psc_collision *collision,
-		  mparticles_t& mprts, int n_start, int n_end,
+		  mparticles_t::patch_t& prts, int n_start, int n_end,
 		  int p, int i, int j, int k)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
-  mparticles_t::patch_t& prts = mprts[p];
   real_t fnqs = ppsc->coeff.cori;
   mfields_t mf_rei(coll->mflds_rei);
   Fields F(mf_rei[p]);
@@ -407,9 +403,9 @@ update_rei_before(struct psc_collision *collision,
   F(2, i,j,k) = 0.;
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
-    F(0, i,j,k) -= prt.pxi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
-    F(1, i,j,k) -= prt.pyi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
-    F(2, i,j,k) -= prt.pzi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+    F(0, i,j,k) -= prt.pxi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+    F(1, i,j,k) -= prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+    F(2, i,j,k) -= prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
   }
 }
 
@@ -418,20 +414,19 @@ update_rei_before(struct psc_collision *collision,
 
 static void
 update_rei_after(struct psc_collision *collision,
-		 mparticles_t& mprts, int n_start, int n_end,
+		 mparticles_t::patch_t& prts, int n_start, int n_end,
 		 int p, int i, int j, int k)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
-  mparticles_t::patch_t& prts = mprts[p];
   real_t fnqs = ppsc->coeff.cori;
   mfields_t mf_rei(coll->mflds_rei);
   Fields F(mf_rei[p]);
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
-    F(0, i,j,k) += prt.pxi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
-    F(1, i,j,k) += prt.pyi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
-    F(2, i,j,k) += prt.pzi * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+    F(0, i,j,k) += prt.pxi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+    F(1, i,j,k) += prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+    F(2, i,j,k) += prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
   }
   F(0, i,j,k) /= (coll->every * ppsc->dt);
   F(1, i,j,k) /= (coll->every * ppsc->dt);
@@ -443,12 +438,11 @@ update_rei_after(struct psc_collision *collision,
 
 static void
 collide_in_cell(struct psc_collision *collision,
-		mparticles_t& mprts, int n_start, int n_end,
-		struct psc_collision_stats *stats, int p)
+		mparticles_t::patch_t& prts, int n_start, int n_end,
+		struct psc_collision_stats *stats)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
-  mparticles_t::patch_t& prts = mprts[p];
   int nn = n_end - n_start;
   
   int n = 0;
@@ -457,20 +451,20 @@ collide_in_cell(struct psc_collision *collision,
   }
 
   // all particles need to have same weight!
-  real_t wni = mprts->prt_wni(prts[n_start]);
+  real_t wni = prts.prt_wni(prts[n_start]);
   real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
   real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
   int cnt = 0;
 
   if (nn % 2 == 1) { // odd # of particles: do 3-collision
-    nudts[cnt++] = bc(mprts, p, .5 * nudt1, n_start    , n_start + 1);
-    nudts[cnt++] = bc(mprts, p, .5 * nudt1, n_start    , n_start + 2);
-    nudts[cnt++] = bc(mprts, p, .5 * nudt1, n_start + 1, n_start + 2);
+    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 1);
+    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 2);
+    nudts[cnt++] = bc(prts, .5 * nudt1, n_start + 1, n_start + 2);
     n = 3;
   }
   for (; n < nn;  n += 2) { // do remaining particles as pair
-    nudts[cnt++] = bc(mprts, p, nudt1, n_start + n, n_start + n + 1);
+    nudts[cnt++] = bc(prts, nudt1, n_start + n, n_start + n + 1);
   }
 
   calc_stats(stats, nudts, cnt);
@@ -555,19 +549,19 @@ psc_collision_sub_run(struct psc_collision *collision,
     int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
     struct psc_collision_stats stats_total = {};
     
-    find_cell_offsets(offsets, mprts, p);
+    find_cell_offsets(offsets, mprts[p]);
     
     Fields F(mf_coll[p]);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       int c = (iz * ldims[1] + iy) * ldims[0] + ix;
       randomize_in_cell(prts, offsets[c], offsets[c+1]);
 
-      update_rei_before(collision, mprts, offsets[c], offsets[c+1], p, ix,iy,iz);
+      update_rei_before(collision, mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
       
       struct psc_collision_stats stats = {};
-      collide_in_cell(collision, mprts, offsets[c], offsets[c+1], &stats, p);
+      collide_in_cell(collision, mprts[p], offsets[c], offsets[c+1], &stats);
       
-      update_rei_after(collision, mprts, offsets[c], offsets[c+1], p, ix,iy,iz);
+      update_rei_after(collision, mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
 
       for (int s = 0; s < NR_STATS; s++) {
 	F(s, ix,iy,iz) = stats.s[s];

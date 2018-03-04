@@ -279,6 +279,7 @@ struct mparticles_patch_base
 
   real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
   real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
+  real_t prt_wni(const particle_t& prt) const { return prt.wni(grid_); }
   real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
 
   const Grid_t& grid() { return grid_; }
