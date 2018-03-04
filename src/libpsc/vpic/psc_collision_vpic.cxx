@@ -9,7 +9,7 @@
 
 // ----------------------------------------------------------------------
 
-class PscCollisionVpic
+class PscCollisionVpic : CollisionBase
 {
 public:
   constexpr static char const* const name = "vpic";
@@ -19,7 +19,7 @@ public:
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void run(psc_mparticles* mprts_base)
+  void run(psc_mparticles* mprts_base) override
   {
     Simulation_collision_run(sim_);
   }

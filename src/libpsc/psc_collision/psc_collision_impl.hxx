@@ -10,7 +10,7 @@
 #include <cmath>
 
 template<typename MP, typename MF>
-struct Collision_
+struct Collision_ : CollisionBase
 {
   using mparticles_t = MP;
   using particles_t = typename mparticles_t::patch_t;
@@ -122,7 +122,7 @@ struct Collision_
   // ----------------------------------------------------------------------
   // run
 
-  void run(struct psc_mparticles *mprts_base)
+  void run(struct psc_mparticles *mprts_base) override
   {
     static int pr;
     if (!pr) {

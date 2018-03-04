@@ -505,6 +505,7 @@ main(int argc, char **argv)
 #include <push_particles.hxx>
 #include <push_fields.hxx>
 #include <sort.hxx>
+#include <collision.hxx>
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -523,13 +524,13 @@ static void psc_flatfoil_step(struct psc *psc)
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
   PscSortBase sort(psc->sort);
-
-  sort(mprts);
+  PscCollisionBase collision(psc->collision);
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-  psc_collision_run(psc->collision, psc->particles);
+  sort(mprts);
+  collision(mprts);
   
   //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
 

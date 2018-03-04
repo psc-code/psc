@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include "psc_collision_private.h"
+#include "particles.hxx"
+
 // ======================================================================
 // PscCollision
 
@@ -12,6 +15,11 @@ struct PscCollision
   explicit PscCollision(psc_collision *collision)
     : collision_(collision)
   {}
+
+  void operator()(PscMparticlesBase mprts)
+  {
+    psc_collision_run(collision_, mprts.mprts());
+  }
   
   sub_t* sub() { return mrc_to_subobj(collision_, sub_t); }
   sub_t* operator->() { return sub(); }
@@ -19,6 +27,17 @@ struct PscCollision
 private:
   psc_collision *collision_;
 };
+
+// ======================================================================
+// CollisionBase
+
+class CollisionBase
+{
+public:
+  virtual void run(struct psc_mparticles *mprts_base) = 0;
+};
+
+using PscCollisionBase = PscCollision<CollisionBase>;
 
 // ======================================================================
 // CollisionWrapper
