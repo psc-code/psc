@@ -14,8 +14,9 @@
 template<typename MP>
 struct SortCountsort : SortBase
 {
-  using mparticles_t = MP;
-  using particle_t = typename mparticles_t::particle_t;
+  using Mparticles = MP;
+  using particle_t = typename Mparticles::particle_t;
+  using mparticles_t = PscMparticles<Mparticles>;
   
   void operator()(mparticles_t mprts)
   {
@@ -72,8 +73,9 @@ struct SortCountsort : SortBase
 template<typename MP>
 struct SortCountsort2 : SortBase
 {
-  using mparticles_t = MP;
-  using particle_t = typename mparticles_t::particle_t;
+  using Mparticles = MP;
+  using particle_t = typename Mparticles::particle_t;
+  using mparticles_t = PscMparticles<Mparticles>;
   
   void operator()(mparticles_t mprts)
   {

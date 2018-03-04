@@ -478,8 +478,8 @@ main(int argc, char **argv)
 #include "psc_particles_single.h"
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 
-using PscMparticles_t = PscMparticles<MparticlesDouble>;
-using Sort_t = SortCountsort2<PscMparticles_t>;
+using Mparticles_t = MparticlesDouble;
+using Sort_t = SortCountsort2<Mparticles_t>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step

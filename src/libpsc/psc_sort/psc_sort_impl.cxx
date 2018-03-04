@@ -21,7 +21,7 @@ public:
 // psc_sort: subclass "countsort_single"
 
 struct psc_sort_ops_countsort_single : psc_sort_ops {
-  using PscSort = PscSortWrapper<SortCountsort<PscMparticlesSingle>>;
+  using PscSort = PscSortWrapper<SortCountsort<MparticlesSingle>>;
   psc_sort_ops_countsort_single() {
     name                  = "countsort_single";
     size                  = PscSort::size;
@@ -34,7 +34,7 @@ struct psc_sort_ops_countsort_single : psc_sort_ops {
 // psc_sort: subclass "countsort2_single"
 
 struct psc_sort_ops_countsort2_single : psc_sort_ops {
-  using PscSort = PscSortWrapper<SortCountsort2<PscMparticlesSingle>>;
+  using PscSort = PscSortWrapper<SortCountsort2<MparticlesSingle>>;
   psc_sort_ops_countsort2_single() {
     name                  = "countsort2_single";
     size                  = PscSort::size;
@@ -47,7 +47,7 @@ struct psc_sort_ops_countsort2_single : psc_sort_ops {
 // psc_sort: subclass "countsort_double"
 
 struct psc_sort_ops_countsort_double : psc_sort_ops {
-  using PscSort = PscSortWrapper<SortCountsort<PscMparticlesDouble>>;
+  using PscSort = PscSortWrapper<SortCountsort<MparticlesDouble>>;
   psc_sort_ops_countsort_double() {
     name                  = "countsort_double";
     size                  = PscSort::size;
@@ -60,7 +60,7 @@ struct psc_sort_ops_countsort_double : psc_sort_ops {
 // psc_sort: subclass "countsort2_double"
 
 struct psc_sort_ops_countsort2_double : psc_sort_ops {
-  using PscSort = PscSortWrapper<SortCountsort2<PscMparticlesDouble>>;
+  using PscSort = PscSortWrapper<SortCountsort2<MparticlesDouble>>;
   psc_sort_ops_countsort2_double() {
     name                  = "countsort2_double";
     size                  = PscSort::size;
