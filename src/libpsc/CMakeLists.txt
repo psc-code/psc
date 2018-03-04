@@ -37,9 +37,8 @@ add_library(psc
   psc_sort/psc_sort_impl.cxx
 
   psc_collision/psc_collision.cxx
-  psc_collision/psc_collision_double.cxx
+  psc_collision/psc_collision_impl.cxx
   psc_collision/psc_collision_none.cxx
-  psc_collision/psc_collision_single.cxx
 
   psc_bnd/psc_bnd.cxx
   psc_bnd/psc_bnd_impl.cxx
