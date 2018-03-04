@@ -40,7 +40,7 @@ struct Collision_
     assert(nu_ > 0.);
 
     mflds = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds, FIELDS_TYPE);
+    psc_mfields_set_type(mflds, fields_traits<typename mfields_t::fields_t>::name);
     psc_mfields_set_param_int(mflds, "nr_fields", NR_STATS);
     psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
     mflds->grid = &ppsc->grid();
@@ -53,7 +53,7 @@ struct Collision_
     psc_mfields_list_add(&psc_mfields_base_list, &mflds);
     
     mflds_rei = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds_rei, FIELDS_TYPE);
+    psc_mfields_set_type(mflds_rei, fields_traits<typename mfields_t::fields_t>::name);
     psc_mfields_set_param_int(mflds_rei, "nr_fields", 3);
     psc_mfields_set_param_int3(mflds_rei, "ibn", ppsc->ibn);
     mflds_rei->grid = &ppsc->grid();

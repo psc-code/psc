@@ -1,5 +1,5 @@
 
-#include <psc_fields_as_c.h>
+#include "psc_fields_c.h"
 #include <psc_particles_as_double.h>
 
 #include "psc_collision_common.cxx"
@@ -7,13 +7,13 @@
 // ======================================================================
 // psc_collision: subclass "double"
 
-psc_collision_ops_<Collision_<mparticles_t, mfields_t>> psc_collision_double_ops;
+psc_collision_ops_<Collision_<mparticles_t, PscMfieldsC>> psc_collision_double_ops;
 
 // ======================================================================
 // psc_output_fields_item: subclass "coll_stats"
 
 struct psc_output_fields_item_ops_coll_double : psc_output_fields_item_ops {
-  using Collision = Collision_<mparticles_t, mfields_t>;
+  using Collision = Collision_<mparticles_t, PscMfieldsC>;
   psc_output_fields_item_ops_coll_double() {
     name      = "coll_stats_" PARTICLE_TYPE;
     nr_comp   = Collision::NR_STATS;
@@ -30,7 +30,7 @@ struct psc_output_fields_item_ops_coll_double : psc_output_fields_item_ops {
 // psc_output_fields_item: subclass "coll_rei"
 
 struct psc_output_fields_item_ops_coll_rei_double : psc_output_fields_item_ops {
-  using Collision = Collision_<mparticles_t, mfields_t>;
+  using Collision = Collision_<mparticles_t, PscMfieldsC>;
   psc_output_fields_item_ops_coll_rei_double() {
     name      = "coll_rei_" PARTICLE_TYPE;
     nr_comp   = 3;
