@@ -16,10 +16,52 @@ using Fields = Fields3d<mfields_t::fields_t>;
 using real_t = mparticles_t::real_t;
 using PscCollision_t = PscCollision<psc_collision_sub<mparticles_t>>;
 
+enum {
+  STATS_MIN,
+  STATS_MED,
+  STATS_MAX,
+  STATS_NLARGE,
+  STATS_NCOLL,
+  NR_STATS,
+};
+
 template<typename MP>
 struct psc_collision_sub
 {
   using mparticles_t = MP;
+
+  psc_collision_sub(MPI_Comm comm)
+  {
+    mflds = psc_mfields_create(comm);
+    psc_mfields_set_type(mflds, FIELDS_TYPE);
+    psc_mfields_set_param_int(mflds, "nr_fields", NR_STATS);
+    psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
+    mflds->grid = &ppsc->grid();
+    psc_mfields_setup(mflds);
+    psc_mfields_set_comp_name(mflds, 0, "coll_nudt_min");
+    psc_mfields_set_comp_name(mflds, 1, "coll_nudt_med");
+    psc_mfields_set_comp_name(mflds, 2, "coll_nudt_max");
+    psc_mfields_set_comp_name(mflds, 3, "coll_nudt_nlarge");
+    psc_mfields_set_comp_name(mflds, 4, "coll_nudt_ncoll");
+    psc_mfields_list_add(&psc_mfields_base_list, &mflds);
+    
+    mflds_rei = psc_mfields_create(comm);
+    psc_mfields_set_type(mflds_rei, FIELDS_TYPE);
+    psc_mfields_set_param_int(mflds_rei, "nr_fields", 3);
+    psc_mfields_set_param_int3(mflds_rei, "ibn", ppsc->ibn);
+    mflds_rei->grid = &ppsc->grid();
+    psc_mfields_setup(mflds_rei);
+    psc_mfields_set_comp_name(mflds_rei, 0, "coll_rei_x");
+    psc_mfields_set_comp_name(mflds_rei, 1, "coll_rei_y");
+    psc_mfields_set_comp_name(mflds_rei, 2, "coll_rei_z");
+    psc_mfields_list_add(&psc_mfields_base_list, &mflds_rei);
+  }
+
+  ~psc_collision_sub()
+  {
+    psc_mfields_destroy(mflds);
+    psc_mfields_destroy(mflds_rei);
+  }
   
   // parameters
   int every;
@@ -37,15 +79,6 @@ static struct param psc_collision_sub_descr[] = {
   {},
 };
 #undef VAR
-
-enum {
-  STATS_MIN,
-  STATS_MED,
-  STATS_MAX,
-  STATS_NLARGE,
-  STATS_NCOLL,
-  NR_STATS,
-};
 
 struct psc_collision_stats {
   real_t s[NR_STATS];
@@ -486,33 +519,7 @@ psc_collision_sub_setup(struct psc_collision *_collision)
 {
   PscCollision_t collision(_collision);
 
-  new(collision.sub()) psc_collision_sub<mparticles_t>;
-  
-  psc_collision_sub<mparticles_t> *coll = collision.sub();
-
-  coll->mflds = psc_mfields_create(psc_collision_comm(_collision));
-  psc_mfields_set_type(coll->mflds, FIELDS_TYPE);
-  psc_mfields_set_param_int(coll->mflds, "nr_fields", NR_STATS);
-  psc_mfields_set_param_int3(coll->mflds, "ibn", ppsc->ibn);
-  coll->mflds->grid = &ppsc->grid();
-  psc_mfields_setup(coll->mflds);
-  psc_mfields_set_comp_name(coll->mflds, 0, "coll_nudt_min");
-  psc_mfields_set_comp_name(coll->mflds, 1, "coll_nudt_med");
-  psc_mfields_set_comp_name(coll->mflds, 2, "coll_nudt_max");
-  psc_mfields_set_comp_name(coll->mflds, 3, "coll_nudt_nlarge");
-  psc_mfields_set_comp_name(coll->mflds, 4, "coll_nudt_ncoll");
-  psc_mfields_list_add(&psc_mfields_base_list, &coll->mflds);
-
-  coll->mflds_rei = psc_mfields_create(psc_collision_comm(_collision));
-  psc_mfields_set_type(coll->mflds_rei, FIELDS_TYPE);
-  psc_mfields_set_param_int(coll->mflds_rei, "nr_fields", 3);
-  psc_mfields_set_param_int3(coll->mflds_rei, "ibn", ppsc->ibn);
-  coll->mflds_rei->grid = &ppsc->grid();
-  psc_mfields_setup(coll->mflds_rei);
-  psc_mfields_set_comp_name(coll->mflds_rei, 0, "coll_rei_x");
-  psc_mfields_set_comp_name(coll->mflds_rei, 1, "coll_rei_y");
-  psc_mfields_set_comp_name(coll->mflds_rei, 2, "coll_rei_z");
-  psc_mfields_list_add(&psc_mfields_base_list, &coll->mflds_rei);
+  new(collision.sub()) psc_collision_sub<mparticles_t>(psc_collision_comm(_collision));
 }
 
 // ----------------------------------------------------------------------
@@ -524,9 +531,6 @@ psc_collision_sub_destroy(struct psc_collision *_collision)
   PscCollision_t collision(_collision);
 
   collision->~psc_collision_sub();
-
-  psc_mfields_destroy(collision->mflds);
-  psc_mfields_destroy(collision->mflds_rei);
 }
 
 // ----------------------------------------------------------------------
