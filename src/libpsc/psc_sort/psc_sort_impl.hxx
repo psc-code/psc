@@ -14,8 +14,11 @@
 template<typename MP>
 struct SortCountsort : SortCRTP<SortCountsort<MP>>
 {
+  using Base = SortCRTP<SortCountsort<MP>>;
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
+
+  using Base::Base;
   
   void sort(Mparticles& mprts)
   {
@@ -65,8 +68,11 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>>
 template<typename MP>
 struct SortCountsort2 : SortCRTP<SortCountsort2<MP>>
 {
+  using Base = SortCRTP<SortCountsort2<MP>>;
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
+
+  using Base::Base;
   
   void sort(Mparticles& mprts)
   {

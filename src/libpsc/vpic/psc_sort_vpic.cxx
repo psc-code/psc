@@ -7,7 +7,10 @@
 
 struct SortVpic : SortCRTP<SortVpic>
 {
+  using Base = SortCRTP<SortVpic>;
   using Mparticles = MparticlesVpic;
+
+  using Base::Base;
   
   void sort(Mparticles& mprts)
   {

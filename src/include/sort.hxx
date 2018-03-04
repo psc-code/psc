@@ -63,6 +63,10 @@ using PscSortBase = PscSort<SortBase>;
 template<typename Derived>
 struct SortCRTP : SortBase
 {
+  SortCRTP(int interval)
+    : interval_(interval)
+  {}
+  
   void run(struct psc_mparticles *mprts_base) override
   {
     using Mparticles = typename Derived::Mparticles;
@@ -71,6 +75,9 @@ struct SortCRTP : SortBase
     derived.sort(*mprts.sub());
     mprts.put_as(mprts_base);
   }
+
+private:
+  int interval_;
 };
 
 // ======================================================================
@@ -85,7 +92,7 @@ public:
   static void setup(psc_sort* _sort)
   {
     PscSort<Sort> sort(_sort);
-    new(sort.sub()) Sort;
+    new(sort.sub()) Sort(_sort->every);
   }
 
   static void destroy(psc_sort* _sort)
