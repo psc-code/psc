@@ -30,11 +30,11 @@ struct Collision_
     real_t s[NR_STATS];
   };
 
-  Collision_(MPI_Comm comm, int every, double nu)
-    : every(every),
-      nu(nu)
+  Collision_(MPI_Comm comm, int interval, double nu)
+    : interval_(interval),
+      nu_(nu)
   {
-    assert(nu > 0.);
+    assert(nu_ > 0.);
 
     mflds = psc_mfields_create(comm);
     psc_mfields_set_type(mflds, FIELDS_TYPE);
@@ -125,7 +125,7 @@ struct Collision_
       pr = prof_register("collision", 1., 0, 0);
     }
 
-    if (ppsc->timestep % every != 0) {
+    if (ppsc->timestep % interval_ != 0) {
       return;
     }
 
@@ -509,9 +509,9 @@ struct Collision_
       F(1, i,j,k) += prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(2, i,j,k) += prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
     }
-    F(0, i,j,k) /= (every * ppsc->dt);
-    F(1, i,j,k) /= (every * ppsc->dt);
-    F(2, i,j,k) /= (every * ppsc->dt);
+    F(0, i,j,k) /= (interval_ * ppsc->dt);
+    F(1, i,j,k) /= (interval_ * ppsc->dt);
+    F(2, i,j,k) /= (interval_ * ppsc->dt);
   }
 
   // ----------------------------------------------------------------------
@@ -529,7 +529,7 @@ struct Collision_
 
     // all particles need to have same weight!
     real_t wni = prts.prt_wni(prts[n_start]);
-    real_t nudt1 = wni / ppsc->prm.nicell * nn * every * ppsc->dt * nu;
+    real_t nudt1 = wni / ppsc->prm.nicell * nn * interval_ * ppsc->dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
@@ -548,10 +548,12 @@ struct Collision_
     free(nudts);
   }
 
+private:
   // parameters
-  int every;
-  double nu;
+  int interval_;
+  double nu_;
 
+public: // FIXME
   // internal
   struct psc_mfields *mflds;
   struct psc_mfields *mflds_rei;
