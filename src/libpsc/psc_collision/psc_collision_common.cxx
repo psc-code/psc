@@ -562,48 +562,29 @@ public: // FIXME
   struct psc_mfields *mflds_rei;
 };
 
-using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
-
-// ======================================================================
-
 // ======================================================================
 // psc_output_fields_item: subclass "coll_stats"
 
+template<typename Collision>
 struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
   psc_output_fields_item_ops_coll() {
     name      = "coll_stats_" PARTICLE_TYPE;
-    nr_comp   = Collision_<mparticles_t>::NR_STATS;
+    nr_comp   = Collision::NR_STATS;
     fld_names[0] = "coll_nudt_min";
     fld_names[1] = "coll_nudt_med";
     fld_names[2] = "coll_nudt_max";
     fld_names[3] = "coll_nudt_large";
     fld_names[4] = "coll_ncoll";
-    run_all   = CollisionWrapper<Collision_<mparticles_t>>::copy_stats;
+    run_all   = CollisionWrapper<Collision>::copy_stats;
   }
-} psc_output_fields_item_coll_stats_ops;
+};
 
-// ======================================================================
-
-static void
-copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  PscCollision_t collision(ppsc->collision);
-  Collision_<mparticles_t> *coll = collision.sub();
-
-  mfields_t mr = mres->get_as<mfields_t>(0, 0);
-
-  for (int m = 0; m < 3; m++) {
-    // FIXME, copy could be avoided (?)
-    mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
-  }
-
-  mr.put_as(mres, 0, 3);
-}
+psc_output_fields_item_ops_coll<Collision_<mparticles_t>> psc_output_fields_item_coll_stats_ops;
 
 // ======================================================================
 // psc_output_fields_item: subclass "coll_rei"
 
+template<typename Collision>
 struct psc_output_fields_item_ops_coll_rei : psc_output_fields_item_ops {
   psc_output_fields_item_ops_coll_rei() {
     name      = "coll_rei_" PARTICLE_TYPE;
@@ -611,7 +592,9 @@ struct psc_output_fields_item_ops_coll_rei : psc_output_fields_item_ops {
     fld_names[0] = "coll_rei_x";
     fld_names[1] = "coll_rei_y";
     fld_names[2] = "coll_rei_z";
-    run_all   = copy_rei;
+    run_all   = CollisionWrapper<Collision>::copy_rei;
   }
-} psc_output_fields_item_coll_rei_ops;
+};
+
+psc_output_fields_item_ops_coll_rei<Collision_<mparticles_t>> psc_output_fields_item_coll_rei_ops;
 
