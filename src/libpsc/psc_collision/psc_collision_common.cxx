@@ -9,13 +9,18 @@
 
 #include <cmath>
 
+template<typename MP>
 struct psc_collision_sub;
 
 using Fields = Fields3d<mfields_t::fields_t>;
 using real_t = mparticles_t::real_t;
-using PscCollision_t = PscCollision<psc_collision_sub>;
+using PscCollision_t = PscCollision<psc_collision_sub<mparticles_t>>;
 
-struct psc_collision_sub {
+template<typename MP>
+struct psc_collision_sub
+{
+  using mparticles_t = MP;
+  
   // parameters
   int every;
   double nu;
@@ -25,7 +30,7 @@ struct psc_collision_sub {
   struct psc_mfields *mflds_rei;
 };
 
-#define VAR(x) (void *)offsetof(struct psc_collision_sub, x)
+#define VAR(x) (void *)offsetof(psc_collision_sub<mparticles_t>, x)
 static struct param psc_collision_sub_descr[] = {
   { "every"         , VAR(every)       , PARAM_INT(1)     },
   { "nu"            , VAR(nu)          , PARAM_DOUBLE(-1.) },
@@ -480,7 +485,7 @@ static void
 psc_collision_sub_setup(struct psc_collision *_collision)
 {
   PscCollision_t collision(_collision);
-  psc_collision_sub *coll = collision.sub();
+  psc_collision_sub<mparticles_t> *coll = collision.sub();
 
   coll->mflds = psc_mfields_create(psc_collision_comm(_collision));
   psc_mfields_set_type(coll->mflds, FIELDS_TYPE);
@@ -527,7 +532,7 @@ psc_collision_sub_run(struct psc_collision *_collision,
 		      struct psc_mparticles *mprts_base)
 {
   PscCollision_t collision(_collision);
-  struct psc_collision_sub *coll = collision.sub();
+  psc_collision_sub<mparticles_t> *coll = collision.sub();
   
   static int pr;
   if (!pr) {
@@ -596,7 +601,7 @@ psc_collision_sub_run(struct psc_collision *_collision,
 struct psc_collision_sub_ops : psc_collision_ops {
   psc_collision_sub_ops() {
     name                  = PARTICLE_TYPE;
-    size                  = sizeof(struct psc_collision_sub);
+    size                  = sizeof(psc_collision_sub<mparticles_t>);
     param_descr           = psc_collision_sub_descr;
     setup                 = psc_collision_sub_setup;
     destroy               = psc_collision_sub_destroy;
@@ -612,7 +617,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 {
   assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
   PscCollision_t collision(ppsc->collision);
-  psc_collision_sub *coll = collision.sub();
+  psc_collision_sub<mparticles_t> *coll = collision.sub();
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
@@ -648,7 +653,7 @@ copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 {
   assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
   PscCollision_t collision(ppsc->collision);
-  psc_collision_sub *coll = collision.sub();
+  psc_collision_sub<mparticles_t> *coll = collision.sub();
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
