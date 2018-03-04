@@ -13,6 +13,7 @@ template<typename MP>
 struct Collision_
 {
   using mparticles_t = MP;
+  using mfields_t = mfields_t;
   using particles_t = typename mparticles_t::patch_t;
   using real_t = typename mparticles_t::real_t;
   using Fields = Fields3d<mfields_t::fields_t>;
@@ -565,23 +566,6 @@ using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
 
 // ======================================================================
 
-static void
-copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  PscCollision_t collision(ppsc->collision);
-  Collision_<mparticles_t> *coll = collision.sub();
-
-  mfields_t mr = mres->get_as<mfields_t>(0, 0);
-
-  for (int m = 0; m < coll->NR_STATS; m++) {
-    // FIXME, copy could be avoided (?)
-    mr->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
-  }
-
-  mr.put_as(mres, 0, coll->NR_STATS);
-}
-
 // ======================================================================
 // psc_output_fields_item: subclass "coll_stats"
 
@@ -594,7 +578,7 @@ struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
     fld_names[2] = "coll_nudt_max";
     fld_names[3] = "coll_nudt_large";
     fld_names[4] = "coll_ncoll";
-    run_all   = copy_stats;
+    run_all   = CollisionWrapper<Collision_<mparticles_t>>::copy_stats;
   }
 } psc_output_fields_item_coll_stats_ops;
 
