@@ -16,11 +16,10 @@ struct SortCountsort : SortBase
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
-  using mparticles_t = PscMparticles<Mparticles>;
   
-  void operator()(mparticles_t mprts)
+  void operator()(Mparticles& mprts)
   {
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
 
@@ -60,8 +59,8 @@ struct SortCountsort : SortBase
 
   void run(struct psc_mparticles *mprts_base) override
   {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    (*this)(mprts);
+    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
+    (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 };
@@ -75,11 +74,10 @@ struct SortCountsort2 : SortBase
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
-  using mparticles_t = PscMparticles<Mparticles>;
   
-  void operator()(mparticles_t mprts)
+  void operator()(Mparticles& mprts)
   {
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
       
@@ -132,8 +130,8 @@ struct SortCountsort2 : SortBase
 
   void run(struct psc_mparticles *mprts_base) override
   {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    (*this)(mprts);
+    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
+    (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 };

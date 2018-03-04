@@ -7,17 +7,17 @@
 
 struct SortVpic : SortBase
 {
-  using mparticles_t = PscMparticlesVpic;
+  using Mparticles = MparticlesVpic;
   
-  void operator()(mparticles_t mprts)
+  void operator()(Mparticles& mprts)
   {
-    Simulation_sort_mprts(mprts->sim, mprts->vmprts, ppsc->timestep);
+    Simulation_sort_mprts(mprts.sim, mprts.vmprts, ppsc->timestep);
   }
 
   void run(struct psc_mparticles *mprts_base) override
   {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    (*this)(mprts);
+    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
+    (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 };
