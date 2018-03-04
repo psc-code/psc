@@ -6,7 +6,6 @@
 #include <psc_heating_spot_private.h>
 #include <psc_inject.h>
 #include <psc_target_private.h>
-#include <psc_event_generator_private.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -127,8 +126,6 @@ psc_flatfoil_create(struct psc *psc)
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
-
-  psc_event_generator_set_type(psc->event_generator, "flatfoil");
 
   psc_target_set_type(sub->target, "foil");
 
@@ -278,34 +275,6 @@ struct psc_ops_flatfoil : psc_ops {
 #endif
   }
 } psc_flatfoil_ops;
-
-// ======================================================================
-// psc_event_generator subclass "flatfoil"
-
-// ----------------------------------------------------------------------
-// psc_event_generator_flatfoil_run
-
-void
-psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
-				 struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc *psc = ppsc; // FIXME
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-  psc_inject_run(sub->inject, mprts, mflds);
-  psc_heating_run(sub->heating, mprts, mflds);
-}
-
-// ----------------------------------------------------------------------
-// psc_event_generator_ops "flatfoil"
-
-struct psc_event_generator_ops_flatfoil : psc_event_generator_ops {
-  psc_event_generator_ops_flatfoil() {
-    name                  = "flatfoil";
-    run                   = psc_event_generator_flatfoil_run;
-  }
-} psc_event_generator_flatfoil_ops;
-
 
 // ======================================================================
 // psc_target subclass "foil"
@@ -482,8 +451,6 @@ struct psc_heating_spot_ops_foil : psc_heating_spot_ops {
 int
 main(int argc, char **argv)
 {
-  mrc_class_register_subclass(&mrc_class_psc_event_generator,
-			      &psc_event_generator_flatfoil_ops);
   mrc_class_register_subclass(&mrc_class_psc_target,
 			      &psc_target_ops_foil);
   mrc_class_register_subclass(&mrc_class_psc_heating_spot,
@@ -546,7 +513,6 @@ static void psc_flatfoil_step(struct psc *psc)
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   
-  //psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds());
   psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds());
   
