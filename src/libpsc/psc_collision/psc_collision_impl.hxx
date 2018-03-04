@@ -11,8 +11,9 @@
 #include <cmath>
 
 template<typename MP, typename MF>
-struct Collision_ : CollisionBase
+struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
 {
+  using Base = CollisionCRTP<Collision_<MP, MF>, MP>;
   using Mparticles = MP;
   using particles_t = typename Mparticles::patch_t;
   using particle_t = typename Mparticles::particle_t;
@@ -21,6 +22,8 @@ struct Collision_ : CollisionBase
   using Fields = Fields3d<typename Mfields::fields_t>;
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
+
+  using Base::Base;
 
   constexpr static char const* const name = mparticles_traits<mparticles_t>::name;
 
@@ -38,7 +41,7 @@ struct Collision_ : CollisionBase
   };
 
   Collision_(MPI_Comm comm, int interval, double nu)
-    : interval_(interval),
+    : Base(interval),
       nu_(nu)
   {
     assert(nu_ > 0.);
@@ -75,7 +78,7 @@ struct Collision_ : CollisionBase
   }
 
   // ----------------------------------------------------------------------
-  // operator(): sort
+  // operator(): collide
 
   void operator()(mparticles_t mprts)
   {
@@ -132,7 +135,7 @@ struct Collision_ : CollisionBase
       pr = prof_register("collision", 1., 0, 0);
     }
 
-    if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
+    if (this->interval_ > 0 && ppsc->timestep % this->interval_ == 0) {
       mparticles_t mprts = mprts_base.get_as<mparticles_t>();
       
       prof_start(pr);
@@ -513,9 +516,9 @@ struct Collision_ : CollisionBase
       F(1, i,j,k) += prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(2, i,j,k) += prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
     }
-    F(0, i,j,k) /= (interval_ * ppsc->dt);
-    F(1, i,j,k) /= (interval_ * ppsc->dt);
-    F(2, i,j,k) /= (interval_ * ppsc->dt);
+    F(0, i,j,k) /= (this->interval_ * ppsc->dt);
+    F(1, i,j,k) /= (this->interval_ * ppsc->dt);
+    F(2, i,j,k) /= (this->interval_ * ppsc->dt);
   }
 
   // ----------------------------------------------------------------------
@@ -533,7 +536,7 @@ struct Collision_ : CollisionBase
 
     // all particles need to have same weight!
     real_t wni = prts.prt_wni(prts[n_start]);
-    real_t nudt1 = wni / ppsc->prm.nicell * nn * interval_ * ppsc->dt * nu_;
+    real_t nudt1 = wni / ppsc->prm.nicell * nn * this->interval_ * ppsc->dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
@@ -554,7 +557,6 @@ struct Collision_ : CollisionBase
 
 private:
   // parameters
-  int interval_;
   double nu_;
 
 public: // FIXME

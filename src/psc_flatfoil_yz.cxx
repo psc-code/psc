@@ -513,8 +513,8 @@ static void psc_flatfoil_step(struct psc *psc)
 
   //sort(mprts);
   sort_(mprts_);
-  //collision(mprts);
-  collision_.run(mprts);
+  collision(mprts);
+  //collision_(mprts_);
   
   //psc_checks_continuity_before_particle_push(psc->checks, psc);
 

@@ -46,6 +46,17 @@ public:
 
 using PscCollisionBase = PscCollision<CollisionBase>;
 
+template<typename Derived, typename MP>
+struct CollisionCRTP : CollisionBase
+{
+  CollisionCRTP(int interval)
+    : interval_(interval)
+  {}
+
+protected:
+  int interval_;
+};
+
 // ======================================================================
 // CollisionWrapper
 
