@@ -496,18 +496,19 @@ static void psc_flatfoil_step(struct psc *psc)
   psc_balance_run(psc->balance, psc);
 
   PscMparticlesBase mprts(psc->particles);
+  auto& mprts_ = *dynamic_cast<Mparticles_t*>(mprts.sub());
   PscMfieldsBase mflds(psc->flds);
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
   PscSortBase sort(psc->sort);
-  auto sort_ = dynamic_cast<Sort_t*>(sort.sub());
+  auto& sort_ = *dynamic_cast<Sort_t*>(sort.sub());
   PscCollisionBase collision(psc->collision);
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
   //sort(mprts);
-  sort_->run(mprts);
+  sort_(mprts_);
   collision(mprts);
   
   //psc_checks_continuity_before_particle_push(psc->checks, psc);

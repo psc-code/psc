@@ -51,6 +51,35 @@ struct SortCRTP : SortBase
   SortCRTP(int interval)
     : interval_(interval)
   {}
+
+  // FIXME, the 2x replicated funcs here aren't nice to start with.
+  // There should be a way to have a get_as that's specialized for known types,
+  // so that in case of the two known types being equal, nothing gets done..
+  
+  // FIXME, why can't I use Derived::Mparticles here?
+  template<typename MP>
+  void operator()(MP& mprts)
+  {
+    if (interval_ <= 0 || ppsc->timestep % interval_ != 0)
+      return;
+    
+    static int st_time_sort, pr;
+    if (!st_time_sort) {
+      st_time_sort = psc_stats_register("time sort");
+      pr = prof_register("sort", 1., 0, 0);
+    }
+    
+    psc_stats_start(st_time_sort);
+    prof_start(pr);
+    
+    static_assert(std::is_same<MP, typename Derived::Mparticles>::value,
+		  "MP better be the Derived class's MP type");
+    auto& derived = *static_cast<Derived*>(this);
+    derived.sort(mprts);
+
+    psc_stats_stop(st_time_sort);
+    prof_stop(pr);
+  }
   
   void run(PscMparticlesBase mprts_base) override
   {
