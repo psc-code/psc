@@ -485,6 +485,9 @@ static void
 psc_collision_sub_setup(struct psc_collision *_collision)
 {
   PscCollision_t collision(_collision);
+
+  new(collision.sub()) psc_collision_sub<mparticles_t>;
+  
   psc_collision_sub<mparticles_t> *coll = collision.sub();
 
   coll->mflds = psc_mfields_create(psc_collision_comm(_collision));
@@ -519,6 +522,8 @@ static void
 psc_collision_sub_destroy(struct psc_collision *_collision)
 {
   PscCollision_t collision(_collision);
+
+  collision->~psc_collision_sub();
 
   psc_mfields_destroy(collision->mflds);
   psc_mfields_destroy(collision->mflds_rei);
