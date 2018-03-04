@@ -9,10 +9,15 @@
 // ======================================================================
 // PscSort
 
+struct SortBase;
+
 template<typename S>
 struct PscSort
 {
   using sub_t = S;
+  
+  // static_assert(std::is_convertible<sub_t*, SortBase*>::value,
+  // 		"sub classes used in PscSort must derive from SortBase");
   
   explicit PscSort(psc_sort *sort)
     : sort_(sort)
@@ -57,28 +62,7 @@ public:
 using PscSortBase = PscSort<SortBase>;
 
 // ======================================================================
-// PscSort_
-//
-// wraps get_as / put_as
-
-template<class Sort>
-class PscSort_ : SortBase
-{
-public:
-  using mparticles_t = typename Sort::mparticles_t;
-  
-  void run(struct psc_mparticles *mprts_base) override
-  {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    
-    sort_(mprts);
-    
-    mprts.put_as(mprts_base);
-  }
-
-private:
-  Sort sort_{};
-};
+// PscSortWrapper
 
 template<typename Sort>
 class PscSortWrapper
