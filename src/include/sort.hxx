@@ -45,7 +45,7 @@ struct SortBase
 
 using PscSortBase = PscSort<SortBase>;
 
-template<typename Derived>
+template<typename Derived, typename MP>
 struct SortCRTP : SortBase
 {
   SortCRTP(int interval)
@@ -56,8 +56,6 @@ struct SortCRTP : SortBase
   // There should be a way to have a get_as that's specialized for known types,
   // so that in case of the two known types being equal, nothing gets done..
   
-  // FIXME, why can't I use Derived::Mparticles here?
-  template<typename MP>
   void operator()(MP& mprts)
   {
     if (interval_ <= 0 || ppsc->timestep % interval_ != 0)
@@ -72,8 +70,6 @@ struct SortCRTP : SortBase
     psc_stats_start(st_time_sort);
     prof_start(pr);
     
-    static_assert(std::is_same<MP, typename Derived::Mparticles>::value,
-		  "MP better be the Derived class's MP type");
     auto& derived = *static_cast<Derived*>(this);
     derived.sort(mprts);
 

@@ -5,9 +5,9 @@
 #include "vpic_iface.h"
 #include "sort.hxx"
 
-struct SortVpic : SortCRTP<SortVpic>
+struct SortVpic : SortCRTP<SortVpic, MparticlesVpic>
 {
-  using Base = SortCRTP<SortVpic>;
+  using Base = SortCRTP<SortVpic, MparticlesVpic>;
   using Mparticles = MparticlesVpic;
 
   using Base::Base;
