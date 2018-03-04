@@ -37,6 +37,8 @@ struct psc_collision_sub
   
   psc_collision_sub(MPI_Comm comm)
   {
+    assert(nu > 0.);
+
     mflds = psc_mfields_create(comm);
     psc_mfields_set_type(mflds, FIELDS_TYPE);
     psc_mfields_set_param_int(mflds, "nr_fields", NR_STATS);
@@ -69,29 +71,11 @@ struct psc_collision_sub
   }
 
   // ----------------------------------------------------------------------
-  // psc_collision_sub_run
+  // operator(): sort
 
-  static void run(struct psc_collision *_collision, struct psc_mparticles *mprts_base)
+  void operator()(mparticles_t mprts)
   {
-    PscCollision_t collision(_collision);
-    psc_collision_sub<mparticles_t> *coll = collision.sub();
-  
-    static int pr;
-    if (!pr) {
-      pr = prof_register("collision", 1., 0, 0);
-    }
-
-    assert(coll->nu > 0.);
-
-    if (ppsc->timestep % coll->every != 0) {
-      return;
-    }
-
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-
-    prof_start(pr);
-
-    mfields_t mf_coll(coll->mflds);
+    mfields_t mf_coll(mflds);
     for (int p = 0; p < mprts->n_patches(); p++) {
       particles_t& prts = mprts[p];
   
@@ -100,19 +84,19 @@ struct psc_collision_sub
       int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
       struct psc_collision_stats stats_total = {};
     
-      coll->find_cell_offsets(offsets, mprts[p]);
+      find_cell_offsets(offsets, mprts[p]);
     
       Fields F(mf_coll[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	int c = (iz * ldims[1] + iy) * ldims[0] + ix;
-	coll->randomize_in_cell(prts, offsets[c], offsets[c+1]);
+	randomize_in_cell(prts, offsets[c], offsets[c+1]);
 
-	coll->update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+	update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
       
 	struct psc_collision_stats stats = {};
-	coll->collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
+	collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
       
-	coll->update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+	update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
 
 	for (int s = 0; s < NR_STATS; s++) {
 	  F(s, ix,iy,iz) = stats.s[s];
@@ -132,6 +116,30 @@ struct psc_collision_sub
       free(offsets);
     }
     
+  }
+
+  // ----------------------------------------------------------------------
+  // psc_collision_sub_run
+
+  static void run(struct psc_collision *_collision, struct psc_mparticles *mprts_base)
+  {
+    PscCollision_t collision(_collision);
+    psc_collision_sub<mparticles_t> *coll = collision.sub();
+  
+    static int pr;
+    if (!pr) {
+      pr = prof_register("collision", 1., 0, 0);
+    }
+
+    if (ppsc->timestep % coll->every != 0) {
+      return;
+    }
+
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+
+    prof_start(pr);
+
+    (*collision.sub())(mprts);
     prof_stop(pr);
     
     mprts.put_as(mprts_base);
