@@ -17,6 +17,8 @@ struct Collision_
   using real_t = typename mparticles_t::real_t;
   using Fields = Fields3d<mfields_t::fields_t>;
 
+  constexpr static char const* const name = PARTICLE_TYPE;
+
   enum {
     STATS_MIN,
     STATS_MED,
@@ -562,16 +564,7 @@ public: // FIXME
 // ======================================================================
 // psc_collision: subclass "c" / "single"
 
-struct psc_collision_sub_ops : psc_collision_ops {
-  using Collision = CollisionWrapper<Collision_<mparticles_t>>;
-  psc_collision_sub_ops() {
-    name                  = PARTICLE_TYPE;
-    size                  = Collision::size;
-    setup                 = Collision::setup;
-    destroy               = Collision::destroy;
-    run                   = Collision::run;
-  }
-} psc_collision_sub_ops;
+psc_collision_ops_<Collision_<mparticles_t>> psc_collision_sub_ops;
 
 using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
 

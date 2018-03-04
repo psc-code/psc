@@ -12,6 +12,8 @@
 class PscCollisionVpic
 {
 public:
+  constexpr static char const* const name = "vpic";
+
   PscCollisionVpic(MPI_Comm comm, int interval, double nu)
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
@@ -29,14 +31,4 @@ private:
 // ----------------------------------------------------------------------
 // psc_collision: subclass "vpic"
 
-struct psc_collision_vpic_ops : psc_collision_ops {
-  using Collision = CollisionWrapper<PscCollisionVpic>;
-  psc_collision_vpic_ops() {
-    name                  = "vpic";
-    size                  = Collision::size;
-    setup                 = Collision::setup;
-    destroy               = Collision::destroy;
-    run                   = Collision::run;
-  }
-} psc_collision_vpic_ops;
-
+psc_collision_ops_<PscCollisionVpic> psc_collision_vpic_ops;

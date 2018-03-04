@@ -9,6 +9,8 @@
 
 struct PscCollisionNone
 {
+  constexpr static char const* const name = "none";
+  
   PscCollisionNone(MPI_Comm comm, int every, double nu)
   {}
   
@@ -19,14 +21,4 @@ struct PscCollisionNone
 // ======================================================================
 // psc_collision: subclass "none"
 
-struct psc_collision_none_ops : psc_collision_ops {
-  using Collision = CollisionWrapper<PscCollisionNone>;
-  psc_collision_none_ops() {
-    name                  = "none";
-    size                  = Collision::size;
-    setup                 = Collision::setup;
-    destroy               = Collision::destroy;
-    run                   = Collision::run;
-  }
-} psc_collision_none_ops;
-
+psc_collision_ops_<PscCollisionNone> psc_collision_none_ops;

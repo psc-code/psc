@@ -28,6 +28,8 @@ class CollisionWrapper
 {
 public:
   const static size_t size = sizeof(Collision);
+
+  constexpr static char const* const name = Collision::name;
   
   static void setup(struct psc_collision* _collision)
   {
@@ -49,6 +51,18 @@ public:
     PscCollision<Collision> collision(_collision);
 
     collision->run(mprts);
+  }
+};
+
+template<typename Collision>
+struct psc_collision_ops_ : psc_collision_ops {
+  using CollisionWrapper = CollisionWrapper<Collision>;
+  psc_collision_ops_() {
+    name                  = CollisionWrapper::name;
+    size                  = CollisionWrapper::size;
+    setup                 = CollisionWrapper::setup;
+    destroy               = CollisionWrapper::destroy;
+    run                   = CollisionWrapper::run;
   }
 };
 
