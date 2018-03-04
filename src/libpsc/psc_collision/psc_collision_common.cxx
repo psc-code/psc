@@ -561,11 +561,6 @@ public: // FIXME
   struct psc_mfields *mflds_rei;
 };
 
-// ======================================================================
-// psc_collision: subclass "c" / "single"
-
-psc_collision_ops_<Collision_<mparticles_t>> psc_collision_sub_ops;
-
 using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
 
 // ======================================================================
@@ -574,7 +569,6 @@ static void
 copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
   PscCollision_t collision(ppsc->collision);
   Collision_<mparticles_t> *coll = collision.sub();
 
@@ -610,7 +604,6 @@ static void
 copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
   PscCollision_t collision(ppsc->collision);
   Collision_<mparticles_t> *coll = collision.sub();
 
