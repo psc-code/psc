@@ -562,39 +562,3 @@ public: // FIXME
   struct psc_mfields *mflds_rei;
 };
 
-// ======================================================================
-// psc_output_fields_item: subclass "coll_stats"
-
-template<typename Collision>
-struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_coll() {
-    name      = "coll_stats_" PARTICLE_TYPE;
-    nr_comp   = Collision::NR_STATS;
-    fld_names[0] = "coll_nudt_min";
-    fld_names[1] = "coll_nudt_med";
-    fld_names[2] = "coll_nudt_max";
-    fld_names[3] = "coll_nudt_large";
-    fld_names[4] = "coll_ncoll";
-    run_all   = CollisionWrapper<Collision>::copy_stats;
-  }
-};
-
-psc_output_fields_item_ops_coll<Collision_<mparticles_t>> psc_output_fields_item_coll_stats_ops;
-
-// ======================================================================
-// psc_output_fields_item: subclass "coll_rei"
-
-template<typename Collision>
-struct psc_output_fields_item_ops_coll_rei : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_coll_rei() {
-    name      = "coll_rei_" PARTICLE_TYPE;
-    nr_comp   = 3;
-    fld_names[0] = "coll_rei_x";
-    fld_names[1] = "coll_rei_y";
-    fld_names[2] = "coll_rei_z";
-    run_all   = CollisionWrapper<Collision>::copy_rei;
-  }
-};
-
-psc_output_fields_item_ops_coll_rei<Collision_<mparticles_t>> psc_output_fields_item_coll_rei_ops;
-
