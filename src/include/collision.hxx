@@ -24,11 +24,7 @@ struct PscCollision
     }
     
     psc_stats_start(st_time_collision);
-
-    struct psc_collision_ops *ops = psc_collision_ops(collision_);
-    assert(ops->run);
-    ops->run(collision_, mprts.mprts());
-    
+    (*this)->run(mprts.mprts());
     psc_stats_stop(st_time_collision);
   }
   
@@ -75,14 +71,6 @@ public:
     
     collision->~Collision();
   }
-
-  static void run(struct psc_collision* _collision, struct psc_mparticles* mprts)
-  {
-    PscCollision<Collision> collision(_collision);
-
-    collision->run(mprts);
-  }
-
 };
 
 template<typename Collision>
@@ -93,7 +81,6 @@ struct psc_collision_ops_ : psc_collision_ops {
     size                  = CollisionWrapper::size;
     setup                 = CollisionWrapper::setup;
     destroy               = CollisionWrapper::destroy;
-    run                   = CollisionWrapper::run;
   }
 };
 
