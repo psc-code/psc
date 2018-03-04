@@ -24,7 +24,7 @@ struct PscCollision
     }
     
     psc_stats_start(st_time_collision);
-    (*this)->run(mprts.mprts());
+    (*this)->run(mprts);
     psc_stats_stop(st_time_collision);
   }
   
@@ -41,7 +41,7 @@ private:
 class CollisionBase
 {
 public:
-  virtual void run(struct psc_mparticles *mprts_base) = 0;
+  virtual void run(PscMparticlesBase mprts_base) = 0;
 };
 
 using PscCollisionBase = PscCollision<CollisionBase>;

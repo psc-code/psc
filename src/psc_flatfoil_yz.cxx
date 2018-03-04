@@ -475,11 +475,14 @@ main(int argc, char **argv)
 #include <collision.hxx>
 
 #include "psc_particles_double.h"
-#include "psc_particles_single.h"
+#include "psc_fields_c.h"
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
+#include "../libpsc/psc_collision/psc_collision_impl.hxx"
 
 using Mparticles_t = MparticlesDouble;
+using Mfields_t = MfieldsC;
 using Sort_t = SortCountsort2<Mparticles_t>;
+using Collision_t = Collision_<Mparticles_t, Mfields_t>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -503,13 +506,15 @@ static void psc_flatfoil_step(struct psc *psc)
   PscSortBase sort(psc->sort);
   auto& sort_ = *dynamic_cast<Sort_t*>(sort.sub());
   PscCollisionBase collision(psc->collision);
+  auto& collision_ = *dynamic_cast<Collision_t*>(collision.sub());
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
   //sort(mprts);
   sort_(mprts_);
-  collision(mprts);
+  //collision(mprts);
+  collision_.run(mprts);
   
   //psc_checks_continuity_before_particle_push(psc->checks, psc);
 

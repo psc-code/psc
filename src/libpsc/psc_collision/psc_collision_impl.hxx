@@ -125,7 +125,7 @@ struct Collision_ : CollisionBase
   // ----------------------------------------------------------------------
   // run
 
-  void run(struct psc_mparticles *mprts_base) override
+  void run(PscMparticlesBase mprts_base) override
   {
     static int pr;
     if (!pr) {
@@ -133,7 +133,7 @@ struct Collision_ : CollisionBase
     }
 
     if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
-      mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+      mparticles_t mprts = mprts_base.get_as<mparticles_t>();
       
       prof_start(pr);
       (*this)(mprts);
