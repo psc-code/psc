@@ -18,7 +18,18 @@ struct PscCollision
 
   void operator()(PscMparticlesBase mprts)
   {
-    psc_collision_run(collision_, mprts.mprts());
+    static int st_time_collision;
+    if (!st_time_collision) {
+      st_time_collision = psc_stats_register("time collision");
+    }
+    
+    psc_stats_start(st_time_collision);
+
+    struct psc_collision_ops *ops = psc_collision_ops(collision_);
+    assert(ops->run);
+    ops->run(collision_, mprts.mprts());
+    
+    psc_stats_stop(st_time_collision);
   }
   
   sub_t* sub() { return mrc_to_subobj(collision_, sub_t); }
