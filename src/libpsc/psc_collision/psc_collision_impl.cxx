@@ -1,5 +1,5 @@
 
-#include "psc_collision_common.cxx"
+#include "psc_collision_impl.hxx"
 
 #include "psc_fields_single.h"
 #include "psc_particles_single.h"
