@@ -1,5 +1,6 @@
 
 #include "psc_collision_private.h"
+#include "collision.hxx"
 #include "psc_output_fields_item_private.h"
 #include "fields.hxx"
 
@@ -8,8 +9,11 @@
 
 #include <cmath>
 
+struct psc_collision_sub;
+
 using Fields = Fields3d<mfields_t::fields_t>;
 using real_t = mparticles_t::real_t;
+using PscCollision_t = PscCollision<psc_collision_sub>;
 
 struct psc_collision_sub {
   // parameters
@@ -20,8 +24,6 @@ struct psc_collision_sub {
   struct psc_mfields *mflds;
   struct psc_mfields *mflds_rei;
 };
-
-#define psc_collision_sub(o) mrc_to_subobj(o, struct psc_collision_sub)
 
 #define VAR(x) (void *)offsetof(struct psc_collision_sub, x)
 static struct param psc_collision_sub_descr[] = {
@@ -389,14 +391,14 @@ bc(mparticles_t::patch_t& prts, real_t nudt1, int n1, int n2)
 // update_rei_before
 
 static void
-update_rei_before(struct psc_collision *collision,
+update_rei_before(struct psc_collision *_collision,
 		  mparticles_t::patch_t& prts, int n_start, int n_end,
 		  int p, int i, int j, int k)
 {
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  PscCollision_t collision(_collision);
 
   real_t fnqs = ppsc->coeff.cori;
-  mfields_t mf_rei(coll->mflds_rei);
+  mfields_t mf_rei(collision->mflds_rei);
   Fields F(mf_rei[p]);
   F(0, i,j,k) = 0.;
   F(1, i,j,k) = 0.;
@@ -413,14 +415,14 @@ update_rei_before(struct psc_collision *collision,
 // update_rei_after
 
 static void
-update_rei_after(struct psc_collision *collision,
+update_rei_after(struct psc_collision *_collision,
 		 mparticles_t::patch_t& prts, int n_start, int n_end,
 		 int p, int i, int j, int k)
 {
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  PscCollision_t collision(_collision);
 
   real_t fnqs = ppsc->coeff.cori;
-  mfields_t mf_rei(coll->mflds_rei);
+  mfields_t mf_rei(collision->mflds_rei);
   Fields F(mf_rei[p]);
   for (int n = n_start; n < n_end; n++) {
     particle_t& prt = prts[n];
@@ -428,20 +430,20 @@ update_rei_after(struct psc_collision *collision,
     F(1, i,j,k) += prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
     F(2, i,j,k) += prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
   }
-  F(0, i,j,k) /= (coll->every * ppsc->dt);
-  F(1, i,j,k) /= (coll->every * ppsc->dt);
-  F(2, i,j,k) /= (coll->every * ppsc->dt);
+  F(0, i,j,k) /= (collision->every * ppsc->dt);
+  F(1, i,j,k) /= (collision->every * ppsc->dt);
+  F(2, i,j,k) /= (collision->every * ppsc->dt);
 }
 
 // ----------------------------------------------------------------------
 // collide_in_cell
 
 static void
-collide_in_cell(struct psc_collision *collision,
+collide_in_cell(struct psc_collision *_collision,
 		mparticles_t::patch_t& prts, int n_start, int n_end,
 		struct psc_collision_stats *stats)
 {
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  PscCollision_t collision(_collision);
 
   int nn = n_end - n_start;
   
@@ -452,7 +454,7 @@ collide_in_cell(struct psc_collision *collision,
 
   // all particles need to have same weight!
   real_t wni = prts.prt_wni(prts[n_start]);
-  real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
+  real_t nudt1 = wni / ppsc->prm.nicell * nn * collision->every * ppsc->dt * collision->nu;
 
   real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
   int cnt = 0;
@@ -475,11 +477,12 @@ collide_in_cell(struct psc_collision *collision,
 // psc_collision_sub_setup
 
 static void
-psc_collision_sub_setup(struct psc_collision *collision)
+psc_collision_sub_setup(struct psc_collision *_collision)
 {
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  PscCollision_t collision(_collision);
+  psc_collision_sub *coll = collision.sub();
 
-  coll->mflds = psc_mfields_create(psc_collision_comm(collision));
+  coll->mflds = psc_mfields_create(psc_collision_comm(_collision));
   psc_mfields_set_type(coll->mflds, FIELDS_TYPE);
   psc_mfields_set_param_int(coll->mflds, "nr_fields", NR_STATS);
   psc_mfields_set_param_int3(coll->mflds, "ibn", ppsc->ibn);
@@ -492,7 +495,7 @@ psc_collision_sub_setup(struct psc_collision *collision)
   psc_mfields_set_comp_name(coll->mflds, 4, "coll_nudt_ncoll");
   psc_mfields_list_add(&psc_mfields_base_list, &coll->mflds);
 
-  coll->mflds_rei = psc_mfields_create(psc_collision_comm(collision));
+  coll->mflds_rei = psc_mfields_create(psc_collision_comm(_collision));
   psc_mfields_set_type(coll->mflds_rei, FIELDS_TYPE);
   psc_mfields_set_param_int(coll->mflds_rei, "nr_fields", 3);
   psc_mfields_set_param_int3(coll->mflds_rei, "ibn", ppsc->ibn);
@@ -508,23 +511,24 @@ psc_collision_sub_setup(struct psc_collision *collision)
 // psc_collision_sub_destroy
 
 static void
-psc_collision_sub_destroy(struct psc_collision *collision)
+psc_collision_sub_destroy(struct psc_collision *_collision)
 {
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  PscCollision_t collision(_collision);
 
-  psc_mfields_destroy(coll->mflds);
-  psc_mfields_destroy(coll->mflds_rei);
+  psc_mfields_destroy(collision->mflds);
+  psc_mfields_destroy(collision->mflds_rei);
 }
 
 // ----------------------------------------------------------------------
 // psc_collision_sub_run
 
 static void
-psc_collision_sub_run(struct psc_collision *collision,
+psc_collision_sub_run(struct psc_collision *_collision,
 		      struct psc_mparticles *mprts_base)
 {
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
-
+  PscCollision_t collision(_collision);
+  struct psc_collision_sub *coll = collision.sub();
+  
   static int pr;
   if (!pr) {
     pr = prof_register("collision", 1., 0, 0);
@@ -556,12 +560,12 @@ psc_collision_sub_run(struct psc_collision *collision,
       int c = (iz * ldims[1] + iy) * ldims[0] + ix;
       randomize_in_cell(prts, offsets[c], offsets[c+1]);
 
-      update_rei_before(collision, mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+      update_rei_before(_collision, mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
       
       struct psc_collision_stats stats = {};
-      collide_in_cell(collision, mprts[p], offsets[c], offsets[c+1], &stats);
+      collide_in_cell(_collision, mprts[p], offsets[c], offsets[c+1], &stats);
       
-      update_rei_after(collision, mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+      update_rei_after(_collision, mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
 
       for (int s = 0; s < NR_STATS; s++) {
 	F(s, ix,iy,iz) = stats.s[s];
@@ -606,10 +610,9 @@ static void
 copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_collision *collision = ppsc->collision;
-  assert(psc_collision_ops(collision) == &psc_collision_sub_ops);
-
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
+  PscCollision_t collision(ppsc->collision);
+  psc_collision_sub *coll = collision.sub();
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
@@ -643,10 +646,9 @@ static void
 copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_collision *collision = ppsc->collision;
-  assert(psc_collision_ops(collision) == &psc_collision_sub_ops);
-
-  struct psc_collision_sub *coll = psc_collision_sub(collision);
+  assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
+  PscCollision_t collision(ppsc->collision);
+  psc_collision_sub *coll = collision.sub();
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
