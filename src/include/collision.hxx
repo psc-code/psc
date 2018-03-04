@@ -53,42 +53,6 @@ public:
     collision->run(mprts);
   }
 
-  static void copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-			 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-  {
-    using mparticles_t = typename Collision::mparticles_t;
-    using mfields_t = typename Collision::mfields_t;
-    PscCollision<Collision> collision(ppsc->collision);
-    Collision* coll = collision.sub();
-    
-    mfields_t mr = mres->get_as<mfields_t>(0, 0);
-    
-    for (int m = 0; m < coll->NR_STATS; m++) {
-      // FIXME, copy could be avoided (?)
-      mr->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
-    }
-    
-    mr.put_as(mres, 0, coll->NR_STATS);
-  }
-
-  static void copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		       struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-  {
-    using mparticles_t = typename Collision::mparticles_t;
-    using mfields_t = typename Collision::mfields_t;
-    PscCollision<Collision> collision(ppsc->collision);
-    Collision* coll = collision.sub();
-    
-    mfields_t mr = mres->get_as<mfields_t>(0, 0);
-    
-    for (int m = 0; m < 3; m++) {
-      // FIXME, copy could be avoided (?)
-      mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
-    }
-    
-    mr.put_as(mres, 0, 3);
-  }
-  
 };
 
 template<typename Collision>
