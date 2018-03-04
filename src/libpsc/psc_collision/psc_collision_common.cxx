@@ -13,12 +13,13 @@ template<typename MP, typename MF>
 struct Collision_
 {
   using mparticles_t = MP;
-  using mfields_t = MF;
   using particles_t = typename mparticles_t::patch_t;
+  using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
+  using mfields_t = MF;
   using Fields = Fields3d<typename mfields_t::fields_t>;
 
-  constexpr static char const* const name = PARTICLE_TYPE;
+  constexpr static char const* const name = mparticles_traits<mparticles_t>::name;
 
   enum {
     STATS_MIN,
