@@ -10,11 +10,11 @@
 #include <cmath>
 
 template<typename MP>
-struct psc_collision_sub;
+struct Collision_;
 
 using Fields = Fields3d<mfields_t::fields_t>;
 using real_t = mparticles_t::real_t;
-using PscCollision_t = PscCollision<psc_collision_sub<mparticles_t>>;
+using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
 
 enum {
   STATS_MIN,
@@ -30,12 +30,12 @@ struct psc_collision_stats {
 };
 
 template<typename MP>
-struct psc_collision_sub
+struct Collision_
 {
   using mparticles_t = MP;
   using particles_t = typename mparticles_t::patch_t;
   
-  psc_collision_sub(MPI_Comm comm)
+  Collision_(MPI_Comm comm)
   {
     assert(nu > 0.);
 
@@ -64,7 +64,7 @@ struct psc_collision_sub
     psc_mfields_list_add(&psc_mfields_base_list, &mflds_rei);
   }
 
-  ~psc_collision_sub()
+  ~Collision_()
   {
     psc_mfields_destroy(mflds);
     psc_mfields_destroy(mflds_rei);
@@ -560,8 +560,8 @@ struct psc_collision_sub
   struct psc_mfields *mflds_rei;
 };
 
-#define VAR(x) (void *)offsetof(psc_collision_sub<mparticles_t>, x)
-static struct param psc_collision_sub_descr[] = {
+#define VAR(x) (void *)offsetof(Collision_<mparticles_t>, x)
+static struct param Collision__descr[] = {
   { "every"         , VAR(every)       , PARAM_INT(1)     },
   { "nu"            , VAR(nu)          , PARAM_DOUBLE(-1.) },
   {},
@@ -572,11 +572,11 @@ static struct param psc_collision_sub_descr[] = {
 // psc_collision: subclass "c" / "single"
 
 struct psc_collision_sub_ops : psc_collision_ops {
-  using Collision = CollisionWrapper<psc_collision_sub<mparticles_t>>;
+  using Collision = CollisionWrapper<Collision_<mparticles_t>>;
   psc_collision_sub_ops() {
     name                  = PARTICLE_TYPE;
     size                  = Collision::size;
-    param_descr           = psc_collision_sub_descr;
+    param_descr           = Collision__descr;
     setup                 = Collision::setup;
     destroy               = Collision::destroy;
     run                   = Collision::run;
@@ -591,7 +591,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 {
   assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
   PscCollision_t collision(ppsc->collision);
-  psc_collision_sub<mparticles_t> *coll = collision.sub();
+  Collision_<mparticles_t> *coll = collision.sub();
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
@@ -627,7 +627,7 @@ copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 {
   assert(psc_collision_ops(ppsc->collision) == &psc_collision_sub_ops);
   PscCollision_t collision(ppsc->collision);
-  psc_collision_sub<mparticles_t> *coll = collision.sub();
+  Collision_<mparticles_t> *coll = collision.sub();
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
