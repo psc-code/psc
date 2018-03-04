@@ -9,14 +9,14 @@
 
 #include <cmath>
 
-template<typename MP>
+template<typename MP, typename MF>
 struct Collision_
 {
   using mparticles_t = MP;
-  using mfields_t = mfields_t;
+  using mfields_t = MF;
   using particles_t = typename mparticles_t::patch_t;
   using real_t = typename mparticles_t::real_t;
-  using Fields = Fields3d<mfields_t::fields_t>;
+  using Fields = Fields3d<typename mfields_t::fields_t>;
 
   constexpr static char const* const name = PARTICLE_TYPE;
 
