@@ -9,7 +9,7 @@
 // PscSortNone
 //
 // we could wrap SortNone as usual, but there's really no point to
-// get_as() / put_as()
+// get_as() / put_as() ever
 
 class PscSortNone : SortBase
 {

@@ -12,12 +12,12 @@
 // SortCountsort
 
 template<typename MP>
-struct SortCountsort : SortBase
+struct SortCountsort : SortCRTP<SortCountsort<MP>>
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
   
-  void operator()(Mparticles& mprts)
+  void sort(Mparticles& mprts)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
@@ -56,13 +56,6 @@ struct SortCountsort : SortBase
       delete[] cnts;
     }
   }
-
-  void run(struct psc_mparticles *mprts_base) override
-  {
-    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
-  }
 };
 
 // ======================================================================
@@ -70,12 +63,12 @@ struct SortCountsort : SortBase
 // use a separate array of cell indices
 
 template<typename MP>
-struct SortCountsort2 : SortBase
+struct SortCountsort2 : SortCRTP<SortCountsort2<MP>>
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
   
-  void operator()(Mparticles& mprts)
+  void sort(Mparticles& mprts)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
@@ -127,25 +120,16 @@ struct SortCountsort2 : SortBase
       delete[] cnts;
     }
   }
-
-  void run(struct psc_mparticles *mprts_base) override
-  {
-    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
-  }
 };
 
 // ======================================================================
 // SortNone
 
 template<typename MP>
-struct SortNone : SortBase
+struct SortNone : SortCRTP<SortNone<MP>>
 {
   using mparticles_t = MP;
 
-  void operator()(mparticles_t mprts) {}
-
-  void run(struct psc_mparticles *mprts_base) override {}
+  void sort(mparticles_t mprts) {}
 };
     

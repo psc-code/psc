@@ -53,13 +53,25 @@ private:
 // ======================================================================
 // SortBase
 
-class SortBase
+struct SortBase
 {
-public:
   virtual void run(struct psc_mparticles *mprts_base) = 0;
 };
 
 using PscSortBase = PscSort<SortBase>;
+
+template<typename Derived>
+struct SortCRTP : SortBase
+{
+  void run(struct psc_mparticles *mprts_base) override
+  {
+    using Mparticles = typename Derived::Mparticles;
+    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
+    auto& derived = *static_cast<Derived*>(this);
+    derived.sort(*mprts.sub());
+    mprts.put_as(mprts_base);
+  }
+};
 
 // ======================================================================
 // PscSortWrapper

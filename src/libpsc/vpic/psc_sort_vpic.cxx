@@ -5,20 +5,13 @@
 #include "vpic_iface.h"
 #include "sort.hxx"
 
-struct SortVpic : SortBase
+struct SortVpic : SortCRTP<SortVpic>
 {
   using Mparticles = MparticlesVpic;
   
-  void operator()(Mparticles& mprts)
+  void sort(Mparticles& mprts)
   {
     Simulation_sort_mprts(mprts.sim, mprts.vmprts, ppsc->timestep);
-  }
-
-  void run(struct psc_mparticles *mprts_base) override
-  {
-    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
   }
 };
 
