@@ -129,18 +129,15 @@ struct Collision_
       pr = prof_register("collision", 1., 0, 0);
     }
 
-    if (ppsc->timestep % interval_ != 0) {
-      return;
+    if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
+      mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+      
+      prof_start(pr);
+      (*this)(mprts);
+      prof_stop(pr);
+      
+      mprts.put_as(mprts_base);
     }
-
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-
-    prof_start(pr);
-
-    (*this)(mprts);
-    prof_stop(pr);
-    
-    mprts.put_as(mprts_base);
   }
 
   // ----------------------------------------------------------------------
