@@ -1,5 +1,6 @@
 
 #include "psc_collision_private.h"
+#include "collision.hxx"
 
 #include "psc_particles_vpic.h"
 #include "psc_method.h"
@@ -8,44 +9,34 @@
 
 // ----------------------------------------------------------------------
 
-struct psc_collision_vpic {
-  Simulation *sim;
+class PscCollisionVpic
+{
+public:
+  PscCollisionVpic(MPI_Comm comm, int interval, double nu)
+  {
+    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
+  }
+
+  void run(psc_mparticles* mprts_base)
+  {
+    Simulation_collision_run(sim_);
+  }
+
+private:
+  Simulation *sim_;
 };
-
-#define psc_collision_vpic(collision) mrc_to_subobj(collision, struct psc_collision_vpic)
-
-// ----------------------------------------------------------------------
-// psc_collision_vpic_setup
-
-static void
-psc_collision_vpic_setup(struct psc_collision *collision)
-{
-  struct psc_collision_vpic *sub = psc_collision_vpic(collision);
-  
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sub->sim);
-}
-
-// ----------------------------------------------------------------------
-// psc_collision_vpic_run
-
-static void
-psc_collision_vpic_run(struct psc_collision *collision,
-		       struct psc_mparticles *mprts_base)
-{
-  struct psc_collision_vpic *sub = psc_collision_vpic(collision);
-
-  Simulation_collision_run(sub->sim);
-}
 
 // ----------------------------------------------------------------------
 // psc_collision: subclass "vpic"
 
-struct psc_collision_ops_vpic : psc_collision_ops {
-  psc_collision_ops_vpic() {
+struct psc_collision_vpic_ops : psc_collision_ops {
+  using Collision = CollisionWrapper<PscCollisionVpic>;
+  psc_collision_vpic_ops() {
     name                  = "vpic";
-    size                  = sizeof(struct psc_collision_vpic);
-    setup                 = psc_collision_vpic_setup;
-    run                   = psc_collision_vpic_run;
+    size                  = Collision::size;
+    setup                 = Collision::setup;
+    destroy               = Collision::destroy;
+    run                   = Collision::run;
   }
 } psc_collision_vpic_ops;
 
