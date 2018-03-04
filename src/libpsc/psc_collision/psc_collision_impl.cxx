@@ -9,8 +9,8 @@
 // ======================================================================
 // psc_collision: subclass "single"/"double"
 
-psc_collision_ops_<Collision_<PscMparticlesSingle, PscMfieldsSingle>> psc_collision_single_ops;
-psc_collision_ops_<Collision_<PscMparticlesDouble, PscMfieldsC>> psc_collision_double_ops;
+psc_collision_ops_<Collision_<MparticlesSingle, MfieldsSingle>> psc_collision_single_ops;
+psc_collision_ops_<Collision_<MparticlesDouble, MfieldsC>> psc_collision_double_ops;
 
 
 template<typename Collision>
@@ -55,7 +55,7 @@ static void copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mf
 // psc_output_fields_item: subclass "coll_stats"
 
 struct psc_output_fields_item_ops_coll_single : psc_output_fields_item_ops {
-  using Collision = Collision_<PscMparticlesSingle, PscMfieldsSingle>;
+  using Collision = Collision_<MparticlesSingle, MfieldsSingle>;
   psc_output_fields_item_ops_coll_single() {
     name      = "coll_stats_single";
     nr_comp   = Collision::NR_STATS;
@@ -69,7 +69,7 @@ struct psc_output_fields_item_ops_coll_single : psc_output_fields_item_ops {
 } psc_output_fields_item_coll_stats_single_ops;
 
 struct psc_output_fields_item_ops_coll_double : psc_output_fields_item_ops {
-  using Collision = Collision_<PscMparticlesDouble, PscMfieldsC>;
+  using Collision = Collision_<MparticlesDouble, MfieldsC>;
   psc_output_fields_item_ops_coll_double() {
     name      = "coll_stats_double";
     nr_comp   = Collision::NR_STATS;
@@ -86,7 +86,7 @@ struct psc_output_fields_item_ops_coll_double : psc_output_fields_item_ops {
 // psc_output_fields_item: subclass "coll_rei"
 
 struct psc_output_fields_item_ops_coll_rei_single : psc_output_fields_item_ops {
-  using Collision = Collision_<PscMparticlesSingle, PscMfieldsSingle>;
+  using Collision = Collision_<MparticlesSingle, MfieldsSingle>;
   psc_output_fields_item_ops_coll_rei_single() {
     name      = "coll_rei_single";
     nr_comp   = 3;
@@ -98,7 +98,7 @@ struct psc_output_fields_item_ops_coll_rei_single : psc_output_fields_item_ops {
 } psc_output_fields_item_coll_rei_single_ops;
 
 struct psc_output_fields_item_ops_coll_rei_double : psc_output_fields_item_ops {
-  using Collision = Collision_<PscMparticlesDouble, PscMfieldsC>;
+  using Collision = Collision_<MparticlesDouble, MfieldsC>;
   psc_output_fields_item_ops_coll_rei_double() {
     name      = "coll_rei_double";
     nr_comp   = 3;

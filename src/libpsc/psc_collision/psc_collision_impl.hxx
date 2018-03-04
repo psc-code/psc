@@ -3,6 +3,7 @@
 #include "collision.hxx"
 #include "psc_output_fields_item_private.h"
 #include "fields.hxx"
+#include "fields3d.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -12,12 +13,14 @@
 template<typename MP, typename MF>
 struct Collision_ : CollisionBase
 {
-  using mparticles_t = MP;
-  using particles_t = typename mparticles_t::patch_t;
-  using particle_t = typename mparticles_t::particle_t;
-  using real_t = typename mparticles_t::real_t;
-  using mfields_t = MF;
-  using Fields = Fields3d<typename mfields_t::fields_t>;
+  using Mparticles = MP;
+  using particles_t = typename Mparticles::patch_t;
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mparticles::real_t;
+  using Mfields = MF;
+  using Fields = Fields3d<typename Mfields::fields_t>;
+  using mparticles_t = PscMparticles<Mparticles>;
+  using mfields_t = PscMfields<Mfields>;
 
   constexpr static char const* const name = mparticles_traits<mparticles_t>::name;
 
@@ -41,7 +44,7 @@ struct Collision_ : CollisionBase
     assert(nu_ > 0.);
 
     mflds = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds, fields_traits<typename mfields_t::fields_t>::name);
+    psc_mfields_set_type(mflds, fields_traits<typename Mfields::fields_t>::name);
     psc_mfields_set_param_int(mflds, "nr_fields", NR_STATS);
     psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
     mflds->grid = &ppsc->grid();
@@ -54,7 +57,7 @@ struct Collision_ : CollisionBase
     psc_mfields_list_add(&psc_mfields_base_list, &mflds);
     
     mflds_rei = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds_rei, fields_traits<typename mfields_t::fields_t>::name);
+    psc_mfields_set_type(mflds_rei, fields_traits<typename Mfields::fields_t>::name);
     psc_mfields_set_param_int(mflds_rei, "nr_fields", 3);
     psc_mfields_set_param_int3(mflds_rei, "ibn", ppsc->ibn);
     mflds_rei->grid = &ppsc->grid();
