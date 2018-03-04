@@ -9,7 +9,7 @@
 
 struct PscCollisionNone
 {
-  PscCollisionNone(MPI_Comm comm)
+  PscCollisionNone(MPI_Comm comm, int every, double nu)
   {}
   
   void run(struct psc_mparticles *mprts_base)

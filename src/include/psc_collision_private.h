@@ -6,6 +6,8 @@
 
 struct psc_collision {
   struct mrc_obj obj;
+  int every;
+  double nu;
 };
 
 struct psc_collision_ops {

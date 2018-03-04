@@ -35,7 +35,9 @@ struct Collision_
   using mparticles_t = MP;
   using particles_t = typename mparticles_t::patch_t;
   
-  Collision_(MPI_Comm comm)
+  Collision_(MPI_Comm comm, int every, double nu)
+    : every(every),
+      nu(nu)
   {
     assert(nu > 0.);
 
@@ -560,14 +562,6 @@ struct Collision_
   struct psc_mfields *mflds_rei;
 };
 
-#define VAR(x) (void *)offsetof(Collision_<mparticles_t>, x)
-static struct param Collision__descr[] = {
-  { "every"         , VAR(every)       , PARAM_INT(1)     },
-  { "nu"            , VAR(nu)          , PARAM_DOUBLE(-1.) },
-  {},
-};
-#undef VAR
-
 // ======================================================================
 // psc_collision: subclass "c" / "single"
 
@@ -576,7 +570,6 @@ struct psc_collision_sub_ops : psc_collision_ops {
   psc_collision_sub_ops() {
     name                  = PARTICLE_TYPE;
     size                  = Collision::size;
-    param_descr           = Collision__descr;
     setup                 = Collision::setup;
     destroy               = Collision::destroy;
     run                   = Collision::run;

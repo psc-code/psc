@@ -33,7 +33,8 @@ public:
   {
     PscCollision<Collision> collision(_collision);
     
-    new(collision.sub()) Collision(psc_collision_comm(_collision));
+    new(collision.sub()) Collision(psc_collision_comm(_collision),
+				   _collision->every, _collision->nu);
   }
 
   static void destroy(struct psc_collision* _collision)
