@@ -20,3 +20,28 @@ private:
   psc_collision *collision_;
 };
 
+// ======================================================================
+// CollisionWrapper
+
+template<typename Collision>
+class CollisionWrapper
+{
+public:
+  const static size_t size = sizeof(Collision);
+  
+  static void setup(struct psc_collision *_collision)
+  {
+    PscCollision<Collision> collision(_collision);
+    
+    new(collision.sub()) Collision(psc_collision_comm(_collision));
+  }
+
+  static void destroy(struct psc_collision *_collision)
+  {
+    PscCollision<Collision> collision(_collision);
+    
+    collision->~Collision();
+  }
+
+};
+

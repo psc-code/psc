@@ -571,38 +571,17 @@ static struct param psc_collision_sub_descr[] = {
 };
 #undef VAR
 
-// ----------------------------------------------------------------------
-// psc_collision_sub_setup
-
-static void
-psc_collision_sub_setup(struct psc_collision *_collision)
-{
-  PscCollision_t collision(_collision);
-
-  new(collision.sub()) psc_collision_sub<mparticles_t>(psc_collision_comm(_collision));
-}
-
-// ----------------------------------------------------------------------
-// psc_collision_sub_destroy
-
-static void
-psc_collision_sub_destroy(struct psc_collision *_collision)
-{
-  PscCollision_t collision(_collision);
-
-  collision->~psc_collision_sub();
-}
-
 // ======================================================================
 // psc_collision: subclass "c" / "single"
 
 struct psc_collision_sub_ops : psc_collision_ops {
+  using Collision = CollisionWrapper<psc_collision_sub<mparticles_t>>;
   psc_collision_sub_ops() {
     name                  = PARTICLE_TYPE;
-    size                  = sizeof(psc_collision_sub<mparticles_t>);
+    size                  = Collision::size;
     param_descr           = psc_collision_sub_descr;
-    setup                 = psc_collision_sub_setup;
-    destroy               = psc_collision_sub_destroy;
+    setup                 = Collision::setup;
+    destroy               = Collision::destroy;
     run                   = psc_collision_sub<mparticles_t>::run;
   }
 } psc_collision_sub_ops;
