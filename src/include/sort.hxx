@@ -25,7 +25,7 @@ struct PscSort
   
   void operator()(PscMparticlesBase mprts)
   {
-    if (ppsc->timestep % sort_->every != 0)
+    if (sort_->every <= 0 || ppsc->timestep % sort_->every != 0)
       return;
     
     static int st_time_sort, pr;

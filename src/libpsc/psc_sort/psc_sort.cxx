@@ -31,7 +31,7 @@ psc_sort_init()
 
 #define VAR(x) (void *)offsetof(struct psc_sort, x)
 static struct param psc_sort_descr[] = {
-  { "every"             , VAR(every)               , PARAM_INT(100)       },
+  { "every"             , VAR(every)               , PARAM_INT(0)         },
   {},
 };
 #undef VAR
