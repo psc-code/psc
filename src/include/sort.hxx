@@ -25,7 +25,7 @@ struct PscSort
   
   void operator()(PscMparticlesBase mprts)
   {
-    sub()->run(mprts.mprts());
+    sub()->run(mprts);
   }
   
   sub_t* sub() { return mrc_to_subobj(sort_, sub_t); }
@@ -40,7 +40,7 @@ private:
 
 struct SortBase
 {
-  virtual void run(struct psc_mparticles *mprts_base) = 0;
+  virtual void run(PscMparticlesBase mprts_base) = 0;
 };
 
 using PscSortBase = PscSort<SortBase>;
@@ -52,7 +52,7 @@ struct SortCRTP : SortBase
     : interval_(interval)
   {}
   
-  void run(struct psc_mparticles *mprts_base) override
+  void run(PscMparticlesBase mprts_base) override
   {
     if (interval_ <= 0 || ppsc->timestep % interval_ != 0)
       return;
@@ -67,7 +67,7 @@ struct SortCRTP : SortBase
     prof_start(pr);
     
     using Mparticles = typename Derived::Mparticles;
-    auto mprts = mprts_base->get_as<PscMparticles<Mparticles>>();
+    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
     auto& derived = *static_cast<Derived*>(this);
     derived.sort(*mprts.sub());
     mprts.put_as(mprts_base);

@@ -468,9 +468,24 @@ struct PscMparticles
       sub_(mrc_to_subobj(mprts, sub_t))
   {}
 
+  template<typename MP>
+  MP get_as(uint flags = 0)
+  {
+    const char *type = mparticles_traits<MP>::name;
+    struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_, type, flags);
+    return MP(mprts);
+  }
+
   void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
   {
     psc_mparticles_put_as(mprts_, mprts_base, flags);
+    mprts_ = nullptr;
+  }
+
+  template<typename MP>
+  void put_as(MP mprts_base, unsigned int flags = 0)
+  {
+    psc_mparticles_put_as(mprts_, mprts_base.mprts(), flags);
     mprts_ = nullptr;
   }
 

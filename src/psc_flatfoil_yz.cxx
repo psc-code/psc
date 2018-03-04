@@ -507,7 +507,7 @@ static void psc_flatfoil_step(struct psc *psc)
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
   //sort(mprts);
-  sort_->run(mprts.mprts());
+  sort_->run(mprts);
   collision(mprts);
   
   //psc_checks_continuity_before_particle_push(psc->checks, psc);

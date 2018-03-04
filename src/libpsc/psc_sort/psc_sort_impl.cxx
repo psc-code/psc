@@ -16,7 +16,7 @@ class PscSortNone : SortBase
 public:
   PscSortNone(int interval) {}
   
-  void run(struct psc_mparticles *mprts_base) override {}
+  void run(PscMparticlesBase mprts_base) override {}
 };
 
 // ======================================================================
