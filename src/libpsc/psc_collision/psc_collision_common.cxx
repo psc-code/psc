@@ -119,19 +119,16 @@ struct psc_collision_sub
   }
 
   // ----------------------------------------------------------------------
-  // psc_collision_sub_run
+  // run
 
-  static void run(struct psc_collision *_collision, struct psc_mparticles *mprts_base)
+  void run(struct psc_mparticles *mprts_base)
   {
-    PscCollision_t collision(_collision);
-    psc_collision_sub<mparticles_t> *coll = collision.sub();
-  
     static int pr;
     if (!pr) {
       pr = prof_register("collision", 1., 0, 0);
     }
 
-    if (ppsc->timestep % coll->every != 0) {
+    if (ppsc->timestep % every != 0) {
       return;
     }
 
@@ -139,7 +136,7 @@ struct psc_collision_sub
 
     prof_start(pr);
 
-    (*collision.sub())(mprts);
+    (*this)(mprts);
     prof_stop(pr);
     
     mprts.put_as(mprts_base);
@@ -582,7 +579,7 @@ struct psc_collision_sub_ops : psc_collision_ops {
     param_descr           = psc_collision_sub_descr;
     setup                 = Collision::setup;
     destroy               = Collision::destroy;
-    run                   = psc_collision_sub<mparticles_t>::run;
+    run                   = Collision::run;
   }
 } psc_collision_sub_ops;
 

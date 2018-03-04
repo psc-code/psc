@@ -29,19 +29,25 @@ class CollisionWrapper
 public:
   const static size_t size = sizeof(Collision);
   
-  static void setup(struct psc_collision *_collision)
+  static void setup(struct psc_collision* _collision)
   {
     PscCollision<Collision> collision(_collision);
     
     new(collision.sub()) Collision(psc_collision_comm(_collision));
   }
 
-  static void destroy(struct psc_collision *_collision)
+  static void destroy(struct psc_collision* _collision)
   {
     PscCollision<Collision> collision(_collision);
     
     collision->~Collision();
   }
 
+  static void run(struct psc_collision* _collision, struct psc_mparticles* mprts)
+  {
+    PscCollision<Collision> collision(_collision);
+
+    collision->run(mprts);
+  }
 };
 
