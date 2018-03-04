@@ -10,31 +10,26 @@
 #include <cmath>
 
 template<typename MP>
-struct Collision_;
-
-using Fields = Fields3d<mfields_t::fields_t>;
-using real_t = mparticles_t::real_t;
-using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
-
-enum {
-  STATS_MIN,
-  STATS_MED,
-  STATS_MAX,
-  STATS_NLARGE,
-  STATS_NCOLL,
-  NR_STATS,
-};
-
-struct psc_collision_stats {
-  real_t s[NR_STATS];
-};
-
-template<typename MP>
 struct Collision_
 {
   using mparticles_t = MP;
   using particles_t = typename mparticles_t::patch_t;
+  using real_t = typename mparticles_t::real_t;
+  using Fields = Fields3d<mfields_t::fields_t>;
+
+  enum {
+    STATS_MIN,
+    STATS_MED,
+    STATS_MAX,
+    STATS_NLARGE,
+    STATS_NCOLL,
+    NR_STATS,
+  };
   
+  struct psc_collision_stats {
+    real_t s[NR_STATS];
+  };
+
   Collision_(MPI_Comm comm, int every, double nu)
     : every(every),
       nu(nu)
@@ -576,6 +571,8 @@ struct psc_collision_sub_ops : psc_collision_ops {
   }
 } psc_collision_sub_ops;
 
+using PscCollision_t = PscCollision<Collision_<mparticles_t>>;
+
 // ======================================================================
 
 static void
@@ -588,12 +585,12 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
   mfields_t mr = mres->get_as<mfields_t>(0, 0);
 
-  for (int m = 0; m < NR_STATS; m++) {
+  for (int m = 0; m < coll->NR_STATS; m++) {
     // FIXME, copy could be avoided (?)
     mr->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
   }
 
-  mr.put_as(mres, 0, NR_STATS);
+  mr.put_as(mres, 0, coll->NR_STATS);
 }
 
 // ======================================================================
@@ -602,7 +599,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 struct psc_output_fields_item_ops_coll : psc_output_fields_item_ops {
   psc_output_fields_item_ops_coll() {
     name      = "coll_stats_" PARTICLE_TYPE;
-    nr_comp   = NR_STATS;
+    nr_comp   = Collision_<mparticles_t>::NR_STATS;
     fld_names[0] = "coll_nudt_min";
     fld_names[1] = "coll_nudt_med";
     fld_names[2] = "coll_nudt_max";
