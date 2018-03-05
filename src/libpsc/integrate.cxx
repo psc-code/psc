@@ -15,6 +15,7 @@
 #include "push_fields.hxx"
 #include "sort.hxx"
 #include "collision.hxx"
+#include "bnd_particles.hxx"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -100,6 +101,7 @@ psc_step(struct psc *psc)
   PscPushFieldsBase pushf(psc->push_fields);
   PscSortBase sort(psc->sort);
   PscCollisionBase collision(psc->collision);
+  PscBndParticlesBase bndp(psc->bnd_particles);
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -119,7 +121,7 @@ psc_step(struct psc *psc)
   pushf.advance_H(mflds, .5);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
+  bndp(mprts);
   
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   

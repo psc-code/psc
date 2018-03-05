@@ -473,6 +473,7 @@ main(int argc, char **argv)
 #include <push_fields.hxx>
 #include <sort.hxx>
 #include <collision.hxx>
+#include <bnd_particles.hxx>
 
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
@@ -514,7 +515,8 @@ static void psc_flatfoil_step(struct psc *psc)
   PscPushParticlesBase pushp(psc->push_particles);
   PscPushFieldsBase pushf(psc->push_fields);
   auto& pushf_ = dynamic_cast<PushFields_t&>(*pushf.sub());
-
+  PscBndParticlesBase bndp(psc->bnd_particles);
+  
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
@@ -546,7 +548,7 @@ static void psc_flatfoil_step(struct psc *psc)
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 #endif
   
-  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
+  bndp(mprts);
   
   psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds());
   psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds());
