@@ -482,6 +482,7 @@ main(int argc, char **argv)
 #include "../libpsc/psc_push_particles/push_config.hxx"
 #include "../libpsc/psc_push_particles/push_part_common.c"
 #include "psc_push_fields_impl.hxx"
+#include "bnd_particles_impl.hxx"
 
 using Mparticles_t = MparticlesDouble;
 using Mfields_t = MfieldsC;
@@ -489,6 +490,7 @@ using Sort_t = SortCountsort2<Mparticles_t>;
 using Collision_t = Collision_<Mparticles_t, Mfields_t>;
 using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
 using PushFields_t = PushFields<PscMfieldsC>;
+using BndParticles_t = psc_bnd_particles_sub<PscMparticles<Mparticles_t>>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -516,6 +518,7 @@ static void psc_flatfoil_step(struct psc *psc)
   PscPushFieldsBase pushf(psc->push_fields);
   auto& pushf_ = dynamic_cast<PushFields_t&>(*pushf.sub());
   PscBndParticlesBase bndp(psc->bnd_particles);
+  auto& bndp_ = dynamic_cast<BndParticles_t&>(*bndp.sub());
   
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -533,6 +536,8 @@ static void psc_flatfoil_step(struct psc *psc)
   pushf_.push_H(mflds.mflds(), .5);
   psc_stats_stop(st_time_field);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+  
+  bndp_.exchange_particles(mprts);
 #else
   sort(mprts);
   collision(mprts);
@@ -546,9 +551,9 @@ static void psc_flatfoil_step(struct psc *psc)
   // field propagation B^{n+1/2} -> B^{n+1}
   pushf.advance_H(mflds, .5);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-#endif
   
   bndp(mprts);
+#endif
   
   psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds());
   psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds());
