@@ -12,7 +12,7 @@
 
 struct BndBase
 {
-  virtual void fill_ghosts() = 0;
+  //  virtual void fill_ghosts() = 0;
 };
 
 // ======================================================================
@@ -90,4 +90,28 @@ private:
 };
 
 using PscBndBase = PscBnd<BndBase>;
+
+// ======================================================================
+// PscBndWrapper
+
+template<typename Bnd>
+class PscBndWrapper
+{
+public:
+  const static size_t size = sizeof(Bnd);
+  
+  static void setup(psc_bnd* _bnd)
+  {
+    PscBnd<Bnd> bnd(_bnd);
+    new(bnd.sub()) Bnd();
+
+    psc_bnd_setup_super(_bnd);
+  }
+
+  static void destroy(psc_bnd* _bnd)
+  {
+    PscBnd<Bnd> bnd(_bnd);
+    bnd->~Bnd();
+  }
+};
 

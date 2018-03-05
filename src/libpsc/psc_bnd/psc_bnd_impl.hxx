@@ -1,12 +1,13 @@
 
 #include "psc.h"
 #include "fields.hxx"
+#include "bnd.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
 template<typename MF>
-struct psc_bnd_fld_ops
+struct psc_bnd_fld_ops : BndBase
 {
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
