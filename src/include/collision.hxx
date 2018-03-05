@@ -4,6 +4,8 @@
 #include "psc_collision_private.h"
 #include "particles.hxx"
 
+#include <mrc_profile.h>
+
 // ======================================================================
 // PscCollision
 
@@ -49,9 +51,33 @@ using PscCollisionBase = PscCollision<CollisionBase>;
 template<typename Derived, typename MP>
 struct CollisionCRTP : CollisionBase
 {
+  using Mparticles = MP;
+  
   CollisionCRTP(int interval)
     : interval_(interval)
   {}
+
+  // ----------------------------------------------------------------------
+  // run
+
+  void run(PscMparticlesBase mprts_base) override
+  {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("collision", 1., 0, 0);
+    }
+
+    if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
+      auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
+      
+      prof_start(pr);
+      auto& derived = *static_cast<Derived*>(this);
+      derived(mprts);
+      prof_stop(pr);
+      
+      mprts.put_as(mprts_base);
+    }
+  }
 
 protected:
   int interval_;
