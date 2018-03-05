@@ -537,7 +537,7 @@ static void psc_flatfoil_step(struct psc *psc)
   psc_stats_stop(st_time_field);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
-  bndp_.exchange_particles(mprts);
+  bndp_(mprts_);
 #else
   sort(mprts);
   collision(mprts);
