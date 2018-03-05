@@ -14,10 +14,15 @@
 #endif
 
 MparticlesCuda::MparticlesCuda(const Grid_t& grid)
-: MparticlesBase(grid)
+  : MparticlesBase(grid)
 {
   dprintf("CMPRTS: ctor\n");
   cmprts_ = new cuda_mparticles(grid);
+
+  patches_.reserve(grid.n_patches());
+  for (int p = 0; p < grid.n_patches(); p++) {
+      patches_.emplace_back(*this, p);
+  }
 }
 
 MparticlesCuda::~MparticlesCuda()

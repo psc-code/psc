@@ -13,41 +13,7 @@
 // ======================================================================
 // PscMparticlesCuda
 
-struct PscMparticlesCuda : PscMparticles<MparticlesCuda>
-{
-  using Base = PscMparticles<MparticlesCuda>;
-  using particle_t = particle_cuda_t;
-  using real_t = particle_cuda_real_t;
-  using Real3 = Vec3<real_t>;
-  using particle_buf_t = psc_particle_cuda_buf_t;
-
-  using Base::Base;
-
-  struct patch_t
-  {
-    patch_t(PscMparticlesCuda& mp, int p)
-      : mp_(mp), p_(p), pi_(mp->grid())
-    {
-    }
-
-    particle_buf_t& get_buf() { assert(0); static particle_buf_t fake{}; return fake; } // FIXME
-
-    int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
-    Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
-    int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
-  
-    const int* get_b_mx() const;
-
-  private:
-    PscMparticlesCuda& mp_;
-    int p_;
-    ParticleIndexer<real_t> pi_;
-  };
-
-  patch_t operator[](int p) {
-    return patch_t(*this, p);
-  }
-};
+using PscMparticlesCuda = PscMparticles<MparticlesCuda>;
 
 template<>
 struct mparticles_traits<PscMparticlesCuda>

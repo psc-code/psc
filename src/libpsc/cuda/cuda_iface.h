@@ -8,6 +8,12 @@
 #include <particles.hxx>
 #include <grid.hxx>
 
+#if 1
+#define dprintf(...) mprintf(__VA_ARGS__)
+#else
+#define dprintf(...) do {} while (0)
+#endif
+
 struct BS
 {
   using x = std::integral_constant<unsigned int, 1>;
@@ -58,6 +64,7 @@ struct MparticlesCuda : MparticlesBase
   using particle_buf_t = psc_particle_cuda_buf_t;
   
   MparticlesCuda(const Grid_t& grid);
+
   MparticlesCuda(const MparticlesCuda&) = delete;
   ~MparticlesCuda();
 
@@ -89,8 +96,7 @@ struct MparticlesCuda : MparticlesBase
     
     patch_t(MparticlesCuda& mp, int p)
       : mp_(mp), p_(p), pi_(mp.grid())
-    {
-    }
+    {}
 
     particle_buf_t& get_buf() { assert(0); static particle_buf_t fake{}; return fake; } // FIXME
 
@@ -106,12 +112,12 @@ struct MparticlesCuda : MparticlesBase
     ParticleIndexer<real_t> pi_;
   };
 
-  patch_t operator[](int p) {
-    return patch_t(*this, p);
-  }
+  const patch_t& operator[](int p) const { return patches_[p]; }
+  patch_t&       operator[](int p)       { return patches_[p]; }
 
 private:
   cuda_mparticles* cmprts_;
+  std::vector<patch_t> patches_;
 
   template<typename MP>
   friend struct bnd_particles_policy_cuda;

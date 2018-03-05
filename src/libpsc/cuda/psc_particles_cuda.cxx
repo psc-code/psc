@@ -175,7 +175,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles
 
 const int* PscMparticlesCuda::patch_t::get_b_mx() const
 {
-  return mp_->patch_get_b_mx(p_);
+  return mp_.patch_get_b_mx(p_);
 }
 
 // ----------------------------------------------------------------------
