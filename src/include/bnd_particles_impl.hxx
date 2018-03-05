@@ -47,7 +47,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
     ddcp = new ddc_particles<mparticles_t>(domain);
   }
 
-  void exchange_particles(psc_mparticles* mprts_base) override;
+  void exchange_particles(PscMparticlesBase mprts_base) override;
 
 protected:
   void process_patch(mparticles_t mprts, int p);
@@ -223,9 +223,9 @@ void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
 // psc_bnd_particles_sub::exchange_particles
 
 template<typename MP>
-void psc_bnd_particles_sub<MP>::exchange_particles(psc_mparticles* mprts_base)
+void psc_bnd_particles_sub<MP>::exchange_particles(PscMparticlesBase mprts_base)
 {
-  mparticles_t mprts = mprts_base->get_as<MP>();
+  mparticles_t mprts = mprts_base.get_as<MP>();
   
   for (int p = 0; p < mprts->n_patches(); p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];

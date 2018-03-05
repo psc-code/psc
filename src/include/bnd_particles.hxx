@@ -11,7 +11,7 @@
 struct BndParticlesBase
 {
   virtual void reset(struct mrc_domain*, const Grid_t& grid) = 0;
-  virtual void exchange_particles(psc_mparticles* mprts_base) = 0;
+  virtual void exchange_particles(PscMparticlesBase mprts_base) = 0;
 };
 
 // ======================================================================
@@ -38,7 +38,7 @@ struct PscBndParticles
     
     prof_start(pr);
     psc_stats_start(st_time_comm);
-    sub()->exchange_particles(mprts.mprts());
+    sub()->exchange_particles(mprts);
     psc_stats_stop(st_time_comm);
     prof_stop(pr);
   }

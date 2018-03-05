@@ -35,7 +35,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<PscMparticlesCuda>
   // ----------------------------------------------------------------------
   // exchange_particles
 
-  void exchange_particles(psc_mparticles* mprts_base) override
+  void exchange_particles(PscMparticlesBase mprts_base) override
   {
     static int pr_A, pr_B;
     if (!pr_A) {
@@ -43,7 +43,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<PscMparticlesCuda>
       pr_B = prof_register("xchg_mprts_post", 1., 0, 0);
     }
     
-    auto mprts = mprts_base->get_as<mparticles_t>();
+    auto mprts = mprts_base.get_as<mparticles_t>();
 
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_A);
