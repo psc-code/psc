@@ -15,9 +15,10 @@ extern double *psc_balance_comp_time_by_patch;
 template<typename MP>
 struct psc_bnd_particles_sub : BndParticlesBase
 {
-  using mparticles_t = MP;
-  using particle_t = typename mparticles_t::particle_t;
-  using real_t = typename mparticles_t::real_t;
+  using Mparticles = MP;
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mparticles::real_t;
+  using mparticles_t = PscMparticles<Mparticles>;
   using ddcp_t = ddc_particles<mparticles_t>;
   using ddcp_patch = typename ddcp_t::patch;
 
@@ -225,7 +226,7 @@ void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
 template<typename MP>
 void psc_bnd_particles_sub<MP>::exchange_particles(PscMparticlesBase mprts_base)
 {
-  mparticles_t mprts = mprts_base.get_as<MP>();
+  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
   
   for (int p = 0; p < mprts->n_patches(); p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];

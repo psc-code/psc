@@ -490,7 +490,7 @@ using Sort_t = SortCountsort2<Mparticles_t>;
 using Collision_t = Collision_<Mparticles_t, Mfields_t>;
 using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
 using PushFields_t = PushFields<PscMfieldsC>;
-using BndParticles_t = psc_bnd_particles_sub<PscMparticles<Mparticles_t>>;
+using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step

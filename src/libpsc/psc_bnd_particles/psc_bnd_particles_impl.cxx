@@ -13,7 +13,7 @@
 // psc_bnd_particles: subclass "single"
 
 struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_sub<PscMparticlesSingle>;
+  using sub_t = psc_bnd_particles_sub<MparticlesSingle>;
   using PscBndParticles_t = PscBndParticlesWrapper<sub_t>;
   psc_bnd_particles_ops_single() {
     name                    = "single";
@@ -27,7 +27,7 @@ struct psc_bnd_particles_ops_single : psc_bnd_particles_ops {
 // psc_bnd_particles: subclass "double"
 
 struct psc_bnd_particles_ops_double : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_sub<PscMparticlesDouble>;
+  using sub_t = psc_bnd_particles_sub<MparticlesDouble>;
   using PscBndParticles_t = PscBndParticlesWrapper<sub_t>;
   psc_bnd_particles_ops_double() {
     name                    = "double";
@@ -41,7 +41,7 @@ struct psc_bnd_particles_ops_double : psc_bnd_particles_ops {
 // psc_bnd_particles: subclass "single2"
 
 struct psc_bnd_particles_ops_single2 : psc_bnd_particles_ops {
-  using sub_t = psc_bnd_particles_ordered<PscMparticlesSingle>;
+  using sub_t = psc_bnd_particles_ordered<MparticlesSingle>;
   using PscBndParticles_t = PscBndParticlesWrapper<sub_t>;
   psc_bnd_particles_ops_single2() {
     name                    = "single2";
