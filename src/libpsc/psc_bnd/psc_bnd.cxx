@@ -78,51 +78,6 @@ psc_bnd_check_domain(struct psc_bnd *bnd)
 }
 
 // ======================================================================
-// forward to subclass
-
-void
-psc_bnd_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("add_ghosts", 1., 0, 0);
-  }
-
-  //  psc_bnd_check_domain(bnd);
-
-  psc_stats_start(st_time_comm);
-  prof_start(pr);
-
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-  assert(ops->add_ghosts);
-  ops->add_ghosts(bnd, flds, mb, me);
-
-  prof_stop(pr);
-  psc_stats_stop(st_time_comm);
-}
-
-void
-psc_bnd_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fill_ghosts", 1., 0, 0);
-  }
-
-  //  psc_bnd_check_domain(bnd);
-
-  psc_stats_start(st_time_comm);
-  prof_start(pr);
-
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-  assert(ops->fill_ghosts);
-  ops->fill_ghosts(bnd, flds, mb, me);
-
-  prof_stop(pr);
-  psc_stats_stop(st_time_comm);
-}
-
-// ======================================================================
 // psc_bnd_init
 
 extern struct psc_bnd_ops psc_bnd_c_ops;
