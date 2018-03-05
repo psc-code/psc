@@ -4,6 +4,7 @@
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "particles.hxx"
+#include "bnd_particles.hxx"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -501,7 +502,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
   prof_stop(pr);
 }
 
-void psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd);
 BEGIN_C_DECLS
 void psc_bnd_check_domain(struct psc_bnd *bnd);
 END_C_DECLS
@@ -590,8 +590,8 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   communicate_free(ctx);
 
   psc->mrc_domain = domain_new;
-  psc_bnd_particles_check_domain(psc->bnd_particles);
-  psc_bnd_check_domain(psc->bnd);
+  auto bndp = PscBndParticlesBase(psc->bnd_particles);
+  bndp.reset();
   psc_output_fields_check_bnd = true;
   mrc_domain_destroy(domain_old);
 }
@@ -806,7 +806,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   delete psc->grid_;
   psc->grid_ = new_grid;
   psc->mrc_domain = domain_new;
-  psc_bnd_particles_check_domain(psc->bnd_particles);
+  auto bndp = PscBndParticlesBase(psc->bnd_particles);
+  bndp.reset();
   psc_bnd_check_domain(psc->bnd);
   psc_output_fields_check_bnd = true;
   psc_balance_generation_cnt++;

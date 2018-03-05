@@ -31,6 +31,12 @@ struct PscBndParticles
   {
     psc_bnd_particles_exchange(bndp_, mprts.mprts());
   }
+
+  void reset()
+  {
+    void psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd);
+    psc_bnd_particles_check_domain(bndp_);
+  }
   
   sub_t* sub() { return mrc_to_subobj(bndp_, sub_t); }
   sub_t* operator->() { return sub(); }

@@ -61,8 +61,6 @@ psc_bnd_particles_exchange(struct psc_bnd_particles *bnd, struct psc_mparticles 
     pr = prof_register("xchg_prts", 1., 0, 0);
   }
 
-  //  psc_bnd_particles_check_domain(bnd);
-
   prof_start(pr);
   psc_stats_start(st_time_comm);
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
