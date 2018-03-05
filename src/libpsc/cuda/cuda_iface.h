@@ -53,6 +53,9 @@ struct cuda_mparticles;
 struct MparticlesCuda : MparticlesBase
 {
   using particle_t = particle_cuda_t;
+  using real_t = particle_cuda_real_t;
+  using Real3 = Vec3<real_t>;
+  using particle_buf_t = psc_particle_cuda_buf_t;
   
   MparticlesCuda(const Grid_t& grid);
   MparticlesCuda(const MparticlesCuda&) = delete;
@@ -79,6 +82,33 @@ struct MparticlesCuda : MparticlesBase
   const int *patch_get_b_mx(int p);
   
   cuda_mparticles* cmprts() { return cmprts_; }
+
+  struct patch_t
+  {
+    using buf_t = particle_buf_t;
+    
+    patch_t(MparticlesCuda& mp, int p)
+      : mp_(mp), p_(p), pi_(mp.grid())
+    {
+    }
+
+    particle_buf_t& get_buf() { assert(0); static particle_buf_t fake{}; return fake; } // FIXME
+
+    int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
+    Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
+    int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
+  
+    const int* get_b_mx() const;
+
+  private:
+    MparticlesCuda& mp_;
+    int p_;
+    ParticleIndexer<real_t> pi_;
+  };
+
+  patch_t operator[](int p) {
+    return patch_t(*this, p);
+  }
 
 private:
   cuda_mparticles* cmprts_;
