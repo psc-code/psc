@@ -36,26 +36,6 @@ psc_bnd_particles_set_psc(struct psc_bnd_particles *bnd, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_exchange
-
-void
-psc_bnd_particles_exchange(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("xchg_prts", 1., 0, 0);
-  }
-
-  prof_start(pr);
-  psc_stats_start(st_time_comm);
-  struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
-  assert(ops->exchange_particles);
-  ops->exchange_particles(bnd, mprts);
-  psc_stats_stop(st_time_comm);
-  prof_stop(pr);
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_particles_open_calc_moments
 
 void

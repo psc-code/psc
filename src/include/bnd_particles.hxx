@@ -3,6 +3,8 @@
 
 #include "psc_bnd_particles_private.h"
 
+#include <mrc_profile.h>
+
 // ======================================================================
 // BndParticlesBase
 
@@ -29,7 +31,18 @@ struct PscBndParticles
 
   void operator()(PscMparticlesBase mprts)
   {
-    psc_bnd_particles_exchange(bndp_, mprts.mprts());
+    static int pr;
+    if (!pr) {
+      pr = prof_register("xchg_prts", 1., 0, 0);
+    }
+    
+    prof_start(pr);
+    psc_stats_start(st_time_comm);
+    struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bndp_);
+    assert(ops->exchange_particles);
+    ops->exchange_particles(bndp_, mprts.mprts());
+    psc_stats_stop(st_time_comm);
+    prof_stop(pr);
   }
 
   void reset()
