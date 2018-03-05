@@ -45,7 +45,6 @@ struct PscPushFields
 
   void advance_H(PscMfieldsBase mflds, double frac)
   {
-    struct psc_push_fields_ops *ops = psc_push_fields_ops(pushf_);
     static int pr;
     if (!pr) {
       pr = prof_register("push_fields_H", 1., 0, 0);

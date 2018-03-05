@@ -129,7 +129,7 @@ protected:
 // class PushFields
 
 template<typename mfields_t>
-class PushFields : PushFieldsBase
+class PushFields : public PushFieldsBase
 {
   using fields_t = typename mfields_t::fields_t;
 
