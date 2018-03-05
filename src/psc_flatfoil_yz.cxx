@@ -538,6 +538,13 @@ static void psc_flatfoil_step(struct psc *psc)
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
   bndp_(mprts_);
+  
+  psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds());
+  psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds());
+  
+  // field propagation E^{n+1/2} -> E^{n+3/2}
+  pushf.advance_b2(mflds);
+  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 #else
   sort(mprts);
   collision(mprts);
@@ -553,7 +560,6 @@ static void psc_flatfoil_step(struct psc *psc)
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
   bndp(mprts);
-#endif
   
   psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds());
   psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds());
@@ -561,6 +567,7 @@ static void psc_flatfoil_step(struct psc *psc)
   // field propagation E^{n+1/2} -> E^{n+3/2}
   pushf.advance_b2(mflds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+#endif
 
   // field propagation B^{n+1} -> B^{n+3/2}
   pushf.advance_a(mflds);
