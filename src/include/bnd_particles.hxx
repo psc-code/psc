@@ -38,17 +38,15 @@ struct PscBndParticles
     
     prof_start(pr);
     psc_stats_start(st_time_comm);
-    struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bndp_);
-    assert(ops->exchange_particles);
-    ops->exchange_particles(bndp_, mprts.mprts());
+    sub()->exchange_particles(mprts.mprts());
     psc_stats_stop(st_time_comm);
     prof_stop(pr);
   }
 
   void reset()
   {
-    struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bndp_);
-    ops->reset(bndp_);
+    if (!bndp_->obj.is_setup) return; // FIXME, hack around being called before constructed
+    sub()->reset(bndp_->psc->mrc_domain, bndp_->psc->grid());
   }
   
   sub_t* sub() { return mrc_to_subobj(bndp_, sub_t); }
