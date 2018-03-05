@@ -4,6 +4,7 @@
 
 #include <psc_fields_as_single.h>
 #include <fields.hxx>
+#include <bnd.hxx>
 
 #include "cuda_iface.h"
 
@@ -124,7 +125,8 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 
   if (psc_balance_generation_cnt != inject->balance_generation_cnt) {
     inject->balance_generation_cnt = psc_balance_generation_cnt;
-    psc_bnd_check_domain(inject->item_n_bnd);
+    auto bnd = PscBndBase(inject->item_n_bnd);
+    bnd.reset();
   }
   psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, inject->mflds_n);
 

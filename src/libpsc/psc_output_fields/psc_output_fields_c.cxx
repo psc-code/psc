@@ -3,6 +3,7 @@
 #include "psc_output_fields_item.h"
 #include "psc_bnd.h"
 #include "psc_fields_as_c.h"
+#include "bnd.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -199,7 +200,6 @@ psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 // psc_output_fields_c_run
 
 bool psc_output_fields_check_bnd;
-void psc_bnd_check_domain(struct psc_bnd *bnd);
 
 static void
 psc_output_fields_c_run(struct psc_output_fields *out,
@@ -216,7 +216,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
   if (psc_output_fields_check_bnd) {
     psc_output_fields_check_bnd = false;
-    psc_bnd_check_domain(out_c->bnd);
+    auto bnd = PscBndBase(out_c->bnd);
+    bnd.reset();
   }
 
   bool doaccum_tfield = out_c->dowrite_tfield && 

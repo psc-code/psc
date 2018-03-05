@@ -69,6 +69,11 @@ struct PscBnd
     psc_stats_stop(st_time_comm);
   }
 
+  void reset()
+  {
+    psc_bnd_check_domain(bnd_);
+  }
+  
   sub_t* sub() { return mrc_to_subobj(bnd_, sub_t); }
   sub_t* operator->() { return sub(); }
 

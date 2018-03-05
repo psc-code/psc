@@ -5,6 +5,7 @@
 #include "psc_push_fields.h"
 #include "particles.hxx"
 #include "bnd_particles.hxx"
+#include "bnd.hxx"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -502,9 +503,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
   prof_stop(pr);
 }
 
-BEGIN_C_DECLS
-void psc_bnd_check_domain(struct psc_bnd *bnd);
-END_C_DECLS
 extern bool psc_output_fields_check_bnd;
 
 void
@@ -808,7 +806,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc->mrc_domain = domain_new;
   auto bndp = PscBndParticlesBase(psc->bnd_particles);
   bndp.reset();
-  psc_bnd_check_domain(psc->bnd);
+  auto bnd = PscBndBase(psc->bnd);
+  bnd.reset();
   psc_output_fields_check_bnd = true;
   psc_balance_generation_cnt++;
   
