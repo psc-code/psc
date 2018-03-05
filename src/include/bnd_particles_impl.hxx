@@ -50,7 +50,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   // ----------------------------------------------------------------------
   // reset
 
-  void reset(struct mrc_domain *domain)
+  void reset(struct mrc_domain *domain, const Grid_t& grid) override
   {
     delete ddcp;
     ddcp = new ddc_particles<mparticles_t>(domain);
@@ -252,8 +252,9 @@ template<typename MP>
 void psc_bnd_particles_sub<MP>::reset(struct psc_bnd_particles *bnd)
 {
   auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
+  if (!sub->ddcp) return; // FIXME, hack around being called before constructed
 
-  sub->reset(bnd->psc->mrc_domain);
+  sub->reset(bnd->psc->mrc_domain, bnd->psc->grid());
   //psc_bnd_particles_open_reset(bnd);
 }
 

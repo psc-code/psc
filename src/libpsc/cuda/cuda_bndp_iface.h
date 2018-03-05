@@ -26,9 +26,9 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<PscMparticlesCuda>
   // ----------------------------------------------------------------------
   // reset
   
-  void reset(struct mrc_domain *domain, const Grid_t& grid)
+  void reset(struct mrc_domain *domain, const Grid_t& grid) override
   {
-    Base::reset(domain);
+    Base::reset(domain, grid);
     //cbndp_->setup(grid);
   }
 
