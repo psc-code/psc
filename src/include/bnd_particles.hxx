@@ -64,6 +64,7 @@ public:
   static void reset(psc_bnd_particles* _bndp)
   {
     PscBndParticles<BndParticles> bndp(_bndp);
+    if (!bndp->ddcp) return; // FIXME, hack around being called before constructed
     
     bndp->reset(_bndp->psc->mrc_domain, _bndp->psc->grid());
   }

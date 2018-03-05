@@ -22,15 +22,6 @@ struct psc_bnd_particles_sub : BndParticlesBase
   using ddcp_patch = typename ddcp_t::patch;
 
   // ----------------------------------------------------------------------
-  // interface to psc_bnd_particles_ops
-
-  static void destroy(struct psc_bnd_particles *bnd);
-  static void setup(struct psc_bnd_particles *bnd);
-  static void reset(struct psc_bnd_particles *bnd);
-  static void exchange_particles(struct psc_bnd_particles *bnd,
-				 struct psc_mparticles *mprts_base);
-
-  // ----------------------------------------------------------------------
   // ctor
 
   psc_bnd_particles_sub(struct mrc_domain *domain, const Grid_t& grid)
@@ -56,12 +47,15 @@ struct psc_bnd_particles_sub : BndParticlesBase
     ddcp = new ddc_particles<mparticles_t>(domain);
   }
 
+  void exchange_particles(psc_mparticles* mprts_base);
+
 protected:
   void process_patch(mparticles_t mprts, int p);
   void process_and_exchange(mparticles_t mprts);
-  void exchange_particles(mparticles_t mprts);
+
 
 protected:
+public: // FIXME
   ddcp_t* ddcp;
 };
 
@@ -229,8 +223,10 @@ void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
 // psc_bnd_particles_sub::exchange_particles
 
 template<typename MP>
-void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
+void psc_bnd_particles_sub<MP>::exchange_particles(psc_mparticles* mprts_base)
 {
+  mparticles_t mprts = mprts_base->get_as<MP>();
+  
   for (int p = 0; p < mprts->n_patches(); p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = &mprts[p].get_buf();
@@ -242,33 +238,7 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
   //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
   //psc_bnd_particles_open_boundary(bnd, particles, mflds);
   //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
-}
-
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_reset
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::reset(struct psc_bnd_particles *bnd)
-{
-  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
-  if (!sub->ddcp) return; // FIXME, hack around being called before constructed
-
-  sub->reset(bnd->psc->mrc_domain, bnd->psc->grid());
-  //psc_bnd_particles_open_reset(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::exchange_particles(struct psc_bnd_particles *bnd,
-						      struct psc_mparticles *mprts_base)
-{
-  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
-  mparticles_t mprts = mprts_base->get_as<MP>();
-  
-  sub->exchange_particles(mprts);
 
   mprts.put_as(mprts_base);
 }
+
