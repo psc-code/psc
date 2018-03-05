@@ -51,7 +51,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<MparticlesCuda>
     cbndp_->prep(ddcp, mprts->cmprts());
     prof_stop(pr_A);
     
-    process_and_exchange(mprts);
+    process_and_exchange(*mprts.sub());
     
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_B);

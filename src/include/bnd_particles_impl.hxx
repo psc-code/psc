@@ -48,15 +48,67 @@ struct psc_bnd_particles_sub : BndParticlesBase
     ddcp = new ddc_particles<mparticles_t>(domain);
   }
 
-  void exchange_particles(PscMparticlesBase mprts_base) override;
+  // ----------------------------------------------------------------------
+  // operator() (exchange on correct particle type)
+  
+  void operator()(Mparticles& mprts)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      ddcp_patch *dpatch = &ddcp->patches[p];
+      dpatch->m_buf = &mprts[p].get_buf();
+      dpatch->m_begin = 0;
+    }
+
+    process_and_exchange(mprts);
+    
+    //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
+    //psc_bnd_particles_open_boundary(bnd, particles, mflds);
+    //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
+  }
+
+  // ----------------------------------------------------------------------
+  // process_and_exchange
+
+  void process_and_exchange(Mparticles& mprts)
+  {
+    static int pr_B, pr_C;
+    if (!pr_B) {
+      pr_B = prof_register("xchg_prep", 1., 0, 0);
+      pr_C = prof_register("xchg_comm", 1., 0, 0);
+    }
+  
+    prof_restart(pr_time_step_no_comm);
+    prof_start(pr_B);
+#pragma omp parallel for
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
+      process_patch(mprts, p);
+      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
+    }
+    prof_stop(pr_B);
+    prof_stop(pr_time_step_no_comm);
+    
+    prof_start(pr_C);
+    ddcp->comm();
+    prof_stop(pr_C);
+
+    //mprts->check();
+  }
+  
+  // ----------------------------------------------------------------------
+  // exchange_particles
+
+  void exchange_particles(PscMparticlesBase mprts_base) override
+  {
+    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+    (*this)(*mprts.sub());
+    mprts.put_as(mprts_base);
+  }
 
 protected:
-  void process_patch(mparticles_t mprts, int p);
-  void process_and_exchange(mparticles_t mprts);
-
+  void process_patch(Mparticles& mprts, int p);
 
 protected:
-public: // FIXME
   ddcp_t* ddcp;
 };
 
@@ -64,7 +116,7 @@ public: // FIXME
 // psc_bnd_particles_sub::process_patch
 
 template<typename MP>
-void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
+void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
 {
   struct psc *psc = ppsc;
 
@@ -185,61 +237,5 @@ void psc_bnd_particles_sub<MP>::process_patch(mparticles_t mprts, int p)
     }
   }
   dpatch->m_buf->resize(head);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::process_and_exchange
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::process_and_exchange(mparticles_t mprts)
-{
-  // FIXME we should make sure (assert) we don't quietly drop particle which left
-  // in the invariant direction
-
-  static int pr_B, pr_C;
-  if (!pr_B) {
-    pr_B = prof_register("xchg_prep", 1., 0, 0);
-    pr_C = prof_register("xchg_comm", 1., 0, 0);
-  }
-  
-  prof_restart(pr_time_step_no_comm);
-  prof_start(pr_B);
-#pragma omp parallel for
-  for (int p = 0; p < mprts->n_patches(); p++) {
-    psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-    process_patch(mprts, p);
-    psc_balance_comp_time_by_patch[p] += MPI_Wtime();
-  }
-  prof_stop(pr_B);
-  prof_stop(pr_time_step_no_comm);
-
-  prof_start(pr_C);
-  ddcp->comm();
-  prof_stop(pr_C);
-
-  //mprts->check();
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::exchange_particles
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::exchange_particles(PscMparticlesBase mprts_base)
-{
-  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-  
-  for (int p = 0; p < mprts->n_patches(); p++) {
-    ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = &mprts[p].get_buf();
-    dpatch->m_begin = 0;
-  }
-
-  process_and_exchange(mprts);
-
-  //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
-  //psc_bnd_particles_open_boundary(bnd, particles, mflds);
-  //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
-
-  mprts.put_as(mprts_base);
 }
 
