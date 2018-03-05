@@ -5,6 +5,7 @@
 #include "fields3d.hxx"
 
 #include <mrc_profile.h>
+#include <mrc_ddc.h>
 
 // ======================================================================
 // BndBase
@@ -71,7 +72,14 @@ struct PscBnd
 
   void reset()
   {
-    psc_bnd_check_domain(bnd_);
+    if (!bnd_->ddc) {
+      return;
+    }
+    
+    struct psc_bnd_ops *ops = psc_bnd_ops(bnd_);
+    
+    mrc_ddc_destroy(bnd_->ddc);
+    ops->create_ddc(bnd_);
   }
   
   sub_t* sub() { return mrc_to_subobj(bnd_, sub_t); }

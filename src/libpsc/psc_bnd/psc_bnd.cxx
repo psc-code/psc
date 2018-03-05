@@ -57,26 +57,6 @@ _psc_bnd_read(struct psc_bnd *bnd, struct mrc_io *io)
   psc_bnd_setup(bnd);
 }
 
-// ----------------------------------------------------------------------
-// psc_bnd_check_domain
-//
-// check if the underlying mrc_domain changed since setup(),
-// which might happen, e.g., through rebalancing.
-// In this case, do setup() over.
-
-void
-psc_bnd_check_domain(struct psc_bnd *bnd)
-{
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-
-  if (!bnd->ddc) {
-    return;
-  }
-
-  mrc_ddc_destroy(bnd->ddc);
-  ops->create_ddc(bnd);
-}
-
 // ======================================================================
 // psc_bnd_init
 
