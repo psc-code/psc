@@ -20,10 +20,6 @@ struct psc_bnd_particles {
 
 struct psc_bnd_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_bnd_particles);
-
-  void (*reset)(struct psc_bnd_particles *bnd);
-  void (*exchange_particles)(struct psc_bnd_particles *bnd, struct psc_mparticles *particles);
-  void (*open_calc_moments)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
 };
 
 #define psc_bnd_particles_ops(bnd) ((struct psc_bnd_particles_ops *)((bnd)->obj.ops))

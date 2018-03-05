@@ -49,8 +49,8 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mp
   }
 
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
-  assert(ops->open_calc_moments);
-  ops->open_calc_moments(bnd, mprts);
+  //assert(ops->open_calc_moments);
+  //ops->open_calc_moments(bnd, mprts);
 }
 
 // ----------------------------------------------------------------------

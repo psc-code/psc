@@ -18,8 +18,6 @@ struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
     size                    = sizeof(psc_bnd_particles_cuda);
     destroy                 = PscBndParticles_t::destroy;
     setup                   = PscBndParticles_t::setup;
-    reset                   = PscBndParticles_t::reset;
-    exchange_particles      = PscBndParticles_t::exchange_particles;
   }
 } psc_bnd_particles_cuda_ops;
 

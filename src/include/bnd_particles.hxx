@@ -78,22 +78,5 @@ public:
     PscBndParticles<BndParticles> bndp(_bndp);
     bndp->~BndParticles();
   }
-
-  static void reset(psc_bnd_particles* _bndp)
-  {
-    PscBndParticles<BndParticles> bndp(_bndp);
-    if (!bndp->ddcp) return; // FIXME, hack around being called before constructed
-    
-    bndp->reset(_bndp->psc->mrc_domain, _bndp->psc->grid());
-  }
-
-  static void exchange_particles(struct psc_bnd_particles *_bndp,
-				 struct psc_mparticles *mprts_base)
-  {
-    PscBndParticles<BndParticles> bndp(_bndp);
-    
-    bndp->exchange_particles(mprts_base);
-  }
-  
 };
 
