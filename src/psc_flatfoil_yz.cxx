@@ -539,12 +539,45 @@ static void psc_flatfoil_step(struct psc *psc)
   
   bndp_(mprts_);
   
-  psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds());
-  psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds());
+  psc_inject_run(sub->inject, mprts.mprts(), mflds.mflds()); //!!!
+  psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds()); //!!!
   
   // field propagation E^{n+1/2} -> E^{n+3/2}
-  pushf.advance_b2(mflds);
+
+  // fill ghosts for H
+  psc_bnd_fields_fill_ghosts_H(pushf.pushf()->bnd_fields, mflds.mflds());
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+  
+  // add and fill ghost for J
+  psc_bnd_fields_add_ghosts_J(pushf.pushf()->bnd_fields, mflds.mflds());
+  psc_bnd_add_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
+  
+  // push E
+  pushf_.push_E(mflds.mflds(), 1.);
+  
+  psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
+  if (pushf.pushf()->variant == 0) {
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+  }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+
+  // field propagation B^{n+1} -> B^{n+3/2}
+
+  //pushf.advance_a(mflds);
+  if (pushf.pushf()->variant == 0) {
+    psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+  }
+  
+  // push H
+  pushf_.push_H(mflds.mflds(), .5);
+  
+  psc_bnd_fields_fill_ghosts_H(pushf.pushf()->bnd_fields, mflds.mflds());
+  if (pushf.pushf()->variant == 0) {
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+  }
+  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #else
   sort(mprts);
   collision(mprts);
@@ -567,11 +600,11 @@ static void psc_flatfoil_step(struct psc *psc)
   // field propagation E^{n+1/2} -> E^{n+3/2}
   pushf.advance_b2(mflds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-#endif
 
   // field propagation B^{n+1} -> B^{n+3/2}
   pushf.advance_a(mflds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+#endif
 
   //psc_checks_continuity_after_particle_push(psc->checks, psc);
 
