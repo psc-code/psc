@@ -72,7 +72,7 @@ struct CollisionCRTP : CollisionBase
       
       prof_start(pr);
       auto& derived = *static_cast<Derived*>(this);
-      derived(mprts);
+      derived.collide(mprts);
       prof_stop(pr);
       
       mprts.put_as(mprts_base);

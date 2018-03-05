@@ -78,9 +78,9 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   }
 
   // ----------------------------------------------------------------------
-  // operator(): collide
+  // collide
 
-  void operator()(mparticles_t mprts)
+  void collide(mparticles_t mprts)
   {
     mfields_t mf_coll(mflds);
     for (int p = 0; p < mprts->n_patches(); p++) {
