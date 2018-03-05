@@ -9,10 +9,15 @@
 // ======================================================================
 // PscCollision
 
+struct CollisionBase;
+
 template<typename S>
 struct PscCollision
 {
   using sub_t = S;
+  
+  static_assert(std::is_convertible<sub_t*, CollisionBase*>::value,
+  		"sub classes used in PscCollision must derive from CollisionBase");
   
   explicit PscCollision(psc_collision *collision)
     : collision_(collision)

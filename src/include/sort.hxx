@@ -16,8 +16,8 @@ struct PscSort
 {
   using sub_t = S;
   
-  // static_assert(std::is_convertible<sub_t*, SortBase*>::value,
-  // 		"sub classes used in PscSort must derive from SortBase");
+  static_assert(std::is_convertible<sub_t*, SortBase*>::value,
+  		"sub classes used in PscSort must derive from SortBase");
   
   explicit PscSort(psc_sort *sort)
     : sort_(sort)

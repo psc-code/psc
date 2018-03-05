@@ -9,7 +9,7 @@
 
 // ----------------------------------------------------------------------
 
-class PscCollisionVpic : CollisionBase
+class PscCollisionVpic : public CollisionBase
 {
 public:
   constexpr static char const* const name = "vpic";
