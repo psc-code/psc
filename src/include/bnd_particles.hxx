@@ -68,5 +68,13 @@ public:
     bndp->reset(_bndp->psc->mrc_domain, _bndp->psc->grid());
   }
 
+  static void exchange_particles(struct psc_bnd_particles *_bndp,
+				 struct psc_mparticles *mprts_base)
+  {
+    PscBndParticles<BndParticles> bndp(_bndp);
+    
+    bndp->exchange_particles(mprts_base);
+  }
+  
 };
 
