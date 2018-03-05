@@ -58,6 +58,25 @@ struct CollisionCRTP : CollisionBase
   {}
 
   // ----------------------------------------------------------------------
+  // operator()
+  
+  void operator()(Mparticles& mprts)
+  {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("collision", 1., 0, 0);
+    }
+
+    if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
+      MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+      mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr);
+      static_cast<Derived*>(this)->collide(mprts);
+      prof_stop(pr);
+    }
+  }
+
+  // ----------------------------------------------------------------------
   // run
 
   void run(PscMparticlesBase mprts_base) override
@@ -70,9 +89,10 @@ struct CollisionCRTP : CollisionBase
     if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
       auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
       
+      MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+      mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr);
-      auto& derived = *static_cast<Derived*>(this);
-      derived.collide(mprts);
+      static_cast<Derived*>(this)->collide(*mprts.sub());
       prof_stop(pr);
       
       mprts.put_as(mprts_base);

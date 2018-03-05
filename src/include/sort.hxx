@@ -70,13 +70,14 @@ struct SortCRTP : SortBase
     }
     
     psc_stats_start(st_time_sort);
+
+    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+    mpi_printf(comm, "***** Sorting...\n");
     prof_start(pr);
-    
-    auto& derived = *static_cast<Derived*>(this);
-    derived.sort(mprts);
+    static_cast<Derived*>(this)->sort(mprts);
+    prof_stop(pr);
 
     psc_stats_stop(st_time_sort);
-    prof_stop(pr);
   }
   
   void run(PscMparticlesBase mprts_base) override
@@ -93,9 +94,10 @@ struct SortCRTP : SortBase
     psc_stats_start(st_time_sort);
     
     auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    auto& derived = *static_cast<Derived*>(this);
+    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+    mpi_printf(comm, "***** Sorting...\n");
     prof_start(pr);
-    derived.sort(*mprts.sub());
+    static_cast<Derived*>(this)->sort(*mprts.sub());
     prof_stop(pr);
     mprts.put_as(mprts_base);
 

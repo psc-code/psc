@@ -80,10 +80,10 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   // ----------------------------------------------------------------------
   // collide
 
-  void collide(mparticles_t mprts)
+  void collide(Mparticles& mprts)
   {
     mfields_t mf_coll(mflds);
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
   
       const int *ldims = ppsc->grid().ldims;
