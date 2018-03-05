@@ -1,6 +1,7 @@
 
 #include "psc_output_fields_item_private.h"
 #include "psc_bnd.h"
+#include "bnd.hxx"
 
 #include <string.h>
 
@@ -67,7 +68,8 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
   ops->run_all(item, flds, particles, res);
   if (ops->flags & POFI_ADD_GHOSTS) {
     assert(item->bnd);
-    psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
+    auto bnd = PscBndBase(item->bnd);
+    bnd.add_ghosts(res, 0, res->nr_fields);
   }
 }
 

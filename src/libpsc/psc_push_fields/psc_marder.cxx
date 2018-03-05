@@ -3,6 +3,7 @@
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
 #include "fields3d.hxx"
+#include "bnd.hxx"
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
@@ -30,7 +31,8 @@ marder_calc_aid_fields(struct psc_marder *marder,
 
   PscMfieldsBase(div_e)->axpy_comp(0, -1., *PscMfieldsBase(rho).sub(), 0);
   // FIXME, why is this necessary?
-  psc_bnd_fill_ghosts(marder->bnd, div_e, 0, 1);
+  auto bnd = PscBndBase(marder->bnd);
+  bnd.fill_ghosts(div_e, 0, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -69,7 +71,8 @@ psc_marder_run(struct psc_marder *marder,
     psc_output_fields_item_run(marder->item_rho, flds, particles, marder->rho);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-    psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
+    auto bnd = PscBndBase(ppsc->bnd);
+    bnd.fill_ghosts(flds, EX, EX+3);
 
     prof_stop(pr_A);
 
@@ -77,7 +80,8 @@ psc_marder_run(struct psc_marder *marder,
     for (int i = 0; i < marder->loop; i++) {
       marder_calc_aid_fields(marder, flds, particles, marder->div_e, marder->rho);
       ops->correct(marder, flds, marder->div_e);
-      psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
+      auto bnd = PscBndBase(ppsc->bnd);
+      bnd.fill_ghosts(flds, EX, EX+3);
     }
     prof_stop(pr_B);
   }

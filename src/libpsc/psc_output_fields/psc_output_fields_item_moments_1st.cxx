@@ -2,6 +2,7 @@
 #include "psc_output_fields_item_private.h"
 #include <psc_bnd.h>
 #include <fields.hxx>
+#include <bnd.hxx>
 
 #include <math.h>
 
@@ -464,8 +465,9 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
-  psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
-  psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
+  auto bnd = PscBnd(item->bnd);
+  bnd.add_ghosts(mres, 0, mres->nr_fields);
+  bnd.fill_ghosts(mres, 0, mres->nr_fields);
 
   for (int p = 0; p < mres->nr_patches; p++) {
     Fields R(mf_res[p]);
@@ -495,9 +497,10 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   mprts.put_as(mprts_base, MP_DONT_COPY);
 
   for (int m = 0; m < ppsc->nr_kinds; m++) {
-    psc_bnd_add_ghosts(item->bnd, mres, 10*m + 4, 10*m + 10);
+    bnd.add_ghosts(mres, 10*m + 4, 10*m + 10);
   }
-  psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
+  auto bnd = PscBnd(item->bnd);
+  bnd.fill_ghosts(mres, 0, mres->nr_fields);
 }
 
 static void
@@ -513,8 +516,9 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
   }
 
-  psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
-  psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
+  auto bnd = PscBnd(item->bnd);
+  bnd.add_ghosts(mres, 0, mres->nr_fields);
+  bd.fill_ghosts(mres, 0, mres->nr_fields);
 
   const int mm2mx[6] = { 0, 1, 2, 0, 1, 2 };
   const int mm2my[6] = { 0, 1, 2, 1, 2, 0 };

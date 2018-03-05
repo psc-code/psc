@@ -474,6 +474,7 @@ main(int argc, char **argv)
 #include <sort.hxx>
 #include <collision.hxx>
 #include <bnd_particles.hxx>
+#include <bnd.hxx>
 
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
@@ -519,6 +520,7 @@ static void psc_flatfoil_step(struct psc *psc)
   auto& pushf_ = dynamic_cast<PushFields_t&>(*pushf.sub());
   PscBndParticlesBase bndp(psc->bnd_particles);
   auto& bndp_ = dynamic_cast<BndParticles_t&>(*bndp.sub());
+  PscBndBase bnd(psc->bnd);
   
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -546,19 +548,19 @@ static void psc_flatfoil_step(struct psc *psc)
 
   // fill ghosts for H
   psc_bnd_fields_fill_ghosts_H(pushf.pushf()->bnd_fields, mflds.mflds());
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+  bnd.fill_ghosts(mflds, HX, HX + 3);
   
   // add and fill ghost for J
   psc_bnd_fields_add_ghosts_J(pushf.pushf()->bnd_fields, mflds.mflds());
-  psc_bnd_add_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
+  bnd.add_ghosts(mflds, JXI, JXI + 3);
+  bnd.fill_ghosts(mflds, JXI, JXI + 3);
   
   // push E
   pushf_.push_E(mflds.mflds(), 1.);
   
   psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
   if (pushf.pushf()->variant == 0) {
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+    bnd.fill_ghosts(mflds, EX, EX + 3);
   }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
@@ -567,7 +569,7 @@ static void psc_flatfoil_step(struct psc *psc)
   //pushf.advance_a(mflds);
   if (pushf.pushf()->variant == 0) {
     psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+    bnd.fill_ghosts(mflds.mflds(), EX, EX + 3);
   }
   
   // push H
@@ -575,7 +577,7 @@ static void psc_flatfoil_step(struct psc *psc)
   
   psc_bnd_fields_fill_ghosts_H(pushf.pushf()->bnd_fields, mflds.mflds());
   if (pushf.pushf()->variant == 0) {
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+    bnd.fill_ghosts(mflds.mflds(), HX, HX + 3);
   }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #else

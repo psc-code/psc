@@ -3,9 +3,9 @@
 
 #include "psc_push_fields_private.h"
 #include "fields3d.hxx"
+#include "bnd.hxx"
 
 #include "psc_bnd_fields.h"
-#include "psc_bnd.h"
 
 #include <mrc_profile.h>
 
@@ -63,29 +63,33 @@ struct PscPushFields
 
   void advance_b2(PscMfieldsBase mflds)
   {
+    auto bnd = PscBndBase(ppsc->bnd);
+
     // fill ghosts for H
     psc_bnd_fields_fill_ghosts_H(pushf_->bnd_fields, mflds.mflds());
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+    bnd.fill_ghosts(mflds.mflds(), HX, HX + 3);
     
     // add and fill ghost for J
     psc_bnd_fields_add_ghosts_J(pushf_->bnd_fields, mflds.mflds());
-    psc_bnd_add_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
-    psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), JXI, JXI + 3);
+    bnd.add_ghosts(mflds.mflds(), JXI, JXI + 3);
+    bnd.fill_ghosts(mflds.mflds(), JXI, JXI + 3);
     
     // push E
     advance_E(mflds, 1.);
 
     psc_bnd_fields_fill_ghosts_E(pushf_->bnd_fields, mflds.mflds());
     if (pushf_->variant == 0) {
-      psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+      bnd.fill_ghosts(mflds.mflds(), EX, EX + 3);
     }
   }
 
   void advance_a(PscMfieldsBase mflds)
   {
+    auto bnd = PscBndBase(ppsc->bnd);
+
     if (pushf_->variant == 0) {
       psc_bnd_fields_fill_ghosts_E(pushf_->bnd_fields, mflds.mflds());
-      psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), EX, EX + 3);
+      bnd.fill_ghosts(mflds.mflds(), EX, EX + 3);
     }
     
     // push H
@@ -93,7 +97,7 @@ struct PscPushFields
 
     psc_bnd_fields_fill_ghosts_H(pushf_->bnd_fields, mflds.mflds());
     if (pushf_->variant == 0) {
-      psc_bnd_fill_ghosts(ppsc->bnd, mflds.mflds(), HX, HX + 3);
+      bnd.fill_ghosts(mflds.mflds(), HX, HX + 3);
     }
   }
 
