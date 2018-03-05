@@ -36,21 +36,6 @@ psc_bnd_particles_set_psc(struct psc_bnd_particles *bnd, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// check_domain
-//
-// check if the underlying mrc_domain changed since setup(),
-// which might happen, e.g., through rebalancing.
-// In this case, do setup() over.
-
-void
-psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd)
-{
-  struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
-
-  ops->reset(bnd);
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_particles_exchange
 
 void

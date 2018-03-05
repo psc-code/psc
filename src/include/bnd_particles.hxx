@@ -34,8 +34,8 @@ struct PscBndParticles
 
   void reset()
   {
-    void psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd);
-    psc_bnd_particles_check_domain(bndp_);
+    struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bndp_);
+    ops->reset(bndp_);
   }
   
   sub_t* sub() { return mrc_to_subobj(bndp_, sub_t); }
