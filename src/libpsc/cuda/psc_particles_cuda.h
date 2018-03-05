@@ -30,6 +30,8 @@ struct PscMparticlesCuda : PscMparticles<MparticlesCuda>
     {
     }
 
+    particle_buf_t& get_buf() { assert(0); static particle_buf_t fake{}; return fake; } // FIXME
+
     int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
     Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }

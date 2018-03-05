@@ -35,7 +35,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<PscMparticlesCuda>
   // ----------------------------------------------------------------------
   // exchange_particles
 
-  void exchange_particles(psc_mparticles* mprts_base)
+  void exchange_particles(psc_mparticles* mprts_base) override
   {
     static int pr_A, pr_B;
     if (!pr_A) {

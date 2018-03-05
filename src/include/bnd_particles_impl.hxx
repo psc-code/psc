@@ -47,7 +47,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
     ddcp = new ddc_particles<mparticles_t>(domain);
   }
 
-  void exchange_particles(psc_mparticles* mprts_base);
+  void exchange_particles(psc_mparticles* mprts_base) override;
 
 protected:
   void process_patch(mparticles_t mprts, int p);

@@ -9,6 +9,7 @@
 struct BndParticlesBase
 {
   virtual void reset(struct mrc_domain*, const Grid_t& grid) = 0;
+  virtual void exchange_particles(psc_mparticles* mprts_base) = 0;
 };
 
 // ======================================================================
