@@ -478,11 +478,14 @@ main(int argc, char **argv)
 #include "psc_fields_c.h"
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
+#include "../libpsc/psc_push_particles/push_config.hxx"
+#include "../libpsc/psc_push_particles/push_part_common.c"
 
 using Mparticles_t = MparticlesDouble;
 using Mfields_t = MfieldsC;
 using Sort_t = SortCountsort2<Mparticles_t>;
 using Collision_t = Collision_<Mparticles_t, Mfields_t>;
+using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -501,27 +504,35 @@ static void psc_flatfoil_step(struct psc *psc)
   PscMparticlesBase mprts(psc->particles);
   auto& mprts_ = *dynamic_cast<Mparticles_t*>(mprts.sub());
   PscMfieldsBase mflds(psc->flds);
-  PscPushParticlesBase pushp(psc->push_particles);
-  PscPushFieldsBase pushf(psc->push_fields);
+  auto& mflds_ = *dynamic_cast<Mfields_t*>(mflds.sub());
   PscSortBase sort(psc->sort);
   auto& sort_ = *dynamic_cast<Sort_t*>(sort.sub());
   PscCollisionBase collision(psc->collision);
   auto& collision_ = *dynamic_cast<Collision_t*>(collision.sub());
+  PscPushParticlesBase pushp(psc->push_particles);
+  PscPushFieldsBase pushf(psc->push_fields);
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-  //sort(mprts);
-  //collision(mprts);
+#if 1
   sort_(mprts_);
   collision_(mprts_);
-  
-  //psc_checks_continuity_before_particle_push(psc->checks, psc);
+
+  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+  PushParticles_t::push_mprts(mprts_, mflds_);
+  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+#else
+  sort(mprts);
+  collision(mprts);
+
+  // psc_checks_continuity_before_particle_push(psc->checks, psc);
 
   // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
   pushp(mprts, mflds);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-    
+#endif
+  
   // field propagation B^{n+1/2} -> B^{n+1}
   pushf.advance_H(mflds, .5);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
