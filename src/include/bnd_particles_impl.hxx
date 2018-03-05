@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "ddc_particles.hxx"
+#include "bnd_particles.hxx"
 
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
@@ -12,7 +13,7 @@ extern double *psc_balance_comp_time_by_patch;
 // psc_bnd_particles
 
 template<typename MP>
-struct psc_bnd_particles_sub
+struct psc_bnd_particles_sub : BndParticlesBase
 {
   using mparticles_t = MP;
   using particle_t = typename mparticles_t::particle_t;
@@ -29,11 +30,10 @@ struct psc_bnd_particles_sub
   static void exchange_particles(struct psc_bnd_particles *bnd,
 				 struct psc_mparticles *mprts_base);
 
-protected:
   // ----------------------------------------------------------------------
   // ctor
 
-  psc_bnd_particles_sub(struct mrc_domain *domain)
+  psc_bnd_particles_sub(struct mrc_domain *domain, const Grid_t& grid)
     : ddcp(nullptr)
   {
     ddcp = new ddc_particles<mparticles_t>(domain);
@@ -56,6 +56,7 @@ protected:
     ddcp = new ddc_particles<mparticles_t>(domain);
   }
 
+protected:
   void process_patch(mparticles_t mprts, int p);
   void process_and_exchange(mparticles_t mprts);
   void exchange_particles(mparticles_t mprts);
@@ -243,29 +244,6 @@ void psc_bnd_particles_sub<MP>::exchange_particles(mparticles_t mprts)
   //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
 }
 
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::destroy
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::destroy(struct psc_bnd_particles *bnd)
-{
-  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
-  
-  sub->~psc_bnd_particles_sub<MP>();
-}
-  
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub::setup
-
-template<typename MP>
-void psc_bnd_particles_sub<MP>::setup(struct psc_bnd_particles *bnd)
-{
-  auto sub = static_cast<psc_bnd_particles_sub<MP>*>(bnd->obj.subctx);
-
-  new(sub) psc_bnd_particles_sub<MP>(bnd->psc->mrc_domain);
-  //psc_bnd_particles_open_setup(bnd);
-}
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_reset

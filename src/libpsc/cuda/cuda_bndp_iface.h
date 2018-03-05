@@ -19,7 +19,7 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<PscMparticlesCuda>
   // ctor
   
   psc_bnd_particles_cuda(struct mrc_domain *domain, const Grid_t& grid)
-    : Base(domain),
+    : Base(domain, grid),
       cbndp_(new cuda_bndp(grid))
   {}
 
@@ -67,16 +67,6 @@ public:
   // this spoint
   
   // ----------------------------------------------------------------------
-  // setup
-  
-  static void setup(struct psc_bnd_particles *bnd)
-  {
-    auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
-
-    new(sub) psc_bnd_particles_cuda(bnd->psc->mrc_domain, bnd->psc->grid());
-  }
-
-  // ----------------------------------------------------------------------
   // reset
   
   static void reset(struct psc_bnd_particles *bnd)
@@ -86,16 +76,6 @@ public:
     sub->reset(bnd->psc->mrc_domain, bnd->psc->grid());
   }
 
-  // ----------------------------------------------------------------------
-  // destroy
-
-  static void destroy(struct psc_bnd_particles *bnd)
-  {
-    auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
-
-    sub->~psc_bnd_particles_cuda();
-  }
-  
   // ----------------------------------------------------------------------
   // exchange_particles
 

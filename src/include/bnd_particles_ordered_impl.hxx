@@ -177,9 +177,11 @@ struct bnd_particles_policy_ordered
 template<typename MP>
 struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_policy_ordered<MP>
 {
+  using Base = psc_bnd_particles_sub<MP>;
   using mparticles_t = MP;
 
-  using psc_bnd_particles_sub<MP>::ddcp;
+  using Base::Base;
+  using Base::ddcp;
 
   // ----------------------------------------------------------------------
   // exchange_particles
@@ -210,26 +212,6 @@ struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_poli
   // interface to psc_bnd_particles
   // repeated here since there's no way to do this somehow virtual at
   // this spoint
-  
-  // ----------------------------------------------------------------------
-  // create
-
-  static void create(struct psc_bnd_particles *bnd)
-  {
-    auto sub = static_cast<psc_bnd_particles_ordered*>(bnd->obj.subctx);
-
-    new(sub) psc_bnd_particles_ordered();
-  }
-  
-  // ----------------------------------------------------------------------
-  // destroy
-
-  static void destroy(struct psc_bnd_particles *bnd)
-  {
-    auto sub = static_cast<psc_bnd_particles_ordered*>(bnd->obj.subctx);
-
-    sub->~psc_bnd_particles_ordered();
-  }
   
   // ----------------------------------------------------------------------
   // exchange_particles

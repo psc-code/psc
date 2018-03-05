@@ -52,7 +52,7 @@ public:
   static void setup(psc_bnd_particles* _bndp)
   {
     PscBndParticles<BndParticles> bndp(_bndp);
-    new(bndp.sub()) BndParticles;
+    new(bndp.sub()) BndParticles(_bndp->psc->mrc_domain, _bndp->psc->grid());
   }
 
   static void destroy(psc_bnd_particles* _bndp)
