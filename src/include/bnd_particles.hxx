@@ -60,5 +60,13 @@ public:
     PscBndParticles<BndParticles> bndp(_bndp);
     bndp->~BndParticles();
   }
+
+  static void reset(psc_bnd_particles* _bndp)
+  {
+    PscBndParticles<BndParticles> bndp(_bndp);
+    
+    bndp->reset(_bndp->psc->mrc_domain, _bndp->psc->grid());
+  }
+
 };
 

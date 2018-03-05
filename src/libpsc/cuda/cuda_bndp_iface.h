@@ -67,16 +67,6 @@ public:
   // this spoint
   
   // ----------------------------------------------------------------------
-  // reset
-  
-  static void reset(struct psc_bnd_particles *bnd)
-  {
-    auto sub = static_cast<psc_bnd_particles_cuda*>(bnd->obj.subctx);
-    
-    sub->reset(bnd->psc->mrc_domain, bnd->psc->grid());
-  }
-
-  // ----------------------------------------------------------------------
   // exchange_particles
 
   static void exchange_particles(struct psc_bnd_particles *bnd,
