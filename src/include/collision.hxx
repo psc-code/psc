@@ -7,9 +7,16 @@
 #include <mrc_profile.h>
 
 // ======================================================================
-// PscCollision
+// CollisionBase
 
-struct CollisionBase;
+class CollisionBase
+{
+public:
+  virtual void run(PscMparticlesBase mprts_base) = 0;
+};
+
+// ======================================================================
+// PscCollision
 
 template<typename S>
 struct PscCollision
@@ -40,15 +47,6 @@ struct PscCollision
 
 private:
   psc_collision *collision_;
-};
-
-// ======================================================================
-// CollisionBase
-
-class CollisionBase
-{
-public:
-  virtual void run(PscMparticlesBase mprts_base) = 0;
 };
 
 using PscCollisionBase = PscCollision<CollisionBase>;
