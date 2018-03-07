@@ -17,6 +17,7 @@ struct psc_bnd_ops {
   void (*create_ddc)(struct psc_bnd *bnd);
   void (*add_ghosts)(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me);
   void (*fill_ghosts)(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me);
+  void (*reset)(struct psc_bnd *bnd);
 };
 
 // ======================================================================

@@ -10,6 +10,16 @@
 
 struct BndCuda : BndBase {
   struct cuda_mfields_bnd *cbnd;
+
+  // ----------------------------------------------------------------------
+  // reset
+  
+  void reset()
+  {
+    assert(0);
+    // mrc_ddc_destroy(bnd_->ddc);
+    // ops->create_ddc(bnd_);
+  }
 };
 
 #define psc_bnd_cuda(bnd) mrc_to_subobj(bnd, struct psc_bnd_cuda)
@@ -257,9 +267,11 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base, i
 // psc_bnd: subclass "cuda"
 
 struct psc_bnd_ops_cuda : psc_bnd_ops {
+  using PscBnd_t = PscBndWrapper<BndCuda>;
   psc_bnd_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(BndCuda);
+    size                    = PscBnd_t::size;
+    reset                   = PscBnd_t::reset;
     setup                   = psc_bnd_cuda_setup;
     destroy                 = psc_bnd_cuda_destroy;
     create_ddc              = psc_bnd_cuda_create_ddc;

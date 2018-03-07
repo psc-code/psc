@@ -35,6 +35,16 @@ struct Bnd_ : BndBase
   }
 
   // ----------------------------------------------------------------------
+  // reset
+  
+  void reset()
+  {
+    assert(0);
+    // mrc_ddc_destroy(bnd_->ddc);
+    // ops->create_ddc(bnd_);
+  }
+  
+  // ----------------------------------------------------------------------
   // add_ghosts
   
   static void add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base,

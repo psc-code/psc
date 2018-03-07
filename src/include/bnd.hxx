@@ -13,6 +13,7 @@
 struct BndBase
 {
   //  virtual void fill_ghosts() = 0;
+  virtual void reset() = 0;
 };
 
 // ======================================================================
@@ -77,9 +78,8 @@ struct PscBnd
     }
     
     struct psc_bnd_ops *ops = psc_bnd_ops(bnd_);
-    
-    mrc_ddc_destroy(bnd_->ddc);
-    ops->create_ddc(bnd_);
+    assert(ops->reset);
+    ops->reset(bnd_);
   }
   
   sub_t* sub() { return mrc_to_subobj(bnd_, sub_t); }
@@ -112,6 +112,12 @@ public:
   {
     PscBnd<Bnd> bnd(_bnd);
     bnd->~Bnd();
+  }
+
+  static void reset(psc_bnd* _bnd)
+  {
+    PscBnd<Bnd> bnd(_bnd);
+    bnd->reset();
   }
 };
 
