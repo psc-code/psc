@@ -6,16 +6,23 @@
 #include <bnd.hxx>
 
 #include <stdlib.h>
+#include <string>
 
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
-using real_t = mparticles_t::real_t;
-  
 // ======================================================================
 // Inject_
 
+template<typename MP, typename MF>
 struct Inject_
 {
+  using Mfields = MF;
+  using Mparticles = MP;
+  using fields_t = typename Mfields::fields_t;
+  using Fields = Fields3d<fields_t>;
+  using real_t = typename Mparticles::real_t;
+  using particle_t = typename Mparticles::particle_t;
+  using mparticles_t = PscMparticles<Mparticles>;
+  using mfields_t = PscMfields<Mfields>;
+  
   // ----------------------------------------------------------------------
   // create
   
@@ -26,8 +33,9 @@ struct Inject_
     psc_bnd_set_name(inject->item_n_bnd, "inject_item_n_bnd");
     psc_bnd_set_type(inject->item_n_bnd, "c");
     psc_bnd_set_psc(inject->item_n_bnd, ppsc);
-    
-    psc_output_fields_item_set_type(inject->item_n, "n_1st_" PARTICLE_TYPE);
+
+    auto name = std::string("n_1st_") + mparticles_traits<mparticles_t>::name;
+    psc_output_fields_item_set_type(inject->item_n, name.c_str());
     psc_output_fields_item_set_psc_bnd(inject->item_n, inject->item_n_bnd);
   }
 
@@ -203,16 +211,4 @@ struct Inject_
   }
 
 };
-
-// ----------------------------------------------------------------------
-// psc_inject "sub"
-
-struct psc_inject_ops_sub : psc_inject_ops {
-  using Inject_t = Inject_;
-  psc_inject_ops_sub() {
-    name                = PARTICLE_TYPE;
-    create              = Inject_t::create;
-    run                 = Inject_t::run;
-  }
-} psc_inject_ops_sub;
 
