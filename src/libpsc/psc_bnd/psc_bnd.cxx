@@ -18,26 +18,6 @@ psc_bnd_set_psc(struct psc_bnd *bnd, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_setup
-
-static void
-_psc_bnd_setup(struct psc_bnd *bnd)
-{
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-  assert(ops->create_ddc);
-  ops->create_ddc(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_destroy
-
-static void
-_psc_bnd_destroy(struct psc_bnd *bnd)
-{
-  //mrc_ddc_destroy(bnd->ddc);
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_write
 
 static void
@@ -88,8 +68,6 @@ struct mrc_class_psc_bnd_ : mrc_class_psc_bnd
     name             = "psc_bnd";
     size             = sizeof(struct psc_bnd);
     init             = psc_bnd_init;
-    setup            = _psc_bnd_setup;
-    destroy          = _psc_bnd_destroy;
     write            = _psc_bnd_write;
     read             = _psc_bnd_read;
   }
