@@ -46,7 +46,7 @@ struct Bnd_ : BndBase
   
   void reset() override
   {
-    mrc_ddc_destroy(ddc_);
+    this->~Bnd_();
     new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain, ppsc->ibn);
   }
   
