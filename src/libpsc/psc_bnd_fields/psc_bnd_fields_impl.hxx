@@ -25,7 +25,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  void fill_ghosts_E(PscMfieldsBase mflds_base)
+  void fill_ghosts_E(PscMfieldsBase mflds_base) override
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
     mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
@@ -72,7 +72,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  void fill_ghosts_H(PscMfieldsBase mflds_base)
+  void fill_ghosts_H(PscMfieldsBase mflds_base) override
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
     mfields_t mf = mflds_base.get_as<mfields_t>(HX, HX + 3);
@@ -119,7 +119,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  void add_ghosts_J(PscMfieldsBase mflds_base)
+  void add_ghosts_J(PscMfieldsBase mflds_base) override
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
     mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);

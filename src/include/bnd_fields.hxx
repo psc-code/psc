@@ -8,6 +8,9 @@
 
 struct BndFieldsBase
 {
+  virtual void fill_ghosts_E(PscMfieldsBase mflds_base) = 0;
+  virtual void fill_ghosts_H(PscMfieldsBase mflds_base) = 0;
+  virtual void add_ghosts_J(PscMfieldsBase mflds_base) = 0;
 };
 
 // ======================================================================

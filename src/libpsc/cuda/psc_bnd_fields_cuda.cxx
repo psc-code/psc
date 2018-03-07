@@ -14,7 +14,7 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  void fill_ghosts_E(PscMfieldsBase mflds_base)
+  void fill_ghosts_E(PscMfieldsBase mflds_base) override
   {
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -45,7 +45,7 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  void fill_ghosts_H(PscMfieldsBase mflds_base)
+  void fill_ghosts_H(PscMfieldsBase mflds_base) override
   {
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -77,7 +77,7 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  void add_ghosts_J(PscMfieldsBase mflds_base)
+  void add_ghosts_J(PscMfieldsBase mflds_base) override
   {
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
