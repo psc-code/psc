@@ -18,7 +18,6 @@ struct psc_inject {
   struct psc_target *target;
 
   // state
-  struct psc_bnd *item_n_bnd;
   int balance_generation_cnt;
 };
 
@@ -29,8 +28,6 @@ static struct param psc_inject_descr[] _mrc_unused = {
   { "tau"        , VAR(tau)        , PARAM_INT(40)                       },
   { "kind_n"     , VAR(kind_n)     , PARAM_INT(-1)                       },
   { "target"     , VAR(target)     , PARAM_OBJ(psc_target)               },
-
-  { "item_n_bnd" , VAR(item_n_bnd) , MRC_VAR_OBJ(psc_bnd)                },
 
   {},
 };

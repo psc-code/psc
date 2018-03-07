@@ -34,13 +34,14 @@ struct InjectCuda : InjectBase
   
   void _create(struct psc_inject *inject)
   {
-    psc_bnd_set_name(inject->item_n_bnd, "inject_item_n_bnd");
-    psc_bnd_set_type(inject->item_n_bnd, "cuda");
-    psc_bnd_set_psc(inject->item_n_bnd, ppsc);
+    item_n_bnd = psc_bnd_create(psc_inject_comm(inject));
+    psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
+    psc_bnd_set_type(item_n_bnd, "cuda");
+    psc_bnd_set_psc(item_n_bnd, ppsc);
 
     item_n = psc_output_fields_item_create(psc_inject_comm(inject));
     psc_output_fields_item_set_type(item_n, "n_1st_cuda");
-    psc_output_fields_item_set_psc_bnd(item_n, inject->item_n_bnd);
+    psc_output_fields_item_set_psc_bnd(item_n, item_n_bnd);
 
     psc_output_fields_item_setup(item_n);
   }
@@ -143,7 +144,7 @@ struct InjectCuda : InjectBase
 
     if (psc_balance_generation_cnt != inject->balance_generation_cnt) {
       inject->balance_generation_cnt = psc_balance_generation_cnt;
-      auto bnd = PscBndBase(inject->item_n_bnd);
+      auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
     psc_output_fields_item_run(item_n, mflds_base, mprts_base, mflds_n);

@@ -19,6 +19,7 @@ struct InjectBase
 
   struct psc_mfields *mflds_n;
   struct psc_output_fields_item *item_n;
+  struct psc_bnd *item_n_bnd;
 };
 
 // ======================================================================
