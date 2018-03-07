@@ -116,8 +116,5 @@ struct psc_bnd_fields_ops_cuda : psc_bnd_fields_ops {
     size                  = PscBndFields_t::size;
     setup                 = PscBndFields_t::setup;
     destroy               = PscBndFields_t::destroy;
-    fill_ghosts_E         = PscBndFields_t::fill_ghosts_E;
-    fill_ghosts_H         = PscBndFields_t::fill_ghosts_H;
-    add_ghosts_J          = PscBndFields_t::add_ghosts_J;
   }
 } psc_bnd_fields_cuda_ops;

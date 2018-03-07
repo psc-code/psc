@@ -73,23 +73,5 @@ public:
     PscBndFields<BndFields> bndf(_bndf);
     bndf->~BndFields();
   }
-
-  static void fill_ghosts_E(psc_bnd_fields *_bndf, psc_mfields *mflds_base)
-  {
-    PscBndFields<BndFields> bndf(_bndf);
-    bndf->fill_ghosts_E(mflds_base);
-  }
-  
-  static void fill_ghosts_H(psc_bnd_fields *_bndf, psc_mfields *mflds_base)
-  {
-    PscBndFields<BndFields> bndf(_bndf);
-    bndf->fill_ghosts_H(mflds_base);
-  }
-  
-  static void add_ghosts_J(psc_bnd_fields *_bndf, psc_mfields *mflds_base)
-  {
-    PscBndFields<BndFields> bndf(_bndf);
-    bndf->add_ghosts_J(mflds_base);
-  }
 };
 
