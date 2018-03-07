@@ -25,12 +25,6 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  static void fill_ghosts_E(struct psc_bnd_fields *_bndf, struct psc_mfields *mflds_base)
-  {
-    PscBndFields<Self> bndf(_bndf);
-    bndf->fill_ghosts_E(PscMfieldsBase(mflds_base));
-  }
-  
   void fill_ghosts_E(PscMfieldsBase mflds_base)
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
@@ -78,12 +72,6 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  static void fill_ghosts_H(struct psc_bnd_fields *_bndf, struct psc_mfields *mflds_base)
-  {
-    PscBndFields<Self> bndf(_bndf);
-    bndf->fill_ghosts_H(PscMfieldsBase(mflds_base));
-  }
-  
   void fill_ghosts_H(PscMfieldsBase mflds_base)
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
@@ -131,12 +119,6 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  static void add_ghosts_J(struct psc_bnd_fields *_bndf, struct psc_mfields *mflds_base)
-  {
-    PscBndFields<Self> bndf(_bndf);
-    bndf->add_ghosts_J(PscMfieldsBase(mflds_base));
-  }
-  
   void add_ghosts_J(PscMfieldsBase mflds_base)
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
