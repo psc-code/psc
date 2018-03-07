@@ -10,6 +10,7 @@ template<typename MF>
 struct Bnd_ : BndBase
 {
   using mfields_t = MF;
+  using Mfields = typename MF::sub_t;
   using fields_t = typename mfields_t::fields_t;
   using real_t = typename mfields_t::real_t;
   using Fields = Fields3d<fields_t>;
@@ -89,7 +90,8 @@ struct Bnd_ : BndBase
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
   {
-    mfields_t mf = *static_cast<mfields_t*>(ctx);
+    mfields_t _mf = *static_cast<mfields_t*>(ctx);
+    Mfields& mf = *_mf.sub();
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -107,7 +109,8 @@ struct Bnd_ : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			   void *_buf, void *ctx)
   {
-    mfields_t mf = *static_cast<mfields_t*>(ctx);
+    mfields_t _mf = *static_cast<mfields_t*>(ctx);
+    Mfields& mf = *_mf.sub();
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -125,7 +128,8 @@ struct Bnd_ : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			    void *_buf, void *ctx)
   {
-    mfields_t mf = *static_cast<mfields_t*>(ctx);
+    mfields_t _mf = *static_cast<mfields_t*>(ctx);
+    Mfields& mf = *_mf.sub();
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
