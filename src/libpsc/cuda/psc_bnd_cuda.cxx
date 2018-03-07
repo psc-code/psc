@@ -8,8 +8,39 @@
 #include <mrc_ddc_private.h>
 #include <mrc_profile.h>
 
+void psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx);
+void psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx);
+void psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx);
+
+static struct mrc_ddc_funcs ddc_funcs = {
+  .copy_to_buf   = psc_bnd_fld_cuda_copy_to_buf,
+  .copy_from_buf = psc_bnd_fld_cuda_copy_from_buf,
+  .add_from_buf  = psc_bnd_fld_cuda_add_from_buf,
+};
+
 struct BndCuda : BndBase {
   struct cuda_mfields_bnd *cbnd;
+
+  // ----------------------------------------------------------------------
+  // ctor
+
+  BndCuda(mrc_domain *domain, int ibn[3])
+  {
+    ddc_ = mrc_domain_create_ddc(domain);
+    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
+    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
+    mrc_ddc_set_param_int(ddc_, "max_n_fields", 6);
+    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(fields_cuda_real_t));
+    mrc_ddc_setup(ddc_);
+  }
+
+  // ----------------------------------------------------------------------
+  // dtor
+
+  ~BndCuda()
+  {
+    mrc_ddc_destroy(ddc_);
+  }
 
   // ----------------------------------------------------------------------
   // reset
@@ -24,8 +55,6 @@ struct BndCuda : BndBase {
   //private:
   mrc_ddc* ddc_;
 };
-
-#define psc_bnd_cuda(bnd) mrc_to_subobj(bnd, struct psc_bnd_cuda)
 
 // ======================================================================
 // ddc funcs
@@ -96,27 +125,12 @@ psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], vo
   }
 }
 
-static struct mrc_ddc_funcs ddc_funcs = {
-  .copy_to_buf   = psc_bnd_fld_cuda_copy_to_buf,
-  .copy_from_buf = psc_bnd_fld_cuda_copy_from_buf,
-  .add_from_buf  = psc_bnd_fld_cuda_add_from_buf,
-};
-
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_create_ddc
 
 void
 psc_bnd_cuda_create_ddc(struct psc_bnd *_bnd)
 {
-  PscBnd<BndCuda> bnd(_bnd);
-  struct psc *psc = _bnd->psc;
-
-  bnd->ddc_ = mrc_domain_create_ddc(psc->mrc_domain);
-  mrc_ddc_set_funcs(bnd->ddc_, &ddc_funcs);
-  mrc_ddc_set_param_int3(bnd->ddc_, "ibn", psc->ibn);
-  mrc_ddc_set_param_int(bnd->ddc_, "max_n_fields", 6);
-  mrc_ddc_set_param_int(bnd->ddc_, "size_of_type", sizeof(fields_cuda_real_t));
-  mrc_ddc_setup(bnd->ddc_);
 }
 
 // ----------------------------------------------------------------------
