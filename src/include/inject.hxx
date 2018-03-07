@@ -13,9 +13,10 @@
 
 struct InjectBase
 {
-  InjectBase(bool do_inject, int every_step, int tau, int kind_n)
+  InjectBase(bool do_inject, int every_step, int tau, int kind_n, psc_target* target)
     : do_inject(do_inject),
-      every_step(every_step), tau(tau), kind_n(kind_n)
+      every_step(every_step), tau(tau), kind_n(kind_n),
+      target(target)
   {}
   
   // param
@@ -23,6 +24,7 @@ struct InjectBase
   const int every_step; // inject every so many steps
   const int tau; // in steps
   const int kind_n; // the number of particles to inject are based on this kind's density
+  psc_target* const target;
 
   // state
   struct psc_mfields *mflds_n;
@@ -88,7 +90,8 @@ public:
   {
     PscInject<Inject> inject(_inject);
     new(inject.sub()) Inject(psc_inject_comm(_inject),
-			     _inject->do_inject, _inject->every_step, _inject->tau, _inject->kind_n);
+			     _inject->do_inject, _inject->every_step, _inject->tau, _inject->kind_n,
+			     _inject->target);
 
     psc_inject_setup_super(_inject);
   }

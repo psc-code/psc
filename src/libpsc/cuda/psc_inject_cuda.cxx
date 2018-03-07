@@ -23,8 +23,9 @@ struct InjectCuda : InjectBase
   using fields_t = mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
 
-  InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n)
-    : InjectBase(do_inject, every_step, tau, kind_n)
+  InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
+	     psc_target* target)
+    : InjectBase(do_inject, every_step, tau, kind_n, target)
 
   {
     item_n_bnd = psc_bnd_create(comm);
