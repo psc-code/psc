@@ -14,7 +14,7 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  static void fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  void fill_ghosts_E(PscMfieldsBase mflds_base)
   {
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -22,7 +22,7 @@ struct BndFieldsCuda : BndFieldsBase
       return;
     }
 
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(EX, EX + 3);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(EX, EX + 3);
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
 	ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -45,7 +45,7 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  static void fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  void fill_ghosts_H(PscMfieldsBase mflds_base)
   {
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -53,7 +53,7 @@ struct BndFieldsCuda : BndFieldsBase
       return;
     }
 
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(HX, HX + 3);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(HX, HX + 3);
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
 	ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -77,7 +77,7 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  static void add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  void add_ghosts_J(PscMfieldsBase mflds_base)
   {
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -85,7 +85,7 @@ struct BndFieldsCuda : BndFieldsBase
       return;
     }
 
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(JXI, JXI + 3);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, JXI + 3);
     if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
 	ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
 	ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -113,14 +113,11 @@ struct psc_bnd_fields_ops_cuda : psc_bnd_fields_ops {
   using PscBndFields_t = PscBndFieldsWrapper<BndFieldsCuda>;
   psc_bnd_fields_ops_cuda() {
     name                  = "cuda";
-    fill_ghosts_E         = BndFieldsCuda::fill_ghosts_E;
-    fill_ghosts_H         = BndFieldsCuda::fill_ghosts_H;
-    add_ghosts_J          = BndFieldsCuda::add_ghosts_J;
     size                  = PscBndFields_t::size;
     setup                 = PscBndFields_t::setup;
     destroy               = PscBndFields_t::destroy;
-    // fill_ghosts_E         = PscBndFields_t::fill_ghosts_E;
-    // fill_ghosts_H         = PscBndFields_t::fill_ghosts_H;
-    // add_ghosts_J          = PscBndFields_t::add_ghosts_J;
+    fill_ghosts_E         = PscBndFields_t::fill_ghosts_E;
+    fill_ghosts_H         = PscBndFields_t::fill_ghosts_H;
+    add_ghosts_J          = PscBndFields_t::add_ghosts_J;
   }
 } psc_bnd_fields_cuda_ops;
