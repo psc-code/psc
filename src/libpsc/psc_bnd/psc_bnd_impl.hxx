@@ -54,33 +54,33 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
   
-  void add_ghosts(mfields_t& mf, int mb, int me)
+  void add_ghosts(Mfields& mflds, int mb, int me)
   {
-    mrc_ddc_add_ghosts(ddc_, mb, me, &mf);
+    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
   }
 
   void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
     auto mf = mflds_base.get_as<mfields_t>(mb, me);
-    add_ghosts(mf, mb, me);
+    add_ghosts(*mf.sub(), mb, me);
     mf.put_as(mflds_base, mb, me);
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(mfields_t& mf, int mb, int me)
+  void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &mf);
+    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds);
   }
 
   void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
     auto mf = mflds_base.get_as<mfields_t>(mb, me);
-    fill_ghosts(mf, mb, me);
+    fill_ghosts(*mf.sub(), mb, me);
     mf.put_as(mflds_base, mb, me);
   }
 
@@ -90,8 +90,7 @@ struct Bnd_ : BndBase
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
   {
-    mfields_t _mf = *static_cast<mfields_t*>(ctx);
-    Mfields& mf = *_mf.sub();
+    auto& mf = *static_cast<Mfields*>(ctx);
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -109,8 +108,7 @@ struct Bnd_ : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			   void *_buf, void *ctx)
   {
-    mfields_t _mf = *static_cast<mfields_t*>(ctx);
-    Mfields& mf = *_mf.sub();
+    auto& mf = *static_cast<Mfields*>(ctx);
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -128,8 +126,7 @@ struct Bnd_ : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			    void *_buf, void *ctx)
   {
-    mfields_t _mf = *static_cast<mfields_t*>(ctx);
-    Mfields& mf = *_mf.sub();
+    auto& mf = *static_cast<Mfields*>(ctx);
     Fields F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
