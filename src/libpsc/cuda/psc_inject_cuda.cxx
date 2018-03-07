@@ -39,8 +39,20 @@ struct InjectCuda : InjectBase
 
     psc_output_fields_item_setup(item_n);
     psc_bnd_setup(item_n_bnd);
+
+    psc_mfields_set_name(mflds_n, "mflds_n");
+    psc_mfields_list_add(&psc_mfields_base_list, &mflds_n);
   }
 
+  // ----------------------------------------------------------------------
+  // dtor
+
+  ~InjectCuda()
+  {
+    psc_mfields_destroy(mflds_n);
+    // FIXME, more cleanup needed
+  }
+  
   // ----------------------------------------------------------------------
   // get_n_in_cell
   //

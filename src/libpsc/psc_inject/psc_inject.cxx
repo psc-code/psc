@@ -10,21 +10,6 @@
 // psc_inject
 
 // ----------------------------------------------------------------------
-// _psc_inject_setup
-
-static void
-_psc_inject_setup(struct psc_inject *_inject)
-{
-  PscInjectBase inject(_inject);
-  // set up necessary bits for calculating / averaging density moment
-
-  psc_inject_setup_member_objs(_inject);
-  
-  psc_mfields_set_name(inject->mflds_n, "mflds_n");
-  psc_mfields_list_add(&psc_mfields_base_list, &inject->mflds_n);
-}
-
-// ----------------------------------------------------------------------
 // _psc_inject_destroy
 
 static void
@@ -101,8 +86,6 @@ struct mrc_class_psc_inject_ : mrc_class_psc_inject {
     size             = sizeof(struct psc_inject);
     param_descr      = psc_inject_descr;
     init             = psc_inject_init;
-    setup            = _psc_inject_setup;
-    destroy          = _psc_inject_destroy;
   }
 } mrc_class_psc_inject;
 
