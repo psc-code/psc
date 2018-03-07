@@ -30,17 +30,26 @@ struct PscBndFields
 
   void fill_ghosts_E(PscMfieldsBase mflds)
   {
-    psc_bnd_fields_fill_ghosts_E(bndf_, mflds.mflds());
+    struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bndf_);
+    if (ops->fill_ghosts_E) {
+      ops->fill_ghosts_E(bndf_, mflds.mflds());
+    }
   }
 
   void fill_ghosts_H(PscMfieldsBase mflds)
   {
-    psc_bnd_fields_fill_ghosts_H(bndf_, mflds.mflds());
+    struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bndf_);
+    if (ops->fill_ghosts_H) {
+      ops->fill_ghosts_H(bndf_, mflds.mflds());
+    }
   }
 
   void add_ghosts_J(PscMfieldsBase mflds)
   {
-    psc_bnd_fields_add_ghosts_J(bndf_, mflds.mflds());
+    struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bndf_);
+    if (ops->add_ghosts_J) {
+      ops->add_ghosts_J(bndf_, mflds.mflds());
+    }
   }
 
   sub_t* sub() { return mrc_to_subobj(bndf_, sub_t); }

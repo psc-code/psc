@@ -3,36 +3,6 @@
 #include "psc_fields_as_c.h"
 
 // ======================================================================
-// forward to subclass
-
-void
-psc_bnd_fields_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
-{
-  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->fill_ghosts_E) {
-    ops->fill_ghosts_E(bnd, mflds);
-  }
-}
-
-void
-psc_bnd_fields_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
-{
-  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->fill_ghosts_H) {
-    ops->fill_ghosts_H(bnd, mflds);
-  }
-}
-
-void
-psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
-{
-  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->add_ghosts_J) {
-    ops->add_ghosts_J(bnd, mflds);
-  }
-}
-
-// ======================================================================
 // psc_bnd_fields_init
 
 extern struct psc_bnd_fields_ops psc_bnd_fields_fortran_ops;
