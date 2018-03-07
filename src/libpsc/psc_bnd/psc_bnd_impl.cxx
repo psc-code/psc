@@ -9,7 +9,7 @@
 // psc_bnd: subclass "c"
 
 struct psc_bnd_ops_c : psc_bnd_ops {
-  using Bnd_t = Bnd_<PscMfieldsC>;
+  using Bnd_t = Bnd_<MfieldsC>;
   using PscBnd_t = PscBndWrapper<Bnd_t>;
   psc_bnd_ops_c() {
     name                    = "c";
@@ -24,7 +24,7 @@ struct psc_bnd_ops_c : psc_bnd_ops {
 
 
 struct psc_bnd_ops_single : psc_bnd_ops {
-  using Bnd_t = Bnd_<PscMfieldsSingle>;
+  using Bnd_t = Bnd_<MfieldsSingle>;
   using PscBnd_t = PscBndWrapper<Bnd_t>;
   psc_bnd_ops_single() {
     name                    = "single";

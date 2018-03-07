@@ -9,11 +9,11 @@
 template<typename MF>
 struct Bnd_ : BndBase
 {
-  using mfields_t = MF;
-  using Mfields = typename MF::sub_t;
-  using fields_t = typename mfields_t::fields_t;
-  using real_t = typename mfields_t::real_t;
+  using Mfields = MF;
+  using fields_t = typename Mfields::fields_t;
+  using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
+  using mfields_t = PscMfields<Mfields>;
 
   // ----------------------------------------------------------------------
   // ctor
