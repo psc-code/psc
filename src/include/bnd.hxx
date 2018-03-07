@@ -38,8 +38,6 @@ struct PscBnd
       pr = prof_register("fill_ghosts", 1., 0, 0);
     }
     
-    //  psc_bnd_check_domain(bnd);
-    
     psc_stats_start(st_time_comm);
     prof_start(pr);
     
@@ -58,8 +56,6 @@ struct PscBnd
       pr = prof_register("add_ghosts", 1., 0, 0);
     }
 
-    //  psc_bnd_check_domain(bnd);
-    
     psc_stats_start(st_time_comm);
     prof_start(pr);
     

@@ -42,15 +42,6 @@ struct Bnd_ : BndBase
   }
   
   // ----------------------------------------------------------------------
-  // create
-  
-  static void create(struct psc_bnd *_bnd)
-  {
-    PscBnd<Bnd_<MF>> bnd(_bnd);
-    new(bnd.sub()) Bnd_(_bnd->psc->mrc_domain, _bnd->psc->ibn);
-  }
-
-  // ----------------------------------------------------------------------
   // reset
   
   void reset()
