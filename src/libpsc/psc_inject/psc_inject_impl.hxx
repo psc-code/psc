@@ -26,15 +26,15 @@ struct Inject_ : InjectBase
   using mfields_t = PscMfields<Mfields>;
   
   // ----------------------------------------------------------------------
-  // create
+  // setup
   
-  static void create(struct psc_inject *_inject)
+  static void setup(struct psc_inject *_inject)
   {
     PscInject<Self> inject(_inject);
-    inject->_create(_inject);
+    inject->_setup(_inject);
   }
   
-  void _create(struct psc_inject *inject)
+  void _setup(struct psc_inject *inject)
   {
     // it looks like n_1st_sub takes "sub" particles, but makes
     // moment fields of type "c", so let's use those "c" fields.
@@ -47,16 +47,7 @@ struct Inject_ : InjectBase
     auto name = std::string("n_1st_") + mparticles_traits<mparticles_t>::name;
     psc_output_fields_item_set_type(item_n, name.c_str());
     psc_output_fields_item_set_psc_bnd(item_n, item_n_bnd);
-  }
 
-  static void setup(struct psc_inject *_inject)
-  {
-    PscInject<Self> inject(_inject);
-    inject->_setup(_inject);
-  }
-  
-  void _setup(struct psc_inject *inject)
-  {
     mflds_n = psc_output_fields_item_create_mfields(item_n);
     psc_output_fields_item_setup(item_n);
     psc_bnd_setup(item_n_bnd);

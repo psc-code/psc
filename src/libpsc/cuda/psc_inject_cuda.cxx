@@ -24,15 +24,15 @@ struct InjectCuda : InjectBase
   using Fields = Fields3d<fields_t>;
 
   // ----------------------------------------------------------------------
-  // create
+  // setup
   
-  static void create(struct psc_inject *_inject)
+  static void setup(struct psc_inject *_inject)
   {
     PscInject<Self> inject(_inject);
-    inject->_create(_inject);
+    inject->_setup(_inject);
   }
   
-  void _create(struct psc_inject *inject)
+  void _setup(struct psc_inject *inject)
   {
     item_n_bnd = psc_bnd_create(psc_inject_comm(inject));
     psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
@@ -44,6 +44,7 @@ struct InjectCuda : InjectBase
     psc_output_fields_item_set_psc_bnd(item_n, item_n_bnd);
 
     psc_output_fields_item_setup(item_n);
+    psc_bnd_setup(item_n_bnd);
   }
 
   // ----------------------------------------------------------------------
@@ -247,7 +248,7 @@ struct psc_inject_ops_cuda : psc_inject_ops {
   using Inject_t = InjectCuda;
   psc_inject_ops_cuda() {
     name                = "cuda";
-    create              = Inject_t::create;
+    setup               = Inject_t::setup;
     run                 = Inject_t::run;
   }
 } psc_inject_ops_cuda;

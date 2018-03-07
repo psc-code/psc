@@ -13,7 +13,6 @@ struct psc_inject_ops_single : psc_inject_ops {
   psc_inject_ops_single() {
     name                = "single";
     size                = sizeof(Inject_t);
-    create              = Inject_t::create;
     setup               = Inject_t::setup;
     run                 = Inject_t::run;
   }
@@ -27,7 +26,6 @@ struct psc_inject_ops_double : psc_inject_ops {
   psc_inject_ops_double() {
     name                = "double";
     size                = sizeof(Inject_t);
-    create              = Inject_t::create;
     setup               = Inject_t::setup;
     run                 = Inject_t::run;
   }
