@@ -488,6 +488,7 @@ main(int argc, char **argv)
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
+#include "../libpsc/psc_inject/psc_inject_impl.hxx"
 
 using Mparticles_t = MparticlesDouble;
 using Mfields_t = MfieldsC;
@@ -498,6 +499,7 @@ using PushFields_t = PushFields<PscMfieldsC>;
 using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
 using Bnd_t = Bnd_<MfieldsC>;
 using BndFields_t = BndFieldsNone;
+using Inject_t = Inject_<Mparticles_t, Mfields_t>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -531,6 +533,7 @@ static void psc_flatfoil_step(struct psc *psc)
   PscBndFieldsBase bndf(pushf.pushf()->bnd_fields); // !!!
   auto& bndf_ = dynamic_cast<BndFields_t&>(*bndf.sub());
   PscInjectBase inject(sub->inject);
+  auto& inject_ = dynamic_cast<Inject_t&>(*inject.sub());
   
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -551,7 +554,7 @@ static void psc_flatfoil_step(struct psc *psc)
   
   bndp_(mprts_);
   
-  inject(mprts, mflds);
+  inject_.run(mprts, mflds);
   psc_heating_run(sub->heating, mprts.mprts(), mflds.mflds()); //!!!
   
   // field propagation E^{n+1/2} -> E^{n+3/2}

@@ -141,6 +141,13 @@ struct Inject_ : InjectBase
 
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
+    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+    (*this)(mprts, mflds_base);
+    mprts.put_as(mprts_base);
+  }
+  
+  void operator()(mparticles_t mprts, PscMfieldsBase mflds_base)
+  {
     struct psc *psc = ppsc;
     
     real_t fac = 1. / psc->coeff.cori * 
@@ -152,9 +159,8 @@ struct Inject_ : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(item_n, mflds_base.mflds(), mprts_base.mprts(), mflds_n);
+    psc_output_fields_item_run(item_n, mflds_base.mflds(), mprts.mprts(), mflds_n);
 
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
     mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
     psc_foreach_patch(psc, p) {
@@ -225,7 +231,6 @@ struct Inject_ : InjectBase
       }
     }
 
-    mprts.put_as(mprts_base);
     mf_n.put_as(mflds_n, 0, 0);
   }
 
