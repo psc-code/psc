@@ -11,10 +11,10 @@ struct BndVpic : BndBase
   void reset() override
   {}
   
-  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
+  void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {}
   
-  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
+  void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {}
 };
 

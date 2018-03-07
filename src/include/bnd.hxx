@@ -12,8 +12,8 @@
 
 struct BndBase
 {
-  virtual void fill_ghosts(psc_mfields* mflds, int mb, int me) = 0;
-  virtual void add_ghosts(psc_mfields* mflds, int mb, int me) = 0;
+  virtual void fill_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
+  virtual void add_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
   virtual void reset() = 0;
 };
 

@@ -484,6 +484,7 @@ main(int argc, char **argv)
 #include "../libpsc/psc_push_particles/push_part_common.c"
 #include "psc_push_fields_impl.hxx"
 #include "bnd_particles_impl.hxx"
+#include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 
 using Mparticles_t = MparticlesDouble;
 using Mfields_t = MfieldsC;
@@ -492,6 +493,7 @@ using Collision_t = Collision_<Mparticles_t, Mfields_t>;
 using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
 using PushFields_t = PushFields<PscMfieldsC>;
 using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
+using Bnd_t = Bnd_<PscMfieldsC>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -521,6 +523,7 @@ static void psc_flatfoil_step(struct psc *psc)
   PscBndParticlesBase bndp(psc->bnd_particles);
   auto& bndp_ = dynamic_cast<BndParticles_t&>(*bndp.sub());
   PscBndBase bnd(psc->bnd);
+  auto& bnd_ = dynamic_cast<Bnd_t&>(*bnd.sub());
   
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -560,7 +563,7 @@ static void psc_flatfoil_step(struct psc *psc)
   
   psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
   if (pushf.pushf()->variant == 0) {
-    bnd.fill_ghosts(mflds, EX, EX + 3);
+    bnd_.fill_ghosts(mflds, EX, EX + 3);
   }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
@@ -569,7 +572,7 @@ static void psc_flatfoil_step(struct psc *psc)
   //pushf.advance_a(mflds);
   if (pushf.pushf()->variant == 0) {
     psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
-    bnd.fill_ghosts(mflds.mflds(), EX, EX + 3);
+    bnd_.fill_ghosts(mflds, EX, EX + 3);
   }
   
   // push H
@@ -577,7 +580,7 @@ static void psc_flatfoil_step(struct psc *psc)
   
   psc_bnd_fields_fill_ghosts_H(pushf.pushf()->bnd_fields, mflds.mflds());
   if (pushf.pushf()->variant == 0) {
-    bnd.fill_ghosts(mflds.mflds(), HX, HX + 3);
+    bnd_.fill_ghosts(mflds, HX, HX + 3);
   }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #else

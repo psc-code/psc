@@ -89,9 +89,9 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
+  void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(mb, me);
 
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
@@ -119,7 +119,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
+  void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
     static int pr1, pr2, pr3, pr4, pr5;
     if (!pr1) {
@@ -130,7 +130,7 @@ struct BndCuda : BndBase
       pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
     }
     
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(mb, me);
     
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);

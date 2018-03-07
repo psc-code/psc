@@ -309,6 +309,18 @@ struct PscMfields
     return (*sub_)[p];
   }
 
+  template<typename MF>
+  MF get_as(int mb, int me)
+  {
+    return mflds_->get_as<MF>(mb, me);
+  }
+  
+  template<typename MF>
+  void put_as(MF mflds_base, int mb, int me)
+  {
+    return put_as(mflds_base.mflds(), mb, me);
+  }
+
   void put_as(struct psc_mfields *mflds_base, int mb, int me)
   {
     psc_mfields_put_as(mflds_, mflds_base, mb, me);
