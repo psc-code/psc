@@ -79,7 +79,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // reset
   
-  void reset()
+  void reset() override
   {
     assert(0);
     // mrc_ddc_destroy(bnd_->ddc);
@@ -89,7 +89,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me)
+  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
   {
     PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
 
@@ -119,7 +119,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me)
+  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
   {
     static int pr1, pr2, pr3, pr4, pr5;
     if (!pr1) {

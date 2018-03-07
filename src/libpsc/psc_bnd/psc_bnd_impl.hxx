@@ -44,7 +44,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // reset
   
-  void reset()
+  void reset() override
   {
     mrc_ddc_destroy(ddc_);
     new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain, ppsc->ibn);
@@ -53,7 +53,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
   
-  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me)
+  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
   {
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
     mrc_ddc_add_ghosts(ddc_, mb, me, &mf);
@@ -63,7 +63,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me)
+  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me) override
   {
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
     // FIXME
