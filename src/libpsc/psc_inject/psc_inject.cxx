@@ -74,33 +74,6 @@ debug_dump(struct mrc_io *io, struct psc_mfields *mflds)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_inject_run
-//
-// FIXME mostly duplicated from psc_setup_particles
-
-void
-psc_inject_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
-	       struct psc_mfields *mflds_base)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("inject_run", 1., 0, 0);
-  }  
-
-  if (!inject->do_inject ||
-      ppsc->timestep % inject->every_step != 0) {
-    return;
-  }
-
-  struct psc_inject_ops *ops = psc_inject_ops(inject);
-  assert(ops && ops->run);
-
-  prof_start(pr);
-  ops->run(inject, mprts_base, mflds_base);
-  prof_stop(pr);
-}
-
-// ----------------------------------------------------------------------
 // psc_inject_init
 
 extern struct psc_inject_ops psc_inject_ops_single;

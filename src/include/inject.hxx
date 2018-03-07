@@ -30,7 +30,22 @@ struct PscInject
 
   void operator()(PscMparticlesBase mprts, PscMfieldsBase mflds)
   {
-    psc_inject_run(inject_, mprts.mprts(), mflds.mflds());
+    static int pr;
+    if (!pr) {
+      pr = prof_register("inject_run", 1., 0, 0);
+    }  
+    
+    if (!inject_->do_inject ||
+	ppsc->timestep % inject_->every_step != 0) {
+      return;
+    }
+    
+    struct psc_inject_ops *ops = psc_inject_ops(inject_);
+    assert(ops && ops->run);
+    
+    prof_start(pr);
+    ops->run(inject_, mprts.mprts(), mflds.mflds());
+    prof_stop(pr);
   }
 
 private:
