@@ -10,16 +10,16 @@
 
 
 struct psc_bnd_fields_ops_c : psc_bnd_fields_ops {
-  using bnd_fields_ops_c = bnd_fields_ops<PscMfieldsC>;
-  using PscBndFields = PscBndFieldsWrapper<bnd_fields_ops_c>;
+  using BndFields_t = BndFields_<MfieldsC>;
+  using PscBndFields_t = PscBndFieldsWrapper<BndFields_t>;
   psc_bnd_fields_ops_c() {
     name                  = "c";
-    size                  = PscBndFields::size;
-    setup                 = PscBndFields::setup;
-    destroy               = PscBndFields::destroy;
-    fill_ghosts_E         = bnd_fields_ops_c::fill_ghosts_E;
-    fill_ghosts_H         = bnd_fields_ops_c::fill_ghosts_H;
-    add_ghosts_J          = bnd_fields_ops_c::add_ghosts_J;
+    size                  = PscBndFields_t::size;
+    setup                 = PscBndFields_t::setup;
+    destroy               = PscBndFields_t::destroy;
+    fill_ghosts_E         = BndFields_t::fill_ghosts_E;
+    fill_ghosts_H         = BndFields_t::fill_ghosts_H;
+    add_ghosts_J          = BndFields_t::add_ghosts_J;
   }
 } psc_bnd_fields_c_ops;
 
@@ -27,15 +27,15 @@ struct psc_bnd_fields_ops_c : psc_bnd_fields_ops {
 // psc_bnd_fields: subclass "single"
 
 struct psc_bnd_fields_ops_single : psc_bnd_fields_ops {
-  using bnd_fields_ops_single = bnd_fields_ops<PscMfieldsSingle>;
-  using PscBndFields = PscBndFieldsWrapper<bnd_fields_ops_single>;
+  using BndFields_t = BndFields_<MfieldsSingle>;
+  using PscBndFields_t = PscBndFieldsWrapper<BndFields_t>;
   psc_bnd_fields_ops_single() {
     name                  = "single";
-    size                  = PscBndFields::size;
-    setup                 = PscBndFields::setup;
-    destroy               = PscBndFields::destroy;
-    fill_ghosts_E         = bnd_fields_ops_single::fill_ghosts_E;
-    fill_ghosts_H         = bnd_fields_ops_single::fill_ghosts_H;
-    add_ghosts_J          = bnd_fields_ops_single::add_ghosts_J;
+    size                  = PscBndFields_t::size;
+    setup                 = PscBndFields_t::setup;
+    destroy               = PscBndFields_t::destroy;
+    fill_ghosts_E         = BndFields_t::fill_ghosts_E;
+    fill_ghosts_H         = BndFields_t::fill_ghosts_H;
+    add_ghosts_J          = BndFields_t::add_ghosts_J;
   }
 } psc_bnd_fields_single_ops;
