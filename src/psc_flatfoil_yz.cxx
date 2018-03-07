@@ -563,7 +563,7 @@ static void psc_flatfoil_step(struct psc *psc)
   
   psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
   if (pushf.pushf()->variant == 0) {
-    bnd_.fill_ghosts(mflds, EX, EX + 3);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
   }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
@@ -572,7 +572,7 @@ static void psc_flatfoil_step(struct psc *psc)
   //pushf.advance_a(mflds);
   if (pushf.pushf()->variant == 0) {
     psc_bnd_fields_fill_ghosts_E(pushf.pushf()->bnd_fields, mflds.mflds());
-    bnd_.fill_ghosts(mflds, EX, EX + 3);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
   }
   
   // push H
@@ -580,7 +580,7 @@ static void psc_flatfoil_step(struct psc *psc)
   
   psc_bnd_fields_fill_ghosts_H(pushf.pushf()->bnd_fields, mflds.mflds());
   if (pushf.pushf()->variant == 0) {
-    bnd_.fill_ghosts(mflds, HX, HX + 3);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
   }
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #else
