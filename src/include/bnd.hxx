@@ -73,10 +73,6 @@ struct PscBnd
 
   void reset()
   {
-    if (!bnd_->ddc) {
-      return;
-    }
-    
     struct psc_bnd_ops *ops = psc_bnd_ops(bnd_);
     assert(ops->reset);
     ops->reset(bnd_);

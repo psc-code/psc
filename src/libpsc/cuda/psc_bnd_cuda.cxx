@@ -20,6 +20,9 @@ struct BndCuda : BndBase {
     // mrc_ddc_destroy(bnd_->ddc);
     // ops->create_ddc(bnd_);
   }
+
+  //private:
+  mrc_ddc* ddc_;
 };
 
 #define psc_bnd_cuda(bnd) mrc_to_subobj(bnd, struct psc_bnd_cuda)
@@ -103,16 +106,17 @@ static struct mrc_ddc_funcs ddc_funcs = {
 // psc_bnd_cuda_create_ddc
 
 void
-psc_bnd_cuda_create_ddc(struct psc_bnd *bnd)
+psc_bnd_cuda_create_ddc(struct psc_bnd *_bnd)
 {
-  struct psc *psc = bnd->psc;
+  PscBnd<BndCuda> bnd(_bnd);
+  struct psc *psc = _bnd->psc;
 
-  bnd->ddc = mrc_domain_create_ddc(psc->mrc_domain);
-  mrc_ddc_set_funcs(bnd->ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(bnd->ddc, "ibn", psc->ibn);
-  mrc_ddc_set_param_int(bnd->ddc, "max_n_fields", 6);
-  mrc_ddc_set_param_int(bnd->ddc, "size_of_type", sizeof(fields_cuda_real_t));
-  mrc_ddc_setup(bnd->ddc);
+  bnd->ddc_ = mrc_domain_create_ddc(psc->mrc_domain);
+  mrc_ddc_set_funcs(bnd->ddc_, &ddc_funcs);
+  mrc_ddc_set_param_int3(bnd->ddc_, "ibn", psc->ibn);
+  mrc_ddc_set_param_int(bnd->ddc_, "max_n_fields", 6);
+  mrc_ddc_set_param_int(bnd->ddc_, "size_of_type", sizeof(fields_cuda_real_t));
+  mrc_ddc_setup(bnd->ddc_);
 }
 
 // ----------------------------------------------------------------------
@@ -136,7 +140,7 @@ psc_bnd_cuda_setup(struct psc_bnd *_bnd)
     prm.im[d] = psc->grid().ldims[d] + 2 * psc->ibn[d];
   }
   
-  struct mrc_ddc_multi *multi = mrc_ddc_multi(_bnd->ddc);
+  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc_);
   struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
   struct mrc_ddc_rank_info *ri = patt2->ri;
     
@@ -194,7 +198,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base, in
     cuda_add_ghosts_periodic_z(mf->cmflds, 0, mb, me);
   } else {
     cuda_mfields_bnd_from_device_inside(bnd->cbnd, mf->cmflds, mb, me);
-    mrc_ddc_add_ghosts(_bnd->ddc, 0, me - mb, _bnd);
+    mrc_ddc_add_ghosts(bnd->ddc_, 0, me - mb, _bnd);
     cuda_mfields_bnd_to_device_inside(bnd->cbnd, mf->cmflds, mb, me);
   }
 
@@ -241,18 +245,18 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base, i
     prof_stop(pr1);
 
     prof_start(pr2);
-    mrc_ddc_fill_ghosts_begin(_bnd->ddc, 0, me - mb, _bnd);
+    mrc_ddc_fill_ghosts_begin(bnd->ddc_, 0, me - mb, _bnd);
     prof_stop(pr2);
     prof_start(pr3);
 #if 0
-    mrc_ddc_fill_ghosts_local(bnd->ddc, 0, me - mb, mflds);
+    mrc_ddc_fill_ghosts_local(bnd->ddc_, 0, me - mb, mflds);
 #endif
 #if 1
     cuda_mfields_bnd_fill_ghosts_local(bnd->cbnd, mf->cmflds, mb, me);
 #endif
     prof_stop(pr3);
     prof_start(pr4);
-    mrc_ddc_fill_ghosts_end(_bnd->ddc, 0, me - mb, mf.mflds());
+    mrc_ddc_fill_ghosts_end(bnd->ddc_, 0, me - mb, mf.mflds());
     prof_stop(pr4);
 
     prof_start(pr5);

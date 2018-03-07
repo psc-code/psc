@@ -17,21 +17,23 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // create
   
-  static void create(struct psc_bnd *bnd)
+  static void create(struct psc_bnd *_bnd)
   {
+    PscBnd<Bnd_<MF>> bnd(_bnd);
+    
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
       .copy_from_buf = copy_from_buf,
       .add_from_buf  = add_from_buf,
     };
 
-    struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
+    struct mrc_ddc *ddc = mrc_domain_create_ddc(_bnd->psc->mrc_domain);
     mrc_ddc_set_funcs(ddc, &ddc_funcs);
-    mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
+    mrc_ddc_set_param_int3(ddc, "ibn", _bnd->psc->ibn);
     mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
     mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(real_t));
     mrc_ddc_setup(ddc);
-    bnd->ddc = ddc;
+    bnd->ddc_ = ddc;
   }
 
   // ----------------------------------------------------------------------
@@ -39,7 +41,6 @@ struct Bnd_ : BndBase
   
   void reset()
   {
-    assert(0);
     // mrc_ddc_destroy(bnd_->ddc);
     // ops->create_ddc(bnd_);
   }
@@ -47,25 +48,27 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
   
-  static void add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base,
+  static void add_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base,
 			 int mb, int me)
   {
+    PscBnd<Bnd_<MF>> bnd(_bnd);
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
-    mrc_ddc_add_ghosts(bnd->ddc, mb, me, &mf);
+    mrc_ddc_add_ghosts(bnd->ddc_, mb, me, &mf);
     mf.put_as(mflds_base, mb, me);
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  static void fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base,
+  static void fill_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base,
 			  int mb, int me)
   {
+    PscBnd<Bnd_<MF>> bnd(_bnd);
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_fill_ghosts(bnd->ddc, mb, me, &mf);
+    mrc_ddc_fill_ghosts(bnd->ddc_, mb, me, &mf);
     mf.put_as(mflds_base, mb, me);
   }
 
@@ -126,4 +129,6 @@ struct Bnd_ : BndBase
     }
   }
 
+private:
+  mrc_ddc *ddc_;
 };

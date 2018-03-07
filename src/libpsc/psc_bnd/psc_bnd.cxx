@@ -34,7 +34,7 @@ _psc_bnd_setup(struct psc_bnd *bnd)
 static void
 _psc_bnd_destroy(struct psc_bnd *bnd)
 {
-  mrc_ddc_destroy(bnd->ddc);
+  //mrc_ddc_destroy(bnd->ddc);
 }
 
 // ----------------------------------------------------------------------
