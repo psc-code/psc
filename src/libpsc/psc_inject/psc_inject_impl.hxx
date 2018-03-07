@@ -140,8 +140,8 @@ struct Inject_ : InjectBase
     struct psc *psc = ppsc;
     
     real_t fac = 1. / psc->coeff.cori * 
-      (inject->every_step * psc->dt / inject->tau) /
-      (1. + inject->every_step * psc->dt / inject->tau);
+      (every_step * psc->dt / tau) /
+      (1. + every_step * psc->dt / tau);
 
     if (psc_balance_generation_cnt != balance_generation_cnt) {
       balance_generation_cnt = psc_balance_generation_cnt;
@@ -150,8 +150,6 @@ struct Inject_ : InjectBase
     }
     psc_output_fields_item_run(item_n, mflds_base, mprts_base, mflds_n);
 
-    int kind_n = inject->kind_n;
-  
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
     mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
