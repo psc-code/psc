@@ -15,25 +15,31 @@ struct Bnd_ : BndBase
   using Fields = Fields3d<fields_t>;
 
   // ----------------------------------------------------------------------
-  // create
-  
-  static void create(struct psc_bnd *_bnd)
+  // ctor
+
+  Bnd_(mrc_domain* domain, int ibn[3])
   {
-    PscBnd<Bnd_<MF>> bnd(_bnd);
-    
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
       .copy_from_buf = copy_from_buf,
       .add_from_buf  = add_from_buf,
     };
 
-    struct mrc_ddc *ddc = mrc_domain_create_ddc(_bnd->psc->mrc_domain);
-    mrc_ddc_set_funcs(ddc, &ddc_funcs);
-    mrc_ddc_set_param_int3(ddc, "ibn", _bnd->psc->ibn);
-    mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
-    mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(real_t));
-    mrc_ddc_setup(ddc);
-    bnd->ddc_ = ddc;
+    ddc_ = mrc_domain_create_ddc(domain);
+    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
+    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
+    mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
+    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
+    mrc_ddc_setup(ddc_);
+  }
+
+  // ----------------------------------------------------------------------
+  // create
+  
+  static void create(struct psc_bnd *_bnd)
+  {
+    PscBnd<Bnd_<MF>> bnd(_bnd);
+    new(bnd.sub()) Bnd_(_bnd->psc->mrc_domain, _bnd->psc->ibn);
   }
 
   // ----------------------------------------------------------------------
@@ -41,8 +47,8 @@ struct Bnd_ : BndBase
   
   void reset()
   {
-    // mrc_ddc_destroy(bnd_->ddc);
-    // ops->create_ddc(bnd_);
+    mrc_ddc_destroy(ddc_);
+    new(this) Bnd_(ppsc->mrc_domain, ppsc->ibn);
   }
   
   // ----------------------------------------------------------------------

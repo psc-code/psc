@@ -99,7 +99,7 @@ public:
   static void setup(psc_bnd* _bnd)
   {
     PscBnd<Bnd> bnd(_bnd);
-    new(bnd.sub()) Bnd();
+    //new(bnd.sub()) Bnd();
 
     psc_bnd_setup_super(_bnd);
   }
