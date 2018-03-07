@@ -135,7 +135,7 @@ struct Inject_ : InjectBase
     inject->run(_inject, mprts_base, mflds_base);
   }
 
-  void run(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
     struct psc *psc = ppsc;
     
@@ -148,9 +148,9 @@ struct Inject_ : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(item_n, mflds_base, mprts_base, mflds_n);
+    psc_output_fields_item_run(item_n, mflds_base.mflds(), mprts_base.mprts(), mflds_n);
 
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
     mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
     psc_foreach_patch(psc, p) {

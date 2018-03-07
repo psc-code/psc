@@ -128,7 +128,7 @@ struct InjectCuda : InjectBase
     inject->run(_inject, mprts_base, mflds_base);
   }
 
-  void run(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
     struct psc *psc = ppsc;
 
@@ -141,7 +141,7 @@ struct InjectCuda : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(item_n, mflds_base, mprts_base, mflds_n);
+    psc_output_fields_item_run(item_n, mflds_base.mflds(), mprts_base.mprts(), mflds_n);
 
     mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
@@ -228,7 +228,7 @@ struct InjectCuda : InjectBase
 
     mf_n.put_as(mflds_n, 0, 0);
 
-    psc_mparticles_cuda_inject(mprts_base, buf, buf_n_by_patch);
+    psc_mparticles_cuda_inject(mprts_base.mprts(), buf, buf_n_by_patch);
   }
 };
 
