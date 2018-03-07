@@ -8,9 +8,6 @@
 
 struct BndFieldsBase
 {
-  virtual void fill_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
-  virtual void add_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
-  virtual void reset() = 0;
 };
 
 // ======================================================================
@@ -60,4 +57,26 @@ private:
 };
 
 using PscBndFieldsBase = PscBndFields<BndFieldsBase>;
+
+// ======================================================================
+// PscBndWrapper
+
+template<typename BndFields>
+class PscBndFieldsWrapper
+{
+public:
+  const static size_t size = sizeof(BndFields);
+  
+  static void setup(psc_bnd_fields* _bndf)
+  {
+    PscBndFields<BndFields> bndf(_bndf);
+    new(bndf.sub()) BndFields();
+  }
+
+  static void destroy(psc_bnd_fields* _bndf)
+  {
+    PscBndFields<BndFields> bndf(_bndf);
+    bndf->~BndFields();
+  }
+};
 

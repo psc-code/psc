@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "fields.hxx"
+#include "bnd_fields.hxx"
 
 #include <mrc_bits.h>
 
@@ -12,7 +13,7 @@
 using dim = dim_xz; // FIXME
 
 template<typename MF>
-struct bnd_fields_ops
+struct bnd_fields_ops : BndFieldsBase
 {
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
