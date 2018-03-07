@@ -13,10 +13,6 @@
 
 struct InjectBase
 {
-  virtual void fill_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
-  virtual void add_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
-  virtual void reset() = 0;
-
   struct psc_mfields *mflds_n;
   struct psc_output_fields_item *item_n;
   struct psc_bnd *item_n_bnd;
@@ -78,7 +74,8 @@ public:
   static void setup(psc_inject* _inject)
   {
     PscInject<Inject> inject(_inject);
-    new(inject.sub()) Inject();
+    new(inject.sub()) Inject(psc_inject_comm(_inject));
+    psc_inject_setup_super(_inject);
   }
 
   static void destroy(psc_inject* _inject)

@@ -23,17 +23,7 @@ struct InjectCuda : InjectBase
   using fields_t = mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
 
-  // ----------------------------------------------------------------------
-  // setup
-  
-  static void setup(struct psc_inject *_inject)
-  {
-    PscInject<Self> inject(_inject);
-    inject->_setup(psc_inject_comm(_inject));
-    psc_inject_setup_super(_inject);
-  }
-  
-  void _setup(MPI_Comm comm)
+  InjectCuda(MPI_Comm comm)
   {
     item_n_bnd = psc_bnd_create(comm);
     psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
@@ -247,9 +237,11 @@ struct InjectCuda : InjectBase
 
 struct psc_inject_ops_cuda : psc_inject_ops {
   using Inject_t = InjectCuda;
+  using PscInject_t = PscInjectWrapper<InjectCuda>;
   psc_inject_ops_cuda() {
     name                = "cuda";
-    setup               = Inject_t::setup;
+    setup               = PscInject_t::setup;
+    destroy             = PscInject_t::destroy;
     run                 = Inject_t::run;
   }
 } psc_inject_ops_cuda;

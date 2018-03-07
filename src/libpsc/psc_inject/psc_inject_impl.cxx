@@ -10,10 +10,12 @@
 
 struct psc_inject_ops_single : psc_inject_ops {
   using Inject_t = Inject_<MparticlesSingle, MfieldsC>;
+  using PscInject_t = PscInjectWrapper<Inject_t>;
   psc_inject_ops_single() {
     name                = "single";
     size                = sizeof(Inject_t);
-    setup               = Inject_t::setup;
+    setup               = PscInject_t::setup;
+    destroy             = PscInject_t::destroy;
     run                 = Inject_t::run;
   }
 } psc_inject_ops_single;
@@ -23,10 +25,12 @@ struct psc_inject_ops_single : psc_inject_ops {
 
 struct psc_inject_ops_double : psc_inject_ops {
   using Inject_t = Inject_<MparticlesDouble, MfieldsC>;
+  using PscInject_t = PscInjectWrapper<Inject_t>;
   psc_inject_ops_double() {
     name                = "double";
     size                = sizeof(Inject_t);
-    setup               = Inject_t::setup;
+    setup               = PscInject_t::setup;
+    destroy             = PscInject_t::destroy;
     run                 = Inject_t::run;
   }
 } psc_inject_ops_double;

@@ -26,16 +26,9 @@ struct Inject_ : InjectBase
   using mfields_t = PscMfields<Mfields>;
   
   // ----------------------------------------------------------------------
-  // setup
+  // ctor
   
-  static void setup(struct psc_inject *_inject)
-  {
-    PscInject<Self> inject(_inject);
-    inject->_setup(psc_inject_comm(_inject));
-    psc_inject_setup_super(_inject);
-  }
-  
-  void _setup(MPI_Comm comm)
+  Inject_(MPI_Comm comm)
   {
     // it looks like n_1st_sub takes "sub" particles, but makes
     // moment fields of type "c", so let's use those "c" fields.
