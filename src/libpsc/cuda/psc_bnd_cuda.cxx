@@ -24,7 +24,7 @@ struct BndCuda : BndBase {
   // ----------------------------------------------------------------------
   // ctor
 
-  BndCuda(mrc_domain *domain, int ibn[3])
+  BndCuda(const Grid_t& grid, mrc_domain *domain, int ibn[3])
   {
     ddc_ = mrc_domain_create_ddc(domain);
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);
@@ -32,6 +32,36 @@ struct BndCuda : BndBase {
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 6);
     mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(fields_cuda_real_t));
     mrc_ddc_setup(ddc_);
+
+    struct cuda_mfields_bnd_params prm;
+
+    prm.n_patches = grid.n_patches();
+    assert(prm.n_patches > 0);
+    // FIXME, it'd be nicer if the interface was ldims / ibn based
+    for (int d = 0; d < 3; d++) {
+      prm.ib[d] = -ibn[d];
+      prm.im[d] = grid.ldims[d] + 2 * ibn[d];
+    }
+    
+    struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
+    struct mrc_ddc_rank_info *ri = patt2->ri;
+    
+    prm.n_recv_entries = ri[multi->mpi_rank].n_recv_entries;
+    prm.recv_entry = (struct cuda_mfields_bnd_entry *) calloc(prm.n_recv_entries, sizeof(*prm.recv_entry));
+    
+    for (int i = 0; i < prm.n_recv_entries; i++) {
+      struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+      prm.recv_entry[i].patch     = re->patch;
+      prm.recv_entry[i].nei_patch = re->nei_patch;
+      prm.recv_entry[i].dir1      = re->dir1;
+      //mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
+    }
+    
+    cbnd = cuda_mfields_bnd_create();
+    cuda_mfields_bnd_ctor(cbnd, &prm);
+    
+    free(prm.recv_entry);
   }
 
   // ----------------------------------------------------------------------
@@ -123,48 +153,6 @@ psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], vo
       }
     }
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_setup
-
-static void
-psc_bnd_cuda_setup(struct psc_bnd *_bnd)
-{
-  PscBnd<BndCuda> bnd(_bnd);
-
-  psc_bnd_setup_super(_bnd); // this calls back ::create_ddc() to set up ::ddc
-
-  struct cuda_mfields_bnd_params prm;
-
-  struct psc *psc = _bnd->psc;
-  prm.n_patches = psc->n_patches();
-  assert(prm.n_patches > 0);
-  // FIXME, it'd be nicer if the interface was ldims / ibn based
-  for (int d = 0; d < 3; d++) {
-    prm.ib[d] = -psc->ibn[d];
-    prm.im[d] = psc->grid().ldims[d] + 2 * psc->ibn[d];
-  }
-  
-  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc_);
-  struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
-  struct mrc_ddc_rank_info *ri = patt2->ri;
-    
-  prm.n_recv_entries = ri[multi->mpi_rank].n_recv_entries;
-  prm.recv_entry = (struct cuda_mfields_bnd_entry *) calloc(prm.n_recv_entries, sizeof(*prm.recv_entry));
-
-  for (int i = 0; i < prm.n_recv_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-    prm.recv_entry[i].patch     = re->patch;
-    prm.recv_entry[i].nei_patch = re->nei_patch;
-    prm.recv_entry[i].dir1      = re->dir1;
-    //mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
-  }
-
-  bnd->cbnd = cuda_mfields_bnd_create();
-  cuda_mfields_bnd_ctor(bnd->cbnd, &prm);
-
-  free(prm.recv_entry);
 }
 
 // ----------------------------------------------------------------------
@@ -282,7 +270,7 @@ struct psc_bnd_ops_cuda : psc_bnd_ops {
     name                    = "cuda";
     size                    = PscBnd_t::size;
     reset                   = PscBnd_t::reset;
-    setup                   = psc_bnd_cuda_setup;
+    setup                   = PscBnd_t::setup;
     destroy                 = psc_bnd_cuda_destroy;
     add_ghosts              = psc_bnd_cuda_add_ghosts;
     fill_ghosts             = psc_bnd_cuda_fill_ghosts;

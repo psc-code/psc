@@ -99,7 +99,7 @@ public:
   static void setup(psc_bnd* _bnd)
   {
     PscBnd<Bnd> bnd(_bnd);
-    new(bnd.sub()) Bnd(_bnd->psc->mrc_domain, _bnd->psc->ibn);
+    new(bnd.sub()) Bnd(_bnd->psc->grid(), _bnd->psc->mrc_domain, _bnd->psc->ibn);
   }
 
   static void destroy(psc_bnd* _bnd)

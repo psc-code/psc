@@ -17,7 +17,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Bnd_(mrc_domain* domain, int ibn[3])
+  Bnd_(const Grid_t& grid, mrc_domain* domain, int ibn[3])
   {
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
@@ -56,7 +56,7 @@ struct Bnd_ : BndBase
   void reset()
   {
     mrc_ddc_destroy(ddc_);
-    new(this) Bnd_(ppsc->mrc_domain, ppsc->ibn);
+    new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain, ppsc->ibn);
   }
   
   // ----------------------------------------------------------------------
