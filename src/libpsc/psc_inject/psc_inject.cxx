@@ -20,7 +20,6 @@ _psc_inject_setup(struct psc_inject *_inject)
 
   psc_inject_setup_member_objs(_inject);
   
-  inject->mflds_n = psc_output_fields_item_create_mfields(_inject->item_n);
   psc_mfields_set_name(inject->mflds_n, "mflds_n");
   psc_mfields_list_add(&psc_mfields_base_list, &inject->mflds_n);
 }

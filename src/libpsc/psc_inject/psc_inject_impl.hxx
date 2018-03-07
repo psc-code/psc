@@ -28,7 +28,13 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // create
   
-  static void create(struct psc_inject *inject)
+  static void create(struct psc_inject *_inject)
+  {
+    PscInject<Self> inject(_inject);
+    inject->_create(_inject);
+  }
+  
+  void _create(struct psc_inject *inject)
   {
     // it looks like n_1st_sub takes "sub" particles, but makes
     // moment fields of type "c", so let's use those "c" fields.
@@ -37,10 +43,25 @@ struct Inject_ : InjectBase
     psc_bnd_set_psc(inject->item_n_bnd, ppsc);
 
     auto name = std::string("n_1st_") + mparticles_traits<mparticles_t>::name;
-    psc_output_fields_item_set_type(inject->item_n, name.c_str());
-    psc_output_fields_item_set_psc_bnd(inject->item_n, inject->item_n_bnd);
+    item_n = psc_output_fields_item_create(psc_inject_comm(inject));
+    psc_output_fields_item_set_type(item_n, name.c_str());
+    psc_output_fields_item_set_psc_bnd(item_n, inject->item_n_bnd);
   }
 
+  static void setup(struct psc_inject *_inject)
+  {
+    PscInject<Self> inject(_inject);
+    inject->_setup(_inject);
+  }
+  
+  void _setup(struct psc_inject *inject)
+  {
+    mflds_n = psc_output_fields_item_create_mfields(item_n);
+    psc_output_fields_item_setup(item_n);
+
+    psc_inject_setup_super(inject);
+  }
+  
   // ----------------------------------------------------------------------
   // get_n_in_cell
   //
@@ -140,7 +161,7 @@ struct Inject_ : InjectBase
       auto bnd = PscBndBase(inject->item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, mflds_n);
+    psc_output_fields_item_run(item_n, mflds_base, mprts_base, mflds_n);
 
     int kind_n = inject->kind_n;
   

@@ -18,6 +18,7 @@ struct InjectBase
   virtual void reset() = 0;
 
   struct psc_mfields *mflds_n;
+  struct psc_output_fields_item *item_n;
 };
 
 // ======================================================================

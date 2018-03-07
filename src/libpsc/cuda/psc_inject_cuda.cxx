@@ -26,14 +26,23 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // create
   
-  static void create(struct psc_inject *inject)
+  static void create(struct psc_inject *_inject)
+  {
+    PscInject<Self> inject(_inject);
+    inject->_create(_inject);
+  }
+  
+  void _create(struct psc_inject *inject)
   {
     psc_bnd_set_name(inject->item_n_bnd, "inject_item_n_bnd");
     psc_bnd_set_type(inject->item_n_bnd, "cuda");
     psc_bnd_set_psc(inject->item_n_bnd, ppsc);
-    
-    psc_output_fields_item_set_type(inject->item_n, "n_1st_cuda");
-    psc_output_fields_item_set_psc_bnd(inject->item_n, inject->item_n_bnd);
+
+    item_n = psc_output_fields_item_create(psc_inject_comm(inject));
+    psc_output_fields_item_set_type(item_n, "n_1st_cuda");
+    psc_output_fields_item_set_psc_bnd(item_n, inject->item_n_bnd);
+
+    psc_output_fields_item_setup(item_n);
   }
 
   // ----------------------------------------------------------------------
@@ -137,7 +146,7 @@ struct InjectCuda : InjectBase
       auto bnd = PscBndBase(inject->item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, mflds_n);
+    psc_output_fields_item_run(item_n, mflds_base, mprts_base, mflds_n);
 
     int kind_n = inject->kind_n;
   
