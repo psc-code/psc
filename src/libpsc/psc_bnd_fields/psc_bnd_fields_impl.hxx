@@ -633,5 +633,17 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  
 };
+
+// ======================================================================
+// BndFieldsNone
+
+// FIXME, this is mostly useful at most for testing and maybe should go away
+
+struct BndFieldsNone : BndFieldsBase
+{
+  void fill_ghosts_E(PscMfieldsBase mflds_base) override {};
+  void fill_ghosts_H(PscMfieldsBase mflds_base) override {};
+  void add_ghosts_J(PscMfieldsBase mflds_base) override {};
+};
+

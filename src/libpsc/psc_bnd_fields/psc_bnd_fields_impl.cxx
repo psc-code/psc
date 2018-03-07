@@ -33,3 +33,16 @@ struct psc_bnd_fields_ops_single : psc_bnd_fields_ops {
     destroy               = PscBndFields_t::destroy;
   }
 } psc_bnd_fields_single_ops;
+
+// ======================================================================
+// psc_bnd_fields: subclass "none"
+
+struct psc_bnd_fields_ops_none : psc_bnd_fields_ops {
+  using PscBndFields_t = PscBndFieldsWrapper<BndFieldsNone>;
+  psc_bnd_fields_ops_none() {
+    name                  = "none";
+    size                  = PscBndFields_t::size;
+    setup                 = PscBndFields_t::setup;
+    destroy               = PscBndFields_t::destroy;
+  }
+} psc_bnd_fields_none_ops;

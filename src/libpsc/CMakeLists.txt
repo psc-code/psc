@@ -45,7 +45,6 @@ add_library(psc
 
   psc_bnd_fields/psc_bnd_fields.cxx
   psc_bnd_fields/psc_bnd_fields_impl.cxx
-  psc_bnd_fields/psc_bnd_fields_none.cxx
 
   psc_bnd_particles/psc_bnd_particles.cxx
   psc_bnd_particles/psc_bnd_particles_impl.cxx
