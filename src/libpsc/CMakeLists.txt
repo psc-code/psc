@@ -93,8 +93,7 @@ add_library(psc
   psc_heating/psc_heating_spot.cxx
 
   psc_inject/psc_inject.cxx
-  psc_inject/psc_inject_single.cxx
-  psc_inject/psc_inject_double.cxx
+  psc_inject/psc_inject_impl.cxx
   psc_inject/psc_target.cxx
   )
 target_include_directories(psc PUBLIC ../include)
