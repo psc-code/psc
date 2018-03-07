@@ -7,7 +7,7 @@
 #include <mrc_ddc.h>
 
 template<typename MF>
-struct psc_bnd_fld_ops : BndBase
+struct Bnd_ : BndBase
 {
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;

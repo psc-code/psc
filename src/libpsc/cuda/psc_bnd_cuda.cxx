@@ -3,11 +3,12 @@
 #include "psc_fields_cuda.h"
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
+#include "bnd.hxx"
 
 #include <mrc_ddc_private.h>
 #include <mrc_profile.h>
 
-struct psc_bnd_cuda {
+struct BndCuda : BndBase {
   struct cuda_mfields_bnd *cbnd;
 };
 
@@ -19,8 +20,9 @@ struct psc_bnd_cuda {
 void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_bnd *bnd = (struct psc_bnd *) _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
+  struct psc_bnd *_bnd = (struct psc_bnd *) _ctx;
+  PscBnd<BndCuda> bnd(_bnd);
+  struct cuda_mfields_bnd *cbnd = bnd->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
 
@@ -40,8 +42,9 @@ psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_bnd *bnd = (struct psc_bnd *) _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
+  struct psc_bnd *_bnd = (struct psc_bnd *) _ctx;
+  PscBnd<BndCuda> bnd(_bnd);
+  struct cuda_mfields_bnd *cbnd = bnd->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
 
@@ -61,8 +64,9 @@ psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], voi
 void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_bnd *bnd = (struct psc_bnd *) _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
+  struct psc_bnd *_bnd = (struct psc_bnd *) _ctx;
+  PscBnd<BndCuda> bnd(_bnd);
+  struct cuda_mfields_bnd *cbnd = bnd->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
 
@@ -105,15 +109,15 @@ psc_bnd_cuda_create_ddc(struct psc_bnd *bnd)
 // psc_bnd_cuda_setup
 
 static void
-psc_bnd_cuda_setup(struct psc_bnd *bnd)
+psc_bnd_cuda_setup(struct psc_bnd *_bnd)
 {
-  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
+  PscBnd<BndCuda> bnd(_bnd);
 
-  psc_bnd_setup_super(bnd); // this calls back ::create_ddc() to set up ::ddc
+  psc_bnd_setup_super(_bnd); // this calls back ::create_ddc() to set up ::ddc
 
   struct cuda_mfields_bnd_params prm;
 
-  struct psc *psc = bnd->psc;
+  struct psc *psc = _bnd->psc;
   prm.n_patches = psc->n_patches();
   assert(prm.n_patches > 0);
   // FIXME, it'd be nicer if the interface was ldims / ibn based
@@ -122,7 +126,7 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
     prm.im[d] = psc->grid().ldims[d] + 2 * psc->ibn[d];
   }
   
-  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
+  struct mrc_ddc_multi *multi = mrc_ddc_multi(_bnd->ddc);
   struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
   struct mrc_ddc_rank_info *ri = patt2->ri;
     
@@ -137,8 +141,8 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
     //mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
   }
 
-  sub->cbnd = cuda_mfields_bnd_create();
-  cuda_mfields_bnd_ctor(sub->cbnd, &prm);
+  bnd->cbnd = cuda_mfields_bnd_create();
+  cuda_mfields_bnd_ctor(bnd->cbnd, &prm);
 
   free(prm.recv_entry);
 }
@@ -147,25 +151,25 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
 // psc_bnd_cuda_destroy
 
 static void
-psc_bnd_cuda_destroy(struct psc_bnd *bnd)
+psc_bnd_cuda_destroy(struct psc_bnd *_bnd)
 {
-  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
+  PscBnd<BndCuda> bnd(_bnd);
 
-  cuda_mfields_bnd_dtor(sub->cbnd);
-  cuda_mfields_bnd_destroy(sub->cbnd);
+  cuda_mfields_bnd_dtor(bnd->cbnd);
+  cuda_mfields_bnd_destroy(bnd->cbnd);
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_add_ghosts
 
 void
-psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
+psc_bnd_cuda_add_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
+  PscBnd<BndCuda> bnd(_bnd);
   PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
 
   int size;
-  MPI_Comm_size(psc_bnd_comm(bnd), &size);
+  MPI_Comm_size(psc_bnd_comm(_bnd), &size);
   if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -179,9 +183,9 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
     // z-periodic single patch
     cuda_add_ghosts_periodic_z(mf->cmflds, 0, mb, me);
   } else {
-    cuda_mfields_bnd_from_device_inside(cbnd, mf->cmflds, mb, me);
-    mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, bnd);
-    cuda_mfields_bnd_to_device_inside(cbnd, mf->cmflds, mb, me);
+    cuda_mfields_bnd_from_device_inside(bnd->cbnd, mf->cmflds, mb, me);
+    mrc_ddc_add_ghosts(_bnd->ddc, 0, me - mb, _bnd);
+    cuda_mfields_bnd_to_device_inside(bnd->cbnd, mf->cmflds, mb, me);
   }
 
   mf.put_as(mflds_base, mb, me);
@@ -191,9 +195,9 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
 // psc_bnd_cuda_fill_ghosts
 
 void
-psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
+psc_bnd_cuda_fill_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
+  PscBnd<BndCuda> bnd(_bnd);
 
   static int pr1, pr2, pr3, pr4, pr5;
   if (!pr1) {
@@ -207,7 +211,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
   PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(mb, me);
 
   int size;
-  MPI_Comm_size(psc_bnd_comm(bnd), &size);
+  MPI_Comm_size(psc_bnd_comm(_bnd), &size);
 
   if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
@@ -223,26 +227,26 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     cuda_fill_ghosts_periodic_z(mf->cmflds, 0, mb, me);
   } else {
     prof_start(pr1);
-    cuda_mfields_bnd_from_device_inside(cbnd, mf->cmflds, mb, me); // FIXME _only
+    cuda_mfields_bnd_from_device_inside(bnd->cbnd, mf->cmflds, mb, me); // FIXME _only
     prof_stop(pr1);
 
     prof_start(pr2);
-    mrc_ddc_fill_ghosts_begin(bnd->ddc, 0, me - mb, bnd);
+    mrc_ddc_fill_ghosts_begin(_bnd->ddc, 0, me - mb, _bnd);
     prof_stop(pr2);
     prof_start(pr3);
 #if 0
     mrc_ddc_fill_ghosts_local(bnd->ddc, 0, me - mb, mflds);
 #endif
 #if 1
-    cuda_mfields_bnd_fill_ghosts_local(cbnd, mf->cmflds, mb, me);
+    cuda_mfields_bnd_fill_ghosts_local(bnd->cbnd, mf->cmflds, mb, me);
 #endif
     prof_stop(pr3);
     prof_start(pr4);
-    mrc_ddc_fill_ghosts_end(bnd->ddc, 0, me - mb, mf.mflds());
+    mrc_ddc_fill_ghosts_end(_bnd->ddc, 0, me - mb, mf.mflds());
     prof_stop(pr4);
 
     prof_start(pr5);
-    cuda_mfields_bnd_to_device_outside(cbnd, mf->cmflds, mb, me);
+    cuda_mfields_bnd_to_device_outside(bnd->cbnd, mf->cmflds, mb, me);
     prof_stop(pr5);
   }
 
@@ -255,7 +259,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
 struct psc_bnd_ops_cuda : psc_bnd_ops {
   psc_bnd_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(struct psc_bnd_cuda);
+    size                    = sizeof(BndCuda);
     setup                   = psc_bnd_cuda_setup;
     destroy                 = psc_bnd_cuda_destroy;
     create_ddc              = psc_bnd_cuda_create_ddc;
