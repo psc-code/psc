@@ -16,9 +16,6 @@ struct psc_inject {
   int tau; // in steps
   int kind_n; // the number of particles to inject are based on this kind's density
   struct psc_target *target;
-
-  // state
-  int balance_generation_cnt;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_inject, x)

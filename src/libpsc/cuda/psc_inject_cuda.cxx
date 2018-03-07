@@ -134,8 +134,8 @@ struct InjectCuda : InjectBase
       (inject->every_step * psc->dt / inject->tau) /
       (1. + inject->every_step * psc->dt / inject->tau);
 
-    if (psc_balance_generation_cnt != inject->balance_generation_cnt) {
-      inject->balance_generation_cnt = psc_balance_generation_cnt;
+    if (psc_balance_generation_cnt != balance_generation_cnt) {
+      balance_generation_cnt = psc_balance_generation_cnt;
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
