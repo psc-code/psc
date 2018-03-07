@@ -16,7 +16,6 @@ struct psc_inject_ops_single : psc_inject_ops {
     size                = sizeof(Inject_t);
     setup               = PscInject_t::setup;
     destroy             = PscInject_t::destroy;
-    run                 = Inject_t::run;
   }
 } psc_inject_ops_single;
 
@@ -31,7 +30,6 @@ struct psc_inject_ops_double : psc_inject_ops {
     size                = sizeof(Inject_t);
     setup               = PscInject_t::setup;
     destroy             = PscInject_t::destroy;
-    run                 = Inject_t::run;
   }
 } psc_inject_ops_double;
 

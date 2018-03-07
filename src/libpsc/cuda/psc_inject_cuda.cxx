@@ -121,14 +121,7 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // run
 
-  static void run(struct psc_inject *_inject, struct psc_mparticles *mprts_base,
-		  struct psc_mfields *mflds_base)
-  {
-    PscInject<Self> inject(_inject);
-    inject->run(_inject, mprts_base, mflds_base);
-  }
-
-  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
     struct psc *psc = ppsc;
 
@@ -242,7 +235,6 @@ struct psc_inject_ops_cuda : psc_inject_ops {
     name                = "cuda";
     setup               = PscInject_t::setup;
     destroy             = PscInject_t::destroy;
-    run                 = Inject_t::run;
   }
 } psc_inject_ops_cuda;
 

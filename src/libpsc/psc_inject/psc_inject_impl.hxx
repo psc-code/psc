@@ -128,14 +128,7 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // run
 
-  static void run(struct psc_inject *_inject, struct psc_mparticles *mprts_base,
-		  struct psc_mfields *mflds_base)
-  {
-    PscInject<Self> inject(_inject);
-    inject->run(_inject, mprts_base, mflds_base);
-  }
-
-  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
     struct psc *psc = ppsc;
     

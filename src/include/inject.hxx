@@ -18,6 +18,8 @@ struct InjectBase
       every_step(every_step), tau(tau), kind_n(kind_n),
       target(target)
   {}
+
+  virtual void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) = 0;
   
   // param
   const bool do_inject; // whether to inject particles at all
@@ -60,11 +62,8 @@ struct PscInject
       return;
     }
     
-    struct psc_inject_ops *ops = psc_inject_ops(inject_);
-    assert(ops && ops->run);
-    
     prof_start(pr);
-    ops->run(inject_, mprts.mprts(), mflds.mflds());
+    sub()->run(mprts, mflds);
     prof_stop(pr);
   }
 

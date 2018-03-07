@@ -32,11 +32,7 @@ static struct param psc_inject_descr[] _mrc_unused = {
 
 struct psc_inject_ops {
   MRC_SUBCLASS_OPS(struct psc_inject);
-  void (*run)(struct psc_inject *inject, struct psc_mparticles *mprts_base,
-   	      struct psc_mfields *mflds_base);
 };
-
-#define psc_inject_ops(inject) ((struct psc_inject_ops *)((inject)->obj.ops))
 
 #endif
 
