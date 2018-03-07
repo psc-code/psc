@@ -486,6 +486,7 @@ main(int argc, char **argv)
 #include "psc_push_fields_impl.hxx"
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+#include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
 
 using Mparticles_t = MparticlesDouble;
 using Mfields_t = MfieldsC;
@@ -495,6 +496,7 @@ using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
 using PushFields_t = PushFields<PscMfieldsC>;
 using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
 using Bnd_t = Bnd_<MfieldsC>;
+using BndFields_t = BndFieldsNone;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -526,6 +528,7 @@ static void psc_flatfoil_step(struct psc *psc)
   PscBndBase bnd(psc->bnd);
   auto& bnd_ = dynamic_cast<Bnd_t&>(*bnd.sub());
   PscBndFieldsBase bndf(pushf.pushf()->bnd_fields); // !!!
+  auto& bndf_ = dynamic_cast<BndFields_t&>(*bndf.sub());
   
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -552,18 +555,18 @@ static void psc_flatfoil_step(struct psc *psc)
   // field propagation E^{n+1/2} -> E^{n+3/2}
 
   // fill ghosts for H
-  bndf.fill_ghosts_H(mflds);
+  bndf_.fill_ghosts_H(mflds);
   bnd.fill_ghosts(mflds, HX, HX + 3);
   
   // add and fill ghost for J
-  bndf.add_ghosts_J(mflds);
+  bndf_.add_ghosts_J(mflds);
   bnd.add_ghosts(mflds, JXI, JXI + 3);
   bnd.fill_ghosts(mflds, JXI, JXI + 3);
   
   // push E
   pushf_.push_E(mflds.mflds(), 1.);
   
-  bndf.fill_ghosts_E(mflds);
+  bndf_.fill_ghosts_E(mflds);
   if (pushf.pushf()->variant == 0) {
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
   }
@@ -573,14 +576,14 @@ static void psc_flatfoil_step(struct psc *psc)
 
   //pushf.advance_a(mflds);
   if (pushf.pushf()->variant == 0) {
-    bndf.fill_ghosts_E(mflds);
+    bndf_.fill_ghosts_E(mflds);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
   }
   
   // push H
   pushf_.push_H(mflds.mflds(), .5);
   
-  bndf.fill_ghosts_H(mflds);
+  bndf_.fill_ghosts_H(mflds);
   if (pushf.pushf()->variant == 0) {
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
   }
