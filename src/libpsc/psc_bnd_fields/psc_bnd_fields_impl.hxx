@@ -15,6 +15,7 @@ using dim = dim_xz; // FIXME
 template<typename MF>
 struct BndFields_ : BndFieldsBase
 {
+  using Self = BndFields_<MF>;
   using Mfields = MF;
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
@@ -24,10 +25,16 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  static void fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  static void fill_ghosts_E(struct psc_bnd_fields *_bndf, struct psc_mfields *mflds_base)
+  {
+    PscBndFields<Self> bndf(_bndf);
+    bndf->fill_ghosts_E(PscMfieldsBase(mflds_base));
+  }
+  
+  void fill_ghosts_E(PscMfieldsBase mflds_base)
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
-    mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
+    mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
   
     for (int p = 0; p < mf->n_patches(); p++) {
       // lo
@@ -37,7 +44,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_E_lo(bnd, mf[p], p, d);
+	    conducting_wall_E_lo(mf[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
 	    break;
@@ -54,7 +61,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_E_hi(bnd, mf[p], p, d);
+	    conducting_wall_E_hi(mf[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
 	    break;
@@ -71,10 +78,16 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  static void fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  static void fill_ghosts_H(struct psc_bnd_fields *_bndf, struct psc_mfields *mflds_base)
+  {
+    PscBndFields<Self> bndf(_bndf);
+    bndf->fill_ghosts_H(PscMfieldsBase(mflds_base));
+  }
+  
+  void fill_ghosts_H(PscMfieldsBase mflds_base)
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
-    mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
+    mfields_t mf = mflds_base.get_as<mfields_t>(HX, HX + 3);
   
     for (int p = 0; p < mf->n_patches(); p++) {
       // lo
@@ -84,10 +97,10 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_H_lo(bnd, mf[p], p, d);
+	    conducting_wall_H_lo(mf[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
-	    open_H_lo(bnd, mf[p], p, d);
+	    open_H_lo(mf[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -101,10 +114,10 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_H_hi(bnd, mf[p], p, d);
+	    conducting_wall_H_hi(mf[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
-	    open_H_hi(bnd, mf[p], p, d);
+	    open_H_hi(mf[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -118,10 +131,16 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  static void add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
+  static void add_ghosts_J(struct psc_bnd_fields *_bndf, struct psc_mfields *mflds_base)
+  {
+    PscBndFields<Self> bndf(_bndf);
+    bndf->add_ghosts_J(PscMfieldsBase(mflds_base));
+  }
+  
+  void add_ghosts_J(PscMfieldsBase mflds_base)
   {
     // FIXME/OPT, if we don't need to do anything, we don't need to get
-    mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
+    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
     
     for (int p = 0; p < mf->n_patches(); p++) {
       // lo
@@ -132,7 +151,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_OPEN:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_J_lo(bnd, mf[p], p, d);
+	    conducting_wall_J_lo(mf[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -147,7 +166,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_OPEN:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_J_hi(bnd, mf[p], p, d);
+	    conducting_wall_J_hi(mf[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -164,8 +183,7 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
-  static void
-  conducting_wall_E_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void conducting_wall_E_lo(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -234,8 +252,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void
-  conducting_wall_E_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void conducting_wall_E_hi(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -302,8 +319,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void
-  conducting_wall_H_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void conducting_wall_H_lo(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -363,8 +379,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void
-  conducting_wall_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void conducting_wall_H_hi(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -426,8 +441,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void
-  conducting_wall_J_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void conducting_wall_J_lo(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -462,8 +476,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void
-  conducting_wall_J_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void conducting_wall_J_hi(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -505,8 +518,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // open_H_lo
 
-  static void
-  open_H_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  void open_H_lo(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
@@ -573,7 +585,7 @@ struct BndFields_ : BndFieldsBase
   }
 
   static void
-  open_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
+  open_H_hi(fields_t flds, int p, int d)
   {
     Fields F(flds);
     const int *ldims = ppsc->grid().ldims;
