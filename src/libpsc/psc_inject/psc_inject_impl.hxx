@@ -28,7 +28,8 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // ctor
   
-  Inject_(MPI_Comm comm)
+  Inject_(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n)
+    : InjectBase(do_inject, every_step, tau, kind_n)
   {
     // it looks like n_1st_sub takes "sub" particles, but makes
     // moment fields of type "c", so let's use those "c" fields.
