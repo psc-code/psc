@@ -132,11 +132,10 @@ struct Inject_ : InjectBase
 		  struct psc_mfields *mflds_base)
   {
     PscInject<Self> inject(_inject);
-    inject->_run(_inject, mprts_base, mflds_base);
+    inject->run(_inject, mprts_base, mflds_base);
   }
 
-  void _run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
-	    struct psc_mfields *mflds_base)
+  void run(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
   {
     struct psc *psc = ppsc;
     
@@ -171,7 +170,7 @@ struct Inject_ : InjectBase
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    if (!psc_target_is_inside(inject->target, xx)) {
+	    if (!psc_target_is_inside(target, xx)) {
 	      continue;
 	    }
 
@@ -187,7 +186,7 @@ struct Inject_ : InjectBase
 		npt.T[1] = psc->kinds[kind].T;
 		npt.T[2] = psc->kinds[kind].T;
 	      };
-	      psc_target_init_npt(inject->target, kind, xx, &npt);
+	      psc_target_init_npt(target, kind, xx, &npt);
 	    
 	      int n_in_cell;
 	      if (kind != psc->prm.neutralizing_population) {
