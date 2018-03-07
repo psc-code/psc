@@ -19,24 +19,6 @@ struct BndVpic : BndBase
 };
 
 // ----------------------------------------------------------------------
-// psc_bnd_vpic_fill_ghosts
-
-static void
-psc_bnd_vpic_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds,
-			 int mb, int me)
-{  
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_vpic_add_ghosts
-
-static void
-psc_bnd_vpic_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds,
-			int mb, int me)
-{  
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd: subclass "vpic"
 
 struct psc_bnd_ops_vpic : psc_bnd_ops {
@@ -44,11 +26,8 @@ struct psc_bnd_ops_vpic : psc_bnd_ops {
   psc_bnd_ops_vpic() {
     name                    = "vpic";
     size                    = PscBnd_t::size;
-    reset                   = PscBnd_t::reset;
     setup                   = PscBnd_t::setup;
     destroy                 = PscBnd_t::destroy;
-    add_ghosts              = PscBnd_t::add_ghosts;
-    fill_ghosts             = PscBnd_t::fill_ghosts;
   }
 } psc_bnd_vpic_ops;
 

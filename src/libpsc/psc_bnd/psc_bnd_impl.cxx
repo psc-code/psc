@@ -16,9 +16,6 @@ struct psc_bnd_ops_c : psc_bnd_ops {
     size                    = PscBnd_t::size;
     setup                   = PscBnd_t::setup;
     destroy                 = PscBnd_t::destroy;
-    reset                   = PscBnd_t::reset;
-    add_ghosts              = PscBnd_t::add_ghosts;
-    fill_ghosts             = PscBnd_t::fill_ghosts;
   }
 } psc_bnd_c_ops;
 
@@ -34,9 +31,6 @@ struct psc_bnd_ops_single : psc_bnd_ops {
     size                    = PscBnd_t::size;
     setup                   = PscBnd_t::setup;
     destroy                 = PscBnd_t::destroy;
-    reset                   = PscBnd_t::reset;
-    add_ghosts              = PscBnd_t::add_ghosts;
-    fill_ghosts             = PscBnd_t::fill_ghosts;
   }
 } psc_bnd_single_ops;
 

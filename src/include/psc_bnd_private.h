@@ -11,11 +11,6 @@ struct psc_bnd {
 
 struct psc_bnd_ops {
   MRC_SUBCLASS_OPS(struct psc_bnd);
-
-  // for field exchange
-  void (*add_ghosts)(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me);
-  void (*fill_ghosts)(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me);
-  void (*reset)(struct psc_bnd *bnd);
 };
 
 // ======================================================================

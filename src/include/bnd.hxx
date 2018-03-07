@@ -42,9 +42,7 @@ struct PscBnd
     psc_stats_start(st_time_comm);
     prof_start(pr);
     
-    struct psc_bnd_ops *ops = psc_bnd_ops(bnd_);
-    assert(ops->fill_ghosts);
-    ops->fill_ghosts(bnd_, mflds.mflds(), mb, me);
+    sub()->fill_ghosts(mflds.mflds(), mb, me);
 
     prof_stop(pr);
     psc_stats_stop(st_time_comm);
@@ -60,9 +58,7 @@ struct PscBnd
     psc_stats_start(st_time_comm);
     prof_start(pr);
     
-    struct psc_bnd_ops *ops = psc_bnd_ops(bnd_);
-    assert(ops->add_ghosts);
-    ops->add_ghosts(bnd_, mflds.mflds(), mb, me);
+    sub()->add_ghosts(mflds.mflds(), mb, me);
     
     prof_stop(pr);
     psc_stats_stop(st_time_comm);
@@ -70,9 +66,7 @@ struct PscBnd
 
   void reset()
   {
-    struct psc_bnd_ops *ops = psc_bnd_ops(bnd_);
-    assert(ops->reset);
-    ops->reset(bnd_);
+    sub()->reset();
   }
   
   sub_t* sub() { return mrc_to_subobj(bnd_, sub_t); }
@@ -103,24 +97,6 @@ public:
   {
     PscBnd<Bnd> bnd(_bnd);
     bnd->~Bnd();
-  }
-
-  static void reset(psc_bnd* _bnd)
-  {
-    PscBnd<Bnd> bnd(_bnd);
-    bnd->reset();
-  }
-
-  static void add_ghosts(psc_bnd* _bnd, psc_mfields* mflds, int mb, int me)
-  {
-    PscBnd<Bnd> bnd(_bnd);
-    bnd->add_ghosts(mflds, mb, me);
-  }
-
-  static void fill_ghosts(psc_bnd* _bnd, psc_mfields* mflds, int mb, int me)
-  {
-    PscBnd<Bnd> bnd(_bnd);
-    bnd->fill_ghosts(mflds, mb, me);
   }
 };
 

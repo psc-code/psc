@@ -253,11 +253,8 @@ struct psc_bnd_ops_cuda : psc_bnd_ops {
   psc_bnd_ops_cuda() {
     name                    = "cuda";
     size                    = PscBnd_t::size;
-    reset                   = PscBnd_t::reset;
     setup                   = PscBnd_t::setup;
     destroy                 = PscBnd_t::destroy;
-    add_ghosts              = PscBnd_t::add_ghosts;
-    fill_ghosts             = PscBnd_t::fill_ghosts;
   }
 } psc_bnd_cuda_ops;
 
