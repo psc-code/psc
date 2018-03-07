@@ -15,6 +15,12 @@ psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
   return push->bnd_fields;
 }
 
+static void
+_psc_push_fields_setup(struct psc_push_fields *push)
+{
+  psc_bnd_fields_setup(push->bnd_fields);
+}
+
 // ======================================================================
 // variant 0: default
 // 
@@ -92,6 +98,7 @@ struct mrc_class_psc_push_fields_ : mrc_class_psc_push_fields {
     size             = sizeof(struct psc_push_fields);
     param_descr      = psc_push_fields_descr;
     init             = psc_push_fields_init;
+    setup            = _psc_push_fields_setup;
   }
 } mrc_class_psc_push_fields;
 

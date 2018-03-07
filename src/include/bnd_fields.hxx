@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_bnd_fields_private.h"
+#include "fields3d.hxx"
 
 // ======================================================================
 // BndFieldsBase
@@ -30,26 +31,17 @@ struct PscBndFields
 
   void fill_ghosts_E(PscMfieldsBase mflds)
   {
-    struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bndf_);
-    if (ops->fill_ghosts_E) {
-      ops->fill_ghosts_E(bndf_, mflds.mflds());
-    }
+    sub()->fill_ghosts_E(mflds);
   }
 
   void fill_ghosts_H(PscMfieldsBase mflds)
   {
-    struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bndf_);
-    if (ops->fill_ghosts_H) {
-      ops->fill_ghosts_H(bndf_, mflds.mflds());
-    }
+    sub()->fill_ghosts_H(mflds);
   }
 
   void add_ghosts_J(PscMfieldsBase mflds)
   {
-    struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bndf_);
-    if (ops->add_ghosts_J) {
-      ops->add_ghosts_J(bndf_, mflds.mflds());
-    }
+    sub()->add_ghosts_J(mflds);
   }
 
   sub_t* sub() { return mrc_to_subobj(bndf_, sub_t); }
@@ -99,6 +91,5 @@ public:
     PscBndFields<BndFields> bndf(_bndf);
     bndf->add_ghosts_J(mflds_base);
   }
-  
 };
 

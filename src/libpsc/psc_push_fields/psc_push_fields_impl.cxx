@@ -14,6 +14,8 @@ static void psc_push_fields_sub_setup(struct psc_push_fields *push)
 {
   PscPushFields<PushFields_t> pushf(push);
   new(pushf.sub()) PushFields_t;
+
+  psc_push_fields_setup_super(push);
 }
 
 template<typename PushFields_t>
