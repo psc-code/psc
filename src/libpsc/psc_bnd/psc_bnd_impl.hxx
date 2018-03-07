@@ -53,27 +53,23 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
   
-  static void add_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base,
-			 int mb, int me)
+  void add_ghosts(struct psc_mfields *mflds_base, int mb, int me)
   {
-    PscBnd<Bnd_<MF>> bnd(_bnd);
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
-    mrc_ddc_add_ghosts(bnd->ddc_, mb, me, &mf);
+    mrc_ddc_add_ghosts(ddc_, mb, me, &mf);
     mf.put_as(mflds_base, mb, me);
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  static void fill_ghosts(struct psc_bnd *_bnd, struct psc_mfields *mflds_base,
-			  int mb, int me)
+  void fill_ghosts(struct psc_mfields *mflds_base, int mb, int me)
   {
-    PscBnd<Bnd_<MF>> bnd(_bnd);
     mfields_t mf = mflds_base->get_as<MF>(mb, me);
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_fill_ghosts(bnd->ddc_, mb, me, &mf);
+    mrc_ddc_fill_ghosts(ddc_, mb, me, &mf);
     mf.put_as(mflds_base, mb, me);
   }
 

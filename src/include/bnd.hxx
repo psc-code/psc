@@ -109,5 +109,17 @@ public:
     PscBnd<Bnd> bnd(_bnd);
     bnd->reset();
   }
+
+  static void add_ghosts(psc_bnd* _bnd, psc_mfields* mflds, int mb, int me)
+  {
+    PscBnd<Bnd> bnd(_bnd);
+    bnd->add_ghosts(mflds, mb, me);
+  }
+
+  static void fill_ghosts(psc_bnd* _bnd, psc_mfields* mflds, int mb, int me)
+  {
+    PscBnd<Bnd> bnd(_bnd);
+    bnd->fill_ghosts(mflds, mb, me);
+  }
 };
 
