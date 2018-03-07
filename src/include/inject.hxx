@@ -3,6 +3,8 @@
 
 #include "psc_inject_private.h"
 
+#include "particles.hxx"
+
 // ======================================================================
 // InjectBase
 
