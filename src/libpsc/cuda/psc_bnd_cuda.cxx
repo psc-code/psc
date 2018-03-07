@@ -69,6 +69,9 @@ struct BndCuda : BndBase {
 
   ~BndCuda()
   {
+    cuda_mfields_bnd_dtor(cbnd);
+    cuda_mfields_bnd_destroy(cbnd);
+
     mrc_ddc_destroy(ddc_);
   }
 
@@ -153,18 +156,6 @@ psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], vo
       }
     }
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_destroy
-
-static void
-psc_bnd_cuda_destroy(struct psc_bnd *_bnd)
-{
-  PscBnd<BndCuda> bnd(_bnd);
-
-  cuda_mfields_bnd_dtor(bnd->cbnd);
-  cuda_mfields_bnd_destroy(bnd->cbnd);
 }
 
 // ----------------------------------------------------------------------
@@ -271,7 +262,7 @@ struct psc_bnd_ops_cuda : psc_bnd_ops {
     size                    = PscBnd_t::size;
     reset                   = PscBnd_t::reset;
     setup                   = PscBnd_t::setup;
-    destroy                 = psc_bnd_cuda_destroy;
+    destroy                 = PscBnd_t::destroy;
     add_ghosts              = psc_bnd_cuda_add_ghosts;
     fill_ghosts             = psc_bnd_cuda_fill_ghosts;
   }
