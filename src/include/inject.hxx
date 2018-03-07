@@ -4,6 +4,9 @@
 #include "psc_inject_private.h"
 
 #include "particles.hxx"
+#include "fields3d.hxx"
+
+#include <mrc_profile.h>
 
 // ======================================================================
 // InjectBase
@@ -13,6 +16,8 @@ struct InjectBase
   virtual void fill_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
   virtual void add_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
   virtual void reset() = 0;
+
+  struct psc_mfields *mflds_n;
 };
 
 // ======================================================================
@@ -49,6 +54,9 @@ struct PscInject
     ops->run(inject_, mprts.mprts(), mflds.mflds());
     prof_stop(pr);
   }
+
+  sub_t* sub() { return mrc_to_subobj(inject_, sub_t); }
+  sub_t* operator->() { return sub(); }
 
 private:
   psc_inject* inject_;

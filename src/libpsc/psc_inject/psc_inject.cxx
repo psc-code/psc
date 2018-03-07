@@ -1,5 +1,6 @@
 
 #include "psc_inject_private.h"
+#include "inject.hxx"
 #include "fields.hxx"
 
 #include <mrc_profile.h>
@@ -12,13 +13,14 @@
 // _psc_inject_setup
 
 static void
-_psc_inject_setup(struct psc_inject *inject)
+_psc_inject_setup(struct psc_inject *_inject)
 {
+  PscInjectBase inject(_inject);
   // set up necessary bits for calculating / averaging density moment
 
-  psc_inject_setup_member_objs(inject);
-
-  inject->mflds_n = psc_output_fields_item_create_mfields(inject->item_n);
+  psc_inject_setup_member_objs(_inject);
+  
+  inject->mflds_n = psc_output_fields_item_create_mfields(_inject->item_n);
   psc_mfields_set_name(inject->mflds_n, "mflds_n");
   psc_mfields_list_add(&psc_mfields_base_list, &inject->mflds_n);
 }
@@ -27,8 +29,9 @@ _psc_inject_setup(struct psc_inject *inject)
 // _psc_inject_destroy
 
 static void
-_psc_inject_destroy(struct psc_inject *inject)
+_psc_inject_destroy(struct psc_inject *_inject)
 {
+  PscInjectBase inject(_inject);
   psc_mfields_destroy(inject->mflds_n);
 }
 

@@ -2,6 +2,7 @@
 #include <psc_inject_private.h>
 #include <psc_balance.h>
 
+#include <inject.hxx>
 #include <fields.hxx>
 #include <bnd.hxx>
 
@@ -12,8 +13,9 @@
 // Inject_
 
 template<typename MP, typename MF>
-struct Inject_
+struct Inject_ : InjectBase
 {
+  using Self = Inject_<MP, MF>;
   using Mfields = MF;
   using Mparticles = MP;
   using fields_t = typename Mfields::fields_t;
@@ -117,8 +119,15 @@ struct Inject_
   // ----------------------------------------------------------------------
   // run
 
-  static void run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
+  static void run(struct psc_inject *_inject, struct psc_mparticles *mprts_base,
 		  struct psc_mfields *mflds_base)
+  {
+    PscInject<Self> inject(_inject);
+    inject->_run(_inject, mprts_base, mflds_base);
+  }
+
+  void _run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
+	    struct psc_mfields *mflds_base)
   {
     struct psc *psc = ppsc;
     
@@ -131,12 +140,12 @@ struct Inject_
       auto bnd = PscBndBase(inject->item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, inject->mflds_n);
+    psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, mflds_n);
 
     int kind_n = inject->kind_n;
   
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    mfields_t mf_n = inject->mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
+    mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
     psc_foreach_patch(psc, p) {
       Fields N(mf_n[p]);
@@ -207,7 +216,7 @@ struct Inject_
     }
 
     mprts.put_as(mprts_base);
-    mf_n.put_as(inject->mflds_n, 0, 0);
+    mf_n.put_as(mflds_n, 0, 0);
   }
 
 };

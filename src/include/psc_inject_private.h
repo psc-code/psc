@@ -18,7 +18,6 @@ struct psc_inject {
   struct psc_target *target;
 
   // state
-  struct psc_mfields *mflds_n;
   struct psc_output_fields_item *item_n;
   struct psc_bnd *item_n_bnd;
   int balance_generation_cnt;

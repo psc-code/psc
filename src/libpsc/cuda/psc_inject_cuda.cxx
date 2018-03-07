@@ -17,8 +17,9 @@ void psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_m
 // ======================================================================
 // InjectCuda
 
-struct InjectCuda
+struct InjectCuda : InjectBase
 {
+  using Self = InjectCuda;
   using fields_t = mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
 
@@ -115,8 +116,15 @@ struct InjectCuda
   // ----------------------------------------------------------------------
   // run
 
-  static void run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
+  static void run(struct psc_inject *_inject, struct psc_mparticles *mprts_base,
 		  struct psc_mfields *mflds_base)
+  {
+    PscInject<Self> inject(_inject);
+    inject->_run(_inject, mprts_base, mflds_base);
+  }
+
+  void _run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
+	    struct psc_mfields *mflds_base)
   {
     struct psc *psc = ppsc;
 
@@ -129,11 +137,11 @@ struct InjectCuda
       auto bnd = PscBndBase(inject->item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, inject->mflds_n);
+    psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, mflds_n);
 
     int kind_n = inject->kind_n;
   
-    mfields_t mf_n = inject->mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
+    mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;
@@ -216,7 +224,7 @@ struct InjectCuda
       }
     }
 
-    mf_n.put_as(inject->mflds_n, 0, 0);
+    mf_n.put_as(mflds_n, 0, 0);
 
     psc_mparticles_cuda_inject(mprts_base, buf, buf_n_by_patch);
   }
