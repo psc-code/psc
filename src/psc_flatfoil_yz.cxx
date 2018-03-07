@@ -556,12 +556,12 @@ static void psc_flatfoil_step(struct psc *psc)
 
   // fill ghosts for H
   bndf_.fill_ghosts_H(mflds);
-  bnd.fill_ghosts(mflds, HX, HX + 3);
+  bnd_.fill_ghosts(mflds, HX, HX + 3);
   
   // add and fill ghost for J
   bndf_.add_ghosts_J(mflds);
-  bnd.add_ghosts(mflds, JXI, JXI + 3);
-  bnd.fill_ghosts(mflds, JXI, JXI + 3);
+  bnd_.add_ghosts(mflds, JXI, JXI + 3);
+  bnd_.fill_ghosts(mflds, JXI, JXI + 3);
   
   // push E
   pushf_.push_E(mflds.mflds(), 1.);
