@@ -29,17 +29,18 @@ struct InjectCuda : InjectBase
   static void setup(struct psc_inject *_inject)
   {
     PscInject<Self> inject(_inject);
-    inject->_setup(_inject);
+    inject->_setup(psc_inject_comm(_inject));
+    psc_inject_setup_super(_inject);
   }
   
-  void _setup(struct psc_inject *inject)
+  void _setup(MPI_Comm comm)
   {
-    item_n_bnd = psc_bnd_create(psc_inject_comm(inject));
+    item_n_bnd = psc_bnd_create(comm);
     psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
     psc_bnd_set_type(item_n_bnd, "cuda");
     psc_bnd_set_psc(item_n_bnd, ppsc);
 
-    item_n = psc_output_fields_item_create(psc_inject_comm(inject));
+    item_n = psc_output_fields_item_create(comm);
     psc_output_fields_item_set_type(item_n, "n_1st_cuda");
     psc_output_fields_item_set_psc_bnd(item_n, item_n_bnd);
 
