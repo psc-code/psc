@@ -13,6 +13,16 @@
 extern int pr_time_step_no_comm; // FIXME
 
 // ======================================================================
+// class PushFieldsBase
+
+class PushFieldsBase
+{
+public:
+  virtual void push_E(struct psc_mfields *mflds_base, double dt_fac) = 0;
+  virtual void push_H(struct psc_mfields *mflds_base, double dt_fac) = 0;
+};
+
+// ======================================================================
 // PscPushFields
 
 template<typename S>
@@ -20,6 +30,9 @@ struct PscPushFields
 {
   using sub_t = S;
 
+  static_assert(std::is_convertible<sub_t*, PushFieldsBase*>::value,
+  		"sub classes used in PscPushFieldsParticles must derive from PushFieldsBase");
+  
   explicit PscPushFields(psc_push_fields *pushf)
     : pushf_(pushf),
       sub_(mrc_to_subobj(pushf, sub_t))
@@ -27,7 +40,6 @@ struct PscPushFields
 
   void advance_E(PscMfieldsBase mflds, double frac)
   {
-    struct psc_push_fields_ops *ops = psc_push_fields_ops(pushf_);
     static int pr;
     if (!pr) {
       pr = prof_register("push_fields_E", 1., 0, 0);
@@ -113,16 +125,6 @@ struct PscPushFields
 private:
   psc_push_fields *pushf_;
   sub_t *sub_;
-};
-
-// ======================================================================
-// class PushFieldsBase
-
-class PushFieldsBase
-{
-public:
-  virtual void push_E(struct psc_mfields *mflds_base, double dt_fac) = 0;
-  virtual void push_H(struct psc_mfields *mflds_base, double dt_fac) = 0;
 };
 
 using PscPushFieldsBase = PscPushFields<PushFieldsBase>;

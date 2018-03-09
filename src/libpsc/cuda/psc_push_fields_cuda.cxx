@@ -5,9 +5,8 @@
 
 #include "push_fields.hxx"
 
-class PushFieldsCuda : PushFieldsBase
+struct PushFieldsCuda : PushFieldsBase
 {
-public:
   // ----------------------------------------------------------------------
   // push_E
 

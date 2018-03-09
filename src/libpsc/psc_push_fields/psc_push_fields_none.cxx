@@ -3,9 +3,8 @@
 
 #include "push_fields.hxx"
 
-class PushFieldsNone : PushFieldsBase
+struct PushFieldsNone : PushFieldsBase
 {
-public:
   void push_E(struct psc_mfields *mflds_base, double dt_fac) override
   {}
 

@@ -10,9 +10,8 @@
 
 // ----------------------------------------------------------------------
 
-class PushFieldsVpic : PushFieldsBase
+struct PushFieldsVpic : PushFieldsBase
 {
-public:
   PushFieldsVpic()
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
