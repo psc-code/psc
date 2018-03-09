@@ -540,18 +540,18 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
 // ======================================================================
 
-#define MAKE_OP1(TYPE, NAME, FNAME, RUN)				\
+#define MAKE_OP1(TYPE, NAME, FNAME, Moment_t)				\
   struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
     psc_output_fields_item_ops_##NAME##TYPE() {				\
     name               = #NAME #TYPE;					\
     nr_comp	       = 1;						\
     fld_names[0]       = FNAME;						\
-    run_all            = RUN;						\
+    run_all            = ItemMoment<Moment_t>::run;			\
     flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
   }									\
   } psc_output_fields_item_##NAME##TYPE##_ops;
 
-#define MAKE_OP3(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, RUN)		\
+#define MAKE_OP3(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, Moment_t)		\
   struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
     psc_output_fields_item_ops_##NAME##TYPE() {				\
     name               = #NAME #TYPE;					\
@@ -559,12 +559,12 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     fld_names[0]       = FNAMEX;					\
     fld_names[1]       = FNAMEY;					\
     fld_names[2]       = FNAMEZ;					\
-    run_all            = RUN;						\
+    run_all            = ItemMoment<Moment_t>::run;			\
     flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
   }									\
   } psc_output_fields_item_##NAME##TYPE##_ops;
 
-#define MAKE_OP6(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, FNAME3, FNAME4, FNAME5, RUN) \
+#define MAKE_OP6(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, FNAME3, FNAME4, FNAME5, Moment_t) \
   struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
     psc_output_fields_item_ops_##NAME##TYPE() {				\
     name               = #NAME #TYPE;					\
@@ -575,19 +575,19 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     fld_names[3]       = FNAME3;					\
     fld_names[4]       = FNAME4;					\
     fld_names[5]       = FNAME5;					\
-    run_all            = RUN;						\
+    run_all            = ItemMoment<Moment_t>::run;			\
     flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
   }									\
   } psc_output_fields_item_##NAME##TYPE##_ops;
 
 
 #define MAKE_POFI_OPS(TYPE)						\
-  MAKE_OP1(TYPE, n_1st_, "n", ItemMoment<Moment_n_1st>::run)		\
-  MAKE_OP3(TYPE, v_1st_, "vx", "vy", "vz", ItemMoment<Moment_v_1st>::run) \
-  MAKE_OP3(TYPE, p_1st_, "px", "py", "pz", ItemMoment<Moment_p_1st>::run) \
-  MAKE_OP3(TYPE, vv_1st_, "vxvx", "vyvy", "vzvz", ItemMoment<Moment_vv_1st>::run) \
-  MAKE_OP6(TYPE, T_1st_, "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz", ItemMoment<Moment_T_1st>::run) \
-  MAKE_OP6(TYPE, Tvv_1st_, "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz", ItemMoment<Moment_Tvv_1st>::run) \
+  MAKE_OP1(TYPE, n_1st_, "n", Moment_n_1st)				\
+  MAKE_OP3(TYPE, v_1st_, "vx", "vy", "vz", Moment_v_1st)		\
+  MAKE_OP3(TYPE, p_1st_, "px", "py", "pz", Moment_p_1st)		\
+  MAKE_OP3(TYPE, vv_1st_, "vxvx", "vyvy", "vzvz", Moment_vv_1st)	\
+  MAKE_OP6(TYPE, T_1st_, "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz", Moment_T_1st) \
+  MAKE_OP6(TYPE, Tvv_1st_, "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz", Moment_Tvv_1st) \
 
 #if 0
 									\
