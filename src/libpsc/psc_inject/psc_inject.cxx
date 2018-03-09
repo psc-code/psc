@@ -9,16 +9,6 @@
 // ======================================================================
 // psc_inject
 
-// ----------------------------------------------------------------------
-// _psc_inject_destroy
-
-static void
-_psc_inject_destroy(struct psc_inject *_inject)
-{
-  PscInjectBase inject(_inject);
-  psc_mfields_destroy(inject->mflds_n);
-}
-
 #if 0
 // ----------------------------------------------------------------------
 // debug_dump
