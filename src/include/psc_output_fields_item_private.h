@@ -16,13 +16,15 @@ enum {
 
 #define POFI_MAX_COMPS (16)
 
+using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
+
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
   void (*run_all)(struct psc_output_fields_item *item,
 		  struct psc_mfields *mflds, struct psc_mparticles *mprts,
 		  struct psc_mfields *mres);
   int nr_comp;
-  std::array<const char *, POFI_MAX_COMPS> fld_names;
+  fld_names_t fld_names;
   unsigned int flags;
 };
 

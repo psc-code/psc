@@ -5,6 +5,43 @@
 
 using Fields = Fields3d<mfields_t::fields_t>;
 
+template<typename Item>
+struct ItemFields
+{
+  constexpr static char const* name = Item::name;
+  constexpr static int n_comps = Item::n_comps; 
+  static fld_names_t fld_names() { return Item::fld_names(); }
+ 
+  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+		  struct psc_mparticles *mprts, struct psc_mfields *mres)
+  {
+    mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
+    mfields_t mf_res(mres);
+    for (int p = 0; p < mf_res->n_patches(); p++) {
+      Fields F(mf[p]), R(mf_res[p]);
+      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+	Item::set(R, F, ix,iy,iz);
+      } foreach_3d_end;
+    }
+    mf.put_as(mflds_base, 0, 0);
+  }
+};
+
+template<typename Item_t>
+struct FieldsItemOps : psc_output_fields_item_ops {
+  FieldsItemOps() {
+    name      = Item_t::name;
+    nr_comp   = Item_t::n_comps;
+    fld_names = Item_t::fld_names();
+    run_all   = Item_t::run;
+  }
+};
+
+template<typename Item_t>
+using FieldsItemFieldsOps = FieldsItemOps<ItemFields<Item_t>>;
+
+// ======================================================================
+
 // FIXME, we're assuming that the result fields are "c" type
 
 // ======================================================================
@@ -20,32 +57,22 @@ using Fields = Fields3d<mfields_t::fields_t>;
 #define JY_NC(ix,iy,iz) (.5f * (F(JYI,ix,iy,iz) + F(JYI,ix,iy-dy,iz)))
 #define JZ_NC(ix,iy,iz) (.5f * (F(JZI,ix,iy,iz) + F(JZI,ix,iy,iz-dz)))
 
-static void
-calc_j_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_j_nc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = JX_NC(ix,iy,iz);
-      R(1, ix,iy,iz) = JY_NC(ix,iy,iz);
-      R(2, ix,iy,iz) = JZ_NC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "j_nc";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "jx_nc", "jy_nc", "jz_nc" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = JX_NC(i,j,k);
+    R(1, i,j,k) = JY_NC(i,j,k);
+    R(2, i,j,k) = JZ_NC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_j_nc : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_j_nc() {
-    name      = "j_nc";
-    nr_comp   = 3;
-    fld_names = { "jx_nc", "jy_nc", "jz_nc" };
-    run_all   = calc_j_nc;
-  }
-} psc_output_fields_item_j_nc_ops;
+FieldsItemFieldsOps<Item_j_nc> psc_output_fields_item_j_nc_ops;
 
 // ======================================================================
 
@@ -56,65 +83,41 @@ struct psc_output_fields_item_ops_j_nc : psc_output_fields_item_ops {
 #define JZ_CC(ix,iy,iz) (.25f * (F(JZI, ix,iy,iz   ) + F(JZI, ix+dx,iy   ,iz) + \
 				 F(JZI, ix,iy+dy,iz) + F(JZI, ix+dx,iy+dy,iz)))
 
-static void
-calc_j(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-       struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_j_cc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = JX_CC(ix,iy,iz);
-      R(1, ix,iy,iz) = JY_CC(ix,iy,iz);
-      R(2, ix,iy,iz) = JZ_CC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "j";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "jx", "jy", "jz" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = JX_CC(i,j,k);
+    R(1, i,j,k) = JY_CC(i,j,k);
+    R(2, i,j,k) = JZ_CC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_j : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_j() {
-    name      = "j";
-    nr_comp   = 3;
-    fld_names[0] = "jx";
-    fld_names[1] = "jy";
-    fld_names[2] = "jz";
-    run_all   = calc_j;
-  }
-} psc_output_fields_item_j_ops;
+FieldsItemFieldsOps<Item_j_cc> psc_output_fields_item_j_ops;
 
 // ======================================================================
 
-static void
-calc_j_ec(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_j_ec
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = F(JXI, ix,iy,iz);
-      R(1, ix,iy,iz) = F(JYI, ix,iy,iz);
-      R(2, ix,iy,iz) = F(JZI, ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "j_ec";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "jx_ec", "jy_ec", "jz_ec" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = F(JXI, i,j,k);
+    R(1, i,j,k) = F(JYI, i,j,k);
+    R(2, i,j,k) = F(JZI, i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_j_ec : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_j_ec() {
-    name      = "j_ec";
-    nr_comp   = 3;
-    fld_names[0] = "jx_ec";
-    fld_names[1] = "jy_ec";
-    fld_names[2] = "jz_ec";
-    run_all   = calc_j_ec;
-  }
-} psc_output_fields_item_j_ec_ops;
+FieldsItemFieldsOps<Item_j_ec> psc_output_fields_item_j_ec_ops;
 
 // ======================================================================
 
@@ -122,34 +125,22 @@ struct psc_output_fields_item_ops_j_ec : psc_output_fields_item_ops {
 #define EY_NC(ix,iy,iz) (.5f * (F( EY,ix,iy,iz) + F( EY,ix,iy-dy,iz)))
 #define EZ_NC(ix,iy,iz) (.5f * (F( EZ,ix,iy,iz) + F( EZ,ix,iy,iz-dz)))
 
-static void
-calc_E_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_e_nc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = EX_NC(ix,iy,iz);
-      R(1, ix,iy,iz) = EY_NC(ix,iy,iz);
-      R(2, ix,iy,iz) = EZ_NC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "e_nc";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "ex_nc", "ey_nc", "ez_nc" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = EX_NC(i,j,k);
+    R(1, i,j,k) = EY_NC(i,j,k);
+    R(2, i,j,k) = EZ_NC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_e_nc : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_e_nc() {
-    name      = "e_nc";
-    nr_comp   = 3;
-    fld_names[0] = "ex_nc";
-    fld_names[1] = "ey_nc";
-    fld_names[2] = "ez_nc";
-    run_all   = calc_E_nc;
-  }
-} psc_output_fields_item_e_nc_ops;
+FieldsItemFieldsOps<Item_e_nc> psc_output_fields_item_e_nc_ops;
 
 // ======================================================================
 
@@ -160,65 +151,41 @@ struct psc_output_fields_item_ops_e_nc : psc_output_fields_item_ops {
 #define EZ_CC(ix,iy,iz) (.25f * (F( EZ,ix,iy   ,iz) + F( EZ,ix+dx,iy   ,iz) + \
 				 F( EZ,ix,iy+dy,iz) + F( EZ,ix+dx,iy+dy,iz)))
 
-static void
-calc_E_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_e_cc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = EX_CC(ix,iy,iz);
-      R(1, ix,iy,iz) = EY_CC(ix,iy,iz);
-      R(2, ix,iy,iz) = EZ_CC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "e";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "ex", "ey", "ez" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = EX_CC(i,j,k);
+    R(1, i,j,k) = EY_CC(i,j,k);
+    R(2, i,j,k) = EZ_CC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_e : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_e() {
-    name      = "e";
-    nr_comp   = 3;
-    fld_names[0] = "ex";
-    fld_names[1] = "ey";
-    fld_names[2] = "ez";
-    run_all   = calc_E_cc;
-  }
-} psc_output_fields_item_e_ops;
+FieldsItemFieldsOps<Item_e_cc> psc_output_fields_item_e_ops;
 
 // ======================================================================
 
-static void
-calc_E_ec(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_e_ec
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = F(EX, ix,iy,iz);
-      R(1, ix,iy,iz) = F(EY, ix,iy,iz);
-      R(2, ix,iy,iz) = F(EZ, ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "e_ec";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "ex_ec", "ey_ec", "ez_ec" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = F(EX, i,j,k);
+    R(1, i,j,k) = F(EY, i,j,k);
+    R(2, i,j,k) = F(EZ, i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_e_ec : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_e_ec() {
-    name      = "e_ec";
-    nr_comp   = 3;
-    fld_names[0] = "ex_ec";
-    fld_names[1] = "ey_ec";
-    fld_names[2] = "ez_ec";
-    run_all   = calc_E_ec;
-  }
-} psc_output_fields_item_e_ec_ops;
+FieldsItemFieldsOps<Item_e_ec> psc_output_fields_item_e_ec_ops;
 
 // ======================================================================
 
@@ -229,34 +196,22 @@ struct psc_output_fields_item_ops_e_ec : psc_output_fields_item_ops {
 #define HZ_NC(ix,iy,iz) (.25f*(F(HZ,ix,iy   ,iz) + F(HZ,ix-dx,iy   ,iz) + \
 			       F(HZ,ix,iy-dy,iz) + F(HZ,ix-dx,iy-dy,iz)))
 
-static void
-calc_H_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_h_nc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = HX_NC(ix,iy,iz);
-      R(1, ix,iy,iz) = HY_NC(ix,iy,iz);
-      R(2, ix,iy,iz) = HZ_NC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "h_nc";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "hx_nc", "hy_nc", "hz_nc" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = HX_NC(i,j,k);
+    R(1, i,j,k) = HY_NC(i,j,k);
+    R(2, i,j,k) = HZ_NC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_h_nc : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_h_nc() {
-    name      = "h_nc";
-    nr_comp   = 3;
-    fld_names[0] = "hx_nc";
-    fld_names[1] = "hy_nc";
-    fld_names[2] = "hz_nc";
-    run_all   = calc_H_nc;
-  }
-} psc_output_fields_item_h_nc_ops;
+FieldsItemFieldsOps<Item_h_nc> psc_output_fields_item_h_nc_ops;
 
 // ======================================================================
 
@@ -264,250 +219,158 @@ struct psc_output_fields_item_ops_h_nc : psc_output_fields_item_ops {
 #define HY_CC(ix,iy,iz) (.5f*(F(HY,ix,iy,iz) + F(HY,ix,iy+dy,iz)))
 #define HZ_CC(ix,iy,iz) (.5f*(F(HZ,ix,iy,iz) + F(HZ,ix,iy,iz+dz)))
 
-static void
-calc_H_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_h_cc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = HX_CC(ix,iy,iz);
-      R(1, ix,iy,iz) = HY_CC(ix,iy,iz);
-      R(2, ix,iy,iz) = HZ_CC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "h";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "hx", "hy", "hz" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = HX_CC(i,j,k);
+    R(1, i,j,k) = HY_CC(i,j,k);
+    R(2, i,j,k) = HZ_CC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_h : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_h() {
-    name      = "h";
-    nr_comp   = 3;
-    fld_names[0] = "hx";
-    fld_names[1] = "hy";
-    fld_names[2] = "hz";
-    run_all   = calc_H_cc;
-  }
-} psc_output_fields_item_h_ops;
+FieldsItemFieldsOps<Item_h_cc> psc_output_fields_item_h_ops;
 
 // ======================================================================
 
-static void
-calc_H_fc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_h_fc
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = F(HX, ix,iy,iz);
-      R(1, ix,iy,iz) = F(HY, ix,iy,iz);
-      R(2, ix,iy,iz) = F(HZ, ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "h_fc";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "hx_fc", "hy_fc", "hz_fc" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = F(HX, i,j,k);
+    R(1, i,j,k) = F(HY, i,j,k);
+    R(2, i,j,k) = F(HZ, i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_h_fc : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_h_fc() {
-    name      = "h_fc";
-    nr_comp   = 3;
-    fld_names[0] = "hx_fc";
-    fld_names[1] = "hy_fc";
-    fld_names[2] = "hz_fc";
-    run_all   = calc_H_fc;
-  }
-} psc_output_fields_item_h_fc_ops;
+FieldsItemFieldsOps<Item_h_fc> psc_output_fields_item_h_fc_ops;
 
 // ======================================================================
 
-static void
-calc_jdote_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	      struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_jdote
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, EX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
-      R(1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
-      R(2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
-    } foreach_3d_end;
+  constexpr static char const* name = "jdote";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "jxex", "jyey", "jzez" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = JX_CC(i,j,k) * EX_CC(i,j,k);
+    R(1, i,j,k) = JY_CC(i,j,k) * EY_CC(i,j,k);
+    R(2, i,j,k) = JZ_CC(i,j,k) * EZ_CC(i,j,k);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_jdote : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_jdote() {
-    name      = "jdote";
-    nr_comp   = 3;
-    fld_names[0] = "jxex";
-    fld_names[1] = "jyey";
-    fld_names[2] = "jzez";
-    run_all   = calc_jdote_cc;
-  }
-} psc_output_fields_item_jdote_ops;
+FieldsItemFieldsOps<Item_jdote> psc_output_fields_item_jdote_ops;
 
 // ======================================================================
 
-static void
-calc_poyn_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	     struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_poyn
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
-			       EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
-      R(1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
-			       EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
-      R(2, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
-			       EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
-    } foreach_3d_end;
+  constexpr static char const* name = "poyn";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "poynx", "poyny", "poynz" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = (EY_CC(i,j,k) * HZ_CC(i,j,k) - 
+		   EZ_CC(i,j,k) * HY_CC(i,j,k));
+    R(1, i,j,k) = (EZ_CC(i,j,k) * HX_CC(i,j,k) -
+		   EX_CC(i,j,k) * HZ_CC(i,j,k));
+    R(2, i,j,k) = (EX_CC(i,j,k) * HY_CC(i,j,k) -
+		   EY_CC(i,j,k) * HX_CC(i,j,k));
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_poyn : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_poyn() {
-    name      = "poyn";
-    nr_comp   = 3;
-    fld_names[0] = "poynx";
-    fld_names[1] = "poyny";
-    fld_names[2] = "poynz";
-    run_all   = calc_poyn_cc;
-  }
-} psc_output_fields_item_poyn_ops;
+FieldsItemFieldsOps<Item_poyn> psc_output_fields_item_poyn_ops;
 
 // ======================================================================
 
-static void
-calc_E2_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	   struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_e2
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
-      R(1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
-      R(2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
-    } foreach_3d_end;
+  constexpr static char const* name = "e2";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "ex2", "ey2", "ez2" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = sqr(EX_CC(i,j,k));
+    R(1, i,j,k) = sqr(EY_CC(i,j,k));
+    R(2, i,j,k) = sqr(EZ_CC(i,j,k));
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_e2 : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_e2() {
-    name      = "e2";
-    nr_comp   = 3;
-    fld_names[0] = "ex2";
-    fld_names[1] = "ey2";
-    fld_names[2] = "ez2";
-    run_all   = calc_E2_cc;
-  }
-} psc_output_fields_item_e2_ops;
+FieldsItemFieldsOps<Item_e2> psc_output_fields_item_e2_ops;
 
 // ======================================================================
 
-static void
-calc_H2_cc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	   struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_h2
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
-      R(1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
-      R(2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
-    } foreach_3d_end;
+  constexpr static char const* name = "h2";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "hx2", "hy2", "hz2" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = sqr(HX_CC(i,j,k));
+    R(1, i,j,k) = sqr(HY_CC(i,j,k));
+    R(2, i,j,k) = sqr(HZ_CC(i,j,k));
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_h2 : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_h2() {
-    name      = "h2";
-    nr_comp   = 3;
-    fld_names[0] = "hx2";
-    fld_names[1] = "hy2";
-    fld_names[2] = "hz2";
-    run_all   = calc_H2_cc;
-  }
-} psc_output_fields_item_h2_ops;
+FieldsItemFieldsOps<Item_h2> psc_output_fields_item_h2_ops;
 
 // ======================================================================
 
-static void
-calc_divb(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	  struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_divb
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(HX, HX + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = 
-	((F(HX, ix+dx,iy,iz) - F(HX, ix,iy,iz)) / ppsc->grid().dx[0] +
-	 (F(HY, ix,iy+dy,iz) - F(HY, ix,iy,iz)) / ppsc->grid().dx[1] +
-	 (F(HZ, ix,iy,iz+dz) - F(HZ, ix,iy,iz)) / ppsc->grid().dx[2]);
-    } foreach_3d_end;
+  constexpr static char const* name = "divb";
+  constexpr static int n_comps = 1;
+  static fld_names_t fld_names() { return { "divb" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = 
+      ((F(HX, i+dx,j,k) - F(HX, i,j,k)) / ppsc->grid().dx[0] +
+       (F(HY, i,j+dy,k) - F(HY, i,j,k)) / ppsc->grid().dx[1] +
+       (F(HZ, i,j,k+dz) - F(HZ, i,j,k)) / ppsc->grid().dx[2]);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_divb : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_divb() {
-    name      = "divb";
-    nr_comp   = 1;
-    fld_names[0] = "divb";
-    run_all   = calc_divb;
-  }
-} psc_output_fields_item_divb_ops;
+FieldsItemFieldsOps<Item_divb> psc_output_fields_item_divb_ops;
 
 // ======================================================================
 
-static void
-calc_divj_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	     struct psc_mparticles *mprts, struct psc_mfields *mres)
+struct Item_divj
 {
-  define_dxdydz(dx, dy, dz);
-  mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
-  mfields_t mf_res(mres);
-  for (int p = 0; p < mf_res->n_patches(); p++) {
-    Fields F(mf[p]), R(mf_res[p]);
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      R(0, ix,iy,iz) = 
-	((F(JXI, ix,iy,iz) - F(JXI, ix-dx,iy,iz)) / ppsc->grid().dx[0] +
-	 (F(JYI, ix,iy,iz) - F(JYI, ix,iy-dy,iz)) / ppsc->grid().dx[1] +
-	 (F(JZI, ix,iy,iz) - F(JZI, ix,iy,iz-dz)) / ppsc->grid().dx[2]);
-    } foreach_3d_end;
+  constexpr static char const* name = "divj";
+  constexpr static int n_comps = 1;
+  static fld_names_t fld_names() { return { "divj" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = 
+      ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / ppsc->grid().dx[0] +
+       (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / ppsc->grid().dx[1] +
+       (F(JZI, i,j,k) - F(JZI, i,j,k-dz)) / ppsc->grid().dx[2]);
   }
-  mf.put_as(mflds_base, 0, 0);
-}
+};
 
-struct psc_output_fields_item_ops_divj : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_divj() {
-    name      = "divj";
-    nr_comp   = 1;
-    fld_names[0] = "divj";
-    run_all   = calc_divj_nc;
-  }
-} psc_output_fields_item_divj_ops;
+FieldsItemFieldsOps<Item_divj> psc_output_fields_item_divj_ops;
 
