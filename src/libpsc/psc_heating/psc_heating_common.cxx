@@ -13,10 +13,18 @@ template<typename MP>
 struct Heating_ : HeatingBase
 {
   // ----------------------------------------------------------------------
-  // psc_heating_particle_kick
+  // ctor
 
-  static void
-  psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, real_t H)
+  Heating_(int every_step, int tb, int te, int kind)
+    : every_step_(every_step),
+      tb_(tb), te_(te),
+      kind_(kind)
+  {}
+  
+  // ----------------------------------------------------------------------
+  // kick_particle
+
+  static void kick_particle(struct psc_heating *heating, particle_t *prt, real_t H)
   {
     struct psc *psc = ppsc;
 
@@ -84,13 +92,18 @@ struct Heating_ : HeatingBase
 
 	double H = psc_heating_spot_get_H(heating->spot, xx);
 	if (H > 0) {
-	  psc_heating_particle_kick(heating, prt, H);
+	  kick_particle(heating, prt, H);
 	}
       }
     }
 
     mprts.put_as(mprts_base);
   }
+
+private:
+  int every_step_;
+  int tb_, te_;
+  int kind_;
 };
 
 // ----------------------------------------------------------------------
