@@ -103,6 +103,19 @@ add_ghosts_boundary(fields_t res, int p, int mb, int me)
 }
 
 template<typename Moment_t>
+struct ItemMomentWrap
+{
+  static void run(mparticles_t mprts, mfields_t mflds_res)
+  {
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      mflds_res[p].zero();
+      Moment_t::run(p, mflds_res[p], mprts);
+      add_ghosts_boundary(mflds_res[p], p, 0, mflds_res->n_comps());
+    }
+  }
+};
+
+template<typename Moment_t>
 struct ItemMoment
 {
   static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
@@ -110,12 +123,8 @@ struct ItemMoment
   {
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
     mfields_t mf_res(mres);
-    
-    for (int p = 0; p < mprts->n_patches(); p++) {
-      mf_res[p].zero();
-      Moment_t::run(p, mf_res[p], mprts);
-      add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
-    }
+
+    ItemMomentWrap<Moment_t>::run(mprts, mf_res);
     
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
@@ -139,7 +148,6 @@ struct Moment_n_1st
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
     }
   }
-
 };
 
 // ======================================================================
