@@ -13,7 +13,7 @@
 
 struct HeatingBase
 {
-  virtual void run(psc_mparticles* mprts_base) = 0;
+  virtual void run(PscMparticlesBase mprts_base) = 0;
 };
 
 // ======================================================================
@@ -31,7 +31,7 @@ struct PscHeating
     : heating_(heating)
   {}
 
-  void operator()(PscMparticlesBase mprts, PscMfieldsBase mflds)
+  void operator()(PscMparticlesBase mprts)
   {
     static int pr;
     if (!pr) {
@@ -39,7 +39,7 @@ struct PscHeating
     }  
     
     prof_start(pr);
-    sub()->run(mprts.mprts());
+    sub()->run(mprts);
     prof_stop(pr);
   }
   

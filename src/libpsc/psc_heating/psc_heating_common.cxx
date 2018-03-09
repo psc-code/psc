@@ -87,7 +87,7 @@ struct Heating_ : HeatingBase
     }
   }
   
-  void run(psc_mparticles* mprts_base) override
+  void run(PscMparticlesBase mprts_base) override
   {
     struct psc *psc = ppsc;
     
@@ -100,7 +100,7 @@ struct Heating_ : HeatingBase
       return;
     }
 
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
     (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }

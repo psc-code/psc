@@ -557,7 +557,7 @@ static void psc_flatfoil_step(struct psc *psc)
   bndp_(mprts_);
   
   inject_.run(mprts, mflds);
-  heating(mprts, mflds);
+  heating(mprts);
   
   // field propagation E^{n+1/2} -> E^{n+3/2}
 
@@ -612,7 +612,7 @@ static void psc_flatfoil_step(struct psc *psc)
   bndp(mprts);
   
   inject(mprts, mflds);
-  heating(mprts, mflds);
+  heating(mprts);
   
   // field propagation E^{n+1/2} -> E^{n+3/2}
   pushf.advance_b2(mflds);

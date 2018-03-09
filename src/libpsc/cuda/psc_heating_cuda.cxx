@@ -26,6 +26,7 @@ struct HeatingCuda : HeatingBase
     struct cuda_heating_foil foil;
     double val;
 
+    assert(strcmp(psc_heating_spot_type(&spot_), "foil") == 0);
     psc_heating_spot_get_param_double(&spot_, "zl", &val);
     foil.zl = val;
     psc_heating_spot_get_param_double(&spot_, "zh", &val);
@@ -49,7 +50,7 @@ struct HeatingCuda : HeatingBase
   // ----------------------------------------------------------------------
   // run
 
-  void run(psc_mparticles* mprts_base) override
+  void run(PscMparticlesBase mprts_base) override
   {
     struct psc *psc = ppsc;
 
@@ -62,11 +63,8 @@ struct HeatingCuda : HeatingBase
       return;
     }
 
-    assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
-    struct psc_mparticles *mprts = mprts_base;
-
-    struct cuda_mparticles *cmprts = PscMparticlesCuda(mprts)->cmprts();
-    assert(strcmp(psc_heating_spot_type(&spot_), "foil") == 0);
+    PscMparticlesCuda mprts = mprts_base.get_as<PscMparticlesCuda>();
+    cuda_mparticles *cmprts = mprts->cmprts();
     cuda_heating_run_foil(cmprts);
   }
 
