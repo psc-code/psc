@@ -4,6 +4,7 @@
 #include "psc_bnd.h"
 #include "psc_fields_as_c.h"
 #include "bnd.hxx"
+#include "fields_item.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -228,8 +229,10 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
     struct psc_fields_list *pfd = &out_c->pfd;
+    PscMparticlesBase mprts(particles);
     for (int i = 0; i < pfd->nr_flds; i++) {
-      psc_output_fields_item_run(out_c->item[i], flds, particles, pfd->flds[i]);
+      PscFieldsItemBase item(out_c->item[i]);
+      item(flds, mprts, pfd->flds[i]);
     }
   }
 

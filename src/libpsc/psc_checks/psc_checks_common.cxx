@@ -4,6 +4,7 @@
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
 #include "fields.hxx"
+#include "fields_item.hxx"
 
 #include <mrc_io.h>
 
@@ -51,7 +52,9 @@ calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
   psc_output_fields_item_set_type(item, "rho_" PSC_CHECKS_ORDER "_nc_" PARTICLE_TYPE);
   psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
-  psc_output_fields_item_run(item, psc->flds, mprts, rho);
+  PscMparticlesBase mp(mprts);
+  PscFieldsItemBase _item(item);
+  _item(psc->flds, mp, rho);
   psc_output_fields_item_destroy(item);
 
   psc_bnd_destroy(bnd);
@@ -248,7 +251,9 @@ calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
   psc_output_fields_item_set_type(item, "dive_" FIELDS_TYPE);
   psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
-  psc_output_fields_item_run(item, mflds, psc->particles, dive); // FIXME, should accept NULL for mprts
+  PscMparticlesBase mprts(psc->particles);
+  PscFieldsItemBase _item(item);
+  _item(mflds, mprts, dive); // FIXME, should accept NULL for mprts
   psc_output_fields_item_destroy(item);
 
   psc_bnd_destroy(bnd);

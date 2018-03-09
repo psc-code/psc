@@ -6,6 +6,7 @@
 #include <fields.hxx>
 #include <bnd.hxx>
 #include <inject.hxx>
+#include <fields_item.hxx>
 
 #include "cuda_iface.h"
 
@@ -146,7 +147,8 @@ struct InjectCuda : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    psc_output_fields_item_run(item_n, mflds_base.mflds(), mprts_base.mprts(), mflds_n);
+    PscFieldsItemBase _item_n(item_n);
+    _item_n(mflds_base, mprts_base, mflds_n);
 
     mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
 

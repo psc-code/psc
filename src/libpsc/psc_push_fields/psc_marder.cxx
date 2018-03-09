@@ -4,6 +4,7 @@
 #include "psc_output_fields_item.h"
 #include "fields3d.hxx"
 #include "bnd.hxx"
+#include "fields_item.hxx"
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
@@ -18,7 +19,9 @@ marder_calc_aid_fields(struct psc_marder *marder,
 		       struct psc_mfields *flds, struct psc_mparticles *particles,
 		       struct psc_mfields *div_e, struct psc_mfields *rho)
 {
-  psc_output_fields_item_run(marder->item_div_e, flds, particles, div_e); // FIXME, should accept NULL for particles
+  PscMparticlesBase mprts(particles);
+  PscFieldsItemBase item_div_e(marder->item_div_e);
+  item_div_e(flds, mprts, div_e); // FIXME, should accept NULL for particles
   
   if (marder->dump) {
     static int cnt;
@@ -68,7 +71,9 @@ psc_marder_run(struct psc_marder *marder,
   } else {
     prof_start(pr_A);
 
-    psc_output_fields_item_run(marder->item_rho, flds, particles, marder->rho);
+    PscMparticlesBase mprts(particles);
+    PscFieldsItemBase item_rho(marder->item_rho);
+    item_rho(flds, mprts, marder->rho);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     auto bnd = PscBndBase(ppsc->bnd);
