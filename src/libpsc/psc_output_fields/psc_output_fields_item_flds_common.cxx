@@ -2,6 +2,9 @@
 #include "psc_output_fields_item_private.h"
 
 #include "fields.hxx"
+#include "fields_item.hxx"
+
+#include <string>
 
 // ======================================================================
 
@@ -13,16 +16,23 @@
 // ======================================================================
 
 template<typename MF>
-struct output_flds_ops
+struct FieldsItem_dive
 {
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
   using real_t = typename mfields_t::real_t;
   using Fields = Fields3d<fields_t>;
 
-  static void
-  calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	       struct psc_mparticles *mprts, struct psc_mfields *mres_base)
+  constexpr static char const* name()
+  {
+    return strdup((std::string{"dive_"} + fields_traits<fields_t>::name).c_str());
+  }
+  constexpr static int n_comps = 1;
+  constexpr static fld_names_t fld_names() { return { "dive", }; }
+  constexpr static int flags = 0;
+
+  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+		  struct psc_mparticles *mprts, struct psc_mfields *mres_base)
   {
     define_dxdydz(dx, dy, dz);
     mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
@@ -41,12 +51,5 @@ struct output_flds_ops
   }
 };
 
-struct psc_output_fields_item_dive_ops : psc_output_fields_item_ops {
-  psc_output_fields_item_dive_ops() {
-    name      = "dive_" FIELDS_TYPE;
-    nr_comp   = 1;
-    fld_names[0] = "dive";
-    run_all   = output_flds_ops<mfields_t>::calc_dive_nc;
-  }
-} psc_output_fields_item_dive_ops;
+FieldsItemOps<FieldsItem_dive<mfields_t>> psc_output_fields_item_dive_ops;
 
