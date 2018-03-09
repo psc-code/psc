@@ -19,27 +19,6 @@ psc_heating_get_spot(struct psc_heating *heating)
 }
 
 // ----------------------------------------------------------------------
-// psc_heating_run
-
-void
-psc_heating_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
-		struct psc_mfields *mflds_base)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("heating_run", 1., 0, 0);
-  }  
-
-  prof_start(pr);
-  struct psc_heating_ops *ops = psc_heating_ops(heating);
-
-  assert(ops && ops->run);
-  ops->run(heating, mprts_base, mflds_base);
-
-  prof_stop(pr);
-}
-
-// ----------------------------------------------------------------------
 // psc_heating_init
 
 extern struct psc_heating_ops psc_heating_ops_single;
