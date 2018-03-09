@@ -504,6 +504,13 @@ using BndFields_t = BndFieldsNone;
 using Inject_t = Inject_<Mparticles_t, Mfields_t>;
 using Heating_t = Heating_<Mparticles_t>;
 
+static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
+			      Sort_t& sort, Collision_t& collision)
+{
+  sort(mprts);
+  collision(mprts);
+}
+
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
 
@@ -544,8 +551,8 @@ static void psc_flatfoil_step(struct psc *psc)
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
 #if 1
-  sort_(mprts_);
-  collision_(mprts_);
+  psc_flatfoil_step(mprts_, mflds_,
+		    sort_, collision_);
 
   // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
   PushParticles_t::push_mprts(mprts_, mflds_);
