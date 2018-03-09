@@ -119,196 +119,177 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   mprts.put_as(mprts_base, MP_DONT_COPY);
 }
 
+template<typename Moment_t>
+struct ItemMoment
+{
+  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+  {
+    run_all(item, mflds_base, mprts_base, mres, Moment_t::run);
+  }
+};
+  
 // ======================================================================
 // n_1st
 
-static void
-do_n_1st_run(int p, fields_t flds, mparticles_t& mprts)
+struct Moment_n_1st
 {
-  const Grid_t& grid = ppsc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *prt = &*prt_iter;
-    int m = prt->kind();
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
+  static void run(int p, fields_t flds, mparticles_t& mprts)
+  {
+    const Grid_t& grid = ppsc->grid();
+    mparticles_t::patch_t& prts = mprts[p];
+    real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *prt = &*prt_iter;
+      int m = prt->kind();
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
+    }
   }
-}
 
-static void
-n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	      struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  run_all(item, mflds_base, mprts_base, mres, do_n_1st_run);
-}
+};
 
 // ======================================================================
 // v_1st
 
-static void
-do_v_1st_run(int p, fields_t flds, mparticles_t& mprts)
+struct Moment_v_1st
 {
-  const Grid_t& grid = ppsc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *prt = &*prt_iter;
-    int mm = prt->kind() * 3;
-
-    real_t vxi[3];
-    particle_calc_vxi(prt, vxi);
-
-    for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m]);
+  static void run(int p, fields_t flds, mparticles_t& mprts)
+  {
+    const Grid_t& grid = ppsc->grid();
+    mparticles_t::patch_t& prts = mprts[p];
+    real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *prt = &*prt_iter;
+      int mm = prt->kind() * 3;
+      
+      real_t vxi[3];
+      particle_calc_vxi(prt, vxi);
+      
+      for (int m = 0; m < 3; m++) {
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m]);
+      }
     }
   }
-}
-
-static void
-v_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	      struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  run_all(item, mflds_base, mprts_base, mres, do_v_1st_run);
-}
+};
 
 // ======================================================================
 // p_1st
 
-static void
-do_p_1st_run(int p, fields_t flds, mparticles_t& mprts)
+struct Moment_p_1st
 {
-  const Grid_t& grid = ppsc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *prt = &*prt_iter;
-    int mm = prt->kind() * 3;
-    real_t *pxi = &prt->pxi;
-
-    for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, mprts->prt_mni(*prt) * pxi[m]);
+  static void run(int p, fields_t flds, mparticles_t& mprts)
+  {
+    const Grid_t& grid = ppsc->grid();
+    mparticles_t::patch_t& prts = mprts[p];
+    real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *prt = &*prt_iter;
+      int mm = prt->kind() * 3;
+      real_t *pxi = &prt->pxi;
+      
+      for (int m = 0; m < 3; m++) {
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, mprts->prt_mni(*prt) * pxi[m]);
+      }
     }
   }
-}
-
-static void
-p_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	      struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  run_all(item, mflds_base, mprts_base, mres, do_p_1st_run);
-}
+};
 
 // ======================================================================
 // vv_1st
 
-static void
-do_vv_1st_run(int p, fields_t flds, mparticles_t& mprts)
+struct Moment_vv_1st
 {
-  const Grid_t& grid = ppsc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *prt = &*prt_iter;
-    int mm = prt->kind() * 3;
-
-    real_t vxi[3];
-    particle_calc_vxi(prt, vxi);
-
-    for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m] * vxi[m]);
+  static void run(int p, fields_t flds, mparticles_t& mprts)
+  {
+    const Grid_t& grid = ppsc->grid();
+    mparticles_t::patch_t& prts = mprts[p];
+    real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *prt = &*prt_iter;
+      int mm = prt->kind() * 3;
+      
+      real_t vxi[3];
+      particle_calc_vxi(prt, vxi);
+      
+      for (int m = 0; m < 3; m++) {
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m] * vxi[m]);
+      }
     }
   }
-}
-
-static void
-vv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	       struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  run_all(item, mflds_base, mprts_base, mres, do_vv_1st_run);
-}
+};
 
 // ======================================================================
 // T_1st
 
-static void
-do_T_1st_run(int p, fields_t flds, mparticles_t& mprts)
+struct Moment_T_1st
 {
-  const Grid_t& grid = ppsc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *prt = &*prt_iter;
-    int mm = prt->kind() * 6;
-
-    real_t vxi[3];
-    particle_calc_vxi(prt, vxi);
-    real_t *pxi = &prt->pxi;
-    real_t vx[3];
-    vx[0] = vxi[0] * cos(ppsc->prm.theta_xz) - vxi[2] * sin(ppsc->prm.theta_xz);
-    vx[1] = vxi[1];
-    vx[2] = vxi[0] * sin(ppsc->prm.theta_xz) + vxi[2] * cos(ppsc->prm.theta_xz);
-    real_t px[3];
-    px[0] = pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz);
-    px[1] = pxi[1];
-    px[2] = pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * px[0] * vx[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * px[1] * vx[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * px[2] * vx[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * px[0] * vx[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * px[0] * vx[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * px[1] * vx[2]);
+  static void run(int p, fields_t flds, mparticles_t& mprts)
+  {
+    const Grid_t& grid = ppsc->grid();
+    mparticles_t::patch_t& prts = mprts[p];
+    real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *prt = &*prt_iter;
+      int mm = prt->kind() * 6;
+      
+      real_t vxi[3];
+      particle_calc_vxi(prt, vxi);
+      real_t *pxi = &prt->pxi;
+      real_t vx[3];
+      vx[0] = vxi[0] * cos(ppsc->prm.theta_xz) - vxi[2] * sin(ppsc->prm.theta_xz);
+      vx[1] = vxi[1];
+      vx[2] = vxi[0] * sin(ppsc->prm.theta_xz) + vxi[2] * cos(ppsc->prm.theta_xz);
+      real_t px[3];
+      px[0] = pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz);
+      px[1] = pxi[1];
+      px[2] = pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * px[0] * vx[0]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * px[1] * vx[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * px[2] * vx[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * px[0] * vx[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * px[0] * vx[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * px[1] * vx[2]);
+    }
   }
-}
-
-static void
-T_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	      struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  run_all(item, mflds_base, mprts_base, mres, do_T_1st_run);
-}
+};
 
 // ======================================================================
 // Tvv_1st
 
-static void
-do_Tvv_1st_run(int p, fields_t flds, mparticles_t& mprts)
+struct Moment_Tvv_1st
 {
-  const Grid_t& grid = ppsc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-    particle_t *prt = &*prt_iter;
-    int mm = prt->kind() * 6;
-
-    real_t vxi[3];
-    particle_calc_vxi(prt, vxi);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * vxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * vxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * vxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * vxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * vxi[0] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * vxi[1] * vxi[2]);
+  static void run(int p, fields_t flds, mparticles_t& mprts)
+  {
+    const Grid_t& grid = ppsc->grid();
+    mparticles_t::patch_t& prts = mprts[p];
+    real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      particle_t *prt = &*prt_iter;
+      int mm = prt->kind() * 6;
+      
+      real_t vxi[3];
+      particle_calc_vxi(prt, vxi);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * vxi[0] * vxi[0]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * vxi[1] * vxi[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * vxi[2] * vxi[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * vxi[0] * vxi[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * vxi[0] * vxi[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * vxi[1] * vxi[2]);
+    }
   }
-}
-
-static void
-Tvv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-{
-  run_all(item, mflds_base, mprts_base, mres, do_Tvv_1st_run);
-}
+};
 
 #if 0
 
@@ -606,12 +587,12 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
 
 #define MAKE_POFI_OPS(TYPE)						\
-  MAKE_OP1(TYPE, n_1st_, "n", n_1st_run_all)				\
-  MAKE_OP3(TYPE, v_1st_, "vx", "vy", "vz", v_1st_run_all)		\
-  MAKE_OP3(TYPE, p_1st_, "px", "py", "pz", p_1st_run_all)		\
-  MAKE_OP3(TYPE, vv_1st_, "vxvx", "vyvy", "vzvz", vv_1st_run_all)	\
-  MAKE_OP6(TYPE, T_1st_, "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz", T_1st_run_all)	\
-  MAKE_OP6(TYPE, Tvv_1st_, "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz", Tvv_1st_run_all)	\
+  MAKE_OP1(TYPE, n_1st_, "n", ItemMoment<Moment_n_1st>::run)		\
+  MAKE_OP3(TYPE, v_1st_, "vx", "vy", "vz", ItemMoment<Moment_v_1st>::run) \
+  MAKE_OP3(TYPE, p_1st_, "px", "py", "pz", ItemMoment<Moment_p_1st>::run) \
+  MAKE_OP3(TYPE, vv_1st_, "vxvx", "vyvy", "vzvz", ItemMoment<Moment_vv_1st>::run) \
+  MAKE_OP6(TYPE, T_1st_, "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz", ItemMoment<Moment_T_1st>::run) \
+  MAKE_OP6(TYPE, Tvv_1st_, "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz", ItemMoment<Moment_Tvv_1st>::run) \
 
 #if 0
 									\
