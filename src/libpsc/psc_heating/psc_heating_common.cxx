@@ -105,16 +105,6 @@ struct Heating_ : HeatingBase
     mprts.put_as(mprts_base);
   }
   
-  // ----------------------------------------------------------------------
-  // run
-
-  static void run(struct psc_heating *_heating, struct psc_mparticles *mprts_base,
-		  struct psc_mfields *mflds_base)
-  {
-    PscHeating<Self> heating(_heating);
-    heating->run(mprts_base);
-  }
-
 private:
   int every_step_;
   int tb_, te_;
@@ -133,7 +123,6 @@ struct psc_heating_ops_sub : psc_heating_ops {
     size                = PscHeating_t::size;
     setup               = PscHeating_t::setup;
     destroy             = PscHeating_t::destroy;
-    run                 = Heating_t::run;
   }
 } psc_heating_ops_sub;
 
