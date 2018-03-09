@@ -509,6 +509,11 @@ static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
 {
   sort(mprts);
   collision(mprts);
+
+  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+  PushParticles_t::push_mprts(mprts, mflds);
+  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+  
 }
 
 // ----------------------------------------------------------------------
@@ -554,10 +559,6 @@ static void psc_flatfoil_step(struct psc *psc)
   psc_flatfoil_step(mprts_, mflds_,
 		    sort_, collision_);
 
-  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-  PushParticles_t::push_mprts(mprts_, mflds_);
-  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-  
   // field propagation B^{n+1/2} -> B^{n+1}
   psc_stats_start(st_time_field);
   pushf_.push_H(mflds.mflds(), .5);
