@@ -102,30 +102,22 @@ add_ghosts_boundary(fields_t res, int p, int mb, int me)
   }
 }
 
-static void
-run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
-	void (*do_run)(int p, fields_t res, mparticles_t& mprts))
-{
-  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-  mfields_t mf_res(mres);
-  
-  for (int p = 0; p < mprts->n_patches(); p++) {
-    mf_res[p].zero();
-    do_run(p, mf_res[p], mprts);
-    add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
-  }
-
-  mprts.put_as(mprts_base, MP_DONT_COPY);
-}
-
 template<typename Moment_t>
 struct ItemMoment
 {
   static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
   {
-    run_all(item, mflds_base, mprts_base, mres, Moment_t::run);
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    mfields_t mf_res(mres);
+    
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      mf_res[p].zero();
+      Moment_t::run(p, mf_res[p], mprts);
+      add_ghosts_boundary(mf_res[p], p, 0, mres->nr_fields);
+    }
+    
+    mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 };
   
