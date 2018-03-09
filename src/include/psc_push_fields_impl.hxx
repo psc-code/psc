@@ -139,12 +139,12 @@ public:
   // push_E
 
   template<typename dim>
-  void push_E(Mfields_t& mflds, struct psc *psc, double dt_fac)
+  void push_E(Mfields_t& mflds, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
     
     for (int p = 0; p < mflds.n_patches(); p++) {
-      PushE<Fields> push_E(mflds[p], psc, dt_fac);
+      PushE<Fields> push_E(mflds[p], ppsc, dt_fac);
       Foreach_3d(push_E, 1, 2);
     }
   }
@@ -153,12 +153,12 @@ public:
   // push_H
 
   template<typename dim>
-  void push_H(Mfields_t& mflds, struct psc *psc, double dt_fac)
+  void push_H(Mfields_t& mflds, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
-      PushH<Fields> push_H(mflds[p], psc, dt_fac);
+      PushH<Fields> push_H(mflds[p], ppsc, dt_fac);
       Foreach_3d(push_H, 2, 1);
     }
   }
@@ -178,11 +178,11 @@ public:
     
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      push_E<dim_xyz>(*mflds.sub(), ppsc, dt_fac);
+      push_E<dim_xyz>(*mflds.sub(), dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      push_E<dim_yz>(*mflds.sub(), ppsc, dt_fac);
+      push_E<dim_yz>(*mflds.sub(), dt_fac);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      push_E<dim_xz>(*mflds.sub(), ppsc, dt_fac);
+      push_E<dim_xz>(*mflds.sub(), dt_fac);
     } else {
       assert(0);
     }
@@ -204,11 +204,11 @@ public:
     
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-      push_H<dim_xyz>(*mflds.sub(), ppsc, dt_fac);
+      push_H<dim_xyz>(*mflds.sub(), dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-      push_H<dim_yz>(*mflds.sub(), ppsc, dt_fac);
+      push_H<dim_yz>(*mflds.sub(), dt_fac);
     } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-      push_H<dim_xz>(*mflds.sub(), ppsc, dt_fac);
+      push_H<dim_xz>(*mflds.sub(), dt_fac);
     } else {
       assert(0);
     }
