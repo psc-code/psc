@@ -3,6 +3,7 @@
 #include <psc_bnd.h>
 #include <fields.hxx>
 #include <bnd.hxx>
+#include <fields_item.hxx>
 
 #include <string>
 #include <math.h>
@@ -117,9 +118,19 @@ struct ItemMomentWrap
   }
 };
 
-template<typename Moment_t>
+template<typename Moment_t, typename mparticles_t>
 struct ItemMoment
 {
+  static const char* name()
+  {
+    return strdup((std::string(Moment_t::name) + "_" +
+		   mparticles_traits<mparticles_t>::name).c_str());
+  }
+
+  constexpr static int n_comps = Moment_t::n_comps; 
+  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+
   static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
   {
@@ -565,20 +576,11 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
 // ======================================================================
 
-template<typename Moment_t, typename mparticles_t>
-struct psc_output_fields_item_ops_ : psc_output_fields_item_ops {
-  psc_output_fields_item_ops_() {
-    name               = strdup((std::string(Moment_t::name) + "_" +
-				 mparticles_traits<mparticles_t>::name).c_str());
-    nr_comp	       = Moment_t::n_comps;
-    fld_names          = Moment_t::fld_names();
-    run_all            = ItemMoment<Moment_t>::run;
-    flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;
-  }
-};
+template<typename Item_t, typename mparticles_t>
+using FieldsItemMomentOps = FieldsItemOps<ItemMoment<Item_t, mparticles_t>>;
 
 #define MAKE_OP(TYPE, NAME, Moment_t)					\
-  struct psc_output_fields_item_ops_<Moment_t, mparticles_t> psc_output_fields_item_##NAME##TYPE##_ops;
+  FieldsItemMomentOps<Moment_t, mparticles_t> psc_output_fields_item_##NAME##TYPE##_ops;
 
 #define MAKE_POFI_OPS(TYPE)						\
   MAKE_OP(TYPE, n_1st_  , Moment_n_1st)					\

@@ -76,3 +76,17 @@ public:
   }
 };
 
+// ======================================================================
+// FieldsItemOps
+
+template<typename Item_t>
+struct FieldsItemOps : psc_output_fields_item_ops {
+  FieldsItemOps() {
+    name      = Item_t::name();
+    nr_comp   = Item_t::n_comps;
+    fld_names = Item_t::fld_names();
+    run_all   = Item_t::run;
+    flags     = Item_t::flags;
+  }
+};
+

@@ -1,6 +1,7 @@
 #include "psc_output_fields_item_private.h"
 
 #include "fields.hxx"
+#include "fields_item.hxx"
 #include "psc_fields_as_c.h"
 
 using Fields = Fields3d<mfields_t::fields_t>;
@@ -8,9 +9,10 @@ using Fields = Fields3d<mfields_t::fields_t>;
 template<typename Item>
 struct ItemFields
 {
-  constexpr static char const* name = Item::name;
+  constexpr static char const* name() { return Item::name; }
   constexpr static int n_comps = Item::n_comps; 
-  static fld_names_t fld_names() { return Item::fld_names(); }
+  constexpr static fld_names_t fld_names() { return Item::fld_names(); }
+  constexpr static int flags = 0;
  
   static void run(mfields_t mf, mfields_t mf_res)
   {
@@ -29,16 +31,6 @@ struct ItemFields
     mfields_t mf_res(mres);
     run(mf, mf_res);
     mf.put_as(mflds_base, 0, 0);
-  }
-};
-
-template<typename Item_t>
-struct FieldsItemOps : psc_output_fields_item_ops {
-  FieldsItemOps() {
-    name      = Item_t::name;
-    nr_comp   = Item_t::n_comps;
-    fld_names = Item_t::fld_names();
-    run_all   = Item_t::run;
   }
 };
 
