@@ -68,6 +68,8 @@ public:
 			       _heating->tb, _heating->te,
 			       _heating->kind,
 			       *_heating->spot);
+
+    psc_heating_setup_super(_heating);
   }
 
   static void destroy(psc_heating* _heating)
