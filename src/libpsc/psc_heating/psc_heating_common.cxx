@@ -1,5 +1,6 @@
 
 #include <psc_heating_private.h>
+#include "heating.hxx"
 
 using real_t = mparticles_t::real_t;
 
@@ -8,94 +9,102 @@ using real_t = mparticles_t::real_t;
 // ======================================================================
 // psc_heating subclass "sub"
 
-// ----------------------------------------------------------------------
-// psc_heating_particle_kick
-
-static void
-psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, real_t H)
+template<typename MP>
+struct Heating_ : HeatingBase
 {
-  struct psc *psc = ppsc;
+  // ----------------------------------------------------------------------
+  // psc_heating_particle_kick
 
-  real_t heating_dt = heating->every_step * psc->dt;
+  static void
+  psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, real_t H)
+  {
+    struct psc *psc = ppsc;
 
-  float ran1, ran2, ran3, ran4, ran5, ran6;
-  do {
-    ran1 = random() / ((float) RAND_MAX + 1);
-    ran2 = random() / ((float) RAND_MAX + 1);
-    ran3 = random() / ((float) RAND_MAX + 1);
-    ran4 = random() / ((float) RAND_MAX + 1);
-    ran5 = random() / ((float) RAND_MAX + 1);
-    ran6 = random() / ((float) RAND_MAX + 1);
-  } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+    real_t heating_dt = heating->every_step * psc->dt;
 
-  real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-  real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-  real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+    float ran1, ran2, ran3, ran4, ran5, ran6;
+    do {
+      ran1 = random() / ((float) RAND_MAX + 1);
+      ran2 = random() / ((float) RAND_MAX + 1);
+      ran3 = random() / ((float) RAND_MAX + 1);
+      ran4 = random() / ((float) RAND_MAX + 1);
+      ran5 = random() / ((float) RAND_MAX + 1);
+      ran6 = random() / ((float) RAND_MAX + 1);
+    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+	     ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
 
-  real_t Dpxi = sqrtf(H * heating_dt);
-  real_t Dpyi = sqrtf(H * heating_dt);
-  real_t Dpzi = sqrtf(H * heating_dt);
+    real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
+    real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
+    real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
 
-  prt->pxi += Dpxi * ranx;
-  prt->pyi += Dpyi * rany;
-  prt->pzi += Dpzi * ranz;
-}
+    real_t Dpxi = sqrtf(H * heating_dt);
+    real_t Dpyi = sqrtf(H * heating_dt);
+    real_t Dpzi = sqrtf(H * heating_dt);
 
-// ----------------------------------------------------------------------
-// psc_heating_sub_run
-
-static void
-psc_heating_sub_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
-		       struct psc_mfields *mflds_base)
-{
-  struct psc *psc = ppsc;
-
-  // only heating between heating_tb and heating_te
-  if (psc->timestep < heating->tb || psc->timestep >= heating->te) {
-    return;
+    prt->pxi += Dpxi * ranx;
+    prt->pyi += Dpyi * rany;
+    prt->pzi += Dpzi * ranz;
   }
 
-  if (psc->timestep % heating->every_step != 0) {
-    return;
-  }
+  // ----------------------------------------------------------------------
+  // run
 
-  int kind = heating->kind;
+  static void run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
+		  struct psc_mfields *mflds_base)
+  {
+    struct psc *psc = ppsc;
 
-  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    // only heating between heating_tb and heating_te
+    if (psc->timestep < heating->tb || psc->timestep >= heating->te) {
+      return;
+    }
+
+    if (psc->timestep % heating->every_step != 0) {
+      return;
+    }
+
+    int kind = heating->kind;
+
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
-  psc_foreach_patch(psc, p) {
-    mparticles_t::patch_t& prts = mprts[p];
-    auto& patch = psc->grid().patches[p];
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
-      if (prt->kind() != kind) {
-	continue;
-      }
+    psc_foreach_patch(psc, p) {
+      mparticles_t::patch_t& prts = mprts[p];
+      auto& patch = psc->grid().patches[p];
+      PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+	particle_t *prt = &*prt_iter;
+	if (prt->kind() != kind) {
+	  continue;
+	}
       
-      double xx[3] = {
-	prt->xi + patch.xb[0],
-	prt->yi + patch.xb[1],
-	prt->zi + patch.xb[2],
-      };
+	double xx[3] = {
+	  prt->xi + patch.xb[0],
+	  prt->yi + patch.xb[1],
+	  prt->zi + patch.xb[2],
+	};
 
-      double H = psc_heating_spot_get_H(heating->spot, xx);
-      if (H > 0) {
-	psc_heating_particle_kick(heating, prt, H);
+	double H = psc_heating_spot_get_H(heating->spot, xx);
+	if (H > 0) {
+	  psc_heating_particle_kick(heating, prt, H);
+	}
       }
     }
-  }
 
-  mprts.put_as(mprts_base);
-}
+    mprts.put_as(mprts_base);
+  }
+};
 
 // ----------------------------------------------------------------------
 // psc_heating "sub"
 
 struct psc_heating_ops_sub : psc_heating_ops {
+  using Heating_t = Heating_<mparticles_t::sub_t>;
+  using PscHeating_t = PscHeatingWrapper<Heating_t>;
   psc_heating_ops_sub() {
     name                = PARTICLE_TYPE;
-    run                 = psc_heating_sub_run;
+    size                = PscHeating_t::size;
+    setup               = PscHeating_t::setup;
+    destroy             = PscHeating_t::destroy;
+    run                 = Heating_t::run;
   }
 } psc_heating_ops_sub;
 
