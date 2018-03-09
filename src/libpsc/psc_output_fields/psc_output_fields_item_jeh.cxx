@@ -12,17 +12,22 @@ struct ItemFields
   constexpr static int n_comps = Item::n_comps; 
   static fld_names_t fld_names() { return Item::fld_names(); }
  
+  static void run(mfields_t mf, mfields_t mf_res)
+  {
+    for (int p = 0; p < mf_res->n_patches(); p++) {
+      Fields F(mf[p]), R(mf_res[p]);
+      psc_foreach_3d(ppsc, p, i,j,k, 0, 0) {
+	Item::set(R, F, i,j,k);
+      } foreach_3d_end;
+    }
+  }
+
   static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 		  struct psc_mparticles *mprts, struct psc_mfields *mres)
   {
     mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
     mfields_t mf_res(mres);
-    for (int p = 0; p < mf_res->n_patches(); p++) {
-      Fields F(mf[p]), R(mf_res[p]);
-      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-	Item::set(R, F, ix,iy,iz);
-      } foreach_3d_end;
-    }
+    run(mf, mf_res);
     mf.put_as(mflds_base, 0, 0);
   }
 };
