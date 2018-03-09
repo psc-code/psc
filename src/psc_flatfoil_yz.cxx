@@ -490,6 +490,7 @@ main(int argc, char **argv)
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
 #include "../libpsc/psc_inject/psc_inject_impl.hxx"
+#include "../libpsc/psc_heating/psc_heating_impl.hxx"
 
 using Mparticles_t = MparticlesDouble;
 using Mfields_t = MfieldsC;
@@ -501,6 +502,7 @@ using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
 using Bnd_t = Bnd_<MfieldsC>;
 using BndFields_t = BndFieldsNone;
 using Inject_t = Inject_<Mparticles_t, Mfields_t>;
+using Heating_t = Heating_<Mparticles_t>;
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -536,6 +538,7 @@ static void psc_flatfoil_step(struct psc *psc)
   PscInjectBase inject(sub->inject);
   auto& inject_ = dynamic_cast<Inject_t&>(*inject.sub());
   PscHeatingBase heating(sub->heating);
+  auto& heating_ = dynamic_cast<Heating_t&>(*heating.sub());
   
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -557,7 +560,7 @@ static void psc_flatfoil_step(struct psc *psc)
   bndp_(mprts_);
   
   inject_.run(mprts, mflds);
-  heating(mprts);
+  heating_.run(mprts);
   
   // field propagation E^{n+1/2} -> E^{n+3/2}
 
