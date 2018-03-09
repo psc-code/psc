@@ -2,8 +2,6 @@
 #include <psc_heating_private.h>
 #include "heating.hxx"
 
-using real_t = mparticles_t::real_t;
-
 #include <stdlib.h>
 
 // ======================================================================
@@ -67,7 +65,7 @@ struct Heating_ : HeatingBase
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       auto& patch = mprts.grid().patches[p];
-      PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
 	particle_t& prt = *prt_iter;
 	if (prt.kind() != kind_) {
 	  continue;
@@ -111,19 +109,4 @@ private:
   int kind_;
   psc_heating_spot& spot_;
 };
-
-// ----------------------------------------------------------------------
-// psc_heating "sub"
-
-struct psc_heating_ops_sub : psc_heating_ops {
-  using Heating_t = Heating_<mparticles_t::sub_t>;
-  using PscHeating_t = PscHeatingWrapper<Heating_t>;
-  psc_heating_ops_sub() {
-    name                = PARTICLE_TYPE;
-    size                = PscHeating_t::size;
-    setup               = PscHeating_t::setup;
-    destroy             = PscHeating_t::destroy;
-  }
-} psc_heating_ops_sub;
-
 
