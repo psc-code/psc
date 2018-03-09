@@ -13,6 +13,7 @@
 
 struct HeatingBase
 {
+  virtual void run(psc_mparticles* mprts_base) = 0;
 };
 
 // ======================================================================
@@ -38,11 +39,7 @@ struct PscHeating
     }  
     
     prof_start(pr);
-    struct psc_heating_ops *ops = psc_heating_ops(heating_);
-
-    assert(ops && ops->run);
-    ops->run(heating_, mprts.mprts(), mflds.mflds());
-    
+    sub()->run(mprts.mprts());
     prof_stop(pr);
   }
   

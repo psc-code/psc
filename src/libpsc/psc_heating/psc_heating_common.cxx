@@ -87,7 +87,7 @@ struct Heating_ : HeatingBase
     }
   }
   
-  void run(psc_mparticles* mprts_base)
+  void run(psc_mparticles* mprts_base) override
   {
     struct psc *psc = ppsc;
     
