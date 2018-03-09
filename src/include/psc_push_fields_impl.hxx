@@ -167,9 +167,9 @@ public:
   // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
   //       jx^{n+1}[-.5:.5][-1:1][-1:1]
   
-  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    mfields_t mf = mflds_base->get_as<mfields_t>(JXI, HX + 3);
+    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, HX + 3);
     
     for (int p = 0; p < mf->n_patches(); p++) {
       int *gdims = ppsc->domain.gdims;
@@ -195,9 +195,9 @@ public:
   // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
   // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
-  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    mfields_t mf = mflds_base->get_as<mfields_t>(EX, HX + 3);
+    mfields_t mf = mflds_base.get_as<mfields_t>(EX, HX + 3);
     
     for (int p = 0; p < mf->n_patches(); p++) {
       int *gdims = ppsc->domain.gdims;

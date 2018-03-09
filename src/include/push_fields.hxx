@@ -18,8 +18,8 @@ extern int pr_time_step_no_comm; // FIXME
 class PushFieldsBase
 {
 public:
-  virtual void push_E(struct psc_mfields *mflds_base, double dt_fac) = 0;
-  virtual void push_H(struct psc_mfields *mflds_base, double dt_fac) = 0;
+  virtual void push_E(PscMfieldsBase mflds_base, double dt_fac) = 0;
+  virtual void push_H(PscMfieldsBase mflds_base, double dt_fac) = 0;
 };
 
 // ======================================================================

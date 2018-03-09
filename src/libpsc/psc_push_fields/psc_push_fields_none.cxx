@@ -5,10 +5,10 @@
 
 struct PushFieldsNone : PushFieldsBase
 {
-  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {}
 
-  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {}
 };
 

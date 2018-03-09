@@ -10,9 +10,9 @@ struct PushFieldsCuda : PushFieldsBase
   // ----------------------------------------------------------------------
   // push_E
 
-  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(JXI, HX + 3);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, HX + 3);
     
     if (ppsc->domain.gdims[0] == 1) {
       cuda_push_fields_E_yz(mf->cmflds, dt_fac * ppsc->dt);
@@ -23,9 +23,9 @@ struct PushFieldsCuda : PushFieldsBase
     mf.put_as(mflds_base, EX, EX + 3);
   }
   
-  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(JXI, HX + 3);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, HX + 3);
     
     if (ppsc->domain.gdims[0] == 1) {
       cuda_push_fields_H_yz(mf->cmflds, dt_fac * ppsc->dt);

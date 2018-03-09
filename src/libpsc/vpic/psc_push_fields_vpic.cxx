@@ -17,10 +17,10 @@ struct PushFieldsVpic : PushFieldsBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_E(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
     // needs J, E, B, TCA, material
-    PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(JXI, VPIC_MFIELDS_N_COMP);
+    PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(JXI, VPIC_MFIELDS_N_COMP);
     FieldArray *vmflds = mf->vmflds_fields;
     Simulation_push_mflds_E(sim_, vmflds, dt_fac);
     Simulation_field_injection(sim_); // FIXME, this isn't the place, should have its own psc_field_injection
@@ -29,10 +29,10 @@ struct PushFieldsVpic : PushFieldsBase
     mf.put_as(mflds_base, EX, 9 + 3);
   }
 
-  void push_H(struct psc_mfields *mflds_base, double dt_fac) override
+  void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
     // needs E, B
-    PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, HX + 6);
+    PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(EX, HX + 6);
     FieldArray *vmflds = mf->vmflds_fields;
     Simulation_push_mflds_H(sim_, vmflds, dt_fac);
     

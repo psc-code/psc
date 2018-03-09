@@ -539,6 +539,8 @@ static void psc_flatfoil_step(struct psc *psc)
   PscCollisionBase collision(psc->collision);
   auto& collision_ = dynamic_cast<Collision_t&>(*collision.sub());
   PscPushParticlesBase pushp(psc->push_particles);
+  //mprintf("sub %s\n", typeid(*pushp.sub()).name());
+  //auto& pushp_ = dynamic_cast<PushParticles_t&>(*pushp.sub());
   PscPushFieldsBase pushf(psc->push_fields);
   auto& pushf_ = dynamic_cast<PushFields_t&>(*pushf.sub());
   PscBndParticlesBase bndp(psc->bnd_particles);
@@ -561,7 +563,7 @@ static void psc_flatfoil_step(struct psc *psc)
 
   // field propagation B^{n+1/2} -> B^{n+1}
   psc_stats_start(st_time_field);
-  pushf_.push_H(mflds.mflds(), .5);
+  pushf_.push_H(mflds, .5);
   psc_stats_stop(st_time_field);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
@@ -582,7 +584,7 @@ static void psc_flatfoil_step(struct psc *psc)
   bnd_.fill_ghosts(mflds, JXI, JXI + 3);
   
   // push E
-  pushf_.push_E(mflds.mflds(), 1.);
+  pushf_.push_E(mflds, 1.);
   
   bndf_.fill_ghosts_E(mflds);
   if (pushf.pushf()->variant == 0) {
@@ -599,7 +601,7 @@ static void psc_flatfoil_step(struct psc *psc)
   }
   
   // push H
-  pushf_.push_H(mflds.mflds(), .5);
+  pushf_.push_H(mflds, .5);
   
   bndf_.fill_ghosts_H(mflds);
   if (pushf.pushf()->variant == 0) {
