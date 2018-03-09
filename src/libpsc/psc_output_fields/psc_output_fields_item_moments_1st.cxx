@@ -565,16 +565,20 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
 // ======================================================================
 
+template<typename Moment_t, typename mparticles_t>
+struct psc_output_fields_item_ops_ : psc_output_fields_item_ops {
+  psc_output_fields_item_ops_() {
+    name               = strdup((std::string(Moment_t::name) + "_" +
+				 mparticles_traits<mparticles_t>::name).c_str());
+    nr_comp	       = Moment_t::n_comps;
+    fld_names          = Moment_t::fld_names();
+    run_all            = ItemMoment<Moment_t>::run;
+    flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  }
+};
+
 #define MAKE_OP(TYPE, NAME, Moment_t)					\
-  struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
-    psc_output_fields_item_ops_##NAME##TYPE() {				\
-      name               = strdup((std::string(Moment_t::name) + "_" #TYPE).c_str()); \
-      nr_comp	         = Moment_t::n_comps;				\
-      fld_names          = Moment_t::fld_names();			\
-      run_all            = ItemMoment<Moment_t>::run;			\
-      flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
-    }									\
-  } psc_output_fields_item_##NAME##TYPE##_ops;
+  struct psc_output_fields_item_ops_<Moment_t, mparticles_t> psc_output_fields_item_##NAME##TYPE##_ops;
 
 #define MAKE_POFI_OPS(TYPE)						\
   MAKE_OP(TYPE, n_1st_  , Moment_n_1st)					\
