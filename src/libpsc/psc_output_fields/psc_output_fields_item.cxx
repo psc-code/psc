@@ -54,25 +54,6 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   return flds;
 }
 
-// ----------------------------------------------------------------------
-// psc_output_fields_item_run
-
-void
-psc_output_fields_item_run(struct psc_output_fields_item *item,
-			   struct psc_mfields *flds, struct psc_mparticles *particles,
-			   struct psc_mfields *res)
-{
-  struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
-  assert(ops->run_all);
-
-  ops->run_all(item, flds, particles, res);
-  if (ops->flags & POFI_ADD_GHOSTS) {
-    assert(item->bnd);
-    auto bnd = PscBndBase(item->bnd);
-    bnd.add_ghosts(res, 0, res->nr_fields);
-  }
-}
-
 // ======================================================================
 // psc_output_fields_item_init
 
