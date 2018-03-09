@@ -138,6 +138,8 @@ struct ItemMoment
 struct Moment_n_1st
 {
   constexpr static char const* name = "n_1st";
+  constexpr static int n_comps = 1;
+  constexpr static fld_names_t fld_names() { return { "n" }; }
   
   static void run(fields_t flds, particles_t& prts)
   {
@@ -159,6 +161,8 @@ struct Moment_n_1st
 struct Moment_v_1st
 {
   constexpr static char const* name = "v_1st";
+  constexpr static int n_comps = 3;
+  constexpr static fld_names_t fld_names() { return { "vx", "vy", "vz" }; }
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -186,6 +190,8 @@ struct Moment_v_1st
 struct Moment_p_1st
 {
   constexpr static char const* name = "p_1st";
+  constexpr static int n_comps = 3;
+  constexpr static fld_names_t fld_names() { return { "px", "py", "pz" }; }
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -211,6 +217,8 @@ struct Moment_p_1st
 struct Moment_vv_1st
 {
   constexpr static char const* name = "vv_1st";
+  constexpr static int n_comps = 3;
+  constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz" }; }
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -238,6 +246,8 @@ struct Moment_vv_1st
 struct Moment_T_1st
 {
   constexpr static char const* name = "T_1st";
+  constexpr static int n_comps = 6;
+  constexpr static fld_names_t fld_names() { return { "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" }; }
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -276,6 +286,8 @@ struct Moment_T_1st
 struct Moment_Tvv_1st
 {
   constexpr static char const* name = "Tvv_1st";
+  constexpr static int n_comps = 6;
+  constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz" }; }
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -553,54 +565,24 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
 // ======================================================================
 
-#define MAKE_OP1(TYPE, NAME, FNAME, Moment_t)				\
+#define MAKE_OP(TYPE, NAME, Moment_t)					\
   struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
     psc_output_fields_item_ops_##NAME##TYPE() {				\
       name               = strdup((std::string(Moment_t::name) + "_" #TYPE).c_str()); \
-      nr_comp	         = 1;						\
-      fld_names[0]       = FNAME;					\
+      nr_comp	         = Moment_t::n_comps;				\
+      fld_names          = Moment_t::fld_names();			\
       run_all            = ItemMoment<Moment_t>::run;			\
       flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
     }									\
   } psc_output_fields_item_##NAME##TYPE##_ops;
-
-#define MAKE_OP3(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, Moment_t)		\
-  struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
-    psc_output_fields_item_ops_##NAME##TYPE() {				\
-      name               = strdup((std::string(Moment_t::name) + "_" #TYPE).c_str()); \
-      nr_comp	         = 3;						\
-      fld_names[0]       = FNAMEX;					\
-      fld_names[1]       = FNAMEY;					\
-      fld_names[2]       = FNAMEZ;					\
-      run_all            = ItemMoment<Moment_t>::run;			\
-      flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
-    }									\
-  } psc_output_fields_item_##NAME##TYPE##_ops;
-
-#define MAKE_OP6(TYPE, NAME, FNAMEX, FNAMEY, FNAMEZ, FNAME3, FNAME4, FNAME5, Moment_t) \
-  struct psc_output_fields_item_ops_##NAME##TYPE : psc_output_fields_item_ops { \
-    psc_output_fields_item_ops_##NAME##TYPE() {				\
-      name               = strdup((std::string(Moment_t::name) + "_" #TYPE).c_str()); \
-      nr_comp	         = 6;						\
-      fld_names[0]       = FNAMEX;					\
-      fld_names[1]       = FNAMEY;					\
-      fld_names[2]       = FNAMEZ;					\
-      fld_names[3]       = FNAME3;					\
-      fld_names[4]       = FNAME4;					\
-      fld_names[5]       = FNAME5;					\
-      run_all            = ItemMoment<Moment_t>::run;			\
-      flags              = POFI_ADD_GHOSTS | POFI_BY_KIND;		\
-    }									\
-  } psc_output_fields_item_##NAME##TYPE##_ops;
-
 
 #define MAKE_POFI_OPS(TYPE)						\
-  MAKE_OP1(TYPE, n_1st_, "n", Moment_n_1st)				\
-  MAKE_OP3(TYPE, v_1st_, "vx", "vy", "vz", Moment_v_1st)		\
-  MAKE_OP3(TYPE, p_1st_, "px", "py", "pz", Moment_p_1st)		\
-  MAKE_OP3(TYPE, vv_1st_, "vxvx", "vyvy", "vzvz", Moment_vv_1st)	\
-  MAKE_OP6(TYPE, T_1st_, "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz", Moment_T_1st) \
-  MAKE_OP6(TYPE, Tvv_1st_, "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz", Moment_Tvv_1st) \
+  MAKE_OP(TYPE, n_1st_  , Moment_n_1st)					\
+  MAKE_OP(TYPE, v_1st_  , Moment_v_1st)					\
+  MAKE_OP(TYPE, p_1st_  , Moment_p_1st)					\
+  MAKE_OP(TYPE, vv_1st_ , Moment_vv_1st)				\
+  MAKE_OP(TYPE, T_1st_  , Moment_T_1st)					\
+  MAKE_OP(TYPE, Tvv_1st_, Moment_Tvv_1st)				\
 
 #if 0
 									\
