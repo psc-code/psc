@@ -13,6 +13,10 @@ template<typename MP>
 struct Heating_ : HeatingBase
 {
   using Self = Heating_<MP>;
+  using Mparticles = MP;
+  using real_t = typename Mparticles::real_t;
+  using particle_t = typename Mparticles::particle_t;
+  using mparticles_t = PscMparticles<Mparticles>;
   
   // ----------------------------------------------------------------------
   // ctor
@@ -28,7 +32,7 @@ struct Heating_ : HeatingBase
   // ----------------------------------------------------------------------
   // kick_particle
 
-  void kick_particle(particle_t *prt, real_t H)
+  void kick_particle(particle_t& prt, real_t H)
   {
     struct psc *psc = ppsc;
 
@@ -53,26 +57,26 @@ struct Heating_ : HeatingBase
     real_t Dpyi = sqrtf(H * heating_dt);
     real_t Dpzi = sqrtf(H * heating_dt);
 
-    prt->pxi += Dpxi * ranx;
-    prt->pyi += Dpyi * rany;
-    prt->pzi += Dpzi * ranz;
+    prt.pxi += Dpxi * ranx;
+    prt.pyi += Dpyi * rany;
+    prt.pzi += Dpzi * ranz;
   }
 
-  void operator()(mparticles_t mprts)
+  void operator()(Mparticles& mprts)
   {
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
-      auto& patch = mprts->grid().patches[p];
+      auto& patch = mprts.grid().patches[p];
       PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-	particle_t *prt = &*prt_iter;
-	if (prt->kind() != kind_) {
+	particle_t& prt = *prt_iter;
+	if (prt.kind() != kind_) {
 	  continue;
 	}
       
 	double xx[3] = {
-	  prt->xi + patch.xb[0],
-	  prt->yi + patch.xb[1],
-	  prt->zi + patch.xb[2],
+	  prt.xi + patch.xb[0],
+	  prt.yi + patch.xb[1],
+	  prt.zi + patch.xb[2],
 	};
 
 	double H = psc_heating_spot_get_H(&spot_, xx);
@@ -97,7 +101,7 @@ struct Heating_ : HeatingBase
     }
 
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    (*this)(mprts);
+    (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
   
