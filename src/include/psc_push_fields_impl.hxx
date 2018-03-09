@@ -131,6 +131,7 @@ protected:
 template<typename mfields_t>
 class PushFields : public PushFieldsBase
 {
+  using Mfields_t = typename mfields_t::sub_t;
   using fields_t = typename mfields_t::fields_t;
 
 public:
@@ -138,24 +139,28 @@ public:
   // push_E
 
   template<typename dim>
-  void push_E(fields_t flds, struct psc *psc, double dt_fac)
+  void push_E(Mfields_t& mflds, struct psc *psc, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
-    PushE<Fields> push_E(flds, psc, dt_fac);
     
-    Foreach_3d(push_E, 1, 2);
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      PushE<Fields> push_E(mflds[p], psc, dt_fac);
+      Foreach_3d(push_E, 1, 2);
+    }
   }
   
   // ----------------------------------------------------------------------
   // push_H
 
   template<typename dim>
-  void push_H(fields_t flds, struct psc *psc, double dt_fac)
+  void push_H(Mfields_t& mflds, struct psc *psc, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
-    PushH<Fields> push_H(flds, psc, dt_fac);
-    
-    Foreach_3d(push_H, 2, 1);
+
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      PushH<Fields> push_H(mflds[p], psc, dt_fac);
+      Foreach_3d(push_H, 2, 1);
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -169,22 +174,20 @@ public:
   
   void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, HX + 3);
+    mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, HX + 3);
     
-    for (int p = 0; p < mf->n_patches(); p++) {
-      int *gdims = ppsc->domain.gdims;
-      if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_E<dim_xyz>(mf[p], ppsc, dt_fac);
-      } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_E<dim_yz>(mf[p], ppsc, dt_fac);
-      } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-	push_E<dim_xz>(mf[p], ppsc, dt_fac);
-      } else {
-	assert(0);
-      }
+    int *gdims = ppsc->domain.gdims;
+    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+      push_E<dim_xyz>(*mflds.sub(), ppsc, dt_fac);
+    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+      push_E<dim_yz>(*mflds.sub(), ppsc, dt_fac);
+    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+      push_E<dim_xz>(*mflds.sub(), ppsc, dt_fac);
+    } else {
+      assert(0);
     }
 
-    mf.put_as(mflds_base, EX, EX + 3);
+    mflds.put_as(mflds_base, EX, EX + 3);
   }
 
   // ----------------------------------------------------------------------
@@ -197,22 +200,20 @@ public:
 
   void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    mfields_t mf = mflds_base.get_as<mfields_t>(EX, HX + 3);
+    mfields_t mflds = mflds_base.get_as<mfields_t>(EX, HX + 3);
     
-    for (int p = 0; p < mf->n_patches(); p++) {
-      int *gdims = ppsc->domain.gdims;
-      if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_H<dim_xyz>(mf[p], ppsc, dt_fac);
-      } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-	push_H<dim_yz>(mf[p], ppsc, dt_fac);
-      } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
-	push_H<dim_xz>(mf[p], ppsc, dt_fac);
-      } else {
-	assert(0);
-      }
+    int *gdims = ppsc->domain.gdims;
+    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+      push_H<dim_xyz>(*mflds.sub(), ppsc, dt_fac);
+    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+      push_H<dim_yz>(*mflds.sub(), ppsc, dt_fac);
+    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+      push_H<dim_xz>(*mflds.sub(), ppsc, dt_fac);
+    } else {
+      assert(0);
     }
 
-    mf.put_as(mflds_base, HX, HX + 3);
+    mflds.put_as(mflds_base, HX, HX + 3);
   }    
 };
 
