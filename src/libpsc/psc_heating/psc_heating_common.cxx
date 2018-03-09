@@ -12,6 +12,8 @@ using real_t = mparticles_t::real_t;
 template<typename MP>
 struct Heating_ : HeatingBase
 {
+  using Self = Heating_<MP>;
+  
   // ----------------------------------------------------------------------
   // ctor
 
@@ -24,11 +26,11 @@ struct Heating_ : HeatingBase
   // ----------------------------------------------------------------------
   // kick_particle
 
-  static void kick_particle(struct psc_heating *heating, particle_t *prt, real_t H)
+  void kick_particle(particle_t *prt, real_t H)
   {
     struct psc *psc = ppsc;
 
-    real_t heating_dt = heating->every_step * psc->dt;
+    real_t heating_dt = every_step_ * psc->dt;
 
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -57,21 +59,22 @@ struct Heating_ : HeatingBase
   // ----------------------------------------------------------------------
   // run
 
-  static void run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
+  static void run(struct psc_heating *_heating, struct psc_mparticles *mprts_base,
 		  struct psc_mfields *mflds_base)
   {
+    PscHeating<Self> heating(_heating);
     struct psc *psc = ppsc;
 
     // only heating between heating_tb and heating_te
-    if (psc->timestep < heating->tb || psc->timestep >= heating->te) {
+    if (psc->timestep < heating->tb_ || psc->timestep >= heating->te_) {
       return;
     }
 
-    if (psc->timestep % heating->every_step != 0) {
+    if (psc->timestep % heating->every_step_ != 0) {
       return;
     }
 
-    int kind = heating->kind;
+    int kind = heating->kind_;
 
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
   
@@ -90,9 +93,9 @@ struct Heating_ : HeatingBase
 	  prt->zi + patch.xb[2],
 	};
 
-	double H = psc_heating_spot_get_H(heating->spot, xx);
+	double H = psc_heating_spot_get_H(_heating->spot, xx);
 	if (H > 0) {
-	  kick_particle(heating, prt, H);
+	  heating->kick_particle(prt, H);
 	}
       }
     }
