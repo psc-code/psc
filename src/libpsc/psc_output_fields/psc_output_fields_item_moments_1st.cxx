@@ -9,6 +9,7 @@
 using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 using real_t = mparticles_t::real_t;
+using particles_t = mparticles_t::patch_t;
 
 #include "common_moments.cxx"
 
@@ -109,7 +110,7 @@ struct ItemMomentWrap
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
       mflds_res[p].zero();
-      Moment_t::run(p, mflds_res[p], mprts);
+      Moment_t::run(mflds_res[p], mprts[p]);
       add_ghosts_boundary(mflds_res[p], p, 0, mflds_res->n_comps());
     }
   }
@@ -135,10 +136,9 @@ struct ItemMoment
 
 struct Moment_n_1st
 {
-  static void run(int p, fields_t flds, mparticles_t& mprts)
+  static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    mparticles_t::patch_t& prts = mprts[p];
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
@@ -155,10 +155,9 @@ struct Moment_n_1st
 
 struct Moment_v_1st
 {
-  static void run(int p, fields_t flds, mparticles_t& mprts)
+  static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    mparticles_t::patch_t& prts = mprts[p];
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
@@ -181,10 +180,9 @@ struct Moment_v_1st
 
 struct Moment_p_1st
 {
-  static void run(int p, fields_t flds, mparticles_t& mprts)
+  static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    mparticles_t::patch_t& prts = mprts[p];
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
@@ -194,7 +192,7 @@ struct Moment_p_1st
       real_t *pxi = &prt->pxi;
       
       for (int m = 0; m < 3; m++) {
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, mprts->prt_mni(*prt) * pxi[m]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, prts.prt_mni(*prt) * pxi[m]);
       }
     }
   }
@@ -205,10 +203,9 @@ struct Moment_p_1st
 
 struct Moment_vv_1st
 {
-  static void run(int p, fields_t flds, mparticles_t& mprts)
+  static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    mparticles_t::patch_t& prts = mprts[p];
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
@@ -231,10 +228,9 @@ struct Moment_vv_1st
 
 struct Moment_T_1st
 {
-  static void run(int p, fields_t flds, mparticles_t& mprts)
+  static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    mparticles_t::patch_t& prts = mprts[p];
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
@@ -253,12 +249,12 @@ struct Moment_T_1st
       px[0] = pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz);
       px[1] = pxi[1];
       px[2] = pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * px[0] * vx[0]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * px[1] * vx[1]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * px[2] * vx[2]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * px[0] * vx[1]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * px[0] * vx[2]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * px[1] * vx[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(*prt) * px[0] * vx[0]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(*prt) * px[1] * vx[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prts.prt_mni(*prt) * px[2] * vx[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, prts.prt_mni(*prt) * px[0] * vx[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, prts.prt_mni(*prt) * px[0] * vx[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, prts.prt_mni(*prt) * px[1] * vx[2]);
     }
   }
 };
@@ -268,10 +264,9 @@ struct Moment_T_1st
 
 struct Moment_Tvv_1st
 {
-  static void run(int p, fields_t flds, mparticles_t& mprts)
+  static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    mparticles_t::patch_t& prts = mprts[p];
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
@@ -281,12 +276,12 @@ struct Moment_Tvv_1st
       
       real_t vxi[3];
       particle_calc_vxi(prt, vxi);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, mprts->prt_mni(*prt) * vxi[0] * vxi[0]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, mprts->prt_mni(*prt) * vxi[1] * vxi[1]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, mprts->prt_mni(*prt) * vxi[2] * vxi[2]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, mprts->prt_mni(*prt) * vxi[0] * vxi[1]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, mprts->prt_mni(*prt) * vxi[0] * vxi[2]);
-      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, mprts->prt_mni(*prt) * vxi[1] * vxi[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(*prt) * vxi[0] * vxi[0]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(*prt) * vxi[1] * vxi[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prts.prt_mni(*prt) * vxi[2] * vxi[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, prts.prt_mni(*prt) * vxi[0] * vxi[1]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, prts.prt_mni(*prt) * vxi[0] * vxi[2]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, prts.prt_mni(*prt) * vxi[1] * vxi[2]);
     }
   }
 };
