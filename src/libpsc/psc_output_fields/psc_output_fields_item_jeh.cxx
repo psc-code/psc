@@ -42,9 +42,7 @@ struct psc_output_fields_item_ops_j_nc : psc_output_fields_item_ops {
   psc_output_fields_item_ops_j_nc() {
     name      = "j_nc";
     nr_comp   = 3;
-    fld_names[0] = "jx_nc";
-    fld_names[1] = "jy_nc";
-    fld_names[2] = "jz_nc";
+    fld_names = { "jx_nc", "jy_nc", "jz_nc" };
     run_all   = calc_j_nc;
   }
 } psc_output_fields_item_j_nc_ops;

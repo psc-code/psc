@@ -22,7 +22,7 @@ struct psc_output_fields_item_ops {
 		  struct psc_mfields *mflds, struct psc_mparticles *mprts,
 		  struct psc_mfields *mres);
   int nr_comp;
-  const char *fld_names[POFI_MAX_COMPS];
+  std::array<const char *, POFI_MAX_COMPS> fld_names;
   unsigned int flags;
 };
 
