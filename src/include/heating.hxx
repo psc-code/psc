@@ -68,9 +68,9 @@ public:
   {
     PscHeating<Heating> heating(_heating);
     new(heating.sub()) Heating(_heating->every_step,
-			       _heating->tb,
-			       _heating->te,
-			       _heating->kind);
+			       _heating->tb, _heating->te,
+			       _heating->kind,
+			       *_heating->spot);
   }
 
   static void destroy(psc_heating* _heating)

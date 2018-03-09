@@ -17,10 +17,12 @@ struct Heating_ : HeatingBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Heating_(int every_step, int tb, int te, int kind)
+  Heating_(int every_step, int tb, int te, int kind,
+	   psc_heating_spot& spot)
     : every_step_(every_step),
       tb_(tb), te_(te),
-      kind_(kind)
+      kind_(kind),
+      spot_(spot)
   {}
   
   // ----------------------------------------------------------------------
@@ -93,7 +95,7 @@ struct Heating_ : HeatingBase
 	  prt->zi + patch.xb[2],
 	};
 
-	double H = psc_heating_spot_get_H(_heating->spot, xx);
+	double H = psc_heating_spot_get_H(&heating->spot_, xx);
 	if (H > 0) {
 	  heating->kick_particle(prt, H);
 	}
@@ -107,6 +109,7 @@ private:
   int every_step_;
   int tb_, te_;
   int kind_;
+  psc_heating_spot& spot_;
 };
 
 // ----------------------------------------------------------------------
