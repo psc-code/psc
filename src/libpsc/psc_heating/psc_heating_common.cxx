@@ -58,34 +58,14 @@ struct Heating_ : HeatingBase
     prt->pzi += Dpzi * ranz;
   }
 
-  // ----------------------------------------------------------------------
-  // run
-
-  static void run(struct psc_heating *_heating, struct psc_mparticles *mprts_base,
-		  struct psc_mfields *mflds_base)
+  void operator()(mparticles_t mprts)
   {
-    PscHeating<Self> heating(_heating);
-    struct psc *psc = ppsc;
-
-    // only heating between heating_tb and heating_te
-    if (psc->timestep < heating->tb_ || psc->timestep >= heating->te_) {
-      return;
-    }
-
-    if (psc->timestep % heating->every_step_ != 0) {
-      return;
-    }
-
-    int kind = heating->kind_;
-
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-  
-    psc_foreach_patch(psc, p) {
-      mparticles_t::patch_t& prts = mprts[p];
-      auto& patch = psc->grid().patches[p];
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      auto& prts = mprts[p];
+      auto& patch = mprts->grid().patches[p];
       PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
 	particle_t *prt = &*prt_iter;
-	if (prt->kind() != kind) {
+	if (prt->kind() != kind_) {
 	  continue;
 	}
       
@@ -95,14 +75,40 @@ struct Heating_ : HeatingBase
 	  prt->zi + patch.xb[2],
 	};
 
-	double H = psc_heating_spot_get_H(&heating->spot_, xx);
+	double H = psc_heating_spot_get_H(&spot_, xx);
 	if (H > 0) {
-	  heating->kick_particle(prt, H);
+	  kick_particle(prt, H);
 	}
       }
     }
+  }
+  
+  void run(psc_mparticles* mprts_base)
+  {
+    struct psc *psc = ppsc;
+    
+    // only heating between heating_tb and heating_te
+    if (psc->timestep < tb_ || psc->timestep >= te_) {
+      return;
+    }
 
+    if (psc->timestep % every_step_ != 0) {
+      return;
+    }
+
+    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+    (*this)(mprts);
     mprts.put_as(mprts_base);
+  }
+  
+  // ----------------------------------------------------------------------
+  // run
+
+  static void run(struct psc_heating *_heating, struct psc_mparticles *mprts_base,
+		  struct psc_mfields *mflds_base)
+  {
+    PscHeating<Self> heating(_heating);
+    heating->run(mprts_base);
   }
 
 private:
