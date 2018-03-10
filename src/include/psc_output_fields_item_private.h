@@ -20,12 +20,6 @@ using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
 
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
-  unsigned int flags;
 };
-
-#define psc_output_fields_item_ops(item)			\
-  ((struct psc_output_fields_item_ops *)((item)->obj.ops))
-
-// ======================================================================
 
 #endif

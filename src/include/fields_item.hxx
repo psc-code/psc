@@ -59,8 +59,6 @@ struct PscFieldsItem
 
   void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts, PscMfieldsBase mres)
   {
-    struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item_);
-    
     assert(mres.mflds() == sub()->mres_base_);
     sub()->run2(mflds, mprts);
   }
@@ -111,7 +109,6 @@ struct FieldsItemOps : psc_output_fields_item_ops {
     size      = Wrapper_t::size;
     setup     = Wrapper_t::setup;
     destroy   = Wrapper_t::destroy;
-    flags     = Item_t::flags;
   }
 };
 
@@ -131,7 +128,6 @@ struct FieldsItemFields : FieldsItemBase
       return strdup((std::string{Item::name} + "_" + fields_traits<typename mfields_t::fields_t>::name).c_str());
     }
   }
-  constexpr static int flags = 0;
  
   FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
   {
@@ -308,12 +304,11 @@ struct ItemMoment : FieldsItemBase
     return strdup((std::string(Moment_t::name) + "_" +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
-  constexpr static int flags = Moment_t::flags;
 
   static int n_comps()
   {
     int n_comps = Moment_t::n_comps;
-    if (flags & POFI_BY_KIND) {
+    if (Moment_t::flags & POFI_BY_KIND) {
       n_comps *= POFI_BY_KIND;
     }
     assert(n_comps <= POFI_MAX_COMPS);
@@ -323,7 +318,7 @@ struct ItemMoment : FieldsItemBase
   static fld_names_t fld_names()
   {
     auto fld_names = Moment_t::fld_names();
-    if (!(flags & POFI_BY_KIND)) {
+    if (!(Moment_t::flags & POFI_BY_KIND)) {
       return fld_names;
     }
 
@@ -363,7 +358,7 @@ struct ItemMoment : FieldsItemBase
   {
     run(mflds_base, mprts_base);
 
-    if (flags & POFI_ADD_GHOSTS) {
+    if (Moment_t::flags & POFI_ADD_GHOSTS) {
       bnd_.add_ghosts(this->mres_base_, 0, this->mres_base_->nr_fields);
     }
   }
