@@ -20,6 +20,9 @@ using particles_t = mparticles_t::patch_t;
 
 struct Moment_n_1st
 {
+  using mparticles_t = mparticles_t;
+  using mfields_t = mfields_t;
+  
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n" }; }
@@ -44,6 +47,9 @@ struct Moment_n_1st
 
 struct Moment_v_1st
 {
+  using mparticles_t = mparticles_t;
+  using mfields_t = mfields_t;
+  
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "vx", "vy", "vz" }; }
@@ -74,6 +80,9 @@ struct Moment_v_1st
 
 struct Moment_p_1st
 {
+  using mparticles_t = mparticles_t;
+  using mfields_t = mfields_t;
+  
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "px", "py", "pz" }; }
@@ -102,6 +111,9 @@ struct Moment_p_1st
 
 struct Moment_vv_1st
 {
+  using mparticles_t = mparticles_t;
+  using mfields_t = mfields_t;
+  
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz" }; }
@@ -132,6 +144,9 @@ struct Moment_vv_1st
 
 struct Moment_T_1st
 {
+  using mparticles_t = mparticles_t;
+  using mfields_t = mfields_t;
+  
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
   constexpr static fld_names_t fld_names() { return { "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" }; }
@@ -173,6 +188,9 @@ struct Moment_T_1st
 
 struct Moment_Tvv_1st
 {
+  using mparticles_t = mparticles_t;
+  using mfields_t = mfields_t;
+  
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
   constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz" }; }
