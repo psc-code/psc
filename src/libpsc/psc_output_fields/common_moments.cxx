@@ -287,7 +287,6 @@ struct ItemMoment
     return strdup((std::string(Moment_t::name) + "_" +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
-
   constexpr static int n_comps = Moment_t::n_comps; 
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
