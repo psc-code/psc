@@ -16,6 +16,8 @@ struct FieldsItemBase
 {
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
 		   PscMfieldsBase mres_base) = 0;
+
+  psc_mfields* mres_base_;
 };
 
 // ======================================================================
@@ -68,12 +70,18 @@ public:
   {
     PscFieldsItem<FieldsItem> item(_item);
     new(item.sub()) FieldsItem();
+
+    item->mres_base_ = psc_output_fields_item_create_mfields(_item);
+    psc_mfields_list_add(&psc_mfields_base_list, &item->mres_base_);
   }
 
   static void destroy(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
     item->~FieldsItem();
+
+    psc_mfields_list_del(&psc_mfields_base_list, &item->mres_base_);
+    psc_mfields_destroy(item->mres_base_);
   }
 };
 
