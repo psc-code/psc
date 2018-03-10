@@ -3,6 +3,7 @@
 #include "fields.hxx"
 #include "fields_item.hxx"
 #include "psc_fields_as_c.h"
+#include "psc_fields_cuda.h"
 
 using Fields = Fields3d<mfields_t::fields_t>;
 

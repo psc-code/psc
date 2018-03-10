@@ -6,6 +6,7 @@
 #include "particles.hxx"
 #include "fields3d.hxx"
 #include "bnd.hxx"
+#include "psc_fields_c.h"
 
 #include <mrc_profile.h>
 
@@ -23,15 +24,14 @@ struct FieldsItemBase
 template<class Derived>
 struct FieldsItemCRTP : FieldsItemBase
 {
+  using mres_t = MfieldsC; // default (FIXME, get rid of?)
+  
   FieldsItemCRTP(MPI_Comm comm, PscBndBase bnd)
     : bnd_(bnd)
   {
     auto d = static_cast<Derived*>(this);
 
-    const char* type = "c";
-    if (strcmp(d->name(), "n_1st_cuda") == 0) { // FIXME
-      type = "cuda";
-    }
+    const char* type = fields_traits<typename Derived::mres_t::fields_t>::name;
     int n_comps_total = d->n_comps;
     if (d->flags & POFI_BY_KIND) {
       n_comps_total *= ppsc->nr_kinds;

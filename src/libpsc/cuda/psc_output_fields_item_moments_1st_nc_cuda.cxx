@@ -14,7 +14,8 @@ struct FieldsItem_rho_1st_nc_cuda : FieldsItemCRTP<FieldsItem_rho_1st_nc_cuda>
   using Base = FieldsItemCRTP<FieldsItem_rho_1st_nc_cuda>;
   using Base::Base;
   
-  static const char* name() { return "rho_1st_nc_cuda"; }
+  using mres_t = MfieldsCuda;
+  constexpr static const char* name() { return "rho_1st_nc_cuda"; }
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = POFI_ADD_GHOSTS;
