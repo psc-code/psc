@@ -15,45 +15,6 @@ psc_output_fields_item_set_psc_bnd(struct psc_output_fields_item *item,
   item->bnd = bnd; // FIXME, ref counting?
 }
 
-// ----------------------------------------------------------------------
-// psc_output_fields_item_create_mfields
-
-struct psc_mfields *
-psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
-{
-  struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
-  struct psc_mfields *flds = psc_mfields_create(psc_output_fields_item_comm(item));
-  if (strcmp(psc_output_fields_item_type(item), "n_1st_cuda") == 0) { // FIXME
-    psc_mfields_set_type(flds, "cuda");
-  } else {
-    psc_mfields_set_type(flds, "c");
-  }
-  int nr_comp;
-  if (ops->flags & POFI_BY_KIND) {
-    nr_comp = ops->nr_comp * ppsc->nr_kinds;
-  } else {
-    nr_comp = ops->nr_comp;
-  }
-  psc_mfields_set_param_int(flds, "nr_fields", nr_comp);
-  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
-  flds->grid = &ppsc->grid();
-  psc_mfields_setup(flds);
-  assert(ops->nr_comp <= POFI_MAX_COMPS);
-  for (int m = 0; m < nr_comp; m++) {
-    if (ops->flags & POFI_BY_KIND) {
-      int mm = m % ops->nr_comp;
-      int k = m / ops->nr_comp;
-      char s[strlen(ops->fld_names[mm]) + strlen(ppsc->kinds[k].name) + 2];
-      sprintf(s, "%s_%s", ops->fld_names[mm], ppsc->kinds[k].name);
-      psc_mfields_set_comp_name(flds, m, s);
-    } else {
-      psc_mfields_set_comp_name(flds, m, ops->fld_names[m]);
-    }
-  }
-
-  return flds;
-}
-
 // ======================================================================
 // psc_output_fields_item_init
 

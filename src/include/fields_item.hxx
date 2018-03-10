@@ -57,6 +57,46 @@ private:
 
 using PscFieldsItemBase = PscFieldsItem<FieldsItemBase>;
 
+// ----------------------------------------------------------------------
+// psc_output_fields_item_create_mfields
+
+static struct psc_mfields *
+psc_output_fields_item_create_mfields(struct psc_output_fields_item *_item)
+{
+  struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(_item);
+  MPI_Comm comm = psc_output_fields_item_comm(_item);
+  const char* type = "c";
+  if (strcmp(psc_output_fields_item_type(_item), "n_1st_cuda") == 0) { // FIXME
+    type = "cuda";
+  }
+  int n_comps = ops->nr_comp;
+  int n_comps_total = n_comps;
+  if (ops->flags & POFI_BY_KIND) {
+    n_comps_total *= ppsc->nr_kinds;
+  }
+
+  struct psc_mfields *flds = psc_mfields_create(comm);
+  psc_mfields_set_type(flds, type);
+  psc_mfields_set_param_int(flds, "nr_fields", n_comps_total);
+  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
+  flds->grid = &ppsc->grid();
+  psc_mfields_setup(flds);
+  assert(ops->nr_comp <= POFI_MAX_COMPS);
+  for (int m = 0; m < n_comps_total; m++) {
+    if (ops->flags & POFI_BY_KIND) {
+      int mm = m % ops->nr_comp;
+      int k = m / ops->nr_comp;
+      char s[strlen(ops->fld_names[mm]) + strlen(ppsc->kinds[k].name) + 2];
+      sprintf(s, "%s_%s", ops->fld_names[mm], ppsc->kinds[k].name);
+      psc_mfields_set_comp_name(flds, m, s);
+    } else {
+      psc_mfields_set_comp_name(flds, m, ops->fld_names[m]);
+    }
+  }
+
+  return flds;
+}
+
 // ======================================================================
 // PscFieldsItemWrapper
 
