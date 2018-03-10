@@ -7,7 +7,7 @@
 
 // ======================================================================
 
-struct FieldsItem_dive_cuda : FieldsItemBase
+struct FieldsItem_dive_cuda : FieldsItemCRTP<FieldsItem_dive_cuda>
 {
   static const char* name() { return "dive_cuda"; }
   constexpr static int n_comps = 1;

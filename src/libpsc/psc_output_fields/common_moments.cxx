@@ -280,7 +280,7 @@ struct ItemMomentWrap
 };
 
 template<typename Moment_t, typename mparticles_t>
-struct ItemMoment : FieldsItemBase
+struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t>>
 {
   static const char* name()
   {

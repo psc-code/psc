@@ -16,7 +16,7 @@ psc_collision_ops_<Collision_<MparticlesSingle, MfieldsSingle>> psc_collision_si
 psc_collision_ops_<Collision_<MparticlesDouble, MfieldsC>> psc_collision_double_ops;
 
 template<typename Collision>
-struct FieldsItem_coll_stats : FieldsItemBase
+struct FieldsItem_coll_stats : FieldsItemCRTP<FieldsItem_coll_stats<Collision>>
 {
   using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;
@@ -52,7 +52,7 @@ struct FieldsItem_coll_stats : FieldsItemBase
 };
 
 template<typename Collision>
-struct FieldsItem_coll_rei : FieldsItemBase
+struct FieldsItem_coll_rei : FieldsItemCRTP<FieldsItem_coll_rei<Collision>>
 {
   using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;

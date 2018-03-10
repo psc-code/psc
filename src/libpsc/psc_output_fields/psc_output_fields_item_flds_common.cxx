@@ -16,7 +16,7 @@
 // ======================================================================
 
 template<typename MF>
-struct FieldsItem_dive : FieldsItemBase
+struct FieldsItem_dive : FieldsItemCRTP<FieldsItem_dive<MF>>
 {
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;

@@ -15,7 +15,7 @@ using Fields = Fields3d<fields_t>;
 // ----------------------------------------------------------------------
 // FieldsItem_vpic_fields
 
-struct FieldsItem_vpic_fields : FieldsItemBase
+struct FieldsItem_vpic_fields : FieldsItemCRTP<FieldsItem_vpic_fields>
 {
   constexpr static char const* name() { return "vpic_fields"; }
   constexpr static int n_comps = 16;
@@ -60,7 +60,7 @@ FieldsItemOps<FieldsItem_vpic_fields> psc_output_fields_item_vpic_fields_ops;
 // ----------------------------------------------------------------------
 // FieldsItem_vpic_hydro
 
-struct FieldsItem_vpic_hydro : FieldsItemBase
+struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
 {
   constexpr static char const* name() { return "vpic_hydro"; }
   constexpr static int n_comps = VPIC_HYDRO_N_COMP;

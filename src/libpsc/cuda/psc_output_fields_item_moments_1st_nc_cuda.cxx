@@ -9,7 +9,7 @@
 // ======================================================================
 // rho_1st_nc_cuda
 
-struct FieldsItem_rho_1st_nc_cuda : FieldsItemBase
+struct FieldsItem_rho_1st_nc_cuda : FieldsItemCRTP<FieldsItem_rho_1st_nc_cuda>
 {
   static const char* name() { return "rho_1st_nc_cuda"; }
   constexpr static int n_comps = 1;
@@ -38,7 +38,7 @@ FieldsItemOps<FieldsItem_rho_1st_nc_cuda> psc_output_fields_item_rho_1st_nc_cuda
 // ======================================================================
 // n_1st_cuda
 
-struct FieldsItem_n_1st_cuda : FieldsItemBase
+struct FieldsItem_n_1st_cuda : FieldsItemCRTP<FieldsItem_n_1st_cuda>
 {
   static const char* name() { return "n_1st_cuda"; }
   constexpr static int n_comps = 1;

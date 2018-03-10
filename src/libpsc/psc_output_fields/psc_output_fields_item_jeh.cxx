@@ -7,7 +7,7 @@
 using Fields = Fields3d<mfields_t::fields_t>;
 
 template<typename Item>
-struct ItemFields : FieldsItemBase
+struct ItemFields : FieldsItemCRTP<ItemFields<Item>>
 {
   constexpr static char const* name() { return Item::name; }
   constexpr static int n_comps = Item::n_comps; 

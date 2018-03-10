@@ -16,8 +16,21 @@ struct FieldsItemBase
 {
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
 		   PscMfieldsBase mres_base) = 0;
+  virtual void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+		   PscMfieldsBase mres_base) = 0;
 
   psc_mfields* mres_base_;
+};
+
+template<class Derived>
+struct FieldsItemCRTP : FieldsItemBase
+{
+  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	    PscMfieldsBase mres_base) override
+  {
+    auto d = static_cast<Derived*>(this);
+    d->run(mflds_base, mprts_base, mres_base);
+  }
 };
 
 // ======================================================================
