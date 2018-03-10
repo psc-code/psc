@@ -23,7 +23,8 @@ struct FieldsItemBase
 template<class Derived>
 struct FieldsItemCRTP : FieldsItemBase
 {
-  FieldsItemCRTP(MPI_Comm comm)
+  FieldsItemCRTP(MPI_Comm comm, PscBndBase bnd)
+    : bnd_(bnd)
   {
     auto d = static_cast<Derived*>(this);
 
@@ -58,12 +59,25 @@ struct FieldsItemCRTP : FieldsItemBase
 
     psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
   }
+
+  ~FieldsItemCRTP()
+  {
+    psc_mfields_list_del(&psc_mfields_base_list, &mres_base_);
+    psc_mfields_destroy(mres_base_);
+  }
   
   void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     auto d = static_cast<Derived*>(this);
     d->run(mflds_base, mprts_base);
+
+    if (d->flags & POFI_ADD_GHOSTS) {
+      bnd_.add_ghosts(mres_base_, 0, mres_base_->nr_fields);
+    }
   }
+
+private:
+  PscBndBase bnd_;
 };
 
 // ======================================================================
@@ -87,12 +101,6 @@ struct PscFieldsItem
     
     assert(mres.mflds() == sub()->mres_base_);
     sub()->run2(mflds, mprts);
-
-    if (ops->flags & POFI_ADD_GHOSTS) {
-      assert(item_->bnd);
-      auto bnd = PscBndBase(item_->bnd);
-      bnd.add_ghosts(mres, 0, mres.n_fields());
-    }
   }
 
   sub_t* sub() { return mrc_to_subobj(item_, sub_t); }
@@ -116,7 +124,8 @@ public:
   static void setup(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
-    new(item.sub()) FieldsItem(psc_output_fields_item_comm(_item));
+    new(item.sub()) FieldsItem(psc_output_fields_item_comm(_item),
+			       PscBndBase{_item->bnd});
   }
 
   static void destroy(psc_output_fields_item* _item)
@@ -126,9 +135,6 @@ public:
     if (!item->mres_base_) return; // ctor hadn't run yet FIXME
 
     item->~FieldsItem();
-
-    psc_mfields_list_del(&psc_mfields_base_list, &item->mres_base_);
-    psc_mfields_destroy(item->mres_base_);
   }
 };
 
