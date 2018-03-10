@@ -42,37 +42,6 @@ struct FieldsItemBase
   psc_mfields* mres_base_;
 };
 
-template<class Derived>
-struct FieldsItemCRTP : FieldsItemBase
-{
-  using mres_t = MfieldsC; // default (FIXME, get rid of?)
-
-  FieldsItemCRTP(MPI_Comm comm, PscBndBase bnd)
-    : bnd_(bnd)
-  {
-    auto d = static_cast<Derived*>(this);
-
-    create_mres_<typename Derived::mres_t>(comm, d->n_comps());
-    auto fld_names = d->fld_names();
-    for (int m = 0; m < d->n_comps(); m++) {
-      psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
-    }
-  }
-
-  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
-  {
-    auto d = static_cast<Derived*>(this);
-    d->run(mflds_base, mprts_base);
-
-    if (d->flags & POFI_ADD_GHOSTS) {
-      bnd_.add_ghosts(mres_base_, 0, mres_base_->nr_fields);
-    }
-  }
-
-private:
-  PscBndBase bnd_;
-};
-
 // ======================================================================
 // PscFieldsItem
 
@@ -327,11 +296,8 @@ struct ItemMomentLoopPatches : Moment_t
 // ItemMoment
 
 template<typename Moment_t>
-struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t>>
+struct ItemMoment : FieldsItemBase
 {
-  using Base = FieldsItemCRTP<ItemMoment<Moment_t>>;
-  using Base::Base;
-
   using mparticles_t = typename Moment_t::mparticles_t;
   using mfields_t = typename Moment_t::mfields_t;
   using fields_t = typename mfields_t::fields_t;
@@ -373,6 +339,15 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t>>
     return names;
   }
 
+  ItemMoment(MPI_Comm comm, PscBndBase bnd)
+    : bnd_(bnd)
+  {
+    this->template create_mres_<mfields_t>(comm, n_comps());
+    for (int m = 0; m < n_comps(); m++) {
+      psc_mfields_set_comp_name(this->mres_base_, m, fld_names()[m]);
+    }
+  }
+
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
@@ -384,6 +359,17 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t>>
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 
+  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  {
+    run(mflds_base, mprts_base);
+
+    if (flags & POFI_ADD_GHOSTS) {
+      bnd_.add_ghosts(this->mres_base_, 0, this->mres_base_->nr_fields);
+    }
+  }
+
+private:
+  PscBndBase bnd_;
 };
 
 // ----------------------------------------------------------------------
