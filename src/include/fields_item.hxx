@@ -18,6 +18,19 @@ struct FieldsItemBase
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
   virtual void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
 
+  template<typename MF>
+  static psc_mfields* make_(MPI_Comm comm, int n_comps)
+  {
+    auto mflds = psc_mfields_create(comm);
+    psc_mfields_set_type(mflds, fields_traits<typename MF::fields_t>::name);
+    psc_mfields_set_param_int(mflds, "nr_fields", n_comps);
+    psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
+    mflds->grid = &ppsc->grid();
+    psc_mfields_setup(mflds);
+
+    return mflds;
+  }
+  
   psc_mfields* mres_base_;
 };
 
@@ -25,24 +38,15 @@ template<class Derived>
 struct FieldsItemCRTP : FieldsItemBase
 {
   using mres_t = MfieldsC; // default (FIXME, get rid of?)
-  
+
   FieldsItemCRTP(MPI_Comm comm, PscBndBase bnd)
     : bnd_(bnd)
   {
     auto d = static_cast<Derived*>(this);
 
-    const char* type = fields_traits<typename Derived::mres_t::fields_t>::name;
-    int n_comps_total = d->n_comps();
-    
-    mres_base_ = psc_mfields_create(comm);
-    psc_mfields_set_type(mres_base_, type);
-    psc_mfields_set_param_int(mres_base_, "nr_fields", n_comps_total);
-    psc_mfields_set_param_int3(mres_base_, "ibn", ppsc->ibn);
-    mres_base_->grid = &ppsc->grid();
-    psc_mfields_setup(mres_base_);
-
+    mres_base_ = make_<typename Derived::mres_t>(comm, d->n_comps());
     auto fld_names = d->fld_names();
-    for (int m = 0; m < n_comps_total; m++) {
+    for (int m = 0; m < d->n_comps(); m++) {
       psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
     }
 
