@@ -16,7 +16,7 @@ psc_collision_ops_<Collision_<MparticlesSingle, MfieldsSingle>> psc_collision_si
 psc_collision_ops_<Collision_<MparticlesDouble, MfieldsC>> psc_collision_double_ops;
 
 template<typename Collision>
-struct FieldsItem_coll_stats
+struct FieldsItem_coll_stats : FieldsItemBase
 {
   using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;
@@ -34,25 +34,25 @@ struct FieldsItem_coll_stats
   }
   constexpr static int flags = 0;
 
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
     PscCollision<Collision> collision(ppsc->collision);
     Collision* coll = collision.sub();
     
-    mfields_t mr = mres->get_as<mfields_t>(0, 0);
+    mfields_t mr = mres_base.get_as<mfields_t>(0, 0);
     
     for (int m = 0; m < coll->NR_STATS; m++) {
       // FIXME, copy could be avoided (?)
       mr->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
     }
     
-    mr.put_as(mres, 0, coll->NR_STATS);
+    mr.put_as(mres_base, 0, coll->NR_STATS);
   }
 };
 
 template<typename Collision>
-struct FieldsItem_coll_rei
+struct FieldsItem_coll_rei : FieldsItemBase
 {
   using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;
@@ -66,20 +66,20 @@ struct FieldsItem_coll_rei
   constexpr static fld_names_t fld_names() { return { "coll_rei_x", "coll_rei_y", "coll_rei_z" }; }
   constexpr static int flags = 0;
 
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
     PscCollision<Collision> collision(ppsc->collision);
     Collision* coll = collision.sub();
     
-    mfields_t mr = mres->get_as<mfields_t>(0, 0);
+    mfields_t mr = mres_base.get_as<mfields_t>(0, 0);
     
     for (int m = 0; m < 3; m++) {
       // FIXME, copy could be avoided (?)
       mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
     }
     
-    mr.put_as(mres, 0, 3);
+    mr.put_as(mres_base, 0, 3);
   }
 };
   

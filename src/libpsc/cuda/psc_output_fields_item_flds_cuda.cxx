@@ -7,20 +7,20 @@
 
 // ======================================================================
 
-struct FieldsItem_dive_cuda
+struct FieldsItem_dive_cuda : FieldsItemBase
 {
   static const char* name() { return "dive_cuda"; }
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "dive" }; } // FIXME
   constexpr static int flags = 0;
 
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
     assert(ppsc->domain.gdims[0] == 1);
 
-    PscMfieldsCuda mf = mflds_base->get_as<PscMfieldsCuda>(EX, EX+3);
-    PscMfieldsCuda mf_res = mres_base->get_as<PscMfieldsCuda>(0, 0);
+    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(EX, EX+3);
+    PscMfieldsCuda mf_res = mres_base.get_as<PscMfieldsCuda>(0, 0);
     cuda_mfields *cmflds = mf->cmflds;
     cuda_mfields *cmres = mf_res->cmflds;
     

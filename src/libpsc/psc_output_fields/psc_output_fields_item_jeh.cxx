@@ -7,7 +7,7 @@
 using Fields = Fields3d<mfields_t::fields_t>;
 
 template<typename Item>
-struct ItemFields
+struct ItemFields : FieldsItemBase
 {
   constexpr static char const* name() { return Item::name; }
   constexpr static int n_comps = Item::n_comps; 
@@ -24,11 +24,11 @@ struct ItemFields
     }
   }
 
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts, struct psc_mfields *mres)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
-    mfields_t mf = mflds_base->get_as<mfields_t>(JXI, JXI + 3);
-    mfields_t mf_res(mres);
+    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
+    mfields_t mf_res(mres_base.mflds());
     run(mf, mf_res);
     mf.put_as(mflds_base, 0, 0);
   }

@@ -15,7 +15,7 @@ using Fields = Fields3d<fields_t>;
 // ----------------------------------------------------------------------
 // FieldsItem_vpic_fields
 
-struct FieldsItem_vpic_fields
+struct FieldsItem_vpic_fields : FieldsItemBase
 {
   constexpr static char const* name() { return "vpic_fields"; }
   constexpr static int n_comps = 16;
@@ -37,11 +37,11 @@ struct FieldsItem_vpic_fields
   }
   constexpr static int flags = 0;
   
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
-    mfields_t mf = mflds_base->get_as<mfields_t>(0, 16);
-    mfields_t mf_res(mres);
+    mfields_t mf = mflds_base.get_as<mfields_t>(0, 16);
+    mfields_t mf_res(mres_base.mflds());
     
     for (int p = 0; p < mf_res->n_patches(); p++) {
       Fields F(mf[p]), R(mf_res[p]);
@@ -60,7 +60,7 @@ FieldsItemOps<FieldsItem_vpic_fields> psc_output_fields_item_vpic_fields_ops;
 // ----------------------------------------------------------------------
 // FieldsItem_vpic_hydro
 
-struct FieldsItem_vpic_hydro
+struct FieldsItem_vpic_hydro : FieldsItemBase
 {
   constexpr static char const* name() { return "vpic_hydro"; }
   constexpr static int n_comps = VPIC_HYDRO_N_COMP;
@@ -73,10 +73,10 @@ struct FieldsItem_vpic_hydro
   }
   constexpr static int flags = POFI_BY_KIND;
   
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
-    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres));
+    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres_base.mflds()));
     psc_mfields_set_type(mflds_hydro, "vpic");
     psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
     int ibn[3] = { 1, 1, 1 };
@@ -85,7 +85,7 @@ struct FieldsItem_vpic_hydro
     psc_mfields_setup(mflds_hydro);
     PscMfieldsVpic mf_hydro(mflds_hydro);
     
-    PscMparticlesVpic mprts = mprts_base->get_as<PscMparticlesVpic>();
+    PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>();
     
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -95,7 +95,7 @@ struct FieldsItem_vpic_hydro
       Simulation_moments_run(sim, vmflds_hydro, mprts->vmprts, kind);
       
       mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
-      mfields_t mf_res(mres);
+      mfields_t mf_res(mres_base.mflds());
       for (int p = 0; p < mf_res->n_patches(); p++) {
 	Fields F(mf[p]), R(mf_res[p]);
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {

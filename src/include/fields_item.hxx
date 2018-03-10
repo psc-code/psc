@@ -14,7 +14,8 @@
 
 struct FieldsItemBase
 {
-  virtual void run(PscMparticlesBase mprts_base) = 0;
+  virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+		   PscMfieldsBase mres_base) = 0;
 };
 
 // ======================================================================
@@ -74,6 +75,13 @@ public:
     PscFieldsItem<FieldsItem> item(_item);
     item->~FieldsItem();
   }
+
+  static void run(struct psc_output_fields_item *_item, struct psc_mfields *mflds_base,
+		  struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
+  {
+    PscFieldsItem<FieldsItem> item(_item);
+    item->run(mflds_base, PscMparticlesBase{mprts_base}, mres_base);
+  }
 };
 
 // ======================================================================
@@ -81,11 +89,15 @@ public:
 
 template<typename Item_t>
 struct FieldsItemOps : psc_output_fields_item_ops {
+  using Wrapper_t = PscFieldsItemWrapper<Item_t>;
   FieldsItemOps() {
     name      = Item_t::name();
+    size      = Wrapper_t::size;
+    setup     = Wrapper_t::setup;
+    destroy   = Wrapper_t::destroy;
     nr_comp   = Item_t::n_comps;
     fld_names = Item_t::fld_names();
-    run_all   = Item_t::run;
+    run_all   = Wrapper_t::run;
     flags     = Item_t::flags;
   }
 };

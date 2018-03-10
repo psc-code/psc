@@ -16,7 +16,7 @@
 // ======================================================================
 
 template<typename MF>
-struct FieldsItem_dive
+struct FieldsItem_dive : FieldsItemBase
 {
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
@@ -31,12 +31,12 @@ struct FieldsItem_dive
   constexpr static fld_names_t fld_names() { return { "dive", }; }
   constexpr static int flags = 0;
 
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts, struct psc_mfields *mres_base)
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
+	   PscMfieldsBase mres_base) override
   {
     define_dxdydz(dx, dy, dz);
-    mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
-    mfields_t mf_res = mres_base->get_as<mfields_t>(0, 0);
+    mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
+    mfields_t mf_res = mres_base.get_as<mfields_t>(0, 0);
     for (int p = 0; p < mf_res->n_patches(); p++) {
       Fields F(mf[p]), R(mf_res[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
