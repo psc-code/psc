@@ -25,7 +25,38 @@ struct FieldsItemCRTP : FieldsItemBase
 {
   FieldsItemCRTP(MPI_Comm comm)
   {
-    MHERE;
+    auto d = static_cast<Derived*>(this);
+
+    const char* type = "c";
+    if (strcmp(d->name(), "n_1st_cuda") == 0) { // FIXME
+      type = "cuda";
+    }
+    int n_comps_total = d->n_comps;
+    if (d->flags & POFI_BY_KIND) {
+      n_comps_total *= ppsc->nr_kinds;
+    }
+    
+    mres_base_ = psc_mfields_create(comm);
+    psc_mfields_set_type(mres_base_, type);
+    psc_mfields_set_param_int(mres_base_, "nr_fields", n_comps_total);
+    psc_mfields_set_param_int3(mres_base_, "ibn", ppsc->ibn);
+    mres_base_->grid = &ppsc->grid();
+    psc_mfields_setup(mres_base_);
+
+    assert(d->n_comps <= POFI_MAX_COMPS);
+    for (int m = 0; m < n_comps_total; m++) {
+      if (d->flags & POFI_BY_KIND) {
+	int mm = m % d->n_comps;
+	int k = m / d->n_comps;
+	char s[strlen(d->fld_names()[mm]) + strlen(ppsc->kinds[k].name) + 2];
+	sprintf(s, "%s_%s", d->fld_names()[mm], ppsc->kinds[k].name);
+	psc_mfields_set_comp_name(mres_base_, m, s);
+      } else {
+	psc_mfields_set_comp_name(mres_base_, m, d->fld_names()[m]);
+      }
+    }
+
+    psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
   }
   
   void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
@@ -73,47 +104,6 @@ private:
 
 using PscFieldsItemBase = PscFieldsItem<FieldsItemBase>;
 
-// ----------------------------------------------------------------------
-// psc_output_fields_item_create_mfields
-
-static struct psc_mfields *
-psc_output_fields_item_create_mfields(struct psc_output_fields_item *_item)
-{
-  MHERE;
-  struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(_item);
-  MPI_Comm comm = psc_output_fields_item_comm(_item);
-  const char* type = "c";
-  if (strcmp(psc_output_fields_item_type(_item), "n_1st_cuda") == 0) { // FIXME
-    type = "cuda";
-  }
-  int n_comps = ops->nr_comp;
-  int n_comps_total = n_comps;
-  if (ops->flags & POFI_BY_KIND) {
-    n_comps_total *= ppsc->nr_kinds;
-  }
-
-  struct psc_mfields *flds = psc_mfields_create(comm);
-  psc_mfields_set_type(flds, type);
-  psc_mfields_set_param_int(flds, "nr_fields", n_comps_total);
-  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
-  flds->grid = &ppsc->grid();
-  psc_mfields_setup(flds);
-  assert(ops->nr_comp <= POFI_MAX_COMPS);
-  for (int m = 0; m < n_comps_total; m++) {
-    if (ops->flags & POFI_BY_KIND) {
-      int mm = m % ops->nr_comp;
-      int k = m / ops->nr_comp;
-      char s[strlen(ops->fld_names[mm]) + strlen(ppsc->kinds[k].name) + 2];
-      sprintf(s, "%s_%s", ops->fld_names[mm], ppsc->kinds[k].name);
-      psc_mfields_set_comp_name(flds, m, s);
-    } else {
-      psc_mfields_set_comp_name(flds, m, ops->fld_names[m]);
-    }
-  }
-
-  return flds;
-}
-
 // ======================================================================
 // PscFieldsItemWrapper
 
@@ -127,9 +117,6 @@ public:
   {
     PscFieldsItem<FieldsItem> item(_item);
     new(item.sub()) FieldsItem(psc_output_fields_item_comm(_item));
-
-    item->mres_base_ = psc_output_fields_item_create_mfields(_item);
-    psc_mfields_list_add(&psc_mfields_base_list, &item->mres_base_);
   }
 
   static void destroy(psc_output_fields_item* _item)
