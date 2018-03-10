@@ -20,8 +20,6 @@ using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
 
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
-  int nr_comp;
-  fld_names_t fld_names;
   unsigned int flags;
 };
 

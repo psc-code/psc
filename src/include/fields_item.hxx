@@ -143,8 +143,6 @@ struct FieldsItemOps : psc_output_fields_item_ops {
     size      = Wrapper_t::size;
     setup     = Wrapper_t::setup;
     destroy   = Wrapper_t::destroy;
-    nr_comp   = Item_t::n_comps;
-    fld_names = Item_t::fld_names();
     flags     = Item_t::flags;
   }
 };
