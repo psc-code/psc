@@ -219,7 +219,7 @@ using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_
 // ItemMomentWrap
 
 template<typename Moment_t, typename mparticles_t, typename mfields_t>
-struct ItemMomentWrap
+struct ItemMomentWrap : Moment_t
 {
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
@@ -324,22 +324,22 @@ struct ItemMomentWrap
 // ----------------------------------------------------------------------
 // ItemMoment
 
-template<typename Moment_t, typename mparticles_t, typename mfields_t>
-struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>>
+template<typename ItemMomentWrap_t, typename mparticles_t, typename mfields_t>
+struct ItemMoment : FieldsItemCRTP<ItemMoment<ItemMomentWrap_t, mparticles_t, mfields_t>>
 {
-  using Base = FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>>;
+  using Base = FieldsItemCRTP<ItemMoment<ItemMomentWrap_t, mparticles_t, mfields_t>>;
   using Base::Base;
   
   static const char* name()
   {
-    return strdup((std::string(Moment_t::name) + "_" +
+    return strdup((std::string(ItemMomentWrap_t::name) + "_" +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
-  constexpr static int flags = Moment_t::flags;
+  constexpr static int flags = ItemMomentWrap_t::flags;
 
   static int n_comps()
   {
-    int n_comps = Moment_t::n_comps;
+    int n_comps = ItemMomentWrap_t::n_comps;
     if (flags & POFI_BY_KIND) {
       n_comps *= POFI_BY_KIND;
     }
@@ -348,7 +348,7 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>
   }
   static fld_names_t fld_names()
   {
-    auto fld_names = Moment_t::fld_names();
+    auto fld_names = ItemMomentWrap_t::fld_names();
     if (!(flags & POFI_BY_KIND)) {
       return fld_names;
     }
@@ -356,9 +356,9 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>
     static fld_names_t names;
     if (!names[0]) {
       for (int k = 0; k < ppsc->nr_kinds; k++) {
-	for (int m = 0; m < Moment_t::n_comps; m++) {
+	for (int m = 0; m < ItemMomentWrap_t::n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
-	  names[k * Moment_t::n_comps + m] = strdup(s.c_str());
+	  names[k * ItemMomentWrap_t::n_comps + m] = strdup(s.c_str());
 	}
       }
     }
@@ -370,7 +370,7 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
     mfields_t mres = this->mres_base_->template get_as<mfields_t>(0, 0);
 
-    ItemMomentWrap<Moment_t, mparticles_t, mfields_t>::run(mprts, mres);
+    ItemMomentWrap_t::run(mprts, mres);
     
     mres.put_as(this->mres_base_, 0, this->mres_base_->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
@@ -380,6 +380,6 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>
 // ----------------------------------------------------------------------
 // FieldsItemMomentOps
   
-template<typename Item_t, typename mparticles_t, typename mfields_t>
-using FieldsItemMomentOps = FieldsItemOps<ItemMoment<Item_t, mparticles_t, mfields_t>>;
+template<typename Moment_t, typename mparticles_t, typename mfields_t>
+using FieldsItemMomentOps = FieldsItemOps<ItemMoment<ItemMomentWrap<Moment_t, mparticles_t, mfields_t>, mparticles_t, mfields_t>>;
 
