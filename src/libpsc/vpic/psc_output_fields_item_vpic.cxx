@@ -37,11 +37,10 @@ struct FieldsItem_vpic_fields : FieldsItemCRTP<FieldsItem_vpic_fields>
   }
   constexpr static int flags = 0;
   
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mfields_t mf = mflds_base.get_as<mfields_t>(0, 16);
-    mfields_t mf_res(mres_base.mflds());
+    mfields_t mf_res(this->mres_base_);
     
     for (int p = 0; p < mf_res->n_patches(); p++) {
       Fields F(mf[p]), R(mf_res[p]);
@@ -73,10 +72,9 @@ struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
   }
   constexpr static int flags = POFI_BY_KIND;
   
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
-    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres_base.mflds()));
+    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(this->mres_base_));
     psc_mfields_set_type(mflds_hydro, "vpic");
     psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
     int ibn[3] = { 1, 1, 1 };
@@ -95,7 +93,7 @@ struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
       Simulation_moments_run(sim, vmflds_hydro, mprts->vmprts, kind);
       
       mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
-      mfields_t mf_res(mres_base.mflds());
+      mfields_t mf_res(this->mres_base_);
       for (int p = 0; p < mf_res->n_patches(); p++) {
 	Fields F(mf[p]), R(mf_res[p]);
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {

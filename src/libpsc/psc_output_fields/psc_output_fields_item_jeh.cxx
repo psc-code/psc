@@ -24,11 +24,10 @@ struct ItemFields : FieldsItemCRTP<ItemFields<Item>>
     }
   }
 
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
-    mfields_t mf_res(mres_base.mflds());
+    mfields_t mf_res(this->mres_base_);
     run(mf, mf_res);
     mf.put_as(mflds_base, 0, 0);
   }

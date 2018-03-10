@@ -291,15 +291,14 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t>>
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
 
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-    mfields_t mres = mres_base.get_as<mfields_t>(0, 0);
+    mfields_t mres = this->mres_base_->template get_as<mfields_t>(0, 0);
 
     ItemMomentWrap<Moment_t>::run(mprts, mres);
     
-    mres.put_as(mres_base, 0, mres_base->n_comps());
+    mres.put_as(this->mres_base_, 0, this->mres_base_->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 };

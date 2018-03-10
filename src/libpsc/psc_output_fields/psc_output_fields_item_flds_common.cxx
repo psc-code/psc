@@ -31,12 +31,11 @@ struct FieldsItem_dive : FieldsItemCRTP<FieldsItem_dive<MF>>
   constexpr static fld_names_t fld_names() { return { "dive", }; }
   constexpr static int flags = 0;
 
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     define_dxdydz(dx, dy, dz);
     mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
-    mfields_t mf_res = mres_base.get_as<mfields_t>(0, 0);
+    mfields_t mf_res = this->mres_base_->template get_as<mfields_t>(0, 0);
     for (int p = 0; p < mf_res->n_patches(); p++) {
       Fields F(mf[p]), R(mf_res[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
@@ -47,7 +46,7 @@ struct FieldsItem_dive : FieldsItemCRTP<FieldsItem_dive<MF>>
       } foreach_3d_end;
     }
     mf.put_as(mflds_base, 0, 0);
-    mf_res.put_as(mres_base, 0, 1);
+    mf_res.put_as(this->mres_base_, 0, 1);
   }
 };
 

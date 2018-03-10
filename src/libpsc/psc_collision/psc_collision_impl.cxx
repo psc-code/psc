@@ -34,20 +34,19 @@ struct FieldsItem_coll_stats : FieldsItemCRTP<FieldsItem_coll_stats<Collision>>
   }
   constexpr static int flags = 0;
 
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     PscCollision<Collision> collision(ppsc->collision);
     Collision* coll = collision.sub();
     
-    mfields_t mr = mres_base.get_as<mfields_t>(0, 0);
+    mfields_t mr = this->mres_base_->template get_as<mfields_t>(0, 0);
     
     for (int m = 0; m < coll->NR_STATS; m++) {
       // FIXME, copy could be avoided (?)
       mr->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
     }
     
-    mr.put_as(mres_base, 0, coll->NR_STATS);
+    mr.put_as(this->mres_base_, 0, coll->NR_STATS);
   }
 };
 
@@ -66,20 +65,19 @@ struct FieldsItem_coll_rei : FieldsItemCRTP<FieldsItem_coll_rei<Collision>>
   constexpr static fld_names_t fld_names() { return { "coll_rei_x", "coll_rei_y", "coll_rei_z" }; }
   constexpr static int flags = 0;
 
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
-	   PscMfieldsBase mres_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     PscCollision<Collision> collision(ppsc->collision);
     Collision* coll = collision.sub();
     
-    mfields_t mr = mres_base.get_as<mfields_t>(0, 0);
+    mfields_t mr = this->mres_base_->template get_as<mfields_t>(0, 0);
     
     for (int m = 0; m < 3; m++) {
       // FIXME, copy could be avoided (?)
       mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
     }
     
-    mr.put_as(mres_base, 0, 3);
+    mr.put_as(this->mres_base_, 0, 3);
   }
 };
   
