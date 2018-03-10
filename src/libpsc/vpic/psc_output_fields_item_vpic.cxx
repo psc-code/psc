@@ -50,15 +50,15 @@ struct Item_vpic_fields
 FieldsItemOps<FieldsItemFields<Item_vpic_fields>> psc_output_fields_item_vpic_fields_ops;
 
 // ----------------------------------------------------------------------
-// FieldsItem_vpic_hydro
+// Moment_vpic_hydro
 
-struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
+struct Moment_vpic_hydro
 {
-  using Base = FieldsItemCRTP<FieldsItem_vpic_hydro>;
-  using Base::Base;
+  using mfields_t = mfields_t;
+  using mparticles_t = PscMparticlesVpic;
   
-  constexpr static char const* name() { return "vpic_hydro"; }
-  constexpr static int n_comps() { return VPIC_HYDRO_N_COMP; }
+  constexpr static char const* name = "vpic_hydro";
+  constexpr static int n_comps = VPIC_HYDRO_N_COMP;
   constexpr static fld_names_t fld_names()
   {
     return { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
@@ -68,9 +68,9 @@ struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
   }
   constexpr static int flags = POFI_BY_KIND;
   
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  static void run(mfields_t mres, mparticles_t mprts)
   {
-    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(this->mres_base_));
+    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres.mflds()));
     psc_mfields_set_type(mflds_hydro, "vpic");
     psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
     int ibn[3] = { 1, 1, 1 };
@@ -78,8 +78,6 @@ struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
     mflds_hydro->grid = &ppsc->grid();
     psc_mfields_setup(mflds_hydro);
     PscMfieldsVpic mf_hydro(mflds_hydro);
-    
-    PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>();
     
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -89,9 +87,8 @@ struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
       Simulation_moments_run(sim, vmflds_hydro, mprts->vmprts, kind);
       
       mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
-      mfields_t mf_res(this->mres_base_);
-      for (int p = 0; p < mf_res->n_patches(); p++) {
-	Fields F(mf[p]), R(mf_res[p]);
+      for (int p = 0; p < mres->n_patches(); p++) {
+	Fields F(mf[p]), R(mres[p]);
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	  for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
 	    R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
@@ -101,11 +98,9 @@ struct FieldsItem_vpic_hydro : FieldsItemCRTP<FieldsItem_vpic_hydro>
       mf.put_as(mflds_hydro, 0, 0);
     }
     
-    mprts.put_as(mprts_base, MP_DONT_COPY);
-    
     psc_mfields_destroy(mflds_hydro);
   }
 };
 
-FieldsItemOps<FieldsItem_vpic_hydro> psc_output_fields_item_vpic_hydro_ops;
+FieldsItemOps<ItemMoment<Moment_vpic_hydro>> psc_output_fields_item_vpic_hydro_ops;
 
