@@ -45,16 +45,9 @@ struct FieldsItemCRTP : FieldsItemBase
     psc_mfields_setup(mres_base_);
 
     assert(d->n_comps <= POFI_MAX_COMPS);
+    auto fld_names = d->fld_names();
     for (int m = 0; m < n_comps_total; m++) {
-      if (d->flags & POFI_BY_KIND) {
-	int mm = m % d->n_comps;
-	int k = m / d->n_comps;
-	char s[strlen(d->fld_names()[mm]) + strlen(ppsc->kinds[k].name) + 2];
-	sprintf(s, "%s_%s", d->fld_names()[mm], ppsc->kinds[k].name);
-	psc_mfields_set_comp_name(mres_base_, m, s);
-      } else {
-	psc_mfields_set_comp_name(mres_base_, m, d->fld_names()[m]);
-      }
+      psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
     }
 
     psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);

@@ -290,9 +290,28 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t>>
     return strdup((std::string(Moment_t::name) + "_" +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
-  constexpr static int n_comps = Moment_t::n_comps; 
-  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
+  constexpr static int n_comps = Moment_t::n_comps; 
+  static fld_names_t fld_names()
+  {
+    auto fld_names = Moment_t::fld_names();
+    if (!(flags & POFI_BY_KIND)) {
+      assert(n_comps <= POFI_MAX_COMPS);
+      return fld_names;
+    }
+
+    assert(n_comps * ppsc->nr_kinds <= POFI_MAX_COMPS);
+    static fld_names_t names;
+    if (!names[0]) {
+      for (int k = 0; k < ppsc->nr_kinds; k++) {
+	for (int m = 0; m < n_comps; m++) {
+	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
+	  names[k * n_comps + m] = strdup(s.c_str());
+	}
+      }
+    }
+    return names;
+  }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
