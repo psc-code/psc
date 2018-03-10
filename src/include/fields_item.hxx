@@ -36,9 +36,9 @@ struct PscFieldsItem
   void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts, PscMfieldsBase mres)
   {
     struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item_);
-    assert(ops->run_all);
     
-    ops->run_all(item_, mflds.mflds(), mprts.mprts(), mres.mflds());
+    sub()->run(mflds, mprts, mres);
+
     if (ops->flags & POFI_ADD_GHOSTS) {
       assert(item_->bnd);
       auto bnd = PscBndBase(item_->bnd);
@@ -75,13 +75,6 @@ public:
     PscFieldsItem<FieldsItem> item(_item);
     item->~FieldsItem();
   }
-
-  static void run(struct psc_output_fields_item *_item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
-  {
-    PscFieldsItem<FieldsItem> item(_item);
-    item->run(mflds_base, PscMparticlesBase{mprts_base}, mres_base);
-  }
 };
 
 // ======================================================================
@@ -97,7 +90,6 @@ struct FieldsItemOps : psc_output_fields_item_ops {
     destroy   = Wrapper_t::destroy;
     nr_comp   = Item_t::n_comps;
     fld_names = Item_t::fld_names();
-    run_all   = Wrapper_t::run;
     flags     = Item_t::flags;
   }
 };
