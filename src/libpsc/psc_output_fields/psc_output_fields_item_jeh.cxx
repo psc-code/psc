@@ -7,50 +7,24 @@
 
 using Fields = Fields3d<mfields_t::fields_t>;
 
-template<typename Item>
-struct ItemFields : FieldsItemBase
+template<typename ItemPatch>
+struct ItemLoopPatches : ItemPatch
 {
-  constexpr static char const* name() { return Item::name; }
-  constexpr static int flags = 0;
- 
-  ItemFields(MPI_Comm comm, PscBndBase bnd)
-    : bnd_(bnd)
+  using mfields_t = mfields_t;
+  
+  static void run(mfields_t mflds, mfields_t mres)
   {
-    create_mres_<mfields_t>(comm, Item::n_comps);
-    for (int m = 0; m < Item::n_comps; m++) {
-      psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
-    }
-  }
-
-  static void run(mfields_t mf, mfields_t mf_res)
-  {
-    for (int p = 0; p < mf_res->n_patches(); p++) {
-      Fields F(mf[p]), R(mf_res[p]);
+    for (int p = 0; p < mres->n_patches(); p++) {
+      Fields F(mflds[p]), R(mres[p]);
       psc_foreach_3d(ppsc, p, i,j,k, 0, 0) {
-	Item::set(R, F, i,j,k);
+	ItemPatch::set(R, F, i,j,k);
       } foreach_3d_end;
     }
   }
-
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
-  {
-    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
-    mfields_t mf_res(this->mres_base_);
-    run(mf, mf_res);
-    mf.put_as(mflds_base, 0, 0);
-  }
-
-  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
-  {
-    run(mflds_base, mprts_base);
-  }
-
-private:
-  PscBndBase bnd_;
 };
 
 template<typename Item_t>
-using FieldsItemFieldsOps = FieldsItemOps<ItemFields<Item_t>>;
+using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_t>>>;
 
 // ======================================================================
 

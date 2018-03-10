@@ -143,3 +143,36 @@ struct FieldsItemOps : psc_output_fields_item_ops {
   }
 };
 
+// ======================================================================
+// FieldsItemFields
+
+template<typename Item>
+struct FieldsItemFields : FieldsItemBase
+{
+  using mfields_t = typename Item::mfields_t;
+  
+  constexpr static char const* name() { return Item::name; }
+  constexpr static int flags = 0;
+ 
+  FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
+  {
+    create_mres_<mfields_t>(comm, Item::n_comps);
+    for (int m = 0; m < Item::n_comps; m++) {
+      psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
+    }
+  }
+
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  {
+    mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
+    mfields_t mres(mres_base_);
+    Item::run(mflds, mres);
+    mflds.put_as(mflds_base, 0, 0);
+  }
+
+  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  {
+    run(mflds_base, mprts_base);
+  }
+};
+
