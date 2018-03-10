@@ -78,6 +78,9 @@ public:
   static void destroy(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
+
+    if (!item->mres_base_) return; // ctor hadn't run yet FIXME
+
     item->~FieldsItem();
 
     psc_mfields_list_del(&psc_mfields_base_list, &item->mres_base_);

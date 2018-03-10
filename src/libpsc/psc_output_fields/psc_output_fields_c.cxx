@@ -89,8 +89,6 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 
   struct psc_fields_list *pfd = &out_c->pfd;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    psc_mfields_list_del(&psc_mfields_base_list, &pfd->flds[i]);
-    psc_mfields_destroy(pfd->flds[i]);
     psc_output_fields_item_destroy(out_c->item[i]);
   }
   struct psc_fields_list *tfd = &out_c->tfd;
@@ -137,11 +135,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
     psc_output_fields_item_setup(item);
     out_c->item[pfd->nr_flds] = item;
-    struct psc_mfields *flds = psc_output_fields_item_create_mfields(item);
+    struct psc_mfields *flds = PscFieldsItemBase{item}->mres_base_;
     psc_mfields_set_name(flds, p);
     pfd->flds[pfd->nr_flds] = flds;
-    // FIXME, should be del'd eventually
-    psc_mfields_list_add(&psc_mfields_base_list, &pfd->flds[pfd->nr_flds]);
     pfd->nr_flds++;
   }
   free(s_orig);
@@ -152,7 +148,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
     assert(psc->n_patches() > 0);
-    // FIXME, shouldn't we use item_create_mfields(), too?
     struct psc_mfields *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_set_type(flds, "c");
     psc_mfields_set_name(flds, psc_mfields_name(pfd->flds[i]));
@@ -161,7 +156,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     flds->grid = &ppsc->grid();
     psc_mfields_setup(flds);
     tfd->flds[i] = flds;
-    // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &tfd->flds[i]);
     for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
       psc_mfields_set_comp_name(flds, m, psc_mfields_comp_name(pfd->flds[i], m));
