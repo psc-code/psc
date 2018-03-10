@@ -293,13 +293,14 @@ struct ItemMoment
   constexpr static int flags = Moment_t::flags;
 
   static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+		  struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
   {
     mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    mfields_t mf_res(mres);
+    mfields_t mf_res = mres_base->get_as<mfields_t>(0, 0);
 
     ItemMomentWrap<Moment_t>::run(mprts, mf_res);
     
+    mf_res.put_as(mres_base, 0, mres_base->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 };
