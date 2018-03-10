@@ -5,10 +5,13 @@
 
 #include "particles.hxx"
 #include "fields3d.hxx"
+#include "fields.hxx"
 #include "bnd.hxx"
 #include "psc_fields_c.h"
 
 #include <mrc_profile.h>
+
+#include <string>
 
 // ======================================================================
 // FieldsItemBase
@@ -151,7 +154,14 @@ struct FieldsItemFields : FieldsItemBase
 {
   using mfields_t = typename Item::mfields_t;
   
-  constexpr static char const* name() { return Item::name; }
+  static char const* name()
+  {
+    if (std::is_same<mfields_t, PscMfieldsC>::value) {
+      return Item::name;
+    } else {
+      return strdup((std::string{Item::name} + "_" + fields_traits<typename mfields_t::fields_t>::name).c_str());
+    }
+  }
   constexpr static int flags = 0;
  
   FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
@@ -175,4 +185,30 @@ struct FieldsItemFields : FieldsItemBase
     run(mflds_base, mprts_base);
   }
 };
+
+// ======================================================================
+// FieldsItemFieldsOps
+//
+// Adapter from per-patch Item with ::set
+
+template<typename ItemPatch>
+struct ItemLoopPatches : ItemPatch
+{
+  using mfields_t = typename ItemPatch::mfields_t;
+  using fields_t = typename mfields_t::fields_t;
+  using Fields = Fields3d<fields_t>;
+  
+  static void run(mfields_t mflds, mfields_t mres)
+  {
+    for (int p = 0; p < mres->n_patches(); p++) {
+      Fields F(mflds[p]), R(mres[p]);
+      psc_foreach_3d(ppsc, p, i,j,k, 0, 0) {
+	ItemPatch::set(R, F, i,j,k);
+      } foreach_3d_end;
+    }
+  }
+};
+
+template<typename Item_t>
+using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_t>>>;
 
