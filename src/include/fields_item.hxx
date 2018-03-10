@@ -305,62 +305,48 @@ struct ItemMoment : FieldsItemBase
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
 
-  static int n_comps()
-  {
-    int n_comps = Moment_t::n_comps;
-    if (Moment_t::flags & POFI_BY_KIND) {
-      n_comps *= POFI_BY_KIND;
-    }
-    assert(n_comps <= POFI_MAX_COMPS);
-    return n_comps;
-  }
-  
-  static fld_names_t fld_names()
-  {
-    auto fld_names = Moment_t::fld_names();
-    if (!(Moment_t::flags & POFI_BY_KIND)) {
-      return fld_names;
-    }
-
-    static fld_names_t names;
-    if (!names[0]) {
-      for (int k = 0; k < ppsc->nr_kinds; k++) {
-	for (int m = 0; m < Moment_t::n_comps; m++) {
-	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
-	  names[k * Moment_t::n_comps + m] = strdup(s.c_str());
-	}
-      }
-    }
-    return names;
-  }
-
   ItemMoment(MPI_Comm comm, PscBndBase bnd)
     : bnd_(bnd)
   {
-    this->template create_mres_<mfields_t>(comm, n_comps());
-    for (int m = 0; m < n_comps(); m++) {
-      psc_mfields_set_comp_name(this->mres_base_, m, fld_names()[m]);
+    auto n_comps = Moment_t::n_comps;
+    auto fld_names = Moment_t::fld_names();
+    assert(n_comps <= POFI_MAX_COMPS);
+
+    if (!Moment_t::flags & POFI_BY_KIND) {
+      create_mres_<mfields_t>(comm, n_comps);
+      for (int m = 0; m < n_comps; m++) {
+	psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
+      }
+    } else {
+      assert(n_comps <= POFI_MAX_COMPS);
+      create_mres_<mfields_t>(comm, n_comps * ppsc->nr_kinds);
+      for (int k = 0; k < ppsc->nr_kinds; k++) {
+	for (int m = 0; m < n_comps; m++) {
+	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
+	  psc_mfields_set_comp_name(mres_base_, k * n_comps + m, s.c_str());
+	}
+      }
     }
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-    mfields_t mres = this->mres_base_->template get_as<mfields_t>(0, 0);
+    mfields_t mres = mres_base_->get_as<mfields_t>(0, 0);
 
     Moment_t::run(mres, mprts);
     
-    mres.put_as(this->mres_base_, 0, this->mres_base_->nr_fields);
+    mres.put_as(mres_base_, 0, mres_base_->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
+
+    if (Moment_t::flags & POFI_ADD_GHOSTS) {
+      bnd_.add_ghosts(mres_base_, 0, mres_base_->nr_fields);
+    }
   }
 
   void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     run(mflds_base, mprts_base);
-
-    if (Moment_t::flags & POFI_ADD_GHOSTS) {
-      bnd_.add_ghosts(this->mres_base_, 0, this->mres_base_->nr_fields);
-    }
   }
 
 private:
