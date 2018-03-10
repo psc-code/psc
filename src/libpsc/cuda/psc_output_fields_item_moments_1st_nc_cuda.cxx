@@ -11,6 +11,9 @@
 
 struct FieldsItem_rho_1st_nc_cuda : FieldsItemCRTP<FieldsItem_rho_1st_nc_cuda>
 {
+  using Base = FieldsItemCRTP<FieldsItem_rho_1st_nc_cuda>;
+  using Base::Base;
+  
   static const char* name() { return "rho_1st_nc_cuda"; }
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
@@ -39,6 +42,9 @@ FieldsItemOps<FieldsItem_rho_1st_nc_cuda> psc_output_fields_item_rho_1st_nc_cuda
 
 struct FieldsItem_n_1st_cuda : FieldsItemCRTP<FieldsItem_n_1st_cuda>
 {
+  using Base = FieldsItemCRTP<FieldsItem_n_1st_cuda>;
+  using Base::Base;
+  
   static const char* name() { return "n_1st_cuda"; }
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; }

@@ -18,6 +18,9 @@
 template<typename MF>
 struct FieldsItem_dive : FieldsItemCRTP<FieldsItem_dive<MF>>
 {
+  using Base = FieldsItemCRTP<FieldsItem_dive<MF>>;
+  using Base::Base;
+  
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
   using real_t = typename mfields_t::real_t;

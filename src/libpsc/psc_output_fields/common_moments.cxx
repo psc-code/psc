@@ -282,6 +282,9 @@ struct ItemMomentWrap
 template<typename Moment_t, typename mparticles_t>
 struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t>>
 {
+  using Base = FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t>>;
+  using Base::Base;
+  
   static const char* name()
   {
     return strdup((std::string(Moment_t::name) + "_" +

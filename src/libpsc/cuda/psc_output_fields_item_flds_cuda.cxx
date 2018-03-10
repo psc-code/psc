@@ -9,6 +9,9 @@
 
 struct FieldsItem_dive_cuda : FieldsItemCRTP<FieldsItem_dive_cuda>
 {
+  using Base = FieldsItemCRTP<FieldsItem_dive_cuda>;
+  using Base::Base;
+  
   static const char* name() { return "dive_cuda"; }
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "dive" }; } // FIXME

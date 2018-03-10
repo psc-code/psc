@@ -9,6 +9,9 @@ using Fields = Fields3d<mfields_t::fields_t>;
 template<typename Item>
 struct ItemFields : FieldsItemCRTP<ItemFields<Item>>
 {
+  using Base = FieldsItemCRTP<ItemFields<Item>>;
+  using Base::Base;
+  
   constexpr static char const* name() { return Item::name; }
   constexpr static int n_comps = Item::n_comps; 
   constexpr static fld_names_t fld_names() { return Item::fld_names(); }

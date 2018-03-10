@@ -23,6 +23,11 @@ struct FieldsItemBase
 template<class Derived>
 struct FieldsItemCRTP : FieldsItemBase
 {
+  FieldsItemCRTP(MPI_Comm comm)
+  {
+    MHERE;
+  }
+  
   void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     auto d = static_cast<Derived*>(this);
@@ -74,6 +79,7 @@ using PscFieldsItemBase = PscFieldsItem<FieldsItemBase>;
 static struct psc_mfields *
 psc_output_fields_item_create_mfields(struct psc_output_fields_item *_item)
 {
+  MHERE;
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(_item);
   MPI_Comm comm = psc_output_fields_item_comm(_item);
   const char* type = "c";
@@ -120,7 +126,7 @@ public:
   static void setup(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
-    new(item.sub()) FieldsItem();
+    new(item.sub()) FieldsItem(psc_output_fields_item_comm(_item));
 
     item->mres_base_ = psc_output_fields_item_create_mfields(_item);
     psc_mfields_list_add(&psc_mfields_base_list, &item->mres_base_);
