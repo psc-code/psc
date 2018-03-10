@@ -16,134 +16,6 @@ using particles_t = mparticles_t::patch_t;
 #include "common_moments.cxx"
 
 // ======================================================================
-// boundary stuff FIXME, should go elsewhere...
-
-static void
-add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
-{
-  Fields F(flds);
-  const int *ldims = ppsc->grid().ldims;
-
-  int bx = ldims[0] == 1 ? 0 : 1;
-  if (d == 1) {
-    for (int iz = -1; iz < ldims[2] + 1; iz++) {
-      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	int iy = 0; {
-	  for (int m = mb; m < me; m++) {
-	    F(m, ix,iy,iz) += F(m, ix,iy-1,iz);
-	  }
-	}
-      }
-    }
-  } else if (d == 2) {
-    for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
-      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	int iz = 0; {
-	  for (int m = mb; m < me; m++) {
-	    F(m, ix,iy,iz) += F(m, ix,iy,iz-1);
-	  }
-	}
-      }
-    }
-  } else {
-    assert(0);
-  }
-}
-
-static void
-add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
-{
-  Fields F(flds);
-  const int *ldims = ppsc->grid().ldims;
-
-  int bx = ldims[0] == 1 ? 0 : 1;
-  if (d == 1) {
-    for (int iz = -1; iz < ldims[2] + 1; iz++) {
-      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	int iy = ldims[1] - 1; {
-	  for (int m = mb; m < me; m++) {
-	    F(m, ix,iy,iz) += F(m, ix,iy+1,iz);
-	  }
-	}
-      }
-    }
-  } else if (d == 2) {
-    for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
-      for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	int iz = ldims[2] - 1; {
-	  for (int m = mb; m < me; m++) {
-	    F(m, ix,iy,iz) += F(m, ix,iy,iz+1);
-	  }
-	}
-      }
-    }
-  } else {
-    assert(0);
-  }
-}
-
-static void
-add_ghosts_boundary(fields_t res, int p, int mb, int me)
-{
-  // lo
-  for (int d = 0; d < 3; d++) {
-    if (psc_at_boundary_lo(ppsc, p, d)) {
-      if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING ||
-	  ppsc->domain.bnd_part_lo[d] == BND_PART_OPEN) {
-	add_ghosts_reflecting_lo(res, p, d, mb, me);
-      }
-    }
-  }
-  // hi
-  for (int d = 0; d < 3; d++) {
-    if (psc_at_boundary_hi(ppsc, p, d)) {
-      if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING ||
-	  ppsc->domain.bnd_part_hi[d] == BND_PART_OPEN) {
-	add_ghosts_reflecting_hi(res, p, d, mb, me);
-      }
-    }
-  }
-}
-
-template<typename Moment_t>
-struct ItemMomentWrap
-{
-  static void run(mparticles_t mprts, mfields_t mflds_res)
-  {
-    for (int p = 0; p < mprts->n_patches(); p++) {
-      mflds_res[p].zero();
-      Moment_t::run(mflds_res[p], mprts[p]);
-      add_ghosts_boundary(mflds_res[p], p, 0, mflds_res->n_comps());
-    }
-  }
-};
-
-template<typename Moment_t, typename mparticles_t>
-struct ItemMoment
-{
-  static const char* name()
-  {
-    return strdup((std::string(Moment_t::name) + "_" +
-		   mparticles_traits<mparticles_t>::name).c_str());
-  }
-
-  constexpr static int n_comps = Moment_t::n_comps; 
-  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
-
-  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
-  {
-    mparticles_t mprts = mprts_base->get_as<mparticles_t>();
-    mfields_t mf_res(mres);
-
-    ItemMomentWrap<Moment_t>::run(mprts, mf_res);
-    
-    mprts.put_as(mprts_base, MP_DONT_COPY);
-  }
-};
-  
-// ======================================================================
 // n_1st
 
 struct Moment_n_1st
@@ -151,6 +23,7 @@ struct Moment_n_1st
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n" }; }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
   
   static void run(fields_t flds, particles_t& prts)
   {
@@ -174,6 +47,7 @@ struct Moment_v_1st
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "vx", "vy", "vz" }; }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -203,6 +77,7 @@ struct Moment_p_1st
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "px", "py", "pz" }; }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -230,6 +105,7 @@ struct Moment_vv_1st
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz" }; }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -259,6 +135,7 @@ struct Moment_T_1st
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
   constexpr static fld_names_t fld_names() { return { "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" }; }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -299,6 +176,7 @@ struct Moment_Tvv_1st
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
   constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz" }; }
+  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -575,9 +453,6 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 #endif
 
 // ======================================================================
-
-template<typename Item_t, typename mparticles_t>
-using FieldsItemMomentOps = FieldsItemOps<ItemMoment<Item_t, mparticles_t>>;
 
 #define MAKE_OP(TYPE, NAME, Moment_t)					\
   FieldsItemMomentOps<Moment_t, mparticles_t> psc_output_fields_item_##NAME##TYPE##_ops;
