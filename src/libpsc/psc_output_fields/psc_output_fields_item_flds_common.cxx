@@ -30,7 +30,7 @@ struct FieldsItem_dive : FieldsItemCRTP<FieldsItem_dive<MF>>
   {
     return strdup((std::string{"dive_"} + fields_traits<fields_t>::name).c_str());
   }
-  constexpr static int n_comps = 1;
+  constexpr static int n_comps() { return 1; }
   constexpr static fld_names_t fld_names() { return { "dive", }; }
   constexpr static int flags = 0;
 

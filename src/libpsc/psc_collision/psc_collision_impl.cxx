@@ -29,7 +29,7 @@ struct FieldsItem_coll_stats : FieldsItemCRTP<FieldsItem_coll_stats<Collision>>
     return strdup((std::string("coll_stats_") +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
-  constexpr static int n_comps = Collision::NR_STATS;
+  constexpr static int n_comps() { return Collision::NR_STATS; }
   constexpr static fld_names_t fld_names()
   {
     return { "coll_nudt_min", "coll_nudt_med", "coll_nudt_max", "coll_nudt_large",
@@ -67,7 +67,7 @@ struct FieldsItem_coll_rei : FieldsItemCRTP<FieldsItem_coll_rei<Collision>>
     return strdup((std::string("coll_rei_") +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
-  constexpr static int n_comps = 3;
+  constexpr static int n_comps() { return 3; }
   constexpr static fld_names_t fld_names() { return { "coll_rei_x", "coll_rei_y", "coll_rei_z" }; }
   constexpr static int flags = 0;
 

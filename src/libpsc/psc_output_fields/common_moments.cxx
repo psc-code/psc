@@ -291,22 +291,29 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t>>
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
   constexpr static int flags = Moment_t::flags;
-  constexpr static int n_comps = Moment_t::n_comps; 
+
+  static int n_comps()
+  {
+    int n_comps = Moment_t::n_comps;
+    if (flags & POFI_BY_KIND) {
+      n_comps *= POFI_BY_KIND;
+    }
+    assert(n_comps <= POFI_MAX_COMPS);
+    return n_comps;
+  }
   static fld_names_t fld_names()
   {
     auto fld_names = Moment_t::fld_names();
     if (!(flags & POFI_BY_KIND)) {
-      assert(n_comps <= POFI_MAX_COMPS);
       return fld_names;
     }
 
-    assert(n_comps * ppsc->nr_kinds <= POFI_MAX_COMPS);
     static fld_names_t names;
     if (!names[0]) {
       for (int k = 0; k < ppsc->nr_kinds; k++) {
-	for (int m = 0; m < n_comps; m++) {
+	for (int m = 0; m < Moment_t::n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
-	  names[k * n_comps + m] = strdup(s.c_str());
+	  names[k * Moment_t::n_comps + m] = strdup(s.c_str());
 	}
       }
     }

@@ -32,10 +32,7 @@ struct FieldsItemCRTP : FieldsItemBase
     auto d = static_cast<Derived*>(this);
 
     const char* type = fields_traits<typename Derived::mres_t::fields_t>::name;
-    int n_comps_total = d->n_comps;
-    if (d->flags & POFI_BY_KIND) {
-      n_comps_total *= ppsc->nr_kinds;
-    }
+    int n_comps_total = d->n_comps();
     
     mres_base_ = psc_mfields_create(comm);
     psc_mfields_set_type(mres_base_, type);
@@ -44,7 +41,6 @@ struct FieldsItemCRTP : FieldsItemBase
     mres_base_->grid = &ppsc->grid();
     psc_mfields_setup(mres_base_);
 
-    assert(d->n_comps <= POFI_MAX_COMPS);
     auto fld_names = d->fld_names();
     for (int m = 0; m < n_comps_total; m++) {
       psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
