@@ -12,16 +12,11 @@
 using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 
-// ----------------------------------------------------------------------
-// FieldsItem_vpic_fields
-
-struct FieldsItem_vpic_fields : FieldsItemCRTP<FieldsItem_vpic_fields>
+struct Item_vpic_fields
 {
-  using Base = FieldsItemCRTP<FieldsItem_vpic_fields>;
-  using Base::Base;
-  
-  constexpr static char const* name() { return "vpic_fields"; }
-  constexpr static int n_comps() { return 16; }
+  using mfields_t = mfields_t;
+  constexpr static const char* name = "vpic_fields";
+  constexpr static int n_comps = 16;
   constexpr static fld_names_t fld_names()
   {
 #if 0
@@ -38,26 +33,21 @@ struct FieldsItem_vpic_fields : FieldsItemCRTP<FieldsItem_vpic_fields>
 	     "rhob_nc", "rhof_nc", };
 #endif
   }
-  constexpr static int flags = 0;
-  
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+
+  static void run(mfields_t mflds, mfields_t mres)
   {
-    mfields_t mf = mflds_base.get_as<mfields_t>(0, 16);
-    mfields_t mf_res(this->mres_base_);
-    
-    for (int p = 0; p < mf_res->n_patches(); p++) {
-      Fields F(mf[p]), R(mf_res[p]);
+    for (int p = 0; p < mres->n_patches(); p++) {
+      Fields F(mflds[p]), R(mres[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	for (int m = 0; m < 16; m++) {
 	  R(m, ix,iy,iz) = F(m, ix,iy,iz);
 	}
       } foreach_3d_end;
     }
-    mf.put_as(mflds_base, 0, 0);
   }
 };
 
-FieldsItemOps<FieldsItem_vpic_fields> psc_output_fields_item_vpic_fields_ops;
+FieldsItemOps<FieldsItemFields<Item_vpic_fields>> psc_output_fields_item_vpic_fields_ops;
 
 // ----------------------------------------------------------------------
 // FieldsItem_vpic_hydro
