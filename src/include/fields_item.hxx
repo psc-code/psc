@@ -212,3 +212,174 @@ struct ItemLoopPatches : ItemPatch
 template<typename Item_t>
 using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_t>>>;
 
+// ======================================================================
+// FieldsItemMomentOps
+
+// ----------------------------------------------------------------------
+// ItemMomentWrap
+
+template<typename Moment_t, typename mparticles_t, typename mfields_t>
+struct ItemMomentWrap
+{
+  using fields_t = typename mfields_t::fields_t;
+  using Fields = Fields3d<fields_t>;
+  
+  static void run(mparticles_t mprts, mfields_t mflds_res)
+  {
+    for (int p = 0; p < mprts->n_patches(); p++) {
+      mflds_res[p].zero();
+      Moment_t::run(mflds_res[p], mprts[p]);
+      add_ghosts_boundary(mflds_res[p], p, 0, mflds_res->n_comps());
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // boundary stuff FIXME, should go elsewhere...
+
+  static void add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
+  {
+    Fields F(flds);
+    const int *ldims = ppsc->grid().ldims;
+
+    int bx = ldims[0] == 1 ? 0 : 1;
+    if (d == 1) {
+      for (int iz = -1; iz < ldims[2] + 1; iz++) {
+	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+	  int iy = 0; {
+	    for (int m = mb; m < me; m++) {
+	      F(m, ix,iy,iz) += F(m, ix,iy-1,iz);
+	    }
+	  }
+	}
+      }
+    } else if (d == 2) {
+      for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
+	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+	  int iz = 0; {
+	    for (int m = mb; m < me; m++) {
+	      F(m, ix,iy,iz) += F(m, ix,iy,iz-1);
+	    }
+	  }
+	}
+      }
+    } else {
+      assert(0);
+    }
+  }
+
+  static void add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
+  {
+    Fields F(flds);
+    const int *ldims = ppsc->grid().ldims;
+
+    int bx = ldims[0] == 1 ? 0 : 1;
+    if (d == 1) {
+      for (int iz = -1; iz < ldims[2] + 1; iz++) {
+	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+	  int iy = ldims[1] - 1; {
+	    for (int m = mb; m < me; m++) {
+	      F(m, ix,iy,iz) += F(m, ix,iy+1,iz);
+	    }
+	  }
+	}
+      }
+    } else if (d == 2) {
+      for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
+	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+	  int iz = ldims[2] - 1; {
+	    for (int m = mb; m < me; m++) {
+	      F(m, ix,iy,iz) += F(m, ix,iy,iz+1);
+	    }
+	  }
+	}
+      }
+    } else {
+      assert(0);
+    }
+  }
+
+  static void add_ghosts_boundary(fields_t res, int p, int mb, int me)
+  {
+    // lo
+    for (int d = 0; d < 3; d++) {
+      if (psc_at_boundary_lo(ppsc, p, d)) {
+	if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING ||
+	    ppsc->domain.bnd_part_lo[d] == BND_PART_OPEN) {
+	  add_ghosts_reflecting_lo(res, p, d, mb, me);
+	}
+      }
+    }
+    // hi
+    for (int d = 0; d < 3; d++) {
+      if (psc_at_boundary_hi(ppsc, p, d)) {
+	if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING ||
+	    ppsc->domain.bnd_part_hi[d] == BND_PART_OPEN) {
+	  add_ghosts_reflecting_hi(res, p, d, mb, me);
+	}
+      }
+    }
+  }
+};
+
+// ----------------------------------------------------------------------
+// ItemMoment
+
+template<typename Moment_t, typename mparticles_t, typename mfields_t>
+struct ItemMoment : FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>>
+{
+  using Base = FieldsItemCRTP<ItemMoment<Moment_t, mparticles_t, mfields_t>>;
+  using Base::Base;
+  
+  static const char* name()
+  {
+    return strdup((std::string(Moment_t::name) + "_" +
+		   mparticles_traits<mparticles_t>::name).c_str());
+  }
+  constexpr static int flags = Moment_t::flags;
+
+  static int n_comps()
+  {
+    int n_comps = Moment_t::n_comps;
+    if (flags & POFI_BY_KIND) {
+      n_comps *= POFI_BY_KIND;
+    }
+    assert(n_comps <= POFI_MAX_COMPS);
+    return n_comps;
+  }
+  static fld_names_t fld_names()
+  {
+    auto fld_names = Moment_t::fld_names();
+    if (!(flags & POFI_BY_KIND)) {
+      return fld_names;
+    }
+
+    static fld_names_t names;
+    if (!names[0]) {
+      for (int k = 0; k < ppsc->nr_kinds; k++) {
+	for (int m = 0; m < Moment_t::n_comps; m++) {
+	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
+	  names[k * Moment_t::n_comps + m] = strdup(s.c_str());
+	}
+      }
+    }
+    return names;
+  }
+
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  {
+    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+    mfields_t mres = this->mres_base_->template get_as<mfields_t>(0, 0);
+
+    ItemMomentWrap<Moment_t, mparticles_t, mfields_t>::run(mprts, mres);
+    
+    mres.put_as(this->mres_base_, 0, this->mres_base_->nr_fields);
+    mprts.put_as(mprts_base, MP_DONT_COPY);
+  }
+};
+
+// ----------------------------------------------------------------------
+// FieldsItemMomentOps
+  
+template<typename Item_t, typename mparticles_t, typename mfields_t>
+using FieldsItemMomentOps = FieldsItemOps<ItemMoment<Item_t, mparticles_t, mfields_t>>;
+

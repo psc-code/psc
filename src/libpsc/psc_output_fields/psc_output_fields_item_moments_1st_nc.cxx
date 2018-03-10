@@ -88,7 +88,7 @@ struct Moment_v_1st_nc
 };
 
 #define MAKE_OP(TYPE, NAME, Moment_t)					\
-  FieldsItemMomentOps<Moment_t, mparticles_t> psc_output_fields_item_##NAME##TYPE##_ops;
+  FieldsItemMomentOps<Moment_t, mparticles_t, mfields_t> psc_output_fields_item_##NAME##TYPE##_ops;
 
 #define MAKE_POFI_OPS(TYPE)						\
   MAKE_OP(TYPE, n_1st_nc_  , Moment_n_1st_nc)				\
