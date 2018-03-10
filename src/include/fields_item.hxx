@@ -19,7 +19,6 @@
 struct FieldsItemBase
 {
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
-  virtual void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
 
   template<typename MF>
   void create_mres_(MPI_Comm comm, int n_comps)
@@ -60,7 +59,7 @@ struct PscFieldsItem
   void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts, PscMfieldsBase mres)
   {
     assert(mres.mflds() == sub()->mres_base_);
-    sub()->run2(mflds, mprts);
+    sub()->run(mflds, mprts);
   }
 
   sub_t* sub() { return mrc_to_subobj(item_, sub_t); }
@@ -143,11 +142,6 @@ struct FieldsItemFields : FieldsItemBase
     mfields_t mres(mres_base_);
     Item::run(mflds, mres);
     mflds.put_as(mflds_base, 0, 0);
-  }
-
-  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
-  {
-    run(mflds_base, mprts_base);
   }
 };
 
@@ -318,7 +312,6 @@ struct ItemMoment : FieldsItemBase
 	psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
       }
     } else {
-      assert(n_comps <= POFI_MAX_COMPS);
       create_mres_<mfields_t>(comm, n_comps * ppsc->nr_kinds);
       for (int k = 0; k < ppsc->nr_kinds; k++) {
 	for (int m = 0; m < n_comps; m++) {
@@ -342,11 +335,6 @@ struct ItemMoment : FieldsItemBase
     if (Moment_t::flags & POFI_ADD_GHOSTS) {
       bnd_.add_ghosts(mres_base_, 0, mres_base_->nr_fields);
     }
-  }
-
-  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
-  {
-    run(mflds_base, mprts_base);
   }
 
 private:
