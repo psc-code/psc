@@ -52,56 +52,45 @@ struct FieldsItem_coll_stats
 };
 
 template<typename Collision>
-static void copy_rei(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		     struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+struct FieldsItem_coll_rei
 {
   using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;
-  PscCollision<Collision> collision(ppsc->collision);
-  Collision* coll = collision.sub();
-  
-  mfields_t mr = mres->get_as<mfields_t>(0, 0);
-  
-  for (int m = 0; m < 3; m++) {
-    // FIXME, copy could be avoided (?)
-    mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
+
+  static const char* name()
+  {
+    return strdup((std::string("coll_rei_") +
+		   mparticles_traits<mparticles_t>::name).c_str());
   }
-  
-  mr.put_as(mres, 0, 3);
-}
+  constexpr static int n_comps = 3;
+  constexpr static fld_names_t fld_names() { return { "coll_rei_x", "coll_rei_y", "coll_rei_z" }; }
+  constexpr static int flags = 0;
+
+  static void run(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+		  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+  {
+    PscCollision<Collision> collision(ppsc->collision);
+    Collision* coll = collision.sub();
+    
+    mfields_t mr = mres->get_as<mfields_t>(0, 0);
+    
+    for (int m = 0; m < 3; m++) {
+      // FIXME, copy could be avoided (?)
+      mr->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
+    }
+    
+    mr.put_as(mres, 0, 3);
+  }
+};
   
 // ======================================================================
-// psc_output_fields_item: subclass "coll_stats"
+// psc_output_fields_item: subclass "coll_stats" / "coll_rei"
 
 using CollisionSingle = Collision_<MparticlesSingle, MfieldsSingle>;
 FieldsItemOps<FieldsItem_coll_stats<CollisionSingle>> psc_output_fields_item_coll_stats_single_ops;
+FieldsItemOps<FieldsItem_coll_rei<CollisionSingle>> psc_output_fields_item_coll_rei_single_ops;
 
 using CollisionDouble = Collision_<MparticlesDouble, MfieldsC>;
 FieldsItemOps<FieldsItem_coll_stats<CollisionDouble>> psc_output_fields_item_coll_stats_double_ops;
+FieldsItemOps<FieldsItem_coll_rei<CollisionDouble>> psc_output_fields_item_coll_rei_double_ops;
 
-// ======================================================================
-// psc_output_fields_item: subclass "coll_rei"
-
-struct psc_output_fields_item_ops_coll_rei_single : psc_output_fields_item_ops {
-  using Collision = Collision_<MparticlesSingle, MfieldsSingle>;
-  psc_output_fields_item_ops_coll_rei_single() {
-    name      = "coll_rei_single";
-    nr_comp   = 3;
-    fld_names[0] = "coll_rei_x";
-    fld_names[1] = "coll_rei_y";
-    fld_names[2] = "coll_rei_z";
-    run_all   = copy_rei<Collision>;
-  }
-} psc_output_fields_item_coll_rei_single_ops;
-
-struct psc_output_fields_item_ops_coll_rei_double : psc_output_fields_item_ops {
-  using Collision = Collision_<MparticlesDouble, MfieldsC>;
-  psc_output_fields_item_ops_coll_rei_double() {
-    name      = "coll_rei_double";
-    nr_comp   = 3;
-    fld_names[0] = "coll_rei_x";
-    fld_names[1] = "coll_rei_y";
-    fld_names[2] = "coll_rei_z";
-    run_all   = copy_rei<Collision>;
-  }
-} psc_output_fields_item_coll_rei_double_ops;
