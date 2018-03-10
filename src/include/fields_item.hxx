@@ -28,6 +28,7 @@ struct FieldsItemCRTP : FieldsItemBase
   void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base,
 	    PscMfieldsBase mres_base) override
   {
+    assert(mres_base.mflds() == mres_base_);
     auto d = static_cast<Derived*>(this);
     d->run(mflds_base, mprts_base, mres_base);
   }
@@ -52,7 +53,7 @@ struct PscFieldsItem
   {
     struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item_);
     
-    sub()->run(mflds, mprts, mres);
+    sub()->run2(mflds, mprts, mres);
 
     if (ops->flags & POFI_ADD_GHOSTS) {
       assert(item_->bnd);
