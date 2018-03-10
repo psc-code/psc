@@ -8,16 +8,20 @@
 using Fields = Fields3d<mfields_t::fields_t>;
 
 template<typename Item>
-struct ItemFields : FieldsItemCRTP<ItemFields<Item>>
+struct ItemFields : FieldsItemBase
 {
-  using Base = FieldsItemCRTP<ItemFields<Item>>;
-  using Base::Base;
-  
   constexpr static char const* name() { return Item::name; }
-  constexpr static int n_comps() { return Item::n_comps; }
-  constexpr static fld_names_t fld_names() { return Item::fld_names(); }
   constexpr static int flags = 0;
  
+  ItemFields(MPI_Comm comm, PscBndBase bnd)
+    : bnd_(bnd)
+  {
+    create_mres_<mfields_t>(comm, Item::n_comps);
+    for (int m = 0; m < Item::n_comps; m++) {
+      psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
+    }
+  }
+
   static void run(mfields_t mf, mfields_t mf_res)
   {
     for (int p = 0; p < mf_res->n_patches(); p++) {
@@ -35,6 +39,14 @@ struct ItemFields : FieldsItemCRTP<ItemFields<Item>>
     run(mf, mf_res);
     mf.put_as(mflds_base, 0, 0);
   }
+
+  void run2(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  {
+    run(mflds_base, mprts_base);
+  }
+
+private:
+  PscBndBase bnd_;
 };
 
 template<typename Item_t>
