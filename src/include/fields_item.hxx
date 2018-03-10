@@ -218,9 +218,11 @@ using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_
 // ----------------------------------------------------------------------
 // ItemMomentWrap
 
-template<typename Moment_t, typename mparticles_t, typename mfields_t>
+template<typename Moment_t, typename MP, typename MF>
 struct ItemMomentWrap : Moment_t
 {
+  using mparticles_t = MP;
+  using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
   
@@ -324,11 +326,14 @@ struct ItemMomentWrap : Moment_t
 // ----------------------------------------------------------------------
 // ItemMoment
 
-template<typename ItemMomentWrap_t, typename mparticles_t, typename mfields_t>
-struct ItemMoment : FieldsItemCRTP<ItemMoment<ItemMomentWrap_t, mparticles_t, mfields_t>>
+template<typename ItemMomentWrap_t>
+struct ItemMoment : FieldsItemCRTP<ItemMoment<ItemMomentWrap_t>>
 {
-  using Base = FieldsItemCRTP<ItemMoment<ItemMomentWrap_t, mparticles_t, mfields_t>>;
+  using Base = FieldsItemCRTP<ItemMoment<ItemMomentWrap_t>>;
   using Base::Base;
+
+  using mparticles_t = typename ItemMomentWrap_t::mparticles_t;
+  using mfields_t = typename ItemMomentWrap_t::mfields_t;
   
   static const char* name()
   {
@@ -381,5 +386,5 @@ struct ItemMoment : FieldsItemCRTP<ItemMoment<ItemMomentWrap_t, mparticles_t, mf
 // FieldsItemMomentOps
   
 template<typename Moment_t, typename mparticles_t, typename mfields_t>
-using FieldsItemMomentOps = FieldsItemOps<ItemMoment<ItemMomentWrap<Moment_t, mparticles_t, mfields_t>, mparticles_t, mfields_t>>;
+using FieldsItemMomentOps = FieldsItemOps<ItemMoment<ItemMomentWrap<Moment_t, mparticles_t, mfields_t>>>;
 
