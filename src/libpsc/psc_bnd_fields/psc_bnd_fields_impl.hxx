@@ -25,12 +25,9 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  void fill_ghosts_E(PscMfieldsBase mflds_base) override
+  void fill_ghosts_E(Mfields& mflds)
   {
-    // FIXME/OPT, if we don't need to do anything, we don't need to get
-    mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
-  
-    for (int p = 0; p < mf->n_patches(); p++) {
+    for (int p = 0; p < mflds.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -38,7 +35,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_E_lo(mf[p], p, d);
+	    conducting_wall_E_lo(mflds[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
 	    break;
@@ -55,7 +52,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_E_hi(mf[p], p, d);
+	    conducting_wall_E_hi(mflds[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
 	    break;
@@ -65,19 +62,24 @@ struct BndFields_ : BndFieldsBase
 	}
       }
     }
-
-    mf.put_as(mflds_base, EX, EX + 3);
   }
 
+  void fill_ghosts_E(PscMfieldsBase mflds_base) override
+  {
+    // OPT, if we don't need to do anything, we don't need to get
+    mfields_t mflds = mflds_base.get_as<mfields_t>(EX, EX + 3);
+
+    fill_ghosts_E(*mflds.sub());
+
+    mflds.put_as(mflds_base, EX, EX + 3);
+  }
+  
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  void fill_ghosts_H(PscMfieldsBase mflds_base) override
+  void fill_ghosts_H(Mfields& mflds)
   {
-    // FIXME/OPT, if we don't need to do anything, we don't need to get
-    mfields_t mf = mflds_base.get_as<mfields_t>(HX, HX + 3);
-  
-    for (int p = 0; p < mf->n_patches(); p++) {
+    for (int p = 0; p < mflds.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -85,10 +87,10 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_H_lo(mf[p], p, d);
+	    conducting_wall_H_lo(mflds[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
-	    open_H_lo(mf[p], p, d);
+	    open_H_lo(mflds[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -102,10 +104,10 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_H_hi(mf[p], p, d);
+	    conducting_wall_H_hi(mflds[p], p, d);
 	    break;
 	  case BND_FLD_OPEN:
-	    open_H_hi(mf[p], p, d);
+	    open_H_hi(mflds[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -113,18 +115,24 @@ struct BndFields_ : BndFieldsBase
 	}
       }
     }
-    mf.put_as(mflds_base, HX, HX + 3);
   }
 
+  void fill_ghosts_H(PscMfieldsBase mflds_base) override
+  {
+    // OPT, if we don't need to do anything, we don't need to get
+    mfields_t mflds = mflds_base.get_as<mfields_t>(HX, HX + 3);
+
+    fill_ghosts_H(*mflds.sub());
+
+    mflds.put_as(mflds_base, HX, HX + 3);
+  }
+  
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  void add_ghosts_J(PscMfieldsBase mflds_base) override
+  void add_ghosts_J(Mfields& mflds)
   {
-    // FIXME/OPT, if we don't need to do anything, we don't need to get
-    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
-    
-    for (int p = 0; p < mf->n_patches(); p++) {
+    for (int p = 0; p < mflds.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -133,7 +141,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_OPEN:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_J_lo(mf[p], p, d);
+	    conducting_wall_J_lo(mflds[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -148,7 +156,7 @@ struct BndFields_ : BndFieldsBase
 	  case BND_FLD_OPEN:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
-	    conducting_wall_J_hi(mf[p], p, d);
+	    conducting_wall_J_hi(mflds[p], p, d);
 	    break;
 	  default:
 	    assert(0);
@@ -156,10 +164,18 @@ struct BndFields_ : BndFieldsBase
 	}
       }
     }
-    
-    mf.put_as(mflds_base, JXI, JXI + 3);
   }
 
+  void add_ghosts_J(PscMfieldsBase mflds_base) override
+  {
+    // OPT, if we don't need to do anything, we don't need to get
+    mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
+
+    add_ghosts_J(*mflds.sub());
+
+    mflds.put_as(mflds_base, JXI, JXI + 3);
+  }
+  
   static void fields_t_set_nan(real_t *f)
   {
     *f = std::numeric_limits<real_t>::quiet_NaN();
