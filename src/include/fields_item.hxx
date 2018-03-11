@@ -310,8 +310,7 @@ struct ItemMoment : FieldsItemBase
   }
 
   ItemMoment(MPI_Comm comm, PscBndBase bnd)
-    : moment_(bnd),
-      bnd_(bnd)
+    : moment_(bnd)
   {
     auto n_comps = Moment_t::n_comps;
     auto fld_names = Moment_t::fld_names();
@@ -346,7 +345,6 @@ struct ItemMoment : FieldsItemBase
 
 private:
   Moment_t moment_;
-  PscBndBase bnd_;
 };
 
 // ----------------------------------------------------------------------
