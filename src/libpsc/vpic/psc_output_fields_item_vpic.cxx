@@ -57,7 +57,7 @@ struct Moment_vpic_hydro
   using mfields_t = mfields_t;
   using mparticles_t = PscMparticlesVpic;
   
-  constexpr static char const* name = "vpic_hydro";
+  constexpr static char const* name() { return "vpic_hydro"; }
   constexpr static int n_comps = VPIC_HYDRO_N_COMP;
   constexpr static fld_names_t fld_names()
   {
