@@ -170,9 +170,9 @@
 // be consolidated
 
 static inline void
-particle_calc_vxi(particle_t *part, real_t vxi[3])
+particle_calc_vxi(particle_t *part, particle_t::real_t vxi[3])
 {
-  real_t root =
+  particle_t::real_t root =
     1.f / std::sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;

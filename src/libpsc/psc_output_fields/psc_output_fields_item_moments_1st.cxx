@@ -8,12 +8,12 @@
 #include <string>
 #include <math.h>
 
+#include "common_moments.cxx"
+
 using fields_t = mfields_t::fields_t;
 using Fields = Fields3d<fields_t>;
 using real_t = mparticles_t::real_t;
 using particles_t = mparticles_t::patch_t;
-
-#include "common_moments.cxx"
 
 // ======================================================================
 // n_1st
