@@ -115,7 +115,7 @@ struct FieldsItemFields : FieldsItemBase
  
   FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
   {
-    mres_base_ = mfields_t::create(comm, Item::n_comps).mflds();
+    mres_base_ = mfields_t::create(comm, ppsc->grid(), Item::n_comps).mflds();
     for (int m = 0; m < Item::n_comps; m++) {
       psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
     }
@@ -313,12 +313,12 @@ struct ItemMoment : FieldsItemBase
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Moment_t::flags & POFI_BY_KIND) {
-      mres_base_ = mfields_t::create(comm, n_comps).mflds();
+      mres_base_ = mfields_t::create(comm, ppsc->grid(), n_comps).mflds();
       for (int m = 0; m < n_comps; m++) {
 	psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
       }
     } else {
-      mres_base_ = mfields_t::create(comm, n_comps * ppsc->nr_kinds).mflds();
+      mres_base_ = mfields_t::create(comm, ppsc->grid(), n_comps * ppsc->nr_kinds).mflds();
       for (int k = 0; k < ppsc->nr_kinds; k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
@@ -338,11 +338,9 @@ struct ItemMoment : FieldsItemBase
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-    mfields_t mres = mres_base_->get_as<mfields_t>(0, 0);
 
-    moment_.run(mres, mprts);
+    moment_.run(mfields_t{mres_base_}, mprts);
     
-    mres.put_as(mres_base_, 0, mres_base_->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 

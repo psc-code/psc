@@ -301,12 +301,13 @@ struct PscMfields
   static_assert(std::is_convertible<sub_t*, MfieldsBase*>::value,
 		"sub classes used in mfields_t must derive from psc_mfields_base");
 
-  static Self create(MPI_Comm comm, int n_comps)
+  static Self create(MPI_Comm comm, const Grid_t& grid, int n_comps)
   {
     psc_mfields *mflds = psc_mfields_create(comm);
     psc_mfields_set_type(mflds, fields_traits<fields_t>::name);
     psc_mfields_set_param_int(mflds, "nr_fields", n_comps);
     psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
+    mflds->grid = &grid;
     psc_mfields_setup(mflds);
     return Self{mflds};
   }
