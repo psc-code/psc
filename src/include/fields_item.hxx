@@ -342,10 +342,10 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// ItemMoment2
+// ItemMoment
 
 template<typename Moment_t>
-struct ItemMoment2 : FieldsItemBase
+struct ItemMoment : FieldsItemBase
 {
   using mparticles_t = typename Moment_t::mparticles_t;
   using mfields_t = typename Moment_t::mfields_t;
@@ -358,7 +358,7 @@ struct ItemMoment2 : FieldsItemBase
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
 
-  ItemMoment2(MPI_Comm comm, PscBndBase bnd)
+  ItemMoment(MPI_Comm comm, PscBndBase bnd)
     : moment_(comm, bnd)
   {}
 
@@ -381,5 +381,5 @@ private:
 // FieldsItemMomentOps
   
 template<typename Moment_t>
-using FieldsItemMomentOps = FieldsItemOps<ItemMoment2<ItemMomentLoopPatches<Moment_t>>>;
+using FieldsItemMomentOps = FieldsItemOps<ItemMoment<ItemMomentLoopPatches<Moment_t>>>;
 

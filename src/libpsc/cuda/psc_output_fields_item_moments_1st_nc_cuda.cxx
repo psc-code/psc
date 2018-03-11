@@ -40,7 +40,7 @@ private:
   PscBndBase bnd_;
 };
 
-FieldsItemOps<ItemMoment2<Moment_rho_1st_nc_cuda>> psc_output_fields_item_rho_1st_nc_cuda_ops;
+FieldsItemOps<ItemMoment<Moment_rho_1st_nc_cuda>> psc_output_fields_item_rho_1st_nc_cuda_ops;
 
 // ======================================================================
 // n_1st_cuda
@@ -76,5 +76,5 @@ private:
   PscBndBase bnd_;
 };
 
-FieldsItemOps<ItemMoment2<Moment_n_1st_cuda>> psc_output_fields_item_n_1st_cuda_ops;
+FieldsItemOps<ItemMoment<Moment_n_1st_cuda>> psc_output_fields_item_n_1st_cuda_ops;
 
