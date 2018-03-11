@@ -504,6 +504,15 @@ using BndFields_t = BndFieldsNone<Mfields_t>;
 using Inject_t = Inject_<Mparticles_t, Mfields_t>;
 using Heating_t = Heating_<Mparticles_t>;
 
+// ----------------------------------------------------------------------
+// psc_flatfoil_step
+//
+// things are missing from the generic step():
+// - timing
+// - psc_checks
+// - pushp prep
+// - marder
+
 static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
 			      Sort_t& sort, Collision_t& collision,
 			      PushParticles_t& pushp, PushFields_t& pushf,
@@ -596,37 +605,9 @@ static void psc_flatfoil_step(struct psc *psc)
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-#if 1
   psc_flatfoil_step(mprts_, mflds_,
 		    sort_, collision_, pushp_, pushf_,
 		    bndp_, bnd_, bndf_, inject_, heating_);
-#else
-  sort(mprts);
-  collision(mprts);
-
-  // psc_checks_continuity_before_particle_push(psc->checks, psc);
-
-  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-  pushp(mprts, mflds);
-  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-  
-  // field propagation B^{n+1/2} -> B^{n+1}
-  pushf.advance_H(mflds, .5);
-  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-  
-  bndp(mprts);
-  
-  inject(mprts, mflds);
-  heating(mprts);
-  
-  // field propagation E^{n+1/2} -> E^{n+3/2}
-  pushf.advance_b2(mflds);
-  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-
-  // field propagation B^{n+1} -> B^{n+3/2}
-  pushf.advance_a(mflds);
-  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-#endif
 
   //psc_checks_continuity_after_particle_push(psc->checks, psc);
 
