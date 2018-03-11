@@ -20,7 +20,7 @@ struct FieldsItemBase
 {
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
 
-  virtual psc_mfields* mres() = 0;
+  virtual PscMfieldsBase mres() = 0;
 
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
@@ -136,7 +136,7 @@ struct FieldsItemFields : FieldsItemBase
     mflds.put_as(mflds_base, 0, 0);
   }
 
-  virtual psc_mfields* mres() override { return mres_base_; }
+  virtual PscMfieldsBase mres() override { return mres_base_; }
 
 private:  
   psc_mfields* mres_base_;
@@ -369,7 +369,7 @@ struct FieldsItemMoment : FieldsItemBase
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 
-  virtual psc_mfields* mres() override { return moment_.mres_base(); }
+  virtual PscMfieldsBase mres() override { return moment_.mres_base(); }
   
 private:
   Moment_t moment_;

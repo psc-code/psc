@@ -146,7 +146,7 @@ struct InjectCuda : InjectBase
     FieldsItemBase* item = PscFieldsItemBase{item_n}.sub();
     item->run(mflds_base, mprts_base);
 
-    mfields_t mf_n = item->mres()->get_as<mfields_t>(kind_n, kind_n+1);
+    mfields_t mf_n = item->mres().get_as<mfields_t>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;
