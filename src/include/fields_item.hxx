@@ -173,6 +173,8 @@ using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_
 
 // ----------------------------------------------------------------------
 // ItemMomentCRTP
+//
+// deriving from this class adds the result field mres_
 
 template<typename Derived, typename MF>
 struct ItemMomentCRTP
