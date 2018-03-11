@@ -233,6 +233,9 @@ struct InjectCuda : InjectBase
 
     psc_mparticles_cuda_inject(mprts_base.mprts(), buf, buf_n_by_patch);
   }
+
+private:
+  struct psc_output_fields_item *item_n;
 };
 
 // ----------------------------------------------------------------------

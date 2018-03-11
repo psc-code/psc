@@ -42,14 +42,8 @@ struct Inject_ : InjectBase
     psc_bnd_set_type(item_n_bnd, "c");
     psc_bnd_set_psc(item_n_bnd, ppsc);
 
-    item_n = psc_output_fields_item_create(comm);
-    auto name = std::string("n_1st_") + mparticles_traits<mparticles_t>::name;
-    psc_output_fields_item_set_type(item_n, name.c_str());
-    psc_output_fields_item_set_psc_bnd(item_n, item_n_bnd);
-
-    psc_output_fields_item_setup(item_n);
     psc_bnd_setup(item_n_bnd);
-    item_ = &dynamic_cast<FieldsItem_t&>(*PscFieldsItemBase{item_n}.sub());
+    item_ = new FieldsItem_t{comm, PscBndBase{item_n_bnd}};
   }
 
   // ----------------------------------------------------------------------
