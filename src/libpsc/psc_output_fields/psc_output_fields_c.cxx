@@ -135,7 +135,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
     psc_output_fields_item_setup(item);
     out_c->item[pfd->nr_flds] = item;
-    struct psc_mfields *flds = PscFieldsItemBase{item}->mres_base_;
+    struct psc_mfields *flds = PscFieldsItemBase{item}->mres();
     psc_mfields_set_name(flds, p);
     pfd->flds[pfd->nr_flds] = flds;
     pfd->nr_flds++;
@@ -227,7 +227,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     for (int i = 0; i < pfd->nr_flds; i++) {
       PscFieldsItemBase item(out_c->item[i]);
       item(flds, mprts, nullptr);
-      pfd->flds[i] = item->mres_base_; // FIXME, just storing this temporarily for writing next
+      pfd->flds[i] = item->mres(); // FIXME, just storing this temporarily for writing next
     }
   }
 

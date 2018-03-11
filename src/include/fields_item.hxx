@@ -20,6 +20,8 @@ struct FieldsItemBase
 {
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
 
+  virtual psc_mfields* mres() = 0;
+
   template<typename MF>
   static MF create_mfields_(MPI_Comm comm, int n_comps)
   {
@@ -31,14 +33,8 @@ struct FieldsItemBase
     psc_mfields_setup(mflds);
     return MF{mflds};
   }
-  
-  ~FieldsItemBase()
-  {
-    psc_mfields_list_del(&psc_mfields_base_list, &mres_base_);
-    psc_mfields_destroy(mres_base_);
-  }
-  
-  psc_mfields* mres_base_;
+
+  bool inited = true;
 };
 
 // ======================================================================
@@ -59,7 +55,7 @@ struct PscFieldsItem
   void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts, PscMfieldsBase mres)
   {
     // FIXME, we shouldn't even take the mres arg
-    assert(!mres.mflds() || mres.mflds() == sub()->mres_base_);
+    assert(!mres.mflds());
     sub()->run(mflds, mprts);
   }
 
@@ -92,7 +88,7 @@ public:
   {
     PscFieldsItem<FieldsItem> item(_item);
 
-    if (!item->mres_base_) return; // ctor hadn't run yet FIXME
+    if (!item->inited) return; // ctor hadn't run yet FIXME
 
     item->~FieldsItem();
   }
@@ -138,6 +134,12 @@ struct FieldsItemFields : FieldsItemBase
     psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
   }
 
+  ~FieldsItemFields()
+  {
+    psc_mfields_list_del(&psc_mfields_base_list, &mres_base_);
+    psc_mfields_destroy(mres_base_);
+  }
+
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
@@ -145,6 +147,11 @@ struct FieldsItemFields : FieldsItemBase
     Item::run(mflds, mres);
     mflds.put_as(mflds_base, 0, 0);
   }
+
+  virtual psc_mfields* mres() override { return mres_base_; }
+
+private:  
+  psc_mfields* mres_base_;
 };
 
 // ======================================================================
@@ -334,6 +341,12 @@ struct ItemMoment : FieldsItemBase
     psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
   }
 
+  ~ItemMoment()
+  {
+    psc_mfields_list_del(&psc_mfields_base_list, &mres_base_);
+    psc_mfields_destroy(mres_base_);
+  }
+
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
@@ -345,6 +358,9 @@ struct ItemMoment : FieldsItemBase
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 
+  virtual psc_mfields* mres() override { return mres_base_; }
+  
+  psc_mfields* mres_base_;
 private:
   Moment_t moment_;
 };
