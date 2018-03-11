@@ -58,7 +58,7 @@ struct PscFieldsItem
 
   void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts, PscMfieldsBase mres)
   {
-    assert(mres.mflds() == sub()->mres_base_);
+    assert(!mres.mflds() || mres.mflds() == sub()->mres_base_);
     sub()->run(mflds, mprts);
   }
 
