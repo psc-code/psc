@@ -60,8 +60,26 @@ struct Heating_ : HeatingBase
     prt.pzi += Dpzi * ranz;
   }
 
+  bool do_heating(int step)
+  {
+    // only heating between heating_tb and heating_te
+    if (step < tb_ || step >= te_) {
+      return false;
+    }
+
+    if (step % every_step_ != 0) {
+      return false;
+    }
+
+    return true;
+  }
+
   void operator()(Mparticles& mprts)
   {
+    if (!do_heating(ppsc->timestep)) {
+      return;
+    }
+    
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       auto& patch = mprts.grid().patches[p];
@@ -87,17 +105,10 @@ struct Heating_ : HeatingBase
   
   void run(PscMparticlesBase mprts_base) override
   {
-    struct psc *psc = ppsc;
+    if (!do_heating(ppsc->timestep)) {
+      return;
+    }
     
-    // only heating between heating_tb and heating_te
-    if (psc->timestep < tb_ || psc->timestep >= te_) {
-      return;
-    }
-
-    if (psc->timestep % every_step_ != 0) {
-      return;
-    }
-
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
     (*this)(*mprts.sub());
     mprts.put_as(mprts_base);

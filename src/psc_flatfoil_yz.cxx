@@ -507,7 +507,7 @@ using Heating_t = Heating_<Mparticles_t>;
 static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
 			      Sort_t& sort, Collision_t& collision,
 			      PushFields_t& pushf, BndParticles_t& bndp,
-			      Inject_t& inject)
+			      Inject_t& inject, Heating_t& heating)
 {
   sort(mprts);
   collision(mprts);
@@ -523,7 +523,9 @@ static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
   bndp(mprts);
+
   inject(mprts);
+  heating(mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -570,10 +572,8 @@ static void psc_flatfoil_step(struct psc *psc)
 #if 1
   psc_flatfoil_step(mprts_, mflds_,
 		    sort_, collision_, pushf_, bndp_,
-		    inject_);
+		    inject_, heating_);
 
-  heating_.run(mprts);
-  
   // field propagation E^{n+1/2} -> E^{n+3/2}
 
   // fill ghosts for H
