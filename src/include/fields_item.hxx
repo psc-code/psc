@@ -172,51 +172,73 @@ using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_
 // FieldsItemMomentOps
 
 // ----------------------------------------------------------------------
+// ItemMomentCRTP
+
+template<typename Derived, typename MF>
+struct ItemMomentCRTP
+{
+  using mfields_t = MF;
+  
+  ItemMomentCRTP(MPI_Comm comm)
+  {
+    auto n_comps = Derived::n_comps;
+    auto fld_names = Derived::fld_names();
+    assert(n_comps <= POFI_MAX_COMPS);
+
+    if (!Derived::flags & POFI_BY_KIND) {
+      this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps).mflds();
+      for (int m = 0; m < n_comps; m++) {
+	psc_mfields_set_comp_name(this->mres_, m, fld_names[m]);
+      }
+    } else {
+      this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps * ppsc->nr_kinds).mflds();
+      for (int k = 0; k < ppsc->nr_kinds; k++) {
+	for (int m = 0; m < n_comps; m++) {
+	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
+	  psc_mfields_set_comp_name(this->mres_, k * n_comps + m, s.c_str());
+	}
+      }
+    }
+    psc_mfields_list_add(&psc_mfields_base_list, &this->mres_);
+  }
+  
+  ~ItemMomentCRTP()
+  {
+    psc_mfields_list_del(&psc_mfields_base_list, &mres_);
+    psc_mfields_destroy(mres_);
+  }
+  
+  psc_mfields*& mres() { return mres_; }
+
+protected:
+  psc_mfields* mres_;
+};
+
+// ----------------------------------------------------------------------
 // ItemMomentLoopPatches
 
 template<typename Moment_t>
-struct ItemMomentLoopPatches
+struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::mfields_t>
 {
+  using Base = ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::mfields_t>;
   using mfields_t = typename Moment_t::mfields_t;
   using mparticles_t = typename Moment_t::mparticles_t;
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
 
   constexpr static const char* name() { return  Moment_t::name; }
+  constexpr static int n_comps = Moment_t::n_comps;
+  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
+  constexpr static int flags = Moment_t::flags;
 
   ItemMomentLoopPatches(MPI_Comm comm, PscBndBase bnd)
-    : bnd_(bnd)
-  {
-    auto n_comps = Moment_t::n_comps;
-    auto fld_names = Moment_t::fld_names();
-    assert(n_comps <= POFI_MAX_COMPS);
-
-    if (!Moment_t::flags & POFI_BY_KIND) {
-      mres_ = mfields_t::create(comm, ppsc->grid(), n_comps).mflds();
-      for (int m = 0; m < n_comps; m++) {
-	psc_mfields_set_comp_name(mres_, m, fld_names[m]);
-      }
-    } else {
-      mres_ = mfields_t::create(comm, ppsc->grid(), n_comps * ppsc->nr_kinds).mflds();
-      for (int k = 0; k < ppsc->nr_kinds; k++) {
-	for (int m = 0; m < n_comps; m++) {
-	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
-	  psc_mfields_set_comp_name(mres_, k * n_comps + m, s.c_str());
-	}
-      }
-    }
-    psc_mfields_list_add(&psc_mfields_base_list, &mres_);
-  }
-
-  ~ItemMomentLoopPatches()
-  {
-    psc_mfields_list_del(&psc_mfields_base_list, &mres_);
-    psc_mfields_destroy(mres_);
-  }
+    : Base(comm),
+      bnd_(bnd)
+  {}
 
   void run(mparticles_t mprts)
   {
-    mfields_t mres{mres_};
+    mfields_t mres{this->mres_};
     for (int p = 0; p < mprts->n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
@@ -313,10 +335,7 @@ struct ItemMomentLoopPatches
     }
   }
 
-  psc_mfields*& mres() { return mres_; }
-
 private:
-  psc_mfields* mres_;
   PscBndBase bnd_;
 };
 
