@@ -13,13 +13,14 @@
 // ======================================================================
 // n_1st
 
+template<typename MP, typename MF>
 struct Moment_n_1st
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
-  using real_t = mparticles_t::real_t;
-  using particles_t = mparticles_t::patch_t;
-  using fields_t = mfields_t::fields_t;  
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -43,13 +44,14 @@ struct Moment_n_1st
 // ======================================================================
 // v_1st
 
+template<typename MP, typename MF>
 struct Moment_v_1st
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
-  using real_t = mparticles_t::real_t;
-  using particles_t = mparticles_t::patch_t;
-  using fields_t = mfields_t::fields_t;  
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
@@ -79,13 +81,14 @@ struct Moment_v_1st
 // ======================================================================
 // p_1st
 
+template<typename MP, typename MF>
 struct Moment_p_1st
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
-  using real_t = mparticles_t::real_t;
-  using particles_t = mparticles_t::patch_t;
-  using fields_t = mfields_t::fields_t;  
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
@@ -113,13 +116,14 @@ struct Moment_p_1st
 // ======================================================================
 // vv_1st
 
+template<typename MP, typename MF>
 struct Moment_vv_1st
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
-  using real_t = mparticles_t::real_t;
-  using particles_t = mparticles_t::patch_t;
-  using fields_t = mfields_t::fields_t;  
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
@@ -149,13 +153,14 @@ struct Moment_vv_1st
 // ======================================================================
 // T_1st
 
+template<typename MP, typename MF>
 struct Moment_T_1st
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
-  using real_t = mparticles_t::real_t;
-  using particles_t = mparticles_t::patch_t;
-  using fields_t = mfields_t::fields_t;  
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
@@ -196,13 +201,14 @@ struct Moment_T_1st
 // ======================================================================
 // Tvv_1st
 
+template<typename MP, typename MF>
 struct Moment_Tvv_1st
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
-  using real_t = mparticles_t::real_t;
-  using particles_t = mparticles_t::patch_t;
-  using fields_t = mfields_t::fields_t;  
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
@@ -234,7 +240,7 @@ struct Moment_Tvv_1st
 // ======================================================================
 
 #define MAKE_OP(TYPE, NAME, Moment_t)					\
-  FieldsItemMomentOps<Moment_t> psc_output_fields_item_##NAME##TYPE##_ops;
+  FieldsItemMomentOps<Moment_t<mparticles_t, mfields_t>> psc_output_fields_item_##NAME##TYPE##_ops;
 
 #define MAKE_POFI_OPS(TYPE)						\
   MAKE_OP(TYPE, n_1st_  , Moment_n_1st)					\
