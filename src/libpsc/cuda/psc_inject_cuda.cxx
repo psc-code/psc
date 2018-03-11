@@ -143,10 +143,10 @@ struct InjectCuda : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    PscFieldsItemBase _item_n(item_n);
-    _item_n(mflds_base, mprts_base, nullptr);
+    FieldsItemBase* item = PscFieldsItemBase{item_n}.sub();
+    item->run(mflds_base, mprts_base);
 
-    mfields_t mf_n = _item_n->mres_base_->get_as<mfields_t>(kind_n, kind_n+1);
+    mfields_t mf_n = item->mres_base_->get_as<mfields_t>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;
@@ -229,7 +229,7 @@ struct InjectCuda : InjectBase
       }
     }
 
-    mf_n.put_as(_item_n->mres_base_, 0, 0);
+    mf_n.put_as(item->mres_base_, 0, 0);
 
     psc_mparticles_cuda_inject(mprts_base.mprts(), buf, buf_n_by_patch);
   }
