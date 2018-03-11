@@ -89,6 +89,8 @@ struct psc_param {
   int stats_every; ///< output timing and other info every so many steps
   bool detailed_profiling; ///< output profiling info for each process separately
   double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
+
+  int sort_interval;
 };
 
 /// coefficients needed for computations

@@ -513,7 +513,7 @@ using Heating_t = Heating_<Mparticles_t>;
 // - pushp prep
 // - marder
 
-static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
+static void psc_flatfoil_step(struct psc* psc, Mparticles_t& mprts, Mfields_t& mflds,
 			      Sort_t& sort, Collision_t& collision,
 			      PushParticles_t& pushp, PushFields_t& pushf,
 			      BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
@@ -522,7 +522,12 @@ static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
 {
   // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-  sort(mprts);
+  int timestep = psc->timestep;
+  
+  if (psc->prm.sort_interval > 0 && timestep % psc->prm.sort_interval == 0) {
+    sort(mprts);
+  }
+  
   collision(mprts);
 
   // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
@@ -605,7 +610,7 @@ static void psc_flatfoil_step(struct psc *psc)
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-  psc_flatfoil_step(mprts_, mflds_,
+  psc_flatfoil_step(psc, mprts_, mflds_,
 		    sort_, collision_, pushp_, pushf_,
 		    bndp_, bnd_, bndf_, inject_, heating_);
 
