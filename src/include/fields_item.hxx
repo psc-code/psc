@@ -22,19 +22,7 @@ struct FieldsItemBase
 
   virtual psc_mfields* mres() = 0;
 
-  template<typename MF>
-  static MF create_mfields_(MPI_Comm comm, int n_comps)
-  {
-    psc_mfields *mflds = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds, fields_traits<typename MF::fields_t>::name);
-    psc_mfields_set_param_int(mflds, "nr_fields", n_comps);
-    psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
-    mflds->grid = &ppsc->grid();
-    psc_mfields_setup(mflds);
-    return MF{mflds};
-  }
-
-  bool inited = true;
+  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
 // ======================================================================
@@ -127,7 +115,7 @@ struct FieldsItemFields : FieldsItemBase
  
   FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
   {
-    mres_base_ = create_mfields_<mfields_t>(comm, Item::n_comps).mflds();
+    mres_base_ = mfields_t::create(comm, Item::n_comps).mflds();
     for (int m = 0; m < Item::n_comps; m++) {
       psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
     }
@@ -325,12 +313,12 @@ struct ItemMoment : FieldsItemBase
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Moment_t::flags & POFI_BY_KIND) {
-      mres_base_ = create_mfields_<mfields_t>(comm, n_comps).mflds();
+      mres_base_ = mfields_t::create(comm, n_comps).mflds();
       for (int m = 0; m < n_comps; m++) {
 	psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
       }
     } else {
-      mres_base_ = create_mfields_<mfields_t>(comm, n_comps * ppsc->nr_kinds).mflds();
+      mres_base_ = mfields_t::create(comm, n_comps * ppsc->nr_kinds).mflds();
       for (int k = 0; k < ppsc->nr_kinds; k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;

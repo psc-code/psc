@@ -35,10 +35,12 @@ enum CURRMEM { // FIXME, dup
 };
 
 enum { // FIXME, duplicated
+#if 0
   JXI, JYI, JZI,
   EX , EY , EZ ,
   HX , HY , HZ ,
-  N_FIELDS,
+#endif
+  N_FIELDS = 9,
 };
 
 // profile hackiness
