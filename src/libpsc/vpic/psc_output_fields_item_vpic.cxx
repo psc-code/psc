@@ -108,5 +108,5 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
   }
 };
 
-FieldsItemOps<ItemMoment<Moment_vpic_hydro>> psc_output_fields_item_vpic_hydro_ops;
+FieldsItemOps<FieldsItemMoment<Moment_vpic_hydro>> psc_output_fields_item_vpic_hydro_ops;
 
