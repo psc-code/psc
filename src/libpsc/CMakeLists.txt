@@ -73,10 +73,9 @@ add_library(psc
   psc_output_fields/psc_output_fields_item_flds_c.cxx
   psc_output_fields/psc_output_fields_item_flds_single.cxx
   psc_output_fields/psc_output_fields_item_jeh.cxx
-  psc_output_fields/psc_output_fields_item_moments_1st_double.cxx
+  psc_output_fields/psc_output_fields_item_moments_1st.cxx
   psc_output_fields/psc_output_fields_item_moments_1st_nc_double.cxx
   psc_output_fields/psc_output_fields_item_moments_1st_nc_single.cxx
-  psc_output_fields/psc_output_fields_item_moments_1st_single.cxx
   psc_output_fields/psc_output_fields_item_moments_2nd_nc_double.cxx
 
   psc_output_fields_collection/psc_output_fields_collection.cxx

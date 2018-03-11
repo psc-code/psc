@@ -1,12 +1,6 @@
 
-# pragma once
+#pragma once
 
-#include <psc_bnd.h>
-#include <fields.hxx>
-#include <bnd.hxx>
-#include <fields_item.hxx>
-
-#include <string>
 #include <cmath>
 
 #include "common_moments.cxx"
@@ -237,17 +231,4 @@ struct Moment_Tvv_1st
     }
   }
 };
-
-// ======================================================================
-
-#define MAKE_OP(MP, MF, TYPE, NAME, Moment_t)				\
-  FieldsItemMomentOps<Moment_t<MP, MF>> psc_output_fields_item_##NAME##TYPE##_ops;
-
-#define MAKE_POFI_OPS(MP, MF, TYPE)					\
-  MAKE_OP(MP, MF, TYPE, n_1st_  , Moment_n_1st)				\
-  MAKE_OP(MP, MF, TYPE, v_1st_  , Moment_v_1st)				\
-  MAKE_OP(MP, MF, TYPE, p_1st_  , Moment_p_1st)				\
-  MAKE_OP(MP, MF, TYPE, vv_1st_ , Moment_vv_1st)			\
-  MAKE_OP(MP, MF, TYPE, T_1st_  , Moment_T_1st)				\
-  MAKE_OP(MP, MF, TYPE, Tvv_1st_, Moment_Tvv_1st)			\
 
