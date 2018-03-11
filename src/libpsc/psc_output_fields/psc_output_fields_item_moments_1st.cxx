@@ -10,11 +10,6 @@
 
 #include "common_moments.cxx"
 
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
-using real_t = mparticles_t::real_t;
-using particles_t = mparticles_t::patch_t;
-
 // ======================================================================
 // n_1st
 
@@ -22,6 +17,9 @@ struct Moment_n_1st
 {
   using mparticles_t = mparticles_t;
   using mfields_t = mfields_t;
+  using real_t = mparticles_t::real_t;
+  using particles_t = mparticles_t::patch_t;
+  using fields_t = mfields_t::fields_t;  
   
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -49,6 +47,9 @@ struct Moment_v_1st
 {
   using mparticles_t = mparticles_t;
   using mfields_t = mfields_t;
+  using real_t = mparticles_t::real_t;
+  using particles_t = mparticles_t::patch_t;
+  using fields_t = mfields_t::fields_t;  
   
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
@@ -82,6 +83,9 @@ struct Moment_p_1st
 {
   using mparticles_t = mparticles_t;
   using mfields_t = mfields_t;
+  using real_t = mparticles_t::real_t;
+  using particles_t = mparticles_t::patch_t;
+  using fields_t = mfields_t::fields_t;  
   
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
@@ -113,6 +117,9 @@ struct Moment_vv_1st
 {
   using mparticles_t = mparticles_t;
   using mfields_t = mfields_t;
+  using real_t = mparticles_t::real_t;
+  using particles_t = mparticles_t::patch_t;
+  using fields_t = mfields_t::fields_t;  
   
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
@@ -146,6 +153,9 @@ struct Moment_T_1st
 {
   using mparticles_t = mparticles_t;
   using mfields_t = mfields_t;
+  using real_t = mparticles_t::real_t;
+  using particles_t = mparticles_t::patch_t;
+  using fields_t = mfields_t::fields_t;  
   
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
@@ -190,6 +200,9 @@ struct Moment_Tvv_1st
 {
   using mparticles_t = mparticles_t;
   using mfields_t = mfields_t;
+  using real_t = mparticles_t::real_t;
+  using particles_t = mparticles_t::patch_t;
+  using fields_t = mfields_t::fields_t;  
   
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
