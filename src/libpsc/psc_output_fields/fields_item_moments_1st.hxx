@@ -1,12 +1,13 @@
 
-#include "psc_output_fields_item_private.h"
+# pragma once
+
 #include <psc_bnd.h>
 #include <fields.hxx>
 #include <bnd.hxx>
 #include <fields_item.hxx>
 
 #include <string>
-#include <math.h>
+#include <cmath>
 
 #include "common_moments.cxx"
 

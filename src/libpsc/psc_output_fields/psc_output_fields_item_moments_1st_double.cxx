@@ -7,6 +7,6 @@
 // !!! These moments are shifted to (n+.5) * dt, rather than n * dt,
 // since the "double" particles are shifted that way.
 
-#include "psc_output_fields_item_moments_1st.cxx"
+#include "fields_item_moments_1st.hxx"
 
 MAKE_POFI_OPS(PscMparticlesDouble, PscMfieldsC, double);
