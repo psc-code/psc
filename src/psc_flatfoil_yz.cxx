@@ -497,10 +497,10 @@ using Mfields_t = MfieldsC;
 using Sort_t = SortCountsort2<Mparticles_t>;
 using Collision_t = Collision_<Mparticles_t, Mfields_t>;
 using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
-using PushFields_t = PushFields<PscMfieldsC>;
+using PushFields_t = PushFields<Mfields_t>;
 using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
-using Bnd_t = Bnd_<MfieldsC>;
-using BndFields_t = BndFieldsNone<MfieldsC>;
+using Bnd_t = Bnd_<Mfields_t>;
+using BndFields_t = BndFieldsNone<Mfields_t>;
 using Inject_t = Inject_<Mparticles_t, Mfields_t>;
 using Heating_t = Heating_<Mparticles_t>;
 
@@ -511,6 +511,8 @@ static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
 			      Inject_t& inject, Heating_t& heating)
 			      
 {
+  // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+
   sort(mprts);
   collision(mprts);
 
@@ -519,9 +521,7 @@ static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
   // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
   
   // === field propagation B^{n+1/2} -> B^{n+1}
-  psc_stats_start(st_time_field);
   pushf.push_H<dim_yz>(mflds, .5);
-  psc_stats_stop(st_time_field);
   // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
   bndp(mprts);

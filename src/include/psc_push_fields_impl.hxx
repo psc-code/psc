@@ -99,8 +99,7 @@ public:
   PushH(const fields_t& flds, struct psc* psc, double dt_fac)
     : Base(psc, dt_fac),
       F(flds)
-  {
-  }
+  {}
   
   void x(int i, int j,int k)
   {
@@ -128,11 +127,11 @@ protected:
 // ======================================================================
 // class PushFields
 
-template<typename mfields_t>
+template<typename Mfields_t>
 class PushFields : public PushFieldsBase
 {
-  using Mfields_t = typename mfields_t::sub_t;
-  using fields_t = typename mfields_t::fields_t;
+  using fields_t = typename Mfields_t::fields_t;
+  using mfields_t = PscMfields<Mfields_t>;
 
 public:
   // ----------------------------------------------------------------------
