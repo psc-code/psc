@@ -513,60 +513,82 @@ using Heating_t = Heating_<Mparticles_t>;
 // - pushp prep
 // - marder
 
-static void psc_flatfoil_step(struct psc* psc, Mparticles_t& mprts, Mfields_t& mflds,
-			      Sort_t& sort, Collision_t& collision,
-			      PushParticles_t& pushp, PushFields_t& pushf,
-			      BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
-			      Inject_t& inject, Heating_t& heating)
-			      
+struct PscFlatfoil
 {
-  // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-
-  int timestep = psc->timestep;
+  PscFlatfoil(psc *psc)
+    : psc_(psc)
+  {}
   
-  if (psc->prm.sort_interval > 0 && timestep % psc->prm.sort_interval == 0) {
-    sort(mprts);
+  void step(Mparticles_t& mprts, Mfields_t& mflds,
+	    Sort_t& sort, Collision_t& collision,
+	    PushParticles_t& pushp, PushFields_t& pushf,
+	    BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
+	    Inject_t& inject, Heating_t& heating)
+    
+  {
+    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+    
+    int timestep = psc_->timestep;
+    
+    if (psc_->prm.sort_interval > 0 && timestep % psc_->prm.sort_interval == 0) {
+      sort(mprts);
+    }
+    
+    collision(mprts);
+    
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    pushp.push_mprts(mprts, mflds);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    
+    // === field propagation B^{n+1/2} -> B^{n+1}
+    pushf.push_H<dim_yz>(mflds, .5);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+    
+    bndp(mprts);
+    
+    inject(mprts);
+    heating(mprts);
+    
+    // === field propagation E^{n+1/2} -> E^{n+3/2}
+    bndf.fill_ghosts_H(mflds);
+    bnd.fill_ghosts(mflds, HX, HX + 3);
+    
+    bndf.add_ghosts_J(mflds);
+    bnd.add_ghosts(mflds, JXI, JXI + 3);
+    bnd.fill_ghosts(mflds, JXI, JXI + 3);
+    
+    pushf.push_E<dim_yz>(mflds, 1.);
+    
+    bndf.fill_ghosts_E(mflds);
+    bnd.fill_ghosts(mflds, EX, EX + 3);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+    
+    // === field propagation B^{n+1} -> B^{n+3/2}
+    bndf.fill_ghosts_E(mflds);
+    bnd.fill_ghosts(mflds, EX, EX + 3);
+    
+    pushf.push_H<dim_yz>(mflds, .5);
+    
+    bndf.fill_ghosts_H(mflds);
+    bnd.fill_ghosts(mflds, HX, HX + 3);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
+
+    //psc_checks_continuity_after_particle_push(psc->checks, psc);
+
+    // E at t^{n+3/2}, particles at t^{n+3/2}
+    // B at t^{n+3/2} (Note: that is not it's natural time,
+    // but div B should be == 0 at any time...)
+    //psc_marder_run(psc->marder, psc->flds, psc->particles);
+    
+    //psc_checks_gauss(psc->checks, psc);
+
+    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
-  
-  collision(mprts);
 
-  // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-  pushp.push_mprts(mprts, mflds);
-  // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-  
-  // === field propagation B^{n+1/2} -> B^{n+1}
-  pushf.push_H<dim_yz>(mflds, .5);
-  // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-  
-  bndp(mprts);
-
-  inject(mprts);
-  heating(mprts);
-
-  // === field propagation E^{n+1/2} -> E^{n+3/2}
-  bndf.fill_ghosts_H(mflds);
-  bnd.fill_ghosts(mflds, HX, HX + 3);
-  
-  bndf.add_ghosts_J(mflds);
-  bnd.add_ghosts(mflds, JXI, JXI + 3);
-  bnd.fill_ghosts(mflds, JXI, JXI + 3);
-
-  pushf.push_E<dim_yz>(mflds, 1.);
-
-  bndf.fill_ghosts_E(mflds);
-  bnd.fill_ghosts(mflds, EX, EX + 3);
-  // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-
-  // === field propagation B^{n+1} -> B^{n+3/2}
-  bndf.fill_ghosts_E(mflds);
-  bnd.fill_ghosts(mflds, EX, EX + 3);
-  
-  pushf.push_H<dim_yz>(mflds, .5);
-  
-  bndf.fill_ghosts_H(mflds);
-  bnd.fill_ghosts(mflds, HX, HX + 3);
-  // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-}
+private:
+  psc* psc_;
+};
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_step
@@ -610,19 +632,9 @@ static void psc_flatfoil_step(struct psc *psc)
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-  psc_flatfoil_step(psc, mprts_, mflds_,
-		    sort_, collision_, pushp_, pushf_,
-		    bndp_, bnd_, bndf_, inject_, heating_);
-
-  //psc_checks_continuity_after_particle_push(psc->checks, psc);
-
-  // E at t^{n+3/2}, particles at t^{n+3/2}
-  // B at t^{n+3/2} (Note: that is not it's natural time,
-  // but div B should be == 0 at any time...)
-  //psc_marder_run(psc->marder, psc->flds, psc->particles);
-    
-  //psc_checks_gauss(psc->checks, psc);
-
-  //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
+  PscFlatfoil flatfoil(psc);
+  flatfoil.step(mprts_, mflds_,
+		sort_, collision_, pushp_, pushf_,
+		bndp_, bnd_, bndf_, inject_, heating_);
 }
 
