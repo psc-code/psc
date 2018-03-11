@@ -73,7 +73,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
     : Base(comm)
   {}
   
-  void run(mparticles_t mprts)
+  void run(MparticlesVpic& mprts)
   {
     mfields_t mres{this->mres_};
     struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres.mflds()));
@@ -90,7 +90,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
     
     for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
       HydroArray *vmflds_hydro = mf_hydro->vmflds_hydro;
-      Simulation_moments_run(sim, vmflds_hydro, mprts->vmprts, kind);
+      Simulation_moments_run(sim, vmflds_hydro, mprts.vmprts, kind);
       
       mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres->n_patches(); p++) {

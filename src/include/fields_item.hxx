@@ -226,6 +226,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   using Base = ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::mfields_t>;
   using mfields_t = typename Moment_t::mfields_t;
   using mparticles_t = typename Moment_t::mparticles_t;
+  using Mparticles = typename mparticles_t::sub_t;
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
 
@@ -239,10 +240,10 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
       bnd_(bnd)
   {}
 
-  void run(mparticles_t mprts)
+  void run(Mparticles& mprts)
   {
     mfields_t mres{this->mres_};
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
       add_ghosts_boundary(mres[p], p, 0, mres->n_comps());
@@ -364,7 +365,7 @@ struct FieldsItemMoment : FieldsItemBase
   {
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
 
-    moment_.run(mprts);
+    moment_.run(*mprts.sub());
     
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }

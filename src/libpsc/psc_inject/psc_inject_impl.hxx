@@ -152,7 +152,7 @@ struct Inject_ : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    moment_n_->run(mprts);
+    moment_n_->run(*mprts.sub());
     auto mf_n = moment_n_->mres();
 
     psc_foreach_patch(psc, p) {
