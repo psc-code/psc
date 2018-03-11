@@ -229,5 +229,7 @@ struct Inject_ : InjectBase
 
 private:
   FieldsItem_t* item_;
+  struct psc_bnd *item_n_bnd;
+  int balance_generation_cnt = {};
 };
 

@@ -27,10 +27,6 @@ struct InjectBase
   const int tau; // in steps
   const int kind_n; // the number of particles to inject are based on this kind's density
   psc_target* const target;
-
-  // state
-  struct psc_bnd *item_n_bnd;
-  int balance_generation_cnt = {};
 };
 
 // ======================================================================

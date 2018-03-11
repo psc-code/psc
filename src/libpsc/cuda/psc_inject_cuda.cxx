@@ -236,6 +236,8 @@ struct InjectCuda : InjectBase
 
 private:
   struct psc_output_fields_item *item_n;
+  struct psc_bnd *item_n_bnd;
+  int balance_generation_cnt = {};
 };
 
 // ----------------------------------------------------------------------
