@@ -342,69 +342,6 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// ItemMoment
-
-template<typename Moment_t>
-struct ItemMoment : FieldsItemBase
-{
-  using mparticles_t = typename Moment_t::mparticles_t;
-  using mfields_t = typename Moment_t::mfields_t;
-  using fields_t = typename mfields_t::fields_t;
-  using Fields = Fields3d<fields_t>;
-  
-  static const char* name()
-  {
-    return strdup((std::string(Moment_t::name()) + "_" +
-		   mparticles_traits<mparticles_t>::name).c_str());
-  }
-
-  ItemMoment(MPI_Comm comm, PscBndBase bnd)
-    : moment_(bnd)
-  {
-    auto n_comps = Moment_t::n_comps;
-    auto fld_names = Moment_t::fld_names();
-    assert(n_comps <= POFI_MAX_COMPS);
-
-    if (!Moment_t::flags & POFI_BY_KIND) {
-      mres_base_ = mfields_t::create(comm, ppsc->grid(), n_comps).mflds();
-      for (int m = 0; m < n_comps; m++) {
-	psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
-      }
-    } else {
-      mres_base_ = mfields_t::create(comm, ppsc->grid(), n_comps * ppsc->nr_kinds).mflds();
-      for (int k = 0; k < ppsc->nr_kinds; k++) {
-	for (int m = 0; m < n_comps; m++) {
-	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
-	  psc_mfields_set_comp_name(mres_base_, k * n_comps + m, s.c_str());
-	}
-      }
-    }
-    psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
-  }
-
-  ~ItemMoment()
-  {
-    psc_mfields_list_del(&psc_mfields_base_list, &mres_base_);
-    psc_mfields_destroy(mres_base_);
-  }
-
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
-  {
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-
-    moment_.run(mfields_t{mres_base_}, mprts);
-    
-    mprts.put_as(mprts_base, MP_DONT_COPY);
-  }
-
-  virtual psc_mfields* mres() override { return mres_base_; }
-  
-private:
-  Moment_t moment_;
-  psc_mfields* mres_base_;
-};
-
-// ----------------------------------------------------------------------
 // ItemMoment2
 
 template<typename Moment_t>

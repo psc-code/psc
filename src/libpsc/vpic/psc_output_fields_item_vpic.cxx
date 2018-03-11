@@ -52,8 +52,9 @@ FieldsItemOps<FieldsItemFields<Item_vpic_fields>> psc_output_fields_item_vpic_fi
 // ----------------------------------------------------------------------
 // Moment_vpic_hydro
 
-struct Moment_vpic_hydro
+struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
 {
+  using Base = ItemMomentCRTP<Moment_vpic_hydro, mfields_t>;
   using mfields_t = mfields_t;
   using mparticles_t = PscMparticlesVpic;
   
@@ -68,10 +69,13 @@ struct Moment_vpic_hydro
   }
   constexpr static int flags = POFI_BY_KIND;
 
-  Moment_vpic_hydro(PscBndBase bnd) {}
+  Moment_vpic_hydro(MPI_Comm comm, PscBndBase bnd)
+    : Base(comm)
+  {}
   
-  static void run(mfields_t mres, mparticles_t mprts)
+  void run(mparticles_t mprts)
   {
+    mfields_t mres{this->mres_};
     struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres.mflds()));
     psc_mfields_set_type(mflds_hydro, "vpic");
     psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
@@ -104,5 +108,5 @@ struct Moment_vpic_hydro
   }
 };
 
-FieldsItemOps<ItemMoment<Moment_vpic_hydro>> psc_output_fields_item_vpic_hydro_ops;
+FieldsItemOps<ItemMoment2<Moment_vpic_hydro>> psc_output_fields_item_vpic_hydro_ops;
 
