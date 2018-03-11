@@ -228,7 +228,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
 
-  constexpr static const char* name() { return  Moment_t::name; }
+  constexpr static const char* name = Moment_t::name;
   constexpr static int n_comps = Moment_t::n_comps;
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
@@ -348,13 +348,10 @@ template<typename Moment_t>
 struct ItemMoment : FieldsItemBase
 {
   using mparticles_t = typename Moment_t::mparticles_t;
-  using mfields_t = typename Moment_t::mfields_t;
-  using fields_t = typename mfields_t::fields_t;
-  using Fields = Fields3d<fields_t>;
   
   static const char* name()
   {
-    return strdup((std::string(Moment_t::name()) + "_" +
+    return strdup((std::string(Moment_t::name) + "_" +
 		   mparticles_traits<mparticles_t>::name).c_str());
   }
 

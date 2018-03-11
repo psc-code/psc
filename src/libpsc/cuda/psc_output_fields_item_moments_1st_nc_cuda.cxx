@@ -15,7 +15,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, PscMfield
   using mfields_t = PscMfieldsCuda;
   using mparticles_t = PscMparticlesCuda;
   
-  constexpr static const char* name() { return "rho_1st_nc"; }
+  constexpr static const char* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = 0;
@@ -51,7 +51,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, PscMfieldsCuda>
   using mfields_t = PscMfieldsCuda;
   using mparticles_t = PscMparticlesCuda;
   
-  constexpr static const char* name() { return "n_1st"; }
+  constexpr static const char* name = "n_1st";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; }
   constexpr static int flags = 0;
