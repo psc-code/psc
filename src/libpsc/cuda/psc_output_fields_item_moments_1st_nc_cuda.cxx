@@ -21,13 +21,14 @@ struct Moment_rho_1st_nc_cuda
 
   Moment_rho_1st_nc_cuda(PscBndBase bnd) : bnd_(bnd) {}
 
-  static void run(mfields_t mres, mparticles_t mprts)
+  void run(mfields_t mres, mparticles_t mprts)
   {
     cuda_mparticles *cmprts = mprts->cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
     cuda_moments_yz_rho_1st_nc(cmprts, cmres);
+    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 
 private:
@@ -51,13 +52,14 @@ struct Moment_n_1st_cuda
 
   Moment_n_1st_cuda(PscBndBase bnd) : bnd_(bnd) {}
 
-  static void run(mfields_t mres, mparticles_t mprts)
+  void run(mfields_t mres, mparticles_t mprts)
   {
     cuda_mparticles *cmprts = mprts->cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
     cuda_moments_yz_n_1st(cmprts, cmres);
+    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 
 private:

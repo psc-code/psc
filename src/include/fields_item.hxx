@@ -190,12 +190,16 @@ struct ItemMomentLoopPatches : Moment_t
     : bnd_(bnd)
   {}
   
-  static void run(mfields_t mres, mparticles_t mprts)
+  void run(mfields_t mres, mparticles_t mprts)
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
       add_ghosts_boundary(mres[p], p, 0, mres->n_comps());
+    }
+
+    if (Moment_t::flags & POFI_ADD_GHOSTS) {
+      bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
     }
   }
 
@@ -340,10 +344,6 @@ struct ItemMoment : FieldsItemBase
     
     mres.put_as(mres_base_, 0, mres_base_->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
-
-    if (Moment_t::flags & POFI_ADD_GHOSTS) {
-      bnd_.add_ghosts(mres_base_, 0, mres_base_->nr_fields);
-    }
   }
 
 private:
