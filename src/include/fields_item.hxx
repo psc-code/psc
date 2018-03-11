@@ -198,9 +198,7 @@ struct ItemMomentLoopPatches : Moment_t
       add_ghosts_boundary(mres[p], p, 0, mres->n_comps());
     }
 
-    if (Moment_t::flags & POFI_ADD_GHOSTS) {
-      bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
-    }
+    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 
   // ----------------------------------------------------------------------

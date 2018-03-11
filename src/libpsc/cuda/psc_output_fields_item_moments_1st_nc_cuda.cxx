@@ -17,7 +17,7 @@ struct Moment_rho_1st_nc_cuda
   constexpr static const char* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
-  constexpr static int flags = POFI_ADD_GHOSTS;
+  constexpr static int flags = 0;
 
   Moment_rho_1st_nc_cuda(PscBndBase bnd) : bnd_(bnd) {}
 
@@ -48,7 +48,7 @@ struct Moment_n_1st_cuda
   constexpr static const char* name = "n_1st";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; } // FIXME
-  constexpr static int flags = POFI_ADD_GHOSTS;
+  constexpr static int flags = 0;
 
   Moment_n_1st_cuda(PscBndBase bnd) : bnd_(bnd) {}
 

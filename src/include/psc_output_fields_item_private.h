@@ -10,7 +10,6 @@ struct psc_output_fields_item {
 };
 
 enum {
-  POFI_ADD_GHOSTS = 1, // this item needs to have ghost points added to interior points
   POFI_BY_KIND    = 2, // this item needs to be replicated by kind
 };
 

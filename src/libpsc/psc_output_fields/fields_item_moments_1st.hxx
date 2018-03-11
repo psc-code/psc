@@ -20,7 +20,7 @@ struct Moment_n_1st
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n" }; }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  constexpr static int flags = POFI_BY_KIND;
   
   static void run(fields_t flds, particles_t& prts)
   {
@@ -51,7 +51,7 @@ struct Moment_v_1st
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "vx", "vy", "vz" }; }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  constexpr static int flags = POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -88,7 +88,7 @@ struct Moment_p_1st
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "px", "py", "pz" }; }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  constexpr static int flags = POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -123,7 +123,7 @@ struct Moment_vv_1st
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz" }; }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  constexpr static int flags = POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -160,7 +160,7 @@ struct Moment_T_1st
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
   constexpr static fld_names_t fld_names() { return { "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" }; }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  constexpr static int flags = POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
@@ -208,7 +208,7 @@ struct Moment_Tvv_1st
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
   constexpr static fld_names_t fld_names() { return { "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz" }; }
-  constexpr static int flags = POFI_ADD_GHOSTS | POFI_BY_KIND;
+  constexpr static int flags = POFI_BY_KIND;
 
   static void run(fields_t flds, particles_t& prts)
   {
