@@ -175,12 +175,17 @@ using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_
 // ItemMomentLoopPatches
 
 template<typename Moment_t>
-struct ItemMomentLoopPatches : Moment_t
+struct ItemMomentLoopPatches
 {
   using mfields_t = typename Moment_t::mfields_t;
   using mparticles_t = typename Moment_t::mparticles_t;
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
+
+  constexpr static const char* name = Moment_t::name;
+  constexpr static int n_comps = Moment_t::n_comps;
+  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
+  constexpr static int flags = Moment_t::flags;
 
   ItemMomentLoopPatches(PscBndBase bnd)
     : bnd_(bnd)
