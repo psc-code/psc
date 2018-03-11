@@ -348,9 +348,9 @@ struct ItemMoment : FieldsItemBase
 
   virtual psc_mfields* mres() override { return mres_base_; }
   
-  psc_mfields* mres_base_;
 private:
   Moment_t moment_;
+  psc_mfields* mres_base_;
 };
 
 // ----------------------------------------------------------------------
