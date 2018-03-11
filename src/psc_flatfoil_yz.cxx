@@ -506,26 +506,52 @@ using Heating_t = Heating_<Mparticles_t>;
 
 static void psc_flatfoil_step(Mparticles_t& mprts, Mfields_t& mflds,
 			      Sort_t& sort, Collision_t& collision,
-			      PushFields_t& pushf, BndParticles_t& bndp,
+			      PushParticles_t& pushp, PushFields_t& pushf,
+			      BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
 			      Inject_t& inject, Heating_t& heating)
+			      
 {
   sort(mprts);
   collision(mprts);
 
-  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-  PushParticles_t::push_mprts(mprts, mflds);
-  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+  // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+  pushp.push_mprts(mprts, mflds);
+  // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
   
-  // field propagation B^{n+1/2} -> B^{n+1}
+  // === field propagation B^{n+1/2} -> B^{n+1}
   psc_stats_start(st_time_field);
   pushf.push_H<dim_yz>(mflds, .5);
   psc_stats_stop(st_time_field);
-  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+  // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
   
   bndp(mprts);
 
   inject(mprts);
   heating(mprts);
+
+  // === field propagation E^{n+1/2} -> E^{n+3/2}
+  bndf.fill_ghosts_H(mflds);
+  bnd.fill_ghosts(mflds, HX, HX + 3);
+  
+  bndf.add_ghosts_J(mflds);
+  bnd.add_ghosts(mflds, JXI, JXI + 3);
+  bnd.fill_ghosts(mflds, JXI, JXI + 3);
+
+  pushf.push_E<dim_yz>(mflds, 1.);
+
+  bndf.fill_ghosts_E(mflds);
+  bnd.fill_ghosts(mflds, EX, EX + 3);
+  // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+
+  // === field propagation B^{n+1} -> B^{n+3/2}
+  bndf.fill_ghosts_E(mflds);
+  bnd.fill_ghosts(mflds, EX, EX + 3);
+  
+  pushf.push_H<dim_yz>(mflds, .5);
+  
+  bndf.fill_ghosts_H(mflds);
+  bnd.fill_ghosts(mflds, HX, HX + 3);
+  // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 }
 
 // ----------------------------------------------------------------------
@@ -553,6 +579,7 @@ static void psc_flatfoil_step(struct psc *psc)
   PscPushParticlesBase pushp(psc->push_particles);
   //mprintf("sub %s\n", typeid(*pushp.sub()).name());
   //auto& pushp_ = dynamic_cast<PushParticles_t&>(*pushp.sub());
+  auto& pushp_ = *new PushParticles_t{}; // FIXME
   PscPushFieldsBase pushf(psc->push_fields);
   auto& pushf_ = dynamic_cast<PushFields_t&>(*pushf.sub());
   PscBndParticlesBase bndp(psc->bnd_particles);
@@ -571,45 +598,8 @@ static void psc_flatfoil_step(struct psc *psc)
 
 #if 1
   psc_flatfoil_step(mprts_, mflds_,
-		    sort_, collision_, pushf_, bndp_,
-		    inject_, heating_);
-
-  // field propagation E^{n+1/2} -> E^{n+3/2}
-
-  // fill ghosts for H
-  bndf_.fill_ghosts_H(mflds_);
-  bnd_.fill_ghosts(mflds, HX, HX + 3);
-  
-  // add and fill ghost for J
-  bndf_.add_ghosts_J(mflds);
-  bnd_.add_ghosts(mflds, JXI, JXI + 3);
-  bnd_.fill_ghosts(mflds, JXI, JXI + 3);
-  
-  // push E
-  pushf_.push_E<dim_yz>(mflds_, 1.);
-  
-  bndf_.fill_ghosts_E(mflds);
-  if (pushf.pushf()->variant == 0) {
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
-  }
-  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-
-  // field propagation B^{n+1} -> B^{n+3/2}
-
-  //pushf.advance_a(mflds);
-  if (pushf.pushf()->variant == 0) {
-    bndf_.fill_ghosts_E(mflds);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
-  }
-  
-  // push H
-  pushf_.push_H<dim_yz>(mflds_, .5);
-  
-  bndf_.fill_ghosts_H(mflds);
-  if (pushf.pushf()->variant == 0) {
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
-  }
-  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+		    sort_, collision_, pushp_, pushf_,
+		    bndp_, bnd_, bndf_, inject_, heating_);
 #else
   sort(mprts);
   collision(mprts);
