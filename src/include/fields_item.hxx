@@ -21,15 +21,15 @@ struct FieldsItemBase
   virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
 
   template<typename MF>
-  void create_mres_(MPI_Comm comm, int n_comps)
+  static MF create_mfields_(MPI_Comm comm, int n_comps)
   {
-    mres_base_ = psc_mfields_create(comm);
-    psc_mfields_set_type(mres_base_, fields_traits<typename MF::fields_t>::name);
-    psc_mfields_set_param_int(mres_base_, "nr_fields", n_comps);
-    psc_mfields_set_param_int3(mres_base_, "ibn", ppsc->ibn);
-    mres_base_->grid = &ppsc->grid();
-    psc_mfields_setup(mres_base_);
-    psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
+    psc_mfields *mflds = psc_mfields_create(comm);
+    psc_mfields_set_type(mflds, fields_traits<typename MF::fields_t>::name);
+    psc_mfields_set_param_int(mflds, "nr_fields", n_comps);
+    psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
+    mflds->grid = &ppsc->grid();
+    psc_mfields_setup(mflds);
+    return MF{mflds};
   }
   
   ~FieldsItemBase()
@@ -131,10 +131,11 @@ struct FieldsItemFields : FieldsItemBase
  
   FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
   {
-    create_mres_<mfields_t>(comm, Item::n_comps);
+    mres_base_ = create_mfields_<mfields_t>(comm, Item::n_comps).mflds();
     for (int m = 0; m < Item::n_comps; m++) {
       psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
     }
+    psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
@@ -317,12 +318,12 @@ struct ItemMoment : FieldsItemBase
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Moment_t::flags & POFI_BY_KIND) {
-      create_mres_<mfields_t>(comm, n_comps);
+      mres_base_ = create_mfields_<mfields_t>(comm, n_comps).mflds();
       for (int m = 0; m < n_comps; m++) {
 	psc_mfields_set_comp_name(mres_base_, m, fld_names[m]);
       }
     } else {
-      create_mres_<mfields_t>(comm, n_comps * ppsc->nr_kinds);
+      mres_base_ = create_mfields_<mfields_t>(comm, n_comps * ppsc->nr_kinds).mflds();
       for (int k = 0; k < ppsc->nr_kinds; k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
@@ -330,6 +331,7 @@ struct ItemMoment : FieldsItemBase
 	}
       }
     }
+    psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
