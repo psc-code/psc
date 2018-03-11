@@ -38,7 +38,8 @@ struct psc_bnd_fields_ops_single : psc_bnd_fields_ops {
 // psc_bnd_fields: subclass "none"
 
 struct psc_bnd_fields_ops_none : psc_bnd_fields_ops {
-  using PscBndFields_t = PscBndFieldsWrapper<BndFieldsNone>;
+  using BndFields_t = BndFieldsNone<MfieldsC>; // FIXME, based on specific mfields
+  using PscBndFields_t = PscBndFieldsWrapper<BndFields_t>;
   psc_bnd_fields_ops_none() {
     name                  = "none";
     size                  = PscBndFields_t::size;

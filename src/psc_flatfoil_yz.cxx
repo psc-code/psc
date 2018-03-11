@@ -500,7 +500,7 @@ using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
 using PushFields_t = PushFields<PscMfieldsC>;
 using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
 using Bnd_t = Bnd_<MfieldsC>;
-using BndFields_t = BndFieldsNone;
+using BndFields_t = BndFieldsNone<MfieldsC>;
 using Inject_t = Inject_<Mparticles_t, Mfields_t>;
 using Heating_t = Heating_<Mparticles_t>;
 
@@ -577,7 +577,7 @@ static void psc_flatfoil_step(struct psc *psc)
   // field propagation E^{n+1/2} -> E^{n+3/2}
 
   // fill ghosts for H
-  bndf_.fill_ghosts_H(mflds);
+  bndf_.fill_ghosts_H(mflds_);
   bnd_.fill_ghosts(mflds, HX, HX + 3);
   
   // add and fill ghost for J
