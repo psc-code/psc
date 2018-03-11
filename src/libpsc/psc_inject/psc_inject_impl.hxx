@@ -47,9 +47,6 @@ struct Inject_ : InjectBase
 
     psc_output_fields_item_setup(item_n);
     psc_bnd_setup(item_n_bnd);
-
-    mflds_n = PscFieldsItemBase{item_n}->mres_base_;
-    psc_mfields_set_name(mflds_n, "mflds_n");
   }
 
   // ----------------------------------------------------------------------
@@ -159,10 +156,9 @@ struct Inject_ : InjectBase
       bnd.reset();
     }
     PscFieldsItemBase _item_n(item_n);
-    mflds_n = _item_n->mres_base_;
-    _item_n(mflds_base, *reinterpret_cast<PscMparticlesBase*>(&mprts), mflds_n);
+    _item_n(mflds_base, *reinterpret_cast<PscMparticlesBase*>(&mprts), nullptr);
 
-    mfields_t mf_n = mflds_n->get_as<mfields_t>(kind_n, kind_n+1);
+    mfields_t mf_n = _item_n->mres_base_->get_as<mfields_t>(kind_n, kind_n+1);
 
     psc_foreach_patch(psc, p) {
       Fields N(mf_n[p]);
@@ -232,7 +228,7 @@ struct Inject_ : InjectBase
       }
     }
 
-    mf_n.put_as(mflds_n, 0, 0);
+    mf_n.put_as(_item_n->mres_base_, 0, 0);
   }
 
 };
