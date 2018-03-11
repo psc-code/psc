@@ -210,7 +210,8 @@ struct ItemMomentCRTP
     psc_mfields_destroy(mres_);
   }
   
-  psc_mfields*& mres() { return mres_; }
+  psc_mfields*& mres_base() { return mres_; }
+  mfields_t mres() { return mfields_t{mres_}; }
 
 protected:
   psc_mfields* mres_;
@@ -368,7 +369,7 @@ struct FieldsItemMoment : FieldsItemBase
     mprts.put_as(mprts_base, MP_DONT_COPY);
   }
 
-  virtual psc_mfields* mres() override { return moment_.mres(); }
+  virtual psc_mfields* mres() override { return moment_.mres_base(); }
   
 private:
   Moment_t moment_;
