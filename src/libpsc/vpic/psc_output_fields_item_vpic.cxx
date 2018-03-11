@@ -67,6 +67,8 @@ struct Moment_vpic_hydro
 	     "tzx_nc", "txy_nc", "_pad0", "_pad1", };
   }
   constexpr static int flags = POFI_BY_KIND;
+
+  Moment_vpic_hydro(PscBndBase bnd) {}
   
   static void run(mfields_t mres, mparticles_t mprts)
   {

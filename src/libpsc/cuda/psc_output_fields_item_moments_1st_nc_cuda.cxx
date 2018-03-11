@@ -19,6 +19,8 @@ struct Moment_rho_1st_nc_cuda
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = POFI_ADD_GHOSTS;
 
+  Moment_rho_1st_nc_cuda(PscBndBase bnd) : bnd_(bnd) {}
+
   static void run(mfields_t mres, mparticles_t mprts)
   {
     cuda_mparticles *cmprts = mprts->cmprts();
@@ -27,6 +29,9 @@ struct Moment_rho_1st_nc_cuda
     mres->zero();
     cuda_moments_yz_rho_1st_nc(cmprts, cmres);
   }
+
+private:
+  PscBndBase bnd_;
 };
 
 FieldsItemOps<ItemMoment<Moment_rho_1st_nc_cuda>> psc_output_fields_item_rho_1st_nc_cuda_ops;
@@ -44,6 +49,8 @@ struct Moment_n_1st_cuda
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; } // FIXME
   constexpr static int flags = POFI_ADD_GHOSTS;
 
+  Moment_n_1st_cuda(PscBndBase bnd) : bnd_(bnd) {}
+
   static void run(mfields_t mres, mparticles_t mprts)
   {
     cuda_mparticles *cmprts = mprts->cmprts();
@@ -52,6 +59,9 @@ struct Moment_n_1st_cuda
     mres->zero();
     cuda_moments_yz_n_1st(cmprts, cmres);
   }
+
+private:
+  PscBndBase bnd_;
 };
 
 FieldsItemOps<ItemMoment<Moment_n_1st_cuda>> psc_output_fields_item_n_1st_cuda_ops;

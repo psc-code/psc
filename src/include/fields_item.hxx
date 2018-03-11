@@ -185,6 +185,10 @@ struct ItemMomentLoopPatches : Moment_t
   using mparticles_t = typename Moment_t::mparticles_t;
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
+
+  ItemMomentLoopPatches(PscBndBase bnd)
+    : bnd_(bnd)
+  {}
   
   static void run(mfields_t mres, mparticles_t mprts)
   {
@@ -281,6 +285,9 @@ struct ItemMomentLoopPatches : Moment_t
       }
     }
   }
+
+private:
+  PscBndBase bnd_;
 };
 
 // ----------------------------------------------------------------------
@@ -301,7 +308,8 @@ struct ItemMoment : FieldsItemBase
   }
 
   ItemMoment(MPI_Comm comm, PscBndBase bnd)
-    : bnd_(bnd)
+    : moment_(bnd),
+      bnd_(bnd)
   {
     auto n_comps = Moment_t::n_comps;
     auto fld_names = Moment_t::fld_names();
@@ -328,7 +336,7 @@ struct ItemMoment : FieldsItemBase
     mparticles_t mprts = mprts_base.get_as<mparticles_t>();
     mfields_t mres = mres_base_->get_as<mfields_t>(0, 0);
 
-    Moment_t::run(mres, mprts);
+    moment_.run(mres, mprts);
     
     mres.put_as(mres_base_, 0, mres_base_->nr_fields);
     mprts.put_as(mprts_base, MP_DONT_COPY);
@@ -339,6 +347,7 @@ struct ItemMoment : FieldsItemBase
   }
 
 private:
+  Moment_t moment_;
   PscBndBase bnd_;
 };
 
