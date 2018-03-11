@@ -33,8 +33,8 @@ struct Moment_n_1st
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      auto *prt = &*prt_iter;
       int m = prt->kind();
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
     }
@@ -64,8 +64,8 @@ struct Moment_v_1st
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      auto *prt = &*prt_iter;
       int mm = prt->kind() * 3;
       
       real_t vxi[3];
@@ -101,8 +101,8 @@ struct Moment_p_1st
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      auto *prt = &*prt_iter;
       int mm = prt->kind() * 3;
       real_t *pxi = &prt->pxi;
       
@@ -136,8 +136,8 @@ struct Moment_vv_1st
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      auto *prt = &*prt_iter;
       int mm = prt->kind() * 3;
       
       real_t vxi[3];
@@ -173,8 +173,8 @@ struct Moment_T_1st
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      auto *prt = &*prt_iter;
       int mm = prt->kind() * 6;
       
       real_t vxi[3];
@@ -221,8 +221,8 @@ struct Moment_Tvv_1st
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
-      particle_t *prt = &*prt_iter;
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
+      auto *prt = &*prt_iter;
       int mm = prt->kind() * 6;
       
       real_t vxi[3];
@@ -239,14 +239,14 @@ struct Moment_Tvv_1st
 
 // ======================================================================
 
-#define MAKE_OP(TYPE, NAME, Moment_t)					\
-  FieldsItemMomentOps<Moment_t<mparticles_t, mfields_t>> psc_output_fields_item_##NAME##TYPE##_ops;
+#define MAKE_OP(MP, MF, TYPE, NAME, Moment_t)				\
+  FieldsItemMomentOps<Moment_t<MP, MF>> psc_output_fields_item_##NAME##TYPE##_ops;
 
-#define MAKE_POFI_OPS(TYPE)						\
-  MAKE_OP(TYPE, n_1st_  , Moment_n_1st)					\
-  MAKE_OP(TYPE, v_1st_  , Moment_v_1st)					\
-  MAKE_OP(TYPE, p_1st_  , Moment_p_1st)					\
-  MAKE_OP(TYPE, vv_1st_ , Moment_vv_1st)				\
-  MAKE_OP(TYPE, T_1st_  , Moment_T_1st)					\
-  MAKE_OP(TYPE, Tvv_1st_, Moment_Tvv_1st)				\
+#define MAKE_POFI_OPS(MP, MF, TYPE)					\
+  MAKE_OP(MP, MF, TYPE, n_1st_  , Moment_n_1st)				\
+  MAKE_OP(MP, MF, TYPE, v_1st_  , Moment_v_1st)				\
+  MAKE_OP(MP, MF, TYPE, p_1st_  , Moment_p_1st)				\
+  MAKE_OP(MP, MF, TYPE, vv_1st_ , Moment_vv_1st)			\
+  MAKE_OP(MP, MF, TYPE, T_1st_  , Moment_T_1st)				\
+  MAKE_OP(MP, MF, TYPE, Tvv_1st_, Moment_Tvv_1st)			\
 

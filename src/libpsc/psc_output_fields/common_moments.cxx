@@ -170,10 +170,11 @@
 // FIXME, this function exists about 100x all over the place, should
 // be consolidated
 
+template<typename particle_t>
 static inline void
-particle_calc_vxi(particle_t *part, particle_t::real_t vxi[3])
+particle_calc_vxi(particle_t *part, typename particle_t::real_t vxi[3])
 {
-  particle_t::real_t root =
+  typename particle_t::real_t root =
     1.f / std::sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;
