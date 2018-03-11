@@ -464,8 +464,7 @@ struct PscMparticles
   using particle_buf_t = typename patch_t::buf_t;
 
   explicit PscMparticles(psc_mparticles *mprts)
-    : mprts_(mprts),
-      sub_(mrc_to_subobj(mprts, sub_t))
+    : mprts_(mprts)
   {}
 
   template<typename MP>
@@ -488,21 +487,20 @@ struct PscMparticles
     psc_mparticles_put_as(mprts_, mprts_base.mprts(), flags);
     mprts_ = nullptr;
   }
-
+  
   psc_mparticles *mprts() { return mprts_; }
   
-  sub_t* operator->() { return sub_; }
+  sub_t* operator->() { return sub(); }
 
-  sub_t* sub() { return sub_; }
+  sub_t* sub() { return mrc_to_subobj(mprts_, sub_t); }
 
   patch_t& operator[](int p)
   {
     return (*this->sub())[p];
   }
-
+  
 private:
   psc_mparticles *mprts_;
-  sub_t *sub_;
 };
 
 using PscMparticlesBase = PscMparticles<MparticlesBase>;

@@ -299,15 +299,14 @@ struct PscMfields
 		"sub classes used in mfields_t must derive from psc_mfields_base");
   
   PscMfields(struct psc_mfields *mflds)
-    : mflds_(mflds),
-      sub_(mrc_to_subobj(mflds, sub_t))
+    : mflds_(mflds)
   {}
 
   unsigned int n_fields() const { return mflds_->nr_fields; }
 
   fields_t operator[](int p)
   {
-    return (*sub_)[p];
+    return (*sub())[p];
   }
 
   template<typename MF>
@@ -329,12 +328,11 @@ struct PscMfields
 
   struct psc_mfields *mflds() { return mflds_; }
   
-  sub_t* operator->() { return sub_; }
-  sub_t* sub() { return sub_; }
+  sub_t* operator->() { return sub(); }
+  sub_t* sub() { return mrc_to_subobj(mflds_, sub_t); }
   
 private:
   struct psc_mfields *mflds_;
-  sub_t *sub_;
 };
 
 using PscMfieldsBase = PscMfields<MfieldsBase>;
