@@ -26,7 +26,7 @@ struct Inject_ : InjectBase
   using particle_t = typename Mparticles::particle_t;
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
-  using ItemMoment_t = FieldsItemMoment<ItemMomentLoopPatches<Moment_n_1st<mparticles_t, mfields_t>>>;
+  using ItemMoment_t = ItemMomentLoopPatches<Moment_n_1st<mparticles_t, mfields_t>>;
   
   // ----------------------------------------------------------------------
   // ctor
@@ -43,7 +43,7 @@ struct Inject_ : InjectBase
     psc_bnd_set_psc(item_n_bnd, ppsc);
 
     psc_bnd_setup(item_n_bnd);
-    moment_n_ = new ItemMoment_t{comm, PscBndBase{item_n_bnd}};
+    moment_n_.reset(new ItemMoment_t{comm, PscBndBase{item_n_bnd}});
   }
 
   // ----------------------------------------------------------------------
@@ -152,9 +152,8 @@ struct Inject_ : InjectBase
       auto bnd = PscBndBase(item_n_bnd);
       bnd.reset();
     }
-    moment_n_->run(mflds_base, PscMparticlesBase(mprts.mprts()));
-
-    mfields_t mf_n = moment_n_->mres()->template get_as<mfields_t>(kind_n, kind_n+1);
+    moment_n_->run(mprts);
+    auto mf_n = moment_n_->mres();
 
     psc_foreach_patch(psc, p) {
       Fields N(mf_n[p]);
@@ -223,12 +222,10 @@ struct Inject_ : InjectBase
 	}
       }
     }
-
-    mf_n.put_as(moment_n_->mres(), 0, 0);
   }
 
 private:
-  ItemMoment_t* moment_n_;
+  std::unique_ptr<ItemMoment_t> moment_n_;
   struct psc_bnd *item_n_bnd;
   int balance_generation_cnt = {};
 };
