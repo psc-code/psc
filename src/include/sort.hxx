@@ -7,9 +7,15 @@
 #include <mrc_profile.h>
 
 // ======================================================================
-// PscSort
+// SortBase
 
-struct SortBase;
+struct SortBase
+{
+  virtual void run(PscMparticlesBase mprts_base) = 0;
+};
+
+// ======================================================================
+// PscSort
 
 template<typename S>
 struct PscSort
@@ -35,15 +41,10 @@ private:
   psc_sort *sort_;
 };
 
-// ======================================================================
-// SortBase
-
-struct SortBase
-{
-  virtual void run(PscMparticlesBase mprts_base) = 0;
-};
-
 using PscSortBase = PscSort<SortBase>;
+
+// ======================================================================
+// SortCRTP
 
 template<typename Derived, typename MP>
 struct SortCRTP : SortBase
