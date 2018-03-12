@@ -492,20 +492,11 @@ main(int argc, char **argv)
 #include "../libpsc/psc_inject/psc_inject_impl.hxx"
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 
-using Mparticles_t = MparticlesDouble;
-using Mfields_t = MfieldsC;
-using Sort_t = SortCountsort2<Mparticles_t>;
-using Collision_t = Collision_<Mparticles_t, Mfields_t>;
-using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
-using PushFields_t = PushFields<Mfields_t>;
-using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
-using Bnd_t = Bnd_<Mfields_t>;
-using BndFields_t = BndFieldsNone<Mfields_t>;
-using Inject_t = Inject_<Mparticles_t, Mfields_t>;
-using Heating_t = Heating_<Mparticles_t>;
-
-// ----------------------------------------------------------------------
-// psc_flatfoil_step
+// ======================================================================
+// PscFlatfoil
+//
+// eventually, a Psc replacement / derived class, but for now just
+// pretending to be something like that
 //
 // things are missing from the generic step():
 // - timing
@@ -515,19 +506,36 @@ using Heating_t = Heating_<Mparticles_t>;
 
 struct PscFlatfoil : Params
 {
+  using Mparticles_t = MparticlesDouble;
+  using Mfields_t = MfieldsC;
+  using Sort_t = SortCountsort2<Mparticles_t>;
+  using Collision_t = Collision_<Mparticles_t, Mfields_t>;
+  using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
+  using PushFields_t = PushFields<Mfields_t>;
+  using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
+  using Bnd_t = Bnd_<Mfields_t>;
+  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Inject_t = Inject_<Mparticles_t, Mfields_t>;
+  using Heating_t = Heating_<Mparticles_t>;
+
   PscFlatfoil(psc *psc)
     : Params(psc->params),
       psc_{psc},
+      sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
       collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
       pushp_{*new PushParticles_t{}}, // FIXME
-      pushf_{dynamic_cast<PushFields_t&>(*PscPushFieldsBase{psc->push_fields}.sub())}
+      pushf_{dynamic_cast<PushFields_t&>(*PscPushFieldsBase{psc->push_fields}.sub())},
+      bndp_{dynamic_cast<BndParticles_t&>(*PscBndParticlesBase{psc->bnd_particles}.sub())},
+      bnd_{dynamic_cast<Bnd_t&>(*PscBndBase{psc->bnd}.sub())},
+      bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
+      inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
+      heating_{dynamic_cast<Heating_t&>(*PscHeatingBase{sub_->heating}.sub())}
   {}
   
-  void step(BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
-	    Inject_t& inject, Heating_t& heating)
+  void step()
   {
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     
@@ -547,33 +555,33 @@ struct PscFlatfoil : Params
     pushf_.push_H<dim_yz>(mflds_, .5);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
     
-    bndp(mprts_);
+    bndp_(mprts_);
     
-    inject(mprts_);
-    heating(mprts_);
+    inject_(mprts_);
+    heating_(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-    bndf.fill_ghosts_H(mflds_);
-    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
-    bndf.add_ghosts_J(mflds_);
-    bnd.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd.fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     
     pushf_.push_E<dim_yz>(mflds_, 1.);
     
-    bndf.fill_ghosts_E(mflds_);
-    bnd.fill_ghosts(mflds_, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
-    bndf.fill_ghosts_E(mflds_);
-    bnd.fill_ghosts(mflds_, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     
     pushf_.push_H<dim_yz>(mflds_, .5);
     
-    bndf.fill_ghosts_H(mflds_);
-    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
 
@@ -591,12 +599,18 @@ struct PscFlatfoil : Params
 
 private:
   psc* psc_;
+  psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
   Sort_t& sort_;
   Collision_t& collision_;
   PushParticles_t& pushp_;
   PushFields_t& pushf_;
+  BndParticles_t& bndp_;
+  Bnd_t& bnd_;
+  BndFields_t& bndf_;
+  Inject_t& inject_;
+  Heating_t& heating_;
 };
 
 // ----------------------------------------------------------------------
@@ -609,28 +623,12 @@ static void psc_flatfoil_step(struct psc *psc)
   mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	     psc->prm.nmax, psc->timestep * psc->dt);
 
-  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-
   psc_balance_run(psc->balance, psc);
 
-  //mprintf("sub %s\n", typeid(*pushp.sub()).name());
-  //auto& pushp_ = dynamic_cast<PushParticles_t&>(*pushp.sub());
-  auto& pushp_ = *new PushParticles_t{}; // FIXME
-  PscBndParticlesBase bndp(psc->bnd_particles);
-  auto& bndp_ = dynamic_cast<BndParticles_t&>(*bndp.sub());
-  PscBndBase bnd(psc->bnd);
-  auto& bnd_ = dynamic_cast<Bnd_t&>(*bnd.sub());
-  PscBndFieldsBase bndf(psc->push_fields->bnd_fields); // !!!
-  auto& bndf_ = dynamic_cast<BndFields_t&>(*bndf.sub());
-  PscInjectBase inject(sub->inject);
-  auto& inject_ = dynamic_cast<Inject_t&>(*inject.sub());
-  PscHeatingBase heating(sub->heating);
-  auto& heating_ = dynamic_cast<Heating_t&>(*heating.sub());
-  
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
   PscFlatfoil flatfoil(psc);
-  flatfoil.step(bndp_, bnd_, bndf_, inject_, heating_);
+  flatfoil.step();
 }
 
