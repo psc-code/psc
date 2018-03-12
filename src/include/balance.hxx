@@ -8,11 +8,6 @@
 
 struct BalanceBase
 {
-  virtual void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
-				     struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
-				     uint *nr_particles_by_patch_new) = 0;
-  virtual void communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
-				  struct psc_mfields *mflds_old, struct psc_mfields *mflds_new) = 0;
   virtual void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) = 0;
   virtual void operator()(struct psc_balance *bal, struct psc *psc) = 0;
 };

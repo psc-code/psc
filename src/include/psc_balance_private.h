@@ -18,15 +18,6 @@ struct psc_balance_ops {
   MRC_SUBCLASS_OPS(struct psc_balance);
   const char *mprts_type;
   const char *mflds_type;
-  void (*communicate_particles)(struct psc_balance *bal,
-				struct communicate_ctx *ctx,
-				struct psc_mparticles *mprts_old,
-				struct psc_mparticles *mprts_new,
-				uint *nr_particles_by_patch_new);
-  void (*communicate_fields)(struct psc_balance *bal,
-			     struct communicate_ctx *ctx,
-			     struct psc_mfields *mflds_old,
-			     struct psc_mfields *mflds_new);
 };
 
 #define psc_balance_ops(bal) ((struct psc_balance_ops *)(bal->obj.ops))
