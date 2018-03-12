@@ -324,6 +324,8 @@ struct MparticlesBase
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }
+
+  virtual ~MparticlesBase() {}
   virtual int get_n_prts() const = 0;
   virtual void get_size_all(uint *n_prts_by_patch) const = 0;
   virtual void reserve_all(const uint *n_prts_by_patch) = 0;
@@ -333,6 +335,8 @@ struct MparticlesBase
 
 protected:
   const Grid_t& grid_;
+public:
+  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
 // ======================================================================

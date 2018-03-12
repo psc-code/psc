@@ -856,30 +856,32 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_prts);
 
     prof_start(pr_bal_prts_A);
-    PscMparticlesBase mprts(psc->particles);
+    PscMparticlesBase mprts_old_base(psc->particles);
     uint *nr_particles_by_patch = (uint *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
-    mprts->get_size_all(nr_particles_by_patch);
+    mprts_old_base->get_size_all(nr_particles_by_patch);
     prof_stop(pr_bal_prts_A);
 
     communicate_new_nr_particles(ctx, &nr_particles_by_patch);
 
     prof_start(pr_bal_prts_B);
     // alloc new particles
-    struct psc_mparticles *mprts_base_new = psc_mparticles_create(mrc_domain_comm(domain_new));
-    psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
-    mprts_base_new->grid = new_grid;
-    psc_mparticles_setup(mprts_base_new);
+    struct psc_mparticles *_mprts_base_new = psc_mparticles_create(mrc_domain_comm(domain_new));
+    psc_mparticles_set_type(_mprts_base_new, psc->prm.particles_base);
+    _mprts_base_new->grid = new_grid;
+    psc_mparticles_setup(_mprts_base_new);
+    PscMparticlesBase mprts_new_base{_mprts_base_new};
 
-    mparticles_t mprts_old = psc->particles->get_as<mparticles_t>();
-    if (mprts_old.mprts() != psc->particles) { // FIXME hacky: destroy old particles early if we just got a copy
-      psc_mparticles_destroy(psc->particles);
+    mparticles_t mprts_old = mprts_old_base.get_as<mparticles_t>();
+    if (mprts_old.mprts() != mprts_old_base.mprts()) { // FIXME hacky: destroy old particles early if we just got a copy
+      mprts_old_base.sub()->~MparticlesBase();
+      //      psc_mparticles_destroy(psc->particles);
     }
 
     prof_start(pr_bal_prts_B1);
-    PscMparticlesBase(mprts_base_new)->reserve_all(nr_particles_by_patch);
+    mprts_new_base->reserve_all(nr_particles_by_patch);
     prof_stop(pr_bal_prts_B1);
 
-    mparticles_t mprts_new = mprts_base_new->get_as<mparticles_t>(MP_DONT_COPY);
+    mparticles_t mprts_new = mprts_new_base.get_as<mparticles_t>(MP_DONT_COPY);
     prof_stop(pr_bal_prts_B);
     
     // communicate particles
@@ -888,23 +890,21 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
 
-    mprts_new.put_as(mprts_base_new, 0);
+    mprts_new.put_as(mprts_new_base, 0);
 
-    if (mprts_old.mprts() != psc->particles) {
+    if (mprts_old.mprts() != mprts_old_base.mprts()) {
       // can't do this because psc->particles is gone
       // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
       psc_mparticles_destroy(mprts_old.mprts());
-      psc->particles = mprts_base_new;
     } else {
       // replace particles by redistributed ones
       // FIXME, very hacky: brutally overwrites the sub-object, maybe this could be done properly
       // with move semantics
       // psc_mparticles_destroy(psc->particles);
       // psc->particles = mprts_base_new;
-      mparticles_t mprts(psc->particles);
-      mprts->~Mparticles();
-      memcpy((char *) mprts.sub(), (char *) mparticles_t{mprts_base_new}.sub(), mprts.mprts()->obj.ops->size);
+      mprts_old_base.sub()->~MparticlesBase();
     }
+    memcpy((char*) mprts_old_base.sub(), (char*) mprts_new_base.sub(), mprts_old_base.mprts()->obj.ops->size);
     prof_stop(pr_bal_prts_C);
 
     prof_stop(pr_bal_prts);

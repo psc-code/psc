@@ -28,7 +28,8 @@ static void
 PFX(destroy)(struct psc_mparticles *_mprts)
 {
   mparticles_t mprts(_mprts);
-
+  if (!mprts.sub()->inited) return; // FIXME hack
+  
   mprts->~Mparticles();
 }
 
