@@ -484,8 +484,34 @@ struct PscMparticles
   MP get_as(uint flags = 0)
   {
     const char *type = mparticles_traits<MP>::name;
-    struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_, type, flags);
-    return MP(mprts);
+    PscMparticlesBase mp_from(mprts_);
+    const char *type_from = psc_mparticles_type(mprts_);
+    // If we're already the subtype, nothing to be done
+    if (strcmp(type_from, type) == 0) {
+      return MP{mprts_};
+    }
+  
+    static int pr;
+    if (!pr) {
+      pr = prof_register("mparticles_get_as", 1., 0, 0);
+    }
+    prof_start(pr);
+
+    //  mprintf("get_as %s -> %s from\n", type_from, type);
+    //  psc_mparticles_view(mprts_);
+
+    struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_));
+    psc_mparticles_set_type(mprts, type);
+    mprts->grid = mprts_->grid;
+    psc_mparticles_setup(mprts);
+
+    copy(mprts_, mprts, type_from, type, flags);
+
+    //  mprintf("get_as %s -> %s to\n", type_from, type);
+    //  psc_mparticles_view(mprts);
+
+    prof_stop(pr);
+    return MP{mprts};
   }
 
   void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
@@ -553,39 +579,6 @@ private:
     } else {
       copy_from(mprts_to, mprts_from, flags);
     }
-  }
-
-  psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
-					unsigned int flags)
-  {
-    PscMparticlesBase mp_from(mprts_from);
-    const char *type_from = psc_mparticles_type(mprts_from);
-    // If we're already the subtype, nothing to be done
-    if (strcmp(type_from, type) == 0) {
-      return mprts_from;
-    }
-  
-    static int pr;
-    if (!pr) {
-      pr = prof_register("mparticles_get_as", 1., 0, 0);
-    }
-    prof_start(pr);
-
-    //  mprintf("get_as %s -> %s from\n", type_from, type);
-    //  psc_mparticles_view(mprts_from);
-
-    struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_from));
-    psc_mparticles_set_type(mprts, type);
-    mprts->grid = mprts_from->grid;
-    psc_mparticles_setup(mprts);
-
-    copy(mprts_from, mprts, type_from, type, flags);
-
-    //  mprintf("get_as %s -> %s to\n", type_from, type);
-    //  psc_mparticles_view(mprts);
-
-    prof_stop(pr);
-    return mprts;
   }
 
   void psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
