@@ -33,59 +33,10 @@ f
 // ----------------------------------------------------------------------
 // conversion to/from "double"
 
-template<typename MP_FROM, typename MP_TO>
-struct ConvertFrom
-{
-  using MparticlesFrom = MP_FROM;
-  using MparticlesTo = MP_TO;
-  using particle_from_t = typename MP_FROM::particle_t;
-  using mparticles_to_t = PscMparticles<MP_TO>;
-
-  void operator()(mparticles_to_t mprts_to, int p, int n, const particle_t& prt_from)
-  {
-    auto& prt_to = mprts_to[p][n];
-    
-    prt_to.xi       = prt_from.xi;
-    prt_to.yi       = prt_from.yi;
-    prt_to.zi       = prt_from.zi;
-    prt_to.pxi      = prt_from.pxi;
-    prt_to.pyi      = prt_from.pyi;
-    prt_to.pzi      = prt_from.pzi;
-    prt_to.qni_wni_ = prt_from.qni_wni_;
-    prt_to.kind_    = prt_from.kind_;
-  }
-};
-
-template<typename MP_TO, typename MP_FROM>
-struct ConvertTo
-{
-  using MparticlesFrom = MP_FROM;
-  using MparticlesTo = MP_TO;
-  using particle_to_t = typename MP_TO::particle_t;
-  using mparticles_from_t = PscMparticles<MP_FROM>;
-
-  particle_to_t operator()(mparticles_from_t mprts_from, int p, int n)
-  {
-    particle_to_t prt_to;
-    const auto& prt_from = mprts_from[p][n];
-    
-    prt_to.xi       = prt_from.xi;
-    prt_to.yi       = prt_from.yi;
-    prt_to.zi       = prt_from.zi;
-    prt_to.pxi      = prt_from.pxi;
-    prt_to.pyi      = prt_from.pyi;
-    prt_to.pzi      = prt_from.pzi;
-    prt_to.qni_wni_ = prt_from.qni_wni_;
-    prt_to.kind_    = prt_from.kind_;
-    
-    return prt_to;
-  }
-};
-
 template<>
 mrc_obj_method MparticlesSingle::methods[] = {
-  MRC_OBJ_METHOD("copy_to_double"  , (psc_mparticles_copy_to_<ConvertFrom<MparticlesSingle, MparticlesDouble>>)),
-  MRC_OBJ_METHOD("copy_from_double", (psc_mparticles_copy_from_<ConvertTo<MparticlesSingle, MparticlesDouble>>)),
+  MRC_OBJ_METHOD("copy_to_double"  , (psc_mparticles_copy_to<Convert<MparticlesSingle, MparticlesDouble>>)),
+  MRC_OBJ_METHOD("copy_from_double", (psc_mparticles_copy_from<Convert<MparticlesDouble, MparticlesSingle>>)),
   {}
 };
 
