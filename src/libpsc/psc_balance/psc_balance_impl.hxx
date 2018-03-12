@@ -1,9 +1,477 @@
 
 #include "fields.hxx"
 #include "balance.hxx"
+#include "bnd_particles.hxx"
 
 #include <mrc_profile.h>
 #include <string.h>
+
+extern double *psc_balance_comp_time_by_patch;
+extern bool psc_output_fields_check_bnd;
+
+static double
+capability_default(int p)
+{
+  return 1.;
+}
+
+static double _mrc_unused
+capability_jaguar(int p)
+{
+  if (p % 16 == 0) {
+    return 16.;
+  } else {
+    return 1.;
+  }
+}
+
+static void
+psc_get_loads_initial(struct psc *psc, double *loads, uint *nr_particles_by_patch)
+{
+  psc_foreach_patch(psc, p) {
+    const int *ldims = psc->grid().ldims;
+    loads[p] = nr_particles_by_patch[p] + 
+      psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
+  }
+}
+
+static void
+psc_get_loads(struct psc *psc, double *loads)
+{
+  struct psc_mparticles *mprts = psc->particles;
+  PscMparticlesBase mp(mprts);
+  
+  uint n_prts_by_patch[mp->n_patches()];
+  mp->get_size_all(n_prts_by_patch);
+  psc_foreach_patch(psc, p) {
+    if (psc->balance->factor_fields >= 0.) {
+      const int *ldims = psc->grid().ldims;
+      loads[p] = n_prts_by_patch[p] +
+	psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
+      //mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
+    } else {
+      double comp_time = psc_balance_comp_time_by_patch[p];
+      loads[p] = comp_time;
+#if 0
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      loads[p] = 1 + rank;
+#endif
+    }
+  }
+}
+
+static int
+find_best_mapping(struct psc_balance *bal, struct mrc_domain *domain,
+		  int nr_global_patches, double *loads_all)
+{
+  MPI_Comm comm = mrc_domain_comm(domain);
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  int *nr_patches_all_new = NULL;
+
+  if (rank == 0) { // do the mapping on proc 0
+    double *capability = (double *) calloc(size, sizeof(*capability));
+    for (int p = 0; p < size; p++) {
+      capability[p] = capability_default(p);
+    }
+    nr_patches_all_new = (int *) calloc(size, sizeof(*nr_patches_all_new));
+    double loads_sum = 0.;
+    for (int i = 0; i < nr_global_patches; i++) {
+      loads_sum += loads_all[i];
+    }
+    double capability_sum = 0.;
+    for (int p = 0; p < size; p++) {
+      capability_sum += capability[p];
+    }
+    double load_target = loads_sum / capability_sum;
+    mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
+	    loads_sum, capability_sum, load_target);
+    int p = 0, nr_new_patches = 0;
+    double load = 0.;
+    double next_target = load_target * capability[0];
+    for (int i = 0; i < nr_global_patches; i++) {
+      load += loads_all[i];
+      nr_new_patches++;
+      if (p < size - 1) {
+	// if load limit is reached, or we have only as many patches as processors left
+	if (load > next_target || size - p >= nr_global_patches - i) {
+	  double above_target = load - next_target;
+	  double below_target = next_target - (load - loads_all[i]);
+	  if (above_target > below_target && nr_new_patches > 1) {
+	    nr_patches_all_new[p] = nr_new_patches - 1;
+	    nr_new_patches = 1;
+	  } else {
+	    nr_patches_all_new[p] = nr_new_patches;
+	    nr_new_patches = 0;
+	  }
+	  p++;
+	  next_target += load_target * capability[p];
+	}
+      }
+      // last proc takes what's left
+      if (i == nr_global_patches - 1) {
+	nr_patches_all_new[size - 1] = nr_new_patches;
+      }
+    }
+    
+    int pp = 0;
+    double min_diff = 0, max_diff = 0;
+    for (int p = 0; p < size; p++) {
+      double load = 0.;
+      for (int i = 0; i < nr_patches_all_new[p]; i++) {
+	load += loads_all[pp++];
+	if (bal->print_loads) {
+	  mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	}
+      }
+      double diff = load - load_target * capability[p];
+      if (bal->print_loads) {
+	mprintf("p %d # = %d load %g / %g : diff %g %%\n", p, nr_patches_all_new[p],
+		load, load_target * capability[p], 100. * diff / (load_target * capability[p]));
+      }
+      if (diff < min_diff) {
+	min_diff = diff;
+      }
+      if (diff > max_diff) {
+	max_diff = diff;
+      }
+    }
+    mprintf("psc_balance: achieved target %g (%g %% -- %g %%)\n", load_target,
+	    100 * min_diff / load_target, 100 * max_diff / load_target);
+
+    if (bal->write_loads) {
+      int gp = 0;
+      char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
+      FILE *f = fopen(s, "w");
+      for (int r = 0; r < size; r++) {
+	for (int p = 0; p < nr_patches_all_new[r]; p++) {
+	  fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
+	  gp++;
+	}
+      }
+      fclose(f);
+    }
+
+    free(capability);
+  }
+  // then scatter
+  int nr_patches_new;
+  MPI_Scatter(nr_patches_all_new, 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
+	      0, comm);
+  free(nr_patches_all_new);
+  return nr_patches_new;
+}
+
+static double *
+gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
+	     int *p_nr_global_patches)
+{
+  MPI_Comm comm = mrc_domain_comm(domain);
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  // gather nr_patches for all procs on proc 0
+  int *nr_patches_all = NULL;
+  if (rank == 0) {
+    nr_patches_all = (int *) calloc(size, sizeof(*nr_patches_all));
+  }
+  MPI_Gather(&nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
+
+  // gather loads for all patches on proc 0
+  int *displs = NULL;
+  double *loads_all = NULL;
+  if (rank == 0) {
+    displs = (int *) calloc(size, sizeof(*displs));
+    int off = 0;
+    for (int i = 0; i < size; i++) {
+      displs[i] = off;
+      off += nr_patches_all[i];
+    }
+    mrc_domain_get_nr_global_patches(domain, p_nr_global_patches);
+	  
+    loads_all = (double *) calloc(*p_nr_global_patches, sizeof(*loads_all));
+  }
+  MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
+	      MPI_DOUBLE, 0, comm);
+
+  if (rank == 0) {
+#if 0
+    int rl = 0;
+    char s[20]; sprintf(s, "loads-%06d.asc", ppsc->timestep);
+    FILE *f = fopen(s, "w");
+    for (int p = 0; p < *p_nr_global_patches; p++) {
+      if (rl < size - 1 && p >= displs[rl+1]) {
+	rl++;
+      }
+      fprintf(f, "%d %g %d\n", p, loads_all[p], rl);
+    }
+    fclose(f);
+#endif
+    free(nr_patches_all);
+    free(displs);
+  }
+
+  return loads_all;
+}
+
+static void
+communicate_setup(struct communicate_ctx *ctx, struct mrc_domain *domain_old,
+		  struct mrc_domain *domain_new)
+{
+  ctx->comm = mrc_domain_comm(domain_old);
+  MPI_Comm_rank(ctx->comm, &ctx->mpi_rank);
+  MPI_Comm_size(ctx->comm, &ctx->mpi_size);
+
+  mrc_domain_get_patches(domain_old, &ctx->nr_patches_old);
+  mrc_domain_get_patches(domain_new, &ctx->nr_patches_new);
+
+  ctx->send_info = (struct send_info *) calloc(ctx->nr_patches_old, sizeof(*ctx->send_info));
+  ctx->recv_info = (struct recv_info *) calloc(ctx->nr_patches_new, sizeof(*ctx->recv_info));
+
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    struct mrc_patch_info info_old, info_new;
+    mrc_domain_get_local_patch_info(domain_old, p, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_new, info_old.level, info_old.idx3, &info_new);
+    ctx->send_info[p].rank  = info_new.rank;
+    ctx->send_info[p].patch = info_new.patch;
+  }
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    struct mrc_patch_info info_old, info_new;
+    mrc_domain_get_local_patch_info(domain_new, p, &info_new);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info_new.level, info_new.idx3, &info_old);
+    ctx->recv_info[p].rank  = info_old.rank;
+    ctx->recv_info[p].patch = info_old.patch;
+  }
+
+  // maps rank <-> rank index
+
+  ctx->send_rank_to_ri = (int *) malloc(ctx->mpi_size * sizeof(*ctx->send_rank_to_ri));
+  ctx->recv_rank_to_ri = (int *) malloc(ctx->mpi_size * sizeof(*ctx->recv_rank_to_ri));
+  for (int r = 0; r < ctx->mpi_size; r++) {
+    ctx->send_rank_to_ri[r] = -1;
+    ctx->recv_rank_to_ri[r] = -1;
+  }
+
+  ctx->nr_send_ranks = 0;
+  ctx->nr_recv_ranks = 0;
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    int send_rank = ctx->send_info[p].rank;
+    if (send_rank >= 0) {
+      if (ctx->send_rank_to_ri[send_rank] < 0) {
+	ctx->send_rank_to_ri[send_rank] = ctx->nr_send_ranks++;
+      }
+    }
+  }
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    int recv_rank = ctx->recv_info[p].rank;
+    if (recv_rank >= 0) {
+      if (ctx->recv_rank_to_ri[recv_rank] < 0) {
+	ctx->recv_rank_to_ri[recv_rank] = ctx->nr_recv_ranks++;
+      }
+    }
+  }
+
+  ctx->send_by_ri = (struct by_ri *) calloc(ctx->nr_send_ranks, sizeof(*ctx->send_by_ri));
+  ctx->recv_by_ri = (struct by_ri *) calloc(ctx->nr_recv_ranks, sizeof(*ctx->recv_by_ri));
+
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    int send_rank = ctx->send_info[p].rank;
+    if (send_rank >= 0) {
+      ctx->send_by_ri[ctx->send_rank_to_ri[send_rank]].rank = send_rank;
+    }
+  }
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    int recv_rank = ctx->recv_info[p].rank;
+    if (recv_rank >= 0) {
+      ctx->recv_by_ri[ctx->recv_rank_to_ri[recv_rank]].rank = recv_rank;
+    }
+  }
+
+  /* for (int ri = 0; ri < ctx->nr_send_ranks; ri++) { */
+  /*   mprintf("send -> %d (%d)\n", ctx->send_by_ri[ri].rank, ri); */
+  /* } */
+
+  // count number of patches sent to each rank
+
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    int send_rank = ctx->send_info[p].rank;
+    if (send_rank >= 0) {
+      ctx->send_by_ri[ctx->send_rank_to_ri[send_rank]].nr_patches++;
+    }
+  }
+
+  // map send patch index by ri back to local patch number
+
+  for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
+    ctx->send_by_ri[ri].pi_to_patch = (int *) calloc(ctx->send_by_ri[ri].nr_patches, sizeof(*ctx->send_by_ri[ri].pi_to_patch));
+    ctx->send_by_ri[ri].nr_patches = 0;
+  }
+
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    int send_rank = ctx->send_info[p].rank;
+    if (send_rank < 0) {
+      continue;
+    }
+    int ri = ctx->send_rank_to_ri[send_rank];
+    int pi = ctx->send_by_ri[ri].nr_patches++;
+    ctx->send_by_ri[ri].pi_to_patch[pi] = p;
+  }
+
+  // count number of patches received from each rank
+
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    int recv_rank = ctx->recv_info[p].rank;
+    if (recv_rank >= 0) {
+      int ri = ctx->recv_rank_to_ri[recv_rank];
+      ctx->recv_by_ri[ri].nr_patches++;
+    }
+  }
+
+  // map received patch index by ri back to local patch number
+
+  for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
+    ctx->recv_by_ri[ri].pi_to_patch = (int *) calloc(ctx->recv_by_ri[ri].nr_patches, sizeof(*ctx->recv_by_ri[ri].pi_to_patch));
+    ctx->recv_by_ri[ri].nr_patches = 0;
+  }
+
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    int recv_rank = ctx->recv_info[p].rank;
+    if (recv_rank < 0) {
+      continue;
+    }
+    int ri = ctx->recv_rank_to_ri[recv_rank];
+    int pi = ctx->recv_by_ri[ri].nr_patches++;
+    ctx->recv_by_ri[ri].pi_to_patch[pi] = p;
+  }
+
+}
+
+static void
+communicate_free(struct communicate_ctx *ctx)
+{
+  free(ctx->send_info);
+  free(ctx->recv_info);
+
+  free(ctx->send_rank_to_ri);
+  free(ctx->recv_rank_to_ri);
+
+  for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
+    free(ctx->send_by_ri[ri].pi_to_patch);
+  }
+  free(ctx->send_by_ri);
+
+  for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
+    free(ctx->recv_by_ri[ri].pi_to_patch);
+  }
+  free(ctx->recv_by_ri);
+}
+
+static void
+communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_by_patch)
+{
+  static int pr;
+  if (!pr) {
+    pr   = prof_register("comm nr prts", 1., 0, 0);
+  }
+
+  prof_start(pr);
+
+  uint *nr_particles_by_patch_old = *p_nr_particles_by_patch;
+  uint *nr_particles_by_patch_new = (uint *) calloc(ctx->nr_patches_new,
+						   sizeof(nr_particles_by_patch_new));
+  // post receives 
+
+  MPI_Request *recv_reqs = (MPI_Request *) calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
+  int nr_recv_reqs = 0;
+
+  int **nr_particles_recv_by_ri = (int **) calloc(ctx->nr_recv_ranks, sizeof(*nr_particles_recv_by_ri));
+  for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
+    struct by_ri *recv = &ctx->recv_by_ri[ri];
+    nr_particles_recv_by_ri[ri] = (int *) calloc(recv->nr_patches, sizeof(*nr_particles_recv_by_ri[ri]));
+    
+    if (recv->rank != ctx->mpi_rank) {
+      //mprintf("recv <- %d (len %d)\n", r, nr_patches_recv_by_ri[ri]);
+      MPI_Irecv(nr_particles_recv_by_ri[ri], recv->nr_patches, MPI_INT,
+		recv->rank, 10, ctx->comm, &recv_reqs[nr_recv_reqs++]);
+    }
+  }
+
+  // post sends
+
+  MPI_Request *send_reqs = (MPI_Request *) calloc(ctx->nr_send_ranks, sizeof(*send_reqs));
+  int nr_send_reqs = 0;
+
+  int **nr_particles_send_by_ri = (int **) calloc(ctx->nr_send_ranks, sizeof(*nr_particles_send_by_ri));
+  for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
+    struct by_ri *send = &ctx->send_by_ri[ri];
+    nr_particles_send_by_ri[ri] = (int *) calloc(send->nr_patches, sizeof(*nr_particles_send_by_ri[ri]));
+
+    for (int pi = 0; pi < send->nr_patches; pi++) {
+      nr_particles_send_by_ri[ri][pi] = nr_particles_by_patch_old[send->pi_to_patch[pi]];
+    }
+
+    if (send->rank != ctx->mpi_rank) {
+      //mprintf("send -> %d (len %d)\n", r, nr_patches_send_by_ri[ri]);
+      MPI_Isend(nr_particles_send_by_ri[ri], send->nr_patches, MPI_INT,
+		send->rank, 10, ctx->comm, &send_reqs[nr_send_reqs++]);
+    }
+  }
+  assert(nr_send_reqs <= ctx->nr_send_ranks);
+
+  // copy local particle numbers
+  {
+    int send_ri = ctx->send_rank_to_ri[ctx->mpi_rank];
+    int recv_ri = ctx->recv_rank_to_ri[ctx->mpi_rank];
+    if (send_ri < 0) { // no local patches to copy
+      assert(recv_ri < 0);
+    } else {
+      assert(ctx->send_by_ri[send_ri].nr_patches == ctx->recv_by_ri[recv_ri].nr_patches);
+      for (int n = 0; n < ctx->send_by_ri[send_ri].nr_patches; n++) {
+	nr_particles_recv_by_ri[recv_ri][n] = nr_particles_send_by_ri[send_ri][n];
+      }
+    }
+  }
+
+  MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+
+  // update from received data
+
+  for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
+    struct by_ri *recv = &ctx->recv_by_ri[ri];
+    for (int pi = 0; pi < ctx->recv_by_ri[ri].nr_patches; pi++) {
+      nr_particles_by_patch_new[recv->pi_to_patch[pi]] = nr_particles_recv_by_ri[ri][pi];
+    }
+  }
+
+  // clean up recv
+
+  for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
+    free(nr_particles_recv_by_ri[ri]);
+  }
+  free(nr_particles_recv_by_ri);
+  free(recv_reqs);
+
+  MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+
+  // clean up send
+
+  for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
+    free(nr_particles_send_by_ri[ri]);
+  }
+  free(nr_particles_send_by_ri);
+  free(send_reqs);
+
+  // return result
+
+  free(*p_nr_particles_by_patch);
+  *p_nr_particles_by_patch = nr_particles_by_patch_new;
+
+  prof_stop(pr);
+}
 
 template<typename MP, typename MF>
 struct Balance_ : BalanceBase
@@ -212,7 +680,85 @@ struct Balance_ : BalanceBase
 
   void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) override
   {
-    psc_balance_initial(bal, psc, n_prts_by_patch);
+    struct mrc_domain *domain_old = psc->mrc_domain;
+
+    int nr_patches;
+    mrc_domain_get_patches(domain_old, &nr_patches);
+    double *loads = (double *) calloc(nr_patches, sizeof(*loads));
+    psc_get_loads_initial(psc, loads, n_prts_by_patch);
+
+    int nr_global_patches;
+    double *loads_all = gather_loads(domain_old, loads, nr_patches,
+				     &nr_global_patches);
+    free(loads);
+
+    int nr_patches_new = find_best_mapping(bal, domain_old, nr_global_patches,
+					   loads_all);
+
+    free(loads_all);
+
+    struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
+    //  mrc_domain_view(domain_new);
+    delete psc->grid_;
+    psc->grid_ = psc->make_grid(domain_new);
+    psc_balance_comp_time_by_patch = (double *) calloc(nr_patches_new,
+						       sizeof(*psc_balance_comp_time_by_patch));
+
+    struct communicate_ctx _ctx, *ctx = &_ctx;
+    communicate_setup(ctx, domain_old, domain_new);
+
+    communicate_new_nr_particles(ctx, &n_prts_by_patch);
+
+    // ----------------------------------------------------------------------
+    // fields
+
+    struct psc_balance_ops *ops = psc_balance_ops(bal);
+
+    struct psc_mfields_list_entry *p;
+    __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
+      struct psc_mfields *flds_base_old = *p->flds_p;
+    
+      struct psc_mfields *flds_base_new;
+      flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
+      psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
+      psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
+      psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
+      psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
+      flds_base_new->grid = &psc->grid();
+      psc_mfields_setup(flds_base_new);
+      for (int m = 0; m < flds_base_old->nr_fields; m++) {
+	const char *s = psc_mfields_comp_name(flds_base_old, m);
+	if (s) {
+	  psc_mfields_set_comp_name(flds_base_new, m, s);
+	}
+      }
+
+      // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
+      struct psc_mfields *flds_old =
+	psc_mfields_get_as(flds_base_old, ops->mflds_type, 0, flds_base_old->nr_fields);
+      if (flds_old != flds_base_old) { 
+	psc_mfields_destroy(flds_base_old);
+      }
+
+      struct psc_mfields *flds_new =
+	psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
+      communicate_fields(bal, ctx, flds_old, flds_new);
+      psc_mfields_put_as(flds_new, flds_base_new, 0, flds_base_new->nr_fields);
+
+      if (flds_old == flds_base_old) {
+	psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
+	psc_mfields_destroy(flds_base_old);
+      }
+      *p->flds_p = flds_base_new;
+    }
+
+    communicate_free(ctx);
+
+    psc->mrc_domain = domain_new;
+    auto bndp = PscBndParticlesBase(psc->bnd_particles);
+    bndp.reset();
+    psc_output_fields_check_bnd = true;
+    mrc_domain_destroy(domain_old);
   }
 
   void  operator()(struct psc_balance *bal, struct psc *psc) override
