@@ -509,5 +509,29 @@ private:
 
 using PscMparticlesBase = PscMparticles<MparticlesBase>;
 
+// ======================================================================
+// MparticlesWrapper
+
+template<typename Mparticles>
+class MparticlesWrapper
+{
+public:
+  const static size_t size = sizeof(Mparticles);
+
+  //  constexpr static char const* const name = Mparticles::name;
+  
+  static void setup(struct psc_mparticles* _mprts)
+  {
+    PscMparticles<Mparticles> mprts(_mprts);
+    new(mprts.sub()) Mparticles{*_mprts->grid};
+  }
+
+  static void destroy(struct psc_mparticles* _mprts)
+  {
+    PscMparticles<Mparticles> mprts(_mprts);
+    mprts->~Mparticles();
+  }
+};
+
 #endif
 
