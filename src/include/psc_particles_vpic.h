@@ -10,6 +10,8 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
+#include "psc_method.h"
+
 void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 				  uint *n_prts_by_patch);
 
@@ -20,13 +22,17 @@ struct particle_vpic_t
 
 struct MparticlesVpic : MparticlesBase
 {
-  using Base = MparticlesBase;
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
 
-  using Base::Base;
-  
   Particles *vmprts;
   Simulation *sim;
+
+  MparticlesVpic(const Grid_t& grid)
+    : MparticlesBase(grid)
+  {
+    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+    vmprts = Simulation_get_particles(sim);
+  }
 
   int get_n_prts() const override
   {

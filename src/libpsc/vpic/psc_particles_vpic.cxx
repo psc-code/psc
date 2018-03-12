@@ -285,29 +285,16 @@ static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
 };
 
 // ----------------------------------------------------------------------
-// psc_mparticles_vpic_setup
-
-static void
-psc_mparticles_vpic_setup(struct psc_mparticles *_mprts)
-{
-  PscMparticlesVpic mprts(_mprts);
-
-  assert(_mprts->grid);
-  new(mprts.sub()) MparticlesVpic{*_mprts->grid};
-
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mprts->sim);
-  mprts->vmprts = Simulation_get_particles(mprts->sim);
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles: subclass "vpic"
   
 struct psc_mparticles_ops_vpic : psc_mparticles_ops {
+  using Wrapper_t = MparticlesWrapper<MparticlesVpic>;
   psc_mparticles_ops_vpic() {
     name                    = "vpic";
-    size                    = sizeof(MparticlesVpic);
+    size                    = Wrapper_t::size;
     methods                 = psc_mparticles_vpic_methods;
-    setup                   = psc_mparticles_vpic_setup;
+    setup                   = Wrapper_t::setup;
+    destroy                 = Wrapper_t::destroy;
   }
 } psc_mparticles_vpic_ops;
 

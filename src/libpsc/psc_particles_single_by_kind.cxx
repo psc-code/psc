@@ -24,8 +24,6 @@ PFX(setup)(struct psc_mparticles *_mprts)
   PscMparticlesSingleByKind mprts(_mprts);
 
   new(mprts.sub()) MparticlesSingleByKind{ppsc->grid()};
-
-  mprts->bkmprts = bk_mparticles_new(mprts->n_patches());
 }
 
 static void
@@ -48,12 +46,13 @@ PFX(get_nr_particles)(struct psc_mparticles *_mprts)
 // psc_mparticles_ops
 
 struct PFX(ops) : psc_mparticles_ops {
+  using Wrapper_t = MparticlesWrapper<MparticlesSingleByKind>;
   PFX(ops)() {
     name                    = PARTICLE_TYPE;
-    size                    = sizeof(struct MparticlesSingleByKind);
+    size                    = Wrapper_t::size;
     methods                 = PFX(methods);
-    setup                   = PFX(setup);
-    destroy                 = PFX(destroy);
+    setup                   = Wrapper_t::setup;
+    destroy                 = Wrapper_t::destroy;
 #if 0
     write                   = PFX(write);
     read                    = PFX(read);

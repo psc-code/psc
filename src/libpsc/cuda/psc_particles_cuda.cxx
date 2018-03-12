@@ -20,29 +20,6 @@ static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
   {}
 };
 
-// ----------------------------------------------------------------------
-// psc_mparticles_cuda_setup
-
-static void
-psc_mparticles_cuda_setup(struct psc_mparticles *_mprts)
-{
-  PscMparticlesCuda mprts(_mprts);
-
-  assert(_mprts->grid);
-  new(mprts.sub()) MparticlesCuda(*_mprts->grid);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_cuda_destroy
-
-static void
-psc_mparticles_cuda_destroy(struct psc_mparticles *_mprts)
-{
-  PscMparticlesCuda mprts(_mprts);
-  
-  mprts.sub()->~MparticlesCuda();
-}
-
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all
@@ -182,12 +159,13 @@ const int* PscMparticlesCuda::patch_t::get_b_mx() const
 // psc_mparticles: subclass "cuda"
   
 struct psc_mparticles_ops_cuda : psc_mparticles_ops {
+  using Wrapper_t = MparticlesWrapper<MparticlesCuda>;
   psc_mparticles_ops_cuda() {
     name                    = "cuda";
-    size                    = sizeof(MparticlesCuda);
+    size                    = Wrapper_t::size;
     methods                 = psc_mparticles_cuda_methods;
-    setup                   = psc_mparticles_cuda_setup;
-    destroy                 = psc_mparticles_cuda_destroy;
+    setup                   = Wrapper_t::setup;
+    destroy                 = Wrapper_t::destroy;
 #ifdef HAVE_LIBHDF5_HL
     read                    = psc_mparticles_cuda_read;
     write                   = psc_mparticles_cuda_write;

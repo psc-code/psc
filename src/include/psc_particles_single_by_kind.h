@@ -15,12 +15,20 @@ struct particle_single_by_kind_t
 
 struct MparticlesSingleByKind : MparticlesBase
 {
-  using Base = MparticlesBase;
   using particle_t = particle_single_by_kind_t;
 
-  using Base::Base;
-
   bk_mparticles *bkmprts;
+
+  MparticlesSingleByKind(const Grid_t& grid)
+    : MparticlesBase(grid)
+  {
+    bkmprts = bk_mparticles_new(grid.n_patches());
+  }
+
+  ~MparticlesSingleByKind()
+  {
+    bk_mparticles_delete(bkmprts);
+  }
 
   int get_n_prts() const override
   {
