@@ -518,53 +518,8 @@ struct PscMparticles
   template<typename MP>
   void put_as(MP mprts_base, unsigned int flags = 0)
   {
-    // If we're already the subtype, nothing to be done
-    if (typeid(*sub()) == typeid(typename MP::sub_t)) {
-      return;
-    }
-
-    PscMparticlesBase mprts(mprts_); // *this, really...
-    const char *type = psc_mparticles_type(mprts.mprts());
-    const char *type_to = psc_mparticles_type(mprts_base.mprts());
-
-    static int pr;
-    if (!pr) {
-      pr = prof_register("mparticles_put_as", 1., 0, 0);
-    }
-    prof_start(pr);
-
-    //  mprintf("put_as %s -> %s from\n", type, type_to);
-    //  psc_mparticles_view(mprts);
-  
-    if (flags & MP_DONT_COPY) {
-      // let's check that the size of the particle arrays hasn't changed, since
-      // it's not obvious what we should do in case it did...
-      uint n_prts_by_patch[mprts->n_patches()];
-      uint n_prts_by_patch_to[mprts_base->n_patches()];
-
-      mprts->get_size_all(n_prts_by_patch);
-      mprts_base->get_size_all(n_prts_by_patch_to);
-      assert(mprts_base->n_patches() == mprts->n_patches());
-
-      for (int p = 0; p < mprts->n_patches(); p++) {
-	if (n_prts_by_patch[p] != n_prts_by_patch_to[p]) {
-	  mprintf("psc_mparticles_put_as: p = %d n_prts %d -- %d\n",
-		  p, n_prts_by_patch[p], n_prts_by_patch_to[p]);
-	}
-	assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
-      }
-
-      flags |= MP_DONT_RESIZE;
-    }
-  
-    copy(mprts_, mprts_base.mprts(), type, type_to, flags);
-  
-    psc_mparticles_destroy(mprts_);
+    psc_mparticles_put_as(mprts_, mprts_base.mprts(), flags);
     mprts_ = nullptr;
-    
-    //  mprintf("put_as %s -> %s to\n", type, type_to);
-    //  psc_mparticles_view(mprts_base);
-    prof_stop(pr);
   }
   
   psc_mparticles *mprts() { return mprts_; }
@@ -621,9 +576,54 @@ private:
     }
   }
 
-  template<typename MP>
-  void psc_mparticles_put_as(MP mp_base, uint flags)
+  void psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
+			     unsigned int flags)
   {
+    PscMparticlesBase mp(mprts), mp_to(mprts_to);
+    // If we're already the subtype, nothing to be done
+    const char *type = psc_mparticles_type(mprts);
+    const char *type_to = psc_mparticles_type(mprts_to);
+    if (strcmp(type_to, type) == 0) {
+      return;
+    }
+
+    static int pr;
+    if (!pr) {
+      pr = prof_register("mparticles_put_as", 1., 0, 0);
+    }
+    prof_start(pr);
+
+    //  mprintf("put_as %s -> %s from\n", type, type_to);
+    //  psc_mparticles_view(mprts);
+  
+    if (flags & MP_DONT_COPY) {
+      // let's check that the size of the particle arrays hasn't changed, since
+      // it's not obvious what we should do in case it did...
+      uint n_prts_by_patch[mp->n_patches()];
+      uint n_prts_by_patch_to[mp_to->n_patches()];
+
+      mp->get_size_all(n_prts_by_patch);
+      mp_to->get_size_all(n_prts_by_patch_to);
+      assert(mp_to->n_patches() == mp->n_patches());
+
+      for (int p = 0; p < mp->n_patches(); p++) {
+	if (n_prts_by_patch[p] != n_prts_by_patch_to[p]) {
+	  mprintf("psc_mparticles_put_as: p = %d n_prts %d -- %d\n",
+		  p, n_prts_by_patch[p], n_prts_by_patch_to[p]);
+	}
+	assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
+      }
+
+      flags |= MP_DONT_RESIZE;
+    }
+  
+    copy(mprts, mprts_to, type, type_to, flags);
+  
+    psc_mparticles_destroy(mprts);
+
+    //  mprintf("put_as %s -> %s to\n", type, type_to);
+    //  psc_mparticles_view(mprts_to);
+    prof_stop(pr);
   }
   
 private:
