@@ -176,7 +176,6 @@ static struct param psc_descr[] = {
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
   { "event_generator"         , VAR(event_generator)         , MRC_VAR_OBJ(psc_event_generator) },
-  { "balance"                 , VAR(balance)                 , MRC_VAR_OBJ(psc_balance) },
   { "checks"                  , VAR(checks)                  , MRC_VAR_OBJ(psc_checks) },
 
   {},
@@ -204,6 +203,8 @@ _psc_create(struct psc *psc)
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
 
   psc->time_start = MPI_Wtime();
+
+  psc->balance = psc_balance_create(psc_comm(psc));
 }
 
 // ----------------------------------------------------------------------
@@ -212,6 +213,8 @@ _psc_create(struct psc *psc)
 static void
 _psc_set_from_options(struct psc *psc)
 {
+  psc_balance_set_from_options(psc->balance);
+  
   // make comma separated list of current kinds
   char *s = new char[100]();
   char *s_save = s;
@@ -498,6 +501,7 @@ _psc_setup(struct psc *psc)
   uint *n_prts_by_patch = new uint[psc->n_patches()];
   
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
+  psc_balance_setup(psc->balance);
   auto balance = PscBalanceBase{psc->balance};
   balance.initial(psc, n_prts_by_patch);
 
