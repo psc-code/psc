@@ -640,6 +640,8 @@ static void psc_flatfoil_integrate(struct psc *psc)
   mpi_printf(psc_comm(psc), "*** Advancing\n");
   double elapsed = MPI_Wtime();
 
+  PscFlatfoil flatfoil(psc);
+
   bool first_iteration = true;
   while (psc->timestep < psc->prm.nmax) {
     prof_start(pr);
@@ -661,7 +663,6 @@ static void psc_flatfoil_integrate(struct psc *psc)
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    PscFlatfoil flatfoil(psc);
     flatfoil.step();
 
     psc->timestep++; // FIXME, too hacky
