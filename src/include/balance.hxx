@@ -13,6 +13,16 @@ struct BalanceBase
 				     uint *nr_particles_by_patch_new) = 0;
   virtual void communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
 				  struct psc_mfields *mflds_old, struct psc_mfields *mflds_new) = 0;
+
+  void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch)
+  {
+    psc_balance_initial(bal, psc, &n_prts_by_patch);
+  }
+  
+  void operator()(struct psc_balance *bal, struct psc *psc)
+  {
+    psc_balance_run(bal, psc);
+  }
 };
 
 // ======================================================================
@@ -32,12 +42,12 @@ struct PscBalance
 
   void operator()(struct psc* psc)
   {
-    psc_balance_run(balance_, psc);
+    (*sub())(balance_, psc);
   }
 
   void initial(struct psc* psc, uint*& n_prts_by_patch)
   {
-    psc_balance_initial(balance_, psc, &n_prts_by_patch);
+    sub()->initial(balance_, psc, n_prts_by_patch);
   }
 
   sub_t* sub() { return mrc_to_subobj(balance_, sub_t); }
