@@ -676,6 +676,43 @@ struct Balance_ : BalanceBase
     delete[] recv_reqs;
   }
 
+  void balance_field(struct psc_balance *bal, struct communicate_ctx* ctx,
+		     struct psc* psc, struct mrc_domain *domain_new, struct psc_mfields **p_mflds)
+  {
+    struct psc_mfields *flds_base_old = *p_mflds;
+    
+    struct psc_mfields *flds_base_new;
+    flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
+    psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
+    psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
+    psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
+    psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
+    flds_base_new->grid = &psc->grid();
+    psc_mfields_setup(flds_base_new);
+    for (int m = 0; m < flds_base_old->nr_fields; m++) {
+      const char *s = psc_mfields_comp_name(flds_base_old, m);
+      if (s) {
+	psc_mfields_set_comp_name(flds_base_new, m, s);
+      }
+    }
+    
+    // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
+    mfields_t flds_old = flds_base_old->get_as<mfields_t>(0, flds_base_old->nr_fields);
+    if (flds_old.mflds() != flds_base_old) { 
+      psc_mfields_destroy(flds_base_old);
+    }
+    
+    mfields_t flds_new = flds_base_new->get_as<mfields_t>(0, 0);
+    communicate_fields(bal, ctx, flds_old.mflds(), flds_new.mflds());
+    flds_new.put_as(flds_base_new, 0, flds_base_new->nr_fields);
+    
+    if (flds_old.mflds() == flds_base_old) {
+      flds_old.put_as(flds_base_old, 0, 0);
+      psc_mfields_destroy(flds_base_old);
+    }
+    *p_mflds = flds_base_new;
+  }
+  
   void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) override
   {
     struct mrc_domain *domain_old = psc->mrc_domain;
@@ -712,38 +749,7 @@ struct Balance_ : BalanceBase
 
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      struct psc_mfields *flds_base_old = *p->flds_p;
-    
-      struct psc_mfields *flds_base_new;
-      flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
-      psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
-      psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
-      psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
-      psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
-      flds_base_new->grid = &psc->grid();
-      psc_mfields_setup(flds_base_new);
-      for (int m = 0; m < flds_base_old->nr_fields; m++) {
-	const char *s = psc_mfields_comp_name(flds_base_old, m);
-	if (s) {
-	  psc_mfields_set_comp_name(flds_base_new, m, s);
-	}
-      }
-
-      // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
-      mfields_t flds_old = flds_base_old->get_as<mfields_t>(0, flds_base_old->nr_fields);
-      if (flds_old.mflds() != flds_base_old) { 
-	psc_mfields_destroy(flds_base_old);
-      }
-
-      mfields_t flds_new = flds_base_new->get_as<mfields_t>(0, 0);
-      communicate_fields(bal, ctx, flds_old.mflds(), flds_new.mflds());
-      flds_new.put_as(flds_base_new, 0, flds_base_new->nr_fields);
-
-      if (flds_old.mflds() == flds_base_old) {
-	flds_old.put_as(flds_base_old, 0, 0);
-	psc_mfields_destroy(flds_base_old);
-      }
-      *p->flds_p = flds_base_new;
+      balance_field(bal, ctx, psc, domain_new, p->flds_p);
     }
 
     communicate_free(ctx);
@@ -755,7 +761,7 @@ struct Balance_ : BalanceBase
     mrc_domain_destroy(domain_old);
   }
 
-  void  operator()(struct psc_balance *bal, struct psc *psc) override
+  void operator()(struct psc_balance *bal, struct psc *psc) override
   {
     // FIXME, way too much duplication from the above
     if (bal->every <= 0)
