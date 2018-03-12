@@ -15,6 +15,7 @@
 #include <psc_output_fields_collection_private.h>
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
+#include "balance.hxx"
 
 #include <psc_particles_as_single.h>
 #include <psc_particles_vpic.h>
@@ -533,7 +534,8 @@ psc_harris_setup(struct psc *psc)
   // partition and initial balancing
   uint *n_prts_by_patch = (uint *) calloc(psc->n_patches(), sizeof(*n_prts_by_patch));
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
-  psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
+  auto balance = PscBalanceBase{psc->balance};
+  balance.initial(psc, n_prts_by_patch);
 
   psc_setup_base_mprts(psc);
   psc_setup_base_mflds(psc);

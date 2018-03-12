@@ -18,6 +18,7 @@
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
+#include "balance.hxx"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -497,7 +498,8 @@ _psc_setup(struct psc *psc)
   uint *n_prts_by_patch = new uint[psc->n_patches()];
   
   psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
-  psc_balance_initial(psc->balance, psc, &n_prts_by_patch);
+  auto balance = PscBalanceBase{psc->balance};
+  balance.initial(psc, n_prts_by_patch);
 
   // create base particle data structure
   psc_setup_base_mprts(psc);
