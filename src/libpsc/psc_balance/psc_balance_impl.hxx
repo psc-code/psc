@@ -2,6 +2,7 @@
 #include "fields.hxx"
 #include "balance.hxx"
 #include "bnd_particles.hxx"
+#include "bnd.hxx"
 
 #include <mrc_profile.h>
 #include <string.h>
@@ -763,6 +764,210 @@ struct Balance_ : BalanceBase
 
   void  operator()(struct psc_balance *bal, struct psc *psc) override
   {
-    psc_balance_run(bal, psc);
+    // FIXME, way too much duplication from the above
+    if (bal->every <= 0)
+      return;
+
+    if (psc->timestep == 0 || psc->timestep % bal->every != 0)
+      return;
+
+    static int st_time_balance;
+    if (!st_time_balance) {
+      st_time_balance = psc_stats_register("time balancing");
+    }
+    static int pr_bal_gather, pr_bal_decomp_A, pr_bal_decomp_B, pr_bal_decomp_C, pr_bal_decomp_D,
+      pr_bal_prts, pr_bal_flds, pr_bal_flds_comm, pr_bal_ctx, pr_bal_flds_A, pr_bal_flds_B, pr_bal_flds_C;
+    static int pr_bal_prts_A, pr_bal_prts_B, pr_bal_prts_C, pr_bal_prts_B1;
+    if (!pr_bal_gather) {
+      pr_bal_gather = prof_register("bal gather", 1., 0, 0);
+      pr_bal_decomp_A = prof_register("bal decomp A", 1., 0, 0);
+      pr_bal_decomp_B = prof_register("bal decomp B", 1., 0, 0);
+      pr_bal_decomp_C = prof_register("bal decomp C", 1., 0, 0);
+      pr_bal_decomp_D = prof_register("bal decomp D", 1., 0, 0);
+      pr_bal_ctx = prof_register("bal ctx", 1., 0, 0);
+      pr_bal_prts = prof_register("bal prts", 1., 0, 0);
+      pr_bal_prts_A = prof_register("bal prts A", 1., 0, 0);
+      pr_bal_prts_B = prof_register("bal prts B", 1., 0, 0);
+      pr_bal_prts_B1 = prof_register("bal prts B1", 1., 0, 0);
+      pr_bal_prts_C = prof_register("bal prts C", 1., 0, 0);
+      pr_bal_flds = prof_register("bal flds", 1., 0, 0);
+      pr_bal_flds_comm = prof_register("bal flds comm", 1., 0, 0);
+      pr_bal_flds_A = prof_register("bal flds A", 1., 0, 0);
+      pr_bal_flds_B = prof_register("bal flds B", 1., 0, 0);
+      pr_bal_flds_C = prof_register("bal flds C", 1., 0, 0);
+    }
+
+    psc_stats_start(st_time_balance);
+    prof_start(pr_bal_gather);
+    struct mrc_domain *domain_old = psc->mrc_domain;
+
+    int nr_patches;
+    mrc_domain_get_patches(domain_old, &nr_patches);
+    double *loads = (double *) calloc(nr_patches, sizeof(*loads));
+    psc_get_loads(psc, loads);
+
+    int nr_global_patches;
+    double *loads_all = gather_loads(domain_old, loads, nr_patches,
+				     &nr_global_patches);
+    free(loads);
+    prof_stop(pr_bal_gather);
+
+    prof_start(pr_bal_decomp_A);
+    int nr_patches_new = find_best_mapping(bal, domain_old, nr_global_patches,
+					   loads_all);
+    prof_stop(pr_bal_decomp_A);
+
+    prof_start(pr_bal_decomp_B);
+    free(loads_all);
+
+    struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
+    prof_stop(pr_bal_decomp_B);
+    prof_start(pr_bal_decomp_C);
+    //  mrc_domain_view(domain_new);
+    Grid_t* new_grid = psc->make_grid(domain_new);
+    prof_stop(pr_bal_decomp_C);
+    prof_start(pr_bal_decomp_D);
+    free(psc_balance_comp_time_by_patch);
+    psc_balance_comp_time_by_patch = (double *) calloc(nr_patches_new,// leaked the very last time
+						       sizeof(*psc_balance_comp_time_by_patch));
+  
+    //If there are no active patches, exit here
+    int n_global_patches;
+    mrc_domain_get_nr_global_patches(domain_new, &n_global_patches);
+    if(n_global_patches < 1) abort();
+    prof_stop(pr_bal_decomp_D);
+
+    // OPT: if local patches didn't change at all, no need to do anything...
+
+    prof_start(pr_bal_ctx);
+    struct communicate_ctx _ctx, *ctx = &_ctx;
+    communicate_setup(ctx, domain_old, domain_new);
+    prof_stop(pr_bal_ctx);
+
+    // ----------------------------------------------------------------------
+    // particles
+
+    prof_start(pr_bal_prts);
+
+    prof_start(pr_bal_prts_A);
+    PscMparticlesBase mprts(psc->particles);
+    uint *nr_particles_by_patch = (uint *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
+    mprts->get_size_all(nr_particles_by_patch);
+    prof_stop(pr_bal_prts_A);
+
+    communicate_new_nr_particles(ctx, &nr_particles_by_patch);
+
+    prof_start(pr_bal_prts_B);
+    // alloc new particles
+    struct psc_balance_ops *ops = psc_balance_ops(bal);
+
+    struct psc_mparticles *mprts_base_new = 
+      psc_mparticles_create(mrc_domain_comm(domain_new));
+    psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
+    mprts_base_new->grid = new_grid;
+    psc_mparticles_setup(mprts_base_new);
+
+    struct psc_mparticles *mprts_old = psc_mparticles_get_as(psc->particles, ops->mprts_type, 0);
+    if (mprts_old != psc->particles) { // FIXME hacky: destroy old particles early if we just got a copy
+      psc_mparticles_destroy(psc->particles);
+    }
+
+    prof_start(pr_bal_prts_B1);
+    PscMparticlesBase(mprts_base_new)->reserve_all(nr_particles_by_patch);
+    prof_stop(pr_bal_prts_B1);
+
+    struct psc_mparticles *mprts_new = psc_mparticles_get_as(mprts_base_new, ops->mprts_type, MP_DONT_COPY);
+    prof_stop(pr_bal_prts_B);
+    
+    // communicate particles
+    communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
+
+    prof_start(pr_bal_prts_C);
+    free(nr_particles_by_patch);
+
+    psc_mparticles_put_as(mprts_new, mprts_base_new, 0);
+
+    if (mprts_old != psc->particles) {
+      // can't do this because psc->particles is gone
+      // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
+      psc_mparticles_destroy(mprts_old);
+    } else {
+      psc_mparticles_destroy(psc->particles);
+    }
+    // replace particles by redistributed ones
+    psc->particles = mprts_base_new;
+    prof_stop(pr_bal_prts_C);
+
+    prof_stop(pr_bal_prts);
+
+    // ----------------------------------------------------------------------
+    // fields
+
+    prof_start(pr_bal_flds_comm);
+    prof_stop(pr_bal_flds_comm);
+    /* prof_start(pr_bal_flds_A); */
+    /* prof_stop(pr_bal_flds_A); */
+    prof_start(pr_bal_flds_B);
+    prof_stop(pr_bal_flds_B);
+
+    prof_start(pr_bal_flds);
+    struct psc_mfields_list_entry *p;
+    __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
+      struct psc_mfields *flds_base_old = *p->flds_p;
+
+      struct psc_mfields *flds_base_new;
+      flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
+      psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
+      psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
+      psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
+      psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
+
+      prof_start(pr_bal_flds_A);
+      flds_base_new->grid = new_grid;
+      psc_mfields_setup(flds_base_new);
+      prof_stop(pr_bal_flds_A);
+      for (int m = 0; m < flds_base_old->nr_fields; m++) {
+	const char *s = psc_mfields_comp_name(flds_base_old, m);
+	if (s) {
+	  psc_mfields_set_comp_name(flds_base_new, m, s);
+	}
+      }
+
+      prof_restart(pr_bal_flds_B);
+      struct psc_mfields *flds_old =
+	psc_mfields_get_as(flds_base_old, ops->mflds_type, 0, flds_base_old->nr_fields);
+      struct psc_mfields *flds_new =
+	psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
+      prof_stop(pr_bal_flds_B);
+
+      prof_restart(pr_bal_flds_comm);
+      communicate_fields(bal, ctx, flds_old, flds_new);
+      prof_stop(pr_bal_flds_comm);
+
+      prof_restart(pr_bal_flds_C);
+      psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
+      psc_mfields_put_as(flds_new, flds_base_new, 0, flds_base_new->nr_fields);
+      prof_stop(pr_bal_flds_C);
+
+      psc_mfields_destroy(*p->flds_p);
+      *p->flds_p = flds_base_new;
+    }
+    prof_stop(pr_bal_flds);
+  
+    communicate_free(ctx);
+
+    delete psc->grid_;
+    psc->grid_ = new_grid;
+    psc->mrc_domain = domain_new;
+    auto bndp = PscBndParticlesBase(psc->bnd_particles);
+    bndp.reset();
+    auto bnd = PscBndBase(psc->bnd);
+    bnd.reset();
+    psc_output_fields_check_bnd = true;
+    psc_balance_generation_cnt++;
+  
+    mrc_domain_destroy(domain_old);
+
+    psc_stats_stop(st_time_balance);
   }
 };
