@@ -79,15 +79,18 @@ struct MparticlesCuda : MparticlesBase
   void setup_internals();
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
 
-  static void copy_from_single(struct psc_mparticles *mprts_cuda,
-			       struct psc_mparticles *mprts, uint flags);
-  static void copy_to_single(struct psc_mparticles *mprts_cuda,
-			     struct psc_mparticles *mprts, uint flags);
-  static void copy_from_double(struct psc_mparticles *mprts_cuda,
-			       struct psc_mparticles *mprts, uint flags);
-  static void copy_to_double(struct psc_mparticles *mprts_cuda,
-			     struct psc_mparticles *mprts, uint flags);
-  
+  template<typename MparticlesOther>
+  static void copy_from_(MparticlesCuda& mp_cuda, MparticlesOther mp);
+
+  template<typename MparticlesOther>
+  static void copy_to_(MparticlesCuda& mp_cuda, MparticlesOther mp);
+
+  template<typename MparticlesOther>
+  static void copy_from(struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts, uint flags);
+
+  template<typename MparticlesOther>
+  static void copy_to(struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts, uint flags);
+
   const int *patch_get_b_mx(int p);
   
   cuda_mparticles* cmprts() { return cmprts_; }

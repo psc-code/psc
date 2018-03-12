@@ -154,8 +154,11 @@ private:
   int p_;
 };
 
+// ======================================================================
+// conversion to "single"/"double"
+
 template<typename MP>
-static void copy_from(MparticlesCuda& mprts_to, MP mprts_from)
+void MparticlesCuda::copy_from_(MparticlesCuda& mprts_to, MP mprts_from)
 {
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -172,7 +175,7 @@ static void copy_from(MparticlesCuda& mprts_to, MP mprts_from)
 }
 
 template<typename MP>
-static void copy_to(MparticlesCuda& mprts_from, MP mprts_to)
+void MparticlesCuda::copy_to_(MparticlesCuda& mprts_from, MP mprts_to)
 {
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -186,33 +189,21 @@ static void copy_to(MparticlesCuda& mprts_from, MP mprts_to)
   }
 }
 
-// ======================================================================
-// conversion to "single"
-
-void MparticlesCuda::copy_from_single(struct psc_mparticles *mprts_cuda,
-				      struct psc_mparticles *mprts, uint flags)
+template<typename MparticlesOther>
+void MparticlesCuda::copy_from(struct psc_mparticles *mprts_cuda,
+			       struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(*PscMparticlesCuda{mprts_cuda}.sub(), *PscMparticlesSingle{mprts}.sub());
+  copy_from_(*PscMparticlesCuda{mprts_cuda}.sub(), *PscMparticles<MparticlesOther>{mprts}.sub());
 }
 
-void MparticlesCuda::copy_to_single(struct psc_mparticles *mprts_cuda,
-				    struct psc_mparticles *mprts, uint flags)
+template<typename MparticlesOther>
+void MparticlesCuda::copy_to(struct psc_mparticles *mprts_cuda,
+			     struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(*PscMparticlesCuda{mprts_cuda}.sub(), *PscMparticlesSingle{mprts}.sub());
+  copy_to_(*PscMparticlesCuda{mprts_cuda}.sub(), *PscMparticles<MparticlesOther>{mprts}.sub());
 }
 
-// ======================================================================
-// conversion to "double"
-
-void MparticlesCuda::copy_from_double(struct psc_mparticles *mprts_cuda,
-				      struct psc_mparticles *mprts, uint flags)
-{
-  copy_from(*PscMparticlesCuda{mprts_cuda}.sub(), *PscMparticlesDouble{mprts}.sub());
-}
-
-void MparticlesCuda::copy_to_double(struct psc_mparticles *mprts_cuda,
-				    struct psc_mparticles *mprts, uint flags)
-{
-  copy_to(*PscMparticlesCuda{mprts_cuda}.sub(), *PscMparticlesDouble{mprts}.sub());
-}
-
+template void MparticlesCuda::copy_to<MparticlesSingle>(psc_mparticles*, psc_mparticles*, uint flags);
+template void MparticlesCuda::copy_from<MparticlesSingle>(psc_mparticles*, psc_mparticles*, uint flags);
+template void MparticlesCuda::copy_to<MparticlesDouble>(psc_mparticles*, psc_mparticles*, uint flags);
+template void MparticlesCuda::copy_from<MparticlesDouble>(psc_mparticles*, psc_mparticles*, uint flags);
