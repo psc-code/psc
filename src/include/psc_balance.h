@@ -11,7 +11,7 @@ BEGIN_C_DECLS
 MRC_CLASS_DECLARE(psc_balance, struct psc_balance);
 
 void psc_balance_initial(struct psc_balance *bal, struct psc *psc,
-			 uint **p_nr_particles_by_patch);
+			 uint*& n_prts_by_patch);
 void psc_balance_run(struct psc_balance *bal, struct psc *psc);
 
 extern int psc_balance_generation_cnt;

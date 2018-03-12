@@ -506,15 +506,14 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
 extern bool psc_output_fields_check_bnd;
 
 void
-psc_balance_initial(struct psc_balance *bal, struct psc *psc,
-		    uint **p_nr_particles_by_patch)
+psc_balance_initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch)
 {
   struct mrc_domain *domain_old = psc->mrc_domain;
 
   int nr_patches;
   mrc_domain_get_patches(domain_old, &nr_patches);
   double *loads = (double *) calloc(nr_patches, sizeof(*loads));
-  psc_get_loads_initial(psc, loads, *p_nr_particles_by_patch);
+  psc_get_loads_initial(psc, loads, n_prts_by_patch);
 
   int nr_global_patches;
   double *loads_all = gather_loads(domain_old, loads, nr_patches,
@@ -536,7 +535,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   struct communicate_ctx _ctx, *ctx = &_ctx;
   communicate_setup(ctx, domain_old, domain_new);
 
-  communicate_new_nr_particles(ctx, p_nr_particles_by_patch);
+  communicate_new_nr_particles(ctx, &n_prts_by_patch);
 
   // ----------------------------------------------------------------------
   // fields
