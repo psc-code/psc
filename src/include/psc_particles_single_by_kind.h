@@ -30,6 +30,8 @@ struct MparticlesSingleByKind : MparticlesBase
     bk_mparticles_delete(bkmprts);
   }
 
+  static mrc_obj_method methods[];
+
   int get_n_prts() const override
   {
     return bk_mparticles_n_prts(bkmprts);

@@ -149,7 +149,7 @@ struct PFX(OPS) : psc_mparticles_ops {
   PFX(OPS)() {
     name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
-    methods                 = PFX(methods);
+    methods                 = Wrapper_t::methods;
     setup                   = Wrapper_t::setup;
     destroy                 = Wrapper_t::destroy;
     write                   = PFX(write);

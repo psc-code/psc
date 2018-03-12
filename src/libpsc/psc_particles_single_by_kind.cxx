@@ -11,7 +11,7 @@
 // ======================================================================
 // psc_mparticles: subclass "single_by_kind"
 
-static struct mrc_obj_method psc_mparticles_single_by_kind_methods[] = {
+mrc_obj_method MparticlesSingleByKind::methods[] = {
   {}
 };
 
@@ -50,7 +50,7 @@ struct PFX(ops) : psc_mparticles_ops {
   PFX(ops)() {
     name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
-    methods                 = PFX(methods);
+    methods                 = Wrapper_t::methods;
     setup                   = Wrapper_t::setup;
     destroy                 = Wrapper_t::destroy;
 #if 0

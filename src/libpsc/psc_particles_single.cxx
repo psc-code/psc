@@ -88,7 +88,8 @@ psc_mparticles_single_copy_from_double(struct psc_mparticles *mprts,
 			   flags, convert_to_single);
 }
 
-static struct mrc_obj_method psc_mparticles_single_methods[] = {
+template<>
+mrc_obj_method MparticlesSingle::methods[] = {
   MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_single_copy_to_double),
   MRC_OBJ_METHOD("copy_from_double", psc_mparticles_single_copy_from_double),
   {}

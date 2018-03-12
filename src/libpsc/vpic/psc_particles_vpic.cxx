@@ -276,7 +276,7 @@ static void psc_mparticles_vpic_copy_to(struct psc_mparticles *mprts,
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
-static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
+mrc_obj_method MparticlesVpic::methods[] = {
   MRC_OBJ_METHOD("copy_to_single"          , psc_mparticles_vpic_copy_to<PscMparticlesSingle>),
   MRC_OBJ_METHOD("copy_from_single"        , psc_mparticles_vpic_copy_from<PscMparticlesSingle>),
   MRC_OBJ_METHOD("copy_to_single_by_kind"  , psc_mparticles_vpic_copy_to<PscMparticlesSingleByKind>),
@@ -292,7 +292,7 @@ struct psc_mparticles_ops_vpic : psc_mparticles_ops {
   psc_mparticles_ops_vpic() {
     name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
-    methods                 = psc_mparticles_vpic_methods;
+    methods                 = Wrapper_t::methods;
     setup                   = Wrapper_t::setup;
     destroy                 = Wrapper_t::destroy;
   }

@@ -68,6 +68,8 @@ struct MparticlesCuda : MparticlesBase
   MparticlesCuda(const MparticlesCuda&) = delete;
   ~MparticlesCuda();
 
+  static mrc_obj_method methods[];
+  
   int get_n_prts() const override;
   void get_size_all(uint *n_prts_by_patch) const override;
   void reserve_all(const uint *n_prts_by_patch) override;

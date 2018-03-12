@@ -12,7 +12,7 @@
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_methods
 
-static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
+mrc_obj_method MparticlesCuda::methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , MparticlesCuda::copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", MparticlesCuda::copy_from_single),
   MRC_OBJ_METHOD("copy_to_double"  , MparticlesCuda::copy_to_double),
@@ -163,7 +163,7 @@ struct psc_mparticles_ops_cuda : psc_mparticles_ops {
   psc_mparticles_ops_cuda() {
     name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
-    methods                 = psc_mparticles_cuda_methods;
+    methods                 = Wrapper_t::methods;
     setup                   = Wrapper_t::setup;
     destroy                 = Wrapper_t::destroy;
 #ifdef HAVE_LIBHDF5_HL

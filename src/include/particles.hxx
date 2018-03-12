@@ -359,6 +359,8 @@ struct Mparticles : MparticlesBase
     }
   }
 
+  static mrc_obj_method methods[];
+  
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
 
@@ -531,6 +533,8 @@ public:
     PscMparticles<Mparticles> mprts(_mprts);
     mprts->~Mparticles();
   }
+
+  constexpr static mrc_obj_method* methods = Mparticles::methods;
 };
 
 #endif

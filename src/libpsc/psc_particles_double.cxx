@@ -5,8 +5,9 @@
 
 // ======================================================================
 // psc_mparticles: subclass "double"
-  
-static struct mrc_obj_method psc_mparticles_double_methods[] = {
+
+template<>
+mrc_obj_method MparticlesDouble::methods[] = {
   {}
 };
 

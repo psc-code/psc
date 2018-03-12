@@ -34,6 +34,8 @@ struct MparticlesVpic : MparticlesBase
     vmprts = Simulation_get_particles(sim);
   }
 
+  static mrc_obj_method methods[];
+
   int get_n_prts() const override
   {
     return Simulation_mprts_get_nr_particles(sim, vmprts);
