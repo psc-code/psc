@@ -483,18 +483,19 @@ struct PscMparticles
   template<typename MP>
   MP get_as(uint flags = 0)
   {
-    const char *type = mparticles_traits<MP>::name;
-    PscMparticlesBase mp_from(mprts_);
-    const char *type_from = psc_mparticles_type(mprts_);
     // If we're already the subtype, nothing to be done
-    if (strcmp(type_from, type) == 0) {
+    if (typeid(*sub()) == typeid(typename MP::sub_t)) {
       return MP{mprts_};
     }
   
+    const char *type = mparticles_traits<MP>::name;
+    const char *type_from = psc_mparticles_type(mprts_);
+
     static int pr;
     if (!pr) {
       pr = prof_register("mparticles_get_as", 1., 0, 0);
     }
+
     prof_start(pr);
 
     //  mprintf("get_as %s -> %s from\n", type_from, type);
