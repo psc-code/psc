@@ -881,11 +881,17 @@ struct Balance_ : BalanceBase
       // can't do this because psc->particles is gone
       // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
       psc_mparticles_destroy(mprts_old.mprts());
+      psc->particles = mprts_base_new;
     } else {
-      psc_mparticles_destroy(psc->particles);
+      // replace particles by redistributed ones
+      // FIXME, very hacky: brutally overwrites the sub-object, maybe this could be done properly
+      // with move semantics
+      // psc_mparticles_destroy(psc->particles);
+      // psc->particles = mprts_base_new;
+      mparticles_t mprts(psc->particles);
+      mprts->~Mparticles();
+      memcpy((char *) mprts.sub(), (char *) mparticles_t{mprts_base_new}.sub(), mprts.mprts()->obj.ops->size);
     }
-    // replace particles by redistributed ones
-    psc->particles = mprts_base_new;
     prof_stop(pr_bal_prts_C);
 
     prof_stop(pr_bal_prts);
