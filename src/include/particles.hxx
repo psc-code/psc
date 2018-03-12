@@ -531,6 +531,7 @@ public:
   static void destroy(struct psc_mparticles* _mprts)
   {
     PscMparticles<Mparticles> mprts(_mprts);
+    if (!mprts->inited) return; // FIXME
     mprts->~Mparticles();
   }
 
