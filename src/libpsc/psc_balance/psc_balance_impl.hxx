@@ -1,11 +1,12 @@
 
 #include "fields.hxx"
+#include "balance.hxx"
 
 #include <mrc_profile.h>
 #include <string.h>
 
 template<typename MP, typename MF>
-struct PscBalance_
+struct Balance_ : BalanceBase
 {
   using mparticles_t = MP;
   using mfields_t = MF;

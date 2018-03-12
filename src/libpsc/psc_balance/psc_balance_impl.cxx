@@ -13,13 +13,17 @@
 
 struct psc_balance_ops_single : psc_balance_ops
 {
-  using PscBalance_t = PscBalance_<PscMparticlesSingle, PscMfieldsSingle>;
+  using Balance_t = Balance_<PscMparticlesSingle, PscMfieldsSingle>;
+  using Wrapper_t = BalanceWrapper<Balance_t>;
   psc_balance_ops_single() {
     name                  = "single";
     mprts_type            = "single";
     mflds_type            = "single";
-    communicate_particles = PscBalance_t::communicate_particles;
-    communicate_fields    = PscBalance_t::communicate_fields;
+    size                  = Wrapper_t::size;
+    setup                 = Wrapper_t::setup;
+    destroy               = Wrapper_t::destroy;
+    communicate_particles = Balance_t::communicate_particles;
+    communicate_fields    = Balance_t::communicate_fields;
   }
 } psc_balance_single_ops;
 
@@ -28,12 +32,16 @@ struct psc_balance_ops_single : psc_balance_ops
 
 struct psc_balance_ops_double : psc_balance_ops
 {
-  using PscBalance_t = PscBalance_<PscMparticlesDouble, PscMfieldsC>;
+  using Balance_t = Balance_<PscMparticlesDouble, PscMfieldsC>;
+  using Wrapper_t = BalanceWrapper<Balance_t>;
   psc_balance_ops_double() {
     name                  = "double";
     mprts_type            = "double";
     mflds_type            = "c";
-    communicate_particles = PscBalance_t::communicate_particles;
-    communicate_fields    = PscBalance_t::communicate_fields;
+    size                  = Wrapper_t::size;
+    setup                 = Wrapper_t::setup;
+    destroy               = Wrapper_t::destroy;
+    communicate_particles = Balance_t::communicate_particles;
+    communicate_fields    = Balance_t::communicate_fields;
   }
 } psc_balance_double_ops;
