@@ -908,6 +908,7 @@ struct Balance_ : BalanceBase
       // psc->particles = mprts_base_new;
       mprts_old_base.sub()->~MparticlesBase();
     }
+    mprts_old_base.mprts()->grid = new_grid;
     memcpy((char*) mprts_old_base.sub(), (char*) mprts_new_base.sub(), mprts_old_base.mprts()->obj.ops->size);
     prof_stop(pr_bal_prts_C);
 
