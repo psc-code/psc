@@ -483,6 +483,8 @@ struct Balance_ : BalanceBase
   using Fields = Fields3d<fields_t>;
   using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
+  using Mparticles = typename mparticles_t::sub_t;
+  using Mfields = typename mfields_t::sub_t;
 
   void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
 			     mparticles_t mprts_old, mparticles_t mprts_new,
@@ -701,7 +703,7 @@ struct Balance_ : BalanceBase
     // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
     mfields_t mflds_old = mflds_base_old.get_as<mfields_t>(0, mflds_base_old->n_comps());
     if (mflds_old.mflds() != mflds_base_old.mflds()) { 
-      psc_mfields_destroy(mflds_base_old.mflds());
+      mflds_base_old->~MfieldsBase();
     }
     
     mfields_t mflds_new = mflds_base_new.get_as<mfields_t>(0, 0);
@@ -710,9 +712,12 @@ struct Balance_ : BalanceBase
     
     if (mflds_old.mflds() == mflds_base_old.mflds()) {
       mflds_old.put_as(mflds_base_old, 0, 0);
-      psc_mfields_destroy(mflds_base_old.mflds());
+      // psc_mfields_destroy(mflds_base_old.mflds());
+      // *p_mflds = mflds_base_new.mflds();
+      mflds_base_old->~MfieldsBase();
     }
-    *p_mflds = mflds_base_new.mflds();
+    memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
+	   mflds_base_old.mflds()->obj.ops->size);
   }
   
   void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) override

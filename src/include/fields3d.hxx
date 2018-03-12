@@ -176,6 +176,7 @@ struct MfieldsBase
   int n_patches() const { return grid_.n_patches(); }
   int n_comps() const { return n_fields_; }
 
+  virtual ~MfieldsBase() {}
   virtual void zero_comp(int m) = 0;
   virtual void set_comp(int m, double val) = 0;
   virtual void scale_comp(int m, double val) = 0;
