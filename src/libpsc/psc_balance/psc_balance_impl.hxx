@@ -11,6 +11,7 @@ struct PscBalance_
   using mfields_t = MF;
   using fields_t = typename mfields_t::fields_t;
   using Fields = Fields3d<fields_t>;
+  using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
 
   static void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
