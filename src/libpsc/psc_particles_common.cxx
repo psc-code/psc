@@ -10,30 +10,6 @@ using real_t = mparticles_t::real_t;
 // psc_mparticles "single" / "double" / "c"
 
 // ----------------------------------------------------------------------
-// psc_mparticles_sub_setup
-
-static void
-PFX(setup)(struct psc_mparticles *_mprts)
-{
-  mparticles_t mprts(_mprts);
-
-  assert(_mprts->grid);
-  new(mprts.sub()) mparticles_t::sub_t(*_mprts->grid);
-}
-
-// ----------------------------------------------------------------------
-// psc_mparticles_sub_destroy
-
-static void
-PFX(destroy)(struct psc_mparticles *_mprts)
-{
-  mparticles_t mprts(_mprts);
-  if (!mprts.sub()->inited) return; // FIXME hack
-  
-  mprts->~Mparticles();
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticls_sub_write/read
   
 #if (PSC_PARTICLES_AS_DOUBLE || PSC_PARTICLES_AS_SINGLE) && HAVE_LIBHDF5_HL
@@ -144,16 +120,4 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
-struct PFX(OPS) : psc_mparticles_ops {
-  using Wrapper_t = MparticlesWrapper<typename mparticles_t::sub_t>;
-  PFX(OPS)() {
-    name                    = Wrapper_t::name;
-    size                    = Wrapper_t::size;
-    methods                 = Wrapper_t::methods;
-    setup                   = Wrapper_t::setup;
-    destroy                 = Wrapper_t::destroy;
-    write                   = PFX(write);
-    read                    = PFX(read);
-  }
-} PFX(ops);
-
+psc_mparticles_ops_<mparticles_t::sub_t> PFX(ops);

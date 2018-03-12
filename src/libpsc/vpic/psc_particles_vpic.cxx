@@ -287,16 +287,7 @@ mrc_obj_method MparticlesVpic::methods[] = {
 // ----------------------------------------------------------------------
 // psc_mparticles: subclass "vpic"
   
-struct psc_mparticles_ops_vpic : psc_mparticles_ops {
-  using Wrapper_t = MparticlesWrapper<MparticlesVpic>;
-  psc_mparticles_ops_vpic() {
-    name                    = Wrapper_t::name;
-    size                    = Wrapper_t::size;
-    methods                 = Wrapper_t::methods;
-    setup                   = Wrapper_t::setup;
-    destroy                 = Wrapper_t::destroy;
-  }
-} psc_mparticles_vpic_ops;
+psc_mparticles_ops_<MparticlesVpic> psc_mparticles_vpic_ops;
 
 
 

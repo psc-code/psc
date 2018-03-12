@@ -538,5 +538,16 @@ public:
   constexpr static mrc_obj_method* methods = Mparticles::methods;
 };
 
+template<typename Mparticles>
+struct psc_mparticles_ops_ : psc_mparticles_ops {
+  using Wrapper_t = MparticlesWrapper<Mparticles>;
+  psc_mparticles_ops_() {
+    name    = Wrapper_t::name;
+    size    = Wrapper_t::size;
+    methods = Wrapper_t::methods;
+    setup   = Wrapper_t::setup;
+    destroy = Wrapper_t::destroy;
+  }
+};
 #endif
 

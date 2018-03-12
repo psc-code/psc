@@ -158,18 +158,4 @@ const int* PscMparticlesCuda::patch_t::get_b_mx() const
 // ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
-struct psc_mparticles_ops_cuda : psc_mparticles_ops {
-  using Wrapper_t = MparticlesWrapper<MparticlesCuda>;
-  psc_mparticles_ops_cuda() {
-    name                    = Wrapper_t::name;
-    size                    = Wrapper_t::size;
-    methods                 = Wrapper_t::methods;
-    setup                   = Wrapper_t::setup;
-    destroy                 = Wrapper_t::destroy;
-#ifdef HAVE_LIBHDF5_HL
-    read                    = psc_mparticles_cuda_read;
-    write                   = psc_mparticles_cuda_write;
-#endif
-  }
-} psc_mparticles_cuda_ops;
-
+psc_mparticles_ops_<MparticlesCuda> psc_mparticles_cuda_ops;

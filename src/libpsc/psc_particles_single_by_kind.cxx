@@ -16,47 +16,7 @@ mrc_obj_method MparticlesSingleByKind::methods[] = {
 };
 
 // ----------------------------------------------------------------------
-// psc_mparticles_sub_setup
-
-static void
-PFX(setup)(struct psc_mparticles *_mprts)
-{
-  PscMparticlesSingleByKind mprts(_mprts);
-
-  new(mprts.sub()) MparticlesSingleByKind{ppsc->grid()};
-}
-
-static void
-PFX(destroy)(struct psc_mparticles *_mprts)
-{
-  auto mprts = PscMparticlesSingleByKind{_mprts};
-
-  bk_mparticles_delete(mprts->bkmprts);
-}
-
-static unsigned int
-PFX(get_nr_particles)(struct psc_mparticles *_mprts)
-{
-  auto mprts = PscMparticlesSingleByKind{_mprts};
-
-  return bk_mparticles_n_prts(mprts->bkmprts);
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_ops
 
-struct PFX(ops) : psc_mparticles_ops {
-  using Wrapper_t = MparticlesWrapper<MparticlesSingleByKind>;
-  PFX(ops)() {
-    name                    = Wrapper_t::name;
-    size                    = Wrapper_t::size;
-    methods                 = Wrapper_t::methods;
-    setup                   = Wrapper_t::setup;
-    destroy                 = Wrapper_t::destroy;
-#if 0
-    write                   = PFX(write);
-    read                    = PFX(read);
-#endif
-  }
-} PFX(ops);
+psc_mparticles_ops_<MparticlesSingleByKind> psc_mparticles_single_by_kind_ops;
 
