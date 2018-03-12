@@ -547,10 +547,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     struct psc_mfields *flds_base_old = *p->flds_p;
     
-    // if (flds_base_old != psc->flds) {
-    //   fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
-    //   continue; // FIXME!!!
-    // }
     struct psc_mfields *flds_base_new;
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
     psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
@@ -748,11 +744,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     struct psc_mfields *flds_base_old = *p->flds_p;
-    // if (flds_base_old != psc->flds) {
-    //   fprintf(stderr, "WARNING: not rebalancing some extra field (%p) -- expect crash!\n",
-    // 	      flds_base_old);
-    //   continue; // FIXME!!!
-    // }
+
     struct psc_mfields *flds_base_new;
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
     psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));

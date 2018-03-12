@@ -209,4 +209,14 @@ struct Balance_ : BalanceBase
     delete[] send_reqs;
     delete[] recv_reqs;
   }
+
+  void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) override
+  {
+    psc_balance_initial(bal, psc, &n_prts_by_patch);
+  }
+
+  void  operator()(struct psc_balance *bal, struct psc *psc) override
+  {
+    psc_balance_run(bal, psc);
+  }
 };
