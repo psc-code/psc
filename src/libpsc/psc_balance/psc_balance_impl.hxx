@@ -677,7 +677,8 @@ struct Balance_ : BalanceBase
   }
 
   void balance_field(struct psc_balance *bal, struct communicate_ctx* ctx,
-		     struct psc* psc, struct mrc_domain *domain_new, struct psc_mfields **p_mflds)
+		     struct psc* psc, struct mrc_domain *domain_new, const Grid_t *new_grid,
+		     struct psc_mfields **p_mflds)
   {
     PscMfieldsBase mflds_base_old{*p_mflds};
 
@@ -687,7 +688,7 @@ struct Balance_ : BalanceBase
     psc_mfields_set_name(flds_base_new, psc_mfields_name(mflds_base_old.mflds()));
     psc_mfields_set_param_int(flds_base_new, "nr_fields", mflds_base_old->n_comps());
     psc_mfields_set_param_int3(flds_base_new, "ibn", mflds_base_old.mflds()->ibn);
-    flds_base_new->grid = &psc->grid();
+    flds_base_new->grid = new_grid;
     psc_mfields_setup(flds_base_new);
     for (int m = 0; m < mflds_base_old->n_comps(); m++) {
       const char *s = psc_mfields_comp_name(mflds_base_old.mflds(), m);
@@ -750,7 +751,7 @@ struct Balance_ : BalanceBase
 
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      balance_field(bal, ctx, psc, domain_new, p->flds_p);
+      balance_field(bal, ctx, psc, domain_new, &psc->grid(), p->flds_p);
     }
 
     communicate_free(ctx);
@@ -909,42 +910,7 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_flds);
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      struct psc_mfields *flds_base_old = *p->flds_p;
-
-      struct psc_mfields *flds_base_new;
-      flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
-      psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
-      psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
-      psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
-      psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
-
-      prof_start(pr_bal_flds_A);
-      flds_base_new->grid = new_grid;
-      psc_mfields_setup(flds_base_new);
-      prof_stop(pr_bal_flds_A);
-      for (int m = 0; m < flds_base_old->nr_fields; m++) {
-	const char *s = psc_mfields_comp_name(flds_base_old, m);
-	if (s) {
-	  psc_mfields_set_comp_name(flds_base_new, m, s);
-	}
-      }
-
-      prof_restart(pr_bal_flds_B);
-      mfields_t flds_old = flds_base_old->get_as<mfields_t>(0, flds_base_old->nr_fields);
-      mfields_t flds_new = flds_base_new->get_as<mfields_t>(0, 0);
-      prof_stop(pr_bal_flds_B);
-
-      prof_restart(pr_bal_flds_comm);
-      communicate_fields(bal, ctx, flds_old.mflds(), flds_new.mflds());
-      prof_stop(pr_bal_flds_comm);
-
-      prof_restart(pr_bal_flds_C);
-      flds_old.put_as(flds_base_old, 0, 0);
-      flds_new.put_as(flds_base_new, 0, flds_base_new->nr_fields);
-      prof_stop(pr_bal_flds_C);
-
-      psc_mfields_destroy(*p->flds_p);
-      *p->flds_p = flds_base_new;
+      balance_field(bal, ctx, psc, domain_new, new_grid, p->flds_p);
     }
     prof_stop(pr_bal_flds);
   
