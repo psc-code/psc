@@ -17,8 +17,6 @@ struct psc_balance_ops_single : psc_balance_ops
   using Wrapper_t = BalanceWrapper<Balance_t>;
   psc_balance_ops_single() {
     name                  = "single";
-    mprts_type            = "single";
-    mflds_type            = "single";
     size                  = Wrapper_t::size;
     setup                 = Wrapper_t::setup;
     destroy               = Wrapper_t::destroy;
@@ -34,8 +32,6 @@ struct psc_balance_ops_double : psc_balance_ops
   using Wrapper_t = BalanceWrapper<Balance_t>;
   psc_balance_ops_double() {
     name                  = "double";
-    mprts_type            = "double";
-    mflds_type            = "c";
     size                  = Wrapper_t::size;
     setup                 = Wrapper_t::setup;
     destroy               = Wrapper_t::destroy;

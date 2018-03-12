@@ -713,8 +713,6 @@ struct Balance_ : BalanceBase
     // ----------------------------------------------------------------------
     // fields
 
-    struct psc_balance_ops *ops = psc_balance_ops(bal);
-
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
       struct psc_mfields *flds_base_old = *p->flds_p;
@@ -735,19 +733,17 @@ struct Balance_ : BalanceBase
       }
 
       // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
-      struct psc_mfields *flds_old =
-	psc_mfields_get_as(flds_base_old, ops->mflds_type, 0, flds_base_old->nr_fields);
-      if (flds_old != flds_base_old) { 
+      mfields_t flds_old = flds_base_old->get_as<mfields_t>(0, flds_base_old->nr_fields);
+      if (flds_old.mflds() != flds_base_old) { 
 	psc_mfields_destroy(flds_base_old);
       }
 
-      struct psc_mfields *flds_new =
-	psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
-      communicate_fields(bal, ctx, flds_old, flds_new);
-      psc_mfields_put_as(flds_new, flds_base_new, 0, flds_base_new->nr_fields);
+      mfields_t flds_new = flds_base_new->get_as<mfields_t>(0, 0);
+      communicate_fields(bal, ctx, flds_old.mflds(), flds_new.mflds());
+      flds_new.put_as(flds_base_new, 0, flds_base_new->nr_fields);
 
-      if (flds_old == flds_base_old) {
-	psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
+      if (flds_old.mflds() == flds_base_old) {
+	flds_old.put_as(flds_base_old, 0, 0);
 	psc_mfields_destroy(flds_base_old);
       }
       *p->flds_p = flds_base_new;
@@ -859,16 +855,13 @@ struct Balance_ : BalanceBase
 
     prof_start(pr_bal_prts_B);
     // alloc new particles
-    struct psc_balance_ops *ops = psc_balance_ops(bal);
-
-    struct psc_mparticles *mprts_base_new = 
-      psc_mparticles_create(mrc_domain_comm(domain_new));
+    struct psc_mparticles *mprts_base_new = psc_mparticles_create(mrc_domain_comm(domain_new));
     psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
     mprts_base_new->grid = new_grid;
     psc_mparticles_setup(mprts_base_new);
 
-    struct psc_mparticles *mprts_old = psc_mparticles_get_as(psc->particles, ops->mprts_type, 0);
-    if (mprts_old != psc->particles) { // FIXME hacky: destroy old particles early if we just got a copy
+    mparticles_t mprts_old = psc->particles->get_as<mparticles_t>();
+    if (mprts_old.mprts() != psc->particles) { // FIXME hacky: destroy old particles early if we just got a copy
       psc_mparticles_destroy(psc->particles);
     }
 
@@ -876,21 +869,21 @@ struct Balance_ : BalanceBase
     PscMparticlesBase(mprts_base_new)->reserve_all(nr_particles_by_patch);
     prof_stop(pr_bal_prts_B1);
 
-    struct psc_mparticles *mprts_new = psc_mparticles_get_as(mprts_base_new, ops->mprts_type, MP_DONT_COPY);
+    mparticles_t mprts_new = mprts_base_new->get_as<mparticles_t>(MP_DONT_COPY);
     prof_stop(pr_bal_prts_B);
     
     // communicate particles
-    communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
+    communicate_particles(bal, ctx, mprts_old.mprts(), mprts_new.mprts(), nr_particles_by_patch);
 
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
 
-    psc_mparticles_put_as(mprts_new, mprts_base_new, 0);
+    mprts_new.put_as(mprts_base_new, 0);
 
-    if (mprts_old != psc->particles) {
+    if (mprts_old.mprts() != psc->particles) {
       // can't do this because psc->particles is gone
       // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
-      psc_mparticles_destroy(mprts_old);
+      psc_mparticles_destroy(mprts_old.mprts());
     } else {
       psc_mparticles_destroy(psc->particles);
     }
@@ -934,19 +927,17 @@ struct Balance_ : BalanceBase
       }
 
       prof_restart(pr_bal_flds_B);
-      struct psc_mfields *flds_old =
-	psc_mfields_get_as(flds_base_old, ops->mflds_type, 0, flds_base_old->nr_fields);
-      struct psc_mfields *flds_new =
-	psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
+      mfields_t flds_old = flds_base_old->get_as<mfields_t>(0, flds_base_old->nr_fields);
+      mfields_t flds_new = flds_base_new->get_as<mfields_t>(0, 0);
       prof_stop(pr_bal_flds_B);
 
       prof_restart(pr_bal_flds_comm);
-      communicate_fields(bal, ctx, flds_old, flds_new);
+      communicate_fields(bal, ctx, flds_old.mflds(), flds_new.mflds());
       prof_stop(pr_bal_flds_comm);
 
       prof_restart(pr_bal_flds_C);
-      psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
-      psc_mfields_put_as(flds_new, flds_base_new, 0, flds_base_new->nr_fields);
+      flds_old.put_as(flds_base_old, 0, 0);
+      flds_new.put_as(flds_base_new, 0, flds_base_new->nr_fields);
       prof_stop(pr_bal_flds_C);
 
       psc_mfields_destroy(*p->flds_p);

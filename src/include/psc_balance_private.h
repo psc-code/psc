@@ -16,8 +16,6 @@ struct communicate_ctx;
 
 struct psc_balance_ops {
   MRC_SUBCLASS_OPS(struct psc_balance);
-  const char *mprts_type;
-  const char *mflds_type;
 };
 
 #define psc_balance_ops(bal) ((struct psc_balance_ops *)(bal->obj.ops))
