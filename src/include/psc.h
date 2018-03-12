@@ -10,6 +10,8 @@
 #include "psc_fields.h"
 #include "grid.hxx"
 
+#include "sort.hxx"
+
 #include <mrc_domain.h>
 
 #include <stdbool.h>
@@ -391,35 +393,5 @@ static inline bool psc_at_boundary_hi(struct psc *psc, int p, int d)
 {
   return psc->grid().patches[p].off[d] + psc->grid().ldims[d] == psc->grid().gdims[d];
 }
-
-// ----------------------------------------------------------------------
-// psc_stats: simple statistics
-
-#define MAX_PSC_STATS 20
-
-extern double psc_stats_val[MAX_PSC_STATS+1]; // [0] is left empty
-extern int nr_psc_stats;
-
-int psc_stats_register(const char *name);
-void psc_stats_log(struct psc *psc);
-
-#define psc_stats_start(n) do {				\
-    psc_stats_val[n] -= MPI_Wtime();			\
-  } while (0)
-
-#define psc_stats_stop(n) do {				\
-    psc_stats_val[n] += MPI_Wtime();			\
-  } while (0)
-
-// These are general statistics categories to be used in different parts
-// of the code as appropriate.
-
-extern int st_time_output;   //< time spent in output
-extern int st_time_comm;     //< time spent in communications
-extern int st_time_particle; //< time spent in particle computation
-extern int st_time_field;    //< time spent in field computation
-
-// ----------------------------------------------------------------------
-// other bits and hacks...
 
 #endif

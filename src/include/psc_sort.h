@@ -4,8 +4,6 @@
 
 #include <mrc_obj.h>
 
-#include "psc.h"
-
 MRC_CLASS_DECLARE(psc_sort, struct psc_sort);
 
 #endif

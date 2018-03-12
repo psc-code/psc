@@ -1,9 +1,10 @@
 
 #pragma once
 
-#include "particles.hxx"
 #include "psc_sort_private.h"
+#include "particles.hxx"
 
+#include "psc_stats.h"
 #include <mrc_profile.h>
 
 // ======================================================================
