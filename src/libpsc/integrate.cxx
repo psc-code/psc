@@ -154,6 +154,11 @@ psc_step(struct psc *psc)
 void
 psc_integrate(struct psc *psc)
 {
+  if (psc_ops(psc) && psc_ops(psc)->integrate) {
+    psc_ops(psc)->integrate(psc);
+    return;
+  }
+
   psc_method_initialize(psc->method, psc);
   mpi_printf(psc_comm(psc), "Initialization complete.\n");
   

@@ -255,7 +255,7 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
   }
 }
 
-static void psc_flatfoil_step(struct psc *psc);
+static void psc_flatfoil_integrate(struct psc *psc);
 
 // ----------------------------------------------------------------------
 // psc_ops "flatfoil"
@@ -271,7 +271,7 @@ struct psc_ops_flatfoil : psc_ops {
     init_field       = psc_flatfoil_init_field;
     init_npt         = psc_flatfoil_init_npt;
 #ifdef USE_OWN_PSC_STEP
-    step             = psc_flatfoil_step;
+    integrate        = psc_flatfoil_integrate;
 #endif
   }
 } psc_flatfoil_ops;
@@ -466,6 +466,7 @@ main(int argc, char **argv)
 #include <psc_checks.h>
 #include <psc_bnd_particles.h>
 #include <psc_marder.h>
+#include <psc_method.h>
 
 #include <particles.hxx>
 #include <fields3d.hxx>
@@ -614,21 +615,91 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_step
+// psc_flatfoil_integrate
 
-static void psc_flatfoil_step(struct psc *psc)
+static void psc_flatfoil_integrate(struct psc *psc)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
+  psc_method_initialize(psc->method, psc);
+  mpi_printf(psc_comm(psc), "Initialization complete.\n");
+  
+  static int pr;
+  if (!pr) {
+    pr = prof_register("psc_step", 1., 0, 0);
+  }
 
-  mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
-	     psc->prm.nmax, psc->timestep * psc->dt);
+  int st_nr_particles = psc_stats_register("nr particles");
+  int st_time_step = psc_stats_register("time entire step");
 
-  psc_balance_run(psc->balance, psc);
+  // generic stats categories
+  st_time_particle = psc_stats_register("time particle update");
+  st_time_field = psc_stats_register("time field update");
+  st_time_comm = psc_stats_register("time communication");
+  st_time_output = psc_stats_register("time output");
 
-  prof_start(pr_time_step_no_comm);
-  prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+  mpi_printf(psc_comm(psc), "*** Advancing\n");
+  double elapsed = MPI_Wtime();
 
-  PscFlatfoil flatfoil(psc);
-  flatfoil.step();
+  bool first_iteration = true;
+  while (psc->timestep < psc->prm.nmax) {
+    prof_start(pr);
+    psc_stats_start(st_time_step);
+
+    if (!first_iteration &&
+	psc->prm.write_checkpoint_every_step > 0 &&
+	psc->timestep % psc->prm.write_checkpoint_every_step == 0) {
+      psc_write_checkpoint(psc);
+    }
+    first_iteration = false;
+
+    mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
+	       psc->prm.nmax, psc->timestep * psc->dt);
+    
+    psc_balance_run(psc->balance, psc);
+    
+    prof_start(pr_time_step_no_comm);
+    prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+
+    PscFlatfoil flatfoil(psc);
+    flatfoil.step();
+
+    psc->timestep++; // FIXME, too hacky
+    psc_output(psc);
+    
+    psc_stats_stop(st_time_step);
+    prof_stop(pr);
+
+    PscMparticlesBase mprts(psc->particles);
+    psc_stats_val[st_nr_particles] = mprts->get_n_prts();
+
+    if (psc->timestep % psc->prm.stats_every == 0) {
+      psc_stats_log(psc);
+      psc_print_profiling(psc);
+    }
+
+    if (psc->prm.wallclock_limit > 0.) {
+      double wallclock_elapsed = MPI_Wtime() - psc->time_start;
+      double wallclock_elapsed_max;
+      MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
+		    MPI_COMM_WORLD);
+      
+      if (wallclock_elapsed_max > psc->prm.wallclock_limit) {
+	mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
+	break;
+      }
+    }
+  }
+
+  if (psc->prm.write_checkpoint) {
+    psc_write_checkpoint(psc);
+  }
+
+  // FIXME, merge with existing handling of wallclock time
+  elapsed = MPI_Wtime() - elapsed;
+
+  int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
+  /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
+  mpi_printf(psc_comm(psc), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
+	     elapsed, w, d, h, m, s );
+  
 }
 
