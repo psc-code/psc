@@ -166,6 +166,8 @@ void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
 bool mrc_obj_is_setup(struct mrc_obj *obj);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
+struct mrc_obj_ops *mrc_obj_find_subclass_ops(struct mrc_class *cls, const char *subclass);
+
 enum {
   CLASS_INFO_VERB_NONE = 0,
   CLASS_INFO_VERB_DIFF,

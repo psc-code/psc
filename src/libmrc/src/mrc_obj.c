@@ -181,8 +181,8 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
   return obj;
 }
 
-static struct mrc_obj_ops *
-find_subclass_ops(struct mrc_class *cls, const char *subclass)
+struct mrc_obj_ops *
+mrc_obj_find_subclass_ops(struct mrc_class *cls, const char *subclass)
 {
   if (!subclass)
     return NULL;
@@ -428,7 +428,7 @@ obj_set_type(struct mrc_obj *obj, const char *subclass, bool basic_only)
   free(obj->subctx);
   obj->subctx = NULL;
   
-  struct mrc_obj_ops *ops = find_subclass_ops(obj->cls, subclass);
+  struct mrc_obj_ops *ops = mrc_obj_find_subclass_ops(obj->cls, subclass);
   assert(ops);
   obj->ops = ops;
 
