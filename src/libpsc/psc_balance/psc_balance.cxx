@@ -599,18 +599,11 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 void
 psc_balance_run(struct psc_balance *bal, struct psc *psc)
 {
-  if (bal->force_update == true)
-  {
-    bal->force_update = false;
-  }
-  else
-  {
-    if (bal->every <= 0)
-      return;
+  if (bal->every <= 0)
+    return;
 
-    if (psc->timestep == 0 || psc->timestep % bal->every != 0)
-      return;
-  }
+  if (psc->timestep == 0 || psc->timestep % bal->every != 0)
+    return;
 
   static int st_time_balance;
   if (!st_time_balance) {
@@ -856,7 +849,6 @@ psc_balance_init(void)
 #define VAR(x) (void *)offsetof(struct psc_balance, x)
 static struct param psc_balance_descr[] = {
   { "every"            , VAR(every)            , PARAM_INT(0)            },
-  { "force_update"     , VAR(force_update)     , PARAM_INT(0)            },
   { "factor_fields"    , VAR(factor_fields)    , PARAM_DOUBLE(1.)        },
   { "print_loads"      , VAR(print_loads)      , PARAM_BOOL(false)       },
   { "write_loads"      , VAR(write_loads)      , PARAM_BOOL(false)       },

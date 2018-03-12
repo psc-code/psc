@@ -7,7 +7,6 @@
 struct psc_balance {
   struct mrc_obj obj;
   int every;
-  int force_update;
   double factor_fields;
   bool print_loads;
   bool write_loads;
