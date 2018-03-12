@@ -865,6 +865,10 @@ struct Balance_ : BalanceBase
 
     prof_start(pr_bal_prts_B);
     // alloc new particles
+    mrc_obj_ops *ops = mrc_obj_find_subclass_ops(reinterpret_cast<mrc_class*>(&mrc_class_psc_mparticles),
+						 psc_mparticles_type(mprts_old_base.mprts()));
+    assert(ops);
+						 
     struct psc_mparticles *_mprts_base_new = psc_mparticles_create(mrc_domain_comm(domain_new));
     psc_mparticles_set_type(_mprts_base_new, psc->prm.particles_base);
     _mprts_base_new->grid = new_grid;
