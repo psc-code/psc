@@ -468,6 +468,7 @@ main(int argc, char **argv)
 #include <psc_marder.h>
 #include <psc_method.h>
 
+#include <balance.hxx>
 #include <particles.hxx>
 #include <fields3d.hxx>
 #include <push_particles.hxx>
@@ -653,8 +654,9 @@ static void psc_flatfoil_integrate(struct psc *psc)
 
     mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	       psc->prm.nmax, psc->timestep * psc->dt);
-    
-    psc_balance_run(psc->balance, psc);
+
+    auto balance = PscBalanceBase{psc->balance};
+    balance(psc);
     
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart

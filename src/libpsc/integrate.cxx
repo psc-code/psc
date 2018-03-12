@@ -10,6 +10,7 @@
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 #include "psc_checks.h"
+#include "balance.hxx"
 #include "particles.hxx"
 #include "push_particles.hxx"
 #include "push_fields.hxx"
@@ -93,7 +94,8 @@ psc_step(struct psc *psc)
 
   // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-  psc_balance_run(psc->balance, psc);
+  auto balance = PscBalanceBase{psc->balance};
+  balance(psc);
 
   PscMparticlesBase mprts(psc->particles);
   PscMfieldsBase mflds(psc->flds);
