@@ -28,12 +28,13 @@ struct PushParticlesVpic : PushParticlesBase
     mf.put_as(mflds_base, 0, 0);
   }
   
-  void push_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base) override
+  void push_mprts(struct psc_mparticles *_mprts_base, struct psc_mfields *mflds_base) override
   {
     // needs E, B (not really, because they're already in interpolator), rhob?
+    auto mprts_base = PscMparticlesBase{_mprts_base};
     PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, HX + 6);
     FieldArray *vmflds = mf->vmflds_fields;
-    PscMparticlesVpic mprts = mprts_base->get_as<PscMparticlesVpic>();
+    PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>();
     
     Simulation_push_mprts(sim_, mprts->vmprts, vmflds);
     

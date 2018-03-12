@@ -30,8 +30,9 @@ static struct param psc_output_particles_ascii_descr[] = {
 
 static void
 psc_output_particles_ascii_run(struct psc_output_particles *out,
-			       struct psc_mparticles *mprts_base)
+			       struct psc_mparticles *_mprts_base)
 {
+  auto mprts_base = PscMparticlesBase{_mprts_base};
   struct psc_output_particles_ascii *asc = to_psc_output_particles_ascii(out);
 
   if (asc->every_step < 0 ||
@@ -45,7 +46,7 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
   sprintf(filename, "%s/%s.%06d_p%06d.asc", asc->data_dir,
 	  asc->basename, ppsc->timestep, rank);
 
-  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
 
   FILE *file = fopen(filename, "w");
   for (int p = 0; p < mprts->n_patches(); p++) {

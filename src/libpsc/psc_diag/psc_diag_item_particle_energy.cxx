@@ -33,7 +33,8 @@ static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  struct psc *psc, double *result)
 {
-  mparticles_t mprts = psc->particles->get_as<mparticles_t>();
+  auto mprts_base = PscMparticlesBase{psc->particles};
+  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
 
   for (int p = 0; p < mprts->n_patches(); p++) {
     do_particle_energy(psc, mprts, p, result);

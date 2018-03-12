@@ -347,10 +347,11 @@ write_idx(struct psc_output_particles *out, size_t *gidx_begin, size_t *gidx_end
 
 static void
 psc_output_particles_hdf5_run(struct psc_output_particles *out,
-			      struct psc_mparticles *mprts_base)
+			      struct psc_mparticles *_mprts_base)
 {
   // OPT: this is not optimal in that it will convert particles to PARTICLE_TYPE twice,
   // though that only matters if particle type isn't PARTICLE_TYPE to start with.
+  auto mprts_base = PscMparticlesBase{_mprts_base};
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
   MPI_Comm comm = psc_output_particles_comm(out);
   herr_t ierr;
@@ -369,7 +370,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     return;
   }
 
-  mparticles_t mprts = mprts_base->get_as<mparticles_t>();
+  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
 
   prof_start(pr_A);
   int rank, size;

@@ -157,11 +157,12 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
 }
 
 void
-psc_mparticles_check(struct psc_mparticles *mprts_base)
+psc_mparticles_check(struct psc_mparticles *_mprts_base)
 {
+  auto mprts_base = PscMparticlesBase{_mprts_base};
   int fail_cnt = 0;
 
-  mparticles_t mprts = mprts_base->get_as<PscMparticlesDouble>(0);
+  mparticles_t mprts = mprts_base.get_as<PscMparticlesDouble>();
   const Grid_t& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {

@@ -14,10 +14,6 @@
 
 struct psc_mparticles {
   struct mrc_obj obj;
-
-  template<typename MP>
-  MP get_as(unsigned int flags = 0);
-
   const Grid_t* grid;
 };
 
@@ -56,13 +52,5 @@ void psc_mparticles_put_as(struct psc_mparticles *mprts,
 			   struct psc_mparticles *mprts_base,
 			   unsigned int flags);
 void psc_mparticles_check(struct psc_mparticles *mprts);
-
-template<typename MP>
-inline MP psc_mparticles::get_as(unsigned int flags)
-{
-  const char *type = mparticles_traits<MP>::name;
-  struct psc_mparticles *mprts = psc_mparticles_get_as(this, type, flags);
-  return MP(mprts);
-}
 
 #endif
