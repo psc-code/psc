@@ -485,10 +485,9 @@ struct Balance_ : BalanceBase
   using real_t = typename mparticles_t::real_t;
 
   void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
-			     struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
+			     mparticles_t mprts_old, mparticles_t mprts_new,
 			     uint *nr_particles_by_patch_new)
   {
-    PscMparticlesBase mp_old(mprts_old), mp_new(mprts_new);
     static int pr, pr_A, pr_B, pr_C, pr_D;
     if (!pr) {
       pr   = prof_register("comm prts", 1., 0, 0);
@@ -502,9 +501,9 @@ struct Balance_ : BalanceBase
 
     prof_start(pr_A);
     // FIXME, use _all
-    for (int p = 0; p < mp_new->n_patches(); p++) {
-      mparticles_t(mprts_new)[p].reserve(nr_particles_by_patch_new[p]);
-      mparticles_t(mprts_new)[p].resize(nr_particles_by_patch_new[p]);
+    for (int p = 0; p < mprts_new->n_patches(); p++) {
+      mprts_new[p].reserve(nr_particles_by_patch_new[p]);
+      mprts_new[p].resize(nr_particles_by_patch_new[p]);
     }
 
     assert(sizeof(particle_t) % sizeof(real_t) == 0); // FIXME
@@ -522,7 +521,7 @@ struct Balance_ : BalanceBase
 
       for (int pi = 0; pi < recv->nr_patches; pi++) {
 	int p = recv->pi_to_patch[pi];
-	auto& prts_new = mparticles_t(mprts_new)[p];
+	auto& prts_new = mprts_new[p];
 	int nn = prts_new.size() * (sizeof(particle_t)  / sizeof(real_t));
 	MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank,
 		  pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
@@ -543,7 +542,7 @@ struct Balance_ : BalanceBase
 
       for (int pi = 0; pi < send->nr_patches; pi++) {
 	int p = send->pi_to_patch[pi];
-	auto& prts_old = mparticles_t(mprts_old)[p];
+	auto& prts_old = mprts_old[p];
 	int nn = prts_old.size() * (sizeof(particle_t)  / sizeof(real_t));
 	//mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
 	MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank,
@@ -560,8 +559,8 @@ struct Balance_ : BalanceBase
 	continue;
       }
 
-      auto& prts_old = mparticles_t(mprts_old)[ctx->recv_info[p].patch];
-      auto& prts_new = mparticles_t(mprts_new)[p];
+      auto& prts_old = mprts_old[ctx->recv_info[p].patch];
+      auto& prts_new = mprts_new[p];
       assert(prts_old.size() == prts_new.size());
 #if 1
       for (int n = 0; n < prts_new.size(); n++) {
@@ -590,14 +589,12 @@ struct Balance_ : BalanceBase
   }
 
   void communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
-			  struct psc_mfields *mflds_old, struct psc_mfields *mflds_new)
+			  mfields_t mf_old, mfields_t mf_new)
   {
     //HACK: Don't communicate output fields if they don't correspond to the domain
     //This is needed e.g. for the boosted output which handles its MPI communication internally
     //printf("Field: %s\n", flds->f[0].name);
 
-    mfields_t mf_old(mflds_old), mf_new(mflds_new);
-  
     if (ctx->nr_patches_old != mf_old->n_patches()) return;
 	
     assert(ctx->nr_patches_old == mf_old->n_patches());
@@ -873,7 +870,7 @@ struct Balance_ : BalanceBase
     prof_stop(pr_bal_prts_B);
     
     // communicate particles
-    communicate_particles(bal, ctx, mprts_old.mprts(), mprts_new.mprts(), nr_particles_by_patch);
+    communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
 
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
@@ -895,13 +892,6 @@ struct Balance_ : BalanceBase
 
     // ----------------------------------------------------------------------
     // fields
-
-    prof_start(pr_bal_flds_comm);
-    prof_stop(pr_bal_flds_comm);
-    /* prof_start(pr_bal_flds_A); */
-    /* prof_stop(pr_bal_flds_A); */
-    prof_start(pr_bal_flds_B);
-    prof_stop(pr_bal_flds_B);
 
     prof_start(pr_bal_flds);
     struct psc_mfields_list_entry *p;
