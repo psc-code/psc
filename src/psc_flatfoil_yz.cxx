@@ -518,13 +518,15 @@ struct PscFlatfoil : Params
   PscFlatfoil(psc *psc)
     : Params(psc->params),
       psc_{psc},
+      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
-      collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())}
+      collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
+      pushp_{*new PushParticles_t{}}, // FIXME
+      pushf_{dynamic_cast<PushFields_t&>(*PscPushFieldsBase{psc->push_fields}.sub())}
   {}
   
-  void step(Mparticles_t& mprts, Mfields_t& mflds,
-	    PushParticles_t& pushp, PushFields_t& pushf,
-	    BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
+  void step(BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
 	    Inject_t& inject, Heating_t& heating)
   {
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
@@ -532,46 +534,46 @@ struct PscFlatfoil : Params
     int timestep = psc_->timestep;
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
-      sort_(mprts);
+      sort_(mprts_);
     }
     
-    collision_(mprts);
+    collision_(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp.push_mprts(mprts, mflds);
+    pushp_.push_mprts(mprts_, mflds_);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
-    pushf.push_H<dim_yz>(mflds, .5);
+    pushf_.push_H<dim_yz>(mflds_, .5);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
     
-    bndp(mprts);
+    bndp(mprts_);
     
-    inject(mprts);
-    heating(mprts);
+    inject(mprts_);
+    heating(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-    bndf.fill_ghosts_H(mflds);
-    bnd.fill_ghosts(mflds, HX, HX + 3);
+    bndf.fill_ghosts_H(mflds_);
+    bnd.fill_ghosts(mflds_, HX, HX + 3);
     
-    bndf.add_ghosts_J(mflds);
-    bnd.add_ghosts(mflds, JXI, JXI + 3);
-    bnd.fill_ghosts(mflds, JXI, JXI + 3);
+    bndf.add_ghosts_J(mflds_);
+    bnd.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd.fill_ghosts(mflds_, JXI, JXI + 3);
     
-    pushf.push_E<dim_yz>(mflds, 1.);
+    pushf_.push_E<dim_yz>(mflds_, 1.);
     
-    bndf.fill_ghosts_E(mflds);
-    bnd.fill_ghosts(mflds, EX, EX + 3);
+    bndf.fill_ghosts_E(mflds_);
+    bnd.fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
-    bndf.fill_ghosts_E(mflds);
-    bnd.fill_ghosts(mflds, EX, EX + 3);
+    bndf.fill_ghosts_E(mflds_);
+    bnd.fill_ghosts(mflds_, EX, EX + 3);
     
-    pushf.push_H<dim_yz>(mflds, .5);
+    pushf_.push_H<dim_yz>(mflds_, .5);
     
-    bndf.fill_ghosts_H(mflds);
-    bnd.fill_ghosts(mflds, HX, HX + 3);
+    bndf.fill_ghosts_H(mflds_);
+    bnd.fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
 
@@ -589,8 +591,12 @@ struct PscFlatfoil : Params
 
 private:
   psc* psc_;
+  Mparticles_t& mprts_;
+  Mfields_t& mflds_;
   Sort_t& sort_;
   Collision_t& collision_;
+  PushParticles_t& pushp_;
+  PushFields_t& pushf_;
 };
 
 // ----------------------------------------------------------------------
@@ -607,21 +613,14 @@ static void psc_flatfoil_step(struct psc *psc)
 
   psc_balance_run(psc->balance, psc);
 
-  PscMparticlesBase mprts(psc->particles);
-  auto& mprts_ = dynamic_cast<Mparticles_t&>(*mprts.sub());
-  PscMfieldsBase mflds(psc->flds);
-  auto& mflds_ = dynamic_cast<Mfields_t&>(*mflds.sub());
-  PscCollisionBase collision(psc->collision);
   //mprintf("sub %s\n", typeid(*pushp.sub()).name());
   //auto& pushp_ = dynamic_cast<PushParticles_t&>(*pushp.sub());
   auto& pushp_ = *new PushParticles_t{}; // FIXME
-  PscPushFieldsBase pushf(psc->push_fields);
-  auto& pushf_ = dynamic_cast<PushFields_t&>(*pushf.sub());
   PscBndParticlesBase bndp(psc->bnd_particles);
   auto& bndp_ = dynamic_cast<BndParticles_t&>(*bndp.sub());
   PscBndBase bnd(psc->bnd);
   auto& bnd_ = dynamic_cast<Bnd_t&>(*bnd.sub());
-  PscBndFieldsBase bndf(pushf.pushf()->bnd_fields); // !!!
+  PscBndFieldsBase bndf(psc->push_fields->bnd_fields); // !!!
   auto& bndf_ = dynamic_cast<BndFields_t&>(*bndf.sub());
   PscInjectBase inject(sub->inject);
   auto& inject_ = dynamic_cast<Inject_t&>(*inject.sub());
@@ -632,8 +631,6 @@ static void psc_flatfoil_step(struct psc *psc)
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
   PscFlatfoil flatfoil(psc);
-  flatfoil.step(mprts_, mflds_,
-		pushp_, pushf_,
-		bndp_, bnd_, bndf_, inject_, heating_);
+  flatfoil.step(bndp_, bnd_, bndf_, inject_, heating_);
 }
 
