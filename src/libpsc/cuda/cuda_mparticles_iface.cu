@@ -155,34 +155,34 @@ private:
 };
 
 template<typename MP>
-static void copy_from(PscMparticlesCuda mprts_to, MP mprts_from)
+static void copy_from(MparticlesCuda& mprts_to, MP mprts_from)
 {
-  int n_patches = mprts_to->n_patches();
+  int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
-  mprts_to->reserve_all(n_prts_by_patch);
-  mprts_to->resize_all(n_prts_by_patch);
+  mprts_to.reserve_all(n_prts_by_patch);
+  mprts_to.resize_all(n_prts_by_patch);
 
   for (int p = 0; p < n_patches; p++) {
     ConvertToCuda<MP> convert_to_cuda(mprts_from, p);
-    mprts_to->cmprts()->set_particles(p, convert_to_cuda);
+    mprts_to.cmprts()->set_particles(p, convert_to_cuda);
   }
 
-  mprts_to->setup_internals();
+  mprts_to.setup_internals();
 }
 
 template<typename MP>
-static void copy_to(PscMparticlesCuda mprts_from, MP mprts_to)
+static void copy_to(MparticlesCuda& mprts_from, MP mprts_to)
 {
   int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
-  mprts_from->get_size_all(n_prts_by_patch);
+  mprts_from.get_size_all(n_prts_by_patch);
   mprts_to->reserve_all(n_prts_by_patch);
   mprts_to->resize_all(n_prts_by_patch);
 
   for (int p = 0; p < n_patches; p++) {
     ConvertFromCuda<MP> convert_from_cuda(mprts_to, p);
-    mprts_from->cmprts()->get_particles(p, convert_from_cuda);
+    mprts_from.cmprts()->get_particles(p, convert_from_cuda);
   }
 }
 
@@ -190,15 +190,15 @@ static void copy_to(PscMparticlesCuda mprts_from, MP mprts_to)
 // conversion to "single"
 
 void MparticlesCuda::copy_from_single(struct psc_mparticles *mprts_cuda,
-					   struct psc_mparticles *mprts, uint flags)
+				      struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(PscMparticlesCuda(mprts_cuda), PscMparticlesSingle(mprts));
+  copy_from(*PscMparticlesCuda{mprts_cuda}.sub(), PscMparticlesSingle(mprts));
 }
 
 void MparticlesCuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(PscMparticlesCuda(mprts_cuda), PscMparticlesSingle(mprts));
+  copy_to(*PscMparticlesCuda{mprts_cuda}.sub(), PscMparticlesSingle(mprts));
 }
 
 // ======================================================================
@@ -207,12 +207,12 @@ void MparticlesCuda::copy_to_single(struct psc_mparticles *mprts_cuda,
 void MparticlesCuda::copy_from_double(struct psc_mparticles *mprts_cuda,
 					   struct psc_mparticles *mprts, uint flags)
 {
-  copy_from(PscMparticlesCuda(mprts_cuda), PscMparticlesDouble(mprts));
+  copy_from(*PscMparticlesCuda{mprts_cuda}.sub(), PscMparticlesDouble(mprts));
 }
 
 void MparticlesCuda::copy_to_double(struct psc_mparticles *mprts_cuda,
 					 struct psc_mparticles *mprts, uint flags)
 {
-  copy_to(PscMparticlesCuda(mprts_cuda), PscMparticlesDouble(mprts));
+  copy_to(*PscMparticlesCuda{mprts_cuda}.sub(), PscMparticlesDouble(mprts));
 }
 
