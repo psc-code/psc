@@ -15,9 +15,9 @@ struct Balance_ : BalanceBase
   using particle_t = typename mparticles_t::particle_t;
   using real_t = typename mparticles_t::real_t;
 
-  static void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
-				    struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
-				    uint *nr_particles_by_patch_new)
+  void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
+			     struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
+			     uint *nr_particles_by_patch_new) override
   {
     PscMparticlesBase mp_old(mprts_old), mp_new(mprts_new);
     static int pr, pr_A, pr_B, pr_C, pr_D;
@@ -120,8 +120,8 @@ struct Balance_ : BalanceBase
     prof_stop(pr);
   }
 
-  static void communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
-				 struct psc_mfields *mflds_old, struct psc_mfields *mflds_new)
+  void communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
+			  struct psc_mfields *mflds_old, struct psc_mfields *mflds_new) override
   {
     //HACK: Don't communicate output fields if they don't correspond to the domain
     //This is needed e.g. for the boosted output which handles its MPI communication internally

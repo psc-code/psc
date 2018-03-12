@@ -22,8 +22,8 @@ struct psc_balance_ops_single : psc_balance_ops
     size                  = Wrapper_t::size;
     setup                 = Wrapper_t::setup;
     destroy               = Wrapper_t::destroy;
-    communicate_particles = Balance_t::communicate_particles;
-    communicate_fields    = Balance_t::communicate_fields;
+    communicate_particles = Wrapper_t::communicate_particles;
+    communicate_fields    = Wrapper_t::communicate_fields;
   }
 } psc_balance_single_ops;
 
@@ -41,7 +41,7 @@ struct psc_balance_ops_double : psc_balance_ops
     size                  = Wrapper_t::size;
     setup                 = Wrapper_t::setup;
     destroy               = Wrapper_t::destroy;
-    communicate_particles = Balance_t::communicate_particles;
-    communicate_fields    = Balance_t::communicate_fields;
+    communicate_particles = Wrapper_t::communicate_particles;
+    communicate_fields    = Wrapper_t::communicate_fields;
   }
 } psc_balance_double_ops;
