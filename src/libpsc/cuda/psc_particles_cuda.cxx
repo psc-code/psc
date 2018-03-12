@@ -3,8 +3,6 @@
 #include "cuda_iface.h"
 #include "psc_particles_cuda.h"
 #include "psc_push_particles.h"
-#include "psc_particles_single.h"
-#include "psc_particles_double.h"
 
 #include <mrc_io.h>
 
@@ -15,10 +13,10 @@
 // psc_mparticles_cuda_methods
 
 mrc_obj_method MparticlesCuda::methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , MparticlesCuda::copy_to<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_from_single", MparticlesCuda::copy_from<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_to_double"  , MparticlesCuda::copy_to<MparticlesDouble>),
-  MRC_OBJ_METHOD("copy_from_double", MparticlesCuda::copy_from<MparticlesDouble>),
+  MRC_OBJ_METHOD("copy_to_single"  , MparticlesCuda::copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", MparticlesCuda::copy_from_single),
+  MRC_OBJ_METHOD("copy_to_double"  , MparticlesCuda::copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", MparticlesCuda::copy_from_double),
   {}
 };
 
