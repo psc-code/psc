@@ -51,19 +51,12 @@ struct SortCRTP : SortBase
 {
   using Mparticles = MP;
   
-  SortCRTP(int interval)
-    : interval_(interval)
-  {}
-
   // FIXME, the 2x replicated funcs here aren't nice to start with.
   // There should be a way to have a get_as that's specialized for known types,
   // so that in case of the two known types being equal, nothing gets done..
   
   void operator()(Mparticles& mprts)
   {
-    if (interval_ <= 0 || ppsc->timestep % interval_ != 0)
-      return;
-    
     static int st_time_sort, pr;
     if (!st_time_sort) {
       st_time_sort = psc_stats_register("time sort");
@@ -83,9 +76,6 @@ struct SortCRTP : SortBase
   
   void run(PscMparticlesBase mprts_base) override
   {
-    if (interval_ <= 0 || ppsc->timestep % interval_ != 0)
-      return;
-    
     static int st_time_sort, pr;
     if (!st_time_sort) {
       st_time_sort = psc_stats_register("time sort");
@@ -104,9 +94,6 @@ struct SortCRTP : SortBase
 
     psc_stats_stop(st_time_sort);
   }
-
-private:
-  int interval_;
 };
 
 // ======================================================================
@@ -121,7 +108,7 @@ public:
   static void setup(psc_sort* _sort)
   {
     PscSort<Sort> sort(_sort);
-    new(sort.sub()) Sort(_sort->every);
+    new(sort.sub()) Sort{};
   }
 
   static void destroy(psc_sort* _sort)

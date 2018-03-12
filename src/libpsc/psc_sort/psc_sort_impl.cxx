@@ -14,8 +14,6 @@
 class PscSortNone : public SortBase
 {
 public:
-  PscSortNone(int interval) {}
-  
   void run(PscMparticlesBase mprts_base) override {}
 };
 
