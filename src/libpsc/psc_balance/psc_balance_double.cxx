@@ -11,11 +11,12 @@
 
 struct psc_balance_ops_double : psc_balance_ops
 {
+  using PscBalance_t = PscBalance_<PscMparticlesDouble, PscMfieldsC>;
   psc_balance_ops_double() {
     name                  = "double";
     mprts_type            = "double";
     mflds_type            = "c";
-    communicate_particles = psc_balance_sub_communicate_particles;
-    communicate_fields    = psc_balance_sub_communicate_fields;
+    communicate_particles = PscBalance_t::communicate_particles;
+    communicate_fields    = PscBalance_t::communicate_fields;
   }
 } psc_balance_double_ops;

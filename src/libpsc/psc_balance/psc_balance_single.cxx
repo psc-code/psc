@@ -11,11 +11,12 @@
 
 struct psc_balance_ops_single : psc_balance_ops
 {
+  using PscBalance_t = PscBalance_<PscMparticlesSingle, PscMfieldsSingle>;
   psc_balance_ops_single() {
     name                  = "single";
     mprts_type            = "single";
     mflds_type            = "single";
-    communicate_particles = psc_balance_sub_communicate_particles;
-    communicate_fields    = psc_balance_sub_communicate_fields;
+    communicate_particles = PscBalance_t::communicate_particles;
+    communicate_fields    = PscBalance_t::communicate_fields;
   }
 } psc_balance_single_ops;
