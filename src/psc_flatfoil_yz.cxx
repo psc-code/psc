@@ -517,11 +517,12 @@ struct PscFlatfoil : Params
 {
   PscFlatfoil(psc *psc)
     : Params(psc->params),
-      psc_(psc)
+      psc_{psc},
+      sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
+      collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())}
   {}
   
   void step(Mparticles_t& mprts, Mfields_t& mflds,
-	    Sort_t& sort, Collision_t& collision,
 	    PushParticles_t& pushp, PushFields_t& pushf,
 	    BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
 	    Inject_t& inject, Heating_t& heating)
@@ -531,10 +532,10 @@ struct PscFlatfoil : Params
     int timestep = psc_->timestep;
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
-      sort(mprts);
+      sort_(mprts);
     }
     
-    collision(mprts);
+    collision_(mprts);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp.push_mprts(mprts, mflds);
@@ -588,6 +589,8 @@ struct PscFlatfoil : Params
 
 private:
   psc* psc_;
+  Sort_t& sort_;
+  Collision_t& collision_;
 };
 
 // ----------------------------------------------------------------------
@@ -608,11 +611,7 @@ static void psc_flatfoil_step(struct psc *psc)
   auto& mprts_ = dynamic_cast<Mparticles_t&>(*mprts.sub());
   PscMfieldsBase mflds(psc->flds);
   auto& mflds_ = dynamic_cast<Mfields_t&>(*mflds.sub());
-  PscSortBase sort(psc->sort);
-  auto& sort_ = dynamic_cast<Sort_t&>(*sort.sub());
   PscCollisionBase collision(psc->collision);
-  auto& collision_ = dynamic_cast<Collision_t&>(*collision.sub());
-  PscPushParticlesBase pushp(psc->push_particles);
   //mprintf("sub %s\n", typeid(*pushp.sub()).name());
   //auto& pushp_ = dynamic_cast<PushParticles_t&>(*pushp.sub());
   auto& pushp_ = *new PushParticles_t{}; // FIXME
@@ -634,7 +633,7 @@ static void psc_flatfoil_step(struct psc *psc)
 
   PscFlatfoil flatfoil(psc);
   flatfoil.step(mprts_, mflds_,
-		sort_, collision_, pushp_, pushf_,
+		pushp_, pushf_,
 		bndp_, bnd_, bndf_, inject_, heating_);
 }
 
