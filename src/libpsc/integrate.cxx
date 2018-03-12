@@ -102,11 +102,13 @@ psc_step(struct psc *psc)
   PscSortBase sort(psc->sort);
   PscCollisionBase collision(psc->collision);
   PscBndParticlesBase bndp(psc->bnd_particles);
+  Params* p = &psc->params;
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-  sort(mprts);
+  if (p->sort_interval > 0 && (psc->timestep % p->sort_interval) == 0) sort(mprts);
+  
   collision(mprts);
   
   //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
