@@ -57,4 +57,28 @@ void psc_mparticles_copy_to(mparticles_t mprts_from, MP mprts_to, unsigned int f
   }
 }
 
+template<typename ConvertFrom>
+void psc_mparticles_copy_to_(struct psc_mparticles *mprts,
+			     struct psc_mparticles *mprts_to, unsigned int flags)
+{
+  using mparticles_to_t = PscMparticles<typename ConvertFrom::MparticlesTo>;
+  using mparticles_from_t = PscMparticles<typename ConvertFrom::MparticlesFrom>;
+
+  ConvertFrom convert_from;
+  psc_mparticles_copy_to(mparticles_from_t{mprts}, mparticles_to_t{mprts_to},
+			 flags, convert_from);
+}
+
+template<typename ConvertTo>
+void psc_mparticles_copy_from_(struct psc_mparticles *mprts,
+			       struct psc_mparticles *mprts_from, unsigned int flags)
+{
+  using mparticles_to_t = PscMparticles<typename ConvertTo::MparticlesTo>;
+  using mparticles_from_t = PscMparticles<typename ConvertTo::MparticlesFrom>;
+
+  ConvertTo convert_to;
+  psc_mparticles_copy_from(mparticles_to_t{mprts}, mparticles_from_t{mprts_from},
+			   flags, convert_to);
+}
+
 

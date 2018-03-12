@@ -33,65 +33,59 @@ f
 // ----------------------------------------------------------------------
 // conversion to/from "double"
 
-struct ConvertFromSingle
+template<typename MP_FROM, typename MP_TO>
+struct ConvertFrom
 {
-  void operator()(PscMparticlesDouble mprts_dbl, int p, int n, const particle_single_t& prt)
+  using MparticlesFrom = MP_FROM;
+  using MparticlesTo = MP_TO;
+  using particle_from_t = typename MP_FROM::particle_t;
+  using mparticles_to_t = PscMparticles<MP_TO>;
+
+  void operator()(mparticles_to_t mprts_to, int p, int n, const particle_t& prt_from)
   {
-    particle_double_t& prt_dbl = mprts_dbl[p][n];
+    auto& prt_to = mprts_to[p][n];
     
-    prt_dbl.xi      = prt.xi;
-    prt_dbl.yi      = prt.yi;
-    prt_dbl.zi      = prt.zi;
-    prt_dbl.pxi     = prt.pxi;
-    prt_dbl.pyi     = prt.pyi;
-    prt_dbl.pzi     = prt.pzi;
-    prt_dbl.qni_wni_ = prt.qni_wni_;
-    prt_dbl.kind_   = prt.kind_;
+    prt_to.xi       = prt_from.xi;
+    prt_to.yi       = prt_from.yi;
+    prt_to.zi       = prt_from.zi;
+    prt_to.pxi      = prt_from.pxi;
+    prt_to.pyi      = prt_from.pyi;
+    prt_to.pzi      = prt_from.pzi;
+    prt_to.qni_wni_ = prt_from.qni_wni_;
+    prt_to.kind_    = prt_from.kind_;
   }
 };
 
-struct ConvertToSingle
+template<typename MP_TO, typename MP_FROM>
+struct ConvertTo
 {
-  particle_single_t operator()(PscMparticlesDouble mprts_dbl, int p, int n)
-  {
-    particle_single_t prt;
-    const particle_double_t& prt_dbl = mprts_dbl[p][n];
-    
-    prt.xi      = prt_dbl.xi;
-    prt.yi      = prt_dbl.yi;
-    prt.zi      = prt_dbl.zi;
-    prt.pxi     = prt_dbl.pxi;
-    prt.pyi     = prt_dbl.pyi;
-    prt.pzi     = prt_dbl.pzi;
-    prt.qni_wni_ = prt_dbl.qni_wni_;
-    prt.kind_   = prt_dbl.kind_;
+  using MparticlesFrom = MP_FROM;
+  using MparticlesTo = MP_TO;
+  using particle_to_t = typename MP_TO::particle_t;
+  using mparticles_from_t = PscMparticles<MP_FROM>;
 
-    return prt;
+  particle_to_t operator()(mparticles_from_t mprts_from, int p, int n)
+  {
+    particle_to_t prt_to;
+    const auto& prt_from = mprts_from[p][n];
+    
+    prt_to.xi       = prt_from.xi;
+    prt_to.yi       = prt_from.yi;
+    prt_to.zi       = prt_from.zi;
+    prt_to.pxi      = prt_from.pxi;
+    prt_to.pyi      = prt_from.pyi;
+    prt_to.pzi      = prt_from.pzi;
+    prt_to.qni_wni_ = prt_from.qni_wni_;
+    prt_to.kind_    = prt_from.kind_;
+    
+    return prt_to;
   }
 };
-
-static void
-psc_mparticles_single_copy_to_double(struct psc_mparticles *mprts,
-				     struct psc_mparticles *mprts_dbl, unsigned int flags)
-{
-  ConvertFromSingle convert_from_single;
-  psc_mparticles_copy_to(mparticles_t(mprts), PscMparticlesDouble(mprts_dbl),
-			 flags, convert_from_single);
-}
-
-static void
-psc_mparticles_single_copy_from_double(struct psc_mparticles *mprts,
-				       struct psc_mparticles *mprts_dbl, unsigned int flags)
-{
-  ConvertToSingle convert_to_single;
-  psc_mparticles_copy_from(mparticles_t(mprts), PscMparticlesDouble(mprts_dbl),
-			   flags, convert_to_single);
-}
 
 template<>
 mrc_obj_method MparticlesSingle::methods[] = {
-  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_single_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_single_copy_from_double),
+  MRC_OBJ_METHOD("copy_to_double"  , (psc_mparticles_copy_to_<ConvertFrom<MparticlesSingle, MparticlesDouble>>)),
+  MRC_OBJ_METHOD("copy_from_double", (psc_mparticles_copy_from_<ConvertTo<MparticlesSingle, MparticlesDouble>>)),
   {}
 };
 
