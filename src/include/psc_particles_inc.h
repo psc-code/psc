@@ -44,16 +44,16 @@ struct Convert
   }
 };
 
-template<typename Convert>
+template<typename MP_FROM, typename MP_TO>
 void psc_mparticles_copy_to(struct psc_mparticles *mprts_from_,
 			    struct psc_mparticles *mprts_to_, unsigned int flags)
 {
-  using mparticles_to_t = PscMparticles<typename Convert::MparticlesTo>;
-  using mparticles_from_t = PscMparticles<typename Convert::MparticlesFrom>;
+  using mparticles_to_t = PscMparticles<MP_TO>;
+  using mparticles_from_t = PscMparticles<MP_FROM>;
   auto mprts_to = mparticles_to_t{mprts_to_};
   auto mprts_from = mparticles_from_t{mprts_from_};
 
-  Convert convert;
+  Convert<MP_FROM, MP_TO> convert;
   int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from->get_size_all(n_prts_by_patch);
@@ -70,11 +70,11 @@ void psc_mparticles_copy_to(struct psc_mparticles *mprts_from_,
   }
 }
 
-template<typename Convert>
+template<typename MP_TO, typename MP_FROM>
 void psc_mparticles_copy_from(struct psc_mparticles *mprts_to_,
 			      struct psc_mparticles *mprts_from_, unsigned int flags)
 {
-  psc_mparticles_copy_to<Convert>(mprts_from_, mprts_to_, flags);
+  psc_mparticles_copy_to<MP_FROM, MP_TO>(mprts_from_, mprts_to_, flags);
 }
 
 
