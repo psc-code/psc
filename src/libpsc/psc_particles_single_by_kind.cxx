@@ -48,7 +48,7 @@ PFX(get_nr_particles)(struct psc_mparticles *_mprts)
 struct PFX(ops) : psc_mparticles_ops {
   using Wrapper_t = MparticlesWrapper<MparticlesSingleByKind>;
   PFX(ops)() {
-    name                    = PARTICLE_TYPE;
+    name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
     methods                 = PFX(methods);
     setup                   = Wrapper_t::setup;

@@ -147,7 +147,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 struct PFX(OPS) : psc_mparticles_ops {
   using Wrapper_t = MparticlesWrapper<typename mparticles_t::sub_t>;
   PFX(OPS)() {
-    name                    = PARTICLE_TYPE;
+    name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
     methods                 = PFX(methods);
     setup                   = Wrapper_t::setup;

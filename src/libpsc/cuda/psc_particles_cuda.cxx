@@ -161,7 +161,7 @@ const int* PscMparticlesCuda::patch_t::get_b_mx() const
 struct psc_mparticles_ops_cuda : psc_mparticles_ops {
   using Wrapper_t = MparticlesWrapper<MparticlesCuda>;
   psc_mparticles_ops_cuda() {
-    name                    = "cuda";
+    name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
     methods                 = psc_mparticles_cuda_methods;
     setup                   = Wrapper_t::setup;

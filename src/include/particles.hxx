@@ -518,7 +518,7 @@ class MparticlesWrapper
 public:
   const static size_t size = sizeof(Mparticles);
 
-  //  constexpr static char const* const name = Mparticles::name;
+  constexpr static const char* name = mparticles_traits<PscMparticles<Mparticles>>::name;
   
   static void setup(struct psc_mparticles* _mprts)
   {

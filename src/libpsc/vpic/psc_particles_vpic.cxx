@@ -290,7 +290,7 @@ static struct mrc_obj_method psc_mparticles_vpic_methods[] = {
 struct psc_mparticles_ops_vpic : psc_mparticles_ops {
   using Wrapper_t = MparticlesWrapper<MparticlesVpic>;
   psc_mparticles_ops_vpic() {
-    name                    = "vpic";
+    name                    = Wrapper_t::name;
     size                    = Wrapper_t::size;
     methods                 = psc_mparticles_vpic_methods;
     setup                   = Wrapper_t::setup;
