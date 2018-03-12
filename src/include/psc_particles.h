@@ -45,12 +45,6 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 #define MP_BLOCKSIZE_8X8X8    (0x4000)
 
 
-struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mprts_base,
-					     const char *type,
-					     unsigned int flags);
-void psc_mparticles_put_as(struct psc_mparticles *mprts,
-			   struct psc_mparticles *mprts_base,
-			   unsigned int flags);
 void psc_mparticles_check(struct psc_mparticles *mprts);
 
 #endif

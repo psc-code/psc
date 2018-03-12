@@ -40,7 +40,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
     do_particle_energy(psc, mprts, p, result);
   }
 
-  mprts.put_as(psc->particles, MP_DONT_COPY);
+  mprts.put_as(mprts_base, MP_DONT_COPY);
 }
 
 // ======================================================================

@@ -515,12 +515,6 @@ struct PscMparticles
     return MP{mprts};
   }
 
-  void put_as(psc_mparticles *mprts_base, unsigned int flags = 0)
-  {
-    psc_mparticles_put_as(mprts_, mprts_base, flags);
-    mprts_ = nullptr;
-  }
-
   template<typename MP>
   void put_as(MP mprts_base, unsigned int flags = 0)
   {

@@ -863,7 +863,7 @@ psc_setup_particles(struct psc *psc, uint *nr_particles_by_patch)
       assert(mprts[p].size() == nr_particles_by_patch[p]);
     }
   }
-  mprts.put_as(psc->particles);
+  mprts.put_as(mprts_base);
 }
 
 // ----------------------------------------------------------------------
