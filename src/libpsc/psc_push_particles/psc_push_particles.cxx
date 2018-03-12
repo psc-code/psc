@@ -50,26 +50,15 @@ psc_push_particles_run(struct psc_push_particles *push,
   PscPushParticlesBase pushp(push);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
-  struct psc_mparticles *mprts;
-  if (ops->particles_type) {
-    mprts = psc_mparticles_get_as(mprts_base, ops->particles_type, 0);
-  } else {
-    mprts = mprts_base;
-  }
-
   prof_start(pr);
   prof_restart(pr_time_step_no_comm);
   psc_stats_start(st_time_particle);
 
-  pushp->push_mprts(mprts, mflds_base);
+  pushp->push_mprts(mprts_base, mflds_base);
   
   psc_stats_stop(st_time_particle);
   prof_stop(pr_time_step_no_comm);
   prof_stop(pr);
-
-  if (ops->particles_type) {
-    psc_mparticles_put_as(mprts, mprts_base, 0);
-  }
 }
 
 void
@@ -79,18 +68,7 @@ psc_push_particles_stagger(struct psc_push_particles *push,
   PscPushParticlesBase pushp(push);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
-  struct psc_mparticles *mprts;
-  if (ops->particles_type) {
-    mprts = psc_mparticles_get_as(mprts_base, ops->particles_type, 0);
-  } else {
-    mprts = mprts_base;
-  }
-
-  pushp->stagger_mprts(mprts, mflds_base);
-  
-  if (ops->particles_type) {
-    psc_mparticles_put_as(mprts, mprts_base, 0);
-  }
+  pushp->stagger_mprts(mprts_base, mflds_base);
 }
 
 unsigned int

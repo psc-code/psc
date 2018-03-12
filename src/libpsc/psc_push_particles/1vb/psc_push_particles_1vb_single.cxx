@@ -31,7 +31,6 @@ struct psc_push_particles_ops_1vb_single : psc_push_particles_ops {
     size                  = PushParticlesWrapper_t::size;
     setup                 = PushParticlesWrapper_t::setup;
     destroy               = PushParticlesWrapper_t::destroy;
-    particles_type        = PARTICLE_TYPE;
   }
 } psc_push_particles_1vb_single_ops;
 

@@ -14,7 +14,6 @@ struct psc_push_particles_ops_1vbec_single : psc_push_particles_ops {
     size                  = PushParticlesWrapper_t::size;
     setup                 = PushParticlesWrapper_t::setup;
     destroy               = PushParticlesWrapper_t::destroy;
-    particles_type        = "single";
   }
 } psc_push_particles_1vbec_single_ops;
 

@@ -127,11 +127,12 @@ struct PscPushParticles_
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
   
-  static void push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  static void push_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
   {
     auto mf = mflds_base->get_as<mfields_t>(EX, EX + 6);
-    auto mp = mparticles_t(mprts);
+    auto mp = mprts_base->get_as<mparticles_t>();
     PushParticles_t::push_mprts(*mp.sub(), *mf.sub());
+    mp.put_as(mprts_base);
     mf.put_as(mflds_base, JXI, JXI+3);
   }
   
