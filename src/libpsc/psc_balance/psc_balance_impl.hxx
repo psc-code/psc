@@ -679,38 +679,39 @@ struct Balance_ : BalanceBase
   void balance_field(struct psc_balance *bal, struct communicate_ctx* ctx,
 		     struct psc* psc, struct mrc_domain *domain_new, struct psc_mfields **p_mflds)
   {
-    struct psc_mfields *flds_base_old = *p_mflds;
-    
+    PscMfieldsBase mflds_base_old{*p_mflds};
+
     struct psc_mfields *flds_base_new;
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
-    psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
-    psc_mfields_set_name(flds_base_new, psc_mfields_name(flds_base_old));
-    psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
-    psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
+    psc_mfields_set_type(flds_base_new, psc_mfields_type(mflds_base_old.mflds()));
+    psc_mfields_set_name(flds_base_new, psc_mfields_name(mflds_base_old.mflds()));
+    psc_mfields_set_param_int(flds_base_new, "nr_fields", mflds_base_old->n_comps());
+    psc_mfields_set_param_int3(flds_base_new, "ibn", mflds_base_old.mflds()->ibn);
     flds_base_new->grid = &psc->grid();
     psc_mfields_setup(flds_base_new);
-    for (int m = 0; m < flds_base_old->nr_fields; m++) {
-      const char *s = psc_mfields_comp_name(flds_base_old, m);
+    for (int m = 0; m < mflds_base_old->n_comps(); m++) {
+      const char *s = psc_mfields_comp_name(mflds_base_old.mflds(), m);
       if (s) {
 	psc_mfields_set_comp_name(flds_base_new, m, s);
       }
     }
+    PscMfieldsBase mflds_base_new{flds_base_new};
     
     // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
-    mfields_t flds_old = flds_base_old->get_as<mfields_t>(0, flds_base_old->nr_fields);
-    if (flds_old.mflds() != flds_base_old) { 
-      psc_mfields_destroy(flds_base_old);
+    mfields_t mflds_old = mflds_base_old.get_as<mfields_t>(0, mflds_base_old->n_comps());
+    if (mflds_old.mflds() != mflds_base_old.mflds()) { 
+      psc_mfields_destroy(mflds_base_old.mflds());
     }
     
-    mfields_t flds_new = flds_base_new->get_as<mfields_t>(0, 0);
-    communicate_fields(bal, ctx, flds_old.mflds(), flds_new.mflds());
-    flds_new.put_as(flds_base_new, 0, flds_base_new->nr_fields);
+    mfields_t mflds_new = mflds_base_new.get_as<mfields_t>(0, 0);
+    communicate_fields(bal, ctx, mflds_old, mflds_new);
+    mflds_new.put_as(mflds_base_new, 0, mflds_base_new->n_comps());
     
-    if (flds_old.mflds() == flds_base_old) {
-      flds_old.put_as(flds_base_old, 0, 0);
-      psc_mfields_destroy(flds_base_old);
+    if (mflds_old.mflds() == mflds_base_old.mflds()) {
+      mflds_old.put_as(mflds_base_old, 0, 0);
+      psc_mfields_destroy(mflds_base_old.mflds());
     }
-    *p_mflds = flds_base_new;
+    *p_mflds = mflds_base_new.mflds();
   }
   
   void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) override
