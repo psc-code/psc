@@ -517,7 +517,7 @@ _psc_setup(struct psc *psc)
 
   psc_setup_member_objs(psc);
 
-  psc->prm.sort_interval = psc->sort->every;
+  psc->params.sort_interval = psc->sort->every;
 }
 
 // ----------------------------------------------------------------------

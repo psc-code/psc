@@ -513,10 +513,11 @@ using Heating_t = Heating_<Mparticles_t>;
 // - pushp prep
 // - marder
 
-struct PscFlatfoil
+struct PscFlatfoil : Params
 {
   PscFlatfoil(psc *psc)
-    : psc_(psc)
+    : Params(psc->params),
+      psc_(psc)
   {}
   
   void step(Mparticles_t& mprts, Mfields_t& mflds,
@@ -524,13 +525,12 @@ struct PscFlatfoil
 	    PushParticles_t& pushp, PushFields_t& pushf,
 	    BndParticles_t& bndp, Bnd_t& bnd, BndFields_t& bndf,
 	    Inject_t& inject, Heating_t& heating)
-    
   {
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     
     int timestep = psc_->timestep;
     
-    if (psc_->prm.sort_interval > 0 && timestep % psc_->prm.sort_interval == 0) {
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
       sort(mprts);
     }
     

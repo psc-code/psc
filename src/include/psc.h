@@ -89,7 +89,10 @@ struct psc_param {
   int stats_every; ///< output timing and other info every so many steps
   bool detailed_profiling; ///< output profiling info for each process separately
   double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
+};
 
+struct Params
+{
   int sort_interval;
 };
 
@@ -202,6 +205,8 @@ struct psc {
   int nr_kinds;                 ///< nr of different particle kinds
   struct psc_kind *kinds;       ///< particle kinds (e.g., e-, ion, ...)
   ///@}
+
+  Params params;
 
   
   // other parameters / constants
