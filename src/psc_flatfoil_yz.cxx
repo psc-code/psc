@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define USE_OWN_PSC_STEP
+//#define USE_OWN_PSC_STEP
 
 // ======================================================================
 // psc subclass "flatfoil"
