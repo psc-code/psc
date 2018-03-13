@@ -5,7 +5,7 @@
 #include "psc_particles_private.h"
 #include "psc.h"
 
-#include "particles.hxx"
+#include "particles_simple.hxx"
 #include "particles_traits.hxx"
 
 struct particle_double_t : psc_particle<double> {};

@@ -4,7 +4,7 @@
 
 #include "psc_particles_private.h"
 
-#include "particles.hxx"
+#include "particles_simple.hxx"
 #include "particles_traits.hxx"
 
 struct particle_single_t : psc_particle<float> {};

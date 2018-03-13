@@ -5,7 +5,7 @@
 #include "mrc_json.h"
 #include "psc_fields_single.h"
 
-#include <particles.hxx>
+#include <particles_simple.hxx> // FIXME?
 #include <grid.hxx>
 
 #if 1
@@ -38,9 +38,7 @@ void cuda_base_init(void);
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda
 
-using particle_cuda_real_t = float;
-
-struct particle_cuda_t : psc_particle<particle_cuda_real_t> {};
+struct particle_cuda_t : psc_particle<float> {};
 
 using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
 
@@ -59,7 +57,7 @@ struct cuda_mparticles;
 struct MparticlesCuda : MparticlesBase
 {
   using particle_t = particle_cuda_t;
-  using real_t = particle_cuda_real_t;
+  using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using particle_buf_t = psc_particle_cuda_buf_t;
   
