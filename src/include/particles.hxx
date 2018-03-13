@@ -474,6 +474,18 @@ struct Mparticles : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 };
 
+// ----------------------------------------------------------------------
+// psc_mparticles_create
+
+inline psc_mparticles* psc_mparticles_create(MPI_Comm comm, const Grid_t& grid, const char *type)
+{
+  psc_mparticles* mprts = psc_mparticles_create(comm);
+  psc_mparticles_set_type(mprts, type);
+  mprts->grid = &grid;
+  psc_mparticles_setup(mprts);
+  return mprts;
+}
+
 // ======================================================================
 // PscMparticles
 
@@ -502,11 +514,7 @@ struct PscMparticles
 
   static Self create(MPI_Comm comm, const Grid_t& grid)
   {
-    psc_mparticles *mprts = psc_mparticles_create(comm);
-    psc_mparticles_set_type(mprts, mparticles_traits<Self>::name);
-    mprts->grid = &grid;
-    psc_mparticles_setup(mprts);
-    return Self{mprts};
+    return Self{psc_mparticles_create(comm, grid, mparticles_traits<Self>::name)};
   }
   
   template<typename MP>
