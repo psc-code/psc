@@ -27,7 +27,7 @@ capability_jaguar(int p)
 }
 
 static void
-psc_get_loads_initial(struct psc *psc, double *loads, uint *nr_particles_by_patch)
+psc_get_loads_initial(struct psc *psc, double *loads, const uint *nr_particles_by_patch)
 {
   psc_foreach_patch(psc, p) {
     const int *ldims = psc->grid().ldims;
@@ -371,8 +371,8 @@ communicate_free(struct communicate_ctx *ctx)
   free(ctx->recv_by_ri);
 }
 
-static uint*
-communicate_new_nr_particles(struct communicate_ctx *ctx, uint *n_prts_by_patch_old)
+static std::vector<uint>
+communicate_new_nr_particles(struct communicate_ctx *ctx, std::vector<uint> n_prts_by_patch_old)
 {
   static int pr;
   if (!pr) {
@@ -381,7 +381,7 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint *n_prts_by_patch_
 
   prof_start(pr);
 
-  uint *n_prts_by_patch_new = new uint[ctx->nr_patches_new];
+  std::vector<uint> n_prts_by_patch_new(ctx->nr_patches_new);
   // post receives 
 
   MPI_Request *recv_reqs = (MPI_Request *) calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
@@ -465,8 +465,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint *n_prts_by_patch_
   free(send_reqs);
 
   // return result
-
-  delete[] n_prts_by_patch_old;
 
   prof_stop(pr);
   return n_prts_by_patch_new;
@@ -716,14 +714,14 @@ struct Balance_ : BalanceBase
 	   mflds_base_old.mflds()->obj.ops->size);
   }
   
-  uint* initial(struct psc_balance *bal, struct psc *psc, uint* n_prts_by_patch_old) override
+  std::vector<uint> initial(struct psc_balance *bal, struct psc *psc, const std::vector<uint>& n_prts_by_patch_old) override
   {
     struct mrc_domain *domain_old = psc->mrc_domain;
 
     int nr_patches;
     mrc_domain_get_patches(domain_old, &nr_patches);
     double *loads = (double *) calloc(nr_patches, sizeof(*loads));
-    psc_get_loads_initial(psc, loads, n_prts_by_patch_old);
+    psc_get_loads_initial(psc, loads, n_prts_by_patch_old.data());
 
     int nr_global_patches;
     double *loads_all = gather_loads(domain_old, loads, nr_patches,
@@ -745,7 +743,7 @@ struct Balance_ : BalanceBase
     struct communicate_ctx _ctx, *ctx = &_ctx;
     communicate_setup(ctx, domain_old, domain_new);
 
-    uint* n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
+    std::vector<uint> n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
 
     // ----------------------------------------------------------------------
     // fields
@@ -856,11 +854,11 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_prts_A);
     PscMparticlesBase mprts_old_base(psc->particles);
     auto& mp_old_base = *mprts_old_base.sub();
-    uint *n_prts_by_patch_old = new uint[nr_patches];
-    mprts_old_base->get_size_all(n_prts_by_patch_old);
+    std::vector<uint> n_prts_by_patch_old(nr_patches);
+    mprts_old_base->get_size_all(n_prts_by_patch_old.data());
     prof_stop(pr_bal_prts_A);
 
-    uint* n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
 
     // alloc new particles
 
@@ -874,7 +872,7 @@ struct Balance_ : BalanceBase
       
       // communicate particles
       auto* mp_new = new Mparticles{*new_grid};
-      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new);
+      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
       delete mp_old;
       
       prof_start(pr_bal_prts_C);
@@ -885,14 +883,13 @@ struct Balance_ : BalanceBase
       auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
       auto mp_new = dynamic_cast<Mparticles*>(&mp_new_base);
       // communicate particles
-      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new);
+      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
       mp_old_base.~MparticlesBase();
     }
 
     memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
     operator delete(&mp_new_base);
     mprts_old_base.mprts()->grid = new_grid;
-    delete[] n_prts_by_patch_new;
 
     prof_stop(pr_bal_prts);
 

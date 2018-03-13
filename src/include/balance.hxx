@@ -8,7 +8,8 @@
 
 struct BalanceBase
 {
-  virtual uint* initial(struct psc_balance *bal, struct psc *psc, uint* n_prts_by_patch) = 0;
+  virtual std::vector<uint> initial(struct psc_balance *bal, struct psc *psc,
+				    const std::vector<uint>& n_prts_by_patch) = 0;
   virtual void operator()(struct psc_balance *bal, struct psc *psc) = 0;
 };
 
@@ -32,7 +33,7 @@ struct PscBalance
     (*sub())(balance_, psc);
   }
 
-  uint* initial(struct psc* psc, uint* n_prts_by_patch)
+  std::vector<uint> initial(struct psc* psc, const std::vector<uint>& n_prts_by_patch)
   {
     return sub()->initial(balance_, psc, n_prts_by_patch);
   }

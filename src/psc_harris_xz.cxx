@@ -515,18 +515,17 @@ psc_harris_setup(struct psc *psc)
   psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
 
   // partition and initial balancing
-  uint *n_prts_by_patch = (uint *) calloc(psc->n_patches(), sizeof(*n_prts_by_patch));
-  psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
+  std::vector<uint> n_prts_by_patch_old(psc->n_patches());
+  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old.data());
   auto balance = PscBalanceBase{psc->balance};
-  balance.initial(psc, n_prts_by_patch);
+  auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
 
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
 
   psc_setup_base_mflds(psc);
 
-  psc_setup_particles(psc, n_prts_by_patch);
-  free(n_prts_by_patch);
+  psc_setup_particles(psc, n_prts_by_patch_new.data());
 
   psc_set_ic_fields(psc);
   
