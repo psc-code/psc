@@ -56,6 +56,7 @@ struct cuda_mparticles;
 
 struct MparticlesCuda : MparticlesBase
 {
+  using Self = MparticlesCuda;
   using particle_t = particle_cuda_t;
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
@@ -76,6 +77,8 @@ struct MparticlesCuda : MparticlesBase
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void setup_internals();
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
+
+  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
 
   template<typename MP>
   static void copy_to(MparticlesCuda& mprts_cuda, MP& mprts);

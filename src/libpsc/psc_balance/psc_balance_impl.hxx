@@ -864,41 +864,34 @@ struct Balance_ : BalanceBase
 
     // alloc new particles
 
+    auto& mp_new_base = *mp_old_base.create(*new_grid);
     if (typeid(mp_old_base) != typeid(Mparticles)) {
       prof_start(pr_bal_prts_B);
-      auto mprts_new_base = PscMparticlesCreate(mrc_domain_comm(domain_new), *new_grid,
-						psc->prm.particles_base);
-      auto& mp_new_base = *mprts_new_base.sub();
-      auto mprts_old = mprts_old_base.get_as<mparticles_t>();
-      auto& mp_old = *mprts_old.sub();
-      
-      auto* mp_new = new Mparticles{*new_grid};
+      auto mp_old = new Mparticles{mp_old_base.grid()};
+      MparticlesBase::convert(mp_old_base, *mp_old);
+      mp_old_base.~MparticlesBase();
       prof_stop(pr_bal_prts_B);
-    
+      
       // communicate particles
-      communicate_particles(bal, ctx, mp_old, *mp_new, nr_particles_by_patch);
+      auto* mp_new = new Mparticles{*new_grid};
+      communicate_particles(bal, ctx, *mp_old, *mp_new, nr_particles_by_patch);
+      delete mp_old;
       
       prof_start(pr_bal_prts_C);
-      
-      mp_old_base.~MparticlesBase();
-
-      psc_mparticles_destroy(mprts_old.mprts());
       MparticlesBase::convert(*mp_new, mp_new_base);
-      operator delete(mp_new);
-      memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
+      delete mp_new;
       prof_stop(pr_bal_prts_C);
     } else {
-      auto* mp_new = new Mparticles{*new_grid};
-      
+      auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
+      auto mp_new = dynamic_cast<Mparticles*>(&mp_new_base);
       // communicate particles
-      communicate_particles(bal, ctx, dynamic_cast<Mparticles&>(mp_old_base), *mp_new, nr_particles_by_patch);
-
+      communicate_particles(bal, ctx, *mp_old, *mp_new, nr_particles_by_patch);
       mp_old_base.~MparticlesBase();
-      memcpy((char*) &mp_old_base, (char*) mp_new, mprts_old_base.mprts()->obj.ops->size);
-      operator delete(mp_new);
     }
+
+    memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
+    operator delete(&mp_new_base);
     mprts_old_base.mprts()->grid = new_grid;
-    free(nr_particles_by_patch);
     free(nr_particles_by_patch);
 
     prof_stop(pr_bal_prts);

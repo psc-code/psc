@@ -15,6 +15,7 @@ struct particle_single_by_kind_t
 
 struct MparticlesSingleByKind : MparticlesBase
 {
+  using Self = MparticlesSingleByKind;
   using particle_t = particle_single_by_kind_t;
 
   bk_mparticles *bkmprts;
@@ -50,6 +51,11 @@ struct MparticlesSingleByKind : MparticlesBase
   void resize_all(const uint *n_prts_by_patch) override
   {
     bk_mparticles_resize_all(bkmprts, n_prts_by_patch);
+  }
+
+  MparticlesBase* create(const Grid_t& grid) override
+  {
+    return new Self{grid};
   }
 };
 

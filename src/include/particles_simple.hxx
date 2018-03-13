@@ -300,6 +300,7 @@ struct mparticles_patch : mparticles_patch_base<P> {
 template<typename P>
 struct Mparticles : MparticlesBase
 {
+  using Self = Mparticles<P>;
   using particle_t = P;
   using particle_real_t = typename particle_t::real_t; // FIXME, should go away
   using real_t = particle_real_t;
@@ -404,6 +405,8 @@ struct Mparticles : MparticlesBase
     (*this)[p].push_back(prt);
   }
   
+  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
+
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
   particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
   particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(grid_); }
