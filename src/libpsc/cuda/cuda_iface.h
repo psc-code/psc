@@ -80,10 +80,10 @@ struct MparticlesCuda : MparticlesBase
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
 
   template<typename MP>
-  static void copy_to__(MparticlesCuda& mprts_cuda, MP mprts);
+  static void copy_to__(MparticlesCuda& mprts_cuda, MP& mprts);
 
   template<typename MP>
-  static void copy_from__(MparticlesCuda& mprts_cuda, MP mprts);
+  static void copy_from__(MparticlesCuda& mprts_cuda, MP& mprts);
 
   template<typename MP>
   static void copy_from(struct psc_mparticles *mprts_cuda,
