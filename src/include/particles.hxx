@@ -521,7 +521,10 @@ struct PscMparticles
     mprts->grid = mprts_->grid;
     psc_mparticles_setup(mprts);
 
-    copy(mprts_, mprts, type_from, type, flags);
+    const MparticlesBase::Map &conversions_from = sub()->conversions();
+    const MparticlesBase::Map &conversions = PscMparticlesBase{mprts}.sub()->conversions();
+    
+    copy(mprts_, mprts, type_from, type, conversions_from, conversions, flags);
 
     //  mprintf("get_as %s -> %s to\n", type_from, type);
     //  psc_mparticles_view(mprts);
@@ -551,6 +554,7 @@ struct PscMparticles
 private:
   void copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
 	    const char *type_from, const char *type_to,
+	    const MparticlesBase::Map& conversions_from, const MparticlesBase::Map& conversions_to,
 	    unsigned int flags)
   {
     PscMparticlesBase mp_from(mprts_from), mp_to(mprts_to);
@@ -570,11 +574,11 @@ private:
 
     assert(!(flags & MP_DONT_RESIZE));
 
-    auto s = std::string{"copy_to_"} + type_to;
-    copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_from, s.c_str());
+    auto it = conversions_from.find(std::string{"copy_to_"} + type_to);
+    copy_to = it != conversions_from.cend() ? it->second : nullptr;
     if (!copy_to) {
-      s = std::string{"copy_from_"} + type_from;
-      copy_from = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_to, s.c_str());
+      auto it = conversions_to.find(std::string{"copy_from_"} + type_from);
+      copy_from = it != conversions_to.cend() ? it->second : nullptr;
     }
     if (!copy_to && !copy_from) {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
@@ -631,7 +635,9 @@ private:
       flags |= MP_DONT_RESIZE;
     }
   
-    copy(mprts, mprts_to, type, type_to, flags);
+    const MparticlesBase::Map &conversions_to = mp_to.sub()->conversions();
+    const MparticlesBase::Map &conversions = mp.sub()->conversions();
+    copy(mprts, mprts_to, type, type_to, conversions, conversions_to, flags);
   
     psc_mparticles_destroy(mprts);
 
