@@ -881,26 +881,21 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
 
+    mp_old_base.~MparticlesBase();
     if (&mp_old != &mp_old_base) { // FIXME hacky: destroy old particles early if we just got a copy
-      mp_old_base.~MparticlesBase();
-    }
-
-    mprts_new.put_as(mprts_new_base, 0);
-
-    if (&mp_old != &mp_old_base) {
       // can't do this because psc->particles (mp_old_base) is gone
       // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
       psc_mparticles_destroy(mprts_old.mprts());
+      mprts_new.put_as(mprts_new_base, 0);
     } else {
       // replace particles by redistributed ones
       // FIXME, very hacky: brutally overwrites the sub-object, maybe this could be done properly
       // with move semantics
       // psc_mparticles_destroy(psc->particles);
       // psc->particles = mprts_base_new;
-      mp_old_base.~MparticlesBase();
     }
-    mprts_old_base.mprts()->grid = new_grid;
     memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
+    mprts_old_base.mprts()->grid = new_grid;
     prof_stop(pr_bal_prts_C);
 
     prof_stop(pr_bal_prts);
