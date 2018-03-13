@@ -371,8 +371,8 @@ communicate_free(struct communicate_ctx *ctx)
   free(ctx->recv_by_ri);
 }
 
-static void
-communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_n_prts_by_patch)
+static uint*
+communicate_new_nr_particles(struct communicate_ctx *ctx, uint *n_prts_by_patch_old)
 {
   static int pr;
   if (!pr) {
@@ -381,7 +381,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_n_prts_by_pat
 
   prof_start(pr);
 
-  uint *n_prts_by_patch_old = *p_n_prts_by_patch;
   uint *n_prts_by_patch_new = new uint[ctx->nr_patches_new];
   // post receives 
 
@@ -467,10 +466,10 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_n_prts_by_pat
 
   // return result
 
-  delete[] *p_n_prts_by_patch;
-  *p_n_prts_by_patch = n_prts_by_patch_new;
+  delete[] n_prts_by_patch_old;
 
   prof_stop(pr);
+  return n_prts_by_patch_new;
 }
 
 template<typename MP, typename MF>
@@ -746,7 +745,7 @@ struct Balance_ : BalanceBase
     struct communicate_ctx _ctx, *ctx = &_ctx;
     communicate_setup(ctx, domain_old, domain_new);
 
-    communicate_new_nr_particles(ctx, &n_prts_by_patch);
+    n_prts_by_patch = communicate_new_nr_particles(ctx, n_prts_by_patch);
 
     // ----------------------------------------------------------------------
     // fields
@@ -859,7 +858,7 @@ struct Balance_ : BalanceBase
     mprts_old_base->get_size_all(n_prts_by_patch);
     prof_stop(pr_bal_prts_A);
 
-    communicate_new_nr_particles(ctx, &n_prts_by_patch);
+    n_prts_by_patch = communicate_new_nr_particles(ctx, n_prts_by_patch);
 
     // alloc new particles
 
