@@ -35,11 +35,11 @@ struct MparticlesBase
   using Convert = std::unordered_map<std::type_index, copy_func_t>;
   
   MparticlesBase(const Grid_t& grid)
-    : grid_(grid)
+    : grid_(&grid)
   {}
 
-  const Grid_t& grid() const { return grid_; }
-  int n_patches() const { return grid_.n_patches(); }
+  const Grid_t& grid() const { return *grid_; }
+  int n_patches() const { return grid_->n_patches(); }
 
   virtual ~MparticlesBase() {}
   virtual int get_n_prts() const = 0;
@@ -55,7 +55,7 @@ struct MparticlesBase
   static void convert(MparticlesBase& mp_from, MparticlesBase& mp_to);
   
 protected:
-  const Grid_t& grid_;
+  const Grid_t* grid_;
 public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };

@@ -361,7 +361,7 @@ struct Mparticles : MparticlesBase
   {
     int kind = new_prt.kind;
 
-    const Grid_t::Patch& patch = grid_.patches[p];
+    const Grid_t::Patch& patch = grid_->patches[p];
     for (int d = 0; d < 3; d++) {
       assert(new_prt.x[d] >= patch.xb[d]);
       assert(new_prt.x[d] <= patch.xe[d]);
@@ -374,7 +374,7 @@ struct Mparticles : MparticlesBase
     prt.pxi     = new_prt.u[0];
     prt.pyi     = new_prt.u[1];
     prt.pzi     = new_prt.u[2];
-    prt.qni_wni_ = new_prt.w * grid_.kinds[kind].q;
+    prt.qni_wni_ = new_prt.w * grid_->kinds[kind].q;
     prt.kind_   = kind;
     
     (*this)[p].push_back(prt);
@@ -384,13 +384,13 @@ struct Mparticles : MparticlesBase
   {
     int kind = new_prt.kind;
 
-    const Grid_t::Patch& patch = grid_.patches[p];
+    const Grid_t::Patch& patch = grid_->patches[p];
     for (int d = 0; d < 3; d++) {
       assert(new_prt.x[d] >= patch.xb[d]);
       assert(new_prt.x[d] <= patch.xe[d]);
     }
     
-    float dVi = 1.f / (grid_.dx[0] * grid_.dx[1] * grid_.dx[2]);
+    float dVi = 1.f / (grid_->dx[0] * grid_->dx[1] * grid_->dx[2]);
     
     particle_t prt;
     prt.xi      = new_prt.x[0] - patch.xb[0];
@@ -399,7 +399,7 @@ struct Mparticles : MparticlesBase
     prt.pxi     = new_prt.u[0];
     prt.pyi     = new_prt.u[1];
     prt.pzi     = new_prt.u[2];
-    prt.qni_wni_ = new_prt.w * grid_.kinds[kind].q * dVi;
+    prt.qni_wni_ = new_prt.w * grid_->kinds[kind].q * dVi;
     prt.kind_   = kind;
     
     (*this)[p].push_back(prt);
@@ -407,10 +407,10 @@ struct Mparticles : MparticlesBase
   
   MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
 
-  particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
-  particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
-  particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(grid_); }
-  particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
+  particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
+  particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
+  particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(*grid_); }
+  particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(*grid_); }
 
   std::vector<patch_t> patches_;
 
