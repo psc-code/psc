@@ -503,7 +503,7 @@ struct PscMparticles
       return MP{mprts_};
     }
   
-    const char *type = mparticles_traits<MP>::name;
+    const char *type_to = mparticles_traits<MP>::name;
     const char *type_from = psc_mparticles_type(mprts_);
 
     static int pr;
@@ -513,24 +513,25 @@ struct PscMparticles
 
     prof_start(pr);
 
-    //  mprintf("get_as %s -> %s from\n", type_from, type);
+    //  mprintf("get_as %s -> %s from\n", type_from, type_to);
     //  psc_mparticles_view(mprts_);
 
-    struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_));
-    psc_mparticles_set_type(mprts, type);
-    mprts->grid = mprts_->grid;
-    psc_mparticles_setup(mprts);
+    struct psc_mparticles *mprts_to_ = psc_mparticles_create(psc_mparticles_comm(mprts_));
+    psc_mparticles_set_type(mprts_to_, type_to);
+    mprts_to_->grid = mprts_->grid;
+    psc_mparticles_setup(mprts_to_);
+    auto mprts_to = MP{mprts_to_};
 
     const MparticlesBase::Map &conversions_from = sub()->conversions();
-    const MparticlesBase::Map &conversions = PscMparticlesBase{mprts}.sub()->conversions();
+    const MparticlesBase::Map &conversions_to = mprts_to.sub()->conversions();
     
-    copy(mprts_, mprts, type_from, type, conversions_from, conversions, flags);
+    copy(mprts_, mprts_to_, type_from, type_to, conversions_from, conversions_to, flags);
 
-    //  mprintf("get_as %s -> %s to\n", type_from, type);
+    //  mprintf("get_as %s -> %s to\n", type_from, type_to);
     //  psc_mparticles_view(mprts);
 
     prof_stop(pr);
-    return MP{mprts};
+    return mprts_to;
   }
 
   template<typename MP>
@@ -552,22 +553,23 @@ struct PscMparticles
   }
 
 private:
-  void copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
+  void copy(struct psc_mparticles *_mprts_from, struct psc_mparticles *_mprts_to,
 	    const char *type_from, const char *type_to,
 	    const MparticlesBase::Map& conversions_from, const MparticlesBase::Map& conversions_to,
 	    unsigned int flags)
   {
-    PscMparticlesBase mp_from(mprts_from), mp_to(mprts_to);
+    PscMparticlesBase mprts_from(_mprts_from), mprts_to(_mprts_to);
     psc_mparticles_copy_func_t copy_to, copy_from;
 
-    assert(mp_from->n_patches() == mp_to->n_patches());
+    // FIXME, could check for equal grid
+    assert(mprts_from->n_patches() == mprts_to->n_patches());
 
     if (flags & MP_DONT_COPY) {
       if (!(flags & MP_DONT_RESIZE)) {
-	uint n_prts_by_patch[mp_from->n_patches()];
-	mp_from->get_size_all(n_prts_by_patch);
-	mp_to->reserve_all(n_prts_by_patch);
-	mp_to->resize_all(n_prts_by_patch);
+	uint n_prts_by_patch[mprts_from->n_patches()];
+	mprts_from->get_size_all(n_prts_by_patch);
+	mprts_to->reserve_all(n_prts_by_patch);
+	mprts_to->resize_all(n_prts_by_patch);
       }
       return;
     }
@@ -583,25 +585,25 @@ private:
     if (!copy_to && !copy_from) {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
 	      "no 'copy_from_%s' in '%s'!\n",
-	      type_to, psc_mparticles_type(mprts_from), type_from, psc_mparticles_type(mprts_to));
+	      type_to, psc_mparticles_type(_mprts_from), type_from, psc_mparticles_type(_mprts_to));
       assert(0);
     }
 
     if (copy_to) {
-      copy_to(*PscMparticlesBase{mprts_from}.sub(), *PscMparticlesBase{mprts_to}.sub());
+      copy_to(*mprts_from.sub(), *mprts_to.sub());
     } else {
-      copy_from(*PscMparticlesBase{mprts_to}.sub(), *PscMparticlesBase{mprts_from}.sub());
+      copy_from(*mprts_to.sub(), *mprts_from.sub());
     }
   }
 
-  void psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
+  void psc_mparticles_put_as(struct psc_mparticles *_mprts_from, struct psc_mparticles *_mprts_to,
 			     unsigned int flags)
   {
-    PscMparticlesBase mp(mprts), mp_to(mprts_to);
+    PscMparticlesBase mprts_from(_mprts_from), mprts_to(_mprts_to);
     // If we're already the subtype, nothing to be done
-    const char *type = psc_mparticles_type(mprts);
-    const char *type_to = psc_mparticles_type(mprts_to);
-    if (strcmp(type_to, type) == 0) {
+    const char *type_from = psc_mparticles_type(_mprts_from);
+    const char *type_to = psc_mparticles_type(_mprts_to);
+    if (strcmp(type_to, type_from) == 0) {
       return;
     }
 
@@ -611,37 +613,33 @@ private:
     }
     prof_start(pr);
 
-    //  mprintf("put_as %s -> %s from\n", type, type_to);
+    //  mprintf("put_as %s -> %s from\n", type_from, type_to);
     //  psc_mparticles_view(mprts);
   
     if (flags & MP_DONT_COPY) {
       // let's check that the size of the particle arrays hasn't changed, since
       // it's not obvious what we should do in case it did...
-      uint n_prts_by_patch[mp->n_patches()];
-      uint n_prts_by_patch_to[mp_to->n_patches()];
+      assert(mprts_to->n_patches() == mprts_from->n_patches());
 
-      mp->get_size_all(n_prts_by_patch);
-      mp_to->get_size_all(n_prts_by_patch_to);
-      assert(mp_to->n_patches() == mp->n_patches());
+      uint n_prts_by_patch[mprts_from->n_patches()];
+      uint n_prts_by_patch_to[mprts_to->n_patches()];
+      mprts_from->get_size_all(n_prts_by_patch);
+      mprts_to->get_size_all(n_prts_by_patch_to);
 
-      for (int p = 0; p < mp->n_patches(); p++) {
-	if (n_prts_by_patch[p] != n_prts_by_patch_to[p]) {
-	  mprintf("psc_mparticles_put_as: p = %d n_prts %d -- %d\n",
-		  p, n_prts_by_patch[p], n_prts_by_patch_to[p]);
-	}
+      for (int p = 0; p < mprts_from->n_patches(); p++) {
 	assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
       }
 
       flags |= MP_DONT_RESIZE;
     }
   
-    const MparticlesBase::Map &conversions_to = mp_to.sub()->conversions();
-    const MparticlesBase::Map &conversions = mp.sub()->conversions();
-    copy(mprts, mprts_to, type, type_to, conversions, conversions_to, flags);
+    const MparticlesBase::Map &conversions_to = mprts_to.sub()->conversions();
+    const MparticlesBase::Map &conversions_from = mprts_from.sub()->conversions();
+    copy(_mprts_from, _mprts_to, type_from, type_to, conversions_from, conversions_to, flags);
   
-    psc_mparticles_destroy(mprts);
+    psc_mparticles_destroy(_mprts_from);
 
-    //  mprintf("put_as %s -> %s to\n", type, type_to);
+    //  mprintf("put_as %s -> %s to\n", type_from, type_to);
     //  psc_mparticles_view(mprts_to);
     prof_stop(pr);
   }
