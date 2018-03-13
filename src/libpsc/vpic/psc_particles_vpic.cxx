@@ -35,15 +35,15 @@ template<typename MP>
 struct ConvertFromVpic;
 
 template<typename MP>
-static void copy_from(MparticlesVpic& mprts, MP mprts_from);
+static void copy_from(MparticlesVpic& mprts, MP& mprts_from);
 
 // ----------------------------------------------------------------------
 // conversion to "single"
 
 template<>
-struct ConvertVpic<PscMparticlesSingle>
+struct ConvertVpic<MparticlesSingle>
 {
-  ConvertVpic(PscMparticlesSingle& mprts_other, Grid& grid, int p)
+  ConvertVpic(MparticlesSingle& mprts_other, Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
     im[0] = grid.nx + 2;
@@ -56,7 +56,7 @@ struct ConvertVpic<PscMparticlesSingle>
   }
 
 protected:
-  PscMparticlesSingle& mprts_other_;
+  MparticlesSingle& mprts_other_;
   int p_;
   int im[3];
   float dx[3];
@@ -64,9 +64,9 @@ protected:
 };
 
 template<>
-struct ConvertToVpic<PscMparticlesSingle> : ConvertVpic<PscMparticlesSingle>
+struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
 {
-  using Base = ConvertVpic<PscMparticlesSingle>;
+  using Base = ConvertVpic<MparticlesSingle>;
 
   using Base::Base;
   
@@ -94,9 +94,9 @@ struct ConvertToVpic<PscMparticlesSingle> : ConvertVpic<PscMparticlesSingle>
 };
 
 template<>
-struct ConvertFromVpic<PscMparticlesSingle> : ConvertVpic<PscMparticlesSingle>
+struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
 {
-  using Base = ConvertVpic<PscMparticlesSingle>;
+  using Base = ConvertVpic<MparticlesSingle>;
 
   using Base::Base;
   
@@ -130,28 +130,28 @@ struct ConvertFromVpic<PscMparticlesSingle> : ConvertVpic<PscMparticlesSingle>
 // conversion to "single_by_kind"
 
 template<>
-struct ConvertVpic<PscMparticlesSingleByKind>
+struct ConvertVpic<MparticlesSingleByKind>
 {
-  ConvertVpic(PscMparticlesSingleByKind& mprts_other, Grid& grid, int p)
+  ConvertVpic(MparticlesSingleByKind& mprts_other, Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
   }
 
 protected:
-  PscMparticlesSingleByKind& mprts_other_;
+  MparticlesSingleByKind& mprts_other_;
   int p_;
 };
 
 template<>
-struct ConvertToVpic<PscMparticlesSingleByKind> : ConvertVpic<PscMparticlesSingleByKind>
+struct ConvertToVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByKind>
 {
-  using Base = ConvertVpic<PscMparticlesSingleByKind>;
+  using Base = ConvertVpic<MparticlesSingleByKind>;
 
   using Base::Base;
   
   void operator()(struct vpic_mparticles_prt *prt, int n)
   {
-    particle_single_by_kind *part = &mprts_other_->bkmprts->at(p_, n);
+    particle_single_by_kind *part = &mprts_other_.bkmprts->at(p_, n);
     
     //  assert(part->kind < ppsc->nr_kinds);
     prt->dx[0] = part->dx[0];
@@ -167,15 +167,15 @@ struct ConvertToVpic<PscMparticlesSingleByKind> : ConvertVpic<PscMparticlesSingl
 };
 
 template<>
-struct ConvertFromVpic<PscMparticlesSingleByKind> : ConvertVpic<PscMparticlesSingleByKind>
+struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByKind>
 {
-  using Base = ConvertVpic<PscMparticlesSingleByKind>;
+  using Base = ConvertVpic<MparticlesSingleByKind>;
 
   using Base::Base;
   
   void operator()(struct vpic_mparticles_prt *prt, int n)
   {
-    particle_single_by_kind *part = &mprts_other_->bkmprts->at(p_, n);
+    particle_single_by_kind *part = &mprts_other_.bkmprts->at(p_, n);
     
     assert(prt->kind < 2); // FIXMEppsc->nr_kinds);
     part->dx[0] = prt->dx[0];
@@ -191,14 +191,14 @@ struct ConvertFromVpic<PscMparticlesSingleByKind> : ConvertVpic<PscMparticlesSin
 };
   
 template<typename MP>
-void copy_to(MparticlesVpic& mprts_from, MP mprts_to)
+void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 {
   Particles *vmprts = mprts_from.vmprts;
-  int n_patches = mprts_to->n_patches();
+  int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from.get_size_all(n_prts_by_patch);
-  mprts_to->reserve_all(n_prts_by_patch);
-  mprts_to->resize_all(n_prts_by_patch);
+  mprts_to.reserve_all(n_prts_by_patch);
+  mprts_to.resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -211,7 +211,7 @@ void copy_to(MparticlesVpic& mprts_from, MP mprts_to)
 }
 
 template<>
-void copy_from<PscMparticlesSingle>(MparticlesVpic& mprts_to, PscMparticlesSingle mprts_from)
+void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 {
   Particles *vmprts = mprts_to.vmprts;
   int n_patches = mprts_to.n_patches();
@@ -222,11 +222,11 @@ void copy_from<PscMparticlesSingle>(MparticlesVpic& mprts_to, PscMparticlesSingl
   }
   mprts_to.resize_all(n_prts_by_patch);
 
-  mprts_from->get_size_all(n_prts_by_patch);
+  mprts_from.get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
-    ConvertToVpic<PscMparticlesSingle> convert_to_vpic(mprts_from, *vmprts->grid(), p);
+    ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, *vmprts->grid(), p);
 
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
@@ -238,19 +238,19 @@ void copy_from<PscMparticlesSingle>(MparticlesVpic& mprts_to, PscMparticlesSingl
 }
 
 template<>
-void copy_from<PscMparticlesSingleByKind>(MparticlesVpic& mprts_to, PscMparticlesSingleByKind mprts_from)
+void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 {
   Particles *vmprts = mprts_to.vmprts;
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
-  mprts_from->get_size_all(n_prts_by_patch);
+  mprts_from.get_size_all(n_prts_by_patch);
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertToVpic<PscMparticlesSingleByKind> convert_to_vpic(mprts_from, *vmprts->grid(), p);
+    ConvertToVpic<MparticlesSingleByKind> convert_to_vpic(mprts_from, *vmprts->grid(), p);
     vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic);
 
     off += n_prts;
@@ -262,7 +262,7 @@ static void psc_mparticles_vpic_copy_from(struct psc_mparticles *mprts,
 					  struct psc_mparticles *mprts_other,
 					  unsigned int flags)
 {
-  copy_from(*PscMparticlesVpic{mprts}.sub(), MP(mprts_other));
+  copy_from(*PscMparticlesVpic{mprts}.sub(), *MP{mprts_other}.sub());
 }
 
 template<typename MP>
@@ -270,7 +270,7 @@ static void psc_mparticles_vpic_copy_to(struct psc_mparticles *mprts,
 					struct psc_mparticles *mprts_other,
 					unsigned int flags)
 {
-  copy_to(*PscMparticlesVpic{mprts}.sub(), MP(mprts_other));
+  copy_to(*PscMparticlesVpic{mprts}.sub(), *MP{mprts_other}.sub());
 }
 
 // ----------------------------------------------------------------------
