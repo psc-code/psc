@@ -478,7 +478,11 @@ struct PscMparticles
 
   explicit PscMparticles(psc_mparticles *mprts)
     : mprts_(mprts)
-  {}
+  {
+    if (mprts != nullptr) {
+      assert(dynamic_cast<sub_t*>(mrc_to_subobj(mprts, MparticlesBase)));
+    }
+  }
 
   template<typename MP>
   MP get_as(uint flags = 0)
@@ -643,14 +647,13 @@ public:
   
   static void setup(struct psc_mparticles* _mprts)
   {
-    PscMparticles<Mparticles> mprts(_mprts);
-    new(mprts.sub()) Mparticles{*_mprts->grid};
+    new(_mprts->obj.subctx) Mparticles{*_mprts->grid};
   }
 
   static void destroy(struct psc_mparticles* _mprts)
   {
+    if (!mrc_to_subobj(_mprts, MparticlesBase)->inited) return; // FIXME
     PscMparticles<Mparticles> mprts(_mprts);
-    if (!mprts->inited) return; // FIXME
     mprts->~Mparticles();
   }
 
