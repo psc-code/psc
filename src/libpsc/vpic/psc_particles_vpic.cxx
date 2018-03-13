@@ -274,14 +274,14 @@ static void psc_mparticles_vpic_copy_to(MparticlesBase& mp,
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
-const MparticlesVpic::Map MparticlesVpic::convert_to_ = {
-  { "copy_to_single"           , psc_mparticles_vpic_copy_to<MparticlesSingle> },
-  { "copy_to_single_by_kind"   , psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },
+const MparticlesVpic::Convert MparticlesVpic::convert_to_ = {
+  { std::type_index(typeid(MparticlesSingle)), psc_mparticles_vpic_copy_to<MparticlesSingle> },
+  { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },
 };
 
-const MparticlesVpic::Map MparticlesVpic::convert_from_ = {
-  { "copy_from_single"         , psc_mparticles_vpic_copy_from<MparticlesSingle> },
-  { "copy_from_single_by_kind" , psc_mparticles_vpic_copy_from<MparticlesSingleByKind> },
+const MparticlesVpic::Convert MparticlesVpic::convert_from_ = {
+  { std::type_index(typeid(MparticlesSingle)), psc_mparticles_vpic_copy_from<MparticlesSingle> },
+  { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_from<MparticlesSingleByKind> },
 };
 
 // ----------------------------------------------------------------------

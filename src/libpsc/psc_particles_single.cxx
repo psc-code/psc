@@ -33,12 +33,12 @@ f
 // ----------------------------------------------------------------------
 // conversion to/from "double"
 
-template<> const MparticlesBase::Map MparticlesSingle::convert_to_ = {
-  { "copy_to_double"  , psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble> },
+template<> const MparticlesBase::Convert MparticlesSingle::convert_to_ = {
+  { std::type_index(typeid(MparticlesDouble)), psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble> },
 };
 
-template<> const MparticlesBase::Map MparticlesSingle::convert_from_ = {
-  { "copy_from_double", psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble> },
+template<> const MparticlesBase::Convert MparticlesSingle::convert_from_ = {
+  { std::type_index(typeid(MparticlesDouble)), psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble> },
 };
 
 #include "psc_particles_common.cxx"

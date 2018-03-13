@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <typeindex>
 #include <string>
 
 // ======================================================================
@@ -322,7 +323,7 @@ struct MparticlesBase
   using patch_t = patch_base_t;
 
   using copy_func_t = void (*)(MparticlesBase&, MparticlesBase&);
-  using Map = std::unordered_map<std::string, copy_func_t>;
+  using Convert = std::unordered_map<std::type_index, copy_func_t>;
   
   MparticlesBase(const Grid_t& grid)
     : grid_(grid)
@@ -339,8 +340,8 @@ struct MparticlesBase
   virtual void inject(int p, const psc_particle_inject& new_prt) { assert(0); }
   virtual void inject_reweight(int p, const psc_particle_inject& new_prt) { assert(0); }
 
-  virtual const Map& convert_to() { static const Map convert_to_; return convert_to_; }
-  virtual const Map& convert_from() { static const Map convert_from_; return convert_from_; }
+  virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
+  virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
 
 protected:
   const Grid_t& grid_;
@@ -467,9 +468,9 @@ struct Mparticles : MparticlesBase
 
   std::vector<patch_t> patches_;
 
-  static const Map convert_to_, convert_from_;
-  const Map& convert_to() override { return convert_to_; }
-  const Map& convert_from() override { return convert_from_; }
+  static const Convert convert_to_, convert_from_;
+  const Convert& convert_to() override { return convert_to_; }
+  const Convert& convert_from() override { return convert_from_; }
 };
 
 // ======================================================================

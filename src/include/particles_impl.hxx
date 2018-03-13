@@ -109,15 +109,15 @@ inline void PscMparticles<S>::copy(MparticlesBase& mp_from, MparticlesBase& mp_t
   
   assert(!(flags & MP_DONT_RESIZE));
   
-  auto it = mp_from.convert_to().find(std::string{"copy_to_"} + type_to);
-  auto copy_to = it != mp_from.convert_to().cend() ? it->second : nullptr;
-  if (copy_to) {
-    copy_to(mp_from, mp_to);
+  auto it = mp_from.convert_to().find(std::type_index(typeid(mp_to)));
+  auto convert_to = it != mp_from.convert_to().cend() ? it->second : nullptr;
+  if (convert_to) {
+    convert_to(mp_from, mp_to);
   } else {
-    auto it = mp_to.convert_from().find(std::string{"copy_from_"} + type_from);
-    auto copy_from = it != mp_to.convert_from().cend() ? it->second : nullptr;
-    if (copy_from) {
-      copy_from(mp_to, mp_from);
+    auto it = mp_to.convert_from().find(std::type_index(typeid(mp_from)));
+    auto convert_from = it != mp_to.convert_from().cend() ? it->second : nullptr;
+    if (convert_from) {
+      convert_from(mp_to, mp_from);
     } else {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
 	      "no 'copy_from_%s' in '%s'!\n",
