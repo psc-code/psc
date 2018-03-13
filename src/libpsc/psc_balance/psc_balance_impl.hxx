@@ -372,7 +372,7 @@ communicate_free(struct communicate_ctx *ctx)
 }
 
 static void
-communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_by_patch)
+communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_n_prts_by_patch)
 {
   static int pr;
   if (!pr) {
@@ -381,9 +381,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
 
   prof_start(pr);
 
-  uint *nr_particles_by_patch_old = *p_nr_particles_by_patch;
-  uint *nr_particles_by_patch_new = (uint *) calloc(ctx->nr_patches_new,
-						   sizeof(nr_particles_by_patch_new));
+  uint *n_prts_by_patch_old = *p_n_prts_by_patch;
+  uint *n_prts_by_patch_new = new uint[ctx->nr_patches_new];
   // post receives 
 
   MPI_Request *recv_reqs = (MPI_Request *) calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
@@ -412,7 +411,7 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
     nr_particles_send_by_ri[ri] = (int *) calloc(send->nr_patches, sizeof(*nr_particles_send_by_ri[ri]));
 
     for (int pi = 0; pi < send->nr_patches; pi++) {
-      nr_particles_send_by_ri[ri][pi] = nr_particles_by_patch_old[send->pi_to_patch[pi]];
+      nr_particles_send_by_ri[ri][pi] = n_prts_by_patch_old[send->pi_to_patch[pi]];
     }
 
     if (send->rank != ctx->mpi_rank) {
@@ -444,7 +443,7 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
   for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
     struct by_ri *recv = &ctx->recv_by_ri[ri];
     for (int pi = 0; pi < ctx->recv_by_ri[ri].nr_patches; pi++) {
-      nr_particles_by_patch_new[recv->pi_to_patch[pi]] = nr_particles_recv_by_ri[ri][pi];
+      n_prts_by_patch_new[recv->pi_to_patch[pi]] = nr_particles_recv_by_ri[ri][pi];
     }
   }
 
@@ -468,8 +467,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, uint **p_nr_particles_
 
   // return result
 
-  free(*p_nr_particles_by_patch);
-  *p_nr_particles_by_patch = nr_particles_by_patch_new;
+  delete[] *p_n_prts_by_patch;
+  *p_n_prts_by_patch = n_prts_by_patch_new;
 
   prof_stop(pr);
 }
@@ -856,11 +855,11 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_prts_A);
     PscMparticlesBase mprts_old_base(psc->particles);
     auto& mp_old_base = *mprts_old_base.sub();
-    uint *nr_particles_by_patch = (uint *) calloc(nr_patches, sizeof(*nr_particles_by_patch));
-    mprts_old_base->get_size_all(nr_particles_by_patch);
+    uint *n_prts_by_patch = new uint[nr_patches];
+    mprts_old_base->get_size_all(n_prts_by_patch);
     prof_stop(pr_bal_prts_A);
 
-    communicate_new_nr_particles(ctx, &nr_particles_by_patch);
+    communicate_new_nr_particles(ctx, &n_prts_by_patch);
 
     // alloc new particles
 
@@ -874,7 +873,7 @@ struct Balance_ : BalanceBase
       
       // communicate particles
       auto* mp_new = new Mparticles{*new_grid};
-      communicate_particles(bal, ctx, *mp_old, *mp_new, nr_particles_by_patch);
+      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch);
       delete mp_old;
       
       prof_start(pr_bal_prts_C);
@@ -885,14 +884,14 @@ struct Balance_ : BalanceBase
       auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
       auto mp_new = dynamic_cast<Mparticles*>(&mp_new_base);
       // communicate particles
-      communicate_particles(bal, ctx, *mp_old, *mp_new, nr_particles_by_patch);
+      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch);
       mp_old_base.~MparticlesBase();
     }
 
     memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
     operator delete(&mp_new_base);
     mprts_old_base.mprts()->grid = new_grid;
-    free(nr_particles_by_patch);
+    delete[] n_prts_by_patch;
 
     prof_stop(pr_bal_prts);
 
