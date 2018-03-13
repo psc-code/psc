@@ -558,18 +558,19 @@ private:
 	    const MparticlesBase::Map& conversions_from, const MparticlesBase::Map& conversions_to,
 	    unsigned int flags)
   {
-    PscMparticlesBase mprts_from(_mprts_from), mprts_to(_mprts_to);
+    auto& mp_from = *PscMparticlesBase{_mprts_from}.sub();
+    auto& mp_to = *PscMparticlesBase{_mprts_to}.sub();
     psc_mparticles_copy_func_t copy_to, copy_from;
 
     // FIXME, could check for equal grid
-    assert(mprts_from->n_patches() == mprts_to->n_patches());
+    assert(mp_from.n_patches() == mp_to.n_patches());
 
     if (flags & MP_DONT_COPY) {
       if (!(flags & MP_DONT_RESIZE)) {
-	uint n_prts_by_patch[mprts_from->n_patches()];
-	mprts_from->get_size_all(n_prts_by_patch);
-	mprts_to->reserve_all(n_prts_by_patch);
-	mprts_to->resize_all(n_prts_by_patch);
+	uint n_prts_by_patch[mp_from.n_patches()];
+	mp_from.get_size_all(n_prts_by_patch);
+	mp_to.reserve_all(n_prts_by_patch);
+	mp_to.resize_all(n_prts_by_patch);
       }
       return;
     }
@@ -585,14 +586,14 @@ private:
     if (!copy_to && !copy_from) {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
 	      "no 'copy_from_%s' in '%s'!\n",
-	      type_to, psc_mparticles_type(_mprts_from), type_from, psc_mparticles_type(_mprts_to));
+	      type_to, type_from, type_from, type_to);
       assert(0);
     }
 
     if (copy_to) {
-      copy_to(*mprts_from.sub(), *mprts_to.sub());
+      copy_to(mp_from, mp_to);
     } else {
-      copy_from(*mprts_to.sub(), *mprts_from.sub());
+      copy_from(mp_to, mp_from);
     }
   }
 
