@@ -487,12 +487,9 @@ struct Balance_ : BalanceBase
   using Mfields = typename mfields_t::sub_t;
 
   void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
-			     mparticles_t mprts_old, mparticles_t mprts_new,
+			     Mparticles& mp_old, Mparticles& mp_new,
 			     uint *n_prts_by_patch_new)
   {
-    auto& mp_old = *mprts_old.sub();
-    auto& mp_new = *mprts_new.sub();
-    
     static int pr, pr_A, pr_B, pr_C, pr_D;
     if (!pr) {
       pr   = prof_register("comm prts", 1., 0, 0);
@@ -505,7 +502,6 @@ struct Balance_ : BalanceBase
     prof_start(pr);
 
     prof_start(pr_A);
-    // FIXME, use _all
     mp_new.reserve_all(n_prts_by_patch_new);
     mp_new.resize_all(n_prts_by_patch_new);
 
@@ -524,7 +520,7 @@ struct Balance_ : BalanceBase
 
       for (int pi = 0; pi < recv->nr_patches; pi++) {
 	int p = recv->pi_to_patch[pi];
-	auto& prts_new = mprts_new[p];
+	auto& prts_new = mp_new[p];
 	int nn = prts_new.size() * (sizeof(particle_t)  / sizeof(real_t));
 	MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank,
 		  pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
@@ -545,7 +541,7 @@ struct Balance_ : BalanceBase
 
       for (int pi = 0; pi < send->nr_patches; pi++) {
 	int p = send->pi_to_patch[pi];
-	auto& prts_old = mprts_old[p];
+	auto& prts_old = mp_old[p];
 	int nn = prts_old.size() * (sizeof(particle_t)  / sizeof(real_t));
 	//mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
 	MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank,
@@ -562,8 +558,8 @@ struct Balance_ : BalanceBase
 	continue;
       }
 
-      auto& prts_old = mprts_old[ctx->recv_info[p].patch];
-      auto& prts_new = mprts_new[p];
+      auto& prts_old = mp_old[ctx->recv_info[p].patch];
+      auto& prts_new = mp_new[p];
       assert(prts_old.size() == prts_new.size());
 #if 1
       for (int n = 0; n < prts_new.size(); n++) {
@@ -880,7 +876,7 @@ struct Balance_ : BalanceBase
     prof_stop(pr_bal_prts_B);
     
     // communicate particles
-    communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
+    communicate_particles(bal, ctx, mp_old, mp_new, nr_particles_by_patch);
 
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
