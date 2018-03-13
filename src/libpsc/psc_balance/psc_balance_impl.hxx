@@ -886,7 +886,9 @@ struct Balance_ : BalanceBase
       // can't do this because psc->particles (mp_old_base) is gone
       // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
       psc_mparticles_destroy(mprts_old.mprts());
-      mprts_new.put_as(mprts_new_base, 0);
+      // mprts_new.put_as(mprts_new_base, 0);
+      MparticlesBase::convert(mp_new, mp_new_base);
+      psc_mparticles_destroy(mprts_new.mprts());
     } else {
       // replace particles by redistributed ones
       // FIXME, very hacky: brutally overwrites the sub-object, maybe this could be done properly
