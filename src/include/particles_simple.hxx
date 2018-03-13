@@ -226,7 +226,7 @@ struct mparticles_patch_base
     : pi_(mprts->grid()),
       mprts_(mprts),
       p_(p),
-      grid_(mprts->grid())
+      grid_(&mprts->grid())
   {}
 
   particle_t& operator[](int n) { return buf[n]; }
@@ -271,12 +271,12 @@ struct mparticles_patch_base
     
   const int* get_b_mx() const { return pi_.b_mx_; }
 
-  real_t prt_qni(const particle_t& prt) const { return prt.qni(grid_); }
-  real_t prt_mni(const particle_t& prt) const { return prt.mni(grid_); }
-  real_t prt_wni(const particle_t& prt) const { return prt.wni(grid_); }
-  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
+  real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
+  real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
+  real_t prt_wni(const particle_t& prt) const { return prt.wni(*grid_); }
+  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(*grid_); }
 
-  const Grid_t& grid() { return grid_; }
+  const Grid_t& grid() { return *grid_; }
 
   buf_t buf;
   ParticleIndexer<real_t> pi_;
@@ -284,7 +284,7 @@ struct mparticles_patch_base
 private:
   Mparticles<P>* mprts_;
   int p_;
-  const Grid_t& grid_;
+  const Grid_t* grid_;
 };
 
 template<typename P>

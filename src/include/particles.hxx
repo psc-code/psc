@@ -163,7 +163,7 @@ struct psc_mparticles_ops_ : psc_mparticles_ops {
     destroy = Wrapper_t::destroy;
   }
 
-  MparticlesBase* create(const Grid_t&grid) { return new Mparticles{grid}; }
+  MparticlesBase* create(const Grid_t& grid) { return new Mparticles{grid}; }
 };
 
 #endif
