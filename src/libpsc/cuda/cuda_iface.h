@@ -86,6 +86,12 @@ struct MparticlesCuda : MparticlesBase
   static void copy_from__(MparticlesCuda& mprts_cuda, MP& mprts);
 
   template<typename MP>
+  static void copy_to_(MparticlesBase& mprts_cuda, MparticlesBase& mprts);
+
+  template<typename MP>
+  static void copy_from_(MparticlesBase& mprts_cuda, MparticlesBase& mprts);
+
+  template<typename MP>
   static void copy_from(struct psc_mparticles *mprts_cuda,
 			struct psc_mparticles *mprts, uint flags);
 
