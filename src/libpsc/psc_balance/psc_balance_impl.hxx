@@ -873,9 +873,6 @@ struct Balance_ : BalanceBase
     auto& mp_new_base = *mprts_new_base.sub();
     auto mprts_old = mprts_old_base.get_as<mparticles_t>();
     auto& mp_old = *mprts_old.sub();
-    if (&mp_old != &mp_old_base) { // FIXME hacky: destroy old particles early if we just got a copy
-      mp_old_base.~MparticlesBase();
-    }
 
     auto mprts_new = mprts_new_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
     auto& mp_new = *mprts_new.sub();
@@ -890,6 +887,10 @@ struct Balance_ : BalanceBase
 
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
+
+    if (&mp_old != &mp_old_base) { // FIXME hacky: destroy old particles early if we just got a copy
+      mp_old_base.~MparticlesBase();
+    }
 
     mprts_new.put_as(mprts_new_base, 0);
 
