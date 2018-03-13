@@ -201,7 +201,10 @@ void MparticlesCuda::copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
   copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
-template void MparticlesCuda::copy_from<MparticlesSingle>(MparticlesBase&, MparticlesBase&);
-template void MparticlesCuda::copy_to<MparticlesSingle>(MparticlesBase&, MparticlesBase&);
-template void MparticlesCuda::copy_from<MparticlesDouble>(MparticlesBase&, MparticlesBase&);
-template void MparticlesCuda::copy_to<MparticlesDouble>(MparticlesBase&, MparticlesBase&);
+MparticlesCuda::Map MparticlesCuda::conversions = {
+  { "copy_to_single"  , copy_to<MparticlesSingle>   },
+  { "copy_from_single", copy_from<MparticlesSingle> },
+  { "copy_to_double"  , copy_to<MparticlesDouble>   },
+  { "copy_from_double", copy_from<MparticlesDouble> },
+};
+

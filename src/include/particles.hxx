@@ -9,7 +9,8 @@
 #include <mrc_profile.h>
 
 #include <vector>
-
+#include <unordered_map>
+#include <string>
 
 // ======================================================================
 // Particle positions in cell / patch
@@ -319,6 +320,9 @@ struct MparticlesBase
 {
   using particle_t = particle_base_t;
   using patch_t = patch_base_t;
+
+  using copy_func_t = void (*)(MparticlesBase&, MparticlesBase&);
+  using Map = std::unordered_map<std::string, copy_func_t>;
   
   MparticlesBase(const Grid_t& grid)
     : grid_(grid)
@@ -341,7 +345,7 @@ public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
-using psc_mparticles_copy_func_t = void (*)(MparticlesBase&, MparticlesBase&);
+using psc_mparticles_copy_func_t = MparticlesBase::copy_func_t; // FIXME, get rid of
 
 // ======================================================================
 // Mparticles
@@ -459,6 +463,8 @@ struct Mparticles : MparticlesBase
   particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid_); }
 
   std::vector<patch_t> patches_;
+
+  static Map conversions;
 };
 
 // ======================================================================

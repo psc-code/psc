@@ -60,6 +60,8 @@ struct MparticlesVpic : MparticlesBase
   {
     Simulation_inject_particle(sim, vmprts, p, &prt);
   }
+
+  static Map conversions;
 };
 
 using PscMparticlesVpic = PscMparticles<MparticlesVpic>;

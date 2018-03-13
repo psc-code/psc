@@ -40,5 +40,11 @@ mrc_obj_method MparticlesSingle::methods[] = {
   {}
 };
 
+template<>
+MparticlesSingle::Map MparticlesSingle::conversions = {
+  { "copy_to_double"  , psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble> },
+  { "copy_from_double", psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble> },
+};
+
 #include "psc_particles_common.cxx"
 
