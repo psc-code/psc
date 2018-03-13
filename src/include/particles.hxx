@@ -516,9 +516,7 @@ struct PscMparticles
   }
 
 private:
-  void copy(MparticlesBase& mp_from, MparticlesBase& mp_to,
-	    const char *type_from, const char *type_to,
-	    unsigned int flags);
+  void copy(MparticlesBase& mp_from, MparticlesBase& mp_to, unsigned int flags);
 
 private:
   psc_mparticles *mprts_;

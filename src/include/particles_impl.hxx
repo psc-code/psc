@@ -29,7 +29,7 @@ inline MP PscMparticles<S>::get_as(uint flags)
   psc_mparticles_setup(mprts_to_);
   auto mprts_to = MP{mprts_to_};
   
-  copy(*sub(), *mprts_to.sub(), type_from, type_to, flags);
+  copy(*sub(), *mprts_to.sub(), flags);
   
   //  mprintf("get_as %s -> %s to\n", type_from, type_to);
   //  psc_mparticles_view(mprts);
@@ -79,7 +79,7 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
     flags |= MP_DONT_RESIZE;
   }
   
-  copy(mp_from, mp_to, type_from, type_to, flags);
+  copy(mp_from, mp_to, flags);
   
   psc_mparticles_destroy(mprts_);
   mprts_ = nullptr;
@@ -91,11 +91,10 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
 
 template<typename S>
 inline void PscMparticles<S>::copy(MparticlesBase& mp_from, MparticlesBase& mp_to,
-				   const char *type_from, const char *type_to,
 				   unsigned int flags)
 {
-  // FIXME, could check for equal grid
-  assert(mp_from.n_patches() == mp_to.n_patches());
+  // FIXME, implementing == wouldn't hurt
+  assert(&mp_from.grid() == &mp_to.grid());
   
   if (flags & MP_DONT_COPY) {
     if (!(flags & MP_DONT_RESIZE)) {
@@ -109,22 +108,21 @@ inline void PscMparticles<S>::copy(MparticlesBase& mp_from, MparticlesBase& mp_t
   
   assert(!(flags & MP_DONT_RESIZE));
   
-  auto it = mp_from.convert_to().find(std::type_index(typeid(mp_to)));
-  auto convert_to = it != mp_from.convert_to().cend() ? it->second : nullptr;
-  if (convert_to) {
-    convert_to(mp_from, mp_to);
-  } else {
-    auto it = mp_to.convert_from().find(std::type_index(typeid(mp_from)));
-    auto convert_from = it != mp_to.convert_from().cend() ? it->second : nullptr;
-    if (convert_from) {
-      convert_from(mp_to, mp_from);
-    } else {
-      fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
-	      "no 'copy_from_%s' in '%s'!\n",
-	      type_to, type_from, type_from, type_to);
-      assert(0);
-    }
+  auto convert_to = mp_from.convert_to().find(std::type_index(typeid(mp_to)));
+  if (convert_to != mp_from.convert_to().cend()) {
+    convert_to->second(mp_from, mp_to);
+    return;
   }
+  
+  auto convert_from = mp_to.convert_from().find(std::type_index(typeid(mp_from)));
+  if (convert_from != mp_to.convert_from().cend()) {
+    convert_from->second(mp_to, mp_from);
+    return;
+  }
+
+  fprintf(stderr, "ERROR: no conversion known from %s to %s!\n",
+	  typeid(mp_from).name(), typeid(mp_to).name());
+  assert(0);
 }
 
  
