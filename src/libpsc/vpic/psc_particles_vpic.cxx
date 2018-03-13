@@ -271,24 +271,6 @@ static void psc_mparticles_vpic_copy_to(MparticlesBase& mp,
   copy_to(dynamic_cast<MparticlesVpic&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
-template<typename MP>
-static void psc_mparticles_vpic_copy_from(struct psc_mparticles *mprts,
-					  struct psc_mparticles *mprts_other,
-					  unsigned int flags)
-{
-  psc_mparticles_vpic_copy_from<MP>(*PscMparticlesBase{mprts}.sub(),
-				    *PscMparticlesBase{mprts_other}.sub());
-}
-
-template<typename MP>
-static void psc_mparticles_vpic_copy_to(struct psc_mparticles *mprts,
-					struct psc_mparticles *mprts_other,
-					unsigned int flags)
-{
-  psc_mparticles_vpic_copy_to<MP>(*PscMparticlesBase{mprts}.sub(),
-				  *PscMparticlesBase{mprts_other}.sub());
-}
-
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 

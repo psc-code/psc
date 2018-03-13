@@ -201,25 +201,7 @@ void MparticlesCuda::copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
   copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
-template<typename MP>
-void MparticlesCuda::copy_from(struct psc_mparticles *mprts_cuda,
-			       struct psc_mparticles *mprts, uint flags)
-{
-  copy_from<MP>(*PscMparticlesBase{mprts_cuda}.sub(), *PscMparticlesBase{mprts}.sub());
-}
-
-template<typename MP>
-void MparticlesCuda::copy_to(struct psc_mparticles *mprts_cuda,
-			     struct psc_mparticles *mprts, uint flags)
-{
-  copy_to<MP>(*PscMparticlesBase{mprts_cuda}.sub(), *PscMparticlesBase{mprts}.sub());
-}
-
-template void MparticlesCuda::copy_from<MparticlesSingle>(struct psc_mparticles *mprts_cuda,
-							  struct psc_mparticles *mprts, uint flags);
-template void MparticlesCuda::copy_to<MparticlesSingle>(struct psc_mparticles *mprts_cuda,
-							struct psc_mparticles *mprts, uint flags);
-template void MparticlesCuda::copy_from<MparticlesDouble>(struct psc_mparticles *mprts_cuda,
-							  struct psc_mparticles *mprts, uint flags);
-template void MparticlesCuda::copy_to<MparticlesDouble>(struct psc_mparticles *mprts_cuda,
-							struct psc_mparticles *mprts, uint flags);
+template void MparticlesCuda::copy_from<MparticlesSingle>(MparticlesBase&, MparticlesBase&);
+template void MparticlesCuda::copy_to<MparticlesSingle>(MparticlesBase&, MparticlesBase&);
+template void MparticlesCuda::copy_from<MparticlesDouble>(MparticlesBase&, MparticlesBase&);
+template void MparticlesCuda::copy_to<MparticlesDouble>(MparticlesBase&, MparticlesBase&);
