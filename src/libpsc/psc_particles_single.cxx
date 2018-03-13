@@ -35,8 +35,8 @@ f
 
 template<>
 mrc_obj_method MparticlesSingle::methods[] = {
-  MRC_OBJ_METHOD("copy_to_double"  , (psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble>)),
-  MRC_OBJ_METHOD("copy_from_double", (psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble>)),
+  MRC_OBJ_METHOD("copy_to_double"  , ((psc_mparticles_copy_func_t) psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble>)),
+  MRC_OBJ_METHOD("copy_from_double", ((psc_mparticles_copy_func_t) psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble>)),
   {}
 };
 

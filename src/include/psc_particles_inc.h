@@ -65,14 +65,14 @@ void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
 }
 
 template<typename MP_FROM, typename MP_TO>
-void psc_mparticles_copy_to_(MparticlesBase& mp_from, MparticlesBase& mp_to)
+void psc_mparticles_copy_to(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {
   psc_mparticles_copy<MP_FROM, MP_TO>(dynamic_cast<MP_FROM&>(mp_from),
 				      dynamic_cast<MP_TO&>(mp_to));
 }
 
 template<typename MP_FROM, typename MP_TO>
-void psc_mparticles_copy_from_(MparticlesBase& mp_from, MparticlesBase& mp_to)
+void psc_mparticles_copy_from(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {
   psc_mparticles_copy<MP_TO, MP_FROM>(dynamic_cast<MP_TO&>(mp_to),
 				      dynamic_cast<MP_FROM&>(mp_from));
@@ -82,7 +82,7 @@ template<typename MP_FROM, typename MP_TO>
 void psc_mparticles_copy_to(struct psc_mparticles *mprts_from,
 			    struct psc_mparticles *mprts_to, unsigned int flags)
 {
-  psc_mparticles_copy_to_<MP_FROM, MP_TO>(*PscMparticlesBase{mprts_from}.sub(),
+  psc_mparticles_copy_to<MP_FROM, MP_TO>(*PscMparticlesBase{mprts_from}.sub(),
 					  *PscMparticlesBase{mprts_to}.sub());
 }
 
@@ -90,7 +90,7 @@ template<typename MP_TO, typename MP_FROM>
 void psc_mparticles_copy_from(struct psc_mparticles *mprts_to,
 			      struct psc_mparticles *mprts_from, unsigned int flags)
 {
-  psc_mparticles_copy_from_<MP_TO, MP_FROM>(*PscMparticlesBase{mprts_to}.sub(),
+  psc_mparticles_copy_from<MP_TO, MP_FROM>(*PscMparticlesBase{mprts_to}.sub(),
 					    *PscMparticlesBase{mprts_from}.sub());
 }
 

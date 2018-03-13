@@ -258,15 +258,15 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 }
 
 template<typename MP>
-static void psc_mparticles_vpic_copy_from_(MparticlesBase& mp,
-					   MparticlesBase& mp_other)
+static void psc_mparticles_vpic_copy_from(MparticlesBase& mp,
+					  MparticlesBase& mp_other)
 {
   copy_from(dynamic_cast<MparticlesVpic&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
 template<typename MP>
-static void psc_mparticles_vpic_copy_to_(MparticlesBase& mp,
-					 MparticlesBase& mp_other)
+static void psc_mparticles_vpic_copy_to(MparticlesBase& mp,
+					MparticlesBase& mp_other)
 {
   copy_to(dynamic_cast<MparticlesVpic&>(mp), dynamic_cast<MP&>(mp_other));
 }
@@ -276,8 +276,8 @@ static void psc_mparticles_vpic_copy_from(struct psc_mparticles *mprts,
 					  struct psc_mparticles *mprts_other,
 					  unsigned int flags)
 {
-  psc_mparticles_vpic_copy_from_<MP>(*PscMparticlesBase{mprts}.sub(),
-				     *PscMparticlesBase{mprts_other}.sub());
+  psc_mparticles_vpic_copy_from<MP>(*PscMparticlesBase{mprts}.sub(),
+				    *PscMparticlesBase{mprts_other}.sub());
 }
 
 template<typename MP>
@@ -285,18 +285,18 @@ static void psc_mparticles_vpic_copy_to(struct psc_mparticles *mprts,
 					struct psc_mparticles *mprts_other,
 					unsigned int flags)
 {
-  psc_mparticles_vpic_copy_to_<MP>(*PscMparticlesBase{mprts}.sub(),
-				   *PscMparticlesBase{mprts_other}.sub());
+  psc_mparticles_vpic_copy_to<MP>(*PscMparticlesBase{mprts}.sub(),
+				  *PscMparticlesBase{mprts_other}.sub());
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
 mrc_obj_method MparticlesVpic::methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"          , psc_mparticles_vpic_copy_to<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_from_single"        , psc_mparticles_vpic_copy_from<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_to_single_by_kind"  , psc_mparticles_vpic_copy_to<MparticlesSingleByKind>),
-  MRC_OBJ_METHOD("copy_from_single_by_kind", psc_mparticles_vpic_copy_from<MparticlesSingleByKind>),
+  MRC_OBJ_METHOD("copy_to_single"          , (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_to<MparticlesSingle>),
+  MRC_OBJ_METHOD("copy_from_single"        , (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_from<MparticlesSingle>),
+  MRC_OBJ_METHOD("copy_to_single_by_kind"  , (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_to<MparticlesSingleByKind>),
+  MRC_OBJ_METHOD("copy_from_single_by_kind", (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_from<MparticlesSingleByKind>),
   {}
 };
 
