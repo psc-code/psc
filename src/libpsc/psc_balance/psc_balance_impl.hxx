@@ -871,33 +871,31 @@ struct Balance_ : BalanceBase
     auto& mp_old = *mprts_old.sub();
 
     auto& mp_new_base = *mprts_new_base.sub();
-    Mparticles* mp_new;
     if (&mp_old != &mp_old_base) { // FIXME hacky: destroy old particles early if we just got a copy
-      mp_new = new Mparticles{*new_grid};
-    } else {
-      mp_new = dynamic_cast<Mparticles*>(&mp_new_base);
-    }
-    prof_stop(pr_bal_prts_B);
+      Mparticles* mp_new = new Mparticles{*new_grid};
+      prof_stop(pr_bal_prts_B);
     
-    // communicate particles
-    communicate_particles(bal, ctx, mp_old, *mp_new, nr_particles_by_patch);
+      // communicate particles
+      communicate_particles(bal, ctx, mp_old, *mp_new, nr_particles_by_patch);
+      
+      prof_start(pr_bal_prts_C);
+      free(nr_particles_by_patch);
+      
+      mp_old_base.~MparticlesBase();
 
-    prof_start(pr_bal_prts_C);
-    free(nr_particles_by_patch);
-
-    mp_old_base.~MparticlesBase();
-    if (&mp_old != &mp_old_base) { // FIXME hacky: destroy old particles early if we just got a copy
-      // can't do this because psc->particles (mp_old_base) is gone
-      // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
       psc_mparticles_destroy(mprts_old.mprts());
       MparticlesBase::convert(*mp_new, mp_new_base);
       operator delete(mp_new);
     } else {
-      // replace particles by redistributed ones
-      // FIXME, very hacky: brutally overwrites the sub-object, maybe this could be done properly
-      // with move semantics
-      // psc_mparticles_destroy(psc->particles);
-      // psc->particles = mprts_base_new;
+      prof_stop(pr_bal_prts_B);
+      
+      // communicate particles
+      communicate_particles(bal, ctx, mp_old, dynamic_cast<Mparticles&>(mp_new_base), nr_particles_by_patch);
+      
+      prof_start(pr_bal_prts_C);
+      free(nr_particles_by_patch);
+      
+      mp_old_base.~MparticlesBase();
     }
     memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
     mprts_old_base.mprts()->grid = new_grid;
