@@ -10,6 +10,22 @@
 #include <string.h>
 
 // ======================================================================
+
+#include "particles.hxx"
+#include "particles_impl.hxx"
+
+#include "psc_particles_single.h"
+#include "psc_particles_cuda.h"
+#include "psc_particles_vpic.h"
+
+template PscMparticlesSingle PscMparticles<MparticlesBase>::get_as(uint flags);
+template PscMparticlesCuda PscMparticles<MparticlesBase>::get_as(uint flags);
+template PscMparticlesVpic PscMparticles<MparticlesBase>::get_as(uint flags);
+template void PscMparticles<MparticlesSingle>::put_as(PscMparticlesBase mprts_base, uint flags);
+template void PscMparticles<MparticlesCuda>::put_as(PscMparticlesBase mprts_base, uint flags);
+template void PscMparticles<MparticlesVpic>::put_as(PscMparticlesBase mprts_base, uint flags);
+
+// ======================================================================
 // psc_mparticles base class
 
 static void
@@ -107,4 +123,6 @@ struct mrc_class_psc_mparticles_ : mrc_class_psc_mparticles {
     view             = _psc_mparticles_view;
   }
 } mrc_class_psc_mparticles;
+
+
 
