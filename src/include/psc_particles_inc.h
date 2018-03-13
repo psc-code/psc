@@ -45,7 +45,7 @@ struct Convert
 };
 
 template<typename MP_FROM, typename MP_TO>
-void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to, unsigned int flags)
+void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
 {
   Convert<MP_FROM, MP_TO> convert;
   int n_patches = mp_to.n_patches();
@@ -64,29 +64,34 @@ void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to, unsigned int flags)
   }
 }
 
+template<typename MP_FROM, typename MP_TO>
+void psc_mparticles_copy_to_(MparticlesBase& mp_from, MparticlesBase& mp_to)
+{
+  psc_mparticles_copy<MP_FROM, MP_TO>(dynamic_cast<MP_FROM&>(mp_from),
+				      dynamic_cast<MP_TO&>(mp_to));
+}
 
 template<typename MP_FROM, typename MP_TO>
-void psc_mparticles_copy_to(struct psc_mparticles *mprts_from_,
-			    struct psc_mparticles *mprts_to_, unsigned int flags)
+void psc_mparticles_copy_from_(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {
-  using mparticles_to_t = PscMparticles<MP_TO>;
-  using mparticles_from_t = PscMparticles<MP_FROM>;
-  auto mprts_to = mparticles_to_t{mprts_to_};
-  auto mprts_from = mparticles_from_t{mprts_from_};
+  psc_mparticles_copy<MP_TO, MP_FROM>(dynamic_cast<MP_TO&>(mp_to),
+				      dynamic_cast<MP_FROM&>(mp_from));
+}
 
-  psc_mparticles_copy<MP_FROM, MP_TO>(*mprts_from.sub(), *mprts_to.sub(), flags);
+template<typename MP_FROM, typename MP_TO>
+void psc_mparticles_copy_to(struct psc_mparticles *mprts_from,
+			    struct psc_mparticles *mprts_to, unsigned int flags)
+{
+  psc_mparticles_copy_to_<MP_FROM, MP_TO>(*PscMparticlesBase{mprts_from}.sub(),
+					  *PscMparticlesBase{mprts_to}.sub());
 }
 
 template<typename MP_TO, typename MP_FROM>
-void psc_mparticles_copy_from(struct psc_mparticles *mprts_to_,
-			      struct psc_mparticles *mprts_from_, unsigned int flags)
+void psc_mparticles_copy_from(struct psc_mparticles *mprts_to,
+			      struct psc_mparticles *mprts_from, unsigned int flags)
 {
-  using mparticles_to_t = PscMparticles<MP_TO>;
-  using mparticles_from_t = PscMparticles<MP_FROM>;
-  auto mprts_to = mparticles_to_t{mprts_to_};
-  auto mprts_from = mparticles_from_t{mprts_from_};
-
-  psc_mparticles_copy<MP_FROM, MP_TO>(*mprts_from.sub(), *mprts_to.sub(), flags);
+  psc_mparticles_copy_from_<MP_TO, MP_FROM>(*PscMparticlesBase{mprts_to}.sub(),
+					    *PscMparticlesBase{mprts_from}.sub());
 }
 
 
