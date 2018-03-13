@@ -6,13 +6,8 @@
 // ======================================================================
 // psc_mparticles: subclass "double"
 
-template<>
-mrc_obj_method MparticlesDouble::methods[] = {
-  {}
-};
-
-template<>
-const MparticlesBase::Map MparticlesDouble::conversions_ = {};
+template<> const MparticlesBase::Map MparticlesDouble::convert_to_ = {};
+template<> const MparticlesBase::Map MparticlesDouble::convert_from_ = {};
 
 #include "psc_particles_common.cxx"
 

@@ -105,11 +105,5 @@ psc_mparticles_fortran_copy_from_double(struct psc_mparticles *mprts_fortran,
 			   flags, convert_from_double);
 }
 
-static struct mrc_obj_method psc_mparticles_fortran_methods[] = {
-  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_fortran_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_fortran_copy_from_double),
-  {}
-};
-
 #include "psc_particles_common.cxx"
 

@@ -33,16 +33,11 @@ f
 // ----------------------------------------------------------------------
 // conversion to/from "double"
 
-template<>
-mrc_obj_method MparticlesSingle::methods[] = {
-  MRC_OBJ_METHOD("copy_to_double"  , ((psc_mparticles_copy_func_t) psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble>)),
-  MRC_OBJ_METHOD("copy_from_double", ((psc_mparticles_copy_func_t) psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble>)),
-  {}
+template<> const MparticlesBase::Map MparticlesSingle::convert_to_ = {
+  { "copy_to_double"  , psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble> },
 };
 
-template<>
-const MparticlesBase::Map MparticlesSingle::conversions_ = {
-  { "copy_to_double"  , psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble> },
+template<> const MparticlesBase::Map MparticlesSingle::convert_from_ = {
   { "copy_from_double", psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble> },
 };
 

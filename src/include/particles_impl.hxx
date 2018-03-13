@@ -89,5 +89,43 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
   prof_stop(pr);
 }
 
+template<typename S>
+inline void PscMparticles<S>::copy(MparticlesBase& mp_from, MparticlesBase& mp_to,
+				   const char *type_from, const char *type_to,
+				   unsigned int flags)
+{
+  // FIXME, could check for equal grid
+  assert(mp_from.n_patches() == mp_to.n_patches());
   
+  if (flags & MP_DONT_COPY) {
+    if (!(flags & MP_DONT_RESIZE)) {
+      uint n_prts_by_patch[mp_from.n_patches()];
+      mp_from.get_size_all(n_prts_by_patch);
+      mp_to.reserve_all(n_prts_by_patch);
+      mp_to.resize_all(n_prts_by_patch);
+    }
+    return;
+  }
+  
+  assert(!(flags & MP_DONT_RESIZE));
+  
+  auto it = mp_from.convert_to().find(std::string{"copy_to_"} + type_to);
+  auto copy_to = it != mp_from.convert_to().cend() ? it->second : nullptr;
+  if (copy_to) {
+    copy_to(mp_from, mp_to);
+  } else {
+    auto it = mp_to.convert_from().find(std::string{"copy_from_"} + type_from);
+    auto copy_from = it != mp_to.convert_from().cend() ? it->second : nullptr;
+    if (copy_from) {
+      copy_from(mp_to, mp_from);
+    } else {
+      fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
+	      "no 'copy_from_%s' in '%s'!\n",
+	      type_to, type_from, type_from, type_to);
+      assert(0);
+    }
+  }
+}
+
+ 
 

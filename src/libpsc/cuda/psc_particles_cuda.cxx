@@ -14,14 +14,6 @@
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_methods
 
-mrc_obj_method MparticlesCuda::methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , (psc_mparticles_copy_func_t) MparticlesCuda::copy_to<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_from_single", (psc_mparticles_copy_func_t) MparticlesCuda::copy_from<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_to_double"  , (psc_mparticles_copy_func_t) MparticlesCuda::copy_to<MparticlesDouble>),
-  MRC_OBJ_METHOD("copy_from_double", (psc_mparticles_copy_func_t) MparticlesCuda::copy_from<MparticlesDouble>),
-  {}
-};
-
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all

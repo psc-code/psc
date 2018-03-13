@@ -11,10 +11,6 @@
 // ======================================================================
 // psc_mparticles: subclass "single_by_kind"
 
-mrc_obj_method MparticlesSingleByKind::methods[] = {
-  {}
-};
-
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 

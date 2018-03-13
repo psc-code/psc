@@ -274,18 +274,13 @@ static void psc_mparticles_vpic_copy_to(MparticlesBase& mp,
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
-mrc_obj_method MparticlesVpic::methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"          , (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_to<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_from_single"        , (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_from<MparticlesSingle>),
-  MRC_OBJ_METHOD("copy_to_single_by_kind"  , (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_to<MparticlesSingleByKind>),
-  MRC_OBJ_METHOD("copy_from_single_by_kind", (psc_mparticles_copy_func_t) psc_mparticles_vpic_copy_from<MparticlesSingleByKind>),
-  {}
+const MparticlesVpic::Map MparticlesVpic::convert_to_ = {
+  { "copy_to_single"           , psc_mparticles_vpic_copy_to<MparticlesSingle> },
+  { "copy_to_single_by_kind"   , psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },
 };
 
-const MparticlesVpic::Map MparticlesVpic::conversions_ = {
-  { "copy_to_single"           , psc_mparticles_vpic_copy_to<MparticlesSingle> },
+const MparticlesVpic::Map MparticlesVpic::convert_from_ = {
   { "copy_from_single"         , psc_mparticles_vpic_copy_from<MparticlesSingle> },
-  { "copy_to_single_by_kind"   , psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },
   { "copy_from_single_by_kind" , psc_mparticles_vpic_copy_from<MparticlesSingleByKind> },
 };
 
