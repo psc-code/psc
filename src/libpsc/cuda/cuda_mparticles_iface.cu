@@ -155,7 +155,7 @@ private:
 };
 
 template<typename MP>
-static void copy_from(MparticlesCuda& mprts_to, MP mprts_from)
+void MparticlesCuda::copy_from(MparticlesCuda& mprts_to, MP mprts_from)
 {
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -172,7 +172,7 @@ static void copy_from(MparticlesCuda& mprts_to, MP mprts_from)
 }
 
 template<typename MP>
-static void copy_to(MparticlesCuda& mprts_from, MP mprts_to)
+void MparticlesCuda::copy_to(MparticlesCuda& mprts_from, MP mprts_to)
 {
   int n_patches = mprts_to->n_patches();
   uint n_prts_by_patch[n_patches];
