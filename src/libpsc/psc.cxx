@@ -477,16 +477,6 @@ psc_setup_base_mflds(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_base_mprts
-
-static void
-psc_setup_base_mprts(struct psc *psc)
-{
-  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain), psc->grid(),
-					 psc->prm.particles_base);
-}
-
-// ----------------------------------------------------------------------
 // _psc_setup
 
 static void
@@ -503,7 +493,8 @@ _psc_setup(struct psc *psc)
   balance.initial(psc, n_prts_by_patch);
 
   // create base particle data structure
-  psc_setup_base_mprts(psc);
+  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+					 psc->prm.particles_base);
   
   // set particles x^{n+1/2}, p^{n+1/2}
   psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch);

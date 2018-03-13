@@ -869,13 +869,9 @@ struct Balance_ : BalanceBase
 						 psc_mparticles_type(mprts_old_base.mprts()));
     assert(ops);
 						 
-    struct psc_mparticles *_mprts_base_new = psc_mparticles_create(mrc_domain_comm(domain_new));
-    psc_mparticles_set_type(_mprts_base_new, psc->prm.particles_base);
-    _mprts_base_new->grid = new_grid;
-    psc_mparticles_setup(_mprts_base_new);
-    PscMparticlesBase mprts_new_base{_mprts_base_new};
-
-    mparticles_t mprts_old = mprts_old_base.get_as<mparticles_t>();
+    auto mprts_new_base = PscMparticlesBase{psc_mparticles_create(mrc_domain_comm(domain_new), *new_grid,
+								  psc->prm.particles_base)};
+    auto mprts_old = mprts_old_base.get_as<mparticles_t>();
     if (mprts_old.mprts() != mprts_old_base.mprts()) { // FIXME hacky: destroy old particles early if we just got a copy
       mprts_old_base.sub()->~MparticlesBase();
       //      psc_mparticles_destroy(psc->particles);
