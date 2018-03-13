@@ -61,7 +61,8 @@ struct MparticlesVpic : MparticlesBase
     Simulation_inject_particle(sim, vmprts, p, &prt);
   }
 
-  static Map conversions;
+  static const Map conversions_;
+  const Map& conversions() override { return conversions_; }
 };
 
 using PscMparticlesVpic = PscMparticles<MparticlesVpic>;

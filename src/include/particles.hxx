@@ -339,6 +339,8 @@ struct MparticlesBase
   virtual void inject(int p, const psc_particle_inject& new_prt) { assert(0); }
   virtual void inject_reweight(int p, const psc_particle_inject& new_prt) { assert(0); }
 
+  virtual const Map& conversions() { static const Map conversions_; return conversions_; }
+
 protected:
   const Grid_t& grid_;
 public:
@@ -464,7 +466,8 @@ struct Mparticles : MparticlesBase
 
   std::vector<patch_t> patches_;
 
-  static Map conversions;
+  static const Map conversions_;
+  const Map& conversions() override { return conversions_; }
 };
 
 // ======================================================================
@@ -567,12 +570,11 @@ private:
 
     assert(!(flags & MP_DONT_RESIZE));
 
-    char s[std::max(strlen(type_from),strlen(type_to)) + 12];
-    sprintf(s, "copy_to_%s", type_to);
-    copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_from, s);
+    auto s = std::string{"copy_to_"} + type_to;
+    copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_from, s.c_str());
     if (!copy_to) {
-      sprintf(s, "copy_from_%s", type_from);
-      copy_from = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_to, s);
+      s = std::string{"copy_from_"} + type_from;
+      copy_from = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_to, s.c_str());
     }
     if (!copy_to && !copy_from) {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "

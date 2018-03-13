@@ -41,7 +41,7 @@ mrc_obj_method MparticlesSingle::methods[] = {
 };
 
 template<>
-MparticlesSingle::Map MparticlesSingle::conversions = {
+const MparticlesBase::Map MparticlesSingle::conversions_ = {
   { "copy_to_double"  , psc_mparticles_copy_to<MparticlesSingle, MparticlesDouble> },
   { "copy_from_double", psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble> },
 };

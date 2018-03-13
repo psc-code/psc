@@ -91,7 +91,8 @@ struct MparticlesCuda : MparticlesBase
   template<typename MP>
   static void copy_from(MparticlesBase& mprts_cuda, MparticlesBase& mprts);
 
-  static Map conversions;
+  static const Map conversions_;
+  const Map& conversions() override { return conversions_; }
 
   const int *patch_get_b_mx(int p);
   

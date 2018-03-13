@@ -282,7 +282,7 @@ mrc_obj_method MparticlesVpic::methods[] = {
   {}
 };
 
-MparticlesVpic::Map MparticlesVpic::conversions = {
+const MparticlesVpic::Map MparticlesVpic::conversions_ = {
   { "copy_to_single"           , psc_mparticles_vpic_copy_to<MparticlesSingle> },
   { "copy_from_single"         , psc_mparticles_vpic_copy_from<MparticlesSingle> },
   { "copy_to_single_by_kind"   , psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },

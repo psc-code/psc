@@ -11,5 +11,8 @@ mrc_obj_method MparticlesDouble::methods[] = {
   {}
 };
 
+template<>
+const MparticlesBase::Map MparticlesDouble::conversions_ = {};
+
 #include "psc_particles_common.cxx"
 

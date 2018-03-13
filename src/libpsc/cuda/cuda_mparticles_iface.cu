@@ -201,7 +201,7 @@ void MparticlesCuda::copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
   copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
-MparticlesCuda::Map MparticlesCuda::conversions = {
+const MparticlesCuda::Map MparticlesCuda::conversions_ = {
   { "copy_to_single"  , copy_to<MparticlesSingle>   },
   { "copy_from_single", copy_from<MparticlesSingle> },
   { "copy_to_double"  , copy_to<MparticlesDouble>   },
