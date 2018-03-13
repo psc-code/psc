@@ -5,8 +5,9 @@ template<typename S>
 template<typename MP>
 inline MP PscMparticles<S>::get_as(uint flags)
 {
+  auto& mp_from = *sub();
   // If we're already the subtype, nothing to be done
-  if (typeid(*sub()) == typeid(typename MP::sub_t)) {
+  if (typeid(mp_from) == typeid(typename MP::sub_t)) {
     return MP{mprts_};
   }
   
@@ -28,8 +29,19 @@ inline MP PscMparticles<S>::get_as(uint flags)
   mprts_to_->grid = mprts_->grid;
   psc_mparticles_setup(mprts_to_);
   auto mprts_to = MP{mprts_to_};
+  auto& mp_to = *mprts_to.sub();
   
-  copy(*sub(), *mprts_to.sub(), flags);
+  if (flags & MP_DONT_COPY) {
+    if (!(flags & MP_DONT_RESIZE)) {
+      uint n_prts_by_patch[mp_from.n_patches()];
+      mp_from.get_size_all(n_prts_by_patch);
+      mp_to.reserve_all(n_prts_by_patch);
+      mp_to.resize_all(n_prts_by_patch);
+    }
+  } else {
+    assert(!(flags & MP_DONT_RESIZE));
+    copy(mp_from, mp_to, flags);
+  }
   
   //  mprintf("get_as %s -> %s to\n", type_from, type_to);
   //  psc_mparticles_view(mprts);
@@ -75,11 +87,9 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
     for (int p = 0; p < mp_from.n_patches(); p++) {
       assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
     }
-    
-    flags |= MP_DONT_RESIZE;
+  } else {
+    copy(mp_from, mp_to, flags);
   }
-  
-  copy(mp_from, mp_to, flags);
   
   psc_mparticles_destroy(mprts_);
   mprts_ = nullptr;
@@ -95,18 +105,6 @@ inline void PscMparticles<S>::copy(MparticlesBase& mp_from, MparticlesBase& mp_t
 {
   // FIXME, implementing == wouldn't hurt
   assert(&mp_from.grid() == &mp_to.grid());
-  
-  if (flags & MP_DONT_COPY) {
-    if (!(flags & MP_DONT_RESIZE)) {
-      uint n_prts_by_patch[mp_from.n_patches()];
-      mp_from.get_size_all(n_prts_by_patch);
-      mp_to.reserve_all(n_prts_by_patch);
-      mp_to.resize_all(n_prts_by_patch);
-    }
-    return;
-  }
-  
-  assert(!(flags & MP_DONT_RESIZE));
   
   auto convert_to = mp_from.convert_to().find(std::type_index(typeid(mp_to)));
   if (convert_to != mp_from.convert_to().cend()) {
