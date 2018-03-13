@@ -716,6 +716,7 @@ struct Balance_ : BalanceBase
       // *p_mflds = mflds_base_new.mflds();
       mflds_base_old->~MfieldsBase();
     }
+    mflds_base_old.mflds()->grid = new_grid;
     memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
 	   mflds_base_old.mflds()->obj.ops->size);
   }

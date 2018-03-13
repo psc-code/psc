@@ -195,6 +195,8 @@ struct MfieldsBase
 protected:
   int n_fields_;
   const Grid_t& grid_;
+public:
+  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
 // ======================================================================
@@ -352,5 +354,30 @@ private:
 
 using PscMfieldsBase = PscMfields<MfieldsBase>;
 
-#endif
+// ======================================================================
+// MfieldsWrapper
 
+template<typename Mfields>
+class MfieldsWrapper
+{
+public:
+  const static size_t size = sizeof(Mfields);
+
+  constexpr static const char* name = fields_traits<typename Mfields::fields_t>::name;
+  
+  static void setup(struct psc_mfields* _mflds)
+  {
+    psc_mfields_setup_super(_mflds);
+    
+    new(_mflds->obj.subctx) Mfields{*_mflds->grid, _mflds->nr_fields, _mflds->ibn};
+  }
+
+  static void destroy(struct psc_mfields* _mflds)
+  {
+    if (!mrc_to_subobj(_mflds, MfieldsBase)->inited) return; // FIXME
+    PscMfields<Mfields> mflds(_mflds);
+    mflds->~Mfields();
+  }
+};
+
+#endif

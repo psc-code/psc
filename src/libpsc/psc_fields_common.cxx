@@ -2,31 +2,6 @@
 // ======================================================================
 // psc_mfields
 
-// ----------------------------------------------------------------------
-// psc_mfields_setup
-
-static void
-MPFX(setup)(struct psc_mfields *_mflds)
-{
-  mfields_t mflds(_mflds);
-
-  psc_mfields_setup_super(_mflds);
-
-  assert(_mflds->grid);
-  new(mflds.sub()) MFIELDS(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_destroy
-
-static void
-MPFX(destroy)(struct psc_mfields *_mflds)
-{
-  mfields_t mflds(_mflds);
-
-  mflds->~MFIELDS();
-}
-
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
 
 #include <mrc_io.h>
@@ -123,16 +98,18 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 // psc_mfields: subclass ops
   
 struct MPFX(psc_mfields_ops) : psc_mfields_ops {
+  using Wrapper_t = MfieldsWrapper<MFIELDS>;
   MPFX(psc_mfields_ops)() {
-    name                  = FIELDS_TYPE;
-    size                  = sizeof(MFIELDS);
+    name                  = Wrapper_t::name;
+    size                  = Wrapper_t::size;
     methods               = MPFX(methods);
-    setup                 = MPFX(setup);
-    destroy               = MPFX(destroy);
-#if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
+    setup                 = Wrapper_t::setup;
+    destroy               = Wrapper_t::destroy;
+  }
+} MPFX(ops);
+
+#if 0 //defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
     write                 = MPFX(write);
     read                  = MPFX(read);
 #endif
-  }
-} MPFX(ops);
 
