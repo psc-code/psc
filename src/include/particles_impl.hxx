@@ -11,8 +11,6 @@ inline MP PscMparticles<S>::get_as(uint flags)
     return MP{mprts_};
   }
   
-  const char *type_to = mparticles_traits<MP>::name;
-
   static int pr;
   if (!pr) {
     pr = prof_register("mparticles_get_as", 1., 0, 0);
