@@ -488,8 +488,11 @@ struct Balance_ : BalanceBase
 
   void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
 			     mparticles_t mprts_old, mparticles_t mprts_new,
-			     uint *nr_particles_by_patch_new)
+			     uint *n_prts_by_patch_new)
   {
+    auto& mp_old = *mprts_old.sub();
+    auto& mp_new = *mprts_new.sub();
+    
     static int pr, pr_A, pr_B, pr_C, pr_D;
     if (!pr) {
       pr   = prof_register("comm prts", 1., 0, 0);
@@ -503,10 +506,8 @@ struct Balance_ : BalanceBase
 
     prof_start(pr_A);
     // FIXME, use _all
-    for (int p = 0; p < mprts_new->n_patches(); p++) {
-      mprts_new[p].reserve(nr_particles_by_patch_new[p]);
-      mprts_new[p].resize(nr_particles_by_patch_new[p]);
-    }
+    mp_new.reserve_all(n_prts_by_patch_new);
+    mp_new.resize_all(n_prts_by_patch_new);
 
     assert(sizeof(particle_t) % sizeof(real_t) == 0); // FIXME
 
@@ -878,10 +879,6 @@ struct Balance_ : BalanceBase
     auto& mp_new = *mprts_new.sub();
     prof_stop(pr_bal_prts_B);
     
-    prof_start(pr_bal_prts_B1);
-    mp_new.reserve_all(nr_particles_by_patch);
-    prof_stop(pr_bal_prts_B1);
-
     // communicate particles
     communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
 
