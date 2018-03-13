@@ -12,7 +12,6 @@ inline MP PscMparticles<S>::get_as(uint flags)
   }
   
   const char *type_to = mparticles_traits<MP>::name;
-  const char *type_from = psc_mparticles_type(mprts_);
 
   static int pr;
   if (!pr) {
@@ -21,8 +20,7 @@ inline MP PscMparticles<S>::get_as(uint flags)
   
   prof_start(pr);
   
-  //  mprintf("get_as %s -> %s from\n", type_from, type_to);
-  //  psc_mparticles_view(mprts_);
+  //  mprintf("get_as %s -> %s from\n", typeid(mp_from).name(), typeid(typename MP::sub_t).name());
   
   struct psc_mparticles *mprts_to_ = psc_mparticles_create(psc_mparticles_comm(mprts_));
   psc_mparticles_set_type(mprts_to_, type_to);
@@ -43,8 +41,7 @@ inline MP PscMparticles<S>::get_as(uint flags)
     copy(mp_from, mp_to, flags);
   }
   
-  //  mprintf("get_as %s -> %s to\n", type_from, type_to);
-  //  psc_mparticles_view(mprts);
+  //  mprintf("get_as %s -> %s to\n", typeid(mp_from).name(), typeid(mp_to).name());
   
   prof_stop(pr);
   return mprts_to;
@@ -68,11 +65,7 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
   }
   prof_start(pr);
   
-  const char *type_from = psc_mparticles_type(mprts_);
-  const char *type_to = psc_mparticles_type(mprts_base.mprts());
-  
-  //  mprintf("put_as %s -> %s from\n", type_from, type_to);
-  //  psc_mparticles_view(mprts);
+  //  mprintf("put_as %s -> %s from\n", typeid(mp_from).name(), typeid(mp_to).name());
   
   if (flags & MP_DONT_COPY) {
     // let's check that the size of the particle arrays hasn't changed, since
@@ -94,8 +87,7 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
   psc_mparticles_destroy(mprts_);
   mprts_ = nullptr;
   
-  //  mprintf("put_as %s -> %s to\n", type_from, type_to);
-  //  psc_mparticles_view(mprts_to);
+  //  mprintf("put_as %s -> %s to\n", typeid(mp_from).name(), typeid(mp_to).name());
   prof_stop(pr);
 }
 
