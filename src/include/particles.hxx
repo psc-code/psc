@@ -522,10 +522,7 @@ struct PscMparticles
     psc_mparticles_setup(mprts_to_);
     auto mprts_to = MP{mprts_to_};
 
-    const MparticlesBase::Map &conversions_from = sub()->conversions();
-    const MparticlesBase::Map &conversions_to = mprts_to.sub()->conversions();
-    
-    copy(mprts_, mprts_to_, type_from, type_to, conversions_from, conversions_to, flags);
+    copy(*sub(), *mprts_to.sub(), type_from, type_to, flags);
 
     //  mprintf("get_as %s -> %s to\n", type_from, type_to);
     //  psc_mparticles_view(mprts);
@@ -553,15 +550,10 @@ struct PscMparticles
   }
 
 private:
-  void copy(struct psc_mparticles *_mprts_from, struct psc_mparticles *_mprts_to,
+  void copy(MparticlesBase& mp_from, MparticlesBase& mp_to,
 	    const char *type_from, const char *type_to,
-	    const MparticlesBase::Map& conversions_from, const MparticlesBase::Map& conversions_to,
 	    unsigned int flags)
   {
-    auto& mp_from = *PscMparticlesBase{_mprts_from}.sub();
-    auto& mp_to = *PscMparticlesBase{_mprts_to}.sub();
-    psc_mparticles_copy_func_t copy_to, copy_from;
-
     // FIXME, could check for equal grid
     assert(mp_from.n_patches() == mp_to.n_patches());
 
@@ -577,11 +569,13 @@ private:
 
     assert(!(flags & MP_DONT_RESIZE));
 
-    auto it = conversions_from.find(std::string{"copy_to_"} + type_to);
-    copy_to = it != conversions_from.cend() ? it->second : nullptr;
+    psc_mparticles_copy_func_t copy_to, copy_from;
+
+    auto it = mp_from.conversions().find(std::string{"copy_to_"} + type_to);
+    copy_to = it != mp_from.conversions().cend() ? it->second : nullptr;
     if (!copy_to) {
-      auto it = conversions_to.find(std::string{"copy_from_"} + type_from);
-      copy_from = it != conversions_to.cend() ? it->second : nullptr;
+      auto it = mp_to.conversions().find(std::string{"copy_from_"} + type_from);
+      copy_from = it != mp_to.conversions().cend() ? it->second : nullptr;
     }
     if (!copy_to && !copy_from) {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
@@ -634,9 +628,7 @@ private:
       flags |= MP_DONT_RESIZE;
     }
   
-    const MparticlesBase::Map &conversions_to = mprts_to.sub()->conversions();
-    const MparticlesBase::Map &conversions_from = mprts_from.sub()->conversions();
-    copy(_mprts_from, _mprts_to, type_from, type_to, conversions_from, conversions_to, flags);
+    copy(*mprts_from.sub(), *mprts_to.sub(), type_from, type_to, flags);
   
     psc_mparticles_destroy(_mprts_from);
 
