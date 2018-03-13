@@ -867,16 +867,20 @@ struct Balance_ : BalanceBase
 
     auto mprts_new_base = PscMparticlesCreate(mrc_domain_comm(domain_new), *new_grid,
 					      psc->prm.particles_base);
-    auto& mp_new_base = *mprts_new_base.sub();
     auto mprts_old = mprts_old_base.get_as<mparticles_t>();
     auto& mp_old = *mprts_old.sub();
 
-    auto mprts_new = mprts_new_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
-    auto& mp_new = *mprts_new.sub();
+    auto& mp_new_base = *mprts_new_base.sub();
+    Mparticles* mp_new;
+    if (&mp_old != &mp_old_base) { // FIXME hacky: destroy old particles early if we just got a copy
+      mp_new = new Mparticles{*new_grid};
+    } else {
+      mp_new = dynamic_cast<Mparticles*>(&mp_new_base);
+    }
     prof_stop(pr_bal_prts_B);
     
     // communicate particles
-    communicate_particles(bal, ctx, mp_old, mp_new, nr_particles_by_patch);
+    communicate_particles(bal, ctx, mp_old, *mp_new, nr_particles_by_patch);
 
     prof_start(pr_bal_prts_C);
     free(nr_particles_by_patch);
@@ -886,9 +890,8 @@ struct Balance_ : BalanceBase
       // can't do this because psc->particles (mp_old_base) is gone
       // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
       psc_mparticles_destroy(mprts_old.mprts());
-      // mprts_new.put_as(mprts_new_base, 0);
-      MparticlesBase::convert(mp_new, mp_new_base);
-      psc_mparticles_destroy(mprts_new.mprts());
+      MparticlesBase::convert(*mp_new, mp_new_base);
+      operator delete(mp_new);
     } else {
       // replace particles by redistributed ones
       // FIXME, very hacky: brutally overwrites the sub-object, maybe this could be done properly
