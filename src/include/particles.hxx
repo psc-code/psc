@@ -341,6 +341,8 @@ public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
+using psc_mparticles_copy_func_t = void (*)(MparticlesBase&, MparticlesBase&);
+
 // ======================================================================
 // Mparticles
 
@@ -573,11 +575,19 @@ private:
       assert(0);
     }
 
+#if 0
     if (copy_to) {
       copy_to(mprts_from, mprts_to, flags);
     } else {
       copy_from(mprts_to, mprts_from, flags);
     }
+#else
+    if (copy_to) {
+      copy_to(*PscMparticlesBase{mprts_from}.sub(), *PscMparticlesBase{mprts_to}.sub());
+    } else {
+      copy_from(*PscMparticlesBase{mprts_to}.sub(), *PscMparticlesBase{mprts_from}.sub());
+    }
+#endif
   }
 
   void psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,

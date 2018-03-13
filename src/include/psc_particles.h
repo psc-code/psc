@@ -32,10 +32,6 @@ struct psc_mparticles_ops {
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
 
-typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
-					   struct psc_mparticles *,
-					   unsigned int);
-
 #define MP_DONT_COPY (0x1)
 #define MP_DONT_RESIZE (0x2)
 #define MP_BLOCKSIZE_MASK     (0x7000)
