@@ -21,12 +21,8 @@ inline MP PscMparticles<S>::get_as(uint flags)
   prof_start(pr);
   
   //  mprintf("get_as %s -> %s from\n", typeid(mp_from).name(), typeid(typename MP::sub_t).name());
-  
-  struct psc_mparticles *mprts_to_ = psc_mparticles_create(psc_mparticles_comm(mprts_));
-  psc_mparticles_set_type(mprts_to_, type_to);
-  mprts_to_->grid = mprts_->grid;
-  psc_mparticles_setup(mprts_to_);
-  auto mprts_to = MP{mprts_to_};
+
+  auto mprts_to = MP::create(psc_mparticles_comm(mprts_), mp_from.grid());
   auto& mp_to = *mprts_to.sub();
   
   if (flags & MP_DONT_COPY) {
@@ -38,7 +34,7 @@ inline MP PscMparticles<S>::get_as(uint flags)
     }
   } else {
     assert(!(flags & MP_DONT_RESIZE));
-    copy(mp_from, mp_to, flags);
+    MparticlesBase::convert(mp_from, mp_to);
   }
   
   //  mprintf("get_as %s -> %s to\n", typeid(mp_from).name(), typeid(mp_to).name());
@@ -81,7 +77,7 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
       assert(n_prts_by_patch[p] == n_prts_by_patch_to[p]);
     }
   } else {
-    copy(mp_from, mp_to, flags);
+    MparticlesBase::convert(mp_from, mp_to);
   }
   
   psc_mparticles_destroy(mprts_);
@@ -91,9 +87,7 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
   prof_stop(pr);
 }
 
-template<typename S>
-inline void PscMparticles<S>::copy(MparticlesBase& mp_from, MparticlesBase& mp_to,
-				   unsigned int flags)
+inline void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {
   // FIXME, implementing == wouldn't hurt
   assert(&mp_from.grid() == &mp_to.grid());

@@ -342,7 +342,8 @@ struct MparticlesBase
 
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
-
+  static void convert(MparticlesBase& mp_from, MparticlesBase& mp_to);
+  
 protected:
   const Grid_t& grid_;
 public:
@@ -484,6 +485,7 @@ using PscMparticlesBase = PscMparticles<MparticlesBase>;
 template<typename S>
 struct PscMparticles
 {
+  using Self = PscMparticles<S>;
   using sub_t = S;
   using particle_t = typename sub_t::particle_t;
   using real_t = typename particle_t::real_t;
@@ -498,6 +500,15 @@ struct PscMparticles
     }
   }
 
+  static Self create(MPI_Comm comm, const Grid_t& grid)
+  {
+    psc_mparticles *mprts = psc_mparticles_create(comm);
+    psc_mparticles_set_type(mprts, mparticles_traits<Self>::name);
+    mprts->grid = &grid;
+    psc_mparticles_setup(mprts);
+    return Self{mprts};
+  }
+  
   template<typename MP>
   MP get_as(uint flags = 0);
 
@@ -516,7 +527,7 @@ struct PscMparticles
   }
 
 private:
-  void copy(MparticlesBase& mp_from, MparticlesBase& mp_to, unsigned int flags);
+  static void convert(MparticlesBase& mp_from, MparticlesBase& mp_to);
 
 private:
   psc_mparticles *mprts_;
