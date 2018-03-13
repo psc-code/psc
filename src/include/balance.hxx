@@ -8,7 +8,7 @@
 
 struct BalanceBase
 {
-  virtual void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) = 0;
+  virtual uint* initial(struct psc_balance *bal, struct psc *psc, uint* n_prts_by_patch) = 0;
   virtual void operator()(struct psc_balance *bal, struct psc *psc) = 0;
 };
 
@@ -32,9 +32,9 @@ struct PscBalance
     (*sub())(balance_, psc);
   }
 
-  void initial(struct psc* psc, uint*& n_prts_by_patch)
+  uint* initial(struct psc* psc, uint* n_prts_by_patch)
   {
-    sub()->initial(balance_, psc, n_prts_by_patch);
+    return sub()->initial(balance_, psc, n_prts_by_patch);
   }
 
   sub_t* sub() { return mrc_to_subobj(balance_, sub_t); }

@@ -716,14 +716,14 @@ struct Balance_ : BalanceBase
 	   mflds_base_old.mflds()->obj.ops->size);
   }
   
-  void initial(struct psc_balance *bal, struct psc *psc, uint*& n_prts_by_patch) override
+  uint* initial(struct psc_balance *bal, struct psc *psc, uint* n_prts_by_patch_old) override
   {
     struct mrc_domain *domain_old = psc->mrc_domain;
 
     int nr_patches;
     mrc_domain_get_patches(domain_old, &nr_patches);
     double *loads = (double *) calloc(nr_patches, sizeof(*loads));
-    psc_get_loads_initial(psc, loads, n_prts_by_patch);
+    psc_get_loads_initial(psc, loads, n_prts_by_patch_old);
 
     int nr_global_patches;
     double *loads_all = gather_loads(domain_old, loads, nr_patches,
@@ -745,7 +745,7 @@ struct Balance_ : BalanceBase
     struct communicate_ctx _ctx, *ctx = &_ctx;
     communicate_setup(ctx, domain_old, domain_new);
 
-    n_prts_by_patch = communicate_new_nr_particles(ctx, n_prts_by_patch);
+    uint* n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
 
     // ----------------------------------------------------------------------
     // fields
@@ -762,6 +762,8 @@ struct Balance_ : BalanceBase
     bndp.reset();
     psc_output_fields_check_bnd = true;
     mrc_domain_destroy(domain_old);
+
+    return n_prts_by_patch_new;
   }
 
   void operator()(struct psc_balance *bal, struct psc *psc) override
@@ -854,11 +856,11 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_prts_A);
     PscMparticlesBase mprts_old_base(psc->particles);
     auto& mp_old_base = *mprts_old_base.sub();
-    uint *n_prts_by_patch = new uint[nr_patches];
-    mprts_old_base->get_size_all(n_prts_by_patch);
+    uint *n_prts_by_patch_old = new uint[nr_patches];
+    mprts_old_base->get_size_all(n_prts_by_patch_old);
     prof_stop(pr_bal_prts_A);
 
-    n_prts_by_patch = communicate_new_nr_particles(ctx, n_prts_by_patch);
+    uint* n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
 
     // alloc new particles
 
@@ -872,7 +874,7 @@ struct Balance_ : BalanceBase
       
       // communicate particles
       auto* mp_new = new Mparticles{*new_grid};
-      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch);
+      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new);
       delete mp_old;
       
       prof_start(pr_bal_prts_C);
@@ -883,14 +885,14 @@ struct Balance_ : BalanceBase
       auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
       auto mp_new = dynamic_cast<Mparticles*>(&mp_new_base);
       // communicate particles
-      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch);
+      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new);
       mp_old_base.~MparticlesBase();
     }
 
     memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
     operator delete(&mp_new_base);
     mprts_old_base.mprts()->grid = new_grid;
-    delete[] n_prts_by_patch;
+    delete[] n_prts_by_patch_new;
 
     prof_stop(pr_bal_prts);
 

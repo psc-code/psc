@@ -485,21 +485,21 @@ _psc_setup(struct psc *psc)
   psc_method_do_setup(psc->method, psc);
 
   // partition and initial balancing
-  uint *n_prts_by_patch = new uint[psc->n_patches()];
+  uint *n_prts_by_patch_old = new uint[psc->n_patches()];
   
-  psc_method_setup_partition(psc->method, psc, n_prts_by_patch);
+  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old);
   psc_balance_setup(psc->balance);
   auto balance = PscBalanceBase{psc->balance};
-  balance.initial(psc, n_prts_by_patch);
+  uint* n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
 
   // create base particle data structure
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
   
   // set particles x^{n+1/2}, p^{n+1/2}
-  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch);
+  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new);
 
-  delete[] n_prts_by_patch;
+  delete[] n_prts_by_patch_new;
 
   // create and set up base mflds
   psc_setup_base_mflds(psc);
