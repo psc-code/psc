@@ -877,14 +877,14 @@ struct Balance_ : BalanceBase
       mp_old_base.~MparticlesBase();
     }
 
-    prof_start(pr_bal_prts_B1);
-    mp_new_base.reserve_all(nr_particles_by_patch);
-    prof_stop(pr_bal_prts_B1);
-
-    auto mprts_new = mprts_new_base.get_as<mparticles_t>(MP_DONT_COPY);
+    auto mprts_new = mprts_new_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
     auto& mp_new = *mprts_new.sub();
     prof_stop(pr_bal_prts_B);
     
+    prof_start(pr_bal_prts_B1);
+    mp_new.reserve_all(nr_particles_by_patch);
+    prof_stop(pr_bal_prts_B1);
+
     // communicate particles
     communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
 
