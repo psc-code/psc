@@ -61,18 +61,6 @@ public:
 
 using psc_mparticles_copy_func_t = MparticlesBase::copy_func_t; // FIXME, get rid of
 
-// ----------------------------------------------------------------------
-// psc_mparticles_create
-
-inline psc_mparticles* psc_mparticles_create(MPI_Comm comm, const Grid_t& grid, const char *type)
-{
-  psc_mparticles* mprts = psc_mparticles_create(comm);
-  psc_mparticles_set_type(mprts, type);
-  mprts->grid = &grid;
-  psc_mparticles_setup(mprts);
-  return mprts;
-}
-
 // ======================================================================
 // PscMparticles
 
@@ -80,6 +68,8 @@ template<typename S>
 struct PscMparticles;
 
 using PscMparticlesBase = PscMparticles<MparticlesBase>;
+
+PscMparticlesBase PscMparticlesCreate(MPI_Comm comm, const Grid_t& grid, const char *type);
 
 template<typename S>
 struct PscMparticles
@@ -101,7 +91,8 @@ struct PscMparticles
 
   static Self create(MPI_Comm comm, const Grid_t& grid)
   {
-    return Self{psc_mparticles_create(comm, grid, mparticles_traits<Self>::name)};
+    auto mprts = PscMparticlesCreate(comm, grid, mparticles_traits<Self>::name);
+    return Self{mprts.mprts()}; // odd way of returning derived type
   }
   
   template<typename MP>
@@ -127,6 +118,15 @@ private:
 private:
   psc_mparticles *mprts_;
 };
+
+inline PscMparticlesBase PscMparticlesCreate(MPI_Comm comm, const Grid_t& grid, const char *type)
+{
+  psc_mparticles* mprts = psc_mparticles_create(comm);
+  psc_mparticles_set_type(mprts, type);
+  mprts->grid = &grid;
+  psc_mparticles_setup(mprts);
+  return PscMparticlesBase{mprts};
+}
 
 // ======================================================================
 // MparticlesWrapper

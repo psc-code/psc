@@ -520,8 +520,8 @@ psc_harris_setup(struct psc *psc)
   auto balance = PscBalanceBase{psc->balance};
   balance.initial(psc, n_prts_by_patch);
 
-  psc->particles = psc_mparticles_create(mrc_domain_comm(psc->mrc_domain), psc->grid(),
-					 psc->prm.particles_base);
+  psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+				       psc->prm.particles_base).mprts();
 
   psc_setup_base_mflds(psc);
 
