@@ -11,8 +11,8 @@
 #define dprintf(...) do {} while (0)
 #endif
 
-MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, const Int3& ibn)
-  : MfieldsBase(grid, n_fields)
+MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
+  : MfieldsBase(grid, n_fields, ibn)
 {
   dprintf("CMFLDS: ctor\n");
   cmflds = new cuda_mfields(grid, n_fields, ibn);

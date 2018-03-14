@@ -20,7 +20,7 @@ struct MfieldsCuda : MfieldsBase
   using fields_t = fields_cuda_t;
   using mfields_t = PscMfields<MfieldsCuda>;
   
-  MfieldsCuda(const Grid_t& grid, int n_fields, const Int3& ibn);
+  MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn);
   MfieldsCuda(const MfieldsCuda&) = delete;
   ~MfieldsCuda();
 

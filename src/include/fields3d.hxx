@@ -168,15 +168,17 @@ struct MfieldsBase
   
   struct fields_t { struct real_t {}; };
   
-  MfieldsBase(const Grid_t& grid, int n_fields)
+  MfieldsBase(const Grid_t& grid, int n_fields, Int3 ibn)
     : grid_(&grid),
-      n_fields_(n_fields)
+      n_fields_(n_fields),
+      ibn_(ibn)
   {}
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
   
   int n_patches() const { return grid_->n_patches(); }
   int n_comps() const { return n_fields_; }
+  Int3 ibn() const { return ibn_; }
 
   virtual ~MfieldsBase() {}
   virtual void zero_comp(int m) = 0;
@@ -203,6 +205,7 @@ struct MfieldsBase
 protected:
   int n_fields_;
   const Grid_t* grid_;
+  Int3 ibn_;
 public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
@@ -216,8 +219,8 @@ struct Mfields : MfieldsBase
   using fields_t = F;
   using real_t = typename fields_t::real_t;
 
-  Mfields(const Grid_t& grid, int n_fields, int ibn[3])
-    : MfieldsBase(grid, n_fields)
+  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase(grid, n_fields, ibn)
   {
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
