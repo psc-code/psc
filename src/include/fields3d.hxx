@@ -169,11 +169,11 @@ struct MfieldsBase
   struct fields_t { struct real_t {}; };
   
   MfieldsBase(const Grid_t& grid, int n_fields)
-    : grid_(grid),
+    : grid_(&grid),
       n_fields_(n_fields)
   {}
 
-  int n_patches() const { return grid_.n_patches(); }
+  int n_patches() const { return grid_->n_patches(); }
   int n_comps() const { return n_fields_; }
 
   virtual ~MfieldsBase() {}
@@ -192,7 +192,7 @@ struct MfieldsBase
     }
   }
 
-  const Grid_t& grid() { return grid_; }
+  const Grid_t& grid() { return *grid_; }
   
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
@@ -200,7 +200,7 @@ struct MfieldsBase
 
 protected:
   int n_fields_;
-  const Grid_t& grid_;
+  const Grid_t* grid_;
 public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
@@ -220,29 +220,19 @@ struct Mfields : MfieldsBase
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
       ib[d] = -ibn[d];
-      im[d] = grid_.ldims[d] + 2 * ibn[d];
+      im[d] = grid_->ldims[d] + 2 * ibn[d];
       size *= im[d];
     }
 
-    data = (real_t**) calloc(n_patches(), sizeof(*data));
+    data.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      data[p] = (real_t *) calloc(n_fields * size, sizeof(real_t));
-    }
-  }
-
-  ~Mfields()
-  {
-    if (data) { // FIXME, since this object exists without a constructor having been called, for now...
-      for (int p = 0; p < n_patches(); p++) {
-	free(data[p]);
-      }
-      free(data);
+      data.emplace_back(new real_t[n_fields * size]);
     }
   }
 
   fields_t operator[](int p)
   {
-    return fields_t(ib, im, n_fields_, data[p]);
+    return fields_t(ib, im, n_fields_, data[p].get());
   }
 
   void zero_comp(int m) override
@@ -295,7 +285,7 @@ struct Mfields : MfieldsBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  real_t **data;
+  std::vector<std::unique_ptr<real_t[]>> data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
 };

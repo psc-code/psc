@@ -51,7 +51,7 @@ void MfieldsCuda::axpy_comp_yz(int ym, float a, PscMfieldsCuda mflds_x, int xm)
 void MfieldsCuda::zero_comp(int m)
 {
   dprintf("CMFLDS: zero_comp\n");
-  assert(grid_.gdims[0] == 1);
+  assert(grid_->gdims[0] == 1);
   cmflds->zero_comp_yz(m);
 }
 

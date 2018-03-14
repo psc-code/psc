@@ -684,8 +684,11 @@ struct Balance_ : BalanceBase
       memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
 	     mflds_base_old.mflds()->obj.ops->size);
     } else {
-      communicate_fields(ctx, dynamic_cast<Mfields&>(mf_base_old), dynamic_cast<Mfields&>(mf_base_new));
-      
+      auto &mf_old = dynamic_cast<Mfields&>(mf_base_old);
+      auto &mf_new = dynamic_cast<Mfields&>(mf_base_new);
+      communicate_fields(ctx, mf_old, mf_new);
+
+      //mf_old = mf_new;
       mflds_base_old->~MfieldsBase();
       memcpy((char*) &mf_base_old, (char*) &mf_base_new, mflds_base_old.mflds()->obj.ops->size);
     }
