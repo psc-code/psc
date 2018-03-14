@@ -51,6 +51,12 @@
 // ======================================================================
 // psc subclass "flatfoil"
 
+enum {
+  MY_ION,
+  MY_ELECTRON,
+  N_MY_KINDS,
+};
+
 struct psc_flatfoil {
   double BB;
   double Zi;
@@ -162,7 +168,9 @@ struct PscFlatfoil : Params
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
       heating_{dynamic_cast<Heating_t&>(*PscHeatingBase{sub_->heating}.sub())},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
-  {}
+  {
+    heating2_.reset(new Heating_t{20, 0, 10000000, MY_ELECTRON, *sub_->heating->spot});
+  }
   
   void step()
   {
@@ -189,7 +197,7 @@ struct PscFlatfoil : Params
     bndp_(mprts_);
     
     inject_(mprts_);
-    heating_(mprts_);
+    (*heating2_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     bndf_.fill_ghosts_H(mflds_);
@@ -350,14 +358,10 @@ private:
   Heating_t& heating_;
   Balance_t& balance_;
 
+  std::unique_ptr<Heating_t> heating2_;
+  
   int st_nr_particles;
   int st_time_step;
-};
-
-enum {
-  MY_ION,
-  MY_ELECTRON,
-  N_MY_KINDS,
 };
 
 // ----------------------------------------------------------------------
