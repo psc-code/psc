@@ -39,9 +39,9 @@ static void
 psc_mfields_vpic_copy_from_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
 				  int mb, int me)
 {
-  PscMfieldsSingle mf_single(mflds_single);
-  PscMfieldsVpic mf(mflds);
-  for (int p = 0; p < mf->n_patches(); p++) {
+  auto& mf_single = *PscMfieldsSingle(mflds_single).sub();
+  auto& mf = *PscMfieldsVpic(mflds).sub();
+  for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     Fields F(flds);
     FieldsS F_s(mf_single[p]);
@@ -70,9 +70,9 @@ static void
 psc_mfields_vpic_copy_to_single(struct psc_mfields *mflds, struct psc_mfields *mflds_single,
 			   int mb, int me)
 {
-  PscMfieldsSingle mf_single(mflds_single);
-  PscMfieldsVpic mf(mflds);
-  for (int p = 0; p < mf->n_patches(); p++) {
+  auto& mf_single = *PscMfieldsSingle(mflds_single).sub();
+  auto& mf = *PscMfieldsVpic(mflds).sub();
+  for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     fields_single_t flds_single = mf_single[p];
     Fields F(flds);
@@ -165,28 +165,6 @@ static void psc_mfields_vpic_destroy(struct psc_mfields *mflds)
   } else {
     assert(0);
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_vpic_get_field_t
-
-fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *_mflds, int p)
-{
-  PscMfieldsVpic mflds(_mflds);
-
-  // FIXME hacky...
-  if (_mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
-    int ib[3], im[3];
-    float* data = Simulation_mflds_getData(mflds->sim, mflds->vmflds_fields, ib, im);
-    return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
-  } else if (_mflds->nr_fields == VPIC_HYDRO_N_COMP) {
-    int ib[3], im[3];
-    float* data = Simulation_hydro_getData(mflds->sim, mflds->vmflds_hydro, ib, im);
-    return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
-  } else {
-    assert(0);
-  }
-  abort();
 }
 
 // ======================================================================

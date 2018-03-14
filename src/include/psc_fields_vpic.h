@@ -20,6 +20,22 @@ struct MfieldsVpic : MfieldsBase
 
   using Base::Base;
 
+  inline fields_vpic_t operator[](int p)
+  {
+    // FIXME hacky...
+    if (n_comps() == VPIC_MFIELDS_N_COMP) {
+      int ib[3], im[3];
+      float* data = Simulation_mflds_getData(sim, vmflds_fields, ib, im);
+      return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
+    } else if (n_comps() == VPIC_HYDRO_N_COMP) {
+      int ib[3], im[3];
+      float* data = Simulation_hydro_getData(sim, vmflds_hydro, ib, im);
+      return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
+    } else {
+      assert(0);
+    }
+  }
+
   double synchronize_tang_e_norm_b()
   {
     return Simulation_mflds_synchronize_tang_e_norm_b(sim, vmflds_fields);
@@ -87,13 +103,6 @@ struct MfieldsVpic : MfieldsBase
 };
 
 using PscMfieldsVpic = PscMfields<MfieldsVpic>;
-
-template<>
-inline fields_vpic_t PscMfieldsVpic::operator[](int p)
-{
-  fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *mflds, int p);
-  return psc_mfields_vpic_get_field_t(mflds_, p);
-}
 
 template<>
 struct fields_traits<fields_vpic_t>
