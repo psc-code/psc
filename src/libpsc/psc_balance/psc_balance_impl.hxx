@@ -583,18 +583,8 @@ struct Balance_ : BalanceBase
     prof_stop(pr);
   }
 
-  void communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
-			  mfields_t mf_old, mfields_t mf_new)
+  void communicate_fields(struct communicate_ctx *ctx, Mfields& mf_old, Mfields& mf_new)
   {
-    //HACK: Don't communicate output fields if they don't correspond to the domain
-    //This is needed e.g. for the boosted output which handles its MPI communication internally
-    //printf("Field: %s\n", flds->f[0].name);
-
-    if (ctx->nr_patches_old != mf_old->n_patches()) return;
-	
-    assert(ctx->nr_patches_old == mf_old->n_patches());
-    assert(ctx->nr_patches_old > 0);
-  
     MPI_Datatype mpi_dtype = fields_traits<fields_t>::mpi_dtype();
 
     // send from old local patches
@@ -681,32 +671,23 @@ struct Balance_ : BalanceBase
     auto mflds_base_new = PscMfieldsCreate(mrc_domain_comm(domain_new), *new_grid,
 					   mflds_base_old->n_comps(), mflds_base_old.mflds()->ibn,
 					   psc_mfields_type(mflds_base_old.mflds()));
-    psc_mfields_set_name(mflds_base_new.mflds(), psc_mfields_name(mflds_base_old.mflds()));
-    for (int m = 0; m < mflds_base_old->n_comps(); m++) {
-      const char *s = psc_mfields_comp_name(mflds_base_old.mflds(), m);
-      if (s) {
-	psc_mfields_set_comp_name(mflds_base_new.mflds(), m, s);
-      }
-    }
+    auto& mf_base_new = *mflds_base_new.sub();
     
     if (typeid(mf_base_old) != typeid(Mfields)) {
       auto mflds_old = mflds_base_old.get_as<mfields_t>(0, mflds_base_old->n_comps());
       mflds_base_old->~MfieldsBase();
       
       auto mflds_new = mflds_base_new.get_as<mfields_t>(0, 0);
-      communicate_fields(bal, ctx, mflds_old, mflds_new);
+      communicate_fields(ctx, *mflds_old.sub(), *mflds_new.sub());
       mflds_new.put_as(mflds_base_new, 0, mflds_base_new->n_comps());
       
       memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
 	     mflds_base_old.mflds()->obj.ops->size);
     } else {
-      auto mflds_new = mflds_base_new.get_as<mfields_t>(0, 0);
-      communicate_fields(bal, ctx, mfields_t{mflds_base_old.mflds()}, mflds_new);
-      mflds_new.put_as(mflds_base_new, 0, mflds_base_new->n_comps());
+      communicate_fields(ctx, dynamic_cast<Mfields&>(mf_base_old), dynamic_cast<Mfields&>(mf_base_new));
       
       mflds_base_old->~MfieldsBase();
-      memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
-	     mflds_base_old.mflds()->obj.ops->size);
+      memcpy((char*) &mf_base_old, (char*) &mf_base_new, mflds_base_old.mflds()->obj.ops->size);
     }
   }
   
