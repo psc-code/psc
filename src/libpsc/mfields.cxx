@@ -131,17 +131,12 @@ inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int m
   assert(0);
 }
 
-
-
-struct psc_mfields *
-psc_mfields_get_as(struct psc_mfields *_mflds_base, const char *type,
-		   int mb, int me)
+PscMfieldsBase psc_mfields_get_as(PscMfieldsBase mflds_base, const char *type, int mb, int me)
 {
-  auto mflds_base = PscMfieldsBase{_mflds_base};
   const char *type_base = psc_mfields_type(mflds_base.mflds());
   // If we're already the subtype, nothing to be done
   if (strcmp(type_base, type) == 0)
-    return mflds_base.mflds();
+    return mflds_base;
 
   static int pr;
   if (!pr) {
@@ -159,15 +154,11 @@ psc_mfields_get_as(struct psc_mfields *_mflds_base, const char *type,
   MfieldsBase::convert(*mflds_base.sub(), *mflds.sub(), mb, me);
 
   prof_stop(pr);
-  return mflds.mflds();
+  return mflds;
 }
 
-void
-psc_mfields_put_as(struct psc_mfields *_mflds, struct psc_mfields *_mflds_base,
-		   int mb, int me)
+void psc_mfields_put_as(PscMfieldsBase mflds, PscMfieldsBase mflds_base, int mb, int me)
 {
-  auto mflds = PscMfieldsBase{_mflds};
-  auto mflds_base = PscMfieldsBase{_mflds_base};
   // If we're already the subtype, nothing to be done
   const char *type = psc_mfields_type(mflds.mflds());
   const char *type_base = psc_mfields_type(mflds_base.mflds());

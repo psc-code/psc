@@ -303,6 +303,12 @@ struct Mfields : MfieldsBase
 // ======================================================================
 // PscMfields
 
+template<typename S> struct PscMfields;
+using PscMfieldsBase = PscMfields<MfieldsBase>;
+
+PscMfieldsBase psc_mfields_get_as(PscMfieldsBase mflds_base, const char *type, int mb, int me);
+void psc_mfields_put_as(PscMfieldsBase mflds, PscMfieldsBase mflds_base, int mb, int me);
+
 template<typename S>
 struct PscMfields
 {
@@ -318,7 +324,11 @@ struct PscMfields
   
   PscMfields(struct psc_mfields *mflds)
     : mflds_(mflds)
-  {}
+  {
+    if (mflds != nullptr) {
+      assert(dynamic_cast<sub_t*>(mrc_to_subobj(mflds, MfieldsBase)));
+    }
+  }
 
   unsigned int n_fields() const { return mflds_->nr_fields; }
 
@@ -331,14 +341,13 @@ struct PscMfields
   MF get_as(int mb, int me)
   {
     const char *type = fields_traits<typename MF::fields_t>::name;
-    struct psc_mfields *mflds = psc_mfields_get_as(mflds_, type, mb, me);
-    return MF(mflds);
+    return MF{psc_mfields_get_as(PscMfieldsBase{mflds()}, type, mb, me).mflds()};
   }
   
   template<typename MF>
   void put_as(MF mflds_base, int mb, int me)
   {
-    psc_mfields_put_as(mflds_, mflds_base.mflds(), mb, me);
+    psc_mfields_put_as(PscMfieldsBase{mflds()}, PscMfieldsBase{mflds_base.mflds()}, mb, me);
   }
 
   struct psc_mfields *mflds() { return mflds_; }
@@ -349,8 +358,6 @@ struct PscMfields
 private:
   struct psc_mfields *mflds_;
 };
-
-using PscMfieldsBase = PscMfields<MfieldsBase>;
 
 inline PscMfieldsBase PscMfieldsCreate(MPI_Comm comm, const Grid_t& grid, int n_comps,
 				       Int3 ibn, const char* type)

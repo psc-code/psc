@@ -33,10 +33,6 @@ struct psc_mfields_ops {
 
 void psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s);
 const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
-struct psc_mfields *psc_mfields_get_as(struct psc_mfields *mflds_base,
-				       const char *type, int mb, int me);
-void psc_mfields_put_as(struct psc_mfields *mflds,
-			struct psc_mfields *mflds_base, int mb, int me);
 
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
 
