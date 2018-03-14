@@ -31,8 +31,8 @@ struct MparticlesBase
   using particle_t = particle_base_t;
   using patch_t = patch_base_t;
 
-  using copy_func_t = void (*)(MparticlesBase&, MparticlesBase&);
-  using Convert = std::unordered_map<std::type_index, copy_func_t>;
+  using convert_func_t = void (*)(MparticlesBase&, MparticlesBase&);
+  using Convert = std::unordered_map<std::type_index, convert_func_t>;
   
   MparticlesBase(const Grid_t& grid)
     : grid_(&grid)
@@ -60,8 +60,6 @@ protected:
 public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
-
-using psc_mparticles_copy_func_t = MparticlesBase::copy_func_t; // FIXME, get rid of
 
 // ======================================================================
 // PscMparticles

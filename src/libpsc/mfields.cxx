@@ -108,30 +108,20 @@ psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io)
   mrc_fld_destroy(fld);
 }
 
-// inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me,
-// 				 PscMfieldsBase mflds_from, PscMfieldsBase mflds_to)
-// {
-// }
-
-static void
-copy(PscMfieldsBase mflds_from, PscMfieldsBase mflds_to,
-     const char *type_from, const char *type_to, int mb, int me)
+inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me)
 {
-  auto& mf_from = *mflds_from.sub();
-  auto& mf_to = *mflds_to.sub();
-
   // FIXME, implementing == wouldn't hurt
   assert(&mf_from.grid() == &mf_to.grid());
   
   auto convert_to = mf_from.convert_to().find(std::type_index(typeid(mf_to)));
   if (convert_to != mf_from.convert_to().cend()) {
-    convert_to->second(mflds_from.mflds(), mflds_to.mflds(), mb, me);
+    convert_to->second(mf_from, mf_to, mb, me);
     return;
   }
   
   auto convert_from = mf_to.convert_from().find(std::type_index(typeid(mf_from)));
   if (convert_from != mf_to.convert_from().cend()) {
-    convert_from->second(mflds_to.mflds(), mflds_from.mflds(), mb, me);
+    convert_from->second(mf_to, mf_from, mb, me);
     return;
   }
 
@@ -165,7 +155,7 @@ psc_mfields_get_as(struct psc_mfields *_mflds_base, const char *type,
   auto mflds = PscMfieldsCreate(psc_mfields_comm(mflds_base.mflds()), mflds_base->grid(),
 				mflds_base->n_comps(), mflds_base.mflds()->ibn, type);
 
-  copy(mflds_base.mflds(), mflds.mflds(), type_base, type, mb, me);
+  MfieldsBase::convert(*mflds_base.sub(), *mflds.sub(), mb, me);
 
   prof_stop(pr);
   return mflds.mflds();
@@ -189,7 +179,7 @@ psc_mfields_put_as(struct psc_mfields *_mflds, struct psc_mfields *_mflds_base,
   }
   prof_start(pr);
 
-  copy(mflds.mflds(), mflds_base.mflds(), type, type_base, mb, me);
+  MfieldsBase::convert(*mflds.sub(), *mflds_base.sub(), mb, me);
   psc_mfields_destroy(mflds.mflds());
 
   prof_stop(pr);

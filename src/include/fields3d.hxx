@@ -163,8 +163,8 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 
 struct MfieldsBase
 {
-  using copy_func_t = psc_mfields_copy_func_t;
-  using Convert = std::unordered_map<std::type_index, copy_func_t>;
+  using convert_func_t = void (*)(MfieldsBase&, MfieldsBase&, int, int);
+  using Convert = std::unordered_map<std::type_index, convert_func_t>;
   
   struct fields_t { struct real_t {}; };
   
@@ -196,7 +196,7 @@ struct MfieldsBase
   
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
-  static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to);
+  static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me);
 
 protected:
   int n_fields_;

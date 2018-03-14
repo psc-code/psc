@@ -20,12 +20,10 @@ using FieldsC = Fields3d<fields_c_t>;
 // ======================================================================
 // convert to c
 
-static void
-psc_mfields_single_copy_from_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
-			       int mb, int me)
+static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mflds_c, int mb, int me)
 {
-  auto& mf = *mfields_t(mflds).sub();
-  auto& mf_c = *PscMfieldsC(mflds_c).sub();
+  auto& mf = dynamic_cast<MfieldsSingle&>(mflds);
+  auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_t flds = mf[p];
     Fields F(flds);
@@ -42,12 +40,10 @@ psc_mfields_single_copy_from_c(struct psc_mfields *mflds, struct psc_mfields *mf
   }
 }
 
-void
-psc_mfields_single_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mflds_c,
-			     int mb, int me)
+static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_c, int mb, int me)
 {
-  auto& mf = *mfields_t(mflds).sub();
-  auto& mf_c = *PscMfieldsC(mflds_c).sub();
+  auto& mf = dynamic_cast<MfieldsSingle&>(mflds);
+  auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_t flds = mf[p];
     Fields F(flds);

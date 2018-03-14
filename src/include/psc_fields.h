@@ -34,9 +34,6 @@ struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
 };
 
-typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
-					int, int);
-
 void psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s);
 const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
 struct psc_mfields *psc_mfields_get_as(struct psc_mfields *mflds_base,

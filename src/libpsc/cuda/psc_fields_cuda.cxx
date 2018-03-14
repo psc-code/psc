@@ -18,12 +18,10 @@ using FieldsC = Fields3d<fields_c_t>; // host
 // ======================================================================
 // convert from/to "c"
 
-static void
-psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
-			    int mb, int me)
+static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& mflds_c, int mb, int me)
 {
-  auto& mf_c = *PscMfieldsC(mflds_c).sub();
-  auto& mf_cuda = *PscMfieldsCuda(mflds_cuda).sub();
+  auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
+  auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   fields_single_t flds = mf_cuda.get_host_fields();
   FieldsH F(flds);
 
@@ -45,12 +43,10 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
   flds.dtor();
 }
 
-static void
-psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
-			  int mb, int me)
+static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mflds_c, int mb, int me)
 {
-  auto& mf_c = *PscMfieldsC(mflds_c).sub();
-  auto& mf_cuda = *PscMfieldsCuda(mflds_cuda).sub();
+  auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
+  auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   fields_single_t flds = mf_cuda.get_host_fields();
   FieldsH F(flds);
 
@@ -75,12 +71,10 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 // ======================================================================
 // convert from/to "single"
 
-static void
-psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
-				  int mb, int me)
+static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBase& mflds_single, int mb, int me)
 {
-  auto& mf_single = *PscMfieldsSingle(mflds_single).sub();
-  auto& mf_cuda = *PscMfieldsCuda(mflds_cuda).sub();
+  auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
+  auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   fields_single_t flds = mf_cuda.get_host_fields();
   FieldsH F(flds);
   
@@ -103,12 +97,10 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
   flds.dtor();
 }
 
-static void
-psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
-				int mb, int me)
+static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase& mflds_single, int mb, int me)
 {
-  auto& mf_single = *PscMfieldsSingle(mflds_single).sub();
-  auto& mf_cuda = *PscMfieldsCuda(mflds_cuda).sub();
+  auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
+  auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   fields_single_t flds = mf_cuda.get_host_fields();
   FieldsH F(flds);
 
