@@ -661,9 +661,7 @@ struct Balance_ : BalanceBase
     delete[] recv_reqs;
   }
 
-  void balance_field(struct psc_balance *bal, struct communicate_ctx* ctx,
-		     struct psc* psc, struct mrc_domain *domain_new, const Grid_t *new_grid,
-		     struct psc_mfields *mflds)
+  void balance_field(struct communicate_ctx* ctx, const Grid_t& new_grid, struct psc_mfields *mflds)
   {
     PscMfieldsBase mflds_base_old{mflds};
     auto& mf_base_old = *mflds_base_old.sub();
@@ -671,15 +669,15 @@ struct Balance_ : BalanceBase
     if (typeid(mf_base_old) != typeid(Mfields)) {
       auto& mf_old = *new Mfields{mf_base_old.grid(), mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       MfieldsBase::convert(mf_base_old, mf_old, 0, mf_old.n_comps());
-      mf_base_old.reset(*new_grid); // free old memory
+      mf_base_old.reset(new_grid); // free old memory
 
-      auto mf_new = Mfields{*new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
+      auto mf_new = Mfields{new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       communicate_fields(ctx, mf_old, mf_new);
       delete &mf_old; // delete as early as possible
       
       MfieldsBase::convert(mf_new, mf_base_old, 0, mf_base_old.n_comps());
     } else {
-      auto mf_new = Mfields{*new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
+      auto mf_new = Mfields{new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       auto &mf_old = dynamic_cast<Mfields&>(mf_base_old);
 
       communicate_fields(ctx, mf_old, mf_new);
@@ -724,7 +722,7 @@ struct Balance_ : BalanceBase
 
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      balance_field(bal, ctx, psc, domain_new, &psc->grid(), *p->flds_p);
+      balance_field(ctx, psc->grid(), *p->flds_p);
     }
 
     communicate_free(ctx);
@@ -866,7 +864,7 @@ struct Balance_ : BalanceBase
     prof_start(pr_bal_flds);
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      balance_field(bal, ctx, psc, domain_new, new_grid, *p->flds_p);
+      balance_field(ctx, *new_grid, *p->flds_p);
     }
     prof_stop(pr_bal_flds);
   
