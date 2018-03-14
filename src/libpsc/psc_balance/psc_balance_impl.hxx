@@ -26,203 +26,6 @@ capability_jaguar(int p)
   }
 }
 
-static std::vector<double> psc_get_loads_initial(struct psc *psc, const std::vector<uint>& n_prts_by_patch)
-{
-  std::vector<double> loads;
-  loads.reserve(n_prts_by_patch.size());
-
-  const int *ldims = psc->grid().ldims;
-  for (auto n_prts : n_prts_by_patch) {
-    loads.push_back(n_prts + psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2]);
-  }
-
-  return loads;
-}
-
-static std::vector<double> psc_get_loads(struct psc *psc)
-{
-  struct psc_mparticles *mprts = psc->particles;
-  PscMparticlesBase mp(mprts);
-  
-  uint n_prts_by_patch[mp->n_patches()];
-  mp->get_size_all(n_prts_by_patch);
-
-  std::vector<double> loads;
-  loads.reserve(psc->grid().n_patches());
-  psc_foreach_patch(psc, p) {
-    double load;
-    if (psc->balance->factor_fields >= 0.) {
-      const int *ldims = psc->grid().ldims;
-      load = n_prts_by_patch[p] + psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
-      //mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
-    } else {
-      load = psc_balance_comp_time_by_patch[p];
-#if 0
-      int rank;
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      load = 1 + rank;
-#endif
-    }
-    loads.push_back(load);
-  }
-  return loads;
-}
-
-static int find_best_mapping(psc_balance *bal, mrc_domain *domain, const std::vector<double>& loads_all)
-{
-  MPI_Comm comm = mrc_domain_comm(domain);
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-
-  int *nr_patches_all_new = NULL;
-
-  if (rank == 0) { // do the mapping on proc 0
-    double *capability = (double *) calloc(size, sizeof(*capability));
-    for (int p = 0; p < size; p++) {
-      capability[p] = capability_default(p);
-    }
-    nr_patches_all_new = (int *) calloc(size, sizeof(*nr_patches_all_new));
-    double loads_sum = 0.;
-    for (int i = 0; i < loads_all.size(); i++) {
-      loads_sum += loads_all[i];
-    }
-    double capability_sum = 0.;
-    for (int p = 0; p < size; p++) {
-      capability_sum += capability[p];
-    }
-    double load_target = loads_sum / capability_sum;
-    mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
-	    loads_sum, capability_sum, load_target);
-    int p = 0, nr_new_patches = 0;
-    double load = 0.;
-    double next_target = load_target * capability[0];
-    for (int i = 0; i < loads_all.size(); i++) {
-      load += loads_all[i];
-      nr_new_patches++;
-      if (p < size - 1) {
-	// if load limit is reached, or we have only as many patches as processors left
-	if (load > next_target || size - p >= loads_all.size() - i) {
-	  double above_target = load - next_target;
-	  double below_target = next_target - (load - loads_all[i]);
-	  if (above_target > below_target && nr_new_patches > 1) {
-	    nr_patches_all_new[p] = nr_new_patches - 1;
-	    nr_new_patches = 1;
-	  } else {
-	    nr_patches_all_new[p] = nr_new_patches;
-	    nr_new_patches = 0;
-	  }
-	  p++;
-	  next_target += load_target * capability[p];
-	}
-      }
-      // last proc takes what's left
-      if (i == loads_all.size() - 1) {
-	nr_patches_all_new[size - 1] = nr_new_patches;
-      }
-    }
-    
-    int pp = 0;
-    double min_diff = 0, max_diff = 0;
-    for (int p = 0; p < size; p++) {
-      double load = 0.;
-      for (int i = 0; i < nr_patches_all_new[p]; i++) {
-	load += loads_all[pp++];
-	if (bal->print_loads) {
-	  mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
-	}
-      }
-      double diff = load - load_target * capability[p];
-      if (bal->print_loads) {
-	mprintf("p %d # = %d load %g / %g : diff %g %%\n", p, nr_patches_all_new[p],
-		load, load_target * capability[p], 100. * diff / (load_target * capability[p]));
-      }
-      if (diff < min_diff) {
-	min_diff = diff;
-      }
-      if (diff > max_diff) {
-	max_diff = diff;
-      }
-    }
-    mprintf("psc_balance: achieved target %g (%g %% -- %g %%)\n", load_target,
-	    100 * min_diff / load_target, 100 * max_diff / load_target);
-
-    if (bal->write_loads) {
-      int gp = 0;
-      char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
-      FILE *f = fopen(s, "w");
-      for (int r = 0; r < size; r++) {
-	for (int p = 0; p < nr_patches_all_new[r]; p++) {
-	  fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
-	  gp++;
-	}
-      }
-      fclose(f);
-    }
-
-    free(capability);
-  }
-  // then scatter
-  int nr_patches_new;
-  MPI_Scatter(nr_patches_all_new, 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
-	      0, comm);
-  free(nr_patches_all_new);
-  return nr_patches_new;
-}
-
-std::vector<double> gather_loads(struct mrc_domain *domain, std::vector<double> loads)
-{
-  MPI_Comm comm = mrc_domain_comm(domain);
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-
-  // gather nr_patches for all procs on proc 0
-  int *nr_patches_all = NULL;
-  if (rank == 0) {
-    nr_patches_all = (int *) calloc(size, sizeof(*nr_patches_all));
-  }
-  int n_patches = loads.size();
-  MPI_Gather(&n_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
-
-  // gather loads for all patches on proc 0
-  int *displs = NULL;
-  std::vector<double> loads_all;
-  if (rank == 0) {
-    displs = (int *) calloc(size, sizeof(*displs));
-    int off = 0;
-    for (int i = 0; i < size; i++) {
-      displs[i] = off;
-      off += nr_patches_all[i];
-    }
-    int n_global_patches;
-    mrc_domain_get_nr_global_patches(domain, &n_global_patches);
-	  
-    loads_all.resize(n_global_patches);
-  }
-  MPI_Gatherv(loads.data(), n_patches, MPI_DOUBLE, loads_all.data(), nr_patches_all, displs,
-	      MPI_DOUBLE, 0, comm);
-
-  if (rank == 0) {
-#if 0
-    int rl = 0;
-    char s[20]; sprintf(s, "loads-%06d.asc", ppsc->timestep);
-    FILE *f = fopen(s, "w");
-    for (int p = 0; p < *p_nr_global_patches; p++) {
-      if (rl < size - 1 && p >= displs[rl+1]) {
-	rl++;
-      }
-      fprintf(f, "%d %g %d\n", p, loads_all[p], rl);
-    }
-    fclose(f);
-#endif
-    free(nr_patches_all);
-    free(displs);
-  }
-
-  return loads_all;
-}
-
 // ======================================================================
 // Communicate
 
@@ -506,8 +309,10 @@ struct communicate_ctx {
     prof_stop(pr);
     return n_prts_by_patch_new;
   }
-
 };
+
+// ======================================================================
+// Balance_
 
 template<typename MP, typename MF>
 struct Balance_ : BalanceBase
@@ -520,6 +325,234 @@ struct Balance_ : BalanceBase
   using real_t = typename mparticles_t::real_t;
   using Mparticles = typename mparticles_t::sub_t;
   using Mfields = typename mfields_t::sub_t;
+
+  Balance_(int every, double factor_fields=1., bool print_loads=false, bool write_loads=false)
+    : every_(every), factor_fields_(factor_fields),
+      print_loads_(print_loads), write_loads_(write_loads)
+  {}
+
+  std::vector<uint> initial(psc* psc, const std::vector<uint>& n_prts_by_patch_old) override
+  {
+    auto loads = get_loads_initial(psc->grid(), n_prts_by_patch_old);
+    return balance(psc, loads, nullptr, n_prts_by_patch_old);
+  }
+
+  void operator()(psc* psc) override
+  {
+    if (every_ <= 0)
+      return;
+
+    if (psc->timestep == 0 || psc->timestep % every_ != 0)
+      return;
+
+    static int st_time_balance;
+    if (!st_time_balance) {
+      st_time_balance = psc_stats_register("time balancing");
+    }
+
+    psc_stats_start(st_time_balance);
+    auto loads = get_loads(psc);
+    balance(psc, loads, PscMparticlesBase{psc->particles}.sub(), {});
+    psc_stats_stop(st_time_balance);
+  }
+
+private:
+  std::vector<double> get_loads_initial(const Grid_t& grid, const std::vector<uint>& n_prts_by_patch)
+  {
+    std::vector<double> loads;
+    loads.reserve(n_prts_by_patch.size());
+
+    const int *ldims = grid.ldims;
+    for (auto n_prts : n_prts_by_patch) {
+      loads.push_back(n_prts + factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
+    }
+
+    return loads;
+  }
+
+  std::vector<double> get_loads(struct psc *psc)
+  {
+    struct psc_mparticles *mprts = psc->particles;
+    PscMparticlesBase mp(mprts);
+  
+    uint n_prts_by_patch[mp->n_patches()];
+    mp->get_size_all(n_prts_by_patch);
+
+    std::vector<double> loads;
+    loads.reserve(psc->grid().n_patches());
+    psc_foreach_patch(psc, p) {
+      double load;
+      if (factor_fields_ >= 0.) {
+	const int *ldims = psc->grid().ldims;
+	load = n_prts_by_patch[p] + factor_fields_ * ldims[0] * ldims[1] * ldims[2];
+	//mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
+      } else {
+	load = psc_balance_comp_time_by_patch[p];
+#if 0
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	load = 1 + rank;
+#endif
+      }
+      loads.push_back(load);
+    }
+    return loads;
+  }
+
+  std::vector<double> gather_loads(struct mrc_domain *domain, std::vector<double> loads)
+  {
+    MPI_Comm comm = mrc_domain_comm(domain);
+    int rank, size;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
+
+    // gather nr_patches for all procs on proc 0
+    int *nr_patches_all = NULL;
+    if (rank == 0) {
+      nr_patches_all = (int *) calloc(size, sizeof(*nr_patches_all));
+    }
+    int n_patches = loads.size();
+    MPI_Gather(&n_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
+
+    // gather loads for all patches on proc 0
+    int *displs = NULL;
+    std::vector<double> loads_all;
+    if (rank == 0) {
+      displs = (int *) calloc(size, sizeof(*displs));
+      int off = 0;
+      for (int i = 0; i < size; i++) {
+	displs[i] = off;
+	off += nr_patches_all[i];
+      }
+      int n_global_patches;
+      mrc_domain_get_nr_global_patches(domain, &n_global_patches);
+	  
+      loads_all.resize(n_global_patches);
+    }
+    MPI_Gatherv(loads.data(), n_patches, MPI_DOUBLE, loads_all.data(), nr_patches_all, displs,
+		MPI_DOUBLE, 0, comm);
+
+    if (rank == 0) {
+#if 0
+      int rl = 0;
+      char s[20]; sprintf(s, "loads-%06d.asc", ppsc->timestep);
+      FILE *f = fopen(s, "w");
+      for (int p = 0; p < *p_nr_global_patches; p++) {
+	if (rl < size - 1 && p >= displs[rl+1]) {
+	  rl++;
+	}
+	fprintf(f, "%d %g %d\n", p, loads_all[p], rl);
+      }
+      fclose(f);
+#endif
+      free(nr_patches_all);
+      free(displs);
+    }
+
+    return loads_all;
+  }
+
+  int find_best_mapping(mrc_domain *domain, const std::vector<double>& loads_all)
+  {
+    MPI_Comm comm = mrc_domain_comm(domain);
+    int rank, size;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
+
+    int *nr_patches_all_new = NULL;
+
+    if (rank == 0) { // do the mapping on proc 0
+      double *capability = (double *) calloc(size, sizeof(*capability));
+      for (int p = 0; p < size; p++) {
+	capability[p] = capability_default(p);
+      }
+      nr_patches_all_new = (int *) calloc(size, sizeof(*nr_patches_all_new));
+      double loads_sum = 0.;
+      for (int i = 0; i < loads_all.size(); i++) {
+	loads_sum += loads_all[i];
+      }
+      double capability_sum = 0.;
+      for (int p = 0; p < size; p++) {
+	capability_sum += capability[p];
+      }
+      double load_target = loads_sum / capability_sum;
+      mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
+	      loads_sum, capability_sum, load_target);
+      int p = 0, nr_new_patches = 0;
+      double load = 0.;
+      double next_target = load_target * capability[0];
+      for (int i = 0; i < loads_all.size(); i++) {
+	load += loads_all[i];
+	nr_new_patches++;
+	if (p < size - 1) {
+	  // if load limit is reached, or we have only as many patches as processors left
+	  if (load > next_target || size - p >= loads_all.size() - i) {
+	    double above_target = load - next_target;
+	    double below_target = next_target - (load - loads_all[i]);
+	    if (above_target > below_target && nr_new_patches > 1) {
+	      nr_patches_all_new[p] = nr_new_patches - 1;
+	      nr_new_patches = 1;
+	    } else {
+	      nr_patches_all_new[p] = nr_new_patches;
+	      nr_new_patches = 0;
+	    }
+	    p++;
+	    next_target += load_target * capability[p];
+	  }
+	}
+	// last proc takes what's left
+	if (i == loads_all.size() - 1) {
+	  nr_patches_all_new[size - 1] = nr_new_patches;
+	}
+      }
+    
+      int pp = 0;
+      double min_diff = 0, max_diff = 0;
+      for (int p = 0; p < size; p++) {
+	double load = 0.;
+	for (int i = 0; i < nr_patches_all_new[p]; i++) {
+	  load += loads_all[pp++];
+	  if (print_loads_) {
+	    mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	  }
+	}
+	double diff = load - load_target * capability[p];
+	if (print_loads_) {
+	  mprintf("p %d # = %d load %g / %g : diff %g %%\n", p, nr_patches_all_new[p],
+		  load, load_target * capability[p], 100. * diff / (load_target * capability[p]));
+	}
+	if (diff < min_diff) {
+	  min_diff = diff;
+	}
+	if (diff > max_diff) {
+	  max_diff = diff;
+	}
+      }
+      mprintf("psc_balance: achieved target %g (%g %% -- %g %%)\n", load_target,
+	      100 * min_diff / load_target, 100 * max_diff / load_target);
+
+      if (write_loads_) {
+	int gp = 0;
+	char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
+	FILE *f = fopen(s, "w");
+	for (int r = 0; r < size; r++) {
+	  for (int p = 0; p < nr_patches_all_new[r]; p++) {
+	    fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
+	    gp++;
+	  }
+	}
+	fclose(f);
+      }
+
+      free(capability);
+    }
+    // then scatter
+    int nr_patches_new;
+    MPI_Scatter(nr_patches_all_new, 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
+		0, comm);
+    free(nr_patches_all_new);
+    return nr_patches_new;
+  }
 
   void communicate_particles(struct communicate_ctx *ctx, Mparticles& mp_old, Mparticles& mp_new,
 			     const std::vector<uint>& n_prts_by_patch_new)
@@ -748,7 +781,7 @@ struct Balance_ : BalanceBase
     }
   }
   
-  std::vector<uint> balance(psc_balance* bal, psc* psc, std::vector<double> loads, MparticlesBase *mp,
+  std::vector<uint> balance(psc* psc, std::vector<double> loads, MparticlesBase *mp,
 			    std::vector<uint> n_prts_by_patch_old)
   {
     static int pr_bal_load, pr_bal_ctx, pr_bal_prts, pr_bal_flds;
@@ -763,7 +796,7 @@ struct Balance_ : BalanceBase
     auto domain_old = psc->mrc_domain;
     
     auto loads_all = gather_loads(domain_old, loads);
-    int n_patches_new = find_best_mapping(bal, domain_old, loads_all);
+    int n_patches_new = find_best_mapping(domain_old, loads_all);
 
     auto domain_new = psc_setup_mrc_domain(psc, n_patches_new);
     auto& new_grid = *psc->make_grid(domain_new);
@@ -810,29 +843,9 @@ struct Balance_ : BalanceBase
     return n_prts_by_patch_new;
   }
 
-  std::vector<uint> initial(struct psc_balance *bal, struct psc *psc, const std::vector<uint>& n_prts_by_patch_old) override
-  {
-    auto loads = psc_get_loads_initial(psc, n_prts_by_patch_old);
-    return balance(bal, psc, loads, nullptr, n_prts_by_patch_old);
-  }
-
-  void operator()(struct psc_balance *bal, struct psc *psc) override
-  {
-    // FIXME, way too much duplication from the above
-    if (bal->every <= 0)
-      return;
-
-    if (psc->timestep == 0 || psc->timestep % bal->every != 0)
-      return;
-
-    static int st_time_balance;
-    if (!st_time_balance) {
-      st_time_balance = psc_stats_register("time balancing");
-    }
-
-    psc_stats_start(st_time_balance);
-    auto loads = psc_get_loads(psc);
-    balance(bal, psc, loads, PscMparticlesBase{psc->particles}.sub(), {});
-    psc_stats_stop(st_time_balance);
-  }
+private:
+  int every_;
+  double factor_fields_;
+  bool print_loads_;
+  bool write_loads_;
 };
