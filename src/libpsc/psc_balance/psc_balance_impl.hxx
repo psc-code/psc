@@ -863,11 +863,10 @@ struct Balance_ : BalanceBase
     // alloc new particles
 
     if (typeid(mp_old_base) != typeid(Mparticles)) {
-      auto& mp_new_base = *mp_old_base.create(*new_grid);
       prof_start(pr_bal_prts_B);
       auto mp_old = new Mparticles{mp_old_base.grid()};
       MparticlesBase::convert(mp_old_base, *mp_old);
-      mp_old_base.~MparticlesBase();
+      mp_old_base.reset(*new_grid); // frees memory here already
       prof_stop(pr_bal_prts_B);
       
       // communicate particles
@@ -876,20 +875,15 @@ struct Balance_ : BalanceBase
       delete mp_old;
       
       prof_start(pr_bal_prts_C);
-      MparticlesBase::convert(*mp_new, mp_new_base);
+      MparticlesBase::convert(*mp_new, mp_old_base);
       delete mp_new;
       prof_stop(pr_bal_prts_C);
-
-      //mp_old_base = mp_new_base;
-      memcpy((char*) &mp_old_base, (char*) &mp_new_base, mprts_old_base.mprts()->obj.ops->size);
-      operator delete(&mp_new_base);
     } else {
       auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
-      auto mp_new = new Mparticles{*new_grid};
+      auto mp_new = std::unique_ptr<Mparticles>(new Mparticles{*new_grid});
       // communicate particles
       communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
       *mp_old = std::move(*mp_new);
-      delete mp_new;
     }
 
     mprts_old_base.mprts()->grid = new_grid;

@@ -48,7 +48,9 @@ struct MparticlesBase
   virtual void resize_all(const uint *n_prts_by_patch) = 0;
   virtual void inject(int p, const psc_particle_inject& new_prt) { assert(0); }
   virtual void inject_reweight(int p, const psc_particle_inject& new_prt) { assert(0); }
+
   virtual MparticlesBase* create(const Grid_t& grid) = 0;
+  virtual void reset(const Grid_t& grid) { grid_ = &grid; }
 
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }

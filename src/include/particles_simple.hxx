@@ -315,7 +315,17 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  static mrc_obj_method methods[];
+  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
+  void reset(const Grid_t& grid) override
+  {
+    MparticlesBase::reset(grid);
+    patches_.clear();
+    patches_.reserve(grid.n_patches());
+    for (int p = 0; p < grid.n_patches(); p++) {
+      patches_.emplace_back(this, p);
+    }
+  }
+
   
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
@@ -405,17 +415,16 @@ struct Mparticles : MparticlesBase
     (*this)[p].push_back(prt);
   }
   
-  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
-
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
   particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
   particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(*grid_); }
   particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(*grid_); }
 
-  std::vector<patch_t> patches_;
-
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
+
+private:
+  std::vector<patch_t> patches_;
 };
 
