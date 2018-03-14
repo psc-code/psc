@@ -744,15 +744,40 @@ struct Balance_ : BalanceBase
     }
   }
   
-  std::vector<uint> balance(psc* psc, Grid_t& new_grid, mrc_domain* domain_new, MparticlesBase *mp,
-			    communicate_ctx& ctx, std::vector<uint> n_prts_by_patch_old)
+  std::vector<uint> balance(psc_balance* bal, psc* psc, int n_patches, double* loads, MparticlesBase *mp,
+			    std::vector<uint> n_prts_by_patch_old)
   {
-    static int pr_bal_prts, pr_bal_flds;
-    if (!pr_bal_prts) {
-      pr_bal_prts = prof_register("bal prs", 1., 0, 0);
+    static int pr_bal_load, pr_bal_ctx, pr_bal_prts, pr_bal_flds;
+    if (!pr_bal_load) {
+      pr_bal_load = prof_register("bal load", 1., 0, 0);
+      pr_bal_ctx  = prof_register("bal ctx", 1., 0, 0);
+      pr_bal_prts = prof_register("bal prts", 1., 0, 0);
       pr_bal_flds = prof_register("bal flds", 1., 0, 0);
     }
+
+    prof_start(pr_bal_load);
+    auto domain_old = psc->mrc_domain;
     
+    int n_global_patches;
+    double *loads_all = gather_loads(domain_old, loads, n_patches,
+				     &n_global_patches);
+    free(loads);
+
+    int n_patches_new = find_best_mapping(bal, domain_old, n_global_patches, loads_all);
+    free(loads_all);
+
+    auto domain_new = psc_setup_mrc_domain(psc, n_patches_new);
+    auto& new_grid = *psc->make_grid(domain_new);
+    
+    free(psc_balance_comp_time_by_patch);
+    psc_balance_comp_time_by_patch = (double *) calloc(new_grid.n_patches(),// leaked the very last time
+						       sizeof(*psc_balance_comp_time_by_patch));
+    prof_stop(pr_bal_load);
+
+    prof_start(pr_bal_ctx);
+    communicate_ctx ctx(domain_old, domain_new);
+    prof_stop(pr_bal_ctx);
+
     // particles
     std::vector<uint> n_prts_by_patch_new;
     if (mp) {
@@ -794,24 +819,7 @@ struct Balance_ : BalanceBase
     double *loads = (double *) calloc(nr_patches, sizeof(*loads));
     psc_get_loads_initial(psc, loads, n_prts_by_patch_old.data());
 
-    int nr_global_patches;
-    double *loads_all = gather_loads(domain_old, loads, nr_patches,
-				     &nr_global_patches);
-    free(loads);
-
-    int nr_patches_new = find_best_mapping(bal, domain_old, nr_global_patches,
-					   loads_all);
-
-    free(loads_all);
-
-    auto domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
-    auto new_grid = psc->make_grid(domain_new);
-    psc_balance_comp_time_by_patch = (double *) calloc(new_grid->n_patches(),
-						       sizeof(*psc_balance_comp_time_by_patch));
-
-    communicate_ctx ctx(domain_old, domain_new);
-
-    auto n_prts_by_patch_new = balance(psc, *new_grid, domain_new, nullptr, ctx, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance(bal, psc, nr_patches, loads, nullptr, n_prts_by_patch_old);
 
     return n_prts_by_patch_new;
   }
@@ -829,21 +837,8 @@ struct Balance_ : BalanceBase
     if (!st_time_balance) {
       st_time_balance = psc_stats_register("time balancing");
     }
-    static int pr_bal_gather, pr_bal_decomp_A, pr_bal_decomp_B, pr_bal_decomp_C, pr_bal_decomp_D,
-      pr_bal_prts, pr_bal_flds, pr_bal_ctx;
-    if (!pr_bal_gather) {
-      pr_bal_gather = prof_register("bal gather", 1., 0, 0);
-      pr_bal_decomp_A = prof_register("bal decomp A", 1., 0, 0);
-      pr_bal_decomp_B = prof_register("bal decomp B", 1., 0, 0);
-      pr_bal_decomp_C = prof_register("bal decomp C", 1., 0, 0);
-      pr_bal_decomp_D = prof_register("bal decomp D", 1., 0, 0);
-      pr_bal_ctx = prof_register("bal ctx", 1., 0, 0);
-      pr_bal_prts = prof_register("bal prts", 1., 0, 0);
-      pr_bal_flds = prof_register("bal flds", 1., 0, 0);
-    }
 
     psc_stats_start(st_time_balance);
-    prof_start(pr_bal_gather);
     struct mrc_domain *domain_old = psc->mrc_domain;
 
     int nr_patches;
@@ -851,44 +846,7 @@ struct Balance_ : BalanceBase
     double *loads = (double *) calloc(nr_patches, sizeof(*loads));
     psc_get_loads(psc, loads);
 
-    int nr_global_patches;
-    double *loads_all = gather_loads(domain_old, loads, nr_patches,
-				     &nr_global_patches);
-    free(loads);
-    prof_stop(pr_bal_gather);
-
-    prof_start(pr_bal_decomp_A);
-    int nr_patches_new = find_best_mapping(bal, domain_old, nr_global_patches,
-					   loads_all);
-    prof_stop(pr_bal_decomp_A);
-
-    prof_start(pr_bal_decomp_B);
-    free(loads_all);
-
-    struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
-    prof_stop(pr_bal_decomp_B);
-    prof_start(pr_bal_decomp_C);
-    //  mrc_domain_view(domain_new);
-    Grid_t* new_grid = psc->make_grid(domain_new);
-    prof_stop(pr_bal_decomp_C);
-    prof_start(pr_bal_decomp_D);
-    free(psc_balance_comp_time_by_patch);
-    psc_balance_comp_time_by_patch = (double *) calloc(nr_patches_new,// leaked the very last time
-						       sizeof(*psc_balance_comp_time_by_patch));
-  
-    //If there are no active patches, exit here
-    int n_global_patches;
-    mrc_domain_get_nr_global_patches(domain_new, &n_global_patches);
-    if(n_global_patches < 1) abort();
-    prof_stop(pr_bal_decomp_D);
-
-    // OPT: if local patches didn't change at all, no need to do anything...
-
-    prof_start(pr_bal_ctx);
-    communicate_ctx ctx(domain_old, domain_new);
-    prof_stop(pr_bal_ctx);
-
-    balance(psc, *new_grid, domain_new, PscMparticlesBase{psc->particles}.sub(), ctx, {});
+    balance(bal, psc, nr_patches, loads, PscMparticlesBase{psc->particles}.sub(), {});
   
     psc_stats_stop(st_time_balance);
   }
