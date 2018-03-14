@@ -675,11 +675,14 @@ struct Balance_ : BalanceBase
     
     if (typeid(mf_base_old) != typeid(Mfields)) {
       auto mflds_old = mflds_base_old.get_as<mfields_t>(0, mflds_base_old->n_comps());
+      auto& mf_old = *mflds_old.sub();
       mflds_base_old->~MfieldsBase();
-      
-      auto mflds_new = mflds_base_new.get_as<mfields_t>(0, 0);
-      communicate_fields(ctx, *mflds_old.sub(), *mflds_new.sub());
-      mflds_new.put_as(mflds_base_new, 0, mflds_base_new->n_comps());
+
+      auto& mf_new = *new Mfields{*new_grid, mf_base_new.n_comps(), mflds_base_new.mflds()->ibn};
+      communicate_fields(ctx, mf_old, mf_new);
+
+      MfieldsBase::convert(mf_new, mf_base_new, 0, mf_base_new.n_comps());
+      delete &mf_new;
       
       memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
 	     mflds_base_old.mflds()->obj.ops->size);
