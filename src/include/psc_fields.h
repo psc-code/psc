@@ -20,9 +20,6 @@ struct psc_mfields {
   int nr_fields; //> number of field components
   int ibn[3]; //> number of ghost points
 
-  template<typename MF>
-  MF get_as(int mb, int me);
-
   const Grid_t* grid;
 };
 
@@ -42,14 +39,6 @@ void psc_mfields_put_as(struct psc_mfields *mflds,
 			struct psc_mfields *mflds_base, int mb, int me);
 
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
-
-template<typename MF>
-inline MF psc_mfields::get_as(int mb, int me)
-{
-  const char *type = fields_traits<typename MF::fields_t>::name;
-  struct psc_mfields *mflds = psc_mfields_get_as(this, type, mb, me);
-  return MF(mflds);
-}
 
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;

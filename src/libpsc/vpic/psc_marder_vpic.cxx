@@ -53,7 +53,7 @@ psc_marder_vpic_clean_div_b(struct psc_marder *marder, PscMfieldsVpic mflds)
 
 static void
 psc_marder_vpic_run(struct psc_marder *marder,
-		    struct psc_mfields *mflds_base,
+		    struct psc_mfields *_mflds_base,
 		    struct psc_mparticles *_mprts_base)
 {
   struct psc *psc = ppsc; // FIXME
@@ -69,7 +69,8 @@ psc_marder_vpic_run(struct psc_marder *marder,
     return;
   }
   
-  PscMfieldsVpic mf = mflds_base->get_as<PscMfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
+  auto mflds_base = PscMfieldsBase{_mflds_base};
+  PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
 
   auto mprts_base = PscMparticlesBase{_mprts_base};
   PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>();

@@ -195,10 +195,11 @@ struct marder_ops {
   // correct
 
   static void
-  correct(struct psc_marder *marder, struct psc_mfields *mflds_base,
+  correct(struct psc_marder *marder, struct psc_mfields *_mflds_base,
 	  struct psc_mfields *div_e)
   {
-    mfields_t mf = mflds_base->get_as<mfields_t>(EX, EX + 3);
+    auto mflds_base = PscMfieldsBase{_mflds_base};
+    mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
     mfields_t mf_div_e(div_e);
   
     for (int p = 0; p < mf_div_e->n_patches(); p++) {

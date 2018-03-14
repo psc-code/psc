@@ -90,8 +90,10 @@ psc_marder_cuda_destroy(struct psc_marder *marder)
 
 static void
 psc_marder_cuda_correct(struct psc_marder *marder,
-			struct psc_mfields *mflds_base, struct psc_mfields *mf_base)
+			struct psc_mfields *_mflds_base, struct psc_mfields *_mf_base)
 {
+  auto mflds_base = PscMfieldsBase{_mflds_base};
+  auto mf_base = PscMfieldsBase{_mf_base};
   assert(ppsc->domain.gdims[0] == 1);
 
   const Grid_t& grid = ppsc->grid();
@@ -116,8 +118,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   fac[1] = .5 * ppsc->dt * diffusion / dx[1];
   fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
-  PscMfieldsCuda mflds = mflds_base->get_as<PscMfieldsCuda>(EX, EX + 3);
-  PscMfieldsCuda mf = mf_base->get_as<PscMfieldsCuda>(0, 1);
+  PscMfieldsCuda mflds = mflds_base.get_as<PscMfieldsCuda>(EX, EX + 3);
+  PscMfieldsCuda mf = mf_base.get_as<PscMfieldsCuda>(0, 1);
   cuda_mfields *cmflds = mflds->cmflds;
   cuda_mfields *cmf = mf->cmflds;
 

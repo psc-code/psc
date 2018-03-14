@@ -330,18 +330,15 @@ struct PscMfields
   template<typename MF>
   MF get_as(int mb, int me)
   {
-    return mflds_->get_as<MF>(mb, me);
+    const char *type = fields_traits<typename MF::fields_t>::name;
+    struct psc_mfields *mflds = psc_mfields_get_as(mflds_, type, mb, me);
+    return MF(mflds);
   }
   
   template<typename MF>
   void put_as(MF mflds_base, int mb, int me)
   {
-    return put_as(mflds_base.mflds(), mb, me);
-  }
-
-  void put_as(struct psc_mfields *mflds_base, int mb, int me)
-  {
-    psc_mfields_put_as(mflds_, mflds_base, mb, me);
+    psc_mfields_put_as(mflds_, mflds_base.mflds(), mb, me);
   }
 
   struct psc_mfields *mflds() { return mflds_; }
