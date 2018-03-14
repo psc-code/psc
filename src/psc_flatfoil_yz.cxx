@@ -231,11 +231,11 @@ struct PscFlatfoil : Params
   // ----------------------------------------------------------------------
   // integrate
 
-  static void integrate(struct psc *psc)
+  void integrate()
   {
-    psc_method_initialize(psc->method, psc);
-    mpi_printf(psc_comm(psc), "Initialization complete.\n");
-  
+    psc_method_initialize(psc_->method, psc_);
+    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+
     static int pr;
     if (!pr) {
       pr = prof_register("psc_step", 1., 0, 0);
@@ -250,61 +250,59 @@ struct PscFlatfoil : Params
     st_time_comm = psc_stats_register("time communication");
     st_time_output = psc_stats_register("time output");
 
-    mpi_printf(psc_comm(psc), "*** Advancing\n");
+    mpi_printf(psc_comm(psc_), "*** Advancing\n");
     double elapsed = MPI_Wtime();
 
-    PscFlatfoil flatfoil(psc);
-
     bool first_iteration = true;
-    while (psc->timestep < psc->prm.nmax) {
+    while (psc_->timestep < psc_->prm.nmax) {
       prof_start(pr);
       psc_stats_start(st_time_step);
 
       if (!first_iteration &&
-	  psc->prm.write_checkpoint_every_step > 0 &&
-	  psc->timestep % psc->prm.write_checkpoint_every_step == 0) {
-	psc_write_checkpoint(psc);
+	  psc_->prm.write_checkpoint_every_step > 0 &&
+	  psc_->timestep % psc_->prm.write_checkpoint_every_step == 0) {
+	psc_write_checkpoint(psc_);
       }
       first_iteration = false;
 
-      mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
-		 psc->prm.nmax, psc->timestep * psc->dt);
+      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Time %g\n", psc_->timestep + 1,
+		 psc_->prm.nmax, psc_->timestep * psc_->dt);
 
-      PscMparticlesBase mprts(psc->particles);
+      PscMparticlesBase mprts(psc_->particles);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-      flatfoil.step();
-
-      psc->timestep++; // FIXME, too hacky
-      psc_output(psc);
+      step();
     
+      psc_->timestep++; // FIXME, too hacky
+      psc_output(psc_);
+
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
       psc_stats_val[st_nr_particles] = mprts->get_n_prts();
 
-      if (psc->timestep % psc->prm.stats_every == 0) {
-	psc_stats_log(psc);
-	psc_print_profiling(psc);
+      if (psc_->timestep % psc_->prm.stats_every == 0) {
+	psc_stats_log(psc_);
+	psc_print_profiling(psc_);
       }
 
-      if (psc->prm.wallclock_limit > 0.) {
-	double wallclock_elapsed = MPI_Wtime() - psc->time_start;
+      if (psc_->prm.wallclock_limit > 0.) {
+	double wallclock_elapsed = MPI_Wtime() - psc_->time_start;
 	double wallclock_elapsed_max;
 	MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
 		      MPI_COMM_WORLD);
       
-	if (wallclock_elapsed_max > psc->prm.wallclock_limit) {
+	if (wallclock_elapsed_max > psc_->prm.wallclock_limit) {
 	  mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
 	  break;
 	}
       }
     }
 
-    if (psc->prm.write_checkpoint) {
-      psc_write_checkpoint(psc);
+    if (psc_->prm.write_checkpoint) {
+      psc_write_checkpoint(psc_);
     }
 
     // FIXME, merge with existing handling of wallclock time
@@ -312,9 +310,15 @@ struct PscFlatfoil : Params
 
     int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
     /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
-    mpi_printf(psc_comm(psc), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
+    mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
 	       elapsed, w, d, h, m, s );
   
+  }
+
+  static void integrate(struct psc *psc)
+  {
+    PscFlatfoil flatfoil(psc);
+    flatfoil.integrate();
   }
 
 private:
