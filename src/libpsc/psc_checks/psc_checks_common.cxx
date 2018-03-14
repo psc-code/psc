@@ -24,14 +24,7 @@ using Fields = Fields3d<fields_t>;
 static struct psc_mfields *
 fld_create(struct psc *psc, int nr_fields)
 {
-  struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_type(fld, FIELDS_TYPE);
-  psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
-  psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
-  fld->grid = &psc->grid();
-  psc_mfields_setup(fld);
-
-  return fld;
+  return mfields_t::create(psc_comm(psc), psc->grid(), nr_fields, psc->ibn).mflds();
 }
 
 // ----------------------------------------------------------------------

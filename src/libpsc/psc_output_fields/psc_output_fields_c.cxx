@@ -147,18 +147,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    assert(psc->n_patches() > 0);
-    struct psc_mfields *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
-    psc_mfields_set_type(flds, "c");
-    psc_mfields_set_name(flds, psc_mfields_name(pfd->flds[i]));
-    psc_mfields_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
-    psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
-    flds->grid = &ppsc->grid();
-    psc_mfields_setup(flds);
-    tfd->flds[i] = flds;
+    tfd->flds[i] = PscMfieldsC::create(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+				       pfd->flds[i]->nr_fields, psc->ibn).mflds();
+    psc_mfields_set_name(tfd->flds[i], psc_mfields_name(pfd->flds[i]));
     psc_mfields_list_add(&psc_mfields_base_list, &tfd->flds[i]);
     for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
-      psc_mfields_set_comp_name(flds, m, psc_mfields_comp_name(pfd->flds[i], m));
+      psc_mfields_set_comp_name(tfd->flds[i], m, psc_mfields_comp_name(pfd->flds[i], m));
     }
   }
   out_c->naccum = 0;

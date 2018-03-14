@@ -46,12 +46,7 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   {
     assert(nu_ > 0.);
 
-    mflds = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds, fields_traits<typename Mfields::fields_t>::name);
-    psc_mfields_set_param_int(mflds, "nr_fields", NR_STATS);
-    psc_mfields_set_param_int3(mflds, "ibn", ppsc->ibn);
-    mflds->grid = &ppsc->grid();
-    psc_mfields_setup(mflds);
+    mflds = mfields_t::create(comm, ppsc->grid(), NR_STATS, ppsc->ibn).mflds();
     psc_mfields_set_comp_name(mflds, 0, "coll_nudt_min");
     psc_mfields_set_comp_name(mflds, 1, "coll_nudt_med");
     psc_mfields_set_comp_name(mflds, 2, "coll_nudt_max");
@@ -59,12 +54,7 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
     psc_mfields_set_comp_name(mflds, 4, "coll_nudt_ncoll");
     psc_mfields_list_add(&psc_mfields_base_list, &mflds);
     
-    mflds_rei = psc_mfields_create(comm);
-    psc_mfields_set_type(mflds_rei, fields_traits<typename Mfields::fields_t>::name);
-    psc_mfields_set_param_int(mflds_rei, "nr_fields", 3);
-    psc_mfields_set_param_int3(mflds_rei, "ibn", ppsc->ibn);
-    mflds_rei->grid = &ppsc->grid();
-    psc_mfields_setup(mflds_rei);
+    mflds_rei = mfields_t::create(comm, ppsc->grid(), 3, ppsc->ibn).mflds();
     psc_mfields_set_comp_name(mflds_rei, 0, "coll_rei_x");
     psc_mfields_set_comp_name(mflds_rei, 1, "coll_rei_y");
     psc_mfields_set_comp_name(mflds_rei, 2, "coll_rei_z");

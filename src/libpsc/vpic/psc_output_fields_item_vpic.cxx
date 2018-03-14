@@ -75,16 +75,9 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
   
   void run(MparticlesVpic& mprts)
   {
-    mfields_t mres{this->mres_};
-    struct psc_mfields *mflds_hydro = psc_mfields_create(psc_mfields_comm(mres.mflds()));
-    psc_mfields_set_type(mflds_hydro, "vpic");
-    psc_mfields_set_param_int(mflds_hydro, "nr_fields", 16);
-    int ibn[3] = { 1, 1, 1 };
-    psc_mfields_set_param_int3(mflds_hydro, "ibn", ibn);
-    mflds_hydro->grid = &ppsc->grid();
-    psc_mfields_setup(mflds_hydro);
-    PscMfieldsVpic mf_hydro(mflds_hydro);
-    
+    auto mres = mfields_t{this->mres_};
+    auto mf_hydro = PscMfieldsVpic::create(psc_mfields_comm(mres.mflds()), ppsc->grid(),
+					    16, { 1, 1, 1 });
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
@@ -92,7 +85,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
       HydroArray *vmflds_hydro = mf_hydro->vmflds_hydro;
       Simulation_moments_run(sim, vmflds_hydro, mprts.vmprts, kind);
       
-      mfields_t mf = mflds_hydro->get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
+      mfields_t mf = mf_hydro.get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres->n_patches(); p++) {
 	Fields F(mf[p]), R(mres[p]);
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
@@ -101,10 +94,10 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
 	  }
 	} foreach_3d_end;
       }
-      mf.put_as(mflds_hydro, 0, 0);
+      mf.put_as(mf_hydro, 0, 0);
     }
     
-    psc_mfields_destroy(mflds_hydro);
+    psc_mfields_destroy(mf_hydro.mflds());
   }
 };
 

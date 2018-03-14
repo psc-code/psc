@@ -466,14 +466,6 @@ psc_setup_domain(struct psc *psc)
 static void
 psc_setup_base_mflds(struct psc *psc)
 {
-  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
-  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
-  psc_mfields_set_name(psc->flds, "mfields");
-  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
-  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
-  psc->flds->grid = &psc->grid();
-  psc_mfields_setup(psc->flds);
 }
 
 // ----------------------------------------------------------------------
@@ -500,7 +492,10 @@ _psc_setup(struct psc *psc)
   psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new.data());
 
   // create and set up base mflds
-  psc_setup_base_mflds(psc);
+  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
+  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+
   psc_method_set_ic_fields(psc->method, psc);
 
 #ifdef USE_FORTRAN

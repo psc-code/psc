@@ -155,18 +155,14 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   /* static int cnt; */
   /* mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me); */
   /* if (cnt++ == 10) assert(0); */
-  
-  struct psc_mfields *mflds = psc_mfields_create(psc_mfields_comm(mflds_base));
-  psc_mfields_set_type(mflds, type);
-  psc_mfields_set_param_int(mflds, "nr_fields", mflds_base->nr_fields);
-  psc_mfields_set_param_int3(mflds, "ibn", mflds_base->ibn);
-  mflds->grid = mflds_base->grid;
-  psc_mfields_setup(mflds);
 
-  copy(mflds_base, mflds, type_base, type, mb, me);
+  auto mflds = PscMfieldsCreate(psc_mfields_comm(mflds_base), *mflds_base->grid, // FIXME grid
+				mflds_base->nr_fields, mflds_base->ibn, type);
+
+  copy(mflds_base, mflds.mflds(), type_base, type, mb, me);
 
   prof_stop(pr);
-  return mflds;
+  return mflds.mflds();
 }
 
 void

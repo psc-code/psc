@@ -21,15 +21,9 @@
 static struct psc_mfields *
 fld_create(struct psc *psc, const char *name)
 {
-  struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_type(fld, "cuda");
-  psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
-  psc_mfields_set_param_int(fld, "nr_fields", 1);
-  fld->grid = &psc->grid();
-  psc_mfields_setup(fld);
-  psc_mfields_set_comp_name(fld, 0, name);
-
-  return fld;
+  auto mflds = PscMfieldsCuda::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
+  psc_mfields_set_comp_name(mflds.mflds(), 0, name);
+  return mflds.mflds();
 }
 
 // ----------------------------------------------------------------------

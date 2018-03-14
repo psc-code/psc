@@ -677,21 +677,16 @@ struct Balance_ : BalanceBase
   {
     PscMfieldsBase mflds_base_old{*p_mflds};
 
-    struct psc_mfields *flds_base_new;
-    flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
-    psc_mfields_set_type(flds_base_new, psc_mfields_type(mflds_base_old.mflds()));
-    psc_mfields_set_name(flds_base_new, psc_mfields_name(mflds_base_old.mflds()));
-    psc_mfields_set_param_int(flds_base_new, "nr_fields", mflds_base_old->n_comps());
-    psc_mfields_set_param_int3(flds_base_new, "ibn", mflds_base_old.mflds()->ibn);
-    flds_base_new->grid = new_grid;
-    psc_mfields_setup(flds_base_new);
+    auto mflds_base_new = PscMfieldsCreate(mrc_domain_comm(domain_new), *new_grid,
+					   mflds_base_old->n_comps(), mflds_base_old.mflds()->ibn,
+					   psc_mfields_type(mflds_base_old.mflds()));
+    psc_mfields_set_name(mflds_base_new.mflds(), psc_mfields_name(mflds_base_old.mflds()));
     for (int m = 0; m < mflds_base_old->n_comps(); m++) {
       const char *s = psc_mfields_comp_name(mflds_base_old.mflds(), m);
       if (s) {
-	psc_mfields_set_comp_name(flds_base_new, m, s);
+	psc_mfields_set_comp_name(mflds_base_new.mflds(), m, s);
       }
     }
-    PscMfieldsBase mflds_base_new{flds_base_new};
     
     // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
     mfields_t mflds_old = mflds_base_old.get_as<mfields_t>(0, mflds_base_old->n_comps());

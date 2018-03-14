@@ -25,15 +25,10 @@ struct marder_ops {
   static struct psc_mfields *
   fld_create(struct psc *psc, const char *name)
   {
-    struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
-    psc_mfields_set_type(fld, fields_traits<fields_t>::name);
-    psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
-    psc_mfields_set_param_int(fld, "nr_fields", 1);
-    fld->grid = &ppsc->grid();
-    psc_mfields_setup(fld);
-    psc_mfields_set_comp_name(fld, 0, name);
+    auto mflds = mfields_t::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
+    psc_mfields_set_comp_name(mflds.mflds(), 0, name);
 
-    return fld;
+    return mflds.mflds();
   }
 
   // ----------------------------------------------------------------------

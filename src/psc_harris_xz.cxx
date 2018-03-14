@@ -16,6 +16,7 @@
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
 #include "balance.hxx"
+#include "fields3d.hxx"
 
 #include <psc_particles_as_single.h>
 #include <psc_particles_vpic.h>
@@ -425,26 +426,6 @@ psc_harris_setup_log(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_base_mflds
-//
-// FIXME, duplicated
-
-static void
-psc_setup_base_mflds(struct psc *psc)
-{
-  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
-  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
-  psc_mfields_set_name(psc->flds, "mfields");
-  psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
-  psc_mfields_set_param_int(psc->flds, "nr_fields", psc->n_state_fields);
-  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
-  psc->flds->grid = &psc->grid();
-  psc_mfields_setup(psc->flds);
-}
-
-
-// ----------------------------------------------------------------------
 // courant length
 //
 // FIXME, the dt calculating should be consolidated with what regular PSC does
@@ -523,7 +504,9 @@ psc_harris_setup(struct psc *psc)
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
 
-  psc_setup_base_mflds(psc);
+  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
+  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
 
   psc_setup_particles(psc, n_prts_by_patch_new.data());
 
