@@ -191,6 +191,8 @@ struct MfieldsBase
       axpy_comp(m, alpha, x, m);
     }
   }
+
+  const Grid_t& grid() { return grid_; }
   
 protected:
   int n_fields_;
