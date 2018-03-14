@@ -657,8 +657,10 @@ static void psc_flatfoil_integrate(struct psc *psc)
     mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	       psc->prm.nmax, psc->timestep * psc->dt);
 
+    PscMparticlesBase mprts(psc->particles);
+
     auto balance = PscBalanceBase{psc->balance};
-    balance(psc);
+    balance(psc, mprts);
     
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -671,7 +673,6 @@ static void psc_flatfoil_integrate(struct psc *psc)
     psc_stats_stop(st_time_step);
     prof_stop(pr);
 
-    PscMparticlesBase mprts(psc->particles);
     psc_stats_val[st_nr_particles] = mprts->get_n_prts();
 
     if (psc->timestep % psc->prm.stats_every == 0) {

@@ -94,9 +94,6 @@ psc_step(struct psc *psc)
 
   // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-  auto balance = PscBalanceBase{psc->balance};
-  balance(psc);
-
   PscMparticlesBase mprts(psc->particles);
   PscMfieldsBase mflds(psc->flds);
   PscPushParticlesBase pushp(psc->push_particles);
@@ -105,6 +102,9 @@ psc_step(struct psc *psc)
   PscCollisionBase collision(psc->collision);
   PscBndParticlesBase bndp(psc->bnd_particles);
   Params* p = &psc->params;
+
+  auto balance = PscBalanceBase{psc->balance};
+  balance(psc, mprts);
 
   prof_start(pr_time_step_no_comm);
   prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
