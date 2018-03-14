@@ -744,8 +744,8 @@ struct Balance_ : BalanceBase
     }
   }
   
-  void balance(psc* psc, Grid_t& new_grid, mrc_domain* domain_new, MparticlesBase *mp,
-	       communicate_ctx& ctx)
+  std::vector<uint> balance(psc* psc, Grid_t& new_grid, mrc_domain* domain_new, MparticlesBase *mp,
+			    communicate_ctx& ctx, std::vector<uint> n_prts_by_patch_old)
   {
     static int pr_bal_prts, pr_bal_flds;
     if (!pr_bal_prts) {
@@ -754,10 +754,13 @@ struct Balance_ : BalanceBase
     }
     
     // particles
+    std::vector<uint> n_prts_by_patch_new;
     if (mp) {
       prof_start(pr_bal_prts);
       balance_particles(ctx, new_grid, *mp);
       prof_stop(pr_bal_prts);
+    } else {
+      n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
     }
 
     // fields
@@ -779,6 +782,8 @@ struct Balance_ : BalanceBase
     }
     psc_output_fields_check_bnd = true;
     psc_balance_generation_cnt++;
+
+    return n_prts_by_patch_new;
   }
 
   std::vector<uint> initial(struct psc_balance *bal, struct psc *psc, const std::vector<uint>& n_prts_by_patch_old) override
@@ -806,9 +811,7 @@ struct Balance_ : BalanceBase
 
     communicate_ctx ctx(domain_old, domain_new);
 
-    std::vector<uint> n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
-
-    balance(psc, *new_grid, domain_new, nullptr, ctx);
+    auto n_prts_by_patch_new = balance(psc, *new_grid, domain_new, nullptr, ctx, n_prts_by_patch_old);
 
     return n_prts_by_patch_new;
   }
@@ -885,7 +888,7 @@ struct Balance_ : BalanceBase
     communicate_ctx ctx(domain_old, domain_new);
     prof_stop(pr_bal_ctx);
 
-    balance(psc, *new_grid, domain_new, PscMparticlesBase{psc->particles}.sub(), ctx);
+    balance(psc, *new_grid, domain_new, PscMparticlesBase{psc->particles}.sub(), ctx, {});
   
     psc_stats_stop(st_time_balance);
   }
