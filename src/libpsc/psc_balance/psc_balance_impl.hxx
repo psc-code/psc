@@ -674,18 +674,18 @@ struct Balance_ : BalanceBase
     auto& mf_base_new = *mflds_base_new.sub();
     
     if (typeid(mf_base_old) != typeid(Mfields)) {
-      auto mflds_old = mflds_base_old.get_as<mfields_t>(0, mflds_base_old->n_comps());
-      auto& mf_old = *mflds_old.sub();
-      mflds_base_old->~MfieldsBase();
+      auto& mf_old = *new Mfields{mf_base_old.grid(), mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
+      MfieldsBase::convert(mf_base_old, mf_old, 0, mf_old.n_comps());
+      mf_base_old.~MfieldsBase();
 
-      auto& mf_new = *new Mfields{*new_grid, mf_base_new.n_comps(), mflds_base_new.mflds()->ibn};
+      auto& mf_new = *new Mfields{*new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       communicate_fields(ctx, mf_old, mf_new);
-
+      delete &mf_old;
+      
       MfieldsBase::convert(mf_new, mf_base_new, 0, mf_base_new.n_comps());
       delete &mf_new;
       
-      memcpy((char*) mflds_base_old.sub(), (char*) mflds_base_new.sub(),
-	     mflds_base_old.mflds()->obj.ops->size);
+      memcpy((char*) &mf_base_old, (char*) &mf_base_new, mflds_base_old.mflds()->obj.ops->size);
     } else {
       auto &mf_old = dynamic_cast<Mfields&>(mf_base_old);
       auto &mf_new = dynamic_cast<Mfields&>(mf_base_new);
