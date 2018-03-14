@@ -744,10 +744,24 @@ struct Balance_ : BalanceBase
     }
   }
   
+  void balance_all_fields(communicate_ctx& ctx, const Grid_t& new_grid)
+  {
+    static int pr_bal_flds;
+    if (!pr_bal_flds) {
+      pr_bal_flds = prof_register("bal flds", 1., 0, 0);
+    }
+    
+    prof_start(pr_bal_flds);
+    struct psc_mfields_list_entry *p;
+    __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
+      balance_field(ctx, new_grid, *PscMfieldsBase{*p->flds_p}.sub());
+    }
+    prof_stop(pr_bal_flds);
+  }
+
   std::vector<uint> initial(struct psc_balance *bal, struct psc *psc, const std::vector<uint>& n_prts_by_patch_old) override
   {
     struct mrc_domain *domain_old = psc->mrc_domain;
-
     int nr_patches;
     mrc_domain_get_patches(domain_old, &nr_patches);
     double *loads = (double *) calloc(nr_patches, sizeof(*loads));
@@ -763,11 +777,9 @@ struct Balance_ : BalanceBase
 
     free(loads_all);
 
-    struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
-    //  mrc_domain_view(domain_new);
-    delete psc->grid_;
-    psc->grid_ = psc->make_grid(domain_new);
-    psc_balance_comp_time_by_patch = (double *) calloc(nr_patches_new,
+    auto domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
+    auto new_grid = psc->make_grid(domain_new);
+    psc_balance_comp_time_by_patch = (double *) calloc(new_grid->n_patches(),
 						       sizeof(*psc_balance_comp_time_by_patch));
 
     communicate_ctx ctx(domain_old, domain_new);
@@ -777,16 +789,14 @@ struct Balance_ : BalanceBase
     // ----------------------------------------------------------------------
     // fields
 
-    struct psc_mfields_list_entry *p;
-    __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      balance_field(ctx, psc->grid(), *PscMfieldsBase{*p->flds_p}.sub());
-    }
+    balance_all_fields(ctx, *new_grid);
 
     psc->mrc_domain = domain_new;
-    auto bndp = PscBndParticlesBase(psc->bnd_particles);
-    bndp.reset();
-    psc_output_fields_check_bnd = true;
     mrc_domain_destroy(domain_old);
+    delete psc->grid_;
+    psc->grid_ = new_grid;
+    PscBndParticlesBase(psc->bnd_particles).reset();
+    psc_output_fields_check_bnd = true;
 
     return n_prts_by_patch_new;
   }
@@ -873,12 +883,7 @@ struct Balance_ : BalanceBase
     // ----------------------------------------------------------------------
     // fields
 
-    prof_start(pr_bal_flds);
-    struct psc_mfields_list_entry *p;
-    __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      balance_field(ctx, *new_grid, *PscMfieldsBase{*p->flds_p}.sub());
-    }
-    prof_stop(pr_bal_flds);
+    balance_all_fields(ctx, *new_grid);
   
     delete psc->grid_;
     psc->grid_ = new_grid;
