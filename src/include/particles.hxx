@@ -144,6 +144,7 @@ public:
   static void setup(struct psc_mparticles* _mprts)
   {
     new(_mprts->obj.subctx) Mparticles{*_mprts->grid};
+    _mprts->grid = nullptr;
   }
 
   static void destroy(struct psc_mparticles* _mprts)

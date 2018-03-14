@@ -860,8 +860,6 @@ struct Balance_ : BalanceBase
 
     auto n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
 
-    // alloc new particles
-
     if (typeid(mp_old_base) != typeid(Mparticles)) {
       prof_start(pr_bal_prts_B);
       auto mp_old = new Mparticles{mp_old_base.grid()};
@@ -885,8 +883,6 @@ struct Balance_ : BalanceBase
       communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
       *mp_old = std::move(*mp_new);
     }
-
-    mprts_old_base.mprts()->grid = new_grid;
 
     prof_stop(pr_bal_prts);
 

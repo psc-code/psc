@@ -370,6 +370,7 @@ public:
     psc_mfields_setup_super(_mflds);
     
     new(_mflds->obj.subctx) Mfields{*_mflds->grid, _mflds->nr_fields, _mflds->ibn};
+    _mflds->grid = nullptr; // to prevent subsequent use, there's Mfields::grid() instead
   }
 
   static void destroy(struct psc_mfields* _mflds)
