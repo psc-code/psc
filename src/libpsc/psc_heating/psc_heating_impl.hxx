@@ -5,12 +5,11 @@
 #include <stdlib.h>
 
 // ======================================================================
-// psc_heating subclass "sub"
+// Heating__
 
-template<typename MP>
-struct Heating_ : HeatingBase
+template<typename MP, typename FUNC>
+struct Heating__ : HeatingBase
 {
-  using Self = Heating_<MP>;
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
   using particle_t = typename Mparticles::particle_t;
@@ -19,12 +18,11 @@ struct Heating_ : HeatingBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Heating_(int every_step, int tb, int te, int kind,
-	   psc_heating_spot& spot)
+  Heating__(int every_step, int tb, int te, int kind, FUNC get_H)
     : every_step_(every_step),
       tb_(tb), te_(te),
       kind_(kind),
-      spot_(spot)
+      get_H_(get_H)
   {}
   
   // ----------------------------------------------------------------------
@@ -95,7 +93,7 @@ struct Heating_ : HeatingBase
 	  prt.zi + patch.xb[2],
 	};
 
-	double H = psc_heating_spot_get_H(&spot_, xx);
+	double H = get_H_(xx);
 	if (H > 0) {
 	  kick_particle(prt, H);
 	}
@@ -118,6 +116,31 @@ private:
   int every_step_;
   int tb_, te_;
   int kind_;
+  FUNC get_H_;
+};
+
+struct PscHeatingSpot
+{
+  PscHeatingSpot(psc_heating_spot& spot)
+    : spot_(spot)
+  {}
+
+  double operator()(double *xx)
+  {
+    return psc_heating_spot_get_H(&spot_, xx);
+  }
+  
+private:
   psc_heating_spot& spot_;
 };
 
+template<typename MP>
+struct Heating_ : Heating__<MP, PscHeatingSpot>
+{
+  using Base = Heating__<MP, PscHeatingSpot>;
+
+  Heating_(int every_step, int tb, int te, int kind,
+	   psc_heating_spot& spot)
+    : Base{every_step, tb, te, kind, PscHeatingSpot{spot}}
+  {}
+};
