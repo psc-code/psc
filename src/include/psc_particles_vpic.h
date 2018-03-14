@@ -62,8 +62,6 @@ struct MparticlesVpic : MparticlesBase
     Simulation_inject_particle(sim, vmprts, p, &prt);
   }
 
-  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
-
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }

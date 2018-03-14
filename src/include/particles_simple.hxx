@@ -315,7 +315,6 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
   void reset(const Grid_t& grid) override
   {
     MparticlesBase::reset(grid);

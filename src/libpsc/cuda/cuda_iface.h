@@ -78,8 +78,6 @@ struct MparticlesCuda : MparticlesBase
   void setup_internals();
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
 
-  MparticlesBase* create(const Grid_t& grid) override { return new Self{grid}; }
-
   template<typename MP>
   static void copy_to(MparticlesCuda& mprts_cuda, MP& mprts);
 

@@ -52,11 +52,6 @@ struct MparticlesSingleByKind : MparticlesBase
   {
     bk_mparticles_resize_all(bkmprts, n_prts_by_patch);
   }
-
-  MparticlesBase* create(const Grid_t& grid) override
-  {
-    return new Self{grid};
-  }
 };
 
 // ======================================================================
