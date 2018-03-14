@@ -688,9 +688,7 @@ struct Balance_ : BalanceBase
       auto &mf_new = dynamic_cast<Mfields&>(mf_base_new);
       communicate_fields(ctx, mf_old, mf_new);
 
-      //mf_old = mf_new;
-      mflds_base_old->~MfieldsBase();
-      memcpy((char*) &mf_base_old, (char*) &mf_base_new, mflds_base_old.mflds()->obj.ops->size);
+      mf_old = std::move(mf_new);
     }
   }
   
