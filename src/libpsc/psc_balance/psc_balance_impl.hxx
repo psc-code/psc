@@ -351,7 +351,7 @@ struct Balance_ : BalanceBase
     }
 
     psc_stats_start(st_time_balance);
-    auto loads = get_loads(psc);
+    auto loads = get_loads(psc->grid(), mp);
     balance(psc, loads, &mp);
     psc_stats_stop(st_time_balance);
   }
@@ -370,20 +370,17 @@ private:
     return loads;
   }
 
-  std::vector<double> get_loads(struct psc *psc)
+  std::vector<double> get_loads(const Grid_t& grid, MparticlesBase& mp)
   {
-    struct psc_mparticles *mprts = psc->particles;
-    PscMparticlesBase mp(mprts);
-  
-    uint n_prts_by_patch[mp->n_patches()];
-    mp->get_size_all(n_prts_by_patch);
+    uint n_prts_by_patch[mp.n_patches()];
+    mp.get_size_all(n_prts_by_patch);
 
     std::vector<double> loads;
-    loads.reserve(psc->grid().n_patches());
-    psc_foreach_patch(psc, p) {
+    loads.reserve(mp.n_patches());
+    for (int p = 0; p < mp.n_patches(); p++) {
       double load;
       if (factor_fields_ >= 0.) {
-	const int *ldims = psc->grid().ldims;
+	const int *ldims = grid.ldims;
 	load = n_prts_by_patch[p] + factor_fields_ * ldims[0] * ldims[1] * ldims[2];
 	//mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
       } else {
