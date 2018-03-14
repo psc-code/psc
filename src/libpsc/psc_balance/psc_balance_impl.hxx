@@ -744,29 +744,39 @@ struct Balance_ : BalanceBase
     }
   }
   
-  void balance_all_fields(communicate_ctx& ctx, const Grid_t& new_grid)
+  void balance(psc* psc, Grid_t& new_grid, mrc_domain* domain_new, MparticlesBase *mp,
+	       communicate_ctx& ctx)
   {
-    static int pr_bal_flds;
-    if (!pr_bal_flds) {
+    static int pr_bal_prts, pr_bal_flds;
+    if (!pr_bal_prts) {
+      pr_bal_prts = prof_register("bal prs", 1., 0, 0);
       pr_bal_flds = prof_register("bal flds", 1., 0, 0);
     }
     
+    // particles
+    if (mp) {
+      prof_start(pr_bal_prts);
+      balance_particles(ctx, new_grid, *mp);
+      prof_stop(pr_bal_prts);
+    }
+
+    // fields
     prof_start(pr_bal_flds);
     struct psc_mfields_list_entry *p;
     __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
       balance_field(ctx, new_grid, *PscMfieldsBase{*p->flds_p}.sub());
     }
     prof_stop(pr_bal_flds);
-  }
 
-  void balance(psc* psc, Grid_t& new_grid, mrc_domain* domain_new)
-  {
+    // update psc etc
     mrc_domain_destroy(psc->mrc_domain);
     psc->mrc_domain = domain_new;
     delete psc->grid_;
     psc->grid_ = &new_grid;
     PscBndParticlesBase(psc->bnd_particles).reset();
-    PscBndBase(psc->bnd).reset();
+    if (mp) { // FIXME, hacky...
+      PscBndBase(psc->bnd).reset();
+    }
     psc_output_fields_check_bnd = true;
     psc_balance_generation_cnt++;
   }
@@ -798,12 +808,7 @@ struct Balance_ : BalanceBase
 
     std::vector<uint> n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
 
-    // ----------------------------------------------------------------------
-    // fields
-
-    balance_all_fields(ctx, *new_grid);
-
-    balance(psc, *new_grid, domain_new);
+    balance(psc, *new_grid, domain_new, nullptr, ctx);
 
     return n_prts_by_patch_new;
   }
@@ -880,19 +885,7 @@ struct Balance_ : BalanceBase
     communicate_ctx ctx(domain_old, domain_new);
     prof_stop(pr_bal_ctx);
 
-    // ----------------------------------------------------------------------
-    // particles
-
-    prof_start(pr_bal_prts);
-    balance_particles(ctx, *new_grid, *PscMparticlesBase{psc->particles}.sub());
-    prof_stop(pr_bal_prts);
-
-    // ----------------------------------------------------------------------
-    // fields
-
-    balance_all_fields(ctx, *new_grid);
-  
-    balance(psc, *new_grid, domain_new);
+    balance(psc, *new_grid, domain_new, PscMparticlesBase{psc->particles}.sub(), ctx);
   
     psc_stats_stop(st_time_balance);
   }
