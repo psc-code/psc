@@ -3,7 +3,6 @@
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
 #include <psc_heating.h>
-#include <psc_heating_spot_private.h>
 #include <psc_inject.h>
 #include <psc_target_private.h>
 
@@ -82,7 +81,6 @@ struct psc_flatfoil {
   double heating_xc; // them from d_i to internal (d_e) units
   double heating_yc;
   double heating_rH;
-  struct psc_heating *heating;
   
   // state
   double d_i;
@@ -120,7 +118,6 @@ static struct param psc_flatfoil_descr[] = {
   { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
   { "target"            , VAR(target)            , MRC_VAR_OBJ(psc_target)  },
   { "inject"            , VAR(inject)            , MRC_VAR_OBJ(psc_inject)  },
-  { "heating"           , VAR(heating)           , MRC_VAR_OBJ(psc_heating) },
   {},
 };
 #undef VAR
@@ -188,8 +185,7 @@ struct PscFlatfoil : Params
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = Inject_<Mparticles_t, Mfields_t>;
-  using Heating_t = Heating_<Mparticles_t>;
-  using Heating2_t = Heating__<Mparticles_t>;
+  using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
   PscFlatfoil(psc *psc)
@@ -206,7 +202,6 @@ struct PscFlatfoil : Params
       bnd_{dynamic_cast<Bnd_t&>(*PscBndBase{psc->bnd}.sub())},
       bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
-      heating_{dynamic_cast<Heating_t&>(*PscHeatingBase{sub_->heating}.sub())},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
     PscHeatingSpotFoilParams foil_params;
@@ -217,7 +212,7 @@ struct PscFlatfoil : Params
     foil_params.rH = sub_->heating_rH * sub_->d_i;
     foil_params.T  = .04;
     foil_params.Mi = sub_->heating_rH * psc->kinds[MY_ION].m;
-    heating2_.reset(new Heating2_t{20, 0, 10000000, MY_ELECTRON, PscHeatingSpotFoil{foil_params}});
+    heating_.reset(new Heating_t{20, 0, 10000000, MY_ELECTRON, PscHeatingSpotFoil{foil_params}});
   }
   
   void step()
@@ -245,7 +240,7 @@ struct PscFlatfoil : Params
     bndp_(mprts_);
     
     inject_(mprts_);
-    (*heating2_)(mprts_);
+    (*heating_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     bndf_.fill_ghosts_H(mflds_);
@@ -403,10 +398,9 @@ private:
   Bnd_t& bnd_;
   BndFields_t& bndf_;
   Inject_t& inject_;
-  Heating_t& heating_;
   Balance_t& balance_;
 
-  std::unique_ptr<Heating2_t> heating2_;
+  std::unique_ptr<Heating_t> heating_;
   
   int st_nr_particles;
   int st_time_step;
@@ -450,9 +444,6 @@ psc_flatfoil_create(struct psc *psc)
   psc_bnd_fields_set_type(bnd_fields, "none");
 
   psc_target_set_type(sub->target, "foil");
-
-  struct psc_heating_spot *spot = psc_heating_get_spot(sub->heating);
-  psc_heating_spot_set_type(spot, "foil");
 }
 
 // ----------------------------------------------------------------------
@@ -493,16 +484,6 @@ psc_flatfoil_setup(struct psc *psc)
 
   psc_inject_set_param_int(sub->inject, "kind_n", MY_ELECTRON);
   psc_inject_set_param_obj(sub->inject, "target", sub->target);
-
-  psc_heating_set_param_int(sub->heating, "kind", MY_ELECTRON);
-
-  struct psc_heating_spot *spot = psc_heating_get_spot(sub->heating);
-  psc_heating_spot_set_param_double(spot, "zl", sub->heating_zl * sub->d_i);
-  psc_heating_spot_set_param_double(spot, "zh", sub->heating_zh * sub->d_i);
-  psc_heating_spot_set_param_double(spot, "xc", sub->heating_xc * sub->d_i);
-  psc_heating_spot_set_param_double(spot, "yc", sub->heating_yc * sub->d_i);
-  psc_heating_spot_set_param_double(spot, "rH", sub->heating_rH * sub->d_i);
-  psc_heating_spot_set_param_double(spot, "Mi", psc->kinds[MY_ION].m);
 
   psc_setup_super(psc);
   psc_setup_member_objs_sub(psc);
@@ -683,57 +664,6 @@ struct psc_target_ops_foil : psc_target_ops {
 } psc_target_ops_foil;
 
 // ======================================================================
-// psc_heating_spot_foil
-
-#define PscHeatingSpotFoil(heating) mrc_to_subobj(heating, struct PscHeatingSpotFoil)
-
-// ----------------------------------------------------------------------
-// psc_heating_spot_foil_setup
-
-static void
-psc_heating_spot_foil_setup(struct psc_heating_spot *heating)
-{
-  struct PscHeatingSpotFoil *sub = PscHeatingSpotFoil(heating);
-  new(sub) PscHeatingSpotFoil{*sub};
-}
-
-// ----------------------------------------------------------------------
-// psc_heating_spot_foil_get_H
-
-static double
-psc_heating_spot_foil_get_H(struct psc_heating_spot *heating, const double *xx)
-{
-  struct PscHeatingSpotFoil *sub = PscHeatingSpotFoil(heating);
-  return (*sub)(xx);
-}
-  
-#define VAR(x) (void *)offsetof(struct PscHeatingSpotFoilParams, x)
-static struct param psc_heating_spot_foil_descr[] _mrc_unused = {
-  { "zl"                , VAR(zl)                , PARAM_DOUBLE(0.)       },
-  { "zh"                , VAR(zh)                , PARAM_DOUBLE(0.)       },
-  { "xc"                , VAR(xc)                , PARAM_DOUBLE(0.)       },
-  { "yc"                , VAR(yc)                , PARAM_DOUBLE(0.)       },
-  { "rH"                , VAR(rH)                , PARAM_DOUBLE(0.)       },
-  { "T"                 , VAR(T)                 , PARAM_DOUBLE(.04)      },
-  { "Mi"                , VAR(Mi)                , PARAM_DOUBLE(1.)       },
-  {},
-};
-#undef VAR
-
-// ----------------------------------------------------------------------
-// psc_heating_spot "foil"
-
-struct psc_heating_spot_ops_foil : psc_heating_spot_ops {
-  psc_heating_spot_ops_foil() {
-    name                = "foil";
-    size                = sizeof(struct PscHeatingSpotFoil);
-    param_descr         = psc_heating_spot_foil_descr;
-    setup               = psc_heating_spot_foil_setup;
-    get_H               = psc_heating_spot_foil_get_H;
-  }
-} psc_heating_spot_ops_foil;
-
-// ======================================================================
 // main
 
 int
@@ -741,8 +671,6 @@ main(int argc, char **argv)
 {
   mrc_class_register_subclass(&mrc_class_psc_target,
 			      &psc_target_ops_foil);
-  mrc_class_register_subclass(&mrc_class_psc_heating_spot,
-			      &psc_heating_spot_ops_foil);
   return psc_main(&argc, &argv, &psc_flatfoil_ops);
 }
 
