@@ -482,8 +482,7 @@ struct Balance_ : BalanceBase
   using Mparticles = typename mparticles_t::sub_t;
   using Mfields = typename mfields_t::sub_t;
 
-  void communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
-			     Mparticles& mp_old, Mparticles& mp_new,
+  void communicate_particles(struct communicate_ctx *ctx, Mparticles& mp_old, Mparticles& mp_new,
 			     uint *n_prts_by_patch_new)
   {
     static int pr, pr_A, pr_B, pr_C, pr_D;
@@ -661,6 +660,36 @@ struct Balance_ : BalanceBase
     delete[] recv_reqs;
   }
 
+  void balance_particles(struct communicate_ctx* ctx, const Grid_t& new_grid, PscMparticlesBase mprts_old_base)
+  {
+    auto& mp_old_base = *mprts_old_base.sub();
+    int n_patches = mp_old_base.n_patches();
+    std::vector<uint> n_prts_by_patch_old(n_patches);
+    mprts_old_base->get_size_all(n_prts_by_patch_old.data());
+
+    auto n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
+
+    if (typeid(mp_old_base) != typeid(Mparticles)) {
+      auto mp_old = new Mparticles{mp_old_base.grid()};
+      MparticlesBase::convert(mp_old_base, *mp_old);
+      mp_old_base.reset(new_grid); // frees memory here already
+      
+      // communicate particles
+      auto* mp_new = new Mparticles{new_grid};
+      communicate_particles(ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
+      delete mp_old;
+      
+      MparticlesBase::convert(*mp_new, mp_old_base);
+      delete mp_new;
+    } else {
+      auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
+      auto mp_new = std::unique_ptr<Mparticles>(new Mparticles{new_grid});
+      // communicate particles
+      communicate_particles(ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
+      *mp_old = std::move(*mp_new);
+    }
+  }
+  
   void balance_field(struct communicate_ctx* ctx, const Grid_t& new_grid, MfieldsBase& mf_base)
   {
     if (typeid(mf_base) != typeid(Mfields)) {
@@ -819,40 +848,7 @@ struct Balance_ : BalanceBase
     // particles
 
     prof_start(pr_bal_prts);
-
-    prof_start(pr_bal_prts_A);
-    PscMparticlesBase mprts_old_base(psc->particles);
-    auto& mp_old_base = *mprts_old_base.sub();
-    std::vector<uint> n_prts_by_patch_old(nr_patches);
-    mprts_old_base->get_size_all(n_prts_by_patch_old.data());
-    prof_stop(pr_bal_prts_A);
-
-    auto n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
-
-    if (typeid(mp_old_base) != typeid(Mparticles)) {
-      prof_start(pr_bal_prts_B);
-      auto mp_old = new Mparticles{mp_old_base.grid()};
-      MparticlesBase::convert(mp_old_base, *mp_old);
-      mp_old_base.reset(*new_grid); // frees memory here already
-      prof_stop(pr_bal_prts_B);
-      
-      // communicate particles
-      auto* mp_new = new Mparticles{*new_grid};
-      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
-      delete mp_old;
-      
-      prof_start(pr_bal_prts_C);
-      MparticlesBase::convert(*mp_new, mp_old_base);
-      delete mp_new;
-      prof_stop(pr_bal_prts_C);
-    } else {
-      auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
-      auto mp_new = std::unique_ptr<Mparticles>(new Mparticles{*new_grid});
-      // communicate particles
-      communicate_particles(bal, ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
-      *mp_old = std::move(*mp_new);
-    }
-
+    balance_particles(ctx, *new_grid, PscMparticlesBase{psc->particles});
     prof_stop(pr_bal_prts);
 
     // ----------------------------------------------------------------------
