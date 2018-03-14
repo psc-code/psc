@@ -662,31 +662,30 @@ struct Balance_ : BalanceBase
 
   void balance_particles(struct communicate_ctx* ctx, const Grid_t& new_grid, PscMparticlesBase mprts_old_base)
   {
-    auto& mp_old_base = *mprts_old_base.sub();
-    int n_patches = mp_old_base.n_patches();
+    auto& mp_base = *mprts_old_base.sub();
+    int n_patches = mp_base.n_patches();
     std::vector<uint> n_prts_by_patch_old(n_patches);
-    mprts_old_base->get_size_all(n_prts_by_patch_old.data());
+    mp_base.get_size_all(n_prts_by_patch_old.data());
 
     auto n_prts_by_patch_new = communicate_new_nr_particles(ctx, n_prts_by_patch_old);
 
-    if (typeid(mp_old_base) != typeid(Mparticles)) {
-      auto mp_old = new Mparticles{mp_old_base.grid()};
-      MparticlesBase::convert(mp_old_base, *mp_old);
-      mp_old_base.reset(new_grid); // frees memory here already
+    if (typeid(mp_base) != typeid(Mparticles)) {
+      auto& mp_old = *new Mparticles{mp_base.grid()};
+      MparticlesBase::convert(mp_base, mp_old);
+      mp_base.reset(new_grid); // frees memory here already
       
-      // communicate particles
-      auto* mp_new = new Mparticles{new_grid};
-      communicate_particles(ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
-      delete mp_old;
+      auto mp_new = Mparticles{new_grid};
+      communicate_particles(ctx, mp_old, mp_new, n_prts_by_patch_new.data());
+      delete &mp_old;
       
-      MparticlesBase::convert(*mp_new, mp_old_base);
-      delete mp_new;
+      MparticlesBase::convert(mp_new, mp_base);
     } else {
-      auto mp_old = dynamic_cast<Mparticles*>(&mp_old_base);
-      auto mp_new = std::unique_ptr<Mparticles>(new Mparticles{new_grid});
-      // communicate particles
-      communicate_particles(ctx, *mp_old, *mp_new, n_prts_by_patch_new.data());
-      *mp_old = std::move(*mp_new);
+      auto mp_new = Mparticles{new_grid};
+      auto& mp_old = dynamic_cast<Mparticles&>(mp_base);
+
+      communicate_particles(ctx, mp_old, mp_new, n_prts_by_patch_new.data());
+
+      mp_old = std::move(mp_new);
     }
   }
   
