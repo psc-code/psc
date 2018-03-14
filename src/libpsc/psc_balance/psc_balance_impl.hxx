@@ -668,27 +668,20 @@ struct Balance_ : BalanceBase
     PscMfieldsBase mflds_base_old{mflds};
     auto& mf_base_old = *mflds_base_old.sub();
 
-    auto mflds_base_new = PscMfieldsCreate(mrc_domain_comm(domain_new), *new_grid,
-					   mflds_base_old->n_comps(), mflds_base_old.mflds()->ibn,
-					   psc_mfields_type(mflds_base_old.mflds()));
-    auto& mf_base_new = *mflds_base_new.sub();
-    
     if (typeid(mf_base_old) != typeid(Mfields)) {
       auto& mf_old = *new Mfields{mf_base_old.grid(), mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       MfieldsBase::convert(mf_base_old, mf_old, 0, mf_old.n_comps());
-      mf_base_old.~MfieldsBase();
+      mf_base_old.reset(*new_grid); // free old memory
 
-      auto& mf_new = *new Mfields{*new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
+      auto mf_new = Mfields{*new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       communicate_fields(ctx, mf_old, mf_new);
-      delete &mf_old;
+      delete &mf_old; // delete as early as possible
       
-      MfieldsBase::convert(mf_new, mf_base_new, 0, mf_base_new.n_comps());
-      delete &mf_new;
-      
-      memcpy((char*) &mf_base_old, (char*) &mf_base_new, mflds_base_old.mflds()->obj.ops->size);
+      MfieldsBase::convert(mf_new, mf_base_old, 0, mf_base_old.n_comps());
     } else {
+      auto mf_new = Mfields{*new_grid, mf_base_old.n_comps(), mflds_base_old.mflds()->ibn};
       auto &mf_old = dynamic_cast<Mfields&>(mf_base_old);
-      auto &mf_new = dynamic_cast<Mfields&>(mf_base_new);
+
       communicate_fields(ctx, mf_old, mf_new);
 
       mf_old = std::move(mf_new);

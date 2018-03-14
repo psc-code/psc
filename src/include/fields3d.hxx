@@ -173,6 +173,8 @@ struct MfieldsBase
       n_fields_(n_fields)
   {}
 
+  virtual void reset(const Grid_t& grid) { grid_ = &grid; }
+  
   int n_patches() const { return grid_->n_patches(); }
   int n_comps() const { return n_fields_; }
 
@@ -230,6 +232,22 @@ struct Mfields : MfieldsBase
     }
   }
 
+  virtual void reset(const Grid_t& grid) override
+  {
+    MfieldsBase::reset(grid);
+    data.clear();
+
+    unsigned int size = 1;
+    for (int d = 0; d < 3; d++) {
+      size *= im[d];
+    }
+
+    data.reserve(n_patches());
+    for (int p = 0; p < n_patches(); p++) {
+      data.emplace_back(new real_t[n_comps() * size]);
+    }
+  }
+  
   fields_t operator[](int p)
   {
     return fields_t(ib, im, n_fields_, data[p].get());
