@@ -6,7 +6,7 @@
 
 MRC_CLASS_DECLARE(psc_heating_spot, struct psc_heating_spot);
 
-double psc_heating_spot_get_H(struct psc_heating_spot *spot, double *xx);
+double psc_heating_spot_get_H(struct psc_heating_spot *spot, const double *xx);
 
 #endif
 

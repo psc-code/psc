@@ -8,7 +8,7 @@
 // psc_heating_spot_get_H
 
 double
-psc_heating_spot_get_H(struct psc_heating_spot *spot, double *xx)
+psc_heating_spot_get_H(struct psc_heating_spot *spot, const double *xx)
 {
   struct psc_heating_spot_ops *ops = psc_heating_spot_ops(spot);
 

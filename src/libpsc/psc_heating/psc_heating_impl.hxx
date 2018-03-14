@@ -7,7 +7,7 @@
 // ======================================================================
 // Heating__
 
-template<typename MP, typename FUNC>
+template<typename MP>
 struct Heating__ : HeatingBase
 {
   using Mparticles = MP;
@@ -18,6 +18,7 @@ struct Heating__ : HeatingBase
   // ----------------------------------------------------------------------
   // ctor
 
+  template<typename FUNC>
   Heating__(int every_step, int tb, int te, int kind, FUNC get_H)
     : every_step_(every_step),
       tb_(tb), te_(te),
@@ -116,7 +117,7 @@ private:
   int every_step_;
   int tb_, te_;
   int kind_;
-  FUNC get_H_;
+  std::function<double(const double*)> get_H_;
 };
 
 struct PscHeatingSpot
@@ -125,7 +126,7 @@ struct PscHeatingSpot
     : spot_(spot)
   {}
 
-  double operator()(double *xx)
+  double operator()(const double *xx)
   {
     return psc_heating_spot_get_H(&spot_, xx);
   }
@@ -135,9 +136,9 @@ private:
 };
 
 template<typename MP>
-struct Heating_ : Heating__<MP, PscHeatingSpot>
+struct Heating_ : Heating__<MP>
 {
-  using Base = Heating__<MP, PscHeatingSpot>;
+  using Base = Heating__<MP>;
 
   Heating_(int every_step, int tb, int te, int kind,
 	   psc_heating_spot& spot)

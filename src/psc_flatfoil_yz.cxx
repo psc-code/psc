@@ -126,6 +126,45 @@ static struct param psc_flatfoil_descr[] = {
 #undef VAR
 
 // ======================================================================
+// PscHeatingSpotFoil
+
+struct PscHeatingSpotFoilParams
+{
+  double zl; // in internal units (d_e)
+  double zh;
+  double xc;
+  double yc;
+  double rH;
+  double T;
+  double Mi;
+};
+
+struct PscHeatingSpotFoil : PscHeatingSpotFoilParams
+{
+  PscHeatingSpotFoil(const PscHeatingSpotFoilParams& params)
+    : PscHeatingSpotFoilParams{params}
+  {
+    double width = zh - zl;
+    fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
+    // FIXME, I don't understand the sqrt(Mi) in here
+  }
+  
+  double operator()(const double *xx)
+  {
+    double x = xx[0], y = xx[1], z = xx[2];
+
+    if (z <= zl || z >= zh) {
+      return 0;
+    }
+    
+    return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
+  }
+
+private:
+  double fac;
+};
+
+// ======================================================================
 // PscFlatfoil
 //
 // eventually, a Psc replacement / derived class, but for now just
@@ -150,6 +189,7 @@ struct PscFlatfoil : Params
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = Inject_<Mparticles_t, Mfields_t>;
   using Heating_t = Heating_<Mparticles_t>;
+  using Heating2_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
   PscFlatfoil(psc *psc)
@@ -169,7 +209,15 @@ struct PscFlatfoil : Params
       heating_{dynamic_cast<Heating_t&>(*PscHeatingBase{sub_->heating}.sub())},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
-    heating2_.reset(new Heating_t{20, 0, 10000000, MY_ELECTRON, *sub_->heating->spot});
+    PscHeatingSpotFoilParams foil_params;
+    foil_params.zl = sub_->heating_zl * sub_->d_i;
+    foil_params.zh = sub_->heating_zh * sub_->d_i;
+    foil_params.xc = sub_->heating_xc * sub_->d_i;
+    foil_params.yc = sub_->heating_yc * sub_->d_i;
+    foil_params.rH = sub_->heating_rH * sub_->d_i;
+    foil_params.T  = .04;
+    foil_params.Mi = sub_->heating_rH * psc->kinds[MY_ION].m;
+    heating2_.reset(new Heating2_t{20, 0, 10000000, MY_ELECTRON, PscHeatingSpotFoil{foil_params}});
   }
   
   void step()
@@ -358,7 +406,7 @@ private:
   Heating_t& heating_;
   Balance_t& balance_;
 
-  std::unique_ptr<Heating_t> heating2_;
+  std::unique_ptr<Heating2_t> heating2_;
   
   int st_nr_particles;
   int st_time_step;
@@ -635,23 +683,9 @@ struct psc_target_ops_foil : psc_target_ops {
 } psc_target_ops_foil;
 
 // ======================================================================
-// psc_heating_spot subclass "foil"
+// psc_heating_spot_foil
 
-struct psc_heating_spot_foil {
-  // params
-  double zl; // in internal units (d_e)
-  double zh;
-  double xc;
-  double yc;
-  double rH;
-  double T;
-  double Mi;
-
-  // state
-  double fac;
-};
-
-#define psc_heating_spot_foil(heating) mrc_to_subobj(heating, struct psc_heating_spot_foil)
+#define PscHeatingSpotFoil(heating) mrc_to_subobj(heating, struct PscHeatingSpotFoil)
 
 // ----------------------------------------------------------------------
 // psc_heating_spot_foil_setup
@@ -659,39 +693,21 @@ struct psc_heating_spot_foil {
 static void
 psc_heating_spot_foil_setup(struct psc_heating_spot *heating)
 {
-  struct psc_heating_spot_foil *sub = psc_heating_spot_foil(heating);
-  
-  double width = sub->zh - sub->zl;
-  sub->fac = (8.f * pow(sub->T, 1.5)) / (sqrt(sub->Mi) * width);
-  // FIXME, I don't understand the sqrt(Mi) in here
-
-  psc_heating_spot_setup_super(heating);
+  struct PscHeatingSpotFoil *sub = PscHeatingSpotFoil(heating);
+  new(sub) PscHeatingSpotFoil{*sub};
 }
 
 // ----------------------------------------------------------------------
 // psc_heating_spot_foil_get_H
 
 static double
-psc_heating_spot_foil_get_H(struct psc_heating_spot *heating, double *xx)
+psc_heating_spot_foil_get_H(struct psc_heating_spot *heating, const double *xx)
 {
-  struct psc_heating_spot_foil *sub = psc_heating_spot_foil(heating);
-  
-  double zl = sub->zl;
-  double zh = sub->zh;
-  double xc = sub->xc;
-  double yc = sub->yc;
-  double rH = sub->rH;
-  double fac = sub->fac;
-  double x = xx[0], y = xx[1], z = xx[2];
-
-  if (z <= zl || z >= zh) {
-    return 0;
-  }
-
-  return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
+  struct PscHeatingSpotFoil *sub = PscHeatingSpotFoil(heating);
+  return (*sub)(xx);
 }
   
-#define VAR(x) (void *)offsetof(struct psc_heating_spot_foil, x)
+#define VAR(x) (void *)offsetof(struct PscHeatingSpotFoilParams, x)
 static struct param psc_heating_spot_foil_descr[] _mrc_unused = {
   { "zl"                , VAR(zl)                , PARAM_DOUBLE(0.)       },
   { "zh"                , VAR(zh)                , PARAM_DOUBLE(0.)       },
@@ -710,7 +726,7 @@ static struct param psc_heating_spot_foil_descr[] _mrc_unused = {
 struct psc_heating_spot_ops_foil : psc_heating_spot_ops {
   psc_heating_spot_ops_foil() {
     name                = "foil";
-    size                = sizeof(struct psc_heating_spot_foil);
+    size                = sizeof(struct PscHeatingSpotFoil);
     param_descr         = psc_heating_spot_foil_descr;
     setup               = psc_heating_spot_foil_setup;
     get_H               = psc_heating_spot_foil_get_H;

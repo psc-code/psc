@@ -10,7 +10,7 @@ struct psc_heating_spot {
 
 struct psc_heating_spot_ops {
   MRC_SUBCLASS_OPS(struct psc_heating_spot);
-  double (*get_H)(struct psc_heating_spot *spot, double x[3]);
+  double (*get_H)(struct psc_heating_spot *spot, const double x[3]);
 };
 
 #define psc_heating_spot_ops(spot) ((struct psc_heating_spot_ops *)((spot)->obj.ops))
