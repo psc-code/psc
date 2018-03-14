@@ -277,19 +277,20 @@ psc_mfields_cuda_read(struct psc_mfields *_mflds, struct mrc_io *io)
 // ======================================================================
 // psc_mfields: subclass "cuda"
   
-static struct mrc_obj_method psc_mfields_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_mfields_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_mfields_cuda_copy_from_c),
-  MRC_OBJ_METHOD("copy_to_single"  , psc_mfields_cuda_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_mfields_cuda_copy_from_single),
-  {}
+const MfieldsBase::Convert MfieldsCuda::convert_to_ = {
+  { std::type_index(typeid(MfieldsC))     , psc_mfields_cuda_copy_to_c },
+  { std::type_index(typeid(MfieldsSingle)), psc_mfields_cuda_copy_to_single },
+};
+
+const MfieldsBase::Convert MfieldsCuda::convert_from_ = {
+  { std::type_index(typeid(MfieldsC))     , psc_mfields_cuda_copy_from_c },
+  { std::type_index(typeid(MfieldsSingle)), psc_mfields_cuda_copy_from_single },
 };
 
 struct psc_mfields_ops_cuda : psc_mfields_ops {
   psc_mfields_ops_cuda() {
     name                  = "cuda";
     size                  = sizeof(struct MfieldsCuda);
-    methods               = psc_mfields_cuda_methods;
     setup                 = psc_mfields_cuda_setup;
     destroy               = psc_mfields_cuda_destroy;
 #ifdef HAVE_LIBHDF5_HL

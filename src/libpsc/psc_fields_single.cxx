@@ -64,10 +64,12 @@ psc_mfields_single_copy_to_c(struct psc_mfields *mflds, struct psc_mfields *mfld
   }
 }
 
-static struct mrc_obj_method psc_mfields_single_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",   psc_mfields_single_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c", psc_mfields_single_copy_from_c),
-  {}
+template<> const MfieldsBase::Convert MfieldsSingle::convert_to_ = {
+  { std::type_index(typeid(MfieldsC)), psc_mfields_single_copy_to_c },
+};
+
+template<> const MfieldsBase::Convert MfieldsSingle::convert_from_ = {
+  { std::type_index(typeid(MfieldsC)), psc_mfields_single_copy_from_c },
 };
 
 #include "psc_fields_common.cxx"

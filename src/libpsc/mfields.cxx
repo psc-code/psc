@@ -108,31 +108,36 @@ psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io)
   mrc_fld_destroy(fld);
 }
 
+// inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me,
+// 				 PscMfieldsBase mflds_from, PscMfieldsBase mflds_to)
+// {
+// }
+
 static void
 copy(PscMfieldsBase mflds_from, PscMfieldsBase mflds_to,
      const char *type_from, const char *type_to, int mb, int me)
 {
-  psc_mfields_copy_func_t copy_to, copy_from;
+  auto& mf_from = *mflds_from.sub();
+  auto& mf_to = *mflds_to.sub();
 
-  char s[strlen(type_to) + 12];
-  sprintf(s, "copy_to_%s", type_to);
-  copy_to = (psc_mfields_copy_func_t) psc_mfields_get_method(mflds_from.mflds(), s);
-  if (!copy_to) {
-    sprintf(s, "copy_from_%s", type_from);
-    copy_from = (psc_mfields_copy_func_t) psc_mfields_get_method(mflds_to.mflds(), s);
+  // FIXME, implementing == wouldn't hurt
+  assert(&mf_from.grid() == &mf_to.grid());
+  
+  auto convert_to = mf_from.convert_to().find(std::type_index(typeid(mf_to)));
+  if (convert_to != mf_from.convert_to().cend()) {
+    convert_to->second(mflds_from.mflds(), mflds_to.mflds(), mb, me);
+    return;
   }
-  if (!copy_to && !copy_from) {
-    fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mfields '%s' and "
-	    "no 'copy_from_%s' in '%s'!\n",
-	    type_to, type_from, type_from, type_to);
-    assert(0);
+  
+  auto convert_from = mf_to.convert_from().find(std::type_index(typeid(mf_from)));
+  if (convert_from != mf_to.convert_from().cend()) {
+    convert_from->second(mflds_to.mflds(), mflds_from.mflds(), mb, me);
+    return;
   }
 
-  if (copy_to) {
-    copy_to(mflds_from.mflds(), mflds_to.mflds(), mb, me);
-  } else {
-    copy_from(mflds_to.mflds(), mflds_from.mflds(), mb, me);
-  }
+  fprintf(stderr, "ERROR: no conversion known from %s to %s!\n",
+	  typeid(mf_from).name(), typeid(mf_to).name());
+  assert(0);
 }
 
 

@@ -11,9 +11,8 @@
 #define MPFX(x) psc_mfields_c_ ## x
 #define MFIELDS MfieldsC
 
-static struct mrc_obj_method psc_mfields_c_methods[] = {
-  {}
-};
+template<> const MfieldsBase::Convert MfieldsC::convert_to_ = {};
+template<> const MfieldsBase::Convert MfieldsC::convert_from_ = {};
 
 #include "psc_fields_common.cxx"
 

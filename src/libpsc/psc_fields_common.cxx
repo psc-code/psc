@@ -102,7 +102,6 @@ struct MPFX(psc_mfields_ops) : psc_mfields_ops {
   MPFX(psc_mfields_ops)() {
     name                  = Wrapper_t::name;
     size                  = Wrapper_t::size;
-    methods               = MPFX(methods);
     setup                 = Wrapper_t::setup;
     destroy               = Wrapper_t::destroy;
   }

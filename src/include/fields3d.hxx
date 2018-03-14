@@ -163,10 +163,10 @@ int fields3d<R, L>::index(int m, int i, int j, int k) const
 
 struct MfieldsBase
 {
-  struct fields_t
-  {
-    struct real_t {};
-  };
+  using copy_func_t = psc_mfields_copy_func_t;
+  using Convert = std::unordered_map<std::type_index, copy_func_t>;
+  
+  struct fields_t { struct real_t {}; };
   
   MfieldsBase(const Grid_t& grid, int n_fields)
     : grid_(grid),
@@ -194,6 +194,10 @@ struct MfieldsBase
 
   const Grid_t& grid() { return grid_; }
   
+  virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
+  virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
+  static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to);
+
 protected:
   int n_fields_;
   const Grid_t& grid_;
@@ -286,6 +290,10 @@ struct Mfields : MfieldsBase
     }
     return rv;
   }
+
+  static const Convert convert_to_, convert_from_;
+  const Convert& convert_to() override { return convert_to_; }
+  const Convert& convert_from() override { return convert_from_; }
 
   real_t **data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)

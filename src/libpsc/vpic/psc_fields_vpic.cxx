@@ -192,17 +192,18 @@ fields_vpic_t psc_mfields_vpic_get_field_t(struct psc_mfields *_mflds, int p)
 // ======================================================================
 // psc_mfields: subclass "vpic"
 
-static struct mrc_obj_method psc_mfields_vpic_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , psc_mfields_vpic_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_mfields_vpic_copy_from_single),
-  {}
+const MfieldsBase::Convert MfieldsVpic::convert_to_ = {
+  { std::type_index(typeid(MfieldsSingle)), psc_mfields_vpic_copy_to_single },
+};
+
+const MfieldsBase::Convert MfieldsVpic::convert_from_ = {
+  { std::type_index(typeid(MfieldsSingle)), psc_mfields_vpic_copy_from_single },
 };
 
 struct psc_mfields_ops_vpic : psc_mfields_ops {
   psc_mfields_ops_vpic() {
     name                  = "vpic";
     size                  = sizeof(MfieldsVpic);
-    methods               = psc_mfields_vpic_methods;
     setup                 = psc_mfields_vpic_setup;
     destroy               = psc_mfields_vpic_destroy;
 #ifdef HAVE_LIBHDF5_HL
