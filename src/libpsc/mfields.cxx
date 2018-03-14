@@ -131,52 +131,6 @@ inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int m
   assert(0);
 }
 
-PscMfieldsBase psc_mfields_get_as(PscMfieldsBase mflds_base, const char *type, int mb, int me)
-{
-  const char *type_base = psc_mfields_type(mflds_base.mflds());
-  // If we're already the subtype, nothing to be done
-  if (strcmp(type_base, type) == 0)
-    return mflds_base;
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mfields_get_as", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  /* static int cnt; */
-  /* mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me); */
-  /* if (cnt++ == 10) assert(0); */
-
-  auto mflds = PscMfieldsCreate(psc_mfields_comm(mflds_base.mflds()), mflds_base->grid(),
-				mflds_base->n_comps(), mflds_base.mflds()->ibn, type);
-
-  MfieldsBase::convert(*mflds_base.sub(), *mflds.sub(), mb, me);
-
-  prof_stop(pr);
-  return mflds;
-}
-
-void psc_mfields_put_as(PscMfieldsBase mflds, PscMfieldsBase mflds_base, int mb, int me)
-{
-  // If we're already the subtype, nothing to be done
-  const char *type = psc_mfields_type(mflds.mflds());
-  const char *type_base = psc_mfields_type(mflds_base.mflds());
-  if (strcmp(type_base, type) == 0)
-    return;
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mfields_put_as", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  MfieldsBase::convert(*mflds.sub(), *mflds_base.sub(), mb, me);
-  psc_mfields_destroy(mflds.mflds());
-
-  prof_stop(pr);
-}
-
 // ======================================================================
 
 void

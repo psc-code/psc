@@ -306,9 +306,6 @@ struct Mfields : MfieldsBase
 template<typename S> struct PscMfields;
 using PscMfieldsBase = PscMfields<MfieldsBase>;
 
-PscMfieldsBase psc_mfields_get_as(PscMfieldsBase mflds_base, const char *type, int mb, int me);
-void psc_mfields_put_as(PscMfieldsBase mflds, PscMfieldsBase mflds_base, int mb, int me);
-
 template<typename S>
 struct PscMfields
 {
@@ -340,14 +337,50 @@ struct PscMfields
   template<typename MF>
   MF get_as(int mb, int me)
   {
-    const char *type = fields_traits<typename MF::fields_t>::name;
-    return MF{psc_mfields_get_as(PscMfieldsBase{mflds()}, type, mb, me).mflds()};
+    auto& mf_base = *sub();
+    // If we're already the subtype, nothing to be done
+    if (typeid(mf_base) == typeid(typename MF::sub_t)) {
+      return MF{mflds()};
+    }
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("mfields_get_as", 1., 0, 0);
+    }
+    prof_start(pr);
+
+    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
+    
+    auto mflds = MF::create(psc_mfields_comm(mflds_), sub()->grid(), sub()->n_comps(), mflds_->ibn);
+    
+    MfieldsBase::convert(mf_base, *mflds.sub(), mb, me);
+
+    prof_stop(pr);
+    return mflds;
   }
   
   template<typename MF>
   void put_as(MF mflds_base, int mb, int me)
   {
-    psc_mfields_put_as(PscMfieldsBase{mflds()}, PscMfieldsBase{mflds_base.mflds()}, mb, me);
+    auto& mf = *sub();
+    auto& mf_base = *mflds_base.sub();
+    
+    // If we're already the subtype, nothing to be done
+    if (typeid(mf) == typeid(mf_base)) {
+      return;
+    }
+  
+    static int pr;
+    if (!pr) {
+      pr = prof_register("mfields_put_as", 1., 0, 0);
+    }
+    prof_start(pr);
+    
+    MfieldsBase::convert(mf, mf_base, mb, me);
+    psc_mfields_destroy(mflds_);
+    mflds_ = nullptr;
+    
+    prof_stop(pr);
   }
 
   struct psc_mfields *mflds() { return mflds_; }
