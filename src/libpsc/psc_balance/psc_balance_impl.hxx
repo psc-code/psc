@@ -759,6 +759,18 @@ struct Balance_ : BalanceBase
     prof_stop(pr_bal_flds);
   }
 
+  void balance(psc* psc, Grid_t& new_grid, mrc_domain* domain_new)
+  {
+    mrc_domain_destroy(psc->mrc_domain);
+    psc->mrc_domain = domain_new;
+    delete psc->grid_;
+    psc->grid_ = &new_grid;
+    PscBndParticlesBase(psc->bnd_particles).reset();
+    PscBndBase(psc->bnd).reset();
+    psc_output_fields_check_bnd = true;
+    psc_balance_generation_cnt++;
+  }
+
   std::vector<uint> initial(struct psc_balance *bal, struct psc *psc, const std::vector<uint>& n_prts_by_patch_old) override
   {
     struct mrc_domain *domain_old = psc->mrc_domain;
@@ -791,12 +803,7 @@ struct Balance_ : BalanceBase
 
     balance_all_fields(ctx, *new_grid);
 
-    psc->mrc_domain = domain_new;
-    mrc_domain_destroy(domain_old);
-    delete psc->grid_;
-    psc->grid_ = new_grid;
-    PscBndParticlesBase(psc->bnd_particles).reset();
-    psc_output_fields_check_bnd = true;
+    balance(psc, *new_grid, domain_new);
 
     return n_prts_by_patch_new;
   }
@@ -885,14 +892,7 @@ struct Balance_ : BalanceBase
 
     balance_all_fields(ctx, *new_grid);
   
-    delete psc->grid_;
-    psc->grid_ = new_grid;
-    psc->mrc_domain = domain_new;
-    mrc_domain_destroy(domain_old);
-    PscBndParticlesBase(psc->bnd_particles).reset();
-    PscBndBase(psc->bnd).reset();
-    psc_output_fields_check_bnd = true;
-    psc_balance_generation_cnt++;
+    balance(psc, *new_grid, domain_new);
   
     psc_stats_stop(st_time_balance);
   }
