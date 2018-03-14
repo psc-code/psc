@@ -228,27 +228,39 @@ struct PscFlatfoil : Params
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
-  // ----------------------------------------------------------------------
-  // integrate
-
-  void integrate()
+  void setup()
   {
-    psc_method_initialize(psc_->method, psc_);
-    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+    setup_stats();
+  }
 
-    static int pr;
-    if (!pr) {
-      pr = prof_register("psc_step", 1., 0, 0);
-    }
-
-    int st_nr_particles = psc_stats_register("nr particles");
-    int st_time_step = psc_stats_register("time entire step");
+  void setup_stats()
+  {
+    st_nr_particles = psc_stats_register("nr particles");
+    st_time_step = psc_stats_register("time entire step");
 
     // generic stats categories
     st_time_particle = psc_stats_register("time particle update");
     st_time_field = psc_stats_register("time field update");
     st_time_comm = psc_stats_register("time communication");
     st_time_output = psc_stats_register("time output");
+  }
+  
+  // ----------------------------------------------------------------------
+  // integrate
+
+  void integrate()
+  {
+    //psc_method_initialize(psc_->method, psc_);
+    psc_output(psc_);
+    psc_stats_log(psc_);
+    psc_print_profiling(psc_);
+
+    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+
+    static int pr;
+    if (!pr) {
+      pr = prof_register("psc_step", 1., 0, 0);
+    }
 
     mpi_printf(psc_comm(psc_), "*** Advancing\n");
     double elapsed = MPI_Wtime();
@@ -318,6 +330,7 @@ struct PscFlatfoil : Params
   static void integrate(struct psc *psc)
   {
     PscFlatfoil flatfoil(psc);
+    flatfoil.setup();
     flatfoil.integrate();
   }
 
@@ -336,6 +349,9 @@ private:
   Inject_t& inject_;
   Heating_t& heating_;
   Balance_t& balance_;
+
+  int st_nr_particles;
+  int st_time_step;
 };
 
 enum {
