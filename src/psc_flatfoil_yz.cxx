@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define USE_OWN_PSC_STEP
+#define USE_OWN_PSC_STEP
 
 // ======================================================================
 // psc subclass "flatfoil"
@@ -493,6 +493,7 @@ main(int argc, char **argv)
 #include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
 #include "../libpsc/psc_inject/psc_inject_impl.hxx"
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
+#include "../libpsc/psc_balance/psc_balance_impl.hxx"
 
 // ======================================================================
 // PscFlatfoil
@@ -519,6 +520,7 @@ struct PscFlatfoil : Params
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = Inject_<Mparticles_t, Mfields_t>;
   using Heating_t = Heating_<Mparticles_t>;
+  using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
   PscFlatfoil(psc *psc)
     : Params(psc->params),
@@ -534,7 +536,8 @@ struct PscFlatfoil : Params
       bnd_{dynamic_cast<Bnd_t&>(*PscBndBase{psc->bnd}.sub())},
       bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
-      heating_{dynamic_cast<Heating_t&>(*PscHeatingBase{sub_->heating}.sub())}
+      heating_{dynamic_cast<Heating_t&>(*PscHeatingBase{sub_->heating}.sub())},
+      balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {}
   
   void step()
@@ -542,6 +545,8 @@ struct PscFlatfoil : Params
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     
     int timestep = psc_->timestep;
+    
+    balance_(psc_, mprts_);
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       sort_(mprts_);
@@ -613,6 +618,7 @@ private:
   BndFields_t& bndf_;
   Inject_t& inject_;
   Heating_t& heating_;
+  Balance_t& balance_;
 };
 
 // ----------------------------------------------------------------------
@@ -659,9 +665,6 @@ static void psc_flatfoil_integrate(struct psc *psc)
 
     PscMparticlesBase mprts(psc->particles);
 
-    auto balance = PscBalanceBase{psc->balance};
-    balance(psc, mprts);
-    
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
