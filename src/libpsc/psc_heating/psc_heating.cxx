@@ -1,8 +1,6 @@
 
 #include "psc_heating_private.h"
 
-#include <psc_particles_as_single.h> // FIXME
-
 #include <mrc_profile.h>
 #include <stdlib.h>
 
