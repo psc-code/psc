@@ -58,8 +58,7 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
     pr = prof_register("mparticles_put_as", 1., 0, 0);
   }
   prof_start(pr);
-  
-  //  mprintf("put_as %s -> %s from\n", typeid(mp_from).name(), typeid(mp_to).name());
+  //mprintf("put_as %s -> %s from\n", typeid(mp_from).name(), typeid(mp_to).name());
   
   if (flags & MP_DONT_COPY) {
     // let's check that the size of the particle arrays hasn't changed, since
@@ -78,10 +77,10 @@ inline void PscMparticles<S>::put_as(MP mprts_base, uint flags)
     MparticlesBase::convert(mp_from, mp_to);
   }
   
+  //mprintf("put_as %s -> %s to\n", typeid(mp_from).name(), typeid(mp_to).name());
   psc_mparticles_destroy(mprts_);
   mprts_ = nullptr;
   
-  //  mprintf("put_as %s -> %s to\n", typeid(mp_from).name(), typeid(mp_to).name());
   prof_stop(pr);
 }
 

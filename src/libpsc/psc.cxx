@@ -777,7 +777,7 @@ psc_setup_particles(struct psc *psc, uint *nr_particles_by_patch)
 
   // FIXME, why does this do anything to the random seed?e
   auto mprts_base = PscMparticlesBase{psc->particles};
-  auto mprts = mprts_base.get_as<PscMparticlesDouble>(MP_DONT_COPY);
+  auto mprts = mprts_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
 
   if (psc->prm.seed_by_time) {
     srandom(10*rank + time(NULL));

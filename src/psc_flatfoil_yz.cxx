@@ -176,25 +176,12 @@ private:
 
 struct PscFlatfoil : Params
 {
-#define PUSHER 2
-#if PUSHER == 0 // generic_c (double)
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-  using PushParticles_t = PushParticlesGenericC;
-  using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
-#else
-#if PUSHER == 1 // 1vbec_single
   using Mparticles_t = MparticlesSingle;
   using Mfields_t = MfieldsSingle;
-  using PushParticles_t = PushParticles1vbecSingle_t;
-#elif PUSHER == 2 // 1vbec_double
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-  using PushParticles_t = PushParticles1vbecDouble_t;
-#endif
-  template<typename dim>
-  using push_p_ops_1vbec_ = push_p_ops_1vbec<Mparticles_t, Mfields_t, dim>;
-  //using PushParticles_t = PushParticles_<push_p_ops_1vbec_>;
+#define PUSHER 1
+#if PUSHER == 0 // generic_c
+  using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
+#else // 1vbec
   using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
 #endif
   
@@ -214,20 +201,20 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
-      collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
-      //pushp_{*new PushParticlesPusher_t{}},
-      pushp_{dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_.pushp_},
-      pushf_{dynamic_cast<PushFields_t&>(*PscPushFieldsBase{psc->push_fields}.sub())},
-      bndp_{dynamic_cast<BndParticles_t&>(*PscBndParticlesBase{psc->bnd_particles}.sub())},
-      bnd_{dynamic_cast<Bnd_t&>(*PscBndBase{psc->bnd}.sub())},
-      //      bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
-      inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
-      balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
+      // sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
+      // collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
+      // bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
+      inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
+      // balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
     // mprintf("pushp %s\n", typeid(*PscPushParticlesBase{psc->push_particles}.sub()).name());
     // mprintf("pushp %s\n", typeid(dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_).name());
     // mprintf("xxx   %s\n", typeid(PushParticles_t).name());
+
+    pushp_.reset(new PushParticlesPusher_t{});
+    pushf_.reset(new PushFields_t{});
+    bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
+    bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain, psc_->ibn});
 
     PscHeatingSpotFoilParams foil_params;
     foil_params.zl = sub_->heating_zl * sub_->d_i;
@@ -246,50 +233,51 @@ struct PscFlatfoil : Params
     
     int timestep = psc_->timestep;
     
-    balance_(psc_, mprts_);
+    // balance_(psc_, mprts_);
     
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
-      sort_(mprts_);
-    }
+    // if (sort_interval > 0 && timestep % sort_interval == 0) {
+    //   sort_(mprts_);
+    // }
     
-    collision_(mprts_);
+    // collision_(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    //pushp_.push_mprts(mprts_, mflds_);
-    PscPushParticlesBase{psc_->push_particles}(PscMparticlesBase{psc_->particles}, PscMfieldsBase{psc_->flds});
+    pushp_->push_mprts(mprts_, mflds_);
+    //PscPushParticlesBase{psc_->push_particles}(PscMparticlesBase{psc_->particles}, PscMfieldsBase{psc_->flds});
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
-    pushf_.push_H<dim_yz>(mflds_, .5);
+    pushf_->push_H<dim_yz>(mflds_, .5);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-    
-    bndp_(mprts_);
+
+    (*bndp_)(mprts_);
+    //PscBndParticlesBase{psc_->bnd_particles}(PscMparticlesBase{psc_->particles});
     
     inject_(mprts_);
     (*heating_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     //bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bnd_->fill_ghosts(mflds_, HX, HX + 3);
     
     //bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
     
-    pushf_.push_E<dim_yz>(mflds_, 1.);
+    pushf_->push_E<dim_yz>(mflds_, 1.);
     
     //bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bnd_->fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
     //bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bnd_->fill_ghosts(mflds_, EX, EX + 3);
     
-    pushf_.push_H<dim_yz>(mflds_, .5);
+    pushf_->push_H<dim_yz>(mflds_, .5);
     
     //bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bnd_->fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
 
@@ -416,15 +404,16 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  Sort_t& sort_;
-  Collision_t& collision_;
-  PushParticlesPusher_t& pushp_;
-  PushFields_t& pushf_;
-  BndParticles_t& bndp_;
-  Bnd_t& bnd_;
-  //BndFields_t& bndf_;
+  // Sort_t& sort_;
+  // Collision_t& collision_;
+  // BndFields_t& bndf_;
   Inject_t& inject_;
-  Balance_t& balance_;
+  // Balance_t& balance_;
+
+  std::unique_ptr<PushParticlesPusher_t> pushp_;
+  std::unique_ptr<PushFields_t> pushf_;
+  std::unique_ptr<BndParticles_t> bndp_;
+  std::unique_ptr<Bnd_t> bnd_;
 
   std::unique_ptr<Heating_t> heating_;
   
