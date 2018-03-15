@@ -88,9 +88,6 @@ public:
 // ======================================================================
 // PscPushParticles
 
-template<typename S> struct PscPushParticles;
-using PscPushParticlesBase = PscPushParticles<PushParticlesBase>;
-
 template<typename S>
 struct PscPushParticles
 {
@@ -108,13 +105,11 @@ struct PscPushParticles
       pr = prof_register("push_particles_run", 1., 0, 0);
     }  
     
-    PscPushParticlesBase pushp(pushp_);
-    
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     psc_stats_start(st_time_particle);
     
-    pushp->push_mprts(mprts_base.mprts(), mflds_base.mflds());
+    sub()->push_mprts(mprts_base.mprts(), mflds_base.mflds());
     
     psc_stats_stop(st_time_particle);
     prof_stop(pr_time_step_no_comm);
@@ -123,9 +118,7 @@ struct PscPushParticles
 
   void stagger(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    PscPushParticlesBase pushp(pushp_);
-
-    pushp->stagger_mprts(mprts_base.mprts(), mflds_base.mflds());
+    sub()->stagger_mprts(mprts_base.mprts(), mflds_base.mflds());
   }
   
   psc_push_particles *pushp() { return pushp_; }
@@ -138,6 +131,8 @@ private:
   psc_push_particles *pushp_;
   sub_t *sub_;
 };
+
+using PscPushParticlesBase = PscPushParticles<PushParticlesBase>;
 
 // ======================================================================
 // PscPushParticles_
