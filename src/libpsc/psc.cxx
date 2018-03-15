@@ -15,6 +15,7 @@
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 #include "psc_checks.h"
+//#include "particles_impl.hxx"
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 #include "fields.hxx"

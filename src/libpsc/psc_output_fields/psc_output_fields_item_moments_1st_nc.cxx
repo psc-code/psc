@@ -28,7 +28,7 @@ struct Moment_n_1st_nc
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *prt = &*prt_iter;
       int m = prt->kind();
       DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, 1.f);
@@ -55,7 +55,7 @@ struct Moment_rho_1st_nc
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
     
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *prt = &*prt_iter;
       int m = prt->kind();
       DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, ppsc->kinds[m].q);
@@ -82,7 +82,7 @@ struct Moment_v_1st_nc
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
     real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
 
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *prt = &*prt_iter;
       int mm = prt->kind() * 3;
       

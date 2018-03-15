@@ -150,7 +150,7 @@ count_sort(mparticles_t mprts, int **off, int **map)
     unsigned int n_prts = prts.size();
 
     // counting sort to get map 
-    PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *part = &*prt_iter;
       int si = get_sort_index(prts, part);
       off[p][si]++;

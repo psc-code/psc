@@ -2,7 +2,6 @@
 #include "psc_sort_private.h"
 #include "sort.hxx"
 
-#include <particle_iter.h>
 #include <psc_particles.h>
 
 #include <mrc_profile.h>
@@ -30,7 +29,7 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
       unsigned int *cnts = new unsigned int[n_cells]{};
     
       // count
-      PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
 	int cni = prts.validCellIndex(*prt_iter);
 	cnts[cni]++;
       }
@@ -46,7 +45,7 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
     
       // move into new position
       particle_t *particles2 = new particle_t[n_prts];
-      PARTICLE_ITER_LOOP(prt_iter, prts.begin(), prts.end()) {
+      for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
 	unsigned int cni = prts.validCellIndex(*prt_iter);
 	particles2[cnts[cni]] = *prt_iter;
 	cnts[cni]++;

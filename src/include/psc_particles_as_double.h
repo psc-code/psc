@@ -11,7 +11,5 @@ using particle_t = mparticles_t::particle_t;
 
 #define PSC_PARTICLES_AS_DOUBLE 1
 
-#include "particle_iter.h"
-
 #endif
 

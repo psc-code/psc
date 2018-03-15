@@ -11,7 +11,5 @@ using particle_t = mparticles_t::particle_t;
 
 #define PSC_PARTICLES_AS_SINGLE 1
 
-#include "particle_iter.h"
-
 #endif
 

@@ -1,8 +1,6 @@
 
 #include <mrc_profile.h>
 
-#include <particle_iter.h>
-
 template<typename C>
 struct PushParticles__
 {
