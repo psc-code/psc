@@ -11,8 +11,7 @@ add_library(psc
   psc_main.cxx
   psc_method.cxx
   psc_method_default.cxx
-  psc_particles_double.cxx
-  psc_particles_single.cxx
+  psc_particles_impl.cxx
   psc_particles_single_by_kind.cxx
   psc_stats.cxx
   rngpool.cxx
