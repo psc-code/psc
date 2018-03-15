@@ -1,32 +1,14 @@
 
 #include "psc_diag_item_private.h"
-#include "psc_particles_as_double.h"
+#include "psc_particles_double.h"
 
 #include <math.h>
+
+using mparticles_t = PscMparticlesDouble;
 
 static void
 do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
 {
-  const Grid_t& grid = psc->grid();
-  mparticles_t::patch_t& prts = mprts[p];
-  double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-
-  double fac = grid.dx[0] * grid.dx[1] * grid.dx[2];
-  int n_prts = prts.size();
-  for (int n = 0; n < n_prts; n++) {
-    particle_t& prt = prts[n];
-      
-    double gamma = sqrt(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
-    double Ekin = (gamma - 1.) * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
-    double qni = mprts->prt_qni(prt);
-    if (qni < 0.) {
-      result[0] += Ekin * fac;
-    } else if (qni > 0.) {
-      result[1] += Ekin * fac;
-    } else {
-      assert(0);
-    }
-  }
 }
 
 static void
@@ -36,8 +18,23 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
   auto mprts_base = PscMparticlesBase{psc->particles};
   mparticles_t mprts = mprts_base.get_as<mparticles_t>();
 
+  const Grid_t& grid = psc->grid();
+  double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  double fac = grid.dx[0] * grid.dx[1] * grid.dx[2];
+
   for (int p = 0; p < mprts->n_patches(); p++) {
-    do_particle_energy(psc, mprts, p, result);
+    for (auto& prt : mprts[p]) {
+      double gamma = sqrt(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+      double Ekin = (gamma - 1.) * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
+      double qni = mprts->prt_qni(prt);
+      if (qni < 0.) {
+	result[0] += Ekin * fac;
+      } else if (qni > 0.) {
+	result[1] += Ekin * fac;
+      } else {
+	assert(0);
+      }
+    }
   }
 
   mprts.put_as(mprts_base, MP_DONT_COPY);

@@ -1,6 +1,6 @@
 
 #include "psc_output_particles_private.h"
-#include "psc_particles_as_double.h"
+#include "psc_particles_double.h"
 
 #include <mrc_params.h>
 #include <string.h>
@@ -46,18 +46,17 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
   sprintf(filename, "%s/%s.%06d_p%06d.asc", asc->data_dir,
 	  asc->basename, ppsc->timestep, rank);
 
-  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+  auto mprts = mprts_base.get_as<PscMparticlesDouble>();
 
   FILE *file = fopen(filename, "w");
   for (int p = 0; p < mprts->n_patches(); p++) {
-    mparticles_t::patch_t& prts = mprts[p];
-    int n_prts = prts.size();
-    for (int n = 0; n < n_prts; n++) {
-      particle_t& prt = prts[n];
+    int n = 0;
+    for (auto& prt : mprts[p]) {
       fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
 	      n, prt.xi, prt.yi, prt.zi,
 	      prt.pxi, prt.pyi, prt.pzi,
 	      prt.qni_wni_, prt.kind());
+      n++;
     }
   }
 

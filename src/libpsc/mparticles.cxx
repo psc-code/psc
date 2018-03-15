@@ -1,8 +1,6 @@
 
 #include "psc.h"
 
-#include "psc_particles_as_double.h" // only for checking...
-
 #include <mrc_profile.h>
 #include <mrc_params.h>
 #include <mrc_io.h>
@@ -15,6 +13,7 @@
 #include "particles_impl.hxx"
 
 #include "psc_particles_single.h"
+#include "psc_particles_double.h"
 #include "psc_particles_cuda.h"
 #include "psc_particles_vpic.h"
 
@@ -50,12 +49,12 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
   auto mprts_base = PscMparticlesBase{_mprts_base};
   int fail_cnt = 0;
 
-  mparticles_t mprts = mprts_base.get_as<PscMparticlesDouble>();
+  auto mprts = mprts_base.get_as<PscMparticlesDouble>();
   const Grid_t& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {
     auto& patch = ppsc->grid().patches[p];
-    mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
+    auto& prts = mprts[p];
 
     f_real xb[3], xe[3];
     
@@ -67,13 +66,12 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
       xe[d] = patch.xb[d] + grid.ldims[d] * grid.dx[d];
     }
 
-    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t *part = &*prt_iter;
-      if (part->xi < 0.f || part->xi >= xe[0] - xb[0] || // FIXME xz only!
-	  part->zi < 0.f || part->zi >= xe[2] - xb[2]) {
+    for (auto prt : prts) {
+      if (prt.xi < 0.f || prt.xi >= xe[0] - xb[0] || // FIXME xz only!
+	  prt.zi < 0.f || prt.zi >= xe[2] - xb[2]) {
 	if (fail_cnt++ < 10) {
-	  mprintf("FAIL: xi %g [%g:%g]\n", part->xi, 0., xe[0] - xb[0]);
-	  mprintf("      zi %g [%g:%g]\n", part->zi, 0., xe[2] - xb[2]);
+	  mprintf("FAIL: xi %g [%g:%g]\n", prt.xi, 0., xe[0] - xb[0]);
+	  mprintf("      zi %g [%g:%g]\n", prt.zi, 0., xe[2] - xb[2]);
 	}
       }
     }

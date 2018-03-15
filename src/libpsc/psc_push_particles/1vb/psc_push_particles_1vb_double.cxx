@@ -1,8 +1,8 @@
 
 #include "psc_push_particles_private.h"
 
-#include "psc_particles_as_double.h"
-#include "psc_fields_as_c.h"
+#include "psc_particles_double.h"
+#include "psc_fields_c.h"
 
 #define CALC_J CALC_J_1VB_2D
 

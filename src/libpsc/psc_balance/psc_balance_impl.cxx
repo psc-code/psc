@@ -4,9 +4,9 @@
 #include "psc_balance_impl.hxx"
 
 #include "psc_particles_single.h"
-#include "psc_particles_as_double.h"
+#include "psc_particles_double.h"
 #include "psc_fields_single.h"
-#include "psc_fields_as_c.h"
+#include "psc_fields_c.h"
 
 // ======================================================================
 // psc_balance subclass "single"
