@@ -121,6 +121,13 @@ struct PscPushParticles
     prof_stop(pr);
   }
 
+  void stagger(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  {
+    PscPushParticlesBase pushp(pushp_);
+
+    pushp->stagger_mprts(mprts_base.mprts(), mflds_base.mflds());
+  }
+  
   psc_push_particles *pushp() { return pushp_; }
   
   sub_t* operator->() { return sub_; }

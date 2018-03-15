@@ -7,6 +7,7 @@
 #include <psc_output_particles.h>
 #include <psc_balance.h>
 #include <particles.hxx>
+#include <push_particles.hxx>
 
 #include <stdlib.h>
 
@@ -61,7 +62,8 @@ psc_method_default_set_ic_fields(struct psc_method *method, struct psc *psc)
 static void
 psc_method_default_initialize(struct psc_method *method, struct psc *psc)
 {
-  psc_push_particles_stagger(psc->push_particles, psc->particles, psc->flds);
+  auto pushp = PscPushParticlesBase{psc->push_particles};
+  pushp.stagger(PscMparticlesBase{psc->particles}, PscMfieldsBase{psc->flds});
 
   // initial output / stats
   psc_output(psc);

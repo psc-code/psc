@@ -38,15 +38,6 @@ psc_push_particles_prep(struct psc_push_particles *push,
   prof_stop(pr);
 }
 
-void
-psc_push_particles_stagger(struct psc_push_particles *push,
-			   struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
-{
-  PscPushParticlesBase pushp(push);
-
-  pushp->stagger_mprts(mprts_base, mflds_base);
-}
-
 unsigned int
 psc_push_particles_get_mp_flags(struct psc_push_particles *push)
 {
