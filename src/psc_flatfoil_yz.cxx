@@ -182,16 +182,20 @@ struct PscFlatfoil : Params
   using Mfields_t = MfieldsC;
   using PushParticles_t = PushParticlesGenericC;
   using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
-#elif PUSHER == 1 // 1vbec_single
+#else
+#if PUSHER == 1 // 1vbec_single
   using Mparticles_t = MparticlesSingle;
   using Mfields_t = MfieldsSingle;
-  using PushParticles_t = PushParticles1vbecSingle;
-  using PushParticlesPusher_t = PushParticles1vb<Config1vbecSingle<dim_yz>>;
+  using PushParticles_t = PushParticles1vbecSingle_t;
 #elif PUSHER == 2 // 1vbec_double
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
-  using PushParticles_t = PushParticles_<push_p_ops_1vbec_double>;
-  using PushParticlesPusher_t = PushParticles1vb<Config1vbecDouble<dim_yz>>;
+  using PushParticles_t = PushParticles1vbecDouble_t;
+#endif
+  template<typename dim>
+  using push_p_ops_1vbec_ = push_p_ops_1vbec<Mparticles_t, Mfields_t, dim>;
+  //using PushParticles_t = PushParticles_<push_p_ops_1vbec_>;
+  using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
 #endif
   
   using Sort_t = SortCountsort2<Mparticles_t>;
@@ -251,7 +255,8 @@ struct PscFlatfoil : Params
     collision_(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp_.push_mprts(mprts_, mflds_);
+    //pushp_.push_mprts(mprts_, mflds_);
+    PscPushParticlesBase{psc_->push_particles}(PscMparticlesBase{psc_->particles}, PscMfieldsBase{psc_->flds});
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}

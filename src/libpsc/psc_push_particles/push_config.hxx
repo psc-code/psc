@@ -70,17 +70,16 @@ using Config1st = push_p_config<MparticlesDouble, MfieldsC,
 				dim, opt_order_1st,
 				CurrentNone>;
 
+template<typename Mparticles, typename Mfields, typename dim>
+using Config1vbec = push_p_config<Mparticles, Mfields,
+				  InterpolateEM1vbec<Fields3d<typename Mfields::fields_t>, dim>,
+				  dim, opt_order_1st,
+				  Current1vbVar1>;
 template<typename dim>
-using Config1vbecDouble = push_p_config<MparticlesDouble, MfieldsC,
-					InterpolateEM1vbec<Fields3d<MfieldsC::fields_t>, dim>,
-					dim, opt_order_1st,
-					Current1vbVar1>;
+using Config1vbecDouble = Config1vbec<MparticlesDouble, MfieldsC, dim>;
 
 template<typename dim>
-using Config1vbecSingle = push_p_config<MparticlesSingle, MfieldsSingle,
-					InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t>, dim>,
-					dim, opt_order_1st,
-					Current1vbVar1>;
+using Config1vbecSingle = Config1vbec<MparticlesSingle, MfieldsSingle, dim>;
 
 using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsSingle,
 					  InterpolateEM1vbec<Fields3d<MfieldsSingle::fields_t, dim_xz>, dim_xyz>,

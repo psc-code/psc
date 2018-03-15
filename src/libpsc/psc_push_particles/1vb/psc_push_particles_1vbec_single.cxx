@@ -6,7 +6,7 @@
 // ======================================================================
 // psc_push_particles: subclass "1vbec_single"
 
-using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles1vbecSingle>;
+using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles1vbecSingle_t>;
 
 struct psc_push_particles_ops_1vbec_single : psc_push_particles_ops {
   psc_push_particles_ops_1vbec_single() {

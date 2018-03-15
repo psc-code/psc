@@ -1,8 +1,8 @@
 
 #include "psc_push_particles_private.h"
 
-#include "psc_particles_as_double.h"
-#include "psc_fields_as_c.h"
+#include "psc_particles_double.h"
+#include "psc_fields_c.h"
 #include "psc_push_particles_1vb.h"
 #include "push_particles.hxx"
 #include "push_particles_1vbec_single.hxx"
@@ -10,7 +10,7 @@
 // ======================================================================
 // psc_push_particles: subclass "1vbec_double"
 
-using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles_t>;
+using PushParticlesWrapper_t = PushParticlesWrapper<PushParticles1vbecDouble_t>;
   
 struct psc_push_particles_ops_1vbec_double : psc_push_particles_ops {
   psc_push_particles_ops_1vbec_double() {
