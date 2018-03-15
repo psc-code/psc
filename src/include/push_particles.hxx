@@ -13,12 +13,12 @@ extern int pr_time_step_no_comm; // FIXME
 class PushParticlesBase
 {
 public:
-  virtual void prep(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+  virtual void prep(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   { assert(0); }
   
-  virtual void push_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+  virtual void push_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    auto gdims = PscMparticlesBase(mprts_base)->grid().gdims;
+    auto gdims = mprts_base->grid().gdims;
 
     // if this function has not been overriden, call the pusher for the appropriate dims
     if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] == 1) { // x
@@ -40,33 +40,33 @@ public:
     }
   }
 
-  virtual void push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_xyz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_xy(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_xy(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_xz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_xz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_x(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_x(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_y(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_y(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_z(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_z(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void push_mprts_1(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void stagger_mprts(struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+  virtual void stagger_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    auto gdims = PscMparticlesBase(mprts_base)->grid().gdims;
+    auto gdims = mprts_base->grid().gdims;
 
     if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) { // yz
       stagger_mprts_yz(mprts_base, mflds_base);
@@ -77,10 +77,10 @@ public:
     }
   }
   
-  virtual void stagger_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void stagger_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
-  virtual void stagger_mprts_1(struct psc_mparticles *mprts, struct psc_mfields *mflds_base)
+  virtual void stagger_mprts_1(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
 };
@@ -109,7 +109,7 @@ struct PscPushParticles
     prof_restart(pr_time_step_no_comm);
     psc_stats_start(st_time_particle);
     
-    sub()->push_mprts(mprts_base.mprts(), mflds_base.mflds());
+    sub()->push_mprts(mprts_base, mflds_base.mflds());
     
     psc_stats_stop(st_time_particle);
     prof_stop(pr_time_step_no_comm);
@@ -118,7 +118,7 @@ struct PscPushParticles
 
   void stagger(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    sub()->stagger_mprts(mprts_base.mprts(), mflds_base.mflds());
+    sub()->stagger_mprts(mprts_base, mflds_base.mflds());
   }
   
   psc_push_particles *pushp() { return pushp_; }
@@ -147,10 +147,8 @@ struct PscPushParticles_
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
   
-  static void push_mprts(struct psc_mparticles *_mprts_base, struct psc_mfields *_mflds_base)
+  static void push_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    auto mflds_base = PscMfieldsBase{_mflds_base};
-    auto mprts_base = PscMparticlesBase{_mprts_base};
     auto mf = mflds_base.get_as<mfields_t>(EX, EX + 6);
     auto mp = mprts_base.get_as<mparticles_t>();
     PushParticles_t::push_mprts(*mp.sub(), *mf.sub());
@@ -158,10 +156,8 @@ struct PscPushParticles_
     mf.put_as(mflds_base, JXI, JXI+3);
   }
   
-  static void stagger_mprts(struct psc_mparticles *_mprts_base, struct psc_mfields *_mflds_base)
+  static void stagger_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    auto mflds_base = PscMfieldsBase{_mflds_base};
-    auto mprts_base = PscMparticlesBase{_mprts_base};
     auto mf = mflds_base.get_as<mfields_t>(EX, EX + 6);
     auto mp = mprts_base.get_as<mparticles_t>();
     PushParticles_t::stagger_mprts(*mp.sub(), *mf.sub());

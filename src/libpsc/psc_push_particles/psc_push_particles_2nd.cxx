@@ -14,7 +14,7 @@
 
 struct PushParticles2ndDouble : PushParticlesBase
 {
-  void push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds) override
+  void push_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
   { return PscPushParticles_<PushParticles__<Config2ndDoubleYZ>>::push_mprts(mprts, mflds); }
 };
 
