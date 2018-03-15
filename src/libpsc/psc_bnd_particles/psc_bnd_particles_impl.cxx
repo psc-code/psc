@@ -2,7 +2,6 @@
 #include "psc_bnd_particles_private.h"
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
-#include "psc_particles_fortran.h"
 
 //#include "psc_bnd_particles_open.cxx"
 
