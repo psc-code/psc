@@ -5,34 +5,7 @@
 #include "particles.hxx"
 #include "fields3d.hxx"
 
-// ======================================================================
-// PscPushParticles
-
-template<typename S>
-struct PscPushParticles
-{
-  using sub_t = S;
-
-  explicit PscPushParticles(psc_push_particles *pushp)
-    : pushp_(pushp),
-      sub_(mrc_to_subobj(pushp, sub_t))
-  {}
-
-  void operator()(PscMparticlesBase mprts, PscMfieldsBase mflds)
-  {
-    psc_push_particles_run(pushp_, mprts.mprts(), mflds.mflds());
-  }
-
-  psc_push_particles *pushp() { return pushp_; }
-  
-  sub_t* operator->() { return sub_; }
-
-  sub_t* sub() { return sub_; }
-
-private:
-  psc_push_particles *pushp_;
-  sub_t *sub_;
-};
+extern int pr_time_step_no_comm; // FIXME
 
 // ======================================================================
 // PushParticlesBase
@@ -112,7 +85,52 @@ public:
 
 };
 
+// ======================================================================
+// PscPushParticles
+
+template<typename S> struct PscPushParticles;
 using PscPushParticlesBase = PscPushParticles<PushParticlesBase>;
+
+template<typename S>
+struct PscPushParticles
+{
+  using sub_t = S;
+
+  explicit PscPushParticles(psc_push_particles *pushp)
+    : pushp_(pushp),
+      sub_(mrc_to_subobj(pushp, sub_t))
+  {}
+
+  void operator()(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("push_particles_run", 1., 0, 0);
+    }  
+    
+    PscPushParticlesBase pushp(pushp_);
+    
+    prof_start(pr);
+    prof_restart(pr_time_step_no_comm);
+    psc_stats_start(st_time_particle);
+    
+    pushp->push_mprts(mprts_base.mprts(), mflds_base.mflds());
+    
+    psc_stats_stop(st_time_particle);
+    prof_stop(pr_time_step_no_comm);
+    prof_stop(pr);
+  }
+
+  psc_push_particles *pushp() { return pushp_; }
+  
+  sub_t* operator->() { return sub_; }
+
+  sub_t* sub() { return sub_; }
+
+private:
+  psc_push_particles *pushp_;
+  sub_t *sub_;
+};
 
 // ======================================================================
 // PscPushParticles_
