@@ -7,8 +7,6 @@
 using mparticles_t = PscMparticlesDouble;
 using particle_t = mparticles_t::particle_t;
 
-#define particle_qni_wni            particle_double_qni_wni
-
 #define PARTICLE_TYPE               "double"
 
 #define PSC_PARTICLES_AS_DOUBLE 1
