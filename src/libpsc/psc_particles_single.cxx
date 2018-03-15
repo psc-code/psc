@@ -41,5 +41,4 @@ template<> const MparticlesBase::Convert MparticlesSingle::convert_from_ = {
   { std::type_index(typeid(MparticlesDouble)), psc_mparticles_copy_from<MparticlesSingle, MparticlesDouble> },
 };
 
-#include "psc_particles_common.cxx"
-
+psc_mparticles_ops_<mparticles_t::sub_t> psc_mparticles_single_ops;

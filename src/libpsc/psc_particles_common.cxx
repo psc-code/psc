@@ -120,4 +120,3 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
-psc_mparticles_ops_<mparticles_t::sub_t> PFX(ops);

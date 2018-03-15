@@ -9,7 +9,5 @@ using particle_t = mparticles_t::particle_t;
 
 #define PARTICLE_TYPE               "single"
 
-#define PSC_PARTICLES_AS_SINGLE 1
-
 #endif
 

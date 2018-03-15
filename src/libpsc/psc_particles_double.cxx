@@ -9,5 +9,5 @@
 template<> const MparticlesBase::Convert MparticlesDouble::convert_to_ = {};
 template<> const MparticlesBase::Convert MparticlesDouble::convert_from_ = {};
 
-#include "psc_particles_common.cxx"
+psc_mparticles_ops_<mparticles_t::sub_t> psc_mparticles_double_ops;
 

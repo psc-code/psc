@@ -9,7 +9,5 @@ using particle_t = mparticles_t::particle_t;
 
 #define PARTICLE_TYPE               "double"
 
-#define PSC_PARTICLES_AS_DOUBLE 1
-
 #endif
 
