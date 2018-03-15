@@ -9,7 +9,13 @@
 #include "../1vb.c"
 
 template<typename dim>
-using push_p_ops_1vbec_single_ = PscPushParticles_<PushParticles1vb<Config1vbecDouble<dim>>>;
+using push_p_ops_1vbec_double = PscPushParticles_<PushParticles1vb<Config1vbecDouble<dim>>>;
+
+using PushParticles_t = PushParticles_<push_p_ops_1vbec_double>;
+
+
+template<typename dim>
+using push_p_ops_1vbec_single_ = PscPushParticles_<PushParticles1vb<Config1vbecSingle<dim>>>;
 
 // FIXME, special hack... for xyz_xz
 

@@ -38,7 +38,8 @@
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
 #include "../libpsc/psc_push_particles/push_config.hxx"
-#include "../libpsc/psc_push_particles/push_part_common.c"
+#include "../libpsc/psc_push_particles/push_dispatch.hxx"
+#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
 #include "psc_push_fields_impl.hxx"
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
@@ -175,16 +176,31 @@ private:
 
 struct PscFlatfoil : Params
 {
+#define PUSHER 2
+#if PUSHER == 0 // generic_c (double)
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
+  using PushParticles_t = PushParticlesGenericC;
+  using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
+#elif PUSHER == 1 // 1vbec_single
+  using Mparticles_t = MparticlesSingle;
+  using Mfields_t = MfieldsSingle;
+  using PushParticles_t = PushParticles1vbecSingle;
+  using PushParticlesPusher_t = PushParticles1vb<Config1vbecSingle<dim_yz>>;
+#elif PUSHER == 2 // 1vbec_double
+  using Mparticles_t = MparticlesDouble;
+  using Mfields_t = MfieldsC;
+  using PushParticles_t = PushParticles_<push_p_ops_1vbec_double>;
+  using PushParticlesPusher_t = PushParticles1vb<Config1vbecDouble<dim_yz>>;
+#endif
+  
   using Sort_t = SortCountsort2<Mparticles_t>;
   using Collision_t = Collision_<Mparticles_t, Mfields_t>;
-  using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
   using PushFields_t = PushFields<Mfields_t>;
   using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
-  using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = Inject_<Mparticles_t, Mfields_t>;
+  using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
+  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
@@ -196,14 +212,19 @@ struct PscFlatfoil : Params
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
       collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
-      pushp_{*new PushParticles_t{}}, // FIXME
+      //pushp_{*new PushParticlesPusher_t{}},
+      pushp_{dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_.pushp_},
       pushf_{dynamic_cast<PushFields_t&>(*PscPushFieldsBase{psc->push_fields}.sub())},
       bndp_{dynamic_cast<BndParticles_t&>(*PscBndParticlesBase{psc->bnd_particles}.sub())},
       bnd_{dynamic_cast<Bnd_t&>(*PscBndBase{psc->bnd}.sub())},
-      bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
+      //      bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
+    // mprintf("pushp %s\n", typeid(*PscPushParticlesBase{psc->push_particles}.sub()).name());
+    // mprintf("pushp %s\n", typeid(dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_).name());
+    // mprintf("xxx   %s\n", typeid(PushParticles_t).name());
+
     PscHeatingSpotFoilParams foil_params;
     foil_params.zl = sub_->heating_zl * sub_->d_i;
     foil_params.zh = sub_->heating_zh * sub_->d_i;
@@ -243,26 +264,26 @@ struct PscFlatfoil : Params
     (*heating_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-    bndf_.fill_ghosts_H(mflds_);
+    //bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
-    bndf_.add_ghosts_J(mflds_);
+    //bndf_.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     
     pushf_.push_E<dim_yz>(mflds_, 1.);
     
-    bndf_.fill_ghosts_E(mflds_);
+    //bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
-    bndf_.fill_ghosts_E(mflds_);
+    //bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     
     pushf_.push_H<dim_yz>(mflds_, .5);
     
-    bndf_.fill_ghosts_H(mflds_);
+    //bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
@@ -392,11 +413,11 @@ private:
   Mfields_t& mflds_;
   Sort_t& sort_;
   Collision_t& collision_;
-  PushParticles_t& pushp_;
+  PushParticlesPusher_t& pushp_;
   PushFields_t& pushf_;
   BndParticles_t& bndp_;
   Bnd_t& bnd_;
-  BndFields_t& bndf_;
+  //BndFields_t& bndf_;
   Inject_t& inject_;
   Balance_t& balance_;
 

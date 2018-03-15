@@ -164,6 +164,8 @@ struct PscPushParticles_
     mp.put_as(mprts_base);
     mf.put_as(mflds_base, JXI, JXI+3);
   }
+
+  PushParticles_t pushp_;
 };
 
 template<typename PushParticles_t>

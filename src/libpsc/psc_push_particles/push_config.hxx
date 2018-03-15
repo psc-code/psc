@@ -9,6 +9,7 @@
 #include "inc_curr.c"
 #include "pushp_current_esirkepov.hxx"
 #include "inc_push.c"
+#include "push_particles.hxx"
 
 #define atomicAdd(addr, val) \
   do { *(addr) += (val); } while (0)
@@ -91,3 +92,4 @@ using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsSingle,
 					 dim_1, opt_order_1st,
 					 Current1vbVar1,
 					 dim_1>;
+

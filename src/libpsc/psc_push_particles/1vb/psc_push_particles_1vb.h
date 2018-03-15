@@ -28,7 +28,7 @@ public:
 #endif
 
   void push_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { PUSH_P_OPS<dim_yz>::push_mprts(mprts, mflds); }
+  { push_yz_.push_mprts(mprts, mflds); }
 
   void push_mprts_1(PscMparticlesBase mprts, PscMfieldsBase mflds) override
   { PUSH_P_OPS<dim_1>::push_mprts(mprts, mflds); }
@@ -36,6 +36,7 @@ public:
   void stagger_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
   { PUSH_P_OPS<dim_yz>::stagger_mprts(mprts, mflds); }
 
+  PUSH_P_OPS<dim_yz> push_yz_;
 };
 
 

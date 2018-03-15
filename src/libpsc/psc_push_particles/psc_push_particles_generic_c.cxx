@@ -3,35 +3,7 @@
 
 #include "push_particles.hxx"
 #include "push_config.hxx"
-
-#include "push_part_common.c"
-
-template<typename DIM>
-using Push = PscPushParticles_<PushParticles__<Config2nd<DIM>>>;
-
-struct PushParticlesGenericC : PushParticlesBase
-{
-  void push_mprts_xyz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_xyz>::push_mprts(mprts, mflds); }
-
-  void push_mprts_xy(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_xy>::push_mprts(mprts, mflds); }
-
-  void push_mprts_xz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_xz>::push_mprts(mprts, mflds); }
-
-  void push_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_yz>::push_mprts(mprts, mflds); }
-
-  void push_mprts_y(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_y>::push_mprts(mprts, mflds); }
-
-  void push_mprts_z(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_z>::push_mprts(mprts, mflds); }
-
-  void push_mprts_1(PscMparticlesBase mprts, PscMfieldsBase mflds) override
-  { return Push<dim_1>::push_mprts(mprts, mflds); }
-};
+#include "push_dispatch.hxx"
 
 using PushParticlesWrapper_t = PushParticlesWrapper<PushParticlesGenericC>;
 
