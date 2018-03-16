@@ -2,8 +2,6 @@
 #include <psc.h>
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
-#include <psc_heating.h>
-#include <psc_inject.h>
 #include <psc_target_private.h>
 
 #include <math.h>
@@ -75,8 +73,6 @@ struct psc_flatfoil {
   double target_zwidth;
   struct psc_target *target;
 
-  struct psc_inject *inject;
-
   double heating_zl; // this is ugly as these are used to set the corresponding
   double heating_zh; // quantities in psc_heating, but having them here we can rescale
   double heating_xc; // them from d_i to internal (d_e) units
@@ -118,7 +114,6 @@ static struct param psc_flatfoil_descr[] = {
   { "LLs"               , VAR(LLs)               , MRC_VAR_DOUBLE           },
   { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
   { "target"            , VAR(target)            , MRC_VAR_OBJ(psc_target)  },
-  { "inject"            , VAR(inject)            , MRC_VAR_OBJ(psc_inject)  },
   {},
 };
 #undef VAR
@@ -496,9 +491,6 @@ psc_flatfoil_setup(struct psc *psc)
   psc_target_set_param_double(sub->target, "yh", sub->target_yh * sub->d_i);
   psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
   psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
-
-  psc_inject_set_param_int(sub->inject, "kind_n", MY_ELECTRON);
-  psc_inject_set_param_obj(sub->inject, "target", sub->target);
 
   psc_setup_super(psc);
   psc_setup_member_objs_sub(psc);
