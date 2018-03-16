@@ -147,7 +147,7 @@ psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
     assert(psc->n_patches() == 1);
     n_prts_by_patch[0] = 1; // fake, but not possible to balance, anyway
   } else {
-    psc_setup_partition(psc, n_prts_by_patch);
+    SetupParticles<MparticlesDouble>::setup_partition(psc, n_prts_by_patch);
   }
 }
 

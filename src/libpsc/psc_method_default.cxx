@@ -34,7 +34,7 @@ static void
 psc_method_default_setup_partition(struct psc_method *method, struct psc *psc,
 				   uint *n_prts_by_patch)
 {
-  psc_setup_partition(psc, n_prts_by_patch);
+  SetupParticles<MparticlesDouble>::setup_partition(psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
