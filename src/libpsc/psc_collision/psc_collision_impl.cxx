@@ -9,11 +9,13 @@
 
 #include <string>
 
+void* global_collision; // FIXME
+
 // ======================================================================
 // psc_collision: subclass "single"/"double"
 
-psc_collision_ops_<Collision_<MparticlesSingle, MfieldsSingle>> psc_collision_single_ops;
-psc_collision_ops_<Collision_<MparticlesDouble, MfieldsC>> psc_collision_double_ops;
+psc_collision_ops_<CollisionConvert<Collision_<MparticlesSingle, MfieldsSingle>>> psc_collision_single_ops;
+psc_collision_ops_<CollisionConvert<Collision_<MparticlesDouble, MfieldsC>>> psc_collision_double_ops;
 
 template<typename Collision>
 struct Item_coll_stats
@@ -29,12 +31,12 @@ struct Item_coll_stats
 
   static void run(mfields_t mflds, mfields_t mres)
   {
-    PscCollision<Collision> collision(ppsc->collision);
-    Collision* coll = collision.sub();
+    assert(global_collision);
+    Collision& coll = *reinterpret_cast<Collision*>(global_collision);
     
-    for (int m = 0; m < coll->NR_STATS; m++) {
+    for (int m = 0; m < coll.NR_STATS; m++) {
       // FIXME, copy could be avoided (?)
-      mres->copy_comp(m, *mfields_t(coll->mflds).sub(), m);
+      mres->copy_comp(m, *mfields_t(coll.mflds).sub(), m);
     }
   }
 };
@@ -52,12 +54,12 @@ struct Item_coll_rei
 
   static void run(mfields_t mflds, mfields_t mres)
   {
-    PscCollision<Collision> collision(ppsc->collision);
-    Collision* coll = collision.sub();
+    assert(global_collision);
+    Collision& coll = *reinterpret_cast<Collision*>(global_collision);
     
     for (int m = 0; m < 3; m++) {
       // FIXME, copy could be avoided (?)
-      mres->copy_comp(m, *mfields_t(coll->mflds_rei).sub(), m);
+      mres->copy_comp(m, *mfields_t(coll.mflds_rei).sub(), m);
     }
   }
 };

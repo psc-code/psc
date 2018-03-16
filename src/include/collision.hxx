@@ -77,6 +77,24 @@ protected:
 };
 
 // ======================================================================
+// CollisionConvert
+
+template<typename Collision_t>
+struct CollisionConvert : Collision_t, CollisionBase
+{
+  using Base = Collision_t;
+  using Mparticles = typename Collision_t::Mparticles;
+  using Base::Base;
+
+  void run(PscMparticlesBase mprts_base) override
+  {
+    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
+    (*this)(*mprts.sub());
+    mprts.put_as(mprts_base);
+  }
+};
+
+// ======================================================================
 // CollisionWrapper
 
 template<typename Collision>

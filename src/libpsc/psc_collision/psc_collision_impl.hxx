@@ -10,10 +10,11 @@
 
 #include <cmath>
 
+extern void* global_collision; // FIXME
+
 template<typename MP, typename MF>
-struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
+struct Collision_
 {
-  using Base = CollisionCRTP<Collision_<MP, MF>, MP>;
   using Mparticles = MP;
   using particles_t = typename Mparticles::patch_t;
   using particle_t = typename Mparticles::particle_t;
@@ -39,7 +40,7 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   };
 
   Collision_(MPI_Comm comm, int interval, double nu)
-    : Base(interval),
+    : interval_(interval),
       nu_(nu)
   {
     assert(nu_ > 0.);
@@ -57,6 +58,8 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
     psc_mfields_set_comp_name(mflds_rei, 1, "coll_rei_y");
     psc_mfields_set_comp_name(mflds_rei, 2, "coll_rei_z");
     psc_mfields_list_add(&psc_mfields_base_list, &mflds_rei);
+
+    global_collision = this;
   }
 
   ~Collision_()
@@ -531,6 +534,7 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
 private:
   // parameters
   double nu_;
+  int interval_;
 
 public: // FIXME
   // internal
