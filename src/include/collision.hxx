@@ -63,20 +63,12 @@ struct CollisionCRTP : CollisionBase
   {}
 
   // ----------------------------------------------------------------------
-  // operator()
-  
-  void operator()(Mparticles& mprts)
-  {
-    static_cast<Derived*>(this)->collide(mprts);
-  }
-
-  // ----------------------------------------------------------------------
   // run
 
   void run(PscMparticlesBase mprts_base) override
   {
     auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    (*this)(*mprts.sub());
+    static_cast<Derived&>(*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 

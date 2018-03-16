@@ -68,7 +68,7 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   // ----------------------------------------------------------------------
   // collide
 
-  void collide(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     static int pr;
     if (!pr) {
