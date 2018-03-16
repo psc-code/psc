@@ -201,7 +201,6 @@ struct PscFlatfoil : Params
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
-      inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
     MPI_Comm comm = psc_comm(psc);
@@ -218,6 +217,13 @@ struct PscFlatfoil : Params
     foil_params.T  = .04;
     foil_params.Mi = sub_->heating_rH * psc->kinds[MY_ION].m;
     heating_.reset(new Heating_t{20, 0, 10000000, MY_ELECTRON, PscHeatingSpotFoil{foil_params}});
+
+    bool inject_enable = true;
+    bool inject_kind_n = MY_ELECTRON;
+    bool inject_interval = 20;
+    bool inject_tau = 40;
+    inject_.reset(new Inject_t{comm, inject_enable, inject_interval, inject_tau, inject_kind_n,
+	  sub_->target});
   }
   
   void step()
@@ -248,7 +254,7 @@ struct PscFlatfoil : Params
 
     (*bndp_)(mprts_);
     
-    inject_(mprts_);
+    (*inject_)(mprts_);
     (*heating_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
@@ -398,7 +404,6 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  Inject_t& inject_;
   Balance_t& balance_;
 
   Sort_t sort_;
@@ -410,6 +415,7 @@ private:
   BndFields_t bndf_;
 
   std::unique_ptr<Heating_t> heating_;
+  std::unique_ptr<Inject_t> inject_;
   
   int st_nr_particles;
   int st_time_step;
