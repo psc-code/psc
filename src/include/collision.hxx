@@ -84,19 +84,8 @@ struct CollisionCRTP : CollisionBase
 
   void run(PscMparticlesBase mprts_base) override
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("collision", 1., 0, 0);
-    }
-
     auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    
-    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-    mpi_printf(comm, "***** Performing collisions...\n");
-    prof_start(pr);
-    static_cast<Derived*>(this)->collide(*mprts.sub());
-    prof_stop(pr);
-    
+    (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 
