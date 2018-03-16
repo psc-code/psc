@@ -46,14 +46,69 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 
-// ======================================================================
-// psc subclass "flatfoil"
-
 enum {
   MY_ION,
   MY_ELECTRON,
   N_MY_KINDS,
 };
+
+// ======================================================================
+// TargetFoil
+
+struct psc_target_foil
+{
+  // params
+  double yl;
+  double yh;
+  double zl;
+  double zh;
+  double n;
+  double Te;
+  double Ti;
+};
+
+#define psc_target_foil(target) mrc_to_subobj(target, struct psc_target_foil)
+
+struct TargetFoil : psc_target_foil
+{
+  TargetFoil(const psc_target_foil& params)
+    : psc_target_foil{params}
+  {}
+
+  bool is_inside(double crd[3])
+  {
+    return (crd[1] >= yl && crd[1] <= yh &&
+	    crd[2] >= zl && crd[2] <= zh);
+  }
+
+  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
+  {
+    if (!is_inside(crd)) {
+      npt->n = 0;
+      return;
+    }
+    
+    switch (pop) {
+    case MY_ION:
+      npt->n    = n;
+      npt->T[0] = Ti;
+      npt->T[1] = Ti;
+      npt->T[2] = Ti;
+      break;
+    case MY_ELECTRON:
+      npt->n    = n;
+      npt->T[0] = Te;
+      npt->T[1] = Te;
+      npt->T[2] = Te;
+      break;
+    default:
+      assert(0);
+    }
+  }
+};
+
+// ======================================================================
+// psc subclass "flatfoil"
 
 struct psc_flatfoil {
   double BB;
@@ -72,6 +127,7 @@ struct psc_flatfoil {
   double target_yh;
   double target_zwidth;
   struct psc_target *target;
+  TargetFoil inject_target;
 
   double heating_zl; // this is ugly as these are used to set the corresponding
   double heating_zh; // quantities in psc_heating, but having them here we can rescale
@@ -157,58 +213,6 @@ private:
   double fac;
 };
 
-struct psc_target_foil
-{
-  // params
-  double yl;
-  double yh;
-  double zl;
-  double zh;
-  double n;
-  double Te;
-  double Ti;
-};
-
-#define psc_target_foil(target) mrc_to_subobj(target, struct psc_target_foil)
-
-struct TargetFoil : psc_target_foil
-{
-  TargetFoil(psc_target* target)
-    : psc_target_foil{*psc_target_foil(target)}
-  {}
-
-  bool is_inside(double crd[3])
-  {
-    return (crd[1] >= yl && crd[1] <= yh &&
-	    crd[2] >= zl && crd[2] <= zh);
-  }
-
-  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
-  {
-    if (!is_inside(crd)) {
-      npt->n = 0;
-      return;
-    }
-    
-    switch (pop) {
-    case MY_ION:
-      npt->n    = n;
-      npt->T[0] = Ti;
-      npt->T[1] = Ti;
-      npt->T[2] = Ti;
-      break;
-    case MY_ELECTRON:
-      npt->n    = n;
-      npt->T[0] = Te;
-      npt->T[1] = Te;
-      npt->T[2] = Te;
-      break;
-    default:
-      assert(0);
-    }
-  }
-};
-
 // ======================================================================
 // PscFlatfoil
 //
@@ -255,7 +259,7 @@ struct PscFlatfoil : Params
     bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
     bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain, psc_->ibn});
 
-    PscHeatingSpotFoilParams foil_params;
+    auto foil_params = PscHeatingSpotFoilParams{};
     foil_params.zl = sub_->heating_zl * sub_->d_i;
     foil_params.zh = sub_->heating_zh * sub_->d_i;
     foil_params.xc = sub_->heating_xc * sub_->d_i;
@@ -269,8 +273,7 @@ struct PscFlatfoil : Params
     bool inject_kind_n = MY_ELECTRON;
     bool inject_interval = 20;
     bool inject_tau = 40;
-    inject_.reset(new Inject_t{comm, inject_enable, inject_interval, inject_tau, inject_kind_n,
-	  TargetFoil{sub_->target}});
+    inject_.reset(new Inject_t{comm, inject_enable, inject_interval, inject_tau, inject_kind_n, sub_->inject_target});
   }
   
   void step()
@@ -544,6 +547,16 @@ psc_flatfoil_setup(struct psc *psc)
   psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
   psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
 
+  auto foil_inject_params = psc_target_foil{};
+  foil_inject_params.yl = sub->target_yl * sub->d_i;
+  foil_inject_params.yh = sub->target_yh * sub->d_i;
+  foil_inject_params.zl = - sub->target_zwidth * sub->d_i;
+  foil_inject_params.zh =   sub->target_zwidth * sub->d_i;
+  foil_inject_params.n  = 1.;
+  foil_inject_params.Te = .001;
+  foil_inject_params.Ti = .001;
+  sub->inject_target = TargetFoil{foil_inject_params};
+  
   psc_setup_super(psc);
   psc_setup_member_objs_sub(psc);
 
@@ -588,7 +601,6 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 		      struct psc_particle_npt *npt)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
-  struct psc_target *target = sub->target;
 
   switch (pop) {
   case MY_ION:
@@ -611,9 +623,9 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     return;
   }
 
-  if (psc_target_is_inside(target, x)) {
+  if (sub->inject_target.is_inside(x)) {
     // replace values above by target values
-    psc_target_init_npt(target, pop, x, npt);
+    sub->inject_target.init_npt(pop, x, npt);
   }
 }
 
