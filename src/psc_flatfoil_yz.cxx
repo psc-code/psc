@@ -201,7 +201,6 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
       collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
       // bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
@@ -211,6 +210,7 @@ struct PscFlatfoil : Params
     // mprintf("pushp %s\n", typeid(dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_).name());
     // mprintf("xxx   %s\n", typeid(PushParticles_t).name());
 
+    sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticlesPusher_t{});
     pushf_.reset(new PushFields_t{});
     bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
@@ -236,14 +236,13 @@ struct PscFlatfoil : Params
     // balance_(psc_, mprts_);
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
-      sort_(mprts_);
+      (*sort_)(mprts_);
     }
     
     collision_(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp_->push_mprts(mprts_, mflds_);
-    //PscPushParticlesBase{psc_->push_particles}(PscMparticlesBase{psc_->particles}, PscMfieldsBase{psc_->flds});
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
@@ -251,7 +250,6 @@ struct PscFlatfoil : Params
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     (*bndp_)(mprts_);
-    //PscBndParticlesBase{psc_->bnd_particles}(PscMparticlesBase{psc_->particles});
     
     inject_(mprts_);
     (*heating_)(mprts_);
@@ -389,7 +387,6 @@ struct PscFlatfoil : Params
     /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
     mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
 	       elapsed, w, d, h, m, s );
-  
   }
 
   static void integrate(struct psc *psc)
@@ -404,12 +401,12 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  Sort_t& sort_;
   Collision_t& collision_;
   // BndFields_t& bndf_;
   Inject_t& inject_;
   // Balance_t& balance_;
 
+  std::unique_ptr<Sort_t> sort_;
   std::unique_ptr<PushParticlesPusher_t> pushp_;
   std::unique_ptr<PushFields_t> pushf_;
   std::unique_ptr<BndParticles_t> bndp_;
