@@ -232,7 +232,9 @@ struct PscFlatfoil : Params
       sort_(mprts_);
     }
     
-    (*collision_)(mprts_);
+    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+      (*collision_)(mprts_);
+    }
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp_.push_mprts(mprts_, mflds_);

@@ -72,13 +72,11 @@ struct CollisionCRTP : CollisionBase
       pr = prof_register("collision", 1., 0, 0);
     }
 
-    if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
-      MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-      mpi_printf(comm, "***** Performing collisions...\n");
-      prof_start(pr);
-      static_cast<Derived*>(this)->collide(mprts);
-      prof_stop(pr);
-    }
+    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+    mpi_printf(comm, "***** Performing collisions...\n");
+    prof_start(pr);
+    static_cast<Derived*>(this)->collide(mprts);
+    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------
