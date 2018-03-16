@@ -200,8 +200,8 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
-      // balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
+      inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
+      balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
     MPI_Comm comm = psc_comm(psc);
     
@@ -225,8 +225,14 @@ struct PscFlatfoil : Params
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     
     int timestep = psc_->timestep;
-    
-    // balance_(psc_, mprts_);
+
+    int gen_cnt = psc_balance_generation_cnt;
+    balance_(psc_, mprts_);
+    if (psc_balance_generation_cnt > gen_cnt) {
+      // FIXME, hacky but at least makes it work
+      bndp_->reset(psc_->mrc_domain, psc_->grid());
+      bnd_->reset();
+    }
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       sort_(mprts_);
@@ -395,7 +401,7 @@ private:
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
   Inject_t& inject_;
-  // Balance_t& balance_;
+  Balance_t& balance_;
 
   Sort_t sort_;
   std::unique_ptr<Collision_t> collision_;
