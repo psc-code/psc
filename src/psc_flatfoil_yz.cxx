@@ -201,8 +201,8 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      // sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
-      // collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
+      sort_{dynamic_cast<Sort_t&>(*PscSortBase{psc->sort}.sub())},
+      collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
       // bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
       // balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
@@ -235,11 +235,11 @@ struct PscFlatfoil : Params
     
     // balance_(psc_, mprts_);
     
-    // if (sort_interval > 0 && timestep % sort_interval == 0) {
-    //   sort_(mprts_);
-    // }
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      sort_(mprts_);
+    }
     
-    // collision_(mprts_);
+    collision_(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp_->push_mprts(mprts_, mflds_);
@@ -404,8 +404,8 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  // Sort_t& sort_;
-  // Collision_t& collision_;
+  Sort_t& sort_;
+  Collision_t& collision_;
   // BndFields_t& bndf_;
   Inject_t& inject_;
   // Balance_t& balance_;
