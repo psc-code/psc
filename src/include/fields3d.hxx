@@ -231,7 +231,7 @@ struct Mfields : MfieldsBase
 
     data.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      data.emplace_back(new real_t[n_fields * size]);
+      data.emplace_back(new real_t[n_fields * size]{});
     }
   }
 
