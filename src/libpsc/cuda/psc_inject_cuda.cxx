@@ -1,5 +1,4 @@
 
-#include <psc_inject_private.h>
 #include <psc_balance.h>
 
 #include <psc_fields_as_single.h>
@@ -26,7 +25,7 @@ struct InjectCuda : InjectBase
   using Fields = Fields3d<fields_t>;
 
   InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
-	     psc_target* target)
+	     Target_t target)
     : InjectBase(do_inject, every_step, tau, kind_n)
 
   {

@@ -2,7 +2,6 @@
 #include <psc.h>
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
-#include <psc_target_private.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -67,8 +66,6 @@ struct psc_target_foil
   double Ti;
 };
 
-#define psc_target_foil(target) mrc_to_subobj(target, struct psc_target_foil)
-
 struct TargetFoil : psc_target_foil
 {
   TargetFoil(const psc_target_foil& params)
@@ -126,7 +123,6 @@ struct psc_flatfoil {
   double target_yl;
   double target_yh;
   double target_zwidth;
-  struct psc_target *target;
   TargetFoil inject_target;
 
   double heating_zl; // this is ugly as these are used to set the corresponding
@@ -169,7 +165,6 @@ static struct param psc_flatfoil_descr[] = {
 
   { "LLs"               , VAR(LLs)               , MRC_VAR_DOUBLE           },
   { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
-  { "target"            , VAR(target)            , MRC_VAR_OBJ(psc_target)  },
   {},
 };
 #undef VAR
@@ -507,8 +502,6 @@ psc_flatfoil_create(struct psc *psc)
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
-
-  psc_target_set_type(sub->target, "foil");
 }
 
 // ----------------------------------------------------------------------
@@ -541,11 +534,6 @@ psc_flatfoil_setup(struct psc *psc)
   psc->kinds[MY_ION     ].name = strdup("i");
 
   sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
-
-  psc_target_set_param_double(sub->target, "yl", sub->target_yl * sub->d_i);
-  psc_target_set_param_double(sub->target, "yh", sub->target_yh * sub->d_i);
-  psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
-  psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
 
   auto foil_inject_params = psc_target_foil{};
   foil_inject_params.yl = sub->target_yl * sub->d_i;
@@ -649,86 +637,11 @@ struct psc_ops_flatfoil : psc_ops {
 } psc_flatfoil_ops;
 
 // ======================================================================
-// psc_target subclass "foil"
-
-#define VAR(x) (void *)offsetof(struct psc_target_foil, x)
-static struct param psc_target_foil_descr[] _mrc_unused = {
-  { "yl"           , VAR(yl)           , PARAM_DOUBLE(0.)       },
-  { "yh"           , VAR(yh)           , PARAM_DOUBLE(0.)       },
-  { "zl"           , VAR(zl)           , PARAM_DOUBLE(0.)       },
-  { "zh"           , VAR(zh)           , PARAM_DOUBLE(0.)       },
-  { "n"            , VAR(n)            , PARAM_DOUBLE(1.)       },
-  { "Te"           , VAR(Te)           , PARAM_DOUBLE(.001)     },
-  { "Ti"           , VAR(Ti)           , PARAM_DOUBLE(.001)     },
-  {},
-};
-#undef VAR
-
-// ----------------------------------------------------------------------
-// psc_target_foil_is_inside
-
-static bool
-psc_target_foil_is_inside(struct psc_target *target, double x[3])
-{
-  struct psc_target_foil *sub = psc_target_foil(target);
-  
-  return (x[1] >= sub->yl && x[1] <= sub->yh &&
-	  x[2] >= sub->zl && x[2] <= sub->zh);
-}
-
-// ----------------------------------------------------------------------
-// psc_target_foil_init_npt
-
-static void
-psc_target_foil_init_npt(struct psc_target *target, int pop, double x[3],
-			 struct psc_particle_npt *npt)
-{
-  struct psc_target_foil *sub = psc_target_foil(target);
-
-  if (!psc_target_foil_is_inside(target, x)) {
-    npt->n = 0;
-    return;
-  }
-
-  switch (pop) {
-  case MY_ION:
-    npt->n    = sub->n;
-    npt->T[0] = sub->Ti;
-    npt->T[1] = sub->Ti;
-    npt->T[2] = sub->Ti;
-    break;
-  case MY_ELECTRON:
-    npt->n    = sub->n;
-    npt->T[0] = sub->Te;
-    npt->T[1] = sub->Te;
-    npt->T[2] = sub->Te;
-    break;
-  default:
-    assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_target "foil"
-
-struct psc_target_ops_foil : psc_target_ops {
-  psc_target_ops_foil() {
-    name                = "foil";
-    size                = sizeof(struct psc_target_foil);
-    param_descr         = psc_target_foil_descr;
-    is_inside           = psc_target_foil_is_inside;
-    init_npt            = psc_target_foil_init_npt;
-  }
-} psc_target_ops_foil;
-
-// ======================================================================
 // main
 
 int
 main(int argc, char **argv)
 {
-  mrc_class_register_subclass(&mrc_class_psc_target,
-			      &psc_target_ops_foil);
   return psc_main(&argc, &argv, &psc_flatfoil_ops);
 }
 

@@ -1,5 +1,4 @@
 
-#include <psc_inject_private.h>
 #include <psc_balance.h>
 
 #include <inject.hxx>
