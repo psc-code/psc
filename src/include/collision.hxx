@@ -38,7 +38,9 @@ struct PscCollision
     }
     
     psc_stats_start(st_time_collision);
-    (*this)->run(mprts);
+    if (collision_->every > 0 && ppsc->timestep % collision_->every == 0) {
+      sub()->run(mprts);
+    }
     psc_stats_stop(st_time_collision);
   }
   
@@ -89,17 +91,15 @@ struct CollisionCRTP : CollisionBase
       pr = prof_register("collision", 1., 0, 0);
     }
 
-    if (interval_ > 0 && ppsc->timestep % interval_ == 0) {
-      auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-      
-      MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-      mpi_printf(comm, "***** Performing collisions...\n");
-      prof_start(pr);
-      static_cast<Derived*>(this)->collide(*mprts.sub());
-      prof_stop(pr);
-      
-      mprts.put_as(mprts_base);
-    }
+    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
+    
+    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+    mpi_printf(comm, "***** Performing collisions...\n");
+    prof_start(pr);
+    static_cast<Derived*>(this)->collide(*mprts.sub());
+    prof_stop(pr);
+    
+    mprts.put_as(mprts_base);
   }
 
 protected:
