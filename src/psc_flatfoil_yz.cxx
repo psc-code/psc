@@ -200,12 +200,12 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
+      collision_{psc_comm(psc), collision_interval, collision_nu},
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
     MPI_Comm comm = psc_comm(psc);
     
-    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
     bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
     bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain, psc_->ibn});
 
@@ -235,7 +235,7 @@ struct PscFlatfoil : Params
     
     if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
-      (*collision_)(mprts_);
+      collision_(mprts_);
     }
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
@@ -402,7 +402,7 @@ private:
   Balance_t& balance_;
 
   Sort_t sort_;
-  std::unique_ptr<Collision_t> collision_;
+  Collision_t collision_;
   PushParticlesPusher_t pushp_;
   PushFields_t pushf_;
   std::unique_ptr<BndParticles_t> bndp_;
