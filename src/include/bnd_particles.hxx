@@ -10,7 +10,6 @@
 
 struct BndParticlesBase
 {
-  virtual void reset(struct mrc_domain*, const Grid_t& grid) = 0;
   virtual void exchange_particles(PscMparticlesBase mprts_base) = 0;
 };
 
@@ -43,12 +42,6 @@ struct PscBndParticles
     prof_stop(pr);
   }
 
-  void reset()
-  {
-    if (!bndp_->obj.is_setup) return; // FIXME, hack around being called before constructed
-    sub()->reset(bndp_->psc->mrc_domain, bndp_->psc->grid());
-  }
-  
   sub_t* sub() { return mrc_to_subobj(bndp_, sub_t); }
   sub_t* operator->() { return sub(); }
 

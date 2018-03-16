@@ -836,7 +836,6 @@ private:
     psc->mrc_domain = domain_new;
     delete psc->grid_;
     psc->grid_ = &new_grid;
-    PscBndParticlesBase(psc->bnd_particles).reset();
     if (mp) { // FIXME, hacky...
       PscBndBase(psc->bnd).reset();
     }

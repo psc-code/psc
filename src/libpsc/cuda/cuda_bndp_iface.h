@@ -27,9 +27,9 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<MparticlesCuda>
   // ----------------------------------------------------------------------
   // reset
   
-  void reset(struct mrc_domain *domain, const Grid_t& grid) override
+  void reset()
   {
-    Base::reset(domain, grid);
+    Base::reset();
     //cbndp_->setup(grid);
   }
 
@@ -38,6 +38,8 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<MparticlesCuda>
 
   void exchange_particles(PscMparticlesBase mprts_base) override
   {
+    // FIXME, needs to check for rebalanced domain
+    
     static int pr_A, pr_B;
     if (!pr_A) {
       pr_A = prof_register("xchg_mprts_prep", 1., 0, 0);

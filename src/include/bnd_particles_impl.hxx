@@ -3,6 +3,7 @@
 
 #include <cstring>
 
+#include "psc_balance.h"
 #include "ddc_particles.hxx"
 #include "bnd_particles.hxx"
 
@@ -26,9 +27,10 @@ struct psc_bnd_particles_sub : BndParticlesBase
   // ctor
 
   psc_bnd_particles_sub(struct mrc_domain *domain, const Grid_t& grid)
-    : ddcp(nullptr)
+    : ddcp{},
+      balance_generation_cnt_{-1}
   {
-    ddcp = new ddc_particles<mparticles_t>(domain);
+    reset();
   }
 
   // ----------------------------------------------------------------------
@@ -42,10 +44,11 @@ struct psc_bnd_particles_sub : BndParticlesBase
   // ----------------------------------------------------------------------
   // reset
 
-  void reset(struct mrc_domain *domain, const Grid_t& grid) override
+  void reset()
   {
     delete ddcp;
-    ddcp = new ddc_particles<mparticles_t>(domain);
+    ddcp = new ddc_particles<mparticles_t>(ppsc->mrc_domain);
+    balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 
   // ----------------------------------------------------------------------
@@ -53,6 +56,9 @@ struct psc_bnd_particles_sub : BndParticlesBase
   
   void operator()(Mparticles& mprts)
   {
+    if (psc_balance_generation_cnt > balance_generation_cnt_) {
+      reset();
+    }
     for (int p = 0; p < mprts.n_patches(); p++) {
       ddcp_patch *dpatch = &ddcp->patches[p];
       dpatch->m_buf = &mprts[p].get_buf();
@@ -110,6 +116,7 @@ protected:
 
 protected:
   ddcp_t* ddcp;
+  int balance_generation_cnt_;
 };
 
 // ----------------------------------------------------------------------

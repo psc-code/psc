@@ -230,7 +230,6 @@ struct PscFlatfoil : Params
     balance_(psc_, mprts_);
     if (psc_balance_generation_cnt > gen_cnt) {
       // FIXME, hacky but at least makes it work
-      bndp_->reset(psc_->mrc_domain, psc_->grid());
       bnd_->reset();
     }
     
