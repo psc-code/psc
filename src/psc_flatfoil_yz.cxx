@@ -176,10 +176,9 @@ private:
 
 struct PscFlatfoil : Params
 {
-  using Mparticles_t = MparticlesSingle;
-  using Mfields_t = MfieldsSingle;
-#define PUSHER 1
-#if PUSHER == 0 // generic_c
+  using Mparticles_t = MparticlesDouble;
+  using Mfields_t = MfieldsC;
+#if 1 // generic_c
   using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
 #else // 1vbec
   using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
@@ -201,7 +200,6 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      collision_{dynamic_cast<Collision_t&>(*PscCollisionBase{psc->collision}.sub())},
       // bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
       // balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
@@ -210,7 +208,10 @@ struct PscFlatfoil : Params
     // mprintf("pushp %s\n", typeid(dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_).name());
     // mprintf("xxx   %s\n", typeid(PushParticles_t).name());
 
+    MPI_Comm comm = psc_comm(psc);
+    
     sort_.reset(new Sort_t{});
+    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
     pushp_.reset(new PushParticlesPusher_t{});
     pushf_.reset(new PushFields_t{});
     bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
@@ -239,7 +240,7 @@ struct PscFlatfoil : Params
       (*sort_)(mprts_);
     }
     
-    collision_(mprts_);
+    (*collision_)(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp_->push_mprts(mprts_, mflds_);
@@ -401,12 +402,12 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  Collision_t& collision_;
   // BndFields_t& bndf_;
   Inject_t& inject_;
   // Balance_t& balance_;
 
   std::unique_ptr<Sort_t> sort_;
+  std::unique_ptr<Collision_t> collision_;
   std::unique_ptr<PushParticlesPusher_t> pushp_;
   std::unique_ptr<PushFields_t> pushf_;
   std::unique_ptr<BndParticles_t> bndp_;

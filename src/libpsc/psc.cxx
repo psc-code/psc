@@ -6,7 +6,7 @@
 #include "psc_bnd.h"
 #include "psc_bnd_particles.h"
 #include "psc_bnd_fields.h"
-#include "psc_collision.h"
+#include "psc_collision_private.h"
 #include "psc_sort_private.h"
 #include "psc_marder.h"
 #include "psc_diag.h"
@@ -504,6 +504,8 @@ _psc_setup(struct psc *psc)
   psc_setup_member_objs(psc);
 
   psc->params.sort_interval = psc->sort->every;
+  psc->params.collision_interval = psc->collision->every;
+  psc->params.collision_nu = psc->collision->nu;
 }
 
 // ----------------------------------------------------------------------

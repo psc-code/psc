@@ -23,8 +23,6 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
 
-  using Base::Base;
-
   constexpr static char const* const name = mparticles_traits<mparticles_t>::name;
 
   enum {
