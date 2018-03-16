@@ -203,16 +203,9 @@ struct PscFlatfoil : Params
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
       // balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
-    // mprintf("pushp %s\n", typeid(*PscPushParticlesBase{psc->push_particles}.sub()).name());
-    // mprintf("pushp %s\n", typeid(dynamic_cast<PushParticles_t&>(*PscPushParticlesBase{psc->push_particles}.sub()).push_yz_).name());
-    // mprintf("xxx   %s\n", typeid(PushParticles_t).name());
-
     MPI_Comm comm = psc_comm(psc);
     
-    sort_.reset(new Sort_t{});
     collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
-    pushp_.reset(new PushParticlesPusher_t{});
-    pushf_.reset(new PushFields_t{});
     bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
     bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain, psc_->ibn});
 
@@ -236,17 +229,17 @@ struct PscFlatfoil : Params
     // balance_(psc_, mprts_);
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
-      (*sort_)(mprts_);
+      sort_(mprts_);
     }
     
     (*collision_)(mprts_);
     
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp_->push_mprts(mprts_, mflds_);
+    pushp_.push_mprts(mprts_, mflds_);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
-    pushf_->push_H<dim_yz>(mflds_, .5);
+    pushf_.push_H<dim_yz>(mflds_, .5);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     (*bndp_)(mprts_);
@@ -262,7 +255,7 @@ struct PscFlatfoil : Params
     bnd_->add_ghosts(mflds_, JXI, JXI + 3);
     bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
     
-    pushf_->push_E<dim_yz>(mflds_, 1.);
+    pushf_.push_E<dim_yz>(mflds_, 1.);
     
     bndf_.fill_ghosts_E(mflds_);
     bnd_->fill_ghosts(mflds_, EX, EX + 3);
@@ -272,7 +265,7 @@ struct PscFlatfoil : Params
     bndf_.fill_ghosts_E(mflds_);
     bnd_->fill_ghosts(mflds_, EX, EX + 3);
     
-    pushf_->push_H<dim_yz>(mflds_, .5);
+    pushf_.push_H<dim_yz>(mflds_, .5);
     
     bndf_.fill_ghosts_H(mflds_);
     bnd_->fill_ghosts(mflds_, HX, HX + 3);
@@ -404,10 +397,10 @@ private:
   Inject_t& inject_;
   // Balance_t& balance_;
 
-  std::unique_ptr<Sort_t> sort_;
+  Sort_t sort_;
   std::unique_ptr<Collision_t> collision_;
-  std::unique_ptr<PushParticlesPusher_t> pushp_;
-  std::unique_ptr<PushFields_t> pushf_;
+  PushParticlesPusher_t pushp_;
+  PushFields_t pushf_;
   std::unique_ptr<BndParticles_t> bndp_;
   std::unique_ptr<Bnd_t> bnd_;
   BndFields_t bndf_;
