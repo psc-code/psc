@@ -130,7 +130,7 @@ struct FieldsItemFields : FieldsItemBase
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
-    mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
+    mfields_t mflds = mflds_base.get_as<mfields_t>(0, mflds_base->n_comps());
     mfields_t mres(mres_base_);
     Item::run(mflds, mres);
     mflds.put_as(mflds_base, 0, 0);
