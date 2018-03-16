@@ -67,16 +67,7 @@ struct CollisionCRTP : CollisionBase
   
   void operator()(Mparticles& mprts)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("collision", 1., 0, 0);
-    }
-
-    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-    mpi_printf(comm, "***** Performing collisions...\n");
-    prof_start(pr);
     static_cast<Derived*>(this)->collide(mprts);
-    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------

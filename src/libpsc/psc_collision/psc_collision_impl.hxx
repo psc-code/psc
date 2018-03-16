@@ -70,6 +70,12 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
 
   void collide(Mparticles& mprts)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("collision", 1., 0, 0);
+    }
+
+    prof_start(pr);
     mfields_t mf_coll(mflds);
     for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
@@ -110,7 +116,7 @@ struct Collision_ : CollisionCRTP<Collision_<MP, MF>, MP>
   
       free(offsets);
     }
-    
+    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------

@@ -223,7 +223,7 @@ struct PscFlatfoil : Params
   void step()
   {
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-    
+    MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
     balance_(psc_, mprts_);
@@ -233,6 +233,7 @@ struct PscFlatfoil : Params
     }
     
     if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
       (*collision_)(mprts_);
     }
     
