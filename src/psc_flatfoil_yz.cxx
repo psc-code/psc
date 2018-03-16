@@ -218,7 +218,7 @@ struct PscFlatfoil : Params
     bool inject_interval = 20;
     bool inject_tau = 40;
     inject_.reset(new Inject_t{comm, inject_enable, inject_interval, inject_tau, inject_kind_n,
-	  sub_->target});
+	  TargetPsc{sub_->target}});
   }
   
   void step()

@@ -55,7 +55,7 @@ struct Inject_ : InjectBase
   // ctor
   
   Inject_(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
-	  psc_target* target)
+	  Target_t target)
     : InjectBase{do_inject, every_step, tau, kind_n},
       target_{target}
   {
