@@ -26,17 +26,7 @@ _psc_balance_read(struct psc_balance *bal, struct mrc_io *io)
 {
   int nr_patches;
   mrc_domain_get_patches(ppsc->mrc_domain, &nr_patches);
-  psc_balance_comp_time_by_patch = (double *) calloc(nr_patches,// leaked the very last time
-					  sizeof(*psc_balance_comp_time_by_patch));
-}
-
-// ----------------------------------------------------------------------
-// _psc_balance_destroy
-
-static void
-_psc_balance_destroy(struct psc_balance *bal)
-{
-  free(psc_balance_comp_time_by_patch);
+  psc_balance_comp_time_by_patch = new double[nr_patches];
 }
 
 // ----------------------------------------------------------------------
@@ -73,7 +63,6 @@ struct mrc_class_psc_balance_ : mrc_class_psc_balance
     size        = sizeof(struct psc_balance);
     param_descr = psc_balance_descr;
     init        = psc_balance_init;
-    destroy     = _psc_balance_destroy;
     read        = _psc_balance_read;
   }
 } mrc_class_psc_balance;

@@ -329,8 +329,15 @@ struct Balance_ : BalanceBase
   Balance_(int every, double factor_fields=1., bool print_loads=false, bool write_loads=false)
     : every_(every), factor_fields_(factor_fields),
       print_loads_(print_loads), write_loads_(write_loads)
-  {}
+  {
+    psc_balance_comp_time_by_patch = nullptr;
+  }
 
+  ~Balance_()
+  {
+    delete[] psc_balance_comp_time_by_patch;
+  }
+  
   std::vector<uint> initial(psc* psc, const std::vector<uint>& n_prts_by_patch_old) override
   {
     auto loads = get_loads_initial(psc->grid(), n_prts_by_patch_old);
@@ -798,9 +805,8 @@ private:
     auto domain_new = psc_setup_mrc_domain(psc, n_patches_new);
     auto& new_grid = *psc->make_grid(domain_new);
     
-    free(psc_balance_comp_time_by_patch);
-    psc_balance_comp_time_by_patch = (double *) calloc(new_grid.n_patches(),// leaked the very last time
-						       sizeof(*psc_balance_comp_time_by_patch));
+    delete[] psc_balance_comp_time_by_patch;
+    psc_balance_comp_time_by_patch = new double[new_grid.n_patches()];
     prof_stop(pr_bal_load);
 
     prof_start(pr_bal_ctx);
