@@ -200,7 +200,6 @@ struct PscFlatfoil : Params
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      // bndf_{dynamic_cast<BndFields_t&>(*PscBndFieldsBase{psc->push_fields->bnd_fields}.sub())}, // !!!
       inject_{dynamic_cast<Inject_t&>(*PscInjectBase{sub_->inject}.sub())}
       // balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
@@ -256,26 +255,26 @@ struct PscFlatfoil : Params
     (*heating_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-    //bndf_.fill_ghosts_H(mflds_);
+    bndf_.fill_ghosts_H(mflds_);
     bnd_->fill_ghosts(mflds_, HX, HX + 3);
     
-    //bndf_.add_ghosts_J(mflds_);
+    bndf_.add_ghosts_J(mflds_);
     bnd_->add_ghosts(mflds_, JXI, JXI + 3);
     bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
     
     pushf_->push_E<dim_yz>(mflds_, 1.);
     
-    //bndf_.fill_ghosts_E(mflds_);
+    bndf_.fill_ghosts_E(mflds_);
     bnd_->fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
-    //bndf_.fill_ghosts_E(mflds_);
+    bndf_.fill_ghosts_E(mflds_);
     bnd_->fill_ghosts(mflds_, EX, EX + 3);
     
     pushf_->push_H<dim_yz>(mflds_, .5);
     
-    //bndf_.fill_ghosts_H(mflds_);
+    bndf_.fill_ghosts_H(mflds_);
     bnd_->fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
@@ -402,7 +401,6 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  // BndFields_t& bndf_;
   Inject_t& inject_;
   // Balance_t& balance_;
 
@@ -412,6 +410,7 @@ private:
   std::unique_ptr<PushFields_t> pushf_;
   std::unique_ptr<BndParticles_t> bndp_;
   std::unique_ptr<Bnd_t> bnd_;
+  BndFields_t bndf_;
 
   std::unique_ptr<Heating_t> heating_;
   
