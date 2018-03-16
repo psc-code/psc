@@ -52,21 +52,19 @@ private:
 using PscSortBase = PscSort<SortBase>;
 
 // ======================================================================
-// SortCRTP
+// SortConvert
 
-template<typename Derived, typename MP>
-struct SortCRTP : SortBase
+template<typename Sort_t>
+struct SortConvert : Sort_t, SortBase
 {
-  using Mparticles = MP;
-  
-  // FIXME, the 2x replicated funcs here aren't nice to start with.
-  // There should be a way to have a get_as that's specialized for known types,
-  // so that in case of the two known types being equal, nothing gets done..
-  
+  using Base = Sort_t;
+  using Mparticles = typename Sort_t::Mparticles;
+  using Base::Base;
+
   void run(PscMparticlesBase mprts_base) override
   {
     auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    static_cast<Derived&>(*this)(*mprts.sub());
+    (*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 };

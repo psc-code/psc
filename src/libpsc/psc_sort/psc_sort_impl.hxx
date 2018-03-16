@@ -11,14 +11,11 @@
 // SortCountsort
 
 template<typename MP>
-struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
+struct SortCountsort
 {
-  using Base = SortCRTP<SortCountsort<MP>, MP>;
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
 
-  using Base::Base;
-  
   void operator()(Mparticles& mprts)
   {
     static int pr;
@@ -72,14 +69,11 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
 // use a separate array of cell indices
 
 template<typename MP>
-struct SortCountsort2 : SortCRTP<SortCountsort2<MP>, MP>
+struct SortCountsort2
 {
-  using Base = SortCRTP<SortCountsort2<MP>, MP>;
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
 
-  using Base::Base;
-  
   void operator()(Mparticles& mprts)
   {
     static int pr;
@@ -145,7 +139,7 @@ struct SortCountsort2 : SortCRTP<SortCountsort2<MP>, MP>
 // SortNone
 
 template<typename MP>
-struct SortNone : SortCRTP<SortNone<MP>, MP>
+struct SortNone
 {
   using mparticles_t = MP;
 
