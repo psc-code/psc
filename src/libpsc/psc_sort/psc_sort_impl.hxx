@@ -21,6 +21,12 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
   
   void sort(Mparticles& mprts)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("SortCountsort", 1., 0, 0);
+    }
+    
+    prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
@@ -57,6 +63,7 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
       delete[] particles2;
       delete[] cnts;
     }
+    prof_stop(pr);
   }
 };
 
@@ -75,6 +82,12 @@ struct SortCountsort2 : SortCRTP<SortCountsort2<MP>, MP>
   
   void sort(Mparticles& mprts)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("SortCountsort", 1., 0, 0);
+    }
+
+    prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
@@ -124,6 +137,7 @@ struct SortCountsort2 : SortCRTP<SortCountsort2<MP>, MP>
       delete[] cnis;
       delete[] cnts;
     }
+    prof_stop(pr);
   }
 };
 

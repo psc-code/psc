@@ -32,7 +32,14 @@ struct PscSort
   
   void operator()(PscMparticlesBase mprts)
   {
+    static int st_time_sort;
+    if (!st_time_sort) {
+      st_time_sort = psc_stats_register("time sort");
+    }
+    
+    psc_stats_start(st_time_sort);
     sub()->run(mprts);
+    psc_stats_stop(st_time_sort);
   }
   
   sub_t* sub() { return mrc_to_subobj(sort_, sub_t); }
@@ -58,42 +65,14 @@ struct SortCRTP : SortBase
   
   void operator()(Mparticles& mprts)
   {
-    static int st_time_sort, pr;
-    if (!st_time_sort) {
-      st_time_sort = psc_stats_register("time sort");
-      pr = prof_register("sort", 1., 0, 0);
-    }
-    
-    psc_stats_start(st_time_sort);
-
-    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-    mpi_printf(comm, "***** Sorting...\n");
-    prof_start(pr);
     static_cast<Derived*>(this)->sort(mprts);
-    prof_stop(pr);
-
-    psc_stats_stop(st_time_sort);
   }
   
   void run(PscMparticlesBase mprts_base) override
   {
-    static int st_time_sort, pr;
-    if (!st_time_sort) {
-      st_time_sort = psc_stats_register("time sort");
-      pr = prof_register("sort", 1., 0, 0);
-    }
-    
-    psc_stats_start(st_time_sort);
-    
     auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-    mpi_printf(comm, "***** Sorting...\n");
-    prof_start(pr);
     static_cast<Derived*>(this)->sort(*mprts.sub());
-    prof_stop(pr);
     mprts.put_as(mprts_base);
-
-    psc_stats_stop(st_time_sort);
   }
 };
 

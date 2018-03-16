@@ -229,6 +229,7 @@ struct PscFlatfoil : Params
     balance_(psc_, mprts_);
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
+      mpi_printf(comm, "***** Sorting...\n");
       sort_(mprts_);
     }
     
