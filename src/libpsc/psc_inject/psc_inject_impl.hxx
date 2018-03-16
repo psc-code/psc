@@ -12,29 +12,6 @@
 #include <string>
 
 // ======================================================================
-// TargetPsc
-
-struct TargetPsc
-{
-  TargetPsc(psc_target* target)
-    : target_(target)
-  {}
-
-  bool is_inside(double crd[3])
-  {
-    return psc_target_is_inside(target_, crd);
-  }
-
-  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
-  {
-    return psc_target_init_npt(target_, pop, crd, npt);
-  }
-
-private:
-  psc_target* target_;
-};
-
-// ======================================================================
 // Inject_
 
 template<typename MP, typename MF, typename Target_t>

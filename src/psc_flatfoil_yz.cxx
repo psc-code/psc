@@ -157,6 +157,26 @@ private:
   double fac;
 };
 
+struct TargetFoil
+{
+  TargetFoil(psc_target* target)
+    : target_(target)
+  {}
+
+  bool is_inside(double crd[3])
+  {
+    return psc_target_is_inside(target_, crd);
+  }
+
+  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
+  {
+    return psc_target_init_npt(target_, pop, crd, npt);
+  }
+
+private:
+  psc_target* target_;
+};
+
 // ======================================================================
 // PscFlatfoil
 //
@@ -185,7 +205,7 @@ struct PscFlatfoil : Params
   using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
-  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, TargetPsc>; // FIXME, shouldn't always use MfieldsC
+  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, TargetFoil>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
@@ -218,7 +238,7 @@ struct PscFlatfoil : Params
     bool inject_interval = 20;
     bool inject_tau = 40;
     inject_.reset(new Inject_t{comm, inject_enable, inject_interval, inject_tau, inject_kind_n,
-	  TargetPsc{sub_->target}});
+	  TargetFoil{sub_->target}});
   }
   
   void step()
