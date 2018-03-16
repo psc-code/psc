@@ -138,11 +138,6 @@ struct InjectCuda : InjectBase
       (every_step * psc->dt / tau) /
       (1. + every_step * psc->dt / tau);
 
-    if (psc_balance_generation_cnt != balance_generation_cnt) {
-      balance_generation_cnt = psc_balance_generation_cnt;
-      auto bnd = PscBndBase(item_n_bnd);
-      bnd.reset();
-    }
     FieldsItemBase* item = PscFieldsItemBase{item_n}.sub();
     item->run(mflds_base, mprts_base);
 

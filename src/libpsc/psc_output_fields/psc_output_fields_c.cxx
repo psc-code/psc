@@ -188,8 +188,6 @@ psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 // ----------------------------------------------------------------------
 // psc_output_fields_c_run
 
-bool psc_output_fields_check_bnd;
-
 static void
 psc_output_fields_c_run(struct psc_output_fields *out,
 			struct psc_mfields *flds, struct psc_mparticles *particles)
@@ -202,12 +200,6 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     pr = prof_register("output_c_field", 1., 0, 0);
   }
   prof_start(pr);
-
-  if (psc_output_fields_check_bnd) {
-    psc_output_fields_check_bnd = false;
-    auto bnd = PscBndBase(out_c->bnd);
-    bnd.reset();
-  }
 
   bool doaccum_tfield = out_c->dowrite_tfield && 
     (((psc->timestep >= (out_c->tfield_next - out_c->tfield_length + 1)) &&

@@ -226,12 +226,7 @@ struct PscFlatfoil : Params
     
     int timestep = psc_->timestep;
 
-    int gen_cnt = psc_balance_generation_cnt;
     balance_(psc_, mprts_);
-    if (psc_balance_generation_cnt > gen_cnt) {
-      // FIXME, hacky but at least makes it work
-      bnd_->reset();
-    }
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       sort_(mprts_);

@@ -8,7 +8,6 @@
 #include <string.h>
 
 extern double *psc_balance_comp_time_by_patch;
-extern bool psc_output_fields_check_bnd;
 
 static double
 capability_default(int p)
@@ -392,12 +391,12 @@ private:
 	//mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
       } else {
 	load = psc_balance_comp_time_by_patch[p];
-#if 0
-	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	load = 1 + rank;
-#endif
       }
+#if 1
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      load = 1 + rank;
+#endif
       loads.push_back(load);
     }
     return loads;
@@ -836,10 +835,6 @@ private:
     psc->mrc_domain = domain_new;
     delete psc->grid_;
     psc->grid_ = &new_grid;
-    if (mp) { // FIXME, hacky...
-      PscBndBase(psc->bnd).reset();
-    }
-    psc_output_fields_check_bnd = true;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;

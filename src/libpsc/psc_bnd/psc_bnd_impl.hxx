@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "fields.hxx"
 #include "bnd.hxx"
+#include "psc_balance.h"
 
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
@@ -32,6 +33,7 @@ struct Bnd_ : BndBase
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
     mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
     mrc_ddc_setup(ddc_);
+    balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 
   // ----------------------------------------------------------------------
@@ -45,8 +47,9 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // reset
   
-  void reset() override
+  void reset()
   {
+    // FIXME, not really a pretty way of doing this
     this->~Bnd_();
     new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain, ppsc->ibn);
   }
@@ -56,6 +59,9 @@ struct Bnd_ : BndBase
   
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
+    if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      reset();
+    }
     mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
   }
 
@@ -71,6 +77,9 @@ struct Bnd_ : BndBase
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
+    if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      reset();
+    }
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
@@ -143,4 +152,5 @@ struct Bnd_ : BndBase
 
 private:
   mrc_ddc *ddc_;
+  int balance_generation_cnt_;
 };

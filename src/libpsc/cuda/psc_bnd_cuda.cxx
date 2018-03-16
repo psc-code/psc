@@ -79,7 +79,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // reset
   
-  void reset() override
+  void reset()
   {
     assert(0);
     // mrc_ddc_destroy(bnd_->ddc);

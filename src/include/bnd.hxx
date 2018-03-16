@@ -14,7 +14,6 @@ struct BndBase
 {
   virtual void fill_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
   virtual void add_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
-  virtual void reset() = 0;
 };
 
 // ======================================================================
@@ -64,11 +63,6 @@ struct PscBnd
     psc_stats_stop(st_time_comm);
   }
 
-  void reset()
-  {
-    sub()->reset();
-  }
-  
   sub_t* sub() { return mrc_to_subobj(bnd_, sub_t); }
   sub_t* operator->() { return sub(); }
 
