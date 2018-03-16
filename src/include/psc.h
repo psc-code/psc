@@ -10,7 +10,7 @@
 #include "psc_fields.h"
 #include "grid.hxx"
 
-#include "sort.hxx"
+#include "psc_stats.h"
 
 #include <mrc_domain.h>
 

@@ -19,7 +19,7 @@ struct SortCountsort : SortCRTP<SortCountsort<MP>, MP>
 
   using Base::Base;
   
-  void sort(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     static int pr;
     if (!pr) {
@@ -80,7 +80,7 @@ struct SortCountsort2 : SortCRTP<SortCountsort2<MP>, MP>
 
   using Base::Base;
   
-  void sort(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     static int pr;
     if (!pr) {

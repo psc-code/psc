@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_balance_private.h"
+#include "particles.hxx"
 
 // ======================================================================
 // BalanceBase

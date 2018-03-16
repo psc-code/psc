@@ -63,15 +63,10 @@ struct SortCRTP : SortBase
   // There should be a way to have a get_as that's specialized for known types,
   // so that in case of the two known types being equal, nothing gets done..
   
-  void operator()(Mparticles& mprts)
-  {
-    static_cast<Derived*>(this)->sort(mprts);
-  }
-  
   void run(PscMparticlesBase mprts_base) override
   {
     auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    static_cast<Derived*>(this)->sort(*mprts.sub());
+    static_cast<Derived&>(*this)(*mprts.sub());
     mprts.put_as(mprts_base);
   }
 };

@@ -7,11 +7,15 @@
 #include "grid.hxx"
 #include "psc_fields.h"
 
+#include <mrc_profile.h>
+
 #include <type_traits>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <algorithm>
+#include <unordered_map>
+#include <typeindex>
 
 template<bool AOS>
 struct Layout

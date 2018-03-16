@@ -12,7 +12,7 @@ struct SortVpic : SortCRTP<SortVpic, MparticlesVpic>
 
   using Base::Base;
   
-  void sort(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     Simulation_sort_mprts(mprts.sim, mprts.vmprts, ppsc->timestep);
   }
