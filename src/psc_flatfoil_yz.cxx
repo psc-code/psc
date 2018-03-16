@@ -185,7 +185,7 @@ struct PscFlatfoil : Params
   using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
-  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t>; // FIXME, shouldn't always use MfieldsC
+  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, TargetPsc>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 

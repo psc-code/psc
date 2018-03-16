@@ -18,6 +18,7 @@ void psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_m
 // ======================================================================
 // InjectCuda
 
+template<typename Target_t>
 struct InjectCuda : InjectBase
 {
   using Self = InjectCuda;
@@ -26,7 +27,7 @@ struct InjectCuda : InjectBase
 
   InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
 	     psc_target* target)
-    : InjectBase(do_inject, every_step, tau, kind_n, target)
+    : InjectBase(do_inject, every_step, tau, kind_n)
 
   {
     item_n_bnd = psc_bnd_create(comm);
@@ -170,7 +171,7 @@ struct InjectCuda : InjectBase
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    if (!psc_target_is_inside(target, xx)) {
+	    if (!target_.is_inside(xx)) {
 	      continue;
 	    }
 
@@ -186,7 +187,7 @@ struct InjectCuda : InjectBase
 		npt.T[1] = psc->kinds[kind].T;
 		npt.T[2] = psc->kinds[kind].T;
 	      };
-	      psc_target_init_npt(target, kind, xx, &npt);
+	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
 	      if (kind != psc->prm.neutralizing_population) {
@@ -230,21 +231,9 @@ struct InjectCuda : InjectBase
   }
 
 private:
+  Target_t target_;
   struct psc_output_fields_item *item_n;
   struct psc_bnd *item_n_bnd;
   int balance_generation_cnt = {};
 };
-
-// ----------------------------------------------------------------------
-// psc_inject "cuda"
-
-struct psc_inject_ops_cuda : psc_inject_ops {
-  using Inject_t = InjectCuda;
-  using PscInject_t = PscInjectWrapper<InjectCuda>;
-  psc_inject_ops_cuda() {
-    name                = "cuda";
-    setup               = PscInject_t::setup;
-    destroy             = PscInject_t::destroy;
-  }
-} psc_inject_ops_cuda;
 

@@ -12,12 +12,35 @@
 #include <string>
 
 // ======================================================================
+// TargetPsc
+
+struct TargetPsc
+{
+  TargetPsc(psc_target* target)
+    : target_(target)
+  {}
+
+  bool is_inside(double crd[3])
+  {
+    return psc_target_is_inside(target_, crd);
+  }
+
+  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
+  {
+    return psc_target_init_npt(target_, pop, crd, npt);
+  }
+
+private:
+  psc_target* target_;
+};
+
+// ======================================================================
 // Inject_
 
-template<typename MP, typename MF>
+template<typename MP, typename MF, typename Target_t>
 struct Inject_ : InjectBase
 {
-  using Self = Inject_<MP, MF>;
+  using Self = Inject_<MP, MF, Target_t>;
   using Mfields = MF;
   using Mparticles = MP;
   using fields_t = typename Mfields::fields_t;
@@ -33,7 +56,8 @@ struct Inject_ : InjectBase
   
   Inject_(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
 	  psc_target* target)
-    : InjectBase{do_inject, every_step, tau, kind_n, target}
+    : InjectBase{do_inject, every_step, tau, kind_n},
+      target_{target}
   {
     // it looks like n_1st_sub takes "sub" particles, but makes
     // moment fields of type "c", so let's use those "c" fields.
@@ -167,7 +191,7 @@ struct Inject_ : InjectBase
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    if (!psc_target_is_inside(target, xx)) {
+	    if (!target_.is_inside(xx)) {
 	      continue;
 	    }
 
@@ -183,7 +207,7 @@ struct Inject_ : InjectBase
 		npt.T[1] = psc->kinds[kind].T;
 		npt.T[2] = psc->kinds[kind].T;
 	      };
-	      psc_target_init_npt(target, kind, xx, &npt);
+	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
 	      if (kind != psc->prm.neutralizing_population) {
@@ -220,6 +244,7 @@ struct Inject_ : InjectBase
   }
 
 private:
+  Target_t target_;
   std::unique_ptr<ItemMoment_t> moment_n_;
   struct psc_bnd *item_n_bnd;
   int balance_generation_cnt = {};
