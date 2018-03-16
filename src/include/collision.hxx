@@ -53,29 +53,6 @@ private:
 
 using PscCollisionBase = PscCollision<CollisionBase>;
 
-template<typename Derived, typename MP>
-struct CollisionCRTP : CollisionBase
-{
-  using Mparticles = MP;
-  
-  CollisionCRTP(int interval)
-    : interval_(interval)
-  {}
-
-  // ----------------------------------------------------------------------
-  // run
-
-  void run(PscMparticlesBase mprts_base) override
-  {
-    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    static_cast<Derived&>(*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
-  }
-
-protected:
-  int interval_;
-};
-
 // ======================================================================
 // CollisionConvert
 
