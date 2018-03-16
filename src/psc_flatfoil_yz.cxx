@@ -142,9 +142,9 @@ struct PscHeatingSpotFoil : PscHeatingSpotFoilParams
     // FIXME, I don't understand the sqrt(Mi) in here
   }
   
-  double operator()(const double *xx)
+  double operator()(const double *crd)
   {
-    double x = xx[0], y = xx[1], z = xx[2];
+    double x = crd[0], y = crd[1], z = crd[2];
 
     if (z <= zl || z >= zh) {
       return 0;
@@ -157,24 +157,56 @@ private:
   double fac;
 };
 
-struct TargetFoil
+struct psc_target_foil
+{
+  // params
+  double yl;
+  double yh;
+  double zl;
+  double zh;
+  double n;
+  double Te;
+  double Ti;
+};
+
+#define psc_target_foil(target) mrc_to_subobj(target, struct psc_target_foil)
+
+struct TargetFoil : psc_target_foil
 {
   TargetFoil(psc_target* target)
-    : target_(target)
+    : psc_target_foil{*psc_target_foil(target)}
   {}
 
   bool is_inside(double crd[3])
   {
-    return psc_target_is_inside(target_, crd);
+    return (crd[1] >= yl && crd[1] <= yh &&
+	    crd[2] >= zl && crd[2] <= zh);
   }
 
   void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
   {
-    return psc_target_init_npt(target_, pop, crd, npt);
+    if (!is_inside(crd)) {
+      npt->n = 0;
+      return;
+    }
+    
+    switch (pop) {
+    case MY_ION:
+      npt->n    = n;
+      npt->T[0] = Ti;
+      npt->T[1] = Ti;
+      npt->T[2] = Ti;
+      break;
+    case MY_ELECTRON:
+      npt->n    = n;
+      npt->T[0] = Te;
+      npt->T[1] = Te;
+      npt->T[2] = Te;
+      break;
+    default:
+      assert(0);
+    }
   }
-
-private:
-  psc_target* target_;
 };
 
 // ======================================================================
@@ -606,19 +638,6 @@ struct psc_ops_flatfoil : psc_ops {
 
 // ======================================================================
 // psc_target subclass "foil"
-
-struct psc_target_foil {
-  // params
-  double yl;
-  double yh;
-  double zl;
-  double zh;
-  double n;
-  double Te;
-  double Ti;
-};
-
-#define psc_target_foil(target) mrc_to_subobj(target, struct psc_target_foil)
 
 #define VAR(x) (void *)offsetof(struct psc_target_foil, x)
 static struct param psc_target_foil_descr[] _mrc_unused = {
