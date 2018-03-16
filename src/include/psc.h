@@ -359,11 +359,7 @@ void psc_setup(struct psc *psc);
 void psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
-struct psc_particle_double;
-void psc_setup_particle(struct psc *psc, struct psc_particle_double *prt, struct psc_particle_npt *npt,
-			int p, double xx[3]);
 void psc_setup_partition(struct psc *psc, uint *nr_particles_by_patch);
-void psc_setup_particles(struct psc *psc, uint *nr_particles_by_patch);
 void psc_set_ic_fields(struct psc *psc);
 void psc_set_ic_fields_default(struct psc *psc);
 void psc_output(struct psc *psc);

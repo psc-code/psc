@@ -6,6 +6,8 @@
 
 #include <psc_balance.h>
 #include <psc_marder.h>
+#include <setup_particles.hxx>
+#include <psc_particles_double.h>
 
 #include <vpic_iface.h>
 
@@ -167,7 +169,7 @@ psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
     mprts.put_as(mprts_base);
   } else {
     mprts_base->reserve_all(n_prts_by_patch);
-    psc_setup_particles(psc, n_prts_by_patch);
+    SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
   }
 }
 

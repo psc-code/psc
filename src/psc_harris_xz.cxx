@@ -17,6 +17,7 @@
 #include <psc_output_particles.h>
 #include "balance.hxx"
 #include "fields3d.hxx"
+#include "setup_particles.hxx"
 
 #include <psc_particles_as_single.h>
 #include <psc_particles_vpic.h>
@@ -508,7 +509,7 @@ psc_harris_setup(struct psc *psc)
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
   psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
 
-  psc_setup_particles(psc, n_prts_by_patch_new.data());
+  SetupParticles<mparticles_t::sub_t>::setup_particles(psc, n_prts_by_patch_new.data());
 
   psc_set_ic_fields(psc);
   

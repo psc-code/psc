@@ -6,8 +6,11 @@
 #include <psc_output_fields_collection.h>
 #include <psc_output_particles.h>
 #include <psc_balance.h>
+#include <psc_particles_single.h>
+#include <psc_particles_double.h>
 #include <particles.hxx>
 #include <push_particles.hxx>
+#include <setup_particles.hxx>
 
 #include <stdlib.h>
 
@@ -43,7 +46,7 @@ psc_method_default_set_ic_particles(struct psc_method *method, struct psc *psc,
 {
   PscMparticlesBase mprts(psc->particles);
   mprts->reserve_all(n_prts_by_patch);
-  psc_setup_particles(psc, n_prts_by_patch);
+  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
