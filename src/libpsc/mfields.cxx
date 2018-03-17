@@ -137,7 +137,7 @@ void
 psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p)
 {
   struct psc_mfields_list_entry *p = new struct psc_mfields_list_entry();
-  p->flds_p = flds_p;
+  p->mflds = *flds_p;
   list_add_tail(&p->entry, head);
 }
 
@@ -146,7 +146,7 @@ psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p)
 {
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, head, entry, struct psc_mfields_list_entry) {
-    if (p->flds_p == flds_p) {
+    if (p->mflds == *flds_p) {
       list_del(&p->entry);
       delete p;
       return;

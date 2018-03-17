@@ -37,7 +37,7 @@ const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
 
 struct psc_mfields_list_entry {
-  struct psc_mfields **flds_p;
+  struct psc_mfields* mflds;
   list_t entry;
 };
 
