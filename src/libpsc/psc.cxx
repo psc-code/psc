@@ -473,17 +473,14 @@ _psc_setup(struct psc *psc)
   auto balance = PscBalanceBase{psc->balance};
   auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
 
-  // create base particle data structure
+  // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
-  
-  // set particles x^{n+1/2}, p^{n+1/2}
   psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new.data());
 
   // create and set up base mflds
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-
   psc_method_set_ic_fields(psc->method, psc);
 
 #ifdef USE_FORTRAN

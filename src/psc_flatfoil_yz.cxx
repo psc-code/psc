@@ -472,6 +472,9 @@ psc_flatfoil::psc_flatfoil(psc* psc)
 
 void psc_flatfoil::setup(psc* psc)
 {
+  MPI_Comm comm = psc_comm(psc);
+  mpi_printf(comm, "*** Setting up...\n");
+
   params.BB = 0.;
   params.Zi = 1.;
 
@@ -509,6 +512,9 @@ void psc_flatfoil::setup(psc* psc)
   psc->kinds[MY_ION     ].name = strdup("i");
 
   d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
+
+  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
 
   // sort
   params.sort_interval = 10;
@@ -561,11 +567,29 @@ void psc_flatfoil::setup(psc* psc)
   params.balance_print_loads = true;
   params.balance_write_loads = false;
 
-  psc_setup_super(psc);
+  // --- generic setup
+  psc_method_do_setup(psc->method, psc);
 
-  MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
+  // --- partition particles and initial balancing
+  mpi_printf(comm, "**** Partitioning...\n");
+  auto n_prts_by_patch_old = psc_method_setup_partition(psc->method, psc);
+  psc_balance_setup(psc->balance);
+  auto balance = PscBalanceBase{psc->balance};
+  auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
+
+  // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
+  mpi_printf(comm, "**** Setting up particles...\n");
+  psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+				       psc->prm.particles_base).mprts();
+  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new.data());
+
+  // --- create and set up base mflds
+  mpi_printf(comm, "**** Setting up fields...\n");
+  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
+  psc_method_set_ic_fields(psc->method, psc);
+
+  psc_setup_member_objs(psc);
 }
 
 // ----------------------------------------------------------------------
