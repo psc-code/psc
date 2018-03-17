@@ -3,6 +3,10 @@
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
 
+#ifdef USE_VPIC
+#include "../libpsc/vpic/vpic_iface.h"
+#endif
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -664,6 +668,35 @@ struct psc_ops_flatfoil : psc_ops {
 int
 main(int argc, char **argv)
 {
-  return psc_main(&argc, &argv, &psc_flatfoil_ops);
+#ifdef USE_VPIC
+  vpic_base_init(&argc, &argv);
+#else
+  MPI_Init(&argc, &argv);
+#endif
+  libmrc_params_init(argc, argv);
+  mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
+
+  mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
+
+  int from_checkpoint = -1;
+  mrc_params_get_option_int("from_checkpoint", &from_checkpoint);
+
+  struct psc *psc;
+
+  psc = psc_create(MPI_COMM_WORLD);
+  psc_set_from_options(psc);
+  psc_setup(psc);
+  psc_view(psc);
+  psc_mparticles_view(psc->particles);
+  psc_mfields_view(psc->flds);
+  
+  psc_integrate(psc);
+  
+  psc_destroy(psc);
+  
+  libmrc_params_finalize();
+  MPI_Finalize();
+
+  return 0;
 }
 
