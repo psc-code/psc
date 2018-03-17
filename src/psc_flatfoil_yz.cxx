@@ -239,13 +239,12 @@ struct PscFlatfoil : Params
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
+      bndp_{psc_->mrc_domain, psc_->grid()},
+      bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
       balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
   {
     MPI_Comm comm = psc_comm(psc);
     
-    bndp_.reset(new BndParticles_t{psc_->mrc_domain, psc_->grid()});
-    bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain, psc_->ibn});
-
     auto foil_params = PscHeatingSpotFoilParams{};
     foil_params.zl = sub_->heating_zl * sub_->d_i;
     foil_params.zh = sub_->heating_zh * sub_->d_i;
@@ -289,33 +288,33 @@ struct PscFlatfoil : Params
     pushf_.push_H<dim_yz>(mflds_, .5);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-    (*bndp_)(mprts_);
+    bndp_(mprts_);
     
     (*inject_)(mprts_);
     (*heating_)(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     bndf_.fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
     bndf_.add_ghosts_J(mflds_);
-    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     
     pushf_.push_E<dim_yz>(mflds_, 1.);
     
     bndf_.fill_ghosts_E(mflds_);
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
     bndf_.fill_ghosts_E(mflds_);
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     
     pushf_.push_H<dim_yz>(mflds_, .5);
     
     bndf_.fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
 
@@ -447,8 +446,8 @@ private:
   Collision_t collision_;
   PushParticlesPusher_t pushp_;
   PushFields_t pushf_;
-  std::unique_ptr<BndParticles_t> bndp_;
-  std::unique_ptr<Bnd_t> bnd_;
+  BndParticles_t bndp_;
+  Bnd_t bnd_;
   BndFields_t bndf_;
 
   std::unique_ptr<Heating_t> heating_;
