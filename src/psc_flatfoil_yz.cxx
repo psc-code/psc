@@ -101,9 +101,9 @@ struct TargetFoil : TargetFoilParams
 };
 
 // ======================================================================
-// PscHeatingSpotFoil
+// HeatingSpotFoil
 
-struct PscHeatingSpotFoilParams
+struct HeatingSpotFoilParams
 {
   double zl; // in internal units (d_e)
   double zh;
@@ -114,10 +114,10 @@ struct PscHeatingSpotFoilParams
   double Mi;
 };
 
-struct PscHeatingSpotFoil : PscHeatingSpotFoilParams
+struct HeatingSpotFoil : HeatingSpotFoilParams
 {
-  PscHeatingSpotFoil(const PscHeatingSpotFoilParams& params)
-    : PscHeatingSpotFoilParams{params}
+  HeatingSpotFoil(const HeatingSpotFoilParams& params)
+    : HeatingSpotFoilParams{params}
   {
     double width = zh - zl;
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
@@ -228,7 +228,7 @@ struct PscFlatfoilParams
   int heating_begin;
   int heating_end;
   int heating_kind;
-  PscHeatingSpotFoilParams heating_foil_params;
+  HeatingSpotFoilParams heating_foil_params;
 
   bool inject_enable;
   int inject_kind_n;
@@ -267,7 +267,7 @@ struct PscFlatfoil : PscFlatfoilParams
       bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating_interval, heating_begin, heating_end, heating_kind,
-	  PscHeatingSpotFoil{heating_foil_params}},
+	  HeatingSpotFoil{heating_foil_params}},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, sub_->inject_target}
   {}
   
