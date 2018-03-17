@@ -32,6 +32,7 @@
 #include <inject.hxx>
 #include <heating.hxx>
 #include <setup_particles.hxx>
+#include <setup_fields.hxx>
 
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
@@ -591,7 +592,7 @@ void psc_flatfoil::setup(psc* psc)
   mpi_printf(comm, "**** Setting up fields...\n");
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  psc_set_ic_fields(psc);
+  SetupFields<MfieldsC>::set_ic(psc);
 
   psc_setup_member_objs(psc);
 }
