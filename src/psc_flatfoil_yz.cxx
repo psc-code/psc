@@ -443,35 +443,6 @@ struct PscFlatfoil : PscFlatfoilParams
 
   static void integrate(struct psc *psc)
   {
-    struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-    auto params = PscFlatfoilParams{};
-    params.sort_interval = psc->sort->every;
-
-    params.collision_interval = psc->collision->every;
-    params.collision_nu = psc->collision->nu;
-
-    params.heating_interval = 20;
-    params.heating_begin = 0;
-    params.heating_end = 10000000;
-    params.heating_kind = MY_ELECTRON;
-    auto& heating_foil_params = params.heating_foil_params;
-    heating_foil_params.zl = sub->heating_zl * sub->d_i;
-    heating_foil_params.zh = sub->heating_zh * sub->d_i;
-    heating_foil_params.xc = sub->heating_xc * sub->d_i;
-    heating_foil_params.yc = sub->heating_yc * sub->d_i;
-    heating_foil_params.rH = sub->heating_rH * sub->d_i;
-    heating_foil_params.T  = .04;
-    heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
-    
-    params.inject_enable = true;
-    params.inject_kind_n = MY_ELECTRON;
-    params.inject_interval = 20;
-    params.inject_tau = 40;
-
-    PscFlatfoil flatfoil(params, psc);
-    flatfoil.setup();
-    flatfoil.integrate();
   }
 
 private:
@@ -689,8 +660,38 @@ main(int argc, char **argv)
   psc_view(psc);
   psc_mparticles_view(psc->particles);
   psc_mfields_view(psc->flds);
-  
-  psc_integrate(psc);
+
+  {
+    struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+    auto params = PscFlatfoilParams{};
+    params.sort_interval = psc->sort->every;
+
+    params.collision_interval = psc->collision->every;
+    params.collision_nu = psc->collision->nu;
+
+    params.heating_interval = 20;
+    params.heating_begin = 0;
+    params.heating_end = 10000000;
+    params.heating_kind = MY_ELECTRON;
+    auto& heating_foil_params = params.heating_foil_params;
+    heating_foil_params.zl = sub->heating_zl * sub->d_i;
+    heating_foil_params.zh = sub->heating_zh * sub->d_i;
+    heating_foil_params.xc = sub->heating_xc * sub->d_i;
+    heating_foil_params.yc = sub->heating_yc * sub->d_i;
+    heating_foil_params.rH = sub->heating_rH * sub->d_i;
+    heating_foil_params.T  = .04;
+    heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
+    
+    params.inject_enable = true;
+    params.inject_kind_n = MY_ELECTRON;
+    params.inject_interval = 20;
+    params.inject_tau = 40;
+
+    PscFlatfoil flatfoil(params, psc);
+    flatfoil.setup();
+    flatfoil.integrate();
+  }
   
   psc_destroy(psc);
   
