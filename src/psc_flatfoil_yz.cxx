@@ -176,12 +176,19 @@ struct PscFlatfoilParams
   int heating_begin;
   int heating_end;
   int heating_kind;
+  double heating_zl;
+  double heating_zh;
+  double heating_xc;
+  double heating_yc;
+  double heating_rH;
   HeatingSpotFoilParams heating_foil_params;
 
   bool inject_enable;
   int inject_kind_n;
   int inject_interval;
   int inject_tau;
+
+  InjectFoil inject_target;
 };
 
 // ======================================================================
@@ -189,14 +196,6 @@ struct PscFlatfoilParams
 
 struct psc_flatfoil {
   PscFlatfoilParams params;
-  
-  InjectFoil inject_target;
-
-  double heating_zl; // this is ugly as these are used to set the corresponding
-  double heating_zh; // quantities in psc_heating, but having them here we can rescale
-  double heating_xc; // them from d_i to internal (d_e) units
-  double heating_yc;
-  double heating_rH;
   
   // state
   double d_i;
@@ -210,12 +209,6 @@ struct psc_flatfoil {
 
 #define VAR(x) (void *)offsetof(struct psc_flatfoil, x)
 static struct param psc_flatfoil_descr[] = {
-  { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)        },
-  { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)         },
-  { "heating_xc"        , VAR(heating_xc)        , PARAM_DOUBLE(0.)         },
-  { "heating_yc"        , VAR(heating_yc)        , PARAM_DOUBLE(0.)         },
-  { "heating_rH"        , VAR(heating_rH)        , PARAM_DOUBLE(3.)         },
-
   { "LLs"               , VAR(LLs)               , MRC_VAR_DOUBLE           },
   { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
   {},
@@ -266,7 +259,7 @@ struct PscFlatfoil : PscFlatfoilParams
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating_interval, heating_begin, heating_end, heating_kind,
 	  HeatingSpotFoil{heating_foil_params}},
-      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, sub_->inject_target}
+      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
   {}
   
   void step()
@@ -519,6 +512,12 @@ void psc_flatfoil::setup(psc* psc)
   params.target_yh     =  100000.;
   params.target_zwidth =  1.;
 
+  params.heating_zl = -1.;
+  params.heating_zh =  1.;
+  params.heating_xc = 0.;
+  params.heating_yc = 0.;
+  params.heating_rH = 3.;
+  
   LLs = 4. * params.LLf; // FIXME, unused?
   LLn = .5 * params.LLf; // FIXME, unused?
   
@@ -552,13 +551,13 @@ void psc_flatfoil::setup(psc* psc)
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
   auto& heating_foil_params = params.heating_foil_params;
-  heating_foil_params.zl = heating_zl * d_i;
-  heating_foil_params.zh = heating_zh * d_i;
-  heating_foil_params.xc = heating_xc * d_i;
-  heating_foil_params.yc = heating_yc * d_i;
-  heating_foil_params.rH = heating_rH * d_i;
+  heating_foil_params.zl = params.heating_zl * d_i;
+  heating_foil_params.zh = params.heating_zh * d_i;
+  heating_foil_params.xc = params.heating_xc * d_i;
+  heating_foil_params.yc = params.heating_yc * d_i;
+  heating_foil_params.rH = params.heating_rH * d_i;
   heating_foil_params.T  = .04;
-  heating_foil_params.Mi = heating_rH * psc->kinds[MY_ION].m;
+  heating_foil_params.Mi = params.heating_rH * psc->kinds[MY_ION].m;
   
   params.inject_enable = true;
   params.inject_kind_n = MY_ELECTRON;
@@ -572,7 +571,7 @@ void psc_flatfoil::setup(psc* psc)
   inject_foil_params.n  = 1.;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
-  inject_target = InjectFoil{inject_foil_params};
+  params.inject_target = InjectFoil{inject_foil_params};
 
   psc_setup_super(psc);
 
@@ -635,9 +634,9 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     assert(0);
   }
 
-  if (sub->inject_target.is_inside(x)) {
+  if (sub->params.inject_target.is_inside(x)) {
     // replace values above by target values
-    sub->inject_target.init_npt(pop, x, npt);
+    sub->params.inject_target.init_npt(pop, x, npt);
   }
 }
 
