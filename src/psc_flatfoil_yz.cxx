@@ -31,6 +31,7 @@
 #include <bnd_fields.hxx>
 #include <inject.hxx>
 #include <heating.hxx>
+#include <setup_particles.hxx>
 
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
@@ -568,11 +569,12 @@ void psc_flatfoil::setup(psc* psc)
   params.balance_write_loads = false;
 
   // --- generic setup
-  psc_method_do_setup(psc->method, psc);
+  psc_setup_coeff(psc);
+  psc_setup_domain(psc);
 
   // --- partition particles and initial balancing
   mpi_printf(comm, "**** Partitioning...\n");
-  auto n_prts_by_patch_old = psc_method_setup_partition(psc->method, psc);
+  auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc);
   psc_balance_setup(psc->balance);
   auto balance = PscBalanceBase{psc->balance};
   auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
@@ -581,13 +583,15 @@ void psc_flatfoil::setup(psc* psc)
   mpi_printf(comm, "**** Setting up particles...\n");
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
-  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new.data());
+  PscMparticlesBase mprts(psc->particles);
+  mprts->reserve_all(n_prts_by_patch_new.data());
+  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch_new.data());
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Setting up fields...\n");
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  psc_method_set_ic_fields(psc->method, psc);
+  psc_set_ic_fields(psc);
 
   psc_setup_member_objs(psc);
 }
