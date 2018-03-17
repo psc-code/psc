@@ -93,19 +93,6 @@ struct psc_param {
   double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
 };
 
-struct Params
-{
-  int sort_interval;
-
-  int collision_interval;
-  double collision_nu;
-
-  int balance_interval;
-  double balance_factor_fields;
-  bool balance_print_loads;
-  bool balance_write_loads;
-};
-
 /// coefficients needed for computations
 /// -- derived, not provided by user
 struct psc_coeff {
@@ -216,9 +203,6 @@ struct psc {
   struct psc_kind *kinds;       ///< particle kinds (e.g., e-, ion, ...)
   ///@}
 
-  Params params;
-
-  
   // other parameters / constants
   double p2A, p2B;
   int timestep;	///< the current timestep

@@ -212,7 +212,20 @@ private:
 // - pushp prep
 // - marder
 
-struct PscFlatfoil : Params
+struct PscFlatfoilParams
+{
+  int sort_interval;
+
+  int collision_interval;
+  double collision_nu;
+
+  int balance_interval;
+  double balance_factor_fields;
+  bool balance_print_loads;
+  bool balance_write_loads;
+};
+
+struct PscFlatfoil : PscFlatfoilParams
 {
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
@@ -232,8 +245,8 @@ struct PscFlatfoil : Params
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
-  PscFlatfoil(const Params& params, psc *psc)
-    : Params(params),
+  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+    : PscFlatfoilParams{params},
       psc_{psc},
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
@@ -430,7 +443,7 @@ struct PscFlatfoil : Params
 
   static void integrate(struct psc *psc)
   {
-    auto params = Params{};
+    auto params = PscFlatfoilParams{};
     params.sort_interval = psc->sort->every;
     params.collision_interval = psc->collision->every;
     params.collision_nu = psc->collision->nu;

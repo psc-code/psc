@@ -101,7 +101,6 @@ psc_step(struct psc *psc)
   PscSortBase sort(psc->sort);
   PscCollisionBase collision(psc->collision);
   PscBndParticlesBase bndp(psc->bnd_particles);
-  Params* p = &psc->params;
 
   auto balance = PscBalanceBase{psc->balance};
   balance(psc, mprts);
