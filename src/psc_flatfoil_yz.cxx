@@ -54,22 +54,18 @@ enum {
 // ======================================================================
 // TargetFoil
 
-struct psc_target_foil
+struct TargetFoilParams
 {
-  // params
-  double yl;
-  double yh;
-  double zl;
-  double zh;
+  double yl, yh;
+  double zl, zh;
   double n;
-  double Te;
-  double Ti;
+  double Te, Ti;
 };
 
-struct TargetFoil : psc_target_foil
+struct TargetFoil : TargetFoilParams
 {
-  TargetFoil(const psc_target_foil& params)
-    : psc_target_foil{params}
+  TargetFoil(const TargetFoilParams& params)
+    : TargetFoilParams{params}
   {}
 
   bool is_inside(double crd[3])
@@ -118,8 +114,6 @@ struct psc_flatfoil {
   double background_Te;
   double background_Ti;
 
-  bool no_initial_target; // for testing, the target can be turned off in the initial condition
-
   double target_yl;
   double target_yh;
   double target_zwidth;
@@ -154,8 +148,6 @@ static struct param psc_flatfoil_descr[] = {
   { "target_yl"         , VAR(target_yl)         , PARAM_DOUBLE(-100000.)   },
   { "target_yh"         , VAR(target_yh)         , PARAM_DOUBLE( 100000.)   },
   { "target_zwidth"     , VAR(target_zwidth)     , PARAM_DOUBLE(1.)         },
-
-  { "no_initial_target" , VAR(no_initial_target) , PARAM_BOOL(false)        },
 
   { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)        },
   { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)         },
@@ -535,15 +527,15 @@ psc_flatfoil_setup(struct psc *psc)
 
   sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
 
-  auto foil_inject_params = psc_target_foil{};
-  foil_inject_params.yl = sub->target_yl * sub->d_i;
-  foil_inject_params.yh = sub->target_yh * sub->d_i;
-  foil_inject_params.zl = - sub->target_zwidth * sub->d_i;
-  foil_inject_params.zh =   sub->target_zwidth * sub->d_i;
-  foil_inject_params.n  = 1.;
-  foil_inject_params.Te = .001;
-  foil_inject_params.Ti = .001;
-  sub->inject_target = TargetFoil{foil_inject_params};
+  auto target_foil_params = TargetFoilParams{};
+  target_foil_params.yl = sub->target_yl * sub->d_i;
+  target_foil_params.yh = sub->target_yh * sub->d_i;
+  target_foil_params.zl = - sub->target_zwidth * sub->d_i;
+  target_foil_params.zh =   sub->target_zwidth * sub->d_i;
+  target_foil_params.n  = 1.;
+  target_foil_params.Te = .001;
+  target_foil_params.Ti = .001;
+  sub->inject_target = TargetFoil{target_foil_params};
   
   psc_setup_super(psc);
   psc_setup_member_objs_sub(psc);
@@ -605,10 +597,6 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     break;
   default:
     assert(0);
-  }
-
-  if (sub->no_initial_target) {
-    return;
   }
 
   if (sub->inject_target.is_inside(x)) {
