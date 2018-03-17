@@ -822,8 +822,8 @@ private:
 
     // fields
     prof_start(pr_bal_flds);
-    for (auto mflds : psc_mfields_list) {
-      balance_field(ctx, new_grid, *PscMfieldsBase{mflds}.sub());
+    for (auto mf : MfieldsBase::instances) {
+      balance_field(ctx, new_grid, *mf);
     }
     prof_stop(pr_bal_flds);
 

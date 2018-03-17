@@ -18,8 +18,6 @@
 #include <typeindex>
 #include <list>
 
-extern std::list<psc_mfields*> psc_mfields_list;
-
 template<bool AOS>
 struct Layout
 {
@@ -179,7 +177,14 @@ struct MfieldsBase
     : grid_(&grid),
       n_fields_(n_fields),
       ibn_(ibn)
-  {}
+  {
+    instances.push_back(this);
+  }
+
+  virtual ~MfieldsBase()
+  {
+    instances.remove(this);
+  }
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
   
@@ -187,7 +192,6 @@ struct MfieldsBase
   int n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
-  virtual ~MfieldsBase() {}
   virtual void zero_comp(int m) = 0;
   virtual void set_comp(int m, double val) = 0;
   virtual void scale_comp(int m, double val) = 0;
@@ -209,6 +213,8 @@ struct MfieldsBase
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
   static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me);
 
+  static std::list<MfieldsBase*> instances;
+  
 protected:
   int n_fields_;
   const Grid_t* grid_;
@@ -445,13 +451,11 @@ public:
     
     new(_mflds->obj.subctx) Mfields{*_mflds->grid, _mflds->nr_fields, _mflds->ibn};
     _mflds->grid = nullptr; // to prevent subsequent use, there's Mfields::grid() instead
-    psc_mfields_list.push_back(_mflds);
   }
 
   static void destroy(struct psc_mfields* _mflds)
   {
     if (!mrc_to_subobj(_mflds, MfieldsBase)->inited) return; // FIXME
-    psc_mfields_list.remove(_mflds);
     PscMfields<Mfields> mflds(_mflds);
     mflds->~Mfields();
   }

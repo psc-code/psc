@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-std::list<psc_mfields*> psc_mfields_list;
+std::list<MfieldsBase*> MfieldsBase::instances;
 
 // ======================================================================
 // _psc_mfields_setup
