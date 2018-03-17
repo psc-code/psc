@@ -174,6 +174,8 @@ struct PscFlatfoilParams
 // psc subclass "flatfoil"
 
 struct psc_flatfoil {
+  PscFlatfoilParams params;
+  
   double BB;
   double Zi;
   double LLf;
@@ -200,7 +202,7 @@ struct psc_flatfoil {
   double LLs;
   double LLn;
 
-  void setup(PscFlatfoilParams& params);
+  void setup(psc* psc);
 };
 
 #define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
@@ -513,10 +515,8 @@ psc_flatfoil_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_flatfoil_setup
 
-void psc_flatfoil::setup(PscFlatfoilParams& params)
+void psc_flatfoil::setup(psc* psc)
 {
-  psc* psc = ppsc;
-
   LLs = 4. * LLf;
   LLn = .5 * LLf;
   
@@ -678,11 +678,10 @@ main(int argc, char **argv)
   psc = psc_create(MPI_COMM_WORLD);
   psc_set_from_options(psc);
   {
-    auto params = PscFlatfoilParams{};
     psc_flatfoil* sub = psc_flatfoil(psc);
-    sub->setup(params);
+    sub->setup(psc);
 
-    PscFlatfoil flatfoil(params, psc);
+    PscFlatfoil flatfoil(sub->params, psc);
 
     psc_view(psc);
     psc_mparticles_view(psc->particles);
