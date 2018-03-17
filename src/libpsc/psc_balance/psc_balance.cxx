@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-LIST_HEAD(psc_mfields_base_list);
-
 double *psc_balance_comp_time_by_patch;
 
 int psc_balance_generation_cnt;

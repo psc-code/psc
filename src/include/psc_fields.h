@@ -36,18 +36,6 @@ const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
 
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
 
-struct psc_mfields_list_entry {
-  struct psc_mfields* mflds;
-  list_t entry;
-};
-
-void psc_mfields_list_add(list_t *head, struct psc_mfields *mflds);
-void psc_mfields_list_del(list_t *head, struct psc_mfields *mflds);
-
-#define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
-
-extern list_t psc_mfields_base_list;
-
 #endif
 
 

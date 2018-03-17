@@ -822,9 +822,8 @@ private:
 
     // fields
     prof_start(pr_bal_flds);
-    struct psc_mfields_list_entry *p;
-    __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-      balance_field(ctx, new_grid, *PscMfieldsBase{p->mflds}.sub());
+    for (auto mflds : psc_mfields_list) {
+      balance_field(ctx, new_grid, *PscMfieldsBase{mflds}.sub());
     }
     prof_stop(pr_bal_flds);
 
