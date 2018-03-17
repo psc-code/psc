@@ -51,13 +51,11 @@ struct Collision_
     psc_mfields_set_comp_name(mflds, 2, "coll_nudt_max");
     psc_mfields_set_comp_name(mflds, 3, "coll_nudt_nlarge");
     psc_mfields_set_comp_name(mflds, 4, "coll_nudt_ncoll");
-    psc_mfields_list_add(&psc_mfields_base_list, mflds);
     
     mflds_rei = mfields_t::create(comm, ppsc->grid(), 3, ppsc->ibn).mflds();
     psc_mfields_set_comp_name(mflds_rei, 0, "coll_rei_x");
     psc_mfields_set_comp_name(mflds_rei, 1, "coll_rei_y");
     psc_mfields_set_comp_name(mflds_rei, 2, "coll_rei_z");
-    psc_mfields_list_add(&psc_mfields_base_list, mflds_rei);
 
     global_collision = this;
   }

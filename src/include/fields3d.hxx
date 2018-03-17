@@ -442,11 +442,13 @@ public:
     
     new(_mflds->obj.subctx) Mfields{*_mflds->grid, _mflds->nr_fields, _mflds->ibn};
     _mflds->grid = nullptr; // to prevent subsequent use, there's Mfields::grid() instead
+    psc_mfields_list_add(&psc_mfields_base_list, _mflds);
   }
 
   static void destroy(struct psc_mfields* _mflds)
   {
     if (!mrc_to_subobj(_mflds, MfieldsBase)->inited) return; // FIXME
+    psc_mfields_list_del(&psc_mfields_base_list, _mflds);
     PscMfields<Mfields> mflds(_mflds);
     mflds->~Mfields();
   }

@@ -93,7 +93,6 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
   }
   struct psc_fields_list *tfd = &out_c->tfd;
   for (int i = 0; i < tfd->nr_flds; i++) {
-    psc_mfields_list_del(&psc_mfields_base_list, tfd->flds[i]);
     psc_mfields_destroy(tfd->flds[i]);
   }
 
@@ -150,7 +149,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     tfd->flds[i] = PscMfieldsC::create(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       pfd->flds[i]->nr_fields, psc->ibn).mflds();
     psc_mfields_set_name(tfd->flds[i], psc_mfields_name(pfd->flds[i]));
-    psc_mfields_list_add(&psc_mfields_base_list, tfd->flds[i]);
     for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
       psc_mfields_set_comp_name(tfd->flds[i], m, psc_mfields_comp_name(pfd->flds[i], m));
     }
