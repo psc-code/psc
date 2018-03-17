@@ -223,6 +223,12 @@ struct PscFlatfoilParams
   double balance_factor_fields;
   bool balance_print_loads;
   bool balance_write_loads;
+
+  int heating_interval;
+  int heating_begin;
+  int heating_end;
+  int heating_kind;
+  PscHeatingSpotFoilParams heating_foil_params;
 };
 
 struct PscFlatfoil : PscFlatfoilParams
@@ -244,7 +250,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, TargetFoil>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
-
+  
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : PscFlatfoilParams{params},
       psc_{psc},
@@ -254,20 +260,13 @@ struct PscFlatfoil : PscFlatfoilParams
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
-      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads}
+      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
+      heating_{heating_interval, heating_begin, heating_end, heating_kind,
+	  PscHeatingSpotFoil{heating_foil_params}}
+
   {
     MPI_Comm comm = psc_comm(psc);
     
-    auto foil_params = PscHeatingSpotFoilParams{};
-    foil_params.zl = sub_->heating_zl * sub_->d_i;
-    foil_params.zh = sub_->heating_zh * sub_->d_i;
-    foil_params.xc = sub_->heating_xc * sub_->d_i;
-    foil_params.yc = sub_->heating_yc * sub_->d_i;
-    foil_params.rH = sub_->heating_rH * sub_->d_i;
-    foil_params.T  = .04;
-    foil_params.Mi = sub_->heating_rH * psc->kinds[MY_ION].m;
-    heating_.reset(new Heating_t{20, 0, 10000000, MY_ELECTRON, PscHeatingSpotFoil{foil_params}});
-
     bool inject_enable = true;
     bool inject_kind_n = MY_ELECTRON;
     bool inject_interval = 20;
@@ -304,7 +303,7 @@ struct PscFlatfoil : PscFlatfoilParams
     bndp_(mprts_);
     
     (*inject_)(mprts_);
-    (*heating_)(mprts_);
+    heating_(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     bndf_.fill_ghosts_H(mflds_);
@@ -443,10 +442,27 @@ struct PscFlatfoil : PscFlatfoilParams
 
   static void integrate(struct psc *psc)
   {
+    struct psc_flatfoil *sub = psc_flatfoil(psc);
+
     auto params = PscFlatfoilParams{};
     params.sort_interval = psc->sort->every;
+
     params.collision_interval = psc->collision->every;
     params.collision_nu = psc->collision->nu;
+
+    params.heating_interval = 20;
+    params.heating_begin = 0;
+    params.heating_end = 10000000;
+    params.heating_kind = MY_ELECTRON;
+    auto& heating_foil_params = params.heating_foil_params;
+    heating_foil_params.zl = sub->heating_zl * sub->d_i;
+    heating_foil_params.zh = sub->heating_zh * sub->d_i;
+    heating_foil_params.xc = sub->heating_xc * sub->d_i;
+    heating_foil_params.yc = sub->heating_yc * sub->d_i;
+    heating_foil_params.rH = sub->heating_rH * sub->d_i;
+    heating_foil_params.T  = .04;
+    heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
+    
     PscFlatfoil flatfoil(params, psc);
     flatfoil.setup();
     flatfoil.integrate();
@@ -467,7 +483,7 @@ private:
   BndFields_t bndf_;
   Balance_t balance_;
 
-  std::unique_ptr<Heating_t> heating_;
+  Heating_t heating_;
   std::unique_ptr<Inject_t> inject_;
   
   int st_nr_particles;
