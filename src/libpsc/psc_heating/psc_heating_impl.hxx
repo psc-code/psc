@@ -1,5 +1,4 @@
 
-#include <psc_heating_private.h>
 #include "heating.hxx"
 
 #include <stdlib.h>
@@ -120,28 +119,3 @@ private:
   std::function<double(const double*)> get_H_;
 };
 
-struct PscHeatingSpot
-{
-  PscHeatingSpot(psc_heating_spot& spot)
-    : spot_(spot)
-  {}
-
-  double operator()(const double *xx)
-  {
-    return psc_heating_spot_get_H(&spot_, xx);
-  }
-  
-private:
-  psc_heating_spot& spot_;
-};
-
-template<typename MP>
-struct Heating_ : Heating__<MP>
-{
-  using Base = Heating__<MP>;
-
-  Heating_(int every_step, int tb, int te, int kind,
-	   psc_heating_spot& spot)
-    : Base{every_step, tb, te, kind, PscHeatingSpot{spot}}
-  {}
-};

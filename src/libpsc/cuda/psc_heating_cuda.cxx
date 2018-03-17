@@ -1,6 +1,4 @@
 
-#include <psc_heating_private.h>
-
 #include "cuda_iface.h"
 #include "psc_particles_cuda.h"
 #include "heating.hxx"
@@ -16,16 +14,16 @@ struct HeatingCuda : HeatingBase
   // ----------------------------------------------------------------------
   // ctor
 
-  HeatingCuda(int every_step, int tb, int te, int kind,
-	   psc_heating_spot& spot)
+  template<typename FUNC>
+  HeatingCuda(int every_step, int tb, int te, int kind, FUNC get_H)
     : every_step_(every_step),
       tb_(tb), te_(te),
-      kind_(kind),
-      spot_(spot)
+      kind_(kind)
   {
     struct cuda_heating_foil foil;
     double val;
 
+#if 0
     assert(strcmp(psc_heating_spot_type(&spot_), "foil") == 0);
     psc_heating_spot_get_param_double(&spot_, "zl", &val);
     foil.zl = val;
@@ -43,7 +41,7 @@ struct HeatingCuda : HeatingBase
     foil.Mi = val;
     foil.kind = kind_;
     foil.heating_dt = every_step_ * ppsc->dt;
-
+#endif
     cuda_heating_setup_foil(&foil);
   }
 
@@ -72,18 +70,5 @@ private:
   int every_step_;
   int tb_, te_;
   int kind_;
-  psc_heating_spot& spot_;
 };
 
-// ----------------------------------------------------------------------
-// psc_heating "cuda"
-
-struct psc_heating_ops_cuda : psc_heating_ops {
-  using PscHeating_t = PscHeatingWrapper<HeatingCuda>;
-  psc_heating_ops_cuda() {
-    name                = "cuda";
-    size                = PscHeating_t::size;
-    setup               = PscHeating_t::setup;
-    destroy             = PscHeating_t::destroy;
-  }
-} psc_heating_ops_cuda;

@@ -82,10 +82,6 @@ add_library(psc
   psc_output_particles/psc_output_particles_hdf5_double.cxx
   psc_output_particles/psc_output_particles_hdf5_single.cxx
   psc_output_particles/psc_output_particles_none.cxx
-
-  psc_heating/psc_heating.cxx
-  psc_heating/psc_heating_impl.cxx
-  psc_heating/psc_heating_spot.cxx
   )
 target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC mrc)
