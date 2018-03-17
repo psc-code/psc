@@ -62,13 +62,13 @@ psc_checks_sub_setup(struct psc_checks *checks)
   psc_mfields_set_type(checks->rho_m, FIELDS_TYPE);
   psc_mfields_set_param_int3(checks->rho_m, "ibn", ppsc->ibn);
   psc_mfields_set_param_int(checks->rho_m, "nr_fields", 1);
-  psc_mfields_list_add(&psc_mfields_base_list, &checks->rho_m);
+  psc_mfields_list_add(&psc_mfields_base_list, checks->rho_m);
   checks->rho_m->grid = &ppsc->grid();
 
   psc_mfields_set_type(checks->rho_p, FIELDS_TYPE);
   psc_mfields_set_param_int3(checks->rho_p, "ibn", ppsc->ibn);
   psc_mfields_set_param_int(checks->rho_p, "nr_fields", 1);
-  psc_mfields_list_add(&psc_mfields_base_list, &checks->rho_p);
+  psc_mfields_list_add(&psc_mfields_base_list, checks->rho_p);
   checks->rho_p->grid = &ppsc->grid();
 
   psc_checks_setup_member_objs(checks);

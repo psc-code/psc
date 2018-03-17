@@ -493,7 +493,7 @@ _psc_setup(struct psc *psc)
   // create and set up base mflds
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_list_add(&psc_mfields_base_list, psc->flds);
 
   psc_method_set_ic_fields(psc->method, psc);
 
@@ -510,7 +510,7 @@ _psc_setup(struct psc *psc)
 static void
 _psc_destroy(struct psc *psc)
 {
-  psc_mfields_list_del(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_list_del(&psc_mfields_base_list, psc->flds);
   psc_mfields_destroy(psc->flds);
   psc_mparticles_destroy(psc->particles);
 
@@ -591,7 +591,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   psc->particles = mrc_io_read_ref(io, psc, "mparticles", psc_mparticles);
   psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_list_add(&psc_mfields_base_list, psc->flds);
 
   psc_read_member_objs(psc, io);
 

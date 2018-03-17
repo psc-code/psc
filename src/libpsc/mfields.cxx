@@ -134,19 +134,19 @@ inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int m
 // ======================================================================
 
 void
-psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p)
+psc_mfields_list_add(list_t *head, struct psc_mfields *mflds)
 {
   struct psc_mfields_list_entry *p = new struct psc_mfields_list_entry();
-  p->mflds = *flds_p;
+  p->mflds = mflds;
   list_add_tail(&p->entry, head);
 }
 
 void
-psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p)
+psc_mfields_list_del(list_t *head, struct psc_mfields *mflds)
 {
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, head, entry, struct psc_mfields_list_entry) {
-    if (p->mflds == *flds_p) {
+    if (p->mflds == mflds) {
       list_del(&p->entry);
       delete p;
       return;

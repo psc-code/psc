@@ -119,12 +119,12 @@ struct FieldsItemFields : FieldsItemBase
     for (int m = 0; m < Item::n_comps; m++) {
       psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
     }
-    psc_mfields_list_add(&psc_mfields_base_list, &mres_base_);
+    psc_mfields_list_add(&psc_mfields_base_list, mres_base_);
   }
 
   ~FieldsItemFields()
   {
-    psc_mfields_list_del(&psc_mfields_base_list, &mres_base_);
+    psc_mfields_list_del(&psc_mfields_base_list, mres_base_);
     psc_mfields_destroy(mres_base_);
   }
 
@@ -201,12 +201,12 @@ struct ItemMomentCRTP
 	}
       }
     }
-    psc_mfields_list_add(&psc_mfields_base_list, &this->mres_);
+    psc_mfields_list_add(&psc_mfields_base_list, mres_);
   }
   
   ~ItemMomentCRTP()
   {
-    psc_mfields_list_del(&psc_mfields_base_list, &mres_);
+    psc_mfields_list_del(&psc_mfields_base_list, mres_);
     psc_mfields_destroy(mres_);
   }
   

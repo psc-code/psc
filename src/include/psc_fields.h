@@ -41,8 +41,8 @@ struct psc_mfields_list_entry {
   list_t entry;
 };
 
-void psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p);
-void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
+void psc_mfields_list_add(list_t *head, struct psc_mfields *mflds);
+void psc_mfields_list_del(list_t *head, struct psc_mfields *mflds);
 
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 

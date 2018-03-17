@@ -507,7 +507,7 @@ psc_harris_setup(struct psc *psc)
 
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_list_add(&psc_mfields_base_list, psc->flds);
 
   SetupParticles<mparticles_t::sub_t>::setup_particles(psc, n_prts_by_patch_new.data());
 
