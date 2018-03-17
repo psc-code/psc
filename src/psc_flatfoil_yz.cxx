@@ -170,13 +170,12 @@ struct PscFlatfoilParams
   int heating_begin;
   int heating_end;
   int heating_kind;
-  HeatingSpotFoilParams heating_foil_params;
+  HeatingSpotFoil heating_spot;
 
   bool inject_enable;
   int inject_kind_n;
   int inject_interval;
   int inject_tau;
-
   InjectFoil inject_target;
 };
 
@@ -195,14 +194,6 @@ struct psc_flatfoil {
 };
 
 #define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
-
-#define VAR(x) (void *)offsetof(struct psc_flatfoil, x)
-static struct param psc_flatfoil_descr[] = {
-  { "LLs"               , VAR(LLs)               , MRC_VAR_DOUBLE           },
-  { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
-  {},
-};
-#undef VAR
 
 // ======================================================================
 // PscFlatfoil
@@ -246,8 +237,7 @@ struct PscFlatfoil : PscFlatfoilParams
       bndp_{psc_->mrc_domain, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
-      heating_{heating_interval, heating_begin, heating_end, heating_kind,
-	  HeatingSpotFoil{heating_foil_params}},
+      heating_{heating_interval, heating_begin, heating_end, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
   {}
   
@@ -417,10 +407,6 @@ struct PscFlatfoil : PscFlatfoilParams
 	       elapsed, w, d, h, m, s );
   }
 
-  static void integrate(struct psc *psc)
-  {
-  }
-
 private:
   psc* psc_;
   psc_flatfoil* sub_;
@@ -523,12 +509,13 @@ void psc_flatfoil::setup(psc* psc)
   psc->kinds[MY_ION     ].name = strdup("i");
 
   d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
-  
-  params.sort_interval = psc->sort->every;
+
+  // sort
+  params.sort_interval = 10;
 
   // collisions
-  params.collision_interval = psc->collision->every;
-  params.collision_nu = psc->collision->nu;
+  params.collision_interval = 10;
+  params.collision_nu = .1;
 
   // --- setup heating
   double heating_zl = -1.;
@@ -536,8 +523,7 @@ void psc_flatfoil::setup(psc* psc)
   double heating_xc = 0.;
   double heating_yc = 0.;
   double heating_rH = 3.;
-  
-  auto& heating_foil_params = params.heating_foil_params;
+  auto heating_foil_params = HeatingSpotFoilParams{};
   heating_foil_params.zl = heating_zl * d_i;
   heating_foil_params.zh = heating_zh * d_i;
   heating_foil_params.xc = heating_xc * d_i;
@@ -545,6 +531,7 @@ void psc_flatfoil::setup(psc* psc)
   heating_foil_params.rH = heating_rH * d_i;
   heating_foil_params.T  = .04;
   heating_foil_params.Mi = heating_rH * psc->kinds[MY_ION].m;
+  params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
   params.heating_begin = 0;
   params.heating_end = 10000000;
@@ -554,7 +541,6 @@ void psc_flatfoil::setup(psc* psc)
   double target_yl     = -100000.;
   double target_yh     =  100000.;
   double target_zwidth =  1.;
-
   auto inject_foil_params = InjectFoilParams{};
   inject_foil_params.yl =   target_yl * d_i;
   inject_foil_params.yh =   target_yh * d_i;
@@ -568,6 +554,12 @@ void psc_flatfoil::setup(psc* psc)
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
   params.inject_tau = 40;
+
+  // --- balancing
+  params.balance_interval = 100;
+  params.balance_factor_fields = 1.;
+  params.balance_print_loads = true;
+  params.balance_write_loads = false;
 
   psc_setup_super(psc);
 
@@ -643,7 +635,6 @@ struct psc_ops_flatfoil : psc_ops {
   psc_ops_flatfoil() {
     name             = "flatfoil";
     size             = sizeof(struct psc_flatfoil);
-    param_descr      = psc_flatfoil_descr;
     create           = psc_flatfoil_create;
     read             = psc_flatfoil_read;
     init_field       = psc_flatfoil_init_field;
@@ -667,12 +658,7 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
-  int from_checkpoint = -1;
-  mrc_params_get_option_int("from_checkpoint", &from_checkpoint);
-
-  struct psc *psc;
-
-  psc = psc_create(MPI_COMM_WORLD);
+  psc *psc = psc_create(MPI_COMM_WORLD);
   psc_set_from_options(psc);
   {
     psc_flatfoil* sub = psc_flatfoil(psc);
