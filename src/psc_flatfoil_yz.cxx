@@ -148,6 +148,20 @@ private:
 
 struct PscFlatfoilParams
 {
+  double BB;
+  double Zi;
+  double LLf;
+  double LLz;
+  double LLy;
+
+  double background_n;
+  double background_Te;
+  double background_Ti;
+
+  double target_yl;
+  double target_yh;
+  double target_zwidth;
+
   int sort_interval;
 
   int collision_interval;
@@ -176,19 +190,6 @@ struct PscFlatfoilParams
 struct psc_flatfoil {
   PscFlatfoilParams params;
   
-  double BB;
-  double Zi;
-  double LLf;
-  double LLz;
-  double LLy;
-
-  double background_n;
-  double background_Te;
-  double background_Ti;
-
-  double target_yl;
-  double target_yh;
-  double target_zwidth;
   InjectFoil inject_target;
 
   double heating_zl; // this is ugly as these are used to set the corresponding
@@ -209,20 +210,6 @@ struct psc_flatfoil {
 
 #define VAR(x) (void *)offsetof(struct psc_flatfoil, x)
 static struct param psc_flatfoil_descr[] = {
-  { "BB"                , VAR(BB)                , PARAM_DOUBLE(.0)         },
-  { "Zi"                , VAR(Zi)                , PARAM_DOUBLE(1.)         },
-  { "LLf"               , VAR(LLf)               , PARAM_DOUBLE(25.)        },
-  { "LLz"               , VAR(LLz)               , PARAM_DOUBLE(400.*4)     },
-  { "LLy"               , VAR(LLy)               , PARAM_DOUBLE(400.)       },
-
-  { "background_n"      , VAR(background_n)      , PARAM_DOUBLE(.002)       },
-  { "background_Te"     , VAR(background_Te)     , PARAM_DOUBLE(.001)       },
-  { "background_Ti"     , VAR(background_Ti)     , PARAM_DOUBLE(.001)       },
-
-  { "target_yl"         , VAR(target_yl)         , PARAM_DOUBLE(-100000.)   },
-  { "target_yh"         , VAR(target_yh)         , PARAM_DOUBLE( 100000.)   },
-  { "target_zwidth"     , VAR(target_zwidth)     , PARAM_DOUBLE(1.)         },
-
   { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)        },
   { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)         },
   { "heating_xc"        , VAR(heating_xc)        , PARAM_DOUBLE(0.)         },
@@ -517,12 +504,27 @@ psc_flatfoil_create(struct psc *psc)
 
 void psc_flatfoil::setup(psc* psc)
 {
-  LLs = 4. * LLf;
-  LLn = .5 * LLf;
+  params.BB = 0.;
+  params.Zi = 1.;
+
+  params.LLf = 25.;
+  params.LLz = 400. * 4.;
+  params.LLy = 400.;
+
+  params.background_n  = .002;
+  params.background_Te = .001;
+  params.background_Ti = .001;
+
+  params.target_yl     = -100000.;
+  params.target_yh     =  100000.;
+  params.target_zwidth =  1.;
+
+  LLs = 4. * params.LLf; // FIXME, unused?
+  LLn = .5 * params.LLf; // FIXME, unused?
   
   psc->domain.length[0] = 1.;
-  psc->domain.length[1] = LLy;
-  psc->domain.length[2] = LLz;
+  psc->domain.length[1] = params.LLy;
+  psc->domain.length[2] = params.LLz;
 
   // center around origin
   for (int d = 0; d < 3; d++) {
@@ -534,8 +536,8 @@ void psc_flatfoil::setup(psc* psc)
   psc->kinds[MY_ELECTRON].m = 1.;
   psc->kinds[MY_ELECTRON].name = strdup("e");
 
-  psc->kinds[MY_ION     ].q = Zi;
-  psc->kinds[MY_ION     ].m = 100. * Zi;  // FIXME, hardcoded mass ratio 100
+  psc->kinds[MY_ION     ].q = params.Zi;
+  psc->kinds[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
   psc->kinds[MY_ION     ].name = strdup("i");
 
   d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
@@ -563,10 +565,10 @@ void psc_flatfoil::setup(psc* psc)
   params.inject_interval = 20;
   params.inject_tau = 40;
   auto inject_foil_params = InjectFoilParams{};
-  inject_foil_params.yl = target_yl * d_i;
-  inject_foil_params.yh = target_yh * d_i;
-  inject_foil_params.zl = - target_zwidth * d_i;
-  inject_foil_params.zh =   target_zwidth * d_i;
+  inject_foil_params.yl = params.target_yl * d_i;
+  inject_foil_params.yh = params.target_yh * d_i;
+  inject_foil_params.zl = - params.target_zwidth * d_i;
+  inject_foil_params.zh =   params.target_zwidth * d_i;
   inject_foil_params.n  = 1.;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
@@ -576,7 +578,7 @@ void psc_flatfoil::setup(psc* psc)
 
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
+  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
 }
 
 // ----------------------------------------------------------------------
@@ -596,7 +598,7 @@ psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
 
-  double BB = sub->BB;
+  double BB = sub->params.BB;
 
   switch (m) {
   case HY:
@@ -618,16 +620,16 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 
   switch (pop) {
   case MY_ION:
-    npt->n    = sub->background_n;
-    npt->T[0] = sub->background_Ti;
-    npt->T[1] = sub->background_Ti;
-    npt->T[2] = sub->background_Ti;
+    npt->n    = sub->params.background_n;
+    npt->T[0] = sub->params.background_Ti;
+    npt->T[1] = sub->params.background_Ti;
+    npt->T[2] = sub->params.background_Ti;
     break;
   case MY_ELECTRON:
-    npt->n    = sub->background_n;
-    npt->T[0] = sub->background_Te;
-    npt->T[1] = sub->background_Te;
-    npt->T[2] = sub->background_Te;
+    npt->n    = sub->params.background_n;
+    npt->T[0] = sub->params.background_Te;
+    npt->T[1] = sub->params.background_Te;
+    npt->T[2] = sub->params.background_Te;
     break;
   default:
     assert(0);
