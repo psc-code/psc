@@ -229,6 +229,11 @@ struct PscFlatfoilParams
   int heating_end;
   int heating_kind;
   PscHeatingSpotFoilParams heating_foil_params;
+
+  bool inject_enable;
+  int inject_kind_n;
+  int inject_interval;
+  int inject_tau;
 };
 
 struct PscFlatfoil : PscFlatfoilParams
@@ -262,17 +267,9 @@ struct PscFlatfoil : PscFlatfoilParams
       bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating_interval, heating_begin, heating_end, heating_kind,
-	  PscHeatingSpotFoil{heating_foil_params}}
-
-  {
-    MPI_Comm comm = psc_comm(psc);
-    
-    bool inject_enable = true;
-    bool inject_kind_n = MY_ELECTRON;
-    bool inject_interval = 20;
-    bool inject_tau = 40;
-    inject_.reset(new Inject_t{comm, inject_enable, inject_interval, inject_tau, inject_kind_n, sub_->inject_target});
-  }
+	  PscHeatingSpotFoil{heating_foil_params}},
+      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, sub_->inject_target}
+  {}
   
   void step()
   {
@@ -302,7 +299,7 @@ struct PscFlatfoil : PscFlatfoilParams
 
     bndp_(mprts_);
     
-    (*inject_)(mprts_);
+    inject_(mprts_);
     heating_(mprts_);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
@@ -463,6 +460,11 @@ struct PscFlatfoil : PscFlatfoilParams
     heating_foil_params.T  = .04;
     heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
     
+    params.inject_enable = true;
+    params.inject_kind_n = MY_ELECTRON;
+    params.inject_interval = 20;
+    params.inject_tau = 40;
+
     PscFlatfoil flatfoil(params, psc);
     flatfoil.setup();
     flatfoil.integrate();
@@ -484,7 +486,7 @@ private:
   Balance_t balance_;
 
   Heating_t heating_;
-  std::unique_ptr<Inject_t> inject_;
+  Inject_t inject_;
   
   int st_nr_particles;
   int st_time_step;
