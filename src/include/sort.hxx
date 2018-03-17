@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_sort_private.h"
+#include "psc.h"
 #include "particles.hxx"
 
 #include "psc_stats.h"
@@ -37,9 +38,11 @@ struct PscSort
       st_time_sort = psc_stats_register("time sort");
     }
     
-    psc_stats_start(st_time_sort);
-    sub()->run(mprts);
-    psc_stats_stop(st_time_sort);
+    if (sort_->every > 0 && (ppsc->timestep % sort_->every) == 0) {
+      psc_stats_start(st_time_sort);
+      sub()->run(mprts);
+      psc_stats_stop(st_time_sort);
+    }
   }
   
   sub_t* sub() { return mrc_to_subobj(sort_, sub_t); }

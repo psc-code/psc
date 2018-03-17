@@ -232,8 +232,8 @@ struct PscFlatfoil : Params
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
 
-  PscFlatfoil(psc *psc)
-    : Params(psc->params),
+  PscFlatfoil(const Params& params, psc *psc)
+    : Params(params),
       psc_{psc},
       sub_{psc_flatfoil(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
@@ -430,7 +430,11 @@ struct PscFlatfoil : Params
 
   static void integrate(struct psc *psc)
   {
-    PscFlatfoil flatfoil(psc);
+    auto params = Params{};
+    params.sort_interval = psc->sort->every;
+    params.collision_interval = psc->collision->every;
+    params.collision_nu = psc->collision->nu;
+    PscFlatfoil flatfoil(params, psc);
     flatfoil.setup();
     flatfoil.integrate();
   }

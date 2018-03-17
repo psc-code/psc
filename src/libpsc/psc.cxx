@@ -502,10 +502,6 @@ _psc_setup(struct psc *psc)
 #endif
 
   psc_setup_member_objs(psc);
-
-  psc->params.sort_interval = psc->sort->every;
-  psc->params.collision_interval = psc->collision->every;
-  psc->params.collision_nu = psc->collision->nu;
 }
 
 // ----------------------------------------------------------------------
