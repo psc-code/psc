@@ -175,10 +175,10 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_partition
 
-  static void setup_partition(struct psc *psc, uint *nr_particles_by_patch)
+  static void setup_partition(struct psc *psc, std::vector<uint>& nr_particles_by_patch)
   {
     if (psc_ops(psc)->setup_particles) {
-      psc_ops(psc)->setup_particles(psc, nr_particles_by_patch, true);
+      psc_ops(psc)->setup_particles(psc, nr_particles_by_patch.data(), true);
       return;
     }
     if (!psc_ops(psc)->init_npt) {

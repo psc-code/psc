@@ -498,7 +498,7 @@ psc_harris_setup(struct psc *psc)
 
   // partition and initial balancing
   std::vector<uint> n_prts_by_patch_old(psc->n_patches());
-  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old.data());
+  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old);
   auto balance = PscBalanceBase{psc->balance};
   auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
 

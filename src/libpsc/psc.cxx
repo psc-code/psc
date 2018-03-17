@@ -460,14 +460,6 @@ psc_setup_domain(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_base_mflds
-
-static void
-psc_setup_base_mflds(struct psc *psc)
-{
-}
-
-// ----------------------------------------------------------------------
 // _psc_setup
 
 static void
@@ -478,7 +470,7 @@ _psc_setup(struct psc *psc)
   // partition and initial balancing
   std::vector<uint> n_prts_by_patch_old(psc->n_patches());
   
-  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old.data());
+  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old);
   psc_balance_setup(psc->balance);
   auto balance = PscBalanceBase{psc->balance};
   std::vector<uint> n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
