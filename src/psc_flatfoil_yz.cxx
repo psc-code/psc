@@ -56,9 +56,9 @@ enum {
 };
 
 // ======================================================================
-// TargetFoil
+// InjectFoil
 
-struct TargetFoilParams
+struct InjectFoilParams
 {
   double yl, yh;
   double zl, zh;
@@ -66,10 +66,10 @@ struct TargetFoilParams
   double Te, Ti;
 };
 
-struct TargetFoil : TargetFoilParams
+struct InjectFoil : InjectFoilParams
 {
-  TargetFoil(const TargetFoilParams& params)
-    : TargetFoilParams{params}
+  InjectFoil(const InjectFoilParams& params)
+    : InjectFoilParams{params}
   {}
 
   bool is_inside(double crd[3])
@@ -160,7 +160,7 @@ struct psc_flatfoil {
   double target_yl;
   double target_yh;
   double target_zwidth;
-  TargetFoil inject_target;
+  InjectFoil inject_target;
 
   double heating_zl; // this is ugly as these are used to set the corresponding
   double heating_zh; // quantities in psc_heating, but having them here we can rescale
@@ -256,7 +256,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
-  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, TargetFoil>; // FIXME, shouldn't always use MfieldsC
+  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, InjectFoil>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
   
@@ -535,16 +535,6 @@ psc_flatfoil_setup(struct psc *psc, PscFlatfoilParams& params)
   psc->kinds[MY_ION     ].name = strdup("i");
 
   sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
-
-  auto target_foil_params = TargetFoilParams{};
-  target_foil_params.yl = sub->target_yl * sub->d_i;
-  target_foil_params.yh = sub->target_yh * sub->d_i;
-  target_foil_params.zl = - sub->target_zwidth * sub->d_i;
-  target_foil_params.zh =   sub->target_zwidth * sub->d_i;
-  target_foil_params.n  = 1.;
-  target_foil_params.Te = .001;
-  target_foil_params.Ti = .001;
-  sub->inject_target = TargetFoil{target_foil_params};
   
   params.sort_interval = psc->sort->every;
   
@@ -568,6 +558,15 @@ psc_flatfoil_setup(struct psc *psc, PscFlatfoilParams& params)
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
   params.inject_tau = 40;
+  auto inject_foil_params = InjectFoilParams{};
+  inject_foil_params.yl = sub->target_yl * sub->d_i;
+  inject_foil_params.yh = sub->target_yh * sub->d_i;
+  inject_foil_params.zl = - sub->target_zwidth * sub->d_i;
+  inject_foil_params.zh =   sub->target_zwidth * sub->d_i;
+  inject_foil_params.n  = 1.;
+  inject_foil_params.Te = .001;
+  inject_foil_params.Ti = .001;
+  sub->inject_target = InjectFoil{inject_foil_params};
 
   psc_setup_super(psc);
 
