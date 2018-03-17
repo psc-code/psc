@@ -19,14 +19,12 @@ psc_method_do_setup(struct psc_method *method, struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_method_setup_partition
 
-void
-psc_method_setup_partition(struct psc_method *method, struct psc *psc,
-			   std::vector<uint>& n_prts_by_patch)
+std::vector<uint> psc_method_setup_partition(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->setup_partition);
 
-  ops->setup_partition(method, psc, n_prts_by_patch);
+  return ops->setup_partition(method, psc);
 }
 
 // ----------------------------------------------------------------------

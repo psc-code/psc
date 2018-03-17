@@ -11,7 +11,7 @@ struct psc_method {
 struct psc_method_ops {
   MRC_SUBCLASS_OPS(struct psc_method);
   void (*do_setup)(struct psc_method *method, struct psc *psc);
-  void (*setup_partition)(struct psc_method *method, struct psc *psc, std::vector<uint>& n_prts_by_patch);
+  std::vector<uint> (*setup_partition)(struct psc_method *method, struct psc *psc);
   void (*set_ic_particles)(struct psc_method *method, struct psc *psc, uint *n_prts_by_patch);
   void (*set_ic_fields)(struct psc_method *method, struct psc *psc);
   void (*initialize)(struct psc_method *method, struct psc *psc);

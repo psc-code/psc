@@ -175,17 +175,15 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_partition
 
-  static void setup_partition(struct psc *psc, std::vector<uint>& nr_particles_by_patch)
+  static std::vector<uint> setup_partition(struct psc *psc)
   {
+    std::vector<uint> n_prts_by_patch(psc->n_patches());
     if (psc_ops(psc)->setup_particles) {
-      psc_ops(psc)->setup_particles(psc, nr_particles_by_patch.data(), true);
-      return;
+      psc_ops(psc)->setup_particles(psc, n_prts_by_patch.data(), true);
+      return n_prts_by_patch;
     }
     if (!psc_ops(psc)->init_npt) {
-      psc_foreach_patch(psc, p) {
-	nr_particles_by_patch[p] = 0;
-      }
-      return;
+      return n_prts_by_patch;
     }
 
     if (psc->prm.nr_populations < 0) {
@@ -195,7 +193,6 @@ struct SetupParticles
       psc->prm.neutralizing_population = psc->prm.nr_populations - 1;
     }
 
-    int np_total = 0;
     psc_foreach_patch(psc, p) {
       auto ilo = Int3{}, ihi = psc->grid().ldims;
 
@@ -235,10 +232,9 @@ struct SetupParticles
 	  }
 	}
       }
-      nr_particles_by_patch[p] = np;
-      np_total += np;
+      n_prts_by_patch[p] = np;
     }
+    return n_prts_by_patch;
   }
-
 };
 

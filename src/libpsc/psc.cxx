@@ -468,12 +468,10 @@ _psc_setup(struct psc *psc)
   psc_method_do_setup(psc->method, psc);
 
   // partition and initial balancing
-  std::vector<uint> n_prts_by_patch_old(psc->n_patches());
-  
-  psc_method_setup_partition(psc->method, psc, n_prts_by_patch_old);
+  auto n_prts_by_patch_old = psc_method_setup_partition(psc->method, psc);
   psc_balance_setup(psc->balance);
   auto balance = PscBalanceBase{psc->balance};
-  std::vector<uint> n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
+  auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
 
   // create base particle data structure
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),

@@ -137,17 +137,16 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_method_vpic_setup_partition
 
-static void
-psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc,
-				std::vector<uint>& n_prts_by_patch)
+static std::vector<uint> psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc)
+				
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
   if (sub->use_deck_particle_ic) {
     assert(psc->n_patches() == 1);
-    n_prts_by_patch[0] = 1; // fake, but not possible to balance, anyway
+    return { 1 }; // 1 patch with 1 particle: fake, but not possible to balance, anyway
   } else {
-    SetupParticles<MparticlesDouble>::setup_partition(psc, n_prts_by_patch);
+    return SetupParticles<MparticlesDouble>::setup_partition(psc);
   }
 }
 
