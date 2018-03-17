@@ -66,6 +66,8 @@ struct InjectFoilParams
 
 struct InjectFoil : InjectFoilParams
 {
+  InjectFoil() = default;
+  
   InjectFoil(const InjectFoilParams& params)
     : InjectFoilParams{params}
   {}
@@ -118,6 +120,8 @@ struct HeatingSpotFoilParams
 
 struct HeatingSpotFoil : HeatingSpotFoilParams
 {
+  HeatingSpotFoil() = default;
+  
   HeatingSpotFoil(const HeatingSpotFoilParams& params)
     : HeatingSpotFoilParams{params}
   {
@@ -182,18 +186,21 @@ struct PscFlatfoilParams
 // ======================================================================
 // psc subclass "flatfoil"
 
-struct psc_flatfoil {
+struct psc_flatfoil
+{
+  psc_flatfoil(psc* psc);
+  
+  void setup(psc* psc);
+
   PscFlatfoilParams params;
   
   // state
   double d_i;
   double LLs;
   double LLn;
-
-  void setup(psc* psc);
 };
 
-#define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
+#define psc_flatfoil_(psc) mrc_to_subobj(psc, struct psc_flatfoil)
 
 // ======================================================================
 // PscFlatfoil
@@ -230,7 +237,7 @@ struct PscFlatfoil : PscFlatfoilParams
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : PscFlatfoilParams{params},
       psc_{psc},
-      sub_{psc_flatfoil(psc)},
+      sub_{psc_flatfoil_(psc)},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
@@ -430,13 +437,10 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_create
+// psc_flatfoil ctor
 
-static void
-psc_flatfoil_create(struct psc *psc)
+psc_flatfoil::psc_flatfoil(psc* psc)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-
   psc_default_dimensionless(psc);
 
   psc->prm.nmax = 210001;
@@ -461,10 +465,16 @@ psc_flatfoil_create(struct psc *psc)
   psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+}
 
-  struct psc_bnd_fields *bnd_fields = 
-    psc_push_fields_get_bnd_fields(psc->push_fields);
-  psc_bnd_fields_set_type(bnd_fields, "none");
+// ----------------------------------------------------------------------
+// psc_flatfoil_create
+
+static void
+psc_flatfoil_create(struct psc *psc)
+{
+  struct psc_flatfoil *sub = psc_flatfoil_(psc);
+  new(sub) psc_flatfoil{psc};
 }
 
 // ----------------------------------------------------------------------
@@ -583,7 +593,7 @@ psc_flatfoil_read(struct psc *psc, struct mrc_io *io)
 static double
 psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
+  struct psc_flatfoil *sub = psc_flatfoil_(psc);
 
   double BB = sub->params.BB;
 
@@ -603,7 +613,7 @@ static void
 psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 		      struct psc_particle_npt *npt)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
+  struct psc_flatfoil *sub = psc_flatfoil_(psc);
 
   switch (pop) {
   case MY_ION:
@@ -661,7 +671,7 @@ main(int argc, char **argv)
   psc *psc = psc_create(MPI_COMM_WORLD);
   psc_set_from_options(psc);
   {
-    psc_flatfoil* sub = psc_flatfoil(psc);
+    psc_flatfoil* sub = psc_flatfoil_(psc);
     sub->setup(psc);
 
     PscFlatfoil flatfoil(sub->params, psc);
