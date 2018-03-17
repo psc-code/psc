@@ -144,6 +144,33 @@ private:
 };
 
 // ======================================================================
+// PscFlatfoilParams
+
+struct PscFlatfoilParams
+{
+  int sort_interval;
+
+  int collision_interval;
+  double collision_nu;
+
+  int balance_interval;
+  double balance_factor_fields;
+  bool balance_print_loads;
+  bool balance_write_loads;
+
+  int heating_interval;
+  int heating_begin;
+  int heating_end;
+  int heating_kind;
+  HeatingSpotFoilParams heating_foil_params;
+
+  bool inject_enable;
+  int inject_kind_n;
+  int inject_interval;
+  int inject_tau;
+};
+
+// ======================================================================
 // psc subclass "flatfoil"
 
 struct psc_flatfoil {
@@ -172,6 +199,8 @@ struct psc_flatfoil {
   double d_i;
   double LLs;
   double LLn;
+
+  void setup(PscFlatfoilParams& params);
 };
 
 #define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
@@ -215,30 +244,6 @@ static struct param psc_flatfoil_descr[] = {
 // - psc_checks
 // - pushp prep
 // - marder
-
-struct PscFlatfoilParams
-{
-  int sort_interval;
-
-  int collision_interval;
-  double collision_nu;
-
-  int balance_interval;
-  double balance_factor_fields;
-  bool balance_print_loads;
-  bool balance_write_loads;
-
-  int heating_interval;
-  int heating_begin;
-  int heating_end;
-  int heating_kind;
-  HeatingSpotFoilParams heating_foil_params;
-
-  bool inject_enable;
-  int inject_kind_n;
-  int inject_interval;
-  int inject_tau;
-};
 
 struct PscFlatfoil : PscFlatfoilParams
 {
@@ -508,17 +513,16 @@ psc_flatfoil_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_flatfoil_setup
 
-static void
-psc_flatfoil_setup(struct psc *psc, PscFlatfoilParams& params)
+void psc_flatfoil::setup(PscFlatfoilParams& params)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
+  psc* psc = ppsc;
 
-  sub->LLs = 4. * sub->LLf;
-  sub->LLn = .5 * sub->LLf;
+  LLs = 4. * LLf;
+  LLn = .5 * LLf;
   
   psc->domain.length[0] = 1.;
-  psc->domain.length[1] = sub->LLy;
-  psc->domain.length[2] = sub->LLz;
+  psc->domain.length[1] = LLy;
+  psc->domain.length[2] = LLz;
 
   // center around origin
   for (int d = 0; d < 3; d++) {
@@ -530,11 +534,11 @@ psc_flatfoil_setup(struct psc *psc, PscFlatfoilParams& params)
   psc->kinds[MY_ELECTRON].m = 1.;
   psc->kinds[MY_ELECTRON].name = strdup("e");
 
-  psc->kinds[MY_ION     ].q = sub->Zi;
-  psc->kinds[MY_ION     ].m = 100. * sub->Zi;  // FIXME, hardcoded mass ratio 100
+  psc->kinds[MY_ION     ].q = Zi;
+  psc->kinds[MY_ION     ].m = 100. * Zi;  // FIXME, hardcoded mass ratio 100
   psc->kinds[MY_ION     ].name = strdup("i");
 
-  sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
+  d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
   
   params.sort_interval = psc->sort->every;
   
@@ -546,33 +550,33 @@ psc_flatfoil_setup(struct psc *psc, PscFlatfoilParams& params)
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
   auto& heating_foil_params = params.heating_foil_params;
-  heating_foil_params.zl = sub->heating_zl * sub->d_i;
-  heating_foil_params.zh = sub->heating_zh * sub->d_i;
-  heating_foil_params.xc = sub->heating_xc * sub->d_i;
-  heating_foil_params.yc = sub->heating_yc * sub->d_i;
-  heating_foil_params.rH = sub->heating_rH * sub->d_i;
+  heating_foil_params.zl = heating_zl * d_i;
+  heating_foil_params.zh = heating_zh * d_i;
+  heating_foil_params.xc = heating_xc * d_i;
+  heating_foil_params.yc = heating_yc * d_i;
+  heating_foil_params.rH = heating_rH * d_i;
   heating_foil_params.T  = .04;
-  heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
+  heating_foil_params.Mi = heating_rH * psc->kinds[MY_ION].m;
   
   params.inject_enable = true;
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
   params.inject_tau = 40;
   auto inject_foil_params = InjectFoilParams{};
-  inject_foil_params.yl = sub->target_yl * sub->d_i;
-  inject_foil_params.yh = sub->target_yh * sub->d_i;
-  inject_foil_params.zl = - sub->target_zwidth * sub->d_i;
-  inject_foil_params.zh =   sub->target_zwidth * sub->d_i;
+  inject_foil_params.yl = target_yl * d_i;
+  inject_foil_params.yh = target_yh * d_i;
+  inject_foil_params.zl = - target_zwidth * d_i;
+  inject_foil_params.zh =   target_zwidth * d_i;
   inject_foil_params.n  = 1.;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
-  sub->inject_target = InjectFoil{inject_foil_params};
+  inject_target = InjectFoil{inject_foil_params};
 
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., sub->d_i);
-  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(sub->background_Te));
+  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
 }
 
 // ----------------------------------------------------------------------
@@ -675,10 +679,8 @@ main(int argc, char **argv)
   psc_set_from_options(psc);
   {
     auto params = PscFlatfoilParams{};
-
-    psc_flatfoil_setup(psc, params);
-
-    struct psc_flatfoil *sub = psc_flatfoil(psc);
+    psc_flatfoil* sub = psc_flatfoil(psc);
+    sub->setup(params);
 
     PscFlatfoil flatfoil(params, psc);
 
