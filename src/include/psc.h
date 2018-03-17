@@ -96,8 +96,14 @@ struct psc_param {
 struct Params
 {
   int sort_interval;
+
   int collision_interval;
   double collision_nu;
+
+  int balance_interval;
+  double balance_factor_fields;
+  bool balance_print_loads;
+  bool balance_write_loads;
 };
 
 /// coefficients needed for computations

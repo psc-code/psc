@@ -241,7 +241,7 @@ struct PscFlatfoil : Params
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
-      balance_{dynamic_cast<Balance_t&>(*PscBalanceBase{psc->balance}.sub())}
+      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads}
   {
     MPI_Comm comm = psc_comm(psc);
     
@@ -440,7 +440,6 @@ private:
   psc_flatfoil* sub_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
-  Balance_t& balance_;
 
   Sort_t sort_;
   Collision_t collision_;
@@ -449,6 +448,7 @@ private:
   BndParticles_t bndp_;
   Bnd_t bnd_;
   BndFields_t bndf_;
+  Balance_t balance_;
 
   std::unique_ptr<Heating_t> heating_;
   std::unique_ptr<Inject_t> inject_;

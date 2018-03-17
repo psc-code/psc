@@ -328,9 +328,7 @@ struct Balance_ : BalanceBase
   Balance_(int every, double factor_fields=1., bool print_loads=false, bool write_loads=false)
     : every_(every), factor_fields_(factor_fields),
       print_loads_(print_loads), write_loads_(write_loads)
-  {
-    psc_balance_comp_time_by_patch = nullptr;
-  }
+  {}
 
   ~Balance_()
   {
