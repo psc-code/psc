@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define USE_OWN_PSC_STEP
-
 #include <psc_balance.h>
 #include <psc_sort.h>
 #include <psc_collision.h>
@@ -158,10 +156,6 @@ struct PscFlatfoilParams
   double background_Te;
   double background_Ti;
 
-  double target_yl;
-  double target_yh;
-  double target_zwidth;
-
   int sort_interval;
 
   int collision_interval;
@@ -176,11 +170,6 @@ struct PscFlatfoilParams
   int heating_begin;
   int heating_end;
   int heating_kind;
-  double heating_zl;
-  double heating_zh;
-  double heating_xc;
-  double heating_yc;
-  double heating_rH;
   HeatingSpotFoilParams heating_foil_params;
 
   bool inject_enable;
@@ -500,27 +489,20 @@ void psc_flatfoil::setup(psc* psc)
   params.BB = 0.;
   params.Zi = 1.;
 
+  // --- for background plasma
+  params.background_n  = .002;
+  params.background_Te = .001;
+  params.background_Ti = .001;
+  
+  // --- setup domain
   params.LLf = 25.;
   params.LLz = 400. * 4.;
   params.LLy = 400.;
 
-  params.background_n  = .002;
-  params.background_Te = .001;
-  params.background_Ti = .001;
-
-  params.target_yl     = -100000.;
-  params.target_yh     =  100000.;
-  params.target_zwidth =  1.;
-
-  params.heating_zl = -1.;
-  params.heating_zh =  1.;
-  params.heating_xc = 0.;
-  params.heating_yc = 0.;
-  params.heating_rH = 3.;
-  
+  // FIXME, unused?
   LLs = 4. * params.LLf; // FIXME, unused?
   LLn = .5 * params.LLf; // FIXME, unused?
-  
+
   psc->domain.length[0] = 1.;
   psc->domain.length[1] = params.LLy;
   psc->domain.length[2] = params.LLz;
@@ -530,6 +512,7 @@ void psc_flatfoil::setup(psc* psc)
     psc->domain.corner[d] = -.5 * psc->domain.length[d];
   }
 
+  // -- setup particles
   // last population is neutralizing
   psc->kinds[MY_ELECTRON].q = -1.;
   psc->kinds[MY_ELECTRON].m = 1.;
@@ -542,36 +525,49 @@ void psc_flatfoil::setup(psc* psc)
   d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
   
   params.sort_interval = psc->sort->every;
-  
+
+  // collisions
   params.collision_interval = psc->collision->every;
   params.collision_nu = psc->collision->nu;
+
+  // --- setup heating
+  double heating_zl = -1.;
+  double heating_zh =  1.;
+  double heating_xc = 0.;
+  double heating_yc = 0.;
+  double heating_rH = 3.;
   
+  auto& heating_foil_params = params.heating_foil_params;
+  heating_foil_params.zl = heating_zl * d_i;
+  heating_foil_params.zh = heating_zh * d_i;
+  heating_foil_params.xc = heating_xc * d_i;
+  heating_foil_params.yc = heating_yc * d_i;
+  heating_foil_params.rH = heating_rH * d_i;
+  heating_foil_params.T  = .04;
+  heating_foil_params.Mi = heating_rH * psc->kinds[MY_ION].m;
   params.heating_interval = 20;
   params.heating_begin = 0;
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
-  auto& heating_foil_params = params.heating_foil_params;
-  heating_foil_params.zl = params.heating_zl * d_i;
-  heating_foil_params.zh = params.heating_zh * d_i;
-  heating_foil_params.xc = params.heating_xc * d_i;
-  heating_foil_params.yc = params.heating_yc * d_i;
-  heating_foil_params.rH = params.heating_rH * d_i;
-  heating_foil_params.T  = .04;
-  heating_foil_params.Mi = params.heating_rH * psc->kinds[MY_ION].m;
-  
-  params.inject_enable = true;
-  params.inject_kind_n = MY_ELECTRON;
-  params.inject_interval = 20;
-  params.inject_tau = 40;
+
+  // -- setup injection
+  double target_yl     = -100000.;
+  double target_yh     =  100000.;
+  double target_zwidth =  1.;
+
   auto inject_foil_params = InjectFoilParams{};
-  inject_foil_params.yl = params.target_yl * d_i;
-  inject_foil_params.yh = params.target_yh * d_i;
-  inject_foil_params.zl = - params.target_zwidth * d_i;
-  inject_foil_params.zh =   params.target_zwidth * d_i;
+  inject_foil_params.yl =   target_yl * d_i;
+  inject_foil_params.yh =   target_yh * d_i;
+  inject_foil_params.zl = - target_zwidth * d_i;
+  inject_foil_params.zh =   target_zwidth * d_i;
   inject_foil_params.n  = 1.;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
   params.inject_target = InjectFoil{inject_foil_params};
+  params.inject_enable = true;
+  params.inject_kind_n = MY_ELECTRON;
+  params.inject_interval = 20;
+  params.inject_tau = 40;
 
   psc_setup_super(psc);
 
