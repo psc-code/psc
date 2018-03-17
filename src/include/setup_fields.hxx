@@ -46,6 +46,14 @@ struct SetupFields
       } foreach_3d_g_end;
     }
   }
+
+  template<typename FUNC>
+  static void set(PscMfieldsBase mflds_base, FUNC func)
+  {
+    mfields_t mflds = mflds_base.get_as<mfields_t>(0, 0);
+    set(*mflds.sub(), func);
+    mflds.put_as(mflds_base, JXI, HX + 3);
+  }
   
   static void set_ic(struct psc *psc)
   {
@@ -54,13 +62,9 @@ struct SetupFields
     if (!init_field)
       return;
 
-    auto mflds_base = PscMfieldsBase{psc->flds};
-    mfields_t mflds = mflds_base.get_as<mfields_t>(0, 0);
-
-    set(*mflds.sub(), [&](int m, real_t xx[3]) {
+    set(PscMfieldsBase(psc->flds), [&](int m, real_t xx[3]) {
 	return init_field(psc, xx, m);
       });
 
-    mflds.put_as(mflds_base, JXI, HX + 3);
   }
 };
