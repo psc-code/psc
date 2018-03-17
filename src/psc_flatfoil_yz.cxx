@@ -509,7 +509,7 @@ psc_flatfoil_create(struct psc *psc)
 // psc_flatfoil_setup
 
 static void
-psc_flatfoil_setup(struct psc *psc)
+psc_flatfoil_setup(struct psc *psc, PscFlatfoilParams& params)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
 
@@ -546,8 +546,30 @@ psc_flatfoil_setup(struct psc *psc)
   target_foil_params.Ti = .001;
   sub->inject_target = TargetFoil{target_foil_params};
   
+  params.sort_interval = psc->sort->every;
+  
+  params.collision_interval = psc->collision->every;
+  params.collision_nu = psc->collision->nu;
+  
+  params.heating_interval = 20;
+  params.heating_begin = 0;
+  params.heating_end = 10000000;
+  params.heating_kind = MY_ELECTRON;
+  auto& heating_foil_params = params.heating_foil_params;
+  heating_foil_params.zl = sub->heating_zl * sub->d_i;
+  heating_foil_params.zh = sub->heating_zh * sub->d_i;
+  heating_foil_params.xc = sub->heating_xc * sub->d_i;
+  heating_foil_params.yc = sub->heating_yc * sub->d_i;
+  heating_foil_params.rH = sub->heating_rH * sub->d_i;
+  heating_foil_params.T  = .04;
+  heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
+  
+  params.inject_enable = true;
+  params.inject_kind_n = MY_ELECTRON;
+  params.inject_interval = 20;
+  params.inject_tau = 40;
+
   psc_setup_super(psc);
-  psc_setup_member_objs_sub(psc);
 
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., sub->d_i);
@@ -623,13 +645,9 @@ struct psc_ops_flatfoil : psc_ops {
     size             = sizeof(struct psc_flatfoil);
     param_descr      = psc_flatfoil_descr;
     create           = psc_flatfoil_create;
-    setup            = psc_flatfoil_setup;
     read             = psc_flatfoil_read;
     init_field       = psc_flatfoil_init_field;
     init_npt         = psc_flatfoil_init_npt;
-#ifdef USE_OWN_PSC_STEP
-    integrate        = PscFlatfoil::integrate;
-#endif
   }
 } psc_flatfoil_ops;
 
@@ -656,39 +674,19 @@ main(int argc, char **argv)
 
   psc = psc_create(MPI_COMM_WORLD);
   psc_set_from_options(psc);
-  psc_setup(psc);
-  psc_view(psc);
-  psc_mparticles_view(psc->particles);
-  psc_mfields_view(psc->flds);
-
   {
+    auto params = PscFlatfoilParams{};
+
+    psc_flatfoil_setup(psc, params);
+
     struct psc_flatfoil *sub = psc_flatfoil(psc);
 
-    auto params = PscFlatfoilParams{};
-    params.sort_interval = psc->sort->every;
-
-    params.collision_interval = psc->collision->every;
-    params.collision_nu = psc->collision->nu;
-
-    params.heating_interval = 20;
-    params.heating_begin = 0;
-    params.heating_end = 10000000;
-    params.heating_kind = MY_ELECTRON;
-    auto& heating_foil_params = params.heating_foil_params;
-    heating_foil_params.zl = sub->heating_zl * sub->d_i;
-    heating_foil_params.zh = sub->heating_zh * sub->d_i;
-    heating_foil_params.xc = sub->heating_xc * sub->d_i;
-    heating_foil_params.yc = sub->heating_yc * sub->d_i;
-    heating_foil_params.rH = sub->heating_rH * sub->d_i;
-    heating_foil_params.T  = .04;
-    heating_foil_params.Mi = sub->heating_rH * psc->kinds[MY_ION].m;
-    
-    params.inject_enable = true;
-    params.inject_kind_n = MY_ELECTRON;
-    params.inject_interval = 20;
-    params.inject_tau = 40;
-
     PscFlatfoil flatfoil(params, psc);
+
+    psc_view(psc);
+    psc_mparticles_view(psc->particles);
+    psc_mfields_view(psc->flds);
+    
     flatfoil.setup();
     flatfoil.integrate();
   }
