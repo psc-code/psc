@@ -468,16 +468,6 @@ psc_flatfoil::psc_flatfoil(psc* psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_create
-
-static void
-psc_flatfoil_create(struct psc *psc)
-{
-  struct psc_flatfoil *sub = psc_flatfoil_(psc);
-  new(sub) psc_flatfoil{psc};
-}
-
-// ----------------------------------------------------------------------
 // psc_flatfoil_setup
 
 void psc_flatfoil::setup(psc* psc)
@@ -579,15 +569,6 @@ void psc_flatfoil::setup(psc* psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_read
-
-static void
-psc_flatfoil_read(struct psc *psc, struct mrc_io *io)
-{
-  psc_read_super(psc, io);
-}
-
-// ----------------------------------------------------------------------
 // psc_flatfoil_init_field
 
 static double
@@ -639,6 +620,16 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 }
 
 // ----------------------------------------------------------------------
+// psc_flatfoil_create
+
+static void
+psc_flatfoil_create(struct psc *psc)
+{
+  struct psc_flatfoil *sub = psc_flatfoil_(psc);
+  new(sub) psc_flatfoil{psc};
+}
+
+// ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
 struct psc_ops_flatfoil : psc_ops {
@@ -646,7 +637,6 @@ struct psc_ops_flatfoil : psc_ops {
     name             = "flatfoil";
     size             = sizeof(struct psc_flatfoil);
     create           = psc_flatfoil_create;
-    read             = psc_flatfoil_read;
     init_field       = psc_flatfoil_init_field;
     init_npt         = psc_flatfoil_init_npt;
   }
