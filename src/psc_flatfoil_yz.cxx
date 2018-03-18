@@ -470,6 +470,38 @@ psc_flatfoil::psc_flatfoil(psc* psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_flatfoil_init_npt
+
+static void
+psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
+		      struct psc_particle_npt *npt)
+{
+  struct psc_flatfoil *sub = psc_flatfoil_(psc);
+
+  switch (pop) {
+  case MY_ION:
+    npt->n    = sub->params.background_n;
+    npt->T[0] = sub->params.background_Ti;
+    npt->T[1] = sub->params.background_Ti;
+    npt->T[2] = sub->params.background_Ti;
+    break;
+  case MY_ELECTRON:
+    npt->n    = sub->params.background_n;
+    npt->T[0] = sub->params.background_Te;
+    npt->T[1] = sub->params.background_Te;
+    npt->T[2] = sub->params.background_Te;
+    break;
+  default:
+    assert(0);
+  }
+
+  if (sub->params.inject_target.is_inside(x)) {
+    // replace values above by target values
+    sub->params.inject_target.init_npt(pop, x, npt);
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_flatfoil_setup
 
 void psc_flatfoil::setup(psc* psc)
@@ -585,7 +617,9 @@ void psc_flatfoil::setup(psc* psc)
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
   PscMparticlesBase mprts(psc->particles);
-  SetupParticles<MparticlesDouble>::setup_particles(mprts, psc, n_prts_by_patch_new);
+  SetupParticles<MparticlesDouble>::setup_particles(mprts, psc, n_prts_by_patch_new, [&](int kind, double crd[3], psc_particle_npt& npt) {
+      psc_flatfoil_init_npt(psc, kind, crd, &npt);
+    });
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Setting up fields...\n");
@@ -618,38 +652,6 @@ psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 
   default:
     return 0.;
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_flatfoil_init_npt
-
-static void
-psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
-		      struct psc_particle_npt *npt)
-{
-  struct psc_flatfoil *sub = psc_flatfoil_(psc);
-
-  switch (pop) {
-  case MY_ION:
-    npt->n    = sub->params.background_n;
-    npt->T[0] = sub->params.background_Ti;
-    npt->T[1] = sub->params.background_Ti;
-    npt->T[2] = sub->params.background_Ti;
-    break;
-  case MY_ELECTRON:
-    npt->n    = sub->params.background_n;
-    npt->T[0] = sub->params.background_Te;
-    npt->T[1] = sub->params.background_Te;
-    npt->T[2] = sub->params.background_Te;
-    break;
-  default:
-    assert(0);
-  }
-
-  if (sub->params.inject_target.is_inside(x)) {
-    // replace values above by target values
-    sub->params.inject_target.init_npt(pop, x, npt);
   }
 }
 

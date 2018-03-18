@@ -104,14 +104,25 @@ struct SetupParticles
     }
   }
 
-  static void setup_particles(PscMparticlesBase mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch)
+  static void setup_particles(PscMparticlesBase mprts, psc* psc, std::vector<uint>& n_prts_by_patch)
+  {
+    setup_particles(mprts, psc, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+	psc_ops(psc)->init_npt(psc, kind, crd, &npt);
+      });
+  }
+
+  template<typename FUNC>
+  static void setup_particles(PscMparticlesBase mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
+			      FUNC func)
   {
     auto mprts = mprts_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
-    setup_particles(*mprts.sub(), psc, n_prts_by_patch);
+    setup_particles(*mprts.sub(), psc, n_prts_by_patch, func);
     mprts.put_as(mprts_base);
   }
 
-  static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch)
+  template<typename FUNC>
+  static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch,
+			      FUNC func)
   {
     const Grid_t& grid = mprts.grid();
     
@@ -145,7 +156,7 @@ struct SetupParticles
 		npt.T[1] = psc->kinds[kind].T;
 		npt.T[2] = psc->kinds[kind].T;
 	      };
-	      psc_ops(psc)->init_npt(psc, kind, xx, &npt);
+	      func(kind, xx, npt);
 
 	      int n_in_cell;
 	      if (kind != psc->prm.neutralizing_population) {
