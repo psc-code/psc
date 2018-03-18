@@ -15,22 +15,22 @@ struct SetupFields
   template<typename FUNC>
   static void set(Mfields& mf, FUNC func)
   {
-    psc_foreach_patch(ppsc, p) {
+    for (int p = 0; p < mf.n_patches(); ++p) {
+      auto& patch = mf.grid().patches[p];
       Fields F(mf[p]);
 
       // FIXME, do we need the ghost points?
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	struct psc* psc = ppsc;
-	double dx = mf.grid().dx[0], dy = mf.grid().dx[1], dz = mf.grid().dx[2];
-	double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
+	double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy), z_nc = patch.z_nc(jz);
+	double x_cc = patch.x_cc(jx), y_cc = patch.y_cc(jy), z_cc = patch.z_cc(jz);
 
-	double ncc[3] = { xx        , yy + .5*dy, zz + .5*dz };
-	double cnc[3] = { xx + .5*dx, yy        , zz + .5*dz };
-	double ccn[3] = { xx + .5*dx, yy + .5*dy, zz         };
+	double ncc[3] = { x_nc, y_cc, z_cc };
+	double cnc[3] = { x_cc, y_nc, z_cc };
+	double ccn[3] = { x_cc, y_cc, z_nc };
 
-	double cnn[3] = { xx + .5*dx, yy        , zz         };
-	double ncn[3] = { xx        , yy + .5*dy, zz         };
-	double nnc[3] = { xx        , yy        , zz + .5*dz };
+	double cnn[3] = { x_cc, y_nc, z_nc };
+	double ncn[3] = { x_nc, y_cc, z_nc };
+	double nnc[3] = { x_nc, y_nc, z_cc };
 
 	F(HX, jx,jy,jz) += func(HX, ncc);
 	F(HY, jx,jy,jz) += func(HY, cnc);

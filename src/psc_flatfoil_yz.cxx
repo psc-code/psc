@@ -590,9 +590,9 @@ void psc_flatfoil::setup(psc* psc)
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Setting up fields...\n");
-  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
-			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  PscMfieldsBase mflds(psc->flds);
+  auto mflds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+				psc->n_state_fields, psc->ibn, psc->prm.fields_base);
+  psc->flds = mflds.mflds();
   SetupFields<MfieldsC>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HY: return params.BB;
