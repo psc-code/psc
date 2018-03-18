@@ -283,62 +283,6 @@ psc_flatfoil::psc_flatfoil()
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
-
-  // sort
-  params.sort_interval = 10;
-
-  // collisions
-  params.collision_interval = 10;
-  params.collision_nu = .1;
-
-  // -- setup injection
-  double target_yl     = -100000.;
-  double target_yh     =  100000.;
-  double target_zwidth =  1.;
-  auto inject_foil_params = InjectFoilParams{};
-  inject_foil_params.yl =   target_yl * d_i;
-  inject_foil_params.yh =   target_yh * d_i;
-  inject_foil_params.zl = - target_zwidth * d_i;
-  inject_foil_params.zh =   target_zwidth * d_i;
-  inject_foil_params.n  = 1.;
-  inject_foil_params.Te = .001;
-  inject_foil_params.Ti = .001;
-  params.inject_target = InjectFoil{inject_foil_params};
-  params.inject_enable = true;
-  params.inject_kind_n = MY_ELECTRON;
-  params.inject_interval = 20;
-  params.inject_tau = 40;
-
-  // --- balancing
-  params.balance_interval = 100;
-  params.balance_factor_fields = 1.;
-  params.balance_print_loads = true;
-  params.balance_write_loads = false;
-
-  // --- generic setup
-  psc_setup_coeff(psc_);
-  psc_setup_domain(psc_);
-
-  // --- partition particles and initial balancing
-  mpi_printf(comm, "**** Partitioning...\n");
-  auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc_);
-  psc_balance_setup(psc_->balance);
-  auto balance = PscBalanceBase{psc_->balance};
-  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-
-  // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  mpi_printf(comm, "**** Setting up particles...\n");
-  psc_->particles = PscMparticlesCreate(mrc_domain_comm(psc_->mrc_domain), psc_->grid(),
-					psc_->prm.particles_base).mprts();
-  setup_initial_particles(PscMparticlesBase{psc_->particles}, n_prts_by_patch_new);
-
-  // --- create and set up base mflds
-  mpi_printf(comm, "**** Setting up fields...\n");
-  psc_->flds = PscMfieldsCreate(mrc_domain_comm(psc_->mrc_domain), psc_->grid(),
-			       psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
-  setup_initial_fields(psc_->flds);
-
-  psc_setup_member_objs(psc_);
 }
 
 // ----------------------------------------------------------------------
@@ -628,6 +572,15 @@ private:
 
 PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 {
+  MPI_Comm comm = psc_comm(psc_);
+  
+  // sort
+  params.sort_interval = 10;
+
+  // collisions
+  params.collision_interval = 10;
+  params.collision_nu = .1;
+
   // --- setup heating
   double heating_zl = -1.;
   double heating_zh =  1.;
@@ -642,12 +595,61 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   heating_foil_params.rH = heating_rH * d_i;
   heating_foil_params.T  = .04;
   heating_foil_params.Mi = heating_rH * psc_->kinds[MY_ION].m;
+  auto heating_spot = HeatingSpotFoil{heating_foil_params};
   int heating_interval = 20;
   int heating_begin = 0;
   int heating_end = 10000000;
   int heating_kind = MY_ELECTRON;
   auto heating = Heating_t{heating_interval, heating_begin, heating_end,
-			   heating_kind, HeatingSpotFoil{heating_foil_params}};
+			   heating_kind, heating_spot};
+
+  // -- setup injection
+  double target_yl     = -100000.;
+  double target_yh     =  100000.;
+  double target_zwidth =  1.;
+  auto inject_foil_params = InjectFoilParams{};
+  inject_foil_params.yl =   target_yl * d_i;
+  inject_foil_params.yh =   target_yh * d_i;
+  inject_foil_params.zl = - target_zwidth * d_i;
+  inject_foil_params.zh =   target_zwidth * d_i;
+  inject_foil_params.n  = 1.;
+  inject_foil_params.Te = .001;
+  inject_foil_params.Ti = .001;
+  params.inject_target = InjectFoil{inject_foil_params};
+  params.inject_enable = true;
+  params.inject_kind_n = MY_ELECTRON;
+  params.inject_interval = 20;
+  params.inject_tau = 40;
+
+  // --- balancing
+  params.balance_interval = 100;
+  params.balance_factor_fields = 1.;
+  params.balance_print_loads = true;
+  params.balance_write_loads = false;
+
+  // --- generic setup
+  psc_setup_coeff(psc_);
+  psc_setup_domain(psc_);
+
+  // --- partition particles and initial balancing
+  mpi_printf(comm, "**** Partitioning...\n");
+  auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc_);
+  psc_balance_setup(psc_->balance);
+  auto balance = PscBalanceBase{psc_->balance};
+  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+
+  // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
+  mpi_printf(comm, "**** Setting up particles...\n");
+  psc_->particles = PscMparticlesCreate(comm, psc_->grid(), psc_->prm.particles_base).mprts();
+  setup_initial_particles(PscMparticlesBase{psc_->particles}, n_prts_by_patch_new);
+
+  // --- create and set up base mflds
+  mpi_printf(comm, "**** Setting up fields...\n");
+  psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
+				psc_->prm.fields_base).mflds();
+  setup_initial_fields(psc_->flds);
+
+  psc_setup_member_objs(psc_);
 
   return new PscFlatfoil(params, heating, psc_);
 }
