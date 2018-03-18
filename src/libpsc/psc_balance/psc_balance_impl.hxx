@@ -390,7 +390,7 @@ private:
       } else {
 	load = psc_balance_comp_time_by_patch[p];
       }
-#if 1
+#if 0
       int rank;
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
       load = 1 + rank;
