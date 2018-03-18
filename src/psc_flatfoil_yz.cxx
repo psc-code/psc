@@ -193,6 +193,8 @@ struct psc_flatfoil
   psc_flatfoil(psc* psc);
   
   void setup(psc* psc);
+  void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch);
+  void setup_initial_fields(PscMfieldsBase mflds);
 
   PscFlatfoilParams params;
   
@@ -616,24 +618,39 @@ void psc_flatfoil::setup(psc* psc)
   mpi_printf(comm, "**** Setting up particles...\n");
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
-  PscMparticlesBase mprts(psc->particles);
-  SetupParticles<MparticlesDouble>::setup_particles(mprts, psc, n_prts_by_patch_new, [&](int kind, double crd[3], psc_particle_npt& npt) {
-      psc_flatfoil_init_npt(psc, kind, crd, &npt);
-    });
+  setup_initial_particles(PscMparticlesBase{psc->particles}, n_prts_by_patch_new);
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Setting up fields...\n");
-  auto mflds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
-				psc->n_state_fields, psc->ibn, psc->prm.fields_base);
-  psc->flds = mflds.mflds();
+  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
+  setup_initial_fields(psc->flds);
+
+  psc_setup_member_objs(psc);
+}
+
+// ----------------------------------------------------------------------
+// psc_flatfoil::setup_initial_particles
+
+void psc_flatfoil::setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch)
+{
+  SetupParticles<MparticlesDouble>::
+    setup_particles(mprts, ppsc, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+	psc_flatfoil_init_npt(ppsc, kind, crd, &npt);
+      });
+}
+
+// ----------------------------------------------------------------------
+// psc_flatfoil::setup_initial_fields
+
+void psc_flatfoil::setup_initial_fields(PscMfieldsBase mflds)
+{
   SetupFields<MfieldsC>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HY: return params.BB;
       default: return 0.;
       }
     });
-
-  psc_setup_member_objs(psc);
 }
 
 // ----------------------------------------------------------------------
