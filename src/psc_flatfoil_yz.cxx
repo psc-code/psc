@@ -154,9 +154,6 @@ struct PscFlatfoilParams
 {
   double BB;
   double Zi;
-  double LLf;
-  double LLz;
-  double LLy;
 
   double background_n;
   double background_Te;
@@ -514,22 +511,18 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   psc_->prm.cfl = 0.75;
 
   // --- setup domain
-  params.LLf = 25.;
-  params.LLy = 400.;
-  params.LLz = 400. * 4.;
-
-  LLs = 4. * params.LLf; // FIXME, unused?
-  LLn = .5 * params.LLf; // FIXME, unused?
+  double LLy = 400.;
+  double LLz = 400. * 4.;
 
   auto grid_params = GridParams{};
   grid_params.length[0] = 1.;
-  grid_params.length[1] = params.LLy;
-  grid_params.length[2] = params.LLz;
+  grid_params.length[1] = LLy;
+  grid_params.length[2] = LLz;
 
   // center around origin
   grid_params.corner[0] = 0.;
-  grid_params.corner[1] = -.5 * grid_params.length[1];
-  grid_params.corner[2] = -.5 * grid_params.length[2];
+  grid_params.corner[1] = -.5 * LLy;
+  grid_params.corner[2] = -.5 * LLz;
 
   grid_params.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   grid_params.bnd_fld_hi[0] = BND_FLD_PERIODIC;
@@ -545,8 +538,16 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   grid_params.bnd_part_hi[2] = BND_PART_PERIODIC;
 
   grid_params.gdims[0] = 1;
-  grid_params.gdims[1] = 1600;
-  grid_params.gdims[2] = 1600*4;
+  grid_params.gdims[1] = 160;
+  grid_params.gdims[2] = 160*4;
+
+  grid_params.np[0] = 1;
+  grid_params.np[1] = 4;
+  grid_params.np[2] = 4;
+
+  grid_params.bs[0] = 1;
+  grid_params.bs[1] = 4;
+  grid_params.bs[2] = 4;
 
   psc_->domain = grid_params;
 
