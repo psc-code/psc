@@ -172,12 +172,6 @@ struct PscFlatfoilParams
   bool balance_print_loads;
   bool balance_write_loads;
 
-  int heating_interval;
-  int heating_begin;
-  int heating_end;
-  int heating_kind;
-  HeatingSpotFoil heating_spot;
-
   bool inject_enable;
   int inject_kind_n;
   int inject_interval;
@@ -192,6 +186,10 @@ struct PscFlatfoil;
 
 struct psc_flatfoil
 {
+  using Mparticles_t = MparticlesDouble;
+  using Mfields_t = MfieldsC;
+  using Heating_t = Heating__<Mparticles_t>;
+
   psc_flatfoil();
   
   void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch);
@@ -292,26 +290,6 @@ psc_flatfoil::psc_flatfoil()
   // collisions
   params.collision_interval = 10;
   params.collision_nu = .1;
-
-  // --- setup heating
-  double heating_zl = -1.;
-  double heating_zh =  1.;
-  double heating_xc = 0.;
-  double heating_yc = 0.;
-  double heating_rH = 3.;
-  auto heating_foil_params = HeatingSpotFoilParams{};
-  heating_foil_params.zl = heating_zl * d_i;
-  heating_foil_params.zh = heating_zh * d_i;
-  heating_foil_params.xc = heating_xc * d_i;
-  heating_foil_params.yc = heating_yc * d_i;
-  heating_foil_params.rH = heating_rH * d_i;
-  heating_foil_params.T  = .04;
-  heating_foil_params.Mi = heating_rH * psc_->kinds[MY_ION].m;
-  params.heating_spot = HeatingSpotFoil{heating_foil_params};
-  params.heating_interval = 20;
-  params.heating_begin = 0;
-  params.heating_end = 10000000;
-  params.heating_kind = MY_ELECTRON;
 
   // -- setup injection
   double target_yl     = -100000.;
@@ -436,7 +414,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
   
-  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+  PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
     : PscFlatfoilParams{params},
       psc_{psc},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
@@ -445,7 +423,7 @@ struct PscFlatfoil : PscFlatfoilParams
       bndp_{psc_->mrc_domain, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
-      heating_{heating_interval, heating_begin, heating_end, heating_kind, heating_spot},
+      heating_{heating},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
   {}
   
@@ -650,7 +628,28 @@ private:
 
 PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 {
-  return new PscFlatfoil(params, psc_);
+  // --- setup heating
+  double heating_zl = -1.;
+  double heating_zh =  1.;
+  double heating_xc = 0.;
+  double heating_yc = 0.;
+  double heating_rH = 3.;
+  auto heating_foil_params = HeatingSpotFoilParams{};
+  heating_foil_params.zl = heating_zl * d_i;
+  heating_foil_params.zh = heating_zh * d_i;
+  heating_foil_params.xc = heating_xc * d_i;
+  heating_foil_params.yc = heating_yc * d_i;
+  heating_foil_params.rH = heating_rH * d_i;
+  heating_foil_params.T  = .04;
+  heating_foil_params.Mi = heating_rH * psc_->kinds[MY_ION].m;
+  int heating_interval = 20;
+  int heating_begin = 0;
+  int heating_end = 10000000;
+  int heating_kind = MY_ELECTRON;
+  auto heating = Heating_t{heating_interval, heating_begin, heating_end,
+			   heating_kind, HeatingSpotFoil{heating_foil_params}};
+
+  return new PscFlatfoil(params, heating, psc_);
 }
 
 // ----------------------------------------------------------------------
