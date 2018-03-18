@@ -113,15 +113,6 @@ struct SetupParticles
 
   static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch)
   {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (psc->prm.seed_by_time) { // FIXME, not here!
-      srandom(10*rank + time(NULL));
-    } else {
-      srandom(rank);
-    }
-
     psc_foreach_patch(psc, p) {
       auto ilo = Int3{}, ihi = psc->grid().ldims;
   

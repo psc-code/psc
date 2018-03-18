@@ -129,7 +129,6 @@ static struct param psc_descr[] = {
   { "neutralizing_population", VAR(prm.neutralizing_population)  , PARAM_INT(-1),
     .help = "this population will get density set to achieve neutrality "
     "in a given cell." },
-  { "seed_by_time"  , VAR(prm.seed_by_time)    , PARAM_BOOL(false)          },
   // by default, we put the # of particles per cell according to the
   // density, using the weights (~ 1) only to fine-tune to the
   // right density.
@@ -192,6 +191,10 @@ _psc_create(struct psc *psc)
   assert(!ppsc);
   ppsc = psc;
 
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  srandom(rank);
+  
   // default: 2 species (e-, i+)
   psc_set_kinds(psc, 2, NULL);
 
