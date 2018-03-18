@@ -421,7 +421,7 @@ void psc_set_dt(psc* psc)
 void
 psc_setup_domain(struct psc *psc)
 {
-  struct psc_domain *domain = &psc->domain;
+  GridParams *domain = &psc->domain;
 
   bool need_pml = false;
 

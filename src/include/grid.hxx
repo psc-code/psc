@@ -6,6 +6,44 @@
 #include <vector>
 #include <cstring>
 
+///Possible boundary conditions for fields
+enum {
+  BND_FLD_OPEN,
+  BND_FLD_PERIODIC,
+  BND_FLD_UPML,
+  BND_FLD_TIME,
+  BND_FLD_CONDUCTING_WALL,
+  BND_FLD_ABSORBING,
+};
+
+///Possible boundary conditions for particles
+enum {
+  BND_PART_REFLECTING,
+  BND_PART_PERIODIC,
+  BND_PART_ABSORBING,
+  BND_PART_OPEN,
+};
+
+///Describes the spatial domain to operate on.
+///
+///This struct describes the spatial dimension of the simulation-box
+///@note Here, you can also set the dimensionality by eliminating a dimension. Example: To simulate in xy only, set
+///\verbatim psc_domain.gdims[2]=1 \endverbatim
+///Also, set the boundary conditions for the eliminated dimensions to BND_FLD_PERIODIC or you'll get invalid \a dt and \a dx
+
+struct GridParams
+{
+  double length[3];	///<The physical size of the simulation-box 
+  double corner[3];
+  int gdims[3];		///<Number of grid-points in each dimension
+  int np[3];		///<Number of patches in each dimension
+  int bs[3];
+  int bnd_fld_lo[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  int bnd_fld_hi[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  int bnd_part_lo[3];	///<Boundary conditions of the particles. Can be any value of BND_PART.
+  int bnd_part_hi[3];   ///<Boundary conditions of the particles. Can be any value of BND_PART.
+};
+
 // ======================================================================
 // Grid_
 
