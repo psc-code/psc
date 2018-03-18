@@ -513,9 +513,26 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
+  // --- setup domain
   psc_->domain.gdims[0] = 1;
   psc_->domain.gdims[1] = 1600;
   psc_->domain.gdims[2] = 1600*4;
+
+  params.LLf = 25.;
+  params.LLy = 400.;
+  params.LLz = 400. * 4.;
+
+  LLs = 4. * params.LLf; // FIXME, unused?
+  LLn = .5 * params.LLf; // FIXME, unused?
+
+  psc_->domain.length[0] = 1.;
+  psc_->domain.length[1] = params.LLy;
+  psc_->domain.length[2] = params.LLz;
+
+  // center around origin
+  for (int d = 0; d < 3; d++) {
+    psc_->domain.corner[d] = -.5 * psc_->domain.length[d];
+  }
 
   psc_->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc_->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
@@ -540,24 +557,6 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   params.background_Te = .001;
   params.background_Ti = .001;
   
-  // --- setup domain
-  params.LLf = 25.;
-  params.LLz = 400. * 4.;
-  params.LLy = 400.;
-
-  // FIXME, unused?
-  LLs = 4. * params.LLf; // FIXME, unused?
-  LLn = .5 * params.LLf; // FIXME, unused?
-
-  psc_->domain.length[0] = 1.;
-  psc_->domain.length[1] = params.LLy;
-  psc_->domain.length[2] = params.LLz;
-
-  // center around origin
-  for (int d = 0; d < 3; d++) {
-    psc_->domain.corner[d] = -.5 * psc_->domain.length[d];
-  }
-
   // -- setup particles
   // last population is neutralizing
   psc_->kinds[MY_ELECTRON].q = -1.;
