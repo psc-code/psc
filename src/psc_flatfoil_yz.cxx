@@ -514,10 +514,6 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   psc_->prm.cfl = 0.75;
 
   // --- setup domain
-  psc_->domain.gdims[0] = 1;
-  psc_->domain.gdims[1] = 1600;
-  psc_->domain.gdims[2] = 1600*4;
-
   params.LLf = 25.;
   params.LLy = 400.;
   params.LLz = 400. * 4.;
@@ -525,27 +521,34 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   LLs = 4. * params.LLf; // FIXME, unused?
   LLn = .5 * params.LLf; // FIXME, unused?
 
-  psc_->domain.length[0] = 1.;
-  psc_->domain.length[1] = params.LLy;
-  psc_->domain.length[2] = params.LLz;
+  auto grid_params = GridParams{};
+  grid_params.length[0] = 1.;
+  grid_params.length[1] = params.LLy;
+  grid_params.length[2] = params.LLz;
 
   // center around origin
-  for (int d = 0; d < 3; d++) {
-    psc_->domain.corner[d] = -.5 * psc_->domain.length[d];
-  }
+  grid_params.corner[0] = 0.;
+  grid_params.corner[1] = -.5 * grid_params.length[1];
+  grid_params.corner[2] = -.5 * grid_params.length[2];
 
-  psc_->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+  grid_params.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  grid_params.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  grid_params.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  grid_params.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  grid_params.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  grid_params.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  grid_params.bnd_part_lo[0] = BND_PART_PERIODIC;
+  grid_params.bnd_part_hi[0] = BND_PART_PERIODIC;
+  grid_params.bnd_part_lo[1] = BND_PART_PERIODIC;
+  grid_params.bnd_part_hi[1] = BND_PART_PERIODIC;
+  grid_params.bnd_part_lo[2] = BND_PART_PERIODIC;
+  grid_params.bnd_part_hi[2] = BND_PART_PERIODIC;
+
+  grid_params.gdims[0] = 1;
+  grid_params.gdims[1] = 1600;
+  grid_params.gdims[2] = 1600*4;
+
+  psc_->domain = grid_params;
 
   psc_set_from_options(psc_);
 
