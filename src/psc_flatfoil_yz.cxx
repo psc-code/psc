@@ -637,25 +637,6 @@ void psc_flatfoil::setup(psc* psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_init_field
-
-static double
-psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
-{
-  struct psc_flatfoil *sub = psc_flatfoil_(psc);
-
-  double BB = sub->params.BB;
-
-  switch (m) {
-  case HY:
-    return BB;
-
-  default:
-    return 0.;
-  }
-}
-
-// ----------------------------------------------------------------------
 // psc_flatfoil_create
 
 static void
@@ -673,8 +654,6 @@ struct psc_ops_flatfoil : psc_ops {
     name             = "flatfoil";
     size             = sizeof(struct psc_flatfoil);
     create           = psc_flatfoil_create;
-    init_field       = psc_flatfoil_init_field;
-    init_npt         = psc_flatfoil_init_npt;
   }
 } psc_flatfoil_ops;
 
