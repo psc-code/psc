@@ -190,9 +190,9 @@ struct PscFlatfoilParams
 
 struct psc_flatfoil
 {
-  psc_flatfoil(psc* psc);
+  psc_flatfoil();
   
-  void setup(psc* psc);
+  void setup();
   void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch);
   void setup_initial_fields(PscMfieldsBase mflds);
 
@@ -202,45 +202,50 @@ struct psc_flatfoil
   double d_i;
   double LLs;
   double LLn;
+
+  psc* psc_;
 };
 
 // ----------------------------------------------------------------------
 // psc_flatfoil ctor
 
-psc_flatfoil::psc_flatfoil(psc* psc)
+psc_flatfoil::psc_flatfoil()
+  : psc_(psc_create(MPI_COMM_WORLD))
 {
-  psc_default_dimensionless(psc);
+  psc_default_dimensionless(psc_);
 
-  psc->prm.nmax = 210001;
-  psc->prm.nicell = 100;
-  psc->prm.nr_populations = N_MY_KINDS;
-  psc->prm.fractional_n_particles_per_cell = true;
-  psc->prm.cfl = 0.75;
+  psc_->prm.nmax = 210001;
+  psc_->prm.nicell = 100;
+  psc_->prm.nr_populations = N_MY_KINDS;
+  psc_->prm.fractional_n_particles_per_cell = true;
+  psc_->prm.cfl = 0.75;
 
-  psc->domain.gdims[0] = 1;
-  psc->domain.gdims[1] = 1600;
-  psc->domain.gdims[2] = 1600*4;
+  psc_->domain.gdims[0] = 1;
+  psc_->domain.gdims[1] = 1600;
+  psc_->domain.gdims[2] = 1600*4;
 
-  psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+  psc_->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 }
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_setup
+// psc_flatfoil::setup
 
-void psc_flatfoil::setup(psc* psc)
+void psc_flatfoil::setup()
 {
-  MPI_Comm comm = psc_comm(psc);
+  psc_set_from_options(psc_);
+
+  MPI_Comm comm = psc_comm(psc_);
   mpi_printf(comm, "*** Setting up...\n");
 
   params.BB = 0.;
@@ -260,26 +265,26 @@ void psc_flatfoil::setup(psc* psc)
   LLs = 4. * params.LLf; // FIXME, unused?
   LLn = .5 * params.LLf; // FIXME, unused?
 
-  psc->domain.length[0] = 1.;
-  psc->domain.length[1] = params.LLy;
-  psc->domain.length[2] = params.LLz;
+  psc_->domain.length[0] = 1.;
+  psc_->domain.length[1] = params.LLy;
+  psc_->domain.length[2] = params.LLz;
 
   // center around origin
   for (int d = 0; d < 3; d++) {
-    psc->domain.corner[d] = -.5 * psc->domain.length[d];
+    psc_->domain.corner[d] = -.5 * psc_->domain.length[d];
   }
 
   // -- setup particles
   // last population is neutralizing
-  psc->kinds[MY_ELECTRON].q = -1.;
-  psc->kinds[MY_ELECTRON].m = 1.;
-  psc->kinds[MY_ELECTRON].name = strdup("e");
+  psc_->kinds[MY_ELECTRON].q = -1.;
+  psc_->kinds[MY_ELECTRON].m = 1.;
+  psc_->kinds[MY_ELECTRON].name = strdup("e");
 
-  psc->kinds[MY_ION     ].q = params.Zi;
-  psc->kinds[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
-  psc->kinds[MY_ION     ].name = strdup("i");
+  psc_->kinds[MY_ION     ].q = params.Zi;
+  psc_->kinds[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
+  psc_->kinds[MY_ION     ].name = strdup("i");
 
-  d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
+  d_i = sqrt(psc_->kinds[MY_ION].m / psc_->kinds[MY_ION].q);
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
@@ -304,7 +309,7 @@ void psc_flatfoil::setup(psc* psc)
   heating_foil_params.yc = heating_yc * d_i;
   heating_foil_params.rH = heating_rH * d_i;
   heating_foil_params.T  = .04;
-  heating_foil_params.Mi = heating_rH * psc->kinds[MY_ION].m;
+  heating_foil_params.Mi = heating_rH * psc_->kinds[MY_ION].m;
   params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
   params.heating_begin = 0;
@@ -336,29 +341,29 @@ void psc_flatfoil::setup(psc* psc)
   params.balance_write_loads = false;
 
   // --- generic setup
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc);
+  psc_setup_coeff(psc_);
+  psc_setup_domain(psc_);
 
   // --- partition particles and initial balancing
   mpi_printf(comm, "**** Partitioning...\n");
-  auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc);
-  psc_balance_setup(psc->balance);
-  auto balance = PscBalanceBase{psc->balance};
-  auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
+  auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc_);
+  psc_balance_setup(psc_->balance);
+  auto balance = PscBalanceBase{psc_->balance};
+  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Setting up particles...\n");
-  psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
-				       psc->prm.particles_base).mprts();
-  setup_initial_particles(PscMparticlesBase{psc->particles}, n_prts_by_patch_new);
+  psc_->particles = PscMparticlesCreate(mrc_domain_comm(psc_->mrc_domain), psc_->grid(),
+					psc_->prm.particles_base).mprts();
+  setup_initial_particles(PscMparticlesBase{psc_->particles}, n_prts_by_patch_new);
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Setting up fields...\n");
-  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
-			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  setup_initial_fields(psc->flds);
+  psc_->flds = PscMfieldsCreate(mrc_domain_comm(psc_->mrc_domain), psc_->grid(),
+			       psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+  setup_initial_fields(psc_->flds);
 
-  psc_setup_member_objs(psc);
+  psc_setup_member_objs(psc_);
 }
 
 // ----------------------------------------------------------------------
@@ -668,23 +673,21 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
-  psc *psc = psc_create(MPI_COMM_WORLD);
-  psc_flatfoil *sim = new psc_flatfoil{psc};
-  psc_set_from_options(psc);
+  psc_flatfoil *sim = new psc_flatfoil{};
+  sim->setup();
+
   {
-    sim->setup(psc);
+    PscFlatfoil flatfoil(sim->params, sim->psc_);
 
-    PscFlatfoil flatfoil(sim->params, psc);
-
-    psc_view(psc);
-    psc_mparticles_view(psc->particles);
-    psc_mfields_view(psc->flds);
+    psc_view(sim->psc_);
+    psc_mparticles_view(sim->psc_->particles);
+    psc_mfields_view(sim->psc_->flds);
     
     flatfoil.setup();
     flatfoil.integrate();
   }
   
-  psc_destroy(psc);
+  psc_destroy(sim->psc_);
   
   libmrc_params_finalize();
   MPI_Finalize();
