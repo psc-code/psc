@@ -212,78 +212,7 @@ struct psc_flatfoil
 
 psc_flatfoil::psc_flatfoil()
   : psc_(psc_create(MPI_COMM_WORLD))
-{
-  MPI_Comm comm = psc_comm(psc_);
-  mpi_printf(comm, "*** Setting up...\n");
-
-  psc_default_dimensionless(psc_);
-
-  psc_->prm.nmax = 210001;
-  psc_->prm.nicell = 100;
-  psc_->prm.nr_populations = N_MY_KINDS;
-  psc_->prm.fractional_n_particles_per_cell = true;
-  psc_->prm.cfl = 0.75;
-
-  psc_->domain.gdims[0] = 1;
-  psc_->domain.gdims[1] = 1600;
-  psc_->domain.gdims[2] = 1600*4;
-
-  psc_->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc_->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
-  psc_->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
-
-  psc_set_from_options(psc_);
-
-  params.BB = 0.;
-  params.Zi = 1.;
-
-  // --- for background plasma
-  params.background_n  = .002;
-  params.background_Te = .001;
-  params.background_Ti = .001;
-  
-  // --- setup domain
-  params.LLf = 25.;
-  params.LLz = 400. * 4.;
-  params.LLy = 400.;
-
-  // FIXME, unused?
-  LLs = 4. * params.LLf; // FIXME, unused?
-  LLn = .5 * params.LLf; // FIXME, unused?
-
-  psc_->domain.length[0] = 1.;
-  psc_->domain.length[1] = params.LLy;
-  psc_->domain.length[2] = params.LLz;
-
-  // center around origin
-  for (int d = 0; d < 3; d++) {
-    psc_->domain.corner[d] = -.5 * psc_->domain.length[d];
-  }
-
-  // -- setup particles
-  // last population is neutralizing
-  psc_->kinds[MY_ELECTRON].q = -1.;
-  psc_->kinds[MY_ELECTRON].m = 1.;
-  psc_->kinds[MY_ELECTRON].name = strdup("e");
-
-  psc_->kinds[MY_ION     ].q = params.Zi;
-  psc_->kinds[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
-  psc_->kinds[MY_ION     ].name = strdup("i");
-
-  d_i = sqrt(psc_->kinds[MY_ION].m / psc_->kinds[MY_ION].q);
-
-  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
-}
+{}
 
 // ----------------------------------------------------------------------
 // psc_flatfoil::setup_initial_particles
@@ -574,6 +503,75 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 {
   MPI_Comm comm = psc_comm(psc_);
   
+  mpi_printf(comm, "*** Setting up...\n");
+
+  psc_default_dimensionless(psc_);
+
+  psc_->prm.nmax = 210001;
+  psc_->prm.nicell = 100;
+  psc_->prm.nr_populations = N_MY_KINDS;
+  psc_->prm.fractional_n_particles_per_cell = true;
+  psc_->prm.cfl = 0.75;
+
+  psc_->domain.gdims[0] = 1;
+  psc_->domain.gdims[1] = 1600;
+  psc_->domain.gdims[2] = 1600*4;
+
+  psc_->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  psc_->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
+  psc_->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+
+  psc_set_from_options(psc_);
+
+  params.BB = 0.;
+  params.Zi = 1.;
+
+  // --- for background plasma
+  params.background_n  = .002;
+  params.background_Te = .001;
+  params.background_Ti = .001;
+  
+  // --- setup domain
+  params.LLf = 25.;
+  params.LLz = 400. * 4.;
+  params.LLy = 400.;
+
+  // FIXME, unused?
+  LLs = 4. * params.LLf; // FIXME, unused?
+  LLn = .5 * params.LLf; // FIXME, unused?
+
+  psc_->domain.length[0] = 1.;
+  psc_->domain.length[1] = params.LLy;
+  psc_->domain.length[2] = params.LLz;
+
+  // center around origin
+  for (int d = 0; d < 3; d++) {
+    psc_->domain.corner[d] = -.5 * psc_->domain.length[d];
+  }
+
+  // -- setup particles
+  // last population is neutralizing
+  psc_->kinds[MY_ELECTRON].q = -1.;
+  psc_->kinds[MY_ELECTRON].m = 1.;
+  psc_->kinds[MY_ELECTRON].name = strdup("e");
+
+  psc_->kinds[MY_ION     ].q = params.Zi;
+  psc_->kinds[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
+  psc_->kinds[MY_ION     ].name = strdup("i");
+
+  d_i = sqrt(psc_->kinds[MY_ION].m / psc_->kinds[MY_ION].q);
+
+  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
   // sort
   params.sort_interval = 10;
 
