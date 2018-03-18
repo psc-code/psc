@@ -188,12 +188,16 @@ struct PscFlatfoilParams
 // ======================================================================
 // psc subclass "flatfoil"
 
+struct PscFlatfoil;
+
 struct psc_flatfoil
 {
   psc_flatfoil();
   
   void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch);
   void setup_initial_fields(PscMfieldsBase mflds);
+
+  PscFlatfoil* makePscFlatfoil();
 
   PscFlatfoilParams params;
   
@@ -642,6 +646,14 @@ private:
 };
 
 // ----------------------------------------------------------------------
+// psc_flatfoil::makePscFlatfoil
+
+PscFlatfoil* psc_flatfoil::makePscFlatfoil()
+{
+  return new PscFlatfoil(params, psc_);
+}
+
+// ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
 struct psc_ops_flatfoil : psc_ops {
@@ -668,16 +680,16 @@ main(int argc, char **argv)
 
   psc_flatfoil *sim = new psc_flatfoil{};
 
-  {
-    PscFlatfoil flatfoil(sim->params, sim->psc_);
-
-    psc_view(sim->psc_);
-    psc_mparticles_view(sim->psc_->particles);
-    psc_mfields_view(sim->psc_->flds);
-    
-    flatfoil.setup();
-    flatfoil.integrate();
-  }
+  auto flatfoil = sim->makePscFlatfoil();
+  
+  psc_view(sim->psc_);
+  psc_mparticles_view(sim->psc_->particles);
+  psc_mfields_view(sim->psc_->flds);
+  
+  flatfoil->setup();
+  flatfoil->integrate();
+  
+  delete flatfoil;
   
   psc_destroy(sim->psc_);
   
