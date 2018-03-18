@@ -472,38 +472,6 @@ psc_flatfoil::psc_flatfoil(psc* psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_init_npt
-
-static void
-psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
-		      struct psc_particle_npt *npt)
-{
-  struct psc_flatfoil *sub = psc_flatfoil_(psc);
-
-  switch (pop) {
-  case MY_ION:
-    npt->n    = sub->params.background_n;
-    npt->T[0] = sub->params.background_Ti;
-    npt->T[1] = sub->params.background_Ti;
-    npt->T[2] = sub->params.background_Ti;
-    break;
-  case MY_ELECTRON:
-    npt->n    = sub->params.background_n;
-    npt->T[0] = sub->params.background_Te;
-    npt->T[1] = sub->params.background_Te;
-    npt->T[2] = sub->params.background_Te;
-    break;
-  default:
-    assert(0);
-  }
-
-  if (sub->params.inject_target.is_inside(x)) {
-    // replace values above by target values
-    sub->params.inject_target.init_npt(pop, x, npt);
-  }
-}
-
-// ----------------------------------------------------------------------
 // psc_flatfoil_setup
 
 void psc_flatfoil::setup(psc* psc)
@@ -634,10 +602,31 @@ void psc_flatfoil::setup(psc* psc)
 
 void psc_flatfoil::setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch)
 {
-  SetupParticles<MparticlesDouble>::
-    setup_particles(mprts, ppsc, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
-	psc_flatfoil_init_npt(ppsc, kind, crd, &npt);
-      });
+  auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
+    switch (kind) {
+    case MY_ION:
+    npt.n    = params.background_n;
+    npt.T[0] = params.background_Ti;
+    npt.T[1] = params.background_Ti;
+    npt.T[2] = params.background_Ti;
+    break;
+    case MY_ELECTRON:
+    npt.n    = params.background_n;
+    npt.T[0] = params.background_Te;
+    npt.T[1] = params.background_Te;
+    npt.T[2] = params.background_Te;
+    break;
+    default:
+    assert(0);
+    }
+
+    if (params.inject_target.is_inside(crd)) {
+      // replace values above by target values
+      params.inject_target.init_npt(kind, crd, &npt);
+    }
+  };
+
+  SetupParticles<MparticlesDouble>::setup_particles(mprts, ppsc, n_prts_by_patch, init_npt);
 }
 
 // ----------------------------------------------------------------------
