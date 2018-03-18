@@ -192,7 +192,6 @@ struct psc_flatfoil
 {
   psc_flatfoil();
   
-  void setup();
   void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch);
   void setup_initial_fields(PscMfieldsBase mflds);
 
@@ -212,6 +211,9 @@ struct psc_flatfoil
 psc_flatfoil::psc_flatfoil()
   : psc_(psc_create(MPI_COMM_WORLD))
 {
+  MPI_Comm comm = psc_comm(psc_);
+  mpi_printf(comm, "*** Setting up...\n");
+
   psc_default_dimensionless(psc_);
 
   psc_->prm.nmax = 210001;
@@ -236,17 +238,8 @@ psc_flatfoil::psc_flatfoil()
   psc_->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
   psc_->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
   psc_->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
-}
 
-// ----------------------------------------------------------------------
-// psc_flatfoil::setup
-
-void psc_flatfoil::setup()
-{
   psc_set_from_options(psc_);
-
-  MPI_Comm comm = psc_comm(psc_);
-  mpi_printf(comm, "*** Setting up...\n");
 
   params.BB = 0.;
   params.Zi = 1.;
@@ -674,7 +667,6 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
   psc_flatfoil *sim = new psc_flatfoil{};
-  sim->setup();
 
   {
     PscFlatfoil flatfoil(sim->params, sim->psc_);
