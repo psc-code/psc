@@ -113,8 +113,12 @@ struct SetupParticles
 
   static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch)
   {
-    psc_foreach_patch(psc, p) {
-      auto ilo = Int3{}, ihi = psc->grid().ldims;
+    const Grid_t& grid = mprts.grid();
+    
+    mprts.reserve_all(n_prts_by_patch.data());
+
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto ilo = Int3{}, ihi = grid.ldims;
   
       int nr_pop = psc->prm.nr_populations;
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
@@ -125,9 +129,9 @@ struct SetupParticles
 			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.gdims[0] == 1) xx[0] = CRDX(p, jx);
+	    if (grid.gdims[1] == 1) xx[1] = CRDY(p, jy);
+	    if (grid.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 	  
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < nr_pop; kind++) {
