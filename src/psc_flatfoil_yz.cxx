@@ -644,23 +644,11 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_create
-
-static void
-psc_flatfoil_create(struct psc *psc)
-{
-  struct psc_flatfoil *sub = psc_flatfoil_(psc);
-  new(sub) psc_flatfoil{psc};
-}
-
-// ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
 struct psc_ops_flatfoil : psc_ops {
   psc_ops_flatfoil() {
     name             = "flatfoil";
-    size             = sizeof(struct psc_flatfoil);
-    create           = psc_flatfoil_create;
   }
 } psc_flatfoil_ops;
 
@@ -681,12 +669,12 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
   psc *psc = psc_create(MPI_COMM_WORLD);
+  psc_flatfoil *sim = new psc_flatfoil{psc};
   psc_set_from_options(psc);
   {
-    psc_flatfoil* sub = psc_flatfoil_(psc);
-    sub->setup(psc);
+    sim->setup(psc);
 
-    PscFlatfoil flatfoil(sub->params, psc);
+    PscFlatfoil flatfoil(sim->params, psc);
 
     psc_view(psc);
     psc_mparticles_view(psc->particles);
