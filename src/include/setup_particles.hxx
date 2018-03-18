@@ -92,21 +92,31 @@ struct SetupParticles
   static void setup_particles(struct psc *psc, std::vector<uint>& n_prts_by_patch)
   {
     auto mprts_base = PscMparticlesBase{psc->particles};
-    mprts_base->reserve_all(n_prts_by_patch.data());
 
     if (psc_ops(psc)->setup_particles) {
+      mprts_base->reserve_all(n_prts_by_patch.data());
       psc_ops(psc)->setup_particles(psc, n_prts_by_patch, false);
       return;
     }
-    if (!psc_ops(psc)->init_npt)
-      return;
 
+    if (psc_ops(psc)->init_npt) {
+      setup_particles(mprts_base, psc, n_prts_by_patch);
+    }
+  }
+
+  static void setup_particles(PscMparticlesBase mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch)
+  {
+    auto mprts = mprts_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
+    setup_particles(*mprts.sub(), psc, n_prts_by_patch);
+    mprts.put_as(mprts_base);
+  }
+
+  static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch)
+  {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    auto mprts = mprts_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
-
-    if (psc->prm.seed_by_time) {
+    if (psc->prm.seed_by_time) { // FIXME, not here!
       srandom(10*rank + time(NULL));
     } else {
       srandom(rank);
@@ -170,7 +180,6 @@ struct SetupParticles
 	assert(mprts[p].size() == n_prts_by_patch[p]);
       }
     }
-    mprts.put_as(mprts_base);
   }
 
   // ----------------------------------------------------------------------
