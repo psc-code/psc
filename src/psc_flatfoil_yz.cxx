@@ -204,242 +204,6 @@ struct psc_flatfoil
   double LLn;
 };
 
-#define psc_flatfoil_(psc) mrc_to_subobj(psc, struct psc_flatfoil)
-
-// ======================================================================
-// PscFlatfoil
-//
-// eventually, a Psc replacement / derived class, but for now just
-// pretending to be something like that
-//
-// things are missing from the generic step():
-// - timing
-// - psc_checks
-// - pushp prep
-// - marder
-
-struct PscFlatfoil : PscFlatfoilParams
-{
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-#if 1 // generic_c
-  using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
-#else // 1vbec
-  using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
-#endif
-  
-  using Sort_t = SortCountsort2<Mparticles_t>;
-  using Collision_t = Collision_<Mparticles_t, Mfields_t>;
-  using PushFields_t = PushFields<Mfields_t>;
-  using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
-  using Bnd_t = Bnd_<Mfields_t>;
-  using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
-  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, InjectFoil>; // FIXME, shouldn't always use MfieldsC
-  using Heating_t = Heating__<Mparticles_t>;
-  using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
-  
-  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
-    : PscFlatfoilParams{params},
-      psc_{psc},
-      sub_{psc_flatfoil_(psc)},
-      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
-      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      collision_{psc_comm(psc), collision_interval, collision_nu},
-      bndp_{psc_->mrc_domain, psc_->grid()},
-      bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
-      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
-      heating_{heating_interval, heating_begin, heating_end, heating_kind, heating_spot},
-      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
-  {}
-  
-  void step()
-  {
-    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-    MPI_Comm comm = psc_comm(psc_);
-    int timestep = psc_->timestep;
-
-    balance_(psc_, mprts_);
-    
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
-      mpi_printf(comm, "***** Sorting...\n");
-      sort_(mprts_);
-    }
-    
-    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
-      mpi_printf(comm, "***** Performing collisions...\n");
-      collision_(mprts_);
-    }
-    
-    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp_.push_mprts(mprts_, mflds_);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-    
-    // === field propagation B^{n+1/2} -> B^{n+1}
-    pushf_.push_H<dim_yz>(mflds_, .5);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-    bndp_(mprts_);
-    
-    inject_(mprts_);
-    heating_(mprts_);
-    
-    // === field propagation E^{n+1/2} -> E^{n+3/2}
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
-    
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
-    
-    pushf_.push_E<dim_yz>(mflds_, 1.);
-    
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-    
-    // === field propagation B^{n+1} -> B^{n+3/2}
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
-    
-    pushf_.push_H<dim_yz>(mflds_, .5);
-    
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-
-
-    //psc_checks_continuity_after_particle_push(psc->checks, psc);
-
-    // E at t^{n+3/2}, particles at t^{n+3/2}
-    // B at t^{n+3/2} (Note: that is not it's natural time,
-    // but div B should be == 0 at any time...)
-    //psc_marder_run(psc->marder, psc->flds, psc->particles);
-    
-    //psc_checks_gauss(psc->checks, psc);
-
-    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
-  }
-
-  void setup()
-  {
-    setup_stats();
-  }
-
-  void setup_stats()
-  {
-    st_nr_particles = psc_stats_register("nr particles");
-    st_time_step = psc_stats_register("time entire step");
-
-    // generic stats categories
-    st_time_particle = psc_stats_register("time particle update");
-    st_time_field = psc_stats_register("time field update");
-    st_time_comm = psc_stats_register("time communication");
-    st_time_output = psc_stats_register("time output");
-  }
-  
-  // ----------------------------------------------------------------------
-  // integrate
-
-  void integrate()
-  {
-    //psc_method_initialize(psc_->method, psc_);
-    psc_output(psc_);
-    psc_stats_log(psc_);
-    psc_print_profiling(psc_);
-
-    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
-
-    static int pr;
-    if (!pr) {
-      pr = prof_register("psc_step", 1., 0, 0);
-    }
-
-    mpi_printf(psc_comm(psc_), "*** Advancing\n");
-    double elapsed = MPI_Wtime();
-
-    bool first_iteration = true;
-    while (psc_->timestep < psc_->prm.nmax) {
-      prof_start(pr);
-      psc_stats_start(st_time_step);
-
-      if (!first_iteration &&
-	  psc_->prm.write_checkpoint_every_step > 0 &&
-	  psc_->timestep % psc_->prm.write_checkpoint_every_step == 0) {
-	psc_write_checkpoint(psc_);
-      }
-      first_iteration = false;
-
-      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Time %g\n", psc_->timestep + 1,
-		 psc_->prm.nmax, psc_->timestep * psc_->dt);
-
-      PscMparticlesBase mprts(psc_->particles);
-
-      prof_start(pr_time_step_no_comm);
-      prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
-
-      step();
-    
-      psc_->timestep++; // FIXME, too hacky
-      psc_output(psc_);
-
-      psc_stats_stop(st_time_step);
-      prof_stop(pr);
-
-      psc_stats_val[st_nr_particles] = mprts->get_n_prts();
-
-      if (psc_->timestep % psc_->prm.stats_every == 0) {
-	psc_stats_log(psc_);
-	psc_print_profiling(psc_);
-      }
-
-      if (psc_->prm.wallclock_limit > 0.) {
-	double wallclock_elapsed = MPI_Wtime() - psc_->time_start;
-	double wallclock_elapsed_max;
-	MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
-		      MPI_COMM_WORLD);
-      
-	if (wallclock_elapsed_max > psc_->prm.wallclock_limit) {
-	  mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
-	  break;
-	}
-      }
-    }
-
-    if (psc_->prm.write_checkpoint) {
-      psc_write_checkpoint(psc_);
-    }
-
-    // FIXME, merge with existing handling of wallclock time
-    elapsed = MPI_Wtime() - elapsed;
-
-    int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
-    /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
-    mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
-	       elapsed, w, d, h, m, s );
-  }
-
-private:
-  psc* psc_;
-  psc_flatfoil* sub_;
-  Mparticles_t& mprts_;
-  Mfields_t& mflds_;
-
-  Sort_t sort_;
-  Collision_t collision_;
-  PushParticlesPusher_t pushp_;
-  PushFields_t pushf_;
-  BndParticles_t bndp_;
-  Bnd_t bnd_;
-  BndFields_t bndf_;
-  Balance_t balance_;
-
-  Heating_t heating_;
-  Inject_t inject_;
-  
-  int st_nr_particles;
-  int st_time_step;
-};
-
 // ----------------------------------------------------------------------
 // psc_flatfoil ctor
 
@@ -641,6 +405,243 @@ void psc_flatfoil::setup_initial_fields(PscMfieldsBase mflds)
       }
     });
 }
+
+#define psc_flatfoil_(psc) mrc_to_subobj(psc, struct psc_flatfoil)
+
+// ======================================================================
+// PscFlatfoil
+//
+// eventually, a Psc replacement / derived class, but for now just
+// pretending to be something like that
+
+struct PscFlatfoil : PscFlatfoilParams
+{
+  using Mparticles_t = MparticlesDouble;
+  using Mfields_t = MfieldsC;
+#if 1 // generic_c
+  using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
+#else // 1vbec
+  using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
+#endif
+  
+  using Sort_t = SortCountsort2<Mparticles_t>;
+  using Collision_t = Collision_<Mparticles_t, Mfields_t>;
+  using PushFields_t = PushFields<Mfields_t>;
+  using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
+  using Bnd_t = Bnd_<Mfields_t>;
+  using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
+  using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, InjectFoil>; // FIXME, shouldn't always use MfieldsC
+  using Heating_t = Heating__<Mparticles_t>;
+  using Balance_t = Balance_<PscMparticles<Mparticles_t>, PscMfields<Mfields_t>>;
+  
+  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+    : PscFlatfoilParams{params},
+      psc_{psc},
+      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
+      collision_{psc_comm(psc), collision_interval, collision_nu},
+      bndp_{psc_->mrc_domain, psc_->grid()},
+      bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
+      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
+      heating_{heating_interval, heating_begin, heating_end, heating_kind, heating_spot},
+      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
+  {}
+  
+  // ----------------------------------------------------------------------
+  // step
+  //
+  // things are missing from the generic step():
+  // - timing
+  // - psc_checks
+  // - pushp prep
+  // - marder
+
+  void step()
+  {
+    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+    MPI_Comm comm = psc_comm(psc_);
+    int timestep = psc_->timestep;
+
+    balance_(psc_, mprts_);
+    
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      mpi_printf(comm, "***** Sorting...\n");
+      sort_(mprts_);
+    }
+    
+    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      collision_(mprts_);
+    }
+    
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    pushp_.push_mprts(mprts_, mflds_);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    
+    // === field propagation B^{n+1/2} -> B^{n+1}
+    pushf_.push_H<dim_yz>(mflds_, .5);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+    bndp_(mprts_);
+    
+    inject_(mprts_);
+    heating_(mprts_);
+    
+    // === field propagation E^{n+1/2} -> E^{n+3/2}
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    
+    pushf_.push_E<dim_yz>(mflds_, 1.);
+    
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+    
+    // === field propagation B^{n+1} -> B^{n+3/2}
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    
+    pushf_.push_H<dim_yz>(mflds_, .5);
+    
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
+
+    //psc_checks_continuity_after_particle_push(psc->checks, psc);
+
+    // E at t^{n+3/2}, particles at t^{n+3/2}
+    // B at t^{n+3/2} (Note: that is not it's natural time,
+    // but div B should be == 0 at any time...)
+    //psc_marder_run(psc->marder, psc->flds, psc->particles);
+    
+    //psc_checks_gauss(psc->checks, psc);
+
+    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
+  }
+
+  void setup()
+  {
+    setup_stats();
+  }
+
+  void setup_stats()
+  {
+    st_nr_particles = psc_stats_register("nr particles");
+    st_time_step = psc_stats_register("time entire step");
+
+    // generic stats categories
+    st_time_particle = psc_stats_register("time particle update");
+    st_time_field = psc_stats_register("time field update");
+    st_time_comm = psc_stats_register("time communication");
+    st_time_output = psc_stats_register("time output");
+  }
+  
+  // ----------------------------------------------------------------------
+  // integrate
+
+  void integrate()
+  {
+    //psc_method_initialize(psc_->method, psc_);
+    psc_output(psc_);
+    psc_stats_log(psc_);
+    psc_print_profiling(psc_);
+
+    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+
+    static int pr;
+    if (!pr) {
+      pr = prof_register("psc_step", 1., 0, 0);
+    }
+
+    mpi_printf(psc_comm(psc_), "*** Advancing\n");
+    double elapsed = MPI_Wtime();
+
+    bool first_iteration = true;
+    while (psc_->timestep < psc_->prm.nmax) {
+      prof_start(pr);
+      psc_stats_start(st_time_step);
+
+      if (!first_iteration &&
+	  psc_->prm.write_checkpoint_every_step > 0 &&
+	  psc_->timestep % psc_->prm.write_checkpoint_every_step == 0) {
+	psc_write_checkpoint(psc_);
+      }
+      first_iteration = false;
+
+      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Time %g\n", psc_->timestep + 1,
+		 psc_->prm.nmax, psc_->timestep * psc_->dt);
+
+      PscMparticlesBase mprts(psc_->particles);
+
+      prof_start(pr_time_step_no_comm);
+      prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+
+      step();
+    
+      psc_->timestep++; // FIXME, too hacky
+      psc_output(psc_);
+
+      psc_stats_stop(st_time_step);
+      prof_stop(pr);
+
+      psc_stats_val[st_nr_particles] = mprts->get_n_prts();
+
+      if (psc_->timestep % psc_->prm.stats_every == 0) {
+	psc_stats_log(psc_);
+	psc_print_profiling(psc_);
+      }
+
+      if (psc_->prm.wallclock_limit > 0.) {
+	double wallclock_elapsed = MPI_Wtime() - psc_->time_start;
+	double wallclock_elapsed_max;
+	MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
+		      MPI_COMM_WORLD);
+      
+	if (wallclock_elapsed_max > psc_->prm.wallclock_limit) {
+	  mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
+	  break;
+	}
+      }
+    }
+
+    if (psc_->prm.write_checkpoint) {
+      psc_write_checkpoint(psc_);
+    }
+
+    // FIXME, merge with existing handling of wallclock time
+    elapsed = MPI_Wtime() - elapsed;
+
+    int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
+    /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
+    mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
+	       elapsed, w, d, h, m, s );
+  }
+
+private:
+  psc* psc_;
+  Mparticles_t& mprts_;
+  Mfields_t& mflds_;
+
+  Sort_t sort_;
+  Collision_t collision_;
+  PushParticlesPusher_t pushp_;
+  PushFields_t pushf_;
+  BndParticles_t bndp_;
+  Bnd_t bnd_;
+  BndFields_t bndf_;
+  Balance_t balance_;
+
+  Heating_t heating_;
+  Inject_t inject_;
+  
+  int st_nr_particles;
+  int st_time_step;
+};
 
 // ----------------------------------------------------------------------
 // psc_flatfoil_create
