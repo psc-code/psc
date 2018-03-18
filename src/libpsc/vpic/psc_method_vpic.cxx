@@ -155,7 +155,7 @@ static std::vector<uint> psc_method_vpic_setup_partition(struct psc_method *meth
 
 static void
 psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
-				 uint *n_prts_by_patch)
+				 std::vector<uint>& n_prts_by_patch)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -167,7 +167,6 @@ psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
     PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>(MP_DONT_COPY | MP_DONT_RESIZE);
     mprts.put_as(mprts_base);
   } else {
-    mprts_base->reserve_all(n_prts_by_patch);
     SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
   }
 }

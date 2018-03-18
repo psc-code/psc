@@ -477,7 +477,7 @@ _psc_setup(struct psc *psc)
   // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
-  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new.data());
+  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new);
 
   // create and set up base mflds
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),

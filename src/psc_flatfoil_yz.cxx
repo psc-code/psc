@@ -585,8 +585,7 @@ void psc_flatfoil::setup(psc* psc)
   psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 				       psc->prm.particles_base).mprts();
   PscMparticlesBase mprts(psc->particles);
-  mprts->reserve_all(n_prts_by_patch_new.data());
-  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch_new.data());
+  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch_new);
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Setting up fields...\n");

@@ -89,10 +89,13 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_particles
 
-  static void setup_particles(struct psc *psc, uint *nr_particles_by_patch)
+  static void setup_particles(struct psc *psc, std::vector<uint>& n_prts_by_patch)
   {
+    auto mprts_base = PscMparticlesBase{psc->particles};
+    mprts_base->reserve_all(n_prts_by_patch.data());
+
     if (psc_ops(psc)->setup_particles) {
-      psc_ops(psc)->setup_particles(psc, nr_particles_by_patch, false);
+      psc_ops(psc)->setup_particles(psc, n_prts_by_patch, false);
       return;
     }
     if (!psc_ops(psc)->init_npt)
@@ -101,8 +104,6 @@ struct SetupParticles
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    // FIXME, why does this do anything to the random seed?e
-    auto mprts_base = PscMparticlesBase{psc->particles};
     auto mprts = mprts_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
 
     if (psc->prm.seed_by_time) {
@@ -166,7 +167,7 @@ struct SetupParticles
 	}
       }
       if (!psc->prm.fractional_n_particles_per_cell) {
-	assert(mprts[p].size() == nr_particles_by_patch[p]);
+	assert(mprts[p].size() == n_prts_by_patch[p]);
       }
     }
     mprts.put_as(mprts_base);
@@ -179,7 +180,7 @@ struct SetupParticles
   {
     std::vector<uint> n_prts_by_patch(psc->n_patches());
     if (psc_ops(psc)->setup_particles) {
-      psc_ops(psc)->setup_particles(psc, n_prts_by_patch.data(), true);
+      psc_ops(psc)->setup_particles(psc, n_prts_by_patch, true);
       return n_prts_by_patch;
     }
     if (!psc_ops(psc)->init_npt) {

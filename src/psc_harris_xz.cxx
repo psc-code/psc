@@ -507,7 +507,7 @@ psc_harris_setup(struct psc *psc)
   psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
 
-  SetupParticles<mparticles_t::sub_t>::setup_particles(psc, n_prts_by_patch_new.data());
+  SetupParticles<mparticles_t::sub_t>::setup_particles(psc, n_prts_by_patch_new);
 
   psc_set_ic_fields(psc);
   
@@ -570,7 +570,7 @@ psc_harris_init_field(struct psc *psc, double crd[3], int m)
 // set particles x^{n+1/2}, p^{n+1/2}
 
 static void
-psc_harris_setup_particles(struct psc *psc, uint *nr_particles_by_patch, bool count_only)
+psc_harris_setup_particles(struct psc *psc, std::vector<uint>& nr_particles_by_patch, bool count_only)
 {
   struct psc_harris *sub = psc_harris(psc);
   struct globals_physics *phys = &sub->phys;

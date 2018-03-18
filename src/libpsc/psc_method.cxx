@@ -32,7 +32,7 @@ std::vector<uint> psc_method_setup_partition(struct psc_method *method, struct p
 
 void
 psc_method_set_ic_particles(struct psc_method *method, struct psc *psc,
-			    uint *n_prts_by_patch)
+			    std::vector<uint>& n_prts_by_patch)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->set_ic_particles);

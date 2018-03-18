@@ -40,10 +40,8 @@ std::vector<uint> psc_method_default_setup_partition(struct psc_method *method, 
 
 static void
 psc_method_default_set_ic_particles(struct psc_method *method, struct psc *psc,
-				    uint *n_prts_by_patch)
+				    std::vector<uint>& n_prts_by_patch)
 {
-  PscMparticlesBase mprts(psc->particles);
-  mprts->reserve_all(n_prts_by_patch);
   SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
 }
 
