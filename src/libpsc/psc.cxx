@@ -327,11 +327,9 @@ void psc_set_dt(psc* psc)
   Vec3<double> dx = Vec3<double>(psc->domain.length) / Vec3<double>(Int3(psc->domain.gdims));
   if (!psc->dt) {
     double inv_sum = 0.;
-    int nr_levels;
-    mrc_domain_get_nr_levels(psc->mrc_domain, &nr_levels);
-    for (int d=0;d<3;d++) {
+    for (int d = 0; d < 3; d++) {
       if (psc->domain.gdims[d] > 1) {
-	inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
+	inv_sum += 1. / sqr(dx[d]);
       }
     }
     if (!inv_sum) { // simulation has 0 dimensions
@@ -384,12 +382,11 @@ psc_setup_domain(struct psc *psc)
 	    "WARNING: pml is not supported anymore but pml boundary conditions requested.\n");
     abort();
   }
-  if (!psc->mrc_domain) {
-    psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
-  }
+  assert(!psc->mrc_domain_);
+  psc->mrc_domain_ = psc_setup_mrc_domain(psc, -1);
   psc_set_dt(psc);
 
-  psc->grid_ = psc->make_grid(psc->mrc_domain);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_);
 }
 
 // ----------------------------------------------------------------------
@@ -407,12 +404,12 @@ _psc_setup(struct psc *psc)
   auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
 
   // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  psc->particles = PscMparticlesCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+  psc->particles = PscMparticlesCreate(psc_comm(psc), psc->grid(),
 				       psc->prm.particles_base).mprts();
   psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new);
 
   // create and set up base mflds
-  psc->flds = PscMfieldsCreate(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+  psc->flds = PscMfieldsCreate(psc_comm(psc), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
   psc_method_set_ic_fields(psc->method, psc);
 
@@ -432,7 +429,7 @@ _psc_destroy(struct psc *psc)
   psc_mfields_destroy(psc->flds);
   psc_mparticles_destroy(psc->particles);
 
-  mrc_domain_destroy(psc->mrc_domain);
+  mrc_domain_destroy(psc->mrc_domain_);
 
   ppsc = NULL;
 }
@@ -456,7 +453,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
     mrc_io_write_string(io, psc, s, psc->kinds_[k].name);
   }
 #endif
-  mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain);
+  mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain_);
   mrc_io_write_ref(io, psc, "mparticles", psc->particles);
   mrc_io_write_ref(io, psc, "mfields", psc->flds);
 }
@@ -486,7 +483,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   }
 #endif
   
-  psc->mrc_domain = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
+  psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
   psc_setup_domain(psc);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
@@ -568,7 +565,7 @@ static void
 _psc_view(struct psc *psc)
 {
   const auto& kinds = psc->grid().kinds;
-  mrc_domain_view(psc->mrc_domain);
+  mrc_domain_view(psc->mrc_domain_);
 
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");

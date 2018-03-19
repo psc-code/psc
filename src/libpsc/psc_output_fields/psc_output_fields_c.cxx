@@ -29,7 +29,7 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   }
 
   int gdims[3];
-  mrc_domain_get_global_dims(ppsc->mrc_domain, gdims);
+  mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
   int slab_off[3], slab_dims[3];
   for (int d = 0; d < 3; d++) {
     if (out->rx[d] > gdims[d])
@@ -146,7 +146,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    tfd->flds[i] = PscMfieldsC::create(mrc_domain_comm(psc->mrc_domain), psc->grid(),
+    tfd->flds[i] = PscMfieldsC::create(psc_comm(psc), psc->grid(),
 				       pfd->flds[i]->nr_fields, psc->ibn).mflds();
     psc_mfields_set_name(tfd->flds[i], psc_mfields_name(pfd->flds[i]));
     for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {

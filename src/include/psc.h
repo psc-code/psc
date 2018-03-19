@@ -166,7 +166,7 @@ struct psc {
   ///
   ///Use this to access the global list of patches \sa \ref patches
 
-  struct mrc_domain *mrc_domain;
+  struct mrc_domain *mrc_domain_;
 
   Grid_t* make_grid(struct mrc_domain* domain);
   int n_patches() { return grid().n_patches(); }

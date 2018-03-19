@@ -23,7 +23,7 @@ static void
 _psc_balance_read(struct psc_balance *bal, struct mrc_io *io)
 {
   int nr_patches;
-  mrc_domain_get_patches(ppsc->mrc_domain, &nr_patches);
+  mrc_domain_get_patches(ppsc->mrc_domain_, &nr_patches);
   psc_balance_comp_time_by_patch = new double[nr_patches];
 }
 

@@ -98,7 +98,7 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *_mflds_base)
 void
 psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  struct mrc_fld *fld = mrc_domain_m3_create(ppsc->mrc_domain);
+  struct mrc_fld *fld = mrc_domain_m3_create(ppsc->mrc_domain_);
   mrc_fld_set_name(fld, psc_mfields_name(mflds));
   mrc_fld_set_param_int(fld, "nr_ghosts", 2);
   mrc_fld_set_param_int(fld, "nr_comps", mflds->nr_fields);

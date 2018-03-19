@@ -124,10 +124,10 @@ struct marder_ops {
     double deltaz = ppsc->grid().dx[2];
     double inv_sum = 0.;
     int nr_levels;
-    mrc_domain_get_nr_levels(ppsc->mrc_domain, &nr_levels);
-    for (int d=0;d<3;d++) {
-      if (ppsc->domain.gdims[d] > 1) {
-	inv_sum += 1. / sqr(ppsc->grid().dx[d] / (1 << (nr_levels - 1)));
+    const auto& grid = ppsc->grid();
+    for (int d = 0; d < 3; d++) {
+      if (grid.gdims[d] > 1) {
+	inv_sum += 1. / sqr(grid.dx[d]);
       }
     }
     double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;

@@ -290,8 +290,8 @@ struct PscFlatfoil : PscFlatfoilParams
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
-      bndp_{psc_->mrc_domain, psc_->grid()},
-      bnd_{psc_->grid(), psc_->mrc_domain, psc_->ibn},
+      bndp_{psc_->mrc_domain_, psc_->grid()},
+      bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}

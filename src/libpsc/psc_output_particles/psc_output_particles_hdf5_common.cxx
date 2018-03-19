@@ -180,13 +180,11 @@ count_sort(mparticles_t mprts, int **off, int **map)
 // ----------------------------------------------------------------------
 // 
 
-static void
+static int
 find_patch_bounds(struct psc_output_particles_hdf5 *hdf5,
-		  struct mrc_patch_info *info,
-		  int ilo[3], int ihi[3], int ld[3], int *p_sz)
+		  const int ldims[3], const int off[3],
+		  int ilo[3], int ihi[3], int ld[3])
 {
-  int *ldims = info->ldims, *off = info->off;
-
   for (int d = 0; d < 3; d++) {
     ilo[d] = MIN(ldims[d], MAX(0, hdf5->lo[d] - off[d]));
     ihi[d] = MAX(0, MIN(ldims[d], hdf5->hi[d] - off[d]));
@@ -194,7 +192,7 @@ find_patch_bounds(struct psc_output_particles_hdf5 *hdf5,
     ihi[d] = MIN(ldims[d], hdf5->hi[d] - off[d]);
     ld[d] = ihi[d] - ilo[d];
   }
-  *p_sz = ppsc->grid().kinds.size() * ld[0] * ld[1] * ld[2];
+  return ppsc->grid().kinds.size() * ld[0] * ld[1] * ld[2];
 }
 
 // ----------------------------------------------------------------------
@@ -207,20 +205,20 @@ make_local_particle_array(struct psc_output_particles *out,
 {
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
   MPI_Comm comm = psc_output_particles_comm(out);
-  int nr_kinds = mprts->grid().kinds.size();
-  struct mrc_patch_info info;
+  const auto& grid = mprts->grid();
+  int nr_kinds = grid.kinds.size();
 
   // count all particles to be written locally
   size_t n_write = 0;
   for (int p = 0; p < mprts->n_patches(); p++) {
-    mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
-    int ilo[3], ihi[3], ld[3], sz;
-    find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+    auto& patch = grid.patches[p];
+    int ilo[3], ihi[3], ld[3];
+    int sz = find_patch_bounds(hdf5, grid.ldims, patch.off, ilo, ihi, ld);
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	  for (int kind = 0; kind < nr_kinds; kind++) {
-	    int si = cell_index_3_to_1(info.ldims, jx, jy, jz) * nr_kinds + kind;
+	    int si = cell_index_3_to_1(grid.ldims, jx, jy, jz) * nr_kinds + kind;
 	    n_write += off[p][si+1] - off[p][si];
 	  }
 	}
@@ -238,18 +236,17 @@ make_local_particle_array(struct psc_output_particles *out,
   // copy particles to be written into temp array
   int nn = 0;
   for (int p = 0; p < mprts->n_patches(); p++) {
-    mparticles_t::patch_t& prts = mprts[p];
-    mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
-    int ilo[3], ihi[3], ld[3], sz;
-    find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+    auto& prts = mprts[p];
+    const auto& patch = ppsc->grid().patches[p];
+    int ilo[3], ihi[3], ld[3];
+    int sz = find_patch_bounds(hdf5, grid.ldims, patch.off, ilo, ihi, ld);
     idx[p] = (size_t *) malloc(2 * sz * sizeof(*idx));
-    auto& patch = ppsc->grid().patches[p];
 
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	  for (int kind = 0; kind < nr_kinds; kind++) {
-	    int si = cell_index_3_to_1(info.ldims, jx, jy, jz) * nr_kinds + kind;
+	    int si = cell_index_3_to_1(grid.ldims, jx, jy, jz) * nr_kinds + kind;
 	    int jj = ((kind * ld[2] + jz - ilo[2])
 		      * ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
 	    idx[p][jj     ] = nn + n_off;
@@ -354,6 +351,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   auto mprts_base = PscMparticlesBase{_mprts_base};
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
   MPI_Comm comm = psc_output_particles_comm(out);
+  const auto& grid = ppsc->grid();
   herr_t ierr;
 
   static int pr_A, pr_B, pr_C, pr_D, pr_E;
@@ -415,24 +413,24 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   prof_start(pr_B);
   if (rank == 0) {
     int nr_global_patches;
-    mrc_domain_get_nr_global_patches(ppsc->mrc_domain, &nr_global_patches);
+    mrc_domain_get_nr_global_patches(ppsc->mrc_domain_, &nr_global_patches);
 
     int *remote_sz = (int *) calloc(size, sizeof(*remote_sz));
     for (int p = 0; p < nr_global_patches; p++) {
-      mrc_domain_get_global_patch_info(ppsc->mrc_domain, p, &info);
+      mrc_domain_get_global_patch_info(ppsc->mrc_domain_, p, &info);
       if (info.rank == rank) { // skip local patches
 	continue;
       }
-      int ilo[3], ihi[3], ld[3], sz;
-      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+      int ilo[3], ihi[3], ld[3];
+      int sz = find_patch_bounds(hdf5, info.ldims, info.off, ilo, ihi, ld);
       remote_sz[info.rank] += sz;
     }
 
     // build global idx array, local part
     for (int p = 0; p < mprts->n_patches(); p++) {
-      mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
-      int ilo[3], ihi[3], ld[3], sz;
-      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+      mrc_domain_get_local_patch_info(ppsc->mrc_domain_, p, &info);
+      int ilo[3], ihi[3], ld[3];
+      int sz = find_patch_bounds(hdf5, info.ldims, info.off, ilo, ihi, ld);
       
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -470,12 +468,12 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 
     // build global idx array, remote part
     for (int p = 0; p < nr_global_patches; p++) {
-      mrc_domain_get_global_patch_info(ppsc->mrc_domain, p, &info);
+      mrc_domain_get_global_patch_info(ppsc->mrc_domain_, p, &info);
       if (info.rank == rank) { // skip local patches
 	continue;
       }
-      int ilo[3], ihi[3], ld[3], sz;
-      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+      int ilo[3], ihi[3], ld[3];
+      int sz = find_patch_bounds(hdf5, info.ldims, info.off, ilo, ihi, ld);
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -505,17 +503,17 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     // FIXME, alloc idx[] as one array in the first place
     int local_sz = 0;
     for (int p = 0; p < mprts->n_patches(); p++) {
-      mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
-      int ilo[3], ihi[3], ld[3], sz;
-      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+      const auto& patch = grid.patches[p];
+      int ilo[3], ihi[3], ld[3];
+      int sz = find_patch_bounds(hdf5, grid.ldims, patch.off, ilo, ihi, ld);
       local_sz += sz;
     }
     size_t *l_idx = (size_t *) malloc(2 * local_sz * sizeof(*l_idx));
     size_t *l_idx_p = (size_t *) l_idx;
     for (int p = 0; p < mprts->n_patches(); p++) {
-      mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
-      int ilo[3], ihi[3], ld[3], sz;
-      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+      const auto& patch = grid.patches[p];
+      int ilo[3], ihi[3], ld[3];
+      int sz = find_patch_bounds(hdf5, grid.ldims, patch.off, ilo, ihi, ld);
       memcpy(l_idx_p, idx[p], 2 * sz * sizeof(*l_idx_p));
       l_idx_p += 2 * sz;
     }
