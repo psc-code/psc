@@ -75,13 +75,14 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
   
   void run(MparticlesVpic& mprts)
   {
+    const auto& kinds = mprts.grid().kinds;
     auto mres = mfields_t{this->mres_};
     auto mf_hydro = PscMfieldsVpic::create(psc_mfields_comm(mres.mflds()), ppsc->grid(),
 					    16, { 1, 1, 1 });
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
-    for (int kind = 0; kind < ppsc->nr_kinds; kind++) {
+    for (int kind = 0; kind < kinds.size(); kind++) {
       HydroArray *vmflds_hydro = mf_hydro->vmflds_hydro;
       Simulation_moments_run(sim, vmflds_hydro, mprts.vmprts, kind);
       

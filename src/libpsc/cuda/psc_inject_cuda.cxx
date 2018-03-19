@@ -114,7 +114,7 @@ struct InjectCuda : InjectBase
       }
     }
   
-    assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
+    assert(npt->kind >= 0 && npt->kind < kinds.size());
     assert(npt->q == kinds[npt->kind].q);
     assert(npt->m == kinds[npt->kind].m);
 
@@ -179,7 +179,7 @@ struct InjectCuda : InjectBase
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < nr_pop; kind++) {
 	      struct psc_particle_npt npt = {};
-	      if (kind < psc->nr_kinds) {
+	      if (kind < kinds.size()) {
 		npt.kind = kind;
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;

@@ -304,7 +304,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
   }
 
   Grid_t::Kinds kinds;
-  for (int k = 0; k < ppsc->nr_kinds; k++) {
+  for (int k = 0; k < ppsc->nr_kinds_; k++) {
     kinds.emplace_back(ppsc->kinds_[k].q, ppsc->kinds_[k].m, ppsc->kinds_[k].name);
   }
 
@@ -440,7 +440,7 @@ _psc_destroy(struct psc *psc)
   mrc_domain_destroy(psc->mrc_domain);
 
   if (psc->kinds_) {
-    for (int k = 0; k < psc->nr_kinds; k++) {
+    for (int k = 0; k < psc->nr_kinds_; k++) {
       free(psc->kinds_[k].name);
     }
     free(psc->kinds_);
@@ -456,9 +456,9 @@ static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
   mrc_io_write_int(io, psc, "timestep", psc->timestep);
-  mrc_io_write_int(io, psc, "nr_kinds", psc->nr_kinds);
+  mrc_io_write_int(io, psc, "nr_kinds", psc->nr_kinds_);
 
-  for (int k = 0; k < psc->nr_kinds; k++) {
+  for (int k = 0; k < psc->nr_kinds_; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
     mrc_io_write_double(io, psc, s, psc->kinds_[k].q);
@@ -484,10 +484,10 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_setup_coeff(psc);
 
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
-  mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds);
+  mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds_);
 
-  psc->kinds_ = new psc_kind[psc->nr_kinds]();
-  for (int k = 0; k < psc->nr_kinds; k++) {
+  psc->kinds_ = new psc_kind[psc->nr_kinds_]();
+  for (int k = 0; k < psc->nr_kinds_; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
     mrc_io_read_double(io, psc, s, &psc->kinds_[k].q);
@@ -582,7 +582,7 @@ _psc_view(struct psc *psc)
 
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");
-  for (int k = 0; k < psc->nr_kinds; k++) {
+  for (int k = 0; k < kinds.size(); k++) {
     mpi_printf(comm, "%19s | q = %g m = %g\n",
 	       kinds[k].name, kinds[k].q, kinds[k].m);
   }
@@ -594,18 +594,18 @@ _psc_view(struct psc *psc)
 void
 psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
 {
-  if (!kinds && nr_kinds == psc->nr_kinds) {
+  if (!kinds && nr_kinds == psc->nr_kinds_) {
     return;
   }
 
   if (psc->kinds_) {
-    for (int k = 0; k < psc->nr_kinds; k++) {
+    for (int k = 0; k < psc->nr_kinds_; k++) {
       free(psc->kinds_[k].name);
     }
     free(psc->kinds_);
   }
     
-  psc->nr_kinds = nr_kinds;
+  psc->nr_kinds_ = nr_kinds;
   psc->kinds_ = new psc_kind[nr_kinds]();
   if (kinds) {
     for (int k = 0; k < nr_kinds; k++) {

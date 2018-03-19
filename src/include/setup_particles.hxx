@@ -73,7 +73,7 @@ struct SetupParticles
       }
     }
   
-    assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
+    assert(npt->kind >= 0 && npt->kind < kinds.size());
     prt->kind_ = npt->kind;
     assert(npt->q == kinds[prt->kind_].q);
     assert(npt->m == kinds[prt->kind_].m);
@@ -149,7 +149,7 @@ struct SetupParticles
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < nr_pop; kind++) {
 	      struct psc_particle_npt npt = {};
-	      if (kind < psc->nr_kinds) {
+	      if (kind < kinds.size()) {
 		npt.kind = kind;
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;
@@ -191,7 +191,9 @@ struct SetupParticles
 
   static std::vector<uint> setup_partition(struct psc *psc)
   {
+    auto& kinds = psc->grid().kinds;
     std::vector<uint> n_prts_by_patch(psc->n_patches());
+
     if (psc_ops(psc)->setup_particles) {
       psc_ops(psc)->setup_particles(psc, n_prts_by_patch, true);
       return n_prts_by_patch;
@@ -201,13 +203,12 @@ struct SetupParticles
     }
 
     if (psc->prm.nr_populations < 0) {
-      psc->prm.nr_populations = psc->nr_kinds;
+      psc->prm.nr_populations = kinds.size();
     }
     if (psc->prm.neutralizing_population < 0) {
       psc->prm.neutralizing_population = psc->prm.nr_populations - 1;
     }
 
-    auto& kinds = psc->grid().kinds;
     psc_foreach_patch(psc, p) {
       auto ilo = Int3{}, ihi = psc->grid().ldims;
 
@@ -227,7 +228,7 @@ struct SetupParticles
 	      if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
 	      struct psc_particle_npt npt = {};
-	      if (kind < psc->nr_kinds) {
+	      if (kind < kinds.size()) {
 		npt.kind = kind;
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;

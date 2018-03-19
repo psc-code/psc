@@ -192,8 +192,8 @@ struct ItemMomentCRTP
 	psc_mfields_set_comp_name(this->mres_, m, fld_names[m]);
       }
     } else {
-      this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps * ppsc->nr_kinds, ppsc->ibn).mflds();
-      for (int k = 0; k < ppsc->nr_kinds; k++) {
+      this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps * kinds.size(), ppsc->ibn).mflds();
+      for (int k = 0; k < kinds.size(); k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + kinds[k].name;
 	  psc_mfields_set_comp_name(this->mres_, k * n_comps + m, s.c_str());

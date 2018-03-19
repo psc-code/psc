@@ -75,7 +75,7 @@ struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
     auto& prts_other = mprts_other_[p_];
     auto& prt_other = prts_other[n];
     
-    assert(prt_other.kind() < ppsc->nr_kinds);
+    assert(prt_other.kind() < mprts_other_.grid().kinds.size());
     int i3[3];
     for (int d = 0; d < 3; d++) {
       float val = (&prt_other.xi)[d] / dx[d];
@@ -107,7 +107,7 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
     auto& prts_other = mprts_other_[p_];
     auto& prt_other = prts_other[n];
     
-    assert(prt->kind < ppsc->nr_kinds);
+    assert(prt->kind < mprts_other_.grid().kinds.size());
     int i = prt->i;
     int i3[3];
     i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);

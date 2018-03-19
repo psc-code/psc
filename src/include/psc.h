@@ -157,7 +157,7 @@ struct psc {
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff;	///< automatically derived constants
   GridParams domain;	///< the computational domain
-  int nr_kinds;                 ///< nr of different particle kinds
+  int nr_kinds_;                 ///< nr of different particle kinds
   struct psc_kind *kinds_;       ///< particle kinds (e.g., e-, ion, ...)
   ///@}
 
