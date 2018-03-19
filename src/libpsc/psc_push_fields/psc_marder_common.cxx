@@ -163,7 +163,7 @@ struct marder_ops {
     } psc_foreach_3d_more_end;
 #endif
 
-    assert(ppsc->domain_.gdims[0] == 1);
+    assert(ppsc->grid().isInvar(0));
 
     {
       int l[3] = { l_nc[0], l_cc[1], l_nc[2] };
