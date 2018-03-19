@@ -242,10 +242,6 @@ psc_setup_coeff(struct psc *psc)
 struct mrc_domain *
 psc_setup_mrc_domain(struct psc *psc, const GridBc& grid_bc, int nr_patches)
 {
-  if (psc_ops(psc)->setup_mrc_domain) {
-    return psc_ops(psc)->setup_mrc_domain(psc, nr_patches);
-  }
-
   // FIXME, should be split to create, set_from_options, setup time?
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   // create a very simple domain decomposition
