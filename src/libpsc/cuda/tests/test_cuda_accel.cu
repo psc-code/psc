@@ -69,7 +69,7 @@ struct PushMprtsTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    auto domain = GridParams{{1, 1, 1}, {L, L, L}};
+    auto domain = Grid_t::Domain{{1, 1, 1}, {L, L, L}};
     grid_.reset(new Grid_t{domain});
   }
 

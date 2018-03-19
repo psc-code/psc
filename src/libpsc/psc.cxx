@@ -240,31 +240,31 @@ psc_setup_coeff(struct psc *psc)
 // psc_setup_mrc_domain
 
 struct mrc_domain *
-psc_setup_mrc_domain(const GridParams& grid_params, const GridBc& grid_bc, int nr_patches)
+psc_setup_mrc_domain(const Grid_t::Domain& grid_domain, const GridBc& grid_bc, int nr_patches)
 {
   // FIXME, should be split to create, set_from_options, setup time?
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   // create a very simple domain decomposition
   int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_params.gdims[d] > 1) {
+    if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_domain.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
     }
   }
 
   mrc_domain_set_type(domain, "multi");
-  mrc_domain_set_param_int3(domain, "m", grid_params.gdims);
+  mrc_domain_set_param_int3(domain, "m", grid_domain.gdims);
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
   mrc_domain_set_param_int(domain, "bcz", bc[2]);
   mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
-  mrc_domain_set_param_int3(domain, "np", grid_params.np);
+  mrc_domain_set_param_int3(domain, "np", grid_domain.np);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_double3(crds, "l", grid_params.corner);
-  mrc_crds_set_param_double3(crds, "h", grid_params.corner + grid_params.length);
+  mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
+  mrc_crds_set_param_double3(crds, "h", grid_domain.corner + grid_domain.length);
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
@@ -289,7 +289,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
     offs.push_back(patches[p].off);
   }
 
-  Grid_t *grid = new Grid_t(domain_, ldims, offs);
+  Grid_t *grid = new Grid_t(domain_, offs);
 
   for (int d = 0; d < 3; d++) {
     grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain_.bs[d];
@@ -334,7 +334,7 @@ void psc_set_dt(psc* psc)
 
 void psc_setup_domain(struct psc *psc, GridBc& bc)
 {
-  GridParams *domain = &psc->domain_;
+  Grid_t::Domain& domain = psc->domain_;
 
   for (int d = 0; d < 3; d++) {
     if (psc->ibn[d] != 0) {
@@ -345,7 +345,7 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
       psc->ibn[d] = 2;
     }
 
-    if (domain->gdims[d] == 1) {
+    if (domain.gdims[d] == 1) {
       // if invariant in this direction:
       // set bnd to periodic (FIXME?)
       bc.fld_lo[d] = BND_FLD_PERIODIC;

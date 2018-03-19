@@ -5,21 +5,19 @@
 
 static Grid_t make_grid()
 {
-  auto domain = GridParams{{8, 4, 2},
-			   {80.,  40., 20.}, {-40., -20., 0.},
-			   {4, 2, 2 }};
-  Int3 ldims = { 4, 2, 2 };
+  auto domain = Grid_t::Domain{{8, 4, 2},
+			       {80.,  40., 20.}, {-40., -20., 0.},
+			       {2, 2, 1}};
   std::vector<Int3> offs = {{0, 0, 0}, {4, 0, 0}};
-  return Grid_t(domain, ldims, offs);
+  return Grid_t(domain, offs);
 }
 
 static Grid_t make_grid_1()
 {
-  auto domain = GridParams{{8, 4, 2},
-			   {10., 10., 10.}};
-  Int3 ldims = { 1, 1, 1 };
+  auto domain = Grid_t::Domain{{8, 4, 2},
+			       {10., 10., 10.}};
   std::vector<Int3> offs = { { 0, 0, 0 } };
-  return Grid_t(domain, ldims, offs);
+  return Grid_t(domain, offs);
 }
 
 TEST(Grid, Domain)

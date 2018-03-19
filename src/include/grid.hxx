@@ -44,22 +44,6 @@ struct GridBc
   Int3 prt_hi;  ///<Boundary conditions of the particles. Can be any value of BND_PART.
 };
 
-struct GridParams
-{
-  using Double3 = Vec3<double>;
-
-  GridParams(Int3 gdims, Double3 length, Double3 corner = {0., 0., 0.},
-	     Int3 np = {1, 1, 1}, Int3 bs = {1, 1, 1})
-    : gdims(gdims), length(length), corner(corner), np(np), bs(bs) 
-  {}
-  
-  Int3 gdims;		///<Number of grid-points in each dimension
-  Double3 length;	///<The physical size of the simulation-box 
-  Double3 corner;
-  Int3 np;		///<Number of patches in each dimension
-  Int3 bs;
-};
-
 // ======================================================================
 // Grid_
 
@@ -69,6 +53,8 @@ struct Grid_
   using real_t = T;
   using Real3 = Vec3<real_t>;
 
+  struct Domain;
+  
   struct Kind;
   using Kinds = std::vector<Kind>;
   
@@ -99,9 +85,9 @@ struct Grid_
   //
   // Maybe the named ctor idiom would be good here (but right now
   // can't be done since the copy ctor is deleted.
-  Grid_(const GridParams& domain)
-    : domain(domain),
-      gdims(domain.gdims)
+  Grid_(const Domain& domain)
+    : domain{domain},
+      gdims{domain.gdims}
   {
     ldims = gdims;
     dx = domain.length / Real3(gdims);
@@ -113,11 +99,11 @@ struct Grid_
     }
   }
 
-  Grid_(const GridParams& domain, const Int3& ldims, const std::vector<Int3>& offs)
-    : domain(domain),
-      gdims(domain.gdims),
-      ldims(ldims),
-      dx(domain.length / Real3(domain.gdims))
+  Grid_(const Domain& domain, const std::vector<Int3>& offs)
+    : domain{domain},
+      gdims{domain.gdims},
+      ldims{domain.ldims},
+      dx{domain.dx}
   {
     for (auto off : offs) {
       patches.push_back(Patch(off,
@@ -131,7 +117,7 @@ struct Grid_
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
-  GridParams domain;
+  Domain domain;
   GridBc bc;
   // FIXME? these defaults, in particular for dt, might be a bit
   // dangerous, as they're useful for testing but might hide if one
@@ -143,6 +129,36 @@ struct Grid_
   std::vector<Kind> kinds;
   Int3 bs = { 1, 1, 1 };
 };
+
+// ======================================================================
+// Grid::Domain
+
+template<class T>
+struct Grid_<T>::Domain
+{
+  Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.},
+	 Int3 np = {1, 1, 1}, Int3 bs = {1, 1, 1})
+    : gdims(gdims), length(length), corner(corner), np(np), bs(bs) 
+  {
+    for (int d = 0; d < 3; d++) {
+      assert(gdims[d] % np[d] == 0);
+      ldims[d] = gdims[d] / np[d];
+    }
+    dx = length / Real3(gdims);
+  }
+  
+  Int3 gdims;		///<Number of grid-points in each dimension
+  Real3 length;	///<The physical size of the simulation-box 
+  Real3 corner;
+  Int3 np;		///<Number of patches in each dimension
+  Int3 bs; // FIXME, shouldn't really be in here
+  
+  Int3 ldims;
+  Real3 dx;
+};
+
+// ======================================================================
+// Grid::Kind
 
 template<class T>
 struct Grid_<T>::Kind

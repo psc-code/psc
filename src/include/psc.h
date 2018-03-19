@@ -148,7 +148,7 @@ struct psc {
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff;	///< automatically derived constants
-  GridParams domain_;	///< the computational domain
+  Grid_t::Domain domain_;	///< the computational domain
   GridBc bc_;
   Grid_t::Kinds kinds_;
   ///@}
@@ -306,7 +306,7 @@ void psc_integrate(struct psc *psc);
 
 void psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc, GridBc& bc);
-struct mrc_domain *psc_setup_mrc_domain(const GridParams&, const GridBc& grid_bc, int nr_patches);
+struct mrc_domain *psc_setup_mrc_domain(const Grid_t::Domain&, const GridBc& grid_bc, int nr_patches);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
