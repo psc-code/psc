@@ -67,6 +67,7 @@ struct Inject_ : InjectBase
   void operator()(Mparticles& mprts)
   {
     struct psc *psc = ppsc;
+    const auto& kinds = mprts.grid().kinds;
     
     real_t fac = 1. / psc->coeff.cori * 
       (every_step * psc->dt / tau) /
@@ -99,10 +100,10 @@ struct Inject_ : InjectBase
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < nr_pop; kind++) {
 	      struct psc_particle_npt npt = {};
-	      if (kind < psc->nr_kinds) {
+	      if (kind < kinds.size()) {
 		npt.kind = kind;
-		npt.q    = psc->kinds[kind].q;
-		npt.m    = psc->kinds[kind].m;
+		npt.q    = kinds[kind].q;
+		npt.m    = kinds[kind].m;
 		npt.n    = psc->kinds[kind].n;
 		npt.T[0] = psc->kinds[kind].T;
 		npt.T[1] = psc->kinds[kind].T;
@@ -133,7 +134,7 @@ struct Inject_ : InjectBase
 		assert(psc->prm.fractional_n_particles_per_cell);
 		particle_t prt;
 		SetupParticles<Mparticles>::setup_particle(psc, &prt, &npt, p, xx);
-		prt.qni_wni_ = psc->kinds[prt.kind_].q; // ??? FIXME
+		prt.qni_wni_ = kinds[prt.kind_].q; // ??? FIXME
 
 		mprts[p].push_back(prt);
 	      }
