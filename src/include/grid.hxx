@@ -110,7 +110,7 @@ struct Grid_
 
   int n_patches() const { return patches.size(); }
 
-  bool isInvar(int d) const { return domain.gdims[d] == 1; }
+  bool isInvar(int d) const { return domain.isInvar(d); }
 
   Int3 ldims;
   Domain domain;
@@ -142,6 +142,8 @@ struct Grid_<T>::Domain
     }
     dx = length / Real3(gdims);
   }
+
+  bool isInvar(int d) const { return gdims[d] == 1; }
   
   Int3 gdims;		///<Number of grid-points in each dimension
   Real3 length;	///<The physical size of the simulation-box 

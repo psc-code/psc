@@ -309,24 +309,18 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
 // ----------------------------------------------------------------------
 // psc_set_dt
 
-void psc_set_dt(psc* psc)
+double psc_set_dt(psc* psc, const Grid_t::Domain& domain)
 {
-  Vec3<double> dx = psc->domain_.length / Vec3<double>(psc->domain_.gdims);
-  if (!psc->dt) {
-    double inv_sum = 0.;
-    for (int d = 0; d < 3; d++) {
-      if (psc->domain_.gdims[d] > 1) {
-	inv_sum += 1. / sqr(dx[d]);
-      }
+  double inv_sum = 0.;
+  for (int d = 0; d < 3; d++) {
+    if (!domain.isInvar(d)) {
+      inv_sum += 1. / sqr(domain.dx[d]);
     }
-    if (!inv_sum) { // simulation has 0 dimensions
-      inv_sum = 1.;
-    }
-    psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
   }
-
-  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
-  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
+  if (!inv_sum) { // simulation has 0 dimensions
+    inv_sum = 1.;
+  }
+  return psc->prm.cfl * sqrt(1./inv_sum);
 }
 
 // ----------------------------------------------------------------------
@@ -336,6 +330,12 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
 {
   Grid_t::Domain& domain = psc->domain_;
 
+  if (!psc->dt) {
+    psc->dt = psc_set_dt(psc, domain);
+  }
+  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
+  
   for (int d = 0; d < 3; d++) {
     if (psc->ibn[d] != 0) {
       continue;
@@ -356,10 +356,8 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
       psc->ibn[d] = 0;
     }
   }
-  assert(!psc->mrc_domain_);
-  psc->mrc_domain_ = psc_setup_mrc_domain(psc->domain_, bc, -1);
-  psc_set_dt(psc);
 
+  psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
   psc->grid_ = psc->make_grid(psc->mrc_domain_, bc);
 }
 
