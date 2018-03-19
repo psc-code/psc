@@ -55,81 +55,6 @@ struct Inject_ : InjectBase
   }
   
   // ----------------------------------------------------------------------
-  // get_n_in_cell
-  //
-  // helper function for partition / particle setup FIXME duplicated
-
-  static int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
-  {
-    if (psc->prm.const_num_particles_per_cell) {
-      return psc->prm.nicell;
-    }
-    if (npt->particles_per_cell) {
-      return npt->n * npt->particles_per_cell + .5;
-    }
-    if (psc->prm.fractional_n_particles_per_cell) {
-      int n_prts = npt->n / psc->coeff.cori;
-      float rmndr = npt->n / psc->coeff.cori - n_prts;
-      float ran = random() / ((float) RAND_MAX + 1);
-      if (ran < rmndr) {
-	n_prts++;
-      }
-      return n_prts;
-    }
-    return npt->n / psc->coeff.cori + .5;
-  }
-
-  // FIXME duplicated
-
-  static void _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
-				  int p, double xx[3])
-  {
-    double beta = psc->coeff.beta;
-
-    float ran1, ran2, ran3, ran4, ran5, ran6;
-    do {
-      ran1 = random() / ((float) RAND_MAX + 1);
-      ran2 = random() / ((float) RAND_MAX + 1);
-      ran3 = random() / ((float) RAND_MAX + 1);
-      ran4 = random() / ((float) RAND_MAX + 1);
-      ran5 = random() / ((float) RAND_MAX + 1);
-      ran6 = random() / ((float) RAND_MAX + 1);
-    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-	     ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	      
-    double pxi = npt->p[0] +
-      sqrtf(-2.f*npt->T[0]/npt->m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-    double pyi = npt->p[1] +
-      sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-    double pzi = npt->p[2] +
-      sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
-
-    if (psc->prm.initial_momentum_gamma_correction) {
-      double gam;
-      if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
-	gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
-	pxi *= gam;
-	pyi *= gam;
-	pzi *= gam;
-      }
-    }
-
-    const Grid_t& grid = psc->grid();
-    assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
-    prt->kind_ = npt->kind;
-    assert(npt->q == psc->kinds[prt->kind_].q);
-    assert(npt->m == psc->kinds[prt->kind_].m);
-    /* prt->qni = psc->kinds[prt->kind].q; */
-    /* prt->mni = psc->kinds[prt->kind].m; */
-    prt->xi = xx[0] - grid.patches[p].xb[0];
-    prt->yi = xx[1] - grid.patches[p].xb[1];
-    prt->zi = xx[2] - grid.patches[p].xb[2];
-    prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
-    prt->pyi = pyi;
-    prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
-  }	      
-
-  // ----------------------------------------------------------------------
   // run
 
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
@@ -196,7 +121,7 @@ struct Inject_ : InjectBase
 		    // statistically right...
 		    n_in_cell = npt.n *fac;		}
 		} else {
-		  n_in_cell = get_n_in_cell(psc, &npt);
+		  n_in_cell = SetupParticles<Mparticles>::get_n_in_cell(psc, &npt);
 		}
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
@@ -207,7 +132,7 @@ struct Inject_ : InjectBase
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
 		assert(psc->prm.fractional_n_particles_per_cell);
 		particle_t prt;
-		_psc_setup_particle(psc, &prt, &npt, p, xx);
+		SetupParticles<Mparticles>::setup_particle(psc, &prt, &npt, p, xx);
 		prt.qni_wni_ = psc->kinds[prt.kind_].q; // ??? FIXME
 
 		mprts[p].push_back(prt);
