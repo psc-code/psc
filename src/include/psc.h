@@ -111,14 +111,6 @@ struct psc_coeff {
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
-///Describes the different particle kinds
-///
-struct psc_kind {
-  double q;  // charge
-  double m;  // mass
-  char *name; // short string for the kind name
-};
-
 ///Default kinds (electrons + ions)
 enum {
   KIND_ELECTRON,
@@ -157,8 +149,7 @@ struct psc {
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff;	///< automatically derived constants
   GridParams domain;	///< the computational domain
-  int nr_kinds_;                 ///< nr of different particle kinds
-  struct psc_kind *kinds_;       ///< particle kinds (e.g., e-, ion, ...)
+  Grid_t::Kinds kinds_;
   ///@}
 
   // other parameters / constants

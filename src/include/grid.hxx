@@ -146,6 +146,15 @@ struct Grid_<T>::Kind
   {
     k.name = nullptr;
   }
+
+  Kind& operator=(const Kind& other)
+  {
+    free((void*) name);
+    q = other.q;
+    m = other.m;
+    name = strdup(other.name);
+    return *this;
+  }
   
   ~Kind()
   {

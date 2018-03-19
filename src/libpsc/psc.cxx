@@ -303,11 +303,6 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
     offs.push_back(patches[p].off);
   }
 
-  Grid_t::Kinds kinds;
-  for (int k = 0; k < ppsc->nr_kinds_; k++) {
-    kinds.emplace_back(ppsc->kinds_[k].q, ppsc->kinds_[k].m, ppsc->kinds_[k].name);
-  }
-
   Grid_t *grid = new Grid_t(gdims, ldims, domain.length, domain.corner, offs);
 
   for (int d = 0; d < 3; d++) {
@@ -319,7 +314,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
   grid->eta = coeff.eta;
   grid->dt = dt;
 
-  grid->kinds = std::move(kinds);
+  grid->kinds = ppsc->kinds_;
 
   return grid;
 }
@@ -439,13 +434,6 @@ _psc_destroy(struct psc *psc)
 
   mrc_domain_destroy(psc->mrc_domain);
 
-  if (psc->kinds_) {
-    for (int k = 0; k < psc->nr_kinds_; k++) {
-      free(psc->kinds_[k].name);
-    }
-    free(psc->kinds_);
-  }
-  
   ppsc = NULL;
 }
 
@@ -456,6 +444,7 @@ static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
   mrc_io_write_int(io, psc, "timestep", psc->timestep);
+#if 0
   mrc_io_write_int(io, psc, "nr_kinds", psc->nr_kinds_);
 
   for (int k = 0; k < psc->nr_kinds_; k++) {
@@ -466,7 +455,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
     mrc_io_write_double(io, psc, s, psc->kinds_[k].m);
     mrc_io_write_string(io, psc, s, psc->kinds_[k].name);
   }
-
+#endif
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain);
   mrc_io_write_ref(io, psc, "mparticles", psc->particles);
   mrc_io_write_ref(io, psc, "mfields", psc->flds);
@@ -484,8 +473,8 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_setup_coeff(psc);
 
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
+#if 0
   mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds_);
-
   psc->kinds_ = new psc_kind[psc->nr_kinds_]();
   for (int k = 0; k < psc->nr_kinds_; k++) {
     char s[20];
@@ -495,7 +484,8 @@ _psc_read(struct psc *psc, struct mrc_io *io)
     mrc_io_read_double(io, psc, s, &psc->kinds_[k].m);
     mrc_io_read_string(io, psc, s, &psc->kinds_[k].name);
   }
-
+#endif
+  
   psc->mrc_domain = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
   psc_setup_domain(psc);
 #ifdef USE_FORTRAN
@@ -593,21 +583,7 @@ _psc_view(struct psc *psc)
 
 void psc_set_kinds(struct psc *psc, const Grid_t::Kinds& kinds)
 {
-  if (psc->kinds_) {
-    for (int k = 0; k < psc->nr_kinds_; k++) {
-      free(psc->kinds_[k].name);
-    }
-    free(psc->kinds_);
-  }
-    
-  psc->nr_kinds_ = kinds.size();
-  psc->kinds_ = new psc_kind[kinds.size()]{};
-
-  for (int k = 0; k < kinds.size(); k++) {
-    psc->kinds_[k].q = kinds[k].q;
-    psc->kinds_[k].m = kinds[k].m;
-    psc->kinds_[k].name = strdup(kinds[k].name);
-  }
+  psc->kinds_ = kinds;
 }
 
 // ======================================================================

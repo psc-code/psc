@@ -347,13 +347,6 @@ psc_harris_setup_species(struct psc *psc)
   double nmovers = .1 * nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
 
-  struct psc_kind kinds[2];
-  kinds[KIND_ELECTRON].name = strdup("e");
-  kinds[KIND_ELECTRON].q = -phys->ec;
-  kinds[KIND_ELECTRON].m = phys->me;
-  kinds[KIND_ION].name = strdup("i");
-  kinds[KIND_ION].q =  phys->ec;
-  kinds[KIND_ION].m = phys->mi;
   psc_set_kinds(psc, {{-phys->ec, phys->me, "e"}, {phys->ec, phys->mi, "i"}});
 
   Simulation_define_species(sub->sim, "electron", -phys->ec, phys->me, nmax, nmovers,
