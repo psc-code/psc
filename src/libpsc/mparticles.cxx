@@ -63,7 +63,7 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
     
     for (int d = 0; d < 3; d++) {
       xb[d] = patch.xb[d];
-      xe[d] = patch.xb[d] + grid.ldims[d] * grid.dx[d];
+      xe[d] = patch.xb[d] + grid.ldims[d] * grid.domain.dx[d];
     }
 
     for (auto prt : prts) {

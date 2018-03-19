@@ -102,7 +102,7 @@ do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
     if (psc->grid().isInvar(d)) {
       h[d] = 0.;
     } else {
-      h[d] = 1. / psc->grid().dx[d];
+      h[d] = 1. / psc->grid().domain.dx[d];
     }
   }
 

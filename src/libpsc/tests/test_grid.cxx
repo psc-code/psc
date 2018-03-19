@@ -26,7 +26,7 @@ TEST(Grid, Domain)
     
   EXPECT_EQ(grid.domain.gdims, Int3({ 8, 4, 2 }));
   EXPECT_EQ(grid.ldims, Int3({ 4, 2, 2 }));
-  EXPECT_EQ(grid.dx, Grid_t::Real3({ 10., 10., 10. }));
+  EXPECT_EQ(grid.domain.dx, Grid_t::Real3({ 10., 10., 10. }));
   EXPECT_EQ(grid.n_patches(), 2);
   EXPECT_EQ(grid.patches[0].off, Int3({ 0, 0, 0 }));
   EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({ -40., -20.,  0. }));

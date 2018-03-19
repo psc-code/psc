@@ -35,7 +35,7 @@ struct SetParticleTest1
   cuda_mparticles_prt operator()(int n)
   {
     Int3 ldims = grid_.ldims;
-    Vec3<double> dx = grid_.dx;
+    Vec3<double> dx = grid_.domain.dx;
     
     int k = n % ldims[2];
     n /= ldims[2];
@@ -118,9 +118,9 @@ TEST_F(CudaMparticlesTest, SetParticles)
       int k = n % grid_->ldims[2]; n /= grid_->ldims[2];
       int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
       int i = n;
-      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->dx[0]);
-      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->dx[1]);
-      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
+      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->domain.dx[0]);
+      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->domain.dx[1]);
+      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->domain.dx[2]);
     });
 }
 
@@ -209,9 +209,9 @@ TEST_F(CudaMparticlesTest, SetupInternals)
       int i = n % grid_->ldims[0]; n /= grid_->ldims[0];
       int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
       int k = n;
-      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->dx[0]);
-      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->dx[1]);
-      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->dx[2]);
+      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->domain.dx[0]);
+      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->domain.dx[1]);
+      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->domain.dx[2]);
     });
 
   cmprts->check_ordered();

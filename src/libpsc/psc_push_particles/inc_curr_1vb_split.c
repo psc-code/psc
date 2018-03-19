@@ -12,11 +12,11 @@ struct Current1vbSplit
   
   Current1vbSplit(const Grid_t& grid)
     : dt_(grid.dt),
-      dxi_{ Real3{1., 1. , 1.} / Real3(grid.dx) }
+      dxi_{ Real3{1., 1. , 1.} / Real3(grid.domain.dx) }
   {
-    fnqxs_ = grid.dx[0] * grid.fnqs / grid.dt;
-    fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
-    fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
+    fnqxs_ = grid.domain.dx[0] * grid.fnqs / grid.dt;
+    fnqys_ = grid.domain.dx[1] * grid.fnqs / grid.dt;
+    fnqzs_ = grid.domain.dx[2] * grid.fnqs / grid.dt;
   }
 
   void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,

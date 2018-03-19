@@ -67,9 +67,9 @@ struct ParticleIndexer
   using Real3 = Vec3<real_t>;
 
   ParticleIndexer(const Grid_t& grid)
-    : dxi_(Real3(1.) / Real3(grid.dx)),
+    : dxi_(Real3(1.) / Real3(grid.domain.dx)),
       ldims_(grid.ldims),
-      b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.dx))),
+      b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.domain.dx))),
       b_mx_(grid.ldims / grid.bs)
   {
     n_cells_ = ldims_[0] * ldims_[1] * ldims_[2];
@@ -399,7 +399,7 @@ struct Mparticles : MparticlesBase
       assert(new_prt.x[d] <= patch.xe[d]);
     }
     
-    float dVi = 1.f / (grid_->dx[0] * grid_->dx[1] * grid_->dx[2]);
+    float dVi = 1.f / (grid_->domain.dx[0] * grid_->domain.dx[1] * grid_->domain.dx[2]);
     
     particle_t prt;
     prt.xi      = new_prt.x[0] - patch.xb[0];

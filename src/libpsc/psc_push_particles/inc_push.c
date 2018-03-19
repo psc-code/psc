@@ -12,7 +12,7 @@ public:
   using Real3 = Vec3<real_t>;
   
   PI(const Grid_t& grid)
-    : dxi_{ Real3{ 1., 1., 1. } / Real3(grid.dx) }
+    : dxi_{ Real3{ 1., 1., 1. } / Real3(grid.domain.dx) }
   {}
   
   // ----------------------------------------------------------------------

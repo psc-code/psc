@@ -16,7 +16,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
   const Grid_t& grid = psc->grid();
   mfields_t mf = mflds_base.get_as<mfields_t>(EX, HX + 3);
   psc_foreach_patch(psc, p) {
-    double fac = grid.dx[0] * grid.dx[1] * grid.dx[2];
+    double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
     Fields F(mf[p]);
     // FIXME, this doesn't handle non-periodic b.c. right
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {

@@ -30,9 +30,9 @@ struct Item_dive
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = 
-      ((F(EX, i,j,k) - F(EX, i-dx,j,k)) / ppsc->grid().dx[0] +
-       (F(EY, i,j,k) - F(EY, i,j-dy,k)) / ppsc->grid().dx[1] +
-       (F(EZ, i,j,k) - F(EZ, i,j,k-dz)) / ppsc->grid().dx[2]);
+      ((F(EX, i,j,k) - F(EX, i-dx,j,k)) / ppsc->grid().domain.dx[0] +
+       (F(EY, i,j,k) - F(EY, i,j-dy,k)) / ppsc->grid().domain.dx[1] +
+       (F(EZ, i,j,k) - F(EZ, i,j,k-dz)) / ppsc->grid().domain.dx[2]);
   }
 };
 

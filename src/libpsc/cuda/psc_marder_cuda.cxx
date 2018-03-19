@@ -100,12 +100,12 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   // FIXME: how to choose diffusion parameter properly?
   float dx[3];
   for (int d = 0; d < 3; d++) {
-    dx[d] = grid.dx[d];
+    dx[d] = grid.domain.dx[d];
   }
   float inv_sum = 0.;
   for (int d = 0; d < 3; d++) {
     if (!grid.isInvar(d)) {
-      inv_sum += 1. / sqr(grid.dx[d]);
+      inv_sum += 1. / sqr(grid.domain.dx[d]);
     }
   }
   float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;

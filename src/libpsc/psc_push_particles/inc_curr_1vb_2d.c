@@ -17,8 +17,8 @@ struct Current1vb2d
     : dt_(grid.dt),
       fnqs_(grid.fnqs)
   {
-    fnqys_ = grid.dx[1] * grid.fnqs / grid.dt;
-    fnqzs_ = grid.dx[2] * grid.fnqs / grid.dt;
+    fnqys_ = grid.domain.dx[1] * grid.fnqs / grid.dt;
+    fnqzs_ = grid.domain.dx[2] * grid.fnqs / grid.dt;
   }
   
   // ----------------------------------------------------------------------

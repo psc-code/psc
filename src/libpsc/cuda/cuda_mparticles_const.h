@@ -34,16 +34,16 @@ cuda_mparticles_const_set(struct cuda_mparticles *cmprts)
   
   struct cuda_mparticles_const c;
   for (int d = 0; d < 3; d++) {
-    c.dxi[d] = 1.f / grid.dx[d];
+    c.dxi[d] = 1.f / grid.domain.dx[d];
     c.b_mx[d] = cmprts->pi_.b_mx_[d];
     c.b_dxi[d] = cmprts->pi_.b_dxi_[d];
   }
 
   c.dt = grid.dt;
   c.fnqs  = grid.fnqs;
-  c.fnqxs = grid.dx[0] * c.fnqs / grid.dt;
-  c.fnqys = grid.dx[1] * c.fnqs / grid.dt;
-  c.fnqzs = grid.dx[2] * c.fnqs / grid.dt;
+  c.fnqxs = grid.domain.dx[0] * c.fnqs / grid.dt;
+  c.fnqys = grid.domain.dx[1] * c.fnqs / grid.dt;
+  c.fnqzs = grid.domain.dx[2] * c.fnqs / grid.dt;
   c.dqs = .5f * grid.eta * grid.dt;
 
   int n_kinds = grid.kinds.size();

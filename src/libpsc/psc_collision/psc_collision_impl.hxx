@@ -166,7 +166,7 @@ struct Collision_
   {
     real_t dxi[3];
     for (int d = 0; d < 3; d++) {
-      dxi[d] = 1.f / ppsc->grid().dx[d];
+      dxi[d] = 1.f / ppsc->grid().domain.dx[d];
     }
     const int *ldims = ppsc->grid().ldims;
     int last = 0;

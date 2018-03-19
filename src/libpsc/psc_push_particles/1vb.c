@@ -61,7 +61,7 @@ private:
     Current current(prts.grid());
 
     PI<real_t> pi(prts.grid());
-    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = prts.grid().kinds;
     assert(kinds.size() <= MAX_NR_KINDS);
@@ -145,7 +145,7 @@ private:
         
     AdvanceParticle_t advance(prts.grid().dt);
 
-    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().dx);
+    Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = prts.grid().kinds;
     assert(kinds.size() <= MAX_NR_KINDS);

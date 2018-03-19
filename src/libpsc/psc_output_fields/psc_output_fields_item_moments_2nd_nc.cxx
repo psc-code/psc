@@ -29,7 +29,7 @@ struct Moment_n
   {
     const Grid_t& grid = ppsc->grid();
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *prt = &*prt_iter;
@@ -56,7 +56,7 @@ struct Moment_rho
   {
     const Grid_t& grid = ppsc->grid();
     real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-    real_t dxi = 1.f / grid.dx[0], dyi = 1.f / grid.dx[1], dzi = 1.f / grid.dx[2];
+    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *prt = &*prt_iter;

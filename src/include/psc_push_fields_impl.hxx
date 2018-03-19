@@ -38,9 +38,9 @@ public:
 
     // FIXME, it'd be even better to not even calculate derivates
     // that will be multiplied by 0 
-    cnx = dim::InvarX::value ? 0 : dth / grid.dx[0];
-    cny = dim::InvarY::value ? 0 : dth / grid.dx[1];
-    cnz = dim::InvarZ::value ? 0 : dth / grid.dx[2];
+    cnx = dim::InvarX::value ? 0 : dth / grid.domain.dx[0];
+    cny = dim::InvarY::value ? 0 : dth / grid.domain.dx[1];
+    cnz = dim::InvarZ::value ? 0 : dth / grid.domain.dx[2];
   }
 
 protected:

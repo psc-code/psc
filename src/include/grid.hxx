@@ -87,10 +87,9 @@ struct Grid_
   // can't be done since the copy ctor is deleted.
   Grid_(const Domain& domain)
     : domain{domain},
-      ldims{domain.ldims},
-      dx{domain.dx}
+      ldims{domain.ldims}
   {
-    patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, domain.length, dx));
+    patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, domain.length, domain.dx));
 
     for (int d = 0; d < 3; d++) {
       assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
@@ -99,13 +98,13 @@ struct Grid_
 
   Grid_(const Domain& domain, const std::vector<Int3>& offs)
     : domain{domain},
-      ldims{domain.ldims},
-      dx{domain.dx}
+      ldims{domain.ldims}
   {
     for (auto off : offs) {
       patches.push_back(Patch(off,
-			      Vec3<double>(off        ) * dx + domain.corner,
-			      Vec3<double>(off + ldims) * dx + domain.corner, dx));
+			      Vec3<double>(off        ) * domain.dx + domain.corner,
+			      Vec3<double>(off + ldims) * domain.dx + domain.corner,
+			      domain.dx));
     }
   }
 
@@ -114,7 +113,6 @@ struct Grid_
   bool isInvar(int d) const { return domain.gdims[d] == 1; }
 
   Int3 ldims;
-  Real3 dx;
   Domain domain;
   GridBc bc;
   // FIXME? these defaults, in particular for dt, might be a bit

@@ -341,9 +341,9 @@ struct Item_divb
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = 
-      ((F(HX, i+dx,j,k) - F(HX, i,j,k)) / ppsc->grid().dx[0] +
-       (F(HY, i,j+dy,k) - F(HY, i,j,k)) / ppsc->grid().dx[1] +
-       (F(HZ, i,j,k+dz) - F(HZ, i,j,k)) / ppsc->grid().dx[2]);
+      ((F(HX, i+dx,j,k) - F(HX, i,j,k)) / ppsc->grid().domain.dx[0] +
+       (F(HY, i,j+dy,k) - F(HY, i,j,k)) / ppsc->grid().domain.dx[1] +
+       (F(HZ, i,j,k+dz) - F(HZ, i,j,k)) / ppsc->grid().domain.dx[2]);
   }
 };
 
@@ -363,9 +363,9 @@ struct Item_divj
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = 
-      ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / ppsc->grid().dx[0] +
-       (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / ppsc->grid().dx[1] +
-       (F(JZI, i,j,k) - F(JZI, i,j,k-dz)) / ppsc->grid().dx[2]);
+      ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / ppsc->grid().domain.dx[0] +
+       (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / ppsc->grid().domain.dx[1] +
+       (F(JZI, i,j,k) - F(JZI, i,j,k-dz)) / ppsc->grid().domain.dx[2]);
   }
 };
 
