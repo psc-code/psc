@@ -296,7 +296,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     grid->bs[d] = grid->isInvar(d) ? 1 : domain.bs[d];
   }
 
-  grid->kinds = kinds_;
+  grid->kinds = kinds;
 
   grid->bc = bc;
   for (int d = 0; d < 3; d++) {
@@ -337,10 +337,8 @@ double psc_set_dt(psc* psc, const Grid_t::Domain& domain)
 // ----------------------------------------------------------------------
 // psc_setup_domain
 
-void psc_setup_domain(struct psc *psc, GridBc& bc)
+void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds)
 {
-  Grid_t::Domain& domain = psc->domain_;
-
   if (!psc->dt) {
     psc->dt = psc_set_dt(psc, domain);
   }
@@ -361,7 +359,7 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
   }
 
   psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
-  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, psc->kinds_);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds);
 }
 
 // ----------------------------------------------------------------------
@@ -459,7 +457,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 #endif
   
   psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
-  psc_setup_domain(psc, psc->bc_);
+  psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
 #endif

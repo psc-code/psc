@@ -242,7 +242,7 @@ psc_harris_setup_domain(struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
 
   psc_setup_coeff(psc); // FIXME -- in the middle of things here, will be done again later
-  psc_setup_domain(psc, psc->bc_);
+  psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
   
   // Setup basic grid parameters
   double dx[3], xl[3], xh[3];
