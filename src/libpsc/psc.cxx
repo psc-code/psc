@@ -240,7 +240,7 @@ psc_setup_coeff(struct psc *psc)
 // psc_setup_mrc_domain
 
 struct mrc_domain *
-psc_setup_mrc_domain(struct psc *psc, int nr_patches)
+psc_setup_mrc_domain(struct psc *psc, const GridBc& grid_bc, int nr_patches)
 {
   if (psc_ops(psc)->setup_mrc_domain) {
     return psc_ops(psc)->setup_mrc_domain(psc, nr_patches);
@@ -251,7 +251,7 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   // create a very simple domain decomposition
   int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    if (psc->bc_.fld_lo[d] == BND_FLD_PERIODIC && psc->domain_.gdims[d] > 1) {
+    if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && psc->domain_.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
     }
   }
@@ -279,7 +279,7 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 // ----------------------------------------------------------------------
 // psc_make_grid
 
-Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
+Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
 {
   Int3 gdims;
   mrc_domain_get_global_dims(mrc_domain, gdims);
@@ -305,7 +305,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
   grid->dt = dt;
 
   grid->kinds = ppsc->kinds_;
-  grid->bc = ppsc->bc_;
+  grid->bc = bc;
 
   return grid;
 }
@@ -361,10 +361,10 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
     }
   }
   assert(!psc->mrc_domain_);
-  psc->mrc_domain_ = psc_setup_mrc_domain(psc, -1);
+  psc->mrc_domain_ = psc_setup_mrc_domain(psc, bc, -1);
   psc_set_dt(psc);
 
-  psc->grid_ = psc->make_grid(psc->mrc_domain_);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_, bc);
 }
 
 // ----------------------------------------------------------------------

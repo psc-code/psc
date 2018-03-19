@@ -169,7 +169,7 @@ struct psc {
 
   struct mrc_domain *mrc_domain_;
 
-  Grid_t* make_grid(struct mrc_domain* domain);
+  Grid_t* make_grid(struct mrc_domain* domain, const GridBc& bc);
   int n_patches() { return grid().n_patches(); }
 
   int ibn[3];         ///< number of ghost points
@@ -307,7 +307,7 @@ void psc_integrate(struct psc *psc);
 
 void psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc, GridBc& bc);
-struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
+struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, const GridBc& grid_bc, int nr_patches);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
