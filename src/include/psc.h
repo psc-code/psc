@@ -116,7 +116,6 @@ struct psc_coeff {
 struct psc_kind {
   double q;  // charge
   double m;  // mass
-  double n;  // default density
   char *name; // short string for the kind name
 };
 

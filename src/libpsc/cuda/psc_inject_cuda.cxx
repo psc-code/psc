@@ -181,7 +181,6 @@ struct InjectCuda : InjectBase
 		npt.kind = kind;
 		npt.q    = psc->kinds[kind].q;
 		npt.m    = psc->kinds[kind].m;
-		npt.n    = psc->kinds[kind].n;
 	      };
 	      target_.init_npt(kind, xx, &npt);
 	    

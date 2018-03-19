@@ -151,7 +151,6 @@ struct SetupParticles
 		npt.kind = kind;
 		npt.q    = psc->kinds[kind].q;
 		npt.m    = psc->kinds[kind].m;
-		npt.n    = psc->kinds[kind].n;
 	      };
 	      func(kind, xx, npt);
 
@@ -229,7 +228,6 @@ struct SetupParticles
 		npt.kind = kind;
 		npt.q    = psc->kinds[kind].q;
 		npt.m    = psc->kinds[kind].m;
-		npt.n    = psc->kinds[kind].n;
 	      };
 	      psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 

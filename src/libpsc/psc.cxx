@@ -221,9 +221,6 @@ _psc_set_from_options(struct psc *psc)
     sprintf(s, "particle_%s_m", kind->name);
     mrc_params_get_option_double_help(s, &kind->m, 
 				      "mass of this particle kind");
-    sprintf(s, "particle_%s_n", kind->name);
-    mrc_params_get_option_double_help(s, &kind->n, 
-				      "default density of this particle kind");
   }
 }
 
@@ -479,9 +476,6 @@ _psc_write(struct psc *psc, struct mrc_io *io)
     mrc_io_write_double(io, psc, s, psc->kinds[k].q);
     sprintf(s, "kind_m%d", k);
     mrc_io_write_double(io, psc, s, psc->kinds[k].m);
-    sprintf(s, "kind_n%d", k);
-    mrc_io_write_double(io, psc, s, psc->kinds[k].n);
-    sprintf(s, "kind_T%d", k);
     mrc_io_write_string(io, psc, s, psc->kinds[k].name);
   }
 
@@ -511,9 +505,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
     mrc_io_read_double(io, psc, s, &psc->kinds[k].q);
     sprintf(s, "kind_m%d", k);
     mrc_io_read_double(io, psc, s, &psc->kinds[k].m);
-    sprintf(s, "kind_n%d", k);
-    mrc_io_read_double(io, psc, s, &psc->kinds[k].n);
-    sprintf(s, "kind_T%d", k);
     mrc_io_read_string(io, psc, s, &psc->kinds[k].name);
   }
 
@@ -603,9 +594,8 @@ _psc_view(struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");
   for (int k = 0; k < psc->nr_kinds; k++) {
-    mpi_printf(comm, "%19s | q = %g m = %g n = %g\n", 
-	       psc->kinds[k].name, psc->kinds[k].q, psc->kinds[k].m,
-	       psc->kinds[k].n);
+    mpi_printf(comm, "%19s | q = %g m = %g\n", 
+	       psc->kinds[k].name, psc->kinds[k].q, psc->kinds[k].m);
   }
 }
 
