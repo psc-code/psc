@@ -94,7 +94,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 {
   auto mflds_base = PscMfieldsBase{_mflds_base};
   auto mf_base = PscMfieldsBase{_mf_base};
-  assert(mflds_base->grid().gdims[0] == 1);
+  assert(mflds_base->grid().isInvar(0));
 
   const Grid_t& grid = ppsc->grid();
   // FIXME: how to choose diffusion parameter properly?
@@ -104,10 +104,10 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   }
   float inv_sum = 0.;
   for (int d = 0; d < 3; d++) {
-      if (grid.gdims[d] > 1) {
-	inv_sum += 1. / sqr(grid.dx[d]);
-      }
+    if (!grid.isInvar(d)) {
+      inv_sum += 1. / sqr(grid.dx[d]);
     }
+  }
   float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
   float diffusion     = diffusion_max * marder->diffusion;
     

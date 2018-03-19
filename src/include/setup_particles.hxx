@@ -142,9 +142,9 @@ struct SetupParticles
 			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	    if (grid.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	    if (grid.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
+	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
+	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
 	  
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < nr_pop; kind++) {
@@ -225,9 +225,9 @@ struct SetupParticles
 			       .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	      // FIXME, the issue really is that (2nd order) particle pushers
 	      // don't handle the invariant dim right
-	      if (grid.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	      if (grid.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	      if (grid.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	      if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
+	      if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
+	      if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
 
 	      struct psc_particle_npt npt = {};
 	      if (kind < kinds.size()) {

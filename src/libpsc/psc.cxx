@@ -292,7 +292,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
   Grid_t *grid = new Grid_t(domain_, offs);
 
   for (int d = 0; d < 3; d++) {
-    grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain_.bs[d];
+    grid->bs[d] = grid->isInvar(d) ? 1 : domain_.bs[d];
   }
   
   assert(coeff.ld == 1.);

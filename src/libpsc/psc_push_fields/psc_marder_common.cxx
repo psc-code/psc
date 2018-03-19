@@ -96,9 +96,9 @@ struct marder_ops {
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
 #define define_dxdydz(dx, dy, dz)				\
-  int dx _mrc_unused = (ppsc->grid().gdims[0] == 1) ? 0 : 1;	\
-  int dy _mrc_unused = (ppsc->grid().gdims[1] == 1) ? 0 : 1;	\
-  int dz _mrc_unused = (ppsc->grid().gdims[2] == 1) ? 0 : 1
+  int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;	\
+  int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;	\
+  int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
 
 #define psc_foreach_3d_more(psc, p, ix, iy, iz, l, r) {	\
   int __ilo[3] = { -l[0], -l[1], -l[2] };		\
@@ -126,7 +126,7 @@ struct marder_ops {
     int nr_levels;
     const auto& grid = ppsc->grid();
     for (int d = 0; d < 3; d++) {
-      if (grid.gdims[d] > 1) {
+      if (!grid.isInvar(d)) {
 	inv_sum += 1. / sqr(grid.dx[d]);
       }
     }

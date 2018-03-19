@@ -14,9 +14,9 @@ using Fields = Fields3d<fields_t>;
 // FIXME, duplicated
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx _mrc_unused = (ppsc->grid().gdims[0] == 1) ? 0 : 1;		\
-  int dy _mrc_unused = (ppsc->grid().gdims[1] == 1) ? 0 : 1;		\
-  int dz _mrc_unused = (ppsc->grid().gdims[2] == 1) ? 0 : 1
+  int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;      \
+  int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;      \
+  int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
 
 // ----------------------------------------------------------------------
 // FIXME, should be consolidated?
@@ -99,7 +99,7 @@ do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
   define_dxdydz(dx, dy, dz);
   fields_t::real_t h[3];
   for (int d = 0; d < 3; d++) {
-    if (psc->grid().gdims[d] == 1) {
+    if (psc->grid().isInvar(d)) {
       h[d] = 0.;
     } else {
       h[d] = 1. / psc->grid().dx[d];

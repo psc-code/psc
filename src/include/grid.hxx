@@ -87,11 +87,9 @@ struct Grid_
   // can't be done since the copy ctor is deleted.
   Grid_(const Domain& domain)
     : domain{domain},
-      gdims{domain.gdims}
+      ldims{domain.ldims},
+      dx{domain.dx}
   {
-    ldims = gdims;
-    dx = domain.length / Real3(gdims);
-
     patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, domain.length, dx));
 
     for (int d = 0; d < 3; d++) {
@@ -101,7 +99,6 @@ struct Grid_
 
   Grid_(const Domain& domain, const std::vector<Int3>& offs)
     : domain{domain},
-      gdims{domain.gdims},
       ldims{domain.ldims},
       dx{domain.dx}
   {
@@ -111,10 +108,11 @@ struct Grid_
 			      Vec3<double>(off + ldims) * dx + domain.corner, dx));
     }
   }
-  
+
   int n_patches() const { return patches.size(); }
 
-  Int3 gdims;
+  bool isInvar(int d) const { return domain.gdims[d] == 1; }
+
   Int3 ldims;
   Real3 dx;
   Domain domain;

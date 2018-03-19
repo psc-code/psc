@@ -175,12 +175,15 @@ public:
   {
     mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, HX + 3);
     
-    const int *gdims = mflds->grid().gdims;
-    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+    const auto& grid = mflds->grid();
+    using Bool3 = Vec3<bool>;
+    Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
+
+    if (invar == Bool3{false, false, false}) {
       push_E<dim_xyz>(*mflds.sub(), dt_fac);
-    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+    } else if (invar == Bool3{true, false, false}) {
       push_E<dim_yz>(*mflds.sub(), dt_fac);
-    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+    } else if (invar == Bool3{false, true, false}) {
       push_E<dim_xz>(*mflds.sub(), dt_fac);
     } else {
       assert(0);
@@ -201,12 +204,15 @@ public:
   {
     mfields_t mflds = mflds_base.get_as<mfields_t>(EX, HX + 3);
     
-    const int *gdims = mflds->grid().gdims;
-    if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+    const auto& grid = mflds->grid();
+    using Bool3 = Vec3<bool>;
+    Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
+
+    if (invar == Bool3{false, false, false}) {
       push_H<dim_xyz>(*mflds.sub(), dt_fac);
-    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+    } else if (invar == Bool3{true, false, false}) {
       push_H<dim_yz>(*mflds.sub(), dt_fac);
-    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) {
+    } else if (invar == Bool3{false, true, false}) {
       push_H<dim_xz>(*mflds.sub(), dt_fac);
     } else {
       assert(0);

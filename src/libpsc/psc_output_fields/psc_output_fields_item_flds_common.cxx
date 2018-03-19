@@ -8,10 +8,10 @@
 
 // ======================================================================
 
-#define define_dxdydz(dx, dy, dz)					\
-  int dx _mrc_unused = (ppsc->grid().gdims[0] == 1) ? 0 : 1;		\
-  int dy _mrc_unused = (ppsc->grid().gdims[1] == 1) ? 0 : 1;		\
-  int dz _mrc_unused = (ppsc->grid().gdims[2] == 1) ? 0 : 1
+#define define_dxdydz(dx, dy, dz)			       \
+  int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;      \
+  int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;      \
+  int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
 
 // ======================================================================
 

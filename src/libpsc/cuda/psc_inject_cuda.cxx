@@ -134,7 +134,8 @@ struct InjectCuda : InjectBase
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
     struct psc *psc = ppsc;
-    const auto& kinds = psc->grid().kinds;
+    const auto& grid = psc->grid();
+    const auto& kinds = grid.kinds;
 
     float fac = 1. / psc->coeff.cori * 
       (every_step * psc->dt / tau) /
@@ -168,9 +169,9 @@ struct InjectCuda : InjectBase
 			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (psc->grid().gdims[0] == 1) xx[0] = CRDX(p, jx);
-	    if (psc->grid().gdims[1] == 1) xx[1] = CRDY(p, jy);
-	    if (psc->grid().gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
+	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
+	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
 
 	    if (!target_.is_inside(xx)) {
 	      continue;

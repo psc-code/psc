@@ -225,12 +225,12 @@ Variables ix, iy, iz will be automatically declared.
 Always close this expression with foreach_3d_end
 */
 #define foreach_3d(psc, p, ix, iy, iz, l, r) {                         \
-  int __ilo[3] = { (psc)->grid().gdims[0] == 1 ? 0 : -l ,		\
-		   (psc)->grid().gdims[1] == 1 ? 0 : -l,		\
-		   (psc)->grid().gdims[2] == 1 ? 0 : -l };		\
-  int __ihi[3] = { (psc)->grid().ldims[0] + ((psc)->grid().gdims[0] == 1 ? 0 : r), \
-		   (psc)->grid().ldims[1] + ((psc)->grid().gdims[1] == 1 ? 0 : r), \
-		   (psc)->grid().ldims[2] + ((psc)->grid().gdims[2] == 1 ? 0 : r) }; \
+  int __ilo[3] = { (psc)->grid().isInvar(0) ? 0 : -l ,			\
+		   (psc)->grid().isInvar(1) ? 0 : -l,	\
+		   (psc)->grid().isInvar(2) ? 0 : -l };	\
+  int __ihi[3] = { (psc)->grid().ldims[0] + ((psc)->grid().isInvar(0) ? 0 : r), \
+		   (psc)->grid().ldims[1] + ((psc)->grid().isInvar(1) ? 0 : r), \
+		   (psc)->grid().ldims[2] + ((psc)->grid().isInvar(2) ? 0 : r) }; \
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -326,7 +326,7 @@ static inline bool psc_at_boundary_lo(struct psc *psc, int p, int d)
 
 static inline bool psc_at_boundary_hi(struct psc *psc, int p, int d)
 {
-  return psc->grid().patches[p].off[d] + psc->grid().ldims[d] == psc->grid().gdims[d];
+  return psc->grid().patches[p].off[d] + psc->grid().ldims[d] == psc->grid().domain.gdims[d];
 }
 
 #endif

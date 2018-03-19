@@ -90,9 +90,9 @@ struct Inject_ : InjectBase
 			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	    if (grid.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	    if (grid.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
+	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
+	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
 
 	    if (!target_.is_inside(xx)) {
 	      continue;

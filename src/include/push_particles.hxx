@@ -18,22 +18,24 @@ public:
   
   virtual void push_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    auto gdims = mprts_base->grid().gdims;
+    const auto& grid = mprts_base->grid();
+    using Bool3 = Vec3<bool>;
+    Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
     // if this function has not been overriden, call the pusher for the appropriate dims
-    if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] == 1) { // x
+    if (invar == Bool3{false, true, true}) { // x
       push_mprts_x(mprts_base, mflds_base);
-    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] == 1) { // y
+    } else if (invar == Bool3{true, false, true}) { // y
       push_mprts_y(mprts_base, mflds_base);
-    } else if (gdims[0] == 1 && gdims[1] == 1 && gdims[2] > 1) { // y
+    } else if (invar == Bool3{true, true, false}) { // z
       push_mprts_z(mprts_base, mflds_base);
-    } else if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] == 1) { // xy
+    } else if (invar == Bool3{false, false, true}) { // xy
       push_mprts_xy(mprts_base, mflds_base);
-    } else if (gdims[0] > 1 && gdims[1] == 1 && gdims[2] > 1) { // xz
+    } else if (invar == Bool3{false, true, false}) { // xz
       push_mprts_xz(mprts_base, mflds_base);
-    } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) { // yz
+    } else if (invar == Bool3{true, false, false}) { // yz
       push_mprts_yz(mprts_base, mflds_base);
-    } else if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) { // xyz
+    } else if (invar == Bool3{false, false, false}) { // xyz
       push_mprts_xyz(mprts_base, mflds_base);
     } else {
       push_mprts_1(mprts_base, mflds_base);
@@ -66,11 +68,13 @@ public:
 
   virtual void stagger_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
   {
-    auto gdims = mprts_base->grid().gdims;
+    const auto& grid = mprts_base->grid();
+    using Bool3 = Vec3<bool>;
+    Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
-    if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) { // yz
+    if (invar == Bool3{true, false, false}) { // yz
       stagger_mprts_yz(mprts_base, mflds_base);
-    } else if (gdims[0] == 1 && gdims[1] == 1 && gdims[2] == 1) { // 1
+    } else if (invar == Bool3{true, true, true}) { // 1
       stagger_mprts_1(mprts_base, mflds_base);
     } else {
       mprintf("WARNING: no stagger_mprts() case!\n");
