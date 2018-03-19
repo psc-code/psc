@@ -10,18 +10,16 @@
 enum {
   BND_FLD_OPEN,
   BND_FLD_PERIODIC,
-  BND_FLD_UPML,
-  BND_FLD_TIME,
   BND_FLD_CONDUCTING_WALL,
   BND_FLD_ABSORBING,
 };
 
 ///Possible boundary conditions for particles
 enum {
-  BND_PART_REFLECTING,
-  BND_PART_PERIODIC,
-  BND_PART_ABSORBING,
-  BND_PART_OPEN,
+  BND_PRT_REFLECTING,
+  BND_PRT_PERIODIC,
+  BND_PRT_ABSORBING,
+  BND_PRT_OPEN,
 };
 
 ///Describes the spatial domain to operate on.

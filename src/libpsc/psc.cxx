@@ -40,8 +40,8 @@ struct psc *ppsc;
 #define VAR(x) (void *)(offsetof(struct psc, x))
 #define VAR_(x, n) (void *)(offsetof(struct psc, x) + n*sizeof(int))
 
-static mrc_param_select bnd_fld_descr[5];
-static mrc_param_select bnd_part_descr[4];
+static mrc_param_select bnd_fld_descr[3];
+static mrc_param_select bnd_prt_descr[4];
 
 static struct select_init {
   select_init() {
@@ -49,21 +49,17 @@ static struct select_init {
     bnd_fld_descr[0].val = BND_FLD_OPEN;
     bnd_fld_descr[1].str = "periodic";
     bnd_fld_descr[1].val = BND_FLD_PERIODIC;
-    bnd_fld_descr[2].str = "upml";
-    bnd_fld_descr[2].val = BND_FLD_UPML;
-    bnd_fld_descr[3].str = "time";
-    bnd_fld_descr[3].val = BND_FLD_TIME;
-    bnd_fld_descr[4].str = "conducting_wall";
-    bnd_fld_descr[4].val = BND_FLD_CONDUCTING_WALL;
+    bnd_fld_descr[2].str = "conducting_wall";
+    bnd_fld_descr[2].val = BND_FLD_CONDUCTING_WALL;
 
-    bnd_part_descr[0].str = "reflecting";
-    bnd_part_descr[0].val = BND_PART_REFLECTING;
-    bnd_part_descr[1].str = "periodic";
-    bnd_part_descr[1].val = BND_PART_PERIODIC;
-    bnd_part_descr[2].str = "absorbing";
-    bnd_part_descr[2].val = BND_PART_ABSORBING;
-    bnd_part_descr[3].str = "open";
-    bnd_part_descr[3].val = BND_PART_OPEN;
+    bnd_prt_descr[0].str = "reflecting";
+    bnd_prt_descr[0].val = BND_PRT_REFLECTING;
+    bnd_prt_descr[1].str = "periodic";
+    bnd_prt_descr[1].val = BND_PRT_PERIODIC;
+    bnd_prt_descr[2].str = "absorbing";
+    bnd_prt_descr[2].val = BND_PRT_ABSORBING;
+    bnd_prt_descr[3].str = "open";
+    bnd_prt_descr[3].val = BND_PRT_OPEN;
   }
 } select_initializer;
 
@@ -88,18 +84,18 @@ static struct param psc_descr[] = {
   { "bnd_field_hi_z", VAR_(domain_.bc_fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
 
-  { "bnd_particle_lo_x", VAR_(domain_.bc_prt_lo, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
-								 bnd_part_descr) },
-  { "bnd_particle_lo_y", VAR_(domain_.bc_prt_lo, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
-								 bnd_part_descr) },
-  { "bnd_particle_lo_z", VAR_(domain_.bc_prt_lo, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
-								 bnd_part_descr) },
-  { "bnd_particle_hi_x", VAR_(domain_.bc_prt_hi, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
-								 bnd_part_descr) },
-  { "bnd_particle_hi_y", VAR_(domain_.bc_prt_hi, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
-								 bnd_part_descr) },
-  { "bnd_particle_hi_z", VAR_(domain_.bc_prt_hi, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
-								 bnd_part_descr) },
+  { "bnd_particle_lo_x", VAR_(domain_.bc_prt_lo, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
+								       bnd_prt_descr) },
+  { "bnd_particle_lo_y", VAR_(domain_.bc_prt_lo, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
+								       bnd_prt_descr) },
+  { "bnd_particle_lo_z", VAR_(domain_.bc_prt_lo, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
+								       bnd_prt_descr) },
+  { "bnd_particle_hi_x", VAR_(domain_.bc_prt_hi, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
+								       bnd_prt_descr) },
+  { "bnd_particle_hi_y", VAR_(domain_.bc_prt_hi, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
+								       bnd_prt_descr) },
+  { "bnd_particle_hi_z", VAR_(domain_.bc_prt_hi, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
+								       bnd_prt_descr) },
 
   // psc_params
   { "qq"            , VAR(prm.qq)              , PARAM_DOUBLE(1.6021e-19)   },
@@ -350,8 +346,6 @@ psc_setup_domain(struct psc *psc)
 {
   GridParams *domain = &psc->domain_;
 
-  bool need_pml = false;
-
   for (int d = 0; d < 3; d++) {
     if (psc->ibn[d] != 0) {
       continue;
@@ -366,21 +360,11 @@ psc_setup_domain(struct psc *psc)
       // set bnd to periodic (FIXME?)
       domain->bc_fld_lo[d] = BND_FLD_PERIODIC;
       domain->bc_fld_hi[d] = BND_FLD_PERIODIC;
-      domain->bc_prt_lo[d] = BND_PART_PERIODIC;
-      domain->bc_prt_hi[d] = BND_PART_PERIODIC;
+      domain->bc_prt_lo[d] = BND_PRT_PERIODIC;
+      domain->bc_prt_hi[d] = BND_PRT_PERIODIC;
       // and no ghost points
       psc->ibn[d] = 0;
-    } else {
-      if ((domain->bc_fld_lo[d] >= BND_FLD_UPML && domain->bc_fld_lo[d] <= BND_FLD_TIME) ||
-	  (domain->bc_fld_hi[d] >= BND_FLD_UPML && domain->bc_fld_hi[d] <= BND_FLD_TIME)) {
-	need_pml = true;
-      }
     }
-  }
-  if (need_pml) {
-    fprintf(stderr,
-	    "WARNING: pml is not supported anymore but pml boundary conditions requested.\n");
-    abort();
   }
   assert(!psc->mrc_domain_);
   psc->mrc_domain_ = psc_setup_mrc_domain(psc, -1);

@@ -67,8 +67,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   {
     int pbc;
     switch (bc) {
-    case BND_PART_REFLECTING: pbc = Grid::reflect_particles; break;
-    case BND_PART_ABSORBING:  pbc = Grid::absorb_particles ; break;
+    case BND_PRT_REFLECTING: pbc = Grid::reflect_particles; break;
+    case BND_PRT_ABSORBING:  pbc = Grid::absorb_particles ; break;
     default: assert(0);
     }
     grid_->set_pbc(boundary, pbc);

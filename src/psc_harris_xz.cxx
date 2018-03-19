@@ -110,8 +110,8 @@ psc_harris_create(struct psc *psc)
 
   grid_params.bc_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL };
   grid_params.bc_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL };
-  grid_params.bc_prt_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_REFLECTING };
-  grid_params.bc_prt_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_REFLECTING };
+  grid_params.bc_prt_lo = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING };
+  grid_params.bc_prt_hi = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING };
 
   psc->domain_ = grid_params;
  
@@ -278,17 +278,17 @@ psc_harris_setup_domain(struct psc *psc)
   // ***** Set Particle Boundary Conditions *****
   if (sub->prm.driven_bc_z) {
     mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PART_ABSORBING);
-    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PART_ABSORBING);
+    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
+    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
   } else {
     mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PART_REFLECTING);
-    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PART_REFLECTING);
+    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
+    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
   }
   if (sub->prm.open_bc_x) {
     mpi_printf(comm, "Absorb particles on X-boundaries\n");
-    if (left)  Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(-1,0,0), BND_PART_ABSORBING);
-    if (right) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY( 1,0,0), BND_PART_ABSORBING);
+    if (left)  Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
+    if (right) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
   }
 }
 

@@ -43,9 +43,9 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mp
 {
   const auto& grid = ppsc->grid();
   // no need to calculate moments if we're not having any open boundary
-  if (!(grid.bc.prt_lo[0] == BND_PART_OPEN || grid.bc.prt_hi[0] == BND_PART_OPEN ||
-	grid.bc.prt_lo[1] == BND_PART_OPEN || grid.bc.prt_hi[1] == BND_PART_OPEN ||
-	grid.bc.prt_lo[2] == BND_PART_OPEN || grid.bc.prt_hi[2] == BND_PART_OPEN)) {
+  if (!(grid.bc.prt_lo[0] == BND_PRT_OPEN || grid.bc.prt_hi[0] == BND_PRT_OPEN ||
+	grid.bc.prt_lo[1] == BND_PRT_OPEN || grid.bc.prt_hi[1] == BND_PRT_OPEN ||
+	grid.bc.prt_lo[2] == BND_PRT_OPEN || grid.bc.prt_hi[2] == BND_PRT_OPEN)) {
     return;
   }
 

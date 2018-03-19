@@ -523,8 +523,8 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 
   grid_params.bc_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
   grid_params.bc_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
-  grid_params.bc_prt_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
-  grid_params.bc_prt_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
+  grid_params.bc_prt_lo = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC };
+  grid_params.bc_prt_hi = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC };
 
   psc_->domain_ = grid_params;
 
