@@ -54,6 +54,9 @@ struct Grid_
 {
   using real_t = T;
   using Real3 = Vec3<real_t>;
+
+  struct Kind;
+  using Kinds = std::vector<Kind>;
   
   struct Patch
   {
@@ -74,35 +77,6 @@ struct Grid_
     Real3 xe;
   private:
     Real3 dx_;
-  };
-
-  struct Kind
-  {
-    Kind() // FIXME, do we want to keep this ctor?
-    {}
-    
-    Kind(real_t q_, real_t m_, const char *name_)
-      : q(q_), m(m_), name(strdup(name_))
-    {};
-
-    Kind(const Kind& k)
-      : q(k.q), m(k.m), name(strdup(k.name))
-    {}
-
-    Kind(Kind&& k)
-      : q(k.q), m(k.m), name(k.name)
-    {
-      k.name = nullptr;
-    }
-
-    ~Kind()
-    {
-      free((void*) name);
-    }
-    
-    real_t q;
-    real_t m;
-    const char *name;
   };
 
   // Construct a single patch covering the whole domain
@@ -151,6 +125,36 @@ struct Grid_
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
   Int3 bs = { 1, 1, 1 };
+};
+
+template<class T>
+struct Grid_<T>::Kind
+{
+  Kind() // FIXME, do we want to keep this ctor?
+  {}
+  
+  Kind(real_t q_, real_t m_, const char *name_)
+    : q(q_), m(m_), name(strdup(name_))
+  {};
+  
+  Kind(const Kind& k)
+    : q(k.q), m(k.m), name(strdup(k.name))
+  {}
+  
+  Kind(Kind&& k)
+    : q(k.q), m(k.m), name(k.name)
+  {
+    k.name = nullptr;
+  }
+  
+  ~Kind()
+  {
+    free((void*) name);
+  }
+  
+  real_t q;
+  real_t m;
+  const char *name;
 };
 
 using Grid_t = Grid_<double>;

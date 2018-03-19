@@ -314,7 +314,12 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
   for (int p = 0; p < n_patches; p++) {
     assert(ldims == Int3(patches[p].ldims));
     offs.push_back(patches[p].off);
-  }  
+  }
+
+  Grid_t::Kinds kinds;
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
+    kinds.emplace_back(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name);
+  }
 
   Grid_t *grid = new Grid_t(gdims, ldims, domain.length, domain.corner, offs);
 
@@ -327,11 +332,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
   grid->eta = coeff.eta;
   grid->dt = dt;
 
-  // FIXME arguably this whole kinds stuff shouldn't be in grid in the first place, though
-  grid->kinds.resize(0);
-  for (int k = 0; k < ppsc->nr_kinds; k++) {
-    grid->kinds.push_back(Grid_t::Kind(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name));
-  }
+  grid->kinds = std::move(kinds);
 
   return grid;
 }
