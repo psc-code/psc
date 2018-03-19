@@ -316,11 +316,12 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   static void add_ghosts_boundary(fields_t res, int p, int mb, int me)
   {
+    const auto& grid = ppsc->grid();
     // lo
     for (int d = 0; d < 3; d++) {
       if (psc_at_boundary_lo(ppsc, p, d)) {
-	if (ppsc->domain_.bnd_part_lo[d] == BND_PART_REFLECTING ||
-	    ppsc->domain_.bnd_part_lo[d] == BND_PART_OPEN) {
+	if (grid.bc.prt_lo[d] == BND_PART_REFLECTING ||
+	    grid.bc.prt_lo[d] == BND_PART_OPEN) {
 	  add_ghosts_reflecting_lo(res, p, d, mb, me);
 	}
       }
@@ -328,8 +329,8 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
     // hi
     for (int d = 0; d < 3; d++) {
       if (psc_at_boundary_hi(ppsc, p, d)) {
-	if (ppsc->domain_.bnd_part_hi[d] == BND_PART_REFLECTING ||
-	    ppsc->domain_.bnd_part_hi[d] == BND_PART_OPEN) {
+	if (grid.bc.prt_hi[d] == BND_PART_REFLECTING ||
+	    grid.bc.prt_hi[d] == BND_PART_OPEN) {
 	  add_ghosts_reflecting_hi(res, p, d, mb, me);
 	}
       }

@@ -58,8 +58,8 @@ psc_bubble_create(struct psc *psc)
 
   grid_params.bnd_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
   grid_params.bnd_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
-  grid_params.bnd_part_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
-  grid_params.bnd_part_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
+  grid_params.bc_prt_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
+  grid_params.bc_prt_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
 
   psc->domain_ = grid_params;
 

@@ -31,6 +31,21 @@ enum {
 ///\verbatim psc_domain.gdims[2]=1 \endverbatim
 ///Also, set the boundary conditions for the eliminated dimensions to BND_FLD_PERIODIC or you'll get invalid \a dt and \a dx
 
+struct GridBc
+{
+  GridBc() = default; // FIXME
+  
+  GridBc(Int3 fld_lo, Int3 fld_hi, Int3 prt_lo, Int3 prt_hi)
+    : fld_lo(fld_lo), fld_hi(fld_hi),
+      prt_lo(prt_lo), prt_hi(prt_hi)
+  {}
+  
+  Int3 fld_lo;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  Int3 fld_hi;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  Int3 prt_lo;	///<Boundary conditions of the particles. Can be any value of BND_PART.
+  Int3 prt_hi;  ///<Boundary conditions of the particles. Can be any value of BND_PART.
+};
+
 struct GridParams
 {
   using Double3 = Vec3<double>;
@@ -42,8 +57,8 @@ struct GridParams
   Int3 bs;
   Int3 bnd_fld_lo;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
   Int3 bnd_fld_hi;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 bnd_part_lo;	///<Boundary conditions of the particles. Can be any value of BND_PART.
-  Int3 bnd_part_hi;     ///<Boundary conditions of the particles. Can be any value of BND_PART.
+  Int3 bc_prt_lo; 	///<Boundary conditions of the particles. Can be any value of BND_PART.
+  Int3 bc_prt_hi;       ///<Boundary conditions of the particles. Can be any value of BND_PART.
 };
 
 // ======================================================================
@@ -116,6 +131,7 @@ struct Grid_
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
+  GridBc bc;
   // FIXME? these defaults, in particular for dt, might be a bit
   // dangerous, as they're useful for testing but might hide if one
   // forgets to init them correctly for an real simulation

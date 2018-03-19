@@ -41,10 +41,11 @@ psc_bnd_particles_set_psc(struct psc_bnd_particles *bnd, struct psc *psc)
 void
 psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
+  const auto& grid = ppsc->grid();
   // no need to calculate moments if we're not having any open boundary
-  if (!(ppsc->domain_.bnd_part_lo[0] == BND_PART_OPEN || ppsc->domain_.bnd_part_hi[0] == BND_PART_OPEN ||
-	ppsc->domain_.bnd_part_lo[1] == BND_PART_OPEN || ppsc->domain_.bnd_part_hi[1] == BND_PART_OPEN ||
-	ppsc->domain_.bnd_part_lo[2] == BND_PART_OPEN || ppsc->domain_.bnd_part_hi[2] == BND_PART_OPEN)) {
+  if (!(grid.bc.prt_lo[0] == BND_PART_OPEN || grid.bc.prt_hi[0] == BND_PART_OPEN ||
+	grid.bc.prt_lo[1] == BND_PART_OPEN || grid.bc.prt_hi[1] == BND_PART_OPEN ||
+	grid.bc.prt_lo[2] == BND_PART_OPEN || grid.bc.prt_hi[2] == BND_PART_OPEN)) {
     return;
   }
 

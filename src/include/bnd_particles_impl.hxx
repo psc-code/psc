@@ -130,7 +130,8 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  const Grid_t::Patch& gpatch = psc->grid().patches[p];
+  const auto& grid = psc->grid();
+  const auto& gpatch = grid.patches[p];
   const int *b_mx = mprts[p].get_b_mx();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
@@ -170,7 +171,7 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
     int dir[3];
     for (int d = 0; d < 3; d++) {
       if (b_pos[d] < 0) {
-	if (!psc_at_boundary_lo(ppsc, p, d) || psc->domain_.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	if (!psc_at_boundary_lo(ppsc, p, d) || grid.bc.prt_lo[d] == BND_PART_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
 	  int bi = mprts[p].blockPosition(xi[d], d);
@@ -179,7 +180,7 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
 	    dir[d] = 0;
 	  }
 	} else {
-	  switch (psc->domain_.bnd_part_lo[d]) {
+	  switch (grid.bc.prt_lo[d]) {
 	  case BND_PART_REFLECTING:
 	    xi[d] =  -xi[d];
 	    pxi[d] = -pxi[d];
@@ -194,7 +195,7 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
 	}
       } else if (b_pos[d] >= b_mx[d]) {
 	if (!psc_at_boundary_hi(ppsc, p, d) ||
-	    psc->domain_.bnd_part_hi[d] == BND_PART_PERIODIC) {
+	    grid.bc.prt_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
 	  int bi = mprts[p].blockPosition(xi[d], d);
@@ -202,7 +203,7 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
 	    xi[d] = 0.;
 	  }
 	} else {
-	  switch (psc->domain_.bnd_part_hi[d]) {
+	  switch (grid.bc.prt_hi[d]) {
 	  case BND_PART_REFLECTING: {
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
