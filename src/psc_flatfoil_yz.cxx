@@ -520,13 +520,13 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   grid_params.gdims = { 1, 160, 160 * 4 };
   grid_params.np = { 1, 4, 4 };
   grid_params.bs = { 1, 1, 1 };
-
-  grid_params.bc_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
-  grid_params.bc_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
-  grid_params.bc_prt_lo = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC };
-  grid_params.bc_prt_hi = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC };
-
   psc_->domain_ = grid_params;
+
+  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+  psc_->bc_ = grid_bc;
 
   psc_set_from_options(psc_);
 

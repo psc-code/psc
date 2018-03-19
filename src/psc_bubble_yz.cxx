@@ -55,13 +55,13 @@ psc_bubble_create(struct psc *psc)
 
   auto grid_params = GridParams{};
   grid_params.gdims = { 1, 64, 256 };
-
-  grid_params.bc_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
-  grid_params.bc_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
-  grid_params.bc_prt_lo = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC };
-  grid_params.bc_prt_hi = { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC };
-
   psc->domain_ = grid_params;
+
+  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+  psc->bc_ = grid_bc;
 
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);

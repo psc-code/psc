@@ -71,30 +71,30 @@ static struct param psc_descr[] = {
   { "np_"	    , VAR(domain_.np)	          , PARAM_INT3(1, 1, 1)	 },
   { "bs"            , VAR(domain_.bs)              , PARAM_INT3(1, 1, 1)  },
 
-  { "bnd_field_lo_x", VAR_(domain_.bc_fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_x", VAR_(bc_.fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_lo_y", VAR_(domain_.bc_fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_y", VAR_(bc_.fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_lo_z", VAR_(domain_.bc_fld_lo, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_z", VAR_(bc_.fld_lo, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_x", VAR_(domain_.bc_fld_hi, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_x", VAR_(bc_.fld_hi, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_y", VAR_(domain_.bc_fld_hi, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_y", VAR_(bc_.fld_hi, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_z", VAR_(domain_.bc_fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_z", VAR_(bc_.fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
 
-  { "bnd_particle_lo_x", VAR_(domain_.bc_prt_lo, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
+  { "bnd_particle_lo_x", VAR_(bc_.prt_lo, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
 								       bnd_prt_descr) },
-  { "bnd_particle_lo_y", VAR_(domain_.bc_prt_lo, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
+  { "bnd_particle_lo_y", VAR_(bc_.prt_lo, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
 								       bnd_prt_descr) },
-  { "bnd_particle_lo_z", VAR_(domain_.bc_prt_lo, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
+  { "bnd_particle_lo_z", VAR_(bc_.prt_lo, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
 								       bnd_prt_descr) },
-  { "bnd_particle_hi_x", VAR_(domain_.bc_prt_hi, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
+  { "bnd_particle_hi_x", VAR_(bc_.prt_hi, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
 								       bnd_prt_descr) },
-  { "bnd_particle_hi_y", VAR_(domain_.bc_prt_hi, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
+  { "bnd_particle_hi_y", VAR_(bc_.prt_hi, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
 								       bnd_prt_descr) },
-  { "bnd_particle_hi_z", VAR_(domain_.bc_prt_hi, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
+  { "bnd_particle_hi_z", VAR_(bc_.prt_hi, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
 								       bnd_prt_descr) },
 
   // psc_params
@@ -251,8 +251,7 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   // create a very simple domain decomposition
   int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    if (psc->domain_.bc_fld_lo[d] == BND_FLD_PERIODIC &&
-	psc->domain_.gdims[d] > 1) {
+    if (psc->bc_.fld_lo[d] == BND_FLD_PERIODIC && psc->domain_.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
     }
   }
@@ -306,11 +305,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
   grid->dt = dt;
 
   grid->kinds = ppsc->kinds_;
-
-  grid->bc.fld_lo = ppsc->domain_.bc_fld_lo;
-  grid->bc.fld_hi = ppsc->domain_.bc_fld_hi;
-  grid->bc.prt_lo = ppsc->domain_.bc_prt_lo;
-  grid->bc.prt_hi = ppsc->domain_.bc_prt_hi;
+  grid->bc = ppsc->bc_;
 
   return grid;
 }
@@ -358,10 +353,10 @@ psc_setup_domain(struct psc *psc)
     if (domain->gdims[d] == 1) {
       // if invariant in this direction:
       // set bnd to periodic (FIXME?)
-      domain->bc_fld_lo[d] = BND_FLD_PERIODIC;
-      domain->bc_fld_hi[d] = BND_FLD_PERIODIC;
-      domain->bc_prt_lo[d] = BND_PRT_PERIODIC;
-      domain->bc_prt_hi[d] = BND_PRT_PERIODIC;
+      psc->bc_.fld_lo[d] = BND_FLD_PERIODIC;
+      psc->bc_.fld_hi[d] = BND_FLD_PERIODIC;
+      psc->bc_.prt_lo[d] = BND_PRT_PERIODIC;
+      psc->bc_.prt_hi[d] = BND_PRT_PERIODIC;
       // and no ghost points
       psc->ibn[d] = 0;
     }

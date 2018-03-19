@@ -53,10 +53,6 @@ struct GridParams
   Int3 gdims;		///<Number of grid-points in each dimension
   Int3 np;		///<Number of patches in each dimension
   Int3 bs;
-  Int3 bc_fld_lo;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 bc_fld_hi;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 bc_prt_lo; 	///<Boundary conditions of the particles. Can be any value of BND_PART.
-  Int3 bc_prt_hi;       ///<Boundary conditions of the particles. Can be any value of BND_PART.
 };
 
 // ======================================================================

@@ -149,6 +149,7 @@ struct psc {
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff;	///< automatically derived constants
   GridParams domain_;	///< the computational domain
+  GridBc bc_;
   Grid_t::Kinds kinds_;
   ///@}
 
