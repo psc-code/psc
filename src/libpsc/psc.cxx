@@ -188,7 +188,7 @@ _psc_create(struct psc *psc)
   srandom(rank);
   
   // default: 2 species (e-, i+)
-  psc_set_kinds(psc, 2, NULL);
+  psc_set_kinds(psc, {{ -1., 1., "e"}, { 1., 100., "i" }});
 
   // default 9 state fields (J,E,B)
   psc->n_state_fields = NR_FIELDS;
@@ -591,13 +591,8 @@ _psc_view(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_set_kinds
 
-void
-psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
+void psc_set_kinds(struct psc *psc, const Grid_t::Kinds& kinds)
 {
-  if (!kinds && nr_kinds == psc->nr_kinds_) {
-    return;
-  }
-
   if (psc->kinds_) {
     for (int k = 0; k < psc->nr_kinds_; k++) {
       free(psc->kinds_[k].name);
@@ -605,31 +600,13 @@ psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
     free(psc->kinds_);
   }
     
-  psc->nr_kinds_ = nr_kinds;
-  psc->kinds_ = new psc_kind[nr_kinds]();
-  if (kinds) {
-    for (int k = 0; k < nr_kinds; k++) {
-      psc->kinds_[k] = kinds[k];
-      psc->kinds_[k].name = strdup(kinds[k].name);
-    }
-  } else {
-    // set defaults, one electron species, the rest ions
-    if (nr_kinds > KIND_ELECTRON) {
-      psc->kinds_[KIND_ELECTRON].name = strdup("e");
-      psc->kinds_[KIND_ELECTRON].q = -1.;
-      psc->kinds_[KIND_ELECTRON].m = 1.;
-    }
-    for (int k = 1; k < nr_kinds; k++) {
-      char s[10];
-      if (k == KIND_ION) {
-	sprintf(s, "i");
-      } else {
-	sprintf(s, "i%d", k);
-      }
-      psc->kinds_[k].name = strdup(s);
-      psc->kinds_[k].q = 1.;
-      psc->kinds_[k].m = 100.;
-    }
+  psc->nr_kinds_ = kinds.size();
+  psc->kinds_ = new psc_kind[kinds.size()]{};
+
+  for (int k = 0; k < kinds.size(); k++) {
+    psc->kinds_[k].q = kinds[k].q;
+    psc->kinds_[k].m = kinds[k].m;
+    psc->kinds_[k].name = strdup(kinds[k].name);
   }
 }
 

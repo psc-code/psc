@@ -57,22 +57,21 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   psc->prm.nmax = info.num_step;
   psc->prm.stats_every = info.status_interval;
   
-  struct psc_kind *kinds = (struct psc_kind *) calloc(info.n_kinds, sizeof(*kinds));
+  Grid_t::Kinds kinds;
   for (int m = 0; m < info.n_kinds; m++) {
-    kinds[m].q = info.kinds[m].q;
-    kinds[m].m = info.kinds[m].m;
     // map "electron" -> "e", "ion"-> "i" to avoid even more confusion with
     // how moments etc are named.
+    const char* name;
     if (strcmp(info.kinds[m].name, "electron") == 0) {
-      kinds[m].name = strdup("e");
+      name = "e";
     } else if (strcmp(info.kinds[m].name, "ion") == 0) {
-      kinds[m].name = strdup("i");
+      name = "i";
     } else {
-      kinds[m].name = info.kinds[m].name;
+      name = info.kinds[m].name;
     }
+    kinds.emplace_back(info.kinds[m].q, info.kinds[m].m, name);
   }
-  psc_set_kinds(psc, info.n_kinds, kinds);
-  free(kinds);
+  psc_set_kinds(psc, kinds);
   
   psc_marder_set_param_int(psc->marder, "clean_div_e_interval", info.clean_div_e_interval);
   psc_marder_set_param_int(psc->marder, "clean_div_b_interval", info.clean_div_b_interval);

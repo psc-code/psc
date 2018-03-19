@@ -306,7 +306,7 @@ extern struct psc *ppsc;
 struct psc *psc_create(MPI_Comm comm);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
-void psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds);
+void psc_set_kinds(struct psc *psc, const Grid_t::Kinds& kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 void psc_set_ic_fields(struct psc *psc);

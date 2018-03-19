@@ -539,14 +539,10 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   params.background_Ti = .001;
   
   // -- setup particles
-  // last population is neutralizing
-  psc_->kinds_[MY_ELECTRON].q = -1.;
-  psc_->kinds_[MY_ELECTRON].m = 1.;
-  psc_->kinds_[MY_ELECTRON].name = strdup("e");
-
-  psc_->kinds_[MY_ION     ].q = params.Zi;
-  psc_->kinds_[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
-  psc_->kinds_[MY_ION     ].name = strdup("i");
+  // last population ("e") is neutralizing
+ // FIXME, hardcoded mass ratio 100
+  Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+  psc_set_kinds(psc_, kinds);
 
   d_i = sqrt(psc_->kinds_[MY_ION].m / psc_->kinds_[MY_ION].q);
 
