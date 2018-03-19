@@ -33,15 +33,17 @@ enum {
 
 struct GridParams
 {
-  double length[3];	///<The physical size of the simulation-box 
-  double corner[3];
-  int gdims[3];		///<Number of grid-points in each dimension
-  int np[3];		///<Number of patches in each dimension
-  int bs[3];
-  int bnd_fld_lo[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  int bnd_fld_hi[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  int bnd_part_lo[3];	///<Boundary conditions of the particles. Can be any value of BND_PART.
-  int bnd_part_hi[3];   ///<Boundary conditions of the particles. Can be any value of BND_PART.
+  using Double3 = Vec3<double>;
+  
+  Double3 length;	///<The physical size of the simulation-box 
+  Double3 corner;
+  Int3 gdims;		///<Number of grid-points in each dimension
+  Int3 np;		///<Number of patches in each dimension
+  Int3 bs;
+  Int3 bnd_fld_lo;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  Int3 bnd_fld_hi;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  Int3 bnd_part_lo;	///<Boundary conditions of the particles. Can be any value of BND_PART.
+  Int3 bnd_part_hi;     ///<Boundary conditions of the particles. Can be any value of BND_PART.
 };
 
 // ======================================================================

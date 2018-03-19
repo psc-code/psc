@@ -37,7 +37,8 @@ using Fields = Fields3d<mfields_t::fields_t>;
 
 struct psc *ppsc;
 
-#define VAR(x) (void *)offsetof(struct psc, x)
+#define VAR(x) (void *)(offsetof(struct psc, x))
+#define VAR_(x, n) (void *)(offsetof(struct psc, x) + n*sizeof(int))
 
 static mrc_param_select bnd_fld_descr[5];
 static mrc_param_select bnd_part_descr[4];
@@ -68,45 +69,36 @@ static struct select_init {
 
 static struct param psc_descr[] = {
   // psc_domain
-  { "length_x"      , VAR(domain.length[0])       , PARAM_DOUBLE(1e-6)   },
-  { "length_y"      , VAR(domain.length[1])       , PARAM_DOUBLE(1e-6)   },
-  { "length_z"      , VAR(domain.length[2])       , PARAM_DOUBLE(20e-6)  },
-  { "corner_x"      , VAR(domain.corner[0])       , PARAM_DOUBLE(0.)     },
-  { "corner_y"      , VAR(domain.corner[1])       , PARAM_DOUBLE(0.)     },
-  { "corner_z"      , VAR(domain.corner[2])       , PARAM_DOUBLE(0.)     },
-  { "gdims_x"       , VAR(domain.gdims[0])        , PARAM_INT(1)         },
-  { "gdims_y"       , VAR(domain.gdims[1])        , PARAM_INT(1)         },
-  { "gdims_z"       , VAR(domain.gdims[2])        , PARAM_INT(400)       },
-  { "np_x"	    , VAR(domain.np[0])	          , PARAM_INT(1)	 },
-  { "np_y"	    , VAR(domain.np[1])	          , PARAM_INT(1)	 },
-  { "np_z"	    , VAR(domain.np[2])	          , PARAM_INT(1)	 },
+  { "length_"       , VAR(domain.length)          , PARAM_DOUBLE3(1., 1., 1.) },
+  { "corner_"       , VAR(domain.corner)          , PARAM_DOUBLE3(0., 0., 0.) },
+  { "gdims_"        , VAR(domain.gdims)           , PARAM_INT3(1, 1, 1)  },
+  { "np_"	    , VAR(domain.np)	          , PARAM_INT3(1, 1, 1)	 },
   { "bs"            , VAR(domain.bs)              , PARAM_INT3(1, 1, 1)  },
 
-  { "bnd_field_lo_x", VAR(domain.bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_x", VAR_(domain.bnd_fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_lo_y", VAR(domain.bnd_fld_lo[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_y", VAR_(domain.bnd_fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_lo_z", VAR(domain.bnd_fld_lo[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_z", VAR_(domain.bnd_fld_lo, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_x", VAR(domain.bnd_fld_hi[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_x", VAR_(domain.bnd_fld_hi, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_y", VAR(domain.bnd_fld_hi[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_y", VAR_(domain.bnd_fld_hi, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_z", VAR(domain.bnd_fld_hi[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_z", VAR_(domain.bnd_fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
 
-  { "bnd_particle_lo_x", VAR(domain.bnd_part_lo[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_x", VAR_(domain.bnd_part_lo, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_lo_y", VAR(domain.bnd_part_lo[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_y", VAR_(domain.bnd_part_lo, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_lo_z", VAR(domain.bnd_part_lo[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_z", VAR_(domain.bnd_part_lo, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-
-  { "bnd_particle_hi_x", VAR(domain.bnd_part_hi[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_hi_x", VAR_(domain.bnd_part_hi, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_hi_y", VAR(domain.bnd_part_hi[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_hi_y", VAR_(domain.bnd_part_hi, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_hi_z", VAR(domain.bnd_part_hi[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_hi_z", VAR_(domain.bnd_part_hi, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
 
   // psc_params

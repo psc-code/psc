@@ -515,39 +515,16 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   double LLz = 400. * 4.;
 
   auto grid_params = GridParams{};
-  grid_params.length[0] = 1.;
-  grid_params.length[1] = LLy;
-  grid_params.length[2] = LLz;
+  grid_params.length = { 1., LLy, LLz };
+  grid_params.corner = { 0., -.5 * LLy, -.5 * LLz }; // center around origin
+  grid_params.gdims = { 1, 160, 160 * 4 };
+  grid_params.np = { 1, 4, 4 };
+  grid_params.bs = { 1, 1, 1 };
 
-  // center around origin
-  grid_params.corner[0] = 0.;
-  grid_params.corner[1] = -.5 * LLy;
-  grid_params.corner[2] = -.5 * LLz;
-
-  grid_params.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  grid_params.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  grid_params.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  grid_params.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  grid_params.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  grid_params.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  grid_params.bnd_part_lo[0] = BND_PART_PERIODIC;
-  grid_params.bnd_part_hi[0] = BND_PART_PERIODIC;
-  grid_params.bnd_part_lo[1] = BND_PART_PERIODIC;
-  grid_params.bnd_part_hi[1] = BND_PART_PERIODIC;
-  grid_params.bnd_part_lo[2] = BND_PART_PERIODIC;
-  grid_params.bnd_part_hi[2] = BND_PART_PERIODIC;
-
-  grid_params.gdims[0] = 1;
-  grid_params.gdims[1] = 160;
-  grid_params.gdims[2] = 160*4;
-
-  grid_params.np[0] = 1;
-  grid_params.np[1] = 4;
-  grid_params.np[2] = 4;
-
-  grid_params.bs[0] = 1;
-  grid_params.bs[1] = 4;
-  grid_params.bs[2] = 4;
+  grid_params.bnd_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
+  grid_params.bnd_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
+  grid_params.bnd_part_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
+  grid_params.bnd_part_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
 
   psc_->domain = grid_params;
 
@@ -575,6 +552,7 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
+
   // sort
   params.sort_interval = 10;
 
