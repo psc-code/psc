@@ -209,19 +209,6 @@ static void
 _psc_set_from_options(struct psc *psc)
 {
   psc_balance_set_from_options(psc->balance);
-  
-  // allow setting of parameters for each kind
-  char s[100];
-  for (int k = 0; k < psc->nr_kinds; k++) {
-    struct psc_kind *kind = psc->kinds + k;
-    assert(kind->name);
-    sprintf(s, "particle_%s_q", kind->name);
-    mrc_params_get_option_double_help(s, &kind->q, 
-				      "charge of this particle kind");
-    sprintf(s, "particle_%s_m", kind->name);
-    mrc_params_get_option_double_help(s, &kind->m, 
-				      "mass of this particle kind");
-  }
 }
 
 // ======================================================================

@@ -20,6 +20,7 @@ struct psc_bubble {
   double LLy;
   double TTe;
   double TTi;
+  double MMi;
 };
 
 #define to_psc_bubble(psc) mrc_to_subobj(psc, struct psc_bubble)
@@ -36,6 +37,7 @@ static struct param psc_bubble_descr[] = {
   { "LLy"           , VAR(LLy)             , PARAM_DOUBLE(0.)     },
   { "TTe"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
   { "TTi"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
+  { "MMi"           , VAR(MMi)             , PARAM_DOUBLE(100.)   },
   {},
 };
 #undef VAR
@@ -50,8 +52,6 @@ psc_bubble_create(struct psc *psc)
 
   psc->prm.nmax = 32000;
   psc->prm.nicell = 10;
-
-  psc->kinds[KIND_ION].m = 100.;
 
   psc->domain.gdims[0] = 1;
   psc->domain.gdims[1] = 64;
@@ -125,7 +125,7 @@ psc_bubble_init_field(struct psc *psc, double x[3], int m)
   double LLn = bubble->LLn;
   double LLy = bubble->LLy;
   double LLB = bubble->LLB;
-  double MMi = psc->kinds[KIND_ION].m;
+  double MMi = bubble->MMi;
   double MMach = bubble->MMach;
   double TTe = bubble->TTe;
 
@@ -194,7 +194,7 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
   double LLy = bubble->LLy;
   double LLn = bubble->LLn;
   double LLB = bubble->LLB;
-  double V0 = bubble->MMach * sqrt(bubble->TTe / psc->kinds[KIND_ION].m);
+  double V0 = bubble->MMach * sqrt(bubble->TTe / bubble->MMi);
 
   double nnb = bubble->nnb;
   double nn0 = bubble->nn0;
