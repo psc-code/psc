@@ -289,7 +289,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
     offs.push_back(patches[p].off);
   }
 
-  Grid_t *grid = new Grid_t(gdims, ldims, domain_.length, domain_.corner, offs);
+  Grid_t *grid = new Grid_t(domain_, ldims, offs);
 
   for (int d = 0; d < 3; d++) {
     grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain_.bs[d];

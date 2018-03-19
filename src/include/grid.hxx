@@ -107,16 +107,16 @@ struct Grid_
     }
   }
 
-  Grid_(const Int3& _gdims, const Int3& _ldims, const Real3& length,
-	const Real3& corner, const std::vector<Int3>& offs)
-    : gdims(_gdims),
-      ldims(_ldims),
-      dx(length / Real3(gdims))
+  Grid_(const GridParams& domain, const Int3& ldims, const std::vector<Int3>& offs)
+    : domain(domain),
+      gdims(domain.gdims),
+      ldims(ldims),
+      dx(domain.length / Real3(domain.gdims))
   {
     for (auto off : offs) {
       patches.push_back(Patch(off,
-			      Vec3<double>(off        ) * dx + corner,
-			      Vec3<double>(off + ldims) * dx + corner, dx));
+			      Vec3<double>(off        ) * dx + domain.corner,
+			      Vec3<double>(off + ldims) * dx + domain.corner, dx));
     }
   }
   
@@ -125,6 +125,7 @@ struct Grid_
   Int3 gdims;
   Int3 ldims;
   Real3 dx;
+  GridParams domain;
   GridBc bc;
   // FIXME? these defaults, in particular for dt, might be a bit
   // dangerous, as they're useful for testing but might hide if one

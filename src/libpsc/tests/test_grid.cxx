@@ -5,22 +5,24 @@
 
 static Grid_t make_grid()
 {
-  Int3 gdims = { 8, 4, 2 };
+  auto domain = GridParams{};
+  domain.gdims = {8, 4, 2};
+  domain.length = { 80.,  40., 20.};
+  domain.corner = {-40., -20., 0.};
   Int3 ldims = { 4, 2, 2 };
-  Grid_t::Real3 length = {  80.,  40., 20. };
-  Grid_t::Real3 corner = { -40., -20., 0. };
-  std::vector<Int3> offs = { { 0, 0, 0 }, { 4, 0, 0 } };
-  return Grid_t(gdims, ldims, length, corner, offs);
+  std::vector<Int3> offs = {{0, 0, 0}, {4, 0, 0}};
+  return Grid_t(domain, ldims, offs);
 }
 
 static Grid_t make_grid_1()
 {
-  Int3 gdims = { 1, 1, 1 };
+  auto domain = GridParams{};
+  domain.gdims = {8, 4, 28};
+  domain.length = {10., 10., 10.};
+  domain.corner = {0., 0., 0. };
   Int3 ldims = { 1, 1, 1 };
-  Grid_t::Real3 length = {  10., 10., 10. };
-  Grid_t::Real3 corner = {   0.,  0.,  0. };
   std::vector<Int3> offs = { { 0, 0, 0 } };
-  return Grid_t(gdims, ldims, length, corner, offs);
+  return Grid_t(domain, ldims, offs);
 }
 
 TEST(Grid, Domain)
