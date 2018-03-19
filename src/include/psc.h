@@ -306,7 +306,7 @@ void psc_output(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
 void psc_setup_coeff(struct psc *psc);
-void psc_setup_domain(struct psc *psc);
+void psc_setup_domain(struct psc *psc, GridBc& bc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);

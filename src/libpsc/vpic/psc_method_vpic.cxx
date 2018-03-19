@@ -130,7 +130,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 	     psc->n_state_fields, psc->ibn[0], psc->ibn[1], psc->ibn[2]);
 
   psc_setup_coeff(psc);
-  psc_setup_domain(psc);
+  psc_setup_domain(psc, psc->bc_);
 }
 
 // ----------------------------------------------------------------------

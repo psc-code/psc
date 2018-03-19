@@ -336,8 +336,7 @@ void psc_set_dt(psc* psc)
 // ----------------------------------------------------------------------
 // psc_setup_domain
 
-void
-psc_setup_domain(struct psc *psc)
+void psc_setup_domain(struct psc *psc, GridBc& bc)
 {
   GridParams *domain = &psc->domain_;
 
@@ -353,10 +352,10 @@ psc_setup_domain(struct psc *psc)
     if (domain->gdims[d] == 1) {
       // if invariant in this direction:
       // set bnd to periodic (FIXME?)
-      psc->bc_.fld_lo[d] = BND_FLD_PERIODIC;
-      psc->bc_.fld_hi[d] = BND_FLD_PERIODIC;
-      psc->bc_.prt_lo[d] = BND_PRT_PERIODIC;
-      psc->bc_.prt_hi[d] = BND_PRT_PERIODIC;
+      bc.fld_lo[d] = BND_FLD_PERIODIC;
+      bc.fld_hi[d] = BND_FLD_PERIODIC;
+      bc.prt_lo[d] = BND_PRT_PERIODIC;
+      bc.prt_hi[d] = BND_PRT_PERIODIC;
       // and no ghost points
       psc->ibn[d] = 0;
     }
@@ -463,7 +462,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 #endif
   
   psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
-  psc_setup_domain(psc);
+  psc_setup_domain(psc, psc->bc_);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
 #endif

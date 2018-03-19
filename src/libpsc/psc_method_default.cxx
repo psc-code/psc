@@ -24,7 +24,7 @@ static void
 psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
 {
   psc_setup_coeff(psc);
-  psc_setup_domain(psc);
+  psc_setup_domain(psc, psc->bc_);
 }
 
 // ----------------------------------------------------------------------

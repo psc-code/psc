@@ -604,7 +604,7 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 
   // --- generic setup
   psc_setup_coeff(psc_);
-  psc_setup_domain(psc_);
+  psc_setup_domain(psc_, psc_->bc_);
 
   // --- partition particles and initial balancing
   mpi_printf(comm, "**** Partitioning...\n");
