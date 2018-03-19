@@ -275,7 +275,8 @@ psc_setup_mrc_domain(const Grid_t::Domain& grid_domain, const GridBc& grid_bc, i
 // ----------------------------------------------------------------------
 // psc_make_grid
 
-Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
+Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
+		       const Grid_t::Kinds& kinds)
 {
   Int3 gdims;
   mrc_domain_get_global_dims(mrc_domain, gdims);
@@ -289,19 +290,29 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const GridBc& bc)
     offs.push_back(patches[p].off);
   }
 
-  Grid_t *grid = new Grid_t(domain_, offs);
+  Grid_t *grid = new Grid_t(domain, offs);
 
   for (int d = 0; d < 3; d++) {
-    grid->bs[d] = grid->isInvar(d) ? 1 : domain_.bs[d];
+    grid->bs[d] = grid->isInvar(d) ? 1 : domain.bs[d];
+  }
+
+  grid->kinds = kinds_;
+
+  grid->bc = bc;
+  for (int d = 0; d < 3; d++) {
+    if (grid->isInvar(d)) {
+      // if invariant in this direction: set bnd to periodic (FIXME?)
+      grid->bc.fld_lo[d] = BND_FLD_PERIODIC;
+      grid->bc.fld_hi[d] = BND_FLD_PERIODIC;
+      grid->bc.prt_lo[d] = BND_PRT_PERIODIC;
+      grid->bc.prt_hi[d] = BND_PRT_PERIODIC;
+    }
   }
   
   assert(coeff.ld == 1.);
   grid->fnqs = sqr(coeff.alpha) * coeff.cori / coeff.eta;
   grid->eta = coeff.eta;
   grid->dt = dt;
-
-  grid->kinds = ppsc->kinds_;
-  grid->bc = bc;
 
   return grid;
 }
@@ -341,24 +352,16 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
       continue;
     }
     // FIXME, old-style particle pushers need 3 ghost points still
-    if (psc->ibn[d] == 0) {
-      psc->ibn[d] = 2;
-    }
-
     if (domain.gdims[d] == 1) {
-      // if invariant in this direction:
-      // set bnd to periodic (FIXME?)
-      bc.fld_lo[d] = BND_FLD_PERIODIC;
-      bc.fld_hi[d] = BND_FLD_PERIODIC;
-      bc.prt_lo[d] = BND_PRT_PERIODIC;
-      bc.prt_hi[d] = BND_PRT_PERIODIC;
-      // and no ghost points
+      // no ghost points
       psc->ibn[d] = 0;
+    } else {
+      psc->ibn[d] = 2;
     }
   }
 
   psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
-  psc->grid_ = psc->make_grid(psc->mrc_domain_, bc);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, psc->kinds_);
 }
 
 // ----------------------------------------------------------------------
