@@ -105,9 +105,6 @@ struct Inject_ : InjectBase
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;
 		npt.n    = psc->kinds[kind].n;
-		npt.T[0] = psc->kinds[kind].T;
-		npt.T[1] = psc->kinds[kind].T;
-		npt.T[2] = psc->kinds[kind].T;
 	      };
 	      target_.init_npt(kind, xx, &npt);
 	    

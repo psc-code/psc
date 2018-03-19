@@ -18,6 +18,8 @@ struct psc_bubble {
   double LLB;
   double LLz;
   double LLy;
+  double TTe;
+  double TTi;
 };
 
 #define to_psc_bubble(psc) mrc_to_subobj(psc, struct psc_bubble)
@@ -32,6 +34,8 @@ static struct param psc_bubble_descr[] = {
   { "LLB"           , VAR(LLB)             , PARAM_DOUBLE(200./6.)},
   { "LLz"           , VAR(LLz)             , PARAM_DOUBLE(0.)     },
   { "LLy"           , VAR(LLy)             , PARAM_DOUBLE(0.)     },
+  { "TTe"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
+  { "TTi"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
   {},
 };
 #undef VAR
@@ -47,9 +51,7 @@ psc_bubble_create(struct psc *psc)
   psc->prm.nmax = 32000;
   psc->prm.nicell = 10;
 
-  psc->kinds[KIND_ELECTRON].T = .02;
   psc->kinds[KIND_ION].m = 100.;
-  psc->kinds[KIND_ION].T = .02;
 
   psc->domain.gdims[0] = 1;
   psc->domain.gdims[1] = 64;
@@ -99,8 +101,7 @@ psc_bubble_setup(struct psc *psc)
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
-  double TTe = psc->kinds[KIND_ELECTRON].T;
-  mpi_printf(comm, "lambda_D = %g\n", sqrt(TTe));
+  mpi_printf(comm, "lambda_D = %g\n", sqrt(bubble->TTe));
 }
 
 // ----------------------------------------------------------------------
@@ -126,7 +127,7 @@ psc_bubble_init_field(struct psc *psc, double x[3], int m)
   double LLB = bubble->LLB;
   double MMi = psc->kinds[KIND_ION].m;
   double MMach = bubble->MMach;
-  double TTe = psc->kinds[KIND_ELECTRON].T;
+  double TTe = bubble->TTe;
 
   double z1 = x[2];
   double y1 = x[1] + .5 * LLy;
@@ -193,10 +194,12 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
   double LLy = bubble->LLy;
   double LLn = bubble->LLn;
   double LLB = bubble->LLB;
-  double V0 = bubble->MMach * sqrt(psc->kinds[KIND_ELECTRON].T / psc->kinds[KIND_ION].m);
+  double V0 = bubble->MMach * sqrt(bubble->TTe / psc->kinds[KIND_ION].m);
 
   double nnb = bubble->nnb;
   double nn0 = bubble->nn0;
+
+  double TTe = bubble->TTe, TTi = bubble->TTi;
 
   double r1 = sqrt(sqr(x[2]) + sqr(x[1] + .5 * LLy));
   double r2 = sqrt(sqr(x[2]) + sqr(x[1] - .5 * LLy));
@@ -227,8 +230,14 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
       npt->p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r2)/(2.*LLB)) / npt->n;
     }
 
+    npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
     break;
   case 1: // ions
+    npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
     break;
   default:
     assert(0);

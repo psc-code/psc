@@ -210,47 +210,8 @@ _psc_set_from_options(struct psc *psc)
 {
   psc_balance_set_from_options(psc->balance);
   
-  // make comma separated list of current kinds
-  char *s = new char[100]();
-  char *s_save = s;
-  if (psc->nr_kinds > 0) {
-    strcpy(s, psc->kinds[0].name);
-    for (int k = 1; k < psc->nr_kinds; k++) {
-      strcat(s, ",");
-      strcat(s, psc->kinds[k].name);
-    }
-  }
-  char **ps = &s;
-  // allow user to change names, or even change number
-  mrc_params_get_option_string_help("particle_kinds", (const char **) ps,
-				    "names of particle kinds, separated by commas");
-  // parse comma separated list back into names
-  char *p, *ss;
-  int k = 0;
-  ss = strdup(*ps);
-  char *ss_save;
-  ss_save = ss;
-  
-  while ((p = strsep(&ss, ", "))) {
-    k++;
-  }
-  free(ss);
-  free(ss_save);
-  psc_set_kinds(psc, k, NULL);
-
-  k = 0;
-  ss = strdup(*ps);
-  ss_save = ss;
-  while ((p = strsep(&ss, ", "))) {
-    free(psc->kinds[k].name);
-    psc->kinds[k].name = strdup(p);
-    k++;
-  }
-  free(ss);
-  free(ss_save);
-  s = s_save;
-    
   // allow setting of parameters for each kind
+  char s[100];
   for (int k = 0; k < psc->nr_kinds; k++) {
     struct psc_kind *kind = psc->kinds + k;
     assert(kind->name);
@@ -263,11 +224,7 @@ _psc_set_from_options(struct psc *psc)
     sprintf(s, "particle_%s_n", kind->name);
     mrc_params_get_option_double_help(s, &kind->n, 
 				      "default density of this particle kind");
-    sprintf(s, "particle_%s_T", kind->name);
-    mrc_params_get_option_double_help(s, &kind->T, 
-				      "default temperature of this particle kind");
   }
-  delete[] s;
 }
 
 // ======================================================================
@@ -525,8 +482,6 @@ _psc_write(struct psc *psc, struct mrc_io *io)
     sprintf(s, "kind_n%d", k);
     mrc_io_write_double(io, psc, s, psc->kinds[k].n);
     sprintf(s, "kind_T%d", k);
-    mrc_io_write_double(io, psc, s, psc->kinds[k].T);
-    sprintf(s, "kind_name%d", k);
     mrc_io_write_string(io, psc, s, psc->kinds[k].name);
   }
 
@@ -559,8 +514,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
     sprintf(s, "kind_n%d", k);
     mrc_io_read_double(io, psc, s, &psc->kinds[k].n);
     sprintf(s, "kind_T%d", k);
-    mrc_io_read_double(io, psc, s, &psc->kinds[k].T);
-    sprintf(s, "kind_name%d", k);
     mrc_io_read_string(io, psc, s, &psc->kinds[k].name);
   }
 
@@ -650,9 +603,9 @@ _psc_view(struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");
   for (int k = 0; k < psc->nr_kinds; k++) {
-    mpi_printf(comm, "%19s | q = %g m = %g n = %g T = %g\n", 
+    mpi_printf(comm, "%19s | q = %g m = %g n = %g\n", 
 	       psc->kinds[k].name, psc->kinds[k].q, psc->kinds[k].m,
-	       psc->kinds[k].n, psc->kinds[k].T);
+	       psc->kinds[k].n);
   }
 }
 
