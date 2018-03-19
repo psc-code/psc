@@ -269,7 +269,8 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
   psc_mfields_set_name(rho, "rho");
   psc_mfields_set_comp_name(rho, 0, "rho");
   mfields_t mf_dive(dive), mf_rho(rho);
-
+  const auto& grid = psc->grid();
+  
   calc_rho(psc, psc->particles, rho);
   calc_dive(psc, psc->flds, dive);
 
@@ -280,7 +281,7 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 
     int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
-      if (ppsc->domain_.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
 	  psc_at_boundary_lo(ppsc, p, d)) {
 	l[d] = 1;
       }

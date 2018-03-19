@@ -16,17 +16,18 @@ struct BndFieldsCuda : BndFieldsBase
 
   void fill_ghosts_E(PscMfieldsBase mflds_base) override
   {
-    if (ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    const auto& grid = mflds_base->grid();
+    if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       return;
     }
 
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(EX, EX + 3);
-    if (ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
-	ppsc->domain_.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
+	grid.bc.fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       int d = 1;
       for (int p = 0; p < mf->n_patches(); p++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -47,17 +48,18 @@ struct BndFieldsCuda : BndFieldsBase
 
   void fill_ghosts_H(PscMfieldsBase mflds_base) override
   {
-    if (ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    const auto& grid = mflds_base->grid();
+    if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       return;
     }
 
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(HX, HX + 3);
-    if (ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
-	ppsc->domain_.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
+	grid.bc.fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       int d = 1;
       for (int p = 0; p < mf->n_patches(); p++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
@@ -79,17 +81,18 @@ struct BndFieldsCuda : BndFieldsBase
 
   void add_ghosts_J(PscMfieldsBase mflds_base) override
   {
-    if (ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    const auto& grid = mflds_base->grid();
+    if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       return;
     }
 
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, JXI + 3);
-    if (ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
-	ppsc->domain_.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
+	grid.bc.fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       int d = 1;
       for (int p = 0; p < mf->n_patches(); p++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {

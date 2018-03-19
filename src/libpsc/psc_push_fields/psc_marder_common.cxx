@@ -136,12 +136,12 @@ struct marder_ops {
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
-      if (ppsc->domain_.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
 	  psc_at_boundary_lo(ppsc, p, d)) {
 	l_cc[d] = -1;
 	l_nc[d] = -1;
       }
-      if (ppsc->domain_.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
+      if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
 	  psc_at_boundary_hi(ppsc, p, d)) {
 	r_cc[d] = -1;
 	r_nc[d] = 0;

@@ -91,20 +91,21 @@ struct BndCuda : BndBase
 
   void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
+    const auto& grid = mflds_base->grid();
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(mb, me);
 
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
     if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // double periodic single patch
       cuda_add_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
     } else if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	       ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	       ppsc->domain_.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
-	       ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	       grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	       grid.bc.fld_lo[1] != BND_FLD_PERIODIC &&
+	       grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // z-periodic single patch
       cuda_add_ghosts_periodic_z(mf->cmflds, 0, mb, me);
     } else {
@@ -130,21 +131,22 @@ struct BndCuda : BndBase
       pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
     }
     
+    const auto& grid = mflds_base->grid();
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(mb, me);
     
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
     
     if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
+	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // double periodic single patch
       cuda_fill_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
     } else if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	       ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	       ppsc->domain_.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
-	       ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	       grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
+	       grid.bc.fld_lo[1] != BND_FLD_PERIODIC &&
+	       grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // z-periodic single patch
       cuda_fill_ghosts_periodic_z(mf->cmflds, 0, mb, me);
     } else {
