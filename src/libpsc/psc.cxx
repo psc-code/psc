@@ -240,31 +240,31 @@ psc_setup_coeff(struct psc *psc)
 // psc_setup_mrc_domain
 
 struct mrc_domain *
-psc_setup_mrc_domain(struct psc *psc, const GridBc& grid_bc, int nr_patches)
+psc_setup_mrc_domain(const GridParams& grid_params, const GridBc& grid_bc, int nr_patches)
 {
   // FIXME, should be split to create, set_from_options, setup time?
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   // create a very simple domain decomposition
   int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && psc->domain_.gdims[d] > 1) {
+    if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_params.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
     }
   }
 
   mrc_domain_set_type(domain, "multi");
-  mrc_domain_set_param_int3(domain, "m", psc->domain_.gdims);
+  mrc_domain_set_param_int3(domain, "m", grid_params.gdims);
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
   mrc_domain_set_param_int(domain, "bcz", bc[2]);
   mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
-  mrc_domain_set_param_int3(domain, "np", psc->domain_.np);
+  mrc_domain_set_param_int3(domain, "np", grid_params.np);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_double3(crds, "l", psc->domain_.corner);
-  mrc_crds_set_param_double3(crds, "h", psc->domain_.corner + psc->domain_.length);
+  mrc_crds_set_param_double3(crds, "l", grid_params.corner);
+  mrc_crds_set_param_double3(crds, "h", grid_params.corner + grid_params.length);
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
@@ -357,7 +357,7 @@ void psc_setup_domain(struct psc *psc, GridBc& bc)
     }
   }
   assert(!psc->mrc_domain_);
-  psc->mrc_domain_ = psc_setup_mrc_domain(psc, bc, -1);
+  psc->mrc_domain_ = psc_setup_mrc_domain(psc->domain_, bc, -1);
   psc_set_dt(psc);
 
   psc->grid_ = psc->make_grid(psc->mrc_domain_, bc);
