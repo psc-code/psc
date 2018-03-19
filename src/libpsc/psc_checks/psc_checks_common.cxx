@@ -14,9 +14,9 @@ using Fields = Fields3d<fields_t>;
 // FIXME, duplicated
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
-  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
-  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
+  int dx _mrc_unused = (ppsc->grid().gdims[0] == 1) ? 0 : 1;		\
+  int dy _mrc_unused = (ppsc->grid().gdims[1] == 1) ? 0 : 1;		\
+  int dz _mrc_unused = (ppsc->grid().gdims[2] == 1) ? 0 : 1
 
 // ----------------------------------------------------------------------
 // FIXME, should be consolidated?
@@ -99,7 +99,7 @@ do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
   define_dxdydz(dx, dy, dz);
   fields_t::real_t h[3];
   for (int d = 0; d < 3; d++) {
-    if (psc->domain.gdims[d] == 1) {
+    if (psc->grid().gdims[d] == 1) {
       h[d] = 0.;
     } else {
       h[d] = 1. / psc->grid().dx[d];
@@ -280,7 +280,7 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 
     int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
-      if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+      if (ppsc->domain_.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
 	  psc_at_boundary_lo(ppsc, p, d)) {
 	l[d] = 1;
       }

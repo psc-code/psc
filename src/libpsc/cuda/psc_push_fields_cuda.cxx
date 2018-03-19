@@ -14,7 +14,7 @@ struct PushFieldsCuda : PushFieldsBase
   {
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, HX + 3);
     
-    if (ppsc->domain.gdims[0] == 1) {
+    if (mf->grid().gdims[0] == 1) {
       cuda_push_fields_E_yz(mf->cmflds, dt_fac * ppsc->dt);
     } else {
       assert(0);
@@ -27,7 +27,7 @@ struct PushFieldsCuda : PushFieldsBase
   {
     PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, HX + 3);
     
-    if (ppsc->domain.gdims[0] == 1) {
+    if (mf->grid().gdims[0] == 1) {
       cuda_push_fields_H_yz(mf->cmflds, dt_fac * ppsc->dt);
     } else {
       assert(0);

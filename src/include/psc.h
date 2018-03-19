@@ -148,7 +148,7 @@ struct psc {
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff;	///< automatically derived constants
-  GridParams domain;	///< the computational domain
+  GridParams domain_;	///< the computational domain
   Grid_t::Kinds kinds_;
   ///@}
 
@@ -225,12 +225,12 @@ Variables ix, iy, iz will be automatically declared.
 Always close this expression with foreach_3d_end
 */
 #define foreach_3d(psc, p, ix, iy, iz, l, r) {                         \
-  int __ilo[3] = { (psc)->domain.gdims[0] == 1 ? 0 : -l ,              \
-                  (psc)->domain.gdims[1] == 1 ? 0 : -l,                        \
-                  (psc)->domain.gdims[2] == 1 ? 0 : -l };              \
-  int __ihi[3] = { (psc)->grid().ldims[0] + ((psc)->domain.gdims[0] == 1 ? 0 : r), \
-		   (psc)->grid().ldims[1] + ((psc)->domain.gdims[1] == 1 ? 0 : r), \
-		   (psc)->grid().ldims[2] + ((psc)->domain.gdims[2] == 1 ? 0 : r) }; \
+  int __ilo[3] = { (psc)->grid().gdims[0] == 1 ? 0 : -l ,		\
+		   (psc)->grid().gdims[1] == 1 ? 0 : -l,		\
+		   (psc)->grid().gdims[2] == 1 ? 0 : -l };		\
+  int __ihi[3] = { (psc)->grid().ldims[0] + ((psc)->grid().gdims[0] == 1 ? 0 : r), \
+		   (psc)->grid().ldims[1] + ((psc)->grid().gdims[1] == 1 ? 0 : r), \
+		   (psc)->grid().ldims[2] + ((psc)->grid().gdims[2] == 1 ? 0 : r) }; \
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)

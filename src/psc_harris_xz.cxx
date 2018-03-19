@@ -105,20 +105,16 @@ psc_harris_create(struct psc *psc)
 
   psc->prm.stats_every = 100;
 
-  psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[2] = BND_FLD_CONDUCTING_WALL;
-  psc->domain.bnd_fld_hi[2] = BND_FLD_CONDUCTING_WALL;
- 
-  psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
-  psc->domain.bnd_part_hi[2] = BND_PART_REFLECTING;
+  auto grid_params = GridParams{};
+  grid_params.gdims = { 1, 64, 256 };
 
+  grid_params.bnd_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL };
+  grid_params.bnd_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL };
+  grid_params.bnd_part_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_REFLECTING };
+  grid_params.bnd_part_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_REFLECTING };
+
+  psc->domain_ = grid_params;
+ 
   psc_method_set_type(psc->method, "vpic");
 
   psc_sort_set_type(psc->sort, "vpic");
@@ -164,9 +160,9 @@ psc_harris_setup_ic(struct psc *psc)
   struct globals_physics *phys = &sub->phys;
   struct vpic_harris_params *prm = &sub->prm;
 
-  sub->n_global_patches = psc->domain.np[0] * psc->domain.np[1] * psc->domain.np[2];
+  sub->n_global_patches = psc->domain_.np[0] * psc->domain_.np[1] * psc->domain_.np[2];
   
-  assert(psc->domain.np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+  assert(psc->domain_.np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   // FIXME, the general normalization stuff should be shared somehow
 
@@ -208,7 +204,7 @@ psc_harris_setup_ic(struct psc *psc)
   double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
   double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
   double Npe       = Npe_sheet + Npe_back;
-  int *gdims       = psc->domain.gdims;
+  int *gdims       = psc->domain_.gdims;
   phys->Ne         = prm->nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
   phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
   phys->Ne_back    = phys->Ne*Npe_back/Npe;
@@ -227,13 +223,13 @@ psc_harris_setup_ic(struct psc *psc)
   phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
   phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
 
-  psc->domain.length[0] = phys->Lx;
-  psc->domain.length[1] = phys->Ly;
-  psc->domain.length[2] = phys->Lz;
+  psc->domain_.length[0] = phys->Lx;
+  psc->domain_.length[1] = phys->Ly;
+  psc->domain_.length[2] = phys->Lz;
 
-  psc->domain.corner[0] = 0.;
-  psc->domain.corner[1] = -.5 * phys->Ly;
-  psc->domain.corner[2] = -.5 * phys->Lz;
+  psc->domain_.corner[0] = 0.;
+  psc->domain_.corner[1] = -.5 * phys->Ly;
+  psc->domain_.corner[2] = -.5 * phys->Lz;
 }
 
 // ----------------------------------------------------------------------
@@ -252,14 +248,14 @@ psc_harris_setup_domain(struct psc *psc)
   // Setup basic grid parameters
   double dx[3], xl[3], xh[3];
   for (int d = 0; d < 3; d++) {
-    dx[d] = psc->domain.length[d] / psc->domain.gdims[d];
-    xl[d] = psc->domain.corner[d];
-    xh[d] = xl[d] + psc->domain.length[d];
+    dx[d] = psc->domain_.length[d] / psc->domain_.gdims[d];
+    xl[d] = psc->domain_.corner[d];
+    xh[d] = xl[d] + psc->domain_.length[d];
   }
   Simulation_setup_grid(sub->sim, dx, phys->dt, phys->c, phys->eps0);
 
   // Define the grid
-  Simulation_define_periodic_grid(sub->sim, xl, xh, psc->domain.gdims, psc->domain.np);
+  Simulation_define_periodic_grid(sub->sim, xl, xh, psc->domain_.gdims, psc->domain_.np);
 
   int p = 0;
   bool left = psc_at_boundary_lo(psc, p, 0);
@@ -367,7 +363,7 @@ psc_harris_setup_log(struct psc *psc)
 
   mpi_printf(comm, "***********************************************\n");
   mpi_printf(comm, "* Topology: %d x %d x %d\n",
-	     psc->domain.np[0], psc->domain.np[1], psc->domain.np[2]);
+	     psc->domain_.np[0], psc->domain_.np[1], psc->domain_.np[2]);
   mpi_printf(comm, "tanhf    = %g\n", phys->tanhf);
   mpi_printf(comm, "L_di     = %g\n", sub->prm.L_di);
   mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
@@ -387,9 +383,9 @@ psc_harris_setup_log(struct psc *psc)
   mpi_printf(comm, "Ly/de = %g\n", phys->Ly/phys->de);
   mpi_printf(comm, "Lz/di = %g\n", phys->Lz/phys->di);
   mpi_printf(comm, "Lz/de = %g\n", phys->Lz/phys->de);
-  mpi_printf(comm, "nx = %d\n", psc->domain.gdims[0]);
-  mpi_printf(comm, "ny = %d\n", psc->domain.gdims[1]);
-  mpi_printf(comm, "nz = %d\n", psc->domain.gdims[2]);
+  mpi_printf(comm, "nx = %d\n", psc->domain_.gdims[0]);
+  mpi_printf(comm, "ny = %d\n", psc->domain_.gdims[1]);
+  mpi_printf(comm, "nz = %d\n", psc->domain_.gdims[2]);
   mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
   mpi_printf(comm, "n_global_patches = %d\n", sub->n_global_patches);
   mpi_printf(comm, "nppc = %g\n", sub->prm.nppc);
@@ -403,13 +399,13 @@ psc_harris_setup_log(struct psc *psc)
   mpi_printf(comm, "dt*wpe = %g\n", phys->wpe*phys->dt);
   mpi_printf(comm, "dt*wce = %g\n", phys->wce*phys->dt);
   mpi_printf(comm, "dt*wci = %g\n", phys->wci*phys->dt);
-  mpi_printf(comm, "dx/de = %g\n", phys->Lx/(phys->de*psc->domain.gdims[0]));
-  mpi_printf(comm, "dy/de = %g\n", phys->Ly/(phys->de*psc->domain.gdims[1]));
-  mpi_printf(comm, "dz/de = %g\n", phys->Lz/(phys->de*psc->domain.gdims[2]));
-  mpi_printf(comm, "dx/rhoi = %g\n", (phys->Lx/psc->domain.gdims[0])/(phys->vthi/phys->wci));
-  mpi_printf(comm, "dx/rhoe = %g\n", (phys->Lx/psc->domain.gdims[0])/(phys->vthe/phys->wce));
+  mpi_printf(comm, "dx/de = %g\n", phys->Lx/(phys->de*psc->domain_.gdims[0]));
+  mpi_printf(comm, "dy/de = %g\n", phys->Ly/(phys->de*psc->domain_.gdims[1]));
+  mpi_printf(comm, "dz/de = %g\n", phys->Lz/(phys->de*psc->domain_.gdims[2]));
+  mpi_printf(comm, "dx/rhoi = %g\n", (phys->Lx/psc->domain_.gdims[0])/(phys->vthi/phys->wci));
+  mpi_printf(comm, "dx/rhoe = %g\n", (phys->Lx/psc->domain_.gdims[0])/(phys->vthe/phys->wce));
   mpi_printf(comm, "L/debye = %g\n", phys->L/(phys->vthe/phys->wpe));
-  mpi_printf(comm, "dx/debye = %g\n", (phys->Lx/psc->domain.gdims[0])/(phys->vthe/phys->wpe));
+  mpi_printf(comm, "dx/debye = %g\n", (phys->Lx/psc->domain_.gdims[0])/(phys->vthe/phys->wpe));
   mpi_printf(comm, "n0 = %g\n", phys->n0);
   mpi_printf(comm, "vthi/c = %g\n", phys->vthi/phys->c);
   mpi_printf(comm, "vthe/c = %g\n", phys->vthe/phys->c);
@@ -449,7 +445,7 @@ psc_harris_setup(struct psc *psc)
   psc_harris_setup_ic(psc);
 
   // Determine the time step
-  phys->dg = courant_length(psc->domain.length, psc->domain.gdims);
+  phys->dg = courant_length(psc->domain_.length, psc->domain_.gdims);
   phys->dt = psc->prm.cfl * phys->dg / phys->c; // courant limited time step
   if (phys->wpe * phys->dt > sub->prm.wpedt_max) {
     phys->dt = sub->prm.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited

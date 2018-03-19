@@ -96,15 +96,15 @@ struct BndCuda : BndBase
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
     if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
+	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
       // double periodic single patch
       cuda_add_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
     } else if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
-	       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	       ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+	       ppsc->domain_.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
+	       ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
       // z-periodic single patch
       cuda_add_ghosts_periodic_z(mf->cmflds, 0, mb, me);
     } else {
@@ -136,15 +136,15 @@ struct BndCuda : BndBase
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
     
     if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
-	ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+	ppsc->domain_.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
+	ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
       // double periodic single patch
       cuda_fill_ghosts_periodic_yz(mf->cmflds, 0, mb, me);
     } else if (size == 1 && ppsc->n_patches() == 1 && // FIXME !!!
-	       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
-	       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
-	       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+	       ppsc->domain_.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+	       ppsc->domain_.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
+	       ppsc->domain_.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
       // z-periodic single patch
       cuda_fill_ghosts_periodic_z(mf->cmflds, 0, mb, me);
     } else {

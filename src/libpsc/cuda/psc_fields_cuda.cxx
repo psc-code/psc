@@ -172,7 +172,7 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *_mflds_y, int my, double alpha,
   PscMfieldsCuda mflds_y(_mflds_y);
   PscMfieldsCuda mflds_x(_mflds_x);
 
-  assert(ppsc->domain.gdims[0] == 1);
+  assert(mflds_y->grid().gdims[0] == 1);
   mflds_y->axpy_comp_yz(my, alpha, mflds_x, mx);
 }
 

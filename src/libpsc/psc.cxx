@@ -69,36 +69,36 @@ static struct select_init {
 
 static struct param psc_descr[] = {
   // psc_domain
-  { "length_"       , VAR(domain.length)          , PARAM_DOUBLE3(1., 1., 1.) },
-  { "corner_"       , VAR(domain.corner)          , PARAM_DOUBLE3(0., 0., 0.) },
-  { "gdims_"        , VAR(domain.gdims)           , PARAM_INT3(1, 1, 1)  },
-  { "np_"	    , VAR(domain.np)	          , PARAM_INT3(1, 1, 1)	 },
-  { "bs"            , VAR(domain.bs)              , PARAM_INT3(1, 1, 1)  },
+  { "length_"       , VAR(domain_.length)          , PARAM_DOUBLE3(1., 1., 1.) },
+  { "corner_"       , VAR(domain_.corner)          , PARAM_DOUBLE3(0., 0., 0.) },
+  { "gdims_"        , VAR(domain_.gdims)           , PARAM_INT3(1, 1, 1)  },
+  { "np_"	    , VAR(domain_.np)	          , PARAM_INT3(1, 1, 1)	 },
+  { "bs"            , VAR(domain_.bs)              , PARAM_INT3(1, 1, 1)  },
 
-  { "bnd_field_lo_x", VAR_(domain.bnd_fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_x", VAR_(domain_.bnd_fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_lo_y", VAR_(domain.bnd_fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_y", VAR_(domain_.bnd_fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_lo_z", VAR_(domain.bnd_fld_lo, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_lo_z", VAR_(domain_.bnd_fld_lo, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_x", VAR_(domain.bnd_fld_hi, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_x", VAR_(domain_.bnd_fld_hi, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_y", VAR_(domain.bnd_fld_hi, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_y", VAR_(domain_.bnd_fld_hi, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
-  { "bnd_field_hi_z", VAR_(domain.bnd_fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
+  { "bnd_field_hi_z", VAR_(domain_.bnd_fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
 
-  { "bnd_particle_lo_x", VAR_(domain.bnd_part_lo, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_x", VAR_(domain_.bnd_part_lo, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_lo_y", VAR_(domain.bnd_part_lo, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_y", VAR_(domain_.bnd_part_lo, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_lo_z", VAR_(domain.bnd_part_lo, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_z", VAR_(domain_.bnd_part_lo, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_hi_x", VAR_(domain.bnd_part_hi, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_hi_x", VAR_(domain_.bnd_part_hi, 0)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_hi_y", VAR_(domain.bnd_part_hi, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_hi_y", VAR_(domain_.bnd_part_hi, 1)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_hi_z", VAR_(domain.bnd_part_hi, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_hi_z", VAR_(domain_.bnd_part_hi, 2)     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
 
   // psc_params
@@ -255,30 +255,25 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   // create a very simple domain decomposition
   int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
-	psc->domain.gdims[d] > 1) {
+    if (psc->domain_.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
+	psc->domain_.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
     }
   }
 
   mrc_domain_set_type(domain, "multi");
-  mrc_domain_set_param_int3(domain, "m", psc->domain.gdims);
+  mrc_domain_set_param_int3(domain, "m", psc->domain_.gdims);
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
   mrc_domain_set_param_int(domain, "bcz", bc[2]);
   mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
-  mrc_domain_set_param_int3(domain, "np", psc->domain.np);
+  mrc_domain_set_param_int3(domain, "np", psc->domain_.np);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  double l[3] = { psc->domain.corner[0], psc->domain.corner[1], psc->domain.corner[2] };
-  double h[3] = {
-      psc->domain.corner[0] + psc->domain.length[0],
-      psc->domain.corner[1] + psc->domain.length[1],
-      psc->domain.corner[2] + psc->domain.length[2] };
-  mrc_crds_set_param_double3(crds, "l", l);
-  mrc_crds_set_param_double3(crds, "h", h);
+  mrc_crds_set_param_double3(crds, "l", psc->domain_.corner);
+  mrc_crds_set_param_double3(crds, "h", psc->domain_.corner + psc->domain_.length);
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
@@ -303,10 +298,10 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
     offs.push_back(patches[p].off);
   }
 
-  Grid_t *grid = new Grid_t(gdims, ldims, domain.length, domain.corner, offs);
+  Grid_t *grid = new Grid_t(gdims, ldims, domain_.length, domain_.corner, offs);
 
   for (int d = 0; d < 3; d++) {
-    grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain.bs[d];
+    grid->bs[d] = grid->gdims[d] == 1 ? 1 : domain_.bs[d];
   }
   
   assert(coeff.ld == 1.);
@@ -324,11 +319,11 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
 
 void psc_set_dt(psc* psc)
 {
-  Vec3<double> dx = Vec3<double>(psc->domain.length) / Vec3<double>(Int3(psc->domain.gdims));
+  Vec3<double> dx = psc->domain_.length / Vec3<double>(psc->domain_.gdims);
   if (!psc->dt) {
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
-      if (psc->domain.gdims[d] > 1) {
+      if (psc->domain_.gdims[d] > 1) {
 	inv_sum += 1. / sqr(dx[d]);
       }
     }
@@ -348,7 +343,7 @@ void psc_set_dt(psc* psc)
 void
 psc_setup_domain(struct psc *psc)
 {
-  GridParams *domain = &psc->domain;
+  GridParams *domain = &psc->domain_;
 
   bool need_pml = false;
 

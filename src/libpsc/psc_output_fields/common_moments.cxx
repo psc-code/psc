@@ -25,13 +25,13 @@
     real_t g1z = h3;							\
     									\
     int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->domain.gdims[0] == 1) {					\
+    if (ppsc->grid().gdims[0] == 1) {					\
       jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
     }									\
-    if (ppsc->domain.gdims[1] == 1) {					\
+    if (ppsc->grid().gdims[1] == 1) {					\
       jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
     }									\
-    if (ppsc->domain.gdims[2] == 1) {					\
+    if (ppsc->grid().gdims[2] == 1) {					\
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
@@ -72,13 +72,13 @@
     real_t g1z = h3;							\
     									\
     int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->domain.gdims[0] == 1) {					\
+    if (ppsc->grid().gdims[0] == 1) {					\
       jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
     }									\
-    if (ppsc->domain.gdims[1] == 1) {					\
+    if (ppsc->grid().gdims[1] == 1) {					\
       jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
     }									\
-    if (ppsc->domain.gdims[2] == 1) {					\
+    if (ppsc->grid().gdims[2] == 1) {					\
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
@@ -122,13 +122,13 @@
     real_t g1z = .5f*(.5f-h3)*(.5f-h3);					\
     									\
     int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->domain.gdims[0] == 1) {					\
+    if (ppsc->domain_.gdims[0] == 1) {					\
       jx = 0; g0x = 1.; g1x = 0.; gmx = 0.; jxd = 0;			\
     }									\
-    if (ppsc->domain.gdims[1] == 1) {					\
+    if (ppsc->domain_.gdims[1] == 1) {					\
       jy = 0; g0y = 1.; g1y = 0.; gmy = 0.; jyd = 0;			\
     }									\
-    if (ppsc->domain.gdims[2] == 1) {					\
+    if (ppsc->domain_.gdims[2] == 1) {					\
       jz = 0; g0z = 1.; g1z = 0.; gmz = 0.; jzd = 0;			\
     }									\
     									\

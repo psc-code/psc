@@ -526,7 +526,7 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   grid_params.bnd_part_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
   grid_params.bnd_part_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
 
-  psc_->domain = grid_params;
+  psc_->domain_ = grid_params;
 
   psc_set_from_options(psc_);
 

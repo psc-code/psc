@@ -319,8 +319,8 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
     // lo
     for (int d = 0; d < 3; d++) {
       if (psc_at_boundary_lo(ppsc, p, d)) {
-	if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING ||
-	    ppsc->domain.bnd_part_lo[d] == BND_PART_OPEN) {
+	if (ppsc->domain_.bnd_part_lo[d] == BND_PART_REFLECTING ||
+	    ppsc->domain_.bnd_part_lo[d] == BND_PART_OPEN) {
 	  add_ghosts_reflecting_lo(res, p, d, mb, me);
 	}
       }
@@ -328,8 +328,8 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
     // hi
     for (int d = 0; d < 3; d++) {
       if (psc_at_boundary_hi(ppsc, p, d)) {
-	if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING ||
-	    ppsc->domain.bnd_part_hi[d] == BND_PART_OPEN) {
+	if (ppsc->domain_.bnd_part_hi[d] == BND_PART_REFLECTING ||
+	    ppsc->domain_.bnd_part_hi[d] == BND_PART_OPEN) {
 	  add_ghosts_reflecting_hi(res, p, d, mb, me);
 	}
       }

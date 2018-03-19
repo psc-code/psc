@@ -9,9 +9,9 @@
 // ======================================================================
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
-  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
-  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
+  int dx _mrc_unused = (ppsc->grid().gdims[0] == 1) ? 0 : 1;		\
+  int dy _mrc_unused = (ppsc->grid().gdims[1] == 1) ? 0 : 1;		\
+  int dz _mrc_unused = (ppsc->grid().gdims[2] == 1) ? 0 : 1
 
 // ======================================================================
 

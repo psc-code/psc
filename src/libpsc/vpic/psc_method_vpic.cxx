@@ -79,7 +79,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   psc_marder_set_param_int(psc->marder, "num_div_e_round", info.num_div_e_round);
   psc_marder_set_param_int(psc->marder, "num_div_b_round", info.num_div_b_round);
   
-  int *np = psc->domain.np;
+  int *np = psc->domain_.np;
   mpi_printf(comm, "domain: np = %d x %d x %d\n", np[0], np[1], np[2]);
   // FIXME, it looks like we can get np from simulation->p[xyz], so we should use that or
   // at least make sure it's consistent
@@ -112,10 +112,10 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
   
   // set size of simulation box to match vpic
   for (int d = 0; d < 3; d++) {
-    psc->domain.length[d] = x1[d] - x0[d];
-    psc->domain.corner[d] = x0[d];
-    psc->domain.gdims[d] = np[d] * info.nx[d];
-    psc->domain.np[d] = np[d];
+    psc->domain_.length[d] = x1[d] - x0[d];
+    psc->domain_.corner[d] = x0[d];
+    psc->domain_.gdims[d] = np[d] * info.nx[d];
+    psc->domain_.np[d] = np[d];
   }
   
   psc->dt = info.dt;

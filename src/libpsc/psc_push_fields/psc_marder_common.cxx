@@ -96,9 +96,9 @@ struct marder_ops {
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
 #define define_dxdydz(dx, dy, dz)				\
-  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;	\
-  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;	\
-  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
+  int dx _mrc_unused = (ppsc->grid().gdims[0] == 1) ? 0 : 1;	\
+  int dy _mrc_unused = (ppsc->grid().gdims[1] == 1) ? 0 : 1;	\
+  int dz _mrc_unused = (ppsc->grid().gdims[2] == 1) ? 0 : 1
 
 #define psc_foreach_3d_more(psc, p, ix, iy, iz, l, r) {	\
   int __ilo[3] = { -l[0], -l[1], -l[2] };		\
@@ -136,12 +136,12 @@ struct marder_ops {
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
-      if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+      if (ppsc->domain_.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
 	  psc_at_boundary_lo(ppsc, p, d)) {
 	l_cc[d] = -1;
 	l_nc[d] = -1;
       }
-      if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
+      if (ppsc->domain_.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
 	  psc_at_boundary_hi(ppsc, p, d)) {
 	r_cc[d] = -1;
 	r_nc[d] = 0;
@@ -163,7 +163,7 @@ struct marder_ops {
     } psc_foreach_3d_more_end;
 #endif
 
-    assert(ppsc->domain.gdims[0] == 1);
+    assert(ppsc->domain_.gdims[0] == 1);
 
     {
       int l[3] = { l_nc[0], l_cc[1], l_nc[2] };

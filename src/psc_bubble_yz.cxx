@@ -53,22 +53,15 @@ psc_bubble_create(struct psc *psc)
   psc->prm.nmax = 32000;
   psc->prm.nicell = 10;
 
-  psc->domain.gdims[0] = 1;
-  psc->domain.gdims[1] = 64;
-  psc->domain.gdims[2] = 256;
+  auto grid_params = GridParams{};
+  grid_params.gdims = { 1, 64, 256 };
 
-  psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+  grid_params.bnd_fld_lo = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
+  grid_params.bnd_fld_hi = { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC };
+  grid_params.bnd_part_lo = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
+  grid_params.bnd_part_hi = { BND_PART_PERIODIC, BND_PART_PERIODIC, BND_PART_PERIODIC };
+
+  psc->domain_ = grid_params;
 
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
@@ -89,14 +82,8 @@ psc_bubble_setup(struct psc *psc)
   if (bubble->LLz == 0.) {
     bubble->LLz = 3. * bubble->LLn;
   }
-  psc->domain.length[0] = bubble->LLn; // no x-dependence
-  psc->domain.length[1] = bubble->LLy;
-  psc->domain.length[2] = bubble->LLz;
-
-  // center around origin
-  for (int d = 0; d < 3; d++) {
-    psc->domain.corner[d] = -.5 * psc->domain.length[d];
-  }
+  psc->domain_.length = { bubble->LLn, bubble->LLy, bubble->LLz };
+  psc->domain_.corner = { 0, -.5 * bubble->LLy, -.5 * bubble->LLz };
 
   psc_setup_super(psc);
 

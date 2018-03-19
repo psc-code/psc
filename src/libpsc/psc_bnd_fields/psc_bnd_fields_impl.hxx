@@ -31,7 +31,7 @@ struct BndFields_ : BndFieldsBase
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
-	  switch (ppsc->domain.bnd_fld_lo[d]) {
+	  switch (ppsc->domain_.bnd_fld_lo[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
@@ -48,7 +48,7 @@ struct BndFields_ : BndFieldsBase
       // hi
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_hi(ppsc, p, d)) {
-	  switch (ppsc->domain.bnd_fld_hi[d]) {
+	  switch (ppsc->domain_.bnd_fld_hi[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
@@ -83,7 +83,7 @@ struct BndFields_ : BndFieldsBase
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
-	  switch (ppsc->domain.bnd_fld_lo[d]) {
+	  switch (ppsc->domain_.bnd_fld_lo[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
@@ -100,7 +100,7 @@ struct BndFields_ : BndFieldsBase
       // hi
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_hi(ppsc, p, d)) {
-	  switch (ppsc->domain.bnd_fld_hi[d]) {
+	  switch (ppsc->domain_.bnd_fld_hi[d]) {
 	  case BND_FLD_PERIODIC:
 	    break;
 	  case BND_FLD_CONDUCTING_WALL:
@@ -136,7 +136,7 @@ struct BndFields_ : BndFieldsBase
       // lo
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_lo(ppsc, p, d)) {
-	  switch (ppsc->domain.bnd_fld_lo[d]) {
+	  switch (ppsc->domain_.bnd_fld_lo[d]) {
 	  case BND_FLD_PERIODIC:
 	  case BND_FLD_OPEN:
 	    break;
@@ -151,7 +151,7 @@ struct BndFields_ : BndFieldsBase
       // hi
       for (int d = 0; d < 3; d++) {
 	if (psc_at_boundary_hi(ppsc, p, d)) {
-	  switch (ppsc->domain.bnd_fld_hi[d]) {
+	  switch (ppsc->domain_.bnd_fld_hi[d]) {
 	  case BND_FLD_PERIODIC:
 	  case BND_FLD_OPEN:
 	    break;

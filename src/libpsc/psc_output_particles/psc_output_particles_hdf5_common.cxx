@@ -83,9 +83,9 @@ psc_output_particles_hdf5_setup(struct psc_output_particles *out)
   for (int d = 0; d < 3; d++) {
     assert(hdf5->lo[d] >= 0);
     if (hdf5->hi[d] == 0) {
-      hdf5->hi[d] = ppsc->domain.gdims[d];
+      hdf5->hi[d] = ppsc->grid().gdims[d];
     }
-    assert(hdf5->hi[d] <= ppsc->domain.gdims[d]);
+    assert(hdf5->hi[d] <= ppsc->grid().gdims[d]);
     hdf5->wdims[d] = hdf5->hi[d] - hdf5->lo[d];
   }
 }

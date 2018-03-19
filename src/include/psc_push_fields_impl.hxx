@@ -175,7 +175,7 @@ public:
   {
     mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, HX + 3);
     
-    int *gdims = ppsc->domain.gdims;
+    const int *gdims = mflds->grid().gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
       push_E<dim_xyz>(*mflds.sub(), dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
@@ -201,7 +201,7 @@ public:
   {
     mfields_t mflds = mflds_base.get_as<mfields_t>(EX, HX + 3);
     
-    int *gdims = ppsc->domain.gdims;
+    const int *gdims = mflds->grid().gdims;
     if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
       push_H<dim_xyz>(*mflds.sub(), dt_fac);
     } else if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {

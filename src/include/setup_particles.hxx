@@ -209,8 +209,10 @@ struct SetupParticles
       psc->prm.neutralizing_population = psc->prm.nr_populations - 1;
     }
 
+    const auto& grid = psc->grid();
+    
     psc_foreach_patch(psc, p) {
-      auto ilo = Int3{}, ihi = psc->grid().ldims;
+      auto ilo = Int3{}, ihi = grid.ldims;
 
       int np = 0;
       int nr_pop = psc->prm.nr_populations;
@@ -223,9 +225,9 @@ struct SetupParticles
 			       .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	      // FIXME, the issue really is that (2nd order) particle pushers
 	      // don't handle the invariant dim right
-	      if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	      if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	      if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	      if (grid.gdims[0] == 1) xx[0] = CRDX(p, jx);
+	      if (grid.gdims[1] == 1) xx[1] = CRDY(p, jy);
+	      if (grid.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
 	      struct psc_particle_npt npt = {};
 	      if (kind < kinds.size()) {
