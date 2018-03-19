@@ -526,7 +526,6 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-  psc_->bc_ = grid_bc;
 
   psc_set_from_options(psc_);
 
@@ -604,7 +603,7 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 
   // --- generic setup
   psc_setup_coeff(psc_);
-  psc_setup_domain(psc_, psc_->bc_);
+  psc_setup_domain(psc_, grid_bc);
 
   // --- partition particles and initial balancing
   mpi_printf(comm, "**** Partitioning...\n");
