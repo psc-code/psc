@@ -540,15 +540,15 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   
   // -- setup particles
   // last population is neutralizing
-  psc_->kinds[MY_ELECTRON].q = -1.;
-  psc_->kinds[MY_ELECTRON].m = 1.;
-  psc_->kinds[MY_ELECTRON].name = strdup("e");
+  psc_->kinds_[MY_ELECTRON].q = -1.;
+  psc_->kinds_[MY_ELECTRON].m = 1.;
+  psc_->kinds_[MY_ELECTRON].name = strdup("e");
 
-  psc_->kinds[MY_ION     ].q = params.Zi;
-  psc_->kinds[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
-  psc_->kinds[MY_ION     ].name = strdup("i");
+  psc_->kinds_[MY_ION     ].q = params.Zi;
+  psc_->kinds_[MY_ION     ].m = 100. * params.Zi;  // FIXME, hardcoded mass ratio 100
+  psc_->kinds_[MY_ION     ].name = strdup("i");
 
-  d_i = sqrt(psc_->kinds[MY_ION].m / psc_->kinds[MY_ION].q);
+  d_i = sqrt(psc_->kinds_[MY_ION].m / psc_->kinds_[MY_ION].q);
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
@@ -573,7 +573,7 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   heating_foil_params.yc = heating_yc * d_i;
   heating_foil_params.rH = heating_rH * d_i;
   heating_foil_params.T  = .04;
-  heating_foil_params.Mi = heating_rH * psc_->kinds[MY_ION].m;
+  heating_foil_params.Mi = heating_rH * psc_->kinds_[MY_ION].m;
   auto heating_spot = HeatingSpotFoil{heating_foil_params};
   int heating_interval = 20;
   int heating_begin = 0;

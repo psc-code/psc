@@ -42,6 +42,7 @@ struct SetupParticles
   static void setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
 			     int p, double xx[3])
   {
+    auto& kinds = psc->grid().kinds;
     double beta = psc->coeff.beta;
     
     float ran1, ran2, ran3, ran4, ran5, ran6;
@@ -74,10 +75,10 @@ struct SetupParticles
   
     assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
     prt->kind_ = npt->kind;
-    assert(npt->q == psc->kinds[prt->kind_].q);
-    assert(npt->m == psc->kinds[prt->kind_].m);
-    /* prt->qni = psc->kinds[prt->kind].q; */
-    /* prt->mni = psc->kinds[prt->kind].m; */
+    assert(npt->q == kinds[prt->kind_].q);
+    assert(npt->m == kinds[prt->kind_].m);
+    /* prt->qni = kinds[prt->kind].q; */
+    /* prt->mni = kinds[prt->kind].m; */
     prt->xi = xx[0] - psc->grid().patches[p].xb[0];
     prt->yi = xx[1] - psc->grid().patches[p].xb[1];
     prt->zi = xx[2] - psc->grid().patches[p].xb[2];
@@ -124,7 +125,8 @@ struct SetupParticles
   static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch,
 			      FUNC func)
   {
-    const Grid_t& grid = mprts.grid();
+    const auto& grid = mprts.grid();
+    const auto& kinds = grid.kinds;
     
     mprts.reserve_all(n_prts_by_patch.data());
 
@@ -149,8 +151,8 @@ struct SetupParticles
 	      struct psc_particle_npt npt = {};
 	      if (kind < psc->nr_kinds) {
 		npt.kind = kind;
-		npt.q    = psc->kinds[kind].q;
-		npt.m    = psc->kinds[kind].m;
+		npt.q    = kinds[kind].q;
+		npt.m    = kinds[kind].m;
 	      };
 	      func(kind, xx, npt);
 
@@ -168,9 +170,9 @@ struct SetupParticles
 		setup_particle(psc, &prt, &npt, p, xx);
 		//p->lni = particle_label_offset + 1;
 		if (psc->prm.fractional_n_particles_per_cell) {
-		  prt.qni_wni_ = psc->kinds[prt.kind_].q;
+		  prt.qni_wni_ = kinds[prt.kind_].q;
 		} else {
-		  prt.qni_wni_ = psc->kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
+		  prt.qni_wni_ = kinds[prt.kind_].q * npt.n / (n_in_cell * psc->coeff.cori);
 		}
 		mprts[p].push_back(prt);
 	      }
@@ -205,6 +207,7 @@ struct SetupParticles
       psc->prm.neutralizing_population = psc->prm.nr_populations - 1;
     }
 
+    auto& kinds = psc->grid().kinds;
     psc_foreach_patch(psc, p) {
       auto ilo = Int3{}, ihi = psc->grid().ldims;
 
@@ -226,8 +229,8 @@ struct SetupParticles
 	      struct psc_particle_npt npt = {};
 	      if (kind < psc->nr_kinds) {
 		npt.kind = kind;
-		npt.q    = psc->kinds[kind].q;
-		npt.m    = psc->kinds[kind].m;
+		npt.q    = kinds[kind].q;
+		npt.m    = kinds[kind].m;
 	      };
 	      psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 

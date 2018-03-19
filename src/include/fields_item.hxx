@@ -183,6 +183,7 @@ struct ItemMomentCRTP
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
+    auto& kinds = ppsc->grid().kinds;
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Derived::flags & POFI_BY_KIND) {
@@ -194,7 +195,7 @@ struct ItemMomentCRTP
       this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps * ppsc->nr_kinds, ppsc->ibn).mflds();
       for (int k = 0; k < ppsc->nr_kinds; k++) {
 	for (int m = 0; m < n_comps; m++) {
-	  auto s = std::string(fld_names[m]) + "_" + ppsc->kinds[k].name;
+	  auto s = std::string(fld_names[m]) + "_" + kinds[k].name;
 	  psc_mfields_set_comp_name(this->mres_, k * n_comps + m, s.c_str());
 	}
       }

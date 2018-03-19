@@ -82,7 +82,8 @@ struct InjectCuda : InjectBase
   _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
 		      struct psc_particle_npt *npt, int p, double xx[3])
   {
-    const Grid_t& grid = psc->grid();
+    const auto& grid = psc->grid();
+    const auto& kinds = grid.kinds;
     double beta = psc->coeff.beta;
 
     float ran1, ran2, ran3, ran4, ran5, ran6;
@@ -114,8 +115,8 @@ struct InjectCuda : InjectBase
     }
   
     assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
-    assert(npt->q == psc->kinds[npt->kind].q);
-    assert(npt->m == psc->kinds[npt->kind].m);
+    assert(npt->q == kinds[npt->kind].q);
+    assert(npt->m == kinds[npt->kind].m);
 
     cprt->xi[0] = xx[0] - grid.patches[p].xb[0];
     cprt->xi[1] = xx[1] - grid.patches[p].xb[1];
@@ -124,7 +125,7 @@ struct InjectCuda : InjectBase
     cprt->pxi[1] = pyi;
     cprt->pxi[2] = pzi;
     cprt->kind = npt->kind;
-    cprt->qni_wni = psc->kinds[npt->kind].q;
+    cprt->qni_wni = kinds[npt->kind].q;
   }	      
 
   // ----------------------------------------------------------------------
@@ -133,6 +134,7 @@ struct InjectCuda : InjectBase
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
     struct psc *psc = ppsc;
+    const auto& kinds = psc->grid().kinds;
 
     float fac = 1. / psc->coeff.cori * 
       (every_step * psc->dt / tau) /
@@ -179,8 +181,8 @@ struct InjectCuda : InjectBase
 	      struct psc_particle_npt npt = {};
 	      if (kind < psc->nr_kinds) {
 		npt.kind = kind;
-		npt.q    = psc->kinds[kind].q;
-		npt.m    = psc->kinds[kind].m;
+		npt.q    = kinds[kind].q;
+		npt.m    = kinds[kind].m;
 	      };
 	      target_.init_npt(kind, xx, &npt);
 	    

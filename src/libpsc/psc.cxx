@@ -305,7 +305,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain)
 
   Grid_t::Kinds kinds;
   for (int k = 0; k < ppsc->nr_kinds; k++) {
-    kinds.emplace_back(ppsc->kinds[k].q, ppsc->kinds[k].m, ppsc->kinds[k].name);
+    kinds.emplace_back(ppsc->kinds_[k].q, ppsc->kinds_[k].m, ppsc->kinds_[k].name);
   }
 
   Grid_t *grid = new Grid_t(gdims, ldims, domain.length, domain.corner, offs);
@@ -439,11 +439,11 @@ _psc_destroy(struct psc *psc)
 
   mrc_domain_destroy(psc->mrc_domain);
 
-  if (psc->kinds) {
+  if (psc->kinds_) {
     for (int k = 0; k < psc->nr_kinds; k++) {
-      free(psc->kinds[k].name);
+      free(psc->kinds_[k].name);
     }
-    free(psc->kinds);
+    free(psc->kinds_);
   }
   
   ppsc = NULL;
@@ -461,10 +461,10 @@ _psc_write(struct psc *psc, struct mrc_io *io)
   for (int k = 0; k < psc->nr_kinds; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
-    mrc_io_write_double(io, psc, s, psc->kinds[k].q);
+    mrc_io_write_double(io, psc, s, psc->kinds_[k].q);
     sprintf(s, "kind_m%d", k);
-    mrc_io_write_double(io, psc, s, psc->kinds[k].m);
-    mrc_io_write_string(io, psc, s, psc->kinds[k].name);
+    mrc_io_write_double(io, psc, s, psc->kinds_[k].m);
+    mrc_io_write_string(io, psc, s, psc->kinds_[k].name);
   }
 
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain);
@@ -486,14 +486,14 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
   mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds);
 
-  psc->kinds = new psc_kind[psc->nr_kinds]();
+  psc->kinds_ = new psc_kind[psc->nr_kinds]();
   for (int k = 0; k < psc->nr_kinds; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
-    mrc_io_read_double(io, psc, s, &psc->kinds[k].q);
+    mrc_io_read_double(io, psc, s, &psc->kinds_[k].q);
     sprintf(s, "kind_m%d", k);
-    mrc_io_read_double(io, psc, s, &psc->kinds[k].m);
-    mrc_io_read_string(io, psc, s, &psc->kinds[k].name);
+    mrc_io_read_double(io, psc, s, &psc->kinds_[k].m);
+    mrc_io_read_string(io, psc, s, &psc->kinds_[k].name);
   }
 
   psc->mrc_domain = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
@@ -577,13 +577,14 @@ psc_set_ic_fields(struct psc *psc)
 static void
 _psc_view(struct psc *psc)
 {
+  const auto& kinds = psc->grid().kinds;
   mrc_domain_view(psc->mrc_domain);
 
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");
   for (int k = 0; k < psc->nr_kinds; k++) {
-    mpi_printf(comm, "%19s | q = %g m = %g\n", 
-	       psc->kinds[k].name, psc->kinds[k].q, psc->kinds[k].m);
+    mpi_printf(comm, "%19s | q = %g m = %g\n",
+	       kinds[k].name, kinds[k].q, kinds[k].m);
   }
 }
 
@@ -597,26 +598,26 @@ psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
     return;
   }
 
-  if (psc->kinds) {
+  if (psc->kinds_) {
     for (int k = 0; k < psc->nr_kinds; k++) {
-      free(psc->kinds[k].name);
+      free(psc->kinds_[k].name);
     }
-    free(psc->kinds);
+    free(psc->kinds_);
   }
     
   psc->nr_kinds = nr_kinds;
-  psc->kinds = new psc_kind[nr_kinds]();
+  psc->kinds_ = new psc_kind[nr_kinds]();
   if (kinds) {
     for (int k = 0; k < nr_kinds; k++) {
-      psc->kinds[k] = kinds[k];
-      psc->kinds[k].name = strdup(kinds[k].name);
+      psc->kinds_[k] = kinds[k];
+      psc->kinds_[k].name = strdup(kinds[k].name);
     }
   } else {
     // set defaults, one electron species, the rest ions
     if (nr_kinds > KIND_ELECTRON) {
-      psc->kinds[KIND_ELECTRON].name = strdup("e");
-      psc->kinds[KIND_ELECTRON].q = -1.;
-      psc->kinds[KIND_ELECTRON].m = 1.;
+      psc->kinds_[KIND_ELECTRON].name = strdup("e");
+      psc->kinds_[KIND_ELECTRON].q = -1.;
+      psc->kinds_[KIND_ELECTRON].m = 1.;
     }
     for (int k = 1; k < nr_kinds; k++) {
       char s[10];
@@ -625,9 +626,9 @@ psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
       } else {
 	sprintf(s, "i%d", k);
       }
-      psc->kinds[k].name = strdup(s);
-      psc->kinds[k].q = 1.;
-      psc->kinds[k].m = 100.;
+      psc->kinds_[k].name = strdup(s);
+      psc->kinds_[k].q = 1.;
+      psc->kinds_[k].m = 100.;
     }
   }
 }
