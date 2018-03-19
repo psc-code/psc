@@ -57,8 +57,7 @@ struct Moment_rho_1st_nc
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t *prt = &*prt_iter;
-      int m = prt->kind();
-      DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, ppsc->kinds[m].q);
+      DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, prts.prt_qni(*prt));
     }
   }
 };

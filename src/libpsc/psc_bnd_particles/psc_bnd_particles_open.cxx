@@ -452,6 +452,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
   /* 	  ninjo, ninjn, ninjn - ninjc, ninjc); */
   ninjo = ninjn - ninjc;
 
+  auto& grid = prts.grid();
   int nvdx = 1000;
   double dvz = c / ((double) nvdx);
 	  
@@ -468,7 +469,7 @@ inject_particles(int p, struct psc_mparticles *mprts, fields_t flds,
       mp[p].resize(i + 1);
       particle_t *prt = &prts[i]; 
       prt->kind_ = kind;
-      prt->qni_wni = ppsc->kinds[kind].q;
+      prt->qni_wni = grid.kinds[kind].q;
 
       real_t *pxi = &prt->pxi;
       real_t *xi  = &prt->xi;

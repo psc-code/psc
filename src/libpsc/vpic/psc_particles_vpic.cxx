@@ -72,24 +72,25 @@ struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
   
   void operator()(struct vpic_mparticles_prt *prt, int n)
   {
-    particle_single_t *part = &mprts_other_[p_][n];
+    auto& prts_other = mprts_other_[p_];
+    auto& prt_other = prts_other[n];
     
-    assert(part->kind() < ppsc->nr_kinds);
+    assert(prt_other.kind() < ppsc->nr_kinds);
     int i3[3];
     for (int d = 0; d < 3; d++) {
-      float val = (&part->xi)[d] / dx[d];
+      float val = (&prt_other.xi)[d] / dx[d];
       i3[d] = (int) val;
-      //mprintf("d %d val %g xi %g\n", d, val, part->xi);
+      //mprintf("d %d val %g xi %g\n", d, val, prt_other.xi);
       assert(i3[d] >= -1 && i3[d] < im[d] + 1);
       prt->dx[d] = (val - i3[d]) * 2.f - 1.f;
       i3[d] += 1;
     }
     prt->i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
-    prt->ux[0] = part->pxi;
-    prt->ux[1] = part->pyi;
-    prt->ux[2] = part->pzi;
-    prt->w     = part->qni_wni_ / ppsc->kinds[part->kind_].q / dVi;
-    prt->kind  = part->kind();
+    prt->ux[0] = prt_other.pxi;
+    prt->ux[1] = prt_other.pyi;
+    prt->ux[2] = prt_other.pzi;
+    prt->w     = prts_other.prt_wni(prt_other) / dVi;
+    prt->kind  = prt_other.kind();
   }
 };
 
@@ -102,7 +103,9 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
   
   void operator()(struct vpic_mparticles_prt *prt, int n)
   {
-    particle_single_t *part = &mprts_other_[p_][n];
+    auto& grid = mprts_other_.grid();
+    auto& prts_other = mprts_other_[p_];
+    auto& prt_other = prts_other[n];
     
     assert(prt->kind < ppsc->nr_kinds);
     int i = prt->i;
@@ -110,19 +113,19 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
     i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);
     i3[1] = i / im[0]; i-= i3[1] * im[0];
     i3[0] = i;
-    part->xi      = (i3[0] - 1 + .5f * (1.f + prt->dx[0])) * dx[0];
-    part->yi      = (i3[1] - 1 + .5f * (1.f + prt->dx[1])) * dx[1];
-    part->zi      = (i3[2] - 1 + .5f * (1.f + prt->dx[2])) * dx[2];
-    float w = part->zi / dx[2];
+    prt_other.xi      = (i3[0] - 1 + .5f * (1.f + prt->dx[0])) * dx[0];
+    prt_other.yi      = (i3[1] - 1 + .5f * (1.f + prt->dx[1])) * dx[1];
+    prt_other.zi      = (i3[2] - 1 + .5f * (1.f + prt->dx[2])) * dx[2];
+    float w = prt_other.zi / dx[2];
     if (!(w >= 0 && w <= im[2] - 2)) {
       printf("w %g im %d i3 %d dx %g\n", w, im[2], i3[2], prt->dx[2]);
     }
     assert(w >= 0 && w <= im[2] - 2);
-    part->kind_   = prt->kind;
-    part->pxi     = prt->ux[0];
-    part->pyi     = prt->ux[1];
-    part->pzi     = prt->ux[2];
-    part->qni_wni_ = ppsc->kinds[prt->kind].q * prt->w * dVi;
+    prt_other.kind_    = prt->kind;
+    prt_other.pxi      = prt->ux[0];
+    prt_other.pyi      = prt->ux[1];
+    prt_other.pzi      = prt->ux[2];
+    prt_other.qni_wni_ = grid.kinds[prt->kind].q * prt->w * dVi;
   }
 };
 
