@@ -514,12 +514,9 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   double LLy = 400.;
   double LLz = 400. * 4.;
 
-  auto grid_params = GridParams{};
-  grid_params.length = { 1., LLy, LLz };
-  grid_params.corner = { 0., -.5 * LLy, -.5 * LLz }; // center around origin
-  grid_params.gdims = { 1, 160, 160 * 4 };
-  grid_params.np = { 1, 4, 4 };
-  grid_params.bs = { 1, 1, 1 };
+  auto grid_params = GridParams{{1, 160, 160 * 4}, // global number of grid points
+				{1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
+				{1, 4, 4}}; // division into patches
   psc_->domain_ = grid_params;
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },

@@ -105,8 +105,7 @@ psc_harris_create(struct psc *psc)
 
   psc->prm.stats_every = 100;
 
-  auto grid_params = GridParams{};
-  grid_params.gdims = { 1, 64, 256 };
+  auto grid_params = GridParams{{1, 64, 256}, {0, 0, 0}};
   psc->domain_ = grid_params;
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },

@@ -47,10 +47,15 @@ struct GridBc
 struct GridParams
 {
   using Double3 = Vec3<double>;
+
+  GridParams(Int3 gdims, Double3 length, Double3 corner = {0., 0., 0.},
+	     Int3 np = {1, 1, 1}, Int3 bs = {1, 1, 1})
+    : gdims(gdims), length(length), corner(corner), np(np), bs(bs) 
+  {}
   
+  Int3 gdims;		///<Number of grid-points in each dimension
   Double3 length;	///<The physical size of the simulation-box 
   Double3 corner;
-  Int3 gdims;		///<Number of grid-points in each dimension
   Int3 np;		///<Number of patches in each dimension
   Int3 bs;
 };
@@ -88,19 +93,20 @@ struct Grid_
     Real3 dx_;
   };
 
-  // Construct a single patch covering the whole domain
+  // Construct a single≈≈ patch covering the whole domain
   // Args: global dimensions, and length of the domain in all 3 dims
-  // -- mostly useful for testing
+  // -- mostly useful ≈for testing
   //
   // Maybe the named ctor idiom would be good here (but right now
   // can't be done since the copy ctor is deleted.
-  Grid_(const Int3& _gdims, const Real3& length)
-    : gdims(_gdims)
+  Grid_(const GridParams& domain)
+    : domain(domain),
+      gdims(domain.gdims)
   {
     ldims = gdims;
-    dx = length / Real3(gdims);
+    dx = domain.length / Real3(gdims);
 
-    patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, length, dx));
+    patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, domain.length, dx));
 
     for (int d = 0; d < 3; d++) {
       assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3

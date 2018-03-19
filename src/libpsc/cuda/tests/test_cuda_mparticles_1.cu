@@ -89,7 +89,8 @@ struct CudaMparticlesTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    grid_.reset(new Grid_t({ 1, 4, 2 }, { 1., 40., 20. }));
+    GridParams domain = {{1, 4, 2}, {1., 40., 20.}};
+    grid_.reset(new Grid_t(domain));
   }
 };
 

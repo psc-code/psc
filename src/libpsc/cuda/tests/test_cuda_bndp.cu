@@ -30,10 +30,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    auto domain = GridParams{};
-    domain.gdims = {1, 8, 8};
-    domain.length = {1., 80., 80.};
-    domain.corner = {0., 0., 0.};
+    auto domain = GridParams{{1, 8, 8}, {1., 80., 80.}};
     std::vector<Int3> offs = {{0, 0, 0}, {0, 4, 0}};
     grid.reset(new Grid_t(domain, { 1, 4, 4 }, offs));
 

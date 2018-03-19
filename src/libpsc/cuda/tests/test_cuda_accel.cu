@@ -69,7 +69,8 @@ struct PushMprtsTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    grid_.reset(new Grid_t({ 1, 1, 1 }, { L, L, L }));
+    auto domain = GridParams{{1, 1, 1}, {L, L, L}};
+    grid_.reset(new Grid_t{domain});
   }
 
   // FIXME, convenient interfaces like make_cmflds, make_cmprts
