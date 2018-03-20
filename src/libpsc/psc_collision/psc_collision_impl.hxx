@@ -461,7 +461,7 @@ struct Collision_
   void update_rei_before(particles_t& prts, int n_start, int n_end,
 			 int p, int i, int j, int k)
   {
-    real_t fnqs = ppsc->coeff.cori;
+    real_t fnqs = prts.grid().fnqs;
     mfields_t mf_rei(mflds_rei);
     Fields F(mf_rei[p]);
     F(0, i,j,k) = 0.;
@@ -481,7 +481,7 @@ struct Collision_
   void update_rei_after(particles_t& prts, int n_start, int n_end,
 			int p, int i, int j, int k)
   {
-    real_t fnqs = ppsc->coeff.cori;
+    real_t fnqs = prts.grid().fnqs;
     mfields_t mf_rei(mflds_rei);
     Fields F(mf_rei[p]);
     for (int n = n_start; n < n_end; n++) {

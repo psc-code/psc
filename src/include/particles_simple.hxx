@@ -192,7 +192,7 @@ struct psc_particle
   real_t pxi, pyi, pzi;
   int kind_;
 
-  int kind() { return kind_; }
+  int kind() const { return kind_; }
 
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored in mprts at right precision
