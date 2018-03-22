@@ -189,9 +189,6 @@ struct psc_flatfoil
 
   psc_flatfoil();
   
-  void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch);
-  void setup_initial_fields(PscMfieldsBase mflds);
-
   PscFlatfoil* makePscFlatfoil();
 
   PscFlatfoilParams params;
@@ -210,53 +207,6 @@ struct psc_flatfoil
 psc_flatfoil::psc_flatfoil()
   : psc_(psc_create(MPI_COMM_WORLD))
 {}
-
-// ----------------------------------------------------------------------
-// psc_flatfoil::setup_initial_particles
-
-void psc_flatfoil::setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch)
-{
-  auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-    switch (kind) {
-    case MY_ION:
-    npt.n    = params.background_n;
-    npt.T[0] = params.background_Ti;
-    npt.T[1] = params.background_Ti;
-    npt.T[2] = params.background_Ti;
-    break;
-    case MY_ELECTRON:
-    npt.n    = params.background_n;
-    npt.T[0] = params.background_Te;
-    npt.T[1] = params.background_Te;
-    npt.T[2] = params.background_Te;
-    break;
-    default:
-    assert(0);
-    }
-
-    if (params.inject_target.is_inside(crd)) {
-      // replace values above by target values
-      params.inject_target.init_npt(kind, crd, &npt);
-    }
-  };
-
-  SetupParticles<MparticlesDouble>::setup_particles(mprts, ppsc, n_prts_by_patch, init_npt);
-}
-
-// ----------------------------------------------------------------------
-// psc_flatfoil::setup_initial_fields
-
-void psc_flatfoil::setup_initial_fields(PscMfieldsBase mflds)
-{
-  SetupFields<MfieldsC>::set(mflds, [&](int m, double crd[3]) {
-      switch (m) {
-      case HY: return params.BB;
-      default: return 0.;
-      }
-    });
-}
-
-#define psc_flatfoil_(psc) mrc_to_subobj(psc, struct psc_flatfoil)
 
 // ======================================================================
 // PscFlatfoil
@@ -376,8 +326,71 @@ struct PscFlatfoil : PscFlatfoilParams
 
   void setup()
   {
+    MPI_Comm comm = psc_comm(psc_);
+
+    // --- partition particles and initial balancing
+    mpi_printf(comm, "**** Partitioning...\n");
+    auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc_);
+    psc_balance_setup(psc_->balance);
+    auto balance = PscBalanceBase{psc_->balance};
+    auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+    PscMparticlesBase{psc_->particles}->reset(psc_->grid());
+    // balance::initial does not rebalance particles, because the old way of doing this
+    // does't even have the particle data structure created yet -- FIXME?
+    
+    mpi_printf(comm, "**** Setting up particles...\n");
+    setup_initial_particles(PscMparticlesBase{psc_->particles}, n_prts_by_patch_new);
+    
+    mpi_printf(comm, "**** Setting up fields...\n");
+    setup_initial_fields(psc_->flds);
+
     setup_stats();
   }
+
+  // ----------------------------------------------------------------------
+  // setup_initial_particles
+  
+  void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch)
+  {
+    auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
+      switch (kind) {
+      case MY_ION:
+      npt.n    = background_n;
+      npt.T[0] = background_Ti;
+      npt.T[1] = background_Ti;
+      npt.T[2] = background_Ti;
+      break;
+      case MY_ELECTRON:
+      npt.n    = background_n;
+      npt.T[0] = background_Te;
+      npt.T[1] = background_Te;
+      npt.T[2] = background_Te;
+      break;
+      default:
+      assert(0);
+      }
+      
+      if (inject_target.is_inside(crd)) {
+	// replace values above by target values
+	inject_target.init_npt(kind, crd, &npt);
+      }
+    };
+    
+    SetupParticles<MparticlesDouble>::setup_particles(mprts, ppsc, n_prts_by_patch, init_npt);
+  }
+
+// ----------------------------------------------------------------------
+// setup_initial_fields
+
+void setup_initial_fields(PscMfieldsBase mflds)
+{
+  SetupFields<MfieldsC>::set(mflds, [&](int m, double crd[3]) {
+      switch (m) {
+      case HY: return BB;
+      default: return 0.;
+      }
+    });
+}
 
   void setup_stats()
   {
@@ -600,25 +613,14 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
   psc_setup_coeff(psc_);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds);
 
-  // --- partition particles and initial balancing
-  mpi_printf(comm, "**** Partitioning...\n");
-  auto n_prts_by_patch_old = SetupParticles<MparticlesDouble>::setup_partition(psc_);
-  psc_balance_setup(psc_->balance);
-  auto balance = PscBalanceBase{psc_->balance};
-  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  mpi_printf(comm, "**** Setting up particles...\n");
+  mpi_printf(comm, "**** Creating particle data structure...\n");
   psc_->particles = PscMparticlesCreate(comm, psc_->grid(), psc_->prm.particles_base).mprts();
-  setup_initial_particles(PscMparticlesBase{psc_->particles}, n_prts_by_patch_new);
 
   // --- create and set up base mflds
-  mpi_printf(comm, "**** Setting up fields...\n");
+  mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
 				psc_->prm.fields_base).mflds();
-  setup_initial_fields(psc_->flds);
-
-  psc_setup_member_objs(psc_);
 
   return new PscFlatfoil(params, heating, psc_);
 }
