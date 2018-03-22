@@ -120,6 +120,8 @@ struct Grid_
   // forgets to init them correctly for an real simulation
   real_t fnqs = { 1. };
   real_t eta = { 1. };
+  real_t beta = { 1. };
+  real_t cori = { 1. };
   real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;

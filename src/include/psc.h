@@ -147,7 +147,7 @@ struct psc {
   ///@defgroup config-params user-configurable parameters @{
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
-  struct psc_coeff coeff;	///< automatically derived constants
+  struct psc_coeff coeff_;	///< automatically derived constants
   Grid_t::Domain domain_;	///< the computational domain
   GridBc bc_;
   Grid_t::Kinds kinds_;

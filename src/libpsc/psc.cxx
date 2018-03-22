@@ -217,23 +217,23 @@ void
 psc_setup_coeff(struct psc *psc)
 {
   assert(psc->prm.nicell > 0);
-  psc->coeff.cori = 1. / psc->prm.nicell;
-  psc->coeff.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
-  psc->coeff.ld = psc->prm.cc / psc->coeff.wl;
+  psc->coeff_.cori = 1. / psc->prm.nicell;
+  psc->coeff_.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
+  psc->coeff_.ld = psc->prm.cc / psc->coeff_.wl;
   if (psc->prm.e0 == 0.) {
     psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
       psc->prm.lw / 1.0e6;
   }
   psc->prm.b0 = psc->prm.e0 / psc->prm.cc;
-  psc->prm.rho0 = psc->prm.eps0 * psc->coeff.wl * psc->prm.b0;
-  psc->prm.phi0 = psc->coeff.ld * psc->prm.e0;
-  psc->prm.a0 = psc->prm.e0 / psc->coeff.wl;
-  psc->coeff.vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * psc->coeff.wl);
-  psc->coeff.vt = sqrt(psc->prm.tt / psc->prm.mm);
-  psc->coeff.wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
-  psc->coeff.alpha = psc->coeff.wp / psc->coeff.wl;
-  psc->coeff.beta = psc->coeff.vt / psc->prm.cc;
-  psc->coeff.eta = psc->coeff.vos / psc->prm.cc;
+  psc->prm.rho0 = psc->prm.eps0 * psc->coeff_.wl * psc->prm.b0;
+  psc->prm.phi0 = psc->coeff_.ld * psc->prm.e0;
+  psc->prm.a0 = psc->prm.e0 / psc->coeff_.wl;
+  psc->coeff_.vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * psc->coeff_.wl);
+  psc->coeff_.vt = sqrt(psc->prm.tt / psc->prm.mm);
+  psc->coeff_.wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
+  psc->coeff_.alpha = psc->coeff_.wp / psc->coeff_.wl;
+  psc->coeff_.beta = psc->coeff_.vt / psc->prm.cc;
+  psc->coeff_.eta = psc->coeff_.vos / psc->prm.cc;
 }
 
 // ----------------------------------------------------------------------
@@ -309,9 +309,11 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     }
   }
   
-  assert(coeff.ld == 1.);
-  grid->fnqs = sqr(coeff.alpha) * coeff.cori / coeff.eta;
-  grid->eta = coeff.eta;
+  assert(coeff_.ld == 1.);
+  grid->fnqs = sqr(coeff_.alpha) * coeff_.cori / coeff_.eta;
+  grid->eta = coeff_.eta;
+  grid->beta = coeff_.beta;
+  grid->cori = coeff_.cori;
   grid->dt = dt;
 
   return grid;
@@ -469,51 +471,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   psc->time_start = MPI_Wtime();
 }
-
-// ----------------------------------------------------------------------
-// get_n_in_cell
-//
-// helper function for partition / particle setup
-
-static inline int
-get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
-{
-  if (psc->prm.const_num_particles_per_cell) {
-    return psc->prm.nicell;
-  }
-  if (npt->particles_per_cell) {
-    return npt->n * npt->particles_per_cell + .5;
-  }
-  if (psc->prm.fractional_n_particles_per_cell) {
-    int n_prts = npt->n / psc->coeff.cori;
-    float rmndr = npt->n / psc->coeff.cori - n_prts;
-    float ran = random() / ((float) RAND_MAX + 1);
-    if (ran < rmndr) {
-      n_prts++;
-    }
-    return n_prts;
-  }
-  return npt->n / psc->coeff.cori + .5;
-}
-
-// ----------------------------------------------------------------------
-// find_bounds
-//
-// helper function for partition / particle setup
-
-static void
-find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
-{
-  for (int d = 0; d < 3; d++) {
-    ilo[d] = 0;
-    ihi[d] = psc->grid().ldims[d];
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_set_ic_fields_default
-//
-// FIXME, eventually we don't need to do J anymore
 
 // ----------------------------------------------------------------------
 // psc_set_ic_fields

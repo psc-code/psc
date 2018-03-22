@@ -58,6 +58,8 @@ struct InjectCuda : InjectBase
   static inline int
   get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
   {
+    const auto& grid = psc->grid();
+    
     if (psc->prm.const_num_particles_per_cell) {
       return psc->prm.nicell;
     }
@@ -65,15 +67,15 @@ struct InjectCuda : InjectBase
       return npt->n * npt->particles_per_cell + .5;
     }
     if (psc->prm.fractional_n_particles_per_cell) {
-      int n_prts = npt->n / psc->coeff.cori;
-      float rmndr = npt->n / psc->coeff.cori - n_prts;
+      int n_prts = npt->n / grid.cori;
+      float rmndr = npt->n / grid.cori - n_prts;
       float ran = random() / ((float) RAND_MAX + 1);
       if (ran < rmndr) {
 	n_prts++;
       }
       return n_prts;
     }
-    return npt->n / psc->coeff.cori + .5;
+    return npt->n / grid.cori + .5;
   }
 
   // FIXME duplicated
@@ -84,7 +86,7 @@ struct InjectCuda : InjectBase
   {
     const auto& grid = psc->grid();
     const auto& kinds = grid.kinds;
-    double beta = psc->coeff.beta;
+    double beta = grid.beta;
 
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -137,9 +139,8 @@ struct InjectCuda : InjectBase
     const auto& grid = psc->grid();
     const auto& kinds = grid.kinds;
 
-    float fac = 1. / psc->coeff.cori * 
-      (every_step * psc->dt / tau) /
-      (1. + every_step * psc->dt / tau);
+    float fac = 1. / grid.cori * 
+      (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
 
     FieldsItemBase* item = PscFieldsItemBase{item_n}.sub();
     item->run(mflds_base, mprts_base);
