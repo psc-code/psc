@@ -337,10 +337,10 @@ struct PscFlatfoil : PscFlatfoilParams
     mprts_.reset(psc_->grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(PscMparticlesBase{psc_->particles}, n_prts_by_patch_new);
+    setup_initial_particles(mprts_, n_prts_by_patch_new);
     
     mpi_printf(comm, "**** Setting up fields...\n");
-    setup_initial_fields(psc_->flds);
+    setup_initial_fields(mflds_);
 
     psc_setup_member_objs(psc_);
 
@@ -350,7 +350,7 @@ struct PscFlatfoil : PscFlatfoilParams
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
-  void setup_initial_particles(PscMparticlesBase mprts, std::vector<uint>& n_prts_by_patch)
+  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
     auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
       switch (kind) {
@@ -376,21 +376,21 @@ struct PscFlatfoil : PscFlatfoilParams
       }
     };
     
-    SetupParticles<MparticlesDouble>::setup_particles(mprts, ppsc, n_prts_by_patch, init_npt);
+    SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, init_npt);
   }
 
-// ----------------------------------------------------------------------
-// setup_initial_fields
-
-void setup_initial_fields(PscMfieldsBase mflds)
-{
-  SetupFields<MfieldsC>::set(mflds, [&](int m, double crd[3]) {
-      switch (m) {
-      case HY: return BB;
-      default: return 0.;
-      }
-    });
-}
+  // ----------------------------------------------------------------------
+  // setup_initial_fields
+  
+  void setup_initial_fields(Mfields_t& mflds)
+  {
+    SetupFields<Mfields_t>::set(mflds, [&](int m, double crd[3]) {
+	switch (m) {
+	case HY: return BB;
+	default: return 0.;
+	}
+      });
+  }
 
   void setup_stats()
   {
