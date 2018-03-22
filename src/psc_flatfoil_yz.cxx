@@ -342,6 +342,8 @@ struct PscFlatfoil : PscFlatfoilParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(psc_->flds);
 
+    psc_setup_member_objs(psc_);
+
     setup_stats();
   }
 
