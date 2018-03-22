@@ -110,10 +110,6 @@ static struct param psc_descr[] = {
   { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
   { "cfl"           , VAR(prm.cfl)             , PARAM_DOUBLE(.75)          },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
-  { "nr_populations", VAR(prm.nr_populations)  , PARAM_INT(-1),
-    .help = "number of particle populations in the initial condition. "
-    "init_npt() will be called this many times. By default, nr_populations "
-    "will be set the the number of particle kinds." },
   { "neutralizing_population", VAR(prm.neutralizing_population)  , PARAM_INT(-1),
     .help = "this population will get density set to achieve neutrality "
     "in a given cell." },

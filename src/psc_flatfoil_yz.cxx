@@ -519,7 +519,6 @@ PscFlatfoil* psc_flatfoil::makePscFlatfoil()
 
   psc_->prm.nmax = 210001;
   psc_->prm.nicell = 100;
-  psc_->prm.nr_populations = N_MY_KINDS;
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 

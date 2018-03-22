@@ -161,7 +161,6 @@ struct InjectCuda : InjectBase
       Fields N(mf_n[p]);
       const int *ldims = psc->grid().ldims;
     
-      int nr_pop = psc->prm.nr_populations;
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
 	  for (int jx = 0; jx < ldims[0]; jx++) {
@@ -179,7 +178,7 @@ struct InjectCuda : InjectBase
 	    }
 
 	    int n_q_in_cell = 0;
-	    for (int kind = 0; kind < nr_pop; kind++) {
+	    for (int kind = 0; kind < kinds.size(); kind++) {
 	      struct psc_particle_npt npt = {};
 	      if (kind < kinds.size()) {
 		npt.kind = kind;
@@ -204,7 +203,7 @@ struct InjectCuda : InjectBase
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(psc->prm.neutralizing_population == nr_pop - 1);
+		assert(psc->prm.neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 

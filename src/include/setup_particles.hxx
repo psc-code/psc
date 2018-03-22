@@ -135,7 +135,6 @@ struct SetupParticles
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto ilo = Int3{}, ihi = grid.ldims;
   
-      int nr_pop = psc->prm.nr_populations;
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -149,7 +148,7 @@ struct SetupParticles
 	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
 	  
 	    int n_q_in_cell = 0;
-	    for (int kind = 0; kind < nr_pop; kind++) {
+	    for (int kind = 0; kind < kinds.size(); kind++) {
 	      struct psc_particle_npt npt = {};
 	      if (kind < kinds.size()) {
 		npt.kind = kind;
@@ -164,7 +163,7 @@ struct SetupParticles
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(psc->prm.neutralizing_population == nr_pop - 1);
+		assert(psc->prm.neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
@@ -204,11 +203,8 @@ struct SetupParticles
       return n_prts_by_patch;
     }
 
-    if (psc->prm.nr_populations < 0) {
-      psc->prm.nr_populations = kinds.size();
-    }
     if (psc->prm.neutralizing_population < 0) {
-      psc->prm.neutralizing_population = psc->prm.nr_populations - 1;
+      psc->prm.neutralizing_population = kinds.size() - 1;
     }
 
     const auto& grid = psc->grid();
@@ -217,8 +213,7 @@ struct SetupParticles
       auto ilo = Int3{}, ihi = grid.ldims;
 
       int np = 0;
-      int nr_pop = psc->prm.nr_populations;
-      for (int kind = 0; kind < nr_pop; kind++) {
+      for (int kind = 0; kind < kinds.size(); kind++) {
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
