@@ -19,7 +19,6 @@ struct psc_output_particles_ops_hdf5_double : psc_output_particles_ops {
   psc_output_particles_ops_hdf5_double() {
     name                  = "hdf5_double";
     size                  = sizeof(struct psc_output_particles_hdf5);
-    param_descr           = psc_output_particles_hdf5_descr;
     setup                 = psc_output_particles_hdf5_setup;
     destroy               = psc_output_particles_hdf5_destroy;
     run                   = psc_output_particles_hdf5_run;

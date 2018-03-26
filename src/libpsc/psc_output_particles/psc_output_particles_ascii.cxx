@@ -10,20 +10,9 @@
 #define to_psc_output_particles_ascii(out) \
   mrc_to_subobj(out, struct psc_output_particles_ascii)
 
-struct psc_output_particles_ascii {
-  const char *data_dir;
-  const char *basename;
-  int every_step;
+struct psc_output_particles_ascii : PscOutputParticlesParams
+{
 };
-
-#define VAR(x) (void *)offsetof(struct psc_output_particles_ascii, x)
-static struct param psc_output_particles_ascii_descr[] = {
-  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
-  { "basename"           , VAR(basename)             , PARAM_STRING("prt")     },
-  { "every_step"         , VAR(every_step)           , PARAM_INT(-1)           },
-  {},
-};
-#undef VAR
 
 // ----------------------------------------------------------------------
 // psc_output_particles_ascii_run
@@ -72,7 +61,6 @@ struct psc_output_particles_ops_ascii : psc_output_particles_ops {
   psc_output_particles_ops_ascii() {
     name                  = "ascii";
     size                  = sizeof(struct psc_output_particles_ascii);
-    param_descr           = psc_output_particles_ascii_descr;
     run                   = psc_output_particles_ascii_run;
   }
 } psc_output_particles_ascii_ops;

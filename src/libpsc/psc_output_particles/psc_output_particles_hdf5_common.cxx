@@ -20,35 +20,12 @@ struct hdf5_prt {
 #define to_psc_output_particles_hdf5(out) \
   mrc_to_subobj(out, struct psc_output_particles_hdf5)
 
-struct psc_output_particles_hdf5 {
-  // parameters
-  const char *data_dir;
-  const char *basename;
-  int every_step;
-  int lo[3];
-  int hi[3];
-  bool use_independent_io;
-  char *romio_cb_write;
-  char *romio_ds_write;
-
+struct psc_output_particles_hdf5 : PscOutputParticlesParams
+{
   // internal
   hid_t prt_type;
   int wdims[3]; // dimensions of the subdomain we're actually writing
 };
-
-#define VAR(x) (void *)offsetof(struct psc_output_particles_hdf5, x)
-static struct param psc_output_particles_hdf5_descr[] = {
-  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
-  { "basename"           , VAR(basename)             , PARAM_STRING("prt")     },
-  { "every_step"         , VAR(every_step)           , PARAM_INT(-1)           },
-  { "lo"                 , VAR(lo)                   , PARAM_INT3(0, 0, 0)     },
-  { "hi"                 , VAR(hi)                   , PARAM_INT3(0, 0, 0)     },
-  { "use_independent_io" , VAR(use_independent_io)   , PARAM_BOOL(false)       },
-  { "romio_cb_write"     , VAR(romio_cb_write)       , PARAM_STRING(NULL)      },
-  { "romio_ds_write"     , VAR(romio_ds_write)       , PARAM_STRING(NULL)      },
-  {},
-};
-#undef VAR
 
 // ----------------------------------------------------------------------
 // psc_output_particles_hdf5_setup
@@ -57,6 +34,8 @@ static void
 psc_output_particles_hdf5_setup(struct psc_output_particles *out)
 {
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
+
+  *static_cast<PscOutputParticlesParams*>(hdf5) = out->params;
 
   hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
   H5Tinsert(id, "x" , HOFFSET(struct hdf5_prt, x) , H5T_NATIVE_FLOAT);
