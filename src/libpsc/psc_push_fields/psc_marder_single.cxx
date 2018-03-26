@@ -1,13 +1,13 @@
 
 #include "psc_fields_single.h"
-#include "psc_particles_as_single.h"
+#include "psc_particles_single.h"
 
 #include "psc_marder_common.cxx"
 
 // ======================================================================
 // psc_marder: single
 
-using marder_ops_single = marder_ops<PscMfieldsSingle>;
+using marder_ops_single = marder_ops<MparticlesSingle, PscMfieldsSingle>;
 
 struct psc_marder_ops_single : psc_marder_ops {
   psc_marder_ops_single() {

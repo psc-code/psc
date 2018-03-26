@@ -6,8 +6,9 @@
 
 #include <mrc_io.h>
 
-template<typename MF>
+template<typename MP, typename MF>
 struct marder_ops {
+  using Mparticles_t = MP;
   using mfields_t = MF;
   using Mfields_t = typename mfields_t::sub_t;
   using fields_t = typename mfields_t::fields_t;
@@ -56,7 +57,8 @@ struct marder_ops {
     psc_output_fields_item_setup(marder->item_div_e);
 
     marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
-    psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_" PARTICLE_TYPE);
+    auto s = std::string("rho_1st_nc_") + Mparticles_traits<Mparticles_t>::name;
+    psc_output_fields_item_set_type(marder->item_rho, s.c_str());
     psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd);
     psc_output_fields_item_setup(marder->item_rho);
 
