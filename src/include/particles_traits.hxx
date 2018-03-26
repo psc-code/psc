@@ -1,12 +1,10 @@
 
-#ifndef PARTICLES_TRAITS_HXX
-#define PARTICLES_TRAITS_HXX
+#pragma once
 
-template<typename MP>
-struct mparticles_traits
+template<typename MParticles>
+struct Mparticles_traits
 {
 };
 
-#endif
 
 

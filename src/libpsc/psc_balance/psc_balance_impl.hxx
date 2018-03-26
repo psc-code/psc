@@ -575,7 +575,7 @@ private:
 
     assert(sizeof(particle_t) % sizeof(real_t) == 0); // FIXME
 
-    MPI_Datatype mpi_dtype = mparticles_traits<mparticles_t>::mpi_dtype();
+    MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
     // recv for new local patches
     MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new]();
     int nr_recv_reqs = 0;

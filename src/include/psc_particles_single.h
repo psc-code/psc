@@ -55,7 +55,7 @@ using MparticlesSingle = Mparticles<particle_single_t>;
 using PscMparticlesSingle = PscMparticles<MparticlesSingle>;
 
 template<>
-struct mparticles_traits<PscMparticlesSingle>
+struct Mparticles_traits<MparticlesSingle>
 {
   static constexpr const char* name = "single";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

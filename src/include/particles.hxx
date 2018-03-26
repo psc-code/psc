@@ -91,7 +91,7 @@ struct PscMparticles
 
   static Self create(MPI_Comm comm, const Grid_t& grid)
   {
-    auto mprts = PscMparticlesCreate(comm, grid, mparticles_traits<Self>::name);
+    auto mprts = PscMparticlesCreate(comm, grid, Mparticles_traits<S>::name);
     return Self{mprts.mprts()}; // odd way of returning derived type
   }
   
@@ -137,7 +137,7 @@ class MparticlesWrapper
 public:
   const static size_t size = sizeof(Mparticles);
 
-  constexpr static const char* name = mparticles_traits<PscMparticles<Mparticles>>::name;
+  constexpr static const char* name = Mparticles_traits<Mparticles>::name;
   
   static void setup(struct psc_mparticles* _mprts)
   {

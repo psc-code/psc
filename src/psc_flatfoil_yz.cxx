@@ -592,7 +592,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
   psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-					mparticles_traits<PscMparticles<PscFlatfoil::Mparticles_t>>::name).mprts();
+					Mparticles_traits<PscFlatfoil::Mparticles_t>::name).mprts();
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");

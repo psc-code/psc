@@ -24,7 +24,7 @@ struct Collision_
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
 
-  constexpr static char const* const name = mparticles_traits<mparticles_t>::name;
+  constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
 
   enum {
     STATS_MIN,

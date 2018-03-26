@@ -60,7 +60,7 @@ struct MparticlesSingleByKind : MparticlesBase
 using PscMparticlesSingleByKind = PscMparticles<MparticlesSingleByKind>;
 
 template<>
-struct mparticles_traits<PscMparticlesSingleByKind>
+struct Mparticles_traits<MparticlesSingleByKind>
 {
   static constexpr const char* name = "single_by_kind";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

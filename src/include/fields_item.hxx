@@ -352,7 +352,7 @@ struct FieldsItemMoment : FieldsItemBase
   static const char* name()
   {
     return strdup((std::string(Moment_t::name) + "_" +
-		   mparticles_traits<mparticles_t>::name).c_str());
+		   Mparticles_traits<typename mparticles_t::sub_t>::name).c_str());
   }
 
   FieldsItemMoment(MPI_Comm comm, PscBndBase bnd)

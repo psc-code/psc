@@ -16,7 +16,7 @@
 using PscMparticlesCuda = PscMparticles<MparticlesCuda>;
 
 template<>
-struct mparticles_traits<PscMparticlesCuda>
+struct Mparticles_traits<MparticlesCuda>
 {
   static constexpr const char* name = "cuda";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
