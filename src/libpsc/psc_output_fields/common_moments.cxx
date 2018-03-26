@@ -100,6 +100,7 @@
   } while (0)
 
 #define DEPOSIT_TO_GRID_2ND_NC(part, flds, m, val) do {			\
+    using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
     real_t *xi = &part->xi; /* don't shift back in time */		\
     real_t u = xi[0] * dxi;						\

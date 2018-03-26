@@ -2,23 +2,21 @@
 #include "psc_output_fields_item_private.h"
 #include "fields.hxx"
 
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
-using real_t = mparticles_t::real_t;
-
 #include <math.h>
 
 #include "common_moments.cxx"
 
-using particles_t = mparticles_t::patch_t;
-
 // ======================================================================
 // n
 
+template<typename MP, typename MF>
 struct Moment_n
 {
-  using Mparticles = mparticles_t::sub_t;
-  using Mfields = mfields_t::sub_t;
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "n_2nd_nc_double";
   constexpr static int n_comps = 1;
@@ -32,7 +30,7 @@ struct Moment_n
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t *prt = &*prt_iter;
+      auto *prt = &*prt_iter;
       int m = prt->kind();
       DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
     }
@@ -42,10 +40,14 @@ struct Moment_n
 // ======================================================================
 // rho
 
+template<typename MP, typename MF>
 struct Moment_rho
 {
-  using Mparticles = mparticles_t::sub_t;
-  using Mfields = mfields_t::sub_t;
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "rho_2nd_nc_double";
   constexpr static int n_comps = 1;
@@ -59,7 +61,7 @@ struct Moment_rho
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t *prt = &*prt_iter;
+      auto *prt = &*prt_iter;
       DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prts.prt_qni(*prt));
     }
   }
