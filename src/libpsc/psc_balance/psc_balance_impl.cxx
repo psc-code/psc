@@ -13,7 +13,7 @@
 
 struct psc_balance_ops_single : psc_balance_ops
 {
-  using Balance_t = Balance_<PscMparticlesSingle, PscMfieldsSingle>;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Wrapper_t = BalanceWrapper<Balance_t>;
   psc_balance_ops_single() {
     name                  = "single";
@@ -28,7 +28,7 @@ struct psc_balance_ops_single : psc_balance_ops
 
 struct psc_balance_ops_double : psc_balance_ops
 {
-  using Balance_t = Balance_<PscMparticlesDouble, PscMfieldsC>;
+  using Balance_t = Balance_<MparticlesDouble, MfieldsC>;
   using Wrapper_t = BalanceWrapper<Balance_t>;
   psc_balance_ops_double() {
     name                  = "double";

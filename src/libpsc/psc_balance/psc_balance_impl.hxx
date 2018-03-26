@@ -316,14 +316,12 @@ struct communicate_ctx {
 template<typename MP, typename MF>
 struct Balance_ : BalanceBase
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using fields_t = typename mfields_t::fields_t;
+  using Mparticles = MP;
+  using Mfields = MF;
+  using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
-  using particle_t = typename mparticles_t::particle_t;
-  using real_t = typename mparticles_t::real_t;
-  using Mparticles = typename mparticles_t::sub_t;
-  using Mfields = typename mfields_t::sub_t;
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mparticles::real_t;
 
   Balance_(int every, double factor_fields=1., bool print_loads=false, bool write_loads=false)
     : every_(every), factor_fields_(factor_fields),
