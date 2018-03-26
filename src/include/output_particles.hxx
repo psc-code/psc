@@ -30,7 +30,11 @@ struct PscOutputParticles
 
   void run(PscMparticlesBase mprts_base)
   {
-    psc_output_particles_run(outp_, mprts_base.mprts());
+    struct psc_output_particles_ops *ops = psc_output_particles_ops(outp_);
+    assert(ops->run);
+    psc_stats_start(st_time_output);
+    ops->run(outp_, mprts_base.mprts());
+    psc_stats_stop(st_time_output);
   }
 
   psc_push_fields *outp() { return outp_; }

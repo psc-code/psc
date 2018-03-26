@@ -1,4 +1,6 @@
 
+#include "psc.h"
+
 using real_t = mparticles_t::real_t;
 
 // needs to be changed accordingly
