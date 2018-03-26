@@ -11,7 +11,7 @@
 class OutputParticlesBase
 {
 public:
-  //  virtual void run(PscMparticlesBase mprts_base) = 0;
+  virtual void run(PscMparticlesBase mprts_base) = 0;
 };
 
 // ======================================================================
@@ -31,10 +31,8 @@ struct PscOutputParticles
 
   void run(PscMparticlesBase mprts_base)
   {
-    struct psc_output_particles_ops *ops = psc_output_particles_ops(outp_);
-    assert(ops->run);
     psc_stats_start(st_time_output);
-    ops->run(outp_, mprts_base.mprts());
+    sub()->run(mprts_base);
     psc_stats_stop(st_time_output);
   }
 

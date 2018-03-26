@@ -22,6 +22,5 @@ struct psc_output_particles_ops_hdf5_double : psc_output_particles_ops {
     size                  = Wrapper_t::size;
     setup                 = Wrapper_t::setup;
     destroy               = Wrapper_t::destroy;
-    run                   = psc_output_particles_hdf5_run;
   }
 } psc_output_particles_hdf5_double_ops;
