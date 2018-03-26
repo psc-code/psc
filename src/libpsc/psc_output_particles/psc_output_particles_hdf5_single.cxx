@@ -20,7 +20,6 @@ struct psc_output_particles_ops_hdf5_single : psc_output_particles_ops {
     name                  = "hdf5_single";
     size                  = sizeof(struct psc_output_particles_hdf5);
     param_descr           = psc_output_particles_hdf5_descr;
-    create                = psc_output_particles_hdf5_create;
     setup                 = psc_output_particles_hdf5_setup;
     destroy               = psc_output_particles_hdf5_destroy;
     run                   = psc_output_particles_hdf5_run;
