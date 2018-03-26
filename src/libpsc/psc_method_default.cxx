@@ -11,6 +11,7 @@
 #include <particles.hxx>
 #include <push_particles.hxx>
 #include <setup_particles.hxx>
+#include <output_particles.hxx>
 
 #include <stdlib.h>
 
@@ -78,7 +79,7 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 {
   psc_diag_run(psc->diag, psc);
   psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, psc->particles);
-  psc_output_particles_run(psc->output_particles, psc->particles);
+  PscOutputParticlesBase{psc->output_particles}.run(PscMparticlesBase{psc->particles});
 }
 
 // ----------------------------------------------------------------------
