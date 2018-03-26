@@ -1,23 +1,9 @@
 
 #include <psc.h>
-#include <psc_push_fields.h>
-#include <psc_bnd_fields.h>
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
-
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <psc_balance.h>
-#include <psc_sort.h>
-#include <psc_collision.h>
-#include <psc_checks.h>
-#include <psc_bnd_particles.h>
-#include <psc_marder.h>
-#include <psc_method.h>
 
 #include <balance.hxx>
 #include <particles.hxx>
@@ -36,6 +22,7 @@
 
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
+
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
 #include "../libpsc/psc_push_particles/push_config.hxx"
@@ -186,12 +173,11 @@ struct PscFlatfoil : PscFlatfoilParams
 {
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
-#if 1 // generic_c
+#if 1 // generic_c: 2nd order
   using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
-#else // 1vbec
+#else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
   using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
 #endif
-  
   using Sort_t = SortCountsort2<Mparticles_t>;
   using Collision_t = Collision_<Mparticles_t, Mfields_t>;
   using PushFields_t = PushFields<Mfields_t>;
@@ -479,9 +465,7 @@ private:
 
 struct PscFlatfoilBuilder
 {
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-  using Heating_t = Heating__<Mparticles_t>;
+  using Heating_t = PscFlatfoil::Heating_t;
 
   PscFlatfoilBuilder()
     : psc_(psc_create(MPI_COMM_WORLD))
@@ -607,12 +591,13 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
-  psc_->particles = PscMparticlesCreate(comm, psc_->grid(), psc_->prm.particles_base).mprts();
+  psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
+					mparticles_traits<PscMparticles<PscFlatfoil::Mparticles_t>>::name).mprts();
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
-				psc_->prm.fields_base).mflds();
+				fields_traits<PscFlatfoil::Mfields_t::fields_t>::name).mflds();
 
   return new PscFlatfoil(params, heating, psc_);
 }
