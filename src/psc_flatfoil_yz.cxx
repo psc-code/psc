@@ -199,86 +199,6 @@ struct PscFlatfoil : PscFlatfoilParams
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
-  {}
-  
-  // ----------------------------------------------------------------------
-  // step
-  //
-  // things are missing from the generic step():
-  // - timing
-  // - psc_checks
-  // - pushp prep
-  // - marder
-
-  void step()
-  {
-    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-    MPI_Comm comm = psc_comm(psc_);
-    int timestep = psc_->timestep;
-
-    balance_(psc_, mprts_);
-    
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
-      mpi_printf(comm, "***** Sorting...\n");
-      sort_(mprts_);
-    }
-    
-    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
-      mpi_printf(comm, "***** Performing collisions...\n");
-      collision_(mprts_);
-    }
-    
-    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp_.push_mprts(mprts_, mflds_);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-    
-    // === field propagation B^{n+1/2} -> B^{n+1}
-    pushf_.push_H<dim_yz>(mflds_, .5);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-    bndp_(mprts_);
-    
-    inject_(mprts_);
-    heating_(mprts_);
-    
-    // === field propagation E^{n+1/2} -> E^{n+3/2}
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
-    
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
-    
-    pushf_.push_E<dim_yz>(mflds_, 1.);
-    
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-    
-    // === field propagation B^{n+1} -> B^{n+3/2}
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
-    
-    pushf_.push_H<dim_yz>(mflds_, .5);
-    
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-
-
-    //psc_checks_continuity_after_particle_push(psc->checks, psc);
-
-    // E at t^{n+3/2}, particles at t^{n+3/2}
-    // B at t^{n+3/2} (Note: that is not it's natural time,
-    // but div B should be == 0 at any time...)
-    //psc_marder_run(psc->marder, psc->flds, psc->particles);
-    
-    //psc_checks_gauss(psc->checks, psc);
-
-    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
-  }
-
-  void setup()
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -300,7 +220,7 @@ struct PscFlatfoil : PscFlatfoilParams
 
     setup_stats();
   }
-
+  
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
@@ -346,6 +266,9 @@ struct PscFlatfoil : PscFlatfoilParams
       });
   }
 
+  // ----------------------------------------------------------------------
+  // setup_stats
+  
   void setup_stats()
   {
     st_nr_particles = psc_stats_register("nr particles");
@@ -437,6 +360,83 @@ struct PscFlatfoil : PscFlatfoilParams
     /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
     mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
 	       elapsed, w, d, h, m, s );
+  }
+
+  // ----------------------------------------------------------------------
+  // step
+  //
+  // things are missing from the generic step():
+  // - timing
+  // - psc_checks
+  // - pushp prep
+  // - marder
+
+  void step()
+  {
+    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+    MPI_Comm comm = psc_comm(psc_);
+    int timestep = psc_->timestep;
+
+    balance_(psc_, mprts_);
+    
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      mpi_printf(comm, "***** Sorting...\n");
+      sort_(mprts_);
+    }
+    
+    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      collision_(mprts_);
+    }
+    
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    pushp_.push_mprts(mprts_, mflds_);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    
+    // === field propagation B^{n+1/2} -> B^{n+1}
+    pushf_.push_H<dim_yz>(mflds_, .5);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+    bndp_(mprts_);
+    
+    inject_(mprts_);
+    heating_(mprts_);
+    
+    // === field propagation E^{n+1/2} -> E^{n+3/2}
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    
+    pushf_.push_E<dim_yz>(mflds_, 1.);
+    
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+    
+    // === field propagation B^{n+1} -> B^{n+3/2}
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    
+    pushf_.push_H<dim_yz>(mflds_, .5);
+    
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
+
+    //psc_checks_continuity_after_particle_push(psc->checks, psc);
+
+    // E at t^{n+3/2}, particles at t^{n+3/2}
+    // B at t^{n+3/2} (Note: that is not it's natural time,
+    // but div B should be == 0 at any time...)
+    //psc_marder_run(psc->marder, psc->flds, psc->particles);
+    
+    //psc_checks_gauss(psc->checks, psc);
+
+    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
 private:
@@ -634,7 +634,6 @@ main(int argc, char **argv)
   psc_mparticles_view(sim.psc_->particles);
   psc_mfields_view(sim.psc_->flds);
   
-  flatfoil->setup();
   flatfoil->integrate();
   
   delete flatfoil;
