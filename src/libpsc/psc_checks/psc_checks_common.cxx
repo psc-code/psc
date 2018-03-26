@@ -21,6 +21,7 @@ using Fields = Fields3d<fields_t>;
 
 namespace {
 
+template<typename MP, typename MF>
 struct Checks_ : ChecksParams, ChecksBase
 {
   Checks_(MPI_Comm comm, const ChecksParams& params)
@@ -338,19 +339,4 @@ psc_checks_sub_read(struct psc_checks *checks, struct mrc_io *io)
 
   psc_checks_read_member_objs(checks, io);
 }
-
-// ----------------------------------------------------------------------
-// psc_checks_sub_ops
-
-struct psc_checks_ops_sub : psc_checks_ops {
-  using Wrapper_t = ChecksWrapper<Checks_>;
-  psc_checks_ops_sub() {
-    name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE;
-    size                            = Wrapper_t::size;
-    setup                           = Wrapper_t::setup;
-    destroy                         = Wrapper_t::destroy;
-    //read                            = psc_checks_sub_read;
-  }
-} psc_checks_sub_ops;
-
 
