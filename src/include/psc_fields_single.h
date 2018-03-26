@@ -17,7 +17,7 @@ using MfieldsSingle = Mfields<fields_single_t>;
 using PscMfieldsSingle = PscMfields<MfieldsSingle>;
 
 template<>
-struct fields_traits<fields_single_t>
+struct Mfields_traits<MfieldsSingle>
 {
   static constexpr const char* name = "single";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

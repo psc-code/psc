@@ -17,7 +17,7 @@ using MfieldsC = Mfields<fields_c_t>;
 using PscMfieldsC = PscMfields<MfieldsC>;
 
 template<>
-struct fields_traits<fields_c_t>
+struct Mfields_traits<MfieldsC>
 {
   static constexpr const char* name = "c";
   static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }

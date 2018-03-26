@@ -9,6 +9,7 @@
 template<typename MF>
 struct marder_ops {
   using mfields_t = MF;
+  using Mfields_t = typename mfields_t::sub_t;
   using fields_t = typename mfields_t::fields_t;
   using real_t = typename mfields_t::real_t;
   using Fields = Fields3d<fields_t>;
@@ -42,14 +43,14 @@ struct marder_ops {
 
     marder->bnd = psc_bnd_create(psc_marder_comm(marder));
     psc_bnd_set_name(marder->bnd, "marder_bnd");
-    psc_bnd_set_type(marder->bnd, fields_traits<fields_t>::name);
+    psc_bnd_set_type(marder->bnd, Mfields_traits<Mfields_t>::name);
     psc_bnd_set_psc(marder->bnd, ppsc);
     psc_bnd_setup(marder->bnd);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
     marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
     char name[20];
-    snprintf(name, 20, "dive_%s", fields_traits<fields_t>::name);
+    snprintf(name, 20, "dive_%s", Mfields_traits<Mfields_t>::name);
     psc_output_fields_item_set_type(marder->item_div_e, name);
     psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
     psc_output_fields_item_setup(marder->item_div_e);

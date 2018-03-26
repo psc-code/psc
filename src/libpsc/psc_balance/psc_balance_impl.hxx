@@ -657,7 +657,7 @@ private:
 
   void communicate_fields(struct communicate_ctx *ctx, Mfields& mf_old, Mfields& mf_new)
   {
-    MPI_Datatype mpi_dtype = fields_traits<fields_t>::mpi_dtype();
+    MPI_Datatype mpi_dtype = Mfields_traits<Mfields>::mpi_dtype();
 
     // send from old local patches
     MPI_Request *send_reqs = new MPI_Request[ctx->nr_patches_old]();

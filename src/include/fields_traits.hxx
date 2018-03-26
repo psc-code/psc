@@ -1,12 +1,8 @@
 
-#ifndef FIELDS_TRAITS_HXX
-#define FIELDS_TRAITS_HXX
+#pragma once
 
 template<typename F>
-struct fields_traits
+struct Mfields_traits
 {
 };
-
-#endif
-
 

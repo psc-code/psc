@@ -431,7 +431,7 @@ inline PscMfieldsBase PscMfieldsCreate(MPI_Comm comm, const Grid_t& grid, int n_
 template<typename S>
 PscMfields<S> PscMfields<S>::create(MPI_Comm comm, const Grid_t& grid, int n_comps, Int3 ibn)
 {
-  return Self{PscMfieldsCreate(comm, grid, n_comps, ibn, fields_traits<fields_t>::name).mflds()};
+  return Self{PscMfieldsCreate(comm, grid, n_comps, ibn, Mfields_traits<S>::name).mflds()};
 }
   
 // ======================================================================
@@ -443,7 +443,7 @@ class MfieldsWrapper
 public:
   const static size_t size = sizeof(Mfields);
 
-  constexpr static const char* name = fields_traits<typename Mfields::fields_t>::name;
+  constexpr static const char* name = Mfields_traits<Mfields>::name;
   
   static void setup(struct psc_mfields* _mflds)
   {

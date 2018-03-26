@@ -109,7 +109,7 @@ struct FieldsItemFields : FieldsItemBase
     if (std::is_same<mfields_t, PscMfieldsC>::value && strcmp(Item::name, "dive") != 0) {
       return Item::name;
     } else {
-      return strdup((std::string{Item::name} + "_" + fields_traits<typename mfields_t::fields_t>::name).c_str());
+      return strdup((std::string{Item::name} + "_" + Mfields_traits<typename mfields_t::sub_t>::name).c_str());
     }
   }
  

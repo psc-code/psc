@@ -597,7 +597,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
-				fields_traits<PscFlatfoil::Mfields_t::fields_t>::name).mflds();
+				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
 
   return new PscFlatfoil(params, heating, psc_);
 }

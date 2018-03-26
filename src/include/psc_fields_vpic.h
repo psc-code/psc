@@ -105,7 +105,7 @@ struct MfieldsVpic : MfieldsBase
 using PscMfieldsVpic = PscMfields<MfieldsVpic>;
 
 template<>
-struct fields_traits<fields_vpic_t>
+struct Mfields_traits<MfieldsVpic>
 {
   static constexpr const char* name = "vpic";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

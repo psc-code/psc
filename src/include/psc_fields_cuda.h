@@ -47,7 +47,7 @@ struct MfieldsCuda : MfieldsBase
 using PscMfieldsCuda = PscMfields<MfieldsCuda>;
 
 template<>
-struct fields_traits<fields_cuda_t>
+struct Mfields_traits<MfieldsCuda>
 {
   static constexpr const char* name = "cuda";
 };
