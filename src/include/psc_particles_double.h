@@ -11,7 +11,6 @@
 struct particle_double_t : psc_particle<double> {};
 
 using MparticlesDouble = Mparticles<particle_double_t>;
-using PscMparticlesDouble = PscMparticles<MparticlesDouble>;
 
 template<>
 struct Mparticles_traits<MparticlesDouble>

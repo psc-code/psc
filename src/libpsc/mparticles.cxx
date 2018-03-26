@@ -17,9 +17,9 @@
 #include "psc_particles_cuda.h"
 #include "psc_particles_vpic.h"
 
-template PscMparticlesSingle PscMparticles<MparticlesBase>::get_as(uint flags);
-template PscMparticlesCuda PscMparticles<MparticlesBase>::get_as(uint flags);
-template PscMparticlesVpic PscMparticles<MparticlesBase>::get_as(uint flags);
+template PscMparticles<MparticlesSingle> PscMparticles<MparticlesBase>::get_as(uint flags);
+template PscMparticles<MparticlesCuda> PscMparticles<MparticlesBase>::get_as(uint flags);
+template PscMparticles<MparticlesVpic> PscMparticles<MparticlesBase>::get_as(uint flags);
 template void PscMparticles<MparticlesSingle>::put_as(PscMparticlesBase mprts_base, uint flags);
 template void PscMparticles<MparticlesCuda>::put_as(PscMparticlesBase mprts_base, uint flags);
 template void PscMparticles<MparticlesVpic>::put_as(PscMparticlesBase mprts_base, uint flags);
@@ -49,7 +49,7 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
   auto mprts_base = PscMparticlesBase{_mprts_base};
   int fail_cnt = 0;
 
-  auto mprts = mprts_base.get_as<PscMparticlesDouble>();
+  auto mprts = mprts_base.get_as<PscMparticles<MparticlesDouble>>();
   const Grid_t& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {

@@ -52,7 +52,6 @@ struct mparticles_patch<particle_single_t> : mparticles_patch_base<particle_sing
 };
 
 using MparticlesSingle = Mparticles<particle_single_t>;
-using PscMparticlesSingle = PscMparticles<MparticlesSingle>;
 
 template<>
 struct Mparticles_traits<MparticlesSingle>

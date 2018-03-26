@@ -4,19 +4,12 @@
 
 #include <math.h>
 
-using mparticles_t = PscMparticlesDouble;
-
-static void
-do_particle_energy(struct psc *psc, mparticles_t mprts, int p, double *result)
-{
-}
-
 static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  struct psc *psc, double *result)
 {
   auto mprts_base = PscMparticlesBase{psc->particles};
-  mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+  auto mprts = mprts_base.get_as<PscMparticles<MparticlesDouble>>();
 
   const Grid_t& grid = psc->grid();
   double fnqs = grid.fnqs;
