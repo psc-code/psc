@@ -177,38 +177,6 @@ struct PscFlatfoilParams
 };
 
 // ======================================================================
-// psc subclass "flatfoil"
-
-struct PscFlatfoil;
-
-struct psc_flatfoil
-{
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-  using Heating_t = Heating__<Mparticles_t>;
-
-  psc_flatfoil();
-  
-  PscFlatfoil* makePscFlatfoil();
-
-  PscFlatfoilParams params;
-  
-  // state
-  double d_i;
-  double LLs;
-  double LLn;
-
-  psc* psc_;
-};
-
-// ----------------------------------------------------------------------
-// psc_flatfoil ctor
-
-psc_flatfoil::psc_flatfoil()
-  : psc_(psc_create(MPI_COMM_WORLD))
-{}
-
-// ======================================================================
 // PscFlatfoil
 //
 // eventually, a Psc replacement / derived class, but for now just
@@ -506,10 +474,35 @@ private:
   int st_time_step;
 };
 
-// ----------------------------------------------------------------------
-// psc_flatfoil::makePscFlatfoil
+// ======================================================================
+// PscFlatfoilBuilder
 
-PscFlatfoil* psc_flatfoil::makePscFlatfoil()
+struct PscFlatfoilBuilder
+{
+  using Mparticles_t = MparticlesDouble;
+  using Mfields_t = MfieldsC;
+  using Heating_t = Heating__<Mparticles_t>;
+
+  PscFlatfoilBuilder()
+    : psc_(psc_create(MPI_COMM_WORLD))
+  {}
+  
+  PscFlatfoil* makePscFlatfoil();
+
+  PscFlatfoilParams params;
+  
+  // state
+  double d_i;
+  double LLs;
+  double LLn;
+
+  psc* psc_;
+};
+
+// ----------------------------------------------------------------------
+// PscFlatfoilBuilder::makePscFlatfoil
+
+PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 {
   MPI_Comm comm = psc_comm(psc_);
   
@@ -649,20 +642,19 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
-  psc_flatfoil *sim = new psc_flatfoil{};
-
-  auto flatfoil = sim->makePscFlatfoil();
+  auto sim = PscFlatfoilBuilder{};
+  auto flatfoil = sim.makePscFlatfoil();
   
-  psc_view(sim->psc_);
-  psc_mparticles_view(sim->psc_->particles);
-  psc_mfields_view(sim->psc_->flds);
+  psc_view(sim.psc_);
+  psc_mparticles_view(sim.psc_->particles);
+  psc_mfields_view(sim.psc_->flds);
   
   flatfoil->setup();
   flatfoil->integrate();
   
   delete flatfoil;
   
-  psc_destroy(sim->psc_);
+  psc_destroy(sim.psc_);
   
   libmrc_params_finalize();
   MPI_Finalize();
