@@ -19,7 +19,7 @@
 #include "fields3d.hxx"
 #include "setup_particles.hxx"
 
-#include <psc_particles_as_single.h>
+#include <psc_particles_single.h>
 #include <psc_particles_vpic.h>
 
 #include "rngpool_iface.h"
@@ -29,6 +29,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
+using Mparticles_t = MparticlesSingle;
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
@@ -495,7 +497,7 @@ psc_harris_setup(struct psc *psc)
   psc->flds = PscMfieldsCreate(psc_comm(psc), psc->grid(),
 			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
 
-  SetupParticles<mparticles_t::sub_t>::setup_particles(psc, n_prts_by_patch_new);
+  SetupParticles<Mparticles_t>::setup_particles(psc, n_prts_by_patch_new);
 
   psc_set_ic_fields(psc);
   
