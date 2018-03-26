@@ -79,8 +79,7 @@ add_library(psc
 
   psc_output_particles/psc_output_particles.cxx
   psc_output_particles/psc_output_particles_ascii.cxx
-  psc_output_particles/psc_output_particles_hdf5_double.cxx
-  psc_output_particles/psc_output_particles_hdf5_single.cxx
+  psc_output_particles/psc_output_particles_hdf5_impl.cxx
   psc_output_particles/psc_output_particles_none.cxx
   )
 target_include_directories(psc PUBLIC ../include)

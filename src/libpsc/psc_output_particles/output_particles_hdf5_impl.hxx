@@ -1,5 +1,9 @@
 
 #include "psc.h"
+#include <mrc_profile.h>
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
 
 #include "output_particles.hxx"
 
