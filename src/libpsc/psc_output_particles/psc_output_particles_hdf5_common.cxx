@@ -20,11 +20,48 @@ struct hdf5_prt {
 #define to_psc_output_particles_hdf5(out) \
   mrc_to_subobj(out, struct psc_output_particles_hdf5)
 
+namespace {
+
 struct psc_output_particles_hdf5 : PscOutputParticlesParams
 {
+  using Mparticles = mparticles_t::sub_t;
+  using real_t = typename Mparticles::real_t;
+
+  psc_output_particles_hdf5(const PscOutputParticlesParams& params)
+    : PscOutputParticlesParams(params)
+  {
+    hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
+    H5Tinsert(id, "x" , HOFFSET(struct hdf5_prt, x) , H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "y" , HOFFSET(struct hdf5_prt, y) , H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "z" , HOFFSET(struct hdf5_prt, z) , H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "px", HOFFSET(struct hdf5_prt, px), H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "py", HOFFSET(struct hdf5_prt, py), H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "pz", HOFFSET(struct hdf5_prt, pz), H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "q" , HOFFSET(struct hdf5_prt, q) , H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "m" , HOFFSET(struct hdf5_prt, m) , H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "w" , HOFFSET(struct hdf5_prt, w) , H5T_NATIVE_FLOAT);
+    prt_type = id;
+    
+    // set hi to gdims by default (if not set differently before)
+    // and calculate wdims (global dims of region we're writing)
+    for (int d = 0; d < 3; d++) {
+      assert(lo[d] >= 0);
+      if (hi[d] == 0) {
+	hi[d] = ppsc->grid().domain.gdims[d];
+      }
+      assert(hi[d] <= ppsc->grid().domain.gdims[d]);
+      wdims[d] = hi[d] - lo[d];
+    }
+  }
+
+  ~psc_output_particles_hdf5()
+  {
+    H5Tclose(prt_type);
+  }
+  
   // internal
   hid_t prt_type;
-  int wdims[3]; // dimensions of the subdomain we're actually writing
+  Int3 wdims; // dimensions of the subdomain we're actually writing
 };
 
 // ----------------------------------------------------------------------
@@ -33,33 +70,7 @@ struct psc_output_particles_hdf5 : PscOutputParticlesParams
 static void
 psc_output_particles_hdf5_setup(struct psc_output_particles *out)
 {
-  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
-
-  *static_cast<PscOutputParticlesParams*>(hdf5) = out->params;
-
-  hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
-  H5Tinsert(id, "x" , HOFFSET(struct hdf5_prt, x) , H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "y" , HOFFSET(struct hdf5_prt, y) , H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "z" , HOFFSET(struct hdf5_prt, z) , H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "px", HOFFSET(struct hdf5_prt, px), H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "py", HOFFSET(struct hdf5_prt, py), H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "pz", HOFFSET(struct hdf5_prt, pz), H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "q" , HOFFSET(struct hdf5_prt, q) , H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "m" , HOFFSET(struct hdf5_prt, m) , H5T_NATIVE_FLOAT);
-  H5Tinsert(id, "w" , HOFFSET(struct hdf5_prt, w) , H5T_NATIVE_FLOAT);
-  
-  hdf5->prt_type = id;
-
-  // set hi to gdims by default (if not set differently before)
-  // and calculate wdims (global dims of region we're writing)
-  for (int d = 0; d < 3; d++) {
-    assert(hdf5->lo[d] >= 0);
-    if (hdf5->hi[d] == 0) {
-      hdf5->hi[d] = ppsc->grid().domain.gdims[d];
-    }
-    assert(hdf5->hi[d] <= ppsc->grid().domain.gdims[d]);
-    hdf5->wdims[d] = hdf5->hi[d] - hdf5->lo[d];
-  }
+  new(out->obj.subctx) psc_output_particles_hdf5{out->params};
 }
 
 // ----------------------------------------------------------------------
@@ -69,8 +80,7 @@ static void
 psc_output_particles_hdf5_destroy(struct psc_output_particles *out)
 {
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
-
-  H5Tclose(hdf5->prt_type);
+  hdf5->~psc_output_particles_hdf5();
 }
 
 // ----------------------------------------------------------------------
@@ -568,3 +578,4 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 }
 
 
+}
