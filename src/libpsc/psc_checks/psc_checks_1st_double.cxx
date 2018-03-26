@@ -1,6 +1,6 @@
 
-#include "psc_fields_as_c.h"
-#include "psc_particles_as_double.h"
+#include "psc_fields_c.h"
+#include "psc_particles_double.h"
 
 #define PSC_CHECKS_ORDER "1st"
 
@@ -12,7 +12,7 @@
 struct psc_checks_1st_double_ops : psc_checks_ops {
   using Wrapper_t = ChecksWrapper<Checks_<MparticlesDouble, MfieldsC>>;
   psc_checks_1st_double_ops() {
-    name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE;
+    name                            = "1st_double";
     size                            = Wrapper_t::size;
     setup                           = Wrapper_t::setup;
     destroy                         = Wrapper_t::destroy;

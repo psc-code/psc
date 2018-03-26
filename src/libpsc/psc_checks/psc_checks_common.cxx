@@ -21,6 +21,7 @@ namespace {
 template<typename MP, typename MF>
 struct Checks_ : ChecksParams, ChecksBase
 {
+  using Mparticles = MP;
   using Mfields = MF;
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
@@ -58,7 +59,8 @@ struct Checks_ : ChecksParams, ChecksBase
 
     struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
     // makes, e.g., "rho_1st_nc_single"
-    psc_output_fields_item_set_type(item, "rho_" PSC_CHECKS_ORDER "_nc_" PARTICLE_TYPE);
+    auto s = std::string("rho_" PSC_CHECKS_ORDER "_nc_") + Mparticles_traits<Mparticles>::name;
+    psc_output_fields_item_set_type(item, s.c_str());
     psc_output_fields_item_set_psc_bnd(item, bnd);
     psc_output_fields_item_setup(item);
     PscMparticlesBase mp(mprts);
