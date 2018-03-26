@@ -26,8 +26,6 @@ add_library(psc
   psc_push_particles/1vb/psc_push_particles_1vbec_single.cxx
 
   psc_push_fields/psc_marder.cxx
-  psc_push_fields/psc_marder_c.cxx
-  psc_push_fields/psc_marder_single.cxx
   psc_push_fields/psc_push_fields.cxx
   psc_push_fields/psc_push_fields_impl.cxx
   psc_push_fields/psc_push_fields_none.cxx

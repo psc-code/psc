@@ -2,6 +2,9 @@
 #include "psc_marder_private.h"
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
+#include "psc_particles_single.h"
+#include "psc_particles_double.h"
+#include "psc_fields_single.h"
 #include "fields3d.hxx"
 #include "bnd.hxx"
 #include "fields_item.hxx"
@@ -97,8 +100,30 @@ psc_marder_run(struct psc_marder *marder,
 // ----------------------------------------------------------------------
 // psc_marder_init
 
-extern struct psc_marder_ops psc_marder_c_ops;
-extern struct psc_marder_ops psc_marder_single_ops;
+#include "marder_impl.hxx"
+
+using marder_ops_c = marder_ops<MparticlesDouble, PscMfieldsC>;
+
+static struct psc_marder_ops_c : psc_marder_ops {
+  psc_marder_ops_c() {
+    name                  = "c";
+    setup                 = marder_ops_c::setup;
+    destroy               = marder_ops_c::destroy;
+    correct               = marder_ops_c::correct;
+  }
+} psc_marder_c_ops;
+
+using marder_ops_single = marder_ops<MparticlesSingle, PscMfieldsSingle>;
+
+static struct psc_marder_ops_single : psc_marder_ops {
+  psc_marder_ops_single() {
+    name                  = "single";
+    setup                 = marder_ops_single::setup;
+    destroy               = marder_ops_single::destroy;
+    correct               = marder_ops_single::correct;
+  }
+} psc_marder_single_ops;
+
 extern struct psc_marder_ops psc_marder_cuda_ops;
 extern struct psc_marder_ops psc_marder_vpic_ops;
 
