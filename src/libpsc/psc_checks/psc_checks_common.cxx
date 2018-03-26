@@ -327,15 +327,6 @@ struct Checks_ : ChecksParams, ChecksBase
 }
 
 // ----------------------------------------------------------------------
-// psc_checks_sub_setup
-
-static void
-psc_checks_sub_setup(struct psc_checks *checks)
-{
-  new(checks->obj.subctx) Checks_{psc_checks_comm(checks), checks->params};
-}
-
-// ----------------------------------------------------------------------
 // psc_checks_sub_read
 //
 // FIXME, this function exists to avoid a setup called twice error, but it's just a workaround
@@ -352,10 +343,13 @@ psc_checks_sub_read(struct psc_checks *checks, struct mrc_io *io)
 // psc_checks_sub_ops
 
 struct psc_checks_ops_sub : psc_checks_ops {
+  using Wrapper_t = ChecksWrapper<Checks_>;
   psc_checks_ops_sub() {
     name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE;
-    setup                           = psc_checks_sub_setup;
-    read                            = psc_checks_sub_read;
+    size                            = Wrapper_t::size;
+    setup                           = Wrapper_t::setup;
+    destroy                         = Wrapper_t::destroy;
+    //read                            = psc_checks_sub_read;
   }
 } psc_checks_sub_ops;
 
