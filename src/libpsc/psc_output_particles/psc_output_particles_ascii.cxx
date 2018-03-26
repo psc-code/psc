@@ -1,6 +1,6 @@
 
-#include "psc_output_particles_private.h"
 #include "psc_particles_double.h"
+#include "output_particles.hxx"
 
 #include <mrc_params.h>
 #include <string.h>
@@ -10,9 +10,31 @@
 #define to_psc_output_particles_ascii(out) \
   mrc_to_subobj(out, struct psc_output_particles_ascii)
 
-struct psc_output_particles_ascii : PscOutputParticlesParams
+struct psc_output_particles_ascii : PscOutputParticlesParams, OutputParticlesBase
 {
+  psc_output_particles_ascii(const PscOutputParticlesParams& params)
+    : PscOutputParticlesParams(params)
+  {}
 };
+
+// ----------------------------------------------------------------------
+// psc_output_particles_ascii_setup
+
+static void
+psc_output_particles_ascii_setup(struct psc_output_particles *out)
+{
+  new(out->obj.subctx) psc_output_particles_ascii{out->params};
+}
+
+// ----------------------------------------------------------------------
+// psc_output_particles_ascii_destroy
+
+static void
+psc_output_particles_ascii_destroy(struct psc_output_particles *out)
+{
+  struct psc_output_particles_ascii *sub = to_psc_output_particles_ascii(out);
+  sub->~psc_output_particles_ascii();
+}
 
 // ----------------------------------------------------------------------
 // psc_output_particles_ascii_run
@@ -58,9 +80,12 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 // psc_output_particles: subclass "ascii"
 
 struct psc_output_particles_ops_ascii : psc_output_particles_ops {
+  using Wrapper_t = OutputParticlesWrapper<psc_output_particles_ascii>;
   psc_output_particles_ops_ascii() {
     name                  = "ascii";
-    size                  = sizeof(struct psc_output_particles_ascii);
+    size                  = Wrapper_t::size;
+    setup                 = Wrapper_t::setup;
+    destroy               = Wrapper_t::destroy;
     run                   = psc_output_particles_ascii_run;
   }
 } psc_output_particles_ascii_ops;

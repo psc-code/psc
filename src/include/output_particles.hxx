@@ -3,6 +3,7 @@
 
 #include "psc_output_particles_private.h"
 #include "particles.hxx"
+#include "psc.h"
 
 // ======================================================================
 // class OutputParticlesBase
@@ -10,7 +11,7 @@
 class OutputParticlesBase
 {
 public:
-  virtual void run(PscMparticlesBase mprts_base) = 0;
+  //  virtual void run(PscMparticlesBase mprts_base) = 0;
 };
 
 // ======================================================================
@@ -37,7 +38,7 @@ struct PscOutputParticles
     psc_stats_stop(st_time_output);
   }
 
-  psc_push_fields *outp() { return outp_; }
+  psc_output_particles* outp() { return outp_; }
   
   sub_t* operator->() { return sub(); }
 
@@ -48,3 +49,26 @@ private:
 };
 
 using PscOutputParticlesBase = PscOutputParticles<OutputParticlesBase>;
+
+// ======================================================================
+// OutputParticlesWrapper
+
+template<typename OutputParticles_t>
+class OutputParticlesWrapper
+{
+public:
+  const static size_t size = sizeof(OutputParticles_t);
+  
+  static void setup(struct psc_output_particles *_outp)
+  {
+    PscOutputParticles<OutputParticles_t> outp(_outp);
+    new(outp.sub()) OutputParticles_t{_outp->params};
+  }
+
+  static void destroy(struct psc_output_particles *_outp)
+  {
+    PscOutputParticles<OutputParticles_t> outp(_outp);
+    outp.sub()->~OutputParticles_t();
+  }
+};
+

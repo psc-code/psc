@@ -1,6 +1,8 @@
 
 #include "psc.h"
 
+#include "output_particles.hxx"
+
 using real_t = mparticles_t::real_t;
 
 // needs to be changed accordingly
@@ -22,7 +24,7 @@ struct hdf5_prt {
 
 namespace {
 
-struct psc_output_particles_hdf5 : PscOutputParticlesParams
+struct psc_output_particles_hdf5 : PscOutputParticlesParams, OutputParticlesBase
 {
   using Mparticles = mparticles_t::sub_t;
   using real_t = typename Mparticles::real_t;
@@ -63,25 +65,6 @@ struct psc_output_particles_hdf5 : PscOutputParticlesParams
   hid_t prt_type;
   Int3 wdims; // dimensions of the subdomain we're actually writing
 };
-
-// ----------------------------------------------------------------------
-// psc_output_particles_hdf5_setup
-
-static void
-psc_output_particles_hdf5_setup(struct psc_output_particles *out)
-{
-  new(out->obj.subctx) psc_output_particles_hdf5{out->params};
-}
-
-// ----------------------------------------------------------------------
-// psc_output_particles_hdf5_destroy
-
-static void
-psc_output_particles_hdf5_destroy(struct psc_output_particles *out)
-{
-  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
-  hdf5->~psc_output_particles_hdf5();
-}
 
 // ----------------------------------------------------------------------
 // get_cell_index
