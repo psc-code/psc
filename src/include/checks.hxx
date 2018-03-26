@@ -31,23 +31,17 @@ struct PscChecks
 
   void continuity_before_particle_push(psc* psc)
   {
-    struct psc_checks_ops *ops = psc_checks_ops(checks_);
-    assert(ops && ops->continuity_before_particle_push);
-    ops->continuity_before_particle_push(checks_, psc);
+    sub()->continuity_before_particle_push(psc);
   }
 
   void continuity_after_particle_push(psc* psc)
   { 
-    struct psc_checks_ops *ops = psc_checks_ops(checks_);
-    assert(ops && ops->continuity_after_particle_push);
-    ops->continuity_after_particle_push(checks_, psc);
+    sub()->continuity_after_particle_push(psc);
   }
 
   void gauss(psc* psc)
   {
-    struct psc_checks_ops *ops = psc_checks_ops(checks_);
-    assert(ops && ops->gauss);
-    ops->gauss(checks_, psc);
+    sub()->gauss(psc);
   }
 
   sub_t* operator->() { return sub(); }

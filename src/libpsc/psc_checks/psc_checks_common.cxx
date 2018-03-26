@@ -5,6 +5,7 @@
 #include "psc_output_fields_item.h"
 #include "fields.hxx"
 #include "fields_item.hxx"
+#include "checks.hxx"
 
 #include <mrc_io.h>
 
@@ -20,9 +21,9 @@ using Fields = Fields3d<fields_t>;
 
 namespace {
 
-struct PscChecks : ChecksParams
+struct Checks_ : ChecksParams, ChecksBase
 {
-  PscChecks(MPI_Comm comm, const ChecksParams& params)
+  Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
       comm_{comm}
   {
@@ -186,7 +187,7 @@ struct PscChecks : ChecksParams
   // ----------------------------------------------------------------------
   // continuity_before_particle_push
 
-  void continuity_before_particle_push(psc *psc)
+  void continuity_before_particle_push(psc *psc) override
   {
     if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
       return;
@@ -198,7 +199,7 @@ struct PscChecks : ChecksParams
   // ----------------------------------------------------------------------
   // continuity_after_particle_push
 
-  void continuity_after_particle_push(psc *psc)
+  void continuity_after_particle_push(psc *psc) override
   {
     if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
       return;
@@ -239,7 +240,7 @@ struct PscChecks : ChecksParams
   // ----------------------------------------------------------------------
   // gauss
 
-  void gauss(psc* psc)
+  void gauss(psc* psc) override
   {
     if (gauss_every_step < 0 ||	psc->timestep % gauss_every_step != 0) {
       return;
@@ -331,7 +332,7 @@ struct PscChecks : ChecksParams
 static void
 psc_checks_sub_setup(struct psc_checks *checks)
 {
-  new(checks->obj.subctx) PscChecks{psc_checks_comm(checks), checks->params};
+  new(checks->obj.subctx) Checks_{psc_checks_comm(checks), checks->params};
 }
 
 // ----------------------------------------------------------------------
@@ -347,27 +348,6 @@ psc_checks_sub_read(struct psc_checks *checks, struct mrc_io *io)
   psc_checks_read_member_objs(checks, io);
 }
 
-static void
-psc_checks_sub_continuity_before_particle_push(struct psc_checks *checks, psc* psc)
-{
-  auto sub = mrc_to_subobj(checks, PscChecks);
-  sub->continuity_before_particle_push(psc);
-}
-
-static void
-psc_checks_sub_continuity_after_particle_push(struct psc_checks *checks, psc* psc)
-{
-  auto sub = mrc_to_subobj(checks, PscChecks);
-  sub->continuity_after_particle_push(psc);
-}
-
-static void
-psc_checks_sub_gauss(struct psc_checks *checks, psc* psc)
-{
-  auto sub = mrc_to_subobj(checks, PscChecks);
-  sub->gauss(psc);
-}
-
 // ----------------------------------------------------------------------
 // psc_checks_sub_ops
 
@@ -376,9 +356,6 @@ struct psc_checks_ops_sub : psc_checks_ops {
     name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE;
     setup                           = psc_checks_sub_setup;
     read                            = psc_checks_sub_read;
-    continuity_before_particle_push = psc_checks_sub_continuity_before_particle_push;
-    continuity_after_particle_push  = psc_checks_sub_continuity_after_particle_push;
-    gauss                           = psc_checks_sub_gauss;
   }
 } psc_checks_sub_ops;
 
