@@ -57,7 +57,7 @@ psc_checks_init()
 // ----------------------------------------------------------------------
 // psc_checks_descr
 
-#define VAR(x) (void *)offsetof(struct psc_checks, x)
+#define VAR(x) (void *)offsetof(struct psc_checks, params.x)
 
 static struct param psc_checks_descr[] = {
   { "continuity_every_step" , VAR(continuity_every_step) , PARAM_INT(-1)       },
@@ -70,8 +70,8 @@ static struct param psc_checks_descr[] = {
   { "gauss_verbose"         , VAR(gauss_verbose)         , PARAM_BOOL(false)   },
   { "gauss_dump_always"     , VAR(gauss_dump_always)     , PARAM_BOOL(false)   },
 
-  { "rho_m"                 , VAR(rho_m)                 , MRC_VAR_OBJ(psc_mfields) },
-  { "rho_p"                 , VAR(rho_p)                 , MRC_VAR_OBJ(psc_mfields) },
+  // { "rho_m"                 , VAR(rho_m)                 , MRC_VAR_OBJ(psc_mfields) },
+  // { "rho_p"                 , VAR(rho_p)                 , MRC_VAR_OBJ(psc_mfields) },
   {},
 };
 

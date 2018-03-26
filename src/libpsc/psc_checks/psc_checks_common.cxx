@@ -20,8 +20,12 @@ using Fields = Fields3d<fields_t>;
 
 namespace {
 
-struct PscChecks
+struct PscChecks : ChecksParams
 {
+  PscChecks(const ChecksParams& params)
+    : ChecksParams{params}
+  {}
+  
   // ----------------------------------------------------------------------
   // FIXME, should be consolidated?
 
@@ -120,7 +124,7 @@ struct PscChecks
     calc_div_j(psc, psc->flds, div_j);
     mf_div_j->scale(psc->dt);
 
-    double eps = checks->continuity_threshold;
+    double eps = checks->params.continuity_threshold;
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
       Fields D_rho(mf_d_rho[p]);
@@ -140,12 +144,12 @@ struct PscChecks
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, psc_checks_comm(checks));
 
-    if (checks->continuity_verbose || max_err >= eps) {
+    if (checks->params.continuity_verbose || max_err >= eps) {
       mpi_printf(psc_checks_comm(checks),
 		 "continuity: max_err = %g (thres %g)\n", max_err, eps);
     }
 
-    if (checks->continuity_dump_always || max_err >= eps) {
+    if (checks->params.continuity_dump_always || max_err >= eps) {
       static struct mrc_io *io;
       if (!io) {
 	io = mrc_io_create(psc_comm(psc));
@@ -173,12 +177,13 @@ struct PscChecks
   static void
   continuity_before_particle_push(struct psc_checks *checks, struct psc *psc)
   {
-    if (checks->continuity_every_step < 0 ||
-	psc->timestep % checks->continuity_every_step != 0) {
+    PscChecks* sub = mrc_to_subobj(checks, PscChecks);
+    if (checks->params.continuity_every_step < 0 ||
+	psc->timestep % checks->params.continuity_every_step != 0) {
       return;
     }
 
-    calc_rho(psc, psc->particles, checks->rho_m);
+    calc_rho(psc, psc->particles, sub->rho_m);
   }
 
   // ----------------------------------------------------------------------
@@ -187,13 +192,14 @@ struct PscChecks
   static void
   continuity_after_particle_push(struct psc_checks *checks, struct psc *psc)
   {
-    if (checks->continuity_every_step < 0 ||
-	psc->timestep % checks->continuity_every_step != 0) {
+    PscChecks* sub = mrc_to_subobj(checks, PscChecks);
+    if (checks->params.continuity_every_step < 0 ||
+	psc->timestep % checks->params.continuity_every_step != 0) {
       return;
     }
 
-    calc_rho(psc, psc->particles, checks->rho_p);
-    psc_checks_continuity(checks, psc, checks->rho_m, checks->rho_p);
+    calc_rho(psc, psc->particles, sub->rho_p);
+    psc_checks_continuity(checks, psc, sub->rho_m, sub->rho_p);
   }
 
   // ======================================================================
@@ -229,8 +235,8 @@ struct PscChecks
 
   static void gauss(struct psc_checks *checks, struct psc *psc)
   {
-    if (checks->gauss_every_step < 0 ||
-	psc->timestep % checks->gauss_every_step != 0) {
+    if (checks->params.gauss_every_step < 0 ||
+	psc->timestep % checks->params.gauss_every_step != 0) {
       return;
     }
 
@@ -246,7 +252,7 @@ struct PscChecks
     calc_rho(psc, psc->particles, rho);
     calc_dive(psc, psc->flds, dive);
 
-    double eps = checks->gauss_threshold;
+    double eps = checks->params.gauss_threshold;
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
       Fields Rho(mf_rho[p]), DivE(mf_dive[p]);
@@ -281,11 +287,11 @@ struct PscChecks
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, psc_checks_comm(checks));
 
-    if (checks->gauss_verbose || max_err >= eps) {
+    if (checks->params.gauss_verbose || max_err >= eps) {
       mpi_printf(psc_checks_comm(checks), "gauss: max_err = %g (thres %g)\n", max_err, eps);
     }
 
-    if (checks->gauss_dump_always || max_err >= eps) {
+    if (checks->params.gauss_dump_always || max_err >= eps) {
       static struct mrc_io *io;
       if (!io) {
 	io = mrc_io_create(psc_comm(psc));
@@ -307,6 +313,8 @@ struct PscChecks
     psc_mfields_destroy(dive);
   }
 
+  // state
+  psc_mfields *rho_m, *rho_p;
 };
 
 }
@@ -317,17 +325,21 @@ struct PscChecks
 static void
 psc_checks_sub_setup(struct psc_checks *checks)
 {
-  psc_mfields_set_type(checks->rho_m, FIELDS_TYPE);
-  psc_mfields_set_param_int3(checks->rho_m, "ibn", ppsc->ibn);
-  psc_mfields_set_param_int(checks->rho_m, "nr_fields", 1);
-  checks->rho_m->grid = &ppsc->grid();
+  auto* sub = new(checks->obj.subctx) PscChecks{checks->params};
+
+  sub->rho_m = psc_mfields_create(psc_checks_comm(checks));
+  psc_mfields_set_type(sub->rho_m, FIELDS_TYPE);
+  psc_mfields_set_param_int3(sub->rho_m, "ibn", ppsc->ibn);
+  psc_mfields_set_param_int(sub->rho_m, "nr_fields", 1);
+  sub->rho_m->grid = &ppsc->grid();
+  psc_mfields_setup(sub->rho_m);
   
-  psc_mfields_set_type(checks->rho_p, FIELDS_TYPE);
-  psc_mfields_set_param_int3(checks->rho_p, "ibn", ppsc->ibn);
-  psc_mfields_set_param_int(checks->rho_p, "nr_fields", 1);
-  checks->rho_p->grid = &ppsc->grid();
-  
-  psc_checks_setup_member_objs(checks);
+  sub->rho_p = psc_mfields_create(psc_checks_comm(checks));
+  psc_mfields_set_type(sub->rho_p, FIELDS_TYPE);
+  psc_mfields_set_param_int3(sub->rho_p, "ibn", ppsc->ibn);
+  psc_mfields_set_param_int(sub->rho_p, "nr_fields", 1);
+  sub->rho_p->grid = &ppsc->grid();
+  psc_mfields_setup(sub->rho_p);
 }
 
 // ----------------------------------------------------------------------
