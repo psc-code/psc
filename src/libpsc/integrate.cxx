@@ -17,6 +17,7 @@
 #include "sort.hxx"
 #include "collision.hxx"
 #include "bnd_particles.hxx"
+#include "checks.hxx"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -113,7 +114,7 @@ psc_step(struct psc *psc)
   
   //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
 
-  psc_checks_continuity_before_particle_push(psc->checks, psc);
+  PscChecksBase{psc->checks}.continuity_before_particle_push(psc);
 
   // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
   pushp(mprts, mflds);
@@ -135,14 +136,14 @@ psc_step(struct psc *psc)
   pushf.advance_a(mflds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-  psc_checks_continuity_after_particle_push(psc->checks, psc);
+  PscChecksBase{psc->checks}.continuity_after_particle_push(psc);
 
   // E at t^{n+3/2}, particles at t^{n+3/2}
   // B at t^{n+3/2} (Note: that is not it's natural time,
   // but div B should be == 0 at any time...)
   psc_marder_run(psc->marder, psc->flds, psc->particles);
     
-  psc_checks_gauss(psc->checks, psc);
+  PscChecksBase{psc->checks}.gauss(psc);
 
   psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
 }

@@ -2,42 +2,6 @@
 #include "psc_checks_private.h"
 
 // ----------------------------------------------------------------------
-// psc_checks_continuity_before_particle_push
-
-void
-psc_checks_continuity_before_particle_push(struct psc_checks *checks, struct psc *psc)
-{
-  struct psc_checks_ops *ops = psc_checks_ops(checks);
-
-  assert(ops && ops->continuity_before_particle_push);
-  ops->continuity_before_particle_push(checks, psc);
-}
-
-// ----------------------------------------------------------------------
-// psc_checks_continuity_after_particle_push
-
-void
-psc_checks_continuity_after_particle_push(struct psc_checks *checks, struct psc *psc)
-{
-  struct psc_checks_ops *ops = psc_checks_ops(checks);
-
-  assert(ops && ops->continuity_after_particle_push);
-  ops->continuity_after_particle_push(checks, psc);
-}
-
-// ----------------------------------------------------------------------
-// psc_checks_gauss
-
-void
-psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
-{
-  struct psc_checks_ops *ops = psc_checks_ops(checks);
-
-  assert(ops && ops->gauss);
-  ops->gauss(checks, psc);
-}
-
-// ----------------------------------------------------------------------
 // psc_checks_init
 
 extern struct psc_checks_ops psc_checks_1st_double_ops;
