@@ -1,5 +1,5 @@
 
-#include "psc_fields_as_c.h"
+#include "psc_fields_c.h"
 #include "psc_particles_as_double.h"
 
 #define PSC_CHECKS_ORDER "2nd"

@@ -9,9 +9,6 @@
 
 #include <mrc_io.h>
 
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
-
 // FIXME, duplicated
 
 #define define_dxdydz(dx, dy, dz)					\
@@ -24,23 +21,17 @@ namespace {
 template<typename MP, typename MF>
 struct Checks_ : ChecksParams, ChecksBase
 {
+  using Mfields = MF;
+  using fields_t = typename Mfields::fields_t;
+  using real_t = typename Mfields::real_t;
+  using Fields = Fields3d<fields_t>;
+
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
       comm_{comm}
   {
-    rho_m = psc_mfields_create(comm);
-    psc_mfields_set_type(rho_m, FIELDS_TYPE);
-    psc_mfields_set_param_int3(rho_m, "ibn", ppsc->ibn);
-    psc_mfields_set_param_int(rho_m, "nr_fields", 1);
-    rho_m->grid = &ppsc->grid();
-    psc_mfields_setup(rho_m);
-    
-    rho_p = psc_mfields_create(comm);
-    psc_mfields_set_type(rho_p, FIELDS_TYPE);
-    psc_mfields_set_param_int3(rho_p, "ibn", ppsc->ibn);
-    psc_mfields_set_param_int(rho_p, "nr_fields", 1);
-    rho_p->grid = &ppsc->grid();
-    psc_mfields_setup(rho_p);
+    rho_m = fld_create(ppsc, 1);
+    rho_p = fld_create(ppsc, 1);
   }
   
   // ----------------------------------------------------------------------
@@ -49,7 +40,7 @@ struct Checks_ : ChecksParams, ChecksBase
   static struct psc_mfields *
   fld_create(struct psc *psc, int nr_fields)
   {
-    return mfields_t::create(psc_comm(psc), psc->grid(), nr_fields, psc->ibn).mflds();
+    return PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), nr_fields, psc->ibn).mflds();
   }
 
   // ----------------------------------------------------------------------
@@ -61,7 +52,7 @@ struct Checks_ : ChecksParams, ChecksBase
     // FIXME, output_fields should be taking care of this?
     struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
     psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_rho");
-    psc_bnd_set_type(bnd, FIELDS_TYPE);
+    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
     psc_bnd_set_psc(bnd, psc);
     psc_bnd_setup(bnd);
 
@@ -91,7 +82,7 @@ struct Checks_ : ChecksParams, ChecksBase
   {
     Fields F(flds), Div_J(div_j);
     define_dxdydz(dx, dy, dz);
-    fields_t::real_t h[3];
+    real_t h[3];
     for (int d = 0; d < 3; d++) {
       if (psc->grid().isInvar(d)) {
 	h[d] = 0.;
@@ -112,8 +103,8 @@ struct Checks_ : ChecksParams, ChecksBase
   calc_div_j(struct psc *psc, struct psc_mfields *_mflds_base, struct psc_mfields *div_j)
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
-    mfields_t mf = mflds_base.get_as<mfields_t>(JXI, JXI + 3);
-    mfields_t mf_div_j(div_j);
+    auto mf = mflds_base.get_as<PscMfields<Mfields>>(JXI, JXI + 3);
+    PscMfields<Mfields> mf_div_j(div_j);
     psc_foreach_patch(psc, p) {
       do_calc_div_j(psc, p, mf[p], mf_div_j[p]);
     }
@@ -131,10 +122,10 @@ struct Checks_ : ChecksParams, ChecksBase
     struct psc_mfields *d_rho = fld_create(psc, 1);
     psc_mfields_set_name(d_rho, "d_rho");
     psc_mfields_set_comp_name(d_rho, 0, "d_rho");
-    mfields_t mf_div_j(div_j), mf_d_rho(d_rho);
+    PscMfields<Mfields> mf_div_j(div_j), mf_d_rho(d_rho);
 
-    mf_d_rho->axpy( 1., *mfields_t(rho_p).sub());
-    mf_d_rho->axpy(-1., *mfields_t(rho_m).sub());
+    mf_d_rho->axpy( 1., *PscMfields<Mfields>(rho_p).sub());
+    mf_d_rho->axpy(-1., *PscMfields<Mfields>(rho_m).sub());
 
     calc_div_j(psc, psc->flds, div_j);
     mf_div_j->scale(psc->dt);
@@ -222,12 +213,13 @@ struct Checks_ : ChecksParams, ChecksBase
     // FIXME, output_fields should be taking care of this?
     struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
     psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_dive");
-    psc_bnd_set_type(bnd, FIELDS_TYPE);
+    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
     psc_bnd_set_psc(bnd, psc);
     psc_bnd_setup(bnd);
 
     struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-    psc_output_fields_item_set_type(item, "dive_" FIELDS_TYPE);
+    auto s = std::string("dive_") + Mfields_traits<Mfields>::name;
+    psc_output_fields_item_set_type(item, s.c_str());
     psc_output_fields_item_set_psc_bnd(item, bnd);
     psc_output_fields_item_setup(item);
     PscMparticlesBase mprts(psc->particles);
@@ -253,7 +245,7 @@ struct Checks_ : ChecksParams, ChecksBase
     struct psc_mfields *rho = fld_create(psc, 1);
     psc_mfields_set_name(rho, "rho");
     psc_mfields_set_comp_name(rho, 0, "rho");
-    mfields_t mf_dive(dive), mf_rho(rho);
+    PscMfields<Mfields> mf_dive(dive), mf_rho(rho);
     const auto& grid = psc->grid();
   
     calc_rho(psc, psc->particles, rho);
