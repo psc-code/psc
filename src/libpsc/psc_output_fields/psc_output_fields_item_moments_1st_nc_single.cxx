@@ -13,5 +13,5 @@
 
 #include "psc_output_fields_item_moments_1st_nc.cxx"
 
-MAKE_POFI_OPS(PscMparticlesSingle, PscMfieldsC, single)
+MAKE_POFI_OPS(MparticlesSingle, MfieldsC, single)
 

@@ -9,11 +9,11 @@
 // ======================================================================
 // Moment_rho_1st_nc_cuda
 
-struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, PscMfieldsCuda>
+struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>
 {
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, PscMfieldsCuda>;
-  using mfields_t = PscMfieldsCuda;
-  using mparticles_t = PscMparticlesCuda;
+  using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
+  using Mfields = MfieldsCuda;
+  using Mparticles = MparticlesCuda;
   
   constexpr static const char* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
@@ -27,7 +27,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, PscMfield
 
   void run(MparticlesCuda& mprts)
   {
-    mfields_t mres{this->mres_};
+    PscMfields<Mfields> mres{this->mres_};
     cuda_mparticles *cmprts = mprts.cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
@@ -45,11 +45,11 @@ FieldsItemOps<FieldsItemMoment<Moment_rho_1st_nc_cuda>> psc_output_fields_item_r
 // ======================================================================
 // n_1st_cuda
 
-struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, PscMfieldsCuda>
+struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
 {
-  using Base = ItemMomentCRTP<Moment_n_1st_cuda, PscMfieldsCuda>;
-  using mfields_t = PscMfieldsCuda;
-  using mparticles_t = PscMparticlesCuda;
+  using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
+  using Mfields = MfieldsCuda;
+  using Mparticles = MparticlesCuda;
   
   constexpr static const char* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -63,7 +63,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, PscMfieldsCuda>
 
   void run(MparticlesCuda& mprts)
   {
-    mfields_t mres{this->mres_};
+    PscMfields<Mfields> mres{this->mres_};
     cuda_mparticles *cmprts = mprts.cmprts();
     cuda_mfields *cmres = mres->cmflds;
     

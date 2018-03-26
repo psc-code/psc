@@ -25,7 +25,7 @@ struct Inject_ : InjectBase
   using particle_t = typename Mparticles::particle_t;
   using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
-  using ItemMoment_t = ItemMomentLoopPatches<Moment_n_1st<mparticles_t, mfields_t>>;
+  using ItemMoment_t = ItemMomentLoopPatches<Moment_n_1st<Mparticles, Mfields>>;
   
   // ----------------------------------------------------------------------
   // ctor

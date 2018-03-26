@@ -22,5 +22,5 @@ using Ops = FieldsItemMomentOps<Moment_t>;
   Ops<Moment_T_1st<MP, MF>> psc_output_fields_item_T_1st_##TYPE##_ops;	\
   Ops<Moment_Tvv_1st<MP, MF>> psc_output_fields_item_Tvv_1st_##TYPE##_ops; \
 
-MAKE_POFI_OPS(PscMparticlesSingle, PscMfieldsC, single);
-MAKE_POFI_OPS(PscMparticlesDouble, PscMfieldsC, double);
+MAKE_POFI_OPS(MparticlesSingle, MfieldsC, single);
+MAKE_POFI_OPS(MparticlesDouble, MfieldsC, double);

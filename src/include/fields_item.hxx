@@ -177,7 +177,7 @@ using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_
 template<typename Derived, typename MF>
 struct ItemMomentCRTP
 {
-  using mfields_t = MF;
+  using Mfields = MF;
   
   ItemMomentCRTP(MPI_Comm comm)
   {
@@ -187,12 +187,12 @@ struct ItemMomentCRTP
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Derived::flags & POFI_BY_KIND) {
-      this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps, ppsc->ibn).mflds();
+      this->mres_ = PscMfields<Mfields>::create(comm, ppsc->grid(), n_comps, ppsc->ibn).mflds();
       for (int m = 0; m < n_comps; m++) {
 	psc_mfields_set_comp_name(this->mres_, m, fld_names[m]);
       }
     } else {
-      this->mres_ = mfields_t::create(comm, ppsc->grid(), n_comps * kinds.size(), ppsc->ibn).mflds();
+      this->mres_ = PscMfields<Mfields>::create(comm, ppsc->grid(), n_comps * kinds.size(), ppsc->ibn).mflds();
       for (int k = 0; k < kinds.size(); k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + kinds[k].name;
@@ -208,7 +208,7 @@ struct ItemMomentCRTP
   }
   
   psc_mfields*& mres_base() { return mres_; }
-  mfields_t mres() { return mfields_t{mres_}; }
+  PscMfields<Mfields> mres() { return PscMfields<Mfields>{mres_}; }
 
 protected:
   psc_mfields* mres_;
@@ -218,13 +218,12 @@ protected:
 // ItemMomentLoopPatches
 
 template<typename Moment_t>
-struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::mfields_t>
+struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::Mfields>
 {
-  using Base = ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::mfields_t>;
-  using mfields_t = typename Moment_t::mfields_t;
-  using mparticles_t = typename Moment_t::mparticles_t;
-  using Mparticles = typename mparticles_t::sub_t;
-  using fields_t = typename mfields_t::fields_t;
+  using Base = ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::Mfields>;
+  using Mfields = typename Moment_t::Mfields;
+  using Mparticles = typename Moment_t::Mparticles;
+  using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
 
   constexpr static const char* name = Moment_t::name;
@@ -239,7 +238,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   void run(Mparticles& mprts)
   {
-    mfields_t mres{this->mres_};
+    PscMfields<Mfields> mres{this->mres_};
     for (int p = 0; p < mprts.n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
@@ -347,12 +346,12 @@ private:
 template<typename Moment_t>
 struct FieldsItemMoment : FieldsItemBase
 {
-  using mparticles_t = typename Moment_t::mparticles_t;
+  using Mparticles = typename Moment_t::Mparticles;
   
   static const char* name()
   {
     return strdup((std::string(Moment_t::name) + "_" +
-		   Mparticles_traits<typename mparticles_t::sub_t>::name).c_str());
+		   Mparticles_traits<Mparticles>::name).c_str());
   }
 
   FieldsItemMoment(MPI_Comm comm, PscBndBase bnd)
@@ -361,7 +360,7 @@ struct FieldsItemMoment : FieldsItemBase
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
 
     moment_.run(*mprts.sub());
     

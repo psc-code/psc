@@ -52,11 +52,11 @@ FieldsItemOps<FieldsItemFields<Item_vpic_fields>> psc_output_fields_item_vpic_fi
 // ----------------------------------------------------------------------
 // Moment_vpic_hydro
 
-struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, mfields_t>
+struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
 {
-  using Base = ItemMomentCRTP<Moment_vpic_hydro, mfields_t>;
-  using mfields_t = mfields_t;
-  using mparticles_t = PscMparticlesVpic;
+  using Base = ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>;
+  using Mfields = MfieldsC;
+  using Mparticles = MparticlesVpic;
   
   constexpr static char const* name = "vpic_hydro";
   constexpr static int n_comps = VPIC_HYDRO_N_COMP;

@@ -11,11 +11,11 @@
 template<typename MP, typename MF>
 struct Moment_n_1st
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using real_t = typename mparticles_t::real_t;
-  using particles_t = typename mparticles_t::patch_t;
-  using fields_t = typename mfields_t::fields_t;  
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -42,11 +42,11 @@ struct Moment_n_1st
 template<typename MP, typename MF>
 struct Moment_v_1st
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using real_t = typename mparticles_t::real_t;
-  using particles_t = typename mparticles_t::patch_t;
-  using fields_t = typename mfields_t::fields_t;  
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
@@ -79,11 +79,11 @@ struct Moment_v_1st
 template<typename MP, typename MF>
 struct Moment_p_1st
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using real_t = typename mparticles_t::real_t;
-  using particles_t = typename mparticles_t::patch_t;
-  using fields_t = typename mfields_t::fields_t;  
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
@@ -114,11 +114,11 @@ struct Moment_p_1st
 template<typename MP, typename MF>
 struct Moment_vv_1st
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using real_t = typename mparticles_t::real_t;
-  using particles_t = typename mparticles_t::patch_t;
-  using fields_t = typename mfields_t::fields_t;  
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
@@ -151,11 +151,11 @@ struct Moment_vv_1st
 template<typename MP, typename MF>
 struct Moment_T_1st
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using real_t = typename mparticles_t::real_t;
-  using particles_t = typename mparticles_t::patch_t;
-  using fields_t = typename mfields_t::fields_t;  
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
@@ -199,11 +199,11 @@ struct Moment_T_1st
 template<typename MP, typename MF>
 struct Moment_Tvv_1st
 {
-  using mparticles_t = MP;
-  using mfields_t = MF;
-  using real_t = typename mparticles_t::real_t;
-  using particles_t = typename mparticles_t::patch_t;
-  using fields_t = typename mfields_t::fields_t;  
+  using Mparticles = MP;
+  using Mfields = MF;
+  using real_t = typename Mparticles::real_t;
+  using particles_t = typename Mparticles::patch_t;
+  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
