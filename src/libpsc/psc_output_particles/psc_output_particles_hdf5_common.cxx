@@ -3,8 +3,6 @@
 
 #include "output_particles.hxx"
 
-using real_t = mparticles_t::real_t;
-
 // needs to be changed accordingly
 
 struct hdf5_prt {
@@ -22,11 +20,11 @@ struct hdf5_prt {
 #define to_psc_output_particles_hdf5(out) \
   mrc_to_subobj(out, struct psc_output_particles_hdf5)
 
-namespace {
-
+template<typename Mparticles>
 struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 {
-  using Mparticles = mparticles_t::sub_t;
+  using particle_t = typename Mparticles::particle_t;
+  using Particles = typename Mparticles::patch_t;
   using real_t = typename Mparticles::real_t;
 
   psc_output_particles_hdf5(const OutputParticlesParams& params)
@@ -73,7 +71,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   }
 
   static inline int
-  get_sort_index(mparticles_t::patch_t& prts, particle_t *part)
+  get_sort_index(Particles& prts, particle_t *part)
   {
     const Grid_t& grid = ppsc->grid();
     const int *ldims = grid.ldims;
@@ -99,7 +97,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   // count_sort
 
   static void
-  count_sort(mparticles_t mprts, int **off, int **map)
+  count_sort(PscMparticles<Mparticles> mprts, int **off, int **map)
   {
     int nr_kinds = mprts->grid().kinds.size();
 
@@ -107,7 +105,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
       const int *ldims = ppsc->grid().ldims;
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
       off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
-      mparticles_t::patch_t& prts = mprts[p];
+      Particles& prts = mprts[p];
       unsigned int n_prts = prts.size();
 
       // counting sort to get map 
@@ -157,7 +155,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   // ----------------------------------------------------------------------
   // make_local_particle_array
 
-  hdf5_prt*  make_local_particle_array(mparticles_t mprts, int **off, int **map,
+  hdf5_prt*  make_local_particle_array(PscMparticles<Mparticles> mprts, int **off, int **map,
 				       size_t **idx, size_t *p_n_write, size_t *p_n_off, size_t *p_n_total)
   {
     const auto& grid = mprts->grid();
@@ -312,7 +310,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
       return;
     }
 
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
 
     prof_start(pr_A);
     int rank, size;
@@ -543,5 +541,3 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   Int3 wdims; // dimensions of the subdomain we're actually writing
   MPI_Comm comm_;
 };
-
-}
