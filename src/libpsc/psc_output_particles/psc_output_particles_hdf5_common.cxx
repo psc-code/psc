@@ -24,13 +24,13 @@ struct hdf5_prt {
 
 namespace {
 
-struct psc_output_particles_hdf5 : PscOutputParticlesParams, OutputParticlesBase
+struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 {
   using Mparticles = mparticles_t::sub_t;
   using real_t = typename Mparticles::real_t;
 
-  psc_output_particles_hdf5(const PscOutputParticlesParams& params)
-    : PscOutputParticlesParams(params)
+  psc_output_particles_hdf5(const OutputParticlesParams& params)
+    : OutputParticlesParams(params)
   {
     hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
     H5Tinsert(id, "x" , HOFFSET(struct hdf5_prt, x) , H5T_NATIVE_FLOAT);

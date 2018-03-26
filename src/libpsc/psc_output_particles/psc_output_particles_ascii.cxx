@@ -10,10 +10,10 @@
 #define to_psc_output_particles_ascii(out) \
   mrc_to_subobj(out, struct psc_output_particles_ascii)
 
-struct psc_output_particles_ascii : PscOutputParticlesParams, OutputParticlesBase
+struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
 {
-  psc_output_particles_ascii(const PscOutputParticlesParams& params)
-    : PscOutputParticlesParams(params)
+  psc_output_particles_ascii(const OutputParticlesParams& params)
+    : OutputParticlesParams(params)
   {}
 };
 

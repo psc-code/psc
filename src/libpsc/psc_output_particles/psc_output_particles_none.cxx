@@ -2,10 +2,10 @@
 #include "psc_output_particles_private.h"
 #include "output_particles.hxx"
 
-struct psc_output_particles_none : PscOutputParticlesParams, OutputParticlesBase
+struct psc_output_particles_none : OutputParticlesParams, OutputParticlesBase
 {
-  psc_output_particles_none(const PscOutputParticlesParams& params)
-    : PscOutputParticlesParams(params)
+  psc_output_particles_none(const OutputParticlesParams& params)
+    : OutputParticlesParams(params)
   {}
 };
 
@@ -14,7 +14,7 @@ struct psc_output_particles_none : PscOutputParticlesParams, OutputParticlesBase
 
 static void
 psc_output_particles_none_run(struct psc_output_particles *out,
-				 struct psc_mparticles *particles_base)
+			      struct psc_mparticles *particles_base)
 {
 }
 

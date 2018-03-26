@@ -5,7 +5,7 @@
 #include <psc_output_particles.h>
 #include "vec3.hxx"
 
-struct PscOutputParticlesParams
+struct OutputParticlesParams
 {
   const char *data_dir;
   const char *basename;
@@ -22,7 +22,7 @@ struct psc_output_particles
   struct mrc_obj obj;
 
   // parameters
-  PscOutputParticlesParams params;
+  OutputParticlesParams params;
 };
 
 struct psc_output_particles_ops {
