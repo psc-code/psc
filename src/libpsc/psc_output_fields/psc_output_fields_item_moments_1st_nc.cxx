@@ -3,19 +3,19 @@
 
 #include <math.h>
 
-using real_t = mparticles_t::real_t;
-
 #include "common_moments.cxx"
-
-using particles_t = mparticles_t::patch_t;
 
 // ======================================================================
 // n
 
+template<typename MP, typename MF>
 struct Moment_n_1st_nc
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "n_1st_nc";
   constexpr static int n_comps = 1;
@@ -29,7 +29,7 @@ struct Moment_n_1st_nc
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
 
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t *prt = &*prt_iter;
+      auto *prt = &*prt_iter;
       int m = prt->kind();
       DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, 1.f);
     }
@@ -39,10 +39,14 @@ struct Moment_n_1st_nc
 // ======================================================================
 // rho
 
+template<typename MP, typename MF>
 struct Moment_rho_1st_nc
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
@@ -56,7 +60,7 @@ struct Moment_rho_1st_nc
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t *prt = &*prt_iter;
+      auto *prt = &*prt_iter;
       DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, prts.prt_qni(*prt));
     }
   }
@@ -65,10 +69,14 @@ struct Moment_rho_1st_nc
 // ======================================================================
 // v
 
+template<typename MP, typename MF>
 struct Moment_v_1st_nc
 {
-  using mparticles_t = mparticles_t;
-  using mfields_t = mfields_t;
+  using mparticles_t = MP;
+  using mfields_t = MF;
+  using real_t = typename mparticles_t::real_t;
+  using particles_t = typename mparticles_t::patch_t;
+  using fields_t = typename mfields_t::fields_t;  
   
   constexpr static char const* name = "v_1st_nc";
   constexpr static int n_comps = 3;
@@ -82,7 +90,7 @@ struct Moment_v_1st_nc
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
 
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t *prt = &*prt_iter;
+      auto *prt = &*prt_iter;
       int mm = prt->kind() * 3;
       
       real_t vxi[3];
@@ -95,11 +103,13 @@ struct Moment_v_1st_nc
   }
 };
 
+template<typename Moment_t>
+using Ops = FieldsItemMomentOps<Moment_t>;
 #define MAKE_OP(TYPE, NAME, Moment_t)					\
   FieldsItemMomentOps<Moment_t> psc_output_fields_item_##NAME##TYPE##_ops;
 
-#define MAKE_POFI_OPS(TYPE)						\
-  MAKE_OP(TYPE, n_1st_nc_  , Moment_n_1st_nc)				\
-  MAKE_OP(TYPE, rho_1st_nc_, Moment_rho_1st_nc)				\
-  MAKE_OP(TYPE, v_1st_nc_  , Moment_v_1st_nc)				\
+#define MAKE_POFI_OPS(MP, MF, TYPE)					\
+  Ops<Moment_n_1st_nc<MP, MF>> psc_output_fields_item_n_1st_nc_##TYPE##_ops; \
+  Ops<Moment_rho_1st_nc<MP, MF>> psc_output_fields_item_rho_1st_nc_##TYPE##_ops; \
+  Ops<Moment_v_1st_nc<MP, MF>> psc_output_fields_item_v_1st_nc_##TYPE##_ops; \
 

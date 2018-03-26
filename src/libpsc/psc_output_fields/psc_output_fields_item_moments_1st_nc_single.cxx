@@ -1,11 +1,8 @@
 
 #include "psc.h"
-#include "psc_particles_as_single.h"
-#include "psc_fields_as_c.h"
+#include "psc_particles_single.h"
+#include "psc_fields_c.h"
 #include "fields.hxx"
-
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
 
 // ======================================================================
 // !!! These moments are shifted to (n+.5) * dt, rather than n * dt,
@@ -16,5 +13,5 @@ using Fields = Fields3d<fields_t>;
 
 #include "psc_output_fields_item_moments_1st_nc.cxx"
 
-MAKE_POFI_OPS(single)
+MAKE_POFI_OPS(PscMparticlesSingle, PscMfieldsC, single)
 
