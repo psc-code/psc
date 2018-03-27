@@ -15,10 +15,9 @@ struct bnd_particles_policy_ordered
 
   static void
   find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts,
-			   struct psc_mparticles *mprts, int p, int off)
+			   Mparticles& mprts, int p, int off)
   {
-    auto& prts = PscMparticles<Mparticles>{mprts}[p];
-
+    auto& prts = mprts[p];
     unsigned int n_prts = prts.size();
     int *b_mx = prts.pi_.b_mx_;
     for (int i = off; i < n_prts; i++) {
@@ -36,10 +35,9 @@ struct bnd_particles_policy_ordered
   // find_block_indices_count_reorder
 
   static void _mrc_unused
-  find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
+  find_block_indices_count_reorder(Mparticles& mprts, int p)
   {
-    auto& prts = PscMparticles<Mparticles>{mprts}[p];
-
+    auto& prts = mprts[p];
     unsigned int n_prts = prts.size();
     unsigned int cnt = n_prts;
     int *b_mx = prts.b_mx;
@@ -62,10 +60,9 @@ struct bnd_particles_policy_ordered
   }
 
   static void _mrc_unused
-  count_and_reorder_to_back(struct psc_mparticles *mprts, int p)
+  count_and_reorder_to_back(Mparticles& mprts, int p)
   {
-    auto& prts = PscMparticles<Mparticles>{mprts}[p];
-
+    auto& prts = mprts[p];
     memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
     unsigned int n_prts = prts.size();
     unsigned int cnt = n_prts;
@@ -79,10 +76,9 @@ struct bnd_particles_policy_ordered
   }
 
   static void _mrc_unused
-  reorder_to_back(struct psc_mparticles *mprts, int p)
+  reorder_to_back(Mparticles& mprts, int p)
   {
-    auto& prts = PscMparticles<Mparticles>{mprts}[p];
-
+    auto& prts = mprts[p];
     unsigned int n_prts = prts.size();
     unsigned int cnt = n_prts;
     for (int i = 0; i < n_prts; i++) {
@@ -134,7 +130,7 @@ struct bnd_particles_policy_ordered
   // ----------------------------------------------------------------------
   // exchange_mprts_prep
   
-  void exchange_mprts_prep(ddcp_t* ddcp, PscMparticles<Mparticles> mprts)
+  void exchange_mprts_prep(ddcp_t* ddcp, Mparticles& mprts)
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
       auto& prts = mprts[p];
@@ -142,7 +138,7 @@ struct bnd_particles_policy_ordered
       
       if (1) {
 	//      find_block_indices_count_reorderx(prts);
-	count_and_reorder_to_back(mprts.mprts(), p);
+	count_and_reorder_to_back(mprts, p);
       }
       dpatch->m_buf = &prts.get_buf();
       dpatch->m_begin = dpatch->m_buf->size();
@@ -155,7 +151,7 @@ struct bnd_particles_policy_ordered
   // ----------------------------------------------------------------------
   // exchange_mprts_post
   
-  void exchange_mprts_post(ddcp_t* ddcp, PscMparticles<Mparticles> mprts)
+  void exchange_mprts_post(ddcp_t* ddcp, Mparticles& mprts)
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
       auto& prts = mprts[p];
@@ -163,7 +159,7 @@ struct bnd_particles_policy_ordered
       
       int n_prts = dpatch->m_buf->size();
       
-      find_block_indices_count(prts.b_idx, prts.b_cnt, mprts.mprts(), p, dpatch->m_begin);
+      find_block_indices_count(prts.b_idx, prts.b_cnt, *mprts.sub(), p, dpatch->m_begin);
       exclusive_scan(prts.b_cnt, prts.nr_blocks + 1);
       sort_indices(prts.b_idx, prts.b_cnt, prts.b_ids, n_prts);
       
@@ -178,7 +174,7 @@ template<typename MP>
 struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_policy_ordered<MP>
 {
   using Base = psc_bnd_particles_sub<MP>;
-  using mparticles_t = MP;
+  using Mparticles = MP;
 
   using Base::Base;
   using Base::ddcp;
@@ -195,7 +191,7 @@ struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_poli
     }
     
     auto mprts_base = PscMparticlesBase{_mprts_base};
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
+    auto& mprts = mprts_base->get_as<Mparticles>();
 
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_A);
@@ -210,7 +206,7 @@ struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_poli
     prof_stop(pr_B);
     prof_stop(pr_time_step_no_comm);
 
-    mprts.put_as(mprts_base);
+    mprts_base->put_as(mprts);
   }
 };
 

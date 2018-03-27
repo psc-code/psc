@@ -29,8 +29,7 @@ struct cuda_bnd {
 
 struct cuda_bndp : cuda_mparticles_indexer
 {
-  using mparticles_t = PscMparticlesCuda;
-  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_t = ddc_particles<PscMparticles<MparticlesCuda>>;
   using ddcp_patch = typename ddcp_t::patch;
 
   cuda_bndp(const Grid_t& grid);

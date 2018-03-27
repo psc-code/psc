@@ -46,7 +46,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   void reset()
   {
     delete ddcp;
-    ddcp = new ddc_particles<PscMparticles<Mparticles>>(ppsc->mrc_domain_);
+    ddcp = new ddcp_t{ppsc->mrc_domain_};
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 

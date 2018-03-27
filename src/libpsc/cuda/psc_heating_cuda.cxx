@@ -61,9 +61,9 @@ struct HeatingCuda : HeatingBase
       return;
     }
 
-    PscMparticlesCuda mprts = mprts_base.get_as<PscMparticlesCuda>();
-    cuda_mparticles *cmprts = mprts->cmprts();
-    cuda_heating_run_foil(cmprts);
+    auto& mprts = mprts_base->get_as<MparticlesCuda>();
+    cuda_heating_run_foil(mprts.cmprts());
+    mprts_base->put_as(mprts);
   }
 
 private:

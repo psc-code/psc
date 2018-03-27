@@ -11,9 +11,7 @@
 // ======================================================================
 // psc_mparticles "cuda"
 
-// ----------------------------------------------------------------------
-// psc_mparticles_cuda_methods
-
+#if 0
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all
@@ -128,17 +126,16 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 }
 
 #endif
+#endif
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_inject
 
 void
-psc_mparticles_cuda_inject(struct psc_mparticles *_mprts, struct cuda_mparticles_prt *buf,
+psc_mparticles_cuda_inject(MparticlesCuda& mprts, struct cuda_mparticles_prt *buf,
 			   uint *buf_n_by_patch)
 {
-  PscMparticlesCuda mprts(_mprts);
-
-  mprts->inject_buf(buf, buf_n_by_patch);
+  mprts.inject_buf(buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------

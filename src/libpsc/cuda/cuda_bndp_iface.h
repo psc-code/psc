@@ -14,7 +14,6 @@ extern int pr_time_step_no_comm;
 struct psc_bnd_particles_cuda : psc_bnd_particles_sub<MparticlesCuda>
 {
   using Base = psc_bnd_particles_sub<MparticlesCuda>;
-  using mparticles_t = PscMparticlesCuda;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -46,23 +45,23 @@ struct psc_bnd_particles_cuda : psc_bnd_particles_sub<MparticlesCuda>
       pr_B = prof_register("xchg_mprts_post", 1., 0, 0);
     }
     
-    auto mprts = mprts_base.get_as<mparticles_t>();
+    auto& mprts = mprts_base->get_as<MparticlesCuda>();
 
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_A);
-    cbndp_->prep(ddcp, mprts->cmprts());
+    cbndp_->prep(ddcp, mprts.cmprts());
     prof_stop(pr_A);
     
-    process_and_exchange(*mprts.sub());
+    process_and_exchange(mprts);
     
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_B);
-    cbndp_->post(ddcp, mprts->cmprts());
+    cbndp_->post(ddcp, mprts.cmprts());
     prof_stop(pr_B);
     prof_stop(pr_time_step_no_comm);
 
-    mprts.put_as(mprts_base);
-}
+    mprts_base->put_as(mprts);
+  }
 
 private:
   std::unique_ptr<cuda_bndp> cbndp_;

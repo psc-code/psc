@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-void psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
+void psc_mparticles_cuda_inject(MparticlesCuda& mprts, struct cuda_mparticles_prt *buf,
 				uint *buf_n_by_patch); // FIXME
 
 // ======================================================================
@@ -145,6 +145,7 @@ struct InjectCuda : InjectBase
     FieldsItemBase* item = PscFieldsItemBase{item_n}.sub();
     item->run(mflds_base, mprts_base);
 
+    auto& mprts = mprts_base->get_as<MparticlesCuda>();
     mfields_t mf_n = item->mres().get_as<mfields_t>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
@@ -225,7 +226,8 @@ struct InjectCuda : InjectBase
 
     mf_n.put_as(item->mres(), 0, 0);
 
-    psc_mparticles_cuda_inject(mprts_base.mprts(), buf, buf_n_by_patch);
+    psc_mparticles_cuda_inject(mprts, buf, buf_n_by_patch);
+    mprts_base->put_as(mprts);
   }
 
 private:
