@@ -19,7 +19,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
-  using ddcp_t = ddc_particles<PscMparticles<Mparticles>>;
+  using ddcp_t = ddc_particles<Mparticles>;
   using ddcp_patch = typename ddcp_t::patch;
 
   // ----------------------------------------------------------------------

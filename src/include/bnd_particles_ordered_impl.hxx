@@ -7,7 +7,7 @@ struct bnd_particles_policy_ordered
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
-  using ddcp_t = ddc_particles<PscMparticles<Mparticles>>;
+  using ddcp_t = ddc_particles<Mparticles>;
   using ddcp_patch = typename ddcp_t::patch;
   
   // ----------------------------------------------------------------------

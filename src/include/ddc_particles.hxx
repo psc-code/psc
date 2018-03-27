@@ -12,10 +12,10 @@
 template<typename MP>
 struct ddc_particles
 {
-  using mparticles_t = MP;
-  using particle_t = typename mparticles_t::particle_t;
-  using particle_buf_t = typename mparticles_t::particle_buf_t;
-  using real_t = typename mparticles_t::real_t;
+  using Mparticles = MP;
+  using particle_t = typename Mparticles::particle_t;
+  using particle_buf_t = typename PscMparticles<Mparticles>::particle_buf_t;
+  using real_t = typename Mparticles::real_t;
   
   ddc_particles(struct mrc_domain *domain);
   ~ddc_particles();
@@ -402,7 +402,7 @@ inline void ddc_particles<MP>::comm()
   MPI_Waitall(n_ranks, recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(n_ranks, send_reqs, MPI_STATUSES_IGNORE);
 
-  MPI_Datatype mpi_dtype = Mparticles_traits<typename mparticles_t::sub_t>::mpi_dtype();
+  MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
 
   // add remote # particles
   int n_send = 0, n_recv = 0;
