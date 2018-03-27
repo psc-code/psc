@@ -152,12 +152,6 @@ struct PscMparticles
     return Self{mprts.mprts()}; // odd way of returning derived type
   }
   
-  template<typename MP>
-  MP get_as(uint flags = 0);
-
-  template<typename MP>
-  void put_as(MP mprts_base, uint flags = 0);
-  
   psc_mparticles *mprts() { return mprts_; }
   
   sub_t* operator->() { return sub(); }

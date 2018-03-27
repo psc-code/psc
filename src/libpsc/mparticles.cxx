@@ -17,15 +17,6 @@
 #include "psc_particles_cuda.h"
 #include "psc_particles_vpic.h"
 
-template PscMparticles<MparticlesDouble> PscMparticles<MparticlesBase>::get_as(uint flags);
-template PscMparticles<MparticlesSingle> PscMparticles<MparticlesBase>::get_as(uint flags);
-template PscMparticles<MparticlesCuda> PscMparticles<MparticlesBase>::get_as(uint flags);
-template PscMparticles<MparticlesVpic> PscMparticles<MparticlesBase>::get_as(uint flags);
-template void PscMparticles<MparticlesSingle>::put_as(PscMparticlesBase mprts_base, uint flags);
-template void PscMparticles<MparticlesDouble>::put_as(PscMparticlesBase mprts_base, uint flags);
-template void PscMparticles<MparticlesCuda>::put_as(PscMparticlesBase mprts_base, uint flags);
-template void PscMparticles<MparticlesVpic>::put_as(PscMparticlesBase mprts_base, uint flags);
-
 // ======================================================================
 // psc_mparticles base class
 
