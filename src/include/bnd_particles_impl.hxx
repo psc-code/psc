@@ -19,8 +19,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
-  using mparticles_t = PscMparticles<Mparticles>;
-  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_t = ddc_particles<PscMparticles<Mparticles>>;
   using ddcp_patch = typename ddcp_t::patch;
 
   // ----------------------------------------------------------------------
@@ -47,7 +46,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   void reset()
   {
     delete ddcp;
-    ddcp = new ddc_particles<mparticles_t>(ppsc->mrc_domain_);
+    ddcp = new ddc_particles<PscMparticles<Mparticles>>(ppsc->mrc_domain_);
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 
@@ -106,9 +105,9 @@ struct psc_bnd_particles_sub : BndParticlesBase
 
   void exchange_particles(PscMparticlesBase mprts_base) override
   {
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base->put_as(mprts);
   }
 
 protected:
@@ -138,7 +137,7 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
     xm[d] = gpatch.xe[d] - gpatch.xb[d];
   }
   
-  typename ddc_particles<mparticles_t>::patch *dpatch = &ddcp->patches[p];
+  auto *dpatch = &ddcp->patches[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     dpatch->nei[dir1].send_buf.resize(0);
   }
@@ -239,7 +238,7 @@ void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
 	mprts[p].validCellIndex(*prt);
 	(*dpatch->m_buf)[head++] = *prt;
       } else {
-	typename ddc_particles<mparticles_t>::dnei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
+	auto* nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	nei->send_buf.push_back(*prt);
       }
     }

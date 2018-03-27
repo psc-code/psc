@@ -9,17 +9,17 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  struct psc *psc, double *result)
 {
   auto mprts_base = PscMparticlesBase{psc->particles};
-  auto mprts = mprts_base.get_as<PscMparticles<MparticlesDouble>>();
+  auto& mprts = mprts_base->get_as<MparticlesDouble>();
 
   const Grid_t& grid = psc->grid();
   double fnqs = grid.fnqs;
   double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
 
-  for (int p = 0; p < mprts->n_patches(); p++) {
+  for (int p = 0; p < mprts.n_patches(); p++) {
     for (auto& prt : mprts[p]) {
       double gamma = sqrt(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
-      double Ekin = (gamma - 1.) * mprts->prt_mni(prt) * mprts->prt_wni(prt) * fnqs;
-      double qni = mprts->prt_qni(prt);
+      double Ekin = (gamma - 1.) * mprts.prt_mni(prt) * mprts.prt_wni(prt) * fnqs;
+      double qni = mprts.prt_qni(prt);
       if (qni < 0.) {
 	result[0] += Ekin * fac;
       } else if (qni > 0.) {
@@ -30,7 +30,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
     }
   }
 
-  mprts.put_as(mprts_base, MP_DONT_COPY);
+  mprts_base->put_as(mprts, MP_DONT_COPY);
 }
 
 // ======================================================================

@@ -66,9 +66,9 @@ struct SortConvert : Sort_t, SortBase
 
   void run(PscMparticlesBase mprts_base) override
   {
-    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base->put_as(mprts);
   }
 };
 

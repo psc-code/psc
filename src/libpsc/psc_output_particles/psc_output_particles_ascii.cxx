@@ -33,10 +33,10 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
     sprintf(filename, "%s/%s.%06d_p%06d.asc", data_dir,
 	    basename, ppsc->timestep, rank);
     
-    auto mprts = mprts_base.get_as<PscMparticles<MparticlesDouble>>();
+    auto& mprts = mprts_base->get_as<MparticlesDouble>();
     
     FILE *file = fopen(filename, "w");
-    for (int p = 0; p < mprts->n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       int n = 0;
       for (auto& prt : mprts[p]) {
 	fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
@@ -47,7 +47,7 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
       }
     }
     
-    mprts.put_as(mprts_base, MP_DONT_COPY);
+    mprts_base->put_as(mprts, MP_DONT_COPY);
     
     fclose(file);
   }

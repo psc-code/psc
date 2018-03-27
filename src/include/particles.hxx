@@ -86,8 +86,6 @@ struct MparticlesBase
   template<typename MP>
   void put_as(MP& mprts, uint flags = 0)
   {
-    auto& mp_from = mprts;
-  
     // If we're already the subtype, nothing to be done
     if (typeid(mprts) == typeid(*this)) {
       return;

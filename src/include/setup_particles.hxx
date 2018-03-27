@@ -9,7 +9,6 @@ struct SetupParticles
 {
   using Mparticles = MP;
   using particle_t = typename MP::particle_t;
-  using mparticles_t = PscMparticles<Mparticles>;
   
   // ----------------------------------------------------------------------
   // get_n_in_cell
@@ -118,9 +117,9 @@ struct SetupParticles
   static void setup_particles(PscMparticlesBase mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
 			      FUNC func)
   {
-    auto mprts = mprts_base.get_as<mparticles_t>(MP_DONT_COPY | MP_DONT_RESIZE);
-    setup_particles(*mprts.sub(), psc, n_prts_by_patch, func);
-    mprts.put_as(mprts_base);
+    auto& mprts = mprts_base->get_as<Mparticles>(MP_DONT_COPY | MP_DONT_RESIZE);
+    setup_particles(mprts, psc, n_prts_by_patch, func);
+    mprts_base->put_as(mprts);
   }
 
   template<typename FUNC>

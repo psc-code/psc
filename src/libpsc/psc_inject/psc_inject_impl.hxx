@@ -23,7 +23,6 @@ struct Inject_ : InjectBase
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
   using particle_t = typename Mparticles::particle_t;
-  using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
   using ItemMoment_t = ItemMomentLoopPatches<Moment_n_1st<Mparticles, Mfields>>;
   
@@ -59,9 +58,9 @@ struct Inject_ : InjectBase
 
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base->put_as(mprts);
   }
   
   void operator()(Mparticles& mprts)

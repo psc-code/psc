@@ -360,11 +360,9 @@ struct FieldsItemMoment : FieldsItemBase
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
-    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-
-    moment_.run(*mprts.sub());
-    
-    mprts.put_as(mprts_base, MP_DONT_COPY);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    moment_.run(mprts);
+    mprts_base->put_as(mprts, MP_DONT_COPY);
   }
 
   virtual PscMfieldsBase mres() override { return moment_.mres_base(); }

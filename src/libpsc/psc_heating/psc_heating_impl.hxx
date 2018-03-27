@@ -12,7 +12,6 @@ struct Heating__ : HeatingBase
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
   using particle_t = typename Mparticles::particle_t;
-  using mparticles_t = PscMparticles<Mparticles>;
   
   // ----------------------------------------------------------------------
   // ctor
@@ -107,9 +106,9 @@ struct Heating__ : HeatingBase
       return;
     }
     
-    mparticles_t mprts = mprts_base.get_as<mparticles_t>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base->put_as(mprts);
   }
   
 private:

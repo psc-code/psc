@@ -537,9 +537,9 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
       return;
     }
 
-    auto mprts = mprts_base.get_as<PscMparticles<Mparticles>>();
-    (*this)(*mprts.sub());
-    mprts.put_as(mprts_base, MP_DONT_COPY);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base->put_as(mprts, MP_DONT_COPY);
   }
 
   // private:

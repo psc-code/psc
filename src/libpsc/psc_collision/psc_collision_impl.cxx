@@ -33,7 +33,6 @@ psc_collision_ops_<CollisionConvert<Collision_<MparticlesDouble, MfieldsC>>> psc
 template<typename Collision>
 struct Item_coll_stats
 {
-  using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;
 
   constexpr static const char* name = "coll_stats";
@@ -57,7 +56,6 @@ struct Item_coll_stats
 template<typename Collision>
 struct Item_coll_rei
 {
-  using mparticles_t = typename Collision::mparticles_t;
   using mfields_t = typename Collision::mfields_t;
 
   constexpr static const char* name = "coll_rei";

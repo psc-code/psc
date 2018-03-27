@@ -17,10 +17,12 @@
 #include "psc_particles_cuda.h"
 #include "psc_particles_vpic.h"
 
+template PscMparticles<MparticlesDouble> PscMparticles<MparticlesBase>::get_as(uint flags);
 template PscMparticles<MparticlesSingle> PscMparticles<MparticlesBase>::get_as(uint flags);
 template PscMparticles<MparticlesCuda> PscMparticles<MparticlesBase>::get_as(uint flags);
 template PscMparticles<MparticlesVpic> PscMparticles<MparticlesBase>::get_as(uint flags);
 template void PscMparticles<MparticlesSingle>::put_as(PscMparticlesBase mprts_base, uint flags);
+template void PscMparticles<MparticlesDouble>::put_as(PscMparticlesBase mprts_base, uint flags);
 template void PscMparticles<MparticlesCuda>::put_as(PscMparticlesBase mprts_base, uint flags);
 template void PscMparticles<MparticlesVpic>::put_as(PscMparticlesBase mprts_base, uint flags);
 
@@ -49,11 +51,11 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
   auto mprts_base = PscMparticlesBase{_mprts_base};
   int fail_cnt = 0;
 
-  auto mprts = mprts_base.get_as<PscMparticles<MparticlesDouble>>();
-  const Grid_t& grid = ppsc->grid();
+  auto& mprts = mprts_base->get_as<MparticlesDouble>();
+  const auto& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {
-    auto& patch = ppsc->grid().patches[p];
+    auto& patch = grid.patches[p];
     auto& prts = mprts[p];
 
     f_real xb[3], xe[3];
@@ -78,7 +80,7 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
   }
   assert(fail_cnt == 0);
 
-  mprts.put_as(mprts_base, 0);
+  mprts_base->put_as(mprts, MP_DONT_COPY);
 }
 
 // ======================================================================

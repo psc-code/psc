@@ -7,8 +7,7 @@ struct bnd_particles_policy_ordered
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
-  using mparticles_t = PscMparticles<Mparticles>;
-  using ddcp_t = ddc_particles<mparticles_t>;
+  using ddcp_t = ddc_particles<PscMparticles<Mparticles>>;
   using ddcp_patch = typename ddcp_t::patch;
   
   // ----------------------------------------------------------------------
@@ -18,7 +17,7 @@ struct bnd_particles_policy_ordered
   find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts,
 			   struct psc_mparticles *mprts, int p, int off)
   {
-    typename mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
+    auto& prts = PscMparticles<Mparticles>{mprts}[p];
 
     unsigned int n_prts = prts.size();
     int *b_mx = prts.pi_.b_mx_;
@@ -39,7 +38,7 @@ struct bnd_particles_policy_ordered
   static void _mrc_unused
   find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
   {
-    typename mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
+    auto& prts = PscMparticles<Mparticles>{mprts}[p];
 
     unsigned int n_prts = prts.size();
     unsigned int cnt = n_prts;
@@ -65,7 +64,7 @@ struct bnd_particles_policy_ordered
   static void _mrc_unused
   count_and_reorder_to_back(struct psc_mparticles *mprts, int p)
   {
-    typename mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
+    auto& prts = PscMparticles<Mparticles>{mprts}[p];
 
     memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
     unsigned int n_prts = prts.size();
@@ -82,7 +81,7 @@ struct bnd_particles_policy_ordered
   static void _mrc_unused
   reorder_to_back(struct psc_mparticles *mprts, int p)
   {
-    typename mparticles_t::patch_t& prts = mparticles_t(mprts)[p];
+    auto& prts = PscMparticles<Mparticles>{mprts}[p];
 
     unsigned int n_prts = prts.size();
     unsigned int cnt = n_prts;
@@ -135,7 +134,7 @@ struct bnd_particles_policy_ordered
   // ----------------------------------------------------------------------
   // exchange_mprts_prep
   
-  void exchange_mprts_prep(ddcp_t* ddcp, mparticles_t mprts)
+  void exchange_mprts_prep(ddcp_t* ddcp, PscMparticles<Mparticles> mprts)
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
       auto& prts = mprts[p];
@@ -156,7 +155,7 @@ struct bnd_particles_policy_ordered
   // ----------------------------------------------------------------------
   // exchange_mprts_post
   
-  void exchange_mprts_post(ddcp_t* ddcp, mparticles_t mprts)
+  void exchange_mprts_post(ddcp_t* ddcp, PscMparticles<Mparticles> mprts)
   {
     for (int p = 0; p < mprts->n_patches(); p++) {
       auto& prts = mprts[p];

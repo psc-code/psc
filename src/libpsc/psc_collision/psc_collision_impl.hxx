@@ -21,7 +21,6 @@ struct Collision_
   using real_t = typename Mparticles::real_t;
   using Mfields = MF;
   using Fields = Fields3d<typename Mfields::fields_t>;
-  using mparticles_t = PscMparticles<Mparticles>;
   using mfields_t = PscMfields<Mfields>;
 
   constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
