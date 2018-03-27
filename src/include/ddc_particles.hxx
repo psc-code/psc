@@ -14,7 +14,7 @@ struct ddc_particles
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
-  using particle_buf_t = typename PscMparticles<Mparticles>::particle_buf_t;
+  using particle_buf_t = typename Mparticles::buf_t;
   using real_t = typename Mparticles::real_t;
   
   ddc_particles(struct mrc_domain *domain);

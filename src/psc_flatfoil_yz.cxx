@@ -250,7 +250,7 @@ struct PscFlatfoil : PscFlatfoilParams
       }
     };
     
-    SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, init_npt);
+    SetupParticles<Mparticles_t>::setup_particles(PscMparticlesBase{ppsc->particles}, psc_, n_prts_by_patch, init_npt);
   }
 
   // ----------------------------------------------------------------------

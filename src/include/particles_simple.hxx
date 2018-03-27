@@ -305,6 +305,7 @@ struct Mparticles : MparticlesBase
   using particle_real_t = typename particle_t::real_t; // FIXME, should go away
   using real_t = particle_real_t;
   using patch_t = mparticles_patch<particle_t>;
+  using buf_t = typename patch_t::buf_t;
 
   Mparticles(const Grid_t& grid)
     : MparticlesBase(grid)

@@ -136,7 +136,6 @@ struct PscMparticles
   using particle_t = typename sub_t::particle_t;
   using real_t = typename particle_t::real_t;
   using patch_t = typename sub_t::patch_t;
-  using particle_buf_t = typename patch_t::buf_t;
 
   explicit PscMparticles(psc_mparticles *mprts)
     : mprts_(mprts)

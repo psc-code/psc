@@ -60,7 +60,7 @@ struct MparticlesCuda : MparticlesBase
   using particle_t = particle_cuda_t;
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
-  using particle_buf_t = psc_particle_cuda_buf_t;
+  using buf_t = psc_particle_cuda_buf_t;
   
   MparticlesCuda(const Grid_t& grid);
 
@@ -98,13 +98,11 @@ struct MparticlesCuda : MparticlesBase
 
   struct patch_t
   {
-    using buf_t = particle_buf_t;
-    
     patch_t(MparticlesCuda& mp, int p)
       : mp_(mp), p_(p), pi_(mp.grid())
     {}
 
-    particle_buf_t& get_buf() { assert(0); static particle_buf_t fake{}; return fake; } // FIXME
+    buf_t& get_buf() { assert(0); static buf_t fake{}; return fake; } // FIXME
 
     int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
     Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
