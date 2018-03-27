@@ -12,6 +12,9 @@ class OutputParticlesBase
 {
 public:
   virtual void run(PscMparticlesBase mprts_base) = 0;
+
+public:
+  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
 // ======================================================================
@@ -65,6 +68,7 @@ public:
 
   static void destroy(struct psc_output_particles *_outp)
   {
+    if (!mrc_to_subobj(_outp, OutputParticlesBase)->inited) return; // FIXME
     PscOutputParticles<OutputParticles_t> outp(_outp);
     outp.sub()->~OutputParticles_t();
   }
