@@ -36,13 +36,13 @@ struct PushParticlesVpic : PushParticlesBase
     auto mprts_base = PscMparticlesBase{_mprts_base};
     PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(EX, HX + 6);
     FieldArray *vmflds = mf->vmflds_fields;
-    PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>();
+    auto& mprts = mprts_base->get_as<MparticlesVpic>();
     
-    Simulation_push_mprts(sim_, mprts->vmprts, vmflds);
+    Simulation_push_mprts(sim_, mprts.vmprts, vmflds);
     
     // update jf FIXME: rhob too, probably, depending on b.c.
     mf.put_as(mflds_base, JXI, JXI + 3);
-    mprts.put_as(mprts_base);
+    mprts_base->put_as(mprts);
   }
 
 private:

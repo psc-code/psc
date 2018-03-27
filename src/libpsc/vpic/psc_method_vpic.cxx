@@ -163,8 +163,8 @@ psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
   if (sub->use_deck_particle_ic) {
     // If we want to use the deck particle i.c., we need to copy the
     // already set up "vpic" particles over to the base particles.
-    PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>(MP_DONT_COPY | MP_DONT_RESIZE);
-    mprts.put_as(mprts_base);
+    auto& mprts = mprts_base->get_as<MparticlesVpic>(MP_DONT_COPY | MP_DONT_RESIZE);
+    mprts_base->put_as(mprts);
   } else {
     SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
   }
@@ -208,7 +208,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   auto mflds_base = PscMfieldsBase{psc->flds};
   auto mprts_base = PscMparticlesBase{psc->particles};
   PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
-  PscMparticlesVpic mprts = mprts_base.get_as<PscMparticlesVpic>();
+  auto& mprts = mprts_base->get_as<MparticlesVpic>();
   
   // Do some consistency checks on user initialized fields
 
@@ -229,7 +229,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
   mf->clear_rhof();
-  mf->accumulate_rho_p(mprts->vmprts);
+  mf->accumulate_rho_p(mprts.vmprts);
   mf->synchronize_rho();
   mf->compute_rhob();
 
@@ -246,9 +246,9 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
   FieldArray *vmflds = mf->vmflds_fields;
-  Simulation_initialize(sub->sim, mprts->vmprts, vmflds);
+  Simulation_initialize(sub->sim, mprts.vmprts, vmflds);
 
-  mprts.put_as(mprts_base);
+  mprts_base->put_as(mprts);
   mf.put_as(mflds_base, 0, VPIC_MFIELDS_N_COMP);
 
   // First output / stats

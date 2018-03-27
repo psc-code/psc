@@ -67,8 +67,6 @@ struct MparticlesVpic : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 };
 
-using PscMparticlesVpic = PscMparticles<MparticlesVpic>;
-
 template<>
 struct Mparticles_traits<MparticlesVpic>
 {
