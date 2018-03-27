@@ -57,8 +57,6 @@ struct MparticlesSingleByKind : MparticlesBase
 // ======================================================================
 // PscMparticlesSingleByKind
 
-using PscMparticlesSingleByKind = PscMparticles<MparticlesSingleByKind>;
-
 template<>
 struct Mparticles_traits<MparticlesSingleByKind>
 {
