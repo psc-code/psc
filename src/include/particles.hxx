@@ -51,6 +51,65 @@ struct MparticlesBase
   virtual void inject(int p, const psc_particle_inject& new_prt) { assert(0); }
   virtual void inject_reweight(int p, const psc_particle_inject& new_prt) { assert(0); }
 
+  template<typename MP>
+  MP& get_as(uint flags = 0)
+  {
+    // If we're already the subtype, nothing to be done
+    if (typeid(*this) == typeid(MP)) {
+      mprintf("this %p %p\n", this, dynamic_cast<MP*>(this));
+      return *dynamic_cast<MP*>(this);
+    }
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("Mparticles_get_as", 1., 0, 0);
+    }
+    
+    prof_start(pr);
+    auto& mprts = *new MP{grid()};
+    if (flags & MP_DONT_COPY) {
+      if (!(flags & MP_DONT_RESIZE)) {
+	uint n_prts_by_patch[n_patches()];
+	get_size_all(n_prts_by_patch);
+	mprts.reserve_all(n_prts_by_patch);
+	mprts.resize_all(n_prts_by_patch);
+      }
+    } else {
+      assert(!(flags & MP_DONT_RESIZE));
+      MparticlesBase::convert(*this, mprts);
+    }
+  
+    prof_stop(pr);
+    return mprts;
+  }
+
+  template<typename MP>
+  void put_as(MP& mprts, uint flags = 0)
+  {
+    auto& mp_from = mprts;
+  
+    // If we're already the subtype, nothing to be done
+    if (typeid(mprts) == typeid(*this)) {
+      return;
+    }
+
+    static int pr;
+    if (!pr) {
+      pr = prof_register("Mparticles_put_as", 1., 0, 0);
+    }
+    prof_start(pr);
+    //mprintf("put_as %s -> %s from\n", typeid(mprts).name(), typeid(*thi).name());
+  
+    if (!(flags & MP_DONT_COPY)) {
+      MparticlesBase::convert(mprts, *this);
+    }
+  
+    //mprintf("put_as %s -> %s to\n", typeid(mprts).name(), typeid(*this).name());
+    delete &mprts;
+  
+    prof_stop(pr);
+  }
+  
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
   static void convert(MparticlesBase& mp_from, MparticlesBase& mp_to);
@@ -111,9 +170,6 @@ struct PscMparticles
   {
     return (*this->sub())[p];
   }
-
-private:
-  static void convert(MparticlesBase& mp_from, MparticlesBase& mp_to);
 
 private:
   psc_mparticles *mprts_;
