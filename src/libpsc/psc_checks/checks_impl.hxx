@@ -274,21 +274,18 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    struct psc_mfields *rho = fld_create(psc, 1);
-    psc_mfields_set_name(rho, "rho");
-    psc_mfields_set_comp_name(rho, 0, "rho");
-    PscMfields<Mfields> mf_rho(rho);
     const auto& grid = psc->grid();
   
-    calc_rho(item_rho_, PscMparticlesBase{psc->particles}, rho);
+    item_rho_(nullptr, PscMparticlesBase{psc->particles}, nullptr);
     calc_dive(psc, psc->flds);
 
-    auto& mres = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
+    auto& dive = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
+    auto& rho = *PscMfields<Mfields>{item_rho_->mres().mflds()}.sub();
     
     double eps = gauss_threshold;
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
-      Fields Rho(mf_rho[p]), DivE(mres[p]);
+      Fields Rho(rho[p]), DivE(dive[p]);
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
@@ -335,14 +332,12 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
-      psc_mfields_write_as_mrc_fld(rho, io);
-      mres.write_as_mrc_fld(io, {"Div_E"});
+      rho.write_as_mrc_fld(io, {"rho"});
+      dive.write_as_mrc_fld(io, {"Div_E"});
       mrc_io_close(io);
     }
 
     assert(max_err < eps);
-
-    psc_mfields_destroy(rho);
   }
 
   // state
