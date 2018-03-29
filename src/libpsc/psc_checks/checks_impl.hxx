@@ -35,12 +35,38 @@ struct Checks_ : ChecksParams, ChecksBase
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
 
+  // ----------------------------------------------------------------------
+  // ctor
+  
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
       comm_{comm}
   {
     rho_m = fld_create(ppsc, 1);
     rho_p = fld_create(ppsc, 1);
+
+    // FIXME, output_fields should be taking care of this?
+    bnd_ = psc_bnd_create(comm);
+    psc_bnd_set_name(bnd_, "psc_output_fields_bnd_calc_rho");
+    psc_bnd_set_type(bnd_, Mfields_traits<Mfields>::name);
+    psc_bnd_set_psc(bnd_, ppsc);
+    psc_bnd_setup(bnd_);
+
+    item_rho_ = psc_output_fields_item_create(comm);
+    // makes, e.g., "rho_1st_nc_single"
+    auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
+    psc_output_fields_item_set_type(item_rho_, s.c_str());
+    psc_output_fields_item_set_psc_bnd(item_rho_, bnd_);
+    psc_output_fields_item_setup(item_rho_);
+  }
+  
+  // ----------------------------------------------------------------------
+  // dtor
+
+  ~Checks_()
+  {
+    psc_output_fields_item_destroy(item_rho_);
+    psc_bnd_destroy(bnd_);
   }
   
   // ----------------------------------------------------------------------
@@ -55,28 +81,19 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // calc_rho
 
-  static void
-  calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
+  void calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *_rho)
   {
-    // FIXME, output_fields should be taking care of this?
-    struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
-    psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_rho");
-    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(bnd, psc);
-    psc_bnd_setup(bnd);
-
-    struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-    // makes, e.g., "rho_1st_nc_single"
-    auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
-    psc_output_fields_item_set_type(item, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item, bnd);
-    psc_output_fields_item_setup(item);
     PscMparticlesBase mp(mprts);
-    PscFieldsItemBase _item(item);
-    _item(psc->flds, mp, rho);
-    psc_output_fields_item_destroy(item);
+    PscFieldsItemBase item_rho(item_rho_);
+    item_rho(psc->flds, mp, nullptr);
+    auto& mres = *PscMfields<Mfields>{item_rho->mres().mflds()}.sub();
+    auto& rho = *PscMfields<Mfields>{_rho}.sub();
 
-    psc_bnd_destroy(bnd);
+    for (int p = 0; p < mres.n_patches(); p++) {
+      foreach_3d(ppsc, 0, i,j,k, 0, 0) {
+	rho[p](0, i,j,k) = mres[p](0, i,j,k);
+      } foreach_3d_end;
+    }
   }
 
   // ======================================================================
@@ -325,6 +342,8 @@ struct Checks_ : ChecksParams, ChecksBase
   // state
   MPI_Comm comm_;
   psc_mfields *rho_m, *rho_p;
+  psc_bnd* bnd_;
+  psc_output_fields_item* item_rho_;
 };
 
 // ----------------------------------------------------------------------

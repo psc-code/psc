@@ -35,6 +35,7 @@
 #include "../libpsc/psc_inject/psc_inject_impl.hxx"
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
+#include "../libpsc/psc_checks/checks_impl.hxx"
 
 enum {
   MY_ION,
@@ -161,6 +162,8 @@ struct PscFlatfoilParams
   int inject_interval;
   int inject_tau;
   InjectFoil inject_target;
+
+  ChecksParams checks_params;
 };
 
 // ======================================================================
@@ -173,7 +176,7 @@ struct PscFlatfoil : PscFlatfoilParams
 {
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
-#if 1 // generic_c: 2nd order
+#if 0 // generic_c: 2nd order
   using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
 #else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
   using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
@@ -187,6 +190,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, InjectFoil>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
+  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order_1st>;
   
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
     : PscFlatfoilParams{params},
@@ -198,7 +202,8 @@ struct PscFlatfoil : PscFlatfoilParams
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating},
-      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target}
+      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target},
+      checks_{psc_comm(psc), checks_params}
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -389,6 +394,8 @@ struct PscFlatfoil : PscFlatfoilParams
       collision_(mprts_);
     }
     
+    checks_.continuity_before_particle_push(psc_);
+
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp_.push_mprts(mprts_, mflds_);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
@@ -426,8 +433,7 @@ struct PscFlatfoil : PscFlatfoilParams
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-
-    //psc_checks_continuity_after_particle_push(psc->checks, psc);
+    checks_.continuity_after_particle_push(psc_);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
@@ -455,6 +461,8 @@ private:
 
   Heating_t heating_;
   Inject_t inject_;
+
+  Checks_t checks_;
   
   int st_nr_particles;
   int st_time_step;
@@ -578,6 +586,17 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
   params.inject_tau = 40;
+
+  // --- checks
+  params.checks_params.continuity_every_step = 1;
+  params.checks_params.continuity_threshold = 1e-14;
+  params.checks_params.continuity_verbose = true;
+  params.checks_params.continuity_dump_always = false;
+
+  params.checks_params.gauss_every_step = 0;
+  params.checks_params.gauss_threshold = 1e-6;
+  params.checks_params.gauss_verbose = true;
+  params.checks_params.gauss_dump_always = false;
 
   // --- balancing
   params.balance_interval = 100;
