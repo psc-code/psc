@@ -143,8 +143,8 @@ struct Checks_ : ChecksParams, ChecksBase
   {
     auto mflds_base = PscMfieldsBase{psc->flds};
 
-    auto& div_j = *PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), 1, psc->ibn).sub();
-    auto& d_rho = *PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), 1, psc->ibn).sub();
+    auto div_j = Mfields{psc->grid(), 1, psc->ibn};
+    auto d_rho = Mfields{psc->grid(), 1, psc->ibn};
     auto& rho_p = *PscMfields<Mfields>{item_rho_p_->mres().mflds()}.sub();
     auto& rho_m = *PscMfields<Mfields>{item_rho_m_->mres().mflds()}.sub();
 
@@ -195,9 +195,6 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     assert(max_err < eps);
-
-    div_j.~Mfields();
-    d_rho.~Mfields();
   }
 
   // ----------------------------------------------------------------------
