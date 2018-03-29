@@ -110,7 +110,7 @@ struct Checks_ : ChecksParams, ChecksBase
   // FIXME, make diag_item?
 
   static void
-  calc_div_j(struct psc *psc, PscMfieldsBase mflds_base, Mfields& div_j)
+  calc_div_j(struct psc *psc, Mfields& mflds, Mfields& div_j)
   {
     real_t h[3];
     for (int d = 0; d < 3; d++) {
@@ -121,9 +121,8 @@ struct Checks_ : ChecksParams, ChecksBase
       }
     }
     
-    auto mf = mflds_base.get_as<PscMfields<Mfields>>(JXI, JXI + 3);
     for (int p = 0; p < div_j.n_patches(); p++) {
-      Fields F(mf[p]), Div_J(div_j[p]);
+      Fields F(mflds[p]), Div_J(div_j[p]);
       define_dxdydz(dx, dy, dz);
 
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
@@ -133,7 +132,6 @@ struct Checks_ : ChecksParams, ChecksBase
 	  (F(JZI, jx,jy,jz) - F(JZI, jx,jy,jz-dz)) * h[2];
       } psc_foreach_3d_end;
     }
-    mf.put_as(mflds_base, 0, 0);
   }
 
   // ----------------------------------------------------------------------
@@ -142,6 +140,7 @@ struct Checks_ : ChecksParams, ChecksBase
   void continuity(psc *psc)
   {
     auto mflds_base = PscMfieldsBase{psc->flds};
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(JXI, JXI + 3);
 
     auto div_j = Mfields{psc->grid(), 1, psc->ibn};
     auto d_rho = Mfields{psc->grid(), 1, psc->ibn};
@@ -151,7 +150,7 @@ struct Checks_ : ChecksParams, ChecksBase
     d_rho.axpy( 1., rho_p);
     d_rho.axpy(-1., rho_m);
 
-    calc_div_j(psc, mflds_base, div_j);
+    calc_div_j(psc, *mflds.sub(), div_j);
     div_j.scale(psc->dt);
 
     double eps = continuity_threshold;
@@ -195,6 +194,7 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     assert(max_err < eps);
+    mflds.put_as(mflds_base, 0, 0);
   }
 
   // ----------------------------------------------------------------------
