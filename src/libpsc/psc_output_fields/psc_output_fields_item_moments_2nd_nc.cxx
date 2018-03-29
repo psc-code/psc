@@ -49,7 +49,7 @@ struct Moment_rho
   using particles_t = typename Mparticles::patch_t;
   using fields_t = typename Mfields::fields_t;  
   
-  constexpr static char const* name = "rho_2nd_nc_double";
+  constexpr static char const* name = "rho_2nd_nc";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
