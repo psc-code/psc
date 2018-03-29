@@ -46,9 +46,6 @@ struct Checks_ : ChecksParams, ChecksBase
       item_rho_{nullptr},
       item_dive_{nullptr}
   {
-    rho_m = fld_create(ppsc, 1);
-    rho_p = fld_create(ppsc, 1);
-
     // FIXME, output_fields should be taking care of this?
     bnd_ = psc_bnd_create(comm);
     psc_bnd_set_name(bnd_, "psc_output_fields_bnd_calc_rho");
@@ -111,14 +108,6 @@ struct Checks_ : ChecksParams, ChecksBase
   void calc_rho(PscFieldsItemBase item, PscMparticlesBase mprts, PscMfields<Mfields> _rho)
   {
     item(nullptr, mprts, nullptr);
-    auto& mres = *PscMfields<Mfields>{item->mres().mflds()}.sub();
-    auto& rho = *_rho.sub();
-
-    for (int p = 0; p < mres.n_patches(); p++) {
-      foreach_3d(ppsc, 0, i,j,k, 0, 0) {
-	rho[p](0, i,j,k) = mres[p](0, i,j,k);
-      } foreach_3d_end;
-    }
   }
 
   // ======================================================================
@@ -166,7 +155,7 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // continuity
 
-  void continuity(psc *psc, psc_mfields *rho_m, psc_mfields *rho_p)
+  void continuity(psc *psc)
   {
     struct psc_mfields *div_j = fld_create(psc, 1);
     psc_mfields_set_name(div_j, "div_j");
@@ -175,9 +164,11 @@ struct Checks_ : ChecksParams, ChecksBase
     psc_mfields_set_name(d_rho, "d_rho");
     psc_mfields_set_comp_name(d_rho, 0, "d_rho");
     PscMfields<Mfields> mf_div_j(div_j), mf_d_rho(d_rho);
+    Mfields& rho_p = *PscMfields<Mfields>{item_rho_p_->mres().mflds()}.sub();
+    Mfields& rho_m = *PscMfields<Mfields>{item_rho_m_->mres().mflds()}.sub();
 
-    mf_d_rho->axpy( 1., *PscMfields<Mfields>(rho_p).sub());
-    mf_d_rho->axpy(-1., *PscMfields<Mfields>(rho_m).sub());
+    mf_d_rho->axpy( 1., rho_p);
+    mf_d_rho->axpy(-1., rho_m);
 
     calc_div_j(psc, psc->flds, div_j);
     mf_div_j->scale(psc->dt);
@@ -237,7 +228,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    calc_rho(item_rho_m_, PscMparticlesBase{psc->particles}, rho_m);
+    item_rho_m_(nullptr, PscMparticlesBase{psc->particles}, nullptr);
   }
 
   // ----------------------------------------------------------------------
@@ -249,8 +240,8 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    calc_rho(item_rho_p_, PscMparticlesBase{psc->particles}, rho_p);
-    continuity(psc, rho_m, rho_p);
+    item_rho_p_(nullptr, PscMparticlesBase{psc->particles}, nullptr);
+    continuity(psc);
   }
 
   // ======================================================================
@@ -342,7 +333,6 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // state
   MPI_Comm comm_;
-  psc_mfields *rho_m, *rho_p;
   psc_bnd* bnd_;
   PscFieldsItemBase item_rho_p_;
   PscFieldsItemBase item_rho_m_;
