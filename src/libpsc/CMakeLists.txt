@@ -49,10 +49,6 @@ add_library(psc
   psc_balance/psc_balance_impl.cxx
 
   psc_checks/psc_checks.cxx
-  psc_checks/psc_checks_1st_double.cxx
-  psc_checks/psc_checks_1st_single.cxx
-  psc_checks/psc_checks_2nd_double.cxx
-  psc_checks/psc_checks_2nd_single.cxx
 
   psc_event_generator/psc_event_generator.cxx
   psc_event_generator/psc_event_generator_none.cxx

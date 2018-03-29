@@ -1,13 +1,57 @@
 
-#include "psc_checks_private.h"
+#include "checks_impl.hxx"
+
+#include "psc_particles_single.h"
+#include "psc_particles_double.h"
+#include "psc_fields_single.h"
+#include "psc_fields_c.h"
 
 // ----------------------------------------------------------------------
 // psc_checks_init
 
-extern struct psc_checks_ops psc_checks_1st_double_ops;
-extern struct psc_checks_ops psc_checks_1st_single_ops;
-extern struct psc_checks_ops psc_checks_2nd_double_ops;
-extern struct psc_checks_ops psc_checks_2nd_single_ops;
+struct psc_checks_1st_single_ops : psc_checks_ops {
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>>;
+  psc_checks_1st_single_ops() {
+    name                            = "1st_single";
+    size                            = Wrapper_t::size;
+    setup                           = Wrapper_t::setup;
+    destroy                         = Wrapper_t::destroy;
+    //read                            = psc_checks_sub_read;
+  }
+} psc_checks_1st_single_ops;
+
+struct psc_checks_1st_double_ops : psc_checks_ops {
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesDouble, MfieldsC, checks_order_1st>>;
+  psc_checks_1st_double_ops() {
+    name                            = "1st_double";
+    size                            = Wrapper_t::size;
+    setup                           = Wrapper_t::setup;
+    destroy                         = Wrapper_t::destroy;
+    //read                            = psc_checks_sub_read;
+  }
+} psc_checks_1st_double_ops;
+
+struct psc_checks_2nd_single_ops : psc_checks_ops {
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesSingle, MfieldsSingle, checks_order_2nd>>;
+  psc_checks_2nd_single_ops() {
+    name                            = "2nd_single";
+    size                            = Wrapper_t::size;
+    setup                           = Wrapper_t::setup;
+    destroy                         = Wrapper_t::destroy;
+    //read                            = psc_checks_sub_read;
+  }
+} psc_checks_2nd_single_ops;
+
+struct psc_checks_2nd_double_ops : psc_checks_ops {
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesDouble, MfieldsC, checks_order_2nd>>;
+  psc_checks_2nd_double_ops() {
+    name                            = "2nd_double";
+    size                            = Wrapper_t::size;
+    setup                           = Wrapper_t::setup;
+    destroy                         = Wrapper_t::destroy;
+    //read                            = psc_checks_sub_read;
+  }
+} psc_checks_2nd_double_ops;
 
 static void
 psc_checks_init()

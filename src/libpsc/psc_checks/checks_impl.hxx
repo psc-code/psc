@@ -26,8 +26,6 @@ struct checks_order_2nd
   int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;      \
   int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
 
-namespace {
-
 template<typename MP, typename MF, typename ORDER>
 struct Checks_ : ChecksParams, ChecksBase
 {
@@ -328,8 +326,6 @@ struct Checks_ : ChecksParams, ChecksBase
   MPI_Comm comm_;
   psc_mfields *rho_m, *rho_p;
 };
-
-}
 
 // ----------------------------------------------------------------------
 // psc_checks_sub_read
