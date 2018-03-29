@@ -56,7 +56,6 @@ struct MparticlesBase
   {
     // If we're already the subtype, nothing to be done
     if (typeid(*this) == typeid(MP)) {
-      mprintf("this %p %p\n", this, dynamic_cast<MP*>(this));
       return *dynamic_cast<MP*>(this);
     }
     
