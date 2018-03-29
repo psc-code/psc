@@ -534,7 +534,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // last population ("e") is neutralizing
  // FIXME, hardcoded mass ratio 100
   Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
-
+  psc_->prm.neutralizing_population = MY_ELECTRON;
+  
   d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
