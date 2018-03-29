@@ -2,15 +2,13 @@
 #include "psc_fields_single.h"
 #include "psc_particles_single.h"
 
-#define PSC_CHECKS_ORDER "2nd"
-
 #include "psc_checks_common.cxx"
 
 // ----------------------------------------------------------------------
 // psc_checks_2nd_single_ops
 
 struct psc_checks_2nd_single_ops : psc_checks_ops {
-  using Wrapper_t = ChecksWrapper<Checks_<MparticlesSingle, MfieldsSingle>>;
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesSingle, MfieldsSingle, checks_order_2nd>>;
   psc_checks_2nd_single_ops() {
     name                            = "2nd_single";
     size                            = Wrapper_t::size;

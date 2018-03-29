@@ -9,6 +9,16 @@
 
 #include <mrc_io.h>
 
+struct checks_order_1st
+{
+  constexpr static char const* sfx = "1st";
+};
+
+struct checks_order_2nd
+{
+  constexpr static char const* sfx = "2nd";
+};
+
 // FIXME, duplicated
 
 #define define_dxdydz(dx, dy, dz)					\
@@ -18,7 +28,7 @@
 
 namespace {
 
-template<typename MP, typename MF>
+template<typename MP, typename MF, typename ORDER>
 struct Checks_ : ChecksParams, ChecksBase
 {
   using Mparticles = MP;
@@ -59,7 +69,7 @@ struct Checks_ : ChecksParams, ChecksBase
 
     struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
     // makes, e.g., "rho_1st_nc_single"
-    auto s = std::string("rho_" PSC_CHECKS_ORDER "_nc_") + Mparticles_traits<Mparticles>::name;
+    auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
     psc_output_fields_item_set_type(item, s.c_str());
     psc_output_fields_item_set_psc_bnd(item, bnd);
     psc_output_fields_item_setup(item);

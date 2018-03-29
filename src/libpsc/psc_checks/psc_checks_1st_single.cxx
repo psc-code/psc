@@ -10,7 +10,7 @@
 // psc_checks_1st_single_ops
 
 struct psc_checks_1st_single_ops : psc_checks_ops {
-  using Wrapper_t = ChecksWrapper<Checks_<MparticlesSingle, MfieldsSingle>>;
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>>;
   psc_checks_1st_single_ops() {
     name                            = "1st_single";
     size                            = Wrapper_t::size;

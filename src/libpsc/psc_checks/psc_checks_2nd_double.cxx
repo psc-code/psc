@@ -10,7 +10,7 @@
 // psc_checks_2nd_double_ops
 
 struct psc_checks_2nd_double_ops : psc_checks_ops {
-  using Wrapper_t = ChecksWrapper<Checks_<MparticlesDouble, MfieldsC>>;
+  using Wrapper_t = ChecksWrapper<Checks_<MparticlesDouble, MfieldsC, checks_order_2nd>>;
   psc_checks_2nd_double_ops() {
     name                            = "2nd_double";
     size                            = Wrapper_t::size;
