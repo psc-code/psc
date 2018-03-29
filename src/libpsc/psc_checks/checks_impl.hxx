@@ -244,18 +244,10 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // calc_dive
 
-  void calc_dive(struct psc *psc, struct psc_mfields *mflds, PscMfields<Mfields> _dive)
+  void calc_dive(struct psc *psc, struct psc_mfields *mflds)
   {
     PscMparticlesBase mprts(psc->particles);
     item_dive_(mflds, mprts, nullptr); // FIXME, should accept NULL for mprts
-    auto& mres = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
-    auto& dive = *_dive.sub();
-
-    for (int p = 0; p < mres.n_patches(); p++) {
-      foreach_3d(ppsc, 0, i,j,k, 0, 0) {
-	dive[p](0, i,j,k) = mres[p](0, i,j,k);
-      } foreach_3d_end;
-    }
   }
 
   // ----------------------------------------------------------------------
@@ -267,22 +259,21 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    struct psc_mfields *dive = fld_create(psc, 1);
-    psc_mfields_set_name(dive, "div_E");
-    psc_mfields_set_comp_name(dive, 0, "div_E");
     struct psc_mfields *rho = fld_create(psc, 1);
     psc_mfields_set_name(rho, "rho");
     psc_mfields_set_comp_name(rho, 0, "rho");
-    PscMfields<Mfields> mf_dive(dive), mf_rho(rho);
+    PscMfields<Mfields> mf_rho(rho);
     const auto& grid = psc->grid();
   
     calc_rho(psc, psc->particles, rho);
-    calc_dive(psc, psc->flds, dive);
+    calc_dive(psc, psc->flds);
 
+    auto& mres = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
+    
     double eps = gauss_threshold;
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
-      Fields Rho(mf_rho[p]), DivE(mf_dive[p]);
+      Fields Rho(mf_rho[p]), DivE(mres[p]);
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
@@ -330,14 +321,13 @@ struct Checks_ : ChecksParams, ChecksBase
       }
       mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
       psc_mfields_write_as_mrc_fld(rho, io);
-      psc_mfields_write_as_mrc_fld(dive, io);
+      mres.write_as_mrc_fld(io, {"Div_E"});
       mrc_io_close(io);
     }
 
     assert(max_err < eps);
 
     psc_mfields_destroy(rho);
-    psc_mfields_destroy(dive);
   }
 
   // state
