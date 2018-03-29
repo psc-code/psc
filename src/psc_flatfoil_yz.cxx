@@ -178,8 +178,10 @@ struct PscFlatfoil : PscFlatfoilParams
   using Mfields_t = MfieldsC;
 #if 0 // generic_c: 2nd order
   using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
+  using checks_order = checks_order_2nd;
 #else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
   using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
+  using checks_order = checks_order_1st;
 #endif
   using Sort_t = SortCountsort2<Mparticles_t>;
   using Collision_t = Collision_<Mparticles_t, Mfields_t>;
@@ -190,7 +192,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Inject_t = Inject_<Mparticles_t, PscMfieldsC::sub_t, InjectFoil>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
-  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order_1st>;
+  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
     : PscFlatfoilParams{params},
@@ -221,6 +223,7 @@ struct PscFlatfoil : PscFlatfoilParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
+    checks_.gauss(psc_);
     psc_setup_member_objs(psc_);
 
     setup_stats();
@@ -440,7 +443,7 @@ struct PscFlatfoil : PscFlatfoilParams
     // but div B should be == 0 at any time...)
     //psc_marder_run(psc->marder, psc->flds, psc->particles);
     
-    //psc_checks_gauss(psc->checks, psc);
+    checks_.gauss(psc_);
 
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
@@ -594,8 +597,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.checks_params.continuity_verbose = true;
   params.checks_params.continuity_dump_always = false;
 
-  params.checks_params.gauss_every_step = 0;
-  params.checks_params.gauss_threshold = 1e-6;
+  params.checks_params.gauss_every_step = 1;
+  params.checks_params.gauss_threshold = 1e-14;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
 

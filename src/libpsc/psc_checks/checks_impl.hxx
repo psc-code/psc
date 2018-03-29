@@ -58,6 +58,12 @@ struct Checks_ : ChecksParams, ChecksBase
     psc_output_fields_item_set_type(item_rho_, s.c_str());
     psc_output_fields_item_set_psc_bnd(item_rho_, bnd_);
     psc_output_fields_item_setup(item_rho_);
+
+    item_dive_ = psc_output_fields_item_create(comm);
+    auto s_dive = std::string("dive_") + Mfields_traits<Mfields>::name;
+    psc_output_fields_item_set_type(item_dive_, s_dive.c_str());
+    psc_output_fields_item_set_psc_bnd(item_dive_, bnd_);
+    psc_output_fields_item_setup(item_dive_);
   }
   
   // ----------------------------------------------------------------------
@@ -66,6 +72,7 @@ struct Checks_ : ChecksParams, ChecksBase
   ~Checks_()
   {
     psc_output_fields_item_destroy(item_rho_);
+    psc_output_fields_item_destroy(item_dive_);
     psc_bnd_destroy(bnd_);
   }
   
@@ -234,27 +241,19 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // calc_dive
 
-  static void
-  calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
+  void calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *_dive)
   {
-    // FIXME, output_fields should be taking care of this?
-    struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
-    psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_dive");
-    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(bnd, psc);
-    psc_bnd_setup(bnd);
-
-    struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-    auto s = std::string("dive_") + Mfields_traits<Mfields>::name;
-    psc_output_fields_item_set_type(item, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item, bnd);
-    psc_output_fields_item_setup(item);
     PscMparticlesBase mprts(psc->particles);
-    PscFieldsItemBase _item(item);
-    _item(mflds, mprts, dive); // FIXME, should accept NULL for mprts
-    psc_output_fields_item_destroy(item);
+    PscFieldsItemBase item_dive(item_dive_);
+    item_dive(mflds, mprts, nullptr); // FIXME, should accept NULL for mprts
+    auto& mres = *PscMfields<Mfields>{item_dive->mres().mflds()}.sub();
+    auto& dive = *PscMfields<Mfields>{_dive}.sub();
 
-    psc_bnd_destroy(bnd);
+    for (int p = 0; p < mres.n_patches(); p++) {
+      foreach_3d(ppsc, 0, i,j,k, 0, 0) {
+	dive[p](0, i,j,k) = mres[p](0, i,j,k);
+      } foreach_3d_end;
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -300,7 +299,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	double v_rho = Rho(0, jx,jy,jz);
 	double v_dive = DivE(0, jx,jy,jz);
 	max_err = fmax(max_err, fabs(v_dive - v_rho));
-#if 0
+#if 1
 	if (fabs(v_dive - v_rho) > eps) {
 	  printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
 		 v_dive, v_rho, v_dive - v_rho);
@@ -344,6 +343,7 @@ struct Checks_ : ChecksParams, ChecksBase
   psc_mfields *rho_m, *rho_p;
   psc_bnd* bnd_;
   psc_output_fields_item* item_rho_;
+  psc_output_fields_item* item_dive_;
 };
 
 // ----------------------------------------------------------------------
