@@ -141,13 +141,12 @@ struct Checks_ : ChecksParams, ChecksBase
   }
 
   static void
-  calc_div_j(struct psc *psc, struct psc_mfields *_mflds_base, struct psc_mfields *div_j)
+  calc_div_j(struct psc *psc, struct psc_mfields *_mflds_base, Mfields& div_j)
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
     auto mf = mflds_base.get_as<PscMfields<Mfields>>(JXI, JXI + 3);
-    PscMfields<Mfields> mf_div_j(div_j);
     psc_foreach_patch(psc, p) {
-      do_calc_div_j(psc, p, mf[p], mf_div_j[p]);
+      do_calc_div_j(psc, p, mf[p], div_j[p]);
     }
     mf.put_as(mflds_base, 0, 0);
   }
@@ -157,27 +156,28 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity(psc *psc)
   {
-    struct psc_mfields *div_j = fld_create(psc, 1);
-    psc_mfields_set_name(div_j, "div_j");
-    psc_mfields_set_comp_name(div_j, 0, "div_j");
-    struct psc_mfields *d_rho = fld_create(psc, 1);
-    psc_mfields_set_name(d_rho, "d_rho");
-    psc_mfields_set_comp_name(d_rho, 0, "d_rho");
-    PscMfields<Mfields> mf_div_j(div_j), mf_d_rho(d_rho);
+    struct psc_mfields *_div_j = fld_create(psc, 1);
+    psc_mfields_set_name(_div_j, "div_j");
+    psc_mfields_set_comp_name(_div_j, 0, "div_j");
+    struct psc_mfields *_d_rho = fld_create(psc, 1);
+    psc_mfields_set_name(_d_rho, "d_rho");
+    psc_mfields_set_comp_name(_d_rho, 0, "d_rho");
+    auto& d_rho = *PscMfields<Mfields>{_d_rho}.sub();
+    auto& div_j = *PscMfields<Mfields>{_div_j}.sub();
     Mfields& rho_p = *PscMfields<Mfields>{item_rho_p_->mres().mflds()}.sub();
     Mfields& rho_m = *PscMfields<Mfields>{item_rho_m_->mres().mflds()}.sub();
 
-    mf_d_rho->axpy( 1., rho_p);
-    mf_d_rho->axpy(-1., rho_m);
+    d_rho.axpy( 1., rho_p);
+    d_rho.axpy(-1., rho_m);
 
     calc_div_j(psc, psc->flds, div_j);
-    mf_div_j->scale(psc->dt);
+    div_j.scale(psc->dt);
 
     double eps = continuity_threshold;
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
-      Fields D_rho(mf_d_rho[p]);
-      Fields Div_J(mf_div_j[p]);
+      Fields D_rho(d_rho[p]);
+      Fields Div_J(div_j[p]);
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
 	double d_rho = D_rho(0, jx,jy,jz);
 	double div_j = Div_J(0, jx,jy,jz);
@@ -208,15 +208,15 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
-      psc_mfields_write_as_mrc_fld(div_j, io);
-      psc_mfields_write_as_mrc_fld(d_rho, io);
+      div_j.write_as_mrc_fld(io, {"div_j"});
+      d_rho.write_as_mrc_fld(io, {"d_rho"});
       mrc_io_close(io);
     }
 
     assert(max_err < eps);
 
-    psc_mfields_destroy(div_j);
-    psc_mfields_destroy(d_rho);
+    psc_mfields_destroy(_div_j);
+    psc_mfields_destroy(_d_rho);
   }
 
   // ----------------------------------------------------------------------
