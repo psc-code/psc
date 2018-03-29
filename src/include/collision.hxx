@@ -100,12 +100,12 @@ public:
 
 template<typename Collision>
 struct psc_collision_ops_ : psc_collision_ops {
-  using CollisionWrapper = CollisionWrapper<Collision>;
+  using Wrapper = CollisionWrapper<Collision>;
   psc_collision_ops_() {
-    name                  = CollisionWrapper::name;
-    size                  = CollisionWrapper::size;
-    setup                 = CollisionWrapper::setup;
-    destroy               = CollisionWrapper::destroy;
+    name                  = Wrapper::name;
+    size                  = Wrapper::size;
+    setup                 = Wrapper::setup;
+    destroy               = Wrapper::destroy;
   }
 };
 
