@@ -41,6 +41,8 @@ struct Checks_ : ChecksParams, ChecksBase
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
       comm_{comm},
+      item_rho_p_{nullptr},
+      item_rho_m_{nullptr},
       item_rho_{nullptr},
       item_dive_{nullptr}
   {
@@ -54,9 +56,23 @@ struct Checks_ : ChecksParams, ChecksBase
     psc_bnd_set_psc(bnd_, ppsc);
     psc_bnd_setup(bnd_);
 
-    psc_output_fields_item* item_rho = psc_output_fields_item_create(comm);
+    psc_output_fields_item* item_rho;
     // makes, e.g., "rho_1st_nc_single"
     auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
+
+    item_rho = psc_output_fields_item_create(comm);
+    psc_output_fields_item_set_type(item_rho, s.c_str());
+    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
+    psc_output_fields_item_setup(item_rho);
+    item_rho_p_ = PscFieldsItemBase{item_rho};
+
+    item_rho = psc_output_fields_item_create(comm);
+    psc_output_fields_item_set_type(item_rho, s.c_str());
+    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
+    psc_output_fields_item_setup(item_rho);
+    item_rho_m_ = PscFieldsItemBase{item_rho};
+
+    item_rho = psc_output_fields_item_create(comm);
     psc_output_fields_item_set_type(item_rho, s.c_str());
     psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
     psc_output_fields_item_setup(item_rho);
@@ -92,11 +108,10 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // calc_rho
 
-  void calc_rho(struct psc *psc, struct psc_mparticles *mprts, PscMfields<Mfields> _rho)
+  void calc_rho(PscFieldsItemBase item, PscMparticlesBase mprts, PscMfields<Mfields> _rho)
   {
-    PscMparticlesBase mp(mprts);
-    item_rho_(psc->flds, mp, nullptr);
-    auto& mres = *PscMfields<Mfields>{item_rho_->mres().mflds()}.sub();
+    item(nullptr, mprts, nullptr);
+    auto& mres = *PscMfields<Mfields>{item->mres().mflds()}.sub();
     auto& rho = *_rho.sub();
 
     for (int p = 0; p < mres.n_patches(); p++) {
@@ -222,7 +237,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    calc_rho(psc, psc->particles, rho_m);
+    calc_rho(item_rho_m_, PscMparticlesBase{psc->particles}, rho_m);
   }
 
   // ----------------------------------------------------------------------
@@ -234,7 +249,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    calc_rho(psc, psc->particles, rho_p);
+    calc_rho(item_rho_p_, PscMparticlesBase{psc->particles}, rho_p);
     continuity(psc, rho_m, rho_p);
   }
 
@@ -265,7 +280,7 @@ struct Checks_ : ChecksParams, ChecksBase
     PscMfields<Mfields> mf_rho(rho);
     const auto& grid = psc->grid();
   
-    calc_rho(psc, psc->particles, rho);
+    calc_rho(item_rho_, PscMparticlesBase{psc->particles}, rho);
     calc_dive(psc, psc->flds);
 
     auto& mres = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
@@ -334,6 +349,8 @@ struct Checks_ : ChecksParams, ChecksBase
   MPI_Comm comm_;
   psc_mfields *rho_m, *rho_p;
   psc_bnd* bnd_;
+  PscFieldsItemBase item_rho_p_;
+  PscFieldsItemBase item_rho_m_;
   PscFieldsItemBase item_rho_;
   PscFieldsItemBase item_dive_;
 };
