@@ -119,10 +119,10 @@ struct Checks_ : ChecksParams, ChecksBase
   // FIXME, make diag_item?
 
   static void
-  do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
+  calc_div_j(struct psc *psc, struct psc_mfields *_mflds_base, Mfields& div_j)
   {
-    Fields F(flds), Div_J(div_j);
-    define_dxdydz(dx, dy, dz);
+    auto mflds_base = PscMfieldsBase{_mflds_base};
+
     real_t h[3];
     for (int d = 0; d < 3; d++) {
       if (psc->grid().isInvar(d)) {
@@ -131,22 +131,18 @@ struct Checks_ : ChecksParams, ChecksBase
 	h[d] = 1. / psc->grid().domain.dx[d];
       }
     }
-
-    psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      Div_J(0, jx,jy,jz) =
-	(F(JXI, jx,jy,jz) - F(JXI, jx-dx,jy,jz)) * h[0] +
-	(F(JYI, jx,jy,jz) - F(JYI, jx,jy-dy,jz)) * h[1] +
-	(F(JZI, jx,jy,jz) - F(JZI, jx,jy,jz-dz)) * h[2];
-    } psc_foreach_3d_end;
-  }
-
-  static void
-  calc_div_j(struct psc *psc, struct psc_mfields *_mflds_base, Mfields& div_j)
-  {
-    auto mflds_base = PscMfieldsBase{_mflds_base};
+    
     auto mf = mflds_base.get_as<PscMfields<Mfields>>(JXI, JXI + 3);
-    psc_foreach_patch(psc, p) {
-      do_calc_div_j(psc, p, mf[p], div_j[p]);
+    for (int p = 0; p < div_j.n_patches(); p++) {
+      Fields F(mf[p]), Div_J(div_j[p]);
+      define_dxdydz(dx, dy, dz);
+
+      psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
+	Div_J(0, jx,jy,jz) =
+	  (F(JXI, jx,jy,jz) - F(JXI, jx-dx,jy,jz)) * h[0] +
+	  (F(JYI, jx,jy,jz) - F(JYI, jx,jy-dy,jz)) * h[1] +
+	  (F(JZI, jx,jy,jz) - F(JZI, jx,jy,jz-dz)) * h[2];
+      } psc_foreach_3d_end;
     }
     mf.put_as(mflds_base, 0, 0);
   }
