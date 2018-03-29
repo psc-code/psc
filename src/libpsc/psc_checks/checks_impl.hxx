@@ -94,15 +94,6 @@ struct Checks_ : ChecksParams, ChecksBase
   }
   
   // ----------------------------------------------------------------------
-  // FIXME, should be consolidated?
-
-  static struct psc_mfields *
-  fld_create(struct psc *psc, int nr_fields)
-  {
-    return PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), nr_fields, psc->ibn).mflds();
-  }
-
-  // ----------------------------------------------------------------------
   // calc_rho
 
   void calc_rho(PscFieldsItemBase item, PscMparticlesBase mprts, PscMfields<Mfields> _rho)
@@ -152,16 +143,10 @@ struct Checks_ : ChecksParams, ChecksBase
   {
     auto mflds_base = PscMfieldsBase{psc->flds};
 
-    struct psc_mfields *_div_j = fld_create(psc, 1);
-    psc_mfields_set_name(_div_j, "div_j");
-    psc_mfields_set_comp_name(_div_j, 0, "div_j");
-    struct psc_mfields *_d_rho = fld_create(psc, 1);
-    psc_mfields_set_name(_d_rho, "d_rho");
-    psc_mfields_set_comp_name(_d_rho, 0, "d_rho");
-    auto& d_rho = *PscMfields<Mfields>{_d_rho}.sub();
-    auto& div_j = *PscMfields<Mfields>{_div_j}.sub();
-    Mfields& rho_p = *PscMfields<Mfields>{item_rho_p_->mres().mflds()}.sub();
-    Mfields& rho_m = *PscMfields<Mfields>{item_rho_m_->mres().mflds()}.sub();
+    auto& div_j = *PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), 1, psc->ibn).sub();
+    auto& d_rho = *PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), 1, psc->ibn).sub();
+    auto& rho_p = *PscMfields<Mfields>{item_rho_p_->mres().mflds()}.sub();
+    auto& rho_m = *PscMfields<Mfields>{item_rho_m_->mres().mflds()}.sub();
 
     d_rho.axpy( 1., rho_p);
     d_rho.axpy(-1., rho_m);
@@ -211,8 +196,8 @@ struct Checks_ : ChecksParams, ChecksBase
 
     assert(max_err < eps);
 
-    psc_mfields_destroy(_div_j);
-    psc_mfields_destroy(_d_rho);
+    div_j.~Mfields();
+    d_rho.~Mfields();
   }
 
   // ----------------------------------------------------------------------
