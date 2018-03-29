@@ -119,10 +119,8 @@ struct Checks_ : ChecksParams, ChecksBase
   // FIXME, make diag_item?
 
   static void
-  calc_div_j(struct psc *psc, struct psc_mfields *_mflds_base, Mfields& div_j)
+  calc_div_j(struct psc *psc, PscMfieldsBase mflds_base, Mfields& div_j)
   {
-    auto mflds_base = PscMfieldsBase{_mflds_base};
-
     real_t h[3];
     for (int d = 0; d < 3; d++) {
       if (psc->grid().isInvar(d)) {
@@ -152,6 +150,8 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity(psc *psc)
   {
+    auto mflds_base = PscMfieldsBase{psc->flds};
+
     struct psc_mfields *_div_j = fld_create(psc, 1);
     psc_mfields_set_name(_div_j, "div_j");
     psc_mfields_set_comp_name(_div_j, 0, "div_j");
@@ -166,7 +166,7 @@ struct Checks_ : ChecksParams, ChecksBase
     d_rho.axpy( 1., rho_p);
     d_rho.axpy(-1., rho_m);
 
-    calc_div_j(psc, psc->flds, div_j);
+    calc_div_j(psc, mflds_base, div_j);
     div_j.scale(psc->dt);
 
     double eps = continuity_threshold;
