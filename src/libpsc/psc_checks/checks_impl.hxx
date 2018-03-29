@@ -40,7 +40,9 @@ struct Checks_ : ChecksParams, ChecksBase
   
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
-      comm_{comm}
+      comm_{comm},
+      item_rho_{nullptr},
+      item_dive_{nullptr}
   {
     rho_m = fld_create(ppsc, 1);
     rho_p = fld_create(ppsc, 1);
@@ -52,18 +54,20 @@ struct Checks_ : ChecksParams, ChecksBase
     psc_bnd_set_psc(bnd_, ppsc);
     psc_bnd_setup(bnd_);
 
-    item_rho_ = psc_output_fields_item_create(comm);
+    psc_output_fields_item* item_rho = psc_output_fields_item_create(comm);
     // makes, e.g., "rho_1st_nc_single"
     auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
-    psc_output_fields_item_set_type(item_rho_, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item_rho_, bnd_);
-    psc_output_fields_item_setup(item_rho_);
+    psc_output_fields_item_set_type(item_rho, s.c_str());
+    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
+    psc_output_fields_item_setup(item_rho);
+    item_rho_ = PscFieldsItemBase{item_rho};
 
-    item_dive_ = psc_output_fields_item_create(comm);
+    psc_output_fields_item* item_dive = psc_output_fields_item_create(comm);
     auto s_dive = std::string("dive_") + Mfields_traits<Mfields>::name;
-    psc_output_fields_item_set_type(item_dive_, s_dive.c_str());
-    psc_output_fields_item_set_psc_bnd(item_dive_, bnd_);
-    psc_output_fields_item_setup(item_dive_);
+    psc_output_fields_item_set_type(item_dive, s_dive.c_str());
+    psc_output_fields_item_set_psc_bnd(item_dive, bnd_);
+    psc_output_fields_item_setup(item_dive);
+    item_dive_ = PscFieldsItemBase{item_dive};
   }
   
   // ----------------------------------------------------------------------
@@ -71,8 +75,8 @@ struct Checks_ : ChecksParams, ChecksBase
 
   ~Checks_()
   {
-    psc_output_fields_item_destroy(item_rho_);
-    psc_output_fields_item_destroy(item_dive_);
+    psc_output_fields_item_destroy(item_rho_.item());
+    psc_output_fields_item_destroy(item_dive_.item());
     psc_bnd_destroy(bnd_);
   }
   
@@ -88,13 +92,12 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // calc_rho
 
-  void calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *_rho)
+  void calc_rho(struct psc *psc, struct psc_mparticles *mprts, PscMfields<Mfields> _rho)
   {
     PscMparticlesBase mp(mprts);
-    PscFieldsItemBase item_rho(item_rho_);
-    item_rho(psc->flds, mp, nullptr);
-    auto& mres = *PscMfields<Mfields>{item_rho->mres().mflds()}.sub();
-    auto& rho = *PscMfields<Mfields>{_rho}.sub();
+    item_rho_(psc->flds, mp, nullptr);
+    auto& mres = *PscMfields<Mfields>{item_rho_->mres().mflds()}.sub();
+    auto& rho = *_rho.sub();
 
     for (int p = 0; p < mres.n_patches(); p++) {
       foreach_3d(ppsc, 0, i,j,k, 0, 0) {
@@ -241,13 +244,12 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // calc_dive
 
-  void calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *_dive)
+  void calc_dive(struct psc *psc, struct psc_mfields *mflds, PscMfields<Mfields> _dive)
   {
     PscMparticlesBase mprts(psc->particles);
-    PscFieldsItemBase item_dive(item_dive_);
-    item_dive(mflds, mprts, nullptr); // FIXME, should accept NULL for mprts
-    auto& mres = *PscMfields<Mfields>{item_dive->mres().mflds()}.sub();
-    auto& dive = *PscMfields<Mfields>{_dive}.sub();
+    item_dive_(mflds, mprts, nullptr); // FIXME, should accept NULL for mprts
+    auto& mres = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
+    auto& dive = *_dive.sub();
 
     for (int p = 0; p < mres.n_patches(); p++) {
       foreach_3d(ppsc, 0, i,j,k, 0, 0) {
@@ -342,8 +344,8 @@ struct Checks_ : ChecksParams, ChecksBase
   MPI_Comm comm_;
   psc_mfields *rho_m, *rho_p;
   psc_bnd* bnd_;
-  psc_output_fields_item* item_rho_;
-  psc_output_fields_item* item_dive_;
+  PscFieldsItemBase item_rho_;
+  PscFieldsItemBase item_dive_;
 };
 
 // ----------------------------------------------------------------------

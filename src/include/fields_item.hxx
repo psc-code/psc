@@ -49,6 +49,7 @@ struct PscFieldsItem
 
   sub_t* sub() { return mrc_to_subobj(item_, sub_t); }
   sub_t* operator->() { return sub(); }
+  psc_output_fields_item* item() { return item_; }
 
 private:
   psc_output_fields_item* item_;
