@@ -315,6 +315,8 @@ struct Mfields : MfieldsBase
     return rv;
   }
 
+  void write_as_mrc_fld(mrc_io *io, const std::vector<std::string>& comp_names);
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
