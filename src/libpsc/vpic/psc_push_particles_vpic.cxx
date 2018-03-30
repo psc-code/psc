@@ -21,12 +21,9 @@ struct PushParticlesVpic : PushParticlesBase
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
     // needs E, B
-    PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(EX, HX + 6);
-    FieldArray *vmflds = mf->vmflds_fields;
-    
-    Simulation_push_mprts_prep(sim_, vmflds);
-    
-    mf.put_as(mflds_base, 0, 0);
+    auto& mflds = mflds_base->get_as<MfieldsVpic>(EX, HX + 6);
+    Simulation_push_mprts_prep(sim_, mflds.vmflds_fields);
+    mflds_base->put_as(mflds, 0, 0);
   }
   
   void push_mprts(PscMparticlesBase _mprts_base, PscMfieldsBase _mflds_base) override
@@ -34,14 +31,13 @@ struct PushParticlesVpic : PushParticlesBase
     auto mflds_base = PscMfieldsBase{_mflds_base};
     // needs E, B (not really, because they're already in interpolator), rhob?
     auto mprts_base = PscMparticlesBase{_mprts_base};
-    PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(EX, HX + 6);
-    FieldArray *vmflds = mf->vmflds_fields;
+    auto& mflds = mflds_base->get_as<MfieldsVpic>(EX, HX + 6);
     auto& mprts = mprts_base->get_as<MparticlesVpic>();
     
-    Simulation_push_mprts(sim_, mprts.vmprts, vmflds);
+    Simulation_push_mprts(sim_, mprts.vmprts, mflds.vmflds_fields);
     
     // update jf FIXME: rhob too, probably, depending on b.c.
-    mf.put_as(mflds_base, JXI, JXI + 3);
+    mflds_base->put_as(mflds, JXI, JXI + 3);
     mprts_base->put_as(mprts);
   }
 

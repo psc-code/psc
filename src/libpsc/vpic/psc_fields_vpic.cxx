@@ -119,7 +119,7 @@ static int ref_count_fields, ref_count_hydro;
 
 static void psc_mfields_vpic_setup(struct psc_mfields *_mflds)
 {
-  PscMfieldsVpic mflds(_mflds);
+  auto& mflds = *PscMfields<MfieldsVpic>{_mflds}.sub();
 
   psc_mfields_setup_super(_mflds);
 
@@ -128,7 +128,7 @@ static void psc_mfields_vpic_setup(struct psc_mfields *_mflds)
   assert(_mflds->ibn[1] == 1);
   assert(_mflds->ibn[2] == 1);
 
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mflds->sim);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mflds.sim);
 
   if (_mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
@@ -136,14 +136,14 @@ static void psc_mfields_vpic_setup(struct psc_mfields *_mflds)
     assert(ref_count_fields == 0);
     ref_count_fields++;
 
-    mflds->vmflds_fields = Simulation_get_FieldArray(mflds->sim);
+    mflds.vmflds_fields = Simulation_get_FieldArray(mflds.sim);
   } else if (_mflds->nr_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    mflds->vmflds_hydro = Simulation_get_HydroArray(mflds->sim);
+    mflds.vmflds_hydro = Simulation_get_HydroArray(mflds.sim);
   } else {
     assert(0);
   }

@@ -77,16 +77,15 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
   {
     const auto& kinds = mprts.grid().kinds;
     auto& mres = *PscMfields<Mfields>{this->mres_}.sub();
-    auto mf_hydro = PscMfieldsVpic::create(psc_mfields_comm(this->mres_), ppsc->grid(),
-					    16, { 1, 1, 1 });
+    auto mf_hydro = MfieldsVpic{ppsc->grid(), 16, { 1, 1, 1 }};
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
     for (int kind = 0; kind < kinds.size(); kind++) {
-      HydroArray *vmflds_hydro = mf_hydro->vmflds_hydro;
+      HydroArray *vmflds_hydro = mf_hydro.vmflds_hydro;
       Simulation_moments_run(sim, vmflds_hydro, mprts.vmprts, kind);
       
-      auto& mf = mf_hydro->get_as<Mfields>(0, VPIC_HYDRO_N_COMP);
+      auto& mf = mf_hydro.get_as<Mfields>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres.n_patches(); p++) {
 	Fields F(mf[p]), R(mres[p]);
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
@@ -95,10 +94,8 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
 	  }
 	} foreach_3d_end;
       }
-      mf_hydro->put_as(mf, 0, 0);
+      mf_hydro.put_as(mf, 0, 0);
     }
-    
-    psc_mfields_destroy(mf_hydro.mflds());
   }
 };
 

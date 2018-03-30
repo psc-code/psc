@@ -20,24 +20,22 @@ struct PushFieldsVpic : PushFieldsBase
   void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
     // needs J, E, B, TCA, material
-    PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(JXI, VPIC_MFIELDS_N_COMP);
-    FieldArray *vmflds = mf->vmflds_fields;
+    auto& mflds = mflds_base->get_as<MfieldsVpic>(JXI, VPIC_MFIELDS_N_COMP);
+    FieldArray *vmflds = mflds.vmflds_fields;
     Simulation_push_mflds_E(sim_, vmflds, dt_fac);
     Simulation_field_injection(sim_); // FIXME, this isn't the place, should have its own psc_field_injection
     
     // updates E, TCA, and B ghost points FIXME 9 == TCAX
-    mf.put_as(mflds_base, EX, 9 + 3);
+    mflds_base->put_as(mflds, EX, 9 + 3);
   }
 
   void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
     // needs E, B
-    PscMfieldsVpic mf = mflds_base.get_as<PscMfieldsVpic>(EX, HX + 6);
-    FieldArray *vmflds = mf->vmflds_fields;
-    Simulation_push_mflds_H(sim_, vmflds, dt_fac);
-    
+    auto& mflds = mflds_base->get_as<MfieldsVpic>(EX, HX + 6);
+    Simulation_push_mflds_H(sim_, mflds.vmflds_fields, dt_fac);
     // updates B
-    mf.put_as(mflds_base, HX, HX + 3);
+    mflds_base->put_as(mflds, HX, HX + 3);
   }
 
 private:
