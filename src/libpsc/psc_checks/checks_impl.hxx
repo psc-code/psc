@@ -26,6 +26,30 @@ struct checks_order_2nd
   int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;      \
   int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
 
+
+// FIXME, almost same as dive
+
+template<class MF>
+struct Item_divj
+{
+  using mfields_t = MF;
+  using fields_t = typename mfields_t::fields_t;
+  using Fields = Fields3d<fields_t>;
+  
+  constexpr static char const* name = "divj";
+  constexpr static int n_comps = 1;
+  static fld_names_t fld_names() { return { "divj" }; }
+  
+  static void set(Fields& R, Fields&F, int i, int j, int k)
+  {
+    auto& grid = ppsc->grid();
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / grid.domain.dx[0] +
+		   (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / grid.domain.dx[1] +
+		   (F(JZI, i,j,k) - F(JZI, i,j,k-dz)) / grid.domain.dx[2]);
+  }
+};
+
 template<typename MP, typename MF, typename ORDER>
 struct Checks_ : ChecksParams, ChecksBase
 {
@@ -93,46 +117,8 @@ struct Checks_ : ChecksParams, ChecksBase
     psc_bnd_destroy(bnd_);
   }
   
-  // ----------------------------------------------------------------------
-  // calc_rho
-
-  void calc_rho(PscFieldsItemBase item, PscMparticlesBase mprts, PscMfields<Mfields> _rho)
-  {
-    item(nullptr, mprts, nullptr);
-  }
-
   // ======================================================================
   // psc_checks: Charge Continuity 
-
-  // ----------------------------------------------------------------------
-  // psc_calc_div_j
-  //
-  // FIXME, make diag_item?
-
-  static void
-  calc_div_j(struct psc *psc, Mfields& mflds, Mfields& div_j)
-  {
-    real_t h[3];
-    for (int d = 0; d < 3; d++) {
-      if (psc->grid().isInvar(d)) {
-	h[d] = 0.;
-      } else {
-	h[d] = 1. / psc->grid().domain.dx[d];
-      }
-    }
-    
-    for (int p = 0; p < div_j.n_patches(); p++) {
-      Fields F(mflds[p]), Div_J(div_j[p]);
-      define_dxdydz(dx, dy, dz);
-
-      psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-	Div_J(0, jx,jy,jz) =
-	  (F(JXI, jx,jy,jz) - F(JXI, jx-dx,jy,jz)) * h[0] +
-	  (F(JYI, jx,jy,jz) - F(JYI, jx,jy-dy,jz)) * h[1] +
-	  (F(JZI, jx,jy,jz) - F(JZI, jx,jy,jz-dz)) * h[2];
-      } psc_foreach_3d_end;
-    }
-  }
 
   // ----------------------------------------------------------------------
   // continuity
@@ -140,17 +126,18 @@ struct Checks_ : ChecksParams, ChecksBase
   void continuity(psc *psc)
   {
     auto mflds_base = PscMfieldsBase{psc->flds};
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(JXI, JXI + 3);
 
-    auto div_j = Mfields{psc->grid(), 1, psc->ibn};
     auto d_rho = Mfields{psc->grid(), 1, psc->ibn};
-    auto& rho_p = *PscMfields<Mfields>{item_rho_p_->mres().mflds()}.sub();
-    auto& rho_m = *PscMfields<Mfields>{item_rho_m_->mres().mflds()}.sub();
+    auto& rho_p = dynamic_cast<Mfields&>(*item_rho_p_->mres().sub());
+    auto& rho_m = dynamic_cast<Mfields&>(*item_rho_m_->mres().sub());
 
     d_rho.axpy( 1., rho_p);
     d_rho.axpy(-1., rho_m);
 
-    calc_div_j(psc, *mflds.sub(), div_j);
+    FieldsItemFields<ItemLoopPatches<Item_divj<PscMfields<Mfields>>>> item_divj{comm_, PscBndBase{bnd_}};
+    item_divj.run(mflds_base, PscMparticlesBase{nullptr});
+    
+    auto& div_j = dynamic_cast<Mfields&>(*item_divj.mres().sub());
     div_j.scale(psc->dt);
 
     double eps = continuity_threshold;
@@ -194,7 +181,6 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     assert(max_err < eps);
-    mflds.put_as(mflds_base, 0, 0);
   }
 
   // ----------------------------------------------------------------------
