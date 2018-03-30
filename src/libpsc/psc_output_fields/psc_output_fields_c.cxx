@@ -210,7 +210,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     PscMparticlesBase mprts(particles);
     for (int i = 0; i < pfd->nr_flds; i++) {
       PscFieldsItemBase item(out_c->item[i]);
-      item(flds, mprts, nullptr);
+      item(flds, mprts);
       pfd->flds[i] = item->mres().mflds(); // FIXME, just storing this temporarily for writing next
     }
   }

@@ -24,7 +24,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
 {
   PscMparticlesBase mprts(particles);
   PscFieldsItemBase item_div_e(marder->item_div_e);
-  item_div_e(flds, mprts, div_e); // FIXME, should accept NULL for particles
+  item_div_e(flds, mprts); // FIXME, should accept NULL for particles
   
   if (marder->dump) {
     static int cnt;
@@ -76,7 +76,7 @@ psc_marder_run(struct psc_marder *marder,
 
     PscMparticlesBase mprts(particles);
     PscFieldsItemBase item_rho(marder->item_rho);
-    item_rho(flds, mprts, marder->rho);
+    item_rho(flds, mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     auto bnd = PscBndBase(ppsc->bnd);

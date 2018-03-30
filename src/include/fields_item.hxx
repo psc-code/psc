@@ -40,10 +40,8 @@ struct PscFieldsItem
     : item_(item)
   {}
 
-  void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts, PscMfieldsBase mres)
+  void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts)
   {
-    // FIXME, we shouldn't even take the mres arg
-    assert(!mres.mflds());
     sub()->run(mflds, mprts);
   }
 
