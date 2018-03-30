@@ -77,11 +77,8 @@ public:
   // ----------------------------------------------------------------------
   // continuity
 
-  void continuity(psc *psc)
+  void continuity(psc *psc, PscMfields<Mfields> mflds)
   {
-    auto mflds_base = PscMfieldsBase{psc->flds};
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
-
     auto& rho_p = item_rho_p_.result();
     auto& rho_m = item_rho_m_.result();
 
@@ -95,7 +92,7 @@ public:
 
     double eps = continuity_threshold;
     double max_err = 0.;
-    psc_foreach_patch(psc, p) {
+    for (int p = 0; p < div_j.n_patches(); p++) {
       Fields D_rho(d_rho[p]);
       Fields Div_J(div_j[p]);
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
@@ -134,7 +131,6 @@ public:
     }
 
     assert(max_err < eps);
-    mflds.put_as(mflds_base, 0, 0);
   }
 
   // ----------------------------------------------------------------------
@@ -161,11 +157,16 @@ public:
       return;
     }
 
+    auto mflds_base = PscMfieldsBase{psc->flds};
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
+
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mprts = mprts_base->get_as<Mparticles>();
     item_rho_p_.run(mprts);
+    continuity(psc, mflds);
+
+    mflds.put_as(mflds_base, 0, 0);
     mprts_base->put_as(mprts);
-    continuity(psc);
   }
 
   // ======================================================================
@@ -194,7 +195,7 @@ public:
     
     double eps = gauss_threshold;
     double max_err = 0.;
-    psc_foreach_patch(psc, p) {
+    for (int p = 0; p < dive.n_patches(); p++) {
       Fields Rho(rho[p]), DivE(dive[p]);
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
