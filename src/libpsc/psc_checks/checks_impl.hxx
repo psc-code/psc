@@ -96,6 +96,7 @@ public:
   void continuity(psc *psc)
   {
     auto mflds_base = PscMfieldsBase{psc->flds};
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
 
     auto& rho_p = dynamic_cast<Mfields&>(*item_rho_p_->mres().sub());
     auto& rho_m = dynamic_cast<Mfields&>(*item_rho_m_->mres().sub());
@@ -103,9 +104,9 @@ public:
     auto& d_rho = rho_p;
     d_rho.axpy(-1., rho_m);
 
-    item_divj_.run(mflds_base, PscMparticlesBase{nullptr});
+    item_divj_(mflds);
     
-    auto& div_j = dynamic_cast<Mfields&>(*item_divj_.mres().sub());
+    auto& div_j = item_divj_.result();
     div_j.scale(psc->dt);
 
     double eps = continuity_threshold;
@@ -149,6 +150,7 @@ public:
     }
 
     assert(max_err < eps);
+    mflds.put_as(mflds_base, 0, 0);
   }
 
   // ----------------------------------------------------------------------
@@ -187,14 +189,16 @@ public:
     if (gauss_every_step < 0 ||	psc->timestep % gauss_every_step != 0) {
       return;
     }
-
+    
+    auto mflds_base = PscMfieldsBase{psc->flds};
     auto mprts_base = PscMparticlesBase{psc->particles};
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(EX, EX+3);
     const auto& grid = psc->grid();
 
     item_rho_(nullptr, mprts_base, nullptr);
-    item_dive_.run(psc->flds, PscMparticlesBase{nullptr});
+    item_dive_(mflds);
 
-    auto& dive = dynamic_cast<Mfields&>(*item_dive_.mres().sub());
+    auto& dive = item_dive_.result();
     auto& rho = dynamic_cast<Mfields&>(*item_rho_->mres().sub());
     
     double eps = gauss_threshold;
@@ -253,6 +257,7 @@ public:
     }
 
     assert(max_err < eps);
+    mflds.put_as(mflds_base, 0, 0);
   }
 
   // state
