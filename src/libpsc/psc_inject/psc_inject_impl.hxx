@@ -23,7 +23,6 @@ struct Inject_ : InjectBase
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
   using particle_t = typename Mparticles::particle_t;
-  using mfields_t = PscMfields<Mfields>;
   using ItemMoment_t = ItemMomentLoopPatches<Moment_n_1st<Mparticles, Mfields>>;
   
   // ----------------------------------------------------------------------

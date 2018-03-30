@@ -21,7 +21,6 @@ struct Collision_
   using real_t = typename Mparticles::real_t;
   using Mfields = MF;
   using Fields = Fields3d<typename Mfields::fields_t>;
-  using mfields_t = PscMfields<Mfields>;
 
   constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
 
@@ -44,14 +43,14 @@ struct Collision_
   {
     assert(nu_ > 0.);
 
-    mflds = mfields_t::create(comm, ppsc->grid(), NR_STATS, ppsc->ibn).mflds();
+    mflds = PscMfields<Mfields>::create(comm, ppsc->grid(), NR_STATS, ppsc->ibn).mflds();
     psc_mfields_set_comp_name(mflds, 0, "coll_nudt_min");
     psc_mfields_set_comp_name(mflds, 1, "coll_nudt_med");
     psc_mfields_set_comp_name(mflds, 2, "coll_nudt_max");
     psc_mfields_set_comp_name(mflds, 3, "coll_nudt_nlarge");
     psc_mfields_set_comp_name(mflds, 4, "coll_nudt_ncoll");
     
-    mflds_rei = mfields_t::create(comm, ppsc->grid(), 3, ppsc->ibn).mflds();
+    mflds_rei = PscMfields<Mfields>::create(comm, ppsc->grid(), 3, ppsc->ibn).mflds();
     psc_mfields_set_comp_name(mflds_rei, 0, "coll_rei_x");
     psc_mfields_set_comp_name(mflds_rei, 1, "coll_rei_y");
     psc_mfields_set_comp_name(mflds_rei, 2, "coll_rei_z");
@@ -76,7 +75,7 @@ struct Collision_
     }
 
     prof_start(pr);
-    mfields_t mf_coll(mflds);
+    auto& mf_coll = *PscMfields<Mfields>{mflds}.sub();
     for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
   
@@ -461,7 +460,7 @@ struct Collision_
 			 int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().fnqs;
-    mfields_t mf_rei(mflds_rei);
+    auto& mf_rei = *PscMfields<Mfields>(mflds_rei).sub();
     Fields F(mf_rei[p]);
     F(0, i,j,k) = 0.;
     F(1, i,j,k) = 0.;
@@ -481,7 +480,7 @@ struct Collision_
 			int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().fnqs;
-    mfields_t mf_rei(mflds_rei);
+    auto& mf_rei = *PscMfields<Mfields>(mflds_rei).sub();
     Fields F(mf_rei[p]);
     for (int n = n_start; n < n_end; n++) {
       particle_t& prt = prts[n];
