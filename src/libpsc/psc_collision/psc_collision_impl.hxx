@@ -5,9 +5,6 @@
 #include "fields.hxx"
 #include "fields3d.hxx"
 
-#include <mrc_profile.h>
-#include <mrc_params.h>
-
 #include <cmath>
 
 extern void* global_collision; // FIXME
@@ -52,12 +49,6 @@ struct Collision_
 
   void operator()(Mparticles& mprts)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("collision", 1., 0, 0);
-    }
-
-    prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
   
@@ -97,7 +88,6 @@ struct Collision_
   
       free(offsets);
     }
-    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------

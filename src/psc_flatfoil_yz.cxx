@@ -413,6 +413,20 @@ struct PscFlatfoil : PscFlatfoilParams
 
   void step()
   {
+    static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
+      pr_bndp, pr_bndf, pr_inject, pr_heating;
+    if (!pr_sort) {
+      pr_sort = prof_register("step_sort", 1., 0, 0);
+      pr_collision = prof_register("step_collision", 1., 0, 0);
+      pr_checks = prof_register("step_checks", 1., 0, 0);
+      pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
+      pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
+      pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
+      pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
+      pr_inject = prof_register("step_inject", 1., 0, 0);
+      pr_heating = prof_register("step_heating", 1., 0, 0);
+    }
+
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
@@ -421,41 +435,63 @@ struct PscFlatfoil : PscFlatfoilParams
     
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
       sort_(mprts_);
+      prof_stop(pr_sort);
     }
     
     if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
       collision_(mprts_);
+      prof_stop(pr_collision);
     }
     
     if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      prof_start(pr_checks);
       checks_.continuity_before_particle_push(mprts_);
+      prof_stop(pr_checks);
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    prof_start(pr_push_prts);
     pushp_.push_mprts(mprts_, mflds_);
+    prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
+    prof_start(pr_push_flds);
     pushf_.push_H<dim_yz>(mflds_, .5);
+    prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
+    prof_start(pr_bndp);
     bndp_(mprts_);
+    prof_stop(pr_bndp);
     
+    prof_start(pr_inject);
     inject_(mprts_);
+    prof_stop(pr_inject);
+
+    prof_start(pr_heating);
     heating_(mprts_);
+    prof_stop(pr_heating);
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
+    prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
     bndf_.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    prof_stop(pr_bndf);
     
+    prof_restart(pr_push_flds);
     pushf_.push_E<dim_yz>(mflds_, 1.);
+    prof_stop(pr_push_flds);
     
+    prof_restart(pr_bndf);
     bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
@@ -463,15 +499,22 @@ struct PscFlatfoil : PscFlatfoilParams
     // === field propagation B^{n+1} -> B^{n+3/2}
     bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    prof_stop(pr_bndf);
     
+    prof_restart(pr_push_flds);
     pushf_.push_H<dim_yz>(mflds_, .5);
+    prof_stop(pr_push_flds);
     
+    prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
     if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      prof_restart(pr_checks);
       checks_.continuity_after_particle_push(mprts_, mflds_);
+      prof_stop(pr_checks);
     }
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
@@ -480,7 +523,9 @@ struct PscFlatfoil : PscFlatfoilParams
     //psc_marder_run(psc->marder, psc->flds, psc->particles);
 
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
+      prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
+      prof_stop(pr_checks);
     }
 
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);

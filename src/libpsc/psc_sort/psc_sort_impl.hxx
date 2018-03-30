@@ -18,12 +18,6 @@ struct SortCountsort
 
   void operator()(Mparticles& mprts)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("SortCountsort", 1., 0, 0);
-    }
-    
-    prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
@@ -60,7 +54,6 @@ struct SortCountsort
       delete[] particles2;
       delete[] cnts;
     }
-    prof_stop(pr);
   }
 };
 
@@ -76,12 +69,6 @@ struct SortCountsort2
 
   void operator()(Mparticles& mprts)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("SortCountsort", 1., 0, 0);
-    }
-
-    prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
@@ -131,7 +118,6 @@ struct SortCountsort2
       delete[] cnis;
       delete[] cnts;
     }
-    prof_stop(pr);
   }
 };
 
