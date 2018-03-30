@@ -73,7 +73,7 @@ struct Inject_ : InjectBase
       (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
 
     moment_n_->run(mprts);
-    auto mf_n = moment_n_->mres();
+    auto& mf_n = moment_n_->result();
 
     psc_foreach_patch(psc, p) {
       Fields N(mf_n[p]);
