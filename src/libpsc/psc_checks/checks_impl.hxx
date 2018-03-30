@@ -55,30 +55,13 @@ public:
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
       comm_{comm},
-      item_rho_p_{nullptr},
-      item_rho_m_{nullptr},
       bnd_{make_bnd(comm)},
       item_rho_{comm, PscBndBase{bnd_}},
+      item_rho_m_{comm, PscBndBase{bnd_}},
+      item_rho_p_{comm, PscBndBase{bnd_}},
       item_dive_{comm, PscBndBase{bnd_}},
       item_divj_{comm, PscBndBase{bnd_}}
-  {
-    // FIXME, output_fields should be taking care of this?
-    psc_output_fields_item* item_rho;
-    // makes, e.g., "rho_1st_nc_single"
-    auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
-
-    item_rho = psc_output_fields_item_create(comm);
-    psc_output_fields_item_set_type(item_rho, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
-    psc_output_fields_item_setup(item_rho);
-    item_rho_p_ = PscFieldsItemBase{item_rho};
-
-    item_rho = psc_output_fields_item_create(comm);
-    psc_output_fields_item_set_type(item_rho, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
-    psc_output_fields_item_setup(item_rho);
-    item_rho_m_ = PscFieldsItemBase{item_rho};
-  }
+  {}
   
   // ----------------------------------------------------------------------
   // dtor
@@ -99,8 +82,8 @@ public:
     auto mflds_base = PscMfieldsBase{psc->flds};
     auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
 
-    auto& rho_p = dynamic_cast<Mfields&>(*item_rho_p_->mres().sub());
-    auto& rho_m = dynamic_cast<Mfields&>(*item_rho_m_->mres().sub());
+    auto& rho_p = item_rho_p_.result();
+    auto& rho_m = item_rho_m_.result();
 
     auto& d_rho = rho_p;
     d_rho.axpy(-1., rho_m);
@@ -163,7 +146,10 @@ public:
       return;
     }
 
-    item_rho_m_(nullptr, PscMparticlesBase{psc->particles}, nullptr);
+    auto mprts_base = PscMparticlesBase{psc->particles};
+    auto mprts = mprts_base->get_as<Mparticles>();
+    item_rho_m_.run(mprts);
+    mprts_base->put_as(mprts);
   }
 
   // ----------------------------------------------------------------------
@@ -175,7 +161,10 @@ public:
       return;
     }
 
-    item_rho_p_(nullptr, PscMparticlesBase{psc->particles}, nullptr);
+    auto mprts_base = PscMparticlesBase{psc->particles};
+    auto mprts = mprts_base->get_as<Mparticles>();
+    item_rho_p_.run(mprts);
+    mprts_base->put_as(mprts);
     continuity(psc);
   }
 
@@ -266,8 +255,8 @@ public:
   // state
   MPI_Comm comm_;
   psc_bnd* bnd_;
-  PscFieldsItemBase item_rho_m_;
-  PscFieldsItemBase item_rho_p_;
+  ItemMomentLoopPatches<Moment_t> item_rho_p_;
+  ItemMomentLoopPatches<Moment_t> item_rho_m_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<PscMfields<Mfields>>>> item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<PscMfields<Mfields>>>> item_divj_;
