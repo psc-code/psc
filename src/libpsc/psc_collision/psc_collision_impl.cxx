@@ -48,7 +48,7 @@ struct Item_coll_stats
     
     for (int m = 0; m < coll.NR_STATS; m++) {
       // FIXME, copy could be avoided (?)
-      mres.copy_comp(m, *PscMfields<Mfields>(coll.mflds).sub(), m);
+      mres.copy_comp(m, coll.mflds_stats_, m);
     }
   }
 };
@@ -70,7 +70,7 @@ struct Item_coll_rei
     
     for (int m = 0; m < 3; m++) {
       // FIXME, copy could be avoided (?)
-      mres.copy_comp(m, *PscMfields<Mfields>(coll.mflds_rei).sub(), m);
+      mres.copy_comp(m, coll.mflds_rei_, m);
     }
   }
 };

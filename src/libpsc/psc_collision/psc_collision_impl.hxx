@@ -38,30 +38,13 @@ struct Collision_
   };
 
   Collision_(MPI_Comm comm, int interval, double nu)
-    : interval_(interval),
-      nu_(nu)
+    : interval_{interval},
+      nu_{nu},
+      mflds_stats_{ppsc->grid(), NR_STATS, ppsc->ibn},
+      mflds_rei_{ppsc->grid(), NR_STATS, ppsc->ibn}
   {
     assert(nu_ > 0.);
-
-    mflds = PscMfields<Mfields>::create(comm, ppsc->grid(), NR_STATS, ppsc->ibn).mflds();
-    psc_mfields_set_comp_name(mflds, 0, "coll_nudt_min");
-    psc_mfields_set_comp_name(mflds, 1, "coll_nudt_med");
-    psc_mfields_set_comp_name(mflds, 2, "coll_nudt_max");
-    psc_mfields_set_comp_name(mflds, 3, "coll_nudt_nlarge");
-    psc_mfields_set_comp_name(mflds, 4, "coll_nudt_ncoll");
-    
-    mflds_rei = PscMfields<Mfields>::create(comm, ppsc->grid(), 3, ppsc->ibn).mflds();
-    psc_mfields_set_comp_name(mflds_rei, 0, "coll_rei_x");
-    psc_mfields_set_comp_name(mflds_rei, 1, "coll_rei_y");
-    psc_mfields_set_comp_name(mflds_rei, 2, "coll_rei_z");
-
     global_collision = this;
-  }
-
-  ~Collision_()
-  {
-    psc_mfields_destroy(mflds);
-    psc_mfields_destroy(mflds_rei);
   }
 
   // ----------------------------------------------------------------------
@@ -75,7 +58,6 @@ struct Collision_
     }
 
     prof_start(pr);
-    auto& mf_coll = *PscMfields<Mfields>{mflds}.sub();
     for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
   
@@ -86,7 +68,7 @@ struct Collision_
     
       find_cell_offsets(offsets, mprts[p]);
     
-      Fields F(mf_coll[p]);
+      Fields F(mflds_stats_[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 	randomize_in_cell(prts, offsets[c], offsets[c+1]);
@@ -460,8 +442,7 @@ struct Collision_
 			 int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().fnqs;
-    auto& mf_rei = *PscMfields<Mfields>(mflds_rei).sub();
-    Fields F(mf_rei[p]);
+    Fields F(mflds_rei_[p]);
     F(0, i,j,k) = 0.;
     F(1, i,j,k) = 0.;
     F(2, i,j,k) = 0.;
@@ -480,8 +461,7 @@ struct Collision_
 			int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().fnqs;
-    auto& mf_rei = *PscMfields<Mfields>(mflds_rei).sub();
-    Fields F(mf_rei[p]);
+    Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       particle_t& prt = prts[n];
       F(0, i,j,k) += prt.pxi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
@@ -533,8 +513,8 @@ private:
   int interval_;
 
 public: // FIXME
-  // internal
-  struct psc_mfields *mflds;
-  struct psc_mfields *mflds_rei;
+  // for output
+  Mfields mflds_stats_;
+  Mfields mflds_rei_;
 };
 
