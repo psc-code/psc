@@ -259,8 +259,8 @@ public:
   ItemMomentLoopPatches<Moment_t> item_rho_p_;
   ItemMomentLoopPatches<Moment_t> item_rho_m_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<PscMfields<Mfields>>>> item_dive_;
-  FieldsItemFields<ItemLoopPatches<Item_divj<PscMfields<Mfields>>>> item_divj_;
+  FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_divj<Mfields>>> item_divj_;
 };
 
 // ----------------------------------------------------------------------

@@ -156,10 +156,10 @@ private:
 template<typename ItemPatch>
 struct ItemLoopPatches : ItemPatch
 {
-  using mfields_t = typename ItemPatch::mfields_t;
-  using Mfields = typename mfields_t::sub_t;
+  using Mfields = typename ItemPatch::Mfields;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
+  using mfields_t = PscMfields<Mfields>;
   
   static void run(mfields_t mflds, mfields_t mres)
   {

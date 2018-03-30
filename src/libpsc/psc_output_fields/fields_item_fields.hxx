@@ -15,8 +15,8 @@
 template<class MF>
 struct Item_dive
 {
-  using mfields_t = MF;
-  using fields_t = typename mfields_t::fields_t;
+  using Mfields = MF;
+  using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   
   constexpr static char const* name = "dive";
@@ -41,8 +41,8 @@ struct Item_dive
 template<class MF>
 struct Item_divj
 {
-  using mfields_t = MF;
-  using fields_t = typename mfields_t::fields_t;
+  using Mfields = MF;
+  using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   
   constexpr static char const* name = "divj";
