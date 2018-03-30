@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "fields_item.hxx"
 
 #include <string>

@@ -256,6 +256,8 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 
+  Mfields& result() { return *PscMfields<Mfields>(this->mres_).sub(); }
+  
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
 

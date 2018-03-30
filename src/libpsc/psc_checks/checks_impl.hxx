@@ -7,17 +7,24 @@
 #include "fields_item.hxx"
 #include "checks.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
+#include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
 
 #include <mrc_io.h>
 
 struct checks_order_1st
 {
   constexpr static char const* sfx = "1st";
+
+  template<typename Mparticles, typename Mfields>
+  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
 };
 
 struct checks_order_2nd
 {
   constexpr static char const* sfx = "2nd";
+
+  template<typename Mparticles, typename Mfields>
+  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
 };
 
 template<typename MP, typename MF, typename ORDER>
@@ -28,7 +35,8 @@ struct Checks_ : ChecksParams, ChecksBase
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
-
+  using Moment_t = typename ORDER::template Moment_rho_nc<Mparticles, Mfields>;
+  
   // ----------------------------------------------------------------------
   // ctor
 
@@ -49,8 +57,8 @@ public:
       comm_{comm},
       item_rho_p_{nullptr},
       item_rho_m_{nullptr},
-      item_rho_{nullptr},
       bnd_{make_bnd(comm)},
+      item_rho_{comm, PscBndBase{bnd_}},
       item_dive_{comm, PscBndBase{bnd_}},
       item_divj_{comm, PscBndBase{bnd_}}
   {
@@ -70,12 +78,6 @@ public:
     psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
     psc_output_fields_item_setup(item_rho);
     item_rho_m_ = PscFieldsItemBase{item_rho};
-
-    item_rho = psc_output_fields_item_create(comm);
-    psc_output_fields_item_set_type(item_rho, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
-    psc_output_fields_item_setup(item_rho);
-    item_rho_ = PscFieldsItemBase{item_rho};
   }
   
   // ----------------------------------------------------------------------
@@ -83,7 +85,6 @@ public:
 
   ~Checks_()
   {
-    psc_output_fields_item_destroy(item_rho_.item());
     psc_bnd_destroy(bnd_);
   }
   
@@ -193,13 +194,14 @@ public:
     auto mflds_base = PscMfieldsBase{psc->flds};
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mflds = mflds_base.get_as<PscMfields<Mfields>>(EX, EX+3);
+    auto mprts = mprts_base->get_as<Mparticles>();
     const auto& grid = psc->grid();
 
-    item_rho_(nullptr, mprts_base, nullptr);
+    item_rho_.run(mprts);
     item_dive_(mflds);
 
     auto& dive = item_dive_.result();
-    auto& rho = dynamic_cast<Mfields&>(*item_rho_->mres().sub());
+    auto& rho = item_rho_.result();
     
     double eps = gauss_threshold;
     double max_err = 0.;
@@ -258,14 +260,15 @@ public:
 
     assert(max_err < eps);
     mflds.put_as(mflds_base, 0, 0);
+    mprts_base->put_as(mprts);
   }
 
   // state
   MPI_Comm comm_;
   psc_bnd* bnd_;
-  PscFieldsItemBase item_rho_p_;
   PscFieldsItemBase item_rho_m_;
-  PscFieldsItemBase item_rho_;
+  PscFieldsItemBase item_rho_p_;
+  ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<PscMfields<Mfields>>>> item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<PscMfields<Mfields>>>> item_divj_;
 };
