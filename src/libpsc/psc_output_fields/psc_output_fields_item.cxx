@@ -2,6 +2,8 @@
 #include "psc_output_fields_item_private.h"
 #include "psc_bnd.h"
 #include "bnd.hxx"
+#include "fields_item_fields.hxx"
+#include "psc_fields_single.h"
 
 #include <string.h>
 
@@ -17,6 +19,9 @@ psc_output_fields_item_set_psc_bnd(struct psc_output_fields_item *item,
 
 // ======================================================================
 // psc_output_fields_item_init
+
+FieldsItemFieldsOps<Item_dive<PscMfields<MfieldsSingle>>> psc_output_fields_item_dive_single_ops;
+FieldsItemFieldsOps<Item_dive<PscMfields<MfieldsC>>> psc_output_fields_item_dive_c_ops;
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_j_ops;
@@ -67,9 +72,6 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_singl
 extern struct psc_output_fields_item_ops psc_output_fields_item_coll_rei_single_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_double_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_coll_rei_double_ops;
-
-extern struct psc_output_fields_item_ops psc_output_fields_item_dive_c_ops;
-extern struct psc_output_fields_item_ops psc_output_fields_item_dive_single_ops;
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_cuda_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_ops;

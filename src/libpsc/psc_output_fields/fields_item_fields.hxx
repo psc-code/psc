@@ -1,12 +1,8 @@
 
-#include "psc_output_fields_item_private.h"
+#pragma once
 
 #include "fields.hxx"
 #include "fields_item.hxx"
-
-#include <string>
-
-// ======================================================================
 
 #define define_dxdydz(dx, dy, dz)			       \
   int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;      \
@@ -35,7 +31,4 @@ struct Item_dive
        (F(EZ, i,j,k) - F(EZ, i,j,k-dz)) / ppsc->grid().domain.dx[2]);
   }
 };
-
-FieldsItemFieldsOps<Item_dive<mfields_t>> psc_output_fields_item_dive_ops;
-
 
