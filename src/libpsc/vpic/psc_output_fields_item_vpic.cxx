@@ -35,9 +35,9 @@ struct Item_vpic_fields
 #endif
   }
 
-  static void run(mfields_t mflds, mfields_t mres)
+  static void run(Mfields& mflds, Mfields& mres)
   {
-    for (int p = 0; p < mres->n_patches(); p++) {
+    for (int p = 0; p < mres.n_patches(); p++) {
       Fields F(mflds[p]), R(mres[p]);
       psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
 	for (int m = 0; m < 16; m++) {

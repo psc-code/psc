@@ -34,7 +34,6 @@ template<typename Collision>
 struct Item_coll_stats
 {
   using Mfields = typename Collision::mfields_t::sub_t;
-  using mfields_t = PscMfields<Mfields>;
 
   constexpr static const char* name = "coll_stats";
   constexpr static int n_comps = Collision::NR_STATS;
@@ -42,14 +41,14 @@ struct Item_coll_stats
 	"coll_nudt_large", "coll_ncoll" }; }
   constexpr static int flags = 0;
 
-  static void run(mfields_t mflds, mfields_t mres)
+  static void run(Mfields& mflds, Mfields& mres)
   {
     assert(global_collision);
     Collision& coll = *reinterpret_cast<Collision*>(global_collision);
     
     for (int m = 0; m < coll.NR_STATS; m++) {
       // FIXME, copy could be avoided (?)
-      mres->copy_comp(m, *mfields_t(coll.mflds).sub(), m);
+      mres.copy_comp(m, *PscMfields<Mfields>(coll.mflds).sub(), m);
     }
   }
 };
@@ -58,21 +57,20 @@ template<typename Collision>
 struct Item_coll_rei
 {
   using Mfields = typename Collision::mfields_t::sub_t;
-  using mfields_t = PscMfields<Mfields>;
 
   constexpr static const char* name = "coll_rei";
   constexpr static int n_comps = 3;
   constexpr static fld_names_t fld_names() { return { "coll_rei_x", "coll_rei_y", "coll_rei_z" }; }
   constexpr static int flags = 0;
 
-  static void run(mfields_t mflds, mfields_t mres)
+  static void run(Mfields& mflds, Mfields& mres)
   {
     assert(global_collision);
     Collision& coll = *reinterpret_cast<Collision*>(global_collision);
     
     for (int m = 0; m < 3; m++) {
       // FIXME, copy could be avoided (?)
-      mres->copy_comp(m, *mfields_t(coll.mflds_rei).sub(), m);
+      mres.copy_comp(m, *PscMfields<Mfields>(coll.mflds_rei).sub(), m);
     }
   }
 };

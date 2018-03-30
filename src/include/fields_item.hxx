@@ -130,7 +130,7 @@ struct FieldsItemFields : FieldsItemBase
   void operator()(PscMfields<Mfields> mflds)
   {
     auto mres = PscMfields<Mfields>{mres_base_};
-    Item::run(mflds, mres);
+    Item::run(*mflds.sub(), *mres.sub());
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
@@ -159,11 +159,10 @@ struct ItemLoopPatches : ItemPatch
   using Mfields = typename ItemPatch::Mfields;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
-  using mfields_t = PscMfields<Mfields>;
   
-  static void run(mfields_t mflds, mfields_t mres)
+  static void run(Mfields& mflds, Mfields& mres)
   {
-    for (int p = 0; p < mres->n_patches(); p++) {
+    for (int p = 0; p < mres.n_patches(); p++) {
       Fields F(mflds[p]), R(mres[p]);
       psc_foreach_3d(ppsc, p, i,j,k, 0, 0) {
 	ItemPatch::set(R, F, i,j,k);
