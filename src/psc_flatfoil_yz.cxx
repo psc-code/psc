@@ -618,6 +618,11 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_setup_coeff(psc_);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds);
 
+  // make sure that np isn't overridden on the command line
+  Int3 np;
+  mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
+  assert(np == grid_domain.np);
+
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
   psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
