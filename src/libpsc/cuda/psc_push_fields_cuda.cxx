@@ -12,28 +12,28 @@ struct PushFieldsCuda : PushFieldsBase
 
   void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, HX + 3);
+    auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
     
-    if (mf->grid().isInvar(0)) {
-      cuda_push_fields_E_yz(mf->cmflds, dt_fac * ppsc->dt);
+    if (mflds.grid().isInvar(0)) {
+      cuda_push_fields_E_yz(mflds.cmflds, dt_fac * ppsc->dt);
     } else {
       assert(0);
     }
     
-    mf.put_as(mflds_base, EX, EX + 3);
+    mflds_base->put_as(mflds, EX, EX + 3);
   }
   
   void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(JXI, HX + 3);
+    auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
     
-    if (mf->grid().isInvar(0)) {
-      cuda_push_fields_H_yz(mf->cmflds, dt_fac * ppsc->dt);
+    if (mflds.grid().isInvar(0)) {
+      cuda_push_fields_H_yz(mflds.cmflds, dt_fac * ppsc->dt);
     } else {
       assert(0);
     }
     
-    mf.put_as(mflds_base, HX, HX + 3);
+    mflds_base->put_as(mflds, HX, HX + 3);
   }
 };
 

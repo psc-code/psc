@@ -23,7 +23,9 @@ cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
     n_cells(n_patches * n_cells_per_patch),
     d_flds_(n_fields * n_cells),
     grid_(grid)
-{}
+{
+  cuda_base_init();
+}
 
 // ----------------------------------------------------------------------
 // to_json

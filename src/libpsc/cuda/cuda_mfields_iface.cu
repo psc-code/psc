@@ -42,10 +42,10 @@ void MfieldsCuda::copy_from_device(int p, fields_single_t h_flds, int mb, int me
   cmflds->copy_from_device(p, h_flds, mb, me);
 }
 
-void MfieldsCuda::axpy_comp_yz(int ym, float a, PscMfieldsCuda mflds_x, int xm)
+void MfieldsCuda::axpy_comp_yz(int ym, float a, MfieldsCuda& mflds_x, int xm)
 {
   dprintf("CMFLDS: axpy_comp_yz\n");
-  cmflds->axpy_comp_yz(ym, a, mflds_x->cmflds, xm);
+  cmflds->axpy_comp_yz(ym, a, mflds_x.cmflds, xm);
 }
 
 void MfieldsCuda::zero_comp(int m)

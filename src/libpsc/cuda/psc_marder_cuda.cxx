@@ -21,7 +21,7 @@
 static struct psc_mfields *
 fld_create(struct psc *psc, const char *name)
 {
-  auto mflds = PscMfieldsCuda::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
+  auto mflds = PscMfields<MfieldsCuda>::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
   psc_mfields_set_comp_name(mflds.mflds(), 0, name);
   return mflds.mflds();
 }
@@ -116,13 +116,13 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   fac[1] = .5 * ppsc->dt * diffusion / dx[1];
   fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
-  PscMfieldsCuda mflds = mflds_base.get_as<PscMfieldsCuda>(EX, EX + 3);
-  PscMfieldsCuda mf = mf_base.get_as<PscMfieldsCuda>(0, 1);
-  cuda_mfields *cmflds = mflds->cmflds;
-  cuda_mfields *cmf = mf->cmflds;
+  auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, EX + 3);
+  auto& mf = mf_base->get_as<MfieldsCuda>(0, 1);
+  cuda_mfields *cmflds = mflds.cmflds;
+  cuda_mfields *cmf = mf.cmflds;
 
   // OPT, do all patches in one kernel
-  for (int p = 0; p < mf->n_patches(); p++) {
+  for (int p = 0; p < mf.n_patches(); p++) {
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
@@ -149,8 +149,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
     cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
   }
 
-  mflds.put_as(mflds_base, EX, EX + 3);
-  mf.put_as(mf_base, 0, 0);
+  mflds_base->put_as(mflds, EX, EX + 3);
+  mf_base->put_as(mf, 0, 0);
 }
 
 // ======================================================================

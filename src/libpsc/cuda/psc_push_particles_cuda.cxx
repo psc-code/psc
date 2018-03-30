@@ -35,14 +35,13 @@ public:
   void push_mprts_yz(PscMparticlesBase mprts_base, PscMfieldsBase _mflds_base) override
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
-    PscMfieldsCuda mf = mflds_base.get_as<PscMfieldsCuda>(EX, EX + 6);
+    auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, EX + 6);
     auto& mprts = mprts_base->get_as<MparticlesCuda>();
-    auto* cmprts = mprts.cmprts();
     int bs[3] = { BS::x::value, BS::y::value, BS::z::value };
-    cuda_push_mprts_yz(cmprts, mf->cmflds, bs, Config::Ip::value, Config::Deposit::value,
+    cuda_push_mprts_yz(mprts.cmprts(), mflds.cmflds, bs, Config::Ip::value, Config::Deposit::value,
 		       Config::Current::value);
     mprts_base->put_as(mprts);
-    mf.put_as(mflds_base, JXI, JXI + 3);
+    mflds_base->put_as(mflds, JXI, JXI + 3);
   }
 };
 

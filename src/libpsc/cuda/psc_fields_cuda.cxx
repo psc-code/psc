@@ -124,58 +124,6 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase
 
 // ======================================================================
 
-// ----------------------------------------------------------------------
-// psc_mfields_cuda_setup
-
-static void
-psc_mfields_cuda_setup(struct psc_mfields *_mflds)
-{
-  PscMfieldsCuda mflds(_mflds);
-
-  psc_mfields_setup_super(_mflds);
-
-  cuda_base_init();
-
-  assert(_mflds->grid);
-  new(mflds.sub()) MfieldsCuda(*_mflds->grid, mflds.n_fields(), _mflds->ibn);
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_cuda_destroy
-
-static void
-psc_mfields_cuda_destroy(struct psc_mfields *_mflds)
-{
-  PscMfieldsCuda mflds(_mflds);
-
-  mflds->~MfieldsCuda();
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_cuda_zero_comp
-
-static void
-psc_mfields_cuda_zero_comp(struct psc_mfields *_mflds, int m)
-{
-  PscMfieldsCuda mflds(_mflds);
-
-  mflds->zero_comp(m);
-}
-
-// ----------------------------------------------------------------------
-// psc_mfields_cuda_axpy_comp
-
-static void
-psc_mfields_cuda_axpy_comp(struct psc_mfields *_mflds_y, int my, double alpha,
-			   struct psc_mfields *_mflds_x, int mx)
-{
-  PscMfieldsCuda mflds_y(_mflds_y);
-  PscMfieldsCuda mflds_x(_mflds_x);
-
-  assert(mflds_y->grid().isInvar(0));
-  mflds_y->axpy_comp_yz(my, alpha, mflds_x, mx);
-}
-
 #ifdef HAVE_LIBHDF5_HL
 
 #include <mrc_io.h>
@@ -195,7 +143,7 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *_mflds_y, int my, double alpha,
 static void
 psc_mfields_cuda_write(struct psc_mfields *_mflds, struct mrc_io *io)
 {
-  PscMfieldsCuda mflds(_mflds);
+  auto& mflds = *PscMfields<MfieldsCuda>{_mflds}->sub();
 
   int ierr;
   long h5_file;
@@ -234,7 +182,7 @@ psc_mfields_cuda_read(struct psc_mfields *_mflds, struct mrc_io *io)
   
   psc_mfields_cuda_setup(_mflds);
 
-  PscMfieldsCuda mflds(_mflds);
+  auto& mflds = *PscMfields<MfieldsCuda>{_mflds}->sub();
 
   int ierr;
   long h5_file;
@@ -280,11 +228,12 @@ const MfieldsBase::Convert MfieldsCuda::convert_from_ = {
 };
 
 struct psc_mfields_ops_cuda : psc_mfields_ops {
+  using Wrapper = MfieldsWrapper<MfieldsCuda>;
   psc_mfields_ops_cuda() {
-    name                  = "cuda";
-    size                  = sizeof(struct MfieldsCuda);
-    setup                 = psc_mfields_cuda_setup;
-    destroy               = psc_mfields_cuda_destroy;
+    name                  = Wrapper::name;
+    size                  = Wrapper::size;
+    setup                 = Wrapper::setup;
+    destroy               = Wrapper::destroy;
 #ifdef HAVE_LIBHDF5_HL
     write                 = psc_mfields_cuda_write;
     read                  = psc_mfields_cuda_read;
