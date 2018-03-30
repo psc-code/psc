@@ -51,7 +51,8 @@ public:
       item_rho_m_{nullptr},
       item_rho_{nullptr},
       bnd_{make_bnd(comm)},
-      item_dive_{comm, PscBndBase{bnd_}}
+      item_dive_{comm, PscBndBase{bnd_}},
+      item_divj_{comm, PscBndBase{bnd_}}
   {
     // FIXME, output_fields should be taking care of this?
     psc_output_fields_item* item_rho;
@@ -103,10 +104,9 @@ public:
     d_rho.axpy( 1., rho_p);
     d_rho.axpy(-1., rho_m);
 
-    FieldsItemFields<ItemLoopPatches<Item_divj<PscMfields<Mfields>>>> item_divj{comm_, PscBndBase{bnd_}};
-    item_divj.run(mflds_base, PscMparticlesBase{nullptr});
+    item_divj_.run(mflds_base, PscMparticlesBase{nullptr});
     
-    auto& div_j = dynamic_cast<Mfields&>(*item_divj.mres().sub());
+    auto& div_j = dynamic_cast<Mfields&>(*item_divj_.mres().sub());
     div_j.scale(psc->dt);
 
     double eps = continuity_threshold;
@@ -263,6 +263,7 @@ public:
   PscFieldsItemBase item_rho_m_;
   PscFieldsItemBase item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<PscMfields<Mfields>>>> item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_divj<PscMfields<Mfields>>>> item_divj_;
 };
 
 // ----------------------------------------------------------------------
