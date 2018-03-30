@@ -223,7 +223,7 @@ struct PscFlatfoil : PscFlatfoilParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
-    checks_.gauss(psc_);
+    checks_.gauss(mprts_, mflds_);
     psc_setup_member_objs(psc_);
 
     setup_stats();
@@ -443,7 +443,7 @@ struct PscFlatfoil : PscFlatfoilParams
     // but div B should be == 0 at any time...)
     //psc_marder_run(psc->marder, psc->flds, psc->particles);
     
-    checks_.gauss(psc_);
+    checks_.gauss(mprts_, mflds_);
 
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
