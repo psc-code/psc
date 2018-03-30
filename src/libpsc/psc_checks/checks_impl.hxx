@@ -83,7 +83,7 @@ public:
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mprts = mprts_base->get_as<Mparticles>();
     continuity_before_particle_push(mprts);
-    mprts_base->put_as(mprts);
+    mprts_base->put_as(mprts, MP_DONT_COPY);
   }
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -102,11 +102,11 @@ public:
 
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mflds_base = PscMfieldsBase{psc->flds};
-    auto mprts = mprts_base->get_as<Mparticles>();
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
-    continuity_after_particle_push(mprts, *mflds.sub());
-    mflds.put_as(mflds_base, 0, 0);
-    mprts_base->put_as(mprts);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    auto& mflds = mflds_base->get_as<Mfields>(0, mflds_base->n_comps());
+    continuity_after_particle_push(mprts, mflds);
+    mflds_base->put_as(mflds, 0, 0);
+    mprts_base->put_as(mprts, MP_DONT_COPY);
   }
 
   void continuity_after_particle_push(Mparticles& mprts, Mfields& mflds)
@@ -179,12 +179,12 @@ public:
     
     auto mflds_base = PscMfieldsBase{psc->flds};
     auto mprts_base = PscMparticlesBase{psc->particles};
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(EX, EX+3);
-    auto mprts = mprts_base->get_as<Mparticles>();
+    auto& mflds = mflds_base->get_as<Mfields>(EX, EX+3);
+    auto& mprts = mprts_base->get_as<Mparticles>();
 
-    gauss(mprts, *mflds.sub());
+    gauss(mprts, mflds);
 
-    mflds.put_as(mflds_base, 0, 0);
+    mflds_base->put_as(mflds, 0, 0);
     mprts_base->put_as(mprts);
 }
 
