@@ -75,18 +75,53 @@ public:
   // psc_checks: Charge Continuity 
 
   // ----------------------------------------------------------------------
-  // continuity
+  // continuity_before_particle_push
 
-  void continuity(Mfields& mflds)
+  void continuity_before_particle_push(psc *psc) override
   {
+    if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
+      return;
+    }
+
+    auto mprts_base = PscMparticlesBase{psc->particles};
+    auto mprts = mprts_base->get_as<Mparticles>();
+    continuity_before_particle_push(mprts);
+    mprts_base->put_as(mprts);
+  }
+
+  void continuity_before_particle_push(Mparticles& mprts)
+  {
+    item_rho_m_.run(mprts);
+  }
+
+  // ----------------------------------------------------------------------
+  // continuity_after_particle_push
+
+  void continuity_after_particle_push(psc *psc) override
+  {
+    if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
+      return;
+    }
+
+    auto mprts_base = PscMparticlesBase{psc->particles};
+    auto mflds_base = PscMfieldsBase{psc->flds};
+    auto mprts = mprts_base->get_as<Mparticles>();
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
+    continuity_after_particle_push(mprts, *mflds.sub());
+    mflds.put_as(mflds_base, 0, 0);
+    mprts_base->put_as(mprts);
+  }
+
+  void continuity_after_particle_push(Mparticles& mprts, Mfields& mflds)
+  {
+    item_rho_p_.run(mprts);
+    item_divj_(mflds);
+
     auto& rho_p = item_rho_p_.result();
     auto& rho_m = item_rho_m_.result();
-
     auto& d_rho = rho_p;
     d_rho.axpy(-1., rho_m);
 
-    item_divj_(mflds);
-    
     auto& div_j = item_divj_.result();
     div_j.scale(ppsc->dt);
 
@@ -131,50 +166,6 @@ public:
     }
 
     assert(max_err < eps);
-  }
-
-  // ----------------------------------------------------------------------
-  // continuity_before_particle_push
-
-  void continuity_before_particle_push(psc *psc) override
-  {
-    if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
-      return;
-    }
-
-    auto mprts_base = PscMparticlesBase{psc->particles};
-    auto mprts = mprts_base->get_as<Mparticles>();
-    continuity_before_particle_push(mprts);
-    mprts_base->put_as(mprts);
-  }
-
-  void continuity_before_particle_push(Mparticles& mprts)
-  {
-    item_rho_m_.run(mprts);
-  }
-
-  // ----------------------------------------------------------------------
-  // continuity_after_particle_push
-
-  void continuity_after_particle_push(psc *psc) override
-  {
-    if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
-      return;
-    }
-
-    auto mprts_base = PscMparticlesBase{psc->particles};
-    auto mflds_base = PscMfieldsBase{psc->flds};
-    auto mprts = mprts_base->get_as<Mparticles>();
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
-    continuity_after_particle_push(mprts, *mflds.sub());
-    mflds.put_as(mflds_base, 0, 0);
-    mprts_base->put_as(mprts);
-  }
-
-  void continuity_after_particle_push(Mparticles& mprts, Mfields& mflds)
-  {
-    item_rho_p_.run(mprts);
-    continuity(mflds);
   }
   
   // ======================================================================
