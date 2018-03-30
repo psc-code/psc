@@ -189,6 +189,57 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_partition
 
+  template<typename FUNC>
+  static std::vector<uint> setup_partition(psc* psc, FUNC func)
+  {
+    const auto& grid = psc->grid();
+    const auto& kinds = grid.kinds;
+    std::vector<uint> n_prts_by_patch(grid.n_patches());
+    
+    for (int p = 0; p < grid.n_patches(); ++p) {
+      auto ilo = Int3{}, ihi = grid.ldims;
+  
+      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
+			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
+			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	    // FIXME, the issue really is that (2nd order) particle pushers
+	    // don't handle the invariant dim right
+	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
+	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
+	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
+	  
+	    int n_q_in_cell = 0;
+	    for (int kind = 0; kind < kinds.size(); kind++) {
+	      struct psc_particle_npt npt = {};
+	      if (kind < kinds.size()) {
+		npt.kind = kind;
+		npt.q    = kinds[kind].q;
+		npt.m    = kinds[kind].m;
+	      };
+	      func(kind, xx, npt);
+
+	      int n_in_cell;
+	      if (kind != psc->prm.neutralizing_population) {
+		n_in_cell = get_n_in_cell(psc, &npt);
+		n_q_in_cell += npt.q * n_in_cell;
+	      } else {
+		// FIXME, should handle the case where not the last population is neutralizing
+		assert(psc->prm.neutralizing_population == kinds.size() - 1);
+		n_in_cell = -n_q_in_cell / npt.q;
+	      }
+	      n_prts_by_patch[p] += n_in_cell;
+	    }
+	  }
+	}
+      }
+    }
+
+    return n_prts_by_patch;
+  }
+
   static std::vector<uint> setup_partition(struct psc *psc)
   {
     auto& kinds = psc->grid().kinds;
