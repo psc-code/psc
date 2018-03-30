@@ -209,6 +209,50 @@ struct MfieldsBase
 
   const Grid_t& grid() { return *grid_; }
   
+  template<typename MF>
+  MF& get_as(int mb, int me)
+  {
+    // If we're already the subtype, nothing to be done
+    if (typeid(*this) == typeid(MF)) {
+      return *dynamic_cast<MF*>(this);
+    }
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("Mfields_get_as", 1., 0, 0);
+    }
+    prof_start(pr);
+
+    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
+    
+    auto& mflds = *new MF{grid(), n_comps(), ibn()};
+    
+    MfieldsBase::convert(*this, mflds, mb, me);
+
+    prof_stop(pr);
+    return mflds;
+  }
+
+  template<typename MF>
+  void put_as(MF& mflds, int mb, int me)
+  {
+    // If we're already the subtype, nothing to be done
+    if (typeid(*this) == typeid(mflds)) {
+      return;
+    }
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("Mfields_put_as", 1., 0, 0);
+    }
+    prof_start(pr);
+    
+    MfieldsBase::convert(mflds, *this, mb, me);
+    delete &mflds;
+    
+    prof_stop(pr);
+  }
+
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
   static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me);
