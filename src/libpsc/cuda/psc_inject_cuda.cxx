@@ -1,7 +1,7 @@
 
 #include <psc_balance.h>
 
-#include <psc_fields_as_single.h>
+#include <psc_fields_single.h>
 #include <fields.hxx>
 #include <bnd.hxx>
 #include <inject.hxx>
@@ -21,7 +21,7 @@ template<typename Target_t>
 struct InjectCuda : InjectBase
 {
   using Self = InjectCuda;
-  using fields_t = mfields_t::fields_t;
+  using fields_t = MfieldsSingle::fields_t;
   using Fields = Fields3d<fields_t>;
 
   InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
@@ -146,7 +146,7 @@ struct InjectCuda : InjectBase
     item->run(mflds_base, mprts_base);
 
     auto& mprts = mprts_base->get_as<MparticlesCuda>();
-    mfields_t mf_n = item->mres().get_as<mfields_t>(kind_n, kind_n+1);
+    auto mf_n = item->mres().get_as<PscMfields<MfieldsSingle>>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;

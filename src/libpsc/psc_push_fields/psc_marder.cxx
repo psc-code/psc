@@ -102,7 +102,7 @@ psc_marder_run(struct psc_marder *marder,
 
 #include "marder_impl.hxx"
 
-using marder_ops_c = marder_ops<MparticlesDouble, PscMfieldsC>;
+using marder_ops_c = marder_ops<MparticlesDouble, MfieldsC>;
 
 static struct psc_marder_ops_c : psc_marder_ops {
   psc_marder_ops_c() {
@@ -113,7 +113,7 @@ static struct psc_marder_ops_c : psc_marder_ops {
   }
 } psc_marder_c_ops;
 
-using marder_ops_single = marder_ops<MparticlesSingle, PscMfieldsSingle>;
+using marder_ops_single = marder_ops<MparticlesSingle, MfieldsSingle>;
 
 static struct psc_marder_ops_single : psc_marder_ops {
   psc_marder_ops_single() {

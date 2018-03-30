@@ -13,8 +13,7 @@
 #define MPFX(x) psc_mfields_single_ ## x
 #define MFIELDS MfieldsSingle
 
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
+using Fields = Fields3d<MfieldsSingle::fields_t>;
 using FieldsC = Fields3d<fields_c_t>;
 
 // ======================================================================
@@ -25,7 +24,7 @@ static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mfld
   auto& mf = dynamic_cast<MfieldsSingle&>(mflds);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
-    fields_t flds = mf[p];
+    auto flds = mf[p];
     Fields F(flds);
     FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
@@ -45,7 +44,7 @@ static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_
   auto& mf = dynamic_cast<MfieldsSingle&>(mflds);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
-    fields_t flds = mf[p];
+    auto flds = mf[p];
     Fields F(flds);
     FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {

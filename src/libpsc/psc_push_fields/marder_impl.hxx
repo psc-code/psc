@@ -9,10 +9,9 @@
 template<typename MP, typename MF>
 struct marder_ops {
   using Mparticles_t = MP;
-  using mfields_t = MF;
-  using Mfields_t = typename mfields_t::sub_t;
-  using fields_t = typename mfields_t::fields_t;
-  using real_t = typename mfields_t::real_t;
+  using Mfields = MF;
+  using fields_t = typename Mfields::fields_t;
+  using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
 
   // FIXME: checkpointing won't properly restore state
@@ -27,7 +26,7 @@ struct marder_ops {
   static struct psc_mfields *
   fld_create(struct psc *psc, const char *name)
   {
-    auto mflds = mfields_t::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
+    auto mflds = PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
     psc_mfields_set_comp_name(mflds.mflds(), 0, name);
 
     return mflds.mflds();
@@ -44,14 +43,14 @@ struct marder_ops {
 
     marder->bnd = psc_bnd_create(psc_marder_comm(marder));
     psc_bnd_set_name(marder->bnd, "marder_bnd");
-    psc_bnd_set_type(marder->bnd, Mfields_traits<Mfields_t>::name);
+    psc_bnd_set_type(marder->bnd, Mfields_traits<Mfields>::name);
     psc_bnd_set_psc(marder->bnd, ppsc);
     psc_bnd_setup(marder->bnd);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
     marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
     char name[20];
-    snprintf(name, 20, "dive_%s", Mfields_traits<Mfields_t>::name);
+    snprintf(name, 20, "dive_%s", Mfields_traits<Mfields>::name);
     psc_output_fields_item_set_type(marder->item_div_e, name);
     psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
     psc_output_fields_item_setup(marder->item_div_e);
@@ -200,8 +199,8 @@ struct marder_ops {
 	  struct psc_mfields *div_e)
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
-    mfields_t mf = mflds_base.get_as<mfields_t>(EX, EX + 3);
-    mfields_t mf_div_e(div_e);
+    auto mf = mflds_base.get_as<PscMfields<Mfields>>(EX, EX + 3);
+    auto mf_div_e = PscMfields<Mfields>{div_e};
   
     for (int p = 0; p < mf_div_e->n_patches(); p++) {
       correct_patch(marder, mf[p], mf_div_e[p], p);
