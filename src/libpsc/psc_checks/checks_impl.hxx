@@ -185,10 +185,19 @@ public:
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mflds = mflds_base.get_as<PscMfields<Mfields>>(EX, EX+3);
     auto mprts = mprts_base->get_as<Mparticles>();
-    const auto& grid = psc->grid();
+
+    gauss(mprts, *mflds.sub());
+
+    mflds.put_as(mflds_base, 0, 0);
+    mprts_base->put_as(mprts);
+}
+
+  void gauss(Mparticles& mprts, Mfields& mflds)
+  {
+    const auto& grid = mprts.grid();
 
     item_rho_.run(mprts);
-    item_dive_(*mflds.sub());
+    item_dive_(mflds);
 
     auto& dive = item_dive_.result();
     auto& rho = item_rho_.result();
@@ -205,11 +214,11 @@ public:
 	  l[d] = 1;
 	}
       }
-
-      psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
+      
+      psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
 	if (jy < l[1] || jz < l[2] ||
-	    jy >= psc->grid().ldims[1] - r[1] ||
-	    jz >= psc->grid().ldims[2] - r[2]) {
+	    jy >= grid.ldims[1] - r[1] ||
+	    jz >= grid.ldims[2] - r[2]) {
 	  continue;
 	}
 	double v_rho = Rho(0, jx,jy,jz);
@@ -235,22 +244,20 @@ public:
     if (gauss_dump_always || max_err >= eps) {
       static struct mrc_io *io;
       if (!io) {
-	io = mrc_io_create(psc_comm(psc));
+	io = mrc_io_create(comm_);
 	mrc_io_set_name(io, "mrc_io_gauss");
 	mrc_io_set_param_string(io, "basename", "gauss");
 	mrc_io_set_from_options(io);
 	mrc_io_setup(io);
 	mrc_io_view(io);
       }
-      mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
+      mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
       rho.write_as_mrc_fld(io, {"rho"});
       dive.write_as_mrc_fld(io, {"Div_E"});
       mrc_io_close(io);
     }
 
     assert(max_err < eps);
-    mflds.put_as(mflds_base, 0, 0);
-    mprts_base->put_as(mprts);
   }
 
   // state

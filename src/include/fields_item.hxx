@@ -107,7 +107,7 @@ struct FieldsItemFields : FieldsItemBase
   
   static char const* name()
   {
-    if (std::is_same<Mfields, MfieldsC>::value) {
+    if (std::is_same<Mfields, MfieldsC>::value && strcmp(Item::name, "dive") != 0) {
       return Item::name;
     } else {
       return strdup((std::string{Item::name} + "_" + Mfields_traits<Mfields>::name).c_str());
