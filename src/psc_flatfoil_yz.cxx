@@ -397,7 +397,9 @@ struct PscFlatfoil : PscFlatfoilParams
       collision_(mprts_);
     }
     
-    checks_.continuity_before_particle_push(mprts_);
+    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      checks_.continuity_before_particle_push(mprts_);
+    }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp_.push_mprts(mprts_, mflds_);
@@ -436,14 +438,18 @@ struct PscFlatfoil : PscFlatfoilParams
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    checks_.continuity_after_particle_push(mprts_, mflds_);
+    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      checks_.continuity_after_particle_push(mprts_, mflds_);
+    }
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
     //psc_marder_run(psc->marder, psc->flds, psc->particles);
-    
-    checks_.gauss(mprts_, mflds_);
+
+    if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
+      checks_.gauss(mprts_, mflds_);
+    }
 
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
@@ -592,12 +598,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.inject_tau = 40;
 
   // --- checks
-  params.checks_params.continuity_every_step = 1;
+  params.checks_params.continuity_every_step = -1;
   params.checks_params.continuity_threshold = 1e-14;
   params.checks_params.continuity_verbose = true;
   params.checks_params.continuity_dump_always = false;
 
-  params.checks_params.gauss_every_step = 1;
+  params.checks_params.gauss_every_step = -1;
   params.checks_params.gauss_threshold = 1e-14;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
