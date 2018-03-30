@@ -77,7 +77,7 @@ public:
   // ----------------------------------------------------------------------
   // continuity
 
-  void continuity(psc *psc, Mfields& mflds)
+  void continuity(Mfields& mflds)
   {
     auto& rho_p = item_rho_p_.result();
     auto& rho_m = item_rho_m_.result();
@@ -88,14 +88,14 @@ public:
     item_divj_(mflds);
     
     auto& div_j = item_divj_.result();
-    div_j.scale(psc->dt);
+    div_j.scale(ppsc->dt);
 
     double eps = continuity_threshold;
     double max_err = 0.;
     for (int p = 0; p < div_j.n_patches(); p++) {
       Fields D_rho(d_rho[p]);
       Fields Div_J(div_j[p]);
-      psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
+      psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
 	double d_rho = D_rho(0, jx,jy,jz);
 	double div_j = Div_J(0, jx,jy,jz);
 	max_err = fmax(max_err, fabs(d_rho + div_j));
@@ -117,14 +117,14 @@ public:
     if (continuity_dump_always || max_err >= eps) {
       static struct mrc_io *io;
       if (!io) {
-	io = mrc_io_create(psc_comm(psc));
+	io = mrc_io_create(comm_);
 	mrc_io_set_name(io, "mrc_io_continuity");
 	mrc_io_set_param_string(io, "basename", "continuity");
 	mrc_io_set_from_options(io);
 	mrc_io_setup(io);
 	mrc_io_view(io);
       }
-      mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
+      mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
       div_j.write_as_mrc_fld(io, {"div_j"});
       d_rho.write_as_mrc_fld(io, {"d_rho"});
       mrc_io_close(io);
@@ -144,8 +144,13 @@ public:
 
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mprts = mprts_base->get_as<Mparticles>();
-    item_rho_m_.run(mprts);
+    continuity_before_particle_push(mprts);
     mprts_base->put_as(mprts);
+  }
+
+  void continuity_before_particle_push(Mparticles& mprts)
+  {
+    item_rho_m_.run(mprts);
   }
 
   // ----------------------------------------------------------------------
@@ -157,18 +162,21 @@ public:
       return;
     }
 
-    auto mflds_base = PscMfieldsBase{psc->flds};
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
-
     auto mprts_base = PscMparticlesBase{psc->particles};
+    auto mflds_base = PscMfieldsBase{psc->flds};
     auto mprts = mprts_base->get_as<Mparticles>();
-    item_rho_p_.run(mprts);
-    continuity(psc, *mflds.sub());
-
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
+    continuity_after_particle_push(mprts, *mflds.sub());
     mflds.put_as(mflds_base, 0, 0);
     mprts_base->put_as(mprts);
   }
 
+  void continuity_after_particle_push(Mparticles& mprts, Mfields& mflds)
+  {
+    item_rho_p_.run(mprts);
+    continuity(mflds);
+  }
+  
   // ======================================================================
   // psc_checks: Gauss's Law
 
