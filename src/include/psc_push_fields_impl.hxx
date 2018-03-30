@@ -127,18 +127,17 @@ protected:
 // ======================================================================
 // class PushFields
 
-template<typename Mfields_t>
+template<typename Mfields>
 class PushFields : public PushFieldsBase
 {
-  using fields_t = typename Mfields_t::fields_t;
-  using mfields_t = PscMfields<Mfields_t>;
+  using fields_t = typename Mfields::fields_t;
 
 public:
   // ----------------------------------------------------------------------
   // push_E
 
   template<typename dim>
-  void push_E(Mfields_t& mflds, double dt_fac)
+  void push_E(Mfields& mflds, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
     
@@ -152,7 +151,7 @@ public:
   // push_H
 
   template<typename dim>
-  void push_H(Mfields_t& mflds, double dt_fac)
+  void push_H(Mfields& mflds, double dt_fac)
   {
     using Fields = Fields3d<fields_t, dim>;
 
@@ -173,23 +172,23 @@ public:
   
   void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    mfields_t mflds = mflds_base.get_as<mfields_t>(JXI, HX + 3);
+    auto& mflds = mflds_base->get_as<Mfields>(JXI, HX + 3);
     
-    const auto& grid = mflds->grid();
+    const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;
     Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
     if (invar == Bool3{false, false, false}) {
-      push_E<dim_xyz>(*mflds.sub(), dt_fac);
+      push_E<dim_xyz>(mflds, dt_fac);
     } else if (invar == Bool3{true, false, false}) {
-      push_E<dim_yz>(*mflds.sub(), dt_fac);
+      push_E<dim_yz>(mflds, dt_fac);
     } else if (invar == Bool3{false, true, false}) {
-      push_E<dim_xz>(*mflds.sub(), dt_fac);
+      push_E<dim_xz>(mflds, dt_fac);
     } else {
       assert(0);
     }
 
-    mflds.put_as(mflds_base, EX, EX + 3);
+    mflds_base->put_as(mflds, EX, EX + 3);
   }
 
   // ----------------------------------------------------------------------
@@ -202,23 +201,23 @@ public:
 
   void push_H(PscMfieldsBase mflds_base, double dt_fac) override
   {
-    mfields_t mflds = mflds_base.get_as<mfields_t>(EX, HX + 3);
+    auto& mflds = mflds_base->get_as<Mfields>(JXI, HX + 3);
     
-    const auto& grid = mflds->grid();
+    const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;
     Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
     if (invar == Bool3{false, false, false}) {
-      push_H<dim_xyz>(*mflds.sub(), dt_fac);
+      push_H<dim_xyz>(mflds, dt_fac);
     } else if (invar == Bool3{true, false, false}) {
-      push_H<dim_yz>(*mflds.sub(), dt_fac);
+      push_H<dim_yz>(mflds, dt_fac);
     } else if (invar == Bool3{false, true, false}) {
-      push_H<dim_xz>(*mflds.sub(), dt_fac);
+      push_H<dim_xz>(mflds, dt_fac);
     } else {
       assert(0);
     }
 
-    mflds.put_as(mflds_base, HX, HX + 3);
+    mflds_base->put_as(mflds, HX, HX + 3);
   }    
 };
 

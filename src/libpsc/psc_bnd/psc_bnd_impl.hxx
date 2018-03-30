@@ -14,7 +14,6 @@ struct Bnd_ : BndBase
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
-  using mfields_t = PscMfields<Mfields>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -67,9 +66,9 @@ struct Bnd_ : BndBase
 
   void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
-    auto mf = mflds_base.get_as<mfields_t>(mb, me);
-    add_ghosts(*mf.sub(), mb, me);
-    mf.put_as(mflds_base, mb, me);
+    auto& mf = mflds_base->get_as<Mfields>(mb, me);
+    add_ghosts(mf, mb, me);
+    mflds_base->put_as(mf, mb, me);
   }
 
   // ----------------------------------------------------------------------
@@ -88,9 +87,9 @@ struct Bnd_ : BndBase
 
   void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
-    auto mf = mflds_base.get_as<mfields_t>(mb, me);
-    fill_ghosts(*mf.sub(), mb, me);
-    mf.put_as(mflds_base, mb, me);
+    auto& mf = mflds_base->get_as<Mfields>(mb, me);
+    fill_ghosts(mf, mb, me);
+    mflds_base->put_as(mf, mb, me);
   }
 
   // ----------------------------------------------------------------------

@@ -79,10 +79,10 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *_mflds_base)
   using Fields = Fields3d<MfieldsC::fields_t>;
 
   auto mflds_base = PscMfieldsBase{_mflds_base};
-  auto mf = mflds_base.get_as<PscMfields<MfieldsC>>(0, mflds_base->n_comps());
+  auto& mflds = mflds_base->get_as<MfieldsC>(0, mflds_base->n_comps());
 
-  psc_foreach_patch(ppsc, p) {
-    Fields F(mf[p]);
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    Fields F(mflds[p]);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < mflds_base->n_comps(); m++) {
@@ -92,7 +92,7 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *_mflds_base)
     mrc_fld_patch_put(m3);
   }
 
-  mf.put_as(mflds_base, 0, 0);
+  mflds_base->put_as(mflds, 0, 0);
 }
 
 void

@@ -10,7 +10,6 @@ struct SetupFields
   using Mfields = MF;
   using Fields = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using mfields_t = PscMfields<Mfields>;
 
   template<typename FUNC>
   static void set(Mfields& mf, FUNC func)
@@ -50,9 +49,9 @@ struct SetupFields
   template<typename FUNC>
   static void set(PscMfieldsBase mflds_base, FUNC func)
   {
-    mfields_t mflds = mflds_base.get_as<mfields_t>(0, 0);
-    set(*mflds.sub(), func);
-    mflds.put_as(mflds_base, JXI, HX + 3);
+    auto& mflds = mflds_base->get_as<Mfields>(0, 0);
+    set(mflds, func);
+    mflds_base->put_as(mflds, JXI, HX + 3);
   }
   
   static void set_ic(struct psc *psc)
