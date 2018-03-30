@@ -8,23 +8,20 @@
 #include "checks.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
+#include "../libpsc/psc_output_fields/psc_output_fields_item_moments_2nd_nc.cxx"
 
 #include <mrc_io.h>
 
 struct checks_order_1st
 {
-  constexpr static char const* sfx = "1st";
-
   template<typename Mparticles, typename Mfields>
   using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
 };
 
 struct checks_order_2nd
 {
-  constexpr static char const* sfx = "2nd";
-
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
+  using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
 };
 
 template<typename MP, typename MF, typename ORDER>

@@ -10,7 +10,7 @@
 // n
 
 template<typename MP, typename MF>
-struct Moment_n
+struct Moment_n_2nd_nc
 {
   using Mparticles = MP;
   using Mfields = MF;
@@ -41,7 +41,7 @@ struct Moment_n
 // rho
 
 template<typename MP, typename MF>
-struct Moment_rho
+struct Moment_rho_2nd_nc
 {
   using Mparticles = MP;
   using Mfields = MF;
