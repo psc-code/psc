@@ -199,14 +199,14 @@ struct marder_ops {
 	  struct psc_mfields *div_e)
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
-    auto mf = mflds_base.get_as<PscMfields<Mfields>>(EX, EX + 3);
-    auto mf_div_e = PscMfields<Mfields>{div_e};
+    auto& mf = mflds_base->get_as<Mfields>(EX, EX + 3);
+    auto& mf_div_e = *PscMfields<Mfields>{div_e}.sub();
   
-    for (int p = 0; p < mf_div_e->n_patches(); p++) {
+    for (int p = 0; p < mf_div_e.n_patches(); p++) {
       correct_patch(marder, mf[p], mf_div_e[p], p);
     }
 
-    mf.put_as(mflds_base, EX, EX + 3);
+    mflds_base->put_as(mf, EX, EX + 3);
   }
 };
 

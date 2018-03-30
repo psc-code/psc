@@ -14,7 +14,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
 {
   auto mflds_base = PscMfieldsBase{psc->flds};
   const Grid_t& grid = psc->grid();
-  auto mf = mflds_base.get_as<PscMfields<MfieldsC>>(EX, HX + 3);
+  auto& mf = mflds_base->get_as<MfieldsC>(EX, HX + 3);
   psc_foreach_patch(psc, p) {
     double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
     Fields F(mf[p]);
@@ -28,7 +28,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
       EH2[5] +=	sqr(F(HZ, ix,iy,iz)) * fac;
     } foreach_3d_end;
   }
-  mf.put_as(mflds_base, 0, 0);
+  mflds_base->put_as(mf, 0, 0);
 }
 
 // ======================================================================
