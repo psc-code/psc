@@ -127,16 +127,15 @@ struct FieldsItemFields : FieldsItemBase
     psc_mfields_destroy(mres_base_);
   }
 
-  void operator()(PscMfields<Mfields> mflds)
+  void operator()(Mfields& mflds)
   {
-    auto mres = PscMfields<Mfields>{mres_base_};
-    Item::run(*mflds.sub(), *mres.sub());
+    Item::run(mflds, result());
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
-    (*this)(mflds);
+    (*this)(*mflds.sub());
     mflds.put_as(mflds_base, 0, 0);
   }
 

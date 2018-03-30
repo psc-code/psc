@@ -77,7 +77,7 @@ public:
   // ----------------------------------------------------------------------
   // continuity
 
-  void continuity(psc *psc, PscMfields<Mfields> mflds)
+  void continuity(psc *psc, Mfields& mflds)
   {
     auto& rho_p = item_rho_p_.result();
     auto& rho_m = item_rho_m_.result();
@@ -163,7 +163,7 @@ public:
     auto mprts_base = PscMparticlesBase{psc->particles};
     auto mprts = mprts_base->get_as<Mparticles>();
     item_rho_p_.run(mprts);
-    continuity(psc, mflds);
+    continuity(psc, *mflds.sub());
 
     mflds.put_as(mflds_base, 0, 0);
     mprts_base->put_as(mprts);
@@ -188,7 +188,7 @@ public:
     const auto& grid = psc->grid();
 
     item_rho_.run(mprts);
-    item_dive_(mflds);
+    item_dive_(*mflds.sub());
 
     auto& dive = item_dive_.result();
     auto& rho = item_rho_.result();
