@@ -10,6 +10,7 @@
 struct Item_dive_cuda
 {
   using mfields_t = PscMfieldsCuda;
+  using Mfields = MfieldsCuda;
   constexpr static const char* name = "dive_cuda";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "dive" }; } // FIXME

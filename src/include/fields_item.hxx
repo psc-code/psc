@@ -103,7 +103,7 @@ struct FieldsItemOps : psc_output_fields_item_ops {
 template<typename Item>
 struct FieldsItemFields : FieldsItemBase
 {
-  using Mfields = typename Item::mfields_t::sub_t;
+  using Mfields = typename Item::Mfields;
   
   static char const* name()
   {
@@ -157,7 +157,8 @@ template<typename ItemPatch>
 struct ItemLoopPatches : ItemPatch
 {
   using mfields_t = typename ItemPatch::mfields_t;
-  using fields_t = typename mfields_t::fields_t;
+  using Mfields = typename mfields_t::sub_t;
+  using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   
   static void run(mfields_t mflds, mfields_t mres)

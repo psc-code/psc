@@ -15,6 +15,7 @@ using Fields = Fields3d<fields_t>;
 struct Item_vpic_fields
 {
   using mfields_t = mfields_t;
+  using Mfields = MfieldsC;
   constexpr static const char* name = "vpic_fields";
   constexpr static int n_comps = 16;
   constexpr static fld_names_t fld_names()
