@@ -76,10 +76,10 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *_mflds_base)
 {
-  using Fields = Fields3d<mfields_t::fields_t>;
+  using Fields = Fields3d<MfieldsC::fields_t>;
 
   auto mflds_base = PscMfieldsBase{_mflds_base};
-  mfields_t mf = mflds_base.get_as<mfields_t>(0, mflds_base->n_comps());
+  auto mf = mflds_base.get_as<PscMfields<MfieldsC>>(0, mflds_base->n_comps());
 
   psc_foreach_patch(ppsc, p) {
     Fields F(mf[p]);

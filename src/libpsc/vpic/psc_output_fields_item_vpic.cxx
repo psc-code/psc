@@ -9,13 +9,11 @@
 #include "psc_particles_vpic.h"
 #include "psc_method.h"
 
-using fields_t = mfields_t::fields_t;
-using Fields = Fields3d<fields_t>;
-
 struct Item_vpic_fields
 {
-  using mfields_t = mfields_t;
   using Mfields = MfieldsC;
+  using Fields = Fields3d<typename Mfields::fields_t>;
+
   constexpr static const char* name = "vpic_fields";
   constexpr static int n_comps = 16;
   constexpr static fld_names_t fld_names()
@@ -58,6 +56,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
   using Base = ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>;
   using Mfields = MfieldsC;
   using Mparticles = MparticlesVpic;
+  using Fields = Fields3d<typename Mfields::fields_t>;
   
   constexpr static char const* name = "vpic_hydro";
   constexpr static int n_comps = VPIC_HYDRO_N_COMP;
@@ -77,7 +76,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
   void run(MparticlesVpic& mprts)
   {
     const auto& kinds = mprts.grid().kinds;
-    auto mres = mfields_t{this->mres_};
+    auto mres = PscMfields<Mfields>{this->mres_};
     auto mf_hydro = PscMfieldsVpic::create(psc_mfields_comm(mres.mflds()), ppsc->grid(),
 					    16, { 1, 1, 1 });
     Simulation *sim;
@@ -87,7 +86,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
       HydroArray *vmflds_hydro = mf_hydro->vmflds_hydro;
       Simulation_moments_run(sim, vmflds_hydro, mprts.vmprts, kind);
       
-      mfields_t mf = mf_hydro.get_as<mfields_t>(0, VPIC_HYDRO_N_COMP);
+      auto mf = mf_hydro.get_as<PscMfields<Mfields>>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres->n_patches(); p++) {
 	Fields F(mf[p]), R(mres[p]);
 	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {

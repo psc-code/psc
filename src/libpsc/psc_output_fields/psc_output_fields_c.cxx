@@ -146,8 +146,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    tfd->flds[i] = PscMfieldsC::create(psc_comm(psc), psc->grid(),
-				       pfd->flds[i]->nr_fields, psc->ibn).mflds();
+    tfd->flds[i] = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(),
+						pfd->flds[i]->nr_fields, psc->ibn).mflds();
     psc_mfields_set_name(tfd->flds[i], psc_mfields_name(pfd->flds[i]));
     for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
       psc_mfields_set_comp_name(tfd->flds[i], m, psc_mfields_comp_name(pfd->flds[i], m));

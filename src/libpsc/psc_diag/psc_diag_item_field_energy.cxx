@@ -3,7 +3,7 @@
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 
-using Fields = Fields3d<mfields_t::fields_t, dim_xyz>;
+using Fields = Fields3d<MfieldsC::fields_t, dim_xyz>;
 
 // ----------------------------------------------------------------------
 // psc_diag_item_field_energy_run
@@ -14,7 +14,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
 {
   auto mflds_base = PscMfieldsBase{psc->flds};
   const Grid_t& grid = psc->grid();
-  mfields_t mf = mflds_base.get_as<mfields_t>(EX, HX + 3);
+  auto mf = mflds_base.get_as<PscMfields<MfieldsC>>(EX, HX + 3);
   psc_foreach_patch(psc, p) {
     double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
     Fields F(mf[p]);

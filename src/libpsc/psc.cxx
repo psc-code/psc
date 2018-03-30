@@ -33,7 +33,8 @@
 #include <time.h>
 #include <array>
 
-using Fields = Fields3d<mfields_t::fields_t>;
+using Mfields_t = MfieldsC;
+using Fields = Fields3d<Mfields_t::fields_t>;
 
 struct psc *ppsc;
 
@@ -480,7 +481,7 @@ psc_set_ic_fields(struct psc *psc)
   if (psc_ops(psc)->setup_fields) {
     psc_ops(psc)->setup_fields(psc, psc->flds);
   } else {
-    SetupFields<mfields_t::sub_t>::set_ic(psc);
+    SetupFields<Mfields_t>::set_ic(psc);
   }
 }
 
