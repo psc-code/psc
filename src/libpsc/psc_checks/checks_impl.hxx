@@ -31,22 +31,29 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // ----------------------------------------------------------------------
   // ctor
-  
+
+private:
+  static psc_bnd* make_bnd(MPI_Comm comm)
+  {
+    auto bnd = psc_bnd_create(comm);
+    psc_bnd_set_name(bnd, "psc_checks_bnd");
+    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
+    psc_bnd_set_psc(bnd, ppsc);
+    psc_bnd_setup(bnd);
+    return bnd;
+  }
+
+public:
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams{params},
       comm_{comm},
       item_rho_p_{nullptr},
       item_rho_m_{nullptr},
       item_rho_{nullptr},
-      item_dive_{nullptr}
+      bnd_{make_bnd(comm)},
+      item_dive_{comm, PscBndBase{bnd_}}
   {
     // FIXME, output_fields should be taking care of this?
-    bnd_ = psc_bnd_create(comm);
-    psc_bnd_set_name(bnd_, "psc_output_fields_bnd_calc_rho");
-    psc_bnd_set_type(bnd_, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(bnd_, ppsc);
-    psc_bnd_setup(bnd_);
-
     psc_output_fields_item* item_rho;
     // makes, e.g., "rho_1st_nc_single"
     auto s = std::string("rho_") + ORDER::sfx + "_nc_" + Mparticles_traits<Mparticles>::name;
@@ -68,13 +75,6 @@ struct Checks_ : ChecksParams, ChecksBase
     psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
     psc_output_fields_item_setup(item_rho);
     item_rho_ = PscFieldsItemBase{item_rho};
-
-    psc_output_fields_item* item_dive = psc_output_fields_item_create(comm);
-    auto s_dive = std::string("dive_") + Mfields_traits<Mfields>::name;
-    psc_output_fields_item_set_type(item_dive, s_dive.c_str());
-    psc_output_fields_item_set_psc_bnd(item_dive, bnd_);
-    psc_output_fields_item_setup(item_dive);
-    item_dive_ = PscFieldsItemBase{item_dive};
   }
   
   // ----------------------------------------------------------------------
@@ -83,7 +83,6 @@ struct Checks_ : ChecksParams, ChecksBase
   ~Checks_()
   {
     psc_output_fields_item_destroy(item_rho_.item());
-    psc_output_fields_item_destroy(item_dive_.item());
     psc_bnd_destroy(bnd_);
   }
   
@@ -192,12 +191,12 @@ struct Checks_ : ChecksParams, ChecksBase
 
     auto mprts_base = PscMparticlesBase{psc->particles};
     const auto& grid = psc->grid();
-  
-    item_rho_(nullptr, mprts_base, nullptr);
-    item_dive_(psc->flds, mprts_base, nullptr); // FIXME, should accept NULL for mprts
 
-    auto& dive = *PscMfields<Mfields>{item_dive_->mres().mflds()}.sub();
-    auto& rho = *PscMfields<Mfields>{item_rho_->mres().mflds()}.sub();
+    item_rho_(nullptr, mprts_base, nullptr);
+    item_dive_.run(psc->flds, PscMparticlesBase{nullptr});
+
+    auto& dive = dynamic_cast<Mfields&>(*item_dive_.mres().sub());
+    auto& rho = dynamic_cast<Mfields&>(*item_rho_->mres().sub());
     
     double eps = gauss_threshold;
     double max_err = 0.;
@@ -263,7 +262,7 @@ struct Checks_ : ChecksParams, ChecksBase
   PscFieldsItemBase item_rho_p_;
   PscFieldsItemBase item_rho_m_;
   PscFieldsItemBase item_rho_;
-  PscFieldsItemBase item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_dive<PscMfields<Mfields>>>> item_dive_;
 };
 
 // ----------------------------------------------------------------------
