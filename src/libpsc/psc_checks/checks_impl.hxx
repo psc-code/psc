@@ -97,11 +97,10 @@ public:
   {
     auto mflds_base = PscMfieldsBase{psc->flds};
 
-    auto d_rho = Mfields{psc->grid(), 1, psc->ibn};
     auto& rho_p = dynamic_cast<Mfields&>(*item_rho_p_->mres().sub());
     auto& rho_m = dynamic_cast<Mfields&>(*item_rho_m_->mres().sub());
 
-    d_rho.axpy( 1., rho_p);
+    auto& d_rho = rho_p;
     d_rho.axpy(-1., rho_m);
 
     item_divj_.run(mflds_base, PscMparticlesBase{nullptr});
