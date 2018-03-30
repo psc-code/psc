@@ -111,7 +111,7 @@ psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io)
   mrc_fld_destroy(fld);
 }
 
-inline void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me)
+void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me)
 {
   // FIXME, implementing == wouldn't hurt
   assert(&mf_from.grid() == &mf_to.grid());

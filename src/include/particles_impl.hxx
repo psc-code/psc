@@ -1,7 +1,7 @@
 
 #pragma once
 
-inline void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
+void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {
   // FIXME, implementing == wouldn't hurt
   assert(&mp_from.grid() == &mp_to.grid());

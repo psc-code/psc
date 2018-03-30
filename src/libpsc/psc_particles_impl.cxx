@@ -80,8 +80,8 @@ psc_mparticles_ops_<MparticlesSingle> psc_mparticles_single_ops;
 // ======================================================================
 // psc_mparticles: subclass "double"
 
-template<> const MparticlesBase::Convert MparticlesDouble::convert_to_ = {};
-template<> const MparticlesBase::Convert MparticlesDouble::convert_from_ = {};
+template<> const MparticlesBase::Convert MparticlesDouble::convert_to_{};
+template<> const MparticlesBase::Convert MparticlesDouble::convert_from_{};
 
 psc_mparticles_ops_<MparticlesDouble> psc_mparticles_double_ops;
 

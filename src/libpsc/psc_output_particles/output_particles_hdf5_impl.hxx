@@ -32,7 +32,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   using real_t = typename Mparticles::real_t;
 
   psc_output_particles_hdf5(const OutputParticlesParams& params)
-    : OutputParticlesParams{params},
+    : OutputParticlesParams(params),
       comm_{psc_comm(ppsc)}
   {
     hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));

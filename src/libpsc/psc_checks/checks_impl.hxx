@@ -50,7 +50,7 @@ private:
 
 public:
   Checks_(MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams{params},
+    : ChecksParams(params),
       comm_{comm},
       bnd_{make_bnd(comm)},
       item_rho_{comm, PscBndBase{bnd_}},

@@ -59,7 +59,7 @@ struct InjectFoil : InjectFoilParams
   InjectFoil() = default;
   
   InjectFoil(const InjectFoilParams& params)
-    : InjectFoilParams{params}
+    : InjectFoilParams(params)
   {}
 
   bool is_inside(double crd[3])
@@ -113,7 +113,7 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
   HeatingSpotFoil() = default;
   
   HeatingSpotFoil(const HeatingSpotFoilParams& params)
-    : HeatingSpotFoilParams{params}
+    : HeatingSpotFoilParams(params)
   {
     double width = zh - zl;
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
@@ -195,7 +195,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
-    : PscFlatfoilParams{params},
+    : PscFlatfoilParams(params),
       psc_{psc},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},

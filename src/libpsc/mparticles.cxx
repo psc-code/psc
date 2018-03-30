@@ -14,8 +14,10 @@
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
-#include "psc_particles_cuda.h"
+#include "../libpsc/cuda/psc_particles_cuda.h"
+#ifdef HAVE_VPIC
 #include "psc_particles_vpic.h"
+#endif
 
 // ======================================================================
 // psc_mparticles base class
