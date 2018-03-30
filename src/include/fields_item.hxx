@@ -103,20 +103,20 @@ struct FieldsItemOps : psc_output_fields_item_ops {
 template<typename Item>
 struct FieldsItemFields : FieldsItemBase
 {
-  using mfields_t = typename Item::mfields_t;
+  using Mfields = typename Item::mfields_t::sub_t;
   
   static char const* name()
   {
-    if (std::is_same<mfields_t, PscMfieldsC>::value && strcmp(Item::name, "dive") != 0) {
+    if (std::is_same<Mfields, MfieldsC>::value) {
       return Item::name;
     } else {
-      return strdup((std::string{Item::name} + "_" + Mfields_traits<typename mfields_t::sub_t>::name).c_str());
+      return strdup((std::string{Item::name} + "_" + Mfields_traits<Mfields>::name).c_str());
     }
   }
  
   FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
   {
-    mres_base_ = mfields_t::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).mflds();
+    mres_base_ = PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).mflds();
     for (int m = 0; m < Item::n_comps; m++) {
       psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
     }
@@ -127,22 +127,22 @@ struct FieldsItemFields : FieldsItemBase
     psc_mfields_destroy(mres_base_);
   }
 
-  void operator()(mfields_t mflds)
+  void operator()(PscMfields<Mfields> mflds)
   {
-    mfields_t mres(mres_base_);
+    auto mres = PscMfields<Mfields>{mres_base_};
     Item::run(mflds, mres);
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
-    mfields_t mflds = mflds_base.get_as<mfields_t>(0, mflds_base->n_comps());
+    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
     (*this)(mflds);
     mflds.put_as(mflds_base, 0, 0);
   }
 
   virtual PscMfieldsBase mres() override { return mres_base_; }
 
-  typename mfields_t::sub_t& result() { return *mfields_t{mres_base_}.sub(); }
+  Mfields& result() { return *PscMfields<Mfields>{mres_base_}.sub(); }
 
 private:  
   psc_mfields* mres_base_;
