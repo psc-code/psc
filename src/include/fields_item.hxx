@@ -8,6 +8,7 @@
 #include "fields.hxx"
 #include "bnd.hxx"
 #include "psc_fields_c.h"
+#include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 
 #include <mrc_profile.h>
 
@@ -222,7 +223,7 @@ protected:
 // ----------------------------------------------------------------------
 // ItemMomentLoopPatches
 
-template<typename Moment_t>
+template<typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
 struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::Mfields>
 {
   using Base = ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, typename Moment_t::Mfields>;
@@ -237,8 +238,8 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   constexpr static int flags = Moment_t::flags;
 
   ItemMomentLoopPatches(MPI_Comm comm, PscBndBase bnd)
-    : Base(comm),
-      bnd_(bnd)
+    : Base{comm},
+      bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn}
   {}
 
   void run(Mparticles& mprts)
@@ -342,7 +343,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   }
 
 private:
-  PscBndBase bnd_;
+  Bnd bnd_;
 };
 
 // ----------------------------------------------------------------------
