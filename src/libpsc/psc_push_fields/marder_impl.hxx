@@ -4,17 +4,19 @@
 #include "psc_output_fields_item.h"
 #include "fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
+#include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
 
 #include <mrc_io.h>
 
 template<typename MP, typename MF>
 struct Marder_ : MarderBase
 {
-  using Mparticles_t = MP;
+  using Mparticles = MP;
   using Mfields = MF;
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
+  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
 
 private:
   static psc_bnd* make_bnd(MPI_Comm comm)
@@ -36,14 +38,9 @@ public:
       dump_{dump},
       bnd_{make_bnd(comm)},
       // FIXME, output_fields should be taking care of their own psc_bnd?
+      item_rho_{comm, PscBndBase{bnd_}},
       item_dive_{comm, PscBndBase{bnd_}}
   {
-    item_rho = psc_output_fields_item_create(psc_comm(ppsc));
-    auto s = std::string("rho_1st_nc_") + Mparticles_traits<Mparticles_t>::name;
-    psc_output_fields_item_set_type(item_rho, s.c_str());
-    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
-    psc_output_fields_item_setup(item_rho);
-
     if (dump_) {
       io_ = mrc_io_create(psc_comm(ppsc));
       mrc_io_set_type(io_, "xdmf_collective");
@@ -57,7 +54,6 @@ public:
   ~Marder_()
   {
     psc_bnd_destroy(bnd_);
-    psc_output_fields_item_destroy(item_rho);
     mrc_io_destroy(io_);
   }
   
@@ -70,22 +66,20 @@ public:
 
   void calc_aid_fields(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
-    PscFieldsItemBase item_rho(this->item_rho);
     item_dive_(*PscMfields<Mfields>{mflds_base.mflds()}.sub());
 	       
     if (dump_) {
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
+      item_rho_.result().write_as_mrc_fld(io_, {"rho"});
       item_dive_.result().write_as_mrc_fld(io_, {"dive"});
       mrc_io_close(io_);
     }
     
-    item_dive_.result().axpy_comp(0, -1., *item_rho->mres().sub(), 0);
+    item_dive_.result().axpy_comp(0, -1., item_rho_.result(), 0);
     // FIXME, why is this necessary?
-    auto bnd = PscBndBase(bnd_);
-    bnd.fill_ghosts(item_dive_.mres(), 0, 1);
+    PscBndBase{bnd_}.fill_ghosts(item_dive_.mres(), 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -201,8 +195,7 @@ public:
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
-    PscFieldsItemBase item_rho(this->item_rho);
-    item_rho(mflds_base, mprts_base);
+    item_rho_.run(*PscMparticles<Mparticles>{mprts_base.mprts()}.sub());
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     auto bnd = PscBndBase(ppsc->bnd);
@@ -235,7 +228,7 @@ private:
 
   MPI_Comm comm_;
   psc_bnd* bnd_;
-  psc_output_fields_item* item_rho;
+  ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
 };
