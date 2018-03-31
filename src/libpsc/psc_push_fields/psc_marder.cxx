@@ -19,12 +19,11 @@
 
 static void
 marder_calc_aid_fields(struct psc_marder *marder, 
-		       struct psc_mfields *flds, struct psc_mparticles *particles)
+		       PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
 {
-  PscMparticlesBase mprts(particles);
   PscFieldsItemBase item_div_e(marder->item_div_e);
   PscFieldsItemBase item_rho(marder->item_rho);
-  item_div_e(flds, mprts); // FIXME, should accept NULL for particles
+  item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
   
   if (marder->dump) {
     static int cnt;
@@ -55,11 +54,9 @@ void
 psc_marder_run(struct psc_marder *marder, 
 	       struct psc_mfields *flds, struct psc_mparticles *particles)
 {
-  static int pr, pr_A, pr_B;
+  static int pr;
   if (!pr) {
     pr   = prof_register("psc_marder_run", 1., 0, 0);
-    pr_A = prof_register("psc_marder rho", 1., 0, 0);
-    pr_B = prof_register("psc_marder iter", 1., 0, 0);
   }
 
   if (marder->every_step < 0 || ppsc->timestep % marder->every_step != 0) 
@@ -67,34 +64,8 @@ psc_marder_run(struct psc_marder *marder,
 
   prof_start(pr);
   struct psc_marder_ops *ops = psc_marder_ops(marder);
-  assert(ops);
-
-  if (ops->run) {
-    ops->run(marder, flds, particles);
-  } else {
-    prof_start(pr_A);
-
-    PscMparticlesBase mprts(particles);
-    PscFieldsItemBase item_rho(marder->item_rho);
-    PscFieldsItemBase item_div_e(marder->item_div_e);
-    item_rho(flds, mprts);
-
-    // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-    auto bnd = PscBndBase(ppsc->bnd);
-    bnd.fill_ghosts(flds, EX, EX+3);
-
-    prof_stop(pr_A);
-
-    prof_start(pr_B);
-    for (int i = 0; i < marder->loop; i++) {
-      marder_calc_aid_fields(marder, flds, particles);
-      ops->correct(marder, flds, item_div_e->mres().mflds());
-      auto bnd = PscBndBase(ppsc->bnd);
-      bnd.fill_ghosts(flds, EX, EX+3);
-    }
-    prof_stop(pr_B);
-  }
-  
+  assert(ops && ops->run);
+  ops->run(marder, PscMfieldsBase{flds}, PscMparticlesBase{particles});
   prof_stop(pr);
 }
 
@@ -110,7 +81,7 @@ static struct psc_marder_ops_c : psc_marder_ops {
     name                  = "c";
     setup                 = marder_ops_c::setup;
     destroy               = marder_ops_c::destroy;
-    correct               = marder_ops_c::correct;
+    run                   = marder_ops_c::run;
   }
 } psc_marder_c_ops;
 
@@ -121,7 +92,7 @@ static struct psc_marder_ops_single : psc_marder_ops {
     name                  = "single";
     setup                 = marder_ops_single::setup;
     destroy               = marder_ops_single::destroy;
-    correct               = marder_ops_single::correct;
+    run                   = marder_ops_single::run;
   }
 } psc_marder_single_ops;
 

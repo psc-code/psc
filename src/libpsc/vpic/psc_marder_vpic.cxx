@@ -53,8 +53,7 @@ psc_marder_vpic_clean_div_b(struct psc_marder *marder, MfieldsVpic& mflds)
 
 static void
 psc_marder_vpic_run(struct psc_marder *marder,
-		    struct psc_mfields *_mflds_base,
-		    struct psc_mparticles *_mprts_base)
+		    PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
 {
   struct psc *psc = ppsc; // FIXME
 
@@ -69,10 +68,7 @@ psc_marder_vpic_run(struct psc_marder *marder,
     return;
   }
   
-  auto mflds_base = PscMfieldsBase{_mflds_base};
   auto& mflds = mflds_base->get_as<MfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
-
-  auto mprts_base = PscMparticlesBase{_mprts_base};
   auto& mprts = mprts_base->get_as<MparticlesVpic>();
 
   // Divergence clean e

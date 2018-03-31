@@ -5,6 +5,8 @@
 #include "psc_fields_cuda.h"
 #include "cuda_iface.h"
 
+#include "fields_item.hxx"
+
 #include <mrc_io.h>
 
 #include <stdlib.h>
@@ -147,6 +149,60 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   mf_base->put_as(mf, 0, 0);
 }
 
+static void marder_calc_aid_fields(struct psc_marder *marder, 
+				   PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+{
+  PscFieldsItemBase item_div_e(marder->item_div_e);
+  PscFieldsItemBase item_rho(marder->item_rho);
+  item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
+  
+  if (marder->dump) {
+    static int cnt;
+    mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+    cnt++;
+    psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), marder->io);
+    psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), marder->io);
+    mrc_io_close(marder->io);
+  }
+
+  item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
+  // FIXME, why is this necessary?
+  auto bnd = PscBndBase(marder->bnd);
+  bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+}
+
+static void psc_marder_cuda_run(struct psc_marder *marder, PscMfieldsBase mflds_base,
+				PscMparticlesBase mprts_base)
+{
+  static int pr, pr_A, pr_B;
+  if (!pr) {
+    pr   = prof_register("psc_marder_run", 1., 0, 0);
+    pr_A = prof_register("psc_marder rho", 1., 0, 0);
+    pr_B = prof_register("psc_marder iter", 1., 0, 0);
+  }
+  
+  prof_start(pr_A);
+  
+  PscFieldsItemBase item_rho(marder->item_rho);
+  PscFieldsItemBase item_div_e(marder->item_div_e);
+  item_rho(mflds_base, mprts_base);
+  
+  // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
+  auto bnd = PscBndBase(ppsc->bnd);
+  bnd.fill_ghosts(mflds_base, EX, EX+3);
+  
+  prof_stop(pr_A);
+  
+  prof_start(pr_B);
+  for (int i = 0; i < marder->loop; i++) {
+    marder_calc_aid_fields(marder, mflds_base, mprts_base);
+    psc_marder_cuda_correct(marder, mflds_base.mflds(), item_div_e->mres().mflds());
+    auto bnd = PscBndBase(ppsc->bnd);
+    bnd.fill_ghosts(mflds_base, EX, EX+3);
+  }
+  prof_stop(pr_B);
+}
+
 // ======================================================================
 // psc_marder: subclass "cuda"
 
@@ -155,7 +211,7 @@ struct psc_marder_ops_cuda : psc_marder_ops {
     name                  = "cuda";
     setup                 = psc_marder_cuda_setup;
     destroy               = psc_marder_cuda_destroy;
-    correct               = psc_marder_cuda_correct;
+    run                   = psc_marder_cuda_run;
   }
 } psc_marder_cuda_ops;
 

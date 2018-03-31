@@ -3,6 +3,8 @@
 #define PSC_MARDER_PRIVATE_H
 
 #include <psc_marder.h>
+#include "fields3d.hxx"
+#include "particles.hxx"
 
 struct psc_marder {
   struct mrc_obj obj;
@@ -27,8 +29,7 @@ struct psc_marder {
 
 struct psc_marder_ops {
   MRC_SUBCLASS_OPS(struct psc_marder);
-  void (*correct)(struct psc_marder *marder, struct psc_mfields *mflds, struct psc_mfields *f);
-  void (*run)(struct psc_marder *marder, struct psc_mfields *mflds, struct psc_mparticles *mprts);
+  void (*run)(struct psc_marder *marder, PscMfieldsBase mflds, PscMparticlesBase mprts);
 };
 
 #define psc_marder_ops(marder) ((struct psc_marder_ops *)(marder->obj.ops))
