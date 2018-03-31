@@ -15,22 +15,7 @@ enum {
 
 #define MAX_FIELDS_LIST 50
 
-struct psc_fields_list
-{
-  psc_fields_list() { n_flds_ = 0; }
-  int size() const { return n_flds_; }
-
-  void push_back(psc_mfields* mflds)
-  {
-    flds_[n_flds_++] = mflds;
-  }
-
-  psc_mfields*  operator[](int i) const { return flds_[i]; }
-  psc_mfields*& operator[](int i)       { return flds_[i]; }
-
-  int n_flds_;
-  psc_mfields* flds_[MAX_FIELDS_LIST];
-};
+using psc_fields_list = std::vector<psc_mfields*>;
 
 struct psc_output_fields_c {
   char *data_dir;
@@ -48,7 +33,7 @@ struct psc_output_fields_c {
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  struct psc_fields_list pfd, tfd;
+  psc_fields_list pfd, tfd;
   struct psc_output_fields_item *item[MAX_FIELDS_LIST];
   struct mrc_io *ios[NR_IO_TYPES];
 
@@ -65,11 +50,6 @@ extern struct _psc_output_format_ops psc_output_format_ops_vtk;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_points;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_cells;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_binary;
-
-void write_fields_combine(struct psc_fields_list *list, 
-			  void (*write_field)(void *ctx, struct psc_mfields *fld),
-			  void *ctx);
-
 
 
 #endif
