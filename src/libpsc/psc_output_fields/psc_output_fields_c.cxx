@@ -14,7 +14,7 @@
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
 void
-write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
+write_fields(struct psc_output_fields_c *out, psc_fields_list& list,
 	     int io_type, const char *pfx)
 {
   struct mrc_io *io = out->ios[io_type];
@@ -51,15 +51,13 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   mrc_obj_write(obj, io);
   mrc_obj_destroy(obj);
 
-  for (int m = 0; m < list->size(); m++) {
-    struct psc_mfields *flds = (*list)[m];
-
+  for (int m = 0; m < list.size(); m++) {
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
       mrc_io_set_param_int3(io, "slab_off", slab_off);
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
 
-    psc_mfields_write_as_mrc_fld(flds, io);
+    psc_mfields_write_as_mrc_fld(list[m], io);
   }
   mrc_io_close(io);
 }
@@ -87,13 +85,13 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
-  struct psc_fields_list *pfd = &out_c->pfd;
-  for (int i = 0; i < pfd->size(); i++) {
+  psc_fields_list& pfd = out_c->pfd;
+  for (int i = 0; i < pfd.size(); i++) {
     psc_output_fields_item_destroy(out_c->item[i]);
   }
-  struct psc_fields_list *tfd = &out_c->tfd;
-  for (int i = 0; i < tfd->size(); i++) {
-    psc_mfields_destroy((*tfd)[i]);
+  psc_fields_list& tfd = out_c->tfd;
+  for (int i = 0; i < tfd.size(); i++) {
+    psc_mfields_destroy(tfd[i]);
   }
 
   // FIXME, we used to have mrc_io persistent across new objects from
@@ -120,11 +118,11 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
 
-  struct psc_fields_list *pfd = &out_c->pfd;
+  psc_fields_list& pfd = out_c->pfd;
 
   // setup pfd according to output_fields as given
   // (potentially) on the command line
-  pfd->ctor();
+  pfd.ctor();
   // parse comma separated list of fields
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
@@ -133,25 +131,25 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_set_type(item, p);
     psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
     psc_output_fields_item_setup(item);
-    out_c->item[pfd->size()] = item;
+    out_c->item[pfd.size()] = item;
     auto mres = PscFieldsItemBase{item}->mres();
     psc_mfields_set_name(mres.mflds(), p);
-    pfd->push_back(mres.mflds());
+    pfd.push_back(mres.mflds());
   }
   free(s_orig);
 
   // create tfd to look just like pfd
   // FIXME, only if necessary
-  struct psc_fields_list *tfd = &out_c->tfd;
-  tfd->ctor();
-  for (int i = 0; i < pfd->size(); i++) {
+  psc_fields_list& tfd = out_c->tfd;
+  tfd.ctor();
+  for (int i = 0; i < pfd.size(); i++) {
     auto mflds = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(),
-					      (*pfd)[i]->nr_fields, psc->ibn).mflds();
-    psc_mfields_set_name((*tfd)[i], psc_mfields_name((*pfd)[i]));
-    for (int m = 0; m < (*pfd)[i]->nr_fields; m++) {
-      psc_mfields_set_comp_name((*tfd)[i], m, psc_mfields_comp_name((*pfd)[i], m));
+					      pfd[i]->nr_fields, psc->ibn).mflds();
+    psc_mfields_set_name(tfd[i], psc_mfields_name(pfd[i]));
+    for (int m = 0; m < pfd[i]->nr_fields; m++) {
+      psc_mfields_set_comp_name(tfd[i], m, psc_mfields_comp_name(pfd[i], m));
     }
-    tfd->push_back(mflds);
+    tfd.push_back(mflds);
   }
   out_c->naccum = 0;
 
@@ -206,12 +204,12 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
-    struct psc_fields_list *pfd = &out_c->pfd;
+    psc_fields_list& pfd = out_c->pfd;
     PscMparticlesBase mprts(particles);
-    for (int i = 0; i < pfd->size(); i++) {
+    for (int i = 0; i < pfd.size(); i++) {
       PscFieldsItemBase item(out_c->item[i]);
       item(flds, mprts);
-      (*pfd)[i] = item->mres().mflds(); // FIXME, just storing this temporarily for writing next
+      pfd[i] = item->mres().mflds(); // FIXME, just storing this temporarily for writing next
     }
   }
 
@@ -219,7 +217,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     if (psc->timestep >= out_c->pfield_next) {
        out_c->pfield_next += out_c->pfield_step;
        mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
-       write_fields(out_c, &out_c->pfd, IO_TYPE_PFD, out_c->pfd_s);
+       write_fields(out_c, out_c->pfd, IO_TYPE_PFD, out_c->pfd_s);
     }
   }
 
@@ -239,7 +237,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 	PscMfieldsBase(out_c->tfd[m])->scale(1./out_c->naccum);
       }
 
-      write_fields(out_c, &out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);
+      write_fields(out_c, out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);
 
       for (int m = 0; m < out_c->tfd.size(); m++) {
 	PscMfieldsBase(out_c->tfd[m])->zero();
