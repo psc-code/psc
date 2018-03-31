@@ -31,9 +31,8 @@ private:
   }
 
 public:
-  Marder_(MPI_Comm comm, int interval, real_t diffusion, int loop, bool dump)
+  Marder_(MPI_Comm comm, real_t diffusion, int loop, bool dump)
     : comm_{comm},
-      interval_{interval},
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
@@ -197,11 +196,11 @@ public:
     mpi_printf(comm_, "marder: err %g\n", max_err);
   }
 
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  // ----------------------------------------------------------------------
+  // operator()
+
+  void operator()(Mfields& mflds, Mparticles& mprts)
   {
-    auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 3);
-    auto& mprts = mprts_base->get_as<Mparticles>();
-    
     item_rho_.run(mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
@@ -212,13 +211,23 @@ public:
       correct(mflds);
       bnd__.fill_ghosts(mflds, EX, EX+3);
     }
+  }
+  
+  // ----------------------------------------------------------------------
+  // run
+  
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  {
+    auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 3);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+
+    (*this)(mflds, mprts);
 
     mflds_base->put_as(mflds, EX, EX + 3);
     mprts_base->put_as(mprts, MP_DONT_COPY);
   }
 
 private:
-  int interval_; //< do Marder correction every so many steps
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho

@@ -20,9 +20,8 @@ struct MarderCuda : MarderBase
 {
   using real_t = MfieldsCuda::fields_t::real_t;
   
-  MarderCuda(MPI_Comm comm, int interval, real_t diffusion, int loop, bool dump)
-    : interval_{interval},
-      diffusion_{diffusion},
+  MarderCuda(MPI_Comm comm, real_t diffusion, int loop, bool dump)
+    : diffusion_{diffusion},
       loop_{loop},
       dump_{dump}
   {
@@ -171,7 +170,6 @@ struct MarderCuda : MarderBase
   }
 
 private:
-  int interval_; //< do Marder correction every so many steps
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho
