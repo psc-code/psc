@@ -19,26 +19,26 @@
 
 static void
 marder_calc_aid_fields(struct psc_marder *marder, 
-		       struct psc_mfields *flds, struct psc_mparticles *particles,
-		       struct psc_mfields *div_e, struct psc_mfields *rho)
+		       struct psc_mfields *flds, struct psc_mparticles *particles)
 {
   PscMparticlesBase mprts(particles);
   PscFieldsItemBase item_div_e(marder->item_div_e);
+  PscFieldsItemBase item_rho(marder->item_rho);
   item_div_e(flds, mprts); // FIXME, should accept NULL for particles
   
   if (marder->dump) {
     static int cnt;
     mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
     cnt++;
-    psc_mfields_write_as_mrc_fld(rho, marder->io);
-    psc_mfields_write_as_mrc_fld(div_e, marder->io);
+    psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), marder->io);
+    psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), marder->io);
     mrc_io_close(marder->io);
   }
 
-  PscMfieldsBase(div_e)->axpy_comp(0, -1., *PscMfieldsBase(rho).sub(), 0);
+  item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
   // FIXME, why is this necessary?
   auto bnd = PscBndBase(marder->bnd);
-  bnd.fill_ghosts(div_e, 0, 1);
+  bnd.fill_ghosts(item_div_e->mres(), 0, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -76,6 +76,7 @@ psc_marder_run(struct psc_marder *marder,
 
     PscMparticlesBase mprts(particles);
     PscFieldsItemBase item_rho(marder->item_rho);
+    PscFieldsItemBase item_div_e(marder->item_div_e);
     item_rho(flds, mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
@@ -86,8 +87,8 @@ psc_marder_run(struct psc_marder *marder,
 
     prof_start(pr_B);
     for (int i = 0; i < marder->loop; i++) {
-      marder_calc_aid_fields(marder, flds, particles, marder->div_e, marder->rho);
-      ops->correct(marder, flds, marder->div_e);
+      marder_calc_aid_fields(marder, flds, particles);
+      ops->correct(marder, flds, item_div_e->mres().mflds());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(flds, EX, EX+3);
     }

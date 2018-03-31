@@ -32,9 +32,6 @@ fld_create(struct psc *psc, const char *name)
 static void
 psc_marder_cuda_setup(struct psc_marder *marder)
 {
-  marder->div_e = fld_create(ppsc, "div_E");
-  marder->rho = fld_create(ppsc, "rho");
-
   marder->bnd = psc_bnd_create(psc_marder_comm(marder));
   psc_bnd_set_name(marder->bnd, "marder_bnd");
   psc_bnd_set_type(marder->bnd, "cuda");
@@ -70,9 +67,6 @@ psc_marder_cuda_setup(struct psc_marder *marder)
 static void
 psc_marder_cuda_destroy(struct psc_marder *marder)
 {
-  psc_mfields_destroy(marder->div_e);
-  psc_mfields_destroy(marder->rho);
-
   psc_output_fields_item_destroy(marder->item_div_e);
   psc_output_fields_item_destroy(marder->item_rho);
 

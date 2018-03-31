@@ -19,8 +19,6 @@ struct psc_marder {
   int num_div_b_round;
 
   // state
-  struct psc_mfields *div_e;
-  struct psc_mfields *rho;
   struct psc_bnd *bnd; //< for filling ghosts on rho, div_e
   struct psc_output_fields_item *item_div_e;
   struct psc_output_fields_item *item_rho;

@@ -1,5 +1,6 @@
 
 #include <psc.h>
+#include <psc_marder.h>
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -518,9 +519,9 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
-    // B at t^{n+3/2} (Note: that is not it's natural time,
+    // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    //psc_marder_run(psc->marder, psc->flds, psc->particles);
+    psc_marder_run(psc_->marder, psc_->flds, psc_->particles);
 
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);

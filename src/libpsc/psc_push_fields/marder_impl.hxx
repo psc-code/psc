@@ -38,9 +38,6 @@ struct marder_ops {
   static void
   setup(struct psc_marder *marder)
   {
-    marder->div_e = fld_create(ppsc, "div_E");
-    marder->rho = fld_create(ppsc, "rho");
-
     marder->bnd = psc_bnd_create(psc_marder_comm(marder));
     psc_bnd_set_name(marder->bnd, "marder_bnd");
     psc_bnd_set_type(marder->bnd, Mfields_traits<Mfields>::name);
@@ -79,9 +76,6 @@ struct marder_ops {
   static void
   destroy(struct psc_marder *marder)
   {
-    psc_mfields_destroy(marder->div_e);
-    psc_mfields_destroy(marder->rho);
-
     psc_output_fields_item_destroy(marder->item_div_e);
     psc_output_fields_item_destroy(marder->item_rho);
 
@@ -114,8 +108,8 @@ struct marder_ops {
 #define psc_foreach_3d_more_end			\
   } } }
 
-    static void
-    correct_patch(struct psc_marder *marder, fields_t flds, fields_t f, int p)
+  static void
+  correct_patch(struct psc_marder *marder, fields_t flds, fields_t f, int p, real_t& max_err)
   {
     Fields F(flds), FF(f);
     define_dxdydz(dx, dy, dz);
@@ -171,6 +165,7 @@ struct marder_ops {
       int l[3] = { l_nc[0], l_cc[1], l_nc[2] };
       int r[3] = { r_nc[0], r_cc[1], r_nc[2] };
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
+	max_err = std::max(max_err, std::abs(FF(0, ix,iy,iz)));
 	F(EY, ix,iy,iz) += 
 	  (FF(0, ix,iy+dy,iz) - FF(0, ix,iy,iz))
 	  * .5 * ppsc->dt * diffusion / deltay;
@@ -201,10 +196,14 @@ struct marder_ops {
     auto mflds_base = PscMfieldsBase{_mflds_base};
     auto& mf = mflds_base->get_as<Mfields>(EX, EX + 3);
     auto& mf_div_e = *PscMfields<Mfields>{div_e}.sub();
-  
+
+    real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
-      correct_patch(marder, mf[p], mf_div_e[p], p);
+      correct_patch(marder, mf[p], mf_div_e[p], p, max_err);
     }
+
+    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1, Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, psc_marder_comm(marder));
+    mpi_printf(psc_marder_comm(marder), "marder: err %g\n", max_err);
 
     mflds_base->put_as(mf, EX, EX + 3);
   }
