@@ -40,16 +40,4 @@ struct psc_output_fields_c {
   struct psc_bnd *bnd;
 };
 
-// ======================================================================
-
-extern struct _psc_output_format_ops psc_output_format_ops_mrc;
-extern struct _psc_output_format_ops psc_output_format_ops_binary;
-extern struct _psc_output_format_ops psc_output_format_ops_hdf5;
-extern struct _psc_output_format_ops psc_output_format_ops_xdmf;
-extern struct _psc_output_format_ops psc_output_format_ops_vtk;
-extern struct _psc_output_format_ops psc_output_format_ops_vtk_points;
-extern struct _psc_output_format_ops psc_output_format_ops_vtk_cells;
-extern struct _psc_output_format_ops psc_output_format_ops_vtk_binary;
-
-
 #endif
