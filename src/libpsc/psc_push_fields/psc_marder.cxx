@@ -15,32 +15,6 @@
 #include <math.h>
 
 // ----------------------------------------------------------------------
-// marder_calc_aid_fields
-
-static void
-marder_calc_aid_fields(struct psc_marder *marder, 
-		       PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
-{
-  PscFieldsItemBase item_div_e(marder->item_div_e);
-  PscFieldsItemBase item_rho(marder->item_rho);
-  item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
-  
-  if (marder->dump) {
-    static int cnt;
-    mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
-    cnt++;
-    psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), marder->io);
-    psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), marder->io);
-    mrc_io_close(marder->io);
-  }
-
-  item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
-  // FIXME, why is this necessary?
-  auto bnd = PscBndBase(marder->bnd);
-  bnd.fill_ghosts(item_div_e->mres(), 0, 1);
-}
-
-// ----------------------------------------------------------------------
 // psc_marder_init
 
 #include "marder_impl.hxx"
