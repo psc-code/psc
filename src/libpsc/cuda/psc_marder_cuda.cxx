@@ -16,41 +16,25 @@
 // FIXME: if the subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
 
-struct MarderCuda
+struct MarderCuda : MarderBase
 {
-  // ----------------------------------------------------------------------
-  // fld_create
-  //
-  // FIXME, should be consolidated with psc_checks.c, and probably other places
-
-  static struct psc_mfields *
-  fld_create(struct psc *psc, const char *name)
+  MarderCuda(MPI_Comm comm, psc_marder* marder)
   {
-    auto mflds = PscMfields<MfieldsCuda>::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
-    psc_mfields_set_comp_name(mflds.mflds(), 0, name);
-    return mflds.mflds();
-  }
-
-  // ----------------------------------------------------------------------
-  // setup
-
-  static void setup(struct psc_marder *marder)
-  {
-    marder->bnd = psc_bnd_create(psc_marder_comm(marder));
-    psc_bnd_set_name(marder->bnd, "marder_bnd");
-    psc_bnd_set_type(marder->bnd, "cuda");
-    psc_bnd_set_psc(marder->bnd, ppsc);
-    psc_bnd_setup(marder->bnd);
+    bnd_ = psc_bnd_create(comm);
+    psc_bnd_set_name(bnd_, "marder_bnd");
+    psc_bnd_set_type(bnd_, "cuda");
+    psc_bnd_set_psc(bnd_, ppsc);
+    psc_bnd_setup(bnd_);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
     marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
     psc_output_fields_item_set_type(marder->item_div_e, "dive_cuda");
-    psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
+    psc_output_fields_item_set_psc_bnd(marder->item_div_e, bnd_);
     psc_output_fields_item_setup(marder->item_div_e);
 
     marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
     psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_cuda");
-    psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd);
+    psc_output_fields_item_set_psc_bnd(marder->item_rho, bnd_);
     psc_output_fields_item_setup(marder->item_rho);
 
     if (marder->dump) {
@@ -65,6 +49,24 @@ struct MarderCuda
     }
   }
 
+  ~MarderCuda()
+  {
+    psc_bnd_destroy(bnd_);
+  }
+  
+  // ----------------------------------------------------------------------
+  // fld_create
+  //
+  // FIXME, should be consolidated with psc_checks.c, and probably other places
+
+  static struct psc_mfields *
+  fld_create(struct psc *psc, const char *name)
+  {
+    auto mflds = PscMfields<MfieldsCuda>::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
+    psc_mfields_set_comp_name(mflds.mflds(), 0, name);
+    return mflds.mflds();
+  }
+
   // ----------------------------------------------------------------------
   // destroy
 
@@ -72,8 +74,6 @@ struct MarderCuda
   {
     psc_output_fields_item_destroy(marder->item_div_e);
     psc_output_fields_item_destroy(marder->item_rho);
-
-    psc_bnd_destroy(marder->bnd);
 
     if (marder->dump) {
       mrc_io_destroy(marder->io);
@@ -150,8 +150,8 @@ struct MarderCuda
     mf_base->put_as(mf, 0, 0);
   }
 
-  static void marder_calc_aid_fields(struct psc_marder *marder, 
-				     PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  void calc_aid_fields(struct psc_marder *marder, 
+		       PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
     PscFieldsItemBase item_div_e(marder->item_div_e);
     PscFieldsItemBase item_rho(marder->item_rho);
@@ -168,12 +168,12 @@ struct MarderCuda
 
     item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
     // FIXME, why is this necessary?
-    auto bnd = PscBndBase(marder->bnd);
+    auto bnd = PscBndBase(bnd_);
     bnd.fill_ghosts(item_div_e->mres(), 0, 1);
   }
 
-  static void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
-		  PscMparticlesBase mprts_base)
+  void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
+	   PscMparticlesBase mprts_base) override
   {
     PscFieldsItemBase item_rho(marder->item_rho);
     PscFieldsItemBase item_div_e(marder->item_div_e);
@@ -184,12 +184,21 @@ struct MarderCuda
     bnd.fill_ghosts(mflds_base, EX, EX+3);
   
     for (int i = 0; i < marder->loop; i++) {
-      marder_calc_aid_fields(marder, mflds_base, mprts_base);
+      calc_aid_fields(marder, mflds_base, mprts_base);
       psc_marder_cuda_correct(marder, mflds_base.mflds(), item_div_e->mres().mflds());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
   }
+
+  static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base,
+		   PscMparticlesBase mprts_base)
+  {
+    PscMarder<MarderCuda>{marder}->run(marder, mflds_base, mprts_base);
+  }
+  
+private:
+  psc_bnd* bnd_; //< for filling ghosts on rho, div_e
 };
 
 // ======================================================================
@@ -200,9 +209,9 @@ struct psc_marder_ops_cuda : psc_marder_ops {
   psc_marder_ops_cuda() {
     name                  = "cuda";
     size                  = Wrapper::size;
-    setup                 = MarderCuda::setup;
+    setup                 = Wrapper::setup;
     destroy               = MarderCuda::destroy;
-    run                   = MarderCuda::run;
+    run                   = MarderCuda::run_;
   }
 } psc_marder_cuda_ops;
 

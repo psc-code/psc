@@ -8,7 +8,8 @@
 
 struct MarderBase
 {
-  virtual void run(PscMparticlesBase mprts_base) = 0;
+  virtual void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
+		   PscMparticlesBase mprts_base) = 0;
 };
 
 // ======================================================================
@@ -70,7 +71,7 @@ public:
   
   static void setup(psc_marder* _marder)
   {
-    new(_marder->obj.subctx) Marder{};
+    new(_marder->obj.subctx) Marder{psc_marder_comm(_marder), _marder};
   }
 
   static void destroy(psc_marder* _marder)

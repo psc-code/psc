@@ -7,7 +7,7 @@
 #include <mrc_io.h>
 
 template<typename MP, typename MF>
-struct Marder_
+struct Marder_ : MarderBase
 {
   using Mparticles_t = MP;
   using Mfields = MF;
@@ -15,6 +15,45 @@ struct Marder_
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
 
+  Marder_(MPI_Comm comm, psc_marder* marder)
+  {
+    bnd_ = psc_bnd_create(psc_marder_comm(marder));
+    psc_bnd_set_name(bnd_, "marder_bnd");
+    psc_bnd_set_type(bnd_, Mfields_traits<Mfields>::name);
+    psc_bnd_set_psc(bnd_, ppsc);
+    psc_bnd_setup(bnd_);
+
+    // FIXME, output_fields should be taking care of their own psc_bnd?
+    marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
+    char name[20];
+    snprintf(name, 20, "dive_%s", Mfields_traits<Mfields>::name);
+    psc_output_fields_item_set_type(marder->item_div_e, name);
+    psc_output_fields_item_set_psc_bnd(marder->item_div_e, bnd_);
+    psc_output_fields_item_setup(marder->item_div_e);
+
+    marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
+    auto s = std::string("rho_1st_nc_") + Mparticles_traits<Mparticles_t>::name;
+    psc_output_fields_item_set_type(marder->item_rho, s.c_str());
+    psc_output_fields_item_set_psc_bnd(marder->item_rho, bnd_);
+    psc_output_fields_item_setup(marder->item_rho);
+
+    if (marder->dump) {
+      struct mrc_io *io = mrc_io_create(psc_comm(ppsc));
+      mrc_io_set_type(io, "xdmf_collective");
+      mrc_io_set_name(io, "mrc_io_marder");
+      mrc_io_set_param_string(io, "basename", "marder");
+      mrc_io_set_from_options(io);
+      mrc_io_setup(io);
+
+      marder->io = io;
+    }
+  }
+
+  ~Marder_()
+  {
+    psc_bnd_destroy(bnd_);
+  }
+  
   // FIXME: checkpointing won't properly restore state
   // FIXME: if the subclass creates objects, it'd be cleaner to have them
   // be part of the subclass
@@ -34,44 +73,6 @@ struct Marder_
   }
 
   // ----------------------------------------------------------------------
-  // setup
-
-  static void
-  setup(struct psc_marder *marder)
-  {
-    marder->bnd = psc_bnd_create(psc_marder_comm(marder));
-    psc_bnd_set_name(marder->bnd, "marder_bnd");
-    psc_bnd_set_type(marder->bnd, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(marder->bnd, ppsc);
-    psc_bnd_setup(marder->bnd);
-
-    // FIXME, output_fields should be taking care of their own psc_bnd?
-    marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
-    char name[20];
-    snprintf(name, 20, "dive_%s", Mfields_traits<Mfields>::name);
-    psc_output_fields_item_set_type(marder->item_div_e, name);
-    psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
-    psc_output_fields_item_setup(marder->item_div_e);
-
-    marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
-    auto s = std::string("rho_1st_nc_") + Mparticles_traits<Mparticles_t>::name;
-    psc_output_fields_item_set_type(marder->item_rho, s.c_str());
-    psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd);
-    psc_output_fields_item_setup(marder->item_rho);
-
-    if (marder->dump) {
-      struct mrc_io *io = mrc_io_create(psc_comm(ppsc));
-      mrc_io_set_type(io, "xdmf_collective");
-      mrc_io_set_name(io, "mrc_io_marder");
-      mrc_io_set_param_string(io, "basename", "marder");
-      mrc_io_set_from_options(io);
-      mrc_io_setup(io);
-
-      marder->io = io;
-    }
-  }
-
-  // ----------------------------------------------------------------------
   // destroy
 
   static void
@@ -79,8 +80,6 @@ struct Marder_
   {
     psc_output_fields_item_destroy(marder->item_div_e);
     psc_output_fields_item_destroy(marder->item_rho);
-
-    psc_bnd_destroy(marder->bnd);
 
     if (marder->dump) {
       mrc_io_destroy(marder->io);
@@ -188,6 +187,31 @@ struct Marder_
 #undef psc_foreach_3d_more_end
 
   // ----------------------------------------------------------------------
+  // calc_aid_fields
+
+  void calc_aid_fields(struct psc_marder *marder, 
+		       PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  {
+    PscFieldsItemBase item_div_e(marder->item_div_e);
+    PscFieldsItemBase item_rho(marder->item_rho);
+    item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
+    
+    if (marder->dump) {
+      static int cnt;
+      mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+      cnt++;
+      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), marder->io);
+      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), marder->io);
+      mrc_io_close(marder->io);
+    }
+    
+    item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
+    // FIXME, why is this necessary?
+    auto bnd = PscBndBase(bnd_);
+    bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+  }
+
+  // ----------------------------------------------------------------------
   // correct
 
   static void
@@ -209,8 +233,8 @@ struct Marder_
     mflds_base->put_as(mf, EX, EX + 3);
   }
 
-  static void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
-		  PscMparticlesBase mprts_base)
+  void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
+	   PscMparticlesBase mprts_base)
   {
     PscFieldsItemBase item_rho(marder->item_rho);
     PscFieldsItemBase item_div_e(marder->item_div_e);
@@ -221,36 +245,20 @@ struct Marder_
     bnd.fill_ghosts(mflds_base, EX, EX+3);
 
     for (int i = 0; i < marder->loop; i++) {
-      marder_calc_aid_fields(marder, mflds_base, mprts_base);
+      calc_aid_fields(marder, mflds_base, mprts_base);
       correct(marder, mflds_base.mflds(), item_div_e->mres().mflds());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
   }
 
-  // ----------------------------------------------------------------------
-  // marder_calc_aid_fields
-
-  static void marder_calc_aid_fields(struct psc_marder *marder, 
-				     PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base,
+		   PscMparticlesBase mprts_base)
   {
-    PscFieldsItemBase item_div_e(marder->item_div_e);
-    PscFieldsItemBase item_rho(marder->item_rho);
-    item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
-    
-    if (marder->dump) {
-      static int cnt;
-      mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
-      cnt++;
-      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), marder->io);
-      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), marder->io);
-      mrc_io_close(marder->io);
-    }
-    
-    item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
-    // FIXME, why is this necessary?
-    auto bnd = PscBndBase(marder->bnd);
-    bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+    PscMarder<Marder_>{marder}->run(marder, mflds_base, mprts_base);
   }
+  
+private:
+  psc_bnd* bnd_;
 };
 

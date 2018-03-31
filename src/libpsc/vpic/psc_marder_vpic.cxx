@@ -8,10 +8,11 @@
 // ======================================================================
 // psc_marder "vpic"
 
-#define MarderVpic(marder) mrc_to_subobj(marder, MarderVpic)
-
-struct MarderVpic
+struct MarderVpic : MarderBase
 {
+  MarderVpic(MPI_Comm comm, psc_marder* marder)
+  {}
+  
   // ----------------------------------------------------------------------
   // psc_marder_vpic_clean_div_e
 
@@ -58,7 +59,7 @@ struct MarderVpic
   // ----------------------------------------------------------------------
   // run
 
-  static void run(struct psc_marder *marder, PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  void run(struct psc_marder *marder, PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
     struct psc *psc = ppsc; // FIXME
 
@@ -103,6 +104,11 @@ struct MarderVpic
 
     mflds_base->put_as(mflds, EX, 16);
   }
+
+  static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  {
+    PscMarder<MarderVpic>{marder}->run(marder, mflds_base, mprts_base);
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -113,7 +119,9 @@ struct psc_marder_ops_vpic : psc_marder_ops {
   psc_marder_ops_vpic() {
     name                  = "vpic";
     size                  = Wrapper::size;
-    run                   = MarderVpic::run;
+    setup                 = Wrapper::setup;
+    destroy               = Wrapper::destroy;
+    run                   = MarderVpic::run_;
   }
 } psc_marder_vpic_ops;
 
