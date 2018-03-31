@@ -20,9 +20,8 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCu
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = 0;
 
-  Moment_rho_1st_nc_cuda(MPI_Comm comm, PscBndBase bnd)
-    : Base(comm),
-      bnd_(bnd)
+  Moment_rho_1st_nc_cuda(MPI_Comm comm)
+    : Base(comm)
   {}
 
   void run(MparticlesCuda& mprts)
@@ -33,11 +32,9 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCu
     
     mres->zero();
     cuda_moments_yz_rho_1st_nc(cmprts, cmres);
-    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
+    assert(0); // FIXME
+    //bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
-
-private:
-  PscBndBase bnd_;
 };
 
 FieldsItemOps<FieldsItemMoment<Moment_rho_1st_nc_cuda>> psc_output_fields_item_rho_1st_nc_cuda_ops;
@@ -56,9 +53,8 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; }
   constexpr static int flags = 0;
 
-  Moment_n_1st_cuda(MPI_Comm comm, PscBndBase bnd)
-    : Base(comm),
-      bnd_(bnd)
+  Moment_n_1st_cuda(MPI_Comm comm)
+    : Base(comm)
   {}
 
   void run(MparticlesCuda& mprts)
@@ -69,11 +65,9 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
     
     mres->zero();
     cuda_moments_yz_n_1st(cmprts, cmres);
-    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
+    assert(0);
+    //bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
-
-private:
-  PscBndBase bnd_;
 };
 
 FieldsItemOps<FieldsItemMoment<Moment_n_1st_cuda>> psc_output_fields_item_n_1st_cuda_ops;

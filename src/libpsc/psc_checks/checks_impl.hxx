@@ -53,11 +53,11 @@ public:
     : ChecksParams(params),
       comm_{comm},
       bnd_{make_bnd(comm)},
-      item_rho_{comm, PscBndBase{bnd_}},
-      item_rho_m_{comm, PscBndBase{bnd_}},
-      item_rho_p_{comm, PscBndBase{bnd_}},
-      item_dive_{comm, PscBndBase{bnd_}},
-      item_divj_{comm, PscBndBase{bnd_}}
+      item_rho_{comm},
+      item_rho_m_{comm},
+      item_rho_p_{comm},
+      item_dive_{comm},
+      item_divj_{comm}
   {}
   
   // ----------------------------------------------------------------------

@@ -68,8 +68,7 @@ public:
   static void setup(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
-    new(item.sub()) FieldsItem(psc_output_fields_item_comm(_item),
-			       PscBndBase{_item->bnd});
+    new(item.sub()) FieldsItem(psc_output_fields_item_comm(_item));
   }
 
   static void destroy(psc_output_fields_item* _item)
@@ -113,7 +112,7 @@ struct FieldsItemFields : FieldsItemBase
     }
   }
  
-  FieldsItemFields(MPI_Comm comm, PscBndBase bnd)
+  FieldsItemFields(MPI_Comm comm)
   {
     mres_base_ = PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).mflds();
     for (int m = 0; m < Item::n_comps; m++) {
@@ -237,7 +236,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
 
-  ItemMomentLoopPatches(MPI_Comm comm, PscBndBase bnd)
+  ItemMomentLoopPatches(MPI_Comm comm)
     : Base{comm},
       bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn}
   {}
@@ -360,8 +359,8 @@ struct FieldsItemMoment : FieldsItemBase
 		   Mparticles_traits<Mparticles>::name).c_str());
   }
 
-  FieldsItemMoment(MPI_Comm comm, PscBndBase bnd)
-    : moment_(comm, bnd)
+  FieldsItemMoment(MPI_Comm comm)
+    : moment_(comm)
   {}
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override

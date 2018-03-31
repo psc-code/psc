@@ -31,27 +31,10 @@ struct Inject_ : InjectBase
   Inject_(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
 	  Target_t target)
     : InjectBase{do_inject, every_step, tau, kind_n},
-      target_{target}
-  {
-    // it looks like n_1st_sub takes "sub" particles, but makes
-    // moment fields of type "c", so let's use those "c" fields.
-    item_n_bnd = psc_bnd_create(comm);
-    psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
-    psc_bnd_set_type(item_n_bnd, "c");
-    psc_bnd_set_psc(item_n_bnd, ppsc);
+      target_{target},
+      moment_n_{comm}
+  {}
 
-    psc_bnd_setup(item_n_bnd);
-    moment_n_.reset(new ItemMoment_t{comm, PscBndBase{item_n_bnd}});
-  }
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~Inject_()
-  {
-    // FIXME, more cleanup needed
-  }
-  
   // ----------------------------------------------------------------------
   // run
 
@@ -71,8 +54,8 @@ struct Inject_ : InjectBase
     real_t fac = 1. / grid.cori * 
       (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
 
-    moment_n_->run(mprts);
-    auto& mf_n = moment_n_->result();
+    moment_n_.run(mprts);
+    auto& mf_n = moment_n_.result();
 
     psc_foreach_patch(psc, p) {
       Fields N(mf_n[p]);
@@ -140,8 +123,7 @@ struct Inject_ : InjectBase
 
 private:
   Target_t target_;
-  std::unique_ptr<ItemMoment_t> moment_n_;
-  struct psc_bnd *item_n_bnd;
+  ItemMoment_t moment_n_;
   int balance_generation_cnt = {};
 };
 

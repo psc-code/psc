@@ -38,9 +38,8 @@ public:
       dump_{dump},
       bnd__{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
       bnd_{make_bnd(comm)},
-      // FIXME, output_fields should be taking care of their own psc_bnd?
-      item_rho_{comm, PscBndBase{bnd_}},
-      item_dive_{comm, PscBndBase{bnd_}}
+      item_rho_{comm},
+      item_dive_{comm}
   {
     if (dump_) {
       io_ = mrc_io_create(psc_comm(ppsc));
