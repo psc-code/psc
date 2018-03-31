@@ -102,11 +102,6 @@ struct MarderVpic : MarderBase
     mflds_base->put_as(mflds, EX, 16);
   }
 
-  static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
-  {
-    PscMarder<MarderVpic>{marder}->run(mflds_base, mprts_base);
-  }
-
 private:
   MPI_Comm comm_;
   int clean_div_e_interval_ = 10; // FIXME, hardcoded...

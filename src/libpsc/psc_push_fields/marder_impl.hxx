@@ -64,9 +64,9 @@ public:
   // ----------------------------------------------------------------------
   // calc_aid_fields
 
-  void calc_aid_fields(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  void calc_aid_fields(Mfields& mflds)
   {
-    item_dive_(*PscMfields<Mfields>{mflds_base.mflds()}.sub());
+    item_dive_(mflds);
 	       
     if (dump_) {
       static int cnt;
@@ -202,11 +202,12 @@ public:
     bnd.fill_ghosts(mflds_base, EX, EX+3);
 
     for (int i = 0; i < loop_; i++) {
-      calc_aid_fields(mflds_base, mprts_base);
-
       auto& mf = mflds_base->get_as<Mfields>(EX, EX + 3);
       auto& mf_div_e = item_dive_.result();
+
+      calc_aid_fields(mf);
       correct(mf, mf_div_e);
+
       mflds_base->put_as(mf, EX, EX + 3);
       
       auto bnd = PscBndBase(ppsc->bnd);
@@ -214,12 +215,6 @@ public:
     }
   }
 
-  static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base,
-		   PscMparticlesBase mprts_base)
-  {
-    PscMarder<Marder_>{marder}->run(mflds_base, mprts_base);
-  }
-  
 private:
   int interval_; //< do Marder correction every so many steps
   real_t diffusion_; //< diffusion coefficient for Marder correction

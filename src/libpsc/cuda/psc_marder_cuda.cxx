@@ -170,12 +170,6 @@ struct MarderCuda : MarderBase
     }
   }
 
-  static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base,
-		   PscMparticlesBase mprts_base)
-  {
-    PscMarder<MarderCuda>{marder}->run(mflds_base, mprts_base);
-  }
-  
 private:
   int interval_; //< do Marder correction every so many steps
   real_t diffusion_; //< diffusion coefficient for Marder correction
