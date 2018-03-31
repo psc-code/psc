@@ -6,7 +6,6 @@
 
 struct psc_output_fields_item {
   struct mrc_obj obj;
-  struct psc_bnd *bnd;
 };
 
 enum {

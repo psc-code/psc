@@ -63,21 +63,6 @@ write_fields(struct psc_output_fields_c *out, psc_fields_list& list,
 }
 
 // ----------------------------------------------------------------------
-// psc_output_fields_c_create
-
-static void
-psc_output_fields_c_create(struct psc_output_fields *out)
-{
-  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
-
-  out_c->bnd = psc_bnd_create(psc_output_fields_comm(out));
-  psc_bnd_set_name(out_c->bnd, "psc_output_fields_bnd");
-  psc_bnd_set_type(out_c->bnd, "c");
-  psc_bnd_set_psc(out_c->bnd, ppsc);
-  psc_output_fields_add_child(out, (struct mrc_obj *) out_c->bnd);
-}
-
-// ----------------------------------------------------------------------
 // psc_output_fields_c_destroy
 
 static void
@@ -128,7 +113,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     struct psc_output_fields_item *item =
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
-    psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
     psc_output_fields_item_setup(item);
     out_c->item[pfd.size()] = item;
     auto mres = PscFieldsItemBase{item}->mres();
@@ -283,7 +267,6 @@ struct psc_output_fields_ops_c : psc_output_fields_ops {
     name                  = "c";
     size                  = sizeof(struct psc_output_fields_c);
     param_descr           = psc_output_fields_c_descr;
-    create                = psc_output_fields_c_create;
     setup                 = psc_output_fields_c_setup;
     destroy               = psc_output_fields_c_destroy;
     write                 = psc_output_fields_c_write;

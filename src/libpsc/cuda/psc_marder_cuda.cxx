@@ -34,12 +34,10 @@ struct MarderCuda : MarderBase
     // FIXME, output_fields should be taking care of their own psc_bnd?
     item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
     psc_output_fields_item_set_type(item_div_e, "dive_cuda");
-    psc_output_fields_item_set_psc_bnd(item_div_e, bnd_);
     psc_output_fields_item_setup(item_div_e);
 
     item_rho = psc_output_fields_item_create(psc_comm(ppsc));
     psc_output_fields_item_set_type(item_rho, "rho_1st_nc_cuda");
-    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
     psc_output_fields_item_setup(item_rho);
 
     if (dump_) {
