@@ -5,6 +5,7 @@
 #include "fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
+#include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 
 #include <mrc_io.h>
 
@@ -36,6 +37,7 @@ public:
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
+      bnd__{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
       bnd_{make_bnd(comm)},
       // FIXME, output_fields should be taking care of their own psc_bnd?
       item_rho_{comm, PscBndBase{bnd_}},
@@ -182,8 +184,10 @@ public:
   // ----------------------------------------------------------------------
   // correct
 
-  void correct(Mfields& mf, Mfields& mf_div_e)
+  void correct(Mfields& mf)
   {
+    auto& mf_div_e = item_dive_.result();
+
     real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
       correct_patch(mf[p], mf_div_e[p], p, max_err);
@@ -195,24 +199,22 @@ public:
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
-    item_rho_.run(*PscMparticles<Mparticles>{mprts_base.mprts()}.sub());
+    auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 3);
+    auto& mprts = mprts_base->get_as<Mparticles>();
+    
+    item_rho_.run(mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-    auto bnd = PscBndBase(ppsc->bnd);
-    bnd.fill_ghosts(mflds_base, EX, EX+3);
+    bnd__.fill_ghosts(mflds, EX, EX+3);
 
     for (int i = 0; i < loop_; i++) {
-      auto& mf = mflds_base->get_as<Mfields>(EX, EX + 3);
-      auto& mf_div_e = item_dive_.result();
-
-      calc_aid_fields(mf);
-      correct(mf, mf_div_e);
-
-      mflds_base->put_as(mf, EX, EX + 3);
-      
-      auto bnd = PscBndBase(ppsc->bnd);
-      bnd.fill_ghosts(mflds_base, EX, EX+3);
+      calc_aid_fields(mflds);
+      correct(mflds);
+      bnd__.fill_ghosts(mflds, EX, EX+3);
     }
+
+    mflds_base->put_as(mflds, EX, EX + 3);
+    mprts_base->put_as(mprts, MP_DONT_COPY);
   }
 
 private:
@@ -222,6 +224,7 @@ private:
   bool dump_; //< dump div_E, rho
 
   MPI_Comm comm_;
+  Bnd_<Mfields> bnd__;
   psc_bnd* bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
