@@ -17,7 +17,7 @@ enum {
 
 struct psc_fields_list
 {
-  void ctor() { n_flds_ = 0; }
+  psc_fields_list() { n_flds_ = 0; }
   int size() const { return n_flds_; }
 
   void push_back(psc_mfields* mflds)

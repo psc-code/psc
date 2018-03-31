@@ -122,7 +122,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 
   // setup pfd according to output_fields as given
   // (potentially) on the command line
-  pfd.ctor();
   // parse comma separated list of fields
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
@@ -141,13 +140,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   // create tfd to look just like pfd
   // FIXME, only if necessary
   psc_fields_list& tfd = out_c->tfd;
-  tfd.ctor();
   for (int i = 0; i < pfd.size(); i++) {
     auto mflds = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(),
 					      pfd[i]->nr_fields, psc->ibn).mflds();
-    psc_mfields_set_name(tfd[i], psc_mfields_name(pfd[i]));
+    psc_mfields_set_name(mflds, psc_mfields_name(pfd[i]));
     for (int m = 0; m < pfd[i]->nr_fields; m++) {
-      psc_mfields_set_comp_name(tfd[i], m, psc_mfields_comp_name(pfd[i], m));
+      psc_mfields_set_comp_name(mflds, m, psc_mfields_comp_name(pfd[i], m));
     }
     tfd.push_back(mflds);
   }
