@@ -44,8 +44,6 @@ struct Marder_ : MarderBase
       mrc_io_set_param_string(io, "basename", "marder");
       mrc_io_set_from_options(io);
       mrc_io_setup(io);
-
-      marder->io = io;
     }
   }
 
@@ -54,6 +52,7 @@ struct Marder_ : MarderBase
     psc_bnd_destroy(bnd_);
     psc_output_fields_item_destroy(item_div_e);
     psc_output_fields_item_destroy(item_rho);
+    mrc_io_destroy(io);
   }
   
   // FIXME: checkpointing won't properly restore state
@@ -72,17 +71,6 @@ struct Marder_ : MarderBase
     psc_mfields_set_comp_name(mflds.mflds(), 0, name);
 
     return mflds.mflds();
-  }
-
-  // ----------------------------------------------------------------------
-  // destroy
-
-  static void
-  destroy(struct psc_marder *marder)
-  {
-    if (marder->dump) {
-      mrc_io_destroy(marder->io);
-    }
   }
 
   // ----------------------------------------------------------------------
@@ -197,11 +185,11 @@ struct Marder_ : MarderBase
     
     if (marder->dump) {
       static int cnt;
-      mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+      mrc_io_open(io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), marder->io);
-      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), marder->io);
-      mrc_io_close(marder->io);
+      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io);
+      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io);
+      mrc_io_close(io);
     }
     
     item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
@@ -261,5 +249,6 @@ private:
   psc_bnd* bnd_;
   psc_output_fields_item* item_div_e;
   psc_output_fields_item* item_rho;
+  mrc_io *io; //< for debug dumping
 };
 

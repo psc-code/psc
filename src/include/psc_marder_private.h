@@ -19,9 +19,6 @@ struct psc_marder {
   int sync_shared_interval;
   int num_div_e_round;
   int num_div_b_round;
-
-  // state
-  struct mrc_io *io; //< for debug dumping
 };
 
 struct psc_marder_ops {
