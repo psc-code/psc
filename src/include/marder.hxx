@@ -8,8 +8,7 @@
 
 struct MarderBase
 {
-  virtual void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
-		   PscMparticlesBase mprts_base) = 0;
+  virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
 };
 
 // ======================================================================

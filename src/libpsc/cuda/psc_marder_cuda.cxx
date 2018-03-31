@@ -76,14 +76,33 @@ struct MarderCuda : MarderBase
     return mflds.mflds();
   }
 
+  void calc_aid_fields(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  {
+    PscFieldsItemBase item_div_e(this->item_div_e);
+    PscFieldsItemBase item_rho(this->item_rho);
+    item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
+  
+    if (dump_) {
+      static int cnt;
+      mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+      cnt++;
+      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
+      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
+      mrc_io_close(io_);
+    }
+
+    item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
+    // FIXME, why is this necessary?
+    auto bnd = PscBndBase(bnd_);
+    bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+  }
+
   // ----------------------------------------------------------------------
   // psc_marder_cuda_correct
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
-  static void
-  psc_marder_cuda_correct(struct psc_marder *marder,
-			  struct psc_mfields *_mflds_base, struct psc_mfields *_mf_base)
+  void correct(struct psc_mfields *_mflds_base, struct psc_mfields *_mf_base)
   {
     auto mflds_base = PscMfieldsBase{_mflds_base};
     auto mf_base = PscMfieldsBase{_mf_base};
@@ -102,7 +121,7 @@ struct MarderCuda : MarderBase
       }
     }
     float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
-    float diffusion     = diffusion_max * marder->diffusion;
+    float diffusion     = diffusion_max * diffusion_;
     
     float fac[3];
     fac[0] = 0.f;
@@ -146,30 +165,7 @@ struct MarderCuda : MarderBase
     mf_base->put_as(mf, 0, 0);
   }
 
-  void calc_aid_fields(struct psc_marder *marder, 
-		       PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
-  {
-    PscFieldsItemBase item_div_e(this->item_div_e);
-    PscFieldsItemBase item_rho(this->item_rho);
-    item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
-  
-    if (marder->dump) {
-      static int cnt;
-      mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
-      cnt++;
-      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
-      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
-      mrc_io_close(io_);
-    }
-
-    item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
-    // FIXME, why is this necessary?
-    auto bnd = PscBndBase(bnd_);
-    bnd.fill_ghosts(item_div_e->mres(), 0, 1);
-  }
-
-  void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
-	   PscMparticlesBase mprts_base) override
+  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
     PscFieldsItemBase item_rho(this->item_rho);
     PscFieldsItemBase item_div_e(this->item_div_e);
@@ -179,9 +175,9 @@ struct MarderCuda : MarderBase
     auto bnd = PscBndBase(ppsc->bnd);
     bnd.fill_ghosts(mflds_base, EX, EX+3);
   
-    for (int i = 0; i < marder->loop; i++) {
-      calc_aid_fields(marder, mflds_base, mprts_base);
-      psc_marder_cuda_correct(marder, mflds_base.mflds(), item_div_e->mres().mflds());
+    for (int i = 0; i < loop_; i++) {
+      calc_aid_fields(mflds_base, mprts_base);
+      correct(mflds_base.mflds(), item_div_e->mres().mflds());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
@@ -190,7 +186,7 @@ struct MarderCuda : MarderBase
   static void run_(struct psc_marder *marder, PscMfieldsBase mflds_base,
 		   PscMparticlesBase mprts_base)
   {
-    PscMarder<MarderCuda>{marder}->run(marder, mflds_base, mprts_base);
+    PscMarder<MarderCuda>{marder}->run(mflds_base, mprts_base);
   }
   
 private:
