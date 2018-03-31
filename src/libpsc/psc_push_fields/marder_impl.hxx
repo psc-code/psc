@@ -7,7 +7,7 @@
 #include <mrc_io.h>
 
 template<typename MP, typename MF>
-struct marder_ops
+struct Marder_
 {
   using Mparticles_t = MP;
   using Mfields = MF;

@@ -19,25 +19,23 @@
 
 #include "marder_impl.hxx"
 
-using marder_ops_c = marder_ops<MparticlesDouble, MfieldsC>;
-
 static struct psc_marder_ops_c : psc_marder_ops {
+  using MarderC = Marder_<MparticlesDouble, MfieldsC>;
   psc_marder_ops_c() {
     name                  = "c";
-    setup                 = marder_ops_c::setup;
-    destroy               = marder_ops_c::destroy;
-    run                   = marder_ops_c::run;
+    setup                 = MarderC::setup;
+    destroy               = MarderC::destroy;
+    run                   = MarderC::run;
   }
 } psc_marder_c_ops;
 
-using marder_ops_single = marder_ops<MparticlesSingle, MfieldsSingle>;
-
 static struct psc_marder_ops_single : psc_marder_ops {
+  using MarderSingle = Marder_<MparticlesSingle, MfieldsSingle>;
   psc_marder_ops_single() {
     name                  = "single";
-    setup                 = marder_ops_single::setup;
-    destroy               = marder_ops_single::destroy;
-    run                   = marder_ops_single::run;
+    setup                 = MarderSingle::setup;
+    destroy               = MarderSingle::destroy;
+    run                   = MarderSingle::run;
   }
 } psc_marder_single_ops;
 
