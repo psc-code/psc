@@ -109,9 +109,10 @@ struct MarderVpic
 // psc_marder: subclass "vpic"
 
 struct psc_marder_ops_vpic : psc_marder_ops {
+  using Wrapper = MarderWrapper<MarderVpic>;
   psc_marder_ops_vpic() {
     name                  = "vpic";
-    size                  = sizeof(MarderVpic);
+    size                  = Wrapper::size;
     run                   = MarderVpic::run;
   }
 } psc_marder_vpic_ops;

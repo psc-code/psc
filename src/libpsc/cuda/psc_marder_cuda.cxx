@@ -5,6 +5,7 @@
 #include "psc_fields_cuda.h"
 #include "cuda_iface.h"
 
+#include "marder.hxx"
 #include "fields_item.hxx"
 
 #include <mrc_io.h>
@@ -195,9 +196,10 @@ struct MarderCuda
 // psc_marder: subclass "cuda"
 
 struct psc_marder_ops_cuda : psc_marder_ops {
+  using Wrapper = MarderWrapper<MarderCuda>;
   psc_marder_ops_cuda() {
     name                  = "cuda";
-    size                  = sizeof(MarderCuda);
+    size                  = Wrapper::size;
     setup                 = MarderCuda::setup;
     destroy               = MarderCuda::destroy;
     run                   = MarderCuda::run;

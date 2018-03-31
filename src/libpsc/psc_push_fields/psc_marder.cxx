@@ -8,6 +8,7 @@
 #include "fields3d.hxx"
 #include "bnd.hxx"
 #include "fields_item.hxx"
+#include "marder.hxx"
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
@@ -21,8 +22,10 @@
 
 static struct psc_marder_ops_c : psc_marder_ops {
   using MarderC = Marder_<MparticlesDouble, MfieldsC>;
+  using Wrapper = MarderWrapper<MarderC>;
   psc_marder_ops_c() {
     name                  = "c";
+    size                  = Wrapper::size;
     setup                 = MarderC::setup;
     destroy               = MarderC::destroy;
     run                   = MarderC::run;
@@ -31,8 +34,10 @@ static struct psc_marder_ops_c : psc_marder_ops {
 
 static struct psc_marder_ops_single : psc_marder_ops {
   using MarderSingle = Marder_<MparticlesSingle, MfieldsSingle>;
+  using Wrapper = MarderWrapper<MarderSingle>;
   psc_marder_ops_single() {
     name                  = "single";
+    size                  = Wrapper::size;
     setup                 = MarderSingle::setup;
     destroy               = MarderSingle::destroy;
     run                   = MarderSingle::run;

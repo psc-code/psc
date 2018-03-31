@@ -59,3 +59,24 @@ private:
 
 using PscMarderBase = PscMarder<MarderBase>;
 
+// ======================================================================
+// PscMarderWrapper
+
+template<typename Marder>
+class MarderWrapper
+{
+public:
+  const static size_t size = sizeof(Marder);
+  
+  static void setup(psc_marder* _marder)
+  {
+    new(_marder->obj.subctx) Marder{};
+  }
+
+  static void destroy(psc_marder* _marder)
+  {
+    PscMarder<Marder> marder(_marder);
+    marder->~Marder();
+  }
+};
+
