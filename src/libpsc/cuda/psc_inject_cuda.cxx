@@ -146,7 +146,7 @@ struct InjectCuda : InjectBase
     item->run(mflds_base, mprts_base);
 
     auto& mprts = mprts_base->get_as<MparticlesCuda>();
-    auto mf_n = item->mres().get_as<PscMfields<MfieldsSingle>>(kind_n, kind_n+1);
+    auto& mf_n = item->mres()->get_as<MfieldsSingle>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;
@@ -224,7 +224,7 @@ struct InjectCuda : InjectBase
       }
     }
 
-    mf_n.put_as(item->mres(), 0, 0);
+    item->mres()->put_as(mf_n, 0, 0);
 
     psc_mparticles_cuda_inject(mprts, buf, buf_n_by_patch);
     mprts_base->put_as(mprts);

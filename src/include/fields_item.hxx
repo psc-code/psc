@@ -132,9 +132,9 @@ struct FieldsItemFields : FieldsItemBase
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {
-    auto mflds = mflds_base.get_as<PscMfields<Mfields>>(0, mflds_base->n_comps());
-    (*this)(*mflds.sub());
-    mflds.put_as(mflds_base, 0, 0);
+    auto& mflds = mflds_base->get_as<Mfields>(0, mflds_base->n_comps());
+    (*this)(mflds);
+    mflds_base->put_as(mflds, 0, 0);
   }
 
   virtual PscMfieldsBase mres() override { return mres_base_; }
