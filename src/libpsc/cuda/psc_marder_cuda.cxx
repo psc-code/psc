@@ -27,15 +27,15 @@ struct MarderCuda : MarderBase
     psc_bnd_setup(bnd_);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
-    marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
-    psc_output_fields_item_set_type(marder->item_div_e, "dive_cuda");
-    psc_output_fields_item_set_psc_bnd(marder->item_div_e, bnd_);
-    psc_output_fields_item_setup(marder->item_div_e);
+    item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
+    psc_output_fields_item_set_type(item_div_e, "dive_cuda");
+    psc_output_fields_item_set_psc_bnd(item_div_e, bnd_);
+    psc_output_fields_item_setup(item_div_e);
 
-    marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
-    psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_cuda");
-    psc_output_fields_item_set_psc_bnd(marder->item_rho, bnd_);
-    psc_output_fields_item_setup(marder->item_rho);
+    item_rho = psc_output_fields_item_create(psc_comm(ppsc));
+    psc_output_fields_item_set_type(item_rho, "rho_1st_nc_cuda");
+    psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
+    psc_output_fields_item_setup(item_rho);
 
     if (marder->dump) {
       struct mrc_io *io = mrc_io_create(psc_comm(ppsc));
@@ -52,6 +52,8 @@ struct MarderCuda : MarderBase
   ~MarderCuda()
   {
     psc_bnd_destroy(bnd_);
+    psc_output_fields_item_destroy(item_div_e);
+    psc_output_fields_item_destroy(item_rho);
   }
   
   // ----------------------------------------------------------------------
@@ -72,9 +74,6 @@ struct MarderCuda : MarderBase
 
   static void destroy(struct psc_marder *marder)
   {
-    psc_output_fields_item_destroy(marder->item_div_e);
-    psc_output_fields_item_destroy(marder->item_rho);
-
     if (marder->dump) {
       mrc_io_destroy(marder->io);
     }
@@ -153,8 +152,8 @@ struct MarderCuda : MarderBase
   void calc_aid_fields(struct psc_marder *marder, 
 		       PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
-    PscFieldsItemBase item_div_e(marder->item_div_e);
-    PscFieldsItemBase item_rho(marder->item_rho);
+    PscFieldsItemBase item_div_e(this->item_div_e);
+    PscFieldsItemBase item_rho(this->item_rho);
     item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
   
     if (marder->dump) {
@@ -175,8 +174,8 @@ struct MarderCuda : MarderBase
   void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
 	   PscMparticlesBase mprts_base) override
   {
-    PscFieldsItemBase item_rho(marder->item_rho);
-    PscFieldsItemBase item_div_e(marder->item_div_e);
+    PscFieldsItemBase item_rho(this->item_rho);
+    PscFieldsItemBase item_div_e(this->item_div_e);
     item_rho(mflds_base, mprts_base);
   
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
@@ -199,6 +198,8 @@ struct MarderCuda : MarderBase
   
 private:
   psc_bnd* bnd_; //< for filling ghosts on rho, div_e
+  psc_output_fields_item* item_div_e;
+  psc_output_fields_item* item_rho;
 };
 
 // ======================================================================
