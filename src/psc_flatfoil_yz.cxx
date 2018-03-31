@@ -37,6 +37,7 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
+#include "../libpsc/psc_push_fields/marder_impl.hxx"
 
 enum {
   MY_ION,
@@ -153,6 +154,11 @@ struct PscFlatfoilParams
   int collision_interval;
   double collision_nu;
 
+  int marder_interval;
+  double marder_diffusion;
+  int marder_loop;
+  bool marder_dump;
+
   int balance_interval;
   double balance_factor_fields;
   bool balance_print_loads;
@@ -194,6 +200,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
+  using Marder_t = Marder_<Mparticles_t, Mfields_t>;
   
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
     : PscFlatfoilParams(params),
@@ -206,7 +213,8 @@ struct PscFlatfoil : PscFlatfoilParams
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target},
-      checks_{psc_comm(psc), checks_params}
+      checks_{psc_comm(psc), checks_params},
+      marder_{psc_comm(psc), marder_diffusion, marder_loop, marder_dump}
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -412,15 +420,16 @@ struct PscFlatfoil : PscFlatfoilParams
   void step()
   {
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_inject, pr_heating;
+      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating;
     if (!pr_sort) {
       pr_sort = prof_register("step_sort", 1., 0, 0);
       pr_collision = prof_register("step_collision", 1., 0, 0);
-      pr_checks = prof_register("step_checks", 1., 0, 0);
       pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
       pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
       pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
       pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
+      pr_checks = prof_register("step_checks", 1., 0, 0);
+      pr_marder = prof_register("step_marder", 1., 0, 0);
       pr_inject = prof_register("step_inject", 1., 0, 0);
       pr_heating = prof_register("step_heating", 1., 0, 0);
     }
@@ -518,7 +527,12 @@ struct PscFlatfoil : PscFlatfoilParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    PscMarderBase{psc_->marder}(PscMfieldsBase{psc_->flds}, PscMparticlesBase{psc_->particles});
+    if (marder_interval > 0 && ppsc->timestep % marder_interval == 0) {
+      mpi_printf(comm, "***** Performing Marder correction...\n");
+      prof_start(pr_marder);
+      marder_(mflds_, mprts_);
+      prof_stop(pr_marder);
+    }
 
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
@@ -547,6 +561,7 @@ private:
   Inject_t inject_;
 
   Checks_t checks_;
+  Marder_t marder_;
   
   int st_nr_particles;
   int st_time_step;
@@ -682,6 +697,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.checks_params.gauss_threshold = 1e-14;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
+
+  // --- marder
+  params.marder_interval = 5;
+  params.marder_diffusion = 0.9;
+  params.marder_loop = 3;
+  params.marder_dump = false;
 
   // --- balancing
   params.balance_interval = 100;

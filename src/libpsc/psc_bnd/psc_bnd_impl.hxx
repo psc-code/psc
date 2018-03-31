@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "psc.h"
 #include "fields.hxx"
 #include "bnd.hxx"

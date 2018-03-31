@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "psc_output_fields_item_private.h"
 
 #include <math.h>
