@@ -3,6 +3,7 @@
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
 #include "fields.hxx"
+#include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 
 #include <mrc_io.h>
 
@@ -15,27 +16,28 @@ struct Marder_ : MarderBase
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
 
+private:
+  static psc_bnd* make_bnd(MPI_Comm comm)
+  {
+    auto bnd = psc_bnd_create(comm);
+    psc_bnd_set_name(bnd, "psc_checks_bnd");
+    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
+    psc_bnd_set_psc(bnd, ppsc);
+    psc_bnd_setup(bnd);
+    return bnd;
+  }
+
+public:
   Marder_(MPI_Comm comm, int interval, real_t diffusion, int loop, bool dump)
     : comm_{comm},
       interval_{interval},
       diffusion_{diffusion},
       loop_{loop},
-      dump_{dump}
+      dump_{dump},
+      bnd_{make_bnd(comm)},
+      // FIXME, output_fields should be taking care of their own psc_bnd?
+      item_dive_{comm, PscBndBase{bnd_}}
   {
-    bnd_ = psc_bnd_create(comm);
-    psc_bnd_set_name(bnd_, "marder_bnd");
-    psc_bnd_set_type(bnd_, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(bnd_, ppsc);
-    psc_bnd_setup(bnd_);
-
-    // FIXME, output_fields should be taking care of their own psc_bnd?
-    item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
-    char name[20];
-    snprintf(name, 20, "dive_%s", Mfields_traits<Mfields>::name);
-    psc_output_fields_item_set_type(item_div_e, name);
-    psc_output_fields_item_set_psc_bnd(item_div_e, bnd_);
-    psc_output_fields_item_setup(item_div_e);
-
     item_rho = psc_output_fields_item_create(psc_comm(ppsc));
     auto s = std::string("rho_1st_nc_") + Mparticles_traits<Mparticles_t>::name;
     psc_output_fields_item_set_type(item_rho, s.c_str());
@@ -55,7 +57,6 @@ struct Marder_ : MarderBase
   ~Marder_()
   {
     psc_bnd_destroy(bnd_);
-    psc_output_fields_item_destroy(item_div_e);
     psc_output_fields_item_destroy(item_rho);
     mrc_io_destroy(io_);
   }
@@ -65,41 +66,26 @@ struct Marder_ : MarderBase
   // be part of the subclass
 
   // ----------------------------------------------------------------------
-  // fld_create
-  //
-  // FIXME, should be consolidated with psc_checks.c, and probably other places
-
-  static struct psc_mfields *
-  fld_create(struct psc *psc, const char *name)
-  {
-    auto mflds = PscMfields<Mfields>::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
-    psc_mfields_set_comp_name(mflds.mflds(), 0, name);
-
-    return mflds.mflds();
-  }
-
-  // ----------------------------------------------------------------------
   // calc_aid_fields
 
   void calc_aid_fields(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
-    PscFieldsItemBase item_div_e(this->item_div_e);
     PscFieldsItemBase item_rho(this->item_rho);
-    item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
-    
+    item_dive_(*PscMfields<Mfields>{mflds_base.mflds()}.sub());
+	       
     if (dump_) {
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
       psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
-      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
+      item_dive_.result().write_as_mrc_fld(io_, {"dive"});
       mrc_io_close(io_);
     }
     
-    item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
+    item_dive_.result().axpy_comp(0, -1., *item_rho->mres().sub(), 0);
     // FIXME, why is this necessary?
     auto bnd = PscBndBase(bnd_);
-    bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+    bnd.fill_ghosts(item_dive_.mres(), 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -202,12 +188,8 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // correct
 
-  void correct(struct psc_mfields *_mflds_base, struct psc_mfields *div_e)
+  void correct(Mfields& mf, Mfields& mf_div_e)
   {
-    auto mflds_base = PscMfieldsBase{_mflds_base};
-    auto& mf = mflds_base->get_as<Mfields>(EX, EX + 3);
-    auto& mf_div_e = *PscMfields<Mfields>{div_e}.sub();
-
     real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
       correct_patch(mf[p], mf_div_e[p], p, max_err);
@@ -215,14 +197,11 @@ struct Marder_ : MarderBase
 
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1, Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, comm_);
     mpi_printf(comm_, "marder: err %g\n", max_err);
-
-    mflds_base->put_as(mf, EX, EX + 3);
   }
 
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
     PscFieldsItemBase item_rho(this->item_rho);
-    PscFieldsItemBase item_div_e(this->item_div_e);
     item_rho(mflds_base, mprts_base);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
@@ -231,7 +210,12 @@ struct Marder_ : MarderBase
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds_base, mprts_base);
-      correct(mflds_base.mflds(), item_div_e->mres().mflds());
+
+      auto& mf = mflds_base->get_as<Mfields>(EX, EX + 3);
+      auto& mf_div_e = item_dive_.result();
+      correct(mf, mf_div_e);
+      mflds_base->put_as(mf, EX, EX + 3);
+      
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
@@ -251,8 +235,8 @@ private:
 
   MPI_Comm comm_;
   psc_bnd* bnd_;
-  psc_output_fields_item* item_div_e;
   psc_output_fields_item* item_rho;
+  FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
 };
 

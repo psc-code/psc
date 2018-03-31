@@ -63,19 +63,6 @@ struct MarderCuda : MarderBase
     }
   }
   
-  // ----------------------------------------------------------------------
-  // fld_create
-  //
-  // FIXME, should be consolidated with psc_checks.c, and probably other places
-
-  static struct psc_mfields *
-  fld_create(struct psc *psc, const char *name)
-  {
-    auto mflds = PscMfields<MfieldsCuda>::create(psc_comm(psc), psc->grid(), 1, psc->ibn);
-    psc_mfields_set_comp_name(mflds.mflds(), 0, name);
-    return mflds.mflds();
-  }
-
   void calc_aid_fields(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
   {
     PscFieldsItemBase item_div_e(this->item_div_e);
