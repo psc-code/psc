@@ -41,35 +41,6 @@ marder_calc_aid_fields(struct psc_marder *marder,
 }
 
 // ----------------------------------------------------------------------
-// psc_marder_run
-//
-// On ghost cells:
-// It is possible (variant = 1) that ghost cells are set before this is called
-// and the subsequent code expects ghost cells to still be set on return.
-// We're calling fill_ghosts at the end of each iteration, so that's fine.
-// However, for variant = 0, ghost cells aren't set on entry, and they're not
-// expected to be set on return (though we do that, anyway.)
-
-void
-psc_marder_run(struct psc_marder *marder, 
-	       struct psc_mfields *flds, struct psc_mparticles *particles)
-{
-  static int pr;
-  if (!pr) {
-    pr   = prof_register("psc_marder_run", 1., 0, 0);
-  }
-
-  if (marder->every_step < 0 || ppsc->timestep % marder->every_step != 0) 
-    return;
-
-  prof_start(pr);
-  struct psc_marder_ops *ops = psc_marder_ops(marder);
-  assert(ops && ops->run);
-  ops->run(marder, PscMfieldsBase{flds}, PscMparticlesBase{particles});
-  prof_stop(pr);
-}
-
-// ----------------------------------------------------------------------
 // psc_marder_init
 
 #include "marder_impl.hxx"
