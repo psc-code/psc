@@ -33,7 +33,7 @@ struct PscMarder
   // However, for variant = 0, ghost cells aren't set on entry, and they're not
   // expected to be set on return (though we do that, anyway.)
 
-  void operator()(PscMparticlesBase mprts, PscMfieldsBase mflds)
+  void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts)
   {
     static int pr;
     if (!pr) {
@@ -44,9 +44,7 @@ struct PscMarder
       return;
     
     prof_start(pr);
-    struct psc_marder_ops *ops = psc_marder_ops(marder_);
-    assert(ops && ops->run);
-    ops->run(marder_, mflds, mprts);
+    sub()->run(mflds, mprts);
     prof_stop(pr);
   }
   

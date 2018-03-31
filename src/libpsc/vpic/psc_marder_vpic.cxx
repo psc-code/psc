@@ -126,7 +126,6 @@ struct psc_marder_ops_vpic : psc_marder_ops {
     size                  = Wrapper::size;
     setup                 = Wrapper::setup;
     destroy               = Wrapper::destroy;
-    run                   = MarderVpic::run_;
   }
 } psc_marder_vpic_ops;
 

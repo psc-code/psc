@@ -28,7 +28,6 @@ static struct psc_marder_ops_c : psc_marder_ops {
     size                  = Wrapper::size;
     setup                 = Wrapper::setup;
     destroy               = Wrapper::destroy;
-    run                   = MarderC::run_;
   }
 } psc_marder_c_ops;
 
@@ -40,7 +39,6 @@ static struct psc_marder_ops_single : psc_marder_ops {
     size                  = Wrapper::size;
     setup                 = Wrapper::setup;
     destroy               = Wrapper::destroy;
-    run                   = MarderSingle::run_;
   }
 } psc_marder_single_ops;
 

@@ -142,7 +142,7 @@ psc_step(struct psc *psc)
   // E at t^{n+3/2}, particles at t^{n+3/2}
   // B at t^{n+3/2} (Note: that is not it's natural time,
   // but div B should be == 0 at any time...)
-  PscMarderBase{psc->marder}(PscMparticlesBase{psc->particles}, PscMfieldsBase{psc->flds});
+  PscMarderBase{psc->marder}(mflds, mprts);
     
   PscChecksBase{psc->checks}.gauss(psc);
 

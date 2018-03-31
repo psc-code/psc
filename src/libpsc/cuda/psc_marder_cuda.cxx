@@ -211,7 +211,6 @@ struct psc_marder_ops_cuda : psc_marder_ops {
     size                  = Wrapper::size;
     setup                 = Wrapper::setup;
     destroy               = Wrapper::destroy;
-    run                   = MarderCuda::run_;
   }
 } psc_marder_cuda_ops;
 

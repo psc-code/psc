@@ -518,7 +518,7 @@ struct PscFlatfoil : PscFlatfoilParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    PscMarderBase{psc_->marder}(PscMparticlesBase{psc_->particles}, PscMfieldsBase{psc_->flds});
+    PscMarderBase{psc_->marder}(PscMfieldsBase{psc_->flds}, PscMparticlesBase{psc_->particles});
 
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);

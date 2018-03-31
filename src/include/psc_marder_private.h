@@ -23,9 +23,6 @@ struct psc_marder {
 
 struct psc_marder_ops {
   MRC_SUBCLASS_OPS(struct psc_marder);
-  void (*run)(struct psc_marder *marder, PscMfieldsBase mflds, PscMparticlesBase mprts);
 };
-
-#define psc_marder_ops(marder) ((struct psc_marder_ops *)(marder->obj.ops))
 
 #endif
