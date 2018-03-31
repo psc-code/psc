@@ -212,15 +212,6 @@ struct marder_ops
   static void run(struct psc_marder *marder, PscMfieldsBase mflds_base,
 		  PscMparticlesBase mprts_base)
   {
-    static int pr, pr_A, pr_B;
-    if (!pr) {
-      pr   = prof_register("psc_marder_run", 1., 0, 0);
-      pr_A = prof_register("psc_marder rho", 1., 0, 0);
-      pr_B = prof_register("psc_marder iter", 1., 0, 0);
-    }
-
-    prof_start(pr_A);
-
     PscFieldsItemBase item_rho(marder->item_rho);
     PscFieldsItemBase item_div_e(marder->item_div_e);
     item_rho(mflds_base, mprts_base);
@@ -229,16 +220,12 @@ struct marder_ops
     auto bnd = PscBndBase(ppsc->bnd);
     bnd.fill_ghosts(mflds_base, EX, EX+3);
 
-    prof_stop(pr_A);
-
-    prof_start(pr_B);
     for (int i = 0; i < marder->loop; i++) {
       marder_calc_aid_fields(marder, mflds_base, mprts_base);
       correct(marder, mflds_base.mflds(), item_div_e->mres().mflds());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
-    prof_stop(pr_B);
   }
 };
 

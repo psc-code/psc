@@ -1,6 +1,5 @@
 
 #include <psc.h>
-#include <psc_marder.h>
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -16,6 +15,7 @@
 #include <bnd_particles.hxx>
 #include <bnd.hxx>
 #include <bnd_fields.hxx>
+#include <marder.hxx>
 #include <inject.hxx>
 #include <heating.hxx>
 #include <setup_particles.hxx>
@@ -407,10 +407,7 @@ struct PscFlatfoil : PscFlatfoilParams
   // step
   //
   // things are missing from the generic step():
-  // - timing
-  // - psc_checks
   // - pushp prep
-  // - marder
 
   void step()
   {
@@ -521,7 +518,7 @@ struct PscFlatfoil : PscFlatfoilParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    psc_marder_run(psc_->marder, psc_->flds, psc_->particles);
+    PscMarderBase{psc_->marder}(PscMparticlesBase{psc_->particles}, PscMfieldsBase{psc_->flds});
 
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
