@@ -40,7 +40,9 @@ struct Marder_ : MarderBase
 
   ~Marder_()
   {
-    mrc_io_destroy(io_);
+    if (dump_) {
+      mrc_io_destroy(io_);
+    }
   }
   
   // FIXME: checkpointing won't properly restore state
