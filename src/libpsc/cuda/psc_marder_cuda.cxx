@@ -18,7 +18,13 @@
 
 struct MarderCuda : MarderBase
 {
-  MarderCuda(MPI_Comm comm, psc_marder* marder)
+  using real_t = MfieldsCuda::fields_t::real_t;
+  
+  MarderCuda(MPI_Comm comm, int interval, real_t diffusion, int loop, bool dump)
+    : interval_{interval},
+      diffusion_{diffusion},
+      loop_{loop},
+      dump_{dump}
   {
     bnd_ = psc_bnd_create(comm);
     psc_bnd_set_name(bnd_, "marder_bnd");
@@ -37,13 +43,13 @@ struct MarderCuda : MarderBase
     psc_output_fields_item_set_psc_bnd(item_rho, bnd_);
     psc_output_fields_item_setup(item_rho);
 
-    if (marder->dump) {
-      io = mrc_io_create(psc_comm(ppsc));
-      mrc_io_set_type(io, "xdmf_collective");
-      mrc_io_set_name(io, "mrc_io_marder");
-      mrc_io_set_param_string(io, "basename", "marder");
-      mrc_io_set_from_options(io);
-      mrc_io_setup(io);
+    if (dump_) {
+      io_ = mrc_io_create(psc_comm(ppsc));
+      mrc_io_set_type(io_, "xdmf_collective");
+      mrc_io_set_name(io_, "mrc_io_marder");
+      mrc_io_set_param_string(io_, "basename", "marder");
+      mrc_io_set_from_options(io_);
+      mrc_io_setup(io_);
     }
   }
 
@@ -52,7 +58,9 @@ struct MarderCuda : MarderBase
     psc_bnd_destroy(bnd_);
     psc_output_fields_item_destroy(item_div_e);
     psc_output_fields_item_destroy(item_rho);
-    mrc_io_destroy(io);
+    if (dump_) {
+      mrc_io_destroy(io_);
+    }
   }
   
   // ----------------------------------------------------------------------
@@ -147,11 +155,11 @@ struct MarderCuda : MarderBase
   
     if (marder->dump) {
       static int cnt;
-      mrc_io_open(io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+      mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io);
-      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io);
-      mrc_io_close(io);
+      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
+      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
+      mrc_io_close(io_);
     }
 
     item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
@@ -186,10 +194,15 @@ struct MarderCuda : MarderBase
   }
   
 private:
+  int interval_; //< do Marder correction every so many steps
+  real_t diffusion_; //< diffusion coefficient for Marder correction
+  int loop_; //< execute this many relaxation steps in a loop
+  bool dump_; //< dump div_E, rho
+
   psc_bnd* bnd_; //< for filling ghosts on rho, div_e
   psc_output_fields_item* item_div_e;
   psc_output_fields_item* item_rho;
-  mrc_io *io; //< for debug dumping
+  mrc_io *io_; //< for debug dumping
 };
 
 // ======================================================================

@@ -71,7 +71,8 @@ public:
   
   static void setup(psc_marder* _marder)
   {
-    new(_marder->obj.subctx) Marder{psc_marder_comm(_marder), _marder};
+    new(_marder->obj.subctx) Marder(psc_marder_comm(_marder), _marder->every_step,
+				    _marder->diffusion, _marder->loop, _marder->dump);
   }
 
   static void destroy(psc_marder* _marder)
