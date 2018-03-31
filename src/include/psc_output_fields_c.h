@@ -15,9 +15,21 @@ enum {
 
 #define MAX_FIELDS_LIST 50
 
-struct psc_fields_list {
-  int nr_flds;
-  struct psc_mfields *flds[MAX_FIELDS_LIST];
+struct psc_fields_list
+{
+  void ctor() { n_flds_ = 0; }
+  int size() const { return n_flds_; }
+
+  void push_back(psc_mfields* mflds)
+  {
+    flds_[n_flds_++] = mflds;
+  }
+
+  psc_mfields*  operator[](int i) const { return flds_[i]; }
+  psc_mfields*& operator[](int i)       { return flds_[i]; }
+
+  int n_flds_;
+  psc_mfields* flds_[MAX_FIELDS_LIST];
 };
 
 struct psc_output_fields_c {
