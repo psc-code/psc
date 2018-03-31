@@ -37,36 +37,15 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // ctor
 
-private:
-  static psc_bnd* make_bnd(MPI_Comm comm)
-  {
-    auto bnd = psc_bnd_create(comm);
-    psc_bnd_set_name(bnd, "psc_checks_bnd");
-    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(bnd, ppsc);
-    psc_bnd_setup(bnd);
-    return bnd;
-  }
-
-public:
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
       comm_{comm},
-      bnd_{make_bnd(comm)},
       item_rho_{comm},
       item_rho_m_{comm},
       item_rho_p_{comm},
       item_dive_{comm},
       item_divj_{comm}
   {}
-  
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~Checks_()
-  {
-    psc_bnd_destroy(bnd_);
-  }
   
   // ======================================================================
   // psc_checks: Charge Continuity 
@@ -258,7 +237,6 @@ public:
 
   // state
   MPI_Comm comm_;
-  psc_bnd* bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_p_;
   ItemMomentLoopPatches<Moment_t> item_rho_m_;
   ItemMomentLoopPatches<Moment_t> item_rho_;

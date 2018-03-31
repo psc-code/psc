@@ -19,25 +19,12 @@ struct Marder_ : MarderBase
   using Fields = Fields3d<fields_t>;
   using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
 
-private:
-  static psc_bnd* make_bnd(MPI_Comm comm)
-  {
-    auto bnd = psc_bnd_create(comm);
-    psc_bnd_set_name(bnd, "psc_checks_bnd");
-    psc_bnd_set_type(bnd, Mfields_traits<Mfields>::name);
-    psc_bnd_set_psc(bnd, ppsc);
-    psc_bnd_setup(bnd);
-    return bnd;
-  }
-
-public:
   Marder_(MPI_Comm comm, real_t diffusion, int loop, bool dump)
     : comm_{comm},
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
       bnd__{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
-      bnd_{make_bnd(comm)},
       item_rho_{comm},
       item_dive_{comm}
   {
@@ -53,7 +40,6 @@ public:
 
   ~Marder_()
   {
-    psc_bnd_destroy(bnd_);
     mrc_io_destroy(io_);
   }
   
@@ -79,7 +65,7 @@ public:
     
     item_dive_.result().axpy_comp(0, -1., item_rho_.result(), 0);
     // FIXME, why is this necessary?
-    PscBndBase{bnd_}.fill_ghosts(item_dive_.mres(), 0, 1);
+    bnd__.fill_ghosts(item_dive_.result(), 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -233,7 +219,6 @@ private:
 
   MPI_Comm comm_;
   Bnd_<Mfields> bnd__;
-  psc_bnd* bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
