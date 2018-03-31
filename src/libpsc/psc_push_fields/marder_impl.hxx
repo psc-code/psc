@@ -24,7 +24,7 @@ struct Marder_ : MarderBase
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
-      bnd__{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
+      bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
       item_rho_{comm},
       item_dive_{comm}
   {
@@ -67,7 +67,7 @@ struct Marder_ : MarderBase
     
     item_dive_.result().axpy_comp(0, -1., item_rho_.result(), 0);
     // FIXME, why is this necessary?
-    bnd__.fill_ghosts(item_dive_.result(), 0, 1);
+    bnd_.fill_ghosts(item_dive_.result(), 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -191,12 +191,12 @@ struct Marder_ : MarderBase
     item_rho_.run(mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-    bnd__.fill_ghosts(mflds, EX, EX+3);
+    bnd_.fill_ghosts(mflds, EX, EX+3);
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds);
       correct(mflds);
-      bnd__.fill_ghosts(mflds, EX, EX+3);
+      bnd_.fill_ghosts(mflds, EX, EX+3);
     }
   }
   
@@ -220,7 +220,7 @@ private:
   bool dump_; //< dump div_E, rho
 
   MPI_Comm comm_;
-  Bnd_<Mfields> bnd__;
+  Bnd_<Mfields> bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
