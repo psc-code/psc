@@ -136,8 +136,8 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
-      div_j.write_as_mrc_fld(io, {"div_j"});
-      d_rho.write_as_mrc_fld(io, {"d_rho"});
+      div_j.write_as_mrc_fld(io, "div_j", {"div_j"});
+      d_rho.write_as_mrc_fld(io, "d_rho", {"d_rho"});
       mrc_io_close(io);
     }
 
@@ -227,8 +227,8 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
-      rho.write_as_mrc_fld(io, {"rho"});
-      dive.write_as_mrc_fld(io, {"Div_E"});
+      rho.write_as_mrc_fld(io, "rho", {"rho"});
+      dive.write_as_mrc_fld(io, "Div_E", {"Div_E"});
       mrc_io_close(io);
     }
 

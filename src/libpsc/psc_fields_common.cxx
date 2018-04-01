@@ -4,35 +4,6 @@
 // ======================================================================
 // psc_mfields
 
-template<typename F>
-void Mfields<F>::write_as_mrc_fld(mrc_io *io, const std::vector<std::string>& comp_names)
-{
-  struct mrc_fld *fld = mrc_domain_m3_create(ppsc->mrc_domain_);
-  mrc_fld_set_param_int(fld, "nr_ghosts", 0);
-  mrc_fld_set_param_int(fld, "nr_comps", n_comps());
-  mrc_fld_setup(fld);
-  assert(comp_names.size() == n_comps());
-  for (int m = 0; m < n_comps(); m++) {
-    mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
-  }
-
-  for (int p = 0; p < n_patches(); p++) {
-    mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
-    mrc_fld_foreach(fld, i,j,k, 0,0) {
-      for (int m = 0; m < n_comps(); m++) {
-	MRC_M3(m3p ,m , i,j,k) = (*this)[p](m, i,j,k);
-      }
-    } mrc_fld_foreach_end;
-    mrc_fld_patch_put(fld);
-  }
-  
-  mrc_fld_write(fld, io);
-  mrc_fld_destroy(fld);
-}
-
-template
-void Mfields<MFIELDS::fields_t>::write_as_mrc_fld(mrc_io *io, const std::vector<std::string>& comp_names);
-
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
 
 #include <mrc_io.h>

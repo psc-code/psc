@@ -60,8 +60,8 @@ struct Marder_ : MarderBase
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      item_rho_.result().write_as_mrc_fld(io_, {"rho"});
-      item_dive_.result().write_as_mrc_fld(io_, {"dive"});
+      item_rho_.result().write_as_mrc_fld(io_, "rho", {"rho"});
+      item_dive_.result().write_as_mrc_fld(io_, "dive", {"dive"});
       mrc_io_close(io_);
     }
     

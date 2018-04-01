@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <typeindex>
 #include <list>
+#include <string>
 
 template<bool AOS>
 struct Layout
@@ -197,6 +198,10 @@ struct MfieldsBase
   virtual void scale_comp(int m, double val) = 0;
   virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
   virtual double max_comp(int m) = 0;
+  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
+  {
+    assert(0);
+  }
 
   void zero()            { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
   void scale(double val) { for (int m = 0; m < n_fields_; m++) scale_comp(m, val); }
@@ -359,7 +364,31 @@ struct Mfields : MfieldsBase
     return rv;
   }
 
-  void write_as_mrc_fld(mrc_io *io, const std::vector<std::string>& comp_names);
+  void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
+  {
+    mrc_fld* fld = mrc_domain_m3_create(ppsc->mrc_domain_);
+    mrc_fld_set_name(fld, name.c_str());
+    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
+    mrc_fld_set_param_int(fld, "nr_comps", n_comps());
+    mrc_fld_setup(fld);
+    assert(comp_names.size() == n_comps());
+    for (int m = 0; m < n_comps(); m++) {
+      mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
+    }
+
+    for (int p = 0; p < n_patches(); p++) {
+      mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
+      mrc_fld_foreach(fld, i,j,k, 0,0) {
+	for (int m = 0; m < n_comps(); m++) {
+	  MRC_M3(m3p ,m , i,j,k) = (*this)[p](m, i,j,k);
+	}
+      } mrc_fld_foreach_end;
+      mrc_fld_patch_put(fld);
+    }
+  
+    mrc_fld_write(fld, io);
+    mrc_fld_destroy(fld);
+  }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

@@ -57,7 +57,13 @@ write_fields(struct psc_output_fields_c *out, psc_fields_list& list,
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
 
-    psc_mfields_write_as_mrc_fld(list[m], io);
+    auto mflds_base = PscMfieldsBase{list[m]};
+    auto& mflds = *mflds_base.sub();
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mflds_base->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds_base.mflds(), m));
+    }
+    mflds.write_as_mrc_fld(io, psc_mfields_name(mflds_base.mflds()), comp_names);
   }
   mrc_io_close(io);
 }
