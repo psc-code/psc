@@ -13,11 +13,12 @@
 
 struct MfieldsItem
 {
-  MfieldsItem(psc_mfields *mflds)
-    : mflds(mflds)
+  MfieldsItem(PscMfieldsBase mflds, const std::string& name)
+    : mflds(mflds), name(name)
   {}
   
-  psc_mfields* mflds;
+  PscMfieldsBase mflds;
+  std::string name;
 };
 
 using MfieldsList = std::vector<MfieldsItem>;
@@ -25,7 +26,7 @@ using MfieldsList = std::vector<MfieldsItem>;
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
 void
-write_fields(struct psc_output_fields_c *out, const MfieldsList& list,
+write_fields(struct psc_output_fields_c *out, MfieldsList& list,
 	     int io_type, const char *pfx)
 {
   struct mrc_io *io = out->ios[io_type];
@@ -62,19 +63,19 @@ write_fields(struct psc_output_fields_c *out, const MfieldsList& list,
   mrc_obj_write(obj, io);
   mrc_obj_destroy(obj);
 
-  for (int m = 0; m < list.size(); m++) {
+  for (auto& item : list) {
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
       mrc_io_set_param_int3(io, "slab_off", slab_off);
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
 
-    auto mflds_base = PscMfieldsBase{list[m].mflds};
-    auto& mflds = *mflds_base.sub();
+    auto mflds_base = item.mflds;
+    auto& mflds = *item.mflds.sub();
     std::vector<std::string> comp_names;
     for (int m = 0; m < mflds_base->n_comps(); m++) {
       comp_names.push_back(psc_mfields_comp_name(mflds_base.mflds(), m));
     }
-    mflds.write_as_mrc_fld(io, psc_mfields_name(mflds_base.mflds()), comp_names);
+    mflds.write_as_mrc_fld(io, item.name, comp_names);
   }
   mrc_io_close(io);
 }
@@ -218,7 +219,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
        mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
        MfieldsList list;
        for (auto mflds: out_c->pfd) {
-	 list.emplace_back(mflds);
+	 list.emplace_back(mflds, psc_mfields_name(mflds));
        }
        write_fields(out_c, list, IO_TYPE_PFD, out_c->pfd_s);
     }
@@ -242,7 +243,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       
       MfieldsList list;
       for (auto mflds: out_c->tfd) {
-	list.emplace_back(mflds);
+	list.emplace_back(mflds, psc_mfields_name(mflds));
       }
       write_fields(out_c, list, IO_TYPE_TFD, out_c->tfd_s);
 
