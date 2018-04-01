@@ -65,7 +65,7 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 
   for (auto& item : out_c->items) {
     psc_output_fields_item_destroy(item.item.item());
-    //    psc_mfields_destroy(item.tfd.mflds());
+    delete &item.tfd;
   }
 
   for (int i = 0; i < NR_IO_TYPES; i++) {
@@ -104,9 +104,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     }
 
     // tfd -- FIXME?! always MfieldsC
-    auto mflds_tfd = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(), mflds_pfd->n_comps(), psc->ibn);
-
-    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, *mflds_pfd.sub(), *mflds_tfd.sub());
+    MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd->n_comps(), psc->ibn};
+    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, *mflds_pfd.sub(), mflds_tfd);
   }
   free(s_orig);
 
