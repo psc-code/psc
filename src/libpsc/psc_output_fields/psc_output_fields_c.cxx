@@ -65,7 +65,7 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 
   for (auto& item : out_c->items) {
     psc_output_fields_item_destroy(item.item.item());
-    psc_mfields_destroy(item.tfd.mflds());
+    //    psc_mfields_destroy(item.tfd.mflds());
   }
 
   for (int i = 0; i < NR_IO_TYPES; i++) {
@@ -106,7 +106,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     // tfd -- FIXME?! always MfieldsC
     auto mflds_tfd = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(), mflds_pfd->n_comps(), psc->ibn);
 
-    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, PscMfieldsBase{mflds_tfd.mflds()});
+    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, *mflds_pfd.sub(), *mflds_tfd.sub());
   }
   free(s_orig);
 
@@ -183,8 +183,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     auto io = out_c->ios[IO_TYPE_PFD];
     open_mrc_io(out_c, io);
     for (auto& item : out_c->items) {
-      auto& mflds = *item.pfd.sub();
-      mflds.write_as_mrc_fld(io, item.name, item.comp_names);
+      item.pfd.write_as_mrc_fld(io, item.name, item.comp_names);
     }
     mrc_io_close(io);
   }
@@ -193,7 +192,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     if (doaccum_tfield) {
       // tfd += pfd
       for (auto& item : out_c->items) {
-	item.tfd->axpy(1., *item.pfd.sub());
+	item.tfd.axpy(1., item.pfd);
       }
       out_c->naccum++;
     }
@@ -206,10 +205,9 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
       // convert accumulated values to correct temporal mean
       for (auto& item : out_c->items) {
-	item.tfd->scale(1. / out_c->naccum);
-	auto& mflds = *item.tfd.sub();
-	mflds.write_as_mrc_fld(io, item.name, item.comp_names);
-	item.tfd->zero();
+	item.tfd.scale(1. / out_c->naccum);
+	item.tfd.write_as_mrc_fld(io, item.name, item.comp_names);
+	item.tfd.zero();
       }
       out_c->naccum = 0;
       mrc_io_close(io);

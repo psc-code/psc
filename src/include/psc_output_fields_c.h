@@ -19,14 +19,14 @@ enum {
 struct OutputFieldsItem
 {
   OutputFieldsItem(PscFieldsItemBase item, const std::string& name,
-		   std::vector<std::string>& comp_names, PscMfieldsBase pfd,
-		   PscMfieldsBase tfd)
+		   std::vector<std::string>& comp_names, MfieldsBase& pfd,
+		   MfieldsBase& tfd)
     : item(item), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
   {}
 
   PscFieldsItemBase item;
-  PscMfieldsBase pfd;
-  PscMfieldsBase tfd;
+  MfieldsBase& pfd;
+  MfieldsBase& tfd;
   std::string name;
   std::vector<std::string> comp_names;
 };
