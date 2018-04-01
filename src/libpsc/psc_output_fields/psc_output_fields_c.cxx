@@ -55,21 +55,6 @@ static void open_mrc_io(psc_output_fields_c *out, mrc_io *io)
   }
 }
 
-void
-write_fields(struct psc_output_fields_c *out, MfieldsList& list,
-	     int io_type, const char *pfx)
-{
-  mrc_io *io = out->ios[io_type];
-
-  open_mrc_io(out, io);
-  for (auto& item : list) {
-    auto mflds_base = item.mflds;
-    auto& mflds = *item.mflds.sub();
-    mflds.write_as_mrc_fld(io, item.name, item.comp_names);
-  }
-  mrc_io_close(io);
-}
-
 // ----------------------------------------------------------------------
 // psc_output_fields_c_destroy
 
@@ -209,7 +194,14 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if (out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) {
     mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
     out_c->pfield_next += out_c->pfield_step;
-    write_fields(out_c, pfd_, IO_TYPE_PFD, out_c->pfd_s);
+
+    auto io = out_c->ios[IO_TYPE_PFD];
+    open_mrc_io(out_c, io);
+    for (auto& item : pfd_) {
+      auto& mflds = *item.mflds.sub();
+      mflds.write_as_mrc_fld(io, item.name, item.comp_names);
+    }
+    mrc_io_close(io);
   }
 
   if (out_c->dowrite_tfield) {
@@ -229,7 +221,13 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 	item.mflds->scale(1. / out_c->naccum);
       }
       
-      write_fields(out_c, tfd_, IO_TYPE_TFD, out_c->tfd_s);
+      auto io = out_c->ios[IO_TYPE_TFD];
+      open_mrc_io(out_c, io);
+      for (auto& item : tfd_) {
+	auto& mflds = *item.mflds.sub();
+	mflds.write_as_mrc_fld(io, item.name, item.comp_names);
+      }
+      mrc_io_close(io);
       
       for (auto item: tfd_) {
 	item.mflds->zero();
