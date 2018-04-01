@@ -144,12 +144,6 @@ struct PscMparticles
     }
   }
 
-  static Self create(MPI_Comm comm, const Grid_t& grid)
-  {
-    auto mprts = PscMparticlesCreate(comm, grid, Mparticles_traits<S>::name);
-    return Self{mprts.mprts()}; // odd way of returning derived type
-  }
-  
   psc_mparticles *mprts() { return mprts_; }
   
   sub_t* operator->() { return sub(); }
