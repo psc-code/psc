@@ -11,10 +11,21 @@
 #include <mrc_io.h>
 #include <string.h>
 
+struct MfieldsItem
+{
+  MfieldsItem(psc_mfields *mflds)
+    : mflds(mflds)
+  {}
+  
+  psc_mfields* mflds;
+};
+
+using MfieldsList = std::vector<MfieldsItem>;
+
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
 void
-write_fields(struct psc_output_fields_c *out, psc_fields_list& list,
+write_fields(struct psc_output_fields_c *out, const MfieldsList& list,
 	     int io_type, const char *pfx)
 {
   struct mrc_io *io = out->ios[io_type];
@@ -57,7 +68,7 @@ write_fields(struct psc_output_fields_c *out, psc_fields_list& list,
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
 
-    auto mflds_base = PscMfieldsBase{list[m]};
+    auto mflds_base = PscMfieldsBase{list[m].mflds};
     auto& mflds = *mflds_base.sub();
     std::vector<std::string> comp_names;
     for (int m = 0; m < mflds_base->n_comps(); m++) {
@@ -205,7 +216,11 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     if (psc->timestep >= out_c->pfield_next) {
        out_c->pfield_next += out_c->pfield_step;
        mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
-       write_fields(out_c, out_c->pfd, IO_TYPE_PFD, out_c->pfd_s);
+       MfieldsList list;
+       for (auto mflds: out_c->pfd) {
+	 list.emplace_back(mflds);
+       }
+       write_fields(out_c, list, IO_TYPE_PFD, out_c->pfd_s);
     }
   }
 
@@ -224,8 +239,12 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       for (int m = 0; m < out_c->tfd.size(); m++) {
 	PscMfieldsBase(out_c->tfd[m])->scale(1./out_c->naccum);
       }
-
-      write_fields(out_c, out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);
+      
+      MfieldsList list;
+      for (auto mflds: out_c->tfd) {
+	list.emplace_back(mflds);
+      }
+      write_fields(out_c, list, IO_TYPE_TFD, out_c->tfd_s);
 
       for (int m = 0; m < out_c->tfd.size(); m++) {
 	PscMfieldsBase(out_c->tfd[m])->zero();
