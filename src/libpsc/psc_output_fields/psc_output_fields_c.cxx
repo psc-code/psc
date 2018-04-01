@@ -105,8 +105,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
 
-  psc_fields_list& pfd = out_c->pfd;
-
+  auto& pfd_ = out_c->pfd_, tfd_ = out_c->tfd_;
+  auto& pfd = out_c->pfd, tfd = out_c->tfd;
+  
   // setup pfd according to output_fields as given
   // (potentially) on the command line
   // parse comma separated list of fields
@@ -117,45 +118,31 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_set_type(item, p);
     psc_output_fields_item_setup(item);
     out_c->item[pfd.size()] = item;
+
+    // pfd
     auto mres = PscFieldsItemBase{item}->mres();
     psc_mfields_set_name(mres.mflds(), p);
     pfd.push_back(mres.mflds());
+
+    // pfd_
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mres->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mres.mflds(), m));
+    }
+    pfd_.emplace_back(mres, p, comp_names);
+
+    // create tfd to look just like pfd
+    auto mflds = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(), mres->n_comps(), psc->ibn);
+    psc_mfields_set_name(mflds.mflds(), p);
+    for (int m = 0; m < mres->n_comps(); m++) {
+      psc_mfields_set_comp_name(mflds.mflds(), m, psc_mfields_comp_name(mres.mflds(), m));
+    }
+    tfd.push_back(mflds.mflds());
+
+    // tfd_
+    tfd_.emplace_back(PscMfieldsBase{mflds.mflds()}, p, comp_names);
   }
   free(s_orig);
-
-  // create tfd to look just like pfd
-  // FIXME, only if necessary
-  psc_fields_list& tfd = out_c->tfd;
-  for (int i = 0; i < pfd.size(); i++) {
-    auto mflds = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(),
-					      pfd[i]->nr_fields, psc->ibn).mflds();
-    psc_mfields_set_name(mflds, psc_mfields_name(pfd[i]));
-    for (int m = 0; m < pfd[i]->nr_fields; m++) {
-      psc_mfields_set_comp_name(mflds, m, psc_mfields_comp_name(pfd[i], m));
-    }
-    tfd.push_back(mflds);
-  }
-
-  auto& pfd_ = out_c->pfd_, tfd_ = out_c->tfd_;
-  
-  for (int i = 0; i < out_c->pfd.size(); i++) {
-    PscFieldsItemBase item(out_c->item[i]);
-    auto mflds = item->mres();
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
-    }
-    pfd_.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
-  }
-
-  for (auto _mflds: out_c->tfd) {
-    auto mflds = PscMfieldsBase{_mflds};
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
-    }
-    tfd_.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
-  }
 
   out_c->naccum = 0;
 
