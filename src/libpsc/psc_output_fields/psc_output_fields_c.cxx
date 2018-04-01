@@ -13,12 +13,14 @@
 
 struct MfieldsItem
 {
-  MfieldsItem(PscMfieldsBase mflds, const std::string& name)
-    : mflds(mflds), name(name)
+  MfieldsItem(PscMfieldsBase mflds, const std::string& name,
+	      const std::vector<std::string>& comp_names)
+    : mflds(mflds), name(name), comp_names(comp_names)
   {}
   
   PscMfieldsBase mflds;
   std::string name;
+  std::vector<std::string> comp_names;
 };
 
 using MfieldsList = std::vector<MfieldsItem>;
@@ -71,11 +73,7 @@ write_fields(struct psc_output_fields_c *out, MfieldsList& list,
 
     auto mflds_base = item.mflds;
     auto& mflds = *item.mflds.sub();
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds_base->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds_base.mflds(), m));
-    }
-    mflds.write_as_mrc_fld(io, item.name, comp_names);
+    mflds.write_as_mrc_fld(io, item.name, item.comp_names);
   }
   mrc_io_close(io);
 }
@@ -218,8 +216,13 @@ psc_output_fields_c_run(struct psc_output_fields *out,
        out_c->pfield_next += out_c->pfield_step;
        mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
        MfieldsList list;
-       for (auto mflds: out_c->pfd) {
-	 list.emplace_back(mflds, psc_mfields_name(mflds));
+       for (auto _mflds: out_c->pfd) {
+	 auto mflds = PscMfieldsBase{_mflds};
+	 std::vector<std::string> comp_names;
+	 for (int m = 0; m < mflds->n_comps(); m++) {
+	   comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+	 }
+	 list.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
        }
        write_fields(out_c, list, IO_TYPE_PFD, out_c->pfd_s);
     }
@@ -242,11 +245,16 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       }
       
       MfieldsList list;
-      for (auto mflds: out_c->tfd) {
-	list.emplace_back(mflds, psc_mfields_name(mflds));
+      for (auto _mflds: out_c->tfd) {
+	auto mflds = PscMfieldsBase{_mflds};
+	std::vector<std::string> comp_names;
+	for (int m = 0; m < mflds->n_comps(); m++) {
+	  comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+	}
+	list.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
       }
       write_fields(out_c, list, IO_TYPE_TFD, out_c->tfd_s);
-
+      
       for (int m = 0; m < out_c->tfd.size(); m++) {
 	PscMfieldsBase(out_c->tfd[m])->zero();
       }
