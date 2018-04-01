@@ -27,6 +27,15 @@ struct MfieldsItem
   std::vector<std::string> comp_names;
 };
 
+struct OutputFieldsItem
+{
+  OutputFieldsItem(psc_output_fields_item* item)
+  : item(item)
+  {}
+  
+  psc_output_fields_item* item;
+};
+
 using MfieldsList = std::vector<MfieldsItem>;
 
 struct psc_output_fields_c {
@@ -46,7 +55,7 @@ struct psc_output_fields_c {
   // storage for output
   unsigned int naccum;
   MfieldsList pfd_, tfd_;
-  std::vector<psc_output_fields_item*> item;
+  std::vector<OutputFieldsItem> items;
   struct mrc_io *ios[NR_IO_TYPES];
 };
 

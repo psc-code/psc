@@ -63,8 +63,8 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
-  for (int i = 0; i < out_c->item.size(); i++) {
-    psc_output_fields_item_destroy(out_c->item[i]);
+  for (auto& item : out_c->items) {
+    psc_output_fields_item_destroy(item.item);
   }
 
   for (auto& item : out_c->tfd_) {
@@ -106,7 +106,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
     psc_output_fields_item_setup(item);
-    out_c->item.push_back(item);
+    out_c->items.emplace_back(item);
 
     // pfd_
     auto mres = PscFieldsItemBase{item}->mres();
@@ -185,8 +185,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
-    for (auto item_ : out_c->item) {
-      PscFieldsItemBase item(item_);
+    for (auto item_ : out_c->items) {
+      PscFieldsItemBase item(item_.item);
       item(flds, mprts);
     }
   }
