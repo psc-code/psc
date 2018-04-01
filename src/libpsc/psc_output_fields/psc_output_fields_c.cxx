@@ -185,8 +185,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
-    for (int i = 0; i < out_c->item.size(); i++) {
-      PscFieldsItemBase item(out_c->item[i]);
+    for (auto item_ : out_c->item) {
+      PscFieldsItemBase item(item_);
       item(flds, mprts);
     }
   }
@@ -216,23 +216,18 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       mpi_printf(psc_output_fields_comm(out), "***** Writing TFD output\n");
       out_c->tfield_next += out_c->tfield_step;
       
-      // convert accumulated values to correct temporal mean
-      for (auto item: tfd_) {
-	item.mflds->scale(1. / out_c->naccum);
-      }
-      
       auto io = out_c->ios[IO_TYPE_TFD];
       open_mrc_io(out_c, io);
-      for (auto& item : tfd_) {
+
+      // convert accumulated values to correct temporal mean
+      for (auto& item: tfd_) {
+	item.mflds->scale(1. / out_c->naccum);
 	auto& mflds = *item.mflds.sub();
 	mflds.write_as_mrc_fld(io, item.name, item.comp_names);
-      }
-      mrc_io_close(io);
-      
-      for (auto item: tfd_) {
 	item.mflds->zero();
       }
       out_c->naccum = 0;
+      mrc_io_close(io);
     }
   }
   
