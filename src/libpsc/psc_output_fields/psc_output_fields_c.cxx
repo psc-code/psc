@@ -187,6 +187,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 			struct psc_mfields *flds, struct psc_mparticles *particles)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  PscMparticlesBase mprts(particles);
   struct psc *psc = out->psc;
 
   static int pr;
@@ -200,32 +201,41 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       psc->timestep % out_c->tfield_every == 0) || 
      psc->timestep == 0);
 
+  MfieldsList pfd_;
+  psc_fields_list& pfd = out_c->pfd;
+  for (int i = 0; i < pfd.size(); i++) {
+    PscFieldsItemBase item(out_c->item[i]);
+    pfd[i] = item->mres().mflds(); // FIXME, just storing this temporarily for writing next
+    auto mflds = PscMfieldsBase{pfd[i]};
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mflds->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+    }
+    pfd_.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
+  }
+
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
-    psc_fields_list& pfd = out_c->pfd;
-    PscMparticlesBase mprts(particles);
     for (int i = 0; i < pfd.size(); i++) {
       PscFieldsItemBase item(out_c->item[i]);
       item(flds, mprts);
-      pfd[i] = item->mres().mflds(); // FIXME, just storing this temporarily for writing next
     }
   }
 
-  if (out_c->dowrite_pfield) {
-    if (psc->timestep >= out_c->pfield_next) {
-       out_c->pfield_next += out_c->pfield_step;
-       mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
-       MfieldsList list;
-       for (auto _mflds: out_c->pfd) {
-	 auto mflds = PscMfieldsBase{_mflds};
-	 std::vector<std::string> comp_names;
-	 for (int m = 0; m < mflds->n_comps(); m++) {
-	   comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
-	 }
-	 list.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
-       }
-       write_fields(out_c, list, IO_TYPE_PFD, out_c->pfd_s);
+  if (out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) {
+    mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
+    out_c->pfield_next += out_c->pfield_step;
+    write_fields(out_c, pfd_, IO_TYPE_PFD, out_c->pfd_s);
+  }
+
+  MfieldsList tfd_;
+  for (auto _mflds: out_c->tfd) {
+    auto mflds = PscMfieldsBase{_mflds};
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mflds->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
     }
+    tfd_.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
   }
 
   if (out_c->dowrite_tfield) {
@@ -237,6 +247,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       out_c->naccum++;
     }
     if (psc->timestep >= out_c->tfield_next) {
+      mpi_printf(psc_output_fields_comm(out), "***** Writing TFD output\n");
       out_c->tfield_next += out_c->tfield_step;
       
       // convert accumulated values to correct temporal mean
@@ -244,16 +255,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 	PscMfieldsBase(out_c->tfd[m])->scale(1./out_c->naccum);
       }
       
-      MfieldsList list;
-      for (auto _mflds: out_c->tfd) {
-	auto mflds = PscMfieldsBase{_mflds};
-	std::vector<std::string> comp_names;
-	for (int m = 0; m < mflds->n_comps(); m++) {
-	  comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
-	}
-	list.emplace_back(mflds, psc_mfields_name(mflds.mflds()), comp_names);
-      }
-      write_fields(out_c, list, IO_TYPE_TFD, out_c->tfd_s);
+      write_fields(out_c, tfd_, IO_TYPE_TFD, out_c->tfd_s);
       
       for (int m = 0; m < out_c->tfd.size(); m++) {
 	PscMfieldsBase(out_c->tfd[m])->zero();
