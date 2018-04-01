@@ -6,6 +6,7 @@
 #include "psc_output_fields_item.h"
 
 #include "fields3d.hxx"
+#include "fields_item.hxx"
 
 // ----------------------------------------------------------------------
 
@@ -15,28 +16,20 @@ enum {
   NR_IO_TYPES,
 };
 
-struct MfieldsItem
+struct OutputFieldsItem
 {
-  MfieldsItem(PscMfieldsBase mflds, const std::string& name,
-	      const std::vector<std::string>& comp_names)
-    : mflds(mflds), name(name), comp_names(comp_names)
+  OutputFieldsItem(PscFieldsItemBase item, const std::string& name,
+		   std::vector<std::string>& comp_names, PscMfieldsBase pfd,
+		   PscMfieldsBase tfd)
+    : item(item), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
   {}
-  
-  PscMfieldsBase mflds;
+
+  PscFieldsItemBase item;
+  PscMfieldsBase pfd;
+  PscMfieldsBase tfd;
   std::string name;
   std::vector<std::string> comp_names;
 };
-
-struct OutputFieldsItem
-{
-  OutputFieldsItem(psc_output_fields_item* item)
-  : item(item)
-  {}
-  
-  psc_output_fields_item* item;
-};
-
-using MfieldsList = std::vector<MfieldsItem>;
 
 struct psc_output_fields_c {
   char *data_dir;
@@ -54,7 +47,6 @@ struct psc_output_fields_c {
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  MfieldsList pfd_, tfd_;
   std::vector<OutputFieldsItem> items;
   struct mrc_io *ios[NR_IO_TYPES];
 };

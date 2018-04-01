@@ -64,19 +64,10 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
   for (auto& item : out_c->items) {
-    psc_output_fields_item_destroy(item.item);
+    psc_output_fields_item_destroy(item.item.item());
+    psc_mfields_destroy(item.tfd.mflds());
   }
 
-  for (auto& item : out_c->tfd_) {
-    psc_mfields_destroy(item.mflds.mflds());
-  }
-
-  // FIXME, we used to have mrc_io persistent across new objects from
-  // this class (using a static var for ios), which was bad, but actually
-  // helped getting a proper temporal XDMF file...
-  // now it's part of the object, but will break the temporal XDMF file on
-  // rebalancing (?)
-  
   for (int i = 0; i < NR_IO_TYPES; i++) {
     mrc_io_destroy(out_c->ios[i]);
     out_c->ios[i] = NULL;
@@ -95,8 +86,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
 
-  auto& pfd_ = out_c->pfd_, tfd_ = out_c->tfd_;
-  
   // setup pfd according to output_fields as given
   // (potentially) on the command line
   // parse comma separated list of fields
@@ -106,19 +95,18 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
     psc_output_fields_item_setup(item);
-    out_c->items.emplace_back(item);
 
-    // pfd_
-    auto mres = PscFieldsItemBase{item}->mres();
+    // pfd
+    auto mflds_pfd = PscFieldsItemBase{item}->mres();
     std::vector<std::string> comp_names;
-    for (int m = 0; m < mres->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mres.mflds(), m));
+    for (int m = 0; m < mflds_pfd->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds_pfd.mflds(), m));
     }
-    pfd_.emplace_back(mres, p, comp_names);
 
-    // tfd_ -- FIXME?! always MfieldsC
-    auto mflds = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(), mres->n_comps(), psc->ibn);
-    tfd_.emplace_back(PscMfieldsBase{mflds.mflds()}, p, comp_names);
+    // tfd -- FIXME?! always MfieldsC
+    auto mflds_tfd = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(), mflds_pfd->n_comps(), psc->ibn);
+
+    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, PscMfieldsBase{mflds_tfd.mflds()});
   }
   free(s_orig);
 
@@ -181,13 +169,10 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       psc->timestep % out_c->tfield_every == 0) ||
      psc->timestep == 0);
 
-  auto& pfd_ = out_c->pfd_, tfd_ = out_c->tfd_;
-  
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
-    for (auto item_ : out_c->items) {
-      PscFieldsItemBase item(item_.item);
-      item(flds, mprts);
+    for (auto item : out_c->items) {
+      item.item(flds, mprts);
     }
   }
 
@@ -197,8 +182,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
     auto io = out_c->ios[IO_TYPE_PFD];
     open_mrc_io(out_c, io);
-    for (auto& item : pfd_) {
-      auto& mflds = *item.mflds.sub();
+    for (auto& item : out_c->items) {
+      auto& mflds = *item.pfd.sub();
       mflds.write_as_mrc_fld(io, item.name, item.comp_names);
     }
     mrc_io_close(io);
@@ -207,8 +192,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if (out_c->dowrite_tfield) {
     if (doaccum_tfield) {
       // tfd += pfd
-      for (int m = 0; m < tfd_.size(); m++) {
-	tfd_[m].mflds->axpy(1., *pfd_[m].mflds.sub());
+      for (auto& item : out_c->items) {
+	item.tfd->axpy(1., *item.pfd.sub());
       }
       out_c->naccum++;
     }
@@ -220,11 +205,11 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       open_mrc_io(out_c, io);
 
       // convert accumulated values to correct temporal mean
-      for (auto& item: tfd_) {
-	item.mflds->scale(1. / out_c->naccum);
-	auto& mflds = *item.mflds.sub();
+      for (auto& item : out_c->items) {
+	item.tfd->scale(1. / out_c->naccum);
+	auto& mflds = *item.tfd.sub();
 	mflds.write_as_mrc_fld(io, item.name, item.comp_names);
-	item.mflds->zero();
+	item.tfd->zero();
       }
       out_c->naccum = 0;
       mrc_io_close(io);
