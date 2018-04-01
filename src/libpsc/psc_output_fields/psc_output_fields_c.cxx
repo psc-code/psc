@@ -72,12 +72,11 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
-  psc_fields_list& pfd = out_c->pfd;
-  for (int i = 0; i < pfd.size(); i++) {
+  for (int i = 0; i < out_c->item.size(); i++) {
     psc_output_fields_item_destroy(out_c->item[i]);
   }
-  auto& tfd_ = out_c->tfd_;
-  for (auto& item : tfd_) {
+
+  for (auto& item : out_c->tfd_) {
     psc_mfields_destroy(item.mflds.mflds());
   }
 
@@ -106,7 +105,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->tfield_next = out_c->tfield_first;
 
   auto& pfd_ = out_c->pfd_, tfd_ = out_c->tfd_;
-  auto& pfd = out_c->pfd;
   
   // setup pfd according to output_fields as given
   // (potentially) on the command line
@@ -117,14 +115,10 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
     psc_output_fields_item_setup(item);
-    out_c->item[pfd.size()] = item;
-
-    // pfd
-    auto mres = PscFieldsItemBase{item}->mres();
-    psc_mfields_set_name(mres.mflds(), p);
-    pfd.push_back(mres.mflds());
+    out_c->item.push_back(item);
 
     // pfd_
+    auto mres = PscFieldsItemBase{item}->mres();
     std::vector<std::string> comp_names;
     for (int m = 0; m < mres->n_comps(); m++) {
       comp_names.push_back(psc_mfields_comp_name(mres.mflds(), m));
@@ -193,7 +187,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
-    for (int i = 0; i < out_c->pfd.size(); i++) {
+    for (int i = 0; i < out_c->item.size(); i++) {
       PscFieldsItemBase item(out_c->item[i]);
       item(flds, mprts);
     }

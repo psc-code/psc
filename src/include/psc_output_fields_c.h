@@ -15,10 +15,6 @@ enum {
   NR_IO_TYPES,
 };
 
-#define MAX_FIELDS_LIST 50
-
-using psc_fields_list = std::vector<psc_mfields*>;
-
 struct MfieldsItem
 {
   MfieldsItem(PscMfieldsBase mflds, const std::string& name,
@@ -49,9 +45,8 @@ struct psc_output_fields_c {
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  psc_fields_list pfd;
   MfieldsList pfd_, tfd_;
-  struct psc_output_fields_item *item[MAX_FIELDS_LIST];
+  std::vector<psc_output_fields_item*> item;
   struct mrc_io *ios[NR_IO_TYPES];
 };
 
