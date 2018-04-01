@@ -13,21 +13,19 @@
 
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
-void
-write_fields(struct psc_output_fields_c *out, MfieldsList& list,
-	     int io_type, const char *pfx)
+static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
 {
-  struct mrc_io *io = out->ios[io_type];
-  if (!io) {
-    io = mrc_io_create(MPI_COMM_WORLD);
-    mrc_io_set_param_string(io, "basename", pfx);
-    mrc_io_set_param_string(io, "outdir",out->data_dir);
-    mrc_io_set_from_options(io);
-    mrc_io_setup(io);
-    mrc_io_view(io);
-    out->ios[io_type] = io;
-  }
+  mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_param_string(io, "basename", pfx);
+  mrc_io_set_param_string(io, "outdir", data_dir);
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_view(io);
+  return io;
+}
 
+static void open_mrc_io(psc_output_fields_c *out, mrc_io *io)
+{
   int gdims[3];
   mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
   int slab_off[3], slab_dims[3];
@@ -51,12 +49,20 @@ write_fields(struct psc_output_fields_c *out, MfieldsList& list,
   mrc_obj_write(obj, io);
   mrc_obj_destroy(obj);
 
-  for (auto& item : list) {
-    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
-      mrc_io_set_param_int3(io, "slab_off", slab_off);
-      mrc_io_set_param_int3(io, "slab_dims", slab_dims);
-    }
+  if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
+    mrc_io_set_param_int3(io, "slab_off", slab_off);
+    mrc_io_set_param_int3(io, "slab_dims", slab_dims);
+  }
+}
 
+void
+write_fields(struct psc_output_fields_c *out, MfieldsList& list,
+	     int io_type, const char *pfx)
+{
+  mrc_io *io = out->ios[io_type];
+
+  open_mrc_io(out, io);
+  for (auto& item : list) {
     auto mflds_base = item.mflds;
     auto& mflds = *item.mflds.sub();
     mflds.write_as_mrc_fld(io, item.name, item.comp_names);
@@ -134,6 +140,13 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->naccum = 0;
 
   psc_output_fields_setup_children(out);
+
+  if (out_c->dowrite_pfield) {
+    out_c->ios[IO_TYPE_PFD] = create_mrc_io(out_c->pfd_s, out_c->data_dir);
+  }
+  if (out_c->dowrite_tfield) {
+    out_c->ios[IO_TYPE_TFD] = create_mrc_io(out_c->tfd_s, out_c->data_dir);
+  }
 }
 
 // ----------------------------------------------------------------------
