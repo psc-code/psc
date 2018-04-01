@@ -76,9 +76,9 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
   for (int i = 0; i < pfd.size(); i++) {
     psc_output_fields_item_destroy(out_c->item[i]);
   }
-  psc_fields_list& tfd = out_c->tfd;
-  for (int i = 0; i < tfd.size(); i++) {
-    psc_mfields_destroy(tfd[i]);
+  auto& tfd_ = out_c->tfd_;
+  for (auto& item : tfd_) {
+    psc_mfields_destroy(item.mflds.mflds());
   }
 
   // FIXME, we used to have mrc_io persistent across new objects from
@@ -106,7 +106,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->tfield_next = out_c->tfield_first;
 
   auto& pfd_ = out_c->pfd_, tfd_ = out_c->tfd_;
-  auto& pfd = out_c->pfd, tfd = out_c->tfd;
+  auto& pfd = out_c->pfd;
   
   // setup pfd according to output_fields as given
   // (potentially) on the command line
@@ -131,15 +131,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     }
     pfd_.emplace_back(mres, p, comp_names);
 
-    // create tfd to look just like pfd
+    // tfd_ -- FIXME?! always MfieldsC
     auto mflds = PscMfields<MfieldsC>::create(psc_comm(psc), psc->grid(), mres->n_comps(), psc->ibn);
-    psc_mfields_set_name(mflds.mflds(), p);
-    for (int m = 0; m < mres->n_comps(); m++) {
-      psc_mfields_set_comp_name(mflds.mflds(), m, psc_mfields_comp_name(mres.mflds(), m));
-    }
-    tfd.push_back(mflds.mflds());
-
-    // tfd_
     tfd_.emplace_back(PscMfieldsBase{mflds.mflds()}, p, comp_names);
   }
   free(s_orig);
@@ -225,14 +218,14 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       out_c->tfield_next += out_c->tfield_step;
       
       // convert accumulated values to correct temporal mean
-      for (int m = 0; m < out_c->tfd.size(); m++) {
-	tfd_[m].mflds->scale(1. / out_c->naccum);
+      for (auto item: tfd_) {
+	item.mflds->scale(1. / out_c->naccum);
       }
       
       write_fields(out_c, tfd_, IO_TYPE_TFD, out_c->tfd_s);
       
-      for (int m = 0; m < out_c->tfd.size(); m++) {
-	tfd_[m].mflds->zero();
+      for (auto item: tfd_) {
+	item.mflds->zero();
       }
       out_c->naccum = 0;
     }

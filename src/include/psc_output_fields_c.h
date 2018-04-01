@@ -49,7 +49,7 @@ struct psc_output_fields_c {
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  psc_fields_list pfd, tfd;
+  psc_fields_list pfd;
   MfieldsList pfd_, tfd_;
   struct psc_output_fields_item *item[MAX_FIELDS_LIST];
   struct mrc_io *ios[NR_IO_TYPES];
