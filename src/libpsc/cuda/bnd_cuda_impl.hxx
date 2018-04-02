@@ -87,10 +87,9 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  void add_ghosts(MfieldsCuda& mflds, int mb, int me)
   {
-    const auto& grid = mflds_base->grid();
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(mb, me);
+    const auto& grid = mflds.grid();
 
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
@@ -111,14 +110,19 @@ struct BndCuda : BndBase
       mrc_ddc_add_ghosts(ddc_, 0, me - mb, this);
       cuda_mfields_bnd_to_device_inside(cbnd, mflds.cmflds, mb, me);
     }
-    
+  }
+
+  void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  {
+    auto& mflds = mflds_base->get_as<MfieldsCuda>(mb, me);
+    add_ghosts(mflds, mb, me);
     mflds_base->put_as(mflds, mb, me);
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  void fill_ghosts(MfieldsCuda& mflds, int mb, int me)
   {
     static int pr1, pr2, pr3, pr4, pr5;
     if (!pr1) {
@@ -129,8 +133,7 @@ struct BndCuda : BndBase
       pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
     }
     
-    const auto& grid = mflds_base->grid();
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(mb, me);
+    const auto& grid = mflds.grid();
     
     int size;
     MPI_Comm_size(mrc_ddc_comm(ddc_), &size);
@@ -171,7 +174,12 @@ struct BndCuda : BndBase
       cuda_mfields_bnd_to_device_outside(cbnd, mflds.cmflds, mb, me);
       prof_stop(pr5);
     }
-    
+  }
+
+  void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  {
+    auto& mflds = mflds_base->get_as<MfieldsCuda>(mb, me);
+    fill_ghosts(mflds, mb, me);
     mflds_base->put_as(mflds, mb, me);
   }
 
