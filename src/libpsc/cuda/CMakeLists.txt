@@ -59,6 +59,7 @@ macro(add_cuda_test name)
   endif()
 endmacro()
 
+add_cuda_test(test_cuda_base)
 add_cuda_test(test_cuda_accel)
 add_cuda_test(test_cuda_bndp)
 add_cuda_test(test_cuda_mfields)
