@@ -129,6 +129,50 @@ TYPED_TEST(BndTest, FillGhosts)
   }
 }
 
+TYPED_TEST(BndTest, AddGhosts)
+{
+  using Bnd = TypeParam;
+  using Mfields = typename Bnd::Mfields;
+
+  auto grid_domain = make_grid();
+  auto& grid = grid_domain.grid;
+  auto ibn = Int3{0, B, B};
+  auto mflds = Mfields{grid, 1, ibn};
+
+  EXPECT_EQ(mflds.n_patches(), grid.n_patches());
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    int j0 = grid.patches[p].off[1];
+    int k0 = grid.patches[p].off[2];
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+	int jj = j + j0, kk = k + k0;
+	mflds[p](0, i,j,k) = 1;
+      });
+  }
+
+  //Mfields_dump(mflds);
+
+  Bnd bnd{grid, grid_domain.domain, ibn};
+  bnd.add_ghosts(mflds, 0, 1);
+
+  //Mfields_dump(mflds);
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    int j0 = grid.patches[p].off[1];
+    int k0 = grid.patches[p].off[2];
+    auto& ldims = grid.ldims;
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+	int n_nei = 0;
+	if (j >= 0 && j < ldims[1] &&
+	    k >= 0 && k < ldims[2]) {
+	  if (j == 0 || j == ldims[1] - 1) n_nei++;
+	  if (k == 0 || k == ldims[2] - 1) n_nei++;
+	  if (n_nei == 2) n_nei++; // corner -> diagonal contribution, too
+	}
+  	EXPECT_EQ(mflds[p](0, i,j,k), 1 + n_nei) << "ijk " << i << " " << j << " " << k;
+      });
+  }
+}
+
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
