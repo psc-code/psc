@@ -63,3 +63,12 @@ void MfieldsCuda::zero()
     zero_comp(m);
   }
 }
+
+MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p)
+  : mflds_(mflds), p_(p)
+{}
+
+MfieldsCuda::real_t MfieldsCuda::Patch::operator()(int m, int i, int j, int k) const
+{
+  return (*mflds_.cmflds)(m, i,j,k, p_);
+}

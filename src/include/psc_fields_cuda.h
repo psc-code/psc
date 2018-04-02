@@ -18,9 +18,23 @@ struct fields_cuda_t
 struct MfieldsCuda : MfieldsBase
 {
   using fields_t = fields_cuda_t;
+  using real_t = fields_cuda_t::real_t;
   
+  class Patch
+  {
+  public:
+    Patch(MfieldsCuda& mflds, int p);
+    
+    real_t operator()(int m, int i, int j, int k) const;
+    
+  private:
+    MfieldsCuda& mflds_;
+    int p_;
+  };
+
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn);
   MfieldsCuda(const MfieldsCuda&) = delete;
+  MfieldsCuda(MfieldsCuda&&) = default;
   ~MfieldsCuda();
 
   void zero_comp(int m) override;
@@ -36,10 +50,12 @@ struct MfieldsCuda : MfieldsBase
   void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
   void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
 
+  Patch operator[](int p) { return { *this, p }; }
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
-
+  
   struct cuda_mfields *cmflds;
 };
 
