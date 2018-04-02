@@ -112,6 +112,24 @@ struct Grid_
 
   bool isInvar(int d) const { return domain.isInvar(d); }
 
+  template<typename FUNC>
+  void Foreach_3d(int l, int r, FUNC F) const
+  {
+    int __ilo[3] = { isInvar(0) ? 0 : -l,
+		     isInvar(1) ? 0 : -l,
+		     isInvar(2) ? 0 : -l };
+    int __ihi[3] = { ldims[0] + (isInvar(0) ? 0 : r),
+		     ldims[1] + (isInvar(1) ? 0 : r),
+		     ldims[2] + (isInvar(2) ? 0 : r) };
+    for (int k = __ilo[2]; k < __ihi[2]; k++) {
+      for (int j = __ilo[1]; j < __ihi[1]; j++) {
+	for (int i = __ilo[0]; i < __ihi[0]; i++) {
+	  F(i, j, k);
+	}
+      }
+    }
+  }
+  
   Int3 ldims;
   Domain domain;
   GridBc bc;
