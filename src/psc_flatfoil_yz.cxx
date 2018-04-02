@@ -477,6 +477,7 @@ struct PscFlatfoil : PscFlatfoilParams
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto pushf = PushFieldsCuda{};
+    auto bndf = BndFieldsNone<MfieldsCuda>{};
 
     {
       auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
@@ -503,10 +504,18 @@ struct PscFlatfoil : PscFlatfoilParams
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
+#ifdef DO_CUDA
+    // FIXME bndf
+#else
     bndf_.fill_ghosts_H(mflds_);
+#endif
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
+#ifdef DO_CUDA
+    // FIXME bndf
+#else
     bndf_.add_ghosts_J(mflds_);
+#endif
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
@@ -524,12 +533,20 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_push_flds);
     
     prof_restart(pr_bndf);
+#ifdef DO_CUDA
+    // FIXME bndf
+#else
     bndf_.fill_ghosts_E(mflds_);
+#endif
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
     
     // === field propagation B^{n+1} -> B^{n+3/2}
+#ifdef DO_CUDA
+    // FIXME bndf
+#else
     bndf_.fill_ghosts_E(mflds_);
+#endif
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
     
@@ -546,7 +563,11 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_push_flds);
     
     prof_start(pr_bndf);
+#ifdef DO_CUDA
+    // FIXME bndf
+#else
     bndf_.fill_ghosts_H(mflds_);
+#endif
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
