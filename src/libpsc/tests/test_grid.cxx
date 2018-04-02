@@ -78,36 +78,6 @@ void setValues(mfields& mflds, Set set)
   }
 }
   
-TEST(Mfields, Constructor)
-{
-  using Mfields_t = Mfields<fields_single_t>;
-
-  Grid_t grid = make_grid();
-  Mfields_t mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
-
-  EXPECT_EQ(mflds.n_patches(), grid.n_patches());
-}
-
-TEST(Mfields, Set)
-{
-  using Mfields_t = Mfields<fields_single_t>;
-
-  Grid_t grid = make_grid();
-  Mfields_t mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
-
-  setValues(mflds, [](int m) -> Mfields_t::real_t {
-      switch(m) {
-      case EX: return 1.;
-      case EY: return 2.;
-      case EZ: return 3.;
-      default: return 0.;
-      }
-    });
-
-  auto F = mflds[0];
-  EXPECT_EQ(F(EY, 0, 0, 0), 2.);
-}
-
 #include "../vpic/PscRng.h"
 
 using Rng = PscRng;
