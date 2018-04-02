@@ -468,7 +468,11 @@ struct PscFlatfoil : PscFlatfoilParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
+#if 0
     pushf_.push_H<dim_yz>(mflds_, .5);
+#else
+    PscPushFieldsBase{psc_->push_fields}->push_H(PscMfieldsBase{psc_->flds}, .5);
+#endif
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
