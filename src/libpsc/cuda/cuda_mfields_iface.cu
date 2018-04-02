@@ -5,7 +5,8 @@
 
 #include "psc_fields_cuda.h"
 
-#if 1
+#undef dprintf
+#if 0
 #define dprintf(...) mprintf(__VA_ARGS__)
 #else
 #define dprintf(...) do {} while (0)
