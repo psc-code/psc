@@ -3,6 +3,8 @@
 
 #include "grid.hxx"
 #include "fields3d.hxx"
+#include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+
 #include "psc_fields_single.h"
 
 struct GridDomain { Grid_t grid; mrc_domain* domain; };
@@ -17,6 +19,9 @@ static GridDomain make_grid()
   mrc_domain_set_type(mrc_domain, "multi");
   mrc_domain_set_param_int3(mrc_domain, "m", domain.gdims);
   mrc_domain_set_param_int3(mrc_domain, "np", domain.np);
+  mrc_domain_set_param_int(mrc_domain, "bcx", BC_PERIODIC);
+  mrc_domain_set_param_int(mrc_domain, "bcy", BC_PERIODIC);
+  mrc_domain_set_param_int(mrc_domain, "bcz", BC_PERIODIC);
   mrc_domain_setup(mrc_domain);
   //mrc_domain_view(mrc_domain);
 
@@ -49,6 +54,7 @@ TEST(Bnd, MakeGrid)
 }
 
 using Mfields_t = Mfields<fields_single_t>;
+using Bnd = Bnd_<Mfields_t>;
 const int B = 1;
 
 static void Mfields_dump(Mfields_t& mflds)
@@ -62,12 +68,12 @@ static void Mfields_dump(Mfields_t& mflds)
   }
 }
 
-TEST(Bnd, MakeField)
+TEST(Bnd, FillGhosts)
 {
   auto grid_domain = make_grid();
-  Grid_t& grid = grid_domain.grid;
-
-  Mfields_t mflds(grid, 1, Int3{ 0, B, B });
+  auto& grid = grid_domain.grid;
+  auto ibn = Int3{0, B, B};
+  Mfields_t mflds(grid, 1, ibn);
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
@@ -80,7 +86,35 @@ TEST(Bnd, MakeField)
       });
   }
 
-  Mfields_dump(mflds);
+  //Mfields_dump(mflds);
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    int j0 = grid.patches[p].off[1];
+    int k0 = grid.patches[p].off[2];
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+	int jj = j + j0, kk = k + k0;
+	if (j >= 0 && j < grid.ldims[1] &&
+	    k >= 0 && k < grid.ldims[2]) {
+	  EXPECT_EQ(mflds[p](0, i,j,k), 10*jj + kk);
+	} else {
+	  EXPECT_EQ(mflds[p](0, i,j,k), 0);
+	}
+      });
+  }
+
+  Bnd bnd{grid, grid_domain.domain, ibn};
+  bnd.fill_ghosts(mflds, 0, 1);
+
+  //Mfields_dump(mflds);
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    int j0 = grid.patches[p].off[1];
+    int k0 = grid.patches[p].off[2];
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+	int jj = j + j0, kk = k + k0;
+	jj = (jj + grid.domain.gdims[1]) % grid.domain.gdims[1];
+	kk = (kk + grid.domain.gdims[2]) % grid.domain.gdims[2];
+	EXPECT_EQ(mflds[p](0, i,j,k), 10*jj + kk);
+      });
+  }
 }
 
 int main(int argc, char **argv) {
