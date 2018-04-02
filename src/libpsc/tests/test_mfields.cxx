@@ -3,6 +3,7 @@
 
 #include "fields3d.hxx"
 #include "psc_fields_single.h"
+#include "psc_fields_c.h"
 
 #include "psc.h" // FIXME, just for EX etc
 
@@ -51,7 +52,7 @@ template <typename T>
 class MfieldsTest : public ::testing::Test
 {};
 
-using MfieldsTestTypes = ::testing::Types<MfieldsSingle>;
+using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
 
 TYPED_TEST_CASE(MfieldsTest, MfieldsTestTypes);
 
@@ -63,6 +64,22 @@ TYPED_TEST(MfieldsTest, Constructor)
   auto mflds = Mfields{grid, NR_FIELDS, Int3{ 1, 1, 1 }};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
+}
+
+TYPED_TEST(MfieldsTest, Access)
+{
+  using Mfields = TypeParam;
+
+  auto grid = make_grid();
+  auto mflds = Mfields{grid, NR_FIELDS, Int3{ 1, 1, 1 }};
+
+  auto val = mflds[0](0, 1, 1, 1);
+  EXPECT_EQ(val, 0.);
+
+  mflds[0](0, 1, 1, 1) = 99.;
+
+  auto val2 = mflds[0](0, 1, 1, 1);
+  EXPECT_EQ(val2, 99.);
 }
 
 TYPED_TEST(MfieldsTest, Set)
