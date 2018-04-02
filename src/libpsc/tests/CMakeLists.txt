@@ -9,3 +9,4 @@ endmacro()
 
 add_psc_test(vec3_unittest)
 add_psc_test(test_grid)
+add_psc_test(test_bnd)
