@@ -6,6 +6,7 @@
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 
 #include "psc_fields_single.h"
+#include "psc_fields_c.h"
 
 struct GridDomain { Grid_t grid; mrc_domain* domain; };
 
@@ -36,6 +37,19 @@ static GridDomain make_grid()
   return { Grid_t(domain, offs), mrc_domain };
 }
 
+template<typename Mfields>
+static void Mfields_dump(Mfields& mflds)
+{
+  int B = -mflds.ib[2]; // FIXME, more of a guess in general...
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    mflds.grid().Foreach_3d(B, B, [&](int i, int j, int k) {
+	for (int m = 0; m < mflds.n_comps(); m++) {
+	  printf("p %d ijk [%d:%d:%d] m %d value %02g\n", p, i,j,k, m, mflds[p](m, i,j,k));
+	}
+      });
+  }
+}
+
 TEST(Bnd, MakeGrid)
 {
   auto grid_domain = make_grid();
@@ -53,27 +67,25 @@ TEST(Bnd, MakeGrid)
   EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 40., 40. }));
 }
 
-using Mfields_t = Mfields<fields_single_t>;
-using Bnd = Bnd_<Mfields_t>;
+template <typename T>
+class BndTest : public ::testing::Test
+{};
+
+using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>>;
+
+TYPED_TEST_CASE(BndTest, BndTestTypes);
+
 const int B = 1;
 
-static void Mfields_dump(Mfields_t& mflds)
+TYPED_TEST(BndTest, FillGhosts)
 {
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    mflds.grid().Foreach_3d(B, B, [&](int i, int j, int k) {
-	for (int m = 0; m < mflds.n_comps(); m++) {
-	  printf("p %d ijk [%d:%d:%d] m %d value %02g\n", p, i,j,k, m, mflds[p](m, i,j,k));
-	}
-      });
-  }
-}
+  using Bnd = TypeParam;
+  using Mfields = typename Bnd::Mfields;
 
-TEST(Bnd, FillGhosts)
-{
   auto grid_domain = make_grid();
   auto& grid = grid_domain.grid;
   auto ibn = Int3{0, B, B};
-  Mfields_t mflds(grid, 1, ibn);
+  auto mflds = Mfields{grid, 1, ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
