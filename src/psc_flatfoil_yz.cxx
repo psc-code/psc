@@ -469,7 +469,7 @@ struct PscFlatfoil : PscFlatfoilParams
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
 #if 0
-    pushf_.push_H<dim_yz>(mflds_, .5);
+    pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
 #else
     PscPushFieldsBase{psc_->push_fields}->push_H(PscMfieldsBase{psc_->flds}, .5);
 #endif
@@ -499,7 +499,7 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
-    pushf_.push_E<dim_yz>(mflds_, 1.);
+    pushf_.push_E(mflds_, 1., dim_yz{});
     prof_stop(pr_push_flds);
     
     prof_restart(pr_bndf);
@@ -513,7 +513,7 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
-    pushf_.push_H<dim_yz>(mflds_, .5);
+    pushf_.push_H(mflds_, .5, dim_yz{});
     prof_stop(pr_push_flds);
     
     prof_start(pr_bndf);

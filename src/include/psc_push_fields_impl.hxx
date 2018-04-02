@@ -137,7 +137,7 @@ public:
   // push_E
 
   template<typename dim>
-  void push_E(Mfields& mflds, double dt_fac)
+  void push_E(Mfields& mflds, double dt_fac, dim tag)
   {
     using Fields = Fields3d<fields_t, dim>;
     
@@ -151,7 +151,7 @@ public:
   // push_H
 
   template<typename dim>
-  void push_H(Mfields& mflds, double dt_fac)
+  void push_H(Mfields& mflds, double dt_fac, dim tag)
   {
     using Fields = Fields3d<fields_t, dim>;
 
@@ -179,11 +179,11 @@ public:
     Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
     if (invar == Bool3{false, false, false}) {
-      push_E<dim_xyz>(mflds, dt_fac);
+      push_E(mflds, dt_fac, dim_xyz{});
     } else if (invar == Bool3{true, false, false}) {
-      push_E<dim_yz>(mflds, dt_fac);
+      push_E(mflds, dt_fac, dim_yz{});
     } else if (invar == Bool3{false, true, false}) {
-      push_E<dim_xz>(mflds, dt_fac);
+      push_E(mflds, dt_fac, dim_xz{});
     } else {
       assert(0);
     }
@@ -208,11 +208,11 @@ public:
     Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
     if (invar == Bool3{false, false, false}) {
-      push_H<dim_xyz>(mflds, dt_fac);
+      push_H(mflds, dt_fac, dim_xyz{});
     } else if (invar == Bool3{true, false, false}) {
-      push_H<dim_yz>(mflds, dt_fac);
+      push_H(mflds, dt_fac, dim_yz{});
     } else if (invar == Bool3{false, true, false}) {
-      push_H<dim_xz>(mflds, dt_fac);
+      push_H(mflds, dt_fac, dim_xz{});
     } else {
       assert(0);
     }
