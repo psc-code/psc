@@ -19,13 +19,25 @@ struct MfieldsCuda : MfieldsBase
 {
   using fields_t = fields_cuda_t;
   using real_t = fields_cuda_t::real_t;
+
+  class Accessor
+  {
+  public:
+    Accessor(MfieldsCuda& mflds, int idx);
+    operator real_t() const;
+    real_t operator=(real_t val);
+
+  private:
+    MfieldsCuda& mflds_;
+    int idx_;
+  };
   
   class Patch
   {
   public:
     Patch(MfieldsCuda& mflds, int p);
     
-    real_t operator()(int m, int i, int j, int k) const;
+    Accessor operator()(int m, int i, int j, int k);
     
   private:
     MfieldsCuda& mflds_;
@@ -50,6 +62,7 @@ struct MfieldsCuda : MfieldsBase
   void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
   void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
 
+  int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return { *this, p }; }
 
   static const Convert convert_to_, convert_from_;

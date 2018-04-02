@@ -64,11 +64,31 @@ void MfieldsCuda::zero()
   }
 }
 
+int MfieldsCuda::index(int m, int i, int j, int k, int p) const
+{
+  return cmflds->index(m, i, j, k, p);
+}
+
 MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p)
   : mflds_(mflds), p_(p)
 {}
 
-MfieldsCuda::real_t MfieldsCuda::Patch::operator()(int m, int i, int j, int k) const
+MfieldsCuda::Accessor MfieldsCuda::Patch::operator()(int m, int i, int j, int k)
 {
-  return (*mflds_.cmflds)(m, i,j,k, p_);
+  return { mflds_, mflds_.index(m, i,j,k, p_) };
+}
+
+MfieldsCuda::Accessor::Accessor(MfieldsCuda& mflds, int idx)
+  : mflds_(mflds), idx_(idx)
+{}
+
+MfieldsCuda::Accessor::operator real_t() const
+{
+  return mflds_.cmflds->get_value(idx_);
+}
+
+MfieldsCuda::real_t MfieldsCuda::Accessor::operator=(real_t val)
+{
+  mflds_.cmflds->set_value(idx_, val);
+  return val;
 }

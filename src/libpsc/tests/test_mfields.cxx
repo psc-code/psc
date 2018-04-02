@@ -17,7 +17,6 @@ static Grid_t make_grid()
   return Grid_t(domain, offs);
 }
 
-#if 0
 // FIXME, consolidate / replace by more generic coord-dependent one
 template<typename Mfields, typename Set>
 void setValues(Mfields& mflds, Set set)
@@ -49,7 +48,6 @@ void setValues(Mfields& mflds, Set set)
     F(HZ, 0,0,1) = set(HZ);
   }
 }
-#endif
   
 template <typename T>
 class MfieldsTest : public ::testing::Test
@@ -76,16 +74,13 @@ TYPED_TEST(MfieldsTest, Access)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, Int3{ 1, 1, 1 }};
 
-  auto val = mflds[0](0, 1, 1, 1);
-  EXPECT_EQ(val, 0.);
+  EXPECT_EQ(mflds[0](0, 1, 1, 1), 0.);
 
-  //  mflds[0](0, 1, 1, 1) = 99.;
+  mflds[0](0, 1, 1, 1) = 99.;
 
-  auto val2 = mflds[0](0, 1, 1, 1);
-  EXPECT_EQ(val2, 99.);
+  EXPECT_EQ(mflds[0](0, 1, 1, 1), 99.);
 }
 
-#if 0
 TYPED_TEST(MfieldsTest, Set)
 {
   using Mfields = TypeParam;
@@ -105,4 +100,3 @@ TYPED_TEST(MfieldsTest, Set)
   auto F = mflds[0];
   EXPECT_EQ(F(EY, 0, 0, 0), 2.);
 }
-#endif

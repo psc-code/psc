@@ -68,16 +68,18 @@ struct cuda_mfields
   DFields operator[](int p);
   const Grid_t& grid() const { return grid_; }
 
-  real_t operator()(int m, int i, int j, int k, int p)
+  int index(int m, int i, int j, int k, int p) const
   {
-    int idx = (((((p)
-		  * n_fields + m)
-		 * im[2] + (k + 2))
-		* im[1] + (j + 2))
-	       * 1 + (0));
-    return d_flds_[idx];
+    return (((((p)
+	       * n_fields + m)
+	      * im[2] + (k + 2))
+	     * im[1] + (j + 2))
+	    * 1 + (0));
   }
 
+  real_t get_value(int idx) const { return d_flds_[idx]; }
+  void set_value(int idx, real_t val) { d_flds_[idx] = val; }
+  
 public:
   Int3 ib;
   Int3 im;
