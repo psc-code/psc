@@ -1,4 +1,6 @@
 
+#define DO_CUDA 1
+
 #include <psc.h>
 
 #ifdef USE_VPIC
@@ -38,6 +40,10 @@
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
+
+#ifdef DO_CUDA
+#include "../libpsc/cuda/push_fields_cuda_impl.hxx"
+#endif
 
 enum {
   MY_ION,
@@ -468,10 +474,17 @@ struct PscFlatfoil : PscFlatfoilParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-#if 0
-    pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
+#ifdef DO_CUDA
+    auto mflds_base = PscMfieldsBase{psc_->flds};
+    auto pushf = PushFieldsCuda{};
+
+    {
+      auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+      pushf.push_H(mflds, .5, dim_yz{});
+      mflds_base->put_as(mflds, HX, HX + 3);
+    }
 #else
-    PscPushFieldsBase{psc_->push_fields}->push_H(PscMfieldsBase{psc_->flds}, .5);
+    pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
 #endif
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
@@ -499,7 +512,15 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
+#ifdef DO_CUDA
+    {
+      auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+      pushf.push_E(mflds, 1., dim_yz{});
+      mflds_base->put_as(mflds, EX, EX + 3);
+    }
+#else
     pushf_.push_E(mflds_, 1., dim_yz{});
+#endif
     prof_stop(pr_push_flds);
     
     prof_restart(pr_bndf);
@@ -513,7 +534,15 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
+#ifdef DO_CUDA
+    {
+      auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+      pushf.push_H(mflds, .5, dim_yz{});
+      mflds_base->put_as(mflds, HX, HX + 3);
+    }
+#else
     pushf_.push_H(mflds_, .5, dim_yz{});
+#endif
     prof_stop(pr_push_flds);
     
     prof_start(pr_bndf);
