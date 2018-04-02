@@ -327,6 +327,59 @@ k_fill_ghosts_local_yz(float *d_flds, int *d_nei_patch_by_dir1,
   }
 }
 
+void
+cuda_fill_ghosts_local_gold(float *h_flds, int *nei_patch_by_dir1, int mb, int me,
+			    int *im, int nr_fields, int nr_patches, int nr_ghosts, int threadIdx)
+{
+  int iy, iz;
+  int diry, dirz;
+
+  int r_p = threadIdx / nr_ghosts;
+  if (r_p >= nr_patches)
+    return;
+  int tid = threadIdx - nr_ghosts * r_p;
+
+  if (tid < 4 * im[1]) {
+    iy = tid % im[1];
+    iz = tid / im[1];
+    if (iy < 2) {
+      diry = -1;
+    } else if (iy < im[1] - 2) {
+	diry = 0;
+    } else {
+      diry = 1;
+    }
+    if (iz < 2) {
+      dirz = -1;
+    } else {
+      dirz = 1;
+      iz += im[2] - 2*2;
+    }
+  } else {
+    int tid2 = tid - 4 * im[1];
+    iy = tid2 % 4;
+    iz = tid2 / 4 + 2;
+    dirz = 0;
+    if (iy < 2) {
+      diry = -1;
+    } else {
+      diry = 1;
+      iy += im[1] - 2*2;
+    }
+  }
+  int s_p = nei_patch_by_dir1[r_p*9 + 3*dirz + diry + 4];
+  if (s_p >= 0) {
+    float *r_f = &h_flds[((r_p * nr_fields + mb) * im[2]) * im[1]];
+    float *s_f = &h_flds[((s_p * nr_fields + mb)
+			  * im[2] - dirz * (im[2] - 2*2)) 
+			 * im[1] - diry * (im[1] - 2*2)];
+    for (int m = 0; m < me - mb; m++) {
+      int i = (m * im[2] + iz) * im[1] + iy;
+      r_f[i] = s_f[i];
+    }
+  }
+}
+
 template<int B, bool pack>
 static void
 fields_device_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
@@ -393,6 +446,7 @@ cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mf
   int n_ghosts = 2*B * (im[1] + im[2] - 2*B);
   int n_threads = n_ghosts * n_patches;
 
+#if 1
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
@@ -408,13 +462,14 @@ cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mf
   }
   cuda_sync_if_enabled();
 
-#if 0
-  thrust::device_ptr<float> d_flds(mflds_cuda->d_flds);
-  thrust::host_vector<float> h_flds(d_flds, d_flds + nr_patches * nr_fields * im[2] *im[2]);
+#else
 
-  for (int tid = 0; tid < nr_threads; tid++) {
-    cuda_fill_ghosts_local_gold(&h_flds[0], nei_patch_by_dir1, mb, me, im, nr_fields, 
-				nr_patches, nr_ghosts, tid);
+  thrust::device_ptr<float> d_flds(cmflds->data());
+  thrust::host_vector<float> h_flds(d_flds, d_flds + n_patches * n_fields * im[2] *im[2]);
+
+  for (int tid = 0; tid < n_threads; tid++) {
+    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im, n_fields, 
+				n_patches, n_ghosts, tid);
   }
   
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -795,59 +850,6 @@ cuda_mfields_bnd_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfi
   }
 }
 
-void
-cuda_fill_ghosts_local_gold(float *h_flds, int *nei_patch_by_dir1, int mb, int me,
-			    int *im, int nr_fields, int nr_patches, int nr_ghosts, int threadIdx)
-{
-  int iy, iz;
-  int diry, dirz;
-
-  int r_p = threadIdx / nr_ghosts;
-  if (r_p >= nr_patches)
-    return;
-  int tid = threadIdx - nr_ghosts * r_p;
-
-  if (tid < 4 * im[1]) {
-    iy = tid % im[1];
-    iz = tid / im[1];
-    if (iy < 2) {
-      diry = -1;
-    } else if (iy < im[1] - 2) {
-	diry = 0;
-    } else {
-      diry = 1;
-    }
-    if (iz < 2) {
-      dirz = -1;
-    } else {
-      dirz = 1;
-      iz += im[2] - 2*2;
-    }
-  } else {
-    int tid2 = tid - 4 * im[1];
-    iy = tid2 % 4;
-    iz = tid2 / 4 + 2;
-    dirz = 0;
-    if (iy < 2) {
-      diry = -1;
-    } else {
-      diry = 1;
-      iy += im[1] - 2*2;
-    }
-  }
-  int s_p = nei_patch_by_dir1[r_p*9 + 3*dirz + diry + 4];
-  if (s_p >= 0) {
-    float *r_f = &h_flds[((r_p * nr_fields + mb) * im[2]) * im[1]];
-    float *s_f = &h_flds[((s_p * nr_fields + mb)
-			  * im[2] - dirz * (im[2] - 2*2)) 
-			 * im[1] - diry * (im[1] - 2*2)];
-    for (int m = 0; m < me - mb; m++) {
-      int i = (m * im[2] + iz) * im[1] + iy;
-      r_f[i] = s_f[i];
-    }
-  }
-}
-
 template<int WHAT>
 static void
 g_fields_device_pack3_yz(int tid, float *d_buf, float *d_flds, int *d_map, int *d_nei_patch_by_dir1,
@@ -1111,7 +1113,7 @@ cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields,
   cudaError_t ierr;
 
   fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out, &map->h_map_out);
-  printf("map_out %d\n", map->nr_map_out);
+  //printf("map_out %d\n", map->nr_map_out);
   
   ierr = cudaMalloc((void **) &map->d_map_out,
 		    map->nr_map_out * sizeof(*map->d_map_out)); cudaCheck(ierr);
@@ -1120,7 +1122,7 @@ cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields,
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   
   fields_create_map_in_yz(cbnd, n_fields, 2, &map->nr_map_in, &map->h_map_in);
-  printf("map_in %d\n", map->nr_map_in);
+  //printf("map_in %d\n", map->nr_map_in);
   
   ierr = cudaMalloc((void **) &map->d_map_in,
 		    map->nr_map_in * sizeof(*map->d_map_in)); cudaCheck(ierr);
