@@ -4,6 +4,7 @@
 #include "grid.hxx"
 #include "fields3d.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+#include "../libpsc/cuda/bnd_cuda_impl.hxx"
 
 #include "psc_fields_single.h"
 #include "psc_fields_c.h"
@@ -23,6 +24,13 @@ static GridDomain make_grid()
   mrc_domain_set_param_int(mrc_domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mrc_domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mrc_domain, "bcz", BC_PERIODIC);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(mrc_domain);
+  mrc_crds_set_type(crds, "uniform");
+  mrc_crds_set_param_int(crds, "sw", 2);
+  mrc_crds_set_param_double3(crds, "l", domain.corner);
+  mrc_crds_set_param_double3(crds, "h", domain.corner + domain.length);
+  
   mrc_domain_setup(mrc_domain);
   //mrc_domain_view(mrc_domain);
 
@@ -71,7 +79,7 @@ template <typename T>
 class BndTest : public ::testing::Test
 {};
 
-using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>>;
+using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>, BndCuda>;
 
 TYPED_TEST_CASE(BndTest, BndTestTypes);
 

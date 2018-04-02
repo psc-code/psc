@@ -3,6 +3,7 @@
 
 #include "cuda_iface_bnd.h"
 #include "mrc_ddc_private.h"
+#include "psc_fields_cuda.h"
 
 static void psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx);
 static void psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx);
@@ -16,6 +17,7 @@ static struct mrc_ddc_funcs ddc_funcs = {
 
 struct BndCuda : BndBase
 {
+  using Mfields = MfieldsCuda;
   using real_t = MfieldsCuda::fields_t::real_t;
 
   struct cuda_mfields_bnd *cbnd;

@@ -72,8 +72,8 @@ struct cuda_mfields
   {
     return (((((p)
 	       * n_fields + m)
-	      * im[2] + (k + 2))
-	     * im[1] + (j + 2))
+	      * im[2] + (k - ib[2]))
+	     * im[1] + (j - ib[1]))
 	    * 1 + (0));
   }
 
