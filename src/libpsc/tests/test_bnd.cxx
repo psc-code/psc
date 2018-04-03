@@ -46,13 +46,14 @@ static GridDomain make_grid()
 }
 
 template<typename Mfields>
-static void Mfields_dump(Mfields& mflds)
+static void Mfields_dump(Mfields& mflds, int B)
 {
-  int B = -mflds.ib[2]; // FIXME, more of a guess in general...
+  using real_t = typename Mfields::real_t;
+  
   for (int p = 0; p < mflds.n_patches(); p++) {
     mflds.grid().Foreach_3d(B, B, [&](int i, int j, int k) {
 	for (int m = 0; m < mflds.n_comps(); m++) {
-	  printf("p %d ijk [%d:%d:%d] m %d value %02g\n", p, i,j,k, m, mflds[p](m, i,j,k));
+	  printf("p %d ijk [%d:%d:%d] m %d value %02g\n", p, i,j,k, m, (real_t) mflds[p](m, i,j,k));
 	}
       });
   }
@@ -106,7 +107,7 @@ TYPED_TEST(BndTest, FillGhosts)
       });
   }
 
-  //Mfields_dump(mflds);
+  //Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
@@ -124,7 +125,7 @@ TYPED_TEST(BndTest, FillGhosts)
   Bnd bnd{grid, grid_domain.domain, ibn};
   bnd.fill_ghosts(mflds, 0, 1);
 
-  //Mfields_dump(mflds);
+  //Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
@@ -158,12 +159,12 @@ TYPED_TEST(BndTest, AddGhosts)
       });
   }
 
-  //Mfields_dump(mflds);
+  //Mfields_dump(mflds, B);
 
   Bnd bnd{grid, grid_domain.domain, ibn};
   bnd.add_ghosts(mflds, 0, 1);
 
-  //Mfields_dump(mflds);
+  //Mfields_dump(mflds, 0*B);
   for (int p = 0; p < mflds.n_patches(); p++) {
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];

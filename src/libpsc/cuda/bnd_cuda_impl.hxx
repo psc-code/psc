@@ -110,6 +110,17 @@ struct BndCuda : BndBase
     } else {
       cuda_mfields_bnd_from_device_inside(cbnd, mflds.cmflds, mb, me);
       mrc_ddc_add_ghosts(ddc_, 0, me - mb, this);
+#if 0
+      struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, 0);
+      mprintf("cf %p %p %p\n", cf, cf->arr, cf->arr_off);
+      for (int iz = 0; iz < 4; iz++) {
+	for (int iy = 0; iy < 4; iy++) {
+	  for (int ix = 0; ix < 1; ix++) {
+	    mprintf("now p%d %d:%d:%d %g\n", 0, ix, iy, iz, F3_CF(cf, 0, ix,iy,iz));
+	  }
+	}
+      }
+#endif
       cuda_mfields_bnd_to_device_inside(cbnd, mflds.cmflds, mb, me);
     }
   }

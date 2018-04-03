@@ -209,9 +209,9 @@ k_fields_device_pack_yz(float *d_buf, DMFields d_flds, int mb, int gmy, int gmz,
   }
   
   if (WHAT == PACK) {
-    d_buf[tid] = d_flds[p](mb + m, jx,jy,jz);
+    d_buf[tid] = d_flds[p](mb + m, jx,jy-BND,jz-BND);
   } else if (WHAT == UNPACK) {
-    d_flds[p](mb + m, jx,jy,jz) = d_buf[tid]; 
+    d_flds[p](mb + m, jx,jy-BND,jz-BND) = d_buf[tid]; 
   }
 }
 
@@ -675,7 +675,7 @@ __fields_cuda_to_device_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd 
   prof_start(pr2);
   cudaError_t ierr;
   ierr = cudaMemcpy(cbnd->d_bnd_buf, cbnd->h_bnd_buf,
-		    MAX_BND_COMPONENTS * buf_size * cmflds->n_patches *
+		    (me - mb) * buf_size * cmflds->n_patches *
 		    sizeof(*cbnd->d_bnd_buf),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   prof_stop(pr2);
