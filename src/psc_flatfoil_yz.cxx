@@ -509,10 +509,10 @@ struct PscFlatfoil : PscFlatfoilParams
     {
       auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
       prof_start(pr_bndf);
-      // FIXME bndf
+      bndf.fill_ghosts_H(mflds);
       bnd.fill_ghosts(mflds, HX, HX + 3);
 
-      // FIXME bndf
+      bndf.add_ghosts_J(mflds);
       bnd.add_ghosts(mflds, JXI, JXI + 3);
       bnd.fill_ghosts(mflds, JXI, JXI + 3);
       prof_stop(pr_bndf);
@@ -522,7 +522,7 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_push_flds);
 
       prof_restart(pr_bndf);
-      // FIXME bndf
+      bndf.fill_ghosts_E(mflds);
       bnd.fill_ghosts(mflds, EX, EX + 3);
       prof_stop(pr_bndf);
       // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
@@ -533,12 +533,11 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_push_flds);
 
       prof_start(pr_bndf);
-      // FIXME bndf
+      bndf.fill_ghosts_H(mflds);
       bnd.fill_ghosts(mflds, HX, HX + 3);
       prof_stop(pr_bndf);
       mflds_base->put_as(mflds, JXI, HX + 3);
     }
-    
 #else
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
