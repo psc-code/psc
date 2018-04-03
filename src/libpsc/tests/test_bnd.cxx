@@ -13,8 +13,8 @@ struct GridDomain { Grid_t grid; mrc_domain* domain; };
 
 static GridDomain make_grid()
 {
-  auto domain = Grid_t::Domain{{1, 4, 4},
-			       {10.,  40., 40.}, {},
+  auto domain = Grid_t::Domain{{1, 8, 4},
+			       {10., 80., 40.}, {},
 			       {1, 2, 1}};
 
   mrc_domain* mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
@@ -63,16 +63,16 @@ TEST(Bnd, MakeGrid)
   auto grid_domain = make_grid();
   Grid_t& grid = grid_domain.grid;
     
-  EXPECT_EQ(grid.domain.gdims, Int3({1, 4, 4}));
-  EXPECT_EQ(grid.ldims, Int3({1, 2, 4 }));
+  EXPECT_EQ(grid.domain.gdims, Int3({1, 8, 4}));
+  EXPECT_EQ(grid.ldims, Int3({1, 4, 4 }));
   EXPECT_EQ(grid.domain.dx, Grid_t::Real3({ 10., 10., 10. }));
   EXPECT_EQ(grid.n_patches(), 2);
   EXPECT_EQ(grid.patches[0].off, Int3({ 0, 0, 0 }));
   EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({  0.,  0.,  0. }));
-  EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({ 10., 20., 40. }));
-  EXPECT_EQ(grid.patches[1].off, Int3({ 0, 2, 0 }));
-  EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({  0., 20.,  0. }));
-  EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 40., 40. }));
+  EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({ 10., 40., 40. }));
+  EXPECT_EQ(grid.patches[1].off, Int3({ 0, 4, 0 }));
+  EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({  0., 40.,  0. }));
+  EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 80., 40. }));
 }
 
 template <typename T>
@@ -83,7 +83,7 @@ using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>, BndCu
 
 TYPED_TEST_CASE(BndTest, BndTestTypes);
 
-const int B = 1;
+const int B = 2;
 
 TYPED_TEST(BndTest, FillGhosts)
 {
@@ -172,8 +172,8 @@ TYPED_TEST(BndTest, AddGhosts)
 	int n_nei = 0;
 	if (j >= 0 && j < ldims[1] &&
 	    k >= 0 && k < ldims[2]) {
-	  if (j == 0 || j == ldims[1] - 1) n_nei++;
-	  if (k == 0 || k == ldims[2] - 1) n_nei++;
+	  if (j < B || j >= ldims[1] - B) n_nei++;
+	  if (k < B || k >= ldims[2] - B) n_nei++;
 	  if (n_nei == 2) n_nei++; // corner -> diagonal contribution, too
 	}
   	EXPECT_EQ(mflds[p](0, i,j,k), 1 + n_nei) << "ijk " << i << " " << j << " " << k;
