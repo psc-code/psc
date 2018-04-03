@@ -518,17 +518,17 @@ struct PscFlatfoil : PscFlatfoilParams
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
 #endif
     
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
 #ifdef DO_CUDA
     {
       auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, JXI + 3);
       // FIXME bndf
-      //      bnd.add_ghosts(mflds, JXI, JXI + 3);
+      bnd.add_ghosts(mflds, JXI, JXI + 3);
       bnd.fill_ghosts(mflds, JXI, JXI + 3);
       mflds_base->put_as(mflds, JXI, JXI + 3);
     }
 #else
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
 #endif
     prof_stop(pr_bndf);
