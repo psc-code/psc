@@ -518,35 +518,13 @@ struct PscFlatfoil : PscFlatfoilParams
       // === field propagation B^{n+1/2} -> B^{n+1}
       prof_start(pr_push_flds);
       pushf.push_H(mflds, .5, dim_yz{});
-      mflds_base->put_as(mflds, JXI, HX + 3);
       prof_stop(pr_push_flds);
       // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
       prof_start(pr_bndp);
       bndp(mprts);
       prof_stop(pr_bndp);
-      mprts_base->put_as(mprts);
-    }
-#else
-    prof_start(pr_push_prts);
-    pushp_.push_mprts(mprts_, mflds_);
-    prof_stop(pr_push_prts);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
-    // === field propagation B^{n+1/2} -> B^{n+1}
-    prof_start(pr_push_flds);
-    pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
-    prof_stop(pr_push_flds);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-    prof_start(pr_bndp);
-    bndp_(mprts_);
-    prof_stop(pr_bndp);
-#endif
-
-#ifdef DO_CUDA
-    {
-      auto& mprts = mprts_base->get_as<MparticlesCuda>();
       prof_start(pr_inject);
       inject(mprts);
       prof_stop(pr_inject);
@@ -558,22 +536,8 @@ struct PscFlatfoil : PscFlatfoilParams
 	heating(mprts);
 	prof_stop(pr_heating);
       }
-      mprts_base->put_as(mprts);
-    }
-#else
-    prof_start(pr_inject);
-    inject_(mprts_);
-    prof_stop(pr_inject);
 
-    prof_start(pr_heating);
-    heating_(mprts_);
-    prof_stop(pr_heating);
-#endif
-
-    // === field propagation E^{n+1/2} -> E^{n+3/2}
-#ifdef DO_CUDA
-    {
-      auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+      // === field propagation E^{n+1/2} -> E^{n+3/2}
       prof_start(pr_bndf);
       bndf.fill_ghosts_H(mflds);
       bnd.fill_ghosts(mflds, HX, HX + 3);
@@ -603,8 +567,33 @@ struct PscFlatfoil : PscFlatfoilParams
       bnd.fill_ghosts(mflds, HX, HX + 3);
       prof_stop(pr_bndf);
       mflds_base->put_as(mflds, JXI, HX + 3);
+      mprts_base->put_as(mprts);
     }
 #else
+    prof_start(pr_push_prts);
+    pushp_.push_mprts(mprts_, mflds_);
+    prof_stop(pr_push_prts);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+
+    // === field propagation B^{n+1/2} -> B^{n+1}
+    prof_start(pr_push_flds);
+    pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
+    prof_stop(pr_push_flds);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+    prof_start(pr_bndp);
+    bndp_(mprts_);
+    prof_stop(pr_bndp);
+
+    prof_start(pr_inject);
+    inject_(mprts_);
+    prof_stop(pr_inject);
+
+    prof_start(pr_heating);
+    heating_(mprts_);
+    prof_stop(pr_heating);
+
+    // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
