@@ -112,6 +112,10 @@ struct DFields
 private:
   __device__ int index(int m, int i, int j, int k) const
   {
+#if 0
+    if (j + 2 < 0 || j + 2 >= im_[1]) printf("!!! j %d\n", j);
+    if (k + 2 < 0 || k + 2 >= im_[2]) printf("!!! k %d\n", k);
+#endif
     return ((((m)
 	      *im_[2] + (k + 2))
 	     *im_[1] + (j + 2))
