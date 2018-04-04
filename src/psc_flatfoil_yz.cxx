@@ -45,6 +45,7 @@
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
+#include "../libpsc/cuda/heating_cuda_impl.hxx"
 #endif
 
 enum {
@@ -469,7 +470,6 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    prof_start(pr_push_prts);
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
@@ -479,31 +479,59 @@ struct PscFlatfoil : PscFlatfoilParams
     auto bndf = BndFieldsNone<MfieldsCuda>{};
     auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
 
+    auto& kinds = ppsc->grid().kinds;
+    double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+    double heating_zl = -1.;
+    double heating_zh =  1.;
+    double heating_xc = 0.;
+    double heating_yc = 0.;
+    double heating_rH = 3.;
+    auto heating_foil_params = HeatingSpotFoilParams{};
+    heating_foil_params.zl = heating_zl * d_i;
+    heating_foil_params.zh = heating_zh * d_i;
+    heating_foil_params.xc = heating_xc * d_i;
+    heating_foil_params.yc = heating_yc * d_i;
+    heating_foil_params.rH = heating_rH * d_i;
+    heating_foil_params.T  = .04;
+    heating_foil_params.Mi = heating_rH * kinds[MY_ION].m;
+    auto heating_spot = HeatingSpotFoil{heating_foil_params};
+    int heating_interval = 20;
+    int heating_begin = 0;
+    int heating_end = 10000000;
+    int heating_kind = MY_ELECTRON;
+    auto heating = HeatingCuda{heating_interval, heating_begin, heating_end,
+			       heating_kind, heating_spot};
+
     {
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
+      prof_start(pr_push_prts);
       pushp.push_mprts_yz(mprts, mflds);
+      prof_stop(pr_push_prts);
       mprts_base->put_as(mprts);
       mflds_base->put_as(mflds, JXI, JXI + 3);
     }
 #else
+    prof_start(pr_push_prts);
     pushp_.push_mprts(mprts_, mflds_);
-#endif
     prof_stop(pr_push_prts);
+#endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
-    prof_start(pr_push_flds);
 #ifdef DO_CUDA
     {
       auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+      prof_start(pr_push_flds);
       pushf.push_H(mflds, .5, dim_yz{});
       mflds_base->put_as(mflds, HX, HX + 3);
+      prof_stop(pr_push_flds);
     }
 #else
+    prof_start(pr_push_flds);
     pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
-#endif
     prof_stop(pr_push_flds);
+#endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
@@ -514,9 +542,21 @@ struct PscFlatfoil : PscFlatfoilParams
     inject_(mprts_);
     prof_stop(pr_inject);
 
+#ifdef DO_CUDA
+    // only heating between heating_tb and heating_te
+    if (psc_->timestep >= heating_begin && psc_->timestep < heating_end &&
+	psc_->timestep % heating_interval == 0) {
+      auto& mprts = mprts_base->get_as<MparticlesCuda>();
+      prof_start(pr_heating);
+      heating(mprts);
+      prof_stop(pr_heating);
+      mprts_base->put_as(mprts);
+    }
+#else
     prof_start(pr_heating);
     heating_(mprts_);
     prof_stop(pr_heating);
+#endif
     
     // === field propagation E^{n+1/2} -> E^{n+3/2}
 #ifdef DO_CUDA
