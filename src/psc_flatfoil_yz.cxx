@@ -547,30 +547,26 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_start(pr_inject);
       inject(mprts);
       prof_stop(pr_inject);
+
+      // only heating between heating_tb and heating_te
+      if (psc_->timestep >= heating_begin && psc_->timestep < heating_end &&
+	  psc_->timestep % heating_interval == 0) {
+	prof_start(pr_heating);
+	heating(mprts);
+	prof_stop(pr_heating);
+      }
       mprts_base->put_as(mprts);
     }
 #else
     prof_start(pr_inject);
     inject_(mprts_);
     prof_stop(pr_inject);
-#endif
 
-#ifdef DO_CUDA
-    // only heating between heating_tb and heating_te
-    if (psc_->timestep >= heating_begin && psc_->timestep < heating_end &&
-	psc_->timestep % heating_interval == 0) {
-      auto& mprts = mprts_base->get_as<MparticlesCuda>();
-      prof_start(pr_heating);
-      heating(mprts);
-      prof_stop(pr_heating);
-      mprts_base->put_as(mprts);
-    }
-#else
     prof_start(pr_heating);
     heating_(mprts_);
     prof_stop(pr_heating);
 #endif
-    
+
     // === field propagation E^{n+1/2} -> E^{n+3/2}
 #ifdef DO_CUDA
     {
