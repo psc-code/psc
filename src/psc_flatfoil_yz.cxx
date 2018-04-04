@@ -42,6 +42,7 @@
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
 
 #ifdef DO_CUDA
+#include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
 #endif
@@ -469,18 +470,31 @@ struct PscFlatfoil : PscFlatfoilParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
+#ifdef DO_CUDA
+    auto mflds_base = PscMfieldsBase{psc_->flds};
+    auto mprts_base = PscMparticlesBase{psc_->particles};
+    using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
+    auto pushp = PushParticlesCuda<Config1vbec3d>{};
+    auto pushf = PushFieldsCuda{};
+    auto bndf = BndFieldsNone<MfieldsCuda>{};
+    auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
+
+    {
+      auto& mprts = mprts_base->get_as<MparticlesCuda>();
+      auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
+      pushp.push_mprts_yz(mprts, mflds);
+      mprts_base->put_as(mprts);
+      mflds_base->put_as(mflds, JXI, JXI + 3);
+    }
+#else
     pushp_.push_mprts(mprts_, mflds_);
+#endif
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
 #ifdef DO_CUDA
-    auto mflds_base = PscMfieldsBase{psc_->flds};
-    auto pushf = PushFieldsCuda{};
-    auto bndf = BndFieldsNone<MfieldsCuda>{};
-    auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
-
     {
       auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
       pushf.push_H(mflds, .5, dim_yz{});
@@ -664,7 +678,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   auto grid_domain = Grid_t::Domain{{1, 160, 640}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 20, 5}}; // division into patches
+				    {1, 1, 1}, // division into patches
+                                    {1, 4, 4}}; // blocksize FIXME needs to match cuda pusher
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
