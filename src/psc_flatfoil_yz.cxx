@@ -50,6 +50,7 @@
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
+#include "../libpsc/cuda/sort_cuda_impl.hxx"
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
 #endif
 
@@ -454,19 +455,13 @@ struct PscFlatfoil : PscFlatfoilParams
 
     balance_(psc_, mprts_);
     
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
-      mpi_printf(comm, "***** Sorting...\n");
-      prof_start(pr_sort);
-      sort_(mprts_);
-      prof_stop(pr_sort);
-    }
-    
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
-    using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
+    auto sort = SortCuda{};
     auto collision = CollisionCuda{psc_comm(psc_), collision_interval, collision_nu};
 
+    using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
     auto pushp = PushParticlesCuda<Config1vbec3d>{};
     auto pushf = PushFieldsCuda{};
     auto bndf = BndFieldsNone<MfieldsCuda>{};
@@ -505,6 +500,13 @@ struct PscFlatfoil : PscFlatfoilParams
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
 
+      if (sort_interval > 0 && timestep % sort_interval == 0) {
+	mpi_printf(comm, "***** Sorting...\n");
+	prof_start(pr_sort);
+	sort(mprts);
+	prof_stop(pr_sort);
+      }
+    
       if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
 	mpi_printf(comm, "***** Performing collisions...\n");
 	prof_start(pr_collision);
@@ -599,6 +601,13 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
 #else
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
+      sort_(mprts_);
+      prof_stop(pr_sort);
+    }
+    
     if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
