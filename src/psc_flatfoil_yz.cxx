@@ -49,6 +49,7 @@
 #include "../libpsc/cuda/inject_cuda_impl.hxx"
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
+#include "../libpsc/cuda/marder_cuda_impl.hxx"
 #endif
 
 enum {
@@ -582,6 +583,17 @@ struct PscFlatfoil : PscFlatfoilParams
       mflds_base->put_as(mflds, JXI, HX + 3);
       mprts_base->put_as(mprts);
     }
+
+    // E at t^{n+3/2}, particles at t^{n+3/2}
+    // B at t^{n+3/2} (Note: that is not its natural time,
+    // but div B should be == 0 at any time...)
+    if (marder_interval > 0 && ppsc->timestep % marder_interval == 0) {
+      mpi_printf(comm, "***** Performing Marder correction...\n");
+      prof_start(pr_marder);
+      marder_(mflds_, mprts_);
+      prof_stop(pr_marder);
+    }
+
 #else
     if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
       prof_start(pr_checks);
@@ -649,7 +661,6 @@ struct PscFlatfoil : PscFlatfoilParams
       checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
-#endif
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
@@ -661,6 +672,7 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_marder);
     }
 
+#endif
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
