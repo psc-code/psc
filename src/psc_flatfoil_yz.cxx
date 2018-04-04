@@ -477,6 +477,7 @@ struct PscFlatfoil : PscFlatfoilParams
     auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
     auto bndp = BndParticlesCuda{ppsc->mrc_domain_, ppsc->grid()};
     auto checks = ChecksCuda{};
+    auto marder = MarderCuda(psc_comm(psc_), marder_diffusion, marder_loop, marder_dump);
 
     auto inject = InjectCuda<InjectFoil>{psc_comm(psc_), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target};
     
@@ -579,19 +580,19 @@ struct PscFlatfoil : PscFlatfoilParams
 	checks.continuity_after_particle_push(mprts, mflds);
 	prof_stop(pr_checks);
       }
+
+      // E at t^{n+3/2}, particles at t^{n+3/2}
+      // B at t^{n+3/2} (Note: that is not its natural time,
+      // but div B should be == 0 at any time...)
+      if (marder_interval > 0 && ppsc->timestep % marder_interval == 0) {
+	mpi_printf(comm, "***** Performing Marder correction...\n");
+	prof_start(pr_marder);
+	marder(mflds, mprts);
+	prof_stop(pr_marder);
+      }
       
       mflds_base->put_as(mflds, JXI, HX + 3);
       mprts_base->put_as(mprts);
-    }
-
-    // E at t^{n+3/2}, particles at t^{n+3/2}
-    // B at t^{n+3/2} (Note: that is not its natural time,
-    // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && ppsc->timestep % marder_interval == 0) {
-      mpi_printf(comm, "***** Performing Marder correction...\n");
-      prof_start(pr_marder);
-      marder_(mflds_, mprts_);
-      prof_stop(pr_marder);
     }
 
 #else
