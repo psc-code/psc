@@ -45,6 +45,7 @@
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
+#include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/inject_cuda_impl.hxx"
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
 #endif
@@ -479,6 +480,7 @@ struct PscFlatfoil : PscFlatfoilParams
     auto pushf = PushFieldsCuda{};
     auto bndf = BndFieldsNone<MfieldsCuda>{};
     auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
+    auto bndp = BndParticlesCuda{ppsc->mrc_domain_, ppsc->grid()};
 
     auto inject = InjectCuda<InjectFoil>{psc_comm(psc_), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target};
     

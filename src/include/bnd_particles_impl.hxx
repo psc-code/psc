@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <mrc_profile.h>
 
 #include <cstring>

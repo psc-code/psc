@@ -20,6 +20,7 @@ add_library(psccuda
   psc_marder_cuda.cxx
 
   psc_bnd_particles_cuda.cu
+  bnd_particles_cuda_impl.cu
   cuda_bndp.cu
   cuda_bndp_scan.cu
   cuda_bndp_spine.cu

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_bnd_particles_private.h"
+#include "particles.hxx"
 
 #include <mrc_profile.h>
 
