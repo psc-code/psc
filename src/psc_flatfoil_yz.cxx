@@ -541,9 +541,19 @@ struct PscFlatfoil : PscFlatfoilParams
     bndp_(mprts_);
     prof_stop(pr_bndp);
     
+#ifdef DO_CUDA
+    {
+      auto& mprts = mprts_base->get_as<MparticlesCuda>();
+      prof_start(pr_inject);
+      inject(mprts);
+      prof_stop(pr_inject);
+      mprts_base->put_as(mprts);
+    }
+#else
     prof_start(pr_inject);
     inject_(mprts_);
     prof_stop(pr_inject);
+#endif
 
 #ifdef DO_CUDA
     // only heating between heating_tb and heating_te

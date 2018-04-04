@@ -3,6 +3,7 @@
 
 #include "inject.hxx"
 #include "cuda_iface.h"
+#include "fields_item_moments_1st_cuda.hxx"
 
 void psc_mparticles_cuda_inject(MparticlesCuda& mprts, struct cuda_mparticles_prt *buf,
 				uint *buf_n_by_patch); // FIXME
@@ -19,8 +20,8 @@ struct InjectCuda : InjectBase
 
   InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
 	     Target_t target)
-    : InjectBase(do_inject, every_step, tau, kind_n)
-
+    : InjectBase(do_inject, every_step, tau, kind_n),
+      target_{target}
   {
     item_n_bnd = psc_bnd_create(comm);
     psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
@@ -123,9 +124,9 @@ struct InjectCuda : InjectBase
   }	      
 
   // ----------------------------------------------------------------------
-  // run
+  // operator()
 
-  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
+  void operator()(MparticlesCuda& mprts)
   {
     struct psc *psc = ppsc;
     const auto& grid = psc->grid();
@@ -134,11 +135,11 @@ struct InjectCuda : InjectBase
     float fac = 1. / grid.cori * 
       (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
 
-    FieldsItemBase* item = PscFieldsItemBase{item_n}.sub();
-    item->run(mflds_base, mprts_base);
+    auto item_n = Moment_n_1st_cuda{psc_comm(ppsc)};
+    item_n.run(mprts);
 
-    auto& mprts = mprts_base->get_as<MparticlesCuda>();
-    auto& mf_n = item->mres()->get_as<MfieldsSingle>(kind_n, kind_n+1);
+    auto mres = PscMfieldsBase{item_n.mres_base()};
+    auto& mf_n = mres->get_as<MfieldsSingle>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;
@@ -216,12 +217,21 @@ struct InjectCuda : InjectBase
       }
     }
 
-    item->mres()->put_as(mf_n, 0, 0);
+    mres->put_as(mf_n, 0, 0);
 
     psc_mparticles_cuda_inject(mprts, buf, buf_n_by_patch);
-    mprts_base->put_as(mprts);
   }
 
+  // ----------------------------------------------------------------------
+  // run
+  
+  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
+  {
+    auto& mprts = mprts_base->get_as<MparticlesCuda>();
+    (*this)(mprts);
+    mprts_base->put_as(mprts);
+  }
+  
 private:
   Target_t target_;
   struct psc_output_fields_item *item_n;
