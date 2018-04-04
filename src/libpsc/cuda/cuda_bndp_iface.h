@@ -11,9 +11,9 @@
 
 extern int pr_time_step_no_comm;
 
-struct psc_bnd_particles_cuda : psc_bnd_particles_sub<MparticlesCuda>
+struct psc_bnd_particles_cuda : BndParticles_<MparticlesCuda>
 {
-  using Base = psc_bnd_particles_sub<MparticlesCuda>;
+  using Base = BndParticles_<MparticlesCuda>;
 
   // ----------------------------------------------------------------------
   // ctor

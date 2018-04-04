@@ -203,7 +203,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Sort_t = SortCountsort2<Mparticles_t>;
   using Collision_t = Collision_<Mparticles_t, Mfields_t>;
   using PushFields_t = PushFields<Mfields_t>;
-  using BndParticles_t = psc_bnd_particles_sub<Mparticles_t>;
+  using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
   using Inject_t = Inject_<Mparticles_t, MfieldsC, InjectFoil>; // FIXME, shouldn't always use MfieldsC

@@ -11,10 +11,10 @@ extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 // ======================================================================
-// psc_bnd_particles
+// BndParticles_
 
 template<typename MP>
-struct psc_bnd_particles_sub : BndParticlesBase
+struct BndParticles_ : BndParticlesBase
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
@@ -25,7 +25,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   // ----------------------------------------------------------------------
   // ctor
 
-  psc_bnd_particles_sub(struct mrc_domain *domain, const Grid_t& grid)
+  BndParticles_(struct mrc_domain *domain, const Grid_t& grid)
     : ddcp{},
       balance_generation_cnt_{-1}
   {
@@ -35,7 +35,7 @@ struct psc_bnd_particles_sub : BndParticlesBase
   // ----------------------------------------------------------------------
   // dtor
 
-  ~psc_bnd_particles_sub()
+  ~BndParticles_()
   {
     delete ddcp;
   }
@@ -119,10 +119,10 @@ protected:
 };
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_sub::process_patch
+// BndParticles_::process_patch
 
 template<typename MP>
-void psc_bnd_particles_sub<MP>::process_patch(Mparticles& mprts, int p)
+void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
 {
   struct psc *psc = ppsc;
 

@@ -171,9 +171,9 @@ struct bnd_particles_policy_ordered
 };
 
 template<typename MP>
-struct psc_bnd_particles_ordered : psc_bnd_particles_sub<MP>, bnd_particles_policy_ordered<MP>
+struct psc_bnd_particles_ordered : BndParticles_<MP>, bnd_particles_policy_ordered<MP>
 {
-  using Base = psc_bnd_particles_sub<MP>;
+  using Base = BndParticles_<MP>;
   using Mparticles = MP;
 
   using Base::Base;
