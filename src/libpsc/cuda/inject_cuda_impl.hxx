@@ -21,19 +21,9 @@ struct InjectCuda : InjectBase
   InjectCuda(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
 	     Target_t target)
     : InjectBase(do_inject, every_step, tau, kind_n),
-      target_{target}
-  {
-    item_n_bnd = psc_bnd_create(comm);
-    psc_bnd_set_name(item_n_bnd, "inject_item_n_bnd");
-    psc_bnd_set_type(item_n_bnd, "cuda");
-    psc_bnd_set_psc(item_n_bnd, ppsc);
-
-    item_n = psc_output_fields_item_create(comm);
-    psc_output_fields_item_set_type(item_n, "n_1st_cuda");
-
-    psc_output_fields_item_setup(item_n);
-    psc_bnd_setup(item_n_bnd);
-  }
+      target_{target},
+      moment_n_{comm}
+  {}
 
   // ----------------------------------------------------------------------
   // dtor
@@ -135,11 +125,10 @@ struct InjectCuda : InjectBase
     float fac = 1. / grid.cori * 
       (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
 
-    auto item_n = Moment_n_1st_cuda{psc_comm(ppsc)};
-    item_n.run(mprts);
+    moment_n_.run(mprts);
 
-    auto mres = PscMfieldsBase{item_n.mres_base()};
-    auto& mf_n = mres->get_as<MfieldsSingle>(kind_n, kind_n+1);
+    MfieldsCuda& mres = moment_n_.result();
+    auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
 
     static struct cuda_mparticles_prt *buf;
     static uint buf_n_alloced;
@@ -217,7 +206,7 @@ struct InjectCuda : InjectBase
       }
     }
 
-    mres->put_as(mf_n, 0, 0);
+    mres.put_as(mf_n, 0, 0);
 
     psc_mparticles_cuda_inject(mprts, buf, buf_n_by_patch);
   }
@@ -234,8 +223,6 @@ struct InjectCuda : InjectBase
   
 private:
   Target_t target_;
-  struct psc_output_fields_item *item_n;
-  struct psc_bnd *item_n_bnd;
-  int balance_generation_cnt = {};
+  Moment_n_1st_cuda moment_n_;
 };
 

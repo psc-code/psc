@@ -1,5 +1,4 @@
 
-#include <psc_balance.h>
 
 #include <inject.hxx>
 #include <fields.hxx>
@@ -124,6 +123,5 @@ struct Inject_ : InjectBase
 private:
   Target_t target_;
   ItemMoment_t moment_n_;
-  int balance_generation_cnt = {};
 };
 
