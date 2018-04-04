@@ -29,7 +29,6 @@ struct InjectCuda : InjectBase
 
     item_n = psc_output_fields_item_create(comm);
     psc_output_fields_item_set_type(item_n, "n_1st_cuda");
-    psc_output_fields_item_set_psc_bnd(item_n, item_n_bnd);
 
     psc_output_fields_item_setup(item_n);
     psc_bnd_setup(item_n_bnd);
