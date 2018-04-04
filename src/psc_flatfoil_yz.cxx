@@ -465,7 +465,7 @@ struct PscFlatfoil : PscFlatfoilParams
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
     using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
-    auto collision = CollisionCuda{};  //    collision_{psc_comm(psc), collision_interval, collision_nu},
+    auto collision = CollisionCuda{psc_comm(psc_), collision_interval, collision_nu};
 
     auto pushp = PushParticlesCuda<Config1vbec3d>{};
     auto pushf = PushFieldsCuda{};
