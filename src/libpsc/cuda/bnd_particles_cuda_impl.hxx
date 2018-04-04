@@ -14,6 +14,7 @@ struct BndParticlesCuda : BndParticles_<MparticlesCuda>
   ~BndParticlesCuda();
 
   void reset();
+  void operator()(MparticlesCuda& mprts);
   void exchange_particles(PscMparticlesBase mprts_base) override;
 
 private:

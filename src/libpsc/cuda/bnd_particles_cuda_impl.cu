@@ -28,19 +28,20 @@ void BndParticlesCuda::reset()
 }
 
 // ----------------------------------------------------------------------
-// exchange_particles
+// operator()
 
-void BndParticlesCuda::exchange_particles(PscMparticlesBase mprts_base)
+void BndParticlesCuda::operator()(MparticlesCuda& mprts)
 {
-  // FIXME, needs to check for rebalanced domain
+  if (psc_balance_generation_cnt > balance_generation_cnt_) {
+    reset();
+    mprintf("WARNING: bndp_cuda::reset() probably broken\n");
+  }
   
   static int pr_A, pr_B;
   if (!pr_A) {
     pr_A = prof_register("xchg_mprts_prep", 1., 0, 0);
     pr_B = prof_register("xchg_mprts_post", 1., 0, 0);
   }
-  
-  auto& mprts = mprts_base->get_as<MparticlesCuda>();
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
@@ -54,7 +55,15 @@ void BndParticlesCuda::exchange_particles(PscMparticlesBase mprts_base)
   cbndp_->post(ddcp, mprts.cmprts());
   prof_stop(pr_B);
   prof_stop(pr_time_step_no_comm);
-  
+}
+
+// ----------------------------------------------------------------------
+// exchange_particles
+
+void BndParticlesCuda::exchange_particles(PscMparticlesBase mprts_base)
+{
+  auto& mprts = mprts_base->get_as<MparticlesCuda>();
+  (*this)(mprts);
   mprts_base->put_as(mprts);
 }
 
