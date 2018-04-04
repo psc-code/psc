@@ -596,6 +596,12 @@ struct PscFlatfoil : PscFlatfoilParams
 	prof_stop(pr_marder);
       }
       
+      if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
+	prof_restart(pr_checks);
+	checks.gauss(mprts, mflds);
+	prof_stop(pr_checks);
+      }
+
       mflds_base->put_as(mflds, JXI, HX + 3);
       mprts_base->put_as(mprts);
     }
@@ -692,13 +698,12 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_marder);
     }
 
-#endif
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
-
+#endif
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 

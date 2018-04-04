@@ -14,5 +14,7 @@ struct ChecksCuda : ChecksBase
  
   void continuity_after_particle_push(MparticlesCuda& mprts, MfieldsCuda& mflds)
   {}
- 
+
+  void gauss(MparticlesCuda& mprts, MfieldsCuda& mflds)
+  {}
 };
