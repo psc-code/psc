@@ -69,6 +69,13 @@ int MfieldsCuda::index(int m, int i, int j, int k, int p) const
   return cmflds->index(m, i, j, k, p);
 }
 
+void MfieldsCuda::write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
+{
+  auto& mflds = get_as<MfieldsSingle>(0, n_comps());
+  mflds.write_as_mrc_fld(io, name, comp_names);
+  put_as(mflds, 0, 0);
+}
+
 MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p)
   : mflds_(mflds), p_(p)
 {}

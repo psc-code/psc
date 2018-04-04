@@ -65,7 +65,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
     
     mres->zero();
     cuda_moments_yz_n_1st(cmprts, cmres);
-    assert(0);
+    //assert(0);
     //bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 };
