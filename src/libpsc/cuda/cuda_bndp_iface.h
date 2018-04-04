@@ -11,14 +11,14 @@
 
 extern int pr_time_step_no_comm;
 
-struct psc_bnd_particles_cuda : BndParticles_<MparticlesCuda>
+struct BndParticlesCuda : BndParticles_<MparticlesCuda>
 {
   using Base = BndParticles_<MparticlesCuda>;
 
   // ----------------------------------------------------------------------
   // ctor
   
-  psc_bnd_particles_cuda(struct mrc_domain *domain, const Grid_t& grid)
+  BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
     : Base(domain, grid),
       cbndp_(new cuda_bndp(grid))
   {}
