@@ -7,7 +7,7 @@
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 
-#if 1
+#if 0
 #define dprintf(...) mprintf(__VA_ARGS__)
 #else
 #define dprintf(...) do {} while (0)
