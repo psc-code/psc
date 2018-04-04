@@ -50,6 +50,7 @@
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
+#include "../libpsc/cuda/collision_cuda_impl.hxx"
 #endif
 
 enum {
@@ -460,17 +461,12 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_sort);
     }
     
-    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
-      mpi_printf(comm, "***** Performing collisions...\n");
-      prof_start(pr_collision);
-      collision_(mprts_);
-      prof_stop(pr_collision);
-    }
-    
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
     using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
+    auto collision = CollisionCuda{};  //    collision_{psc_comm(psc), collision_interval, collision_nu},
+
     auto pushp = PushParticlesCuda<Config1vbec3d>{};
     auto pushf = PushFieldsCuda{};
     auto bndf = BndFieldsNone<MfieldsCuda>{};
@@ -509,6 +505,13 @@ struct PscFlatfoil : PscFlatfoilParams
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
 
+      if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+	mpi_printf(comm, "***** Performing collisions...\n");
+	prof_start(pr_collision);
+	collision(mprts);
+	prof_stop(pr_collision);
+      }
+    
       if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
 	prof_start(pr_checks);
 	checks.continuity_before_particle_push(mprts);
@@ -596,6 +599,13 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
 #else
+    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
+      collision_(mprts_);
+      prof_stop(pr_collision);
+    }
+    
     if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
       prof_start(pr_checks);
       checks_.continuity_before_particle_push(mprts_);
