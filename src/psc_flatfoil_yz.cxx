@@ -453,7 +453,9 @@ struct PscFlatfoil : PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-    balance_(psc_, mprts_);
+    if (balance_interval > 0 && psc_->timestep % balance_interval == 0) {
+      balance_(psc_, mprts_);
+    }
     
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};

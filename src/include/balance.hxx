@@ -30,7 +30,9 @@ struct PscBalance
 
   void operator()(struct psc* psc, PscMparticlesBase mprts)
   {
-    (*sub())(psc, *mprts.sub());
+    if (balance_->every > 0 && psc->timestep % balance_->every == 0) {
+      (*sub())(psc, *mprts.sub());
+    }
   }
 
   std::vector<uint> initial(struct psc* psc, const std::vector<uint>& n_prts_by_patch)

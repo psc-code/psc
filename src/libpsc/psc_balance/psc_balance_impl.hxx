@@ -341,12 +341,6 @@ struct Balance_ : BalanceBase
 
   void operator()(psc* psc, MparticlesBase& mp) override
   {
-    if (every_ <= 0)
-      return;
-
-    if (psc->timestep == 0 || psc->timestep % every_ != 0)
-      return;
-
     static int st_time_balance;
     if (!st_time_balance) {
       st_time_balance = psc_stats_register("time balancing");
