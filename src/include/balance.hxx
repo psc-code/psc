@@ -68,20 +68,5 @@ public:
     PscBalance<Balance> balance(_balance);
     balance->~Balance();
   }
-
-  static void communicate_particles(struct psc_balance *_balance, struct communicate_ctx *ctx,
-				    struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
-				    uint *n_prts_by_patch_new)
-  {
-    PscBalance<Balance> balance(_balance);
-    balance->communicate_particles(_balance, ctx, mprts_old, mprts_new, n_prts_by_patch_new);
-  }
-
-  static void communicate_fields(struct psc_balance *_balance, struct communicate_ctx *ctx,
-				 struct psc_mfields *mflds_old, struct psc_mfields *mflds_new)
-  {
-    PscBalance<Balance> balance(_balance);
-    balance->communicate_fields(_balance, ctx, mflds_old, mflds_new);
-  }
 };
 
