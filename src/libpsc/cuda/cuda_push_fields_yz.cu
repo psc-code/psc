@@ -23,8 +23,8 @@ push_fields_E_yz(DMFields MF, float dt, float cny, float cnz, int gridy)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] - 2 * (2-BND) &&
-	iz < d_cmflds_const.im[2] - 2 * (2-BND)))
+  if (!(iy >= 1 && iy < d_cmflds_const.im[1] - 2 * (2-BND) &&
+	iz >= 1 && iz < d_cmflds_const.im[2] - 2 * (2-BND)))
     return;
   iy -= BND;
   iz -= BND;
@@ -55,8 +55,8 @@ push_fields_H_yz(DMFields MF, float cny, float cnz, int gridy)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] - 2 * (2-BND) &&
-	iz < d_cmflds_const.im[2] - 2 * (2-BND)))
+  if (!(iy < d_cmflds_const.im[1] - 2 * (2-BND) - 1 &&
+	iz < d_cmflds_const.im[2] - 2 * (2-BND) - 1))
     return;
   iy -= BND;
   iz -= BND;
