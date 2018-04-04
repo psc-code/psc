@@ -48,6 +48,7 @@
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/inject_cuda_impl.hxx"
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
+#include "../libpsc/cuda/checks_cuda_impl.hxx"
 #endif
 
 enum {
@@ -465,13 +466,6 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_collision);
     }
     
-    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
-      prof_start(pr_checks);
-      checks_.continuity_before_particle_push(mprts_);
-      prof_stop(pr_checks);
-    }
-
-    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
@@ -481,6 +475,7 @@ struct PscFlatfoil : PscFlatfoilParams
     auto bndf = BndFieldsNone<MfieldsCuda>{};
     auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
     auto bndp = BndParticlesCuda{ppsc->mrc_domain_, ppsc->grid()};
+    auto checks = ChecksCuda{};
 
     auto inject = InjectCuda<InjectFoil>{psc_comm(psc_), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target};
     
@@ -507,9 +502,18 @@ struct PscFlatfoil : PscFlatfoilParams
     auto heating = HeatingCuda{heating_interval, heating_begin, heating_end,
 			       heating_kind, heating_spot};
 
+
     {
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
+
+      if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+	prof_start(pr_checks);
+	checks.continuity_before_particle_push(mprts);
+	prof_stop(pr_checks);
+      }
+
+      // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
       prof_start(pr_push_prts);
       pushp.push_mprts_yz(mprts, mflds);
       prof_stop(pr_push_prts);
@@ -566,10 +570,26 @@ struct PscFlatfoil : PscFlatfoilParams
       bndf.fill_ghosts_H(mflds);
       bnd.fill_ghosts(mflds, HX, HX + 3);
       prof_stop(pr_bndf);
+
+      // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+      
+      if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+	prof_restart(pr_checks);
+	checks.continuity_after_particle_push(mprts, mflds);
+	prof_stop(pr_checks);
+      }
+      
       mflds_base->put_as(mflds, JXI, HX + 3);
       mprts_base->put_as(mprts);
     }
 #else
+    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      prof_start(pr_checks);
+      checks_.continuity_before_particle_push(mprts_);
+      prof_stop(pr_checks);
+    }
+
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
     pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
@@ -622,7 +642,6 @@ struct PscFlatfoil : PscFlatfoilParams
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
-#endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
     if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
@@ -630,6 +649,7 @@ struct PscFlatfoil : PscFlatfoilParams
       checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
+#endif
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
