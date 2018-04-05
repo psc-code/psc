@@ -453,10 +453,6 @@ struct PscFlatfoil : PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-    if (balance_interval > 0 && psc_->timestep % balance_interval == 0) {
-      balance_(psc_, mprts_);
-    }
-    
 #ifdef DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
@@ -499,6 +495,10 @@ struct PscFlatfoil : PscFlatfoilParams
 
 
     {
+      if (balance_interval > 0 && timestep % balance_interval == 0) {
+	balance_(psc_, mprts_);
+      }
+    
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
 
@@ -609,6 +609,10 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
 #else
+    if (balance_interval > 0 && timestep % balance_interval == 0) {
+      balance_(psc_, mprts_);
+    }
+    
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
