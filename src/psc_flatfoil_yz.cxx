@@ -465,7 +465,7 @@ struct PscFlatfoil : PscFlatfoilParams
     auto bndf = BndFieldsNone<MfieldsCuda>{};
     auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
     auto bndp = BndParticlesCuda{ppsc->mrc_domain_, ppsc->grid()};
-    auto checks = ChecksCuda{};
+    auto checks = ChecksCuda{psc_comm(psc_), checks_params};
     auto marder = MarderCuda(psc_comm(psc_), marder_diffusion, marder_loop, marder_dump);
 
     auto inject = InjectCuda<InjectFoil>{psc_comm(psc_), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target};
