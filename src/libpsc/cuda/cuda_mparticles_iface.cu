@@ -185,6 +185,9 @@ void MparticlesCuda::copy_to(MparticlesCuda& mp, MP& mp_other)
   mp_other.reserve_all(n_prts_by_patch);
   mp_other.resize_all(n_prts_by_patch);
 
+  if (mp.cmprts()->need_reorder) {
+    mp.cmprts()->reorder();
+  }
   for (int p = 0; p < n_patches; p++) {
     ConvertFromCuda<MP> convert_from_cuda(mp_other, p);
     mp.cmprts()->get_particles(p, convert_from_cuda);
