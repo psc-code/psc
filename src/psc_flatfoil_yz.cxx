@@ -275,70 +275,51 @@ struct PscFlatfoil : PscFlatfoilParams
 
     setup_stats();
   }
+
+  void init_npt(int kind, double crd[3], psc_particle_npt& npt)
+  {
+    switch (kind) {
+    case MY_ION:
+      npt.n    = background_n;
+      npt.T[0] = background_Ti;
+      npt.T[1] = background_Ti;
+      npt.T[2] = background_Ti;
+      break;
+    case MY_ELECTRON:
+      npt.n    = background_n;
+      npt.T[0] = background_Te;
+      npt.T[1] = background_Te;
+      npt.T[2] = background_Te;
+      break;
+    default:
+      assert(0);
+    }
+      
+    if (inject_target.is_inside(crd)) {
+      // replace values above by target values
+      inject_target.init_npt(kind, crd, &npt);
+    }
+  }
   
   // ----------------------------------------------------------------------
   // setup_initial_partition
   
   std::vector<uint> setup_initial_partition()
   {
-    auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-      switch (kind) {
-      case MY_ION:
-      npt.n    = background_n;
-      npt.T[0] = background_Ti;
-      npt.T[1] = background_Ti;
-      npt.T[2] = background_Ti;
-      break;
-      case MY_ELECTRON:
-      npt.n    = background_n;
-      npt.T[0] = background_Te;
-      npt.T[1] = background_Te;
-      npt.T[2] = background_Te;
-      break;
-      default:
-      assert(0);
-      }
-      
-      if (inject_target.is_inside(crd)) {
-	// replace values above by target values
-	inject_target.init_npt(kind, crd, &npt);
-      }
-    };
-    
-    return SetupParticles<Mparticles_t>::setup_partition(psc_, init_npt);
+    return SetupParticles<Mparticles_t>::setup_partition(psc_, [&](int kind, double crd[3], psc_particle_npt& npt) {
+	this->init_npt(kind, crd, npt);
+      });
   }
-
+  
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
-    auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-      switch (kind) {
-      case MY_ION:
-      npt.n    = background_n;
-      npt.T[0] = background_Ti;
-      npt.T[1] = background_Ti;
-      npt.T[2] = background_Ti;
-      break;
-      case MY_ELECTRON:
-      npt.n    = background_n;
-      npt.T[0] = background_Te;
-      npt.T[1] = background_Te;
-      npt.T[2] = background_Te;
-      break;
-      default:
-      assert(0);
-      }
-      
-      if (inject_target.is_inside(crd)) {
-	// replace values above by target values
-	inject_target.init_npt(kind, crd, &npt);
-      }
-    };
-
     auto& mp = mprts.get_as<MparticlesSingle>();
-    SetupParticles<MparticlesSingle>::setup_particles(mp, psc_, n_prts_by_patch, init_npt);
+    SetupParticles<MparticlesSingle>::setup_particles(mp, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+	this->init_npt(kind, crd, npt);
+      });
     mprts.put_as(mp);
   }
 
