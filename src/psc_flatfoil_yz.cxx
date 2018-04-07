@@ -537,44 +537,15 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_checks);
     }
 
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    prof_start(pr_push_prts);
     pushp.push_mprts_yz(mprts_, mflds_);
-#if 0
-    {
-      auto& mprts = mprts_base->get_as<MparticlesCuda>();
-      auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
-
-      // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-      prof_start(pr_push_prts);
-      //      pushp.push_mprts_yz(mprts, mflds);
-      prof_stop(pr_push_prts);
-      // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-
-      prof_start(pr_bndp);
-      bndp(mprts);
-      prof_stop(pr_bndp);
-
-      mflds_base->put_as(mflds, JXI, HX + 3);
-      mprts_base->put_as(mprts);
-    }
-#else
-    {
-      auto& mprts_ = this->mprts_.get_as<MparticlesDouble>();
-      auto& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
-
-      // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-      prof_start(pr_push_prts);
-           // pushp_.push_mprts(mprts_, mflds_);
-      prof_stop(pr_push_prts);
-      // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-
-      prof_start(pr_bndp);
-      bndp_(mprts_);
-      prof_stop(pr_bndp);
-
-      this->mprts_.put_as(mprts_);
-      this->mflds_.put_as(mflds_, 0, this->mflds_.n_comps());
-    }
-#endif
+    prof_stop(pr_push_prts);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    
+    prof_start(pr_bndp);
+    bndp(mprts_);
+    prof_stop(pr_bndp);
     
 #if 0//def DO_CUDA
     {
