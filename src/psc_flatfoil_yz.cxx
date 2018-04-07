@@ -196,7 +196,7 @@ struct PscFlatfoilParams
 
 struct PscFlatfoil : PscFlatfoilParams
 {
-#if 1
+#if 0
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
 #if 0 // generic_c: 2nd order
@@ -238,8 +238,8 @@ struct PscFlatfoil : PscFlatfoilParams
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
     : PscFlatfoilParams(params),
       psc_{psc},
-      mprts_{dynamic_cast<MparticlesCuda&>(*PscMparticlesBase{psc->particles}.sub())},
-      mflds_{dynamic_cast<MfieldsCuda&>(*PscMfieldsBase{psc->flds}.sub())},
+      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -306,7 +306,7 @@ struct PscFlatfoil : PscFlatfoilParams
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
-  void setup_initial_particles(MparticlesCuda& mprts, std::vector<uint>& n_prts_by_patch)
+  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
     auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
       switch (kind) {
@@ -623,8 +623,8 @@ struct PscFlatfoil : PscFlatfoilParams
 
 private:
   psc* psc_;
-  MparticlesCuda& mprts_;
-  MfieldsCuda& mflds_;
+  Mparticles_t& mprts_;
+  Mfields_t& mflds_;
 
   Sort_t sort_;
   Collision_t collision_;
@@ -801,12 +801,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
   psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-					Mparticles_traits<MparticlesCuda>::name).mprts();
+					Mparticles_traits<PscFlatfoil::Mparticles_t>::name).mprts();
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
-				Mfields_traits<MfieldsCuda>::name).mflds();
+				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
 
   return new PscFlatfoil(params, heating, psc_);
 }
