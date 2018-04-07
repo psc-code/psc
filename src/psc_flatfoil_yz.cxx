@@ -185,6 +185,10 @@ struct PscFlatfoilParams
   int inject_tau;
   InjectFoil inject_target;
 
+  int heating_begin;
+  int heating_end;
+  int heating_interval;
+
   ChecksParams checks_params;
 };
 
@@ -518,8 +522,8 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_inject);
       
     // only heating between heating_tb and heating_te
-    if (timestep >= heating_.tb_ && timestep < heating_.te_ &&
-	timestep % heating_.every_step_ == 0) {
+    if (timestep >= heating_begin && timestep < heating_end &&
+	timestep % heating_interval == 0) {
       prof_start(pr_heating);
       heating_(mprts_);
       prof_stop(pr_heating);
@@ -701,11 +705,11 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   heating_foil_params.T  = .04;
   heating_foil_params.Mi = heating_rH * kinds[MY_ION].m;
   auto heating_spot = HeatingSpotFoil{heating_foil_params};
-  int heating_interval = 20;
-  int heating_begin = 0;
-  int heating_end = 10000000;
+  params.heating_interval = 20;
+  params.heating_begin = 0;
+  params.heating_end = 10000000;
   int heating_kind = MY_ELECTRON;
-  auto heating = Heating_t{heating_interval, heating_begin, heating_end,
+  auto heating = Heating_t{params.heating_interval, params.heating_begin, params.heating_end,
 			   heating_kind, heating_spot};
 
   // -- setup injection
