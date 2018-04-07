@@ -90,6 +90,11 @@ const int* MparticlesCuda::patch_get_b_mx(int p)
   return cmprts_->patch_get_b_mx(p);
 }
 
+void MparticlesCuda::dump(const std::string& filename)
+{
+  cmprts_->dump(filename);
+}
+
 // ======================================================================
 // conversion
 

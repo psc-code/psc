@@ -77,24 +77,28 @@ void cuda_mparticles::dump_by_patch(uint *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // dump
 
-void cuda_mparticles::dump()
+void cuda_mparticles::dump(const std::string& filename) const
 {
-  printf("cuda_mparticles_dump: n_prts = %d\n", n_prts);
+  FILE* file = fopen(filename.c_str(), "w");
+  assert(file);
+  
+  fprintf(file, "cuda_mparticles_dump: n_prts = %d\n", n_prts);
   uint off = 0;
   for (int b = 0; b < n_blocks; b++) {
     uint off_b = d_off[b], off_e = d_off[b+1];
     int p = b / n_blocks_per_patch;
-    printf("cuda_mparticles_dump: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
+    fprintf(file, "cuda_mparticles_dump: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
     assert(d_off[b] == off);
     for (int n = d_off[b]; n < d_off[b+1]; n++) {
       float4 xi4 = d_xi4[n], pxi4 = d_pxi4[n];
       uint bidx = d_bidx[n], id = d_id[n];
-      printf("cuda_mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d %s\n",
-	     n, xi4.x, xi4.y, xi4.z, cuda_float_as_int(xi4.w), pxi4.x, pxi4.y, pxi4.z, pxi4.w,
-	     bidx, id, b == bidx ? "" : "BIDX MISMATCH!");
+      fprintf(file, "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d %s\n",
+	      n, xi4.x, xi4.y, xi4.z, cuda_float_as_int(xi4.w), pxi4.x, pxi4.y, pxi4.z, pxi4.w,
+	      bidx, id, b == bidx ? "" : "BIDX MISMATCH!");
     }
     off += off_e - off_b;
   }
+  fclose(file);
 }
 
 // ----------------------------------------------------------------------

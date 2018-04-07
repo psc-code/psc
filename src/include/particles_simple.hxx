@@ -414,6 +414,24 @@ struct Mparticles : MparticlesBase
     
     (*this)[p].push_back(prt);
   }
+
+  void dump(const std::string& filename)
+  {
+    FILE* file = fopen(filename.c_str(), "w");
+    assert(file);
+
+    for (int p = 0; p < n_patches(); p++) {
+      auto& prts = (*this)[p];
+      fprintf(file, "mparticles_dump: p%d n_prts = %d\n", p, prts.size());
+      for (int n = 0; n < prts.size(); n++) {
+	auto& prt = prts[n];
+	fprintf(file, "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g\n",
+		n, prt.xi, prt.yi, prt.zi, prt.kind_,
+		prt.pxi, prt.pyi, prt.pzi, prt.qni_wni_);
+      }
+    }
+    fclose(file);
+  }
   
   particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
   particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }

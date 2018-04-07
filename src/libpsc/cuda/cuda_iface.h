@@ -8,7 +8,7 @@
 #include <particles_simple.hxx> // FIXME?
 #include <grid.hxx>
 
-#if 1
+#if 0
 #define dprintf(...) mprintf(__VA_ARGS__)
 #else
 #define dprintf(...) do {} while (0)
@@ -75,6 +75,7 @@ struct MparticlesCuda : MparticlesBase
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void setup_internals();
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
+  void dump(const std::string& filename);
 
   template<typename MP>
   static void copy_to(MparticlesCuda& mprts_cuda, MP& mprts);
