@@ -53,6 +53,7 @@
 #include "../libpsc/cuda/sort_cuda_impl.hxx"
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
+#include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
 enum {
@@ -316,11 +317,9 @@ struct PscFlatfoil : PscFlatfoilParams
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
-    auto& mp = mprts.get_as<MparticlesSingle>();
-    SetupParticles<MparticlesSingle>::setup_particles(mp, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
-    mprts.put_as(mp);
   }
 
   // ----------------------------------------------------------------------
