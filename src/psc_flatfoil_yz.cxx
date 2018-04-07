@@ -547,160 +547,77 @@ struct PscFlatfoil : PscFlatfoilParams
     bndp(mprts_);
     prof_stop(pr_bndp);
     
-#if 0//def DO_CUDA
-    {
-      auto& mprts = mprts_base->get_as<MparticlesCuda>();
-      auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
-
-      // === field propagation B^{n+1/2} -> B^{n+1}
-      prof_start(pr_push_flds);
-      pushf.push_H(mflds, .5, dim_yz{});
-      prof_stop(pr_push_flds);
-      // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-      prof_start(pr_inject);
-      inject(mprts);
-      prof_stop(pr_inject);
-
-      // only heating between heating_tb and heating_te
-      if (psc_->timestep >= heating_begin && psc_->timestep < heating_end &&
-	  psc_->timestep % heating_interval == 0) {
-	prof_start(pr_heating);
-	heating(mprts);
-	prof_stop(pr_heating);
-      }
-
-      // === field propagation E^{n+1/2} -> E^{n+3/2}
-      prof_start(pr_bndf);
-      bndf.fill_ghosts_H(mflds);
-      bnd.fill_ghosts(mflds, HX, HX + 3);
-
-      bndf.add_ghosts_J(mflds);
-      bnd.add_ghosts(mflds, JXI, JXI + 3);
-      bnd.fill_ghosts(mflds, JXI, JXI + 3);
-      prof_stop(pr_bndf);
-
-      prof_restart(pr_push_flds);
-      pushf.push_E(mflds, 1., dim_yz{});
-      prof_stop(pr_push_flds);
-
-      prof_restart(pr_bndf);
-      bndf.fill_ghosts_E(mflds);
-      bnd.fill_ghosts(mflds, EX, EX + 3);
-      prof_stop(pr_bndf);
-      // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-      
-      // === field propagation B^{n+1} -> B^{n+3/2}
-      prof_restart(pr_push_flds);
-      pushf.push_H(mflds, .5, dim_yz{});
-      prof_stop(pr_push_flds);
-
-      prof_start(pr_bndf);
-      bndf.fill_ghosts_H(mflds);
-      bnd.fill_ghosts(mflds, HX, HX + 3);
-      prof_stop(pr_bndf);
-
-      // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-      
-      if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
-	prof_restart(pr_checks);
-	checks.continuity_after_particle_push(mprts, mflds);
-	prof_stop(pr_checks);
-      }
-
-      // E at t^{n+3/2}, particles at t^{n+3/2}
-      // B at t^{n+3/2} (Note: that is not its natural time,
-      // but div B should be == 0 at any time...)
-      if (marder_interval > 0 && ppsc->timestep % marder_interval == 0) {
-	mpi_printf(comm, "***** Performing Marder correction...\n");
-	prof_start(pr_marder);
-	marder(mflds, mprts);
-	prof_stop(pr_marder);
-      }
-      
-      if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
-	prof_restart(pr_checks);
-	checks.gauss(mprts, mflds);
-	prof_stop(pr_checks);
-      }
-
-      mflds_base->put_as(mflds, JXI, HX + 3);
-      mprts_base->put_as(mprts);
-    }
-
-#else
-    auto& mprts_ = this->mprts_.get_as<MparticlesDouble>();
-    auto& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
-
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
+    pushf.push_H(mflds_, .5, dim_yz{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
+    
     prof_start(pr_inject);
-    inject_(mprts_);
+    inject(mprts_);
     prof_stop(pr_inject);
-
-    prof_start(pr_heating);
-    heating_(mprts_);
-    prof_stop(pr_heating);
+      
+    // only heating between heating_tb and heating_te
+    if (psc_->timestep >= heating_begin && psc_->timestep < heating_end &&
+	psc_->timestep % heating_interval == 0) {
+      prof_start(pr_heating);
+      heating(mprts_);
+      prof_stop(pr_heating);
+    }
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
-
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf.fill_ghosts_H(mflds_);
+    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    
+    bndf.add_ghosts_J(mflds_);
+    bnd.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
-
+    
     prof_restart(pr_push_flds);
-    pushf_.push_E(mflds_, 1., dim_yz{});
+    pushf.push_E(mflds_, 1., dim_yz{});
     prof_stop(pr_push_flds);
-
+    
     prof_restart(pr_bndf);
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bndf.fill_ghosts_E(mflds_);
+    bnd.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-    
+      
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_.push_H(mflds_, .5, dim_yz{});
+    pushf.push_H(mflds_, .5, dim_yz{});
     prof_stop(pr_push_flds);
-
+    
     prof_start(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bndf.fill_ghosts_H(mflds_);
+    bnd.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-
-    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      
+    if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_.continuity_after_particle_push(mprts_, mflds_);
+      checks.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
-
+    
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && ppsc->timestep % marder_interval == 0) {
+    if (marder_interval > 0 && timestep % marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      marder_(mflds_, mprts_);
+      marder(mflds_, mprts_);
       prof_stop(pr_marder);
     }
-
+    
     if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
-      checks_.gauss(mprts_, mflds_);
+      checks.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
-    this->mprts_.put_as(mprts_);
-    this->mflds_.put_as(mflds_, 0, this->mflds_.n_comps());
-#endif
+    
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
