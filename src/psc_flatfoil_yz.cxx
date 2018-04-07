@@ -52,6 +52,7 @@
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
 #include "../libpsc/cuda/sort_cuda_impl.hxx"
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
+#include "../libpsc/cuda/setup_fields_cuda.hxx"
 #endif
 
 enum {
@@ -344,16 +345,14 @@ struct PscFlatfoil : PscFlatfoilParams
   // ----------------------------------------------------------------------
   // setup_initial_fields
   
-  void setup_initial_fields(MfieldsBase& mflds)
+  void setup_initial_fields(Mfields_t& mflds)
   {
-    auto& mf = mflds.get_as<MfieldsSingle>(0, 0);
-    SetupFields<MfieldsSingle>::set(mf, [&](int m, double crd[3]) {
+    SetupFields<Mfields_t>::set(mflds, [&](int m, double crd[3]) {
 	switch (m) {
 	case HY: return BB;
 	default: return 0.;
 	}
       });
-    mflds.put_as(mf, 0, mflds.n_comps());
   }
 
   // ----------------------------------------------------------------------
