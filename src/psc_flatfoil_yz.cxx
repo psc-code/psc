@@ -473,7 +473,6 @@ struct PscFlatfoil : PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-#if 0//def DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
     auto sort = SortCuda{};
@@ -514,11 +513,12 @@ struct PscFlatfoil : PscFlatfoilParams
 			       heating_kind, heating_spot};
 
 
+    if (balance_interval > 0 && timestep % balance_interval == 0) {
+      balance_(psc_, mprts_);
+    }
+
+#if 1
     {
-      if (balance_interval > 0 && timestep % balance_interval == 0) {
-	balance_(psc_, mprts_);
-      }
-    
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
 
@@ -528,7 +528,7 @@ struct PscFlatfoil : PscFlatfoilParams
 	sort(mprts);
 	prof_stop(pr_sort);
       }
-    
+
       if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
 	mpi_printf(comm, "***** Performing collisions...\n");
 	prof_start(pr_collision);
@@ -536,6 +536,38 @@ struct PscFlatfoil : PscFlatfoilParams
 	prof_stop(pr_collision);
       }
     
+      mflds_base->put_as(mflds, JXI, HX + 3);
+      mprts_base->put_as(mprts);
+    }
+#else
+    {
+      auto& mprts_ = this->mprts_.get_as<MparticlesDouble>();
+      auto& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
+
+      if (sort_interval > 0 && timestep % sort_interval == 0) {
+	mpi_printf(comm, "***** Sorting...\n");
+	prof_start(pr_sort);
+	sort_(mprts_);
+	prof_stop(pr_sort);
+      }
+
+      if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+	mpi_printf(comm, "***** Performing collisions...\n");
+	prof_start(pr_collision);
+	collision_(mprts_);
+	prof_stop(pr_collision);
+      }
+    
+      this->mprts_.put_as(mprts_);
+      this->mflds_.put_as(mflds_, 0, this->mflds_.n_comps());
+    }
+#endif
+    
+#if 0//def DO_CUDA
+    {
+      auto& mprts = mprts_base->get_as<MparticlesCuda>();
+      auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
+
       if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
 	prof_start(pr_checks);
 	checks.continuity_before_particle_push(mprts);
@@ -629,26 +661,9 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
 #else
-    if (balance_interval > 0 && timestep % balance_interval == 0) {
-      balance_(psc_, mprts_);
-    }
+    auto& mprts_ = this->mprts_.get_as<MparticlesDouble>();
+    auto& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
 
-    MparticlesDouble& mprts_ = this->mprts_.get_as<MparticlesDouble>();
-    MfieldsC& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
-      mpi_printf(comm, "***** Sorting...\n");
-      prof_start(pr_sort);
-      sort_(mprts_);
-      prof_stop(pr_sort);
-    }
-    
-    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
-      mpi_printf(comm, "***** Performing collisions...\n");
-      prof_start(pr_collision);
-      collision_(mprts_);
-      prof_stop(pr_collision);
-    }
-    
     if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
       prof_start(pr_checks);
       checks_.continuity_before_particle_push(mprts_);
