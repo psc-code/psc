@@ -61,6 +61,12 @@ int MparticlesCuda::get_n_prts() const
   return cmprts_->get_n_prts();
 }
 
+void MparticlesCuda::reset(const Grid_t& grid)
+{
+  this->~MparticlesCuda();
+  new(this) MparticlesCuda(grid);
+}
+
 void MparticlesCuda::to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
 {
   dprintf("CMPRTS: to_device\n");
