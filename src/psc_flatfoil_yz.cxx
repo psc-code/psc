@@ -517,25 +517,41 @@ struct PscFlatfoil : PscFlatfoilParams
       balance_(psc_, mprts_);
     }
 
-#if 1
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
+      sort(mprts_);
+      prof_stop(pr_sort);
+    }
+    
+    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
+      collision(mprts_);
+      prof_stop(pr_collision);
+    }
+    
+    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+      prof_start(pr_checks);
+      checks.continuity_before_particle_push(mprts_);
+      prof_stop(pr_checks);
+    }
+
+#if 0
     {
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
 
-      if (sort_interval > 0 && timestep % sort_interval == 0) {
-	mpi_printf(comm, "***** Sorting...\n");
-	prof_start(pr_sort);
-	sort(mprts);
-	prof_stop(pr_sort);
-      }
+      // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+      prof_start(pr_push_prts);
+      pushp.push_mprts_yz(mprts, mflds);
+      prof_stop(pr_push_prts);
+      // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
-      if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
-	mpi_printf(comm, "***** Performing collisions...\n");
-	prof_start(pr_collision);
-	collision(mprts);
-	prof_stop(pr_collision);
-      }
-    
+      prof_start(pr_bndp);
+      bndp(mprts);
+      prof_stop(pr_bndp);
+
       mflds_base->put_as(mflds, JXI, HX + 3);
       mprts_base->put_as(mprts);
     }
@@ -544,20 +560,16 @@ struct PscFlatfoil : PscFlatfoilParams
       auto& mprts_ = this->mprts_.get_as<MparticlesDouble>();
       auto& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
 
-      if (sort_interval > 0 && timestep % sort_interval == 0) {
-	mpi_printf(comm, "***** Sorting...\n");
-	prof_start(pr_sort);
-	sort_(mprts_);
-	prof_stop(pr_sort);
-      }
+      // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+      prof_start(pr_push_prts);
+      pushp_.push_mprts(mprts_, mflds_);
+      prof_stop(pr_push_prts);
+      // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
-      if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
-	mpi_printf(comm, "***** Performing collisions...\n");
-	prof_start(pr_collision);
-	collision_(mprts_);
-	prof_stop(pr_collision);
-      }
-    
+      prof_start(pr_bndp);
+      bndp_(mprts_);
+      prof_stop(pr_bndp);
+
       this->mprts_.put_as(mprts_);
       this->mflds_.put_as(mflds_, 0, this->mflds_.n_comps());
     }
@@ -568,27 +580,11 @@ struct PscFlatfoil : PscFlatfoilParams
       auto& mprts = mprts_base->get_as<MparticlesCuda>();
       auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, HX + 3);
 
-      if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
-	prof_start(pr_checks);
-	checks.continuity_before_particle_push(mprts);
-	prof_stop(pr_checks);
-      }
-
-      // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-      prof_start(pr_push_prts);
-      pushp.push_mprts_yz(mprts, mflds);
-      prof_stop(pr_push_prts);
-      // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-
       // === field propagation B^{n+1/2} -> B^{n+1}
       prof_start(pr_push_flds);
       pushf.push_H(mflds, .5, dim_yz{});
       prof_stop(pr_push_flds);
       // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-      prof_start(pr_bndp);
-      bndp(mprts);
-      prof_stop(pr_bndp);
 
       prof_start(pr_inject);
       inject(mprts);
@@ -664,27 +660,11 @@ struct PscFlatfoil : PscFlatfoilParams
     auto& mprts_ = this->mprts_.get_as<MparticlesDouble>();
     auto& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
 
-    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
-      prof_start(pr_checks);
-      checks_.continuity_before_particle_push(mprts_);
-      prof_stop(pr_checks);
-    }
-
-    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    prof_start(pr_push_prts);
-    pushp_.push_mprts(mprts_, mflds_);
-    prof_stop(pr_push_prts);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
     pushf_.push_H<dim_yz>(mflds_, .5, dim_yz{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-    prof_start(pr_bndp);
-    bndp_(mprts_);
-    prof_stop(pr_bndp);
 
     prof_start(pr_inject);
     inject_(mprts_);
