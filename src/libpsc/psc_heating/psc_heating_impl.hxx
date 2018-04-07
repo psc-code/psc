@@ -17,22 +17,17 @@ struct Heating__ : HeatingBase
   // ctor
 
   template<typename FUNC>
-  Heating__(int every_step, int tb, int te, int kind, FUNC get_H)
-    : every_step_(every_step),
-      tb_(tb), te_(te),
-      kind_(kind),
-      get_H_(get_H)
-  {}
+  Heating__(int interval, int kind, FUNC get_H)
+    : get_H_(get_H)
+  {
+    heating_dt_ = interval * ppsc->dt;
+  }
   
   // ----------------------------------------------------------------------
   // kick_particle
 
   void kick_particle(particle_t& prt, real_t H)
   {
-    struct psc *psc = ppsc;
-
-    real_t heating_dt = every_step_ * psc->dt;
-
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
       ran1 = random() / ((float) RAND_MAX + 1);
@@ -48,9 +43,9 @@ struct Heating__ : HeatingBase
     real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
     real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
 
-    real_t Dpxi = sqrtf(H * heating_dt);
-    real_t Dpyi = sqrtf(H * heating_dt);
-    real_t Dpzi = sqrtf(H * heating_dt);
+    real_t Dpxi = sqrtf(H * heating_dt_);
+    real_t Dpyi = sqrtf(H * heating_dt_);
+    real_t Dpzi = sqrtf(H * heating_dt_);
 
     prt.pxi += Dpxi * ranx;
     prt.pyi += Dpyi * rany;
@@ -89,10 +84,9 @@ struct Heating__ : HeatingBase
     mprts_base->put_as(mprts);
   }
   
-  //private:
-  int every_step_;
-  int tb_, te_;
+private:
   int kind_;
+  real_t heating_dt_;
   std::function<double(const double*)> get_H_;
 };
 

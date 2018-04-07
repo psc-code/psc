@@ -709,8 +709,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.heating_begin = 0;
   params.heating_end = 10000000;
   int heating_kind = MY_ELECTRON;
-  auto heating = Heating_t{params.heating_interval, params.heating_begin, params.heating_end,
-			   heating_kind, heating_spot};
+  auto heating = Heating_t{params.heating_interval, heating_kind, heating_spot};
 
   // -- setup injection
   double target_yl     = -100000.;

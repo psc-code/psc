@@ -12,10 +12,8 @@ struct HeatingCuda : HeatingBase
   // ctor
 
   template<typename FUNC>
-  HeatingCuda(int every_step, int tb, int te, int kind, FUNC get_H)
-    : every_step_(every_step),
-      tb_(tb), te_(te),
-      kind_(kind)
+  HeatingCuda(int interval, int kind, FUNC get_H)
+    : kind_(kind)
   {
     struct cuda_heating_foil foil;
     double val;
@@ -29,7 +27,7 @@ struct HeatingCuda : HeatingBase
     foil.T  = spot.T;
     foil.Mi = spot.Mi;
     foil.kind = kind;
-    foil.heating_dt = every_step * ppsc->dt;
+    foil.heating_dt = interval * ppsc->dt;
     cuda_heating_setup_foil(&foil);
   }
 
@@ -51,9 +49,7 @@ struct HeatingCuda : HeatingBase
     mprts_base->put_as(mprts);
   }
 
-  //private:
-  int every_step_;
-  int tb_, te_;
+private:
   int kind_;
 };
 
