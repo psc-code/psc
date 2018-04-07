@@ -196,6 +196,7 @@ struct PscFlatfoilParams
 
 struct PscFlatfoil : PscFlatfoilParams
 {
+#if 1
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
 #if 0 // generic_c: 2nd order
@@ -216,11 +217,28 @@ struct PscFlatfoil : PscFlatfoilParams
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
+#else
+  using Mparticles_t = MparticlesCuda;
+  using Mfields_t = MfieldsCuda;
+  using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
+  using PushParticlesPusher_t = PushParticlesCuda<Config1vbec3d>;
+  using Sort_t = SortCuda;
+  using Collision_t = CollisionCuda;
+  using PushFields_t = PushFieldsCuda;
+  using BndParticles_t = BndParticlesCuda;
+  using Bnd_t = BndCuda;
+  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Inject_t = InjectCuda<InjectFoil>;
+  using Heating_t = HeatingCuda;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
+  using Checks_t = ChecksCuda;
+  using Marder_t = MarderCuda;
+#endif
   
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
     : PscFlatfoilParams(params),
       psc_{psc},
-      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mprts_{dynamic_cast<MparticlesCuda&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -229,7 +247,7 @@ struct PscFlatfoil : PscFlatfoilParams
       heating_{heating},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target},
       checks_{psc_comm(psc), checks_params},
-      marder_{psc_comm(psc), marder_diffusion, marder_loop, marder_dump}
+      marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -247,7 +265,7 @@ struct PscFlatfoil : PscFlatfoilParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
-    checks_.gauss(mprts_, mflds_);
+    //    checks_.gauss(mprts_, mflds_);
     psc_setup_member_objs(psc_);
 
     setup_stats();
@@ -288,7 +306,7 @@ struct PscFlatfoil : PscFlatfoilParams
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
-  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
+  void setup_initial_particles(MparticlesCuda& mprts, std::vector<uint>& n_prts_by_patch)
   {
     auto init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
       switch (kind) {
@@ -314,7 +332,7 @@ struct PscFlatfoil : PscFlatfoilParams
       }
     };
     
-    SetupParticles<Mparticles_t>::setup_particles(PscMparticlesBase{ppsc->particles}, psc_, n_prts_by_patch, init_npt);
+    SetupParticles<MparticlesSingle>::setup_particles(PscMparticlesBase{ppsc->particles}, psc_, n_prts_by_patch, init_npt);
   }
 
   // ----------------------------------------------------------------------
@@ -322,12 +340,14 @@ struct PscFlatfoil : PscFlatfoilParams
   
   void setup_initial_fields(Mfields_t& mflds)
   {
-    SetupFields<Mfields_t>::set(mflds, [&](int m, double crd[3]) {
+    MfieldsSingle& mf = mflds.get_as<MfieldsSingle>(0, 0);
+    SetupFields<MfieldsSingle>::set(mf, [&](int m, double crd[3]) {
 	switch (m) {
 	case HY: return BB;
 	default: return 0.;
 	}
       });
+    mflds.put_as(mf, 0, mflds.n_comps());
   }
 
   // ----------------------------------------------------------------------
@@ -453,7 +473,7 @@ struct PscFlatfoil : PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-#ifdef DO_CUDA
+#if 0//def DO_CUDA
     auto mflds_base = PscMfieldsBase{psc_->flds};
     auto mprts_base = PscMparticlesBase{psc_->particles};
     auto sort = SortCuda{};
@@ -612,7 +632,8 @@ struct PscFlatfoil : PscFlatfoilParams
     if (balance_interval > 0 && timestep % balance_interval == 0) {
       balance_(psc_, mprts_);
     }
-    
+
+    MparticlesDouble& mprts_ = this->mprts_.get_as<MparticlesDouble>();
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
@@ -709,13 +730,14 @@ struct PscFlatfoil : PscFlatfoilParams
       checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
+    this->mprts_.put_as(mprts_);
 #endif
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
 private:
   psc* psc_;
-  Mparticles_t& mprts_;
+  MparticlesCuda& mprts_;
   Mfields_t& mflds_;
 
   Sort_t sort_;
@@ -893,7 +915,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
   psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-					Mparticles_traits<PscFlatfoil::Mparticles_t>::name).mprts();
+					Mparticles_traits<MparticlesCuda>::name).mprts();
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
