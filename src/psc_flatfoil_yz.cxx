@@ -239,7 +239,7 @@ struct PscFlatfoil : PscFlatfoilParams
     : PscFlatfoilParams(params),
       psc_{psc},
       mprts_{dynamic_cast<MparticlesCuda&>(*PscMparticlesBase{psc->particles}.sub())},
-      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
+      mflds_{dynamic_cast<MfieldsCuda&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -338,7 +338,7 @@ struct PscFlatfoil : PscFlatfoilParams
   // ----------------------------------------------------------------------
   // setup_initial_fields
   
-  void setup_initial_fields(Mfields_t& mflds)
+  void setup_initial_fields(MfieldsBase& mflds)
   {
     MfieldsSingle& mf = mflds.get_as<MfieldsSingle>(0, 0);
     SetupFields<MfieldsSingle>::set(mf, [&](int m, double crd[3]) {
@@ -634,6 +634,7 @@ struct PscFlatfoil : PscFlatfoilParams
     }
 
     MparticlesDouble& mprts_ = this->mprts_.get_as<MparticlesDouble>();
+    MfieldsC& mflds_ = this->mflds_.get_as<MfieldsC>(0, this->mflds_.n_comps());
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
@@ -731,6 +732,7 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_checks);
     }
     this->mprts_.put_as(mprts_);
+    this->mflds_.put_as(mflds_, 0, this->mflds_.n_comps());
 #endif
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
@@ -738,7 +740,7 @@ struct PscFlatfoil : PscFlatfoilParams
 private:
   psc* psc_;
   MparticlesCuda& mprts_;
-  Mfields_t& mflds_;
+  MfieldsCuda& mflds_;
 
   Sort_t sort_;
   Collision_t collision_;
@@ -920,7 +922,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
-				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
+				Mfields_traits<MfieldsCuda>::name).mflds();
 
   return new PscFlatfoil(params, heating, psc_);
 }
