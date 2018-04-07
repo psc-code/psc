@@ -111,7 +111,7 @@ struct Heating__ : HeatingBase
     mprts_base->put_as(mprts);
   }
   
-private:
+  //private:
   int every_step_;
   int tb_, te_;
   int kind_;

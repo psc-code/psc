@@ -265,7 +265,7 @@ struct PscFlatfoil : PscFlatfoilParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
-    //    checks_.gauss(mprts_, mflds_);
+    checks_.gauss(mprts_, mflds_);
     psc_setup_member_objs(psc_);
 
     setup_stats();
@@ -473,46 +473,6 @@ struct PscFlatfoil : PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-    auto mflds_base = PscMfieldsBase{psc_->flds};
-    auto mprts_base = PscMparticlesBase{psc_->particles};
-    auto sort = SortCuda{};
-    auto collision = CollisionCuda{psc_comm(psc_), collision_interval, collision_nu};
-
-    using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
-    auto pushp = PushParticlesCuda<Config1vbec3d>{};
-    auto pushf = PushFieldsCuda{};
-    auto bndf = BndFieldsNone<MfieldsCuda>{};
-    auto bnd = BndCuda{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
-    auto bndp = BndParticlesCuda{ppsc->mrc_domain_, ppsc->grid()};
-    auto checks = ChecksCuda{psc_comm(psc_), checks_params};
-    auto marder = MarderCuda(psc_comm(psc_), marder_diffusion, marder_loop, marder_dump);
-
-    auto inject = InjectCuda<InjectFoil>{psc_comm(psc_), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target};
-    
-    auto& kinds = ppsc->grid().kinds;
-    double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
-    double heating_zl = -1.;
-    double heating_zh =  1.;
-    double heating_xc = 0.;
-    double heating_yc = 0.;
-    double heating_rH = 3.;
-    auto heating_foil_params = HeatingSpotFoilParams{};
-    heating_foil_params.zl = heating_zl * d_i;
-    heating_foil_params.zh = heating_zh * d_i;
-    heating_foil_params.xc = heating_xc * d_i;
-    heating_foil_params.yc = heating_yc * d_i;
-    heating_foil_params.rH = heating_rH * d_i;
-    heating_foil_params.T  = .04;
-    heating_foil_params.Mi = heating_rH * kinds[MY_ION].m;
-    auto heating_spot = HeatingSpotFoil{heating_foil_params};
-    int heating_interval = 20;
-    int heating_begin = 0;
-    int heating_end = 10000000;
-    int heating_kind = MY_ELECTRON;
-    auto heating = HeatingCuda{heating_interval, heating_begin, heating_end,
-			       heating_kind, heating_spot};
-
-
     if (balance_interval > 0 && timestep % balance_interval == 0) {
       balance_(psc_, mprts_);
     }
@@ -520,85 +480,85 @@ struct PscFlatfoil : PscFlatfoilParams
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      sort(mprts_);
+      sort_(mprts_);
       prof_stop(pr_sort);
     }
     
-    if (collision_interval > 0 && ppsc->timestep % collision_interval == 0) {
+    if (collision_interval > 0 && timestep % collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      collision(mprts_);
+      collision_(mprts_);
       prof_stop(pr_collision);
     }
     
-    if (checks_params.continuity_every_step > 0 && psc_->timestep % checks_params.continuity_every_step == 0) {
+    if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       prof_start(pr_checks);
-      checks.continuity_before_particle_push(mprts_);
+      checks_.continuity_before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp.push_mprts_yz(mprts_, mflds_);
+    pushp_.push_mprts_yz(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     prof_start(pr_bndp);
-    bndp(mprts_);
+    bndp_(mprts_);
     prof_stop(pr_bndp);
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf.push_H(mflds_, .5, dim_yz{});
+    pushf_.push_H(mflds_, .5, dim_yz{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
     
     prof_start(pr_inject);
-    inject(mprts_);
+    inject_(mprts_);
     prof_stop(pr_inject);
       
     // only heating between heating_tb and heating_te
-    if (psc_->timestep >= heating_begin && psc_->timestep < heating_end &&
-	psc_->timestep % heating_interval == 0) {
+    if (timestep >= heating_.tb_ && timestep < heating_.te_ &&
+	timestep % heating_.every_step_ == 0) {
       prof_start(pr_heating);
-      heating(mprts_);
+      heating_(mprts_);
       prof_stop(pr_heating);
     }
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
-    bndf.fill_ghosts_H(mflds_);
-    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
-    bndf.add_ghosts_J(mflds_);
-    bnd.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd.fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
-    pushf.push_E(mflds_, 1., dim_yz{});
+    pushf_.push_E(mflds_, 1., dim_yz{});
     prof_stop(pr_push_flds);
     
     prof_restart(pr_bndf);
-    bndf.fill_ghosts_E(mflds_);
-    bnd.fill_ghosts(mflds_, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf.push_H(mflds_, .5, dim_yz{});
+    pushf_.push_H(mflds_, .5, dim_yz{});
     prof_stop(pr_push_flds);
     
     prof_start(pr_bndf);
-    bndf.fill_ghosts_H(mflds_);
-    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
       
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks.continuity_after_particle_push(mprts_, mflds_);
+      checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
     
@@ -608,13 +568,13 @@ struct PscFlatfoil : PscFlatfoilParams
     if (marder_interval > 0 && timestep % marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      marder(mflds_, mprts_);
+      marder_(mflds_, mprts_);
       prof_stop(pr_marder);
     }
     
-    if (checks_params.gauss_every_step > 0 && psc_->timestep % checks_params.gauss_every_step == 0) {
+    if (checks_params.gauss_every_step > 0 && timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
-      checks.gauss(mprts_, mflds_);
+      checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
     
