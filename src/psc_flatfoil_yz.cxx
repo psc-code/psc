@@ -196,7 +196,23 @@ struct PscFlatfoilParams
 
 struct PscFlatfoil : PscFlatfoilParams
 {
-#if 0
+#if DO_CUDA
+  using Mparticles_t = MparticlesCuda;
+  using Mfields_t = MfieldsCuda;
+  using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
+  using PushParticlesPusher_t = PushParticlesCuda<Config1vbec3d>;
+  using Sort_t = SortCuda;
+  using Collision_t = CollisionCuda;
+  using PushFields_t = PushFieldsCuda;
+  using BndParticles_t = BndParticlesCuda;
+  using Bnd_t = BndCuda;
+  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Inject_t = InjectCuda<InjectFoil>;
+  using Heating_t = HeatingCuda;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
+  using Checks_t = ChecksCuda;
+  using Marder_t = MarderCuda;
+#else
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
 #if 0 // generic_c: 2nd order
@@ -217,22 +233,6 @@ struct PscFlatfoil : PscFlatfoilParams
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
-#else
-  using Mparticles_t = MparticlesCuda;
-  using Mfields_t = MfieldsCuda;
-  using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
-  using PushParticlesPusher_t = PushParticlesCuda<Config1vbec3d>;
-  using Sort_t = SortCuda;
-  using Collision_t = CollisionCuda;
-  using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda;
-  using Bnd_t = BndCuda;
-  using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = InjectCuda<InjectFoil>;
-  using Heating_t = HeatingCuda;
-  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
-  using Checks_t = ChecksCuda;
-  using Marder_t = MarderCuda;
 #endif
   
   PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
@@ -499,7 +499,7 @@ struct PscFlatfoil : PscFlatfoilParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_.push_mprts_yz(mprts_, mflds_);
+    pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     

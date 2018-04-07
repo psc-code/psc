@@ -29,7 +29,7 @@ template<typename Config>
 class PushParticlesCuda : PushParticlesBase
 {
 public:
-  void push_mprts_yz(MparticlesCuda& mprts, MfieldsCuda& mflds)
+  void push_mprts(MparticlesCuda& mprts, MfieldsCuda& mflds)
   {
     int bs[3] = { BS::x::value, BS::y::value, BS::z::value };
     cuda_push_mprts_yz(mprts.cmprts(), mflds.cmflds, bs, Config::Ip::value, Config::Deposit::value,
@@ -40,7 +40,7 @@ public:
   {
     auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, EX + 6);
     auto& mprts = mprts_base->get_as<MparticlesCuda>();
-    push_mprts_yz(mprts, mflds);
+    push_mprts(mprts, mflds);
     mprts_base->put_as(mprts);
     mflds_base->put_as(mflds, JXI, JXI + 3);
   }
