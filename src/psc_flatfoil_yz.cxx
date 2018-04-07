@@ -335,8 +335,10 @@ struct PscFlatfoil : PscFlatfoilParams
 	inject_target.init_npt(kind, crd, &npt);
       }
     };
-    
-    SetupParticles<MparticlesSingle>::setup_particles(PscMparticlesBase{ppsc->particles}, psc_, n_prts_by_patch, init_npt);
+
+    auto& mp = mprts.get_as<MparticlesSingle>();
+    SetupParticles<MparticlesSingle>::setup_particles(mp, psc_, n_prts_by_patch, init_npt);
+    mprts.put_as(mp);
   }
 
   // ----------------------------------------------------------------------
@@ -344,7 +346,7 @@ struct PscFlatfoil : PscFlatfoilParams
   
   void setup_initial_fields(MfieldsBase& mflds)
   {
-    MfieldsSingle& mf = mflds.get_as<MfieldsSingle>(0, 0);
+    auto& mf = mflds.get_as<MfieldsSingle>(0, 0);
     SetupFields<MfieldsSingle>::set(mf, [&](int m, double crd[3]) {
 	switch (m) {
 	case HY: return BB;
