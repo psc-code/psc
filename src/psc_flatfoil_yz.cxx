@@ -7,7 +7,6 @@
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
 
-#include <profile.hxx>
 #include <balance.hxx>
 #include <particles.hxx>
 #include <fields3d.hxx>
@@ -438,9 +437,11 @@ struct PscFlatfoil : PscFlatfoilParams
 
   void step()
   {
-    static int pr_checks, pr_push_prts, pr_push_flds,
+    static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
       pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating;
-    if (!pr_checks) {
+    if (!pr_sort) {
+      pr_sort = prof_register("step_sort", 1., 0, 0);
+      pr_collision = prof_register("step_collision", 1., 0, 0);
       pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
       pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
       pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
@@ -461,12 +462,16 @@ struct PscFlatfoil : PscFlatfoilParams
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
       sort_(mprts_);
+      prof_stop(pr_sort);
     }
     
     if (collision_interval > 0 && timestep % collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
       collision_(mprts_);
+      prof_stop(pr_collision);
     }
     
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
@@ -564,20 +569,20 @@ private:
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
 
-  Profile<Sort_t> sort_;
-  Profile<Collision_t> collision_;
-  Profile<PushParticles_t> pushp_;
-  Profile<PushFields_t> pushf_;
-  Profile<BndParticles_t> bndp_;
-  Profile<Bnd_t> bnd_;
-  Profile<BndFields_t> bndf_;
-  Profile<Balance_t> balance_;
+  Sort_t sort_;
+  Collision_t collision_;
+  PushParticles_t pushp_;
+  PushFields_t pushf_;
+  BndParticles_t bndp_;
+  Bnd_t bnd_;
+  BndFields_t bndf_;
+  Balance_t balance_;
 
-  Profile<Heating_t> heating_;
-  Profile<Inject_t> inject_;
+  Heating_t heating_;
+  Inject_t inject_;
 
-  Profile<Checks_t> checks_;
-  Profile<Marder_t> marder_;
+  Checks_t checks_;
+  Marder_t marder_;
   
   int st_nr_particles;
   int st_time_step;
