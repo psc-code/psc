@@ -206,7 +206,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Mparticles_t = MparticlesCuda;
   using Mfields_t = MfieldsCuda;
   using Config1vbec3d = Config<IpEc, DepositVb3d, CurrentShared>;
-  using PushParticlesPusher_t = PushParticlesCuda<Config1vbec3d>;
+  using PushParticles_t = PushParticlesCuda<Config1vbec3d>;
   using Sort_t = SortCuda;
   using Collision_t = CollisionCuda;
   using PushFields_t = PushFieldsCuda;
@@ -222,10 +222,10 @@ struct PscFlatfoil : PscFlatfoilParams
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
 #if 0 // generic_c: 2nd order
-  using PushParticlesPusher_t = PushParticles__<Config2nd<dim_yz>>;
+  using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
   using checks_order = checks_order_2nd;
 #else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
-  using PushParticlesPusher_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
+  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
   using checks_order = checks_order_1st;
 #endif
   using Sort_t = SortCountsort2<Mparticles_t>;
@@ -385,8 +385,6 @@ struct PscFlatfoil : PscFlatfoilParams
       mpi_printf(psc_comm(psc_), "**** Step %d / %d, Time %g\n", psc_->timestep + 1,
 		 psc_->prm.nmax, psc_->timestep * psc_->dt);
 
-      PscMparticlesBase mprts(psc_->particles);
-
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
@@ -398,7 +396,7 @@ struct PscFlatfoil : PscFlatfoilParams
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
-      psc_stats_val[st_nr_particles] = mprts->get_n_prts();
+      psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
 
       if (psc_->timestep % psc_->prm.stats_every == 0) {
 	psc_stats_log(psc_);
@@ -573,7 +571,7 @@ private:
 
   Sort_t sort_;
   Collision_t collision_;
-  PushParticlesPusher_t pushp_;
+  PushParticles_t pushp_;
   PushFields_t pushf_;
   BndParticles_t bndp_;
   Bnd_t bnd_;
