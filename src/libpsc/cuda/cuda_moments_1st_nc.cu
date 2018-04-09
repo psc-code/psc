@@ -36,14 +36,14 @@ public:
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(int block_start,
+rho_1st_nc_cuda_run(DParticleIndexer dpi,
 		    float4 *d_xi4, float4 *d_pxi4,
 		    uint *d_off, int nr_total_blocks, uint *d_ids,
 		    DMFields d_flds0)
 {
   int block_pos[3];
-  int p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
-  int bid = d_cmprts_const.dpi.find_bid();
+  int p = dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int bid = dpi.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -83,14 +83,14 @@ rho_1st_nc_cuda_run(int block_start,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(int block_start,
+n_1st_cuda_run(DParticleIndexer dpi,
 	       float4 *d_xi4, float4 *d_pxi4,
 	       uint *d_off, int nr_total_blocks, uint *d_ids,
 	       DMFields d_flds0)
 {
   int block_pos[3];
-  int p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
-  int bid = d_cmprts_const.dpi.find_bid();
+  int p = dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int bid = dpi.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -140,7 +140,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cu
 
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
+    (*cmprts, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
      cmprts->d_off.data().get(),
      cmprts->n_blocks, cmprts->d_id.data().get(), *cmres);
   cuda_sync_if_enabled();
@@ -160,7 +160,7 @@ n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mf
 
   n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
+    (*cmprts, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
      cmprts->n_blocks, cmprts->d_id.data().get(), *cmres);
   cuda_sync_if_enabled();
 }
