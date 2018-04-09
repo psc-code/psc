@@ -162,20 +162,30 @@ struct DParticles : DParticleIndexer
   
   DParticles(const cuda_mparticles& cmprts)
     : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi(), cmprts.dxi()},
-      fnqs_(cmprts.grid_.fnqs)
+      dt_(cmprts.grid_.dt),
+      fnqs_(cmprts.grid_.fnqs),
+      dqs_(.5f * cmprts.grid_.eta * cmprts.grid_.dt)
   {
-    int n_kinds = cmprts.grid_.kinds.size();
+    auto& grid = cmprts.grid_;
+    
+    int n_kinds = grid.kinds.size();
     assert(n_kinds <= MAX_N_KINDS);
     for (int k = 0; k < n_kinds; k++) {
-      q_inv_[k] = 1.f / cmprts.grid_.kinds[k].q;
+      dq_[k] = dqs_ * grid.kinds[k].q / grid.kinds[k].m;
+      q_inv_[k] = 1.f / grid.kinds[k].q;
     }
   }
 
+  __device__ real_t dt() const { return dt_; }
   __device__ real_t fnqs() const { return fnqs_; }
   __device__ real_t q_inv(int k) const { return q_inv_[k]; }
+  __device__ real_t dq(int k) const { return dq_[k]; }
 
 private:
+  real_t dt_;
   real_t fnqs_;
+  real_t dqs_;
+  real_t dq_[MAX_N_KINDS];
   real_t q_inv_[MAX_N_KINDS];
 };
 

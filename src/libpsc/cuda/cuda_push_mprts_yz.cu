@@ -121,7 +121,7 @@ push_part_one(DParticles dmprts, struct d_particle& prt, int n, DMParticles d_mp
   real_t xm[3];
   dmprts.scalePos(xm, prt.xi);
   InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
-  AdvanceParticle<real_t, dim> advance{d_cmprts_const.dt};
+  AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
   ip.set_coeffs(xm);
   
@@ -130,7 +130,7 @@ push_part_one(DParticles dmprts, struct d_particle& prt, int n, DMParticles d_mp
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   int kind = __float_as_int(prt.kind_as_float);
-  real_t dq = d_cmprts_const.dq[kind];
+  real_t dq = dmprts.dq(kind);
   if (REORDER) {
     LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, id);
     advance.push_p(prt.pxi, E, H, dq);
