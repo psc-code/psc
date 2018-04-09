@@ -4,6 +4,29 @@
 #include "cuda_mparticles_const.h"
 #include "cuda_mfields_const.h"
 
+struct DParticles : DParticleIndexer
+{
+  static const int MAX_N_KINDS = 4;
+  
+  DParticles(const cuda_mparticles& cmprts)
+    : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi()},
+      fnqs_(cmprts.grid_.fnqs)
+  {
+    int n_kinds = cmprts.grid_.kinds.size();
+    assert(n_kinds <= MAX_N_KINDS);
+    for (int k = 0; k < n_kinds; k++) {
+      q_inv_[k] = 1.f / cmprts.grid_.kinds[k].q;
+    }
+  }
+
+  __device__ real_t fnqs() const { return fnqs_; }
+  __device__ real_t q_inv(int k) const { return q_inv_[k]; }
+
+private:
+  real_t fnqs_;
+  real_t q_inv_[MAX_N_KINDS];
+};
+
 #define THREADS_PER_BLOCK (512)
 
 // FIXME/TODO: we could do this w/o prior reordering, but currently the
@@ -36,14 +59,14 @@ public:
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(DParticleIndexer dpi,
+rho_1st_nc_cuda_run(DParticles dmprts,
 		    float4 *d_xi4, float4 *d_pxi4,
 		    uint *d_off, int nr_total_blocks, uint *d_ids,
 		    DMFields d_flds0)
 {
   int block_pos[3];
-  int p = dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
-  int bid = dpi.find_bid();
+  int p = dmprts.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -64,7 +87,7 @@ rho_1st_nc_cuda_run(DParticleIndexer dpi,
       LOAD_PARTICLE_MOM(prt, d_pxi4, n);
     }
 
-    float fnq = prt.qni_wni * d_cmprts_const.fnqs;
+    float fnq = prt.qni_wni * dmprts.fnqs();
     
     int lf[3];
     float of[3];
@@ -83,14 +106,14 @@ rho_1st_nc_cuda_run(DParticleIndexer dpi,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(DParticleIndexer dpi,
+n_1st_cuda_run(DParticles dmprts,
 	       float4 *d_xi4, float4 *d_pxi4,
 	       uint *d_off, int nr_total_blocks, uint *d_ids,
 	       DMFields d_flds0)
 {
   int block_pos[3];
-  int p = dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
-  int bid = dpi.find_bid();
+  int p = dmprts.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -112,8 +135,8 @@ n_1st_cuda_run(DParticleIndexer dpi,
     }
 
     int kind = __float_as_int(prt.kind_as_float);
-    float wni = prt.qni_wni * d_cmprts_const.q_inv[kind];
-    float fnq = wni * d_cmprts_const.fnqs;
+    float wni = prt.qni_wni * dmprts.q_inv(kind);
+    float fnq = wni * dmprts.fnqs();
     
     int lf[3];
     float of[3];
