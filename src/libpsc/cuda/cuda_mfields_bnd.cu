@@ -1,7 +1,6 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
-#include "cuda_mfields_const.h"
 #include "cuda_bits.h"
 
 #include <mrc_profile.h>

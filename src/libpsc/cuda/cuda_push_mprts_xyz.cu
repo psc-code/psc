@@ -2,8 +2,6 @@
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
 
-#include "cuda_mfields_const.h"
-
 #include "psc.h" // FIXME
 
 #define THREADS_PER_BLOCK (512)
