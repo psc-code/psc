@@ -5,6 +5,11 @@
 #include "grid.hxx"
 #include "psc_particles_cuda.h"
 
+
+#define CUDA_BND_S_NEW (9)
+#define CUDA_BND_S_OOB (10)
+#define CUDA_BND_STRIDE (10)
+
 // ======================================================================
 // DParticleIndexer
 
@@ -24,6 +29,22 @@ struct DParticleIndexer
     
     //assert(block_pos_y < b_mx[1] && block_pos_z < b_mx[2]); FIXME, assert doesn't work (on macbook)
     return (p * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
+  }
+
+  __device__ int blockShift(float xi[3], int p_nr, int bid) const
+  {
+    uint block_pos_y = __float2int_rd(xi[1] * b_dxi[1]);
+    uint block_pos_z = __float2int_rd(xi[2] * b_dxi[2]);
+    
+    if (block_pos_y >= b_mx[1] || block_pos_z >= b_mx[2]) {
+      return CUDA_BND_S_OOB;
+    } else {
+      int bidx = (p_nr * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
+      int b_diff = bid - bidx + b_mx[1] + 1;
+      int d1 = b_diff % b_mx[1];
+      int d2 = b_diff / b_mx[1];
+      return d2 * 3 + d1;
+    }
   }
   
   __device__ int find_bid()

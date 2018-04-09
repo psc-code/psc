@@ -390,22 +390,8 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
     STORE_PARTICLE_POS(prt, d_xi4, n);
   }
 
-  // save block_idx for new particle position at x^(n+1.5)
-  uint block_pos_y = __float2int_rd(prt.xi[1] * d_cmprts_const.dpi.b_dxi[1]);
-  uint block_pos_z = __float2int_rd(prt.xi[2] * d_cmprts_const.dpi.b_dxi[2]);
-  int nr_blocks = d_cmprts_const.dpi.b_mx[1] * d_cmprts_const.dpi.b_mx[2];
-
-  int block_idx;
-  if (block_pos_y >= d_cmprts_const.dpi.b_mx[1] || block_pos_z >= d_cmprts_const.dpi.b_mx[2]) {
-    block_idx = CUDA_BND_S_OOB;
-  } else {
-    int bidx = block_pos_z * d_cmprts_const.dpi.b_mx[1] + block_pos_y + p_nr * nr_blocks;
-    int b_diff = bid - bidx + d_cmprts_const.dpi.b_mx[1] + 1;
-    int d1 = b_diff % d_cmprts_const.dpi.b_mx[1];
-    int d2 = b_diff / d_cmprts_const.dpi.b_mx[1];
-    block_idx = d2 * 3 + d1;
-  }
-  d_bidx[n] = block_idx;
+  // has moved into which block? (given as relative shift)
+  d_bidx[n] = d_cmprts_const.dpi.blockShift(prt.xi, p_nr, bid);
 
   // position xm at x^(n+.5)
   find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
