@@ -2,8 +2,6 @@
 #include "cuda_iface.h"
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
-#include "cuda_mparticles_const.h"
-#include "cuda_mfields_const.h"
 
 #define DIM DIM_YZ
 
@@ -360,7 +358,7 @@ yz_calc_j(DParticles dmprts, struct d_particle& prt, int n, float4 *d_xi4, float
   float xm[3], xp[3];
   int j[3], k[3];
   
-  find_idx_off_pos_1st(prt.xi, j, h0, xm, float(0.));
+  dmprts.find_idx_off_pos_1st(prt.xi, j, h0, xm, float(0.));
 
   if (DEPOSIT == DEPOSIT_VB_2D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
@@ -371,7 +369,7 @@ yz_calc_j(DParticles dmprts, struct d_particle& prt, int n, float4 *d_xi4, float
     // out-of-plane currents at intermediate time
     int lf[3];
     float of[3];
-    find_idx_off_1st(prt.xi, lf, of, float(0.));
+    dmprts.find_idx_off_1st(prt.xi, lf, of, float(0.));
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
 
@@ -393,7 +391,7 @@ yz_calc_j(DParticles dmprts, struct d_particle& prt, int n, float4 *d_xi4, float
   d_bidx[n] = dmprts.blockShift(prt.xi, p_nr, bid);
 
   // position xm at x^(n+.5)
-  find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
+  dmprts.find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
 
   // deposit xm -> xp
   int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
@@ -515,9 +513,6 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  cuda_mfields_const_set(cmflds);
-  cuda_mparticles_const_set(cmprts);
-
   zero_currents(cmflds);
 
   int gx, gy;

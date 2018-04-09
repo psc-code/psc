@@ -134,6 +134,18 @@ struct DParticleIndexer
     }
   }
 
+  // ----------------------------------------------------------------------
+  // find_idx_off_pos_1st
+  
+  __device__ void find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], float shift)
+  {
+    for (int d = 0; d < 3; d++) {
+      pos[d] = xi[d] * dxi_[d] + shift;
+      j[d] = __float2int_rd(pos[d]);
+      h[d] = pos[d] - j[d];
+    }
+  }
+
   __device__ void scalePos(real_t xs[3], real_t xi[3])
   {
     xs[0] = 0.;

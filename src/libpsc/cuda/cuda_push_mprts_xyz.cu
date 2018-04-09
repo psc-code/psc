@@ -2,7 +2,6 @@
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
 
-#include "cuda_mparticles_const.h"
 #include "cuda_mfields_const.h"
 
 #include "psc.h" // FIXME
