@@ -141,7 +141,7 @@ void cuda_mparticles::set_particles(uint p, F getter)
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
-    pi_.checkInPatchMod(prt.xi);
+    checkInPatchMod(prt.xi);
 
     xi4[n].x  = prt.xi[0];
     xi4[n].y  = prt.xi[1];

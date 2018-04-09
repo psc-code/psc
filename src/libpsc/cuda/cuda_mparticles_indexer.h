@@ -23,14 +23,19 @@ struct cuda_mparticles_indexer
     n_blocks = n_patches * n_blocks_per_patch;
   }
 
-  int blockIndex(const float4& xi4, int p)
+  Int3 blockPosition(const real_t xi[3]) const { return pi_.blockPosition(xi); }
+
+  int blockIndex(const float4& xi4, int p) const
   {
-    Int3 bpos = pi_.blockPosition(&xi4.x);
+    Int3 bpos = blockPosition(&xi4.x);
     return blockIndex(bpos, p);
   }
 
+  void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
+  const Real3& b_dxi() const { return pi_.b_dxi_; }
+
 private:
-  int blockIndex(Int3 bpos, int p)
+  int blockIndex(Int3 bpos, int p) const
   {
     int bidx = pi_.blockIndex(bpos);
     if (bidx < 0) {
@@ -45,6 +50,7 @@ public:
   uint n_blocks_per_patch;       // number of blocks per patch
   uint n_blocks;                 // number of blocks in all patches in mprts
   Int3 b_mx_;                    // number of blocks per direction in each patch
+private:
   ParticleIndexer<real_t> pi_;
 };
 
