@@ -117,49 +117,10 @@ find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], floa
 }
 
 // ----------------------------------------------------------------------
-// block_pos_to_block_idx
-
-// OPT, we're not using the log / shift versions anymore, they might be faster
-// (but the compiler should figure it out on its own)
-
-template<int NBLOCKS_X, int NBLOCKS_Y, int NBLOCKS_Z>
-static __device__ __host__ __forceinline__ uint
-block_pos_to_block_idx(int block_pos[3])
-{
-  return (block_pos[2] *  NBLOCKS_Y) | block_pos[1];
-}
-
-#define NO_CHECKERBOARD
-static __device__ inline uint
-block_pos_to_block_idx(int block_pos[3], uint b_mx[3])
-{
-#if 1 // DIM == DIM_YZ FIXME
-#ifdef NO_CHECKERBOARD
-  return block_pos[2] * b_mx[1] + block_pos[1];
-#else
-  int dimy = b_mx[1] >> 1;
-  return
-    ((block_pos[1] & 1) << 0) |
-    ((block_pos[2] & 1) << 1) | 
-    (((block_pos[2] >> 1) * dimy + (block_pos[1] >> 1)) << 2);
-#endif
-#else
-#error TBD
-#endif
-}
-
-// ----------------------------------------------------------------------
 // find_bid
 //
 // FIXME, this is here to consolidate between moments / particle pusher
 // but it's really an implementation detail
-
-__device__ static int
-find_bid_q(int p, int *block_pos)
-{
-  // FIXME won't work if b_mx[1,2] not even (?)
-  return block_pos_to_block_idx(block_pos, d_cmprts_const.dpi.b_mx) + p * d_cmprts_const.dpi.b_mx[1] * d_cmprts_const.dpi.b_mx[2];
-}
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int

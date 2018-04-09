@@ -47,9 +47,29 @@ struct DParticleIndexer
     }
   }
   
+  __device__ static uint block_pos_to_block_idx(int block_pos[3], uint b_mx[3])
+  {
+#define NO_CHECKERBOARD
+#ifdef NO_CHECKERBOARD
+    return block_pos[2] * b_mx[1] + block_pos[1];
+#else
+    int dimy = b_mx[1] >> 1;
+    return
+      ((block_pos[1] & 1) << 0) |
+      ((block_pos[2] & 1) << 1) | 
+      (((block_pos[2] >> 1) * dimy + (block_pos[1] >> 1)) << 2);
+#endif
+  }
+
   __device__ int find_bid()
   {
     return blockIdx.y * b_mx[1] + blockIdx.x;
+  }
+
+  __device__ int find_bid_q(int p, int *block_pos)
+  {
+    // FIXME won't work if b_mx[1,2] not even (?)
+    return block_pos_to_block_idx(block_pos, b_mx) + p * b_mx[1] * b_mx[2];
   }
 
   template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
