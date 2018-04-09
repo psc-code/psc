@@ -134,6 +134,13 @@ struct DParticleIndexer
     }
   }
 
+  __device__ void scalePos(real_t xs[3], real_t xi[3])
+  {
+    xs[0] = 0.;
+    xs[1] = xi[1] * dxi_[1];
+    xs[2] = xi[2] * dxi_[2];
+  }
+  
 private:
   uint b_mx_[3];
   real_t b_dxi_[3];

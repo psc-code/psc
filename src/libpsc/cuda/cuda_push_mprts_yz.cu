@@ -105,7 +105,7 @@ private:
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, typename FldCache_t>
 __device__ static void
-push_part_one(struct d_particle& prt, int n, DMParticles d_mprts,
+push_part_one(DParticles dmprts, struct d_particle& prt, int n, DMParticles d_mprts,
 	      const FldCache_t& fld_cache)
 {
   uint id;
@@ -118,9 +118,8 @@ push_part_one(struct d_particle& prt, int n, DMParticles d_mprts,
   // here we have x^{n+.5}, p^n
 
   // field interpolation
-  float xm[3];
-  xm[1] = prt.xi[1] * d_cmprts_const.dxi[1];
-  xm[2] = prt.xi[2] * d_cmprts_const.dxi[2];
+  real_t xm[3];
+  dmprts.scalePos(xm, prt.xi);
   InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
   AdvanceParticle<real_t, dim> advance{d_cmprts_const.dt};
 
@@ -463,7 +462,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_mflds)
+push_mprts_ab(int block_start, DParticles dmprts, DMParticles d_mprts, DMFields d_mflds)
 {
   using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
 
@@ -479,7 +478,7 @@ push_mprts_ab(int block_start, DMParticles d_mprts, DMFields d_mflds)
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP>
-      (prt, n, d_mprts, fld_cache);
+      (dmprts, prt, n, d_mprts, fld_cache);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
@@ -541,14 +540,14 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, *cmprts, *cmflds);
+	(block_start, *cmprts, *cmprts, *cmflds);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
     push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (0, *cmprts, *cmflds);
+      (0, *cmprts, *cmprts, *cmflds);
     cuda_sync_if_enabled();
   } else {
     assert(0);
