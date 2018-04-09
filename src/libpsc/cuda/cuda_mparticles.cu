@@ -159,12 +159,10 @@ void cuda_mparticles::find_block_indices_ids()
     return;
   }
   
-  DParticleIndexer dpi(*this);
-    
   dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
-  k_find_block_indices_ids<<<dimGrid, dimBlock>>>(dpi,
+  k_find_block_indices_ids<<<dimGrid, dimBlock>>>(*this,
 						  d_xi4.data().get(),
 						  d_off.data().get(),
 						  d_bidx.data().get(),
