@@ -1,7 +1,6 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
-#include "cuda_mfields_const.h"
 
 struct DParticles : DParticleIndexer
 {
@@ -155,8 +154,6 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 static void
 rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  cuda_mfields_const_set(cmres);
-  
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
@@ -174,8 +171,6 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 static void
 n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  cuda_mfields_const_set(cmres);
-
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
   n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
