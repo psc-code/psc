@@ -14,6 +14,7 @@ struct DParticleIndexer
 {
   using real_t = float;
 
+  DParticleIndexer() = default; // FIXME, delete
   DParticleIndexer(const cuda_mparticles_indexer& cpi);
 
   __device__ int blockIndex(float4 xi4, int p) const

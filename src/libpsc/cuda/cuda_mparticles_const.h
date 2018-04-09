@@ -14,9 +14,8 @@
 #define MAX_KINDS (4)
 
 struct cuda_mparticles_const {
+  DParticleIndexer dpi;
   float dxi[3];
-  float b_dxi[3];
-  int b_mx[3];
   float dt;
   float dqs;
   float dq[MAX_KINDS];
@@ -33,10 +32,9 @@ cuda_mparticles_const_set(struct cuda_mparticles *cmprts)
   const Grid_t& grid = cmprts->grid_;
   
   struct cuda_mparticles_const c;
+  c.dpi = DParticleIndexer(*cmprts);
   for (int d = 0; d < 3; d++) {
     c.dxi[d] = 1.f / grid.domain.dx[d];
-    c.b_mx[d] = cmprts->b_mx()[d];
-    c.b_dxi[d] = cmprts->b_dxi()[d];
   }
 
   c.dt = grid.dt;
@@ -133,7 +131,7 @@ block_pos_to_block_idx(int block_pos[3])
 
 #define NO_CHECKERBOARD
 static __device__ inline uint
-block_pos_to_block_idx(int block_pos[3], int b_mx[3])
+block_pos_to_block_idx(int block_pos[3], uint b_mx[3])
 {
 #if 1 // DIM == DIM_YZ FIXME
 #ifdef NO_CHECKERBOARD
@@ -159,14 +157,14 @@ block_pos_to_block_idx(int block_pos[3], int b_mx[3])
 __device__ static int
 find_bid()
 {
-  return blockIdx.y * d_cmprts_const.b_mx[1] + blockIdx.x;
+  return blockIdx.y * d_cmprts_const.dpi.b_mx[1] + blockIdx.x;
 }
 
 __device__ static int
 find_bid_q(int p, int *block_pos)
 {
   // FIXME won't work if b_mx[1,2] not even (?)
-  return block_pos_to_block_idx(block_pos, d_cmprts_const.b_mx) + p * d_cmprts_const.b_mx[1] * d_cmprts_const.b_mx[2];
+  return block_pos_to_block_idx(block_pos, d_cmprts_const.dpi.b_mx) + p * d_cmprts_const.dpi.b_mx[1] * d_cmprts_const.dpi.b_mx[2];
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -174,26 +172,26 @@ __device__ static int
 find_block_pos_patch(int *block_pos, int *ci0)
 {
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % d_cmprts_const.b_mx[2];
+  block_pos[2] = blockIdx.y % d_cmprts_const.dpi.b_mx[2];
 
   ci0[0] = 0;
   ci0[1] = block_pos[1] * BLOCKSIZE_Y;
   ci0[2] = block_pos[2] * BLOCKSIZE_Z;
 
-  return blockIdx.y / d_cmprts_const.b_mx[2];
+  return blockIdx.y / d_cmprts_const.dpi.b_mx[2];
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
 find_block_pos_patch_q(int *block_pos, int *ci0, int block_start)
 {
-  int grid_dim_y = (d_cmprts_const.b_mx[2] + 1) / 2;
+  int grid_dim_y = (d_cmprts_const.dpi.b_mx[2] + 1) / 2;
   block_pos[1] = blockIdx.x * 2;
   block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
   block_pos[1] += block_start & 1;
   block_pos[2] += block_start >> 1;
-  if (block_pos[1] >= d_cmprts_const.b_mx[1] ||
-      block_pos[2] >= d_cmprts_const.b_mx[2])
+  if (block_pos[1] >= d_cmprts_const.dpi.b_mx[1] ||
+      block_pos[2] >= d_cmprts_const.dpi.b_mx[2])
     return -1;
 
   ci0[0] = 0;

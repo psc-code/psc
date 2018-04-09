@@ -35,9 +35,9 @@ __device__ static int
 find_block_pos_patch(int *block_pos)
 {
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % d_cmprts_const.b_mx[2];
+  block_pos[2] = blockIdx.y % d_cmprts_const.dpi.b_mx[2];
 
-  return blockIdx.y / d_cmprts_const.b_mx[2];
+  return blockIdx.y / d_cmprts_const.dpi.b_mx[2];
 }
 
 // ----------------------------------------------------------------------
