@@ -2,7 +2,6 @@
 #include "cuda_iface.h"
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
-#include "cuda_mparticles_const.h"
 #include "cuda_bits.h"
 #include "psc_bits.h"
 
@@ -179,12 +178,12 @@ cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-k_heating_run_foil(struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
-		   uint *d_off, curandState *d_curand_states)
+  k_heating_run_foil(DParticleIndexer dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
+		     uint *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];
-  int p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos, ci0);
-  int bid = d_cmprts_const.dpi.find_bid();
+  int p = dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos, ci0);
+  int bid = dpi.find_bid();
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
@@ -248,7 +247,7 @@ heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
 
   k_heating_run_foil<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-    (h_prm, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
+    (*cmprts, h_prm, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
      d_curand_states);
   cuda_sync_if_enabled();
 }
@@ -282,7 +281,6 @@ cuda_heating_run_foil(struct cuda_mparticles *cmprts)
   static bool first_time = true;
   static curandState *d_curand_states;
   if (first_time) {
-    cuda_mparticles_const_set(cmprts);
     cuda_heating_params_set(cmprts);
 
     dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
