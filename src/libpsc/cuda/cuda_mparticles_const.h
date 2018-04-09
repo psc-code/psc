@@ -155,12 +155,6 @@ block_pos_to_block_idx(int block_pos[3], uint b_mx[3])
 // but it's really an implementation detail
 
 __device__ static int
-find_bid()
-{
-  return blockIdx.y * d_cmprts_const.dpi.b_mx[1] + blockIdx.x;
-}
-
-__device__ static int
 find_bid_q(int p, int *block_pos)
 {
   // FIXME won't work if b_mx[1,2] not even (?)

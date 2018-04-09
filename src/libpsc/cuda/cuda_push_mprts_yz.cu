@@ -465,7 +465,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
   } else if (CURRMEM == CURRMEM_GLOBAL) {				\
     p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
       (block_pos, ci0);							\
-    bid = find_bid();							\
+    bid = d_cmprts_const.dpi.find_bid();				\
   }									\
   int block_begin = d_mprts.off_[bid];					\
   int block_end = d_mprts.off_[bid + 1]					\

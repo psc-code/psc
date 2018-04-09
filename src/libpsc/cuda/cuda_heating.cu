@@ -184,7 +184,7 @@ k_heating_run_foil(struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4
 {
   int block_pos[3], ci0[3];
   int p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos, ci0);
-  int bid = find_bid();
+  int bid = d_cmprts_const.dpi.find_bid();
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];

@@ -53,7 +53,7 @@ rho_1st_nc_cuda_run(int block_start,
 {
   int block_pos[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
-  int bid = find_bid();
+  int bid = d_cmprts_const.dpi.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -100,7 +100,7 @@ n_1st_cuda_run(int block_start,
 {
   int block_pos[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
-  int bid = find_bid();
+  int bid = d_cmprts_const.dpi.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
