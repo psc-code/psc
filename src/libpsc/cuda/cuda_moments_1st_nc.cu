@@ -30,16 +30,6 @@ public:
 
 // ======================================================================
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static int
-find_block_pos_patch(int *block_pos)
-{
-  block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % d_cmprts_const.dpi.b_mx[2];
-
-  return blockIdx.y / d_cmprts_const.dpi.b_mx[2];
-}
-
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
@@ -52,7 +42,7 @@ rho_1st_nc_cuda_run(int block_start,
 		    DMFields d_flds0)
 {
   int block_pos[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
   int bid = d_cmprts_const.dpi.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
@@ -99,7 +89,7 @@ n_1st_cuda_run(int block_start,
 	       DMFields d_flds0)
 {
   int block_pos[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
   int bid = d_cmprts_const.dpi.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
