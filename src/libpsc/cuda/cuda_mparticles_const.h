@@ -116,31 +116,5 @@ find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], floa
   }
 }
 
-// ----------------------------------------------------------------------
-// find_bid
-//
-// FIXME, this is here to consolidate between moments / particle pusher
-// but it's really an implementation detail
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static int
-find_block_pos_patch_q(int *block_pos, int *ci0, int block_start)
-{
-  int grid_dim_y = (d_cmprts_const.dpi.b_mx[2] + 1) / 2;
-  block_pos[1] = blockIdx.x * 2;
-  block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
-  block_pos[1] += block_start & 1;
-  block_pos[2] += block_start >> 1;
-  if (block_pos[1] >= d_cmprts_const.dpi.b_mx[1] ||
-      block_pos[2] >= d_cmprts_const.dpi.b_mx[2])
-    return -1;
-
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-
-  return blockIdx.y / grid_dim_y;
-}
-
 #endif
 

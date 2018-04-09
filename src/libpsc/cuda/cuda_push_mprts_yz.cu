@@ -442,7 +442,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
   int block_pos[3], ci0[3];						\
   int p, bid;								\
   if (CURRMEM == CURRMEM_SHARED) {					\
-    p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
+    p = d_cmprts_const.dpi.find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> \
       (block_pos, ci0, block_start);					\
     if (p < 0)								\
       return;								\
