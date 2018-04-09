@@ -2,29 +2,6 @@
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
 
-struct DParticles : DParticleIndexer
-{
-  static const int MAX_N_KINDS = 4;
-  
-  DParticles(const cuda_mparticles& cmprts)
-    : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi(), cmprts.dxi()},
-      fnqs_(cmprts.grid_.fnqs)
-  {
-    int n_kinds = cmprts.grid_.kinds.size();
-    assert(n_kinds <= MAX_N_KINDS);
-    for (int k = 0; k < n_kinds; k++) {
-      q_inv_[k] = 1.f / cmprts.grid_.kinds[k].q;
-    }
-  }
-
-  __device__ real_t fnqs() const { return fnqs_; }
-  __device__ real_t q_inv(int k) const { return q_inv_[k]; }
-
-private:
-  real_t fnqs_;
-  real_t q_inv_[MAX_N_KINDS];
-};
-
 #define THREADS_PER_BLOCK (512)
 
 // FIXME/TODO: we could do this w/o prior reordering, but currently the
