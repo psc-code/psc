@@ -110,27 +110,33 @@ void cuda_mparticles::swap_alt()
   thrust::swap(d_pxi4, d_alt_pxi4);
 }
 
-// ----------------------------------------------------------------------
-// cuda_params2
+// ======================================================================
+// DParticleIndexer
 
-struct cuda_params2 {
-  uint b_mx[3];
-  float b_dxi[3];
-};
-
-static void
-cuda_params2_set(struct cuda_params2 *prm, const struct cuda_mparticles *cuda_mprts)
+struct DParticleIndexer
 {
-  for (int d = 0; d < 3; d++) {
-    prm->b_mx[d]  = cuda_mprts->b_mx()[d];
-    prm->b_dxi[d] = cuda_mprts->b_dxi()[d];
+  using real_t = float;
+
+  DParticleIndexer(const cuda_mparticles_indexer& cpi)
+  {
+    for (int d = 0; d < 3; d++) {
+      b_mx[d]  = cpi.b_mx()[d];
+      b_dxi[d] = cpi.b_dxi()[d];
+    }
   }
-}
 
-static void
-cuda_params2_free(struct cuda_params2 *prm)
-{
-}
+  __device__ int blockIndex(float4 xi4, int p) const
+  {
+    uint block_pos_y = __float2int_rd(xi4.y * b_dxi[1]);
+    uint block_pos_z = __float2int_rd(xi4.z * b_dxi[2]);
+    
+    //assert(block_pos_y < b_mx[1] && block_pos_z < b_mx[2]); FIXME, assert doesn't work (on macbook)
+    return (p * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
+  }
+  
+  uint b_mx[3];
+  real_t b_dxi[3];
+};
 
 #define THREADS_PER_BLOCK 256
 
@@ -138,28 +144,18 @@ cuda_params2_free(struct cuda_params2 *prm)
 // k_find_block_indices_ids
 
 __global__ static void
-k_find_block_indices_ids(struct cuda_params2 prm, float4 *d_xi4, uint *d_off,
+k_find_block_indices_ids(DParticleIndexer dpi, float4 *d_xi4, uint *d_off,
 			 uint *d_bidx, uint *d_ids, int n_patches,
 			 int n_blocks_per_patch)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
   for (int p = 0; p < n_patches; p++) {
     uint off = d_off[p * n_blocks_per_patch];
     uint n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
       float4 xi4 = d_xi4[n + off];
-      uint block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
-      uint block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
-      
-      int block_idx;
-      if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
-	block_idx = -1; // not supposed to happen here!
-      } else {
-	block_idx = block_pos_z * prm.b_mx[1] + block_pos_y + p * nr_blocks;
-      }
-      d_bidx[n + off] = block_idx;
+      d_bidx[n + off] = dpi.blockIndex(xi4, p);
       d_ids[n + off] = n + off;
     }
   }
@@ -191,13 +187,12 @@ void cuda_mparticles::find_block_indices_ids()
     return;
   }
   
-  struct cuda_params2 prm;
-  cuda_params2_set(&prm, this);
+  DParticleIndexer dpi(*this);
     
   dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
-  k_find_block_indices_ids<<<dimGrid, dimBlock>>>(prm,
+  k_find_block_indices_ids<<<dimGrid, dimBlock>>>(dpi,
 						  d_xi4.data().get(),
 						  d_off.data().get(),
 						  d_bidx.data().get(),
@@ -205,7 +200,6 @@ void cuda_mparticles::find_block_indices_ids()
 						  n_patches,
 						  n_blocks_per_patch);
   cuda_sync_if_enabled();
-  cuda_params2_free(&prm);
 }
 
 // ----------------------------------------------------------------------
