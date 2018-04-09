@@ -53,6 +53,33 @@ private:
   ParticleIndexer<real_t> pi_;
 };
 
+// ======================================================================
+// DParticleIndexer
+
+struct DParticleIndexer
+{
+  using real_t = float;
+
+  DParticleIndexer(const cuda_mparticles_indexer& cpi)
+  {
+    for (int d = 0; d < 3; d++) {
+      b_mx[d]  = cpi.b_mx()[d];
+      b_dxi[d] = cpi.b_dxi()[d];
+    }
+  }
+
+  __device__ int blockIndex(float4 xi4, int p) const
+  {
+    uint block_pos_y = __float2int_rd(xi4.y * b_dxi[1]);
+    uint block_pos_z = __float2int_rd(xi4.z * b_dxi[2]);
+    
+    //assert(block_pos_y < b_mx[1] && block_pos_z < b_mx[2]); FIXME, assert doesn't work (on macbook)
+    return (p * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
+  }
+  
+  uint b_mx[3];
+  real_t b_dxi[3];
+};
 
 #endif
 
