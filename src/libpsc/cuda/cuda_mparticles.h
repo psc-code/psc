@@ -164,7 +164,10 @@ struct DParticles : DParticleIndexer
     : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi(), cmprts.dxi()},
       dt_(cmprts.grid_.dt),
       fnqs_(cmprts.grid_.fnqs),
-      dqs_(.5f * cmprts.grid_.eta * cmprts.grid_.dt)
+      fnqxs_(cmprts.grid_.domain.dx[0] * fnqs_ / dt_),
+      fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
+      fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
+      dqs_(.5f * cmprts.grid_.eta * dt_)
   {
     auto& grid = cmprts.grid_;
     
@@ -178,12 +181,16 @@ struct DParticles : DParticleIndexer
 
   __device__ real_t dt() const { return dt_; }
   __device__ real_t fnqs() const { return fnqs_; }
+  __device__ real_t fnqxs() const { return fnqxs_; }
+  __device__ real_t fnqys() const { return fnqys_; }
+  __device__ real_t fnqzs() const { return fnqzs_; }
   __device__ real_t q_inv(int k) const { return q_inv_[k]; }
   __device__ real_t dq(int k) const { return dq_[k]; }
 
 private:
   real_t dt_;
   real_t fnqs_;
+  real_t fnqxs_, fnqys_, fnqzs_;
   real_t dqs_;
   real_t dq_[MAX_N_KINDS];
   real_t q_inv_[MAX_N_KINDS];

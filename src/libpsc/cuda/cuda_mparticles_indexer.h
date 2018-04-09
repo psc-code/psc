@@ -140,6 +140,8 @@ struct DParticleIndexer
     xs[1] = xi[1] * dxi_[1];
     xs[2] = xi[2] * dxi_[2];
   }
+
+  __device__ real_t dxi(int d) const { return dxi_[d]; }
   
 private:
   uint b_mx_[3];

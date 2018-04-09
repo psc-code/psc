@@ -297,7 +297,7 @@ calc_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 
 template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
-curr_vb_cell(int i[3], float x[3], float dx[3], float qni_wni,
+curr_vb_cell(DParticles dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	     CURR &scurr, int *ci0)
 {
   float xa[3] = { 0.,
@@ -305,7 +305,7 @@ curr_vb_cell(int i[3], float x[3], float dx[3], float qni_wni,
 		 x[2] + .5f * dx[2], };
   if (DEPOSIT == DEPOSIT_VB_3D) {
     if (dx[0] != 0.f) {
-      float fnqx = qni_wni * d_cmprts_const.fnqxs;
+      float fnqx = qni_wni * dmprts.fnqxs();
       float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
       scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), ci0);
       scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), ci0);
@@ -314,12 +314,12 @@ curr_vb_cell(int i[3], float x[3], float dx[3], float qni_wni,
     }
   }
   if (dx[1] != 0.f) {
-    float fnqy = qni_wni * d_cmprts_const.fnqys;
+    float fnqy = qni_wni * dmprts.fnqys();
     scurr.add(1, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), ci0);
     scurr.add(1, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), ci0);
   }
   if (dx[2] != 0.f) {
-    float fnqz = qni_wni * d_cmprts_const.fnqzs;
+    float fnqz = qni_wni * dmprts.fnqzs();
     scurr.add(2, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), ci0);
     scurr.add(2, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), ci0);
   }
@@ -345,12 +345,12 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 
 template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
-yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+yz_calc_j(DParticles dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
 	  int nr_total_blocks, int p_nr,
 	  uint *d_bidx, int bid, int *ci0)
 {
-  AdvanceParticle<real_t, dim> advance{d_cmprts_const.dt};
+  AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
   float vxi[3];
   advance.calc_v(vxi, prt.pxi);
@@ -366,7 +366,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     advance.push_x(prt.xi, vxi, .5f);
 
-    float fnqx = vxi[0] * prt.qni_wni * d_cmprts_const.fnqs;
+    float fnqx = vxi[0] * prt.qni_wni * dmprts.fnqs();
 
     // out-of-plane currents at intermediate time
     int lf[3];
@@ -390,7 +390,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
   }
 
   // has moved into which block? (given as relative shift)
-  d_bidx[n] = d_cmprts_const.dpi.blockShift(prt.xi, p_nr, bid);
+  d_bidx[n] = dmprts.blockShift(prt.xi, p_nr, bid);
 
   // position xm at x^(n+.5)
   find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
@@ -400,7 +400,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
   int i[3] = { 0, j[1] - ci0[1], j[2] - ci0[2] };
   float x[3] = { 0.f, xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
   //float dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
-  float dx[3] = { vxi[0] * d_cmprts_const.dt * d_cmprts_const.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+  float dx[3] = { vxi[0] * dmprts.dt() * dmprts.dxi(0), xp[1] - xm[1], xp[2] - xm[2] };
   
   float x1 = x[1] * idiff[1];
   float x2 = x[2] * idiff[2];
@@ -417,16 +417,16 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   float dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt.qni_wni, scurr, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx1, prt.qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt.qni_wni, scurr, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx1, prt.qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt.qni_wni, scurr, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx, prt.qni_wni, scurr, ci0);
 }
 
 // ======================================================================
@@ -441,16 +441,16 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
   int block_pos[3], ci0[3];						\
   int p, bid;								\
   if (CURRMEM == CURRMEM_SHARED) {					\
-    p = d_cmprts_const.dpi.find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> \
+    p = dmprts.find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> \
       (block_pos, ci0, block_start);					\
     if (p < 0)								\
       return;								\
     									\
-    bid = d_cmprts_const.dpi.find_bid_q(p, block_pos);			\
+    bid = dmprts.find_bid_q(p, block_pos);				\
   } else if (CURRMEM == CURRMEM_GLOBAL) {				\
-    p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
+    p = dmprts.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> \
       (block_pos, ci0);							\
-    bid = d_cmprts_const.dpi.find_bid();				\
+    bid = dmprts.find_bid();						\
   }									\
   int block_begin = d_mprts.off_[bid];					\
   int block_end = d_mprts.off_[bid + 1]					\
@@ -482,10 +482,10 @@ push_mprts_ab(int block_start, DParticles dmprts, DMParticles d_mprts, DMFields 
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(prt, n, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(dmprts, prt, n, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
     } else {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(prt, n, d_mprts.xi4_, d_mprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(dmprts, prt, n, d_mprts.xi4_, d_mprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
     }
   }
   
