@@ -463,7 +463,7 @@ yz_calc_j(struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
     									\
     bid = find_bid_q(p, block_pos);					\
   } else if (CURRMEM == CURRMEM_GLOBAL) {				\
-    p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
+    p = d_cmprts_const.dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
       (block_pos, ci0);							\
     bid = find_bid();							\
   }									\

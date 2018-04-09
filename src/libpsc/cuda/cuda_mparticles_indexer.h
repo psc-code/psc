@@ -26,6 +26,19 @@ struct DParticleIndexer
     return (p * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
   }
   
+  template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+  __device__ int find_block_pos_patch(int *block_pos, int *ci0)
+  {
+    block_pos[1] = blockIdx.x;
+    block_pos[2] = blockIdx.y % b_mx[2];
+    
+    ci0[0] = 0;
+    ci0[1] = block_pos[1] * BLOCKSIZE_Y;
+    ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+    
+    return blockIdx.y / b_mx[2];
+  }
+
   uint b_mx[3];
   real_t b_dxi[3];
 };

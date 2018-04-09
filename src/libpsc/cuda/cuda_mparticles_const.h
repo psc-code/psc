@@ -169,20 +169,6 @@ find_bid_q(int p, int *block_pos)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
-find_block_pos_patch(int *block_pos, int *ci0)
-{
-  block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % d_cmprts_const.dpi.b_mx[2];
-
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-
-  return blockIdx.y / d_cmprts_const.dpi.b_mx[2];
-}
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static int
 find_block_pos_patch_q(int *block_pos, int *ci0, int block_start)
 {
   int grid_dim_y = (d_cmprts_const.dpi.b_mx[2] + 1) / 2;
