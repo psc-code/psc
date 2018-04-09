@@ -20,11 +20,12 @@ struct DParticleIndexer
   using real_t = float;
 
   DParticleIndexer() = default; // FIXME, delete
-  DParticleIndexer(const int b_mx[3], const real_t b_dxi[3])
+  DParticleIndexer(const int b_mx[3], const real_t b_dxi[3], const real_t dxi[3])
   {
     for (int d = 0; d < 3; d++) {
       b_mx_[d]  = b_mx[d];
       b_dxi_[d] = b_dxi[d];
+      dxi_[d] = dxi[d];
     }
   }
 
@@ -118,9 +119,25 @@ struct DParticleIndexer
     return blockIdx.y / grid_dim_y;
   }
 
+  // ======================================================================
+  // cell related
+  
+  // ----------------------------------------------------------------------
+  // find_idx_off_1st
+
+  __device__ void find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift)
+  {
+    for (int d = 0; d < 3; d++) {
+      real_t pos = xi[d] * dxi_[d] + shift;
+      j[d] = __float2int_rd(pos);
+      h[d] = pos - j[d];
+    }
+  }
+
 private:
   uint b_mx_[3];
   real_t b_dxi_[3];
+  real_t dxi_[3];
 };
 
 // ======================================================================
@@ -151,10 +168,11 @@ struct cuda_mparticles_indexer
   void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
   const Real3& b_dxi() const { return pi_.b_dxi_; }
   const Int3& b_mx() const { return pi_.b_mx_; }
+  const Real3& dxi() const { return pi_.dxi_; }
 
   operator DParticleIndexer()
   {
-    return DParticleIndexer(pi_.b_mx_, pi_.b_dxi_);
+    return DParticleIndexer(pi_.b_mx_, pi_.b_dxi_, pi_.dxi_);
   }
   
 private:

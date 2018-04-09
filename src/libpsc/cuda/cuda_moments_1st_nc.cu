@@ -9,7 +9,7 @@ struct DParticles : DParticleIndexer
   static const int MAX_N_KINDS = 4;
   
   DParticles(const cuda_mparticles& cmprts)
-    : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi()},
+    : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi(), cmprts.dxi()},
       fnqs_(cmprts.grid_.fnqs)
   {
     int n_kinds = cmprts.grid_.kinds.size();
@@ -91,7 +91,7 @@ rho_1st_nc_cuda_run(DParticles dmprts,
     
     int lf[3];
     float of[3];
-    find_idx_off_1st(prt.xi, lf, of, float(0.));
+    dmprts.find_idx_off_1st(prt.xi, lf, of, float(0.));
 
     scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
     scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
@@ -140,7 +140,7 @@ n_1st_cuda_run(DParticles dmprts,
     
     int lf[3];
     float of[3];
-    find_idx_off_1st(prt.xi, lf, of, float(-.5));
+    dmprts.find_idx_off_1st(prt.xi, lf, of, float(-.5));
 
     scurr.add(kind, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
     scurr.add(kind, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
