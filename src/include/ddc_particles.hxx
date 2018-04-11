@@ -126,6 +126,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	    continue;
 	  }
 	  info[nei->rank].n_recv_entries++;
+	  info[nei->rank].rank = nei->rank;
 	}
       }
     }
@@ -252,17 +253,14 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
     }
   }  
 
-  cinfo_.resize(n_ranks);
-  int i = 0;
-  for (int r = 0; r < size; r++) {
-    if (info[r].n_recv_entries) {
-      assert(info[r].n_send_entries);
-      cinfo_[i] = std::move(info[r]);
-      cinfo_[i].rank = r;
-      i++;
+  cinfo_.reserve(n_ranks);
+  for (auto& item : info) {
+    if (item.n_recv_entries) {
+      assert(item.n_send_entries);
+      cinfo_.push_back(std::move(item));
     }
   }
-  assert(i == n_ranks);
+  assert(cinfo_.size() == n_ranks);
 }
 
 // ----------------------------------------------------------------------
