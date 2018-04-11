@@ -142,8 +142,11 @@ struct DMFields
 
   __host__ __device__ DFields operator[](int p)
   {
-    return DFields(d_flds_ + p * stride_, im_); }
+    return DFields(d_flds_ + p * stride_, im_);
+  }
 
+  __device__ int im(int d) const { return im_[d]; }
+  
 private:
   real_t *d_flds_;
   uint stride_;

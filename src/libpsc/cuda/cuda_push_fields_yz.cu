@@ -1,7 +1,6 @@
 
 #include "cuda_bits.h"
 #include "cuda_mfields.h"
-#include "cuda_mfields_const.h"
 
 #include "fields.hxx"
 
@@ -16,20 +15,21 @@
 // OPT: precalc offset
 
 __global__ static void
-push_fields_E_yz(DMFields MF, float dt, float cny, float cnz, int gridy)
+push_fields_E_yz(DMFields dmflds, float dt, float cny, float cnz, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy >= 1 && iy < d_cmflds_const.im[1] - 2 * (2-BND) &&
-	iz >= 1 && iz < d_cmflds_const.im[2] - 2 * (2-BND)))
+  if (!(iy >= 1 && iy < dmflds.im(1) - 2 * (2-BND) &&
+	iz >= 1 && iz < dmflds.im(2) - 2 * (2-BND)))
     return;
+  
   iy -= BND;
   iz -= BND;
 
-  DFields F = MF[p];
+  DFields F = dmflds[p];
 
   F(EX, 0,iy,iz) +=
     cny * (F(HZ, 0,iy,iz) - F(HZ, 0,iy-1,iz)) -
@@ -48,20 +48,20 @@ push_fields_E_yz(DMFields MF, float dt, float cny, float cnz, int gridy)
 }
 
 __global__ static void
-push_fields_H_yz(DMFields MF, float cny, float cnz, int gridy)
+push_fields_H_yz(DMFields dmflds, float cny, float cnz, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
   int p = blockIdx.y / gridy;
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] - 2 * (2-BND) - 1 &&
-	iz < d_cmflds_const.im[2] - 2 * (2-BND) - 1))
+  if (!(iy < dmflds.im(1) - 2 * (2-BND) - 1 &&
+	iz < dmflds.im(2) - 2 * (2-BND) - 1))
     return;
   iy -= BND;
   iz -= BND;
 
-  DFields F = MF[p];
+  DFields F = dmflds[p];
 
   F(HX, 0,iy,iz) -=
     cny * (F(EZ, 0,iy+1,iz) - F(EZ, 0,iy,iz)) -
@@ -87,7 +87,6 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
     return;
   }
 
-  cuda_mfields_const_set(cmflds);
   assert(cmflds->n_fields == NR_FIELDS);
 
   float cny = dt / cmflds->grid().domain.dx[1];
@@ -111,8 +110,6 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   if (cmflds->n_patches == 0) {
     return;
   }
-
-  cuda_mfields_const_set(cmflds);
 
   float cny = dt / cmflds->grid().domain.dx[1];
   float cnz = dt / cmflds->grid().domain.dx[2];
