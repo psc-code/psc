@@ -64,7 +64,7 @@ struct ddc_particles
   };
   
   int nr_patches;
-  patch *patches;
+  std::vector<patch> patches_;
   struct ddcp_info_by_rank *by_rank;
   struct ddcp_info_by_rank *cinfo; // compressed info
   int n_ranks;
@@ -84,9 +84,9 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   domain = _domain;
   mrc_domain_get_patches(domain, &nr_patches);
-  patches = (patch *) calloc(nr_patches, sizeof(*patches));
+  patches_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -118,7 +118,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // count how many recv_entries per rank
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -172,7 +172,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // count send_entries
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -201,7 +201,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // set up send_entries
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -282,21 +282,17 @@ template<typename MP>
 inline ddc_particles<MP>::~ddc_particles()
 {
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  dnei *nei = &patch->nei[dir1];
-
-	  nei->send_buf.~particle_buf_t();
 	}
       }
     }
   }
-  free(patches);
 
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int size;
@@ -347,7 +343,7 @@ inline void ddc_particles<MP>::comm()
     cinfo[r].n_send = 0;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       dsend_entry *se = &cinfo[r].send_entry[i];
-      patch *patch = &patches[se->patch];
+      patch *patch = &patches_[se->patch];
       dnei *nei = &patch->nei[se->dir1];
       unsigned int n_send = nei->send_buf.size();
       cinfo[r].send_cnts[i] = n_send;
@@ -359,7 +355,7 @@ inline void ddc_particles<MP>::comm()
 
   // overlap: count local # particles
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
     patch->n_recv = 0;
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -371,7 +367,7 @@ inline void ddc_particles<MP>::comm()
 	  }
 	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
 	  int dir1neg = mrc_ddc_dir2idx(dirneg);
-	  dnei *nei_send = &patches[nei->patch].nei[dir1neg];
+	  dnei *nei_send = &patches_[nei->patch].nei[dir1neg];
 	  patch->n_recv += nei_send->send_buf.size();
 	}
       }
@@ -410,7 +406,7 @@ inline void ddc_particles<MP>::comm()
     cinfo[r].n_recv = 0;
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       drecv_entry *re = &cinfo[r].recv_entry[i];
-      patch *patch = &patches[re->patch];
+      patch *patch = &patches_[re->patch];
       patch->n_recv += cinfo[r].recv_cnts[i];
       cinfo[r].n_recv += cinfo[r].recv_cnts[i];
     }
@@ -429,7 +425,7 @@ inline void ddc_particles<MP>::comm()
     iterator_t it0 = it;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       dsend_entry *se = &cinfo[r].send_entry[i];
-      patch *patch = &patches[se->patch];
+      patch *patch = &patches_[se->patch];
       particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
@@ -463,7 +459,7 @@ inline void ddc_particles<MP>::comm()
   iterator_t *it_recv = new iterator_t[nr_patches];
 
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
     int size = patch->m_buf->size();
     patch->m_buf->reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
@@ -474,7 +470,7 @@ inline void ddc_particles<MP>::comm()
 
   // overlap: copy particles from local proc to the end of recv range
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches[p];
+    patch *patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -486,7 +482,7 @@ inline void ddc_particles<MP>::comm()
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  particle_buf_t *nei_send_buf = &patches[nei->patch].nei[dir1neg].send_buf;
+	  particle_buf_t *nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
 
 	  std::copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
 	  it_recv[p] += nei_send_buf->size();
@@ -512,7 +508,7 @@ inline void ddc_particles<MP>::comm()
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    assert(it_recv[p] == patches[p].m_buf->end());
+    assert(it_recv[p] == patches_[p].m_buf->end());
   }
   
   delete[] it_recv;

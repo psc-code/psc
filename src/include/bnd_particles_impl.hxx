@@ -61,7 +61,7 @@ struct BndParticles_ : BndParticlesBase
       reset();
     }
     for (int p = 0; p < mprts.n_patches(); p++) {
-      ddcp_patch *dpatch = &ddcp->patches[p];
+      ddcp_patch *dpatch = &ddcp->patches_[p];
       dpatch->m_buf = &mprts[p].get_buf();
     }
 
@@ -136,7 +136,7 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
     xm[d] = gpatch.xe[d] - gpatch.xb[d];
   }
   
-  auto *dpatch = &ddcp->patches[p];
+  auto *dpatch = &ddcp->patches_[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     dpatch->nei[dir1].send_buf.resize(0);
   }
