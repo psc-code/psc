@@ -68,8 +68,8 @@ struct ddc_particles
   std::vector<ddcp_info_by_rank> by_rank_;
   std::vector<ddcp_info_by_rank> cinfo_; // compressed info
   int n_ranks;
-  MPI_Request *send_reqs;
-  MPI_Request *recv_reqs;
+  std::vector<MPI_Request> send_reqs_;
+  std::vector<MPI_Request> recv_reqs_;
 
   struct mrc_domain *domain;
 };
@@ -237,15 +237,15 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   assert(n_send_ranks == n_recv_ranks);
   n_ranks = n_send_ranks;
 
-  send_reqs = (MPI_Request *) malloc(n_ranks * sizeof(*send_reqs));
-  recv_reqs = (MPI_Request *) malloc(n_ranks * sizeof(*recv_reqs));
+  send_reqs_.resize(n_ranks);
+  recv_reqs_.resize(n_ranks);
 
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (by_rank_[r].n_recv_entries) {
       MPI_Irecv(by_rank_[r].recv_entry,
 		sizeof(drecv_entry) / sizeof(int) * by_rank_[r].n_recv_entries,
-		MPI_INT, r, 111, comm, &recv_reqs[n_recv_ranks++]);
+		MPI_INT, r, 111, comm, &recv_reqs_[n_recv_ranks++]);
     }
   }  
 
@@ -254,7 +254,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
     if (by_rank_[r].n_send_entries) {
       MPI_Isend(by_rank_[r].send_entry,
 		sizeof(dsend_entry) / sizeof(int) * by_rank_[r].n_send_entries,
-		MPI_INT, r, 111, comm, &send_reqs[n_send_ranks++]);
+		MPI_INT, r, 111, comm, &send_reqs_[n_send_ranks++]);
     }
   }  
 
@@ -303,8 +303,6 @@ inline ddc_particles<MP>::~ddc_particles()
     free(by_rank_[r].send_cnts);
     free(by_rank_[r].recv_cnts);
   }
-  free(recv_reqs);
-  free(send_reqs);
 }
 
 // ----------------------------------------------------------------------
@@ -332,7 +330,7 @@ inline void ddc_particles<MP>::comm()
 
   for (int r = 0; r < n_ranks; r++) {
     MPI_Irecv(cinfo_[r].recv_cnts, cinfo_[r].n_recv_entries,
-	      MPI_INT, cinfo_[r].rank, 222, comm, &recv_reqs[r]);
+	      MPI_INT, cinfo_[r].rank, 222, comm, &recv_reqs_[r]);
   }  
 
   for (int r = 0; r < n_ranks; r++) {
@@ -346,7 +344,7 @@ inline void ddc_particles<MP>::comm()
       cinfo_[r].n_send += n_send;
     }
     MPI_Isend(cinfo_[r].send_cnts, cinfo_[r].n_send_entries,
-	      MPI_INT, cinfo_[r].rank, 222, comm, &send_reqs[r]);
+	      MPI_INT, cinfo_[r].rank, 222, comm, &send_reqs_[r]);
   }  
 
   // overlap: count local # particles
@@ -390,8 +388,8 @@ inline void ddc_particles<MP>::comm()
   }
 #endif
 
-  MPI_Waitall(n_ranks, recv_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(n_ranks, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(n_ranks, recv_reqs_.data(), MPI_STATUSES_IGNORE);
+  MPI_Waitall(n_ranks, send_reqs_.data(), MPI_STATUSES_IGNORE);
 
   MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
 
@@ -427,7 +425,7 @@ inline void ddc_particles<MP>::comm()
       it += send_buf_nei->size();
     }
     MPI_Isend(&*it0, sz * cinfo_[r].n_send, mpi_dtype,
-	      cinfo_[r].rank, 1, comm, &send_reqs[r]);
+	      cinfo_[r].rank, 1, comm, &send_reqs_[r]);
   }
   assert(it == send_buf.begin() + n_send);
 
@@ -440,7 +438,7 @@ inline void ddc_particles<MP>::comm()
       continue;
 
     MPI_Irecv(&*it, sz * cinfo_[r].n_recv, mpi_dtype,
-	      cinfo_[r].rank, 1, comm, &recv_reqs[r]);
+	      cinfo_[r].rank, 1, comm, &recv_reqs_[r]);
     it += cinfo_[r].n_recv;
   }
   assert(it == recv_buf.begin() + n_recv);
@@ -487,8 +485,8 @@ inline void ddc_particles<MP>::comm()
     }
   }
 
-  MPI_Waitall(n_ranks, recv_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(n_ranks, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(n_ranks, recv_reqs_.data(), MPI_STATUSES_IGNORE);
+  MPI_Waitall(n_ranks, send_reqs_.data(), MPI_STATUSES_IGNORE);
 
   // copy received particles into right place
 
