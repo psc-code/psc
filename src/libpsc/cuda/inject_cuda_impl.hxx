@@ -5,9 +5,6 @@
 #include "cuda_iface.h"
 #include "fields_item_moments_1st_cuda.hxx"
 
-void psc_mparticles_cuda_inject(MparticlesCuda& mprts, struct cuda_mparticles_prt *buf,
-				uint *buf_n_by_patch); // FIXME
-
 // ======================================================================
 // InjectCuda
 
@@ -208,7 +205,7 @@ struct InjectCuda : InjectBase
 
     mres.put_as(mf_n, 0, 0);
 
-    psc_mparticles_cuda_inject(mprts, buf, buf_n_by_patch);
+    mprts.inject_buf(buf, buf_n_by_patch);
   }
 
   // ----------------------------------------------------------------------

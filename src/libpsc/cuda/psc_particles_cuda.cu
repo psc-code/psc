@@ -325,16 +325,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_inject
-
-void
-psc_mparticles_cuda_inject(MparticlesCuda& mprts, struct cuda_mparticles_prt *buf,
-			   uint *buf_n_by_patch)
-{
-  mprts.inject_buf(buf, buf_n_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // MparticlesCuda::patch_t::get_b_mx
 
 const int* MparticlesCuda::patch_t::get_b_mx() const
