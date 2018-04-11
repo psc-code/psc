@@ -64,7 +64,6 @@ struct ddc_particles
   
   int nr_patches;
   std::vector<patch> patches_;
-  std::vector<ddcp_info_by_rank> by_rank_;
   std::vector<ddcp_info_by_rank> cinfo_; // compressed info
   int n_ranks;
   std::vector<MPI_Request> send_reqs_;
@@ -105,12 +104,12 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
     }
   }
 
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+  MPI_Comm comm = mrc_domain_comm(domain);
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  by_rank_.resize(size);
+  std::vector<ddcp_info_by_rank> info(size);
 
   int dir[3];
 
@@ -126,7 +125,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  by_rank_[nei->rank].n_recv_entries++;
+	  info[nei->rank].n_recv_entries++;
 	}
       }
     }
@@ -134,9 +133,9 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // alloc recv_entries
   for (int r = 0; r < size; r++) {
-    if (by_rank_[r].n_recv_entries) {
-      by_rank_[r].recv_entry.resize(by_rank_[r].n_recv_entries);
-      by_rank_[r].recv_cnts.resize(by_rank_[r].n_recv_entries);
+    if (info[r].n_recv_entries) {
+      info[r].recv_entry.resize(info[r].n_recv_entries);
+      info[r].recv_cnts.resize(info[r].n_recv_entries);
     }
   }
 
@@ -178,7 +177,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  by_rank_[nei->rank].n_send_entries++;
+	  info[nei->rank].n_send_entries++;
 	}
       }
     }
@@ -186,10 +185,10 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // alloc send_entries
   for (int r = 0; r < size; r++) {
-    if (by_rank_[r].n_send_entries) {
-      by_rank_[r].send_entry.resize(by_rank_[r].n_send_entries);
-      by_rank_[r].send_cnts.resize(by_rank_[r].n_send_entries);
-      by_rank_[r].n_send_entries = 0;
+    if (info[r].n_send_entries) {
+      info[r].send_entry.resize(info[r].n_send_entries);
+      info[r].send_cnts.resize(info[r].n_send_entries);
+      info[r].n_send_entries = 0;
     }
   }
 
@@ -208,7 +207,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	    continue;
 	  }
 	  dsend_entry *se =
-	    &by_rank_[nei->rank].send_entry[by_rank_[nei->rank].n_send_entries++];
+	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
 	  se->patch = p;
 	  se->nei_patch = nei->patch;
 	  se->dir1 = dir1;
@@ -221,10 +220,10 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   int n_recv_ranks = 0;
   int n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
-    if (by_rank_[r].n_recv_entries) {
+    if (info[r].n_recv_entries) {
       n_recv_ranks++;
     }
-    if (by_rank_[r].n_send_entries) {
+    if (info[r].n_send_entries) {
       n_send_ranks++;
     }
   }
@@ -237,18 +236,18 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
-    if (by_rank_[r].n_recv_entries) {
-      MPI_Irecv(by_rank_[r].recv_entry.data(),
-		sizeof(drecv_entry) / sizeof(int) * by_rank_[r].n_recv_entries,
+    if (info[r].n_recv_entries) {
+      MPI_Irecv(info[r].recv_entry.data(),
+		sizeof(drecv_entry) / sizeof(int) * info[r].n_recv_entries,
 		MPI_INT, r, 111, comm, &recv_reqs_[n_recv_ranks++]);
     }
   }  
 
   n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
-    if (by_rank_[r].n_send_entries) {
-      MPI_Isend(by_rank_[r].send_entry.data(),
-		sizeof(dsend_entry) / sizeof(int) * by_rank_[r].n_send_entries,
+    if (info[r].n_send_entries) {
+      MPI_Isend(info[r].send_entry.data(),
+		sizeof(dsend_entry) / sizeof(int) * info[r].n_send_entries,
 		MPI_INT, r, 111, comm, &send_reqs_[n_send_ranks++]);
     }
   }  
@@ -259,9 +258,9 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   cinfo_.resize(n_ranks);
   int i = 0;
   for (int r = 0; r < size; r++) {
-    if (by_rank_[r].n_recv_entries) {
-      assert(by_rank_[r].n_send_entries);
-      cinfo_[i] = by_rank_[r];
+    if (info[r].n_recv_entries) {
+      assert(info[r].n_send_entries);
+      cinfo_[i] = info[r];
       cinfo_[i].rank = r;
       i++;
     }
