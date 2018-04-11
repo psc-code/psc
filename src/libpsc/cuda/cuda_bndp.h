@@ -31,8 +31,8 @@ struct cuda_bndp : cuda_mparticles_indexer
 
   cuda_bndp(const Grid_t& grid);
   
-  void prep(ddcp_t* ddcp, cuda_mparticles* cmprts);
-  void post(ddcp_t* ddcp, cuda_mparticles* cmprts);
+  void prep(cuda_mparticles* cmprts);
+  void post(cuda_mparticles* cmprts);
 
   // pieces for prep
   void spine_reduce(cuda_mparticles *cmprts);

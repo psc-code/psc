@@ -88,7 +88,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
-  cbndp->prep(nullptr, cmprts.get());
+  cbndp->prep(cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -248,7 +248,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
   // BndPost expects the work done by bnd_prep()
-  cbndp->prep(nullptr, cmprts.get());
+  cbndp->prep(cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -267,7 +267,7 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   cbndp->bpatch[0].buf[0] = prt3;
   cbndp->bpatch[1].buf[0] = prt1;
   
-  cbndp->post(nullptr, cmprts.get());
+  cbndp->post(cmprts.get());
 
   // bnd_post doesn't do the actually final reordering
   EXPECT_TRUE(cmprts->need_reorder);
@@ -287,7 +287,7 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
   // BndPost expects the work done by bnd_prep()
-  cbndp->prep(nullptr, cmprts.get());
+  cbndp->prep(cmprts.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling

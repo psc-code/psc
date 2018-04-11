@@ -38,12 +38,16 @@ cuda_bndp::cuda_bndp(const Grid_t& grid)
   d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
   bpatch.resize(n_patches);
+  bufs_.reserve(n_patches);
+  for (int p = 0; p < n_patches; p++) {
+    bufs_.push_back(&bpatch[p].buf);
+  }
 }
 
 // ----------------------------------------------------------------------
 // prep
 
-void cuda_bndp::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
+void cuda_bndp::prep(cuda_mparticles* cmprts)
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -73,18 +77,12 @@ void cuda_bndp::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   prof_start(pr_D);
   copy_from_dev_and_convert(cmprts, n_prts_send);
   prof_stop(pr_D);
-
-  if (!ddcp) return; // FIXME testing hack
-  bufs_.resize(ddcp->nr_patches);
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    bufs_[p] = &bpatch[p].buf;
-  }
 }
 
 // ----------------------------------------------------------------------
 // post
 
-void cuda_bndp::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
+void cuda_bndp::post(cuda_mparticles* cmprts)
 {
   static int pr_A, pr_D, pr_E, pr_D1;
   if (!pr_A) {
@@ -116,11 +114,6 @@ void cuda_bndp::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
   cmprts->need_reorder = true;
 #endif
   prof_stop(pr_E);
-
-  if (!ddcp) return; // FIXME, testing hack
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    bufs_[p] = NULL;
-  }
 }
 
 // ----------------------------------------------------------------------

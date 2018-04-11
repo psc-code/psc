@@ -45,14 +45,14 @@ void BndParticlesCuda::operator()(MparticlesCuda& mprts)
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  cbndp_->prep(ddcp, mprts.cmprts());
+  cbndp_->prep(mprts.cmprts());
   prof_stop(pr_A);
   
   process_and_exchange(mprts, cbndp_->bufs_);
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_B);
-  cbndp_->post(ddcp, mprts.cmprts());
+  cbndp_->post(mprts.cmprts());
   prof_stop(pr_B);
   prof_stop(pr_time_step_no_comm);
 }
