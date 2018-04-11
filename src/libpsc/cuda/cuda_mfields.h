@@ -109,6 +109,8 @@ struct DFields
 
   __host__ real_t *data() { return d_flds_; }
 
+  __device__ int im(int d) const { return im_[d]; }
+
 private:
   __device__ int index(int m, int i, int j, int k) const
   {

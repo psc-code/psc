@@ -2,7 +2,7 @@
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
 #include "cuda_mfields.h"
-#include "cuda_mfields_const.h"
+#include "cuda_bits.h"
 
 #include "psc.h"
 
@@ -21,15 +21,15 @@ fill_ghosts_periodic_yz(DFields d_flds, int mb, int me)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] && iz < d_cmflds_const.im[2]))
+  if (!(iy < d_flds.im(1) && iz < d_flds.im(2)))
     return;
 
   bool inside = true;
   int jy = iy, jz = iz;
-  if (jy < SW                  ) { jy += d_cmflds_const.im[1] - 2*SW; inside = false; }
-  if (jy >= d_cmflds_const.im[1] - SW) { jy -= d_cmflds_const.im[1] - 2*SW; inside = false; }
-  if (jz < SW                  ) { jz += d_cmflds_const.im[2] - 2*SW; inside = false; }
-  if (jz >= d_cmflds_const.im[2] - SW) { jz -= d_cmflds_const.im[2] - 2*SW; inside = false; }
+  if (jy < SW                ) { jy += d_flds.im(1) - 2*SW; inside = false; }
+  if (jy >= d_flds.im(1) - SW) { jy -= d_flds.im(1) - 2*SW; inside = false; }
+  if (jz < SW                ) { jz += d_flds.im(2) - 2*SW; inside = false; }
+  if (jz >= d_flds.im(2) - SW) { jz -= d_flds.im(2) - 2*SW; inside = false; }
 
   if (inside)
     return;
@@ -42,7 +42,6 @@ fill_ghosts_periodic_yz(DFields d_flds, int mb, int me)
 void
 cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
-  cuda_mfields_const_set(cmflds);
   assert(cmflds->ib[1] == -SW);
   assert(cmflds->ib[2] == -SW);
 
@@ -59,13 +58,13 @@ fill_ghosts_periodic_z(DFields d_flds, int mb, int me)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] && iz < d_cmflds_const.im[2]))
+  if (!(iy < d_flds.im(1) && iz < d_flds.im(2)))
     return;
 
   bool inside = true;
   int jy = iy, jz = iz;
-  if (jz < SW                  ) { jz += d_cmflds_const.im[2] - 2*SW; inside = false; }
-  if (jz >= d_cmflds_const.im[2] - SW) { jz -= d_cmflds_const.im[2] - 2*SW; inside = false; }
+  if (jz < SW                ) { jz += d_flds.im(2) - 2*SW; inside = false; }
+  if (jz >= d_flds.im(2) - SW) { jz -= d_flds.im(2) - 2*SW; inside = false; }
 
   if (inside)
     return;
@@ -78,8 +77,6 @@ fill_ghosts_periodic_z(DFields d_flds, int mb, int me)
 void
 cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
-  cuda_mfields_const_set(cmflds);
-
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid((cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
@@ -93,55 +90,55 @@ add_ghosts_periodic_yz(DFields d_flds, int mb, int me)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] - 2*SW && iz < d_cmflds_const.im[2] - 2*SW))
+  if (!(iy < d_flds.im(1) - 2*SW && iz < d_flds.im(2) - 2*SW))
     return;
 
   if (iy < SW) {
-    int jy = iy + (d_cmflds_const.im[1] - 2*SW);
+    int jy = iy + (d_flds.im(1) - 2*SW);
     int jz = iz;
     for (int m = mb; m < me; m++) {
       d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
     }
     if (iz < SW) {
-      jz = iz + (d_cmflds_const.im[2] - 2*SW);
+      jz = iz + (d_flds.im(2) - 2*SW);
       for (int m = mb; m < me; m++) {
 	d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
       }
     }
-    if (iz >= d_cmflds_const.im[2] - 3*SW) {
-      jz = iz - (d_cmflds_const.im[2] - 2*SW);
+    if (iz >= d_flds.im(2) - 3*SW) {
+      jz = iz - (d_flds.im(2) - 2*SW);
       for (int m = mb; m < me; m++) {
 	d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
       }
     }
   }
-  if (iy >= d_cmflds_const.im[1] - 3*SW) {
-    int jy = iy - (d_cmflds_const.im[1] - 2*SW);
+  if (iy >= d_flds.im(1) - 3*SW) {
+    int jy = iy - (d_flds.im(1) - 2*SW);
     int jz = iz;
     for (int m = mb; m < me; m++) {
       d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
     }
     if (iz < SW) {
-      jz = iz + (d_cmflds_const.im[2] - 2*SW);
+      jz = iz + (d_flds.im(2) - 2*SW);
       for (int m = mb; m < me; m++) {
 	d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
       }
     }
-    if (iz >= d_cmflds_const.im[2] - 3*SW) {
-      jz = iz - (d_cmflds_const.im[2] - 2*SW);
+    if (iz >= d_flds.im(2) - 3*SW) {
+      jz = iz - (d_flds.im(2) - 2*SW);
       for (int m = mb; m < me; m++) {
 	d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
       }
     }
   }
   if (iz < SW) {
-    int jy = iy, jz = iz + (d_cmflds_const.im[2] - 2*SW);
+    int jy = iy, jz = iz + (d_flds.im(2) - 2*SW);
     for (int m = mb; m < me; m++) {
       d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
     }
   }
-  if (iz >= d_cmflds_const.im[2] - 3*SW) {
-    int jy = iy, jz = iz - (d_cmflds_const.im[2] - 2*SW);
+  if (iz >= d_flds.im(2) - 3*SW) {
+    int jy = iy, jz = iz - (d_flds.im(2) - 2*SW);
     for (int m = mb; m < me; m++) {
       d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
     }
@@ -151,8 +148,6 @@ add_ghosts_periodic_yz(DFields d_flds, int mb, int me)
 void
 cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
-  cuda_mfields_const_set(cmflds);
-
   Int3 ldims = cmflds->grid().ldims;
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -168,17 +163,17 @@ add_ghosts_periodic_z(DFields d_flds, int mb, int me)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (!(iy < d_cmflds_const.im[1] - 2*SW && iz < d_cmflds_const.im[2] - 2*SW))
+  if (!(iy < d_flds.im(1) - 2*SW && iz < d_flds.im(2) - 2*SW))
     return;
 
   if (iz < SW) {
-    int jy = iy, jz = iz + (d_cmflds_const.im[2] - 2*SW);
+    int jy = iy, jz = iz + (d_flds.im(2) - 2*SW);
     for (int m = mb; m < me; m++) {
       d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
     }
   }
-  if (iz >= d_cmflds_const.im[2] - 3*SW) {
-    int jy = iy, jz = iz - (d_cmflds_const.im[2] - 2*SW);
+  if (iz >= d_flds.im(2) - 3*SW) {
+    int jy = iy, jz = iz - (d_flds.im(2) - 2*SW);
     for (int m = mb; m < me; m++) {
       d_flds(m, 0,iy,iz) += d_flds(m, 0,jy,jz);
     }
@@ -188,8 +183,6 @@ add_ghosts_periodic_z(DFields d_flds, int mb, int me)
 void
 cuda_add_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
-  cuda_mfields_const_set(cmflds);
-
   Int3 ldims = cmflds->grid().ldims;
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -204,10 +197,10 @@ conducting_wall_H_y(DFields d_flds)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
-  if (iz >= d_cmflds_const.im[2] - SW)
+  if (iz >= d_flds.im(2) - SW)
     return;
 
-  int my = d_cmflds_const.im[1] - 2*SW;
+  int my = d_flds.im(1) - 2*SW;
 
   if (lo) {
     d_flds(HY, 0,-1,iz) =  d_flds(HY, 0, 1,iz);
@@ -228,10 +221,10 @@ conducting_wall_E_y(DFields d_flds)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
-  if (iz >= d_cmflds_const.im[2] - SW)
+  if (iz >= d_flds.im(2) - SW)
     return;
 
-  int my = d_cmflds_const.im[1] - 2*SW;
+  int my = d_flds.im(1) - 2*SW;
 
   if (lo) {
     d_flds(EX, 0, 0,iz) =  0.;
@@ -256,10 +249,10 @@ conducting_wall_J_y(DFields d_flds)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
-  if (iz >= d_cmflds_const.im[2] - SW)
+  if (iz >= d_flds.im(2) - SW)
     return;
 
-  int my = d_cmflds_const.im[1] - 2*SW;
+  int my = d_flds.im(1) - 2*SW;
 
   if (lo) {
     d_flds(JYI, 0, 0,iz) -= d_flds(JYI, 0,-1,iz);
@@ -284,8 +277,6 @@ template<bool lo, bool hi>
 static void
 cuda_conducting_wall_H_y(struct cuda_mfields *cmflds, int p)
 {
-  cuda_mfields_const_set(cmflds);
-
   int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_H_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> ((*cmflds)[p]);
   cuda_sync_if_enabled();			       
@@ -295,8 +286,6 @@ template<bool lo, bool hi>
 static void
 cuda_conducting_wall_E_y(struct cuda_mfields *cmflds, int p)
 {
-  cuda_mfields_const_set(cmflds);
-
   int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_E_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> ((*cmflds)[p]);
   cuda_sync_if_enabled();			       
@@ -306,8 +295,6 @@ template<bool lo, bool hi>
 static void
 cuda_conducting_wall_J_y(struct cuda_mfields *cmflds, int p)
 {
-  cuda_mfields_const_set(cmflds);
-
   int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_J_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> ((*cmflds)[p]);
   cuda_sync_if_enabled();			       
