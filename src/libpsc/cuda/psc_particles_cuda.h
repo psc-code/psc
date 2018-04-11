@@ -69,8 +69,6 @@ struct MparticlesCuda : MparticlesBase
       : mp_(mp), p_(p), pi_(mp.grid())
     {}
 
-    buf_t& get_buf() { assert(0); static buf_t fake{}; return fake; } // FIXME
-
     int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
     Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
