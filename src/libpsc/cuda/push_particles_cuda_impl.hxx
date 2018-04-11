@@ -33,8 +33,7 @@ class PushParticlesCuda : PushParticlesBase
 public:
   void push_mprts(MparticlesCuda& mprts, MfieldsCuda& mflds)
   {
-    int bs[3] = { BS144::x::value, BS144::y::value, BS144::z::value };
-    CudaPushParticles_<BS144>::push_mprts_yz(mprts.cmprts(), mflds.cmflds, bs, Config::Ip::value, Config::Deposit::value,
+    CudaPushParticles_<BS144>::push_mprts_yz(mprts.cmprts(), mflds.cmflds, Config::Ip::value, Config::Deposit::value,
 		       Config::Current::value);
   }
   

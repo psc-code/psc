@@ -575,34 +575,22 @@ yz_cuda_push_mprts(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
 
 template<typename BS>
 void CudaPushParticles_<BS>::push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds,
-					   const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
+					   bool ip_ec, bool deposit_vb_3d, bool currmem_global)
 {
   if (!ip_ec && !deposit_vb_3d && !currmem_global) {
-    if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-      //return yz_cuda_push_mprts<1, 4, 4, opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
-    }
+    //return yz_cuda_push_mprts<BS::x::value, BS::y::value, BS::z::value, opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
   }
   
   if (ip_ec && deposit_vb_3d && !currmem_global) {
-    if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-      return yz_cuda_push_mprts<1, 4, 4, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
-    }
-    if (bs[0] == 1 && bs[1] == 8 && bs[2] == 8) {
-      //return yz_cuda_push_mprts<1, 8, 8, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
-    }
+    return yz_cuda_push_mprts<BS::x::value, BS::y::value, BS::z::value, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
   }
 
   if (ip_ec && deposit_vb_3d && currmem_global) {
-    if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-      //return yz_cuda_push_mprts<1, 4, 4, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
-    }
-    if (bs[0] == 1 && bs[1] == 1 && bs[2] == 1) {
-      return yz_cuda_push_mprts<1, 1, 1, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
-    }
+    return yz_cuda_push_mprts<BS::x::value, BS::y::value, BS::z::value, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
   }
 
-  printf("bs %d:%d:%d ip_ec %d deposit_vb_3d %d currmem_global %d is not supported!\n",
-	 bs[0], bs[1], bs[2], ip_ec, deposit_vb_3d, currmem_global);
+  printf("ip_ec %d deposit_vb_3d %d currmem_global %d is not supported!\n",
+	 ip_ec, deposit_vb_3d, currmem_global);
   assert(0);
 }
 
