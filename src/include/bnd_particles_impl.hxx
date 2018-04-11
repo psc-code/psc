@@ -100,7 +100,7 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 
   const auto& grid = psc->grid();
   const auto& gpatch = grid.patches[p];
-  const int *b_mx = mprts[p].get_b_mx();
+  const int *b_mx = mprts[p].b_mx();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
     xm[d] = gpatch.xe[d] - gpatch.xb[d];

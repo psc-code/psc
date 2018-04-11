@@ -325,14 +325,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 #endif
 
 // ----------------------------------------------------------------------
-// MparticlesCuda::patch_t::get_b_mx
-
-const int* MparticlesCuda::patch_t::get_b_mx() const
-{
-  return mp_.cmprts_->b_mx();
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
 psc_mparticles_ops_<MparticlesCuda> psc_mparticles_cuda_ops;
