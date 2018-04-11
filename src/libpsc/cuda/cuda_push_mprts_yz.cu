@@ -155,14 +155,17 @@ push_part_one(DMparticlesCuda& dmprts, struct d_particle& prt, int n, const FldC
 
 #define NR_CBLOCKS 16
 #define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
-#define CBLOCK_SIZE_Y (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R)
-#define CBLOCK_SIZE_Z (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R)
+#define CBLOCK_SIZE_Y (BS_Y + BND_CURR_L + BND_CURR_R)
+#define CBLOCK_SIZE_Z (BS_Z + BND_CURR_L + BND_CURR_R)
 #define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
 
 #define CBLOCK_OFF(jy, jz, m, wid) ((((m) * CBLOCK_SIZE_Z + ((jz) + BND_CURR_L)) * CBLOCK_SIZE_Y + ((jy) + BND_CURR_L)) * (NR_CBLOCKS) + wid)
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-class SCurr {
+template<typename BS>
+class SCurr
+{
+  static const int BS_X = BS::x::value, BS_Y = BS::y::value, BS_Z = BS::z::value;
+
 public:
   static const int shared_size = 3 * CBLOCK_SIZE;
 
@@ -183,11 +186,11 @@ public:
   {
     __syncthreads();				\
     int i = threadIdx.x;
-    int stride = (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R) * (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R);
+    int stride = (BS_Y + BND_CURR_L + BND_CURR_R) * (BS_Z + BND_CURR_L + BND_CURR_R);
     while (i < stride) {
       int rem = i;
-      int jz = rem / (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R);
-      rem -= jz * (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R);
+      int jz = rem / (BS_Y + BND_CURR_L + BND_CURR_R);
+      rem -= jz * (BS_Y + BND_CURR_L + BND_CURR_R);
       int jy = rem;
       jz -= BND_CURR_L;
       jy -= BND_CURR_L;
@@ -224,8 +227,9 @@ public:
 // ----------------------------------------------------------------------
 // GCurr
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-class GCurr {
+template<typename BS>
+class GCurr
+{
 public:
   static const int shared_size = 1;
 
@@ -533,14 +537,14 @@ static void cuda_push_mprts_ab(cuda_mparticles<typename Config::Bs>* cmprts, str
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
       push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-		    SCurr<BS::x::value, BS::y::value, BS::z::value>>
+		    SCurr<BS>>
 	<<<dimGrid, THREADS_PER_BLOCK>>>
 	(block_start, *cmprts, *cmflds);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
     push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-    		  GCurr<BS::x::value, BS::y::value, BS::z::value>>
+    		  GCurr<BS>>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, *cmprts, *cmflds);
     cuda_sync_if_enabled();
