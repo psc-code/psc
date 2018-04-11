@@ -187,9 +187,8 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   // alloc send_entries
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
-      info[r].send_entry.resize(info[r].n_send_entries);
+      info[r].send_entry.reserve(info[r].n_send_entries);
       info[r].send_cnts.resize(info[r].n_send_entries);
-      info[r].n_send_entries = 0;
     }
   }
 
@@ -207,12 +206,12 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  dsend_entry *se =
-	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
-	  se->patch = p;
-	  se->nei_patch = nei->patch;
-	  se->dir1 = dir1;
-	  se->dir1neg = dir1neg;
+	  auto se = dsend_entry{};
+	  se.patch = p;
+	  se.nei_patch = nei->patch;
+	  se.dir1 = dir1;
+	  se.dir1neg = dir1neg;
+	  info[nei->rank].send_entry.push_back(se);
 	}
       }
     }
