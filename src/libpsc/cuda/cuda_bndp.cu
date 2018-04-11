@@ -75,8 +75,9 @@ void cuda_bndp::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   prof_stop(pr_D);
 
   if (!ddcp) return; // FIXME testing hack
+  bufs_.resize(ddcp->nr_patches);
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp->bufs_[p] = &bpatch[p].buf;
+    bufs_[p] = &bpatch[p].buf;
   }
 }
 
@@ -118,7 +119,7 @@ void cuda_bndp::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
 
   if (!ddcp) return; // FIXME, testing hack
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp->bufs_[p] = NULL;
+    bufs_[p] = NULL;
   }
 }
 

@@ -63,7 +63,6 @@ struct ddc_particles
   
   int nr_patches;
   std::vector<patch> patches_;
-  std::vector<buf_t*> bufs_;
   std::vector<ddcp_info_by_rank> cinfo_; // compressed info
   int n_ranks;
   std::vector<MPI_Request> send_reqs_;
@@ -83,7 +82,6 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   domain = _domain;
   mrc_domain_get_patches(domain, &nr_patches);
   patches_.resize(nr_patches);
-  bufs_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
 

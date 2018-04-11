@@ -27,6 +27,7 @@ struct cuda_bndp : cuda_mparticles_indexer
 {
   using ddcp_t = ddc_particles<MparticlesCuda>;
   using ddcp_patch = typename ddcp_t::patch;
+  using buf_t = typename MparticlesCuda::buf_t;
 
   cuda_bndp(const Grid_t& grid);
   
@@ -65,6 +66,7 @@ struct cuda_bndp : cuda_mparticles_indexer
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
   std::vector<cuda_bnd> bpatch;
+  std::vector<buf_t*> bufs_;
 };
 
 #endif

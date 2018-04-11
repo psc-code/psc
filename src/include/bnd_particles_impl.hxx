@@ -61,11 +61,14 @@ struct BndParticles_ : BndParticlesBase
     if (psc_balance_generation_cnt > balance_generation_cnt_) {
       reset();
     }
+
+    std::vector<buf_t*> bufs;
+    bufs.reserve(mprts.n_patches());
     for (int p = 0; p < mprts.n_patches(); p++) {
-      ddcp->bufs_[p] = &mprts[p].get_buf();
+      bufs.push_back(&mprts[p].get_buf());
     }
 
-    process_and_exchange(mprts, ddcp->bufs_);
+    process_and_exchange(mprts, bufs);
     
     //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
     //psc_bnd_particles_open_boundary(bnd, particles, mflds);
