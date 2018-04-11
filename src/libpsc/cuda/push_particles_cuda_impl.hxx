@@ -16,9 +16,10 @@ struct DepositVb2d : std::false_type {};
 struct CurrentGlobal : std::true_type {};
 struct CurrentShared : std::false_type {};
 
-template<typename IP, typename DEPOSIT, typename CURRENT>
+template<typename BS, typename IP, typename DEPOSIT, typename CURRENT>
 struct Config
 {
+  using Bs = BS;
   using Ip = IP;
   using Deposit = DEPOSIT;
   using Current = CURRENT;
@@ -33,7 +34,7 @@ class PushParticlesCuda : PushParticlesBase
 public:
   void push_mprts(MparticlesCuda& mprts, MfieldsCuda& mflds)
   {
-    CudaPushParticles_<BS144>::push_mprts_yz(mprts.cmprts(), mflds.cmflds, Config::Ip::value, Config::Deposit::value,
+    CudaPushParticles_<typename Config::Bs>::push_mprts_yz(mprts.cmprts(), mflds.cmflds, Config::Ip::value, Config::Deposit::value,
 		       Config::Current::value);
   }
   
