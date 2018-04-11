@@ -11,7 +11,7 @@
 
 struct BndParticlesBase
 {
-  virtual void exchange_particles(PscMparticlesBase mprts_base) = 0;
+  virtual void exchange_particles(MparticlesBase& mprts_base) = 0;
 };
 
 // ======================================================================
@@ -29,7 +29,7 @@ struct PscBndParticles
     : bndp_(bndp)
   {}
 
-  void operator()(PscMparticlesBase mprts)
+  void operator()(MparticlesBase& mprts)
   {
     static int pr;
     if (!pr) {

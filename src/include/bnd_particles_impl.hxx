@@ -105,11 +105,11 @@ struct BndParticles_ : BndParticlesBase
   // ----------------------------------------------------------------------
   // exchange_particles
 
-  void exchange_particles(PscMparticlesBase mprts_base) override
+  void exchange_particles(MparticlesBase& mprts_base) override
   {
-    auto& mprts = mprts_base->get_as<Mparticles>();
+    auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
   }
 
 protected:

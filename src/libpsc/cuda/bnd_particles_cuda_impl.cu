@@ -60,10 +60,10 @@ void BndParticlesCuda::operator()(MparticlesCuda& mprts)
 // ----------------------------------------------------------------------
 // exchange_particles
 
-void BndParticlesCuda::exchange_particles(PscMparticlesBase mprts_base)
+void BndParticlesCuda::exchange_particles(MparticlesBase& mprts_base)
 {
-  auto& mprts = mprts_base->get_as<MparticlesCuda>();
+  auto& mprts = mprts_base.get_as<MparticlesCuda>();
   (*this)(mprts);
-  mprts_base->put_as(mprts);
+  mprts_base.put_as(mprts);
 }
 

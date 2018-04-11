@@ -125,7 +125,7 @@ psc_step(struct psc *psc)
   pushf.advance_H(mflds, .5);
   // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-  bndp(mprts);
+  bndp(*mprts.sub());
   
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   
