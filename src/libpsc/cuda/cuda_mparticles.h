@@ -81,30 +81,7 @@ struct d_particle {
     d_pxi4[n] = pxi4;							\
 } while (0)
 
-// ----------------------------------------------------------------------
-// DMParticles
-
-struct DMParticles
-{
-  DMParticles(float4* xi4, float4* pxi4, float4* alt_xi4, float4 *alt_pxi4,
-	      uint *off, uint *bidx, uint *id, uint n_blocks)
-    : xi4_(xi4), pxi4_(pxi4),
-      alt_xi4_(alt_xi4), alt_pxi4_(alt_pxi4),
-      off_(off),
-      bidx_(bidx),
-      id_(id),
-      n_blocks_(n_blocks)
-  {}
-  
-  float4 *xi4_;
-  float4 *pxi4_;
-  float4 *alt_xi4_;
-  float4 *alt_pxi4_;
-  uint *off_;
-  uint *bidx_;
-  uint *id_;
-  uint n_blocks_;
-};
+struct DMParticles;
 
 // ----------------------------------------------------------------------
 // cuda_mparticles
@@ -193,6 +170,31 @@ private:
   real_t dqs_;
   real_t dq_[MAX_N_KINDS];
   real_t q_inv_[MAX_N_KINDS];
+};
+
+// ----------------------------------------------------------------------
+// DMParticles
+
+struct DMParticles
+{
+  DMParticles(float4* xi4, float4* pxi4, float4* alt_xi4, float4 *alt_pxi4,
+	      uint *off, uint *bidx, uint *id, uint n_blocks)
+    : xi4_(xi4), pxi4_(pxi4),
+      alt_xi4_(alt_xi4), alt_pxi4_(alt_pxi4),
+      off_(off),
+      bidx_(bidx),
+      id_(id),
+      n_blocks_(n_blocks)
+  {}
+  
+  float4 *xi4_;
+  float4 *pxi4_;
+  float4 *alt_xi4_;
+  float4 *alt_pxi4_;
+  uint *off_;
+  uint *bidx_;
+  uint *id_;
+  uint n_blocks_;
 };
 
 // ======================================================================
