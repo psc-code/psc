@@ -45,7 +45,8 @@ void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 template<typename BS>
 struct cuda_mparticles;
 
-void cuda_push_mprts_yz(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds,
+template<typename BS>
+void cuda_push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds,
 			const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
 
 void cuda_push_mprts_xyz(cuda_mparticles<BS144>*cmprts, struct cuda_mfields *cmflds);
