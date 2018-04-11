@@ -8,6 +8,7 @@
 #include "psc_balance.h"
 #include "ddc_particles.hxx"
 #include "bnd_particles.hxx"
+#include "particles_simple.hxx"
 
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
@@ -68,7 +69,7 @@ struct BndParticlesCommon : BndParticlesBase
 #pragma omp parallel for
     for (int p = 0; p < ddcp->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      process_patch(mprts, *bufs[p], p);
+      process_patch(mprts[p].particleIndexer(), *bufs[p], p);
       psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
     prof_stop(pr_B);
@@ -80,7 +81,7 @@ struct BndParticlesCommon : BndParticlesBase
   }
   
 protected:
-  void process_patch(Mparticles& mprts, buf_t& buf, int p);
+  void process_patch(const ParticleIndexer<real_t>& pi, buf_t& buf, int p);
 
 protected:
   ddcp_t* ddcp;
@@ -91,7 +92,7 @@ protected:
 // BndParticlesCommon::process_patch
 
 template<typename MP>
-void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
+void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, buf_t& buf, int p)
 {
   struct psc *psc = ppsc;
 
@@ -100,7 +101,6 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 
   const auto& grid = psc->grid();
   const auto& gpatch = grid.patches[p];
-  const auto& pi = mprts[p].particleIndexer();
   const int *b_mx = pi.b_mx();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
