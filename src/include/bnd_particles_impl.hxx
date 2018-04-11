@@ -23,6 +23,7 @@ struct BndParticles_ : BndParticlesBase
   using real_t = typename Mparticles::real_t;
   using ddcp_t = ddc_particles<Mparticles>;
   using ddcp_patch = typename ddcp_t::patch;
+  using buf_t = typename Mparticles::buf_t;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -87,7 +88,7 @@ struct BndParticles_ : BndParticlesBase
 #pragma omp parallel for
     for (int p = 0; p < ddcp->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      process_patch(mprts, p);
+      process_patch(mprts, *ddcp->bufs_[p], p);
       psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
     prof_stop(pr_B);
@@ -109,7 +110,7 @@ struct BndParticles_ : BndParticlesBase
   }
 
 protected:
-  void process_patch(Mparticles& mprts, int p);
+  void process_patch(Mparticles& mprts, buf_t& buf, int p);
 
 protected:
   ddcp_t* ddcp;
@@ -120,7 +121,7 @@ protected:
 // BndParticles_::process_patch
 
 template<typename MP>
-void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
+void BndParticles_<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 {
   struct psc *psc = ppsc;
 
@@ -140,7 +141,6 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
     dpatch->nei[dir1].send_buf.resize(0);
   }
 
-  auto& buf = *ddcp->bufs_[p];
   unsigned int n_begin = 0;
   unsigned int n_end = buf.size();
   unsigned int head = n_begin;
