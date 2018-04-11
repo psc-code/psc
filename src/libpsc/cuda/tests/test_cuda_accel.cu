@@ -3,6 +3,7 @@
 #include "fields.hxx"
 #include "cuda_mfields.h"
 #include "cuda_mparticles.h"
+#include "cuda_push_particles.cuh"
 
 #include "cuda_test.hxx"
 
