@@ -252,15 +252,12 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
     }
   }  
 
-  // FIXME / OPT, we're copying alloc'd pointers over,
-  // fragile, though correct. info could be free'd here or even
-  // earlier
   cinfo_.resize(n_ranks);
   int i = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       assert(info[r].n_send_entries);
-      cinfo_[i] = info[r];
+      cinfo_[i] = std::move(info[r]);
       cinfo_[i].rank = r;
       i++;
     }
