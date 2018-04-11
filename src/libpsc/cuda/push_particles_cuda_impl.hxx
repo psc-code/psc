@@ -38,7 +38,7 @@ class PushParticlesCuda : PushParticlesBase
 public:
   void push_mprts(MparticlesCuda& mprts, MfieldsCuda& mflds)
   {
-    CudaPushParticles_<Config>::push_mprts_yz(mprts.cmprts(), mflds.cmflds, Config::Ip::value);
+    CudaPushParticles_<Config>::push_mprts_yz(mprts.cmprts(), mflds.cmflds);
   }
   
   void push_mprts_yz(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override

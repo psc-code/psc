@@ -152,7 +152,7 @@ TEST_F(PushMprtsTest, Accel)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    CudaPushParticles_<Config1vbec3d>::push_mprts_yz(cmprts.get(), cmflds.get(), IP_EC);
+    CudaPushParticles_<Config1vbec3d>::push_mprts_yz(cmprts.get(), cmflds.get());
 
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	EXPECT_NEAR(prt.pxi[0], 1*(n+1), eps);
@@ -201,7 +201,7 @@ TEST_F(PushMprtsTest, Cyclo)
 
   // run test
   for (int n = 0; n < n_steps; n++) {
-    CudaPushParticles_<Config1vbec3d>::push_mprts_yz(cmprts.get(), cmflds.get(), IP_EC);
+    CudaPushParticles_<Config1vbec3d>::push_mprts_yz(cmprts.get(), cmflds.get());
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
