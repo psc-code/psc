@@ -24,7 +24,8 @@ BndParticlesCuda::~BndParticlesCuda()
 void BndParticlesCuda::reset()
 {
   Base::reset();
-  //cbndp_->setup(grid);
+  delete(cbndp_);
+  cbndp_ = new cuda_bndp(ppsc->grid());
 }
 
 // ----------------------------------------------------------------------
@@ -34,7 +35,6 @@ void BndParticlesCuda::operator()(MparticlesCuda& mprts)
 {
   if (psc_balance_generation_cnt > balance_generation_cnt_) {
     reset();
-    mprintf("WARNING: bndp_cuda::reset() probably broken\n");
   }
   
   static int pr_A, pr_B;
