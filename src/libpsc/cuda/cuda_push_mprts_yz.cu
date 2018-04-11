@@ -2,6 +2,7 @@
 #include "cuda_iface.h"
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_push_particles.cuh"
 
 #define DIM DIM_YZ
 
@@ -573,8 +574,8 @@ yz_cuda_push_mprts(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
 // cuda_push_mprts_yz
 
 template<typename BS>
-void cuda_push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds,
-			const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
+void CudaPushParticles_<BS>::push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds,
+					   const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
 {
   if (!ip_ec && !deposit_vb_3d && !currmem_global) {
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
@@ -605,6 +606,4 @@ void cuda_push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds
   assert(0);
 }
 
-template
-void cuda_push_mprts_yz<BS144>(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds,
-			       const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
+template struct CudaPushParticles_<BS144>;
