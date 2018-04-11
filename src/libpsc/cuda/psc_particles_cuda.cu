@@ -71,18 +71,6 @@ void MparticlesCuda::reset(const Grid_t& grid)
   new(this) MparticlesCuda(grid);
 }
 
-void MparticlesCuda::to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
-{
-  dprintf("CMPRTS: to_device\n");
-  cmprts_->to_device(xi4, pxi4, n_prts, off);
-}
-
-void MparticlesCuda::from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off)
-{
-  dprintf("CMPRTS: from_device\n");
-  cmprts_->from_device(xi4, pxi4, n_prts, off);
-}
-
 void MparticlesCuda::setup_internals()
 {
   dprintf("CMPRTS: setup_internals\n");

@@ -5,7 +5,6 @@
 #include "particles.hxx"
 #include "particles_traits.hxx"
 #include "psc_bits.h"
-#include "cuda_compat.h"
 #include "particles_simple.hxx"
 
 #include <vector>
@@ -55,8 +54,6 @@ struct MparticlesCuda : MparticlesBase
   void resize_all(const uint *n_prts_by_patch) override;
   void reset(const Grid_t& grid) override;
 
-  void to_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
-  void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   void setup_internals();
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
