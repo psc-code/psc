@@ -160,7 +160,7 @@ struct DParticles : DParticleIndexer
   static const int MAX_N_KINDS = 4;
   
   DParticles(const cuda_mparticles& cmprts)
-    : DParticleIndexer{cmprts.b_mx(), cmprts.b_dxi(), cmprts.dxi()},
+    : DParticleIndexer{cmprts},
       dt_(cmprts.grid_.dt),
       fnqs_(cmprts.grid_.fnqs),
       fnqxs_(cmprts.grid_.domain.dx[0] * fnqs_ / dt_),
