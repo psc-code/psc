@@ -61,18 +61,6 @@ struct MparticlesCuda : MparticlesBase
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
 
-  template<typename MP>
-  static void copy_to(MparticlesCuda& mprts_cuda, MP& mprts);
-
-  template<typename MP>
-  static void copy_from(MparticlesCuda& mprts_cuda, MP& mprts);
-
-  template<typename MP>
-  static void copy_to(MparticlesBase& mprts_cuda, MparticlesBase& mprts);
-
-  template<typename MP>
-  static void copy_from(MparticlesBase& mprts_cuda, MparticlesBase& mprts);
-
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }

@@ -168,7 +168,7 @@ private:
 };
 
 template<typename MP>
-void MparticlesCuda::copy_from(MparticlesCuda& mp, MP& mp_other)
+static void copy_from(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -185,7 +185,7 @@ void MparticlesCuda::copy_from(MparticlesCuda& mp, MP& mp_other)
 }
 
 template<typename MP>
-void MparticlesCuda::copy_to(MparticlesCuda& mp, MP& mp_other)
+static void copy_to(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp_other.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -206,13 +206,13 @@ void MparticlesCuda::copy_to(MparticlesCuda& mp, MP& mp_other)
 // conversion to "single"/"double"
 
 template<typename MP>
-void MparticlesCuda::copy_from(MparticlesBase& mp, MparticlesBase& mp_other)
+static void copy_from(MparticlesBase& mp, MparticlesBase& mp_other)
 {
   copy_from(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
 template<typename MP>
-void MparticlesCuda::copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
+static void copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
 {
   copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
