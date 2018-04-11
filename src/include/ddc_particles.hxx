@@ -18,7 +18,6 @@ struct ddc_particles
   using real_t = typename Mparticles::real_t;
   
   ddc_particles(struct mrc_domain *domain);
-  ~ddc_particles();
 
   void comm();
 
@@ -37,13 +36,13 @@ struct ddc_particles
   };
   
   struct ddcp_info_by_rank {
-    dsend_entry *send_entry;
-    int *send_cnts;
+    std::vector<dsend_entry> send_entry;
+    std::vector<int> send_cnts;
     int n_send_entries;
     int n_send;
     
-    drecv_entry *recv_entry;
-    int *recv_cnts;
+    std::vector<drecv_entry> recv_entry;
+    std::vector<int> recv_cnts;
     int n_recv_entries;
     int n_recv;
     
@@ -136,10 +135,8 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   // alloc recv_entries
   for (int r = 0; r < size; r++) {
     if (by_rank_[r].n_recv_entries) {
-      by_rank_[r].recv_entry =
-	(drecv_entry *) malloc(by_rank_[r].n_recv_entries * sizeof(*by_rank_[r].recv_entry));
-      by_rank_[r].recv_cnts =
-	(int *) malloc(by_rank_[r].n_recv_entries * sizeof(*by_rank_[r].recv_cnts));
+      by_rank_[r].recv_entry.resize(by_rank_[r].n_recv_entries);
+      by_rank_[r].recv_cnts.resize(by_rank_[r].n_recv_entries);
     }
   }
 
@@ -190,10 +187,8 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   // alloc send_entries
   for (int r = 0; r < size; r++) {
     if (by_rank_[r].n_send_entries) {
-      by_rank_[r].send_entry = (dsend_entry *)
-	malloc(by_rank_[r].n_send_entries * sizeof(*by_rank_[r].send_entry));
-      by_rank_[r].send_cnts = (int *)
-	malloc(by_rank_[r].n_send_entries * sizeof(*by_rank_[r].send_cnts));
+      by_rank_[r].send_entry.resize(by_rank_[r].n_send_entries);
+      by_rank_[r].send_cnts.resize(by_rank_[r].n_send_entries);
       by_rank_[r].n_send_entries = 0;
     }
   }
@@ -243,7 +238,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (by_rank_[r].n_recv_entries) {
-      MPI_Irecv(by_rank_[r].recv_entry,
+      MPI_Irecv(by_rank_[r].recv_entry.data(),
 		sizeof(drecv_entry) / sizeof(int) * by_rank_[r].n_recv_entries,
 		MPI_INT, r, 111, comm, &recv_reqs_[n_recv_ranks++]);
     }
@@ -252,7 +247,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (by_rank_[r].n_send_entries) {
-      MPI_Isend(by_rank_[r].send_entry,
+      MPI_Isend(by_rank_[r].send_entry.data(),
 		sizeof(dsend_entry) / sizeof(int) * by_rank_[r].n_send_entries,
 		MPI_INT, r, 111, comm, &send_reqs_[n_send_ranks++]);
     }
@@ -272,37 +267,6 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
     }
   }
   assert(i == n_ranks);
-}
-
-// ----------------------------------------------------------------------
-// dtor
-
-template<typename MP>
-inline ddc_particles<MP>::~ddc_particles()
-{
-  for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
-
-    int dir[3];
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	}
-      }
-    }
-  }
-
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-  int size;
-  MPI_Comm_size(comm, &size);
-
-  for (int r = 0; r < size; r++) {
-    free(by_rank_[r].send_entry);
-    free(by_rank_[r].recv_entry);
-    free(by_rank_[r].send_cnts);
-    free(by_rank_[r].recv_cnts);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -329,7 +293,7 @@ inline void ddc_particles<MP>::comm()
   int dir[3];
 
   for (int r = 0; r < n_ranks; r++) {
-    MPI_Irecv(cinfo_[r].recv_cnts, cinfo_[r].n_recv_entries,
+    MPI_Irecv(cinfo_[r].recv_cnts.data(), cinfo_[r].n_recv_entries,
 	      MPI_INT, cinfo_[r].rank, 222, comm, &recv_reqs_[r]);
   }  
 
@@ -343,7 +307,7 @@ inline void ddc_particles<MP>::comm()
       cinfo_[r].send_cnts[i] = n_send;
       cinfo_[r].n_send += n_send;
     }
-    MPI_Isend(cinfo_[r].send_cnts, cinfo_[r].n_send_entries,
+    MPI_Isend(cinfo_[r].send_cnts.data(), cinfo_[r].n_send_entries,
 	      MPI_INT, cinfo_[r].rank, 222, comm, &send_reqs_[r]);
   }  
 
