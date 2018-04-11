@@ -2,7 +2,7 @@
 add_library(psccuda
   cuda_base.cu
   
-  psc_particles_cuda.cxx
+  psc_particles_cuda.cu
   cuda_mparticles_base.cu
   cuda_mparticles.cu
   cuda_mparticles_iface.cu
