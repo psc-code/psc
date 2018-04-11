@@ -6,9 +6,9 @@
 
 struct cuda_bndp;
 
-struct BndParticlesCuda : BndParticles_<MparticlesCuda>
+struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda>
 {
-  using Base = BndParticles_<MparticlesCuda>;
+  using Base = BndParticlesCommon<MparticlesCuda>;
 
   BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid);
   ~BndParticlesCuda();

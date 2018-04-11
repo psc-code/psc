@@ -13,22 +13,21 @@ extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 // ======================================================================
-// BndParticles_
+// BndParticlesCommon
 
 template<typename MP>
-struct BndParticles_ : BndParticlesBase
+struct BndParticlesCommon : BndParticlesBase
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
   using ddcp_t = ddc_particles<Mparticles>;
-  using ddcp_patch = typename ddcp_t::patch;
   using buf_t = typename Mparticles::buf_t;
 
   // ----------------------------------------------------------------------
   // ctor
 
-  BndParticles_(struct mrc_domain *domain, const Grid_t& grid)
+  BndParticlesCommon(struct mrc_domain *domain, const Grid_t& grid)
     : ddcp{},
       balance_generation_cnt_{-1}
   {
@@ -38,7 +37,7 @@ struct BndParticles_ : BndParticlesBase
   // ----------------------------------------------------------------------
   // dtor
 
-  ~BndParticles_()
+  ~BndParticlesCommon()
   {
     delete ddcp;
   }
@@ -51,28 +50,6 @@ struct BndParticles_ : BndParticlesBase
     delete ddcp;
     ddcp = new ddcp_t{ppsc->mrc_domain_};
     balance_generation_cnt_ = psc_balance_generation_cnt;
-  }
-
-  // ----------------------------------------------------------------------
-  // operator() (exchange on correct particle type)
-  
-  void operator()(Mparticles& mprts)
-  {
-    if (psc_balance_generation_cnt > balance_generation_cnt_) {
-      reset();
-    }
-
-    std::vector<buf_t*> bufs;
-    bufs.reserve(mprts.n_patches());
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      bufs.push_back(&mprts[p].get_buf());
-    }
-
-    process_and_exchange(mprts, bufs);
-    
-    //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
-    //psc_bnd_particles_open_boundary(bnd, particles, mflds);
-    //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
   }
 
   // ----------------------------------------------------------------------
@@ -102,16 +79,6 @@ struct BndParticles_ : BndParticlesBase
     prof_stop(pr_C);
   }
   
-  // ----------------------------------------------------------------------
-  // exchange_particles
-
-  void exchange_particles(MparticlesBase& mprts_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts);
-    mprts_base.put_as(mprts);
-  }
-
 protected:
   void process_patch(Mparticles& mprts, buf_t& buf, int p);
 
@@ -121,10 +88,10 @@ protected:
 };
 
 // ----------------------------------------------------------------------
-// BndParticles_::process_patch
+// BndParticlesCommon::process_patch
 
 template<typename MP>
-void BndParticles_<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
+void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 {
   struct psc *psc = ppsc;
 
@@ -248,3 +215,48 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
   buf.resize(head);
 }
 
+// ======================================================================
+// BndParticles_
+
+template<typename MP>
+struct BndParticles_ : BndParticlesCommon<MP>
+{
+  using Base = BndParticlesCommon<MP>;
+  using Mparticles = MP;
+  using buf_t = typename Mparticles::buf_t;
+
+  using Base::Base;
+
+  // ----------------------------------------------------------------------
+  // operator() (exchange on correct particle type)
+  
+  void operator()(Mparticles& mprts)
+  {
+    if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
+      this->reset();
+    }
+
+    std::vector<buf_t*> bufs;
+    bufs.reserve(mprts.n_patches());
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      bufs.push_back(&mprts[p].get_buf());
+    }
+
+    this->process_and_exchange(mprts, bufs);
+    
+    //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
+    //psc_bnd_particles_open_boundary(bnd, particles, mflds);
+    //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
+  }
+
+  // ----------------------------------------------------------------------
+  // exchange_particles
+
+  void exchange_particles(MparticlesBase& mprts_base) override
+  {
+    auto& mprts = mprts_base.get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base.put_as(mprts);
+  }
+
+};
