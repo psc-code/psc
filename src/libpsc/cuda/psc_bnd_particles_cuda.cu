@@ -1,10 +1,7 @@
 
 #include "psc_bnd_particles_private.h"
-#include "psc_particles_cuda.h"
 
-#include "cuda_bndp_iface.h"
-
-#include <mrc_profile.h>
+#include "bnd_particles_cuda_impl.hxx"
 
 // ======================================================================
 // psc_bnd_particles: subclass "cuda"
