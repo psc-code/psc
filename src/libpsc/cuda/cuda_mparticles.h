@@ -128,11 +128,11 @@ public:
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
 };
 
-struct DParticles : DParticleIndexer
+struct DMparticlesCuda : DParticleIndexer
 {
   static const int MAX_N_KINDS = 4;
   
-  DParticles(cuda_mparticles& cmprts)
+  DMparticlesCuda(cuda_mparticles& cmprts)
     : DParticleIndexer{cmprts},
       dt_(cmprts.grid_.dt),
       fnqs_(cmprts.grid_.fnqs),

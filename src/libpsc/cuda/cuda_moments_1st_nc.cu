@@ -34,7 +34,7 @@ public:
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(DParticles dmprts,
+rho_1st_nc_cuda_run(DMparticlesCuda dmprts,
 		    float4 *d_xi4, float4 *d_pxi4,
 		    uint *d_off, int nr_total_blocks, uint *d_ids,
 		    DMFields d_flds0)
@@ -81,7 +81,7 @@ rho_1st_nc_cuda_run(DParticles dmprts,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(DParticles dmprts,
+n_1st_cuda_run(DMparticlesCuda dmprts,
 	       float4 *d_xi4, float4 *d_pxi4,
 	       uint *d_off, int nr_total_blocks, uint *d_ids,
 	       DMFields d_flds0)

@@ -103,7 +103,7 @@ private:
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, typename FldCache_t>
 __device__ static void
-push_part_one(DParticles dmprts, struct d_particle& prt, int n, const FldCache_t& fld_cache)
+push_part_one(DMparticlesCuda& dmprts, struct d_particle& prt, int n, const FldCache_t& fld_cache)
 {
   uint id;
   if (REORDER) {
@@ -294,7 +294,7 @@ calc_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 
 template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
-curr_vb_cell(DParticles dmprts, int i[3], float x[3], float dx[3], float qni_wni,
+curr_vb_cell(DMparticlesCuda& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	     CURR &scurr, int *ci0)
 {
   float xa[3] = { 0.,
@@ -342,7 +342,7 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 
 template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
-yz_calc_j(DParticles dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
 	  int nr_total_blocks, int p_nr,
 	  uint *d_bidx, int bid, int *ci0)
@@ -459,7 +459,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, DParticles dmprts, DMFields d_mflds)
+push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
 {
   using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
 
