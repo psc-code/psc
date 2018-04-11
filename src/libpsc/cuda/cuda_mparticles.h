@@ -132,14 +132,16 @@ struct DParticles : DParticleIndexer
 {
   static const int MAX_N_KINDS = 4;
   
-  DParticles(const cuda_mparticles& cmprts)
+  DParticles(cuda_mparticles& cmprts)
     : DParticleIndexer{cmprts},
       dt_(cmprts.grid_.dt),
       fnqs_(cmprts.grid_.fnqs),
       fnqxs_(cmprts.grid_.domain.dx[0] * fnqs_ / dt_),
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
-      dqs_(.5f * cmprts.grid_.eta * dt_)
+      dqs_(.5f * cmprts.grid_.eta * dt_),
+      xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
+      alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get())
   {
     auto& grid = cmprts.grid_;
     
@@ -166,6 +168,11 @@ private:
   real_t dqs_;
   real_t dq_[MAX_N_KINDS];
   real_t q_inv_[MAX_N_KINDS];
+public:
+  float4* xi4_;
+  float4* pxi4_;
+  float4* alt_xi4_;
+  float4* alt_pxi4_;
 };
 
 // ----------------------------------------------------------------------
@@ -174,18 +181,12 @@ private:
 struct DMParticles
 {
   DMParticles(cuda_mparticles& cmprts)
-    : xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
-      alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
-      off_(cmprts.d_off.data().get()),
+    : off_(cmprts.d_off.data().get()),
       bidx_(cmprts.d_bidx.data().get()),
       id_(cmprts.d_id.data().get()),
       n_blocks_(cmprts.n_blocks)
   {}
   
-  float4 *xi4_;
-  float4 *pxi4_;
-  float4 *alt_xi4_;
-  float4 *alt_pxi4_;
   uint *off_;
   uint *bidx_;
   uint *id_;

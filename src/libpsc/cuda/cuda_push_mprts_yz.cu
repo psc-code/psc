@@ -109,9 +109,9 @@ push_part_one(DParticles dmprts, struct d_particle& prt, int n, DMParticles d_mp
   uint id;
   if (REORDER) {
     id = d_mprts.id_[n];
-    LOAD_PARTICLE_POS(prt, d_mprts.xi4_, id);
+    LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
   } else {
-    LOAD_PARTICLE_POS(prt, d_mprts.xi4_, n);
+    LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
   }
   // here we have x^{n+.5}, p^n
 
@@ -130,13 +130,13 @@ push_part_one(DParticles dmprts, struct d_particle& prt, int n, DMParticles d_mp
   int kind = __float_as_int(prt.kind_as_float);
   real_t dq = dmprts.dq(kind);
   if (REORDER) {
-    LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, id);
+    LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
     advance.push_p(prt.pxi, E, H, dq);
-    STORE_PARTICLE_MOM(prt, d_mprts.alt_pxi4_, n);
+    STORE_PARTICLE_MOM(prt, dmprts.alt_pxi4_, n);
   } else {
-    LOAD_PARTICLE_MOM(prt, d_mprts.pxi4_, n);
+    LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
     advance.push_p(prt.pxi, E, H, dq);
-    STORE_PARTICLE_MOM(prt, d_mprts.pxi4_, n);
+    STORE_PARTICLE_MOM(prt, dmprts.pxi4_, n);
   }
 }
 
@@ -480,10 +480,10 @@ push_mprts_ab(int block_start, DParticles dmprts, DMParticles d_mprts, DMFields 
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(dmprts, prt, n, d_mprts.alt_xi4_, d_mprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
     } else {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(dmprts, prt, n, d_mprts.xi4_, d_mprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
     }
   }
   
