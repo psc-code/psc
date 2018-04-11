@@ -386,14 +386,6 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 }
 
 // ----------------------------------------------------------------------
-// patch_get_b_mx
-
-const int* cuda_mparticles::patch_get_b_mx(int p)
-{
-  return b_mx();
-}
-
-// ----------------------------------------------------------------------
 // cast to DMParticles
 
 cuda_mparticles::operator DMParticles()

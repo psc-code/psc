@@ -329,7 +329,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 
 const int* MparticlesCuda::patch_t::get_b_mx() const
 {
-  return mp_.cmprts_->patch_get_b_mx(p_);
+  return mp_.cmprts_->b_mx();
 }
 
 // ----------------------------------------------------------------------
