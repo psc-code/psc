@@ -579,22 +579,21 @@ yz_cuda_push_mprts(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfi
 
 template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds,
-					       bool ip_ec, bool deposit_vb_3d, bool currmem_global)
+					       bool ip_ec)
 {
-  if (!ip_ec && !deposit_vb_3d && !currmem_global) {
+  if (!ip_ec && !Config::Deposit::value && !Config::Current::value) {
     //return yz_cuda_push_mprts<BS::x::value, BS::y::value, BS::z::value, opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
   }
   
-  if (ip_ec && deposit_vb_3d && !currmem_global) {
+  if (ip_ec && Config::Deposit::value && !Config::Current::value) {
     return yz_cuda_push_mprts<Config, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
   }
 
-  if (ip_ec && deposit_vb_3d && currmem_global) {
+  if (ip_ec && Config::Deposit::value && Config::Current::value) {
     return yz_cuda_push_mprts<Config, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
   }
 
-  printf("ip_ec %d deposit_vb_3d %d currmem_global %d is not supported!\n",
-	 ip_ec, deposit_vb_3d, currmem_global);
+  printf("ip_ec %d is not supported!\n", ip_ec);
   assert(0);
 }
 
