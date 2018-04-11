@@ -30,7 +30,7 @@ static cuda_heating_params h_prm;
 // cuda_heating_params_set
 
 static void
-cuda_heating_params_set(struct cuda_mparticles *cmprts)
+cuda_heating_params_set(cuda_mparticles<BS144>* cmprts)
 {
   cudaError_t ierr;
 
@@ -135,7 +135,7 @@ d_particle_kick(float4 *pxi4, float H, curandState *state)
 // cuda_heating_run_foil_gold
 
 void
-cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
+cuda_heating_run_foil_gold(cuda_mparticles<BS144>* cmprts)
 {
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
@@ -241,7 +241,7 @@ k_curand_setup(curandState *d_curand_states, int b_my)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
+heating_run_foil(cuda_mparticles<BS144>* cmprts, curandState *d_curand_states)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
@@ -273,7 +273,7 @@ cuda_heating_setup_foil(struct cuda_heating_foil *_foil)
 // cuda_heating_run_foil
 
 void
-cuda_heating_run_foil(struct cuda_mparticles *cmprts)
+cuda_heating_run_foil(cuda_mparticles<BS144>* cmprts)
 {
   printf("cuda_heating_run_foil\n");
   //return cuda_heating_run_foil_gold(cmprts);

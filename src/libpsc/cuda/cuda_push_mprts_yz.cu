@@ -510,7 +510,7 @@ zero_currents(struct cuda_mfields *cmflds)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 static void
-cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
+cuda_push_mprts_ab(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
 {
   zero_currents(cmflds);
 
@@ -559,7 +559,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, typename IP, enum DEPOSIT DEPOSIT,
 	 enum CURRMEM CURRMEM>
 static void
-yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
+yz_cuda_push_mprts(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
 {
   if (!cmprts->need_reorder) {
     //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
@@ -573,7 +573,7 @@ yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 // cuda_push_mprts_yz
 
 void
-cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
+cuda_push_mprts_yz(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds,
 		   const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
 {
   if (!ip_ec && !deposit_vb_3d && !currmem_global) {

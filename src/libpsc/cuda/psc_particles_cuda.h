@@ -9,6 +9,13 @@
 
 #include <vector>
 
+struct BS144
+{
+  using x = std::integral_constant<unsigned int, 1>;
+  using y = std::integral_constant<unsigned int, 4>;
+  using z = std::integral_constant<unsigned int, 4>;
+};
+
 // ======================================================================
 // particle_cuda_t
 
@@ -30,6 +37,7 @@ struct cuda_mparticles_prt
   float qni_wni;
 };
 
+template<typename BS>
 struct cuda_mparticles;
 
 // ======================================================================
@@ -42,6 +50,7 @@ struct MparticlesCuda : MparticlesBase
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using buf_t = psc_particle_cuda_buf_t;
+  using BS = BS144;
   
   MparticlesCuda(const Grid_t& grid);
 
@@ -61,7 +70,7 @@ struct MparticlesCuda : MparticlesBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  cuda_mparticles* cmprts() { return cmprts_; }
+  cuda_mparticles<BS>* cmprts() { return cmprts_; }
 
   struct patch_t
   {
@@ -78,7 +87,7 @@ struct MparticlesCuda : MparticlesBase
   patch_t operator[](int p) const { return patch_t{*this, p}; }
 
 private:
-  cuda_mparticles* cmprts_;
+  cuda_mparticles<BS>* cmprts_;
   ParticleIndexer<real_t> pi_;
 };
 

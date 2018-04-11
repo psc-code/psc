@@ -49,7 +49,7 @@ k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 // in: d_xi4, d_pxi4[0:n_prts[
 // out: d_xi4, d_pxi4[n_prts:n_prts_send[
 
-void cuda_bndp::reorder_send_by_id(struct cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::reorder_send_by_id(cuda_mparticles* cmprts, uint n_prts_send)
 {
   cmprts->d_xi4.resize(cmprts->n_prts + n_prts_send);
   cmprts->d_pxi4.resize(cmprts->n_prts + n_prts_send);
@@ -137,7 +137,7 @@ void cuda_bndp::reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send
 // out: d_spine_sums, d_id[n_prts - n_prts_send: n_prts[
 //
 
-void cuda_bndp::scan_send_buf_total(struct cuda_mparticles *cmprts, uint n_prts_send)
+void cuda_bndp::scan_send_buf_total(cuda_mparticles* cmprts, uint n_prts_send)
 {
   // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::exclusive_scan(d_spine_cnts.data() + n_blocks * 10,

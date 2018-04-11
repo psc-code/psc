@@ -123,7 +123,7 @@ TEST_F(PushMprtsTest, Accel)
 {
   const int n_prts = 131;
   const int n_steps = 10;
-  const cuda_mparticles::real_t eps = 1e-6;
+  const CudaMparticles::real_t eps = 1e-6;
 
   // init fields
   auto cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
@@ -139,7 +139,7 @@ TEST_F(PushMprtsTest, Accel)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
 	cuda_mparticles_prt prt = {};
 	prt.xi[0] = rng->uniform(0, L);
 	prt.xi[1] = rng->uniform(0, L);
@@ -171,7 +171,7 @@ TEST_F(PushMprtsTest, Cyclo)
   // finite precision, and they add up
   // (but that's okay, if a reminder that the 6th order Boris would
   //  be good)
-  const cuda_mparticles::real_t eps = 1e-2;
+  const CudaMparticles::real_t eps = 1e-2;
 
   // init fields
   auto cmflds = make_cmflds([&] (int m) -> cuda_mfields::real_t {
@@ -185,7 +185,7 @@ TEST_F(PushMprtsTest, Cyclo)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
 	cuda_mparticles_prt prt = {};
 	prt.xi[0] = rng->uniform(0, L);
 	prt.xi[1] = rng->uniform(0, L);

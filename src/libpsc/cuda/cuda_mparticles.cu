@@ -14,7 +14,8 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles::cuda_mparticles(const Grid_t& grid)
+template<typename BS>
+cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
   : cuda_mparticles_base(grid)
 {
   cuda_base_init();
@@ -28,7 +29,8 @@ cuda_mparticles::cuda_mparticles(const Grid_t& grid)
 // ----------------------------------------------------------------------
 // reserve_all
 
-void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
+template<typename BS>
+void cuda_mparticles<BS>::reserve_all(const uint *n_prts_by_patch)
 {
   uint size = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -45,7 +47,8 @@ void cuda_mparticles::reserve_all(const uint *n_prts_by_patch)
 // the goal here is to have d_xi4, d_pxi4, d_bidx and d_id always
 // have the same size.
 
-void cuda_mparticles::resize(uint n_prts)
+template<typename BS>
+void cuda_mparticles<BS>::resize(uint n_prts)
 {
   cuda_mparticles_base::reserve_all(n_prts);
   d_bidx.resize(n_prts);
@@ -55,7 +58,8 @@ void cuda_mparticles::resize(uint n_prts)
 // ----------------------------------------------------------------------
 // dump_by_patch
 
-void cuda_mparticles::dump_by_patch(uint *n_prts_by_patch)
+template<typename BS>
+void cuda_mparticles<BS>::dump_by_patch(uint *n_prts_by_patch)
 {
   printf("cuda_mparticles_dump_by_patch: n_prts = %d\n", n_prts);
   uint off = 0;
@@ -77,7 +81,8 @@ void cuda_mparticles::dump_by_patch(uint *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // dump
 
-void cuda_mparticles::dump(const std::string& filename) const
+template<typename BS>
+void cuda_mparticles<BS>::dump(const std::string& filename) const
 {
   FILE* file = fopen(filename.c_str(), "w");
   assert(file);
@@ -104,7 +109,8 @@ void cuda_mparticles::dump(const std::string& filename) const
 // ----------------------------------------------------------------------
 // swap_alt
 
-void cuda_mparticles::swap_alt()
+template<typename BS>
+void cuda_mparticles<BS>::swap_alt()
 {
   thrust::swap(d_xi4, d_alt_xi4);
   thrust::swap(d_pxi4, d_alt_pxi4);
@@ -136,7 +142,8 @@ k_find_block_indices_ids(DParticleIndexer dpi, float4 *d_xi4, uint *d_off,
 // ----------------------------------------------------------------------
 // find_block_indices_ids
 
-void cuda_mparticles::find_block_indices_ids()
+template<typename BS>
+void cuda_mparticles<BS>::find_block_indices_ids()
 {
   if (n_patches == 0) {
     return;
@@ -175,7 +182,8 @@ void cuda_mparticles::find_block_indices_ids()
 // ----------------------------------------------------------------------
 // stable_sort_by_key
 
-void cuda_mparticles::stable_sort_by_key()
+template<typename BS>
+void cuda_mparticles<BS>::stable_sort_by_key()
 {
   thrust::stable_sort_by_key(d_bidx.data(), d_bidx.data() + n_prts, d_id.begin());
 }
@@ -216,7 +224,8 @@ k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, f
 // ----------------------------------------------------------------------
 // reorder_and_offsets
 
-void cuda_mparticles::reorder_and_offsets()
+template<typename BS>
+void cuda_mparticles<BS>::reorder_and_offsets()
 {
   if (n_patches == 0) {
     return;
@@ -256,7 +265,8 @@ k_reorder(int n_prts, uint *d_ids, float4 *xi4, float4 *pxi4,
 // ----------------------------------------------------------------------
 // reorder
 
-void cuda_mparticles::reorder()
+template<typename BS>
+void cuda_mparticles<BS>::reorder()
 {
   if (!need_reorder) {
     return;
@@ -277,7 +287,8 @@ void cuda_mparticles::reorder()
 // ----------------------------------------------------------------------
 // setup_internals
 
-void cuda_mparticles::setup_internals()
+template<typename BS>
+void cuda_mparticles<BS>::setup_internals()
 {
   // pre-condition: particles sorted by patch, d_off being used to
   // describe patch boundaries
@@ -303,7 +314,8 @@ void cuda_mparticles::setup_internals()
 // ----------------------------------------------------------------------
 // get_n_prts
 
-uint cuda_mparticles::get_n_prts()
+template<typename BS>
+uint cuda_mparticles<BS>::get_n_prts()
 {
   return n_prts;
 }
@@ -311,8 +323,9 @@ uint cuda_mparticles::get_n_prts()
 // ----------------------------------------------------------------------
 // inject
 
-void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
-			     uint *buf_n_by_patch)
+template<typename BS>
+void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
+				 uint *buf_n_by_patch)
 {
   if (need_reorder) {
     reorder();
@@ -387,3 +400,5 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
 
 #include "cuda_mparticles_gold.cu"
 #include "cuda_mparticles_checks.cu"
+
+template struct cuda_mparticles<BS144>;

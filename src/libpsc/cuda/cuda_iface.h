@@ -5,6 +5,7 @@
 #include "mrc_json.h"
 #include "psc_fields_single.h"
 
+#include "psc_particles_cuda.h"
 #include <particles_simple.hxx> // FIXME?
 #include <grid.hxx>
 
@@ -13,13 +14,6 @@
 #else
 #define dprintf(...) do {} while (0)
 #endif
-
-struct BS
-{
-  using x = std::integral_constant<unsigned int, 1>;
-  using y = std::integral_constant<unsigned int, 4>;
-  using z = std::integral_constant<unsigned int, 4>;
-};
 
 // ----------------------------------------------------------------------
 // float_3 etc
@@ -48,16 +42,19 @@ void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 // ----------------------------------------------------------------------
 // cuda_push_mprts
 
-void cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
+template<typename BS>
+struct cuda_mparticles;
+
+void cuda_push_mprts_yz(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds,
 			const int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
 
-void cuda_push_mprts_xyz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds);
+void cuda_push_mprts_xyz(cuda_mparticles<BS144>*cmprts, struct cuda_mfields *cmflds);
 
 // ----------------------------------------------------------------------
 // cuda_moments
 
-void cuda_moments_yz_rho_1st_nc(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres);
-void cuda_moments_yz_n_1st(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres);
+void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
+void cuda_moments_yz_n_1st(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
 
 // ----------------------------------------------------------------------
 // cuda_heating_run_foil
@@ -79,7 +76,7 @@ struct cuda_heating_foil {
 };
 
 void cuda_heating_setup_foil(struct cuda_heating_foil *foil);
-void cuda_heating_run_foil(struct cuda_mparticles *cmprts);
+void cuda_heating_run_foil(cuda_mparticles<BS144>* cmprts);
 
 // FIXME, mv elsewhere
 #define HERE printf("HERE: in %s() at %s:%d\n", __FUNCTION__, __FILE__, __LINE__)

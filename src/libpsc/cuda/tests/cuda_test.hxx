@@ -2,18 +2,20 @@
 #ifndef CUDA_TEST_HXX
 #define CUDA_TEST_HXX
 
+using CudaMparticles = cuda_mparticles<BS144>;
+
 struct TestBase
 {
-  cuda_mparticles* make_cmprts(Grid_t& grid)
+  CudaMparticles* make_cmprts(Grid_t& grid)
   {
-    auto cmprts = new cuda_mparticles(grid);
+    auto cmprts = new CudaMparticles(grid);
     
     return cmprts;
   }
 
-  cuda_mparticles* make_cmprts(Grid_t& grid, const std::vector<cuda_mparticles_prt>& prts)
+  CudaMparticles* make_cmprts(Grid_t& grid, const std::vector<cuda_mparticles_prt>& prts)
   {
-    auto cmprts = new cuda_mparticles(grid);
+    auto cmprts = new CudaMparticles(grid);
 
     uint n_prts_by_patch[1];
     n_prts_by_patch[0] = prts.size();
@@ -25,7 +27,7 @@ struct TestBase
   }
   
   template<typename S>
-  cuda_mparticles* make_cmprts(Grid_t& grid, uint n_prts, S setter)
+  CudaMparticles* make_cmprts(Grid_t& grid, uint n_prts, S setter)
   {
     std::vector<cuda_mparticles_prt> prts;
     prts.reserve(n_prts);

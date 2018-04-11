@@ -28,7 +28,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCu
   void run(MparticlesCuda& mprts)
   {
     PscMfields<Mfields> mres{this->mres_};
-    cuda_mparticles *cmprts = mprts.cmprts();
+    auto* cmprts = mprts.cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
@@ -63,7 +63,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
   void run(MparticlesCuda& mprts)
   {
     PscMfields<Mfields> mres{this->mres_};
-    cuda_mparticles *cmprts = mprts.cmprts();
+    auto* cmprts = mprts.cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();

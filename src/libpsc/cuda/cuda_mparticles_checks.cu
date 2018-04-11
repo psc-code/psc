@@ -5,7 +5,8 @@
 // ----------------------------------------------------------------------
 // check_in_patch_unordered_slow
 
-bool cuda_mparticles::check_in_patch_unordered_slow()
+template<typename BS>
+bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
 {
   uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
@@ -30,7 +31,8 @@ bool cuda_mparticles::check_in_patch_unordered_slow()
 // checks that block indices are correct,
 // id is just enumerating particles
 
-bool cuda_mparticles::check_bidx_id_unordered_slow()
+template<typename BS>
+bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
 {
   uint n_prts_by_patch[n_patches];
   get_size_all(n_prts_by_patch);
@@ -53,7 +55,8 @@ bool cuda_mparticles::check_bidx_id_unordered_slow()
 // ----------------------------------------------------------------------
 // check_ordered
 
-bool cuda_mparticles::check_ordered()
+template<typename BS>
+bool cuda_mparticles<BS>::check_ordered()
 {
   thrust::host_vector<float4> h_xi4(d_xi4.data(), d_xi4.data() + n_prts);
   thrust::host_vector<uint> h_off(d_off);

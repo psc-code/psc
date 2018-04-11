@@ -23,7 +23,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   using Double3 = Vec3<double>;
   
   std::unique_ptr<Grid_t> grid;
-  std::unique_ptr<cuda_mparticles> cmprts;
+  std::unique_ptr<CudaMparticles> cmprts;
   std::unique_ptr<cuda_bndp> cbndp;
 
   const Int3 bs_ = { 1, 1, 1 };

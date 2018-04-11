@@ -22,7 +22,7 @@ MparticlesCuda::MparticlesCuda(const Grid_t& grid)
     pi_(grid)
 {
   dprintf("CMPRTS: ctor\n");
-  cmprts_ = new cuda_mparticles(grid);
+  cmprts_ = new cuda_mparticles<BS144>(grid);
 }
 
 MparticlesCuda::~MparticlesCuda()

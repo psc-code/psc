@@ -59,7 +59,7 @@ private:
   const Grid_t& grid_;
 };
 
-void cuda_mparticles_add_particles_test_1(cuda_mparticles* cmprts, uint *n_prts_by_patch)
+void cuda_mparticles_add_particles_test_1(CudaMparticles* cmprts, uint *n_prts_by_patch)
 {
   const Grid_t& grid = cmprts->grid_;
   Int3 ldims = grid.ldims;
@@ -99,7 +99,7 @@ TEST_F(CudaMparticlesTest, ConstructorDestructor)
 {
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
   EXPECT_EQ(cmprts->n_patches, 1);
 }
 
@@ -108,7 +108,7 @@ TEST_F(CudaMparticlesTest, SetParticles)
 {
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
 
   uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
@@ -142,7 +142,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   n_prts_by_patch[0] = prts.size();
 
   // can't use make_cmprts() from vector here, since that'll sort etc
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
   cmprts->reserve_all(n_prts_by_patch);
   cmprts->resize_all(n_prts_by_patch);
   cmprts->set_particles(0, [&](int n) {
@@ -195,7 +195,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
 TEST_F(CudaMparticlesTest, SetupInternals)
 {
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
-  std::unique_ptr<cuda_mparticles> cmprts(make_cmprts(*grid_));
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
 
   uint n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);

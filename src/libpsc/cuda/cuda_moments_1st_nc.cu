@@ -129,7 +129,7 @@ n_1st_cuda_run(DMparticlesCuda dmprts,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 static void
-rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
+rho_1st_nc_cuda_run_patches_no_reorder(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
@@ -146,7 +146,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cu
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 static void
-n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
+n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
@@ -162,7 +162,7 @@ n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mf
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-rho_1st_nc_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
+rho_1st_nc_cuda_run_patches(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
@@ -178,7 +178,7 @@ rho_1st_nc_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields 
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-n_1st_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
+n_1st_cuda_run_patches(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
@@ -193,7 +193,7 @@ n_1st_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmre
 // cuda_moments_yz_rho_1st_nc
 
 void
-cuda_moments_yz_rho_1st_nc(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
+cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   rho_1st_nc_cuda_run_patches<1, 4, 4>(cmprts, cmres);
 }
@@ -202,7 +202,7 @@ cuda_moments_yz_rho_1st_nc(struct cuda_mparticles *cmprts, struct cuda_mfields *
 // cuda_moments_yz_n_1st
 
 void
-cuda_moments_yz_n_1st(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
+cuda_moments_yz_n_1st(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   n_1st_cuda_run_patches<1, 4, 4>(cmprts, cmres);
 }

@@ -2,7 +2,8 @@
 // ----------------------------------------------------------------------
 // reorder_and_offsets_slow
 
-void cuda_mparticles::reorder_and_offsets_slow()
+template<typename BS>
+void cuda_mparticles<BS>::reorder_and_offsets_slow()
 {
   if (n_patches == 0) {
     return;

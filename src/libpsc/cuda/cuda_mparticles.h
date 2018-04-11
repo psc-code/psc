@@ -23,7 +23,7 @@ struct cuda_mparticles_base : cuda_mparticles_indexer
   cuda_mparticles_base(const Grid_t& grid);
   // copy constructor would work fine, but we don't want to copy everything
   // by accident
-  cuda_mparticles_base(const cuda_mparticles&) = delete;
+  cuda_mparticles_base(const cuda_mparticles<BS144>&) = delete;
 
   void reserve_all(uint sinze);
   void resize_all(const uint *n_prts_by_patch);
@@ -84,6 +84,7 @@ struct d_particle {
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
+template<typename BS>
 struct cuda_mparticles : cuda_mparticles_base
 {
   cuda_mparticles(const Grid_t& grid);
@@ -132,7 +133,7 @@ struct DMparticlesCuda : DParticleIndexer
 {
   static const int MAX_N_KINDS = 4;
   
-  DMparticlesCuda(cuda_mparticles& cmprts)
+  DMparticlesCuda(cuda_mparticles<BS144>& cmprts)
     : DParticleIndexer{cmprts},
       dt_(cmprts.grid_.dt),
       fnqs_(cmprts.grid_.fnqs),
@@ -189,8 +190,9 @@ public:
 // ----------------------------------------------------------------------
 // set_particles
 
+template<>
 template<typename F>
-void cuda_mparticles::set_particles(uint p, F getter)
+void cuda_mparticles<BS144>::set_particles(uint p, F getter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
@@ -223,8 +225,9 @@ void cuda_mparticles::set_particles(uint p, F getter)
 // ----------------------------------------------------------------------
 // get_particles
 
+template<>
 template<typename F>
-void cuda_mparticles::get_particles(uint p, F setter)
+void cuda_mparticles<BS144>::get_particles(uint p, F setter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
