@@ -66,19 +66,13 @@ struct MparticlesCuda : MparticlesBase
   struct patch_t
   {
     patch_t(MparticlesCuda& mp, int p)
-      : mp_(mp), p_(p), pi_(mp.grid())
+      : mp_(mp)
     {}
 
-    int blockPosition(real_t xi, int d) const { return pi_.blockPosition(xi, d); }
-    Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
-    int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
-    const Int3& b_mx() const { return pi_.b_mx(); }
-    const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
+    const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
 
   private:
     MparticlesCuda& mp_;
-    int p_;
-    ParticleIndexer<real_t> pi_;
   };
 
   const patch_t& operator[](int p) const { return patches_[p]; }
@@ -87,6 +81,7 @@ struct MparticlesCuda : MparticlesBase
 private:
   cuda_mparticles* cmprts_;
   std::vector<patch_t> patches_;
+  ParticleIndexer<real_t> pi_;
 
   template<typename MP>
   friend struct bnd_particles_policy_cuda;

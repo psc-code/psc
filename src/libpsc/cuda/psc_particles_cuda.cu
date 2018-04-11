@@ -18,7 +18,8 @@
 // MparticleCuda implementation
 
 MparticlesCuda::MparticlesCuda(const Grid_t& grid)
-  : MparticlesBase(grid)
+  : MparticlesBase(grid),
+    pi_(grid)
 {
   dprintf("CMPRTS: ctor\n");
   cmprts_ = new cuda_mparticles(grid);
