@@ -141,7 +141,11 @@ struct DParticles : DParticleIndexer
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.eta * dt_),
       xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
-      alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get())
+      alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
+      off_(cmprts.d_off.data().get()),
+      bidx_(cmprts.d_bidx.data().get()),
+      id_(cmprts.d_id.data().get()),
+      n_blocks_(cmprts.n_blocks)
   {
     auto& grid = cmprts.grid_;
     
@@ -173,6 +177,10 @@ public:
   float4* pxi4_;
   float4* alt_xi4_;
   float4* alt_pxi4_;
+  uint *off_;
+  uint *bidx_;
+  uint *id_;
+  uint n_blocks_;
 };
 
 // ----------------------------------------------------------------------
@@ -181,16 +189,7 @@ public:
 struct DMParticles
 {
   DMParticles(cuda_mparticles& cmprts)
-    : off_(cmprts.d_off.data().get()),
-      bidx_(cmprts.d_bidx.data().get()),
-      id_(cmprts.d_id.data().get()),
-      n_blocks_(cmprts.n_blocks)
   {}
-  
-  uint *off_;
-  uint *bidx_;
-  uint *id_;
-  uint n_blocks_;
 };
 
 // ======================================================================

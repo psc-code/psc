@@ -108,7 +108,7 @@ push_part_one(DParticles dmprts, struct d_particle& prt, int n, DMParticles d_mp
 {
   uint id;
   if (REORDER) {
-    id = d_mprts.id_[n];
+    id = dmprts.id_[n];
     LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
   } else {
     LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
@@ -450,8 +450,8 @@ yz_calc_j(DParticles dmprts, struct d_particle& prt, int n, float4 *d_xi4, float
       (block_pos, ci0);							\
     bid = dmprts.find_bid();						\
   }									\
-  int block_begin = d_mprts.off_[bid];					\
-  int block_end = d_mprts.off_[bid + 1]					\
+  int block_begin = dmprts.off_[bid];					\
+  int block_end = dmprts.off_[bid + 1]					\
     
 // ----------------------------------------------------------------------
 // push_mprts_ab
@@ -480,10 +480,10 @@ push_mprts_ab(int block_start, DParticles dmprts, DMParticles d_mprts, DMFields 
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     } else {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, d_mprts.n_blocks_, p, d_mprts.bidx_, bid, ci0);
+	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     }
   }
   
