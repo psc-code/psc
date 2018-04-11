@@ -81,8 +81,6 @@ struct d_particle {
     d_pxi4[n] = pxi4;							\
 } while (0)
 
-struct DMParticles;
-
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
@@ -118,8 +116,6 @@ public:
 
   void resize(uint n_prts);
 
-  operator DMParticles();
-  
 public:
   // per particle
   thrust::device_vector<float4> d_alt_xi4;  // storage for out-of-place reordering of particle data
@@ -177,14 +173,13 @@ private:
 
 struct DMParticles
 {
-  DMParticles(float4* xi4, float4* pxi4, float4* alt_xi4, float4 *alt_pxi4,
-	      uint *off, uint *bidx, uint *id, uint n_blocks)
-    : xi4_(xi4), pxi4_(pxi4),
-      alt_xi4_(alt_xi4), alt_pxi4_(alt_pxi4),
-      off_(off),
-      bidx_(bidx),
-      id_(id),
-      n_blocks_(n_blocks)
+  DMParticles(cuda_mparticles& cmprts)
+    : xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
+      alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
+      off_(cmprts.d_off.data().get()),
+      bidx_(cmprts.d_bidx.data().get()),
+      id_(cmprts.d_id.data().get()),
+      n_blocks_(cmprts.n_blocks)
   {}
   
   float4 *xi4_;

@@ -385,17 +385,5 @@ void cuda_mparticles::inject(const cuda_mparticles_prt *buf,
   // assert(check_ordered());
 }
 
-// ----------------------------------------------------------------------
-// cast to DMParticles
-
-cuda_mparticles::operator DMParticles()
-{
-  return DMParticles(d_xi4.data().get(), d_pxi4.data().get(),
-		     d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
-		     d_off.data().get(), d_bidx.data().get(),
-		     d_id.data().get(), n_blocks);
-}
-
-
 #include "cuda_mparticles_gold.cu"
 #include "cuda_mparticles_checks.cu"
