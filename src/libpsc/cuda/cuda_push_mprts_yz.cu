@@ -558,16 +558,16 @@ cuda_push_mprts_ab(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
 // ----------------------------------------------------------------------
 // yz_cuda_push_mprts
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, typename IP, enum DEPOSIT DEPOSIT,
-	 enum CURRMEM CURRMEM>
+template<typename Config, typename IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 static void
-yz_cuda_push_mprts(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
+yz_cuda_push_mprts(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfields *cmflds)
 {
+  using BS = typename Config::Bs;
   if (!cmprts->need_reorder) {
     //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
+    cuda_push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   } else {
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
+    cuda_push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   }
 }
 
@@ -583,11 +583,11 @@ void CudaPushParticles_<Config>::push_mprts_yz(cuda_mparticles<BS>* cmprts, stru
   }
   
   if (ip_ec && deposit_vb_3d && !currmem_global) {
-    return yz_cuda_push_mprts<BS::x::value, BS::y::value, BS::z::value, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+    return yz_cuda_push_mprts<Config, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
   }
 
   if (ip_ec && deposit_vb_3d && currmem_global) {
-    return yz_cuda_push_mprts<BS::x::value, BS::y::value, BS::z::value, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+    return yz_cuda_push_mprts<Config, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
   }
 
   printf("ip_ec %d deposit_vb_3d %d currmem_global %d is not supported!\n",
