@@ -65,7 +65,7 @@ struct ddc_particles
   
   int nr_patches;
   std::vector<patch> patches_;
-  struct ddcp_info_by_rank *by_rank;
+  std::vector<ddcp_info_by_rank> by_rank_;
   struct ddcp_info_by_rank *cinfo; // compressed info
   int n_ranks;
   MPI_Request *send_reqs;
@@ -111,8 +111,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  by_rank = (struct ddcp_info_by_rank *) calloc(size, sizeof(*by_rank));
-  struct ddcp_info_by_rank *info = by_rank;
+  by_rank_.resize(size);
 
   int dir[3];
 
@@ -128,7 +127,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  info[nei->rank].n_recv_entries++;
+	  by_rank_[nei->rank].n_recv_entries++;
 	}
       }
     }
@@ -136,11 +135,11 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // alloc recv_entries
   for (int r = 0; r < size; r++) {
-    if (info[r].n_recv_entries) {
-      info[r].recv_entry =
-	(drecv_entry *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
-      info[r].recv_cnts =
-	(int *) malloc(info[r].n_recv_entries * sizeof(*info[r].recv_cnts));
+    if (by_rank_[r].n_recv_entries) {
+      by_rank_[r].recv_entry =
+	(drecv_entry *) malloc(by_rank_[r].n_recv_entries * sizeof(*by_rank_[r].recv_entry));
+      by_rank_[r].recv_cnts =
+	(int *) malloc(by_rank_[r].n_recv_entries * sizeof(*by_rank_[r].recv_cnts));
     }
   }
 
@@ -182,7 +181,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  info[nei->rank].n_send_entries++;
+	  by_rank_[nei->rank].n_send_entries++;
 	}
       }
     }
@@ -190,12 +189,12 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   // alloc send_entries
   for (int r = 0; r < size; r++) {
-    if (info[r].n_send_entries) {
-      info[r].send_entry = (dsend_entry *)
-	malloc(info[r].n_send_entries * sizeof(*info[r].send_entry));
-      info[r].send_cnts = (int *)
-	malloc(info[r].n_send_entries * sizeof(*info[r].send_cnts));
-      info[r].n_send_entries = 0;
+    if (by_rank_[r].n_send_entries) {
+      by_rank_[r].send_entry = (dsend_entry *)
+	malloc(by_rank_[r].n_send_entries * sizeof(*by_rank_[r].send_entry));
+      by_rank_[r].send_cnts = (int *)
+	malloc(by_rank_[r].n_send_entries * sizeof(*by_rank_[r].send_cnts));
+      by_rank_[r].n_send_entries = 0;
     }
   }
 
@@ -214,7 +213,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	    continue;
 	  }
 	  dsend_entry *se =
-	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
+	    &by_rank_[nei->rank].send_entry[by_rank_[nei->rank].n_send_entries++];
 	  se->patch = p;
 	  se->nei_patch = nei->patch;
 	  se->dir1 = dir1;
@@ -227,10 +226,10 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   int n_recv_ranks = 0;
   int n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
-    if (info[r].n_recv_entries) {
+    if (by_rank_[r].n_recv_entries) {
       n_recv_ranks++;
     }
-    if (info[r].n_send_entries) {
+    if (by_rank_[r].n_send_entries) {
       n_send_ranks++;
     }
   }
@@ -243,18 +242,18 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
-    if (info[r].n_recv_entries) {
-      MPI_Irecv(info[r].recv_entry,
-		sizeof(drecv_entry) / sizeof(int) * info[r].n_recv_entries,
+    if (by_rank_[r].n_recv_entries) {
+      MPI_Irecv(by_rank_[r].recv_entry,
+		sizeof(drecv_entry) / sizeof(int) * by_rank_[r].n_recv_entries,
 		MPI_INT, r, 111, comm, &recv_reqs[n_recv_ranks++]);
     }
   }  
 
   n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
-    if (info[r].n_send_entries) {
-      MPI_Isend(info[r].send_entry,
-		sizeof(dsend_entry) / sizeof(int) * info[r].n_send_entries,
+    if (by_rank_[r].n_send_entries) {
+      MPI_Isend(by_rank_[r].send_entry,
+		sizeof(dsend_entry) / sizeof(int) * by_rank_[r].n_send_entries,
 		MPI_INT, r, 111, comm, &send_reqs[n_send_ranks++]);
     }
   }  
@@ -265,9 +264,9 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   cinfo = (struct ddcp_info_by_rank *) malloc(n_ranks * sizeof(*cinfo));
   int i = 0;
   for (int r = 0; r < size; r++) {
-    if (info[r].n_recv_entries) {
-      assert(info[r].n_send_entries);
-      cinfo[i] = info[r];
+    if (by_rank_[r].n_recv_entries) {
+      assert(by_rank_[r].n_send_entries);
+      cinfo[i] = by_rank_[r];
       cinfo[i].rank = r;
       i++;
     }
@@ -298,14 +297,12 @@ inline ddc_particles<MP>::~ddc_particles()
   int size;
   MPI_Comm_size(comm, &size);
 
-  struct ddcp_info_by_rank *info = by_rank;
   for (int r = 0; r < size; r++) {
-    free(info[r].send_entry);
-    free(info[r].recv_entry);
-    free(info[r].send_cnts);
-    free(info[r].recv_cnts);
+    free(by_rank_[r].send_entry);
+    free(by_rank_[r].recv_entry);
+    free(by_rank_[r].send_cnts);
+    free(by_rank_[r].recv_cnts);
   }
-  free(by_rank);
   free(cinfo);
   free(recv_reqs);
   free(send_reqs);
