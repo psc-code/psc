@@ -510,6 +510,34 @@ zero_currents(struct cuda_mfields *cmflds)
   }
 }
 
+// ======================================================================
+// CurrmemShared
+
+template<typename CudaMparticles>
+struct CurrmemShared
+{
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx =  (cmprts.b_mx()[1] + 1) / 2;
+    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
+    return dim3(gx, gy);
+  }
+};
+
+// ======================================================================
+// CurrmemGlobal
+
+template<typename CudaMparticles>
+struct CurrmemGlobal
+{
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx = cmprts.b_mx()[1];
+    int gy = cmprts.b_mx()[2] * cmprts.n_patches;
+    return dim3(gx, gy);
+  }
+};
+
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
@@ -517,17 +545,16 @@ template<typename Config, bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, e
 static void cuda_push_mprts_ab(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfields *cmflds)
 {
   using BS = typename Config::Bs;
+  using CudaMparticles = cuda_mparticles<typename Config::Bs>;
+
   zero_currents(cmflds);
 
-  int gx, gy;
+  dim3 dimGrid;
   if (CURRMEM == CURRMEM_SHARED) {
-    gx =  (cmprts->b_mx()[1] + 1) / 2;
-    gy = ((cmprts->b_mx()[2] + 1) / 2) * cmprts->n_patches;
+    dimGrid = CurrmemShared<CudaMparticles>::dimGrid(*cmprts);
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    gx = cmprts->b_mx()[1];
-    gy = cmprts->b_mx()[2] * cmprts->n_patches;
+    dimGrid = CurrmemGlobal<CudaMparticles>::dimGrid(*cmprts);
   }
-  dim3 dimGrid(gx, gy);
 
   if (REORDER) {
     cmprts->d_alt_xi4.resize(cmprts->n_prts);
