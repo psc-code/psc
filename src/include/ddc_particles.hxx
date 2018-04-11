@@ -66,7 +66,7 @@ struct ddc_particles
   int nr_patches;
   std::vector<patch> patches_;
   std::vector<ddcp_info_by_rank> by_rank_;
-  struct ddcp_info_by_rank *cinfo; // compressed info
+  std::vector<ddcp_info_by_rank> cinfo_; // compressed info
   int n_ranks;
   MPI_Request *send_reqs;
   MPI_Request *recv_reqs;
@@ -261,13 +261,13 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   // FIXME / OPT, we're copying alloc'd pointers over,
   // fragile, though correct. info could be free'd here or even
   // earlier
-  cinfo = (struct ddcp_info_by_rank *) malloc(n_ranks * sizeof(*cinfo));
+  cinfo_.resize(n_ranks);
   int i = 0;
   for (int r = 0; r < size; r++) {
     if (by_rank_[r].n_recv_entries) {
       assert(by_rank_[r].n_send_entries);
-      cinfo[i] = by_rank_[r];
-      cinfo[i].rank = r;
+      cinfo_[i] = by_rank_[r];
+      cinfo_[i].rank = r;
       i++;
     }
   }
@@ -303,7 +303,6 @@ inline ddc_particles<MP>::~ddc_particles()
     free(by_rank_[r].send_cnts);
     free(by_rank_[r].recv_cnts);
   }
-  free(cinfo);
   free(recv_reqs);
   free(send_reqs);
 }
@@ -332,22 +331,22 @@ inline void ddc_particles<MP>::comm()
   int dir[3];
 
   for (int r = 0; r < n_ranks; r++) {
-    MPI_Irecv(cinfo[r].recv_cnts, cinfo[r].n_recv_entries,
-	      MPI_INT, cinfo[r].rank, 222, comm, &recv_reqs[r]);
+    MPI_Irecv(cinfo_[r].recv_cnts, cinfo_[r].n_recv_entries,
+	      MPI_INT, cinfo_[r].rank, 222, comm, &recv_reqs[r]);
   }  
 
   for (int r = 0; r < n_ranks; r++) {
-    cinfo[r].n_send = 0;
-    for (int i = 0; i < cinfo[r].n_send_entries; i++) {
-      dsend_entry *se = &cinfo[r].send_entry[i];
+    cinfo_[r].n_send = 0;
+    for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
+      dsend_entry *se = &cinfo_[r].send_entry[i];
       patch *patch = &patches_[se->patch];
       dnei *nei = &patch->nei[se->dir1];
       unsigned int n_send = nei->send_buf.size();
-      cinfo[r].send_cnts[i] = n_send;
-      cinfo[r].n_send += n_send;
+      cinfo_[r].send_cnts[i] = n_send;
+      cinfo_[r].n_send += n_send;
     }
-    MPI_Isend(cinfo[r].send_cnts, cinfo[r].n_send_entries,
-	      MPI_INT, cinfo[r].rank, 222, comm, &send_reqs[r]);
+    MPI_Isend(cinfo_[r].send_cnts, cinfo_[r].n_send_entries,
+	      MPI_INT, cinfo_[r].rank, 222, comm, &send_reqs[r]);
   }  
 
   // overlap: count local # particles
@@ -400,15 +399,15 @@ inline void ddc_particles<MP>::comm()
   int n_send = 0, n_recv = 0;
 
   for (int r = 0; r < n_ranks; r++) {
-    cinfo[r].n_recv = 0;
-    for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
-      drecv_entry *re = &cinfo[r].recv_entry[i];
+    cinfo_[r].n_recv = 0;
+    for (int i = 0; i < cinfo_[r].n_recv_entries; i++) {
+      drecv_entry *re = &cinfo_[r].recv_entry[i];
       patch *patch = &patches_[re->patch];
-      patch->n_recv += cinfo[r].recv_cnts[i];
-      cinfo[r].n_recv += cinfo[r].recv_cnts[i];
+      patch->n_recv += cinfo_[r].recv_cnts[i];
+      cinfo_[r].n_recv += cinfo_[r].recv_cnts[i];
     }
-    n_send += cinfo[r].n_send;
-    n_recv += cinfo[r].n_recv;
+    n_send += cinfo_[r].n_send;
+    n_recv += cinfo_[r].n_recv;
   }
 
   // post sends
@@ -416,19 +415,19 @@ inline void ddc_particles<MP>::comm()
   send_buf.resize(n_send);
   iterator_t it = send_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
-    if (cinfo[r].n_send == 0)
+    if (cinfo_[r].n_send == 0)
       continue;
 
     iterator_t it0 = it;
-    for (int i = 0; i < cinfo[r].n_send_entries; i++) {
-      dsend_entry *se = &cinfo[r].send_entry[i];
+    for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
+      dsend_entry *se = &cinfo_[r].send_entry[i];
       patch *patch = &patches_[se->patch];
       particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
     }
-    MPI_Isend(&*it0, sz * cinfo[r].n_send, mpi_dtype,
-	      cinfo[r].rank, 1, comm, &send_reqs[r]);
+    MPI_Isend(&*it0, sz * cinfo_[r].n_send, mpi_dtype,
+	      cinfo_[r].rank, 1, comm, &send_reqs[r]);
   }
   assert(it == send_buf.begin() + n_send);
 
@@ -437,12 +436,12 @@ inline void ddc_particles<MP>::comm()
   recv_buf.resize(n_recv);
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
-    if (cinfo[r].n_recv == 0)
+    if (cinfo_[r].n_recv == 0)
       continue;
 
-    MPI_Irecv(&*it, sz * cinfo[r].n_recv, mpi_dtype,
-	      cinfo[r].rank, 1, comm, &recv_reqs[r]);
-    it += cinfo[r].n_recv;
+    MPI_Irecv(&*it, sz * cinfo_[r].n_recv, mpi_dtype,
+	      cinfo_[r].rank, 1, comm, &recv_reqs[r]);
+    it += cinfo_[r].n_recv;
   }
   assert(it == recv_buf.begin() + n_recv);
 
@@ -495,11 +494,11 @@ inline void ddc_particles<MP>::comm()
 
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
-    for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
-      drecv_entry *re = &cinfo[r].recv_entry[i];
-      std::copy(it, it + cinfo[r].recv_cnts[i], it_recv[re->patch]);
-      it += cinfo[r].recv_cnts[i];
-      it_recv[re->patch] += cinfo[r].recv_cnts[i];
+    for (int i = 0; i < cinfo_[r].n_recv_entries; i++) {
+      drecv_entry *re = &cinfo_[r].recv_entry[i];
+      std::copy(it, it + cinfo_[r].recv_cnts[i], it_recv[re->patch]);
+      it += cinfo_[r].recv_cnts[i];
+      it_recv[re->patch] += cinfo_[r].recv_cnts[i];
     }
   }
   assert(it == recv_buf.begin() + n_recv);
