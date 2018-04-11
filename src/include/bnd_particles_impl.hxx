@@ -100,7 +100,8 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 
   const auto& grid = psc->grid();
   const auto& gpatch = grid.patches[p];
-  const int *b_mx = mprts[p].b_mx();
+  const auto& pi = mprts[p].particleIndexer();
+  const int *b_mx = pi.b_mx();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
     xm[d] = gpatch.xe[d] - gpatch.xb[d];
@@ -120,14 +121,14 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
     real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     real_t *pxi = &prt->pxi;
     
-    Int3 b_pos = mprts[p].blockPosition(xi);
+    Int3 b_pos = pi.blockPosition(xi);
     
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
-      mprts[p].validCellIndex(*prt);
+      pi.validCellIndex(xi);
       buf[head++] = *prt;
       continue;
     }
@@ -142,7 +143,7 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 	if (!psc_at_boundary_lo(ppsc, p, d) || grid.bc.prt_lo[d] == BND_PRT_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
-	  int bi = mprts[p].blockPosition(xi[d], d);
+	  int bi = pi.blockPosition(xi[d], d);
 	  if (bi >= b_mx[d]) {
 	    xi[d] = 0.;
 	    dir[d] = 0;
@@ -166,7 +167,7 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 	    grid.bc.prt_hi[d] == BND_PRT_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
-	  int bi = mprts[p].blockPosition(xi[d], d);
+	  int bi = pi.blockPosition(xi[d], d);
 	  if (bi < 0) {
 	    xi[d] = 0.;
 	  }
@@ -176,7 +177,7 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
-	    int bi = mprts[p].blockPosition(xi[d], d);
+	    int bi = pi.blockPosition(xi[d], d);
 	    if (bi >= b_mx[d]) {
 	      xi[d] *= (1. - 1e-6);
 	    }
@@ -204,7 +205,7 @@ void BndParticlesCommon<MP>::process_patch(Mparticles& mprts, buf_t& buf, int p)
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	mprts[p].validCellIndex(*prt);
+	pi.validCellIndex(xi);
 	buf[head++] = *prt;
       } else {
 	auto* nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];

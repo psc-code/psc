@@ -73,6 +73,7 @@ struct MparticlesCuda : MparticlesBase
     Int3 blockPosition(const Real3& xi) const { return pi_.blockPosition(xi); }
     int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
     const Int3& b_mx() const { return pi_.b_mx(); }
+    const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
 
   private:
     MparticlesCuda& mp_;

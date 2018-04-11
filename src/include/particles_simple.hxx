@@ -271,6 +271,7 @@ struct mparticles_patch_base
   int blockIndex(const real_t* xi) const { return pi_.blockIndex(xi); }
   void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(&prt.xi); }
   const Int3& b_mx() const { return pi_.b_mx(); }
+  const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
     
   real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
   real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
