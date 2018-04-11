@@ -59,7 +59,6 @@ struct ddc_particles
 
   struct patch {
     particle_buf_t *m_buf;
-    unsigned int m_begin;
     dnei nei[N_DIR];
     int n_recv;
   };

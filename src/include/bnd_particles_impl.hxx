@@ -63,7 +63,6 @@ struct BndParticles_ : BndParticlesBase
     for (int p = 0; p < mprts.n_patches(); p++) {
       ddcp_patch *dpatch = &ddcp->patches[p];
       dpatch->m_buf = &mprts[p].get_buf();
-      dpatch->m_begin = 0;
     }
 
     process_and_exchange(mprts);
@@ -87,7 +86,7 @@ struct BndParticles_ : BndParticlesBase
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_B);
 #pragma omp parallel for
-    for (int p = 0; p < mprts.n_patches(); p++) {
+    for (int p = 0; p < ddcp->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       process_patch(mprts, p);
       psc_balance_comp_time_by_patch[p] += MPI_Wtime();
@@ -98,8 +97,6 @@ struct BndParticles_ : BndParticlesBase
     prof_start(pr_C);
     ddcp->comm();
     prof_stop(pr_C);
-
-    //mprts->check();
   }
   
   // ----------------------------------------------------------------------
@@ -144,7 +141,7 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
     dpatch->nei[dir1].send_buf.resize(0);
   }
 
-  unsigned int n_begin = dpatch->m_begin;
+  unsigned int n_begin = 0;
   unsigned int n_end = dpatch->m_buf->size();
   unsigned int head = n_begin;
 

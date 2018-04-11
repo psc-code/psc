@@ -78,7 +78,6 @@ void cuda_bndp::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
   for (int p = 0; p < ddcp->nr_patches; p++) {
     ddcp_patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = &bpatch[p].buf;
-    dpatch->m_begin = 0;
   }
 }
 
