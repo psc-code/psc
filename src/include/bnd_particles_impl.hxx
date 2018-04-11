@@ -65,7 +65,7 @@ struct BndParticles_ : BndParticlesBase
       ddcp->bufs_[p] = &mprts[p].get_buf();
     }
 
-    process_and_exchange(mprts);
+    process_and_exchange(mprts, ddcp->bufs_);
     
     //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
     //psc_bnd_particles_open_boundary(bnd, particles, mflds);
@@ -75,7 +75,7 @@ struct BndParticles_ : BndParticlesBase
   // ----------------------------------------------------------------------
   // process_and_exchange
 
-  void process_and_exchange(Mparticles& mprts)
+  void process_and_exchange(Mparticles& mprts, std::vector<buf_t*>& bufs)
   {
     static int pr_B, pr_C;
     if (!pr_B) {
@@ -88,14 +88,14 @@ struct BndParticles_ : BndParticlesBase
 #pragma omp parallel for
     for (int p = 0; p < ddcp->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      process_patch(mprts, *ddcp->bufs_[p], p);
+      process_patch(mprts, *bufs[p], p);
       psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
     prof_stop(pr_B);
     prof_stop(pr_time_step_no_comm);
     
     prof_start(pr_C);
-    ddcp->comm();
+    ddcp->comm(bufs);
     prof_stop(pr_C);
   }
   

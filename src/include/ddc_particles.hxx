@@ -14,12 +14,12 @@ struct ddc_particles
 {
   using Mparticles = MP;
   using particle_t = typename Mparticles::particle_t;
-  using particle_buf_t = typename Mparticles::buf_t;
+  using buf_t = typename Mparticles::buf_t;
   using real_t = typename Mparticles::real_t;
   
   ddc_particles(struct mrc_domain *domain);
 
-  void comm();
+  void comm(std::vector<buf_t*>& bufs);
 
   struct dsend_entry {
     int patch; // source patch (source rank is this rank)
@@ -50,7 +50,7 @@ struct ddc_particles
   };
 
   struct dnei {
-    particle_buf_t send_buf;
+    buf_t send_buf;
     int n_recv;
     int rank;
     int patch;
@@ -63,7 +63,7 @@ struct ddc_particles
   
   int nr_patches;
   std::vector<patch> patches_;
-  std::vector<particle_buf_t*> bufs_;
+  std::vector<buf_t*> bufs_;
   std::vector<ddcp_info_by_rank> cinfo_; // compressed info
   int n_ranks;
   std::vector<MPI_Request> send_reqs_;
@@ -272,9 +272,9 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 // OPT: make the status buffers only as large as needed?
 
 template<typename MP>
-inline void ddc_particles<MP>::comm()
+inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
 {
-  using iterator_t = typename particle_buf_t::iterator;
+  using iterator_t = typename buf_t::iterator;
   
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int rank, size;
@@ -367,7 +367,7 @@ inline void ddc_particles<MP>::comm()
   }
 
   // post sends
-  particle_buf_t send_buf;
+  buf_t send_buf;
   send_buf.resize(n_send);
   iterator_t it = send_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
@@ -378,7 +378,7 @@ inline void ddc_particles<MP>::comm()
     for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
       dsend_entry *se = &cinfo_[r].send_entry[i];
       patch *patch = &patches_[se->patch];
-      particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
+      buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
     }
@@ -388,7 +388,7 @@ inline void ddc_particles<MP>::comm()
   assert(it == send_buf.begin() + n_send);
 
   // post receives
-  particle_buf_t recv_buf;
+  buf_t recv_buf;
   recv_buf.resize(n_recv);
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
@@ -412,7 +412,7 @@ inline void ddc_particles<MP>::comm()
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
-    auto& buf = *bufs_[p];
+    auto& buf = *bufs[p];
     int size = buf.size();
     buf.reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
@@ -435,7 +435,7 @@ inline void ddc_particles<MP>::comm()
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  particle_buf_t *nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
+	  buf_t *nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
 
 	  std::copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
 	  it_recv[p] += nei_send_buf->size();
@@ -461,7 +461,7 @@ inline void ddc_particles<MP>::comm()
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    assert(it_recv[p] == bufs_[p]->end());
+    assert(it_recv[p] == bufs[p]->end());
   }
   
   delete[] it_recv;
