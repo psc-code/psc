@@ -10,7 +10,8 @@
 // ----------------------------------------------------------------------
 // ctor
 
-cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
+template<typename BS>
+cuda_mparticles_base<BS>::cuda_mparticles_base(const Grid_t& grid)
   : cuda_mparticles_indexer(grid),
     grid_(grid)
 {
@@ -20,7 +21,8 @@ cuda_mparticles_base::cuda_mparticles_base(const Grid_t& grid)
 // ----------------------------------------------------------------------
 // reserve_all
   
-void cuda_mparticles_base::reserve_all(uint size)
+template<typename BS>
+void cuda_mparticles_base<BS>::reserve_all(uint size)
 {
   d_xi4.resize(size);
   d_pxi4.resize(size);
@@ -41,7 +43,8 @@ void cuda_mparticles_base::reserve_all(uint size)
 //   in that case, we supposedly know what we're doing, so we at most need
 //   to check that we aren't beyond our allocated space
   
-void cuda_mparticles_base::resize_all(const uint *n_prts_by_patch)
+template<typename BS>
+void cuda_mparticles_base<BS>::resize_all(const uint *n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(this->n_blocks + 1);
     
@@ -60,7 +63,8 @@ void cuda_mparticles_base::resize_all(const uint *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // get_size_all
 
-void cuda_mparticles_base::get_size_all(uint *n_prts_by_patch)
+template<typename BS>
+void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(d_off);
 
@@ -73,7 +77,8 @@ void cuda_mparticles_base::get_size_all(uint *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // to_device
 
-void cuda_mparticles_base::to_device(float4 *xi4, float4 *pxi4,
+template<typename BS>
+void cuda_mparticles_base<BS>::to_device(float4 *xi4, float4 *pxi4,
 				     uint n_prts, uint off)
 {
   assert(off + n_prts <= d_xi4.size());
@@ -84,7 +89,8 @@ void cuda_mparticles_base::to_device(float4 *xi4, float4 *pxi4,
 // ----------------------------------------------------------------------
 // from_device
 
-void cuda_mparticles_base::from_device(float4 *xi4, float4 *pxi4,
+template<typename BS>
+void cuda_mparticles_base<BS>::from_device(float4 *xi4, float4 *pxi4,
 				       uint n_prts, uint off)
 {
   assert(off + n_prts <= d_xi4.size());
@@ -92,3 +98,4 @@ void cuda_mparticles_base::from_device(float4 *xi4, float4 *pxi4,
   thrust::copy(d_pxi4.begin() + off, d_pxi4.begin() + off + n_prts, pxi4);
 }
 
+template struct cuda_mparticles_base<BS144>;

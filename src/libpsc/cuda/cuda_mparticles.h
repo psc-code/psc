@@ -14,16 +14,13 @@
 // ======================================================================
 // cuda_mparticles_base
 
+template<typename BS>
 struct cuda_mparticles_base : cuda_mparticles_indexer
 {
-  using particle_t = particle_cuda_t;
-  using real_t = particle_t::real_t;
-  using Real3 = Vec3<real_t>;
-
   cuda_mparticles_base(const Grid_t& grid);
   // copy constructor would work fine, but we don't want to copy everything
   // by accident
-  cuda_mparticles_base(const cuda_mparticles<BS144>&) = delete;
+  cuda_mparticles_base(const cuda_mparticles<BS>&) = delete;
 
   void reserve_all(uint sinze);
   void resize_all(const uint *n_prts_by_patch);
@@ -85,8 +82,12 @@ struct d_particle {
 // cuda_mparticles
 
 template<typename BS>
-struct cuda_mparticles : cuda_mparticles_base
+struct cuda_mparticles : cuda_mparticles_base<BS>
 {
+  using particle_t = particle_cuda_t;
+  using real_t = particle_t::real_t;
+  using Real3 = Vec3<real_t>;
+
   cuda_mparticles(const Grid_t& grid);
 
   void reserve_all(const uint *n_prts_by_patch);
