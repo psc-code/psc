@@ -101,7 +101,7 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
 
   const auto& grid = psc->grid();
   const auto& gpatch = grid.patches[p];
-  const int *b_mx = pi.b_mx();
+  const Int3& ldims = pi.ldims();
   real_t xm[3];
   for (int d = 0; d < 3; d++ ) {
     xm[d] = gpatch.xe[d] - gpatch.xb[d];
@@ -121,11 +121,11 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
     real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     real_t *pxi = &prt->pxi;
     
-    Int3 b_pos = pi.blockPosition(xi);
+    Int3 pos = pi.cellPosition(xi);
     
-    if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
-	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+    if (pos[0] >= 0 && pos[0] < ldims[0] && // OPT, could be optimized with casts to unsigned
+	pos[1] >= 0 && pos[1] < ldims[1] &&
+	pos[2] >= 0 && pos[2] < ldims[2]) {
       // fast path
       // particle is still inside patch: move into right position
       pi.validCellIndex(xi);
@@ -139,12 +139,12 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
     bool drop = false;
     int dir[3];
     for (int d = 0; d < 3; d++) {
-      if (b_pos[d] < 0) {
+      if (pos[d] < 0) {
 	if (!psc_at_boundary_lo(ppsc, p, d) || grid.bc.prt_lo[d] == BND_PRT_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
-	  int bi = pi.blockPosition(xi[d], d);
-	  if (bi >= b_mx[d]) {
+	  int ci = pi.cellPosition(xi[d], d);
+	  if (ci >= ldims[d]) {
 	    xi[d] = 0.;
 	    dir[d] = 0;
 	  }
@@ -162,13 +162,12 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
 	    assert(0);
 	  }
 	}
-      } else if (b_pos[d] >= b_mx[d]) {
-	if (!psc_at_boundary_hi(ppsc, p, d) ||
-	    grid.bc.prt_hi[d] == BND_PRT_PERIODIC) {
+      } else if (pos[d] >= ldims[d]) {
+	if (!psc_at_boundary_hi(ppsc, p, d) || grid.bc.prt_hi[d] == BND_PRT_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
-	  int bi = pi.blockPosition(xi[d], d);
-	  if (bi < 0) {
+	  int ci = pi.cellPosition(xi[d], d);
+	  if (ci < 0) {
 	    xi[d] = 0.;
 	  }
 	} else {
@@ -177,8 +176,8 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
-	    int bi = pi.blockPosition(xi[d], d);
-	    if (bi >= b_mx[d]) {
+	    int ci = pi.cellPosition(xi[d], d);
+	    if (ci >= ldims[d]) {
 	      xi[d] *= (1. - 1e-6);
 	    }
 	    break;

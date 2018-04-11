@@ -172,6 +172,7 @@ struct ParticleIndexer
   }
 
   const Int3& b_mx() const { return b_mx_; }
+  const Int3& ldims() const { return ldims_; }
   
   //private:
   Real3 dxi_;
