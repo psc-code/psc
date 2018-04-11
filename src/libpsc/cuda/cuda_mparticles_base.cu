@@ -12,10 +12,10 @@
 
 template<typename BS>
 cuda_mparticles_base<BS>::cuda_mparticles_base(const Grid_t& grid)
-  : cuda_mparticles_indexer(grid),
+  : cuda_mparticles_indexer<BS>(grid),
     grid_(grid)
 {
-  d_off.resize(n_blocks + 1);
+  d_off.resize(this->n_blocks + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -49,12 +49,12 @@ void cuda_mparticles_base<BS>::resize_all(const uint *n_prts_by_patch)
   thrust::host_vector<uint> h_off(this->n_blocks + 1);
     
   uint off = 0;
-  for (int p = 0; p < n_patches; p++) {
-    h_off[p * n_blocks_per_patch] = off;
+  for (int p = 0; p < this->n_patches; p++) {
+    h_off[p * this->n_blocks_per_patch] = off;
     off += n_prts_by_patch[p];
     // printf("set_n_prts p%d: %d\n", p, n_prts_by_patch[p]);
   }
-  h_off[n_blocks] = off;
+  h_off[this->n_blocks] = off;
   n_prts = off;
     
   thrust::copy(h_off.begin(), h_off.end(), d_off.begin());
@@ -68,8 +68,8 @@ void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(d_off);
 
-  for (int p = 0; p < n_patches; p++) {
-    n_prts_by_patch[p] = h_off[(p+1) * n_blocks_per_patch] - h_off[p * n_blocks_per_patch];
+  for (int p = 0; p < this->n_patches; p++) {
+    n_prts_by_patch[p] = h_off[(p+1) * this->n_blocks_per_patch] - h_off[p * this->n_blocks_per_patch];
     //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
   }
 }

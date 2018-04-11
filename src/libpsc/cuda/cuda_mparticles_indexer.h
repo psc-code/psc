@@ -13,6 +13,7 @@
 // ======================================================================
 // cuda_mparticles_indexer
 
+template<typename BS>
 struct cuda_mparticles_indexer
 {
   using particle_t = particle_cuda_t;
@@ -68,7 +69,7 @@ struct DParticleIndexer
 
   DParticleIndexer() = default; // FIXME, delete
 
-  DParticleIndexer(const cuda_mparticles_indexer& cpi)
+  DParticleIndexer(const cuda_mparticles_indexer<BS144>& cpi)
   {
     for (int d = 0; d < 3; d++) {
       b_mx_[d]  = cpi.b_mx()[d];

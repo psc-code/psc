@@ -15,7 +15,7 @@
 // cuda_mparticles_base
 
 template<typename BS>
-struct cuda_mparticles_base : cuda_mparticles_indexer
+struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
 {
   cuda_mparticles_base(const Grid_t& grid);
   // copy constructor would work fine, but we don't want to copy everything

@@ -23,7 +23,7 @@ struct cuda_bnd {
 // ----------------------------------------------------------------------
 // cuda_bndp
 
-struct cuda_bndp : cuda_mparticles_indexer
+struct cuda_bndp : cuda_mparticles_indexer<BS144>
 {
   using ddcp_t = ddc_particles<MparticlesCuda>;
   using ddcp_patch = typename ddcp_t::patch;
