@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "psc_particles_cuda.h"
+
 #include <mrc_io.h>
 
 // FIXME: checkpointing won't properly restore state

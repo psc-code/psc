@@ -4,6 +4,7 @@
 #include "push_particles.hxx"
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
+#include "cuda_iface.h"
 
 struct IpEc : std::true_type {};
 struct IpRegular : std::false_type {};

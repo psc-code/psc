@@ -9,8 +9,12 @@
 // cuda compatibility stuff
 
 #ifndef __CUDACC__
+
 #define __host__
 #define __device__
+
+typedef struct { float x; float y; float z; float w; } float4;
+
 #endif
 
 template<typename T>
