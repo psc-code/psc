@@ -54,7 +54,6 @@ struct MparticlesCuda : MparticlesBase
   void resize_all(const uint *n_prts_by_patch) override;
   void reset(const Grid_t& grid) override;
 
-  void setup_internals();
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
 

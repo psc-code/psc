@@ -71,12 +71,6 @@ void MparticlesCuda::reset(const Grid_t& grid)
   new(this) MparticlesCuda(grid);
 }
 
-void MparticlesCuda::setup_internals()
-{
-  dprintf("CMPRTS: setup_internals\n");
-  cmprts_->setup_internals();
-}
-
 void MparticlesCuda::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
@@ -169,7 +163,7 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
     mp.cmprts()->set_particles(p, convert_to_cuda);
   }
 
-  mp.setup_internals();
+  mp.cmprts()->setup_internals();
 }
 
 template<typename MP>
