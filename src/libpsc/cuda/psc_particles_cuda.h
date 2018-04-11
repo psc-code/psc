@@ -65,26 +65,21 @@ struct MparticlesCuda : MparticlesBase
 
   struct patch_t
   {
-    patch_t(MparticlesCuda& mp, int p)
+    patch_t(const MparticlesCuda& mp, int p)
       : mp_(mp)
     {}
 
     const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
 
   private:
-    MparticlesCuda& mp_;
+    const MparticlesCuda& mp_;
   };
 
-  const patch_t& operator[](int p) const { return patches_[p]; }
-  patch_t&       operator[](int p)       { return patches_[p]; }
+  patch_t operator[](int p) const { return patch_t{*this, p}; }
 
 private:
   cuda_mparticles* cmprts_;
-  std::vector<patch_t> patches_;
   ParticleIndexer<real_t> pi_;
-
-  template<typename MP>
-  friend struct bnd_particles_policy_cuda;
 };
 
 template<>
