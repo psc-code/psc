@@ -4,6 +4,7 @@
 #include "cuda_mfields.h"
 #include "cuda_mparticles.h"
 #include "cuda_push_particles.cuh"
+#include "push_particles_cuda_impl.hxx"
 
 #include "cuda_test.hxx"
 
@@ -151,7 +152,7 @@ TEST_F(PushMprtsTest, Accel)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    CudaPushParticles_<BS144>::push_mprts_yz(cmprts.get(), cmflds.get(), IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    CudaPushParticles_<Config1vbec3d>::push_mprts_yz(cmprts.get(), cmflds.get(), IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
 
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
 	EXPECT_NEAR(prt.pxi[0], 1*(n+1), eps);
@@ -200,7 +201,7 @@ TEST_F(PushMprtsTest, Cyclo)
 
   // run test
   for (int n = 0; n < n_steps; n++) {
-    CudaPushParticles_<BS144>::push_mprts_yz(cmprts.get(), cmflds.get(), IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
+    CudaPushParticles_<Config1vbec3d>::push_mprts_yz(cmprts.get(), cmflds.get(), IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
