@@ -509,11 +509,10 @@ zero_currents(struct cuda_mfields *cmflds)
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
-	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
-static void
-cuda_push_mprts_ab(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
+template<typename Config, bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+static void cuda_push_mprts_ab(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfields *cmflds)
 {
+  using BS = typename Config::Bs;
   zero_currents(cmflds);
 
   int gx, gy;
@@ -533,15 +532,15 @@ cuda_push_mprts_ab(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmflds)
 
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
-      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
+      push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
+		    SCurr<BS::x::value, BS::y::value, BS::z::value>>
 	<<<dimGrid, THREADS_PER_BLOCK>>>
 	(block_start, *cmprts, *cmflds);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-    		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
+    push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
+    		  GCurr<BS::x::value, BS::y::value, BS::z::value>>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, *cmprts, *cmflds);
     cuda_sync_if_enabled();
@@ -565,9 +564,9 @@ yz_cuda_push_mprts(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfi
   using BS = typename Config::Bs;
   if (!cmprts->need_reorder) {
     //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
-    cuda_push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
+    cuda_push_mprts_ab<Config, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   } else {
-    cuda_push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
+    cuda_push_mprts_ab<Config, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   }
 }
 
