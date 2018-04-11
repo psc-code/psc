@@ -57,13 +57,13 @@ struct ddc_particles
   };
 
   struct patch {
-    particle_buf_t *m_buf;
     dnei nei[N_DIR];
     int n_recv;
   };
   
   int nr_patches;
   std::vector<patch> patches_;
+  std::vector<particle_buf_t*> bufs_;
   std::vector<ddcp_info_by_rank> cinfo_; // compressed info
   int n_ranks;
   std::vector<MPI_Request> send_reqs_;
@@ -83,6 +83,7 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
   domain = _domain;
   mrc_domain_get_patches(domain, &nr_patches);
   patches_.resize(nr_patches);
+  bufs_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
 
@@ -411,12 +412,13 @@ inline void ddc_particles<MP>::comm()
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
-    int size = patch->m_buf->size();
-    patch->m_buf->reserve(size + patch->n_recv);
+    auto& buf = *bufs_[p];
+    int size = buf.size();
+    buf.reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
     // it won't become invalid due to a realloc since we reserved enough space...
-    it_recv[p] = patch->m_buf->end();
-    patch->m_buf->resize(size + patch->n_recv);
+    it_recv[p] = buf.end();
+    buf.resize(size + patch->n_recv);
   }
 
   // overlap: copy particles from local proc to the end of recv range
@@ -459,7 +461,7 @@ inline void ddc_particles<MP>::comm()
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    assert(it_recv[p] == patches_[p].m_buf->end());
+    assert(it_recv[p] == bufs_[p]->end());
   }
   
   delete[] it_recv;

@@ -61,8 +61,7 @@ struct BndParticles_ : BndParticlesBase
       reset();
     }
     for (int p = 0; p < mprts.n_patches(); p++) {
-      ddcp_patch *dpatch = &ddcp->patches_[p];
-      dpatch->m_buf = &mprts[p].get_buf();
+      ddcp->bufs_[p] = &mprts[p].get_buf();
     }
 
     process_and_exchange(mprts);
@@ -141,12 +140,13 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
     dpatch->nei[dir1].send_buf.resize(0);
   }
 
+  auto& buf = *ddcp->bufs_[p];
   unsigned int n_begin = 0;
-  unsigned int n_end = dpatch->m_buf->size();
+  unsigned int n_end = buf.size();
   unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
-    particle_t *prt = &(*dpatch->m_buf)[n];
+    particle_t *prt = &buf[n];
     real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     real_t *pxi = &prt->pxi;
     
@@ -158,7 +158,7 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
       // fast path
       // particle is still inside patch: move into right position
       mprts[p].validCellIndex(*prt);
-      (*dpatch->m_buf)[head++] = *prt;
+      buf[head++] = *prt;
       continue;
     }
 
@@ -235,13 +235,13 @@ void BndParticles_<MP>::process_patch(Mparticles& mprts, int p)
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	mprts[p].validCellIndex(*prt);
-	(*dpatch->m_buf)[head++] = *prt;
+	buf[head++] = *prt;
       } else {
 	auto* nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	nei->send_buf.push_back(*prt);
       }
     }
   }
-  dpatch->m_buf->resize(head);
+  buf.resize(head);
 }
 

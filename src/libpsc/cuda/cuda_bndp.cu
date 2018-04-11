@@ -76,7 +76,7 @@ void cuda_bndp::prep(ddcp_t* ddcp, cuda_mparticles* cmprts)
 
   if (!ddcp) return; // FIXME testing hack
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp->patches_[p].m_buf = &bpatch[p].buf;
+    ddcp->bufs_[p] = &bpatch[p].buf;
   }
 }
 
@@ -118,7 +118,7 @@ void cuda_bndp::post(ddcp_t* ddcp, cuda_mparticles* cmprts)
 
   if (!ddcp) return; // FIXME, testing hack
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp->patches_[p].m_buf = NULL;
+    ddcp->bufs_[p] = NULL;
   }
 }
 
