@@ -61,8 +61,6 @@ struct MparticlesCuda : MparticlesBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  const int *patch_get_b_mx(int p);
-  
   cuda_mparticles* cmprts() { return cmprts_; }
 
   struct patch_t

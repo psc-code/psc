@@ -77,11 +77,6 @@ void MparticlesCuda::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
   cmprts_->inject(buf, buf_n_by_patch);
 }
 
-const int* MparticlesCuda::patch_get_b_mx(int p)
-{
-  return cmprts_->patch_get_b_mx(p);
-}
-
 void MparticlesCuda::dump(const std::string& filename)
 {
   cmprts_->dump(filename);
@@ -344,7 +339,7 @@ psc_mparticles_cuda_inject(MparticlesCuda& mprts, struct cuda_mparticles_prt *bu
 
 const int* MparticlesCuda::patch_t::get_b_mx() const
 {
-  return mp_.patch_get_b_mx(p_);
+  return mp_.cmprts_->patch_get_b_mx(p_);
 }
 
 // ----------------------------------------------------------------------
