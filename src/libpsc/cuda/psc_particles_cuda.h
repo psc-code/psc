@@ -10,11 +10,6 @@
 
 #include "cuda_iface.h"
 
-// ======================================================================
-// PscMparticlesCuda
-
-using PscMparticlesCuda = PscMparticles<MparticlesCuda>;
-
 template<>
 struct Mparticles_traits<MparticlesCuda>
 {
