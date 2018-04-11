@@ -140,8 +140,7 @@ struct bnd_particles_policy_ordered
 	//      find_block_indices_count_reorderx(prts);
 	count_and_reorder_to_back(mprts, p);
       }
-      dpatch->m_buf = &prts.get_buf();
-      dpatch->m_begin = dpatch->m_buf->size();
+      dpatch->m_buf = &prts.buf;
       
       unsigned int n_send = prts.b_cnt[prts.nr_blocks];
       dpatch->m_buf->resize(dpatch->m_begin + n_send);

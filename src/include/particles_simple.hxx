@@ -250,11 +250,6 @@ struct mparticles_patch_base
     buf.resize(new_size);
   }
 
-  buf_t& get_buf()
-  {
-    return buf;
-  }
-
   void check() const
   {
     for (auto& prt : buf) {

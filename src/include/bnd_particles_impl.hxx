@@ -240,7 +240,7 @@ struct BndParticles_ : BndParticlesCommon<MP>
     std::vector<buf_t*> bufs;
     bufs.reserve(mprts.n_patches());
     for (int p = 0; p < mprts.n_patches(); p++) {
-      bufs.push_back(&mprts[p].get_buf());
+      bufs.push_back(&mprts[p].buf);
     }
 
     this->process_and_exchange(mprts, bufs);
