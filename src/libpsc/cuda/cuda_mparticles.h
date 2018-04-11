@@ -183,15 +183,6 @@ public:
   uint n_blocks_;
 };
 
-// ----------------------------------------------------------------------
-// DMParticles
-
-struct DMParticles
-{
-  DMParticles(cuda_mparticles& cmprts)
-  {}
-};
-
 // ======================================================================
 // cuda_mparticles implementation
 
