@@ -348,7 +348,7 @@ calc_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 // ----------------------------------------------------------------------
 // curr_vb_cell
 
-template<int DEPOSIT, class CURR>
+template<typename Config, class CURR>
 __device__ static void
 curr_vb_cell(DMparticlesCuda& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	     CURR &scurr, int *ci0)
@@ -356,7 +356,7 @@ curr_vb_cell(DMparticlesCuda& dmprts, int i[3], float x[3], float dx[3], float q
   float xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
 		 x[2] + .5f * dx[2], };
-  if (DEPOSIT == DEPOSIT_VB_3D) {
+  if (Config::Deposit::value == DEPOSIT_VB_3D) {
     if (dx[0] != 0.f) {
       float fnqx = qni_wni * dmprts.fnqxs();
       float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
@@ -396,10 +396,10 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 // ----------------------------------------------------------------------
 // yz_calc_j
 
-template<int DEPOSIT, class CURR>
+template<typename Config, class Curr>
 __device__ static void
 yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  CURR &scurr,
+	  Curr &scurr,
 	  int nr_total_blocks, int p_nr,
 	  uint *d_bidx, int bid, int *ci0)
 {
@@ -415,7 +415,7 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
   
   dmprts.find_idx_off_pos_1st(prt.xi, j, h0, xm, float(0.));
 
-  if (DEPOSIT == DEPOSIT_VB_2D) {
+  if (Config::Deposit::value == DEPOSIT_VB_2D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     advance.push_x(prt.xi, vxi, .5f);
 
@@ -436,7 +436,7 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     advance.push_x(prt.xi, vxi, .5f);
     STORE_PARTICLE_POS(prt, d_xi4, n);
-  } else if (DEPOSIT == DEPOSIT_VB_3D) {
+} else if (Config::Deposit::value == DEPOSIT_VB_3D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     advance.push_x(prt.xi, vxi);
     STORE_PARTICLE_POS(prt, d_xi4, n);
@@ -470,16 +470,16 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 
   float dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx1, prt.qni_wni, scurr, ci0);
+  curr_vb_cell<Config>(dmprts, i, x, dx1, prt.qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx1, prt.qni_wni, scurr, ci0);
+  curr_vb_cell<Config>(dmprts, i, x, dx1, prt.qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx, prt.qni_wni, scurr, ci0);
+  curr_vb_cell<Config>(dmprts, i, x, dx, prt.qni_wni, scurr, ci0);
 }
 
 // ----------------------------------------------------------------------
@@ -517,10 +517,10 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
     push_part_one<Config, REORDER>(dmprts, prt, n, fld_cache);
 
     if (REORDER) {
-      yz_calc_j<Config::Deposit::value, Curr>
+      yz_calc_j<Config>
 	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     } else {
-      yz_calc_j<Config::Deposit::value, Curr>
+      yz_calc_j<Config>
 	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     }
   }
