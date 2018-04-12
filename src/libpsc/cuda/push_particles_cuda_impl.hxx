@@ -13,21 +13,25 @@ struct IpRegular : std::false_type {};
 struct DepositVb3d : std::true_type {};
 struct DepositVb2d : std::false_type {};
 
+struct CurrmemGlobal;
+struct CurrmemShared;
+
 struct CurrentGlobal : std::true_type {};
 struct CurrentShared : std::false_type {};
 
-template<typename BS, typename IP, typename DEPOSIT, typename CURRENT>
+template<typename BS, typename IP, typename DEPOSIT, typename CURRENT, typename CURRMEM>
 struct PushParticlesConfig
 {
   using Bs = BS;
   using Ip = IP;
   using Deposit = DEPOSIT;
   using Current = CURRENT;
+  using Currmem = CURRMEM;
 };
 
-using Config1vb = PushParticlesConfig<BS144, IpRegular, DepositVb2d, CurrentShared>;
-using Config1vbec3d = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared>;
-using Config1vbec3dGmem = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared>;
+using Config1vb = PushParticlesConfig<BS144, IpRegular, DepositVb2d, CurrentShared, CurrmemShared>;
+using Config1vbec3d = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared, CurrmemShared>;
+using Config1vbec3dGmem = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared, CurrmemShared>;
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"

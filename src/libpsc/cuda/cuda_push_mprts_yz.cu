@@ -503,9 +503,9 @@ zero_currents(struct cuda_mfields *cmflds)
 // ======================================================================
 // CurrmemShared
 
-template<typename CudaMparticles>
 struct CurrmemShared
 {
+  template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
     int gx =  (cmprts.b_mx()[1] + 1) / 2;
@@ -517,35 +517,15 @@ struct CurrmemShared
 // ======================================================================
 // CurrmemGlobal
 
-template<typename CudaMparticles>
 struct CurrmemGlobal
 {
+  template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
     int gx = cmprts.b_mx()[1];
     int gy = cmprts.b_mx()[2] * cmprts.n_patches;
     return dim3(gx, gy);
   }
-};
-
-// ======================================================================
-// Currmem_traits
-
-template<typename Current>
-struct Currmem_traits;
-
-template<>
-struct Currmem_traits<CurrentShared>
-{
-  template<typename CudaMparticles>
-  using Currmem = CurrmemShared<CudaMparticles>;
-};
-
-template<>
-struct Currmem_traits<CurrentGlobal>
-{
-  template<typename CudaMparticles>
-  using Currmem = CurrmemGlobal<CudaMparticles>;
 };
 
 // ----------------------------------------------------------------------
@@ -555,21 +535,12 @@ template<typename Config>
 template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
-  static_assert(std::is_same<Config, Config1vb>::value ||
-		std::is_same<Config, Config1vbec3d>::value, "not same");
-  //  using Config1vb = PushParticlesConfig<BS144, IpRegular, DepositVb2d, CurrentShared>;
-  //using Current = typename Config::Current;
-  //static_assert(std::is_same<Current, CurrentShared>::value, "current not same");
-  //using Currmem = Currmem_traits<Current>::Currmem<CudaMparticles>;
+  //using Currmem = Currmem_traits<Current>::Currmem;
+  using Currmem = typename Config::Currmem;
 
   zero_currents(cmflds);
 
-  dim3 dimGrid;
-  if (CURRMEM == CURRMEM_SHARED) {
-    dimGrid = CurrmemShared<CudaMparticles>::dimGrid(*cmprts);
-  } else if (CURRMEM == CURRMEM_GLOBAL) {
-    dimGrid = CurrmemGlobal<CudaMparticles>::dimGrid(*cmprts);
-  }
+  dim3 dimGrid = Currmem::dimGrid(*cmprts);
 
   if (REORDER) {
     cmprts->d_alt_xi4.resize(cmprts->n_prts);

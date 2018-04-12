@@ -21,6 +21,7 @@ template<typename Config>
 struct CudaPushParticles_
 {
   using BS = typename Config::Bs;
+  using Current = typename Config::Current;
   using CudaMparticles = cuda_mparticles<BS>;
   
   static void push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
