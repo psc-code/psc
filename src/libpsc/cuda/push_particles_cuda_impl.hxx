@@ -6,9 +6,10 @@
 #include "psc_fields_cuda.h"
 #include "cuda_iface.h"
 #include "cuda_push_particles.cuh"
+#include "interpolate.hxx"
 
-struct IpEc : std::true_type {};
-struct IpRegular : std::false_type {};
+struct IpEc { using type = opt_ip_1st_ec; };
+struct IpRegular { using type = opt_ip_1st; };
 
 struct DepositVb3d : std::true_type {};
 struct DepositVb2d : std::false_type {};
