@@ -266,6 +266,11 @@ struct CurrmemShared
   {
     return dmprts.find_block_pos_patch_q<BS::x::value, BS::y::value, BS::z::value>(block_pos, ci0, block_start);
   }
+
+  __device__ static int find_bid(DMparticlesCuda& dmprts, int p, int *block_pos)
+  {
+    return dmprts.find_bid_q(p, block_pos);
+  }
 };
 
 // ======================================================================
@@ -290,6 +295,11 @@ struct CurrmemGlobal
   __device__ static int find_block_pos_patch(const DMparticlesCuda& dmprts, int *block_pos, int *ci0, int block_start)
   {
     return dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos, ci0);
+  }
+
+  __device__ static int find_bid(DMparticlesCuda& dmprts, int p, int *block_pos)
+  {
+    return dmprts.find_bid();
   }
 };
 
@@ -504,10 +514,10 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
     if (p < 0)
       return;
 
-    bid = dmprts.find_bid_q(p, block_pos);
+    bid = CurrmemShared::find_bid(dmprts, p, block_pos);
   } else if (CURRMEM == CURRMEM_GLOBAL) {
     p = CurrmemGlobal::find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
-    bid = dmprts.find_bid();
+    bid = CurrmemGlobal::find_bid(dmprts, p, block_pos);
   }
   int block_begin = dmprts.off_[bid];
   int block_end = dmprts.off_[bid + 1];
