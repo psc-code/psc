@@ -399,9 +399,7 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 template<typename Config, class Curr>
 __device__ static void
 yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  Curr &scurr,
-	  int nr_total_blocks, int p_nr,
-	  uint *d_bidx, int bid, int *ci0)
+	  Curr &scurr, int p_nr, int bid, int *ci0)
 {
   AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
@@ -443,7 +441,7 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
   }
 
   // has moved into which block? (given as relative shift)
-  d_bidx[n] = dmprts.blockShift(prt.xi, p_nr, bid);
+  dmprts.bidx_[n] = dmprts.blockShift(prt.xi, p_nr, bid);
 
   // position xm at x^(n+.5)
   dmprts.find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
@@ -517,11 +515,9 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
     push_part_one<Config, REORDER>(dmprts, prt, n, fld_cache);
 
     if (REORDER) {
-      yz_calc_j<Config>
-	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
+      yz_calc_j<Config>(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
     } else {
-      yz_calc_j<Config>
-	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
+      yz_calc_j<Config>(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, p, bid, ci0);
     }
   }
   
