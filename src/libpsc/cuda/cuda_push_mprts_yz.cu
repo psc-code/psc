@@ -349,7 +349,7 @@ calc_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 // ----------------------------------------------------------------------
 // curr_vb_cell
 
-template<enum DEPOSIT DEPOSIT, class CURR>
+template<int DEPOSIT, class CURR>
 __device__ static void
 curr_vb_cell(DMparticlesCuda& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	     CURR &scurr, int *ci0)
@@ -397,7 +397,7 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 // ----------------------------------------------------------------------
 // yz_calc_j
 
-template<enum DEPOSIT DEPOSIT, class CURR>
+template<int DEPOSIT, class CURR>
 __device__ static void
 yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
@@ -486,7 +486,7 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 // ----------------------------------------------------------------------
 // push_mprts_ab
 
-template<typename Config, bool REORDER, typename OPT_IP, int DEPOSIT>
+template<typename Config, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
@@ -515,14 +515,14 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
       continue;
     }
     struct d_particle prt;
-    push_part_one<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP>
+    push_part_one<BS::x::value, BS::y::value, BS::z::value, REORDER, typename Config::Ip>
       (dmprts, prt, n, fld_cache);
 
     if (REORDER) {
-      yz_calc_j<DEPOSIT_VB_2D, Curr>
+      yz_calc_j<Config::Deposit::value, Curr>
 	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     } else {
-      yz_calc_j<DEPOSIT_VB_2D, Curr>
+      yz_calc_j<Config::Deposit::value, Curr>
 	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     }
   }
@@ -564,7 +564,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
   }
 
   for (auto block_start : Currmem::block_starts()) {
-    ::push_mprts_ab<Config, REORDER, typename Config::Ip, Config::Deposit::value>
+    ::push_mprts_ab<Config, REORDER>
       <<<dimGrid, THREADS_PER_BLOCK>>>(block_start, *cmprts, *cmflds);
     cuda_sync_if_enabled();
   }
