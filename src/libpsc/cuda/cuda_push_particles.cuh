@@ -6,11 +6,6 @@ enum DEPOSIT {
   DEPOSIT_VB_3D,
 };
 
-enum CURRMEM {
-  CURRMEM_SHARED,
-  CURRMEM_GLOBAL,
-};
-
 // ----------------------------------------------------------------------
 // cuda_push_mprts
 
@@ -27,9 +22,9 @@ struct CudaPushParticles_
   static void push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
   static void push_mprts_xyz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 
-  template<typename IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+  template<typename IP, enum DEPOSIT DEPOSIT>
   static void push_mprts_yz_reorder(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 
-  template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+  template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT>
   static void push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 };

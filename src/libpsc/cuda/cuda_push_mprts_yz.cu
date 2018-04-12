@@ -483,28 +483,18 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
   curr_vb_cell<DEPOSIT, CURR>(dmprts, i, x, dx, prt.qni_wni, scurr, ci0);
 }
 
-// ======================================================================
-
-#define DECLARE_AND_ZERO_SCURR						\
-  __shared__ float _scurr[CURR::shared_size];				\
-  CURR scurr(_scurr, d_mflds[p])					\
-
-#define DECLARE_AND_CACHE_FIELDS					\
-
-#define FIND_BLOCK_RANGE_CURRMEM(CURRMEM)				\
-    
 // ----------------------------------------------------------------------
 // push_mprts_ab
 
 template<typename Config, bool REORDER,
-	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
+	 typename OPT_IP, enum DEPOSIT DEPOSIT>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
 {
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
-  
+  using Curr = typename Currmem::Curr<BS>;
   using FldCache_t = FldCache<BS::x::value, BS::y::value, BS::z::value>;
 
   int block_pos[3], ci0[3];
@@ -517,7 +507,8 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
   int block_end = dmprts.off_[bid + 1];
   __shared__ FldCache_t fld_cache;
   fld_cache.load(d_mflds[p], ci0);
-  DECLARE_AND_ZERO_SCURR;
+  __shared__ float _scurr[Curr::shared_size];
+  Curr scurr(_scurr, d_mflds[p]);
   
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -529,10 +520,10 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
       (dmprts, prt, n, fld_cache);
 
     if (REORDER) {
-      yz_calc_j<DEPOSIT_VB_2D, CURR>
+      yz_calc_j<DEPOSIT_VB_2D, Curr>
 	(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     } else {
-      yz_calc_j<DEPOSIT_VB_2D, CURR>
+      yz_calc_j<DEPOSIT_VB_2D, Curr>
 	(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, dmprts.n_blocks_, p, dmprts.bidx_, bid, ci0);
     }
   }
@@ -559,7 +550,7 @@ zero_currents(struct cuda_mfields *cmflds)
 // cuda_push_mprts_ab
 
 template<typename Config>
-template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   using Currmem = typename Config::Currmem;
@@ -574,9 +565,8 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
   }
 
   for (auto block_start : Currmem::block_starts()) {
-    ::push_mprts_ab<Config, REORDER, OPT_IP, DEPOSIT, CURRMEM, typename Currmem::Curr<BS>>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, *cmprts, *cmflds);
+    ::push_mprts_ab<Config, REORDER, OPT_IP, DEPOSIT>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(block_start, *cmprts, *cmflds);
     cuda_sync_if_enabled();
   }
 
@@ -590,14 +580,14 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
 // push_mprts_yz_reorder
 
 template<typename Config>
-template<typename IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+template<typename IP, enum DEPOSIT DEPOSIT>
 void CudaPushParticles_<Config>::push_mprts_yz_reorder(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   if (!cmprts->need_reorder) {
     //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
-    push_mprts_ab<false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
+    push_mprts_ab<false, IP, DEPOSIT>(cmprts, cmflds);
   } else {
-    push_mprts_ab<true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
+    push_mprts_ab<true, IP, DEPOSIT>(cmprts, cmflds);
   }
 }
 
@@ -608,15 +598,15 @@ template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   if (!Config::Ip::value && !Config::Deposit::value && !Config::Current::value) {
-    //return push_mprts_yz_reorder<opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
+    //return push_mprts_yz_reorder<opt_ip_1st, DEPOSIT_VB_2D>(cmprts, cmflds);
   }
   
   if (Config::Ip::value && Config::Deposit::value && !Config::Current::value) {
-    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D>(cmprts, cmflds);
   }
 
   if (Config::Ip::value && Config::Deposit::value && Config::Current::value) {
-    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D>(cmprts, cmflds);
   }
 
   assert(0);
