@@ -244,6 +244,44 @@ public:
 };
 
 // ======================================================================
+// CurrmemShared
+
+struct CurrmemShared
+{
+  template<typename BS>
+  using Curr = SCurr<BS>;
+  
+  template<typename CudaMparticles>
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx =  (cmprts.b_mx()[1] + 1) / 2;
+    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
+    return dim3(gx, gy);
+  }
+
+  static Range<int> block_starts() { return range(4);  }
+};
+
+// ======================================================================
+// CurrmemGlobal
+
+struct CurrmemGlobal
+{
+  template<typename BS>
+  using Curr = GCurr<BS>;
+
+  template<typename CudaMparticles>
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx = cmprts.b_mx()[1];
+    int gy = cmprts.b_mx()[2] * cmprts.n_patches;
+    return dim3(gx, gy);
+  }
+
+  static Range<int> block_starts() { return range(1);  }
+};
+
+// ======================================================================
 // depositing current
 
 // ----------------------------------------------------------------------
@@ -500,44 +538,6 @@ zero_currents(struct cuda_mfields *cmflds)
     cudaCheck(ierr);
   }
 }
-
-// ======================================================================
-// CurrmemShared
-
-struct CurrmemShared
-{
-  template<typename BS>
-  using Curr = SCurr<BS>;
-  
-  template<typename CudaMparticles>
-  static dim3 dimGrid(CudaMparticles& cmprts)
-  {
-    int gx =  (cmprts.b_mx()[1] + 1) / 2;
-    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
-    return dim3(gx, gy);
-  }
-
-  static Range<int> block_starts() { return range(4);  }
-};
-
-// ======================================================================
-// CurrmemGlobal
-
-struct CurrmemGlobal
-{
-  template<typename BS>
-  using Curr = GCurr<BS>;
-
-  template<typename CudaMparticles>
-  static dim3 dimGrid(CudaMparticles& cmprts)
-  {
-    int gx = cmprts.b_mx()[1];
-    int gy = cmprts.b_mx()[2] * cmprts.n_patches;
-    return dim3(gx, gy);
-  }
-
-  static Range<int> block_starts() { return range(1);  }
-};
 
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
