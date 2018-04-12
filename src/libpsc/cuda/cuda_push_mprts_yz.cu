@@ -473,14 +473,14 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
   int block_pos[3], ci0[3];						\
   int p, bid;								\
   if (CURRMEM == CURRMEM_SHARED) {					\
-    p = dmprts.find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> \
+    p = dmprts.find_block_pos_patch_q<BS::x::value, BS::y::value, BS::z::value> \
       (block_pos, ci0, block_start);					\
     if (p < 0)								\
       return;								\
     									\
     bid = dmprts.find_bid_q(p, block_pos);				\
   } else if (CURRMEM == CURRMEM_GLOBAL) {				\
-    p = dmprts.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> \
+    p = dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value> \
       (block_pos, ci0);							\
     bid = dmprts.find_bid();						\
   }									\
@@ -490,13 +490,14 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 // ----------------------------------------------------------------------
 // push_mprts_ab
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
+template<typename Config, bool REORDER,
 	 typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
 {
-  using FldCache_t = FldCache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>;
+  using BS = typename Config::Bs;
+  using FldCache_t = FldCache<BS::x::value, BS::y::value, BS::z::value>;
 
   FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
   __shared__ FldCache_t fld_cache;
@@ -509,7 +510,7 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
       continue;
     }
     struct d_particle prt;
-    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, OPT_IP>
+    push_part_one<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP>
       (dmprts, prt, n, fld_cache);
 
     if (REORDER) {
@@ -558,8 +559,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
   }
 
   for (auto block_start : Currmem::block_starts()) {
-    ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-		    typename Currmem::Curr<BS>>
+    ::push_mprts_ab<Config, REORDER, OPT_IP, DEPOSIT, CURRMEM, typename Currmem::Curr<BS>>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, *cmprts, *cmflds);
     cuda_sync_if_enabled();
