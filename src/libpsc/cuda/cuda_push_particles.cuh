@@ -21,10 +21,14 @@ template<typename Config>
 struct CudaPushParticles_
 {
   using BS = typename Config::Bs;
+  using CudaMparticles = cuda_mparticles<BS>;
   
-  static void push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds);
-  static void push_mprts_xyz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds);
+  static void push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
+  static void push_mprts_xyz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 
   template<typename IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
-  static void push_mprts_yz_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds);
+  static void push_mprts_yz_reorder(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
+
+  template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+  static void push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 };
