@@ -11,8 +11,8 @@
 struct IpEc { using type = opt_ip_1st_ec; };
 struct IpRegular { using type = opt_ip_1st; };
 
-struct DepositVb3d : std::true_type {};
-struct DepositVb2d : std::false_type {};
+struct DepositVb3d : std::integral_constant<int, DEPOSIT_VB_3D> {};
+struct DepositVb2d : std::integral_constant<int, DEPOSIT_VB_2D> {};
 
 struct CurrmemGlobal;
 struct CurrmemShared;

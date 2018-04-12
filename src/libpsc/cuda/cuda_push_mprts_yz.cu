@@ -486,8 +486,7 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 // ----------------------------------------------------------------------
 // push_mprts_ab
 
-template<typename Config, bool REORDER,
-	 typename OPT_IP, enum DEPOSIT DEPOSIT>
+template<typename Config, bool REORDER, typename OPT_IP, int DEPOSIT>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
@@ -550,7 +549,7 @@ zero_currents(struct cuda_mfields *cmflds)
 // cuda_push_mprts_ab
 
 template<typename Config>
-template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT>
+template<bool REORDER, typename OPT_IP, int DEPOSIT>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   using Currmem = typename Config::Currmem;
@@ -580,7 +579,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
 // push_mprts_yz_reorder
 
 template<typename Config>
-template<typename IP, enum DEPOSIT DEPOSIT>
+template<typename IP, int DEPOSIT>
 void CudaPushParticles_<Config>::push_mprts_yz_reorder(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   if (!cmprts->need_reorder) {
@@ -597,15 +596,7 @@ void CudaPushParticles_<Config>::push_mprts_yz_reorder(CudaMparticles* cmprts, s
 template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
-  if (!Config::Deposit::value) {
-    //return push_mprts_yz_reorder<typename Config::Ip::type, DEPOSIT_VB_2D>(cmprts, cmflds);
-  }
-  
-  if (Config::Deposit::value) {
-    return push_mprts_yz_reorder<typename Config::Ip::type, DEPOSIT_VB_3D>(cmprts, cmflds);
-  }
-
-  assert(0);
+  return push_mprts_yz_reorder<typename Config::Ip::type, Config::Deposit::value>(cmprts, cmflds);
 }
 
 template struct CudaPushParticles_<Config1vb>;
