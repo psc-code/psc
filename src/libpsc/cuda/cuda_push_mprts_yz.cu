@@ -549,7 +549,7 @@ zero_currents(struct cuda_mfields *cmflds)
 // cuda_push_mprts_ab
 
 template<typename Config>
-template<bool REORDER, typename OPT_IP, int DEPOSIT>
+template<bool REORDER>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   using Currmem = typename Config::Currmem;
@@ -564,7 +564,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
   }
 
   for (auto block_start : Currmem::block_starts()) {
-    ::push_mprts_ab<Config, REORDER, OPT_IP, DEPOSIT>
+    ::push_mprts_ab<Config, REORDER, typename Config::Ip, Config::Deposit::value>
       <<<dimGrid, THREADS_PER_BLOCK>>>(block_start, *cmprts, *cmflds);
     cuda_sync_if_enabled();
   }
@@ -583,9 +583,9 @@ void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cu
 {
   if (!cmprts->need_reorder) {
     //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
-    push_mprts_ab<false, typename Config::Ip, Config::Deposit::value>(cmprts, cmflds);
+    push_mprts_ab<false>(cmprts, cmflds);
   } else {
-    push_mprts_ab<true, typename Config::Ip, Config::Deposit::value>(cmprts, cmflds);
+    push_mprts_ab<true>(cmprts, cmflds);
   }
 }
 

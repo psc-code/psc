@@ -21,6 +21,6 @@ struct CudaPushParticles_
   static void push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
   static void push_mprts_xyz(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 
-  template<bool REORDER, typename OPT_IP, int DEPOSIT>
+  template<bool REORDER>
   static void push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
 };
