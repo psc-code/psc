@@ -506,6 +506,9 @@ zero_currents(struct cuda_mfields *cmflds)
 
 struct CurrmemShared
 {
+  template<typename BS>
+  using Curr = SCurr<BS>;
+  
   template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
@@ -513,6 +516,8 @@ struct CurrmemShared
     int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
     return dim3(gx, gy);
   }
+
+  static Range<int> block_starts() { return range(4);  }
 };
 
 // ======================================================================
@@ -520,6 +525,9 @@ struct CurrmemShared
 
 struct CurrmemGlobal
 {
+  template<typename BS>
+  using Curr = GCurr<BS>;
+
   template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
@@ -527,6 +535,8 @@ struct CurrmemGlobal
     int gy = cmprts.b_mx()[2] * cmprts.n_patches;
     return dim3(gx, gy);
   }
+
+  static Range<int> block_starts() { return range(1);  }
 };
 
 // ----------------------------------------------------------------------
@@ -536,7 +546,6 @@ template<typename Config>
 template<bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
-  //using Currmem = Currmem_traits<Current>::Currmem;
   using Currmem = typename Config::Currmem;
 
   zero_currents(cmflds);
@@ -548,24 +557,12 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
     cmprts->d_alt_pxi4.resize(cmprts->n_prts);
   }
 
-  if (CURRMEM == CURRMEM_SHARED) {
-    for (auto block_start : range(4)) {
-      ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-		    SCurr<BS>>
-	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, *cmprts, *cmflds);
-      cuda_sync_if_enabled();
-    }
-  } else if (CURRMEM == CURRMEM_GLOBAL) {
-    for (auto block_start : range(1)) {
-      ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
-    		  GCurr<BS>>
-	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, *cmprts, *cmflds);
-      cuda_sync_if_enabled();
-    }
-  } else {
-    assert(0);
+  for (auto block_start : Currmem::block_starts()) {
+    ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
+		    typename Currmem::Curr<BS>>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, *cmprts, *cmflds);
+    cuda_sync_if_enabled();
   }
 
   if (REORDER) {
