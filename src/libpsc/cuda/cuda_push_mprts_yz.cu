@@ -508,17 +508,11 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
   using FldCache_t = FldCache<BS::x::value, BS::y::value, BS::z::value>;
 
   int block_pos[3], ci0[3];
-  int p, bid;
-  if (CURRMEM == CURRMEM_SHARED) {
-    p = CurrmemShared::find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
-    if (p < 0)
-      return;
+  int p = Currmem::template find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
+  if (p < 0)
+    return;
 
-    bid = CurrmemShared::find_bid(dmprts, p, block_pos);
-  } else if (CURRMEM == CURRMEM_GLOBAL) {
-    p = CurrmemGlobal::find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
-    bid = CurrmemGlobal::find_bid(dmprts, p, block_pos);
-  }
+  int bid = Currmem::find_bid(dmprts, p, block_pos);
   int block_begin = dmprts.off_[bid];
   int block_end = dmprts.off_[bid + 1];
   __shared__ FldCache_t fld_cache;
