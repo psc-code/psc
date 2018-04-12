@@ -25,10 +25,7 @@
     }									\
   } psc_push_particles_## NAME ##_ops;
 
-using Config1vb = Config<BS144, IpRegular, DepositVb2d, CurrentShared>;
 MAKE_1VBEC3D_YZ(MP_BLOCKSIZE_4X4X4, 1vb_cuda, Config1vb);
-using Config1vbec3d = Config<BS144, IpEc, DepositVb3d, CurrentShared>;
 MAKE_1VBEC3D_YZ(MP_BLOCKSIZE_4X4X4, 1vbec3d_cuda, Config1vbec3d);
-using Config1vbec3dGmem = Config<BS144, IpEc, DepositVb3d, CurrentShared>;
 MAKE_1VBEC3D_YZ(MP_BLOCKSIZE_4X4X4, 1vbec3d_gmem_cuda, Config1vbec3dGmem);
 

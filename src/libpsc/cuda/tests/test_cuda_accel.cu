@@ -21,21 +21,6 @@ using RngPool = PscRngPool<Rng>;
 
 // enum hackiness
 
-enum IP { // FIXME, dup
-  IP_STD, // standard interpolation
-  IP_EC,  // energy-conserving interpolation
-};
-
-enum DEPOSIT { // FIXME, dup
-  DEPOSIT_VB_2D,
-  DEPOSIT_VB_3D,
-};
-
-enum CURRMEM { // FIXME, dup
-  CURRMEM_SHARED,
-  CURRMEM_GLOBAL,
-};
-
 enum { // FIXME, duplicated
 #if 0
   JXI, JYI, JZI,

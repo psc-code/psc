@@ -205,7 +205,7 @@ struct PscFlatfoil : PscFlatfoilParams
 #if DO_CUDA
   using Mparticles_t = MparticlesCuda;
   using Mfields_t = MfieldsCuda;
-  using Config1vbec3d = Config<BS144, IpEc, DepositVb3d, CurrentShared>;
+  using Config1vbec3d = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared>;
   using PushParticles_t = PushParticlesCuda<Config1vbec3d>;
   using Sort_t = SortCuda;
   using Collision_t = CollisionCuda;

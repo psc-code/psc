@@ -17,7 +17,7 @@ struct CurrentGlobal : std::true_type {};
 struct CurrentShared : std::false_type {};
 
 template<typename BS, typename IP, typename DEPOSIT, typename CURRENT>
-struct Config
+struct PushParticlesConfig
 {
   using Bs = BS;
   using Ip = IP;
@@ -25,9 +25,9 @@ struct Config
   using Current = CURRENT;
 };
 
-using Config1vb = Config<BS144, IpRegular, DepositVb2d, CurrentShared>;
-using Config1vbec3d = Config<BS144, IpEc, DepositVb3d, CurrentShared>;
-using Config1vbec3dGmem = Config<BS144, IpEc, DepositVb3d, CurrentShared>;
+using Config1vb = PushParticlesConfig<BS144, IpRegular, DepositVb2d, CurrentShared>;
+using Config1vbec3d = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared>;
+using Config1vbec3dGmem = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrentShared>;
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"

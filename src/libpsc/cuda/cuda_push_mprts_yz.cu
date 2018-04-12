@@ -24,16 +24,6 @@ using dim = dim_yz;
 
 using real_t = float;
 
-enum DEPOSIT {
-  DEPOSIT_VB_2D,
-  DEPOSIT_VB_3D,
-};
-
-enum CURRMEM {
-  CURRMEM_SHARED,
-  CURRMEM_GLOBAL,
-};
-
 // FIXME
 #define CUDA_BND_S_OOB (10)
 
@@ -538,14 +528,40 @@ struct CurrmemGlobal
   }
 };
 
+// ======================================================================
+// Currmem_traits
+
+template<typename Current>
+struct Currmem_traits;
+
+template<>
+struct Currmem_traits<CurrentShared>
+{
+  template<typename CudaMparticles>
+  using Currmem = CurrmemShared<CudaMparticles>;
+};
+
+template<>
+struct Currmem_traits<CurrentGlobal>
+{
+  template<typename CudaMparticles>
+  using Currmem = CurrmemGlobal<CudaMparticles>;
+};
+
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
 template<typename Config, bool REORDER, typename OPT_IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 static void cuda_push_mprts_ab(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfields *cmflds)
 {
+  static_assert(std::is_same<Config, Config1vb>::value ||
+		std::is_same<Config, Config1vbec3d>::value, "not same");
   using BS = typename Config::Bs;
   using CudaMparticles = cuda_mparticles<typename Config::Bs>;
+  //  using Config1vb = PushParticlesConfig<BS144, IpRegular, DepositVb2d, CurrentShared>;
+  //using Current = typename Config::Current;
+  //static_assert(std::is_same<Current, CurrentShared>::value, "current not same");
+  //using Currmem = Currmem_traits<Current>::Currmem<CudaMparticles>;
 
   zero_currents(cmflds);
 
@@ -586,13 +602,12 @@ static void cuda_push_mprts_ab(cuda_mparticles<typename Config::Bs>* cmprts, str
 }
 
 // ----------------------------------------------------------------------
-// yz_cuda_push_mprts
+// push_mprts_yz_reorder
 
-template<typename Config, typename IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
-static void
-yz_cuda_push_mprts(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfields *cmflds)
+template<typename Config>
+template<typename IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+void CudaPushParticles_<Config>::push_mprts_yz_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds)
 {
-  using BS = typename Config::Bs;
   if (!cmprts->need_reorder) {
     //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
     cuda_push_mprts_ab<Config, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
@@ -602,21 +617,21 @@ yz_cuda_push_mprts(cuda_mparticles<typename Config::Bs>* cmprts, struct cuda_mfi
 }
 
 // ----------------------------------------------------------------------
-// cuda_push_mprts_yz
+// push_mprts_yz
 
 template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmflds)
 {
   if (!Config::Ip::value && !Config::Deposit::value && !Config::Current::value) {
-    //return yz_cuda_push_mprts<Config, opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
+    //return push_mprts_yz_reorder<opt_ip_1st, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
   }
   
   if (Config::Ip::value && Config::Deposit::value && !Config::Current::value) {
-    return yz_cuda_push_mprts<Config, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
   }
 
   if (Config::Ip::value && Config::Deposit::value && Config::Current::value) {
-    return yz_cuda_push_mprts<Config, opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
   }
 
   assert(0);
