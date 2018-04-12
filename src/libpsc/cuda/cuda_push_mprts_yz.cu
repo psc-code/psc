@@ -596,7 +596,7 @@ void CudaPushParticles_<Config>::push_mprts_yz_reorder(CudaMparticles* cmprts, s
 template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
-  return push_mprts_yz_reorder<typename Config::Ip::type, Config::Deposit::value>(cmprts, cmflds);
+  return push_mprts_yz_reorder<typename Config::Ip, Config::Deposit::value>(cmprts, cmflds);
 }
 
 template struct CudaPushParticles_<Config1vb>;

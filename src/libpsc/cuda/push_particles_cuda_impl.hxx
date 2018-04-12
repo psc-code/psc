@@ -8,9 +8,6 @@
 #include "cuda_push_particles.cuh"
 #include "interpolate.hxx"
 
-struct IpEc { using type = opt_ip_1st_ec; };
-struct IpRegular { using type = opt_ip_1st; };
-
 struct DepositVb3d : std::integral_constant<int, DEPOSIT_VB_3D> {};
 struct DepositVb2d : std::integral_constant<int, DEPOSIT_VB_2D> {};
 
@@ -26,9 +23,9 @@ struct PushParticlesConfig
   using Currmem = CURRMEM;
 };
 
-using Config1vb = PushParticlesConfig<BS144, IpRegular, DepositVb2d, CurrmemShared>;
-using Config1vbec3d = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrmemShared>;
-using Config1vbec3dGmem = PushParticlesConfig<BS144, IpEc, DepositVb3d, CurrmemShared>;
+using Config1vb = PushParticlesConfig<BS144, opt_ip_1st, DepositVb2d, CurrmemShared>;
+using Config1vbec3d = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+using Config1vbec3dGmem = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"
