@@ -557,11 +557,13 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
+    for (auto block_start : range(1)) {
+      ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
     		  GCurr<BS>>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (0, *cmprts, *cmflds);
-    cuda_sync_if_enabled();
+	<<<dimGrid, THREADS_PER_BLOCK>>>
+	(block_start, *cmprts, *cmflds);
+      cuda_sync_if_enabled();
+    }
   } else {
     assert(0);
   }
