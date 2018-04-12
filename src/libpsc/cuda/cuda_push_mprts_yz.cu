@@ -93,8 +93,7 @@ private:
 // ----------------------------------------------------------------------
 // push_part_one
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
-	 typename OPT_IP, typename FldCache_t>
+template<typename Config, bool REORDER, typename FldCache_t>
 __device__ static void
 push_part_one(DMparticlesCuda& dmprts, struct d_particle& prt, int n, const FldCache_t& fld_cache)
 {
@@ -110,7 +109,7 @@ push_part_one(DMparticlesCuda& dmprts, struct d_particle& prt, int n, const FldC
   // field interpolation
   real_t xm[3];
   dmprts.scalePos(xm, prt.xi);
-  InterpolateEM<FldCache_t, OPT_IP, dim_yz> ip;
+  InterpolateEM<FldCache_t, typename Config::Ip, dim_yz> ip;
   AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
   ip.set_coeffs(xm);
@@ -515,8 +514,7 @@ push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
       continue;
     }
     struct d_particle prt;
-    push_part_one<BS::x::value, BS::y::value, BS::z::value, REORDER, typename Config::Ip>
-      (dmprts, prt, n, fld_cache);
+    push_part_one<Config, REORDER>(dmprts, prt, n, fld_cache);
 
     if (REORDER) {
       yz_calc_j<Config::Deposit::value, Curr>
