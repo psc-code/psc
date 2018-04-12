@@ -4,6 +4,7 @@
 #include "cuda_mfields.h"
 #include "cuda_push_particles.cuh"
 #include "push_particles_cuda_impl.hxx"
+#include "range.hxx"
 
 #define DIM DIM_YZ
 
@@ -548,7 +549,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
   }
 
   if (CURRMEM == CURRMEM_SHARED) {
-    for (int block_start = 0; block_start < 4; block_start++) {
+    for (auto block_start : range(4)) {
       ::push_mprts_ab<BS::x::value, BS::y::value, BS::z::value, REORDER, OPT_IP, DEPOSIT, CURRMEM,
 		    SCurr<BS>>
 	<<<dimGrid, THREADS_PER_BLOCK>>>
