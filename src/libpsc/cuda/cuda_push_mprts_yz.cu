@@ -576,27 +576,17 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
 }
 
 // ----------------------------------------------------------------------
-// push_mprts_yz_reorder
-
-template<typename Config>
-template<typename IP, int DEPOSIT>
-void CudaPushParticles_<Config>::push_mprts_yz_reorder(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
-{
-  if (!cmprts->need_reorder) {
-    //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
-    push_mprts_ab<false, IP, DEPOSIT>(cmprts, cmflds);
-  } else {
-    push_mprts_ab<true, IP, DEPOSIT>(cmprts, cmflds);
-  }
-}
-
-// ----------------------------------------------------------------------
 // push_mprts_yz
 
 template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
-  return push_mprts_yz_reorder<typename Config::Ip, Config::Deposit::value>(cmprts, cmflds);
+  if (!cmprts->need_reorder) {
+    //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
+    push_mprts_ab<false, typename Config::Ip, Config::Deposit::value>(cmprts, cmflds);
+  } else {
+    push_mprts_ab<true, typename Config::Ip, Config::Deposit::value>(cmprts, cmflds);
+  }
 }
 
 template struct CudaPushParticles_<Config1vb>;
