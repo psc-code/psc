@@ -251,6 +251,8 @@ struct CurrmemShared
   template<typename BS>
   using Curr = SCurr<BS>;
   
+  static Range<int> block_starts() { return range(4);  }
+
   template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
@@ -259,7 +261,11 @@ struct CurrmemShared
     return dim3(gx, gy);
   }
 
-  static Range<int> block_starts() { return range(4);  }
+  template<typename BS>
+  __device__ static int find_block_pos_patch(const DMparticlesCuda& dmprts, int *block_pos, int *ci0, int block_start)
+  {
+    return dmprts.find_block_pos_patch_q<BS::x::value, BS::y::value, BS::z::value>(block_pos, ci0, block_start);
+  }
 };
 
 // ======================================================================
@@ -270,6 +276,8 @@ struct CurrmemGlobal
   template<typename BS>
   using Curr = GCurr<BS>;
 
+  static Range<int> block_starts() { return range(1);  }
+
   template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
@@ -278,7 +286,11 @@ struct CurrmemGlobal
     return dim3(gx, gy);
   }
 
-  static Range<int> block_starts() { return range(1);  }
+  template<typename BS>
+  __device__ static int find_block_pos_patch(const DMparticlesCuda& dmprts, int *block_pos, int *ci0, int block_start)
+  {
+    return dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos, ci0);
+  }
 };
 
 // ======================================================================
@@ -470,22 +482,6 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 #define DECLARE_AND_CACHE_FIELDS					\
 
 #define FIND_BLOCK_RANGE_CURRMEM(CURRMEM)				\
-  int block_pos[3], ci0[3];						\
-  int p, bid;								\
-  if (CURRMEM == CURRMEM_SHARED) {					\
-    p = dmprts.find_block_pos_patch_q<BS::x::value, BS::y::value, BS::z::value> \
-      (block_pos, ci0, block_start);					\
-    if (p < 0)								\
-      return;								\
-    									\
-    bid = dmprts.find_bid_q(p, block_pos);				\
-  } else if (CURRMEM == CURRMEM_GLOBAL) {				\
-    p = dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value> \
-      (block_pos, ci0);							\
-    bid = dmprts.find_bid();						\
-  }									\
-  int block_begin = dmprts.off_[bid];					\
-  int block_end = dmprts.off_[bid + 1]					\
     
 // ----------------------------------------------------------------------
 // push_mprts_ab
@@ -497,9 +493,24 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
 {
   using BS = typename Config::Bs;
+  using Currmem = typename Config::Currmem;
+  
   using FldCache_t = FldCache<BS::x::value, BS::y::value, BS::z::value>;
 
-  FIND_BLOCK_RANGE_CURRMEM(CURRMEM);
+  int block_pos[3], ci0[3];
+  int p, bid;
+  if (CURRMEM == CURRMEM_SHARED) {
+    p = CurrmemShared::find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
+    if (p < 0)
+      return;
+
+    bid = dmprts.find_bid_q(p, block_pos);
+  } else if (CURRMEM == CURRMEM_GLOBAL) {
+    p = CurrmemGlobal::find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
+    bid = dmprts.find_bid();
+  }
+  int block_begin = dmprts.off_[bid];
+  int block_end = dmprts.off_[bid + 1];
   __shared__ FldCache_t fld_cache;
   fld_cache.load(d_mflds[p], ci0);
   DECLARE_AND_ZERO_SCURR;

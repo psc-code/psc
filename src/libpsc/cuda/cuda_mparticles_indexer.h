@@ -129,7 +129,7 @@ struct DParticleIndexer
   }
 
   template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-  __device__ int find_block_pos_patch(int *block_pos, int *ci0)
+  __device__ int find_block_pos_patch(int *block_pos, int *ci0) const
   {
     block_pos[1] = blockIdx.x;
     block_pos[2] = blockIdx.y % b_mx_[2];
@@ -142,7 +142,7 @@ struct DParticleIndexer
   }
 
   template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-  __device__ int find_block_pos_patch(int *block_pos)
+  __device__ int find_block_pos_patch(int *block_pos) const
   {
     block_pos[1] = blockIdx.x;
     block_pos[2] = blockIdx.y % b_mx_[2];
@@ -151,7 +151,7 @@ struct DParticleIndexer
   }
 
   template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-  __device__ int find_block_pos_patch_q(int *block_pos, int *ci0, int block_start)
+  __device__ int find_block_pos_patch_q(int *block_pos, int *ci0, int block_start) const
   {
     int grid_dim_y = (b_mx_[2] + 1) / 2;
     block_pos[1] = blockIdx.x * 2;
@@ -203,7 +203,9 @@ struct DParticleIndexer
   }
 
   __device__ real_t dxi(int d) const { return dxi_[d]; }
-  
+
+  __device__ uint b_mx(int d) const { return b_mx_[d]; }
+
 private:
   uint b_mx_[3];
   real_t b_dxi_[3];
