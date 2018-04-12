@@ -597,15 +597,11 @@ void CudaPushParticles_<Config>::push_mprts_yz_reorder(CudaMparticles* cmprts, s
 template<typename Config>
 void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
-  if (!Config::Ip::value && !Config::Deposit::value && !Config::Current::value) {
+  if (!Config::Ip::value && !Config::Deposit::value) {
     //return push_mprts_yz_reorder<opt_ip_1st, DEPOSIT_VB_2D>(cmprts, cmflds);
   }
   
-  if (Config::Ip::value && Config::Deposit::value && !Config::Current::value) {
-    return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D>(cmprts, cmflds);
-  }
-
-  if (Config::Ip::value && Config::Deposit::value && Config::Current::value) {
+  if (Config::Ip::value && Config::Deposit::value) {
     return push_mprts_yz_reorder<opt_ip_1st_ec, DEPOSIT_VB_3D>(cmprts, cmflds);
   }
 
