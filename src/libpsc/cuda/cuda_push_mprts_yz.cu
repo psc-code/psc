@@ -271,10 +271,14 @@ struct CudaPushParticles_yz
   template<bool REORDER>
   __device__
   static void push_mprts(DMparticles& dmprts, DMFields d_mflds,
-			 int block_begin, int block_end, const FldCache& fld_cache,
+			 int block_begin, int block_end,
 			 int p, int bid, int ci0[3])
   {
     using CURR = SCurr<BS>;
+
+    __shared__ FldCache fld_cache;
+    fld_cache.load(d_mflds[p], ci0);
+
     __shared__ float _scurr[CURR::shared_size];
     CURR scurr(_scurr, d_mflds[p]);
 
@@ -318,10 +322,8 @@ push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
   int bid = Currmem::find_bid(dmprts, p, block_pos);
   int block_begin = dmprts.off_[bid];
   int block_end = dmprts.off_[bid + 1];
-  __shared__ FldCache_t fld_cache;
-  fld_cache.load(d_mflds[p], ci0);
   
-  CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, d_mflds, block_begin, block_end, fld_cache, p, bid, ci0);
+  CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, d_mflds, block_begin, block_end, p, bid, ci0);
 }
 
 // ----------------------------------------------------------------------
