@@ -34,12 +34,6 @@ struct psc_mparticles_ops {
 
 #define MP_DONT_COPY (0x1)
 #define MP_DONT_RESIZE (0x2)
-#define MP_BLOCKSIZE_MASK     (0x7000)
-#define MP_BLOCKSIZE_1X1X1    (0x1000)
-#define MP_BLOCKSIZE_2X2X2    (0x2000)
-#define MP_BLOCKSIZE_4X4X4    (0x3000)
-#define MP_BLOCKSIZE_8X8X8    (0x4000)
-
 
 void psc_mparticles_check(struct psc_mparticles *mprts);
 

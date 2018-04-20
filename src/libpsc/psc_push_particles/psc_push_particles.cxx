@@ -38,13 +38,6 @@ psc_push_particles_prep(struct psc_push_particles *push,
   prof_stop(pr);
 }
 
-unsigned int
-psc_push_particles_get_mp_flags(struct psc_push_particles *push)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  return ops->mp_flags;
-}
-
 // ======================================================================
 // psc_push_particles_init
 
