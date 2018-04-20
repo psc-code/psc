@@ -93,55 +93,52 @@ private:
 template<typename Config, typename FC>
 struct CudaPushParticles_yz
 {
-  using DMparticles = DMparticlesCuda<BS144>;
+  using BS = typename Config::Bs;
+  using DMparticles = DMparticlesCuda<BS>;
   using FldCache = FC;
+
+  // ----------------------------------------------------------------------
+  // push_part_one
 
   template<bool REORDER>
   __device__ static void
-  push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache);
+  push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache)
+    
+  {
+    uint id;
+    if (REORDER) {
+      id = dmprts.id_[n];
+      LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
+    } else {
+      LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
+  }
+    // here we have x^{n+.5}, p^n
+    
+    // field interpolation
+    real_t xm[3];
+    dmprts.scalePos(xm, prt.xi);
+    InterpolateEM<FldCache, typename Config::Ip, dim_yz> ip;
+    AdvanceParticle<real_t, dim> advance{dmprts.dt()};
+    
+    ip.set_coeffs(xm);
+    
+    real_t E[3] = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
+    real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
+    
+    // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+    int kind = __float_as_int(prt.kind_as_float);
+    real_t dq = dmprts.dq(kind);
+    if (REORDER) {
+      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
+      advance.push_p(prt.pxi, E, H, dq);
+      STORE_PARTICLE_MOM(prt, dmprts.alt_pxi4_, n);
+    } else {
+      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
+      advance.push_p(prt.pxi, E, H, dq);
+      STORE_PARTICLE_MOM(prt, dmprts.pxi4_, n);
+    }
+  }
 };
-
-// ----------------------------------------------------------------------
-// push_part_one
-
-template<typename Config, typename FC>
-template<bool REORDER>
-__device__
-void CudaPushParticles_yz<Config, FC>::push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache)
-{
-  uint id;
-  if (REORDER) {
-    id = dmprts.id_[n];
-    LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
-  } else {
-    LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
-  }
-  // here we have x^{n+.5}, p^n
-
-  // field interpolation
-  real_t xm[3];
-  dmprts.scalePos(xm, prt.xi);
-  InterpolateEM<FldCache, typename Config::Ip, dim_yz> ip;
-  AdvanceParticle<real_t, dim> advance{dmprts.dt()};
-
-  ip.set_coeffs(xm);
-  
-  real_t E[3] = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
-  real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
-
-  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  int kind = __float_as_int(prt.kind_as_float);
-  real_t dq = dmprts.dq(kind);
-  if (REORDER) {
-    LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
-    advance.push_p(prt.pxi, E, H, dq);
-    STORE_PARTICLE_MOM(prt, dmprts.alt_pxi4_, n);
-  } else {
-    LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
-    advance.push_p(prt.pxi, E, H, dq);
-    STORE_PARTICLE_MOM(prt, dmprts.pxi4_, n);
-  }
-}
 
 // ----------------------------------------------------------------------
 // SCurr
