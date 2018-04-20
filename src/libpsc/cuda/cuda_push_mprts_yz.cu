@@ -39,12 +39,14 @@ using real_t = float;
 // OPT: fld cache is much bigger than needed
 // OPT: precalculating IP coeffs could be a gain, too
 
-template<typename Config, typename FC>
+template<typename Config>
 struct CudaPushParticles_yz
 {
   using BS = typename Config::Bs;
+  using Currmem = typename Config::Currmem;
+  using Curr = typename Currmem::Curr<BS>;
   using DMparticles = DMparticlesCuda<BS>;
-  using FldCache = FC;
+  using FldCache = FldCache<BS::x::value, BS::y::value, BS::z::value>;
 
   // ----------------------------------------------------------------------
   // push_part_one
@@ -133,10 +135,9 @@ struct CudaPushParticles_yz
   // ----------------------------------------------------------------------
   // curr_vb_cell
   
-  template<typename CURR>
   __device__ static void
   curr_vb_cell(DMparticlesCuda<BS144>& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
-	       CURR &scurr, int *ci0)
+	       Curr &scurr, int *ci0)
   {
     float xa[3] = { 0.,
 		    x[1] + .5f * dx[1],
@@ -181,10 +182,9 @@ struct CudaPushParticles_yz
   // ----------------------------------------------------------------------
   // yz_calc_j
   
-  template<typename CURR>
   __device__ static void
   yz_calc_j(DMparticlesCuda<BS144>& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	    CURR &scurr, int p_nr, int bid, int *ci0)
+	    Curr &scurr, int p_nr, int bid, int *ci0)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
@@ -272,10 +272,6 @@ struct CudaPushParticles_yz
   __device__
   static void push_mprts(DMparticles& dmprts, DMFields& d_mflds, int block_start)
   {
-    using BS = typename Config::Bs;
-    using Currmem = typename Config::Currmem;
-    using Curr = typename Currmem::Curr<BS>;
-    
     int block_pos[3], ci0[3];
     int p = Currmem::template find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
     if (p < 0)
@@ -285,13 +281,11 @@ struct CudaPushParticles_yz
     int block_begin = dmprts.off_[bid];
     int block_end = dmprts.off_[bid + 1];
     
-    using CURR = SCurr<BS>;
-
     __shared__ FldCache fld_cache;
     fld_cache.load(d_mflds[p], ci0);
 
-    __shared__ float _scurr[CURR::shared_size];
-    CURR scurr(_scurr, d_mflds[p]);
+    __shared__ float _scurr[Curr::shared_size];
+    Curr scurr(_scurr, d_mflds[p]);
 
     __syncthreads();
     for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -320,10 +314,7 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
 {
-  using BS = typename Config::Bs;
-  using FldCache_t = FldCache<BS::x::value, BS::y::value, BS::z::value>;
-  
-  CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, d_mflds, block_start);
+  CudaPushParticles_yz<Config>::push_mprts<REORDER>(dmprts, d_mflds, block_start);
 }
 
 // ----------------------------------------------------------------------
