@@ -268,19 +268,32 @@ struct CudaPushParticles_yz
   // ----------------------------------------------------------------------
   // push_mprts
 
-  template<bool REORDER, typename CURR>
+  template<bool REORDER>
   __device__
-  static void push_mprts(DMparticles& dmprts, int n, const FldCache& fld_cache, CURR& scurr,
+  static void push_mprts(DMparticles& dmprts, DMFields d_mflds,
+			 int block_begin, int block_end, const FldCache& fld_cache,
 			 int p, int bid, int ci0[3])
   {
-    struct d_particle prt;
-    push_part_one<REORDER>(dmprts, prt, n, fld_cache);
+    using CURR = SCurr<BS>;
+    __shared__ float _scurr[CURR::shared_size];
+    CURR scurr(_scurr, d_mflds[p]);
 
-    if (REORDER) {
-      yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
-    } else {
-      yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, p, bid, ci0);
+    __syncthreads();
+    for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+      if (n < block_begin) {
+	continue;
+      }
+      struct d_particle prt;
+      push_part_one<REORDER>(dmprts, prt, n, fld_cache);
+      
+      if (REORDER) {
+	yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
+      } else {
+	yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, p, bid, ci0);
+      }
     }
+    
+    scurr.add_to_fld(ci0);
   }
 };
 
@@ -307,18 +320,8 @@ push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
   int block_end = dmprts.off_[bid + 1];
   __shared__ FldCache_t fld_cache;
   fld_cache.load(d_mflds[p], ci0);
-  __shared__ float _scurr[Curr::shared_size];
-  Curr scurr(_scurr, d_mflds[p]);
   
-  __syncthreads();
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
-    CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, n, fld_cache, scurr, p, bid, ci0);
-  }
-  
-  scurr.add_to_fld(ci0);
+  CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, d_mflds, block_begin, block_end, fld_cache, p, bid, ci0);
 }
 
 // ----------------------------------------------------------------------
