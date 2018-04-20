@@ -178,7 +178,7 @@ cuda_heating_run_foil_gold(cuda_mparticles<BS144>* cmprts)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-  k_heating_run_foil(DParticleIndexer dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
+  k_heating_run_foil(DParticleIndexer<BS144> dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
 		     uint *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];

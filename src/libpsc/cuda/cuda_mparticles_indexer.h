@@ -63,6 +63,7 @@ private:
 // ======================================================================
 // DParticleIndexer
 
+template<typename BS>
 struct DParticleIndexer
 {
   using real_t = float;

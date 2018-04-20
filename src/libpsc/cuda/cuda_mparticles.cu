@@ -122,7 +122,7 @@ void cuda_mparticles<BS>::swap_alt()
 // k_find_block_indices_ids
 
 __global__ static void
-k_find_block_indices_ids(DParticleIndexer dpi, float4 *d_xi4, uint *d_off,
+k_find_block_indices_ids(DParticleIndexer<BS144> dpi, float4 *d_xi4, uint *d_off,
 			 uint *d_bidx, uint *d_ids, int n_patches,
 			 int n_blocks_per_patch)
 {
