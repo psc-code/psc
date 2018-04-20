@@ -29,8 +29,8 @@ static cuda_heating_params h_prm;
 // ----------------------------------------------------------------------
 // cuda_heating_params_set
 
-static void
-cuda_heating_params_set(cuda_mparticles<BS144>* cmprts)
+template<typename BS>
+static void cuda_heating_params_set(cuda_mparticles<BS>* cmprts)
 {
   cudaError_t ierr;
 
@@ -44,8 +44,8 @@ cuda_heating_params_set(cuda_mparticles<BS144>* cmprts)
 // ----------------------------------------------------------------------
 // cuda_heating_params_free
 
-static void
-cuda_heating_params_free()
+template<typename BS>
+static void cuda_heating_params_free()
 {
   cudaError_t ierr;
 
@@ -134,8 +134,8 @@ d_particle_kick(float4 *pxi4, float H, curandState *state)
 // ----------------------------------------------------------------------
 // cuda_heating_run_foil_gold
 
-void
-cuda_heating_run_foil_gold(cuda_mparticles<BS144>* cmprts)
+template<typename BS>
+void cuda_heating_run_foil_gold(cuda_mparticles<BS>* cmprts)
 {
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
@@ -178,7 +178,7 @@ cuda_heating_run_foil_gold(cuda_mparticles<BS144>* cmprts)
 template<typename BS>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-  k_heating_run_foil(DParticleIndexer<BS144> dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
+  k_heating_run_foil(DParticleIndexer<BS> dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
 		     uint *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];
@@ -241,7 +241,7 @@ k_curand_setup(curandState *d_curand_states, int b_my)
 
 template<typename BS>
 static void
-heating_run_foil(cuda_mparticles<BS144>* cmprts, curandState *d_curand_states)
+heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
@@ -303,7 +303,7 @@ void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts)
   heating_run_foil<BS>(cmprts, d_curand_states);
   
   if (0) {
-    cuda_heating_params_free();
+    cuda_heating_params_free<BS>();
     
     cudaError_t ierr;
     ierr = cudaFree(d_curand_states);

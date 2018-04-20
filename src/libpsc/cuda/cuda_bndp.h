@@ -23,6 +23,7 @@ struct cuda_bnd {
 // ----------------------------------------------------------------------
 // cuda_bndp
 
+template<typename BS>
 struct cuda_bndp : cuda_mparticles_indexer<BS144>
 {
   using ddcp_t = ddc_particles<MparticlesCuda>;

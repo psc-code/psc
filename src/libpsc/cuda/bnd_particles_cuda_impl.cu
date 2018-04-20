@@ -7,7 +7,7 @@
 
 BndParticlesCuda::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
   : Base(domain, grid),
-  cbndp_(new cuda_bndp(grid))
+  cbndp_(new cuda_bndp<BS144>(grid))
 {}
 
 // ----------------------------------------------------------------------
@@ -25,7 +25,7 @@ void BndParticlesCuda::reset()
 {
   Base::reset();
   delete(cbndp_);
-  cbndp_ = new cuda_bndp(ppsc->grid());
+  cbndp_ = new cuda_bndp<BS144>(ppsc->grid());
 }
 
 // ----------------------------------------------------------------------
