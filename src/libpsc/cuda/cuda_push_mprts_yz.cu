@@ -90,12 +90,24 @@ private:
   int off_;
 };
 
+template<typename Config, typename FC>
+struct CudaPushParticles_yz
+{
+  using DMparticles = DMparticlesCuda<BS144>;
+  using FldCache = FC;
+
+  template<bool REORDER>
+  __device__ static void
+  push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache);
+};
+
 // ----------------------------------------------------------------------
 // push_part_one
 
-template<typename Config, bool REORDER, typename FldCache_t>
-__device__ static void
-push_part_one(DMparticlesCuda<BS144>& dmprts, struct d_particle& prt, int n, const FldCache_t& fld_cache)
+template<typename Config, typename FC>
+template<bool REORDER>
+__device__
+void CudaPushParticles_yz<Config, FC>::push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache)
 {
   uint id;
   if (REORDER) {
@@ -109,7 +121,7 @@ push_part_one(DMparticlesCuda<BS144>& dmprts, struct d_particle& prt, int n, con
   // field interpolation
   real_t xm[3];
   dmprts.scalePos(xm, prt.xi);
-  InterpolateEM<FldCache_t, typename Config::Ip, dim_yz> ip;
+  InterpolateEM<FldCache, typename Config::Ip, dim_yz> ip;
   AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
   ip.set_coeffs(xm);
@@ -514,7 +526,7 @@ push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
       continue;
     }
     struct d_particle prt;
-    push_part_one<Config, REORDER>(dmprts, prt, n, fld_cache);
+    CudaPushParticles_yz<Config, FldCache_t>::push_part_one<REORDER>(dmprts, prt, n, fld_cache);
 
     if (REORDER) {
       yz_calc_j<Config>(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
