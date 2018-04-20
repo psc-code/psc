@@ -264,6 +264,24 @@ struct CudaPushParticles_yz
     
     curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, ci0);
   }
+
+  // ----------------------------------------------------------------------
+  // push_mprts
+
+  template<bool REORDER, typename CURR>
+  __device__
+  static void push_mprts(DMparticles& dmprts, int n, const FldCache& fld_cache, CURR& scurr,
+			 int p, int bid, int ci0[3])
+  {
+    struct d_particle prt;
+    push_part_one<REORDER>(dmprts, prt, n, fld_cache);
+
+    if (REORDER) {
+      yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
+    } else {
+      yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, p, bid, ci0);
+    }
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -297,14 +315,7 @@ push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
     if (n < block_begin) {
       continue;
     }
-    struct d_particle prt;
-    CudaPushParticles_yz<Config, FldCache_t>::push_part_one<REORDER>(dmprts, prt, n, fld_cache);
-
-    if (REORDER) {
-      CudaPushParticles_yz<Config, FldCache_t>::yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
-    } else {
-      CudaPushParticles_yz<Config, FldCache_t>::yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, p, bid, ci0);
-    }
+    CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, n, fld_cache, scurr, p, bid, ci0);
   }
   
   scurr.add_to_fld(ci0);
