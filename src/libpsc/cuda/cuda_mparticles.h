@@ -194,23 +194,23 @@ public:
 // ----------------------------------------------------------------------
 // set_particles
 
-template<>
+template<typename BS>
 template<typename F>
-void cuda_mparticles<BS144>::set_particles(uint p, F getter)
+void cuda_mparticles<BS>::set_particles(uint p, F getter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(d_off);
+  thrust::host_vector<uint> h_off(this->d_off);
 
-  uint off = h_off[p * n_blocks_per_patch];
-  uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
+  uint off = h_off[p * this->n_blocks_per_patch];
+  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
   
   thrust::host_vector<float4> xi4(n_prts);
   thrust::host_vector<float4> pxi4(n_prts);
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
-    checkInPatchMod(prt.xi);
+    this->checkInPatchMod(prt.xi);
 
     xi4[n].x  = prt.xi[0];
     xi4[n].y  = prt.xi[1];
@@ -222,28 +222,28 @@ void cuda_mparticles<BS144>::set_particles(uint p, F getter)
     pxi4[n].w = prt.qni_wni;
   }
 
-  thrust::copy(xi4.begin(), xi4.end(), &d_xi4[off]);
-  thrust::copy(pxi4.begin(), pxi4.end(), &d_pxi4[off]);
+  thrust::copy(xi4.begin(), xi4.end(), &this->d_xi4[off]);
+  thrust::copy(pxi4.begin(), pxi4.end(), &this->d_pxi4[off]);
 }
 
 // ----------------------------------------------------------------------
 // get_particles
 
-template<>
+template<typename BS>
 template<typename F>
-void cuda_mparticles<BS144>::get_particles(uint p, F setter)
+void cuda_mparticles<BS>::get_particles(uint p, F setter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(d_off);
+  thrust::host_vector<uint> h_off(this->d_off);
 
-  uint off = h_off[p * n_blocks_per_patch];
-  uint n_prts = h_off[(p+1) * n_blocks_per_patch] - off;
+  uint off = h_off[p * this->n_blocks_per_patch];
+  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
 
   reorder();
 
-  thrust::host_vector<float4> xi4(&d_xi4[off], &d_xi4[off + n_prts]);
-  thrust::host_vector<float4> pxi4(&d_pxi4[off], &d_pxi4[off + n_prts]);
+  thrust::host_vector<float4> xi4(&this->d_xi4[off], &this->d_xi4[off + n_prts]);
+  thrust::host_vector<float4> pxi4(&this->d_pxi4[off], &this->d_pxi4[off + n_prts]);
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt;
