@@ -175,14 +175,14 @@ cuda_heating_run_foil_gold(cuda_mparticles<BS144>* cmprts)
 // ----------------------------------------------------------------------
 // k_heating_run_foil
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<typename BS>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
   k_heating_run_foil(DParticleIndexer<BS144> dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
 		     uint *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];
-  int p = dpi.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos, ci0);
+  int p = dpi.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos, ci0);
   int bid = dpi.find_bid();
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   int block_begin = d_off[bid];
@@ -239,13 +239,13 @@ k_curand_setup(curandState *d_curand_states, int b_my)
 // ----------------------------------------------------------------------
 // heating_run_foil
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<typename BS>
 static void
 heating_run_foil(cuda_mparticles<BS144>* cmprts, curandState *d_curand_states)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
-  k_heating_run_foil<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+  k_heating_run_foil<BS>
       <<<dimGrid, THREADS_PER_BLOCK>>>
     (*cmprts, h_prm, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
      d_curand_states);
@@ -272,8 +272,8 @@ cuda_heating_setup_foil(struct cuda_heating_foil *_foil)
 // ----------------------------------------------------------------------
 // cuda_heating_run_foil
 
-void
-cuda_heating_run_foil(cuda_mparticles<BS144>* cmprts)
+template<typename BS>
+void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts)
 {
   printf("cuda_heating_run_foil\n");
   //return cuda_heating_run_foil_gold(cmprts);
@@ -298,17 +298,9 @@ cuda_heating_run_foil(cuda_mparticles<BS144>* cmprts)
 
   if (cmprts->need_reorder) { 
     cmprts->reorder();
-    cmprts->need_reorder = false;
   }
 
-  const Int3& bs = cmprts->grid_.bs;
-  if (bs[0] == 1 && bs[1] == 2 && bs[2] == 2) {
-    heating_run_foil<1, 2, 2>(cmprts, d_curand_states);
-  } else if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-    heating_run_foil<1, 4, 4>(cmprts, d_curand_states);
-  } else {
-    assert(0);
-  }
+  heating_run_foil<BS>(cmprts, d_curand_states);
   
   if (0) {
     cuda_heating_params_free();
@@ -319,3 +311,4 @@ cuda_heating_run_foil(cuda_mparticles<BS144>* cmprts)
   }
 }
 
+template void cuda_heating_run_foil<BS144>(cuda_mparticles<BS144>* cmprts);

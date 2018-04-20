@@ -68,7 +68,9 @@ struct cuda_heating_foil {
 };
 
 void cuda_heating_setup_foil(struct cuda_heating_foil *foil);
-void cuda_heating_run_foil(cuda_mparticles<BS144>* cmprts);
+
+template<typename BS>
+void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts);
 
 // FIXME, mv elsewhere
 #define HERE printf("HERE: in %s() at %s:%d\n", __FUNCTION__, __FILE__, __LINE__)
