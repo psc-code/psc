@@ -270,10 +270,21 @@ struct CudaPushParticles_yz
 
   template<bool REORDER>
   __device__
-  static void push_mprts(DMparticles& dmprts, DMFields d_mflds,
-			 int block_begin, int block_end,
-			 int p, int bid, int ci0[3])
+  static void push_mprts(DMparticles& dmprts, DMFields& d_mflds, int block_start)
   {
+    using BS = typename Config::Bs;
+    using Currmem = typename Config::Currmem;
+    using Curr = typename Currmem::Curr<BS>;
+    
+    int block_pos[3], ci0[3];
+    int p = Currmem::template find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
+    if (p < 0)
+      return;
+    
+    int bid = Currmem::find_bid(dmprts, p, block_pos);
+    int block_begin = dmprts.off_[bid];
+    int block_end = dmprts.off_[bid + 1];
+    
     using CURR = SCurr<BS>;
 
     __shared__ FldCache fld_cache;
@@ -310,20 +321,9 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
 {
   using BS = typename Config::Bs;
-  using Currmem = typename Config::Currmem;
-  using Curr = typename Currmem::Curr<BS>;
   using FldCache_t = FldCache<BS::x::value, BS::y::value, BS::z::value>;
-
-  int block_pos[3], ci0[3];
-  int p = Currmem::template find_block_pos_patch<BS>(dmprts, block_pos, ci0, block_start);
-  if (p < 0)
-    return;
-
-  int bid = Currmem::find_bid(dmprts, p, block_pos);
-  int block_begin = dmprts.off_[bid];
-  int block_end = dmprts.off_[bid + 1];
   
-  CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, d_mflds, block_begin, block_end, p, bid, ci0);
+  CudaPushParticles_yz<Config, FldCache_t>::push_mprts<REORDER>(dmprts, d_mflds, block_start);
 }
 
 // ----------------------------------------------------------------------
