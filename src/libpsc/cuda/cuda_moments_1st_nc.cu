@@ -158,11 +158,10 @@ n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfiel
 }
 
 // ----------------------------------------------------------------------
-// rho_1st_nc_cuda_run_patches
+// cuda_moments_yz_rho_1st_nc
 
 template<typename BS>
-static void
-rho_1st_nc_cuda_run_patches(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
+void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
@@ -174,11 +173,10 @@ rho_1st_nc_cuda_run_patches(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cm
 }
 
 // ----------------------------------------------------------------------
-// n_1st_cuda_run_patches
+// cuda_moments_yz_n_1st
 
 template<typename BS>
-static void
-n_1st_cuda_run_patches(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
+void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
@@ -187,24 +185,6 @@ n_1st_cuda_run_patches(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
   } else {
     assert(0);
   }
-}
-
-// ----------------------------------------------------------------------
-// cuda_moments_yz_rho_1st_nc
-
-template<typename BS>
-void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
-{
-  rho_1st_nc_cuda_run_patches<BS>(cmprts, cmres);
-}
-
-// ----------------------------------------------------------------------
-// cuda_moments_yz_n_1st
-
-template<typename BS>
-void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
-{
-  n_1st_cuda_run_patches<BS>(cmprts, cmres);
 }
 
 template void cuda_moments_yz_rho_1st_nc<BS144>(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
