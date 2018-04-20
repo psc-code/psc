@@ -70,7 +70,7 @@ struct DParticleIndexer
 
   DParticleIndexer() = default; // FIXME, delete
 
-  DParticleIndexer(const cuda_mparticles_indexer<BS144>& cpi)
+  DParticleIndexer(const cuda_mparticles_indexer<BS>& cpi)
   {
     for (int d = 0; d < 3; d++) {
       b_mx_[d]  = cpi.b_mx()[d];

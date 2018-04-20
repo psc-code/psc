@@ -121,8 +121,9 @@ void cuda_mparticles<BS>::swap_alt()
 // ----------------------------------------------------------------------
 // k_find_block_indices_ids
 
+template<typename BS>
 __global__ static void
-k_find_block_indices_ids(DParticleIndexer<BS144> dpi, float4 *d_xi4, uint *d_off,
+k_find_block_indices_ids(DParticleIndexer<BS> dpi, float4 *d_xi4, uint *d_off,
 			 uint *d_bidx, uint *d_ids, int n_patches,
 			 int n_blocks_per_patch)
 {
@@ -169,13 +170,13 @@ void cuda_mparticles<BS>::find_block_indices_ids()
   dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
-  k_find_block_indices_ids<<<dimGrid, dimBlock>>>(*this,
-						  this->d_xi4.data().get(),
-						  this->d_off.data().get(),
-						  d_bidx.data().get(),
-						  d_id.data().get(),
-						  this->n_patches,
-						  this->n_blocks_per_patch);
+  k_find_block_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
+						      this->d_xi4.data().get(),
+						      this->d_off.data().get(),
+						      d_bidx.data().get(),
+						      d_id.data().get(),
+						      this->n_patches,
+						      this->n_blocks_per_patch);
   cuda_sync_if_enabled();
 }
 
