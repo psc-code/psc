@@ -42,8 +42,11 @@ void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 // ----------------------------------------------------------------------
 // cuda_moments
 
-void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
-void cuda_moments_yz_n_1st(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
+template<typename BS>
+void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres);
+
+template<typename BS>
+void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres);
 
 // ----------------------------------------------------------------------
 // cuda_heating_run_foil
