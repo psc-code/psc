@@ -33,7 +33,7 @@
 
 template<typename BS>
 cuda_bndp<BS>::cuda_bndp(const Grid_t& grid)
-  : cuda_mparticles_indexer(grid)
+  : cuda_mparticles_indexer<BS>(grid)
 {
   d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
   d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));

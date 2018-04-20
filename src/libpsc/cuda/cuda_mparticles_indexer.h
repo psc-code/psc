@@ -40,7 +40,7 @@ struct cuda_mparticles_indexer
   const Int3& b_mx() const { return pi_.b_mx_; }
   const Real3& dxi() const { return pi_.dxi_; }
 
-private:
+protected:
   int blockIndex(Int3 bpos, int p) const
   {
     int bidx = pi_.blockIndex(bpos);
