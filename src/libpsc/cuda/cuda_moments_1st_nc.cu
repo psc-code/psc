@@ -31,7 +31,7 @@ public:
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
+template<typename BS, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 rho_1st_nc_cuda_run(DMparticlesCuda dmprts,
@@ -40,7 +40,7 @@ rho_1st_nc_cuda_run(DMparticlesCuda dmprts,
 		    DMFields d_flds0)
 {
   int block_pos[3];
-  int p = dmprts.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int p = dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos);
   int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
@@ -78,7 +78,7 @@ rho_1st_nc_cuda_run(DMparticlesCuda dmprts,
 // ----------------------------------------------------------------------
 // n_1st_cuda_run
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
+template<typename BS, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 n_1st_cuda_run(DMparticlesCuda dmprts,
@@ -87,7 +87,7 @@ n_1st_cuda_run(DMparticlesCuda dmprts,
 	       DMFields d_flds0)
 {
   int block_pos[3];
-  int p = dmprts.find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int p = dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos);
   int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
@@ -127,13 +127,13 @@ n_1st_cuda_run(DMparticlesCuda dmprts,
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run_patches_no_reorder
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
+template<typename BS, bool REORDER>
 static void
 rho_1st_nc_cuda_run_patches_no_reorder(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
-  rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
+  rho_1st_nc_cuda_run<BS, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (*cmprts, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
      cmprts->d_off.data().get(),
@@ -144,13 +144,13 @@ rho_1st_nc_cuda_run_patches_no_reorder(cuda_mparticles<BS144>* cmprts, struct cu
 // ----------------------------------------------------------------------
 // n_1st_cuda_run_patches_no_reorder
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
+template<typename BS, bool REORDER>
 static void
 n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
 
-  n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
+  n_1st_cuda_run<BS, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (*cmprts, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
      cmprts->n_blocks, cmprts->d_id.data().get(), *cmres);
@@ -160,14 +160,14 @@ n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS144>* cmprts, struct cuda_mf
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run_patches
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<typename BS>
 static void
 rho_1st_nc_cuda_run_patches(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
   if (!cmprts->need_reorder) {
-    rho_1st_nc_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(cmprts, cmres);
+    rho_1st_nc_cuda_run_patches_no_reorder<BS, false>(cmprts, cmres);
   } else {
     assert(0);
   }
@@ -176,14 +176,14 @@ rho_1st_nc_cuda_run_patches(cuda_mparticles<BS144>* cmprts, struct cuda_mfields 
 // ----------------------------------------------------------------------
 // n_1st_cuda_run_patches
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<typename BS>
 static void
 n_1st_cuda_run_patches(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
   if (!cmprts->need_reorder) {
-    n_1st_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(cmprts, cmres);
+    n_1st_cuda_run_patches_no_reorder<BS, false>(cmprts, cmres);
   } else {
     assert(0);
   }
@@ -195,7 +195,7 @@ n_1st_cuda_run_patches(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmre
 void
 cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
-  rho_1st_nc_cuda_run_patches<1, 4, 4>(cmprts, cmres);
+  rho_1st_nc_cuda_run_patches<BS144>(cmprts, cmres);
 }
 
 // ----------------------------------------------------------------------
@@ -204,6 +204,6 @@ cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *
 void
 cuda_moments_yz_n_1st(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres)
 {
-  n_1st_cuda_run_patches<1, 4, 4>(cmprts, cmres);
+  n_1st_cuda_run_patches<BS144>(cmprts, cmres);
 }
 
