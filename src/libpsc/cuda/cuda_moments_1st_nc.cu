@@ -40,7 +40,7 @@ rho_1st_nc_cuda_run(DMparticlesCuda dmprts,
 		    DMFields d_flds0)
 {
   int block_pos[3];
-  int p = dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos);
+  int p = dmprts.find_block_pos_patch(block_pos);
   int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
@@ -87,7 +87,7 @@ n_1st_cuda_run(DMparticlesCuda dmprts,
 	       DMFields d_flds0)
 {
   int block_pos[3];
-  int p = dmprts.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos);
+  int p = dmprts.find_block_pos_patch(block_pos);
   int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];

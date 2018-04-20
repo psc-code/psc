@@ -182,7 +182,7 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 		     uint *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];
-  int p = dpi.find_block_pos_patch<BS::x::value, BS::y::value, BS::z::value>(block_pos, ci0);
+  int p = dpi.find_block_pos_patch(block_pos, ci0);
   int bid = dpi.find_bid();
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   int block_begin = d_off[bid];

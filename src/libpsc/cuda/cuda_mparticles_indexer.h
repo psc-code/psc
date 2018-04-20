@@ -5,7 +5,6 @@
 #include "grid.hxx"
 #include "psc_particles_cuda.h"
 
-
 #define CUDA_BND_S_NEW (9)
 #define CUDA_BND_S_OOB (10)
 #define CUDA_BND_STRIDE (10)
@@ -129,20 +128,18 @@ struct DParticleIndexer
     return block_pos_to_block_idx(block_pos) + p * b_mx_[1] * b_mx_[2];
   }
 
-  template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
   __device__ int find_block_pos_patch(int *block_pos, int *ci0) const
   {
     block_pos[1] = blockIdx.x;
     block_pos[2] = blockIdx.y % b_mx_[2];
     
     ci0[0] = 0;
-    ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-    ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+    ci0[1] = block_pos[1] * BS::y::value;
+    ci0[2] = block_pos[2] * BS::z::value;
     
     return blockIdx.y / b_mx_[2];
   }
 
-  template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
   __device__ int find_block_pos_patch(int *block_pos) const
   {
     block_pos[1] = blockIdx.x;
@@ -151,7 +148,6 @@ struct DParticleIndexer
     return blockIdx.y / b_mx_[2];
   }
 
-  template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
   __device__ int find_block_pos_patch_q(int *block_pos, int *ci0, int block_start) const
   {
     int grid_dim_y = (b_mx_[2] + 1) / 2;
@@ -163,8 +159,8 @@ struct DParticleIndexer
       return -1;
     
     ci0[0] = 0;
-    ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-    ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+    ci0[1] = block_pos[1] * BS::y::value;
+    ci0[2] = block_pos[2] * BS::z::value;
     
     return blockIdx.y / grid_dim_y;
   }
