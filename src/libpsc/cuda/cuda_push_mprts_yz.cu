@@ -136,7 +136,7 @@ struct CudaPushParticles_yz
   // curr_vb_cell
   
   __device__ static void
-  curr_vb_cell(DMparticlesCuda<BS144>& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
+  curr_vb_cell(DMparticles& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	       Curr &scurr, int *ci0)
   {
     float xa[3] = { 0.,
@@ -183,7 +183,7 @@ struct CudaPushParticles_yz
   // yz_calc_j
   
   __device__ static void
-  yz_calc_j(DMparticlesCuda<BS144>& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+  yz_calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	    Curr &scurr, int p_nr, int bid, int *ci0)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -312,7 +312,7 @@ struct CudaPushParticles_yz
 template<typename Config, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
+push_mprts_ab(int block_start, DMparticlesCuda<typename Config::Bs> dmprts, DMFields d_mflds)
 {
   CudaPushParticles_yz<Config>::push_mprts<REORDER>(dmprts, d_mflds, block_start);
 }
