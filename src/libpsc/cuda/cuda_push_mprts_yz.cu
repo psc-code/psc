@@ -95,7 +95,7 @@ private:
 
 template<typename Config, bool REORDER, typename FldCache_t>
 __device__ static void
-push_part_one(DMparticlesCuda& dmprts, struct d_particle& prt, int n, const FldCache_t& fld_cache)
+push_part_one(DMparticlesCuda<BS144>& dmprts, struct d_particle& prt, int n, const FldCache_t& fld_cache)
 {
   uint id;
   if (REORDER) {
@@ -261,12 +261,13 @@ struct CurrmemShared
   }
 
   template<typename BS>
-  __device__ static int find_block_pos_patch(const DMparticlesCuda& dmprts, int *block_pos, int *ci0, int block_start)
+  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
   {
     return dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
   }
 
-  __device__ static int find_bid(DMparticlesCuda& dmprts, int p, int *block_pos)
+  template<typename BS>
+  __device__ static int find_bid(DMparticlesCuda<BS>& dmprts, int p, int *block_pos)
   {
     return dmprts.find_bid_q(p, block_pos);
   }
@@ -291,12 +292,13 @@ struct CurrmemGlobal
   }
 
   template<typename BS>
-  __device__ static int find_block_pos_patch(const DMparticlesCuda& dmprts, int *block_pos, int *ci0, int block_start)
+  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
   {
     return dmprts.find_block_pos_patch(block_pos, ci0);
   }
 
-  __device__ static int find_bid(DMparticlesCuda& dmprts, int p, int *block_pos)
+  template<typename BS>
+  __device__ static int find_bid(DMparticlesCuda<BS>& dmprts, int p, int *block_pos)
   {
     return dmprts.find_bid();
   }
@@ -350,7 +352,7 @@ calc_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 
 template<typename Config, class CURR>
 __device__ static void
-curr_vb_cell(DMparticlesCuda& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
+curr_vb_cell(DMparticlesCuda<BS144>& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	     CURR &scurr, int *ci0)
 {
   float xa[3] = { 0.,
@@ -398,7 +400,7 @@ curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
 
 template<typename Config, class Curr>
 __device__ static void
-yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+yz_calc_j(DMparticlesCuda<BS144>& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  Curr &scurr, int p_nr, int bid, int *ci0)
 {
   AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -486,7 +488,7 @@ yz_calc_j(DMparticlesCuda& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 template<typename Config, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, DMparticlesCuda dmprts, DMFields d_mflds)
+push_mprts_ab(int block_start, DMparticlesCuda<BS144> dmprts, DMFields d_mflds)
 {
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;

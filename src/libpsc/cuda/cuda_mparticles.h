@@ -130,12 +130,15 @@ public:
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
 };
 
-struct DMparticlesCuda : DParticleIndexer<BS144>
+template<typename BS>
+struct DMparticlesCuda : DParticleIndexer<BS>
 {
-  static const int MAX_N_KINDS = 4;
+  using typename DParticleIndexer<BS>::real_t;
   
-  DMparticlesCuda(cuda_mparticles<BS144>& cmprts)
-    : DParticleIndexer{cmprts},
+  static const int MAX_N_KINDS = 4;
+
+  DMparticlesCuda(cuda_mparticles<BS>& cmprts)
+    : DParticleIndexer<BS>{cmprts},
       dt_(cmprts.grid_.dt),
       fnqs_(cmprts.grid_.fnqs),
       fnqxs_(cmprts.grid_.domain.dx[0] * fnqs_ / dt_),
