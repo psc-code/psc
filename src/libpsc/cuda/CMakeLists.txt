@@ -60,6 +60,7 @@ macro(add_cuda_test name)
   endif()
 endmacro()
 
+add_cuda_test(range_unittest)
 add_cuda_test(test_cuda_base)
 add_cuda_test(test_cuda_accel)
 add_cuda_test(test_cuda_bndp)
