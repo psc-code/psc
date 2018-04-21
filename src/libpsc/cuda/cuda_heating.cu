@@ -181,22 +181,23 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
   k_heating_run_foil(DParticleIndexer<BS> dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
 		     uint *d_off, curandState *d_curand_states)
 {
-  int block_pos[3], ci0[3];
-  int p = dpi.find_block_pos_patch(block_pos, ci0);
+  BlockSimple<BS> current_block;
+  if (!current_block.init(dpi)) {
+    return;
+  }
 
   float_3 xb; // __shared__
-  xb[0] = prm.d_xb_by_patch[p][0];
-  xb[1] = prm.d_xb_by_patch[p][1];
-  xb[2] = prm.d_xb_by_patch[p][2];
+  xb[0] = prm.d_xb_by_patch[current_block.p][0];
+  xb[1] = prm.d_xb_by_patch[current_block.p][1];
+  xb[2] = prm.d_xb_by_patch[current_block.p][2];
 
 
-  int bid = dpi.find_bid();
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
+  int id = threadIdx.x + current_block.bid * THREADS_PER_BLOCK;
   /* Copy state to local memory for efficiency */
   curandState local_state = d_curand_states[id];
 
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  int block_begin = d_off[current_block.bid];
+  int block_end = d_off[current_block.bid + 1];
   for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;

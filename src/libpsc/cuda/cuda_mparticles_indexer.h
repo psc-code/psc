@@ -221,7 +221,7 @@ template<typename BS>
 struct BlockSimple : BlockBase
 {
   __device__
-  bool init(const DParticleIndexer<BS>& dpi, int block_start)
+  bool init(const DParticleIndexer<BS>& dpi, int block_start = 0)
   {
     int block_pos[3];
     p = dpi.find_block_pos_patch(block_pos, ci0);

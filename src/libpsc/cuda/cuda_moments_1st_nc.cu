@@ -39,15 +39,16 @@ rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts,
 		    uint *d_off, int nr_total_blocks, uint *d_ids,
 		    DMFields d_flds0)
 {
-  int block_pos[3];
-  int p = dmprts.find_block_pos_patch(block_pos);
+  BlockSimple<BS> current_block;
+  if (!current_block.init(dmprts)) {
+    return;
+  }
 
-  GCurr scurr(d_flds0[p]);
+  GCurr scurr(d_flds0[current_block.p]);
   __syncthreads();
 
-  int bid = dmprts.find_bid();
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  int block_begin = d_off[current_block.bid];
+  int block_end = d_off[current_block.bid + 1];
   for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
@@ -86,15 +87,16 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts,
 	       uint *d_off, int nr_total_blocks, uint *d_ids,
 	       DMFields d_flds0)
 {
-  int block_pos[3];
-  int p = dmprts.find_block_pos_patch(block_pos);
+  BlockSimple<BS> current_block;
+  if (!current_block.init(dmprts)) {
+    return;
+  }
 
-  GCurr scurr(d_flds0[p]);
+  GCurr scurr(d_flds0[current_block.p]);
   __syncthreads();
 
-  int bid = dmprts.find_bid();
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  int block_begin = d_off[current_block.bid];
+  int block_end = d_off[current_block.bid + 1];
   for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
