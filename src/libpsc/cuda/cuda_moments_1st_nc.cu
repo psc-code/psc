@@ -34,33 +34,30 @@ public:
 template<typename BS, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts,
-		    float4 *d_xi4, float4 *d_pxi4,
-		    uint *d_off, int nr_total_blocks, uint *d_ids,
-		    DMFields d_flds0)
+rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
   BlockSimple<BS> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
 
-  GCurr scurr(d_flds0[current_block.p]);
+  GCurr scurr(dmflds[current_block.p]);
   __syncthreads();
 
-  int block_begin = d_off[current_block.bid];
-  int block_end = d_off[current_block.bid + 1];
+  int block_begin = dmprts.off_[current_block.bid];
+  int block_end = dmprts.off_[current_block.bid + 1];
   for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
     }
     struct d_particle prt;
     if (REORDER) {
-      uint id = d_ids[n];
-      LOAD_PARTICLE_POS(prt, d_xi4, id);
-      LOAD_PARTICLE_MOM(prt, d_pxi4, id);
+      uint id = dmprts.id_[n];
+      LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
+      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
     } else {
-      LOAD_PARTICLE_POS(prt, d_xi4, n);
-      LOAD_PARTICLE_MOM(prt, d_pxi4, n);
+      LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
+      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
     }
 
     float fnq = prt.qni_wni * dmprts.fnqs();
@@ -82,33 +79,30 @@ rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts,
 template<typename BS, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(DMparticlesCuda<BS> dmprts,
-	       float4 *d_xi4, float4 *d_pxi4,
-	       uint *d_off, int nr_total_blocks, uint *d_ids,
-	       DMFields d_flds0)
+n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
   BlockSimple<BS> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
 
-  GCurr scurr(d_flds0[current_block.p]);
+  GCurr scurr(dmflds[current_block.p]);
   __syncthreads();
 
-  int block_begin = d_off[current_block.bid];
-  int block_end = d_off[current_block.bid + 1];
+  int block_begin = dmprts.off_[current_block.bid];
+  int block_end = dmprts.off_[current_block.bid + 1];
   for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
     }
     struct d_particle prt;
     if (REORDER) {
-      uint id = d_ids[n];
-      LOAD_PARTICLE_POS(prt, d_xi4, id);
-      LOAD_PARTICLE_MOM(prt, d_pxi4, id);
+      uint id = dmprts.id_[n];
+      LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
+      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
     } else {
-      LOAD_PARTICLE_POS(prt, d_xi4, n);
-      LOAD_PARTICLE_MOM(prt, d_pxi4, n);
+      LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
+      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
     }
 
     int kind = __float_as_int(prt.kind_as_float);
@@ -136,10 +130,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_
   dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   rho_1st_nc_cuda_run<BS, REORDER>
-    <<<dimGrid, THREADS_PER_BLOCK>>>
-    (*cmprts, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
-     cmprts->d_off.data().get(),
-     cmprts->n_blocks, cmprts->d_id.data().get(), *cmres);
+    <<<dimGrid, THREADS_PER_BLOCK>>>(*cmprts, *cmres);
   cuda_sync_if_enabled();
 }
 
@@ -153,9 +144,7 @@ n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfiel
   dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   n_1st_cuda_run<BS, REORDER>
-    <<<dimGrid, THREADS_PER_BLOCK>>>
-    (*cmprts, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
-     cmprts->n_blocks, cmprts->d_id.data().get(), *cmres);
+    <<<dimGrid, THREADS_PER_BLOCK>>>(*cmprts, *cmres);
   cuda_sync_if_enabled();
 }
 
