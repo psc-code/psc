@@ -10,6 +10,9 @@
 #define CUDA_BND_S_OOB (10)
 #define CUDA_BND_STRIDE (10)
 
+template<typename BS>
+struct DParticleIndexer;
+
 // ======================================================================
 // cuda_mparticles_indexer
 
@@ -38,7 +41,6 @@ struct cuda_mparticles_indexer
 
   void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
   const Int3& b_mx() const { return pi_.b_mx_; }
-  const Real3& dxi() const { return pi_.dxi_; }
 
 protected:
   int blockIndex(Int3 bpos, int p) const
@@ -57,6 +59,8 @@ public:
   uint n_blocks;                 // number of blocks in all patches in mprts
 private:
   ParticleIndexer<real_t> pi_;
+
+  friend struct DParticleIndexer<BS>;
 };
 
 // ======================================================================
@@ -72,8 +76,8 @@ struct DParticleIndexer
   DParticleIndexer(const cuda_mparticles_indexer<BS>& cpi)
   {
     for (int d = 0; d < 3; d++) {
-      b_mx_[d]  = cpi.b_mx()[d];
-      dxi_[d]   = cpi.dxi()[d];
+      b_mx_[d]  = cpi.pi_.b_mx_[d];
+      dxi_[d]   = cpi.pi_.dxi_[d];
     }
   }
 
