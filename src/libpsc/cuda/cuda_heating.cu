@@ -183,20 +183,21 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 {
   int block_pos[3], ci0[3];
   int p = dpi.find_block_pos_patch(block_pos, ci0);
-  int bid = dpi.find_bid();
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
 
   float_3 xb; // __shared__
   xb[0] = prm.d_xb_by_patch[p][0];
   xb[1] = prm.d_xb_by_patch[p][1];
   xb[2] = prm.d_xb_by_patch[p][2];
 
+
+  int bid = dpi.find_bid();
+  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   /* Copy state to local memory for efficiency */
   curandState local_state = d_curand_states[id];
 
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
+  for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
     }

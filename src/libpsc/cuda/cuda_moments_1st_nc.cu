@@ -41,14 +41,14 @@ rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts,
 {
   int block_pos[3];
   int p = dmprts.find_block_pos_patch(block_pos);
+
+  GCurr scurr(d_flds0[p]);
+  __syncthreads();
+
   int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
-
-  GCurr scurr(d_flds0[p]);
-
-  __syncthreads();
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+  for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
     }
@@ -88,14 +88,14 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts,
 {
   int block_pos[3];
   int p = dmprts.find_block_pos_patch(block_pos);
+
+  GCurr scurr(d_flds0[p]);
+  __syncthreads();
+
   int bid = dmprts.find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
-
-  GCurr scurr(d_flds0[p]);
-
-  __syncthreads();
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+  for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
     }
