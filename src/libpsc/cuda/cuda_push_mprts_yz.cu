@@ -274,18 +274,17 @@ struct CudaPushParticles_yz
     if (p < 0)
       return;
     
-    int bid = Currmem::find_bid(dmprts, p, block_pos);
-    int block_begin = dmprts.off_[bid];
-    int block_end = dmprts.off_[bid + 1];
-    
     __shared__ FldCache fld_cache;
     fld_cache.load(d_mflds[p], ci0);
 
     __shared__ float _scurr[Curr::shared_size];
     Curr scurr(_scurr, d_mflds[p]);
-
     __syncthreads();
-    for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+
+    int bid = Currmem::find_bid(dmprts, p, block_pos);
+    int block_begin = dmprts.off_[bid];
+    int block_end = dmprts.off_[bid + 1];
+    for (int n : in_block_loop(block_begin, block_end)) {
       if (n < block_begin) {
 	continue;
       }

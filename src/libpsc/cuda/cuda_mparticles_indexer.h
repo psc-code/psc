@@ -4,6 +4,7 @@
 
 #include "grid.hxx"
 #include "psc_particles_cuda.h"
+#include "range.hxx"
 
 #define CUDA_BND_S_NEW (9)
 #define CUDA_BND_S_OOB (10)
@@ -209,6 +210,11 @@ private:
   real_t dxi_[3];
 };
 
+__device__
+inline RangeStrided<uint> in_block_loop(uint block_begin, uint block_end)
+{
+  return range((block_begin & ~31) + threadIdx.x, block_end, blockDim.x);
+}
 
 #endif
 
