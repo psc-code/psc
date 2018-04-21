@@ -112,11 +112,29 @@ public:
   }
 };
 
-struct Block
+struct BlockBase
 {
   int bid;
   int p;
   int ci0[3];
+};
+
+struct Block : BlockBase
+{
+  template<typename BS>
+  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
+  {
+    return dmprts.find_block_pos_patch(block_pos, ci0);
+  }
+};
+
+struct BlockQ : BlockBase
+{
+  template<typename BS>
+  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
+  {
+    return dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
+  }
 };
 
 // ======================================================================
@@ -126,6 +144,8 @@ struct CurrmemShared
 {
   template<typename BS>
   using Curr = SCurr<BS>;
+
+  using Block = BlockQ;
   
   static Range<int> block_starts() { return range(4);  }
 
@@ -135,12 +155,6 @@ struct CurrmemShared
     int gx =  (cmprts.b_mx()[1] + 1) / 2;
     int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
     return dim3(gx, gy);
-  }
-
-  template<typename BS>
-  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
-  {
-    return dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
   }
 
   template<typename BS>
@@ -158,6 +172,8 @@ struct CurrmemGlobal
   template<typename BS>
   using Curr = GCurr<BS>;
 
+  using Block = Block;
+
   static Range<int> block_starts() { return range(1);  }
 
   template<typename CudaMparticles>
@@ -166,12 +182,6 @@ struct CurrmemGlobal
     int gx = cmprts.b_mx()[1];
     int gy = cmprts.b_mx()[2] * cmprts.n_patches;
     return dim3(gx, gy);
-  }
-
-  template<typename BS>
-  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
-  {
-    return dmprts.find_block_pos_patch(block_pos, ci0);
   }
 
   template<typename BS>
