@@ -68,9 +68,7 @@ struct ParticleIndexer
 
   ParticleIndexer(const Grid_t& grid)
     : dxi_(Real3(1.) / Real3(grid.domain.dx)),
-      ldims_(grid.ldims),
-      b_dxi_(Real3(1.) / (Real3(grid.bs) * Real3(grid.domain.dx))),
-      b_mx_(grid.ldims / grid.bs)
+      ldims_(grid.ldims)
   {
     n_cells_ = ldims_[0] * ldims_[1] * ldims_[2];
   }
@@ -140,15 +138,12 @@ struct ParticleIndexer
     }
   }
 
-  const Int3& b_mx() const { return b_mx_; }
   const Int3& ldims() const { return ldims_; }
   
   //private:
   Real3 dxi_;
   Int3 ldims_;
   uint n_cells_;
-  Real3 b_dxi_;
-  Int3 b_mx_;
 };
 
 // ======================================================================

@@ -30,10 +30,13 @@ struct cuda_mparticles_indexer
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles_indexer(const Grid_t& grid)
-    : pi_(grid)
+    : pi_(grid),
+      b_mx_{int(grid.ldims[0] / BS::x::value),
+            int(grid.ldims[1] / BS::y::value),
+            int(grid.ldims[2] / BS::z::value)}
   {
     n_patches = grid.n_patches();
-    n_blocks_per_patch = pi_.b_mx_[0] * pi_.b_mx_[1] * pi_.b_mx_[2];
+    n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
     n_blocks = n_patches * n_blocks_per_patch;
   }
 
@@ -53,17 +56,17 @@ struct cuda_mparticles_indexer
   }
 
   void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
-  const Int3& b_mx() const { return pi_.b_mx_; }
+  const Int3& b_mx() const { return b_mx_; }
 
 protected:
   int blockIndex(Int3 bpos, int p) const
   {
-    if (uint(bpos[1]) >= pi_.b_mx_[1] ||
-	uint(bpos[2]) >= pi_.b_mx_[2]) {
+    if (uint(bpos[1]) >= b_mx_[1] ||
+	uint(bpos[2]) >= b_mx_[2]) {
       return -1;
     }
     
-    return (p * pi_.b_mx_[2] + bpos[2]) * pi_.b_mx_[1] + bpos[1];
+    return (p * b_mx_[2] + bpos[2]) * b_mx_[1] + bpos[1];
   }
 
 public:
@@ -72,6 +75,7 @@ public:
   uint n_blocks;                 // number of blocks in all patches in mprts
 private:
   ParticleIndexer<real_t> pi_;
+  Int3 b_mx_;
 
   friend struct DParticleIndexer<BS>;
 };
@@ -89,7 +93,7 @@ struct DParticleIndexer
   DParticleIndexer(const cuda_mparticles_indexer<BS>& cpi)
   {
     for (int d = 0; d < 3; d++) {
-      b_mx_[d]  = cpi.pi_.b_mx_[d];
+      b_mx_[d]  = cpi.b_mx_[d];
       dxi_[d]   = cpi.pi_.dxi_[d];
     }
   }
