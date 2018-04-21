@@ -112,45 +112,6 @@ public:
   }
 };
 
-struct BlockBase
-{
-  int bid;
-  int p;
-  int ci0[3];
-};
-
-template<typename BS>
-struct BlockSimple : BlockBase
-{
-  __device__
-  bool init(const DMparticlesCuda<BS>& dmprts, int block_start)
-  {
-    int block_pos[3];
-    p = dmprts.find_block_pos_patch(block_pos, ci0);
-    if (p < 0) {
-      return false;
-    }
-    bid = dmprts.find_bid();
-    return true;
-  }
-};
-
-template<typename BS>
-struct BlockQ : BlockBase
-{
-  __device__
-  int init(const DMparticlesCuda<BS>& dmprts, int block_start)
-  {
-    int block_pos[3];
-    p = dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
-    if (p < 0) {
-      return false;
-    }
-    bid = dmprts.find_bid_q(p, block_pos);
-    return true;
-  }
-};
-
 // ======================================================================
 // CurrmemShared
 

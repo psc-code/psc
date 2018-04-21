@@ -210,6 +210,45 @@ private:
   real_t dxi_[3];
 };
 
+struct BlockBase
+{
+  int bid;
+  int p;
+  int ci0[3];
+};
+
+template<typename BS>
+struct BlockSimple : BlockBase
+{
+  __device__
+  bool init(const DParticleIndexer<BS>& dpi, int block_start)
+  {
+    int block_pos[3];
+    p = dpi.find_block_pos_patch(block_pos, ci0);
+    if (p < 0) {
+      return false;
+    }
+    bid = dpi.find_bid();
+    return true;
+  }
+};
+
+template<typename BS>
+struct BlockQ : BlockBase
+{
+  __device__
+  int init(const DParticleIndexer<BS>& dpi, int block_start)
+  {
+    int block_pos[3];
+    p = dpi.find_block_pos_patch_q(block_pos, ci0, block_start);
+    if (p < 0) {
+      return false;
+    }
+    bid = dpi.find_bid_q(p, block_pos);
+    return true;
+  }
+};
+
 __device__
 inline RangeStrided<uint> in_block_loop(uint block_begin, uint block_end)
 {
