@@ -104,43 +104,6 @@ struct DParticleIndexer
     }
   }
   
-  __device__ uint block_pos_to_block_idx(int block_pos[3]) const
-  {
-#define NO_CHECKERBOARD
-#ifdef NO_CHECKERBOARD
-    return block_pos[2] * b_mx_[1] + block_pos[1];
-#else
-    int dimy = b_mx_[1] >> 1;
-    return
-      ((block_pos[1] & 1) << 0) |
-      ((block_pos[2] & 1) << 1) | 
-      (((block_pos[2] >> 1) * dimy + (block_pos[1] >> 1)) << 2);
-#endif
-  }
-
-  __device__ int find_bid_q(int p, int *block_pos) const
-  {
-    // FIXME won't work if b_mx_[1,2] not even (?)
-    return block_pos_to_block_idx(block_pos) + p * b_mx_[1] * b_mx_[2];
-  }
-
-  __device__ int find_block_pos_patch_q(int *block_pos, int *ci0, int block_start) const
-  {
-    int grid_dim_y = (b_mx_[2] + 1) / 2;
-    block_pos[1] = blockIdx.x * 2;
-    block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
-    block_pos[1] += block_start & 1;
-    block_pos[2] += block_start >> 1;
-    if (block_pos[1] >= b_mx_[1] || block_pos[2] >= b_mx_[2])
-      return -1;
-    
-    ci0[0] = 0;
-    ci0[1] = block_pos[1] * BS::y::value;
-    ci0[2] = block_pos[2] * BS::z::value;
-    
-    return blockIdx.y / grid_dim_y;
-  }
-
   // ======================================================================
   // cell related
   
@@ -219,11 +182,32 @@ struct BlockQ : BlockBase
   int init(const DParticleIndexer<BS>& dpi, int block_start)
   {
     int block_pos[3];
-    p = dpi.find_block_pos_patch_q(block_pos, ci0, block_start);
-    if (p < 0) {
+    int grid_dim_y = (dpi.b_mx(2) + 1) / 2;
+    block_pos[1] = blockIdx.x * 2;
+    block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
+    block_pos[1] += block_start & 1;
+    block_pos[2] += block_start >> 1;
+    if (block_pos[1] >= dpi.b_mx(1) || block_pos[2] >= dpi.b_mx(2))
       return false;
-    }
-    bid = dpi.find_bid_q(p, block_pos);
+    
+    ci0[0] = 0;
+    ci0[1] = block_pos[1] * BS::y::value;
+    ci0[2] = block_pos[2] * BS::z::value;
+    
+    p = blockIdx.y / grid_dim_y;
+
+    // FIXME won't work if b_mx_[1,2] not even (?)
+#define NO_CHECKERBOARD
+#ifdef NO_CHECKERBOARD
+    bid = (p * dpi.b_mx(2) + block_pos[2]) * dpi.b_mx(1) + block_pos[1];
+#else
+    int dimy = dpi.b_mx(1) >> 1;
+    bid =
+      ((block_pos[1] & 1) << 0) |
+      ((block_pos[2] & 1) << 1) | 
+      (((block_pos[2] >> 1) * dimy + (block_pos[1] >> 1)) << 2);
+    bid +=  p * dpi.b_mx(1) * dpi.b_mx(2);
+#endif
     return true;
   }
 };
