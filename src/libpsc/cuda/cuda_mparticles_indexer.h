@@ -118,35 +118,10 @@ struct DParticleIndexer
 #endif
   }
 
-  __device__ int find_bid() const
-  {
-    return blockIdx.y * b_mx_[1] + blockIdx.x;
-  }
-
   __device__ int find_bid_q(int p, int *block_pos) const
   {
     // FIXME won't work if b_mx_[1,2] not even (?)
     return block_pos_to_block_idx(block_pos) + p * b_mx_[1] * b_mx_[2];
-  }
-
-  __device__ int find_block_pos_patch(int *block_pos, int *ci0) const
-  {
-    block_pos[1] = blockIdx.x;
-    block_pos[2] = blockIdx.y % b_mx_[2];
-    
-    ci0[0] = 0;
-    ci0[1] = block_pos[1] * BS::y::value;
-    ci0[2] = block_pos[2] * BS::z::value;
-    
-    return blockIdx.y / b_mx_[2];
-  }
-
-  __device__ int find_block_pos_patch(int *block_pos) const
-  {
-    block_pos[1] = blockIdx.x;
-    block_pos[2] = blockIdx.y % b_mx_[2];
-    
-    return blockIdx.y / b_mx_[2];
   }
 
   __device__ int find_block_pos_patch_q(int *block_pos, int *ci0, int block_start) const
@@ -224,11 +199,15 @@ struct BlockSimple : BlockBase
   bool init(const DParticleIndexer<BS>& dpi, int block_start = 0)
   {
     int block_pos[3];
-    p = dpi.find_block_pos_patch(block_pos, ci0);
-    if (p < 0) {
-      return false;
-    }
-    bid = dpi.find_bid();
+    block_pos[1] = blockIdx.x;
+    block_pos[2] = blockIdx.y % dpi.b_mx(2);
+    
+    ci0[0] = 0;
+    ci0[1] = block_pos[1] * BS::y::value;
+    ci0[2] = block_pos[2] * BS::z::value;
+    
+    p = blockIdx.y / dpi.b_mx(2);
+    bid = blockIdx.y * dpi.b_mx(1) + blockIdx.x;
     return true;
   }
 };
