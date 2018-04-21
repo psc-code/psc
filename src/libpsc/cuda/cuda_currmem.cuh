@@ -122,18 +122,22 @@ struct BlockBase
 struct Block : BlockBase
 {
   template<typename BS>
-  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
+  __device__
+  int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
   {
-    return dmprts.find_block_pos_patch(block_pos, ci0);
+    p = dmprts.find_block_pos_patch(block_pos, ci0);
+    return p;
   }
 };
 
 struct BlockQ : BlockBase
 {
   template<typename BS>
-  __device__ static int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int *ci0, int block_start)
+  __device__
+  int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
   {
-    return dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
+    p = dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
+    return p;
   }
 };
 
