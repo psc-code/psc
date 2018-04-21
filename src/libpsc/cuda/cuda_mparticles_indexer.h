@@ -37,7 +37,6 @@ struct cuda_mparticles_indexer
   }
 
   void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
-  const Real3& b_dxi() const { return pi_.b_dxi_; }
   const Int3& b_mx() const { return pi_.b_mx_; }
   const Real3& dxi() const { return pi_.dxi_; }
 

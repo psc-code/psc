@@ -84,8 +84,7 @@ bool cuda_mparticles<BS>::check_ordered()
 	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
 	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
 	Int3 bpos = this->blockPosition(&xi4.x);
-	printf("block_pos %d %d %g %g\n", bpos[1], bpos[2],
-	       xi4.y * this->b_dxi()[1], xi4.z * this->b_dxi()[2]);
+	printf("block_pos %d %d\n", bpos[1], bpos[2]);
       }
       if (!(b == bidx)) return false;
     }

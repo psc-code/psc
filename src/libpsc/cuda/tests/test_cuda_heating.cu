@@ -82,7 +82,6 @@ static int
 get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  float *b_dxi = cmprts->b_dxi;
   int *b_mx = cmprts->b_mx;
   
   float4 xi4 = d_xi4[n];
