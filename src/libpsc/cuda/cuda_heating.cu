@@ -245,7 +245,7 @@ template<typename BS>
 static void
 heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
 {
-  dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
+  dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   k_heating_run_foil<BS>
       <<<dimGrid, THREADS_PER_BLOCK>>>

@@ -133,7 +133,7 @@ template<typename BS, bool REORDER>
 static void
 rho_1st_nc_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
-  dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
+  dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   rho_1st_nc_cuda_run<BS, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -150,7 +150,7 @@ template<typename BS, bool REORDER>
 static void
 n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
-  dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
+  dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   n_1st_cuda_run<BS, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
