@@ -90,10 +90,6 @@ struct Grid_
       ldims{domain.ldims}
   {
     patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, domain.length, domain.dx));
-
-    for (int d = 0; d < 3; d++) {
-      assert(ldims[d] % bs[d] == 0); // FIXME, % operator for Vec3
-    }
   }
 
   Grid_(const Domain& domain, const std::vector<Int3>& offs)
@@ -143,7 +139,6 @@ struct Grid_
   real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
-  Int3 bs = { 1, 1, 1 };
 };
 
 // ======================================================================
@@ -152,9 +147,8 @@ struct Grid_
 template<class T>
 struct Grid_<T>::Domain
 {
-  Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.},
-	 Int3 np = {1, 1, 1}, Int3 bs = {1, 1, 1})
-    : gdims(gdims), length(length), corner(corner), np(np), bs(bs) 
+  Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.}, Int3 np = {1, 1, 1})
+    : gdims(gdims), length(length), corner(corner), np(np)
   {
     for (int d = 0; d < 3; d++) {
       assert(gdims[d] % np[d] == 0);
@@ -169,7 +163,6 @@ struct Grid_<T>::Domain
   Real3 length;	///<The physical size of the simulation-box 
   Real3 corner;
   Int3 np;		///<Number of patches in each dimension
-  Int3 bs; // FIXME, shouldn't really be in here
   
   Int3 ldims;
   Real3 dx;

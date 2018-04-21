@@ -66,11 +66,10 @@ static struct select_init {
 
 static struct param psc_descr[] = {
   // psc_domain
-  { "length_"       , VAR(domain_.length)          , PARAM_DOUBLE3(1., 1., 1.) },
-  { "corner_"       , VAR(domain_.corner)          , PARAM_DOUBLE3(0., 0., 0.) },
-  { "gdims_"        , VAR(domain_.gdims)           , PARAM_INT3(1, 1, 1)  },
-  { "np_"	    , VAR(domain_.np)	          , PARAM_INT3(1, 1, 1)	 },
-  { "bs"            , VAR(domain_.bs)              , PARAM_INT3(1, 1, 1)  },
+  { "length_"       , VAR(domain_.length)          , PARAM_DOUBLE3(1., 1., 1.)  },
+  { "corner_"       , VAR(domain_.corner)          , PARAM_DOUBLE3(0., 0., 0.)  },
+  { "gdims_"        , VAR(domain_.gdims)           , PARAM_INT3(1, 1, 1)        },
+  { "np_"	    , VAR(domain_.np)	           , PARAM_INT3(1, 1, 1)        },
 
   { "bnd_field_lo_x", VAR_(bc_.fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
@@ -288,10 +287,6 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
   }
 
   Grid_t *grid = new Grid_t(domain, offs);
-
-  for (int d = 0; d < 3; d++) {
-    grid->bs[d] = grid->isInvar(d) ? 1 : domain.bs[d];
-  }
 
   grid->kinds = kinds;
 
