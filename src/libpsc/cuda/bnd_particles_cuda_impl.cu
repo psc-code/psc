@@ -5,15 +5,17 @@
 // ----------------------------------------------------------------------
 // ctor
 
-BndParticlesCuda::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
+template<typename BS>
+BndParticlesCuda<BS>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
   : Base(domain, grid),
-  cbndp_(new cuda_bndp<BS144>(grid))
+  cbndp_(new cuda_bndp<BS>(grid))
 {}
 
 // ----------------------------------------------------------------------
 // dtor
 
-BndParticlesCuda::~BndParticlesCuda()
+template<typename BS>
+BndParticlesCuda<BS>::~BndParticlesCuda()
 {
   delete cbndp_;
 }
@@ -21,17 +23,19 @@ BndParticlesCuda::~BndParticlesCuda()
 // ----------------------------------------------------------------------
 // reset
 
-void BndParticlesCuda::reset()
+template<typename BS>
+void BndParticlesCuda<BS>::reset()
 {
   Base::reset();
   delete(cbndp_);
-  cbndp_ = new cuda_bndp<BS144>(ppsc->grid());
+  cbndp_ = new cuda_bndp<BS>(ppsc->grid());
 }
 
 // ----------------------------------------------------------------------
 // operator()
 
-void BndParticlesCuda::operator()(MparticlesCuda& mprts)
+template<typename BS>
+void BndParticlesCuda<BS>::operator()(MparticlesCuda& mprts)
 {
   if (psc_balance_generation_cnt > balance_generation_cnt_) {
     reset();
@@ -60,10 +64,12 @@ void BndParticlesCuda::operator()(MparticlesCuda& mprts)
 // ----------------------------------------------------------------------
 // exchange_particles
 
-void BndParticlesCuda::exchange_particles(MparticlesBase& mprts_base)
+template<typename BS>
+void BndParticlesCuda<BS>::exchange_particles(MparticlesBase& mprts_base)
 {
   auto& mprts = mprts_base.get_as<MparticlesCuda>();
   (*this)(mprts);
   mprts_base.put_as(mprts);
 }
 
+template struct BndParticlesCuda<BS144>;

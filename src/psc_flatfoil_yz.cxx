@@ -210,7 +210,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Sort_t = SortCuda;
   using Collision_t = CollisionCuda;
   using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda;
+  using BndParticles_t = BndParticlesCuda<BS144>;
   using Bnd_t = BndCuda;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = InjectCuda<InjectFoil>;

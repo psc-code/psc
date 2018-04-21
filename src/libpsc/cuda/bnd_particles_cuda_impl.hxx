@@ -7,6 +7,7 @@
 template<typename BS>
 struct cuda_bndp;
 
+template<typename BS>
 struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda>
 {
   using Base = BndParticlesCommon<MparticlesCuda>;
@@ -19,6 +20,6 @@ struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda>
   void exchange_particles(MparticlesBase& mprts_base) override;
 
 private:
-  cuda_bndp<BS144>* cbndp_;
+  cuda_bndp<BS>* cbndp_;
 };
 
