@@ -123,13 +123,15 @@ template<typename BS>
 struct BlockSimple : BlockBase
 {
   __device__
-  int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
+  bool init(const DMparticlesCuda<BS>& dmprts, int block_start)
   {
+    int block_pos[3];
     p = dmprts.find_block_pos_patch(block_pos, ci0);
-    if (p >= 0) {
-      bid = dmprts.find_bid();
+    if (p < 0) {
+      return false;
     }
-    return p;
+    bid = dmprts.find_bid();
+    return true;
   }
 };
 
@@ -137,13 +139,15 @@ template<typename BS>
 struct BlockQ : BlockBase
 {
   __device__
-  int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
+  int init(const DMparticlesCuda<BS>& dmprts, int block_start)
   {
+    int block_pos[3];
     p = dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
-    if (p >= 0) {
-      bid = dmprts.find_bid_q(p, block_pos);
+    if (p < 0) {
+      return false;
     }
-    return p;
+    bid = dmprts.find_bid_q(p, block_pos);
+    return true;
   }
 };
 

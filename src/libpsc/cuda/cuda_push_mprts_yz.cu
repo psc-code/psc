@@ -270,13 +270,10 @@ struct CudaPushParticles_yz
   __device__
   static void push_mprts(DMparticles& dmprts, DMFields& d_mflds, int block_start)
   {
-    int block_pos[3];
     Block current_block;
-    current_block.find_block_pos_patch(dmprts, block_pos, block_start);
-    if (current_block.p < 0)
+    if (!current_block.init(dmprts, block_start)) {
       return;
-    int block_begin = dmprts.off_[current_block.bid];
-    int block_end = dmprts.off_[current_block.bid + 1];
+    }
     
     __shared__ FldCache fld_cache;
     fld_cache.load(d_mflds[current_block.p], current_block.ci0);
@@ -285,6 +282,8 @@ struct CudaPushParticles_yz
     Curr scurr(_scurr, d_mflds[current_block.p]);
     __syncthreads();
 
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
     for (int n : in_block_loop(block_begin, block_end)) {
       if (n < block_begin) {
 	continue;
