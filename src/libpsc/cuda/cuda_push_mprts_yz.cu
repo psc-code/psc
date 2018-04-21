@@ -26,8 +26,6 @@ using dim = dim_yz;
 #include "cuda_fld_cache.cuh"
 #include "cuda_currmem.cuh"
 
-using real_t = float;
-
 // FIXME
 #define CUDA_BND_S_OOB (10)
 
@@ -39,19 +37,19 @@ using real_t = float;
 // OPT: fld cache is much bigger than needed
 // OPT: precalculating IP coeffs could be a gain, too
 
-template<typename Config>
+template<typename Config, bool REORDER>
 struct CudaPushParticles_yz
 {
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
   using Curr = typename Currmem::Curr<BS>;
   using DMparticles = DMparticlesCuda<BS>;
+  using real_t = typename DMparticles::real_t;
   using FldCache = FldCache<BS::x::value, BS::y::value, BS::z::value>;
 
   // ----------------------------------------------------------------------
   // push_part_one
 
-  template<bool REORDER>
   __device__ static void
   push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache)
     
@@ -268,7 +266,6 @@ struct CudaPushParticles_yz
   // ----------------------------------------------------------------------
   // push_mprts
 
-  template<bool REORDER>
   __device__
   static void push_mprts(DMparticles& dmprts, DMFields& d_mflds, int block_start)
   {
@@ -293,7 +290,7 @@ struct CudaPushParticles_yz
 	continue;
       }
       struct d_particle prt;
-      push_part_one<REORDER>(dmprts, prt, n, fld_cache);
+      push_part_one(dmprts, prt, n, fld_cache);
       
       if (REORDER) {
 	yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, ci0);
@@ -314,7 +311,7 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda<typename Config::Bs> dmprts, DMFields d_mflds)
 {
-  CudaPushParticles_yz<Config>::push_mprts<REORDER>(dmprts, d_mflds, block_start);
+  CudaPushParticles_yz<Config, REORDER>::push_mprts(dmprts, d_mflds, block_start);
 }
 
 // ----------------------------------------------------------------------
