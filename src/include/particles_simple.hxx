@@ -94,15 +94,6 @@ struct ParticleIndexer
     return idx;
   }
 
-  Int3 blockPosition(const real_t* pos) const
-  {
-    Int3 idx;
-    for (int d = 0; d < 3; d++) {
-      idx[d] = blockPosition(pos[d], d);
-    }
-    return idx;
-  }
-
   int cellIndex(const Int3& cpos) const
   {
     if (uint(cpos[0]) >= ldims_[0] ||
@@ -133,12 +124,6 @@ struct ParticleIndexer
     int cidx = cellIndex(cpos);
     assert(cidx >= 0);
     return cidx;
-  }
-
-  int blockIndex(const real_t* pos) const
-  {
-    Int3 bpos = blockPosition(pos);
-    return blockIndex(bpos);
   }
 
   void checkInPatchMod(real_t* pos) const
