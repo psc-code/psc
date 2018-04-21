@@ -104,7 +104,7 @@ struct DParticleIndexer
     }
   }
   
-  __device__ uint block_pos_to_block_idx(int block_pos[3])
+  __device__ uint block_pos_to_block_idx(int block_pos[3]) const
   {
 #define NO_CHECKERBOARD
 #ifdef NO_CHECKERBOARD
@@ -118,12 +118,12 @@ struct DParticleIndexer
 #endif
   }
 
-  __device__ int find_bid()
+  __device__ int find_bid() const
   {
     return blockIdx.y * b_mx_[1] + blockIdx.x;
   }
 
-  __device__ int find_bid_q(int p, int *block_pos)
+  __device__ int find_bid_q(int p, int *block_pos) const
   {
     // FIXME won't work if b_mx_[1,2] not even (?)
     return block_pos_to_block_idx(block_pos) + p * b_mx_[1] * b_mx_[2];

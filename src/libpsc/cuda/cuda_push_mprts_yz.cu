@@ -275,7 +275,6 @@ struct CudaPushParticles_yz
     current_block.template find_block_pos_patch<BS>(dmprts, block_pos, block_start);
     if (current_block.p < 0)
       return;
-    current_block.bid = Currmem::find_bid(dmprts, current_block.p, block_pos);
     int block_begin = dmprts.off_[current_block.bid];
     int block_end = dmprts.off_[current_block.bid + 1];
     

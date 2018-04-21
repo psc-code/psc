@@ -126,6 +126,9 @@ struct Block : BlockBase
   int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
   {
     p = dmprts.find_block_pos_patch(block_pos, ci0);
+    if (p >= 0) {
+      bid = dmprts.find_bid();
+    }
     return p;
   }
 };
@@ -137,6 +140,9 @@ struct BlockQ : BlockBase
   int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
   {
     p = dmprts.find_block_pos_patch_q(block_pos, ci0, block_start);
+    if (p >= 0) {
+      bid = dmprts.find_bid_q(p, block_pos);
+    }
     return p;
   }
 };
@@ -160,12 +166,6 @@ struct CurrmemShared
     int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
     return dim3(gx, gy);
   }
-
-  template<typename BS>
-  __device__ static int find_bid(DMparticlesCuda<BS>& dmprts, int p, int *block_pos)
-  {
-    return dmprts.find_bid_q(p, block_pos);
-  }
 };
 
 // ======================================================================
@@ -186,12 +186,6 @@ struct CurrmemGlobal
     int gx = cmprts.b_mx()[1];
     int gy = cmprts.b_mx()[2] * cmprts.n_patches;
     return dim3(gx, gy);
-  }
-
-  template<typename BS>
-  __device__ static int find_bid(DMparticlesCuda<BS>& dmprts, int p, int *block_pos)
-  {
-    return dmprts.find_bid();
   }
 };
 
