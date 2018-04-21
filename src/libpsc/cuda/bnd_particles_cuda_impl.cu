@@ -35,9 +35,9 @@ void BndParticlesCuda<BS>::reset()
 // operator()
 
 template<typename BS>
-void BndParticlesCuda<BS>::operator()(MparticlesCuda& mprts)
+void BndParticlesCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 {
-  if (psc_balance_generation_cnt > balance_generation_cnt_) {
+  if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
     reset();
   }
   
@@ -52,7 +52,7 @@ void BndParticlesCuda<BS>::operator()(MparticlesCuda& mprts)
   cbndp_->prep(mprts.cmprts());
   prof_stop(pr_A);
   
-  process_and_exchange(mprts, cbndp_->bufs_);
+  this->process_and_exchange(mprts, cbndp_->bufs_);
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_B);
@@ -67,7 +67,7 @@ void BndParticlesCuda<BS>::operator()(MparticlesCuda& mprts)
 template<typename BS>
 void BndParticlesCuda<BS>::exchange_particles(MparticlesBase& mprts_base)
 {
-  auto& mprts = mprts_base.get_as<MparticlesCuda>();
+  auto& mprts = mprts_base.get_as<MparticlesCuda<BS>>();
   (*this)(mprts);
   mprts_base.put_as(mprts);
 }

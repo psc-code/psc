@@ -17,7 +17,8 @@
 // ======================================================================
 // MparticleCuda implementation
 
-MparticlesCuda::MparticlesCuda(const Grid_t& grid)
+template<typename BS>
+MparticlesCuda<BS>::MparticlesCuda(const Grid_t& grid)
   : MparticlesBase(grid),
     pi_(grid)
 {
@@ -25,13 +26,15 @@ MparticlesCuda::MparticlesCuda(const Grid_t& grid)
   cmprts_ = new cuda_mparticles<BS>(grid);
 }
 
-MparticlesCuda::~MparticlesCuda()
+template<typename BS>
+MparticlesCuda<BS>::~MparticlesCuda()
 {
   dprintf("CMPRTS: dtor\n");
   delete cmprts_;
 }
 
-void MparticlesCuda::reserve_all(const uint *n_prts_by_patch)
+template<typename BS>
+void MparticlesCuda<BS>::reserve_all(const uint *n_prts_by_patch)
 {
   dprintf("CMPRTS: reserve_all\n");
   for (int p = 0; p < cmprts_->n_patches; p++) {
@@ -40,7 +43,8 @@ void MparticlesCuda::reserve_all(const uint *n_prts_by_patch)
   cmprts_->reserve_all(n_prts_by_patch);
 }
 
-void MparticlesCuda::get_size_all(uint *n_prts_by_patch) const
+template<typename BS>
+void MparticlesCuda<BS>::get_size_all(uint *n_prts_by_patch) const
 {
   dprintf("CMPRTS: get_size_all\n");
   cmprts_->get_size_all(n_prts_by_patch);
@@ -49,31 +53,36 @@ void MparticlesCuda::get_size_all(uint *n_prts_by_patch) const
   }
 }
 
-void MparticlesCuda::resize_all(const uint *n_prts_by_patch)
+template<typename BS>
+void MparticlesCuda<BS>::resize_all(const uint *n_prts_by_patch)
 {
   dprintf("CMPRTS: resize_all\n");
   cmprts_->resize_all(n_prts_by_patch);
 }
 
-int MparticlesCuda::get_n_prts() const
+template<typename BS>
+int MparticlesCuda<BS>::get_n_prts() const
 {
   dprintf("CMPRTS: get_n_prts\n");
   return cmprts_->get_n_prts();
 }
 
-void MparticlesCuda::reset(const Grid_t& grid)
+template<typename BS>
+void MparticlesCuda<BS>::reset(const Grid_t& grid)
 {
   this->~MparticlesCuda();
   new(this) MparticlesCuda(grid);
 }
 
-void MparticlesCuda::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
+template<typename BS>
+void MparticlesCuda<BS>::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
   cmprts_->inject(buf, buf_n_by_patch);
 }
 
-void MparticlesCuda::dump(const std::string& filename)
+template<typename BS>
+void MparticlesCuda<BS>::dump(const std::string& filename)
 {
   cmprts_->dump(filename);
 }
@@ -141,7 +150,7 @@ private:
 };
 
 template<typename MP>
-static void copy_from(MparticlesCuda& mp, MP& mp_other)
+static void copy_from(MparticlesCuda<BS144>& mp, MP& mp_other)
 {
   int n_patches = mp.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -158,7 +167,7 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
 }
 
 template<typename MP>
-static void copy_to(MparticlesCuda& mp, MP& mp_other)
+static void copy_to(MparticlesCuda<BS144>& mp, MP& mp_other)
 {
   int n_patches = mp_other.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -181,21 +190,23 @@ static void copy_to(MparticlesCuda& mp, MP& mp_other)
 template<typename MP>
 static void copy_from(MparticlesBase& mp, MparticlesBase& mp_other)
 {
-  copy_from(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
+  copy_from(dynamic_cast<MparticlesCuda<BS144>&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
 template<typename MP>
 static void copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
 {
-  copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
+  copy_to(dynamic_cast<MparticlesCuda<BS144>&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
-const MparticlesCuda::Convert MparticlesCuda::convert_to_ = {
+template<typename BS>
+const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_to_ = {
   { std::type_index(typeid(MparticlesSingle)), copy_to<MparticlesSingle>   },
   { std::type_index(typeid(MparticlesDouble)), copy_to<MparticlesDouble>   },
 };
 
-const MparticlesCuda::Convert MparticlesCuda::convert_from_ = {
+template<typename BS>
+const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_from_ = {
   { std::type_index(typeid(MparticlesSingle)), copy_from<MparticlesSingle>   },
   { std::type_index(typeid(MparticlesDouble)), copy_from<MparticlesDouble>   },
 };
@@ -323,4 +334,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 // ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
-psc_mparticles_ops_<MparticlesCuda> psc_mparticles_cuda_ops;
+psc_mparticles_ops_<MparticlesCuda<BS144>> psc_mparticles_cuda_ops;
+
+template struct MparticlesCuda<BS144>;

@@ -34,7 +34,7 @@ struct HeatingCuda : HeatingBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MparticlesCuda& mprts)
+  void operator()(MparticlesCuda<BS144>& mprts)
   {
     cuda_heating_run_foil(mprts.cmprts());
   }
@@ -44,7 +44,7 @@ struct HeatingCuda : HeatingBase
 
   void run(PscMparticlesBase mprts_base) override
   {
-    auto& mprts = mprts_base->get_as<MparticlesCuda>();
+    auto& mprts = mprts_base->get_as<MparticlesCuda<BS144>>();
     (*this)(mprts);
     mprts_base->put_as(mprts);
   }

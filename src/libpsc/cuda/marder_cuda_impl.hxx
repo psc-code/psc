@@ -142,11 +142,10 @@ struct MarderCuda : MarderBase
     mf_base->put_as(mf, 0, 0);
   }
 
-  void operator()(MfieldsCuda& mflds, MparticlesCuda& mprts)
+  void operator()(MfieldsCuda& mflds, MparticlesCuda<BS144>& mprts)
   {
     MHERE;
   }
-  
   
   void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
   {

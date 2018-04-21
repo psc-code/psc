@@ -12,7 +12,7 @@ public:
   
   virtual void run(PscMparticlesBase mprts_base) { assert(0); }
 
-  void operator()(MparticlesCuda& _mprts)
+  void operator()(MparticlesCuda<BS144>& _mprts)
   {
     auto& mprts = _mprts.get_as<MparticlesSingle>();
     sort_(mprts);

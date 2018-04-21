@@ -113,7 +113,7 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MparticlesCuda& mprts)
+  void operator()(MparticlesCuda<BS144>& mprts)
   {
     struct psc *psc = ppsc;
     const auto& grid = psc->grid();
@@ -213,7 +213,7 @@ struct InjectCuda : InjectBase
   
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
-    auto& mprts = mprts_base->get_as<MparticlesCuda>();
+    auto& mprts = mprts_base->get_as<MparticlesCuda<BS144>>();
     (*this)(mprts);
     mprts_base->put_as(mprts);
   }

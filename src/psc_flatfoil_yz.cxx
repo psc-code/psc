@@ -203,7 +203,7 @@ struct PscFlatfoilParams
 struct PscFlatfoil : PscFlatfoilParams
 {
 #if DO_CUDA
-  using Mparticles_t = MparticlesCuda;
+  using Mparticles_t = MparticlesCuda<BS144>;
   using Mfields_t = MfieldsCuda;
   using Config1vbec3d = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
   using PushParticles_t = PushParticlesCuda<Config1vbec3d>;

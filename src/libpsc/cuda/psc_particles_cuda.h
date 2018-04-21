@@ -43,6 +43,7 @@ struct cuda_mparticles;
 // ======================================================================
 // MparticlesCuda
 
+template<typename Bs>
 struct MparticlesCuda : MparticlesBase
 {
   using Self = MparticlesCuda;
@@ -92,7 +93,7 @@ private:
 };
 
 template<>
-struct Mparticles_traits<MparticlesCuda>
+struct Mparticles_traits<MparticlesCuda<BS144>>
 {
   static constexpr const char* name = "cuda";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

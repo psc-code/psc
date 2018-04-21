@@ -8,15 +8,15 @@ template<typename BS>
 struct cuda_bndp;
 
 template<typename BS>
-struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda>
+struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda<BS>>
 {
-  using Base = BndParticlesCommon<MparticlesCuda>;
+  using Base = BndParticlesCommon<MparticlesCuda<BS>>;
 
   BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid);
   ~BndParticlesCuda();
 
   void reset();
-  void operator()(MparticlesCuda& mprts);
+  void operator()(MparticlesCuda<BS>& mprts);
   void exchange_particles(MparticlesBase& mprts_base) override;
 
 private:
