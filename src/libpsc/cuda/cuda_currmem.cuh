@@ -119,9 +119,9 @@ struct BlockBase
   int ci0[3];
 };
 
-struct Block : BlockBase
+template<typename BS>
+struct BlockSimple : BlockBase
 {
-  template<typename BS>
   __device__
   int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
   {
@@ -133,9 +133,9 @@ struct Block : BlockBase
   }
 };
 
+template<typename BS>
 struct BlockQ : BlockBase
 {
-  template<typename BS>
   __device__
   int find_block_pos_patch(const DMparticlesCuda<BS>& dmprts, int *block_pos, int block_start)
   {
@@ -155,7 +155,8 @@ struct CurrmemShared
   template<typename BS>
   using Curr = SCurr<BS>;
 
-  using Block = BlockQ;
+  template<typename BS>
+  using Block = BlockQ<BS>;
   
   static Range<int> block_starts() { return range(4);  }
 
@@ -176,7 +177,8 @@ struct CurrmemGlobal
   template<typename BS>
   using Curr = GCurr<BS>;
 
-  using Block = Block;
+  template<typename BS>
+  using Block = BlockSimple<BS>;
 
   static Range<int> block_starts() { return range(1);  }
 
