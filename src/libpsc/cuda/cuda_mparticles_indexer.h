@@ -87,7 +87,7 @@ struct DParticleIndexer
     return (p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y;
   }
 
-  __device__ int blockShift(float xi[3], int p_nr, int bid) const
+  __device__ int blockShift(float xi[3], int p, int bid) const
   {
     uint block_pos_y = __float2int_rd(xi[1] * b_dxi_[1]);
     uint block_pos_z = __float2int_rd(xi[2] * b_dxi_[2]);
@@ -95,7 +95,7 @@ struct DParticleIndexer
     if (block_pos_y >= b_mx_[1] || block_pos_z >= b_mx_[2]) {
       return CUDA_BND_S_OOB;
     } else {
-      int bidx = (p_nr * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y;
+      int bidx = (p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y;
       int b_diff = bid - bidx + b_mx_[1] + 1;
       int d1 = b_diff % b_mx_[1];
       int d2 = b_diff / b_mx_[1];
