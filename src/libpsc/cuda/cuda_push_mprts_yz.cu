@@ -182,7 +182,7 @@ struct CudaPushParticles_yz
   
   __device__ static void
   yz_calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	    Curr &scurr, int p_nr, int bid, const Block& current_block)
+	    Curr &scurr, const Block& current_block)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
@@ -224,7 +224,7 @@ struct CudaPushParticles_yz
     }
 
     // has moved into which block? (given as relative shift)
-    dmprts.bidx_[n] = dmprts.blockShift(prt.xi, p_nr, bid);
+    dmprts.bidx_[n] = dmprts.blockShift(prt.xi, current_block.p, current_block.bid);
 
     // position xm at x^(n+.5)
     dmprts.find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
@@ -271,20 +271,20 @@ struct CudaPushParticles_yz
   {
     int block_pos[3];
     Block current_block;
-    int p = Currmem::template find_block_pos_patch<BS>(dmprts, block_pos, current_block.ci0, block_start);
-    if (p < 0)
+    current_block.p = Currmem::template find_block_pos_patch<BS>(dmprts, block_pos, current_block.ci0, block_start);
+    if (current_block.p < 0)
       return;
+    current_block.bid = Currmem::find_bid(dmprts, current_block.p, block_pos);
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
     
     __shared__ FldCache fld_cache;
-    fld_cache.load(d_mflds[p], current_block.ci0);
+    fld_cache.load(d_mflds[current_block.p], current_block.ci0);
 
     __shared__ float _scurr[Curr::shared_size];
-    Curr scurr(_scurr, d_mflds[p]);
+    Curr scurr(_scurr, d_mflds[current_block.p]);
     __syncthreads();
 
-    int bid = Currmem::find_bid(dmprts, p, block_pos);
-    int block_begin = dmprts.off_[bid];
-    int block_end = dmprts.off_[bid + 1];
     for (int n : in_block_loop(block_begin, block_end)) {
       if (n < block_begin) {
 	continue;
@@ -293,9 +293,9 @@ struct CudaPushParticles_yz
       push_part_one(dmprts, prt, n, fld_cache);
       
       if (REORDER) {
-	yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, p, bid, current_block);
+	yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block);
       } else {
-	yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, p, bid, current_block);
+	yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block);
       }
     }
     

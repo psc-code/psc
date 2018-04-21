@@ -114,6 +114,8 @@ public:
 
 struct Block
 {
+  int bid;
+  int p;
   int ci0[3];
 };
 
