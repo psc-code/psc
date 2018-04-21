@@ -197,17 +197,7 @@ struct BlockQ : BlockBase
     p = blockIdx.y / grid_dim_y;
 
     // FIXME won't work if b_mx_[1,2] not even (?)
-#define NO_CHECKERBOARD
-#ifdef NO_CHECKERBOARD
     bid = (p * dpi.b_mx(2) + block_pos[2]) * dpi.b_mx(1) + block_pos[1];
-#else
-    int dimy = dpi.b_mx(1) >> 1;
-    bid =
-      ((block_pos[1] & 1) << 0) |
-      ((block_pos[2] & 1) << 1) | 
-      (((block_pos[2] >> 1) * dimy + (block_pos[1] >> 1)) << 2);
-    bid +=  p * dpi.b_mx(1) * dpi.b_mx(2);
-#endif
     return true;
   }
 };
