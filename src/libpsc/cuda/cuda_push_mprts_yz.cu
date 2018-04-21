@@ -235,7 +235,7 @@ struct CudaPushParticles_yz
     int i[3] = { 0, j[1] - current_block.ci0[1], j[2] - current_block.ci0[2] };
     float x[3] = { 0.f, xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
     //float dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
-    float dx[3] = { vxi[0] * dmprts.dt() * dmprts.dxi(0), xp[1] - xm[1], xp[2] - xm[2] };
+    float dx[3] = { dmprts.scalePos(vxi[0] * dmprts.dt(), 0), xp[1] - xm[1], xp[2] - xm[2] };
   
     float x1 = x[1] * idiff[1];
     float x2 = x[2] * idiff[2];

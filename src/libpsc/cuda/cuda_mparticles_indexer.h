@@ -115,7 +115,7 @@ struct DParticleIndexer
   __device__ void find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift)
   {
     for (int d = 0; d < 3; d++) {
-      real_t pos = xi[d] * dxi_[d] + shift;
+      real_t pos = scalePos(xi[d], d) + shift;
       j[d] = __float2int_rd(pos);
       h[d] = pos - j[d];
     }
@@ -127,20 +127,23 @@ struct DParticleIndexer
   __device__ void find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], float shift)
   {
     for (int d = 0; d < 3; d++) {
-      pos[d] = xi[d] * dxi_[d] + shift;
+      pos[d] = scalePos(xi[d], d) + shift;
       j[d] = __float2int_rd(pos[d]);
       h[d] = pos[d] - j[d];
     }
   }
 
+  __device__ real_t scalePos(real_t xi, int d)
+  {
+    return xi * dxi_[d];
+  }
+
   __device__ void scalePos(real_t xs[3], real_t xi[3])
   {
     xs[0] = 0.;
-    xs[1] = xi[1] * dxi_[1];
-    xs[2] = xi[2] * dxi_[2];
+    xs[1] = scalePos(xi[1], 1);
+    xs[2] = scalePos(xi[2], 2);
   }
-
-  __device__ real_t dxi(int d) const { return dxi_[d]; }
 
   __device__ uint b_mx(int d) const { return b_mx_[d]; }
 
