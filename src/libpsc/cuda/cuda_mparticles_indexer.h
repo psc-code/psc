@@ -51,12 +51,12 @@ struct cuda_mparticles_indexer
 protected:
   int blockIndex(Int3 bpos, int p) const
   {
-    int bidx = pi_.blockIndex(bpos);
-    if (bidx < 0) {
-      return bidx;
+    if (uint(bpos[1]) >= pi_.b_mx_[1] ||
+	uint(bpos[2]) >= pi_.b_mx_[2]) {
+      return -1;
     }
-
-    return p * n_blocks_per_patch + bidx;
+    
+    return (p * pi_.b_mx_[2] + bpos[2]) * pi_.b_mx_[1] + bpos[1];
   }
 
 public:

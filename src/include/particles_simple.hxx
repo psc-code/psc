@@ -113,18 +113,7 @@ struct ParticleIndexer
     
     return (cpos[2] * ldims_[1] + cpos[1]) * ldims_[0] + cpos[0];
   }
-  
-  int blockIndex(const Int3& bpos) const
-  {
-    if (uint(bpos[0]) >= b_mx_[0] ||
-	uint(bpos[1]) >= b_mx_[1] ||
-	uint(bpos[2]) >= b_mx_[2]) {
-      return -1;
-    } else {
-      return (bpos[2] * b_mx_[1] + bpos[1]) * b_mx_[0] + bpos[0];
-    }
-  }
-  
+
   int cellIndex(const real_t* pos) const
   {
     Int3 cpos = cellPosition(pos);
