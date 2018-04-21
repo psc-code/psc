@@ -74,15 +74,14 @@ struct DParticleIndexer
   {
     for (int d = 0; d < 3; d++) {
       b_mx_[d]  = cpi.b_mx()[d];
-      b_dxi_[d] = cpi.b_dxi()[d];
       dxi_[d]   = cpi.dxi()[d];
     }
   }
 
   __device__ int blockIndex(float4 xi4, int p) const
   {
-    uint block_pos_y = __float2int_rd(xi4.y * b_dxi_[1]);
-    uint block_pos_z = __float2int_rd(xi4.z * b_dxi_[2]);
+    uint block_pos_y = __float2int_rd(xi4.y * dxi_[1]) / BS::y::value;
+    uint block_pos_z = __float2int_rd(xi4.z * dxi_[2]) / BS::z::value;
     
     //assert(block_pos_y < b_mx_[1] && block_pos_z < b_mx_[2]); FIXME, assert doesn't work (on macbook)
     return (p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y;
@@ -90,8 +89,8 @@ struct DParticleIndexer
 
   __device__ int blockShift(float xi[3], int p, int bid) const
   {
-    uint block_pos_y = __float2int_rd(xi[1] * b_dxi_[1]);
-    uint block_pos_z = __float2int_rd(xi[2] * b_dxi_[2]);
+    uint block_pos_y = __float2int_rd(xi[1] * dxi_[1]) / BS::y::value;
+    uint block_pos_z = __float2int_rd(xi[2] * dxi_[2]) / BS::z::value;
     
     if (block_pos_y >= b_mx_[1] || block_pos_z >= b_mx_[2]) {
       return CUDA_BND_S_OOB;
@@ -144,7 +143,6 @@ struct DParticleIndexer
 
 private:
   uint b_mx_[3];
-  real_t b_dxi_[3];
   real_t dxi_[3];
 };
 
