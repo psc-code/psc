@@ -178,11 +178,11 @@ void cuda_heating_run_foil_gold(cuda_mparticles<BS>* cmprts)
 template<typename BS>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-  k_heating_run_foil(DParticleIndexer<BS> dpi, struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4,
-		     uint *d_off, curandState *d_curand_states)
+k_heating_run_foil(DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
+		   curandState *d_curand_states)
 {
   BlockSimple<BS> current_block;
-  if (!current_block.init(dpi)) {
+  if (!current_block.init(dmprts)) {
     return;
   }
 
@@ -196,13 +196,13 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
   /* Copy state to local memory for efficiency */
   curandState local_state = d_curand_states[id];
 
-  int block_begin = d_off[current_block.bid];
-  int block_end = d_off[current_block.bid + 1];
+  int block_begin = dmprts.off_[current_block.bid];
+  int block_end = dmprts.off_[current_block.bid + 1];
   for (int n : in_block_loop(block_begin, block_end)) {
     if (n < block_begin) {
       continue;
     }
-    float4 xi4 = d_xi4[n];
+    float4 xi4 = dmprts.xi4_[n];
     
     int prt_kind = __float_as_int(xi4.w);
     if (prt_kind != d_foil.kind) {
@@ -217,9 +217,9 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
     float H = d_foil_get_H(xx);
     //d_pxi4[n].w = H;
     if (H > 0) {
-      float4 pxi4 = d_pxi4[n];
+      float4 pxi4 = dmprts.pxi4_[n];
       d_particle_kick(&pxi4, H, &local_state);
-      d_pxi4[n] = pxi4;
+      dmprts.pxi4_[n] = pxi4;
     }
   }
 
@@ -248,9 +248,7 @@ heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
   dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   k_heating_run_foil<BS>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-    (*cmprts, h_prm, cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(), cmprts->d_off.data().get(),
-     d_curand_states);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(*cmprts, h_prm, d_curand_states);
   cuda_sync_if_enabled();
 }
 
