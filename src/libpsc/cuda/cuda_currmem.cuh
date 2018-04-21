@@ -42,7 +42,7 @@ public:
     }
   }
 
-  __device__ void add_to_fld(int *ci0)
+  __device__ void add_to_fld(const int *ci0)
   {
     __syncthreads();				\
     int i = threadIdx.x;
@@ -77,7 +77,7 @@ public:
     return scurr[off];
   }
 
-  __device__ void add(int m, int jy, int jz, float val, int *ci0)
+  __device__ void add(int m, int jy, int jz, float val, const int *ci0)
   {
     float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
     atomicAdd(addr, val);
@@ -110,6 +110,11 @@ public:
     float *addr = &d_flds(JXI+m, 0,jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
   }
+};
+
+struct Block
+{
+  int ci0[3];
 };
 
 // ======================================================================
