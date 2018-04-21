@@ -336,17 +336,18 @@ template<bool REORDER>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   using Currmem = typename Config::Currmem;
+  using Block = typename Currmem::Block<typename Config::Bs>;
 
   zero_currents(cmflds);
 
-  dim3 dimGrid = Currmem::dimGrid(*cmprts);
+  dim3 dimGrid = Block::dimGrid(*cmprts);
 
   if (REORDER) {
     cmprts->d_alt_xi4.resize(cmprts->n_prts);
     cmprts->d_alt_pxi4.resize(cmprts->n_prts);
   }
 
-  for (auto block_start : Currmem::block_starts()) {
+  for (auto block_start : Block::block_starts()) {
     ::push_mprts_ab<Config, REORDER>
       <<<dimGrid, THREADS_PER_BLOCK>>>(block_start, *cmprts, *cmflds);
     cuda_sync_if_enabled();

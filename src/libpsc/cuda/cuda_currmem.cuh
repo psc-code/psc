@@ -122,16 +122,6 @@ struct CurrmemShared
 
   template<typename BS>
   using Block = BlockQ<BS>;
-  
-  static Range<int> block_starts() { return range(4);  }
-
-  template<typename CudaMparticles>
-  static dim3 dimGrid(CudaMparticles& cmprts)
-  {
-    int gx =  (cmprts.b_mx()[1] + 1) / 2;
-    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
-    return dim3(gx, gy);
-  }
 };
 
 // ======================================================================
@@ -144,15 +134,5 @@ struct CurrmemGlobal
 
   template<typename BS>
   using Block = BlockSimple<BS>;
-
-  static Range<int> block_starts() { return range(1);  }
-
-  template<typename CudaMparticles>
-  static dim3 dimGrid(CudaMparticles& cmprts)
-  {
-    int gx = cmprts.b_mx()[1];
-    int gy = cmprts.b_mx()[2] * cmprts.n_patches;
-    return dim3(gx, gy);
-  }
 };
 

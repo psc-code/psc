@@ -158,6 +158,16 @@ struct BlockBase
 template<typename BS>
 struct BlockSimple : BlockBase
 {
+  static Range<int> block_starts() { return range(1);  }
+
+  template<typename CudaMparticles>
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx = cmprts.b_mx()[1];
+    int gy = cmprts.b_mx()[2] * cmprts.n_patches;
+    return dim3(gx, gy);
+  }
+
   __device__
   bool init(const DParticleIndexer<BS>& dpi, int block_start = 0)
   {
@@ -178,6 +188,16 @@ struct BlockSimple : BlockBase
 template<typename BS>
 struct BlockQ : BlockBase
 {
+  static Range<int> block_starts() { return range(4);  }
+
+  template<typename CudaMparticles>
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx =  (cmprts.b_mx()[1] + 1) / 2;
+    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
+    return dim3(gx, gy);
+  }
+
   __device__
   int init(const DParticleIndexer<BS>& dpi, int block_start)
   {
