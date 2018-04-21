@@ -8,11 +8,12 @@
 // ======================================================================
 // Moment_rho_1st_nc_cuda
 
-struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>
+template<typename BS>
+struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS>, MfieldsCuda>
 {
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
   using Mfields = MfieldsCuda;
-  using Mparticles = MparticlesCuda<BS144>;
+  using Mparticles = MparticlesCuda<BS>;
   using Bnd = BndCuda;
   
   constexpr static const char* name = "rho_1st_nc";
@@ -25,7 +26,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCu
       bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn}
   {}
 
-  void run(MparticlesCuda<BS144>& mprts)
+  void run(MparticlesCuda<BS>& mprts)
   {
     PscMfields<Mfields> mres{this->mres_};
     auto* cmprts = mprts.cmprts();
@@ -43,11 +44,12 @@ private:
 // ======================================================================
 // n_1st_cuda
 
-struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
+template<typename BS>
+struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS>, MfieldsCuda>
 {
   using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
   using Mfields = MfieldsCuda;
-  using Mparticles = MparticlesCuda<BS144>;
+  using Mparticles = MparticlesCuda<BS>;
   using Bnd = BndCuda;
   
   constexpr static const char* name = "n_1st";
@@ -60,7 +62,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>
       bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn}
   {}
 
-  void run(MparticlesCuda<BS144>& mprts)
+  void run(MparticlesCuda<BS>& mprts)
   {
     PscMfields<Mfields> mres{this->mres_};
     auto* cmprts = mprts.cmprts();

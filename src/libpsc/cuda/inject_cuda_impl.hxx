@@ -8,7 +8,7 @@
 // ======================================================================
 // InjectCuda
 
-template<typename Target_t>
+template<typename BS, typename Target_t>
 struct InjectCuda : InjectBase
 {
   using Self = InjectCuda;
@@ -113,7 +113,7 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MparticlesCuda<BS144>& mprts)
+  void operator()(MparticlesCuda<BS>& mprts)
   {
     struct psc *psc = ppsc;
     const auto& grid = psc->grid();
@@ -213,13 +213,13 @@ struct InjectCuda : InjectBase
   
   void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
-    auto& mprts = mprts_base->get_as<MparticlesCuda<BS144>>();
+    auto& mprts = mprts_base->get_as<MparticlesCuda<BS>>();
     (*this)(mprts);
     mprts_base->put_as(mprts);
   }
   
 private:
   Target_t target_;
-  Moment_n_1st_cuda moment_n_;
+  Moment_n_1st_cuda<BS> moment_n_;
 };
 

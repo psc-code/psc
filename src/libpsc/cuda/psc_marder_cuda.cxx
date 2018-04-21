@@ -15,7 +15,7 @@
 // psc_marder: subclass "cuda"
 
 struct psc_marder_ops_cuda : psc_marder_ops {
-  using Wrapper = MarderWrapper<MarderCuda>;
+  using Wrapper = MarderWrapper<MarderCuda<BS144>>;
   psc_marder_ops_cuda() {
     name                  = "cuda";
     size                  = Wrapper::size;

@@ -6,6 +6,6 @@
 
 #include "fields_item_moments_1st_cuda.hxx"
 
-FieldsItemOps<FieldsItemMoment<Moment_rho_1st_nc_cuda>> psc_output_fields_item_rho_1st_nc_cuda_ops;
-FieldsItemOps<FieldsItemMoment<Moment_n_1st_cuda>> psc_output_fields_item_n_1st_cuda_ops;
+FieldsItemOps<FieldsItemMoment<Moment_rho_1st_nc_cuda<BS144>>> psc_output_fields_item_rho_1st_nc_cuda_ops;
+FieldsItemOps<FieldsItemMoment<Moment_n_1st_cuda<BS144>>> psc_output_fields_item_n_1st_cuda_ops;
 

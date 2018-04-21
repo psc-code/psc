@@ -9,6 +9,7 @@
 // FIXME: if the subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
 
+template<typename BS>
 struct MarderCuda : MarderBase
 {
   using real_t = MfieldsCuda::fields_t::real_t;
@@ -142,7 +143,7 @@ struct MarderCuda : MarderBase
     mf_base->put_as(mf, 0, 0);
   }
 
-  void operator()(MfieldsCuda& mflds, MparticlesCuda<BS144>& mprts)
+  void operator()(MfieldsCuda& mflds, MparticlesCuda<BS>& mprts)
   {
     MHERE;
   }

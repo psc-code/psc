@@ -43,7 +43,7 @@ struct cuda_mparticles;
 // ======================================================================
 // MparticlesCuda
 
-template<typename Bs>
+template<typename BS>
 struct MparticlesCuda : MparticlesBase
 {
   using Self = MparticlesCuda;
@@ -51,7 +51,6 @@ struct MparticlesCuda : MparticlesBase
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using buf_t = psc_particle_cuda_buf_t;
-  using BS = BS144;
   
   MparticlesCuda(const Grid_t& grid);
 

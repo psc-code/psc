@@ -6,6 +6,7 @@
 // ======================================================================
 // psc_heating subclass "cuda"
 
+template<typename BS>
 struct HeatingCuda : HeatingBase
 {
   // ----------------------------------------------------------------------
@@ -34,7 +35,7 @@ struct HeatingCuda : HeatingBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MparticlesCuda<BS144>& mprts)
+  void operator()(MparticlesCuda<BS>& mprts)
   {
     cuda_heating_run_foil(mprts.cmprts());
   }
@@ -44,7 +45,7 @@ struct HeatingCuda : HeatingBase
 
   void run(PscMparticlesBase mprts_base) override
   {
-    auto& mprts = mprts_base->get_as<MparticlesCuda<BS144>>();
+    auto& mprts = mprts_base->get_as<MparticlesCuda<BS>>();
     (*this)(mprts);
     mprts_base->put_as(mprts);
   }

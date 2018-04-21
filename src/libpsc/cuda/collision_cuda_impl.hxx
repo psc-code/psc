@@ -3,7 +3,8 @@
 
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 
-class CollisionCuda: CollisionBase
+template<typename BS>
+class CollisionCuda : CollisionBase
 {
 public:
   CollisionCuda(MPI_Comm comm, int interval, double nu)
@@ -12,9 +13,9 @@ public:
   
   virtual void run(PscMparticlesBase mprts_base) { assert(0); }
 
-  void operator()(MparticlesCuda<BS144>& _mprts)
+  void operator()(MparticlesCuda<BS>& _mprts)
   {
-    auto& mprts = _mprts.get_as<MparticlesSingle>();
+    auto& mprts = _mprts.template get_as<MparticlesSingle>();
     sort_(mprts);
     coll_(mprts);
     _mprts.put_as(mprts);
