@@ -41,7 +41,6 @@ static void psc_mfields_vpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& m
   auto& mf = dynamic_cast<MfieldsVpic&>(mflds);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
-    Fields F(flds);
     FieldsS F_s(mf_single[p]);
 
     
@@ -53,7 +52,7 @@ static void psc_mfields_vpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& m
 	for (int jz = flds.ib_[2]; jz < flds.ib_[2] + flds.im_[2]; jz++) {
 	  for (int jy = flds.ib_[1]; jy < flds.ib_[1] + flds.im_[1]; jy++) {
 	    for (int jx = flds.ib_[0]; jx < flds.ib_[0] + flds.im_[0]; jx++) {
-	      F(m_vpic, jx,jy,jz) = F_s(m, jx,jy,jz);
+	      flds(m_vpic, jx,jy,jz) = F_s(m, jx,jy,jz);
 	    }
 	  }
 	}
@@ -73,7 +72,6 @@ static void psc_mfields_vpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     fields_single_t flds_single = mf_single[p];
-    Fields F(flds);
     FieldsS F_s(flds_single);
 
     int ib[3], ie[3];
@@ -90,7 +88,7 @@ static void psc_mfields_vpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
 	    for (int jx = ib[0]; jx < ie[0]; jx++) {
-	      F_s(m, jx,jy,jz) = F(m, jx,jy,jz);
+	      F_s(m, jx,jy,jz) = flds(m, jx,jy,jz);
 	    }
 	  }
 	}
@@ -101,7 +99,7 @@ static void psc_mfields_vpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
 	for (int jz = ib[2]; jz < ie[2]; jz++) {
 	  for (int jy = ib[1]; jy < ie[1]; jy++) {
 	    for (int jx = ib[0]; jx < ie[0]; jx++) {
-	      F_s(m, jx,jy,jz) = F(m_vpic, jx,jy,jz);
+	      F_s(m, jx,jy,jz) = flds(m_vpic, jx,jy,jz);
 	    }
 	  }
 	}
