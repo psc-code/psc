@@ -161,7 +161,7 @@ psc_harris_setup_ic(struct psc *psc)
   struct vpic_harris_params *prm = &sub->prm;
 
   Int3 gdims = {512, 1, 128};
-  Int3 np = {1, 1, 1};
+  Int3 np = {4, 1, 1};
   sub->n_global_patches = np[0] * np[1] * np[2];
   
   assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
