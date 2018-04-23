@@ -107,9 +107,6 @@ psc_harris_create(struct psc *psc)
 
   psc->prm.stats_every = 100;
 
-  auto grid_domain = Grid_t::Domain{{1, 64, 256}, {0, 0, 0}};
-  psc->domain_ = grid_domain;
-
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
@@ -161,9 +158,11 @@ psc_harris_setup_ic(struct psc *psc)
   struct globals_physics *phys = &sub->phys;
   struct vpic_harris_params *prm = &sub->prm;
 
-  sub->n_global_patches = psc->domain_.np[0] * psc->domain_.np[1] * psc->domain_.np[2];
+  Int3 gdims = {512, 1, 128};
+  Int3 np = {1, 1, 1};
+  sub->n_global_patches = np[0] * np[1] * np[2];
   
-  assert(psc->domain_.np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+  assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
   // FIXME, the general normalization stuff should be shared somehow
 
@@ -205,7 +204,6 @@ psc_harris_setup_ic(struct psc *psc)
   double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
   double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
   double Npe       = Npe_sheet + Npe_back;
-  int *gdims       = psc->domain_.gdims;
   phys->Ne         = prm->nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
   phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
   phys->Ne_back    = phys->Ne*Npe_back/Npe;
@@ -224,13 +222,9 @@ psc_harris_setup_ic(struct psc *psc)
   phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
   phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
 
-  psc->domain_.length[0] = phys->Lx;
-  psc->domain_.length[1] = phys->Ly;
-  psc->domain_.length[2] = phys->Lz;
-
-  psc->domain_.corner[0] = 0.;
-  psc->domain_.corner[1] = -.5 * phys->Ly;
-  psc->domain_.corner[2] = -.5 * phys->Lz;
+  psc->domain_ = Grid_t::Domain{gdims,
+				{phys->Lx, phys->Ly, phys->Lz},
+				{0., -.5 * phys->Ly, -.5 * phys->Lz}, np};
 }
 
 // ----------------------------------------------------------------------
@@ -635,7 +629,6 @@ psc_harris_setup_particles(struct psc *psc, std::vector<uint>& nr_particles_by_p
     prt.w = weight_s;
     prt.kind = KIND_ELECTRON;
     mprts->inject_reweight(0, prt);
-    //inject_particle(electron, &prt, 0., 0);
 
     ux = Rng_normal(rng, 0, vthi);
     uy = Rng_normal(rng, 0, vthi);
