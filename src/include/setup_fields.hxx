@@ -61,7 +61,7 @@ struct SetupFields
     if (!init_field)
       return;
 
-    set(PscMfieldsBase(psc->flds), [&](int m, real_t xx[3]) {
+    set(PscMfieldsBase(psc->flds), [&](int m, double xx[3]) {
 	return init_field(psc, xx, m);
       });
 

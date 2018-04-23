@@ -15,9 +15,11 @@
 #include <psc_output_fields_collection_private.h>
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
+#include "psc_fields_single.h"
 #include "balance.hxx"
 #include "fields3d.hxx"
 #include "setup_particles.hxx"
+#include "setup_fields.hxx"
 
 #include <psc_particles_single.h>
 #include <psc_particles_vpic.h>
@@ -494,7 +496,7 @@ psc_harris_setup(struct psc *psc)
 
   SetupParticles<Mparticles_t>::setup_particles(psc, n_prts_by_patch_new);
 
-  psc_set_ic_fields(psc);
+  SetupFields<MfieldsSingle>::set_ic(psc); // FIXME, use MfieldsVpic directly?
   
   Simulation_diagnostics_setup(sub->sim);
 
