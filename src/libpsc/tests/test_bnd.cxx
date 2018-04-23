@@ -4,7 +4,9 @@
 #include "grid.hxx"
 #include "fields3d.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+#ifdef USE_CUDA
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
+#endif
 
 #include "psc_fields_single.h"
 #include "psc_fields_c.h"
@@ -80,7 +82,11 @@ template <typename T>
 class BndTest : public ::testing::Test
 {};
 
+#ifdef USE_CUDA
 using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>, BndCuda>;
+#else
+using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>>;
+#endif
 
 TYPED_TEST_CASE(BndTest, BndTestTypes);
 

@@ -1,5 +1,7 @@
 
+#ifdef USE_CUDA
 #define DO_CUDA 1
+#endif
 
 #include <psc.h>
 

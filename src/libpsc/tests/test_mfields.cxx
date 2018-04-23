@@ -4,7 +4,9 @@
 #include "fields3d.hxx"
 #include "psc_fields_single.h"
 #include "psc_fields_c.h"
+#ifdef USE_CUDA
 #include "psc_fields_cuda.h"
+#endif
 
 #include "psc.h" // FIXME, just for EX etc
 
@@ -53,7 +55,11 @@ template <typename T>
 class MfieldsTest : public ::testing::Test
 {};
 
+#ifdef USE_CUDA
 using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC, MfieldsCuda>;
+#else
+using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
+#endif
 
 TYPED_TEST_CASE(MfieldsTest, MfieldsTestTypes);
 
