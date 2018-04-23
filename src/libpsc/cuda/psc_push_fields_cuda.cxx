@@ -5,28 +5,16 @@
 
 #include "push_fields_cuda_impl.hxx"
 
-static void
-psc_push_fields_cuda_setup(struct psc_push_fields *push)
-{
-  PscPushFields<PushFieldsCuda> pushf(push);
-  new(pushf.sub()) PushFieldsCuda;
-}
-
-static void
-psc_push_fields_cuda_destroy(struct psc_push_fields *push)
-{
-  PscPushFields<PushFieldsCuda> pushf(push);
-  pushf.sub()->~PushFieldsCuda();
-}
-
 // ======================================================================
 // psc_push_fields: subclass "cuda"
 
 struct psc_push_fields_ops_cuda : psc_push_fields_ops {
+  using Wrapper = PscPushFieldsWrapper<PushFieldsCuda>;
   psc_push_fields_ops_cuda() {
     name                  = "cuda";
-    size                  = sizeof(PushFieldsCuda),
-    setup                 = psc_push_fields_cuda_setup;
-    destroy               = psc_push_fields_cuda_destroy;
+    size                  = Wrapper::size;
+    setup                 = Wrapper::setup;
+    destroy               = Wrapper::destroy;
   }
 } psc_push_fields_cuda_ops;
+

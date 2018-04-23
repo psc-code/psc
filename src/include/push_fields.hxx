@@ -128,3 +128,28 @@ private:
 };
 
 using PscPushFieldsBase = PscPushFields<PushFieldsBase>;
+
+// ======================================================================
+// PscPushFieldsWrapper
+
+template<typename PushFields>
+class PscPushFieldsWrapper
+{
+public:
+  const static size_t size = sizeof(PushFields);
+  
+  static void setup(psc_push_fields* _pushf)
+  {
+    PscPushFields<PushFields> pushf(_pushf);
+    new(pushf.sub()) PushFields;
+    
+    psc_push_fields_setup_super(_pushf);
+  }
+
+  static void destroy(psc_push_fields* _pushf)
+  {
+    PscPushFields<PushFields> pushf(_pushf);
+    pushf.sub()->~PushFields();
+  }
+};
+

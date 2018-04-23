@@ -43,33 +43,14 @@ private:
 };
 
 // ----------------------------------------------------------------------
-// psc_push_fields_vpic_setup
-
-static void
-psc_push_fields_vpic_setup(struct psc_push_fields *push)
-{
-  PscPushFields<PushFieldsVpic> pushf(push);
-  new(pushf.sub()) PushFieldsVpic;
-}
-
-// ----------------------------------------------------------------------
-// psc_push_fields_vpic_destroy
-
-static void
-psc_push_fields_vpic_destroy(struct psc_push_fields *push)
-{
-  PscPushFields<PushFieldsVpic> pushf(push);
-  pushf.sub()->~PushFieldsVpic();
-}
-
-// ----------------------------------------------------------------------
 // psc_push_fields: subclass "vpic"
 
 struct psc_push_fields_ops_vpic : psc_push_fields_ops {
+  using Wrapper = PscPushFieldsWrapper<PushFieldsVpic>;
   psc_push_fields_ops_vpic() {
     name                  = "vpic";
-    size                  = sizeof(struct PushFieldsVpic);
-    setup                 = psc_push_fields_vpic_setup;
+    size                  = Wrapper::size;
+    setup                 = Wrapper::setup;
+    destroy               = Wrapper::destroy;
   }
 } psc_push_fields_vpic_ops;
-
