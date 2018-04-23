@@ -118,6 +118,6 @@ struct Mfields_traits<MfieldsVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-#include "vpic_iface.h"
+#include "../libpsc/vpic/vpic_iface.h"
 
 #endif
