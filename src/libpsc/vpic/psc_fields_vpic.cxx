@@ -115,48 +115,43 @@ static void psc_mfields_vpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
 static int ref_count_fields, ref_count_hydro;
 
 // ----------------------------------------------------------------------
-// psc_mfields_vpic_setup
+// MfieldsVpic ctor
 
-static void psc_mfields_vpic_setup(struct psc_mfields *_mflds)
+MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
+  : MfieldsBase(grid, n_fields, ibn)
 {
-  auto& mflds = *PscMfields<MfieldsVpic>{_mflds}.sub();
+  assert(grid.n_patches() == 1);
+  assert((ibn == Int3{ 1, 1, 1 }));
 
-  psc_mfields_setup_super(_mflds);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
 
-  assert(_mflds->grid->n_patches() == 1);
-  assert(_mflds->ibn[0] == 1);
-  assert(_mflds->ibn[1] == 1);
-  assert(_mflds->ibn[2] == 1);
-
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &mflds.sim);
-
-  if (_mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
+  if (n_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_fields == 0);
     ref_count_fields++;
 
-    mflds.vmflds_fields = Simulation_get_FieldArray(mflds.sim);
-  } else if (_mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+    vmflds_fields = Simulation_get_FieldArray(sim);
+  } else if (n_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    mflds.vmflds_hydro = Simulation_get_HydroArray(mflds.sim);
+    vmflds_hydro = Simulation_get_HydroArray(sim);
   } else {
     assert(0);
   }
 }
 
 // ----------------------------------------------------------------------
-// psc_mfields_vpic_destroy
+// MfieldsVpic dtor
 
-static void psc_mfields_vpic_destroy(struct psc_mfields *mflds)
+MfieldsVpic::~MfieldsVpic()
 {
-  if (mflds->nr_fields == VPIC_MFIELDS_N_COMP) {
+  if (n_fields_ == VPIC_MFIELDS_N_COMP) {
     ref_count_fields--;
-  } else if (mflds->nr_fields == VPIC_HYDRO_N_COMP) {
+  } else if (n_fields_ == VPIC_HYDRO_N_COMP) {
     ref_count_hydro--;
   } else {
     assert(0);
@@ -175,11 +170,12 @@ const MfieldsBase::Convert MfieldsVpic::convert_from_ = {
 };
 
 struct psc_mfields_ops_vpic : psc_mfields_ops {
+  using Wrapper_t = MfieldsWrapper<MfieldsVpic>;
   psc_mfields_ops_vpic() {
-    name                  = "vpic";
-    size                  = sizeof(MfieldsVpic);
-    setup                 = psc_mfields_vpic_setup;
-    destroy               = psc_mfields_vpic_destroy;
+    name                  = Wrapper_t::name;
+    size                  = Wrapper_t::size;
+    setup                 = Wrapper_t::setup;
+    destroy               = Wrapper_t::destroy;
 #ifdef HAVE_LIBHDF5_HL
     write                 = psc_mfields_vpic_write;
     read                  = psc_mfields_vpic_read;

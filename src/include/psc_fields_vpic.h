@@ -20,6 +20,9 @@ struct MfieldsVpic : MfieldsBase
 
   using Base::Base;
 
+  MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn);
+  ~MfieldsVpic();
+
   inline fields_vpic_t operator[](int p)
   {
     // FIXME hacky...
