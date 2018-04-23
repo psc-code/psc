@@ -237,7 +237,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     }
 
     // Reduce results between nodes
-    MPI_Allreduce(&en, &global, 6, MPI_DOUBLE, MPI_SUM, psc_comm_world);
+    MPI_Allreduce(en, global, 6, MPI_DOUBLE, MPI_SUM, psc_comm_world);
   }
 
   void energy_f(double en[6])
