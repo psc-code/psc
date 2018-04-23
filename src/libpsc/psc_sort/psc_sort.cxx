@@ -1,4 +1,6 @@
 
+#include "psc_config.h"
+
 #include "psc_sort_private.h"
 
 #include <mrc_params.h>
