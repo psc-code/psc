@@ -59,7 +59,9 @@ static void psc_mfields_vpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& m
 	}
       }
     } else {
-      assert(0);
+      if (mb != me) {
+	assert(0);
+      }
     }
   }
 }
