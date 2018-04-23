@@ -4,17 +4,17 @@
 #include "vpic_config.h"
 #include "fields.hxx"
 #include "fields_item.hxx"
-#include "psc_fields_as_c.h"
+#include "psc_fields_as_single.h"
 #include "psc_fields_vpic.h"
 #include "psc_particles_vpic.h"
 #include "psc_method.h"
 
 struct Item_vpic_fields
 {
-  using Mfields = MfieldsC;
+  using Mfields = MfieldsSingle;
   using Fields = Fields3d<typename Mfields::fields_t>;
 
-  constexpr static const char* name = "vpic_fields";
+  constexpr static const char* name = "fields_vpic";
   constexpr static int n_comps = 16;
   constexpr static fld_names_t fld_names()
   {
@@ -51,14 +51,14 @@ FieldsItemOps<FieldsItemFields<Item_vpic_fields>> psc_output_fields_item_vpic_fi
 // ----------------------------------------------------------------------
 // Moment_vpic_hydro
 
-struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>
+struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
 {
-  using Base = ItemMomentCRTP<Moment_vpic_hydro, MfieldsC>;
-  using Mfields = MfieldsC;
+  using Base = ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>;
+  using Mfields = MfieldsSingle;
   using Mparticles = MparticlesVpic;
   using Fields = Fields3d<typename Mfields::fields_t>;
   
-  constexpr static char const* name = "vpic_hydro";
+  constexpr static char const* name = "hydro";
   constexpr static int n_comps = VPIC_HYDRO_N_COMP;
   constexpr static fld_names_t fld_names()
   {
