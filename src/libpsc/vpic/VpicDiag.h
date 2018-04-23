@@ -581,6 +581,8 @@ struct VpicDiagMixin
     for(size_t i(0), c(0); i<total_field_variables; i++)
       if(dumpParams.output_vars.bitset(i)) varlist[c++] = i;
     
+    if (numvars > 20) numvars = 20; // FIXME!!! materialid are 16 bit
+
     // more efficient for standard case
     if(istride == 1 && jstride == 1 && kstride == 1)
       for(size_t v(0); v<numvars; v++) {
