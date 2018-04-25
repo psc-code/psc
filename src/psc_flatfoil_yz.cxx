@@ -725,7 +725,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.checks_params.gauss_dump_always = false;
 
   // --- marder
-  params.marder_interval = 5;
+  params.marder_interval = 0*5;
   params.marder_diffusion = 0.9;
   params.marder_loop = 3;
   params.marder_dump = false;
