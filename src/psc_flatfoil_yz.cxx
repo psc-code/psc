@@ -192,6 +192,8 @@ struct PscFlatfoilParams
   int heating_begin;
   int heating_end;
   int heating_interval;
+  int heating_kind;
+  HeatingSpotFoil heating_spot;
 
   ChecksParams checks_params;
 };
@@ -253,7 +255,7 @@ struct PscFlatfoil : PscFlatfoilParams
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
-      heating_{heating},
+      heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target},
       checks_{psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
@@ -505,7 +507,8 @@ struct PscFlatfoil : PscFlatfoilParams
       
     // only heating between heating_tb and heating_te
     if (timestep >= heating_begin && timestep < heating_end &&
-	timestep % heating_interval == 0) {
+	heating_interval > 0 && timestep % heating_interval == 0) {
+      mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
       heating_(mprts_);
       prof_stop(pr_heating);
@@ -684,13 +687,13 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   heating_foil_params.yc = heating_yc * d_i;
   heating_foil_params.rH = heating_rH * d_i;
   heating_foil_params.T  = .04;
-  heating_foil_params.Mi = heating_rH * kinds[MY_ION].m;
-  auto heating_spot = HeatingSpotFoil{heating_foil_params};
+  heating_foil_params.Mi = kinds[MY_ION].m;
+  params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
   params.heating_begin = 0;
   params.heating_end = 10000000;
-  int heating_kind = MY_ELECTRON;
-  auto heating = Heating_t{params.heating_interval, heating_kind, heating_spot};
+  params.heating_kind = MY_ELECTRON;
+  auto heating = Heating_t{params.heating_interval, params.heating_kind, params.heating_spot};
 
   // -- setup injection
   double target_yl     = -100000.;
