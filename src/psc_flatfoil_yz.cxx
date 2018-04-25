@@ -631,12 +631,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_->prm.cfl = 0.75;
 
   // --- setup domain
-  double LLy = 400.;
-  double LLz = 400.*4.;
+  double LLy = 400.*4.;
+  double LLz = 400.;
 
-  auto grid_domain = Grid_t::Domain{{1, 32, 128}, // global number of grid points
+  auto grid_domain = Grid_t::Domain{{1, 128, 32}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 1, 4}}; // division into patches
+				    {1, 4, 1}}; // division into patches
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
