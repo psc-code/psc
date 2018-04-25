@@ -58,8 +58,7 @@ struct Heating__ : HeatingBase
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
       auto& patch = mprts.grid().patches[p];
-      for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-	particle_t& prt = *prt_iter;
+      for (auto& prt : prts) {
 	if (prt.kind() != kind_) {
 	  continue;
 	}
