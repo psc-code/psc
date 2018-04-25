@@ -628,8 +628,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   psc_default_dimensionless(psc_);
 
-  psc_->prm.nmax = 201;
-  psc_->prm.nicell = 10;
+  psc_->prm.nmax = 5001;
+  psc_->prm.nicell = 100;
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
@@ -637,7 +637,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   double LLy = 400.*4.;
   double LLz = 400.;
 
-  auto grid_domain = Grid_t::Domain{{1, 128, 32}, // global number of grid points
+  auto grid_domain = Grid_t::Domain{{1, 640, 160}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
 				    {1, 4, 1}}; // division into patches
 
