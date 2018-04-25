@@ -18,7 +18,8 @@ struct Heating__ : HeatingBase
 
   template<typename FUNC>
   Heating__(int interval, int kind, FUNC get_H)
-    : get_H_(get_H)
+    : kind_{kind},
+      get_H_{get_H}
   {
     heating_dt_ = interval * ppsc->dt;
   }
