@@ -81,7 +81,7 @@ public:
   }
 
 private:
-  __device__ uint index(int jy, int jz, uint m, uint wid)
+  __device__ uint index(int jy, int jz, uint m, uint wid) const
   {
 #if 0
     if (jy < -N_GHOSTS_L || jy >= BS_Y + N_GHOSTS_R ||
