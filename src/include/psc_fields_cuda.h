@@ -49,6 +49,7 @@ struct MfieldsCuda : MfieldsBase
   MfieldsCuda(MfieldsCuda&&) = default;
   ~MfieldsCuda();
 
+  void reset(const Grid_t& new_grid) override;
   void zero_comp(int m) override;
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }

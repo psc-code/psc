@@ -25,6 +25,16 @@ MfieldsCuda::~MfieldsCuda()
   delete cmflds;
 }
 
+void MfieldsCuda::reset(const Grid_t& new_grid)
+{
+  dprintf("CMFLDS: reset\n");
+  MfieldsBase::reset(new_grid);
+  Int3 ibn = -cmflds->ib;
+  int n_fields = cmflds->n_fields;
+  delete cmflds;
+  cmflds = new cuda_mfields(new_grid, n_fields, ibn);
+}
+
 fields_single_t MfieldsCuda::get_host_fields()
 {
   dprintf("CMFLDS: get_host_fields\n");
