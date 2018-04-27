@@ -120,7 +120,7 @@ struct InjectCuda : InjectBase
     const auto& kinds = grid.kinds;
 
     float fac = 1. / grid.cori * 
-      (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
+      (interval * psc->dt / tau) / (1. + interval * psc->dt / tau);
 
     moment_n_.run(mprts);
 

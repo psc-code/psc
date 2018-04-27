@@ -51,7 +51,7 @@ struct Inject_ : InjectBase
     const auto& kinds = grid.kinds;
     
     real_t fac = 1. / grid.cori * 
-      (every_step * psc->dt / tau) / (1. + every_step * psc->dt / tau);
+      (interval * psc->dt / tau) / (1. + interval * psc->dt / tau);
 
     moment_n_.run(mprts);
     auto& mf_n = moment_n_.result();
