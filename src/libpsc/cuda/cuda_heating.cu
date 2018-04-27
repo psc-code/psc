@@ -275,7 +275,6 @@ cuda_heating_setup_foil(struct cuda_heating_foil *_foil)
 template<typename BS>
 void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts)
 {
-  printf("cuda_heating_run_foil\n");
   //return cuda_heating_run_foil_gold(cmprts);
 
   static bool first_time = true;

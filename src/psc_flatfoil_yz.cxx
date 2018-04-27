@@ -631,7 +631,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_default_dimensionless(psc_);
 
   psc_->prm.nmax = 201;
-  psc_->prm.nicell = 10;
+  psc_->prm.nicell = 100;
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
@@ -639,7 +639,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   double LLy = 400.*4.;
   double LLz = 400.;
 
-  auto grid_domain = Grid_t::Domain{{1, 256, 64}, // global number of grid points
+  auto grid_domain = Grid_t::Domain{{1, 512, 128}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
 				    {1, 4, 1}}; // division into patches
 
@@ -691,7 +691,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   heating_foil_params.T  = .04;
   heating_foil_params.Mi = kinds[MY_ION].m;
   params.heating_spot = HeatingSpotFoil{heating_foil_params};
-  params.heating_interval = 0*20;
+  params.heating_interval = 20;
   params.heating_begin = 0;
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
