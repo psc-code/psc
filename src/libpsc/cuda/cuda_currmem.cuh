@@ -10,21 +10,18 @@
 
 // OPT: don't need as many ghost points for current and EM fields (?)
 
-#define BND_CURR_L (1)
-#define BND_CURR_R (2)
-
 #define NR_CBLOCKS 16
 #define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
-#define CBLOCK_SIZE_Y (BS_Y + BND_CURR_L + BND_CURR_R)
-#define CBLOCK_SIZE_Z (BS_Z + BND_CURR_L + BND_CURR_R)
+#define CBLOCK_SIZE_Y (BS_Y + N_GHOSTS_L + N_GHOSTS_R)
+#define CBLOCK_SIZE_Z (BS_Z + N_GHOSTS_L + N_GHOSTS_R)
 #define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
-
-#define CBLOCK_OFF(jy, jz, m, wid) ((((m) * CBLOCK_SIZE_Z + ((jz) + BND_CURR_L)) * CBLOCK_SIZE_Y + ((jy) + BND_CURR_L)) * (NR_CBLOCKS) + wid)
 
 template<typename BS>
 class SCurr
 {
   static const int BS_X = BS::x::value, BS_Y = BS::y::value, BS_Z = BS::z::value;
+  static const uint N_GHOSTS_L = 1;
+  static const uint N_GHOSTS_R = 2;
 
 public:
   static const int shared_size = 3 * CBLOCK_SIZE;
@@ -46,14 +43,14 @@ public:
   {
     __syncthreads();				\
     int i = threadIdx.x;
-    int stride = (BS_Y + BND_CURR_L + BND_CURR_R) * (BS_Z + BND_CURR_L + BND_CURR_R);
+    int stride = CBLOCK_SIZE_Y * CBLOCK_SIZE_Z;
     while (i < stride) {
       int rem = i;
-      int jz = rem / (BS_Y + BND_CURR_L + BND_CURR_R);
-      rem -= jz * (BS_Y + BND_CURR_L + BND_CURR_R);
+      int jz = rem / CBLOCK_SIZE_Y;
+      rem -= jz * CBLOCK_SIZE_Y;
       int jy = rem;
-      jz -= BND_CURR_L;
-      jy -= BND_CURR_L;
+      jz -= N_GHOSTS_L;
+      jy -= N_GHOSTS_L;
       for (int m = 0; m < 3; m++) {
 	float val = float(0.);
 	// FIXME, OPT
@@ -68,12 +65,13 @@ public:
 
   __device__ float operator()(int wid, int jy, int jz, int m) const
   {
-    uint off = CBLOCK_OFF(jy, jz, m, wid);
+    uint off = index(jy, jz, m, wid);
     return scurr[off];
   }
+
   __device__ float& operator()(int wid, int jy, int jz, int m)
   {
-    uint off = CBLOCK_OFF(jy, jz, m, wid);
+    uint off = index(jy, jz, m, wid);
     return scurr[off];
   }
 
@@ -81,6 +79,19 @@ public:
   {
     float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
     atomicAdd(addr, val);
+  }
+
+private:
+  __device__ uint index(int jy, int jz, int m, int wid)
+  {
+    uint off = ((((m)
+	      * CBLOCK_SIZE_Z + ((jz) + N_GHOSTS_L))
+	     * CBLOCK_SIZE_Y + ((jy) + N_GHOSTS_L))
+	    * (NR_CBLOCKS) + wid);
+    if (off >= shared_size) {
+      printf("CUDA_ERROR off %d %d wid %d %d:%d m %d\n", off, shared_size, wid, jy, jz, m);
+    }
+    return off;
   }
 };
 
