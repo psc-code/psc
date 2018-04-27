@@ -503,9 +503,12 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
     
-    prof_start(pr_inject);
-    inject_(mprts_);
-    prof_stop(pr_inject);
+    if (inject_interval > 0 && timestep % inject_interval == 0) {
+      mpi_printf(comm, "***** Performing injection...\n");
+      prof_start(pr_inject);
+      inject_(mprts_);
+      prof_stop(pr_inject);
+    }
       
     // only heating between heating_tb and heating_te
     if (timestep >= heating_begin && timestep < heating_end &&
