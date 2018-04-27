@@ -258,7 +258,7 @@ struct PscFlatfoil : PscFlatfoilParams
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating_interval, heating_kind, heating_spot},
-      inject_{psc_comm(psc), inject_enable, inject_interval, inject_tau, inject_kind_n, inject_target},
+      inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
       checks_{psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
@@ -713,7 +713,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
   params.inject_target = InjectFoil{inject_foil_params};
-  params.inject_enable = true;
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
   params.inject_tau = 40;

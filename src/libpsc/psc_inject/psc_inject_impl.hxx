@@ -27,9 +27,9 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // ctor
   
-  Inject_(MPI_Comm comm, bool do_inject, int every_step, int tau, int kind_n,
+  Inject_(MPI_Comm comm, int interval, int tau, int kind_n,
 	  Target_t target)
-    : InjectBase{do_inject, every_step, tau, kind_n},
+    : InjectBase{interval, tau, kind_n},
       target_{target},
       moment_n_{comm}
   {}
