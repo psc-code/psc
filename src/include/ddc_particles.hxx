@@ -3,6 +3,7 @@
 #define DDC_PARTICLES_HXX
 
 #include <mrc_ddc.h>
+#include <mrc_domain.h>
 
 // ======================================================================
 // ddc_particles
