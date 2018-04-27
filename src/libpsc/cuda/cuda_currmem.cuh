@@ -10,21 +10,19 @@
 
 // OPT: don't need as many ghost points for current and EM fields (?)
 
-#define NR_CBLOCKS 16
-#define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
-#define CBLOCK_SIZE_Y (BS_Y + N_GHOSTS_L + N_GHOSTS_R)
-#define CBLOCK_SIZE_Z (BS_Z + N_GHOSTS_L + N_GHOSTS_R)
-#define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
-
 template<typename BS>
 class SCurr
 {
   static const int BS_X = BS::x::value, BS_Y = BS::y::value, BS_Z = BS::z::value;
   static const uint N_GHOSTS_L = 1;
   static const uint N_GHOSTS_R = 2;
+  static const uint STRIDE_Y = BS_Y + N_GHOSTS_L + N_GHOSTS_R;
+  static const uint STRIDE_Z = BS_Z + N_GHOSTS_L + N_GHOSTS_R;
+
+  static const uint N_COPIES = 16;
 
 public:
-  static const int shared_size = 3 * CBLOCK_SIZE;
+  static const int shared_size = 3 * STRIDE_Y * STRIDE_Z * N_COPIES;
 
   float *scurr;
   DFields d_flds;
@@ -43,18 +41,18 @@ public:
   {
     __syncthreads();				\
     int i = threadIdx.x;
-    int stride = CBLOCK_SIZE_Y * CBLOCK_SIZE_Z;
+    int stride = STRIDE_Y * STRIDE_Z;
     while (i < stride) {
       int rem = i;
-      int jz = rem / CBLOCK_SIZE_Y;
-      rem -= jz * CBLOCK_SIZE_Y;
+      int jz = rem / STRIDE_Y;
+      rem -= jz * STRIDE_Y;
       int jy = rem;
       jz -= N_GHOSTS_L;
       jy -= N_GHOSTS_L;
       for (int m = 0; m < 3; m++) {
 	float val = float(0.);
 	// FIXME, OPT
-	for (int wid = 0; wid < NR_CBLOCKS; wid++) {
+	for (int wid = 0; wid < N_COPIES; wid++) {
 	  val += (*this)(wid, jy, jz, m);
 	}
 	d_flds(JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
@@ -77,7 +75,8 @@ public:
 
   __device__ void add(int m, int jy, int jz, float val, const int *ci0)
   {
-    float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
+    uint wid = threadIdx.x & (N_COPIES - 1);
+    float *addr = &(*this)(wid, jy, jz, m);
     atomicAdd(addr, val);
   }
 
@@ -85,9 +84,9 @@ private:
   __device__ uint index(int jy, int jz, int m, int wid)
   {
     uint off = ((((m)
-	      * CBLOCK_SIZE_Z + ((jz) + N_GHOSTS_L))
-	     * CBLOCK_SIZE_Y + ((jy) + N_GHOSTS_L))
-	    * (NR_CBLOCKS) + wid);
+	      * STRIDE_Z + ((jz) + N_GHOSTS_L))
+	     * STRIDE_Y + ((jy) + N_GHOSTS_L))
+	    * (N_COPIES) + wid);
     if (off >= shared_size) {
       printf("CUDA_ERROR off %d %d wid %d %d:%d m %d\n", off, shared_size, wid, jy, jz, m);
     }
