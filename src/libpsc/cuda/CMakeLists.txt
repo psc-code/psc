@@ -35,6 +35,8 @@ add_library(psccuda
   psc_output_fields_item_moments_1st_nc_cuda.cxx
   cuda_moments_1st_nc.cu
 
+  collision_cuda_impl.cu
+
   psc_heating_cuda.cxx
   cuda_heating.cu
   
