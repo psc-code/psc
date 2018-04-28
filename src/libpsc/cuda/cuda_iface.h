@@ -48,30 +48,6 @@ void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields
 template<typename BS>
 void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres);
 
-// ----------------------------------------------------------------------
-// cuda_heating_run_foil
-
-struct cuda_heating_foil {
-  // params
-  float zl;
-  float zh;
-  float xc;
-  float yc;
-  float rH;
-  float T;
-  float Mi;
-  int kind;
-
-  // state (FIXME, shouldn't be part of the interface)
-  float fac;
-  float heating_dt;
-};
-
-void cuda_heating_setup_foil(struct cuda_heating_foil *foil);
-
-template<typename BS>
-void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts);
-
 // FIXME, mv elsewhere
 #define HERE printf("HERE: in %s() at %s:%d\n", __FUNCTION__, __FILE__, __LINE__)
 

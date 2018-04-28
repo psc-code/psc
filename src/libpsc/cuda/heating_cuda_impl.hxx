@@ -2,6 +2,7 @@
 #pragma once
 
 #include "heating.hxx"
+#include "cuda_heating_iface.hxx"
 
 // ======================================================================
 // psc_heating subclass "cuda"
