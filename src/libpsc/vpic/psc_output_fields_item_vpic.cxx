@@ -18,19 +18,12 @@ struct Item_vpic_fields
   constexpr static int n_comps = 16;
   constexpr static fld_names_t fld_names()
   {
-#if 0
-    return { "ex_ec", "ey_ec", "ez_ec", "dive_nc",
-	     "hx_fc", "hy_fc", "hz_fc", "divb_cc",
-	     "tcax", "tcay", "tcaz", "rhob_nc",
-	     "jx_ec", "jy_ec", "jz_ec", "rho_nc", };
-#else
     return { "jx_ec", "jy_ec", "jz_ec",
 	     "ex_ec", "ey_ec", "ez_ec",
 	     "hx_fc", "hy_fc", "hz_fc",
 	     "tcax_ec", "tcay_ec", "tcaz_ec",
 	     "div_e_err_nc", "div_b_err_cc",
 	     "rhob_nc", "rhof_nc", };
-#endif
   }
 
   static void run(Mfields& mflds, Mfields& mres)
