@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "psc_collision_private.h"
 #include "collision.hxx"
 #include "psc_output_fields_item_private.h"
@@ -134,10 +136,6 @@ struct Collision_
 
   static void find_cell_offsets(int offsets[], particles_t& prts)
   {
-    real_t dxi[3];
-    for (int d = 0; d < 3; d++) {
-      dxi[d] = 1.f / ppsc->grid().domain.dx[d];
-    }
     const int *ldims = ppsc->grid().ldims;
     int last = 0;
     offsets[last] = 0;
