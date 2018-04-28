@@ -60,6 +60,8 @@
 #include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
+#include "heating_spot_foil.hxx"
+
 enum {
   MY_ION,
   MY_ELECTRON,
@@ -119,17 +121,6 @@ struct InjectFoil : InjectFoilParams
 
 // ======================================================================
 // HeatingSpotFoil
-
-struct HeatingSpotFoilParams
-{
-  double zl; // in internal units (d_e)
-  double zh;
-  double xc;
-  double yc;
-  double rH;
-  double T;
-  double Mi;
-};
 
 struct HeatingSpotFoil : HeatingSpotFoilParams
 {
