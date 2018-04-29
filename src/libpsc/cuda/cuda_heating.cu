@@ -83,9 +83,6 @@ k_curand_setup(curandState *d_curand_states, int b_my)
 struct cuda_heating_foil;
 
 template<typename BS>
-void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts);
-
-template<typename BS>
 __global__ static void
 k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
 		   curandState *d_curand_states);
@@ -95,8 +92,6 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 
 struct cuda_heating_foil : HeatingSpotFoilParams
 {
-  cuda_heating_foil() = default;
-  
   cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt)
     : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt)
   {
