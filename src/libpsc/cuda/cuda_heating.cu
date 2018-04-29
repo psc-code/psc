@@ -5,6 +5,7 @@
 #include "cuda_bits.h"
 #include "psc_bits.h"
 #include "cuda_heating_iface.hxx"
+#include "heating_cuda_impl.hxx"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -291,4 +292,28 @@ void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts)
   }
 }
 
-template void cuda_heating_run_foil<BS144>(cuda_heating_foil& foil, cuda_mparticles<BS144>* cmprts);
+// ======================================================================
+
+template<typename BS>
+template<typename FUNC>
+HeatingCuda<BS>::HeatingCuda(int interval, int kind, FUNC get_H)
+{
+  foil_ = new cuda_heating_foil{get_H, kind, interval * ppsc->dt};
+}
+
+template<typename BS>
+HeatingCuda<BS>::~HeatingCuda()
+{
+  delete foil_;
+}
+
+template<typename BS>
+void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
+{
+  cuda_heating_run_foil(*foil_, mprts.cmprts());
+}
+  
+// ======================================================================
+
+template struct HeatingCuda<BS144>;
+template HeatingCuda<BS144>::HeatingCuda(int interval, int kind, HeatingSpotFoil get_H);
