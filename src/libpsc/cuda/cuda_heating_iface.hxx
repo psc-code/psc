@@ -8,7 +8,7 @@ struct cuda_heating_foil;
 void cuda_heating_setup_foil(cuda_heating_foil *foil);
 
 template<typename BS>
-void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts);
+void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts);
 
 // ======================================================================
 // cuda_heating_run_foil

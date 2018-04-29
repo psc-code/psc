@@ -256,7 +256,7 @@ heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
 // cuda_heating_setup_foil
 
 void
-cuda_heating_setup_foil(struct cuda_heating_foil *_foil)
+cuda_heating_setup_foil(cuda_heating_foil *_foil)
 {
   cuda_heating_foil& foil = *_foil;
   float width = foil.zh - foil.zl;
@@ -272,7 +272,7 @@ cuda_heating_setup_foil(struct cuda_heating_foil *_foil)
 // cuda_heating_run_foil
 
 template<typename BS>
-void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts)
+void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts)
 {
   //return cuda_heating_run_foil_gold(cmprts);
 
@@ -309,4 +309,4 @@ void cuda_heating_run_foil(cuda_mparticles<BS>* cmprts)
   }
 }
 
-template void cuda_heating_run_foil<BS144>(cuda_mparticles<BS144>* cmprts);
+template void cuda_heating_run_foil<BS144>(cuda_heating_foil& foil, cuda_mparticles<BS144>* cmprts);
