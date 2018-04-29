@@ -167,7 +167,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     //return cuda_heating_run_foil_gold(cmprts);
     
     static bool first_time = true;
-    static curandState *d_curand_states;
     if (first_time) {
       cuda_heating_params_set(h_prm_, cmprts);
       
@@ -175,10 +174,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       
       cudaError_t ierr;
       int n_threads = dimGrid.x * dimGrid. y * THREADS_PER_BLOCK;
-      ierr = cudaMalloc(&d_curand_states, n_threads * sizeof(*d_curand_states));
+      ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
       cudaCheck(ierr);
       
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states, cmprts->b_mx()[1]);
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_, cmprts->b_mx()[1]);
       cuda_sync_if_enabled();
       
       first_time = false;
@@ -188,13 +187,13 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       cmprts->reorder();
     }
     
-    run_foil<BS>(cmprts, d_curand_states);
+    run_foil<BS>(cmprts, d_curand_states_);
     
     if (0) {
       cuda_heating_params_free<BS>(h_prm_);
       
       cudaError_t ierr;
-      ierr = cudaFree(d_curand_states);
+      ierr = cudaFree(d_curand_states_);
       cudaCheck(ierr);
     }
   }
@@ -207,6 +206,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   float heating_dt;
 
   cuda_heating_params h_prm_;
+  curandState* d_curand_states_;
 };
 
 // ----------------------------------------------------------------------
