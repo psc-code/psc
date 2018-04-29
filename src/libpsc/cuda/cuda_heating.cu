@@ -29,7 +29,7 @@ static cuda_heating_params h_prm;
 // cuda_heating_params_set
 
 template<typename BS>
-static void cuda_heating_params_set(cuda_mparticles<BS>* cmprts)
+static void cuda_heating_params_set(cuda_heating_params& h_prm, cuda_mparticles<BS>* cmprts)
 {
   cudaError_t ierr;
 
@@ -44,7 +44,7 @@ static void cuda_heating_params_set(cuda_mparticles<BS>* cmprts)
 // cuda_heating_params_free
 
 template<typename BS>
-static void cuda_heating_params_free()
+static void cuda_heating_params_free(cuda_heating_params& h_prm)
 {
   cudaError_t ierr;
 
@@ -171,7 +171,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     static bool first_time = true;
     static curandState *d_curand_states;
     if (first_time) {
-      cuda_heating_params_set(cmprts);
+      cuda_heating_params_set(h_prm, cmprts);
       
       dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
       
@@ -193,7 +193,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     run_foil<BS>(cmprts, d_curand_states);
     
     if (0) {
-      cuda_heating_params_free<BS>();
+      cuda_heating_params_free<BS>(h_prm);
       
       cudaError_t ierr;
       ierr = cudaFree(d_curand_states);
