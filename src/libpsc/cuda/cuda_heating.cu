@@ -41,7 +41,6 @@ static void cuda_heating_params_set(cuda_heating_params& h_prm, cuda_mparticles<
 // ----------------------------------------------------------------------
 // cuda_heating_params_free
 
-template<typename BS>
 static void cuda_heating_params_free(cuda_heating_params& h_prm)
 {
   cudaError_t ierr;
@@ -105,6 +104,15 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
   }
 
+  ~cuda_heating_foil()
+  {
+    cuda_heating_params_free(h_prm_);
+    
+    cudaError_t ierr;
+    ierr = cudaFree(d_curand_states_);
+    cudaCheck(ierr);
+  }
+  
   __host__  __device__ float get_H(float *xx)
   {
     if (xx[2] <= zl || xx[2] >= zh) {
@@ -188,14 +196,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     }
     
     run_foil<BS>(cmprts, d_curand_states_);
-    
-    if (0) {
-      cuda_heating_params_free<BS>(h_prm_);
-      
-      cudaError_t ierr;
-      ierr = cudaFree(d_curand_states_);
-      cudaCheck(ierr);
-    }
   }
 
   // params
