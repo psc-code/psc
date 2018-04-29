@@ -71,7 +71,7 @@ foil_get_H(cuda_heating_foil& foil, float *xx)
 // d_foil_get_H
 
 __device__ static float
-d_foil_get_H(float *xx)
+d_foil_get_H(cuda_heating_foil& d_foil, float *xx)
 {
   if (xx[2] <= d_foil.zl || xx[2] >= d_foil.zh) {
     return 0;
@@ -119,7 +119,7 @@ particle_kick(cuda_heating_foil& foil, float4 *pxi4, float H)
 // d_particle_kick
 
 __device__ static void
-d_particle_kick(float4 *pxi4, float H, curandState *state)
+d_particle_kick(cuda_heating_foil& d_foil, float4 *pxi4, float H, curandState *state)
 {
   float2 r01 = curand_normal2(state);
   float r2 = curand_normal(state);
@@ -178,7 +178,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cm
 template<typename BS>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-k_heating_run_foil(DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
+k_heating_run_foil(cuda_heating_foil& d_foil, DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
 		   curandState *d_curand_states)
 {
   BlockSimple<BS> current_block;
@@ -214,11 +214,11 @@ k_heating_run_foil(DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
       xi4.y + xb[1],
       xi4.z + xb[2],
     };
-    float H = d_foil_get_H(xx);
+    float H = d_foil_get_H(d_foil, xx);
     //d_pxi4[n].w = H;
     if (H > 0) {
       float4 pxi4 = dmprts.pxi4_[n];
-      d_particle_kick(&pxi4, H, &local_state);
+      d_particle_kick(d_foil, &pxi4, H, &local_state);
       dmprts.pxi4_[n] = pxi4;
     }
   }
@@ -248,7 +248,7 @@ heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
   dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   k_heating_run_foil<BS>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(*cmprts, h_prm, d_curand_states);
+    <<<dimGrid, THREADS_PER_BLOCK>>>(d_foil, *cmprts, h_prm, d_curand_states);
   cuda_sync_if_enabled();
 }
 
