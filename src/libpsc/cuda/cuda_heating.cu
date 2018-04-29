@@ -251,17 +251,6 @@ heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts, curandSta
 }
 
 // ----------------------------------------------------------------------
-// cuda_heating_setup_foil
-
-void
-cuda_heating_setup_foil(cuda_heating_foil *_foil)
-{
-  cuda_heating_foil& foil = *_foil;
-  float width = foil.zh - foil.zl;
-  foil.fac = (8.f * pow(foil.T, 1.5)) / (sqrt(foil.Mi) * width);
-}
-
-// ----------------------------------------------------------------------
 // cuda_heating_run_foil
 
 template<typename BS>

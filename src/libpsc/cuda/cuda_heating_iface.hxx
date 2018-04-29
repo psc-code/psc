@@ -5,8 +5,6 @@
 
 struct cuda_heating_foil;
 
-void cuda_heating_setup_foil(cuda_heating_foil *foil);
-
 template<typename BS>
 void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts);
 
@@ -20,7 +18,8 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt)
     : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt)
   {
-    cuda_heating_setup_foil(this);
+    float width = zh - zl;
+    fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
   }
   
   // params
