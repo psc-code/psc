@@ -173,10 +173,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     if (first_time) {
       cuda_heating_params_set(h_prm_, cmprts);
       
-      dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
+      dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
+      int n_threads = dimGrid.x * dimGrid.y * THREADS_PER_BLOCK;
       
       cudaError_t ierr;
-      int n_threads = dimGrid.x * dimGrid. y * THREADS_PER_BLOCK;
       ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
       cudaCheck(ierr);
       
