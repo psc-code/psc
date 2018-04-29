@@ -15,7 +15,6 @@
 
 #define THREADS_PER_BLOCK 256
 
-static cuda_heating_foil foil;
 __device__ static cuda_heating_foil d_foil; // FIXME, could use const memory
 
 // ----------------------------------------------------------------------
@@ -58,7 +57,7 @@ static void cuda_heating_params_free()
 // foil_get_H
 
 static float
-foil_get_H(float *xx)
+foil_get_H(cuda_heating_foil& foil, float *xx)
 {
   if (xx[2] <= foil.zl || xx[2] >= foil.zh) {
     return 0;
@@ -104,7 +103,7 @@ bm_normal2(void)
 // particle_kick
 
 static void
-particle_kick(float4 *pxi4, float H)
+particle_kick(cuda_heating_foil& foil, float4 *pxi4, float H)
 {
   float2 r01 = bm_normal2();
   float2 r23 = bm_normal2();
@@ -136,7 +135,7 @@ d_particle_kick(float4 *pxi4, float H, curandState *state)
 // cuda_heating_run_foil_gold
 
 template<typename BS>
-void cuda_heating_run_foil_gold(cuda_mparticles<BS>* cmprts)
+void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts)
 {
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
@@ -155,7 +154,7 @@ void cuda_heating_run_foil_gold(cuda_mparticles<BS>* cmprts)
 	xi4.z + xb[2],
       };
 
-      float H = foil_get_H(xx);
+      float H = foil_get_H(foil, xx);
       // float4 pxi4 = d_pxi4[n];
       // printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
       // 	     xx[0], xx[1], xx[2], H,
@@ -164,7 +163,7 @@ void cuda_heating_run_foil_gold(cuda_mparticles<BS>* cmprts)
       // d_pxi4[n] = pxi4;
       if (H > 0) {
 	float4 pxi4 = cmprts->d_pxi4[n];
-	particle_kick(&pxi4, H);
+	particle_kick(foil, &pxi4, H);
 	cmprts->d_pxi4[n] = pxi4;
 	// printf("H xx = %g %g %g H = %g px = %g %g %g\n", xx[0], xx[1], xx[2], H,
 	//        pxi4.x, pxi4.y, pxi4.z);
@@ -259,8 +258,7 @@ heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
 void
 cuda_heating_setup_foil(struct cuda_heating_foil *_foil)
 {
-  foil = *_foil;
-
+  cuda_heating_foil& foil = *_foil;
   float width = foil.zh - foil.zl;
   foil.fac = (8.f * pow(foil.T, 1.5)) / (sqrt(foil.Mi) * width);
 
