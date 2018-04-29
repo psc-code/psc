@@ -70,6 +70,18 @@ bm_normal2(void)
   return rv;
 }
 
+// ----------------------------------------------------------------------
+// k_curand_setup
+
+__global__ static void
+k_curand_setup(curandState *d_curand_states, int b_my)
+{
+  int bid = blockIdx.y * b_my + blockIdx.x;
+  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
+
+  curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
+}
+
 
 struct cuda_heating_foil;
 
@@ -148,6 +160,47 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     cuda_sync_if_enabled();
   }
   
+  // ----------------------------------------------------------------------
+  // operator()
+  
+  template<typename BS>
+  void operator()(cuda_mparticles<BS>* cmprts)
+  {
+    //return cuda_heating_run_foil_gold(cmprts);
+    
+    static bool first_time = true;
+    static curandState *d_curand_states;
+    if (first_time) {
+      cuda_heating_params_set(cmprts);
+      
+      dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
+      
+      cudaError_t ierr;
+      int n_threads = dimGrid.x * dimGrid. y * THREADS_PER_BLOCK;
+      ierr = cudaMalloc(&d_curand_states, n_threads * sizeof(*d_curand_states));
+      cudaCheck(ierr);
+      
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states, cmprts->b_mx()[1]);
+      cuda_sync_if_enabled();
+      
+      first_time = false;
+    }
+    
+    if (cmprts->need_reorder) { 
+      cmprts->reorder();
+    }
+    
+    run_foil<BS>(cmprts, d_curand_states);
+    
+    if (0) {
+      cuda_heating_params_free<BS>();
+      
+      cudaError_t ierr;
+      ierr = cudaFree(d_curand_states);
+      cudaCheck(ierr);
+    }
+  }
+
   // params
   int kind;
 
@@ -251,59 +304,6 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
   d_curand_states[id] = local_state;
 }
 
-// ----------------------------------------------------------------------
-// k_curand_setup
-
-__global__ static void
-k_curand_setup(curandState *d_curand_states, int b_my)
-{
-  int bid = blockIdx.y * b_my + blockIdx.x;
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
-
-  curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
-}
-
-// ----------------------------------------------------------------------
-// cuda_heating_run_foil
-
-template<typename BS>
-void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts)
-{
-  //return cuda_heating_run_foil_gold(cmprts);
-
-  static bool first_time = true;
-  static curandState *d_curand_states;
-  if (first_time) {
-    cuda_heating_params_set(cmprts);
-
-    dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
-    
-    cudaError_t ierr;
-    int n_threads = dimGrid.x * dimGrid. y * THREADS_PER_BLOCK;
-    ierr = cudaMalloc(&d_curand_states, n_threads * sizeof(*d_curand_states));
-    cudaCheck(ierr);
-
-    k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states, cmprts->b_mx()[1]);
-    cuda_sync_if_enabled();
-
-    first_time = false;
-  }
-
-  if (cmprts->need_reorder) { 
-    cmprts->reorder();
-  }
-
-  foil.run_foil<BS>(cmprts, d_curand_states);
-  
-  if (0) {
-    cuda_heating_params_free<BS>();
-    
-    cudaError_t ierr;
-    ierr = cudaFree(d_curand_states);
-    cudaCheck(ierr);
-  }
-}
-
 // ======================================================================
 
 template<typename BS>
@@ -322,7 +322,7 @@ HeatingCuda<BS>::~HeatingCuda()
 template<typename BS>
 void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 {
-  cuda_heating_run_foil(*foil_, mprts.cmprts());
+  (*foil_)(mprts.cmprts());
 }
   
 // ======================================================================
