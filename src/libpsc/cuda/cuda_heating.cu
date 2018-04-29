@@ -15,8 +15,6 @@
 
 #define THREADS_PER_BLOCK 256
 
-__device__ static cuda_heating_foil d_foil; // FIXME, could use const memory
-
 // ----------------------------------------------------------------------
 // cuda_heating_params
 
@@ -178,7 +176,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cm
 template<typename BS>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-k_heating_run_foil(cuda_heating_foil& d_foil, DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
+k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
 		   curandState *d_curand_states)
 {
   BlockSimple<BS> current_block;
@@ -243,12 +241,12 @@ k_curand_setup(curandState *d_curand_states, int b_my)
 
 template<typename BS>
 static void
-heating_run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
+heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
 {
   dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
 
   k_heating_run_foil<BS>
-    <<<dimGrid, THREADS_PER_BLOCK>>>(d_foil, *cmprts, h_prm, d_curand_states);
+    <<<dimGrid, THREADS_PER_BLOCK>>>(foil, *cmprts, h_prm, d_curand_states);
   cuda_sync_if_enabled();
 }
 
@@ -261,11 +259,6 @@ cuda_heating_setup_foil(cuda_heating_foil *_foil)
   cuda_heating_foil& foil = *_foil;
   float width = foil.zh - foil.zl;
   foil.fac = (8.f * pow(foil.T, 1.5)) / (sqrt(foil.Mi) * width);
-
-  cudaError_t ierr;
-  ierr = cudaMemcpyToSymbol(d_foil, &foil, sizeof(d_foil), 0,
-			    cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
@@ -298,7 +291,7 @@ void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts)
     cmprts->reorder();
   }
 
-  heating_run_foil<BS>(cmprts, d_curand_states);
+  heating_run_foil<BS>(foil, cmprts, d_curand_states);
   
   if (0) {
     cuda_heating_params_free<BS>();
