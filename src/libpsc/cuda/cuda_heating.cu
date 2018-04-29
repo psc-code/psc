@@ -70,6 +70,16 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     float width = zh - zl;
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
   }
+
+  __host__  __device__ float get_H(float *xx)
+  {
+    if (xx[2] <= zl || xx[2] >= zh) {
+      return 0;
+    }
+    
+    return fac * exp(-(sqr(xx[0] - xc) +
+		       sqr(xx[1] - yc)) / sqr(rH));
+  }
   
   // params
   int kind;
@@ -78,34 +88,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   float fac;
   float heating_dt;
 };
-
-// ----------------------------------------------------------------------
-// foil_get_H
-
-static float
-foil_get_H(cuda_heating_foil& foil, float *xx)
-{
-  if (xx[2] <= foil.zl || xx[2] >= foil.zh) {
-    return 0;
-  }
-
-  return foil.fac * exp(-(sqr(xx[0] - foil.xc) +
-			  sqr(xx[1] - foil.yc)) / sqr(foil.rH));
-}
-
-// ----------------------------------------------------------------------
-// d_foil_get_H
-
-__device__ static float
-d_foil_get_H(cuda_heating_foil& d_foil, float *xx)
-{
-  if (xx[2] <= d_foil.zl || xx[2] >= d_foil.zh) {
-    return 0;
-  }
-
-  return d_foil.fac * exp(-(sqr(xx[0] - d_foil.xc) +
-			    sqr(xx[1] - d_foil.yc)) / sqr(d_foil.rH));
-}
 
 // ----------------------------------------------------------------------
 // bm_normal2
@@ -180,7 +162,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cm
 	xi4.z + xb[2],
       };
 
-      float H = foil_get_H(foil, xx);
+      float H = foil.get_H(xx);
       // float4 pxi4 = d_pxi4[n];
       // printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
       // 	     xx[0], xx[1], xx[2], H,
@@ -240,7 +222,7 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
       xi4.y + xb[1],
       xi4.z + xb[2],
     };
-    float H = d_foil_get_H(d_foil, xx);
+    float H = d_foil.get_H(xx);
     //d_pxi4[n].w = H;
     if (H > 0) {
       float4 pxi4 = dmprts.pxi4_[n];
