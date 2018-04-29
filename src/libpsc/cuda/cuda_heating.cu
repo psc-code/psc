@@ -52,6 +52,25 @@ static void cuda_heating_params_free()
   cudaCheck(ierr);
 }
 
+// ----------------------------------------------------------------------
+// bm_normal2
+
+static inline float2
+bm_normal2(void)
+{
+  float u1, u2;
+  do {
+    u1 = random() * (1.f / RAND_MAX);
+    u2 = random() * (1.f / RAND_MAX);
+  } while (u1 <= 0.f);
+
+  float2 rv;
+  rv.x = sqrtf(-2.f * logf(u1)) * cosf(2.f * M_PI * u2);
+  rv.y = sqrtf(-2.f * logf(u1)) * sinf(2.f * M_PI * u2);
+  return rv;
+}
+
+
 struct cuda_heating_foil;
 
 template<typename BS>
@@ -81,6 +100,36 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 		       sqr(xx[1] - yc)) / sqr(rH));
   }
   
+  // ----------------------------------------------------------------------
+  // particle_kick
+  
+  __host__ void particle_kick(float4 *pxi4, float H)
+  {
+    float2 r01 = bm_normal2();
+    float2 r23 = bm_normal2();
+    
+    float Dp = sqrtf(H * heating_dt);
+    
+    pxi4->x += Dp * r01.x;
+    pxi4->y += Dp * r01.y;
+    pxi4->z += Dp * r23.x;
+  }
+
+  // ----------------------------------------------------------------------
+  // d_particle_kick
+  
+  __device__ void d_particle_kick(float4 *pxi4, float H, curandState *state)
+  {
+    float2 r01 = curand_normal2(state);
+    float r2 = curand_normal(state);
+    
+    float Dp = sqrtf(H * heating_dt);
+    
+    pxi4->x += Dp * r01.x;
+    pxi4->y += Dp * r01.y;
+    pxi4->z += Dp * r2;
+  }
+
   // params
   int kind;
 
@@ -88,56 +137,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   float fac;
   float heating_dt;
 };
-
-// ----------------------------------------------------------------------
-// bm_normal2
-
-static inline float2
-bm_normal2(void)
-{
-  float u1, u2;
-  do {
-    u1 = random() * (1.f / RAND_MAX);
-    u2 = random() * (1.f / RAND_MAX);
-  } while (u1 <= 0.f);
-
-  float2 rv;
-  rv.x = sqrtf(-2.f * logf(u1)) * cosf(2.f * M_PI * u2);
-  rv.y = sqrtf(-2.f * logf(u1)) * sinf(2.f * M_PI * u2);
-  return rv;
-}
-
-// ----------------------------------------------------------------------
-// particle_kick
-
-static void
-particle_kick(cuda_heating_foil& foil, float4 *pxi4, float H)
-{
-  float2 r01 = bm_normal2();
-  float2 r23 = bm_normal2();
-
-  float Dp = sqrtf(H * foil.heating_dt);
-
-  pxi4->x += Dp * r01.x;
-  pxi4->y += Dp * r01.y;
-  pxi4->z += Dp * r23.x;
-}
-
-// ----------------------------------------------------------------------
-// d_particle_kick
-
-__device__ static void
-d_particle_kick(cuda_heating_foil& d_foil, float4 *pxi4, float H, curandState *state)
-{
-  float2 r01 = curand_normal2(state);
-  float r2 = curand_normal(state);
-
-  float Dp = sqrtf(H * d_foil.heating_dt);
-
-  pxi4->x += Dp * r01.x;
-  pxi4->y += Dp * r01.y;
-  pxi4->z += Dp * r2;
-}
 
 // ----------------------------------------------------------------------
 // cuda_heating_run_foil_gold
@@ -171,7 +170,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cm
       // d_pxi4[n] = pxi4;
       if (H > 0) {
 	float4 pxi4 = cmprts->d_pxi4[n];
-	particle_kick(foil, &pxi4, H);
+	foil.particle_kick(&pxi4, H);
 	cmprts->d_pxi4[n] = pxi4;
 	// printf("H xx = %g %g %g H = %g px = %g %g %g\n", xx[0], xx[1], xx[2], H,
 	//        pxi4.x, pxi4.y, pxi4.z);
@@ -226,7 +225,7 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
     //d_pxi4[n].w = H;
     if (H > 0) {
       float4 pxi4 = dmprts.pxi4_[n];
-      d_particle_kick(d_foil, &pxi4, H, &local_state);
+      d_foil.d_particle_kick(&pxi4, H, &local_state);
       dmprts.pxi4_[n] = pxi4;
     }
   }
