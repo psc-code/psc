@@ -76,6 +76,11 @@ struct cuda_heating_foil;
 template<typename BS>
 void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts);
 
+template<typename BS>
+__global__ static void
+k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
+		   curandState *d_curand_states);
+
 // ======================================================================
 // cuda_heating_foil
 
@@ -130,6 +135,19 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     pxi4->z += Dp * r2;
   }
 
+  // ----------------------------------------------------------------------
+  // run_foil
+
+  template<typename BS>
+  void run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
+  {
+    dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
+    
+    k_heating_run_foil<BS>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(*this, *cmprts, h_prm, d_curand_states);
+    cuda_sync_if_enabled();
+  }
+  
   // params
   int kind;
 
@@ -246,20 +264,6 @@ k_curand_setup(curandState *d_curand_states, int b_my)
 }
 
 // ----------------------------------------------------------------------
-// heating_run_foil
-
-template<typename BS>
-static void
-heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
-{
-  dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
-
-  k_heating_run_foil<BS>
-    <<<dimGrid, THREADS_PER_BLOCK>>>(foil, *cmprts, h_prm, d_curand_states);
-  cuda_sync_if_enabled();
-}
-
-// ----------------------------------------------------------------------
 // cuda_heating_run_foil
 
 template<typename BS>
@@ -289,7 +293,7 @@ void cuda_heating_run_foil(cuda_heating_foil& foil, cuda_mparticles<BS>* cmprts)
     cmprts->reorder();
   }
 
-  heating_run_foil<BS>(foil, cmprts, d_curand_states);
+  foil.run_foil<BS>(cmprts, d_curand_states);
   
   if (0) {
     cuda_heating_params_free<BS>();
