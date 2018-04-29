@@ -2,10 +2,11 @@
 #pragma once
 
 #include "heating.hxx"
-#include "cuda_heating_iface.hxx"
 
 // ======================================================================
 // psc_heating subclass "cuda"
+
+struct cuda_heating_foil;
 
 template<typename BS>
 struct HeatingCuda : HeatingBase
