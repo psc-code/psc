@@ -15,15 +15,24 @@ struct HeatingCuda : HeatingBase
 
   template<typename FUNC>
   HeatingCuda(int interval, int kind, FUNC get_H)
-    : foil_{get_H, kind, interval * ppsc->dt}
-  {}
+  {
+    foil_ = new cuda_heating_foil{get_H, kind, interval * ppsc->dt};
+  }
+
+  // ----------------------------------------------------------------------
+  // dtor
+
+  ~HeatingCuda()
+  {
+    delete foil_;
+  }
 
   // ----------------------------------------------------------------------
   // operator()
 
   void operator()(MparticlesCuda<BS>& mprts)
   {
-    cuda_heating_run_foil(foil_, mprts.cmprts());
+    cuda_heating_run_foil(*foil_, mprts.cmprts());
   }
   
   // ----------------------------------------------------------------------
@@ -37,6 +46,6 @@ struct HeatingCuda : HeatingBase
   }
 
 private:
-  cuda_heating_foil foil_;
+  cuda_heating_foil* foil_;
 };
 
