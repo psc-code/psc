@@ -23,8 +23,6 @@ struct cuda_heating_params {
   float_3 *d_xb_by_patch;
 };
 
-static cuda_heating_params h_prm;
-
 // ----------------------------------------------------------------------
 // cuda_heating_params_set
 
@@ -156,7 +154,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
     
     k_heating_run_foil<BS>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(*this, *cmprts, h_prm, d_curand_states);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(*this, *cmprts, h_prm_, d_curand_states);
     cuda_sync_if_enabled();
   }
   
@@ -171,7 +169,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     static bool first_time = true;
     static curandState *d_curand_states;
     if (first_time) {
-      cuda_heating_params_set(h_prm, cmprts);
+      cuda_heating_params_set(h_prm_, cmprts);
       
       dim3 dimGrid(cmprts->b_mx()[1], cmprts->b_mx()[2] * cmprts->n_patches);
       
@@ -193,7 +191,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     run_foil<BS>(cmprts, d_curand_states);
     
     if (0) {
-      cuda_heating_params_free<BS>(h_prm);
+      cuda_heating_params_free<BS>(h_prm_);
       
       cudaError_t ierr;
       ierr = cudaFree(d_curand_states);
@@ -207,6 +205,8 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   // state (FIXME, shouldn't be part of the interface)
   float fac;
   float heating_dt;
+
+  cuda_heating_params h_prm_;
 };
 
 // ----------------------------------------------------------------------
