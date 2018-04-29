@@ -165,19 +165,18 @@ main(void)
   // FIXME, up to here, it's been a copy of test_cuda_mparticles to set up
   // a valid particle structure
 
-  struct cuda_heating_foil foil;
-  foil.zl = -10.f;
-  foil.zh =  10.f;
-  foil.xc = 0.f;
-  foil.yc = 0.f;
-  foil.rH = 30.f;
-  foil.T  = .04f;
-  foil.Mi = 100.f;
-  foil.kind = 1;
-  foil.heating_dt = .1;
+  HeatingSpotFoilParams foil_params;
+  foil_params.zl = -10.f;
+  foil_params.zh =  10.f;
+  foil_params.xc = 0.f;
+  foil_params.yc = 0.f;
+  foil_params.rH = 30.f;
+  foil_params.T  = .04f;
+  foil_params.Mi = 100.f;
 
   printf("setup_foil\n");
-  cuda_heating_setup_foil(&foil);
+  cuda_heating_foil foil(foil_params, 1, .1);
+
   printf("run_foil\n");
   cuda_heating_run_foil(cmprts);
 

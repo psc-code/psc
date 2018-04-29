@@ -17,20 +17,9 @@ struct HeatingCuda : HeatingBase
   HeatingCuda(int interval, int kind, FUNC get_H)
     : kind_(kind)
   {
-    struct cuda_heating_foil foil;
     double val;
 
-    auto spot = get_H;
-    foil.zl = spot.zl;
-    foil.zh = spot.zh;
-    foil.xc = spot.xc;
-    foil.yc = spot.yc;
-    foil.rH = spot.rH;
-    foil.T  = spot.T;
-    foil.Mi = spot.Mi;
-    foil.kind = kind;
-    foil.heating_dt = interval * ppsc->dt;
-    cuda_heating_setup_foil(&foil);
+    cuda_heating_foil foil{get_H, kind, interval * ppsc->dt};
   }
 
   // ----------------------------------------------------------------------
