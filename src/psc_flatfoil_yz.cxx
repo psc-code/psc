@@ -209,7 +209,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
 #endif
   
-  PscFlatfoil(const PscFlatfoilParams& params, Heating_t heating, psc *psc)
+  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : PscFlatfoilParams(params),
       psc_{psc},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
@@ -659,7 +659,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.heating_begin = 0;
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
-  auto heating = Heating_t{params.heating_interval, params.heating_kind, params.heating_spot};
 
   // -- setup injection
   double target_yl     = -100000.;
@@ -720,7 +719,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
 				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
 
-  return new PscFlatfoil(params, heating, psc_);
+  return new PscFlatfoil(params, psc_);
 }
 
 // ----------------------------------------------------------------------
