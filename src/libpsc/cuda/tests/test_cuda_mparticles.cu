@@ -85,11 +85,9 @@ struct CudaMparticlesTest : TestBase, ::testing::Test
 {
   std::unique_ptr<Grid_t> grid_;
 
-  const Int3 bs_ = { 1, 1, 1 };
-
   void SetUp()
   {
-    auto domain = Grid_t::Domain{{1, 4, 2}, {1., 40., 20.}};
+    auto domain = Grid_t::Domain{{1, 8, 4}, {1., 80., 40.}};
     grid_.reset(new Grid_t(domain));
   }
 };
@@ -135,6 +133,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
+    { .5, 75., 15. },
     { .5, 35., 15. },
     { .5,  5.,  5. },
   };
@@ -151,38 +150,44 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
 
   EXPECT_EQ(cmprts->d_bidx[0], 0);
   EXPECT_EQ(cmprts->d_bidx[1], 0);
+  EXPECT_EQ(cmprts->d_bidx[2], 0);
   EXPECT_EQ(cmprts->d_id[0], 0);
   EXPECT_EQ(cmprts->d_id[1], 0);
+  EXPECT_EQ(cmprts->d_id[2], 0);
   
   EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
   cmprts->find_block_indices_ids();
   
-  EXPECT_EQ(cmprts->d_bidx[0], 7);
+  EXPECT_EQ(cmprts->d_bidx[0], 1);
   EXPECT_EQ(cmprts->d_bidx[1], 0);
+  EXPECT_EQ(cmprts->d_bidx[2], 0);
   EXPECT_EQ(cmprts->d_id[0], 0);
   EXPECT_EQ(cmprts->d_id[1], 1);
+  EXPECT_EQ(cmprts->d_id[2], 2);
 
   EXPECT_TRUE(cmprts->check_bidx_id_unordered_slow());
   cmprts->stable_sort_by_key();
   
   EXPECT_EQ(cmprts->d_bidx[0], 0);
-  EXPECT_EQ(cmprts->d_bidx[1], 7);
+  EXPECT_EQ(cmprts->d_bidx[1], 0);
+  EXPECT_EQ(cmprts->d_bidx[2], 1);
   EXPECT_EQ(cmprts->d_id[0], 1);
-  EXPECT_EQ(cmprts->d_id[1], 0);
+  EXPECT_EQ(cmprts->d_id[1], 2);
+  EXPECT_EQ(cmprts->d_id[2], 0);
 
   cmprts->reorder_and_offsets();
 
-  float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1];
-  EXPECT_FLOAT_EQ(xi4_0.y, 5.);
-  EXPECT_FLOAT_EQ(xi4_0.z, 5.);
-  EXPECT_FLOAT_EQ(xi4_1.y, 35.);
-  EXPECT_FLOAT_EQ(xi4_1.z, 15.);
+  float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
+  EXPECT_FLOAT_EQ(xi4_0.y, 35.);
+  EXPECT_FLOAT_EQ(xi4_0.z, 15.);
+  EXPECT_FLOAT_EQ(xi4_1.y, 5.);
+  EXPECT_FLOAT_EQ(xi4_1.z, 5.);
+  EXPECT_FLOAT_EQ(xi4_2.y, 75.);
+  EXPECT_FLOAT_EQ(xi4_2.z, 15.);
 
   EXPECT_EQ(cmprts->d_off[0], 0);
-  for (int b = 1; b < 8; b++) {
-    EXPECT_EQ(cmprts->d_off[b], 1) << "where b = " << b;
-  }
-  EXPECT_EQ(cmprts->d_off[8], 2);
+  EXPECT_EQ(cmprts->d_off[1], 2);
+  EXPECT_EQ(cmprts->d_off[2], 3);
 
   EXPECT_TRUE(cmprts->check_ordered());
 }
@@ -205,13 +210,12 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   cmprts->setup_internals();
   
   // check that particles are now in Fortran order
+  int cur_bidx = 0;
   cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      int i = n % grid_->ldims[0]; n /= grid_->ldims[0];
-      int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
-      int k = n;
-      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->domain.dx[0]);
-      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->domain.dx[1]);
-      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->domain.dx[2]);
+      float4 xi = { prt.xi[0], prt.xi[1], prt.xi[2] };
+      int bidx = cmprts->blockIndex(xi, 0);
+      EXPECT_GE(bidx, cur_bidx);
+      cur_bidx = bidx;
     });
 
   cmprts->check_ordered();
