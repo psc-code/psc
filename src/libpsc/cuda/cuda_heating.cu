@@ -93,7 +93,8 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 struct cuda_heating_foil : HeatingSpotFoilParams
 {
   cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt)
-    : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt)
+    : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt),
+      h_prm_{}
   {
     float width = zh - zl;
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
@@ -101,11 +102,13 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 
   ~cuda_heating_foil()
   {
+#if 0 // FIXME
     cuda_heating_params_free(h_prm_);
     
     cudaError_t ierr;
     ierr = cudaFree(d_curand_states_);
     cudaCheck(ierr);
+#endif
   }
   
   __host__  __device__ float get_H(float *xx)
