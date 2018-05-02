@@ -106,6 +106,7 @@ struct cuda_mparticles : cuda_mparticles_base<BS>
 
 public:
   void find_block_indices_ids();
+  void find_cell_indices_ids();
   void stable_sort_by_key();
   void reorder();
   void reorder_and_offsets();
@@ -125,6 +126,8 @@ public:
   thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
+  thrust::device_vector<uint> d_cidx;       // cell index (incl patch) per particle
+  
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
