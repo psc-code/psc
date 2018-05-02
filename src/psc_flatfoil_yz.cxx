@@ -595,7 +595,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_default_dimensionless(psc_);
 
   psc_->prm.nmax = 201;
-  psc_->prm.nicell = 100;
+  psc_->prm.nicell = 10;
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
