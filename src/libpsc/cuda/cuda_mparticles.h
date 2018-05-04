@@ -91,6 +91,12 @@ struct cuda_mparticles_sort
   {
     d_cidx.resize(n_prts);
   }
+
+  template<typename BS>
+  void find_indices_ids(cuda_mparticles<BS>& cmprts)
+  {
+    cmprts.find_cell_indices_ids(d_cidx, cmprts.d_id);
+  }
   
 public:
   thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
@@ -126,7 +132,7 @@ struct cuda_mparticles : cuda_mparticles_base<BS>
 
 public:
   void find_block_indices_ids();
-  void find_cell_indices_ids();
+  void find_cell_indices_ids(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id);
   void stable_sort_by_key();
   void stable_sort_cidx();
   void reorder();

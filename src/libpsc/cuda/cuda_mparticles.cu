@@ -208,7 +208,8 @@ void cuda_mparticles<BS>::find_block_indices_ids()
 // find_cell_indices_ids
 
 template<typename BS>
-void cuda_mparticles<BS>::find_cell_indices_ids()
+void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_cidx,
+						thrust::device_vector<uint>& d_id)
 {
   if (this->n_patches == 0) {
     return;
@@ -237,7 +238,7 @@ void cuda_mparticles<BS>::find_cell_indices_ids()
   k_find_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						     this->d_xi4.data().get(),
 						     this->d_off.data().get(),
-						     sort_by_cell.d_cidx.data().get(),
+						     d_cidx.data().get(),
 						     d_id.data().get(),
 						     this->n_patches,
 						     this->n_blocks_per_patch);
