@@ -24,6 +24,8 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
   for (int p = 0; p < this->n_patches; p++) {
     xb_by_patch[p] = Real3(grid.patches[p].xb);
   }
+
+  d_coff.resize(this->n_cells() + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -295,6 +297,39 @@ k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, f
 }
 
 // ----------------------------------------------------------------------
+// k_reorder_and_offsets_cidx
+
+__global__ static void
+k_reorder_and_offsets_cidx(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
+			   uint *d_cidx, uint *d_ids, uint *d_coff, int last_cell)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i > nr_prts)
+    return;
+
+  int cell, prev_cell;
+  if (i < nr_prts) {
+    xi4[i] = alt_xi4[d_ids[i]];
+    pxi4[i] = alt_pxi4[d_ids[i]];
+    
+    cell = d_cidx[i];
+  } else { // needed if there is no particle in the last block
+    cell = last_cell;
+  }
+
+  // OPT: d_cidx[i-1] could use shmem
+  // create offsets per block into particle array
+  prev_cell = -1;
+  if (i > 0) {
+    prev_cell = d_cidx[i-1];
+  }
+  for (int c = prev_cell + 1; c <= cell; c++) {
+    d_coff[c] = i;
+  }
+}
+
+// ----------------------------------------------------------------------
 // reorder_and_offsets
 
 template<typename BS>
@@ -314,6 +349,31 @@ void cuda_mparticles<BS>::reorder_and_offsets()
 					       d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
 					       d_bidx.data().get(), d_id.data().get(),
 					       this->d_off.data().get(), this->n_blocks);
+  cuda_sync_if_enabled();
+
+  need_reorder = false;
+}
+
+// ----------------------------------------------------------------------
+// reorder_and_offsets_cidx
+
+template<typename BS>
+void cuda_mparticles<BS>::reorder_and_offsets_cidx()
+{
+  if (this->n_patches == 0) {
+    return;
+  }
+
+  swap_alt();
+  resize(this->n_prts);
+
+  dim3 dimGrid((this->n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  dim3 dimBlock(THREADS_PER_BLOCK);
+
+  k_reorder_and_offsets_cidx<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
+						    d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
+						    d_cidx.data().get(), d_id.data().get(),
+						    this->d_coff.data().get(), this->n_cells());
   cuda_sync_if_enabled();
 
   need_reorder = false;

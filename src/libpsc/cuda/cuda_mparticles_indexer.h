@@ -88,6 +88,8 @@ protected:
     return (p * pi_.ldims_[2] + cpos[2]) * pi_.ldims_[1] + cpos[1];
   }
 
+  uint n_cells() const { return pi_.n_cells_ * n_patches; }
+  
 public:
   uint n_patches;                // number of patches
   uint n_blocks_per_patch;       // number of blocks per patch

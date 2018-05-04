@@ -245,23 +245,24 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(cmprts->d_id[1], 1);
   EXPECT_EQ(cmprts->d_id[2], 0);
 
-#if 0
-  cmprts->reorder_and_offsets();
+  cmprts->reorder_and_offsets_cidx();
 
   float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
-  EXPECT_FLOAT_EQ(xi4_0.y, 35.);
-  EXPECT_FLOAT_EQ(xi4_0.z, 15.);
-  EXPECT_FLOAT_EQ(xi4_1.y, 5.);
-  EXPECT_FLOAT_EQ(xi4_1.z, 5.);
+  EXPECT_FLOAT_EQ(xi4_0.y, 5.);
+  EXPECT_FLOAT_EQ(xi4_0.z, 5.);
+  EXPECT_FLOAT_EQ(xi4_1.y, 35.);
+  EXPECT_FLOAT_EQ(xi4_1.z, 15.);
   EXPECT_FLOAT_EQ(xi4_2.y, 75.);
   EXPECT_FLOAT_EQ(xi4_2.z, 15.);
 
-  EXPECT_EQ(cmprts->d_off[0], 0);
-  EXPECT_EQ(cmprts->d_off[1], 2);
-  EXPECT_EQ(cmprts->d_off[2], 3);
-
-  EXPECT_TRUE(cmprts->check_ordered());
-#endif
+  EXPECT_EQ(cmprts->d_coff[0], 0);
+  for (int c = 1; c <= 11; c++) {
+    EXPECT_EQ(cmprts->d_coff[c], 1);
+  }
+  for (int c = 12; c <= 15; c++) {
+    EXPECT_EQ(cmprts->d_coff[c], 2);
+  }
+  EXPECT_EQ(cmprts->d_coff[16], 3);
 }
 
 // ----------------------------------------------------------------------

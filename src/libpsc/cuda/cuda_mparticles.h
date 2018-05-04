@@ -112,6 +112,7 @@ public:
   void reorder();
   void reorder_and_offsets();
   void reorder_and_offsets_slow();
+  void reorder_and_offsets_cidx();
   void swap_alt();
 
   bool check_in_patch_unordered_slow();
@@ -129,6 +130,8 @@ public:
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
   thrust::device_vector<uint> d_cidx;       // cell index (incl patch) per particle
+  thrust::device_vector<uint> d_coff;       // particles per cell
+                                            // are at indices [offsets[cell] .. offsets[cell+1][
   
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
