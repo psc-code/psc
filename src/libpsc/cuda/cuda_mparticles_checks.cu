@@ -53,6 +53,33 @@ bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
 }
 
 // ----------------------------------------------------------------------
+// check_cix_id_unordered_slow
+//
+// checks that cell indices are correct,
+// id is just enumerating particles
+
+template<typename BS>
+bool cuda_mparticles<BS>::check_cidx_id_unordered_slow()
+{
+  uint n_prts_by_patch[this->n_patches];
+  this->get_size_all(n_prts_by_patch);
+
+  uint off = 0;
+  for (int p = 0; p < this->n_patches; p++) {
+    for (int n = 0; n < n_prts_by_patch[p]; n++) {
+      int cidx = this->validCellIndex(this->d_xi4[off + n], p);
+      if (!(cidx == d_cidx[off+n])) return false;
+      if (!(off+n == d_id[off+n])) return false;
+    }
+    off += n_prts_by_patch[p];
+  }
+
+  if (!(off == this->n_prts)) return false;
+  // printf("PASS: cuda_mparticles_check_bidx_id_unordered_slow()\n");
+  return true;
+}
+
+// ----------------------------------------------------------------------
 // check_ordered
 
 template<typename BS>
