@@ -16,7 +16,8 @@
 
 template<typename BS>
 cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
-  : cuda_mparticles_base<BS>(grid)
+: cuda_mparticles_base<BS>(grid),
+  sort_by_cell(this->n_cells())
 {
   cuda_base_init();
   
@@ -24,8 +25,6 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
   for (int p = 0; p < this->n_patches; p++) {
     xb_by_patch[p] = Real3(grid.patches[p].xb);
   }
-
-  d_coff.resize(this->n_cells() + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -373,7 +372,7 @@ void cuda_mparticles<BS>::reorder_and_offsets_cidx()
   k_reorder_and_offsets_cidx<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
 						    d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
 						    d_cidx.data().get(), d_id.data().get(),
-						    this->d_coff.data().get(), this->n_cells());
+						    this->sort_by_cell.d_off.data().get(), this->n_cells());
   cuda_sync_if_enabled();
 
   need_reorder = false;

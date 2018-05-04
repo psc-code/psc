@@ -79,6 +79,20 @@ struct d_particle {
 } while (0)
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_sort
+
+struct cuda_mparticles_sort
+{
+  cuda_mparticles_sort(int n_cells)
+    : d_off(n_cells + 1)
+  {}
+  
+public:
+  thrust::device_vector<uint> d_off;      // particles per cell
+                                          // are at indices [offsets[cell] .. offsets[cell+1][
+};
+
+// ----------------------------------------------------------------------
 // cuda_mparticles
 
 template<typename BS>
@@ -129,9 +143,8 @@ public:
   thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
+  cuda_mparticles_sort sort_by_cell;
   thrust::device_vector<uint> d_cidx;       // cell index (incl patch) per particle
-  thrust::device_vector<uint> d_coff;       // particles per cell
-                                            // are at indices [offsets[cell] .. offsets[cell+1][
   
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 

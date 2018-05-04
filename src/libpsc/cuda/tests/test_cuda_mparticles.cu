@@ -255,14 +255,15 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_FLOAT_EQ(xi4_2.y, 75.);
   EXPECT_FLOAT_EQ(xi4_2.z, 15.);
 
-  EXPECT_EQ(cmprts->d_coff[0], 0);
+  auto& d_off = cmprts->sort_by_cell.d_off;
+  EXPECT_EQ(d_off[0], 0);
   for (int c = 1; c <= 11; c++) {
-    EXPECT_EQ(cmprts->d_coff[c], 1);
+    EXPECT_EQ(d_off[c], 1);
   }
   for (int c = 12; c <= 15; c++) {
-    EXPECT_EQ(cmprts->d_coff[c], 2);
+    EXPECT_EQ(d_off[c], 2);
   }
-  EXPECT_EQ(cmprts->d_coff[16], 3);
+  EXPECT_EQ(d_off[16], 3);
 }
 
 // ----------------------------------------------------------------------
