@@ -88,14 +88,10 @@ struct cuda_mparticles_sort
     : d_off(n_cells + 1)
   {}
 
-  void resize(int n_prts)
-  {
-    d_cidx.resize(n_prts);
-  }
-
   template<typename BS>
   void find_indices_ids(cuda_mparticles<BS>& cmprts)
   {
+    d_cidx.resize(cmprts.n_prts);
     cmprts.find_cell_indices_ids(d_cidx, cmprts.d_id);
   }
   

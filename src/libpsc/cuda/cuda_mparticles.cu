@@ -54,7 +54,6 @@ void cuda_mparticles<BS>::resize(uint n_prts)
   cuda_mparticles_base<BS>::reserve_all(n_prts);
   d_bidx.resize(n_prts);
   d_id.resize(n_prts);
-  sort_by_cell.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
