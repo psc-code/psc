@@ -40,6 +40,17 @@ struct cuda_mparticles_indexer
     n_blocks = n_patches * n_blocks_per_patch;
   }
 
+  Int3 cellPosition(const real_t xi[3]) const
+  {
+    return pi_.cellPosition(xi);
+  }
+
+  int validCellIndex(const float4& xi4, int p) const
+  {
+    Int3 cpos = cellPosition(&xi4.x);
+    return validCellIndex(cpos, p);
+  }
+
   Int3 blockPosition(const real_t xi[3]) const
   {
     Int3 pos = pi_.cellPosition(xi);
@@ -69,6 +80,14 @@ protected:
     return (p * b_mx_[2] + bpos[2]) * b_mx_[1] + bpos[1];
   }
 
+  int validCellIndex(Int3 cpos, int p) const
+  {
+    assert(uint(cpos[1]) < pi_.ldims_[1]);
+    assert(uint(cpos[2]) < pi_.ldims_[2]);
+    
+    return (p * pi_.ldims_[2] + cpos[2]) * pi_.ldims_[1] + cpos[1];
+  }
+
 public:
   uint n_patches;                // number of patches
   uint n_blocks_per_patch;       // number of blocks per patch
@@ -93,9 +112,19 @@ struct DParticleIndexer
   DParticleIndexer(const cuda_mparticles_indexer<BS>& cpi)
   {
     for (int d = 0; d < 3; d++) {
+      ldims_[d] = cpi.pi_.ldims_[d];
       b_mx_[d]  = cpi.b_mx_[d];
       dxi_[d]   = cpi.pi_.dxi_[d];
     }
+  }
+
+  __device__ int validCellIndex(float4 xi4, int p) const
+  {
+    uint pos_y = __float2int_rd(xi4.y * dxi_[1]);
+    uint pos_z = __float2int_rd(xi4.z * dxi_[2]);
+    
+    //assert(pos_y < ldims_[1] && pos_z < ldims_[2]); FIXME, assert doesn't work (on macbook)
+    return (p * ldims_[2] + pos_z) * ldims_[1] + pos_y;
   }
 
   __device__ int blockIndex(float4 xi4, int p) const
@@ -163,6 +192,7 @@ struct DParticleIndexer
   }
 
 private:
+  uint ldims_[3];
   uint b_mx_[3];
   real_t dxi_[3];
 

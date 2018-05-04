@@ -123,11 +123,11 @@ TEST_F(CudaMparticlesTest, SetParticles)
 }
 
 // ---------------------------------------------------------------------
-// SetupInternalsPieces
+// SetupInternalsDetail
 //
 // Tests the pieces that go into setup_internals()
 
-TEST_F(CudaMparticlesTest, SetupInternalsPieces)
+TEST_F(CudaMparticlesTest, SetupInternalsDetail)
 {
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
@@ -190,6 +190,78 @@ TEST_F(CudaMparticlesTest, SetupInternalsPieces)
   EXPECT_EQ(cmprts->d_off[2], 3);
 
   EXPECT_TRUE(cmprts->check_ordered());
+}
+
+// ---------------------------------------------------------------------
+// SortByCellDetail
+//
+// Tests the pieces that go into setup_internals()
+
+TEST_F(CudaMparticlesTest, SortByCellDetail)
+{
+  grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
+  grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
+
+  std::vector<cuda_mparticles_prt> prts = {
+    { .5, 75., 15. },
+    { .5, 35., 15. },
+    { .5,  5.,  5. },
+  };
+  uint n_prts_by_patch[1];
+  n_prts_by_patch[0] = prts.size();
+
+  // can't use make_cmprts() from vector here, since that'll sort etc
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
+  cmprts->reserve_all(n_prts_by_patch);
+  cmprts->resize_all(n_prts_by_patch);
+  cmprts->set_particles(0, [&](int n) {
+      return prts[n];
+    });
+
+  EXPECT_EQ(cmprts->d_cidx[0], 0);
+  EXPECT_EQ(cmprts->d_cidx[1], 0);
+  EXPECT_EQ(cmprts->d_cidx[2], 0);
+  EXPECT_EQ(cmprts->d_id[0], 0);
+  EXPECT_EQ(cmprts->d_id[1], 0);
+  EXPECT_EQ(cmprts->d_id[2], 0);
+  
+  EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
+  cmprts->find_cell_indices_ids();
+
+  EXPECT_EQ(cmprts->d_cidx[0], 15);
+  EXPECT_EQ(cmprts->d_cidx[1], 11);
+  EXPECT_EQ(cmprts->d_cidx[2], 0);
+  EXPECT_EQ(cmprts->d_id[0], 0);
+  EXPECT_EQ(cmprts->d_id[1], 1);
+  EXPECT_EQ(cmprts->d_id[2], 2);
+
+#if 0
+  EXPECT_TRUE(cmprts->check_bidx_id_unordered_slow());
+  cmprts->stable_sort_by_key();
+  
+  EXPECT_EQ(cmprts->d_bidx[0], 0);
+  EXPECT_EQ(cmprts->d_bidx[1], 0);
+  EXPECT_EQ(cmprts->d_bidx[2], 1);
+  EXPECT_EQ(cmprts->d_id[0], 1);
+  EXPECT_EQ(cmprts->d_id[1], 2);
+  EXPECT_EQ(cmprts->d_id[2], 0);
+
+  cmprts->reorder_and_offsets();
+
+  float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
+  EXPECT_FLOAT_EQ(xi4_0.y, 35.);
+  EXPECT_FLOAT_EQ(xi4_0.z, 15.);
+  EXPECT_FLOAT_EQ(xi4_1.y, 5.);
+  EXPECT_FLOAT_EQ(xi4_1.z, 5.);
+  EXPECT_FLOAT_EQ(xi4_2.y, 75.);
+  EXPECT_FLOAT_EQ(xi4_2.z, 15.);
+
+  EXPECT_EQ(cmprts->d_off[0], 0);
+  EXPECT_EQ(cmprts->d_off[1], 2);
+  EXPECT_EQ(cmprts->d_off[2], 3);
+
+  EXPECT_TRUE(cmprts->check_ordered());
+#endif
 }
 
 // ----------------------------------------------------------------------

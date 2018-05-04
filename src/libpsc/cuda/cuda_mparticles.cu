@@ -53,6 +53,7 @@ void cuda_mparticles<BS>::resize(uint n_prts)
   cuda_mparticles_base<BS>::reserve_all(n_prts);
   d_bidx.resize(n_prts);
   d_id.resize(n_prts);
+  d_cidx.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -141,6 +142,28 @@ k_find_block_indices_ids(DParticleIndexer<BS> dpi, float4 *d_xi4, uint *d_off,
 }
 
 // ----------------------------------------------------------------------
+// k_find_cell_indices_ids
+
+template<typename BS>
+__global__ static void
+k_find_cell_indices_ids(DParticleIndexer<BS> dpi, float4 *d_xi4, uint *d_off,
+			uint *d_cidx, uint *d_ids, int n_patches,
+			int n_blocks_per_patch)
+{
+  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  for (int p = 0; p < n_patches; p++) {
+    uint off = d_off[p * n_blocks_per_patch];
+    uint n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
+    if (n < n_prts) {
+      float4 xi4 = d_xi4[n + off];
+      d_cidx[n + off] = dpi.validCellIndex(xi4, p);
+      d_ids[n + off] = n + off;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // find_block_indices_ids
 
 template<typename BS>
@@ -177,6 +200,46 @@ void cuda_mparticles<BS>::find_block_indices_ids()
 						      d_id.data().get(),
 						      this->n_patches,
 						      this->n_blocks_per_patch);
+  cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
+// find_cell_indices_ids
+
+template<typename BS>
+void cuda_mparticles<BS>::find_cell_indices_ids()
+{
+  if (this->n_patches == 0) {
+    return;
+  }
+
+  // OPT: if we didn't need max_n_prts, we wouldn't have to get the
+  // sizes / offsets at all, and it seems likely we could do a better
+  // job here in general
+  uint n_prts_by_patch[this->n_patches];
+  this->get_size_all(n_prts_by_patch);
+  
+  int max_n_prts = 0;
+  for (int p = 0; p < this->n_patches; p++) {
+    if (n_prts_by_patch[p] > max_n_prts) {
+      max_n_prts = n_prts_by_patch[p];
+    }
+  }
+
+  if (max_n_prts == 0) {
+    return;
+  }
+  
+  dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  dim3 dimBlock(THREADS_PER_BLOCK);
+
+  k_find_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
+						     this->d_xi4.data().get(),
+						     this->d_off.data().get(),
+						     d_cidx.data().get(),
+						     d_id.data().get(),
+						     this->n_patches,
+						     this->n_blocks_per_patch);
   cuda_sync_if_enabled();
 }
 
