@@ -236,16 +236,16 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(cmprts->d_id[2], 2);
 
   EXPECT_TRUE(cmprts->check_cidx_id_unordered_slow());
-#if 0
-  cmprts->stable_sort_by_key();
+  cmprts->stable_sort_cidx();
   
-  EXPECT_EQ(cmprts->d_bidx[0], 0);
-  EXPECT_EQ(cmprts->d_bidx[1], 0);
-  EXPECT_EQ(cmprts->d_bidx[2], 1);
-  EXPECT_EQ(cmprts->d_id[0], 1);
-  EXPECT_EQ(cmprts->d_id[1], 2);
+  EXPECT_EQ(cmprts->d_cidx[0], 0);
+  EXPECT_EQ(cmprts->d_cidx[1], 11);
+  EXPECT_EQ(cmprts->d_cidx[2], 15);
+  EXPECT_EQ(cmprts->d_id[0], 2);
+  EXPECT_EQ(cmprts->d_id[1], 1);
   EXPECT_EQ(cmprts->d_id[2], 0);
 
+#if 0
   cmprts->reorder_and_offsets();
 
   float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];

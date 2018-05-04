@@ -108,6 +108,7 @@ public:
   void find_block_indices_ids();
   void find_cell_indices_ids();
   void stable_sort_by_key();
+  void stable_sort_cidx();
   void reorder();
   void reorder_and_offsets();
   void reorder_and_offsets_slow();
