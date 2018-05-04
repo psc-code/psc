@@ -349,7 +349,9 @@ void cuda_mparticles<BS>::reorder_and_offsets()
 // reorder_and_offsets_cidx
 
 template<typename BS>
-void cuda_mparticles<BS>::reorder_and_offsets_cidx()
+void cuda_mparticles<BS>::reorder_and_offsets_cidx(thrust::device_vector<uint>& d_cidx,
+						   thrust::device_vector<uint>& d_id,
+						   thrust::device_vector<uint>& d_off)
 {
   if (this->n_patches == 0) {
     return;
@@ -363,8 +365,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_cidx()
 
   k_reorder_and_offsets_cidx<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
 						    d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
-						    sort_by_cell.d_cidx.data().get(), d_id.data().get(),
-						    sort_by_cell.d_off.data().get(), this->n_cells());
+						    d_cidx.data().get(), d_id.data().get(),
+						    d_off.data().get(), this->n_cells());
   cuda_sync_if_enabled();
 
   need_reorder = false;

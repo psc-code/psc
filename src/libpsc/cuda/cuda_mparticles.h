@@ -111,6 +111,12 @@ struct cuda_mparticles_sort
     thrust::stable_sort_by_key(d_cidx.begin(), d_cidx.end(), cmprts.d_id.begin());
   }
   
+  template<typename BS>
+  void reorder_and_offsets(cuda_mparticles<BS>& cmprts)
+  {
+    cmprts.reorder_and_offsets_cidx(d_cidx, cmprts.d_id, d_off);
+  }
+  
 public:
   thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
   thrust::device_vector<uint> d_off;      // particles per cell
@@ -150,7 +156,8 @@ public:
   void reorder();
   void reorder_and_offsets();
   void reorder_and_offsets_slow();
-  void reorder_and_offsets_cidx();
+  void reorder_and_offsets_cidx(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id,
+				thrust::device_vector<uint>& d_off);
   void swap_alt();
 
   bool check_in_patch_unordered_slow();
