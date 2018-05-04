@@ -219,7 +219,8 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
     });
   EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
 
-  auto& d_idx = cmprts->sort_by_cell.d_cidx;
+  auto& sort_by_cell = cmprts->sort_by_cell;
+  auto& d_idx = sort_by_cell.d_cidx;
   EXPECT_EQ(d_idx[0], 0);
   EXPECT_EQ(d_idx[1], 0);
   EXPECT_EQ(d_idx[2], 0);
@@ -227,7 +228,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(cmprts->d_id[1], 0);
   EXPECT_EQ(cmprts->d_id[2], 0);
   
-  cmprts->sort_by_cell.find_indices_ids(*cmprts);
+  sort_by_cell.find_indices_ids(*cmprts);
 
   EXPECT_EQ(d_idx[0], 15);
   EXPECT_EQ(d_idx[1], 11);
@@ -236,8 +237,8 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(cmprts->d_id[1], 1);
   EXPECT_EQ(cmprts->d_id[2], 2);
 
-  EXPECT_TRUE(cmprts->sort_by_cell.check_cidx_id_unordered_slow(*cmprts));
-  cmprts->stable_sort_cidx();
+  EXPECT_TRUE(sort_by_cell.check_cidx_id_unordered_slow(*cmprts));
+  sort_by_cell.stable_sort_cidx(*cmprts);
   
   EXPECT_EQ(d_idx[0], 0);
   EXPECT_EQ(d_idx[1], 11);

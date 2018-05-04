@@ -10,6 +10,7 @@
 #include "cuda_bits.h"
 
 #include <thrust/device_vector.h>
+#include <thrust/sort.h>
 
 // ======================================================================
 // cuda_mparticles_base
@@ -104,6 +105,12 @@ struct cuda_mparticles_sort
     return cmprts.check_cidx_id_unordered_slow(d_cidx, cmprts.d_id);
   }
   
+  template<typename BS>
+  void stable_sort_cidx(cuda_mparticles<BS>& cmprts)
+  {
+    thrust::stable_sort_by_key(d_cidx.begin(), d_cidx.end(), cmprts.d_id.begin());
+  }
+  
 public:
   thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
   thrust::device_vector<uint> d_off;      // particles per cell
@@ -140,7 +147,6 @@ public:
   void find_block_indices_ids();
   void find_cell_indices_ids(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id);
   void stable_sort_by_key();
-  void stable_sort_cidx();
   void reorder();
   void reorder_and_offsets();
   void reorder_and_offsets_slow();

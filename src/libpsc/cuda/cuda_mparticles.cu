@@ -255,17 +255,6 @@ void cuda_mparticles<BS>::stable_sort_by_key()
 }
 
 // ----------------------------------------------------------------------
-// stable_sort_cidx
-
-template<typename BS>
-void cuda_mparticles<BS>::stable_sort_cidx()
-{
-  thrust::stable_sort_by_key(sort_by_cell.d_cidx.data(),
-			     sort_by_cell.d_cidx.data() + this->n_prts,
-			     d_id.begin());
-}
-
-// ----------------------------------------------------------------------
 // k_reorder_and_offsets
 
 __global__ static void
