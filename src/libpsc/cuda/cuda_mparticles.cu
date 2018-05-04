@@ -54,7 +54,7 @@ void cuda_mparticles<BS>::resize(uint n_prts)
   cuda_mparticles_base<BS>::reserve_all(n_prts);
   d_bidx.resize(n_prts);
   d_id.resize(n_prts);
-  d_cidx.resize(n_prts);
+  sort_by_cell.resize(n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -237,7 +237,7 @@ void cuda_mparticles<BS>::find_cell_indices_ids()
   k_find_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						     this->d_xi4.data().get(),
 						     this->d_off.data().get(),
-						     d_cidx.data().get(),
+						     sort_by_cell.d_cidx.data().get(),
 						     d_id.data().get(),
 						     this->n_patches,
 						     this->n_blocks_per_patch);
@@ -259,7 +259,9 @@ void cuda_mparticles<BS>::stable_sort_by_key()
 template<typename BS>
 void cuda_mparticles<BS>::stable_sort_cidx()
 {
-  thrust::stable_sort_by_key(d_cidx.data(), d_cidx.data() + this->n_prts, d_id.begin());
+  thrust::stable_sort_by_key(sort_by_cell.d_cidx.data(),
+			     sort_by_cell.d_cidx.data() + this->n_prts,
+			     d_id.begin());
 }
 
 // ----------------------------------------------------------------------
@@ -371,8 +373,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_cidx()
 
   k_reorder_and_offsets_cidx<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
 						    d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
-						    d_cidx.data().get(), d_id.data().get(),
-						    this->sort_by_cell.d_off.data().get(), this->n_cells());
+						    sort_by_cell.d_cidx.data().get(), d_id.data().get(),
+						    sort_by_cell.d_off.data().get(), this->n_cells());
   cuda_sync_if_enabled();
 
   need_reorder = false;

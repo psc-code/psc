@@ -86,8 +86,14 @@ struct cuda_mparticles_sort
   cuda_mparticles_sort(int n_cells)
     : d_off(n_cells + 1)
   {}
+
+  void resize(int n_prts)
+  {
+    d_cidx.resize(n_prts);
+  }
   
 public:
+  thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
   thrust::device_vector<uint> d_off;      // particles per cell
                                           // are at indices [offsets[cell] .. offsets[cell+1][
 };
@@ -144,7 +150,6 @@ public:
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
   cuda_mparticles_sort sort_by_cell;
-  thrust::device_vector<uint> d_cidx;       // cell index (incl patch) per particle
   
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 

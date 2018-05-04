@@ -68,7 +68,7 @@ bool cuda_mparticles<BS>::check_cidx_id_unordered_slow()
   for (int p = 0; p < this->n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int cidx = this->validCellIndex(this->d_xi4[off + n], p);
-      if (!(cidx == d_cidx[off+n])) return false;
+      if (!(cidx == sort_by_cell.d_cidx[off+n])) return false;
       if (!(off+n == d_id[off+n])) return false;
     }
     off += n_prts_by_patch[p];
