@@ -98,6 +98,12 @@ struct cuda_mparticles_sort
     cmprts.find_cell_indices_ids(d_cidx, cmprts.d_id);
   }
   
+  template<typename BS>
+  bool check_cidx_id_unordered_slow(cuda_mparticles<BS>& cmprts)
+  {
+    return cmprts.check_cidx_id_unordered_slow(d_cidx, cmprts.d_id);
+  }
+  
 public:
   thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
   thrust::device_vector<uint> d_off;      // particles per cell
@@ -143,7 +149,7 @@ public:
 
   bool check_in_patch_unordered_slow();
   bool check_bidx_id_unordered_slow();
-  bool check_cidx_id_unordered_slow();
+  bool check_cidx_id_unordered_slow(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id);
   bool check_ordered();
 
   void resize(uint n_prts);

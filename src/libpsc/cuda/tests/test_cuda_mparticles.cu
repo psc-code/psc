@@ -236,7 +236,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(cmprts->d_id[1], 1);
   EXPECT_EQ(cmprts->d_id[2], 2);
 
-  EXPECT_TRUE(cmprts->check_cidx_id_unordered_slow());
+  EXPECT_TRUE(cmprts->sort_by_cell.check_cidx_id_unordered_slow(*cmprts));
   cmprts->stable_sort_cidx();
   
   EXPECT_EQ(d_idx[0], 0);
