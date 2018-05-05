@@ -108,10 +108,11 @@ struct cuda_mparticles : cuda_mparticles_base<BS>
 
 public:
   void find_block_indices_ids();
-  void find_cell_indices_ids(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id);
+  void find_cell_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
   void reorder();
   void reorder(const thrust::device_vector<uint>& d_id);
-  void reorder_and_offsets();
+  void reorder_and_offsets(const thrust::device_vector<uint>& d_idx, const thrust::device_vector<uint>& d_id,
+			   thrust::device_vector<uint>& d_off);
   void reorder_and_offsets_slow();
   void swap_alt();
 

@@ -64,6 +64,12 @@ struct cuda_mparticles_sort2
     thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());
   }
 
+  template<typename BS>
+  void reorder_and_offsets(cuda_mparticles<BS>& cmprts)
+  {
+    cmprts.reorder_and_offsets(d_idx, d_id, d_off);
+  }
+  
 public:
   thrust::device_vector<uint> d_idx;      // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;       // particle id used for reordering

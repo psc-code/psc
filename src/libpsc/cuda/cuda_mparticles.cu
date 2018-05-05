@@ -249,7 +249,7 @@ void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_c
 
 __global__ static void
 k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
-		      uint *d_bidx, uint *d_ids, uint *d_off, int last_block)
+		      const uint *d_bidx, const uint *d_ids, uint *d_off, int last_block)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
@@ -281,7 +281,9 @@ k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, f
 // reorder_and_offsets
 
 template<typename BS>
-void cuda_mparticles<BS>::reorder_and_offsets()
+void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>& d_idx,
+					      const thrust::device_vector<uint>& d_id,
+					      thrust::device_vector<uint>& d_off)
 {
   if (this->n_patches == 0) {
     return;
@@ -295,9 +297,9 @@ void cuda_mparticles<BS>::reorder_and_offsets()
 
   k_reorder_and_offsets<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
 					       d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
-					       this->by_block_.d_idx.data().get(),
-					       this->by_block_.d_id.data().get(),
-					       this->by_block_.d_off.data().get(), this->n_blocks);
+					       d_idx.data().get(),
+					       d_id.data().get(),
+					       d_off.data().get(), this->n_blocks);
   cuda_sync_if_enabled();
 
   need_reorder = false;
@@ -366,7 +368,7 @@ void cuda_mparticles<BS>::setup_internals()
 
   this->by_block_.stable_sort();
 
-  reorder_and_offsets();
+  this->by_block_.reorder_and_offsets(*this);
 
   // post-condition:
   // - particles now sorted by block
@@ -458,7 +460,7 @@ void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
 
   this->by_block_.stable_sort();
 
-  reorder_and_offsets();
+  this->by_block_.reorder_and_offsets(*this);
 
   // assert(check_ordered());
 }

@@ -178,7 +178,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   EXPECT_EQ(d_id[1], 2);
   EXPECT_EQ(d_id[2], 0);
 
-  cmprts->reorder_and_offsets();
+  cmprts->by_block_.reorder_and_offsets(*cmprts);
 
   float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
   EXPECT_FLOAT_EQ(xi4_0.y, 35.);
