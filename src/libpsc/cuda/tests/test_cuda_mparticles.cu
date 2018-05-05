@@ -224,7 +224,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
 
   auto sort_by_cell = cuda_mparticles_sort{cmprts->n_cells()};
-  auto& d_idx = sort_by_cell.d_cidx;
+  auto& d_idx = sort_by_cell.d_idx;
   auto& d_id = sort_by_cell.d_id;
   
   sort_by_cell.find_indices_ids(*cmprts);
