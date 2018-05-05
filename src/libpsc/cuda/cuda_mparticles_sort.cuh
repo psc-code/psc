@@ -39,12 +39,6 @@ struct cuda_mparticles_sort
     cmprts.reorder(d_id);
   }
   
-  template<typename BS>
-  void reorder_and_offsets(cuda_mparticles<BS>& cmprts)
-  {
-    cmprts.reorder_and_offsets_cidx(d_cidx, d_id, d_off);
-  }
-  
 public:
   thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
   thrust::device_vector<uint> d_id;       // particle id used for reordering

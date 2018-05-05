@@ -114,8 +114,6 @@ public:
   void reorder(const thrust::device_vector<uint>& d_id);
   void reorder_and_offsets();
   void reorder_and_offsets_slow();
-  void reorder_and_offsets_cidx(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id,
-				thrust::device_vector<uint>& d_off);
   void swap_alt();
 
   bool check_in_patch_unordered_slow();
