@@ -107,7 +107,7 @@ struct cuda_mparticles : cuda_mparticles_base<BS>
   void dump_by_patch(uint *n_prts_by_patch);
 
 public:
-  void find_block_indices_ids();
+  void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
   void find_cell_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
   void reorder();
   void reorder(const thrust::device_vector<uint>& d_id);

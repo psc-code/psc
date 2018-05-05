@@ -59,6 +59,14 @@ struct cuda_mparticles_sort2
     : d_off(n_blocks + 1)
   {}
 
+  template<typename BS>
+  void find_indices_ids(cuda_mparticles<BS>& cmprts)
+  {
+    d_idx.resize(cmprts.n_prts);
+    d_id.resize(cmprts.n_prts);
+    cmprts.find_block_indices_ids(d_idx, d_id);
+  }
+  
   void stable_sort()
   {
     thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());

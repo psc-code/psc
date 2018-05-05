@@ -167,7 +167,8 @@ k_find_cell_indices_ids(DParticleIndexer<BS> dpi, float4 *d_xi4, uint *d_off,
 // find_block_indices_ids
 
 template<typename BS>
-void cuda_mparticles<BS>::find_block_indices_ids()
+void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_idx,
+						 thrust::device_vector<uint>& d_id)
 {
   if (this->n_patches == 0) {
     return;
@@ -196,8 +197,8 @@ void cuda_mparticles<BS>::find_block_indices_ids()
   k_find_block_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						      this->d_xi4.data().get(),
 						      this->by_block_.d_off.data().get(),
-						      this->by_block_.d_idx.data().get(),
-						      this->by_block_.d_id.data().get(),
+						      d_idx.data().get(),
+						      d_id.data().get(),
 						      this->n_patches,
 						      this->n_blocks_per_patch);
   cuda_sync_if_enabled();
@@ -362,7 +363,7 @@ void cuda_mparticles<BS>::setup_internals()
 
   // assert(check_in_patch_unordered_slow());
 
-  find_block_indices_ids();
+  this->by_block_.find_indices_ids(*this);
 
   // assert(check_bidx_id_unordered_slow());
 
@@ -435,7 +436,7 @@ void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
 
   // assert(check_in_patch_unordered_slow());
 
-  find_block_indices_ids();
+  this->by_block_.find_indices_ids(*this);
   // assert(check_bidx_id_unordered_slow());
 
   resize(this->n_prts + buf_n);
