@@ -169,7 +169,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   EXPECT_EQ(d_id[2], 2);
 
   EXPECT_TRUE(cmprts->check_bidx_id_unordered_slow());
-  cmprts->stable_sort_by_key();
+  cmprts->by_block_.stable_sort();
   
   EXPECT_EQ(d_bidx[0], 0);
   EXPECT_EQ(d_bidx[1], 0);

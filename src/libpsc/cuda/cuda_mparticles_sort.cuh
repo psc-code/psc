@@ -59,6 +59,11 @@ struct cuda_mparticles_sort2
     : d_off(n_blocks + 1)
   {}
 
+  void stable_sort()
+  {
+    thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());
+  }
+
 public:
   thrust::device_vector<uint> d_idx;      // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;       // particle id used for reordering

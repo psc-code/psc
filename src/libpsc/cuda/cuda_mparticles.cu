@@ -245,17 +245,6 @@ void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_c
 }
 
 // ----------------------------------------------------------------------
-// stable_sort_by_key
-
-template<typename BS>
-void cuda_mparticles<BS>::stable_sort_by_key()
-{
-  thrust::stable_sort_by_key(this->by_block_.d_idx.data(),
-			     this->by_block_.d_idx.data() + this->n_prts,
-			     this->by_block_.d_id.begin());
-}
-
-// ----------------------------------------------------------------------
 // k_reorder_and_offsets
 
 __global__ static void
@@ -375,7 +364,7 @@ void cuda_mparticles<BS>::setup_internals()
 
   // assert(check_bidx_id_unordered_slow());
 
-  stable_sort_by_key();
+  this->by_block_.stable_sort();
 
   reorder_and_offsets();
 
@@ -467,7 +456,7 @@ void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
 
   this->n_prts += buf_n;
 
-  stable_sort_by_key();
+  this->by_block_.stable_sort();
 
   reorder_and_offsets();
 
