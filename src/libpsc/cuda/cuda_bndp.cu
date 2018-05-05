@@ -230,7 +230,7 @@ uint cuda_bndp<BS>::convert_and_copy_to_dev(cuda_mparticles *cmprts)
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
-  thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), cmprts->d_bidx.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), cmprts->by_block_.d_idx.begin() + cmprts->n_prts);
   // slight abuse of the now unused last part of spine_cnts
   thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(), d_spine_cnts.begin() + 10 * n_blocks);
 

@@ -150,9 +150,10 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
     });
 
   auto& d_id = cmprts->by_block_.d_id;
-  EXPECT_EQ(cmprts->d_bidx[0], 0);
-  EXPECT_EQ(cmprts->d_bidx[1], 0);
-  EXPECT_EQ(cmprts->d_bidx[2], 0);
+  auto& d_bidx = cmprts->by_block_.d_idx;
+  EXPECT_EQ(d_bidx[0], 0);
+  EXPECT_EQ(d_bidx[1], 0);
+  EXPECT_EQ(d_bidx[2], 0);
   EXPECT_EQ(d_id[0], 0);
   EXPECT_EQ(d_id[1], 0);
   EXPECT_EQ(d_id[2], 0);
@@ -160,9 +161,9 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
   cmprts->find_block_indices_ids();
   
-  EXPECT_EQ(cmprts->d_bidx[0], 1);
-  EXPECT_EQ(cmprts->d_bidx[1], 0);
-  EXPECT_EQ(cmprts->d_bidx[2], 0);
+  EXPECT_EQ(d_bidx[0], 1);
+  EXPECT_EQ(d_bidx[1], 0);
+  EXPECT_EQ(d_bidx[2], 0);
   EXPECT_EQ(d_id[0], 0);
   EXPECT_EQ(d_id[1], 1);
   EXPECT_EQ(d_id[2], 2);
@@ -170,9 +171,9 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   EXPECT_TRUE(cmprts->check_bidx_id_unordered_slow());
   cmprts->stable_sort_by_key();
   
-  EXPECT_EQ(cmprts->d_bidx[0], 0);
-  EXPECT_EQ(cmprts->d_bidx[1], 0);
-  EXPECT_EQ(cmprts->d_bidx[2], 1);
+  EXPECT_EQ(d_bidx[0], 0);
+  EXPECT_EQ(d_bidx[1], 0);
+  EXPECT_EQ(d_bidx[2], 1);
   EXPECT_EQ(d_id[0], 1);
   EXPECT_EQ(d_id[1], 2);
   EXPECT_EQ(d_id[2], 0);

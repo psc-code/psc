@@ -67,10 +67,11 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
       xi4.y += 10.;
       cmprts->d_xi4[n] = xi4;
     }
-    cmprts->d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
-    cmprts->d_bidx[1] = CUDA_BND_S_OOB;
-    cmprts->d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
-    cmprts->d_bidx[3] = CUDA_BND_S_OOB;
+    auto& d_bidx = cmprts->by_block_.d_idx;
+    d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
+    d_bidx[1] = CUDA_BND_S_OOB;
+    d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
+    d_bidx[3] = CUDA_BND_S_OOB;
     
 #if 0
     cmprts->dump();
@@ -324,8 +325,9 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old+1]).w), 1);
 
   // block indices have been calculated
-  EXPECT_EQ(cmprts->d_bidx[n_prts_old  ], 0);  // 0th block in 0th patch
-  EXPECT_EQ(cmprts->d_bidx[n_prts_old+1], 16); // 0th block in 1st patch
+  auto& d_bidx = cmprts->by_block_.d_idx;
+  EXPECT_EQ(d_bidx[n_prts_old  ], 0);  // 0th block in 0th patch
+  EXPECT_EQ(d_bidx[n_prts_old+1], 16); // 0th block in 1st patch
 
   // received particles per block have been counted
   for (int b = 0; b < cmprts->n_blocks; b++) {

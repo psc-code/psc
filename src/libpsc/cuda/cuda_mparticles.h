@@ -126,7 +126,6 @@ public:
   // per particle
   thrust::device_vector<float4> d_alt_xi4;  // storage for out-of-place reordering of particle data
   thrust::device_vector<float4> d_alt_pxi4;
-  thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
 
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
@@ -151,7 +150,7 @@ struct DMparticlesCuda : DParticleIndexer<BS>
       xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
       alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
       off_(cmprts.by_block_.d_off.data().get()),
-      bidx_(cmprts.d_bidx.data().get()),
+      bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),
       n_blocks_(cmprts.n_blocks)
   {
