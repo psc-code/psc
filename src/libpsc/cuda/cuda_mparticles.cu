@@ -16,8 +16,7 @@
 
 template<typename BS>
 cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
-: cuda_mparticles_base<BS>(grid),
-  sort_by_cell(this->n_cells())
+: cuda_mparticles_base<BS>(grid)
 {
   cuda_base_init();
   

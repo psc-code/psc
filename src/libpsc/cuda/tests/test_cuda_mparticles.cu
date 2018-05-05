@@ -219,17 +219,10 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
     });
   EXPECT_TRUE(cmprts->check_in_patch_unordered_slow());
 
-  auto& sort_by_cell = cmprts->sort_by_cell;
-  auto& d_idx = sort_by_cell.d_cidx;
-  EXPECT_EQ(d_idx[0], 0);
-  EXPECT_EQ(d_idx[1], 0);
-  EXPECT_EQ(d_idx[2], 0);
-  EXPECT_EQ(cmprts->d_id[0], 0);
-  EXPECT_EQ(cmprts->d_id[1], 0);
-  EXPECT_EQ(cmprts->d_id[2], 0);
+  auto sort_by_cell = cuda_mparticles_sort{cmprts->n_cells()};
   
   sort_by_cell.find_indices_ids(*cmprts);
-
+  auto& d_idx = sort_by_cell.d_cidx;
   EXPECT_EQ(d_idx[0], 15);
   EXPECT_EQ(d_idx[1], 11);
   EXPECT_EQ(d_idx[2], 0);

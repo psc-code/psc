@@ -79,12 +79,12 @@ struct d_particle {
     d_pxi4[n] = pxi4;							\
 } while (0)
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // cuda_mparticles_sort
 
 struct cuda_mparticles_sort
 {
-  cuda_mparticles_sort(int n_cells)
+  cuda_mparticles_sort(uint n_cells)
     : d_off(n_cells + 1)
   {}
 
@@ -170,8 +170,6 @@ public:
   thrust::device_vector<uint> d_bidx;       // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;         // particle id for sorting
 
-  cuda_mparticles_sort sort_by_cell;
-  
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
