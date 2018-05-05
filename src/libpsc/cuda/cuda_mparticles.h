@@ -92,29 +92,30 @@ struct cuda_mparticles_sort
   void find_indices_ids(cuda_mparticles<BS>& cmprts)
   {
     d_cidx.resize(cmprts.n_prts);
-    cmprts.find_cell_indices_ids(d_cidx, cmprts.d_id);
+    d_id.resize(cmprts.n_prts);
+    cmprts.find_cell_indices_ids(d_cidx, d_id);
   }
   
   template<typename BS>
   bool check_cidx_id_unordered_slow(cuda_mparticles<BS>& cmprts)
   {
-    return cmprts.check_cidx_id_unordered_slow(d_cidx, cmprts.d_id);
+    return cmprts.check_cidx_id_unordered_slow(d_cidx, d_id);
   }
   
-  template<typename BS>
-  void stable_sort_cidx(cuda_mparticles<BS>& cmprts)
+  void stable_sort_cidx()
   {
-    thrust::stable_sort_by_key(d_cidx.begin(), d_cidx.end(), cmprts.d_id.begin());
+    thrust::stable_sort_by_key(d_cidx.begin(), d_cidx.end(), d_id.begin());
   }
   
   template<typename BS>
   void reorder_and_offsets(cuda_mparticles<BS>& cmprts)
   {
-    cmprts.reorder_and_offsets_cidx(d_cidx, cmprts.d_id, d_off);
+    cmprts.reorder_and_offsets_cidx(d_cidx, d_id, d_off);
   }
   
 public:
   thrust::device_vector<uint> d_cidx;     // cell index (incl patch) per particle
+  thrust::device_vector<uint> d_id;       // particle id used for reordering
   thrust::device_vector<uint> d_off;      // particles per cell
                                           // are at indices [offsets[cell] .. offsets[cell+1][
 };
