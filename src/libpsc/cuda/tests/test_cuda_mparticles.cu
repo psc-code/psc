@@ -186,9 +186,10 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   EXPECT_FLOAT_EQ(xi4_2.y, 75.);
   EXPECT_FLOAT_EQ(xi4_2.z, 15.);
 
-  EXPECT_EQ(cmprts->d_off[0], 0);
-  EXPECT_EQ(cmprts->d_off[1], 2);
-  EXPECT_EQ(cmprts->d_off[2], 3);
+  auto& d_off = cmprts->by_block_.d_off;
+  EXPECT_EQ(d_off[0], 0);
+  EXPECT_EQ(d_off[1], 2);
+  EXPECT_EQ(d_off[2], 3);
 
   EXPECT_TRUE(cmprts->check_ordered());
 }

@@ -356,17 +356,18 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cmprts->d_id[3], 2);
 
   cbndp->update_offsets(cmprts.get());
+  auto& d_off = cmprts->by_block_.d_off;
   for (int b = 0; b <= cmprts->n_blocks; b++) {
     if (b < 1) {
-      EXPECT_EQ(cmprts->d_off[b], 0) << "where b = " << b;
+      EXPECT_EQ(d_off[b], 0) << "where b = " << b;
     } else if (b < 2) {
-      EXPECT_EQ(cmprts->d_off[b], 1) << "where b = " << b;
+      EXPECT_EQ(d_off[b], 1) << "where b = " << b;
     } else if (b < 17) {
-      EXPECT_EQ(cmprts->d_off[b], 2) << "where b = " << b;
+      EXPECT_EQ(d_off[b], 2) << "where b = " << b;
     } else if (b < 18) {
-      EXPECT_EQ(cmprts->d_off[b], 3) << "where b = " << b;
+      EXPECT_EQ(d_off[b], 3) << "where b = " << b;
     } else {
-      EXPECT_EQ(cmprts->d_off[b], 4) << "where b = " << b;
+      EXPECT_EQ(d_off[b], 4) << "where b = " << b;
     }
   }
 

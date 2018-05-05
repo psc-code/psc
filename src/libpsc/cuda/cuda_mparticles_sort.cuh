@@ -1,6 +1,10 @@
 
 #pragma once
 
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include <thrust/binary_search.h>
+
 // ======================================================================
 // cuda_mparticles_sort
 
@@ -44,6 +48,20 @@ public:
   thrust::device_vector<uint> d_id;       // particle id used for reordering
   thrust::device_vector<uint> d_off;      // particles per cell
                                           // are at indices [offsets[cell] .. offsets[cell+1][
+};
+
+// ======================================================================
+// cuda_mparticles_sort2
+
+struct cuda_mparticles_sort2
+{
+  cuda_mparticles_sort2(uint n_blocks)
+    : d_off(n_blocks + 1)
+  {}
+
+public:
+  thrust::device_vector<uint> d_off;      // particles per cell
+                                          // are at indices [offsets[block] .. offsets[block+1][
 };
 
 

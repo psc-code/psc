@@ -59,7 +59,7 @@ template<typename BS>
 bool cuda_mparticles<BS>::check_ordered()
 {
   thrust::host_vector<float4> h_xi4(this->d_xi4.data(), this->d_xi4.data() + this->n_prts);
-  thrust::host_vector<uint> h_off(this->d_off);
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
   thrust::host_vector<uint> h_id(d_id.data(), d_id.data() + this->n_prts);
 
   //printf("check_ordered: need_reorder %s\n", need_reorder ? "true" : "false");

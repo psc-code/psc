@@ -4,6 +4,7 @@
 
 #include "cuda_iface.h"
 #include "cuda_mparticles_indexer.h"
+#include "cuda_mparticles_sort.cuh"
 
 #include "particles.hxx"
 #include "psc_bits.h"
@@ -37,8 +38,7 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
   thrust::device_vector<float4> d_pxi4;
 
   // per block
-  thrust::device_vector<uint> d_off;     // particles per block
-                                         // are at indices [offsets[block] .. offsets[block+1]-1[
+  cuda_mparticles_sort2 by_block_;
 
   uint n_prts = 0;                       // total # of particles across all patches
   const Grid_t& grid_;
@@ -151,7 +151,7 @@ struct DMparticlesCuda : DParticleIndexer<BS>
       dqs_(.5f * cmprts.grid_.eta * dt_),
       xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
       alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
-      off_(cmprts.d_off.data().get()),
+      off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.d_bidx.data().get()),
       id_(cmprts.d_id.data().get()),
       n_blocks_(cmprts.n_blocks)
@@ -204,7 +204,7 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->d_off);
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
 
   uint off = h_off[p * this->n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
@@ -239,7 +239,7 @@ void cuda_mparticles<BS>::get_particles(uint p, F setter)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sue we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->d_off);
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
 
   uint off = h_off[p * this->n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;

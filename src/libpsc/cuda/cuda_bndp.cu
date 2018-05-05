@@ -259,7 +259,7 @@ void cuda_bndp<BS>::update_offsets(cuda_mparticles *cmprts)
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_blocks, cmprts->d_off.data().get(), d_spine_sums.data().get());
+    (n_blocks, cmprts->by_block_.d_off.data().get(), d_spine_sums.data().get());
   cuda_sync_if_enabled();
 }
 
@@ -273,7 +273,7 @@ void cuda_bndp<BS>::update_offsets_gold(cuda_mparticles *cmprts)
     h_off[bid] = h_spine_sums[bid * 10];
   }
 
-  thrust::copy(h_off.begin(), h_off.end(), cmprts->d_off.begin());
+  thrust::copy(h_off.begin(), h_off.end(), cmprts->by_block_.d_off.begin());
 }
 
 template struct cuda_bndp<BS144>;

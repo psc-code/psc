@@ -89,12 +89,13 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
   
   fprintf(file, "cuda_mparticles_dump: n_prts = %d\n", this->n_prts);
   uint off = 0;
+  auto& d_off = this->by_block_.d_off;
   for (int b = 0; b < this->n_blocks; b++) {
-    uint off_b = this->d_off[b], off_e = this->d_off[b+1];
+    uint off_b = d_off[b], off_e = d_off[b+1];
     int p = b / this->n_blocks_per_patch;
     fprintf(file, "cuda_mparticles_dump: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
-    assert(this->d_off[b] == off);
-    for (int n = this->d_off[b]; n < this->d_off[b+1]; n++) {
+    assert(d_off[b] == off);
+    for (int n = d_off[b]; n < d_off[b+1]; n++) {
       float4 xi4 = this->d_xi4[n], pxi4 = this->d_pxi4[n];
       uint bidx = d_bidx[n], id = d_id[n];
       fprintf(file, "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d %s\n",
@@ -194,7 +195,7 @@ void cuda_mparticles<BS>::find_block_indices_ids()
 
   k_find_block_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						      this->d_xi4.data().get(),
-						      this->d_off.data().get(),
+						      this->by_block_.d_off.data().get(),
 						      d_bidx.data().get(),
 						      d_id.data().get(),
 						      this->n_patches,
@@ -235,7 +236,7 @@ void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_c
 
   k_find_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						     this->d_xi4.data().get(),
-						     this->d_off.data().get(),
+						     this->by_block_.d_off.data().get(),
 						     d_cidx.data().get(),
 						     d_id.data().get(),
 						     this->n_patches,
@@ -304,7 +305,7 @@ void cuda_mparticles<BS>::reorder_and_offsets()
   k_reorder_and_offsets<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
 					       d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
 					       d_bidx.data().get(), d_id.data().get(),
-					       this->d_off.data().get(), this->n_blocks);
+					       this->by_block_.d_off.data().get(), this->n_blocks);
   cuda_sync_if_enabled();
 
   need_reorder = false;
