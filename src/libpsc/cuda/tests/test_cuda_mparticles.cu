@@ -1,5 +1,6 @@
 
 #include "cuda_mparticles.h"
+#include "cuda_mparticles_sort.cuh"
 #include "cuda_test.hxx"
 
 #include <stdio.h>
