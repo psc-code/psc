@@ -374,8 +374,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_cidx(thrust::device_vector<uint>& 
 // k_reorder
 
 __global__ static void
-k_reorder(int n_prts, uint *d_ids, float4 *xi4, float4 *pxi4,
-	  float4 *alt_xi4, float4 *alt_pxi4)
+k_reorder(int n_prts, const uint *d_ids, float4 *xi4, float4 *pxi4,
+	  const float4 *alt_xi4, const float4 *alt_pxi4)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
@@ -395,7 +395,17 @@ void cuda_mparticles<BS>::reorder()
   if (!need_reorder) {
     return;
   }
-  
+
+  reorder(d_id);
+  need_reorder = false;
+}
+
+// ----------------------------------------------------------------------
+// reorder
+
+template<typename BS>
+void cuda_mparticles<BS>::reorder(const thrust::device_vector<uint>& d_id)
+{
   swap_alt();
   resize(this->n_prts);
 
@@ -404,8 +414,6 @@ void cuda_mparticles<BS>::reorder()
   k_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
     (this->n_prts, d_id.data().get(), this->d_xi4.data().get(), this->d_pxi4.data().get(),
      d_alt_xi4.data().get(), d_alt_pxi4.data().get());
-  
-  need_reorder = false;
 }
 
 // ----------------------------------------------------------------------

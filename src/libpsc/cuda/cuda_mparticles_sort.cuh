@@ -34,6 +34,12 @@ struct cuda_mparticles_sort
   }
   
   template<typename BS>
+  void reorder(cuda_mparticles<BS>& cmprts)
+  {
+    cmprts.reorder(d_id);
+  }
+  
+  template<typename BS>
   void reorder_and_offsets(cuda_mparticles<BS>& cmprts)
   {
     cmprts.reorder_and_offsets_cidx(d_cidx, d_id, d_off);

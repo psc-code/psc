@@ -111,6 +111,7 @@ public:
   void find_cell_indices_ids(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id);
   void stable_sort_by_key();
   void reorder();
+  void reorder(const thrust::device_vector<uint>& d_id);
   void reorder_and_offsets();
   void reorder_and_offsets_slow();
   void reorder_and_offsets_cidx(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id,
