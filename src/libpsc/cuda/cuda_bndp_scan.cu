@@ -62,7 +62,7 @@ void cuda_bndp<BS>::reorder_send_by_id(cuda_mparticles* cmprts, uint n_prts_send
   int dimGrid = (n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   k_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_prts_send, cmprts->d_id.data().get() + cmprts->n_prts - n_prts_send,
+    (n_prts_send, cmprts->by_block_.d_id.data().get() + cmprts->n_prts - n_prts_send,
      cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
      cmprts->d_xi4.data().get() + cmprts->n_prts, cmprts->d_pxi4.data().get() + cmprts->n_prts);
   cuda_sync_if_enabled();
@@ -74,7 +74,7 @@ void cuda_bndp<BS>::reorder_send_by_id(cuda_mparticles* cmprts, uint n_prts_send
 template<typename BS>
 void cuda_bndp<BS>::reorder_send_by_id_gold(cuda_mparticles *cmprts, uint n_prts_send)
 {
-  thrust::host_vector<uint> h_id(cmprts->d_id.data(), cmprts->d_id.data() + cmprts->n_prts);
+  thrust::host_vector<uint> h_id(cmprts->by_block_.d_id.data(), cmprts->by_block_.d_id.data() + cmprts->n_prts);
   thrust::host_vector<float4> h_xi4(cmprts->d_xi4.data(), cmprts->d_xi4.data() + cmprts->n_prts + n_prts_send);
   thrust::host_vector<float4> h_pxi4(cmprts->d_pxi4.data(), cmprts->d_pxi4.data() + cmprts->n_prts + n_prts_send);
   
@@ -159,42 +159,42 @@ void cuda_bndp<BS>::scan_send_buf_total(cuda_mparticles* cmprts, uint n_prts_sen
 		       NopFunctor<K>,
 		       4, 4> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->by_block_.d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
   } else if (mx[0] == 1 && mx[1] == 8 && mx[2] == 8) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       8, 8> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->by_block_.d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
   } else if (mx[0] == 1 && mx[1] == 16 && mx[2] == 16) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       16, 16> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->by_block_.d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
   } else if (mx[0] == 1 && mx[1] == 32 && mx[2] == 32) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       32, 32> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->by_block_.d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
   } else if (mx[0] == 1 && mx[1] == 64 && mx[2] == 64) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
 		       NopFunctor<K>,
 		       64, 64> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->by_block_.d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
   } else if (mx[0] == 1 && mx[1] == 128 && mx[2] == 128) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
                        NopFunctor<K>,
                        NopFunctor<K>,
                        128, 128>
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
-      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
+      (d_spine_sums.data().get(), cmprts->d_bidx.data().get(), cmprts->by_block_.d_id.data().get(), cmprts->by_block_.d_off.data().get(), n_blocks);
   } else {
     printf("no support for b_mx %d x %d x %d!\n", mx[0], mx[1], mx[2]);
     assert(0);

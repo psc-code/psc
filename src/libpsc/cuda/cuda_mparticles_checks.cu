@@ -42,7 +42,7 @@ bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = this->blockIndex(this->d_xi4[off + n], p);
       if (!(bidx == d_bidx[off+n])) return false;
-      if (!(off+n == d_id[off+n])) return false;
+      if (!(off+n == this->by_block_.d_id[off+n])) return false;
     }
     off += n_prts_by_patch[p];
   }
@@ -60,7 +60,7 @@ bool cuda_mparticles<BS>::check_ordered()
 {
   thrust::host_vector<float4> h_xi4(this->d_xi4.data(), this->d_xi4.data() + this->n_prts);
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
-  thrust::host_vector<uint> h_id(d_id.data(), d_id.data() + this->n_prts);
+  thrust::host_vector<uint> h_id(this->by_block_.d_id.data(), this->by_block_.d_id.data() + this->n_prts);
 
   //printf("check_ordered: need_reorder %s\n", need_reorder ? "true" : "false");
 

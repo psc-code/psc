@@ -195,8 +195,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #endif
   EXPECT_EQ(cmprts->n_prts, 4);
   EXPECT_EQ(cbndp->n_prts_send, 2);
-  EXPECT_EQ(cmprts->d_id[2], 1);
-  EXPECT_EQ(cmprts->d_id[3], 3);
+  EXPECT_EQ(cmprts->by_block_.d_id[2], 1);
+  EXPECT_EQ(cmprts->by_block_.d_id[3], 3);
 
 #else
   cbndp->scan_send_buf_total_gold(cmprts.get(), cbndp->n_prts_send);
@@ -350,10 +350,11 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cmprts->n_prts -= cbndp->n_prts_send;
 
   EXPECT_EQ(cmprts->n_prts, 4);
-  EXPECT_EQ(cmprts->d_id[0], 4);
-  EXPECT_EQ(cmprts->d_id[1], 0);
-  EXPECT_EQ(cmprts->d_id[2], 5);
-  EXPECT_EQ(cmprts->d_id[3], 2);
+  auto& d_id = cmprts->by_block_.d_id;
+  EXPECT_EQ(d_id[0], 4);
+  EXPECT_EQ(d_id[1], 0);
+  EXPECT_EQ(d_id[2], 5);
+  EXPECT_EQ(d_id[3], 2);
 
   cbndp->update_offsets(cmprts.get());
   auto& d_off = cmprts->by_block_.d_off;

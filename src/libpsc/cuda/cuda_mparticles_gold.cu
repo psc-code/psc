@@ -15,7 +15,7 @@ void cuda_mparticles<BS>::reorder_and_offsets_slow()
   thrust::host_vector<float4> h_alt_pxi4(this->n_prts);
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
   thrust::host_vector<uint> h_bidx(d_bidx);
-  thrust::host_vector<uint> h_id(d_id);
+  thrust::host_vector<uint> h_id(this->by_block_.d_id);
 
   for (int i = 0; i <= this->n_prts; i++) {
     //    uint bidx;

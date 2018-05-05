@@ -60,6 +60,7 @@ struct cuda_mparticles_sort2
   {}
 
 public:
+  thrust::device_vector<uint> d_id;       // particle id used for reordering
   thrust::device_vector<uint> d_off;      // particles per cell
                                           // are at indices [offsets[block] .. offsets[block+1][
 };
