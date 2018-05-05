@@ -18,12 +18,6 @@ struct cuda_mparticles_sort
     cmprts.find_cell_indices_ids(d_cidx, d_id);
   }
   
-  template<typename BS>
-  bool check_cidx_id_unordered_slow(cuda_mparticles<BS>& cmprts)
-  {
-    return cmprts.check_cidx_id_unordered_slow(d_cidx, d_id);
-  }
-  
   void stable_sort_cidx()
   {
     thrust::stable_sort_by_key(d_cidx.begin(), d_cidx.end(), d_id.begin());

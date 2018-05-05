@@ -119,7 +119,6 @@ public:
 
   bool check_in_patch_unordered_slow();
   bool check_bidx_id_unordered_slow();
-  bool check_cidx_id_unordered_slow(thrust::device_vector<uint>& d_cidx, thrust::device_vector<uint>& d_id);
   bool check_ordered();
 
   void resize(uint n_prts);
