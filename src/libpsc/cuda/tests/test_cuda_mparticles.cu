@@ -241,6 +241,17 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(d_id[1], 1);
   EXPECT_EQ(d_id[2], 0);
 
+  sort_by_cell.find_offsets();
+  auto& d_off = sort_by_cell.d_off;
+  EXPECT_EQ(d_off[0], 0);
+  for (int c = 1; c <= 11; c++) {
+    EXPECT_EQ(d_off[c], 1) << "c = " << c;
+  }
+  for (int c = 12; c <= 15; c++) {
+    EXPECT_EQ(d_off[c], 2) << "c = " << c;
+  }
+  EXPECT_EQ(d_off[16], 3);
+  
   sort_by_cell.reorder_and_offsets(*cmprts);
 
   float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
@@ -251,13 +262,12 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_FLOAT_EQ(xi4_2.y, 75.);
   EXPECT_FLOAT_EQ(xi4_2.z, 15.);
 
-  auto& d_off = sort_by_cell.d_off;
   EXPECT_EQ(d_off[0], 0);
   for (int c = 1; c <= 11; c++) {
-    EXPECT_EQ(d_off[c], 1);
+    EXPECT_EQ(d_off[c], 1) << "c = " << c;
   }
   for (int c = 12; c <= 15; c++) {
-    EXPECT_EQ(d_off[c], 2);
+    EXPECT_EQ(d_off[c], 2) << "c = " << c;
   }
   EXPECT_EQ(d_off[16], 3);
 }

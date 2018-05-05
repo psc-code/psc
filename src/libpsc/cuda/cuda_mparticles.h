@@ -11,6 +11,7 @@
 
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
+#include <thrust/binary_search.h>
 
 // ======================================================================
 // cuda_mparticles_base
@@ -105,6 +106,16 @@ struct cuda_mparticles_sort
   void stable_sort_cidx()
   {
     thrust::stable_sort_by_key(d_cidx.begin(), d_cidx.end(), d_id.begin());
+  }
+
+  void find_offsets()
+  {
+    int n_cells = d_off.size() - 1;
+    thrust::counting_iterator<uint> search_begin(0);
+    thrust::upper_bound(d_cidx.begin(), d_cidx.end(),
+			search_begin, search_begin + n_cells,
+			d_off.begin() + 1);
+    // d_off[0] was set to zero during d_off initialization
   }
   
   template<typename BS>
