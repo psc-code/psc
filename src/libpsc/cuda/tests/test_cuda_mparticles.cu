@@ -1,6 +1,7 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mparticles_sort.cuh"
+#include "cuda_collision.cuh"
 #include "cuda_test.hxx"
 
 #include <stdio.h>
@@ -291,5 +292,34 @@ TEST_F(CudaMparticlesTest, SetupInternals)
     });
 
   cmprts->check_ordered();
+}
+
+// ----------------------------------------------------------------------
+// CudaCollision
+
+TEST_F(CudaMparticlesTest, CudaCollision)
+{
+  grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
+
+  uint n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
+  cmprts->setup_internals();
+  cmprts->check_ordered();
+
+  int interval = 1;
+  double nu = .1;
+  cuda_collision<CudaMparticles> coll{interval, nu};
+
+  coll(*cmprts);
+  // // check that particles are now in Fortran order
+  // int cur_bidx = 0;
+  // cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
+  //     float4 xi = { prt.xi[0], prt.xi[1], prt.xi[2] };
+  //     int bidx = cmprts->blockIndex(xi, 0);
+  //     EXPECT_GE(bidx, cur_bidx);
+  //     cur_bidx = bidx;
+  //   });
+
 }
 

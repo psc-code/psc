@@ -15,7 +15,7 @@ CollisionCuda<BS>::CollisionCuda(MPI_Comm comm, int interval, double nu)
 template<typename BS>
 void CollisionCuda<BS>::operator()(MparticlesCuda<BS>& _mprts)
 {
-  (*fwd_)(_mprts.cmprts());
+  (*fwd_)(*_mprts.cmprts());
   auto& mprts = _mprts.template get_as<MparticlesSingle>();
   sort_(mprts);
   coll_(mprts);
