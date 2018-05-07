@@ -4,11 +4,27 @@
 #include "cuda_mparticles.h"
 #include "cuda_mparticles_sort.cuh"
 
+#include <curand_kernel.h>
+
 #define THREADS_PER_BLOCK 128
+
+// ----------------------------------------------------------------------
+// k_curand_setup
+
+__global__
+static void k_curand_setup(curandState *d_curand_states)
+{
+  int bid = blockIdx.x;
+  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
+
+  curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
+}
+
 
 // FIXME, replicated from CPU
 __device__
-static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
+static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2,
+		curandState& curand_state)
 {
   using real_t = float;
   
@@ -52,7 +68,7 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   if (q1*q2 == 0.) {
     return 0.; // no Coulomb collisions with neutrals
   }
- 
+
   LOAD_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
   LOAD_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
 
@@ -81,8 +97,8 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   h2=ss-m1*m1-m2*m2;
   h3=(h2*h2-4.0*m1*m1*m2*m2)/(4.0*ss);
   if (h3 < 0.) {
-    printf("WARNING: ss %g (m1+m1)^2 %g in %s\n", // FIXME
-	   ss, (m1+m2)*(m1+m2), __FILE__);
+    printf("WARNING: ss %g (m1+m2)^2 %g h3 %g in %s\n", // FIXME
+	   ss, (m1+m2)*(m1+m2), h3, __FILE__);
     return 0.; // nudt = 0 because no collision
   }
   ppc=std::sqrt(h3);
@@ -200,12 +216,10 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
     
   nudt=nudt1 * q12*q12/(m12*m12*vcr*vcr*vcr);
   
-#if 0
-
   // event generator of angles for post collision vectors
   
-  ran1 = (1.0 * random()) / RAND_MAX ;
-  ran2 = (1.0 * random()) / RAND_MAX ;
+  ran1 = curand_uniform(&curand_state);
+  ran2 = curand_uniform(&curand_state);
   if (ran2 < 1e-20) {
     ran2 = 1e-20;
   }
@@ -213,19 +227,17 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   nu = 2.f * M_PI * ran1;
   
   if(nudt<1.0) {                   // small angle collision
-    psi=2.f*std::atan(std::sqrt(-.5f*nudt*std::log(1.f-ran2)));
+    psi=2.f*std::atan(std::sqrt(-.5f*nudt*std::log(ran2)));
   } else {
     psi=std::acos(1.f-2.f*ran2);          // isotropic angles
   }
             
   // determine post-collision momentum in cm-frame
-                    
   h1=std::cos(psi);
   h2=std::sin(psi);
   h3=std::sin(nu);
   h4=std::cos(nu);
   
-#endif
   pc03=std::sqrt(m3*m3+qqc*qqc);
   pcx3=qqc*(h1*nx1+h2*h3*nx2+h2*h4*nx3);
   pcy3=qqc*(h1*ny1+h2*h3*ny2+h2*h4*ny3);
@@ -273,17 +285,24 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
 }
 
 __global__ static void
-k_collide(DMparticlesCuda<BS144> dmprts, uint *d_off, float nudt0)
+k_collide(DMparticlesCuda<BS144> dmprts, uint* d_off, uint* d_id, float nudt0,
+	  curandState* d_curand_states)
 {
   using real_t = float;
+
+  int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
+  /* Copy state to local memory for efficiency */
+  curandState local_state = d_curand_states[id];
 
   uint beg = d_off[blockIdx.x];
   uint end = d_off[blockIdx.x + 1];
   real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
   for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
-    printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-    bc(dmprts, nudt1, n, n + 1);
+    //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
+    bc(dmprts, nudt1, d_id[n], d_id[n + 1], local_state);
   }
+
+  d_curand_states[id] = local_state;
 }
 
 // ======================================================================
@@ -305,16 +324,34 @@ struct cuda_collision
     sort_by_cell.find_indices_ids(cmprts);
     sort_by_cell.stable_sort_cidx();
     sort_by_cell.find_offsets();
-    for (int c = 0; c <= cmprts.n_cells(); c++) {
-      printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
-    }
+    // for (int c = 0; c <= cmprts.n_cells(); c++) {
+    //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
+    // }
 
+    static bool first_time = true;
+    if (first_time) {
+      dim3 dimGrid(cmprts.n_cells());
+      int n_threads = dimGrid.x * THREADS_PER_BLOCK;
+      
+      cudaError_t ierr;
+      ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
+      cudaCheck(ierr);
+      
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_);
+      cuda_sync_if_enabled();
+      
+      first_time = false;
+    }
+    
     // all particles need to have same weight!
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts.prt_wni(prts[n_start]);
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
     dim3 dimGrid(cmprts.n_cells());
-    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(), nudt0);
+    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
+					      sort_by_cell.d_id.data().get(),
+					      nudt0, d_curand_states_);
+    cuda_sync_if_enabled();
   }
 
 private:
@@ -322,5 +359,6 @@ private:
   double nu_;
   int nicell_;
   double dt_;
+  curandState* d_curand_states_;
 };
 

@@ -302,16 +302,16 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    { .5, 75., 15. },
-    { .5, 75., 15. },
-    { .5, 75., 15. },
-    { .5,  5.,  5. },
-    { .5,  5.,  5. },
-    { .5, 35.,  5. },
-    { .5, 35.,  5. },
-    { .5, 35.,  5. },
-    { .5, 35.,  5. },
-    { .5, 35.,  5. },
+    { .5, 75., 15., 1.0, 0., 0., 0, 1. },
+    { .5, 75., 15., 1.1, 0., 0., 0, 1. },
+    { .5, 75., 15., 1.2, 0., 0., 0, 1. },
+    { .5, 35.,  5., 0., 1.0, 0., 0, 1. },
+    { .5, 35.,  5., 0., 1.1, 0., 0, 1. },
+    { .5, 35.,  5., 0., 1.2, 0., 0, 1. },
+    { .5, 35.,  5., 0., 1.3, 0., 0, 1. },
+    { .5, 35.,  5., 0., 1.4, 0., 0, 1. },
+    { .5,  5.,  5., 0., 0., 1.0, 0, 1. },
+    { .5,  5.,  5., 0., 0., 1.1, 0, 1. },
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
@@ -334,14 +334,10 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   cuda_collision<CudaMparticles> coll{interval, nu, nicell, dt};
 
   coll(*cmprts);
-  // // check that particles are now in Fortran order
-  // int cur_bidx = 0;
-  // cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-  //     float4 xi = { prt.xi[0], prt.xi[1], prt.xi[2] };
-  //     int bidx = cmprts->blockIndex(xi, 0);
-  //     EXPECT_GE(bidx, cur_bidx);
-  //     cur_bidx = bidx;
-  //   });
+  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
+      printf("xi %g %g pxi %g %g %g\n", prt.xi[1], prt.xi[2],
+	     prt.pxi[0], prt.pxi[1], prt.pxi[2]);
+    });
 
 }
 
