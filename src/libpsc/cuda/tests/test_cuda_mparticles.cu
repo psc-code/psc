@@ -300,16 +300,38 @@ TEST_F(CudaMparticlesTest, SetupInternals)
 TEST_F(CudaMparticlesTest, CudaCollision)
 {
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
-  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
 
-  uint n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
+  std::vector<cuda_mparticles_prt> prts = {
+    { .5, 75., 15. },
+    { .5, 75., 15. },
+    { .5, 75., 15. },
+    { .5,  5.,  5. },
+    { .5,  5.,  5. },
+    { .5, 35.,  5. },
+    { .5, 35.,  5. },
+    { .5, 35.,  5. },
+    { .5, 35.,  5. },
+    { .5, 35.,  5. },
+  };
+  uint n_prts_by_patch[1];
+  n_prts_by_patch[0] = prts.size();
+
+  // FIXME: can use make_cmprts() from vector here
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
+  cmprts->reserve_all(n_prts_by_patch);
+  cmprts->resize_all(n_prts_by_patch);
+  cmprts->set_particles(0, [&](int n) {
+      return prts[n];
+    });
+
   cmprts->setup_internals();
   cmprts->check_ordered();
 
   int interval = 1;
   double nu = .1;
-  cuda_collision<CudaMparticles> coll{interval, nu};
+  int nicell = 10;
+  double dt = .1;
+  cuda_collision<CudaMparticles> coll{interval, nu, nicell, dt};
 
   coll(*cmprts);
   // // check that particles are now in Fortran order
