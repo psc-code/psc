@@ -40,26 +40,30 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   real_t ran1,ran2;
 
   d_particle prt1, prt2;
-  LOAD_PARTICLE_POS(prt1, dmprts.xi4_, n1);
-  LOAD_PARTICLE_POS(prt1, dmprts.xi4_, n2);
-
-#if 0
-  px1=prt1->pxi;
-  py1=prt1->pyi;
-  pz1=prt1->pzi;
-  q1 =prts.prt_qni(*prt1);
-  m1 =prts.prt_mni(*prt1);
-
-  px2=prt2->pxi;
-  py2=prt2->pyi;
-  pz2=prt2->pzi;
-  q2 =prts.prt_qni(*prt2);
-  m2 =prts.prt_mni(*prt2);
+  LOAD_PARTICLE_POS(prt1, dmprts.xi4_ , n1);
+  LOAD_PARTICLE_POS(prt2, dmprts.xi4_ , n2);
+  int kind1 = __float_as_int(prt1.kind_as_float);
+  int kind2 = __float_as_int(prt2.kind_as_float);
+  q1 = dmprts.q(kind1);
+  q2 = dmprts.q(kind2);
+  m1 = dmprts.m(kind1);
+  m2 = dmprts.m(kind2);
 
   if (q1*q2 == 0.) {
     return 0.; // no Coulomb collisions with neutrals
   }
  
+  LOAD_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
+  LOAD_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
+
+  px1 = prt1.pxi[0];
+  py1 = prt1.pxi[1];
+  pz1 = prt1.pxi[2];
+
+  px2 = prt2.pxi[0];
+  py2 = prt2.pxi[1];
+  pz2 = prt2.pxi[2];
+
   px1=m1*px1;
   py1=m1*py1;
   pz1=m1*pz1;
@@ -77,8 +81,8 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   h2=ss-m1*m1-m2*m2;
   h3=(h2*h2-4.0*m1*m1*m2*m2)/(4.0*ss);
   if (h3 < 0.) {
-    mprintf("WARNING: ss %g (m1+m1)^2 %g in psc_collision_c.c\n",
-	    ss, (m1+m2)*(m1+m2));
+    printf("WARNING: ss %g (m1+m1)^2 %g in %s\n", // FIXME
+	   ss, (m1+m2)*(m1+m2), __FILE__);
     return 0.; // nudt = 0 because no collision
   }
   ppc=std::sqrt(h3);
@@ -185,8 +189,8 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   h2=ss-m3*m3-m4*m4;
   h3=(h2*h2-4.0*m3*m3*m4*m4)/(4.0*ss);
   if (h3 < 0.) {
-    mprintf("WARNING: ss %g (m3+m4)^2 %g in psc_collision_c.c\n",
-	    ss, (m3+m4)*(m3+m4));
+    printf("WARNING: ss %g (m3+m4)^2 %g in %s\n",
+	   ss, (m3+m4)*(m3+m4), __FILE__); // FIXME
     return 0.; // nudt = 0 because no collision
   }
           
@@ -196,6 +200,8 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
     
   nudt=nudt1 * q12*q12/(m12*m12*vcr*vcr*vcr);
   
+#if 0
+
   // event generator of angles for post collision vectors
   
   ran1 = (1.0 * random()) / RAND_MAX ;
@@ -204,21 +210,22 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
     ran2 = 1e-20;
   }
   
-  nu = 6.28318530717958623200 * ran1;
+  nu = 2.f * M_PI * ran1;
   
   if(nudt<1.0) {                   // small angle collision
-    psi=2.0*atan(std::sqrt(-0.5*nudt*log(1.0-ran2)));
+    psi=2.f*std::atan(std::sqrt(-.5f*nudt*std::log(1.f-ran2)));
   } else {
-    psi=acos(1.0-2.0*ran2);          // isotropic angles
+    psi=std::acos(1.f-2.f*ran2);          // isotropic angles
   }
             
   // determine post-collision momentum in cm-frame
                     
-  h1=cos(psi);
-  h2=sin(psi);
-  h3=sin(nu);
-  h4=cos(nu);
+  h1=std::cos(psi);
+  h2=std::sin(psi);
+  h3=std::sin(nu);
+  h4=std::cos(nu);
   
+#endif
   pc03=std::sqrt(m3*m3+qqc*qqc);
   pcx3=qqc*(h1*nx1+h2*h3*nx2+h2*h4*nx3);
   pcy3=qqc*(h1*ny1+h2*h3*ny2+h2*h4*ny3);
@@ -233,7 +240,6 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   pcz4=-pcz3;
   
   // determine post-collision momentum in lab-frame
-  
   
   pn3=pcx3*nx+pcy3*ny+pcz3*nz;
   pn4=pcx4*nx+pcy4*ny+pcz4*nz;
@@ -253,13 +259,15 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2)
   py4=py4/m4;
   pz4=pz4/m4;
   
-  prt1->pxi=px3;
-  prt1->pyi=py3;
-  prt1->pzi=pz3;
-  prt2->pxi=px4;
-  prt2->pyi=py4;
-  prt2->pzi=pz4;
-#endif
+  prt1.pxi[0] = px3;
+  prt1.pxi[1] = py3;
+  prt1.pxi[2] = pz3;
+  prt2.pxi[0] = px4;
+  prt2.pxi[1] = py4;
+  prt2.pxi[2] = pz4;
+
+  STORE_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
+  STORE_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
   
   return nudt;
 }

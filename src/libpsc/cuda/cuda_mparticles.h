@@ -161,6 +161,8 @@ struct DMparticlesCuda : DParticleIndexer<BS>
     for (int k = 0; k < n_kinds; k++) {
       dq_[k] = dqs_ * grid.kinds[k].q / grid.kinds[k].m;
       q_inv_[k] = 1.f / grid.kinds[k].q;
+      q_[k] = grid.kinds[k].q;
+      m_[k] = grid.kinds[k].m;
     }
   }
 
@@ -171,6 +173,8 @@ struct DMparticlesCuda : DParticleIndexer<BS>
   __device__ real_t fnqzs() const { return fnqzs_; }
   __device__ real_t q_inv(int k) const { return q_inv_[k]; }
   __device__ real_t dq(int k) const { return dq_[k]; }
+  __device__ real_t q(int k) const { return q_[k]; }
+  __device__ real_t m(int k) const { return m_[k]; }
 
 private:
   real_t dt_;
@@ -179,6 +183,8 @@ private:
   real_t dqs_;
   real_t dq_[MAX_N_KINDS];
   real_t q_inv_[MAX_N_KINDS];
+  real_t q_[MAX_N_KINDS];
+  real_t m_[MAX_N_KINDS];
 public:
   float4* xi4_;
   float4* pxi4_;
