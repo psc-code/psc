@@ -9,7 +9,7 @@
 template<typename BS>
 CollisionCuda<BS>::CollisionCuda(MPI_Comm comm, int interval, double nu)
   : coll_{comm, interval, nu},
-    fwd_{new cuda_collision<cuda_mparticles<BS>>{interval, nu}}
+    fwd_{new cuda_collision<cuda_mparticles<BS>>{interval, nu, ppsc->prm.nicell, ppsc->dt}}
 {}
 
 template<typename BS>

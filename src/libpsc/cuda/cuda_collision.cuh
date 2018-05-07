@@ -21,8 +21,8 @@ k_collide(uint *d_off)
 template<typename cuda_mparticles>
 struct cuda_collision
 {
-  cuda_collision(int interval, double nu)
-    : interval_{interval}, nu_{nu}
+  cuda_collision(int interval, double nu, int nicell, double dt)
+    : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
   
   void operator()(cuda_mparticles& cmprts)
@@ -40,5 +40,7 @@ struct cuda_collision
 private:
   int interval_;
   double nu_;
+  int nicell_;
+  double dt_;
 };
 
