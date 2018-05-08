@@ -603,9 +603,9 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   double LLy = 400.*4.;
   double LLz = 400.;
 
-  auto grid_domain = Grid_t::Domain{{1, 512, 128}, // global number of grid points
+  auto grid_domain = Grid_t::Domain{{1, 4096, 1024}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 8, 2}}; // division into patches
+				    {1, 64, 16}}; // division into patches
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -695,7 +695,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.marder_dump = false;
 
   // --- balancing
-  params.balance_interval = 100;
+  params.balance_interval = 0;
   params.balance_factor_fields = 0.1;
   params.balance_print_loads = true;
   params.balance_write_loads = false;
