@@ -533,7 +533,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
   void run(PscMparticlesBase mprts_base) override
   {
-    if (every_step < 0 || ppsc->timestep % every_step != 0) {
+    if (every_step <= 0 || ppsc->timestep % every_step != 0) {
       return;
     }
 

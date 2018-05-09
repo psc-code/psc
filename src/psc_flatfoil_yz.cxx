@@ -443,6 +443,7 @@ struct PscFlatfoil : PscFlatfoilParams
     }
     
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
+      mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
       checks_.continuity_before_particle_push(mprts_);
       prof_stop(pr_checks);
@@ -605,7 +606,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   auto grid_domain = Grid_t::Domain{{1, 4096, 1024}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 64, 16}}; // division into patches
+				    {1, 16, 4}}; // division into patches
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
