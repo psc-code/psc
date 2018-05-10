@@ -7,6 +7,7 @@
 #include "../libpsc/psc_push_particles/push_config.hxx"
 #include "../libpsc/psc_push_particles/push_dispatch.hxx"
 #include "setup_fields.hxx"
+#include "../libpsc/psc_checks/checks_impl.hxx"
 
 #include "gtest/gtest.h"
 
@@ -25,6 +26,7 @@ struct PushParticlesTest : ::testing::Test
   using Mfields = MfieldsC;
   using Mparticles = MparticlesDouble;
   using PushParticles = PushParticles__<Config2nd<dim_yz>>;
+  using Checks = Checks_<Mparticles, Mfields, checks_order_2nd>;
   
   std::unique_ptr<Grid_t> grid_;
 
@@ -81,8 +83,14 @@ TEST_F(PushParticlesTest, Accel)
 
   // run test
   PushParticles pushp_;
+  ChecksParams checks_params;
+  checks_params.continuity_threshold = 1e-14;
+  checks_params.continuity_verbose = true;
+  Checks checks_{MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
+    checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
+    checks_.continuity_after_particle_push(mprts, mflds);
 
     for (auto& prt : mprts[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);

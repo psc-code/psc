@@ -40,11 +40,11 @@ struct Checks_ : ChecksParams, ChecksBase
   Checks_(MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
       comm_{comm},
-      item_rho_{comm},
-      item_rho_m_{comm},
-      item_rho_p_{comm},
-      item_dive_{comm},
-      item_divj_{comm}
+      item_rho_{ppsc->grid(), comm},
+      item_rho_m_{ppsc->grid(), comm},
+      item_rho_p_{ppsc->grid(), comm},
+      item_dive_{ppsc->grid(), comm},
+      item_divj_{ppsc->grid(), comm}
   {}
   
   // ======================================================================

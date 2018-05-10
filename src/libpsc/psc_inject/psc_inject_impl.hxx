@@ -31,7 +31,7 @@ struct Inject_ : InjectBase
 	  Target_t target)
     : InjectBase{interval, tau, kind_n},
       target_{target},
-      moment_n_{comm}
+      moment_n_{ppsc->grid(), comm}
   {}
 
   // ----------------------------------------------------------------------

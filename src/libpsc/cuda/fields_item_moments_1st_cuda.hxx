@@ -21,9 +21,9 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS>, Mfiel
   constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = 0;
 
-  Moment_rho_1st_nc_cuda(MPI_Comm comm)
-    : Base(comm),
-      bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn}
+  Moment_rho_1st_nc_cuda(const Grid_t& grid, MPI_Comm comm)
+    : Base(grid, comm),
+      bnd_{grid, ppsc->mrc_domain_, ppsc->ibn}
   {}
 
   void run(MparticlesCuda<BS>& mprts)
@@ -57,9 +57,9 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS>, MfieldsCuda>
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; }
   constexpr static int flags = 0;
 
-  Moment_n_1st_cuda(MPI_Comm comm)
-    : Base(comm),
-      bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn}
+  Moment_n_1st_cuda(const Grid_t& grid, MPI_Comm comm)
+    : Base(grid, comm),
+      bnd_{grid, ppsc->mrc_domain_, ppsc->ibn}
   {}
 
   void run(MparticlesCuda<BS>& mprts)
