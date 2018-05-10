@@ -86,7 +86,7 @@ TEST_F(PushParticlesTest, Accel)
   ChecksParams checks_params;
   checks_params.continuity_threshold = 1e-14;
   checks_params.continuity_verbose = true;
-  Checks checks_{MPI_COMM_WORLD, checks_params};
+  Checks checks_{*grid_, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);

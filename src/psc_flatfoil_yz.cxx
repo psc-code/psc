@@ -220,7 +220,7 @@ struct PscFlatfoil : PscFlatfoilParams
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
-      checks_{psc_comm(psc), checks_params},
+      checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
     MPI_Comm comm = psc_comm(psc_);

@@ -66,7 +66,7 @@ public:
   static void setup(struct psc_checks *_checks)
   {
     PscChecks<Checks_t> checks(_checks);
-    new(checks.sub()) Checks_t{psc_checks_comm(_checks), _checks->params};
+    new(checks.sub()) Checks_t{ppsc->grid(), psc_checks_comm(_checks), _checks->params};
   }
 
   static void destroy(struct psc_checks *_checks)
