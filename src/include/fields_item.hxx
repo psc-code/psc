@@ -188,16 +188,16 @@ struct ItemMomentCRTP
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
-    auto& kinds = ppsc->grid().kinds;
+    auto& kinds = grid.kinds;
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Derived::flags & POFI_BY_KIND) {
-      this->mres_ = PscMfields<Mfields>::create(comm, ppsc->grid(), n_comps, ppsc->ibn).mflds();
+      this->mres_ = PscMfields<Mfields>::create(comm, grid, n_comps, ppsc->ibn).mflds();
       for (int m = 0; m < n_comps; m++) {
 	psc_mfields_set_comp_name(this->mres_, m, fld_names[m]);
       }
     } else {
-      this->mres_ = PscMfields<Mfields>::create(comm, ppsc->grid(), n_comps * kinds.size(), ppsc->ibn).mflds();
+      this->mres_ = PscMfields<Mfields>::create(comm, grid, n_comps * kinds.size(), ppsc->ibn).mflds();
       for (int k = 0; k < kinds.size(); k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  auto s = std::string(fld_names[m]) + "_" + kinds[k].name;
