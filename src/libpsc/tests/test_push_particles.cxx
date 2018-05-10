@@ -47,6 +47,7 @@ TEST_F(PushParticlesTest, Accel)
   const int n_steps = 10;
   const Mparticles::real_t eps = 1e-6;
 
+  // init fields
   auto mflds = Mfields{*grid_, NR_FIELDS, {2, 2, 2}};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
@@ -87,6 +88,67 @@ TEST_F(PushParticlesTest, Accel)
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
       EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
       EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
+    }
+  }
+}
+
+// ======================================================================
+// Cyclo test
+
+TEST_F(PushParticlesTest, Cyclo)
+{
+  const int n_prts = 131;
+  const int n_steps = 64;
+  // the errors here are (substantial) truncation error, not
+  // finite precision, and they add up
+  // (but that's okay, if a reminder that the 6th order Boris would
+  //  be good)
+  const Mparticles::real_t eps = 1e-2;
+
+  // init fields
+  auto mflds = Mfields{*grid_, NR_FIELDS, {2, 2, 2}};
+  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+      switch (m) {
+      case HZ: return 2. * M_PI / n_steps;
+      default: return 0.;
+      }
+    });
+
+  // init particles
+  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
+
+  RngPool rngpool;
+  Rng *rng = rngpool[0];
+  auto n_prts_by_patch = std::vector<uint>{n_prts};
+
+  auto mprts = Mparticles{*grid_};
+  mprts.reserve_all(n_prts_by_patch.data());
+  mprts.resize_all(n_prts_by_patch.data());
+  for (auto& prt : mprts[0]) {
+    prt.xi = rng->uniform(0, L);
+    prt.yi = rng->uniform(0, L);
+    prt.zi = rng->uniform(0, L);
+    prt.pxi = 1.; // gamma = 2
+    prt.pyi = 1.;
+    prt.pzi = 1.;
+    prt.qni_wni_ = rng->uniform(0, 1.);;
+    prt.kind_ = 0;
+  }
+
+  // run test
+  PushParticles pushp_;
+  for (int n = 0; n < n_steps; n++) {
+    pushp_.push_mprts(mprts, mflds);
+
+    double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
+		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
+    double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
+		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
+    double uz = 1.;
+    for (auto& prt : mprts[0]) {
+	EXPECT_NEAR(prt.pxi, ux, eps);
+	EXPECT_NEAR(prt.pyi, uy, eps);
+	EXPECT_NEAR(prt.pzi, uz, eps);
     }
   }
 }
