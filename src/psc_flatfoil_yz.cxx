@@ -169,6 +169,8 @@ struct PscFlatfoilParams
 
 struct PscFlatfoil : PscFlatfoilParams
 {
+  using DIM = dim_xyz;
+
 #if DO_CUDA
   using BS = BS144;
   using Mparticles_t = MparticlesCuda<BS>;
@@ -189,11 +191,11 @@ struct PscFlatfoil : PscFlatfoilParams
 #else
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
-#if 0 // generic_c: 2nd order
-  using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
+#if 1 // generic_c: 2nd order
+  using PushParticles_t = PushParticles__<Config2nd<DIM>>;
   using checks_order = checks_order_2nd;
 #else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
-  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
+  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, DIM>>;
   using checks_order = checks_order_1st;
 #endif
   using Sort_t = SortCountsort2<Mparticles_t>;
@@ -477,7 +479,7 @@ struct PscFlatfoil : PscFlatfoilParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_.push_H(mflds_, .5, dim_yz{});
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
     
@@ -508,7 +510,7 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
-    pushf_.push_E(mflds_, 1., dim_yz{});
+    pushf_.push_E(mflds_, 1., DIM{});
     prof_stop(pr_push_flds);
     
     prof_restart(pr_bndf);
@@ -696,13 +698,13 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.inject_tau = 40;
 
   // --- checks
-  params.checks_params.continuity_every_step = -1;
-  params.checks_params.continuity_threshold = 1e-14;
+  params.checks_params.continuity_every_step = 1;
+  params.checks_params.continuity_threshold = 1e-12;
   params.checks_params.continuity_verbose = true;
   params.checks_params.continuity_dump_always = false;
 
-  params.checks_params.gauss_every_step = -1;
-  params.checks_params.gauss_threshold = 1e-14;
+  params.checks_params.gauss_every_step = 1;
+  params.checks_params.gauss_threshold = 1e-12;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
 
