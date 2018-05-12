@@ -75,6 +75,13 @@ using Config1vbec = push_p_config<Mparticles, Mfields,
 				  InterpolateEM1vbec<Fields3d<typename Mfields::fields_t>, dim>,
 				  dim, opt_order_1st,
 				  Current1vbVar1>;
+
+template<typename Mparticles, typename Mfields, typename dim>
+using Config1vbecSplit = push_p_config<Mparticles, Mfields,
+				       InterpolateEM1vbec<Fields3d<typename Mfields::fields_t>, dim>,
+				       dim, opt_order_1st,
+				       Current1vbSplit>;
+
 template<typename dim>
 using Config1vbecDouble = Config1vbec<MparticlesDouble, MfieldsC, dim>;
 

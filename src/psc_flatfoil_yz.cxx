@@ -191,11 +191,16 @@ struct PscFlatfoil : PscFlatfoilParams
 #else
   using Mparticles_t = MparticlesDouble;
   using Mfields_t = MfieldsC;
-#if 1 // generic_c: 2nd order
+#if 0 // generic_c: 2nd order
   using PushParticles_t = PushParticles__<Config2nd<DIM>>;
   using checks_order = checks_order_2nd;
 #else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
+#if 0
   using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, DIM>>;
+#else
+  // need to use Config1vbecSplit when DIM == dim_xyz
+  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles_t, Mfields_t, DIM>>;
+#endif
   using checks_order = checks_order_1st;
 #endif
   using Sort_t = SortCountsort2<Mparticles_t>;
