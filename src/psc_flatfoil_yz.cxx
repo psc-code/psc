@@ -285,9 +285,25 @@ struct PscFlatfoil : PscFlatfoilParams
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
+#if 0
+    n_prts_by_patch[0] = 2;
+    mprts.reserve_all(n_prts_by_patch.data());
+    mprts.resize_all(n_prts_by_patch.data());
+
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      mprintf("npp %d %d\n", p, n_prts_by_patch[p]);
+      for (int n = 0; n < n_prts_by_patch[p]; n++) {
+	auto &prt = mprts[p][n];
+	prt.pxi = n;
+	prt.kind_ = n % 2;
+	prt.qni_wni_ = mprts.grid().kinds[prt.kind_].q;
+      }
+    };
+#else
     SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
+#endif
   }
 
   // ----------------------------------------------------------------------
