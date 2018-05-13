@@ -6,7 +6,7 @@
 template<typename BS>
 struct ChecksCuda : ChecksBase, ChecksParams
 {
-  ChecksCuda(MPI_Comm comm, const ChecksParams& params)
+  ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params)
   {}
   
