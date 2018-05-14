@@ -64,12 +64,12 @@ struct Config
   using Checks = Checks_<MP, MF, ORDER>;
 };
 
-using ConfigDouble = Config<MparticlesDouble,
-			    MfieldsC,
-			    PushParticles__<Config2nd<dim_yz>>,
-			    checks_order_2nd>;
+using Config2ndDouble = Config<MparticlesDouble,
+			       MfieldsC,
+			       PushParticles__<Config2nd<dim_xyz>>,
+			       checks_order_2nd>;
 
-using PushParticlesTestTypes = ::testing::Types<ConfigDouble>;
+using PushParticlesTestTypes = ::testing::Types<Config2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -125,7 +125,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   PushParticles pushp_;
   ChecksParams checks_params;
   checks_params.continuity_threshold = 1e-10;
-  checks_params.continuity_verbose = true;
+  checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     checks_.continuity_before_particle_push(mprts);
@@ -192,8 +192,14 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 
   // run test
   PushParticles pushp_;
+  ChecksParams checks_params;
+  checks_params.continuity_threshold = 1e-10;
+  checks_params.continuity_verbose = false;
+  Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
+    checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
+    checks_.continuity_after_particle_push(mprts, mflds);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
