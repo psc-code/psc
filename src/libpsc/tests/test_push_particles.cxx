@@ -24,11 +24,6 @@ using RngPool = PscRngPool<Rng>;
 template<typename T>
 struct PushParticlesTest : ::testing::Test
 {
-  using Mfields = MfieldsC;
-  using Mparticles = MparticlesDouble;
-  using PushParticles = PushParticles__<Config2nd<dim_yz>>;
-  using Checks = Checks_<Mparticles, Mfields, checks_order_2nd>;
-  
   const double L = 1e10;
 
   ~PushParticlesTest()
@@ -60,7 +55,21 @@ struct PushParticlesTest : ::testing::Test
   }
 };
 
-using PushParticlesTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
+template<typename MP, typename MF, typename PUSHP, typename ORDER>
+struct Config
+{
+  using Mparticles = MP;
+  using Mfields = MF;
+  using PushParticles = PUSHP;
+  using Checks = Checks_<MP, MF, ORDER>;
+};
+
+using ConfigDouble = Config<MparticlesDouble,
+			    MfieldsC,
+			    PushParticles__<Config2nd<dim_yz>>,
+			    checks_order_2nd>;
+
+using PushParticlesTestTypes = ::testing::Types<ConfigDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -69,11 +78,10 @@ TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
 TYPED_TEST(PushParticlesTest, Accel)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using Mparticles = typename Base::Mparticles;
-  using Mfields = typename Base::Mfields;
-  using PushParticles = typename Base::PushParticles;
-  using Checks = typename Base::Checks;
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using PushParticles = typename TypeParam::PushParticles;
+  using Checks = typename TypeParam::Checks;
 
   const int n_prts = 131;
   const int n_steps = 10;
@@ -137,11 +145,10 @@ TYPED_TEST(PushParticlesTest, Accel)
 
 TYPED_TEST(PushParticlesTest, Cyclo)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using Mparticles = typename Base::Mparticles;
-  using Mfields = typename Base::Mfields;
-  using PushParticles = typename Base::PushParticles;
-  using Checks = typename Base::Checks;
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using PushParticles = typename TypeParam::PushParticles;
+  using Checks = typename TypeParam::Checks;
 
   const int n_prts = 131;
   const int n_steps = 64;
