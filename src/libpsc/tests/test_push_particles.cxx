@@ -21,6 +21,7 @@ using RngPool = PscRngPool<Rng>;
 // ======================================================================
 // class PushParticlesTest
 
+template<typename T>
 struct PushParticlesTest : ::testing::Test
 {
   using Mfields = MfieldsC;
@@ -59,20 +60,31 @@ struct PushParticlesTest : ::testing::Test
   }
 };
 
+using PushParticlesTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
+
+TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
+
 // ======================================================================
 // Accel test
 
-TEST_F(PushParticlesTest, Accel)
+TYPED_TEST(PushParticlesTest, Accel)
 {
+  using Base = PushParticlesTest<TypeParam>;
+  using Mparticles = typename Base::Mparticles;
+  using Mfields = typename Base::Mfields;
+  using PushParticles = typename Base::PushParticles;
+  using Checks = typename Base::Checks;
+
   const int n_prts = 131;
   const int n_steps = 10;
-  const Mparticles::real_t eps = 1e-6;
+  const typename Mparticles::real_t eps = 1e-6;
 
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  make_psc(kinds);
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
   
   // init fields
-  auto mflds = Mfields{grid(), NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EX: return 1.;
@@ -87,13 +99,13 @@ TEST_F(PushParticlesTest, Accel)
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
-  auto mprts = Mparticles{grid()};
+  auto mprts = Mparticles{grid};
   mprts.reserve_all(n_prts_by_patch.data());
   mprts.resize_all(n_prts_by_patch.data());
   for (auto& prt : mprts[0]) {
-    prt.xi = rng->uniform(0, L);
-    prt.yi = rng->uniform(0, L);
-    prt.zi = rng->uniform(0, L);
+    prt.xi = rng->uniform(0, this->L);
+    prt.yi = rng->uniform(0, this->L);
+    prt.zi = rng->uniform(0, this->L);
     prt.qni_wni_ = 1.;
     prt.pxi = 0.;
     prt.pyi = 0.;
@@ -106,7 +118,7 @@ TEST_F(PushParticlesTest, Accel)
   ChecksParams checks_params;
   checks_params.continuity_threshold = 1e-14;
   checks_params.continuity_verbose = true;
-  Checks checks_{grid(), MPI_COMM_WORLD, checks_params};
+  Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
@@ -123,21 +135,28 @@ TEST_F(PushParticlesTest, Accel)
 // ======================================================================
 // Cyclo test
 
-TEST_F(PushParticlesTest, Cyclo)
+TYPED_TEST(PushParticlesTest, Cyclo)
 {
+  using Base = PushParticlesTest<TypeParam>;
+  using Mparticles = typename Base::Mparticles;
+  using Mfields = typename Base::Mfields;
+  using PushParticles = typename Base::PushParticles;
+  using Checks = typename Base::Checks;
+
   const int n_prts = 131;
   const int n_steps = 64;
   // the errors here are (substantial) truncation error, not
   // finite precision, and they add up
   // (but that's okay, if a reminder that the 6th order Boris would
   //  be good)
-  const Mparticles::real_t eps = 1e-2;
+  const typename Mparticles::real_t eps = 1e-2;
 
   auto kinds = Grid_t::Kinds{Grid_t::Kind(2., 1., "test_species")};
-  make_psc(kinds);
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
 
   // init fields
-  auto mflds = Mfields{grid(), NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HZ: return 2. * M_PI / n_steps;
@@ -150,13 +169,13 @@ TEST_F(PushParticlesTest, Cyclo)
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
-  auto mprts = Mparticles{grid()};
+  auto mprts = Mparticles{grid};
   mprts.reserve_all(n_prts_by_patch.data());
   mprts.resize_all(n_prts_by_patch.data());
   for (auto& prt : mprts[0]) {
-    prt.xi = rng->uniform(0, L);
-    prt.yi = rng->uniform(0, L);
-    prt.zi = rng->uniform(0, L);
+    prt.xi = rng->uniform(0, this->L);
+    prt.yi = rng->uniform(0, this->L);
+    prt.zi = rng->uniform(0, this->L);
     prt.pxi = 1.; // gamma = 2
     prt.pyi = 1.;
     prt.pzi = 1.;
