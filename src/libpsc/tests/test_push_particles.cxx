@@ -55,18 +55,16 @@ struct PushParticlesTest : ::testing::Test
   }
 };
 
-template<typename MP, typename MF, typename PUSHP, typename ORDER>
+template<typename PUSHP, typename ORDER>
 struct TestConfig
 {
-  using Mparticles = MP;
-  using Mfields = MF;
   using PushParticles = PUSHP;
-  using Checks = Checks_<MP, MF, ORDER>;
+  using Mparticles = typename PushParticles::Mparticles;
+  using Mfields = typename PushParticles::Mfields;
+  using Checks = Checks_<Mparticles, Mfields, ORDER>;
 };
 
-using TestConfig2ndDouble = TestConfig<MparticlesDouble,
-				       MfieldsC,
-				       PushParticles__<Config2ndDouble<dim_xyz>>,
+using TestConfig2ndDouble = TestConfig<PushParticles__<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
 
 using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble>;
