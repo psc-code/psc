@@ -54,10 +54,10 @@ struct push_p_config
 #include "psc_fields_single.h"
 
 template<typename dim>
-using Config2nd = push_p_config<MparticlesDouble, MfieldsC,
-				InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim>,
-				dim, opt_order_2nd,
-				CurrentNone>;
+using Config2ndDouble = push_p_config<MparticlesDouble, MfieldsC,
+				      InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim>,
+				      dim, opt_order_2nd,
+				      CurrentNone>;
 
 using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC,
 					InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim_yz>,

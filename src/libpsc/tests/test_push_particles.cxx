@@ -56,7 +56,7 @@ struct PushParticlesTest : ::testing::Test
 };
 
 template<typename MP, typename MF, typename PUSHP, typename ORDER>
-struct Config
+struct TestConfig
 {
   using Mparticles = MP;
   using Mfields = MF;
@@ -64,12 +64,12 @@ struct Config
   using Checks = Checks_<MP, MF, ORDER>;
 };
 
-using Config2ndDouble = Config<MparticlesDouble,
-			       MfieldsC,
-			       PushParticles__<Config2nd<dim_xyz>>,
-			       checks_order_2nd>;
+using TestConfig2ndDouble = TestConfig<MparticlesDouble,
+				       MfieldsC,
+				       PushParticles__<Config2ndDouble<dim_xyz>>,
+				       checks_order_2nd>;
 
-using PushParticlesTestTypes = ::testing::Types<Config2ndDouble>;
+using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
