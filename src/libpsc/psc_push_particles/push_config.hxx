@@ -59,11 +59,6 @@ using Config2ndDouble = push_p_config<MparticlesDouble, MfieldsC,
 				      dim, opt_order_2nd,
 				      CurrentNone>;
 
-using Config2ndDoubleYZ = push_p_config<MparticlesDouble, MfieldsC,
-					InterpolateEM2nd<Fields3d<MfieldsC::fields_t>, dim_yz>,
-					dim_yz, opt_order_2nd,
-					CurrentNone>;
-
 template<typename dim>
 using Config1st = push_p_config<MparticlesDouble, MfieldsC,
 				InterpolateEM1st<Fields3d<MfieldsC::fields_t>, dim>,
