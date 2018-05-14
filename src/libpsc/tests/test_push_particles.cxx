@@ -124,13 +124,13 @@ TYPED_TEST(PushParticlesTest, Accel)
   // run test
   PushParticles pushp_;
   ChecksParams checks_params;
-  checks_params.continuity_threshold = 1e-14;
+  checks_params.continuity_threshold = 1e-10;
   checks_params.continuity_verbose = true;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    //checks_.continuity_before_particle_push(mprts);
+    checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
-    //checks_.continuity_after_particle_push(mprts, mflds);
+    checks_.continuity_after_particle_push(mprts, mflds);
 
     for (auto& prt : mprts[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
