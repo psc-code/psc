@@ -28,20 +28,35 @@ struct PushParticlesTest : ::testing::Test
   using PushParticles = PushParticles__<Config2nd<dim_yz>>;
   using Checks = Checks_<Mparticles, Mfields, checks_order_2nd>;
   
-  std::unique_ptr<Grid_t> grid_;
-
   const double L = 1e10;
 
-  void SetUp()
+  ~PushParticlesTest()
   {
-    auto domain = Grid_t::Domain{{2, 2, 2}, {L, L, L}};
-    grid_.reset(new Grid_t{domain});
-
-    if (!ppsc) {
-      psc_create(MPI_COMM_WORLD); // FIXME, for ppsc
-    }
+    ppsc = NULL; // FIXME, should use psc_destroy(ppsc), or really, get rid of ppsc...
   }
 
+  void make_psc(const Grid_t::Kinds& kinds)
+  {
+    auto grid_domain = Grid_t::Domain{{2, 2, 2}, {L, L, L}};
+    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+    
+    auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
+    psc_default_dimensionless(psc);
+    psc_setup_coeff(psc);
+    
+    psc_setup_domain(psc, grid_domain, grid_bc, kinds);
+    
+    psc->dt = psc->grid_->dt = 1.;
+  }
+  
+  const Grid_t& grid()
+  {
+    assert(ppsc);
+    return ppsc->grid();
+  }
 };
 
 // ======================================================================
@@ -53,8 +68,11 @@ TEST_F(PushParticlesTest, Accel)
   const int n_steps = 10;
   const Mparticles::real_t eps = 1e-6;
 
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  make_psc(kinds);
+  
   // init fields
-  auto mflds = Mfields{*grid_, NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid(), NR_FIELDS, {2, 2, 2}};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EX: return 1.;
@@ -65,13 +83,11 @@ TEST_F(PushParticlesTest, Accel)
     });
 
   // init particles
-  grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-
   RngPool rngpool;
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
-  auto mprts = Mparticles{*grid_};
+  auto mprts = Mparticles{grid()};
   mprts.reserve_all(n_prts_by_patch.data());
   mprts.resize_all(n_prts_by_patch.data());
   for (auto& prt : mprts[0]) {
@@ -90,7 +106,7 @@ TEST_F(PushParticlesTest, Accel)
   ChecksParams checks_params;
   checks_params.continuity_threshold = 1e-14;
   checks_params.continuity_verbose = true;
-  //Checks checks_{*grid_, MPI_COMM_WORLD, checks_params};
+  Checks checks_{grid(), MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
@@ -117,8 +133,11 @@ TEST_F(PushParticlesTest, Cyclo)
   //  be good)
   const Mparticles::real_t eps = 1e-2;
 
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(2., 1., "test_species")};
+  make_psc(kinds);
+
   // init fields
-  auto mflds = Mfields{*grid_, NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid(), NR_FIELDS, {2, 2, 2}};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HZ: return 2. * M_PI / n_steps;
@@ -127,13 +146,11 @@ TEST_F(PushParticlesTest, Cyclo)
     });
 
   // init particles
-  grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-
   RngPool rngpool;
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
-  auto mprts = Mparticles{*grid_};
+  auto mprts = Mparticles{grid()};
   mprts.reserve_all(n_prts_by_patch.data());
   mprts.resize_all(n_prts_by_patch.data());
   for (auto& prt : mprts[0]) {
