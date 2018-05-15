@@ -6,6 +6,7 @@
 #include "push_particles.hxx"
 #include "../libpsc/psc_push_particles/push_config.hxx"
 #include "../libpsc/psc_push_particles/push_dispatch.hxx"
+#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
 #include "setup_fields.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
@@ -68,8 +69,10 @@ using TestConfig2ndDouble = TestConfig<PushParticles__<Config2ndDouble<dim_xyz>>
 				       checks_order_2nd>;
 using TestConfig2ndSingle = TestConfig<PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
 				       checks_order_2nd>;
+using TestConfig1vbec3dSingle = TestConfig<PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xyz>>,					   checks_order_1st>;
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble, TestConfig2ndSingle>;
+using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble, TestConfig2ndSingle,
+						TestConfig1vbec3dSingle>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
