@@ -66,8 +66,10 @@ struct TestConfig
 
 using TestConfig2ndDouble = TestConfig<PushParticles__<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
+using TestConfig2ndSingle = TestConfig<PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+				       checks_order_2nd>;
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble>;
+using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble, TestConfig2ndSingle>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -83,7 +85,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 
   const int n_prts = 131;
   const int n_steps = 10;
-  const typename Mparticles::real_t eps = 1e-6;
+  const typename Mparticles::real_t eps = 1e-5;
 
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
@@ -121,7 +123,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 
   // run test
   PushParticles pushp_;
-  ChecksParams checks_params;
+  ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;
   checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
@@ -190,7 +192,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 
   // run test
   PushParticles pushp_;
-  ChecksParams checks_params;
+  ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;
   checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};

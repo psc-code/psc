@@ -161,8 +161,8 @@ struct Current
   using Real3 = Vec3<real_t>;
 
   Current(const Grid_t& grid)
-    : dxi_{ Real3{1., 1. , 1.} / grid.domain.dx },
-      fnqs_{grid.fnqs}
+    : dxi_{ Real3{1., 1. , 1.} / Real3{grid.domain.dx} },
+      fnqs_(grid.fnqs)
   {
     fnqxs_ = grid.domain.dx[0] * fnqs_ / grid.dt;
     fnqys_ = grid.domain.dx[1] * fnqs_ / grid.dt;
