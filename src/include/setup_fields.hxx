@@ -47,11 +47,11 @@ struct SetupFields
   }
 
   template<typename FUNC>
-  static void set(PscMfieldsBase mflds_base, FUNC func)
+  static void set(MfieldsBase& mflds_base, FUNC func)
   {
-    auto& mflds = mflds_base->get_as<Mfields>(0, 0);
+    auto& mflds = mflds_base.get_as<Mfields>(0, 0);
     set(mflds, func);
-    mflds_base->put_as(mflds, JXI, HX + 3);
+    mflds_base.put_as(mflds, JXI, HX + 3);
   }
   
   static void set_ic(struct psc *psc)
@@ -61,7 +61,7 @@ struct SetupFields
     if (!init_field)
       return;
 
-    set(PscMfieldsBase(psc->flds), [&](int m, double xx[3]) {
+    set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
 	return init_field(psc, xx, m);
       });
 
