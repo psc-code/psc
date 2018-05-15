@@ -12,6 +12,7 @@
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
+#include "../libpsc/cuda/setup_fields_cuda.hxx"
 #endif
 
 #include "gtest/gtest.h"
@@ -107,7 +108,6 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   
   // init fields
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
-#if 0
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EX: return 1.;
@@ -116,7 +116,7 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
       default: return 0.;
       }
     });
-#endif
+
   // init particles
 }
 
