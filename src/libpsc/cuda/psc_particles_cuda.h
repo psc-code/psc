@@ -65,6 +65,7 @@ struct MparticlesCuda : MparticlesBase
 
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
+  void push_back(int p, const particle_t& prt);
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
@@ -75,13 +76,16 @@ struct MparticlesCuda : MparticlesBase
   struct patch_t
   {
     patch_t(const MparticlesCuda& mp, int p)
-      : mp_(mp)
+      : mp_(mp), p_(p)
     {}
 
     const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
 
+    void push_back(const particle_t& prt) { assert(0); }
+
   private:
     const MparticlesCuda& mp_;
+    int p_;
   };
 
   patch_t operator[](int p) const { return patch_t{*this, p}; }

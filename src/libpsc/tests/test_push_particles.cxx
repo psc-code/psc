@@ -124,6 +124,11 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   mprts.reserve_all(n_prts_by_patch.data());
   for (int n = 0; n < n_prts_by_patch[0]; n++) {
     typename Mparticles::particle_t prt{};
+    prt.xi = 0.;
+    prt.yi = 0.;
+    prt.zi = 0.;
+    prt.qni_wni_ = 1.;
+    mprts[0].push_back(prt);
   }
 }
 
