@@ -117,7 +117,14 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
       }
     });
 
-  // init particles
+  // init particle
+  auto n_prts_by_patch = std::vector<uint>{1};
+
+  Mparticles mprts{grid};
+  mprts.reserve_all(n_prts_by_patch.data());
+  for (int n = 0; n < n_prts_by_patch[0]; n++) {
+    typename Mparticles::particle_t prt{};
+  }
 }
 
 #ifndef USE_CUDA
@@ -157,8 +164,8 @@ TYPED_TEST(PushParticlesTest, Accel)
 
   auto mprts = Mparticles{grid};
   mprts.reserve_all(n_prts_by_patch.data());
-  mprts.resize_all(n_prts_by_patch.data());
-  for (auto& prt : mprts[0]) {
+  for (int n = 0; n < n_prts_by_patch[0]; n++) {
+    typename Mparticles::particle_t prt{};
     prt.xi = rng->uniform(0, this->L);
     prt.yi = rng->uniform(0, this->L);
     prt.zi = rng->uniform(0, this->L);
@@ -167,6 +174,7 @@ TYPED_TEST(PushParticlesTest, Accel)
     prt.pyi = 0.;
     prt.pzi = 0.;
     prt.kind_ = 0;
+    mprts[0].push_back(prt);
   }
 
   // run test
@@ -226,8 +234,8 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 
   auto mprts = Mparticles{grid};
   mprts.reserve_all(n_prts_by_patch.data());
-  mprts.resize_all(n_prts_by_patch.data());
-  for (auto& prt : mprts[0]) {
+  for (int n = 0; n < n_prts_by_patch[0]; n++) {
+    typename Mparticles::particle_t prt{};
     prt.xi = rng->uniform(0, this->L);
     prt.yi = rng->uniform(0, this->L);
     prt.zi = rng->uniform(0, this->L);
@@ -236,6 +244,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     prt.pzi = 1.;
     prt.qni_wni_ = rng->uniform(0, 1.);;
     prt.kind_ = 0;
+    mprts[0].push_back(prt);
   }
 
   // run test
