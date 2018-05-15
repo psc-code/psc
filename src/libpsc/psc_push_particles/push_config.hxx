@@ -60,10 +60,10 @@ using Config2ndDouble = push_p_config<MparticlesDouble, MfieldsC,
 				      CurrentNone>;
 
 template<typename dim>
-using Config1st = push_p_config<MparticlesDouble, MfieldsC,
-				InterpolateEM1st<Fields3d<MfieldsC::fields_t>, dim>,
-				dim, opt_order_1st,
-				CurrentNone>;
+using Config1stDouble = push_p_config<MparticlesDouble, MfieldsC,
+				      InterpolateEM1st<Fields3d<MfieldsC::fields_t>, dim>,
+				      dim, opt_order_1st,
+				      CurrentNone>;
 
 template<typename Mparticles, typename Mfields, typename dim>
 using Config1vbec = push_p_config<Mparticles, Mfields,
