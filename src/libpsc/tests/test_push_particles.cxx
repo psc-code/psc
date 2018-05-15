@@ -9,10 +9,12 @@
 #include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
 #include "setup_fields.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
+#include "setup_particles.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
+#include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
 #include "gtest/gtest.h"
@@ -121,15 +123,14 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   auto n_prts_by_patch = std::vector<uint>{1};
 
   Mparticles mprts{grid};
-  mprts.reserve_all(n_prts_by_patch.data());
-  for (int n = 0; n < n_prts_by_patch[0]; n++) {
-    typename Mparticles::particle_t prt{};
-    prt.xi = 0.;
-    prt.yi = 0.;
-    prt.zi = 0.;
-    prt.qni_wni_ = 1.;
-    mprts[0].push_back(prt);
-  }
+  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+      typename Mparticles::particle_t prt{};
+      prt.xi = 0.;
+      prt.yi = 0.;
+      prt.zi = 0.;
+      prt.qni_wni_ = 1.;
+      return prt;
+    });
 }
 
 #ifndef USE_CUDA
@@ -167,20 +168,19 @@ TYPED_TEST(PushParticlesTest, Accel)
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
-  auto mprts = Mparticles{grid};
-  mprts.reserve_all(n_prts_by_patch.data());
-  for (int n = 0; n < n_prts_by_patch[0]; n++) {
-    typename Mparticles::particle_t prt{};
-    prt.xi = rng->uniform(0, this->L);
-    prt.yi = rng->uniform(0, this->L);
-    prt.zi = rng->uniform(0, this->L);
-    prt.qni_wni_ = 1.;
-    prt.pxi = 0.;
-    prt.pyi = 0.;
-    prt.pzi = 0.;
-    prt.kind_ = 0;
-    mprts[0].push_back(prt);
-  }
+  Mparticles mprts{grid};
+  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+      typename Mparticles::particle_t prt{};
+      prt.xi = rng->uniform(0, this->L);
+      prt.yi = rng->uniform(0, this->L);
+      prt.zi = rng->uniform(0, this->L);
+      prt.qni_wni_ = 1.;
+      prt.pxi = 0.;
+      prt.pyi = 0.;
+      prt.pzi = 0.;
+      prt.kind_ = 0;
+      return prt;
+    });
 
   // run test
   PushParticles pushp_;
@@ -237,7 +237,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
-  auto mprts = Mparticles{grid};
+  Mparticles mprts{grid};
   mprts.reserve_all(n_prts_by_patch.data());
   for (int n = 0; n < n_prts_by_patch[0]; n++) {
     typename Mparticles::particle_t prt{};
