@@ -10,6 +10,10 @@
 #include "setup_fields.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
+#ifdef USE_CUDA
+#include "../libpsc/cuda/push_particles_cuda_impl.hxx"
+#endif
+
 #include "gtest/gtest.h"
 
 // Rng hackiness
@@ -69,13 +73,54 @@ using TestConfig2ndDouble = TestConfig<PushParticles__<Config2ndDouble<dim_xyz>>
 				       checks_order_2nd>;
 using TestConfig2ndSingle = TestConfig<PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
 				       checks_order_2nd>;
-using TestConfig1vbec3dSingle = TestConfig<PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xyz>>,					   checks_order_1st>;
+using TestConfig1vbec3dSingle = TestConfig<PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+					   checks_order_1st>;
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble, TestConfig2ndSingle,
+#ifdef USE_CUDA
+using Config1vbec3d = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+using TestConfig1vbec3dCudaYZ = TestConfig<PushParticlesCuda<Config1vbec3d>,
+					   checks_order_1st>;
+#endif
+
+using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble,
+						TestConfig2ndSingle,
+#ifdef USE_CUDA
+						TestConfig1vbec3dCudaYZ,
+#endif
 						TestConfig1vbec3dSingle>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
+// ======================================================================
+// SingleParticle test
+
+TYPED_TEST(PushParticlesTest, SingleParticle)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using PushParticles = typename TypeParam::PushParticles;
+  using Checks = typename TypeParam::Checks;
+
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
+  
+  // init fields
+  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+#if 0
+  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+      switch (m) {
+      case EX: return 1.;
+      case EY: return 2.;
+      case EZ: return 3.;
+      default: return 0.;
+      }
+    });
+#endif
+  // init particles
+}
+
+#ifndef USE_CUDA
 // ======================================================================
 // Accel test
 
@@ -216,6 +261,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     }
   }
 }
+#endif
 
 int main(int argc, char **argv)
 {
