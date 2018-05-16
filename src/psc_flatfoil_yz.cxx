@@ -1,10 +1,6 @@
 
 #include <psc_config.h>
 
-#ifdef USE_CUDA
-#define DO_CUDA 1
-#endif
-
 #include <psc.h>
 
 #ifdef USE_VPIC
@@ -45,7 +41,7 @@
 #include "../libpsc/psc_checks/checks_impl.hxx"
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
 
-#ifdef DO_CUDA
+#ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
@@ -161,17 +157,10 @@ struct PscFlatfoilParams
   ChecksParams checks_params;
 };
 
-// ======================================================================
-// PscFlatfoil
-//
-// eventually, a Psc replacement / derived class, but for now just
-// pretending to be something like that
-
-struct PscFlatfoil : PscFlatfoilParams
+template<typename DIM>
+struct PscConfigCuda_
 {
-  using DIM = dim_xyz;
-
-#if DO_CUDA
+  using dim_t = DIM;
   using BS = BS144;
   using Mparticles_t = MparticlesCuda<BS>;
   using Mfields_t = MfieldsCuda;
@@ -188,33 +177,86 @@ struct PscFlatfoil : PscFlatfoilParams
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<BS>;
   using Marder_t = MarderCuda<BS>;
-#else
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-#if 0 // generic_c: 2nd order
-  using PushParticles_t = PushParticles__<Config2nd<DIM>>;
+};
+
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfigPushParticles2nd
+{
+  using PushParticles_t = PushParticles__<Config2nd<Mparticles, Mfields, DIM>>;
   using checks_order = checks_order_2nd;
-#else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
-#if 0
-  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, DIM>>;
-#else
-  // need to use Config1vbecSplit when DIM == dim_xyz
-  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles_t, Mfields_t, DIM>>;
-#endif
+};
+
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfigPushParticles1vbec
+{
+  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, Mfields, DIM>>;
   using checks_order = checks_order_1st;
-#endif
+};
+
+template<typename Mparticles, typename Mfields>
+struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
+{
+  // need to use Config1vbecSplit when for dim_xyz
+  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
+  using checks_order = checks_order_1st;
+};
+
+template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles>
+struct PscConfig_
+{
+  using dim_t = DIM;
+  using Mparticles_t = Mparticles;
+  using Mfields_t = Mfields;
+  using ConfigPushp = ConfigPushParticles<DIM, Mparticles, Mfields>;
+  using PushParticles_t = typename ConfigPushp::PushParticles_t;
+  using checks_order = typename ConfigPushp::checks_order;
   using Sort_t = SortCountsort2<Mparticles_t>;
   using Collision_t = Collision_<Mparticles_t, Mfields_t>;
   using PushFields_t = PushFields<Mfields_t>;
   using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
-  using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
+  using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = Inject_<Mparticles_t, MfieldsC, InjectFoil>; // FIXME, shouldn't always use MfieldsC
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
-#endif
+};
+
+// EDIT to change 2-d / 3-d
+using dim_t = dim_xyz;
+
+using PscConfig2ndDouble = PscConfig_<dim_t, MparticlesDouble, MfieldsC, PscConfigPushParticles2nd>;
+using PscConfig2ndSingle = PscConfig_<dim_t, MparticlesSingle, MfieldsSingle, PscConfigPushParticles2nd>;
+using PscConfig1vbecSingle = PscConfig_<dim_t, MparticlesSingle, MfieldsSingle, PscConfigPushParticles1vbec>;
+using PscConfig1vbecCuda = PscConfigCuda_<dim_t>;
+
+// EDIT to change order / floating point type / cuda
+using PscConfig = PscConfig1vbecSingle;
+
+// ======================================================================
+// PscFlatfoil
+//
+// eventually, a Psc replacement / derived class, but for now just
+// pretending to be something like that
+
+struct PscFlatfoil : PscFlatfoilParams
+{
+  using DIM = PscConfig::dim_t;
+  using Mparticles_t = PscConfig::Mparticles_t;
+  using Mfields_t = PscConfig::Mfields_t;
+  using PushParticles_t = PscConfig::PushParticles_t;
+  using Sort_t = PscConfig::Sort_t;
+  using Collision_t = PscConfig::Collision_t;
+  using PushFields_t = PscConfig::PushFields_t;
+  using BndParticles_t = PscConfig::BndParticles_t;
+  using Bnd_t = PscConfig::Bnd_t;
+  using BndFields_t = PscConfig::BndFields_t;
+  using Balance_t = PscConfig::Balance_t;
+  using Heating_t = PscConfig::Heating_t;
+  using Inject_t = PscConfig::Inject_t;
+  using Checks_t = PscConfig::Checks_t;
+  using Marder_t = PscConfig::Marder_t;
   
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : PscFlatfoilParams(params),
