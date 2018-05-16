@@ -4,13 +4,10 @@
 #include <psc.h>
 
 // small 3d box (heating)
-#define TEST_1 1
+#define TEST_1_HEATING_3D 1
 
-// 2d flatfoil
-#define TEST_2 2
-
-// EDIT to change test we're running
-#define TEST TEST_1
+// EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
+//#define TEST TEST_1_HEATING_3D
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -250,8 +247,10 @@ template<typename dim>
 using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>;
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-#if TEST == TEST_1
+#if TEST == TEST_1_HEATING_3D
 using dim_t = dim_xyz;
+#else
+using dim_t = dim_yz;
 #endif
 using PscConfig = PscConfig2ndDouble<dim_t>;
 
@@ -687,23 +686,17 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_->prm.cfl = 0.75;
 
   // --- setup domain
-#if TEST == TEST_1
-  double LLx = 1.;
-  double LLy = 2.;
-  double LLz = 2.;
-  Int3 gdims = { 5, 5, 5 }; // global number of grid points
-  Int3 np = { 1, 1, 1 }; // division into patches
-#elif TEST == TEST_2
-  double LLx = 1.;
-  double LLy = 400.*4.;
-  double LLz = 400.;
+  Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
   Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
   Int3 np = { 1, 16, 4 }; // division into patches
+
+#if TEST == TEST_1_HEATING_3D
+  LL = { 1., 2., 2. }; // domain size (in d_e)
+  gdims = { 5, 5, 5 }; // global number of grid points
+  np = { 1, 1, 1 }; // division into patches
 #endif
   
-  auto grid_domain = Grid_t::Domain{gdims,
-				    {LLx, LLy, LLz}, {-.5*LLx, -.5*LLy, -.5*LLz}, // domain size, origin
-				    np};
+  auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -716,11 +709,11 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.Zi = 1.;
 
   // --- for background plasma
-  params.background_n  = 1.0;
+  params.background_n  = .002;
   params.background_Te = .001;
   params.background_Ti = .001;
   
-  // -- setup particles
+  // -- setup particle kinds
   // last population ("e") is neutralizing
  // FIXME, hardcoded mass ratio 100
   Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
@@ -735,7 +728,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.sort_interval = 10;
 
   // collisions
-  params.collision_interval = -10;
+  params.collision_interval = 10;
   params.collision_nu = .1;
 
   // --- setup heating
@@ -754,7 +747,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   heating_foil_params.Mi = kinds[MY_ION].m;
   params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
-  params.heating_begin = 1000000;
+  params.heating_begin = 0;
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
 
@@ -772,17 +765,17 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   inject_foil_params.Ti = .001;
   params.inject_target = InjectFoil{inject_foil_params};
   params.inject_kind_n = MY_ELECTRON;
-  params.inject_interval = -20;
+  params.inject_interval = 20;
   params.inject_tau = 40;
 
   // --- checks
-  params.checks_params.continuity_every_step = 1;
-  params.checks_params.continuity_threshold = 1e-12;
+  params.checks_params.continuity_every_step = -1;
+  params.checks_params.continuity_threshold = 1e-14;
   params.checks_params.continuity_verbose = true;
   params.checks_params.continuity_dump_always = false;
 
-  params.checks_params.gauss_every_step = 1;
-  params.checks_params.gauss_threshold = 1e-12;
+  params.checks_params.gauss_every_step = -1;
+  params.checks_params.gauss_threshold = 1e-14;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
 
@@ -806,7 +799,13 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
 
-#if TEST == TEST_1
+#if TEST == TEST_1_HEATING_3D
+  params.background_n  = 1.0;
+
+  params.collision_interval = 0;
+  params.heating_interval = 0;
+  params.inject_interval = 0;
+  
   params.checks_params.continuity_every_step = 1;
   params.checks_params.continuity_threshold = 1e-12;
   params.checks_params.continuity_verbose = true;
