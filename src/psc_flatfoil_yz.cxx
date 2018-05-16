@@ -157,28 +157,6 @@ struct PscFlatfoilParams
   ChecksParams checks_params;
 };
 
-template<typename DIM>
-struct PscConfigCuda_
-{
-  using dim_t = DIM;
-  using BS = BS144;
-  using Mparticles_t = MparticlesCuda<BS>;
-  using Mfields_t = MfieldsCuda;
-  using Config1vbec3d = PushParticlesConfig<BS, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
-  using PushParticles_t = PushParticlesCuda<Config1vbec3d>;
-  using Sort_t = SortCuda<BS>;
-  using Collision_t = CollisionCuda<BS>;
-  using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda<BS>;
-  using Bnd_t = BndCuda;
-  using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = InjectCuda<BS, InjectFoil>;
-  using Heating_t = HeatingCuda<BS>;
-  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
-  using Checks_t = ChecksCuda<BS>;
-  using Marder_t = MarderCuda<BS>;
-};
-
 template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfigPushParticles2nd
 {
@@ -191,6 +169,11 @@ struct PscConfigPushParticles1vbec
 {
   using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, Mfields, DIM>>;
   using checks_order = checks_order_1st;
+};
+
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfigPushParticlesCuda
+{
 };
 
 template<typename Mparticles, typename Mfields>
@@ -223,16 +206,42 @@ struct PscConfig_
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
 };
 
-// EDIT to change 2-d / 3-d
-using dim_t = dim_xyz;
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
+{
+  using dim_t = DIM;
+  using BS = typename Mparticles::BS;
+  using Mparticles_t = Mparticles;
+  using Mfields_t = Mfields;
+  using Config1vbec3d = PushParticlesConfig<BS, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+  using PushParticles_t = PushParticlesCuda<Config1vbec3d>;
+  using Sort_t = SortCuda<BS>;
+  using Collision_t = CollisionCuda<BS>;
+  using PushFields_t = PushFieldsCuda;
+  using BndParticles_t = BndParticlesCuda<BS>;
+  using Bnd_t = BndCuda;
+  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Inject_t = InjectCuda<BS, InjectFoil>;
+  using Heating_t = HeatingCuda<BS>;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
+  using Checks_t = ChecksCuda<BS>;
+  using Marder_t = MarderCuda<BS>;
+};
 
-using PscConfig2ndDouble = PscConfig_<dim_t, MparticlesDouble, MfieldsC, PscConfigPushParticles2nd>;
-using PscConfig2ndSingle = PscConfig_<dim_t, MparticlesSingle, MfieldsSingle, PscConfigPushParticles2nd>;
-using PscConfig1vbecSingle = PscConfig_<dim_t, MparticlesSingle, MfieldsSingle, PscConfigPushParticles1vbec>;
-using PscConfig1vbecCuda = PscConfigCuda_<dim_t>;
+template<typename dim>
+using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsC, PscConfigPushParticles2nd>;
 
-// EDIT to change order / floating point type / cuda
-using PscConfig = PscConfig1vbecSingle;
+template<typename dim>
+using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles2nd>;
+
+template<typename dim>
+using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles1vbec>;
+
+template<typename dim>
+using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>;
+
+// EDIT to change order / floating point type / cuda / 2d/3d
+using PscConfig = PscConfig1vbecCuda<dim_xyz>;
 
 // ======================================================================
 // PscFlatfoil

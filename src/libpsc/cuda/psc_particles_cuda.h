@@ -43,10 +43,11 @@ struct cuda_mparticles;
 // ======================================================================
 // MparticlesCuda
 
-template<typename BS>
+template<typename _BS>
 struct MparticlesCuda : MparticlesBase
 {
   using Self = MparticlesCuda;
+  using BS = _BS;
   using particle_t = particle_cuda_t;
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
