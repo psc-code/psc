@@ -770,12 +770,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   // --- checks
   params.checks_params.continuity_every_step = -1;
-  params.checks_params.continuity_threshold = 1e-14;
+  params.checks_params.continuity_threshold = 1e-6;
   params.checks_params.continuity_verbose = true;
   params.checks_params.continuity_dump_always = false;
 
   params.checks_params.gauss_every_step = -1;
-  params.checks_params.gauss_threshold = 1e-14;
+  params.checks_params.gauss_threshold = 1e-6;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
 
