@@ -3,6 +3,12 @@
 
 #include <psc.h>
 
+// small 3d box (heating)
+#define TEST_1 1
+
+// EDIT to change test we're running
+#define TEST TEST_1
+
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
@@ -241,7 +247,10 @@ template<typename dim>
 using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>;
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-using PscConfig = PscConfig1vbecCuda<dim_xyz>;
+#if TEST == TEST_1
+using dim_t = dim_xyz;
+#endif
+using PscConfig = PscConfig2ndDouble<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -784,6 +793,17 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   Int3 np;
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
+
+#if TEST == TEST_1
+  params.checks_params.continuity_every_step = 1;
+  params.checks_params.continuity_threshold = 1e-12;
+  params.checks_params.continuity_verbose = true;
+
+  params.checks_params.gauss_every_step = 1;
+  // eventually, errors accumulate above 1e-10, but it should take a long time
+  params.checks_params.gauss_threshold = 1e-10;
+  params.checks_params.gauss_verbose = true;
+#endif
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
