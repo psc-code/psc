@@ -6,6 +6,9 @@
 // small 3d box (heating)
 #define TEST_1 1
 
+// 2d flatfoil
+#define TEST_2 2
+
 // EDIT to change test we're running
 #define TEST TEST_1
 
@@ -684,13 +687,23 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_->prm.cfl = 0.75;
 
   // --- setup domain
+#if TEST == TEST_1
   double LLx = 1.;
   double LLy = 2.;
   double LLz = 2.;
-
-  auto grid_domain = Grid_t::Domain{{5, 5, 5}, // global number of grid points
+  Int3 gdims = { 5, 5, 5 }; // global number of grid points
+  Int3 np = { 1, 1, 1 }; // division into patches
+#elif TEST == TEST_2
+  double LLx = 1.;
+  double LLy = 400.*4.;
+  double LLz = 400.;
+  Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
+  Int3 np = { 1, 16, 4 }; // division into patches
+#endif
+  
+  auto grid_domain = Grid_t::Domain{gdims,
 				    {LLx, LLy, LLz}, {-.5*LLx, -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 1, 1}}; // division into patches
+				    np};
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -790,7 +803,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds);
 
   // make sure that np isn't overridden on the command line
-  Int3 np;
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
 
