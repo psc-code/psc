@@ -212,6 +212,8 @@ struct PscConfig_
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
 };
 
+#ifdef USE_CUDA
+
 template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
 {
@@ -234,6 +236,8 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Marder_t = MarderCuda<BS>;
 };
 
+#endif
+
 template<typename dim>
 using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsC, PscConfigPushParticles2nd>;
 
@@ -243,8 +247,12 @@ using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscC
 template<typename dim>
 using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles1vbec>;
 
+#ifdef USE_CUDA
+
 template<typename dim>
 using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>;
+
+#endif
 
 // EDIT to change order / floating point type / cuda / 2d/3d
 #if TEST == TEST_1_HEATING_3D
