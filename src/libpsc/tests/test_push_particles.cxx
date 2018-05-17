@@ -115,7 +115,7 @@ using TestConfig2ndDouble = TestConfig<dim_xyz,
 				       PushParticles__<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
 using TestConfig2ndDoubleYZ = TestConfig<dim_yz,
-				       PushParticles__<Config2ndDouble<dim_xyz>>,
+				       PushParticles__<Config2ndDouble<dim_yz>>,
 				       checks_order_2nd>;
 using TestConfig2ndSingle = TestConfig<dim_xyz,
 				       PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
@@ -182,9 +182,11 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 }
 
 // ======================================================================
-// SingleParticlePushp test
+// SingleParticlePushp1 test
+//
+// zero EM test, check position push given existing pzi
 
-TYPED_TEST(PushParticlesTest, SingleParticlePushp)
+TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -210,7 +212,58 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       typename Mparticles::particle_t prt{};
       prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
-      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.; // vzi = 1/sqrt(2.)
+      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.;
+      prt.qni_wni_ = 1.;
+      return prt;
+    });
+
+  PushParticles pushp_;
+  pushp_.push_mprts(mprts, mflds);
+  
+  for (auto& prt : make_getter(mprts)[0]) {
+    EXPECT_NEAR(prt.pxi, 0., eps);
+    EXPECT_NEAR(prt.pyi, 0., eps);
+    EXPECT_NEAR(prt.pzi, 1., eps);
+    EXPECT_NEAR(prt.qni_wni_, 1., eps);
+    EXPECT_NEAR(prt.xi, 5., eps);
+    EXPECT_NEAR(prt.yi, 5., eps);
+    EXPECT_NEAR(prt.zi, 5.707107, eps);
+  }
+}
+
+// ======================================================================
+// SingleParticlePushp2 test
+//
+// EZ = 1, check velocity push
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using PushParticles = typename TypeParam::PushParticles;
+  const typename Mparticles::real_t eps = 1e-5;
+
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
+  
+  // init fields
+  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+      switch (m) {
+      default: return 0.;
+      case EZ: return 2.;
+      }
+    });
+
+  // init particle
+  auto n_prts_by_patch = std::vector<uint>{1};
+
+  Mparticles mprts{grid};
+  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+      typename Mparticles::particle_t prt{};
+      prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
+      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.;
       prt.qni_wni_ = 1.;
       return prt;
     });
@@ -223,11 +276,11 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   for (auto& prt : make_getter(mprts)[0]) {
     EXPECT_NEAR(prt.pxi, 0., eps);
     EXPECT_NEAR(prt.pyi, 0., eps);
-    EXPECT_NEAR(prt.pzi, 1., eps);
+    EXPECT_NEAR(prt.pzi, 3., eps);
     EXPECT_NEAR(prt.qni_wni_, 1., eps);
     EXPECT_NEAR(prt.xi, 5., eps);
     EXPECT_NEAR(prt.yi, 5., eps);
-    EXPECT_NEAR(prt.zi, 5.707107, eps);
+    EXPECT_NEAR(prt.zi, 5.948683, eps);
   }
 }
 
