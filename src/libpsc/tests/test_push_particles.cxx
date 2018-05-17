@@ -130,6 +130,9 @@ using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
 					     checks_order_1st>;
 
 #ifdef USE_CUDA
+using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
+					 PushParticlesCuda<CudaConfig1vbec3d<dim_yz>>,
+					 checks_order_1st>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
 					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz>>,
 					   checks_order_1st>;
@@ -139,6 +142,7 @@ using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
 						TestConfig1vbec3dSingleYZ,
 #ifdef USE_CUDA
 						TestConfig1vbec3dCudaYZ,
+						TestConfig1vbec3dCuda,
 #endif
 						TestConfig2ndDouble,
 						TestConfig2ndSingle,
