@@ -405,13 +405,13 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
 }
 
 // ----------------------------------------------------------------------
-// push_mprts_yz
+// push_mprts
 
 template<typename Config>
-void CudaPushParticles_<Config>::push_mprts_yz(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
+void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   if (!cmprts->need_reorder) {
-    //    printf("INFO: yz_cuda_push_mprts: need_reorder == false\n");
+    //    printf("INFO: push_mprts: need_reorder == false\n");
     push_mprts_ab<false>(cmprts, cmflds);
   } else {
     push_mprts_ab<true>(cmprts, cmflds);
