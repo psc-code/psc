@@ -74,7 +74,12 @@ struct PushParticlesTest : ::testing::Test
 
   void make_psc(const Grid_t::Kinds& kinds)
   {
-    auto grid_domain = Grid_t::Domain{{16, 16, 16}, {L, L, L}};
+    Int3 gdims = {16, 16, 16};
+    if (T::dim::InvarX::value) gdims[0] = 1;
+    if (T::dim::InvarY::value) gdims[1] = 1;
+    if (T::dim::InvarZ::value) gdims[2] = 1;
+
+    auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
@@ -96,33 +101,46 @@ struct PushParticlesTest : ::testing::Test
   }
 };
 
-template<typename PUSHP, typename ORDER>
+template<typename DIM, typename PUSHP, typename ORDER>
 struct TestConfig
 {
+  using dim = DIM;
   using PushParticles = PUSHP;
   using Mparticles = typename PushParticles::Mparticles;
   using Mfields = typename PushParticles::Mfields;
   using Checks = Checks_<Mparticles, Mfields, ORDER>;
 };
 
-using TestConfig2ndDouble = TestConfig<PushParticles__<Config2ndDouble<dim_xyz>>,
+using TestConfig2ndDouble = TestConfig<dim_xyz,
+				       PushParticles__<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
-using TestConfig2ndSingle = TestConfig<PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+using TestConfig2ndDoubleYZ = TestConfig<dim_yz,
+				       PushParticles__<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
-using TestConfig1vbec3dSingle = TestConfig<PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+using TestConfig2ndSingle = TestConfig<dim_xyz,
+				       PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+				       checks_order_2nd>;
+using TestConfig1vbec3dSingle = TestConfig<dim_xyz,
+					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xyz>>,
 					   checks_order_1st>;
+using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
+					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_yz>>,
+					     checks_order_1st>;
 
 #ifdef USE_CUDA
 using Config1vbec3d = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
-using TestConfig1vbec3dCudaYZ = TestConfig<PushParticlesCuda<Config1vbec3d>,
+using TestConfig1vbec3dCudaYZ = TestConfig<dim_xyz,
+					   PushParticlesCuda<Config1vbec3d>,
 					   checks_order_1st>;
 #endif
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble,
-						TestConfig2ndSingle,
+using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
+						TestConfig1vbec3dSingleYZ,
 #ifdef USE_CUDA
 						//						TestConfig1vbec3dCudaYZ,
 #endif
+						TestConfig2ndDouble,
+						TestConfig2ndSingle,
 						TestConfig1vbec3dSingle>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
@@ -194,7 +212,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       typename Mparticles::particle_t prt{};
-      prt.xi = 0.; prt.yi = 0.; prt.zi = 0.;
+      prt.xi = this->L/2; prt.yi = this->L/2; prt.zi = this->L/2;
       prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 0.;
       prt.qni_wni_ = 1.;
       return prt;
