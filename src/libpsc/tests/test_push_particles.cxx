@@ -74,7 +74,7 @@ struct PushParticlesTest : ::testing::Test
 
   void make_psc(const Grid_t::Kinds& kinds)
   {
-    auto grid_domain = Grid_t::Domain{{2, 2, 2}, {L, L, L}};
+    auto grid_domain = Grid_t::Domain{{16, 16, 16}, {L, L, L}};
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
@@ -121,7 +121,7 @@ using TestConfig1vbec3dCudaYZ = TestConfig<PushParticlesCuda<Config1vbec3d>,
 using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDouble,
 						TestConfig2ndSingle,
 #ifdef USE_CUDA
-						TestConfig1vbec3dCudaYZ,
+						//						TestConfig1vbec3dCudaYZ,
 #endif
 						TestConfig1vbec3dSingle>;
 
@@ -194,19 +194,21 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       typename Mparticles::particle_t prt{};
-      prt.xi = 1.;
-      prt.yi = 0.;
-      prt.zi = 0.;
+      prt.xi = 0.; prt.yi = 0.; prt.zi = 0.;
+      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 0.;
       prt.qni_wni_ = 1.;
       return prt;
     });
 
+  PushParticles pushp_;
+  pushp_.push_mprts(mprts, mflds);
+  
   mprts.dump("prts.asc");
 
   for (auto& prt : make_getter(mprts)[0]) {
-    EXPECT_NEAR(prt.xi, 1., eps);
-    EXPECT_NEAR(prt.yi, 0., eps);
-    EXPECT_NEAR(prt.zi, 0., eps);
+    EXPECT_NEAR(prt.pxi, 1., eps);
+    EXPECT_NEAR(prt.pyi, 2., eps);
+    EXPECT_NEAR(prt.pzi, 3., eps);
     EXPECT_NEAR(prt.qni_wni_, 1., eps);
   }
 }
