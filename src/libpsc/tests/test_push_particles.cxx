@@ -26,6 +26,39 @@
 using Rng = PscRng;
 using RngPool = PscRngPool<Rng>;
 
+template<class Mparticles>
+struct Getter
+{
+  Getter(const Mparticles& mprts)
+    : mprts_(mprts) {}
+
+  const typename Mparticles::patch_t& operator[](int p) { return mprts_[p]; }
+
+private:
+  const Mparticles& mprts_;
+};
+
+template<>
+struct Getter<MparticlesCuda<BS144>>
+{
+  using Mparticles = MparticlesCuda<BS144>;
+
+  Getter(Mparticles& mprts)
+    : mprts_(mprts.template get_as<MparticlesSingle>()) {}
+
+  const typename MparticlesSingle::patch_t& operator[](int p) { return mprts_[p]; }
+  
+
+private:
+  const MparticlesSingle& mprts_;
+};
+
+template<class Mparticles>
+Getter<Mparticles> make_getter(Mparticles& mprts)
+{
+  return Getter<Mparticles>(mprts);
+}
+
 // ======================================================================
 // class PushParticlesTest
 
@@ -102,7 +135,43 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using PushParticles = typename TypeParam::PushParticles;
-  using Checks = typename TypeParam::Checks;
+  const typename Mparticles::real_t eps = 1e-5;
+
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
+  
+  // init particle
+  auto n_prts_by_patch = std::vector<uint>{1};
+
+  Mparticles mprts{grid};
+  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+      typename Mparticles::particle_t prt{};
+      prt.xi = 1.;
+      prt.yi = 0.;
+      prt.zi = 0.;
+      prt.qni_wni_ = 1.;
+      return prt;
+    });
+
+  // check particle
+  for (auto& prt : make_getter(mprts)[0]) {
+    EXPECT_NEAR(prt.xi, 1., eps);
+    EXPECT_NEAR(prt.yi, 0., eps);
+    EXPECT_NEAR(prt.zi, 0., eps);
+    EXPECT_NEAR(prt.qni_wni_, 1., eps);
+  }
+}
+
+// ======================================================================
+// SingleParticlePushp test
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using PushParticles = typename TypeParam::PushParticles;
+  const typename Mparticles::real_t eps = 1e-5;
 
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
@@ -125,19 +194,40 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       typename Mparticles::particle_t prt{};
-      prt.xi = 0.;
+      prt.xi = 1.;
       prt.yi = 0.;
       prt.zi = 0.;
       prt.qni_wni_ = 1.;
       return prt;
     });
+
+  mprts.dump("prts.asc");
+
+  for (auto& prt : make_getter(mprts)[0]) {
+    EXPECT_NEAR(prt.xi, 1., eps);
+    EXPECT_NEAR(prt.yi, 0., eps);
+    EXPECT_NEAR(prt.zi, 0., eps);
+    EXPECT_NEAR(prt.qni_wni_, 1., eps);
+  }
 }
 
-#ifndef USE_CUDA
+// ======================================================================
+// PushParticlesTest2 is the same, but won't test cuda (because checks doesn't work)
+
+template<typename T>
+struct PushParticlesTest2 : PushParticlesTest<T>
+{};
+
+using PushParticlesTest2Types = ::testing::Types<TestConfig2ndDouble,
+						 TestConfig2ndSingle,
+						 TestConfig1vbec3dSingle>;
+
+TYPED_TEST_CASE(PushParticlesTest2, PushParticlesTest2Types);
+
 // ======================================================================
 // Accel test
 
-TYPED_TEST(PushParticlesTest, Accel)
+TYPED_TEST(PushParticlesTest2, Accel)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -193,7 +283,7 @@ TYPED_TEST(PushParticlesTest, Accel)
     pushp_.push_mprts(mprts, mflds);
     checks_.continuity_after_particle_push(mprts, mflds);
 
-    for (auto& prt : mprts[0]) {
+    for (auto& prt : make_getter(mprts)[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
       EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
       EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
@@ -204,7 +294,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 // ======================================================================
 // Cyclo test
 
-TYPED_TEST(PushParticlesTest, Cyclo)
+TYPED_TEST(PushParticlesTest2, Cyclo)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -268,14 +358,13 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
-    for (auto& prt : mprts[0]) {
+    for (auto& prt : make_getter(mprts)[0]) {
 	EXPECT_NEAR(prt.pxi, ux, eps);
 	EXPECT_NEAR(prt.pyi, uy, eps);
 	EXPECT_NEAR(prt.pzi, uz, eps);
     }
   }
 }
-#endif
 
 int main(int argc, char **argv)
 {
