@@ -67,6 +67,8 @@ struct PushParticlesTest : ::testing::Test
 {
   const double L = 160;
 
+  Int3 ibn = { 2, 2, 2 };
+  
   ~PushParticlesTest()
   {
     ppsc = NULL; // FIXME, should use psc_destroy(ppsc), or really, get rid of ppsc...
@@ -75,9 +77,9 @@ struct PushParticlesTest : ::testing::Test
   void make_psc(const Grid_t::Kinds& kinds)
   {
     Int3 gdims = {16, 16, 16};
-    if (T::dim::InvarX::value) gdims[0] = 1;
-    if (T::dim::InvarY::value) gdims[1] = 1;
-    if (T::dim::InvarZ::value) gdims[2] = 1;
+    if (T::dim::InvarX::value) { gdims[0] = 1; ibn[0] = 0; }
+    if (T::dim::InvarY::value) { gdims[1] = 1; ibn[1] = 0; }
+    if (T::dim::InvarZ::value) { gdims[2] = 1; ibn[2] = 0; }
 
     auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -198,7 +200,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
   const auto& grid = this->grid();
   
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       default: return 0.;
@@ -248,7 +250,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
   const auto& grid = this->grid();
   
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       default: return 0.;
@@ -316,7 +318,7 @@ TYPED_TEST(PushParticlesTest2, Accel)
   const auto& grid = this->grid();
   
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EX: return 1.;
@@ -390,7 +392,7 @@ TYPED_TEST(PushParticlesTest2, Cyclo)
   const auto& grid = this->grid();
 
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HZ: return 2. * M_PI / n_steps;

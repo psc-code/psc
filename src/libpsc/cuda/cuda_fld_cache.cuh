@@ -32,6 +32,7 @@ struct FldCache
       for (int m = EX; m <= HZ; m++) {
 #if 0
 	float val = d_flds(m, 0,jy+ci0[1],jz+ci0[2]);
+	//printf("C load %d %d: %g (%d)\n", jy+ci0[1], jz+ci0[2], val, m);
 	if (!isfinite(val)) {
 	  printf("CUDA_ERROR: load %g m %d jz %d %d ci0 %d %d\n", val, m, jy, jz, ci0[1], ci0[2]);
 	}
