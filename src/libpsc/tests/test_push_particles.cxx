@@ -29,13 +29,13 @@ using RngPool = PscRngPool<Rng>;
 template<class Mparticles>
 struct Getter
 {
-  Getter(const Mparticles& mprts)
+  Getter(Mparticles& mprts)
     : mprts_(mprts) {}
 
-  const typename Mparticles::patch_t& operator[](int p) { return mprts_[p]; }
+  typename Mparticles::patch_t& operator[](int p) { return mprts_[p]; }
 
 private:
-  const Mparticles& mprts_;
+  Mparticles& mprts_;
 };
 
 template<>
@@ -46,11 +46,11 @@ struct Getter<MparticlesCuda<BS144>>
   Getter(Mparticles& mprts)
     : mprts_(mprts.template get_as<MparticlesSingle>()) {}
 
-  const typename MparticlesSingle::patch_t& operator[](int p) { return mprts_[p]; }
+  typename MparticlesSingle::patch_t& operator[](int p) { return mprts_[p]; }
   
 
 private:
-  const MparticlesSingle& mprts_;
+  MparticlesSingle& mprts_;
 };
 
 template<class Mparticles>
@@ -65,7 +65,7 @@ Getter<Mparticles> make_getter(Mparticles& mprts)
 template<typename T>
 struct PushParticlesTest : ::testing::Test
 {
-  const double L = 1e10;
+  const double L = 160;
 
   ~PushParticlesTest()
   {
@@ -281,14 +281,17 @@ TYPED_TEST(PushParticlesTest2, Accel)
   checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    checks_.continuity_before_particle_push(mprts);
+    //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
-    checks_.continuity_after_particle_push(mprts, mflds);
+    //checks_.continuity_after_particle_push(mprts, mflds);
 
     for (auto& prt : make_getter(mprts)[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
       EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
       EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
+      prt.xi = this->L/2;
+      prt.yi = this->L/2;
+      prt.zi = this->L/2;
     }
   }
 }
@@ -351,9 +354,9 @@ TYPED_TEST(PushParticlesTest2, Cyclo)
   checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    checks_.continuity_before_particle_push(mprts);
+    //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
-    checks_.continuity_after_particle_push(mprts, mflds);
+    //checks_.continuity_after_particle_push(mprts, mflds);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
@@ -361,9 +364,12 @@ TYPED_TEST(PushParticlesTest2, Cyclo)
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
     for (auto& prt : make_getter(mprts)[0]) {
-	EXPECT_NEAR(prt.pxi, ux, eps);
-	EXPECT_NEAR(prt.pyi, uy, eps);
-	EXPECT_NEAR(prt.pzi, uz, eps);
+      EXPECT_NEAR(prt.pxi, ux, eps);
+      EXPECT_NEAR(prt.pyi, uy, eps);
+      EXPECT_NEAR(prt.pzi, uz, eps);
+      prt.xi = this->L/2;
+      prt.yi = this->L/2;
+      prt.zi = this->L/2;
     }
   }
 }
