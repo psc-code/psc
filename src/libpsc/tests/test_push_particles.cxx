@@ -199,9 +199,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
   SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
-      case EX: return 1.;
-      case EY: return 2.;
-      case EZ: return 3.;
       default: return 0.;
       }
     });
@@ -212,8 +209,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       typename Mparticles::particle_t prt{};
-      prt.xi = this->L/2; prt.yi = this->L/2; prt.zi = this->L/2;
-      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 0.;
+      prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
+      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.; // vzi = 1/sqrt(2.)
       prt.qni_wni_ = 1.;
       return prt;
     });
@@ -224,10 +221,13 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp)
   mprts.dump("prts.asc");
 
   for (auto& prt : make_getter(mprts)[0]) {
-    EXPECT_NEAR(prt.pxi, 1., eps);
-    EXPECT_NEAR(prt.pyi, 2., eps);
-    EXPECT_NEAR(prt.pzi, 3., eps);
+    EXPECT_NEAR(prt.pxi, 0., eps);
+    EXPECT_NEAR(prt.pyi, 0., eps);
+    EXPECT_NEAR(prt.pzi, 1., eps);
     EXPECT_NEAR(prt.qni_wni_, 1., eps);
+    EXPECT_NEAR(prt.xi, 5., eps);
+    EXPECT_NEAR(prt.yi, 5., eps);
+    EXPECT_NEAR(prt.zi, 5.707107, eps);
   }
 }
 
