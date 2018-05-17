@@ -24,9 +24,14 @@ struct CudaPushpConfig
   using Currmem = CURRMEM;
 };
 
-using CudaConfig1vb = CudaPushpConfig<dim_yz, BS144, opt_ip_1st, DepositVb2d, CurrmemShared>;
-using CudaConfig1vbec3d = CudaPushpConfig<dim_yz, BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
-using CudaConfig1vbec3dGmem = CudaPushpConfig<dim_yz, BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+template<typename dim>
+using CudaConfig1vbec3d = CudaPushpConfig<dim, BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+
+template<typename dim>
+using CudaConfig1vb = CudaPushpConfig<dim, BS144, opt_ip_1st, DepositVb2d, CurrmemShared>;
+
+template<typename dim>
+using CudaConfig1vbec3dGmem = CudaPushpConfig<dim, BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"

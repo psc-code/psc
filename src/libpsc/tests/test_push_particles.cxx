@@ -131,7 +131,7 @@ using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
-					   PushParticlesCuda<CudaConfig1vbec3d>,
+					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz>>,
 					   checks_order_1st>;
 #endif
 

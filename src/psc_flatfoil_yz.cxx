@@ -221,7 +221,7 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BS = typename Mparticles::BS;
   using Mparticles_t = Mparticles;
   using Mfields_t = Mfields;
-  using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3d>;
+  using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3d<dim_t>>;
   using Sort_t = SortCuda<BS>;
   using Collision_t = CollisionCuda<BS>;
   using PushFields_t = PushFieldsCuda;
