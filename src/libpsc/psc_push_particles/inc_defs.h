@@ -8,18 +8,6 @@
 // be built
 
 // ----------------------------------------------------------------------
-// DIM
-
-#define DIM_X 1
-#define DIM_Y 2
-#define DIM_Z 4
-#define DIM_XY (DIM_X | DIM_Y)
-#define DIM_XZ (DIM_X | DIM_Z)
-#define DIM_YZ (DIM_Y | DIM_Z)
-#define DIM_XYZ (DIM_X | DIM_Y | DIM_Z)
-#define DIM_1 0
-
-// ----------------------------------------------------------------------
 // CALC_J
 
 #define CALC_J_1VB_SPLIT 1 // "original" V-B deposition with splitting along dims
