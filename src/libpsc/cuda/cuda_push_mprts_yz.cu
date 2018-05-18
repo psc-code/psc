@@ -34,7 +34,7 @@
 // OPT: precalculating IP coeffs could be a gain, too
 
 template<typename Config, bool REORDER>
-struct CudaPushParticles_yz
+struct CudaPushParticles
 {
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
@@ -355,7 +355,7 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, DMparticlesCuda<typename Config::Bs> dmprts, DMFields d_mflds)
 {
-  CudaPushParticles_yz<Config, REORDER>::push_mprts(dmprts, d_mflds, block_start);
+  CudaPushParticles<Config, REORDER>::push_mprts(dmprts, d_mflds, block_start);
 }
 
 // ----------------------------------------------------------------------
@@ -420,3 +420,4 @@ void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts, struct cuda_
 
 //template struct CudaPushParticles_<CudaConfig1vb<dim_yz>>;
 template struct CudaPushParticles_<CudaConfig1vbec3d<dim_yz>>;
+template struct CudaPushParticles_<CudaConfig1vbec3d<dim_xyz>>;
