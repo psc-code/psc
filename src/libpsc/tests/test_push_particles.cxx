@@ -67,6 +67,7 @@ struct PushParticlesTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
   using Mfields = typename T::Mfields;
+  using PushParticles = typename T::PushParticles;
   const double L = 160;
 
   Int3 ibn = { 2, 2, 2 };
@@ -118,6 +119,10 @@ struct PushParticlesTest : ::testing::Test
     mprts = new Mparticles{grid()};
     auto n_prts_by_patch = std::vector<uint>{1};
     SetupParticles<Mparticles>::setup_particles(*mprts, n_prts_by_patch, init_particles);
+
+    // do one step
+    PushParticles pushp_;
+    pushp_.push_mprts(*this->mprts, *this->mflds);
   }
 
   Mparticles* mprts;
@@ -265,8 +270,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 {
   using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
-  using PushParticles = typename TypeParam::PushParticles;
   const typename Mparticles::real_t eps = 1e-5;
 
   auto init_fields = [&](int m, double crd[3]) {
@@ -276,25 +279,29 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
     }
   };
 
-  auto init_particles = [&](int p, int n) -> typename Mparticles::particle_t {
-    typename Mparticles::particle_t prt{};
-    prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
-    prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.;
-    prt.qni_wni_ = 1.;
-    return prt;
-  };
+  typename Mparticles::particle_t prt0, prt1;
+
+  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  prt1.pzi = 3.;
+  prt1.zi = 5.948683;
   
+  auto init_particles = [&](int p, int n) -> typename Mparticles::particle_t {
+    return prt0;
+  };
+
   this->runSingleParticleTest(init_fields, init_particles);
   
-  PushParticles pushp_;
-  pushp_.push_mprts(*this->mprts, *this->mflds);
-  
-  this->mprts->dump("prts.asc");
+  //this->mprts->dump("prts.asc");
 
   for (auto& prt : make_getter(*this->mprts)[0]) {
-    EXPECT_NEAR(prt.pxi, 0., eps);
-    EXPECT_NEAR(prt.pyi, 0., eps);
-    EXPECT_NEAR(prt.pzi, 3., eps);
+    EXPECT_NEAR(prt.pxi, prt1.pxi, eps);
+    EXPECT_NEAR(prt.pyi, prt1.pyi, eps);
+    EXPECT_NEAR(prt.pzi, prt1.pzi, eps);
     EXPECT_NEAR(prt.qni_wni_, 1., eps);
     EXPECT_NEAR(prt.xi, 5., eps);
     EXPECT_NEAR(prt.yi, 5., eps);
