@@ -38,6 +38,13 @@ private:
   Mparticles& mprts_;
 };
 
+struct BS444
+{
+  using x = std::integral_constant<unsigned int, 4>;
+  using y = std::integral_constant<unsigned int, 4>;
+  using z = std::integral_constant<unsigned int, 4>;
+};
+
 template<class Mparticles>
 struct GetterCuda
 {
@@ -51,14 +58,16 @@ private:
 };
 
 template<class Mparticles,
-	 typename = typename std::enable_if<!std::is_same<Mparticles, MparticlesCuda<BS144>>::value>::type>
+	 typename = typename std::enable_if<!(std::is_same<Mparticles, MparticlesCuda<BS144>>::value ||
+					      std::is_same<Mparticles, MparticlesCuda<BS444>>::value)>::type>
 Getter<Mparticles> make_getter(Mparticles& mprts)
 {
   return Getter<Mparticles>(mprts);
 }
 
 template<class Mparticles,
-	 typename = typename std::enable_if<std::is_same<Mparticles, MparticlesCuda<BS144>>::value>::type>
+	 typename = typename std::enable_if<std::is_same<Mparticles, MparticlesCuda<BS144>>::value ||
+					    std::is_same<Mparticles, MparticlesCuda<BS444>>::value>::type>
 GetterCuda<Mparticles> make_getter(Mparticles& mprts)
 {
   return GetterCuda<Mparticles>(mprts);
@@ -182,10 +191,10 @@ using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
-					 PushParticlesCuda<CudaConfig1vbec3d<dim_xyz>>,
+					 PushParticlesCuda<CudaConfig1vbec3d<dim_xyz, BS144>>,
 					 checks_order_1st>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
-					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz>>,
+					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
 					   checks_order_1st>;
 #endif
 
