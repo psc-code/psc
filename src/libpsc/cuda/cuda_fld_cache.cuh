@@ -4,9 +4,13 @@
 // ======================================================================
 // FldCache
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<typename BS>
 struct FldCache
 {
+  const static int BLOCKSIZE_X = BS::x::value;
+  const static int BLOCKSIZE_Y = BS::y::value;
+  const static int BLOCKSIZE_Z = BS::z::value;
+
   using real_t = float;
   
   __device__ FldCache() = default;

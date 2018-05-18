@@ -42,7 +42,7 @@ struct CudaPushParticles
   using Curr = typename Currmem::Curr<BS>;
   using DMparticles = DMparticlesCuda<BS>;
   using real_t = typename DMparticles::real_t;
-  using FldCache = FldCache<BS::x::value, BS::y::value, BS::z::value>;
+  using FldCache = FldCache<BS>;
 
   // ----------------------------------------------------------------------
   // push_part_one
