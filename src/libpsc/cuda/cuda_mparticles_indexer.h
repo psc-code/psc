@@ -73,20 +73,22 @@ struct cuda_mparticles_indexer
 protected:
   int blockIndex(Int3 bpos, int p) const
   {
-    if (uint(bpos[1]) >= b_mx_[1] ||
+    if (uint(bpos[0]) >= b_mx_[0] ||
+	uint(bpos[1]) >= b_mx_[1] ||
 	uint(bpos[2]) >= b_mx_[2]) {
       return -1;
     }
     
-    return (p * b_mx_[2] + bpos[2]) * b_mx_[1] + bpos[1];
+    return ((p * b_mx_[2] + bpos[2]) * b_mx_[1] + bpos[1]) * b_mx_[0] + bpos[0];
   }
 
   int validCellIndex(Int3 cpos, int p) const
   {
+    assert(uint(cpos[0]) < pi_.ldims_[0]);
     assert(uint(cpos[1]) < pi_.ldims_[1]);
     assert(uint(cpos[2]) < pi_.ldims_[2]);
     
-    return (p * pi_.ldims_[2] + cpos[2]) * pi_.ldims_[1] + cpos[1];
+    return ((p * pi_.ldims_[2] + cpos[2]) * pi_.ldims_[1] + cpos[1]) * pi_.ldims_[0] + cpos[0];
   }
 
 public:
@@ -123,24 +125,27 @@ struct DParticleIndexer
 
   __device__ int validCellIndex(float4 xi4, int p) const
   {
+    uint pos_x = __float2int_rd(xi4.x * dxi_[0]);
     uint pos_y = __float2int_rd(xi4.y * dxi_[1]);
     uint pos_z = __float2int_rd(xi4.z * dxi_[2]);
     
     //assert(pos_y < ldims_[1] && pos_z < ldims_[2]); FIXME, assert doesn't work (on macbook)
-    return (p * ldims_[2] + pos_z) * ldims_[1] + pos_y;
+    return ((p * ldims_[2] + pos_z) * ldims_[1] + pos_y) * ldims_[0] + pos_x;
   }
 
   __device__ int blockIndex(float4 xi4, int p) const
   {
+    uint block_pos_x = __float2int_rd(xi4.x * dxi_[0]) / BS::x::value;
     uint block_pos_y = __float2int_rd(xi4.y * dxi_[1]) / BS::y::value;
     uint block_pos_z = __float2int_rd(xi4.z * dxi_[2]) / BS::z::value;
     
     //assert(block_pos_y < b_mx_[1] && block_pos_z < b_mx_[2]); FIXME, assert doesn't work (on macbook)
-    return (p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y;
+    return ((p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y) * b_mx_[0] * block_pos_x;
   }
 
   __device__ int blockShift(float xi[3], int p, int bid) const
   {
+    static_assert(BS::x::value == 1, "blockShift needs work for dim_xyz");
     uint block_pos_y = __float2int_rd(xi[1] * dxi_[1]) / BS::y::value;
     uint block_pos_z = __float2int_rd(xi[2] * dxi_[2]) / BS::z::value;
     
