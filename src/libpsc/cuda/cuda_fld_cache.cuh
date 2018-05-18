@@ -69,7 +69,7 @@ private:
     if (i < ci0_[0] -2 || i >= ci0_[0] + BLOCKSIZE_X + 2 ||
 	j < ci0_[1] -2 || j >= ci0_[1] + BLOCKSIZE_Y + 2 ||
 	k < ci0_[2] -2 || k >= ci0_[2] + BLOCKSIZE_Z + 2) {
-      printf("CUDA_ERROR: fld cache ijk %d %d %d ci0 % %d %d\n",
+      printf("CUDA_ERROR: fld cache ijk %d %d %d ci0 %d %d %d\n",
 	     i, j, k, ci0_[0], ci0_[1], ci0_[2]);
     }
 #endif

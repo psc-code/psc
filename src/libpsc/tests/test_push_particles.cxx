@@ -443,6 +443,39 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
 }
 
 // ======================================================================
+// SingleParticlePushp7 test
+//
+// test with EZ = z in different block (not just lower left)
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    case EZ: return crd[2];
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 151.; prt0.yi = 152.; prt0.zi = 155.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 1.; prt0.pyi = 1.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  prt1.pzi = 156;
+  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
+  prt1.yi += vy(prt1);
+  prt1.zi += vz(prt1);
+  
+  this->runSingleParticleTest(init_fields, prt0, prt1);
+}
+
+// ======================================================================
 // PushParticlesTest2 is the same, but won't test cuda (because checks doesn't work)
 
 template<typename T>
