@@ -65,12 +65,14 @@ Getter<Mparticles> make_getter(Mparticles& mprts)
 template<typename T>
 struct PushParticlesTest : ::testing::Test
 {
+  using dim = typename T::dim;
   using Mparticles = typename T::Mparticles;
   using Mfields = typename T::Mfields;
   using PushParticles = typename T::PushParticles;
   using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mparticles::real_t;
 
-  const typename Mparticles::real_t eps = 1e-5;
+  const real_t eps = 1e-5;
   const double L = 160;
 
   Int3 ibn = { 2, 2, 2 };
@@ -83,9 +85,9 @@ struct PushParticlesTest : ::testing::Test
   void make_psc(const Grid_t::Kinds& kinds)
   {
     Int3 gdims = {16, 16, 16};
-    if (T::dim::InvarX::value) { gdims[0] = 1; ibn[0] = 0; }
-    if (T::dim::InvarY::value) { gdims[1] = 1; ibn[1] = 0; }
-    if (T::dim::InvarZ::value) { gdims[2] = 1; ibn[2] = 0; }
+    if (dim::InvarX::value) { gdims[0] = 1; ibn[0] = 0; }
+    if (dim::InvarY::value) { gdims[1] = 1; ibn[1] = 0; }
+    if (dim::InvarZ::value) { gdims[2] = 1; ibn[2] = 0; }
 
     auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -228,6 +230,13 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   }
 }
 
+template<typename particle_t>
+typename particle_t::real_t vz(const particle_t& prt)
+{
+  auto gamma = 1./std::sqrt(1. + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+  return gamma * prt.pzi;
+}
+
 // ======================================================================
 // SingleParticlePushp1 test
 //
@@ -252,7 +261,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
   prt0.kind_ = 0;
 
   prt1 = prt0;
-  prt1.zi = 5.707107;
+  prt1.zi += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -283,17 +292,18 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 
   prt1 = prt0;
   prt1.pzi = 3.;
-  prt1.zi = 5.948683;
+  prt1.zi += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
-  
-  //this->mprts->dump("prts.asc");
 }
 
 // ======================================================================
 // SingleParticlePushp3 test
 //
 // EZ = z, check interpolation in z direction
+// 1vbec doesn't actually interpolate EZ in the z direction,
+// but by choosing the midpoint, that works out
+// (but this test isn't very comprehensive)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
 {
@@ -316,11 +326,72 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
 
   prt1 = prt0;
   prt1.pzi = 6.;
-  prt1.zi = 5.986394;
+  prt1.zi += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
+}
+
+// ======================================================================
+// SingleParticlePushp4 test
+//
+// EZ = y, check interpolation in y direction
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    case EZ: return crd[1];
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 5.; prt0.yi = 4.; prt0.zi = 5.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  prt1.pzi = 5.;
+  prt1.zi = 5.980580;
   
-  //this->mprts->dump("prts.asc");
+  this->runSingleParticleTest(init_fields, prt0, prt1);
+}
+
+// ======================================================================
+// SingleParticlePushp5 test
+//
+// EZ = x, check interpolation in x direction
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    case EZ: return crd[0];
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 3.; prt0.yi = 5.; prt0.zi = 5.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  prt1.pzi = 4.;
+  if (Base::dim::InvarX::value) { prt1.pzi = 1.; }
+  prt1.zi += vz(prt1);
+  
+  this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
 // ======================================================================
