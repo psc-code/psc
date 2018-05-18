@@ -134,10 +134,10 @@ struct PushParticlesTest : ::testing::Test
       EXPECT_NEAR(prt.pxi, prt1.pxi, eps);
       EXPECT_NEAR(prt.pyi, prt1.pyi, eps);
       EXPECT_NEAR(prt.pzi, prt1.pzi, eps);
-      EXPECT_NEAR(prt.qni_wni_, 1., eps);
-      EXPECT_NEAR(prt.xi, 5., eps);
-      EXPECT_NEAR(prt.yi, 5., eps);
-      EXPECT_NEAR(prt.zi, 5.948683, eps);
+      EXPECT_NEAR(prt.qni_wni_, prt1.qni_wni_, eps);
+      EXPECT_NEAR(prt.xi, prt1.xi, eps);
+      EXPECT_NEAR(prt.yi, prt1.yi, eps);
+      EXPECT_NEAR(prt.zi, prt1.zi, eps);
     }
   }
 
@@ -235,47 +235,26 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 {
-  using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
-  using PushParticles = typename TypeParam::PushParticles;
-  const typename Mparticles::real_t eps = 1e-5;
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
 
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
-  const auto& grid = this->grid();
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  prt1.zi = 5.707107;
   
-  // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
-  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
-      switch (m) {
-      default: return 0.;
-      }
-    });
-
-  // init particle
-  auto n_prts_by_patch = std::vector<uint>{1};
-
-  Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      typename Mparticles::particle_t prt{};
-      prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
-      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.;
-      prt.qni_wni_ = 1.;
-      return prt;
-    });
-
-  PushParticles pushp_;
-  pushp_.push_mprts(mprts, mflds);
-  
-  for (auto& prt : make_getter(mprts)[0]) {
-    EXPECT_NEAR(prt.pxi, 0., eps);
-    EXPECT_NEAR(prt.pyi, 0., eps);
-    EXPECT_NEAR(prt.pzi, 1., eps);
-    EXPECT_NEAR(prt.qni_wni_, 1., eps);
-    EXPECT_NEAR(prt.xi, 5., eps);
-    EXPECT_NEAR(prt.yi, 5., eps);
-    EXPECT_NEAR(prt.zi, 5.707107, eps);
-  }
+  this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
 // ======================================================================
