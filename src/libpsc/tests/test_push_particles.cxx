@@ -230,6 +230,23 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   }
 }
 
+// ======================================================================
+// vx, vy, vz
+
+template<typename particle_t>
+typename particle_t::real_t vx(const particle_t& prt)
+{
+  auto gamma = 1./std::sqrt(1. + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+  return gamma * prt.pxi;
+}
+
+template<typename particle_t>
+typename particle_t::real_t vy(const particle_t& prt)
+{
+  auto gamma = 1./std::sqrt(1. + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+  return gamma * prt.pyi;
+}
+
 template<typename particle_t>
 typename particle_t::real_t vz(const particle_t& prt)
 {
@@ -389,6 +406,37 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
   prt1 = prt0;
   prt1.pzi = 4.;
   if (Base::dim::InvarX::value) { prt1.pzi = 1.; }
+  prt1.zi += vz(prt1);
+  
+  this->runSingleParticleTest(init_fields, prt0, prt1);
+}
+
+// ======================================================================
+// SingleParticlePushp6 test
+//
+// simply updating xi (in xyz, but not yz)
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 1.; prt0.yi = 2.; prt0.zi = 3.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 1.; prt0.pyi = 1.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
+  prt1.yi += vy(prt1);
   prt1.zi += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
