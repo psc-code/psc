@@ -36,13 +36,14 @@
 template<typename Config, bool REORDER>
 struct CudaPushParticles
 {
+  using dim = typename Config::dim;
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
   using Block = typename Currmem::Block<BS>;
   using Curr = typename Currmem::Curr<BS>;
   using DMparticles = DMparticlesCuda<BS>;
   using real_t = typename DMparticles::real_t;
-  using FldCache = FldCache<BS>;
+  using FldCache = FldCache<BS, dim>;
 
   // ----------------------------------------------------------------------
   // push_part_one
