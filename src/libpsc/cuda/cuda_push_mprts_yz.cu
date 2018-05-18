@@ -39,7 +39,7 @@ struct CudaPushParticles
   using dim = typename Config::dim;
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
-  using Block = typename Currmem::Block<BS>;
+  using Block = typename Currmem::Block<BS, dim>;
   using Curr = typename Currmem::Curr<BS>;
   using DMparticles = DMparticlesCuda<BS>;
   using real_t = typename DMparticles::real_t;
@@ -383,7 +383,7 @@ template<bool REORDER>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds)
 {
   using Currmem = typename Config::Currmem;
-  using Block = typename Currmem::Block<typename Config::Bs>;
+  using Block = typename Currmem::Block<typename Config::Bs, typename Config::dim>;
 
   zero_currents(cmflds);
 

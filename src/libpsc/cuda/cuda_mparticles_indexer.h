@@ -5,6 +5,7 @@
 #include "grid.hxx"
 #include "psc_particles_cuda.h"
 #include "range.hxx"
+#include "dim.hxx"
 
 #define CUDA_BND_S_NEW (9)
 #define CUDA_BND_S_OOB (10)
@@ -13,7 +14,7 @@
 template<typename BS>
 struct DParticleIndexer;
 
-template<typename BS>
+template<typename BS, typename DIM>
 struct BlockQ;
 
 template<typename BS>
@@ -199,7 +200,8 @@ private:
   uint b_mx_[3];
   real_t dxi_[3];
 
-  friend class BlockQ<BS>;
+  friend class BlockQ<BS, dim_yz>;
+  friend class BlockQ<BS, dim_xyz>;
   friend class BlockSimple<BS>;
 };
 
@@ -240,7 +242,7 @@ struct BlockSimple : BlockBase
   }
 };
 
-template<typename BS>
+template<typename BS, typename DIM>
 struct BlockQ : BlockBase
 {
   static Range<int> block_starts() { return range(4);  }

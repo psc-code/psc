@@ -137,8 +137,8 @@ struct CurrmemShared
   template<typename BS>
   using Curr = SCurr<BS>;
 
-  template<typename BS>
-  using Block = BlockQ<BS>;
+  template<typename BS, typename DIM>
+  using Block = BlockQ<BS, DIM>;
 };
 
 // ======================================================================
@@ -149,7 +149,7 @@ struct CurrmemGlobal
   template<typename BS>
   using Curr = GCurr<BS>;
 
-  template<typename BS>
+  template<typename BS, typename DIM>
   using Block = BlockSimple<BS>;
 };
 
