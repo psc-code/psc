@@ -74,7 +74,7 @@ struct CudaPushParticles
     }
 #endif
     InterpolateEM<FldCache, typename Config::Ip, dim> ip;
-    AdvanceParticle<real_t, dim_yz> advance{dmprts.dt()};
+    AdvanceParticle<real_t, dim> advance{dmprts.dt()};
     
     ip.set_coeffs(xm);
     
@@ -217,7 +217,7 @@ struct CudaPushParticles
   yz_calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	    Curr &scurr, const Block& current_block)
   {
-    AdvanceParticle<real_t, dim_yz> advance{dmprts.dt()};
+    AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
     float vxi[3];
     advance.calc_v(vxi, prt.pxi);
