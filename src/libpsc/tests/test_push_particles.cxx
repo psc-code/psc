@@ -65,6 +65,8 @@ Getter<Mparticles> make_getter(Mparticles& mprts)
 template<typename T>
 struct PushParticlesTest : ::testing::Test
 {
+  using Mparticles = typename T::Mparticles;
+  using Mfields = typename T::Mfields;
   const double L = 160;
 
   Int3 ibn = { 2, 2, 2 };
@@ -101,6 +103,25 @@ struct PushParticlesTest : ::testing::Test
     assert(ppsc);
     return ppsc->grid();
   }
+
+  template<typename FUNC1, typename FUNC2>
+  void runSingleParticleTest(FUNC1 init_fields, FUNC2 init_particles)
+  {
+    auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+    make_psc(kinds);
+
+    // init fields
+    mflds = new Mfields{grid(), NR_FIELDS, ibn};
+    SetupFields<Mfields>::set(*mflds, init_fields);
+
+    // init particle
+    mprts = new Mparticles{grid()};
+    auto n_prts_by_patch = std::vector<uint>{1};
+    SetupParticles<Mparticles>::setup_particles(*mprts, n_prts_by_patch, init_particles);
+  }
+
+  Mparticles* mprts;
+  Mfields* mflds;
 };
 
 template<typename DIM, typename PUSHP, typename ORDER>
@@ -248,37 +269,29 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
   using PushParticles = typename TypeParam::PushParticles;
   const typename Mparticles::real_t eps = 1e-5;
 
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
-  const auto& grid = this->grid();
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    case EZ: return 2.;
+    default: return 0.;
+    }
+  };
+
+  auto init_particles = [&](int p, int n) -> typename Mparticles::particle_t {
+    typename Mparticles::particle_t prt{};
+    prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
+    prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.;
+    prt.qni_wni_ = 1.;
+    return prt;
+  };
   
-  // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
-  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
-      switch (m) {
-      default: return 0.;
-      case EZ: return 2.;
-      }
-    });
-
-  // init particle
-  auto n_prts_by_patch = std::vector<uint>{1};
-
-  Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      typename Mparticles::particle_t prt{};
-      prt.xi = 5.; prt.yi = 5.; prt.zi = 5.;
-      prt.pxi = 0.; prt.pyi = 0.; prt.pzi = 1.;
-      prt.qni_wni_ = 1.;
-      return prt;
-    });
-
+  this->runSingleParticleTest(init_fields, init_particles);
+  
   PushParticles pushp_;
-  pushp_.push_mprts(mprts, mflds);
+  pushp_.push_mprts(*this->mprts, *this->mflds);
   
-  mprts.dump("prts.asc");
+  this->mprts->dump("prts.asc");
 
-  for (auto& prt : make_getter(mprts)[0]) {
+  for (auto& prt : make_getter(*this->mprts)[0]) {
     EXPECT_NEAR(prt.pxi, 0., eps);
     EXPECT_NEAR(prt.pyi, 0., eps);
     EXPECT_NEAR(prt.pzi, 3., eps);
