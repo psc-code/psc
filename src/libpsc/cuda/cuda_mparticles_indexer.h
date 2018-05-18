@@ -250,7 +250,55 @@ struct BlockSimple : BlockBase
 template<typename BS, typename DIM>
 struct BlockQ : BlockBase
 {
-  static Range<int> block_starts() { return range(4);  }
+  static Range<int> block_starts() { return range(8); }
+
+  template<typename CudaMparticles>
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int gx =  (cmprts.b_mx()[0] + 1) / 2;
+    int gy =  (cmprts.b_mx()[1] + 1) / 2;
+    int gz = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
+    return dim3(gx, gy, gz);
+  }
+
+  __device__
+  int init(const DParticleIndexer<BS>& dpi, int block_start)
+  {
+    int block_pos[3];
+    int grid_dim_z = (dpi.b_mx_[2] + 1) / 2;
+    block_pos[0] = blockIdx.x * 2;
+    block_pos[1] = blockIdx.y * 2;
+    block_pos[2] = (blockIdx.z % grid_dim_z) * 2;
+    block_pos[0] += block_start & 1; block_start >>= 1;
+    block_pos[1] += block_start & 1; block_start >>= 1;
+    block_pos[2] += block_start;
+    if (block_pos[0] >= dpi.b_mx_[0] ||
+	block_pos[1] >= dpi.b_mx_[1] ||
+	block_pos[2] >= dpi.b_mx_[2])
+      return false;
+    
+    ci0[0] = block_pos[0] * BS::x::value;
+    ci0[1] = block_pos[1] * BS::y::value;
+    ci0[2] = block_pos[2] * BS::z::value;
+    
+    p = blockIdx.z / grid_dim_z;
+
+    // FIXME won't work if b_mx_[0,1,2] not even (?)
+    bid = (((p
+	     * dpi.b_mx_[2] + block_pos[2])
+	    * dpi.b_mx_[1] + block_pos[1])
+	   * dpi.b_mx_[0] + block_pos[0]);
+    return true;
+  }
+};
+
+// ----------------------------------------------------------------------
+// BlockQ specialized for dim_yz
+
+template<typename BS>
+struct BlockQ<BS, dim_yz> : BlockBase
+{
+  static Range<int> block_starts() { return range(4); }
 
   template<typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)

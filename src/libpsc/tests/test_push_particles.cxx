@@ -126,6 +126,8 @@ struct PushParticlesTest : ::testing::Test
     SetupParticles<Mparticles>::setup_particles(*mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
 	return prt0;
       });
+
+    //mprts->dump("mprts.dump");
   
     // do one step
     PushParticles pushp_;
