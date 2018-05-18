@@ -68,6 +68,9 @@ struct PushParticlesTest : ::testing::Test
   using Mparticles = typename T::Mparticles;
   using Mfields = typename T::Mfields;
   using PushParticles = typename T::PushParticles;
+  using particle_t = typename Mparticles::particle_t;
+
+  const typename Mparticles::real_t eps = 1e-5;
   const double L = 160;
 
   Int3 ibn = { 2, 2, 2 };
@@ -105,8 +108,8 @@ struct PushParticlesTest : ::testing::Test
     return ppsc->grid();
   }
 
-  template<typename FUNC1, typename FUNC2>
-  void runSingleParticleTest(FUNC1 init_fields, FUNC2 init_particles)
+  template<typename FUNC>
+  void runSingleParticleTest(FUNC init_fields, particle_t prt0, particle_t prt1)
   {
     auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
     make_psc(kinds);
@@ -118,11 +121,24 @@ struct PushParticlesTest : ::testing::Test
     // init particle
     mprts = new Mparticles{grid()};
     auto n_prts_by_patch = std::vector<uint>{1};
-    SetupParticles<Mparticles>::setup_particles(*mprts, n_prts_by_patch, init_particles);
-
+    SetupParticles<Mparticles>::setup_particles(*mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+	return prt0;
+      });
+  
     // do one step
     PushParticles pushp_;
-    pushp_.push_mprts(*this->mprts, *this->mflds);
+    pushp_.push_mprts(*mprts, *mflds);
+
+    // check against reference
+    for (auto& prt : make_getter(*mprts)[0]) {
+      EXPECT_NEAR(prt.pxi, prt1.pxi, eps);
+      EXPECT_NEAR(prt.pyi, prt1.pyi, eps);
+      EXPECT_NEAR(prt.pzi, prt1.pzi, eps);
+      EXPECT_NEAR(prt.qni_wni_, 1., eps);
+      EXPECT_NEAR(prt.xi, 5., eps);
+      EXPECT_NEAR(prt.yi, 5., eps);
+      EXPECT_NEAR(prt.zi, 5.948683, eps);
+    }
   }
 
   Mparticles* mprts;
@@ -269,8 +285,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 {
-  using Mparticles = typename TypeParam::Mparticles;
-  const typename Mparticles::real_t eps = 1e-5;
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
@@ -279,7 +295,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
     }
   };
 
-  typename Mparticles::particle_t prt0, prt1;
+  particle_t prt0, prt1;
 
   prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
   prt0.qni_wni_ = 1.;
@@ -290,23 +306,9 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
   prt1.pzi = 3.;
   prt1.zi = 5.948683;
   
-  auto init_particles = [&](int p, int n) -> typename Mparticles::particle_t {
-    return prt0;
-  };
-
-  this->runSingleParticleTest(init_fields, init_particles);
+  this->runSingleParticleTest(init_fields, prt0, prt1);
   
   //this->mprts->dump("prts.asc");
-
-  for (auto& prt : make_getter(*this->mprts)[0]) {
-    EXPECT_NEAR(prt.pxi, prt1.pxi, eps);
-    EXPECT_NEAR(prt.pyi, prt1.pyi, eps);
-    EXPECT_NEAR(prt.pzi, prt1.pzi, eps);
-    EXPECT_NEAR(prt.qni_wni_, 1., eps);
-    EXPECT_NEAR(prt.xi, 5., eps);
-    EXPECT_NEAR(prt.yi, 5., eps);
-    EXPECT_NEAR(prt.zi, 5.948683, eps);
-  }
 }
 
 // ======================================================================
