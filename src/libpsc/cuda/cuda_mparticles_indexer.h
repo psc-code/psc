@@ -186,9 +186,10 @@ struct DParticleIndexer
     return xi * dxi_[d];
   }
 
+  template<typename DIM>
   __device__ void scalePos(real_t xs[3], real_t xi[3])
   {
-    xs[0] = 0.;
+    if (DIM::InvarX::value) xs[0] = 0.; else xs[0] = scalePos(xi[0], 0);
     xs[1] = scalePos(xi[1], 1);
     xs[2] = scalePos(xi[2], 2);
   }

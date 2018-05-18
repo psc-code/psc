@@ -144,7 +144,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xyz>
 {
   using real_t = typename F::real_t;
 
-  static real_t ex(const IP& ip, const F& EM)
+  __host__ __device__ static real_t ex(const IP& ip, const F& EM)
   {
     return (ip.cz.g.v0*(ip.cy.g.v0*EM(EX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
 			ip.cy.g.v1*EM(EX, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  )) +
@@ -152,7 +152,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xyz>
 			ip.cy.g.v1*EM(EX, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l+1)));
   }
 
-  static real_t ey(const IP& ip, const F& EM)
+  __host__ __device__ static real_t ey(const IP& ip, const F& EM)
   {
     return (ip.cx.g.v0*(ip.cz.g.v0*EM(EY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
 			ip.cz.g.v1*EM(EY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1)) +
@@ -160,7 +160,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xyz>
 			ip.cz.g.v1*EM(EY, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l+1)));
   }
 
-  static real_t ez(const IP& ip, const F& EM)
+  __host__ __device__ static real_t ez(const IP& ip, const F& EM)
   {
     return (ip.cy.g.v0*(ip.cx.g.v0*EM(EZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
 			ip.cx.g.v1*EM(EZ, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  )) +
@@ -168,19 +168,19 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xyz>
 			ip.cx.g.v1*EM(EZ, ip.cx.g.l+1,ip.cy.g.l+1,ip.cz.g.l  )));
   }
 
-  static real_t hx(const IP& ip, const F& EM)
+  __host__ __device__ static real_t hx(const IP& ip, const F& EM)
   {
     return (ip.cx.g.v0*EM(HX, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
 	    ip.cx.g.v1*EM(HX, ip.cx.g.l+1,ip.cy.g.l  ,ip.cz.g.l  ));
   }
 
-  static real_t hy(const IP& ip, const F& EM)
+  __host__ __device__ static real_t hy(const IP& ip, const F& EM)
   {
     return (ip.cy.g.v0*EM(HY, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
 	    ip.cy.g.v1*EM(HY, ip.cx.g.l  ,ip.cy.g.l+1,ip.cz.g.l  ));	     
   }
 
-  static real_t hz(const IP& ip, const F& EM)
+  __host__ __device__ static real_t hz(const IP& ip, const F& EM)
   {
     return (ip.cz.g.v0*EM(HZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l  ) +
 	    ip.cz.g.v1*EM(HZ, ip.cx.g.l  ,ip.cy.g.l  ,ip.cz.g.l+1));	     

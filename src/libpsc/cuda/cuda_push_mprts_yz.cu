@@ -59,27 +59,28 @@ struct CudaPushParticles
       LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
     } else {
       LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
-  }
+    }
     // here we have x^{n+.5}, p^n
     
     // field interpolation
     real_t xm[3];
-    dmprts.scalePos(xm, prt.xi);
-#if 0
+    dmprts.template scalePos<dim>(xm, prt.xi);
+#if 1
     const int *ci0 = current_block.ci0;
-    if (xm[1] < ci0[1] || xm[1] > ci0[1] + BS::y::value ||
+    if (!dim::InvarX::value && ((xm[0] < ci0[0] || xm[0] > ci0[0] + BS::x::value)) ||
+	xm[1] < ci0[1] || xm[1] > ci0[1] + BS::y::value ||
 	xm[2] < ci0[2] || xm[2] > ci0[2] + BS::z::value) {
       printf("xm %g %g (xi %g %g n %d)\n", xm[1], xm[2], prt.xi[0], prt.xi[1], n);
     }
 #endif
-    InterpolateEM<FldCache, typename Config::Ip, dim_yz> ip;
+    InterpolateEM<FldCache, typename Config::Ip, dim> ip;
     AdvanceParticle<real_t, dim_yz> advance{dmprts.dt()};
     
     ip.set_coeffs(xm);
     
     real_t E[3] = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
     real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
-#if 0
+#if 1
     if (!isfinite(E[0]) || !isfinite(E[1]) || !isfinite(E[2]) ||
 	!isfinite(H[0]) || !isfinite(H[1]) || !isfinite(H[2])) {
       printf("CUDA_ERROR push_part_one: n = %d E %g %g %g H %g %g %g\n", n,
