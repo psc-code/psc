@@ -337,3 +337,4 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 psc_mparticles_ops_<MparticlesCuda<BS144>> psc_mparticles_cuda_ops;
 
 template struct MparticlesCuda<BS144>;
+template struct MparticlesCuda<BS444>;

@@ -38,13 +38,6 @@ private:
   Mparticles& mprts_;
 };
 
-struct BS444
-{
-  using x = std::integral_constant<unsigned int, 4>;
-  using y = std::integral_constant<unsigned int, 4>;
-  using z = std::integral_constant<unsigned int, 4>;
-};
-
 template<class Mparticles>
 struct GetterCuda
 {
@@ -193,6 +186,9 @@ using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
 					 PushParticlesCuda<CudaConfig1vbec3d<dim_xyz, BS144>>,
 					 checks_order_1st>;
+using TestConfig1vbec3dCuda444 = TestConfig<dim_xyz,
+					 PushParticlesCuda<CudaConfig1vbec3d<dim_xyz, BS444>>,
+					 checks_order_1st>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
 					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
 					   checks_order_1st>;
@@ -203,6 +199,7 @@ using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
 #ifdef USE_CUDA
 						TestConfig1vbec3dCudaYZ,
 						TestConfig1vbec3dCuda,
+						TestConfig1vbec3dCuda444,
 #endif
 						TestConfig2ndDouble,
 						TestConfig2ndSingle,

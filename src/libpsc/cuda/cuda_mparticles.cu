@@ -470,3 +470,4 @@ void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
 #include "cuda_mparticles_checks.cu"
 
 template struct cuda_mparticles<BS144>;
+template struct cuda_mparticles<BS444>;

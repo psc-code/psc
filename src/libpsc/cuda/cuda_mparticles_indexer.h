@@ -145,7 +145,7 @@ struct DParticleIndexer
 
   __device__ int blockShift(float xi[3], int p, int bid) const
   {
-    static_assert(BS::x::value == 1, "blockShift needs work for dim_xyz");
+    //static_assert(BS::x::value == 1, "blockShift needs work for dim_xyz");
     uint block_pos_y = __float2int_rd(xi[1] * dxi_[1]) / BS::y::value;
     uint block_pos_z = __float2int_rd(xi[2] * dxi_[2]) / BS::z::value;
     
