@@ -38,25 +38,30 @@ private:
   Mparticles& mprts_;
 };
 
-template<>
-struct Getter<MparticlesCuda<BS144>>
+template<class Mparticles>
+struct GetterCuda
 {
-  using Mparticles = MparticlesCuda<BS144>;
-
-  Getter(Mparticles& mprts)
+  GetterCuda(Mparticles& mprts)
     : mprts_(mprts.template get_as<MparticlesSingle>()) {}
 
   typename MparticlesSingle::patch_t& operator[](int p) { return mprts_[p]; }
-  
 
 private:
   MparticlesSingle& mprts_;
 };
 
-template<class Mparticles>
+template<class Mparticles,
+	 typename = typename std::enable_if<!std::is_same<Mparticles, MparticlesCuda<BS144>>::value>::type>
 Getter<Mparticles> make_getter(Mparticles& mprts)
 {
   return Getter<Mparticles>(mprts);
+}
+
+template<class Mparticles,
+	 typename = typename std::enable_if<std::is_same<Mparticles, MparticlesCuda<BS144>>::value>::type>
+GetterCuda<Mparticles> make_getter(Mparticles& mprts)
+{
+  return GetterCuda<Mparticles>(mprts);
 }
 
 // ======================================================================
