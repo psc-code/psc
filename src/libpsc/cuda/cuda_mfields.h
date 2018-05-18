@@ -74,7 +74,7 @@ struct cuda_mfields
 	       * n_fields + m)
 	      * im[2] + (k - ib[2]))
 	     * im[1] + (j - ib[1]))
-	    * 1 + (0));
+	    * im[0] + (i - ib[0]));
   }
 
   real_t get_value(int idx) const { return d_flds_[idx]; }
@@ -99,9 +99,10 @@ struct DFields
 {
   using real_t = float;
   
-  __host__ __device__ DFields(real_t* d_flds, int im[3])
+  __host__ __device__ DFields(real_t* d_flds, int im[3], int ib[3])
     : d_flds_(d_flds),
-      im_{ im[0], im[1], im[2] }
+      im_{im[0], im[1], im[2]},
+      ib_{ib[0], ib[1], ib[2]}
   {}
   
   __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
@@ -115,18 +116,20 @@ private:
   __device__ int index(int m, int i, int j, int k) const
   {
 #if 0
-    if (j + 2 < 0 || j + 2 >= im_[1]) printf("!!! j %d\n", j);
-    if (k + 2 < 0 || k + 2 >= im_[2]) printf("!!! k %d\n", k);
+    if (i - ib_[0] < 0 || i - ib_[0] >= im_[0]) printf("!!! i %d\n", j);
+    if (j - ib_[1] < 0 || j - ib_[1] >= im_[1]) printf("!!! j %d\n", j);
+    if (k - ib_[2] < 0 || k - ib_[2] >= im_[2]) printf("!!! k %d\n", k);
 #endif
     return ((((m)
-	      *im_[2] + (k + 2))
-	     *im_[1] + (j + 2))
-	    *1 + (0));
+	      *im_[2] + (k - ib_[2]))
+	     *im_[1] + (j - ib_[1]))
+	    *im_[0] + (i - ib_[0]));
   }
 
 private:
   real_t *d_flds_;
   int im_[3];
+  int ib_[3];
 };
 
 // ======================================================================
@@ -136,15 +139,16 @@ struct DMFields
 {
   using real_t = float;
   
-  __host__ DMFields(real_t* d_flds, uint stride, int im[3])
+  __host__ DMFields(real_t* d_flds, uint stride, int im[3], int ib[3])
     : d_flds_(d_flds),
       stride_(stride),
-      im_{ im[0], im[1], im[2] }
+      im_{ im[0], im[1], im[2] },
+      ib_{ ib[0], ib[1], ib[2] }
   {}
 
   __host__ __device__ DFields operator[](int p)
   {
-    return DFields(d_flds_ + p * stride_, im_);
+    return DFields(d_flds_ + p * stride_, im_, ib_);
   }
 
   __device__ int im(int d) const { return im_[d]; }
@@ -153,6 +157,7 @@ private:
   real_t *d_flds_;
   uint stride_;
   int im_[3];
+  int ib_[3];
 };
 
 #endif
