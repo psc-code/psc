@@ -291,6 +291,39 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 }
 
 // ======================================================================
+// SingleParticlePushp3 test
+//
+// EZ = z, check interpolation in z direction
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    case EZ: return crd[2];
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  prt1.pzi = 6.;
+  prt1.zi = 5.986394;
+  
+  this->runSingleParticleTest(init_fields, prt0, prt1);
+  
+  //this->mprts->dump("prts.asc");
+}
+
+// ======================================================================
 // PushParticlesTest2 is the same, but won't test cuda (because checks doesn't work)
 
 template<typename T>
