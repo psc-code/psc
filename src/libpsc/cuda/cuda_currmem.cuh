@@ -156,6 +156,6 @@ struct CurrmemGlobal
   using Curr = GCurr<BS>;
 
   template<typename BS, typename DIM>
-  using Block = BlockSimple<BS>;
+  using Block = BlockSimple<BS, DIM>;
 };
 

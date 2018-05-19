@@ -157,7 +157,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   template<typename BS>
   void run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
   {
-    dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
+    dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
     
     k_heating_run_foil<BS>
       <<<dimGrid, THREADS_PER_BLOCK>>>(*this, *cmprts, h_prm_, d_curand_states);
@@ -176,7 +176,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     if (first_time) {
       cuda_heating_params_set(h_prm_, cmprts);
       
-      dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
+      dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
       int n_threads = dimGrid.x * dimGrid.y * THREADS_PER_BLOCK;
       
       cudaError_t ierr;
@@ -257,7 +257,7 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct cuda_heating_params prm,
 		   curandState *d_curand_states)
 {
-  BlockSimple<BS> current_block;
+  BlockSimple<BS, dim_yz> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
