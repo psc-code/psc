@@ -120,6 +120,7 @@ struct DParticleIndexer
       ldims_[d] = cpi.pi_.ldims_[d];
       b_mx_[d]  = cpi.b_mx_[d];
       dxi_[d]   = cpi.pi_.dxi_[d];
+      n_blocks_ = cpi.n_blocks;
     }
   }
 
@@ -135,14 +136,36 @@ struct DParticleIndexer
 
   __device__ int blockIndex(float4 xi4, int p) const
   {
-    uint block_pos_x = __float2int_rd(xi4.x * dxi_[0]) / BS::x::value;
-    uint block_pos_y = __float2int_rd(xi4.y * dxi_[1]) / BS::y::value;
-    uint block_pos_z = __float2int_rd(xi4.z * dxi_[2]) / BS::z::value;
-    
-    //assert(block_pos_y < b_mx_[1] && block_pos_z < b_mx_[2]); FIXME, assert doesn't work (on macbook)
-    return ((p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y) * b_mx_[0] * block_pos_x;
+    int block_pos[3] = { int(__float2int_rd(xi4.x * dxi_[0]) / BS::x::value),
+			 int(__float2int_rd(xi4.y * dxi_[1]) / BS::y::value),
+			 int(__float2int_rd(xi4.z * dxi_[2]) / BS::z::value) };
+
+    return validBlockIndex(block_pos, p);
   }
 
+  __device__ int validBlockIndex(const int* block_pos, int p) const
+  {
+    /* assert(block_pos[0] >= 0 && block_pos[0] < b_mx_[0]); */
+    /* assert(block_pos[1] >= 0 && block_pos[1] < b_mx_[1]); */
+    /* assert(block_pos[2] >= 0 && block_pos[2] < b_mx_[2]); */
+
+    return ((p * b_mx_[2] + block_pos[2]) * b_mx_[1] + block_pos[1]) * b_mx_[0] * block_pos[0];
+  }
+
+  __device__ int blockIndexFromCellPosition(const int* cpos, int p) const
+  {
+    if (uint(cpos[0]) >= ldims_[0] ||
+	uint(cpos[1]) >= ldims_[1] ||
+	uint(cpos[2]) >= ldims_[2]) {
+      return n_blocks_;
+    }
+
+    int bpos[3] = { int(cpos[0] / BS::x::value),
+		    int(cpos[1] / BS::y::value),
+		    int(cpos[2] / BS::z::value) };
+    return validBlockIndex(bpos, p);
+  }
+  
   __device__ int blockShift(float xi[3], int p, int bid) const
   {
     //static_assert(BS::x::value == 1, "blockShift needs work for dim_xyz");
@@ -203,6 +226,7 @@ struct DParticleIndexer
 private:
   uint ldims_[3];
   uint b_mx_[3];
+  uint n_blocks_;
   real_t dxi_[3];
 
   friend class BlockQ<BS, dim_yz>;
