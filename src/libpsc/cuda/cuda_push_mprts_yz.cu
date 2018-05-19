@@ -423,3 +423,4 @@ void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts, struct cuda_
 //template struct CudaPushParticles_<CudaConfig1vb<dim_yz>>;
 template struct CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>;
 template struct CudaPushParticles_<CudaConfig1vbec3d<dim_xyz, BS144>>;
+template struct CudaPushParticles_<CudaConfig1vbec3d<dim_xyz, BS444>>;
