@@ -89,6 +89,9 @@ struct PushParticlesTest : ::testing::Test
   const real_t eps = 1e-5;
   const double L = 160;
 
+  const real_t fnqx = .05, fnqy = .05, fnqz = .05;
+  const real_t dx = 10., dy = 10., dz = 10.;
+  
   Int3 ibn = { 2, 2, 2 };
   
   ~PushParticlesTest()
@@ -183,6 +186,19 @@ struct PushParticlesTest : ::testing::Test
       });
   }
   
+  Vec3<double> push_x(const particle_t& prt0, particle_t& prt1)
+  {
+    Vec3<double> xi1 = { prt0.xi + vx(prt1),
+			 prt0.yi + vy(prt1),
+			 prt0.zi + vz(prt1) };
+    
+    if (!dim::InvarX::value) prt1.xi = xi1[0];
+    if (!dim::InvarY::value) prt1.yi = xi1[1];
+    if (!dim::InvarZ::value) prt1.zi = xi1[2];
+
+    return xi1;
+  }
+
   Mparticles* mprts;
   Mfields* mflds;
 };
@@ -513,9 +529,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
 
   prt1 = prt0;
   prt1.pzi = 156;
-  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
-  prt1.yi += vy(prt1);
-  prt1.zi += vz(prt1);
+  this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -544,16 +558,12 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
   prt0.kind_ = 0;
 
   prt1 = prt0;
-  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
-  prt1.yi += vy(prt1);
-  prt1.zi += vz(prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
-    auto fnqz = .05;
-    auto dz = 10.;
     curr_ref = {
-      { JZI, {1, 1, 1}, fnqz / dz * (prt1.zi - prt0.zi) },
+      { JZI, {1, 1, 1}, this->fnqz / this->dz * (xi1[2] - prt0.zi) },
     };
   }
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
@@ -583,17 +593,13 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
   prt0.kind_ = 0;
 
   prt1 = prt0;
-  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
-  prt1.yi += vy(prt1);
-  prt1.zi += vz(prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
-    auto fnqz = .05;
-    auto dz = 10.;
     curr_ref = {
-      { JZI, {1, 1, 1}, fnqz / dz * (20. - prt0.zi) },
-      { JZI, {1, 1, 2}, fnqz / dz * (prt1.zi - 20.) },
+      { JZI, {1, 1, 1}, this->fnqz / this->dz * (20. - prt0.zi) },
+      { JZI, {1, 1, 2}, this->fnqz / this->dz * (xi1[2] - 20.) },
     };
   }
       
@@ -624,9 +630,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
   prt0.kind_ = 0;
 
   prt1 = prt0;
-  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
-  prt1.yi += vy(prt1);
-  prt1.zi += vz(prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -634,7 +638,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
     auto dy = 10.;
     curr_ref = {
       { JYI, {1, 1, 1}, fnqy / dy * (20. - prt0.yi) },
-      { JYI, {1, 2, 1}, fnqy / dy * (prt1.yi - 20.) },
+      { JYI, {1, 2, 1}, fnqy / dy * (xi1[1] - 20.) },
     };
   }
       
@@ -665,19 +669,12 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
   prt0.kind_ = 0;
 
   prt1 = prt0;
-  Vec3<double> xi1 = { prt0.xi + vx(prt1),
-		       prt0.yi + vy(prt1),
-		       prt0.zi + vz(prt1) };
-  if (!Base::dim::InvarX::value) prt1.xi = xi1[0];
-  prt1.yi = xi1[1];
-  prt1.zi = xi1[2];
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
-    auto fnqx = .05;
-    auto dx = 10.;
     curr_ref = {
-      { JXI, {1, 1, 1}, fnqx / dx * (xi1[0] - prt0.xi) },
+      { JXI, {1, 1, 1}, this->fnqx / this->dx * (xi1[0] - prt0.xi) },
     };
   }
       
