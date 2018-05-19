@@ -223,7 +223,6 @@ struct CudaPushParticles
     }
     if (dx[2] != 0.f) {
       float fnqz = qni_wni * dmprts.fnqzs();
-      printf("fnqz %g dx2 %g\n", fnqz, dx[2]);
       scurr.add(2, i[0]  , i[1]  , i[2], fnqz * (dx[2] * (.5f - xa[0]) * (.5f - xa[1]) + h), current_block.ci0);
       scurr.add(2, i[0]+1, i[1]  , i[2], fnqz * (dx[2] * (.5f + xa[0]) * (.5f - xa[1]) - h), current_block.ci0);
       scurr.add(2, i[0]  , i[1]+1, i[2], fnqz * (dx[2] * (.5f - xa[0]) * (.5f + xa[1]) + h), current_block.ci0);
@@ -440,13 +439,18 @@ struct CudaPushParticles
 		      (.5f * bnd[2] - x[2]) / dx[2] };
     // frac[d] may be NaN, but that's okay
     float step = 1.f;
-    int dir = 3;
+    int dir = -1;
     if (frac[0] < step) { step = frac[0]; dir = 0; }
     if (frac[1] < step) { step = frac[1]; dir = 1; }
     if (frac[2] < step) { step = frac[2]; dir = 2; }
     
     printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2], step, dir);
     
+#if 0
+    float dx1[3] = { dx[0] * step, dx[1] * step, dx[2] * step };
+    printf("dx1 %g %g %g\n", dx1[0], dx1[1], dx1[2]);
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
+#else
     int off[3] = {};
     if (dir == 1) {
       off[0] = 0;
@@ -460,16 +464,20 @@ struct CudaPushParticles
 
     float dx1[3];
     calc_dx1(dx1, x, dx, off);
+    printf("dx1 %g %g %g\n", dx1[0], dx1[1], dx1[2]);
     curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
   
     off[1] = idiff[1] - off[1];
     off[2] = idiff[2] - off[2];
     calc_dx1(dx1, x, dx, off);
+    printf("dx1 %g %g %g\n", dx1[0], dx1[1], dx1[2]);
     curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
     
+    printf("dx %g %g %g\n", dx[0], dx[1], dx[2]);
     curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
+#endif
   }
 
   // ----------------------------------------------------------------------
