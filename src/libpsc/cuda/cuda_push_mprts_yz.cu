@@ -234,7 +234,7 @@ struct CudaPushParticles
   // curr_vb_cell_upd
   
   __device__ static void
-  curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3])
+  curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3], dim_yz tag)
   {
     dx[0] -= dx1[0];
     dx[1] -= dx1[1];
@@ -247,6 +247,27 @@ struct CudaPushParticles
     if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
 	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
       printf("CUDA_ERROR cell_upd B jyz %d:%d\n", i[1], i[2]);
+    }
+#endif
+  }
+  
+  __device__ static void
+  curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3], dim_xyz tag)
+  {
+    dx[0] -= dx1[0];
+    dx[1] -= dx1[1];
+    dx[2] -= dx1[2];
+    x[0] += dx1[0] - off[0];
+    x[1] += dx1[1] - off[1];
+    x[2] += dx1[2] - off[2];
+    i[0] += off[0];
+    i[1] += off[1];
+    i[2] += off[2];
+#if 1
+    if (i[0] < -1 || i[0] >= int(BS::x::value) + 1 ||
+	i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
+	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
+      printf("CUDA_ERROR cell_upd B jxyz %d:%d:%d\n", i[0], i[1], i[2]);
     }
 #endif
   }
@@ -341,13 +362,13 @@ struct CudaPushParticles
     float dx1[3];
     calc_dx1(dx1, x, dx, off);
     curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-    curr_vb_cell_upd(i, x, dx1, dx, off);
+    curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
   
     off[1] = idiff[1] - off[1];
     off[2] = idiff[2] - off[2];
     calc_dx1(dx1, x, dx, off);
     curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-    curr_vb_cell_upd(i, x, dx1, dx, off);
+    curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
     
     curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
   }
@@ -410,7 +431,7 @@ struct CudaPushParticles
     float x2 = x[2] * idiff[2];
     int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
 
-    int off[3];
+    int off[3] = {};
     if (d_first == 0) {
       off[1] = idiff[1];
       off[2] = 0;
@@ -422,13 +443,13 @@ struct CudaPushParticles
     float dx1[3];
     calc_dx1(dx1, x, dx, off);
     curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-    curr_vb_cell_upd(i, x, dx1, dx, off);
+    curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
   
     off[1] = idiff[1] - off[1];
     off[2] = idiff[2] - off[2];
     calc_dx1(dx1, x, dx, off);
     curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-    curr_vb_cell_upd(i, x, dx1, dx, off);
+    curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
     
     curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
   }
