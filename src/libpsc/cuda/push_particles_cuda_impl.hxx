@@ -30,8 +30,8 @@ using CudaConfig1vbec3d = CudaPushpConfig<dim, BS, opt_ip_1st_ec, DepositVb3d, C
 template<typename dim>
 using CudaConfig1vb = CudaPushpConfig<dim, BS144, opt_ip_1st, DepositVb2d, CurrmemShared>;
 
-template<typename dim>
-using CudaConfig1vbec3dGmem = CudaPushpConfig<dim, BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+template<typename dim, typename BS>
+using CudaConfig1vbec3dGmem = CudaPushpConfig<dim, BS, opt_ip_1st_ec, DepositVb3d, CurrmemGlobal>;
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"

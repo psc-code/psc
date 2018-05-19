@@ -40,7 +40,7 @@ struct CudaPushParticles
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
   using Block = typename Currmem::Block<BS, dim>;
-  using Curr = typename Currmem::Curr<BS>;
+  using Curr = typename Currmem::Curr<BS, dim>;
   using DMparticles = DMparticlesCuda<BS>;
   using real_t = typename DMparticles::real_t;
   using FldCache = FldCache<BS, dim>;
@@ -544,5 +544,5 @@ void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts, struct cuda_
 
 //template struct CudaPushParticles_<CudaConfig1vb<dim_yz>>;
 template struct CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>;
-template struct CudaPushParticles_<CudaConfig1vbec3d<dim_xyz, BS144>>;
-template struct CudaPushParticles_<CudaConfig1vbec3d<dim_xyz, BS444>>;
+template struct CudaPushParticles_<CudaConfig1vbec3dGmem<dim_xyz, BS144>>;
+template struct CudaPushParticles_<CudaConfig1vbec3dGmem<dim_xyz, BS444>>;

@@ -10,7 +10,7 @@
 
 // OPT: don't need as many ghost points for current and EM fields (?)
 
-template<typename BS>
+template<typename BS, typename DIM>
 class SCurr
 {
   static const int BS_X = BS::x::value, BS_Y = BS::y::value, BS_Z = BS::z::value;
@@ -80,13 +80,6 @@ public:
     atomicAdd(addr, val);
   }
 
-  __device__ void add(int m, int jx, int jy, int jz, float val, const int *ci0)
-  {
-    uint wid = threadIdx.x & (N_COPIES - 1);
-    float *addr = &(*this)(wid, jy, jz, m);
-    atomicAdd(addr, val);
-  }
-
 private:
   __device__ uint index(int jy, int jz, uint m, uint wid) const
   {
@@ -129,9 +122,15 @@ public:
   {
   }
 
-  __device__ void add(int m, int jy, int jz, float val, int *ci0)
+  __device__ void add(int m, int jy, int jz, float val, const int *ci0)
   {
     float *addr = &d_flds(JXI+m, 0,jy+ci0[1],jz+ci0[2]);
+    atomicAdd(addr, val);
+  }
+
+  __device__ void add(int m, int jx, int jy, int jz, float val, const int *ci0)
+  {
+    float *addr = &d_flds(JXI+m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
   }
 };
@@ -141,8 +140,8 @@ public:
 
 struct CurrmemShared
 {
-  template<typename BS>
-  using Curr = SCurr<BS>;
+  template<typename BS, typename DIM>
+  using Curr = SCurr<BS, DIM>;
 
   template<typename BS, typename DIM>
   using Block = BlockQ<BS, DIM>;
@@ -153,7 +152,7 @@ struct CurrmemShared
 
 struct CurrmemGlobal
 {
-  template<typename BS>
+  template<typename BS, typename DIM>
   using Curr = GCurr<BS>;
 
   template<typename BS, typename DIM>

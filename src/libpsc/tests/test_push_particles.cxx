@@ -216,10 +216,10 @@ using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
-					 PushParticlesCuda<CudaConfig1vbec3d<dim_xyz, BS144>>,
+					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
 					 checks_order_1st>;
 using TestConfig1vbec3dCuda444 = TestConfig<dim_xyz,
-					 PushParticlesCuda<CudaConfig1vbec3d<dim_xyz, BS444>>,
+					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
 					 checks_order_1st>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
 					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
