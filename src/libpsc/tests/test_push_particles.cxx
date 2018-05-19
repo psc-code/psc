@@ -721,6 +721,88 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
 }
 
 // ======================================================================
+// SingleParticlePushp13 test
+//
+// test current deposition, yz move, cross z
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 10.; prt0.yi = 19.5; prt0.zi = 10.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  auto xi1 = this->push_x(prt0, prt1);
+
+  std::vector<CurrentReference> curr_ref;
+  if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    curr_ref = {
+      { JYI, {1, 1, 1}, 0.00243749 },
+      { JZI, {1, 1, 1}, 6.25e-5 },
+      { JYI, {1, 2, 1}, 0.00036592 },
+      { JZI, {1, 2, 1}, 0.00282275 },
+      { JYI, {1, 1, 2}, 6.25e-5 },
+      { JYI, {1, 2, 2}, 2.08e-5 },
+    };
+  }
+      
+  this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
+}
+
+// ======================================================================
+// SingleParticlePushp14 test
+//
+// test current deposition, yz move, cross y
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 19.5;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  auto xi1 = this->push_x(prt0, prt1);
+
+  std::vector<CurrentReference> curr_ref;
+  if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    curr_ref = {
+      { JZI, {1, 1, 1}, 0.00243749 },
+      { JYI, {1, 1, 1}, 6.25e-5 },
+      { JZI, {1, 2, 1}, 6.25e-5 },
+      { JZI, {1, 1, 2}, 0.00036592 },
+      { JYI, {1, 1, 2}, 0.00282275 },
+      { JZI, {1, 2, 2}, 2.08e-5 },
+    };
+  }
+      
+  this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
+}
+
+// ======================================================================
 // PushParticlesTest2 is the same, but won't test cuda (because checks doesn't work)
 
 template<typename T>
