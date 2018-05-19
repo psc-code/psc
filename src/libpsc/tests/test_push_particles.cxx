@@ -553,9 +553,131 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
     auto fnqz = .05;
     auto dz = 10.;
     curr_ref = {
-      { JZI, {1, 1, 1}, fnqz / dz * vz(prt1) },
+      { JZI, {1, 1, 1}, fnqz / dz * (prt1.zi - prt0.zi) },
     };
   }
+  this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
+}
+
+// ======================================================================
+// SingleParticlePushp9 test
+//
+// test current deposition, z move only, but crossing bnd
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 19.5;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
+  prt1.yi += vy(prt1);
+  prt1.zi += vz(prt1);
+
+  std::vector<CurrentReference> curr_ref;
+  if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    auto fnqz = .05;
+    auto dz = 10.;
+    curr_ref = {
+      { JZI, {1, 1, 1}, fnqz / dz * (20. - prt0.zi) },
+      { JZI, {1, 1, 2}, fnqz / dz * (prt1.zi - 20.) },
+    };
+  }
+      
+  this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
+}
+
+// ======================================================================
+// SingleParticlePushp10 test
+//
+// test current deposition, y move only, but crossing bnd
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 10.; prt0.yi = 19.5; prt0.zi = 10.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 0.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
+  prt1.yi += vy(prt1);
+  prt1.zi += vz(prt1);
+
+  std::vector<CurrentReference> curr_ref;
+  if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    auto fnqy = .05;
+    auto dy = 10.;
+    curr_ref = {
+      { JYI, {1, 1, 1}, fnqy / dy * (20. - prt0.yi) },
+      { JYI, {1, 2, 1}, fnqy / dy * (prt1.yi - 20.) },
+    };
+  }
+      
+  this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
+}
+
+// ======================================================================
+// SingleParticlePushp11 test
+//
+// test current deposition, x move only
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 10.;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 1.; prt0.pyi = 0.; prt0.pzi = 0.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
+  prt1.yi += vy(prt1);
+  prt1.zi += vz(prt1);
+
+  std::vector<CurrentReference> curr_ref;
+  if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    auto fnqx = .05;
+    auto dx = 10.;
+    curr_ref = {
+      { JXI, {1, 1, 1}, fnqx / dx * (prt1.xi - prt0.xi) },
+    };
+  }
+      
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
