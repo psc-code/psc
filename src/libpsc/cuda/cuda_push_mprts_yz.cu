@@ -312,6 +312,85 @@ struct CudaPushParticles
   }
 
   // ----------------------------------------------------------------------
+  // calc_j -- dispatched for dim_xyz
+  
+  __device__ static void
+  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	 Curr &scurr, const Block& current_block, dim_xyz tag)
+  {
+    AdvanceParticle<real_t, dim> advance{dmprts.dt()};
+
+    float vxi[3];
+    advance.calc_v(vxi, prt.pxi);
+
+    // position xm at x^(n+.5)
+    float h0[3], h1[3];
+    float xm[3], xp[3];
+    int j[3], k[3];
+
+    dmprts.find_idx_off_pos_1st(prt.xi, j, h0, xm, float(0.));
+
+    static_assert(Config::Deposit::value == DEPOSIT_VB_3D, "calc_j dim_xyz needs 3d deposit");
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+    advance.push_x(prt.xi, vxi);
+    STORE_PARTICLE_POS(prt, d_xi4, n);
+
+    // has moved into which block? (given as relative shift)
+    dmprts.bidx_[n] = dmprts.blockShift(prt.xi, current_block.p, current_block.bid);
+
+    // position xm at x^(n+.5)
+    dmprts.find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
+
+    // deposit xm -> xp
+    int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
+#if 0
+    if (idiff[1] < -1 || idiff[1] > 1 ||
+	idiff[2] < -1 || idiff[2] > 1) {
+      printf("A idiff %d %d j %d %d k %d %d\n", idiff[1], idiff[2],
+	     j[1], j[2], k[1], k[2]);
+      printf("A prt.xi %g %g scaled %g %g k %d %d\n", prt.xi[1], prt.xi[2],
+	     dmprts.scalePos(prt.xi[1], 1), dmprts.scalePos(prt.xi[2], 2), k[1], k[2]);
+    }
+#endif
+    int i[3] = { 0, j[1] - current_block.ci0[1], j[2] - current_block.ci0[2] };
+#if 0
+    if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
+	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
+      printf("CUDA_ERROR deposit jyz %d:%d\n", i[1], i[2]);
+    }
+#endif
+    float x[3] = { 0.f, xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
+    //float dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
+    float dx[3] = { dmprts.scalePos(vxi[0] * dmprts.dt(), 0), xp[1] - xm[1], xp[2] - xm[2] };
+  
+    float x1 = x[1] * idiff[1];
+    float x2 = x[2] * idiff[2];
+    int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
+
+    int off[3];
+    if (d_first == 0) {
+      off[1] = idiff[1];
+      off[2] = 0;
+    } else {
+      off[1] = 0;
+      off[2] = idiff[2];
+    }
+
+    float dx1[3];
+    calc_dx1(dx1, x, dx, off);
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block);
+    curr_vb_cell_upd(i, x, dx1, dx, off);
+  
+    off[1] = idiff[1] - off[1];
+    off[2] = idiff[2] - off[2];
+    calc_dx1(dx1, x, dx, off);
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block);
+    curr_vb_cell_upd(i, x, dx1, dx, off);
+    
+    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block);
+  }
+
+  // ----------------------------------------------------------------------
   // push_mprts
 
   __device__
@@ -339,9 +418,9 @@ struct CudaPushParticles
       push_part_one(dmprts, prt, n, fld_cache, current_block);
       
       if (REORDER) {
-	calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block, dim_yz{});
+	calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block, dim{});
       } else {
-	calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block, dim_yz{});
+	calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block, dim{});
       }
     }
     
