@@ -438,24 +438,22 @@ struct CudaPushParticles
     float frac[3] = { (.5f * bnd[0] - x[0]) / dx[0],
 		      (.5f * bnd[1] - x[1]) / dx[1],
 		      (.5f * bnd[2] - x[2]) / dx[2] };
+    // frac[d] may be NaN, but that's okay
     float step = 1.f;
     int dir = 3;
     if (frac[0] < step) { step = frac[0]; dir = 0; }
     if (frac[1] < step) { step = frac[1]; dir = 1; }
     if (frac[2] < step) { step = frac[2]; dir = 2; }
     
-    float x1 = x[1] * idiff[1];
-    float x2 = x[2] * idiff[2];
-    int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
-
-    printf("frac %g %g %g d_first %d step %g dir %d\n", frac[0], frac[1], frac[2], d_first, step, dir);
-    d_first = dir - 1;
+    printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2], step, dir);
     
     int off[3] = {};
-    if (d_first == 0) {
+    if (dir == 1) {
+      off[0] = 0;
       off[1] = idiff[1];
       off[2] = 0;
-    } else {
+    } else if (dir == 2) {
+      off[0] = 0;
       off[1] = 0;
       off[2] = idiff[2];
     }
