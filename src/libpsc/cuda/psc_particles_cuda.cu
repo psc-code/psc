@@ -87,6 +87,12 @@ void MparticlesCuda<BS>::dump(const std::string& filename)
   cmprts_->dump(filename);
 }
 
+template<typename BS>
+bool MparticlesCuda<BS>::check_after_push()
+{
+  return cmprts_->check_bidx_after_push();
+}
+
 // ======================================================================
 // conversion
 

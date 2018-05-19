@@ -167,6 +167,18 @@ struct PushParticlesTest : ::testing::Test
     if (!curr_ref.empty()) {
       checkCurrent(curr_ref);
     }
+
+    check_after_push(*mprts);
+  }
+
+  template<typename Mparticles>
+  void check_after_push(Mparticles& mprts)
+  {
+  }
+
+  void check_after_push(MparticlesCuda<BS444>& mprts)
+  {
+    EXPECT_TRUE(mprts.check_after_push());
   }
 
   void checkCurrent(std::vector<CurrentReference>& curr_ref)

@@ -74,6 +74,7 @@ struct MparticlesCuda : MparticlesBase
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
   void push_back(int p, const particle_t& prt);
+  bool check_after_push();
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

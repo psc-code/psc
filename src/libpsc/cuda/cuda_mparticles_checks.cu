@@ -95,3 +95,29 @@ bool cuda_mparticles<BS>::check_ordered()
   return true;
 }
 
+// ----------------------------------------------------------------------
+// check_bidx
+
+template<typename BS>
+bool cuda_mparticles<BS>::check_bidx_after_push()
+{
+  bool ok = true;
+  
+  for (int p = 0; p < this->n_patches; p++) {
+    int begin = this->by_block_.d_off[p * this->n_blocks_per_patch];
+    int end = this->by_block_.d_off[(p+1) * this->n_blocks_per_patch];
+    for (int n = begin; n < end; n++) {
+      float4 xi4 = this->d_xi4[n];
+      int bidx = this->by_block_.d_idx[n];
+      int bidx2 = this->blockIndex(xi4, p);
+      if (bidx2 < 0) bidx2 = this->n_blocks;
+      if (bidx != bidx2) {
+	mprintf("check_bidx: n %d: xi4 %g %g %g bidx %d/%d\n", n, xi4.x, xi4.y, xi4.z,
+		bidx, bidx2);
+	ok = false;
+      }
+    }
+  }
+  return ok;
+}
+

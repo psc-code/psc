@@ -22,6 +22,4 @@ struct CudaPushParticles_
 
   template<bool REORDER>
   static void push_mprts_ab(CudaMparticles* cmprts, struct cuda_mfields *cmflds);
-
-  static void check_bidx(CudaMparticles* cmprts);
 };
