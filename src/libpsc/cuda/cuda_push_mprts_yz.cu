@@ -211,11 +211,11 @@ struct CudaPushParticles
   }
   
   // ----------------------------------------------------------------------
-  // yz_calc_j
+  // calc_j -- dispatched for dim_yz
   
   __device__ static void
-  yz_calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	    Curr &scurr, const Block& current_block)
+  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	 Curr &scurr, const Block& current_block, dim_yz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
@@ -339,9 +339,9 @@ struct CudaPushParticles
       push_part_one(dmprts, prt, n, fld_cache, current_block);
       
       if (REORDER) {
-	yz_calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block);
+	calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block, dim_yz{});
       } else {
-	yz_calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block);
+	calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block, dim_yz{});
       }
     }
     
