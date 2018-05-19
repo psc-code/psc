@@ -149,7 +149,7 @@ struct DParticleIndexer
     /* assert(block_pos[1] >= 0 && block_pos[1] < b_mx_[1]); */
     /* assert(block_pos[2] >= 0 && block_pos[2] < b_mx_[2]); */
 
-    return ((p * b_mx_[2] + block_pos[2]) * b_mx_[1] + block_pos[1]) * b_mx_[0] * block_pos[0];
+    return ((p * b_mx_[2] + block_pos[2]) * b_mx_[1] + block_pos[1]) * b_mx_[0] + block_pos[0];
   }
 
   __device__ int blockIndexFromCellPosition(const int* cpos, int p) const
