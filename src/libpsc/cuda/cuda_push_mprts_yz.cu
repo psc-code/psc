@@ -251,27 +251,6 @@ struct CudaPushParticles
 #endif
   }
   
-  __device__ static void
-  curr_vb_cell_upd(int i[3], float x[3], float dx1[3], float dx[3], int off[3], dim_xyz tag)
-  {
-    dx[0] -= dx1[0];
-    dx[1] -= dx1[1];
-    dx[2] -= dx1[2];
-    x[0] += dx1[0] - off[0];
-    x[1] += dx1[1] - off[1];
-    x[2] += dx1[2] - off[2];
-    i[0] += off[0];
-    i[1] += off[1];
-    i[2] += off[2];
-#if 1
-    if (i[0] < -1 || i[0] >= int(BS::x::value) + 1 ||
-	i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
-	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
-      printf("CUDA_ERROR cell_upd B jxyz %d:%d:%d\n", i[0], i[1], i[2]);
-    }
-#endif
-  }
-  
   // ----------------------------------------------------------------------
   // calc_j -- dispatched for dim_yz
   
@@ -431,53 +410,38 @@ struct CudaPushParticles
     float dx[3] = { xp[0] - xm[0],
 		    xp[1] - xm[1],
 		    xp[2] - xm[2] };
-    float bnd[3] = { dx[0] > 0 ? 1.f : -1.f,
-		     dx[1] > 0 ? 1.f : -1.f,
-		     dx[2] > 0 ? 1.f : -1.f };
-    float frac[3] = { (.5f * bnd[0] - x[0]) / dx[0],
-		      (.5f * bnd[1] - x[1]) / dx[1],
-		      (.5f * bnd[2] - x[2]) / dx[2] };
-    // frac[d] may be NaN, but that's okay
-    float step = 1.f;
-    int dir = -1;
-    if (frac[0] < step) { step = frac[0]; dir = 0; }
-    if (frac[1] < step) { step = frac[1]; dir = 1; }
-    if (frac[2] < step) { step = frac[2]; dir = 2; }
-    
-    printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2], step, dir);
-    
-#if 0
-    float dx1[3] = { dx[0] * step, dx[1] * step, dx[2] * step };
-    printf("dx1 %g %g %g\n", dx1[0], dx1[1], dx1[2]);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-#else
-    int off[3] = {};
-    if (dir == 1) {
-      off[0] = 0;
-      off[1] = idiff[1];
-      off[2] = 0;
-    } else if (dir == 2) {
-      off[0] = 0;
-      off[1] = 0;
-      off[2] = idiff[2];
+    for (;;) {
+      float bnd[3] = { dx[0] > 0 ? 1.f : -1.f,
+		       dx[1] > 0 ? 1.f : -1.f,
+		       dx[2] > 0 ? 1.f : -1.f };
+      float frac[3] = { (.5f * bnd[0] - x[0]) / dx[0],
+			(.5f * bnd[1] - x[1]) / dx[1],
+			(.5f * bnd[2] - x[2]) / dx[2] };
+      // frac[d] may be NaN, but that's okay
+      float step = 1.f;
+      int dir = -1;
+      if (frac[0] < step) { step = frac[0]; dir = 0; }
+      if (frac[1] < step) { step = frac[1]; dir = 1; }
+      if (frac[2] < step) { step = frac[2]; dir = 2; }
+      
+      float dx1[3] = { dx[0] * step, dx[1] * step, dx[2] * step };
+      // printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2], step, dir);
+      // printf("i %d:%d:%d dx1 %g %g %g x %g %g %g\n", i[0], i[1], i[2], dx1[0], dx1[1], dx1[2],
+      // 	     x[0], x[1], x[2]);
+      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
+      if (dir < 0) {
+	break;
+      }
+      
+      i[dir] += dx[dir] > 0 ? 1 : -1;
+      for (int d = 0; d < 3; d++) {
+	x[d] += dx1[d];
+	dx[d] -= dx1[d];
+	x[dir] = - .5f * bnd[dir];
+      }
+      // printf("2 i %d:%d:%d dx %g %g %g x %g %g %g\n", i[0], i[1], i[2],
+      // 	     dx[0], dx[1], dx[2], x[0], x[1], x[2]); 
     }
-
-    float dx1[3];
-    calc_dx1(dx1, x, dx, off);
-    printf("dx1 %g %g %g\n", dx1[0], dx1[1], dx1[2]);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-    curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
-  
-    off[1] = idiff[1] - off[1];
-    off[2] = idiff[2] - off[2];
-    calc_dx1(dx1, x, dx, off);
-    printf("dx1 %g %g %g\n", dx1[0], dx1[1], dx1[2]);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
-    curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
-    
-    printf("dx %g %g %g\n", dx[0], dx[1], dx[2]);
-    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
-#endif
   }
 
   // ----------------------------------------------------------------------
