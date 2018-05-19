@@ -365,9 +365,9 @@ struct CudaPushParticles
     advance.calc_v(vxi, prt.pxi);
 
     // position xm at x^(n+.5)
-    float h0[3], h1[3];
+    float h0[3];
     float xm[3], xp[3];
-    int j[3], k[3];
+    int j[3];
 
     dmprts.find_idx_off_pos_1st(prt.xi, j, h0, xm, float(0.));
 
@@ -376,25 +376,12 @@ struct CudaPushParticles
     advance.push_x(prt.xi, vxi);
     STORE_PARTICLE_POS(prt, d_xi4, n);
 
-    // has moved into which block? (given as relative shift)
-    dmprts.bidx_[n] = dmprts.blockShift(prt.xi, current_block.p, current_block.bid);
-
-    // position xm at x^(n+.5)
-    dmprts.find_idx_off_pos_1st(prt.xi, k, h1, xp, float(0.));
+    // position xp at x^(n+1.5)
+    for (int d = 0; d < 3; d++) {
+      xp[d] = dmprts.scalePos(prt.xi[d], d);
+    }
 
     // deposit xm -> xp
-    int idiff[3] = { k[0] - j[0], k[1] - j[1], k[2] - j[2] };
-#if 1
-    if (idiff[0] < -1 || idiff[0] > 1 ||
-	idiff[1] < -1 || idiff[1] > 1 ||
-	idiff[2] < -1 || idiff[2] > 1) {
-      printf("A idiff %d %d %d j %d %d %d k %d %d %d\n", idiff[0], idiff[1], idiff[2],
-	     j[0], j[1], j[2], k[0], k[1], k[2]);
-      printf("A prt.xi %g %g scaled %g %g k %d %d\n", prt.xi[0], prt.xi[1], prt.xi[2],
-	     dmprts.scalePos(prt.xi[0], 0), dmprts.scalePos(prt.xi[1], 1), dmprts.scalePos(prt.xi[2], 2),
-	     k[0], k[1], k[2]);
-    }
-#endif
     int i[3] = { j[0] - current_block.ci0[0], j[1] - current_block.ci0[1], j[2] - current_block.ci0[2] };
 #if 1
     if (i[0] < 0 || i[0] >= int(BS::x::value) ||
@@ -407,6 +394,8 @@ struct CudaPushParticles
     float x[3] = { xm[0] - (j[0] + float(.5)),
 		   xm[1] - (j[1] + float(.5)),
 		   xm[2] - (j[2] + float(.5)) };
+    //FIXME x and h0 are almost the same (shifted by .5)
+    //printf("x %g %g %g h0 %g %g %g\n", x[0], x[1], x[2], h0[0], h0[1], h0[2]);
     float dx[3] = { xp[0] - xm[0],
 		    xp[1] - xm[1],
 		    xp[2] - xm[2] };
@@ -442,6 +431,13 @@ struct CudaPushParticles
       // printf("2 i %d:%d:%d dx %g %g %g x %g %g %g\n", i[0], i[1], i[2],
       // 	     dx[0], dx[1], dx[2], x[0], x[1], x[2]); 
     }
+
+    // has moved into which block?
+    int cpos[3] = { (i[0] + current_block.ci0[0]),
+		    (i[1] + current_block.ci0[1]),
+		    (i[2] + current_block.ci0[2]) };
+      
+    //dmprts.bidx_[n] = dmprts.blockIndexFromCellPosition(cpos, current_block.p);
   }
 
   // ----------------------------------------------------------------------

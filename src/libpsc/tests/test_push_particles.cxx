@@ -97,6 +97,8 @@ struct PushParticlesTest : ::testing::Test
   ~PushParticlesTest()
   {
     ppsc = NULL; // FIXME, should use psc_destroy(ppsc), or really, get rid of ppsc...
+    delete mprts;
+    delete mflds;
   }
 
   void make_psc(const Grid_t::Kinds& kinds)
@@ -199,8 +201,8 @@ struct PushParticlesTest : ::testing::Test
     return xi1;
   }
 
-  Mparticles* mprts;
-  Mfields* mflds;
+  Mparticles* mprts = {};
+  Mfields* mflds = {};
 };
 
 template<typename DIM, typename PUSHP, typename ORDER>
