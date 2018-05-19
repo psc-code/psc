@@ -169,6 +169,7 @@ struct PushParticlesTest : ::testing::Test
     auto mflds_ref = Mfields{grid(), NR_FIELDS, ibn};
     auto flds_ref = mflds_ref[0];
     for (auto& ref : curr_ref) {
+      if (dim::InvarX::value) { ref.pos[0] = 0; }
       flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) = ref.val;
     }
 
@@ -549,14 +550,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
-    if (TypeParam::dim::InvarX::value) {
-      curr_ref = {
-	{ JZI, {0, 1, 1}, 0.00353553 },
-      };
-    } else {
-      curr_ref = {
-	{ JZI, {1, 1, 1}, 0.00353553 },
-      };
+    curr_ref = {
+      { JZI, {1, 1, 1}, 0.00353553 },
     };
   }
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
