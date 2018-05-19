@@ -403,10 +403,9 @@ struct CudaPushParticles
       float bnd[3] = { dx[0] > 0 ? 1.f : -1.f,
 		       dx[1] > 0 ? 1.f : -1.f,
 		       dx[2] > 0 ? 1.f : -1.f };
-      float frac[3] = { (.5f * bnd[0] - x[0]) / dx[0],
-			(.5f * bnd[1] - x[1]) / dx[1],
-			(.5f * bnd[2] - x[2]) / dx[2] };
-      // frac[d] may be NaN, but that's okay
+      float frac[3] = { dx[0] == 0.f ? 1.f : (.5f * bnd[0] - x[0]) / dx[0],
+			dx[1] == 0.f ? 1.f : (.5f * bnd[1] - x[1]) / dx[1],
+			dx[2] == 0.f ? 1.f : (.5f * bnd[2] - x[2]) / dx[2] };
       float step = 1.f;
       int dir = -1;
       if (frac[0] < step) { step = frac[0]; dir = 0; }
