@@ -223,6 +223,7 @@ struct CudaPushParticles
     }
     if (dx[2] != 0.f) {
       float fnqz = qni_wni * dmprts.fnqzs();
+      printf("fnqz %g dx2 %g\n", fnqz, dx[2]);
       scurr.add(2, i[0]  , i[1]  , i[2], fnqz * (dx[2] * (.5f - xa[0]) * (.5f - xa[1]) + h), current_block.ci0);
       scurr.add(2, i[0]+1, i[1]  , i[2], fnqz * (dx[2] * (.5f + xa[0]) * (.5f - xa[1]) - h), current_block.ci0);
       scurr.add(2, i[0]  , i[1]+1, i[2], fnqz * (dx[2] * (.5f - xa[0]) * (.5f + xa[1]) + h), current_block.ci0);
@@ -418,10 +419,10 @@ struct CudaPushParticles
 #endif
     int i[3] = { j[0] - current_block.ci0[0], j[1] - current_block.ci0[1], j[2] - current_block.ci0[2] };
 #if 1
-    if (i[0] < -1 || i[0] >= int(BS::x::value) + 1 ||
-	i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
-	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
-      printf("CUDA_ERROR deposit jyz %d:%d:%d\n", i[0],i[1], i[2]);
+    if (i[0] < 0 || i[0] >= int(BS::x::value) ||
+	i[1] < 0 || i[1] >= int(BS::y::value) ||
+	i[2] < 0 || i[2] >= int(BS::z::value)) {
+      printf("CUDA_ERROR deposit jyz %d:%d:%d\n", i[0], i[1], i[2]);
     }
 #endif
     float x[3] = { xm[0] - j[0] - float(.5), xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
