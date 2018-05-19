@@ -665,16 +665,19 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
   prt0.kind_ = 0;
 
   prt1 = prt0;
-  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
-  prt1.yi += vy(prt1);
-  prt1.zi += vz(prt1);
+  Vec3<double> xi1 = { prt0.xi + vx(prt1),
+		       prt0.yi + vy(prt1),
+		       prt0.zi + vz(prt1) };
+  if (!Base::dim::InvarX::value) prt1.xi = xi1[0];
+  prt1.yi = xi1[1];
+  prt1.zi = xi1[2];
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     auto fnqx = .05;
     auto dx = 10.;
     curr_ref = {
-      { JXI, {1, 1, 1}, fnqx / dx * (prt1.xi - prt0.xi) },
+      { JXI, {1, 1, 1}, fnqx / dx * (xi1[0] - prt0.xi) },
     };
   }
       
