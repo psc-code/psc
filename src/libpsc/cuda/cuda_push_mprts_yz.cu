@@ -425,13 +425,32 @@ struct CudaPushParticles
       printf("CUDA_ERROR deposit jyz %d:%d:%d\n", i[0], i[1], i[2]);
     }
 #endif
-    float x[3] = { xm[0] - j[0] - float(.5), xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
-    float dx[3] = { xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2] };
-  
+    // x will be orig position inside cell, ie [-.5,.5]
+    float x[3] = { xm[0] - (j[0] + float(.5)),
+		   xm[1] - (j[1] + float(.5)),
+		   xm[2] - (j[2] + float(.5)) };
+    float dx[3] = { xp[0] - xm[0],
+		    xp[1] - xm[1],
+		    xp[2] - xm[2] };
+    float bnd[3] = { dx[0] > 0 ? 1.f : -1.f,
+		     dx[1] > 0 ? 1.f : -1.f,
+		     dx[2] > 0 ? 1.f : -1.f };
+    float frac[3] = { (.5f * bnd[0] - x[0]) / dx[0],
+		      (.5f * bnd[1] - x[1]) / dx[1],
+		      (.5f * bnd[2] - x[2]) / dx[2] };
+    float step = 1.f;
+    int dir = 3;
+    if (frac[0] < step) { step = frac[0]; dir = 0; }
+    if (frac[1] < step) { step = frac[1]; dir = 1; }
+    if (frac[2] < step) { step = frac[2]; dir = 2; }
+    
     float x1 = x[1] * idiff[1];
     float x2 = x[2] * idiff[2];
     int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
 
+    printf("frac %g %g %g d_first %d step %g dir %d\n", frac[0], frac[1], frac[2], d_first, step, dir);
+    d_first = dir - 1;
+    
     int off[3] = {};
     if (d_first == 0) {
       off[1] = idiff[1];
