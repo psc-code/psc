@@ -66,6 +66,23 @@ GetterCuda<Mparticles> make_getter(Mparticles& mprts)
   return GetterCuda<Mparticles>(mprts);
 }
 
+struct CurrentReference
+{
+  int m;
+  Int3 pos;
+  double val;
+
+  bool operator<(const CurrentReference& other) const
+  {
+    if (m < other.m) return true;
+    if (m == other.m) {
+      if (pos < other.pos) return true;
+      return false;
+    }
+    return false;
+  }
+};
+
 // ======================================================================
 // class PushParticlesTest
 
@@ -118,7 +135,8 @@ struct PushParticlesTest : ::testing::Test
   }
 
   template<typename FUNC>
-  void runSingleParticleTest(FUNC init_fields, particle_t prt0, particle_t prt1)
+  void runSingleParticleTest(FUNC init_fields, particle_t prt0, particle_t prt1,
+			     std::vector<CurrentReference> curr_ref = {})
   {
     auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
     make_psc(kinds);
@@ -150,8 +168,36 @@ struct PushParticlesTest : ::testing::Test
       EXPECT_NEAR(prt.yi, prt1.yi, eps);
       EXPECT_NEAR(prt.zi, prt1.zi, eps);
     }
+
+    if (!curr_ref.empty()) {
+      checkCurrent(curr_ref);
+    }
   }
 
+  void checkCurrent(std::vector<CurrentReference>& curr_ref)
+  {
+    std::vector<CurrentReference> curr;
+    auto flds = (*mflds)[0];
+    this->grid().Foreach_3d(2, 2, [&](int i, int j, int k) {
+	for (int m = JXI; m <= JZI; m++) {
+	  auto val = flds(m, i,j,k);
+	  if (val) {
+	    printf("ijk %d:%d:%d m %d : %g\n", i,j,k, m, real_t(val));
+	    curr.push_back({m, {i,j,k}, val});
+	  }
+	}
+      });
+    std::sort(curr.begin(), curr.end());
+    std::sort(curr_ref.begin(), curr_ref.end());
+    
+    ASSERT_EQ(curr.size(), curr_ref.size());
+    for (int n = 0; n < curr.size(); n++) {
+      EXPECT_EQ(curr[n].m, curr_ref[n].m);
+      EXPECT_EQ(curr[n].pos, curr_ref[n].pos);
+      EXPECT_NEAR(curr[n].val, curr_ref[n].val, 1e-5);
+    }
+  }
+  
   Mparticles* mprts;
   Mfields* mflds;
 };
@@ -160,6 +206,7 @@ template<typename DIM, typename PUSHP, typename ORDER>
 struct TestConfig
 {
   using dim = DIM;
+  using order = ORDER;
   using PushParticles = PUSHP;
   using Mparticles = typename PushParticles::Mparticles;
   using Mfields = typename PushParticles::Mfields;
@@ -515,8 +562,20 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
   if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
   prt1.yi += vy(prt1);
   prt1.zi += vz(prt1);
-  
-  this->runSingleParticleTest(init_fields, prt0, prt1);
+
+  std::vector<CurrentReference> curr_ref;
+  if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    if (TypeParam::dim::InvarX::value) {
+      curr_ref = {
+	{ JZI, {0, 1, 1}, 0.00353553 },
+      };
+    } else {
+      curr_ref = {
+	{ JZI, {1, 1, 1}, 0.00353553 },
+      };
+    };
+  }
+  this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
 // ======================================================================
