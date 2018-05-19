@@ -71,16 +71,6 @@ struct CurrentReference
   int m;
   Int3 pos;
   double val;
-
-  bool operator<(const CurrentReference& other) const
-  {
-    if (m < other.m) return true;
-    if (m == other.m) {
-      if (pos < other.pos) return true;
-      return false;
-    }
-    return false;
-  }
 };
 
 // ======================================================================
@@ -176,26 +166,20 @@ struct PushParticlesTest : ::testing::Test
 
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
-    std::vector<CurrentReference> curr;
+    auto mflds_ref = Mfields{grid(), NR_FIELDS, ibn};
+    auto flds_ref = mflds_ref[0];
+    for (auto& ref : curr_ref) {
+      flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) = ref.val;
+    }
+
     auto flds = (*mflds)[0];
     this->grid().Foreach_3d(2, 2, [&](int i, int j, int k) {
 	for (int m = JXI; m <= JZI; m++) {
 	  auto val = flds(m, i,j,k);
-	  if (val) {
-	    printf("ijk %d:%d:%d m %d : %g\n", i,j,k, m, real_t(val));
-	    curr.push_back({m, {i,j,k}, val});
-	  }
+	  auto val_ref = flds_ref(m, i,j,k);
+	  EXPECT_NEAR(val, val_ref, eps) << "ijk " << i << " " << j << " " << k << " m " << m;
 	}
       });
-    std::sort(curr.begin(), curr.end());
-    std::sort(curr_ref.begin(), curr_ref.end());
-    
-    ASSERT_EQ(curr.size(), curr_ref.size());
-    for (int n = 0; n < curr.size(); n++) {
-      EXPECT_EQ(curr[n].m, curr_ref[n].m);
-      EXPECT_EQ(curr[n].pos, curr_ref[n].pos);
-      EXPECT_NEAR(curr[n].val, curr_ref[n].val, 1e-5);
-    }
   }
   
   Mparticles* mprts;
