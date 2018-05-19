@@ -206,23 +206,27 @@ struct CudaPushParticles
     float xa[3] = { x[0] + .5f * dx[0],
 		    x[1] + .5f * dx[1],
 		    x[2] + .5f * dx[2], };
+    float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
     if (dx[0] != 0.f) {
       float fnqx = qni_wni * dmprts.fnqxs();
-      float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), current_block.ci0);
-      scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), current_block.ci0);
-      scurr.add(0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), current_block.ci0);
-      scurr.add(0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), current_block.ci0);
+      scurr.add(0, i[0], i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), current_block.ci0);
+      scurr.add(0, i[0], i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), current_block.ci0);
+      scurr.add(0, i[0], i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), current_block.ci0);
+      scurr.add(0, i[0], i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), current_block.ci0);
     }
     if (dx[1] != 0.f) {
       float fnqy = qni_wni * dmprts.fnqys();
-      scurr.add(1, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), current_block.ci0);
-      scurr.add(1, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), current_block.ci0);
+      scurr.add(1, i[0]  , i[1], i[2]  , fnqy * (dx[1] * (.5f - xa[0]) * (.5f - xa[2]) + h), current_block.ci0);
+      scurr.add(1, i[0]+1, i[1], i[2]  , fnqy * (dx[1] * (.5f + xa[0]) * (.5f - xa[2]) - h), current_block.ci0);
+      scurr.add(1, i[0]  , i[1], i[2]+1, fnqy * (dx[1] * (.5f - xa[0]) * (.5f + xa[2]) + h), current_block.ci0);
+      scurr.add(1, i[0]+1, i[1], i[2]+1, fnqy * (dx[1] * (.5f + xa[0]) * (.5f + xa[2]) - h), current_block.ci0);
     }
     if (dx[2] != 0.f) {
       float fnqz = qni_wni * dmprts.fnqzs();
-      scurr.add(2, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), current_block.ci0);
-      scurr.add(2, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), current_block.ci0);
+      scurr.add(2, i[0]  , i[1]  , i[2], fnqz * (dx[2] * (.5f - xa[0]) * (.5f - xa[1]) + h), current_block.ci0);
+      scurr.add(2, i[0]+1, i[1]  , i[2], fnqz * (dx[2] * (.5f + xa[0]) * (.5f - xa[1]) - h), current_block.ci0);
+      scurr.add(2, i[0]  , i[1]+1, i[2], fnqz * (dx[2] * (.5f - xa[0]) * (.5f + xa[1]) + h), current_block.ci0);
+      scurr.add(2, i[0]+1, i[1]+1, i[2], fnqz * (dx[2] * (.5f + xa[0]) * (.5f + xa[1]) - h), current_block.ci0);
     }
   }
 

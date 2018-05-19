@@ -80,6 +80,13 @@ public:
     atomicAdd(addr, val);
   }
 
+  __device__ void add(int m, int jx, int jy, int jz, float val, const int *ci0)
+  {
+    uint wid = threadIdx.x & (N_COPIES - 1);
+    float *addr = &(*this)(wid, jy, jz, m);
+    atomicAdd(addr, val);
+  }
+
 private:
   __device__ uint index(int jy, int jz, uint m, uint wid) const
   {
