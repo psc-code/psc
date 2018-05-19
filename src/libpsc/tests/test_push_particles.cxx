@@ -550,8 +550,10 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
+    auto fnqz = .05;
+    auto dz = 10.;
     curr_ref = {
-      { JZI, {1, 1, 1}, 0.00353553 },
+      { JZI, {1, 1, 1}, fnqz / dz * vz(prt1) },
     };
   }
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
