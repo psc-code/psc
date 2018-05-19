@@ -805,6 +805,64 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
 }
 
 // ======================================================================
+// SingleParticlePushp15 test
+//
+// simple mv in z direction, cross block bnd
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 39.5;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  this->push_x(prt0, prt1);
+  
+  this->runSingleParticleTest(init_fields, prt0, prt1);
+}
+
+// ======================================================================
+// SingleParticlePushp16 test
+//
+// simple mv in z direction, cross patch bnd
+
+TYPED_TEST(PushParticlesTest, SingleParticlePushp16)
+{
+  using Base = PushParticlesTest<TypeParam>;
+  using particle_t = typename Base::particle_t;
+
+  auto init_fields = [&](int m, double crd[3]) {
+    switch (m) {
+    default: return 0.;
+    }
+  };
+
+  particle_t prt0, prt1;
+
+  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 159.5;
+  prt0.qni_wni_ = 1.;
+  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
+  prt0.kind_ = 0;
+
+  prt1 = prt0;
+  this->push_x(prt0, prt1);
+  
+  this->runSingleParticleTest(init_fields, prt0, prt1);
+}
+
+// ======================================================================
 // PushParticlesTest2 is the same, but won't test cuda (because checks doesn't work)
 
 template<typename T>

@@ -435,8 +435,9 @@ struct CudaPushParticles
     int cpos[3] = { (i[0] + current_block.ci0[0]),
 		    (i[1] + current_block.ci0[1]),
 		    (i[2] + current_block.ci0[2]) };
-      
-    //dmprts.bidx_[n] = dmprts.blockIndexFromCellPosition(cpos, current_block.p);
+
+    dmprts.bidx_[n] = dmprts.blockIndexFromCellPosition(cpos, current_block.p);
+    printf("cpos %d %d %d p %d bidx %d\n", cpos[0], cpos[1], cpos[2], current_block.p, dmprts.bidx_[n]);
   }
 
   // ----------------------------------------------------------------------
@@ -535,6 +536,27 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
 }
 
 // ----------------------------------------------------------------------
+// check_bidx
+
+template<typename Config>
+void CudaPushParticles_<Config>::check_bidx(CudaMparticles* cmprts)
+{
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    int begin = cmprts->by_block_.d_off[p * cmprts->n_blocks_per_patch];
+    int end = cmprts->by_block_.d_off[(p+1) * cmprts->n_blocks_per_patch];
+    for (int n = begin; n < end; n++) {
+      float4 xi4 = cmprts->d_xi4[n];
+      int bidx = cmprts->by_block_.d_idx[n];
+      int bidx2 = cmprts->blockIndex(xi4, p);
+      if (bidx != bidx2) {
+	mprintf("check_bidx: n %d: xi4 %g %g %g bidx %d/%d\n", n, xi4.x, xi4.y, xi4.z,
+		bidx, bidx2);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // push_mprts
 
 template<typename Config>
@@ -545,6 +567,10 @@ void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts, struct cuda_
     push_mprts_ab<false>(cmprts, cmflds);
   } else {
     push_mprts_ab<true>(cmprts, cmflds);
+  }
+
+  if (1 && !Config::dim::InvarX::value) {
+    check_bidx(cmprts);
   }
 }
 
