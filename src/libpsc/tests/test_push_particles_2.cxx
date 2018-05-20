@@ -17,6 +17,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using PushParticles = typename TypeParam::PushParticles;
+  using BndParticles = typename TypeParam::BndParticles;
   using Checks = typename TypeParam::Checks;
 
   const int n_prts = 131;
@@ -59,6 +60,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 
   // run test
   PushParticles pushp_;
+  BndParticles bndp_{ppsc->mrc_domain_, grid};
   ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;
   checks_params.continuity_verbose = false;
@@ -67,14 +69,12 @@ TYPED_TEST(PushParticlesTest, Accel)
     //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     //checks_.continuity_after_particle_push(mprts, mflds);
+    bndp_(mprts);
 
     for (auto& prt : make_getter(mprts)[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
       EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
       EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
-      prt.xi = this->L/2;
-      prt.yi = this->L/2;
-      prt.zi = this->L/2;
     }
   }
 }
