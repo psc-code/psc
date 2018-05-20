@@ -4,7 +4,6 @@
 #include "testing.hxx"
 
 using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
-						TestConfig1vbec3dSingleYZ,
 #ifdef USE_CUDA
 						TestConfig1vbec3dCudaYZ,
 #endif
@@ -12,8 +11,9 @@ using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
 						TestConfig1vbec3dCuda,
 						TestConfig1vbec3dCuda444,
 #endif
-						TestConfig1vbec3dSingle>;
-//TestConfig2ndDouble>;
+						TestConfig1vbec3dSingleYZ>;
+						//TestConfig1vbec3dSingle>;
+						//TestConfig2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -125,19 +125,18 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
   Mparticles mprts{grid};
-  mprts.reserve_all(n_prts_by_patch.data());
-  for (int n = 0; n < n_prts_by_patch[0]; n++) {
-    typename Mparticles::particle_t prt{};
-    prt.xi = rng->uniform(0, this->L);
-    prt.yi = rng->uniform(0, this->L);
-    prt.zi = rng->uniform(0, this->L);
-    prt.pxi = 1.; // gamma = 2
-    prt.pyi = 1.;
-    prt.pzi = 1.;
-    prt.qni_wni_ = rng->uniform(0, 1.);;
-    prt.kind_ = 0;
-    mprts[0].push_back(prt);
-  }
+  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+      typename Mparticles::particle_t prt{};
+      prt.xi = rng->uniform(0, this->L);
+      prt.yi = rng->uniform(0, this->L);
+      prt.zi = rng->uniform(0, this->L);
+      prt.pxi = 1.; // gamma = 2
+      prt.pyi = 1.;
+      prt.pzi = 1.;
+      prt.qni_wni_ = rng->uniform(0, 1.);;
+      prt.kind_ = 0;
+      return prt;
+    });
 
   // run test
   PushParticles pushp_;
