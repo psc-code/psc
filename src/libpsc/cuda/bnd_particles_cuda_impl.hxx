@@ -7,7 +7,7 @@
 template<typename BS>
 struct cuda_bndp;
 
-template<typename BS>
+template<typename BS, typename DIM>
 struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda<BS>>
 {
   using Base = BndParticlesCommon<MparticlesCuda<BS>>;

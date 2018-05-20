@@ -105,15 +105,17 @@ using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
 					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
 					 checks_order_1st,
 					 ChecksCuda<BS144>,
-					 BndParticlesCuda<BS144>>;
+					 BndParticlesCuda<BS144, dim_xyz>>;
 using TestConfig1vbec3dCuda444 = TestConfig<dim_xyz,
-					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
-					 checks_order_1st>;
+					    PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
+					    checks_order_1st,
+					    ChecksCuda<BS444>,
+					    BndParticlesCuda<BS444, dim_xyz>>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
 					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
 					   checks_order_1st,
 					   ChecksCuda<BS144>,
-					   BndParticlesCuda<BS144>>;
+					   BndParticlesCuda<BS144, dim_yz>>;
 #endif
 
 // ======================================================================

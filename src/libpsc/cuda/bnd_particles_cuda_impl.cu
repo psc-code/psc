@@ -5,8 +5,8 @@
 // ----------------------------------------------------------------------
 // ctor
 
-template<typename BS>
-BndParticlesCuda<BS>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
+template<typename BS, typename DIM>
+BndParticlesCuda<BS, DIM>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
   : Base(domain, grid),
   cbndp_(new cuda_bndp<BS>(grid))
 {}
@@ -14,8 +14,8 @@ BndParticlesCuda<BS>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& 
 // ----------------------------------------------------------------------
 // dtor
 
-template<typename BS>
-BndParticlesCuda<BS>::~BndParticlesCuda()
+template<typename BS, typename DIM>
+BndParticlesCuda<BS, DIM>::~BndParticlesCuda()
 {
   delete cbndp_;
 }
@@ -23,8 +23,8 @@ BndParticlesCuda<BS>::~BndParticlesCuda()
 // ----------------------------------------------------------------------
 // reset
 
-template<typename BS>
-void BndParticlesCuda<BS>::reset()
+template<typename BS, typename DIM>
+void BndParticlesCuda<BS, DIM>::reset()
 {
   Base::reset();
   delete(cbndp_);
@@ -34,8 +34,8 @@ void BndParticlesCuda<BS>::reset()
 // ----------------------------------------------------------------------
 // operator()
 
-template<typename BS>
-void BndParticlesCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
+template<typename BS, typename DIM>
+void BndParticlesCuda<BS, DIM>::operator()(MparticlesCuda<BS>& mprts)
 {
   if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
     reset();
@@ -64,12 +64,12 @@ void BndParticlesCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 // ----------------------------------------------------------------------
 // exchange_particles
 
-template<typename BS>
-void BndParticlesCuda<BS>::exchange_particles(MparticlesBase& mprts_base)
+template<typename BS, typename DIM>
+void BndParticlesCuda<BS, DIM>::exchange_particles(MparticlesBase& mprts_base)
 {
   auto& mprts = mprts_base.get_as<MparticlesCuda<BS>>();
   (*this)(mprts);
   mprts_base.put_as(mprts);
 }
 
-template struct BndParticlesCuda<BS144>;
+template struct BndParticlesCuda<BS144, dim_yz>;
