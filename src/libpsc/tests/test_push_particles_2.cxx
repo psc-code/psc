@@ -72,7 +72,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     //checks_.continuity_after_particle_push(mprts, mflds);
-    //bndp_(mprts);
+    bndp_(mprts);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
@@ -83,11 +83,6 @@ TYPED_TEST(PushParticlesTest, Cyclo)
       EXPECT_NEAR(prt.pxi, ux, eps);
       EXPECT_NEAR(prt.pyi, uy, eps);
       EXPECT_NEAR(prt.pzi, uz, eps);
-#if 1
-      prt.xi = this->L/2;
-      prt.yi = this->L/2;
-      prt.zi = this->L/2;
-#endif
     }
   }
 }

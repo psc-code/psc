@@ -68,9 +68,9 @@ struct BndParticlesCommon : BndParticlesBase
     prof_start(pr_B);
 #pragma omp parallel for
     for (int p = 0; p < ddcp->nr_patches; p++) {
-      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
+      if (psc_balance_comp_time_by_patch) psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       process_patch(mprts[p].particleIndexer(), *bufs[p], p);
-      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
+      if (psc_balance_comp_time_by_patch) psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
     prof_stop(pr_B);
     prof_stop(pr_time_step_no_comm);
