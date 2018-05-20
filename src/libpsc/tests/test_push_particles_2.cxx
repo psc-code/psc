@@ -5,8 +5,10 @@
 
 using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
 						TestConfig1vbec3dSingleYZ,
-#ifdef xUSE_CUDA
+#ifdef USE_CUDA
 						TestConfig1vbec3dCudaYZ,
+#endif
+#if 0
 						TestConfig1vbec3dCuda,
 						TestConfig1vbec3dCuda444,
 #endif
