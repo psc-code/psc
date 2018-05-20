@@ -78,5 +78,39 @@ struct cuda_bndp : cuda_mparticles_indexer<BS>
   std::vector<buf_t*> bufs_;
 };
 
+template<typename BS>
+struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
+{
+  using ddcp_t = ddc_particles<MparticlesCuda<BS>>;
+  using ddcp_patch = typename ddcp_t::patch;
+  using buf_t = typename MparticlesCuda<BS>::buf_t;
+  using CudaMparticles = cuda_mparticles<BS>;
+
+  using cuda_mparticles_indexer<BS>::n_blocks;
+  using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
+  using cuda_mparticles_indexer<BS>::n_patches;
+  using cuda_mparticles_indexer<BS>::checkInPatchMod;
+  using cuda_mparticles_indexer<BS>::blockIndex;
+  using cuda_mparticles_indexer<BS>::b_mx;
+
+  cuda_bndp(const Grid_t& grid)
+    : cuda_mparticles_indexer<BS>{grid}
+  {
+    MHERE;
+  }
+
+  void prep(CudaMparticles* cmprts)
+  {
+    MHERE;
+  }
+  
+  void post(CudaMparticles* cmprts)
+  {
+    MHERE;
+  }
+
+  std::vector<buf_t*> bufs_;
+};
+  
 #endif
 

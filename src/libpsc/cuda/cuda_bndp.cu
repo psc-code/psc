@@ -277,3 +277,4 @@ void cuda_bndp<BS, DIM>::update_offsets_gold(cuda_mparticles *cmprts)
 }
 
 template struct cuda_bndp<BS144, dim_yz>;
+template struct cuda_bndp<BS444, dim_xyz>;

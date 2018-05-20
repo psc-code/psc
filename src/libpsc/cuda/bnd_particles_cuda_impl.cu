@@ -73,3 +73,4 @@ void BndParticlesCuda<BS, DIM>::exchange_particles(MparticlesBase& mprts_base)
 }
 
 template struct BndParticlesCuda<BS144, dim_yz>;
+template struct BndParticlesCuda<BS444, dim_xyz>;

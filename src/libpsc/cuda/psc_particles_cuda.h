@@ -112,4 +112,12 @@ struct Mparticles_traits<MparticlesCuda<BS144>>
 };
 
 
+template<>
+struct Mparticles_traits<MparticlesCuda<BS444>>
+{
+  static constexpr const char* name = "cuda";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
+
+
 #endif
