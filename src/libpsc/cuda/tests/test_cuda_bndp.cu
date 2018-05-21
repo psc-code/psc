@@ -26,13 +26,11 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
   std::unique_ptr<CudaMparticles> cmprts;
   std::unique_ptr<cuda_bndp<BS144, dim_yz>> cbndp;
 
-  const Int3 bs_ = { 1, 1, 1 };
-
   void SetUp()
   {
     auto domain = Grid_t::Domain{{1, 32, 32}, {1., 320., 320.}, {0., 0., 0.},
 				 {1, 2, 2}};
-    std::vector<Int3> offs = {{0, 0, 0}, {0, 4, 0}};
+    std::vector<Int3> offs = {{0, 0, 0}, {0, 16, 0}};
     grid.reset(new Grid_t(domain, offs));
 
     grid->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
