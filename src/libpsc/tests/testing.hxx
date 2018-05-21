@@ -7,6 +7,7 @@
 #include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
+#include "psc_push_fields_impl.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
@@ -14,6 +15,7 @@
 #include "../libpsc/cuda/setup_particles_cuda.hxx"
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
+#include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #endif
 
 // ======================================================================
@@ -72,7 +74,8 @@ GetterCuda<Mparticles> make_getter(Mparticles& mprts)
 
 template<typename DIM, typename PUSHP, typename ORDER,
 	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::Mfields, ORDER>,
-	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>>
+	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
+	 typename PUSHF = PushFields<typename PUSHP::Mfields>>
 struct TestConfig
 {
   using dim = DIM;
@@ -82,6 +85,7 @@ struct TestConfig
   using Mfields = typename PushParticles::Mfields;
   using Checks = CHECKS;
   using BndParticles = BNDP;
+  using PushFields = PUSHF;
 };
 
 using TestConfig2ndDouble = TestConfig<dim_xyz,
@@ -105,17 +109,20 @@ using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
 					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
 					 checks_order_1st,
 					 ChecksCuda<BS144>,
-					 BndParticlesCuda<BS144, dim_xyz>>;
+					 BndParticlesCuda<BS144, dim_xyz>,
+					 PushFieldsCuda>;
 using TestConfig1vbec3dCuda444 = TestConfig<dim_xyz,
 					    PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
 					    checks_order_1st,
 					    ChecksCuda<BS444>,
-					    BndParticlesCuda<BS444, dim_xyz>>;
+					    BndParticlesCuda<BS444, dim_xyz>,
+					    PushFieldsCuda>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
 					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
 					   checks_order_1st,
 					   ChecksCuda<BS144>,
-					   BndParticlesCuda<BS144, dim_yz>>;
+					   BndParticlesCuda<BS144, dim_yz>,
+					   PushFieldsCuda>;
 #endif
 
 // ======================================================================

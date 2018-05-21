@@ -3,16 +3,14 @@
 
 #include "testing.hxx"
 
-#include "psc_push_fields_impl.hxx"
-
 template<typename T>
 struct PushFieldsTest : PushParticlesTest<T>
 {
 };
 
-using PushFieldsTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ>;
+using PushFieldsTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ,
+					     TestConfig1vbec3dCudaYZ>;
 #ifdef xUSE_CUDA
-						TestConfig1vbec3dCudaYZ,
 						TestConfig1vbec3dCuda444>;
 #endif
 //TestConfig1vbec3dSingle>;
@@ -29,7 +27,7 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim = typename TypeParam::dim;
-  using PushFields = PushFields<Mfields>;
+  using PushFields = typename TypeParam::PushFields;
 
   const typename Mparticles::real_t eps = 1e-2;
 
