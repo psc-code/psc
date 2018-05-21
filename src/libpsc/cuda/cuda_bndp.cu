@@ -334,5 +334,28 @@ uint cuda_bndp<BS, dim_xyz>::convert_and_copy_to_dev(CudaMparticles* cmprts)
   return n_recv;
 }
 
+template<typename BS>
+void cuda_bndp<BS, dim_xyz>::post(CudaMparticles* _cmprts)
+{
+  auto& cmprts = *_cmprts;
+
+  uint n_prts_recv = convert_and_copy_to_dev(&cmprts);
+  cmprts.n_prts += n_prts_recv;
+  cmprts.resize(cmprts.n_prts);
+
+  auto& d_bidx = cmprts.by_block_.d_idx;
+  thrust::sequence(cmprts.by_block_.d_id.begin(), cmprts.by_block_.d_id.end());
+  thrust::stable_sort_by_key(d_bidx.begin(), d_bidx.end(), cmprts.by_block_.d_id.begin());
+
+  // find offsets
+  thrust::counting_iterator<uint> search_begin(0);
+  thrust::upper_bound(d_bidx.begin(), d_bidx.end(),
+		      search_begin, search_begin + cmprts.n_blocks,
+		      cmprts.by_block_.d_off.begin() + 1);
+  // d_off[0] was set to zero during d_off initialization
+
+  cmprts.need_reorder = true;
+}
+
 template struct cuda_bndp<BS144, dim_yz>;
 template struct cuda_bndp<BS444, dim_xyz>;

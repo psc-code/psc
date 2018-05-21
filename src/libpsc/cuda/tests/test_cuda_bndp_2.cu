@@ -179,7 +179,6 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
 }
 
-#if 0
 // ----------------------------------------------------------------------
 // BndPost
 //
@@ -187,8 +186,9 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
+  auto& cmprts = *this->cmprts;
   // BndPost expects the work done by bnd_prep()
-  cbndp->prep(cmprts.get());
+  cbndp->prep(&cmprts);
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -207,18 +207,17 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   cbndp->bpatch[0].buf[0] = prt3;
   cbndp->bpatch[1].buf[0] = prt1;
   
-  cbndp->post(cmprts.get());
+  cbndp->post(&cmprts);
 
   // bnd_post doesn't do the actual final reordering
-  EXPECT_TRUE(cmprts->need_reorder);
-  cmprts->reorder();
-  EXPECT_TRUE(cmprts->check_ordered());
+  EXPECT_TRUE(cmprts.need_reorder);
+  cmprts.reorder();
+  EXPECT_TRUE(cmprts.check_ordered());
 
 #if 0
-  cmprts->dump();
+  cmprts.dump();
 #endif
 }
-#endif
 
 // ----------------------------------------------------------------------
 // BndPostDetail

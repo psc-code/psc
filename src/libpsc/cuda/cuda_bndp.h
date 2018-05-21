@@ -106,6 +106,9 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
     }
   }
 
+  // ----------------------------------------------------------------------
+  // prep
+
   void prep(CudaMparticles* _cmprts)
   {
     auto& cmprts = *_cmprts;
@@ -120,11 +123,11 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
 
     copy_from_dev_and_convert(&cmprts, n_prts_send);
   }
+
+  // ----------------------------------------------------------------------
+  // post
   
-  void post(CudaMparticles* cmprts)
-  {
-    printf("AAA %s\n", __FUNCTION__);
-  }
+  void post(CudaMparticles* _cmprts);
 
   // ----------------------------------------------------------------------
   // copy_from_dev_and_convert
