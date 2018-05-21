@@ -89,14 +89,25 @@ TEST(Bnd, MakeGrid)
   EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 80., 40. }));
 }
 
-template <typename T>
-class BndTest : public ::testing::Test
-{};
+template<typename BND>
+struct TestConfigBnd
+{
+  using Bnd = BND;
+};
+
+template<typename T>
+struct BndTest : public ::testing::Test
+{
+  using Bnd = typename T::Bnd;
+};
 
 #ifdef USE_CUDA
-using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>, BndCuda>;
+using BndTestTypes = ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>>,
+				      TestConfigBnd<Bnd_<MfieldsC>>,
+				      TestConfigBnd<BndCuda>>;
 #else
-using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>>;
+using BndTestTypes = ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>>,
+				      TestConfigBnd<Bnd_<MfieldsC>>>;
 #endif
 
 TYPED_TEST_CASE(BndTest, BndTestTypes);
@@ -105,7 +116,8 @@ const int B = 2;
 
 TYPED_TEST(BndTest, FillGhosts)
 {
-  using Bnd = TypeParam;
+  using Base = BndTest<TypeParam>;
+  using Bnd = typename Base::Bnd;
   using Mfields = typename Bnd::Mfields;
 
   auto grid_domain = make_grid<dim_yz>();
@@ -157,7 +169,8 @@ TYPED_TEST(BndTest, FillGhosts)
 
 TYPED_TEST(BndTest, AddGhosts)
 {
-  using Bnd = TypeParam;
+  using Base = BndTest<TypeParam>;
+  using Bnd = typename Base::Bnd;
   using Mfields = typename Bnd::Mfields;
 
   auto grid_domain = make_grid<dim_yz>();
