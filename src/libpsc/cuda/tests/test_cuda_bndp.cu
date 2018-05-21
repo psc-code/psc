@@ -30,7 +30,7 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
   void SetUp()
   {
-    auto domain = Grid_t::Domain{{1, 8, 8}, {1., 80., 80.}, {0., 0., 0.},
+    auto domain = Grid_t::Domain{{1, 32, 32}, {1., 320., 320.}, {0., 0., 0.},
 				 {1, 2, 2}};
     std::vector<Int3> offs = {{0, 0, 0}, {0, 4, 0}};
     grid.reset(new Grid_t(domain, offs));
@@ -41,11 +41,11 @@ struct CudaMparticlesBndTest : TestBase, ::testing::Test
 
     // (ab)use kind to track particle more easily in the test
     std::vector<cuda_mparticles_prt> prts = {
-      { .5,  5., 5., 0., 0., 0., 0 },
-      { .5, 35., 5., 0., 0., 0., 1 },
+      { .5,  35., 5., 0., 0., 0., 0 },
+      { .5, 155., 5., 0., 0., 0., 1 },
       
-      { .5,  5., 5., 0., 0., 0., 2 },
-      { .5, 35., 5., 0., 0., 0., 3 },
+      { .5,  35., 5., 0., 0., 0., 2 },
+      { .5, 155., 5., 0., 0., 0., 3 },
     };
 
     uint n_prts_by_patch[cmprts->n_patches];
@@ -270,7 +270,7 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   
   cbndp->post(cmprts.get());
 
-  // bnd_post doesn't do the actually final reordering
+  // bnd_post doesn't do the actual final reordering
   EXPECT_TRUE(cmprts->need_reorder);
   cmprts->reorder();
   EXPECT_TRUE(cmprts->check_ordered());
@@ -302,8 +302,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // This assumes periodic b.c.
   particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
   particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
-  prt1.yi -= 40.;
-  prt3.yi -= 40.;
+  prt1.yi -= 160.;
+  prt3.yi -= 160.;
   cbndp->bpatch[0].buf[0] = prt3;
   cbndp->bpatch[1].buf[0] = prt1;
 
@@ -361,6 +361,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cbndp->update_offsets(cmprts.get());
   auto& d_off = cmprts->by_block_.d_off;
   for (int b = 0; b <= cmprts->n_blocks; b++) {
+    //if (b < cmprts->n_blocks) printf("b %d: off [%d:%d[\n", b, int(d_off[b]), int(d_off[b+1]));
     if (b < 1) {
       EXPECT_EQ(d_off[b], 0) << "where b = " << b;
     } else if (b < 2) {
@@ -379,6 +380,10 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // bnd_post doesn't do the actually final reordering, but
   // let's do it here for a final check
   cmprts->reorder();
+  // for (int n = 0; n < cmprts->n_prts; n++) {
+  //   float4 xi4 = cmprts->d_xi4[n];
+  //   printf("n %d: %g:%g kind %d\n", n, xi4.y, xi4.z, cuda_float_as_int(xi4.w));
+  // }
   EXPECT_TRUE(cmprts->check_ordered());
 
 #if 0
