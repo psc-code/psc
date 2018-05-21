@@ -5,6 +5,7 @@
 #include "cuda_mparticles_indexer.h"
 #include "psc_particles_cuda.h"
 #include "ddc_particles.hxx"
+#include "cuda_bits.h"
 
 #include <thrust/device_vector.h>
 
@@ -96,7 +97,11 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
   cuda_bndp(const Grid_t& grid)
     : cuda_mparticles_indexer<BS>{grid}
   {
-    printf("AAA %s\n", __FUNCTION__);
+    bpatch.resize(n_patches);
+    bufs_.reserve(n_patches);
+    for (int p = 0; p < n_patches; p++) {
+      bufs_.push_back(&bpatch[p].buf);
+    }
   }
 
   void prep(CudaMparticles* cmprts)
@@ -109,7 +114,47 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
     printf("AAA %s\n", __FUNCTION__);
   }
 
+  // ----------------------------------------------------------------------
+  // copy_from_dev_and_convert
+
+  void copy_from_dev_and_convert(CudaMparticles *cmprts, uint n_prts_send)
+  {
+    uint n_prts = cmprts->n_prts;
+    thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
+    thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
+    
+    assert(cmprts->d_xi4.begin() + n_prts + n_prts_send == cmprts->d_xi4.end());
+    
+    thrust::copy(cmprts->d_xi4.begin()  + n_prts, cmprts->d_xi4.end(), h_bnd_xi4.begin());
+    thrust::copy(cmprts->d_pxi4.begin() + n_prts, cmprts->d_pxi4.end(), h_bnd_pxi4.begin());
+    
+    uint off = 0;
+    for (int p = 0; p < n_patches; p++) {
+      psc_particle_cuda_buf_t& buf = bpatch[p].buf;
+      uint n_send = bpatch[p].n_send;
+      buf.reserve(n_send);
+      buf.resize(n_send);
+      
+      for (int n = 0; n < n_send; n++) {
+	particle_cuda_t *prt = &buf[n];
+	prt->xi      = h_bnd_xi4[n + off].x;
+	prt->yi      = h_bnd_xi4[n + off].y;
+	prt->zi      = h_bnd_xi4[n + off].z;
+	prt->kind_   = cuda_float_as_int(h_bnd_xi4[n + off].w);
+	prt->pxi     = h_bnd_pxi4[n + off].x;
+	prt->pyi     = h_bnd_pxi4[n + off].y;
+	prt->pzi     = h_bnd_pxi4[n + off].z;
+	prt->qni_wni_ = h_bnd_pxi4[n + off].w;
+      }
+      off += n_send;
+    }
+    
+    cmprts->resize(n_prts);
+  }
+
+  std::vector<cuda_bnd> bpatch;
   std::vector<buf_t*> bufs_;
+  uint n_prts_send;
 };
   
 #endif
