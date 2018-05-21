@@ -15,10 +15,12 @@ prof_register(const char *name, float simd, int flops, int bytes)
   return 0;
 }
 
+using CudaMparticles = cuda_mparticles<BS144>;
+
 // ======================================================================
 // CudaMparticlesBndTest
 
-struct CudaMparticlesBndTest : TestBase, ::testing::Test
+struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
 {
   using Double3 = Vec3<double>;
   

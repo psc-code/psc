@@ -42,10 +42,12 @@ prof_register(const char *name, float simd, int flops, int bytes)
   return 0;
 }
 
+using CudaMparticles = cuda_mparticles<BS144>;
+
 // ======================================================================
 // class PushMprtsTest
 
-struct PushMprtsTest : TestBase, ::testing::Test
+struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
 {
   std::unique_ptr<Grid_t> grid_;
 
