@@ -16,6 +16,7 @@ add_library(psccuda
 
   psc_push_fields_cuda.cxx
   cuda_push_fields_yz.cu
+  cuda_push_fields_xyz.cu
 
   psc_marder_cuda.cxx
 
