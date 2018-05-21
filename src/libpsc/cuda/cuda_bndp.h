@@ -96,17 +96,17 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
   cuda_bndp(const Grid_t& grid)
     : cuda_mparticles_indexer<BS>{grid}
   {
-    MHERE;
+    printf("AAA %s\n", __FUNCTION__);
   }
 
   void prep(CudaMparticles* cmprts)
   {
-    MHERE;
+    printf("AAA %s\n", __FUNCTION__);
   }
   
   void post(CudaMparticles* cmprts)
   {
-    MHERE;
+    printf("AAA %s\n", __FUNCTION__);
   }
 
   std::vector<buf_t*> bufs_;

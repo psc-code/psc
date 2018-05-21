@@ -68,10 +68,10 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
       cmprts->d_xi4[n] = xi4;
     }
     auto& d_bidx = cmprts->by_block_.d_idx;
-    d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
-    d_bidx[1] = CUDA_BND_S_OOB;
-    d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
-    d_bidx[3] = CUDA_BND_S_OOB;
+    d_bidx[0] = 1;
+    d_bidx[1] = cmprts->n_blocks; // oob
+    d_bidx[2] = 65;
+    d_bidx[3] = cmprts->n_blocks; // oob
     
 #if 0
     cmprts->dump();
@@ -87,28 +87,58 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
 //
 // tests cuda_bndp::prep()
 
-#if 0
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
   cbndp->prep(cmprts.get());
 
+#if 0
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
   EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
   EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
-}
 #endif
+}
 
-#if 0
 // ----------------------------------------------------------------------
 // BndPrepDetail
 //
 // tests the pieces that go into cuda_bndp::prep()
 
+struct is_inside
+{
+  is_inside(int n_blocks) : n_blocks_(n_blocks) {}
+  
+  __host__ __device__
+  bool operator()(const int& bidx)
+  {
+    return bidx != n_blocks_;
+  }
+  
+  int n_blocks_;
+};
+
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
+  auto& cmprts = *this->cmprts;
+
+  auto& d_bidx = cmprts.by_block_.d_idx;
+  for (int n = 0; n < cmprts.n_prts; n++) {
+    float4 xi4 = cmprts.d_xi4[n];
+    printf("n %d: %g:%g:%g kind %d bidx %d\n", n, xi4.x, xi4.y, xi4.z,
+	   cuda_float_as_int(xi4.w), int(d_bidx[n]));
+  }
+
+  thrust::stable_partition(d_bidx.begin(), d_bidx.end(), is_inside(cmprts.n_blocks));
+
+  for (int n = 0; n < cmprts.n_prts; n++) {
+    float4 xi4 = cmprts.d_xi4[n];
+    printf("n %d: %g:%g:%g kind %d bidx %d\n", n, xi4.x, xi4.y, xi4.z,
+	   cuda_float_as_int(xi4.w), int(d_bidx[n]));
+  }
+
+#if 0
   // test spine_reduce
   cbndp->spine_reduce(cmprts.get());
 
@@ -242,8 +272,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
   EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
-}
 #endif
+}
 
 #if 0
 // ----------------------------------------------------------------------
