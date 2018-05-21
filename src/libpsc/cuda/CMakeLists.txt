@@ -66,6 +66,7 @@ add_cuda_test(range_unittest)
 add_cuda_test(test_cuda_base)
 add_cuda_test(test_cuda_accel)
 add_cuda_test(test_cuda_bndp)
+add_cuda_test(test_cuda_bndp_2)
 add_cuda_test(test_cuda_mfields)
 add_cuda_test(test_cuda_mparticles)
 
