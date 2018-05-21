@@ -9,13 +9,13 @@ struct PushFieldsTest : PushParticlesTest<T>
 };
 
 using PushFieldsTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ,
-					     TestConfig1vbec3dCudaYZ>;
+#ifdef USE_CUDA
+					     TestConfig1vbec3dCudaYZ,
+#endif
+					     TestConfig1vbec3dSingle>;
 #ifdef xUSE_CUDA
 						TestConfig1vbec3dCuda444>;
 #endif
-//TestConfig1vbec3dSingle>;
-						//TestConfig1vbec3dSingle>;
-						//TestConfig2ndDouble>;
 
 TYPED_TEST_CASE(PushFieldsTest, PushFieldsTestTypes);
 
