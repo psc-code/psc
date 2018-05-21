@@ -13,10 +13,9 @@
 
 struct GridDomain { Grid_t grid; mrc_domain* domain; };
 
-static GridDomain make_grid()
+static GridDomain make_grid(Int3 gdims, Vec3<double> length)
 {
-  auto domain = Grid_t::Domain{{1, 8, 4},
-			       {10., 80., 40.}, {},
+  auto domain = Grid_t::Domain{gdims, length, {},
 			       {1, 2, 1}};
 
   mrc_domain* mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
@@ -47,6 +46,18 @@ static GridDomain make_grid()
   return { Grid_t(domain, offs), mrc_domain };
 }
 
+template<typename DIM>
+static GridDomain make_grid()
+{
+  return make_grid({1, 8, 4}, {10., 80., 40.});
+}
+
+template<>
+GridDomain make_grid<dim_xyz>()
+{
+  return make_grid({2, 8, 4}, {20., 80., 40.});
+}
+
 template<typename Mfields>
 static void Mfields_dump(Mfields& mflds, int B)
 {
@@ -63,7 +74,7 @@ static void Mfields_dump(Mfields& mflds, int B)
 
 TEST(Bnd, MakeGrid)
 {
-  auto grid_domain = make_grid();
+  auto grid_domain = make_grid<dim_yz>();
   Grid_t& grid = grid_domain.grid;
     
   EXPECT_EQ(grid.domain.gdims, Int3({1, 8, 4}));
@@ -97,7 +108,7 @@ TYPED_TEST(BndTest, FillGhosts)
   using Bnd = TypeParam;
   using Mfields = typename Bnd::Mfields;
 
-  auto grid_domain = make_grid();
+  auto grid_domain = make_grid<dim_yz>();
   auto& grid = grid_domain.grid;
   auto ibn = Int3{0, B, B};
   auto mflds = Mfields{grid, 1, ibn};
@@ -149,7 +160,7 @@ TYPED_TEST(BndTest, AddGhosts)
   using Bnd = TypeParam;
   using Mfields = typename Bnd::Mfields;
 
-  auto grid_domain = make_grid();
+  auto grid_domain = make_grid<dim_yz>();
   auto& grid = grid_domain.grid;
   auto ibn = Int3{0, B, B};
   auto mflds = Mfields{grid, 1, ibn};
