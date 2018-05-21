@@ -5,6 +5,7 @@
 #include "fields.hxx"
 #include "fields_traits.hxx"
 
+#include "push_fields.hxx"
 #include "psc.h" // FIXME, for foreach_3d macro
 
 // ----------------------------------------------------------------------
