@@ -68,9 +68,9 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
       cmprts->d_xi4[n] = xi4;
     }
     auto& d_bidx = cmprts->by_block_.d_idx;
-    d_bidx[0] = 1;
+    d_bidx[0] = 4;
     d_bidx[1] = cmprts->n_blocks + 0; // oob p0
-    d_bidx[2] = 65;
+    d_bidx[2] = 68;
     d_bidx[3] = cmprts->n_blocks + 1; // oob p1
     
 #if 0
@@ -220,7 +220,6 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 }
 #endif
 
-#if 0
 // ----------------------------------------------------------------------
 // BndPostDetail
 //
@@ -228,8 +227,9 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
+  auto& cmprts = *this->cmprts;
   // BndPost expects the work done by bnd_prep()
-  cbndp->prep(cmprts.get());
+  cbndp->prep(&cmprts);
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -249,86 +249,80 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cbndp->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  uint n_prts_recv = cbndp->convert_and_copy_to_dev(cmprts.get());
-  cmprts->n_prts += n_prts_recv;
+  uint n_prts_recv = cbndp->convert_and_copy_to_dev(&cmprts);
+  cmprts.n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
   EXPECT_EQ(cbndp->bpatch[0].n_recv, 1);
   EXPECT_EQ(cbndp->bpatch[1].n_recv, 1);
   EXPECT_EQ(n_prts_recv, 2);
 
-  // the received particle have been added to the previous total
-  EXPECT_EQ(cmprts->n_prts, 6);
+  // the received particle have been appended to the two remaining ones
+  EXPECT_EQ(cmprts.n_prts, 4);
 
   // and the particle have been appended after the old end of the particle list
-  int n_prts_old = cmprts->n_prts - n_prts_recv;
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old  ]).w), 3);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts->d_xi4[n_prts_old+1]).w), 1);
+  int n_prts_old = cmprts.n_prts - n_prts_recv;
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[n_prts_old  ]).w), 3);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[n_prts_old+1]).w), 1);
 
   // block indices have been calculated
-  auto& d_bidx = cmprts->by_block_.d_idx;
+  auto& d_bidx = cmprts.by_block_.d_idx;
   EXPECT_EQ(d_bidx[n_prts_old  ], 0);  // 0th block in 0th patch
-  EXPECT_EQ(d_bidx[n_prts_old+1], 16); // 0th block in 1st patch
+  EXPECT_EQ(d_bidx[n_prts_old+1], 64); // 0th block in 1st patch
 
-  // received particles per block have been counted
-  for (int b = 0; b < cmprts->n_blocks; b++) {
-    if (b == 0 || b == 16) {
-      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts->n_blocks + b], 1);
-    } else {
-      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts->n_blocks + b], 0);
-    }
+  cmprts.resize(cmprts.n_prts);
+  thrust::sequence(cmprts.by_block_.d_id.begin(), cmprts.by_block_.d_id.end());
+  thrust::stable_sort_by_key(d_bidx.begin(), d_bidx.end(), cmprts.by_block_.d_id.begin());
+
+#if 0
+  for (int n = 0; n < cmprts.n_prts; n++) {
+    float4 xi4 = cmprts.d_xi4[n];
+    printf("n %d: bidx %d id %d\n", n,
+	   int(d_bidx[n]), int(cmprts.by_block_.d_id[n]));
   }
-
-  // both particles are the 0th (and only) particle added to their respective block
-  EXPECT_EQ(cbndp->d_bnd_off[0], 0);
-  EXPECT_EQ(cbndp->d_bnd_off[1], 0);
-
-  // === test sort
-  uint n_prts_by_patch[cmprts->n_patches];
-  cmprts->get_size_all(n_prts_by_patch);
-  EXPECT_EQ(n_prts_by_patch[0], 2);
-  EXPECT_EQ(n_prts_by_patch[1], 2);
+#endif
   
-  cbndp->sort_pairs_device(cmprts.get(), n_prts_recv);
-  cmprts->n_prts -= cbndp->n_prts_send;
-
-  EXPECT_EQ(cmprts->n_prts, 4);
-  auto& d_id = cmprts->by_block_.d_id;
-  EXPECT_EQ(d_id[0], 4);
+  EXPECT_EQ(cmprts.n_prts, 4);
+  auto& d_id = cmprts.by_block_.d_id;
+  EXPECT_EQ(d_id[0], 2);
   EXPECT_EQ(d_id[1], 0);
-  EXPECT_EQ(d_id[2], 5);
-  EXPECT_EQ(d_id[3], 2);
+  EXPECT_EQ(d_id[2], 3);
+  EXPECT_EQ(d_id[3], 1);
 
-  cbndp->update_offsets(cmprts.get());
-  auto& d_off = cmprts->by_block_.d_off;
-  for (int b = 0; b <= cmprts->n_blocks; b++) {
-    //if (b < cmprts->n_blocks) printf("b %d: off [%d:%d[\n", b, int(d_off[b]), int(d_off[b+1]));
+  // find offsets
+  thrust::counting_iterator<uint> search_begin(0);
+  thrust::upper_bound(d_bidx.begin(), d_bidx.end(),
+		      search_begin, search_begin + cmprts.n_blocks,
+		      cmprts.by_block_.d_off.begin() + 1);
+  // d_off[0] was set to zero during d_off initialization
+  auto& d_off = cmprts.by_block_.d_off;
+  for (int b = 0; b <= cmprts.n_blocks; b++) {
+    //if (b < cmprts.n_blocks) printf("b %d: off [%d:%d[\n", b, int(d_off[b]), int(d_off[b+1]));
     if (b < 1) {
       EXPECT_EQ(d_off[b], 0) << "where b = " << b;
-    } else if (b < 2) {
+    } else if (b < 5) {
       EXPECT_EQ(d_off[b], 1) << "where b = " << b;
-    } else if (b < 17) {
+    } else if (b < 65) {
       EXPECT_EQ(d_off[b], 2) << "where b = " << b;
-    } else if (b < 18) {
+    } else if (b < 69) {
       EXPECT_EQ(d_off[b], 3) << "where b = " << b;
     } else {
       EXPECT_EQ(d_off[b], 4) << "where b = " << b;
     }
   }
 
-  cmprts->need_reorder = true;
+  cmprts.need_reorder = true;
 
   // bnd_post doesn't do the actually final reordering, but
   // let's do it here for a final check
-  cmprts->reorder();
-  // for (int n = 0; n < cmprts->n_prts; n++) {
-  //   float4 xi4 = cmprts->d_xi4[n];
+  cmprts.reorder();
+  // for (int n = 0; n < cmprts.n_prts; n++) {
+  //   float4 xi4 = cmprts.d_xi4[n];
   //   printf("n %d: %g:%g kind %d\n", n, xi4.y, xi4.z, cuda_float_as_int(xi4.w));
   // }
-  EXPECT_TRUE(cmprts->check_ordered());
+  EXPECT_TRUE(cmprts.check_ordered());
 
 #if 0
-  cmprts->dump();
+  cmprts.dump();
 #endif
 }
-#endif

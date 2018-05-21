@@ -276,5 +276,63 @@ void cuda_bndp<BS, DIM>::update_offsets_gold(cuda_mparticles *cmprts)
   thrust::copy(h_off.begin(), h_off.end(), cmprts->by_block_.d_off.begin());
 }
 
+// ----------------------------------------------------------------------
+// convert_and_copy_to_dev
+
+template<typename BS>
+uint cuda_bndp<BS, dim_xyz>::convert_and_copy_to_dev(CudaMparticles* cmprts)
+{
+  uint n_recv = 0;
+  for (int p = 0; p < n_patches; p++) {
+    n_recv += bpatch[p].buf.size();
+  }
+
+  thrust::host_vector<float4> h_bnd_xi4(n_recv);
+  thrust::host_vector<float4> h_bnd_pxi4(n_recv);
+  thrust::host_vector<uint> h_bnd_idx(n_recv);
+  //thrust::host_vector<uint> h_bnd_off(n_recv);
+
+  thrust::host_vector<uint> h_bnd_cnt(n_blocks, 0);
+  
+  uint off = 0;
+  for (int p = 0; p < n_patches; p++) {
+    int n_recv = bpatch[p].buf.size();
+    bpatch[p].n_recv = n_recv;
+    
+    for (int n = 0; n < n_recv; n++) {
+      const particle_cuda_t& prt = bpatch[p].buf[n];
+
+      h_bnd_xi4[n + off].x  = prt.xi;
+      h_bnd_xi4[n + off].y  = prt.yi;
+      h_bnd_xi4[n + off].z  = prt.zi;
+      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt.kind_);
+      h_bnd_pxi4[n + off].x = prt.pxi;
+      h_bnd_pxi4[n + off].y = prt.pyi;
+      h_bnd_pxi4[n + off].z = prt.pzi;
+      h_bnd_pxi4[n + off].w = prt.qni_wni_;
+
+      checkInPatchMod(&h_bnd_xi4[n + off].x);
+      uint b = blockIndex(h_bnd_xi4[n + off], p);
+      assert(b < n_blocks);
+      h_bnd_idx[n + off] = b;
+      //h_bnd_off[n + off] = h_bnd_cnt[b]++;
+    }
+    off += n_recv;
+  }
+
+  cmprts->resize(cmprts->n_prts + n_recv);
+
+  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->d_xi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->d_pxi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), cmprts->by_block_.d_idx.begin() + cmprts->n_prts);
+  // // slight abuse of the now unused last part of spine_cnts
+  // thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(), d_spine_cnts.begin() + 10 * n_blocks);
+
+  // d_bnd_off.resize(n_recv);
+  // thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_bnd_off.begin());
+
+  return n_recv;
+}
+
 template struct cuda_bndp<BS144, dim_yz>;
 template struct cuda_bndp<BS444, dim_xyz>;

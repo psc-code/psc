@@ -165,6 +165,8 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
     }
   }
 
+  uint convert_and_copy_to_dev(CudaMparticles *cmprts);
+
   struct is_inside
   {
     is_inside(int n_blocks) : n_blocks_(n_blocks) {}
