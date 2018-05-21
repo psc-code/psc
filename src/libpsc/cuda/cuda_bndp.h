@@ -122,34 +122,35 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
     uint n_prts = cmprts->n_prts;
     thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
     thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
+    thrust::host_vector<uint> h_bidx(n_prts_send);
     
     assert(cmprts->d_xi4.begin() + n_prts + n_prts_send == cmprts->d_xi4.end());
     
     thrust::copy(cmprts->d_xi4.begin()  + n_prts, cmprts->d_xi4.end(), h_bnd_xi4.begin());
     thrust::copy(cmprts->d_pxi4.begin() + n_prts, cmprts->d_pxi4.end(), h_bnd_pxi4.begin());
-    
-    uint off = 0;
+    thrust::copy(cmprts->by_block_.d_idx.begin() + n_prts, cmprts->by_block_.d_idx.end(),
+		 h_bidx.begin());
+
     for (int p = 0; p < n_patches; p++) {
-      psc_particle_cuda_buf_t& buf = bpatch[p].buf;
-      uint n_send = bpatch[p].n_send;
-      buf.reserve(n_send);
-      buf.resize(n_send);
-      
-      for (int n = 0; n < n_send; n++) {
-	particle_cuda_t *prt = &buf[n];
-	prt->xi      = h_bnd_xi4[n + off].x;
-	prt->yi      = h_bnd_xi4[n + off].y;
-	prt->zi      = h_bnd_xi4[n + off].z;
-	prt->kind_   = cuda_float_as_int(h_bnd_xi4[n + off].w);
-	prt->pxi     = h_bnd_pxi4[n + off].x;
-	prt->pyi     = h_bnd_pxi4[n + off].y;
-	prt->pzi     = h_bnd_pxi4[n + off].z;
-	prt->qni_wni_ = h_bnd_pxi4[n + off].w;
-      }
-      off += n_send;
+      bpatch[p].buf.clear();
+      bpatch[p].n_send = 0;
     }
-    
-    cmprts->resize(n_prts);
+    for (int n = 0; n < n_prts_send; n++) {
+      particle_cuda_t prt;
+      prt.xi      = h_bnd_xi4[n].x;
+      prt.yi      = h_bnd_xi4[n].y;
+      prt.zi      = h_bnd_xi4[n].z;
+      prt.kind_   = cuda_float_as_int(h_bnd_xi4[n].w);
+      prt.pxi     = h_bnd_pxi4[n].x;
+      prt.pyi     = h_bnd_pxi4[n].y;
+      prt.pzi     = h_bnd_pxi4[n].z;
+      prt.qni_wni_ = h_bnd_pxi4[n].w;
+
+      int p = h_bidx[n] - cmprts->n_blocks;
+      psc_particle_cuda_buf_t& buf = bpatch[p].buf;
+      bpatch[p].buf.push_back(prt);
+      bpatch[p].n_send++;
+    }
   }
 
   std::vector<cuda_bnd> bpatch;

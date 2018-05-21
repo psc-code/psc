@@ -69,9 +69,9 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     }
     auto& d_bidx = cmprts->by_block_.d_idx;
     d_bidx[0] = 1;
-    d_bidx[1] = cmprts->n_blocks; // oob
+    d_bidx[1] = cmprts->n_blocks + 0; // oob p0
     d_bidx[2] = 65;
-    d_bidx[3] = cmprts->n_blocks; // oob
+    d_bidx[3] = cmprts->n_blocks + 1; // oob p1
     
 #if 0
     cmprts->dump();
@@ -114,7 +114,7 @@ struct is_inside
   bool operator()(thrust::tuple<uint, float4, float4> tup)
   {
     uint bidx = thrust::get<0>(tup);
-    return bidx != n_blocks_;
+    return bidx < n_blocks_;
   }
   
   int n_blocks_;
@@ -125,21 +125,25 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   auto& cmprts = *this->cmprts;
 
   auto& d_bidx = cmprts.by_block_.d_idx;
+#if 0
   for (int n = 0; n < cmprts.n_prts; n++) {
     float4 xi4 = cmprts.d_xi4[n];
     printf("n %d: %g:%g:%g kind %d bidx %d\n", n, xi4.x, xi4.y, xi4.z,
 	   cuda_float_as_int(xi4.w), int(d_bidx[n]));
   }
+#endif
 
   auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.d_xi4.begin(), cmprts.d_pxi4.begin()));
   auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.d_xi4.end(), cmprts.d_pxi4.end()));
   auto oob = thrust::stable_partition(begin, end, is_inside(cmprts.n_blocks));
 
+#if 0
   for (int n = 0; n < cmprts.n_prts; n++) {
     float4 xi4 = cmprts.d_xi4[n];
     printf("n %d: %g:%g:%g kind %d bidx %d\n", n, xi4.x, xi4.y, xi4.z,
 	   cuda_float_as_int(xi4.w), int(d_bidx[n]));
   }
+#endif
 
   EXPECT_EQ(oob, begin + 2);
   EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[0]).w), 0);
@@ -163,7 +167,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   // test copy_from_dev_and_convert
   cbndp->copy_from_dev_and_convert(&cmprts, cbndp->n_prts_send);
 
-#if 1
+#if 0
   for (int p = 0; p < cmprts.n_patches; p++) {
     printf("from_dev: p %d\n", p);
     for (auto& prt : cbndp->bpatch[p].buf) {
