@@ -595,18 +595,18 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   psc_default_dimensionless(psc_);
 
-  psc_->prm.nmax = 5001;
-  psc_->prm.nicell = 100;
+  psc_->prm.nmax = 10001;
+  psc_->prm.nicell = 200;
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
   // --- setup domain
-  double LLy = 400.*4.;
-  double LLz = 400.;
+  double LLy = 8;
+  double LLz = 8.;
 
-  auto grid_domain = Grid_t::Domain{{1, 4096, 1024}, // global number of grid points
+  auto grid_domain = Grid_t::Domain{{1, 32, 32}, // global number of grid points
 				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 16, 4}}; // division into patches
+				    {1, 8, 8}}; // division into patches
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -619,7 +619,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.Zi = 1.;
 
   // --- for background plasma
-  params.background_n  = .002;
+  params.background_n  = 1.0;
   params.background_Te = .001;
   params.background_Ti = .001;
   
@@ -638,7 +638,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.sort_interval = 10;
 
   // collisions
-  params.collision_interval = 10;
+  params.collision_interval = -10;
   params.collision_nu = .1;
 
   // --- setup heating
@@ -657,7 +657,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   heating_foil_params.Mi = kinds[MY_ION].m;
   params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
-  params.heating_begin = 0;
+  params.heating_begin = 1000000;
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
 
@@ -675,7 +675,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   inject_foil_params.Ti = .001;
   params.inject_target = InjectFoil{inject_foil_params};
   params.inject_kind_n = MY_ELECTRON;
-  params.inject_interval = 20;
+  params.inject_interval = -20;
   params.inject_tau = 40;
 
   // --- checks
