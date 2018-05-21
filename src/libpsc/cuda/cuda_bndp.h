@@ -3,11 +3,13 @@
 #define CUDA_BNDP_H
 
 #include "cuda_mparticles_indexer.h"
+#include "cuda_mparticles.h"
 #include "psc_particles_cuda.h"
 #include "ddc_particles.hxx"
 #include "cuda_bits.h"
 
 #include <thrust/device_vector.h>
+#include <thrust/partition.h>
 
 // ======================================================================
 // bnd
@@ -104,9 +106,19 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
     }
   }
 
-  void prep(CudaMparticles* cmprts)
+  void prep(CudaMparticles* _cmprts)
   {
-    printf("AAA %s\n", __FUNCTION__);
+    auto& cmprts = *_cmprts;
+    auto& d_bidx = cmprts.by_block_.d_idx;
+    
+    auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.d_xi4.begin(), cmprts.d_pxi4.begin()));
+    auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.d_xi4.end(), cmprts.d_pxi4.end()));
+    auto oob = thrust::stable_partition(begin, end, is_inside(cmprts.n_blocks));
+
+    n_prts_send = end - oob;
+    cmprts.n_prts -= n_prts_send;
+
+    copy_from_dev_and_convert(&cmprts, n_prts_send);
   }
   
   void post(CudaMparticles* cmprts)
@@ -152,6 +164,20 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
       bpatch[p].n_send++;
     }
   }
+
+  struct is_inside
+  {
+    is_inside(int n_blocks) : n_blocks_(n_blocks) {}
+    
+    __host__ __device__
+    bool operator()(thrust::tuple<uint, float4, float4> tup)
+    {
+      uint bidx = thrust::get<0>(tup);
+      return bidx < n_blocks_;
+    }
+    
+    int n_blocks_;
+  };
 
   std::vector<cuda_bnd> bpatch;
   std::vector<buf_t*> bufs_;
