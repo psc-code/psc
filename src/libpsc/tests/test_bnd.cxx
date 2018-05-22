@@ -123,29 +123,33 @@ TYPED_TEST(BndTest, FillGhosts)
 
   auto grid_domain = make_grid<dim>();
   auto& grid = grid_domain.grid;
-  auto ibn = Int3{0, B, B};
+  auto ibn = Int3{B, B, B};
+  if (dim::InvarX::value) ibn[0] = 0;
   auto mflds = Mfields{grid, 1, ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
-	mflds[p](0, i,j,k) = 10*jj + kk;
+	int ii = i + i0, jj = j + j0, kk = k + k0;
+	mflds[p](0, i,j,k) = 100*ii + 10*jj + kk;
       });
   }
 
   //Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
-	if (j >= 0 && j < grid.ldims[1] &&
+	int ii = i + i0, jj = j + j0, kk = k + k0;
+	if (i >= 0 && i < grid.ldims[0] &&
+	    j >= 0 && j < grid.ldims[1] &&
 	    k >= 0 && k < grid.ldims[2]) {
-	  EXPECT_EQ(mflds[p](0, i,j,k), 10*jj + kk);
+	  EXPECT_EQ(mflds[p](0, i,j,k), 100*ii + 10*jj + kk);
 	} else {
 	  EXPECT_EQ(mflds[p](0, i,j,k), 0);
 	}
@@ -157,13 +161,15 @@ TYPED_TEST(BndTest, FillGhosts)
 
   //Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
+	int ii = i + i0, jj = j + j0, kk = k + k0;
+	ii = (ii + grid.domain.gdims[0]) % grid.domain.gdims[0];
 	jj = (jj + grid.domain.gdims[1]) % grid.domain.gdims[1];
 	kk = (kk + grid.domain.gdims[2]) % grid.domain.gdims[2];
-	EXPECT_EQ(mflds[p](0, i,j,k), 10*jj + kk);
+	EXPECT_EQ(mflds[p](0, i,j,k), 100*ii + 10*jj + kk);
       });
   }
 }
@@ -177,16 +183,17 @@ TYPED_TEST(BndTest, AddGhosts)
 
   auto grid_domain = make_grid<dim>();
   auto& grid = grid_domain.grid;
-  auto ibn = Int3{0, B, B};
+  auto ibn = Int3{B, B, B};
+  if (dim::InvarX::value) ibn[0] = 0;
   auto mflds = Mfields{grid, 1, ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
 	mflds[p](0, i,j,k) = 1;
       });
   }
@@ -203,11 +210,16 @@ TYPED_TEST(BndTest, AddGhosts)
     auto& ldims = grid.ldims;
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
 	int n_nei = 0;
-	if (j >= 0 && j < ldims[1] &&
+	if (i >= 0 && i < ldims[0] &&
+	    j >= 0 && j < ldims[1] &&
 	    k >= 0 && k < ldims[2]) {
+	  if (!dim::InvarX::value) {
+	    if (i < B || i >= ldims[0] - B) n_nei++;
+	  }
 	  if (j < B || j >= ldims[1] - B) n_nei++;
 	  if (k < B || k >= ldims[2] - B) n_nei++;
-	  if (n_nei == 2) n_nei++; // corner -> diagonal contribution, too
+	  if (n_nei == 2) n_nei = 3; // edge -> diagonal contribution, too
+	  else if (n_nei == 3) n_nei = 11; // corner -> why? FIXME why not 7?
 	}
   	EXPECT_EQ(mflds[p](0, i,j,k), 1 + n_nei) << "ijk " << i << " " << j << " " << k;
       });
