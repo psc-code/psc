@@ -107,6 +107,7 @@ using BndTestTypes = ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>, dim_yz>
 				      TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
 #ifdef USE_CUDA
 				      TestConfigBnd<BndCuda, dim_yz>,
+				      TestConfigBnd<BndCuda, dim_xyz>,
 #endif
 				      TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
 
