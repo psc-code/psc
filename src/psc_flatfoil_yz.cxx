@@ -261,7 +261,7 @@ using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig1vbecSingle<dim_t>;
+using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -696,8 +696,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   // --- setup domain
   Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-  Int3 gdims = { 1, 512, 128 }; // global number of grid points
-  Int3 np = { 1, 16, 4 }; // division into patches
+  Int3 gdims = { 1, 3200, 800 }; // global number of grid points
+  Int3 np = { 1, 100, 25 }; // division into patches
 
 #if TEST == TEST_2_FLATFOIL_3D
   LL = { 400., 400.*4, 400. }; // domain size (in d_e)
