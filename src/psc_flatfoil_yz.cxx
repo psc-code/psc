@@ -259,7 +259,7 @@ using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig2ndDouble<dim_t>;
+using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -694,7 +694,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   // --- setup domain
   Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-  Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
+  Int3 gdims = { 1, 512, 128 }; // global number of grid points
   Int3 np = { 1, 16, 4 }; // division into patches
 
 #if TEST == TEST_1_HEATING_3D
