@@ -63,7 +63,7 @@ public:
   {
   }
   
-  void x(int i, int j,int k)
+  void x(int i, int j, int k)
   {
     F(EX, i,j,k) += (cny * (F(HZ, i,j,k) - F(HZ, i,j-1,k)) - cnz * (F(HY, i,j,k) - F(HY, i,j,k-1)) -
     		     dth * F(JXI, i,j,k));
@@ -102,7 +102,7 @@ public:
       F(flds)
   {}
   
-  void x(int i, int j,int k)
+  void x(int i, int j, int k)
   {
     F(HX, i,j,k) -= (cny * (F(EZ, i,j+1,k) - F(EZ, i,j,k)) - cnz * (F(EY, i,j,k+1) - F(EY, i,j,k)));
   }
