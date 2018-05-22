@@ -73,8 +73,8 @@ TYPED_TEST(PushParticlesTest, Accel)
   for (int n = 0; n < n_steps; n++) {
     //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
-    //checks_.continuity_after_particle_push(mprts, mflds);
     bndp_(mprts);
+    //checks_.continuity_after_particle_push(mprts, mflds);
 
     for (auto& prt : make_getter(mprts)[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
@@ -145,8 +145,8 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   for (int n = 0; n < n_steps; n++) {
     //checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
-    //checks_.continuity_after_particle_push(mprts, mflds);
     bndp_(mprts);
+    //checks_.continuity_after_particle_push(mprts, mflds);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
