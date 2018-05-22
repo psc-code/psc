@@ -63,7 +63,9 @@ struct BndCuda2 : BndBase
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
       reset();
     }
-    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
+    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
+    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds_single);
+    mflds.put_as(mflds_single, mb, me);
   }
 
   void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
@@ -84,7 +86,9 @@ struct BndCuda2 : BndBase
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds);
+    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
+    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
+    mflds.put_as(mflds_single, mb, me);
   }
 
   void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
@@ -100,7 +104,7 @@ struct BndCuda2 : BndBase
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
   {
-    auto& mf = *static_cast<Mfields*>(ctx);
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
     auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -118,7 +122,7 @@ struct BndCuda2 : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			   void *_buf, void *ctx)
   {
-    auto& mf = *static_cast<Mfields*>(ctx);
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
     auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -137,7 +141,7 @@ struct BndCuda2 : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			    void *_buf, void *ctx)
   {
-    auto& mf = *static_cast<Mfields*>(ctx);
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
     auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
