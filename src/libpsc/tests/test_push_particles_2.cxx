@@ -23,6 +23,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   using Mfields = typename TypeParam::Mfields;
   using PushParticles = typename TypeParam::PushParticles;
   using BndParticles = typename TypeParam::BndParticles;
+  using Bnd = typename TypeParam::Bnd;
   using Checks = typename TypeParam::Checks;
 
   const int n_prts = 131;
@@ -66,15 +67,18 @@ TYPED_TEST(PushParticlesTest, Accel)
   // run test
   PushParticles pushp_;
   BndParticles bndp_{ppsc->mrc_domain_, grid};
+  Bnd bnd_{grid, ppsc->mrc_domain_, this->ibn};
   ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;
   checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    //checks_.continuity_before_particle_push(mprts);
+    checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     bndp_(mprts);
-    //checks_.continuity_after_particle_push(mprts, mflds);
+    bnd_.add_ghosts(mflds, JXI, JXI+3);
+    bnd_.fill_ghosts(mflds, JXI, JXI+3);
+    checks_.continuity_after_particle_push(mprts, mflds);
 
     for (auto& prt : make_getter(mprts)[0]) {
       EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
@@ -93,6 +97,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   using Mfields = typename TypeParam::Mfields;
   using PushParticles = typename TypeParam::PushParticles;
   using BndParticles = typename TypeParam::BndParticles;
+  using Bnd = typename TypeParam::Bnd;
   using Checks = typename TypeParam::Checks;
 
   const int n_prts = 131;
@@ -138,15 +143,18 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   // run test
   PushParticles pushp_;
   BndParticles bndp_{ppsc->mrc_domain_, grid};
+  Bnd bnd_{grid, ppsc->mrc_domain_, this->ibn};
   ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;
   checks_params.continuity_verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    //checks_.continuity_before_particle_push(mprts);
+    checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     bndp_(mprts);
-    //checks_.continuity_after_particle_push(mprts, mflds);
+    bnd_.add_ghosts(mflds, JXI, JXI+3);
+    bnd_.fill_ghosts(mflds, JXI, JXI+3);
+    checks_.continuity_after_particle_push(mprts, mflds);
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
