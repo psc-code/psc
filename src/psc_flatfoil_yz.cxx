@@ -595,7 +595,7 @@ struct PscFlatfoil : PscFlatfoilParams
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_.push_H(mflds_, .5, dim_yz{});
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     
     prof_start(pr_bndf);
