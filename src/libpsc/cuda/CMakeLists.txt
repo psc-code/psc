@@ -40,8 +40,6 @@ add_library(psccuda
 
   psc_heating_cuda.cxx
   cuda_heating.cu
-  
-  psc_inject_cuda.cxx
   )
 target_include_directories(psccuda
   PUBLIC
