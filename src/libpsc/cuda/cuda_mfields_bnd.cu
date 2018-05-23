@@ -73,11 +73,14 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_par
   
   uint buf_size = 0;
   for (int p = 0; p < cbnd->n_patches; p++) {
+    int B = 2*BND;
     if (cbnd->im[0] == 1) {// + 2*BND) {
-      int B = 2*BND;
       buf_size = 2*B * (cbnd->im[1] + cbnd->im[2] - 2*B);
+      assert(buf_size ==  cbnd->im[1] * cbnd->im[2] -
+	     (cbnd->im[1] - 2*B) * (cbnd->im[2] - 2*B)); 
     } else {
-      assert(0);
+      buf_size = cbnd->im[0] * cbnd->im[1] * cbnd->im[2] -
+	(cbnd->im[0] - 2*B) * (cbnd->im[1] - 2*B) * (cbnd->im[2] - 2*B); 
     }
   }
   cudaError_t ierr;
@@ -434,11 +437,56 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
 }
 
 void
+cuda_mfields_bnd_fill_ghosts_local_xyz(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				       int mb, int me)
+{
+  const int B = 2;
+  int *im = cmflds->im;
+  int n_fields = cmflds->n_fields;
+  int n_patches = cmflds->n_patches;
+  int n_ghosts = im[0] * im[1] * im[2] -
+    (im[0] - 2*B) * (im[1] - 2*B) * (im[2] - 2*B);
+  int n_threads = n_ghosts * n_patches;
+
+#if 0
+  dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
+  dim3 dimBlock(THREADS_PER_BLOCK);
+    
+  float *d_flds = cmflds->data() + mb * im[1] * im[2];
+  if (me - mb == 3) {
+    k_fill_ghosts_local_yz<B, 3> <<<dimGrid, dimBlock>>>
+      (d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
+  } else if (me - mb == 1) {
+    k_fill_ghosts_local_yz<B, 1> <<<dimGrid, dimBlock>>>
+      (d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
+  } else {
+    assert(0);
+  }
+  cuda_sync_if_enabled();
+
+#else
+
+  thrust::device_ptr<float> d_flds(cmflds->data());
+  thrust::host_vector<float> h_flds(d_flds, d_flds + n_patches * n_fields * im[0] * im[1] * im[2]);
+
+  for (int tid = 0; tid < n_threads; tid++) {
+    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im, n_fields, 
+				n_patches, n_ghosts, tid);
+  }
+  
+  thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+#endif
+}
+
+void
 cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				   int mb, int me)
 {
   const int B = 2;
   int *im = cmflds->im;
+  if (im[0] > 1) {
+    cuda_mfields_bnd_fill_ghosts_local_xyz(cbnd, cmflds, mb, me);
+  }
   assert(im[0] == 1);
   int n_fields = cmflds->n_fields;
   int n_patches = cmflds->n_patches;
@@ -464,7 +512,7 @@ cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mf
 #else
 
   thrust::device_ptr<float> d_flds(cmflds->data());
-  thrust::host_vector<float> h_flds(d_flds, d_flds + n_patches * n_fields * im[2] *im[2]);
+  thrust::host_vector<float> h_flds(d_flds, d_flds + n_patches * n_fields * im[1] * im[2]);
 
   for (int tid = 0; tid < n_threads; tid++) {
     cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im, n_fields, 

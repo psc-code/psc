@@ -87,6 +87,12 @@ void MparticlesCuda<BS>::dump(const std::string& filename)
   cmprts_->dump(filename);
 }
 
+template<typename BS>
+bool MparticlesCuda<BS>::check_after_push()
+{
+  return cmprts_->check_bidx_after_push();
+}
+
 // ======================================================================
 // conversion
 
@@ -337,3 +343,4 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 psc_mparticles_ops_<MparticlesCuda<BS144>> psc_mparticles_cuda_ops;
 
 template struct MparticlesCuda<BS144>;
+template struct MparticlesCuda<BS444>;

@@ -183,6 +183,7 @@ struct mparticles_patch_base
   using Real3 = Vec3<real_t>;
   using buf_t = std::vector<particle_t>;
   using iterator = typename buf_t::iterator;
+  using const_iterator = typename buf_t::const_iterator;
   
   // FIXME, I would like to delete the copy ctor because I don't
   // want to copy patch_t by mistake, but that doesn't play well with
@@ -197,7 +198,9 @@ struct mparticles_patch_base
   {}
 
   particle_t& operator[](int n) { return buf[n]; }
+  const_iterator begin() const { return buf.begin(); }
   iterator begin() { return buf.begin(); }
+  const_iterator end() const { return buf.end(); }
   iterator end() { return buf.end(); }
   unsigned int size() const { return buf.size(); }
   void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }

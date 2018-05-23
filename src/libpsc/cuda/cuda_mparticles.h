@@ -119,6 +119,7 @@ public:
   bool check_in_patch_unordered_slow();
   bool check_bidx_id_unordered_slow();
   bool check_ordered();
+  bool check_bidx_after_push();
 
   void resize(uint n_prts);
 

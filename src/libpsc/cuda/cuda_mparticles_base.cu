@@ -98,3 +98,4 @@ void cuda_mparticles_base<BS>::from_device(float4 *xi4, float4 *pxi4,
 }
 
 template struct cuda_mparticles_base<BS144>;
+template struct cuda_mparticles_base<BS444>;

@@ -5,9 +5,11 @@
 
 // small 3d box (heating)
 #define TEST_1_HEATING_3D 1
+#define TEST_2_FLATFOIL_3D 2
 
 // EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
 //#define TEST TEST_1_HEATING_3D
+//#define TEST TEST_2_FLATFOIL_3D
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -221,12 +223,11 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BS = typename Mparticles::BS;
   using Mparticles_t = Mparticles;
   using Mfields_t = Mfields;
-  using Config1vbec3d = PushParticlesConfig<BS, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
-  using PushParticles_t = PushParticlesCuda<Config1vbec3d>;
+  using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3d<dim_t, BS>>;
   using Sort_t = SortCuda<BS>;
   using Collision_t = CollisionCuda<BS>;
   using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda<BS>;
+  using BndParticles_t = BndParticlesCuda<BS, dim_t>;
   using Bnd_t = BndCuda;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = InjectCuda<BS, InjectFoil>;
@@ -255,12 +256,12 @@ using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, P
 #endif
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-#if TEST == TEST_1_HEATING_3D
+#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D
 using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig2ndDouble<dim_t>;
+using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -596,7 +597,7 @@ struct PscFlatfoil : PscFlatfoilParams
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_.push_H(mflds_, .5, dim_yz{});
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     
     prof_start(pr_bndf);
@@ -694,9 +695,15 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_->prm.cfl = 0.75;
 
   Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-  Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
-  Int3 np = { 1, 16, 4 }; // division into patches
+  Int3 gdims = { 1, 3200, 800 }; // global number of grid points
+  Int3 np = { 1, 100, 25 }; // division into patches
 
+#if TEST == TEST_2_FLATFOIL_3D
+  LL = { 400., 400.*4, 400. }; // domain size (in d_e)
+  gdims = { 16, 64, 16 }; // global number of grid points
+  np = { 1, 4, 1 }; // division into patches
+#endif
+  
 #if TEST == TEST_1_HEATING_3D
   LL = { 1., 2., 2. }; // domain size (in d_e)
   gdims = { 5, 5, 5 }; // global number of grid points
@@ -806,6 +813,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
 
+#if TEST == TEST_2_FLATFOIL_3D
+  params.collision_interval = 0;
+  params.heating_interval = 0;
+  params.inject_interval = 0;
+#endif
+  
 #if TEST == TEST_1_HEATING_3D
   params.background_n  = 1.0;
 

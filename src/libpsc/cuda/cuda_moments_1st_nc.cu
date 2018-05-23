@@ -36,7 +36,7 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
-  BlockSimple<BS> current_block;
+  BlockSimple<BS, dim_yz> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
@@ -81,7 +81,7 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
-  BlockSimple<BS> current_block;
+  BlockSimple<BS, dim_yz> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
@@ -127,7 +127,7 @@ template<typename BS, bool REORDER>
 static void
 rho_1st_nc_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
-  dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
+  dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
 
   rho_1st_nc_cuda_run<BS, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>(*cmprts, *cmres);
@@ -141,7 +141,7 @@ template<typename BS, bool REORDER>
 static void
 n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
-  dim3 dimGrid = BlockSimple<BS>::dimGrid(*cmprts);
+  dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
 
   n_1st_cuda_run<BS, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>(*cmprts, *cmres);

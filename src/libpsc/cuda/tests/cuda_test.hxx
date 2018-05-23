@@ -2,10 +2,11 @@
 #ifndef CUDA_TEST_HXX
 #define CUDA_TEST_HXX
 
-using CudaMparticles = cuda_mparticles<BS144>;
-
+template<typename CMP>
 struct TestBase
 {
+  using CudaMparticles = CMP;
+
   CudaMparticles* make_cmprts(Grid_t& grid)
   {
     auto cmprts = new CudaMparticles(grid);
@@ -39,9 +40,6 @@ struct TestBase
 
     return make_cmprts(grid, prts);
   }
-
-private:
-  Int3 bs_ = { 1, 1, 1 };
 };
 
 

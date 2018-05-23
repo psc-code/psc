@@ -16,6 +16,13 @@ struct BS144
   using z = std::integral_constant<unsigned int, 4>;
 };
 
+struct BS444
+{
+  using x = std::integral_constant<unsigned int, 4>;
+  using y = std::integral_constant<unsigned int, 4>;
+  using z = std::integral_constant<unsigned int, 4>;
+};
+
 // ======================================================================
 // particle_cuda_t
 
@@ -67,6 +74,7 @@ struct MparticlesCuda : MparticlesBase
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
   void push_back(int p, const particle_t& prt);
+  bool check_after_push();
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
@@ -98,6 +106,14 @@ private:
 
 template<>
 struct Mparticles_traits<MparticlesCuda<BS144>>
+{
+  static constexpr const char* name = "cuda";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
+
+
+template<>
+struct Mparticles_traits<MparticlesCuda<BS444>>
 {
   static constexpr const char* name = "cuda";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }

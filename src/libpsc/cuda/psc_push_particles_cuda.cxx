@@ -24,7 +24,8 @@
     }									\
   } psc_push_particles_## NAME ##_ops;
 
-MAKE_1VBEC3D_YZ(1vb_cuda, Config1vb);
-MAKE_1VBEC3D_YZ(1vbec3d_cuda, Config1vbec3d);
-MAKE_1VBEC3D_YZ(1vbec3d_gmem_cuda, Config1vbec3dGmem);
+//MAKE_1VBEC3D_YZ(1vb_cuda, CudaConfig1vb);
+using CudaConfig1vbec3dYZ = CudaConfig1vbec3d<dim_yz, BS144>;
+MAKE_1VBEC3D_YZ(1vbec3d_cuda, CudaConfig1vbec3dYZ);
+//MAKE_1VBEC3D_YZ(1vbec3d_gmem_cuda, CudaConfig1vbec3dGmem);
 

@@ -14,18 +14,24 @@ struct DepositVb2d : std::integral_constant<int, DEPOSIT_VB_2D> {};
 struct CurrmemGlobal;
 struct CurrmemShared;
 
-template<typename BS, typename IP, typename DEPOSIT, typename CURRMEM>
-struct PushParticlesConfig
+template<typename DIM, typename BS, typename IP, typename DEPOSIT, typename CURRMEM>
+struct CudaPushpConfig
 {
+  using dim = DIM;
   using Bs = BS;
   using Ip = IP;
   using Deposit = DEPOSIT;
   using Currmem = CURRMEM;
 };
 
-using Config1vb = PushParticlesConfig<BS144, opt_ip_1st, DepositVb2d, CurrmemShared>;
-using Config1vbec3d = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
-using Config1vbec3dGmem = PushParticlesConfig<BS144, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+template<typename dim, typename BS>
+using CudaConfig1vbec3d = CudaPushpConfig<dim, BS, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
+
+template<typename dim>
+using CudaConfig1vb = CudaPushpConfig<dim, BS144, opt_ip_1st, DepositVb2d, CurrmemShared>;
+
+template<typename dim, typename BS>
+using CudaConfig1vbec3dGmem = CudaPushpConfig<dim, BS, opt_ip_1st_ec, DepositVb3d, CurrmemGlobal>;
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"
@@ -40,7 +46,7 @@ public:
   
   void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
-    CudaPushParticles_<Config>::push_mprts_yz(mprts.cmprts(), mflds.cmflds);
+    CudaPushParticles_<Config>::push_mprts(mprts.cmprts(), mflds.cmflds);
   }
   
   void push_mprts_yz(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override

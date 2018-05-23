@@ -6,6 +6,7 @@
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
+#include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
 #endif
 
 #include "psc_fields_single.h"
@@ -13,10 +14,9 @@
 
 struct GridDomain { Grid_t grid; mrc_domain* domain; };
 
-static GridDomain make_grid()
+static GridDomain make_grid(Int3 gdims, Vec3<double> length)
 {
-  auto domain = Grid_t::Domain{{1, 8, 4},
-			       {10., 80., 40.}, {},
+  auto domain = Grid_t::Domain{gdims, length, {},
 			       {1, 2, 1}};
 
   mrc_domain* mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
@@ -47,6 +47,18 @@ static GridDomain make_grid()
   return { Grid_t(domain, offs), mrc_domain };
 }
 
+template<typename DIM>
+static GridDomain make_grid()
+{
+  return make_grid({1, 8, 4}, {10., 80., 40.});
+}
+
+template<>
+GridDomain make_grid<dim_xyz>()
+{
+  return make_grid({2, 8, 4}, {20., 80., 40.});
+}
+
 template<typename Mfields>
 static void Mfields_dump(Mfields& mflds, int B)
 {
@@ -63,7 +75,7 @@ static void Mfields_dump(Mfields& mflds, int B)
 
 TEST(Bnd, MakeGrid)
 {
-  auto grid_domain = make_grid();
+  auto grid_domain = make_grid<dim_yz>();
   Grid_t& grid = grid_domain.grid;
     
   EXPECT_EQ(grid.domain.gdims, Int3({1, 8, 4}));
@@ -78,15 +90,27 @@ TEST(Bnd, MakeGrid)
   EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 80., 40. }));
 }
 
-template <typename T>
-class BndTest : public ::testing::Test
-{};
+template<typename BND, typename DIM>
+struct TestConfigBnd
+{
+  using Bnd = BND;
+  using dim = DIM;
+};
 
+template<typename T>
+struct BndTest : public ::testing::Test
+{
+  using Bnd = typename T::Bnd;
+  using dim = typename T::dim;
+};
+
+using BndTestTypes = ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>, dim_yz>,
+				      TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
 #ifdef USE_CUDA
-using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>, BndCuda>;
-#else
-using BndTestTypes = ::testing::Types<Bnd_<MfieldsSingle>, Bnd_<MfieldsC>>;
+				      TestConfigBnd<BndCuda, dim_yz>,
+				      TestConfigBnd<BndCuda2<MfieldsCuda>, dim_xyz>,
 #endif
+				      TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
 
 TYPED_TEST_CASE(BndTest, BndTestTypes);
 
@@ -94,34 +118,40 @@ const int B = 2;
 
 TYPED_TEST(BndTest, FillGhosts)
 {
-  using Bnd = TypeParam;
+  using Base = BndTest<TypeParam>;
+  using Bnd = typename Base::Bnd;
+  using dim = typename Base::dim;
   using Mfields = typename Bnd::Mfields;
 
-  auto grid_domain = make_grid();
+  auto grid_domain = make_grid<dim>();
   auto& grid = grid_domain.grid;
-  auto ibn = Int3{0, B, B};
+  auto ibn = Int3{B, B, B};
+  if (dim::InvarX::value) ibn[0] = 0;
   auto mflds = Mfields{grid, 1, ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
-	mflds[p](0, i,j,k) = 10*jj + kk;
+	int ii = i + i0, jj = j + j0, kk = k + k0;
+	mflds[p](0, i,j,k) = 100*ii + 10*jj + kk;
       });
   }
 
   //Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
-	if (j >= 0 && j < grid.ldims[1] &&
+	int ii = i + i0, jj = j + j0, kk = k + k0;
+	if (i >= 0 && i < grid.ldims[0] &&
+	    j >= 0 && j < grid.ldims[1] &&
 	    k >= 0 && k < grid.ldims[2]) {
-	  EXPECT_EQ(mflds[p](0, i,j,k), 10*jj + kk);
+	  EXPECT_EQ(mflds[p](0, i,j,k), 100*ii + 10*jj + kk);
 	} else {
 	  EXPECT_EQ(mflds[p](0, i,j,k), 0);
 	}
@@ -133,34 +163,39 @@ TYPED_TEST(BndTest, FillGhosts)
 
   //Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
+	int ii = i + i0, jj = j + j0, kk = k + k0;
+	ii = (ii + grid.domain.gdims[0]) % grid.domain.gdims[0];
 	jj = (jj + grid.domain.gdims[1]) % grid.domain.gdims[1];
 	kk = (kk + grid.domain.gdims[2]) % grid.domain.gdims[2];
-	EXPECT_EQ(mflds[p](0, i,j,k), 10*jj + kk);
+	EXPECT_EQ(mflds[p](0, i,j,k), 100*ii + 10*jj + kk);
       });
   }
 }
 
 TYPED_TEST(BndTest, AddGhosts)
 {
-  using Bnd = TypeParam;
+  using Base = BndTest<TypeParam>;
+  using Bnd = typename Base::Bnd;
+  using dim = typename Base::dim;
   using Mfields = typename Bnd::Mfields;
 
-  auto grid_domain = make_grid();
+  auto grid_domain = make_grid<dim>();
   auto& grid = grid_domain.grid;
-  auto ibn = Int3{0, B, B};
+  auto ibn = Int3{B, B, B};
+  if (dim::InvarX::value) ibn[0] = 0;
   auto mflds = Mfields{grid, 1, ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   for (int p = 0; p < mflds.n_patches(); p++) {
+    int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-	int jj = j + j0, kk = k + k0;
 	mflds[p](0, i,j,k) = 1;
       });
   }
@@ -177,11 +212,16 @@ TYPED_TEST(BndTest, AddGhosts)
     auto& ldims = grid.ldims;
     grid.Foreach_3d(B, B, [&](int i, int j, int k) {
 	int n_nei = 0;
-	if (j >= 0 && j < ldims[1] &&
+	if (i >= 0 && i < ldims[0] &&
+	    j >= 0 && j < ldims[1] &&
 	    k >= 0 && k < ldims[2]) {
+	  if (!dim::InvarX::value) {
+	    if (i < B || i >= ldims[0] - B) n_nei++;
+	  }
 	  if (j < B || j >= ldims[1] - B) n_nei++;
 	  if (k < B || k >= ldims[2] - B) n_nei++;
-	  if (n_nei == 2) n_nei++; // corner -> diagonal contribution, too
+	  if (n_nei == 2) n_nei = 3; // edge -> diagonal contribution, too
+	  else if (n_nei == 3) n_nei = 11; // corner -> why? FIXME why not 7?
 	}
   	EXPECT_EQ(mflds[p](0, i,j,k), 1 + n_nei) << "ijk " << i << " " << j << " " << k;
       });

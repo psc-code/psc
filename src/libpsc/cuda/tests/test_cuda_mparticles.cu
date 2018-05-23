@@ -20,6 +20,8 @@ prof_register(const char *name, float simd, int flops, int bytes)
   return 0;
 }
 
+using CudaMparticles = cuda_mparticles<BS144>;
+
 // ----------------------------------------------------------------------
 // cuda_mparticles_add_particles_test_1
 //
@@ -83,7 +85,7 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles* cmprts, uint *n_prts_b
 // ======================================================================
 // CudaMparticlesTest
 
-struct CudaMparticlesTest : TestBase, ::testing::Test
+struct CudaMparticlesTest : TestBase<CudaMparticles>, ::testing::Test
 {
   std::unique_ptr<Grid_t> grid_;
 

@@ -16,7 +16,7 @@ struct PushFieldsCuda : PushFieldsBase
 
   void push_E(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
   {
-    assert(0);
+    cuda_push_fields_E_xyz(mflds.cmflds, dt_fac * ppsc->dt);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch
@@ -47,7 +47,7 @@ struct PushFieldsCuda : PushFieldsBase
 
   void push_H(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
   {
-    assert(0);
+    cuda_push_fields_H_xyz(mflds.cmflds, dt_fac * ppsc->dt);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch

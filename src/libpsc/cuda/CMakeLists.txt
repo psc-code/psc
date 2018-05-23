@@ -16,6 +16,7 @@ add_library(psccuda
 
   psc_push_fields_cuda.cxx
   cuda_push_fields_yz.cu
+  cuda_push_fields_xyz.cu
 
   psc_marder_cuda.cxx
 
@@ -39,8 +40,6 @@ add_library(psccuda
 
   psc_heating_cuda.cxx
   cuda_heating.cu
-  
-  psc_inject_cuda.cxx
   )
 target_include_directories(psccuda
   PUBLIC
@@ -66,6 +65,7 @@ add_cuda_test(range_unittest)
 add_cuda_test(test_cuda_base)
 add_cuda_test(test_cuda_accel)
 add_cuda_test(test_cuda_bndp)
+add_cuda_test(test_cuda_bndp_2)
 add_cuda_test(test_cuda_mfields)
 add_cuda_test(test_cuda_mparticles)
 
