@@ -25,8 +25,8 @@ struct Marder_ : MarderBase
       loop_{loop},
       dump_{dump},
       bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
-      item_rho_{comm},
-      item_dive_{comm}
+      item_rho_{ppsc->grid(), comm},
+      item_dive_{ppsc->grid(), comm}
   {
     if (dump_) {
       io_ = mrc_io_create(psc_comm(ppsc));

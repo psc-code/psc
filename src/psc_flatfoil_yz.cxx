@@ -1,11 +1,13 @@
 
 #include <psc_config.h>
 
-#ifdef USE_CUDA
-#define DO_CUDA 1
-#endif
-
 #include <psc.h>
+
+// small 3d box (heating)
+#define TEST_1_HEATING_3D 1
+
+// EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
+//#define TEST TEST_1_HEATING_3D
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -45,7 +47,7 @@
 #include "../libpsc/psc_checks/checks_impl.hxx"
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
 
-#ifdef DO_CUDA
+#ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
@@ -161,18 +163,64 @@ struct PscFlatfoilParams
   ChecksParams checks_params;
 };
 
-// ======================================================================
-// PscFlatfoil
-//
-// eventually, a Psc replacement / derived class, but for now just
-// pretending to be something like that
-
-struct PscFlatfoil : PscFlatfoilParams
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfigPushParticles2nd
 {
-#if DO_CUDA
-  using BS = BS144;
-  using Mparticles_t = MparticlesCuda<BS>;
-  using Mfields_t = MfieldsCuda;
+  using PushParticles_t = PushParticles__<Config2nd<Mparticles, Mfields, DIM>>;
+  using checks_order = checks_order_2nd;
+};
+
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfigPushParticles1vbec
+{
+  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, Mfields, DIM>>;
+  using checks_order = checks_order_1st;
+};
+
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfigPushParticlesCuda
+{
+};
+
+template<typename Mparticles, typename Mfields>
+struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
+{
+  // need to use Config1vbecSplit when for dim_xyz
+  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
+  using checks_order = checks_order_1st;
+};
+
+template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles>
+struct PscConfig_
+{
+  using dim_t = DIM;
+  using Mparticles_t = Mparticles;
+  using Mfields_t = Mfields;
+  using ConfigPushp = ConfigPushParticles<DIM, Mparticles, Mfields>;
+  using PushParticles_t = typename ConfigPushp::PushParticles_t;
+  using checks_order = typename ConfigPushp::checks_order;
+  using Sort_t = SortCountsort2<Mparticles_t>;
+  using Collision_t = Collision_<Mparticles_t, Mfields_t>;
+  using PushFields_t = PushFields<Mfields_t>;
+  using BndParticles_t = BndParticles_<Mparticles_t>;
+  using Bnd_t = Bnd_<Mfields_t>;
+  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Inject_t = Inject_<Mparticles_t, MfieldsC, InjectFoil>; // FIXME, shouldn't always use MfieldsC
+  using Heating_t = Heating__<Mparticles_t>;
+  using Balance_t = Balance_<Mparticles_t, Mfields_t>;
+  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
+  using Marder_t = Marder_<Mparticles_t, Mfields_t>;
+};
+
+#ifdef USE_CUDA
+
+template<typename DIM, typename Mparticles, typename Mfields>
+struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
+{
+  using dim_t = DIM;
+  using BS = typename Mparticles::BS;
+  using Mparticles_t = Mparticles;
+  using Mfields_t = Mfields;
   using Config1vbec3d = PushParticlesConfig<BS, opt_ip_1st_ec, DepositVb3d, CurrmemShared>;
   using PushParticles_t = PushParticlesCuda<Config1vbec3d>;
   using Sort_t = SortCuda<BS>;
@@ -186,28 +234,57 @@ struct PscFlatfoil : PscFlatfoilParams
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<BS>;
   using Marder_t = MarderCuda<BS>;
+};
+
+#endif
+
+template<typename dim>
+using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsC, PscConfigPushParticles2nd>;
+
+template<typename dim>
+using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles2nd>;
+
+template<typename dim>
+using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles1vbec>;
+
+#ifdef USE_CUDA
+
+template<typename dim>
+using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>;
+
+#endif
+
+// EDIT to change order / floating point type / cuda / 2d/3d
+#if TEST == TEST_1_HEATING_3D
+using dim_t = dim_xyz;
 #else
-  using Mparticles_t = MparticlesDouble;
-  using Mfields_t = MfieldsC;
-#if 0 // generic_c: 2nd order
-  using PushParticles_t = PushParticles__<Config2nd<dim_yz>>;
-  using checks_order = checks_order_2nd;
-#else // 1vbec: 1st order Villasenor-Buneman energy-conserving (kinda...)
-  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles_t, Mfields_t, dim_yz>>;
-  using checks_order = checks_order_1st;
+using dim_t = dim_yz;
 #endif
-  using Sort_t = SortCountsort2<Mparticles_t>;
-  using Collision_t = Collision_<Mparticles_t, Mfields_t>;
-  using PushFields_t = PushFields<Mfields_t>;
-  using BndParticles_t = BndParticles_<Mparticles_t>;
-  using Bnd_t = Bnd_<Mfields_t>;
-  using BndFields_t = BndFieldsNone<Mfields_t>; // FIXME, why MfieldsC hardcoded???
-  using Inject_t = Inject_<Mparticles_t, MfieldsC, InjectFoil>; // FIXME, shouldn't always use MfieldsC
-  using Heating_t = Heating__<Mparticles_t>;
-  using Balance_t = Balance_<Mparticles_t, Mfields_t>;
-  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
-  using Marder_t = Marder_<Mparticles_t, Mfields_t>;
-#endif
+using PscConfig = PscConfig2ndDouble<dim_t>;
+
+// ======================================================================
+// PscFlatfoil
+//
+// eventually, a Psc replacement / derived class, but for now just
+// pretending to be something like that
+
+struct PscFlatfoil : PscFlatfoilParams
+{
+  using DIM = PscConfig::dim_t;
+  using Mparticles_t = PscConfig::Mparticles_t;
+  using Mfields_t = PscConfig::Mfields_t;
+  using PushParticles_t = PscConfig::PushParticles_t;
+  using Sort_t = PscConfig::Sort_t;
+  using Collision_t = PscConfig::Collision_t;
+  using PushFields_t = PscConfig::PushFields_t;
+  using BndParticles_t = PscConfig::BndParticles_t;
+  using Bnd_t = PscConfig::Bnd_t;
+  using BndFields_t = PscConfig::BndFields_t;
+  using Balance_t = PscConfig::Balance_t;
+  using Heating_t = PscConfig::Heating_t;
+  using Inject_t = PscConfig::Inject_t;
+  using Checks_t = PscConfig::Checks_t;
+  using Marder_t = PscConfig::Marder_t;
   
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : PscFlatfoilParams(params),
@@ -220,7 +297,7 @@ struct PscFlatfoil : PscFlatfoilParams
       balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
-      checks_{psc_comm(psc), checks_params},
+      checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
     MPI_Comm comm = psc_comm(psc_);
@@ -285,9 +362,25 @@ struct PscFlatfoil : PscFlatfoilParams
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
+#if 0
+    n_prts_by_patch[0] = 2;
+    mprts.reserve_all(n_prts_by_patch.data());
+    mprts.resize_all(n_prts_by_patch.data());
+
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      mprintf("npp %d %d\n", p, n_prts_by_patch[p]);
+      for (int n = 0; n < n_prts_by_patch[p]; n++) {
+	auto &prt = mprts[p][n];
+	prt.pxi = n;
+	prt.kind_ = n % 2;
+	prt.qni_wni_ = mprts.grid().kinds[prt.kind_].q;
+      }
+    };
+#else
     SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
+#endif
   }
 
   // ----------------------------------------------------------------------
@@ -461,7 +554,7 @@ struct PscFlatfoil : PscFlatfoilParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_.push_H(mflds_, .5, dim_yz{});
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
     
@@ -492,7 +585,7 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     
     prof_restart(pr_push_flds);
-    pushf_.push_E(mflds_, 1., dim_yz{});
+    pushf_.push_E(mflds_, 1., DIM{});
     prof_stop(pr_push_flds);
     
     prof_restart(pr_bndf);
@@ -600,13 +693,17 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
-  // --- setup domain
-  double LLy = 8;
-  double LLz = 8.;
+  Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
+  Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
+  Int3 np = { 1, 16, 4 }; // division into patches
 
-  auto grid_domain = Grid_t::Domain{{1, 32, 32}, // global number of grid points
-				    {1., LLy, LLz}, {0., -.5*LLy, -.5*LLz}, // domain size, origin
-				    {1, 8, 8}}; // division into patches
+#if TEST == TEST_1_HEATING_3D
+  LL = { 1., 2., 2. }; // domain size (in d_e)
+  gdims = { 5, 5, 5 }; // global number of grid points
+  np = { 1, 1, 1 }; // division into patches
+#endif
+  
+  auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
 
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -623,7 +720,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.background_Te = .001;
   params.background_Ti = .001;
   
-  // -- setup particles
+  // -- setup particle kinds
   // last population ("e") is neutralizing
  // FIXME, hardcoded mass ratio 100
   Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
@@ -680,12 +777,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   // --- checks
   params.checks_params.continuity_every_step = -1;
-  params.checks_params.continuity_threshold = 1e-14;
+  params.checks_params.continuity_threshold = 1e-6;
   params.checks_params.continuity_verbose = true;
   params.checks_params.continuity_dump_always = false;
 
   params.checks_params.gauss_every_step = -1;
-  params.checks_params.gauss_threshold = 1e-14;
+  params.checks_params.gauss_threshold = 1e-6;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
 
@@ -706,9 +803,25 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds);
 
   // make sure that np isn't overridden on the command line
-  Int3 np;
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
+
+#if TEST == TEST_1_HEATING_3D
+  params.background_n  = 1.0;
+
+  params.collision_interval = 0;
+  params.heating_interval = 0;
+  params.inject_interval = 0;
+  
+  params.checks_params.continuity_every_step = 1;
+  params.checks_params.continuity_threshold = 1e-12;
+  params.checks_params.continuity_verbose = true;
+
+  params.checks_params.gauss_every_step = 1;
+  // eventually, errors accumulate above 1e-10, but it should take a long time
+  params.checks_params.gauss_threshold = 1e-10;
+  params.checks_params.gauss_verbose = true;
+#endif
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");

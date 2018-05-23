@@ -164,7 +164,7 @@ class PushParticlesTest : public ::testing::Test
 
 using PushParticles1vbecSingle = PushParticles1vb<Config1vbecSingle1>;
 using PushParticles1vbecDouble = PushParticles1vb<Config1vbecDouble<dim_1>>;
-using PushParticles2ndDouble = PushParticles__<Config2nd<dim_1>>;
+using PushParticles2ndDouble = PushParticles__<Config2ndDouble<dim_1>>;
 
 using PushParticlesTestTypes = ::testing::Types<PushParticles1vbecSingle,
 						PushParticles1vbecDouble,

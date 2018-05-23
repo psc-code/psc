@@ -62,8 +62,8 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
   }
   constexpr static int flags = POFI_BY_KIND;
 
-  Moment_vpic_hydro(MPI_Comm comm)
-    : Base(comm)
+  Moment_vpic_hydro(const Grid_t& grid, MPI_Comm comm)
+    : Base(grid, comm)
   {}
   
   void run(MparticlesVpic& mprts)

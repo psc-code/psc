@@ -14,6 +14,11 @@ struct PushFieldsCuda : PushFieldsBase
     cuda_push_fields_E_yz(mflds.cmflds, dt_fac * ppsc->dt);
   }
 
+  void push_E(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
+  {
+    assert(0);
+  }
+
   // dispatch -- FIXME, mostly same as non-cuda dispatch
   void push_E(PscMfieldsBase mflds_base, double dt_fac) override
   {
@@ -38,6 +43,11 @@ struct PushFieldsCuda : PushFieldsBase
   void push_H(MfieldsCuda& mflds, double dt_fac, dim_yz tag)
   {
     cuda_push_fields_H_yz(mflds.cmflds, dt_fac * ppsc->dt);
+  }
+
+  void push_H(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
+  {
+    assert(0);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch

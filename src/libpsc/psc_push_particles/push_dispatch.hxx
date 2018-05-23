@@ -4,7 +4,7 @@
 #include "push_part_common.c"
 
 template<typename dim>
-using PushGenericC = PscPushParticles_<PushParticles__<Config2nd<dim>>>;
+using PushGenericC = PscPushParticles_<PushParticles__<Config2ndDouble<dim>>>;
 
 struct PushParticlesGenericC : PushParticlesBase
 {

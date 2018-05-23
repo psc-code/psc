@@ -137,6 +137,19 @@ struct fields3d {
     return rv;
   }
 
+  void dump()
+  {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  for (int m = 0; m < n_comps_; m++) {
+	    mprintf("dump: ijk %d:%d:%d m %d: %g\n", i, j, k, m, (*this)(m, i,j,k));
+	  }
+	}
+      }
+    }
+  }
+
   real_t* data_;
   Int3 ib_, im_; //> lower bounds and length per direction
   int n_comps_; // # of components

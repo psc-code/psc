@@ -35,16 +35,18 @@ class PushParticlesCuda : PushParticlesBase
 {
 public:
   using BS = typename Config::Bs;
+  using Mparticles = MparticlesCuda<BS>;
+  using Mfields = MfieldsCuda;
   
-  void push_mprts(MparticlesCuda<BS>& mprts, MfieldsCuda& mflds)
+  void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
     CudaPushParticles_<Config>::push_mprts_yz(mprts.cmprts(), mflds.cmflds);
   }
   
   void push_mprts_yz(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
   {
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, EX + 6);
-    auto& mprts = mprts_base->get_as<MparticlesCuda<BS>>();
+    auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 6);
+    auto& mprts = mprts_base->get_as<Mparticles>();
     push_mprts(mprts, mflds);
     mprts_base->put_as(mprts);
     mflds_base->put_as(mflds, JXI, JXI + 3);
