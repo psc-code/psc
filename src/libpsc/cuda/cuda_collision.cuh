@@ -286,7 +286,7 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2,
 
 __global__ static void
 k_collide(DMparticlesCuda<BS144> dmprts, uint* d_off, uint* d_id, float nudt0,
-	  curandState* d_curand_states)
+	  curandState* d_curand_states, uint n_cells)
 {
   using real_t = float;
 
@@ -294,14 +294,16 @@ k_collide(DMparticlesCuda<BS144> dmprts, uint* d_off, uint* d_id, float nudt0,
   /* Copy state to local memory for efficiency */
   curandState local_state = d_curand_states[id];
 
-  uint beg = d_off[blockIdx.x];
-  uint end = d_off[blockIdx.x + 1];
-  real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
-  for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
-    //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-    bc(dmprts, nudt1, d_id[n], d_id[n + 1], local_state);
+  for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
+    uint beg = d_off[bidx];
+    uint end = d_off[bidx + 1];
+    real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
+    for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
+      //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
+      bc(dmprts, nudt1, d_id[n], d_id[n + 1], local_state);
+    }
   }
-
+  
   d_curand_states[id] = local_state;
 }
 
@@ -330,6 +332,8 @@ struct cuda_collision
 
     static bool first_time = true;
     if (first_time) {
+      int blocks = cmprts.n_cells();
+      if (blocks > 32768) blocks = 32768;
       dim3 dimGrid(cmprts.n_cells());
       int n_threads = dimGrid.x * THREADS_PER_BLOCK;
       
@@ -350,7 +354,8 @@ struct cuda_collision
     dim3 dimGrid(cmprts.n_cells());
     k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
 					      sort_by_cell.d_id.data().get(),
-					      nudt0, d_curand_states_);
+					      nudt0, d_curand_states_,
+					      cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
