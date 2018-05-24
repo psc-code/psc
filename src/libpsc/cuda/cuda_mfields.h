@@ -33,7 +33,7 @@ struct cuda_mfields_bnd {
   int im[3];
   int ib[3];
   struct cuda_mfields_bnd_patch *bnd_by_patch;
-  fields_cuda_real_t *d_bnd_buf;
+  thrust::device_vector<fields_cuda_real_t> d_buf;
   thrust::host_vector<fields_cuda_real_t> h_buf;
   int *h_nei_patch;
   int *d_nei_patch;
