@@ -330,11 +330,12 @@ struct cuda_collision
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
     // }
 
+    int blocks = cmprts.n_cells();
+    if (blocks > 32768) blocks = 32768;
+    dim3 dimGrid(blocks);
+
     static bool first_time = true;
     if (first_time) {
-      int blocks = cmprts.n_cells();
-      if (blocks > 32768) blocks = 32768;
-      dim3 dimGrid(cmprts.n_cells());
       int n_threads = dimGrid.x * THREADS_PER_BLOCK;
       
       cudaError_t ierr;
@@ -351,7 +352,6 @@ struct cuda_collision
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts.prt_wni(prts[n_start]);
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
-    dim3 dimGrid(cmprts.n_cells());
     k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
 					      sort_by_cell.d_id.data().get(),
 					      nudt0, d_curand_states_,
