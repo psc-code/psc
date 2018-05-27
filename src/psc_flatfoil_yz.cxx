@@ -696,8 +696,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   // --- setup domain
   Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-  Int3 gdims = { 1, 3200, 800 }; // global number of grid points
-  Int3 np = { 1, 100, 25 }; // division into patches
+  Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
+  Int3 np = { 1, 64, 16 }; // division into patches
 
 #if TEST == TEST_2_FLATFOIL_3D
   LL = { 400., 400.*4, 400. }; // domain size (in d_e)
