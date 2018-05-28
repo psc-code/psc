@@ -180,3 +180,5 @@ void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmr
 
 template void cuda_moments_yz_rho_1st_nc<BS144>(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
 template void cuda_moments_yz_n_1st<BS144>(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
+
+template void cuda_moments_yz_n_1st<BS444>(cuda_mparticles<BS444>* cmprts, struct cuda_mfields *cmres);
