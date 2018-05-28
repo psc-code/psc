@@ -83,9 +83,10 @@ struct d_particle {
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
-template<typename BS>
-struct cuda_mparticles : cuda_mparticles_base<BS>
+template<typename _BS>
+struct cuda_mparticles : cuda_mparticles_base<_BS>
 {
+  using BS = _BS;
   using particle_t = particle_cuda_t;
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;

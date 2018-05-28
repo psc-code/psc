@@ -26,3 +26,4 @@ void CollisionCuda<BS>::operator()(MparticlesCuda<BS>& _mprts)
 }
 
 template struct CollisionCuda<BS144>;
+template struct CollisionCuda<BS444>;

@@ -22,8 +22,9 @@ static void k_curand_setup(curandState *d_curand_states)
 
 
 // FIXME, replicated from CPU
+template<typename DMparticles>
 __device__
-static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2,
+static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
 		curandState& curand_state)
 {
   using real_t = float;
@@ -284,8 +285,9 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2,
   return nudt;
 }
 
+template<typename DMparticles>
 __global__ static void
-k_collide(DMparticlesCuda<BS144> dmprts, uint* d_off, uint* d_id, float nudt0,
+k_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
 	  curandState* d_curand_states, uint n_cells)
 {
   using real_t = float;
@@ -352,7 +354,7 @@ struct cuda_collision
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts.prt_wni(prts[n_start]);
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
-    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
+    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(static_cast<DMparticlesCuda<typename cuda_mparticles::BS>>(cmprts), sort_by_cell.d_off.data().get(),
 					      sort_by_cell.d_id.data().get(),
 					      nudt0, d_curand_states_,
 					      cmprts.n_cells());
