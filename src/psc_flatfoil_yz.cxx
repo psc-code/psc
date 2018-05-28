@@ -8,7 +8,7 @@
 #define TEST_2_FLATFOIL_3D 2
 
 // EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
-//#define TEST TEST_1_HEATING_3D
+//define TEST TEST_1_HEATING_3D
 //#define TEST TEST_2_FLATFOIL_3D
 
 #ifdef USE_VPIC
@@ -259,9 +259,11 @@ using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, P
 #if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D
 using dim_t = dim_xyz;
 #else
-using dim_t = dim_yz;
+using dim_t = dim_xyz;
 #endif
-using PscConfig = PscConfig1vbecCuda<dim_t>;
+//using PscConfig = PscConfig1vbecCuda<dim_t>;
+
+using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -444,8 +446,8 @@ struct PscFlatfoil : PscFlatfoilParams
       }
       first_iteration = false;
 
-      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Time %g\n", psc_->timestep + 1,
-		 psc_->prm.nmax, psc_->timestep * psc_->dt);
+      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", psc_->timestep + 1,
+		 psc_->prm.nmax, psc_->timestep * psc_->dt, MPI_Wtime() - psc_->time_start);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -689,14 +691,14 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
   psc_default_dimensionless(psc_);
 
-  psc_->prm.nmax = 10001;
-  psc_->prm.nicell = 200;
+  psc_->prm.nmax = 4002;
+  psc_->prm.nicell = 50;
   psc_->prm.fractional_n_particles_per_cell = true;
   psc_->prm.cfl = 0.75;
 
-  Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-  Int3 gdims = { 1, 3200, 800 }; // global number of grid points
-  Int3 np = { 1, 100, 25 }; // division into patches
+  Grid_t::Real3 LL = { 400., 200., 800. }; // domain size (in d_e)
+  Int3 gdims = { 800, 400, 1600 }; // global number of grid points
+  Int3 np = { 200, 100, 16}; // division into patches
 
 #if TEST == TEST_2_FLATFOIL_3D
   LL = { 400., 400.*4, 400. }; // domain size (in d_e)
@@ -705,8 +707,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 #endif
   
 #if TEST == TEST_1_HEATING_3D
-  LL = { 1., 2., 2. }; // domain size (in d_e)
-  gdims = { 5, 5, 5 }; // global number of grid points
+  LL = { 2., 2., 2. }; // domain size (in d_e)
+  gdims = { 8, 8, 8 }; // global number of grid points
   np = { 1, 1, 1 }; // division into patches
 #endif
   
@@ -723,7 +725,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   params.Zi = 1.;
 
   // --- for background plasma
-  params.background_n  = 1.0;
+  params.background_n  = 0.02;
   params.background_Te = .001;
   params.background_Ti = .001;
   
@@ -761,7 +763,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   heating_foil_params.Mi = kinds[MY_ION].m;
   params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
-  params.heating_begin = 1000000;
+  params.heating_begin = 0;
   params.heating_end = 10000000;
   params.heating_kind = MY_ELECTRON;
 
@@ -779,7 +781,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   inject_foil_params.Ti = .001;
   params.inject_target = InjectFoil{inject_foil_params};
   params.inject_kind_n = MY_ELECTRON;
-  params.inject_interval = -20;
+  params.inject_interval = 20;
   params.inject_tau = 40;
 
   // --- checks
