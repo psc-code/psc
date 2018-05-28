@@ -327,3 +327,6 @@ void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 
 template struct HeatingCuda<BS144>;
 template HeatingCuda<BS144>::HeatingCuda(int interval, int kind, HeatingSpotFoil get_H);
+
+template struct HeatingCuda<BS444>;
+template HeatingCuda<BS444>::HeatingCuda(int interval, int kind, HeatingSpotFoil get_H);
