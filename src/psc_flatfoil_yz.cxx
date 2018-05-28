@@ -237,6 +237,27 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Marder_t = MarderCuda<BS>;
 };
 
+template<typename Mparticles, typename Mfields>
+struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
+{
+  using dim_t = dim_xyz;
+  using BS = typename Mparticles::BS;
+  using Mparticles_t = Mparticles;
+  using Mfields_t = Mfields;
+  using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3dGmem<dim_t, BS>>;
+  using Sort_t = SortCuda<BS>;
+  using Collision_t = CollisionCuda<BS>;
+  using PushFields_t = PushFieldsCuda;
+  using BndParticles_t = BndParticlesCuda<BS, dim_t>;
+  using Bnd_t = BndCuda;
+  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Inject_t = InjectCuda<BS, InjectFoil>;
+  using Heating_t = HeatingCuda<BS>;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
+  using Checks_t = ChecksCuda<BS>;
+  using Marder_t = MarderCuda<BS>;
+};
+
 #endif
 
 template<typename dim>
@@ -251,7 +272,12 @@ using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, Ps
 #ifdef USE_CUDA
 
 template<typename dim>
-using PscConfig1vbecCuda = PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>;
+struct PscConfig1vbecCuda : PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>
+{};
+
+template<>
+struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, MfieldsCuda, PscConfigPushParticlesCuda>
+{};
 
 #endif
 
