@@ -15,7 +15,7 @@ CollisionCuda<BS>::CollisionCuda(MPI_Comm comm, int interval, double nu)
 template<typename BS>
 void CollisionCuda<BS>::operator()(MparticlesCuda<BS>& _mprts)
 {
-#if 0
+#if 1
   (*fwd_)(*_mprts.cmprts());
 #else
   auto& mprts = _mprts.template get_as<MparticlesSingle>();
@@ -26,3 +26,4 @@ void CollisionCuda<BS>::operator()(MparticlesCuda<BS>& _mprts)
 }
 
 template struct CollisionCuda<BS144>;
+template struct CollisionCuda<BS444>;

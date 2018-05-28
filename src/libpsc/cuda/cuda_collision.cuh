@@ -22,8 +22,9 @@ static void k_curand_setup(curandState *d_curand_states)
 
 
 // FIXME, replicated from CPU
+template<typename DMparticles>
 __device__
-static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2,
+static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
 		curandState& curand_state)
 {
   using real_t = float;
@@ -284,9 +285,10 @@ static float bc(DMparticlesCuda<BS144> dmprts, float nudt1, int n1, int n2,
   return nudt;
 }
 
+template<typename DMparticles>
 __global__ static void
-k_collide(DMparticlesCuda<BS144> dmprts, uint* d_off, uint* d_id, float nudt0,
-	  curandState* d_curand_states)
+k_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
+	  curandState* d_curand_states, uint n_cells)
 {
   using real_t = float;
 
@@ -294,14 +296,16 @@ k_collide(DMparticlesCuda<BS144> dmprts, uint* d_off, uint* d_id, float nudt0,
   /* Copy state to local memory for efficiency */
   curandState local_state = d_curand_states[id];
 
-  uint beg = d_off[blockIdx.x];
-  uint end = d_off[blockIdx.x + 1];
-  real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
-  for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
-    //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-    bc(dmprts, nudt1, d_id[n], d_id[n + 1], local_state);
+  for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
+    uint beg = d_off[bidx];
+    uint end = d_off[bidx + 1];
+    real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
+    for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
+      //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
+      bc(dmprts, nudt1, d_id[n], d_id[n + 1], local_state);
+    }
   }
-
+  
   d_curand_states[id] = local_state;
 }
 
@@ -328,9 +332,12 @@ struct cuda_collision
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
     // }
 
+    int blocks = cmprts.n_cells();
+    if (blocks > 32768) blocks = 32768;
+    dim3 dimGrid(blocks);
+
     static bool first_time = true;
     if (first_time) {
-      dim3 dimGrid(cmprts.n_cells());
       int n_threads = dimGrid.x * THREADS_PER_BLOCK;
       
       cudaError_t ierr;
@@ -347,10 +354,10 @@ struct cuda_collision
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts.prt_wni(prts[n_start]);
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
-    dim3 dimGrid(cmprts.n_cells());
-    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
+    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(static_cast<DMparticlesCuda<typename cuda_mparticles::BS>>(cmprts), sort_by_cell.d_off.data().get(),
 					      sort_by_cell.d_id.data().get(),
-					      nudt0, d_curand_states_);
+					      nudt0, d_curand_states_,
+					      cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
