@@ -8,6 +8,7 @@
 #include "mrc_ddc_private.h"
 
 #include <thrust/gather.h>
+#include <thrust/scatter.h>
 
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
 
@@ -189,21 +190,29 @@ struct CudaBnd
     for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
       struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
       struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
+      assert(se->ihi[0] - se->ilo[0] == re->ihi[0] - re->ilo[0]);
+      assert(se->ihi[1] - se->ilo[1] == re->ihi[1] - re->ilo[1]);
+      assert(se->ihi[2] - se->ilo[2] == re->ihi[2] - re->ilo[2]);
+      assert(se->nei_patch == re->patch);
       if (se->ilo[0] == se->ihi[0] ||
 	  se->ilo[1] == se->ihi[1] ||
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      uint size = (me - mb) * patt2->local_buf_size;
-      std::vector<uint> map_send(size);
-      map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, mflds);
-      auto F0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
 
-      thrust::gather(map_send.begin(), map_send.end(), F0, (real_t*) patt2->local_buf);
-      // for (auto cur : map) {
-      //   *buf++ = F0[cur];
-      // }
-      add_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
+      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
+      std::vector<uint> map_send(size);
+      std::vector<uint> map_recv(size);
+      map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, mflds);
+      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, mflds);
+      auto FS0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
+      auto FR0 = &mflds[re->patch](mb, re->ilo[0], re->ilo[1], re->ilo[2]);
+
+      real_t* buf = static_cast<real_t*>(patt2->local_buf);
+      thrust::gather(map_send.begin(), map_send.end(), FS0, buf);
+      for (auto cur : map_recv) {
+	FR0[cur] += *buf++;
+      }
     }
   }
 
@@ -244,16 +253,16 @@ struct CudaBnd
       }
       uint size = (me - mb) * patt2->local_buf_size;
       std::vector<uint> map_send(size);
+      std::vector<uint> map_recv(size);
       map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, mflds);
-      auto F0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
-
-      thrust::gather(map_send.begin(), map_send.end(), F0, (real_t*) patt2->local_buf);
-      copy_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
+      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, mflds);
+      auto FS0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
+      auto FR0 = &mflds[re->patch](mb, re->ilo[0], re->ilo[1], re->ilo[2]);
+      real_t *buf = static_cast<real_t*>(patt2->local_buf);
+      thrust::gather(map_send.begin(), map_send.end(), FS0, buf);
+      thrust::scatter(buf, buf + size, map_recv.begin(), FR0);
     }
   }
-
-  // ----------------------------------------------------------------------
-  // copy_to_buf
 
   static void map_setup(std::vector<uint>& map, int mb, int me, int p, int ilo[3], int ihi[3],
 			MfieldsSingle& mflds)
@@ -272,6 +281,9 @@ struct CudaBnd
       }
     }
   }
+
+  // ----------------------------------------------------------------------
+  // copy_to_buf
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
