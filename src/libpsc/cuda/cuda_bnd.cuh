@@ -126,32 +126,6 @@ ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
 }
 
-// ----------------------------------------------------------------------
-// ddc_run_local
-
-static void
-ddc_run_local(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	      int mb, int me, void *ctx,
-	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
-	      void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
-{
-  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
-  struct mrc_ddc_rank_info *ri = patt2->ri;
-
-  // overlap: local exchange
-  for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
-    struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
-    if (se->ilo[0] == se->ihi[0] ||
-	se->ilo[1] == se->ihi[1] ||
-	se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
-      continue;
-    }
-    to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
-    from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
-  }
-}
-
 // ======================================================================
 // CudaBnd
 
@@ -199,11 +173,30 @@ struct CudaBnd
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
     ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, copy_to_buf);
-    ddc_run_local(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, copy_to_buf, add_from_buf);
+    add_local(&sub->add_ghosts2, mb, me, mflds_single);
     ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, add_from_buf);
     mflds.put_as(mflds_single, mb, me);
   }
   
+  void add_local(struct mrc_ddc_pattern2 *patt2,
+		 int mb, int me, MfieldsSingle& mflds)
+  {
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_rank_info *ri = patt2->ri;
+    
+    for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
+      struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
+      struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
+      if (se->ilo[0] == se->ihi[0] ||
+	  se->ilo[1] == se->ihi[1] ||
+	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
+	continue;
+      }
+      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, &mflds);
+      add_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
+    }
+  }
+
   // ----------------------------------------------------------------------
   // fill_ghosts
 
