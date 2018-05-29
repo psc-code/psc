@@ -7,6 +7,8 @@
 
 #include "mrc_ddc_private.h"
 
+#include <thrust/gather.h>
+
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
 
 static void
@@ -192,7 +194,7 @@ struct CudaBnd
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, &mflds);
+      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, (real_t*) patt2->local_buf, mflds);
       add_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
     }
   }
@@ -232,13 +234,37 @@ struct CudaBnd
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, &mflds);
+      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, (real_t*) patt2->local_buf, mflds);
       copy_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
     }
   }
 
   // ----------------------------------------------------------------------
   // copy_to_buf
+
+  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			  real_t *buf, MfieldsSingle& mflds)
+  {
+    auto F = mflds[p];
+    auto F0 = &F(mb, ilo[0], ilo[1], ilo[2]);
+ 
+    uint size = (me - mb) * (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    std::vector<uint> map(size);
+    auto cur = map.begin();
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    *cur++ = &F(m, ix,iy,iz) - F0;
+	  }
+	}
+      }
+    }
+    thrust::gather(map.begin(), map.end(), F0, buf);
+    // for (auto cur : map) {
+    //   *buf++ = F0[cur];
+    // }
+  }
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
