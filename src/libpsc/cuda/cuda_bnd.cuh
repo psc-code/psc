@@ -254,8 +254,24 @@ struct CudaBnd
   {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     struct mrc_ddc_rank_info *ri = patt2->ri;
-    
-    // overlap: local exchange
+
+    uint buf_size = 0;
+    for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
+      struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
+      if (se->ilo[0] == se->ihi[0] ||
+	  se->ilo[1] == se->ihi[1] ||
+	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
+	continue;
+      }
+      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
+      buf_size += size;
+    }
+
+    std::vector<uint> map_send(buf_size);
+    std::vector<uint> map_recv(buf_size);
+    std::vector<real_t> buf(buf_size);
+
+    uint off = 0;
     for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
       struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
       struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
@@ -265,22 +281,20 @@ struct CudaBnd
 	continue;
       }
       uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
-      std::vector<uint> map_send(size);
-      std::vector<uint> map_recv(size);
       map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
       map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
-      std::vector<real_t> buf(size);
 #if 0
       thrust::gather(map_send.begin(), map_send.end(), h_flds, buf);
       thrust::scatter(buf, buf + size, map_recv.begin(), h_flds);
 #else
-      for (int i = 0; i < map_send.size(); i++) {
-	buf[i] = h_flds[map_send[i]];
+      for (int i = 0; i < size; i++) {
+	buf[off + i] = h_flds[map_send[i]];
       }
-      for (int i = 0; i < map_recv.size(); i++) {
-	h_flds[map_recv[i]] = buf[i];
+      for (int i = 0; i < size; i++) {
+	h_flds[map_recv[i]] = buf[off + i];
       }
 #endif
+      off += size;
     }
   }
 
