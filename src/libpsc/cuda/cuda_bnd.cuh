@@ -7,6 +7,8 @@
 
 #include "mrc_ddc_private.h"
 
+#define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
+
 static void
 mrc_ddc_multi_set_mpi_type(struct mrc_ddc *ddc)
 {
@@ -150,20 +152,6 @@ ddc_run_local(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   }
 }
 
-// ----------------------------------------------------------------------
-// ddc_run
-
-static void
-ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	int mb, int me, void *ctx,
-	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
-	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
-{
-  ddc_run_begin(ddc, patt2, mb, me, ctx, to_buf);
-  ddc_run_local(ddc, patt2, mb, me, ctx, to_buf, from_buf);
-  ddc_run_end(ddc, patt2, mb, me, ctx, from_buf);
-}
-
 // ======================================================================
 // CudaBnd
 
@@ -206,7 +194,13 @@ struct CudaBnd
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     auto& mflds_single = mflds.get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds_single);
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    
+    mrc_ddc_multi_set_mpi_type(ddc_);
+    mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
+    ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, copy_to_buf);
+    ddc_run_local(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, copy_to_buf, add_from_buf);
+    ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, add_from_buf);
     mflds.put_as(mflds_single, mb, me);
   }
   
@@ -220,8 +214,6 @@ struct CudaBnd
     // rather then box
     auto& mflds_single = mflds.get_as<MfieldsSingle>(mb, me);
 
-#if 1
-#define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
     mrc_ddc_multi_set_mpi_type(ddc_);
@@ -230,10 +222,6 @@ struct CudaBnd
     fill_local(&sub->fill_ghosts2, mb, me, mflds_single);
     ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single, copy_from_buf);
 
-#else
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
-#endif
-    
     mflds.put_as(mflds_single, mb, me);
   }
 
