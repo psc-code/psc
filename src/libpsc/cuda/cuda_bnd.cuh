@@ -194,7 +194,15 @@ struct CudaBnd
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, (real_t*) patt2->local_buf, mflds);
+      uint size = (me - mb) * patt2->local_buf_size;
+      std::vector<uint> map_send(size);
+      map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, mflds);
+      auto F0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
+
+      thrust::gather(map_send.begin(), map_send.end(), F0, (real_t*) patt2->local_buf);
+      // for (auto cur : map) {
+      //   *buf++ = F0[cur];
+      // }
       add_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
     }
   }
@@ -234,7 +242,12 @@ struct CudaBnd
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      copy_to_buf(mb, me, se->patch, se->ilo, se->ihi, (real_t*) patt2->local_buf, mflds);
+      uint size = (me - mb) * patt2->local_buf_size;
+      std::vector<uint> map_send(size);
+      map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, mflds);
+      auto F0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
+
+      thrust::gather(map_send.begin(), map_send.end(), F0, (real_t*) patt2->local_buf);
       copy_from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, &mflds);
     }
   }
@@ -242,14 +255,12 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // copy_to_buf
 
-  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			  real_t *buf, MfieldsSingle& mflds)
+  static void map_setup(std::vector<uint>& map, int mb, int me, int p, int ilo[3], int ihi[3],
+			MfieldsSingle& mflds)
   {
     auto F = mflds[p];
     auto F0 = &F(mb, ilo[0], ilo[1], ilo[2]);
  
-    uint size = (me - mb) * (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    std::vector<uint> map(size);
     auto cur = map.begin();
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -260,10 +271,6 @@ struct CudaBnd
 	}
       }
     }
-    thrust::gather(map.begin(), map.end(), F0, buf);
-    // for (auto cur : map) {
-    //   *buf++ = F0[cur];
-    // }
   }
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
