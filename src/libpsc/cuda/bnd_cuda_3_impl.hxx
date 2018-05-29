@@ -9,6 +9,12 @@
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
+struct CudaBnd
+{
+  //private:
+  mrc_ddc* ddc_;
+};
+
 template<typename MF>
 struct BndCuda3 : BndBase
 {
@@ -22,18 +28,19 @@ struct BndCuda3 : BndBase
 
   BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3])
   {
+    cbnd_ = new CudaBnd{};
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
       .copy_from_buf = copy_from_buf,
       .add_from_buf  = add_from_buf,
     };
 
-    ddc_ = mrc_domain_create_ddc(domain);
-    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
-    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
-    mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
-    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
-    mrc_ddc_setup(ddc_);
+    cbnd_->ddc_ = mrc_domain_create_ddc(domain);
+    mrc_ddc_set_funcs(cbnd_->ddc_, &ddc_funcs);
+    mrc_ddc_set_param_int3(cbnd_->ddc_, "ibn", ibn);
+    mrc_ddc_set_param_int(cbnd_->ddc_, "max_n_fields", 24);
+    mrc_ddc_set_param_int(cbnd_->ddc_, "size_of_type", sizeof(real_t));
+    mrc_ddc_setup(cbnd_->ddc_);
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 
@@ -42,7 +49,8 @@ struct BndCuda3 : BndBase
 
   ~BndCuda3()
   {
-    mrc_ddc_destroy(ddc_);
+    mrc_ddc_destroy(cbnd_->ddc_);
+    delete cbnd_;
   }
   
   // ----------------------------------------------------------------------
@@ -64,7 +72,7 @@ struct BndCuda3 : BndBase
       reset();
     }
     auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds_single);
+    mrc_ddc_add_ghosts(cbnd_->ddc_, mb, me, &mflds_single);
     mflds.put_as(mflds_single, mb, me);
   }
 
@@ -87,7 +95,7 @@ struct BndCuda3 : BndBase
     // I don't think we need as many points, and only stencil star
     // rather then box
     auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
+    mrc_ddc_fill_ghosts(cbnd_->ddc_, mb, me, &mflds_single);
     mflds.put_as(mflds_single, mb, me);
   }
 
@@ -157,6 +165,6 @@ struct BndCuda3 : BndBase
   }
 
 private:
-  mrc_ddc *ddc_;
+  CudaBnd* cbnd_;
   int balance_generation_cnt_;
 };
