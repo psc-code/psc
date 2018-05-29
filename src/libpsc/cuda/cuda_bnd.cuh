@@ -283,6 +283,18 @@ struct CudaBnd
       uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
       map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
       map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+      off += size;
+    }
+    
+    off = 0;
+    for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
+      struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
+      if (se->ilo[0] == se->ihi[0] ||
+	  se->ilo[1] == se->ihi[1] ||
+	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
+	continue;
+      }
+      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
 #if 0
       thrust::gather(map_send.begin(), map_send.end(), h_flds, buf);
       thrust::scatter(buf, buf + size, map_recv.begin(), h_flds);
