@@ -2,7 +2,6 @@
 #pragma once
 
 #include "psc_fields_cuda.h"
-#include "psc_fields_single.h"
 #include "cuda_mfields.h"
 #include "fields.hxx"
 
@@ -68,9 +67,9 @@ mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 
 static void
 ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	      int mb, int me, MfieldsSingle& mflds,
+	      int mb, int me,
 	      cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds,
-	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, MfieldsSingle& mflds,
+	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
 			     cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
@@ -97,7 +96,7 @@ ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
       void *p0 = p;
       for (int i = 0; i < ri[r].n_send_entries; i++) {
 	struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	to_buf(mb, me, se->patch, se->ilo, se->ihi, p, mflds, cmflds, h_flds);
+	to_buf(mb, me, se->patch, se->ilo, se->ihi, p, cmflds, h_flds);
 	p += se->len * (me - mb) * ddc->size_of_type;
       }
       MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type,
@@ -112,9 +111,9 @@ ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 
 static void
 ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	    int mb, int me, MfieldsSingle& mflds, cuda_mfields& cmflds,
+	    int mb, int me, cuda_mfields& cmflds,
 	    thrust::host_vector<real_t>& h_flds,
-	    void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, MfieldsSingle& ctx,
+	    void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
 			     cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
@@ -127,7 +126,7 @@ ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
     if (r != sub->mpi_rank) {
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
-	from_buf(mb, me, re->patch, re->ilo, re->ihi, p, mflds, cmflds, h_flds);
+	from_buf(mb, me, re->patch, re->ilo, re->ihi, p, cmflds, h_flds);
 	p += re->len * (me - mb) * ddc->size_of_type;
       }
     }
@@ -178,19 +177,17 @@ struct CudaBnd
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
     thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
-    auto& mflds_single = mflds.get_as<MfieldsSingle>(mb, me);
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
-    ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, mflds_single, cmflds, h_flds, copy_to_buf);
-    add_local(&sub->add_ghosts2, mb, me, mflds_single, h_flds, cmflds);
-    ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, mflds_single, cmflds, h_flds, add_from_buf);
-    mflds.put_as(mflds_single, 0, 0);
+    ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, cmflds, h_flds, copy_to_buf);
+    add_local(&sub->add_ghosts2, mb, me, h_flds, cmflds);
+    ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, cmflds, h_flds, add_from_buf);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
-  void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me, MfieldsSingle& mflds,
+  void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		 thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
   {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
@@ -214,8 +211,6 @@ struct CudaBnd
       std::vector<uint> map_recv(size);
       map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
       map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
-      auto FS0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
-      auto FR0 = &mflds[re->patch](mb, re->ilo[0], re->ilo[1], re->ilo[2]);
 
       real_t* buf = static_cast<real_t*>(patt2->local_buf);
 #if 0
@@ -243,21 +238,18 @@ struct CudaBnd
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    auto& mflds_single = mflds.get_as<MfieldsSingle>(mb, me);
-    
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
-    ddc_run_begin(ddc_, &sub->fill_ghosts2, mb, me, mflds_single, cmflds, h_flds, copy_to_buf);
-    fill_local(&sub->fill_ghosts2, mb, me, mflds_single, h_flds, cmflds);
-    ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, mflds_single, cmflds, h_flds, copy_from_buf);
+    ddc_run_begin(ddc_, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_to_buf);
+    fill_local(&sub->fill_ghosts2, mb, me, h_flds, cmflds);
+    ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
 
-    mflds.put_as(mflds_single, 0, 0);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
 
-  void fill_local(struct mrc_ddc_pattern2 *patt2, int mb, int me, MfieldsSingle& mflds,
+  void fill_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		  thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
   {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
@@ -293,24 +285,6 @@ struct CudaBnd
   }
 
   static void map_setup(std::vector<uint>& map, int mb, int me, int p, int ilo[3], int ihi[3],
-			MfieldsSingle& mflds)
-  {
-    auto F = mflds[p];
-    real_t* F0 = &F(mb, ilo[0], ilo[1], ilo[2]);
- 
-    auto cur = map.begin();
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    *cur++ = &F(m, ix,iy,iz) - F0;
-	  }
-	}
-      }
-    }
-  }
-
-  static void map_setup(std::vector<uint>& map, int mb, int me, int p, int ilo[3], int ihi[3],
 			cuda_mfields& cmflds)
   {
     auto cur = map.begin();
@@ -329,7 +303,7 @@ struct CudaBnd
   // copy_to_buf
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			  void *_buf, MfieldsSingle& mflds, cuda_mfields& cmflds,
+			  void *_buf, cuda_mfields& cmflds,
 			  thrust::host_vector<real_t>& h_flds)
   {
     real_t *buf = static_cast<real_t*>(_buf);
@@ -350,7 +324,7 @@ struct CudaBnd
   // add_from_buf
 
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			   void *_buf, MfieldsSingle& mflds, cuda_mfields& cmflds,
+			   void *_buf, cuda_mfields& cmflds,
 			  thrust::host_vector<real_t>& h_flds)
   {
     real_t *buf = static_cast<real_t*>(_buf);
@@ -371,8 +345,8 @@ struct CudaBnd
   // copy_from_buf
 
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			    void *_buf, MfieldsSingle& mflds, cuda_mfields& cmflds,
-			  thrust::host_vector<real_t>& h_flds)
+			    void *_buf, cuda_mfields& cmflds,
+			    thrust::host_vector<real_t>& h_flds)
   {
     real_t *buf = static_cast<real_t*>(_buf);
     
