@@ -34,7 +34,6 @@ mrc_ddc_multi_free_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
 {
   free(patt2->send_buf);
   free(patt2->recv_buf);
-  free(patt2->local_buf);
 }
 
 // ----------------------------------------------------------------------
@@ -58,7 +57,6 @@ mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 
     patt2->recv_buf = malloc(patt2->n_recv * patt2->max_n_fields * patt2->max_size_of_type);
     patt2->send_buf = malloc(patt2->n_send * patt2->max_n_fields * patt2->max_size_of_type);
-    patt2->local_buf = malloc(patt2->local_buf_size * patt2->max_n_fields * patt2->max_size_of_type);
   }
 }
 
