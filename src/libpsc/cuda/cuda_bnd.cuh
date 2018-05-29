@@ -186,7 +186,8 @@ struct CudaBnd
     ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, mflds_single, cmflds, h_flds, copy_to_buf);
     add_local(&sub->add_ghosts2, mb, me, mflds_single, h_flds, cmflds);
     ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, mflds_single, cmflds, h_flds, add_from_buf);
-    mflds.put_as(mflds_single, mb, me);
+    mflds.put_as(mflds_single, 0, 0);
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
   void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me, MfieldsSingle& mflds,
@@ -212,7 +213,7 @@ struct CudaBnd
       std::vector<uint> map_send(size);
       std::vector<uint> map_recv(size);
       map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, mflds);
+      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
       auto FS0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
       auto FR0 = &mflds[re->patch](mb, re->ilo[0], re->ilo[1], re->ilo[2]);
 
@@ -224,8 +225,9 @@ struct CudaBnd
 	buf[i] = h_flds[map_send[i]];
       }
 #endif
-      for (auto cur : map_recv) {
-	FR0[cur] += *buf++;
+      auto p = buf;
+      for (auto idx : map_recv) {
+	h_flds[idx] += *p++;
       }
     }
   }
@@ -251,7 +253,8 @@ struct CudaBnd
     fill_local(&sub->fill_ghosts2, mb, me, mflds_single, h_flds, cmflds);
     ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, mflds_single, cmflds, h_flds, copy_from_buf);
 
-    mflds.put_as(mflds_single, mb, me);
+    mflds.put_as(mflds_single, 0, 0);
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
 
   void fill_local(struct mrc_ddc_pattern2 *patt2, int mb, int me, MfieldsSingle& mflds,
@@ -273,18 +276,19 @@ struct CudaBnd
       std::vector<uint> map_send(size);
       std::vector<uint> map_recv(size);
       map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, mflds);
-      auto FS0 = &mflds[se->patch](mb, se->ilo[0], se->ilo[1], se->ilo[2]);
-      auto FR0 = &mflds[re->patch](mb, re->ilo[0], re->ilo[1], re->ilo[2]);
+      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
       real_t *buf = static_cast<real_t*>(patt2->local_buf);
 #if 0
       thrust::gather(map_send.begin(), map_send.end(), h_flds, buf);
+      thrust::scatter(buf, buf + size, map_recv.begin(), h_flds);
 #else
       for (int i = 0; i < map_send.size(); i++) {
 	buf[i] = h_flds[map_send[i]];
       }
+      for (int i = 0; i < map_recv.size(); i++) {
+	h_flds[map_recv[i]] = buf[i];
+      }
 #endif
-      thrust::scatter(buf, buf + size, map_recv.begin(), FR0);
     }
   }
 
@@ -349,7 +353,6 @@ struct CudaBnd
 			   void *_buf, MfieldsSingle& mflds, cuda_mfields& cmflds,
 			  thrust::host_vector<real_t>& h_flds)
   {
-    auto F = mflds[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -357,8 +360,7 @@ struct CudaBnd
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
 	    uint idx = cmflds.index(m, ix,iy,iz, p);
-	    real_t val = F(m, ix,iy,iz) + *buf++;
-	    F(m, ix,iy,iz) = val;
+	    h_flds[idx] += *buf++;
 	  }
 	}
       }
@@ -372,14 +374,14 @@ struct CudaBnd
 			    void *_buf, MfieldsSingle& mflds, cuda_mfields& cmflds,
 			  thrust::host_vector<real_t>& h_flds)
   {
-    auto F = mflds[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    F(m, ix,iy,iz) = *buf++;
+	    uint idx = cmflds.index(m, ix,iy,iz, p);
+	    h_flds[idx] = *buf++;
 	  }
 	}
       }
