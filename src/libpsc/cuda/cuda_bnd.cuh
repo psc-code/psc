@@ -209,8 +209,8 @@ struct CudaBnd
       uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
       std::vector<uint> map_send(size);
       std::vector<uint> map_recv(size);
-      map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+      map_setup(map_send, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+      map_setup(map_recv, 0, mb, me, re->patch, re->ilo, re->ihi, cmflds);
 
       std::vector<real_t> buf(size);
 #if 0
@@ -281,27 +281,27 @@ struct CudaBnd
 	continue;
       }
       uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
-      map_setup(map_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-      map_setup(map_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, cmflds);
 #if 0
       thrust::gather(map_send.begin(), map_send.end(), h_flds, buf);
       thrust::scatter(buf, buf + size, map_recv.begin(), h_flds);
 #else
       for (int i = 0; i < size; i++) {
-	buf[off + i] = h_flds[map_send[i]];
+	buf[off + i] = h_flds[map_send[off + i]];
       }
       for (int i = 0; i < size; i++) {
-	h_flds[map_recv[i]] = buf[off + i];
+	h_flds[map_recv[off + i]] = buf[off + i];
       }
 #endif
       off += size;
     }
   }
 
-  static void map_setup(std::vector<uint>& map, int mb, int me, int p, int ilo[3], int ihi[3],
+  static void map_setup(std::vector<uint>& map, uint off, int mb, int me, int p, int ilo[3], int ihi[3],
 			cuda_mfields& cmflds)
   {
-    auto cur = map.begin();
+    auto cur = &map[off];
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
