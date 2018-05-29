@@ -328,14 +328,14 @@ struct CudaBnd
 			  void *_buf, MfieldsSingle& mflds, cuda_mfields& cmflds,
 			  thrust::host_vector<real_t>& h_flds)
   {
-    auto F = mflds[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    *buf++ = F(m, ix,iy,iz);
+	    uint idx = cmflds.index(m, ix,iy,iz, p);
+	    *buf++ = h_flds[idx];
 	  }
 	}
       }
@@ -356,6 +356,7 @@ struct CudaBnd
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    uint idx = cmflds.index(m, ix,iy,iz, p);
 	    real_t val = F(m, ix,iy,iz) + *buf++;
 	    F(m, ix,iy,iz) = val;
 	  }
