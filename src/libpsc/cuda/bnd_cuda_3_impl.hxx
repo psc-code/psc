@@ -19,9 +19,14 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // ctor
   
-  CudaBnd(const Grid_t& grid, mrc_domain* domain, int ibn[3],
-	  mrc_ddc_funcs& ddc_funcs)
+  CudaBnd(const Grid_t& grid, mrc_domain* domain, int ibn[3])
   {
+    static struct mrc_ddc_funcs ddc_funcs = {
+      .copy_to_buf   = copy_to_buf,
+      .copy_from_buf = copy_from_buf,
+      .add_from_buf  = add_from_buf,
+    };
+
     ddc_ = mrc_domain_create_ddc(domain);
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
@@ -61,7 +66,71 @@ struct CudaBnd
     mflds.put_as(mflds_single, mb, me);
   }
 
-  //private:
+  // ----------------------------------------------------------------------
+  // copy_to_buf
+
+  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			  void *_buf, void *ctx)
+  {
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
+    auto F = mf[p];
+    real_t *buf = static_cast<real_t*>(_buf);
+    
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
+	  }
+	}
+      }
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // add_from_buf
+
+  static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			   void *_buf, void *ctx)
+  {
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
+    auto F = mf[p];
+    real_t *buf = static_cast<real_t*>(_buf);
+    
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    real_t val = F(m, ix,iy,iz) + MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	    F(m, ix,iy,iz) = val;
+	  }
+	}
+      }
+    }
+  }
+  
+  // ----------------------------------------------------------------------
+  // copy_from_buf
+
+  static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+			    void *_buf, void *ctx)
+  {
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
+    auto F = mf[p];
+    real_t *buf = static_cast<real_t*>(_buf);
+    
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  }
+	}
+      }
+    }
+  }
+
+private:
   mrc_ddc* ddc_;
 };
 
@@ -77,16 +146,9 @@ struct BndCuda3 : BndBase
   // ctor
 
   BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3])
-    : balance_generation_cnt_{psc_balance_generation_cnt}
-  {
-    static struct mrc_ddc_funcs ddc_funcs = {
-      .copy_to_buf   = copy_to_buf,
-      .copy_from_buf = copy_from_buf,
-      .add_from_buf  = add_from_buf,
-    };
-
-    cbnd_ = new CudaBnd{grid, domain, ibn, ddc_funcs};
-  }
+    : cbnd_{new CudaBnd{grid, domain, ibn}},
+      balance_generation_cnt_{psc_balance_generation_cnt}
+  {}
 
   // ----------------------------------------------------------------------
   // dtor
@@ -102,8 +164,8 @@ struct BndCuda3 : BndBase
   void reset()
   {
     // FIXME, not really a pretty way of doing this
-    this->~BndCuda3();
-    new(this) BndCuda3(ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn);
+    delete cbnd_;
+    cbnd_ = new CudaBnd{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
   }
   
   // ----------------------------------------------------------------------
@@ -133,7 +195,6 @@ struct BndCuda3 : BndBase
       reset();
     }
     cbnd_->fill_ghosts(mflds, mb, me);
-    // FIXME
   }
 
   void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
@@ -141,64 +202,6 @@ struct BndCuda3 : BndBase
     auto& mf = mflds_base->get_as<Mfields>(mb, me);
     fill_ghosts(mf, mb, me);
     mflds_base->put_as(mf, mb, me);
-  }
-
-  // ----------------------------------------------------------------------
-  // copy_to_buf
-
-  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			  void *_buf, void *ctx)
-  {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
-    auto F = mf[p];
-    real_t *buf = static_cast<real_t*>(_buf);
-    
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
-	  }
-	}
-      }
-    }
-  }
-
-  static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			   void *_buf, void *ctx)
-  {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
-    auto F = mf[p];
-    real_t *buf = static_cast<real_t*>(_buf);
-    
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    real_t val = F(m, ix,iy,iz) + MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	    F(m, ix,iy,iz) = val;
-	  }
-	}
-      }
-    }
-  }
-  
-  static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			    void *_buf, void *ctx)
-  {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
-    auto F = mf[p];
-    real_t *buf = static_cast<real_t*>(_buf);
-    
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	  }
-	}
-      }
-    }
   }
 
 private:
