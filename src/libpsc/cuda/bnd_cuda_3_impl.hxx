@@ -11,6 +11,56 @@
 
 struct CudaBnd
 {
+  using Mfields = MfieldsCuda;
+  using fields_t = typename Mfields::fields_t;
+  using real_t = typename Mfields::real_t;
+  using Fields = Fields3d<fields_t>;
+
+  // ----------------------------------------------------------------------
+  // ctor
+  
+  CudaBnd(const Grid_t& grid, mrc_domain* domain, int ibn[3],
+	  mrc_ddc_funcs& ddc_funcs)
+  {
+    ddc_ = mrc_domain_create_ddc(domain);
+    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
+    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
+    mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
+    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
+    mrc_ddc_setup(ddc_);
+  }
+
+  // ----------------------------------------------------------------------
+  // dtor
+  
+  ~CudaBnd()
+  {
+    mrc_ddc_destroy(ddc_);
+  }
+
+  // ----------------------------------------------------------------------
+  // add_ghosts
+  
+  void add_ghosts(Mfields& mflds, int mb, int me)
+  {
+    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
+    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds_single);
+    mflds.put_as(mflds_single, mb, me);
+  }
+  
+  // ----------------------------------------------------------------------
+  // fill_ghosts
+
+  void fill_ghosts(Mfields& mflds, int mb, int me)
+  {
+    // FIXME
+    // I don't think we need as many points, and only stencil star
+    // rather then box
+    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
+    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
+    mflds.put_as(mflds_single, mb, me);
+  }
+
   //private:
   mrc_ddc* ddc_;
 };
@@ -27,21 +77,15 @@ struct BndCuda3 : BndBase
   // ctor
 
   BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3])
+    : balance_generation_cnt_{psc_balance_generation_cnt}
   {
-    cbnd_ = new CudaBnd{};
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
       .copy_from_buf = copy_from_buf,
       .add_from_buf  = add_from_buf,
     };
 
-    cbnd_->ddc_ = mrc_domain_create_ddc(domain);
-    mrc_ddc_set_funcs(cbnd_->ddc_, &ddc_funcs);
-    mrc_ddc_set_param_int3(cbnd_->ddc_, "ibn", ibn);
-    mrc_ddc_set_param_int(cbnd_->ddc_, "max_n_fields", 24);
-    mrc_ddc_set_param_int(cbnd_->ddc_, "size_of_type", sizeof(real_t));
-    mrc_ddc_setup(cbnd_->ddc_);
-    balance_generation_cnt_ = psc_balance_generation_cnt;
+    cbnd_ = new CudaBnd{grid, domain, ibn, ddc_funcs};
   }
 
   // ----------------------------------------------------------------------
@@ -49,7 +93,6 @@ struct BndCuda3 : BndBase
 
   ~BndCuda3()
   {
-    mrc_ddc_destroy(cbnd_->ddc_);
     delete cbnd_;
   }
   
@@ -71,9 +114,7 @@ struct BndCuda3 : BndBase
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
       reset();
     }
-    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_add_ghosts(cbnd_->ddc_, mb, me, &mflds_single);
-    mflds.put_as(mflds_single, mb, me);
+    cbnd_->add_ghosts(mflds, mb, me);
   }
 
   void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
@@ -91,12 +132,8 @@ struct BndCuda3 : BndBase
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
       reset();
     }
+    cbnd_->fill_ghosts(mflds, mb, me);
     // FIXME
-    // I don't think we need as many points, and only stencil star
-    // rather then box
-    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_fill_ghosts(cbnd_->ddc_, mb, me, &mflds_single);
-    mflds.put_as(mflds_single, mb, me);
   }
 
   void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
