@@ -286,30 +286,19 @@ struct CudaBnd
       off += size;
     }
     
-    off = 0;
-    for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
-      struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
-      if (se->ilo[0] == se->ihi[0] ||
-	  se->ilo[1] == se->ihi[1] ||
-	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
-	continue;
-      }
-      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
-#if 0
-      thrust::gather(map_send.begin(), map_send.end(), h_flds, buf);
-      thrust::scatter(buf, buf + size, map_recv.begin(), h_flds);
+#if 1
+    thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
+    thrust::scatter(buf.begin(), buf.end(), map_recv.begin(), h_flds.begin());
 #else
-      for (int i = 0; i < size; i++) {
-	buf[off + i] = h_flds[map_send[off + i]];
-      }
-      for (int i = 0; i < size; i++) {
-	h_flds[map_recv[off + i]] = buf[off + i];
-      }
-#endif
-      off += size;
+    for (int i = 0; i < buf_size; i++) {
+      buf[i] = h_flds[map_send[i]];
     }
+    for (int i = 0; i < buf_size; i++) {
+      h_flds[map_recv[i]] = buf[i];
+    }
+#endif
   }
-
+  
   static void map_setup(std::vector<uint>& map, uint off, int mb, int me, int p, int ilo[3], int ihi[3],
 			cuda_mfields& cmflds)
   {
