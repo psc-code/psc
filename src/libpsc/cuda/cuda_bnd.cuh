@@ -252,6 +252,26 @@ struct CudaBnd
   void fill_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		  thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
   {
+    std::vector<uint> map_send, map_recv;
+    setup_local_maps(map_send, map_recv, patt2, mb, me, cmflds);
+
+    std::vector<real_t> buf(map_send.size());
+#if 0
+    thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
+    thrust::scatter(buf.begin(), buf.end(), map_recv.begin(), h_flds.begin());
+#else
+    for (int i = 0; i < map_send.size(); i++) {
+      buf[i] = h_flds[map_send[i]];
+    }
+    for (int i = 0; i < map_send.size(); i++) {
+      h_flds[map_recv[i]] = buf[i];
+    }
+#endif
+  }
+  
+  void setup_local_maps(std::vector<uint>& map_send, std::vector<uint>& map_recv,
+			struct mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
+  {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     struct mrc_ddc_rank_info *ri = patt2->ri;
 
@@ -267,9 +287,8 @@ struct CudaBnd
       buf_size += size;
     }
 
-    std::vector<uint> map_send(buf_size);
-    std::vector<uint> map_recv(buf_size);
-    std::vector<real_t> buf(buf_size);
+    map_send.resize(buf_size);
+    map_recv.resize(buf_size);
 
     uint off = 0;
     for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
@@ -285,20 +304,8 @@ struct CudaBnd
       map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, cmflds);
       off += size;
     }
-    
-#if 1
-    thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
-    thrust::scatter(buf.begin(), buf.end(), map_recv.begin(), h_flds.begin());
-#else
-    for (int i = 0; i < buf_size; i++) {
-      buf[i] = h_flds[map_send[i]];
-    }
-    for (int i = 0; i < buf_size; i++) {
-      h_flds[map_recv[i]] = buf[i];
-    }
-#endif
   }
-  
+
   static void map_setup(std::vector<uint>& map, uint off, int mb, int me, int p, int ilo[3], int ihi[3],
 			cuda_mfields& cmflds)
   {
