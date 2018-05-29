@@ -226,8 +226,10 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
-    ddc_run(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single,
-	    ddc_->funcs->copy_to_buf, ddc_->funcs->copy_from_buf);
+    ddc_run_begin(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single, copy_to_buf);
+    ddc_run_local(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single, copy_to_buf, copy_from_buf);
+    ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single, copy_from_buf);
+
 #else
     mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
 #endif
