@@ -60,79 +60,6 @@ mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   }
 }
 
-// ----------------------------------------------------------------------
-// ddc_run_begin
-
-static void
-ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	      int mb, int me,
-	      cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds,
-	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
-			     cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
-{
-  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
-  struct mrc_ddc_rank_info *ri = patt2->ri;
-
-  // communicate aggregated buffers
-  // post receives
-  patt2->recv_cnt = 0;
-  char* p = (char*) patt2->recv_buf;
-  for (int r = 0; r < sub->mpi_size; r++) {
-    if (r != sub->mpi_rank && ri[r].n_recv_entries) {
-      MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
-      p += ri[r].n_recv * (me - mb) * ddc->size_of_type;
-    }
-  }  
-  assert(p == (char*)patt2->recv_buf + patt2->n_recv * (me - mb) * ddc->size_of_type);
-
-  // post sends
-  patt2->send_cnt = 0;
-  p = (char*) patt2->send_buf;
-  for (int r = 0; r < sub->mpi_size; r++) {
-    if (r != sub->mpi_rank && ri[r].n_send_entries) {
-      void *p0 = p;
-      for (int i = 0; i < ri[r].n_send_entries; i++) {
-	struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	to_buf(mb, me, se->patch, se->ilo, se->ihi, p, cmflds, h_flds);
-	p += se->len * (me - mb) * ddc->size_of_type;
-      }
-      MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &patt2->send_req[patt2->send_cnt++]);
-    }
-  }  
-  assert(p == (char*) patt2->send_buf + patt2->n_send * (me - mb) * ddc->size_of_type);
-}
-
-// ----------------------------------------------------------------------
-// ddc_run_end
-
-static void
-ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	    int mb, int me, cuda_mfields& cmflds,
-	    thrust::host_vector<real_t>& h_flds,
-	    void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
-			     cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
-{
-  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
-  struct mrc_ddc_rank_info *ri = patt2->ri;
-
-  MPI_Waitall(patt2->recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
-
-  char* p = (char*) patt2->recv_buf;
-  for (int r = 0; r < sub->mpi_size; r++) {
-    if (r != sub->mpi_rank) {
-      for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
-	from_buf(mb, me, re->patch, re->ilo, re->ihi, p, cmflds, h_flds);
-	p += re->len * (me - mb) * ddc->size_of_type;
-      }
-    }
-  }
-
-  MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
-}
-
 // ======================================================================
 // CudaBnd
 
@@ -179,9 +106,9 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
-    ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, cmflds, h_flds, copy_to_buf);
+    ddc_run_begin(&sub->add_ghosts2, mb, me, cmflds, h_flds, copy_to_buf);
     add_local(&sub->add_ghosts2, mb, me, h_flds, cmflds);
-    ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, cmflds, h_flds, add_from_buf);
+    ddc_run_end(&sub->add_ghosts2, mb, me, cmflds, h_flds, add_from_buf);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
@@ -200,11 +127,80 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
-    ddc_run_begin(ddc_, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_to_buf);
+    ddc_run_begin(&sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_to_buf);
     fill_local(&sub->fill_ghosts2, mb, me, h_flds, cmflds);
-    ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
+    ddc_run_end(&sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+  }
+
+  // ----------------------------------------------------------------------
+  // ddc_run_begin
+
+  void ddc_run_begin(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+		     cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds,
+		     void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+				    cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
+  {
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_rank_info *ri = patt2->ri;
+
+    // communicate aggregated buffers
+    // post receives
+    patt2->recv_cnt = 0;
+    char* p = (char*) patt2->recv_buf;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank && ri[r].n_recv_entries) {
+	MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc_->mpi_type,
+		  r, 0, ddc_->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
+	p += ri[r].n_recv * (me - mb) * ddc_->size_of_type;
+      }
+    }  
+    assert(p == (char*)patt2->recv_buf + patt2->n_recv * (me - mb) * ddc_->size_of_type);
+
+    // post sends
+    patt2->send_cnt = 0;
+    p = (char*) patt2->send_buf;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank && ri[r].n_send_entries) {
+	void *p0 = p;
+	for (int i = 0; i < ri[r].n_send_entries; i++) {
+	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
+	  to_buf(mb, me, se->patch, se->ilo, se->ihi, p, cmflds, h_flds);
+	  p += se->len * (me - mb) * ddc_->size_of_type;
+	}
+	MPI_Isend(p0, ri[r].n_send * (me - mb), ddc_->mpi_type,
+		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
+      }
+    }  
+    assert(p == (char*) patt2->send_buf + patt2->n_send * (me - mb) * ddc_->size_of_type);
+  }
+
+  // ----------------------------------------------------------------------
+  // ddc_run_end
+
+  void ddc_run_end(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+		   cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds,
+		   void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+				    cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
+  {
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_rank_info *ri = patt2->ri;
+
+    MPI_Waitall(patt2->recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
+
+    char* p = (char*) patt2->recv_buf;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank) {
+	for (int i = 0; i < ri[r].n_recv_entries; i++) {
+	  struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
+	  from_buf(mb, me, re->patch, re->ilo, re->ihi, p, cmflds, h_flds);
+	  p += re->len * (me - mb) * ddc_->size_of_type;
+	}
+      }
+    }
+
+    MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
   }
 
   void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
