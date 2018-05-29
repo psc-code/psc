@@ -138,73 +138,79 @@ template<typename MF>
 struct BndCuda3 : BndBase
 {
   using Mfields = MF;
-  using fields_t = typename Mfields::fields_t;
-  using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
 
-  // ----------------------------------------------------------------------
-  // ctor
-
-  BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3])
-    : cbnd_{new CudaBnd{grid, domain, ibn}},
-      balance_generation_cnt_{psc_balance_generation_cnt}
-  {}
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~BndCuda3()
-  {
-    delete cbnd_;
-  }
+  BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3]);
+  ~BndCuda3();
   
-  // ----------------------------------------------------------------------
-  // reset
-  
-  void reset()
-  {
-    // FIXME, not really a pretty way of doing this
-    delete cbnd_;
-    cbnd_ = new CudaBnd{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
-  }
-  
-  // ----------------------------------------------------------------------
-  // add_ghosts
-  
-  void add_ghosts(Mfields& mflds, int mb, int me)
-  {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      reset();
-    }
-    cbnd_->add_ghosts(mflds, mb, me);
-  }
+  void reset();
+  void add_ghosts(Mfields& mflds, int mb, int me);
+  void fill_ghosts(Mfields& mflds, int mb, int me);
 
   void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
-    auto& mf = mflds_base->get_as<Mfields>(mb, me);
-    add_ghosts(mf, mb, me);
-    mflds_base->put_as(mf, mb, me);
-  }
-
-  // ----------------------------------------------------------------------
-  // fill_ghosts
-
-  void fill_ghosts(Mfields& mflds, int mb, int me)
-  {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      reset();
-    }
-    cbnd_->fill_ghosts(mflds, mb, me);
+    assert(0);
   }
 
   void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
   {
-    auto& mf = mflds_base->get_as<Mfields>(mb, me);
-    fill_ghosts(mf, mb, me);
-    mflds_base->put_as(mf, mb, me);
+    assert(0);
   }
 
 private:
   CudaBnd* cbnd_;
   int balance_generation_cnt_;
 };
+
+// ----------------------------------------------------------------------
+// ctor
+
+template<typename MF>
+BndCuda3<MF>::BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3])
+  : cbnd_{new CudaBnd{grid, domain, ibn}},
+    balance_generation_cnt_{psc_balance_generation_cnt}
+{}
+
+// ----------------------------------------------------------------------
+// dtor
+
+template<typename MF>
+BndCuda3<MF>::~BndCuda3()
+{
+  delete cbnd_;
+}
+  
+// ----------------------------------------------------------------------
+// reset
+
+template<typename MF>
+void BndCuda3<MF>::reset()
+{
+  // FIXME, not really a pretty way of doing this
+  delete cbnd_;
+  cbnd_ = new CudaBnd{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
+}
+  
+// ----------------------------------------------------------------------
+// add_ghosts
+
+template<typename MF>
+void BndCuda3<MF>::add_ghosts(Mfields& mflds, int mb, int me)
+{
+  if (psc_balance_generation_cnt != balance_generation_cnt_) {
+    reset();
+  }
+  cbnd_->add_ghosts(mflds, mb, me);
+}
+
+// ----------------------------------------------------------------------
+// fill_ghosts
+
+template<typename MF>
+void BndCuda3<MF>::fill_ghosts(Mfields& mflds, int mb, int me)
+{
+  if (psc_balance_generation_cnt != balance_generation_cnt_) {
+    reset();
+  }
+  cbnd_->fill_ghosts(mflds, mb, me);
+}
+
