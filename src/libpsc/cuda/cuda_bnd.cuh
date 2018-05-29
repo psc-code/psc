@@ -66,8 +66,8 @@ mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 
 static void
 ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	      int mb, int me, void *ctx,
-	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
+	      int mb, int me, MfieldsSingle& mflds,
+	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, MfieldsSingle& mflds))
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
   struct mrc_ddc_rank_info *ri = patt2->ri;
@@ -93,7 +93,7 @@ ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
       void *p0 = p;
       for (int i = 0; i < ri[r].n_send_entries; i++) {
 	struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	to_buf(mb, me, se->patch, se->ilo, se->ihi, p, ctx);
+	to_buf(mb, me, se->patch, se->ilo, se->ihi, p, mflds);
 	p += se->len * (me - mb) * ddc->size_of_type;
       }
       MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type,
@@ -108,8 +108,8 @@ ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 
 static void
 ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	    int mb, int me, void *ctx,
-	    void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
+	    int mb, int me, MfieldsSingle& mflds,
+	    void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, MfieldsSingle& ctx))
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
   struct mrc_ddc_rank_info *ri = patt2->ri;
@@ -121,7 +121,7 @@ ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
     if (r != sub->mpi_rank) {
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
-	from_buf(mb, me, re->patch, re->ilo, re->ihi, p, ctx);
+	from_buf(mb, me, re->patch, re->ilo, re->ihi, p, mflds);
 	p += re->len * (me - mb) * ddc->size_of_type;
       }
     }
@@ -146,9 +146,6 @@ struct CudaBnd
   CudaBnd(const Grid_t& grid, mrc_domain* domain, int ibn[3])
   {
     static struct mrc_ddc_funcs ddc_funcs;
-    ddc_funcs.copy_to_buf   = copy_to_buf;
-    ddc_funcs.copy_from_buf = copy_from_buf;
-    ddc_funcs.add_from_buf  = add_from_buf;
 
     ddc_ = mrc_domain_create_ddc(domain);
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);
@@ -180,9 +177,9 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
-    ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, copy_to_buf);
+    ddc_run_begin(ddc_, &sub->add_ghosts2, mb, me, mflds_single, copy_to_buf);
     add_local(&sub->add_ghosts2, mb, me, mflds_single, h_flds, cmflds);
-    ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, &mflds_single, add_from_buf);
+    ddc_run_end(ddc_, &sub->add_ghosts2, mb, me, mflds_single, add_from_buf);
     mflds.put_as(mflds_single, mb, me);
   }
   
@@ -244,9 +241,9 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
-    ddc_run_begin(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single, copy_to_buf);
+    ddc_run_begin(ddc_, &sub->fill_ghosts2, mb, me, mflds_single, copy_to_buf);
     fill_local(&sub->fill_ghosts2, mb, me, mflds_single, h_flds, cmflds);
-    ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, &mflds_single, copy_from_buf);
+    ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, mflds_single, copy_from_buf);
 
     mflds.put_as(mflds_single, mb, me);
   }
@@ -322,17 +319,16 @@ struct CudaBnd
   // copy_to_buf
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			  void *_buf, void *ctx)
+			  void *_buf, MfieldsSingle& mflds)
   {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
-    auto F = mf[p];
+    auto F = mflds[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
+	    *buf++ = F(m, ix,iy,iz);
 	  }
 	}
       }
@@ -343,17 +339,16 @@ struct CudaBnd
   // add_from_buf
 
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			   void *_buf, void *ctx)
+			   void *_buf, MfieldsSingle& mflds)
   {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
-    auto F = mf[p];
+    auto F = mflds[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    real_t val = F(m, ix,iy,iz) + MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	    real_t val = F(m, ix,iy,iz) + *buf++;
 	    F(m, ix,iy,iz) = val;
 	  }
 	}
@@ -365,17 +360,16 @@ struct CudaBnd
   // copy_from_buf
 
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			    void *_buf, void *ctx)
+			    void *_buf, MfieldsSingle& mflds)
   {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
-    auto F = mf[p];
+    auto F = mflds[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	    F(m, ix,iy,iz) = *buf++;
 	  }
 	}
       }
