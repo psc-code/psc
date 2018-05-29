@@ -187,46 +187,6 @@ struct CudaBnd
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
-  void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
-		 thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
-  {
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
-    struct mrc_ddc_rank_info *ri = patt2->ri;
-    
-    for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
-      struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
-      struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
-      assert(se->ihi[0] - se->ilo[0] == re->ihi[0] - re->ilo[0]);
-      assert(se->ihi[1] - se->ilo[1] == re->ihi[1] - re->ilo[1]);
-      assert(se->ihi[2] - se->ilo[2] == re->ihi[2] - re->ilo[2]);
-      assert(se->nei_patch == re->patch);
-      if (se->ilo[0] == se->ihi[0] ||
-	  se->ilo[1] == se->ihi[1] ||
-	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
-	continue;
-      }
-
-      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
-      std::vector<uint> map_send(size);
-      std::vector<uint> map_recv(size);
-      map_setup(map_send, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-      map_setup(map_recv, 0, mb, me, re->patch, re->ilo, re->ihi, cmflds);
-
-      std::vector<real_t> buf(size);
-#if 0
-      thrust::gather(map_send.begin(), map_send.end(), h_flds, buf);
-#else
-      for (int i = 0; i < map_send.size(); i++) {
-	buf[i] = h_flds[map_send[i]];
-      }
-#endif
-      auto p = buf.begin();
-      for (auto idx : map_recv) {
-	h_flds[idx] += *p++;
-      }
-    }
-  }
-
   // ----------------------------------------------------------------------
   // fill_ghosts
 
@@ -247,6 +207,25 @@ struct CudaBnd
     ddc_run_end(ddc_, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+  }
+
+  void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+		 thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
+  {
+    std::vector<uint> map_send, map_recv;
+    setup_local_maps(map_send, map_recv, patt2, mb, me, cmflds);
+
+    std::vector<real_t> buf(map_send.size());
+#if 0
+    thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
+#else
+    for (int i = 0; i < map_send.size(); i++) {
+      buf[i] = h_flds[map_send[i]];
+    }
+#endif
+    for (int i = 0; i < map_send.size(); i++) {
+      h_flds[map_recv[i]] += buf[i];
+    }
   }
 
   void fill_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
