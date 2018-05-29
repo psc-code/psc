@@ -28,6 +28,7 @@ add_library(psccuda
   
   psc_bnd_cuda.cxx
   cuda_bnd.cu
+  bnd_cuda_3_impl.cu
 
   psc_bnd_fields_cuda.cxx
   cuda_mfields_bnd.cu
