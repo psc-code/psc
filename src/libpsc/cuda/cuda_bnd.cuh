@@ -149,12 +149,13 @@ struct CudaBnd
 
     ddc_run_begin(maps, h_flds);
 
-    // local part
-    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(),
-		   maps.local_buf.begin());
-    scatter(maps.local_recv, maps.local_buf, h_flds);
-
     ddc_run_end(maps, h_flds, scatter);
+
+    // local part
+    thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
+		   maps.d_local_buf.begin());
+    thrust::copy(maps.d_local_buf.begin(), maps.d_local_buf.end(), maps.local_buf.begin());
+    scatter(maps.local_recv, maps.local_buf, h_flds);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
