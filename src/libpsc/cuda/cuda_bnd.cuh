@@ -106,9 +106,12 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
-    ddc_run_begin(&sub->add_ghosts2, mb, me, cmflds, h_flds);
+    thrust::host_vector<uint> map_send, map_recv;
+    setup_remote_maps(map_send, map_recv, &sub->add_ghosts2, mb, me, cmflds);
+
+    ddc_run_begin(map_send, &sub->add_ghosts2, mb, me, cmflds, h_flds);
     add_local(&sub->add_ghosts2, mb, me, h_flds, cmflds);
-    ddc_run_end(&sub->add_ghosts2, mb, me, cmflds, h_flds, add_from_buf);
+    ddc_run_end(map_recv, &sub->add_ghosts2, mb, me, cmflds, h_flds, add_from_buf);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
@@ -127,17 +130,70 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
-    ddc_run_begin(&sub->fill_ghosts2, mb, me, cmflds, h_flds);
+    thrust::host_vector<uint> map_send, map_recv;
+    setup_remote_maps(map_send, map_recv, &sub->fill_ghosts2, mb, me, cmflds);
+
+    ddc_run_begin(map_send, &sub->fill_ghosts2, mb, me, cmflds, h_flds);
     fill_local(&sub->fill_ghosts2, mb, me, h_flds, cmflds);
-    ddc_run_end(&sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
+    ddc_run_end(map_recv, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
 
   // ----------------------------------------------------------------------
+  // setup_remote_maps
+
+  void setup_remote_maps(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
+			struct mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
+  {
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_rank_info *ri = patt2->ri;
+
+    uint n_send = 0, n_recv = 0;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r == sub->mpi_rank) {
+	continue;
+      }
+      
+      if (ri[r].n_send_entries) {
+	n_send += ri[r].n_send * (me - mb);
+      }
+      if (ri[r].n_recv_entries) {
+	n_recv += ri[r].n_recv * (me - mb);
+      }
+    }
+    map_send.resize(n_send);
+    map_recv.resize(n_recv);
+
+    uint off_send = 0, off_recv = 0;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r == sub->mpi_rank) {
+	continue;
+      }
+
+      if (ri[r].n_send_entries) {
+	for (int i = 0; i < ri[r].n_send_entries; i++) {
+	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
+	  map_setup(map_send, off_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	  off_send += se->len * (me - mb);
+	}
+      }
+      if (ri[r].n_recv_entries) {
+	for (int i = 0; i < ri[r].n_recv_entries; i++) {
+	  struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
+	  map_setup(map_recv, off_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+	  off_recv += re->len * (me - mb);
+	}
+      }
+    }
+
+  }
+  
+  // ----------------------------------------------------------------------
   // ddc_run_begin
 
-  void ddc_run_begin(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+  void ddc_run_begin(thrust::host_vector<uint>& map_send,
+		     struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		     cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds)
   {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
@@ -156,31 +212,14 @@ struct CudaBnd
     }  
     assert(p == (real_t*) patt2->recv_buf + patt2->n_recv * (me - mb));
 
-    // post sends
-    patt2->send_cnt = 0;
-    uint n_send = 0;
-    for (int r = 0; r < sub->mpi_size; r++) {
-      if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	n_send += ri[r].n_send * (me - mb);
-      }
-    }
-    thrust::host_vector<uint> map_send(n_send);
-    uint off = 0;
-    for (int r = 0; r < sub->mpi_size; r++) {
-      if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	for (int i = 0; i < ri[r].n_send_entries; i++) {
-	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	  map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-	  off += se->len * (me - mb);
-	}
-      }
-    }
-
+    // gather what's to be sent
     p = (real_t*) patt2->send_buf;
     for (auto idx : map_send) {
       *p++ = h_flds[idx];
     }
 
+    // post sends
+    patt2->send_cnt = 0;
     p = (real_t*) patt2->send_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
@@ -195,7 +234,8 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // ddc_run_end
 
-  void ddc_run_end(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+  void ddc_run_end(thrust::host_vector<uint>& map_recv,
+		   struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		   cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds,
 		   void (*from_buf)(const thrust::host_vector<uint>& map,
 				    real_t *buf, thrust::host_vector<real_t>& h_flds))
