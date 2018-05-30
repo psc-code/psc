@@ -169,14 +169,8 @@ struct CudaBnd
 	  map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
 	  off += size;
 	}
-	off = 0;
-	for (int i = 0; i < ri[r].n_send_entries; i++) {
-	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	  uint size = se->len * (me - mb);
-	  for (int i = 0; i < size; i++) {
-	    p[off + i] = h_flds[map_send[off + i]];
-	  }
-	  off += size;
+	for (int i = 0; i < ri[r].n_send * (me - mb); i++) {
+	  p[i] = h_flds[map_send[i]];
 	}
 	MPI_Isend(p, ri[r].n_send * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
