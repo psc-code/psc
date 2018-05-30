@@ -10,41 +10,7 @@
 #include <thrust/gather.h>
 #include <thrust/scatter.h>
 
-using real_t = float;
-
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
-
-// ----------------------------------------------------------------------
-// mrc_ddc_multi_free_buffers
-
-static void
-mrc_ddc_multi_free_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
-{
-  free(patt2->recv_buf);
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_multi_alloc_buffers
-
-static void
-mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-			    int n_fields)
-{
-  if (ddc->size_of_type > patt2->max_size_of_type ||
-      n_fields > patt2->max_n_fields) {
-
-    if (ddc->size_of_type > patt2->max_size_of_type) {
-      patt2->max_size_of_type = ddc->size_of_type;
-    }
-    if (n_fields > patt2->max_n_fields) {
-      patt2->max_n_fields = n_fields;
-    }
-
-    mrc_ddc_multi_free_buffers(ddc, patt2);
-
-    patt2->recv_buf = malloc(patt2->n_recv * patt2->max_n_fields * patt2->max_size_of_type);
-  }
-}
 
 // ======================================================================
 // CudaBnd
@@ -92,7 +58,6 @@ struct CudaBnd
       local_buf.resize(local_send.size());
       send_buf.resize(send.size());
       recv_buf.resize(recv.size());
-      mrc_ddc_multi_alloc_buffers(ddc, patt2, me - mb);
     }
     
     thrust::host_vector<uint> send, recv;
@@ -166,32 +131,33 @@ struct CudaBnd
     // communicate aggregated buffers
     // post receives
     patt2->recv_cnt = 0;
-    real_t* pp = (real_t*) patt2->recv_buf;
+    auto p_recv = maps.recv_buf.begin();
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_recv_entries) {
-	MPI_Irecv(pp, ri[r].n_recv * mm, mpi_dtype,
+	MPI_Irecv(&*p_recv, ri[r].n_recv * mm, mpi_dtype,
 		  r, 0, ddc_->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
-	pp += ri[r].n_recv * mm;
+	p_recv += ri[r].n_recv * mm;
       }
-    }  
-    assert(pp == (real_t*) patt2->recv_buf + patt2->n_recv * mm);
+    }
+    assert(p_recv == maps.recv_buf.end());
 
     // gather what's to be sent
-    auto p = maps.send_buf.begin();
+    auto p_send = maps.send_buf.begin();
     for (auto idx : maps.send) {
-      *p++ = h_flds[idx];
+      *p_send++ = h_flds[idx];
     }
 
     // post sends
     patt2->send_cnt = 0;
-    p = maps.send_buf.begin();
+    p_send = maps.send_buf.begin();
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	MPI_Isend(&*p, ri[r].n_send * mm, mpi_dtype,
+	MPI_Isend(&*p_send, ri[r].n_send * mm, mpi_dtype,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
-	p += ri[r].n_send * mm;
+	p_send += ri[r].n_send * mm;
       }
     }  
+    assert(p_send == maps.send_buf.end());
   }
 
   // ----------------------------------------------------------------------
@@ -204,8 +170,7 @@ struct CudaBnd
   {
     MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
 
-    real_t* recv_buf = (real_t*) maps.patt->recv_buf;
-    scatter(maps.recv, recv_buf, h_flds);
+    scatter(maps.recv, &maps.recv_buf[0], h_flds);
 
     MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
   }
