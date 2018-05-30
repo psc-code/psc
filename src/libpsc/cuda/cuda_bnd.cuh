@@ -14,18 +14,6 @@ using real_t = float;
 
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
 
-static void
-mrc_ddc_multi_set_mpi_type(struct mrc_ddc *ddc)
-{
-  if (ddc->size_of_type == sizeof(float)) {
-    ddc->mpi_type = MPI_FLOAT;
-  } else if (ddc->size_of_type == sizeof(double)) {
-    ddc->mpi_type = MPI_DOUBLE;
-  } else {
-    assert(0);
-  }
-}
-
 // ----------------------------------------------------------------------
 // mrc_ddc_multi_free_buffers
 
@@ -113,7 +101,6 @@ struct CudaBnd
 
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
-    mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
     Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
 
@@ -134,7 +121,6 @@ struct CudaBnd
     // rather then box
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
-    mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
     Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
 
@@ -165,6 +151,7 @@ struct CudaBnd
   {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     struct mrc_ddc_rank_info *ri = patt2->ri;
+    MPI_Datatype mpi_dtype = MPI_FLOAT; // FIXME Mfields_traits<Mfields>::mpi_dtype();
 
     // communicate aggregated buffers
     // post receives
@@ -172,7 +159,7 @@ struct CudaBnd
     real_t* p = (real_t*) patt2->recv_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_recv_entries) {
-	MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc_->mpi_type,
+	MPI_Irecv(p, ri[r].n_recv * (me - mb), mpi_dtype,
 		  r, 0, ddc_->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
 	p += ri[r].n_recv * (me - mb);
       }
@@ -190,7 +177,7 @@ struct CudaBnd
     p = (real_t*) patt2->send_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	MPI_Isend(p, ri[r].n_send * (me - mb), ddc_->mpi_type,
+	MPI_Isend(p, ri[r].n_send * (me - mb), mpi_dtype,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
 	p += ri[r].n_send * (me - mb);
       }
