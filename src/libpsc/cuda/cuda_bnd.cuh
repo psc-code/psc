@@ -4,6 +4,7 @@
 #include "psc_fields_cuda.h"
 #include "cuda_mfields.h"
 #include "fields.hxx"
+#include "cuda_bits.h"
 
 #include "mrc_ddc_private.h"
 
@@ -60,9 +61,12 @@ struct CudaBnd
     void operator()(const thrust::device_vector<uint>& map,
 		    const thrust::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
     {
+      if (buf.empty()) return;
+      
       const int THREADS_PER_BLOCK = 256;
       dim3 dimGrid((buf.size() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
       k_scatter_add<<<dimGrid, THREADS_PER_BLOCK>>>(buf.data().get(), map.data().get(), d_flds.get(), buf.size());
+      cuda_sync_if_enabled();
     }
   };
 
@@ -80,9 +84,12 @@ struct CudaBnd
 #if 1
       thrust::scatter(buf.begin(), buf.end(), map.begin(), d_flds);
 #else
+      if (buf.empty()) return;
+
       const int THREADS_PER_BLOCK = 256;
       dim3 dimGrid((buf.size() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
       k_scatter<<<dimGrid, THREADS_PER_BLOCK>>>(buf.data().get(), map.data().get(), d_flds.get(), buf.size());
+      cuda_sync_if_enabled();
 #endif
     }
   };
