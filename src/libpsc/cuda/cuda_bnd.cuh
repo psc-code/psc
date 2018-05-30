@@ -142,14 +142,11 @@ struct CudaBnd
     assert(p_recv == maps.recv_buf.end());
 
     // gather what's to be sent
-    auto p_send = maps.send_buf.begin();
-    for (auto idx : maps.send) {
-      *p_send++ = h_flds[idx];
-    }
+    thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
 
     // post sends
     patt2->send_cnt = 0;
-    p_send = maps.send_buf.begin();
+    auto p_send = maps.send_buf.begin();
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
 	MPI_Isend(&*p_send, ri[r].n_send * mm, mpi_dtype,
@@ -170,7 +167,7 @@ struct CudaBnd
   {
     MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
 
-    scatter(maps.recv, &maps.recv_buf[0], h_flds);
+    scatter(maps.recv, maps.recv_buf, h_flds);
 
     MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
   }
@@ -184,7 +181,7 @@ struct CudaBnd
   {
     auto& buf = maps.local_buf;
     thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(), buf.begin());
-    scatter(maps.local_recv, &buf[0], h_flds);
+    scatter(maps.local_recv, buf, h_flds);
   }
 
   // ----------------------------------------------------------------------
@@ -275,10 +272,11 @@ struct CudaBnd
   struct ScatterAdd
   {
     void operator()(const thrust::host_vector<uint>& map,
-		    real_t* buf, thrust::host_vector<real_t>& h_flds)
+		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
     {
+      auto p = buf.begin();
       for (auto cur : map) {
-	h_flds[cur] += *buf++;
+	h_flds[cur] += *p++;
       }
     }
   };
@@ -286,13 +284,14 @@ struct CudaBnd
   struct Scatter
   {
     void operator()(const thrust::host_vector<uint>& map,
-		    real_t* buf, thrust::host_vector<real_t>& h_flds)
+		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
     {
 #if 1
-      thrust::scatter(buf, buf + map.size(), map.begin(), h_flds.begin());
+      thrust::scatter(buf.begin(), buf.end(), map.begin(), h_flds.begin());
 #else
+      auto p = buf.begin();
       for (auto cur : map) {
-	h_flds[cur] = *buf++;
+	h_flds[cur] = *p++;
       }
 #endif
     }
