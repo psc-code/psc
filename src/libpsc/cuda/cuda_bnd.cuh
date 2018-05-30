@@ -9,8 +9,19 @@
 
 #include <thrust/gather.h>
 #include <thrust/scatter.h>
+#include <thrust/sort.h>
 
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
+
+template<typename real_t>
+__global__
+static void k_scatter(const real_t* buf, const uint* map, real_t* flds, unsigned int size)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  if (i < size) {
+    flds[map[i]] = buf[i];
+  }
+}
 
 // ======================================================================
 // CudaBnd
@@ -42,13 +53,18 @@ struct CudaBnd
     void operator()(const thrust::host_vector<uint>& map,
 		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
     {
-#if 1
       thrust::scatter(buf.begin(), buf.end(), map.begin(), h_flds.begin());
+    }
+
+    void operator()(const thrust::device_vector<uint>& map,
+		    const thrust::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
+    {
+#if 1
+      thrust::scatter(buf.begin(), buf.end(), map.begin(), d_flds);
 #else
-      auto p = buf.begin();
-      for (auto cur : map) {
-	h_flds[cur] = *p++;
-      }
+      const int THREADS_PER_BLOCK = 256;
+      dim3 dimGrid((buf.size() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+      k_scatter<<<dimGrid, THREADS_PER_BLOCK>>>(buf.data().get(), map.data().get(), d_flds.get(), buf.size());
 #endif
     }
   };
@@ -152,10 +168,16 @@ struct CudaBnd
     ddc_run_end(maps, h_flds, scatter);
 
     // local part
+#if 0
+    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(),
+		   maps.local_buf.begin());
+    scatter(maps.local_recv, maps.local_buf, h_flds);
+#else
     thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
 		   maps.d_local_buf.begin());
     thrust::copy(maps.d_local_buf.begin(), maps.d_local_buf.end(), maps.local_buf.begin());
     scatter(maps.local_recv, maps.local_buf, h_flds);
+#endif
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
@@ -175,8 +197,7 @@ struct CudaBnd
     // local part
     thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(),
 		   d_flds, maps.d_local_buf.begin());
-    thrust::scatter(maps.d_local_buf.begin(), maps.d_local_buf.end(),
-		    maps.d_local_recv.begin(), d_flds);
+    scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
   }
   
   // ----------------------------------------------------------------------
