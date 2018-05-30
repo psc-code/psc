@@ -128,12 +128,12 @@ k_find_block_indices_ids(DParticleIndexer<BS> dpi, float4 *d_xi4, uint *d_off,
 			 uint *d_bidx, uint *d_ids, int n_patches,
 			 int n_blocks_per_patch)
 {
-  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
   for (int p = 0; p < n_patches; p++) {
     uint off = d_off[p * n_blocks_per_patch];
     uint n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
-    if (n < n_prts) {
+
+    int n = threadIdx.x + blockDim.x * blockIdx.x;
+    for (; n < n_prts; n += gridDim.x * blockDim.x) {
       float4 xi4 = d_xi4[n + off];
       d_bidx[n + off] = dpi.blockIndex(xi4, p);
       d_ids[n + off] = n + off;
@@ -190,8 +190,10 @@ void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_
   if (max_n_prts == 0) {
     return;
   }
-  
-  dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+
+  int n_blocks = (max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  if (n_blocks > 65536) n_blocks = 65536;
+  dim3 dimGrid(n_blocks);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
   k_find_block_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
@@ -252,29 +254,28 @@ __global__ static void
 k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
 		      const uint *d_bidx, const uint *d_ids, uint *d_off, int last_block)
 {
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
 
-  if (i > nr_prts)
-    return;
-
-  int block, prev_block;
-  if (i < nr_prts) {
-    xi4[i] = alt_xi4[d_ids[i]];
-    pxi4[i] = alt_pxi4[d_ids[i]];
+  for (; i <= nr_prts; i += blockDim.x * gridDim.x) {
+    int block, prev_block;
+    if (i < nr_prts) {
+      xi4[i] = alt_xi4[d_ids[i]];
+      pxi4[i] = alt_pxi4[d_ids[i]];
+      
+      block = d_bidx[i];
+    } else { // needed if there is no particle in the last block
+      block = last_block;
+  }
     
-    block = d_bidx[i];
-  } else { // needed if there is no particle in the last block
-    block = last_block;
-  }
-
-  // OPT: d_bidx[i-1] could use shmem
-  // create offsets per block into particle array
-  prev_block = -1;
-  if (i > 0) {
-    prev_block = d_bidx[i-1];
-  }
-  for (int b = prev_block + 1; b <= block; b++) {
-    d_off[b] = i;
+    // OPT: d_bidx[i-1] could use shmem
+    // create offsets per block into particle array
+    prev_block = -1;
+    if (i > 0) {
+      prev_block = d_bidx[i-1];
+    }
+    for (int b = prev_block + 1; b <= block; b++) {
+      d_off[b] = i;
+    }
   }
 }
 
@@ -293,7 +294,9 @@ void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>&
   swap_alt();
   resize(this->n_prts);
 
-  dim3 dimGrid((this->n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  int n_blocks = (this->n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  if (n_blocks > 65536) n_blocks = 65536;
+  dim3 dimGrid(n_blocks);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
   k_reorder_and_offsets<<<dimGrid, dimBlock>>>(this->n_prts, this->d_xi4.data().get(), this->d_pxi4.data().get(),
