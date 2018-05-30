@@ -181,9 +181,13 @@ struct CudaBnd
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
     thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
-    ddc_run_begin(maps, h_flds);
+    postReceives(maps);
+    thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
+    postSends(maps);
 
-    ddc_run_end(maps, h_flds, scatter);
+    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
+    scatter(maps.recv, maps.recv_buf, h_flds);
+    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
 
     // local part
 #if 0
@@ -207,9 +211,13 @@ struct CudaBnd
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
     thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
-    ddc_run_begin(maps, h_flds);
+    postReceives(maps);
+    thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
+    postSends(maps);
 
-    ddc_run_end(maps, h_flds, scatter);
+    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
+    scatter(maps.recv, maps.recv_buf, h_flds);
+    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 
@@ -263,31 +271,6 @@ struct CudaBnd
     assert(p_send == maps.send_buf.end());
   }
   
-  // ----------------------------------------------------------------------
-  // ddc_run_begin
-
-  void ddc_run_begin(Maps& maps, thrust::host_vector<real_t>& h_flds)
-  {
-    postReceives(maps);
-    thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
-    postSends(maps);
-  }
-
-  // ----------------------------------------------------------------------
-  // ddc_run_end
-
-  template<typename S>
-  void ddc_run_end(Maps& maps,
-		   thrust::host_vector<real_t>& h_flds,
-		   S scatter)
-  {
-    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
-
-    scatter(maps.recv, maps.recv_buf, h_flds);
-
-    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
-  }
-
   // ----------------------------------------------------------------------
   // setup_remote_maps
 
