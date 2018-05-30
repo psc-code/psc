@@ -22,6 +22,37 @@ struct CudaBnd
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
 
+  // ======================================================================
+  // Scatter
+  
+  struct ScatterAdd
+  {
+    void operator()(const thrust::host_vector<uint>& map,
+		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
+    {
+      auto p = buf.begin();
+      for (auto cur : map) {
+	h_flds[cur] += *p++;
+      }
+    }
+  };
+
+  struct Scatter
+  {
+    void operator()(const thrust::host_vector<uint>& map,
+		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
+    {
+#if 1
+      thrust::scatter(buf.begin(), buf.end(), map.begin(), h_flds.begin());
+#else
+      auto p = buf.begin();
+      for (auto cur : map) {
+	h_flds[cur] = *p++;
+      }
+#endif
+    }
+  };
+
   // ----------------------------------------------------------------------
   // ctor
   
@@ -116,6 +147,24 @@ struct CudaBnd
     scatter(maps.local_recv, maps.local_buf, h_flds);
 
     ddc_run_end(maps, h_flds, scatter);
+
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+  }
+  
+  void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds,
+	       Scatter scatter)
+  {
+    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
+
+    ddc_run_begin(maps, h_flds);
+
+    ddc_run_end(maps, h_flds, scatter);
+
+    // local part
+    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(),
+		   maps.local_buf.begin());
+    scatter(maps.local_recv, maps.local_buf, h_flds);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
@@ -259,34 +308,6 @@ struct CudaBnd
       }
     }
   }
-
-  struct ScatterAdd
-  {
-    void operator()(const thrust::host_vector<uint>& map,
-		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
-    {
-      auto p = buf.begin();
-      for (auto cur : map) {
-	h_flds[cur] += *p++;
-      }
-    }
-  };
-
-  struct Scatter
-  {
-    void operator()(const thrust::host_vector<uint>& map,
-		    const thrust::host_vector<real_t>& buf, thrust::host_vector<real_t>& h_flds)
-    {
-#if 1
-      thrust::scatter(buf.begin(), buf.end(), map.begin(), h_flds.begin());
-#else
-      auto p = buf.begin();
-      for (auto cur : map) {
-	h_flds[cur] = *p++;
-      }
-#endif
-    }
-  };
 
 private:
   mrc_ddc* ddc_;
