@@ -296,8 +296,7 @@ struct CudaBnd
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
-      buf_size += size;
+      buf_size += se->len * (me - mb);
     }
 
     map_send.resize(buf_size);
@@ -312,7 +311,7 @@ struct CudaBnd
 	  se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
 	continue;
       }
-      uint size = (me - mb) * (se->ihi[0] - se->ilo[0]) * (se->ihi[1] - se->ilo[1]) * (se->ihi[2] - se->ilo[2]);
+      uint size = se->len * (me - mb);
       map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
       map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, cmflds);
       off += size;
