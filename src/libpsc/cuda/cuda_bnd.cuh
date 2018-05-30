@@ -172,6 +172,12 @@ struct CudaBnd
 	for (int i = 0; i < ri[r].n_send * (me - mb); i++) {
 	  p[i] = h_flds[map_send[i]];
 	}
+	p += ri[r].n_send * (me - mb);
+      }
+    }
+    p = (real_t*) patt2->send_buf;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank && ri[r].n_send_entries) {
 	MPI_Isend(p, ri[r].n_send * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
 	p += ri[r].n_send * (me - mb);
