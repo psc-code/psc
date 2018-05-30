@@ -218,45 +218,59 @@ struct CudaBnd
 		   d_flds, maps.d_local_buf.begin());
     scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
   }
+
+  // ----------------------------------------------------------------------
+  // postReceives
+  
+  void postReceives(Maps& maps)
+  {
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_rank_info *ri = maps.patt->ri;
+    MPI_Datatype mpi_dtype = MPI_FLOAT; // FIXME Mfields_traits<Mfields>::mpi_dtype();
+    int mm = maps.me - maps.mb;
+
+    maps.patt->recv_cnt = 0;
+    auto p_recv = maps.recv_buf.begin();
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank && ri[r].n_recv_entries) {
+	MPI_Irecv(&*p_recv, ri[r].n_recv * mm, mpi_dtype,
+		  r, 0, ddc_->obj.comm, &maps.patt->recv_req[maps.patt->recv_cnt++]);
+	p_recv += ri[r].n_recv * mm;
+      }
+    }
+    assert(p_recv == maps.recv_buf.end());
+  }
+
+  // ----------------------------------------------------------------------
+  // postSends
+  
+  void postSends(Maps& maps)
+  {
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_rank_info *ri = maps.patt->ri;
+    MPI_Datatype mpi_dtype = MPI_FLOAT; // FIXME Mfields_traits<Mfields>::mpi_dtype();
+    int mm = maps.me - maps.mb;
+
+    maps.patt->send_cnt = 0;
+    auto p_send = maps.send_buf.begin();
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank && ri[r].n_send_entries) {
+	MPI_Isend(&*p_send, ri[r].n_send * mm, mpi_dtype,
+		  r, 0, ddc_->obj.comm, &maps.patt->send_req[maps.patt->send_cnt++]);
+	p_send += ri[r].n_send * mm;
+      }
+    }  
+    assert(p_send == maps.send_buf.end());
+  }
   
   // ----------------------------------------------------------------------
   // ddc_run_begin
 
   void ddc_run_begin(Maps& maps, thrust::host_vector<real_t>& h_flds)
   {
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
-    auto patt2 = maps.patt;
-    struct mrc_ddc_rank_info *ri = patt2->ri;
-    MPI_Datatype mpi_dtype = MPI_FLOAT; // FIXME Mfields_traits<Mfields>::mpi_dtype();
-    int mm = maps.me - maps.mb;
-
-    // communicate aggregated buffers
-    // post receives
-    patt2->recv_cnt = 0;
-    auto p_recv = maps.recv_buf.begin();
-    for (int r = 0; r < sub->mpi_size; r++) {
-      if (r != sub->mpi_rank && ri[r].n_recv_entries) {
-	MPI_Irecv(&*p_recv, ri[r].n_recv * mm, mpi_dtype,
-		  r, 0, ddc_->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
-	p_recv += ri[r].n_recv * mm;
-      }
-    }
-    assert(p_recv == maps.recv_buf.end());
-
-    // gather what's to be sent
+    postReceives(maps);
     thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
-
-    // post sends
-    patt2->send_cnt = 0;
-    auto p_send = maps.send_buf.begin();
-    for (int r = 0; r < sub->mpi_size; r++) {
-      if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	MPI_Isend(&*p_send, ri[r].n_send * mm, mpi_dtype,
-		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
-	p_send += ri[r].n_send * mm;
-      }
-    }  
-    assert(p_send == maps.send_buf.end());
+    postSends(maps);
   }
 
   // ----------------------------------------------------------------------
