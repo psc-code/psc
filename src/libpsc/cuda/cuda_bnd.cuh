@@ -113,7 +113,12 @@ struct CudaBnd
 	       S scatter)
   {
     ddc_run_begin(maps, h_flds);
-    ddc_run_local(maps, h_flds, scatter);
+
+    // local part
+    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(),
+		   maps.local_buf.begin());
+    scatter(maps.local_recv, maps.local_buf, h_flds);
+
     ddc_run_end(maps, h_flds, scatter);
   }
   
@@ -170,18 +175,6 @@ struct CudaBnd
     scatter(maps.recv, maps.recv_buf, h_flds);
 
     MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
-  }
-
-  // ----------------------------------------------------------------------
-  // ddc_run_local
-
-  template<typename S>
-  void ddc_run_local(Maps& maps,
-		     thrust::host_vector<real_t>& h_flds, S scatter)
-  {
-    auto& buf = maps.local_buf;
-    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(), buf.begin());
-    scatter(maps.local_recv, buf, h_flds);
   }
 
   // ----------------------------------------------------------------------
