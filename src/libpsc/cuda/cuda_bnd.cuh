@@ -158,7 +158,6 @@ struct CudaBnd
 
     // post sends
     patt2->send_cnt = 0;
-    p = (real_t*) patt2->send_buf;
     uint n_send = 0;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
@@ -166,28 +165,22 @@ struct CudaBnd
       }
     }
     thrust::host_vector<uint> map_send(n_send);
-    uint off0 = 0;
+    uint off = 0;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	uint off = 0;
 	for (int i = 0; i < ri[r].n_send_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	  uint size = se->len * (me - mb);
-	  map_setup(map_send, off0 + off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-	  off += size;
+	  map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	  off += se->len * (me - mb);
 	}
-	off0 += ri[r].n_send * (me - mb);
       }
     }
-    off0 = 0;
-    for (int r = 0; r < sub->mpi_size; r++) {
-      if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	for (int i = 0; i < ri[r].n_send * (me - mb); i++) {
-	  p[off0 + i] = h_flds[map_send[off0 + i]];
-	}
-	off0 += ri[r].n_send * (me - mb);
-      }
+
+    p = (real_t*) patt2->send_buf;
+    for (auto idx : map_send) {
+      *p++ = h_flds[idx];
     }
+
     p = (real_t*) patt2->send_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
