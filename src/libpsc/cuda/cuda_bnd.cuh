@@ -161,14 +161,17 @@ struct CudaBnd
 
     ddc_run_end(maps, h_flds, scatter);
 
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+
     // local part
     auto& h_buf = maps.local_buf;
     auto& h_recv_map = maps.local_recv;
-    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(),
-		   h_buf.begin());
-    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
-    thrust::device_vector<real_t> d_buf{h_buf};
     thrust::device_vector<uint> d_recv_map{h_recv_map};
+    auto& h_send_map = maps.local_send;
+    thrust::device_vector<uint> d_send_map{h_send_map};
+    thrust::device_vector<real_t> d_buf{h_buf};
+
+    thrust::gather(d_send_map.begin(), d_send_map.end(), d_flds, d_buf.begin());
     thrust::scatter(d_buf.begin(), d_buf.end(), d_recv_map.begin(), d_flds);
 
   }
