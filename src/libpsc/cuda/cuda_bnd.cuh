@@ -113,7 +113,7 @@ struct CudaBnd
 
     ddc_run_begin(map_send, &sub->add_ghosts2, mb, me, h_flds);
     ddc_run_local(map_local_send, map_local_recv, h_flds, ScatterAdd{});
-    ddc_run_end(map_recv, &sub->add_ghosts2, mb, me, h_flds, ScatterAdd{});
+    ddc_run_end(map_recv, &sub->add_ghosts2, h_flds, ScatterAdd{});
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
@@ -139,7 +139,7 @@ struct CudaBnd
 
     ddc_run_begin(map_send, &sub->fill_ghosts2, mb, me, h_flds);
     ddc_run_local(map_local_send, map_local_recv, h_flds, Scatter{});
-    ddc_run_end(map_recv, &sub->fill_ghosts2, mb, me, h_flds, Scatter{});
+    ddc_run_end(map_recv, &sub->fill_ghosts2, h_flds, Scatter{});
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
@@ -191,7 +191,7 @@ struct CudaBnd
 
   template<typename S>
   void ddc_run_end(thrust::host_vector<uint>& map_recv,
-		   struct mrc_ddc_pattern2 *patt2, int mb, int me,
+		   struct mrc_ddc_pattern2 *patt2,
 		   thrust::host_vector<real_t>& h_flds,
 		   S scatter)
   {
