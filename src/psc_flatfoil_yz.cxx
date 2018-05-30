@@ -472,8 +472,8 @@ struct PscFlatfoil : PscFlatfoilParams
       }
       first_iteration = false;
 
-      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Time %g\n", psc_->timestep + 1,
-		 psc_->prm.nmax, psc_->timestep * psc_->dt);
+      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", psc_->timestep + 1,
+		 psc_->prm.nmax, psc_->timestep * psc_->dt, MPI_Wtime() - psc_->time_start);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
