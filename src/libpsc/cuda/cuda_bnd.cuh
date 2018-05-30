@@ -146,37 +146,37 @@ struct CudaBnd
     // communicate aggregated buffers
     // post receives
     patt2->recv_cnt = 0;
-    char* p = (char*) patt2->recv_buf;
+    real_t* p = (real_t*) patt2->recv_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_recv_entries) {
 	MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
-	p += ri[r].n_recv * (me - mb) * ddc_->size_of_type;
+	p += ri[r].n_recv * (me - mb);
       }
     }  
-    assert(p == (char*)patt2->recv_buf + patt2->n_recv * (me - mb) * ddc_->size_of_type);
+    assert(p == (real_t*) patt2->recv_buf + patt2->n_recv * (me - mb));
 
     // post sends
     patt2->send_cnt = 0;
-    p = (char*) patt2->send_buf;
+    p = (real_t*) patt2->send_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
-	void *p0 = p;
+	real_t *p0 = p;
 	for (int i = 0; i < ri[r].n_send_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
 	  thrust::host_vector<uint> map_recv(se->len * (me - mb));
 	  map_setup(map_recv, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-	  real_t* buf = (real_t*) p;
+	  real_t* buf = p;
 	  for (auto cur : map_recv) {
 	    *buf++ = h_flds[cur];
 	  }
-	  p += se->len * (me - mb) * ddc_->size_of_type;
+	  p += se->len * (me - mb);
 	}
 	MPI_Isend(p0, ri[r].n_send * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
       }
     }  
-    assert(p == (char*) patt2->send_buf + patt2->n_send * (me - mb) * ddc_->size_of_type);
+    assert(p == (real_t*) patt2->send_buf + patt2->n_send * (me - mb));
   }
 
   // ----------------------------------------------------------------------
@@ -192,13 +192,13 @@ struct CudaBnd
 
     MPI_Waitall(patt2->recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
 
-    char* p = (char*) patt2->recv_buf;
+    real_t* p = (real_t*) patt2->recv_buf;
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank) {
 	for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
 	  from_buf(mb, me, re->patch, re->ilo, re->ihi, p, cmflds, h_flds);
-	  p += re->len * (me - mb) * ddc_->size_of_type;
+	  p += re->len * (me - mb);
 	}
       }
     }
