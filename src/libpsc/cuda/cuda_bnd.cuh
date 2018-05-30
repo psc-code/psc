@@ -89,6 +89,10 @@ struct CudaBnd
       local_buf.resize(local_send.size());
       send_buf.resize(send.size());
       recv_buf.resize(recv.size());
+
+      d_local_send = local_send;
+      d_local_recv = local_recv;
+      d_local_buf.resize(local_buf.size());
     }
     
     thrust::host_vector<uint> send, recv;
@@ -96,6 +100,10 @@ struct CudaBnd
     thrust::host_vector<real_t> local_buf;
     thrust::host_vector<real_t> send_buf;
     thrust::host_vector<real_t> recv_buf;
+
+    thrust::device_vector<uint> d_local_recv, d_local_send;
+    thrust::device_vector<real_t> d_local_buf;
+
     mrc_ddc_pattern2* patt;
     int mb, me;
   };
@@ -164,16 +172,10 @@ struct CudaBnd
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 
     // local part
-    auto& h_buf = maps.local_buf;
-    auto& h_recv_map = maps.local_recv;
-    thrust::device_vector<uint> d_recv_map{h_recv_map};
-    auto& h_send_map = maps.local_send;
-    thrust::device_vector<uint> d_send_map{h_send_map};
-    thrust::device_vector<real_t> d_buf{h_buf};
-
-    thrust::gather(d_send_map.begin(), d_send_map.end(), d_flds, d_buf.begin());
-    thrust::scatter(d_buf.begin(), d_buf.end(), d_recv_map.begin(), d_flds);
-
+    thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(),
+		   d_flds, maps.d_local_buf.begin());
+    thrust::scatter(maps.d_local_buf.begin(), maps.d_local_buf.end(),
+		    maps.d_local_recv.begin(), d_flds);
   }
   
   // ----------------------------------------------------------------------
