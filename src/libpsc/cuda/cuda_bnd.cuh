@@ -75,15 +75,11 @@ struct CudaBnd
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     cuda_mfields& cmflds = *mflds.cmflds;
-
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
     
     Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
 
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
-    ddc_run(maps, &sub->add_ghosts2, mb, me, h_flds, ScatterAdd{});
-    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+    ddc_run(maps, &sub->add_ghosts2, mb, me, cmflds, ScatterAdd{});
   }
   
   // ----------------------------------------------------------------------
@@ -91,27 +87,27 @@ struct CudaBnd
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
-    cuda_mfields& cmflds = *mflds.cmflds;
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    cuda_mfields& cmflds = *mflds.cmflds;
+    mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
     
     Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
 
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
-    ddc_run(maps, &sub->fill_ghosts2, mb, me, h_flds, Scatter{});
-    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+    ddc_run(maps, &sub->fill_ghosts2, mb, me, cmflds, Scatter{});
   }
 
   // ----------------------------------------------------------------------
   // ddc_run
 
   template<typename S>
-  void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, thrust::host_vector<real_t>& h_flds,
+  void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds,
 	       S scatter)
   {
+    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
+
     ddc_run_begin(maps, h_flds);
 
     // local part
@@ -120,6 +116,8 @@ struct CudaBnd
     scatter(maps.local_recv, maps.local_buf, h_flds);
 
     ddc_run_end(maps, h_flds, scatter);
+
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
   // ----------------------------------------------------------------------
