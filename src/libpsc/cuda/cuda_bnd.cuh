@@ -176,6 +176,12 @@ struct CudaBnd
 	  map_setup(map_send, off0 + off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
 	  off += size;
 	}
+	off0 += ri[r].n_send * (me - mb);
+      }
+    }
+    off0 = 0;
+    for (int r = 0; r < sub->mpi_size; r++) {
+      if (r != sub->mpi_rank && ri[r].n_send_entries) {
 	for (int i = 0; i < ri[r].n_send * (me - mb); i++) {
 	  p[off0 + i] = h_flds[map_send[off0 + i]];
 	}
