@@ -165,7 +165,7 @@ struct CudaBnd
 	for (int i = 0; i < ri[r].n_send_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
 	  thrust::host_vector<uint> map_recv(se->len * (me - mb));
-	  copy_to_buf(map_recv, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	  map_setup(map_recv, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
 	  real_t* buf = (real_t*) p;
 	  for (auto cur : map_recv) {
 	    *buf++ = h_flds[cur];
@@ -286,25 +286,6 @@ struct CudaBnd
 			cuda_mfields& cmflds)
   {
     auto cur = &map[off];
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    *cur++ = cmflds.index(m, ix,iy,iz, p);
-	  }
-	}
-      }
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // copy_to_buf
-
-  static void copy_to_buf(thrust::host_vector<uint>& map,
-			  int mb, int me, int p, int ilo[3], int ihi[3],
-			  cuda_mfields& cmflds)
-  {
-    auto cur = map.begin();
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
