@@ -734,8 +734,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 #endif
   
 #if TEST == TEST_1_HEATING_3D
-  LL = { 1., 2., 2. }; // domain size (in d_e)
-  gdims = { 5, 5, 5 }; // global number of grid points
+  LL = { 2., 2., 2. }; // domain size (in d_e)
+  gdims = { 8, 8, 8 }; // global number of grid points
   np = { 1, 1, 1 }; // division into patches
 #endif
   
