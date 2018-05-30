@@ -112,7 +112,7 @@ struct CudaBnd
     setup_local_maps(map_local_send, map_local_recv, &sub->add_ghosts2, mb, me, cmflds);
 
     ddc_run_begin(map_send, &sub->add_ghosts2, mb, me, h_flds);
-    add_local(map_local_send, map_local_recv, h_flds);
+    add_local(map_local_send, map_local_recv, h_flds, ScatterAdd{});
     ddc_run_end(map_recv, &sub->add_ghosts2, mb, me, h_flds, ScatterAdd{});
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
@@ -138,7 +138,7 @@ struct CudaBnd
     setup_local_maps(map_local_send, map_local_recv, &sub->fill_ghosts2, mb, me, cmflds);
 
     ddc_run_begin(map_send, &sub->fill_ghosts2, mb, me, h_flds);
-    fill_local(map_local_send, map_local_recv, h_flds);
+    fill_local(map_local_send, map_local_recv, h_flds, Scatter{});
     ddc_run_end(map_recv, &sub->fill_ghosts2, mb, me, h_flds, Scatter{});
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -203,8 +203,9 @@ struct CudaBnd
     MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
   }
 
+  template<typename S>
   void add_local(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
-		 thrust::host_vector<real_t>& h_flds)
+		 thrust::host_vector<real_t>& h_flds, S scatter)
   {
     thrust::host_vector<real_t> buf(map_send.size());
 #if 0
@@ -214,25 +215,25 @@ struct CudaBnd
       buf[i] = h_flds[map_send[i]];
     }
 #endif
-    for (int i = 0; i < map_send.size(); i++) {
-      h_flds[map_recv[i]] += buf[i];
-    }
+    scatter(map_recv, &buf[0], h_flds);
   }
 
+  template<typename S>
   void fill_local(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
-		  thrust::host_vector<real_t>& h_flds)
+		  thrust::host_vector<real_t>& h_flds, S scatter)
   {
     thrust::host_vector<real_t> buf(map_send.size());
 #if 0
     thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
-    thrust::scatter(buf.begin(), buf.end(), map_recv.begin(), h_flds.begin());
 #else
     for (int i = 0; i < map_send.size(); i++) {
       buf[i] = h_flds[map_send[i]];
     }
-    for (int i = 0; i < map_send.size(); i++) {
-      h_flds[map_recv[i]] = buf[i];
-    }
+#endif
+#if 0
+    thrust::scatter(buf.begin(), buf.end(), map_recv.begin(), h_flds.begin());
+#else
+    scatter(map_recv, &buf[0], h_flds);
 #endif
   }
   
