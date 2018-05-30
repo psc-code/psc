@@ -192,7 +192,7 @@ void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_
   }
 
   int n_blocks = (max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  if (n_blocks > 65536) n_blocks = 65536;
+  if (n_blocks > 32768) n_blocks = 32768;
   dim3 dimGrid(n_blocks);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
@@ -295,7 +295,7 @@ void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>&
   resize(this->n_prts);
 
   int n_blocks = (this->n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  if (n_blocks > 65536) n_blocks = 65536;
+  if (n_blocks > 32768) n_blocks = 32768;
   dim3 dimGrid(n_blocks);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
