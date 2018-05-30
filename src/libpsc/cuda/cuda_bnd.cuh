@@ -210,16 +210,15 @@ struct CudaBnd
     thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(), maps.send_buf.begin());
     postSends(maps);
 
-    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
-    thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(), maps.d_recv_buf.begin());
-    scatter(maps.d_recv, maps.d_recv_buf, d_flds);
-
-    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
-
     // local part
     thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
 		   maps.d_local_buf.begin());
     scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
+
+    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
+    thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(), maps.d_recv_buf.begin());
+    scatter(maps.d_recv, maps.d_recv_buf, d_flds);
+    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
 #endif
 
   }
@@ -234,15 +233,15 @@ struct CudaBnd
     thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(), maps.send_buf.begin());
     postSends(maps);
 
-    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
-    thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(), maps.d_recv_buf.begin());
-    scatter(maps.d_recv, maps.d_recv_buf, d_flds);
-    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
-
     // local part
     thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(),
 		   d_flds, maps.d_local_buf.begin());
     scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
+
+    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
+    thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(), maps.d_recv_buf.begin());
+    scatter(maps.d_recv, maps.d_recv_buf, d_flds);
+    MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
   }
 
   // ----------------------------------------------------------------------
