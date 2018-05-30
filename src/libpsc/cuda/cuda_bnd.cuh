@@ -110,8 +110,6 @@ struct CudaBnd
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     cuda_mfields& cmflds = *mflds.cmflds;
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
@@ -119,10 +117,9 @@ struct CudaBnd
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
     Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
 
-    ddc_run_begin(maps.send, &sub->add_ghosts2, mb, me, h_flds);
-    ddc_run_local(maps.local_send, maps.local_recv, h_flds, ScatterAdd{});
-    ddc_run_end(maps.recv, &sub->add_ghosts2, h_flds, ScatterAdd{});
-
+    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
+    ddc_run(maps, &sub->add_ghosts2, mb, me, h_flds, ScatterAdd{});
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
@@ -132,8 +129,6 @@ struct CudaBnd
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     cuda_mfields& cmflds = *mflds.cmflds;
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
@@ -143,16 +138,22 @@ struct CudaBnd
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
     Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
 
-    ddc_run_begin(maps.send, &sub->fill_ghosts2, mb, me, h_flds);
-    ddc_run_local(maps.local_send, maps.local_recv, h_flds, Scatter{});
-    ddc_run_end(maps.recv, &sub->fill_ghosts2, h_flds, Scatter{});
-
+    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
+    ddc_run(maps, &sub->fill_ghosts2, mb, me, h_flds, Scatter{});
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
 
+  // ----------------------------------------------------------------------
+  // ddc_run
+
   template<typename S>
-  void ddc_run(Mfields& mflds, int mb, int me)
+  void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, thrust::host_vector<real_t>& h_flds,
+	       S scatter)
   {
+    ddc_run_begin(maps.send, patt2, mb, me, h_flds);
+    ddc_run_local(maps.local_send, maps.local_recv, h_flds, scatter);
+    ddc_run_end(maps.recv, patt2, h_flds, scatter);
   }
   
   // ----------------------------------------------------------------------
