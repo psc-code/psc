@@ -164,13 +164,11 @@ struct CudaBnd
 	real_t *p0 = p;
 	for (int i = 0; i < ri[r].n_send_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	  thrust::host_vector<uint> map_recv(se->len * (me - mb));
-	  map_setup(map_recv, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-	  real_t* buf = p;
-	  for (auto cur : map_recv) {
-	    *buf++ = h_flds[cur];
+	  thrust::host_vector<uint> map_send(se->len * (me - mb));
+	  map_setup(map_send, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	  for (auto cur : map_send) {
+	    *p++ = h_flds[cur];
 	  }
-	  p += se->len * (me - mb);
 	}
 	MPI_Isend(p0, ri[r].n_send * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
