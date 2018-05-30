@@ -387,7 +387,10 @@ struct CudaPushParticles
     if (i[0] < 0 || i[0] >= int(BS::x::value) ||
 	i[1] < 0 || i[1] >= int(BS::y::value) ||
 	i[2] < 0 || i[2] >= int(BS::z::value)) {
-      printf("CUDA_ERROR deposit jyz %d:%d:%d\n", i[0], i[1], i[2]);
+      printf("CUDA_ERROR deposit jxyz %d:%d:%d\n", i[0], i[1], i[2]);
+      const int* ci0 = current_block.ci0;
+      printf("j %d:%d:%d ci0 %d:%d:%d xm %g:%g:%g\n", j[0], j[1], j[2], ci0[0], ci0[1], ci0[2],
+	     xm[0], xm[1], xm[2]);
     }
 #endif
     // x will be orig position inside cell, ie [-.5,.5]
