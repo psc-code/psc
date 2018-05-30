@@ -140,15 +140,15 @@ struct CudaBnd
   void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, thrust::host_vector<real_t>& h_flds,
 	       S scatter)
   {
-    ddc_run_begin(maps.send, patt2, mb, me, h_flds);
-    ddc_run_local(maps.local_send, maps.local_recv, h_flds, scatter);
-    ddc_run_end(maps.recv, patt2, h_flds, scatter);
+    ddc_run_begin(maps, patt2, mb, me, h_flds);
+    ddc_run_local(maps, h_flds, scatter);
+    ddc_run_end(maps, patt2, h_flds, scatter);
   }
   
   // ----------------------------------------------------------------------
   // ddc_run_begin
 
-  void ddc_run_begin(thrust::host_vector<uint>& map_send,
+  void ddc_run_begin(Maps& maps,
 		     struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		     thrust::host_vector<real_t>& h_flds)
   {
@@ -171,7 +171,7 @@ struct CudaBnd
 
     // gather what's to be sent
     p = (real_t*) patt2->send_buf;
-    for (auto idx : map_send) {
+    for (auto idx : maps.send) {
       *p++ = h_flds[idx];
     }
 
@@ -192,7 +192,7 @@ struct CudaBnd
   // ddc_run_end
 
   template<typename S>
-  void ddc_run_end(thrust::host_vector<uint>& map_recv,
+  void ddc_run_end(Maps& maps,
 		   struct mrc_ddc_pattern2 *patt2,
 		   thrust::host_vector<real_t>& h_flds,
 		   S scatter)
@@ -200,7 +200,7 @@ struct CudaBnd
     MPI_Waitall(patt2->recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
 
     real_t* recv_buf = (real_t*) patt2->recv_buf;
-    scatter(map_recv, recv_buf, h_flds);
+    scatter(maps.recv, recv_buf, h_flds);
 
     MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
   }
@@ -209,12 +209,12 @@ struct CudaBnd
   // ddc_run_local
 
   template<typename S>
-  void ddc_run_local(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
+  void ddc_run_local(Maps& maps,
 		     thrust::host_vector<real_t>& h_flds, S scatter)
   {
-    thrust::host_vector<real_t> buf(map_send.size());
-    thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
-    scatter(map_recv, &buf[0], h_flds);
+    thrust::host_vector<real_t> buf(maps.local_send.size());
+    thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(), buf.begin());
+    scatter(maps.local_recv, &buf[0], h_flds);
   }
 
   // ----------------------------------------------------------------------
