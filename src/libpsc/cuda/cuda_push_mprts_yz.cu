@@ -435,12 +435,18 @@ struct CudaPushParticles
     }
 
     // has moved into which block?
+#if 0
     int cpos[3] = { (i[0] + current_block.ci0[0]),
 		    (i[1] + current_block.ci0[1]),
 		    (i[2] + current_block.ci0[2]) };
-    dmprts.find_idx_off_pos_1st(prt.xi, i, h0, xp, float(0.));
-    printf("cpos %d %d %d -- i %d %d %d\n", cpos[0], cpos[1], cpos[2],
-	   i[0], i[1], i[2]);
+#else
+    int cpos[3] = { __float2int_rd(xp[0]),
+		    __float2int_rd(xp[1]),
+		    __float2int_rd(xp[2]) };
+#endif
+    //dmprts.find_idx_off_pos_1st(prt.xi, i, h0, xp, float(0.));
+    // printf("cpos %d %d %d -- i %d %d %d\n", cpos[0], cpos[1], cpos[2],
+    // 	   __float2int_rd(xp[0]), __float2int_rd(xp[1]), __float2int_rd(xp[2]));
 
     dmprts.bidx_[n] = dmprts.blockIndexFromCellPosition(cpos, current_block.p);
     //    printf("cpos %d %d %d p %d bidx %d\n", cpos[0], cpos[1], cpos[2], current_block.p, dmprts.bidx_[n]);
