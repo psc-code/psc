@@ -166,9 +166,11 @@ struct CudaBnd
 	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
 	  thrust::host_vector<uint> map_send(se->len * (me - mb));
 	  map_setup(map_send, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	  real_t *buf = p;
 	  for (auto cur : map_send) {
-	    *p++ = h_flds[cur];
+	    *buf++ = h_flds[cur];
 	  }
+	  p += map_send.size();
 	}
 	MPI_Isend(p0, ri[r].n_send * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
@@ -182,8 +184,8 @@ struct CudaBnd
 
   void ddc_run_end(struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		   cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds,
-		   void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
-				    cuda_mfields& cmflds, thrust::host_vector<real_t>& h_flds))
+		   void (*from_buf)(const thrust::host_vector<uint>& map,
+				    real_t *buf, thrust::host_vector<real_t>& h_flds))
   {
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     struct mrc_ddc_rank_info *ri = patt2->ri;
@@ -195,8 +197,10 @@ struct CudaBnd
       if (r != sub->mpi_rank) {
 	for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
-	  from_buf(mb, me, re->patch, re->ilo, re->ihi, p, cmflds, h_flds);
-	  p += re->len * (me - mb);
+	  thrust::host_vector<uint> map_recv(re->len * (me - mb));
+	  map_setup(map_recv, 0, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+	  from_buf(map_recv, p, h_flds);
+	  p += map_recv.size();
 	}
       }
     }
@@ -298,42 +302,22 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // add_from_buf
 
-  static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			   void *_buf, cuda_mfields& cmflds,
-			  thrust::host_vector<real_t>& h_flds)
+  static void add_from_buf(const thrust::host_vector<uint>& map,
+			   real_t* buf, thrust::host_vector<real_t>& h_flds)
   {
-    real_t *buf = static_cast<real_t*>(_buf);
-    
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    uint idx = cmflds.index(m, ix,iy,iz, p);
-	    h_flds[idx] += *buf++;
-	  }
-	}
-      }
+    for (auto cur : map) {
+      h_flds[cur] += *buf++;
     }
   }
   
   // ----------------------------------------------------------------------
   // copy_from_buf
 
-  static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			    void *_buf, cuda_mfields& cmflds,
-			    thrust::host_vector<real_t>& h_flds)
+  static void copy_from_buf(const thrust::host_vector<uint>& map,
+			    real_t* buf, thrust::host_vector<real_t>& h_flds)
   {
-    real_t *buf = static_cast<real_t*>(_buf);
-    
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    uint idx = cmflds.index(m, ix,iy,iz, p);
-	    h_flds[idx] = *buf++;
-	  }
-	}
-      }
+    for (auto cur : map) {
+      h_flds[cur] = *buf++;
     }
   }
 
