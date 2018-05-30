@@ -54,6 +54,7 @@
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
+#include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/inject_cuda_impl.hxx"
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
@@ -229,7 +230,7 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Collision_t = CollisionCuda<BS>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<BS, dim_t>;
-  using Bnd_t = BndCuda;
+  using Bnd_t = BndCuda3<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = InjectCuda<BS, InjectFoil>;
   using Heating_t = HeatingCuda<BS>;
@@ -250,7 +251,7 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Collision_t = CollisionCuda<BS>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<BS, dim_t>;
-  using Bnd_t = BndCuda2<Mfields>;
+  using Bnd_t = BndCuda3<Mfields>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = InjectCuda<BS, InjectFoil>;
   using Heating_t = HeatingCuda<BS>;
