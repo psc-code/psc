@@ -95,6 +95,17 @@ struct CudaBnd
 
   // ----------------------------------------------------------------------
   // add_ghosts
+
+  struct Maps {
+    Maps(mrc_ddc* ddc, mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
+    {
+      setup_remote_maps(send, recv, ddc, patt2, mb, me, cmflds);
+      setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, cmflds);
+    }
+    
+    thrust::host_vector<uint> send, recv;
+    thrust::host_vector<uint> local_send, local_recv;
+  };
   
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
@@ -106,14 +117,12 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
-    thrust::host_vector<uint> map_send, map_recv;
-    setup_remote_maps(map_send, map_recv, &sub->add_ghosts2, mb, me, cmflds);
-    thrust::host_vector<uint> map_local_send, map_local_recv;
-    setup_local_maps(map_local_send, map_local_recv, &sub->add_ghosts2, mb, me, cmflds);
+    Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
 
-    ddc_run_begin(map_send, &sub->add_ghosts2, mb, me, h_flds);
-    ddc_run_local(map_local_send, map_local_recv, h_flds, ScatterAdd{});
-    ddc_run_end(map_recv, &sub->add_ghosts2, h_flds, ScatterAdd{});
+    ddc_run_begin(maps.send, &sub->add_ghosts2, mb, me, h_flds);
+    ddc_run_local(maps.local_send, maps.local_recv, h_flds, ScatterAdd{});
+    ddc_run_end(maps.recv, &sub->add_ghosts2, h_flds, ScatterAdd{});
+
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
@@ -132,18 +141,20 @@ struct CudaBnd
     
     mrc_ddc_multi_set_mpi_type(ddc_);
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
-    thrust::host_vector<uint> map_send, map_recv;
-    setup_remote_maps(map_send, map_recv, &sub->fill_ghosts2, mb, me, cmflds);
-    thrust::host_vector<uint> map_local_send, map_local_recv;
-    setup_local_maps(map_local_send, map_local_recv, &sub->fill_ghosts2, mb, me, cmflds);
+    Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
 
-    ddc_run_begin(map_send, &sub->fill_ghosts2, mb, me, h_flds);
-    ddc_run_local(map_local_send, map_local_recv, h_flds, Scatter{});
-    ddc_run_end(map_recv, &sub->fill_ghosts2, h_flds, Scatter{});
+    ddc_run_begin(maps.send, &sub->fill_ghosts2, mb, me, h_flds);
+    ddc_run_local(maps.local_send, maps.local_recv, h_flds, Scatter{});
+    ddc_run_end(maps.recv, &sub->fill_ghosts2, h_flds, Scatter{});
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
 
+  template<typename S>
+  void ddc_run(Mfields& mflds, int mb, int me)
+  {
+  }
+  
   // ----------------------------------------------------------------------
   // ddc_run_begin
 
@@ -218,10 +229,10 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // setup_remote_maps
 
-  void setup_remote_maps(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
-			struct mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
+  static void setup_remote_maps(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
+				mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
   {
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
     struct mrc_ddc_rank_info *ri = patt2->ri;
 
     uint n_send = 0, n_recv = 0;
@@ -259,10 +270,10 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // setup_local_maps
   
-  void setup_local_maps(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
-			struct mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
+  static void setup_local_maps(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
+			       mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
   {
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
     struct mrc_ddc_rank_info *ri = patt2->ri;
 
     uint buf_size = 0;
