@@ -81,27 +81,31 @@ struct CudaBnd
     mrc_ddc_destroy(ddc_);
   }
 
-  // ----------------------------------------------------------------------
-  // add_ghosts
+  // ======================================================================
+  // Maps
 
   struct Maps {
     Maps(mrc_ddc* ddc, mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds)
     {
       setup_remote_maps(send, recv, ddc, patt2, mb, me, cmflds);
       setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, cmflds);
+
+      mrc_ddc_multi_alloc_buffers(ddc, patt2, me - mb);
     }
     
     thrust::host_vector<uint> send, recv;
     thrust::host_vector<uint> local_send, local_recv;
   };
   
+  // ----------------------------------------------------------------------
+  // add_ghosts
+
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     cuda_mfields& cmflds = *mflds.cmflds;
 
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
-    mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
     Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
 
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
@@ -121,7 +125,6 @@ struct CudaBnd
     // rather then box
     struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
     
-    mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
     Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
 
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
