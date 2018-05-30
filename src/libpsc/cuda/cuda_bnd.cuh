@@ -91,12 +91,14 @@ struct CudaBnd
     {
       setup_remote_maps(send, recv, ddc, patt2, mb, me, cmflds);
       setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, cmflds);
+      local_buf.resize(local_send.size());
 
       mrc_ddc_multi_alloc_buffers(ddc, patt2, me - mb);
     }
     
     thrust::host_vector<uint> send, recv;
     thrust::host_vector<uint> local_send, local_recv;
+    thrust::host_vector<real_t> local_buf;
     mrc_ddc_pattern2* patt;
     int mb, me;
   };
@@ -215,7 +217,7 @@ struct CudaBnd
   void ddc_run_local(Maps& maps,
 		     thrust::host_vector<real_t>& h_flds, S scatter)
   {
-    thrust::host_vector<real_t> buf(maps.local_send.size());
+    auto& buf = maps.local_buf;
     thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(), buf.begin());
     scatter(maps.local_recv, &buf[0], h_flds);
   }
