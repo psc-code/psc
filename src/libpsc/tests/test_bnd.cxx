@@ -82,13 +82,18 @@ TEST(Bnd, MakeGrid)
   EXPECT_EQ(grid.domain.gdims, Int3({1, 8, 4}));
   EXPECT_EQ(grid.ldims, Int3({1, 4, 4 }));
   EXPECT_EQ(grid.domain.dx, Grid_t::Real3({ 10., 10., 10. }));
-  EXPECT_EQ(grid.n_patches(), 2);
-  EXPECT_EQ(grid.patches[0].off, Int3({ 0, 0, 0 }));
-  EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({  0.,  0.,  0. }));
-  EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({ 10., 40., 40. }));
-  EXPECT_EQ(grid.patches[1].off, Int3({ 0, 4, 0 }));
-  EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({  0., 40.,  0. }));
-  EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 80., 40. }));
+
+  int mpi_size;
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+  if (mpi_size == 1) {
+    EXPECT_EQ(grid.n_patches(), 2);
+    EXPECT_EQ(grid.patches[0].off, Int3({ 0, 0, 0 }));
+    EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({  0.,  0.,  0. }));
+    EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({ 10., 40., 40. }));
+    EXPECT_EQ(grid.patches[1].off, Int3({ 0, 4, 0 }));
+    EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({  0., 40.,  0. }));
+    EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({ 10., 80., 40. }));
+  }
 }
 
 template<typename BND, typename DIM>
