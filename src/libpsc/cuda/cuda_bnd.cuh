@@ -204,10 +204,10 @@ struct CudaBnd
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
     postReceives(maps);
-    thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
+    thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds, maps.d_send_buf.begin());
+    thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(), maps.send_buf.begin());
     postSends(maps);
 
     MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
@@ -228,10 +228,10 @@ struct CudaBnd
 	       Scatter scatter)
   {
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
     postReceives(maps);
-    thrust::gather(maps.send.begin(), maps.send.end(), h_flds.begin(), maps.send_buf.begin());
+    thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds, maps.d_send_buf.begin());
+    thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(), maps.send_buf.begin());
     postSends(maps);
 
     MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
