@@ -162,15 +162,16 @@ struct CudaBnd
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
 	real_t *p0 = p;
+	thrust::host_vector<uint> map_send(ri[r].n_send * (me - mb));
+	uint off = 0;
 	for (int i = 0; i < ri[r].n_send_entries; i++) {
 	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	  thrust::host_vector<uint> map_send(se->len * (me - mb));
-	  map_setup(map_send, 0, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-	  real_t *buf = p;
-	  for (auto cur : map_send) {
-	    *buf++ = h_flds[cur];
+	  uint size = se->len * (me - mb);
+	  map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	  for (int i = 0; i < size; i++) {
+	    p[off + i] = h_flds[map_send[off + i]];
 	  }
-	  p += map_send.size();
+	  off += size;
 	}
 	MPI_Isend(p0, ri[r].n_send * (me - mb), ddc_->mpi_type,
 		  r, 0, ddc_->obj.comm, &patt2->send_req[patt2->send_cnt++]);
