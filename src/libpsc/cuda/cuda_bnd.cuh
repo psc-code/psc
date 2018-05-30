@@ -155,13 +155,10 @@ struct CudaBnd
 	continue;
       }
       
-      if (ri[r].n_send_entries) {
-	n_send += ri[r].n_send * (me - mb);
-      }
-      if (ri[r].n_recv_entries) {
-	n_recv += ri[r].n_recv * (me - mb);
-      }
+      n_send += ri[r].n_send * (me - mb);
+      n_recv += ri[r].n_recv * (me - mb);
     }
+
     map_send.resize(n_send);
     map_recv.resize(n_recv);
 
@@ -171,19 +168,15 @@ struct CudaBnd
 	continue;
       }
 
-      if (ri[r].n_send_entries) {
-	for (int i = 0; i < ri[r].n_send_entries; i++) {
-	  struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
-	  map_setup(map_send, off_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-	  off_send += se->len * (me - mb);
-	}
+      for (int i = 0; i < ri[r].n_send_entries; i++) {
+	struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
+	map_setup(map_send, off_send, mb, me, se->patch, se->ilo, se->ihi, cmflds);
+	off_send += se->len * (me - mb);
       }
-      if (ri[r].n_recv_entries) {
-	for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	  struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
-	  map_setup(map_recv, off_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
-	  off_recv += re->len * (me - mb);
-	}
+      for (int i = 0; i < ri[r].n_recv_entries; i++) {
+	struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
+	map_setup(map_recv, off_recv, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+	off_recv += re->len * (me - mb);
       }
     }
 
@@ -240,23 +233,10 @@ struct CudaBnd
 		   void (*from_buf)(const thrust::host_vector<uint>& map,
 				    real_t *buf, thrust::host_vector<real_t>& h_flds))
   {
-    struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc_);
-    struct mrc_ddc_rank_info *ri = patt2->ri;
-
     MPI_Waitall(patt2->recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
 
-    real_t* p = (real_t*) patt2->recv_buf;
-    for (int r = 0; r < sub->mpi_size; r++) {
-      if (r != sub->mpi_rank) {
-	for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	  struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
-	  thrust::host_vector<uint> map_recv(re->len * (me - mb));
-	  map_setup(map_recv, 0, mb, me, re->patch, re->ilo, re->ihi, cmflds);
-	  from_buf(map_recv, p, h_flds);
-	  p += map_recv.size();
-	}
-      }
-    }
+    real_t* recv_buf = (real_t*) patt2->recv_buf;
+    from_buf(map_recv, recv_buf, h_flds);
 
     MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
   }
