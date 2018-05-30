@@ -731,8 +731,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 
 #if TEST == TEST_3_NILSON_3D
   LL = { 400., 200., 800. }; // domain size (in d_e)
-  gdims = { 800, 400, 1600 }; // global number of grid points
-  np = { 200, 100, 16 }; // division into patches
+  gdims = { 64, 32, 128 }; // global number of grid points
+  np = { 2, 1, 4 }; // division into patches
 #endif
   
 #if TEST == TEST_2_FLATFOIL_3D
@@ -851,10 +851,11 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   assert(np == grid_domain.np);
 
 #if TEST == TEST_3_NILSON_3D
-  psc_->prm.nmax = 4002;
+  psc_->prm.nmax = 101;
   psc_->prm.nicell = 50;
   params.background_n = .02;
   params.collision_interval = 0;
+  params.inject_interval = 0;
 #endif
   
 #if TEST == TEST_2_FLATFOIL_3D
