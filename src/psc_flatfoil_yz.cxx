@@ -6,10 +6,12 @@
 // small 3d box (heating)
 #define TEST_1_HEATING_3D 1
 #define TEST_2_FLATFOIL_3D 2
+#define TEST_3_NILSON_3D 3
 
 // EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
 //#define TEST TEST_1_HEATING_3D
 //#define TEST TEST_2_FLATFOIL_3D
+#define TEST TEST_3_NILSON_3D
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -284,7 +286,7 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #endif
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D
+#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D || TEST == TEST_3_NILSON_3D
 using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
@@ -727,6 +729,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
   Int3 np = { 1, 64, 16 }; // division into patches
 
+#if TEST == TEST_3_NILSON_3D
+  LL = { 400., 200., 800. }; // domain size (in d_e)
+  gdims = { 800, 400, 1600 }; // global number of grid points
+  np = { 200, 100, 16 }; // division into patches
+#endif
+  
 #if TEST == TEST_2_FLATFOIL_3D
   LL = { 400., 400.*4, 400. }; // domain size (in d_e)
   gdims = { 16, 64, 16 }; // global number of grid points
@@ -842,6 +850,13 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
 
+#if TEST == TEST_3_NILSON_3D
+  psc_->prm.nmax = 4002;
+  psc_->prm.nicell = 50;
+  params.background_n = .02;
+  params.collision_interval = 0;
+#endif
+  
 #if TEST == TEST_2_FLATFOIL_3D
   params.collision_interval = 0;
   params.heating_interval = 0;
