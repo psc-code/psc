@@ -108,9 +108,11 @@ struct CudaBnd
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->add_ghosts2, me - mb);
     thrust::host_vector<uint> map_send, map_recv;
     setup_remote_maps(map_send, map_recv, &sub->add_ghosts2, mb, me, cmflds);
+    thrust::host_vector<uint> map_local_send, map_local_recv;
+    setup_local_maps(map_local_send, map_local_recv, &sub->add_ghosts2, mb, me, cmflds);
 
     ddc_run_begin(map_send, &sub->add_ghosts2, mb, me, cmflds, h_flds);
-    add_local(&sub->add_ghosts2, mb, me, h_flds, cmflds);
+    add_local(map_local_send, map_local_recv, &sub->add_ghosts2, mb, me, h_flds, cmflds);
     ddc_run_end(map_recv, &sub->add_ghosts2, mb, me, cmflds, h_flds, add_from_buf);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
@@ -132,9 +134,11 @@ struct CudaBnd
     mrc_ddc_multi_alloc_buffers(ddc_, &sub->fill_ghosts2, me - mb);
     thrust::host_vector<uint> map_send, map_recv;
     setup_remote_maps(map_send, map_recv, &sub->fill_ghosts2, mb, me, cmflds);
+    thrust::host_vector<uint> map_local_send, map_local_recv;
+    setup_local_maps(map_local_send, map_local_recv, &sub->fill_ghosts2, mb, me, cmflds);
 
     ddc_run_begin(map_send, &sub->fill_ghosts2, mb, me, cmflds, h_flds);
-    fill_local(&sub->fill_ghosts2, mb, me, h_flds, cmflds);
+    fill_local(map_local_send, map_local_recv, &sub->fill_ghosts2, mb, me, h_flds, cmflds);
     ddc_run_end(map_recv, &sub->fill_ghosts2, mb, me, cmflds, h_flds, copy_from_buf);
 
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -199,12 +203,10 @@ struct CudaBnd
     MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
   }
 
-  void add_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+  void add_local(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
+		  struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		 thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
   {
-    thrust::host_vector<uint> map_send, map_recv;
-    setup_local_maps(map_send, map_recv, patt2, mb, me, cmflds);
-
     thrust::host_vector<real_t> buf(map_send.size());
 #if 0
     thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
@@ -218,12 +220,10 @@ struct CudaBnd
     }
   }
 
-  void fill_local(struct mrc_ddc_pattern2 *patt2, int mb, int me,
+  void fill_local(thrust::host_vector<uint>& map_send, thrust::host_vector<uint>& map_recv,
+		  struct mrc_ddc_pattern2 *patt2, int mb, int me,
 		  thrust::host_vector<real_t>& h_flds, cuda_mfields& cmflds)
   {
-    thrust::host_vector<uint> map_send, map_recv;
-    setup_local_maps(map_send, map_recv, patt2, mb, me, cmflds);
-
     thrust::host_vector<real_t> buf(map_send.size());
 #if 0
     thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
