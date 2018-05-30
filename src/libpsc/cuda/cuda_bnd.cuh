@@ -23,6 +23,16 @@ static void k_scatter(const real_t* buf, const uint* map, real_t* flds, unsigned
   }
 }
 
+template<typename real_t>
+__global__
+static void k_scatter_add(const real_t* buf, const uint* map, real_t* flds, unsigned int size)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  if (i < size) {
+    atomicAdd(&flds[map[i]], buf[i]);
+  }
+}
+
 // ======================================================================
 // CudaBnd
 
@@ -45,6 +55,14 @@ struct CudaBnd
       for (auto cur : map) {
 	h_flds[cur] += *p++;
       }
+    }
+
+    void operator()(const thrust::device_vector<uint>& map,
+		    const thrust::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
+    {
+      const int THREADS_PER_BLOCK = 256;
+      dim3 dimGrid((buf.size() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+      k_scatter_add<<<dimGrid, THREADS_PER_BLOCK>>>(buf.data().get(), map.data().get(), d_flds.get(), buf.size());
     }
   };
 
@@ -172,14 +190,15 @@ struct CudaBnd
     thrust::gather(maps.local_send.begin(), maps.local_send.end(), h_flds.begin(),
 		   maps.local_buf.begin());
     scatter(maps.local_recv, maps.local_buf, h_flds);
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
+    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
+
     thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
 		   maps.d_local_buf.begin());
-    thrust::copy(maps.d_local_buf.begin(), maps.d_local_buf.end(), maps.local_buf.begin());
-    scatter(maps.local_recv, maps.local_buf, h_flds);
+    scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
 #endif
 
-    thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
   }
   
   void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds,
