@@ -208,13 +208,7 @@ struct CudaBnd
 		 thrust::host_vector<real_t>& h_flds, S scatter)
   {
     thrust::host_vector<real_t> buf(map_send.size());
-#if 0
     thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
-#else
-    for (int i = 0; i < map_send.size(); i++) {
-      buf[i] = h_flds[map_send[i]];
-    }
-#endif
     scatter(map_recv, &buf[0], h_flds);
   }
 
@@ -223,18 +217,8 @@ struct CudaBnd
 		  thrust::host_vector<real_t>& h_flds, S scatter)
   {
     thrust::host_vector<real_t> buf(map_send.size());
-#if 0
     thrust::gather(map_send.begin(), map_send.end(), h_flds.begin(), buf.begin());
-#else
-    for (int i = 0; i < map_send.size(); i++) {
-      buf[i] = h_flds[map_send[i]];
-    }
-#endif
-#if 0
-    thrust::scatter(buf.begin(), buf.end(), map_recv.begin(), h_flds.begin());
-#else
     scatter(map_recv, &buf[0], h_flds);
-#endif
   }
   
   // ----------------------------------------------------------------------
@@ -348,9 +332,13 @@ struct CudaBnd
     void operator()(const thrust::host_vector<uint>& map,
 		    real_t* buf, thrust::host_vector<real_t>& h_flds)
     {
+#if 1
+      thrust::scatter(buf, buf + map.size(), map.begin(), h_flds.begin());
+#else
       for (auto cur : map) {
 	h_flds[cur] = *buf++;
       }
+#endif
     }
   };
 
