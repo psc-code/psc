@@ -20,6 +20,7 @@
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
+#include "../libpsc/cuda/fields_item_moments_1st_cuda.hxx"
 #endif
 
 // ======================================================================
@@ -133,7 +134,8 @@ using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz,
 					   ChecksCuda<BS144>,
 					   BndParticlesCuda<BS144, dim_yz>,
 					   PushFieldsCuda,
-					   BndCuda>;
+					   BndCuda,
+					   Moment_n_1st_cuda<BS144>>;
 #endif
 
 // ======================================================================
