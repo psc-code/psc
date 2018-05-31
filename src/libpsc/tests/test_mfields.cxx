@@ -106,3 +106,17 @@ TYPED_TEST(MfieldsTest, Set)
   auto F = mflds[0];
   EXPECT_EQ(F(EY, 0, 0, 0), 2.);
 }
+
+TYPED_TEST(MfieldsTest, ZeroComp)
+{
+  using Mfields = TypeParam;
+
+  auto grid = make_grid();
+  auto mflds = Mfields{grid, NR_FIELDS, Int3{ 1, 1, 1 }};
+
+  mflds[0](EY, 0, 0, 0) = 2.;
+
+  mflds.zero_comp(EY);
+
+  EXPECT_EQ(mflds[0](EY, 0, 0, 0), 0.);
+}
