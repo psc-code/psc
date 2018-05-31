@@ -18,11 +18,12 @@ TYPED_TEST(PushParticlesTest, Moment)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
-  //using Moment_n = typename TypeParam::Moment_n;
-  using Moment_n = ItemMomentLoopPatches<Moment_n_1st<Mparticles, Mfields>>;
+  using Moment_n = typename TypeParam::Moment_n;
   using Bnd = typename TypeParam::Bnd;
   using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mfields::real_t;
 
+  const real_t eps = 1e-6;
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
   const auto& grid = this->grid();
@@ -43,6 +44,19 @@ TYPED_TEST(PushParticlesTest, Moment)
   Moment_n moment_n{ppsc->grid(), ppsc->obj.comm};
   moment_n.run(mprts);
   auto& mres = moment_n.result();
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	real_t val = mres[p](0, i,j,k);
+	if (i == 0 && j == 0 & k == 0) {
+	  EXPECT_NEAR(val, .005, eps);
+	} else {
+	  EXPECT_NEAR(val, 0., eps);
+	}
+	// if (val) {
+	//   printf("ijk %d %d %d val %g\n", i, j, k, val);
+	// }
+      });
+  }
 }
 
 int main(int argc, char **argv)

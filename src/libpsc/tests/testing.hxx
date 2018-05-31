@@ -81,7 +81,7 @@ template<typename DIM, typename PUSHP, typename ORDER,
 	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
 	 typename PUSHF = PushFields<typename PUSHP::Mfields>,
 	 typename BND = Bnd_<typename PUSHP::Mfields>,
-	 typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, typename PUSHP::Mfields>>
+	 typename MOMENT_N = ItemMomentLoopPatches<Moment_n_1st<typename PUSHP::Mparticles, typename PUSHP::Mfields>>>
 struct TestConfig
 {
   using dim = DIM;
