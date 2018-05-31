@@ -4,6 +4,7 @@
 
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
+#include "dim.hxx"
 
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
@@ -53,8 +54,10 @@ struct cuda_mfields
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
 
+  void zero_comp(int m, dim_yz tag);
+  void zero_comp(int m, dim_xyz tag);
+  
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
-  void zero_comp_yz(int xm);
 
   fields_single_t get_host_fields();
   void copy_to_device(int p, fields_single_t h_flds, int mb, int me);

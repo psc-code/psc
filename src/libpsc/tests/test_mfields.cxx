@@ -114,9 +114,17 @@ TYPED_TEST(MfieldsTest, ZeroComp)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, Int3{ 1, 1, 1 }};
 
-  mflds[0](EY, 0, 0, 0) = 2.;
+  mflds[0](EX,  4, 2, 2) = 1.;
+  mflds[0](EY, -1,-1,-1) = 2.;
+  mflds[0](EY,  0, 0, 0) = 3.;
+  mflds[0](EY,  4, 2, 2) = 4.;
+  mflds[0](EZ, -1,-1,-1) = 5.;
 
   mflds.zero_comp(EY);
 
-  EXPECT_EQ(mflds[0](EY, 0, 0, 0), 0.);
+  EXPECT_EQ(mflds[0](EX,  4, 2, 2), 1.);
+  EXPECT_EQ(mflds[0](EY, -1,-1,-1), 0.);
+  EXPECT_EQ(mflds[0](EY,  0, 0, 0), 0.);
+  EXPECT_EQ(mflds[0](EY,  4, 2, 2), 0.);
+  EXPECT_EQ(mflds[0](EZ, -1,-1,-1), 5.);
 }

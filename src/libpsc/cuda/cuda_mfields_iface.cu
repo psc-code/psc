@@ -62,8 +62,13 @@ void MfieldsCuda::axpy_comp_yz(int ym, float a, MfieldsCuda& mflds_x, int xm)
 void MfieldsCuda::zero_comp(int m)
 {
   dprintf("CMFLDS: zero_comp\n");
-  assert(grid_->isInvar(0));
-  cmflds->zero_comp_yz(m);
+  assert(!grid_->isInvar(1));
+  assert(!grid_->isInvar(2));
+  if (grid_->isInvar(0)) {
+    cmflds->zero_comp(m, dim_yz{});
+  } else {
+    cmflds->zero_comp(m, dim_xyz{});
+  }
 }
 
 void MfieldsCuda::zero()

@@ -229,7 +229,18 @@ k_zero_comp_yz(float *x_flds, int xm, int my, int mz)
   F3_DDEV(x_flds, xm, 0,iy,iz) = 0.f;
 }
 
-void cuda_mfields::zero_comp_yz(int xm)
+__global__ static void
+k_zero_comp_xyz(float *data, uint n, uint stride)
+{
+  uint i = blockIdx.x * blockDim.x + threadIdx.x;
+  uint p = blockIdx.y;
+
+  if (i < n) {
+    data[i + p * stride] = 0.f;
+  }
+}
+
+void cuda_mfields::zero_comp(int m, dim_yz tag)
 {
   int my = im[1];
   int mz = im[2];
@@ -242,8 +253,21 @@ void cuda_mfields::zero_comp_yz(int xm)
 
   // OPT, should be done in a single kernel
   for (int p = 0; p < n_patches; p++) {
-    k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), xm, my, mz);
+    k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), m, my, mz);
   }
+  cuda_sync_if_enabled();
+}
+
+void cuda_mfields::zero_comp(int m, dim_xyz tag)
+{
+  int n = n_cells_per_patch;
+  int stride = n * n_fields;
+
+  const int THREADS_PER_BLOCK = 512;
+  dim3 dimBlock(THREADS_PER_BLOCK);
+  dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches);
+
+  k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data() + m * n, n, stride);
   cuda_sync_if_enabled();
 }
 
