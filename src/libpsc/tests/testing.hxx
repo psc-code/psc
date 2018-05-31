@@ -9,6 +9,7 @@
 #include "../libpsc/psc_checks/checks_impl.hxx"
 #include "psc_push_fields_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+#include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
@@ -79,7 +80,8 @@ template<typename DIM, typename PUSHP, typename ORDER,
 	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::Mfields, ORDER>,
 	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
 	 typename PUSHF = PushFields<typename PUSHP::Mfields>,
-	 typename BND = Bnd_<typename PUSHP::Mfields>>
+	 typename BND = Bnd_<typename PUSHP::Mfields>,
+	 typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, typename PUSHP::Mfields>>
 struct TestConfig
 {
   using dim = DIM;
@@ -91,6 +93,7 @@ struct TestConfig
   using BndParticles = BNDP;
   using PushFields = PUSHF;
   using Bnd = BND;
+  using Moment_n = MOMENT_N;
 };
 
 using TestConfig2ndDouble = TestConfig<dim_xyz,
