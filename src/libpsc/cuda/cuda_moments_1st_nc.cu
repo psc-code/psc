@@ -32,12 +32,12 @@ public:
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
-template<typename BS, bool REORDER>
+template<typename BS, typename dim, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
-  BlockSimple<BS, dim_yz> current_block;
+  BlockSimple<BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
@@ -77,12 +77,12 @@ rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 // ----------------------------------------------------------------------
 // n_1st_cuda_run
 
-template<typename BS, bool REORDER>
+template<typename BS, typename dim, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
-  BlockSimple<BS, dim_yz> current_block;
+  BlockSimple<BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
@@ -143,9 +143,9 @@ template<typename CudaMparticles, typename dim>
 template<bool REORDER>
 void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
-  dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim_yz>::dimGrid(cmprts);
+  dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
-  rho_1st_nc_cuda_run<typename CudaMparticles::BS, REORDER>
+  rho_1st_nc_cuda_run<typename CudaMparticles::BS, dim, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
   cuda_sync_if_enabled();
 }
@@ -172,9 +172,9 @@ template<typename CudaMparticles, typename dim>
 template<bool REORDER>
 void CudaMoments1stNcN<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
-  dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim_yz>::dimGrid(cmprts);
+  dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
-  n_1st_cuda_run<typename CudaMparticles::BS, REORDER>
+  n_1st_cuda_run<typename CudaMparticles::BS, dim, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
   cuda_sync_if_enabled();
 }
