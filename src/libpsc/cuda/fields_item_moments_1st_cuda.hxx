@@ -9,8 +9,8 @@
 // ======================================================================
 // Moment_rho_1st_nc_cuda
 
-template<typename BS>
-struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS>, MfieldsCuda>
+template<typename BS, typename dim>
+struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, MfieldsCuda>
 {
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
   using Mfields = MfieldsCuda;
@@ -34,7 +34,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS>, Mfiel
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
-    CudaMoments1stNcRho<cuda_mparticles<BS>, dim_yz> cmoments;
+    CudaMoments1stNcRho<cuda_mparticles<BS>, dim> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
@@ -46,8 +46,8 @@ private:
 // ======================================================================
 // n_1st_cuda
 
-template<typename BS>
-struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS>, MfieldsCuda>
+template<typename BS, typename dim>
+struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCuda>
 {
   using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
   using Mfields = MfieldsCuda;
@@ -71,7 +71,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS>, MfieldsCuda>
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
-    CudaMoments1stNcN<cuda_mparticles<BS>, dim_yz> cmoments;
+    CudaMoments1stNcN<cuda_mparticles<BS>, dim> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }

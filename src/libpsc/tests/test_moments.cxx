@@ -48,9 +48,9 @@ TYPED_TEST(PushParticlesTest, Moment1)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	real_t val = mres[p](0, i,j,k);
 	if (i == 0 && j == 0 & k == 0) {
-	  EXPECT_NEAR(val, .005, eps);
+	  EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
 	} else {
-	  EXPECT_NEAR(val, 0., eps);
+	  EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
 	}
 	// if (val) {
 	//   printf("ijk %d %d %d val %g\n", i, j, k, val);
@@ -96,9 +96,9 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	real_t val = mres[p](0, i,j,k);
 	if (i == i0 && j == 0 & k == 0) {
-	  EXPECT_NEAR(val, .005, eps);
+	  EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
 	} else {
-	  EXPECT_NEAR(val, 0., eps);
+	  EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
 	}
 	// if (val) {
 	//   printf("ijk %d %d %d val %g\n", i, j, k, val);
