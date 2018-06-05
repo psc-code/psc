@@ -4,8 +4,9 @@
 #include "testing.hxx"
 
 using PushParticlesTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ
+						,TestConfig1vbec3dSingle
 #ifdef USE_CUDA
-					       ,TestConfig1vbec3dCudaYZ
+						,TestConfig1vbec3dCudaYZ
 #endif
 						>;
 
