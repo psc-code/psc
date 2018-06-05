@@ -30,11 +30,11 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS>, Mfiel
   void run(MparticlesCuda<BS>& mprts)
   {
     PscMfields<Mfields> mres{this->mres_};
-    auto* cmprts = mprts.cmprts();
+    auto& cmprts = *mprts.cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
-    CudaMoments1stNcRho<BS> cmoments;
+    CudaMoments1stNcRho<cuda_mparticles<BS>> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
@@ -67,11 +67,11 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS>, MfieldsCuda>
   void run(MparticlesCuda<BS>& mprts)
   {
     PscMfields<Mfields> mres{this->mres_};
-    auto* cmprts = mprts.cmprts();
+    auto& cmprts = *mprts.cmprts();
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
-    CudaMoments1stNcN<BS> cmoments;
+    CudaMoments1stNcN<cuda_mparticles<BS>> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
