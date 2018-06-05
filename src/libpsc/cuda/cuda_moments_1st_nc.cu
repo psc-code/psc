@@ -1,6 +1,7 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_moments.cuh"
 
 #define THREADS_PER_BLOCK (512)
 
@@ -149,13 +150,13 @@ n_1st_cuda_run_patches_no_reorder(cuda_mparticles<BS>* cmprts, struct cuda_mfiel
 }
 
 // ----------------------------------------------------------------------
-// cuda_moments_yz_rho_1st_nc
+// CudaMoments1stNcRho::operator()
 
 template<typename BS>
-void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
+void CudaMoments1stNcRho<BS>::operator()(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
-
+  
   if (!cmprts->need_reorder) {
     rho_1st_nc_cuda_run_patches_no_reorder<BS, false>(cmprts, cmres);
   } else {
@@ -164,10 +165,10 @@ void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields
 }
 
 // ----------------------------------------------------------------------
-// cuda_moments_yz_n_1st
+// CudaMoments1stNcN::operator()
 
 template<typename BS>
-void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
+void CudaMoments1stNcN<BS>::operator()(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres)
 {
   cmprts->reorder(); // FIXME/OPT?
 
@@ -178,7 +179,6 @@ void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmr
   }
 }
 
-template void cuda_moments_yz_rho_1st_nc<BS144>(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
-template void cuda_moments_yz_n_1st<BS144>(cuda_mparticles<BS144>* cmprts, struct cuda_mfields *cmres);
-
-template void cuda_moments_yz_n_1st<BS444>(cuda_mparticles<BS444>* cmprts, struct cuda_mfields *cmres);
+template struct CudaMoments1stNcRho<BS144>;
+template struct CudaMoments1stNcN<BS144>;
+template struct CudaMoments1stNcN<BS444>;

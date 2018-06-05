@@ -4,6 +4,7 @@
 #include "psc_particles_cuda.h"
 #include "fields_item.hxx"
 #include "bnd_cuda_impl.hxx"
+#include "cuda_moments.cuh"
 
 // ======================================================================
 // Moment_rho_1st_nc_cuda
@@ -33,7 +34,8 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS>, Mfiel
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
-    cuda_moments_yz_rho_1st_nc(cmprts, cmres);
+    CudaMoments1stNcRho<BS> cmoments;
+    cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 
@@ -69,7 +71,8 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS>, MfieldsCuda>
     cuda_mfields *cmres = mres->cmflds;
     
     mres->zero();
-    cuda_moments_yz_n_1st(cmprts, cmres);
+    CudaMoments1stNcN<BS> cmoments;
+    cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
   }
 
