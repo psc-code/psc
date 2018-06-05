@@ -11,7 +11,12 @@
 // ======================================================================
 // GCurr
 
-class GCurr {
+template<typename dim>
+class GCurr;
+
+template<>
+class GCurr<dim_yz>
+{
 public:
   DFields d_flds;
 
@@ -42,7 +47,7 @@ rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     return;
   }
 
-  GCurr scurr(dmflds[current_block.p]);
+  GCurr<dim> scurr(dmflds[current_block.p]);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -87,7 +92,7 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     return;
   }
 
-  GCurr scurr(dmflds[current_block.p]);
+  GCurr<dim> scurr(dmflds[current_block.p]);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
