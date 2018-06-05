@@ -124,8 +124,8 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 // ----------------------------------------------------------------------
 // CudaMoments1stNcRho::operator()
 
-template<typename CudaMparticles>
-void CudaMoments1stNcRho<CudaMparticles>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+template<typename CudaMparticles, typename dim>
+void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
   cmprts.reorder(); // FIXME/OPT?
   
@@ -139,9 +139,9 @@ void CudaMoments1stNcRho<CudaMparticles>::operator()(CudaMparticles& cmprts, str
 // ----------------------------------------------------------------------
 // CudaMoments1stNcRho::invoke
 
-template<typename CudaMparticles>
+template<typename CudaMparticles, typename dim>
 template<bool REORDER>
-void CudaMoments1stNcRho<CudaMparticles>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
   dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim_yz>::dimGrid(cmprts);
 
@@ -153,8 +153,8 @@ void CudaMoments1stNcRho<CudaMparticles>::invoke(CudaMparticles& cmprts, struct 
 // ----------------------------------------------------------------------
 // CudaMoments1stNcN::operator()
 
-template<typename CudaMparticles>
-void CudaMoments1stNcN<CudaMparticles>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+template<typename CudaMparticles, typename dim>
+void CudaMoments1stNcN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
   cmprts.reorder(); // FIXME/OPT?
 
@@ -168,9 +168,9 @@ void CudaMoments1stNcN<CudaMparticles>::operator()(CudaMparticles& cmprts, struc
 // ----------------------------------------------------------------------
 // CudaMoments1stNcN::invoke
 
-template<typename CudaMparticles>
+template<typename CudaMparticles, typename dim>
 template<bool REORDER>
-void CudaMoments1stNcN<CudaMparticles>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+void CudaMoments1stNcN<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
   dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim_yz>::dimGrid(cmprts);
 
@@ -179,6 +179,7 @@ void CudaMoments1stNcN<CudaMparticles>::invoke(CudaMparticles& cmprts, struct cu
   cuda_sync_if_enabled();
 }
 
-template struct CudaMoments1stNcRho<cuda_mparticles<BS144>>;
-template struct CudaMoments1stNcN<cuda_mparticles<BS144>>;
-template struct CudaMoments1stNcN<cuda_mparticles<BS444>>;
+template struct CudaMoments1stNcRho<cuda_mparticles<BS144>, dim_yz>;
+template struct CudaMoments1stNcN<cuda_mparticles<BS144>, dim_yz>;
+
+template struct CudaMoments1stNcN<cuda_mparticles<BS444>, dim_yz>;
