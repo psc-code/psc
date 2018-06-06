@@ -8,7 +8,7 @@
 // ======================================================================
 // InjectCuda
 
-template<typename BS, typename Target_t>
+template<typename BS, typename dim, typename Target_t>
 struct InjectCuda : InjectBase
 {
   using Self = InjectCuda;
@@ -220,6 +220,6 @@ struct InjectCuda : InjectBase
   
 private:
   Target_t target_;
-  Moment_n_1st_cuda<BS> moment_n_;
+  Moment_n_1st_cuda<BS, dim> moment_n_;
 };
 

@@ -234,7 +234,7 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BndParticles_t = BndParticlesCuda<BS, dim_t>;
   using Bnd_t = BndCuda3<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = InjectCuda<BS, InjectFoil>;
+  using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
   using Heating_t = HeatingCuda<BS>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<BS>;
@@ -255,7 +255,7 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BndParticles_t = BndParticlesCuda<BS, dim_t>;
   using Bnd_t = BndCuda3<Mfields>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = InjectCuda<BS, InjectFoil>;
+  using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
   using Heating_t = HeatingCuda<BS>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<BS>;
@@ -861,7 +861,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 #if TEST == TEST_2_FLATFOIL_3D
   params.collision_interval = 0;
   params.heating_interval = 0;
-  params.inject_interval = 0;
+  params.inject_interval = 5;
 #endif
   
 #if TEST == TEST_1_HEATING_3D
