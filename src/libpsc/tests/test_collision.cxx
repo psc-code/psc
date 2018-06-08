@@ -30,6 +30,13 @@ private:
   TestParticle& prt_;
 };
 
+struct RngFake
+{
+  using real_t = double;
+
+  real_t uniform() { return .5; }
+};
+
 TEST(BinaryCollision, Test1)
 {
   double eps = 1e-14;
@@ -37,7 +44,7 @@ TEST(BinaryCollision, Test1)
   TestParticle prt1{{ 1., 0., 0.}, 1., 1. };
   TestParticle prt2{{ 0., 0., 0.}, 1., 1. };
 
-  RngC<double> rng;
+  RngFake rng;
   BinaryCollision<TestParticleRef> bc;
 
   double nudt = bc(prt1, prt2, .1, rng);
