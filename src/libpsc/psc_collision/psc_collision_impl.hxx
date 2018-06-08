@@ -11,166 +11,19 @@
 
 extern void* global_collision; // FIXME
 
-template<typename MP, typename MF>
-struct Collision_
+// ======================================================================
+// BinaryCollision
+
+template<typename particles_t>
+struct BinaryCollision
 {
-  using Mparticles = MP;
-  using particles_t = typename Mparticles::patch_t;
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename Mparticles::real_t;
-  using Mfields = MF;
-  using Fields = Fields3d<typename Mfields::fields_t>;
-
-  constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
-
-  enum {
-    STATS_MIN,
-    STATS_MED,
-    STATS_MAX,
-    STATS_NLARGE,
-    STATS_NCOLL,
-    NR_STATS,
-  };
+  using particle_t = typename particles_t::particle_t;
+  using real_t = typename particles_t::real_t;
   
-  struct psc_collision_stats {
-    real_t s[NR_STATS];
-  };
-
-  Collision_(MPI_Comm comm, int interval, double nu)
-    : interval_{interval},
-      nu_{nu},
-      mflds_stats_{ppsc->grid(), NR_STATS, ppsc->ibn},
-      mflds_rei_{ppsc->grid(), NR_STATS, ppsc->ibn}
-  {
-    assert(nu_ > 0.);
-    global_collision = this;
-  }
-
   // ----------------------------------------------------------------------
-  // collide
+  // operator()
 
-  void operator()(Mparticles& mprts)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      particles_t& prts = mprts[p];
-  
-      const int *ldims = ppsc->grid().ldims;
-      int nr_cells = ldims[0] * ldims[1] * ldims[2];
-      int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
-      struct psc_collision_stats stats_total = {};
-    
-      find_cell_offsets(offsets, mprts[p]);
-    
-      Fields F(mflds_stats_[p]);
-      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-	int c = (iz * ldims[1] + iy) * ldims[0] + ix;
-	randomize_in_cell(prts, offsets[c], offsets[c+1]);
-
-	update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
-      
-	struct psc_collision_stats stats = {};
-	collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
-      
-	update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
-
-	for (int s = 0; s < NR_STATS; s++) {
-	  F(s, ix,iy,iz) = stats.s[s];
-	  stats_total.s[s] += stats.s[s];
-	}
-      } psc_foreach_3d_end;
-    
-#if 0
-      mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", p,
-	      stats_total.s[STATS_MIN] / nr_cells,
-	      stats_total.s[STATS_MED] / nr_cells,
-	      stats_total.s[STATS_MAX] / nr_cells,
-	      stats_total.s[STATS_NLARGE] / nr_cells,
-	      stats_total.s[STATS_NCOLL] / nr_cells);
-#endif
-  
-      free(offsets);
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // calc_stats
-
-  static int compare(const void *_a, const void *_b)
-  {
-    const real_t *a = (const real_t *) _a;
-    const real_t *b = (const real_t *) _b;
-
-    if (*a < *b) {
-      return -1;
-    } else if (*a > *b) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-  static void calc_stats(struct psc_collision_stats *stats, real_t *nudts, int cnt)
-  {
-    qsort(nudts, cnt, sizeof(*nudts), compare);
-    stats->s[STATS_NLARGE] = 0;
-    for (int n = cnt - 1; n >= 0; n--) {
-      if (nudts[n] < 1.) {
-	break;
-      }
-      stats->s[STATS_NLARGE]++;
-    }
-    stats->s[STATS_MIN] = nudts[0];
-    stats->s[STATS_MAX] = nudts[cnt-1];
-    stats->s[STATS_MED] = nudts[cnt/2];
-    stats->s[STATS_NCOLL] = cnt;
-    /* mprintf("min %g med %g max %g nlarge %g ncoll %g\n", */
-    /* 	  stats->s[STATS_MIN], */
-    /* 	  stats->s[STATS_MED], */
-    /* 	  stats->s[STATS_MAX], */
-    /* 	  stats->s[STATS_NLARGE], */
-    /* 	  stats->s[STATS_NCOLL]); */
-  }
-
-  // ----------------------------------------------------------------------
-  // find_cell_offsets
-
-  static void find_cell_offsets(int offsets[], particles_t& prts)
-  {
-    const int *ldims = ppsc->grid().ldims;
-    int last = 0;
-    offsets[last] = 0;
-    int n_prts = prts.size();
-    for (int n = 0; n < n_prts; n++) {
-      int cell_index = prts.validCellIndex(prts[n]);
-      assert(cell_index >= last);
-      while (last < cell_index) {
-	offsets[++last] = n;
-      }
-    }
-    while (last < ldims[0] * ldims[1] * ldims[2]) {
-      offsets[++last] = n_prts;
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // randomize_in_cell
-
-  static void randomize_in_cell(particles_t& prts, int n_start, int n_end)
-  {
-    int nn = n_end - n_start;
-    for (int n = 0; n < nn - 1; n++) {
-      int n_partner = n + random() % (nn - n);
-      if (n != n_partner) {
-	// swap n, n_partner
-	std::swap(prts[n_start + n], prts[n_start + n_partner]);
-      }
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // bc
-
-  static real_t bc(particles_t& prts, real_t nudt1, int n1, int n2)
+  real_t operator()(particles_t& prts, real_t nudt1, int n1, int n2)
   {
     real_t nudt;
     
@@ -423,6 +276,164 @@ struct Collision_
     return nudt;
   }
 
+};
+
+template<typename MP, typename MF>
+struct Collision_
+{
+  using Mparticles = MP;
+  using particles_t = typename Mparticles::patch_t;
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mparticles::real_t;
+  using Mfields = MF;
+  using Fields = Fields3d<typename Mfields::fields_t>;
+
+  constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
+
+  enum {
+    STATS_MIN,
+    STATS_MED,
+    STATS_MAX,
+    STATS_NLARGE,
+    STATS_NCOLL,
+    NR_STATS,
+  };
+  
+  struct psc_collision_stats {
+    real_t s[NR_STATS];
+  };
+
+  Collision_(MPI_Comm comm, int interval, double nu)
+    : interval_{interval},
+      nu_{nu},
+      mflds_stats_{ppsc->grid(), NR_STATS, ppsc->ibn},
+      mflds_rei_{ppsc->grid(), NR_STATS, ppsc->ibn}
+  {
+    assert(nu_ > 0.);
+    global_collision = this;
+  }
+
+  // ----------------------------------------------------------------------
+  // collide
+
+  void operator()(Mparticles& mprts)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      particles_t& prts = mprts[p];
+  
+      const int *ldims = ppsc->grid().ldims;
+      int nr_cells = ldims[0] * ldims[1] * ldims[2];
+      int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
+      struct psc_collision_stats stats_total = {};
+    
+      find_cell_offsets(offsets, mprts[p]);
+    
+      Fields F(mflds_stats_[p]);
+      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+	int c = (iz * ldims[1] + iy) * ldims[0] + ix;
+	randomize_in_cell(prts, offsets[c], offsets[c+1]);
+
+	update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+      
+	struct psc_collision_stats stats = {};
+	collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
+      
+	update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+
+	for (int s = 0; s < NR_STATS; s++) {
+	  F(s, ix,iy,iz) = stats.s[s];
+	  stats_total.s[s] += stats.s[s];
+	}
+      } psc_foreach_3d_end;
+    
+#if 0
+      mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", p,
+	      stats_total.s[STATS_MIN] / nr_cells,
+	      stats_total.s[STATS_MED] / nr_cells,
+	      stats_total.s[STATS_MAX] / nr_cells,
+	      stats_total.s[STATS_NLARGE] / nr_cells,
+	      stats_total.s[STATS_NCOLL] / nr_cells);
+#endif
+  
+      free(offsets);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // calc_stats
+
+  static int compare(const void *_a, const void *_b)
+  {
+    const real_t *a = (const real_t *) _a;
+    const real_t *b = (const real_t *) _b;
+
+    if (*a < *b) {
+      return -1;
+    } else if (*a > *b) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  static void calc_stats(struct psc_collision_stats *stats, real_t *nudts, int cnt)
+  {
+    qsort(nudts, cnt, sizeof(*nudts), compare);
+    stats->s[STATS_NLARGE] = 0;
+    for (int n = cnt - 1; n >= 0; n--) {
+      if (nudts[n] < 1.) {
+	break;
+      }
+      stats->s[STATS_NLARGE]++;
+    }
+    stats->s[STATS_MIN] = nudts[0];
+    stats->s[STATS_MAX] = nudts[cnt-1];
+    stats->s[STATS_MED] = nudts[cnt/2];
+    stats->s[STATS_NCOLL] = cnt;
+    /* mprintf("min %g med %g max %g nlarge %g ncoll %g\n", */
+    /* 	  stats->s[STATS_MIN], */
+    /* 	  stats->s[STATS_MED], */
+    /* 	  stats->s[STATS_MAX], */
+    /* 	  stats->s[STATS_NLARGE], */
+    /* 	  stats->s[STATS_NCOLL]); */
+  }
+
+  // ----------------------------------------------------------------------
+  // find_cell_offsets
+
+  static void find_cell_offsets(int offsets[], particles_t& prts)
+  {
+    const int *ldims = ppsc->grid().ldims;
+    int last = 0;
+    offsets[last] = 0;
+    int n_prts = prts.size();
+    for (int n = 0; n < n_prts; n++) {
+      int cell_index = prts.validCellIndex(prts[n]);
+      assert(cell_index >= last);
+      while (last < cell_index) {
+	offsets[++last] = n;
+      }
+    }
+    while (last < ldims[0] * ldims[1] * ldims[2]) {
+      offsets[++last] = n_prts;
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // randomize_in_cell
+
+  static void randomize_in_cell(particles_t& prts, int n_start, int n_end)
+  {
+    int nn = n_end - n_start;
+    for (int n = 0; n < nn - 1; n++) {
+      int n_partner = n + random() % (nn - n);
+      if (n != n_partner) {
+	// swap n, n_partner
+	std::swap(prts[n_start + n], prts[n_start + n_partner]);
+      }
+    }
+  }
+
   // ----------------------------------------------------------------------
   // update_rei_before
 
@@ -481,6 +492,7 @@ struct Collision_
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
+    BinaryCollision<particles_t> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
       nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 1);
       nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 2);
