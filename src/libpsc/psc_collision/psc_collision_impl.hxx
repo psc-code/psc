@@ -29,6 +29,13 @@ struct Particle
     m = prts_.prt_mni(prt_);
   }
 
+  ~Particle()
+  {
+    prt_.pxi = u[0];
+    prt_.pyi = u[1];
+    prt_.pzi = u[2];
+  }
+
   particle_t& prt_;
   particles_t& prts_;
   
@@ -290,13 +297,6 @@ struct BinaryCollision
     prt1.u = { px3, py3, pz3 };
     prt2.u = { px4, py4, pz4 };
 
-    prt1_.pxi = prt1.u[0];
-    prt1_.pyi = prt1.u[1];
-    prt1_.pzi = prt1.u[2];
-    prt2_.pxi = prt2.u[0];
-    prt2_.pyi = prt2.u[1];
-    prt2_.pzi = prt2.u[2];
-  
     return nudt;
   }
 
