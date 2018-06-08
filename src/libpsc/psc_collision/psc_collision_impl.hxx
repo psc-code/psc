@@ -14,28 +14,6 @@ extern void* global_collision; // FIXME
 // ======================================================================
 // BinaryCollision
 
-template<typename particles_t>
-struct ParticleRef
-{
-  using particle_t = typename particles_t::particle_t;
-  using real_t = typename particles_t::real_t;
-
-  ParticleRef(particles_t& prts, int n)
-    : prt_{prts[n]},
-      prts_{prts}
-  {}
-
-  real_t q() const { return prts_.prt_qni(prt_); }
-  real_t m() const { return prts_.prt_mni(prt_); }
-
-  real_t  u(int d) const { return (&prt_.pxi)[d]; }
-  real_t& u(int d)       { return (&prt_.pxi)[d]; }
-
-private:
-  particle_t& prt_;
-  particles_t& prts_;
-};
-  
 template<typename ParticleRef>
 struct BinaryCollision
 {
@@ -294,6 +272,9 @@ struct BinaryCollision
 
 };
 
+// ======================================================================
+// Collision_
+
 template<typename MP, typename MF>
 struct Collision_
 {
@@ -319,6 +300,26 @@ struct Collision_
     real_t s[NR_STATS];
   };
 
+  struct ParticleRef
+  {
+    using real_t = real_t;
+    
+    ParticleRef(particles_t& prts, int n)
+      : prt_{prts[n]},
+	prts_{prts}
+    {}
+    
+    real_t q() const { return prts_.prt_qni(prt_); }
+    real_t m() const { return prts_.prt_mni(prt_); }
+    
+    real_t  u(int d) const { return (&prt_.pxi)[d]; }
+    real_t& u(int d)       { return (&prt_.pxi)[d]; }
+    
+  private:
+    particle_t& prt_;
+    particles_t& prts_;
+  };
+  
   Collision_(MPI_Comm comm, int interval, double nu)
     : interval_{interval},
       nu_{nu},
@@ -508,7 +509,7 @@ struct Collision_
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
-    BinaryCollision<ParticleRef<particles_t>> bc;
+    BinaryCollision<ParticleRef> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
       nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+1}, .5 * nudt1);
       nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+2}, .5 * nudt1);
