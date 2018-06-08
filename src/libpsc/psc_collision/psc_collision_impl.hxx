@@ -36,16 +36,15 @@ private:
   particles_t& prts_;
 };
   
-template<typename Particle, typename particles_t>
+template<typename ParticleRef>
 struct BinaryCollision
 {
-  using particle_t = typename particles_t::particle_t;
-  using real_t = typename particles_t::real_t;
+  using real_t = typename ParticleRef::real_t;
 
   // ----------------------------------------------------------------------
   // operator()
 
-  real_t operator()(Particle prt1, Particle prt2, real_t nudt1)
+  real_t operator()(ParticleRef prt1, ParticleRef prt2, real_t nudt1)
   {
     real_t nudt;
     
@@ -509,7 +508,7 @@ struct Collision_
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
-    BinaryCollision<Particle<particles_t>, particles_t> bc;
+    BinaryCollision<Particle<particles_t>> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
       nudts[cnt++] = bc({prts, prts[n_start  ]}, {prts, prts[n_start+1]}, .5 * nudt1);
       nudts[cnt++] = bc({prts, prts[n_start  ]}, {prts, prts[n_start+2]}, .5 * nudt1);
