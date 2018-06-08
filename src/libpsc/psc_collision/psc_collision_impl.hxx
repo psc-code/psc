@@ -45,7 +45,7 @@ struct BinaryCollision
   // ----------------------------------------------------------------------
   // operator()
 
-  real_t operator()(particles_t& prts, particle_t& prt1_, particle_t& prt2_, real_t nudt1)
+  real_t operator()(Particle prt1, Particle prt2, real_t nudt1)
   {
     real_t nudt;
     
@@ -74,9 +74,6 @@ struct BinaryCollision
     real_t m12,q12;
     real_t ran1,ran2;
 
-    Particle prt1{prts, prt1_};
-    Particle prt2{prts, prt2_};
-    
     px1=prt1.u(0);
     py1=prt1.u(1);
     pz1=prt1.u(2);
@@ -514,13 +511,13 @@ struct Collision_
 
     BinaryCollision<Particle<particles_t>, particles_t> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = bc(prts, prts[n_start  ], prts[n_start+1], .5 * nudt1);
-      nudts[cnt++] = bc(prts, prts[n_start  ], prts[n_start+2], .5 * nudt1);
-      nudts[cnt++] = bc(prts, prts[n_start+1], prts[n_start+2], .5 * nudt1);
+      nudts[cnt++] = bc({prts, prts[n_start  ]}, {prts, prts[n_start+1]}, .5 * nudt1);
+      nudts[cnt++] = bc({prts, prts[n_start  ]}, {prts, prts[n_start+2]}, .5 * nudt1);
+      nudts[cnt++] = bc({prts, prts[n_start+1]}, {prts, prts[n_start+2]}, .5 * nudt1);
       n = 3;
     }
     for (; n < nn;  n += 2) { // do remaining particles as pair
-      nudts[cnt++] = bc(prts, prts[n_start+n], prts[n_start+n+1], nudt1);
+      nudts[cnt++] = bc({prts, prts[n_start+n]}, {prts, prts[n_start+n+1]}, nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
