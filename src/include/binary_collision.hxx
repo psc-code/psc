@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <cmath>
+
 // ======================================================================
 // BinaryCollision
 
@@ -74,8 +76,8 @@ struct BinaryCollision
     h2=ss-m1*m1-m2*m2;
     h3=(h2*h2-4.f*m1*m1*m2*m2)/(4.f*ss);
     if (h3 < 0.f) {
-      mprintf("WARNING: ss %g (m1+m1)^2 %g in BinaryCollision\n",
-	      ss, (m1+m2)*(m1+m2));
+      printf("WARNING: ss %g (m1+m1)^2 %g in BinaryCollision\n",
+	     ss, (m1+m2)*(m1+m2));
       return 0.f; // nudt = 0 because no collision
     }
     ppc=std::sqrt(h3);
@@ -182,8 +184,8 @@ struct BinaryCollision
     h2=ss-m3*m3-m4*m4;
     h3=(h2*h2-4.f*m3*m3*m4*m4)/(4.f*ss);
     if (h3 < 0.f) {
-      mprintf("WARNING: ss %g (m3+m4)^2 %g in BinaryCollision\n",
-	      ss, (m3+m4)*(m3+m4));
+      printf("WARNING: ss %g (m3+m4)^2 %g in BinaryCollision\n",
+	     ss, (m3+m4)*(m3+m4));
       return 0.f; // nudt = 0 because no collision
     }
           
@@ -249,7 +251,7 @@ struct BinaryCollision
     px4=px4/m4;
     py4=py4/m4;
     pz4=pz4/m4;
-  
+
     prt1.u(0) = px3;
     prt1.u(1) = py3;
     prt1.u(2) = pz3;
