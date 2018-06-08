@@ -19,11 +19,18 @@ struct BinaryCollision
 {
   using particle_t = typename particles_t::particle_t;
   using real_t = typename particles_t::real_t;
+
+  struct Particle
+  {
+    Vec3<real_t> u;
+    real_t q;
+    real_t m;
+  };
   
   // ----------------------------------------------------------------------
   // operator()
 
-  real_t operator()(particles_t& prts, particle_t& prt1, particle_t& prt2, real_t nudt1)
+  real_t operator()(particles_t& prts, particle_t& prt1_, particle_t& prt2_, real_t nudt1)
   {
     real_t nudt;
     
@@ -51,18 +58,21 @@ struct BinaryCollision
     real_t vcn,vcxr,vcyr,vczr,vcr;
     real_t m12,q12;
     real_t ran1,ran2;
-    
-    px1=prt1.pxi;
-    py1=prt1.pyi;
-    pz1=prt1.pzi;
-    q1 =prts.prt_qni(prt1);
-    m1 =prts.prt_mni(prt1);
 
-    px2=prt2.pxi;
-    py2=prt2.pyi;
-    pz2=prt2.pzi;
-    q2 =prts.prt_qni(prt2);
-    m2 =prts.prt_mni(prt2);
+    Particle prt1 = { { prt1_.pxi, prt1_.pyi, prt1_.pzi }, prts.prt_qni(prt1_), prts.prt_mni(prt1_) };
+    Particle prt2 = { { prt2_.pxi, prt2_.pyi, prt2_.pzi }, prts.prt_qni(prt2_), prts.prt_mni(prt2_) };
+    
+    px1=prt1.u[0];
+    py1=prt1.u[1];
+    pz1=prt1.u[2];
+    q1 =prt1.q;
+    m1 =prt1.m;
+
+    px2=prt2.u[0];
+    py2=prt2.u[1];
+    pz2=prt2.u[2];
+    q2 =prt2.q;
+    m2 =prt2.m;
 
     if (q1*q2 == 0.f) {
       return 0.f; // no Coulomb collisions with neutrals
@@ -261,13 +271,15 @@ struct BinaryCollision
     py4=py4/m4;
     pz4=pz4/m4;
   
-    prt1.pxi=px3;
-    prt1.pyi=py3;
-    prt1.pzi=pz3;
-    prt2.pxi=px4;
-    prt2.pyi=py4;
-    prt2.pzi=pz4;
+    prt1.u = { px3, py3, pz3 };
+    prt2.u = { px4, py4, pz4 };
 
+    prt1_.pxi = prt1.u[0];
+    prt1_.pyi = prt1.u[1];
+    prt1_.pzi = prt1.u[2];
+    prt2_.pxi = prt2.u[0];
+    prt2_.pyi = prt2.u[1];
+    prt2_.pzi = prt2.u[2];
   
     return nudt;
   }
