@@ -15,14 +15,14 @@ extern void* global_collision; // FIXME
 // BinaryCollision
 
 template<typename particles_t>
-struct Particle
+struct ParticleRef
 {
   using particle_t = typename particles_t::particle_t;
   using real_t = typename particles_t::real_t;
 
-  Particle(particles_t& prts, particle_t& prt)
-    : prts_{prts},
-      prt_{prt}
+  ParticleRef(particles_t& prts, int n)
+    : prt_{prts[n]},
+      prts_{prts}
   {}
 
   real_t q() const { return prts_.prt_qni(prt_); }
@@ -508,15 +508,15 @@ struct Collision_
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
-    BinaryCollision<Particle<particles_t>> bc;
+    BinaryCollision<ParticleRef<particles_t>> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = bc({prts, prts[n_start  ]}, {prts, prts[n_start+1]}, .5 * nudt1);
-      nudts[cnt++] = bc({prts, prts[n_start  ]}, {prts, prts[n_start+2]}, .5 * nudt1);
-      nudts[cnt++] = bc({prts, prts[n_start+1]}, {prts, prts[n_start+2]}, .5 * nudt1);
+      nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+1}, .5 * nudt1);
+      nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+2}, .5 * nudt1);
+      nudts[cnt++] = bc({prts, n_start+1}, {prts, n_start+2}, .5 * nudt1);
       n = 3;
     }
     for (; n < nn;  n += 2) { // do remaining particles as pair
-      nudts[cnt++] = bc({prts, prts[n_start+n]}, {prts, prts[n_start+n+1]}, nudt1);
+      nudts[cnt++] = bc({prts, n_start+n}, {prts, n_start+n+1}, nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
