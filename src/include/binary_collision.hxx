@@ -4,6 +4,28 @@
 #include <cmath>
 
 // ======================================================================
+// RngC
+
+template<typename real_t>
+struct RngC
+{
+  // ----------------------------------------------------------------------
+  // uniform
+  //
+  // returns random number in ]0:1]
+  
+  real_t uniform()
+  {
+    real_t ran;
+    do {
+      ran = real_t(random()) / RAND_MAX;
+    } while (ran == real_t(0.f));
+
+    return ran;
+  }
+};
+
+// ======================================================================
 // BinaryCollision
 
 template<typename ParticleRef>
@@ -196,9 +218,10 @@ struct BinaryCollision
     nudt=nudt1 * q12*q12/(m12*m12*vcr*vcr*vcr);
   
     // event generator of angles for post collision vectors
-  
-    ran1 = (1.f * random()) / RAND_MAX;
-    ran2 = (1.f * random()) / RAND_MAX;
+
+    RngC<real_t> rng;
+    ran1 = rng.uniform();
+    ran2 = rng.uniform();
     if (ran2 < 1e-20f) {
       ran2 = 1e-20f;
     }
