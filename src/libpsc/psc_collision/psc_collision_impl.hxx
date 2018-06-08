@@ -15,18 +15,34 @@ extern void* global_collision; // FIXME
 // BinaryCollision
 
 template<typename particles_t>
+struct Particle
+{
+  using particle_t = typename particles_t::particle_t;
+  using real_t = typename particles_t::real_t;
+
+  Particle(particles_t& prts, particle_t& prt)
+    : prts_{prts},
+      prt_{prt}
+  {
+    u = { prt_.pxi, prt_.pyi, prt_.pzi };
+    q = prts_.prt_qni(prt_);
+    m = prts_.prt_mni(prt_);
+  }
+
+  particle_t& prt_;
+  particles_t& prts_;
+  
+  Vec3<real_t> u;
+  real_t q;
+  real_t m;
+};
+  
+template<typename Particle, typename particles_t>
 struct BinaryCollision
 {
   using particle_t = typename particles_t::particle_t;
   using real_t = typename particles_t::real_t;
 
-  struct Particle
-  {
-    Vec3<real_t> u;
-    real_t q;
-    real_t m;
-  };
-  
   // ----------------------------------------------------------------------
   // operator()
 
@@ -59,8 +75,8 @@ struct BinaryCollision
     real_t m12,q12;
     real_t ran1,ran2;
 
-    Particle prt1 = { { prt1_.pxi, prt1_.pyi, prt1_.pzi }, prts.prt_qni(prt1_), prts.prt_mni(prt1_) };
-    Particle prt2 = { { prt2_.pxi, prt2_.pyi, prt2_.pzi }, prts.prt_qni(prt2_), prts.prt_mni(prt2_) };
+    Particle prt1{prts, prt1_};
+    Particle prt2{prts, prt2_};
     
     px1=prt1.u[0];
     py1=prt1.u[1];
@@ -500,7 +516,7 @@ struct Collision_
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
-    BinaryCollision<particles_t> bc;
+    BinaryCollision<Particle<particles_t>, particles_t> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
       nudts[cnt++] = bc(prts, prts[n_start  ], prts[n_start+1], .5 * nudt1);
       nudts[cnt++] = bc(prts, prts[n_start  ], prts[n_start+2], .5 * nudt1);
