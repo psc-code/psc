@@ -36,10 +36,11 @@ TEST(BinaryCollision, Test1)
   
   TestParticle prt1{{ 1., 0., 0.}, 1., 1. };
   TestParticle prt2{{ 0., 0., 0.}, 1., 1. };
-  
+
+  RngC<double> rng;
   BinaryCollision<TestParticleRef> bc;
 
-  double nudt = bc(prt1, prt2, .1);
+  double nudt = bc(prt1, prt2, .1, rng);
 
   EXPECT_NEAR(prt1.u[0] + prt2.u[0], 1., eps);
   EXPECT_NEAR(prt1.u[1] + prt2.u[1], 0., eps);

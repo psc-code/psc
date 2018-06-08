@@ -249,15 +249,16 @@ struct Collision_
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
+    RngC<real_t> rng;
     BinaryCollision<ParticleRef> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+1}, .5 * nudt1);
-      nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+2}, .5 * nudt1);
-      nudts[cnt++] = bc({prts, n_start+1}, {prts, n_start+2}, .5 * nudt1);
+      nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+1}, .5 * nudt1, rng);
+      nudts[cnt++] = bc({prts, n_start  }, {prts, n_start+2}, .5 * nudt1, rng);
+      nudts[cnt++] = bc({prts, n_start+1}, {prts, n_start+2}, .5 * nudt1, rng);
       n = 3;
     }
     for (; n < nn;  n += 2) { // do remaining particles as pair
-      nudts[cnt++] = bc({prts, n_start+n}, {prts, n_start+n+1}, nudt1);
+      nudts[cnt++] = bc({prts, n_start+n}, {prts, n_start+n+1}, nudt1, rng);
     }
 
     calc_stats(stats, nudts, cnt);

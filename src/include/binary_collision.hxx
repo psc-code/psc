@@ -36,7 +36,8 @@ struct BinaryCollision
   // ----------------------------------------------------------------------
   // operator()
 
-  real_t operator()(ParticleRef prt1, ParticleRef prt2, real_t nudt1)
+  template<typename Rng>
+  real_t operator()(ParticleRef prt1, ParticleRef prt2, real_t nudt1, Rng& rng)
   {
     real_t nudt;
     
@@ -219,7 +220,6 @@ struct BinaryCollision
   
     // event generator of angles for post collision vectors
 
-    RngC<real_t> rng;
     ran1 = rng.uniform();
     ran2 = rng.uniform();
     if (ran2 < 1e-20f) {
