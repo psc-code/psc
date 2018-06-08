@@ -23,7 +23,7 @@ struct BinaryCollision
   // ----------------------------------------------------------------------
   // operator()
 
-  real_t operator()(particles_t& prts, real_t nudt1, int n1, int n2)
+  real_t operator()(particles_t& prts, particle_t& prt1, particle_t& prt2, real_t nudt1)
   {
     real_t nudt;
     
@@ -52,21 +52,17 @@ struct BinaryCollision
     real_t m12,q12;
     real_t ran1,ran2;
     
-    particle_t *prt1 = &prts[n1];
-    particle_t *prt2 = &prts[n2];
-  
-  
-    px1=prt1->pxi;
-    py1=prt1->pyi;
-    pz1=prt1->pzi;
-    q1 =prts.prt_qni(*prt1);
-    m1 =prts.prt_mni(*prt1);
+    px1=prt1.pxi;
+    py1=prt1.pyi;
+    pz1=prt1.pzi;
+    q1 =prts.prt_qni(prt1);
+    m1 =prts.prt_mni(prt1);
 
-    px2=prt2->pxi;
-    py2=prt2->pyi;
-    pz2=prt2->pzi;
-    q2 =prts.prt_qni(*prt2);
-    m2 =prts.prt_mni(*prt2);
+    px2=prt2.pxi;
+    py2=prt2.pyi;
+    pz2=prt2.pzi;
+    q2 =prts.prt_qni(prt2);
+    m2 =prts.prt_mni(prt2);
 
     if (q1*q2 == 0.) {
       return 0.; // no Coulomb collisions with neutrals
@@ -265,12 +261,12 @@ struct BinaryCollision
     py4=py4/m4;
     pz4=pz4/m4;
   
-    prt1->pxi=px3;
-    prt1->pyi=py3;
-    prt1->pzi=pz3;
-    prt2->pxi=px4;
-    prt2->pyi=py4;
-    prt2->pzi=pz4;
+    prt1.pxi=px3;
+    prt1.pyi=py3;
+    prt1.pzi=pz3;
+    prt2.pxi=px4;
+    prt2.pyi=py4;
+    prt2.pzi=pz4;
 
   
     return nudt;
@@ -494,13 +490,13 @@ struct Collision_
 
     BinaryCollision<particles_t> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 1);
-      nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 2);
-      nudts[cnt++] = bc(prts, .5 * nudt1, n_start + 1, n_start + 2);
+      nudts[cnt++] = bc(prts, prts[n_start  ], prts[n_start+1], .5 * nudt1);
+      nudts[cnt++] = bc(prts, prts[n_start  ], prts[n_start+2], .5 * nudt1);
+      nudts[cnt++] = bc(prts, prts[n_start+1], prts[n_start+2], .5 * nudt1);
       n = 3;
     }
     for (; n < nn;  n += 2) { // do remaining particles as pair
-      nudts[cnt++] = bc(prts, nudt1, n_start + n, n_start + n + 1);
+      nudts[cnt++] = bc(prts, prts[n_start+n], prts[n_start+n+1], nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
