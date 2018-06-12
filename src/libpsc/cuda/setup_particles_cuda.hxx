@@ -3,6 +3,8 @@
 
 #include "setup_particles.hxx"
 
+#include "psc_particles_cuda.h"
+
 template<>
 template<typename FUNC>
 void SetupParticles<MparticlesCuda<BS144>>::setup_particles(Mparticles& mprts, psc* psc,
