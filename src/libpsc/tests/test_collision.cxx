@@ -93,8 +93,8 @@ template <typename T>
 class CollisionTest : public ::testing::Test
 {};
 
-using CollisionTestConfigSingle = CollisionTestConfig<dim_yz, Collision_<MparticlesSingle, MfieldsSingle>>;
-using CollisionTestConfigDouble = CollisionTestConfig<dim_yz, Collision_<MparticlesDouble, MfieldsC>>;
+using CollisionTestConfigSingle = CollisionTestConfig<dim_yz, CollisionHost<MparticlesSingle, MfieldsSingle, RngFake>>;
+using CollisionTestConfigDouble = CollisionTestConfig<dim_yz, CollisionHost<MparticlesDouble, MfieldsC, RngFake>>;
 using CollisionTestConfigCuda = CollisionTestConfig<dim_yz, CollisionCuda<BS144>>;
 
 using CollisionTestTypes = ::testing::Types<CollisionTestConfigSingle,
@@ -149,21 +149,12 @@ TYPED_TEST(CollisionTest, Test1)
   EXPECT_NEAR(prtf0.pzi + prtf1.pzi, 0., eps);
 
   // depends on random numbers, but for RngFake, we know
-  if (0&&std::is_same<Collision, CollisionCuda<BS144>>::value) {
-    EXPECT_NEAR(prtf0.pxi, 0.955017387, eps);
-    EXPECT_NEAR(prtf0.pyi, -0.14940127, eps);
-    EXPECT_NEAR(prtf0.pzi, 0.11518599, eps);
-    EXPECT_NEAR(prtf1.pxi, 0.044982548, eps);
-    EXPECT_NEAR(prtf1.pyi, 0.14940127, eps);
-    EXPECT_NEAR(prtf1.pzi, -0.11518599, eps);
-  } else {
-    EXPECT_NEAR(prtf0.pxi,  0.95307273, eps);
-    EXPECT_NEAR(prtf0.pyi, -0.19111877, eps);
-    EXPECT_NEAR(prtf0.pzi, -0.02291494, eps);
-    EXPECT_NEAR(prtf1.pxi,  0.04692726, eps);
-    EXPECT_NEAR(prtf1.pyi,  0.19111877, eps);
-    EXPECT_NEAR(prtf1.pzi,  0.02291494, eps);
-  }
+  EXPECT_NEAR(prtf0.pxi,  0.96226911, eps);
+  EXPECT_NEAR(prtf0.pyi,  0.        , eps);
+  EXPECT_NEAR(prtf0.pzi, -0.17342988, eps);
+  EXPECT_NEAR(prtf1.pxi,  0.03773088, eps);
+  EXPECT_NEAR(prtf1.pyi, -0.        , eps);
+  EXPECT_NEAR(prtf1.pzi,  0.17342988, eps);
   
   ppsc = NULL; // FIXME
 }
