@@ -40,10 +40,9 @@ struct RngCuda
 };
 
 // FIXME, replicated from CPU
-template<typename ParticleRef, typename DMparticles>
+template<typename ParticleRef>
 __device__
-static float bc(ParticleRef p1, ParticleRef p2, DMparticles dmprts, float nudt1, int n1, int n2,
-		RngCuda& rng)
+static float bc(ParticleRef& p1, ParticleRef& p2, float nudt1, RngCuda& rng)
 {
   using real_t = float;
   
@@ -74,7 +73,6 @@ static float bc(ParticleRef p1, ParticleRef p2, DMparticles dmprts, float nudt1,
   real_t m12,q12;
   real_t ran1,ran2;
 
-  d_particle prt1, prt2;
   q1 = p1.q();
   q2 = p2.q();
   m1 = p1.m();
@@ -280,19 +278,13 @@ static float bc(ParticleRef p1, ParticleRef p2, DMparticles dmprts, float nudt1,
   py4=py4/m4;
   pz4=pz4/m4;
   
-  LOAD_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
-  LOAD_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
+  p1.u(0) = px3;
+  p1.u(1) = py3;
+  p1.u(2) = pz3;
+  p2.u(0) = px4;
+  p2.u(1) = py4;
+  p2.u(2) = pz4;
 
-  prt1.pxi[0] = px3;
-  prt1.pxi[1] = py3;
-  prt1.pxi[2] = pz3;
-  prt2.pxi[0] = px4;
-  prt2.pxi[1] = py4;
-  prt2.pxi[2] = pz4;
-
-  STORE_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
-  STORE_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
-  
   return nudt;
 }
 
@@ -324,6 +316,15 @@ struct cuda_collision
     {
       LOAD_PARTICLE_POS(prt_, dmprts_.xi4_ , n_);
       LOAD_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
+    }
+
+    ParticleRef(const ParticleRef&) = delete;
+
+    __device__
+    ~ParticleRef()
+    {
+      // xi4 is not modified
+      STORE_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
     }
     
     __device__
@@ -419,7 +420,7 @@ struct cuda_collision
 	//printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
 	ParticleRef prt1{dmprts, int(d_id[n  ])};
 	ParticleRef prt2{dmprts, int(d_id[n+1])};
-	bc(prt1, prt2, dmprts, nudt1, d_id[n], d_id[n + 1], rng);
+	bc(prt1, prt2, nudt1, rng);
       }
     }
     
