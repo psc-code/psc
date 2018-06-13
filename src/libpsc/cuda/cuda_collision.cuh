@@ -300,28 +300,12 @@ static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
   return nudt;
 }
 
-template<typename DMparticles>
+template<typename cuda_mparticles>
 __global__ static void
-k_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
+k_collide(DMparticlesCuda<typename cuda_mparticles::BS> dmprts, uint* d_off, uint* d_id, float nudt0,
 	  curandState* d_curand_states, uint n_cells)
 {
-  using real_t = float;
-
-  int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
-  /* Copy state to local memory for efficiency */
-  RngCuda rng = { d_curand_states[id] };
-
-  for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
-    uint beg = d_off[bidx];
-    uint end = d_off[bidx + 1];
-    real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
-    for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
-      //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-      bc(dmprts, nudt1, d_id[n], d_id[n + 1], rng);
-    }
-  }
-  
-  d_curand_states[id] = rng.curand_state;
+  cuda_collision<cuda_mparticles>::d_collide(dmprts, d_off, d_id, nudt0, d_curand_states, n_cells);
 }
 
 // ======================================================================
@@ -331,6 +315,47 @@ template<typename cuda_mparticles>
 struct cuda_collision
 {
   using real_t = typename cuda_mparticles::real_t;
+  using DMparticles = DMparticlesCuda<typename cuda_mparticles::BS>;
+  
+  struct ParticleRef
+  {
+    using real_t = real_t;
+    
+    ParticleRef(DMparticles& dmprts, int n)
+      : dmprts_{dmprts},
+	n_{n}
+    {
+      LOAD_PARTICLE_POS(prt_, dmprts_.xi4_ , n_);
+      LOAD_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
+    }
+    
+    real_t q() const
+    {
+      int kind = __float_as_int(prt_.kind_as_float);
+      return dmprts_.q(kind);
+    }
+
+    real_t m() const
+    {
+      int kind = __float_as_int(prt_.kind_as_float);
+      return dmprts_.m(kind);
+    }
+    
+    real_t u(int d) const
+    {
+      return (&prt_.pxi)[d];
+    }
+
+    real_t& u(int d)
+    {
+      return (&prt_.pxi)[d];
+    }
+
+  private:
+    DMparticles& dmprts_;
+    int n_;
+    d_particle prt_;
+  };
   
   cuda_collision(int interval, double nu, int nicell, double dt)
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
@@ -369,11 +394,33 @@ struct cuda_collision
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts.prt_wni(prts[n_start]);
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
-    k_collide<<<dimGrid, THREADS_PER_BLOCK>>>(static_cast<DMparticlesCuda<typename cuda_mparticles::BS>>(cmprts), sort_by_cell.d_off.data().get(),
+    k_collide<cuda_mparticles><<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
 					      sort_by_cell.d_id.data().get(),
 					      nudt0, d_curand_states_,
 					      cmprts.n_cells());
     cuda_sync_if_enabled();
+  }
+
+  __device__
+  static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
+			curandState* d_curand_states, uint n_cells)
+  {
+    
+    int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
+    /* Copy state to local memory for efficiency */
+    RngCuda rng = { d_curand_states[id] };
+    
+    for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
+      uint beg = d_off[bidx];
+      uint end = d_off[bidx + 1];
+      real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
+      for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
+	//printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
+	bc(dmprts, nudt1, d_id[n], d_id[n + 1], rng);
+      }
+    }
+    
+    d_curand_states[id] = rng.curand_state;
   }
 
 private:
