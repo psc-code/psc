@@ -38,12 +38,12 @@ struct RngCudaState
   void init(dim3 dim_grid);
 
   __device__
-  curandState  operator[](int id) const { return d_curand_states_[id]; }
+  Rng  operator[](int id) const { return d_curand_states_[id]; }
 
   __device__
-  curandState& operator[](int id)       { return d_curand_states_[id]; }
+  Rng& operator[](int id)       { return d_curand_states_[id]; }
 
-  curandState* d_curand_states_;
+  Rng* d_curand_states_;
 };
 
 // ----------------------------------------------------------------------
@@ -54,7 +54,7 @@ static void k_curand_setup(RngCudaState rng_state)
 {
   int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
 
-  curand_init(1234, id % 1024, 0, &rng_state[id]); // FIXME, % 1024 hack
+  curand_init(1234, id % 1024, 0, &rng_state[id].curand_state); // FIXME, % 1024 hack
 }
 
 void RngCudaState::init(dim3 dim_grid)
@@ -181,7 +181,7 @@ struct cuda_collision
     
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
     /* Copy state to local memory for efficiency */
-    RngCudaState::Rng rng = { rng_state[id] };
+    auto rng = rng_state[id];
     BinaryCollision<Particle> bc;
     
     for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
@@ -196,7 +196,7 @@ struct cuda_collision
       }
     }
     
-    rng_state[id] = rng.curand_state;
+    rng_state[id] = rng;
   }
 
 private:
