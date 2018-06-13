@@ -168,14 +168,21 @@ TYPED_TEST(CollisionTest, Test1)
   EXPECT_NEAR(prtf0.pzi + prtf1.pzi, 0., eps);
 
   // depends on random numbers, but for RngFake, we know
-#if 0
-  EXPECT_NEAR(prtf0.pxi, 0.00529763, eps);
-  EXPECT_NEAR(prtf0.pyi, -0.0322735, eps);
-  EXPECT_NEAR(prtf0.pzi, -0.0576536, eps);
-  EXPECT_NEAR(prtf1.pxi, 0.99470234, eps);
-  EXPECT_NEAR(prtf1.pyi, 0.0322735, eps);
-  EXPECT_NEAR(prtf1.pzi, 0.0576536, eps);
-#endif
+  if (std::is_same<Collision, CollisionCuda<BS144>>::value) {
+    EXPECT_NEAR(prtf0.pxi, 0.955017387, eps);
+    EXPECT_NEAR(prtf0.pyi, -0.14940127, eps);
+    EXPECT_NEAR(prtf0.pzi, 0.11518599, eps);
+    EXPECT_NEAR(prtf1.pxi, 0.044982548, eps);
+    EXPECT_NEAR(prtf1.pyi, 0.14940127, eps);
+    EXPECT_NEAR(prtf1.pzi, -0.11518599, eps);
+  } else {
+    EXPECT_NEAR(prtf0.pxi, 0.00529763, eps);
+    EXPECT_NEAR(prtf0.pyi, -0.0322735, eps);
+    EXPECT_NEAR(prtf0.pzi, -0.0576536, eps);
+    EXPECT_NEAR(prtf1.pxi, 0.99470234, eps);
+    EXPECT_NEAR(prtf1.pyi, 0.0322735, eps);
+    EXPECT_NEAR(prtf1.pzi, 0.0576536, eps);
+  }
   
   ppsc = NULL; // FIXME
 }
