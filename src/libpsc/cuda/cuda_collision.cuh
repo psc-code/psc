@@ -11,16 +11,29 @@
 
 #define THREADS_PER_BLOCK 128
 
+// ======================================================================
+// RngCudaState
+
+struct RngCudaState
+{
+  __device__
+  curandState  operator[](int id) const { return d_curand_states_[id]; }
+
+  __device__
+  curandState& operator[](int id)       { return d_curand_states_[id]; }
+
+  curandState* d_curand_states_;
+};
+
 // ----------------------------------------------------------------------
 // k_curand_setup
 
 __global__
-static void k_curand_setup(curandState *d_curand_states)
+static void k_curand_setup(RngCudaState rng_state)
 {
-  int bid = blockIdx.x;
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
+  int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
 
-  curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
+  curand_init(1234, id % 1024, 0, &rng_state[id]); // FIXME, % 1024 hack
 }
 
 // ======================================================================
@@ -45,9 +58,9 @@ struct RngCuda
 template<typename cuda_mparticles>
 __global__ static void
 k_collide(DMparticlesCuda<typename cuda_mparticles::BS> dmprts, uint* d_off, uint* d_id, float nudt0,
-	  curandState* d_curand_states, uint n_cells)
+	  RngCudaState rng_state, uint n_cells)
 {
-  cuda_collision<cuda_mparticles>::d_collide(dmprts, d_off, d_id, nudt0, d_curand_states, n_cells);
+  cuda_collision<cuda_mparticles>::d_collide(dmprts, d_off, d_id, nudt0, rng_state, n_cells);
 }
 
 // ======================================================================
@@ -133,12 +146,12 @@ struct cuda_collision
     static bool first_time = true;
     if (first_time) {
       int n_threads = dimGrid.x * THREADS_PER_BLOCK;
-      
+
       cudaError_t ierr;
-      ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
+      ierr = cudaMalloc(&rng_state_.d_curand_states_, n_threads * sizeof(*rng_state_.d_curand_states_));
       cudaCheck(ierr);
       
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_);
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(rng_state_);
       cuda_sync_if_enabled();
       
       first_time = false;
@@ -150,20 +163,19 @@ struct cuda_collision
 
     k_collide<cuda_mparticles><<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
 					      sort_by_cell.d_id.data().get(),
-					      nudt0, d_curand_states_,
+							       nudt0, rng_state_,
 					      cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
   __device__
   static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
-			curandState* d_curand_states, uint n_cells)
+			RngCudaState rng_state, uint n_cells)
   {
     
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
     /* Copy state to local memory for efficiency */
-    //RngCuda rng = { d_curand_states[id] };
-    RngFake rng;
+    RngCuda rng = { rng_state[id] };
     BinaryCollision<Particle> bc;
     
     for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
@@ -178,7 +190,7 @@ struct cuda_collision
       }
     }
     
-    //d_curand_states[id] = rng.curand_state;
+    rng_state[id] = rng.curand_state;
   }
 
 private:
@@ -186,6 +198,6 @@ private:
   double nu_;
   int nicell_;
   double dt_;
-  curandState* d_curand_states_;
+  RngCudaState rng_state_;
 };
 
