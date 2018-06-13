@@ -15,7 +15,7 @@ extern void* global_collision; // FIXME
 // ======================================================================
 // CollisionHost
 
-template<typename MP, typename MF>
+template<typename MP, typename MF, typename Rng>
 struct CollisionHost
 {
   using Mparticles = MP;
@@ -250,8 +250,6 @@ struct CollisionHost
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
-    RngC<real_t> rng;
-    BinaryCollision<Particle> bc;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
       nudts[cnt++] = do_bc(prts, n_start  , n_start+1, .5 * nudt1);
       nudts[cnt++] = do_bc(prts, n_start  , n_start+2, .5 * nudt1);
@@ -268,7 +266,7 @@ struct CollisionHost
 
   real_t do_bc(particles_t& prts, int n1, int n2, real_t nudt1)
   {
-    RngC<real_t> rng;
+    Rng rng;
     BinaryCollision<Particle> bc;
     Particle prt1 = {prts, n1};
     Particle prt2 = {prts, n2};
@@ -287,4 +285,4 @@ public: // FIXME
 };
 
 template<typename MP, typename MF>
-using Collision_ = CollisionHost<MP, MF>;
+using Collision_ = CollisionHost<MP, MF, RngC<typename MP::real_t>>;
