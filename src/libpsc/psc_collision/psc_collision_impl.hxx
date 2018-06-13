@@ -13,10 +13,10 @@
 extern void* global_collision; // FIXME
 
 // ======================================================================
-// Collision_
+// CollisionHost
 
 template<typename MP, typename MF>
-struct Collision_
+struct CollisionHost
 {
   using Mparticles = MP;
   using particles_t = typename Mparticles::patch_t;
@@ -60,7 +60,7 @@ struct Collision_
     particles_t& prts_;
   };
   
-  Collision_(MPI_Comm comm, int interval, double nu)
+  CollisionHost(MPI_Comm comm, int interval, double nu)
     : interval_{interval},
       nu_{nu},
       mflds_stats_{ppsc->grid(), NR_STATS, ppsc->ibn},
@@ -286,3 +286,5 @@ public: // FIXME
   Mfields mflds_rei_;
 };
 
+template<typename MP, typename MF>
+using Collision_ = CollisionHost<MP, MF>;
