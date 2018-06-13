@@ -181,6 +181,7 @@ struct Collision_
 
   static void randomize_in_cell(particles_t& prts, int n_start, int n_end)
   {
+    return;
     int nn = n_end - n_start;
     for (int n = 0; n < nn - 1; n++) {
       int n_partner = n + random() % (nn - n);
