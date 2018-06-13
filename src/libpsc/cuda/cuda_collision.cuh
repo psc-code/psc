@@ -35,6 +35,8 @@ struct RngCudaState
     curandState curand_state;
   };
 
+  void init(dim3 dim_grid);
+
   __device__
   curandState  operator[](int id) const { return d_curand_states_[id]; }
 
@@ -54,6 +56,18 @@ static void k_curand_setup(RngCudaState rng_state)
 
   curand_init(1234, id % 1024, 0, &rng_state[id]); // FIXME, % 1024 hack
 }
+
+void RngCudaState::init(dim3 dim_grid)
+{
+  int n_threads = dim_grid.x * THREADS_PER_BLOCK;
+  
+  cudaError_t ierr;
+  ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
+  cudaCheck(ierr);
+  
+  k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
+  cuda_sync_if_enabled();
+};
 
 template<typename cuda_mparticles>
 __global__ static void
@@ -145,15 +159,7 @@ struct cuda_collision
 
     static bool first_time = true;
     if (first_time) {
-      int n_threads = dimGrid.x * THREADS_PER_BLOCK;
-
-      cudaError_t ierr;
-      ierr = cudaMalloc(&rng_state_.d_curand_states_, n_threads * sizeof(*rng_state_.d_curand_states_));
-      cudaCheck(ierr);
-      
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(rng_state_);
-      cuda_sync_if_enabled();
-      
+      rng_state_.init(dimGrid);
       first_time = false;
     }
     
