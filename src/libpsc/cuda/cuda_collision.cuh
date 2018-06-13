@@ -40,9 +40,9 @@ struct RngCuda
 };
 
 // FIXME, replicated from CPU
-template<typename ParticleRef>
+template<typename Particle>
 __device__
-static float bc(ParticleRef& p1, ParticleRef& p2, float nudt1, RngCuda& rng)
+static float bc(Particle& p1, Particle& p2, float nudt1, RngCuda& rng)
 {
   using real_t = float;
   
@@ -305,12 +305,12 @@ struct cuda_collision
   using real_t = typename cuda_mparticles::real_t;
   using DMparticles = DMparticlesCuda<typename cuda_mparticles::BS>;
   
-  struct ParticleRef
+  struct Particle
   {
     using real_t = real_t;
 
     __device__
-    ParticleRef(DMparticles& dmprts, int n)
+    Particle(DMparticles& dmprts, int n)
       : dmprts_{dmprts},
 	n_{n}
     {
@@ -318,10 +318,10 @@ struct cuda_collision
       LOAD_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
     }
 
-    ParticleRef(const ParticleRef&) = delete;
+    Particle(const Particle&) = delete;
 
     __device__
-    ~ParticleRef()
+    ~Particle()
     {
       // xi4 is not modified
       STORE_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
@@ -418,8 +418,8 @@ struct cuda_collision
       real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
       for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
 	//printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-	ParticleRef prt1{dmprts, int(d_id[n  ])};
-	ParticleRef prt2{dmprts, int(d_id[n+1])};
+	Particle prt1{dmprts, int(d_id[n  ])};
+	Particle prt2{dmprts, int(d_id[n+1])};
 	bc(prt1, prt2, nudt1, rng);
       }
     }

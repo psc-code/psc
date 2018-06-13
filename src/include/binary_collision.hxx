@@ -28,16 +28,16 @@ struct RngC
 // ======================================================================
 // BinaryCollision
 
-template<typename ParticleRef>
+template<typename Particle>
 struct BinaryCollision
 {
-  using real_t = typename ParticleRef::real_t;
+  using real_t = typename Particle::real_t;
 
   // ----------------------------------------------------------------------
   // operator()
 
   template<typename Rng>
-  real_t operator()(ParticleRef prt1, ParticleRef prt2, real_t nudt1, Rng& rng)
+  real_t operator()(Particle& prt1, Particle& prt2, real_t nudt1, Rng& rng)
   {
     real_t nudt;
     
