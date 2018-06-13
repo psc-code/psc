@@ -20,12 +20,30 @@ static void k_curand_setup(curandState *d_curand_states)
   curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
 }
 
+// ======================================================================
+// RngCuda
+
+struct RngCuda
+{
+  // ----------------------------------------------------------------------
+  // uniform
+  //
+  // returns random number in ]0:1]
+
+  __device__
+  float uniform()
+  {
+    return curand_uniform(&curand_state);
+  }
+
+  curandState curand_state;
+};
 
 // FIXME, replicated from CPU
 template<typename DMparticles>
 __device__
 static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
-		curandState& curand_state)
+		RngCuda& rng)
 {
   using real_t = float;
   
@@ -219,11 +237,8 @@ static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
   
   // event generator of angles for post collision vectors
   
-  ran1 = curand_uniform(&curand_state);
-  ran2 = curand_uniform(&curand_state);
-  if (ran2 < 1e-20) {
-    ran2 = 1e-20;
-  }
+  ran1 = rng.uniform();
+  ran2 = rng.uniform();
   
   nu = 2.f * M_PI * ran1;
   
@@ -294,7 +309,7 @@ k_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
 
   int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
   /* Copy state to local memory for efficiency */
-  curandState local_state = d_curand_states[id];
+  RngCuda rng = { d_curand_states[id] };
 
   for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
     uint beg = d_off[bidx];
@@ -302,11 +317,11 @@ k_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
     real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
     for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
       //printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-      bc(dmprts, nudt1, d_id[n], d_id[n + 1], local_state);
+      bc(dmprts, nudt1, d_id[n], d_id[n + 1], rng);
     }
   }
   
-  d_curand_states[id] = local_state;
+  d_curand_states[id] = rng.curand_state;
 }
 
 // ======================================================================
