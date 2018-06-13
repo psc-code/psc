@@ -40,9 +40,9 @@ struct RngCuda
 };
 
 // FIXME, replicated from CPU
-template<typename DMparticles>
+template<typename ParticleRef, typename DMparticles>
 __device__
-static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
+static float bc(ParticleRef p1, ParticleRef p2, DMparticles dmprts, float nudt1, int n1, int n2,
 		RngCuda& rng)
 {
   using real_t = float;
@@ -75,29 +75,22 @@ static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
   real_t ran1,ran2;
 
   d_particle prt1, prt2;
-  LOAD_PARTICLE_POS(prt1, dmprts.xi4_ , n1);
-  LOAD_PARTICLE_POS(prt2, dmprts.xi4_ , n2);
-  int kind1 = __float_as_int(prt1.kind_as_float);
-  int kind2 = __float_as_int(prt2.kind_as_float);
-  q1 = dmprts.q(kind1);
-  q2 = dmprts.q(kind2);
-  m1 = dmprts.m(kind1);
-  m2 = dmprts.m(kind2);
+  q1 = p1.q();
+  q2 = p2.q();
+  m1 = p1.m();
+  m2 = p2.m();
 
   if (q1*q2 == 0.) {
     return 0.; // no Coulomb collisions with neutrals
   }
 
-  LOAD_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
-  LOAD_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
+  px1 = p1.u(0);
+  py1 = p1.u(1);
+  pz1 = p1.u(2);
 
-  px1 = prt1.pxi[0];
-  py1 = prt1.pxi[1];
-  pz1 = prt1.pxi[2];
-
-  px2 = prt2.pxi[0];
-  py2 = prt2.pxi[1];
-  pz2 = prt2.pxi[2];
+  px2 = p2.u(0);
+  py2 = p2.u(1);
+  pz2 = p2.u(2);
 
   px1=m1*px1;
   py1=m1*py1;
@@ -287,6 +280,9 @@ static float bc(DMparticles dmprts, float nudt1, int n1, int n2,
   py4=py4/m4;
   pz4=pz4/m4;
   
+  LOAD_PARTICLE_MOM(prt1, dmprts.pxi4_, n1);
+  LOAD_PARTICLE_MOM(prt2, dmprts.pxi4_, n2);
+
   prt1.pxi[0] = px3;
   prt1.pxi[1] = py3;
   prt1.pxi[2] = pz3;
@@ -320,7 +316,8 @@ struct cuda_collision
   struct ParticleRef
   {
     using real_t = real_t;
-    
+
+    __device__
     ParticleRef(DMparticles& dmprts, int n)
       : dmprts_{dmprts},
 	n_{n}
@@ -329,26 +326,30 @@ struct cuda_collision
       LOAD_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
     }
     
+    __device__
     real_t q() const
     {
       int kind = __float_as_int(prt_.kind_as_float);
       return dmprts_.q(kind);
     }
 
+    __device__
     real_t m() const
     {
       int kind = __float_as_int(prt_.kind_as_float);
       return dmprts_.m(kind);
     }
     
+    __device__
     real_t u(int d) const
     {
-      return (&prt_.pxi)[d];
+      return prt_.pxi[d];
     }
 
+    __device__
     real_t& u(int d)
     {
-      return (&prt_.pxi)[d];
+      return prt_.pxi[d];
     }
 
   private:
@@ -416,7 +417,9 @@ struct cuda_collision
       real_t nudt1 = nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide the last particle if odd
       for (uint n = beg + 2*threadIdx.x; n + 1 < end; n += 2*THREADS_PER_BLOCK) {
 	//printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n, d_off[blockIdx.x]);
-	bc(dmprts, nudt1, d_id[n], d_id[n + 1], rng);
+	ParticleRef prt1{dmprts, int(d_id[n  ])};
+	ParticleRef prt2{dmprts, int(d_id[n+1])};
+	bc(prt1, prt2, dmprts, nudt1, d_id[n], d_id[n + 1], rng);
       }
     }
     
