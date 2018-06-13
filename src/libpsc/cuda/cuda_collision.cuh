@@ -3,6 +3,9 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mparticles_sort.cuh"
+// FIXME, horrible hack...
+#define DEVICE __device__
+#include "binary_collision.hxx"
 
 #include <curand_kernel.h>
 
@@ -40,9 +43,9 @@ struct RngCuda
 };
 
 // FIXME, replicated from CPU
-template<typename Particle>
+template<typename Particle, typename Rng>
 __device__
-static float bc(Particle& p1, Particle& p2, float nudt1, RngCuda& rng)
+static float bc(Particle& p1, Particle& p2, float nudt1, Rng& rng)
 {
   using real_t = float;
   
@@ -318,8 +321,6 @@ struct cuda_collision
       LOAD_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
     }
 
-    Particle(const Particle&) = delete;
-
     __device__
     ~Particle()
     {
@@ -410,7 +411,9 @@ struct cuda_collision
     
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
     /* Copy state to local memory for efficiency */
-    RngCuda rng = { d_curand_states[id] };
+    //RngCuda rng = { d_curand_states[id] };
+    RngFake rng;
+    BinaryCollision<Particle> bc_;
     
     for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
       uint beg = d_off[bidx];
@@ -424,7 +427,7 @@ struct cuda_collision
       }
     }
     
-    d_curand_states[id] = rng.curand_state;
+    //d_curand_states[id] = rng.curand_state;
   }
 
 private:

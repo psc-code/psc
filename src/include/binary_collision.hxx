@@ -1,7 +1,13 @@
 
 #pragma once
 
+#include "cuda_compat.h"
+
 #include <cmath>
+
+#ifndef DEVICE
+#define DEVICE
+#endif
 
 // ======================================================================
 // RngC
@@ -26,6 +32,19 @@ struct RngC
 };
 
 // ======================================================================
+// RngFake
+//
+// for testing...
+
+struct RngFake
+{
+  using real_t = double;
+
+  __host__ __device__
+  real_t uniform() { return .5; }
+};
+
+// ======================================================================
 // BinaryCollision
 
 template<typename Particle>
@@ -37,6 +56,7 @@ struct BinaryCollision
   // operator()
 
   template<typename Rng>
+  DEVICE
   real_t operator()(Particle& prt1, Particle& prt2, real_t nudt1, Rng& rng)
   {
     real_t nudt;
