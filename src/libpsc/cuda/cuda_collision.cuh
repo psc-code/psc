@@ -16,6 +16,25 @@
 
 struct RngCudaState
 {
+  // ======================================================================
+  // RngCudaState::Rng
+
+  struct Rng
+  {
+    // ----------------------------------------------------------------------
+    // uniform
+    //
+    // returns random number in ]0:1]
+    
+    __device__
+    float uniform()
+    {
+      return curand_uniform(&curand_state);
+    }
+    
+    curandState curand_state;
+  };
+
   __device__
   curandState  operator[](int id) const { return d_curand_states_[id]; }
 
@@ -35,25 +54,6 @@ static void k_curand_setup(RngCudaState rng_state)
 
   curand_init(1234, id % 1024, 0, &rng_state[id]); // FIXME, % 1024 hack
 }
-
-// ======================================================================
-// RngCuda
-
-struct RngCuda
-{
-  // ----------------------------------------------------------------------
-  // uniform
-  //
-  // returns random number in ]0:1]
-
-  __device__
-  float uniform()
-  {
-    return curand_uniform(&curand_state);
-  }
-
-  curandState curand_state;
-};
 
 template<typename cuda_mparticles>
 __global__ static void
@@ -175,7 +175,7 @@ struct cuda_collision
     
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
     /* Copy state to local memory for efficiency */
-    RngCuda rng = { rng_state[id] };
+    RngCudaState::Rng rng = { rng_state[id] };
     BinaryCollision<Particle> bc;
     
     for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
