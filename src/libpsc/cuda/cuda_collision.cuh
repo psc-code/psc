@@ -38,12 +38,12 @@ struct RngCudaState
   void init(dim3 dim_grid);
 
   __device__
-  Rng  operator[](int id) const { return d_curand_states_[id]; }
+  Rng  operator[](int id) const { return rngs_[id]; }
 
   __device__
-  Rng& operator[](int id)       { return d_curand_states_[id]; }
+  Rng& operator[](int id)       { return rngs_[id]; }
 
-  Rng* d_curand_states_;
+  Rng* rngs_;
 };
 
 // ----------------------------------------------------------------------
@@ -62,7 +62,7 @@ void RngCudaState::init(dim3 dim_grid)
   int n_threads = dim_grid.x * THREADS_PER_BLOCK;
   
   cudaError_t ierr;
-  ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
+  ierr = cudaMalloc(&rngs_, n_threads * sizeof(*rngs_));
   cudaCheck(ierr);
   
   k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
