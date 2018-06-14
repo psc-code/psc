@@ -12,7 +12,7 @@ struct RngCudaState;
 // ----------------------------------------------------------------------
 // CollisionCuda
 
-template<typename BS>
+template<typename BS, typename RngState = RngCudaState>
 class CollisionCuda : CollisionBase
 {
 public:
@@ -25,6 +25,6 @@ public:
   void operator()(Mparticles& _mprts);
 
 private:
-  CudaCollision<cuda_mparticles<BS>, RngCudaState> *fwd_;
+  CudaCollision<cuda_mparticles<BS>, RngState> *fwd_;
 };
 

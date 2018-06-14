@@ -6,13 +6,13 @@
 // ======================================================================
 // CollisionCuda
 
-template<typename BS>
-CollisionCuda<BS>::CollisionCuda(MPI_Comm comm, int interval, double nu)
-  : fwd_{new CudaCollision<cuda_mparticles<BS>, RngCudaState>{interval, nu, ppsc->prm.nicell, ppsc->dt}}
+template<typename BS, typename RngState>
+CollisionCuda<BS, RngState>::CollisionCuda(MPI_Comm comm, int interval, double nu)
+  : fwd_{new CudaCollision<cuda_mparticles<BS>, RngState>{interval, nu, ppsc->prm.nicell, ppsc->dt}}
 {}
 
-template<typename BS>
-void CollisionCuda<BS>::operator()(MparticlesCuda<BS>& _mprts)
+template<typename BS, typename RngState>
+void CollisionCuda<BS, RngState>::operator()(MparticlesCuda<BS>& _mprts)
 {
   (*fwd_)(*_mprts.cmprts());
 }
