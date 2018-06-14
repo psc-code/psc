@@ -95,7 +95,7 @@ class CollisionTest : public ::testing::Test
 
 using CollisionTestConfigSingle = CollisionTestConfig<dim_yz, CollisionHost<MparticlesSingle, MfieldsSingle, RngFake>>;
 using CollisionTestConfigDouble = CollisionTestConfig<dim_yz, CollisionHost<MparticlesDouble, MfieldsC, RngFake>>;
-using CollisionTestConfigCuda = CollisionTestConfig<dim_yz, CollisionCuda<BS144>>;
+using CollisionTestConfigCuda = CollisionTestConfig<dim_yz, CollisionCuda<BS144, RngStateFake>>;
 
 using CollisionTestTypes = ::testing::Types<CollisionTestConfigSingle,
 					    CollisionTestConfigDouble,

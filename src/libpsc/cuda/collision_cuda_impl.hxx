@@ -7,12 +7,13 @@
 template<typename cuda_mparticles, typename RngState>
 struct CudaCollision;
 
-struct RngCudaState;
+struct RngStateCuda;
+struct RngStateFake;
 
 // ----------------------------------------------------------------------
 // CollisionCuda
 
-template<typename BS, typename RngState = RngCudaState>
+template<typename BS, typename RngState = RngStateCuda>
 class CollisionCuda : CollisionBase
 {
 public:

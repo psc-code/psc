@@ -19,3 +19,5 @@ void CollisionCuda<BS, RngState>::operator()(MparticlesCuda<BS>& _mprts)
 
 template struct CollisionCuda<BS144>;
 template struct CollisionCuda<BS444>;
+
+template struct CollisionCuda<BS144, RngStateFake>;

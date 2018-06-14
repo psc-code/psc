@@ -12,12 +12,29 @@
 #define THREADS_PER_BLOCK 128
 
 // ======================================================================
-// RngCudaState
+// RngStateFake
 
-struct RngCudaState
+struct RngStateFake
+{
+  void init(dim3 dim_grid) {}
+
+  __device__
+  RngFake  operator[](int id) const { return rng_; }
+
+  __device__
+  RngFake& operator[](int id)       { return rng_; }
+
+private:
+  RngFake rng_;
+};
+  
+// ======================================================================
+// RngStateCuda
+
+struct RngStateCuda
 {
   // ======================================================================
-  // RngCudaState::Rng
+  // RngStateCuda::Rng
 
   struct Rng
   {
@@ -50,14 +67,14 @@ struct RngCudaState
 // k_curand_setup
 
 __global__
-static void k_curand_setup(RngCudaState rng_state)
+static void k_curand_setup(RngStateCuda rng_state)
 {
   int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
 
   curand_init(1234, id % 1024, 0, &rng_state[id].curand_state); // FIXME, % 1024 hack
 }
 
-void RngCudaState::init(dim3 dim_grid)
+void RngStateCuda::init(dim3 dim_grid)
 {
   int n_threads = dim_grid.x * THREADS_PER_BLOCK;
   
