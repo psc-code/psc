@@ -4,8 +4,10 @@
 #include "collision.hxx"
 #include "psc_particles_cuda.h"
 
-template<typename cuda_mparticles>
-struct cuda_collision;
+template<typename cuda_mparticles, typename RngState>
+struct CudaCollision;
+
+struct RngCudaState;
 
 // ----------------------------------------------------------------------
 // CollisionCuda
@@ -23,6 +25,6 @@ public:
   void operator()(Mparticles& _mprts);
 
 private:
-  cuda_collision<cuda_mparticles<BS>> *fwd_;
+  CudaCollision<cuda_mparticles<BS>, RngCudaState> *fwd_;
 };
 

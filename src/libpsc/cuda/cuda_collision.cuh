@@ -69,19 +69,19 @@ void RngCudaState::init(dim3 dim_grid)
   cuda_sync_if_enabled();
 };
 
-template<typename cuda_mparticles>
+template<typename cuda_mparticles, typename RngState>
 __global__ static void
 k_collide(DMparticlesCuda<typename cuda_mparticles::BS> dmprts, uint* d_off, uint* d_id, float nudt0,
-	  RngCudaState rng_state, uint n_cells)
+	  RngState rng_state, uint n_cells)
 {
-  cuda_collision<cuda_mparticles>::d_collide(dmprts, d_off, d_id, nudt0, rng_state, n_cells);
+  CudaCollision<cuda_mparticles, RngState>::d_collide(dmprts, d_off, d_id, nudt0, rng_state, n_cells);
 }
 
 // ======================================================================
 // cuda_collision
 
-template<typename cuda_mparticles>
-struct cuda_collision
+template<typename cuda_mparticles, typename RngState>
+struct CudaCollision
 {
   using real_t = typename cuda_mparticles::real_t;
   using DMparticles = DMparticlesCuda<typename cuda_mparticles::BS>;
@@ -138,7 +138,7 @@ struct cuda_collision
     d_particle prt_;
   };
   
-  cuda_collision(int interval, double nu, int nicell, double dt)
+  CudaCollision(int interval, double nu, int nicell, double dt)
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
   
@@ -176,7 +176,7 @@ struct cuda_collision
 
   __device__
   static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id, float nudt0,
-			RngCudaState rng_state, uint n_cells)
+			RngState rng_state, uint n_cells)
   {
     
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
@@ -204,6 +204,6 @@ private:
   double nu_;
   int nicell_;
   double dt_;
-  RngCudaState rng_state_;
+  RngState rng_state_;
 };
 
