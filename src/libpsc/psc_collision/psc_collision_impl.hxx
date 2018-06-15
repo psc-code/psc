@@ -42,7 +42,7 @@ struct CollisionHost
 
   struct Particle
   {
-    using real_t = real_t;
+    using real_t = typename Mparticles::real_t;
     
     Particle(particles_t& prts, int n)
       : prt_{prts[n]},
