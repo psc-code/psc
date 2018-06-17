@@ -3,7 +3,7 @@
 
 #include "checks.hxx"
 
-template<typename BS>
+template<typename Mparticles>
 struct ChecksCuda : ChecksBase, ChecksParams
 {
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
@@ -14,12 +14,12 @@ struct ChecksCuda : ChecksBase, ChecksParams
   void continuity_after_particle_push(psc* psc) { assert(0); }
   void gauss(psc* psc) { assert(0); }
 
-  void continuity_before_particle_push(MparticlesCuda<BS>& mprts)
+  void continuity_before_particle_push(Mparticles& mprts)
   {}
  
-  void continuity_after_particle_push(MparticlesCuda<BS>& mprts, MfieldsCuda& mflds)
+  void continuity_after_particle_push(Mparticles& mprts, MfieldsCuda& mflds)
   {}
 
-  void gauss(MparticlesCuda<BS>& mprts, MfieldsCuda& mflds)
+  void gauss(Mparticles& mprts, MfieldsCuda& mflds)
   {}
 };

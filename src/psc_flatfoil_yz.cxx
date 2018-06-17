@@ -234,7 +234,7 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
   using Heating_t = HeatingCuda<BS>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
-  using Checks_t = ChecksCuda<BS>;
+  using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
 };
 
@@ -255,7 +255,7 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
   using Heating_t = HeatingCuda<BS>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
-  using Checks_t = ChecksCuda<BS>;
+  using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
 };
 
