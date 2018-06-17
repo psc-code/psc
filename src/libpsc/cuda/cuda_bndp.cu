@@ -157,7 +157,7 @@ void cuda_bndp<BS, DIM>::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint
 
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
-    psc_particle_cuda_buf_t& buf = bpatch[p].buf;
+    auto& buf = bpatch[p].buf;
     uint n_send = bpatch[p].n_send;
     buf.reserve(n_send);
     buf.resize(n_send);

@@ -18,7 +18,7 @@
 // cuda_bnd
 
 struct cuda_bnd {
-  psc_particle_cuda_buf_t buf;
+  std::vector<particle_cuda_t> buf;
   int n_recv;
   int n_send;
 };
@@ -29,7 +29,7 @@ struct cuda_bnd {
 template<typename BS, typename DIM>
 struct cuda_bndp : cuda_mparticles_indexer<BS>
 {
-  using buf_t = typename MparticlesCuda<BS>::buf_t;
+  using buf_t = std::vector<particle_cuda_t>;
   using cuda_mparticles = cuda_mparticles<BS>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
@@ -158,7 +158,7 @@ struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
       prt.qni_wni_ = h_bnd_pxi4[n].w;
 
       int p = h_bidx[n] - cmprts->n_blocks;
-      psc_particle_cuda_buf_t& buf = bpatch[p].buf;
+      auto& buf = bpatch[p].buf;
       bpatch[p].buf.push_back(prt);
       bpatch[p].n_send++;
     }

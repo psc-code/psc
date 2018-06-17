@@ -29,11 +29,6 @@ struct BS444
 struct particle_cuda_t : psc_particle<float> {};
 
 // ======================================================================
-// psc_particle_cuda_buf_t
-
-using psc_particle_cuda_buf_t = std::vector<particle_cuda_t>;
-
-// ======================================================================
 // cuda_mparticles_prt
 
 struct cuda_mparticles_prt
@@ -58,7 +53,7 @@ struct MparticlesCuda : MparticlesBase
   using particle_t = particle_cuda_t;
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
-  using buf_t = psc_particle_cuda_buf_t;
+  using buf_t = std::vector<particle_cuda_t>;
   using CudaMparticles = cuda_mparticles<BS>;
   
   MparticlesCuda(const Grid_t& grid);
