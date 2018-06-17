@@ -155,8 +155,8 @@ private:
   int p_;
 };
 
-template<typename BS, typename MP>
-static void copy_from(MparticlesCuda<BS>& mp, MP& mp_other)
+template<typename MparticlesCuda, typename MP>
+static void copy_from(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -172,8 +172,8 @@ static void copy_from(MparticlesCuda<BS>& mp, MP& mp_other)
   mp.cmprts()->setup_internals();
 }
 
-template<typename BS, typename MP>
-static void copy_to(MparticlesCuda<BS>& mp, MP& mp_other)
+template<typename MparticlesCuda, typename MP>
+static void copy_to(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp_other.n_patches();
   uint n_prts_by_patch[n_patches];
@@ -193,28 +193,28 @@ static void copy_to(MparticlesCuda<BS>& mp, MP& mp_other)
 // ======================================================================
 // conversion to "single"/"double"
 
-template<typename BS, typename MP>
+template<typename MparticlesCuda, typename MP>
 static void copy_from(MparticlesBase& mp, MparticlesBase& mp_other)
 {
-  copy_from(dynamic_cast<MparticlesCuda<BS>&>(mp), dynamic_cast<MP&>(mp_other));
+  copy_from(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
-template<typename BS, typename MP>
+template<typename MparticlesCuda, typename MP>
 static void copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
 {
-  copy_to(dynamic_cast<MparticlesCuda<BS>&>(mp), dynamic_cast<MP&>(mp_other));
+  copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
 }
 
 template<typename BS>
 const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_to_ = {
-  { std::type_index(typeid(MparticlesSingle)), copy_to<BS, MparticlesSingle>   },
-  { std::type_index(typeid(MparticlesDouble)), copy_to<BS, MparticlesDouble>   },
+  { std::type_index(typeid(MparticlesSingle)), copy_to<MparticlesCuda<BS>, MparticlesSingle>   },
+  { std::type_index(typeid(MparticlesDouble)), copy_to<MparticlesCuda<BS>, MparticlesDouble>   },
 };
 
 template<typename BS>
 const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_from_ = {
-  { std::type_index(typeid(MparticlesSingle)), copy_from<BS, MparticlesSingle>   },
-  { std::type_index(typeid(MparticlesDouble)), copy_from<BS, MparticlesDouble>   },
+  { std::type_index(typeid(MparticlesSingle)), copy_from<MparticlesCuda<BS>, MparticlesSingle>   },
+  { std::type_index(typeid(MparticlesDouble)), copy_from<MparticlesCuda<BS>, MparticlesDouble>   },
 };
 
 // ======================================================================
