@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "psc_checks_private.h"
 
 #include "psc_bnd.h"

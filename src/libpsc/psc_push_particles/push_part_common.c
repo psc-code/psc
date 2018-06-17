@@ -1,6 +1,8 @@
 
 #include <mrc_profile.h>
 
+#include "../libpsc/psc_checks/checks_impl.hxx"
+
 template<typename C>
 struct PushParticles__
 {
@@ -10,6 +12,7 @@ struct PushParticles__
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
+  using checks_order = checks_order_2nd;
 
   static void push_mprts(Mparticles& mprts, Mfields& mflds)
   {

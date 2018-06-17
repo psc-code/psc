@@ -173,14 +173,12 @@ template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfigPushParticles2nd
 {
   using PushParticles_t = PushParticles__<Config2nd<Mparticles, Mfields, DIM>>;
-  using checks_order = checks_order_2nd;
 };
 
 template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec
 {
   using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, Mfields, DIM>>;
-  using checks_order = checks_order_1st;
 };
 
 template<typename DIM, typename Mparticles, typename Mfields>
@@ -193,7 +191,6 @@ struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
 {
   // need to use Config1vbecSplit when for dim_xyz
   using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
-  using checks_order = checks_order_1st;
 };
 
 template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles>
@@ -204,7 +201,7 @@ struct PscConfig_
   using Mfields_t = Mfields;
   using ConfigPushp = ConfigPushParticles<DIM, Mparticles, Mfields>;
   using PushParticles_t = typename ConfigPushp::PushParticles_t;
-  using checks_order = typename ConfigPushp::checks_order;
+  using checks_order = typename PushParticles_t::checks_order;
   using Sort_t = SortCountsort2<Mparticles_t>;
   using Collision_t = Collision_<Mparticles_t, Mfields_t>;
   using PushFields_t = PushFields<Mfields_t>;

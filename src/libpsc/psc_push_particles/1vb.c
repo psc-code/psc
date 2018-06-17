@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "1vb/psc_push_particles_1vb.h"
+#include "../libpsc/psc_checks/checks_impl.hxx"
 
 #define MAX_NR_KINDS (10)
 
@@ -25,6 +26,7 @@ struct PushParticles1vb
   using Current = typename C::Current_t;
   using particle_t = typename Mparticles::particle_t;
   using curr_cache_t = typename Current::curr_cache_t;
+  using checks_order = checks_order_1st;
   
   // ----------------------------------------------------------------------
   // push_mprts
