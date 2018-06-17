@@ -26,6 +26,6 @@ public:
   void operator()(Mparticles& _mprts);
 
 private:
-  CudaCollision<cuda_mparticles<BS>, RngState> *fwd_;
+  CudaCollision<typename Mparticles::CudaMparticles, RngState> *fwd_;
 };
 

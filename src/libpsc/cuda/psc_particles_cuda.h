@@ -59,6 +59,7 @@ struct MparticlesCuda : MparticlesBase
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using buf_t = psc_particle_cuda_buf_t;
+  using CudaMparticles = cuda_mparticles<BS>;
   
   MparticlesCuda(const Grid_t& grid);
 
@@ -80,7 +81,7 @@ struct MparticlesCuda : MparticlesBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  cuda_mparticles<BS>* cmprts() { return cmprts_; }
+  CudaMparticles* cmprts() { return cmprts_; }
 
   struct patch_t
   {
@@ -100,7 +101,7 @@ struct MparticlesCuda : MparticlesBase
   patch_t operator[](int p) const { return patch_t{*this, p}; }
 
 private:
-  cuda_mparticles<BS>* cmprts_;
+  CudaMparticles* cmprts_;
   ParticleIndexer<real_t> pi_;
 };
 
