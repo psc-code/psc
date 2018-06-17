@@ -7,19 +7,19 @@
 template<typename CudaMparticles, typename DIM>
 struct cuda_bndp;
 
-template<typename BS, typename DIM>
-struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda<BS>>
+template<typename Mparticles, typename DIM>
+struct BndParticlesCuda : BndParticlesCommon<Mparticles>
 {
-  using Base = BndParticlesCommon<MparticlesCuda<BS>>;
+  using Base = BndParticlesCommon<Mparticles>;
 
   BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid);
   ~BndParticlesCuda();
 
   void reset();
-  void operator()(MparticlesCuda<BS>& mprts);
+  void operator()(Mparticles& mprts);
   void exchange_particles(MparticlesBase& mprts_base) override;
 
 private:
-  cuda_bndp<cuda_mparticles<BS>, DIM>* cbndp_;
+  cuda_bndp<typename Mparticles::CudaMparticles, DIM>* cbndp_;
 };
 

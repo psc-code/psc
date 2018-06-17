@@ -9,7 +9,7 @@
 // psc_bnd_particles: subclass "cuda"
 
 struct psc_bnd_particles_ops_cuda : psc_bnd_particles_ops {
-  using Wrapper = PscBndParticlesWrapper<BndParticlesCuda<BS144, dim_yz>>;
+  using Wrapper = PscBndParticlesWrapper<BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>>;
   psc_bnd_particles_ops_cuda() {
     name                    = "cuda";
     size                    = Wrapper::size;

@@ -5,17 +5,17 @@
 // ----------------------------------------------------------------------
 // ctor
 
-template<typename BS, typename DIM>
-BndParticlesCuda<BS, DIM>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
+template<typename Mparticles, typename DIM>
+BndParticlesCuda<Mparticles, DIM>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
   : Base(domain, grid),
-  cbndp_(new cuda_bndp<cuda_mparticles<BS>, DIM>(grid))
+  cbndp_(new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(grid))
 {}
 
 // ----------------------------------------------------------------------
 // dtor
 
-template<typename BS, typename DIM>
-BndParticlesCuda<BS, DIM>::~BndParticlesCuda()
+template<typename Mparticles, typename DIM>
+BndParticlesCuda<Mparticles, DIM>::~BndParticlesCuda()
 {
   delete cbndp_;
 }
@@ -23,19 +23,19 @@ BndParticlesCuda<BS, DIM>::~BndParticlesCuda()
 // ----------------------------------------------------------------------
 // reset
 
-template<typename BS, typename DIM>
-void BndParticlesCuda<BS, DIM>::reset()
+template<typename Mparticles, typename DIM>
+void BndParticlesCuda<Mparticles, DIM>::reset()
 {
   Base::reset();
   delete(cbndp_);
-  cbndp_ = new cuda_bndp<cuda_mparticles<BS>, DIM>(ppsc->grid());
+  cbndp_ = new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(ppsc->grid());
 }
 
 // ----------------------------------------------------------------------
 // operator()
 
-template<typename BS, typename DIM>
-void BndParticlesCuda<BS, DIM>::operator()(MparticlesCuda<BS>& mprts)
+template<typename Mparticles, typename DIM>
+void BndParticlesCuda<Mparticles, DIM>::operator()(Mparticles& mprts)
 {
   if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
     reset();
@@ -64,13 +64,13 @@ void BndParticlesCuda<BS, DIM>::operator()(MparticlesCuda<BS>& mprts)
 // ----------------------------------------------------------------------
 // exchange_particles
 
-template<typename BS, typename DIM>
-void BndParticlesCuda<BS, DIM>::exchange_particles(MparticlesBase& mprts_base)
+template<typename Mparticles, typename DIM>
+void BndParticlesCuda<Mparticles, DIM>::exchange_particles(MparticlesBase& mprts_base)
 {
-  auto& mprts = mprts_base.get_as<MparticlesCuda<BS>>();
+  auto& mprts = mprts_base.get_as<Mparticles>();
   (*this)(mprts);
   mprts_base.put_as(mprts);
 }
 
-template struct BndParticlesCuda<BS144, dim_yz>;
-template struct BndParticlesCuda<BS444, dim_xyz>;
+template struct BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>;
+template struct BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>;

@@ -228,7 +228,7 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Sort_t = SortCuda<BS>;
   using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda<BS, dim_t>;
+  using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
@@ -249,7 +249,7 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Sort_t = SortCuda<BS>;
   using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda<BS, dim_t>;
+  using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
   using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
