@@ -226,7 +226,7 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Mfields_t = Mfields;
   using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3d<dim_t, BS>>;
   using Sort_t = SortCuda<BS>;
-  using Collision_t = CollisionCuda<BS>;
+  using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<BS, dim_t>;
   using Bnd_t = BndCuda3<Mfields_t>;
@@ -247,7 +247,7 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using Mfields_t = Mfields;
   using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3dGmem<dim_t, BS>>;
   using Sort_t = SortCuda<BS>;
-  using Collision_t = CollisionCuda<BS>;
+  using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<BS, dim_t>;
   using Bnd_t = BndCuda3<Mfields>;

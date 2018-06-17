@@ -13,11 +13,10 @@ struct RngStateFake;
 // ----------------------------------------------------------------------
 // CollisionCuda
 
-template<typename BS, typename RngState = RngStateCuda>
-class CollisionCuda : CollisionBase
+template<typename MP, typename RngState = RngStateCuda>
+struct CollisionCuda : CollisionBase
 {
-public:
-  using Mparticles = MparticlesCuda<BS>;
+  using Mparticles = MP;
   
   CollisionCuda(MPI_Comm comm, int interval, double nu);
   
