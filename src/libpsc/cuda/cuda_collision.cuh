@@ -11,6 +11,9 @@
 
 #define THREADS_PER_BLOCK 128
 
+template<typename cuda_mparticles, typename RngState>
+struct CudaCollision;
+
 // ======================================================================
 // RngStateFake
 

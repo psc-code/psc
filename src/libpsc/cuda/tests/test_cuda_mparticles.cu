@@ -333,7 +333,7 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   double nu = .1;
   int nicell = 10;
   double dt = .1;
-  cuda_collision<CudaMparticles> coll{interval, nu, nicell, dt};
+  CudaCollision<CudaMparticles, RngStateCuda> coll{interval, nu, nicell, dt};
 
   coll(*cmprts);
   cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
