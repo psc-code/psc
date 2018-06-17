@@ -29,8 +29,6 @@ struct cuda_bnd {
 template<typename BS, typename DIM>
 struct cuda_bndp : cuda_mparticles_indexer<BS>
 {
-  using ddcp_t = ddc_particles<MparticlesCuda<BS>>;
-  using ddcp_patch = typename ddcp_t::patch;
   using buf_t = typename MparticlesCuda<BS>::buf_t;
   using cuda_mparticles = cuda_mparticles<BS>;
 
@@ -84,8 +82,6 @@ struct cuda_bndp : cuda_mparticles_indexer<BS>
 template<typename BS>
 struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
 {
-  using ddcp_t = ddc_particles<MparticlesCuda<BS>>;
-  using ddcp_patch = typename ddcp_t::patch;
   using buf_t = typename MparticlesCuda<BS>::buf_t;
   using CudaMparticles = cuda_mparticles<BS>;
 
