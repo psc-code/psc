@@ -26,7 +26,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
   
   std::unique_ptr<Grid_t> grid;
   std::unique_ptr<CudaMparticles> cmprts;
-  std::unique_ptr<cuda_bndp<BS444, dim_xyz>> cbndp;
+  std::unique_ptr<cuda_bndp<CudaMparticles, dim_xyz>> cbndp;
 
   void SetUp()
   {
@@ -77,7 +77,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     cmprts->dump();
 #endif
 
-    cbndp.reset(new cuda_bndp<BS444, dim_xyz>(*grid));
+    cbndp.reset(new cuda_bndp<CudaMparticles, dim_xyz>(*grid));
   }
 };
 

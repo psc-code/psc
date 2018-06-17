@@ -31,8 +31,8 @@
 // ----------------------------------------------------------------------
 // ctor
 
-template<typename BS, typename DIM>
-cuda_bndp<BS, DIM>::cuda_bndp(const Grid_t& grid)
+template<typename CudaMparticles, typename DIM>
+cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
   : cuda_mparticles_indexer<BS>(grid)
 {
   d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
@@ -48,8 +48,8 @@ cuda_bndp<BS, DIM>::cuda_bndp(const Grid_t& grid)
 // ----------------------------------------------------------------------
 // prep
 
-template<typename BS, typename DIM>
-void cuda_bndp<BS, DIM>::prep(cuda_mparticles* cmprts)
+template<typename CudaMparticles, typename DIM>
+void cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts)
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -84,8 +84,8 @@ void cuda_bndp<BS, DIM>::prep(cuda_mparticles* cmprts)
 // ----------------------------------------------------------------------
 // post
 
-template<typename BS, typename DIM>
-void cuda_bndp<BS, DIM>::post(cuda_mparticles* cmprts)
+template<typename CudaMparticles, typename DIM>
+void cuda_bndp<CudaMparticles, DIM>::post(CudaMparticles* cmprts)
 {
   static int pr_A, pr_D, pr_E, pr_D1;
   if (!pr_A) {
@@ -122,8 +122,8 @@ void cuda_bndp<BS, DIM>::post(cuda_mparticles* cmprts)
 // ----------------------------------------------------------------------
 // find_n_send
 
-template<typename BS, typename DIM>
-uint cuda_bndp<BS, DIM>::find_n_send(cuda_mparticles *cmprts)
+template<typename CudaMparticles, typename DIM>
+uint cuda_bndp<CudaMparticles, DIM>::find_n_send(CudaMparticles *cmprts)
 {
   thrust::host_vector<uint> h_spine_sums(n_blocks + 1);
 
@@ -143,8 +143,8 @@ uint cuda_bndp<BS, DIM>::find_n_send(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // copy_from_dev_and_convert
 
-template<typename BS, typename DIM>
-void cuda_bndp<BS, DIM>::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_send)
+template<typename CudaMparticles, typename DIM>
+void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *cmprts, uint n_prts_send)
 {
   uint n_prts = cmprts->n_prts;
   thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
@@ -182,8 +182,8 @@ void cuda_bndp<BS, DIM>::copy_from_dev_and_convert(cuda_mparticles *cmprts, uint
 // ----------------------------------------------------------------------
 // convert_and_copy_to_dev
 
-template<typename BS, typename DIM>
-uint cuda_bndp<BS, DIM>::convert_and_copy_to_dev(cuda_mparticles *cmprts)
+template<typename CudaMparticles, typename DIM>
+uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmprts)
 {
   uint n_recv = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -253,8 +253,8 @@ mprts_update_offsets(int nr_total_blocks, uint *d_off, uint *d_spine_sums)
   }
 }
 
-template<typename BS, typename DIM>
-void cuda_bndp<BS, DIM>::update_offsets(cuda_mparticles *cmprts)
+template<typename CudaMparticles, typename DIM>
+void cuda_bndp<CudaMparticles, DIM>::update_offsets(CudaMparticles *cmprts)
 {
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
@@ -263,8 +263,8 @@ void cuda_bndp<BS, DIM>::update_offsets(cuda_mparticles *cmprts)
   cuda_sync_if_enabled();
 }
 
-template<typename BS, typename DIM>
-void cuda_bndp<BS, DIM>::update_offsets_gold(cuda_mparticles *cmprts)
+template<typename CudaMparticles, typename DIM>
+void cuda_bndp<CudaMparticles, DIM>::update_offsets_gold(CudaMparticles *cmprts)
 {
   thrust::host_vector<uint> h_spine_sums(d_spine_sums.data(), d_spine_sums.data() + 1 + n_blocks * (10 + 1));
   thrust::host_vector<uint> h_off(n_blocks + 1);
@@ -279,8 +279,8 @@ void cuda_bndp<BS, DIM>::update_offsets_gold(cuda_mparticles *cmprts)
 // ----------------------------------------------------------------------
 // convert_and_copy_to_dev
 
-template<typename BS>
-uint cuda_bndp<BS, dim_xyz>::convert_and_copy_to_dev(CudaMparticles* cmprts)
+template<typename CudaMparticles>
+uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles* cmprts)
 {
   uint n_recv = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -334,8 +334,8 @@ uint cuda_bndp<BS, dim_xyz>::convert_and_copy_to_dev(CudaMparticles* cmprts)
   return n_recv;
 }
 
-template<typename BS>
-void cuda_bndp<BS, dim_xyz>::post(CudaMparticles* _cmprts)
+template<typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_xyz>::post(CudaMparticles* _cmprts)
 {
   auto& cmprts = *_cmprts;
 
@@ -357,5 +357,5 @@ void cuda_bndp<BS, dim_xyz>::post(CudaMparticles* _cmprts)
   cmprts.need_reorder = true;
 }
 
-template struct cuda_bndp<BS144, dim_yz>;
-template struct cuda_bndp<BS444, dim_xyz>;
+template struct cuda_bndp<cuda_mparticles<BS144>, dim_yz>;
+template struct cuda_bndp<cuda_mparticles<BS444>, dim_xyz>;

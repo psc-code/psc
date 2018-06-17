@@ -26,11 +26,11 @@ struct cuda_bnd {
 // ----------------------------------------------------------------------
 // cuda_bndp
 
-template<typename BS, typename DIM>
-struct cuda_bndp : cuda_mparticles_indexer<BS>
+template<typename CudaMparticles, typename DIM>
+struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
+  using BS = typename CudaMparticles::BS;
   using buf_t = std::vector<particle_cuda_t>;
-  using cuda_mparticles = cuda_mparticles<BS>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
@@ -41,32 +41,32 @@ struct cuda_bndp : cuda_mparticles_indexer<BS>
 
   cuda_bndp(const Grid_t& grid);
   
-  void prep(cuda_mparticles* cmprts);
-  void post(cuda_mparticles* cmprts);
+  void prep(CudaMparticles* cmprts);
+  void post(CudaMparticles* cmprts);
 
   // pieces for prep
-  void spine_reduce(cuda_mparticles *cmprts);
-  uint find_n_send(cuda_mparticles *cmprts);
-  void scan_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send);
-  void reorder_send_by_id(cuda_mparticles *cmprts, uint n_prts_send);
-  void reorder_send_buf_total(cuda_mparticles *cmprts, uint n_prts_send);
-  void copy_from_dev_and_convert(cuda_mparticles *cmprts, uint n_prts_send);
+  void spine_reduce(CudaMparticles *cmprts);
+  uint find_n_send(CudaMparticles *cmprts);
+  void scan_send_buf_total(CudaMparticles *cmprts, uint n_prts_send);
+  void reorder_send_by_id(CudaMparticles *cmprts, uint n_prts_send);
+  void reorder_send_buf_total(CudaMparticles *cmprts, uint n_prts_send);
+  void copy_from_dev_and_convert(CudaMparticles *cmprts, uint n_prts_send);
 
   // pieces for post
-  uint convert_and_copy_to_dev(cuda_mparticles *cmprts);
-  void sort_pairs_device(cuda_mparticles *cmprts, uint n_prts_recv);
-  void count_received(cuda_mparticles *cmprts);
-  void scan_scatter_received(cuda_mparticles *cmprts, uint n_prts_recv);
-  void update_offsets(cuda_mparticles *cmprts);
+  uint convert_and_copy_to_dev(CudaMparticles *cmprts);
+  void sort_pairs_device(CudaMparticles *cmprts, uint n_prts_recv);
+  void count_received(CudaMparticles *cmprts);
+  void scan_scatter_received(CudaMparticles *cmprts, uint n_prts_recv);
+  void update_offsets(CudaMparticles *cmprts);
 
   // gold
-  void spine_reduce_gold(cuda_mparticles *cmprts);
-  void scan_send_buf_total_gold(cuda_mparticles *cmprts, uint n_prts_send);
-  void reorder_send_by_id_gold(cuda_mparticles *cmprts, uint n_prts_send);
-  void sort_pairs_gold(cuda_mparticles *cmprts, uint n_prts_recv);
-  void count_received_gold(cuda_mparticles *cmprts);
-  void scan_scatter_received_gold(cuda_mparticles *cmprts, uint n_prts_recv);
-  void update_offsets_gold(cuda_mparticles *cmprts);
+  void spine_reduce_gold(CudaMparticles *cmprts);
+  void scan_send_buf_total_gold(CudaMparticles *cmprts, uint n_prts_send);
+  void reorder_send_by_id_gold(CudaMparticles *cmprts, uint n_prts_send);
+  void sort_pairs_gold(CudaMparticles *cmprts, uint n_prts_recv);
+  void count_received_gold(CudaMparticles *cmprts);
+  void scan_scatter_received_gold(CudaMparticles *cmprts, uint n_prts_recv);
+  void update_offsets_gold(CudaMparticles *cmprts);
 
   thrust::device_vector<uint> d_spine_cnts;
   thrust::device_vector<uint> d_spine_sums;
@@ -79,11 +79,11 @@ struct cuda_bndp : cuda_mparticles_indexer<BS>
   std::vector<buf_t*> bufs_;
 };
 
-template<typename BS>
-struct cuda_bndp<BS, dim_xyz> : cuda_mparticles_indexer<BS>
+template<typename CudaMparticles>
+struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
+  using BS = typename CudaMparticles::BS;
   using buf_t = typename MparticlesCuda<BS>::buf_t;
-  using CudaMparticles = cuda_mparticles<BS>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;

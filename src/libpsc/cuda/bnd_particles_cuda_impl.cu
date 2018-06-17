@@ -8,7 +8,7 @@
 template<typename BS, typename DIM>
 BndParticlesCuda<BS, DIM>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
   : Base(domain, grid),
-  cbndp_(new cuda_bndp<BS, DIM>(grid))
+  cbndp_(new cuda_bndp<cuda_mparticles<BS>, DIM>(grid))
 {}
 
 // ----------------------------------------------------------------------
@@ -28,7 +28,7 @@ void BndParticlesCuda<BS, DIM>::reset()
 {
   Base::reset();
   delete(cbndp_);
-  cbndp_ = new cuda_bndp<BS, DIM>(ppsc->grid());
+  cbndp_ = new cuda_bndp<cuda_mparticles<BS>, DIM>(ppsc->grid());
 }
 
 // ----------------------------------------------------------------------

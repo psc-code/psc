@@ -4,7 +4,7 @@
 #include "bnd_particles_impl.hxx"
 #include "psc_particles_cuda.h"
 
-template<typename BS, typename DIM>
+template<typename CudaMparticles, typename DIM>
 struct cuda_bndp;
 
 template<typename BS, typename DIM>
@@ -20,6 +20,6 @@ struct BndParticlesCuda : BndParticlesCommon<MparticlesCuda<BS>>
   void exchange_particles(MparticlesBase& mprts_base) override;
 
 private:
-  cuda_bndp<BS, DIM>* cbndp_;
+  cuda_bndp<cuda_mparticles<BS>, DIM>* cbndp_;
 };
 
