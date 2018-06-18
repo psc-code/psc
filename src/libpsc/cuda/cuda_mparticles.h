@@ -138,9 +138,10 @@ public:
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
 };
 
-template<typename BS>
-struct DMparticlesCuda : DParticleIndexer<BS>
+template<typename BS_>
+struct DMparticlesCuda : DParticleIndexer<BS_>
 {
+  using BS = BS_;
   using typename DParticleIndexer<BS>::real_t;
   
   static const int MAX_N_KINDS = 4;

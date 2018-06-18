@@ -33,12 +33,12 @@ public:
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
-template<typename BS, typename dim, bool REORDER>
+template<typename DMparticles, typename dim, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
+rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
 {
-  BlockSimple<BS, dim> current_block;
+  BlockSimple<typename DMparticles::BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
@@ -168,7 +168,7 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, st
 {
   dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
-  rho_1st_nc_cuda_run<typename CudaMparticles::BS, dim, REORDER>
+  rho_1st_nc_cuda_run<typename CudaMparticles::DMparticles, dim, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
   cuda_sync_if_enabled();
 }
