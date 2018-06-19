@@ -7,11 +7,13 @@
 #define TEST_1_HEATING_3D 1
 #define TEST_2_FLATFOIL_3D 2
 #define TEST_3_NILSON_3D 3
+#define TEST_4_SHOCK_3D 4
 
 // EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
 //#define TEST TEST_1_HEATING_3D
 //#define TEST TEST_2_FLATFOIL_3D
-#define TEST TEST_3_NILSON_3D
+//#define TEST TEST_3_NILSON_3D
+#define TEST TEST_4_SHOCK_3D
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -283,12 +285,12 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #endif
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D || TEST == TEST_3_NILSON_3D
+#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_4_SHOCK_3D
 using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig1vbecCuda<dim_t>;
+using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -726,6 +728,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
   Int3 np = { 1, 64, 16 }; // division into patches
 
+#if TEST == TEST_4_SHOCK_3D
+  LL = { 100., 100., 2000. }; // domain size (in d_e)
+  gdims = { 200, 200, 4000 }; // global number of grid points
+  np = { 40, 40, 8 }; // division into patches
+#endif
+  
 #if TEST == TEST_3_NILSON_3D
   LL = { 400., 200., 800. }; // domain size (in d_e)
   gdims = { 64, 32, 128 }; // global number of grid points
@@ -764,7 +772,11 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // -- setup particle kinds
   // last population ("e") is neutralizing
  // FIXME, hardcoded mass ratio 100
+#if TEST == TEST_4_SHOCK_3D
+  Grid_t::Kinds kinds = {{params.Zi, 25.*params.Zi, "i"}, { -1., 1., "e"}};
+#else
   Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+#endif
   psc_->prm.neutralizing_population = MY_ELECTRON;
   
   d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
@@ -784,14 +796,22 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   double heating_zh =  1.;
   double heating_xc = 0.;
   double heating_yc = 0.;
+#if TEST == TEST_4_SHOCK_3D
+  double heating_rH = 100000.;
+#else
   double heating_rH = 3.;
+#endif
   auto heating_foil_params = HeatingSpotFoilParams{};
   heating_foil_params.zl = heating_zl * d_i;
   heating_foil_params.zh = heating_zh * d_i;
   heating_foil_params.xc = heating_xc * d_i;
   heating_foil_params.yc = heating_yc * d_i;
   heating_foil_params.rH = heating_rH * d_i;
+#if TEST == TEST_4_SHOCK_3D
+  heating_foil_params.T  = .06;
+#else
   heating_foil_params.T  = .04;
+#endif
   heating_foil_params.Mi = kinds[MY_ION].m;
   params.heating_spot = HeatingSpotFoil{heating_foil_params};
   params.heating_interval = 20;
@@ -808,9 +828,15 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   inject_foil_params.yh =   target_yh * d_i;
   inject_foil_params.zl = - target_zwidth * d_i;
   inject_foil_params.zh =   target_zwidth * d_i;
+#if TEST == TEST_4_SHOCK_3D
+  inject_foil_params.n  = 2.5;
+  inject_foil_params.Te = .002;
+  inject_foil_params.Ti = .002;
+#else
   inject_foil_params.n  = 1.;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
+#endif
   params.inject_target = InjectFoil{inject_foil_params};
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
@@ -847,6 +873,17 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);
   assert(np == grid_domain.np);
 
+#if TEST == TEST_4_SHOCK_3D
+  psc_->prm.nmax = 100002;
+  psc_->prm.nicell = 100;
+  params.BB = 0.02;
+  params.background_n = .01;
+  params.background_Te = .002;
+  params.background_Ti = .002;
+  params.collision_interval = 0;
+  params.inject_interval = 0;
+#endif
+  
 #if TEST == TEST_3_NILSON_3D
   psc_->prm.nmax = 101;
   psc_->prm.nicell = 50;
