@@ -290,7 +290,7 @@ using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig1vbecSingle<dim_t>;
+using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -765,9 +765,9 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   Int3 np = { 1, 64, 16 }; // division into patches
 
 #if TEST == TEST_4_SHOCK_3D
-  LL = { 100., 100., 2000. }; // domain size (in d_e)
-  gdims = { 200, 200, 4000 }; // global number of grid points
-  np = { 40, 40, 8 }; // division into patches
+  LL = { 256., 256., 512. }; // domain size (in d_e)
+  gdims = { 256, 256, 512 }; // global number of grid points
+  np = { 16, 16, 32 }; // division into patches
 #endif
   
 #if TEST == TEST_3_NILSON_3D
@@ -809,7 +809,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
   // last population ("e") is neutralizing
  // FIXME, hardcoded mass ratio 100
 #if TEST == TEST_4_SHOCK_3D
-  Grid_t::Kinds kinds = {{params.Zi, 25.*params.Zi, "i"}, { -1., 1., "e"}};
+  Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
 #else
   Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
 #endif
