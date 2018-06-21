@@ -161,12 +161,22 @@ struct CudaBnd
 
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
+    static int pr_addg1, pr_addg2;
+    if (!pr_addg1) {
+      pr_addg1 = prof_register("addg1", 1., 0, 0);
+      pr_addg2 = prof_register("addg2", 1., 0, 0);
+    }
+
     cuda_mfields& cmflds = *mflds.cmflds;
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
-    
-    Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
 
+    prof_start(pr_addg1);
+    Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
+    prof_stop(pr_addg1);
+
+    prof_start(pr_addg2);
     ddc_run(maps, &sub->add_ghosts2, mb, me, cmflds, ScatterAdd{});
+    prof_stop(pr_addg2);
   }
   
   // ----------------------------------------------------------------------
@@ -174,15 +184,40 @@ struct CudaBnd
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
+    static int pr_fillg0, pr_fillg1, pr_fillg2, pr_fillg3, pr_fillg4;
+    if (!pr_fillg1) {
+      pr_fillg0 = prof_register("fillg0", 1., 0, 0);
+      pr_fillg1 = prof_register("fillg1", 1., 0, 0);
+      pr_fillg2 = prof_register("fillg2", 1., 0, 0);
+      pr_fillg3 = prof_register("fillg3", 1., 0, 0);
+      pr_fillg4 = prof_register("fillg4", 1., 0, 0);
+    }
+
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
     cuda_mfields& cmflds = *mflds.cmflds;
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
     
-    Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
+    prof_start(pr_fillg0);
+    MPI_Barrier(MPI_COMM_WORLD);
+    prof_stop(pr_fillg0);
 
+    prof_start(pr_fillg1);
+    Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
+    prof_stop(pr_fillg1);
+
+    prof_start(pr_fillg2);
+    MPI_Barrier(MPI_COMM_WORLD);
+    prof_stop(pr_fillg2);
+
+    prof_start(pr_fillg3);
     ddc_run(maps, &sub->fill_ghosts2, mb, me, cmflds, Scatter{});
+    prof_stop(pr_fillg3);
+
+    prof_start(pr_fillg4);
+    MPI_Barrier(MPI_COMM_WORLD);
+    prof_stop(pr_fillg4);
   }
 
   // ----------------------------------------------------------------------
@@ -192,6 +227,22 @@ struct CudaBnd
   void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me, cuda_mfields& cmflds,
 	       S scatter)
   {
+    static int pr_ddc0, pr_ddc1, pr_ddc2, pr_ddc3, pr_ddc4, pr_ddc5;
+    static int pr_ddc6, pr_ddc7, pr_ddc8, pr_ddc9, pr_ddc10;
+    if (!pr_ddc1) {
+      pr_ddc0 = prof_register("ddc0", 1., 0, 0);
+      pr_ddc1 = prof_register("ddc1", 1., 0, 0);
+      pr_ddc2 = prof_register("ddc2", 1., 0, 0);
+      pr_ddc3 = prof_register("ddc3", 1., 0, 0);
+      pr_ddc4 = prof_register("ddc4", 1., 0, 0);
+      pr_ddc5 = prof_register("ddc5", 1., 0, 0);
+      pr_ddc6 = prof_register("ddc6", 1., 0, 0);
+      pr_ddc7 = prof_register("ddc7", 1., 0, 0);
+      pr_ddc8 = prof_register("ddc8", 1., 0, 0);
+      pr_ddc9 = prof_register("ddc9", 1., 0, 0);
+      pr_ddc10 = prof_register("ddc10", 1., 0, 0);
+    }
+
 #if 0
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
     thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
@@ -211,21 +262,51 @@ struct CudaBnd
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    prof_start(pr_ddc0);
+    MPI_Barrier(MPI_COMM_WORLD);
+    prof_stop(pr_ddc0);
 
+    prof_start(pr_ddc1);
     postReceives(maps);
+    prof_stop(pr_ddc1);
+
+    prof_start(pr_ddc2);
     thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds, maps.d_send_buf.begin());
+    prof_stop(pr_ddc2);
+
+    prof_start(pr_ddc3);
     thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(), maps.send_buf.begin());
+    prof_stop(pr_ddc3);
+
+    prof_start(pr_ddc4);
     postSends(maps);
+    prof_stop(pr_ddc4);
 
     // local part
+    prof_start(pr_ddc5);
     thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
 		   maps.d_local_buf.begin());
-    scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
+    prof_stop(pr_ddc5);
 
+    prof_start(pr_ddc6);
+    scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
+    prof_stop(pr_ddc6);
+
+    prof_start(pr_ddc7);
     MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
+    prof_stop(pr_ddc7);
+
+    prof_start(pr_ddc8);
     thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(), maps.d_recv_buf.begin());
+    prof_stop(pr_ddc8);
+
+    prof_start(pr_ddc9);
     scatter(maps.d_recv, maps.d_recv_buf, d_flds);
+    prof_stop(pr_ddc9);
+
+    prof_start(pr_ddc10);
     MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
+    prof_stop(pr_ddc10);
 #endif
 
   }
