@@ -585,18 +585,18 @@ struct PscFlatfoil : PscFlatfoilParams
     pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-    
+
+#if 0
     prof_start(pr_sync1);
     MPI_Barrier(comm);
     prof_stop(pr_sync1);
+#endif
     
-    prof_start(pr_bndp);
-    bndp_(mprts_);
-    prof_stop(pr_bndp);
-    
+#if 0
     prof_start(pr_sync2);
     MPI_Barrier(comm);
     prof_stop(pr_sync2);
+#endif
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
@@ -624,23 +624,33 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_heating);
     }
 
+#if 1
     prof_start(pr_sync4);
     MPI_Barrier(comm);
     prof_stop(pr_sync4);
+#endif
     
+    prof_start(pr_bndp);
+    bndp_(mprts_);
+    prof_stop(pr_bndp);
+
     // === field propagation E^{n+1/2} -> E^{n+3/2}
+#if 0
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
+#endif
     
     bndf_.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
-    
+
+#if 1
     prof_start(pr_sync4a);
     MPI_Barrier(comm);
     prof_stop(pr_sync4a);
+#endif
     
     prof_restart(pr_push_flds);
     pushf_.push_E(mflds_, 1., DIM{});
@@ -649,27 +659,33 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_start(pr_sync4b);
     MPI_Barrier(comm);
     prof_stop(pr_sync4b);
-    
+
+#if 0
     prof_restart(pr_bndf);
     bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
+#endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
     pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
-    
+
+#if 0
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-      
+#endif
+
+#if 0
     prof_start(pr_sync5);
     MPI_Barrier(comm);
     prof_stop(pr_sync5);
+#endif
     
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);

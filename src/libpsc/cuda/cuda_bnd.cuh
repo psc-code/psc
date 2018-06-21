@@ -173,10 +173,12 @@ struct CudaBnd
     }
 
     cuda_mfields& cmflds = *mflds.cmflds;
-    
+
+#if 0
     prof_start(pr_ddc_sync1);
     MPI_Barrier(MPI_COMM_WORLD);
     prof_stop(pr_ddc_sync1);
+#endif
 
     int key = mb + 100*me;
     auto map = maps.find(key);
@@ -189,9 +191,11 @@ struct CudaBnd
     ddc_run(map->second, patt2, mb, me, cmflds, scatter);
     prof_stop(pr_ddc_run);
 
+#if 0
     prof_start(pr_ddc_sync2);
     MPI_Barrier(MPI_COMM_WORLD);
     prof_stop(pr_ddc_sync2);
+#endif
   }
   
   // ----------------------------------------------------------------------
