@@ -155,16 +155,33 @@ struct CudaBnd
     mrc_ddc_pattern2* patt;
     int mb, me;
   };
+
+  // ----------------------------------------------------------------------
+  // run
+
+  template<typename T>
+  void run(Mfields& mflds, int mb, int me, mrc_ddc_pattern2* patt2, Maps& maps, T scatter)
+  {
+    static int pr_ddc_run;
+    if (!pr_ddc_run) {
+      pr_ddc_run = prof_register("ddc_run", 1., 0, 0);
+    }
+
+    cuda_mfields& cmflds = *mflds.cmflds;
+    
+    prof_start(pr_ddc_run);
+    ddc_run(maps, patt2, mb, me, cmflds, scatter);
+    prof_stop(pr_ddc_run);
+  }
   
   // ----------------------------------------------------------------------
   // add_ghosts
 
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
-    static int pr_addg1, pr_addg2;
+    static int pr_addg1;
     if (!pr_addg1) {
       pr_addg1 = prof_register("addg1", 1., 0, 0);
-      pr_addg2 = prof_register("addg2", 1., 0, 0);
     }
 
     cuda_mfields& cmflds = *mflds.cmflds;
@@ -174,9 +191,7 @@ struct CudaBnd
     Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
     prof_stop(pr_addg1);
 
-    prof_start(pr_addg2);
-    ddc_run(maps, &sub->add_ghosts2, mb, me, cmflds, ScatterAdd{});
-    prof_stop(pr_addg2);
+    run(mflds, mb, me, &sub->add_ghosts2, maps, ScatterAdd{});
   }
   
   // ----------------------------------------------------------------------
@@ -184,12 +199,11 @@ struct CudaBnd
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
-    static int pr_fillg0, pr_fillg1, pr_fillg2, pr_fillg3, pr_fillg4;
+    static int pr_fillg0, pr_fillg1, pr_fillg2, pr_fillg4;
     if (!pr_fillg1) {
       pr_fillg0 = prof_register("fillg0", 1., 0, 0);
       pr_fillg1 = prof_register("fillg1", 1., 0, 0);
       pr_fillg2 = prof_register("fillg2", 1., 0, 0);
-      pr_fillg3 = prof_register("fillg3", 1., 0, 0);
       pr_fillg4 = prof_register("fillg4", 1., 0, 0);
     }
 
@@ -211,9 +225,7 @@ struct CudaBnd
     MPI_Barrier(MPI_COMM_WORLD);
     prof_stop(pr_fillg2);
 
-    prof_start(pr_fillg3);
-    ddc_run(maps, &sub->fill_ghosts2, mb, me, cmflds, Scatter{});
-    prof_stop(pr_fillg3);
+    run(mflds, mb, me, &sub->fill_ghosts2, maps, Scatter{});
 
     prof_start(pr_fillg4);
     MPI_Barrier(MPI_COMM_WORLD);
