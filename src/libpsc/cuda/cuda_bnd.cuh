@@ -162,16 +162,26 @@ struct CudaBnd
   template<typename T>
   void run(Mfields& mflds, int mb, int me, mrc_ddc_pattern2* patt2, Maps& maps, T scatter)
   {
-    static int pr_ddc_run;
+    static int pr_ddc_run, pr_ddc_sync1, pr_ddc_sync2;
     if (!pr_ddc_run) {
       pr_ddc_run = prof_register("ddc_run", 1., 0, 0);
+      pr_ddc_sync1 = prof_register("ddc_sync1", 1., 0, 0);
+      pr_ddc_sync2 = prof_register("ddc_sync2", 1., 0, 0);
     }
 
     cuda_mfields& cmflds = *mflds.cmflds;
     
+    prof_start(pr_ddc_sync1);
+    MPI_Barrier(MPI_COMM_WORLD);
+    prof_stop(pr_ddc_sync1);
+
     prof_start(pr_ddc_run);
     ddc_run(maps, patt2, mb, me, cmflds, scatter);
     prof_stop(pr_ddc_run);
+
+    prof_start(pr_ddc_sync2);
+    MPI_Barrier(MPI_COMM_WORLD);
+    prof_stop(pr_ddc_sync2);
   }
   
   // ----------------------------------------------------------------------
@@ -199,12 +209,10 @@ struct CudaBnd
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
-    static int pr_fillg0, pr_fillg1, pr_fillg2, pr_fillg4;
+    static int pr_fillg0, pr_fillg1;
     if (!pr_fillg1) {
       pr_fillg0 = prof_register("fillg0", 1., 0, 0);
       pr_fillg1 = prof_register("fillg1", 1., 0, 0);
-      pr_fillg2 = prof_register("fillg2", 1., 0, 0);
-      pr_fillg4 = prof_register("fillg4", 1., 0, 0);
     }
 
     // FIXME
@@ -221,15 +229,7 @@ struct CudaBnd
     Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
     prof_stop(pr_fillg1);
 
-    prof_start(pr_fillg2);
-    MPI_Barrier(MPI_COMM_WORLD);
-    prof_stop(pr_fillg2);
-
     run(mflds, mb, me, &sub->fill_ghosts2, maps, Scatter{});
-
-    prof_start(pr_fillg4);
-    MPI_Barrier(MPI_COMM_WORLD);
-    prof_stop(pr_fillg4);
   }
 
   // ----------------------------------------------------------------------
