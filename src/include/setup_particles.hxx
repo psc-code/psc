@@ -132,7 +132,7 @@ struct SetupParticles
     mprts.reserve_all(n_prts_by_patch.data());
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto ilo = Int3{}, ihi = grid.ldims;
+      Int3 ilo = {}, ihi = grid.ldims;
   
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
