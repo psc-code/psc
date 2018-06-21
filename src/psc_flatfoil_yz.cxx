@@ -529,7 +529,8 @@ struct PscFlatfoil : PscFlatfoilParams
   void step()
   {
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating;
+      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
+      pr_sync1, pr_sync2, pr_sync3, pr_sync4, pr_sync5, pr_sync4a, pr_sync4b;
     if (!pr_sort) {
       pr_sort = prof_register("step_sort", 1., 0, 0);
       pr_collision = prof_register("step_collision", 1., 0, 0);
@@ -541,6 +542,13 @@ struct PscFlatfoil : PscFlatfoilParams
       pr_marder = prof_register("step_marder", 1., 0, 0);
       pr_inject = prof_register("step_inject", 1., 0, 0);
       pr_heating = prof_register("step_heating", 1., 0, 0);
+      pr_sync1 = prof_register("step_sync1", 1., 0, 0);
+      pr_sync2 = prof_register("step_sync2", 1., 0, 0);
+      pr_sync3 = prof_register("step_sync3", 1., 0, 0);
+      pr_sync4 = prof_register("step_sync4", 1., 0, 0);
+      pr_sync5 = prof_register("step_sync5", 1., 0, 0);
+      pr_sync4a = prof_register("step_sync4a", 1., 0, 0);
+      pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
     }
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
@@ -578,15 +586,27 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
+    prof_start(pr_sync1);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync1);
+    
     prof_start(pr_bndp);
     bndp_(mprts_);
     prof_stop(pr_bndp);
+    
+    prof_start(pr_sync2);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync2);
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
     pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+    prof_start(pr_sync3);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync3);
     
     if (inject_interval > 0 && timestep % inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
@@ -604,6 +624,10 @@ struct PscFlatfoil : PscFlatfoilParams
       prof_stop(pr_heating);
     }
 
+    prof_start(pr_sync4);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync4);
+    
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
@@ -614,9 +638,17 @@ struct PscFlatfoil : PscFlatfoilParams
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
     
+    prof_start(pr_sync4a);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync4a);
+    
     prof_restart(pr_push_flds);
     pushf_.push_E(mflds_, 1., DIM{});
     prof_stop(pr_push_flds);
+    
+    prof_start(pr_sync4b);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync4b);
     
     prof_restart(pr_bndf);
     bndf_.fill_ghosts_E(mflds_);
@@ -635,6 +667,10 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
       
+    prof_start(pr_sync5);
+    MPI_Barrier(comm);
+    prof_stop(pr_sync5);
+    
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);
       checks_.continuity_after_particle_push(mprts_, mflds_);
