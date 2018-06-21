@@ -39,6 +39,7 @@ void BndCuda3<MF>::add_ghosts(Mfields& mflds, int mb, int me)
 {
   if (psc_balance_generation_cnt != balance_generation_cnt_) {
     reset();
+    balance_generation_cnt_ = psc_balance_generation_cnt;
   }
   cbnd_->add_ghosts(mflds, mb, me);
 }
@@ -51,6 +52,7 @@ void BndCuda3<MF>::fill_ghosts(Mfields& mflds, int mb, int me)
 {
   if (psc_balance_generation_cnt != balance_generation_cnt_) {
     reset();
+    balance_generation_cnt_ = psc_balance_generation_cnt;
   }
   cbnd_->fill_ghosts(mflds, mb, me);
 }
