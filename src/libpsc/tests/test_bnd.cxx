@@ -181,6 +181,9 @@ TYPED_TEST(BndTest, FillGhosts)
 	EXPECT_EQ(mflds[p](0, i,j,k), 100*ii + 10*jj + kk);
       });
   }
+
+  // let's do it again to test CudaBnd caching
+  bnd.fill_ghosts(mflds, 0, 1);
 }
 
 TYPED_TEST(BndTest, AddGhosts)

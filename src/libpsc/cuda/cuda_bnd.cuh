@@ -8,6 +8,8 @@
 
 #include "mrc_ddc_private.h"
 
+#include <unordered_map>
+
 #include <thrust/gather.h>
 #include <thrust/scatter.h>
 #include <thrust/sort.h>
@@ -160,7 +162,8 @@ struct CudaBnd
   // run
 
   template<typename T>
-  void run(Mfields& mflds, int mb, int me, mrc_ddc_pattern2* patt2, Maps& maps, T scatter)
+  void run(Mfields& mflds, int mb, int me, mrc_ddc_pattern2* patt2, std::unordered_map<int, Maps>& maps,
+	   T scatter)
   {
     static int pr_ddc_run, pr_ddc_sync1, pr_ddc_sync2;
     if (!pr_ddc_run) {
@@ -175,8 +178,15 @@ struct CudaBnd
     MPI_Barrier(MPI_COMM_WORLD);
     prof_stop(pr_ddc_sync1);
 
+    int key = mb + 100*me;
+    auto map = maps.find(key);
+    if (map == maps.cend()) {
+      auto pair = maps.emplace(std::make_pair(key, Maps{ddc_, patt2, mb, me, cmflds}));
+      map = pair.first;
+    }
+
     prof_start(pr_ddc_run);
-    ddc_run(maps, patt2, mb, me, cmflds, scatter);
+    ddc_run(map->second, patt2, mb, me, cmflds, scatter);
     prof_stop(pr_ddc_run);
 
     prof_start(pr_ddc_sync2);
@@ -189,19 +199,9 @@ struct CudaBnd
 
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
-    static int pr_addg1;
-    if (!pr_addg1) {
-      pr_addg1 = prof_register("addg1", 1., 0, 0);
-    }
-
-    cuda_mfields& cmflds = *mflds.cmflds;
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    prof_start(pr_addg1);
-    Maps maps(ddc_, &sub->add_ghosts2, mb, me, cmflds);
-    prof_stop(pr_addg1);
-
-    run(mflds, mb, me, &sub->add_ghosts2, maps, ScatterAdd{});
+    run(mflds, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
   }
   
   // ----------------------------------------------------------------------
@@ -209,27 +209,12 @@ struct CudaBnd
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
-    static int pr_fillg0, pr_fillg1;
-    if (!pr_fillg1) {
-      pr_fillg0 = prof_register("fillg0", 1., 0, 0);
-      pr_fillg1 = prof_register("fillg1", 1., 0, 0);
-    }
-
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    cuda_mfields& cmflds = *mflds.cmflds;
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
     
-    prof_start(pr_fillg0);
-    MPI_Barrier(MPI_COMM_WORLD);
-    prof_stop(pr_fillg0);
-
-    prof_start(pr_fillg1);
-    Maps maps(ddc_, &sub->fill_ghosts2, mb, me, cmflds);
-    prof_stop(pr_fillg1);
-
-    run(mflds, mb, me, &sub->fill_ghosts2, maps, Scatter{});
+    run(mflds, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
   }
 
   // ----------------------------------------------------------------------
@@ -454,5 +439,7 @@ struct CudaBnd
 
 private:
   mrc_ddc* ddc_;
+  std::unordered_map<int, Maps> maps_add_;
+  std::unordered_map<int, Maps> maps_fill_;
 };
 
