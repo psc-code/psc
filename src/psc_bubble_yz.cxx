@@ -48,19 +48,24 @@ static struct param psc_bubble_descr[] = {
 static void
 psc_bubble_create(struct psc *psc)
 {
+  struct psc_bubble *bubble = to_psc_bubble(psc);
   psc_default_dimensionless(psc);
 
-  psc->prm.nmax = 32000;
-  psc->prm.nicell = 10;
+  psc->prm.nmax = 1000; //32000;
+  psc->prm.nicell = 100;
 
-  auto grid_params = Grid_t::Domain{{1, 64, 256}, {0., 0., 0.}};
-  psc->domain_ = grid_params;
+  bubble->LLy = 2. * bubble->LLn;
+  bubble->LLz = 3. * bubble->LLn;
 
-  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-  psc->bc_ = grid_bc;
+  psc->domain_ = Grid_t::Domain{{1, 128, 512},
+				{bubble->LLn, bubble->LLy, bubble->LLz},
+				{0., -.5 * bubble->LLy, -.5 * bubble->LLz},
+				{1, 1, 4}};
+  
+  psc->bc_ = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+		    { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+		    { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+		    { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
 
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
@@ -75,15 +80,6 @@ psc_bubble_setup(struct psc *psc)
 {
   struct psc_bubble *bubble = to_psc_bubble(psc);
   
-  if (bubble->LLy == 0.) {
-    bubble->LLy = 2. * bubble->LLn;
-  }
-  if (bubble->LLz == 0.) {
-    bubble->LLz = 3. * bubble->LLn;
-  }
-  psc->domain_.length = { bubble->LLn, bubble->LLy, bubble->LLz };
-  psc->domain_.corner = { 0, -.5 * bubble->LLy, -.5 * bubble->LLz };
-
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
