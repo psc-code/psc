@@ -10,6 +10,8 @@
 #include "psc_push_fields_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+#include "setup_fields.hxx"
+#include "setup_particles.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
@@ -47,6 +49,18 @@ private:
   Mparticles& mprts_;
 };
 
+#ifndef USE_CUDA
+
+template<class Mparticles>
+Getter<Mparticles> make_getter(Mparticles& mprts)
+{
+  return Getter<Mparticles>(mprts);
+}
+
+#endif
+
+#ifdef USE_CUDA
+
 template<class Mparticles>
 struct GetterCuda
 {
@@ -74,6 +88,8 @@ GetterCuda<Mparticles> make_getter(Mparticles& mprts)
 {
   return GetterCuda<Mparticles>(mprts);
 }
+
+#endif
 
 // ======================================================================
 // TestConfig
@@ -253,11 +269,13 @@ struct PushParticlesTest : ::testing::Test
   {
   }
 
+#ifdef USE_CUDA
   void check_after_push(MparticlesCuda<BS444>& mprts)
   {
     EXPECT_TRUE(mprts.check_after_push());
   }
-
+#endif
+  
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
     auto mflds_ref = Mfields{grid(), NR_FIELDS, ibn};

@@ -3,14 +3,15 @@
 
 #include "testing.hxx"
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
+using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ
 #ifdef USE_CUDA
-						TestConfig1vbec3dCudaYZ,
-						TestConfig1vbec3dCuda444>;
+						,TestConfig1vbec3dCudaYZ
+						,TestConfig1vbec3dCuda444
 #endif
+						>;
 //TestConfig1vbec3dSingle>;
-						//TestConfig1vbec3dSingle>;
-						//TestConfig2ndDouble>;
+//TestConfig1vbec3dSingle>;
+//TestConfig2ndDouble>;
 
 TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 

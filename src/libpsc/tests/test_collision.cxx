@@ -95,11 +95,16 @@ class CollisionTest : public ::testing::Test
 
 using CollisionTestConfigSingle = CollisionTestConfig<dim_yz, CollisionHost<MparticlesSingle, MfieldsSingle, RngFake>>;
 using CollisionTestConfigDouble = CollisionTestConfig<dim_yz, CollisionHost<MparticlesDouble, MfieldsC, RngFake>>;
+#ifdef USE_CUDA
 using CollisionTestConfigCuda = CollisionTestConfig<dim_yz, CollisionCuda<MparticlesCuda<BS144>, RngStateFake>>;
+#endif
 
-using CollisionTestTypes = ::testing::Types<CollisionTestConfigSingle,
-					    CollisionTestConfigDouble,
-					    CollisionTestConfigCuda>;
+using CollisionTestTypes = ::testing::Types<CollisionTestConfigSingle
+					    ,CollisionTestConfigDouble
+#ifdef USE_CUDA
+					    ,CollisionTestConfigCuda
+#endif
+					    >;
 
 TYPED_TEST_CASE(CollisionTest, CollisionTestTypes);
   
