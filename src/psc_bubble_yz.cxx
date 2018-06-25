@@ -4,6 +4,8 @@
 #include <psc_bnd_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
+#include <psc_particles_single.h>
+#include <psc_fields_single.h>
 
 #include <mrc_params.h>
 
@@ -243,14 +245,37 @@ struct psc_ops_bubble : psc_ops {
 } psc_bubble_ops;
 
 // ======================================================================
+// PscBubbleParams
+
+struct PscBubbleParams
+{
+};
+
+// ======================================================================
 // PscBubble
 
-struct PscBubble
+struct PscBubble : PscBubbleParams
 {
+  using Mparticles_t = MparticlesSingle;
+  using Mfields_t = MfieldsSingle;
+
+  PscBubble(const PscBubbleParams& params, psc *psc)
+    : PscBubbleParams(params),
+      psc_{psc},
+      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())}
+  {}
+
   void integrate()
   {
     psc_integrate(ppsc);
   }
+
+private:
+  psc* psc_;
+
+  Mparticles_t& mprts_;
+  Mfields_t& mflds_;
 };
 
 // ======================================================================
@@ -264,15 +289,7 @@ struct PscBubbleBuilder
 
   PscBubble* makePscBubble();
 
-#if 0
   PscBubbleParams params;
-  
-  // state
-  double d_i;
-  double LLs;
-  double LLn;
-#endif
-  
   psc* psc_;
 };
 
@@ -288,7 +305,7 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   psc_set_from_options(psc_);
   psc_setup(psc_);
 
-  return new PscBubble{};
+  return new PscBubble{params, psc_};
 }
 
 // ======================================================================
