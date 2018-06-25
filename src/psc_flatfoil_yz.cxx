@@ -751,11 +751,6 @@ struct PscFlatfoilBuilder
 
   PscFlatfoilParams params;
   
-  // state
-  double d_i;
-  double LLs;
-  double LLn;
-
   psc* psc_;
 };
 
@@ -831,7 +826,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
 #endif
   psc_->prm.neutralizing_population = MY_ELECTRON;
   
-  d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+  double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
