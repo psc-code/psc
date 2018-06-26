@@ -25,6 +25,32 @@ struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
   using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
 };
 
+template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
+struct InjectSelector
+{
+  using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
+};
+
+#ifdef USE_CUDA
+
+template<typename InjectShape, typename Dim>
+struct InjectSelector<MparticlesCuda<BS144>, MfieldsCuda, InjectShape, Dim>
+{
+  using Mparticles = MparticlesCuda<BS144>;
+  using Mfields = MfieldsCuda;
+  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectFoil>;
+};
+
+template<typename InjectShape, typename Dim>
+struct InjectSelector<MparticlesCuda<BS444>, MfieldsCuda, InjectShape, Dim>
+{
+  using Mparticles = MparticlesCuda<BS444>;
+  using Mfields = MfieldsCuda;
+  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectFoil>;
+};
+
+#endif
+
 template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles>
 struct PscConfig_
 {
@@ -40,7 +66,7 @@ struct PscConfig_
   using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = Inject_<Mparticles_t, MfieldsC, InjectFoil>; // FIXME, shouldn't always use MfieldsC
+  using Inject_t = typename InjectSelector<Mparticles, Mfields, InjectFoil, dim_t>::Inject;
   using Heating_t = Heating__<Mparticles_t>;
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
@@ -63,7 +89,8 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
+  //using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
+  using Inject_t = typename InjectSelector<Mparticles, Mfields, InjectFoil, dim_t>::Inject;
   using Heating_t = HeatingCuda<BS>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
@@ -84,7 +111,7 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Inject_t = InjectCuda<BS, dim_t, InjectFoil>;
+  using Inject_t = typename InjectSelector<Mparticles, Mfields, InjectFoil, dim_t>::Inject;
   using Heating_t = HeatingCuda<BS>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
