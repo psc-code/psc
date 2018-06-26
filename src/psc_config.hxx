@@ -1,6 +1,34 @@
 
 #pragma once
 
+#include "psc_particles_single.h"
+#include "psc_particles_double.h"
+#include "psc_fields_c.h"
+
+#include "../libpsc/psc_sort/psc_sort_impl.hxx"
+#include "../libpsc/psc_collision/psc_collision_impl.hxx"
+#include "../libpsc/psc_push_particles/push_dispatch.hxx"
+#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
+#include "psc_push_fields_impl.hxx"
+#include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+#include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
+#include "bnd_particles_impl.hxx"
+#include "../libpsc/psc_balance/psc_balance_impl.hxx"
+#include "../libpsc/psc_push_fields/marder_impl.hxx"
+
+#ifdef USE_CUDA
+#include "../libpsc/cuda/push_particles_cuda_impl.hxx"
+#include "../libpsc/cuda/push_fields_cuda_impl.hxx"
+#include "../libpsc/cuda/bnd_cuda_impl.hxx"
+#include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
+#include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
+#include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
+#include "../libpsc/cuda/sort_cuda_impl.hxx"
+#include "../libpsc/cuda/collision_cuda_impl.hxx"
+#include "../libpsc/cuda/checks_cuda_impl.hxx"
+#include "../libpsc/cuda/marder_cuda_impl.hxx"
+#endif
+
 template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfigPushParticles2nd
 {

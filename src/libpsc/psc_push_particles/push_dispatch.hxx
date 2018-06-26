@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "../libpsc/psc_push_particles/push_config.hxx"
+
 #include "push_part_common.c"
 
 template<typename dim>

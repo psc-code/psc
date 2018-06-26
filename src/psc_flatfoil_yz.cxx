@@ -35,40 +35,18 @@
 #include <setup_particles.hxx>
 #include <setup_fields.hxx>
 
-#include "psc_particles_double.h"
-#include "psc_fields_c.h"
-
-#include "../libpsc/psc_sort/psc_sort_impl.hxx"
-#include "../libpsc/psc_collision/psc_collision_impl.hxx"
-#include "../libpsc/psc_push_particles/push_config.hxx"
-#include "../libpsc/psc_push_particles/push_dispatch.hxx"
-#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
-#include "psc_push_fields_impl.hxx"
-#include "bnd_particles_impl.hxx"
-#include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
-#include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
 #include "../libpsc/psc_inject/psc_inject_impl.hxx"
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
-#include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
-#include "../libpsc/psc_push_fields/marder_impl.hxx"
 
 #ifdef USE_CUDA
-#include "../libpsc/cuda/push_particles_cuda_impl.hxx"
-#include "../libpsc/cuda/push_fields_cuda_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
-#include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/inject_cuda_impl.hxx"
 #include "../libpsc/cuda/heating_cuda_impl.hxx"
-#include "../libpsc/cuda/checks_cuda_impl.hxx"
-#include "../libpsc/cuda/marder_cuda_impl.hxx"
-#include "../libpsc/cuda/sort_cuda_impl.hxx"
-#include "../libpsc/cuda/collision_cuda_impl.hxx"
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
 #include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
+
+#include "psc_config.hxx"
 
 #include "heating_spot_foil.hxx"
 
@@ -221,8 +199,6 @@ struct PscFlatfoilParams
 
   ChecksParams checks_params;
 };
-
-#include "psc_config.hxx"
 
 // EDIT to change order / floating point type / cuda / 2d/3d
 #if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_4_SHOCK_3D

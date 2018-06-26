@@ -16,6 +16,8 @@
 #include "checks.hxx"
 #include "marder.hxx"
 
+#include "psc_config.hxx"
+
 #include <mrc_params.h>
 
 #include <math.h>

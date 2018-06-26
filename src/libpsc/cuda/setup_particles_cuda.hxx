@@ -4,6 +4,7 @@
 #include "setup_particles.hxx"
 
 #include "psc_particles_cuda.h"
+#include "psc_particles_single.h"
 
 template<>
 template<typename FUNC>
