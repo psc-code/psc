@@ -263,6 +263,11 @@ struct PscBubbleParams
   int collision_interval;
   double collision_nu;
 
+  int marder_interval;
+  double marder_diffusion;
+  int marder_loop;
+  bool marder_dump;
+
   int balance_interval;
   double balance_factor_fields;
   bool balance_print_loads;
@@ -500,7 +505,7 @@ struct PscBubble : PscBubbleParams
     prof_restart(pr_push_flds);
     pushf.advance_E(mflds, 1.);
     prof_stop(pr_push_flds);
-
+    
 #if 0
     prof_start(pr_sync4b);
     MPI_Barrier(comm);
@@ -543,16 +548,24 @@ struct PscBubble : PscBubbleParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    PscMarderBase{psc_->marder}(mflds, mprts);
+    if (marder_interval > 0 && timestep % marder_interval == 0) {
+      mpi_printf(comm, "***** Performing Marder correction...\n");
+      prof_start(pr_marder);
+      PscMarderBase{psc_->marder}(mflds, mprts);
+      prof_stop(pr_marder);
+    }
     
-    PscChecksBase{psc_->checks}.gauss(psc_);
-
-    psc_push_particles_prep(psc_->push_particles, psc_->particles, psc_->flds);
+    if (checks_params.gauss_every_step > 0 && timestep % checks_params.gauss_every_step == 0) {
+      prof_restart(pr_checks);
+      PscChecksBase{psc_->checks}.gauss(psc_);
+      prof_stop(pr_checks);
+    }
+    
+    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
 private:
   psc* psc_;
-
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
 
@@ -601,6 +614,12 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   params.checks_params.gauss_threshold = 1e-6;
   params.checks_params.gauss_verbose = true;
   params.checks_params.gauss_dump_always = false;
+
+  // --- marder
+  params.marder_interval = 0*5;
+  params.marder_diffusion = 0.9;
+  params.marder_loop = 3;
+  params.marder_dump = false;
 
   // --- balancing
   params.balance_interval = 0;
