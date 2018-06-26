@@ -72,6 +72,29 @@
 
 #include "heating_spot_foil.hxx"
 
+// ======================================================================
+// InjectSelector
+
+template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
+struct InjectSelector
+{
+  using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
+};
+
+#ifdef USE_CUDA
+
+// FIXME, this should really be condition to Mparticles == MparticlesCuda<BS>, not
+// Mfields == MfieldsCuda
+template<typename Mparticles, typename InjectShape, typename Dim>
+struct InjectSelector<Mparticles, MfieldsCuda, InjectShape, Dim>
+{
+  using Mfields = MfieldsCuda;
+  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectShape>;
+};
+
+#endif
+
+
 enum {
   MY_ION,
   MY_ELECTRON,
@@ -179,7 +202,7 @@ using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig1vbecSingle<dim_t>;
+using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscFlatfoil

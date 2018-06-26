@@ -25,25 +25,6 @@ struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
   using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
 };
 
-template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
-struct InjectSelector
-{
-  using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
-};
-
-#ifdef USE_CUDA
-
-// FIXME, this should really be condition to Mparticles == MparticlesCuda<BS>, not
-// Mfields == MfieldsCuda
-template<typename Mparticles, typename InjectShape, typename Dim>
-struct InjectSelector<Mparticles, MfieldsCuda, InjectShape, Dim>
-{
-  using Mfields = MfieldsCuda;
-  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectFoil>;
-};
-
-#endif
-
 template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles>
 struct PscConfig_
 {
