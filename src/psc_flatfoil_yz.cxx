@@ -592,12 +592,6 @@ struct PscFlatfoil : PscFlatfoilParams
     prof_stop(pr_sync1);
 #endif
     
-#if 0
-    prof_start(pr_sync2);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync2);
-#endif
-    
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
     pushf_.push_H(mflds_, .5, DIM{});
