@@ -8,6 +8,13 @@
 #include <psc_fields_single.h>
 
 #include "push_particles.hxx"
+#include "push_fields.hxx"
+#include "sort.hxx"
+#include "collision.hxx"
+#include "bnd_particles.hxx"
+#include "balance.hxx"
+#include "checks.hxx"
+#include "marder.hxx"
 
 #include <mrc_params.h>
 
@@ -323,9 +330,8 @@ struct PscBubble : PscBubbleParams
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-      void psc_step(struct psc *psc);
-      psc_step(psc_);
-      
+      step();
+
       psc_->timestep++; // FIXME, too hacky
       psc_output(psc_);
 
@@ -364,6 +370,71 @@ struct PscBubble : PscBubbleParams
     mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
 	       elapsed, w, d, h, m, s );
     
+  }
+
+  // ----------------------------------------------------------------------
+  // step
+  //
+  // things are missing from the generic step():
+  // - pushp prep
+
+  void step()
+  {
+    if (!pr_time_step_no_comm) {
+      pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
+    }
+
+    // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+
+    PscMparticlesBase mprts(psc_->particles);
+    PscMfieldsBase mflds(psc_->flds);
+    PscPushParticlesBase pushp(psc_->push_particles);
+    PscPushFieldsBase pushf(psc_->push_fields);
+    PscSortBase sort(psc_->sort);
+    PscCollisionBase collision(psc_->collision);
+    PscBndParticlesBase bndp(psc_->bnd_particles);
+
+    auto balance = PscBalanceBase{psc_->balance};
+    balance(psc_, mprts);
+
+    prof_start(pr_time_step_no_comm);
+    prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+
+    sort(mprts);
+    collision(mprts);
+  
+    //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
+
+    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_);
+
+    // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    pushp(mprts, mflds);
+    // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    
+    // field propagation B^{n+1/2} -> B^{n+1}
+    pushf.advance_H(mflds, .5);
+    // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+    bndp(*mprts.sub());
+  
+    // field propagation E^{n+1/2} -> E^{n+3/2}
+    pushf.advance_b2(mflds);
+    // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+
+    // field propagation B^{n+1} -> B^{n+3/2}
+    pushf.advance_a(mflds);
+    // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
+    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_);
+
+    // E at t^{n+3/2}, particles at t^{n+3/2}
+    // B at t^{n+3/2} (Note: that is not it's natural time,
+    // but div B should be == 0 at any time...)
+    PscMarderBase{psc_->marder}(mflds, mprts);
+    
+    PscChecksBase{psc_->checks}.gauss(psc_);
+
+    psc_push_particles_prep(psc_->push_particles, psc_->particles, psc_->flds);
   }
 
 private:
