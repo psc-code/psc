@@ -251,7 +251,7 @@ struct PscFlatfoil : PscFlatfoilParams
   using Bnd_t = PscConfig::Bnd_t;
   using BndFields_t = PscConfig::BndFields_t;
   using Balance_t = PscConfig::Balance_t;
-  using Heating_t = PscConfig::Heating_t;
+  using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
   using Inject_t = typename InjectSelector<Mparticles_t, Mfields_t, InjectFoil, DIM>::Inject;
   using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;

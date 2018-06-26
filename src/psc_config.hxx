@@ -40,7 +40,6 @@ struct PscConfig_
   using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Heating_t = typename HeatingSelector<Mparticles>::Heating;
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
@@ -62,7 +61,6 @@ struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields_t>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Heating_t = typename HeatingSelector<Mparticles>::Heating;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
@@ -82,7 +80,6 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields>;
   using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Heating_t = typename HeatingSelector<Mparticles>::Heating;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
