@@ -471,52 +471,34 @@ struct PscBubble : PscBubbleParams
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-#if 0
     prof_start(pr_sync3);
     MPI_Barrier(comm);
     prof_stop(pr_sync3);
-#endif
 
     prof_start(pr_bndp);
     bndp(*mprts.sub());
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-#if 0
+#if 1
     prof_start(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bndf.fill_ghosts_H(mflds);
+    bnd.fill_ghosts(mflds, HX, HX + 3);
 #endif
 
-#if 0
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf.add_ghosts_J(mflds);
+    bnd.add_ghosts(mflds, JXI, JXI + 3);
+    bnd.fill_ghosts(mflds, JXI, JXI + 3);
     prof_stop(pr_bndf);
-#endif
     
-#if 0
+#if 1
     prof_start(pr_sync4a);
     MPI_Barrier(comm);
     prof_stop(pr_sync4a);
 #endif
     
     prof_restart(pr_push_flds);
-
-    // fill ghosts for H
-    bndf.fill_ghosts_H(mflds);
-    bnd.fill_ghosts(mflds, HX, HX + 3);
-    
-    // add and fill ghost for J
-    bndf.add_ghosts_J(mflds);
-    bnd.add_ghosts(mflds, JXI, JXI + 3);
-    bnd.fill_ghosts(mflds, JXI, JXI + 3);
-    
-    // push E
     pushf.advance_E(mflds, 1.);
-
-    bndf.fill_ghosts_E(mflds);
-    bnd.fill_ghosts(mflds, EX, EX + 3);
     prof_stop(pr_push_flds);
 
 #if 0
@@ -525,31 +507,23 @@ struct PscBubble : PscBubbleParams
     prof_stop(pr_sync4b);
 #endif
 
-#if 0
+#if 1
     prof_restart(pr_bndf);
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bndf.fill_ghosts_E(mflds);
+    bnd.fill_ghosts(mflds, EX, EX + 3);
     prof_stop(pr_bndf);
 #endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    bndf.fill_ghosts_E(mflds);
-    bnd.fill_ghosts(mflds, EX, EX + 3);
-    
-    // push H
     pushf.advance_H(mflds, .5);
-
-    bndf.fill_ghosts_H(mflds);
-    bnd.fill_ghosts(mflds, HX, HX + 3);
-    
     prof_stop(pr_push_flds);
 
-#if 0
+#if 1
     prof_start(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bndf.fill_ghosts_H(mflds);
+    bnd.fill_ghosts(mflds, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
