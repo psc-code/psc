@@ -397,6 +397,8 @@ struct PscBubble : PscBubbleParams
     PscSortBase sort(psc_->sort);
     PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
+    PscBndBase bnd(psc_->bnd);
+    PscBndFieldsBase bndf(pushf.pushf()->bnd_fields);
     auto balance = PscBalanceBase{psc_->balance};
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
@@ -500,7 +502,21 @@ struct PscBubble : PscBubbleParams
 #endif
     
     prof_restart(pr_push_flds);
-    pushf.advance_b2(mflds);
+
+    // fill ghosts for H
+    bndf.fill_ghosts_H(mflds);
+    bnd.fill_ghosts(mflds, HX, HX + 3);
+    
+    // add and fill ghost for J
+    bndf.add_ghosts_J(mflds);
+    bnd.add_ghosts(mflds, JXI, JXI + 3);
+    bnd.fill_ghosts(mflds, JXI, JXI + 3);
+    
+    // push E
+    pushf.advance_E(mflds, 1.);
+
+    bndf.fill_ghosts_E(mflds);
+    bnd.fill_ghosts(mflds, EX, EX + 3);
     prof_stop(pr_push_flds);
 
 #if 0
@@ -519,7 +535,15 @@ struct PscBubble : PscBubbleParams
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf.advance_a(mflds);
+    bndf.fill_ghosts_E(mflds);
+    bnd.fill_ghosts(mflds, EX, EX + 3);
+    
+    // push H
+    pushf.advance_H(mflds, .5);
+
+    bndf.fill_ghosts_H(mflds);
+    bnd.fill_ghosts(mflds, HX, HX + 3);
+    
     prof_stop(pr_push_flds);
 
 #if 0
