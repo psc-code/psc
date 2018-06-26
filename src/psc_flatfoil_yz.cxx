@@ -206,7 +206,7 @@ using dim_t = dim_xyz;
 #else
 using dim_t = dim_yz;
 #endif
-using PscConfig = PscConfig1vbecCuda<dim_t>;
+using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
 // PscFlatfoil

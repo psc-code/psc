@@ -278,13 +278,15 @@ struct PscBubbleParams
   ChecksParams checks_params;
 };
 
+using PscConfig = PscConfig1vbecSingle<dim_yz>;
+
 // ======================================================================
 // PscBubble
 
 struct PscBubble : PscBubbleParams
 {
-  using Mparticles_t = MparticlesSingle;
-  using Mfields_t = MfieldsSingle;
+  using Mparticles_t = PscConfig::Mparticles_t;
+  using Mfields_t = PscConfig::Mfields_t;
 
   PscBubble(const PscBubbleParams& params, psc *psc)
     : PscBubbleParams(params),
