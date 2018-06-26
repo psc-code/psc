@@ -33,18 +33,11 @@ struct InjectSelector
 
 #ifdef USE_CUDA
 
-template<typename InjectShape, typename Dim>
-struct InjectSelector<MparticlesCuda<BS144>, MfieldsCuda, InjectShape, Dim>
+// FIXME, this should really be condition to Mparticles == MparticlesCuda<BS>, not
+// Mfields == MfieldsCuda
+template<typename Mparticles, typename InjectShape, typename Dim>
+struct InjectSelector<Mparticles, MfieldsCuda, InjectShape, Dim>
 {
-  using Mparticles = MparticlesCuda<BS144>;
-  using Mfields = MfieldsCuda;
-  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectFoil>;
-};
-
-template<typename InjectShape, typename Dim>
-struct InjectSelector<MparticlesCuda<BS444>, MfieldsCuda, InjectShape, Dim>
-{
-  using Mparticles = MparticlesCuda<BS444>;
   using Mfields = MfieldsCuda;
   using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectFoil>;
 };
