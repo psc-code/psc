@@ -258,6 +258,17 @@ struct psc_ops_bubble : psc_ops {
 
 struct PscBubbleParams
 {
+  int sort_interval;
+
+  int collision_interval;
+  double collision_nu;
+
+  int balance_interval;
+  double balance_factor_fields;
+  bool balance_print_loads;
+  bool balance_write_loads;
+
+  ChecksParams checks_params;
 };
 
 // ======================================================================
@@ -331,7 +342,7 @@ struct PscBubble : PscBubbleParams
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
       step();
-
+    
       psc_->timestep++; // FIXME, too hacky
       psc_output(psc_);
 
@@ -369,7 +380,6 @@ struct PscBubble : PscBubbleParams
     /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
     mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
 	       elapsed, w, d, h, m, s );
-    
   }
 
   // ----------------------------------------------------------------------
@@ -380,12 +390,6 @@ struct PscBubble : PscBubbleParams
 
   void step()
   {
-    if (!pr_time_step_no_comm) {
-      pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
-    }
-
-    // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-
     PscMparticlesBase mprts(psc_->particles);
     PscMfieldsBase mflds(psc_->flds);
     PscPushParticlesBase pushp(psc_->push_particles);
@@ -393,24 +397,67 @@ struct PscBubble : PscBubbleParams
     PscSortBase sort(psc_->sort);
     PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
-
     auto balance = PscBalanceBase{psc_->balance};
-    balance(psc_, mprts);
 
-    prof_start(pr_time_step_no_comm);
-    prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+    static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
+      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
+      pr_sync1, pr_sync2, pr_sync3, pr_sync4, pr_sync5, pr_sync4a, pr_sync4b;
+    if (!pr_sort) {
+      pr_sort = prof_register("step_sort", 1., 0, 0);
+      pr_collision = prof_register("step_collision", 1., 0, 0);
+      pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
+      pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
+      pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
+      pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
+      pr_checks = prof_register("step_checks", 1., 0, 0);
+      pr_marder = prof_register("step_marder", 1., 0, 0);
+      pr_inject = prof_register("step_inject", 1., 0, 0);
+      pr_heating = prof_register("step_heating", 1., 0, 0);
+      pr_sync1 = prof_register("step_sync1", 1., 0, 0);
+      pr_sync2 = prof_register("step_sync2", 1., 0, 0);
+      pr_sync3 = prof_register("step_sync3", 1., 0, 0);
+      pr_sync4 = prof_register("step_sync4", 1., 0, 0);
+      pr_sync5 = prof_register("step_sync5", 1., 0, 0);
+      pr_sync4a = prof_register("step_sync4a", 1., 0, 0);
+      pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
+    }
 
-    sort(mprts);
-    collision(mprts);
-  
-    //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
+    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+    MPI_Comm comm = psc_comm(psc_);
+    int timestep = psc_->timestep;
 
-    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_);
+    if (balance_interval > 0 && timestep % balance_interval == 0) {
+      balance(psc_, mprts);
+    }
 
-    // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp(mprts, mflds);
-    // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
+      sort(mprts);
+      prof_stop(pr_sort);
+    }
     
+    if (collision_interval > 0 && timestep % collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
+      collision(mprts);
+      prof_stop(pr_collision);
+    }
+    
+    if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
+      mpi_printf(comm, "***** Checking continuity...\n");
+      prof_start(pr_checks);
+      PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_);
+      prof_stop(pr_checks);
+    }
+
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    prof_start(pr_push_prts);
+    pushp(mprts, mflds);
+    prof_stop(pr_push_prts);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+
+
     // field propagation B^{n+1/2} -> B^{n+1}
     pushf.advance_H(mflds, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
@@ -425,8 +472,12 @@ struct PscBubble : PscBubbleParams
     pushf.advance_a(mflds);
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_);
-
+    if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
+      prof_restart(pr_checks);
+      PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_);
+      prof_stop(pr_checks);
+    }
+    
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
@@ -471,6 +522,30 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   
   mpi_printf(comm, "*** Setting up...\n");
 
+  // sort
+  params.sort_interval = 10;
+
+  // collisions
+  params.collision_interval = 10;
+  params.collision_nu = .1;
+
+  // --- checks
+  params.checks_params.continuity_every_step = -1;
+  params.checks_params.continuity_threshold = 1e-6;
+  params.checks_params.continuity_verbose = true;
+  params.checks_params.continuity_dump_always = false;
+
+  params.checks_params.gauss_every_step = -1;
+  params.checks_params.gauss_threshold = 1e-6;
+  params.checks_params.gauss_verbose = true;
+  params.checks_params.gauss_dump_always = false;
+
+  // --- balancing
+  params.balance_interval = 0;
+  params.balance_factor_fields = 0.1;
+  params.balance_print_loads = true;
+  params.balance_write_loads = false;
+  
   psc_set_from_options(psc_);
   psc_setup(psc_);
 
