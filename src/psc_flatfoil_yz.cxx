@@ -73,6 +73,34 @@
 #include "heating_spot_foil.hxx"
 
 // ======================================================================
+// HeatingSelector
+
+template<typename Mparticles>
+struct HeatingSelector
+{
+  using Heating = Heating__<Mparticles>;
+};
+
+#ifdef USE_CUDA
+
+// FIXME, enable_if for any BS
+template<>
+struct HeatingSelector<MparticlesCuda<BS444>>
+{
+  using Mparticles = MparticlesCuda<BS444>;
+  using Heating = HeatingCuda<typename Mparticles::BS>;
+};
+
+template<>
+struct HeatingSelector<MparticlesCuda<BS144>>
+{
+  using Mparticles = MparticlesCuda<BS144>;
+  using Heating = HeatingCuda<typename Mparticles::BS>;
+};
+
+#endif
+
+// ======================================================================
 // InjectSelector
 
 template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
