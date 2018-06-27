@@ -26,7 +26,11 @@
 
 #include <math.h>
 
-struct psc_bubble {
+// ======================================================================
+// PscBubbleParams
+
+struct PscBubbleParams
+{
   double BB;
   double nnb;
   double nn0;
@@ -38,15 +42,7 @@ struct psc_bubble {
   double TTe;
   double TTi;
   double MMi;
-};
-
-#define to_psc_bubble(psc) mrc_to_subobj(psc, struct psc_bubble)
-
-// ======================================================================
-// PscBubbleParams
-
-struct PscBubbleParams
-{
+  
   int sort_interval;
 
   int collision_interval;
@@ -126,18 +122,7 @@ struct PscBubble : PscBubbleParams
 
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
   {
-    psc_bubble* bubble = to_psc_bubble(psc_);
-
-    double BB = bubble->BB;
-    double LLy = bubble->LLy;
-    double LLn = bubble->LLn;
-    double LLB = bubble->LLB;
-    double V0 = bubble->MMach * sqrt(bubble->TTe / bubble->MMi);
-    
-    double nnb = bubble->nnb;
-    double nn0 = bubble->nn0;
-    
-    double TTe = bubble->TTe, TTi = bubble->TTi;
+    double V0 = MMach * sqrt(TTe / MMi);
     
     double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * LLy));
     double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * LLy));
@@ -223,16 +208,6 @@ struct PscBubble : PscBubbleParams
   
   void setup_initial_fields(Mfields_t& mflds)
   {
-    psc_bubble* bubble = to_psc_bubble(psc_);
-
-    double BB = bubble->BB;
-    double LLn = bubble->LLn;
-    double LLy = bubble->LLy;
-    double LLB = bubble->LLB;
-    double MMi = bubble->MMi;
-    double MMach = bubble->MMach;
-    double TTe = bubble->TTe;
-  
     SetupFields<Mfields_t>::set(mflds, [&](int m, double crd[3]) {
 	double z1 = crd[2];
 	double y1 = crd[1] + .5 * LLy;
@@ -589,32 +564,31 @@ struct PscBubbleBuilder
 
 PscBubble* PscBubbleBuilder::makePscBubble()
 {
-  psc_bubble* bubble = to_psc_bubble(psc_);
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
 
   psc_default_dimensionless(psc_);
 
-  bubble->BB = .07;
-  bubble->nnb = .1;
-  bubble->nn0 = 1.;
-  bubble->MMach = 3.;
-  bubble->LLn = 200.;
-  bubble->LLB = 200./6.;
-  bubble->TTe = .02;
-  bubble->TTi = .02;
-  bubble->MMi = 100.;
+  params.BB = .07;
+  params.nnb = .1;
+  params.nn0 = 1.;
+  params.MMach = 3.;
+  params.LLn = 200.;
+  params.LLB = 200./6.;
+  params.TTe = .02;
+  params.TTi = .02;
+  params.MMi = 100.;
     
   psc_->prm.nmax = 1000; //32000;
   psc_->prm.nicell = 100;
 
-  bubble->LLy = 2. * bubble->LLn;
-  bubble->LLz = 3. * bubble->LLn;
+  params.LLy = 2. * params.LLn;
+  params.LLz = 3. * params.LLn;
 
   auto grid_domain = Grid_t::Domain{{1, 128, 512},
-				    {bubble->LLn, bubble->LLy, bubble->LLz},
-				    {0., -.5 * bubble->LLy, -.5 * bubble->LLz},
+				    {params.LLn, params.LLy, params.LLz},
+				    {0., -.5 * params.LLy, -.5 * params.LLz},
 				    {1, 1, 4}};
   
   auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -668,7 +642,7 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
 				Mfields_traits<PscBubble::Mfields_t>::name).mflds();
 
-  mpi_printf(comm, "lambda_D = %g\n", sqrt(bubble->TTe));
+  mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
   
   return new PscBubble{params, psc_};
 }
@@ -679,7 +653,6 @@ PscBubble* PscBubbleBuilder::makePscBubble()
 struct psc_ops_bubble : psc_ops {
   psc_ops_bubble() {
     name             = "bubble";
-    size             = sizeof(struct psc_bubble);
   }
 } psc_bubble_ops;
 
