@@ -285,6 +285,7 @@ using PscConfig = PscConfig1vbecSingle<dim_yz>;
 
 struct PscBubble : PscBubbleParams
 {
+  using DIM = PscConfig::dim_t;
   using Mparticles_t = PscConfig::Mparticles_t;
   using Mfields_t = PscConfig::Mfields_t;
   using Sort_t = PscConfig::Sort_t;
@@ -294,6 +295,9 @@ struct PscBubble : PscBubbleParams
   using BndParticles_t = PscConfig::BndParticles_t;
   using Bnd_t = PscConfig::Bnd_t;
   using BndFields_t = PscConfig::BndFields_t;
+  using Balance_t = PscConfig::Balance_t;
+  using Checks_t = PscConfig::Checks_t;
+  using Marder_t = PscConfig::Marder_t;
 
   PscBubble(const PscBubbleParams& params, psc *psc)
     : PscBubbleParams(params),
@@ -302,7 +306,10 @@ struct PscBubble : PscBubbleParams
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
-      bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn}
+      bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
+      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
+      checks_{psc_->grid(), psc_comm(psc), checks_params},
+      marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
     setup_stats();
   }
@@ -409,10 +416,6 @@ struct PscBubble : PscBubbleParams
 
   void step()
   {
-    PscMparticlesBase mprts(psc_->particles);
-    PscMfieldsBase mflds(psc_->flds);
-    auto balance = PscBalanceBase{psc_->balance};
-
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
       pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
       pr_sync1, pr_sync2, pr_sync3, pr_sync4, pr_sync5, pr_sync4a, pr_sync4b;
@@ -441,7 +444,7 @@ struct PscBubble : PscBubbleParams
     int timestep = psc_->timestep;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      balance(psc_, mprts);
+      balance_(psc_, mprts_);
     }
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {
@@ -461,7 +464,7 @@ struct PscBubble : PscBubbleParams
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
-      PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_);
+      checks_.continuity_before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
@@ -479,7 +482,7 @@ struct PscBubble : PscBubbleParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_.push_H(mflds, .5);
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
@@ -510,7 +513,7 @@ struct PscBubble : PscBubbleParams
 #endif
     
     prof_restart(pr_push_flds);
-    pushf_.push_E(mflds, 1.);
+    pushf_.push_E(mflds_, 1., DIM{});
     prof_stop(pr_push_flds);
     
 #if 0
@@ -529,7 +532,7 @@ struct PscBubble : PscBubbleParams
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_.push_H(mflds, .5);
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
 
 #if 1
@@ -548,7 +551,7 @@ struct PscBubble : PscBubbleParams
     
     if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);
-      PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_);
+      checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
     
@@ -558,13 +561,13 @@ struct PscBubble : PscBubbleParams
     if (marder_interval > 0 && timestep % marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      PscMarderBase{psc_->marder}(mflds, mprts);
+      marder_(mflds_, mprts_);
       prof_stop(pr_marder);
     }
     
     if (checks_params.gauss_every_step > 0 && timestep % checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
-      PscChecksBase{psc_->checks}.gauss(psc_);
+      checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
     
@@ -583,6 +586,10 @@ private:
   BndParticles_t bndp_;
   Bnd_t bnd_;
   BndFields_t bndf_;
+  Balance_t balance_;
+
+  Checks_t checks_;
+  Marder_t marder_;
   
   int st_nr_particles;
   int st_time_step;
