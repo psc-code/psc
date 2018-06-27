@@ -597,10 +597,11 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   params.balance_print_loads = true;
   params.balance_write_loads = false;
   
-  psc_set_from_options(psc_);
+  psc_set_from_options(psc_); // FIXME
 
-
-  psc_method_do_setup(psc_->method, psc_);
+  // --- generic setup
+  psc_setup_coeff(psc_);
+  psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
 
   // partition and initial balancing
   auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
