@@ -226,6 +226,23 @@ struct PscBubble : PscBubbleParams
       checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
+    // partition and initial balancing
+    auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
+    psc_balance_setup(psc_->balance);
+    auto balance = PscBalanceBase{psc_->balance};
+    auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+    // balance::initial does not rebalance particles, because the old way of doing this
+    // does't even have the particle data structure created yet -- FIXME?
+    mprts_.reset(psc_->grid());
+    
+    // initialize base particle data structure x^{n+1/2}, p^{n+1/2}
+    psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
+    
+    // set up base mflds
+    psc_method_set_ic_fields(psc_->method, psc_);
+    
+    psc_setup_member_objs(psc_);
+  
     setup_stats();
   }
 
@@ -609,24 +626,6 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
 				Mfields_traits<PscBubble::Mfields_t>::name).mflds();
 
-  // partition and initial balancing
-  auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
-  psc_balance_setup(psc_->balance);
-  auto balance = PscBalanceBase{psc_->balance};
-  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-  // balance::initial does not rebalance particles, because the old way of doing this
-  // does't even have the particle data structure created yet -- FIXME?
-  mprts->reset(psc_->grid());
-
-  // initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
-
-  // set up base mflds
-  psc_method_set_ic_fields(psc_->method, psc_);
-
-  psc_setup_member_objs(psc_);
-
-  
   mpi_printf(comm, "lambda_D = %g\n", sqrt(bubble->TTe));
   
   return new PscBubble{params, psc_};
