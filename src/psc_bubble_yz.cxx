@@ -38,23 +38,6 @@ struct psc_bubble {
 
 #define to_psc_bubble(psc) mrc_to_subobj(psc, struct psc_bubble)
 
-#define VAR(x) (void *)offsetof(struct psc_bubble, x)
-static struct param psc_bubble_descr[] = {
-  { "BB"            , VAR(BB)              , PARAM_DOUBLE(.07)    },
-  { "nnb"           , VAR(nnb)             , PARAM_DOUBLE(.1)     },
-  { "nn0"           , VAR(nn0)             , PARAM_DOUBLE(1.)     },
-  { "MMach"         , VAR(MMach)           , PARAM_DOUBLE(3.)     },
-  { "LLn"           , VAR(LLn)             , PARAM_DOUBLE(200.)   },
-  { "LLB"           , VAR(LLB)             , PARAM_DOUBLE(200./6.)},
-  { "LLz"           , VAR(LLz)             , PARAM_DOUBLE(0.)     },
-  { "LLy"           , VAR(LLy)             , PARAM_DOUBLE(0.)     },
-  { "TTe"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
-  { "TTi"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
-  { "MMi"           , VAR(MMi)             , PARAM_DOUBLE(100.)   },
-  {},
-};
-#undef VAR
-
 // ----------------------------------------------------------------------
 // psc_bubble_init_field
 
@@ -553,6 +536,16 @@ PscBubble* PscBubbleBuilder::makePscBubble()
 
   psc_default_dimensionless(psc_);
 
+  bubble->BB = .07;
+  bubble->nnb = .1;
+  bubble->nn0 = 1.;
+  bubble->MMach = 3.;
+  bubble->LLn = 200.;
+  bubble->LLB = 200./6.;
+  bubble->TTe = .02;
+  bubble->TTi = .02;
+  bubble->MMi = 100.;
+    
   psc_->prm.nmax = 1000; //32000;
   psc_->prm.nicell = 100;
 
@@ -618,7 +611,6 @@ struct psc_ops_bubble : psc_ops {
   psc_ops_bubble() {
     name             = "bubble";
     size             = sizeof(struct psc_bubble);
-    param_descr      = psc_bubble_descr;
     init_field       = psc_bubble_init_field;
     init_npt         = psc_bubble_init_npt;
   }
