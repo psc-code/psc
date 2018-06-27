@@ -107,14 +107,10 @@ struct PscBubble : PscBubbleParams
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(mprts_, n_prts_by_patch_new);
     
-    // initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-    psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
-    
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
     checks_.gauss(mprts_, mflds_);
-    
     psc_setup_member_objs(psc_);
   
     setup_stats();
