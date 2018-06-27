@@ -287,12 +287,17 @@ struct PscBubble : PscBubbleParams
 {
   using Mparticles_t = PscConfig::Mparticles_t;
   using Mfields_t = PscConfig::Mfields_t;
+  using Sort_t = PscConfig::Sort_t;
+  using Collision_t = PscConfig::Collision_t;
+  using PushParticles_t = PscConfig::PushParticles_t;
+  using PushFields_t = PscConfig::PushFields_t;
 
   PscBubble(const PscBubbleParams& params, psc *psc)
     : PscBubbleParams(params),
       psc_{psc},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
-      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())}
+      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
+      collision_{psc_comm(psc), collision_interval, collision_nu}
   {
     setup_stats();
   }
@@ -401,10 +406,7 @@ struct PscBubble : PscBubbleParams
   {
     PscMparticlesBase mprts(psc_->particles);
     PscMfieldsBase mflds(psc_->flds);
-    PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
-    PscSortBase sort(psc_->sort);
-    PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
     PscBndBase bnd(psc_->bnd);
     PscBndFieldsBase bndf(pushf.pushf()->bnd_fields);
@@ -444,14 +446,14 @@ struct PscBubble : PscBubbleParams
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      sort(mprts);
+      sort_(mprts_);
       prof_stop(pr_sort);
     }
     
     if (collision_interval > 0 && timestep % collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      collision(mprts);
+      collision_(mprts_);
       prof_stop(pr_collision);
     }
     
@@ -464,7 +466,7 @@ struct PscBubble : PscBubbleParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp(mprts, mflds);
+    pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -476,7 +478,7 @@ struct PscBubble : PscBubbleParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf.advance_H(mflds, .5);
+    pushf_.push_H(mflds, .5);
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
@@ -507,7 +509,7 @@ struct PscBubble : PscBubbleParams
 #endif
     
     prof_restart(pr_push_flds);
-    pushf.advance_E(mflds, 1.);
+    pushf_.push_E(mflds, 1.);
     prof_stop(pr_push_flds);
     
 #if 0
@@ -526,7 +528,7 @@ struct PscBubble : PscBubbleParams
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf.advance_H(mflds, .5);
+    pushf_.push_H(mflds, .5);
     prof_stop(pr_push_flds);
 
 #if 1
@@ -573,6 +575,11 @@ private:
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
 
+  Sort_t sort_;
+  Collision_t collision_;
+  PushParticles_t pushp_;
+  PushFields_t pushf_;
+  
   int st_nr_particles;
   int st_time_step;
 };

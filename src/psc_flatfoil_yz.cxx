@@ -219,9 +219,9 @@ struct PscFlatfoil : PscFlatfoilParams
   using DIM = PscConfig::dim_t;
   using Mparticles_t = PscConfig::Mparticles_t;
   using Mfields_t = PscConfig::Mfields_t;
-  using PushParticles_t = PscConfig::PushParticles_t;
   using Sort_t = PscConfig::Sort_t;
   using Collision_t = PscConfig::Collision_t;
+  using PushParticles_t = PscConfig::PushParticles_t;
   using PushFields_t = PscConfig::PushFields_t;
   using BndParticles_t = PscConfig::BndParticles_t;
   using Bnd_t = PscConfig::Bnd_t;
