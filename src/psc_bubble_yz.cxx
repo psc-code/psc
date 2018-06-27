@@ -291,13 +291,18 @@ struct PscBubble : PscBubbleParams
   using Collision_t = PscConfig::Collision_t;
   using PushParticles_t = PscConfig::PushParticles_t;
   using PushFields_t = PscConfig::PushFields_t;
+  using BndParticles_t = PscConfig::BndParticles_t;
+  using Bnd_t = PscConfig::Bnd_t;
+  using BndFields_t = PscConfig::BndFields_t;
 
   PscBubble(const PscBubbleParams& params, psc *psc)
     : PscBubbleParams(params),
       psc_{psc},
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
-      collision_{psc_comm(psc), collision_interval, collision_nu}
+      collision_{psc_comm(psc), collision_interval, collision_nu},
+      bndp_{psc_->mrc_domain_, psc_->grid()},
+      bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn}
   {
     setup_stats();
   }
@@ -406,10 +411,6 @@ struct PscBubble : PscBubbleParams
   {
     PscMparticlesBase mprts(psc_->particles);
     PscMfieldsBase mflds(psc_->flds);
-    PscPushFieldsBase pushf(psc_->push_fields);
-    PscBndParticlesBase bndp(psc_->bnd_particles);
-    PscBndBase bnd(psc_->bnd);
-    PscBndFieldsBase bndf(pushf.pushf()->bnd_fields);
     auto balance = PscBalanceBase{psc_->balance};
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
@@ -487,19 +488,19 @@ struct PscBubble : PscBubbleParams
     prof_stop(pr_sync3);
 
     prof_start(pr_bndp);
-    bndp(*mprts.sub());
+    bndp_(mprts_);
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
 #if 1
     prof_start(pr_bndf);
-    bndf.fill_ghosts_H(mflds);
-    bnd.fill_ghosts(mflds, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
 #endif
 
-    bndf.add_ghosts_J(mflds);
-    bnd.add_ghosts(mflds, JXI, JXI + 3);
-    bnd.fill_ghosts(mflds, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
     
 #if 1
@@ -520,8 +521,8 @@ struct PscBubble : PscBubbleParams
 
 #if 1
     prof_restart(pr_bndf);
-    bndf.fill_ghosts_E(mflds);
-    bnd.fill_ghosts(mflds, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
 #endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
@@ -533,8 +534,8 @@ struct PscBubble : PscBubbleParams
 
 #if 1
     prof_start(pr_bndf);
-    bndf.fill_ghosts_H(mflds);
-    bnd.fill_ghosts(mflds, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
@@ -579,6 +580,9 @@ private:
   Collision_t collision_;
   PushParticles_t pushp_;
   PushFields_t pushf_;
+  BndParticles_t bndp_;
+  Bnd_t bnd_;
+  BndFields_t bndf_;
   
   int st_nr_particles;
   int st_time_step;
