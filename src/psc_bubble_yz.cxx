@@ -599,20 +599,29 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   psc_setup_coeff(psc_);
   psc_setup_domain(psc_, grid_domain, grid_bc, psc_->kinds_);
 
+  // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
+  mpi_printf(comm, "**** Creating particle data structure...\n");
+  auto mprts = PscMparticlesCreate(comm, psc_->grid(),
+				   Mparticles_traits<PscBubble::Mparticles_t>::name);
+  psc_->particles = mprts.mprts();
+
+  // --- create and set up base mflds
+  psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
+				Mfields_traits<PscBubble::Mfields_t>::name).mflds();
+
   // partition and initial balancing
   auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
   psc_balance_setup(psc_->balance);
   auto balance = PscBalanceBase{psc_->balance};
   auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+  // balance::initial does not rebalance particles, because the old way of doing this
+  // does't even have the particle data structure created yet -- FIXME?
+  mprts->reset(psc_->grid());
 
-  // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-				       psc_->prm.particles_base).mprts();
+  // initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
 
-  // create and set up base mflds
-  psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
-			       psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+  // set up base mflds
   psc_method_set_ic_fields(psc_->method, psc_);
 
   psc_setup_member_objs(psc_);
