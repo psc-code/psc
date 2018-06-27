@@ -565,10 +565,6 @@ PscBubble* PscBubbleBuilder::makePscBubble()
 
   psc_set_from_options(psc_);
 
-  struct psc_bnd_fields *bnd_fields = 
-    psc_push_fields_get_bnd_fields(psc_->push_fields);
-  psc_bnd_fields_set_type(bnd_fields, "none");
-
   // sort
   params.sort_interval = 10;
 
