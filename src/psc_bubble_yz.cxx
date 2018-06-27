@@ -42,69 +42,6 @@ struct psc_bubble {
 
 #define to_psc_bubble(psc) mrc_to_subobj(psc, struct psc_bubble)
 
-// ----------------------------------------------------------------------
-// psc_bubble_init_npt
-
-static void
-psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
-		    struct psc_particle_npt *npt)
-{
-  struct psc_bubble *bubble = to_psc_bubble(psc);
-
-  double BB = bubble->BB;
-  double LLy = bubble->LLy;
-  double LLn = bubble->LLn;
-  double LLB = bubble->LLB;
-  double V0 = bubble->MMach * sqrt(bubble->TTe / bubble->MMi);
-
-  double nnb = bubble->nnb;
-  double nn0 = bubble->nn0;
-
-  double TTe = bubble->TTe, TTi = bubble->TTi;
-
-  double r1 = sqrt(sqr(x[2]) + sqr(x[1] + .5 * LLy));
-  double r2 = sqrt(sqr(x[2]) + sqr(x[1] - .5 * LLy));
-
-  npt->n = nnb;
-  if (r1 < LLn) {
-    npt->n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r1 / LLn));
-    if (r1 > 0.0) {
-      npt->p[2] += V0 * sin(M_PI * r1 / LLn) * x[2] / r1;
-      npt->p[1] += V0 * sin(M_PI * r1 / LLn) * (x[1] + .5 * LLy) / r1;
-    }
-  }
-  if (r2 < LLn) {
-    npt->n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r2 / LLn));
-    if (r2 > 0.0) {
-      npt->p[2] += V0 * sin(M_PI * r2 / LLn) * x[2] / r2;
-      npt->p[1] += V0 * sin(M_PI * r2 / LLn) * (x[1] - .5 * LLy) / r2;
-    }
-  }
-
-  switch (kind) {
-  case 0: // electrons
-    // electron drift consistent with initial current
-    if ((r1 <= LLn) && (r1 >= LLn - 2.*LLB)) {
-      npt->p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r1)/(2.*LLB)) / npt->n;
-    }
-    if ((r2 <= LLn) && (r2 >= LLn - 2.*LLB)) {
-      npt->p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r2)/(2.*LLB)) / npt->n;
-    }
-
-    npt->T[0] = TTe;
-    npt->T[1] = TTe;
-    npt->T[2] = TTe;
-    break;
-  case 1: // ions
-    npt->T[0] = TTi;
-    npt->T[1] = TTi;
-    npt->T[2] = TTi;
-    break;
-  default:
-    assert(0);
-  }
-}
-
 // ======================================================================
 // PscBubbleParams
 
@@ -163,14 +100,16 @@ struct PscBubble : PscBubbleParams
   {
     MPI_Comm comm = psc_comm(psc_);
 
-    // partition and initial balancing
-    auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
-    psc_balance_setup(psc_->balance);
-    auto balance = PscBalanceBase{psc_->balance};
-    auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+    // --- partition particles and initial balancing
+    mpi_printf(comm, "**** Partitioning...\n");
+    auto n_prts_by_patch_old = setup_initial_partition();
+    auto n_prts_by_patch_new = balance_.initial(psc_, n_prts_by_patch_old);
     // balance::initial does not rebalance particles, because the old way of doing this
     // does't even have the particle data structure created yet -- FIXME?
     mprts_.reset(psc_->grid());
+    
+    mpi_printf(comm, "**** Setting up particles...\n");
+    setup_initial_particles(mprts_, n_prts_by_patch_new);
     
     // initialize base particle data structure x^{n+1/2}, p^{n+1/2}
     psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
@@ -183,6 +122,100 @@ struct PscBubble : PscBubbleParams
     psc_setup_member_objs(psc_);
   
     setup_stats();
+  }
+
+  void init_npt(int kind, double crd[3], psc_particle_npt& npt)
+  {
+    psc_bubble* bubble = to_psc_bubble(psc_);
+
+    double BB = bubble->BB;
+    double LLy = bubble->LLy;
+    double LLn = bubble->LLn;
+    double LLB = bubble->LLB;
+    double V0 = bubble->MMach * sqrt(bubble->TTe / bubble->MMi);
+    
+    double nnb = bubble->nnb;
+    double nn0 = bubble->nn0;
+    
+    double TTe = bubble->TTe, TTi = bubble->TTi;
+    
+    double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * LLy));
+    double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * LLy));
+    
+    npt.n = nnb;
+    if (r1 < LLn) {
+      npt.n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r1 / LLn));
+      if (r1 > 0.0) {
+	npt.p[2] += V0 * sin(M_PI * r1 / LLn) * crd[2] / r1;
+	npt.p[1] += V0 * sin(M_PI * r1 / LLn) * (crd[1] + .5 * LLy) / r1;
+      }
+    }
+    if (r2 < LLn) {
+      npt.n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r2 / LLn));
+      if (r2 > 0.0) {
+	npt.p[2] += V0 * sin(M_PI * r2 / LLn) * crd[2] / r2;
+	npt.p[1] += V0 * sin(M_PI * r2 / LLn) * (crd[1] - .5 * LLy) / r2;
+      }
+    }
+    
+    switch (kind) {
+    case 0: // electrons
+      // electron drift consistent with initial current
+      if ((r1 <= LLn) && (r1 >= LLn - 2.*LLB)) {
+	npt.p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r1)/(2.*LLB)) / npt.n;
+      }
+      if ((r2 <= LLn) && (r2 >= LLn - 2.*LLB)) {
+	npt.p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r2)/(2.*LLB)) / npt.n;
+      }
+      
+      npt.T[0] = TTe;
+      npt.T[1] = TTe;
+      npt.T[2] = TTe;
+      break;
+    case 1: // ions
+      npt.T[0] = TTi;
+      npt.T[1] = TTi;
+      npt.T[2] = TTi;
+      break;
+    default:
+      assert(0);
+    }
+  }
+  
+  // ----------------------------------------------------------------------
+  // setup_initial_partition
+  
+  std::vector<uint> setup_initial_partition()
+  {
+    return SetupParticles<Mparticles_t>::setup_partition(psc_, [&](int kind, double crd[3], psc_particle_npt& npt) {
+	this->init_npt(kind, crd, npt);
+      });
+  }
+  
+  // ----------------------------------------------------------------------
+  // setup_initial_particles
+  
+  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
+  {
+#if 0
+    n_prts_by_patch[0] = 2;
+    mprts.reserve_all(n_prts_by_patch.data());
+    mprts.resize_all(n_prts_by_patch.data());
+
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      mprintf("npp %d %d\n", p, n_prts_by_patch[p]);
+      for (int n = 0; n < n_prts_by_patch[p]; n++) {
+	auto &prt = mprts[p][n];
+	prt.pxi = n;
+	prt.kind_ = n % 2;
+	prt.qni_wni_ = mprts.grid().kinds[prt.kind_].q;
+      }
+    };
+#else
+    SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+	this->init_npt(kind, crd, npt);
+      });
+#endif
   }
 
   // ----------------------------------------------------------------------
@@ -647,7 +680,6 @@ struct psc_ops_bubble : psc_ops {
   psc_ops_bubble() {
     name             = "bubble";
     size             = sizeof(struct psc_bubble);
-    init_npt         = psc_bubble_init_npt;
   }
 } psc_bubble_ops;
 
