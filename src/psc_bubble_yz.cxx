@@ -56,29 +56,6 @@ static struct param psc_bubble_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_bubble_setup
-
-static void
-psc_bubble_setup(struct psc *psc)
-{
-  struct psc_bubble *bubble = to_psc_bubble(psc);
-  
-  psc_setup_super(psc);
-
-  MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "lambda_D = %g\n", sqrt(bubble->TTe));
-}
-
-// ----------------------------------------------------------------------
-// psc_bubble_read
-
-static void
-psc_bubble_read(struct psc *psc, struct mrc_io *io)
-{
-  psc_read_super(psc, io);
-}
-
-// ----------------------------------------------------------------------
 // psc_bubble_init_field
 
 static double
@@ -629,6 +606,8 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   psc_set_from_options(psc_);
   psc_setup(psc_);
 
+  mpi_printf(comm, "lambda_D = %g\n", sqrt(bubble->TTe));
+  
   return new PscBubble{params, psc_};
 }
 
@@ -640,8 +619,6 @@ struct psc_ops_bubble : psc_ops {
     name             = "bubble";
     size             = sizeof(struct psc_bubble);
     param_descr      = psc_bubble_descr;
-    setup            = psc_bubble_setup;
-    read             = psc_bubble_read;
     init_field       = psc_bubble_init_field;
     init_npt         = psc_bubble_init_npt;
   }
