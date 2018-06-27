@@ -553,15 +553,17 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   bubble->LLy = 2. * bubble->LLn;
   bubble->LLz = 3. * bubble->LLn;
 
-  psc_->domain_ = Grid_t::Domain{{1, 128, 512},
-				 {bubble->LLn, bubble->LLy, bubble->LLz},
-				 {0., -.5 * bubble->LLy, -.5 * bubble->LLz},
-				 {1, 1, 4}};
+  auto grid_domain = Grid_t::Domain{{1, 128, 512},
+				    {bubble->LLn, bubble->LLy, bubble->LLz},
+				    {0., -.5 * bubble->LLy, -.5 * bubble->LLz},
+				    {1, 1, 4}};
   
-  psc_->bc_ = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-		     { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-		     { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-		     { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+
+  psc_set_from_options(psc_);
 
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc_->push_fields);
@@ -597,11 +599,9 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   params.balance_print_loads = true;
   params.balance_write_loads = false;
   
-  psc_set_from_options(psc_); // FIXME
-
   // --- generic setup
   psc_setup_coeff(psc_);
-  psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
+  psc_setup_domain(psc_, grid_domain, grid_bc, psc_->kinds_);
 
   // partition and initial balancing
   auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
