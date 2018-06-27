@@ -56,36 +56,6 @@ static struct param psc_bubble_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_bubble_create
-
-static void
-psc_bubble_create(struct psc *psc)
-{
-  struct psc_bubble *bubble = to_psc_bubble(psc);
-  psc_default_dimensionless(psc);
-
-  psc->prm.nmax = 1000; //32000;
-  psc->prm.nicell = 100;
-
-  bubble->LLy = 2. * bubble->LLn;
-  bubble->LLz = 3. * bubble->LLn;
-
-  psc->domain_ = Grid_t::Domain{{1, 128, 512},
-				{bubble->LLn, bubble->LLy, bubble->LLz},
-				{0., -.5 * bubble->LLy, -.5 * bubble->LLz},
-				{1, 1, 4}};
-  
-  psc->bc_ = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-		    { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-		    { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-		    { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-
-  struct psc_bnd_fields *bnd_fields = 
-    psc_push_fields_get_bnd_fields(psc->push_fields);
-  psc_bnd_fields_set_type(bnd_fields, "none");
-}
-
-// ----------------------------------------------------------------------
 // psc_bubble_setup
 
 static void
@@ -238,22 +208,6 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
     assert(0);
   }
 }
-
-// ======================================================================
-// psc_bubble_ops
-
-struct psc_ops_bubble : psc_ops {
-  psc_ops_bubble() {
-    name             = "bubble";
-    size             = sizeof(struct psc_bubble);
-    param_descr      = psc_bubble_descr;
-    create           = psc_bubble_create;
-    setup            = psc_bubble_setup;
-    read             = psc_bubble_read;
-    init_field       = psc_bubble_init_field;
-    init_npt         = psc_bubble_init_npt;
-  }
-} psc_bubble_ops;
 
 // ======================================================================
 // PscBubbleParams
@@ -615,9 +569,32 @@ struct PscBubbleBuilder
 
 PscBubble* PscBubbleBuilder::makePscBubble()
 {
+  psc_bubble* bubble = to_psc_bubble(psc_);
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
+
+  psc_default_dimensionless(psc_);
+
+  psc_->prm.nmax = 1000; //32000;
+  psc_->prm.nicell = 100;
+
+  bubble->LLy = 2. * bubble->LLn;
+  bubble->LLz = 3. * bubble->LLn;
+
+  psc_->domain_ = Grid_t::Domain{{1, 128, 512},
+				 {bubble->LLn, bubble->LLy, bubble->LLz},
+				 {0., -.5 * bubble->LLy, -.5 * bubble->LLz},
+				 {1, 1, 4}};
+  
+  psc_->bc_ = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+		     { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+		     { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+		     { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+
+  struct psc_bnd_fields *bnd_fields = 
+    psc_push_fields_get_bnd_fields(psc_->push_fields);
+  psc_bnd_fields_set_type(bnd_fields, "none");
 
   // sort
   params.sort_interval = 10;
@@ -654,6 +631,21 @@ PscBubble* PscBubbleBuilder::makePscBubble()
 
   return new PscBubble{params, psc_};
 }
+
+// ----------------------------------------------------------------------
+// psc_ops "bubble"
+
+struct psc_ops_bubble : psc_ops {
+  psc_ops_bubble() {
+    name             = "bubble";
+    size             = sizeof(struct psc_bubble);
+    param_descr      = psc_bubble_descr;
+    setup            = psc_bubble_setup;
+    read             = psc_bubble_read;
+    init_field       = psc_bubble_init_field;
+    init_npt         = psc_bubble_init_npt;
+  }
+} psc_bubble_ops;
 
 // ======================================================================
 // main
