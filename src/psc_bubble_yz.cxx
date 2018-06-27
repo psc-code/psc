@@ -6,6 +6,7 @@
 #include <psc_balance.h>
 #include <psc_particles_single.h>
 #include <psc_fields_single.h>
+#include <psc_method.h>
 
 #include "push_particles.hxx"
 #include "push_fields.hxx"
@@ -597,8 +598,29 @@ PscBubble* PscBubbleBuilder::makePscBubble()
   params.balance_write_loads = false;
   
   psc_set_from_options(psc_);
-  psc_setup(psc_);
 
+
+  psc_method_do_setup(psc_->method, psc_);
+
+  // partition and initial balancing
+  auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
+  psc_balance_setup(psc_->balance);
+  auto balance = PscBalanceBase{psc_->balance};
+  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+
+  // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
+  psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
+				       psc_->prm.particles_base).mprts();
+  psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
+
+  // create and set up base mflds
+  psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
+			       psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+  psc_method_set_ic_fields(psc_->method, psc_);
+
+  psc_setup_member_objs(psc_);
+
+  
   mpi_printf(comm, "lambda_D = %g\n", sqrt(bubble->TTe));
   
   return new PscBubble{params, psc_};
