@@ -18,8 +18,9 @@ struct SetupFields
       auto& patch = mf.grid().patches[p];
       Fields F(mf[p]);
 
+      int n_ghosts = mf.ibn()[0]; // FIXME, not pretty
       // FIXME, do we need the ghost points?
-      mf.grid().Foreach_3d(2, 2, [&](int jx, int jy, int jz) {
+      mf.grid().Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
 	  double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy), z_nc = patch.z_nc(jz);
 	  double x_cc = patch.x_cc(jx), y_cc = patch.y_cc(jy), z_cc = patch.z_cc(jz);
 	  
