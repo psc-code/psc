@@ -7,6 +7,9 @@
 #include <psc_particles_single.h>
 #include <psc_fields_single.h>
 #include <psc_method.h>
+#ifdef USE_VPIC
+#include "../libpsc/vpic/vpic_iface.h" // FIXME
+#endif
 
 #include "push_particles.hxx"
 #include "push_fields.hxx"
