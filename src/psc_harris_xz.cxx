@@ -715,6 +715,21 @@ struct psc_ops_harris : psc_ops {
 } psc_harris_ops;
 
 // ======================================================================
+// PscHarrisBuilder
+
+struct PscHarrisBuilder
+{
+  PscHarrisBuilder()
+    : psc_(psc_create(MPI_COMM_WORLD))
+  {}
+
+  //PscHarris* makePscHarris();
+
+  //PscHarrisParams params;
+  psc* psc_;
+};
+
+// ======================================================================
 // main
 
 int
@@ -730,22 +745,18 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_harris_ops);
 
-  int from_checkpoint = -1;
-  mrc_params_get_option_int("from_checkpoint", &from_checkpoint);
+  auto sim = PscHarrisBuilder{};
 
-  struct psc *psc;
+  psc_set_from_options(sim.psc_);
+  psc_setup(sim.psc_);
 
-  psc = psc_create(MPI_COMM_WORLD);
-  psc_set_from_options(psc);
-  psc_setup(psc);
-
-  psc_view(psc);
-  psc_mparticles_view(psc->particles);
-  psc_mfields_view(psc->flds);
+  psc_view(sim.psc_);
+  psc_mparticles_view(sim.psc_->particles);
+  psc_mfields_view(sim.psc_->flds);
   
-  psc_integrate(psc);
+  psc_integrate(sim.psc_);
   
-  psc_destroy(psc);
+  psc_destroy(sim.psc_);
   
   libmrc_params_finalize();
   MPI_Finalize();
