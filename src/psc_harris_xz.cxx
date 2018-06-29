@@ -124,53 +124,6 @@ static struct param psc_harris_descr[] = {
 };
 #undef VAR
 
-// ----------------------------------------------------------------------
-// psc_harris_create
-
-static void
-psc_harris_create(struct psc *psc)
-{
-  psc_default_dimensionless(psc);
-
-  psc->prm.nicell = 1;
-  psc->prm.cfl = 0.99;
-
-  psc->prm.stats_every = 100;
-
-  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
-  psc->bc_ = grid_bc;
- 
-  psc_method_set_type(psc->method, "vpic");
-
-  psc_sort_set_type(psc->sort, "vpic");
-  // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
-  // internally
-  psc_sort_set_param_int(psc->sort, "every", 1);
-
-  psc_collision_set_type(psc->collision, "vpic");
-
-  // FIXME: can only use 1st order pushers with current conducting wall b.c.
-  psc_push_particles_set_type(psc->push_particles, "vpic");
-  psc_bnd_particles_set_type(psc->bnd_particles, "vpic");
-
-  psc_push_fields_set_type(psc->push_fields, "vpic");
-  psc_bnd_set_type(psc->bnd, "vpic");
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc->push_fields);
-  psc_bnd_fields_set_type(bnd_fields, "vpic");
-
-  psc_marder_set_type(psc->marder, "vpic");
-  // FIXME, marder "vpic" manages its own cleaning intervals
-  psc_marder_set_param_int(psc->marder, "every_step", 1);
-  psc_marder_set_param_int(psc->marder, "clean_div_e_interval", 50);
-  psc_marder_set_param_int(psc->marder, "clean_div_b_interval", 50);
-  psc_marder_set_param_int(psc->marder, "sync_shared_interval", 50);
-  psc_marder_set_param_int(psc->marder, "num_div_e_round", 2);
-  psc_marder_set_param_int(psc->marder, "num_div_b_round", 2);
-}
-
 // FIXME, helper should go somewhere...
 
 static inline double trunc_granular( double a, double b )
@@ -726,7 +679,6 @@ struct psc_ops_harris : psc_ops {
     name             = "harris";
     size             = sizeof(struct psc_harris);
     param_descr      = psc_harris_descr;
-    create           = psc_harris_create;
     setup            = psc_harris_setup;
     destroy          = psc_harris_destroy;
     read             = psc_harris_read;
@@ -760,6 +712,44 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   mpi_printf(comm, "*** Setting up...\n");
 
   psc_default_dimensionless(psc_);
+
+  psc_->prm.nicell = 1;
+  psc_->prm.cfl = 0.99;
+
+  psc_->prm.stats_every = 100;
+
+  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
+  psc_->bc_ = grid_bc;
+ 
+  psc_method_set_type(psc_->method, "vpic");
+
+  psc_sort_set_type(psc_->sort, "vpic");
+  // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
+  // internally
+  psc_sort_set_param_int(psc_->sort, "every", 1);
+
+  psc_collision_set_type(psc_->collision, "vpic");
+
+  // FIXME: can only use 1st order pushers with current conducting wall b.c.
+  psc_push_particles_set_type(psc_->push_particles, "vpic");
+  psc_bnd_particles_set_type(psc_->bnd_particles, "vpic");
+
+  psc_push_fields_set_type(psc_->push_fields, "vpic");
+  psc_bnd_set_type(psc_->bnd, "vpic");
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc_->push_fields);
+  psc_bnd_fields_set_type(bnd_fields, "vpic");
+
+  psc_marder_set_type(psc_->marder, "vpic");
+  // FIXME, marder "vpic" manages its own cleaning intervals
+  psc_marder_set_param_int(psc_->marder, "every_step", 1);
+  psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
+  psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 
   return new PscHarris{params, psc_};
 }
