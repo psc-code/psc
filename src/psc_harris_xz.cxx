@@ -39,6 +39,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+// ======================================================================
+// PscHarrisParams
+
+struct PscHarrisParams
+{
+};
+
+// ======================================================================
+// PscHarris
+
+struct PscHarris : PscHarrisParams
+{
+  PscHarris(const PscHarrisParams& params, psc *psc)
+    : PscHarrisParams(params),
+      psc_{psc}
+  {}
+
+private:
+  psc* psc_;
+};
+
 using Mparticles_t = MparticlesSingle;
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
@@ -723,11 +744,25 @@ struct PscHarrisBuilder
     : psc_(psc_create(MPI_COMM_WORLD))
   {}
 
-  //PscHarris* makePscHarris();
+  PscHarris* makePscHarris();
 
-  //PscHarrisParams params;
+  PscHarrisParams params;
   psc* psc_;
 };
+
+// ----------------------------------------------------------------------
+// PscHarrisBuilder::makePscHarris
+
+PscHarris* PscHarrisBuilder::makePscHarris()
+{
+  MPI_Comm comm = psc_comm(psc_);
+  
+  mpi_printf(comm, "*** Setting up...\n");
+
+  psc_default_dimensionless(psc_);
+
+  return new PscHarris{params, psc_};
+}
 
 // ======================================================================
 // main
@@ -746,6 +781,7 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, &psc_harris_ops);
 
   auto sim = PscHarrisBuilder{};
+  auto harris = sim.makePscHarris();
 
   psc_set_from_options(sim.psc_);
   psc_setup(sim.psc_);
