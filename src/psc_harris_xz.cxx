@@ -419,95 +419,6 @@ courant_length(double length[3], int gdims[3])
 }
  
 // ----------------------------------------------------------------------
-// psc_harris_setup
-
-static void
-psc_harris_setup(struct psc *psc)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  MPI_Comm comm = psc_comm(psc);
-
-  psc_harris_setup_ic(psc);
-
-  // Determine the time step
-  phys->dg = courant_length(psc->domain_.length, psc->domain_.gdims);
-  phys->dt = psc->prm.cfl * phys->dg / phys->c; // courant limited time step
-  if (phys->wpe * phys->dt > sub->prm.wpedt_max) {
-    phys->dt = sub->prm.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
-  }
-  psc->dt = phys->dt;
-
-  psc->prm.nmax = (int) (sub->prm.taui / (phys->wci*phys->dt)); // number of steps from taui
-
-  if (strcmp(psc_method_type(psc->method), "vpic") != 0) {
-    psc_setup_super(psc);
-    psc_harris_setup_log(psc);
-    return;
-  }
-  bool split;
-  psc_method_get_param_bool(psc->method, "split", &split);
-  if (!split) {
-    psc_setup_super(psc);
-    psc_harris_setup_log(psc);
-    return;
-  }
-
-  sub->sim = Simulation_create();
-  psc_method_set_param_ptr(psc->method, "sim", sub->sim);
-  // set high level VPIC simulation parameters
-  // FIXME, will be unneeded eventually
-  Simulation_set_params(sub->sim, psc->prm.nmax, psc->prm.stats_every,
-			psc->prm.stats_every / 2, psc->prm.stats_every / 2,
-			psc->prm.stats_every / 2);
-  psc_harris_setup_domain(psc);
-  psc_harris_setup_fields(psc);
-  psc_harris_setup_species(psc);
-  psc_harris_setup_log(psc);
-
-  int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
-  Simulation_diagnostics_init(sub->sim, interval);
-
-  psc->n_state_fields = VPIC_MFIELDS_N_COMP;
-  psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
-
-  // partition and initial balancing
-  auto n_prts_by_patch_old = psc_method_setup_partition(psc->method, psc);
-  psc_balance_setup(psc->balance);
-  auto balance = PscBalanceBase{psc->balance};
-  auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
-
-  psc->particles = PscMparticlesCreate(psc_comm(psc), psc->grid(),
-				       psc->prm.particles_base).mprts();
-
-  psc->flds = PscMfieldsCreate(psc_comm(psc), psc->grid(),
-			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-
-  SetupParticles<Mparticles_t>::setup_particles(psc, n_prts_by_patch_new);
-
-  SetupFields<MfieldsSingle>::set_ic(psc); // FIXME, use MfieldsVpic directly?
-  
-  Simulation_diagnostics_setup(sub->sim);
-
-  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  
-  psc_setup_member_objs(psc);
-
-  if (sub->prm.output_field_interval > 0) {
-    struct psc_output_fields *out;
-    mrc_obj_for_each_child(out, psc->output_fields_collection, struct psc_output_fields) {
-      psc_output_fields_set_param_int(out, "pfield_step",
-				      (int) (sub->prm.output_field_interval / (phys->wci*phys->dt)));
-    }
-  }
-
-  if (sub->prm.output_particle_interval > 0) {
-    psc_output_particles_set_param_int(psc->output_particles, "every_step",
-				      (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
-  }
-}
-
-// ----------------------------------------------------------------------
 // psc_harris_init_field
 
 static double
@@ -687,7 +598,6 @@ struct psc_ops_harris : psc_ops {
     name             = "harris";
     size             = sizeof(struct psc_harris);
     param_descr      = psc_harris_descr;
-    setup            = psc_harris_setup;
     destroy          = psc_harris_destroy;
     read             = psc_harris_read;
     init_field       = psc_harris_init_field;
@@ -760,8 +670,83 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 
   psc_set_from_options(psc_);
-  psc_setup(psc_);
 
+  struct psc_harris *sub = psc_harris(psc_);
+  struct globals_physics *phys = &sub->phys;
+
+  psc_harris_setup_ic(psc_);
+
+  // Determine the time step
+  phys->dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
+  phys->dt = psc_->prm.cfl * phys->dg / phys->c; // courant limited time step
+  if (phys->wpe * phys->dt > sub->prm.wpedt_max) {
+    phys->dt = sub->prm.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
+  }
+  psc_->dt = phys->dt;
+
+  psc_->prm.nmax = (int) (sub->prm.taui / (phys->wci*phys->dt)); // number of steps from taui
+
+  bool split;
+  psc_method_get_param_bool(psc_->method, "split", &split);
+  if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
+    psc_setup_super(psc_);
+    psc_harris_setup_log(psc_);
+    assert(0);
+  }
+
+  sub->sim = Simulation_create();
+  psc_method_set_param_ptr(psc_->method, "sim", sub->sim);
+  // set high level VPIC simulation parameters
+  // FIXME, will be unneeded eventually
+  Simulation_set_params(sub->sim, psc_->prm.nmax, psc_->prm.stats_every,
+			psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
+			psc_->prm.stats_every / 2);
+  psc_harris_setup_domain(psc_);
+  psc_harris_setup_fields(psc_);
+  psc_harris_setup_species(psc_);
+  psc_harris_setup_log(psc_);
+
+  int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
+  Simulation_diagnostics_init(sub->sim, interval);
+
+  psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
+  psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+
+  // partition and initial balancing
+  auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
+  psc_balance_setup(psc_->balance);
+  auto balance = PscBalanceBase{psc_->balance};
+  auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+
+  psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
+				       psc_->prm.particles_base).mprts();
+
+  psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
+			       psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+
+  SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
+
+  SetupFields<MfieldsSingle>::set_ic(psc_); // FIXME, use MfieldsVpic directly?
+  
+  Simulation_diagnostics_setup(sub->sim);
+
+  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  
+  psc_setup_member_objs(psc_);
+
+  if (sub->prm.output_field_interval > 0) {
+    struct psc_output_fields *out;
+    mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
+      psc_output_fields_set_param_int(out, "pfield_step",
+				      (int) (sub->prm.output_field_interval / (phys->wci*phys->dt)));
+    }
+  }
+
+  if (sub->prm.output_particle_interval > 0) {
+    psc_output_particles_set_param_int(psc_->output_particles, "every_step",
+				      (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
+  }
+  
   return new PscHarris{params, psc_};
 }
 
