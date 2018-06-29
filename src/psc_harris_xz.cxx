@@ -56,6 +56,14 @@ struct PscHarris : PscHarrisParams
       psc_{psc}
   {}
 
+  // ----------------------------------------------------------------------
+  // integrate
+
+  void integrate()
+  {
+    psc_integrate(psc_);
+  }
+
 private:
   psc* psc_;
 };
@@ -751,6 +759,9 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 
+  psc_set_from_options(psc_);
+  psc_setup(psc_);
+
   return new PscHarris{params, psc_};
 }
 
@@ -773,15 +784,14 @@ main(int argc, char **argv)
   auto sim = PscHarrisBuilder{};
   auto harris = sim.makePscHarris();
 
-  psc_set_from_options(sim.psc_);
-  psc_setup(sim.psc_);
-
   psc_view(sim.psc_);
   psc_mparticles_view(sim.psc_->particles);
   psc_mfields_view(sim.psc_->flds);
   
-  psc_integrate(sim.psc_);
+  harris->integrate();
   
+  delete harris;
+
   psc_destroy(sim.psc_);
   
   libmrc_params_finalize();
