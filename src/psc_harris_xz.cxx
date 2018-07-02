@@ -66,6 +66,7 @@ courant_length(double length[3], int gdims[3])
 struct PscHarrisParams
 {
   // FIXME, not really harris-specific
+  double taui;                     // simulation wci's to run
   double t_intervali;              // output interval in terms of 1/wci
   double output_field_interval;    // field output interval in terms of 1/wci
   double output_particle_interval; // particle output interval in terms of 1/wci
@@ -94,7 +95,7 @@ struct PscHarris : PscHarrisParams
     }
     psc_->dt = phys->dt;
     
-    psc_->prm.nmax = (int) (sub->prm.taui / (phys->wci*phys->dt)); // number of steps from taui
+    psc_->prm.nmax = (int) (taui / (phys->wci*phys->dt)); // number of steps from taui
 
     bool split;
     psc_method_get_param_bool(psc_->method, "split", &split);
@@ -193,7 +194,7 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "theta    = %g\n", sub->prm.theta);
     mpi_printf(comm, "Lpert/Lx = %g\n", sub->prm.Lpert_Lx);
     mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
-    mpi_printf(comm, "taui     = %g\n", sub->prm.taui);
+    mpi_printf(comm, "taui     = %g\n", taui);
     mpi_printf(comm, "t_intervali = %g\n", t_intervali);
     mpi_printf(comm, "num_step = %d\n", psc_->prm.nmax);
     mpi_printf(comm, "Lx/di = %g\n", phys->Lx/phys->di);
@@ -270,9 +271,6 @@ static struct param psc_harris_descr[] = {
 
   { "ion_sort_interval"     , VAR(prm.ion_sort_interval)     , PARAM_INT(1000)    },
   { "electron_sort_interval", VAR(prm.electron_sort_interval), PARAM_INT(1000)    },
-
-  { "taui"                  , VAR(prm.taui)                  , PARAM_DOUBLE(100.),
-    .help = "simulation wci's to run" },
 
   { "L_di"                  , VAR(prm.L_di)                  , PARAM_DOUBLE(.5),
     .help = "Sheet thickness / ion inertial length" },
@@ -720,6 +718,8 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   
   mpi_printf(comm, "*** Setting up...\n");
 
+  params.taui = 40.;
+  params.t_intervali = 1.;
   params.output_field_interval = 1.;
   params.output_particle_interval = 10.;
 

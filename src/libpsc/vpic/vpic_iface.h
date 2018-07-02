@@ -180,7 +180,6 @@ struct vpic_harris_params {
 
   int ion_sort_interval;
   int electron_sort_interval;
-  double taui;                    // simulation wci's to run
 
   // Harris
   double L_di;                    // Sheet thickness / ion inertial length
