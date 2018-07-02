@@ -39,6 +39,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void psc_harris_setup_log(struct psc *psc);
+
 // ======================================================================
 // PscHarrisParams
 
@@ -54,7 +56,14 @@ struct PscHarris : PscHarrisParams
   PscHarris(const PscHarrisParams& params, psc *psc)
     : PscHarrisParams(params),
       psc_{psc}
-  {}
+  {
+    MPI_Comm comm = psc_comm(psc_);
+
+    psc_setup_member_objs(psc_);
+    psc_harris_setup_log(psc_);
+    
+    mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
 
   // ----------------------------------------------------------------------
   // integrate
@@ -700,13 +709,12 @@ PscHarris* PscHarrisBuilder::makePscHarris()
     // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
     psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
 					  psc_->prm.particles_base).mprts();
-    psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
-    
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+
+    psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
     psc_method_set_ic_fields(psc_->method, psc_);
-    
   } else {
     sub->sim = Simulation_create();
     psc_method_set_param_ptr(psc_->method, "sim", sub->sim);
@@ -733,7 +741,6 @@ PscHarris* PscHarrisBuilder::makePscHarris()
 
     psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
 					  psc_->prm.particles_base).mprts();
-
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
 
@@ -756,11 +763,6 @@ PscHarris* PscHarrisBuilder::makePscHarris()
     psc_output_particles_set_param_int(psc_->output_particles, "every_step",
 				       (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
   }
-  
-  psc_setup_member_objs(psc_);
-  psc_harris_setup_log(psc_);
-
-  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   
   return new PscHarris{params, psc_};
 }
