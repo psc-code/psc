@@ -171,10 +171,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 
 struct vpic_harris_params {
   // Harris
-  double Ti_Te;                   // Ion temperature / electron temperature
-  double nb_n0;                   // background plasma density
-  double Tbe_Te;                  // Ratio of background T_e to Harris T_e
-  double Tbi_Ti;                  // Ratio of background T_i to Harris T_i
   double bg;                      // Guide field
   double theta;
 

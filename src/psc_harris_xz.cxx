@@ -69,6 +69,10 @@ courant_length(double length[3], int gdims[3])
 struct PscHarrisParams
 {
   double L_di;                     // Sheet thickness / ion inertial length
+  double Ti_Te;                    // Ion temperature / electron temperature
+  double nb_n0;                    // background plasma density
+  double Tbe_Te;                   // Ratio of background T_e to Harris T_e
+  double Tbi_Ti;                   // Ratio of background T_i to Harris T_i
 
   // FIXME, not really harris-specific
   double wpedt_max;
@@ -216,20 +220,20 @@ struct PscHarris : PscHarrisParams
     double c = phys->c;
     //derived quantities
     phys->mi = phys->me*mi_me;       // Ion mass
-    double Te = phys->me*c*c/(2*phys->eps0*sqr(wpe_wce)*(1+prm->Ti_Te)); // Electron temperature
-    double Ti = Te*prm->Ti_Te;       // Ion temperature
+    double Te = phys->me*c*c/(2*phys->eps0*sqr(wpe_wce)*(1.+Ti_Te)); // Electron temperature
+    double Ti = Te*Ti_Te;       // Ion temperature
     phys->vthe = sqrt(Te/phys->me);         // Electron thermal velocity
     phys->vthi = sqrt(Ti/phys->mi);         // Ion thermal velocity
-    phys->vtheb = sqrt(prm->Tbe_Te*Te/phys->me);  // normalized background e thermal vel.
-    phys->vthib = sqrt(prm->Tbi_Ti*Ti/phys->mi);  // normalized background ion thermal vel.
+    phys->vtheb = sqrt(Tbe_Te*Te/phys->me);  // normalized background e thermal vel.
+    phys->vthib = sqrt(Tbi_Ti*Ti/phys->mi);  // normalized background ion thermal vel.
     phys->wci  = 1.0/(mi_me*wpe_wce);  // Ion cyclotron frequency
     phys->wce  = phys->wci*mi_me;            // Electron cyclotron freqeuncy
     phys->wpe  = phys->wce*wpe_wce;          // electron plasma frequency
     phys->wpi  = phys->wpe/sqrt(mi_me);      // ion plasma frequency
     phys->di   = c/phys->wpi;                      // ion inertial length
     phys->L    = L_di*phys->di;              // Harris sheet thickness
-    phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/L_di;
-    phys->v_A = (phys->wci/phys->wpi)/sqrt(prm->nb_n0); // based on nb
+    phys->rhoi_L = sqrt(Ti_Te/(1.+Ti_Te))/L_di;
+    phys->v_A = (phys->wci/phys->wpi)/sqrt(nb_n0); // based on nb
 
     phys->Lx    = Lx_di*phys->di; // size of box in x dimension
     phys->Ly    = Ly_di*phys->di; // size of box in y dimension
@@ -238,11 +242,11 @@ struct PscHarris : PscHarrisParams
     phys->b0 = phys->me*c*phys->wce/phys->ec; // Asymptotic magnetic field strength
     phys->n0 = phys->me*phys->eps0*phys->wpe*phys->wpe/(phys->ec*phys->ec);  // Peak electron (ion) density
     phys->vdri = 2*c*Ti/(phys->ec*phys->b0*phys->L);   // Ion drift velocity
-    phys->vdre = -phys->vdri/(prm->Ti_Te);      // electron drift velocity
+    phys->vdre = -phys->vdri/(Ti_Te);      // electron drift velocity
 
     double Lx = phys->Lx, Ly = phys->Ly, Lz = phys->Lz, L = phys->L;
     double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
-    double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
+    double Npe_back  = nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
     double Npe       = Npe_sheet + Npe_back;
     phys->Ne         = prm->nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
     phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
@@ -398,8 +402,8 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "tanhf    = %g\n", phys->tanhf);
     mpi_printf(comm, "L_di     = %g\n", L_di);
     mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
-    mpi_printf(comm, "Ti/Te    = %g\n", sub->prm.Ti_Te) ;
-    mpi_printf(comm, "nb/n0    = %g\n", sub->prm.nb_n0) ;
+    mpi_printf(comm, "Ti/Te    = %g\n", Ti_Te) ;
+    mpi_printf(comm, "nb/n0    = %g\n", nb_n0) ;
     mpi_printf(comm, "wpe/wce  = %g\n", wpe_wce);
     mpi_printf(comm, "mi/me    = %g\n", mi_me);
     mpi_printf(comm, "theta    = %g\n", sub->prm.theta);
@@ -469,14 +473,6 @@ static struct param psc_harris_descr[] = {
   { "nppc"                   , VAR(prm.nppc)                 , PARAM_DOUBLE(100.),
     .help = "average number of macro particle per cell per species" },
 
-  { "Ti_Te"                 , VAR(prm.Ti_Te)                 , PARAM_DOUBLE(5.),
-    .help = "Ion temperature / electron temperature" },
-  { "nb_n0"                 , VAR(prm.nb_n0)                 , PARAM_DOUBLE(.228),
-    .help = "background plasma density" },
-  { "Tbe_Te"                , VAR(prm.Tbe_Te)                , PARAM_DOUBLE(.7598),
-    .help = "Ratio of background T_e to Harris T_e" },
-  { "Tbi_Ti"                , VAR(prm.Tbi_Ti)                , PARAM_DOUBLE(.3039),
-    .help = "Ratio of background T_i to Harris T_i" },
   { "bg"                    , VAR(prm.bg)                    , PARAM_DOUBLE(0.),
     .help = "Guide field" },
   { "theta"                 , VAR(prm.theta)                 , PARAM_DOUBLE(0.),
@@ -726,7 +722,10 @@ PscHarris* PscHarrisBuilder::makePscHarris()
 
 
   params.L_di = .5;
-  
+  params.Ti_Te = 5.;
+  params.nb_n0 = .05;
+  params.Tbe_Te = .333;
+  params.Tbi_Ti = .333;
 
   psc_default_dimensionless(psc_);
 
