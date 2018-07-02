@@ -42,7 +42,6 @@
 static void psc_harris_setup_domain(struct psc *psc);
 static void psc_harris_setup_fields(struct psc *psc);
 static void psc_harris_setup_species(struct psc *psc);
-static void psc_harris_setup_log(struct psc *psc);
 
 // ----------------------------------------------------------------------
 // courant length
@@ -154,9 +153,8 @@ struct PscHarris : PscHarrisParams
     }
 
     psc_setup_member_objs(psc_);
-    psc_harris_setup_log(psc_);
+    setup_log();
     
-    mprintf("output_field_interval %g\n", output_field_interval);
     if (output_field_interval > 0) {
       struct psc_output_fields *out;
       mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
@@ -171,6 +169,69 @@ struct PscHarris : PscHarrisParams
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
+
+  // ----------------------------------------------------------------------
+  // setup_log
+
+  void setup_log()
+  {
+    struct psc_harris *sub = psc_harris(psc_);
+    struct globals_physics *phys = &sub->phys;
+    MPI_Comm comm = psc_comm(psc_);
+
+    mpi_printf(comm, "***********************************************\n");
+    mpi_printf(comm, "* Topology: %d x %d x %d\n",
+	       psc_->domain_.np[0], psc_->domain_.np[1], psc_->domain_.np[2]);
+    mpi_printf(comm, "tanhf    = %g\n", phys->tanhf);
+    mpi_printf(comm, "L_di     = %g\n", sub->prm.L_di);
+    mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
+    mpi_printf(comm, "Ti/Te    = %g\n", sub->prm.Ti_Te) ;
+    mpi_printf(comm, "nb/n0    = %g\n", sub->prm.nb_n0) ;
+    mpi_printf(comm, "wpe/wce  = %g\n", sub->prm.wpe_wce);
+    mpi_printf(comm, "mi/me    = %g\n", sub->prm.mi_me);
+    mpi_printf(comm, "theta    = %g\n", sub->prm.theta);
+    mpi_printf(comm, "Lpert/Lx = %g\n", sub->prm.Lpert_Lx);
+    mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
+    mpi_printf(comm, "taui     = %g\n", sub->prm.taui);
+    mpi_printf(comm, "t_intervali = %g\n", t_intervali);
+    mpi_printf(comm, "num_step = %d\n", psc_->prm.nmax);
+    mpi_printf(comm, "Lx/di = %g\n", phys->Lx/phys->di);
+    mpi_printf(comm, "Lx/de = %g\n", phys->Lx/phys->de);
+    mpi_printf(comm, "Ly/di = %g\n", phys->Ly/phys->di);
+    mpi_printf(comm, "Ly/de = %g\n", phys->Ly/phys->de);
+    mpi_printf(comm, "Lz/di = %g\n", phys->Lz/phys->di);
+    mpi_printf(comm, "Lz/de = %g\n", phys->Lz/phys->de);
+    mpi_printf(comm, "nx = %d\n", psc_->domain_.gdims[0]);
+    mpi_printf(comm, "ny = %d\n", psc_->domain_.gdims[1]);
+    mpi_printf(comm, "nz = %d\n", psc_->domain_.gdims[2]);
+    mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
+    mpi_printf(comm, "n_global_patches = %d\n", sub->n_global_patches);
+    mpi_printf(comm, "nppc = %g\n", sub->prm.nppc);
+    mpi_printf(comm, "b0 = %g\n", phys->b0);
+    mpi_printf(comm, "v_A (based on nb) = %g\n", phys->v_A);
+    mpi_printf(comm, "di = %g\n", phys->di);
+    mpi_printf(comm, "Ne = %g\n", phys->Ne);
+    mpi_printf(comm, "Ne_sheet = %g\n", phys->Ne_sheet);
+    mpi_printf(comm, "Ne_back = %g\n", phys->Ne_back);
+    mpi_printf(comm, "total # of particles = %g\n", 2*phys->Ne);
+    mpi_printf(comm, "dt*wpe = %g\n", phys->wpe*phys->dt);
+    mpi_printf(comm, "dt*wce = %g\n", phys->wce*phys->dt);
+    mpi_printf(comm, "dt*wci = %g\n", phys->wci*phys->dt);
+    mpi_printf(comm, "dx/de = %g\n", phys->Lx/(phys->de*psc_->domain_.gdims[0]));
+    mpi_printf(comm, "dy/de = %g\n", phys->Ly/(phys->de*psc_->domain_.gdims[1]));
+    mpi_printf(comm, "dz/de = %g\n", phys->Lz/(phys->de*psc_->domain_.gdims[2]));
+    mpi_printf(comm, "dx/rhoi = %g\n", (phys->Lx/psc_->domain_.gdims[0])/(phys->vthi/phys->wci));
+    mpi_printf(comm, "dx/rhoe = %g\n", (phys->Lx/psc_->domain_.gdims[0])/(phys->vthe/phys->wce));
+    mpi_printf(comm, "L/debye = %g\n", phys->L/(phys->vthe/phys->wpe));
+    mpi_printf(comm, "dx/debye = %g\n", (phys->Lx/psc_->domain_.gdims[0])/(phys->vthe/phys->wpe));
+    mpi_printf(comm, "n0 = %g\n", phys->n0);
+    mpi_printf(comm, "vthi/c = %g\n", phys->vthi/phys->c);
+    mpi_printf(comm, "vthe/c = %g\n", phys->vthe/phys->c);
+    mpi_printf(comm, "vdri/c = %g\n", phys->vdri/phys->c);
+    mpi_printf(comm, "vdre/c = %g\n", phys->vdre/phys->c);
+    mpi_printf(comm, "Open BC in x?   = %d\n", sub->prm.open_bc_x);
+    mpi_printf(comm, "Driven BC in z? = %d\n", sub->prm.driven_bc_z);
   }
 
   // ----------------------------------------------------------------------
@@ -446,70 +507,6 @@ psc_harris_setup_species(struct psc *psc)
 			    sub->prm.electron_sort_interval, sort_method);
   Simulation_define_species(sub->sim, "ion", phys->ec, phys->mi, nmax, nmovers,
 			    sub->prm.ion_sort_interval, sort_method);
-}
-
-// ----------------------------------------------------------------------
-// psc_harris_setup_log
-
-static void
-psc_harris_setup_log(struct psc *psc)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  MPI_Comm comm = psc_comm(psc);
-
-  mpi_printf(comm, "***********************************************\n");
-  mpi_printf(comm, "* Topology: %d x %d x %d\n",
-	     psc->domain_.np[0], psc->domain_.np[1], psc->domain_.np[2]);
-  mpi_printf(comm, "tanhf    = %g\n", phys->tanhf);
-  mpi_printf(comm, "L_di     = %g\n", sub->prm.L_di);
-  mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
-  mpi_printf(comm, "Ti/Te    = %g\n", sub->prm.Ti_Te) ;
-  mpi_printf(comm, "nb/n0    = %g\n", sub->prm.nb_n0) ;
-  mpi_printf(comm, "wpe/wce  = %g\n", sub->prm.wpe_wce);
-  mpi_printf(comm, "mi/me    = %g\n", sub->prm.mi_me);
-  mpi_printf(comm, "theta    = %g\n", sub->prm.theta);
-  mpi_printf(comm, "Lpert/Lx = %g\n", sub->prm.Lpert_Lx);
-  mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
-  mpi_printf(comm, "taui     = %g\n", sub->prm.taui);
-  //mpi_printf(comm, "t_intervali = %g\n", t_intervali);
-  mpi_printf(comm, "num_step = %d\n", psc->prm.nmax);
-  mpi_printf(comm, "Lx/di = %g\n", phys->Lx/phys->di);
-  mpi_printf(comm, "Lx/de = %g\n", phys->Lx/phys->de);
-  mpi_printf(comm, "Ly/di = %g\n", phys->Ly/phys->di);
-  mpi_printf(comm, "Ly/de = %g\n", phys->Ly/phys->de);
-  mpi_printf(comm, "Lz/di = %g\n", phys->Lz/phys->di);
-  mpi_printf(comm, "Lz/de = %g\n", phys->Lz/phys->de);
-  mpi_printf(comm, "nx = %d\n", psc->domain_.gdims[0]);
-  mpi_printf(comm, "ny = %d\n", psc->domain_.gdims[1]);
-  mpi_printf(comm, "nz = %d\n", psc->domain_.gdims[2]);
-  mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
-  mpi_printf(comm, "n_global_patches = %d\n", sub->n_global_patches);
-  mpi_printf(comm, "nppc = %g\n", sub->prm.nppc);
-  mpi_printf(comm, "b0 = %g\n", phys->b0);
-  mpi_printf(comm, "v_A (based on nb) = %g\n", phys->v_A);
-  mpi_printf(comm, "di = %g\n", phys->di);
-  mpi_printf(comm, "Ne = %g\n", phys->Ne);
-  mpi_printf(comm, "Ne_sheet = %g\n", phys->Ne_sheet);
-  mpi_printf(comm, "Ne_back = %g\n", phys->Ne_back);
-  mpi_printf(comm, "total # of particles = %g\n", 2*phys->Ne);
-  mpi_printf(comm, "dt*wpe = %g\n", phys->wpe*phys->dt);
-  mpi_printf(comm, "dt*wce = %g\n", phys->wce*phys->dt);
-  mpi_printf(comm, "dt*wci = %g\n", phys->wci*phys->dt);
-  mpi_printf(comm, "dx/de = %g\n", phys->Lx/(phys->de*psc->domain_.gdims[0]));
-  mpi_printf(comm, "dy/de = %g\n", phys->Ly/(phys->de*psc->domain_.gdims[1]));
-  mpi_printf(comm, "dz/de = %g\n", phys->Lz/(phys->de*psc->domain_.gdims[2]));
-  mpi_printf(comm, "dx/rhoi = %g\n", (phys->Lx/psc->domain_.gdims[0])/(phys->vthi/phys->wci));
-  mpi_printf(comm, "dx/rhoe = %g\n", (phys->Lx/psc->domain_.gdims[0])/(phys->vthe/phys->wce));
-  mpi_printf(comm, "L/debye = %g\n", phys->L/(phys->vthe/phys->wpe));
-  mpi_printf(comm, "dx/debye = %g\n", (phys->Lx/psc->domain_.gdims[0])/(phys->vthe/phys->wpe));
-  mpi_printf(comm, "n0 = %g\n", phys->n0);
-  mpi_printf(comm, "vthi/c = %g\n", phys->vthi/phys->c);
-  mpi_printf(comm, "vthe/c = %g\n", phys->vthe/phys->c);
-  mpi_printf(comm, "vdri/c = %g\n", phys->vdri/phys->c);
-  mpi_printf(comm, "vdre/c = %g\n", phys->vdre/phys->c);
-  mpi_printf(comm, "Open BC in x?   = %d\n", sub->prm.open_bc_x);
-  mpi_printf(comm, "Driven BC in z? = %d\n", sub->prm.driven_bc_z);
 }
 
 // ----------------------------------------------------------------------
