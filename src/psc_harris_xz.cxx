@@ -39,6 +39,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+// FIXME, helper should go somewhere...
+
+static inline double trunc_granular( double a, double b )
+{
+  return b * (int)(a/b);
+}
+
 // ----------------------------------------------------------------------
 // courant length
 //
@@ -85,6 +92,8 @@ struct PscHarris : PscHarrisParams
     psc_harris* sub = psc_harris(psc_);
     globals_physics* phys = &sub->phys;
     MPI_Comm comm = psc_comm(psc_);
+
+    setup_ic();
 
     // Determine the time step
     phys->dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
@@ -169,6 +178,84 @@ struct PscHarris : PscHarrisParams
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
+
+  // ----------------------------------------------------------------------
+  // setup_ic
+
+  void setup_ic()
+  {
+    struct psc_harris *sub = psc_harris(psc_);
+    struct globals_physics *phys = &sub->phys;
+    struct vpic_harris_params *prm = &sub->prm;
+
+    Int3 gdims = {512, 1, 128};
+    Int3 np = {4, 1, 1};
+    sub->n_global_patches = np[0] * np[1] * np[2];
+  
+    assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+
+    // FIXME, the general normalization stuff should be shared somehow
+
+    // use natural PIC units
+    phys->ec   = 1;         // Charge normalization
+    phys->me   = 1;         // Mass normalization
+    phys->c    = 1;         // Speed of light
+    phys->de   = 1;         // Length normalization (electron inertial length)
+    phys->eps0 = 1;         // Permittivity of space
+
+    double c = phys->c;
+    //derived quantities
+    phys->mi = phys->me*prm->mi_me;       // Ion mass
+    double Te = phys->me*c*c/(2*phys->eps0*prm->wpe_wce*prm->wpe_wce*(1+prm->Ti_Te)); // Electron temperature
+    double Ti = Te*prm->Ti_Te;       // Ion temperature
+    phys->vthe = sqrt(Te/phys->me);         // Electron thermal velocity
+    phys->vthi = sqrt(Ti/phys->mi);         // Ion thermal velocity
+    phys->vtheb = sqrt(prm->Tbe_Te*Te/phys->me);  // normalized background e thermal vel.
+    phys->vthib = sqrt(prm->Tbi_Ti*Ti/phys->mi);  // normalized background ion thermal vel.
+    phys->wci  = 1.0/(prm->mi_me*prm->wpe_wce);  // Ion cyclotron frequency
+    phys->wce  = phys->wci*prm->mi_me;            // Electron cyclotron freqeuncy
+    phys->wpe  = phys->wce*prm->wpe_wce;          // electron plasma frequency
+    phys->wpi  = phys->wpe/sqrt(prm->mi_me);      // ion plasma frequency
+    phys->di   = c/phys->wpi;                      // ion inertial length
+    phys->L    = prm->L_di*phys->di;              // Harris sheet thickness
+    phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/prm->L_di;
+    phys->v_A = (phys->wci/phys->wpi)/sqrt(prm->nb_n0); // based on nb
+
+    phys->Lx    = prm->Lx_di*phys->di; // size of box in x dimension
+    phys->Ly    = prm->Ly_di*phys->di; // size of box in y dimension
+    phys->Lz    = prm->Lz_di*phys->di; // size of box in z dimension
+
+    phys->b0 = phys->me*c*phys->wce/phys->ec; // Asymptotic magnetic field strength
+    phys->n0 = phys->me*phys->eps0*phys->wpe*phys->wpe/(phys->ec*phys->ec);  // Peak electron (ion) density
+    phys->vdri = 2*c*Ti/(phys->ec*phys->b0*phys->L);   // Ion drift velocity
+    phys->vdre = -phys->vdri/(prm->Ti_Te);      // electron drift velocity
+
+    double Lx = phys->Lx, Ly = phys->Ly, Lz = phys->Lz, L = phys->L;
+    double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
+    double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
+    double Npe       = Npe_sheet + Npe_back;
+    phys->Ne         = prm->nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
+    phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
+    phys->Ne_back    = phys->Ne*Npe_back/Npe;
+    phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,sub->n_global_patches); // Make it divisible by # subdomains
+    phys->Ne_back    = trunc_granular(phys->Ne_back, sub->n_global_patches); // Make it divisible by # subdomains
+    phys->Ne         = phys->Ne_sheet + phys->Ne_back;
+    phys->weight_s   = phys->ec*Npe_sheet/phys->Ne_sheet;  // Charge per macro electron
+    phys->weight_b   = phys->ec*Npe_back/phys->Ne_back;  // Charge per macro electron
+
+    phys->gdri  = 1/sqrt(1-phys->vdri*phys->vdri/(c*c));  // gamma of ion drift frame
+    phys->gdre  = 1/sqrt(1-phys->vdre*phys->vdre/(c*c)); // gamma of electron drift frame
+    phys->udri  = phys->vdri*phys->gdri;                 // 4-velocity of ion drift frame
+    phys->udre  = phys->vdre*phys->gdre;                 // 4-velocity of electron drift frame
+    phys->tanhf = tanh(0.5*Lz/L);
+    phys->Lpert = prm->Lpert_Lx*Lx; // wavelength of perturbation
+    phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
+    phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
+
+    psc_->domain_ = Grid_t::Domain{gdims,
+				  {phys->Lx, phys->Ly, phys->Lz},
+				  {0., -.5 * phys->Ly, -.5 * phys->Lz}, np};
   }
 
   // ----------------------------------------------------------------------
@@ -413,92 +500,6 @@ static struct param psc_harris_descr[] = {
   {},
 };
 #undef VAR
-
-// FIXME, helper should go somewhere...
-
-static inline double trunc_granular( double a, double b )
-{
-  return b * (int)(a/b);
-}
-
-// ----------------------------------------------------------------------
-// psc_harris_setup_ic
-
-static void
-psc_harris_setup_ic(struct psc *psc)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  struct vpic_harris_params *prm = &sub->prm;
-
-  Int3 gdims = {512, 1, 128};
-  Int3 np = {4, 1, 1};
-  sub->n_global_patches = np[0] * np[1] * np[2];
-  
-  assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
-
-  // FIXME, the general normalization stuff should be shared somehow
-
-  // use natural PIC units
-  phys->ec   = 1;         // Charge normalization
-  phys->me   = 1;         // Mass normalization
-  phys->c    = 1;         // Speed of light
-  phys->de   = 1;         // Length normalization (electron inertial length)
-  phys->eps0 = 1;         // Permittivity of space
-
-  double c = phys->c;
-  //derived quantities
-  phys->mi = phys->me*prm->mi_me;       // Ion mass
-  double Te = phys->me*c*c/(2*phys->eps0*prm->wpe_wce*prm->wpe_wce*(1+prm->Ti_Te)); // Electron temperature
-  double Ti = Te*prm->Ti_Te;       // Ion temperature
-  phys->vthe = sqrt(Te/phys->me);         // Electron thermal velocity
-  phys->vthi = sqrt(Ti/phys->mi);         // Ion thermal velocity
-  phys->vtheb = sqrt(prm->Tbe_Te*Te/phys->me);  // normalized background e thermal vel.
-  phys->vthib = sqrt(prm->Tbi_Ti*Ti/phys->mi);  // normalized background ion thermal vel.
-  phys->wci  = 1.0/(prm->mi_me*prm->wpe_wce);  // Ion cyclotron frequency
-  phys->wce  = phys->wci*prm->mi_me;            // Electron cyclotron freqeuncy
-  phys->wpe  = phys->wce*prm->wpe_wce;          // electron plasma frequency
-  phys->wpi  = phys->wpe/sqrt(prm->mi_me);      // ion plasma frequency
-  phys->di   = c/phys->wpi;                      // ion inertial length
-  phys->L    = prm->L_di*phys->di;              // Harris sheet thickness
-  phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/prm->L_di;
-  phys->v_A = (phys->wci/phys->wpi)/sqrt(prm->nb_n0); // based on nb
-
-  phys->Lx    = prm->Lx_di*phys->di; // size of box in x dimension
-  phys->Ly    = prm->Ly_di*phys->di; // size of box in y dimension
-  phys->Lz    = prm->Lz_di*phys->di; // size of box in z dimension
-
-  phys->b0 = phys->me*c*phys->wce/phys->ec; // Asymptotic magnetic field strength
-  phys->n0 = phys->me*phys->eps0*phys->wpe*phys->wpe/(phys->ec*phys->ec);  // Peak electron (ion) density
-  phys->vdri = 2*c*Ti/(phys->ec*phys->b0*phys->L);   // Ion drift velocity
-  phys->vdre = -phys->vdri/(prm->Ti_Te);      // electron drift velocity
-
-  double Lx = phys->Lx, Ly = phys->Ly, Lz = phys->Lz, L = phys->L;
-  double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
-  double Npe_back  = prm->nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
-  double Npe       = Npe_sheet + Npe_back;
-  phys->Ne         = prm->nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
-  phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
-  phys->Ne_back    = phys->Ne*Npe_back/Npe;
-  phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,sub->n_global_patches); // Make it divisible by # subdomains
-  phys->Ne_back    = trunc_granular(phys->Ne_back, sub->n_global_patches); // Make it divisible by # subdomains
-  phys->Ne         = phys->Ne_sheet + phys->Ne_back;
-  phys->weight_s   = phys->ec*Npe_sheet/phys->Ne_sheet;  // Charge per macro electron
-  phys->weight_b   = phys->ec*Npe_back/phys->Ne_back;  // Charge per macro electron
-
-  phys->gdri  = 1/sqrt(1-phys->vdri*phys->vdri/(c*c));  // gamma of ion drift frame
-  phys->gdre  = 1/sqrt(1-phys->vdre*phys->vdre/(c*c)); // gamma of electron drift frame
-  phys->udri  = phys->vdri*phys->gdri;                 // 4-velocity of ion drift frame
-  phys->udre  = phys->vdre*phys->gdre;                 // 4-velocity of electron drift frame
-  phys->tanhf = tanh(0.5*Lz/L);
-  phys->Lpert = prm->Lpert_Lx*Lx; // wavelength of perturbation
-  phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
-  phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
-
-  psc->domain_ = Grid_t::Domain{gdims,
-				{phys->Lx, phys->Ly, phys->Lz},
-				{0., -.5 * phys->Ly, -.5 * phys->Lz}, np};
-}
 
 // ----------------------------------------------------------------------
 // psc_harris_init_field
@@ -760,8 +761,6 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 
   psc_set_from_options(psc_);
-
-  psc_harris_setup_ic(psc_);
 
   return new PscHarris{params, psc_};
 }
