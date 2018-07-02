@@ -68,6 +68,8 @@ courant_length(double length[3], int gdims[3])
 
 struct PscHarrisParams
 {
+  double L_di;                     // Sheet thickness / ion inertial length
+
   // FIXME, not really harris-specific
   double wpedt_max;
 
@@ -225,8 +227,8 @@ struct PscHarris : PscHarrisParams
     phys->wpe  = phys->wce*wpe_wce;          // electron plasma frequency
     phys->wpi  = phys->wpe/sqrt(mi_me);      // ion plasma frequency
     phys->di   = c/phys->wpi;                      // ion inertial length
-    phys->L    = prm->L_di*phys->di;              // Harris sheet thickness
-    phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/prm->L_di;
+    phys->L    = L_di*phys->di;              // Harris sheet thickness
+    phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/L_di;
     phys->v_A = (phys->wci/phys->wpi)/sqrt(prm->nb_n0); // based on nb
 
     phys->Lx    = Lx_di*phys->di; // size of box in x dimension
@@ -394,7 +396,7 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "* Topology: %d x %d x %d\n",
 	       psc_->domain_.np[0], psc_->domain_.np[1], psc_->domain_.np[2]);
     mpi_printf(comm, "tanhf    = %g\n", phys->tanhf);
-    mpi_printf(comm, "L_di     = %g\n", sub->prm.L_di);
+    mpi_printf(comm, "L_di     = %g\n", L_di);
     mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
     mpi_printf(comm, "Ti/Te    = %g\n", sub->prm.Ti_Te) ;
     mpi_printf(comm, "nb/n0    = %g\n", sub->prm.nb_n0) ;
@@ -467,8 +469,6 @@ static struct param psc_harris_descr[] = {
   { "nppc"                   , VAR(prm.nppc)                 , PARAM_DOUBLE(100.),
     .help = "average number of macro particle per cell per species" },
 
-  { "L_di"                  , VAR(prm.L_di)                  , PARAM_DOUBLE(.5),
-    .help = "Sheet thickness / ion inertial length" },
   { "Ti_Te"                 , VAR(prm.Ti_Te)                 , PARAM_DOUBLE(5.),
     .help = "Ion temperature / electron temperature" },
   { "nb_n0"                 , VAR(prm.nb_n0)                 , PARAM_DOUBLE(.228),
@@ -715,7 +715,7 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   params.Lx_di = 40.;
   params.Ly_di = 1.;
   params.Lz_di = 10.;
-  
+
   params.electron_sort_interval = 25;
   params.ion_sort_interval = 25;
   
@@ -723,6 +723,10 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   params.t_intervali = 1.;
   params.output_field_interval = 1.;
   params.output_particle_interval = 10.;
+
+
+  params.L_di = .5;
+  
 
   psc_default_dimensionless(psc_);
 
