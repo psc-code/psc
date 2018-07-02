@@ -66,6 +66,9 @@ courant_length(double length[3], int gdims[3])
 
 struct PscHarrisParams
 {
+  // FIXME, not really harris-specific
+  double output_field_interval;    // field output interval in terms of 1/wci
+  double output_particle_interval; // particle output interval in terms of 1/wci
 };
 
 // ======================================================================
@@ -148,23 +151,24 @@ struct PscHarris : PscHarrisParams
   
       Simulation_diagnostics_setup(sub->sim);
     }
-  
-    if (sub->prm.output_field_interval > 0) {
-      struct psc_output_fields *out;
-      mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
-	psc_output_fields_set_param_int(out, "pfield_step",
-					(int) (sub->prm.output_field_interval / (phys->wci*phys->dt)));
-      }
-    }
-  
-    if (sub->prm.output_particle_interval > 0) {
-      psc_output_particles_set_param_int(psc_->output_particles, "every_step",
-					 (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
-    }
-  
+
     psc_setup_member_objs(psc_);
     psc_harris_setup_log(psc_);
     
+    mprintf("output_field_interval %g\n", output_field_interval);
+    if (output_field_interval > 0) {
+      struct psc_output_fields *out;
+      mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
+	psc_output_fields_set_param_int(out, "pfield_step",
+					(int) (output_field_interval / (phys->wci*phys->dt)));
+      }
+    }
+  
+    if (output_particle_interval > 0) {
+      psc_output_particles_set_param_int(psc_->output_particles, "every_step",
+					 (int) (output_particle_interval / (phys->wci*phys->dt)));
+    }
+  
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   }
 
@@ -209,10 +213,6 @@ static struct param psc_harris_descr[] = {
     .help = "simulation wci's to run" },
   { "t_intervali"           , VAR(prm.t_intervali)           , PARAM_DOUBLE(1.),
     .help = "output interval in terms of 1/wci" },
-  { "output_field_interval" , VAR(prm.output_field_interval) , PARAM_DOUBLE(1.),
-    .help = "field output interval in terms of 1/wci" },
-  { "output_particle_interval", VAR(prm.output_particle_interval), PARAM_DOUBLE(0.),
-    .help = "particle output interval in terms of 1/wci" },
 
   { "L_di"                  , VAR(prm.L_di)                  , PARAM_DOUBLE(.5),
     .help = "Sheet thickness / ion inertial length" },
@@ -723,6 +723,9 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
+
+  params.output_field_interval = 1.;
+  params.output_particle_interval = 10.;
 
   psc_default_dimensionless(psc_);
 
