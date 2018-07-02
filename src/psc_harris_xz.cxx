@@ -41,7 +41,6 @@
 
 static void psc_harris_setup_domain(struct psc *psc);
 static void psc_harris_setup_fields(struct psc *psc);
-static void psc_harris_setup_species(struct psc *psc);
 
 // ----------------------------------------------------------------------
 // courant length
@@ -66,6 +65,9 @@ courant_length(double length[3], int gdims[3])
 struct PscHarrisParams
 {
   // FIXME, not really harris-specific
+  int ion_sort_interval;
+  int electron_sort_interval;
+
   double taui;                     // simulation wci's to run
   double t_intervali;              // output interval in terms of 1/wci
   double output_field_interval;    // field output interval in terms of 1/wci
@@ -127,7 +129,7 @@ struct PscHarris : PscHarrisParams
 			    psc_->prm.stats_every / 2);
       psc_harris_setup_domain(psc_);
       psc_harris_setup_fields(psc_);
-      psc_harris_setup_species(psc_);
+      setup_species();
 
       int interval = (int) (t_intervali / (phys->wci*phys->dt));
       Simulation_diagnostics_init(sub->sim, interval);
@@ -170,6 +172,28 @@ struct PscHarris : PscHarrisParams
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
+
+  // ----------------------------------------------------------------------
+  // setup_species
+
+  void setup_species()
+  {
+    psc_harris* sub = psc_harris(psc_);
+    globals_physics* phys = &sub->phys;
+    MPI_Comm comm = psc_comm(psc_);
+    
+    mpi_printf(comm, "Setting up species.\n");
+    double nmax = sub->prm.overalloc * phys->Ne / sub->n_global_patches;
+    double nmovers = .1 * nmax;
+    double sort_method = 1;   // 0=in place and 1=out of place
+    
+    psc_set_kinds(psc_, {{-phys->ec, phys->me, "e"}, {phys->ec, phys->mi, "i"}});
+    
+    Simulation_define_species(sub->sim, "electron", -phys->ec, phys->me, nmax, nmovers,
+			    electron_sort_interval, sort_method);
+    Simulation_define_species(sub->sim, "ion", phys->ec, phys->mi, nmax, nmovers,
+			      ion_sort_interval, sort_method);
   }
 
   // ----------------------------------------------------------------------
@@ -268,9 +292,6 @@ static struct param psc_harris_descr[] = {
     .help = "z-size of simulatin domain in terms of d_i" },
   { "nppc"                   , VAR(prm.nppc)                 , PARAM_DOUBLE(100.),
     .help = "average number of macro particle per cell per species" },
-
-  { "ion_sort_interval"     , VAR(prm.ion_sort_interval)     , PARAM_INT(1000)    },
-  { "electron_sort_interval", VAR(prm.electron_sort_interval), PARAM_INT(1000)    },
 
   { "L_di"                  , VAR(prm.L_di)                  , PARAM_DOUBLE(.5),
     .help = "Sheet thickness / ion inertial length" },
@@ -485,29 +506,6 @@ psc_harris_setup_fields(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_harris_setup_species
-
-static void
-psc_harris_setup_species(struct psc *psc)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  MPI_Comm comm = psc_comm(psc);
-
-  mpi_printf(comm, "Setting up species.\n");
-  double nmax = sub->prm.overalloc * phys->Ne / sub->n_global_patches;
-  double nmovers = .1 * nmax;
-  double sort_method = 1;   // 0=in place and 1=out of place
-
-  psc_set_kinds(psc, {{-phys->ec, phys->me, "e"}, {phys->ec, phys->mi, "i"}});
-
-  Simulation_define_species(sub->sim, "electron", -phys->ec, phys->me, nmax, nmovers,
-			    sub->prm.electron_sort_interval, sort_method);
-  Simulation_define_species(sub->sim, "ion", phys->ec, phys->mi, nmax, nmovers,
-			    sub->prm.ion_sort_interval, sort_method);
-}
-
-// ----------------------------------------------------------------------
 // psc_harris_init_field
 
 static double
@@ -718,6 +716,9 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   
   mpi_printf(comm, "*** Setting up...\n");
 
+  params.electron_sort_interval = 25;
+  params.ion_sort_interval = 25;
+  
   params.taui = 40.;
   params.t_intervali = 1.;
   params.output_field_interval = 1.;

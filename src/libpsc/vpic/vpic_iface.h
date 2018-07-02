@@ -178,9 +178,6 @@ struct vpic_harris_params {
   
   double Lx_di, Ly_di, Lz_di;     // Size of box in d_i
 
-  int ion_sort_interval;
-  int electron_sort_interval;
-
   // Harris
   double L_di;                    // Sheet thickness / ion inertial length
   double Ti_Te;                   // Ion temperature / electron temperature
