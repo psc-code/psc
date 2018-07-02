@@ -69,6 +69,11 @@ courant_length(double length[3], int gdims[3])
 struct PscHarrisParams
 {
   // FIXME, not really harris-specific
+  double wpedt_max;
+
+  double wpe_wce;                  // electron plasma freq / electron cyclotron freq
+  double mi_me;                    // Ion mass / electron mass
+  
   int ion_sort_interval;
   int electron_sort_interval;
 
@@ -98,8 +103,8 @@ struct PscHarris : PscHarrisParams
     // Determine the time step
     phys->dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
     phys->dt = psc_->prm.cfl * phys->dg / phys->c; // courant limited time step
-    if (phys->wpe * phys->dt > sub->prm.wpedt_max) {
-      phys->dt = sub->prm.wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
+    if (phys->wpe * phys->dt > wpedt_max) {
+      phys->dt = wpedt_max / phys->wpe;  // override timestep if plasma frequency limited
     }
     psc_->dt = phys->dt;
     
@@ -206,17 +211,17 @@ struct PscHarris : PscHarrisParams
 
     double c = phys->c;
     //derived quantities
-    phys->mi = phys->me*prm->mi_me;       // Ion mass
-    double Te = phys->me*c*c/(2*phys->eps0*prm->wpe_wce*prm->wpe_wce*(1+prm->Ti_Te)); // Electron temperature
+    phys->mi = phys->me*mi_me;       // Ion mass
+    double Te = phys->me*c*c/(2*phys->eps0*sqr(wpe_wce)*(1+prm->Ti_Te)); // Electron temperature
     double Ti = Te*prm->Ti_Te;       // Ion temperature
     phys->vthe = sqrt(Te/phys->me);         // Electron thermal velocity
     phys->vthi = sqrt(Ti/phys->mi);         // Ion thermal velocity
     phys->vtheb = sqrt(prm->Tbe_Te*Te/phys->me);  // normalized background e thermal vel.
     phys->vthib = sqrt(prm->Tbi_Ti*Ti/phys->mi);  // normalized background ion thermal vel.
-    phys->wci  = 1.0/(prm->mi_me*prm->wpe_wce);  // Ion cyclotron frequency
-    phys->wce  = phys->wci*prm->mi_me;            // Electron cyclotron freqeuncy
-    phys->wpe  = phys->wce*prm->wpe_wce;          // electron plasma frequency
-    phys->wpi  = phys->wpe/sqrt(prm->mi_me);      // ion plasma frequency
+    phys->wci  = 1.0/(mi_me*wpe_wce);  // Ion cyclotron frequency
+    phys->wce  = phys->wci*mi_me;            // Electron cyclotron freqeuncy
+    phys->wpe  = phys->wce*wpe_wce;          // electron plasma frequency
+    phys->wpi  = phys->wpe/sqrt(mi_me);      // ion plasma frequency
     phys->di   = c/phys->wpi;                      // ion inertial length
     phys->L    = prm->L_di*phys->di;              // Harris sheet thickness
     phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/prm->L_di;
@@ -391,8 +396,8 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "rhoi/L   = %g\n", phys->rhoi_L);
     mpi_printf(comm, "Ti/Te    = %g\n", sub->prm.Ti_Te) ;
     mpi_printf(comm, "nb/n0    = %g\n", sub->prm.nb_n0) ;
-    mpi_printf(comm, "wpe/wce  = %g\n", sub->prm.wpe_wce);
-    mpi_printf(comm, "mi/me    = %g\n", sub->prm.mi_me);
+    mpi_printf(comm, "wpe/wce  = %g\n", wpe_wce);
+    mpi_printf(comm, "mi/me    = %g\n", mi_me);
     mpi_printf(comm, "theta    = %g\n", sub->prm.theta);
     mpi_printf(comm, "Lpert/Lx = %g\n", sub->prm.Lpert_Lx);
     mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
@@ -457,11 +462,6 @@ static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
 static struct param psc_harris_descr[] = {
-  { "wpedt_max"             , VAR(prm.wpedt_max)             , PARAM_DOUBLE(.36)  },
-  { "wpe_wce"               , VAR(prm.wpe_wce)               , PARAM_DOUBLE(2.),
-    .help = "electron plasma freq / electron cyclotron freq" },
-  { "mi_me"                 , VAR(prm.mi_me)                 , PARAM_DOUBLE(25.),
-    .help = "ion mass over electron mass" },
   { "Lx_di"                 , VAR(prm.Lx_di)                 , PARAM_DOUBLE(25.6),
     .help = "x-size of simulatin domain in terms of d_i" },
   { "Ly_di"                 , VAR(prm.Ly_di)                 , PARAM_DOUBLE(1.),
@@ -711,6 +711,10 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
+
+  params.wpedt_max = .36;
+  params.wpe_wce = 2.;
+  params.mi_me = 25.;
 
   params.electron_sort_interval = 25;
   params.ion_sort_interval = 25;

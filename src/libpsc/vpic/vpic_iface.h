@@ -171,11 +171,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 
 struct vpic_harris_params {
   // general
-  double wpedt_max;
-
-  double wpe_wce;                 // electron plasma freq / electron cyclotron freq
-  double mi_me;                   // Ion mass / electron mass
-  
   double Lx_di, Ly_di, Lz_di;     // Size of box in d_i
 
   // Harris
