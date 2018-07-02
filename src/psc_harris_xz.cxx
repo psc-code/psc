@@ -39,9 +39,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void psc_harris_setup_domain(struct psc *psc);
-static void psc_harris_setup_fields(struct psc *psc);
-
 // ----------------------------------------------------------------------
 // courant length
 //
@@ -127,8 +124,8 @@ struct PscHarris : PscHarrisParams
       Simulation_set_params(sub->sim, psc_->prm.nmax, psc_->prm.stats_every,
 			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
 			    psc_->prm.stats_every / 2);
-      psc_harris_setup_domain(psc_);
-      psc_harris_setup_fields(psc_);
+      setup_domain();
+      setup_fields();
       setup_species();
 
       int interval = (int) (t_intervali / (phys->wci*phys->dt));
@@ -172,6 +169,100 @@ struct PscHarris : PscHarrisParams
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
+
+  // ----------------------------------------------------------------------
+  // setup_domain
+
+  void setup_domain()
+  {
+    struct psc_harris *sub = psc_harris(psc_);
+    struct globals_physics *phys = &sub->phys;
+    MPI_Comm comm = psc_comm(psc_);
+
+    psc_setup_coeff(psc_); // FIXME -- in the middle of things here, will be done again later
+    psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
+  
+    // Setup basic grid parameters
+    double dx[3], xl[3], xh[3];
+    for (int d = 0; d < 3; d++) {
+      dx[d] = psc_->domain_.length[d] / psc_->domain_.gdims[d];
+      xl[d] = psc_->domain_.corner[d];
+      xh[d] = xl[d] + psc_->domain_.length[d];
+    }
+    Simulation_setup_grid(sub->sim, dx, phys->dt, phys->c, phys->eps0);
+
+    // Define the grid
+    Simulation_define_periodic_grid(sub->sim, xl, xh, psc_->domain_.gdims, psc_->domain_.np);
+
+    int p = 0;
+    bool left = psc_at_boundary_lo(psc_, p, 0);
+    bool right = psc_at_boundary_hi(psc_, p, 0);
+
+    bool bottom = psc_at_boundary_lo(psc_, p, 2);
+    bool top = psc_at_boundary_hi(psc_, p, 2);
+
+    // ***** Set Field Boundary Conditions *****
+    if (sub->prm.open_bc_x) {
+      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+      if (left ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
+      if (right) Simulation_set_domain_field_bc(sub->sim, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+    }
+  
+    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+    if (bottom) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
+    if (top   ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+
+    // ***** Set Particle Boundary Conditions *****
+    if (sub->prm.driven_bc_z) {
+      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+      if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
+      if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
+    } else {
+      mpi_printf(comm, "Reflect particles on Z-boundaries\n");
+      if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
+      if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
+    }
+    if (sub->prm.open_bc_x) {
+      mpi_printf(comm, "Absorb particles on X-boundaries\n");
+      if (left)  Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
+      if (right) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // setup_fields
+
+  void setup_fields()
+  {
+    struct psc_harris *sub = psc_harris(psc_);
+    MPI_Comm comm = psc_comm(psc_);
+
+    mpi_printf(comm, "Setting up materials.\n");
+
+    Simulation_define_material(sub->sim, "vacuum", 1., 1., 0., 0.);
+#if 0
+    struct material *resistive =
+      Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
+#endif
+    Simulation_define_field_array(sub->sim, 0.);
+
+    // Note: define_material defaults to isotropic materials with mu=1,sigma=0
+    // Tensor electronic, magnetic and conductive materials are supported
+    // though. See "shapes" for how to define them and assign them to regions.
+    // Also, space is initially filled with the first material defined.
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Finalize Field Advance
+
+    mpi_printf(comm, "Finalizing Field Advance\n");
+
+#if 0
+    assert(psc_->nr_patches > 0);
+    struct globals_physics *phys = &sub->phys;
+    Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
+					   0., resistive);
+#endif
   }
 
   // ----------------------------------------------------------------------
@@ -407,102 +498,6 @@ psc_harris_setup_ic(struct psc *psc)
   psc->domain_ = Grid_t::Domain{gdims,
 				{phys->Lx, phys->Ly, phys->Lz},
 				{0., -.5 * phys->Ly, -.5 * phys->Lz}, np};
-}
-
-// ----------------------------------------------------------------------
-// psc_harris_setup_domain
-
-static void
-psc_harris_setup_domain(struct psc *psc)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  MPI_Comm comm = psc_comm(psc);
-
-  psc_setup_coeff(psc); // FIXME -- in the middle of things here, will be done again later
-  psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
-  
-  // Setup basic grid parameters
-  double dx[3], xl[3], xh[3];
-  for (int d = 0; d < 3; d++) {
-    dx[d] = psc->domain_.length[d] / psc->domain_.gdims[d];
-    xl[d] = psc->domain_.corner[d];
-    xh[d] = xl[d] + psc->domain_.length[d];
-  }
-  Simulation_setup_grid(sub->sim, dx, phys->dt, phys->c, phys->eps0);
-
-  // Define the grid
-  Simulation_define_periodic_grid(sub->sim, xl, xh, psc->domain_.gdims, psc->domain_.np);
-
-  int p = 0;
-  bool left = psc_at_boundary_lo(psc, p, 0);
-  bool right = psc_at_boundary_hi(psc, p, 0);
-
-  bool bottom = psc_at_boundary_lo(psc, p, 2);
-  bool top = psc_at_boundary_hi(psc, p, 2);
-
-  // ***** Set Field Boundary Conditions *****
-  if (sub->prm.open_bc_x) {
-    mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-    if (left ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
-    if (right) Simulation_set_domain_field_bc(sub->sim, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
-  }
-  
-  mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-  if (bottom) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
-  if (top   ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
-
-  // ***** Set Particle Boundary Conditions *****
-  if (sub->prm.driven_bc_z) {
-    mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
-    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
-  } else {
-    mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
-    if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
-  }
-  if (sub->prm.open_bc_x) {
-    mpi_printf(comm, "Absorb particles on X-boundaries\n");
-    if (left)  Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
-    if (right) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_harris_setup_fields
-
-static void
-psc_harris_setup_fields(struct psc *psc)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  MPI_Comm comm = psc_comm(psc);
-
-  mpi_printf(comm, "Setting up materials.\n");
-
-  Simulation_define_material(sub->sim, "vacuum", 1., 1., 0., 0.);
-#if 0
-  struct material *resistive =
-    Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
-#endif
-  Simulation_define_field_array(sub->sim, 0.);
-
-  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
-  // Tensor electronic, magnetic and conductive materials are supported
-  // though. See "shapes" for how to define them and assign them to regions.
-  // Also, space is initially filled with the first material defined.
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Finalize Field Advance
-
-  mpi_printf(comm, "Finalizing Field Advance\n");
-
-#if 0
-  assert(psc->nr_patches > 0);
-  struct globals_physics *phys = &sub->phys;
-  Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc->patch[0].dx,
-					 0., resistive);
-#endif
 }
 
 // ----------------------------------------------------------------------
