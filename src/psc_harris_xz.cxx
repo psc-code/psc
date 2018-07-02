@@ -74,6 +74,8 @@ struct PscHarrisParams
   double wpe_wce;                  // electron plasma freq / electron cyclotron freq
   double mi_me;                    // Ion mass / electron mass
   
+  double Lx_di, Ly_di, Lz_di;      // Size of box in d_i
+
   int ion_sort_interval;
   int electron_sort_interval;
 
@@ -227,9 +229,9 @@ struct PscHarris : PscHarrisParams
     phys->rhoi_L = sqrt(prm->Ti_Te/(1.0+prm->Ti_Te))/prm->L_di;
     phys->v_A = (phys->wci/phys->wpi)/sqrt(prm->nb_n0); // based on nb
 
-    phys->Lx    = prm->Lx_di*phys->di; // size of box in x dimension
-    phys->Ly    = prm->Ly_di*phys->di; // size of box in y dimension
-    phys->Lz    = prm->Lz_di*phys->di; // size of box in z dimension
+    phys->Lx    = Lx_di*phys->di; // size of box in x dimension
+    phys->Ly    = Ly_di*phys->di; // size of box in y dimension
+    phys->Lz    = Lz_di*phys->di; // size of box in z dimension
 
     phys->b0 = phys->me*c*phys->wce/phys->ec; // Asymptotic magnetic field strength
     phys->n0 = phys->me*phys->eps0*phys->wpe*phys->wpe/(phys->ec*phys->ec);  // Peak electron (ion) density
@@ -462,12 +464,6 @@ static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
 static struct param psc_harris_descr[] = {
-  { "Lx_di"                 , VAR(prm.Lx_di)                 , PARAM_DOUBLE(25.6),
-    .help = "x-size of simulatin domain in terms of d_i" },
-  { "Ly_di"                 , VAR(prm.Ly_di)                 , PARAM_DOUBLE(1.),
-    .help = "y-size of simulatin domain in terms of d_i" },
-  { "Lz_di"                 , VAR(prm.Lz_di)                 , PARAM_DOUBLE(12.8),
-    .help = "z-size of simulatin domain in terms of d_i" },
   { "nppc"                   , VAR(prm.nppc)                 , PARAM_DOUBLE(100.),
     .help = "average number of macro particle per cell per species" },
 
@@ -716,6 +712,10 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   params.wpe_wce = 2.;
   params.mi_me = 25.;
 
+  params.Lx_di = 40.;
+  params.Ly_di = 1.;
+  params.Lz_di = 10.;
+  
   params.electron_sort_interval = 25;
   params.ion_sort_interval = 25;
   

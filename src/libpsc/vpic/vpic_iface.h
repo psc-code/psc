@@ -170,9 +170,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 // vpic_harris_params
 
 struct vpic_harris_params {
-  // general
-  double Lx_di, Ly_di, Lz_di;     // Size of box in d_i
-
   // Harris
   double L_di;                    // Sheet thickness / ion inertial length
   double Ti_Te;                   // Ion temperature / electron temperature
