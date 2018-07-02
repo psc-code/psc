@@ -67,6 +67,7 @@ courant_length(double length[3], int gdims[3])
 struct PscHarrisParams
 {
   // FIXME, not really harris-specific
+  double t_intervali;              // output interval in terms of 1/wci
   double output_field_interval;    // field output interval in terms of 1/wci
   double output_particle_interval; // particle output interval in terms of 1/wci
 };
@@ -128,7 +129,7 @@ struct PscHarris : PscHarrisParams
       psc_harris_setup_fields(psc_);
       psc_harris_setup_species(psc_);
 
-      int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
+      int interval = (int) (t_intervali / (phys->wci*phys->dt));
       Simulation_diagnostics_init(sub->sim, interval);
 
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
@@ -211,8 +212,6 @@ static struct param psc_harris_descr[] = {
 
   { "taui"                  , VAR(prm.taui)                  , PARAM_DOUBLE(100.),
     .help = "simulation wci's to run" },
-  { "t_intervali"           , VAR(prm.t_intervali)           , PARAM_DOUBLE(1.),
-    .help = "output interval in terms of 1/wci" },
 
   { "L_di"                  , VAR(prm.L_di)                  , PARAM_DOUBLE(.5),
     .help = "Sheet thickness / ion inertial length" },
@@ -473,7 +472,7 @@ psc_harris_setup_log(struct psc *psc)
   mpi_printf(comm, "Lpert/Lx = %g\n", sub->prm.Lpert_Lx);
   mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
   mpi_printf(comm, "taui     = %g\n", sub->prm.taui);
-  mpi_printf(comm, "t_intervali = %g\n", sub->prm.t_intervali);
+  //mpi_printf(comm, "t_intervali = %g\n", t_intervali);
   mpi_printf(comm, "num_step = %d\n", psc->prm.nmax);
   mpi_printf(comm, "Lx/di = %g\n", phys->Lx/phys->di);
   mpi_printf(comm, "Lx/de = %g\n", phys->Lx/phys->de);
