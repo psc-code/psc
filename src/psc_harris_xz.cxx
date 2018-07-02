@@ -707,9 +707,6 @@ PscHarris* PscHarrisBuilder::makePscHarris()
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     psc_method_set_ic_fields(psc_->method, psc_);
     
-    psc_setup_member_objs(psc_);
-    
-    psc_harris_setup_log(psc_);
   } else {
     sub->sim = Simulation_create();
     psc_method_set_param_ptr(psc_->method, "sim", sub->sim);
@@ -721,7 +718,6 @@ PscHarris* PscHarrisBuilder::makePscHarris()
     psc_harris_setup_domain(psc_);
     psc_harris_setup_fields(psc_);
     psc_harris_setup_species(psc_);
-    psc_harris_setup_log(psc_);
 
     int interval = (int) (sub->prm.t_intervali / (phys->wci*phys->dt));
     Simulation_diagnostics_init(sub->sim, interval);
@@ -746,24 +742,25 @@ PscHarris* PscHarrisBuilder::makePscHarris()
     SetupFields<MfieldsSingle>::set_ic(psc_); // FIXME, use MfieldsVpic directly?
   
     Simulation_diagnostics_setup(sub->sim);
-
-    mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
   
-    psc_setup_member_objs(psc_);
-
-    if (sub->prm.output_field_interval > 0) {
-      struct psc_output_fields *out;
-      mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
-	psc_output_fields_set_param_int(out, "pfield_step",
-					(int) (sub->prm.output_field_interval / (phys->wci*phys->dt)));
-      }
-    }
-
-    if (sub->prm.output_particle_interval > 0) {
-      psc_output_particles_set_param_int(psc_->output_particles, "every_step",
-					 (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
+  if (sub->prm.output_field_interval > 0) {
+    struct psc_output_fields *out;
+    mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
+      psc_output_fields_set_param_int(out, "pfield_step",
+				      (int) (sub->prm.output_field_interval / (phys->wci*phys->dt)));
     }
   }
+  
+  if (sub->prm.output_particle_interval > 0) {
+    psc_output_particles_set_param_int(psc_->output_particles, "every_step",
+				       (int) (sub->prm.output_particle_interval / (phys->wci*phys->dt)));
+  }
+  
+  psc_setup_member_objs(psc_);
+  psc_harris_setup_log(psc_);
+
+  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   
   return new PscHarris{params, psc_};
 }
