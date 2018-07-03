@@ -136,7 +136,7 @@ struct PscHarris : PscHarrisParams
       psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				    psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
 
-      psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
+      SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
       // FIXME MfieldsSingle
       SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
 	  return init_field(xx, m);
