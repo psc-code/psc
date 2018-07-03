@@ -171,7 +171,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 
 struct vpic_harris_params {
   // Harris
-  double overalloc;               // Overallocation factor (> 1) for particle arrays
 };
 
 struct globals_physics {

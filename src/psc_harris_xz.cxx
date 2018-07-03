@@ -85,7 +85,6 @@ struct PscHarrisParams
   bool open_bc_x;                  // Flag to signal we want to do open boundary condition in x
   bool driven_bc_z;                // Flag to signal we want to do driven boundary condition in z
 
-
   // FIXME, not really harris-specific
   double wpedt_max;
 
@@ -101,6 +100,8 @@ struct PscHarrisParams
   double t_intervali;              // output interval in terms of 1/wci
   double output_field_interval;    // field output interval in terms of 1/wci
   double output_particle_interval; // particle output interval in terms of 1/wci
+
+  double overalloc;                // Overallocation factor (> 1) for particle arrays
 };
 
 // ======================================================================
@@ -383,7 +384,7 @@ struct PscHarris : PscHarrisParams
     MPI_Comm comm = psc_comm(psc_);
     
     mpi_printf(comm, "Setting up species.\n");
-    double nmax = sub->prm.overalloc * phys->Ne / sub->n_global_patches;
+    double nmax = overalloc * phys->Ne / sub->n_global_patches;
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
@@ -625,9 +626,6 @@ using Mparticles_t = MparticlesSingle;
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
 static struct param psc_harris_descr[] = {
-  { "overalloc"             , VAR(prm.overalloc)             , PARAM_DOUBLE(2.),
-    .help = "over-allocate particle arrays by this factor" },
-
   {},
 };
 #undef VAR
@@ -705,6 +703,7 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   params.output_field_interval = 1.;
   params.output_particle_interval = 10.;
 
+  params.overalloc = 2.;
 
   params.L_di = .5;
   params.Ti_Te = 5.;
