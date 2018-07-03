@@ -39,6 +39,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
+
 // FIXME, helper should go somewhere...
 
 static inline double trunc_granular( double a, double b )
@@ -446,6 +448,124 @@ struct PscHarris : PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
+  // setup_particles
+  //
+  // set particles x^{n+1/2}, p^{n+1/2}
+
+  static void setup_particles(struct psc *psc, std::vector<uint>& nr_particles_by_patch, bool count_only)
+  {
+    struct psc_harris *sub = psc_harris(psc);
+    struct globals_physics *phys = &sub->phys;
+    MPI_Comm comm = psc_comm(psc);
+
+    double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
+    double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
+    double weight_s = phys->weight_s;
+    double tanhf = phys->tanhf, L = phys->L;
+    double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
+    double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
+    double weight_b = phys->weight_b;
+    int n_global_patches = sub->n_global_patches;
+
+    if (count_only) {
+      for (int p = 0; p < psc->n_patches(); p++) {
+	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
+      }
+      return;
+    }
+  
+    PscMparticlesBase mprts(psc->particles);
+  
+    // LOAD PARTICLES
+
+    mpi_printf(comm, "Loading particles\n");
+
+    // Do a fast load of the particles
+
+    rngpool = RngPool_create(); // FIXME, should be part of ctor (of struct psc, really)
+
+    int rank;
+    MPI_Comm_rank(comm, &rank);
+    RngPool_seed(rngpool, rank);
+    Rng *rng = RngPool_get(rngpool, 0);
+
+    assert(psc->n_patches() > 0);
+    const Grid_t& grid = psc->grid();
+    const Grid_t::Patch& patch = grid.patches[0];
+    double xmin = patch.xb[0], xmax = patch.xe[0];
+    double ymin = patch.xb[1], ymax = patch.xe[1];
+    double zmin = patch.xb[2], zmax = patch.xe[2];
+
+    // Load Harris population
+
+    mpi_printf(comm, "-> Main Harris Sheet\n");
+
+    for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
+      double x, y, z, ux, uy, uz, d0;
+
+      particle_inject_t prt;
+
+      do {
+	z = L*atanh(Rng_uniform(rng, -1., 1.)*tanhf);
+      } while (z <= zmin || z >= zmax);
+      x = Rng_uniform(rng, xmin, xmax);
+      y = Rng_uniform(rng, ymin, ymax);
+
+      // inject_particles() will return an error for particles no on this
+      // node and will not inject particle locally
+
+      ux = Rng_normal(rng, 0, vthe);
+      uy = Rng_normal(rng, 0, vthe);
+      uz = Rng_normal(rng, 0, vthe);
+      d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
+      uy = d0*cs - ux*sn;
+      ux = d0*sn + ux*cs;
+
+      prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
+      prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
+      prt.w = weight_s;
+      prt.kind = KIND_ELECTRON;
+      mprts->inject_reweight(0, prt);
+
+      ux = Rng_normal(rng, 0, vthi);
+      uy = Rng_normal(rng, 0, vthi);
+      uz = Rng_normal(rng, 0, vthi);
+      d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
+      uy = d0*cs - ux*sn;
+      ux = d0*sn + ux*cs;
+
+      prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
+      prt.kind = KIND_ION;
+      mprts->inject_reweight(0, prt);
+    }
+
+    mpi_printf(comm, "-> Background Population\n");
+
+    for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
+      particle_inject_t prt;
+      double x = Rng_uniform(rng, xmin, xmax);
+      double y = Rng_uniform(rng, ymin, ymax);
+      double z = Rng_uniform(rng, zmin, zmax);
+
+      prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
+      prt.u[0] = Rng_normal(rng, 0, vtheb);
+      prt.u[1] = Rng_normal(rng, 0, vtheb);
+      prt.u[2] = Rng_normal(rng, 0, vtheb);
+      prt.w = weight_b;
+      prt.kind = KIND_ELECTRON;
+      mprts->inject_reweight(0, prt);
+    
+      prt.u[0] = Rng_normal(rng, 0, vthib);
+      prt.u[1] = Rng_normal(rng, 0, vthib);
+      prt.u[2] = Rng_normal(rng, 0, vthib);
+      prt.kind = KIND_ION;
+      mprts->inject_reweight(0, prt);
+    }
+
+    mpi_printf(comm, "Finished loading particles\n");
+  }
+
+  // ----------------------------------------------------------------------
   // init_field
 
   double init_field(double crd[3], int m)
@@ -491,8 +611,6 @@ private:
 
 using Mparticles_t = MparticlesSingle;
 
-static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
-
 // ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
@@ -519,125 +637,6 @@ static struct param psc_harris_descr[] = {
   {},
 };
 #undef VAR
-
-// ----------------------------------------------------------------------
-// psc_harris_setup_particles
-//
-// set particles x^{n+1/2}, p^{n+1/2}
-
-static void
-psc_harris_setup_particles(struct psc *psc, std::vector<uint>& nr_particles_by_patch, bool count_only)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  MPI_Comm comm = psc_comm(psc);
-
-  double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
-  double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
-  double weight_s = phys->weight_s;
-  double tanhf = phys->tanhf, L = phys->L;
-  double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
-  double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
-  double weight_b = phys->weight_b;
-  int n_global_patches = sub->n_global_patches;
-
-  if (count_only) {
-    for (int p = 0; p < psc->n_patches(); p++) {
-      nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
-    }
-    return;
-  }
-  
-  PscMparticlesBase mprts(psc->particles);
-  
-  // LOAD PARTICLES
-
-  mpi_printf(comm, "Loading particles\n");
-
-  // Do a fast load of the particles
-
-  rngpool = RngPool_create(); // FIXME, should be part of ctor (of struct psc, really)
-
-  int rank;
-  MPI_Comm_rank(comm, &rank);
-  RngPool_seed(rngpool, rank);
-  Rng *rng = RngPool_get(rngpool, 0);
-
-  assert(psc->n_patches() > 0);
-  const Grid_t& grid = psc->grid();
-  const Grid_t::Patch& patch = grid.patches[0];
-  double xmin = patch.xb[0], xmax = patch.xe[0];
-  double ymin = patch.xb[1], ymax = patch.xe[1];
-  double zmin = patch.xb[2], zmax = patch.xe[2];
-
-  // Load Harris population
-
-  mpi_printf(comm, "-> Main Harris Sheet\n");
-
-  for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
-    double x, y, z, ux, uy, uz, d0;
-
-    particle_inject_t prt;
-
-    do {
-      z = L*atanh(Rng_uniform(rng, -1., 1.)*tanhf);
-    } while (z <= zmin || z >= zmax);
-    x = Rng_uniform(rng, xmin, xmax);
-    y = Rng_uniform(rng, ymin, ymax);
-
-    // inject_particles() will return an error for particles no on this
-    // node and will not inject particle locally
-
-    ux = Rng_normal(rng, 0, vthe);
-    uy = Rng_normal(rng, 0, vthe);
-    uz = Rng_normal(rng, 0, vthe);
-    d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
-    uy = d0*cs - ux*sn;
-    ux = d0*sn + ux*cs;
-
-    prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
-    prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
-    prt.w = weight_s;
-    prt.kind = KIND_ELECTRON;
-    mprts->inject_reweight(0, prt);
-
-    ux = Rng_normal(rng, 0, vthi);
-    uy = Rng_normal(rng, 0, vthi);
-    uz = Rng_normal(rng, 0, vthi);
-    d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
-    uy = d0*cs - ux*sn;
-    ux = d0*sn + ux*cs;
-
-    prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
-    prt.kind = KIND_ION;
-    mprts->inject_reweight(0, prt);
-  }
-
-  mpi_printf(comm, "-> Background Population\n");
-
-  for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
-    particle_inject_t prt;
-    double x = Rng_uniform(rng, xmin, xmax);
-    double y = Rng_uniform(rng, ymin, ymax);
-    double z = Rng_uniform(rng, zmin, zmax);
-
-    prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
-    prt.u[0] = Rng_normal(rng, 0, vtheb);
-    prt.u[1] = Rng_normal(rng, 0, vtheb);
-    prt.u[2] = Rng_normal(rng, 0, vtheb);
-    prt.w = weight_b;
-    prt.kind = KIND_ELECTRON;
-    mprts->inject_reweight(0, prt);
-    
-    prt.u[0] = Rng_normal(rng, 0, vthib);
-    prt.u[1] = Rng_normal(rng, 0, vthib);
-    prt.u[2] = Rng_normal(rng, 0, vthib);
-    prt.kind = KIND_ION;
-    mprts->inject_reweight(0, prt);
-  }
-
-  mpi_printf(comm, "Finished loading particles\n");
-}
 
 // ----------------------------------------------------------------------
 // psc_harris_read
@@ -669,7 +668,7 @@ struct psc_ops_harris : psc_ops {
     param_descr      = psc_harris_descr;
     destroy          = psc_harris_destroy;
     read             = psc_harris_read;
-    setup_particles  = psc_harris_setup_particles;
+    setup_particles  = PscHarris::setup_particles;
   }
 } psc_harris_ops;
 
