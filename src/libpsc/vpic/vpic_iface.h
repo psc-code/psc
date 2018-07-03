@@ -220,7 +220,6 @@ struct globals_physics {
 struct psc_harris {
   // state
   struct globals_physics phys;
-  int n_global_patches;
 
   Simulation *sim;
 };

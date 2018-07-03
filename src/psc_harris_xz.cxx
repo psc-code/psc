@@ -212,7 +212,7 @@ struct PscHarris : PscHarrisParams
 
     Int3 gdims = {512, 1, 128};
     Int3 np = {4, 1, 1};
-    sub->n_global_patches = np[0] * np[1] * np[2];
+    n_global_patches_ = np[0] * np[1] * np[2];
   
     assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
@@ -259,8 +259,8 @@ struct PscHarris : PscHarrisParams
     phys->Ne         = nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
     phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
     phys->Ne_back    = phys->Ne*Npe_back/Npe;
-    phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,sub->n_global_patches); // Make it divisible by # subdomains
-    phys->Ne_back    = trunc_granular(phys->Ne_back, sub->n_global_patches); // Make it divisible by # subdomains
+    phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,n_global_patches_); // Make it divisible by # subdomains
+    phys->Ne_back    = trunc_granular(phys->Ne_back, n_global_patches_); // Make it divisible by # subdomains
     phys->Ne         = phys->Ne_sheet + phys->Ne_back;
     phys->weight_s   = phys->ec*Npe_sheet/phys->Ne_sheet;  // Charge per macro electron
     phys->weight_b   = phys->ec*Npe_back/phys->Ne_back;  // Charge per macro electron
@@ -383,7 +383,7 @@ struct PscHarris : PscHarrisParams
     MPI_Comm comm = psc_comm(psc_);
     
     mpi_printf(comm, "Setting up species.\n");
-    double nmax = overalloc * phys->Ne / sub->n_global_patches;
+    double nmax = overalloc * phys->Ne / n_global_patches_;
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
@@ -430,7 +430,7 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "ny = %d\n", psc_->domain_.gdims[1]);
     mpi_printf(comm, "nz = %d\n", psc_->domain_.gdims[2]);
     mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
-    mpi_printf(comm, "n_global_patches = %d\n", sub->n_global_patches);
+    mpi_printf(comm, "n_global_patches = %d\n", n_global_patches_);
     mpi_printf(comm, "nppc = %g\n", nppc);
     mpi_printf(comm, "b0 = %g\n", phys->b0);
     mpi_printf(comm, "v_A (based on nb) = %g\n", phys->v_A);
@@ -476,11 +476,10 @@ struct PscHarris : PscHarrisParams
     double gdre = phys->gdre, udre = phys->udre, gdri = phys->gdri, udri = phys->udri;
     double Ne_back = phys->Ne_back, vtheb = phys->vtheb, vthib = phys->vthib;
     double weight_b = phys->weight_b;
-    int n_global_patches = sub->n_global_patches;
 
     if (count_only) {
       for (int p = 0; p < psc_->n_patches(); p++) {
-	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
+	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches_ + Ne_back / n_global_patches_);
       }
       return;
     }
@@ -511,7 +510,7 @@ struct PscHarris : PscHarrisParams
 
     mpi_printf(comm, "-> Main Harris Sheet\n");
 
-    for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
+    for (int64_t n = 0; n < Ne_sheet / n_global_patches_; n++) {
       double x, y, z, ux, uy, uz, d0;
 
       particle_inject_t prt;
@@ -552,7 +551,7 @@ struct PscHarris : PscHarrisParams
 
     mpi_printf(comm, "-> Background Population\n");
 
-    for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
+    for (int64_t n = 0; n < Ne_back / n_global_patches_; n++) {
       particle_inject_t prt;
       double x = Rng_uniform(rng, xmin, xmax);
       double y = Rng_uniform(rng, ymin, ymax);
@@ -617,6 +616,7 @@ struct PscHarris : PscHarrisParams
 
 private:
   psc* psc_;
+  int n_global_patches_; // FIXME, keep?
 };
 
 // ----------------------------------------------------------------------
