@@ -144,7 +144,8 @@ struct PscHarris : PscHarrisParams
     }
 
     // partition and initial balancing
-    auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
+    std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
+    setup_particles(psc_, n_prts_by_patch_old, true);
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
@@ -159,7 +160,7 @@ struct PscHarris : PscHarrisParams
     
     auto mprts_base = PscMparticlesBase{psc_->particles};
     mprts_base->reserve_all(n_prts_by_patch_new.data());
-    psc_ops(psc)->setup_particles(psc, n_prts_by_patch_new, false);
+    setup_particles(psc, n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
     SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
