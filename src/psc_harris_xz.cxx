@@ -209,7 +209,6 @@ struct PscHarris : PscHarrisParams
   {
     struct psc_harris *sub = psc_harris(psc_);
     struct globals_physics *phys = &sub->phys;
-    struct vpic_harris_params *prm = &sub->prm;
 
     Int3 gdims = {512, 1, 128};
     Int3 np = {4, 1, 1};
@@ -620,25 +619,6 @@ private:
   psc* psc_;
 };
 
-using Mparticles_t = MparticlesSingle;
-
-// ----------------------------------------------------------------------
-
-#define VAR(x) (void *)offsetof(struct psc_harris, x)
-static struct param psc_harris_descr[] = {
-  {},
-};
-#undef VAR
-
-// ----------------------------------------------------------------------
-// psc_harris_read
-
-static void
-psc_harris_read(struct psc *psc, struct mrc_io *io)
-{
-  psc_read_super(psc, io);
-}
-
 // ----------------------------------------------------------------------
 // psc_harris_destroy
 
@@ -657,9 +637,7 @@ struct psc_ops_harris : psc_ops {
   psc_ops_harris() {
     name             = "harris";
     size             = sizeof(struct psc_harris);
-    param_descr      = psc_harris_descr;
     destroy          = psc_harris_destroy;
-    read             = psc_harris_read;
   }
 } psc_harris_ops;
 

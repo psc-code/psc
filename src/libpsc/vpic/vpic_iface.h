@@ -166,13 +166,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 
 
 
-// ----------------------------------------------------------------------
-// vpic_harris_params
-
-struct vpic_harris_params {
-  // Harris
-};
-
 struct globals_physics {
   double ec;
   double me;
@@ -225,11 +218,6 @@ struct globals_physics {
 // psc_harris
 
 struct psc_harris {
-  // must be first because of our hacky way of passing arguments to
-  // vpic initialization deck
-  // params
-  struct vpic_harris_params prm;
-  
   // state
   struct globals_physics phys;
   int n_global_patches;
