@@ -118,6 +118,7 @@ struct PscHarris : PscHarrisParams
     
     psc_->prm.nmax = (int) (taui / (phys->wci*phys->dt)); // number of steps from taui
 
+    std::vector<uint> n_prts_by_patch_new;
     bool split;
     psc_method_get_param_bool(psc_->method, "split", &split);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
@@ -127,7 +128,7 @@ struct PscHarris : PscHarrisParams
       auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
       psc_balance_setup(psc_->balance);
       auto balance = PscBalanceBase{psc_->balance};
-      auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+      n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
     
       // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
       psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
@@ -135,12 +136,6 @@ struct PscHarris : PscHarrisParams
       // create and set up base mflds
       psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				    psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
-
-      SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
-      // FIXME MfieldsSingle
-      SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
-	  return init_field(xx, m);
-	});
     } else {
       sub->sim = Simulation_create();
       psc_method_set_param_ptr(psc_->method, "sim", sub->sim);
@@ -163,20 +158,20 @@ struct PscHarris : PscHarrisParams
       auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
       psc_balance_setup(psc_->balance);
       auto balance = PscBalanceBase{psc_->balance};
-      auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+      n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
 
       psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
 					    psc_->prm.particles_base).mprts();
       psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				    psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
-
-      SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
-
-      // FIXME, use MfieldsVpic directly?
-      SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
-	  return init_field(xx, m);
-	});
     }
+
+    SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
+
+    // FIXME MfieldsSingle
+    SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
+	return init_field(xx, m);
+      });
 
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
     } else {
