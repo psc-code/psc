@@ -218,9 +218,6 @@ struct globals_physics {
 // psc_harris
 
 struct psc_harris {
-  // state
-
-  Simulation *sim_;
 };
 
 #define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
