@@ -145,7 +145,7 @@ struct PscHarris : PscHarrisParams
 
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
-    setup_particles(psc_, n_prts_by_patch_old, true);
+    setup_particles(n_prts_by_patch_old, true);
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
@@ -160,7 +160,7 @@ struct PscHarris : PscHarrisParams
     
     auto mprts_base = PscMparticlesBase{psc_->particles};
     mprts_base->reserve_all(n_prts_by_patch_new.data());
-    setup_particles(psc, n_prts_by_patch_new, false);
+    setup_particles(n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
     SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
@@ -453,11 +453,11 @@ struct PscHarris : PscHarrisParams
   //
   // set particles x^{n+1/2}, p^{n+1/2}
 
-  static void setup_particles(struct psc *psc, std::vector<uint>& nr_particles_by_patch, bool count_only)
+  void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
-    struct psc_harris *sub = psc_harris(psc);
+    struct psc_harris *sub = psc_harris(psc_);
     struct globals_physics *phys = &sub->phys;
-    MPI_Comm comm = psc_comm(psc);
+    MPI_Comm comm = psc_comm(psc_);
 
     double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
     double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
@@ -469,13 +469,13 @@ struct PscHarris : PscHarrisParams
     int n_global_patches = sub->n_global_patches;
 
     if (count_only) {
-      for (int p = 0; p < psc->n_patches(); p++) {
+      for (int p = 0; p < psc_->n_patches(); p++) {
 	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
       }
       return;
     }
   
-    PscMparticlesBase mprts(psc->particles);
+    PscMparticlesBase mprts(psc_->particles);
   
     // LOAD PARTICLES
 
@@ -490,8 +490,8 @@ struct PscHarris : PscHarrisParams
     RngPool_seed(rngpool, rank);
     Rng *rng = RngPool_get(rngpool, 0);
 
-    assert(psc->n_patches() > 0);
-    const Grid_t& grid = psc->grid();
+    assert(psc_->n_patches() > 0);
+    const Grid_t& grid = psc_->grid();
     const Grid_t::Patch& patch = grid.patches[0];
     double xmin = patch.xb[0], xmax = patch.xe[0];
     double ymin = patch.xb[1], ymax = patch.xe[1];
@@ -669,7 +669,6 @@ struct psc_ops_harris : psc_ops {
     param_descr      = psc_harris_descr;
     destroy          = psc_harris_destroy;
     read             = psc_harris_read;
-    setup_particles  = PscHarris::setup_particles;
   }
 } psc_harris_ops;
 
