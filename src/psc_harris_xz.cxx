@@ -118,24 +118,10 @@ struct PscHarris : PscHarrisParams
     
     psc_->prm.nmax = (int) (taui / (phys->wci*phys->dt)); // number of steps from taui
 
-    std::vector<uint> n_prts_by_patch_new;
     bool split;
     psc_method_get_param_bool(psc_->method, "split", &split);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
       psc_method_do_setup(psc_->method, psc_);
-    
-      // partition and initial balancing
-      auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
-      psc_balance_setup(psc_->balance);
-      auto balance = PscBalanceBase{psc_->balance};
-      n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-    
-      // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-      psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-					    psc_->prm.particles_base).mprts();
-      // create and set up base mflds
-      psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
-				    psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     } else {
       sub->sim = Simulation_create();
       psc_method_set_param_ptr(psc_->method, "sim", sub->sim);
@@ -153,19 +139,22 @@ struct PscHarris : PscHarrisParams
 
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
       psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-
-      // partition and initial balancing
-      auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
-      psc_balance_setup(psc_->balance);
-      auto balance = PscBalanceBase{psc_->balance};
-      n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-
-      psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-					    psc_->prm.particles_base).mprts();
-      psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
-				    psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     }
 
+    // partition and initial balancing
+    auto n_prts_by_patch_old = psc_method_setup_partition(psc_->method, psc_);
+    psc_balance_setup(psc_->balance);
+    auto balance = PscBalanceBase{psc_->balance};
+    auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+
+    // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
+    psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
+					  psc_->prm.particles_base).mprts();
+    
+    // create and set up base mflds
+    psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
+				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+    
     SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
 
     // FIXME MfieldsSingle
