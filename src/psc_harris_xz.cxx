@@ -76,6 +76,16 @@ struct PscHarrisParams
   double Tbe_Te;                   // Ratio of background T_e to Harris T_e
   double Tbi_Ti;                   // Ratio of background T_i to Harris T_i
 
+  double bg;                       // Guide field
+  double theta;
+  
+  double Lpert_Lx;                 // wavelength of perturbation in terms of Lx
+  double dbz_b0;                   // perturbation in Bz relative to B0
+  double nppc;                     // Average number of macro particle per cell per species
+  bool open_bc_x;                  // Flag to signal we want to do open boundary condition in x
+  bool driven_bc_z;                // Flag to signal we want to do driven boundary condition in z
+
+
   // FIXME, not really harris-specific
   double wpedt_max;
 
@@ -246,7 +256,7 @@ struct PscHarris : PscHarrisParams
     double Npe_sheet = 2*phys->n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
     double Npe_back  = nb_n0*phys->n0 * Ly*Lz*Lx;          // N physical e's in backgrnd
     double Npe       = Npe_sheet + Npe_back;
-    phys->Ne         = prm->nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
+    phys->Ne         = nppc * gdims[0] * gdims[1] * gdims[2];  // total macro electrons in box
     phys->Ne_sheet   = phys->Ne*Npe_sheet/Npe;
     phys->Ne_back    = phys->Ne*Npe_back/Npe;
     phys->Ne_sheet   = trunc_granular(phys->Ne_sheet,sub->n_global_patches); // Make it divisible by # subdomains
@@ -260,8 +270,8 @@ struct PscHarris : PscHarrisParams
     phys->udri  = phys->vdri*phys->gdri;                 // 4-velocity of ion drift frame
     phys->udre  = phys->vdre*phys->gdre;                 // 4-velocity of electron drift frame
     phys->tanhf = tanh(0.5*Lz/L);
-    phys->Lpert = prm->Lpert_Lx*Lx; // wavelength of perturbation
-    phys->dbz   = prm->dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
+    phys->Lpert = Lpert_Lx*Lx; // wavelength of perturbation
+    phys->dbz   = dbz_b0*phys->b0; // Perturbation in Bz relative to Bo (Only change here)
     phys->dbx   = -phys->dbz*phys->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
 
     psc_->domain_ = Grid_t::Domain{gdims,
@@ -301,7 +311,7 @@ struct PscHarris : PscHarrisParams
     bool top = psc_at_boundary_hi(psc_, p, 2);
 
     // ***** Set Field Boundary Conditions *****
-    if (sub->prm.open_bc_x) {
+    if (open_bc_x) {
       mpi_printf(comm, "Absorbing fields on X-boundaries\n");
       if (left ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
       if (right) Simulation_set_domain_field_bc(sub->sim, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
@@ -312,7 +322,7 @@ struct PscHarris : PscHarrisParams
     if (top   ) Simulation_set_domain_field_bc(sub->sim, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
 
     // ***** Set Particle Boundary Conditions *****
-    if (sub->prm.driven_bc_z) {
+    if (driven_bc_z) {
       mpi_printf(comm, "Absorb particles on Z-boundaries\n");
       if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
       if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
@@ -321,7 +331,7 @@ struct PscHarris : PscHarrisParams
       if (bottom) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
       if (top   ) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
     }
-    if (sub->prm.open_bc_x) {
+    if (open_bc_x) {
       mpi_printf(comm, "Absorb particles on X-boundaries\n");
       if (left)  Simulation_set_domain_particle_bc(sub->sim, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
       if (right) Simulation_set_domain_particle_bc(sub->sim, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
@@ -404,9 +414,9 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "nb/n0    = %g\n", nb_n0) ;
     mpi_printf(comm, "wpe/wce  = %g\n", wpe_wce);
     mpi_printf(comm, "mi/me    = %g\n", mi_me);
-    mpi_printf(comm, "theta    = %g\n", sub->prm.theta);
-    mpi_printf(comm, "Lpert/Lx = %g\n", sub->prm.Lpert_Lx);
-    mpi_printf(comm, "dbz/b0   = %g\n", sub->prm.dbz_b0);
+    mpi_printf(comm, "theta    = %g\n", theta);
+    mpi_printf(comm, "Lpert/Lx = %g\n", Lpert_Lx);
+    mpi_printf(comm, "dbz/b0   = %g\n", dbz_b0);
     mpi_printf(comm, "taui     = %g\n", taui);
     mpi_printf(comm, "t_intervali = %g\n", t_intervali);
     mpi_printf(comm, "num_step = %d\n", psc_->prm.nmax);
@@ -421,7 +431,7 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "nz = %d\n", psc_->domain_.gdims[2]);
     mpi_printf(comm, "courant = %g\n", phys->c*phys->dt/phys->dg);
     mpi_printf(comm, "n_global_patches = %d\n", sub->n_global_patches);
-    mpi_printf(comm, "nppc = %g\n", sub->prm.nppc);
+    mpi_printf(comm, "nppc = %g\n", nppc);
     mpi_printf(comm, "b0 = %g\n", phys->b0);
     mpi_printf(comm, "v_A (based on nb) = %g\n", phys->v_A);
     mpi_printf(comm, "di = %g\n", phys->di);
@@ -444,8 +454,8 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "vthe/c = %g\n", phys->vthe/phys->c);
     mpi_printf(comm, "vdri/c = %g\n", phys->vdri/phys->c);
     mpi_printf(comm, "vdre/c = %g\n", phys->vdre/phys->c);
-    mpi_printf(comm, "Open BC in x?   = %d\n", sub->prm.open_bc_x);
-    mpi_printf(comm, "Driven BC in z? = %d\n", sub->prm.driven_bc_z);
+    mpi_printf(comm, "Open BC in x?   = %d\n", open_bc_x);
+    mpi_printf(comm, "Driven BC in z? = %d\n", driven_bc_z);
   }
 
   // ----------------------------------------------------------------------
@@ -459,7 +469,7 @@ struct PscHarris : PscHarrisParams
     struct globals_physics *phys = &sub->phys;
     MPI_Comm comm = psc_comm(psc_);
 
-    double cs = cos(sub->prm.theta), sn = sin(sub->prm.theta);
+    double cs = cos(theta), sn = sin(theta);
     double Ne_sheet = phys->Ne_sheet, vthe = phys->vthe, vthi = phys->vthi;
     double weight_s = phys->weight_s;
     double tanhf = phys->tanhf, L = phys->L;
@@ -573,8 +583,7 @@ struct PscHarris : PscHarrisParams
   {
     struct psc_harris *sub = psc_harris(psc_);
     struct globals_physics *phys = &sub->phys;
-    double theta = sub->prm.theta;
-    double b0 = phys->b0, bg = sub->prm.bg, dbx = phys->dbx, dbz = phys->dbz;
+    double b0 = phys->b0, dbx = phys->dbx, dbz = phys->dbz;
     double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
     double x = crd[0], z = crd[2];
     
@@ -616,22 +625,6 @@ using Mparticles_t = MparticlesSingle;
 
 #define VAR(x) (void *)offsetof(struct psc_harris, x)
 static struct param psc_harris_descr[] = {
-  { "nppc"                   , VAR(prm.nppc)                 , PARAM_DOUBLE(100.),
-    .help = "average number of macro particle per cell per species" },
-
-  { "bg"                    , VAR(prm.bg)                    , PARAM_DOUBLE(0.),
-    .help = "Guide field" },
-  { "theta"                 , VAR(prm.theta)                 , PARAM_DOUBLE(0.),
-    .help = "Theta" },
-  { "Lpert_Lx"              , VAR(prm.Lpert_Lx)              , PARAM_DOUBLE(1.),
-    .help = "wavelength of perturbation in terms of Lx" },
-  { "dbz_b0"                , VAR(prm.dbz_b0)                , PARAM_DOUBLE(.03),
-    .help = "perturbation in Bz relative to B0" },
-  { "open_bc_x"             , VAR(prm.open_bc_x)             , PARAM_BOOL(false),
-    .help = "use open b.c. at x boundaries" },
-  { "driven_bc_z"           , VAR(prm.driven_bc_z)           , PARAM_BOOL(false),
-    .help = "use driven b.c. at z boundaries" },
-
   { "overalloc"             , VAR(prm.overalloc)             , PARAM_DOUBLE(2.),
     .help = "over-allocate particle arrays by this factor" },
 
@@ -719,6 +712,15 @@ PscHarris* PscHarrisBuilder::makePscHarris()
   params.Tbe_Te = .333;
   params.Tbi_Ti = .333;
 
+  params.bg = 0.;
+  params.theta = 0.;
+
+  params.Lpert_Lx = 1.;
+  params.dbz_b0 = .03;
+  params.nppc = 10;
+  params.open_bc_x = false;
+  params.driven_bc_z = false;
+  
   psc_default_dimensionless(psc_);
 
   psc_->prm.nicell = 1;

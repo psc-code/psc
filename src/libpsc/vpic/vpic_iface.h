@@ -171,15 +171,6 @@ void Simulation_set_region_resistive_harris(Simulation *sim,
 
 struct vpic_harris_params {
   // Harris
-  double bg;                      // Guide field
-  double theta;
-
-  double Lpert_Lx;                // wavelength of perturbation in terms of Lx
-  double dbz_b0;                  // perturbation in Bz relative to B0
-  double nppc;                    // Average number of macro particle per cell per species
-  bool open_bc_x;                 // Flag to signal we want to do open boundary condition in x
-  bool driven_bc_z;               // Flag to signal we want to do driven boundary condition in z
-
   double overalloc;               // Overallocation factor (> 1) for particle arrays
 };
 
