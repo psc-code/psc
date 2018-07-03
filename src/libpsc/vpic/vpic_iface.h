@@ -215,14 +215,6 @@ struct globals_physics {
 };
 
 // ----------------------------------------------------------------------
-// psc_harris
-
-struct psc_harris {
-};
-
-#define psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
-
-// ----------------------------------------------------------------------
 // vpic_kind_info
 
 struct vpic_kind_info {

@@ -111,11 +111,13 @@ struct PscHarris : PscHarrisParams
 {
   using Mparticles_t = MparticlesSingle; // FIXME!!!
   
+  // ----------------------------------------------------------------------
+  // PscHarris ctor
+  
   PscHarris(const PscHarrisParams& params, psc *psc)
     : PscHarrisParams(params),
       psc_{psc}
   {
-    psc_harris* sub = psc_harris(psc_);
     MPI_Comm comm = psc_comm(psc_);
 
     setup_ic();
@@ -201,6 +203,9 @@ struct PscHarris : PscHarrisParams
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   }
 
+  // ----------------------------------------------------------------------
+  // PscHarris dtor
+  
   ~PscHarris()
   {
     Simulation_delete(sim_);
@@ -211,8 +216,6 @@ struct PscHarris : PscHarrisParams
 
   void setup_ic()
   {
-    struct psc_harris *sub = psc_harris(psc_);
-
     Int3 gdims = {512, 1, 128};
     Int3 np = {4, 1, 1};
     n_global_patches_ = np[0] * np[1] * np[2];
@@ -287,7 +290,6 @@ struct PscHarris : PscHarrisParams
 
   void setup_domain()
   {
-    struct psc_harris *sub = psc_harris(psc_);
     MPI_Comm comm = psc_comm(psc_);
 
     psc_setup_coeff(psc_); // FIXME -- in the middle of things here, will be done again later
@@ -345,7 +347,6 @@ struct PscHarris : PscHarrisParams
 
   void setup_fields()
   {
-    struct psc_harris *sub = psc_harris(psc_);
     MPI_Comm comm = psc_comm(psc_);
 
     mpi_printf(comm, "Setting up materials.\n");
@@ -380,7 +381,6 @@ struct PscHarris : PscHarrisParams
 
   void setup_species()
   {
-    psc_harris* sub = psc_harris(psc_);
     MPI_Comm comm = psc_comm(psc_);
     
     mpi_printf(comm, "Setting up species.\n");
@@ -401,7 +401,6 @@ struct PscHarris : PscHarrisParams
 
   void setup_log()
   {
-    struct psc_harris *sub = psc_harris(psc_);
     MPI_Comm comm = psc_comm(psc_);
 
     mpi_printf(comm, "***********************************************\n");
@@ -465,7 +464,6 @@ struct PscHarris : PscHarrisParams
 
   void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
-    struct psc_harris *sub = psc_harris(psc_);
     MPI_Comm comm = psc_comm(psc_);
 
     double cs = cos(theta), sn = sin(theta);
@@ -579,7 +577,6 @@ struct PscHarris : PscHarrisParams
 
   double init_field(double crd[3], int m)
   {
-    struct psc_harris *sub = psc_harris(psc_);
     double b0 = phys_.b0, dbx = phys_.dbx, dbz = phys_.dbz;
     double L = phys_.L, Lx = phys_.Lx, Lz = phys_.Lz, Lpert = phys_.Lpert;
     double x = crd[0], z = crd[2];
@@ -625,7 +622,6 @@ private:
 struct psc_ops_harris : psc_ops {
   psc_ops_harris() {
     name             = "harris";
-    size             = sizeof(struct psc_harris);
   }
 } psc_harris_ops;
 
