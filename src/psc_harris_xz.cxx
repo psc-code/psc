@@ -176,8 +176,10 @@ struct PscHarris : PscHarrisParams
       SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
 	  return init_field(xx, m);
 	});
-      
-  
+    }
+
+    if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
+    } else {
       Simulation_diagnostics_setup(sub->sim);
     }
 
