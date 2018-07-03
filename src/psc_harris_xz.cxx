@@ -137,7 +137,10 @@ struct PscHarris : PscHarrisParams
 				    psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
 
       psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
-      psc_method_set_ic_fields(psc_->method, psc_);
+      // FIXME MfieldsSingle
+      SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
+	  return init_field(psc, xx, m);
+	});
     } else {
       sub->sim = Simulation_create();
       psc_method_set_param_ptr(psc_->method, "sim", sub->sim);
@@ -169,7 +172,11 @@ struct PscHarris : PscHarrisParams
 
       SetupParticles<Mparticles_t>::setup_particles(psc_, n_prts_by_patch_new);
 
-      SetupFields<MfieldsSingle>::set_ic(psc_); // FIXME, use MfieldsVpic directly?
+      // FIXME, use MfieldsVpic directly?
+      SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
+	  return init_field(psc, xx, m);
+	});
+      
   
       Simulation_diagnostics_setup(sub->sim);
     }
@@ -451,6 +458,38 @@ struct PscHarris : PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
+  // init_field
+
+  double init_field(struct psc *psc, double crd[3], int m)
+  {
+    struct psc_harris *sub = psc_harris(psc);
+    struct globals_physics *phys = &sub->phys;
+    double theta = sub->prm.theta;
+    double b0 = phys->b0, bg = sub->prm.bg, dbx = phys->dbx, dbz = phys->dbz;
+    double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
+    double x = crd[0], z = crd[2];
+    
+    double cs = cos(theta), sn = sin(theta);
+    
+    switch (m) {
+    case HX:
+      return cs*b0*tanh(z/L)+dbx*cos(2.*M_PI*(x-.5*Lx)/Lpert)*sin(M_PI*z/Lz);
+      
+    case HY:
+    return -sn*b0*tanh(z/L) + b0*bg;
+    
+    case HZ:
+      return dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert);
+      
+    case JYI:
+      return 0.; // FIXME
+      
+    default:
+      return 0.;
+    }
+  }
+
+  // ----------------------------------------------------------------------
   // integrate
 
   void integrate()
@@ -492,39 +531,6 @@ static struct param psc_harris_descr[] = {
   {},
 };
 #undef VAR
-
-// ----------------------------------------------------------------------
-// psc_harris_init_field
-
-static double
-psc_harris_init_field(struct psc *psc, double crd[3], int m)
-{
-  struct psc_harris *sub = psc_harris(psc);
-  struct globals_physics *phys = &sub->phys;
-  double theta = sub->prm.theta;
-  double b0 = phys->b0, bg = sub->prm.bg, dbx = phys->dbx, dbz = phys->dbz;
-  double L = phys->L, Lx = phys->Lx, Lz = phys->Lz, Lpert = phys->Lpert;
-  double x = crd[0], z = crd[2];
-
-  double cs = cos(theta), sn = sin(theta);
-
-  switch (m) {
-  case HX:
-    return cs*b0*tanh(z/L)+dbx*cos(2.*M_PI*(x-.5*Lx)/Lpert)*sin(M_PI*z/Lz);
-    
-  case HY:
-    return -sn*b0*tanh(z/L) + b0*bg;
-    
-  case HZ:
-    return dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert);
-  
-  case JYI:
-    return 0.; // FIXME
-    
-  default:
-    return 0.;
-  }
-}
 
 // ----------------------------------------------------------------------
 // psc_harris_setup_particles
@@ -675,7 +681,6 @@ struct psc_ops_harris : psc_ops {
     param_descr      = psc_harris_descr;
     destroy          = psc_harris_destroy;
     read             = psc_harris_read;
-    init_field       = psc_harris_init_field;
     setup_particles  = psc_harris_setup_particles;
   }
 } psc_harris_ops;
