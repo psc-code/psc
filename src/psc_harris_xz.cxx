@@ -139,7 +139,7 @@ struct PscHarris : PscHarrisParams
       psc_method_set_ic_particles(psc_->method, psc_, n_prts_by_patch_new);
       // FIXME MfieldsSingle
       SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
-	  return init_field(psc, xx, m);
+	  return init_field(xx, m);
 	});
     } else {
       sub->sim = Simulation_create();
@@ -174,7 +174,7 @@ struct PscHarris : PscHarrisParams
 
       // FIXME, use MfieldsVpic directly?
       SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
-	  return init_field(psc, xx, m);
+	  return init_field(xx, m);
 	});
       
   
@@ -460,9 +460,9 @@ struct PscHarris : PscHarrisParams
   // ----------------------------------------------------------------------
   // init_field
 
-  double init_field(struct psc *psc, double crd[3], int m)
+  double init_field(double crd[3], int m)
   {
-    struct psc_harris *sub = psc_harris(psc);
+    struct psc_harris *sub = psc_harris(psc_);
     struct globals_physics *phys = &sub->phys;
     double theta = sub->prm.theta;
     double b0 = phys->b0, bg = sub->prm.bg, dbx = phys->dbx, dbz = phys->dbz;
