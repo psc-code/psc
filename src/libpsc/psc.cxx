@@ -363,37 +363,6 @@ void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc,
 }
 
 // ----------------------------------------------------------------------
-// _psc_setup
-
-static void
-_psc_setup(struct psc *psc)
-{
-  psc_method_do_setup(psc->method, psc);
-
-  // partition and initial balancing
-  auto n_prts_by_patch_old = psc_method_setup_partition(psc->method, psc);
-  psc_balance_setup(psc->balance);
-  auto balance = PscBalanceBase{psc->balance};
-  auto n_prts_by_patch_new = balance.initial(psc, n_prts_by_patch_old);
-
-  // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  psc->particles = PscMparticlesCreate(psc_comm(psc), psc->grid(),
-				       psc->prm.particles_base).mprts();
-  psc_method_set_ic_particles(psc->method, psc, n_prts_by_patch_new);
-
-  // create and set up base mflds
-  psc->flds = PscMfieldsCreate(psc_comm(psc), psc->grid(),
-			       psc->n_state_fields, psc->ibn, psc->prm.fields_base).mflds();
-  psc_method_set_ic_fields(psc->method, psc);
-
-#ifdef USE_FORTRAN
-  psc_setup_fortran(psc);
-#endif
-
-  psc_setup_member_objs(psc);
-}
-
-// ----------------------------------------------------------------------
 // psc_destroy
 
 static void
@@ -521,7 +490,6 @@ struct mrc_class_psc_ : mrc_class_psc {
     param_descr      = psc_descr;
     create           = _psc_create;
     set_from_options = _psc_set_from_options;
-    setup            = _psc_setup;
     view             = _psc_view;
     destroy          = _psc_destroy;
     write            = _psc_write;
