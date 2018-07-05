@@ -19,24 +19,6 @@
 // psc_method "default"
 
 // ----------------------------------------------------------------------
-// psc_method_default_setup_partition
-
-std::vector<uint> psc_method_default_setup_partition(struct psc_method *method, struct psc *psc)
-{
-  return SetupParticles<MparticlesDouble>::setup_partition(psc);
-}
-
-// ----------------------------------------------------------------------
-// psc_method_default_set_ic_particles
-
-static void
-psc_method_default_set_ic_particles(struct psc_method *method, struct psc *psc,
-				    std::vector<uint>& n_prts_by_patch)
-{
-  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_default_set_ic_fields
 
 static void
@@ -78,8 +60,6 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 struct psc_method_ops_default : psc_method_ops {
   psc_method_ops_default() {
     name                          = "default";
-    setup_partition               = psc_method_default_setup_partition;
-    set_ic_particles              = psc_method_default_set_ic_particles;
     set_ic_fields                 = psc_method_default_set_ic_fields;
     initialize                    = psc_method_default_initialize;
     output                        = psc_method_default_output;

@@ -29,25 +29,6 @@ static struct param psc_method_vpic_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_setup_partition
-
-static std::vector<uint> psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc)
-				
-{
-  return SetupParticles<MparticlesDouble>::setup_partition(psc);
-}
-
-// ----------------------------------------------------------------------
-// psc_method_vpic_set_ic_particles
-
-static void
-psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
-				 std::vector<uint>& n_prts_by_patch)
-{
-  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_vpic_set_ic_fields
 
 static void
@@ -156,8 +137,6 @@ struct psc_method_ops_vpic : psc_method_ops {
     name                          = "vpic";
     size                          = sizeof(struct psc_method_vpic);
     param_descr                   = psc_method_vpic_descr;
-    setup_partition               = psc_method_vpic_setup_partition;
-    set_ic_particles              = psc_method_vpic_set_ic_particles;
     set_ic_fields                 = psc_method_vpic_set_ic_fields;
     initialize                    = psc_method_vpic_initialize;
     output                        = psc_method_vpic_output;

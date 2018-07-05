@@ -5,30 +5,6 @@
 // psc_method
 
 // ----------------------------------------------------------------------
-// psc_method_setup_partition
-
-std::vector<uint> psc_method_setup_partition(struct psc_method *method, struct psc *psc)
-{
-  struct psc_method_ops *ops = psc_method_ops(method);
-  assert(ops && ops->setup_partition);
-
-  return ops->setup_partition(method, psc);
-}
-
-// ----------------------------------------------------------------------
-// psc_method_set_ic_particles
-
-void
-psc_method_set_ic_particles(struct psc_method *method, struct psc *psc,
-			    std::vector<uint>& n_prts_by_patch)
-{
-  struct psc_method_ops *ops = psc_method_ops(method);
-  assert(ops && ops->set_ic_particles);
-
-  ops->set_ic_particles(method, psc, n_prts_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_set_ic_fields
 
 void
