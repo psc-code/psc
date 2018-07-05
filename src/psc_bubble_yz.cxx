@@ -552,16 +552,16 @@ struct PscBubbleBuilder
     : psc_(psc_create(MPI_COMM_WORLD))
   {}
 
-  PscBubble* makePscBubble();
+  PscBubble* makePsc();
 
   PscBubbleParams params;
   psc* psc_;
 };
 
 // ----------------------------------------------------------------------
-// PscBubbleBuilder::makePscBubble
+// PscBubbleBuilder::makePsc
 
-PscBubble* PscBubbleBuilder::makePscBubble()
+PscBubble* PscBubbleBuilder::makePsc()
 {
   MPI_Comm comm = psc_comm(psc_);
   
@@ -672,16 +672,15 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, &psc_bubble_ops);
 
   auto builder = PscBubbleBuilder{};
-  auto bubble = builder.makePscBubble();
+  auto psc = builder.makePsc();
 
   psc_view(builder.psc_);
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
   
-  bubble->integrate();
+  psc->integrate();
 
-  delete bubble;
-  
+  delete psc;
   psc_destroy(builder.psc_);
   
   libmrc_params_finalize();

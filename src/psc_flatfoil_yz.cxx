@@ -657,7 +657,7 @@ struct PscFlatfoilBuilder
     : psc_(psc_create(MPI_COMM_WORLD))
   {}
   
-  PscFlatfoil* makePscFlatfoil();
+  PscFlatfoil* makePsc();
 
   PscFlatfoilParams params;
   
@@ -665,9 +665,9 @@ struct PscFlatfoilBuilder
 };
 
 // ----------------------------------------------------------------------
-// PscFlatfoilBuilder::makePscFlatfoil
+// PscFlatfoilBuilder::makePsc
 
-PscFlatfoil* PscFlatfoilBuilder::makePscFlatfoil()
+PscFlatfoil* PscFlatfoilBuilder::makePsc()
 {
   MPI_Comm comm = psc_comm(psc_);
   
@@ -911,16 +911,15 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
   auto builder = PscFlatfoilBuilder{};
-  auto flatfoil = builder.makePscFlatfoil();
-  
+  auto psc = builder.makePsc();
+
   psc_view(builder.psc_);
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
   
-  flatfoil->integrate();
-  
-  delete flatfoil;
-  
+  psc->integrate();
+
+  delete psc;
   psc_destroy(builder.psc_);
   
   libmrc_params_finalize();
@@ -928,4 +927,3 @@ main(int argc, char **argv)
 
   return 0;
 }
-

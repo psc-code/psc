@@ -639,16 +639,16 @@ struct PscHarrisBuilder
     : psc_(psc_create(MPI_COMM_WORLD))
   {}
 
-  PscHarris* makePscHarris();
+  PscHarris* makePsc();
 
   PscHarrisParams params;
   psc* psc_;
 };
 
 // ----------------------------------------------------------------------
-// PscHarrisBuilder::makePscHarris
+// PscHarrisBuilder::makePsc
 
-PscHarris* PscHarrisBuilder::makePscHarris()
+PscHarris* PscHarrisBuilder::makePsc()
 {
   MPI_Comm comm = psc_comm(psc_);
   
@@ -741,7 +741,7 @@ main(int argc, char **argv)
 #ifdef USE_VPIC
   vpic_base_init(&argc, &argv);
 #else
-  MPI_Init(argc, argv);
+  MPI_Init(&argc, &argv);
 #endif
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
@@ -749,17 +749,16 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, &psc_harris_ops);
 
   auto builder = PscHarrisBuilder{};
-  auto harris = builder.makePscHarris();
+  auto psc = builder.makePsc();
 
   psc_view(builder.psc_);
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
-
-  harris->initialize();
-  harris->integrate();
   
-  delete harris;
+  psc->initialize();
+  psc->integrate();
 
+  delete psc;
   psc_destroy(builder.psc_);
   
   libmrc_params_finalize();
