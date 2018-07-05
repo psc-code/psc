@@ -38,7 +38,7 @@ psc_print_profiling(struct psc *psc)
 {
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (1||size > 1 && !psc->prm.detailed_profiling) {
+  if (1||(size > 1 && !psc->prm.detailed_profiling)) {
     prof_print_mpi(MPI_COMM_WORLD);
   } else {
     int rank;
