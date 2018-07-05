@@ -202,7 +202,6 @@ struct psc_ops {
   // FIXME setup_fields -> set_ic_fields
   void (*setup_fields)(struct psc *psc, struct psc_mfields *flds);
   double (*init_field)(struct psc *psc, double x[3], int m);
-  void (*integrate)(struct psc *psc);
   void (*step)(struct psc *psc);
   void (*output)(struct psc *psc);
 };
