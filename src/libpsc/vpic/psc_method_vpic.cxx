@@ -18,7 +18,6 @@ struct psc_method_vpic {
   // params
   bool use_deck_field_ic;
   bool use_deck_particle_ic;
-  bool split;
 
   // state
   Simulation *sim;
@@ -30,7 +29,6 @@ struct psc_method_vpic {
 static struct param psc_method_vpic_descr[] = {
   { "use_deck_field_ic"     , VAR(use_deck_field_ic)              , PARAM_BOOL(false) },
   { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
-  { "split"                 , VAR(split)                          , PARAM_BOOL(false) },
 
   { "sim"                   , VAR(sim)                            , PARAM_PTR(NULL)   },
   {},
@@ -254,11 +252,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc)
   // First output / stats
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
-  if (sub->split) {
-    Simulation_diagnostics_run(sub->sim);
-  } else {
-    Simulation_diagnostics(sub->sim);
-  }
+  Simulation_diagnostics_run(sub->sim);
   psc_method_default_output(method, psc);
 
   Simulation_print_status(sub->sim);
@@ -277,11 +271,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc)
   // FIXME, a hacky place to do this
   Simulation_inc_step(sub->sim, psc->timestep);
 
-  if (sub->split) {
-    Simulation_diagnostics_run(sub->sim);
-  } else {
-    Simulation_diagnostics(sub->sim);
-  }
+  Simulation_diagnostics_run(sub->sim);
   
   if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
     Simulation_print_status(sub->sim);

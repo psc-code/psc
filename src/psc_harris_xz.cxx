@@ -132,9 +132,7 @@ struct PscHarris : PscHarrisParams
     
     psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
 
-    bool split;
-    psc_method_get_param_bool(psc_->method, "split", &split);
-    if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
+    if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
       psc_method_do_setup(psc_->method, psc_);
     } else {
       sim_ = Simulation_create();
@@ -179,7 +177,7 @@ struct PscHarris : PscHarrisParams
 	return init_field(xx, m);
       });
 
-    if (strcmp(psc_method_type(psc_->method), "vpic") != 0 || !split) {
+    if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       Simulation_diagnostics_setup(sim_);
     }

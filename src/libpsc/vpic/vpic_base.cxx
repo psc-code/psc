@@ -94,15 +94,6 @@ void Simulation_user_initialization(Simulation *sim)
 }
 
 // ----------------------------------------------------------------------
-// Simulation_diagnostics
-
-void Simulation_diagnostics(Simulation *sim)
-{
-  // Let the user compute diagnostics
-  sim->diagnostics();
-}
-
-// ----------------------------------------------------------------------
 // Simulation_inc_step
 
 void Simulation_inc_step(Simulation *sim, int step)

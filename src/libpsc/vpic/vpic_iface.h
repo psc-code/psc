@@ -144,10 +144,10 @@ void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
+void Simulation_diagnostics_run(Simulation *sim);
 
 void Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info);
 void Simulation_print_status(Simulation *sim);
-void Simulation_diagnostics(Simulation *sim);
 void Simulation_inc_step(Simulation *sim, int step);
 void Simulation_user_initialization(Simulation *sim);
 
@@ -156,7 +156,6 @@ struct psc_harris;
 struct vpic_harris_params;
 struct globals_physics;
 
-void Simulation_diagnostics_run(Simulation *sim);
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,
 					    struct globals_physics *phys,
