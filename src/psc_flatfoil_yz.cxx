@@ -902,7 +902,6 @@ main(int argc, char **argv)
   psc->integrate();
 
   delete psc;
-  psc_destroy(builder.psc_);
   
   libmrc_params_finalize();
   MPI_Finalize();
