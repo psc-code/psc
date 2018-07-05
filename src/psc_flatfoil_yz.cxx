@@ -652,7 +652,6 @@ struct PscFlatfoilBuilder
   PscFlatfoil* makePsc();
 
   PscFlatfoilParams params;
-  psc* psc_;
 };
 
 // ----------------------------------------------------------------------
@@ -660,7 +659,7 @@ struct PscFlatfoilBuilder
 
 PscFlatfoil* PscFlatfoilBuilder::makePsc()
 {
-  psc_ = psc_create(MPI_COMM_WORLD);
+  auto psc_ = psc_create(MPI_COMM_WORLD);
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
