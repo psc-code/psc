@@ -898,10 +898,6 @@ main(int argc, char **argv)
   auto builder = PscFlatfoilBuilder{};
   auto psc = builder.makePsc();
 
-  psc_view(builder.psc_);
-  psc_mparticles_view(builder.psc_->particles);
-  psc_mfields_view(builder.psc_->flds);
-  
   psc->initialize();
   psc->integrate();
 
