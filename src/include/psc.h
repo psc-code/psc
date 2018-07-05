@@ -199,9 +199,6 @@ struct psc_ops {
   void (*setup_particles)(struct psc *psc, std::vector<uint>& nr_particles_by_patch, bool count_only);
   void (*init_npt)(struct psc *psc, int kind, double x[3],
 		   struct psc_particle_npt *npt);
-  // FIXME setup_fields -> set_ic_fields
-  void (*setup_fields)(struct psc *psc, struct psc_mfields *flds);
-  double (*init_field)(struct psc *psc, double x[3], int m);
 };
 
 #define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
@@ -296,7 +293,6 @@ void psc_set_from_options(struct psc *psc);
 void psc_set_kinds(struct psc *psc, const Grid_t::Kinds& kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
-void psc_set_ic_fields(struct psc *psc);
 void psc_output(struct psc *psc);
 void psc_integrate(struct psc *psc);
 

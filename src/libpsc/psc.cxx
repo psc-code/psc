@@ -440,22 +440,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// psc_set_ic_fields
-//
-// set i.c. on E^{n+1/2}, B^{n+1/2}
-
-void
-psc_set_ic_fields(struct psc *psc)
-{
-  // type-specific other initial condition
-  if (psc_ops(psc)->setup_fields) {
-    psc_ops(psc)->setup_fields(psc, psc->flds);
-  } else {
-    SetupFields<Mfields_t>::set_ic(psc);
-  }
-}
-
-// ----------------------------------------------------------------------
 // _psc_view
 
 static void

@@ -54,17 +54,4 @@ struct SetupFields
     set(mflds, func);
     mflds_base.put_as(mflds, JXI, HX + 3);
   }
-  
-  static void set_ic(struct psc *psc)
-  {
-    double (*init_field)(struct psc *psc, double x[3], int m);
-    init_field = psc_ops(psc)->init_field;
-    if (!init_field)
-      return;
-
-    set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
-	return init_field(psc, xx, m);
-      });
-
-  }
 };
