@@ -748,19 +748,19 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_harris_ops);
 
-  auto sim = PscHarrisBuilder{};
-  auto harris = sim.makePscHarris();
+  auto builder = PscHarrisBuilder{};
+  auto harris = builder.makePscHarris();
 
-  psc_view(sim.psc_);
-  psc_mparticles_view(sim.psc_->particles);
-  psc_mfields_view(sim.psc_->flds);
+  psc_view(builder.psc_);
+  psc_mparticles_view(builder.psc_->particles);
+  psc_mfields_view(builder.psc_->flds);
 
   harris->initialize();
   harris->integrate();
   
   delete harris;
 
-  psc_destroy(sim.psc_);
+  psc_destroy(builder.psc_);
   
   libmrc_params_finalize();
   MPI_Finalize();

@@ -910,18 +910,18 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
-  auto sim = PscFlatfoilBuilder{};
-  auto flatfoil = sim.makePscFlatfoil();
+  auto builder = PscFlatfoilBuilder{};
+  auto flatfoil = builder.makePscFlatfoil();
   
-  psc_view(sim.psc_);
-  psc_mparticles_view(sim.psc_->particles);
-  psc_mfields_view(sim.psc_->flds);
+  psc_view(builder.psc_);
+  psc_mparticles_view(builder.psc_->particles);
+  psc_mfields_view(builder.psc_->flds);
   
   flatfoil->integrate();
   
   delete flatfoil;
   
-  psc_destroy(sim.psc_);
+  psc_destroy(builder.psc_);
   
   libmrc_params_finalize();
   MPI_Finalize();
