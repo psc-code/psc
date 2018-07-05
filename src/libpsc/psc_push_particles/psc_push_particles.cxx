@@ -11,7 +11,6 @@
 // ======================================================================
 // forward to subclass
 
-extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 void
