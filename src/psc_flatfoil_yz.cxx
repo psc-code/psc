@@ -885,15 +885,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   return new PscFlatfoil(params, psc_);
 }
 
-// ----------------------------------------------------------------------
-// psc_ops "flatfoil"
-
-struct psc_ops_flatfoil : psc_ops {
-  psc_ops_flatfoil() {
-    name             = "flatfoil";
-  }
-} psc_flatfoil_ops;
-
 // ======================================================================
 // main
 
@@ -907,8 +898,6 @@ main(int argc, char **argv)
 #endif
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
-
-  mrc_class_register_subclass(&mrc_class_psc, &psc_flatfoil_ops);
 
   auto builder = PscFlatfoilBuilder{};
   auto psc = builder.makePsc();

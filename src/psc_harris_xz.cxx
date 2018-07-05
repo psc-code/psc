@@ -622,15 +622,6 @@ private:
 };
 
 // ======================================================================
-// psc_harris_ops
-
-struct psc_ops_harris : psc_ops {
-  psc_ops_harris() {
-    name             = "harris";
-  }
-} psc_harris_ops;
-
-// ======================================================================
 // PscHarrisBuilder
 
 struct PscHarrisBuilder
@@ -745,8 +736,6 @@ main(int argc, char **argv)
 #endif
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
-
-  mrc_class_register_subclass(&mrc_class_psc, &psc_harris_ops);
 
   auto builder = PscHarrisBuilder{};
   auto psc = builder.makePsc();

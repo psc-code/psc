@@ -646,15 +646,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   return new PscBubble{params, psc_};
 }
 
-// ----------------------------------------------------------------------
-// psc_ops "bubble"
-
-struct psc_ops_bubble : psc_ops {
-  psc_ops_bubble() {
-    name             = "bubble";
-  }
-} psc_bubble_ops;
-
 // ======================================================================
 // main
 
@@ -668,8 +659,6 @@ main(int argc, char **argv)
 #endif
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
-
-  mrc_class_register_subclass(&mrc_class_psc, &psc_bubble_ops);
 
   auto builder = PscBubbleBuilder{};
   auto psc = builder.makePsc();
