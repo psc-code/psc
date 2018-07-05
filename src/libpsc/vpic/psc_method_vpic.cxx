@@ -15,10 +15,6 @@
 // psc_method "vpic"
 
 struct psc_method_vpic {
-  // params
-  bool use_deck_field_ic;
-  bool use_deck_particle_ic;
-
   // state
   Simulation *sim;
 };
@@ -27,9 +23,6 @@ struct psc_method_vpic {
 
 #define VAR(x) (void *)offsetof(struct psc_method_vpic, x)
 static struct param psc_method_vpic_descr[] = {
-  { "use_deck_field_ic"     , VAR(use_deck_field_ic)              , PARAM_BOOL(false) },
-  { "use_deck_particle_ic"  , VAR(use_deck_particle_ic)           , PARAM_BOOL(false) },
-
   { "sim"                   , VAR(sim)                            , PARAM_PTR(NULL)   },
   {},
 };
@@ -137,14 +130,7 @@ psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
 static std::vector<uint> psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc)
 				
 {
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-
-  if (sub->use_deck_particle_ic) {
-    assert(psc->n_patches() == 1);
-    return { 1 }; // 1 patch with 1 particle: fake, but not possible to balance, anyway
-  } else {
-    return SetupParticles<MparticlesDouble>::setup_partition(psc);
-  }
+  return SetupParticles<MparticlesDouble>::setup_partition(psc);
 }
 
 // ----------------------------------------------------------------------
@@ -154,18 +140,7 @@ static void
 psc_method_vpic_set_ic_particles(struct psc_method *method, struct psc *psc,
 				 std::vector<uint>& n_prts_by_patch)
 {
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-
-  // set up particles
-  auto mprts_base = PscMparticlesBase{psc->particles};
-  if (sub->use_deck_particle_ic) {
-    // If we want to use the deck particle i.c., we need to copy the
-    // already set up "vpic" particles over to the base particles.
-    auto& mprts = mprts_base->get_as<MparticlesVpic>(MP_DONT_COPY | MP_DONT_RESIZE);
-    mprts_base->put_as(mprts);
-  } else {
-    SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
-  }
+  SetupParticles<MparticlesDouble>::setup_particles(psc, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -176,23 +151,12 @@ psc_method_vpic_set_ic_fields(struct psc_method *method, struct psc *psc)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
   
-  if (sub->use_deck_field_ic) {
-    // The vpic-internal fields have already been initialized by the deck,
-    // but by the end of this function, PSC expects the base fields to be contains
-    // the initial condition.
-    // So let's copy the vpic-internal fields into the base fields in this somewhat
-    // odd fashion.
-    auto mflds_base = PscMfieldsBase{psc->flds};
-    auto& mf_vpic = mflds_base->get_as<MfieldsVpic>(0, 0);
-    mflds_base->put_as(mf_vpic, 0, VPIC_MFIELDS_N_COMP);
-  } else {
-    // While the fields may already have been initialized by the deck,
-    // we'll initialize them the PSC way now.  And in case PSC doesn't
-    // specificy a field i.c., clear out whatever the deck did first.
-    PscMfieldsBase(psc->flds)->zero();
-    // This does the usual PSC initialization.
-    psc_set_ic_fields(psc);
-  }
+  // While the fields may already have been initialized by the deck,
+  // we'll initialize them the PSC way now.  And in case PSC doesn't
+  // specificy a field i.c., clear out whatever the deck did first.
+  PscMfieldsBase(psc->flds)->zero();
+  // This does the usual PSC initialization.
+  psc_set_ic_fields(psc);
 }
 
 // ----------------------------------------------------------------------
