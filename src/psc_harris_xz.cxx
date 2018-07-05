@@ -600,6 +600,14 @@ struct PscHarris : Psc, PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
+  // step
+
+  void step()
+  {
+    psc_step(psc_);
+  }
+  
+  // ----------------------------------------------------------------------
   // integrate
 
   void integrate()
@@ -635,7 +643,7 @@ struct PscHarris : Psc, PscHarrisParams
       }
       first_iteration = false;
 
-      psc_step(psc_);
+      step();
 
       psc_->timestep++; // FIXME, too hacky
       psc_output(psc_);
