@@ -600,14 +600,6 @@ struct PscHarris : Psc, PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
-  // initialize
-
-  void initialize()
-  {
-    psc_method_initialize(psc_->method, psc_);
-  }
-
-  // ----------------------------------------------------------------------
   // integrate
 
   void integrate()
@@ -745,7 +737,7 @@ main(int argc, char **argv)
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
   
-  psc->initialize();
+  psc->initialize(builder.psc_);
   psc->integrate();
 
   delete psc;
