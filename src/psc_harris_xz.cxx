@@ -685,7 +685,7 @@ struct PscHarris : Psc, PscHarrisParams
 
   void integrate()
   {
-    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+    Psc::integrate();
   
     static int pr;
     if (!pr) {

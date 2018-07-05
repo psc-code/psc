@@ -32,6 +32,14 @@ struct Psc
     psc_method_initialize(psc_->method, psc_);
   }
 
+  // ----------------------------------------------------------------------
+  // integrate
+
+  void integrate()
+  {
+    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+  }
+  
 protected:
   psc* psc_;
 };
