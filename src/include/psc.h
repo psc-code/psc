@@ -195,10 +195,6 @@ struct psc_particle_npt {
 
 struct psc_ops {
   MRC_SUBCLASS_OPS(struct psc);
-  // FIXME setup_particles -> set_ic_particles
-  void (*setup_particles)(struct psc *psc, std::vector<uint>& nr_particles_by_patch, bool count_only);
-  void (*init_npt)(struct psc *psc, int kind, double x[3],
-		   struct psc_particle_npt *npt);
 };
 
 #define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))

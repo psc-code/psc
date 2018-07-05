@@ -91,28 +91,6 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_particles
 
-  static void setup_particles(struct psc *psc, std::vector<uint>& n_prts_by_patch)
-  {
-    auto mprts_base = PscMparticlesBase{psc->particles};
-
-    if (psc_ops(psc)->setup_particles) {
-      mprts_base->reserve_all(n_prts_by_patch.data());
-      psc_ops(psc)->setup_particles(psc, n_prts_by_patch, false);
-      return;
-    }
-
-    if (psc_ops(psc)->init_npt) {
-      setup_particles(mprts_base, psc, n_prts_by_patch);
-    }
-  }
-
-  static void setup_particles(PscMparticlesBase mprts, psc* psc, std::vector<uint>& n_prts_by_patch)
-  {
-    setup_particles(mprts, psc, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
-	psc_ops(psc)->init_npt(psc, kind, crd, &npt);
-      });
-  }
-
   template<typename FUNC>
   static void setup_particles(PscMparticlesBase mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
 			      FUNC func)
@@ -237,64 +215,6 @@ struct SetupParticles
       }
     }
 
-    return n_prts_by_patch;
-  }
-
-  static std::vector<uint> setup_partition(struct psc *psc)
-  {
-    auto& kinds = psc->grid().kinds;
-    std::vector<uint> n_prts_by_patch(psc->n_patches());
-
-    if (psc_ops(psc)->setup_particles) {
-      psc_ops(psc)->setup_particles(psc, n_prts_by_patch, true);
-      return n_prts_by_patch;
-    }
-    if (!psc_ops(psc)->init_npt) {
-      return n_prts_by_patch;
-    }
-
-    if (psc->prm.neutralizing_population < 0) {
-      psc->prm.neutralizing_population = kinds.size() - 1;
-    }
-
-    const auto& grid = psc->grid();
-    
-    psc_foreach_patch(psc, p) {
-      auto ilo = Int3{}, ihi = grid.ldims;
-
-      int np = 0;
-      for (int kind = 0; kind < kinds.size(); kind++) {
-	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
-			       .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
-			       .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
-	      // FIXME, the issue really is that (2nd order) particle pushers
-	      // don't handle the invariant dim right
-	      if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
-	      if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
-	      if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
-
-	      struct psc_particle_npt npt = {};
-	      if (kind < kinds.size()) {
-		npt.kind = kind;
-		npt.q    = kinds[kind].q;
-		npt.m    = kinds[kind].m;
-	      };
-	      psc_ops(psc)->init_npt(psc, kind, xx, &npt);
-
-	      int n_in_cell = get_n_in_cell(psc, &npt);
-	      if (psc->prm.fractional_n_particles_per_cell) {
-		n_in_cell++; // we may get an extra particle
-	      }
-	      np += n_in_cell;
-	    }
-	  }
-	}
-      }
-      n_prts_by_patch[p] = np;
-    }
     return n_prts_by_patch;
   }
 
