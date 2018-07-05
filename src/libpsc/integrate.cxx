@@ -59,10 +59,6 @@ psc_print_profiling(struct psc *psc)
 void
 psc_output(struct psc *psc)
 {
-  if (psc_ops(psc) && psc_ops(psc)->output) {
-    return psc_ops(psc)->output(psc);
-  }
-
   psc_method_output(psc->method, psc);
 }
 
@@ -78,11 +74,6 @@ int pr_time_step_no_comm; // FIXME, don't like globals
 void
 psc_step(struct psc *psc)
 {
-  if (psc_ops(psc) && psc_ops(psc)->step) {
-    psc_ops(psc)->step(psc);
-    return;
-  }
-
   if (!pr_time_step_no_comm) {
     pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
   }
