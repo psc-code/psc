@@ -235,8 +235,8 @@ struct PscFlatfoil : Psc, PscFlatfoilParams
   using Marder_t = PscConfig::Marder_t;
   
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
-    : PscFlatfoilParams(params),
-      psc_{psc},
+    : Psc{psc},
+      PscFlatfoilParams(params),
       mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
@@ -620,7 +620,6 @@ struct PscFlatfoil : Psc, PscFlatfoilParams
   }
 
 private:
-  psc* psc_;
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
 

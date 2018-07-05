@@ -114,8 +114,8 @@ struct PscHarris : Psc, PscHarrisParams
   // PscHarris ctor
   
   PscHarris(const PscHarrisParams& params, psc *psc)
-    : PscHarrisParams(params),
-      psc_{psc}
+    : Psc{psc},
+      PscHarrisParams(params)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -608,7 +608,6 @@ struct PscHarris : Psc, PscHarrisParams
   }
 
 private:
-  psc* psc_;
   int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
   Simulation* sim_;
