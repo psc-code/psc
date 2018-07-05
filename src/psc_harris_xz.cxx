@@ -133,7 +133,8 @@ struct PscHarris : PscHarrisParams
     psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
 
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
-      psc_method_do_setup(psc_->method, psc_);
+      psc_setup_coeff(psc_);
+      psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
     } else {
       sim_ = Simulation_create();
       psc_method_set_param_ptr(psc_->method, "sim", sim_);
