@@ -544,8 +544,6 @@ private:
 struct PscBubbleBuilder
 {
   PscBubble* makePsc();
-
-  PscBubbleParams params;
 };
 
 // ----------------------------------------------------------------------
@@ -557,6 +555,8 @@ PscBubble* PscBubbleBuilder::makePsc()
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
+
+  PscBubbleParams params;
 
   psc_default_dimensionless(psc_);
 

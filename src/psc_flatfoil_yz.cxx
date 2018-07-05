@@ -650,8 +650,6 @@ struct PscFlatfoilBuilder
   using Heating_t = PscFlatfoil::Heating_t;
 
   PscFlatfoil* makePsc();
-
-  PscFlatfoilParams params;
 };
 
 // ----------------------------------------------------------------------
@@ -663,6 +661,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
+
+  PscFlatfoilParams params;
 
   psc_default_dimensionless(psc_);
 

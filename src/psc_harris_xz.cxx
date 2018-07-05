@@ -619,8 +619,6 @@ private:
 struct PscHarrisBuilder
 {
   PscHarris* makePsc();
-
-  PscHarrisParams params;
 };
 
 // ----------------------------------------------------------------------
@@ -632,6 +630,8 @@ PscHarris* PscHarrisBuilder::makePsc()
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
+
+  PscHarrisParams params;
 
   params.wpedt_max = .36;
   params.wpe_wce = 2.;
