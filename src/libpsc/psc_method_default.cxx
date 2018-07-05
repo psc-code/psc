@@ -19,16 +19,6 @@
 // psc_method "default"
 
 // ----------------------------------------------------------------------
-// psc_method_default_set_ic_fields
-
-static void
-psc_method_default_set_ic_fields(struct psc_method *method, struct psc *psc)
-{
-  // set fields E^{n+1/2}, B^{n+1/2}
-  psc_set_ic_fields(psc);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_default_initialize
 
 static void
@@ -60,7 +50,6 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 struct psc_method_ops_default : psc_method_ops {
   psc_method_ops_default() {
     name                          = "default";
-    set_ic_fields                 = psc_method_default_set_ic_fields;
     initialize                    = psc_method_default_initialize;
     output                        = psc_method_default_output;
   }

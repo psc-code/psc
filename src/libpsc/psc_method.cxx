@@ -5,18 +5,6 @@
 // psc_method
 
 // ----------------------------------------------------------------------
-// psc_method_set_ic_fields
-
-void
-psc_method_set_ic_fields(struct psc_method *method, struct psc *psc)
-{
-  struct psc_method_ops *ops = psc_method_ops(method);
-  assert(ops && ops->set_ic_fields);
-
-  ops->set_ic_fields(method, psc);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_initialize
 
 void

@@ -29,22 +29,6 @@ static struct param psc_method_vpic_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_set_ic_fields
-
-static void
-psc_method_vpic_set_ic_fields(struct psc_method *method, struct psc *psc)
-{
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-  
-  // While the fields may already have been initialized by the deck,
-  // we'll initialize them the PSC way now.  And in case PSC doesn't
-  // specificy a field i.c., clear out whatever the deck did first.
-  PscMfieldsBase(psc->flds)->zero();
-  // This does the usual PSC initialization.
-  psc_set_ic_fields(psc);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_vpic_initialize
 
 static void
@@ -137,7 +121,6 @@ struct psc_method_ops_vpic : psc_method_ops {
     name                          = "vpic";
     size                          = sizeof(struct psc_method_vpic);
     param_descr                   = psc_method_vpic_descr;
-    set_ic_fields                 = psc_method_vpic_set_ic_fields;
     initialize                    = psc_method_vpic_initialize;
     output                        = psc_method_vpic_output;
   }
