@@ -15,7 +15,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // initialize
 
-  void initialize(psc* psc_)
+  void initialize()
   {
     psc_method_initialize(psc_->method, psc_);
   }

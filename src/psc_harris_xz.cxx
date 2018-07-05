@@ -736,7 +736,7 @@ main(int argc, char **argv)
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
   
-  psc->initialize(builder.psc_);
+  psc->initialize();
   psc->integrate();
 
   delete psc;
