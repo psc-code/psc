@@ -314,8 +314,6 @@ void psc_print_profiling(struct psc *psc);
 
 void psc_default_dimensionless(struct psc *psc);
 
-int psc_main(int *argc, char ***argv, struct psc_ops *type);
-
 static inline bool psc_at_boundary_lo(struct psc *psc, int p, int d)
 {
   return psc->grid().patches[p].off[d] == 0;
