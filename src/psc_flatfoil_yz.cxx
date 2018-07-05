@@ -649,14 +649,9 @@ struct PscFlatfoilBuilder
 {
   using Heating_t = PscFlatfoil::Heating_t;
 
-  PscFlatfoilBuilder()
-    : psc_(psc_create(MPI_COMM_WORLD))
-  {}
-  
   PscFlatfoil* makePsc();
 
   PscFlatfoilParams params;
-  
   psc* psc_;
 };
 
@@ -665,6 +660,7 @@ struct PscFlatfoilBuilder
 
 PscFlatfoil* PscFlatfoilBuilder::makePsc()
 {
+  psc_ = psc_create(MPI_COMM_WORLD);
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");

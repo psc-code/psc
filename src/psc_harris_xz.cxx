@@ -618,10 +618,6 @@ private:
 
 struct PscHarrisBuilder
 {
-  PscHarrisBuilder()
-    : psc_(psc_create(MPI_COMM_WORLD))
-  {}
-
   PscHarris* makePsc();
 
   PscHarrisParams params;
@@ -633,6 +629,7 @@ struct PscHarrisBuilder
 
 PscHarris* PscHarrisBuilder::makePsc()
 {
+  psc_ = psc_create(MPI_COMM_WORLD);
   MPI_Comm comm = psc_comm(psc_);
   
   mpi_printf(comm, "*** Setting up...\n");
