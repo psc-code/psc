@@ -109,8 +109,6 @@ struct PscHarrisParams
 
 struct PscHarris : PscHarrisParams
 {
-  using Mparticles_t = MparticlesSingle; // FIXME!!!
-  
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
