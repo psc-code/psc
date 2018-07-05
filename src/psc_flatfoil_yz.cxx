@@ -3,6 +3,7 @@
 
 #include <psc.h>
 #include <psc.hxx>
+#include <psc_method.h>
 
 // small 3d box (heating)
 #define TEST_1_HEATING_3D 1
@@ -363,9 +364,7 @@ struct PscFlatfoil : Psc, PscFlatfoilParams
 
   void initialize()
   {
-    psc_output(psc_);
-    psc_stats_log(psc_);
-    psc_print_profiling(psc_);
+    psc_method_initialize(psc_->method, psc_);
   }
 
   // ----------------------------------------------------------------------

@@ -283,9 +283,7 @@ struct PscBubble : Psc, PscBubbleParams
 
   void initialize()
   {
-    psc_output(psc_);
-    psc_stats_log(psc_);
-    psc_print_profiling(psc_);
+    psc_method_initialize(psc_->method, psc_);
   }
 
   // ----------------------------------------------------------------------
