@@ -19,16 +19,6 @@
 // psc_method "default"
 
 // ----------------------------------------------------------------------
-// psc_method_default_do_setup
-
-static void
-psc_method_default_do_setup(struct psc_method *method, struct psc *psc)
-{
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_default_setup_partition
 
 std::vector<uint> psc_method_default_setup_partition(struct psc_method *method, struct psc *psc)
@@ -88,7 +78,6 @@ psc_method_default_output(struct psc_method *method, struct psc *psc)
 struct psc_method_ops_default : psc_method_ops {
   psc_method_ops_default() {
     name                          = "default";
-    do_setup                      = psc_method_default_do_setup;
     setup_partition               = psc_method_default_setup_partition;
     set_ic_particles              = psc_method_default_set_ic_particles;
     set_ic_fields                 = psc_method_default_set_ic_fields;

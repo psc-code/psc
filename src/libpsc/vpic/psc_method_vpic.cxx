@@ -29,102 +29,6 @@ static struct param psc_method_vpic_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_do_setup
-
-static void
-psc_method_vpic_do_setup(struct psc_method *method, struct psc *psc)
-{
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-  MPI_Comm comm = psc_comm(psc);
-
-  mpi_printf(comm, "*** Initializing\n");
-  
-  sub->sim = Simulation_create();
-  
-  struct vpic_simulation_info info;
-  Simulation_user_initialization(sub->sim);
-  Simulation_get_info(sub->sim, &info);
-  
-  psc->prm.nmax = info.num_step;
-  psc->prm.stats_every = info.status_interval;
-  
-  Grid_t::Kinds kinds;
-  for (int m = 0; m < info.n_kinds; m++) {
-    // map "electron" -> "e", "ion"-> "i" to avoid even more confusion with
-    // how moments etc are named.
-    const char* name;
-    if (strcmp(info.kinds[m].name, "electron") == 0) {
-      name = "e";
-    } else if (strcmp(info.kinds[m].name, "ion") == 0) {
-      name = "i";
-    } else {
-      name = info.kinds[m].name;
-    }
-    kinds.emplace_back(info.kinds[m].q, info.kinds[m].m, name);
-  }
-  psc_set_kinds(psc, kinds);
-  
-  psc_marder_set_param_int(psc->marder, "clean_div_e_interval", info.clean_div_e_interval);
-  psc_marder_set_param_int(psc->marder, "clean_div_b_interval", info.clean_div_b_interval);
-  psc_marder_set_param_int(psc->marder, "sync_shared_interval", info.sync_shared_interval);
-  psc_marder_set_param_int(psc->marder, "num_div_e_round", info.num_div_e_round);
-  psc_marder_set_param_int(psc->marder, "num_div_b_round", info.num_div_b_round);
-  
-  int *np = psc->domain_.np;
-  mpi_printf(comm, "domain: np = %d x %d x %d\n", np[0], np[1], np[2]);
-  // FIXME, it looks like we can get np from simulation->p[xyz], so we should use that or
-  // at least make sure it's consistent
-  
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-  assert(size == np[0] * np[1] * np[2]);
-  
-  int p[3];
-  p[2] = rank / (np[1] * np[0]); rank -= p[2] * (np[1] * np[0]);
-  p[1] = rank / np[0]; rank -= p[1] * np[0];
-  p[0] = rank;
-  
-  double x0[3], x1[3];
-  for (int d = 0; d < 3; d++) {
-    x0[d] = info.x0[d] - p[d] * (info.x1[d] - info.x0[d]);
-    x1[d] = info.x0[d] + (np[d] - p[d]) * (info.x1[d] - info.x0[d]);
-  }
-  
-  // FIXME, it's also not so obvious that this is going to be exactly the same on all procs
-  mprintf("domain: local x0 %g:%g:%g x1 %g:%g:%g\n",
-	  info.x0[0], info.x0[1], info.x0[2],
-	  info.x1[0], info.x1[1], info.x1[2]);
-  mprintf("domain: p %d %d %d\n",
-	  p[0], p[1], p[2]);
-  mprintf("domain: global x0 %g:%g:%g x1 %g:%g:%g\n",
-	  x0[0], x0[1], x0[2],
-	  x1[0], x1[1], x1[2]);
-  
-  // set size of simulation box to match vpic
-  for (int d = 0; d < 3; d++) {
-    psc->domain_.length[d] = x1[d] - x0[d];
-    psc->domain_.corner[d] = x0[d];
-    psc->domain_.gdims[d] = np[d] * info.nx[d];
-    psc->domain_.np[d] = np[d];
-  }
-  
-  psc->dt = info.dt;
-  mpi_printf(comm, "method_vpic_do_setup: Setting dt = %g\n", psc->dt);
-  
-  psc->n_state_fields = VPIC_MFIELDS_N_COMP;
-  // having two ghost points wouldn't really hurt, however having no ghost points
-  // in the invariant direction does cause trouble.
-  // By setting this here, it will override what otherwise happens automatically
-  psc->ibn[0] = psc->ibn[1] = psc->ibn[2] = 1;
-  mpi_printf(comm, "method_vpic_do_setup: Setting n_state_fields = %d, ibn = [%d,%d,%d]\n",
-	     psc->n_state_fields, psc->ibn[0], psc->ibn[1], psc->ibn[2]);
-
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
-}
-
-// ----------------------------------------------------------------------
 // psc_method_vpic_setup_partition
 
 static std::vector<uint> psc_method_vpic_setup_partition(struct psc_method *method, struct psc *psc)
@@ -252,7 +156,6 @@ struct psc_method_ops_vpic : psc_method_ops {
     name                          = "vpic";
     size                          = sizeof(struct psc_method_vpic);
     param_descr                   = psc_method_vpic_descr;
-    do_setup                      = psc_method_vpic_do_setup;
     setup_partition               = psc_method_vpic_setup_partition;
     set_ic_particles              = psc_method_vpic_set_ic_particles;
     set_ic_fields                 = psc_method_vpic_set_ic_fields;
