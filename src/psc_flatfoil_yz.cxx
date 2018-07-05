@@ -2,6 +2,7 @@
 #include <psc_config.h>
 
 #include <psc.h>
+#include <psc.hxx>
 
 // small 3d box (heating)
 #define TEST_1_HEATING_3D 1
@@ -214,7 +215,7 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 // eventually, a Psc replacement / derived class, but for now just
 // pretending to be something like that
 
-struct PscFlatfoil : PscFlatfoilParams
+struct PscFlatfoil : Psc, PscFlatfoilParams
 {
   using DIM = PscConfig::dim_t;
   using Mparticles_t = PscConfig::Mparticles_t;
@@ -906,6 +907,7 @@ main(int argc, char **argv)
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
   
+  psc->initialize();
   psc->integrate();
 
   delete psc;

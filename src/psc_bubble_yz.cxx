@@ -1,5 +1,6 @@
 
 #include <psc.h>
+#include <psc.hxx>
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
 #include <psc_sort.h>
@@ -69,7 +70,7 @@ using PscConfig = PscConfig1vbecSingle<dim_yz>;
 // ======================================================================
 // PscBubble
 
-struct PscBubble : PscBubbleParams
+struct PscBubble : Psc, PscBubbleParams
 {
   using DIM = PscConfig::dim_t;
   using Mparticles_t = PscConfig::Mparticles_t;
@@ -667,6 +668,7 @@ main(int argc, char **argv)
   psc_mparticles_view(builder.psc_->particles);
   psc_mfields_view(builder.psc_->flds);
   
+  psc->initialize();
   psc->integrate();
 
   delete psc;

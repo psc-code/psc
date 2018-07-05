@@ -2,6 +2,7 @@
 #include <psc_config.h>
 
 #include <psc.h>
+#include <psc.hxx>
 
 #ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -107,7 +108,7 @@ struct PscHarrisParams
 // ======================================================================
 // PscHarris
 
-struct PscHarris : PscHarrisParams
+struct PscHarris : Psc, PscHarrisParams
 {
   // ----------------------------------------------------------------------
   // PscHarris ctor
