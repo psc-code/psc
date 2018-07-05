@@ -33,6 +33,8 @@ struct Psc
     psc_mfields_view(psc_->flds);
   
     psc_method_initialize(psc_->method, psc_);
+
+    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
 
   // ----------------------------------------------------------------------
@@ -40,8 +42,6 @@ struct Psc
 
   void integrate()
   {
-    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
-
     static int pr;
     if (!pr) {
       pr = prof_register("psc_step", 1., 0, 0);
