@@ -700,6 +700,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
     PscMfieldsBase mflds(psc_->flds);
+    MfieldsBase& mflds_{*mflds.sub()};
     PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
     PscSortBase sort(psc_->sort);
@@ -720,7 +721,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts_);
 
     // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp(mprts_, mflds);
+    pushp(mprts_, mflds_);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // field propagation B^{n+1/2} -> B^{n+1}
@@ -746,7 +747,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     PscChecksBase{psc_->checks}.gauss(psc_, mprts_);
 
-    psc_push_particles_prep(psc_->push_particles, mprts_, psc_->flds);
+    psc_push_particles_prep(psc_->push_particles, mprts_, mflds_);
   }
 
 protected:

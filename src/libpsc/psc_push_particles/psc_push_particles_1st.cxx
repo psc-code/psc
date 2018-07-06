@@ -14,10 +14,10 @@ using Push = PscPushParticles_<PushParticles__<Config1stDouble<DIM>>>;
 
 struct PushParticles1st : PushParticlesBase
 {
-  void push_mprts_xz(MparticlesBase& mprts, PscMfieldsBase mflds) override
+  void push_mprts_xz(MparticlesBase& mprts, MfieldsBase& mflds) override
   { return Push<dim_xz>::push_mprts(mprts, mflds); }
 
-  void push_mprts_yz(MparticlesBase& mprts, PscMfieldsBase mflds) override
+  void push_mprts_yz(MparticlesBase& mprts, MfieldsBase& mflds) override
   { return Push<dim_yz>::push_mprts(mprts, mflds); }
 };
 
