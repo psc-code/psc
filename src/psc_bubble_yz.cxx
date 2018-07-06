@@ -494,6 +494,8 @@ PscBubble* PscBubbleBuilder::makePsc()
 			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
 
+  auto kinds = Grid_t::Kinds{{ -1., 1., "e"}, { 1., 100., "i" }};
+  
   psc_set_from_options(psc_);
 
   // sort
@@ -528,7 +530,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   
   // --- generic setup
   psc_setup_coeff(psc_);
-  psc_setup_domain(psc_, grid_domain, grid_bc, psc_->kinds_);
+  psc_setup_domain(psc_, grid_domain, grid_bc, kinds);
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
