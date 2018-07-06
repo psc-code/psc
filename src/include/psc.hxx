@@ -29,13 +29,13 @@ struct Psc
   // ----------------------------------------------------------------------
   // initialize
 
-  void initialize()
+  void initialize(PscMparticlesBase mprts)
   {
     psc_view(psc_);
-    psc_mparticles_view(psc_->particles_);
+    psc_mparticles_view(mprts.mprts());
     psc_mfields_view(psc_->flds);
   
-    psc_method_initialize(psc_->method, psc_, PscMparticlesBase{psc_->particles_});
+    psc_method_initialize(psc_->method, psc_, mprts);
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
@@ -115,6 +115,8 @@ struct Psc
   }
 
   virtual void step() = 0;
+
+  psc* get_psc() const { return psc_; } // FIXME, should go away
   
 protected:
   psc* psc_;

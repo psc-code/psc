@@ -815,7 +815,7 @@ main(int argc, char **argv)
   auto builder = PscFlatfoilBuilder{};
   auto psc = builder.makePsc();
 
-  psc->initialize();
+  psc->initialize(PscMparticlesBase{psc->get_psc()->particles_});
   psc->integrate();
 
   delete psc;
