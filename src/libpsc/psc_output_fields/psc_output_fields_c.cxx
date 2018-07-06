@@ -151,7 +151,7 @@ psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 
 static void
 psc_output_fields_c_run(struct psc_output_fields *out,
-			struct psc_mfields *flds, PscMparticlesBase mprts)
+			struct psc_mfields *flds, MparticlesBase& mprts)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
   struct psc *psc = out->psc;

@@ -10,6 +10,6 @@ BEGIN_C_DECLS
 void psc_output_fields_set_psc(struct psc_output_fields *output_fields,
 			       struct psc *psc);
 void psc_output_fields_run(struct psc_output_fields *output_fields,
-			   struct psc_mfields *flds, PscMparticlesBase mprts);
+			   struct psc_mfields *flds, MparticlesBase& mprts);
 
 END_C_DECLS
