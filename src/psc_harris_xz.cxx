@@ -131,7 +131,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params)
   {
-
     setup_ic();
     setup_grid();
 
@@ -280,9 +279,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
 
+    psc_setup_coeff(psc_);
+    psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
-      psc_setup_coeff(psc_);
-      psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
     } else {
       sim_ = Simulation_create();
       psc_method_set_param_ptr(psc_->method, "sim", sim_);
@@ -319,9 +318,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     MPI_Comm comm = psc_comm(psc_);
 
-    psc_setup_coeff(psc_); // FIXME -- in the middle of things here, will be done again later
-    psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
-  
     // Setup basic grid parameters
     double dx[3], xl[3], xh[3];
     for (int d = 0; d < 3; d++) {
