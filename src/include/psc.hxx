@@ -29,7 +29,7 @@ struct Psc
 
   ~Psc()
   {
-    mprts__->~MparticlesBase(); // FIXME, not correct dtor
+    delete mprts__; // FIXME, not correct dtor (because it's not virtual)
     psc_destroy(psc_);
   }
   

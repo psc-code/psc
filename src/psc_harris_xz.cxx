@@ -168,9 +168,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     }
 
     mpi_printf(comm, "**** Creating particle data structure...\n");
-    auto mprts = PscMparticlesCreate(comm, psc_->grid(),
-				 Mparticles_traits<PscHarris::Mparticles_t>::name);
-    mprts__ = mprts.sub();
+    mprts__ = new Mparticles_t{psc_->grid()};
 
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
