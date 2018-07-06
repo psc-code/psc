@@ -322,6 +322,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 				 {phys_.Lx, phys_.Ly, phys_.Lz},
 				 {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
 
+    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
+ 
     // Determine the time step
     phys_.dg = courant_length(domain.length, domain.gdims);
     phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
@@ -333,7 +338,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
 
     psc_setup_coeff(psc_);
-    psc_setup_domain(psc_, domain, psc_->bc_, psc_->kinds_);
+    psc_setup_domain(psc_, domain, grid_bc, psc_->kinds_);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       sim_ = Simulation_create();
@@ -812,12 +817,6 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   psc_->prm.stats_every = 100;
 
-  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
-  psc_->bc_ = grid_bc;
- 
   psc_method_set_type(psc_->method, "vpic");
 
   psc_sort_set_type(psc_->sort, "vpic");

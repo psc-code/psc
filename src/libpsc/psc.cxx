@@ -65,32 +65,6 @@ static struct select_init {
 } select_initializer;
 
 static struct param psc_descr[] = {
-  { "bnd_field_lo_x", VAR_(bc_.fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
-								 bnd_fld_descr) },
-  { "bnd_field_lo_y", VAR_(bc_.fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
-								 bnd_fld_descr) },
-  { "bnd_field_lo_z", VAR_(bc_.fld_lo, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
-								 bnd_fld_descr) },
-  { "bnd_field_hi_x", VAR_(bc_.fld_hi, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
-								 bnd_fld_descr) },
-  { "bnd_field_hi_y", VAR_(bc_.fld_hi, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
-								 bnd_fld_descr) },
-  { "bnd_field_hi_z", VAR_(bc_.fld_hi, 2)   , PARAM_SELECT(BND_FLD_PERIODIC,
-								 bnd_fld_descr) },
-
-  { "bnd_particle_lo_x", VAR_(bc_.prt_lo, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
-								       bnd_prt_descr) },
-  { "bnd_particle_lo_y", VAR_(bc_.prt_lo, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
-								       bnd_prt_descr) },
-  { "bnd_particle_lo_z", VAR_(bc_.prt_lo, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
-								       bnd_prt_descr) },
-  { "bnd_particle_hi_x", VAR_(bc_.prt_hi, 0)     , PARAM_SELECT(BND_PRT_PERIODIC,
-								       bnd_prt_descr) },
-  { "bnd_particle_hi_y", VAR_(bc_.prt_hi, 1)     , PARAM_SELECT(BND_PRT_PERIODIC,
-								       bnd_prt_descr) },
-  { "bnd_particle_hi_z", VAR_(bc_.prt_hi, 2)     , PARAM_SELECT(BND_PRT_PERIODIC,
-								       bnd_prt_descr) },
-
   // psc_params
   { "qq"            , VAR(prm.qq)              , PARAM_DOUBLE(1.6021e-19)   },
   { "mm"            , VAR(prm.mm)              , PARAM_DOUBLE(9.1091e-31)   },
