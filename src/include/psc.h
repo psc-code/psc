@@ -125,7 +125,6 @@ struct psc {
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
   struct psc_coeff coeff_;	///< automatically derived constants
-  Grid_t::Kinds kinds_;
   ///@}
 
   // other parameters / constants

@@ -147,9 +147,6 @@ _psc_create(struct psc *psc)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   srandom(rank);
   
-  // default: 2 species (e-, i+)
-  psc->kinds_ = {{ -1., 1., "e"}, { 1., 100., "i" }};
-
   // default 9 state fields (J,E,B)
   psc->n_state_fields = NR_FIELDS;
 
