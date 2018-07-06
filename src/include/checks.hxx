@@ -9,9 +9,9 @@
 class ChecksBase
 {
 public:
-  virtual void continuity_before_particle_push(psc* psc) = 0;
-  virtual void continuity_after_particle_push(psc* psc) = 0;
-  virtual void gauss(psc* psc) = 0;
+  virtual void continuity_before_particle_push(psc* psc, PscMparticlesBase mprts) = 0;
+  virtual void continuity_after_particle_push(psc* psc, PscMparticlesBase mprts) = 0;
+  virtual void gauss(psc* psc, PscMparticlesBase mprts) = 0;
 };
 
 // ======================================================================
@@ -29,19 +29,19 @@ struct PscChecks
     : checks_(checks)
   {}
 
-  void continuity_before_particle_push(psc* psc)
+  void continuity_before_particle_push(psc* psc, PscMparticlesBase mprts)
   {
-    sub()->continuity_before_particle_push(psc);
+    sub()->continuity_before_particle_push(psc, mprts);
   }
 
-  void continuity_after_particle_push(psc* psc)
+  void continuity_after_particle_push(psc* psc, PscMparticlesBase mprts)
   { 
-    sub()->continuity_after_particle_push(psc);
+    sub()->continuity_after_particle_push(psc, mprts);
   }
 
-  void gauss(psc* psc)
+  void gauss(psc* psc, PscMparticlesBase mprts)
   {
-    sub()->gauss(psc);
+    sub()->gauss(psc, mprts);
   }
 
   sub_t* operator->() { return sub(); }

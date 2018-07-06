@@ -649,7 +649,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
-    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_);
+    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts);
 
     // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     pushp(mprts, mflds);
@@ -671,14 +671,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     pushf.advance_a(mflds);
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_);
+    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, mprts);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
     PscMarderBase{psc_->marder}(mflds, mprts);
     
-    PscChecksBase{psc_->checks}.gauss(psc_);
+    PscChecksBase{psc_->checks}.gauss(psc_, mprts);
 
     psc_push_particles_prep(psc_->push_particles, psc_->particles, psc_->flds);
   }

@@ -55,13 +55,12 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // continuity_before_particle_push
 
-  void continuity_before_particle_push(psc *psc) override
+  void continuity_before_particle_push(psc *psc, PscMparticlesBase mprts_base) override
   {
     if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
       return;
     }
 
-    auto mprts_base = PscMparticlesBase{psc->particles};
     auto mprts = mprts_base->get_as<Mparticles>();
     continuity_before_particle_push(mprts);
     mprts_base->put_as(mprts, MP_DONT_COPY);
@@ -75,13 +74,12 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // continuity_after_particle_push
 
-  void continuity_after_particle_push(psc *psc) override
+  void continuity_after_particle_push(psc *psc, PscMparticlesBase mprts_base) override
   {
     if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
       return;
     }
 
-    auto mprts_base = PscMparticlesBase{psc->particles};
     auto mflds_base = PscMfieldsBase{psc->flds};
     auto& mprts = mprts_base->get_as<Mparticles>();
     auto& mflds = mflds_base->get_as<Mfields>(0, mflds_base->n_comps());
@@ -152,14 +150,13 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // gauss
 
-  void gauss(psc* psc) override
+  void gauss(psc* psc, PscMparticlesBase mprts_base) override
   {
     if (gauss_every_step < 0 ||	psc->timestep % gauss_every_step != 0) {
       return;
     }
     
     auto mflds_base = PscMfieldsBase{psc->flds};
-    auto mprts_base = PscMparticlesBase{psc->particles};
     auto& mflds = mflds_base->get_as<Mfields>(EX, EX+3);
     auto& mprts = mprts_base->get_as<Mparticles>();
 
