@@ -59,7 +59,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // run
 
-  void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
   {
     struct psc *psc = ppsc; // FIXME
 
@@ -71,7 +71,7 @@ struct MarderVpic : MarderBase
       return;
     }
   
-    auto& mflds = mflds_base->get_as<MfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
+    auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
     auto& mprts = mprts_base.get_as<MparticlesVpic>();
 
     // Divergence clean e
@@ -99,7 +99,7 @@ struct MarderVpic : MarderBase
       // updates E, B, TCA
     }
 
-    mflds_base->put_as(mflds, EX, 16);
+    mflds_base.put_as(mflds, EX, 16);
   }
 
 private:
