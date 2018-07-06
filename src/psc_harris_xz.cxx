@@ -343,7 +343,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       Simulation_set_params(sim_, psc_->prm.nmax, psc_->prm.stats_every,
 			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
 			    psc_->prm.stats_every / 2);
-      setup_domain();
+      setup_domain(psc_->domain_);
       setup_fields();
       setup_species();
 
@@ -369,21 +369,21 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // setup_domain
 
-  void setup_domain()
+  void setup_domain(const Grid_t::Domain& domain)
   {
     MPI_Comm comm = psc_comm(psc_);
 
     // Setup basic grid parameters
     double dx[3], xl[3], xh[3];
     for (int d = 0; d < 3; d++) {
-      dx[d] = psc_->domain_.length[d] / psc_->domain_.gdims[d];
-      xl[d] = psc_->domain_.corner[d];
-      xh[d] = xl[d] + psc_->domain_.length[d];
+      dx[d] = domain.length[d] / domain.gdims[d];
+      xl[d] = domain.corner[d];
+      xh[d] = xl[d] + domain.length[d];
     }
     Simulation_setup_grid(sim_, dx, phys_.dt, phys_.c, phys_.eps0);
 
     // Define the grid
-    Simulation_define_periodic_grid(sim_, xl, xh, psc_->domain_.gdims, psc_->domain_.np);
+    Simulation_define_periodic_grid(sim_, xl, xh, domain.gdims, domain.np);
 
     int p = 0;
     bool left = psc_at_boundary_lo(psc_, p, 0);
@@ -482,8 +482,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     MPI_Comm comm = psc_comm(psc_);
 
     mpi_printf(comm, "***********************************************\n");
-    mpi_printf(comm, "* Topology: %d x %d x %d\n",
-	       psc_->domain_.np[0], psc_->domain_.np[1], psc_->domain_.np[2]);
+    mpi_printf(comm, "* Topology: %d x %d x %d\n", np[0], np[1], np[2]);
     mpi_printf(comm, "tanhf    = %g\n", phys_.tanhf);
     mpi_printf(comm, "L_di     = %g\n", L_di);
     mpi_printf(comm, "rhoi/L   = %g\n", phys_.rhoi_L);
@@ -503,9 +502,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "Ly/de = %g\n", phys_.Ly/phys_.de);
     mpi_printf(comm, "Lz/di = %g\n", phys_.Lz/phys_.di);
     mpi_printf(comm, "Lz/de = %g\n", phys_.Lz/phys_.de);
-    mpi_printf(comm, "nx = %d\n", psc_->domain_.gdims[0]);
-    mpi_printf(comm, "ny = %d\n", psc_->domain_.gdims[1]);
-    mpi_printf(comm, "nz = %d\n", psc_->domain_.gdims[2]);
+    mpi_printf(comm, "nx = %d\n", gdims[0]);
+    mpi_printf(comm, "ny = %d\n", gdims[1]);
+    mpi_printf(comm, "nz = %d\n", gdims[2]);
     mpi_printf(comm, "courant = %g\n", phys_.c*phys_.dt/phys_.dg);
     mpi_printf(comm, "n_global_patches = %d\n", phys_.n_global_patches);
     mpi_printf(comm, "nppc = %g\n", nppc);
@@ -519,13 +518,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe*phys_.dt);
     mpi_printf(comm, "dt*wce = %g\n", phys_.wce*phys_.dt);
     mpi_printf(comm, "dt*wci = %g\n", phys_.wci*phys_.dt);
-    mpi_printf(comm, "dx/de = %g\n", phys_.Lx/(phys_.de*psc_->domain_.gdims[0]));
-    mpi_printf(comm, "dy/de = %g\n", phys_.Ly/(phys_.de*psc_->domain_.gdims[1]));
-    mpi_printf(comm, "dz/de = %g\n", phys_.Lz/(phys_.de*psc_->domain_.gdims[2]));
-    mpi_printf(comm, "dx/rhoi = %g\n", (phys_.Lx/psc_->domain_.gdims[0])/(phys_.vthi/phys_.wci));
-    mpi_printf(comm, "dx/rhoe = %g\n", (phys_.Lx/psc_->domain_.gdims[0])/(phys_.vthe/phys_.wce));
+    mpi_printf(comm, "dx/de = %g\n", phys_.Lx/(phys_.de*gdims[0]));
+    mpi_printf(comm, "dy/de = %g\n", phys_.Ly/(phys_.de*gdims[1]));
+    mpi_printf(comm, "dz/de = %g\n", phys_.Lz/(phys_.de*gdims[2]));
+    mpi_printf(comm, "dx/rhoi = %g\n", (phys_.Lx/gdims[0])/(phys_.vthi/phys_.wci));
+    mpi_printf(comm, "dx/rhoe = %g\n", (phys_.Lx/gdims[0])/(phys_.vthe/phys_.wce));
     mpi_printf(comm, "L/debye = %g\n", phys_.L/(phys_.vthe/phys_.wpe));
-    mpi_printf(comm, "dx/debye = %g\n", (phys_.Lx/psc_->domain_.gdims[0])/(phys_.vthe/phys_.wpe));
+    mpi_printf(comm, "dx/debye = %g\n", (phys_.Lx/gdims[0])/(phys_.vthe/phys_.wpe));
     mpi_printf(comm, "n0 = %g\n", phys_.n0);
     mpi_printf(comm, "vthi/c = %g\n", phys_.vthi/phys_.c);
     mpi_printf(comm, "vthe/c = %g\n", phys_.vthe/phys_.c);

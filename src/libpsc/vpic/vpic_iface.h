@@ -90,7 +90,7 @@ void Simulation_set_params(Simulation *vpic,
 void Simulation_setup_grid(Simulation *sim, double dx[3], double dt,
 			   double cvac, double eps0);
 void Simulation_define_periodic_grid(Simulation *sim, double xl[3],
-				     double xh[3], int gdims[3], int np[3]);
+				     double xh[3], const int gdims[3], const int np[3]);
 void Simulation_set_domain_field_bc(Simulation *sim, int boundary, int fbc);
 void Simulation_set_domain_particle_bc(Simulation *sim, int boundary, int pbc);
 
