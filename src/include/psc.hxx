@@ -6,6 +6,11 @@
 
 #include <particles.hxx>
 
+#include <push_particles.hxx>
+
+void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
+				PscMparticlesBase mprts_base); // FIXME
+
 template<typename PscConfig>
 struct Psc
 {
@@ -51,8 +56,12 @@ struct Psc
     psc_view(psc_);
     mprts->view();
     psc_mfields_view(psc_->flds);
-  
-    psc_method_initialize(psc_->method, psc_, mprts);
+
+    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+      psc_method_vpic_initialize(psc_->method, psc_, mprts);
+    } else {
+      initialize_default(psc_->method, psc_, mprts);
+    }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
@@ -133,7 +142,25 @@ struct Psc
   virtual void step() = 0;
 
   psc* get_psc() const { return psc_; } // FIXME, should go away
+
+private:
+
+  // ----------------------------------------------------------------------
+  // initialize_default
   
+  static void initialize_default(struct psc_method *method, struct psc *psc,
+				 PscMparticlesBase mprts)
+  {
+    auto pushp = PscPushParticlesBase{psc->push_particles};
+    pushp.stagger(mprts, PscMfieldsBase{psc->flds});
+    
+    // initial output / stats
+    psc_output(psc, mprts);
+    psc_stats_log(psc);
+    psc_print_profiling(psc);
+  }
+
+public: // FIXME  
   PscMparticlesBase mprts;
 protected:
   psc* psc_;

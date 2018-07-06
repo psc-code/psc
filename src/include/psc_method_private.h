@@ -10,7 +10,6 @@ struct psc_method {
 
 struct psc_method_ops {
   MRC_SUBCLASS_OPS(struct psc_method);
-  void (*initialize)(struct psc_method *method, struct psc *psc, PscMparticlesBase mprts);
   void (*output)(struct psc_method *method, struct psc *psc, PscMparticlesBase mprts);
 };
 

@@ -31,7 +31,7 @@ static struct param psc_method_vpic_descr[] = {
 // ----------------------------------------------------------------------
 // psc_method_vpic_initialize
 
-static void
+void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 			   PscMparticlesBase mprts_base)
 {
@@ -122,7 +122,6 @@ struct psc_method_ops_vpic : psc_method_ops {
     name                          = "vpic";
     size                          = sizeof(struct psc_method_vpic);
     param_descr                   = psc_method_vpic_descr;
-    initialize                    = psc_method_vpic_initialize;
     output                        = psc_method_vpic_output;
   }
 } psc_method_ops_vpic;
