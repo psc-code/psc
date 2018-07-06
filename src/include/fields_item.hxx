@@ -143,7 +143,7 @@ struct FieldsItemFields : FieldsItemBase
 
   virtual std::vector<std::string> comp_names() override
   {
-    auto mflds = mres();
+    auto mflds = PscMfieldsBase{mres_base_};
     std::vector<std::string> comp_names;
     for (int m = 0; m < mflds->n_comps(); m++) {
       comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
@@ -386,7 +386,7 @@ struct FieldsItemMoment : FieldsItemBase
 
   virtual std::vector<std::string> comp_names()  override
   {
-    auto mflds = mres();
+    auto mflds = PscMfieldsBase{moment_.mres_base()};
     std::vector<std::string> comp_names;
     for (int m = 0; m < mflds->n_comps(); m++) {
       comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
