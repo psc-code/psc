@@ -50,6 +50,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+using PscConfig = void;
+
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
@@ -118,7 +120,7 @@ struct PscHarrisParams
 // ======================================================================
 // PscHarris
 
-struct PscHarris : Psc, PscHarrisParams
+struct PscHarris : Psc<PscConfig>, PscHarrisParams
 {
   // ----------------------------------------------------------------------
   // PscHarris ctor

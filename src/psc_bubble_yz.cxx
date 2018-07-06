@@ -70,7 +70,7 @@ using PscConfig = PscConfig1vbecSingle<dim_yz>;
 // ======================================================================
 // PscBubble
 
-struct PscBubble : Psc, PscBubbleParams
+struct PscBubble : Psc<PscConfig>, PscBubbleParams
 {
   using DIM = PscConfig::dim_t;
   using Mparticles_t = PscConfig::Mparticles_t;

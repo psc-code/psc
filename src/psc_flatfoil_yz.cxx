@@ -216,7 +216,7 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 // eventually, a Psc replacement / derived class, but for now just
 // pretending to be something like that
 
-struct PscFlatfoil : Psc, PscFlatfoilParams
+struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 {
   using DIM = PscConfig::dim_t;
   using Mparticles_t = PscConfig::Mparticles_t;

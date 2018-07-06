@@ -6,6 +6,7 @@
 
 #include <particles.hxx>
 
+template<typename PscConfig>
 struct Psc
 {
   // ----------------------------------------------------------------------
