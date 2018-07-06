@@ -560,8 +560,8 @@ main(int argc, char **argv)
   auto builder = PscBubbleBuilder{};
   auto psc = builder.makePsc();
 
-  psc->initialize(psc->mprts);
-  psc->integrate(psc->mprts);
+  psc->initialize();
+  psc->integrate();
 
   delete psc;
   

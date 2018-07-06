@@ -45,7 +45,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // initialize
 
-  void initialize(PscMparticlesBase mprts)
+  void initialize()
   {
     psc_view(psc_);
     psc_mparticles_view(mprts.mprts());
@@ -59,7 +59,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // integrate
 
-  void integrate(PscMparticlesBase mprts)
+  void integrate()
   {
     static int pr;
     if (!pr) {
