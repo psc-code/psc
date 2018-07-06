@@ -188,6 +188,18 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     Simulation_delete(sim_);
   }
 
+  static void phys_ctor(globals_physics& phys_, Int3 gdims, Int3 np, int n_global_patches)
+  {
+    // FIXME, the general normalization stuff should be shared somehow
+
+    // use natural PIC units
+    phys_.ec   = 1;         // Charge normalization
+    phys_.me   = 1;         // Mass normalization
+    phys_.c    = 1;         // Speed of light
+    phys_.de   = 1;         // Length normalization (electron inertial length)
+    phys_.eps0 = 1;         // Permittivity of space
+  }
+
   // ----------------------------------------------------------------------
   // setup_ic
 
@@ -199,14 +211,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
     assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
-    // FIXME, the general normalization stuff should be shared somehow
-
-    // use natural PIC units
-    phys_.ec   = 1;         // Charge normalization
-    phys_.me   = 1;         // Mass normalization
-    phys_.c    = 1;         // Speed of light
-    phys_.de   = 1;         // Length normalization (electron inertial length)
-    phys_.eps0 = 1;         // Permittivity of space
+    phys_ctor(phys_, gdims, np, n_global_patches_);
 
     double c = phys_.c;
     //derived quantities
