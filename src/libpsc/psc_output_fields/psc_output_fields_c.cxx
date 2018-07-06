@@ -97,15 +97,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_setup(item);
 
     // pfd
-    auto mflds_pfd = PscFieldsItemBase{item}->mres();
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds_pfd->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds_pfd.mflds(), m));
-    }
+    std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
+    MfieldsBase& mflds_pfd = *PscFieldsItemBase{item}->mres().sub();
 
     // tfd -- FIXME?! always MfieldsC
-    MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd->n_comps(), psc->ibn};
-    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, *mflds_pfd.sub(), mflds_tfd);
+    MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->ibn};
+    out_c->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
   }
   free(s_orig);
 

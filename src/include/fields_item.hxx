@@ -23,6 +23,16 @@ struct FieldsItemBase
 
   virtual PscMfieldsBase mres() = 0;
 
+  std::vector<std::string> comp_names()
+  {
+    auto mflds = mres();
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mflds->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+    }
+    return comp_names;
+  }
+
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
