@@ -327,6 +327,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
  
+    auto kinds = Grid_t::Kinds{{-phys_.ec, phys_.me, "e"},
+			       { phys_.ec, phys_.mi, "i"}};
+
     // Determine the time step
     phys_.dg = courant_length(domain.length, domain.gdims);
     phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
@@ -338,7 +341,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
 
     psc_setup_coeff(psc_);
-    psc_setup_domain(psc_, domain, grid_bc, psc_->kinds_);
+    psc_setup_domain(psc_, domain, grid_bc, kinds);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       sim_ = Simulation_create();
@@ -470,8 +473,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double nmax = overalloc * phys_.Ne / phys_.n_global_patches;
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
-    
-    psc_set_kinds(psc_, {{-phys_.ec, phys_.me, "e"}, {phys_.ec, phys_.mi, "i"}});
     
     Simulation_define_species(sim_, "electron", -phys_.ec, phys_.me, nmax, nmovers,
 			    electron_sort_interval, sort_method);
