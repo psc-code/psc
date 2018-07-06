@@ -129,10 +129,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   PscHarris(const PscHarrisParams& params, psc *psc)
     : Psc{psc, nullptr}, // FIXME
-      PscHarrisParams(params)
+      PscHarrisParams(params),
+      mprts_{*createMparticles(setup_grid())}
   {
-    mprts__ = createMparticles(setup_grid());
-
+    mprts__ = &mprts_;
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
     setup_particles(n_prts_by_patch_old, true);
@@ -690,6 +690,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
 protected:
+  Mparticles_t& mprts_;
   int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
   Simulation* sim_;
