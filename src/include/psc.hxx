@@ -24,6 +24,7 @@ struct Psc
 
   ~Psc()
   {
+    psc_mparticles_destroy(mprts.mprts());
     psc_destroy(psc_);
   }
   

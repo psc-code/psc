@@ -159,7 +159,6 @@ struct psc {
   double dt;	///< timestep in physical units
   ///@}
 
-  struct psc_mparticles *particles_;	///< All the particles, indexed by their containing patch
   struct psc_mfields *flds;	///< The fields.
   int n_state_fields;           ///< How many field components do we need in ::flds
 
