@@ -152,7 +152,7 @@ private:
 				 PscMparticlesBase mprts)
   {
     auto pushp = PscPushParticlesBase{psc->push_particles};
-    pushp.stagger(mprts, PscMfieldsBase{psc->flds});
+    pushp.stagger(*mprts.sub(), PscMfieldsBase{psc->flds});
     
     // initial output / stats
     psc_method_output(psc->method, psc, *mprts.sub());
