@@ -128,7 +128,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // PscHarris ctor
   
   PscHarris(const PscHarrisParams& params, psc *psc)
-    : Psc{psc, PscMparticlesBase{nullptr}}, // FIXME
+    : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params)
   {
     MPI_Comm comm = psc_comm(psc_);

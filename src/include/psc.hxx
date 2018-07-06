@@ -19,9 +19,9 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(psc* psc, PscMparticlesBase mprts)
+  Psc(psc* psc, MparticlesBase* mprts)
     : psc_(psc),
-      mprts__(mprts.mprts() ? mprts.sub() : nullptr)
+      mprts__(mprts)
   {}
 
   // ----------------------------------------------------------------------

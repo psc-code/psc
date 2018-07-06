@@ -235,7 +235,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : Psc{psc, PscMparticlesCreate(psc_comm(psc), psc->grid(),
-				   Mparticles_traits<Mparticles_t>::name)},
+				   Mparticles_traits<Mparticles_t>::name).sub()},
       PscFlatfoilParams(params),
       mprts_{dynamic_cast<Mparticles_t&>(*mprts__)},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
