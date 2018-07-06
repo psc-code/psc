@@ -173,7 +173,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
-    setup_particles(PscMparticlesBase{nullptr}, n_prts_by_patch_old, true); // FIXME, ugly
+    setup_particles(n_prts_by_patch_old, true);
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
@@ -184,7 +184,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     
     mprts->reserve_all(n_prts_by_patch_new.data());
-    setup_particles(mprts, n_prts_by_patch_new, false);
+    setup_particles(n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
     SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
@@ -475,7 +475,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   //
   // set particles x^{n+1/2}, p^{n+1/2}
 
-  void setup_particles(PscMparticlesBase mprts, std::vector<uint>& nr_particles_by_patch, bool count_only)
+  void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -671,7 +671,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
-    PscMarderBase{psc_->marder}(mflds, mprts);
+    PscMarderBase{psc_->marder}(mflds, *mprts.sub());
     
     PscChecksBase{psc_->checks}.gauss(psc_, mprts);
 

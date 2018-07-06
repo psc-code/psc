@@ -8,7 +8,7 @@
 
 struct MarderBase
 {
-  virtual void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) = 0;
+  virtual void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) = 0;
 };
 
 // ======================================================================
@@ -33,7 +33,7 @@ struct PscMarder
   // However, for variant = 0, ghost cells aren't set on entry, and they're not
   // expected to be set on return (though we do that, anyway.)
 
-  void operator()(PscMfieldsBase mflds, PscMparticlesBase mprts)
+  void operator()(PscMfieldsBase mflds, MparticlesBase& mprts)
   {
     static int pr;
     if (!pr) {
