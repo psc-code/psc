@@ -12,7 +12,7 @@
 class CollisionBase
 {
 public:
-  virtual void run(PscMparticlesBase mprts_base) = 0;
+  virtual void run(MparticlesBase& mprts_base) = 0;
 };
 
 // ======================================================================
@@ -30,7 +30,7 @@ struct PscCollision
     : collision_(collision)
   {}
 
-  void operator()(PscMparticlesBase mprts)
+  void operator()(MparticlesBase& mprts)
   {
     static int st_time_collision;
     if (!st_time_collision) {
@@ -63,11 +63,11 @@ struct CollisionConvert : Collision_t, CollisionBase
   using Mparticles = typename Collision_t::Mparticles;
   using Base::Base;
 
-  void run(PscMparticlesBase mprts_base) override
+  void run(MparticlesBase& mprts_base) override
   {
-    auto& mprts = mprts_base->get_as<Mparticles>();
+    auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
   }
 };
 

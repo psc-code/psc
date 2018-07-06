@@ -13,7 +13,7 @@
 
 struct SortBase
 {
-  virtual void run(PscMparticlesBase mprts_base) = 0;
+  virtual void run(MparticlesBase& mprts_base) = 0;
 };
 
 // ======================================================================
@@ -31,7 +31,7 @@ struct PscSort
     : sort_(sort)
   {}
   
-  void operator()(PscMparticlesBase mprts)
+  void operator()(MparticlesBase& mprts)
   {
     static int st_time_sort;
     if (!st_time_sort) {
@@ -64,11 +64,11 @@ struct SortConvert : Sort_t, SortBase
   using Mparticles = typename Sort_t::Mparticles;
   using Base::Base;
 
-  void run(PscMparticlesBase mprts_base) override
+  void run(MparticlesBase& mprts_base) override
   {
-    auto& mprts = mprts_base->get_as<Mparticles>();
+    auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
   }
 };
 

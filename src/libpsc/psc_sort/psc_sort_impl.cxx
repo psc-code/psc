@@ -14,7 +14,7 @@
 class PscSortNone : public SortBase
 {
 public:
-  void run(PscMparticlesBase mprts_base) override {}
+  void run(MparticlesBase& mprts_base) override {}
 };
 
 // ======================================================================

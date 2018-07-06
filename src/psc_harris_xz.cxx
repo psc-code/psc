@@ -641,8 +641,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    sort(mprts);
-    collision(mprts);
+    sort(*mprts.sub());
+    collision(*mprts.sub());
   
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
