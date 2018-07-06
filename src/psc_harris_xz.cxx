@@ -714,7 +714,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     st_time_output = psc_stats_register("time output");
   }
   
-private:
+protected:
   int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
   Simulation* sim_;

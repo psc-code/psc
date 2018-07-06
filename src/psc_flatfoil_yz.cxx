@@ -544,7 +544,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
-private:
+protected:
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
 
