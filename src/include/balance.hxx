@@ -28,10 +28,10 @@ struct PscBalance
     : balance_(balance)
   {}
 
-  void operator()(struct psc* psc, PscMparticlesBase mprts)
+  void operator()(struct psc* psc, MparticlesBase& mprts)
   {
     if (balance_->every > 0 && psc->timestep % balance_->every == 0) {
-      (*sub())(psc, *mprts.sub());
+      (*sub())(psc, mprts);
     }
   }
 

@@ -636,7 +636,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
     auto balance = PscBalanceBase{psc_->balance};
-    balance(psc_, mprts);
+    balance(psc_, *mprts.sub());
 
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart

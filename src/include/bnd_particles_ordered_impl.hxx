@@ -181,23 +181,24 @@ struct psc_bnd_particles_ordered : BndParticles_<MP>, bnd_particles_policy_order
   // ----------------------------------------------------------------------
   // exchange_particles
 
-  void exchange_particles(psc_mparticles* _mprts_base)
+  void exchange_particles(MparticlesBase& mprts_base)
   {
     static int pr_A, pr_B;
     if (!pr_A) {
       pr_A = prof_register("xchg_mprts_prep", 1., 0, 0);
       pr_B = prof_register("xchg_mprts_post", 1., 0, 0);
     }
-    
-    auto mprts_base = PscMparticlesBase{_mprts_base};
-    auto& mprts = mprts_base->get_as<Mparticles>();
+
+    assert(0);
+#if 0
+    auto& mprts = mprts_base.get_as<Mparticles>();
 
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_A);
     this->exchange_mprts_prep(ddcp, mprts);
     prof_stop(pr_A);
     
-    this->process_and_exchange(mprts);
+    this->process_and_exgchange(mprts);
     
     prof_restart(pr_time_step_no_comm);
     prof_start(pr_B);
@@ -205,7 +206,8 @@ struct psc_bnd_particles_ordered : BndParticles_<MP>, bnd_particles_policy_order
     prof_stop(pr_B);
     prof_stop(pr_time_step_no_comm);
 
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
+#endif
   }
 };
 
