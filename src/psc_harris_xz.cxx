@@ -623,8 +623,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
     }
 
-    // default psc_step() implementation
-
 #if 0
     mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
 	       psc->prm.nmax, psc->timestep * psc->dt);
