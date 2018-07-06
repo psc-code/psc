@@ -531,15 +531,15 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   // ----------------------------------------------------------------------
   // run
 
-  void run(PscMparticlesBase mprts_base) override
+  void run(MparticlesBase& mprts_base) override
   {
     if (every_step <= 0 || ppsc->timestep % every_step != 0) {
       return;
     }
 
-    auto& mprts = mprts_base->get_as<Mparticles>();
+    auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);
-    mprts_base->put_as(mprts, MP_DONT_COPY);
+    mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
   // private:

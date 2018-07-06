@@ -11,7 +11,7 @@
 class OutputParticlesBase
 {
 public:
-  virtual void run(PscMparticlesBase mprts_base) = 0;
+  virtual void run(MparticlesBase& mprts_base) = 0;
 
 public:
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
@@ -32,7 +32,7 @@ struct PscOutputParticles
     : outp_(outp)
   {}
 
-  void run(PscMparticlesBase mprts_base)
+  void run(MparticlesBase& mprts_base)
   {
     psc_stats_start(st_time_output);
     sub()->run(mprts_base);

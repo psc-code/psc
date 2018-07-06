@@ -8,7 +8,7 @@ struct psc_output_particles_none : OutputParticlesParams, OutputParticlesBase
     : OutputParticlesParams(params)
   {}
 
-  void run(PscMparticlesBase mprts_base) override
+  void run(MparticlesBase& mprts_base) override
   {}
 };
 

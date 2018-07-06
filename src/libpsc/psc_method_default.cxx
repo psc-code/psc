@@ -26,7 +26,7 @@ psc_method_default_output(struct psc_method *method, struct psc *psc, PscMpartic
 {
   psc_diag_run(psc->diag, psc, *mprts.sub());
   psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, *mprts.sub());
-  PscOutputParticlesBase{psc->output_particles}.run(mprts);
+  PscOutputParticlesBase{psc->output_particles}.run(*mprts.sub());
 }
 
 // ----------------------------------------------------------------------
