@@ -256,7 +256,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params),
       phys_{params},
-      // FIXME, not dynamically alloced, so deleting mprts__ will crash
       mprts_{createMparticles(setup_grid())}
   {
     mprts__ = &mprts_;

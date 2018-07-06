@@ -29,7 +29,6 @@ struct Psc
 
   ~Psc()
   {
-    delete mprts__; // FIXME, not correct dtor (because it's not virtual)
     psc_destroy(psc_);
   }
   
