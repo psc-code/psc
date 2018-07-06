@@ -26,7 +26,7 @@ psc_method_default_initialize(struct psc_method *method, struct psc *psc,
 			      PscMparticlesBase mprts)
 {
   auto pushp = PscPushParticlesBase{psc->push_particles};
-  pushp.stagger(PscMparticlesBase{psc->particles}, PscMfieldsBase{psc->flds});
+  pushp.stagger(mprts, PscMfieldsBase{psc->flds});
 
   // initial output / stats
   psc_output(psc, mprts);
@@ -42,8 +42,8 @@ psc_method_default_output(struct psc_method *method, struct psc *psc, PscMpartic
 {
   psc_diag_run(psc->diag, psc, mprts
 	       );
-  psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, psc->particles);
-  PscOutputParticlesBase{psc->output_particles}.run(PscMparticlesBase{psc->particles});
+  psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, mprts);
+  PscOutputParticlesBase{psc->output_particles}.run(mprts);
 }
 
 // ----------------------------------------------------------------------

@@ -13,7 +13,7 @@ BEGIN_C_DECLS
 void psc_output_fields_collection_set_psc(struct psc_output_fields_collection *output_fields_collection,
 					  struct psc *psc);
 void psc_output_fields_collection_run(struct psc_output_fields_collection *output_fields_collection,
-				      struct psc_mfields *flds, struct psc_mparticles *particles);
+				      struct psc_mfields *flds, PscMparticlesBase mprts);
 
 END_C_DECLS
 
