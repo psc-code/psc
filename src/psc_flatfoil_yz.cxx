@@ -234,9 +234,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using Marder_t = PscConfig::Marder_t;
   
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
-    : Psc{psc, new Mparticles_t{psc->grid()}},
+    : Psc{psc, nullptr},
       PscFlatfoilParams(params),
-      mprts_{dynamic_cast<Mparticles_t&>(*mprts__)},
+      mprts_{psc->grid()},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -247,6 +247,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
+    mprts__ = &mprts_;
     MPI_Comm comm = psc_comm(psc_);
 
     // --- partition particles and initial balancing
@@ -530,7 +531,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
 protected:
-  Mparticles_t& mprts_;
+  Mparticles_t mprts_;
   Mfields_t& mflds_;
 
   Sort_t sort_;
