@@ -43,7 +43,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // integrate
 
-  void integrate()
+  void integrate(PscMparticlesBase mprts)
   {
     static int pr;
     if (!pr) {
@@ -73,7 +73,6 @@ struct Psc
 
       step();
     
-      PscMparticlesBase mprts(psc_->particles_);
       psc_->timestep++; // FIXME, too hacky
       psc_output(psc_, mprts);
 

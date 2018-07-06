@@ -683,15 +683,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // integrate
 
-  void integrate()
+  void integrate(PscMparticlesBase mprts)
   {
     setup_stats();
-    Psc::integrate();
-  
-    // while (psc_->timestep < psc_->prm.nmax) {
-    //   PscMparticlesBase mprts(psc_->particles);
-    //   psc_stats_val[st_nr_particles] = mprts->get_n_prts();
-    // }
+    Psc::integrate(mprts);
   }
 
   // ----------------------------------------------------------------------
@@ -831,7 +826,7 @@ main(int argc, char **argv)
   auto psc = builder.makePsc();
 
   psc->initialize(PscMparticlesBase{psc->get_psc()->particles_});
-  psc->integrate();
+  psc->integrate(PscMparticlesBase{psc->get_psc()->particles_});
 
   delete psc;
   

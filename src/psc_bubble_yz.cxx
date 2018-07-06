@@ -577,7 +577,7 @@ main(int argc, char **argv)
   auto psc = builder.makePsc();
 
   psc->initialize(PscMparticlesBase{psc->get_psc()->particles_});
-  psc->integrate();
+  psc->integrate(PscMparticlesBase{psc->get_psc()->particles_});
 
   delete psc;
   
