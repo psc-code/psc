@@ -21,7 +21,8 @@ struct Psc
 
   Psc(psc* psc, PscMparticlesBase mprts)
     : psc_(psc),
-      mprts(mprts)
+      mprts(mprts),
+      mprts__(mprts.mprts() ? mprts.sub() : nullptr)
   {}
 
   // ----------------------------------------------------------------------
@@ -29,7 +30,7 @@ struct Psc
 
   ~Psc()
   {
-    psc_mparticles_destroy(mprts.mprts());
+    mprts__->~MparticlesBase(); // FIXME, not correct dtor
     psc_destroy(psc_);
   }
   
@@ -54,13 +55,13 @@ struct Psc
   void initialize()
   {
     psc_view(psc_);
-    mprts->view();
+    mprts__->view();
     psc_mfields_view(psc_->flds);
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, *mprts.sub());
+      psc_method_vpic_initialize(psc_->method, psc_, *mprts__);
     } else {
-      initialize_default(psc_->method, psc_, *mprts.sub());
+      initialize_default(psc_->method, psc_, *mprts__);
     }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -100,13 +101,12 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_method_output(psc_->method, psc_, *mprts.sub());
+      psc_method_output(psc_->method, psc_, *mprts__);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
-      psc_stats_val[st_nr_particles] = mprts->get_n_prts();
-      //psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
+      psc_stats_val[st_nr_particles] = mprts__->get_n_prts();
 
       if (psc_->timestep % psc_->prm.stats_every == 0) {
 	psc_stats_log(psc_);
@@ -163,6 +163,7 @@ private:
 public: // FIXME  
   PscMparticlesBase mprts;
 protected:
+  MparticlesBase* mprts__;
   psc* psc_;
 
   int st_nr_particles;
