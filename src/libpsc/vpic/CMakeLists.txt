@@ -15,7 +15,6 @@ add_library(pscvpic
   psc_vpic_bits.cxx
   simulation.cxx
   vpic_base.cxx
-  vpic_mparticles.cxx
   )
 
 target_include_directories(pscvpic

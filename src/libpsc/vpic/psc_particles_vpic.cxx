@@ -287,11 +287,3 @@ const MparticlesVpic::Convert MparticlesVpic::convert_from_ = {
   { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_from<MparticlesSingleByKind> },
 };
 
-// ----------------------------------------------------------------------
-// psc_mparticles: subclass "vpic"
-  
-psc_mparticles_ops_<MparticlesVpic> psc_mparticles_vpic_ops;
-
-
-
-
