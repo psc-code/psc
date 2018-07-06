@@ -64,8 +64,8 @@ struct MarderCuda : MarderBase
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
-      psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
+      // psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
+      // psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
       mrc_io_close(io_);
     }
 
