@@ -14,8 +14,9 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(psc* psc)
-    : psc_(psc)
+  Psc(psc* psc, PscMparticlesBase mprts)
+    : psc_(psc),
+      mprts(mprts)
   {}
 
   // ----------------------------------------------------------------------
@@ -132,6 +133,7 @@ struct Psc
 
   psc* get_psc() const { return psc_; } // FIXME, should go away
   
+  PscMparticlesBase mprts;
 protected:
   psc* psc_;
 

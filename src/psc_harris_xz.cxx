@@ -128,9 +128,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // PscHarris ctor
   
   PscHarris(const PscHarrisParams& params, psc *psc)
-    : Psc{psc},
-      PscHarrisParams(params),
-      mprts_{nullptr} // FIXME
+    : Psc{psc, PscMparticlesBase{nullptr}}, // FIXME
+      PscHarrisParams(params)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -176,15 +175,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
 
     mpi_printf(comm, "**** Creating particle data structure...\n");
-    mprts_ = PscMparticlesCreate(comm, psc_->grid(),
+    mprts = PscMparticlesCreate(comm, psc_->grid(),
 				 Mparticles_traits<PscHarris::Mparticles_t>::name);
 
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     
-    mprts_->reserve_all(n_prts_by_patch_new.data());
-    setup_particles(mprts_, n_prts_by_patch_new, false);
+    mprts->reserve_all(n_prts_by_patch_new.data());
+    setup_particles(mprts, n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
     SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
@@ -636,27 +635,27 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
     auto balance = PscBalanceBase{psc_->balance};
-    balance(psc_, mprts_);
+    balance(psc_, mprts);
 
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    sort(mprts_);
-    collision(mprts_);
+    sort(mprts);
+    collision(mprts);
   
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
-    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts_);
+    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts);
 
     // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp(mprts_, mflds);
+    pushp(mprts, mflds);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // field propagation B^{n+1/2} -> B^{n+1}
     pushf.advance_H(mflds, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-    bndp(*mprts_.sub());
+    bndp(*mprts.sub());
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
     pushf.advance_b2(mflds);
@@ -666,19 +665,18 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     pushf.advance_a(mflds);
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, mprts_);
+    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, mprts);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
-    PscMarderBase{psc_->marder}(mflds, mprts_);
+    PscMarderBase{psc_->marder}(mflds, mprts);
     
-    PscChecksBase{psc_->checks}.gauss(psc_, mprts_);
+    PscChecksBase{psc_->checks}.gauss(psc_, mprts);
 
-    psc_push_particles_prep(psc_->push_particles, mprts_.mprts(), psc_->flds);
+    psc_push_particles_prep(psc_->push_particles, mprts.mprts(), psc_->flds);
   }
 
-  PscMparticlesBase mprts_;
 protected:
   int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
@@ -800,8 +798,8 @@ main(int argc, char **argv)
   auto builder = PscHarrisBuilder{};
   auto psc = builder.makePsc();
 
-  psc->initialize(psc->mprts_);
-  psc->integrate(psc->mprts_);
+  psc->initialize(psc->mprts);
+  psc->integrate(psc->mprts);
 
   delete psc;
   
