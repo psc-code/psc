@@ -19,18 +19,18 @@ class PushParticles_ : public PushParticlesBase
   using Self = PushParticles_<PUSH_P_OPS>;
   
 public:
-  void push_mprts_xyz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
+  void push_mprts_xyz(MparticlesBase& mprts, PscMfieldsBase mflds) override
   { PUSH_P_OPS<dim_xyz>::push_mprts(mprts, mflds); }
 
 #if 0
-  void push_mprts_xz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
+  void push_mprts_xz(MparticlesBase& mprts, PscMfieldsBase mflds) override
   { PUSH_P_OPS<dim_xz>::push_mprts(mprts, mflds_base); }
 #endif
 
-  void push_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds) override
+  void push_mprts_yz(MparticlesBase& mprts, PscMfieldsBase mflds) override
   { push_yz_.push_mprts(mprts, mflds); }
 
-  void push_mprts_1(PscMparticlesBase mprts, PscMfieldsBase mflds) override
+  void push_mprts_1(MparticlesBase& mprts, PscMfieldsBase mflds) override
   { PUSH_P_OPS<dim_1>::push_mprts(mprts, mflds); }
 
   void stagger_mprts_yz(MparticlesBase& mprts, PscMfieldsBase mflds) override

@@ -13,12 +13,12 @@ extern int pr_time_step_no_comm; // FIXME
 class PushParticlesBase
 {
 public:
-  virtual void prep(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  virtual void prep(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
   { assert(0); }
   
-  virtual void push_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  virtual void push_mprts(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
   {
-    const auto& grid = mprts_base->grid();
+    const auto& grid = mprts_base.grid();
     using Bool3 = Vec3<bool>;
     Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
 
@@ -42,28 +42,28 @@ public:
     }
   }
 
-  virtual void push_mprts_xyz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_xyz(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_xy(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_xy(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_xz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_xz(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_yz(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_yz(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_x(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_x(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_y(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_y(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_z(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_z(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_1(PscMparticlesBase mprts, PscMfieldsBase mflds_base)
+  virtual void push_mprts_1(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
   virtual void stagger_mprts(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
@@ -102,7 +102,7 @@ struct PscPushParticles
       sub_(mrc_to_subobj(pushp, sub_t))
   {}
 
-  void operator()(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  void operator()(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
   {
     static int pr;
     if (!pr) {
@@ -149,12 +149,12 @@ struct PscPushParticles_
   using Mparticles = typename PushParticles_t::Mparticles;
   using Mfields = typename PushParticles_t::Mfields;
   
-  static void push_mprts(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base)
+  static void push_mprts(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
   {
     auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 6);
-    auto& mprts = mprts_base->get_as<Mparticles>();
+    auto& mprts = mprts_base.get_as<Mparticles>();
     PushParticles_t::push_mprts(mprts, mflds);
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
     mflds_base->put_as(mflds, JXI, JXI+3);
   }
   

@@ -15,7 +15,7 @@ extern double *psc_balance_comp_time_by_patch;
 
 void
 psc_push_particles_prep(struct psc_push_particles *push,
-			struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+			MparticlesBase& mprts_base, struct psc_mfields *mflds_base)
 {
   static int pr;
   if (!pr) {
