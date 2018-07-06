@@ -59,7 +59,7 @@ psc_print_profiling(struct psc *psc)
 void
 psc_output(struct psc *psc, PscMparticlesBase mprts)
 {
-  psc_method_output(psc->method, psc, mprts);
+  psc_method_output(psc->method, psc, *mprts.sub());
 }
 
 // This measures the time spent pushing particles and fields, exclusive of

@@ -9,7 +9,7 @@
 
 void
 psc_method_output(struct psc_method *method, struct psc *psc,
-		  PscMparticlesBase mprts)
+		  MparticlesBase& mprts)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->output);

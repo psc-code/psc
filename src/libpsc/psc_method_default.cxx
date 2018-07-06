@@ -22,11 +22,11 @@
 // psc_method_default_output
 
 void
-psc_method_default_output(struct psc_method *method, struct psc *psc, PscMparticlesBase mprts)
+psc_method_default_output(struct psc_method *method, struct psc *psc, MparticlesBase& mprts)
 {
-  psc_diag_run(psc->diag, psc, *mprts.sub());
-  psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, *mprts.sub());
-  PscOutputParticlesBase{psc->output_particles}.run(*mprts.sub());
+  psc_diag_run(psc->diag, psc, mprts);
+  psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, mprts);
+  PscOutputParticlesBase{psc->output_particles}.run(mprts);
 }
 
 // ----------------------------------------------------------------------

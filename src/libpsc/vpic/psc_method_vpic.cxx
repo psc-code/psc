@@ -86,7 +86,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
   Simulation_diagnostics_run(sub->sim);
-  psc_method_default_output(method, psc, mprts_base);
+  psc_method_default_output(method, psc, *mprts_base.sub());
 
   Simulation_print_status(sub->sim);
   psc_stats_log(psc);
@@ -98,7 +98,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_vpic_output(struct psc_method *method, struct psc *psc,
-		       PscMparticlesBase mprts)
+		       MparticlesBase& mprts)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
