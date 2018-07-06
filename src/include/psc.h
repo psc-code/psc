@@ -263,7 +263,6 @@ extern int pr_time_step_no_comm;
 
 struct psc *psc_create(MPI_Comm comm);
 void psc_set_from_options(struct psc *psc);
-void psc_set_kinds(struct psc *psc, const Grid_t::Kinds& kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 

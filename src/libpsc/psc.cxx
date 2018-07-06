@@ -148,7 +148,7 @@ _psc_create(struct psc *psc)
   srandom(rank);
   
   // default: 2 species (e-, i+)
-  psc_set_kinds(psc, {{ -1., 1., "e"}, { 1., 100., "i" }});
+  psc->kinds_ = {{ -1., 1., "e"}, { 1., 100., "i" }};
 
   // default 9 state fields (J,E,B)
   psc->n_state_fields = NR_FIELDS;
@@ -421,14 +421,6 @@ _psc_view(struct psc *psc)
     mpi_printf(comm, "%19s | q = %g m = %g\n",
 	       kinds[k].name, kinds[k].q, kinds[k].m);
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_set_kinds
-
-void psc_set_kinds(struct psc *psc, const Grid_t::Kinds& kinds)
-{
-  psc->kinds_ = kinds;
 }
 
 // ======================================================================
