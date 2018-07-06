@@ -65,12 +65,6 @@ static struct select_init {
 } select_initializer;
 
 static struct param psc_descr[] = {
-  // psc_domain
-  { "length_"       , VAR(domain_.length)          , PARAM_DOUBLE3(1., 1., 1.)  },
-  { "corner_"       , VAR(domain_.corner)          , PARAM_DOUBLE3(0., 0., 0.)  },
-  { "gdims_"        , VAR(domain_.gdims)           , PARAM_INT3(1, 1, 1)        },
-  { "np_"	    , VAR(domain_.np)	           , PARAM_INT3(1, 1, 1)        },
-
   { "bnd_field_lo_x", VAR_(bc_.fld_lo, 0)   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
   { "bnd_field_lo_y", VAR_(bc_.fld_lo, 1)   , PARAM_SELECT(BND_FLD_PERIODIC,
@@ -425,7 +419,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 #endif
   
   psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
-  psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
+  //psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
 #endif
