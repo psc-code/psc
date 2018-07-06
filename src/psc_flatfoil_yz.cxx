@@ -233,10 +233,11 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
   
-  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+  PscFlatfoil(const PscFlatfoilParams& params, psc *psc, PscMparticlesBase mprts)
     : Psc{psc},
       PscFlatfoilParams(params),
-      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles_}.sub())},
+      mprts{mprts},
+      mprts_{dynamic_cast<Mparticles_t&>(*mprts.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -529,6 +530,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
+  PscMparticlesBase mprts;
 protected:
   Mparticles_t& mprts_;
   Mfields_t& mflds_;
@@ -772,15 +774,15 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
-  psc_->particles_ = PscMparticlesCreate(comm, psc_->grid(),
-					Mparticles_traits<PscFlatfoil::Mparticles_t>::name).mprts();
+  auto mprts = PscMparticlesCreate(comm, psc_->grid(),
+				   Mparticles_traits<PscFlatfoil::Mparticles_t>::name);
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
 				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
 
-  return new PscFlatfoil(params, psc_);
+  return new PscFlatfoil(params, psc_, mprts);
 }
 
 // ======================================================================
@@ -800,8 +802,8 @@ main(int argc, char **argv)
   auto builder = PscFlatfoilBuilder{};
   auto psc = builder.makePsc();
 
-  psc->initialize(PscMparticlesBase{psc->get_psc()->particles_});
-  psc->integrate(PscMparticlesBase{psc->get_psc()->particles_});
+  psc->initialize(psc->mprts);
+  psc->integrate(psc->mprts);
 
   delete psc;
   
