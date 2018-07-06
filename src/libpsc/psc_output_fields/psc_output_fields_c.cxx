@@ -98,7 +98,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 
     // pfd
     std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
-    MfieldsBase& mflds_pfd = *PscFieldsItemBase{item}->mres().sub();
+    MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
 
     // tfd -- FIXME?! always MfieldsC
     MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->ibn};

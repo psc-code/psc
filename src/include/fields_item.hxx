@@ -21,7 +21,7 @@ struct FieldsItemBase
 {
   virtual void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) = 0;
 
-  virtual PscMfieldsBase mres() = 0;
+  virtual MfieldsBase& mres() = 0;
 
   virtual std::vector<std::string> comp_names() = 0;
 
@@ -139,7 +139,7 @@ struct FieldsItemFields : FieldsItemBase
     mflds_base.put_as(mflds, 0, 0);
   }
 
-  virtual PscMfieldsBase mres() override { return mres_base_; }
+  virtual MfieldsBase& mres() override { return *PscMfieldsBase{mres_base_}.sub(); }
 
   virtual std::vector<std::string> comp_names() override
   {
@@ -382,7 +382,7 @@ struct FieldsItemMoment : FieldsItemBase
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
-  virtual PscMfieldsBase mres() override { return moment_.mres_base(); }
+  virtual MfieldsBase& mres() override { return *PscMfieldsBase{moment_.mres_base()}.sub(); }
 
   virtual std::vector<std::string> comp_names()  override
   {
