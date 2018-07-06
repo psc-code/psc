@@ -151,7 +151,7 @@ psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 
 static void
 psc_output_fields_c_run(struct psc_output_fields *out,
-			struct psc_mfields *flds, MparticlesBase& mprts)
+			MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
   struct psc *psc = out->psc;
@@ -170,7 +170,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       (out_c->dowrite_tfield && doaccum_tfield)) {
     for (auto item : out_c->items) {
-      item.item(flds, mprts);
+      item.item(mflds, mprts);
     }
   }
 

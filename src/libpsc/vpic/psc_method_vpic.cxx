@@ -33,12 +33,11 @@ static struct param psc_method_vpic_descr[] = {
 
 void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-			   MparticlesBase& mprts_base)
+			   MfieldsBase& mflds_base, MparticlesBase& mprts_base)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
-  auto mflds_base = PscMfieldsBase{psc->flds};
-  auto& mflds = mflds_base->get_as<MfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
+  auto& mflds = mflds_base.get_as<MfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
   auto& mprts = mprts_base.get_as<MparticlesVpic>();
   
   // Do some consistency checks on user initialized fields
@@ -80,13 +79,13 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   Simulation_initialize(sub->sim, mprts.vmprts, vmflds);
 
   mprts_base.put_as(mprts);
-  mflds_base->put_as(mflds, 0, VPIC_MFIELDS_N_COMP);
+  mflds_base.put_as(mflds, 0, VPIC_MFIELDS_N_COMP);
 
   // First output / stats
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
   Simulation_diagnostics_run(sub->sim);
-  psc_method_default_output(method, psc, mprts_base);
+  psc_method_default_output(method, psc, mflds_base, mprts_base);
 
   Simulation_print_status(sub->sim);
   psc_stats_log(psc);
@@ -98,7 +97,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_vpic_output(struct psc_method *method, struct psc *psc,
-		       MparticlesBase& mprts)
+		       MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
@@ -111,7 +110,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc,
     Simulation_print_status(sub->sim);
   }
   
-  psc_method_default_output(NULL, psc, mprts);
+  psc_method_default_output(NULL, psc, mflds, mprts);
 }
 
 // ----------------------------------------------------------------------

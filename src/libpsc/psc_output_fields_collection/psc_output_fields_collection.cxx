@@ -97,11 +97,11 @@ _psc_output_fields_collection_read(struct psc_output_fields_collection *out, str
 
 void
 psc_output_fields_collection_run(struct psc_output_fields_collection *coll,
-				 struct psc_mfields *flds, MparticlesBase& mprts)
+				 MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_output_fields *out;
   mrc_obj_for_each_child(out, coll, struct psc_output_fields) {
-    psc_output_fields_run(out, flds, mprts);
+    psc_output_fields_run(out, mflds, mprts);
   }
 }
 

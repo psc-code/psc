@@ -9,7 +9,7 @@
 #include <push_particles.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-				MparticlesBase& mprts_base); // FIXME
+				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
 
 template<typename PscConfig>
 struct Psc
@@ -56,9 +56,9 @@ struct Psc
     psc_mfields_view(psc_->flds);
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, *mprts__);
+      psc_method_vpic_initialize(psc_->method, psc_, *PscMfieldsBase{psc_->flds}.sub(), *mprts__);
     } else {
-      initialize_default(psc_->method, psc_, *mprts__);
+      initialize_default(psc_->method, psc_, *PscMfieldsBase{psc_->flds}.sub(), *mprts__);
     }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -98,7 +98,7 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_method_output(psc_->method, psc_, *mprts__);
+      psc_method_output(psc_->method, psc_, *PscMfieldsBase{psc_->flds}.sub(), *mprts__);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -146,13 +146,13 @@ private:
   // initialize_default
   
   static void initialize_default(struct psc_method *method, struct psc *psc,
-				 MparticlesBase& mprts)
+				 MfieldsBase& mflds, MparticlesBase& mprts)
   {
     auto pushp = PscPushParticlesBase{psc->push_particles};
-    pushp.stagger(mprts, PscMfieldsBase{psc->flds});
+    pushp.stagger(mprts, mflds);
     
     // initial output / stats
-    psc_method_output(psc->method, psc, mprts);
+    psc_method_output(psc->method, psc, mflds, mprts);
     psc_stats_log(psc);
     psc_print_profiling(psc);
   }

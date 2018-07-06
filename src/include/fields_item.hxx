@@ -19,7 +19,7 @@
 
 struct FieldsItemBase
 {
-  virtual void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) = 0;
+  virtual void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) = 0;
 
   virtual PscMfieldsBase mres() = 0;
 
@@ -41,7 +41,7 @@ struct PscFieldsItem
     : item_(item)
   {}
 
-  void operator()(PscMfieldsBase mflds, MparticlesBase& mprts)
+  void operator()(MfieldsBase& mflds, MparticlesBase& mprts)
   {
     sub()->run(mflds, mprts);
   }
@@ -130,11 +130,11 @@ struct FieldsItemFields : FieldsItemBase
     Item::run(mflds, result());
   }
 
-  void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
   {
-    auto& mflds = mflds_base->get_as<Mfields>(0, mflds_base->n_comps());
+    auto& mflds = mflds_base.get_as<Mfields>(0, mflds_base.n_comps());
     (*this)(mflds);
-    mflds_base->put_as(mflds, 0, 0);
+    mflds_base.put_as(mflds, 0, 0);
   }
 
   virtual PscMfieldsBase mres() override { return mres_base_; }
@@ -363,7 +363,7 @@ struct FieldsItemMoment : FieldsItemBase
     : moment_(grid, comm)
   {}
 
-  void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
   {
     auto& mprts = mprts_base.get_as<Mparticles>();
     moment_.run(mprts);

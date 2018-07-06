@@ -66,7 +66,7 @@ public:
   virtual void push_mprts_1(MparticlesBase& mprts, PscMfieldsBase mflds_base)
   { assert(0); }
 
-  virtual void stagger_mprts(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
+  virtual void stagger_mprts(MparticlesBase& mprts_base, MfieldsBase& mflds_base)
   {
     const auto& grid = mprts_base.grid();
     using Bool3 = Vec3<bool>;
@@ -81,10 +81,10 @@ public:
     }
   }
   
-  virtual void stagger_mprts_yz(MparticlesBase& mprts, PscMfieldsBase mflds_base)
+  virtual void stagger_mprts_yz(MparticlesBase& mprts, MfieldsBase& mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
-  virtual void stagger_mprts_1(MparticlesBase& mprts, PscMfieldsBase mflds_base)
+  virtual void stagger_mprts_1(MparticlesBase& mprts, MfieldsBase& mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
 };
@@ -120,9 +120,9 @@ struct PscPushParticles
     prof_stop(pr);
   }
 
-  void stagger(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
+  void stagger(MparticlesBase& mprts_base, MfieldsBase& mflds_base)
   {
-    sub()->stagger_mprts(mprts_base, mflds_base.mflds());
+    sub()->stagger_mprts(mprts_base, mflds_base);
   }
   
   psc_push_particles *pushp() { return pushp_; }
@@ -158,13 +158,13 @@ struct PscPushParticles_
     mflds_base->put_as(mflds, JXI, JXI+3);
   }
   
-  static void stagger_mprts(MparticlesBase& mprts_base, PscMfieldsBase mflds_base)
+  static void stagger_mprts(MparticlesBase& mprts_base, MfieldsBase& mflds_base)
   {
-    auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 6);
+    auto& mflds = mflds_base.get_as<Mfields>(EX, EX + 6);
     auto& mprts = mprts_base.get_as<Mparticles>();
     PushParticles_t::stagger_mprts(mprts, mflds);
     mprts_base.put_as(mprts);
-    mflds_base->put_as(mflds, JXI, JXI+3);
+    mflds_base.put_as(mflds, JXI, JXI+3);
   }
 
   PushParticles_t pushp_;

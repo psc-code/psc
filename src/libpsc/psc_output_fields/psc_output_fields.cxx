@@ -34,13 +34,13 @@ _psc_output_fields_read(struct psc_output_fields *out, struct mrc_io *io)
 
 void
 psc_output_fields_run(struct psc_output_fields *output_fields,
-		      struct psc_mfields *flds, MparticlesBase& mprts)
+		      MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_output_fields_ops *ops = psc_output_fields_ops(output_fields);
   assert(ops->run);
 
   psc_stats_start(st_time_output);
-  ops->run(output_fields, flds, mprts);
+  ops->run(output_fields, mflds, mprts);
   psc_stats_stop(st_time_output);
 }
 

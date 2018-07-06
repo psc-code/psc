@@ -4,11 +4,12 @@
 
 #include "psc.h"
 #include "particles.hxx"
+#include "fields3d.hxx"
 
 MRC_CLASS_DECLARE(psc_method, struct psc_method);
 
 void psc_method_output(struct psc_method *method, struct psc *psc,
-		       MparticlesBase& mprts);
+		       MfieldsBase& mflds, MparticlesBase& mprts);
 
 #endif
 
