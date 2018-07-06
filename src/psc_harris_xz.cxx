@@ -167,16 +167,17 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
     }
 
+    mpi_printf(comm, "**** Creating particle data structure...\n");
+    mprts = PscMparticlesCreate(comm, psc_->grid(),
+				 Mparticles_traits<PscHarris::Mparticles_t>::name);
+
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
     setup_particles(PscMparticlesBase{nullptr}, n_prts_by_patch_old, true); // FIXME, ugly
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-
-    mpi_printf(comm, "**** Creating particle data structure...\n");
-    mprts = PscMparticlesCreate(comm, psc_->grid(),
-				 Mparticles_traits<PscHarris::Mparticles_t>::name);
+    mprts->reset(psc_->grid());
 
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),

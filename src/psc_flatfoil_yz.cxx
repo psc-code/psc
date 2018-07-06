@@ -233,8 +233,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
   
-  PscFlatfoil(const PscFlatfoilParams& params, psc *psc, PscMparticlesBase mprts)
-    : Psc{psc, mprts},
+  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+    : Psc{psc, PscMparticlesCreate(psc_comm(psc), psc->grid(),
+				   Mparticles_traits<Mparticles_t>::name)},
       PscFlatfoilParams(params),
       mprts_{dynamic_cast<Mparticles_t&>(*mprts.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
@@ -772,15 +773,13 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
-  auto mprts = PscMparticlesCreate(comm, psc_->grid(),
-				   Mparticles_traits<PscFlatfoil::Mparticles_t>::name);
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
 				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
 
-  return new PscFlatfoil(params, psc_, mprts);
+  return new PscFlatfoil(params, psc_);
 }
 
 // ======================================================================
