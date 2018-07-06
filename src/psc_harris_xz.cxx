@@ -168,7 +168,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     }
 
     mpi_printf(comm, "**** Creating particle data structure...\n");
-    mprts = PscMparticlesCreate(comm, psc_->grid(),
+    auto mprts = PscMparticlesCreate(comm, psc_->grid(),
 				 Mparticles_traits<PscHarris::Mparticles_t>::name);
     mprts__ = mprts.sub();
 

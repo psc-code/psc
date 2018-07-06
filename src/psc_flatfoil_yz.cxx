@@ -237,7 +237,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     : Psc{psc, PscMparticlesCreate(psc_comm(psc), psc->grid(),
 				   Mparticles_traits<Mparticles_t>::name)},
       PscFlatfoilParams(params),
-      mprts_{dynamic_cast<Mparticles_t&>(*mprts.sub())},
+      mprts_{dynamic_cast<Mparticles_t&>(*mprts__)},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},

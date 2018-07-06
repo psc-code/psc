@@ -21,7 +21,6 @@ struct Psc
 
   Psc(psc* psc, PscMparticlesBase mprts)
     : psc_(psc),
-      mprts(mprts),
       mprts__(mprts.mprts() ? mprts.sub() : nullptr)
   {}
 
@@ -160,8 +159,6 @@ private:
     psc_print_profiling(psc);
   }
 
-public: // FIXME  
-  PscMparticlesBase mprts;
 protected:
   MparticlesBase* mprts__;
   psc* psc_;
