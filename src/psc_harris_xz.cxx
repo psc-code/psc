@@ -172,13 +172,14 @@ struct globals_physics
   double vtheb;    // normalized background e thermal vel.
   double vthib;    // normalized background ion thermal vel.
 
+  int n_global_patches;
+  
   // ----------------------------------------------------------------------
   // ctor
 
   globals_physics() {}
 
-  globals_physics(Int3 gdims, Int3 np, int n_global_patches,
-		  const PscHarrisParams& p)
+  globals_physics(Int3 gdims, Int3 np, const PscHarrisParams& p)
   {
     // FIXME, the general normalization stuff should be shared somehow
 
@@ -216,6 +217,7 @@ struct globals_physics
     vdri = 2*c*Ti/(ec*b0*L);            // Ion drift velocity
     vdre = -vdri/(p.Ti_Te);             // electron drift velocity
 
+    n_global_patches = np[0] * np[1] * np[2];
     double Npe_sheet = 2*n0*Lx*Ly*L*tanh(0.5*Lz/L);         // N physical e's in sheet
     double Npe_back  = p.nb_n0 * n0 * Ly*Lz*Lx;             // N physical e's in backgrnd
     double Npe       = Npe_sheet + Npe_back;
@@ -315,12 +317,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     Int3 gdims = {512, 1, 128};
     Int3 np = {4, 1, 1};
-    n_global_patches_ = np[0] * np[1] * np[2];
   
     assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
-    phys_ = globals_physics(gdims, np, n_global_patches_, *this);
-   
+    phys_ = globals_physics(gdims, np, *this);
+
     psc_->domain_ = Grid_t::Domain{gdims,
 				  {phys_.Lx, phys_.Ly, phys_.Lz},
 				  {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
@@ -473,7 +474,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     MPI_Comm comm = psc_comm(psc_);
     
     mpi_printf(comm, "Setting up species.\n");
-    double nmax = overalloc * phys_.Ne / n_global_patches_;
+    double nmax = overalloc * phys_.Ne / phys_.n_global_patches;
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
@@ -518,7 +519,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "ny = %d\n", psc_->domain_.gdims[1]);
     mpi_printf(comm, "nz = %d\n", psc_->domain_.gdims[2]);
     mpi_printf(comm, "courant = %g\n", phys_.c*phys_.dt/phys_.dg);
-    mpi_printf(comm, "n_global_patches = %d\n", n_global_patches_);
+    mpi_printf(comm, "n_global_patches = %d\n", phys_.n_global_patches);
     mpi_printf(comm, "nppc = %g\n", nppc);
     mpi_printf(comm, "b0 = %g\n", phys_.b0);
     mpi_printf(comm, "v_A (based on nb) = %g\n", phys_.v_A);
@@ -557,6 +558,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     double cs = cos(theta), sn = sin(theta);
     double Ne_sheet = phys_.Ne_sheet, vthe = phys_.vthe, vthi = phys_.vthi;
+    int n_global_patches = phys_.n_global_patches;
     double weight_s = phys_.weight_s;
     double tanhf = phys_.tanhf, L = phys_.L;
     double gdre = phys_.gdre, udre = phys_.udre, gdri = phys_.gdri, udri = phys_.udri;
@@ -565,7 +567,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     if (count_only) {
       for (int p = 0; p < psc_->n_patches(); p++) {
-	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches_ + Ne_back / n_global_patches_);
+	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
       }
       return;
     }
@@ -594,7 +596,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     mpi_printf(comm, "-> Main Harris Sheet\n");
 
-    for (int64_t n = 0; n < Ne_sheet / n_global_patches_; n++) {
+    for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
       double x, y, z, ux, uy, uz, d0;
 
       particle_inject_t prt;
@@ -635,7 +637,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     mpi_printf(comm, "-> Background Population\n");
 
-    for (int64_t n = 0; n < Ne_back / n_global_patches_; n++) {
+    for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
       particle_inject_t prt;
       double x = Rng_uniform(rng, xmin, xmax);
       double y = Rng_uniform(rng, ymin, ymax);
@@ -756,7 +758,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
 protected:
   Mparticles_t mprts_;
-  int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
   Simulation* sim_;
 };
