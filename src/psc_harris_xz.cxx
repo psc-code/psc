@@ -675,7 +675,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     PscChecksBase{psc_->checks}.gauss(psc_, mprts_);
 
-    psc_push_particles_prep(psc_->push_particles, psc_->particles_, psc_->flds);
+    psc_push_particles_prep(psc_->push_particles, mprts_.mprts(), psc_->flds);
   }
   
   // ----------------------------------------------------------------------
