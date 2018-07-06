@@ -184,6 +184,8 @@ struct globals_physics
 
   globals_physics(Int3 gdims, Int3 np, const PscHarrisParams& p)
   {
+    assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+
     // FIXME, the general normalization stuff should be shared somehow
 
     // use natural PIC units
@@ -314,25 +316,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
-  // setup_ic
+  // setup_grid
 
-  void setup_ic()
+  const Grid_t& setup_grid()
   {
-    assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
-
     phys_ = globals_physics(gdims, np, *this);
 
     psc_->domain_ = Grid_t::Domain{gdims,
 				  {phys_.Lx, phys_.Ly, phys_.Lz},
 				  {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_grid
-
-  const Grid_t& setup_grid()
-  {
-    setup_ic();
 
     // Determine the time step
     phys_.dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
