@@ -131,10 +131,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params)
   {
-    setup_ic();
-    setup_grid();
-
-    mprts__ = createMparticles(psc_->grid());
+    mprts__ = createMparticles(setup_grid());
 
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
@@ -267,8 +264,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // setup_grid
 
-  void setup_grid()
+  const Grid_t& setup_grid()
   {
+    setup_ic();
+
     // Determine the time step
     phys_.dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
     phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
@@ -300,6 +299,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
       psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
     }
+
+    return psc_->grid();
   }
 
   // ----------------------------------------------------------------------
