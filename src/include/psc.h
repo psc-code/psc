@@ -22,22 +22,6 @@
 #include <vector>
 
 // ----------------------------------------------------------------------
-// cell_map
-
-struct cell_map {
-  int dims[3];
-  int b_bits[3];
-  int b_bits_max;
-  int N; // indices will be 0..N-1
-};
-
-int cell_map_init(struct cell_map *map, const int dims[3],
-		  const int blocksize[3]);
-int cell_map_3to1(struct cell_map *map, int i[3]);
-void cell_map_1to3(struct cell_map *map, int idx, int i[3]);
-void cell_map_free(struct cell_map *map);
-
-// ----------------------------------------------------------------------
 
 enum {
   JXI, JYI, JZI,
