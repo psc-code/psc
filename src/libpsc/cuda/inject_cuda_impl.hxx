@@ -211,11 +211,11 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // run
   
-  void run(PscMparticlesBase mprts_base, PscMfieldsBase mflds_base) override
+  void run(MparticlesBase& mprts_base, PscMfieldsBase mflds_base) override
   {
-    auto& mprts = mprts_base->get_as<MparticlesCuda<BS>>();
+    auto& mprts = mprts_base.get_as<MparticlesCuda<BS>>();
     (*this)(mprts);
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
   }
   
 private:

@@ -5,7 +5,7 @@ template<typename BS>
 class SortCuda : SortBase
 {
 public:
-  virtual void run(PscMparticlesBase mprts_base) { assert(0); }
+  virtual void run(MparticlesBase& mprts_base) { assert(0); }
 
   void operator()(MparticlesCuda<BS>& _mprts)
   {

@@ -54,7 +54,7 @@ struct MarderCuda : MarderBase
     }
   }
   
-  void calc_aid_fields(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base)
+  void calc_aid_fields(PscMfieldsBase mflds_base, MparticlesBase& mprts_base)
   {
     PscFieldsItemBase item_div_e(this->item_div_e);
     PscFieldsItemBase item_rho(this->item_rho);
@@ -148,7 +148,7 @@ struct MarderCuda : MarderBase
     MHERE;
   }
   
-  void run(PscMfieldsBase mflds_base, PscMparticlesBase mprts_base) override
+  void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) override
   {
     PscFieldsItemBase item_rho(this->item_rho);
     PscFieldsItemBase item_div_e(this->item_div_e);

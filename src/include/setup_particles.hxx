@@ -92,12 +92,12 @@ struct SetupParticles
   // setup_particles
 
   template<typename FUNC>
-  static void setup_particles(PscMparticlesBase mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
+  static void setup_particles(MparticlesBase& mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
 			      FUNC func)
   {
-    auto& mprts = mprts_base->get_as<Mparticles>(MP_DONT_COPY | MP_DONT_RESIZE);
+    auto& mprts = mprts_base.get_as<Mparticles>(MP_DONT_COPY | MP_DONT_RESIZE);
     setup_particles(mprts, psc, n_prts_by_patch, func);
-    mprts_base->put_as(mprts);
+    mprts_base.put_as(mprts);
   }
 
   template<typename FUNC>

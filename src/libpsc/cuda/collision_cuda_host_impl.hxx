@@ -20,7 +20,7 @@ public:
   
   CollisionCudaHost(MPI_Comm comm, int interval, double nu);
   
-  virtual void run(PscMparticlesBase mprts_base) { assert(0); }
+  virtual void run(MparticlesBase& mprts_base) { assert(0); }
 
   void operator()(Mparticles& mprts)
   {
