@@ -88,7 +88,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   PscBubble(const PscBubbleParams& params, psc *psc)
     : Psc{psc},
       PscBubbleParams(params),
-      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles_}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -548,7 +548,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   mpi_printf(comm, "**** Creating particle data structure...\n");
   auto mprts = PscMparticlesCreate(comm, psc_->grid(),
 				   Mparticles_traits<PscBubble::Mparticles_t>::name);
-  psc_->particles = mprts.mprts();
+  psc_->particles_ = mprts.mprts();
 
   // --- create and set up base mflds
   psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,

@@ -32,10 +32,10 @@ struct Psc
   void initialize()
   {
     psc_view(psc_);
-    psc_mparticles_view(psc_->particles);
+    psc_mparticles_view(psc_->particles_);
     psc_mfields_view(psc_->flds);
   
-    psc_method_initialize(psc_->method, psc_, PscMparticlesBase{psc_->particles});
+    psc_method_initialize(psc_->method, psc_, PscMparticlesBase{psc_->particles_});
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
@@ -73,7 +73,7 @@ struct Psc
 
       step();
     
-      PscMparticlesBase mprts(psc_->particles);
+      PscMparticlesBase mprts(psc_->particles_);
       psc_->timestep++; // FIXME, too hacky
       psc_output(psc_, mprts);
 

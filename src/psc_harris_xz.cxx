@@ -176,14 +176,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
 
     // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-    psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
-					  psc_->prm.particles_base).mprts();
+    psc_->particles_ = PscMparticlesCreate(comm, psc_->grid(),
+					   psc_->prm.particles_base).mprts();
     
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     
-    auto mprts_base = PscMparticlesBase{psc_->particles};
+    auto mprts_base = PscMparticlesBase{psc_->particles_};
     mprts_base->reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
 
@@ -494,7 +494,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       return;
     }
   
-    PscMparticlesBase mprts(psc_->particles);
+    PscMparticlesBase mprts(psc_->particles_);
   
     // LOAD PARTICLES
 
@@ -630,7 +630,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    PscMparticlesBase mprts(psc_->particles);
+    PscMparticlesBase mprts(psc_->particles_);
     PscMfieldsBase mflds(psc_->flds);
     PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
@@ -661,7 +661,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     bndp(*mprts.sub());
   
-    psc_event_generator_run(psc_->event_generator, psc_->particles, psc_->flds);
+    psc_event_generator_run(psc_->event_generator, psc_->particles_, psc_->flds);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
     pushf.advance_b2(mflds);
@@ -680,7 +680,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     PscChecksBase{psc_->checks}.gauss(psc_, mprts);
 
-    psc_push_particles_prep(psc_->push_particles, psc_->particles, psc_->flds);
+    psc_push_particles_prep(psc_->push_particles, psc_->particles_, psc_->flds);
   }
   
   // ----------------------------------------------------------------------

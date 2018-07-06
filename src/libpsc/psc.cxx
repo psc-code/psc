@@ -369,7 +369,7 @@ static void
 _psc_destroy(struct psc *psc)
 {
   psc_mfields_destroy(psc->flds);
-  psc_mparticles_destroy(psc->particles);
+  psc_mparticles_destroy(psc->particles_);
 
   mrc_domain_destroy(psc->mrc_domain_);
 
@@ -396,7 +396,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
   }
 #endif
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain_);
-  mrc_io_write_ref(io, psc, "mparticles", psc->particles);
+  mrc_io_write_ref(io, psc, "mparticles", psc->particles_);
   mrc_io_write_ref(io, psc, "mfields", psc->flds);
 }
 
@@ -431,7 +431,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_setup_fortran(psc);
 #endif
 
-  psc->particles = mrc_io_read_ref(io, psc, "mparticles", psc_mparticles);
+  psc->particles_ = mrc_io_read_ref(io, psc, "mparticles", psc_mparticles);
   psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);
 
   psc_read_member_objs(psc, io);

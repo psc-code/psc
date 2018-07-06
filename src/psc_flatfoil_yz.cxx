@@ -236,7 +236,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : Psc{psc},
       PscFlatfoilParams(params),
-      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles}.sub())},
+      mprts_{dynamic_cast<Mparticles_t&>(*PscMparticlesBase{psc->particles_}.sub())},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -787,7 +787,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
   mpi_printf(comm, "**** Creating particle data structure...\n");
-  psc_->particles = PscMparticlesCreate(comm, psc_->grid(),
+  psc_->particles_ = PscMparticlesCreate(comm, psc_->grid(),
 					Mparticles_traits<PscFlatfoil::Mparticles_t>::name).mprts();
 
   // --- create and set up base mflds
