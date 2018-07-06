@@ -4,6 +4,7 @@
 
 #include "psc_diag_item.h"
 #include "particles.hxx"
+#include "fields3d.hxx"
 
 struct psc_diag_item {
   struct mrc_obj obj;
@@ -12,7 +13,8 @@ struct psc_diag_item {
 struct psc_diag_item_ops {
   MRC_SUBCLASS_OPS(struct psc_diag_item);
   
-  void (*run)(struct psc_diag_item *item, struct psc *psc, MparticlesBase& mprts, double *result);
+  void (*run)(struct psc_diag_item *item, struct psc *psc,
+	      MparticlesBase& mprts, MfieldsBase& mflds, double *result);
   int nr_values;
   const char *title[6]; // FIXME ugly hardcoded 6
 };
