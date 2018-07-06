@@ -169,22 +169,22 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
-    setup_particles(n_prts_by_patch_old, true);
+    setup_particles(PscMparticlesBase{nullptr}, n_prts_by_patch_old, true); // FIXME, ugly
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
 
-    // create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-    psc_->particles_ = PscMparticlesCreate(comm, psc_->grid(),
-					   psc_->prm.particles_base).mprts();
-    
+    mpi_printf(comm, "**** Creating particle data structure...\n");
+    auto mprts = PscMparticlesCreate(comm, psc_->grid(),
+				     Mparticles_traits<PscHarris::Mparticles_t>::name);
+    psc_->particles_ = mprts.mprts();
+
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     
-    auto mprts_base = PscMparticlesBase{psc_->particles_};
-    mprts_base->reserve_all(n_prts_by_patch_new.data());
-    setup_particles(n_prts_by_patch_new, false);
+    mprts->reserve_all(n_prts_by_patch_new.data());
+    setup_particles(mprts, n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
     SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
@@ -474,7 +474,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   //
   // set particles x^{n+1/2}, p^{n+1/2}
 
-  void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
+  void setup_particles(PscMparticlesBase mprts, std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -492,8 +492,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       }
       return;
     }
-  
-    PscMparticlesBase mprts(psc_->particles_);
   
     // LOAD PARTICLES
 
