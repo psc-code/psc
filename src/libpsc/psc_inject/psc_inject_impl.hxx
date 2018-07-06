@@ -37,7 +37,7 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // run
 
-  void run(MparticlesBase& mprts_base, PscMfieldsBase mflds_base) override
+  void run(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
     auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);

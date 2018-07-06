@@ -15,7 +15,7 @@ struct InjectBase
     : interval(interval), tau(tau), kind_n(kind_n)
   {}
 
-  virtual void run(MparticlesBase& mprts_base, PscMfieldsBase mflds_base) = 0;
+  virtual void run(MparticlesBase& mprts_base, MfieldsBase& mflds_base) = 0;
   
   // param
   const int interval; // inject every so many steps
