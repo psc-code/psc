@@ -43,20 +43,12 @@ void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
 // ======================================================================
 // psc_mparticles base class
 
-static void
-_psc_mparticles_view(struct psc_mparticles *_mprts)
-{
-  PscMparticlesBase mprts(_mprts);
-  mprts->view();
-}
-
 void
-psc_mparticles_check(struct psc_mparticles *_mprts_base)
+psc_mparticles_check(MparticlesBase& mprts_base)
 {
-  auto mprts_base = PscMparticlesBase{_mprts_base};
   int fail_cnt = 0;
 
-  auto& mprts = mprts_base->get_as<MparticlesDouble>();
+  auto& mprts = mprts_base.get_as<MparticlesDouble>();
   const auto& grid = ppsc->grid();
   
   psc_foreach_patch(ppsc, p) {
@@ -85,7 +77,7 @@ psc_mparticles_check(struct psc_mparticles *_mprts_base)
   }
   assert(fail_cnt == 0);
 
-  mprts_base->put_as(mprts, MP_DONT_COPY);
+  mprts_base.put_as(mprts, MP_DONT_COPY);
 }
 
 // ======================================================================
@@ -127,7 +119,6 @@ struct mrc_class_psc_mparticles_ : mrc_class_psc_mparticles {
     name             = "psc_mparticles";
     size             = sizeof(struct psc_mparticles);
     init             = psc_mparticles_init;
-    view             = _psc_mparticles_view;
   }
 } mrc_class_psc_mparticles;
 
