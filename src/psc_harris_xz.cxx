@@ -178,13 +178,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
-    mprts->reset(psc_->grid());
+    mprts__->reset(psc_->grid());
 
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
     
-    mprts->reserve_all(n_prts_by_patch_new.data());
+    mprts__->reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
@@ -544,7 +544,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.w = weight_s;
       prt.kind = KIND_ELECTRON;
-      mprts->inject_reweight(0, prt);
+      mprts__->inject_reweight(0, prt);
 
       ux = Rng_normal(rng, 0, vthi);
       uy = Rng_normal(rng, 0, vthi);
@@ -555,7 +555,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.kind = KIND_ION;
-      mprts->inject_reweight(0, prt);
+      mprts__->inject_reweight(0, prt);
     }
 
     mpi_printf(comm, "-> Background Population\n");
@@ -572,13 +572,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[2] = Rng_normal(rng, 0, vtheb);
       prt.w = weight_b;
       prt.kind = KIND_ELECTRON;
-      mprts->inject_reweight(0, prt);
+      mprts__->inject_reweight(0, prt);
     
       prt.u[0] = Rng_normal(rng, 0, vthib);
       prt.u[1] = Rng_normal(rng, 0, vthib);
       prt.u[2] = Rng_normal(rng, 0, vthib);
       prt.kind = KIND_ION;
-      mprts->inject_reweight(0, prt);
+      mprts__->inject_reweight(0, prt);
     }
 
     mpi_printf(comm, "Finished loading particles\n");
@@ -637,27 +637,27 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
     auto balance = PscBalanceBase{psc_->balance};
-    balance(psc_, *mprts.sub());
+    balance(psc_, *mprts__);
 
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    sort(*mprts.sub());
-    collision(*mprts.sub());
+    sort(*mprts__);
+    collision(*mprts__);
   
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
-    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, *mprts.sub());
+    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, *mprts__);
 
     // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp(*mprts.sub(), mflds);
+    pushp(*mprts__, mflds);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // field propagation B^{n+1/2} -> B^{n+1}
     pushf.advance_H(mflds, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-    bndp(*mprts.sub());
+    bndp(*mprts__);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
     pushf.advance_b2(mflds);
@@ -667,16 +667,16 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     pushf.advance_a(mflds);
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, *mprts.sub());
+    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, *mprts__);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
-    PscMarderBase{psc_->marder}(mflds, *mprts.sub());
+    PscMarderBase{psc_->marder}(mflds, *mprts__);
     
-    PscChecksBase{psc_->checks}.gauss(psc_, *mprts.sub());
+    PscChecksBase{psc_->checks}.gauss(psc_, *mprts__);
 
-    psc_push_particles_prep(psc_->push_particles, *mprts.sub(), psc_->flds);
+    psc_push_particles_prep(psc_->push_particles, *mprts__, psc_->flds);
   }
 
 protected:
