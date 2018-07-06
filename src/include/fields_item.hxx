@@ -23,15 +23,7 @@ struct FieldsItemBase
 
   virtual PscMfieldsBase mres() = 0;
 
-  std::vector<std::string> comp_names()
-  {
-    auto mflds = mres();
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
-    }
-    return comp_names;
-  }
+  virtual std::vector<std::string> comp_names() = 0;
 
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
@@ -149,6 +141,16 @@ struct FieldsItemFields : FieldsItemBase
 
   virtual PscMfieldsBase mres() override { return mres_base_; }
 
+  virtual std::vector<std::string> comp_names() override
+  {
+    auto mflds = mres();
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mflds->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+    }
+    return comp_names;
+  }
+  
   Mfields& result() { return *PscMfields<Mfields>{mres_base_}.sub(); }
 
 private:  
@@ -381,6 +383,16 @@ struct FieldsItemMoment : FieldsItemBase
   }
 
   virtual PscMfieldsBase mres() override { return moment_.mres_base(); }
+
+  virtual std::vector<std::string> comp_names()  override
+  {
+    auto mflds = mres();
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < mflds->n_comps(); m++) {
+      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+    }
+    return comp_names;
+  }
   
 private:
   Moment_t moment_;
