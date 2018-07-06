@@ -180,11 +180,9 @@ struct globals_physics
   // ----------------------------------------------------------------------
   // ctor
 
-  globals_physics() {}
-
-  globals_physics(Int3 gdims, Int3 np, const PscHarrisParams& p)
+  globals_physics(const PscHarrisParams& p)
   {
-    assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
+    assert(p.np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
     // FIXME, the general normalization stuff should be shared somehow
 
@@ -222,11 +220,11 @@ struct globals_physics
     vdri = 2*c*Ti/(ec*b0*L);            // Ion drift velocity
     vdre = -vdri/(p.Ti_Te);             // electron drift velocity
 
-    n_global_patches = np[0] * np[1] * np[2];
+    n_global_patches = p.np[0] * p.np[1] * p.np[2];
     double Npe_sheet = 2*n0*Lx*Ly*L*tanh(0.5*Lz/L);         // N physical e's in sheet
     double Npe_back  = p.nb_n0 * n0 * Ly*Lz*Lx;             // N physical e's in backgrnd
     double Npe       = Npe_sheet + Npe_back;
-    Ne         = p.nppc * gdims[0] * gdims[1] * gdims[2];   // total macro electrons in box
+    Ne         = p.nppc * p.gdims[0] * p.gdims[1] * p.gdims[2];   // total macro electrons in box
     Ne_sheet   = Ne * Npe_sheet / Npe;
     Ne_back    = Ne * Npe_back / Npe;
     Ne_sheet   = trunc_granular(Ne_sheet,n_global_patches); // Make it divisible by # subdomains
@@ -257,6 +255,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   PscHarris(const PscHarrisParams& params, psc *psc)
     : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params),
+      phys_{params},
       // FIXME, not dynamically alloced, so deleting mprts__ will crash
       mprts_{createMparticles(setup_grid())}
   {
@@ -320,8 +319,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   const Grid_t& setup_grid()
   {
-    phys_ = globals_physics(gdims, np, *this);
-
     psc_->domain_ = Grid_t::Domain{gdims,
 				  {phys_.Lx, phys_.Ly, phys_.Lz},
 				  {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
@@ -749,8 +746,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
 protected:
-  Mparticles_t mprts_;
   globals_physics phys_;
+  Mparticles_t mprts_;
   Simulation* sim_;
 };
 
