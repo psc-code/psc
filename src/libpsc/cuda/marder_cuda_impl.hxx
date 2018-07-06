@@ -54,7 +54,7 @@ struct MarderCuda : MarderBase
     }
   }
   
-  void calc_aid_fields(PscMfieldsBase mflds_base, MparticlesBase& mprts_base)
+  void calc_aid_fields(MfieldsBase& mflds_base, MparticlesBase& mprts_base)
   {
     PscFieldsItemBase item_div_e(this->item_div_e);
     PscFieldsItemBase item_rho(this->item_rho);
@@ -80,11 +80,9 @@ struct MarderCuda : MarderBase
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
-  void correct(struct psc_mfields *_mflds_base, struct psc_mfields *_mf_base)
+  void correct(MfieldsBase& mflds_base, MfieldsBase& mf_base)
   {
-    auto mflds_base = PscMfieldsBase{_mflds_base};
-    auto mf_base = PscMfieldsBase{_mf_base};
-    assert(mflds_base->grid().isInvar(0));
+    assert(mflds_base.grid().isInvar(0));
 
     const Grid_t& grid = ppsc->grid();
     // FIXME: how to choose diffusion parameter properly?
@@ -106,8 +104,8 @@ struct MarderCuda : MarderBase
     fac[1] = .5 * ppsc->dt * diffusion / dx[1];
     fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(EX, EX + 3);
-    auto& mf = mf_base->get_as<MfieldsCuda>(0, 1);
+    auto& mflds = mflds_base.get_as<MfieldsCuda>(EX, EX + 3);
+    auto& mf = mf_base.>get_as<MfieldsCuda>(0, 1);
     cuda_mfields *cmflds = mflds.cmflds;
     cuda_mfields *cmf = mf.cmflds;
 
@@ -139,8 +137,8 @@ struct MarderCuda : MarderBase
       cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
     }
 
-    mflds_base->put_as(mflds, EX, EX + 3);
-    mf_base->put_as(mf, 0, 0);
+    mflds_base.put_as(mflds, EX, EX + 3);
+    mf_base.put_as(mf, 0, 0);
   }
 
   void operator()(MfieldsCuda& mflds, MparticlesCuda<BS>& mprts)
@@ -148,7 +146,7 @@ struct MarderCuda : MarderBase
     MHERE;
   }
   
-  void run(PscMfieldsBase mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
   {
     PscFieldsItemBase item_rho(this->item_rho);
     PscFieldsItemBase item_div_e(this->item_div_e);
@@ -160,7 +158,7 @@ struct MarderCuda : MarderBase
   
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds_base, mprts_base);
-      correct(mflds_base.mflds(), item_div_e->mres().mflds());
+      correct(mflds_base, item_div_e->mres());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }

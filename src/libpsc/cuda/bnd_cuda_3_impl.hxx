@@ -23,12 +23,12 @@ struct BndCuda3 : BndBase
   void add_ghosts(Mfields& mflds, int mb, int me);
   void fill_ghosts(Mfields& mflds, int mb, int me);
 
-  void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
     assert(0);
   }
 
-  void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
     assert(0);
   }

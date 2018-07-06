@@ -125,11 +125,11 @@ struct BndCuda : BndBase
     }
   }
 
-  void add_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(mb, me);
+    auto& mflds = mflds_base.get_as<MfieldsCuda>(mb, me);
     add_ghosts(mflds, mb, me);
-    mflds_base->put_as(mflds, mb, me);
+    mflds_base.put_as(mflds, mb, me);
   }
 
   // ----------------------------------------------------------------------
@@ -189,11 +189,11 @@ struct BndCuda : BndBase
     }
   }
 
-  void fill_ghosts(PscMfieldsBase mflds_base, int mb, int me) override
+  void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(mb, me);
+    auto& mflds = mflds_base.get_as<MfieldsCuda>(mb, me);
     fill_ghosts(mflds, mb, me);
-    mflds_base->put_as(mflds, mb, me);
+    mflds_base.put_as(mflds, mb, me);
   }
 
 private:

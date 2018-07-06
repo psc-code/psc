@@ -20,9 +20,9 @@ struct PushFieldsCuda : PushFieldsBase
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch
-  void push_E(PscMfieldsBase mflds_base, double dt_fac) override
+  void push_E(MfieldsBase& mflds_base, double dt_fac) override
   {
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsCuda>(JXI, HX + 3);
     
     const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;
@@ -34,7 +34,7 @@ struct PushFieldsCuda : PushFieldsBase
       assert(0);
     }
     
-    mflds_base->put_as(mflds, EX, EX + 3);
+    mflds_base.put_as(mflds, EX, EX + 3);
   }
 
   // ----------------------------------------------------------------------
@@ -51,9 +51,9 @@ struct PushFieldsCuda : PushFieldsBase
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch
-  void push_H(PscMfieldsBase mflds_base, double dt_fac) override
+  void push_H(MfieldsBase& mflds_base, double dt_fac) override
   {
-    auto& mflds = mflds_base->get_as<MfieldsCuda>(JXI, HX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsCuda>(JXI, HX + 3);
     
     const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;
@@ -65,7 +65,7 @@ struct PushFieldsCuda : PushFieldsBase
       assert(0);
     }
 
-    mflds_base->put_as(mflds, HX, HX + 3);
+    mflds_base.put_as(mflds, HX, HX + 3);
   }
 };
 
