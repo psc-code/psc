@@ -9,7 +9,7 @@
 #include <push_particles.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-				PscMparticlesBase mprts_base); // FIXME
+				MparticlesBase& mprts_base); // FIXME
 
 template<typename PscConfig>
 struct Psc
@@ -58,7 +58,7 @@ struct Psc
     psc_mfields_view(psc_->flds);
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, mprts);
+      psc_method_vpic_initialize(psc_->method, psc_, *mprts.sub());
     } else {
       initialize_default(psc_->method, psc_, mprts);
     }
