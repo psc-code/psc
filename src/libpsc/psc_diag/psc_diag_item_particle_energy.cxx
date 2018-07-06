@@ -6,10 +6,10 @@
 
 static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
-				  struct psc *psc, PscMparticlesBase mprts_base,
+				  struct psc *psc, MparticlesBase& mprts_base,
 				  double *result)
 {
-  auto& mprts = mprts_base->get_as<MparticlesDouble>();
+  auto& mprts = mprts_base.get_as<MparticlesDouble>();
 
   const Grid_t& grid = psc->grid();
   double fnqs = grid.fnqs;
@@ -30,7 +30,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
     }
   }
 
-  mprts_base->put_as(mprts, MP_DONT_COPY);
+  mprts_base.put_as(mprts, MP_DONT_COPY);
 }
 
 // ======================================================================

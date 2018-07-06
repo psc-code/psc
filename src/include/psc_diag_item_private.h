@@ -12,7 +12,7 @@ struct psc_diag_item {
 struct psc_diag_item_ops {
   MRC_SUBCLASS_OPS(struct psc_diag_item);
   
-  void (*run)(struct psc_diag_item *item, struct psc *psc, PscMparticlesBase mprts, double *result);
+  void (*run)(struct psc_diag_item *item, struct psc *psc, MparticlesBase& mprts, double *result);
   int nr_values;
   const char *title[6]; // FIXME ugly hardcoded 6
 };
