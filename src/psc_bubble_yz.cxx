@@ -116,7 +116,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     checks_.gauss(mprts_, mflds_);
     psc_setup_member_objs(psc_);
   
-    setup_stats();
+    initialize_stats();
   }
 
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
@@ -262,21 +262,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       });
   }
 
-  // ----------------------------------------------------------------------
-  // setup_stats
-  
-  void setup_stats()
-  {
-    st_nr_particles = psc_stats_register("nr particles");
-    st_time_step = psc_stats_register("time entire step");
-
-    // generic stats categories
-    st_time_particle = psc_stats_register("time particle update");
-    st_time_field = psc_stats_register("time field update");
-    st_time_comm = psc_stats_register("time communication");
-    st_time_output = psc_stats_register("time output");
-  }
-  
   // ----------------------------------------------------------------------
   // step
   //

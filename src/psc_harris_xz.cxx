@@ -198,6 +198,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     }
 
     psc_setup_member_objs(psc_);
+    initialize_stats();
     setup_log();
     
     if (output_field_interval > 0) {
@@ -676,30 +677,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscChecksBase{psc_->checks}.gauss(psc_, mprts_);
 
     psc_push_particles_prep(psc_->push_particles, mprts_.mprts(), psc_->flds);
-  }
-  
-  // ----------------------------------------------------------------------
-  // integrate
-
-  void integrate(PscMparticlesBase mprts)
-  {
-    setup_stats();
-    Psc::integrate(mprts);
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_stats
-  
-  void setup_stats()
-  {
-    st_nr_particles = psc_stats_register("nr particles");
-    st_time_step = psc_stats_register("time entire step");
-
-    // generic stats categories
-    st_time_particle = psc_stats_register("time particle update");
-    st_time_field = psc_stats_register("time field update");
-    st_time_comm = psc_stats_register("time communication");
-    st_time_output = psc_stats_register("time output");
   }
   
 protected:
