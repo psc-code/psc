@@ -62,7 +62,8 @@ _psc_diag_destroy(struct psc_diag *diag)
 // psc_diag_run
 
 void
-psc_diag_run(struct psc_diag *diag, struct psc *psc)
+psc_diag_run(struct psc_diag *diag, struct psc *psc,
+	     PscMparticlesBase mprts)
 {
   if (diag->every_step < 0 || 
       psc->timestep % diag->every_step != 0)
@@ -78,7 +79,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
   mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);
     double *result = (double *) calloc(nr_values, sizeof(*result));
-    psc_diag_item_run(item, psc, result);
+    psc_diag_item_run(item, psc, mprts, result);
     if (rank == 0) {
       MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
     } else {

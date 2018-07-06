@@ -6,9 +6,9 @@
 
 static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
-				  struct psc *psc, double *result)
+				  struct psc *psc, PscMparticlesBase mprts_base,
+				  double *result)
 {
-  auto mprts_base = PscMparticlesBase{psc->particles};
   auto& mprts = mprts_base->get_as<MparticlesDouble>();
 
   const Grid_t& grid = psc->grid();

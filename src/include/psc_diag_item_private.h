@@ -3,6 +3,7 @@
 #define PSC_DIAG_ITEM_PRIVATE_H
 
 #include "psc_diag_item.h"
+#include "particles.hxx"
 
 struct psc_diag_item {
   struct mrc_obj obj;
@@ -11,7 +12,7 @@ struct psc_diag_item {
 struct psc_diag_item_ops {
   MRC_SUBCLASS_OPS(struct psc_diag_item);
   
-  void (*run)(struct psc_diag_item *item, struct psc *psc, double *result);
+  void (*run)(struct psc_diag_item *item, struct psc *psc, PscMparticlesBase mprts, double *result);
   int nr_values;
   const char *title[6]; // FIXME ugly hardcoded 6
 };

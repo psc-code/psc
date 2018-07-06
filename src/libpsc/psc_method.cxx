@@ -8,24 +8,26 @@
 // psc_method_initialize
 
 void
-psc_method_initialize(struct psc_method *method, struct psc *psc)
+psc_method_initialize(struct psc_method *method, struct psc *psc,
+		      PscMparticlesBase mprts)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->initialize);
 
-  ops->initialize(method, psc);
+  ops->initialize(method, psc, mprts);
 }
 
 // ----------------------------------------------------------------------
 // psc_method_output
 
 void
-psc_method_output(struct psc_method *method, struct psc *psc)
+psc_method_output(struct psc_method *method, struct psc *psc,
+		  PscMparticlesBase mprts)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->output);
 
-  ops->output(method, psc);
+  ops->output(method, psc, mprts);
 }
 
 // ----------------------------------------------------------------------
