@@ -117,6 +117,9 @@ struct PscHarrisParams
   double output_particle_interval; // particle output interval in terms of 1/wci
 
   double overalloc;                // Overallocation factor (> 1) for particle arrays
+
+  Int3 gdims;
+  Int3 np;
 };
 
 // ======================================================================
@@ -315,9 +318,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_ic()
   {
-    Int3 gdims = {512, 1, 128};
-    Int3 np = {4, 1, 1};
-  
     assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
     phys_ = globals_physics(gdims, np, *this);
@@ -800,6 +800,9 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   params.overalloc = 2.;
 
+  params.gdims = {512, 1, 128};
+  params.np = { 4, 1, 1 };
+  
   params.L_di = .5;
   params.Ti_Te = 5.;
   params.nb_n0 = .05;
