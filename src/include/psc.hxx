@@ -60,7 +60,7 @@ struct Psc
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       psc_method_vpic_initialize(psc_->method, psc_, *mprts.sub());
     } else {
-      initialize_default(psc_->method, psc_, mprts);
+      initialize_default(psc_->method, psc_, *mprts.sub());
     }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -149,13 +149,13 @@ private:
   // initialize_default
   
   static void initialize_default(struct psc_method *method, struct psc *psc,
-				 PscMparticlesBase mprts)
+				 MparticlesBase& mprts)
   {
     auto pushp = PscPushParticlesBase{psc->push_particles};
-    pushp.stagger(*mprts.sub(), PscMfieldsBase{psc->flds});
+    pushp.stagger(mprts, PscMfieldsBase{psc->flds});
     
     // initial output / stats
-    psc_method_output(psc->method, psc, *mprts.sub());
+    psc_method_output(psc->method, psc, mprts);
     psc_stats_log(psc);
     psc_print_profiling(psc);
   }
