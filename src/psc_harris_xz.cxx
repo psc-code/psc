@@ -130,7 +130,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   PscHarris(const PscHarrisParams& params, psc *psc)
     : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params),
-      mprts_{*createMparticles(setup_grid())}
+      // FIXME, not dynamically alloced, so deleting mprts__ will crash
+      mprts_{createMparticles(setup_grid())}
   {
     mprts__ = &mprts_;
     // partition and initial balancing
@@ -306,10 +307,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // createMparticles
 
-  Mparticles_t* createMparticles(const Grid_t& grid)
+  Mparticles_t createMparticles(const Grid_t& grid)
   {
     mpi_printf(psc_comm(psc_), "**** Creating particle data structure...\n");
-    return new Mparticles_t{grid};
+    return Mparticles_t{grid};
   }
   
   // ----------------------------------------------------------------------
@@ -690,7 +691,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
 protected:
-  Mparticles_t& mprts_;
+  Mparticles_t mprts_;
   int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
   Simulation* sim_;
