@@ -178,7 +178,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "**** Creating particle data structure...\n");
     mprts_ = PscMparticlesCreate(comm, psc_->grid(),
 				 Mparticles_traits<PscHarris::Mparticles_t>::name);
-    psc_->particles_ = mprts_.mprts();
 
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
@@ -678,9 +677,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     psc_push_particles_prep(psc_->push_particles, mprts_.mprts(), psc_->flds);
   }
-  
-protected:
+
   PscMparticlesBase mprts_;
+protected:
   int n_global_patches_; // FIXME, keep?
   globals_physics phys_;
   Simulation* sim_;
@@ -801,8 +800,8 @@ main(int argc, char **argv)
   auto builder = PscHarrisBuilder{};
   auto psc = builder.makePsc();
 
-  psc->initialize(PscMparticlesBase{psc->get_psc()->particles_});
-  psc->integrate(PscMparticlesBase{psc->get_psc()->particles_});
+  psc->initialize(psc->mprts_);
+  psc->integrate(psc->mprts_);
 
   delete psc;
   
