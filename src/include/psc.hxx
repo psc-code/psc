@@ -100,7 +100,7 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_output(psc_, mprts);
+      psc_method_output(psc_->method, psc_, *mprts.sub());
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -155,7 +155,7 @@ private:
     pushp.stagger(mprts, PscMfieldsBase{psc->flds});
     
     // initial output / stats
-    psc_output(psc, mprts);
+    psc_method_output(psc->method, psc, *mprts.sub());
     psc_stats_log(psc);
     psc_print_profiling(psc);
   }
