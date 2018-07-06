@@ -188,7 +188,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     Simulation_delete(sim_);
   }
 
-  static void phys_ctor(globals_physics& phys_, Int3 gdims, Int3 np, int n_global_patches)
+  static void phys_ctor(globals_physics& phys_, Int3 gdims, Int3 np, int n_global_patches,
+			const PscHarrisParams& p)
   {
     // FIXME, the general normalization stuff should be shared somehow
 
@@ -198,6 +199,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     phys_.c    = 1;         // Speed of light
     phys_.de   = 1;         // Length normalization (electron inertial length)
     phys_.eps0 = 1;         // Permittivity of space
+
+    double c = phys_.c;
+    //derived quantities
+    phys_.mi = phys_.me * p.mi_me;       // Ion mass
   }
 
   // ----------------------------------------------------------------------
@@ -211,11 +216,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
     assert(np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
 
-    phys_ctor(phys_, gdims, np, n_global_patches_);
-
+    phys_ctor(phys_, gdims, np, n_global_patches_, *this);
     double c = phys_.c;
-    //derived quantities
-    phys_.mi = phys_.me*mi_me;       // Ion mass
+
     double Te = phys_.me*c*c/(2*phys_.eps0*sqr(wpe_wce)*(1.+Ti_Te)); // Electron temperature
     double Ti = Te*Ti_Te;       // Ion temperature
     phys_.vthe = sqrt(Te/phys_.me);         // Electron thermal velocity
