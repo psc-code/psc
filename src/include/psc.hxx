@@ -49,7 +49,7 @@ struct Psc
   void initialize()
   {
     psc_view(psc_);
-    psc_mparticles_view(mprts.mprts());
+    mprts->view();
     psc_mfields_view(psc_->flds);
   
     psc_method_initialize(psc_->method, psc_, mprts);

@@ -106,6 +106,20 @@ struct MparticlesBase
   
     prof_stop(pr);
   }
+
+  void view() const
+  {
+    MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+    mpi_printf(comm, "  n_patches    = %d\n", n_patches());
+    mpi_printf(comm, "  n_prts_total = %d\n", get_n_prts());
+    
+    uint n_prts_by_patch[n_patches()];
+    get_size_all(n_prts_by_patch);
+    
+    for (int p = 0; p < n_patches(); p++) {
+      mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);
+    }
+  }
   
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }

@@ -46,17 +46,8 @@ void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
 static void
 _psc_mparticles_view(struct psc_mparticles *_mprts)
 {
-  MPI_Comm comm = psc_mparticles_comm(_mprts);
   PscMparticlesBase mprts(_mprts);
-  mpi_printf(comm, "  n_patches    = %d\n", mprts->n_patches());
-  mpi_printf(comm, "  n_prts_total = %d\n", mprts->get_n_prts());
-
-  uint n_prts_by_patch[mprts->n_patches()];
-  mprts->get_size_all(n_prts_by_patch);
-
-  for (int p = 0; p < mprts->n_patches(); p++) {
-    mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);
-  }  
+  mprts->view();
 }
 
 void
