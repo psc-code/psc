@@ -9,6 +9,8 @@
 template<typename PscConfig>
 struct Psc
 {
+  using Mparticles_t = typename PscConfig::Mparticles_t;
+
   // ----------------------------------------------------------------------
   // ctor
 

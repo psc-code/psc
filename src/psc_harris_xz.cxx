@@ -50,7 +50,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-using PscConfig = void;
+struct PscConfig
+{
+  using Mparticles_t = MparticlesVpic;
+};
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
