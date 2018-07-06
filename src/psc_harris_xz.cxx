@@ -131,44 +131,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc, nullptr}, // FIXME
       PscHarrisParams(params)
   {
-    MPI_Comm comm = psc_comm(psc_);
 
     setup_ic();
+    setup_grid();
 
-    // Determine the time step
-    phys_.dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
-    phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
-    if (phys_.wpe * phys_.dt > wpedt_max) {
-      phys_.dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
-    }
-    psc_->dt = phys_.dt;
-    
-    psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
-
-    if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
-      psc_setup_coeff(psc_);
-      psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
-    } else {
-      sim_ = Simulation_create();
-      psc_method_set_param_ptr(psc_->method, "sim", sim_);
-      // set high level VPIC simulation parameters
-      // FIXME, will be unneeded eventually
-      Simulation_set_params(sim_, psc_->prm.nmax, psc_->prm.stats_every,
-			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
-			    psc_->prm.stats_every / 2);
-      setup_domain();
-      setup_fields();
-      setup_species();
-
-      int interval = (int) (t_intervali / (phys_.wci*phys_.dt));
-      Simulation_diagnostics_init(sim_, interval);
-
-      psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
-      psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-    }
-
-    mpi_printf(comm, "**** Creating particle data structure...\n");
-    mprts__ = new Mparticles_t{psc_->grid()};
+    mprts__ = createMparticles(psc_->grid());
 
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
@@ -178,6 +145,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
     mprts__->reset(psc_->grid());
 
+    MPI_Comm comm = psc_comm(psc_);
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
@@ -297,6 +265,53 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 				  {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
   }
 
+  // ----------------------------------------------------------------------
+  // setup_grid
+
+  void setup_grid()
+  {
+    // Determine the time step
+    phys_.dg = courant_length(psc_->domain_.length, psc_->domain_.gdims);
+    phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
+    if (phys_.wpe * phys_.dt > wpedt_max) {
+      phys_.dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
+    }
+    psc_->dt = phys_.dt;
+    
+    psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
+
+    if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
+      psc_setup_coeff(psc_);
+      psc_setup_domain(psc_, psc_->domain_, psc_->bc_, psc_->kinds_);
+    } else {
+      sim_ = Simulation_create();
+      psc_method_set_param_ptr(psc_->method, "sim", sim_);
+      // set high level VPIC simulation parameters
+      // FIXME, will be unneeded eventually
+      Simulation_set_params(sim_, psc_->prm.nmax, psc_->prm.stats_every,
+			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
+			    psc_->prm.stats_every / 2);
+      setup_domain();
+      setup_fields();
+      setup_species();
+
+      int interval = (int) (t_intervali / (phys_.wci*phys_.dt));
+      Simulation_diagnostics_init(sim_, interval);
+
+      psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
+      psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // createMparticles
+
+  Mparticles_t* createMparticles(const Grid_t& grid)
+  {
+    mpi_printf(psc_comm(psc_), "**** Creating particle data structure...\n");
+    return new Mparticles_t{grid};
+  }
+  
   // ----------------------------------------------------------------------
   // setup_domain
 
