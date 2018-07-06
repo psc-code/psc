@@ -30,13 +30,6 @@ enum {
   NR_FIELDS,
 };
 
-// C floating point type
-// used to switch between single and double precision
-
-typedef float real;
-
-#define real(x) x ## f
-
 // Fortran types
 
 typedef double f_real;
