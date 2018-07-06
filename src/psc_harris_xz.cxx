@@ -23,7 +23,6 @@
 #include <psc_output_fields_collection_private.h>
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
-#include <psc_event_generator.h>
 
 #include <push_particles.hxx>
 #include <push_fields.hxx>
@@ -660,8 +659,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     bndp(*mprts.sub());
-  
-    psc_event_generator_run(psc_->event_generator, psc_->particles_, psc_->flds);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
     pushf.advance_b2(mflds);
