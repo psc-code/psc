@@ -253,7 +253,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // PscHarris ctor
   
   PscHarris(const PscHarrisParams& params, psc *psc)
-    : Psc{psc, nullptr}, // FIXME
+    : Psc{psc},
       PscHarrisParams(params),
       phys_{params},
       mprts_{createMparticles(setup_grid())}

@@ -234,7 +234,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using Marder_t = PscConfig::Marder_t;
   
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
-    : Psc{psc, nullptr},
+    : Psc{psc},
       PscFlatfoilParams(params),
       mprts_{psc->grid()},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},

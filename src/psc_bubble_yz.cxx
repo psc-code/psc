@@ -86,7 +86,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   using Marder_t = PscConfig::Marder_t;
 
   PscBubble(const PscBubbleParams& params, psc *psc)
-    : Psc{psc, nullptr},
+    : Psc{psc},
       PscBubbleParams(params),
       mprts_{psc->grid()},
       mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
