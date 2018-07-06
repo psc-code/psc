@@ -18,8 +18,8 @@ extern int pr_time_step_no_comm; // FIXME
 class PushFieldsBase
 {
 public:
-  virtual void push_E(PscMfieldsBase mflds_base, double dt_fac) = 0;
-  virtual void push_H(PscMfieldsBase mflds_base, double dt_fac) = 0;
+  virtual void push_E(MfieldsBase& mflds_base, double dt_fac) = 0;
+  virtual void push_H(MfieldsBase& mflds_base, double dt_fac) = 0;
 };
 
 // ======================================================================
@@ -38,7 +38,7 @@ struct PscPushFields
       sub_(mrc_to_subobj(pushf, sub_t))
   {}
 
-  void advance_E(PscMfieldsBase mflds, double frac)
+  void advance_E(MfieldsBase& mflds, double frac)
   {
     static int pr;
     if (!pr) {
@@ -49,14 +49,14 @@ struct PscPushFields
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     
-    sub()->push_E(mflds.mflds(), frac);
+    sub()->push_E(mflds, frac);
     
     prof_stop(pr_time_step_no_comm);
     prof_stop(pr);
     psc_stats_stop(st_time_field);
   }
 
-  void advance_H(PscMfieldsBase mflds, double frac)
+  void advance_H(MfieldsBase& mflds, double frac)
   {
     static int pr;
     if (!pr) {
@@ -67,14 +67,14 @@ struct PscPushFields
     prof_start(pr);
     prof_restart(pr_time_step_no_comm);
     
-    sub()->push_H(mflds.mflds(), frac);
+    sub()->push_H(mflds, frac);
     
     prof_stop(pr);
     prof_stop(pr_time_step_no_comm);
     psc_stats_stop(st_time_field);
   }
 
-  void advance_b2(PscMfieldsBase mflds)
+  void advance_b2(MfieldsBase& mflds)
   {
     auto bnd = PscBndBase(ppsc->bnd);
     auto bndf = PscBndFieldsBase(pushf_->bnd_fields);
@@ -97,7 +97,7 @@ struct PscPushFields
     }
   }
 
-  void advance_a(PscMfieldsBase mflds)
+  void advance_a(MfieldsBase& mflds)
   {
     auto bnd = PscBndBase(ppsc->bnd);
     auto bndf = PscBndFieldsBase(pushf_->bnd_fields);

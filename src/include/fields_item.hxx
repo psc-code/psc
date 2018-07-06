@@ -250,7 +250,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
       add_ghosts_boundary(mres[p], p, 0, mres->n_comps());
     }
 
-    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
+    bnd_.add_ghosts(*mres.sub(), 0, mres->n_comps());
   }
 
   // ----------------------------------------------------------------------

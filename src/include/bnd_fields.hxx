@@ -9,9 +9,9 @@
 
 struct BndFieldsBase
 {
-  virtual void fill_ghosts_E(PscMfieldsBase mflds_base) = 0;
-  virtual void fill_ghosts_H(PscMfieldsBase mflds_base) = 0;
-  virtual void add_ghosts_J(PscMfieldsBase mflds_base) = 0;
+  virtual void fill_ghosts_E(MfieldsBase& mflds_base) = 0;
+  virtual void fill_ghosts_H(MfieldsBase& mflds_base) = 0;
+  virtual void add_ghosts_J(MfieldsBase& mflds_base) = 0;
 };
 
 // ======================================================================
@@ -29,17 +29,17 @@ struct PscBndFields
     : bndf_(bndf)
   {}
 
-  void fill_ghosts_E(PscMfieldsBase mflds)
+  void fill_ghosts_E(MfieldsBase& mflds)
   {
     sub()->fill_ghosts_E(mflds);
   }
 
-  void fill_ghosts_H(PscMfieldsBase mflds)
+  void fill_ghosts_H(MfieldsBase& mflds)
   {
     sub()->fill_ghosts_H(mflds);
   }
 
-  void add_ghosts_J(PscMfieldsBase mflds)
+  void add_ghosts_J(MfieldsBase& mflds)
   {
     sub()->add_ghosts_J(mflds);
   }

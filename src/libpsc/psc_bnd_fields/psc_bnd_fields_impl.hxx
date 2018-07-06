@@ -65,12 +65,12 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void fill_ghosts_E(PscMfieldsBase mflds_base) override
+  void fill_ghosts_E(MfieldsBase& mflds_base) override
   {
     // OPT, if we don't need to do anything, we don't need to get
-    auto& mflds = mflds_base->get_as<Mfields>(EX, EX + 3);
+    auto& mflds = mflds_base.get_as<Mfields>(EX, EX + 3);
     fill_ghosts_E(mflds);
-    mflds_base->put_as(mflds, EX, EX + 3);
+    mflds_base.put_as(mflds, EX, EX + 3);
   }
   
   // ----------------------------------------------------------------------
@@ -118,12 +118,12 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void fill_ghosts_H(PscMfieldsBase mflds_base) override
+  void fill_ghosts_H(MfieldsBase& mflds_base) override
   {
     // OPT, if we don't need to do anything, we don't need to get
-    auto& mflds = mflds_base->get_as<Mfields>(HX, HX + 3);
+    auto& mflds = mflds_base.get_as<Mfields>(HX, HX + 3);
     fill_ghosts_H(mflds);
-    mflds_base->put_as(mflds, HX, HX + 3);
+    mflds_base.put_as(mflds, HX, HX + 3);
   }
   
   // ----------------------------------------------------------------------
@@ -167,12 +167,12 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void add_ghosts_J(PscMfieldsBase mflds_base) override
+  void add_ghosts_J(MfieldsBase& mflds_base) override
   {
     // OPT, if we don't need to do anything, we don't need to get
-    auto& mflds = mflds_base->get_as<Mfields>(JXI, JXI + 3);
+    auto& mflds = mflds_base.get_as<Mfields>(JXI, JXI + 3);
     add_ghosts_J(mflds);
-    mflds_base->put_as(mflds, JXI, JXI + 3);
+    mflds_base.put_as(mflds, JXI, JXI + 3);
   }
   
   static void fields_t_set_nan(real_t *f)
@@ -660,9 +660,9 @@ struct BndFieldsNone : BndFieldsBase
 {
   using Mfields = MF;
   
-  void fill_ghosts_E(PscMfieldsBase mflds_base) override {};
-  void fill_ghosts_H(PscMfieldsBase mflds_base) override {};
-  void add_ghosts_J(PscMfieldsBase mflds_base) override {};
+  void fill_ghosts_E(MfieldsBase& mflds_base) override {};
+  void fill_ghosts_H(MfieldsBase& mflds_base) override {};
+  void add_ghosts_J(MfieldsBase& mflds_base) override {};
 
   void fill_ghosts_E(Mfields& mflds) {};
   void fill_ghosts_H(Mfields& mflds) {};

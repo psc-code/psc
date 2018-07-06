@@ -725,17 +725,17 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
     // field propagation B^{n+1/2} -> B^{n+1}
-    pushf.advance_H(mflds, .5);
+    pushf.advance_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     bndp(mprts_);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
-    pushf.advance_b2(mflds);
+    pushf.advance_b2(mflds_);
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
-    pushf.advance_a(mflds);
+    pushf.advance_a(mflds_);
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
     PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, mprts_);

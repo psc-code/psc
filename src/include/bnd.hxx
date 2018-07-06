@@ -12,8 +12,8 @@
 
 struct BndBase
 {
-  virtual void fill_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
-  virtual void add_ghosts(PscMfieldsBase mflds, int mb, int me) = 0;
+  virtual void fill_ghosts(MfieldsBase& mflds, int mb, int me) = 0;
+  virtual void add_ghosts(MfieldsBase& mflds, int mb, int me) = 0;
 };
 
 // ======================================================================
@@ -31,7 +31,7 @@ struct PscBnd
     : bnd_(bnd)
   {}
 
-  void fill_ghosts(PscMfieldsBase mflds, int mb, int me)
+  void fill_ghosts(MfieldsBase& mflds, int mb, int me)
   {
     static int pr;
     if (!pr) {
@@ -41,13 +41,13 @@ struct PscBnd
     psc_stats_start(st_time_comm);
     prof_start(pr);
     
-    sub()->fill_ghosts(mflds.mflds(), mb, me);
+    sub()->fill_ghosts(mflds, mb, me);
 
     prof_stop(pr);
     psc_stats_stop(st_time_comm);
   }
 
-  void add_ghosts(PscMfieldsBase mflds, int mb, int me)
+  void add_ghosts(MfieldsBase& mflds, int mb, int me)
   {
     static int pr;
     if (!pr) {
@@ -57,7 +57,7 @@ struct PscBnd
     psc_stats_start(st_time_comm);
     prof_start(pr);
     
-    sub()->add_ghosts(mflds.mflds(), mb, me);
+    sub()->add_ghosts(mflds, mb, me);
     
     prof_stop(pr);
     psc_stats_stop(st_time_comm);
