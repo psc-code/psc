@@ -21,7 +21,8 @@ struct Psc
   // ctor
 
   Psc(psc* psc)
-    : psc_(psc)
+    : psc_(psc),
+      mprts_{psc->grid()}
   {}
 
   // ----------------------------------------------------------------------
@@ -159,6 +160,7 @@ private:
   }
 
 protected:
+  Mparticles_t mprts_;
   MparticlesBase* mprts__;
   MfieldsBase* mflds__;
   psc* psc_;

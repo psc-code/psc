@@ -392,7 +392,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc},
       PscHarrisParams(params),
       phys_{phys},
-      mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
     mprts__ = &mprts_;
@@ -725,7 +724,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
 protected:
   globals_physics phys_;
-  Mparticles_t mprts_;
   Mfields_t mflds_;
 };
 
