@@ -528,13 +528,13 @@ PscBubble* PscBubbleBuilder::makePsc()
   params.balance_print_loads = true;
   params.balance_write_loads = false;
   
+  mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
+  
   // --- generic setup
   psc_setup_coeff(psc_);
   double dt = psc_set_dt(psc_, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
-  mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
-  
   return new PscBubble{params, psc_};
 }
 

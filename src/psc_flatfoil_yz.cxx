@@ -721,11 +721,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.balance_print_loads = true;
   params.balance_write_loads = false;
 
-  // --- generic setup
-  psc_setup_coeff(psc_);
-  double dt = psc_set_dt(psc_, grid_domain);
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
-
 #if TEST == TEST_4_SHOCK_3D
   psc_->prm.nmax = 100002;
   psc_->prm.nicell = 100;
@@ -767,6 +762,11 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.checks_params.gauss_threshold = 1e-10;
   params.checks_params.gauss_verbose = true;
 #endif
+
+  // --- generic setup
+  psc_setup_coeff(psc_);
+  double dt = psc_set_dt(psc_, grid_domain);
+  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
   return new PscFlatfoil{params, psc_};
 }
