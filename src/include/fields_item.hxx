@@ -193,6 +193,7 @@ struct ItemMomentCRTP
   using Mfields = MF;
   
   ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
+    : mres_{nullptr}
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
@@ -216,15 +217,16 @@ struct ItemMomentCRTP
   
   ~ItemMomentCRTP()
   {
-    psc_mfields_destroy(mres_);
+    //FIXME
+    //psc_mfields_destroy(mres_);
   }
   
-  MfieldsBase& mres_base() { return *PscMfieldsBase{mres_}.sub(); }
-  Mfields& result() { return *PscMfields<Mfields>{mres_}.sub(); }
+  MfieldsBase& mres_base() { return *mres_.sub(); }
+  Mfields& result() { return *PscMfields<Mfields>{mres_.mflds()}.sub(); }
   std::vector<std::string> comp_names() { return comp_names_; }
 
 protected:
-  psc_mfields* mres_;
+  PscMfieldsBase mres_;
   std::vector<std::string> comp_names_;
 };
 
@@ -252,7 +254,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   void run(Mparticles& mprts)
   {
-    PscMfields<Mfields> mres{this->mres_};
+    PscMfields<Mfields> mres{this->mres_.mflds()}; // FIXME
     for (int p = 0; p < mprts.n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
