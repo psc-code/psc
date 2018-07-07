@@ -116,11 +116,7 @@ struct FieldsItemFields : FieldsItemBase
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
     : mres_base_{PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).mflds()}
-  {
-    for (int m = 0; m < Item::n_comps; m++) {
-      psc_mfields_set_comp_name(mres_base_, m, Item::fld_names()[m]);
-    }
-  }
+  {}
 
   ~FieldsItemFields()
   {
@@ -146,7 +142,7 @@ struct FieldsItemFields : FieldsItemBase
     auto mflds = PscMfieldsBase{mres_base_};
     std::vector<std::string> comp_names;
     for (int m = 0; m < mflds->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
+      comp_names.emplace_back(Item::fld_names()[m]);
     }
     return comp_names;
   }
