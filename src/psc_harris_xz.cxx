@@ -282,7 +282,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
-      Simulation_diagnostics_setup(sim_);
+      Simulation* sim;
+      psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
+      Simulation_diagnostics_setup(sim);
     }
 
     psc_setup_member_objs(psc_);
@@ -310,7 +312,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   ~PscHarris()
   {
-    Simulation_delete(sim_);
+    Simulation* sim;
+    psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
+    Simulation_delete(sim);
   }
 
   // ----------------------------------------------------------------------
@@ -320,19 +324,19 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
-      sim_ = Simulation_create();
-      psc_method_set_param_ptr(psc_->method, "sim", sim_);
+      auto sim = Simulation_create();
+      psc_method_set_param_ptr(psc_->method, "sim", sim);
       // set high level VPIC simulation parameters
       // FIXME, will be unneeded eventually
-      Simulation_set_params(sim_, psc_->prm.nmax, psc_->prm.stats_every,
+      Simulation_set_params(sim, psc_->prm.nmax, psc_->prm.stats_every,
 			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
 			    psc_->prm.stats_every / 2);
-      setup_domain(psc_->grid().domain);
-      setup_fields();
-      setup_species();
+      setup_domain(sim, psc_->grid().domain);
+      setup_fields(sim);
+      setup_species(sim);
 
       int interval = (int) (t_intervali / (phys_.wci*dt()));
-      Simulation_diagnostics_init(sim_, interval);
+      Simulation_diagnostics_init(sim, interval);
 
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
       psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
@@ -344,7 +348,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // setup_domain
 
-  void setup_domain(const Grid_t::Domain& domain)
+  void setup_domain(Simulation* sim, const Grid_t::Domain& domain)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -355,10 +359,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       xl[d] = domain.corner[d];
       xh[d] = xl[d] + domain.length[d];
     }
-    Simulation_setup_grid(sim_, dx, dt(), phys_.c, phys_.eps0);
+    Simulation_setup_grid(sim, dx, dt(), phys_.c, phys_.eps0);
 
     // Define the grid
-    Simulation_define_periodic_grid(sim_, xl, xh, domain.gdims, domain.np);
+    Simulation_define_periodic_grid(sim, xl, xh, domain.gdims, domain.np);
 
     int p = 0;
     bool left = psc_at_boundary_lo(psc_, p, 0);
@@ -370,46 +374,46 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // ***** Set Field Boundary Conditions *****
     if (open_bc_x) {
       mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-      if (left ) Simulation_set_domain_field_bc(sim_, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
-      if (right) Simulation_set_domain_field_bc(sim_, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+      if (left ) Simulation_set_domain_field_bc(sim, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
+      if (right) Simulation_set_domain_field_bc(sim, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
     }
   
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_field_bc(sim_, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
-    if (top   ) Simulation_set_domain_field_bc(sim_, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+    if (bottom) Simulation_set_domain_field_bc(sim, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
+    if (top   ) Simulation_set_domain_field_bc(sim, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
 
     // ***** Set Particle Boundary Conditions *****
     if (driven_bc_z) {
       mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-      if (bottom) Simulation_set_domain_particle_bc(sim_, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
-      if (top   ) Simulation_set_domain_particle_bc(sim_, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
+      if (bottom) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
+      if (top   ) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
     } else {
       mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-      if (bottom) Simulation_set_domain_particle_bc(sim_, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
-      if (top   ) Simulation_set_domain_particle_bc(sim_, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
+      if (bottom) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
+      if (top   ) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
     }
     if (open_bc_x) {
       mpi_printf(comm, "Absorb particles on X-boundaries\n");
-      if (left)  Simulation_set_domain_particle_bc(sim_, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
-      if (right) Simulation_set_domain_particle_bc(sim_, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
+      if (left)  Simulation_set_domain_particle_bc(sim, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
+      if (right) Simulation_set_domain_particle_bc(sim, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
     }
   }
 
   // ----------------------------------------------------------------------
   // setup_fields
 
-  void setup_fields()
+  void setup_fields(Simulation* sim)
   {
     MPI_Comm comm = psc_comm(psc_);
 
     mpi_printf(comm, "Setting up materials.\n");
 
-    Simulation_define_material(sim_, "vacuum", 1., 1., 0., 0.);
+    Simulation_define_material(sim, "vacuum", 1., 1., 0., 0.);
 #if 0
     struct material *resistive =
       Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 #endif
-    Simulation_define_field_array(sim_, 0.);
+    Simulation_define_field_array(sim, 0.);
 
     // Note: define_material defaults to isotropic materials with mu=1,sigma=0
     // Tensor electronic, magnetic and conductive materials are supported
@@ -432,7 +436,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // setup_species
 
-  void setup_species()
+  void setup_species(Simulation* sim)
   {
     MPI_Comm comm = psc_comm(psc_);
     
@@ -441,9 +445,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
-    Simulation_define_species(sim_, "electron", -phys_.ec, phys_.me, nmax, nmovers,
+    Simulation_define_species(sim, "electron", -phys_.ec, phys_.me, nmax, nmovers,
 			    electron_sort_interval, sort_method);
-    Simulation_define_species(sim_, "ion", phys_.ec, phys_.mi, nmax, nmovers,
+    Simulation_define_species(sim, "ion", phys_.ec, phys_.mi, nmax, nmovers,
 			      ion_sort_interval, sort_method);
   }
 
@@ -719,7 +723,6 @@ protected:
   globals_physics phys_;
   Mparticles_t mprts_;
   Mfields_t mflds_;
-  Simulation* sim_;
 };
 
 // ----------------------------------------------------------------------
