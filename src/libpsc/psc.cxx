@@ -333,8 +333,6 @@ void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc,
 static void
 _psc_destroy(struct psc *psc)
 {
-  psc_mfields_destroy(psc->flds);
-
   mrc_domain_destroy(psc->mrc_domain_);
 
   ppsc = NULL;
@@ -361,7 +359,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 #endif
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain_);
   //mrc_io_write_ref(io, psc, "mparticles", psc->particles_);
-  mrc_io_write_ref(io, psc, "mfields", psc->flds);
+  //mrc_io_write_ref(io, psc, "mfields", psc->flds);
 }
 
 // ----------------------------------------------------------------------
@@ -396,7 +394,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 #endif
 
   //psc->particles_ = mrc_io_read_ref(io, psc, "mparticles", psc_mparticles);
-  psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);
+  //psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);
 
   psc_read_member_objs(psc, io);
 

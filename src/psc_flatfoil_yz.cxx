@@ -237,7 +237,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     : Psc{psc},
       PscFlatfoilParams(params),
       mprts_{psc->grid()},
-      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds}.sub())},
+      mflds_{dynamic_cast<Mfields_t&>(*PscMfieldsBase{psc->flds_}.sub())},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -269,6 +269,11 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     psc_setup_member_objs(psc_);
 
     initialize_stats();
+  }
+
+  ~PscFlatfoil()
+  {
+    psc_mfields_destroy(psc_->flds_);
   }
 
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
@@ -777,8 +782,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- create and set up base mflds
   mpi_printf(comm, "**** Creating fields...\n");
-  psc_->flds = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
-				Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
+  psc_->flds_ = PscMfieldsCreate(comm, psc_->grid(), psc_->n_state_fields, psc_->ibn,
+				 Mfields_traits<PscFlatfoil::Mfields_t>::name).mflds();
 
   return new PscFlatfoil(params, psc_);
 }

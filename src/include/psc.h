@@ -133,7 +133,7 @@ struct psc {
   double dt;	///< timestep in physical units
   ///@}
 
-  struct psc_mfields *flds;	///< The fields.
+  struct psc_mfields *flds_;	///< The fields.
   int n_state_fields;           ///< How many field components do we need in ::flds
 
   ///The domain partitioner.

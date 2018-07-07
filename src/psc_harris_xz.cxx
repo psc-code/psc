@@ -269,9 +269,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     MPI_Comm comm = psc_comm(psc_);
     // create and set up base mflds
-    psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
-				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
-    mflds__ = PscMfieldsBase(psc_->flds).sub();
+    psc_->flds_ = PscMfieldsCreate(comm, psc_->grid(),
+				   psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+    mflds__ = PscMfieldsBase(psc_->flds_).sub();
     
     mprts_.reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
@@ -311,6 +311,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   ~PscHarris()
   {
+    psc_mfields_destroy(psc_->flds_);
     Simulation_delete(sim_);
   }
 
