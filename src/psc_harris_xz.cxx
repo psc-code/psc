@@ -258,8 +258,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
     mprts__ = &mprts_;
+    const auto& grid = psc->grid();
     // partition and initial balancing
-    std::vector<uint> n_prts_by_patch_old(psc_->n_patches());
+    std::vector<uint> n_prts_by_patch_old(grid.n_patches());
     setup_particles(n_prts_by_patch_old, true);
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
@@ -544,6 +545,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
+    const auto& grid = psc_->grid();
     MPI_Comm comm = psc_comm(psc_);
 
     double cs = cos(theta), sn = sin(theta);
@@ -556,7 +558,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double weight_b = phys_.weight_b;
 
     if (count_only) {
-      for (int p = 0; p < psc_->n_patches(); p++) {
+      for (int p = 0; p < grid.n_patches(); p++) {
 	nr_particles_by_patch[p] = 2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
       }
       return;
@@ -575,8 +577,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     RngPool_seed(rngpool, rank);
     Rng *rng = RngPool_get(rngpool, 0);
 
-    assert(psc_->n_patches() > 0);
-    const Grid_t& grid = psc_->grid();
+    assert(grid.n_patches() > 0);
     const Grid_t::Patch& patch = grid.patches[0];
     double xmin = patch.xb[0], xmax = patch.xe[0];
     double ymin = patch.xb[1], ymax = patch.xe[1];

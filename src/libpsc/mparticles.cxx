@@ -50,8 +50,8 @@ psc_mparticles_check(MparticlesBase& mprts_base)
 
   auto& mprts = mprts_base.get_as<MparticlesDouble>();
   const auto& grid = ppsc->grid();
-  
-  psc_foreach_patch(ppsc, p) {
+
+  for (int p = 0; p < grid.n_patches(); p++) {
     auto& patch = grid.patches[p];
     auto& prts = mprts[p];
 

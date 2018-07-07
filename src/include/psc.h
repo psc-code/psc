@@ -142,7 +142,6 @@ struct psc {
 
   Grid_t* make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
 		    const Grid_t::Kinds& kinds, double dt);
-  int n_patches() { return grid().n_patches(); }
 
   int ibn[3];         ///< number of ghost points
 

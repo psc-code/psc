@@ -56,7 +56,7 @@ struct Inject_ : InjectBase
     moment_n_.run(mprts);
     auto& mf_n = moment_n_.result();
 
-    psc_foreach_patch(psc, p) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       Fields N(mf_n[p]);
       const int *ldims = psc->grid().ldims;
     
