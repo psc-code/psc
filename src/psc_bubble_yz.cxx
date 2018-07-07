@@ -84,8 +84,8 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
 
-  PscBubble(const PscBubbleParams& params, psc *psc)
-    : Psc{psc},
+  PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
+    : Psc{p, psc},
       PscBubbleParams(params),
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -457,6 +457,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   
   mpi_printf(comm, "*** Setting up...\n");
 
+  PscParams p;
   PscBubbleParams params;
 
   psc_default_dimensionless(psc_);
@@ -528,7 +529,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   double dt = psc_set_dt(psc_, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
-  return new PscBubble{params, psc_};
+  return new PscBubble{p, params, psc_};
 }
 
 // ======================================================================

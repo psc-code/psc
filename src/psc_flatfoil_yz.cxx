@@ -232,8 +232,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
   
-  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
-    : Psc{psc},
+  PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
+    : Psc{p, psc},
       PscFlatfoilParams(params),
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
@@ -563,6 +563,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   
   mpi_printf(comm, "*** Setting up...\n");
 
+  PscParams p;
   PscFlatfoilParams params;
 
   psc_default_dimensionless(psc_);
@@ -761,7 +762,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   double dt = psc_set_dt(psc_, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
-  return new PscFlatfoil{params, psc_};
+  return new PscFlatfoil{p, params, psc_};
 }
 
 // ======================================================================

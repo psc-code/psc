@@ -11,6 +11,17 @@
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
 
+// ======================================================================
+// PscParams
+
+struct PscParams
+{
+  double cfl;
+};
+  
+// ======================================================================
+// Psc
+
 template<typename PscConfig>
 struct Psc
 {
@@ -20,8 +31,9 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(psc* psc)
-    : psc_(psc),
+  Psc(const PscParams& params, psc* psc)
+    : p_{params},
+      psc_(psc),
       mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {}
@@ -164,6 +176,7 @@ protected:
   Mparticles_t mprts_;
   Mfields_t mflds_;
 
+  PscParams p_;
   psc* psc_;
 
   int st_nr_particles;

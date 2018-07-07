@@ -388,8 +388,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
-  PscHarris(const PscHarrisParams& params, psc *psc, const globals_physics& phys)
-    : Psc{psc},
+  PscHarris(const PscParams& p, const PscHarrisParams& params, psc *psc, const globals_physics& phys)
+    : Psc{p, psc},
       PscHarrisParams(params),
       phys_{phys}
   {
@@ -403,15 +403,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
     mprts_.reset(psc_->grid());
-
+    
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(mprts_, n_prts_by_patch_new);
-
-    // FIXME MfieldsSingle
-    SetupFields<MfieldsSingle>::set(mflds_, [&](int m, double xx[3]) {
-	return init_field(xx, m);
-      });
-
+    
+    mpi_printf(comm, "**** Setting up fields...\n");
+    setup_initial_fields(mflds_);
+    
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       Simulation* sim;
@@ -420,6 +418,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     }
 
     psc_setup_member_objs(psc_);
+
     initialize_stats();
     setup_log();
     
@@ -642,6 +641,17 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
+  // setup_initial_fields
+
+  void setup_initial_fields(Mfields_t& mflds)
+  {
+    // FIXME MfieldsSingle
+    SetupFields<MfieldsSingle>::set(mflds_, [&](int m, double xx[3]) {
+	return init_field(xx, m);
+      });
+  }
+  
+  // ----------------------------------------------------------------------
   // init_field
 
   double init_field(double crd[3], int m)
@@ -771,6 +781,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   mpi_printf(comm, "*** Setting up...\n");
 
+  PscParams p;
   PscHarrisParams params;
 
   params.wpedt_max = .36;
@@ -871,7 +882,7 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   setup_grid(psc_, phys, params);
   
-  return new PscHarris{params, psc_, phys};
+  return new PscHarris{p, params, psc_, phys};
 }
 
 // ======================================================================
