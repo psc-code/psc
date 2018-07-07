@@ -115,12 +115,13 @@ struct FieldsItemFields : FieldsItemBase
   }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
-    : mres_base_{PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).mflds()}
+    : mres_base_{*PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).sub()}
   {}
 
   ~FieldsItemFields()
   {
-    psc_mfields_destroy(mres_base_);
+    //FIXME
+    //psc_mfields_destroy(mres_base_);
   }
 
   void operator()(Mfields& mflds)
@@ -135,22 +136,21 @@ struct FieldsItemFields : FieldsItemBase
     mflds_base.put_as(mflds, 0, 0);
   }
 
-  virtual MfieldsBase& mres() override { return *PscMfieldsBase{mres_base_}.sub(); }
+  virtual MfieldsBase& mres() override { return mres_base_; }
 
   virtual std::vector<std::string> comp_names() override
   {
-    auto mflds = PscMfieldsBase{mres_base_};
     std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds->n_comps(); m++) {
+    for (int m = 0; m < Item::n_comps; m++) {
       comp_names.emplace_back(Item::fld_names()[m]);
     }
     return comp_names;
   }
   
-  Mfields& result() { return *PscMfields<Mfields>{mres_base_}.sub(); }
+  Mfields& result() { return mres_base_; }
 
 private:  
-  psc_mfields* mres_base_;
+  Mfields& mres_base_;
 };
 
 // ======================================================================
