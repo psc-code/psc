@@ -298,9 +298,6 @@ double psc_set_dt(psc* psc, const Grid_t::Domain& domain)
 
 void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds)
 {
-  if (!psc->dt) {
-    psc->dt = psc_set_dt(psc, domain);
-  }
 #if 0
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
