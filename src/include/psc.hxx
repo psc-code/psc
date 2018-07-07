@@ -138,8 +138,6 @@ struct Psc
 
   virtual void step() = 0;
 
-  psc* get_psc() const { return psc_; } // FIXME, should go away
-
 private:
 
   // ----------------------------------------------------------------------
