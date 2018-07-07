@@ -394,18 +394,18 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       phys_{phys}
   {
     MPI_Comm comm = psc_comm(psc_);
-
     const auto& grid = psc->grid();
-    // partition and initial balancing
-    std::vector<uint> n_prts_by_patch_old(grid.n_patches());
-    setup_particles(n_prts_by_patch_old, true);
+
+    // --- partition particles and initial balancing
+    mpi_printf(comm, "**** Partitioning...\n");
+    auto n_prts_by_patch_old = setup_initial_partition();
     psc_balance_setup(psc_->balance);
     auto balance = PscBalanceBase{psc_->balance};
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
     mprts_.reset(psc_->grid());
 
-    mprts_.reserve_all(n_prts_by_patch_new.data());
-    setup_particles(n_prts_by_patch_new, false);
+    mpi_printf(comm, "**** Setting up particles...\n");
+    setup_initial_particles(mprts_, n_prts_by_patch_new);
 
     // FIXME MfieldsSingle
     SetupFields<MfieldsSingle>::set(mflds_, [&](int m, double xx[3]) {
@@ -508,6 +508,25 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "Driven BC in z? = %d\n", driven_bc_z);
   }
 
+  // ----------------------------------------------------------------------
+  // setup_initial_partition
+  
+  std::vector<uint> setup_initial_partition()
+  {
+    std::vector<uint> n_prts_by_patch_old(psc_->grid().n_patches());
+    setup_particles(n_prts_by_patch_old, true);
+    return n_prts_by_patch_old;
+  }
+  
+  // ----------------------------------------------------------------------
+  // setup_initial_particles
+  
+  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
+  {
+    mprts_.reserve_all(n_prts_by_patch.data());
+    setup_particles(n_prts_by_patch, false);
+  }
+  
   // ----------------------------------------------------------------------
   // setup_particles
   //
