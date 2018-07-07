@@ -115,14 +115,8 @@ struct FieldsItemFields : FieldsItemBase
   }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
-    : mres_{*PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).sub()}
+    : mres_{ppsc->grid(), Item::n_comps, ppsc->ibn}
   {}
-
-  ~FieldsItemFields()
-  {
-    //FIXME
-    //psc_mfields_destroy(mres_);
-  }
 
   void operator()(Mfields& mflds)
   {
@@ -150,7 +144,7 @@ struct FieldsItemFields : FieldsItemBase
   Mfields& result() { return mres_; }
 
 private:  
-  Mfields& mres_;
+  Mfields mres_;
 };
 
 // ======================================================================
