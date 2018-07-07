@@ -144,9 +144,6 @@ struct globals_physics
   double wce;
   double wci;
   
-  // general
-  double dt;       // timestep
-  
   // calculated
   double b0;       // B0
   double n0;
@@ -295,13 +292,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       struct psc_output_fields *out;
       mrc_obj_for_each_child(out, psc_->output_fields_collection, struct psc_output_fields) {
 	psc_output_fields_set_param_int(out, "pfield_step",
-					(int) (output_field_interval / (phys_.wci*phys_.dt)));
+					(int) (output_field_interval / (phys_.wci*psc_->dt)));
       }
     }
   
     if (output_particle_interval > 0) {
       psc_output_particles_set_param_int(psc_->output_particles, "every_step",
-					 (int) (output_particle_interval / (phys_.wci*phys_.dt)));
+					 (int) (output_particle_interval / (phys_.wci*psc_->dt)));
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
@@ -321,11 +318,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   void set_dt(const Grid_t::Domain& domain)
   {
     double dg = courant_length(domain.length, domain.gdims);
-    phys_.dt = psc_->prm.cfl * dg / phys_.c; // courant limited time step
-    if (phys_.wpe * phys_.dt > wpedt_max) {
-      phys_.dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
+    double dt = psc_->prm.cfl * dg / phys_.c; // courant limited time step
+    if (phys_.wpe * dt > wpedt_max) {
+      dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
     }
-    psc_->dt = phys_.dt;
+    psc_->dt = dt;
   }
 
   // ----------------------------------------------------------------------
@@ -348,7 +345,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // Determine the time step
     set_dt(domain);
     
-    psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
+    psc_->prm.nmax = (int) (taui / (phys_.wci*psc_->dt)); // number of steps from taui
 
     psc_setup_coeff(psc_);
     psc_setup_domain(psc_, domain, grid_bc, kinds);
@@ -365,7 +362,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       setup_fields();
       setup_species();
 
-      int interval = (int) (t_intervali / (phys_.wci*phys_.dt));
+      int interval = (int) (t_intervali / (phys_.wci*psc_->dt));
       Simulation_diagnostics_init(sim_, interval);
 
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
@@ -389,7 +386,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       xl[d] = domain.corner[d];
       xh[d] = xl[d] + domain.length[d];
     }
-    Simulation_setup_grid(sim_, dx, phys_.dt, phys_.c, phys_.eps0);
+    Simulation_setup_grid(sim_, dx, psc_->dt, phys_.c, phys_.eps0);
 
     // Define the grid
     Simulation_define_periodic_grid(sim_, xl, xh, domain.gdims, domain.np);
@@ -521,9 +518,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "Ne_sheet = %g\n", phys_.Ne_sheet);
     mpi_printf(comm, "Ne_back = %g\n", phys_.Ne_back);
     mpi_printf(comm, "total # of particles = %g\n", 2*phys_.Ne);
-    mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe*phys_.dt);
-    mpi_printf(comm, "dt*wce = %g\n", phys_.wce*phys_.dt);
-    mpi_printf(comm, "dt*wci = %g\n", phys_.wci*phys_.dt);
+    mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe*psc_->dt);
+    mpi_printf(comm, "dt*wce = %g\n", phys_.wce*psc_->dt);
+    mpi_printf(comm, "dt*wci = %g\n", phys_.wci*psc_->dt);
     mpi_printf(comm, "dx/de = %g\n", phys_.Lx/(phys_.de*gdims[0]));
     mpi_printf(comm, "dy/de = %g\n", phys_.Ly/(phys_.de*gdims[1]));
     mpi_printf(comm, "dz/de = %g\n", phys_.Lz/(phys_.de*gdims[2]));
