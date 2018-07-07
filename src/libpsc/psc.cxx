@@ -296,8 +296,8 @@ double psc_set_dt(psc* psc, const Grid_t::Domain& domain)
 // ----------------------------------------------------------------------
 // psc_setup_domain
 
-Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-			 double dt)
+void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
+		      double dt)
 {
 #if 0
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
@@ -328,8 +328,6 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
   Int3 np;
   mrc_domain_get_param_int3(psc->mrc_domain_, "np", np);
   assert(np == domain.np);
-
-  return psc->grid_;
 }
 
 // ----------------------------------------------------------------------
