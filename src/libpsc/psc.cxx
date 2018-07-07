@@ -323,6 +323,11 @@ void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc,
 
   psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
   psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, dt);
+
+  // make sure that np isn't overridden on the command line
+  Int3 np;
+  mrc_domain_get_param_int3(psc->mrc_domain_, "np", np);
+  assert(np == domain.np);
 }
 
 // ----------------------------------------------------------------------
