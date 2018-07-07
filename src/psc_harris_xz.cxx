@@ -352,6 +352,36 @@ static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phy
 			    params.ion_sort_interval, sort_method);
 }
 
+// ----------------------------------------------------------------------
+// setup_grid
+
+static const Grid_t& setup_grid(psc* psc_, const globals_physics& phys_,
+				const PscHarrisParams& params)
+{
+  if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
+  } else {
+    const auto& grid = psc_->grid();
+    auto sim = Simulation_create();
+    psc_method_set_param_ptr(psc_->method, "sim", sim);
+    // set high level VPIC simulation parameters
+    // FIXME, will be unneeded eventually
+    Simulation_set_params(sim, psc_->prm.nmax, psc_->prm.stats_every,
+			  psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
+			  psc_->prm.stats_every / 2);
+    setup_domain(sim, grid.domain, psc_, phys_, params);
+    setup_fields(sim, psc_);
+    setup_species(sim, psc_, phys_, params);
+    
+    int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
+    Simulation_diagnostics_init(sim, interval);
+    
+    psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
+    psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+  }
+  
+  return psc_->grid();
+}
+
 // ======================================================================
 // PscHarris
 
@@ -364,7 +394,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc},
       PscHarrisParams(params),
       phys_{phys},
-      mprts_{setup_grid()},
+      mprts_{setup_grid(psc, phys, params)},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
     mprts__ = &mprts_;
@@ -425,34 +455,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     Simulation* sim;
     psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
     Simulation_delete(sim);
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_grid
-
-  const Grid_t& setup_grid()
-  {
-    if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
-    } else {
-      auto sim = Simulation_create();
-      psc_method_set_param_ptr(psc_->method, "sim", sim);
-      // set high level VPIC simulation parameters
-      // FIXME, will be unneeded eventually
-      Simulation_set_params(sim, psc_->prm.nmax, psc_->prm.stats_every,
-			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
-			    psc_->prm.stats_every / 2);
-      setup_domain(sim, psc_->grid().domain, psc_, phys_, *this);
-      setup_fields(sim, psc_);
-      setup_species(sim, psc_, phys_, *this);
-
-      int interval = (int) (t_intervali / (phys_.wci*dt()));
-      Simulation_diagnostics_init(sim, interval);
-
-      psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
-      psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-    }
-
-    return psc_->grid();
   }
 
   // ----------------------------------------------------------------------
