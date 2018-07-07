@@ -220,7 +220,7 @@ struct ItemMomentCRTP
     psc_mfields_destroy(mres_);
   }
   
-  psc_mfields*& mres_base() { return mres_; }
+  PscMfieldsBase mres_base() { return mres_; }
   Mfields& result() { return *PscMfields<Mfields>{mres_}.sub(); }
 
 protected:
@@ -378,11 +378,11 @@ struct FieldsItemMoment : FieldsItemBase
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
-  virtual MfieldsBase& mres() override { return *PscMfieldsBase{moment_.mres_base()}.sub(); }
+  virtual MfieldsBase& mres() override { return *moment_.mres_base().sub(); }
 
   virtual std::vector<std::string> comp_names()  override
   {
-    auto mflds = PscMfieldsBase{moment_.mres_base()};
+    auto mflds = moment_.mres_base();
     std::vector<std::string> comp_names;
     for (int m = 0; m < mflds->n_comps(); m++) {
       comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
