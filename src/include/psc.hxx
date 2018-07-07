@@ -53,12 +53,11 @@ struct Psc
   {
     psc_view(psc_);
     mprts__->view();
-    psc_mfields_view(psc_->flds);
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, *PscMfieldsBase{psc_->flds}.sub(), *mprts__);
+      psc_method_vpic_initialize(psc_->method, psc_, *mflds__, *mprts__);
     } else {
-      initialize_default(psc_->method, psc_, *PscMfieldsBase{psc_->flds}.sub(), *mprts__);
+      initialize_default(psc_->method, psc_, *mflds__, *mprts__);
     }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -98,7 +97,7 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_method_output(psc_->method, psc_, *PscMfieldsBase{psc_->flds}.sub(), *mprts__);
+      psc_method_output(psc_->method, psc_, *mflds__, *mprts__);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -159,6 +158,7 @@ private:
 
 protected:
   MparticlesBase* mprts__;
+  MfieldsBase* mflds__;
   psc* psc_;
 
   int st_nr_particles;

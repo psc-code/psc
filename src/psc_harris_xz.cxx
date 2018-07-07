@@ -271,12 +271,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // create and set up base mflds
     psc_->flds = PscMfieldsCreate(comm, psc_->grid(),
 				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base).mflds();
+    mflds__ = PscMfieldsBase(psc_->flds).sub();
     
     mprts_.reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
-    SetupFields<MfieldsSingle>::set(*PscMfieldsBase(psc->flds).sub(), [&](int m, double xx[3]) {
+    SetupFields<MfieldsSingle>::set(*mflds__, [&](int m, double xx[3]) {
 	return init_field(xx, m);
       });
 
@@ -699,8 +700,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    PscMfieldsBase mflds(psc_->flds);
-    MfieldsBase& mflds_{*mflds.sub()};
+    MfieldsBase& mflds_ = *mflds__;
     PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
     PscSortBase sort(psc_->sort);
