@@ -355,8 +355,8 @@ static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phy
 // ----------------------------------------------------------------------
 // setup_grid
 
-static const Grid_t& setup_grid(psc* psc_, const globals_physics& phys_,
-				const PscHarrisParams& params)
+void setup_grid(psc* psc_, const globals_physics& phys_,
+		const PscHarrisParams& params)
 {
   if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
   } else {
@@ -378,8 +378,6 @@ static const Grid_t& setup_grid(psc* psc_, const globals_physics& phys_,
     psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
   }
-  
-  return psc_->grid();
 }
 
 // ======================================================================
@@ -394,7 +392,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc},
       PscHarrisParams(params),
       phys_{phys},
-      mprts_{setup_grid(psc, phys, params)},
+      mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
     mprts__ = &mprts_;
@@ -860,6 +858,8 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   psc_setup_coeff(psc_);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
+
+  setup_grid(psc_, phys, params);
   
   return new PscHarris{params, psc_, phys};
 }
