@@ -74,7 +74,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc,
 
   struct psc_diag_item *item;
   if (rank == 0) {
-    fprintf(diag->file, "%g", psc->timestep * psc->dt);
+    fprintf(diag->file, "%g", psc->timestep * psc->grid().dt);
   }
   mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);

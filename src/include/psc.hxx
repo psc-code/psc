@@ -139,7 +139,7 @@ struct Psc
   virtual void step() = 0;
 
 protected:
-  double dt() const { return psc_->dt;}
+  double dt() const { return psc_->grid().dt; }
 
 private:
 

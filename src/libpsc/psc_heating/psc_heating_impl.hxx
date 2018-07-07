@@ -21,7 +21,7 @@ struct Heating__ : HeatingBase
     : kind_{kind},
       get_H_{get_H}
   {
-    heating_dt_ = interval * ppsc->dt;
+    heating_dt_ = interval * ppsc->grid().dt;
   }
   
   // ----------------------------------------------------------------------

@@ -90,6 +90,8 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_after_particle_push(Mparticles& mprts, Mfields& mflds)
   {
+    const auto& grid = mprts.grid();
+    
     item_rho_p_.run(mprts);
     item_divj_(mflds);
 
@@ -99,7 +101,7 @@ struct Checks_ : ChecksParams, ChecksBase
     d_rho.axpy(-1., rho_m);
 
     auto& div_j = item_divj_.result();
-    div_j.scale(ppsc->dt);
+    div_j.scale(grid.dt);
 
     double eps = continuity_threshold;
     double max_err = 0.;
@@ -135,7 +137,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_setup(io);
 	mrc_io_view(io);
       }
-      mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+      mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
       div_j.write_as_mrc_fld(io, "div_j", {"div_j"});
       d_rho.write_as_mrc_fld(io, "d_rho", {"d_rho"});
       mrc_io_close(io);
@@ -224,7 +226,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_setup(io);
 	mrc_io_view(io);
       }
-      mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+      mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
       rho.write_as_mrc_fld(io, "rho", {"rho"});
       dive.write_as_mrc_fld(io, "Div_E", {"Div_E"});
       mrc_io_close(io);

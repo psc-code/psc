@@ -109,7 +109,7 @@ struct Marder_ : MarderBase
 	inv_sum += 1. / sqr(grid.domain.dx[d]);
       }
     }
-    double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
+    double diffusion_max = 1. / 2. / (.5 * ppsc->grid().dt) / inv_sum;
     double diffusion     = diffusion_max * diffusion_;
 
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
@@ -149,7 +149,7 @@ struct Marder_ : MarderBase
 	max_err = std::max(max_err, std::abs(FF(0, ix,iy,iz)));
 	F(EY, ix,iy,iz) += 
 	  (FF(0, ix,iy+dy,iz) - FF(0, ix,iy,iz))
-	  * .5 * ppsc->dt * diffusion / deltay;
+	  * .5 *grid.dt * diffusion / deltay;
       } psc_foreach_3d_more_end;
     }
 
@@ -159,7 +159,7 @@ struct Marder_ : MarderBase
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
 	F(EZ, ix,iy,iz) += 
 	  (FF(0, ix,iy,iz+dz) - FF(0, ix,iy,iz))
-	  * .5 * ppsc->dt * diffusion / deltaz;
+	  * .5 * grid.dt * diffusion / deltaz;
       } psc_foreach_3d_more_end;
     }
   }

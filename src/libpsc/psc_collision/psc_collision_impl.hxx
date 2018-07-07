@@ -217,7 +217,7 @@ struct CollisionHost
   void update_rei_after(particles_t& prts, int n_start, int n_end,
 			int p, int i, int j, int k)
   {
-    real_t fnqs = prts.grid().fnqs;
+    real_t fnqs = prts.grid().fnqs, dt = prts.grid().dt;
     Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       particle_t& prt = prts[n];
@@ -225,9 +225,9 @@ struct CollisionHost
       F(1, i,j,k) += prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(2, i,j,k) += prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
     }
-    F(0, i,j,k) /= (this->interval_ * ppsc->dt);
-    F(1, i,j,k) /= (this->interval_ * ppsc->dt);
-    F(2, i,j,k) /= (this->interval_ * ppsc->dt);
+    F(0, i,j,k) /= (this->interval_ * dt);
+    F(1, i,j,k) /= (this->interval_ * dt);
+    F(2, i,j,k) /= (this->interval_ * dt);
   }
 
   // ----------------------------------------------------------------------
@@ -236,6 +236,7 @@ struct CollisionHost
   void collide_in_cell(particles_t& prts, int n_start, int n_end,
 		       struct psc_collision_stats *stats)
   {
+    const auto& grid = prts.grid();
     int nn = n_end - n_start;
   
     int n = 0;
@@ -245,7 +246,7 @@ struct CollisionHost
 
     // all particles need to have same weight!
     real_t wni = prts.prt_wni(prts[n_start]);
-    real_t nudt1 = wni / ppsc->prm.nicell * nn * this->interval_ * ppsc->dt * nu_;
+    real_t nudt1 = wni / ppsc->prm.nicell * nn * this->interval_ * grid.dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;

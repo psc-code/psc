@@ -35,7 +35,7 @@ public:
   {
     const Grid_t& grid = psc->grid();
     
-    dth = dt_fac * psc->dt;
+    dth = dt_fac * grid.dt;
 
     // FIXME, it'd be even better to not even calculate derivates
     // that will be multiplied by 0 

@@ -533,7 +533,7 @@ struct BndFields_ : BndFieldsBase
 	}
       }
 #endif
-      real_t dt = ppsc->dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
+      real_t dt = ppsc->grid().dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
 	for (int ix = MAX(-2, flds.ib_[0]); ix < MIN(ldims[0] + 2, flds.ib_[0] + flds.im_[0]) ; ix++) {
 	  F(HX, ix,-1,iz) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
@@ -561,7 +561,7 @@ struct BndFields_ : BndFieldsBase
 	}
       }
 #endif
-      real_t dt = ppsc->dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
+      real_t dt = ppsc->grid().dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
 	for (int ix = MAX(-2, flds.ib_[0]); ix < MIN(ldims[0] + 2, flds.ib_[0] + flds.im_[0]) ; ix++) {
 	  F(HY, ix,iy,-1) = (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
@@ -600,7 +600,7 @@ struct BndFields_ : BndFieldsBase
 	}
       }
 #endif
-      real_t dt = ppsc->dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
+      real_t dt = ppsc->grid().dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
 	for (int ix = MAX(-2, flds.ib_[0]); ix < MIN(ldims[0] + 2, flds.ib_[0] + flds.im_[0]) ; ix++) {
 	  F(HX, ix,my,iz) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
@@ -628,7 +628,7 @@ struct BndFields_ : BndFieldsBase
 	}
       }
 #endif
-      real_t dt = ppsc->dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
+      real_t dt = ppsc->grid().dt, dy = ppsc->grid().domain.dx[1], dz = ppsc->grid().domain.dx[2];
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
 	for (int ix = MAX(-2, flds.ib_[0]); ix < MIN(ldims[0] + 2, flds.ib_[0] + flds.im_[0]) ; ix++) {
 	  F(HY, ix,iy,mz) = (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
