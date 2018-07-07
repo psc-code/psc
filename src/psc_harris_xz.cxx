@@ -145,7 +145,6 @@ struct globals_physics
   double wci;
   
   // general
-  double dg;       // courant length
   double dt;       // timestep
   
   // calculated
@@ -321,8 +320,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void set_dt(const Grid_t::Domain& domain)
   {
-    phys_.dg = courant_length(domain.length, domain.gdims);
-    phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
+    double dg = courant_length(domain.length, domain.gdims);
+    phys_.dt = psc_->prm.cfl * dg / phys_.c; // courant limited time step
     if (phys_.wpe * phys_.dt > wpedt_max) {
       phys_.dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
     }
@@ -513,7 +512,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "nx = %d\n", gdims[0]);
     mpi_printf(comm, "ny = %d\n", gdims[1]);
     mpi_printf(comm, "nz = %d\n", gdims[2]);
-    mpi_printf(comm, "courant = %g\n", phys_.c*phys_.dt/phys_.dg);
     mpi_printf(comm, "n_global_patches = %d\n", phys_.n_global_patches);
     mpi_printf(comm, "nppc = %g\n", nppc);
     mpi_printf(comm, "b0 = %g\n", phys_.b0);
