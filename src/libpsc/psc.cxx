@@ -76,7 +76,6 @@ static struct param psc_descr[] = {
   { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
-  { "cfl"           , VAR(prm.cfl)             , PARAM_DOUBLE(.75)          },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
   { "neutralizing_population", VAR(prm.neutralizing_population)  , PARAM_INT(-1),
     .help = "this population will get density set to achieve neutrality "

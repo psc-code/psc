@@ -823,7 +823,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_default_dimensionless(psc_);
 
   psc_->prm.nicell = 1;
-  psc_->prm.cfl = 0.99;
+  p.cfl = 0.99;
 
   psc_->prm.stats_every = 100;
 
@@ -873,7 +873,7 @@ PscHarris* PscHarrisBuilder::makePsc()
 			     { phys.ec, phys.mi, "i"}};
   
   // Determine the time step
-  double dt = set_dt(grid_domain, psc_->prm.cfl, phys, params);
+  double dt = set_dt(grid_domain, p.cfl, phys, params);
   
   psc_->prm.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   

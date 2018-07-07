@@ -571,7 +571,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   psc_->prm.nmax = 5001;
   psc_->prm.nicell = 100;
   psc_->prm.fractional_n_particles_per_cell = true;
-  psc_->prm.cfl = 0.75;
+  p.cfl = 0.75;
 
   // --- setup domain
   Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
@@ -759,7 +759,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- generic setup
   psc_setup_coeff(psc_);
-  double dt = PscFlatfoil::set_dt(psc_, grid_domain);
+  double dt = PscFlatfoil::set_dt(p, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
   return new PscFlatfoil{p, params, psc_};
