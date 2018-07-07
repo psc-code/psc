@@ -393,6 +393,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       PscHarrisParams(params),
       phys_{phys}
   {
+    MPI_Comm comm = psc_comm(psc_);
+
     const auto& grid = psc->grid();
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(grid.n_patches());
@@ -402,10 +404,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
     mprts_.reset(psc_->grid());
 
-    MPI_Comm comm = psc_comm(psc_);
-    // create and set up base mflds
-    mflds_ = Mfields_t{psc_->grid(), psc_->n_state_fields, psc_->ibn};
-    
     mprts_.reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
 
