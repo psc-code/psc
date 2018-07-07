@@ -222,11 +222,11 @@ struct ItemMomentCRTP
   }
   
   MfieldsBase& mres_base() { return *mres_.sub(); }
-  Mfields& result() { return *PscMfields<Mfields>{mres_.mflds()}.sub(); }
+  Mfields& result() { return *mres_.sub(); }
   std::vector<std::string> comp_names() { return comp_names_; }
 
 protected:
-  PscMfieldsBase mres_;
+  PscMfields<Mfields> mres_;
   std::vector<std::string> comp_names_;
 };
 
@@ -254,7 +254,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   void run(Mparticles& mprts)
   {
-    PscMfields<Mfields> mres{this->mres_.mflds()}; // FIXME
+    PscMfields<Mfields> mres{this->mres_};
     for (int p = 0; p < mprts.n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
