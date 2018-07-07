@@ -136,10 +136,10 @@ struct InjectCuda : InjectBase
     uint buf_n_by_patch[psc->n_patches()];
 
     uint buf_n = 0;
-    psc_foreach_patch(psc, p) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       buf_n_by_patch[p] = 0;
       Fields N(mf_n[p]);
-      const int *ldims = psc->grid().ldims;
+      const int *ldims = grid.ldims;
     
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {

@@ -200,11 +200,9 @@ Always close this expression with foreach_3d_end
  * 
 Usage:
 \code
-psc_foreach_patch(&psc, p){
 psc_foreach_3d(p, jx, jy, jz, 0, 0) {
   //do stuff
 } psc_foreach_3d_end;
-}
 \endcode
 */
 #define foreach_3d_end				\
@@ -245,10 +243,6 @@ psc_foreach_3d(p, jx, jy, jz, 0, 0) {
 
 #define psc_foreach_3d_g_end				\
   } } }
-
-#define psc_foreach_patch(psc, p)		\
-  for (int p = 0; p < (psc)->n_patches(); p++)
-
 
 // ----------------------------------------------------------------------
 // we keep this info global for now.
