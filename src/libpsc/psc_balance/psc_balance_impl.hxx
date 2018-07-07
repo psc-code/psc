@@ -814,7 +814,7 @@ private:
 
     // fields
     prof_start(pr_bal_flds);
-    if (mp) { // FIXME, hacky workaround to avoid initial balancing of a field which shouldn't really exist yet,
+    if (1||mp) { // FIXME, hacky workaround to avoid initial balancing of a field which shouldn't really exist yet,
       // but it does because it's a member var of Psc which had to be constructed
       for (auto mf : MfieldsBase::instances) {
 	balance_field(ctx, new_grid, *mf);
