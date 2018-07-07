@@ -69,7 +69,7 @@ struct MarderCuda : MarderBase
       mrc_io_close(io_);
     }
 
-    item_div_e->mres()->axpy_comp(0, -1., *item_rho->mres().sub(), 0);
+    item_div_e->mres().axpy_comp(0, -1., item_rho->mres(), 0);
     // FIXME, why is this necessary?
     auto bnd = PscBndBase(bnd_);
     bnd.fill_ghosts(item_div_e->mres(), 0, 1);
@@ -105,7 +105,7 @@ struct MarderCuda : MarderBase
     fac[2] = .5 * ppsc->dt * diffusion / dx[2];
 
     auto& mflds = mflds_base.get_as<MfieldsCuda>(EX, EX + 3);
-    auto& mf = mf_base.>get_as<MfieldsCuda>(0, 1);
+    auto& mf = mf_base.get_as<MfieldsCuda>(0, 1);
     cuda_mfields *cmflds = mflds.cmflds;
     cuda_mfields *cmf = mf.cmflds;
 

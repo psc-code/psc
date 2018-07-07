@@ -16,7 +16,7 @@ struct BndFieldsCuda : BndFieldsBase
 
   void fill_ghosts_E(MfieldsBase& mflds_base) override
   {
-    const auto& grid = mflds_base->grid();
+    const auto& grid = mflds_base.grid();
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
@@ -48,7 +48,7 @@ struct BndFieldsCuda : BndFieldsBase
 
   void fill_ghosts_H(MfieldsBase& mflds_base) override
   {
-    const auto& grid = mflds_base->grid();
+    const auto& grid = mflds_base.grid();
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
@@ -81,7 +81,7 @@ struct BndFieldsCuda : BndFieldsBase
 
   void add_ghosts_J(MfieldsBase& mflds_base) override
   {
-    const auto& grid = mflds_base->grid();
+    const auto& grid = mflds_base.grid();
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {

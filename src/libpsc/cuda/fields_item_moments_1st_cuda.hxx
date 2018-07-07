@@ -29,14 +29,14 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, 
 
   void run(MparticlesCuda<BS>& mprts)
   {
-    PscMfields<Mfields> mres{this->mres_};
+    Mfields& mres  = this->mres_;
     auto& cmprts = *mprts.cmprts();
-    cuda_mfields *cmres = mres->cmflds;
+    cuda_mfields *cmres = mres.cmflds;
     
-    mres->zero();
+    mres.zero();
     CudaMoments1stNcRho<cuda_mparticles<BS>, dim> cmoments;
     cmoments(cmprts, cmres);
-    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
+    bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
 
 private:
@@ -66,14 +66,14 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCud
 
   void run(MparticlesCuda<BS>& mprts)
   {
-    PscMfields<Mfields> mres{this->mres_};
+    Mfields& mres = this->mres_;
     auto& cmprts = *mprts.cmprts();
-    cuda_mfields *cmres = mres->cmflds;
+    cuda_mfields *cmres = mres.cmflds;
     
-    mres->zero();
+    mres.zero();
     CudaMoments1stNcN<cuda_mparticles<BS>, dim> cmoments;
     cmoments(cmprts, cmres);
-    bnd_.add_ghosts(mres.mflds(), 0, mres->n_comps());
+    bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
 
 private:
