@@ -314,42 +314,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
-  // set_dt
-
-  double set_dt(const Grid_t::Domain& domain)
-  {
-    double dg = courant_length(domain.length, domain.gdims);
-    double dt = psc_->prm.cfl * dg / phys_.c; // courant limited time step
-    if (phys_.wpe * dt > wpedt_max) {
-      dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
-    }
-    return dt;
-  }
-
-  // ----------------------------------------------------------------------
   // setup_grid
 
   const Grid_t& setup_grid()
   {
-    auto domain = Grid_t::Domain{gdims,
-				 {phys_.Lx, phys_.Ly, phys_.Lz},
-				 {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
-
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
- 
-    auto kinds = Grid_t::Kinds{{-phys_.ec, phys_.me, "e"},
-			       { phys_.ec, phys_.mi, "i"}};
-
-    // Determine the time step
-    double dt = set_dt(domain);
-    
-    psc_->prm.nmax = (int) (taui / (phys_.wci*dt)); // number of steps from taui
-
-    psc_setup_coeff(psc_);
-    psc_setup_domain(psc_, domain, grid_bc, kinds, dt);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       sim_ = Simulation_create();
@@ -359,11 +327,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       Simulation_set_params(sim_, psc_->prm.nmax, psc_->prm.stats_every,
 			    psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
 			    psc_->prm.stats_every / 2);
-      setup_domain(domain);
+      setup_domain(psc_->grid().domain);
       setup_fields();
       setup_species();
 
-      int interval = (int) (t_intervali / (phys_.wci*dt));
+      int interval = (int) (t_intervali / (phys_.wci*dt()));
       Simulation_diagnostics_init(sim_, interval);
 
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
@@ -754,6 +722,20 @@ protected:
   Simulation* sim_;
 };
 
+// ----------------------------------------------------------------------
+// set_dt
+
+static double set_dt(const Grid_t::Domain& domain, double cfl, const globals_physics& phys,
+		     const PscHarrisParams& params)
+{
+  double dg = courant_length(domain.length, domain.gdims);
+  double dt = cfl * dg / phys.c; // courant limited time step
+  if (phys.wpe * dt > params.wpedt_max) {
+    dt = params.wpedt_max / phys.wpe;  // override timestep if plasma frequency limited
+  }
+  return dt;
+}
+
 // ======================================================================
 // PscHarrisBuilder
 
@@ -850,6 +832,26 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   globals_physics phys{params};
 
+  auto grid_domain = Grid_t::Domain{params.gdims,
+				    {phys.Lx, phys.Ly, phys.Lz},
+				    {0., -.5 * phys.Ly, -.5 * phys.Lz}, params.np};
+  
+  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
+			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
+  
+  auto kinds = Grid_t::Kinds{{-phys.ec, phys.me, "e"},
+			     { phys.ec, phys.mi, "i"}};
+  
+  // Determine the time step
+  double dt = set_dt(grid_domain, psc_->prm.cfl, phys, params);
+  
+  psc_->prm.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
+  
+  psc_setup_coeff(psc_);
+  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
+  
   return new PscHarris{params, psc_, phys};
 }
 
