@@ -792,7 +792,8 @@ private:
     int n_patches_new = find_best_mapping(domain_old, loads_all);
 
     auto domain_new = psc_setup_mrc_domain(psc->grid().domain, psc->grid().bc, n_patches_new);
-    auto& new_grid = *psc->make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds);
+    auto& new_grid = *psc->make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
+				     psc->grid().dt);
     
     delete[] psc_balance_comp_time_by_patch;
     psc_balance_comp_time_by_patch = new double[new_grid.n_patches()];
