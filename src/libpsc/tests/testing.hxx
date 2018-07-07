@@ -211,9 +211,7 @@ struct PushParticlesTest : ::testing::Test
     psc_default_dimensionless(psc);
     psc_setup_coeff(psc);
     
-    psc_setup_domain(psc, grid_domain, grid_bc, kinds);
-    
-    psc->dt = psc->grid_->dt = 1.;
+    psc_setup_domain(psc, grid_domain, grid_bc, kinds, 1.);
   }
   
   const Grid_t& grid()

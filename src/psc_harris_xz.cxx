@@ -315,14 +315,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // set_dt
 
-  void set_dt(const Grid_t::Domain& domain)
+  double set_dt(const Grid_t::Domain& domain)
   {
     double dg = courant_length(domain.length, domain.gdims);
     double dt = psc_->prm.cfl * dg / phys_.c; // courant limited time step
     if (phys_.wpe * dt > wpedt_max) {
       dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
     }
-    psc_->dt = dt;
+    return dt;
   }
 
   // ----------------------------------------------------------------------
@@ -343,12 +343,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
 
     // Determine the time step
-    set_dt(domain);
+    psc_->dt = set_dt(domain);
     
     psc_->prm.nmax = (int) (taui / (phys_.wci*dt())); // number of steps from taui
 
     psc_setup_coeff(psc_);
-    psc_setup_domain(psc_, domain, grid_bc, kinds);
+    psc_setup_domain(psc_, domain, grid_bc, kinds, psc_->dt);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       sim_ = Simulation_create();
