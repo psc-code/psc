@@ -22,7 +22,8 @@ struct Psc
 
   Psc(psc* psc)
     : psc_(psc),
-      mprts_{psc->grid()}
+      mprts_{psc->grid()},
+      mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {}
 
   // ----------------------------------------------------------------------
@@ -161,6 +162,8 @@ private:
 
 protected:
   Mparticles_t mprts_;
+  Mfields_t mflds_;
+
   MparticlesBase* mprts__;
   MfieldsBase* mflds__;
   psc* psc_;

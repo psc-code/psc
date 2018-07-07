@@ -87,7 +87,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   PscBubble(const PscBubbleParams& params, psc *psc)
     : Psc{psc},
       PscBubbleParams(params),
-      mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -429,8 +428,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   }
 
 protected:
-  Mfields_t mflds_;
-
   Sort_t sort_;
   Collision_t collision_;
   PushParticles_t pushp_;

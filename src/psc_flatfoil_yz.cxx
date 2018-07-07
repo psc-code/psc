@@ -235,7 +235,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
     : Psc{psc},
       PscFlatfoilParams(params),
-      mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -530,8 +529,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
 protected:
-  Mfields_t mflds_;
-
   Sort_t sort_;
   Collision_t collision_;
   PushParticles_t pushp_;
