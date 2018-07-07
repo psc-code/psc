@@ -115,18 +115,18 @@ struct FieldsItemFields : FieldsItemBase
   }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
-    : mres_base_{*PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).sub()}
+    : mres_{*PscMfields<Mfields>::create(comm, ppsc->grid(), Item::n_comps, ppsc->ibn).sub()}
   {}
 
   ~FieldsItemFields()
   {
     //FIXME
-    //psc_mfields_destroy(mres_base_);
+    //psc_mfields_destroy(mres_);
   }
 
   void operator()(Mfields& mflds)
   {
-    Item::run(mflds, result());
+    Item::run(mflds, mres_);
   }
 
   void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
@@ -135,8 +135,6 @@ struct FieldsItemFields : FieldsItemBase
     (*this)(mflds);
     mflds_base.put_as(mflds, 0, 0);
   }
-
-  virtual MfieldsBase& mres() override { return mres_base_; }
 
   virtual std::vector<std::string> comp_names() override
   {
@@ -147,10 +145,12 @@ struct FieldsItemFields : FieldsItemBase
     return comp_names;
   }
   
-  Mfields& result() { return mres_base_; }
+  virtual MfieldsBase& mres() override { return mres_; }
+
+  Mfields& result() { return mres_; }
 
 private:  
-  Mfields& mres_base_;
+  Mfields& mres_;
 };
 
 // ======================================================================
@@ -193,7 +193,8 @@ struct ItemMomentCRTP
   using Mfields = MF;
   
   ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
-    : mres_{nullptr}
+    // FIXME, it'd be nice to create the right number of components either way
+    : mres_{grid, Derived::n_comps, ppsc->ibn}
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
@@ -201,12 +202,11 @@ struct ItemMomentCRTP
     assert(n_comps <= POFI_MAX_COMPS);
 
     if (!Derived::flags & POFI_BY_KIND) {
-      this->mres_ = PscMfields<Mfields>::create(comm, grid, n_comps, ppsc->ibn).mflds();
       for (int m = 0; m < n_comps; m++) {
 	comp_names_.emplace_back(fld_names[m]);
       }
     } else {
-      this->mres_ = PscMfields<Mfields>::create(comm, grid, n_comps * kinds.size(), ppsc->ibn).mflds();
+      mres_ = Mfields(grid, n_comps * kinds.size(), ppsc->ibn);
       for (int k = 0; k < kinds.size(); k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  comp_names_.emplace_back(std::string(fld_names[m]) + "_" + kinds[k].name);
@@ -215,18 +215,11 @@ struct ItemMomentCRTP
     }
   }
   
-  ~ItemMomentCRTP()
-  {
-    //FIXME
-    //psc_mfields_destroy(mres_);
-  }
-  
-  MfieldsBase& mres_base() { return *mres_.sub(); }
-  Mfields& result() { return *mres_.sub(); }
+  Mfields& result() { return mres_; }
   std::vector<std::string> comp_names() { return comp_names_; }
 
 protected:
-  PscMfields<Mfields> mres_;
+  Mfields mres_;
   std::vector<std::string> comp_names_;
 };
 
@@ -254,14 +247,14 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   void run(Mparticles& mprts)
   {
-    PscMfields<Mfields> mres{this->mres_};
+    auto& mres = this->mres_;
     for (int p = 0; p < mprts.n_patches(); p++) {
       mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
-      add_ghosts_boundary(mres[p], p, 0, mres->n_comps());
+      add_ghosts_boundary(mres[p], p, 0, mres.n_comps());
     }
 
-    bnd_.add_ghosts(*mres.sub(), 0, mres->n_comps());
+    bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
 
   // ----------------------------------------------------------------------
@@ -381,7 +374,7 @@ struct FieldsItemMoment : FieldsItemBase
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
-  virtual MfieldsBase& mres() override { return moment_.mres_base(); }
+  virtual MfieldsBase& mres() override { return moment_.result(); }
 
   virtual std::vector<std::string> comp_names()  override { return moment_.comp_names(); }
   
