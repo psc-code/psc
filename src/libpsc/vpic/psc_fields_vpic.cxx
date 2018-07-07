@@ -128,7 +128,9 @@ MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
   if (n_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
-    assert(ref_count_fields == 0);
+    if (ref_count_fields != 0) {
+      MHERE;
+    }
     ref_count_fields++;
 
     vmflds_fields = Simulation_get_FieldArray(sim);

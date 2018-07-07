@@ -15,6 +15,7 @@ template<typename PscConfig>
 struct Psc
 {
   using Mparticles_t = typename PscConfig::Mparticles_t;
+  using Mfields_t = typename PscConfig::Mfields_t;
 
   // ----------------------------------------------------------------------
   // ctor

@@ -40,6 +40,7 @@
 
 #include <psc_particles_single.h>
 #include <psc_particles_vpic.h>
+#include <psc_fields_vpic.h>
 
 #include "rngpool_iface.h"
 
@@ -52,6 +53,7 @@
 struct PscConfig
 {
   using Mparticles_t = MparticlesVpic;
+  using Mfields_t = MfieldsVpic;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
@@ -256,7 +258,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc},
       PscHarrisParams(params),
       phys_{params},
-      mprts_{createMparticles(setup_grid())}
+      mprts_{createMparticles(setup_grid())},
+      mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
     mprts__ = &mprts_;
     // partition and initial balancing
@@ -269,9 +272,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     MPI_Comm comm = psc_comm(psc_);
     // create and set up base mflds
-    auto mflds = PscMfieldsCreate(comm, psc_->grid(),
-				  psc_->n_state_fields, psc_->ibn, psc_->prm.fields_base);
-    mflds__ = mflds.sub();
+    mflds_ = Mfields_t{psc_->grid(), psc_->n_state_fields, psc_->ibn};
+    mflds__ = &mflds_;
     
     mprts_.reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
@@ -311,7 +313,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   ~PscHarris()
   {
-    //psc_mfields_destroy(psc_->flds_);
     Simulation_delete(sim_);
   }
 
@@ -754,6 +755,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 protected:
   globals_physics phys_;
   Mparticles_t mprts_;
+  Mfields_t mflds_;
   Simulation* sim_;
 };
 
