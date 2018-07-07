@@ -94,8 +94,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
-    mprts__ = &mprts_;
-    mflds__ = &mflds_;
     MPI_Comm comm = psc_comm(psc_);
 
     // --- partition particles and initial balancing

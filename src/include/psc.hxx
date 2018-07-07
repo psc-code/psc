@@ -55,12 +55,12 @@ struct Psc
   void initialize()
   {
     psc_view(psc_);
-    mprts__->view();
+    mprts_.view();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, *mflds__, *mprts__);
+      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_);
     } else {
-      initialize_default(psc_->method, psc_, *mflds__, *mprts__);
+      initialize_default(psc_->method, psc_, mflds_, mprts_);
     }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -100,12 +100,12 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_method_output(psc_->method, psc_, *mflds__, *mprts__);
+      psc_method_output(psc_->method, psc_, mflds_, mprts_);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
-      psc_stats_val[st_nr_particles] = mprts__->get_n_prts();
+      psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
 
       if (psc_->timestep % psc_->prm.stats_every == 0) {
 	psc_stats_log(psc_);
@@ -164,8 +164,6 @@ protected:
   Mparticles_t mprts_;
   Mfields_t mflds_;
 
-  MparticlesBase* mprts__;
-  MfieldsBase* mflds__;
   psc* psc_;
 
   int st_nr_particles;

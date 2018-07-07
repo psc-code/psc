@@ -393,7 +393,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       PscHarrisParams(params),
       phys_{phys}
   {
-    mprts__ = &mprts_;
     const auto& grid = psc->grid();
     // partition and initial balancing
     std::vector<uint> n_prts_by_patch_old(grid.n_patches());
@@ -406,13 +405,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     MPI_Comm comm = psc_comm(psc_);
     // create and set up base mflds
     mflds_ = Mfields_t{psc_->grid(), psc_->n_state_fields, psc_->ibn};
-    mflds__ = &mflds_;
     
     mprts_.reserve_all(n_prts_by_patch_new.data());
     setup_particles(n_prts_by_patch_new, false);
 
     // FIXME MfieldsSingle
-    SetupFields<MfieldsSingle>::set(*mflds__, [&](int m, double xx[3]) {
+    SetupFields<MfieldsSingle>::set(mflds_, [&](int m, double xx[3]) {
 	return init_field(xx, m);
       });
 
@@ -671,7 +669,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    MfieldsBase& mflds_ = *mflds__;
     PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
     PscSortBase sort(psc_->sort);
