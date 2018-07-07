@@ -250,10 +250,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
-  PscHarris(const PscHarrisParams& params, psc *psc)
+  PscHarris(const PscHarrisParams& params, psc *psc, const globals_physics& phys)
     : Psc{psc},
       PscHarrisParams(params),
-      phys_{params},
+      phys_{phys},
       mprts_{setup_grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
@@ -848,7 +848,9 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   psc_set_from_options(psc_);
 
-  return new PscHarris{params, psc_};
+  globals_physics phys{params};
+
+  return new PscHarris{params, psc_, phys};
 }
 
 // ======================================================================
