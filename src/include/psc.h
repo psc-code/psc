@@ -267,8 +267,6 @@ void psc_write_checkpoint(struct psc *psc);
 void psc_setup_fortran(struct psc *psc);
 void psc_print_profiling(struct psc *psc);
 
-double psc_set_dt(psc* psc, const Grid_t::Domain& domain);
-
 void psc_default_dimensionless(struct psc *psc);
 
 static inline bool psc_at_boundary_lo(struct psc *psc, int p, int d)

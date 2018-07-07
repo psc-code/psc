@@ -277,23 +277,6 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
 }
 
 // ----------------------------------------------------------------------
-// psc_set_dt
-
-double psc_set_dt(psc* psc, const Grid_t::Domain& domain)
-{
-  double inv_sum = 0.;
-  for (int d = 0; d < 3; d++) {
-    if (!domain.isInvar(d)) {
-      inv_sum += 1. / sqr(domain.dx[d]);
-    }
-  }
-  if (!inv_sum) { // simulation has 0 dimensions
-    inv_sum = 1.;
-  }
-  return psc->prm.cfl * sqrt(1./inv_sum);
-}
-
-// ----------------------------------------------------------------------
 // psc_setup_domain
 
 void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
