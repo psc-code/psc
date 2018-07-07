@@ -187,8 +187,7 @@ struct ItemMomentCRTP
   using Mfields = MF;
   
   ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
-    // FIXME, it'd be nice to create the right number of components either way
-    : mres_{grid, Derived::n_comps, ppsc->ibn}
+    : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), ppsc->ibn}
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
@@ -200,7 +199,6 @@ struct ItemMomentCRTP
 	comp_names_.emplace_back(fld_names[m]);
       }
     } else {
-      mres_ = Mfields(grid, n_comps * kinds.size(), ppsc->ibn);
       for (int k = 0; k < kinds.size(); k++) {
 	for (int m = 0; m < n_comps; m++) {
 	  comp_names_.emplace_back(std::string(fld_names[m]) + "_" + kinds[k].name);
