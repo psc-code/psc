@@ -202,14 +202,13 @@ struct ItemMomentCRTP
     if (!Derived::flags & POFI_BY_KIND) {
       this->mres_ = PscMfields<Mfields>::create(comm, grid, n_comps, ppsc->ibn).mflds();
       for (int m = 0; m < n_comps; m++) {
-	psc_mfields_set_comp_name(this->mres_, m, fld_names[m]);
+	comp_names_.emplace_back(fld_names[m]);
       }
     } else {
       this->mres_ = PscMfields<Mfields>::create(comm, grid, n_comps * kinds.size(), ppsc->ibn).mflds();
       for (int k = 0; k < kinds.size(); k++) {
 	for (int m = 0; m < n_comps; m++) {
-	  auto s = std::string(fld_names[m]) + "_" + kinds[k].name;
-	  psc_mfields_set_comp_name(this->mres_, k * n_comps + m, s.c_str());
+	  comp_names_.emplace_back(std::string(fld_names[m]) + "_" + kinds[k].name);
 	}
       }
     }
@@ -222,9 +221,11 @@ struct ItemMomentCRTP
   
   PscMfieldsBase mres_base() { return mres_; }
   Mfields& result() { return *PscMfields<Mfields>{mres_}.sub(); }
+  std::vector<std::string> comp_names() { return comp_names_; }
 
 protected:
   psc_mfields* mres_;
+  std::vector<std::string> comp_names_;
 };
 
 // ----------------------------------------------------------------------
@@ -380,15 +381,7 @@ struct FieldsItemMoment : FieldsItemBase
 
   virtual MfieldsBase& mres() override { return *moment_.mres_base().sub(); }
 
-  virtual std::vector<std::string> comp_names()  override
-  {
-    auto mflds = moment_.mres_base();
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < mflds->n_comps(); m++) {
-      comp_names.push_back(psc_mfields_comp_name(mflds.mflds(), m));
-    }
-    return comp_names;
-  }
+  virtual std::vector<std::string> comp_names()  override { return moment_.comp_names(); }
   
 private:
   Moment_t moment_;
