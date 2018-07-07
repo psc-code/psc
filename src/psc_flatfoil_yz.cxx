@@ -723,8 +723,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- generic setup
   psc_setup_coeff(psc_);
-  psc_->dt = psc_set_dt(psc_, grid_domain);
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, psc_->dt);
+  double dt = psc_set_dt(psc_, grid_domain);
+  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
   // make sure that np isn't overridden on the command line
   mrc_domain_get_param_int3(psc_->mrc_domain_, "np", np);

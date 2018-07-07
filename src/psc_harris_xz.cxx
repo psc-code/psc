@@ -343,12 +343,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
 
     // Determine the time step
-    psc_->dt = set_dt(domain);
+    double dt = set_dt(domain);
     
-    psc_->prm.nmax = (int) (taui / (phys_.wci*dt())); // number of steps from taui
+    psc_->prm.nmax = (int) (taui / (phys_.wci*dt)); // number of steps from taui
 
     psc_setup_coeff(psc_);
-    psc_setup_domain(psc_, domain, grid_bc, kinds, psc_->dt);
+    psc_setup_domain(psc_, domain, grid_bc, kinds, dt);
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
       sim_ = Simulation_create();
@@ -362,7 +362,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       setup_fields();
       setup_species();
 
-      int interval = (int) (t_intervali / (phys_.wci*dt()));
+      int interval = (int) (t_intervali / (phys_.wci*dt));
       Simulation_diagnostics_init(sim_, interval);
 
       psc_->n_state_fields = VPIC_MFIELDS_N_COMP;

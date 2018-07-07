@@ -130,7 +130,6 @@ struct psc {
   // other parameters / constants
   double p2A, p2B;
   int timestep;	///< the current timestep
-  double dt;	///< timestep in physical units
   ///@}
 
   int n_state_fields;           ///< How many field components do we need in ::flds
