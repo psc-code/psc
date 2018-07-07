@@ -535,12 +535,6 @@ PscBubble* PscBubbleBuilder::makePsc()
 
   mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
   
-  // --- create and initialize base particle data structure x^{n+1/2}, p^{n+1/2}
-  mpi_printf(comm, "**** Creating particle data structure...\n");
-
-  // --- create and set up base mflds
-  mpi_printf(comm, "**** Creating fields...\n");
-
   return new PscBubble{params, psc_};
 }
 
