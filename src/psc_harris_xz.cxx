@@ -258,7 +258,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{psc},
       PscHarrisParams(params),
       phys_{params},
-      mprts_{createMparticles(setup_grid())},
+      mprts_{setup_grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
   {
     mprts__ = &mprts_;
@@ -368,15 +368,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     return psc_->grid();
   }
 
-  // ----------------------------------------------------------------------
-  // createMparticles
-
-  Mparticles_t createMparticles(const Grid_t& grid)
-  {
-    mpi_printf(psc_comm(psc_), "**** Creating particle data structure...\n");
-    return Mparticles_t{grid};
-  }
-  
   // ----------------------------------------------------------------------
   // setup_domain
 
