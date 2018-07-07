@@ -43,7 +43,6 @@ struct psc_param {
   double tt;	///<some measurement for energy ? (default is 1keV in fortran) 
   double cc;	///<speed of light
   double eps0;	///<vacuum permittivity
-  int nmax;	///<number of timesteps
   double lw;	///<normalization coefficient for laser wavelength (omega)
   double i0;	///<laser intensity
   double n0;	///<electron density

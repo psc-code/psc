@@ -16,7 +16,8 @@ void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
 struct PscParams
 {
-  double cfl = { .75 };
+  double cfl = { .75 }; /// CFL number used to determine time step
+  int nmax;	/// Number of timesteps to run
 };
   
 // ======================================================================
@@ -92,7 +93,7 @@ struct Psc
     double elapsed = MPI_Wtime();
 
     bool first_iteration = true;
-    while (psc_->timestep < psc_->prm.nmax) {
+    while (psc_->timestep < p_.nmax) {
       prof_start(pr);
       psc_stats_start(st_time_step);
 
@@ -104,7 +105,7 @@ struct Psc
       first_iteration = false;
 
       mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", psc_->timestep + 1,
-		 psc_->prm.nmax, psc_->timestep * dt(), MPI_Wtime() - psc_->time_start);
+		 p_.nmax, psc_->timestep * dt(), MPI_Wtime() - psc_->time_start);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart

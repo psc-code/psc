@@ -356,7 +356,7 @@ static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phy
 // setup_grid
 
 void setup_grid(psc* psc_, const globals_physics& phys_,
-		const PscHarrisParams& params)
+		const PscParams& p, const PscHarrisParams& params)
 {
   if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
   } else {
@@ -365,7 +365,7 @@ void setup_grid(psc* psc_, const globals_physics& phys_,
     psc_method_set_param_ptr(psc_->method, "sim", sim);
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
-    Simulation_set_params(sim, psc_->prm.nmax, psc_->prm.stats_every,
+    Simulation_set_params(sim, p.nmax, psc_->prm.stats_every,
 			  psc_->prm.stats_every / 2, psc_->prm.stats_every / 2,
 			  psc_->prm.stats_every / 2);
     setup_domain(sim, grid.domain, psc_, phys_, params);
@@ -469,7 +469,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "dbz/b0   = %g\n", dbz_b0);
     mpi_printf(comm, "taui     = %g\n", taui);
     mpi_printf(comm, "t_intervali = %g\n", t_intervali);
-    mpi_printf(comm, "num_step = %d\n", psc_->prm.nmax);
+    mpi_printf(comm, "num_step = %d\n", p_.nmax);
     mpi_printf(comm, "Lx/di = %g\n", phys_.Lx/phys_.di);
     mpi_printf(comm, "Lx/de = %g\n", phys_.Lx/phys_.de);
     mpi_printf(comm, "Ly/di = %g\n", phys_.Ly/phys_.di);
@@ -875,12 +875,12 @@ PscHarris* PscHarrisBuilder::makePsc()
   // Determine the time step
   double dt = set_dt(grid_domain, p.cfl, phys, params);
   
-  psc_->prm.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
+  p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
   psc_setup_coeff(psc_);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
 
-  setup_grid(psc_, phys, params);
+  setup_grid(psc_, phys, p, params);
   
   return new PscHarris{p, params, psc_, phys};
 }

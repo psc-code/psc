@@ -568,7 +568,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   psc_default_dimensionless(psc_);
 
-  psc_->prm.nmax = 5001;
+  p.nmax = 5001;
   psc_->prm.nicell = 100;
   psc_->prm.fractional_n_particles_per_cell = true;
   p.cfl = 0.75;
@@ -716,7 +716,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.balance_write_loads = false;
 
 #if TEST == TEST_4_SHOCK_3D
-  psc_->prm.nmax = 100002;
+  p.nmax = 100002;
   psc_->prm.nicell = 100;
   params.BB = 0.02;
   params.background_n = .01;
