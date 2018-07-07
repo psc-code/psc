@@ -71,7 +71,7 @@ static inline double trunc_granular( double a, double b )
 // FIXME, the dt calculating should be consolidated with what regular PSC does
 
 static inline double
-courant_length(double length[3], int gdims[3])
+courant_length(Vec3<double> length, Int3 gdims)
 {
   double inv_sum = 0.;
   for (int d = 0; d < 3; d++) {
@@ -317,6 +317,19 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
   // ----------------------------------------------------------------------
+  // set_dt
+
+  void set_dt(const Grid_t::Domain& domain)
+  {
+    phys_.dg = courant_length(domain.length, domain.gdims);
+    phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
+    if (phys_.wpe * phys_.dt > wpedt_max) {
+      phys_.dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
+    }
+    psc_->dt = phys_.dt;
+  }
+
+  // ----------------------------------------------------------------------
   // setup_grid
 
   const Grid_t& setup_grid()
@@ -334,12 +347,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
 
     // Determine the time step
-    phys_.dg = courant_length(domain.length, domain.gdims);
-    phys_.dt = psc_->prm.cfl * phys_.dg / phys_.c; // courant limited time step
-    if (phys_.wpe * phys_.dt > wpedt_max) {
-      phys_.dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
-    }
-    psc_->dt = phys_.dt;
+    set_dt(domain);
     
     psc_->prm.nmax = (int) (taui / (phys_.wci*phys_.dt)); // number of steps from taui
 
