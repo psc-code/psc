@@ -141,10 +141,8 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase
 // psc_mfields_write
 
 static void
-psc_mfields_cuda_write(struct psc_mfields *_mflds, struct mrc_io *io)
+psc_mfields_cuda_write(MfieldsCuda& mflds, struct mrc_io *io)
 {
-  auto& mflds = *PscMfields<MfieldsCuda>{_mflds}->sub();
-
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
@@ -176,13 +174,11 @@ psc_mfields_cuda_write(struct psc_mfields *_mflds, struct mrc_io *io)
 // psc_mfields_cuda_read
 
 static void
-psc_mfields_cuda_read(struct psc_mfields *_mflds, struct mrc_io *io)
+psc_mfields_cuda_read(MfieldsCuda& mflds, struct mrc_io *io)
 {
   psc_mfields_read_super(_mflds, io);
   
   psc_mfields_cuda_setup(_mflds);
-
-  auto& mflds = *PscMfields<MfieldsCuda>{_mflds}->sub();
 
   int ierr;
   long h5_file;
@@ -235,8 +231,8 @@ struct psc_mfields_ops_cuda : psc_mfields_ops {
     setup                 = Wrapper::setup;
     destroy               = Wrapper::destroy;
 #ifdef HAVE_LIBHDF5_HL
-    write                 = psc_mfields_cuda_write;
-    read                  = psc_mfields_cuda_read;
+    // write                 = psc_mfields_cuda_write;
+    // read                  = psc_mfields_cuda_read;
 #endif
   }
 } psc_mfields_cuda_ops;
