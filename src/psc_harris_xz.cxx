@@ -401,9 +401,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    psc_balance_setup(psc_->balance);
-    auto balance = PscBalanceBase{psc_->balance};
-    auto n_prts_by_patch_new = balance.initial(psc_, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_.initial(psc_, n_prts_by_patch_old);
     mprts_.reset(psc_->grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
@@ -704,8 +702,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
-    auto balance = PscBalanceBase{psc_->balance};
-    balance(psc_, mprts_);
+    if (p_.balance_interval > 0 && psc_->timestep % p_.balance_interval == 0) {
+      balance_(psc_, mprts_);
+    }
 
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -784,6 +783,14 @@ PscHarris* PscHarrisBuilder::makePsc()
   mpi_printf(comm, "*** Setting up...\n");
 
   PscParams p;
+
+  // --- balancing
+  p.balance_interval = 0;
+  p.balance_factor_fields = 1.;
+  p.balance_print_loads = false;
+  p.balance_write_loads = false;
+  
+  
   PscHarrisParams params;
 
   params.wpedt_max = .36;
