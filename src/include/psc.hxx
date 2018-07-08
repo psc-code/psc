@@ -42,7 +42,8 @@ struct Psc
     : p_{params},
       psc_(psc),
       mprts_{psc->grid()},
-      mflds_{psc->grid(), psc->n_state_fields, psc->ibn}
+      mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
+      balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads}
   {}
 
   // ----------------------------------------------------------------------
@@ -197,11 +198,13 @@ private:
   }
 
 protected:
+  PscParams p_;
+  psc* psc_;
+
   Mparticles_t mprts_;
   Mfields_t mflds_;
 
-  PscParams p_;
-  psc* psc_;
+  Balance_t balance_;
 
   int st_nr_particles;
   int st_time_step;

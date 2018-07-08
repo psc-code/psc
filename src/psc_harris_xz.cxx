@@ -393,8 +393,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   PscHarris(const PscParams& p, const PscHarrisParams& params, psc *psc, const globals_physics& phys)
     : Psc{p, psc},
       PscHarrisParams(params),
-      phys_{phys},
-      balance_{p.balance_interval, p.balance_factor_fields, p.balance_print_loads, p.balance_write_loads}
+      phys_{phys}
   {
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
@@ -750,7 +749,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
 protected:
   globals_physics phys_;
-  Balance_t balance_;
 };
 
 // ----------------------------------------------------------------------

@@ -84,7 +84,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      balance_{p.balance_interval, p.balance_factor_fields, p.balance_print_loads, p.balance_write_loads},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
@@ -427,7 +426,6 @@ protected:
   BndParticles_t bndp_;
   Bnd_t bnd_;
   BndFields_t bndf_;
-  Balance_t balance_;
 
   Checks_t checks_;
   Marder_t marder_;

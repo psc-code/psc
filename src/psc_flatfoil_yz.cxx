@@ -232,7 +232,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
@@ -528,7 +527,6 @@ protected:
   BndParticles_t bndp_;
   Bnd_t bnd_;
   BndFields_t bndf_;
-  Balance_t balance_;
 
   Heating_t heating_;
   Inject_t inject_;
