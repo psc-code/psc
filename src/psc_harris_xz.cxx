@@ -37,6 +37,7 @@
 #include "fields3d.hxx"
 #include "setup_particles.hxx"
 #include "setup_fields.hxx"
+#include "../libpsc/psc_balance/psc_balance_impl.hxx"
 
 #include <psc_particles_single.h>
 #include <psc_particles_vpic.h>
@@ -54,6 +55,7 @@ struct PscConfig
 {
   using Mparticles_t = MparticlesVpic;
   using Mfields_t = MfieldsVpic;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
@@ -117,6 +119,11 @@ struct PscHarrisParams
   double t_intervali;              // output interval in terms of 1/wci
   double output_field_interval;    // field output interval in terms of 1/wci
   double output_particle_interval; // particle output interval in terms of 1/wci
+
+  int balance_interval;
+  double balance_factor_fields;
+  bool balance_print_loads;
+  bool balance_write_loads;
 
   double overalloc;                // Overallocation factor (> 1) for particle arrays
 
@@ -391,7 +398,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   PscHarris(const PscParams& p, const PscHarrisParams& params, psc *psc, const globals_physics& phys)
     : Psc{p, psc},
       PscHarrisParams(params),
-      phys_{phys}
+      phys_{phys},
+      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads}
   {
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
@@ -747,6 +755,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
 protected:
   globals_physics phys_;
+  Balance_t balance_;
 };
 
 // ----------------------------------------------------------------------

@@ -80,7 +80,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   using BndParticles_t = PscConfig::BndParticles_t;
   using Bnd_t = PscConfig::Bnd_t;
   using BndFields_t = PscConfig::BndFields_t;
-  using Balance_t = PscConfig::Balance_t;
   using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
 
