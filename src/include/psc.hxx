@@ -23,6 +23,8 @@ struct PscParams
   double balance_factor_fields;
   bool balance_print_loads;
   bool balance_write_loads;
+
+  int sort_interval;
 };
   
 // ======================================================================

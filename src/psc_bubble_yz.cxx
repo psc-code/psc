@@ -46,8 +46,6 @@ struct PscBubbleParams
   double TTi;
   double MMi;
   
-  int sort_interval;
-
   int collision_interval;
   double collision_nu;
 
@@ -290,7 +288,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       balance_(psc_, mprts_);
     }
 
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
+    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
       sort_(mprts_);
@@ -484,7 +482,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   psc_set_from_options(psc_);
 
   // sort
-  params.sort_interval = 10;
+  p.sort_interval = 10;
 
   // collisions
   params.collision_interval = 10;
