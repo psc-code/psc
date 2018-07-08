@@ -838,8 +838,6 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   psc_method_set_type(psc_->method, "vpic");
 
-  psc_balance_set_type(psc_->balance, "single");
-
   psc_sort_set_type(psc_->sort, "vpic");
   // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
   // internally

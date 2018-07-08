@@ -13,11 +13,9 @@
 #include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
 #include "psc_event_generator.h"
-#include "psc_balance.h"
 #include "psc_checks.h"
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
-#include "balance.hxx"
 #include "setup_fields.hxx"
 
 #include <mrc_common.h>
@@ -153,17 +151,6 @@ _psc_create(struct psc *psc)
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
 
   psc->time_start = MPI_Wtime();
-
-  psc->balance = psc_balance_create(psc_comm(psc));
-}
-
-// ----------------------------------------------------------------------
-// psc_set_from_options
-
-static void
-_psc_set_from_options(struct psc *psc)
-{
-  psc_balance_set_from_options(psc->balance);
 }
 
 // ======================================================================
@@ -411,7 +398,6 @@ struct mrc_class_psc_ : mrc_class_psc {
     size             = sizeof(struct psc);
     param_descr      = psc_descr;
     create           = _psc_create;
-    set_from_options = _psc_set_from_options;
     view             = _psc_view;
     destroy          = _psc_destroy;
     write            = _psc_write;

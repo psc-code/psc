@@ -115,7 +115,6 @@ struct psc {
   struct psc_output_fields_collection *output_fields_collection; ///< collection of psc_output_fields
   struct psc_output_particles *output_particles;///< particle output
   struct psc_event_generator *event_generator;	///< event generator
-  struct psc_balance *balance;                  ///< rebalancer
   struct psc_checks *checks;                    ///< run-time checks
   ///@}
 
