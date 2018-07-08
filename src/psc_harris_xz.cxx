@@ -686,14 +686,34 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void step()
   {
+    static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
+      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
+      pr_sync1, pr_sync2, pr_sync3, pr_sync4, pr_sync5, pr_sync4a, pr_sync4b;
+    if (!pr_sort) {
+      pr_sort = prof_register("step_sort", 1., 0, 0);
+      pr_collision = prof_register("step_collision", 1., 0, 0);
+      pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
+      pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
+      pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
+      pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
+      pr_checks = prof_register("step_checks", 1., 0, 0);
+      pr_marder = prof_register("step_marder", 1., 0, 0);
+      pr_inject = prof_register("step_inject", 1., 0, 0);
+      pr_heating = prof_register("step_heating", 1., 0, 0);
+      pr_sync1 = prof_register("step_sync1", 1., 0, 0);
+      pr_sync2 = prof_register("step_sync2", 1., 0, 0);
+      pr_sync3 = prof_register("step_sync3", 1., 0, 0);
+      pr_sync4 = prof_register("step_sync4", 1., 0, 0);
+      pr_sync5 = prof_register("step_sync5", 1., 0, 0);
+      pr_sync4a = prof_register("step_sync4a", 1., 0, 0);
+      pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
+    }
+
     if (!pr_time_step_no_comm) {
       pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
     }
 
-#if 0
-    mpi_printf(psc_comm(psc), "**** Step %d / %d, Time %g\n", psc->timestep + 1,
-	       psc->prm.nmax, psc->timestep * psc->dt);
-#endif
+    MPI_Comm comm = psc_comm(psc_);
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
@@ -703,14 +723,22 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
-    if (p_.balance_interval > 0 && psc_->timestep % p_.balance_interval == 0) {
+    int timestep = psc_->timestep;
+
+    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       balance_(psc_, mprts_);
     }
 
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    sort(mprts_);
+    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
+      //mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
+      sort_(mprts_);
+      prof_stop(pr_sort);
+    }
+    
     collision(mprts_);
   
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
@@ -802,6 +830,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.Ly_di = 1.;
   params.Lz_di = 10.;
 
+  p.sort_interval = 1;
   params.electron_sort_interval = 25;
   params.ion_sort_interval = 25;
   
