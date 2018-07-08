@@ -4,7 +4,6 @@
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
 #include <psc_sort.h>
-#include <psc_balance.h>
 #include <psc_particles_single.h>
 #include <psc_fields_single.h>
 #include <psc_method.h>

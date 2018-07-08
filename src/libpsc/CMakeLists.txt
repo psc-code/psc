@@ -43,7 +43,6 @@ add_library(psc
   psc_bnd_particles/psc_bnd_particles_impl.cxx
 
   psc_balance/psc_balance.cxx
-  psc_balance/psc_balance_impl.cxx
 
   psc_checks/psc_checks.cxx
 

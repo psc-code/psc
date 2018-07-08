@@ -4,7 +4,6 @@
 #include <psc_fields_vpic.h>
 #include <psc_particles_vpic.h>
 
-#include <psc_balance.h>
 #include <psc_marder.h>
 #include <setup_particles.hxx>
 #include <psc_particles_double.h>

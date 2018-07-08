@@ -8,7 +8,6 @@
 #include "psc_collision.h"
 #include "psc_sort.h"
 #include "psc_event_generator.h"
-#include "psc_balance.h"
 #include "psc_checks.h"
 #include "balance.hxx"
 #include "particles.hxx"

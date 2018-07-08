@@ -5,7 +5,6 @@
 #include <psc_diag.h>
 #include <psc_output_fields_collection.h>
 #include <psc_output_particles.h>
-#include <psc_balance.h>
 #include <psc_particles_single.h>
 #include <psc_particles_double.h>
 #include <particles.hxx>

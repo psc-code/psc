@@ -12,7 +12,6 @@
 #include <psc_push_particles.h>
 #include <psc_push_fields.h>
 #include <psc_collision.h>
-#include <psc_balance.h>
 #include <psc_marder.h>
 #include <psc_sort.h>
 #include <psc_collision.h>

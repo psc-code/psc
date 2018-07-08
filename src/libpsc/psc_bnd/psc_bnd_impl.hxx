@@ -4,7 +4,7 @@
 #include "psc.h"
 #include "fields.hxx"
 #include "bnd.hxx"
-#include "psc_balance.h"
+#include "balance.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_ddc.h>

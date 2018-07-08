@@ -5,7 +5,7 @@
 
 #include <cstring>
 
-#include "psc_balance.h"
+#include "balance.hxx"
 #include "ddc_particles.hxx"
 #include "bnd_particles.hxx"
 #include "particles_simple.hxx"
