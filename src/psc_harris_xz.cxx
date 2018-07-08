@@ -120,11 +120,6 @@ struct PscHarrisParams
   double output_field_interval;    // field output interval in terms of 1/wci
   double output_particle_interval; // particle output interval in terms of 1/wci
 
-  int balance_interval;
-  double balance_factor_fields;
-  bool balance_print_loads;
-  bool balance_write_loads;
-
   double overalloc;                // Overallocation factor (> 1) for particle arrays
 
   Int3 gdims;
@@ -399,7 +394,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     : Psc{p, psc},
       PscHarrisParams(params),
       phys_{phys},
-      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads}
+      balance_{p.balance_interval, p.balance_factor_fields, p.balance_print_loads, p.balance_write_loads}
   {
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();

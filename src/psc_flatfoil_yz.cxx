@@ -182,11 +182,6 @@ struct PscFlatfoilParams
   int marder_loop;
   bool marder_dump;
 
-  int balance_interval;
-  double balance_factor_fields;
-  bool balance_print_loads;
-  bool balance_write_loads;
-
   bool inject_enable;
   int inject_kind_n;
   int inject_interval;
@@ -237,7 +232,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
+      balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
@@ -374,7 +369,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-    if (balance_interval > 0 && timestep % balance_interval == 0) {
+    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       balance_(psc_, mprts_);
     }
 
@@ -709,10 +704,10 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.marder_dump = false;
 
   // --- balancing
-  params.balance_interval = 0;
-  params.balance_factor_fields = 0.1;
-  params.balance_print_loads = true;
-  params.balance_write_loads = false;
+  p.balance_interval = 0;
+  p.balance_factor_fields = 0.1;
+  p.balance_print_loads = true;
+  p.balance_write_loads = false;
 
 #if TEST == TEST_4_SHOCK_3D
   p.nmax = 100002;

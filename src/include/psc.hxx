@@ -18,6 +18,11 @@ struct PscParams
 {
   double cfl = { .75 }; /// CFL number used to determine time step
   int nmax;	/// Number of timesteps to run
+
+  int balance_interval;
+  double balance_factor_fields;
+  bool balance_print_loads;
+  bool balance_write_loads;
 };
   
 // ======================================================================

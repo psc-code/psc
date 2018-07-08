@@ -57,11 +57,6 @@ struct PscBubbleParams
   int marder_loop;
   bool marder_dump;
 
-  int balance_interval;
-  double balance_factor_fields;
-  bool balance_print_loads;
-  bool balance_write_loads;
-
   ChecksParams checks_params;
 };
 
@@ -89,7 +84,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       collision_{psc_comm(psc), collision_interval, collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      balance_{balance_interval, balance_factor_fields, balance_print_loads, balance_write_loads},
+      balance_{p.balance_interval, p.balance_factor_fields, p.balance_print_loads, p.balance_write_loads},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
@@ -293,7 +288,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-    if (balance_interval > 0 && timestep % balance_interval == 0) {
+    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       balance_(psc_, mprts_);
     }
 
@@ -516,10 +511,10 @@ PscBubble* PscBubbleBuilder::makePsc()
   params.marder_dump = false;
 
   // --- balancing
-  params.balance_interval = 0;
-  params.balance_factor_fields = 0.1;
-  params.balance_print_loads = true;
-  params.balance_write_loads = false;
+  p.balance_interval = 0;
+  p.balance_factor_fields = 0.1;
+  p.balance_print_loads = true;
+  p.balance_write_loads = false;
   
   mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
   
