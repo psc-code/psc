@@ -96,21 +96,3 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
 
 #endif
 
-// ----------------------------------------------------------------------
-// psc_mfields: subclass ops
-  
-struct MPFX(psc_mfields_ops) : psc_mfields_ops {
-  using Wrapper_t = MfieldsWrapper<MFIELDS>;
-  MPFX(psc_mfields_ops)() {
-    name                  = Wrapper_t::name;
-    size                  = Wrapper_t::size;
-    setup                 = Wrapper_t::setup;
-    destroy               = Wrapper_t::destroy;
-  }
-} MPFX(ops);
-
-#if 0 //defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
-    write                 = MPFX(write);
-    read                  = MPFX(read);
-#endif
-

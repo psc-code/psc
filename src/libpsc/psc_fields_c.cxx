@@ -1,11 +1,6 @@
 
 #include "psc.h"
-#include "psc_fields_as_c.h"
-
-#include <mrc_params.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include "psc_fields_c.h"
 
 #define PFX(x) psc_fields_c_ ## x
 #define MPFX(x) psc_mfields_c_ ## x

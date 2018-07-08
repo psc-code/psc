@@ -7,7 +7,6 @@
 
 #include "psc_bits.h"
 #include "psc_particles.h"
-#include "psc_fields.h"
 #include "grid.hxx"
 #include "particles.hxx"
 

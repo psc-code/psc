@@ -1,75 +1,15 @@
 
 #include "psc.h"
-#include "fields.hxx"
-#include "psc_fields_as_c.h"
+#include "fields3d.hxx"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
 #include <mrc_io.h>
 #include <stdlib.h>
 #include <string.h>
+#include <list>
 
 std::list<MfieldsBase*> MfieldsBase::instances;
-
-// ======================================================================
-// _psc_mfields_setup
-
-static void
-_psc_mfields_setup(struct psc_mfields *mflds)
-{
-  mflds->comp_name = new char* [mflds->nr_fields]();
-}
-
-// ======================================================================
-// psc_mfields_destroy
-
-static void
-_psc_mfields_destroy(struct psc_mfields *mflds)
-{
-  if (mflds->comp_name) {
-    for (int m = 0; m < mflds->nr_fields; m++) {
-      free(mflds->comp_name[m]);
-    }
-    delete[] mflds->comp_name;
-  }
-}
-
-static void
-_psc_mfields_write(struct psc_mfields *mflds, struct mrc_io *io)
-{
-  for (int m = 0; m < mflds->nr_fields; m++) {
-    char name[20]; sprintf(name, "comp_name_%d", m);
-    mrc_io_write_string(io, mflds, name, psc_mfields_comp_name(mflds, m));
-  }
-}
-
-static void
-_psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
-{
-  mflds->comp_name = new char* [mflds->nr_fields];
-  for (int m = 0; m < mflds->nr_fields; m++) {
-    char name[20]; sprintf(name, "comp_name_%d", m);
-    char *s;
-    mrc_io_read_string(io, mflds, name, &s);
-    if (s) {
-      psc_mfields_set_comp_name(mflds, m, s);
-    }
-  }
-}
-
-void
-psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s)
-{
-  assert(m >= 0 && m < flds->nr_fields);
-  flds->comp_name[m] = strdup(s);
-}
-
-const char *
-psc_mfields_comp_name(struct psc_mfields *flds, int m)
-{
-  assert(m >= 0 && m < flds->nr_fields);
-  return flds->comp_name[m];
-}
 
 void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me)
 {
@@ -92,51 +32,4 @@ void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int 
 	  typeid(mf_from).name(), typeid(mf_to).name());
   assert(0);
 }
-
-// ======================================================================
-
-extern struct psc_mfields_ops psc_mfields_c_ops;
-extern struct psc_mfields_ops psc_mfields_single_ops;
-extern struct psc_mfields_ops psc_mfields_vpic_ops;
-extern struct psc_mfields_ops psc_mfields_cuda_ops;
-
-static void
-psc_mfields_init()
-{
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_c_ops);
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_single_ops);
-#ifdef USE_VPIC
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_vpic_ops);
-#endif
-#ifdef USE_CUDA
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_cuda_ops);
-#endif
-#ifdef USE_CUDA2
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_cuda2_ops);
-#endif
-#ifdef USE_ACC
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_acc_ops);
-#endif
-}
-
-#define VAR(x) (void *)offsetof(struct psc_mfields, x)
-static struct param psc_mfields_descr[] = {
-  { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
-  { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
-  {},
-};
-#undef VAR
-
-struct mrc_class_psc_mfields_ : mrc_class_psc_mfields {
-  mrc_class_psc_mfields_() {
-    name             = "psc_mfields";
-    size             = sizeof(struct psc_mfields);
-    init             = psc_mfields_init;
-    param_descr      = psc_mfields_descr;
-    setup            = _psc_mfields_setup;
-    destroy          = _psc_mfields_destroy;
-    read             = _psc_mfields_read;
-    write            = _psc_mfields_write;
-  }
-} mrc_class_psc_mfields;
 

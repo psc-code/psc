@@ -3,6 +3,7 @@
 #define PSC_FIELDS_VPIC_H
 
 #include "fields3d.hxx"
+#include "fields_traits.hxx"
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 

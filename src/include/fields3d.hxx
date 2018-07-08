@@ -5,7 +5,6 @@
 #include "psc.h"
 
 #include "grid.hxx"
-#include "psc_fields.h"
 
 #include <mrc_profile.h>
 
@@ -410,94 +409,6 @@ struct Mfields : MfieldsBase
   std::vector<std::unique_ptr<real_t[]>> data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
-};
-
-// ======================================================================
-// PscMfields
-
-template<typename S> struct PscMfields;
-using PscMfieldsBase = PscMfields<MfieldsBase>;
-
-template<typename S>
-struct PscMfields
-{
-  using Self = PscMfields<S>;
-  using sub_t = S;
-  using fields_t = typename sub_t::fields_t;
-  using real_t = typename fields_t::real_t;
-
-  static_assert(std::is_convertible<sub_t*, MfieldsBase*>::value,
-		"sub classes used in mfields_t must derive from psc_mfields_base");
-
-  static Self create(MPI_Comm comm, const Grid_t& grid, int n_comps, Int3 ibn);
-  
-  PscMfields(struct psc_mfields *mflds)
-    : mflds_(mflds)
-  {
-    if (mflds != nullptr) {
-      assert(dynamic_cast<sub_t*>(mrc_to_subobj(mflds, MfieldsBase)));
-    }
-  }
-
-  unsigned int n_fields() const { return mflds_->nr_fields; }
-
-  fields_t operator[](int p)
-  {
-    return (*sub())[p];
-  }
-
-  struct psc_mfields *mflds() { return mflds_; }
-  
-  sub_t* operator->() { return sub(); }
-  sub_t* sub() { return mrc_to_subobj(mflds_, sub_t); }
-  
-private:
-  struct psc_mfields *mflds_;
-};
-
-inline PscMfieldsBase PscMfieldsCreate(MPI_Comm comm, const Grid_t& grid, int n_comps,
-				       Int3 ibn, const char* type)
-{
-  psc_mfields *mflds = psc_mfields_create(comm);
-  psc_mfields_set_type(mflds, type);
-  psc_mfields_set_param_int(mflds, "nr_fields", n_comps);
-  psc_mfields_set_param_int3(mflds, "ibn", ibn);
-  mflds->grid = &grid;
-  psc_mfields_setup(mflds);
-  return mflds;
-}
-
-template<typename S>
-PscMfields<S> PscMfields<S>::create(MPI_Comm comm, const Grid_t& grid, int n_comps, Int3 ibn)
-{
-  return Self{PscMfieldsCreate(comm, grid, n_comps, ibn, Mfields_traits<S>::name).mflds()};
-}
-  
-// ======================================================================
-// MfieldsWrapper
-
-template<typename Mfields>
-class MfieldsWrapper
-{
-public:
-  const static size_t size = sizeof(Mfields);
-
-  constexpr static const char* name = Mfields_traits<Mfields>::name;
-  
-  static void setup(struct psc_mfields* _mflds)
-  {
-    psc_mfields_setup_super(_mflds);
-    
-    new(_mflds->obj.subctx) Mfields{*_mflds->grid, _mflds->nr_fields, _mflds->ibn};
-    _mflds->grid = nullptr; // to prevent subsequent use, there's Mfields::grid() instead
-  }
-
-  static void destroy(struct psc_mfields* _mflds)
-  {
-    if (!mrc_to_subobj(_mflds, MfieldsBase)->inited) return; // FIXME
-    PscMfields<Mfields> mflds(_mflds);
-    mflds->~Mfields();
-  }
 };
 
 #endif

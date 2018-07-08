@@ -171,18 +171,3 @@ const MfieldsBase::Convert MfieldsVpic::convert_from_ = {
   { std::type_index(typeid(MfieldsSingle)), psc_mfields_vpic_copy_from_single },
 };
 
-struct psc_mfields_ops_vpic : psc_mfields_ops {
-  using Wrapper_t = MfieldsWrapper<MfieldsVpic>;
-  psc_mfields_ops_vpic() {
-    name                  = Wrapper_t::name;
-    size                  = Wrapper_t::size;
-    setup                 = Wrapper_t::setup;
-    destroy               = Wrapper_t::destroy;
-#ifdef HAVE_LIBHDF5_HL
-    write                 = psc_mfields_vpic_write;
-    read                  = psc_mfields_vpic_read;
-#endif
-  }
-} psc_mfields_vpic_ops;
-
-
