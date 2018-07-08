@@ -1,19 +1,10 @@
 
+#include "sort_vpic.hxx"
+
 #include "psc_sort_private.h"
 
-#include "psc_particles_vpic.h"
 #include "vpic_iface.h"
 #include "sort.hxx"
-
-struct SortVpic
-{
-  using Mparticles = MparticlesVpic;
-
-  void operator()(Mparticles& mprts)
-  {
-    Simulation_sort_mprts(mprts.sim, mprts.vmprts, ppsc->timestep);
-  }
-};
 
 // ----------------------------------------------------------------------
 // psc_sort: subclass "vpic"

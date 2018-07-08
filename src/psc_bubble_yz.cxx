@@ -65,7 +65,6 @@ using PscConfig = PscConfig1vbecSingle<dim_yz>;
 struct PscBubble : Psc<PscConfig>, PscBubbleParams
 {
   using DIM = PscConfig::dim_t;
-  using Sort_t = PscConfig::Sort_t;
   using Collision_t = PscConfig::Collision_t;
   using PushParticles_t = PscConfig::PushParticles_t;
   using PushFields_t = PscConfig::PushFields_t;

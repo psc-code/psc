@@ -36,6 +36,7 @@ struct Psc
   using Mparticles_t = typename PscConfig::Mparticles_t;
   using Mfields_t = typename PscConfig::Mfields_t;
   using Balance_t = typename PscConfig::Balance_t;
+  using Sort_t = typename PscConfig::Sort_t;
 
   // ----------------------------------------------------------------------
   // ctor
