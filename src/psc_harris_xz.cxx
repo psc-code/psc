@@ -719,7 +719,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
-    PscSortBase sort(psc_->sort);
     PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
@@ -830,6 +829,8 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.Ly_di = 1.;
   params.Lz_di = 10.;
 
+  // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
+  // internally, so it needs to be called every step
   p.sort_interval = 1;
   params.electron_sort_interval = 25;
   params.ion_sort_interval = 25;
@@ -867,11 +868,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_->prm.stats_every = 100;
 
   psc_method_set_type(psc_->method, "vpic");
-
-  psc_sort_set_type(psc_->sort, "vpic");
-  // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
-  // internally
-  psc_sort_set_param_int(psc_->sort, "every", 1);
 
   psc_collision_set_type(psc_->collision, "vpic");
 

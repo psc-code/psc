@@ -108,7 +108,6 @@ struct psc {
   struct psc_bnd *bnd;				///< boundaries
   struct psc_bnd_particles *bnd_particles;	///< boundary particlesxs
   struct psc_collision *collision;		///< collision operator
-  struct psc_sort *sort;			///< sort operator
   struct psc_marder *marder;                    ///< marder correction
   struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_fields_collection *output_fields_collection; ///< collection of psc_output_fields

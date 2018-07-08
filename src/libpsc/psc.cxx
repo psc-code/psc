@@ -118,7 +118,6 @@ static struct param psc_descr[] = {
   { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
   { "collision"               , VAR(collision)               , MRC_VAR_OBJ(psc_collision) },
   { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
-  { "sort"                    , VAR(sort)                    , MRC_VAR_OBJ(psc_sort) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
