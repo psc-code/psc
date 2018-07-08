@@ -415,7 +415,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   }
 
 protected:
-  Sort_t sort_;
   Collision_t collision_;
   PushParticles_t pushp_;
   PushFields_t pushf_;

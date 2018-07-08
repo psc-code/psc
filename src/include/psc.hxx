@@ -208,6 +208,7 @@ protected:
   Mfields_t mflds_;
 
   Balance_t balance_;
+  Sort_t sort_;
 
   int st_nr_particles;
   int st_time_step;
