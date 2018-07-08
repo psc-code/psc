@@ -27,9 +27,6 @@ add_library(psc
   psc_push_fields/psc_push_fields_impl.cxx
   psc_push_fields/psc_push_fields_none.cxx
 
-  psc_sort/psc_sort.cxx
-  psc_sort/psc_sort_impl.cxx
-
   psc_collision/psc_collision.cxx
   psc_collision/psc_collision_impl.cxx
 

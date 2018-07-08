@@ -7,7 +7,6 @@
 #include "psc_bnd_particles.h"
 #include "psc_bnd_fields.h"
 #include "psc_collision_private.h"
-#include "psc_sort_private.h"
 #include "psc_marder.h"
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
