@@ -50,7 +50,8 @@ struct Psc
       psc_(psc),
       mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
-      balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads}
+      balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
+      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu}
   {}
 
   // ----------------------------------------------------------------------
@@ -213,6 +214,7 @@ protected:
 
   Balance_t balance_;
   Sort_t sort_;
+  Collision_t collision_;
 
   int st_nr_particles;
   int st_time_step;

@@ -72,7 +72,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
     : Psc{p, psc},
       PscBubbleParams(params),
-      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
@@ -410,7 +409,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   }
 
 protected:
-  Collision_t collision_;
   PushParticles_t pushp_;
   PushFields_t pushf_;
   BndParticles_t bndp_;

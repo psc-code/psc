@@ -222,7 +222,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
     : Psc{p, psc},
       PscFlatfoilParams(params),
-      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       heating_{heating_interval, heating_kind, heating_spot},
@@ -513,7 +512,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
 protected:
-  Collision_t collision_;
   PushParticles_t pushp_;
   PushFields_t pushf_;
   BndParticles_t bndp_;
