@@ -910,8 +910,6 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   psc_bnd_particles_set_type(psc_->bnd_particles, "vpic");
 
-  psc_push_fields_set_type(psc_->push_fields, "vpic");
-
   psc_marder_set_type(psc_->marder, "vpic");
   // FIXME, marder "vpic" manages its own cleaning intervals
   psc_marder_set_param_int(psc_->marder, "every_step", 1);
