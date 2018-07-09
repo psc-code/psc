@@ -511,7 +511,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
 protected:
-  PushParticles_t pushp_;
   PushFields_t pushf_;
   BndParticles_t bndp_;
   Bnd_t bnd_;
