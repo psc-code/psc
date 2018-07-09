@@ -1,32 +1,5 @@
 
-#include "psc_collision_private.h"
-#include "collision.hxx"
-
-#include "psc_particles_vpic.h"
-#include "psc_method.h"
-
-#include "vpic_iface.h"
-
-// ----------------------------------------------------------------------
-
-class PscCollisionVpic : public CollisionBase
-{
-public:
-  constexpr static char const* const name = "vpic";
-
-  PscCollisionVpic(MPI_Comm comm, int interval, double nu)
-  {
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-  }
-
-  void run(MparticlesBase& mprts_base) override
-  {
-    Simulation_collision_run(sim_);
-  }
-
-private:
-  Simulation *sim_;
-};
+#include "collision_vpic.hxx"
 
 // ----------------------------------------------------------------------
 // psc_collision: subclass "vpic"

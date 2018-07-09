@@ -41,6 +41,7 @@
 #include <psc_particles_vpic.h>
 #include <psc_fields_vpic.h>
 #include "../libpsc/vpic/sort_vpic.hxx"
+#include "../libpsc/vpic/collision_vpic.hxx"
 
 #include "rngpool_iface.h"
 
@@ -56,6 +57,7 @@ struct PscConfig
   using Mfields_t = MfieldsVpic;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
+  using Collision_t = PscCollisionVpic;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)

@@ -212,7 +212,6 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 {
   using DIM = PscConfig::dim_t;
-  using Collision_t = PscConfig::Collision_t;
   using PushParticles_t = PscConfig::PushParticles_t;
   using PushFields_t = PscConfig::PushFields_t;
   using BndParticles_t = PscConfig::BndParticles_t;
