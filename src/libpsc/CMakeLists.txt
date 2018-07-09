@@ -15,12 +15,6 @@ add_library(psc
   rngpool.cxx
 
   psc_push_particles/psc_push_particles.cxx
-  psc_push_particles/psc_push_particles_1st.cxx
-  psc_push_particles/psc_push_particles_generic_c.cxx
-  psc_push_particles/1vb/psc_push_particles_1vb_double.cxx
-  psc_push_particles/1vb/psc_push_particles_1vb_single.cxx
-  psc_push_particles/1vb/psc_push_particles_1vbec_double.cxx
-  psc_push_particles/1vb/psc_push_particles_1vbec_single.cxx
 
   psc_push_fields/psc_marder.cxx
   psc_push_fields/psc_push_fields.cxx

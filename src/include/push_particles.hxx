@@ -170,22 +170,3 @@ struct PscPushParticles_
   PushParticles_t pushp_;
 };
 
-template<typename PushParticles_t>
-class PushParticlesWrapper
-{
-public:
-  const static size_t size = sizeof(PushParticles_t);
-  
-  static void setup(struct psc_push_particles *push)
-  {
-    PscPushParticles<PushParticles_t> pushp(push);
-    new(pushp.sub()) PushParticles_t;
-  }
-
-  static void destroy(struct psc_push_particles *push)
-  {
-    PscPushParticles<PushParticles_t> pushp(push);
-    pushp.sub()->~PushParticles_t();
-  }
-};
-
