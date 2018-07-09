@@ -765,21 +765,20 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     bndp(mprts_);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
-    auto bndf = PscBndFieldsBase(psc_->push_fields->bnd_fields);
 
     // fill ghosts for H
-    bndf.fill_ghosts_H(mflds_);
+    bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     
     // add and fill ghost for J
-    bndf.add_ghosts_J(mflds_);
+    bndf_.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     
     // push E
     pushf_.push_E(mflds_, 1.);
 
-    bndf.fill_ghosts_E(mflds_);
+    bndf_.fill_ghosts_E(mflds_);
     //if (pushf_->variant == 0) {
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     //}
@@ -787,14 +786,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // field propagation B^{n+1} -> B^{n+3/2}
     //if (pushf_->variant == 0) {
-    bndf.fill_ghosts_E(mflds_);
+    bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     //    }
     
     // push H
     pushf_.push_H(mflds_, .5);
 
-    bndf.fill_ghosts_H(mflds_);
+    bndf_.fill_ghosts_H(mflds_);
     //if (pushf_->variant == 0) {
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     //}
@@ -912,8 +911,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_bnd_particles_set_type(psc_->bnd_particles, "vpic");
 
   psc_push_fields_set_type(psc_->push_fields, "vpic");
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc_->push_fields);
-  psc_bnd_fields_set_type(bnd_fields, "vpic");
 
   psc_marder_set_type(psc_->marder, "vpic");
   // FIXME, marder "vpic" manages its own cleaning intervals
