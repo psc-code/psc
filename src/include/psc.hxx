@@ -217,6 +217,7 @@ protected:
   Sort_t sort_;
   Collision_t collision_;
   PushParticles_t pushp_;
+  PushFields_t pushf_;
 
   int st_nr_particles;
   int st_time_step;

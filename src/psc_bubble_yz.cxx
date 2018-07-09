@@ -407,7 +407,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   }
 
 protected:
-  PushFields_t pushf_;
   BndParticles_t bndp_;
   Bnd_t bnd_;
   BndFields_t bndf_;
