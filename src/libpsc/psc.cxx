@@ -110,7 +110,6 @@ static struct param psc_descr[] = {
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
-  { "push_particles"          , VAR(push_particles)          , MRC_VAR_OBJ(psc_push_particles) },
   { "push_fields"             , VAR(push_fields)             , MRC_VAR_OBJ(psc_push_fields) },
   { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },
   { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },

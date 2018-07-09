@@ -876,6 +876,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_method_set_type(psc_->method, "vpic");
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
+
   psc_bnd_particles_set_type(psc_->bnd_particles, "vpic");
 
   psc_push_fields_set_type(psc_->push_fields, "vpic");

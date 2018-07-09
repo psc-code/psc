@@ -197,8 +197,7 @@ private:
   static void initialize_default(struct psc_method *method, struct psc *psc,
 				 MfieldsBase& mflds, MparticlesBase& mprts)
   {
-    auto pushp = PscPushParticlesBase{psc->push_particles};
-    pushp.stagger(mprts, mflds);
+    //pushp_.stagger(mprts, mflds); FIXME, vpic does it
     
     // initial output / stats
     psc_method_output(psc->method, psc, mflds, mprts);
