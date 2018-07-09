@@ -40,6 +40,7 @@
 #include "../libpsc/vpic/sort_vpic.hxx"
 #include "../libpsc/vpic/collision_vpic.hxx"
 #include "../libpsc/vpic/push_particles_vpic.hxx"
+#include "../libpsc/vpic/push_fields_vpic.hxx"
 
 #include "rngpool_iface.h"
 
@@ -57,6 +58,7 @@ struct PscConfig
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;
   using PushParticles_t = PushParticlesVpic;
+  using PushFields_t = PushFieldsVpic;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
