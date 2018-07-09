@@ -7,8 +7,9 @@
 
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
-#include "../libpsc/psc_push_particles/push_dispatch.hxx"
-#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
+#include "../libpsc/psc_push_particles/push_part_common.c"
+#include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
+#include "../libpsc/psc_push_particles/1vb.c"
 #include "psc_push_fields_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"

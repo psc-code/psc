@@ -2,9 +2,12 @@
 #pragma once
 
 #include "psc.h"
+#include "psc_fields_single.h"
+#include "psc_particles_single.h"
 #include "../libpsc/psc_push_particles/push_config.hxx"
-#include "../libpsc/psc_push_particles/push_dispatch.hxx"
-#include "../libpsc/psc_push_particles/1vb/push_particles_1vbec_single.hxx"
+#include "../libpsc/psc_push_particles/push_part_common.c"
+#include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
+#include "../libpsc/psc_push_particles/1vb.c"
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 #include "psc_push_fields_impl.hxx"
