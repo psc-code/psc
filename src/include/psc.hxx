@@ -41,6 +41,7 @@ struct Psc
   using Balance_t = typename PscConfig::Balance_t;
   using Sort_t = typename PscConfig::Sort_t;
   using Collision_t = typename PscConfig::Collision_t;
+  using PushParticles_t = typename PscConfig::PushParticles_t;
 
   // ----------------------------------------------------------------------
   // ctor
