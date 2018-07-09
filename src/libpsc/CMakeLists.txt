@@ -18,9 +18,6 @@ add_library(psc
 
   psc_collision/psc_collision_impl.cxx
 
-  psc_bnd/psc_bnd.cxx
-  psc_bnd/psc_bnd_impl.cxx
-
   psc_bnd_fields/psc_bnd_fields.cxx
   psc_bnd_fields/psc_bnd_fields_impl.cxx
 

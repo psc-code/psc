@@ -3,7 +3,6 @@
 
 #include "psc_checks_private.h"
 
-#include "psc_bnd.h"
 #include "psc_output_fields_item.h"
 #include "fields.hxx"
 #include "fields_item.hxx"

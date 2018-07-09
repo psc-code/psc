@@ -1,6 +1,5 @@
 
 #include "psc_output_fields_item_private.h"
-#include "psc_bnd.h"
 #include "bnd.hxx"
 #include "fields_item_fields.hxx"
 #include "psc_fields_single.h"

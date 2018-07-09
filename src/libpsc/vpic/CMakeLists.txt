@@ -3,7 +3,6 @@ add_library(pscvpic
   psc_fields_vpic.cxx
   psc_particles_vpic.cxx
   psc_marder_vpic.cxx
-  psc_bnd_vpic.cxx
   psc_bnd_fields_vpic.cxx
   psc_bnd_particles_vpic.cxx
   psc_output_fields_item_vpic.cxx
