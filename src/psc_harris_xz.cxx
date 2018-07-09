@@ -718,7 +718,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
@@ -749,10 +748,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts_);
 
-    // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    pushp(mprts_, mflds_);
-    // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-    
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    prof_start(pr_push_prts);
+    pushp_.push_mprts(mprts_, mflds_);
+    prof_stop(pr_push_prts);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+
     // field propagation B^{n+1/2} -> B^{n+1}
     pushf.advance_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
@@ -776,7 +777,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     PscChecksBase{psc_->checks}.gauss(psc_, mprts_, mflds_);
 
-    psc_push_particles_prep(psc_->push_particles, mprts_, mflds_);
+    pushp_.prep(mprts_, mflds_);
   }
 
 protected:
@@ -875,7 +876,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_method_set_type(psc_->method, "vpic");
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
-  psc_push_particles_set_type(psc_->push_particles, "vpic");
   psc_bnd_particles_set_type(psc_->bnd_particles, "vpic");
 
   psc_push_fields_set_type(psc_->push_fields, "vpic");
