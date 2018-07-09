@@ -42,6 +42,7 @@
 #include "../libpsc/vpic/push_particles_vpic.hxx"
 #include "../libpsc/vpic/push_fields_vpic.hxx"
 #include "../libpsc/vpic/bnd_vpic.hxx"
+#include "../libpsc/vpic/bnd_fields_vpic.hxx"
 
 #include "rngpool_iface.h"
 
@@ -61,6 +62,7 @@ struct PscConfig
   using PushParticles_t = PushParticlesVpic;
   using PushFields_t = PushFieldsVpic;
   using Bnd_t = BndVpic;
+  using BndFields_t = BndFieldsVpic;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)

@@ -44,6 +44,7 @@ struct Psc
   using PushParticles_t = typename PscConfig::PushParticles_t;
   using PushFields_t = typename PscConfig::PushFields_t;
   using Bnd_t = typename PscConfig::Bnd_t;
+  using BndFields_t = typename PscConfig::BndFields_t;
 
   // ----------------------------------------------------------------------
   // ctor
