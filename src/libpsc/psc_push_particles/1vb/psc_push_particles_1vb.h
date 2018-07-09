@@ -2,8 +2,6 @@
 #ifndef PSC_PUSH_PARTICLES_1VB_H
 #define PSC_PUSH_PARTICLES_1VB_H
 
-#include <psc_push_particles_private.h>
-
 #include "push_particles.hxx"
 #include "fields.hxx"
 

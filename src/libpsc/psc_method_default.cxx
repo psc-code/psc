@@ -1,7 +1,6 @@
 
 #include "psc_method_private.h"
 
-#include <psc_push_particles.h>
 #include <psc_diag.h>
 #include <psc_output_fields_collection.h>
 #include <psc_output_particles.h>
