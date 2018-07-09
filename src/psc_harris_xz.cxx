@@ -719,7 +719,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    PscPushFieldsBase pushf(psc_->push_fields);
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
     int timestep = psc_->timestep;
@@ -756,17 +755,48 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // field propagation B^{n+1/2} -> B^{n+1}
-    pushf.advance_H(mflds_, .5);
+    pushf_.push_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     bndp(mprts_);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
-    pushf.advance_b2(mflds_);
+    //pushf_.advance_b2(mflds_);
+    auto bnd = PscBndBase(psc_->bnd);
+    auto bndf = PscBndFieldsBase(psc_->push_fields->bnd_fields);
+
+    // fill ghosts for H
+    bndf.fill_ghosts_H(mflds_);
+    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    
+    // add and fill ghost for J
+    bndf.add_ghosts_J(mflds_);
+    bnd.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd.fill_ghosts(mflds_, JXI, JXI + 3);
+    
+    // push E
+    pushf_.push_E(mflds_, 1.);
+
+    bndf.fill_ghosts_E(mflds_);
+    //if (pushf_->variant == 0) {
+    bnd.fill_ghosts(mflds_, EX, EX + 3);
+    //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
-    pushf.advance_a(mflds_);
+    //PscPushFieldsBase{psc_->push_fields}.advance_a(mflds_);
+    //if (pushf_->variant == 0) {
+    bndf.fill_ghosts_E(mflds_);
+    bnd.fill_ghosts(mflds_, EX, EX + 3);
+    //    }
+    
+    // push H
+    pushf_.push_H(mflds_, .5);
+
+    bndf.fill_ghosts_H(mflds_);
+    //if (pushf_->variant == 0) {
+    bnd.fill_ghosts(mflds_, HX, HX + 3);
+    //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
     PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, mprts_, mflds_);
