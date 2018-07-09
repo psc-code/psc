@@ -54,7 +54,8 @@ struct Psc
       mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
-      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu}
+      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
+      bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn}
   {}
 
   // ----------------------------------------------------------------------
@@ -219,6 +220,7 @@ protected:
   Collision_t collision_;
   PushParticles_t pushp_;
   PushFields_t pushf_;
+  Bnd_t bnd_;
 
   int st_nr_particles;
   int st_time_step;
