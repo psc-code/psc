@@ -11,7 +11,6 @@
 #include <psc_method.h>
 #include <psc_push_particles.h>
 #include <psc_push_fields.h>
-#include <psc_collision.h>
 #include <psc_marder.h>
 #include <psc_bnd_particles.h>
 #include <psc_bnd.h>
@@ -872,8 +871,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_->prm.stats_every = 100;
 
   psc_method_set_type(psc_->method, "vpic");
-
-  psc_collision_set_type(psc_->collision, "vpic");
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc_->push_particles, "vpic");

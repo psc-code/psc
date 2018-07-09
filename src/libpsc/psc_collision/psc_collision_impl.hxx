@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "psc_collision_private.h"
 #include "collision.hxx"
 #include "binary_collision.hxx"
 #include "psc_output_fields_item_private.h"

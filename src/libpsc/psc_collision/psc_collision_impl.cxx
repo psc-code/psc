@@ -1,6 +1,5 @@
 
 #include "psc_collision_impl.hxx"
-
 #include "psc_fields_single.h"
 #include "psc_particles_single.h"
 #include "psc_fields_c.h"
@@ -21,14 +20,10 @@ struct CollisionNone : CollisionBase
   void operator()(MparticlesBase& mprts_base) override {}
 };
 
-psc_collision_ops_<CollisionNone> psc_collision_none_ops;
 void* global_collision; // FIXME
 
 // ======================================================================
 // psc_collision: subclass "single"/"double"
-
-psc_collision_ops_<CollisionConvert<Collision_<MparticlesSingle, MfieldsSingle>>> psc_collision_single_ops;
-psc_collision_ops_<CollisionConvert<Collision_<MparticlesDouble, MfieldsC>>> psc_collision_double_ops;
 
 template<typename Collision>
 struct Item_coll_stats

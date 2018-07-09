@@ -4,7 +4,6 @@ add_library(pscvpic
   psc_particles_vpic.cxx
   psc_push_fields_vpic.cxx
   psc_push_particles_vpic.cxx
-  psc_collision_vpic.cxx
   psc_marder_vpic.cxx
   psc_bnd_vpic.cxx
   psc_bnd_fields_vpic.cxx

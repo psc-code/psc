@@ -6,7 +6,6 @@
 #include "psc_bnd.h"
 #include "psc_bnd_particles.h"
 #include "psc_bnd_fields.h"
-#include "psc_collision_private.h"
 #include "psc_marder.h"
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
@@ -115,7 +114,6 @@ static struct param psc_descr[] = {
   { "push_fields"             , VAR(push_fields)             , MRC_VAR_OBJ(psc_push_fields) },
   { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },
   { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
-  { "collision"               , VAR(collision)               , MRC_VAR_OBJ(psc_collision) },
   { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
