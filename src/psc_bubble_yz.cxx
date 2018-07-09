@@ -1,7 +1,6 @@
 
 #include <psc.h>
 #include <psc.hxx>
-#include <psc_bnd_fields.h>
 #include <psc_particles_single.h>
 #include <psc_fields_single.h>
 #include <psc_method.h>
