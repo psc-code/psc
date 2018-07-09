@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "psc_method.h"
-#include "psc_push_fields.h"
 #include "psc_marder.h"
 #include "psc_bnd_particles.h"
 #include "psc_event_generator.h"
@@ -9,7 +8,6 @@
 #include "balance.hxx"
 #include "particles.hxx"
 #include "push_particles.hxx"
-#include "push_fields.hxx"
 #include "sort.hxx"
 #include "collision.hxx"
 #include "bnd_particles.hxx"

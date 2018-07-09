@@ -15,9 +15,6 @@ add_library(psc
   rngpool.cxx
 
   psc_push_fields/psc_marder.cxx
-  psc_push_fields/psc_push_fields.cxx
-  psc_push_fields/psc_push_fields_impl.cxx
-  psc_push_fields/psc_push_fields_none.cxx
 
   psc_collision/psc_collision_impl.cxx
 
