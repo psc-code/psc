@@ -13,7 +13,6 @@
 #include <psc_push_fields.h>
 #include <psc_collision.h>
 #include <psc_marder.h>
-#include <psc_collision.h>
 #include <psc_bnd_particles.h>
 #include <psc_bnd.h>
 #include <psc_bnd_fields.h>
@@ -720,7 +719,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     PscPushParticlesBase pushp(psc_->push_particles);
     PscPushFieldsBase pushf(psc_->push_fields);
-    PscCollisionBase collision(psc_->collision);
     PscBndParticlesBase bndp(psc_->bnd_particles);
 
     int timestep = psc_->timestep;
@@ -739,8 +737,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prof_stop(pr_sort);
     }
     
-    collision(mprts_);
-  
+    if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
+      collision_(mprts_);
+      prof_stop(pr_collision);
+    }
+    
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
     PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts_);
