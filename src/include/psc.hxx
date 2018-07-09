@@ -222,6 +222,7 @@ protected:
   PushParticles_t pushp_;
   PushFields_t pushf_;
   Bnd_t bnd_;
+  BndFields_t bndf_;
 
   int st_nr_particles;
   int st_time_step;

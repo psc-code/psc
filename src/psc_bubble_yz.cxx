@@ -405,7 +405,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
 protected:
   BndParticles_t bndp_;
-  BndFields_t bndf_;
 
   Checks_t checks_;
   Marder_t marder_;

@@ -508,7 +508,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
 protected:
   BndParticles_t bndp_;
-  BndFields_t bndf_;
 
   Heating_t heating_;
   Inject_t inject_;
