@@ -108,7 +108,6 @@ static struct param psc_descr[] = {
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
-  { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },
   { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
   { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
@@ -138,7 +137,6 @@ _psc_create(struct psc *psc)
   // default 9 state fields (J,E,B)
   psc->n_state_fields = NR_FIELDS;
 
-  psc_bnd_set_psc(psc->bnd, psc); // FIXME, do general parent interface?
   psc_bnd_particles_set_psc(psc->bnd_particles, psc);
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
 
