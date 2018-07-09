@@ -210,7 +210,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 {
   using DIM = PscConfig::dim_t;
   using BndParticles_t = PscConfig::BndParticles_t;
-  using Bnd_t = PscConfig::Bnd_t;
   using BndFields_t = PscConfig::BndFields_t;
   using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
   using Inject_t = typename InjectSelector<Mparticles_t, Mfields_t, InjectFoil, DIM>::Inject;

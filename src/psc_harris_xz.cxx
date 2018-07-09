@@ -41,6 +41,7 @@
 #include "../libpsc/vpic/collision_vpic.hxx"
 #include "../libpsc/vpic/push_particles_vpic.hxx"
 #include "../libpsc/vpic/push_fields_vpic.hxx"
+#include "../libpsc/vpic/bnd_vpic.hxx"
 
 #include "rngpool_iface.h"
 
@@ -59,6 +60,7 @@ struct PscConfig
   using Collision_t = PscCollisionVpic;
   using PushParticles_t = PushParticlesVpic;
   using PushFields_t = PushFieldsVpic;
+  using Bnd_t = BndVpic;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
@@ -761,7 +763,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     bndp(mprts_);
   
     // field propagation E^{n+1/2} -> E^{n+3/2}
-    //pushf_.advance_b2(mflds_);
     auto bnd = PscBndBase(psc_->bnd);
     auto bndf = PscBndFieldsBase(psc_->push_fields->bnd_fields);
 
@@ -784,7 +785,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
-    //PscPushFieldsBase{psc_->push_fields}.advance_a(mflds_);
     //if (pushf_->variant == 0) {
     bndf.fill_ghosts_E(mflds_);
     bnd.fill_ghosts(mflds_, EX, EX + 3);
