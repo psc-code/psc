@@ -12,7 +12,7 @@
 class CollisionBase
 {
 public:
-  virtual void run(MparticlesBase& mprts_base) = 0;
+  virtual void operator()(MparticlesBase& mprts_base) = 0;
 };
 
 // ======================================================================
@@ -39,7 +39,7 @@ struct PscCollision
     
     psc_stats_start(st_time_collision);
     if (collision_->every > 0 && ppsc->timestep % collision_->every == 0) {
-      sub()->run(mprts);
+      (*sub())(mprts);
     }
     psc_stats_stop(st_time_collision);
   }
@@ -63,7 +63,7 @@ struct CollisionConvert : Collision_t, CollisionBase
   using Mparticles = typename Collision_t::Mparticles;
   using Base::Base;
 
-  void run(MparticlesBase& mprts_base) override
+  void operator()(MparticlesBase& mprts_base) override
   {
     auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);

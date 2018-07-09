@@ -18,7 +18,7 @@ public:
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void run(MparticlesBase& mprts_base) override
+  void operator()(MparticlesBase& mprts_base) override
   {
     Simulation_collision_run(sim_);
   }
