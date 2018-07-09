@@ -25,6 +25,9 @@ struct PscParams
   bool balance_write_loads;
 
   int sort_interval;
+
+  int collision_interval;
+  double collision_nu;
 };
   
 // ======================================================================

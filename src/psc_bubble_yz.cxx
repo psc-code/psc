@@ -45,9 +45,6 @@ struct PscBubbleParams
   double TTi;
   double MMi;
   
-  int collision_interval;
-  double collision_nu;
-
   int marder_interval;
   double marder_diffusion;
   int marder_loop;
@@ -75,7 +72,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
     : Psc{p, psc},
       PscBubbleParams(params),
-      collision_{psc_comm(psc), collision_interval, collision_nu},
+      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
@@ -292,7 +289,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       prof_stop(pr_sort);
     }
     
-    if (collision_interval > 0 && timestep % collision_interval == 0) {
+    if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
       collision_(mprts_);
@@ -481,8 +478,8 @@ PscBubble* PscBubbleBuilder::makePsc()
   p.sort_interval = 10;
 
   // collisions
-  params.collision_interval = 10;
-  params.collision_nu = .1;
+  p.collision_interval = 10;
+  p.collision_nu = .1;
 
   // --- checks
   params.checks_params.continuity_every_step = -1;

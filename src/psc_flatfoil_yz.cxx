@@ -172,9 +172,6 @@ struct PscFlatfoilParams
   double background_Te;
   double background_Ti;
 
-  int collision_interval;
-  double collision_nu;
-
   int marder_interval;
   double marder_diffusion;
   int marder_loop;
@@ -225,7 +222,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
     : Psc{p, psc},
       PscFlatfoilParams(params),
-      collision_{psc_comm(psc), collision_interval, collision_nu},
+      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       heating_{heating_interval, heating_kind, heating_spot},
@@ -375,7 +372,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       prof_stop(pr_sort);
     }
     
-    if (collision_interval > 0 && timestep % collision_interval == 0) {
+    if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
       collision_(mprts_);
@@ -625,8 +622,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   p.sort_interval = 10;
 
   // collisions
-  params.collision_interval = 10;
-  params.collision_nu = .1;
+  p.collision_interval = 10;
+  p.collision_nu = .1;
 
   // --- setup heating
   double heating_zl = -1.;
@@ -709,7 +706,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.background_n = .01;
   params.background_Te = .002;
   params.background_Ti = .002;
-  params.collision_interval = 0;
+  p.collision_interval = 0;
   params.inject_interval = 0;
 #endif
   
@@ -717,12 +714,12 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   psc_->prm.nmax = 101;
   psc_->prm.nicell = 50;
   params.background_n = .02;
-  params.collision_interval = 0;
+  p.collision_interval = 0;
   params.inject_interval = 0;
 #endif
   
 #if TEST == TEST_2_FLATFOIL_3D
-  params.collision_interval = 0;
+  p.collision_interval = 0;
   params.heating_interval = 0;
   params.inject_interval = 5;
 #endif
@@ -730,7 +727,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 #if TEST == TEST_1_HEATING_3D
   params.background_n  = 1.0;
 
-  params.collision_interval = 0;
+  p.collision_interval = 0;
   params.heating_interval = 0;
   params.inject_interval = 0;
   
