@@ -40,6 +40,7 @@
 #include "../libpsc/vpic/bnd_vpic.hxx"
 #include "../libpsc/vpic/bnd_fields_vpic.hxx"
 #include "../libpsc/vpic/bnd_particles_vpic.hxx"
+#include "../libpsc/vpic/marder_vpic.hxx"
 
 #include "rngpool_iface.h"
 
@@ -62,6 +63,7 @@ struct PscConfig
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>;
+  using Marder_t = MarderVpic;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
