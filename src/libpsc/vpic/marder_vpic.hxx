@@ -61,6 +61,11 @@ struct MarderVpic : MarderBase
 
   void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
   {
+    assert(0);
+  }
+  
+  void operator()(MfieldsVpic& mflds, MparticlesVpic& mprts)
+  {
     struct psc *psc = ppsc; // FIXME
 
     bool clean_div_e = (clean_div_e_interval_ > 0 && psc->timestep % clean_div_e_interval_ == 0);
@@ -71,17 +76,12 @@ struct MarderVpic : MarderBase
       return;
     }
   
-    auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, VPIC_MFIELDS_N_COMP);
-    auto& mprts = mprts_base.get_as<MparticlesVpic>();
-
     // Divergence clean e
     if (clean_div_e) {
       // needs E, rhof, rhob, material
       psc_marder_vpic_clean_div_e(mflds, mprts);
       // upates E, rhof, div_e_err
     }
-
-    mprts_base.put_as(mprts, MP_DONT_COPY);
 
     // Divergence clean b
     if (clean_div_b) {
@@ -98,8 +98,6 @@ struct MarderVpic : MarderBase
       mpi_printf(comm_, "Domain desynchronization error = %e (arb units)\n", err);
       // updates E, B, TCA
     }
-
-    mflds_base.put_as(mflds, EX, 16);
   }
 
 private:

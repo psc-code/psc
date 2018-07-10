@@ -805,7 +805,16 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
+#if 1
     PscMarderBase{psc_->marder}(mflds_, mprts_);
+#else
+    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
+      mpi_printf(comm, "***** Performing Marder correction...\n");
+      prof_start(pr_marder);
+      marder_(mflds_, mprts_);
+      prof_stop(pr_marder);
+    }
+#endif
     
     checks_.gauss(psc_, mprts_, mflds_);
 
