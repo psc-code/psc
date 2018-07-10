@@ -44,9 +44,7 @@ struct Checks_ : ChecksParams, ChecksBase
       item_rho_p_{grid, comm},
       item_dive_{grid, comm},
       item_divj_{grid, comm}
-  {
-    MHERE;
-  }
+  {}
   
   // ======================================================================
   // psc_checks: Charge Continuity 
@@ -56,7 +54,7 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_before_particle_push(psc *psc, MparticlesBase& mprts_base) override
   {
-    if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
+    if (continuity_every_step <= 0 || psc->timestep % continuity_every_step != 0) {
       return;
     }
 
@@ -76,7 +74,7 @@ struct Checks_ : ChecksParams, ChecksBase
   void continuity_after_particle_push(psc *psc, MparticlesBase& mprts_base,
 				      MfieldsBase& mflds_base) override
   {
-    if (continuity_every_step < 0 || psc->timestep % continuity_every_step != 0) {
+    if (continuity_every_step <= 0 || psc->timestep % continuity_every_step != 0) {
       return;
     }
 
@@ -153,7 +151,7 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void gauss(psc* psc, MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
-    if (gauss_every_step < 0 ||	psc->timestep % gauss_every_step != 0) {
+    if (gauss_every_step <= 0 || psc->timestep % gauss_every_step != 0) {
       return;
     }
     
