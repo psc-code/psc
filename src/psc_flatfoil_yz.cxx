@@ -188,8 +188,6 @@ struct PscFlatfoilParams
   int heating_interval;
   int heating_kind;
   HeatingSpotFoil heating_spot;
-
-  ChecksParams checks_params;
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
@@ -218,7 +216,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       PscFlatfoilParams(params),
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
-      checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
     MPI_Comm comm = psc_comm(psc_);
@@ -370,7 +367,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       prof_stop(pr_collision);
     }
     
-    if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
+    if (p_.checks_params.continuity_every_step > 0 && timestep % p_.checks_params.continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
       checks_.continuity_before_particle_push(mprts_);
@@ -478,7 +475,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     prof_stop(pr_sync5);
 #endif
     
-    if (checks_params.continuity_every_step > 0 && timestep % checks_params.continuity_every_step == 0) {
+    if (p_.checks_params.continuity_every_step > 0 && timestep % p_.checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);
       checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
@@ -494,7 +491,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       prof_stop(pr_marder);
     }
     
-    if (checks_params.gauss_every_step > 0 && timestep % checks_params.gauss_every_step == 0) {
+    if (p_.checks_params.gauss_every_step > 0 && timestep % p_.checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
@@ -507,7 +504,6 @@ protected:
   Heating_t heating_;
   Inject_t inject_;
 
-  Checks_t checks_;
   Marder_t marder_;
 };
 
@@ -661,15 +657,15 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.inject_tau = 40;
 
   // --- checks
-  params.checks_params.continuity_every_step = -1;
-  params.checks_params.continuity_threshold = 1e-6;
-  params.checks_params.continuity_verbose = true;
-  params.checks_params.continuity_dump_always = false;
+  p.checks_params.continuity_every_step = -1;
+  p.checks_params.continuity_threshold = 1e-6;
+  p.checks_params.continuity_verbose = true;
+  p.checks_params.continuity_dump_always = false;
 
-  params.checks_params.gauss_every_step = -1;
-  params.checks_params.gauss_threshold = 1e-6;
-  params.checks_params.gauss_verbose = true;
-  params.checks_params.gauss_dump_always = false;
+  p.checks_params.gauss_every_step = -1;
+  p.checks_params.gauss_threshold = 1e-6;
+  p.checks_params.gauss_verbose = true;
+  p.checks_params.gauss_dump_always = false;
 
   // --- marder
   params.marder_interval = 0*5;

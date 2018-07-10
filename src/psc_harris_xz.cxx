@@ -62,7 +62,7 @@ struct PscConfig
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;
-  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order_1st>;
+  using Checks_t = Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
@@ -748,7 +748,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
-    PscChecksBase{psc_->checks}.continuity_before_particle_push(psc_, mprts_);
+    checks_.continuity_before_particle_push(psc_, mprts_);
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
@@ -799,14 +799,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    PscChecksBase{psc_->checks}.continuity_after_particle_push(psc_, mprts_, mflds_);
+    checks_.continuity_after_particle_push(psc_, mprts_, mflds_);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
     PscMarderBase{psc_->marder}(mflds_, mprts_);
     
-    PscChecksBase{psc_->checks}.gauss(psc_, mprts_, mflds_);
+    checks_.gauss(psc_, mprts_, mflds_);
 
     pushp_.prep(mprts_, mflds_);
   }

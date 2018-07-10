@@ -7,6 +7,7 @@
 #include <particles.hxx>
 
 #include <push_particles.hxx>
+#include <checks.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
@@ -28,6 +29,8 @@ struct PscParams
 
   int collision_interval;
   double collision_nu;
+
+  ChecksParams checks_params;
 };
   
 // ======================================================================
@@ -59,7 +62,8 @@ struct Psc
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      bndp_{psc_->mrc_domain_, psc_->grid()}
+      bndp_{psc_->mrc_domain_, psc_->grid()},
+      checks_{psc_->grid(), psc_comm(psc), p_.checks_params}
   {}
 
   // ----------------------------------------------------------------------
@@ -227,6 +231,7 @@ protected:
   Bnd_t bnd_;
   BndFields_t bndf_;
   BndParticles_t bndp_;
+  Checks_t checks_;
 
   int st_nr_particles;
   int st_time_step;
