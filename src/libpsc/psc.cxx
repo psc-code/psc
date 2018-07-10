@@ -4,7 +4,6 @@
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
-#include "psc_event_generator.h"
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 #include "setup_fields.hxx"
@@ -106,7 +105,6 @@ static struct param psc_descr[] = {
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
-  { "event_generator"         , VAR(event_generator)         , MRC_VAR_OBJ(psc_event_generator) },
 
   {},
 };

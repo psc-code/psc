@@ -106,7 +106,6 @@ struct psc {
   struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_fields_collection *output_fields_collection; ///< collection of psc_output_fields
   struct psc_output_particles *output_particles;///< particle output
-  struct psc_event_generator *event_generator;	///< event generator
   ///@}
 
   ///@defgroup config-params user-configurable parameters @{

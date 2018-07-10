@@ -18,9 +18,6 @@ add_library(psc
 
   psc_balance/psc_balance.cxx
 
-  psc_event_generator/psc_event_generator.cxx
-  psc_event_generator/psc_event_generator_none.cxx
-
   psc_diag/psc_diag.cxx
   psc_diag/psc_diag_item.cxx
   psc_diag/psc_diag_item_field_energy.cxx
