@@ -69,7 +69,8 @@ struct Psc
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       bndp_{psc_->mrc_domain_, psc_->grid()},
-      checks_{psc_->grid(), psc_comm(psc), p_.checks_params}
+      checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
+      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
   {}
 
   // ----------------------------------------------------------------------
@@ -238,6 +239,7 @@ protected:
   BndFields_t bndf_;
   BndParticles_t bndp_;
   Checks_t checks_;
+  Marder_t marder_;
 
   int st_nr_particles;
   int st_time_step;

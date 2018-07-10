@@ -209,8 +209,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     : Psc{p, psc},
       PscFlatfoilParams(params),
       heating_{heating_interval, heating_kind, heating_spot},
-      inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
-      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
+      inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -497,8 +496,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 protected:
   Heating_t heating_;
   Inject_t inject_;
-
-  Marder_t marder_;
 };
 
 // ======================================================================

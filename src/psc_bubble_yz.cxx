@@ -54,8 +54,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
     : Psc{p, psc},
-      PscBubbleParams(params),
-      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
+      PscBubbleParams(params)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -387,9 +386,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
-
-protected:
-  Marder_t marder_;
 };
 
 // ======================================================================
