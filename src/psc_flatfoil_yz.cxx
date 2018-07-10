@@ -172,11 +172,6 @@ struct PscFlatfoilParams
   double background_Te;
   double background_Ti;
 
-  int marder_interval;
-  double marder_diffusion;
-  int marder_loop;
-  bool marder_dump;
-
   bool inject_enable;
   int inject_kind_n;
   int inject_interval;
@@ -215,7 +210,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       PscFlatfoilParams(params),
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
-      marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
+      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -483,7 +478,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && timestep % marder_interval == 0) {
+    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
       marder_(mflds_, mprts_);
@@ -667,10 +662,10 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   p.checks_params.gauss_dump_always = false;
 
   // --- marder
-  params.marder_interval = 0*5;
-  params.marder_diffusion = 0.9;
-  params.marder_loop = 3;
-  params.marder_dump = false;
+  p.marder_interval = 0*5;
+  p.marder_diffusion = 0.9;
+  p.marder_loop = 3;
+  p.marder_dump = false;
 
   // --- balancing
   p.balance_interval = 0;

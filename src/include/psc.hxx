@@ -31,6 +31,11 @@ struct PscParams
   double collision_nu;
 
   ChecksParams checks_params;
+
+  int marder_interval;
+  double marder_diffusion;
+  int marder_loop;
+  bool marder_dump;
 };
   
 // ======================================================================

@@ -41,11 +41,6 @@ struct PscBubbleParams
   double TTe;
   double TTi;
   double MMi;
-  
-  int marder_interval;
-  double marder_diffusion;
-  int marder_loop;
-  bool marder_dump;
 };
 
 using PscConfig = PscConfig1vbecSingle<dim_yz>;
@@ -60,7 +55,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
     : Psc{p, psc},
       PscBubbleParams(params),
-      marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
+      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
   {
     MPI_Comm comm = psc_comm(psc_);
 
@@ -377,7 +372,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && timestep % marder_interval == 0) {
+    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
       marder_(mflds_, mprts_);
@@ -469,10 +464,10 @@ PscBubble* PscBubbleBuilder::makePsc()
   p.checks_params.gauss_dump_always = false;
 
   // --- marder
-  params.marder_interval = 0*5;
-  params.marder_diffusion = 0.9;
-  params.marder_loop = 3;
-  params.marder_dump = false;
+  p.marder_interval = 0*5;
+  p.marder_diffusion = 0.9;
+  p.marder_loop = 3;
+  p.marder_dump = false;
 
   // --- balancing
   p.balance_interval = 0;
