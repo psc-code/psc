@@ -11,12 +11,12 @@ struct PushFieldsCuda : PushFieldsBase
 
   void push_E(MfieldsCuda& mflds, double dt_fac, dim_yz tag)
   {
-    cuda_push_fields_E_yz(mflds.cmflds, dt_fac * ppsc->dt);
+    cuda_push_fields_E_yz(mflds.cmflds, dt_fac * ppsc->grid().dt);
   }
 
   void push_E(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
   {
-    cuda_push_fields_E_xyz(mflds.cmflds, dt_fac * ppsc->dt);
+    cuda_push_fields_E_xyz(mflds.cmflds, dt_fac * ppsc->grid().dt);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch
@@ -42,12 +42,12 @@ struct PushFieldsCuda : PushFieldsBase
 
   void push_H(MfieldsCuda& mflds, double dt_fac, dim_yz tag)
   {
-    cuda_push_fields_H_yz(mflds.cmflds, dt_fac * ppsc->dt);
+    cuda_push_fields_H_yz(mflds.cmflds, dt_fac * ppsc->grid().dt);
   }
 
   void push_H(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
   {
-    cuda_push_fields_H_xyz(mflds.cmflds, dt_fac * ppsc->dt);
+    cuda_push_fields_H_xyz(mflds.cmflds, dt_fac * ppsc->grid().dt);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch

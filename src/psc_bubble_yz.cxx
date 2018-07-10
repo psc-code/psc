@@ -1,6 +1,7 @@
 
 #include <psc.h>
 #include <psc.hxx>
+#include "psc_config.hxx"
 #include <psc_particles_single.h>
 #include <psc_fields_single.h>
 #include <psc_method.h>
@@ -19,8 +20,6 @@
 
 #include "setup_particles.hxx"
 #include "setup_fields.hxx"
-
-#include "psc_config.hxx"
 
 #include <mrc_params.h>
 

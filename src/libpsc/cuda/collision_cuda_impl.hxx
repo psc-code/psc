@@ -20,7 +20,7 @@ struct CollisionCuda : CollisionBase
   
   CollisionCuda(MPI_Comm comm, int interval, double nu);
   
-  virtual void run(MparticlesBase& mprts_base) { assert(0); }
+  void operator()(MparticlesBase& mprts_base) override { assert(0); }
 
   void operator()(Mparticles& _mprts);
 

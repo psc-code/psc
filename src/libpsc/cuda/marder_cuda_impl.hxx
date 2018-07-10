@@ -19,11 +19,14 @@ struct MarderCuda : MarderBase
       loop_{loop},
       dump_{dump}
   {
+#if 0
     bnd_ = psc_bnd_create(comm);
     psc_bnd_set_name(bnd_, "marder_bnd");
     psc_bnd_set_type(bnd_, "cuda");
     psc_bnd_set_psc(bnd_, ppsc);
     psc_bnd_setup(bnd_);
+#endif
+    assert(0);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
     item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
@@ -46,7 +49,7 @@ struct MarderCuda : MarderBase
 
   ~MarderCuda()
   {
-    psc_bnd_destroy(bnd_);
+    //psc_bnd_destroy(bnd_);
     psc_output_fields_item_destroy(item_div_e);
     psc_output_fields_item_destroy(item_rho);
     if (dump_) {
@@ -71,8 +74,8 @@ struct MarderCuda : MarderBase
 
     item_div_e->mres().axpy_comp(0, -1., item_rho->mres(), 0);
     // FIXME, why is this necessary?
-    auto bnd = PscBndBase(bnd_);
-    bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+    //auto bnd = PscBndBase(bnd_);
+    //bnd.fill_ghosts(item_div_e->mres(), 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -96,13 +99,13 @@ struct MarderCuda : MarderBase
 	inv_sum += 1. / sqr(grid.domain.dx[d]);
       }
     }
-    float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
+    float diffusion_max = 1. / 2. / (.5 * ppsc->grid().dt) / inv_sum;
     float diffusion     = diffusion_max * diffusion_;
     
     float fac[3];
     fac[0] = 0.f;
-    fac[1] = .5 * ppsc->dt * diffusion / dx[1];
-    fac[2] = .5 * ppsc->dt * diffusion / dx[2];
+    fac[1] = .5 * ppsc->grid().dt * diffusion / dx[1];
+    fac[2] = .5 * ppsc->grid().dt * diffusion / dx[2];
 
     auto& mflds = mflds_base.get_as<MfieldsCuda>(EX, EX + 3);
     auto& mf = mf_base.get_as<MfieldsCuda>(0, 1);
@@ -153,6 +156,7 @@ struct MarderCuda : MarderBase
     item_rho(mflds_base, mprts_base);
   
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
+#if 0
     auto bnd = PscBndBase(ppsc->bnd);
     bnd.fill_ghosts(mflds_base, EX, EX+3);
   
@@ -162,6 +166,7 @@ struct MarderCuda : MarderBase
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
+#endif
   }
 
 private:
@@ -169,7 +174,6 @@ private:
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho
 
-  psc_bnd* bnd_; //< for filling ghosts on rho, div_e
   psc_output_fields_item* item_div_e;
   psc_output_fields_item* item_rho;
   mrc_io *io_; //< for debug dumping

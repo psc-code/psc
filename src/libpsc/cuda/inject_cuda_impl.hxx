@@ -120,7 +120,7 @@ struct InjectCuda : InjectBase
     const auto& kinds = grid.kinds;
 
     float fac = 1. / grid.cori * 
-      (interval * psc->dt / tau) / (1. + interval * psc->dt / tau);
+      (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);
 
@@ -133,7 +133,7 @@ struct InjectCuda : InjectBase
       buf_n_alloced = 1000;
       buf = (struct cuda_mparticles_prt *) calloc(buf_n_alloced, sizeof(*buf));
     }
-    uint buf_n_by_patch[psc->n_patches()];
+    uint buf_n_by_patch[grid.n_patches()];
 
     uint buf_n = 0;
     for (int p = 0; p < grid.n_patches(); p++) {

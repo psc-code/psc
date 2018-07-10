@@ -46,7 +46,9 @@ struct Checks_ : ChecksParams, ChecksBase
       item_rho_p_{grid, comm},
       item_dive_{grid, comm},
       item_divj_{grid, comm}
-  {}
+  {
+    MHERE;
+  }
   
   // ======================================================================
   // psc_checks: Charge Continuity 

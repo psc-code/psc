@@ -1,6 +1,7 @@
 
 #include "bnd_cuda_3_impl.hxx"
 #include "cuda_bnd.cuh"
+#include "balance.hxx"
 
 // ----------------------------------------------------------------------
 // ctor

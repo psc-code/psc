@@ -8,7 +8,7 @@
 
 template<typename Mparticles, typename RngState>
 CollisionCuda<Mparticles, RngState>::CollisionCuda(MPI_Comm comm, int interval, double nu)
-  : fwd_{new CudaCollision<typename Mparticles::CudaMparticles, RngState>{interval, nu, ppsc->prm.nicell, ppsc->dt}}
+  : fwd_{new CudaCollision<typename Mparticles::CudaMparticles, RngState>{interval, nu, ppsc->prm.nicell, ppsc->grid().dt}}
 {}
 
 template<typename Mparticles, typename RngState>

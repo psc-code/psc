@@ -1,6 +1,4 @@
 
-#include "psc_bnd_fields_private.h"
-
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
 #include "psc_fields_cuda.h"
@@ -109,15 +107,3 @@ struct BndFieldsCuda : BndFieldsBase
   }
 };
 
-// ======================================================================
-// psc_bnd_fields: subclass "cuda"
-
-struct psc_bnd_fields_ops_cuda : psc_bnd_fields_ops {
-  using PscBndFields_t = PscBndFieldsWrapper<BndFieldsCuda>;
-  psc_bnd_fields_ops_cuda() {
-    name                  = "cuda";
-    size                  = PscBndFields_t::size;
-    setup                 = PscBndFields_t::setup;
-    destroy               = PscBndFields_t::destroy;
-  }
-} psc_bnd_fields_cuda_ops;

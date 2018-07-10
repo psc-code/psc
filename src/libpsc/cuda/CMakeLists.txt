@@ -11,10 +11,8 @@ add_library(psccuda
   cuda_mfields.cu
   cuda_mfields_iface.cu
 
-  psc_push_particles_cuda.cxx
   cuda_push_mprts_yz.cu
 
-  psc_push_fields_cuda.cxx
   cuda_push_fields_yz.cu
   cuda_push_fields_xyz.cu
 
@@ -26,7 +24,6 @@ add_library(psccuda
   cuda_bndp_scan.cu
   cuda_bndp_spine.cu
   
-  psc_bnd_cuda.cxx
   cuda_bnd.cu
   bnd_cuda_3_impl.cu
 

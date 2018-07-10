@@ -2,7 +2,6 @@
 #pragma once
 
 #include "bnd.hxx"
-#include "psc_balance.h"
 
 // ======================================================================
 // BndCuda3

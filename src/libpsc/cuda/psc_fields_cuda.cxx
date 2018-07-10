@@ -223,17 +223,3 @@ const MfieldsBase::Convert MfieldsCuda::convert_from_ = {
   { std::type_index(typeid(MfieldsSingle)), psc_mfields_cuda_copy_from_single },
 };
 
-struct psc_mfields_ops_cuda : psc_mfields_ops {
-  using Wrapper = MfieldsWrapper<MfieldsCuda>;
-  psc_mfields_ops_cuda() {
-    name                  = Wrapper::name;
-    size                  = Wrapper::size;
-    setup                 = Wrapper::setup;
-    destroy               = Wrapper::destroy;
-#ifdef HAVE_LIBHDF5_HL
-    // write                 = psc_mfields_cuda_write;
-    // read                  = psc_mfields_cuda_read;
-#endif
-  }
-} psc_mfields_cuda_ops;
-
