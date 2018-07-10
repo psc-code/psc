@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "psc_method.h"
-#include "psc_bnd_particles.h"
 #include "psc_marder.h"
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
@@ -106,7 +105,6 @@ static struct param psc_descr[] = {
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
-  { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
   { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
@@ -135,7 +133,6 @@ _psc_create(struct psc *psc)
   // default 9 state fields (J,E,B)
   psc->n_state_fields = NR_FIELDS;
 
-  psc_bnd_particles_set_psc(psc->bnd_particles, psc);
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
 
   psc->time_start = MPI_Wtime();

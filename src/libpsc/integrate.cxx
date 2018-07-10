@@ -2,7 +2,6 @@
 #include "psc.h"
 #include "psc_method.h"
 #include "psc_marder.h"
-#include "psc_bnd_particles.h"
 #include "psc_event_generator.h"
 #include "psc_checks.h"
 #include "balance.hxx"
