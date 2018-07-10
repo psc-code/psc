@@ -29,6 +29,7 @@
 #include "setup_particles.hxx"
 #include "setup_fields.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
+#include "../libpsc/psc_checks/checks_impl.hxx"
 
 #include <psc_particles_single.h>
 #include <psc_particles_vpic.h>
@@ -61,6 +62,7 @@ struct PscConfig
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;
+  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order_1st>;
 };
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)

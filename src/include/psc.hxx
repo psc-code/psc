@@ -46,6 +46,7 @@ struct Psc
   using Bnd_t = typename PscConfig::Bnd_t;
   using BndFields_t = typename PscConfig::BndFields_t;
   using BndParticles_t = typename PscConfig::BndParticles_t;
+  using Checks_t = typename PscConfig::Checks_t;
 
   // ----------------------------------------------------------------------
   // ctor

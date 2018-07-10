@@ -211,7 +211,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using DIM = PscConfig::dim_t;
   using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
   using Inject_t = typename InjectSelector<Mparticles_t, Mfields_t, InjectFoil, DIM>::Inject;
-  using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
   
   PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)

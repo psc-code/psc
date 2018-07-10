@@ -58,7 +58,6 @@ using PscConfig = PscConfig1vbecSingle<dim_yz>;
 struct PscBubble : Psc<PscConfig>, PscBubbleParams
 {
   using DIM = PscConfig::dim_t;
-  using Checks_t = PscConfig::Checks_t;
   using Marder_t = PscConfig::Marder_t;
 
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
