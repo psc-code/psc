@@ -857,7 +857,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   mpi_printf(comm, "*** Setting up...\n");
 
-  PscParams p;
+  PscParams p{};
 
   // --- balancing
   p.balance_interval = 0;
