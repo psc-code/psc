@@ -217,7 +217,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
     : Psc{p, psc},
       PscFlatfoilParams(params),
-      bndp_{psc_->mrc_domain_, psc_->grid()},
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
@@ -506,8 +505,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
 protected:
-  BndParticles_t bndp_;
-
   Heating_t heating_;
   Inject_t inject_;
 

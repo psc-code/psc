@@ -65,7 +65,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
     : Psc{p, psc},
       PscBubbleParams(params),
-      bndp_{psc_->mrc_domain_, psc_->grid()},
       checks_{psc_->grid(), psc_comm(psc), checks_params},
       marder_(psc_comm(psc), marder_diffusion, marder_loop, marder_dump)
   {
@@ -401,8 +400,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   }
 
 protected:
-  BndParticles_t bndp_;
-
   Checks_t checks_;
   Marder_t marder_;
 };
