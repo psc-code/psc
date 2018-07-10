@@ -16,8 +16,6 @@ add_library(psccuda
   cuda_push_fields_yz.cu
   cuda_push_fields_xyz.cu
 
-  psc_marder_cuda.cxx
-
   bnd_particles_cuda_impl.cu
   cuda_bndp.cu
   cuda_bndp_scan.cu

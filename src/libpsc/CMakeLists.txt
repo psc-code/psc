@@ -14,8 +14,6 @@ add_library(psc
   psc_stats.cxx
   rngpool.cxx
 
-  psc_push_fields/psc_marder.cxx
-
   psc_collision/psc_collision_impl.cxx
 
   psc_balance/psc_balance.cxx

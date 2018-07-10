@@ -103,7 +103,6 @@ struct psc {
   ///@defgroup interfaces Interfaces @{
   struct mrc_obj obj;
   struct psc_method *method;                    ///< particular variant of PIC method
-  struct psc_marder *marder;                    ///< marder correction
   struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_fields_collection *output_fields_collection; ///< collection of psc_output_fields
   struct psc_output_particles *output_particles;///< particle output

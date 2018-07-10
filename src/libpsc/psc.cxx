@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "psc_method.h"
-#include "psc_marder.h"
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
@@ -104,7 +103,6 @@ static struct param psc_descr[] = {
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
-  { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
