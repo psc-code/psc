@@ -10,7 +10,6 @@
 
 #include <psc_method.h>
 #include <psc_marder.h>
-#include <psc_bnd_particles.h>
 #include <psc_checks.h>
 #include <psc_output_fields_collection_private.h>
 #include <psc_output_fields_private.h>
@@ -722,8 +721,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    PscBndParticlesBase bndp(psc_->bnd_particles);
-
     int timestep = psc_->timestep;
 
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
@@ -761,8 +758,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     pushf_.push_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-    bndp(mprts_);
-  
+    prof_start(pr_bndp);
+    bndp_(mprts_);
+    prof_stop(pr_bndp);
+
     // field propagation E^{n+1/2} -> E^{n+3/2}
 
     // fill ghosts for H
@@ -906,8 +905,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_method_set_type(psc_->method, "vpic");
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
-
-  psc_bnd_particles_set_type(psc_->bnd_particles, "vpic");
 
   psc_marder_set_type(psc_->marder, "vpic");
   // FIXME, marder "vpic" manages its own cleaning intervals
