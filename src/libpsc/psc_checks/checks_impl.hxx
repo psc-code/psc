@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "psc_checks_private.h"
-
 #include "psc_output_fields_item.h"
 #include "fields.hxx"
 #include "fields_item.hxx"
@@ -244,17 +242,4 @@ struct Checks_ : ChecksParams, ChecksBase
   FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<Mfields>>> item_divj_;
 };
-
-// ----------------------------------------------------------------------
-// psc_checks_sub_read
-//
-// FIXME, this function exists to avoid a setup called twice error, but it's just a workaround
-
-static void
-psc_checks_sub_read(struct psc_checks *checks, struct mrc_io *io)
-{
-  psc_checks_read_super(checks, io);
-
-  psc_checks_read_member_objs(checks, io);
-}
 

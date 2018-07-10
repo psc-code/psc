@@ -10,7 +10,6 @@
 
 #include <psc_method.h>
 #include <psc_marder.h>
-#include <psc_checks.h>
 #include <psc_output_fields_collection_private.h>
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>

@@ -20,8 +20,6 @@ add_library(psc
 
   psc_balance/psc_balance.cxx
 
-  psc_checks/psc_checks.cxx
-
   psc_event_generator/psc_event_generator.cxx
   psc_event_generator/psc_event_generator_none.cxx
 
