@@ -113,6 +113,8 @@ struct Psc
       initialize_default(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
     }
 
+    psc_print_profiling(psc_, p_.detailed_profiling);
+
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
 
@@ -223,7 +225,6 @@ private:
     // initial output / stats
     psc_method_output(psc->method, psc, mflds, mprts);
     psc_stats_log(psc);
-    psc_print_profiling(psc, detailed_profiling);
   }
 
 protected:
