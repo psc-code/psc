@@ -14,11 +14,11 @@
 template<class F>
 static void Foreach_3d(F f, int l, int r)
 {
-  foreach_3d(ppsc, 0, i,j,k, l, r) {
-    f.x(i,j,k);
-    f.y(i,j,k);
-    f.z(i,j,k);
-  } foreach_3d_end;
+  ppsc->grid().Foreach_3d(l, r, [&](int i, int j, int k) {
+      f.x(i,j,k);
+      f.y(i,j,k);
+      f.z(i,j,k);
+    });
 }
 
 // ----------------------------------------------------------------------
