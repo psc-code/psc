@@ -125,8 +125,6 @@ _psc_create(struct psc *psc)
   psc->n_state_fields = NR_FIELDS;
 
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
-
-  psc->time_start = MPI_Wtime();
 }
 
 // ======================================================================
@@ -344,8 +342,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   //psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);
 
   psc_read_member_objs(psc, io);
-
-  psc->time_start = MPI_Wtime();
 }
 
 // ----------------------------------------------------------------------

@@ -131,8 +131,6 @@ struct psc {
 
   int ibn[3];         ///< number of ghost points
 
-  double time_start;
-
   const Grid_t& grid() const { assert(grid_); return *grid_; }
 
   Grid_t* grid_ = {};

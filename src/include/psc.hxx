@@ -64,7 +64,8 @@ struct Psc
   // ctor
 
   Psc(const PscParams& params, psc* psc)
-    : p_{params},
+    : time_start_{MPI_Wtime()},
+      p_{params},
       psc_(psc),
       mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
@@ -145,7 +146,7 @@ struct Psc
       first_iteration = false;
 
       mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", psc_->timestep + 1,
-		 p_.nmax, psc_->timestep * dt(), MPI_Wtime() - psc_->time_start);
+		 p_.nmax, psc_->timestep * dt(), MPI_Wtime() - time_start_);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -166,7 +167,7 @@ struct Psc
       }
 
       if (psc_->prm.wallclock_limit > 0.) {
-	double wallclock_elapsed = MPI_Wtime() - psc_->time_start;
+	double wallclock_elapsed = MPI_Wtime() - time_start_;
 	double wallclock_elapsed_max;
 	MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
 		      MPI_COMM_WORLD);
@@ -251,6 +252,8 @@ private:
   }
 
 protected:
+  double time_start_;
+
   PscParams p_;
   psc* psc_;
 
