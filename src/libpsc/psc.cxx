@@ -81,8 +81,6 @@ static struct param psc_descr[] = {
     .help = "if set, interpret momenta as velocities and multiply by gamma to get "
     "relativistic momenta." },
   
-  { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
-  { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("double") },
   { "stats_every"
                     , VAR(prm.stats_every)        , PARAM_INT(1),
     .help = "sets every how many steps we log timing and other stats." },

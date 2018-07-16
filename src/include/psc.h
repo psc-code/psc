@@ -56,8 +56,6 @@ struct psc_param {
   bool fractional_n_particles_per_cell;
   bool const_num_particles_per_cell;
   bool initial_momentum_gamma_correction;
-  char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
-  char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
   int stats_every; ///< output timing and other info every so many steps
   double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
 };
