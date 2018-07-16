@@ -113,7 +113,7 @@ struct Psc
       initialize_default(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
     }
 
-    psc_stats_log(psc_);
+    psc_stats_log(psc_->timestep);
     print_profiling();
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -161,7 +161,7 @@ struct Psc
       psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
 
       if (psc_->timestep % psc_->prm.stats_every == 0) {
-	psc_stats_log(psc_);
+	psc_stats_log(psc_->timestep);
 	print_profiling();
       }
 

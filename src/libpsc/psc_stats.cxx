@@ -19,7 +19,7 @@ psc_stats_register(const char *name)
 }
 
 void
-psc_stats_log(struct psc *psc)
+psc_stats_log(int timestep)
 {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -33,7 +33,7 @@ psc_stats_log(struct psc *psc)
   if (rank == 0) {
     printf("    "
 	   "======================================================== step %-7d ===\n",
-	   psc->timestep);
+	   timestep);
     printf("    %25s %10s %10s %10s %10s\n", "name",
 	   "avg", "min", "max", "total");
     for (int i = 1; i < nr_psc_stats; i++) {

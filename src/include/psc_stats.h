@@ -10,7 +10,7 @@ extern double psc_stats_val[MAX_PSC_STATS+1]; // [0] is left empty
 extern int nr_psc_stats;
 
 int psc_stats_register(const char *name);
-void psc_stats_log(struct psc *psc);
+void psc_stats_log(int timestep);
 
 #define psc_stats_start(n) do {				\
     psc_stats_val[n] -= MPI_Wtime();			\
