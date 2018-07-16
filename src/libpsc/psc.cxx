@@ -93,9 +93,6 @@ static struct param psc_descr[] = {
   { "stats_every"
                     , VAR(prm.stats_every)        , PARAM_INT(1),
     .help = "sets every how many steps we log timing and other stats." },
-  { "detailed_profiling"
-                    , VAR(prm.detailed_profiling) , PARAM_BOOL(false),
-    .help = "output profiling information by MPI process rather than aggregated." },
   { "theta_xz"      , VAR(prm.theta_xz)           , PARAM_DOUBLE(0.),
     .help = "rotate initial particle shifted Maxwellian in x-z plane." },
 

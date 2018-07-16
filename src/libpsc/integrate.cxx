@@ -24,11 +24,11 @@ int st_time_field;
 // psc_print_profiling
 
 void
-psc_print_profiling(struct psc *psc)
+psc_print_profiling(struct psc *psc, bool detailed_profiling)
 {
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (1||(size > 1 && !psc->prm.detailed_profiling)) {
+  if (!detailed_profiling) {
     prof_print_mpi(MPI_COMM_WORLD);
   } else {
     int rank;

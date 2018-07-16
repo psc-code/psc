@@ -62,7 +62,6 @@ struct psc_param {
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
   char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
   int stats_every; ///< output timing and other info every so many steps
-  bool detailed_profiling; ///< output profiling info for each process separately
   double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
 };
 
@@ -252,7 +251,7 @@ struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);
-void psc_print_profiling(struct psc *psc);
+void psc_print_profiling(struct psc *psc, bool detailed_profiling);
 
 void psc_default_dimensionless(struct psc *psc);
 

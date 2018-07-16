@@ -10,15 +10,18 @@
 #include <checks.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
+				MfieldsBase& mflds_base, MparticlesBase& mprts_base,
+				bool detailed_profiling); // FIXME
 
 // ======================================================================
 // PscParams
 
 struct PscParams
 {
-  double cfl = { .75 }; /// CFL number used to determine time step
-  int nmax;	/// Number of timesteps to run
+  double cfl = { .75 }; // CFL number used to determine time step
+  int nmax;             // Number of timesteps to run
+
+  bool detailed_profiling; // output profiling info for each process separately
 
   int balance_interval;
   double balance_factor_fields;
@@ -105,9 +108,9 @@ struct Psc
     mprts_.view();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_);
+      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
     } else {
-      initialize_default(psc_->method, psc_, mflds_, mprts_);
+      initialize_default(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
     }
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
@@ -156,7 +159,7 @@ struct Psc
 
       if (psc_->timestep % psc_->prm.stats_every == 0) {
 	psc_stats_log(psc_);
-	psc_print_profiling(psc_);
+	psc_print_profiling(psc_, p_.detailed_profiling);
       }
 
       if (psc_->prm.wallclock_limit > 0.) {
@@ -213,14 +216,14 @@ private:
   // initialize_default
   
   static void initialize_default(struct psc_method *method, struct psc *psc,
-				 MfieldsBase& mflds, MparticlesBase& mprts)
+			  MfieldsBase& mflds, MparticlesBase& mprts, bool detailed_profiling)
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
     
     // initial output / stats
     psc_method_output(psc->method, psc, mflds, mprts);
     psc_stats_log(psc);
-    psc_print_profiling(psc);
+    psc_print_profiling(psc, detailed_profiling);
   }
 
 protected:
