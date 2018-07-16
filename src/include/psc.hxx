@@ -21,6 +21,8 @@ struct PscParams
   double cfl = { .75 };            // CFL number used to determine time step
   int nmax;                        // Number of timesteps to run
   double wallclock_limit = { 0. }; // Maximum wallclock time to run
+  bool write_checkpoint = { false };
+  int write_checkpoint_every_step = { 0 };
 
   bool detailed_profiling; // output profiling info for each process separately
 
@@ -140,8 +142,8 @@ struct Psc
       psc_stats_start(st_time_step);
 
       if (!first_iteration &&
-	  psc_->prm.write_checkpoint_every_step > 0 &&
-	  psc_->timestep % psc_->prm.write_checkpoint_every_step == 0) {
+	  p_.write_checkpoint_every_step > 0 &&
+	  psc_->timestep % p_.write_checkpoint_every_step == 0) {
 	psc_write_checkpoint(psc_);
       }
       first_iteration = false;
@@ -180,7 +182,7 @@ struct Psc
       }
     }
 
-    if (psc_->prm.write_checkpoint) {
+    if (p_.write_checkpoint) {
       psc_write_checkpoint(psc_);
     }
 

@@ -81,11 +81,6 @@ static struct param psc_descr[] = {
     .help = "if set, interpret momenta as velocities and multiply by gamma to get "
     "relativistic momenta." },
   
-  { "write_checkpoint"
-                    , VAR(prm.write_checkpoint)   , PARAM_BOOL(false) },
-  { "write_checkpoint_every_step"
-                    , VAR(prm.write_checkpoint_every_step), PARAM_INT(-1) },
-
   { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
   { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("double") },
   { "stats_every"
