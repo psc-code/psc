@@ -113,7 +113,7 @@ struct Psc
       initialize_default(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
     }
 
-    psc_print_profiling(psc_, p_.detailed_profiling);
+    print_profiling();
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
@@ -161,7 +161,7 @@ struct Psc
 
       if (psc_->timestep % psc_->prm.stats_every == 0) {
 	psc_stats_log(psc_);
-	psc_print_profiling(psc_, p_.detailed_profiling);
+	print_profiling();
       }
 
       if (psc_->prm.wallclock_limit > 0.) {
@@ -213,6 +213,29 @@ protected:
   double dt() const { return psc_->grid().dt; }
 
 private:
+
+  // ----------------------------------------------------------------------
+  // print_profiling
+
+  void print_profiling()
+  {
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if (!p_.detailed_profiling) {
+      prof_print_mpi(MPI_COMM_WORLD);
+    } else {
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      for (int i = 0; i < size; i++) {
+	if (i == rank) {
+	  mprintf("profile\n");
+	  prof_print();
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+      }
+    }
+  }
+  
 
   // ----------------------------------------------------------------------
   // initialize_default

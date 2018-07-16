@@ -251,7 +251,6 @@ struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);
-void psc_print_profiling(struct psc *psc, bool detailed_profiling);
 
 void psc_default_dimensionless(struct psc *psc);
 
