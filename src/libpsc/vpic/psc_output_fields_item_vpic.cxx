@@ -28,13 +28,15 @@ struct Item_vpic_fields
 
   static void run(Mfields& mflds, Mfields& mres)
   {
+    auto& grid = mflds.grid();
+    
     for (int p = 0; p < mres.n_patches(); p++) {
       Fields F(mflds[p]), R(mres[p]);
-      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-	for (int m = 0; m < 16; m++) {
-	  R(m, ix,iy,iz) = F(m, ix,iy,iz);
-	}
-      } foreach_3d_end;
+      grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
+	  for (int m = 0; m < 16; m++) {
+	    R(m, ix,iy,iz) = F(m, ix,iy,iz);
+	  }
+	});
     }
   }
 };
@@ -70,6 +72,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
   {
     const auto& kinds = mprts.grid().kinds;
     auto& mres = this->mres_;
+    auto& grid = mprts.grid();
     auto mf_hydro = MfieldsVpic{ppsc->grid(), 16, { 1, 1, 1 }};
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -81,11 +84,11 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
       auto& mf = mf_hydro.get_as<Mfields>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres.n_patches(); p++) {
 	Fields F(mf[p]), R(mres[p]);
-	psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-	  for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
-	    R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
-	  }
-	} foreach_3d_end;
+	grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
+	    for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
+	      R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
+	    }
+	  });
       }
       mf_hydro.put_as(mf, 0, 0);
     }

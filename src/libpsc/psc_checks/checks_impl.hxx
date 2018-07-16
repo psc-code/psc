@@ -105,15 +105,15 @@ struct Checks_ : ChecksParams, ChecksBase
     for (int p = 0; p < div_j.n_patches(); p++) {
       Fields D_rho(d_rho[p]);
       Fields Div_J(div_j[p]);
-      psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
-	double d_rho = D_rho(0, jx,jy,jz);
-	double div_j = Div_J(0, jx,jy,jz);
-	max_err = fmax(max_err, fabs(d_rho + div_j));
-	if (fabs(d_rho + div_j) > eps) {
-	  mprintf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
-		  d_rho, -div_j, d_rho + div_j);
-	}
-      } psc_foreach_3d_end;
+      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+	  double d_rho = D_rho(0, jx,jy,jz);
+	  double div_j = Div_J(0, jx,jy,jz);
+	  max_err = fmax(max_err, fabs(d_rho + div_j));
+	  if (fabs(d_rho + div_j) > eps) {
+	    mprintf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
+		    d_rho, -div_j, d_rho + div_j);
+	  }
+	});
     }
 
     // find global max
@@ -187,22 +187,23 @@ struct Checks_ : ChecksParams, ChecksBase
 	}
       }
       
-      psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
-	if (jy < l[1] || jz < l[2] ||
-	    jy >= grid.ldims[1] - r[1] ||
-	    jz >= grid.ldims[2] - r[2]) {
-	  continue;
-	}
-	double v_rho = Rho(0, jx,jy,jz);
-	double v_dive = DivE(0, jx,jy,jz);
-	max_err = fmax(max_err, fabs(v_dive - v_rho));
+      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+	  if (jy < l[1] || jz < l[2] ||
+	      jy >= grid.ldims[1] - r[1] ||
+	      jz >= grid.ldims[2] - r[2]) {
+	    // nothing
+	  } else {
+	    double v_rho = Rho(0, jx,jy,jz);
+	    double v_dive = DivE(0, jx,jy,jz);
+	    max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
-	if (fabs(v_dive - v_rho) > eps) {
-	  printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
-		 v_dive, v_rho, v_dive - v_rho);
-	}
+	    if (fabs(v_dive - v_rho) > eps) {
+	      printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
+		     v_dive, v_rho, v_dive - v_rho);
+	    }
 #endif
-      } psc_foreach_3d_end;
+	  }
+	});
     }
 
     // find global max

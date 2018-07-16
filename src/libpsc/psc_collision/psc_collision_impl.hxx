@@ -74,6 +74,8 @@ struct CollisionHost
 
   void operator()(Mparticles& mprts)
   {
+    auto& grid = mprts.grid();
+
     for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
   
@@ -85,22 +87,22 @@ struct CollisionHost
       find_cell_offsets(offsets, mprts[p]);
     
       Fields F(mflds_stats_[p]);
-      psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-	int c = (iz * ldims[1] + iy) * ldims[0] + ix;
-	randomize_in_cell(prts, offsets[c], offsets[c+1]);
-
-	update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
-      
-	struct psc_collision_stats stats = {};
-	collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
-      
-	update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
-
-	for (int s = 0; s < NR_STATS; s++) {
-	  F(s, ix,iy,iz) = stats.s[s];
-	  stats_total.s[s] += stats.s[s];
-	}
-      } psc_foreach_3d_end;
+      grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
+	  int c = (iz * ldims[1] + iy) * ldims[0] + ix;
+	  randomize_in_cell(prts, offsets[c], offsets[c+1]);
+	  
+	  update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+	  
+	  struct psc_collision_stats stats = {};
+	  collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
+	  
+	  update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+	  
+	  for (int s = 0; s < NR_STATS; s++) {
+	    F(s, ix,iy,iz) = stats.s[s];
+	    stats_total.s[s] += stats.s[s];
+	  }
+	});
     
 #if 0
       mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", p,

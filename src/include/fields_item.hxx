@@ -161,11 +161,13 @@ struct ItemLoopPatches : ItemPatch
   
   static void run(Mfields& mflds, Mfields& mres)
   {
+    auto& grid = mres.grid();
+    
     for (int p = 0; p < mres.n_patches(); p++) {
       Fields F(mflds[p]), R(mres[p]);
-      psc_foreach_3d(ppsc, p, i,j,k, 0, 0) {
-	ItemPatch::set(R, F, i,j,k);
-      } foreach_3d_end;
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	  ItemPatch::set(R, F, i,j,k);
+	});
     }
   }
 };
