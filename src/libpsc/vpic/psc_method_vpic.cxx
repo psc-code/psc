@@ -87,7 +87,6 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   psc_method_default_output(method, psc, mflds_base, mprts_base);
 
   Simulation_print_status(sub->sim);
-  psc_stats_log(psc);
 }
 
 // ----------------------------------------------------------------------
