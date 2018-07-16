@@ -56,7 +56,6 @@ struct psc_param {
   bool fractional_n_particles_per_cell;
   bool const_num_particles_per_cell;
   bool initial_momentum_gamma_correction;
-  double wallclock_limit;
   bool write_checkpoint;
   int write_checkpoint_every_step;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")

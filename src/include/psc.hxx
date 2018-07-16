@@ -18,8 +18,9 @@ void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
 struct PscParams
 {
-  double cfl = { .75 }; // CFL number used to determine time step
-  int nmax;             // Number of timesteps to run
+  double cfl = { .75 };            // CFL number used to determine time step
+  int nmax;                        // Number of timesteps to run
+  double wallclock_limit = { 0. }; // Maximum wallclock time to run
 
   bool detailed_profiling; // output profiling info for each process separately
 
@@ -166,13 +167,13 @@ struct Psc
 	print_profiling();
       }
 
-      if (psc_->prm.wallclock_limit > 0.) {
+      if (p_.wallclock_limit > 0.) {
 	double wallclock_elapsed = MPI_Wtime() - time_start_;
 	double wallclock_elapsed_max;
 	MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
 		      MPI_COMM_WORLD);
       
-	if (wallclock_elapsed_max > psc_->prm.wallclock_limit) {
+	if (wallclock_elapsed_max > p_.wallclock_limit) {
 	  mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
 	  break;
 	}

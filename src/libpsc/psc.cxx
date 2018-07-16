@@ -81,8 +81,6 @@ static struct param psc_descr[] = {
     .help = "if set, interpret momenta as velocities and multiply by gamma to get "
     "relativistic momenta." },
   
-  { "wallclock_limit"
-                    , VAR(prm.wallclock_limit)    , PARAM_DOUBLE(0.) },
   { "write_checkpoint"
                     , VAR(prm.write_checkpoint)   , PARAM_BOOL(false) },
   { "write_checkpoint_every_step"
