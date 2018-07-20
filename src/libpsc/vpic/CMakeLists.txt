@@ -5,7 +5,6 @@ add_library(pscvpic
   psc_output_fields_item_vpic.cxx
   psc_method_vpic.cxx
   psc_vpic_bits.cxx
-  simulation.cxx
   vpic_base.cxx
   )
 
