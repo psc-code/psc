@@ -3,6 +3,7 @@
 
 #include <psc_method.h>
 #include <mrc_profile.h>
+#include <psc_method_private.h>
 
 #include <particles.hxx>
 
@@ -158,7 +159,11 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_method_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
+      if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+	psc_method_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
+      } else {
+	psc_method_default_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
+      }
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -253,7 +258,7 @@ private:
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
     
     // initial output / stats
-    psc_method_output(psc->method, psc, stats_every, mflds, mprts);
+    psc_method_default_output(psc->method, psc, stats_every, mflds, mprts);
   }
 
 protected:
