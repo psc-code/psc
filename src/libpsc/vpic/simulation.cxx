@@ -209,12 +209,5 @@ void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmfld
   sim->uncenter_p(vmprts, vmflds);
 }
 
-// ----------------------------------------------------------------------
-// Simulation_moments_run
-
-void Simulation_moments_run(Simulation* sim, HydroArray *hydro_array, Particles *vmprts, int kind)
-{
-  sim->moments_run(hydro_array, vmprts, kind);
-}
 
 

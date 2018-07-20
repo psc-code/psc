@@ -79,7 +79,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
     
     for (int kind = 0; kind < kinds.size(); kind++) {
       HydroArray *vmflds_hydro = mf_hydro.vmflds_hydro;
-      Simulation_moments_run(sim, vmflds_hydro, mprts.vmprts, kind);
+      sim->moments_run(vmflds_hydro, mprts.vmprts, kind);
       
       auto& mf = mf_hydro.get_as<Mfields>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres.n_patches(); p++) {
