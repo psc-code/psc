@@ -9,7 +9,7 @@ struct SortVpic
 
   void operator()(Mparticles& mprts)
   {
-    Simulation_sort_mprts(mprts.sim, mprts.vmprts, ppsc->timestep);
+    mprts.sim->sort_mprts(*mprts.vmprts, ppsc->timestep);
   }
 };
 

@@ -20,7 +20,7 @@ public:
 
   void operator()(MparticlesBase& mprts_base) override
   {
-    Simulation_collision_run(sim_);
+    sim_->collision_run();
   }
 
 private:

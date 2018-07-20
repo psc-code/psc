@@ -125,9 +125,6 @@ void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmfld
 void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
 void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
 
-void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step);
-void Simulation_collision_run(Simulation *sim);
-
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
 void Simulation_diagnostics_run(Simulation *sim);

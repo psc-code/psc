@@ -302,16 +302,4 @@ void Simulation_moments_run(Simulation* sim, HydroArray *hydro_array, Particles 
   sim->moments_run(hydro_array, vmprts, kind);
 }
 
-// ----------------------------------------------------------------------
-// substeps of a time integration step
-
-void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step)
-{
-  sim->sort_mprts(*vmprts, step);
-}
-
-void Simulation_collision_run(Simulation* sim)
-{
-  sim->collision_run();
-}
 
