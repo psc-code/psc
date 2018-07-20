@@ -98,8 +98,10 @@ void
 psc_method_vpic_inc_step(struct psc_method *method, int timestep)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
+  Simulation* sim = sub->sim;
 
-  Simulation_inc_step(sub->sim, timestep);
+  sim->grid_->step++;
+  assert(sim->grid_->step == timestep);
 }
 
 // ----------------------------------------------------------------------

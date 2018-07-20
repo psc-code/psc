@@ -85,15 +85,6 @@ Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
 }
 
 // ----------------------------------------------------------------------
-// Simulation_inc_step
-
-void Simulation_inc_step(Simulation *sim, int step)
-{
-  sim->grid_->step++;
-  assert(sim->grid_->step == step);
-}
-
-// ----------------------------------------------------------------------
 // vpic_print_status
 
 void Simulation_print_status(Simulation *sim)
