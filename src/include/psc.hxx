@@ -128,12 +128,7 @@ struct Psc
     // initial output / stats
     mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
     diagnostics();
-
-    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_print_status(psc_->method);
-    }
-    psc_stats_log(psc_->timestep);
-    print_profiling();
+    print_status();
 
     mpi_printf(psc_comm(psc_), "Initialization complete.\n");
   }
@@ -184,11 +179,7 @@ struct Psc
       psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
 
       if (psc_->timestep % p_.stats_every == 0) {
-	if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-	  psc_method_vpic_print_status(psc_->method);
-	}
-	psc_stats_log(psc_->timestep);
-	print_profiling();
+	print_status();
       }
 
       if (p_.wallclock_limit > 0.) {
@@ -286,6 +277,18 @@ private:
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 
+  // ----------------------------------------------------------------------
+  // print_status
+
+  void print_status()
+  {
+    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+      psc_method_vpic_print_status(psc_->method);
+    }
+    psc_stats_log(psc_->timestep);
+    print_profiling();
+  }
+  
 protected:
   double time_start_;
 
