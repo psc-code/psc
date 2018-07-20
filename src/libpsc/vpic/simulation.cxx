@@ -218,41 +218,6 @@ double Simulation_mflds_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* v
   return err;
 }
 
-void Simulation_mflds_compute_div_b_err(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->compute_div_b_err(); TOC(compute_div_b_err, 1);
-}
-
-double Simulation_mflds_compute_rms_div_b_err(Simulation* sim, FieldArray* vmflds)
-{
-  double err;
-  TIC err = vmflds->compute_rms_div_b_err(); TOC(compute_rms_div_b_err, 1);
-  return err;
-}
-
-void Simulation_mflds_clean_div_b(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->clean_div_b(); TOC(clean_div_b, 1);
-}
-
-void Simulation_mflds_compute_div_e_err(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->compute_div_e_err(); TOC(compute_div_e_err, 1);
-}
-
-double Simulation_mflds_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds)
-{
-  double err;
-  TIC err = vmflds->compute_rms_div_e_err(); TOC(compute_rms_div_e_err, 1);
-  return err;
-}
-
-void Simulation_mflds_clean_div_e(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->clean_div_e(); TOC(clean_div_e, 1);
-}
-
-
 // ======================================================================
 
 // ----------------------------------------------------------------------

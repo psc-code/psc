@@ -47,32 +47,36 @@ struct MfieldsVpic : MfieldsBase
   
   void compute_div_b_err()
   {
-    Simulation_mflds_compute_div_b_err(sim, vmflds_fields);
+    TIC vmflds_fields->compute_div_b_err(); TOC(compute_div_b_err, 1);
   }
   
   double compute_rms_div_b_err()
   {
-    return Simulation_mflds_compute_rms_div_b_err(sim, vmflds_fields);
+    double err;
+    TIC err = vmflds_fields->compute_rms_div_b_err(); TOC(compute_rms_div_b_err, 1);
+    return err;
   }
 
   void clean_div_b()
   {
-    Simulation_mflds_clean_div_b(sim, vmflds_fields);
+    TIC vmflds_fields->clean_div_b(); TOC(clean_div_b, 1);
   }
 
   void compute_div_e_err()
   {
-    Simulation_mflds_compute_div_e_err(sim, vmflds_fields);
+    TIC vmflds_fields->compute_div_e_err(); TOC(compute_div_e_err, 1);
   }
 
   double compute_rms_div_e_err()
   {
-    return Simulation_mflds_compute_rms_div_e_err(sim, vmflds_fields);
+    double err;
+    TIC err = vmflds_fields->compute_rms_div_e_err(); TOC(compute_rms_div_e_err, 1);
+    return err;
   }
 
   void clean_div_e()
   {
-    Simulation_mflds_clean_div_e(sim, vmflds_fields);
+    TIC vmflds_fields->clean_div_e(); TOC(clean_div_e, 1);
   }
 
   void clear_rhof()
