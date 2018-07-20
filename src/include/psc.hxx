@@ -124,8 +124,9 @@ struct Psc
     } else {
       initialize_default(psc_->method, psc_, mflds_, mprts_, p_.stats_every, p_.detailed_profiling);
     }
+
     // initial output / stats
-    psc_method_default_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
+    output_default(mflds_, mprts_);
 
     psc_stats_log(psc_->timestep);
     print_profiling();
@@ -170,7 +171,7 @@ struct Psc
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	psc_method_vpic_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
       }
-      psc_method_default_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
+      output_default(mflds_, mprts_);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -266,16 +267,13 @@ private:
   }
 
   // ----------------------------------------------------------------------
-  // psc_method_default_output
+  // output_default
 
-  static void
-  psc_method_default_output(struct psc_method *method, struct psc *psc,
-			    int stats_every,
-			    MfieldsBase& mflds, MparticlesBase& mprts)
+  void output_default(MfieldsBase& mflds, MparticlesBase& mprts)
   {
-    psc_diag_run(psc->diag, psc, mprts, mflds);
-    psc_output_fields_collection_run(psc->output_fields_collection, mflds, mprts);
-    PscOutputParticlesBase{psc->output_particles}.run(mprts);
+    psc_diag_run(psc_->diag, psc_, mprts, mflds);
+    psc_output_fields_collection_run(psc_->output_fields_collection, mflds, mprts);
+    PscOutputParticlesBase{psc_->output_particles}.run(mprts);
   }
 
 protected:
