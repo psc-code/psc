@@ -77,7 +77,6 @@ void Simulation_set_domain_particle_bc(Simulation *sim, int boundary, int pbc);
 struct material *Simulation_define_material(Simulation *sim, const char *name,
 					    double eps, double mu,
 					    double sigma, double zeta);
-void Simulation_define_field_array(Simulation *sim, double damp);
 
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,

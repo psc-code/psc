@@ -48,8 +48,3 @@ struct material *Simulation_define_material(Simulation* sim, const char *name,
   return reinterpret_cast<struct material*>(sim->define_material(name, eps, mu, sigma, zeta));
 }
 
-void Simulation_define_field_array(Simulation* sim, double damp)
-{
-  sim->define_field_array(damp);
-}
-

@@ -322,7 +322,7 @@ static void setup_fields(Simulation* sim, psc* psc_)
   struct material *resistive =
     Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 #endif
-  Simulation_define_field_array(sim, 0.);
+  sim->define_field_array(0.);
   
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
   // Tensor electronic, magnetic and conductive materials are supported
