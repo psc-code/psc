@@ -31,9 +31,7 @@ static struct param psc_method_vpic_descr[] = {
 
 void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-			   MfieldsBase& mflds_base, MparticlesBase& mprts_base,
-			   int stats_every,
-			   bool detailed_profiling)
+			   MfieldsBase& mflds_base, MparticlesBase& mprts_base)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 

@@ -14,8 +14,7 @@
 #include <output_particles.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-				MfieldsBase& mflds_base, MparticlesBase& mprts_base,
-				int stats_every, bool detailed_profiling); // FIXME
+				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
 void psc_method_vpic_output(struct psc_method *method, struct psc *psc,
 			    int stats_every,
 			    MfieldsBase& mflds, MparticlesBase& mprts); // FIXME
@@ -120,9 +119,9 @@ struct Psc
     mprts_.view();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_, p_.stats_every, p_.detailed_profiling);
+      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_);
     } else {
-      initialize_default(psc_->method, psc_, mflds_, mprts_, p_.stats_every, p_.detailed_profiling);
+      initialize_default(psc_->method, psc_, mflds_, mprts_);
     }
 
     // initial output / stats
@@ -260,8 +259,7 @@ private:
   // initialize_default
   
   static void initialize_default(struct psc_method *method, struct psc *psc,
-				 MfieldsBase& mflds, MparticlesBase& mprts,
-				 int stats_every, bool detailed_profiling)
+				 MfieldsBase& mflds, MparticlesBase& mprts)
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
   }
