@@ -84,18 +84,6 @@ Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
   
 }
 
-// ----------------------------------------------------------------------
-// vpic_print_status
-
-void Simulation_print_status(Simulation *sim)
-{
-#ifdef HAVE_VPIC
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  update_profile(rank == 0);
-#endif
-}
-
 // ======================================================================
 
 void Simulation_set_region_resistive_harris(Simulation *sim,
