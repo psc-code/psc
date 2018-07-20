@@ -70,9 +70,6 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
 				       Particles *vmprts,
 				       FieldArray *vmflds);
-void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
-			      Particles *mprts,
-			      FieldArray *vmflds);
 
 // ----------------------------------------------------------------------
 // Simulation
@@ -140,7 +137,6 @@ void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmfld
 void Simulation_push_mflds_H(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_push_mflds_E(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_field_injection(Simulation *sim);
-void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds);
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);

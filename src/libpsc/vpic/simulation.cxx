@@ -335,8 +335,3 @@ void Simulation_field_injection(Simulation* sim)
   sim->field_injection();
 }
 
-void Simulation_push_mprts_prep(Simulation *sim, FieldArray *vmflds)
-{
-  sim->push_mprts_prep(*vmflds);
-}
-

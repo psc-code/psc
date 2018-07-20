@@ -22,7 +22,7 @@ struct PushParticlesVpic : PushParticlesBase
   {
     // needs E, B
     auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, HX + 6);
-    Simulation_push_mprts_prep(sim_, mflds.vmflds_fields);
+    sim_->push_mprts_prep(*mflds.vmflds_fields);
     mflds_base.put_as(mflds, 0, 0);
   }
   
