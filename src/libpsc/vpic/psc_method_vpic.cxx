@@ -110,11 +110,11 @@ psc_method_vpic_inc_step(struct psc_method *method, int timestep)
 }
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_output
+// psc_method_vpic_diagnostics_run
 
 void
-psc_method_vpic_output(struct psc_method *method, struct psc *psc,
-		       MfieldsBase& mflds, MparticlesBase& mprts)
+psc_method_vpic_diagnostics_run(struct psc_method *method, struct psc *psc,
+				MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 

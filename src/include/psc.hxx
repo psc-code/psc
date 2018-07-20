@@ -16,8 +16,8 @@
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
 void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
-void psc_method_vpic_output(struct psc_method *method, struct psc *psc,
-			    MfieldsBase& mflds, MparticlesBase& mprts); // FIXME
+void psc_method_vpic_diagnostics_run(struct psc_method *method, struct psc *psc,
+				     MfieldsBase& mflds, MparticlesBase& mprts); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 
 // ======================================================================
@@ -173,7 +173,7 @@ struct Psc
       }
       
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-	psc_method_vpic_output(psc_->method, psc_, mflds_, mprts_);
+	psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
       }
       output_default(mflds_, mprts_);
 
