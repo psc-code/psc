@@ -175,12 +175,6 @@ struct Psc
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	psc_method_vpic_output(psc_->method, psc_, mflds_, mprts_);
       }
-      
-      if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-	if (p_.stats_every > 0 && psc_->timestep % p_.stats_every == 0) {
-	  psc_method_vpic_print_status(psc_->method);
-	}
-      }
       output_default(mflds_, mprts_);
 
       psc_stats_stop(st_time_step);
@@ -189,6 +183,9 @@ struct Psc
       psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
 
       if (psc_->timestep % p_.stats_every == 0) {
+	if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+	  psc_method_vpic_print_status(psc_->method);
+	}
 	psc_stats_log(psc_->timestep);
 	print_profiling();
       }
