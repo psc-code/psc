@@ -121,6 +121,8 @@ struct Psc
     } else {
       initialize_default(psc_->method, psc_, mflds_, mprts_, p_.stats_every, p_.detailed_profiling);
     }
+    // initial output / stats
+    psc_method_default_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
 
     psc_stats_log(psc_->timestep);
     print_profiling();
@@ -258,9 +260,6 @@ private:
 				 int stats_every, bool detailed_profiling)
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
-    
-    // initial output / stats
-    psc_method_default_output(psc->method, psc, stats_every, mflds, mprts);
   }
 
 protected:
