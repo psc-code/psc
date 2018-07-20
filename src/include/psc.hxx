@@ -11,7 +11,7 @@
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base,
-				bool detailed_profiling); // FIXME
+				int stats_every, bool detailed_profiling); // FIXME
 
 // ======================================================================
 // PscParams
@@ -25,6 +25,7 @@ struct PscParams
   int write_checkpoint_every_step = { 0 };
 
   bool detailed_profiling; // output profiling info for each process separately
+  int stats_every;         // output timing and other info every so many steps
 
   int balance_interval;
   double balance_factor_fields;
@@ -112,9 +113,9 @@ struct Psc
     mprts_.view();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
+      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_, p_.stats_every, p_.detailed_profiling);
     } else {
-      initialize_default(psc_->method, psc_, mflds_, mprts_, p_.detailed_profiling);
+      initialize_default(psc_->method, psc_, mflds_, mprts_, p_.stats_every, p_.detailed_profiling);
     }
 
     psc_stats_log(psc_->timestep);
@@ -157,14 +158,14 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
-      psc_method_output(psc_->method, psc_, mflds_, mprts_);
+      psc_method_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
       psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
 
-      if (psc_->timestep % psc_->prm.stats_every == 0) {
+      if (psc_->timestep % p_.stats_every == 0) {
 	psc_stats_log(psc_->timestep);
 	print_profiling();
       }
@@ -246,12 +247,13 @@ private:
   // initialize_default
   
   static void initialize_default(struct psc_method *method, struct psc *psc,
-			  MfieldsBase& mflds, MparticlesBase& mprts, bool detailed_profiling)
+				 MfieldsBase& mflds, MparticlesBase& mprts,
+				 int stats_every, bool detailed_profiling)
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
     
     // initial output / stats
-    psc_method_output(psc->method, psc, mflds, mprts);
+    psc_method_output(psc->method, psc, stats_every, mflds, mprts);
   }
 
 protected:

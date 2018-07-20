@@ -32,6 +32,7 @@ static struct param psc_method_vpic_descr[] = {
 void
 psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 			   MfieldsBase& mflds_base, MparticlesBase& mprts_base,
+			   int stats_every,
 			   bool detailed_profiling)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
@@ -84,7 +85,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   
   mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
   Simulation_diagnostics_run(sub->sim);
-  psc_method_default_output(method, psc, mflds_base, mprts_base);
+  psc_method_default_output(method, psc, stats_every, mflds_base, mprts_base);
 
   Simulation_print_status(sub->sim);
 }
@@ -94,6 +95,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
 static void
 psc_method_vpic_output(struct psc_method *method, struct psc *psc,
+		       int stats_every,
 		       MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
@@ -103,11 +105,11 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc,
 
   Simulation_diagnostics_run(sub->sim);
   
-  if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
+  if (stats_every > 0 && psc->timestep % stats_every == 0) {
     Simulation_print_status(sub->sim);
   }
   
-  psc_method_default_output(NULL, psc, mflds, mprts);
+  psc_method_default_output(NULL, psc, stats_every, mflds, mprts);
 }
 
 // ----------------------------------------------------------------------

@@ -9,12 +9,13 @@
 
 void
 psc_method_output(struct psc_method *method, struct psc *psc,
+		  int stats_every,
 		  MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_method_ops *ops = psc_method_ops(method);
   assert(ops && ops->output);
 
-  ops->output(method, psc, mflds, mprts);
+  ops->output(method, psc, stats_every, mflds, mprts);
 }
 
 // ----------------------------------------------------------------------
