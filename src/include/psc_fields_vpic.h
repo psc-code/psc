@@ -77,22 +77,22 @@ struct MfieldsVpic : MfieldsBase
 
   void clear_rhof()
   {
-    Simulation_mflds_clear_rhof(sim, vmflds_fields);
+    TIC vmflds_fields->clear_rhof(); TOC(clear_rhof, 1);
   }
 
   void synchronize_rho()
   {
-    Simulation_mflds_synchronize_rho(sim, vmflds_fields);
+    TIC vmflds_fields->synchronize_rho(); TOC(synchronize_rho, 1);
   }
   
   void compute_rhob()
   {
-    Simulation_mflds_compute_rhob(sim, vmflds_fields);
+    TIC vmflds_fields->compute_rhob(); TOC(compute_rhob, 1);
   }
   
   void compute_curl_b()
   {
-    Simulation_mflds_compute_curl_b(sim, vmflds_fields);
+    TIC vmflds_fields->compute_curl_b(); TOC(compute_curl_b, 1);
   }
 
   void accumulate_rho_p(Particles* vmprts);

@@ -253,26 +253,6 @@ void Simulation_mflds_clean_div_e(Simulation* sim, FieldArray* vmflds)
 }
 
 
-void Simulation_mflds_clear_rhof(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->clear_rhof(); TOC(clear_jf, 1);
-}
-
-void Simulation_mflds_synchronize_rho(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->synchronize_rho(); TOC(compute_curl_b, 1);
-}
-
-void Simulation_mflds_compute_rhob(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->compute_rhob(); TOC(compute_rhob, 1);
-}
-
-void Simulation_mflds_compute_curl_b(Simulation* sim, FieldArray* vmflds)
-{
-  TIC vmflds->compute_curl_b(); TOC(compute_curl_b, 1);
-}
-
 // ======================================================================
 
 // ----------------------------------------------------------------------

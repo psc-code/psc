@@ -109,10 +109,6 @@ void Simulation_mflds_clean_div_b(Simulation* sim, FieldArray* vmflds);
 void Simulation_mflds_compute_div_e_err(Simulation* sim, FieldArray* vmflds);
 double Simulation_mflds_compute_rms_div_e_err(Simulation* sim, FieldArray* vmflds);
 void Simulation_mflds_clean_div_e(Simulation* sim, FieldArray* vmflds);
-void Simulation_mflds_clear_rhof(Simulation* sim, FieldArray* vmflds);
-void Simulation_mflds_synchronize_rho(Simulation* sim, FieldArray* vmflds);
-void Simulation_mflds_compute_rhob(Simulation* sim, FieldArray* vmflds);
-void Simulation_mflds_compute_curl_b(Simulation* sim, FieldArray* vmflds);
 
 void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 void Simulation_moments_run(Simulation *sim, HydroArray *mflds, Particles *vmprts, int kind);
