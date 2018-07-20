@@ -35,6 +35,5 @@ psc_method_default_output(struct psc_method *method, struct psc *psc,
 struct psc_method_ops_default : psc_method_ops {
   psc_method_ops_default() {
     name                          = "default";
-    output                        = psc_method_default_output;
   }
 } psc_method_ops_default;
