@@ -39,7 +39,7 @@ struct MparticlesVpic : MparticlesBase
 
   int get_n_prts() const override
   {
-    return Simulation_mprts_get_nr_particles(sim, vmprts);
+    return sim->mprts_get_nr_particles(*vmprts);
   }
   
   void get_size_all(uint *n_prts_by_patch) const override
@@ -47,14 +47,56 @@ struct MparticlesVpic : MparticlesBase
     vpic_mparticles_get_size_all(vmprts, 1, n_prts_by_patch);
   }
 
+  // ----------------------------------------------------------------------
+  // reserve_all
+  //
+  // This is a bit iffy, since we don't really want to reallocate stuff here,
+  // at least for now, and we wouldn't be able to know how to split this into
+  // the different species, anyway.
+
   void reserve_all(const uint *n_prts_by_patch) override
   {
-    Simulation_mprts_reserve_all(sim, vmprts, 1, n_prts_by_patch);
+    for (int p = 0; p < n_patches(); p++) {
+      int n_prts = 0, n_prts_alloced = 0;
+      for (auto sp = vmprts->cbegin(); sp != vmprts->cend(); ++sp) {
+	n_prts += sp->np;
+	n_prts_alloced += sp->max_np;
+      }
+#if 0
+      if (n_prts_by_patch[p] != n_prts) {
+	mprintf("vpic_mparticles_reserve_all: %d (currently %d max %d)\n",
+		n_prts_by_patch[p], n_prts, n_prts_alloced);
+      }
+#endif
+      assert(n_prts_by_patch[p] <= n_prts_alloced);
+    }
   }
 
+  // ----------------------------------------------------------------------
+  // resize_all
+  //
+  // Even more iffy, since can't really resize the per-species arrays, since we don't
+  // know how the total # of particles we're given should be divided up
+  
   void resize_all(const uint *n_prts_by_patch) override
   {
-    Simulation_mprts_resize_all(sim, vmprts, 1, n_prts_by_patch);
+    // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
+    // The mparticles conversion function should call resize_all() itself first, resizing to
+    // 0, and then using push_back, which will increase the count back to the right value
+    
+    if (n_prts_by_patch[0] == 0) {
+      for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+	sp->np = 0;
+      }
+    } else {
+#if 0
+      int cur_n_prts_by_patch[n_patches];
+      vpic_mparticles_get_size_all(vmprts, n_patches, cur_n_prts_by_patch);
+      
+      mprintf("vpic_mparticles_resize_all: ignoring %d -> %d\n",
+	      cur_n_prts_by_patch[0], n_prts_by_patch[0]);
+#endif
+    }
   }
 
   void inject_reweight(int p, const psc_particle_inject& prt) override

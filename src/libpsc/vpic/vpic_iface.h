@@ -87,11 +87,6 @@ struct species * Simulation_define_species(Simulation *sim, const char *name, do
 					   double sort_interval, double sort_out_of_place);
 
 Particles* Simulation_get_particles(Simulation *sim);
-int Simulation_mprts_get_nr_particles(Simulation* sim, Particles* vmprts);
-void Simulation_mprts_reserve_all(Simulation* sim, Particles* vmprts, int n_patches,
-				  const uint* n_prts_by_patch);
-void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patches,
-				 const uint* n_prts_by_patch);
 
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
