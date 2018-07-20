@@ -29,7 +29,7 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
 
 void MfieldsVpic::accumulate_rho_p(Particles *vmprts)
 {
-  Simulation_accumulate_rho_p(sim, vmprts, vmflds_fields);
+  sim->accumulate_rho_p(*vmprts, *vmflds_fields);
 }
 
 // ======================================================================

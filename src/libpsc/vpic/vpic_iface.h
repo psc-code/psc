@@ -97,8 +97,6 @@ void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct
 void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
 				const struct psc_particle_inject *prt);
 
-void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *vmflds);
-
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
 void Simulation_diagnostics_run(Simulation *sim);

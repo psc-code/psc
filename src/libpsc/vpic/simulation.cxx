@@ -187,16 +187,3 @@ void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct
   assert(0);
 }
 
-
-// ======================================================================
-
-// ----------------------------------------------------------------------
-// Simulation_accumulate_rho_p
-
-void Simulation_accumulate_rho_p(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
-{
-  return sim->accumulate_rho_p(*vmprts, *vmflds);
-}
-
-
-
