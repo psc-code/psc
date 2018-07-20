@@ -62,6 +62,8 @@ struct MparticlesVpic : MparticlesBase
     Simulation_inject_particle(sim, vmprts, p, &prt);
   }
 
+  static void push_back(Particles* vmprts, const struct vpic_mparticles_prt *prt);
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
