@@ -53,11 +53,3 @@ void Simulation_define_field_array(Simulation* sim, double damp)
   sim->define_field_array(damp);
 }
 
-struct species * Simulation_define_species(Simulation* sim, const char *name, double q, double m,
-					   double max_local_np, double max_local_nm,
-					   double sort_interval, double sort_out_of_place)
-{
-  return reinterpret_cast<struct species*>(sim->define_species(name, q, m, max_local_np, max_local_nm,
-							       sort_interval, sort_out_of_place));
-}
-

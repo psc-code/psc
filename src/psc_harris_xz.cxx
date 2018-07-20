@@ -343,6 +343,17 @@ static void setup_fields(Simulation* sim, psc* psc_)
 }
 
 // ----------------------------------------------------------------------
+// Simulation_define_species
+
+struct species * define_species(Simulation* sim, const char *name, double q, double m,
+				double max_local_np, double max_local_nm,
+				double sort_interval, double sort_out_of_place)
+{
+  return reinterpret_cast<struct species*>(sim->define_species(name, q, m, max_local_np, max_local_nm,
+							       sort_interval, sort_out_of_place));
+}
+
+// ----------------------------------------------------------------------
 // setup_species
 
 static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phys_,
@@ -355,10 +366,10 @@ static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phy
   double nmovers = .1 * nmax;
   double sort_method = 1;   // 0=in place and 1=out of place
   
-  Simulation_define_species(sim, "electron", -phys_.ec, phys_.me, nmax, nmovers,
-			    params.electron_sort_interval, sort_method);
-  Simulation_define_species(sim, "ion", phys_.ec, phys_.mi, nmax, nmovers,
-			    params.ion_sort_interval, sort_method);
+  define_species(sim, "electron", -phys_.ec, phys_.me, nmax, nmovers,
+		 params.electron_sort_interval, sort_method);
+  define_species(sim, "ion", phys_.ec, phys_.mi, nmax, nmovers,
+		 params.ion_sort_interval, sort_method);
 }
 
 // ----------------------------------------------------------------------

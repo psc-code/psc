@@ -78,9 +78,6 @@ struct material *Simulation_define_material(Simulation *sim, const char *name,
 					    double eps, double mu,
 					    double sigma, double zeta);
 void Simulation_define_field_array(Simulation *sim, double damp);
-struct species * Simulation_define_species(Simulation *sim, const char *name, double q, double m,
-					   double max_local_np, double max_local_nm,
-					   double sort_interval, double sort_out_of_place);
 
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,
