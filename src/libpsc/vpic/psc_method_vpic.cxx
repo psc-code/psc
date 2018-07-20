@@ -88,6 +88,17 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 }
 
 // ----------------------------------------------------------------------
+// psc_method_vpic_print_status
+
+void
+psc_method_vpic_print_status(struct psc_method *method)
+{
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+
+  Simulation_print_status(sub->sim);
+}
+
+// ----------------------------------------------------------------------
 // psc_method_vpic_output
 
 void
@@ -103,7 +114,7 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc,
   Simulation_diagnostics_run(sub->sim);
   
   if (stats_every > 0 && psc->timestep % stats_every == 0) {
-    Simulation_print_status(sub->sim);
+    psc_method_vpic_print_status(method);
   }
 }
 
