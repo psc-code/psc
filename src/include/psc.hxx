@@ -127,7 +127,7 @@ struct Psc
 
     // initial output / stats
     mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
-    output_default(mflds_, mprts_);
+    diagnostics();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       psc_method_vpic_print_status(psc_->method);
@@ -176,7 +176,7 @@ struct Psc
 	psc_method_vpic_inc_step(psc_->method, psc_->timestep);
       }
       
-      output_default(mflds_, mprts_);
+      diagnostics();
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -274,16 +274,16 @@ private:
   }
 
   // ----------------------------------------------------------------------
-  // output_default
+  // diagnostics
 
-  void output_default(MfieldsBase& mflds, MparticlesBase& mprts)
+  void diagnostics()
   {
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
     }
-    psc_diag_run(psc_->diag, psc_, mprts, mflds);
-    psc_output_fields_collection_run(psc_->output_fields_collection, mflds, mprts);
-    PscOutputParticlesBase{psc_->output_particles}.run(mprts);
+    psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
+    psc_output_fields_collection_run(psc_->output_fields_collection, mflds_, mprts_);
+    PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 
 protected:
