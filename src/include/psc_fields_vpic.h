@@ -29,11 +29,11 @@ struct MfieldsVpic : MfieldsBase
     // FIXME hacky...
     if (n_comps() == VPIC_MFIELDS_N_COMP) {
       int ib[3], im[3];
-      float* data = Simulation_mflds_getData(sim, vmflds_fields, ib, im);
+      float* data = vmflds_fields->getData(ib, im);
       return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
     } else if (n_comps() == VPIC_HYDRO_N_COMP) {
       int ib[3], im[3];
-      float* data = Simulation_hydro_getData(sim, vmflds_hydro, ib, im);
+      float* data = vmflds_hydro->getData(ib, im);
       return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
     } else {
       assert(0);

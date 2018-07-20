@@ -190,29 +190,6 @@ void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct
 
 // ======================================================================
 
-HydroArray* Simulation_get_HydroArray(Simulation *sim)
-{
-  return sim->hydro_array_;
-}
-
-float* Simulation_hydro_getData(Simulation* sim, HydroArray* hydro, int ib[3], int im[3])
-{
-  return hydro->getData(ib, im);
-}
-
-
-FieldArray* Simulation_get_FieldArray(Simulation *sim)
-{
-  return sim->field_array_;
-}
-
-float* Simulation_mflds_getData(Simulation* sim, FieldArray* vmflds, int ib[3], int im[3])
-{
-  return vmflds->getData(ib, im);
-}
-
-// ======================================================================
-
 // ----------------------------------------------------------------------
 // Simulation_accumulate_rho_p
 
