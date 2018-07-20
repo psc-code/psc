@@ -59,13 +59,6 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 				   F getter);
 
 // ----------------------------------------------------------------------
-// vpic_push_particles
-
-struct vpic_push_particles;
-
-struct vpic_push_particles *vpic_push_particles_new_from_Simulation(Simulation *sim);
-
-// ----------------------------------------------------------------------
 // Simulation
 
 struct vpic_simulation_info;
