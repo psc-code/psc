@@ -211,13 +211,6 @@ float* Simulation_mflds_getData(Simulation* sim, FieldArray* vmflds, int ib[3], 
   return vmflds->getData(ib, im);
 }
 
-double Simulation_mflds_synchronize_tang_e_norm_b(Simulation* sim, FieldArray* vmflds)
-{
-  double err;
-  TIC err = vmflds->synchronize_tang_e_norm_b(); TOC(synchronize_tang_e_norm_b, 1);
-  return err;
-}
-
 // ======================================================================
 
 // ----------------------------------------------------------------------

@@ -42,7 +42,9 @@ struct MfieldsVpic : MfieldsBase
 
   double synchronize_tang_e_norm_b()
   {
-    return Simulation_mflds_synchronize_tang_e_norm_b(sim, vmflds_fields);
+    double err;
+    TIC err = vmflds_fields->synchronize_tang_e_norm_b(); TOC(synchronize_tang_e_norm_b, 1);
+    return err;
   }
   
   void compute_div_b_err()
