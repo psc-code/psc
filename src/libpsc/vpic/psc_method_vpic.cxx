@@ -74,7 +74,8 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
   FieldArray *vmflds = mflds.vmflds_fields;
-  Simulation_initialize(sub->sim, mprts.vmprts, vmflds);
+  mpi_printf(psc_comm(psc), "Uncentering particles\n");
+  sub->sim->uncenter_p(mprts.vmprts, vmflds);
 
   mprts_base.put_as(mprts);
   mflds_base.put_as(mflds, 0, VPIC_MFIELDS_N_COMP);

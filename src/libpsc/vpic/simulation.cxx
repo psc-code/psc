@@ -198,16 +198,5 @@ void Simulation_accumulate_rho_p(Simulation *sim, Particles *vmprts, FieldArray 
   return sim->accumulate_rho_p(*vmprts, *vmflds);
 }
 
-// ----------------------------------------------------------------------
-// Simulation_initialize
-
-void Simulation_initialize(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
-{
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME
-  
-  mpi_printf(comm, "Uncentering particles\n");
-  sim->uncenter_p(vmprts, vmflds);
-}
-
 
 
