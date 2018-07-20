@@ -382,7 +382,7 @@ void setup_grid(psc* psc_, const globals_physics& phys_,
     setup_species(sim, psc_, phys_, params);
     
     int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
-    Simulation_diagnostics_init(sim, interval);
+    sim->newDiag(interval);
     
     psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
@@ -421,7 +421,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     } else {
       Simulation* sim;
       psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
-      Simulation_diagnostics_setup(sim);
+      sim->setupDiag();
     }
 
     psc_setup_member_objs(psc_);

@@ -66,21 +66,3 @@ Particles * Simulation_get_particles(Simulation *sim)
   return &sim->particles_;
 }
 
-// ----------------------------------------------------------------------
-// diagnostics
-
-void Simulation_diagnostics_init(Simulation* sim, int interval)
-{
-  sim->newDiag(interval);
-}
-
-void Simulation_diagnostics_setup(Simulation* sim)
-{
-  sim->setupDiag();
-}
-
-void Simulation_diagnostics_run(Simulation* sim)
-{
-  sim->runDiag();
-}
-
