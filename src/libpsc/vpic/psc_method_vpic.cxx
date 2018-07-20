@@ -93,7 +93,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 // ----------------------------------------------------------------------
 // psc_method_vpic_output
 
-static void
+void
 psc_method_vpic_output(struct psc_method *method, struct psc *psc,
 		       int stats_every,
 		       MfieldsBase& mflds, MparticlesBase& mprts)
