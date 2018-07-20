@@ -164,9 +164,8 @@ struct Psc
       psc_->timestep++; // FIXME, too hacky
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	psc_method_vpic_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
-      } else {
-	psc_method_default_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
       }
+      psc_method_default_output(psc_->method, psc_, p_.stats_every, mflds_, mprts_);
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);

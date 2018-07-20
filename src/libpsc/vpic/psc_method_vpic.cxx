@@ -108,8 +108,6 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc,
   if (stats_every > 0 && psc->timestep % stats_every == 0) {
     Simulation_print_status(sub->sim);
   }
-  
-  psc_method_default_output(NULL, psc, stats_every, mflds, mprts);
 }
 
 // ----------------------------------------------------------------------
