@@ -292,7 +292,7 @@ static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
   Simulation_setup_grid(sim, dx, grid.dt, phys_.c, phys_.eps0);
   
   // Define the grid
-  Simulation_define_periodic_grid(sim, xl, xh, domain.gdims, domain.np);
+  sim->define_periodic_grid(xl, xh, domain.gdims, domain.np);
   
   int p = 0;
   bool left = psc_at_boundary_lo(psc_, p, 0);

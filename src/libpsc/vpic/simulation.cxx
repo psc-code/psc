@@ -25,9 +25,3 @@ void Simulation_setup_grid(Simulation* sim, double dx[3], double dt,
   sim->setup_grid(dx, dt, cvac, eps0);
 }
 
-void Simulation_define_periodic_grid(Simulation* sim, double xl[3],
-				     double xh[3], const int gdims[3], const int np[3])
-{
-  sim->define_periodic_grid(xl, xh, gdims, np);
-}
-
