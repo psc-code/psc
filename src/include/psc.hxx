@@ -126,10 +126,7 @@ struct Psc
     }
 
     // initial output / stats
-    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
-      psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
-    }
+    mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
     output_default(mflds_, mprts_);
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
@@ -179,9 +176,6 @@ struct Psc
 	psc_method_vpic_inc_step(psc_->method, psc_->timestep);
       }
       
-      if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-	psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
-      }
       output_default(mflds_, mprts_);
 
       psc_stats_stop(st_time_step);
@@ -284,6 +278,9 @@ private:
 
   void output_default(MfieldsBase& mflds, MparticlesBase& mprts)
   {
+    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+      psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
+    }
     psc_diag_run(psc_->diag, psc_, mprts, mflds);
     psc_output_fields_collection_run(psc_->output_fields_collection, mflds, mprts);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts);
