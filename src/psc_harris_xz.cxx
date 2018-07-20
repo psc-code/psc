@@ -75,6 +75,27 @@ static inline double trunc_granular( double a, double b )
 }
 
 // ----------------------------------------------------------------------
+// define_material
+
+struct material * define_material(Simulation* sim, const char *name,
+				  double eps, double mu,
+				  double sigma, double zeta)
+{
+  return reinterpret_cast<struct material*>(sim->define_material(name, eps, mu, sigma, zeta));
+}
+
+// ----------------------------------------------------------------------
+// define_species
+
+struct species * define_species(Simulation* sim, const char *name, double q, double m,
+				double max_local_np, double max_local_nm,
+				double sort_interval, double sort_out_of_place)
+{
+  return reinterpret_cast<struct species*>(sim->define_species(name, q, m, max_local_np, max_local_nm,
+							       sort_interval, sort_out_of_place));
+}
+
+// ----------------------------------------------------------------------
 // courant length
 //
 // FIXME, the dt calculating should be consolidated with what regular PSC does
@@ -317,10 +338,10 @@ static void setup_fields(Simulation* sim, psc* psc_)
   
   mpi_printf(comm, "Setting up materials.\n");
   
-  Simulation_define_material(sim, "vacuum", 1., 1., 0., 0.);
+  define_material(sim, "vacuum", 1., 1., 0., 0.);
 #if 0
   struct material *resistive =
-    Simulation_define_material(sub->sim, "resistive", 1., 1., 1., 0.);
+    define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 #endif
   sim->define_field_array(0.);
   
@@ -340,17 +361,6 @@ static void setup_fields(Simulation* sim, psc* psc_)
   Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
 					 0., resistive);
 #endif
-}
-
-// ----------------------------------------------------------------------
-// Simulation_define_species
-
-struct species * define_species(Simulation* sim, const char *name, double q, double m,
-				double max_local_np, double max_local_nm,
-				double sort_interval, double sort_out_of_place)
-{
-  return reinterpret_cast<struct species*>(sim->define_species(name, q, m, max_local_np, max_local_nm,
-							       sort_interval, sort_out_of_place));
 }
 
 // ----------------------------------------------------------------------

@@ -41,10 +41,3 @@ void Simulation_set_domain_particle_bc(Simulation* sim, int boundary, int bc)
   sim->set_domain_particle_bc(boundary, bc);
 }
 
-struct material *Simulation_define_material(Simulation* sim, const char *name,
-					    double eps, double mu,
-					    double sigma, double zeta)
-{
-  return reinterpret_cast<struct material*>(sim->define_material(name, eps, mu, sigma, zeta));
-}
-

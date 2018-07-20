@@ -74,10 +74,6 @@ void Simulation_define_periodic_grid(Simulation *sim, double xl[3],
 void Simulation_set_domain_field_bc(Simulation *sim, int boundary, int fbc);
 void Simulation_set_domain_particle_bc(Simulation *sim, int boundary, int pbc);
 
-struct material *Simulation_define_material(Simulation *sim, const char *name,
-					    double eps, double mu,
-					    double sigma, double zeta);
-
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,
