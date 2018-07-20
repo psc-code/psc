@@ -64,9 +64,6 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 struct vpic_simulation_info;
 struct field_array;
 
-Simulation *Simulation_create();
-void Simulation_delete(Simulation *sim);
-
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,

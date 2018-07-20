@@ -391,7 +391,8 @@ void setup_grid(psc* psc_, const globals_physics& phys_,
   if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
   } else {
     const auto& grid = psc_->grid();
-    auto sim = Simulation_create();
+    mpi_printf(psc_comm(psc_), "*** Initializing\n" );
+    auto sim = new Simulation();
     psc_method_set_param_ptr(psc_->method, "sim", sim);
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
@@ -473,7 +474,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     Simulation* sim;
     psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
-    Simulation_delete(sim);
+    delete sim;
   }
 
   // ----------------------------------------------------------------------
