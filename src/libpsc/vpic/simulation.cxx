@@ -31,13 +31,3 @@ void Simulation_define_periodic_grid(Simulation* sim, double xl[3],
   sim->define_periodic_grid(xl, xh, gdims, np);
 }
 
-void Simulation_set_domain_field_bc(Simulation* sim, int boundary, int bc)
-{
-  sim->set_domain_field_bc(boundary, bc);
-}
-
-void Simulation_set_domain_particle_bc(Simulation* sim, int boundary, int bc)
-{
-  sim->set_domain_particle_bc(boundary, bc);
-}
-

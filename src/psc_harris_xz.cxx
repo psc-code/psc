@@ -304,28 +304,28 @@ static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
   // ***** Set Field Boundary Conditions *****
   if (params.open_bc_x) {
     mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-    if (left ) Simulation_set_domain_field_bc(sim, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
-    if (right) Simulation_set_domain_field_bc(sim, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+    if (left ) sim->set_domain_field_bc(BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
+    if (right) sim->set_domain_field_bc(BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
   }
   
   mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-  if (bottom) Simulation_set_domain_field_bc(sim, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
-  if (top   ) Simulation_set_domain_field_bc(sim, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+  if (bottom) sim->set_domain_field_bc(BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
+  if (top   ) sim->set_domain_field_bc(BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
   
   // ***** Set Particle Boundary Conditions *****
   if (params.driven_bc_z) {
     mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
-    if (top   ) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
+    if (bottom) sim->set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
+    if (top   ) sim->set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
   } else {
     mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    if (bottom) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
-    if (top   ) Simulation_set_domain_particle_bc(sim, BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
+    if (bottom) sim->set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
+    if (top   ) sim->set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
   }
   if (params.open_bc_x) {
     mpi_printf(comm, "Absorb particles on X-boundaries\n");
-    if (left)  Simulation_set_domain_particle_bc(sim, BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
-    if (right) Simulation_set_domain_particle_bc(sim, BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
+    if (left)   sim->set_domain_particle_bc(BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
+    if (right)  sim->set_domain_particle_bc(BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
   }
 }
 
