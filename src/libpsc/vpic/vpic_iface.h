@@ -64,12 +64,6 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
 struct vpic_push_particles;
 
 struct vpic_push_particles *vpic_push_particles_new_from_Simulation(Simulation *sim);
-void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
-				    Particles *vmprts,
-				    FieldArray *vmflds);
-void vpic_push_particles_stagger_mprts(struct vpic_push_particles *vpushp,
-				       Particles *vmprts,
-				       FieldArray *vmflds);
 
 // ----------------------------------------------------------------------
 // Simulation
@@ -133,7 +127,6 @@ void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *
 
 void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step);
 void Simulation_collision_run(Simulation *sim);
-void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds);
 void Simulation_push_mflds_H(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_push_mflds_E(Simulation *sim, FieldArray *vmflds, double frac);
 void Simulation_field_injection(Simulation *sim);

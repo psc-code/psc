@@ -315,11 +315,6 @@ void Simulation_collision_run(Simulation* sim)
   sim->collision_run();
 }
 
-void Simulation_push_mprts(Simulation *sim, Particles *vmprts, FieldArray *vmflds)
-{
-  sim->push_mprts(*vmprts, *vmflds);
-}
-
 void Simulation_push_mflds_H(Simulation* sim, FieldArray *vmflds, double frac)
 {
   sim->push_mflds_H(*vmflds, frac);
