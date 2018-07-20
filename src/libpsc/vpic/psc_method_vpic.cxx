@@ -103,7 +103,6 @@ psc_method_vpic_print_status(struct psc_method *method)
 
 void
 psc_method_vpic_output(struct psc_method *method, struct psc *psc,
-		       int stats_every,
 		       MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
@@ -112,10 +111,6 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc,
   Simulation_inc_step(sub->sim, psc->timestep);
 
   Simulation_diagnostics_run(sub->sim);
-  
-  if (stats_every > 0 && psc->timestep % stats_every == 0) {
-    psc_method_vpic_print_status(method);
-  }
 }
 
 // ----------------------------------------------------------------------
