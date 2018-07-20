@@ -289,7 +289,7 @@ static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
     xl[d] = domain.corner[d];
     xh[d] = xl[d] + domain.length[d];
   }
-  Simulation_setup_grid(sim, dx, grid.dt, phys_.c, phys_.eps0);
+  sim->setup_grid(dx, grid.dt, phys_.c, phys_.eps0);
   
   // Define the grid
   sim->define_periodic_grid(xl, xh, domain.gdims, domain.np);

@@ -67,9 +67,6 @@ struct field_array;
 Simulation *Simulation_create();
 void Simulation_delete(Simulation *sim);
 
-void Simulation_setup_grid(Simulation *sim, double dx[3], double dt,
-			   double cvac, double eps0);
-
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,
