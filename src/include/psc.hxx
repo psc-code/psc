@@ -170,8 +170,13 @@ struct Psc
       psc_->timestep++; // FIXME, too hacky
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	psc_method_vpic_inc_step(psc_->method, psc_->timestep);
+      }
+      
+      if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	psc_method_vpic_output(psc_->method, psc_, mflds_, mprts_);
-  
+      }
+      
+      if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	if (p_.stats_every > 0 && psc_->timestep % p_.stats_every == 0) {
 	  psc_method_vpic_print_status(psc_->method);
 	}
