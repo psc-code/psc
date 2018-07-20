@@ -88,9 +88,6 @@ struct species * Simulation_define_species(Simulation *sim, const char *name, do
 
 Particles* Simulation_get_particles(Simulation *sim);
 
-void Simulation_inject_particle(Simulation *sim, Particles *vmprts, int p,
-				const struct psc_particle_inject *prt);
-
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
 void Simulation_diagnostics_run(Simulation *sim);

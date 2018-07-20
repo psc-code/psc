@@ -101,7 +101,8 @@ struct MparticlesVpic : MparticlesBase
 
   void inject_reweight(int p, const psc_particle_inject& prt) override
   {
-    Simulation_inject_particle(sim, vmprts, p, &prt);
+    assert(p == 0);
+    static_cast<ParticlesOps*>(sim)->inject_particle(*vmprts, *sim->accumulator_, *sim->field_array_, &prt);
   }
 
   void push_back(const struct vpic_mparticles_prt *prt);

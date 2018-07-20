@@ -95,13 +95,3 @@ void Simulation_set_params(Simulation* sim, int num_step, int status_interval,
 		  sync_shared_interval, clean_div_e_interval, clean_div_b_interval);
 }
 
-// ----------------------------------------------------------------------
-// Simulation_inject_particle
-
-void Simulation_inject_particle(Simulation* sim, Particles *vmprts, int p,
-				const struct psc_particle_inject *prt)
-{
-  assert(p == 0);
-  static_cast<ParticlesOps*>(sim)->inject_particle(*vmprts, *sim->accumulator_, *sim->field_array_, prt);
-}
-
