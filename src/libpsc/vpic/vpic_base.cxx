@@ -85,15 +85,6 @@ Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
 }
 
 // ----------------------------------------------------------------------
-// Simulation_user_intialization
-
-void Simulation_user_initialization(Simulation *sim)
-{
-  // Call the user to initialize the simulation
-  sim->initialization(0, 0);
-}
-
-// ----------------------------------------------------------------------
 // Simulation_inc_step
 
 void Simulation_inc_step(Simulation *sim, int step)
