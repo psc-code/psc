@@ -3,12 +3,15 @@
 
 #include <psc_method.h>
 #include <mrc_profile.h>
-#include <psc_method_private.h>
+#include <psc_method.h>
+#include <psc_diag.h>
+#include <psc_output_fields_collection.h>
 
 #include <particles.hxx>
 
 #include <push_particles.hxx>
 #include <checks.hxx>
+#include <output_particles.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base,
@@ -260,6 +263,19 @@ private:
 				 int stats_every, bool detailed_profiling)
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
+  }
+
+  // ----------------------------------------------------------------------
+  // psc_method_default_output
+
+  static void
+  psc_method_default_output(struct psc_method *method, struct psc *psc,
+			    int stats_every,
+			    MfieldsBase& mflds, MparticlesBase& mprts)
+  {
+    psc_diag_run(psc->diag, psc, mprts, mflds);
+    psc_output_fields_collection_run(psc->output_fields_collection, mflds, mprts);
+    PscOutputParticlesBase{psc->output_particles}.run(mprts);
   }
 
 protected:

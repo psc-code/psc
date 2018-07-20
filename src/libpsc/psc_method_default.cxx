@@ -16,22 +16,6 @@
 // ======================================================================
 // psc_method "default"
 
-// ----------------------------------------------------------------------
-// psc_method_default_output
-
-void
-psc_method_default_output(struct psc_method *method, struct psc *psc,
-			  int stats_every,
-			  MfieldsBase& mflds, MparticlesBase& mprts)
-{
-  psc_diag_run(psc->diag, psc, mprts, mflds);
-  psc_output_fields_collection_run(psc->output_fields_collection, mflds, mprts);
-  PscOutputParticlesBase{psc->output_particles}.run(mprts);
-}
-
-// ----------------------------------------------------------------------
-// psc_method "default"
-
 struct psc_method_ops_default : psc_method_ops {
   psc_method_ops_default() {
     name                          = "default";
