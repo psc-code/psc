@@ -315,18 +315,3 @@ void Simulation_collision_run(Simulation* sim)
   sim->collision_run();
 }
 
-void Simulation_push_mflds_H(Simulation* sim, FieldArray *vmflds, double frac)
-{
-  sim->push_mflds_H(*vmflds, frac);
-}
-
-void Simulation_push_mflds_E(Simulation* sim, FieldArray *vmflds, double frac)
-{
-  sim->push_mflds_E(*vmflds, frac);
-}
-
-void Simulation_field_injection(Simulation* sim)
-{
-  sim->field_injection();
-}
-

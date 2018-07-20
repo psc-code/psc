@@ -127,9 +127,6 @@ void Simulation_accumulate_rho_p(Simulation *sim, Particles *mprts, FieldArray *
 
 void Simulation_sort_mprts(Simulation *sim, Particles *vmprts, int step);
 void Simulation_collision_run(Simulation *sim);
-void Simulation_push_mflds_H(Simulation *sim, FieldArray *vmflds, double frac);
-void Simulation_push_mflds_E(Simulation *sim, FieldArray *vmflds, double frac);
-void Simulation_field_injection(Simulation *sim);
 
 void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
