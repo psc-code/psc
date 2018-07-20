@@ -22,7 +22,7 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
   n_prts_by_patch[0] = n_prts;
 }
 
-void MparticlesVpic::push_back(Particles* vmprts, const struct vpic_mparticles_prt *prt)
+void MparticlesVpic::push_back(const struct vpic_mparticles_prt *prt)
 {
   for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
     if (sp->id == prt->kind) {
@@ -251,7 +251,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
     for (int n = 0; n < n_prts; n++) {
       struct vpic_mparticles_prt prt;
       convert_to_vpic(&prt, n);
-      mprts_to.push_back(vmprts, &prt);
+      mprts_to.push_back(&prt);
     }
   }
 }
