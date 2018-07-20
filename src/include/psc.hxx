@@ -121,20 +121,20 @@ struct Psc
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_);
-      
-      // First output / stats
-      
-      mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
-      psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
-      
-      psc_method_vpic_print_status(psc_->method);
     } else {
       initialize_default(psc_->method, psc_, mflds_, mprts_);
     }
 
     // initial output / stats
+    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+      mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
+      psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
+    }
     output_default(mflds_, mprts_);
 
+    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
+      psc_method_vpic_print_status(psc_->method);
+    }
     psc_stats_log(psc_->timestep);
     print_profiling();
 
