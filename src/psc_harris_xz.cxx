@@ -374,9 +374,9 @@ void setup_grid(psc* psc_, const globals_physics& phys_,
     psc_method_set_param_ptr(psc_->method, "sim", sim);
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
-    Simulation_set_params(sim, p.nmax, p.stats_every,
-			  p.stats_every / 2, p.stats_every / 2,
-			  p.stats_every / 2);
+    sim->setParams(p.nmax, p.stats_every,
+		   p.stats_every / 2, p.stats_every / 2,
+		   p.stats_every / 2);
     setup_domain(sim, grid.domain, psc_, phys_, params);
     setup_fields(sim, psc_);
     setup_species(sim, psc_, phys_, params);

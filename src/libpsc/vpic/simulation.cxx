@@ -84,14 +84,3 @@ void Simulation_diagnostics_run(Simulation* sim)
   sim->runDiag();
 }
 
-// ----------------------------------------------------------------------
-// Simulation_set_params
-
-void Simulation_set_params(Simulation* sim, int num_step, int status_interval,
-			   int sync_shared_interval, int clean_div_e_interval,
-			   int clean_div_b_interval)
-{
-  sim->setParams(num_step, status_interval,
-		  sync_shared_interval, clean_div_e_interval, clean_div_b_interval);
-}
-

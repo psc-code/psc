@@ -67,10 +67,6 @@ struct field_array;
 Simulation *Simulation_create();
 void Simulation_delete(Simulation *sim);
 
-void Simulation_set_params(Simulation *vpic,
-			   int num_step, int status_interval, int sync_shared_interval,
-			   int clean_div_e_interval, int clean_div_b_interval);
-
 void Simulation_setup_grid(Simulation *sim, double dx[3], double dt,
 			   double cvac, double eps0);
 void Simulation_define_periodic_grid(Simulation *sim, double xl[3],
