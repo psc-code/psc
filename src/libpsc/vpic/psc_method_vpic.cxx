@@ -78,13 +78,6 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
   mprts_base.put_as(mprts);
   mflds_base.put_as(mflds, 0, VPIC_MFIELDS_N_COMP);
-
-  // First output / stats
-  
-  mpi_printf(psc_comm(psc), "Performing initial diagnostics.\n");
-  Simulation_diagnostics_run(sub->sim);
-
-  Simulation_print_status(sub->sim);
 }
 
 // ----------------------------------------------------------------------
