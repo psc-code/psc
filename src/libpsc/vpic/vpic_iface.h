@@ -129,8 +129,6 @@ void Simulation_diagnostics_init(Simulation *sim, int interval);
 void Simulation_diagnostics_setup(Simulation *sim);
 void Simulation_diagnostics_run(Simulation *sim);
 
-void Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info);
-
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,

@@ -47,43 +47,6 @@ void vpic_base_init(int *pargc, char ***pargv)
   LOG_INFO("vpic_base_init() done\n");
 }
 
-void
-Simulation_get_info(Simulation *sim, struct vpic_simulation_info *info)
-{
-  sim->getParams(info->num_step,
-		 info->clean_div_e_interval,
-		 info->clean_div_b_interval,
-		 info->sync_shared_interval,
-		 info->num_div_e_round,
-		 info->num_div_b_round,
-		 info->status_interval);
-
-  // grid
-  info->dt = sim->grid_->dt;
-  info->nx[0] = sim->grid_->nx;
-  info->nx[1] = sim->grid_->ny;
-  info->nx[2] = sim->grid_->nz;
-  info->dx[0] = sim->grid_->dx;
-  info->dx[1] = sim->grid_->dy;
-  info->dx[2] = sim->grid_->dz;
-  info->x0[0] = sim->grid_->x0;
-  info->x0[1] = sim->grid_->y0;
-  info->x0[2] = sim->grid_->z0;
-  info->x1[0] = sim->grid_->x1;
-  info->x1[1] = sim->grid_->y1;
-  info->x1[2] = sim->grid_->z1;
-
-  // species
-  info->n_kinds = sim->particles_.getNumSpecies();
-  info->kinds = new vpic_kind_info[info->n_kinds];
-  for (auto sp = sim->particles_.begin(); sp != sim->particles_.end(); ++sp) {
-    info->kinds[sp->id].q = sp->q;
-    info->kinds[sp->id].m = sp->m;
-    info->kinds[sp->id].name = sp->name;
-  }
-  
-}
-
 // ======================================================================
 
 void Simulation_set_region_resistive_harris(Simulation *sim,
