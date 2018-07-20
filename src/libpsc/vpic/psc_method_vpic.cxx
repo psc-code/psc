@@ -99,6 +99,17 @@ psc_method_vpic_print_status(struct psc_method *method)
 }
 
 // ----------------------------------------------------------------------
+// psc_method_vpic_inc_step
+
+void
+psc_method_vpic_inc_step(struct psc_method *method, int timestep)
+{
+  struct psc_method_vpic *sub = psc_method_vpic(method);
+
+  Simulation_inc_step(sub->sim, timestep);
+}
+
+// ----------------------------------------------------------------------
 // psc_method_vpic_output
 
 void
@@ -106,9 +117,6 @@ psc_method_vpic_output(struct psc_method *method, struct psc *psc,
 		       MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
-
-  // FIXME, a hacky place to do this
-  Simulation_inc_step(sub->sim, psc->timestep);
 
   Simulation_diagnostics_run(sub->sim);
 }
