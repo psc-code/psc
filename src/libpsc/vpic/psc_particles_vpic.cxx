@@ -22,6 +22,22 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
   n_prts_by_patch[0] = n_prts;
 }
 
+void Simulation_mprts_push_back(Particles* vmprts, const struct vpic_mparticles_prt *prt)
+{
+  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+    if (sp->id == prt->kind) {
+      assert(sp->np < sp->max_np);
+      // the below is inject_particle_raw()
+      Particles::Particle * RESTRICT p = sp->p + (sp->np++);
+      p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
+      p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
+      return;
+    }
+  }
+  mprintf("prt->kind %d not found in species list!\n", prt->kind);
+  assert(0);
+}
+
 // ======================================================================
 // conversion
 
@@ -235,7 +251,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
     for (int n = 0; n < n_prts; n++) {
       struct vpic_mparticles_prt prt;
       convert_to_vpic(&prt, n);
-      Simulation_mprts_push_back(mprts_to.sim, vmprts, &prt);
+      Simulation_mprts_push_back(vmprts, &prt);
     }
   }
 }

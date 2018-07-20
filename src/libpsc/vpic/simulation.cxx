@@ -168,22 +168,3 @@ void Simulation_mprts_resize_all(Simulation* sim, Particles* vmprts, int n_patch
   }
 }
 
-// ----------------------------------------------------------------------
-// Simulation_mprts_push_back
-
-void Simulation_mprts_push_back(Simulation* sim, Particles* vmprts, const struct vpic_mparticles_prt *prt)
-{
-  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    if (sp->id == prt->kind) {
-      assert(sp->np < sp->max_np);
-      // the below is inject_particle_raw()
-      Particles::Particle * RESTRICT p = sp->p + (sp->np++);
-      p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
-      p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
-      return;
-    }
-  }
-  mprintf("prt->kind %d not found in species list!\n", prt->kind);
-  assert(0);
-}
-
