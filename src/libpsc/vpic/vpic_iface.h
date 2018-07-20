@@ -82,8 +82,6 @@ struct species * Simulation_define_species(Simulation *sim, const char *name, do
 					   double max_local_np, double max_local_nm,
 					   double sort_interval, double sort_out_of_place);
 
-Particles* Simulation_get_particles(Simulation *sim);
-
 // Harris specific
 void Simulation_set_region_resistive_harris(Simulation *sim,
 					    struct vpic_harris_params *prm,

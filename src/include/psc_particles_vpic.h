@@ -32,7 +32,7 @@ struct MparticlesVpic : MparticlesBase
     : MparticlesBase(grid)
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vmprts = Simulation_get_particles(sim);
+    vmprts = &sim->particles_;
   }
 
   static mrc_obj_method methods[];

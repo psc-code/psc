@@ -61,8 +61,3 @@ struct species * Simulation_define_species(Simulation* sim, const char *name, do
 							       sort_interval, sort_out_of_place));
 }
 
-Particles * Simulation_get_particles(Simulation *sim)
-{
-  return &sim->particles_;
-}
-
