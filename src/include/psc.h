@@ -57,7 +57,6 @@ struct psc_param {
 /// coefficients needed for computations
 /// -- derived, not provided by user
 struct psc_coeff {
-  double cori;	///< 1 / psc_params.nicell 
   double alpha;
   double beta;
   double eta;

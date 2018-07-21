@@ -106,7 +106,6 @@ void
 psc_setup_coeff(struct psc *psc)
 {
   assert(psc->prm.nicell > 0);
-  psc->coeff_.cori = 1. / psc->prm.nicell;
   double wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
   double ld = psc->prm.cc / wl;
   assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
@@ -195,10 +194,10 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     }
   }
   
-  grid->fnqs = sqr(coeff_.alpha) * coeff_.cori / coeff_.eta;
+  grid->cori = 1. / prm.nicell;
+  grid->fnqs = sqr(coeff_.alpha) * grid->cori / coeff_.eta;
   grid->eta = coeff_.eta;
   grid->beta = coeff_.beta;
-  grid->cori = coeff_.cori;
   grid->dt = dt;
 
   return grid;
