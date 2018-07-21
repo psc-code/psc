@@ -40,8 +40,8 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_particle
   
-  static void setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
-			     int p, double xx[3])
+  void setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
+		      int p, double xx[3])
   {
     auto& kinds = psc->grid().kinds;
     double beta = psc->grid().beta;
@@ -64,7 +64,7 @@ struct SetupParticles
     double pzi = npt->p[2] +
       sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
 
-    if (psc->prm.initial_momentum_gamma_correction) {
+    if (initial_momentum_gamma_correction) {
       double gam;
       if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
 	gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
@@ -92,8 +92,8 @@ struct SetupParticles
   // setup_particles
 
   template<typename FUNC>
-  static void setup_particles(MparticlesBase& mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
-			      FUNC func)
+  void setup_particles(MparticlesBase& mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
+		       FUNC func)
   {
     auto& mprts = mprts_base.get_as<Mparticles>(MP_DONT_COPY | MP_DONT_RESIZE);
     setup_particles(mprts, psc, n_prts_by_patch, func);
@@ -101,8 +101,8 @@ struct SetupParticles
   }
 
   template<typename FUNC>
-  static void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch,
-			      FUNC func)
+  void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch,
+		       FUNC func)
   {
     const auto& grid = mprts.grid();
     const auto& kinds = grid.kinds;
@@ -230,5 +230,7 @@ struct SetupParticles
       }
     }
   }
+
+  bool initial_momentum_gamma_correction = { false };
 };
 

@@ -288,7 +288,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       }
     };
 #else
-    SetupParticles<Mparticles_t>::setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    SetupParticles<Mparticles_t> setup_particles;
+    setup_particles.setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
 #endif

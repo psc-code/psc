@@ -49,6 +49,8 @@ struct Inject_ : InjectBase
     struct psc *psc = ppsc;
     const auto& grid = mprts.grid();
     const auto& kinds = grid.kinds;
+
+    SetupParticles<Mparticles> setup_particles;
     
     real_t fac = 1. / grid.cori * 
       (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
@@ -108,7 +110,7 @@ struct Inject_ : InjectBase
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
 		assert(psc->prm.fractional_n_particles_per_cell);
 		particle_t prt;
-		SetupParticles<Mparticles>::setup_particle(psc, &prt, &npt, p, xx);
+		setup_particles.setup_particle(psc, &prt, &npt, p, xx);
 		prt.qni_wni_ = kinds[prt.kind_].q; // ??? FIXME
 
 		mprts[p].push_back(prt);

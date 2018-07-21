@@ -76,10 +76,6 @@ static struct param psc_descr[] = {
                     , VAR(prm.fractional_n_particles_per_cell), PARAM_BOOL(0)  },
   { "const_num_particles_per_cell"
                     , VAR(prm.const_num_particles_per_cell), PARAM_BOOL(0)  },
-  { "initial_momentum_gamma_correction"
-                    , VAR(prm.initial_momentum_gamma_correction), PARAM_BOOL(0),
-    .help = "if set, interpret momenta as velocities and multiply by gamma to get "
-    "relativistic momenta." },
   
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 

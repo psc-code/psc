@@ -55,7 +55,6 @@ struct psc_param {
   int neutralizing_population;  ///< the initial number of particles in a cell for this population will be st so that it achieves neutrality
   bool fractional_n_particles_per_cell;
   bool const_num_particles_per_cell;
-  bool initial_momentum_gamma_correction;
 };
 
 /// coefficients needed for computations
