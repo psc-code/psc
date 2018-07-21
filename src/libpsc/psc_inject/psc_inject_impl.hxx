@@ -89,7 +89,7 @@ struct Inject_ : InjectBase
 	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
-	      if (kind != psc->prm.neutralizing_population) {
+	      if (kind != setup_particles.neutralizing_population) {
 		if (psc->timestep >= 0) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
@@ -104,7 +104,7 @@ struct Inject_ : InjectBase
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(psc->prm.neutralizing_population == kinds.size() - 1);
+		assert(setup_particles.neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {

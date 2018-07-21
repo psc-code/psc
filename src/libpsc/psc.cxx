@@ -64,9 +64,6 @@ static struct param psc_descr[] = {
   { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
-  { "neutralizing_population", VAR(prm.neutralizing_population)  , PARAM_INT(-1),
-    .help = "this population will get density set to achieve neutrality "
-    "in a given cell." },
   
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 

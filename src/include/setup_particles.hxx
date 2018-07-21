@@ -135,12 +135,12 @@ struct SetupParticles
 	      func(kind, xx, npt);
 
 	      int n_in_cell;
-	      if (kind != psc->prm.neutralizing_population) {
+	      if (kind != neutralizing_population) {
 		n_in_cell = get_n_in_cell(psc, &npt);
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(psc->prm.neutralizing_population == kinds.size() - 1);
+		assert(neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
@@ -200,12 +200,12 @@ struct SetupParticles
 	      func(kind, xx, npt);
 
 	      int n_in_cell;
-	      if (kind != psc->prm.neutralizing_population) {
+	      if (kind != neutralizing_population) {
 		n_in_cell = get_n_in_cell(psc, &npt);
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(psc->prm.neutralizing_population == kinds.size() - 1);
+		assert(neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 	      n_prts_by_patch[p] += n_in_cell;
@@ -231,12 +231,14 @@ struct SetupParticles
     }
   }
 
+  // the initial number of particles in a cell for this population will be st so that it achieves neutrality  
+  int neutralizing_population = { -1 };
+  bool fractional_n_particles_per_cell = { false };
   // by default, we put the # of particles per cell according to the
   // density, using the weights (~ 1) only to fine-tune to the
   // right density.
   // if this parameter is set, we always use nicell particles / cell,
   // and adjust to the right density via the weights.
-  bool fractional_n_particles_per_cell = { false };
   bool const_num_particles_per_cell = { false };
   bool initial_momentum_gamma_correction = { false };
 };
