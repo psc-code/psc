@@ -176,10 +176,10 @@ struct Grid_<T>::Domain
 template<class T>
 struct Grid_<T>::Normalization
 {
-  double cori_;
-  double beta_;
-  double eta_;
-  double fnqs_;
+  real_t fnqs = { 1. };
+  real_t eta = { 1. };
+  real_t beta = { 1. };
+  real_t cori = { 1. };
 };
 
 // ======================================================================

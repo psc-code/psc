@@ -121,11 +121,11 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
 
   Grid_t::Normalization coeff;
-  coeff.cori_ = 1. / psc->prm.nicell;
+  coeff.cori = 1. / psc->prm.nicell;
   double alpha_ = wp / wl;
-  coeff.beta_ = vt / psc->prm.cc;
-  coeff.eta_ = vos / psc->prm.cc;
-  coeff.fnqs_ = sqr(alpha_) * coeff.cori_ / coeff.eta_;
+  coeff.beta = vt / psc->prm.cc;
+  coeff.eta = vos / psc->prm.cc;
+  coeff.fnqs = sqr(alpha_) * coeff.cori / coeff.eta;
   return coeff;
 }
 
@@ -198,10 +198,10 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     }
   }
   
-  grid->cori = coeff.cori_;
-  grid->fnqs = coeff.fnqs_;
-  grid->eta = coeff.eta_;
-  grid->beta = coeff.beta_;
+  grid->cori = coeff.cori;
+  grid->fnqs = coeff.fnqs;
+  grid->eta = coeff.eta;
+  grid->beta = coeff.beta;
   grid->dt = dt;
 
   return grid;
