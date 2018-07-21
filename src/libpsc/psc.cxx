@@ -122,10 +122,10 @@ psc_coeff psc_setup_coeff(struct psc *psc)
 
   psc_coeff coeff;
   coeff.cori_ = 1. / psc->prm.nicell;
-  coeff.alpha_ = wp / wl;
+  double alpha_ = wp / wl;
   coeff.beta_ = vt / psc->prm.cc;
   coeff.eta_ = vos / psc->prm.cc;
-  coeff.fnqs_ = sqr(coeff.alpha_) * coeff.cori_ / coeff.eta_;
+  coeff.fnqs_ = sqr(alpha_) * coeff.cori_ / coeff.eta_;
   return coeff;
 }
 
