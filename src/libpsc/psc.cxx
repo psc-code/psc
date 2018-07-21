@@ -67,13 +67,6 @@ static struct param psc_descr[] = {
   { "neutralizing_population", VAR(prm.neutralizing_population)  , PARAM_INT(-1),
     .help = "this population will get density set to achieve neutrality "
     "in a given cell." },
-  // by default, we put the # of particles per cell according to the
-  // density, using the weights (~ 1) only to fine-tune to the
-  // right density.
-  // if this parameter is set, we always use nicell particles / cell,
-  // and adjust to the right density via the weights.
-  { "fractional_n_particles_per_cell"
-                    , VAR(prm.fractional_n_particles_per_cell), PARAM_BOOL(0)  },
   
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 

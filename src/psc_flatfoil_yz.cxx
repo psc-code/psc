@@ -263,7 +263,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   
   std::vector<uint> setup_initial_partition()
   {
-    SetupParticles<Mparticles_t> setup_particles;    
+    SetupParticles<Mparticles_t> setup_particles;
+    setup_particles.fractional_n_particles_per_cell = true; // FIXME, should use same setup_particles for partition/setup
     return setup_particles.setup_partition(psc_, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
@@ -290,6 +291,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     };
 #else
     SetupParticles<Mparticles_t> setup_particles;
+    setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
@@ -527,7 +529,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   p.nmax = 5001;
   psc_->prm.nicell = 100;
-  psc_->prm.fractional_n_particles_per_cell = true;
   p.cfl = 0.75;
 
   // --- setup domain

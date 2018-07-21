@@ -25,7 +25,7 @@ struct SetupParticles
     if (npt->particles_per_cell) {
       return npt->n * npt->particles_per_cell + .5;
     }
-    if (psc->prm.fractional_n_particles_per_cell) {
+    if (fractional_n_particles_per_cell) {
       int n_prts = npt->n / grid.cori;
       float rmndr = npt->n / grid.cori - n_prts;
       float ran = random() / ((float) RAND_MAX + 1);
@@ -147,7 +147,7 @@ struct SetupParticles
 		particle_t prt;
 		setup_particle(psc, &prt, &npt, p, xx);
 		//p->lni = particle_label_offset + 1;
-		if (psc->prm.fractional_n_particles_per_cell) {
+		if (fractional_n_particles_per_cell) {
 		  prt.qni_wni_ = kinds[prt.kind_].q;
 		} else {
 		  prt.qni_wni_ = kinds[prt.kind_].q * npt.n / (n_in_cell * grid.cori);
@@ -158,7 +158,7 @@ struct SetupParticles
 	  }
 	}
       }
-      if (!psc->prm.fractional_n_particles_per_cell) {
+      if (!fractional_n_particles_per_cell) {
 	assert(mprts[p].size() == n_prts_by_patch[p]);
       }
     }
@@ -231,6 +231,12 @@ struct SetupParticles
     }
   }
 
+  // by default, we put the # of particles per cell according to the
+  // density, using the weights (~ 1) only to fine-tune to the
+  // right density.
+  // if this parameter is set, we always use nicell particles / cell,
+  // and adjust to the right density via the weights.
+  bool fractional_n_particles_per_cell = { false };
   bool const_num_particles_per_cell = { false };
   bool initial_momentum_gamma_correction = { false };
 };

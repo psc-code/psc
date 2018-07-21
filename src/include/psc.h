@@ -53,7 +53,6 @@ struct psc_param {
   double a0;
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
   int neutralizing_population;  ///< the initial number of particles in a cell for this population will be st so that it achieves neutrality
-  bool fractional_n_particles_per_cell;
 };
 
 /// coefficients needed for computations
