@@ -73,7 +73,7 @@ static void make_psc(const Grid_t::Kinds& kinds)
   psc_default_dimensionless(psc);
   psc->coeff_ = psc_setup_coeff(psc);
   
-  psc_setup_domain(psc, grid_domain, grid_bc, kinds, 1.);
+  psc_setup_domain(psc, grid_domain, grid_bc, kinds, psc->coeff_, 1.);
 }
 
 // ======================================================================

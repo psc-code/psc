@@ -100,7 +100,7 @@ struct psc {
   struct mrc_domain *mrc_domain_;
 
   Grid_t* make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
-		    const Grid_t::Kinds& kinds, double dt, Grid_t::Normalization coeff);
+		    const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt);
 
   int ibn[3];         ///< number of ghost points
 
@@ -153,7 +153,7 @@ void psc_destroy(struct psc *psc);
 
 Grid_t::Normalization psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-		      double dt);
+		      const Grid_t::Normalization& norm, double dt);
 struct mrc_domain *psc_setup_mrc_domain(const Grid_t::Domain&, const GridBc& grid_bc, int nr_patches);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);

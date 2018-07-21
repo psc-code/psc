@@ -169,7 +169,7 @@ psc_setup_mrc_domain(const Grid_t::Domain& grid_domain, const GridBc& grid_bc, i
 // psc_make_grid
 
 Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
-		       const Grid_t::Kinds& kinds, double dt, Grid_t::Normalization coeff)
+		       const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt)
 {
   Int3 gdims;
   mrc_domain_get_global_dims(mrc_domain, gdims);
@@ -208,7 +208,7 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
 // psc_setup_domain
 
 void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-		      double dt)
+		      const Grid_t::Normalization& norm, double dt)
 {
 #if 0
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
@@ -233,7 +233,7 @@ void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc,
   }
 
   psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
-  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, dt, psc->coeff_);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, norm, dt);
 
   // make sure that np isn't overridden on the command line
   Int3 np;

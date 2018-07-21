@@ -968,7 +968,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
   psc_->coeff_ = psc_setup_coeff(psc_);
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, dt);
+  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, psc_->coeff_, dt);
 
   setup_grid(psc_, phys, p, params);
   
