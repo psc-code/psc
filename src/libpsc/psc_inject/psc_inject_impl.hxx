@@ -99,7 +99,7 @@ struct Inject_ : InjectBase
 		    // statistically right...
 		    n_in_cell = npt.n *fac;		}
 		} else {
-		  n_in_cell = SetupParticles<Mparticles>::get_n_in_cell(psc, &npt);
+		  n_in_cell = setup_particles.get_n_in_cell(psc, &npt);
 		}
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {

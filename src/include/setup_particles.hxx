@@ -15,11 +15,11 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
   
-  static int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
+  int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
   {
     const auto& grid = psc->grid();
     
-    if (psc->prm.const_num_particles_per_cell) {
+    if (const_num_particles_per_cell) {
       return psc->prm.nicell;
     }
     if (npt->particles_per_cell) {
@@ -168,7 +168,7 @@ struct SetupParticles
   // setup_partition
 
   template<typename FUNC>
-  static std::vector<uint> setup_partition(psc* psc, FUNC func)
+  std::vector<uint> setup_partition(psc* psc, FUNC func)
   {
     const auto& grid = psc->grid();
     const auto& kinds = grid.kinds;
@@ -231,6 +231,7 @@ struct SetupParticles
     }
   }
 
+  bool const_num_particles_per_cell = { false };
   bool initial_momentum_gamma_correction = { false };
 };
 

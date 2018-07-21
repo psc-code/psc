@@ -130,7 +130,8 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   
   std::vector<uint> setup_initial_partition()
   {
-    return SetupParticles<Mparticles_t>::setup_partition(psc_, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    SetupParticles<Mparticles_t> setup_particles;    
+    return setup_particles.setup_partition(psc_, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
   }

@@ -74,8 +74,6 @@ static struct param psc_descr[] = {
   // and adjust to the right density via the weights.
   { "fractional_n_particles_per_cell"
                     , VAR(prm.fractional_n_particles_per_cell), PARAM_BOOL(0)  },
-  { "const_num_particles_per_cell"
-                    , VAR(prm.const_num_particles_per_cell), PARAM_BOOL(0)  },
   
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
