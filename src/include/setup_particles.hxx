@@ -83,9 +83,9 @@ struct SetupParticles
     prt->xi = xx[0] - psc->grid().patches[p].xb[0];
     prt->yi = xx[1] - psc->grid().patches[p].xb[1];
     prt->zi = xx[2] - psc->grid().patches[p].xb[2];
-    prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
+    prt->pxi = pxi;
     prt->pyi = pyi;
-    prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
+    prt->pzi = pzi;
   }	      
 
   // ----------------------------------------------------------------------

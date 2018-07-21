@@ -81,9 +81,6 @@ static struct param psc_descr[] = {
     .help = "if set, interpret momenta as velocities and multiply by gamma to get "
     "relativistic momenta." },
   
-  { "theta_xz"      , VAR(prm.theta_xz)           , PARAM_DOUBLE(0.),
-    .help = "rotate initial particle shifted Maxwellian in x-z plane." },
-
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
