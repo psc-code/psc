@@ -212,9 +212,8 @@ struct PushParticlesTest : ::testing::Test
     
     auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
     psc_default_dimensionless(psc);
-    psc->coeff_ = psc_setup_coeff(psc);
-
-    psc_setup_domain(psc, grid_domain, grid_bc, kinds, psc->coeff_, 1.);
+    auto coeff = psc_setup_coeff(psc);
+    psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1.);
   }
   
   const Grid_t& grid()

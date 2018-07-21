@@ -476,9 +476,9 @@ PscBubble* PscBubbleBuilder::makePsc()
   mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
   
   // --- generic setup
-  psc_->coeff_ = psc_setup_coeff(psc_);
+  auto coeff = psc_setup_coeff(psc_);
   double dt = PscBubble::set_dt(p, grid_domain);
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, psc_->coeff_, dt);
+  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
   return new PscBubble{p, params, psc_};
 }

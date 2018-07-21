@@ -83,7 +83,6 @@ struct psc {
   ///@defgroup config-params user-configurable parameters @{
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
-  Grid_t::Normalization coeff_;	///< automatically derived constants
   ///@}
 
   // other parameters / constants
