@@ -61,13 +61,6 @@ struct psc_coeff {
   double alpha;
   double beta;
   double eta;
-
-  // FIXME are these needed in general?
-  double wl;	///<omega
-  double ld;	///Normalization factor for lengths
-  double vos;	///< 1/k
-  double vt;
-  double wp;
 };
 
 // ----------------------------------------------------------------------

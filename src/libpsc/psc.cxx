@@ -107,22 +107,23 @@ psc_setup_coeff(struct psc *psc)
 {
   assert(psc->prm.nicell > 0);
   psc->coeff_.cori = 1. / psc->prm.nicell;
-  psc->coeff_.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
-  psc->coeff_.ld = psc->prm.cc / psc->coeff_.wl;
+  double wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
+  double ld = psc->prm.cc / wl;
+  assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
   if (psc->prm.e0 == 0.) {
     psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
       psc->prm.lw / 1.0e6;
   }
   psc->prm.b0 = psc->prm.e0 / psc->prm.cc;
-  psc->prm.rho0 = psc->prm.eps0 * psc->coeff_.wl * psc->prm.b0;
-  psc->prm.phi0 = psc->coeff_.ld * psc->prm.e0;
-  psc->prm.a0 = psc->prm.e0 / psc->coeff_.wl;
-  psc->coeff_.vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * psc->coeff_.wl);
-  psc->coeff_.vt = sqrt(psc->prm.tt / psc->prm.mm);
-  psc->coeff_.wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
-  psc->coeff_.alpha = psc->coeff_.wp / psc->coeff_.wl;
-  psc->coeff_.beta = psc->coeff_.vt / psc->prm.cc;
-  psc->coeff_.eta = psc->coeff_.vos / psc->prm.cc;
+  psc->prm.rho0 = psc->prm.eps0 * wl * psc->prm.b0;
+  psc->prm.phi0 = ld * psc->prm.e0;
+  psc->prm.a0 = psc->prm.e0 / wl;
+  double vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * wl);
+  double vt = sqrt(psc->prm.tt / psc->prm.mm);
+  double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
+  psc->coeff_.alpha = wp / wl;
+  psc->coeff_.beta = vt / psc->prm.cc;
+  psc->coeff_.eta = vos / psc->prm.cc;
 }
 
 // ----------------------------------------------------------------------
@@ -194,7 +195,6 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     }
   }
   
-  assert(coeff_.ld == 1.);
   grid->fnqs = sqr(coeff_.alpha) * coeff_.cori / coeff_.eta;
   grid->eta = coeff_.eta;
   grid->beta = coeff_.beta;
