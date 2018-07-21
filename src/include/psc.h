@@ -54,9 +54,7 @@ struct psc_param {
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
 };
 
-/// coefficients needed for computations
-/// -- derived, not provided by user
-struct psc_coeff {
+struct GridNormalization {
   double cori_;
   double beta_;
   double eta_;
@@ -92,7 +90,7 @@ struct psc {
   ///@defgroup config-params user-configurable parameters @{
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
-  struct psc_coeff coeff_;	///< automatically derived constants
+  struct GridNormalization coeff_;	///< automatically derived constants
   ///@}
 
   // other parameters / constants
@@ -109,7 +107,7 @@ struct psc {
   struct mrc_domain *mrc_domain_;
 
   Grid_t* make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
-		    const Grid_t::Kinds& kinds, double dt, psc_coeff coeff);
+		    const Grid_t::Kinds& kinds, double dt, GridNormalization coeff);
 
   int ibn[3];         ///< number of ghost points
 
@@ -160,7 +158,7 @@ void psc_set_from_options(struct psc *psc);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 
-psc_coeff psc_setup_coeff(struct psc *psc);
+GridNormalization psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
 		      double dt);
 struct mrc_domain *psc_setup_mrc_domain(const Grid_t::Domain&, const GridBc& grid_bc, int nr_patches);
