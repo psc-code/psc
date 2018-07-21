@@ -121,9 +121,11 @@ psc_coeff psc_setup_coeff(struct psc *psc)
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
 
   psc_coeff coeff;
+  coeff.cori_ = 1. / psc->prm.nicell;
   coeff.alpha_ = wp / wl;
   coeff.beta_ = vt / psc->prm.cc;
   coeff.eta_ = vos / psc->prm.cc;
+  coeff.fnqs_ = sqr(coeff.alpha_) * coeff.cori_ / coeff.eta_;
   return coeff;
 }
 
@@ -196,8 +198,8 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     }
   }
   
-  grid->cori = 1. / prm.nicell;
-  grid->fnqs = sqr(coeff.alpha_) * grid->cori / coeff.eta_;
+  grid->cori = coeff.cori_;
+  grid->fnqs = coeff.fnqs_;
   grid->eta = coeff.eta_;
   grid->beta = coeff.beta_;
   grid->dt = dt;
