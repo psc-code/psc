@@ -26,15 +26,15 @@ struct SetupParticles
       return npt->n * npt->particles_per_cell + .5;
     }
     if (fractional_n_particles_per_cell) {
-      int n_prts = npt->n / grid.cori;
-      float rmndr = npt->n / grid.cori - n_prts;
+      int n_prts = npt->n / grid.norm.cori;
+      float rmndr = npt->n / grid.norm.cori - n_prts;
       float ran = random() / ((float) RAND_MAX + 1);
       if (ran < rmndr) {
 	n_prts++;
       }
       return n_prts;
     }
-    return npt->n / grid.cori + .5;
+    return npt->n / grid.norm.cori + .5;
   }
 
   // ----------------------------------------------------------------------
@@ -44,7 +44,7 @@ struct SetupParticles
 		      int p, double xx[3])
   {
     auto& kinds = psc->grid().kinds;
-    double beta = psc->grid().beta;
+    double beta = psc->grid().norm.beta;
     
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -150,7 +150,7 @@ struct SetupParticles
 		if (fractional_n_particles_per_cell) {
 		  prt.qni_wni_ = kinds[prt.kind_].q;
 		} else {
-		  prt.qni_wni_ = kinds[prt.kind_].q * npt.n / (n_in_cell * grid.cori);
+		  prt.qni_wni_ = kinds[prt.kind_].q * npt.n / (n_in_cell * grid.norm.cori);
 		}
 		mprts[p].push_back(prt);
 	      }

@@ -20,9 +20,9 @@ struct Current1vbVar1
     : dt_(grid.dt),
       dxi_{ Real3{1., 1. , 1.} / Real3(grid.domain.dx) }
   {
-    fnqxs_ = grid.domain.dx[0] * grid.fnqs / grid.dt;
-    fnqys_ = grid.domain.dx[1] * grid.fnqs / grid.dt;
-    fnqzs_ = grid.domain.dx[2] * grid.fnqs / grid.dt;
+    fnqxs_ = grid.domain.dx[0] * grid.norm.fnqs / grid.dt;
+    fnqys_ = grid.domain.dx[1] * grid.norm.fnqs / grid.dt;
+    fnqzs_ = grid.domain.dx[2] * grid.norm.fnqs / grid.dt;
   }
   
   void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,

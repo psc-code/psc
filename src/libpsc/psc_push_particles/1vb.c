@@ -68,7 +68,7 @@ private:
     auto& kinds = prts.grid().kinds;
     assert(kinds.size() <= MAX_NR_KINDS);
     for (int k = 0; k < kinds.size(); k++) {
-      dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+      dq_kind[k] = .5f * prts.grid().norm.eta * prts.grid().dt * kinds[k].q / kinds[k].m;
     }
 
     unsigned int n_prts = prts.size();

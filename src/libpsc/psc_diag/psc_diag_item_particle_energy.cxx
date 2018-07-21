@@ -12,7 +12,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item, struct psc *psc,
   auto& mprts = mprts_base.get_as<MparticlesDouble>();
 
   const Grid_t& grid = psc->grid();
-  double fnqs = grid.fnqs;
+  double fnqs = grid.norm.fnqs;
   double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
 
   for (int p = 0; p < mprts.n_patches(); p++) {

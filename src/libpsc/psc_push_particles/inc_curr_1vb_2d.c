@@ -15,10 +15,10 @@ struct Current1vb2d
   
   Current1vb2d(const Grid_t& grid)
     : dt_(grid.dt),
-      fnqs_(grid.fnqs)
+      fnqs_(grid.norm.fnqs)
   {
-    fnqys_ = grid.domain.dx[1] * grid.fnqs / grid.dt;
-    fnqzs_ = grid.domain.dx[2] * grid.fnqs / grid.dt;
+    fnqys_ = grid.domain.dx[1] * grid.norm.fnqs / grid.dt;
+    fnqzs_ = grid.domain.dx[2] * grid.norm.fnqs / grid.dt;
   }
   
   // ----------------------------------------------------------------------

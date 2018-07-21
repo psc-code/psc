@@ -36,7 +36,7 @@ private:
     using CurrentE_t = typename C::CurrentE_t;
     using particle_t = typename Mparticles::particle_t;
 
-    real_t dqs = .5f * prts.grid().eta * prts.grid().dt;
+    real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
   
     AdvanceParticle_t advance(prts.grid().dt);

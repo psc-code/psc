@@ -131,13 +131,10 @@ struct Grid_
   Int3 ldims;
   Domain domain;
   GridBc bc;
-  // FIXME? these defaults, in particular for dt, might be a bit
-  // dangerous, as they're useful for testing but might hide if one
-  // forgets to init them correctly for an real simulation
-  real_t fnqs = { 1. };
-  real_t eta = { 1. };
-  real_t beta = { 1. };
-  real_t cori = { 1. };
+  Normalization norm;
+  // FIXME? this default might be a bit dangerous, as they're useful
+  // for testing but might hide if one forgets to init dt correctly
+  // for a real simulation
   real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;

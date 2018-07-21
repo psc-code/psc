@@ -198,10 +198,10 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
     }
   }
   
-  grid->cori = coeff.cori;
-  grid->fnqs = coeff.fnqs;
-  grid->eta = coeff.eta;
-  grid->beta = coeff.beta;
+  grid->norm.cori = coeff.cori;
+  grid->norm.fnqs = coeff.fnqs;
+  grid->norm.eta = coeff.eta;
+  grid->norm.beta = coeff.beta;
   grid->dt = dt;
 
   return grid;

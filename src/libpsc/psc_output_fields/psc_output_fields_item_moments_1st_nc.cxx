@@ -27,7 +27,7 @@ struct Moment_n_1st_nc
   static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    real_t fnqs = grid.fnqs;
+    real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
 
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
@@ -58,7 +58,7 @@ struct Moment_rho_1st_nc
   static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    real_t fnqs = grid.fnqs;
+    real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
@@ -88,7 +88,7 @@ struct Moment_v_1st_nc
   static void run(fields_t flds, particles_t& prts)
   {
     const Grid_t& grid = ppsc->grid();
-    real_t fnqs = grid.fnqs;
+    real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
 
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {

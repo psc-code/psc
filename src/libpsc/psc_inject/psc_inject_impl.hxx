@@ -52,7 +52,7 @@ struct Inject_ : InjectBase
 
     SetupParticles<Mparticles> setup_particles;
     
-    real_t fac = 1. / grid.cori * 
+    real_t fac = 1. / grid.norm.cori * 
       (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);

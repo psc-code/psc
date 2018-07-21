@@ -199,7 +199,7 @@ struct CollisionHost
   void update_rei_before(particles_t& prts, int n_start, int n_end,
 			 int p, int i, int j, int k)
   {
-    real_t fnqs = prts.grid().fnqs;
+    real_t fnqs = prts.grid().norm.fnqs;
     Fields F(mflds_rei_[p]);
     F(0, i,j,k) = 0.;
     F(1, i,j,k) = 0.;
@@ -218,7 +218,7 @@ struct CollisionHost
   void update_rei_after(particles_t& prts, int n_start, int n_end,
 			int p, int i, int j, int k)
   {
-    real_t fnqs = prts.grid().fnqs, dt = prts.grid().dt;
+    real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
     Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       particle_t& prt = prts[n];
