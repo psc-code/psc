@@ -54,13 +54,6 @@ struct psc_param {
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
 };
 
-struct GridNormalization {
-  double cori_;
-  double beta_;
-  double eta_;
-  double fnqs_;
-};
-
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
