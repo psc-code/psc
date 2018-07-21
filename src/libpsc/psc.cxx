@@ -120,9 +120,9 @@ psc_setup_coeff(struct psc *psc)
   double vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * wl);
   double vt = sqrt(psc->prm.tt / psc->prm.mm);
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
-  psc->coeff_.alpha = wp / wl;
-  psc->coeff_.beta = vt / psc->prm.cc;
-  psc->coeff_.eta = vos / psc->prm.cc;
+  psc->coeff_.alpha_ = wp / wl;
+  psc->coeff_.beta_ = vt / psc->prm.cc;
+  psc->coeff_.eta_ = vos / psc->prm.cc;
 }
 
 // ----------------------------------------------------------------------
@@ -195,9 +195,9 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
   }
   
   grid->cori = 1. / prm.nicell;
-  grid->fnqs = sqr(coeff_.alpha) * grid->cori / coeff_.eta;
-  grid->eta = coeff_.eta;
-  grid->beta = coeff_.beta;
+  grid->fnqs = sqr(coeff_.alpha_) * grid->cori / coeff_.eta_;
+  grid->eta = coeff_.eta_;
+  grid->beta = coeff_.beta_;
   grid->dt = dt;
 
   return grid;

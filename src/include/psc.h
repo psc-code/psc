@@ -57,9 +57,9 @@ struct psc_param {
 /// coefficients needed for computations
 /// -- derived, not provided by user
 struct psc_coeff {
-  double alpha;
-  double beta;
-  double eta;
+  double alpha_;
+  double beta_;
+  double eta_;
 };
 
 // ----------------------------------------------------------------------
