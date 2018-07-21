@@ -167,7 +167,7 @@ psc_setup_mrc_domain(const Grid_t::Domain& grid_domain, const GridBc& grid_bc, i
 // psc_make_grid
 
 Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
-		       const Grid_t::Kinds& kinds, double dt)
+		       const Grid_t::Kinds& kinds, double dt, psc_coeff coeff)
 {
   Int3 gdims;
   mrc_domain_get_global_dims(mrc_domain, gdims);
@@ -197,9 +197,9 @@ Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& doma
   }
   
   grid->cori = 1. / prm.nicell;
-  grid->fnqs = sqr(coeff_.alpha_) * grid->cori / coeff_.eta_;
-  grid->eta = coeff_.eta_;
-  grid->beta = coeff_.beta_;
+  grid->fnqs = sqr(coeff.alpha_) * grid->cori / coeff.eta_;
+  grid->eta = coeff.eta_;
+  grid->beta = coeff.beta_;
   grid->dt = dt;
 
   return grid;
@@ -234,7 +234,7 @@ void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc,
   }
 
   psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
-  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, dt);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, dt, psc->coeff_);
 
   // make sure that np isn't overridden on the command line
   Int3 np;
