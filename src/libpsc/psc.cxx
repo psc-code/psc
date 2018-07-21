@@ -102,7 +102,7 @@ _psc_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_setup_coeff
 
-GridNormalization psc_setup_coeff(struct psc *psc)
+Grid_t::Normalization psc_setup_coeff(struct psc *psc)
 {
   assert(psc->prm.nicell > 0);
   double wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
@@ -120,7 +120,7 @@ GridNormalization psc_setup_coeff(struct psc *psc)
   double vt = sqrt(psc->prm.tt / psc->prm.mm);
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
 
-  GridNormalization coeff;
+  Grid_t::Normalization coeff;
   coeff.cori_ = 1. / psc->prm.nicell;
   double alpha_ = wp / wl;
   coeff.beta_ = vt / psc->prm.cc;
@@ -169,7 +169,7 @@ psc_setup_mrc_domain(const Grid_t::Domain& grid_domain, const GridBc& grid_bc, i
 // psc_make_grid
 
 Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
-		       const Grid_t::Kinds& kinds, double dt, GridNormalization coeff)
+		       const Grid_t::Kinds& kinds, double dt, Grid_t::Normalization coeff)
 {
   Int3 gdims;
   mrc_domain_get_global_dims(mrc_domain, gdims);

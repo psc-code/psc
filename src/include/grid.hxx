@@ -22,14 +22,6 @@ enum {
   BND_PRT_OPEN,
 };
 
-struct GridNormalization
-{
-  double cori_;
-  double beta_;
-  double eta_;
-  double fnqs_;
-};
-
 ///Describes the spatial domain to operate on.
 ///
 ///This struct describes the spatial dimension of the simulation-box
@@ -60,6 +52,8 @@ struct Grid_
 {
   using real_t = T;
   using Real3 = Vec3<real_t>;
+
+  struct Normalization;
 
   struct Domain;
   
@@ -174,6 +168,18 @@ struct Grid_<T>::Domain
   
   Int3 ldims;
   Real3 dx;
+};
+
+// ======================================================================
+// Grid::Normalization
+
+template<class T>
+struct Grid_<T>::Normalization
+{
+  double cori_;
+  double beta_;
+  double eta_;
+  double fnqs_;
 };
 
 // ======================================================================
