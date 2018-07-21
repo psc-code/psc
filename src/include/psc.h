@@ -159,7 +159,7 @@ void psc_set_from_options(struct psc *psc);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 
-void psc_setup_coeff(struct psc *psc);
+psc_coeff psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
 		      double dt);
 struct mrc_domain *psc_setup_mrc_domain(const Grid_t::Domain&, const GridBc& grid_bc, int nr_patches);

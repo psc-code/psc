@@ -102,8 +102,7 @@ _psc_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_setup_coeff
 
-void
-psc_setup_coeff(struct psc *psc)
+psc_coeff psc_setup_coeff(struct psc *psc)
 {
   assert(psc->prm.nicell > 0);
   double wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
@@ -120,9 +119,12 @@ psc_setup_coeff(struct psc *psc)
   double vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * wl);
   double vt = sqrt(psc->prm.tt / psc->prm.mm);
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
-  psc->coeff_.alpha_ = wp / wl;
-  psc->coeff_.beta_ = vt / psc->prm.cc;
-  psc->coeff_.eta_ = vos / psc->prm.cc;
+
+  psc_coeff coeff;
+  coeff.alpha_ = wp / wl;
+  coeff.beta_ = vt / psc->prm.cc;
+  coeff.eta_ = vos / psc->prm.cc;
+  return coeff;
 }
 
 // ----------------------------------------------------------------------
