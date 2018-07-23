@@ -177,6 +177,11 @@ struct Grid_<T>::Normalization
   real_t eta = { 1. };
   real_t beta = { 1. };
   real_t cori = { 1. };
+
+  real_t b0;
+  real_t rho0;
+  real_t phi0;
+  real_t a0;
 };
 
 // ======================================================================

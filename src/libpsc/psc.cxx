@@ -104,6 +104,8 @@ _psc_create(struct psc *psc)
 
 Grid_t::Normalization psc_setup_coeff(struct psc *psc)
 {
+  Grid_t::Normalization coeff;
+
   assert(psc->prm.nicell > 0);
   double wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
   double ld = psc->prm.cc / wl;
@@ -112,15 +114,15 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
     psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
       psc->prm.lw / 1.0e6;
   }
-  psc->prm.b0 = psc->prm.e0 / psc->prm.cc;
-  psc->prm.rho0 = psc->prm.eps0 * wl * psc->prm.b0;
-  psc->prm.phi0 = ld * psc->prm.e0;
-  psc->prm.a0 = psc->prm.e0 / wl;
+  coeff.b0 = psc->prm.e0 / psc->prm.cc;
+  coeff.rho0 = psc->prm.eps0 * wl * coeff.b0;
+  coeff.phi0 = ld * psc->prm.e0;
+  coeff.a0 = psc->prm.e0 / wl;
+
   double vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * wl);
   double vt = sqrt(psc->prm.tt / psc->prm.mm);
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
 
-  Grid_t::Normalization coeff;
   coeff.cori = 1. / psc->prm.nicell;
   double alpha_ = wp / wl;
   coeff.beta = vt / psc->prm.cc;

@@ -45,12 +45,8 @@ struct psc_param {
   double lw;	///<normalization coefficient for laser wavelength (omega)
   double i0;	///<laser intensity
   double n0;	///<electron density
-  double e0;	///<field intesity
-  double b0;
+  double e0;	///<field intensity
   double j0;
-  double rho0;
-  double phi0;
-  double a0;
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
 };
 
