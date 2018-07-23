@@ -62,7 +62,7 @@ static struct param psc_descr[] = {
   { "lw"            , VAR(prm.lw)              , PARAM_DOUBLE(3.2e-6)       },
   { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
-  { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
+  { "e0"            , VAR(norm_params.e0)              , PARAM_DOUBLE(0.)           },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
   
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
@@ -106,20 +106,21 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
 {
   Grid_t::Normalization coeff;
 
+  auto& prm = psc->norm_params;
   assert(psc->prm.nicell > 0);
   double wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
   double ld = psc->prm.cc / wl;
   assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
-  if (psc->prm.e0 == 0.) {
-    psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
+  if (prm.e0 == 0.) {
+    prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
       psc->prm.lw / 1.0e6;
   }
-  coeff.b0 = psc->prm.e0 / psc->prm.cc;
+  coeff.b0 = prm.e0 / psc->prm.cc;
   coeff.rho0 = psc->prm.eps0 * wl * coeff.b0;
-  coeff.phi0 = ld * psc->prm.e0;
-  coeff.a0 = psc->prm.e0 / wl;
+  coeff.phi0 = ld * prm.e0;
+  coeff.a0 = prm.e0 / wl;
 
-  double vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * wl);
+  double vos = psc->prm.qq * prm.e0 / (psc->prm.mm * wl);
   double vt = sqrt(psc->prm.tt / psc->prm.mm);
   double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
 
@@ -368,6 +369,6 @@ psc_default_dimensionless(struct psc *psc)
   psc->prm.lw = 2.*M_PI;
   psc->prm.i0 = 0.;
   psc->prm.n0 = 1.;
-  psc->prm.e0 = 1.;
+  psc->norm_params.e0 = 1.;
 }
 

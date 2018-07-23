@@ -53,6 +53,7 @@ struct Grid_
   using real_t = T;
   using Real3 = Vec3<real_t>;
 
+  struct NormalizationParams;
   struct Normalization;
 
   struct Domain;
@@ -165,6 +166,15 @@ struct Grid_<T>::Domain
   
   Int3 ldims;
   Real3 dx;
+};
+
+// ======================================================================
+// Grid::NormalizationParams
+
+template<class T>
+struct Grid_<T>::NormalizationParams
+{
+  double e0 = { 1. }; // field intensity
 };
 
 // ======================================================================

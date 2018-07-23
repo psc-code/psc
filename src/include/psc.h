@@ -45,7 +45,6 @@ struct psc_param {
   double lw;	///<normalization coefficient for laser wavelength (omega)
   double i0;	///<laser intensity
   double n0;	///<electron density
-  double e0;	///<field intensity
   double j0;
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
 };
@@ -79,6 +78,7 @@ struct psc {
   ///@defgroup config-params user-configurable parameters @{
   // user-configurable parameters
   struct psc_param prm;		///< normalization parameters set by the user
+  Grid_t::NormalizationParams norm_params;
   ///@}
 
   // other parameters / constants
