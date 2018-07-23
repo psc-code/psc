@@ -40,7 +40,6 @@ struct psc_param {
   double qq;	///<elemental charge 
   double mm;	///<mass
   double tt;	///<some measurement for energy ? (default is 1keV in fortran) 
-  double cc;	///<speed of light
   double eps0;	///<vacuum permittivity
   double lw;	///<normalization coefficient for laser wavelength (omega)
   double i0;	///<laser intensity

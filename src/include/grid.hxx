@@ -174,6 +174,7 @@ struct Grid_<T>::Domain
 template<class T>
 struct Grid_<T>::NormalizationParams
 {
+  double cc = { 1. }; // speed of light
   double e0 = { 1. }; // field intensity
 };
 

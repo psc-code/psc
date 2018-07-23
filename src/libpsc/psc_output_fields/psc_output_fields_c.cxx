@@ -43,7 +43,7 @@ static void open_mrc_io(psc_output_fields_c *out, mrc_io *io)
   mrc_obj_set_name(obj, "psc");
   mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
   mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->grid().dt);
-  mrc_obj_dict_add_float(obj, "cc", ppsc->prm.cc);
+  mrc_obj_dict_add_float(obj, "cc", ppsc->norm_params.cc);
   mrc_obj_dict_add_float(obj, "dt", ppsc->grid().dt);
   mrc_obj_write(obj, io);
   mrc_obj_destroy(obj);
