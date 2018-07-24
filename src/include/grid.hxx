@@ -177,20 +177,34 @@ struct Grid_<T>::Domain
 template<class T>
 struct Grid_<T>::NormalizationParams
 {
-  NormalizationParams() {}
+  NormalizationParams()
+  {
+    cc = 1.;
+    qq = 1.;
+    mm = 1.;
+    tt = 1.;
+    eps0 = 1.;
+    e0 = 1.;
+    lw = 2.*M_PI;
+    i0 = 0.;
+    n0 = 1.;
 
-  double cc = { 1. }; // speed of light
-  double qq = { 1. }; // elemental charge 
-  double mm = { 1. }; // mass
-  double tt = { 1. }; // some measurement for energy ? (default is 1keV in fortran) 
-  double eps0 = { 1. };	// vacuum permittivity
-  double e0 = { 1. }; // field intensity
+    nicell = 0;
+  }
 
-  double lw = { 2.*M_PI }; // normalization coefficient for laser wavelength (omega)
-  double i0 = { 0. };	   // laser intensity
-  double n0 = { 1. };	   // electron density
+public:
+  double cc;   // speed of light
+  double qq;   // elemental charge 
+  double mm;   // mass
+  double tt;   // some measurement for energy ? (default is 1keV in fortran) 
+  double eps0; // vacuum permittivity
+  double e0;   // field intensity
 
-  int nicell = { 0 };      // number of particles per gridpoint to represent a normalized density of 1 
+  double lw;   // normalization coefficient for laser wavelength (omega)
+  double i0;   // laser intensity
+  double n0;   // electron density
+
+  int nicell;  // number of particles per gridpoint to represent a normalized density of 1 
 };
 
 // ======================================================================
