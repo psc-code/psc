@@ -238,6 +238,7 @@ struct Grid_<T>::Normalization
       prm.e0 = sqrt(2.0 * prm.i0 / prm.eps0 / prm.cc) /
 	prm.lw / 1.0e6;
     }
+    coeff.cc = prm.cc;
     coeff.b0 = prm.e0 / prm.cc;
     coeff.rho0 = prm.eps0 * wl * coeff.b0;
     coeff.phi0 = ld * prm.e0;
@@ -253,8 +254,9 @@ struct Grid_<T>::Normalization
     coeff.eta = vos / prm.cc;
     coeff.fnqs = sqr(alpha_) * coeff.cori / coeff.eta;
     *this = coeff;
-}
+  }
 
+  real_t cc;
   real_t fnqs = { 1. };
   real_t eta = { 1. };
   real_t beta = { 1. };
