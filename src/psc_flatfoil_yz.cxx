@@ -527,10 +527,10 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   PscParams p;
   PscFlatfoilParams params;
 
-  psc_default_dimensionless(psc_);
+  psc_->norm_params = Grid_t::NormalizationParams{};
+  psc_->norm_params.nicell = 100;
 
   p.nmax = 5001;
-  psc_->norm_params.nicell = 100;
   p.cfl = 0.75;
 
   // --- setup domain

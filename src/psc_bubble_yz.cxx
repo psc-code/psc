@@ -411,7 +411,8 @@ PscBubble* PscBubbleBuilder::makePsc()
   PscParams p;
   PscBubbleParams params;
 
-  psc_default_dimensionless(psc_);
+  psc_->norm_params = Grid_t::NormalizationParams{};
+  psc_->norm_params.nicell = 100;
 
   params.BB = .07;
   params.nnb = .1;
@@ -424,7 +425,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   params.MMi = 100.;
     
   p.nmax = 1000; //32000;
-  psc_->norm_params.nicell = 100;
 
   params.LLy = 2. * params.LLn;
   params.LLz = 3. * params.LLn;

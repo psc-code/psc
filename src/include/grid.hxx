@@ -177,6 +177,8 @@ struct Grid_<T>::Domain
 template<class T>
 struct Grid_<T>::NormalizationParams
 {
+  NormalizationParams() {}
+
   double cc = { 1. }; // speed of light
   double qq = { 1. }; // elemental charge 
   double mm = { 1. }; // mass
@@ -186,9 +188,9 @@ struct Grid_<T>::NormalizationParams
 
   double lw = { 2.*M_PI }; // normalization coefficient for laser wavelength (omega)
   double i0 = { 0. };	   // laser intensity
-  double n0;	           // electron density
+  double n0 = { 1. };	   // electron density
 
-  int nicell;	           // number of particles per gridpoint to represent a normalized density of 1 
+  int nicell = { 0 };      // number of particles per gridpoint to represent a normalized density of 1 
 };
 
 // ======================================================================

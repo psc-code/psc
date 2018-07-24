@@ -319,26 +319,3 @@ struct mrc_class_psc_ : mrc_class_psc {
 // ======================================================================
 // helpers
 
-// ----------------------------------------------------------------------
-// psc_default_dimensionless
-//
-// sets up parameter defaults for dimensionless units
-
-void
-psc_default_dimensionless(struct psc *psc)
-{
-  Grid_t::NormalizationParams prm;
-  prm.qq = 1.;
-  prm.mm = 1.;
-  prm.tt = 1.;
-  prm.cc = 1.;
-  prm.eps0 = 1.;
-
-  prm.lw = 2.*M_PI;
-  prm.i0 = 0.;
-  prm.n0 = 1.;
-  prm.e0 = 1.;
-
-  psc->norm_params = prm;
-}
-

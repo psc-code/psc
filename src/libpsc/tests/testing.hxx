@@ -211,7 +211,7 @@ struct PushParticlesTest : ::testing::Test
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
     
     auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
-    psc_default_dimensionless(psc);
+    psc->norm_params = Grid_t::NormalizationParams{};
     auto coeff = Grid_t::Normalization{psc->norm_params};
     psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1.);
   }
