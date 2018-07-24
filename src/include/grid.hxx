@@ -228,32 +228,30 @@ struct Grid_<T>::Normalization
   
   Normalization(NormalizationParams& prm)
   {
-    Normalization coeff;
-    
     assert(prm.nicell > 0);
-    double wl = 2. * M_PI * prm.cc / prm.lw;
-    double ld = prm.cc / wl;
+    cc = prm.cc;
+
+    double wl = 2. * M_PI * cc / prm.lw;
+    double ld = cc / wl;
     assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
     if (prm.e0 == 0.) {
-      prm.e0 = sqrt(2.0 * prm.i0 / prm.eps0 / prm.cc) /
+      prm.e0 = sqrt(2.0 * prm.i0 / prm.eps0 / cc) /
 	prm.lw / 1.0e6;
     }
-    coeff.cc = prm.cc;
-    coeff.b0 = prm.e0 / prm.cc;
-    coeff.rho0 = prm.eps0 * wl * coeff.b0;
-    coeff.phi0 = ld * prm.e0;
-    coeff.a0 = prm.e0 / wl;
+    b0 = prm.e0 / cc;
+    rho0 = prm.eps0 * wl * b0;
+    phi0 = ld * prm.e0;
+    a0 = prm.e0 / wl;
     
     double vos = prm.qq * prm.e0 / (prm.mm * wl);
     double vt = sqrt(prm.tt / prm.mm);
     double wp = sqrt(sqr(prm.qq) * prm.n0 / prm.eps0 / prm.mm);
     
-    coeff.cori = 1. / prm.nicell;
+    cori = 1. / prm.nicell;
     double alpha_ = wp / wl;
-    coeff.beta = vt / prm.cc;
-    coeff.eta = vos / prm.cc;
-    coeff.fnqs = sqr(alpha_) * coeff.cori / coeff.eta;
-    *this = coeff;
+    beta = vt / cc;
+    eta = vos / cc;
+    fnqs = sqr(alpha_) * cori / eta;
   }
 
   real_t cc;
