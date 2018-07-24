@@ -102,11 +102,10 @@ _psc_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_setup_coeff
 
-Grid_t::Normalization psc_setup_coeff(struct psc *psc)
+Grid_t::Normalization psc_setup_coeff(Grid_t::NormalizationParams& prm)
 {
   Grid_t::Normalization coeff;
 
-  auto& prm = psc->norm_params;
   assert(prm.nicell > 0);
   double wl = 2. * M_PI * prm.cc / prm.lw;
   double ld = prm.cc / wl;
@@ -288,7 +287,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   assert(!ppsc);
   ppsc = psc;
 
-  psc_setup_coeff(psc);
+  psc_setup_coeff(psc->norm_params);
 
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
 #if 0
