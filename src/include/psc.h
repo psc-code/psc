@@ -37,7 +37,6 @@ typedef int f_int;
 ///User specified parameters
 ///
 struct psc_param {
-  double j0;
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
 };
 
