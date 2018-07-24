@@ -54,11 +54,11 @@ static struct select_init {
 
 static struct param psc_descr[] = {
   // psc_params
-  { "qq"            , VAR(prm.qq)              , PARAM_DOUBLE(1.6021e-19)   },
-  { "mm"            , VAR(prm.mm)              , PARAM_DOUBLE(9.1091e-31)   },
-  { "tt"            , VAR(prm.tt)              , PARAM_DOUBLE(1.6021e-16)   },
+  { "qq"            , VAR(norm_params.qq)              , PARAM_DOUBLE(1.6021e-19)   },
+  { "mm"            , VAR(norm_params.mm)              , PARAM_DOUBLE(9.1091e-31)   },
+  { "tt"            , VAR(norm_params.tt)              , PARAM_DOUBLE(1.6021e-16)   },
   { "cc"            , VAR(norm_params.cc)              , PARAM_DOUBLE(3.0e8)        },
-  { "eps0"          , VAR(prm.eps0)            , PARAM_DOUBLE(8.8542e-12)   },
+  { "eps0"          , VAR(norm_params.eps0)            , PARAM_DOUBLE(8.8542e-12)   },
   { "lw"            , VAR(prm.lw)              , PARAM_DOUBLE(3.2e-6)       },
   { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
@@ -112,17 +112,17 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
   double ld = prm.cc / wl;
   assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
   if (prm.e0 == 0.) {
-    prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / prm.cc) /
+    prm.e0 = sqrt(2.0 * psc->prm.i0 / prm.eps0 / prm.cc) /
       psc->prm.lw / 1.0e6;
   }
   coeff.b0 = prm.e0 / prm.cc;
-  coeff.rho0 = psc->prm.eps0 * wl * coeff.b0;
+  coeff.rho0 = prm.eps0 * wl * coeff.b0;
   coeff.phi0 = ld * prm.e0;
   coeff.a0 = prm.e0 / wl;
 
-  double vos = psc->prm.qq * prm.e0 / (psc->prm.mm * wl);
-  double vt = sqrt(psc->prm.tt / psc->prm.mm);
-  double wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
+  double vos = prm.qq * prm.e0 / (prm.mm * wl);
+  double vt = sqrt(prm.tt / prm.mm);
+  double wp = sqrt(sqr(prm.qq) * psc->prm.n0 / prm.eps0 / prm.mm);
 
   coeff.cori = 1. / psc->prm.nicell;
   double alpha_ = wp / wl;
@@ -360,11 +360,11 @@ struct mrc_class_psc_ : mrc_class_psc {
 void
 psc_default_dimensionless(struct psc *psc)
 {
-  psc->prm.qq = 1.;
-  psc->prm.mm = 1.;
-  psc->prm.tt = 1.;
+  psc->norm_params.qq = 1.;
+  psc->norm_params.mm = 1.;
+  psc->norm_params.tt = 1.;
   psc->norm_params.cc = 1.;
-  psc->prm.eps0 = 1.;
+  psc->norm_params.eps0 = 1.;
 
   psc->prm.lw = 2.*M_PI;
   psc->prm.i0 = 0.;

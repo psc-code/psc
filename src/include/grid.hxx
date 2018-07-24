@@ -175,6 +175,10 @@ template<class T>
 struct Grid_<T>::NormalizationParams
 {
   double cc = { 1. }; // speed of light
+  double qq = { 1. }; // elemental charge 
+  double mm = { 1. }; // mass
+  double tt = { 1. }; // some measurement for energy ? (default is 1keV in fortran) 
+  double eps0 = { 1. };	// vacuum permittivity
   double e0 = { 1. }; // field intensity
 };
 

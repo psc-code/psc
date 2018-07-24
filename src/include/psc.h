@@ -37,10 +37,6 @@ typedef int f_int;
 ///User specified parameters
 ///
 struct psc_param {
-  double qq;	///<elemental charge 
-  double mm;	///<mass
-  double tt;	///<some measurement for energy ? (default is 1keV in fortran) 
-  double eps0;	///<vacuum permittivity
   double lw;	///<normalization coefficient for laser wavelength (omega)
   double i0;	///<laser intensity
   double n0;	///<electron density
