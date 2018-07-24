@@ -527,8 +527,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   PscParams p;
   PscFlatfoilParams params;
 
-  psc_->norm_params = Grid_t::NormalizationParams::dimensionless();
-  psc_->norm_params.nicell = 100;
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 100;
 
   p.nmax = 5001;
   p.cfl = 0.75;
@@ -676,7 +676,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
 #if TEST == TEST_4_SHOCK_3D
   p.nmax = 100002;
-  psc_->norm_params.nicell = 100;
+  norm_params.nicell = 100;
   params.BB = 0.02;
   params.background_n = .01;
   params.background_Te = .002;
@@ -686,8 +686,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 #endif
   
 #if TEST == TEST_3_NILSON_3D
-  psc_->prm.nmax = 101;
-  psc_->norm_params.nicell = 50;
+  p.nmax = 101;
+  norm_params.nicell = 50;
   params.background_n = .02;
   p.collision_interval = 0;
   params.inject_interval = 0;
@@ -717,7 +717,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 #endif
 
   // --- generic setup
-  auto coeff = Grid_t::Normalization{psc_->norm_params};
+  auto coeff = Grid_t::Normalization{norm_params};
   double dt = PscFlatfoil::set_dt(p, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 

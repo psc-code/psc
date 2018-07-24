@@ -935,8 +935,8 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.open_bc_x = false;
   params.driven_bc_z = false;
   
-  psc_->norm_params = Grid_t::NormalizationParams::dimensionless();
-  psc_->norm_params.nicell = 1;
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 1;
   p.cfl = 0.99;
 
   p.stats_every = 100;
@@ -966,7 +966,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
-  auto coeff = Grid_t::Normalization{psc_->norm_params};
+  auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
   setup_grid(psc_, phys, p, params);

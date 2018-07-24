@@ -411,8 +411,8 @@ PscBubble* PscBubbleBuilder::makePsc()
   PscParams p;
   PscBubbleParams params;
 
-  psc_->norm_params = Grid_t::NormalizationParams::dimensionless();
-  psc_->norm_params.nicell = 100;
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 100;
 
   params.BB = .07;
   params.nnb = .1;
@@ -476,7 +476,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
   
   // --- generic setup
-  auto coeff = Grid_t::Normalization{psc_->norm_params};
+  auto coeff = Grid_t::Normalization{norm_params};
   double dt = PscBubble::set_dt(p, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
