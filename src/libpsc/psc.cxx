@@ -53,18 +53,6 @@ static struct select_init {
 } select_initializer;
 
 static struct param psc_descr[] = {
-  // psc_params
-  { "qq"            , VAR(norm_params.qq)              , PARAM_DOUBLE(1.6021e-19)   },
-  { "mm"            , VAR(norm_params.mm)              , PARAM_DOUBLE(9.1091e-31)   },
-  { "tt"            , VAR(norm_params.tt)              , PARAM_DOUBLE(1.6021e-16)   },
-  { "cc"            , VAR(norm_params.cc)              , PARAM_DOUBLE(3.0e8)        },
-  { "eps0"          , VAR(norm_params.eps0)            , PARAM_DOUBLE(8.8542e-12)   },
-  { "lw"            , VAR(norm_params.lw)              , PARAM_DOUBLE(3.2e-6)       },
-  { "i0"            , VAR(norm_params.i0)              , PARAM_DOUBLE(1e21)         },
-  { "n0"            , VAR(norm_params.n0)              , PARAM_DOUBLE(1e26)         },
-  { "e0"            , VAR(norm_params.e0)              , PARAM_DOUBLE(0.)           },
-  { "nicell"        , VAR(norm_params.nicell)          , PARAM_INT(200)             },
-  
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },

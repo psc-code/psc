@@ -196,6 +196,17 @@ struct Grid_<T>::NormalizationParams
 
   NormalizationParams()
   {
+    qq = 1.6021e-19;
+    mm = 9.1091e-31;
+    tt = 1.6021e-16;
+    cc = 3.0e8;
+
+    eps0 = 8.8542e-12;
+    lw   = 3.2e-6;
+    i0   = 1e21;
+    n0   = 1e26;
+    e0   = 0.;
+    
     nicell = 0;
   }
 
