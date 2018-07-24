@@ -717,7 +717,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 #endif
 
   // --- generic setup
-  auto coeff = psc_setup_coeff(psc_->norm_params);
+  auto coeff = Grid_t::Normalization{psc_->norm_params};
   double dt = PscFlatfoil::set_dt(p, grid_domain);
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
