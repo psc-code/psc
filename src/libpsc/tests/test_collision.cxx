@@ -70,7 +70,7 @@ static void make_psc(const Grid_t::Kinds& kinds)
 			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
   
   auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
-  psc->norm_params = Grid_t::NormalizationParams{};
+  psc->norm_params = Grid_t::NormalizationParams::dimensionless();
   auto coeff = Grid_t::Normalization{psc->norm_params};
   psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1.);
 }

@@ -935,7 +935,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.open_bc_x = false;
   params.driven_bc_z = false;
   
-  psc_->norm_params = Grid_t::NormalizationParams{};
+  psc_->norm_params = Grid_t::NormalizationParams::dimensionless();
   psc_->norm_params.nicell = 1;
   p.cfl = 0.99;
 

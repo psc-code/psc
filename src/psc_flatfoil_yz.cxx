@@ -527,7 +527,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   PscParams p;
   PscFlatfoilParams params;
 
-  psc_->norm_params = Grid_t::NormalizationParams{};
+  psc_->norm_params = Grid_t::NormalizationParams::dimensionless();
   psc_->norm_params.nicell = 100;
 
   p.nmax = 5001;

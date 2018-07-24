@@ -177,18 +177,25 @@ struct Grid_<T>::Domain
 template<class T>
 struct Grid_<T>::NormalizationParams
 {
+  static NormalizationParams dimensionless()
+  {
+    auto prm = NormalizationParams{};
+
+    prm.cc = 1.;
+    prm.qq = 1.;
+    prm.mm = 1.;
+    prm.tt = 1.;
+    prm.eps0 = 1.;
+    prm.e0 = 1.;
+    prm.lw = 2.*M_PI;
+    prm.i0 = 0.;
+    prm.n0 = 1.;
+
+    return prm;
+  }
+
   NormalizationParams()
   {
-    cc = 1.;
-    qq = 1.;
-    mm = 1.;
-    tt = 1.;
-    eps0 = 1.;
-    e0 = 1.;
-    lw = 2.*M_PI;
-    i0 = 0.;
-    n0 = 1.;
-
     nicell = 0;
   }
 
