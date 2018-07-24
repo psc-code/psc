@@ -327,15 +327,18 @@ struct mrc_class_psc_ : mrc_class_psc {
 void
 psc_default_dimensionless(struct psc *psc)
 {
-  psc->norm_params.qq = 1.;
-  psc->norm_params.mm = 1.;
-  psc->norm_params.tt = 1.;
-  psc->norm_params.cc = 1.;
-  psc->norm_params.eps0 = 1.;
+  Grid_t::NormalizationParams prm;
+  prm.qq = 1.;
+  prm.mm = 1.;
+  prm.tt = 1.;
+  prm.cc = 1.;
+  prm.eps0 = 1.;
 
-  psc->norm_params.lw = 2.*M_PI;
-  psc->norm_params.i0 = 0.;
-  psc->norm_params.n0 = 1.;
-  psc->norm_params.e0 = 1.;
+  prm.lw = 2.*M_PI;
+  prm.i0 = 0.;
+  prm.n0 = 1.;
+  prm.e0 = 1.;
+
+  psc->norm_params = prm;
 }
 
