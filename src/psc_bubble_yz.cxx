@@ -424,7 +424,7 @@ PscBubble* PscBubbleBuilder::makePsc()
   params.MMi = 100.;
     
   p.nmax = 1000; //32000;
-  psc_->prm.nicell = 100;
+  psc_->norm_params.nicell = 100;
 
   params.LLy = 2. * params.LLn;
   params.LLz = 3. * params.LLn;

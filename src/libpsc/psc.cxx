@@ -63,7 +63,7 @@ static struct param psc_descr[] = {
   { "i0"            , VAR(norm_params.i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(norm_params.n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(norm_params.e0)              , PARAM_DOUBLE(0.)           },
-  { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
+  { "nicell"        , VAR(norm_params.nicell)          , PARAM_INT(200)             },
   
   { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
 
@@ -107,7 +107,7 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
   Grid_t::Normalization coeff;
 
   auto& prm = psc->norm_params;
-  assert(psc->prm.nicell > 0);
+  assert(prm.nicell > 0);
   double wl = 2. * M_PI * prm.cc / prm.lw;
   double ld = prm.cc / wl;
   assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
@@ -124,7 +124,7 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
   double vt = sqrt(prm.tt / prm.mm);
   double wp = sqrt(sqr(prm.qq) * prm.n0 / prm.eps0 / prm.mm);
 
-  coeff.cori = 1. / psc->prm.nicell;
+  coeff.cori = 1. / prm.nicell;
   double alpha_ = wp / wl;
   coeff.beta = vt / prm.cc;
   coeff.eta = vos / prm.cc;

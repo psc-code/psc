@@ -937,7 +937,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   psc_default_dimensionless(psc_);
 
-  psc_->prm.nicell = 1;
+  psc_->norm_params.nicell = 1;
   p.cfl = 0.99;
 
   p.stats_every = 100;

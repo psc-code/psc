@@ -530,7 +530,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   psc_default_dimensionless(psc_);
 
   p.nmax = 5001;
-  psc_->prm.nicell = 100;
+  psc_->norm_params.nicell = 100;
   p.cfl = 0.75;
 
   // --- setup domain
@@ -676,7 +676,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
 #if TEST == TEST_4_SHOCK_3D
   p.nmax = 100002;
-  psc_->prm.nicell = 100;
+  psc_->norm_params.nicell = 100;
   params.BB = 0.02;
   params.background_n = .01;
   params.background_Te = .002;
@@ -687,7 +687,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   
 #if TEST == TEST_3_NILSON_3D
   psc_->prm.nmax = 101;
-  psc_->prm.nicell = 50;
+  psc_->norm_params.nicell = 50;
   params.background_n = .02;
   p.collision_interval = 0;
   params.inject_interval = 0;

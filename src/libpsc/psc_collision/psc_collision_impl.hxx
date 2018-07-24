@@ -247,7 +247,7 @@ struct CollisionHost
 
     // all particles need to have same weight!
     real_t wni = prts.prt_wni(prts[n_start]);
-    real_t nudt1 = wni / ppsc->prm.nicell * nn * this->interval_ * grid.dt * nu_;
+    real_t nudt1 = wni / ppsc->norm_params.nicell * nn * this->interval_ * grid.dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;

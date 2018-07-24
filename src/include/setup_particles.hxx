@@ -20,7 +20,7 @@ struct SetupParticles
     const auto& grid = psc->grid();
     
     if (const_num_particles_per_cell) {
-      return psc->prm.nicell;
+      return psc->norm_params.nicell;
     }
     if (npt->particles_per_cell) {
       return npt->n * npt->particles_per_cell + .5;

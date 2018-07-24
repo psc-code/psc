@@ -185,6 +185,8 @@ struct Grid_<T>::NormalizationParams
   double lw = { 2.*M_PI }; // normalization coefficient for laser wavelength (omega)
   double i0 = { 0. };	   // laser intensity
   double n0;	           // electron density
+
+  int nicell;	           // number of particles per gridpoint to represent a normalized density of 1 
 };
 
 // ======================================================================
