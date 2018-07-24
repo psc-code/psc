@@ -34,11 +34,6 @@ enum {
 typedef double f_real;
 typedef int f_int;
 
-///User specified parameters
-///
-struct psc_param {
-};
-
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
@@ -63,11 +58,6 @@ struct psc {
   struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_fields_collection *output_fields_collection; ///< collection of psc_output_fields
   struct psc_output_particles *output_particles;///< particle output
-  ///@}
-
-  ///@defgroup config-params user-configurable parameters @{
-  // user-configurable parameters
-  struct psc_param prm;		///< normalization parameters set by the user
   ///@}
 
   // other parameters / constants
