@@ -37,9 +37,6 @@ typedef int f_int;
 ///User specified parameters
 ///
 struct psc_param {
-  double lw;	///<normalization coefficient for laser wavelength (omega)
-  double i0;	///<laser intensity
-  double n0;	///<electron density
   double j0;
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
 };

@@ -5,6 +5,7 @@
 #include "vec3.hxx"
 #include <vector>
 #include <cstring>
+#include <cmath>
 
 ///Possible boundary conditions for fields
 enum {
@@ -180,6 +181,10 @@ struct Grid_<T>::NormalizationParams
   double tt = { 1. }; // some measurement for energy ? (default is 1keV in fortran) 
   double eps0 = { 1. };	// vacuum permittivity
   double e0 = { 1. }; // field intensity
+
+  double lw = { 2.*M_PI }; // normalization coefficient for laser wavelength (omega)
+  double i0 = { 0. };	   // laser intensity
+  double n0;	           // electron density
 };
 
 // ======================================================================

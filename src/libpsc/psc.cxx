@@ -59,9 +59,9 @@ static struct param psc_descr[] = {
   { "tt"            , VAR(norm_params.tt)              , PARAM_DOUBLE(1.6021e-16)   },
   { "cc"            , VAR(norm_params.cc)              , PARAM_DOUBLE(3.0e8)        },
   { "eps0"          , VAR(norm_params.eps0)            , PARAM_DOUBLE(8.8542e-12)   },
-  { "lw"            , VAR(prm.lw)              , PARAM_DOUBLE(3.2e-6)       },
-  { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
-  { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
+  { "lw"            , VAR(norm_params.lw)              , PARAM_DOUBLE(3.2e-6)       },
+  { "i0"            , VAR(norm_params.i0)              , PARAM_DOUBLE(1e21)         },
+  { "n0"            , VAR(norm_params.n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(norm_params.e0)              , PARAM_DOUBLE(0.)           },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
   
@@ -108,12 +108,12 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
 
   auto& prm = psc->norm_params;
   assert(psc->prm.nicell > 0);
-  double wl = 2. * M_PI * prm.cc / psc->prm.lw;
+  double wl = 2. * M_PI * prm.cc / prm.lw;
   double ld = prm.cc / wl;
   assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
   if (prm.e0 == 0.) {
-    prm.e0 = sqrt(2.0 * psc->prm.i0 / prm.eps0 / prm.cc) /
-      psc->prm.lw / 1.0e6;
+    prm.e0 = sqrt(2.0 * prm.i0 / prm.eps0 / prm.cc) /
+      prm.lw / 1.0e6;
   }
   coeff.b0 = prm.e0 / prm.cc;
   coeff.rho0 = prm.eps0 * wl * coeff.b0;
@@ -122,7 +122,7 @@ Grid_t::Normalization psc_setup_coeff(struct psc *psc)
 
   double vos = prm.qq * prm.e0 / (prm.mm * wl);
   double vt = sqrt(prm.tt / prm.mm);
-  double wp = sqrt(sqr(prm.qq) * psc->prm.n0 / prm.eps0 / prm.mm);
+  double wp = sqrt(sqr(prm.qq) * prm.n0 / prm.eps0 / prm.mm);
 
   coeff.cori = 1. / psc->prm.nicell;
   double alpha_ = wp / wl;
@@ -366,9 +366,9 @@ psc_default_dimensionless(struct psc *psc)
   psc->norm_params.cc = 1.;
   psc->norm_params.eps0 = 1.;
 
-  psc->prm.lw = 2.*M_PI;
-  psc->prm.i0 = 0.;
-  psc->prm.n0 = 1.;
+  psc->norm_params.lw = 2.*M_PI;
+  psc->norm_params.i0 = 0.;
+  psc->norm_params.n0 = 1.;
   psc->norm_params.e0 = 1.;
 }
 
