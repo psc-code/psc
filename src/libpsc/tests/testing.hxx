@@ -252,7 +252,7 @@ struct PushParticlesTest : ::testing::Test
       EXPECT_NEAR(prt.pxi, prt1.pxi, eps);
       EXPECT_NEAR(prt.pyi, prt1.pyi, eps);
       EXPECT_NEAR(prt.pzi, prt1.pzi, eps);
-      EXPECT_NEAR(prt.qni_wni_, prt1.qni_wni_, eps);
+      EXPECT_NEAR(prt.qni_wni(grid()), prt1.qni_wni(grid()), eps);
       EXPECT_NEAR(prt.xi, prt1.xi, eps);
       EXPECT_NEAR(prt.yi, prt1.yi, eps);
       EXPECT_NEAR(prt.zi, prt1.zi, eps);

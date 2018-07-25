@@ -51,17 +51,13 @@ TYPED_TEST(PushParticlesTest, Accel)
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
+  using real_t = typename Mparticles::real_t;
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      typename Mparticles::particle_t prt{};
-      prt.xi = rng->uniform(0, this->L);
-      prt.yi = rng->uniform(0, this->L);
-      prt.zi = rng->uniform(0, this->L);
-      prt.qni_wni_ = 1.;
-      prt.pxi = 0.;
-      prt.pyi = 0.;
-      prt.pzi = 0.;
-      prt.kind_ = 0;
+      auto prt = typename Mparticles::particle_t{{real_t(rng->uniform(0, this->L)),
+						  real_t(rng->uniform(0, this->L)),
+						  real_t(rng->uniform(0, this->L))},
+						 {}, 1., 0};
       return prt;
     });
 
@@ -127,17 +123,14 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   Rng *rng = rngpool[0];
   auto n_prts_by_patch = std::vector<uint>{n_prts};
 
+  using real_t = typename Mparticles::real_t;
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      typename Mparticles::particle_t prt{};
-      prt.xi = rng->uniform(0, this->L);
-      prt.yi = rng->uniform(0, this->L);
-      prt.zi = rng->uniform(0, this->L);
-      prt.pxi = 1.; // gamma = 2
-      prt.pyi = 1.;
-      prt.pzi = 1.;
-      prt.qni_wni_ = rng->uniform(0, 1.);;
-      prt.kind_ = 0;
+      auto prt = typename Mparticles::particle_t{{real_t(rng->uniform(0, this->L)),
+						  real_t(rng->uniform(0, this->L)),
+						  real_t(rng->uniform(0, this->L))},
+						 {1., 1., 1.},
+						 real_t(rng->uniform(0., 1.)), 0};
       return prt;
     });
 

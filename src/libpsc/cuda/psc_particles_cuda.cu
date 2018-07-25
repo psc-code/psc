@@ -107,6 +107,7 @@ struct ConvertToCuda
   cuda_mparticles_prt operator()(int n)
   {
     const particle_t& prt_other = mprts_other_[p_][n];
+    auto& grid = mprts_other_.grid();
 
     cuda_mparticles_prt prt;
     prt.xi[0]   = prt_other.xi;
@@ -116,7 +117,7 @@ struct ConvertToCuda
     prt.pxi[1]  = prt_other.pyi;
     prt.pxi[2]  = prt_other.pzi;
     prt.kind    = prt_other.kind_;
-    prt.qni_wni = prt_other.qni_wni_;
+    prt.qni_wni = prt_other.qni_wni(grid);
 
     return prt;
   }
@@ -137,16 +138,9 @@ struct ConvertFromCuda
 
   void operator()(int n, const cuda_mparticles_prt &prt)
   {
-    particle_t& prt_other = mprts_other_[p_][n];
-
-    prt_other.xi      = prt.xi[0];
-    prt_other.yi      = prt.xi[1];
-    prt_other.zi      = prt.xi[2];
-    prt_other.kind_   = prt.kind;
-    prt_other.pxi     = prt.pxi[0];
-    prt_other.pyi     = prt.pxi[1];
-    prt_other.pzi     = prt.pxi[2];
-    prt_other.qni_wni_ = prt.qni_wni;
+    mprts_other_[p_][n] = particle_t{{prt.xi[0], prt.xi[1], prt.xi[2]},
+				     {prt.pxi[0], prt.pxi[1], prt.pxi[2]},
+				     prt.qni_wni, prt.kind};
   }
 
 private:

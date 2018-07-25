@@ -121,7 +121,6 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
   {
     auto& grid = mprts_other_.grid();
     auto& prts_other = mprts_other_[p_];
-    auto& prt_other = prts_other[n];
     
     assert(prt->kind < mprts_other_.grid().kinds.size());
     int i = prt->i;
@@ -129,19 +128,13 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
     i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);
     i3[1] = i / im[0]; i-= i3[1] * im[0];
     i3[0] = i;
-    prt_other.xi      = (i3[0] - 1 + .5f * (1.f + prt->dx[0])) * dx[0];
-    prt_other.yi      = (i3[1] - 1 + .5f * (1.f + prt->dx[1])) * dx[1];
-    prt_other.zi      = (i3[2] - 1 + .5f * (1.f + prt->dx[2])) * dx[2];
-    float w = prt_other.zi / dx[2];
-    if (!(w >= 0 && w <= im[2] - 2)) {
-      printf("w %g im %d i3 %d dx %g\n", w, im[2], i3[2], prt->dx[2]);
-    }
-    assert(w >= 0 && w <= im[2] - 2);
-    prt_other.kind_    = prt->kind;
-    prt_other.pxi      = prt->ux[0];
-    prt_other.pyi      = prt->ux[1];
-    prt_other.pzi      = prt->ux[2];
-    prt_other.qni_wni_ = grid.kinds[prt->kind].q * prt->w * dVi;
+    auto xi = Vec3<float>{(i3[0] - 1 + .5f * (1.f + prt->dx[0])) * dx[0],
+			  (i3[1] - 1 + .5f * (1.f + prt->dx[1])) * dx[1],
+			  (i3[2] - 1 + .5f * (1.f + prt->dx[2])) * dx[2]};
+    auto pxi = Vec3<float>{prt->ux[0], prt->ux[1], prt->ux[2]};
+    auto kind = prt->kind;
+    auto qni_wni = float(grid.kinds[prt->kind].q * prt->w * dVi);
+    prts_other[n] = MparticlesSingle::particle_t{xi, pxi, qni_wni, kind};
   }
 };
 

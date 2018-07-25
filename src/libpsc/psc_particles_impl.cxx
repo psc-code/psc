@@ -10,19 +10,14 @@ struct Convert
   using particle_from_t = typename MP_FROM::particle_t;
   using particle_to_t = typename MP_TO::particle_t;
 
-  particle_to_t operator()(const particle_from_t& prt_from)
+  particle_to_t operator()(const particle_from_t& prt_from, const Grid_t& grid)
   {
-    particle_to_t prt_to;
+    using real_t = typename MparticlesTo::real_t;
     
-    prt_to.xi       = prt_from.xi;
-    prt_to.yi       = prt_from.yi;
-    prt_to.zi       = prt_from.zi;
-    prt_to.pxi      = prt_from.pxi;
-    prt_to.pyi      = prt_from.pyi;
-    prt_to.pzi      = prt_from.pzi;
-    prt_to.qni_wni_ = prt_from.qni_wni_;
-    prt_to.kind_    = prt_from.kind_;
-
+    auto prt_to = particle_to_t{{real_t(prt_from.xi), real_t(prt_from.yi), real_t(prt_from.zi)},
+				{real_t(prt_from.pxi), real_t(prt_from.pyi), real_t(prt_from.pzi)},
+				real_t(prt_from.qni_wni(grid)), prt_from.kind()};
+    
     return prt_to;
   }
 };
@@ -42,7 +37,7 @@ void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
     auto& prts_to = mp_to[p];
     int n_prts = prts_from.size();
     for (int n = 0; n < n_prts; n++) {
-      prts_to[n] = convert(prts_from[n]);
+      prts_to[n] = convert(prts_from[n], mp_from.grid());
     }
   }
 }

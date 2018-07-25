@@ -163,15 +163,10 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
     buf.resize(n_send);
 
     for (int n = 0; n < n_send; n++) {
-      particle_cuda_t *prt = &buf[n];
-      prt->xi      = h_bnd_xi4[n + off].x;
-      prt->yi      = h_bnd_xi4[n + off].y;
-      prt->zi      = h_bnd_xi4[n + off].z;
-      prt->kind_   = cuda_float_as_int(h_bnd_xi4[n + off].w);
-      prt->pxi     = h_bnd_pxi4[n + off].x;
-      prt->pyi     = h_bnd_pxi4[n + off].y;
-      prt->pzi     = h_bnd_pxi4[n + off].z;
-      prt->qni_wni_ = h_bnd_pxi4[n + off].w;
+      buf[n] = particle_cuda_t{{h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
+			       {h_bnd_pxi4[n + off].x, h_bnd_pxi4[n + off].y, h_bnd_pxi4[n + off].z},
+			       h_bnd_pxi4[n + off].w,
+			       cuda_float_as_int(h_bnd_xi4[n + off].w)};
     }
     off += n_send;
   }
@@ -212,7 +207,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
       h_bnd_pxi4[n + off].x = prt.pxi;
       h_bnd_pxi4[n + off].y = prt.pyi;
       h_bnd_pxi4[n + off].z = prt.pzi;
-      h_bnd_pxi4[n + off].w = prt.qni_wni_;
+      h_bnd_pxi4[n + off].w = prt.qni_wni();
 
       checkInPatchMod(&h_bnd_xi4[n + off].x);
       uint b = blockIndex(h_bnd_xi4[n + off], p);
@@ -309,7 +304,7 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
       h_bnd_pxi4[n + off].x = prt.pxi;
       h_bnd_pxi4[n + off].y = prt.pyi;
       h_bnd_pxi4[n + off].z = prt.pzi;
-      h_bnd_pxi4[n + off].w = prt.qni_wni_;
+      h_bnd_pxi4[n + off].w = prt.qni_wni();
 
       checkInPatchMod(&h_bnd_xi4[n + off].x);
       uint b = blockIndex(h_bnd_xi4[n + off], p);

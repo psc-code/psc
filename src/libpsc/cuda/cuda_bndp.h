@@ -147,15 +147,10 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
       bpatch[p].n_send = 0;
     }
     for (int n = 0; n < n_prts_send; n++) {
-      particle_cuda_t prt;
-      prt.xi      = h_bnd_xi4[n].x;
-      prt.yi      = h_bnd_xi4[n].y;
-      prt.zi      = h_bnd_xi4[n].z;
-      prt.kind_   = cuda_float_as_int(h_bnd_xi4[n].w);
-      prt.pxi     = h_bnd_pxi4[n].x;
-      prt.pyi     = h_bnd_pxi4[n].y;
-      prt.pzi     = h_bnd_pxi4[n].z;
-      prt.qni_wni_ = h_bnd_pxi4[n].w;
+      auto prt = particle_cuda_t{{h_bnd_xi4[n].x, h_bnd_xi4[n].y, h_bnd_xi4[n].z},
+				 {h_bnd_pxi4[n].x, h_bnd_pxi4[n].y, h_bnd_pxi4[n].z},
+				 h_bnd_pxi4[n].w,
+				 cuda_float_as_int(h_bnd_xi4[n].w)};
 
       int p = h_bidx[n] - cmprts->n_blocks;
       auto& buf = bpatch[p].buf;

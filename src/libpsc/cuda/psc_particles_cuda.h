@@ -26,7 +26,7 @@ struct BS444
 // ======================================================================
 // particle_cuda_t
 
-struct particle_cuda_t : psc_particle<float> {};
+using particle_cuda_t = psc_particle<float>;
 
 // ======================================================================
 // cuda_mparticles_prt

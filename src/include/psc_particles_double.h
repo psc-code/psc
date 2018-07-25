@@ -8,7 +8,7 @@
 #include "particles_simple.hxx"
 #include "particles_traits.hxx"
 
-struct particle_double_t : psc_particle<double> {};
+using particle_double_t = psc_particle<double>;
 
 using MparticlesDouble = Mparticles<particle_double_t>;
 
@@ -18,11 +18,5 @@ struct Mparticles_traits<MparticlesDouble>
   static constexpr const char* name = "double";
   static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
 };
-
-static inline particle_double_t::real_t
-particle_double_qni_wni(particle_double_t *p)
-{
-  return p->qni_wni_;
-}
 
 #endif

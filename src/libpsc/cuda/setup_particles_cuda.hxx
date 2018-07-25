@@ -25,6 +25,8 @@ void SetupParticles<MparticlesCuda<BS144>>::setup_particles(MparticlesCuda<BS144
 {
   using particle_t = typename Mparticles::particle_t;
 
+  auto& grid = mprts.grid();
+
   std::vector<cuda_mparticles_prt> buf;
   for (int p = 0; p < mprts.n_patches(); p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
@@ -37,7 +39,7 @@ void SetupParticles<MparticlesCuda<BS144>>::setup_particles(MparticlesCuda<BS144
       cprt.pxi[1] = prt.pyi;
       cprt.pxi[2] = prt.pzi;
       cprt.kind = prt.kind_;
-      cprt.qni_wni = prt.qni_wni_;
+      cprt.qni_wni = prt.qni_wni(grid);
       buf.push_back(cprt);
     }
   }
@@ -67,6 +69,8 @@ void SetupParticles<MparticlesCuda<BS444>>::setup_particles(MparticlesCuda<BS444
 {
   using particle_t = typename Mparticles::particle_t;
 
+  auto& grid = mprts.grid();
+
   std::vector<cuda_mparticles_prt> buf;
   for (int p = 0; p < mprts.n_patches(); p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
@@ -79,7 +83,7 @@ void SetupParticles<MparticlesCuda<BS444>>::setup_particles(MparticlesCuda<BS444
       cprt.pxi[1] = prt.pyi;
       cprt.pxi[2] = prt.pzi;
       cprt.kind = prt.kind_;
-      cprt.qni_wni = prt.qni_wni_;
+      cprt.qni_wni = prt.qni_wni(grid);
       buf.push_back(cprt);
     }
   }

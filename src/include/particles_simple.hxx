@@ -153,11 +153,16 @@ template<class R>
 struct psc_particle
 {
   using real_t = R;
+  using Real3 = Vec3<real_t>;
 
-  real_t xi, yi, zi;
-  real_t qni_wni_;
-  real_t pxi, pyi, pzi;
-  int kind_;
+  psc_particle() {}
+
+  psc_particle(Real3 _xi, Real3 _pxi, real_t qni_wni, int kind)
+    : xi{_xi[0]}, yi{_xi[1]}, zi{_xi[2]},
+      pxi{_pxi[0]}, pyi{_pxi[1]}, pzi{_pxi[2]},
+      qni_wni_{qni_wni},
+      kind_{kind}
+  {}
 
   int kind() const { return kind_; }
 
@@ -167,6 +172,15 @@ struct psc_particle
   real_t mni(const Grid_t& grid) const { return grid.kinds[kind_].m; }
   real_t wni(const Grid_t& grid) const { return qni_wni_ / qni(grid); }
   real_t qni_wni(const Grid_t& grid) const { return qni_wni_; }
+  real_t qni_wni() const { return qni_wni_; } // FIXME, one or the other version should suffice?
+
+public:
+  real_t xi, yi, zi;
+private:
+  real_t qni_wni_;
+public:
+  real_t pxi, pyi, pzi;
+  int kind_;
 };
 
 // ======================================================================
@@ -330,6 +344,8 @@ struct Mparticles : MparticlesBase
 
   void inject(int p, const psc_particle_inject& new_prt) override
   {
+    using real_t = typename particle_t::real_t;
+    
     int kind = new_prt.kind;
 
     const Grid_t::Patch& patch = grid_->patches[p];
@@ -338,21 +354,18 @@ struct Mparticles : MparticlesBase
       assert(new_prt.x[d] <= patch.xe[d]);
     }
     
-    particle_t prt;
-    prt.xi      = new_prt.x[0] - patch.xb[0];
-    prt.yi      = new_prt.x[1] - patch.xb[1];
-    prt.zi      = new_prt.x[2] - patch.xb[2];
-    prt.pxi     = new_prt.u[0];
-    prt.pyi     = new_prt.u[1];
-    prt.pzi     = new_prt.u[2];
-    prt.qni_wni_ = new_prt.w * grid_->kinds[kind].q;
-    prt.kind_   = kind;
+    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
+			  real_t(new_prt.w * grid_->kinds[kind].q),
+			  kind};
     
     (*this)[p].push_back(prt);
   }
   
   void inject_reweight(int p, const psc_particle_inject& new_prt) override
   {
+    using real_t = typename particle_t::real_t;
+    
     int kind = new_prt.kind;
 
     const Grid_t::Patch& patch = grid_->patches[p];
@@ -363,15 +376,10 @@ struct Mparticles : MparticlesBase
     
     float dVi = 1.f / (grid_->domain.dx[0] * grid_->domain.dx[1] * grid_->domain.dx[2]);
     
-    particle_t prt;
-    prt.xi      = new_prt.x[0] - patch.xb[0];
-    prt.yi      = new_prt.x[1] - patch.xb[1];
-    prt.zi      = new_prt.x[2] - patch.xb[2];
-    prt.pxi     = new_prt.u[0];
-    prt.pyi     = new_prt.u[1];
-    prt.pzi     = new_prt.u[2];
-    prt.qni_wni_ = new_prt.w * grid_->kinds[kind].q * dVi;
-    prt.kind_   = kind;
+    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
+			  real_t(new_prt.w * grid_->kinds[kind].q * dVi),
+			  kind};
     
     (*this)[p].push_back(prt);
   }

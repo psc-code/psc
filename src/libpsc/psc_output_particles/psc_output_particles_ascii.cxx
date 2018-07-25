@@ -34,6 +34,7 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
 	    basename, ppsc->timestep, rank);
     
     auto& mprts = mprts_base.get_as<MparticlesDouble>();
+    auto& grid = mprts.grid();
     
     FILE *file = fopen(filename, "w");
     for (int p = 0; p < mprts.n_patches(); p++) {
@@ -42,7 +43,7 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
 	fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
 		n, prt.xi, prt.yi, prt.zi,
 		prt.pxi, prt.pyi, prt.pzi,
-		prt.qni_wni_, prt.kind());
+		prt.qni_wni(grid), prt.kind());
 	n++;
       }
     }

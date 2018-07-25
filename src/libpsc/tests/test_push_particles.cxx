@@ -43,11 +43,7 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      typename Mparticles::particle_t prt{};
-      prt.xi = 1.;
-      prt.yi = 0.;
-      prt.zi = 0.;
-      prt.qni_wni_ = 1.;
+      auto prt = typename Mparticles::particle_t{{1., 0., 0.}, {}, 1., 0};
       return prt;
     });
 
@@ -56,7 +52,7 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
     EXPECT_NEAR(prt.xi, 1., eps);
     EXPECT_NEAR(prt.yi, 0., eps);
     EXPECT_NEAR(prt.zi, 0., eps);
-    EXPECT_NEAR(prt.qni_wni_, 1., eps);
+    EXPECT_NEAR(prt.qni_wni(grid), 1., eps);
   }
 }
 
@@ -100,14 +96,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   prt1.zi += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
@@ -130,14 +120,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   prt1.pzi = 3.;
   prt1.zi += vz(prt1);
   
@@ -164,14 +148,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 5.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   prt1.pzi = 6.;
   prt1.zi += vz(prt1);
   
@@ -195,14 +173,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 5.; prt0.yi = 4.; prt0.zi = 5.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   prt1.pzi = 5.;
   prt1.zi = 5.980580;
   
@@ -226,14 +198,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 3.; prt0.yi = 5.; prt0.zi = 5.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{3., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   prt1.pzi = 4.;
   if (Base::dim::InvarX::value) { prt1.pzi = 1.; }
   prt1.zi += vz(prt1);
@@ -257,14 +223,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 1.; prt0.yi = 2.; prt0.zi = 3.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 1.; prt0.pyi = 1.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{1., 2., 3.}, {1., 1., 1.}, 1., 0};
+  auto prt1 = prt0;
   if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
   prt1.yi += vy(prt1);
   prt1.zi += vz(prt1);
@@ -289,14 +249,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 151.; prt0.yi = 152.; prt0.zi = 155.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 1.; prt0.pyi = 1.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{151., 152., 155.}, {1., 1., 1.}, 1., 0};
+  auto prt1 = prt0;
   prt1.pzi = 156;
   this->push_x(prt0, prt1);
   
@@ -319,14 +273,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 10.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 10., 10.}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -354,14 +302,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 19.5;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 10., 19.5}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -391,14 +333,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 19.5; prt0.zi = 10.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 0.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 19.5, 10.}, {0., 1., 0.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -430,14 +366,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 10.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 1.; prt0.pyi = 0.; prt0.pzi = 0.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 10., 10.}, {1., 0., 0.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -466,14 +396,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 10.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 10., 10.}, {0., 1., 1.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -505,14 +429,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 19.5; prt0.zi = 10.;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 19.5, 10.}, {0., 1., 1.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -546,14 +464,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 10.; prt0.yi = 10.; prt0.zi = 19.5;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 1.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{10., 10., 19.5}, {0., 1., 1.}, 1., 0};
+  auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
@@ -587,14 +499,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 39.5;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{5., 5., 39.5}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
@@ -616,14 +522,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp16)
     }
   };
 
-  particle_t prt0, prt1;
-
-  prt0.xi = 5.; prt0.yi = 5.; prt0.zi = 159.5;
-  prt0.qni_wni_ = 1.;
-  prt0.pxi = 0.; prt0.pyi = 0.; prt0.pzi = 1.;
-  prt0.kind_ = 0;
-
-  prt1 = prt0;
+  auto prt0 = particle_t{{5., 5., 159.5}, {0., 0., 1.}, 1., 0};
+  auto prt1 = prt0;
   this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);

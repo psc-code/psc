@@ -144,14 +144,17 @@ struct SetupParticles
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		particle_t prt;
+		using real_t = typename particle_t::real_t;
+		int kind = npt.kind;
+		real_t qni_wni = kinds[kind].q;
+		if (fractional_n_particles_per_cell) {
+		  qni_wni *= 1.;
+		} else {
+		  qni_wni *= npt.n / (n_in_cell * grid.norm.cori);
+		}
+		particle_t prt{{}, {}, qni_wni, kind};
 		setup_particle(psc, &prt, &npt, p, xx);
 		//p->lni = particle_label_offset + 1;
-		if (fractional_n_particles_per_cell) {
-		  prt.qni_wni_ = kinds[prt.kind_].q;
-		} else {
-		  prt.qni_wni_ = kinds[prt.kind_].q * npt.n / (n_in_cell * grid.norm.cori);
-		}
 		mprts[p].push_back(prt);
 	      }
 	    }
