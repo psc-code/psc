@@ -3,10 +3,7 @@
 
 #include <psc.h>
 #include <psc.hxx>
-
-#ifdef USE_VPIC
-#include "../libpsc/vpic/vpic_iface.h"
-#endif
+#include "psc_config.hxx"
 
 #include <psc_method.h>
 #include <psc_output_fields_collection_private.h>
@@ -30,16 +27,6 @@
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 #include <psc_particles_single.h>
-#include <psc_particles_vpic.h>
-#include <psc_fields_vpic.h>
-#include "../libpsc/vpic/sort_vpic.hxx"
-#include "../libpsc/vpic/collision_vpic.hxx"
-#include "../libpsc/vpic/push_particles_vpic.hxx"
-#include "../libpsc/vpic/push_fields_vpic.hxx"
-#include "../libpsc/vpic/bnd_vpic.hxx"
-#include "../libpsc/vpic/bnd_fields_vpic.hxx"
-#include "../libpsc/vpic/bnd_particles_vpic.hxx"
-#include "../libpsc/vpic/marder_vpic.hxx"
 
 #include "rngpool_iface.h"
 
@@ -48,22 +35,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct PscConfigVpic
-{
-  using Mparticles_t = MparticlesVpic;
-  using Mfields_t = MfieldsVpic;
-  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
-  using Sort_t = SortVpic;
-  using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic;
-  using PushFields_t = PushFieldsVpic;
-  using Bnd_t = BndVpic;
-  using BndFields_t = BndFieldsVpic;
-  using BndParticles_t = BndParticlesVpic;
-  using Checks_t = Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>;
-  using Marder_t = MarderVpic;
-};
 
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 

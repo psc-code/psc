@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "fields.hxx"
 #include "balance.hxx"
 #include "bnd_particles.hxx"
