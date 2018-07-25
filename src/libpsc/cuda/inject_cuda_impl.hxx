@@ -35,38 +35,36 @@ struct InjectCuda : InjectBase
   //
   // helper function for partition / particle setup FIXME duplicated
 
-  static inline int
-  get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
+  int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
   {
     const auto& grid = psc->grid();
     
-    if (psc->prm.const_num_particles_per_cell) {
-      return psc->prm.nicell;
+    if (const_num_particles_per_cell) {
+      return 1. / grid.norm.cori;
     }
     if (npt->particles_per_cell) {
       return npt->n * npt->particles_per_cell + .5;
     }
-    if (psc->prm.fractional_n_particles_per_cell) {
-      int n_prts = npt->n / grid.cori;
-      float rmndr = npt->n / grid.cori - n_prts;
+    if (fractional_n_particles_per_cell) {
+      int n_prts = npt->n / grid.norm.cori;
+      float rmndr = npt->n / grid.norm.cori - n_prts;
       float ran = random() / ((float) RAND_MAX + 1);
       if (ran < rmndr) {
 	n_prts++;
       }
       return n_prts;
     }
-    return npt->n / grid.cori + .5;
+    return npt->n / grid.norm.cori + .5;
   }
 
   // FIXME duplicated
 
-  static void
-  _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
-		      struct psc_particle_npt *npt, int p, double xx[3])
+  void _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
+			   struct psc_particle_npt *npt, int p, double xx[3])
   {
     const auto& grid = psc->grid();
     const auto& kinds = grid.kinds;
-    double beta = grid.beta;
+    double beta = grid.norm.beta;
 
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -86,7 +84,7 @@ struct InjectCuda : InjectBase
     double pzi = npt->p[2] +
       sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
 
-    if (psc->prm.initial_momentum_gamma_correction) {
+    if (initial_momentum_gamma_correction) {
       double gam;
       if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
 	gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
@@ -119,7 +117,7 @@ struct InjectCuda : InjectBase
     const auto& grid = psc->grid();
     const auto& kinds = grid.kinds;
 
-    float fac = 1. / grid.cori * 
+    float fac = 1. / grid.norm.cori * 
       (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);
@@ -168,7 +166,7 @@ struct InjectCuda : InjectBase
 	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
-	      if (kind != psc->prm.neutralizing_population) {
+	      if (kind != neutralizing_population) {
 		if (psc->timestep >= 0) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
@@ -183,7 +181,7 @@ struct InjectCuda : InjectBase
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(psc->prm.neutralizing_population == kinds.size() - 1);
+		assert(neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 
@@ -193,7 +191,7 @@ struct InjectCuda : InjectBase
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
 		_psc_setup_particle(psc, &buf[buf_n + cnt], &npt, p, xx);
-		assert(psc->prm.fractional_n_particles_per_cell);
+		assert(fractional_n_particles_per_cell);
 	      }
 	      buf_n += n_in_cell;
 	      buf_n_by_patch[p] += n_in_cell;
@@ -221,5 +219,11 @@ struct InjectCuda : InjectBase
 private:
   Target_t target_;
   Moment_n_1st_cuda<BS, dim> moment_n_;
+
+  // FIXME
+  bool const_num_particles_per_cell = { false };
+  bool fractional_n_particles_per_cell = { true };
+  bool initial_momentum_gamma_correction = { false };
+  int neutralizing_population = { 1 };
 };
 

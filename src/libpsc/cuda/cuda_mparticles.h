@@ -149,11 +149,11 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
   DMparticlesCuda(cuda_mparticles<BS>& cmprts)
     : DParticleIndexer<BS>{cmprts},
       dt_(cmprts.grid_.dt),
-      fnqs_(cmprts.grid_.fnqs),
+      fnqs_(cmprts.grid_.norm.fnqs),
       fnqxs_(cmprts.grid_.domain.dx[0] * fnqs_ / dt_),
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
-      dqs_(.5f * cmprts.grid_.eta * dt_),
+      dqs_(.5f * cmprts.grid_.norm.eta * dt_),
       xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
       alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
       off_(cmprts.by_block_.d_off.data().get()),
