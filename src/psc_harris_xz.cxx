@@ -49,7 +49,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct PscConfig
+struct PscConfigVpic
 {
   using Mparticles_t = MparticlesVpic;
   using Mfields_t = MfieldsVpic;
@@ -410,6 +410,8 @@ void setup_grid(psc* psc_, const globals_physics& phys_,
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
   }
 }
+
+using PscConfig = PscConfigVpic;
 
 // ======================================================================
 // PscHarris
