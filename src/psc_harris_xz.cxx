@@ -1,6 +1,8 @@
 
 #include <psc_config.h>
 
+#define VPIC 1
+
 #include <psc.h>
 #include <psc.hxx>
 #include "psc_config.hxx"
@@ -382,7 +384,11 @@ void setup_grid(psc* psc_, const globals_physics& phys_,
   }
 }
 
+#ifdef VPIC
 using PscConfig = PscConfigVpic;
+#else
+using PscConfig = PscConfig1vbecSingle<dim_xz>;
+#endif
 
 // ======================================================================
 // PscHarris
@@ -808,7 +814,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     checks_.gauss(psc_, mprts_, mflds_);
 
+#ifdef VPIC
     pushp_.prep(mprts_, mflds_);
+#endif
   }
 
 protected:
