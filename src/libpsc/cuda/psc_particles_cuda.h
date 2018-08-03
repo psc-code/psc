@@ -33,8 +33,11 @@ using particle_cuda_t = psc_particle<float>;
 
 struct cuda_mparticles_prt
 {
-  float xi[3];
-  float pxi[3];
+  using real_t = float;
+  using Real3 = Vec3<real_t>;
+  
+  Real3 x;
+  Real3 p;
   int kind;
   float qni_wni;
 };

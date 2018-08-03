@@ -98,12 +98,12 @@ struct InjectCuda : InjectBase
     assert(npt->q == kinds[npt->kind].q);
     assert(npt->m == kinds[npt->kind].m);
 
-    cprt->xi[0] = xx[0] - grid.patches[p].xb[0];
-    cprt->xi[1] = xx[1] - grid.patches[p].xb[1];
-    cprt->xi[2] = xx[2] - grid.patches[p].xb[2];
-    cprt->pxi[0] = pxi;
-    cprt->pxi[1] = pyi;
-    cprt->pxi[2] = pzi;
+    cprt->x[0] = xx[0] - grid.patches[p].xb[0];
+    cprt->x[1] = xx[1] - grid.patches[p].xb[1];
+    cprt->x[2] = xx[2] - grid.patches[p].xb[2];
+    cprt->p[0] = pxi;
+    cprt->p[1] = pyi;
+    cprt->p[2] = pzi;
     cprt->kind = npt->kind;
     cprt->qni_wni = kinds[npt->kind].q;
   }	      

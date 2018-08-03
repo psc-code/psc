@@ -40,12 +40,13 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     cmprts.reset(make_cmprts(*grid));
 
     // (ab)use kind to track particle more easily in the test
+    using Real3 = cuda_mparticles_prt::Real3;
     std::vector<cuda_mparticles_prt> prts = {
-      { .5,  35., 5., 0., 0., 0., 0 },
-      { .5, 155., 5., 0., 0., 0., 1 },
+      {Real3({ .5,  35., 5.}), Real3({0., 0., 0.}), 0 },
+      {Real3({ .5, 155., 5.}), Real3({0., 0., 0.}), 1 },
       
-      { .5,  35., 5., 0., 0., 0., 2 },
-      { .5, 155., 5., 0., 0., 0., 3 },
+      {Real3({ .5,  35., 5.}), Real3({0., 0., 0.}), 2 },
+      {Real3({ .5, 155., 5.}), Real3({0., 0., 0.}), 3 },
     };
 
     uint n_prts_by_patch[cmprts->n_patches];

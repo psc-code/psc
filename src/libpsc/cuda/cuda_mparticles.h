@@ -225,15 +225,15 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
-    this->checkInPatchMod(prt.xi);
+    this->checkInPatchMod(prt.x);
 
-    xi4[n].x  = prt.xi[0];
-    xi4[n].y  = prt.xi[1];
-    xi4[n].z  = prt.xi[2];
+    xi4[n].x  = prt.x[0];
+    xi4[n].y  = prt.x[1];
+    xi4[n].z  = prt.x[2];
     xi4[n].w  = cuda_int_as_float(prt.kind);
-    pxi4[n].x = prt.pxi[0];
-    pxi4[n].y = prt.pxi[1];
-    pxi4[n].z = prt.pxi[2];
+    pxi4[n].x = prt.p[0];
+    pxi4[n].y = prt.p[1];
+    pxi4[n].z = prt.p[2];
     pxi4[n].w = prt.qni_wni;
   }
 
@@ -262,13 +262,13 @@ void cuda_mparticles<BS>::get_particles(uint p, F setter)
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt;
-    prt.xi[0]   = xi4[n].x;
-    prt.xi[1]   = xi4[n].y;
-    prt.xi[2]   = xi4[n].z;
+    prt.x[0]    = xi4[n].x;
+    prt.x[1]    = xi4[n].y;
+    prt.x[2]    = xi4[n].z;
     prt.kind    = cuda_float_as_int(xi4[n].w);
-    prt.pxi[0]  = pxi4[n].x;
-    prt.pxi[1]  = pxi4[n].y;
-    prt.pxi[2]  = pxi4[n].z;
+    prt.p[0]    = pxi4[n].x;
+    prt.p[1]    = pxi4[n].y;
+    prt.p[2]    = pxi4[n].z;
     prt.qni_wni = pxi4[n].w;
 
     setter(n, prt);

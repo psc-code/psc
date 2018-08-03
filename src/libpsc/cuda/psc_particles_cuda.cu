@@ -106,16 +106,13 @@ struct ConvertToCuda
 
   cuda_mparticles_prt operator()(int n)
   {
+    using Real3 = cuda_mparticles_prt::Real3;
     const particle_t& prt_other = mprts_other_[p_][n];
     auto& grid = mprts_other_.grid();
 
     cuda_mparticles_prt prt;
-    prt.xi[0]   = prt_other.x[0];
-    prt.xi[1]   = prt_other.x[1];
-    prt.xi[2]   = prt_other.x[2];
-    prt.pxi[0]  = prt_other.p[0];
-    prt.pxi[1]  = prt_other.p[1];
-    prt.pxi[2]  = prt_other.p[2];
+    prt.x       = Real3(prt_other.x);
+    prt.p       = Real3(prt_other.p);
     prt.kind    = prt_other.kind_;
     prt.qni_wni = prt_other.qni_wni(grid);
 
@@ -131,6 +128,8 @@ template<typename MP>
 struct ConvertFromCuda
 {
   using particle_t = typename MP::particle_t;
+  using real_t = typename particle_t::real_t;
+  using Real3 = typename particle_t::Real3;
 
   ConvertFromCuda(MP& mprts_other, int p)
     : mprts_other_(mprts_other), p_(p)
@@ -138,12 +137,10 @@ struct ConvertFromCuda
 
   void operator()(int n, const cuda_mparticles_prt &prt)
   {
-    using real_t = float;
     const auto& grid = mprts_other_.grid();
     
     mprts_other_[p_][n] = particle_t{grid,
-				     {prt.xi[0], prt.xi[1], prt.xi[2]},
-				     {prt.pxi[0], prt.pxi[1], prt.pxi[2]},
+				     Real3{prt.x}, Real3{prt.p},
 				     prt.qni_wni / real_t(grid.kinds[prt.kind].q), prt.kind};
   }
 

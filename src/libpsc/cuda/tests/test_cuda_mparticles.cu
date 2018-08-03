@@ -48,12 +48,12 @@ struct SetParticleTest1
     int i = n;
 
     cuda_mparticles_prt prt;
-    prt.xi[0] = dx[0] * (i + .5f);
-    prt.xi[1] = dx[1] * (j + .5f);
-    prt.xi[2] = dx[2] * (k + .5f);
-    prt.pxi[0] = i;
-    prt.pxi[1] = j;
-    prt.pxi[2] = k;
+    prt.x[0] = dx[0] * (i + .5f);
+    prt.x[1] = dx[1] * (j + .5f);
+    prt.x[2] = dx[2] * (k + .5f);
+    prt.p[0] = i;
+    prt.p[1] = j;
+    prt.p[2] = k;
     prt.kind = 0;
     prt.qni_wni = 1.;
     return prt;
@@ -120,9 +120,9 @@ TEST_F(CudaMparticlesTest, SetParticles)
       int k = n % grid_->ldims[2]; n /= grid_->ldims[2];
       int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
       int i = n;
-      EXPECT_FLOAT_EQ(prt.xi[0], (i + .5) * grid_->domain.dx[0]);
-      EXPECT_FLOAT_EQ(prt.xi[1], (j + .5) * grid_->domain.dx[1]);
-      EXPECT_FLOAT_EQ(prt.xi[2], (k + .5) * grid_->domain.dx[2]);
+      EXPECT_FLOAT_EQ(prt.x[0], (i + .5) * grid_->domain.dx[0]);
+      EXPECT_FLOAT_EQ(prt.x[1], (j + .5) * grid_->domain.dx[1]);
+      EXPECT_FLOAT_EQ(prt.x[2], (k + .5) * grid_->domain.dx[2]);
     });
 }
 
@@ -137,9 +137,9 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    { .5, 75., 15. },
-    { .5, 35., 15. },
-    { .5,  5.,  5. },
+    {{ .5, 75., 15. }},
+    {{ .5, 35., 15. }},
+    {{ .5,  5.,  5. }},
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
@@ -210,9 +210,9 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    { .5, 75., 15. },
-    { .5, 35., 15. },
-    { .5,  5.,  5. },
+    {{ .5, 75., 15. }},
+    {{ .5, 35., 15. }},
+    {{ .5,  5.,  5. }},
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
@@ -287,7 +287,7 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   // check that particles are now in Fortran order
   int cur_bidx = 0;
   cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      float4 xi = { prt.xi[0], prt.xi[1], prt.xi[2] };
+      float4 xi = { prt.x[0], prt.x[1], prt.x[2] };
       int bidx = cmprts->blockIndex(xi, 0);
       EXPECT_GE(bidx, cur_bidx);
       cur_bidx = bidx;
@@ -304,16 +304,16 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    { .5, 75., 15., 1.0, 0., 0., 0, 1. },
-    { .5, 75., 15., 1.1, 0., 0., 0, 1. },
-    { .5, 75., 15., 1.2, 0., 0., 0, 1. },
-    { .5, 35.,  5., 0., 1.0, 0., 0, 1. },
-    { .5, 35.,  5., 0., 1.1, 0., 0, 1. },
-    { .5, 35.,  5., 0., 1.2, 0., 0, 1. },
-    { .5, 35.,  5., 0., 1.3, 0., 0, 1. },
-    { .5, 35.,  5., 0., 1.4, 0., 0, 1. },
-    { .5,  5.,  5., 0., 0., 1.0, 0, 1. },
-    { .5,  5.,  5., 0., 0., 1.1, 0, 1. },
+    { {.5, 75., 15.}, {1.0, 0., 0.}, 0, 1. },
+    { {.5, 75., 15.}, {1.1, 0., 0.}, 0, 1. },
+    { {.5, 75., 15.}, {1.2, 0., 0.}, 0, 1. },
+    { {.5, 35.,  5.}, {0., 1.0, 0.}, 0, 1. },
+    { {.5, 35.,  5.}, {0., 1.1, 0.}, 0, 1. },
+    { {.5, 35.,  5.}, {0., 1.2, 0.}, 0, 1. },
+    { {.5, 35.,  5.}, {0., 1.3, 0.}, 0, 1. },
+    { {.5, 35.,  5.}, {0., 1.4, 0.}, 0, 1. },
+    { {.5,  5.,  5.}, {0., 0., 1.0}, 0, 1. },
+    { {.5,  5.,  5.}, {0., 0., 1.1}, 0, 1. },
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
@@ -337,8 +337,8 @@ TEST_F(CudaMparticlesTest, CudaCollision)
 
   coll(*cmprts);
   cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      printf("xi %g %g pxi %g %g %g\n", prt.xi[1], prt.xi[2],
-	     prt.pxi[0], prt.pxi[1], prt.pxi[2]);
+      printf("xi %g %g pxi %g %g %g\n", prt.x[1], prt.x[2],
+	     prt.p[0], prt.p[1], prt.p[2]);
     });
 
 }

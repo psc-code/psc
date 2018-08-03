@@ -421,13 +421,13 @@ void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
       float4 *pxi4 = &h_pxi4[off + n];
       const cuda_mparticles_prt *prt = &buf[off + n];
       
-      xi4->x  = prt->xi[0];
-      xi4->y  = prt->xi[1];
-      xi4->z  = prt->xi[2];
+      xi4->x  = prt->x[0];
+      xi4->y  = prt->x[1];
+      xi4->z  = prt->x[2];
       xi4->w  = cuda_int_as_float(prt->kind);
-      pxi4->x = prt->pxi[0];
-      pxi4->y = prt->pxi[1];
-      pxi4->z = prt->pxi[2];
+      pxi4->x = prt->p[0];
+      pxi4->y = prt->p[1];
+      pxi4->z = prt->p[2];
       pxi4->w = prt->qni_wni;
 
       h_bidx[off + n] = this->blockIndex(*xi4, p);

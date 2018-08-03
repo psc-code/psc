@@ -129,10 +129,9 @@ TEST_F(PushMprtsTest, Accel)
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
   std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
+	using Real3 = cuda_mparticles_prt::Real3;
 	cuda_mparticles_prt prt = {};
-	prt.xi[0] = rng->uniform(0, L);
-	prt.xi[1] = rng->uniform(0, L);
-	prt.xi[2] = rng->uniform(0, L);
+	prt.x = Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)});
 	prt.qni_wni = 1.;
 	return prt;
       }));
@@ -142,9 +141,9 @@ TEST_F(PushMprtsTest, Accel)
     CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(cmprts.get(), cmflds.get());
 
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
-	EXPECT_NEAR(prt.pxi[0], 1*(n+1), eps);
-	EXPECT_NEAR(prt.pxi[1], 2*(n+1), eps);
-	EXPECT_NEAR(prt.pxi[2], 3*(n+1), eps);
+	EXPECT_NEAR(prt.p[0], 1*(n+1), eps);
+	EXPECT_NEAR(prt.p[1], 2*(n+1), eps);
+	EXPECT_NEAR(prt.p[2], 3*(n+1), eps);
       });
   }
 }
@@ -175,13 +174,10 @@ TEST_F(PushMprtsTest, Cyclo)
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
   std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
+	using Real3 = cuda_mparticles_prt::Real3;
 	cuda_mparticles_prt prt = {};
-	prt.xi[0] = rng->uniform(0, L);
-	prt.xi[1] = rng->uniform(0, L);
-	prt.xi[2] = rng->uniform(0, L);
-	prt.pxi[0] = 1.; // gamma = 2
-	prt.pxi[1] = 1.;
-	prt.pxi[2] = 1.;
+	prt.x = Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}));
+	prt.p = Real3{1., 1., 1.}; // gamma = 2
 	prt.qni_wni = rng->uniform(0, 1.);;
 	return prt;
       }));
@@ -196,9 +192,9 @@ TEST_F(PushMprtsTest, Cyclo)
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
     cmprts->get_particles(0, [&] (int i, const cuda_mparticles_prt &prt) {
-	EXPECT_NEAR(prt.pxi[0], ux, eps);
-	EXPECT_NEAR(prt.pxi[1], uy, eps);
-	EXPECT_NEAR(prt.pxi[2], uz, eps);
+	EXPECT_NEAR(prt.p[0], ux, eps);
+	EXPECT_NEAR(prt.p[1], uy, eps);
+	EXPECT_NEAR(prt.p[2], uz, eps);
       });
   }
 }

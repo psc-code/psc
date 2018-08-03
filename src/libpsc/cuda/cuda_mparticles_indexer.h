@@ -26,8 +26,7 @@ struct BlockSimple;
 template<typename BS>
 struct cuda_mparticles_indexer
 {
-  using particle_t = particle_cuda_t;
-  using real_t = particle_t::real_t;
+  using real_t = float;
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles_indexer(const Grid_t& grid)
