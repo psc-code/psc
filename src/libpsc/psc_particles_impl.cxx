@@ -14,7 +14,7 @@ struct Convert
   {
     using real_t = typename MparticlesTo::real_t;
     
-    auto prt_to = particle_to_t{{real_t(prt_from.x(0)), real_t(prt_from.x(1)), real_t(prt_from.x(2))},
+    auto prt_to = particle_to_t{{real_t(prt_from.x[0]), real_t(prt_from.x[1]), real_t(prt_from.x[2])},
 				{real_t(prt_from.pxi), real_t(prt_from.pyi), real_t(prt_from.pzi)},
 				real_t(prt_from.qni_wni(grid)), prt_from.kind()};
     

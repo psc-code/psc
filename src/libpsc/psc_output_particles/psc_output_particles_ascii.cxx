@@ -41,7 +41,7 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
       int n = 0;
       for (auto& prt : mprts[p]) {
 	fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
-		n, prt.x(0), prt.x(1), prt.x(2),
+		n, prt.x[0], prt.x[1], prt.x[2],
 		prt.pxi, prt.pyi, prt.pzi,
 		prt.qni_wni(grid), prt.kind());
 	n++;

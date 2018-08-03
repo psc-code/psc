@@ -94,7 +94,7 @@ struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
     assert(prt_other.kind() < mprts_other_.grid().kinds.size());
     int i3[3];
     for (int d = 0; d < 3; d++) {
-      float val = prt_other.x(d) / dx[d];
+      float val = prt_other.x[d] / dx[d];
       i3[d] = (int) val;
       //mprintf("d %d val %g xi %g\n", d, val, prt_other.xi);
       assert(i3[d] >= -1 && i3[d] < im[d] + 1);

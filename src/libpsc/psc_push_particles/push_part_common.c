@@ -48,7 +48,7 @@ private:
 
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t& prt = *prt_iter;
-      real_t *x = prt.x();
+      real_t *x = prt.x;
       real_t vv[3];
 
       // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt

@@ -8,7 +8,7 @@
 #define DEPOSIT_TO_GRID_1ST_CC(part, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x(); /* don't shift back in time */		\
+    real_t *xi = part->x; /* don't shift back in time */		\
     real_t u = xi[0] * dxi - .5;					\
     real_t v = xi[1] * dyi - .5;					\
     real_t w = xi[2] * dzi - .5;					\
@@ -56,7 +56,7 @@
 #define DEPOSIT_TO_GRID_1ST_NC(part, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x(); /* don't shift back in time */		\
+    real_t *xi = part->x; /* don't shift back in time */		\
     real_t u = xi[0] * dxi;						\
     real_t v = xi[1] * dyi;						\
     real_t w = xi[2] * dzi;						\
@@ -104,7 +104,7 @@
 #define DEPOSIT_TO_GRID_2ND_NC(part, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x(); /* don't shift back in time */		\
+    real_t *xi = part->x; /* don't shift back in time */		\
     real_t u = xi[0] * dxi;						\
     real_t v = xi[1] * dyi;						\
     real_t w = xi[2] * dzi;						\

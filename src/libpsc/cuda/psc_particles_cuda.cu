@@ -110,9 +110,9 @@ struct ConvertToCuda
     auto& grid = mprts_other_.grid();
 
     cuda_mparticles_prt prt;
-    prt.xi[0]   = prt_other.x(0);
-    prt.xi[1]   = prt_other.x(1);
-    prt.xi[2]   = prt_other.x(2);
+    prt.xi[0]   = prt_other.x[0];
+    prt.xi[1]   = prt_other.x[1];
+    prt.xi[2]   = prt_other.x[2];
     prt.pxi[0]  = prt_other.pxi;
     prt.pxi[1]  = prt_other.pyi;
     prt.pxi[2]  = prt_other.pzi;
