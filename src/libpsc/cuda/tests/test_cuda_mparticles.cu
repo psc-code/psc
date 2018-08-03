@@ -38,8 +38,9 @@ struct SetParticleTest1
   
   cuda_mparticles_prt operator()(int n)
   {
-    Int3 ldims = grid_.ldims;
-    Vec3<double> dx = grid_.domain.dx;
+    using Real3 = cuda_mparticles_prt::Real3;
+    auto ldims = grid_.ldims;
+    auto dx = grid_.domain.dx;
     
     int k = n % ldims[2];
     n /= ldims[2];
@@ -47,15 +48,10 @@ struct SetParticleTest1
     n /= ldims[1];
     int i = n;
 
-    cuda_mparticles_prt prt;
-    prt.x[0] = dx[0] * (i + .5f);
-    prt.x[1] = dx[1] * (j + .5f);
-    prt.x[2] = dx[2] * (k + .5f);
-    prt.p[0] = i;
-    prt.p[1] = j;
-    prt.p[2] = k;
-    prt.kind = 0;
-    prt.qni_wni = 1.;
+    auto prt = cuda_mparticles_prt{
+      Real3{Vec3<double>{dx[0] * (i + .5f), dx[1] * (j + .5f), dx[2] * (k + .5f)}},
+      Real3{Vec3<int>{i, j, k}},
+      1., 0};
     return prt;
   }
 

@@ -261,16 +261,9 @@ void cuda_mparticles<BS>::get_particles(uint p, F setter)
   thrust::host_vector<float4> pxi4(&this->d_pxi4[off], &this->d_pxi4[off + n_prts]);
 
   for (int n = 0; n < n_prts; n++) {
-    struct cuda_mparticles_prt prt;
-    prt.x[0]    = xi4[n].x;
-    prt.x[1]    = xi4[n].y;
-    prt.x[2]    = xi4[n].z;
-    prt.kind    = cuda_float_as_int(xi4[n].w);
-    prt.p[0]    = pxi4[n].x;
-    prt.p[1]    = pxi4[n].y;
-    prt.p[2]    = pxi4[n].z;
-    prt.qni_wni = pxi4[n].w;
-
+    auto prt = cuda_mparticles_prt{{xi4[n].x, xi4[n].y, xi4[n].z},
+				   {pxi4[n].x, pxi4[n].y, pxi4[n].z},
+				   pxi4[n].w, cuda_float_as_int(xi4[n].w)};
     setter(n, prt);
 
 #if 0
