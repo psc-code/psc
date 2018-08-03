@@ -39,7 +39,7 @@ struct cuda_mparticles_prt
   cuda_mparticles_prt()
   {}
   
-  cuda_mparticles_prt(Real3 x, Real3 p, int kind, float qni_wni=1.)
+  cuda_mparticles_prt(Real3 x, Real3 p, int kind, float qni_wni)
     : x(x), p(p), kind(kind), qni_wni(qni_wni)
   {}
   
