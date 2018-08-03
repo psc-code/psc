@@ -594,7 +594,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       x = Rng_uniform(rng, xmin, xmax);
       y = Rng_uniform(rng, ymin, ymax);
 
-      // inject_particles() will return an error for particles no on this
+      // inject_particles() will return an error for particles not on this
       // node and will not inject particle locally
 
       ux = Rng_normal(rng, 0, vthe);
