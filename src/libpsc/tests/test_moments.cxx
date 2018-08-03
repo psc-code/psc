@@ -29,7 +29,7 @@ TYPED_TEST(PushParticlesTest, Moment1)
   const auto& grid = this->grid();
   
   // init particles
-  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{grid, {5., 5., 5.}, {0., 0., 1.}, 1., 0};
 
   auto n_prts_by_patch = std::vector<uint>{1};
   Mparticles mprts{grid};
@@ -70,7 +70,7 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   const auto& grid = this->grid();
   
   // init particles
-  auto prt0 = particle_t{{25., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{grid, {25., 5., 5.}, {0., 0., 1.}, 1., 0};
 
   auto n_prts_by_patch = std::vector<uint>{1};
   Mparticles mprts{grid};

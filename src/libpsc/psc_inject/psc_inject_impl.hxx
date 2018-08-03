@@ -109,8 +109,8 @@ struct Inject_ : InjectBase
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
 		assert(setup_particles.fractional_n_particles_per_cell);
-		real_t qni_wni = kinds[npt.kind].q; // ??? FIXME
-		auto prt = particle_t{{}, {}, qni_wni, npt.kind};
+		real_t wni = 1.; // ??? FIXME
+		auto prt = particle_t{grid, {}, {}, wni, npt.kind};
 		setup_particles.setup_particle(psc, &prt, &npt, p, xx);
 
 		mprts[p].push_back(prt);

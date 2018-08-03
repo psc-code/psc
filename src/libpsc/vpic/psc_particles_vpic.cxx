@@ -133,8 +133,8 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
 			  (i3[2] - 1 + .5f * (1.f + prt->dx[2])) * dx[2]};
     auto pxi = Vec3<float>{prt->ux[0], prt->ux[1], prt->ux[2]};
     auto kind = prt->kind;
-    auto qni_wni = float(grid.kinds[prt->kind].q * prt->w * dVi);
-    prts_other[n] = MparticlesSingle::particle_t{xi, pxi, qni_wni, kind};
+    auto wni = float(prt->w * dVi);
+    prts_other[n] = MparticlesSingle::particle_t{grid, xi, pxi, wni, kind};
   }
 };
 

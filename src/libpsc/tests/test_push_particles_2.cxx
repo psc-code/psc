@@ -54,7 +54,8 @@ TYPED_TEST(PushParticlesTest, Accel)
   using real_t = typename Mparticles::real_t;
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      auto prt = typename Mparticles::particle_t{{real_t(rng->uniform(0, this->L)),
+      auto prt = typename Mparticles::particle_t{grid,
+						 {real_t(rng->uniform(0, this->L)),
 						  real_t(rng->uniform(0, this->L)),
 						  real_t(rng->uniform(0, this->L))},
 						 {}, 1., 0};
@@ -126,7 +127,8 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   using real_t = typename Mparticles::real_t;
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      auto prt = typename Mparticles::particle_t{{real_t(rng->uniform(0, this->L)),
+      auto prt = typename Mparticles::particle_t{grid,
+						 {real_t(rng->uniform(0, this->L)),
 						  real_t(rng->uniform(0, this->L)),
 						  real_t(rng->uniform(0, this->L))},
 						 {1., 1., 1.},
