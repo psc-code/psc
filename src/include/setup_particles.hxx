@@ -80,9 +80,9 @@ struct SetupParticles
     assert(npt->m == kinds[prt->kind_].m);
     /* prt->qni = kinds[prt->kind].q; */
     /* prt->mni = kinds[prt->kind].m; */
-    prt->xi = xx[0] - psc->grid().patches[p].xb[0];
-    prt->yi = xx[1] - psc->grid().patches[p].xb[1];
-    prt->zi = xx[2] - psc->grid().patches[p].xb[2];
+    prt->x(0) = xx[0] - psc->grid().patches[p].xb[0];
+    prt->x(1) = xx[1] - psc->grid().patches[p].xb[1];
+    prt->x(2) = xx[2] - psc->grid().patches[p].xb[2];
     prt->pxi = pxi;
     prt->pyi = pyi;
     prt->pzi = pzi;

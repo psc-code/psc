@@ -64,9 +64,9 @@ struct Heating__ : HeatingBase
 	}
       
 	double xx[3] = {
-	  prt.xi + patch.xb[0],
-	  prt.yi + patch.xb[1],
-	  prt.zi + patch.xb[2],
+	  prt.x(0) + patch.xb[0],
+	  prt.x(1) + patch.xb[1],
+	  prt.x(2) + patch.xb[2],
 	};
 
 	double H = get_H_(xx);

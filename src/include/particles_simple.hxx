@@ -158,12 +158,31 @@ struct psc_particle
   psc_particle() {}
 
   psc_particle(Real3 _xi, Real3 _pxi, real_t qni_wni, int kind)
-    : xi{_xi[0]}, yi{_xi[1]}, zi{_xi[2]},
+    : xi_{_xi[0]}, yi_{_xi[1]}, zi_{_xi[2]},
       pxi{_pxi[0]}, pyi{_pxi[1]}, pzi{_pxi[2]},
       qni_wni_{qni_wni},
       kind_{kind}
   {}
 
+  real_t x(int d) const
+  {
+    if (d == 0) { return xi_; }
+    else if (d == 1) { return yi_; }
+    else if (d == 2) { return zi_; }
+    else assert(0);
+  }
+
+  real_t& x(int d)
+  {
+    if (d == 0) { return xi_; }
+    else if (d == 1) { return yi_; }
+    else if (d == 2) { return zi_; }
+    else assert(0);
+  }
+
+  const real_t* x() const { return &xi_; }
+  real_t*       x()       { return &xi_; }
+  
   int kind() const { return kind_; }
 
   // FIXME, grid is always double precision, so this will switch precision
@@ -175,7 +194,7 @@ struct psc_particle
   real_t qni_wni() const { return qni_wni_; } // FIXME, one or the other version should suffice?
 
 public:
-  real_t xi, yi, zi;
+  real_t xi_, yi_, zi_;
 private:
   real_t qni_wni_;
 public:
@@ -241,9 +260,9 @@ struct mparticles_patch
 
   // ParticleIndexer functionality
   int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
-  int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(&prt.xi); }
+  int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(prt.x()); }
 
-  void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(&prt.xi); }
+  void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(prt.x()); }
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
     
   real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }

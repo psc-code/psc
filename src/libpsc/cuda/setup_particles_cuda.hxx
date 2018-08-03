@@ -32,9 +32,9 @@ void SetupParticles<MparticlesCuda<BS144>>::setup_particles(MparticlesCuda<BS144
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       particle_t prt = func(p, n);
       cuda_mparticles_prt cprt;
-      cprt.xi[0] = prt.xi;
-      cprt.xi[1] = prt.yi;
-      cprt.xi[2] = prt.zi;
+      cprt.xi[0] = prt.x(0);
+      cprt.xi[1] = prt.x(1);
+      cprt.xi[2] = prt.x(2);
       cprt.pxi[0] = prt.pxi;
       cprt.pxi[1] = prt.pyi;
       cprt.pxi[2] = prt.pzi;
@@ -76,9 +76,9 @@ void SetupParticles<MparticlesCuda<BS444>>::setup_particles(MparticlesCuda<BS444
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       particle_t prt = func(p, n);
       cuda_mparticles_prt cprt;
-      cprt.xi[0] = prt.xi;
-      cprt.xi[1] = prt.yi;
-      cprt.xi[2] = prt.zi;
+      cprt.xi[0] = prt.x(0);
+      cprt.xi[1] = prt.x(1);
+      cprt.xi[2] = prt.x(2);
       cprt.pxi[0] = prt.pxi;
       cprt.pxi[1] = prt.pyi;
       cprt.pxi[2] = prt.pzi;

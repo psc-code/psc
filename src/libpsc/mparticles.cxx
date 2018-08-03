@@ -66,11 +66,11 @@ psc_mparticles_check(MparticlesBase& mprts_base)
     }
 
     for (auto prt : prts) {
-      if (prt.xi < 0.f || prt.xi >= xe[0] - xb[0] || // FIXME xz only!
-	  prt.zi < 0.f || prt.zi >= xe[2] - xb[2]) {
+      if (prt.x(0) < 0.f || prt.x(0) >= xe[0] - xb[0] || // FIXME xz only!
+	  prt.x(1) < 0.f || prt.x(2) >= xe[2] - xb[2]) {
 	if (fail_cnt++ < 10) {
-	  mprintf("FAIL: xi %g [%g:%g]\n", prt.xi, 0., xe[0] - xb[0]);
-	  mprintf("      zi %g [%g:%g]\n", prt.zi, 0., xe[2] - xb[2]);
+	  mprintf("FAIL: xi %g [%g:%g]\n", prt.x(0), 0., xe[0] - xb[0]);
+	  mprintf("      zi %g [%g:%g]\n", prt.x(2), 0., xe[2] - xb[2]);
 	}
       }
     }

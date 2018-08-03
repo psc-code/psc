@@ -49,9 +49,9 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 
   // check particle
   for (auto& prt : make_getter(mprts)[0]) {
-    EXPECT_NEAR(prt.xi, 1., eps);
-    EXPECT_NEAR(prt.yi, 0., eps);
-    EXPECT_NEAR(prt.zi, 0., eps);
+    EXPECT_NEAR(prt.x(0), 1., eps);
+    EXPECT_NEAR(prt.x(1), 0., eps);
+    EXPECT_NEAR(prt.x(2), 0., eps);
     EXPECT_NEAR(prt.qni_wni(grid), 1., eps);
   }
 }
@@ -98,7 +98,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 
   auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.zi += vz(prt1);
+  prt1.x(2) += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -123,7 +123,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
   auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.pzi = 3.;
-  prt1.zi += vz(prt1);
+  prt1.x(2) += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -151,7 +151,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
   auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.pzi = 6.;
-  prt1.zi += vz(prt1);
+  prt1.x(2) += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -176,7 +176,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
   auto prt0 = particle_t{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.pzi = 5.;
-  prt1.zi = 5.980580;
+  prt1.x(2) = 5.980580;
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -202,7 +202,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
   auto prt1 = prt0;
   prt1.pzi = 4.;
   if (Base::dim::InvarX::value) { prt1.pzi = 1.; }
-  prt1.zi += vz(prt1);
+  prt1.x(2) += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -225,9 +225,9 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
 
   auto prt0 = particle_t{{1., 2., 3.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
-  if (!Base::dim::InvarX::value) prt1.xi += vx(prt1);
-  prt1.yi += vy(prt1);
-  prt1.zi += vz(prt1);
+  if (!Base::dim::InvarX::value) prt1.x(0) += vx(prt1);
+  prt1.x(1) += vy(prt1);
+  prt1.x(2) += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -280,7 +280,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JZI, {1, 1, 1}, this->fnqz / this->dz * (xi1[2] - prt0.zi) },
+      { JZI, {1, 1, 1}, this->fnqz / this->dz * (xi1[2] - prt0.x(2)) },
     };
   }
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
@@ -309,7 +309,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JZI, {1, 1, 1}, this->fnqz / this->dz * (20. - prt0.zi) },
+      { JZI, {1, 1, 1}, this->fnqz / this->dz * (20. - prt0.x(2)) },
       { JZI, {1, 1, 2}, this->fnqz / this->dz * (xi1[2] - 20.) },
     };
   }
@@ -342,7 +342,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
     auto fnqy = .05;
     auto dy = 10.;
     curr_ref = {
-      { JYI, {1, 1, 1}, fnqy / dy * (20. - prt0.yi) },
+      { JYI, {1, 1, 1}, fnqy / dy * (20. - prt0.x(1)) },
       { JYI, {1, 2, 1}, fnqy / dy * (xi1[1] - 20.) },
     };
   }
@@ -373,7 +373,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JXI, {1, 1, 1}, this->fnqx / this->dx * (xi1[0] - prt0.xi) },
+      { JXI, {1, 1, 1}, this->fnqx / this->dx * (xi1[0] - prt0.x(0)) },
     };
   }
       
