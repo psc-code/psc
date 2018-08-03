@@ -138,9 +138,13 @@ struct ConvertFromCuda
 
   void operator()(int n, const cuda_mparticles_prt &prt)
   {
-    mprts_other_[p_][n] = particle_t{{prt.xi[0], prt.xi[1], prt.xi[2]},
+    using real_t = float;
+    const auto& grid = mprts_other_.grid();
+    
+    mprts_other_[p_][n] = particle_t{grid,
+				     {prt.xi[0], prt.xi[1], prt.xi[2]},
 				     {prt.pxi[0], prt.pxi[1], prt.pxi[2]},
-				     prt.qni_wni, prt.kind};
+				     prt.qni_wni / real_t(grid.kinds[prt.kind].q), prt.kind};
   }
 
 private:

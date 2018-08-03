@@ -163,10 +163,12 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
     buf.resize(n_send);
 
     for (int n = 0; n < n_send; n++) {
-      buf[n] = particle_cuda_t{{h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
+      int kind = cuda_float_as_int(h_bnd_xi4[n + off].w);
+      buf[n] = particle_cuda_t{cmprts->grid_,
+			       {h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
 			       {h_bnd_pxi4[n + off].x, h_bnd_pxi4[n + off].y, h_bnd_pxi4[n + off].z},
-			       h_bnd_pxi4[n + off].w,
-			       cuda_float_as_int(h_bnd_xi4[n + off].w)};
+			       h_bnd_pxi4[n + off].w / float(cmprts->grid_.kinds[kind].q),
+			       kind};
     }
     off += n_send;
   }
