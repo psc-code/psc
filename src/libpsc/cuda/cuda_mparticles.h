@@ -230,11 +230,11 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
     xi4[n].x  = prt.x[0];
     xi4[n].y  = prt.x[1];
     xi4[n].z  = prt.x[2];
-    xi4[n].w  = cuda_int_as_float(prt.kind);
+    xi4[n].w  = cuda_int_as_float(prt.kind_);
     pxi4[n].x = prt.p[0];
     pxi4[n].y = prt.p[1];
     pxi4[n].z = prt.p[2];
-    pxi4[n].w = prt.qni_wni;
+    pxi4[n].w = prt.qni_wni_;
   }
 
   thrust::copy(xi4.begin(), xi4.end(), &this->d_xi4[off]);

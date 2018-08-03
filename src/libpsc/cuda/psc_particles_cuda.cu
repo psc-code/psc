@@ -138,7 +138,7 @@ struct ConvertFromCuda
     
     mprts_other_[p_][n] = particle_t{grid,
 				     Real3{prt.x}, Real3{prt.p},
-				     prt.qni_wni / real_t(grid.kinds[prt.kind].q), prt.kind};
+				     prt.qni_wni_ / real_t(grid.kinds[prt.kind_].q), prt.kind_};
   }
 
 private:

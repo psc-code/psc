@@ -104,8 +104,8 @@ struct InjectCuda : InjectBase
     cprt->p[0] = pxi;
     cprt->p[1] = pyi;
     cprt->p[2] = pzi;
-    cprt->kind = npt->kind;
-    cprt->qni_wni = kinds[npt->kind].q;
+    cprt->kind_ = npt->kind;
+    cprt->qni_wni_ = kinds[npt->kind].q;
   }	      
 
   // ----------------------------------------------------------------------
