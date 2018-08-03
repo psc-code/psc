@@ -137,9 +137,9 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    {{ .5, 75., 15. }},
-    {{ .5, 35., 15. }},
-    {{ .5,  5.,  5. }},
+    {{ .5, 75., 15. }, {}, 0, 0.},
+    {{ .5, 35., 15. }, {}, 0, 0.},
+    {{ .5,  5.,  5. }, {}, 0, 0.},
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
@@ -210,9 +210,9 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
   std::vector<cuda_mparticles_prt> prts = {
-    {{ .5, 75., 15. }},
-    {{ .5, 35., 15. }},
-    {{ .5,  5.,  5. }},
+    {{ .5, 75., 15. }, {}, 0, 0.},
+    {{ .5, 35., 15. }, {}, 0, 0.},
+    {{ .5,  5.,  5. }, {}, 0, 0.},
   };
   uint n_prts_by_patch[1];
   n_prts_by_patch[0] = prts.size();
