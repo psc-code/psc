@@ -184,13 +184,13 @@ public:
 };
 
 // ======================================================================
-// mparticles_patch_base
+// mparticles_patch
 
 template<typename P>
 struct Mparticles;
 
 template<typename P>
-struct mparticles_patch_base
+struct mparticles_patch
 {
   using particle_t = P;
   using real_t = typename particle_t::real_t;
@@ -204,7 +204,7 @@ struct mparticles_patch_base
   // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
-  mparticles_patch_base(Mparticles<P>* mprts, int p)
+  mparticles_patch(Mparticles<P>* mprts, int p)
     : pi_(mprts->grid()),
       mprts_(mprts),
       p_(p),
@@ -260,13 +260,6 @@ private:
   Mparticles<P>* mprts_;
   int p_;
   const Grid_t* grid_;
-};
-
-template<typename P>
-struct mparticles_patch : mparticles_patch_base<P> {
-  using Base = mparticles_patch_base<P>;
-  
-  using Base::Base;
 };
 
 // ======================================================================
