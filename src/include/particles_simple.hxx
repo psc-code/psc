@@ -158,30 +158,17 @@ struct psc_particle
   psc_particle() {}
 
   psc_particle(Real3 _xi, Real3 _pxi, real_t qni_wni, int kind)
-    : xi_{_xi[0]}, yi_{_xi[1]}, zi_{_xi[2]},
+    : x_{_xi[0], _xi[1], _xi[2]},
       pxi{_pxi[0]}, pyi{_pxi[1]}, pzi{_pxi[2]},
       qni_wni_{qni_wni},
       kind_{kind}
   {}
 
-  real_t x(int d) const
-  {
-    if (d == 0) { return xi_; }
-    else if (d == 1) { return yi_; }
-    else if (d == 2) { return zi_; }
-    else assert(0);
-  }
+  real_t  x(int d) const { return x_[d]; }
+  real_t& x(int d)       { return x_[d]; }
 
-  real_t& x(int d)
-  {
-    if (d == 0) { return xi_; }
-    else if (d == 1) { return yi_; }
-    else if (d == 2) { return zi_; }
-    else assert(0);
-  }
-
-  const real_t* x() const { return &xi_; }
-  real_t*       x()       { return &xi_; }
+  const real_t* x() const { return x_; }
+  real_t*       x()       { return x_; }
   
   int kind() const { return kind_; }
 
@@ -193,9 +180,8 @@ struct psc_particle
   real_t qni_wni(const Grid_t& grid) const { return qni_wni_; }
   real_t qni_wni() const { return qni_wni_; } // FIXME, one or the other version should suffice?
 
-public:
-  real_t xi_, yi_, zi_;
 private:
+  Real3 x_;
   real_t qni_wni_;
 public:
   real_t pxi, pyi, pzi;
