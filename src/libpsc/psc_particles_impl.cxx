@@ -13,9 +13,9 @@ struct Convert
   particle_to_t operator()(const particle_from_t& prt_from, const Grid_t& grid)
   {
     using real_t = typename MparticlesTo::real_t;
+    using Real3 = typename MparticlesTo::Real3;
     
-    auto prt_to = particle_to_t{{real_t(prt_from.x[0]), real_t(prt_from.x[1]), real_t(prt_from.x[2])},
-				{real_t(prt_from.pxi), real_t(prt_from.pyi), real_t(prt_from.pzi)},
+    auto prt_to = particle_to_t{Real3(prt_from.x), Real3(prt_from.p),
 				real_t(prt_from.qni_wni(grid)), prt_from.kind()};
     
     return prt_to;

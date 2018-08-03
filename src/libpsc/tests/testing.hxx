@@ -249,9 +249,9 @@ struct PushParticlesTest : ::testing::Test
 
     // check against reference
     for (auto& prt : make_getter(*mprts)[0]) {
-      EXPECT_NEAR(prt.pxi, prt1.pxi, eps);
-      EXPECT_NEAR(prt.pyi, prt1.pyi, eps);
-      EXPECT_NEAR(prt.pzi, prt1.pzi, eps);
+      EXPECT_NEAR(prt.p[0], prt1.p[0], eps);
+      EXPECT_NEAR(prt.p[1], prt1.p[1], eps);
+      EXPECT_NEAR(prt.p[2], prt1.p[2], eps);
       EXPECT_NEAR(prt.qni_wni(grid()), prt1.qni_wni(grid()), eps);
       EXPECT_NEAR(prt.x[0], prt1.x[0], eps);
       EXPECT_NEAR(prt.x[1], prt1.x[1], eps);

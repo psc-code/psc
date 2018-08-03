@@ -102,9 +102,9 @@ struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
       i3[d] += 1;
     }
     prt->i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
-    prt->ux[0] = prt_other.pxi;
-    prt->ux[1] = prt_other.pyi;
-    prt->ux[2] = prt_other.pzi;
+    prt->ux[0] = prt_other.p[0];
+    prt->ux[1] = prt_other.p[1];
+    prt->ux[2] = prt_other.p[2];
     prt->w     = prts_other.prt_wni(prt_other) / dVi;
     prt->kind  = prt_other.kind();
   }

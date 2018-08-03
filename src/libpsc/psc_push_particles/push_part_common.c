@@ -67,10 +67,10 @@ private:
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
       real_t dq = dqs * prts.prt_qni(prt) / prts.prt_mni(prt);
-      advance.push_p(&prt.pxi, E, H, dq);
+      advance.push_p(prt.p, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-      advance.calc_v(vv, &prt.pxi);
+      advance.calc_v(vv, prt.p);
       advance.push_x(x, vv);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt

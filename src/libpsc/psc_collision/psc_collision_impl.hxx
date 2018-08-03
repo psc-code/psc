@@ -51,8 +51,8 @@ struct CollisionHost
     real_t q() const { return prts_.prt_qni(prt_); }
     real_t m() const { return prts_.prt_mni(prt_); }
     
-    real_t  u(int d) const { return (&prt_.pxi)[d]; }
-    real_t& u(int d)       { return (&prt_.pxi)[d]; }
+    real_t  u(int d) const { return prt_.p[d]; }
+    real_t& u(int d)       { return prt_.p[d]; }
     
   private:
     particle_t& prt_;
@@ -206,9 +206,9 @@ struct CollisionHost
     F(2, i,j,k) = 0.;
     for (int n = n_start; n < n_end; n++) {
       particle_t& prt = prts[n];
-      F(0, i,j,k) -= prt.pxi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(1, i,j,k) -= prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(2, i,j,k) -= prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(0, i,j,k) -= prt.p[0] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(1, i,j,k) -= prt.p[1] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(2, i,j,k) -= prt.p[2] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
     }
   }
 
@@ -222,9 +222,9 @@ struct CollisionHost
     Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       particle_t& prt = prts[n];
-      F(0, i,j,k) += prt.pxi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(1, i,j,k) += prt.pyi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(2, i,j,k) += prt.pzi * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(0, i,j,k) += prt.p[0] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(1, i,j,k) += prt.p[1] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(2, i,j,k) += prt.p[2] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
     }
     F(0, i,j,k) /= (this->interval_ * dt);
     F(1, i,j,k) /= (this->interval_ * dt);

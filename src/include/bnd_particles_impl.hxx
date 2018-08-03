@@ -119,7 +119,7 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
   for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = &buf[n];
     real_t *xi = prt->x;
-    real_t *pxi = &prt->pxi;
+    real_t *pxi = prt->p;
     
     Int3 pos = pi.cellPosition(xi);
     

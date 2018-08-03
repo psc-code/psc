@@ -17,7 +17,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item, struct psc *psc,
 
   for (int p = 0; p < mprts.n_patches(); p++) {
     for (auto& prt : mprts[p]) {
-      double gamma = sqrt(1.f + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
+      double gamma = sqrt(1.f + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
       double Ekin = (gamma - 1.) * mprts.prt_mni(prt) * mprts.prt_wni(prt) * fnqs;
       double qni = mprts.prt_qni(prt);
       if (qni < 0.) {

@@ -48,9 +48,9 @@ struct Heating__ : HeatingBase
     real_t Dpyi = sqrtf(H * heating_dt_);
     real_t Dpzi = sqrtf(H * heating_dt_);
 
-    prt.pxi += Dpxi * ranx;
-    prt.pyi += Dpyi * rany;
-    prt.pzi += Dpzi * ranz;
+    prt.p[0] += Dpxi * ranx;
+    prt.p[1] += Dpyi * rany;
+    prt.p[2] += Dpzi * ranz;
   }
 
   void operator()(Mparticles& mprts)

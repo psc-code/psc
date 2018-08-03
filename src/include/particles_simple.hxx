@@ -157,9 +157,9 @@ struct psc_particle
 
   psc_particle() {}
 
-  psc_particle(Real3 _x, Real3 _pxi, real_t qni_wni, int kind)
+  psc_particle(Real3 _x, Real3 _p, real_t qni_wni, int kind)
     : x{_x},
-      pxi{_pxi[0]}, pyi{_pxi[1]}, pzi{_pxi[2]},
+      p{_p},
       qni_wni_{qni_wni},
       kind_{kind}
   {}
@@ -179,7 +179,7 @@ public:
 private:
   real_t qni_wni_;
 public:
-  real_t pxi, pyi, pzi;
+  Real3 p;
   int kind_;
 };
 
@@ -272,6 +272,7 @@ struct Mparticles : MparticlesBase
   using particle_t = P;
   using particle_real_t = typename particle_t::real_t; // FIXME, should go away
   using real_t = particle_real_t;
+  using Real3 = Vec3<real_t>;
   using patch_t = mparticles_patch<particle_t>;
   using buf_t = typename patch_t::buf_t;
 

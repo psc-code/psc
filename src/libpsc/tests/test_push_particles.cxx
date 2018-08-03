@@ -62,22 +62,22 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 template<typename particle_t>
 typename particle_t::real_t vx(const particle_t& prt)
 {
-  auto gamma = 1./std::sqrt(1. + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
-  return gamma * prt.pxi;
+  auto gamma = 1./std::sqrt(1. + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
+  return gamma * prt.p[0];
 }
 
 template<typename particle_t>
 typename particle_t::real_t vy(const particle_t& prt)
 {
-  auto gamma = 1./std::sqrt(1. + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
-  return gamma * prt.pyi;
+  auto gamma = 1./std::sqrt(1. + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
+  return gamma * prt.p[1];
 }
 
 template<typename particle_t>
 typename particle_t::real_t vz(const particle_t& prt)
 {
-  auto gamma = 1./std::sqrt(1. + sqr(prt.pxi) + sqr(prt.pyi) + sqr(prt.pzi));
-  return gamma * prt.pzi;
+  auto gamma = 1./std::sqrt(1. + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
+  return gamma * prt.p[2];
 }
 
 // ======================================================================
@@ -122,7 +122,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 
   auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.pzi = 3.;
+  prt1.p[2] = 3.;
   prt1.x[2] += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
@@ -150,7 +150,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
 
   auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.pzi = 6.;
+  prt1.p[2] = 6.;
   prt1.x[2] += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
@@ -175,7 +175,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
 
   auto prt0 = particle_t{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.pzi = 5.;
+  prt1.p[2] = 5.;
   prt1.x[2] = 5.980580;
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
@@ -200,8 +200,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
 
   auto prt0 = particle_t{{3., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.pzi = 4.;
-  if (Base::dim::InvarX::value) { prt1.pzi = 1.; }
+  prt1.p[2] = 4.;
+  if (Base::dim::InvarX::value) { prt1.p[2] = 1.; }
   prt1.x[2] += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
@@ -251,7 +251,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
 
   auto prt0 = particle_t{{151., 152., 155.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.pzi = 156;
+  prt1.p[2] = 156;
   this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);

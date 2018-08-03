@@ -209,9 +209,9 @@ TYPED_TEST(PushParticlesTest, Accel)
       auto& prts = mprts[p];
       for (int m = 0; m < prts.size(); m++) {
 	auto& prt = prts[m];
-    	EXPECT_NEAR(prt.pxi, 1*(n+1), eps);
-    	EXPECT_NEAR(prt.pyi, 2*(n+1), eps);
-    	EXPECT_NEAR(prt.pzi, 3*(n+1), eps);
+    	EXPECT_NEAR(prt.p[0], 1*(n+1), eps);
+    	EXPECT_NEAR(prt.p[1], 2*(n+1), eps);
+    	EXPECT_NEAR(prt.p[2], 3*(n+1), eps);
       }
     }
   }
@@ -280,9 +280,9 @@ TYPED_TEST(PushParticlesTest, Cyclo)
       auto& prts = mprts[p];
       for (int m = 0; m < prts.size(); m++) {
 	auto& prt = prts[m];
-    	EXPECT_NEAR(prt.pxi, ux, eps);
-    	EXPECT_NEAR(prt.pyi, uy, eps);
-    	EXPECT_NEAR(prt.pzi, uz, eps);
+    	EXPECT_NEAR(prt.p[0], ux, eps);
+    	EXPECT_NEAR(prt.p[1], uy, eps);
+    	EXPECT_NEAR(prt.p[2], uz, eps);
       };
     }
   }

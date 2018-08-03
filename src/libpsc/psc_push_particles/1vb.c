@@ -92,10 +92,10 @@ private:
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
       real_t dq = dq_kind[prt.kind()];
-      advance.push_p(&prt.pxi, E, H, dq);
+      advance.push_p(prt.p, E, H, dq);
 
       real_t vxi[3];
-      advance.calc_v(vxi, &prt.pxi);
+      advance.calc_v(vxi, prt.p);
 
       int lf[3];
       real_t of[3], xp[3];

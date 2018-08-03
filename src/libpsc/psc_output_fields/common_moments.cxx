@@ -179,9 +179,9 @@ static inline void
 particle_calc_vxi(particle_t *part, typename particle_t::real_t vxi[3])
 {
   typename particle_t::real_t root =
-    1.f / std::sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-  vxi[0] = part->pxi * root;
-  vxi[1] = part->pyi * root;
-  vxi[2] = part->pzi * root;
+    1.f / std::sqrt(1.f + sqr(part->p[0]) + sqr(part->p[1]) + sqr(part->p[2]));
+  vxi[0] = part->p[0] * root;
+  vxi[1] = part->p[1] * root;
+  vxi[2] = part->p[2] * root;
 }
 
