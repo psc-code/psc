@@ -113,9 +113,9 @@ struct ConvertToCuda
     prt.xi[0]   = prt_other.x[0];
     prt.xi[1]   = prt_other.x[1];
     prt.xi[2]   = prt_other.x[2];
-    prt.pxi[0]  = prt_other.pxi;
-    prt.pxi[1]  = prt_other.pyi;
-    prt.pxi[2]  = prt_other.pzi;
+    prt.pxi[0]  = prt_other.p[0];
+    prt.pxi[1]  = prt_other.p[1];
+    prt.pxi[2]  = prt_other.p[2];
     prt.kind    = prt_other.kind_;
     prt.qni_wni = prt_other.qni_wni(grid);
 
