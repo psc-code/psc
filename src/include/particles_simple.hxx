@@ -166,10 +166,6 @@ struct psc_particle
 
   int kind() const { return kind_; }
 
-  // FIXME, grid is always double precision, so this will switch precision
-  // where not desired. should use same info stored in mprts at right precision
-  real_t qni(const Grid_t& grid) const { return grid.kinds[kind_].q; }
-  real_t mni(const Grid_t& grid) const { return grid.kinds[kind_].m; }
   real_t wni() const { return w_; }
 
 public:
@@ -243,13 +239,15 @@ struct mparticles_patch
 
   void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(prt.x); }
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
-    
-  real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
-  real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
-  real_t prt_wni(const particle_t& prt) const { return prt.wni(); }
-  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni(*grid_) * prt.wni(); }
 
-  const Grid_t& grid() { return *grid_; }
+  // FIXME, grid is always double precision, so this will switch precision
+  // where not desired. should use same info stored in mprts at right precision
+  real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind_].q; }
+  real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind_].m; }
+  real_t prt_wni(const particle_t& prt) const { return prt.wni(); }
+  real_t prt_qni_wni(const particle_t& prt) const { return prt_qni(prt) * prt.wni(); }
+
+  const Grid_t& grid() const { return *grid_; }
 
   buf_t buf;
   ParticleIndexer<real_t> pi_;
