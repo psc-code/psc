@@ -6,22 +6,6 @@
 
 #include "vpic_iface.h"
 
-// ----------------------------------------------------------------------
-// vpic_mparticles_get_size_all
-
-void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
-				  uint *n_prts_by_patch)
-{
-  assert(n_patches == 1);
-  uint n_prts = 0;
-
-  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-    n_prts += sp->np;
-  }
-
-  n_prts_by_patch[0] = n_prts;
-}
-
 void MparticlesVpic::push_back(const struct vpic_mparticles_prt *prt)
 {
   for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {

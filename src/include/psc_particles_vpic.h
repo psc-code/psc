@@ -12,9 +12,6 @@
 
 #include "psc_method.h"
 
-void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
-				  uint *n_prts_by_patch);
-
 struct particle_vpic_t
 {
   using real_t = float;
@@ -76,26 +73,36 @@ struct MparticlesVpic : MparticlesBase
   Particles& vmprts_;
   Simulation *sim;
 
+  // ----------------------------------------------------------------------
+  // ctor
+
   MparticlesVpic(const Grid_t& grid)
     : MparticlesBase(grid),
       vmprts_(*new Particles)
   {
+    assert(grid.n_patches() == 1);
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
   }
+
+  // ----------------------------------------------------------------------
+  // get_n_prts
 
   int get_n_prts() const override
   {
     int n_prts = 0;
-    for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
+    for (auto sp = vmprts_.cbegin(); sp != vmprts_.cend(); ++sp) {
       n_prts += sp->np;
     }
     
     return n_prts;
   }
+
+  // ----------------------------------------------------------------------
+  // get_size_all
   
   void get_size_all(uint *n_prts_by_patch) const override
   {
-    vpic_mparticles_get_size_all(&vmprts_, 1, n_prts_by_patch);
+    n_prts_by_patch[0] = get_n_prts();
   }
 
   // ----------------------------------------------------------------------
