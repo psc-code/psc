@@ -215,9 +215,9 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 		arr[nn].px = part->p[0];
 		arr[nn].py = part->p[1];
 		arr[nn].pz = part->p[2];
-		arr[nn].q  = mprts.prt_qni(*part);
-		arr[nn].m  = mprts.prt_mni(*part);
-		arr[nn].w  = mprts.prt_wni(*part);
+		arr[nn].q  = prts.prt_qni(*part);
+		arr[nn].m  = prts.prt_mni(*part);
+		arr[nn].w  = prts.prt_wni(*part);
 	      }
 	    }
 	  }

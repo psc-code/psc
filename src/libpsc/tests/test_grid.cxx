@@ -144,7 +144,7 @@ TEST(Mparticles, setParticles)
     EXPECT_EQ(prts.size(), n_prts);
     for (int n = 0; n < n_prts; n++) {
       particle_t& prt = prts[n];
-      EXPECT_EQ(mprts.prt_wni(prt), 1.);
+      EXPECT_EQ(prts.prt_wni(prt), 1.);
       EXPECT_EQ(prt.kind(), 0);
     }
   }

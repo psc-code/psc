@@ -394,11 +394,6 @@ struct Mparticles : MparticlesBase
     fclose(file);
   }
   
-  particle_real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
-  particle_real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
-  particle_real_t prt_wni(const particle_t& prt) const { return prt.wni(*grid_); }
-  particle_real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(*grid_); }
-
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
