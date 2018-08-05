@@ -227,7 +227,7 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
     struct cuda_mparticles_prt prt = getter(n);
     this->checkInPatchMod(prt.x);
 
-    int kind = cuda_int_as_float(prt.kind_);
+    int kind = cuda_int_as_float(prt.kind);
     xi4[n].x  = prt.x[0];
     xi4[n].y  = prt.x[1];
     xi4[n].z  = prt.x[2];
@@ -235,7 +235,7 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
     pxi4[n].x = prt.p[0];
     pxi4[n].y = prt.p[1];
     pxi4[n].z = prt.p[2];
-    pxi4[n].w = prt.wni_ * this->grid_.kinds[kind].q;
+    pxi4[n].w = prt.w * this->grid_.kinds[kind].q;
   }
 
   thrust::copy(xi4.begin(), xi4.end(), &this->d_xi4[off]);
