@@ -16,8 +16,6 @@
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
 void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
-void psc_method_vpic_diagnostics_run(struct psc_method *method, struct psc *psc,
-				     MfieldsBase& mflds, MparticlesBase& mprts); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 
 // ======================================================================
@@ -272,9 +270,12 @@ private:
 
   void diagnostics()
   {
+#ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_diagnostics_run(psc_->method, psc_, mflds_, mprts_);
+      auto& vmprts = *mprts_.vmprts;
+      sim_->runDiag(vmprts);
     }
+#endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
     psc_output_fields_collection_run(psc_->output_fields_collection, mflds_, mprts_);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);

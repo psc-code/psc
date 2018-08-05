@@ -110,19 +110,6 @@ psc_method_vpic_inc_step(struct psc_method *method, int timestep)
 }
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_diagnostics_run
-
-void
-psc_method_vpic_diagnostics_run(struct psc_method *method, struct psc *psc,
-				MfieldsBase& mflds, MparticlesBase& mprts)
-{
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-
-  auto& particles = sub->sim->getParticles();
-  sub->sim->runDiag(particles);
-}
-
-// ----------------------------------------------------------------------
 // psc_method "vpic"
 
 struct psc_method_ops_vpic : psc_method_ops {
