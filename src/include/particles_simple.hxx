@@ -170,7 +170,7 @@ struct psc_particle
   // where not desired. should use same info stored in mprts at right precision
   real_t qni(const Grid_t& grid) const { return grid.kinds[kind_].q; }
   real_t mni(const Grid_t& grid) const { return grid.kinds[kind_].m; }
-  real_t wni(const Grid_t& grid) const { return w_; }
+  real_t wni() const { return w_; }
 
 public:
   Real3 x;
@@ -246,8 +246,8 @@ struct mparticles_patch
     
   real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
   real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
-  real_t prt_wni(const particle_t& prt) const { return prt.wni(*grid_); }
-  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni(*grid_) * prt.wni(*grid_); }
+  real_t prt_wni(const particle_t& prt) const { return prt.wni(); }
+  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni(*grid_) * prt.wni(); }
 
   const Grid_t& grid() { return *grid_; }
 

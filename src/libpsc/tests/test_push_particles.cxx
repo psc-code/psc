@@ -52,7 +52,7 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
     EXPECT_NEAR(prt.x[0], 1., eps);
     EXPECT_NEAR(prt.x[1], 0., eps);
     EXPECT_NEAR(prt.x[2], 0., eps);
-    EXPECT_NEAR(prt.wni(grid), 1., eps);
+    EXPECT_NEAR(prt.wni(), 1., eps);
   }
 }
 
