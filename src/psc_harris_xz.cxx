@@ -376,7 +376,6 @@ Simulation* setup_simulation(psc* psc_, const globals_physics& phys_,
 		   p.stats_every / 2);
     setup_domain(sim, grid.domain, psc_, phys_, params);
     setup_fields(sim, psc_);
-    setup_species(sim, psc_, phys_, params);
     
     int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
     sim->newDiag(interval);
@@ -403,14 +402,19 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
-  PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* _sim,
+  PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* sim,
 	    psc* psc, const globals_physics& phys)
-    : Psc{p, psc, _sim},
+    : Psc{p, psc, sim},
       PscHarrisParams(params),
       phys_{phys}
   {
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
+
+    // -- setup species
+    // FIXME, taken out of setup_simulation, so in odd order,
+    // and half-redundant to the PSC species setup
+    setup_species(sim, psc_, phys_, params);
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
