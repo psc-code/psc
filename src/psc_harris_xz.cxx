@@ -358,10 +358,10 @@ static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phy
 }
 
 // ----------------------------------------------------------------------
-// setup_grid
+// setup_simulation
 
-void setup_grid(psc* psc_, const globals_physics& phys_,
-		const PscParams& p, const PscHarrisParams& params)
+void setup_simulation(psc* psc_, const globals_physics& phys_,
+		      const PscParams& p, const PscHarrisParams& params)
 {
   if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
   } else {
@@ -952,7 +952,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
-  setup_grid(psc_, phys, p, params);
+  setup_simulation(psc_, phys, p, params);
   
   return new PscHarris{p, params, psc_, phys};
 }
