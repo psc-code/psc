@@ -142,20 +142,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   }
 
   // ----------------------------------------------------------------------
-  // mprts_get_nr_particles
-  
-  int mprts_get_nr_particles(Particles& vmprts)
-  {
-    int n_prts = 0;
-    
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-      n_prts += sp->np;
-    }
-    
-    return n_prts;
-  }
-
-  // ----------------------------------------------------------------------
   // DiagMixin
   
   void newDiag(int interval)

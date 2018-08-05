@@ -83,11 +83,14 @@ struct MparticlesVpic : MparticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
   }
 
-  static mrc_obj_method methods[];
-
   int get_n_prts() const override
   {
-    return sim->mprts_get_nr_particles(vmprts_);
+    int n_prts = 0;
+    for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
+      n_prts += sp->np;
+    }
+    
+    return n_prts;
   }
   
   void get_size_all(uint *n_prts_by_patch) const override
