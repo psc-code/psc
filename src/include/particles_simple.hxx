@@ -181,9 +181,32 @@ struct mparticles_patch
   using particle_t = P;
   using real_t = typename particle_t::real_t;
   using Real3 = Vec3<real_t>;
+  using Double3 = Vec3<double>;
   using buf_t = std::vector<particle_t>;
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
+
+  struct const_accessor
+  {
+    const_accessor(const particle_t& prt, const mparticles_patch& prts)
+      : prt_{prt}, prts_{prts}
+    {}
+
+    Real3 momentum()   const { return prt_.p; }
+    real_t w()         const { return prt_.w; }
+    int kind()         const { return prt_.kind; }
+
+    Double3 position() const
+    {
+      auto& patch = prts_.grid().patches[prts_.p_];
+
+      return patch.xb +	Double3{prt_.x};
+    }
+    
+  private:
+    const particle_t& prt_;
+    const mparticles_patch& prts_;
+  };
   
   // FIXME, I would like to delete the copy ctor because I don't
   // want to copy patch_t by mistake, but that doesn't play well with
@@ -196,6 +219,8 @@ struct mparticles_patch
       p_(p),
       grid_(&mprts->grid())
   {}
+
+  const_accessor get(int n) { return {buf[n], *this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
   const_iterator begin() const { return buf.begin(); }
