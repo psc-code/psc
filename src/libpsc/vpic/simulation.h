@@ -35,7 +35,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       interpolator_(SimulationMixin::getInterpolator()),
       accumulator_(SimulationMixin::getAccumulator()),
       hydro_array_(SimulationMixin::getHydroArray()),
-      particles_(SimulationMixin::getParticles()),
       particle_bc_list_(SimulationMixin::getParticleBcList())
   {
   }
@@ -293,14 +292,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     }
   }
 
-  // ----------------------------------------------------------------------
-  // getParticles
-
-  Particles& getParticles()
-  {
-    return particles_;
-  }
-
   int num_comm_round_;
   
   //private:
@@ -311,8 +302,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   Accumulator*& accumulator_;
   HydroArray*& hydro_array_;
   ParticleBcList& particle_bc_list_;
-private:
-  Particles& particles_;
 
   int np_[3];
 };
