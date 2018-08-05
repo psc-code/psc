@@ -301,7 +301,7 @@ protected:
 					       double max_local_np, double max_local_nm,
 					       double sort_interval, double sort_out_of_place)
   {
-    auto& particles = sim_->getParticles();
+    auto& vmprts = *mprts_.vmprts;
 
     // Compute a reasonble number of movers if user did not specify
     // Based on the twice the number of particles expected to hit the boundary
@@ -315,9 +315,9 @@ protected:
 	max_local_nm = 16*(MAX_PIPELINE+1);
 #endif
     }
-    auto *sp = particles.create(name, q, m, max_local_np, max_local_nm,
-				sort_interval, sort_out_of_place, sim_->grid_);
-    return particles.append(sp);
+    auto sp = vmprts.create(name, q, m, max_local_np, max_local_nm,
+			    sort_interval, sort_out_of_place, sim_->grid_);
+    return vmprts.append(sp);
   }
 
 protected:
