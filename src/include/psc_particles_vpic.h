@@ -79,8 +79,8 @@ struct MparticlesVpic : MparticlesBase
   MparticlesVpic(const Grid_t& grid)
     : MparticlesBase(grid)
   {
+    vmprts = new Particles;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vmprts = &sim->getParticles();
   }
 
   static mrc_obj_method methods[];
