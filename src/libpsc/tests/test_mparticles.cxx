@@ -55,7 +55,7 @@ TYPED_TEST(MparticlesTest, setParticles)
   Mparticles mprts(grid);
 
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto& prts = mprts[p];
+    auto prts = mprts[p];
     auto& patch = mprts.grid().patches[p];
     for (int n = 0; n < n_prts; n++) {
       double nn = double(n) / n_prts;
@@ -71,7 +71,7 @@ TYPED_TEST(MparticlesTest, setParticles)
   }
 
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto& prts = mprts[p];
+    auto prts = mprts[p];
     auto& patch = mprts.grid().patches[p];
     EXPECT_EQ(prts.size(), n_prts);
     for (int n = 0; n < n_prts; n++) {
