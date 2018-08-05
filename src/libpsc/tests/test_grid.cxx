@@ -1,16 +1,7 @@
 
 #include <gtest/gtest.h>
 
-#include "grid.hxx"
-
-static Grid_t make_grid()
-{
-  auto domain = Grid_t::Domain{{8, 4, 2},
-			       {80.,  40., 20.}, {-40., -20., 0.},
-			       {2, 2, 1}};
-  std::vector<Int3> offs = {{0, 0, 0}, {4, 0, 0}};
-  return Grid_t(domain, offs);
-}
+#include "test_common.hxx"
 
 static Grid_t make_grid_1()
 {
@@ -115,16 +106,6 @@ static void initMparticlesRandom(Mparticles& mprts, int n_prts)
       mprts.inject(p, prt);
     }
   }
-}
-
-TEST(Mparticles, Constructor)
-{
-  using Mparticles_t = Mparticles<particle_single_t>;
-  
-  Grid_t grid = make_grid();
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-
-  Mparticles_t mprts(grid);
 }
 
 TEST(Mparticles, setParticles)
