@@ -58,19 +58,6 @@ struct material * define_material(Simulation* sim, const char *name,
 }
 
 // ----------------------------------------------------------------------
-// define_species
-
-struct species * define_species(Simulation* sim, const char *name, double q, double m,
-				double max_local_np, double max_local_nm,
-				double sort_interval, double sort_out_of_place)
-{
-  auto& particles = sim->getParticles();
-  return reinterpret_cast<struct species*>(sim->define_species(particles,
-							       name, q, m, max_local_np, max_local_nm,
-							       sort_interval, sort_out_of_place));
-}
-
-// ----------------------------------------------------------------------
 // courant length
 //
 // FIXME, the dt calculating should be consolidated with what regular PSC does
@@ -447,10 +434,23 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
-    define_species(sim_, "electron", -phys_.ec, phys_.me, nmax, nmovers,
+    define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
 		   electron_sort_interval, sort_method);
-    define_species(sim_, "ion", phys_.ec, phys_.mi, nmax, nmovers,
+    define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
 		   ion_sort_interval, sort_method);
+  }
+
+  // ----------------------------------------------------------------------
+  // define_species
+  
+  Simulation::Species* define_species(const char *name, double q, double m,
+				      double max_local_np, double max_local_nm,
+				      double sort_interval, double sort_out_of_place)
+  {
+    auto& particles = sim_->getParticles();
+    return sim_->define_species(particles,
+				name, q, m, max_local_np, max_local_nm,
+				sort_interval, sort_out_of_place);
   }
 
   // ----------------------------------------------------------------------
