@@ -120,7 +120,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
   }
 
-  Species* define_species(const char *name, double q, double m,
+  Species* define_species(Particles& particles, const char *name, double q, double m,
 			  double max_local_np, double max_local_nm,
 			  double sort_interval, double sort_out_of_place)
   {
@@ -136,9 +136,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 	max_local_nm = 16*(MAX_PIPELINE+1);
 #endif
     }
-    Species *sp = particles_.create(name, q, m, max_local_np, max_local_nm,
+    Species *sp = particles.create(name, q, m, max_local_np, max_local_nm,
 				    sort_interval, sort_out_of_place, grid_);
-    return particles_.append(sp);
+    return particles.append(sp);
   }
 
   void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
@@ -190,9 +190,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     DiagMixin::diagnostics_setup();
   }
 
-  void runDiag()
+  void runDiag(Particles& particles)
   {
-    DiagMixin::diagnostics_run(*field_array_, particles_, *interpolator_, *hydro_array_, np_);
+    DiagMixin::diagnostics_run(*field_array_, particles, *interpolator_, *hydro_array_, np_);
   }
 
   // ======================================================================
@@ -302,14 +302,14 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   // ----------------------------------------------------------------------
   // push_mprts_prep
   
-  void push_mprts_prep(FieldArray& vmflds)
+  void push_mprts_prep(Particles& particles, FieldArray& vmflds)
   {
     // At end of step:
     // Fields are updated ... load the interpolator for next time step and
     // particle diagnostics in user_diagnostics if there are any particle
     // species to worry about
     
-    if (!particles_.empty()) {
+    if (!particles.empty()) {
       interpolator_->load(vmflds);
     }
   }

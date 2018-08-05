@@ -18,12 +18,14 @@ struct PushParticlesVpic : PushParticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void prep(MparticlesBase& _mprts_base, MfieldsBase& mflds_base) override
+  void prep(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
     // needs E, B
+    auto mprts = mprts_base.get_as<MparticlesVpic>();
     auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, HX + 6);
-    sim_->push_mprts_prep(*mflds.vmflds_fields);
+    sim_->push_mprts_prep(*mprts.vmprts, *mflds.vmflds_fields);
     mflds_base.put_as(mflds, 0, 0);
+    mprts_base.put_as(mprts, MP_DONT_COPY);
   }
   
   void push_mprts(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
