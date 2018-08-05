@@ -106,7 +106,7 @@ static void initMparticlesRandom(Mparticles& mprts, int n_prts)
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto patch = mprts.grid().patches[p];
     for (int n = 0; n < n_prts; n++) {
-      psc_particle_inject prt = {};
+      particle_inject prt = {};
       prt.x[0] = rng->uniform(patch.xb[0], patch.xe[0]);
       prt.x[1] = rng->uniform(patch.xb[1], patch.xe[1]);
       prt.x[2] = rng->uniform(patch.xb[2], patch.xe[2]);
@@ -253,7 +253,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto patch = mprts.grid().patches[p];
     for (int n = 0; n < n_prts; n++) {
-      psc_particle_inject prt = {};
+      particle_inject prt = {};
       prt.x[0] = rng->uniform(patch.xb[0], patch.xe[0]);
       prt.x[1] = rng->uniform(patch.xb[1], patch.xe[1]);
       prt.x[2] = rng->uniform(patch.xb[2], patch.xe[2]);

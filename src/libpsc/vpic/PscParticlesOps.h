@@ -391,7 +391,7 @@ struct PscParticlesOps {
   // inject_particle
   
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
-		       const struct psc_particle_inject *prt)
+		       const particle_inject *prt)
   {
     auto sp = vmprts.find(prt->kind);
 

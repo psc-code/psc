@@ -586,7 +586,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
       double x, y, z, ux, uy, uz, d0;
 
-      particle_inject_t prt;
+      particle_inject prt;
 
       do {
 	z = L*atanh(Rng_uniform(rng, -1., 1.)*tanhf);
@@ -625,7 +625,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "-> Background Population\n");
 
     for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
-      particle_inject_t prt;
+      particle_inject prt;
       double x = Rng_uniform(rng, xmin, xmax);
       double y = Rng_uniform(rng, ymin, ymax);
       double z = Rng_uniform(rng, zmin, zmax);

@@ -324,7 +324,7 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  void inject(int p, const psc_particle_inject& new_prt) override
+  void inject(int p, const particle_inject& new_prt) override
   {
     using real_t = typename particle_t::real_t;
     
@@ -344,7 +344,7 @@ struct Mparticles : MparticlesBase
     (*this)[p].push_back(prt);
   }
   
-  void inject_reweight(int p, const psc_particle_inject& new_prt) override
+  void inject_reweight(int p, const particle_inject& new_prt) override
   {
     using real_t = typename particle_t::real_t;
     

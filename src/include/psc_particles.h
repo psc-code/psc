@@ -9,12 +9,13 @@
 #include "grid.hxx"
 #include "particles_traits.hxx"
 
-typedef struct psc_particle_inject {
+struct particle_inject
+{
   double x[3];
   double u[3];
   double w;
   int kind;
-} particle_inject_t;
+};
 
 #define MP_DONT_COPY (0x1)
 #define MP_DONT_RESIZE (0x2)

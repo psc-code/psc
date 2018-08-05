@@ -99,7 +99,7 @@ struct MparticlesVpic : MparticlesBase
     }
   }
 
-  void inject_reweight(int p, const psc_particle_inject& prt) override
+  void inject_reweight(int p, const particle_inject& prt) override
   {
     assert(p == 0);
     static_cast<ParticlesOps*>(sim)->inject_particle(*vmprts, *sim->accumulator_, *sim->field_array_, &prt);

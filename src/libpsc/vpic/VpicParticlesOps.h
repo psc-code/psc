@@ -12,7 +12,7 @@ struct VpicParticlesOps
   typedef typename Particles::ParticleBcList ParticleBcList;
   
   void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
-		       const struct psc_particle_inject *prt)
+		       const particle_inject *prt)
   {
     species_t *sp = &*vmprts.find(prt->kind);
 
