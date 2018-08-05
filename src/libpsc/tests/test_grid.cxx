@@ -108,29 +108,6 @@ static void initMparticlesRandom(Mparticles& mprts, int n_prts)
   }
 }
 
-TEST(Mparticles, setParticles)
-{
-  using particle_t = particle_single_t;
-  using Mparticles_t = Mparticles<particle_t>;
-  const int n_prts = 131;
-
-  Grid_t grid = make_grid();
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-
-  Mparticles_t mprts(grid);
-  initMparticlesRandom(mprts, n_prts);
-
-  for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto& prts = mprts[p];
-    EXPECT_EQ(prts.size(), n_prts);
-    for (int n = 0; n < n_prts; n++) {
-      particle_t& prt = prts[n];
-      EXPECT_EQ(prts.prt_wni(prt), 1.);
-      EXPECT_EQ(prt.kind, 0);
-    }
-  }
-}
-
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 #include "../libpsc/psc_push_particles/push_config.hxx"
 #include "../libpsc/psc_push_particles/push_part_common.c"
