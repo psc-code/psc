@@ -75,9 +75,9 @@ struct SetupParticles
     }
   
     assert(npt->kind >= 0 && npt->kind < kinds.size());
-    prt->kind_ = npt->kind;
-    assert(npt->q == kinds[prt->kind_].q);
-    assert(npt->m == kinds[prt->kind_].m);
+    prt->kind = npt->kind;
+    assert(npt->q == kinds[prt->kind].q);
+    assert(npt->m == kinds[prt->kind].m);
     /* prt->qni = kinds[prt->kind].q; */
     /* prt->mni = kinds[prt->kind].m; */
     prt->x[0] = xx[0] - psc->grid().patches[p].xb[0];

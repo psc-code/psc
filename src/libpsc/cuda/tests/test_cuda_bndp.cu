@@ -96,8 +96,8 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
   // particles 1 and 3 leave their patch and need special handling
   EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -238,8 +238,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -256,8 +256,8 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   // particles 1 and 3 leave their patch and need special handling
   EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
@@ -295,8 +295,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // particles 1 and 3 leave their patch and need special handling
   EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
   EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind_, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind_, 3);
+  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
+  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.

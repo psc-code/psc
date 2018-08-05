@@ -91,7 +91,7 @@ private:
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-      real_t dq = dq_kind[prt.kind()];
+      real_t dq = dq_kind[prt.kind];
       advance.push_p(prt.p, E, H, dq);
 
       real_t vxi[3];

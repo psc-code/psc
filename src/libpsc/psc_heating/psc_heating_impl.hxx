@@ -59,7 +59,7 @@ struct Heating__ : HeatingBase
       auto& prts = mprts[p];
       auto& patch = mprts.grid().patches[p];
       for (auto& prt : prts) {
-	if (prt.kind() != kind_) {
+	if (prt.kind != kind_) {
 	  continue;
 	}
       

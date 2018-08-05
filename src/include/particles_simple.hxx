@@ -155,26 +155,23 @@ struct psc_particle
   using real_t = R;
   using Real3 = Vec3<real_t>;
 
-  psc_particle() {}
-
-  psc_particle(Real3 _x, Real3 _p, real_t w, int kind)
-    : x{_x},
-      p{_p},
-      w_{w},
-      kind_{kind}
+  // FIXME, I don't want this ctor.
+  psc_particle()
   {}
 
-  int kind() const { return kind_; }
+  psc_particle(Real3 x, Real3 p, real_t w, int kind)
+    : x{x},
+      p{p},
+      w_{w},
+      kind{kind}
+  {}
 
   real_t wni() const { return w_; }
 
-public:
   Real3 x;
-private:
   real_t w_;
-public:
   Real3 p;
-  int kind_;
+  int kind;
 };
 
 // ======================================================================
@@ -242,8 +239,8 @@ struct mparticles_patch
 
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored in mprts at right precision
-  real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind_].q; }
-  real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind_].m; }
+  real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind].q; }
+  real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind].m; }
   real_t prt_wni(const particle_t& prt) const { return prt.wni(); }
   real_t prt_qni_wni(const particle_t& prt) const { return prt_qni(prt) * prt.wni(); }
 

@@ -91,7 +91,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     assert(j1 >= 0 && j1 < ldims[1]);
     assert(j2 >= 0 && j2 < ldims[2]);
 
-    int kind = part->kind();
+    int kind = part->kind;
     assert(kind < grid.kinds.size());
  
     return cell_index_3_to_1(ldims, j0, j1, j2) * grid.kinds.size() + kind;
