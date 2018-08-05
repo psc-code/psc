@@ -80,7 +80,7 @@ struct MparticlesVpic : MparticlesBase
     : MparticlesBase(grid)
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vmprts = &sim->particles_;
+    vmprts = &sim->getParticles();
   }
 
   static mrc_obj_method methods[];

@@ -118,7 +118,7 @@ psc_method_vpic_diagnostics_run(struct psc_method *method, struct psc *psc,
 {
   struct psc_method_vpic *sub = psc_method_vpic(method);
 
-  auto& particles = sub->sim->particles_;
+  auto& particles = sub->sim->getParticles();
   sub->sim->runDiag(particles);
 }
 

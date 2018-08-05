@@ -64,7 +64,7 @@ struct species * define_species(Simulation* sim, const char *name, double q, dou
 				double max_local_np, double max_local_nm,
 				double sort_interval, double sort_out_of_place)
 {
-  auto& particles = sim->particles_;
+  auto& particles = sim->getParticles();
   return reinterpret_cast<struct species*>(sim->define_species(particles,
 							       name, q, m, max_local_np, max_local_nm,
 							       sort_interval, sort_out_of_place));

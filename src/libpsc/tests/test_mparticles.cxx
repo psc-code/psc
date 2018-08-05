@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 
-//#define VPIC
+#define VPIC
 
 #include "test_common.hxx"
 
