@@ -403,9 +403,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
-  PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* sim,
+  PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* _sim,
 	    psc* psc, const globals_physics& phys)
-    : Psc{p, psc, sim},
+    : Psc{p, psc, _sim},
       PscHarrisParams(params),
       phys_{phys}
   {
@@ -426,9 +426,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
-      Simulation* sim;
-      psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
-      sim->setupDiag();
+      sim()->setupDiag();
     }
 
     psc_setup_member_objs(psc_);
@@ -457,9 +455,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   ~PscHarris()
   {
-    Simulation* sim;
-    psc_method_get_param_ptr(psc_->method, "sim", (void**) &sim);
-    delete sim;
+    delete sim();
+  }
+
+  // ----------------------------------------------------------------------
+  // sim() FIXME, temp
+
+  Simulation* sim()
+  {
+    return static_cast<Simulation*>(sim_);
   }
 
   // ----------------------------------------------------------------------
