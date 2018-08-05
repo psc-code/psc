@@ -360,15 +360,15 @@ static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phy
 // ----------------------------------------------------------------------
 // setup_simulation
 
-void setup_simulation(psc* psc_, const globals_physics& phys_,
-		      const PscParams& p, const PscHarrisParams& params)
+Simulation* setup_simulation(psc* psc_, const globals_physics& phys_,
+			     const PscParams& p, const PscHarrisParams& params)
 {
   if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
+    return nullptr;
   } else {
     const auto& grid = psc_->grid();
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
     auto sim = new Simulation();
-    psc_method_set_param_ptr(psc_->method, "sim", sim);
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
     sim->setParams(p.nmax, p.stats_every,
@@ -383,6 +383,9 @@ void setup_simulation(psc* psc_, const globals_physics& phys_,
     
     psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+
+    psc_method_set_param_ptr(psc_->method, "sim", sim);
+    return sim;
   }
 }
 
@@ -400,9 +403,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
-  PscHarris(const PscParams& p, const PscHarrisParams& params, psc *psc, const globals_physics& phys)
+  PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* sim,
+	    psc* psc, const globals_physics& phys)
     : Psc{p, psc},
       PscHarrisParams(params),
+      sim_{sim},
       phys_{phys}
   {
     MPI_Comm comm = psc_comm(psc_);
@@ -821,7 +826,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
-protected:
+private:
+  Simulation *sim_;
   globals_physics phys_;
 };
 
@@ -952,9 +958,9 @@ PscHarris* PscHarrisBuilder::makePsc()
   auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
-  setup_simulation(psc_, phys, p, params);
+  auto sim = setup_simulation(psc_, phys, p, params);
   
-  return new PscHarris{p, params, psc_, phys};
+  return new PscHarris{p, params, sim, psc_, phys};
 }
 
 // ======================================================================
