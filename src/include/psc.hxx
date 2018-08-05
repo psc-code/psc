@@ -70,11 +70,12 @@ struct Psc
   using BndParticles_t = typename PscConfig::BndParticles_t;
   using Checks_t = typename PscConfig::Checks_t;
   using Marder_t = typename PscConfig::Marder_t;
+  using Simulation = typename PscConfig::Simulation;
 
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(const PscParams& params, psc* psc, void* sim = nullptr)
+  Psc(const PscParams& params, psc* psc, Simulation* sim = nullptr)
     : time_start_{MPI_Wtime()},
       p_{params},
       sim_{sim},
@@ -294,7 +295,7 @@ protected:
   double time_start_;
 
   PscParams p_;
-  void* sim_;
+  Simulation* sim_;
   psc* psc_;
 
   Mparticles_t mprts_;

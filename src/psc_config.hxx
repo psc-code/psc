@@ -30,6 +30,9 @@
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
 #endif
 
+struct SimulationNone
+{};
+
 template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfigPushParticles2nd
 {
@@ -54,7 +57,8 @@ struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
   using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
 };
 
-template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles>
+template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles,
+	 typename _Simulation = SimulationNone>
 struct PscConfig_
 {
   using dim_t = DIM;
@@ -72,6 +76,7 @@ struct PscConfig_
   using Balance_t = Balance_<Mparticles_t, Mfields_t>;
   using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
   using Marder_t = Marder_<Mparticles_t, Mfields_t>;
+  using Simulation = _Simulation;
 };
 
 #ifdef USE_CUDA
@@ -165,6 +170,7 @@ struct PscConfigVpic
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>;
   using Marder_t = MarderVpic;
+  using Simulation = Simulation;
 };
 
 #endif
