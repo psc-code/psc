@@ -112,7 +112,7 @@ struct ConvertToCuda
     auto& grid = mprts_other_.grid();
 
     return {Real3{prt_other.x}, Real3{prt_other.p},
-	    real_t(prt_other.wni()), prt_other.kind};
+	    real_t(prt_other.w), prt_other.kind};
   }
 
 private:
