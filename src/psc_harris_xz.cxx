@@ -426,7 +426,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
     } else {
-      sim()->setupDiag();
+      sim_->setupDiag();
     }
 
     psc_setup_member_objs(psc_);
@@ -448,22 +448,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // PscHarris dtor
-  
-  ~PscHarris()
-  {
-    delete sim();
-  }
-
-  // ----------------------------------------------------------------------
-  // sim() FIXME, temp
-
-  Simulation* sim()
-  {
-    return static_cast<Simulation*>(sim_);
   }
 
   // ----------------------------------------------------------------------
