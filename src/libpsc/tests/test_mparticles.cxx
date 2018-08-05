@@ -4,33 +4,55 @@
 #include "test_common.hxx"
 
 #include "psc_particles_single.h"
+#include "psc_particles_double.h"
+
+template<typename _Mparticles>
+struct Config
+{
+  using Mparticles = _Mparticles;
+};
+
+using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>,
+					     Config<MparticlesDouble>>;
+
+TYPED_TEST_CASE(MparticlesTest, MparticlesTestTypes);
+
+// ======================================================================
+// MparticlesTest
+
+template<typename T>
+struct MparticlesTest : ::testing::Test
+{
+  Grid_t mk_grid()
+  {
+    Grid_t grid = make_grid();
+    grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+    return grid;
+  }
+};
 
 // -----------------------------------------------------------------------
-// TEST Constructor
+// Constructor
 
-TEST(Mparticles, Constructor)
+TYPED_TEST(MparticlesTest, Constructor)
 {
-  using Mparticles_t = Mparticles<particle_single_t>;
-  
-  Grid_t grid = make_grid();
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+  using Mparticles = typename TypeParam::Mparticles;
 
-  Mparticles_t mprts(grid);
+  auto grid = this->mk_grid();
+  Mparticles mprts(grid);
 }
 
 // ----------------------------------------------------------------------
-// TEST setParticles
+// setParticles
 
-TEST(Mparticles, setParticles)
+TYPED_TEST(MparticlesTest, setParticles)
 {
-  using particle_t = particle_single_t;
-  using Mparticles_t = Mparticles<particle_t>;
+  using Mparticles = typename TypeParam::Mparticles;
   const int n_prts = 4;
 
-  Grid_t grid = make_grid();
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-
-  Mparticles_t mprts(grid);
+  auto grid = this->mk_grid();
+  Mparticles mprts(grid);
 
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto& prts = mprts[p];
@@ -55,8 +77,8 @@ TEST(Mparticles, setParticles)
     for (int n = 0; n < n_prts; n++) {
       double nn = double(n) / n_prts;
       auto L = patch.xe - patch.xb;
-      particle_t& prt = prts[n];
-      EXPECT_EQ(prt.x[0], 0*patch.xb[0] + nn * L[0]); // FIXME, hack around relative position
+      auto prt = prts[n];
+      EXPECT_EQ(prt.x[0], 0*patch.xb[0] + nn * L[0]); // FIXME, hacked around relative position
       EXPECT_EQ(prt.x[1], 0*patch.xb[1] + nn * L[1]);
       EXPECT_EQ(prt.x[2], 0*patch.xb[2] + nn * L[2]);
       EXPECT_EQ(prts.prt_wni(prt), 1.);
