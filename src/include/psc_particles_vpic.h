@@ -71,7 +71,7 @@ struct MparticlesVpic : MparticlesBase
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
 
   Particles& vmprts_;
-  Simulation *sim;
+  Simulation *sim_;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -81,7 +81,7 @@ struct MparticlesVpic : MparticlesBase
       vmprts_(*new Particles)
   {
     assert(grid.n_patches() == 1);
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
   // ----------------------------------------------------------------------
@@ -160,7 +160,7 @@ struct MparticlesVpic : MparticlesBase
   void inject_reweight(int p, const particle_inject& prt) override
   {
     assert(p == 0);
-    static_cast<ParticlesOps*>(sim)->inject_particle(vmprts_, *sim->accumulator_, *sim->field_array_, &prt);
+    static_cast<ParticlesOps*>(sim_)->inject_particle(vmprts_, *sim_->accumulator_, *sim_->field_array_, &prt);
   }
 
   void push_back(const vpic_mparticles_prt *prt)
