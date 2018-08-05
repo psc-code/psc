@@ -291,7 +291,22 @@ private:
     psc_stats_log(psc_->timestep);
     print_profiling();
   }
+
+protected:
+
+  // ----------------------------------------------------------------------
+  // define_species
   
+  typename Simulation::Species* define_species(const char *name, double q, double m,
+					       double max_local_np, double max_local_nm,
+					       double sort_interval, double sort_out_of_place)
+  {
+    auto& particles = sim_->getParticles();
+    return sim_->define_species(particles,
+				name, q, m, max_local_np, max_local_nm,
+				sort_interval, sort_out_of_place);
+  }
+
 protected:
   double time_start_;
 

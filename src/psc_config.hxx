@@ -31,7 +31,9 @@
 #endif
 
 struct SimulationNone
-{};
+{
+  using Species = void;
+};
 
 template<typename DIM, typename Mparticles, typename Mfields>
 struct PscConfigPushParticles2nd
