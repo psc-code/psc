@@ -171,7 +171,6 @@ struct psc_particle
   real_t qni(const Grid_t& grid) const { return grid.kinds[kind_].q; }
   real_t mni(const Grid_t& grid) const { return grid.kinds[kind_].m; }
   real_t wni(const Grid_t& grid) const { return w_; }
-  real_t qni_wni(const Grid_t& grid) const { return grid.kinds[kind_].q * w_; }
 
 public:
   Real3 x;
@@ -248,7 +247,7 @@ struct mparticles_patch
   real_t prt_qni(const particle_t& prt) const { return prt.qni(*grid_); }
   real_t prt_mni(const particle_t& prt) const { return prt.mni(*grid_); }
   real_t prt_wni(const particle_t& prt) const { return prt.wni(*grid_); }
-  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(*grid_); }
+  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni(*grid_) * prt.wni(*grid_); }
 
   const Grid_t& grid() { return *grid_; }
 
