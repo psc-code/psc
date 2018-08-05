@@ -428,7 +428,7 @@ void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
       pxi4->x = prt->p[0];
       pxi4->y = prt->p[1];
       pxi4->z = prt->p[2];
-      pxi4->w = prt->qni_wni_;
+      pxi4->w = prt->wni_ * this->grid_.kinds[prt->kind_].q;
 
       h_bidx[off + n] = this->blockIndex(*xi4, p);
       h_id[off + n] = this->n_prts + off + n;

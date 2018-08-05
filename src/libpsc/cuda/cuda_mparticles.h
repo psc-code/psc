@@ -227,14 +227,15 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
     struct cuda_mparticles_prt prt = getter(n);
     this->checkInPatchMod(prt.x);
 
+    int kind = cuda_int_as_float(prt.kind_);
     xi4[n].x  = prt.x[0];
     xi4[n].y  = prt.x[1];
     xi4[n].z  = prt.x[2];
-    xi4[n].w  = cuda_int_as_float(prt.kind_);
+    xi4[n].w  = kind;
     pxi4[n].x = prt.p[0];
     pxi4[n].y = prt.p[1];
     pxi4[n].z = prt.p[2];
-    pxi4[n].w = prt.qni_wni_;
+    pxi4[n].w = prt.wni_ * this->grid_.kinds[kind].q;
   }
 
   thrust::copy(xi4.begin(), xi4.end(), &this->d_xi4[off]);
@@ -261,9 +262,10 @@ void cuda_mparticles<BS>::get_particles(uint p, F setter)
   thrust::host_vector<float4> pxi4(&this->d_pxi4[off], &this->d_pxi4[off + n_prts]);
 
   for (int n = 0; n < n_prts; n++) {
+    int kind = cuda_float_as_int(xi4[n].w);
     auto prt = cuda_mparticles_prt{{xi4[n].x, xi4[n].y, xi4[n].z},
 				   {pxi4[n].x, pxi4[n].y, pxi4[n].z},
-				   pxi4[n].w, cuda_float_as_int(xi4[n].w)};
+				   pxi4[n].w / float(this->grid_.kinds[kind].q), kind, true};
     setter(n, prt);
 
 #if 0

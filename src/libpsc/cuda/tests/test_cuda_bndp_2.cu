@@ -41,11 +41,11 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
 
     // (ab)use kind to track particle more easily in the test
     std::vector<cuda_mparticles_prt> prts = {
-      {{.5,  35., 5.}, {}, 0., 0},
-      {{.5, 155., 5.}, {}, 0., 1},
+      {{.5,  35., 5.}, {}, 0., 0, true},
+      {{.5, 155., 5.}, {}, 0., 1, true},
       
-      {{.5,  35., 5.}, {}, 0., 2},
-      {{.5, 155., 5.}, {}, 0., 3},
+      {{.5,  35., 5.}, {}, 0., 2, true},
+      {{.5, 155., 5.}, {}, 0., 3, true},
     };
 
     uint n_prts_by_patch[cmprts->n_patches];

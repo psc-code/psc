@@ -36,13 +36,13 @@ struct cuda_mparticles_prt
   using real_t = float;
   using Real3 = Vec3<real_t>;
 
-  cuda_mparticles_prt(Real3 x, Real3 p, float qni_wni, int kind)
-    : x(x), p(p), qni_wni_(qni_wni), kind_(kind)
+  cuda_mparticles_prt(Real3 x, Real3 p, float wni, int kind, bool dummy)
+    : x(x), p(p), wni_(wni), kind_(kind)
   {}
   
   Real3 x;
   Real3 p; 
-  float qni_wni_;
+  float wni_;
   int kind_;
 };
 

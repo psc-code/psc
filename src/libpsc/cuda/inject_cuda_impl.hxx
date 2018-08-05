@@ -105,7 +105,7 @@ struct InjectCuda : InjectBase
     cprt->p[1] = pyi;
     cprt->p[2] = pzi;
     cprt->kind_ = npt->kind;
-    cprt->qni_wni_ = kinds[npt->kind].q;
+    cprt->wni_ = 1.; // FIXME? hardcoded weight
   }	      
 
   // ----------------------------------------------------------------------
