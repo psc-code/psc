@@ -339,25 +339,6 @@ static void setup_fields(Simulation* sim, psc* psc_)
 }
 
 // ----------------------------------------------------------------------
-// setup_species
-
-static void setup_species(Simulation* sim, psc* psc_, const globals_physics& phys_,
-			  const PscHarrisParams params)
-{
-  MPI_Comm comm = psc_comm(psc_);
-  
-  mpi_printf(comm, "Setting up species.\n");
-  double nmax = params.overalloc * phys_.Ne / phys_.n_global_patches;
-  double nmovers = .1 * nmax;
-  double sort_method = 1;   // 0=in place and 1=out of place
-  
-  define_species(sim, "electron", -phys_.ec, phys_.me, nmax, nmovers,
-		 params.electron_sort_interval, sort_method);
-  define_species(sim, "ion", phys_.ec, phys_.mi, nmax, nmovers,
-		 params.ion_sort_interval, sort_method);
-}
-
-// ----------------------------------------------------------------------
 // setup_simulation
 
 Simulation* setup_simulation(psc* psc_, const globals_physics& phys_,
@@ -414,7 +395,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- setup species
     // FIXME, taken out of setup_simulation, so in odd order,
     // and half-redundant to the PSC species setup
-    setup_species(sim, psc_, phys_, params);
+    setup_species();
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
@@ -452,6 +433,24 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  }
+
+  // ----------------------------------------------------------------------
+  // setup_species
+  
+  void setup_species()
+  {
+    MPI_Comm comm = psc_comm(psc_);
+    
+    mpi_printf(comm, "Setting up species.\n");
+    double nmax = overalloc * phys_.Ne / phys_.n_global_patches;
+    double nmovers = .1 * nmax;
+    double sort_method = 1;   // 0=in place and 1=out of place
+    
+    define_species(sim_, "electron", -phys_.ec, phys_.me, nmax, nmovers,
+		   electron_sort_interval, sort_method);
+    define_species(sim_, "ion", phys_.ec, phys_.mi, nmax, nmovers,
+		   ion_sort_interval, sort_method);
   }
 
   // ----------------------------------------------------------------------
