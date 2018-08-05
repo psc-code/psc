@@ -157,7 +157,7 @@ struct psc_particle
 
   psc_particle() {}
 
-  psc_particle(const Grid_t& grid, Real3 _x, Real3 _p, real_t w, int kind)
+  psc_particle(Real3 _x, Real3 _p, real_t w, int kind)
     : x{_x},
       p{_p},
       w_{w},
@@ -347,8 +347,7 @@ struct Mparticles : MparticlesBase
       assert(new_prt.x[d] <= patch.xe[d]);
     }
     
-    auto prt = particle_t{grid(),
-			  {real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
 			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
 			  real_t(new_prt.w),
 			  kind};
@@ -370,8 +369,7 @@ struct Mparticles : MparticlesBase
     
     float dVi = 1.f / (grid_->domain.dx[0] * grid_->domain.dx[1] * grid_->domain.dx[2]);
     
-    auto prt = particle_t{grid(),
-			  {real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
 			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
 			  real_t(new_prt.w),
 			  kind};

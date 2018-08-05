@@ -152,7 +152,7 @@ struct SetupParticles
 		} else {
 		  wni = npt.n / (n_in_cell * grid.norm.cori);
 		}
-		particle_t prt{grid, {}, {}, wni, kind};
+		particle_t prt{{}, {}, wni, kind};
 		setup_particle(psc, &prt, &npt, p, xx);
 		//p->lni = particle_label_offset + 1;
 		mprts[p].push_back(prt);

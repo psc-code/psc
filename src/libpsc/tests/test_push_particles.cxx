@@ -43,7 +43,7 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 
   Mparticles mprts{grid};
   SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      auto prt = typename Mparticles::particle_t{grid, {1., 0., 0.}, {}, 1., 0};
+      auto prt = typename Mparticles::particle_t{{1., 0., 0.}, {}, 1., 0};
       return prt;
     });
 
@@ -96,7 +96,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.x[2] += vz(prt1);
   
@@ -120,7 +120,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.p[2] = 3.;
   prt1.x[2] += vz(prt1);
@@ -148,7 +148,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {5., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.p[2] = 6.;
   prt1.x[2] += vz(prt1);
@@ -173,7 +173,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {5., 4., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.p[2] = 5.;
   prt1.x[2] = 5.980580;
@@ -198,7 +198,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {3., 5., 5.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{3., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.p[2] = 4.;
   if (Base::dim::InvarX::value) { prt1.p[2] = 1.; }
@@ -223,7 +223,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {1., 2., 3.}, {1., 1., 1.}, 1., 0};
+  auto prt0 = particle_t{{1., 2., 3.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   if (!Base::dim::InvarX::value) prt1.x[0] += vx(prt1);
   prt1.x[1] += vy(prt1);
@@ -249,7 +249,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {151., 152., 155.}, {1., 1., 1.}, 1., 0};
+  auto prt0 = particle_t{{151., 152., 155.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.p[2] = 156;
   this->push_x(prt0, prt1);
@@ -273,7 +273,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 10., 10.}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{10., 10., 10.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -302,7 +302,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 10., 19.5}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{10., 10., 19.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -333,7 +333,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 19.5, 10.}, {0., 1., 0.}, 1., 0};
+  auto prt0 = particle_t{{10., 19.5, 10.}, {0., 1., 0.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -366,7 +366,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 10., 10.}, {1., 0., 0.}, 1., 0};
+  auto prt0 = particle_t{{10., 10., 10.}, {1., 0., 0.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -396,7 +396,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 10., 10.}, {0., 1., 1.}, 1., 0};
+  auto prt0 = particle_t{{10., 10., 10.}, {0., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -429,7 +429,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 19.5, 10.}, {0., 1., 1.}, 1., 0};
+  auto prt0 = particle_t{{10., 19.5, 10.}, {0., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -464,7 +464,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {10., 10., 19.5}, {0., 1., 1.}, 1., 0};
+  auto prt0 = particle_t{{10., 10., 19.5}, {0., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   auto xi1 = this->push_x(prt0, prt1);
 
@@ -499,7 +499,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {5., 5., 39.5}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{5., 5., 39.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   this->push_x(prt0, prt1);
   
@@ -522,7 +522,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp16)
     }
   };
 
-  auto prt0 = particle_t{this->grid(), {5., 5., 159.5}, {0., 0., 1.}, 1., 0};
+  auto prt0 = particle_t{{5., 5., 159.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   this->push_x(prt0, prt1);
   

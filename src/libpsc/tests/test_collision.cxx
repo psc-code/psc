@@ -119,8 +119,8 @@ TYPED_TEST(CollisionTest, Test1)
   const auto& grid = ppsc->grid();
   
   // init particles
-  auto prt0 = particle_t{grid, {5., 5., 5.}, {1., 0., 0.}, 1., 0};
-  auto prt1 = particle_t{grid, {5., 5., 5.}, {0. ,0., 0.}, 1., 0};
+  auto prt0 = particle_t{{5., 5., 5.}, {1., 0., 0.}, 1., 0};
+  auto prt1 = particle_t{{5., 5., 5.}, {0. ,0., 0.}, 1., 0};
 
   std::vector<particle_t> prts = { prt0, prt1 };
 
