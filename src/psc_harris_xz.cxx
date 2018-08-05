@@ -405,9 +405,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* sim,
 	    psc* psc, const globals_physics& phys)
-    : Psc{p, psc},
+    : Psc{p, psc, sim},
       PscHarrisParams(params),
-      sim_{sim},
       phys_{phys}
   {
     MPI_Comm comm = psc_comm(psc_);
@@ -827,7 +826,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
 
 private:
-  Simulation *sim_;
   globals_physics phys_;
 };
 

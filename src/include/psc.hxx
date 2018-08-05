@@ -74,10 +74,11 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(const PscParams& params, psc* psc)
+  Psc(const PscParams& params, psc* psc, void* sim = nullptr)
     : time_start_{MPI_Wtime()},
       p_{params},
-      psc_(psc),
+      sim_{sim},
+      psc_{psc},
       mprts_{psc->grid()},
       mflds_{psc->grid(), psc->n_state_fields, psc->ibn},
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
@@ -293,6 +294,7 @@ protected:
   double time_start_;
 
   PscParams p_;
+  void* sim_;
   psc* psc_;
 
   Mparticles_t mprts_;
