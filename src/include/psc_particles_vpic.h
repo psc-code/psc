@@ -73,13 +73,13 @@ struct MparticlesVpic : MparticlesBase
   using Self = MparticlesVpic;
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
 
-  Particles *vmprts;
+  Particles& vmprts_;
   Simulation *sim;
 
   MparticlesVpic(const Grid_t& grid)
-    : MparticlesBase(grid)
+    : MparticlesBase(grid),
+      vmprts_(*new Particles)
   {
-    vmprts = new Particles;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
   }
 
@@ -87,12 +87,12 @@ struct MparticlesVpic : MparticlesBase
 
   int get_n_prts() const override
   {
-    return sim->mprts_get_nr_particles(*vmprts);
+    return sim->mprts_get_nr_particles(vmprts_);
   }
   
   void get_size_all(uint *n_prts_by_patch) const override
   {
-    vpic_mparticles_get_size_all(vmprts, 1, n_prts_by_patch);
+    vpic_mparticles_get_size_all(&vmprts_, 1, n_prts_by_patch);
   }
 
   // ----------------------------------------------------------------------
@@ -106,7 +106,7 @@ struct MparticlesVpic : MparticlesBase
   {
     for (int p = 0; p < n_patches(); p++) {
       int n_prts = 0, n_prts_alloced = 0;
-      for (auto sp = vmprts->cbegin(); sp != vmprts->cend(); ++sp) {
+      for (auto sp = vmprts_.cbegin(); sp != vmprts_.cend(); ++sp) {
 	n_prts += sp->np;
 	n_prts_alloced += sp->max_np;
       }
@@ -133,7 +133,7 @@ struct MparticlesVpic : MparticlesBase
     // 0, and then using push_back, which will increase the count back to the right value
     
     if (n_prts_by_patch[0] == 0) {
-      for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+      for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
 	sp->np = 0;
       }
     } else {
@@ -150,7 +150,7 @@ struct MparticlesVpic : MparticlesBase
   void inject_reweight(int p, const particle_inject& prt) override
   {
     assert(p == 0);
-    static_cast<ParticlesOps*>(sim)->inject_particle(*vmprts, *sim->accumulator_, *sim->field_array_, &prt);
+    static_cast<ParticlesOps*>(sim)->inject_particle(vmprts_, *sim->accumulator_, *sim->field_array_, &prt);
   }
 
   void push_back(const struct vpic_mparticles_prt *prt);

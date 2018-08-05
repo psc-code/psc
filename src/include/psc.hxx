@@ -272,7 +272,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      auto& vmprts = *mprts_.vmprts;
+      auto& vmprts = mprts_.vmprts_;
       sim_->runDiag(vmprts);
     }
 #endif
@@ -302,7 +302,7 @@ protected:
 					       double max_local_np, double max_local_nm,
 					       double sort_interval, double sort_out_of_place)
   {
-    auto& vmprts = *mprts_.vmprts;
+    auto& vmprts = mprts_.vmprts_;
 
     // Compute a reasonble number of movers if user did not specify
     // Based on the twice the number of particles expected to hit the boundary

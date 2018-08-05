@@ -57,7 +57,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
   mflds.clear_rhof();
-  mflds.accumulate_rho_p(mprts.vmprts);
+  mflds.accumulate_rho_p(&mprts.vmprts_);
   mflds.synchronize_rho();
   mflds.compute_rhob();
 
@@ -75,7 +75,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
   FieldArray *vmflds = mflds.vmflds_fields;
   mpi_printf(psc_comm(psc), "Uncentering particles\n");
-  sub->sim->uncenter_p(mprts.vmprts, vmflds);
+  sub->sim->uncenter_p(&mprts.vmprts_, vmflds);
 
   mprts_base.put_as(mprts);
   mflds_base.put_as(mflds, 0, VPIC_MFIELDS_N_COMP);

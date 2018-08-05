@@ -24,7 +24,7 @@ void vpic_mparticles_get_size_all(Particles *vmprts, int n_patches,
 
 void MparticlesVpic::push_back(const struct vpic_mparticles_prt *prt)
 {
-  for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
+  for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
     if (sp->id == prt->kind) {
       assert(sp->np < sp->max_np);
       // the below is inject_particle_raw()
@@ -205,7 +205,7 @@ struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByK
 template<typename MP>
 void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 {
-  Particles *vmprts = mprts_from.vmprts;
+  Particles& vmprts = mprts_from.vmprts_;
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from.get_size_all(n_prts_by_patch);
@@ -215,8 +215,8 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertFromVpic<MP> convert_from_vpic(mprts_to, *vmprts->grid(), p);
-    vpic_mparticles_get_particles(vmprts, n_prts, off, convert_from_vpic);
+    ConvertFromVpic<MP> convert_from_vpic(mprts_to, *vmprts.grid(), p);
+    vpic_mparticles_get_particles(&vmprts, n_prts, off, convert_from_vpic);
 
     off += n_prts;
   }
@@ -225,7 +225,7 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 {
-  Particles *vmprts = mprts_to.vmprts;
+  Particles& vmprts = mprts_to.vmprts_;
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   // reset particle counts to zero, then use push_back to add back new particles
@@ -238,7 +238,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
   mprts_to.reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
-    ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, *vmprts->grid(), p);
+    ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, *vmprts.grid(), p);
 
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
@@ -252,7 +252,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 {
-  Particles *vmprts = mprts_to.vmprts;
+  Particles& vmprts = mprts_to.vmprts_;
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from.get_size_all(n_prts_by_patch);
@@ -262,8 +262,8 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertToVpic<MparticlesSingleByKind> convert_to_vpic(mprts_from, *vmprts->grid(), p);
-    vpic_mparticles_set_particles(vmprts, n_prts, off, convert_to_vpic);
+    ConvertToVpic<MparticlesSingleByKind> convert_to_vpic(mprts_from, *vmprts.grid(), p);
+    vpic_mparticles_set_particles(&vmprts, n_prts, off, convert_to_vpic);
 
     off += n_prts;
   }

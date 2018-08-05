@@ -23,7 +23,7 @@ struct PushParticlesVpic : PushParticlesBase
     // needs E, B
     auto mprts = mprts_base.get_as<MparticlesVpic>();
     auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, HX + 6);
-    sim_->push_mprts_prep(*mprts.vmprts, *mflds.vmflds_fields);
+    sim_->push_mprts_prep(mprts.vmprts_, *mflds.vmflds_fields);
     mflds_base.put_as(mflds, 0, 0);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
@@ -34,7 +34,7 @@ struct PushParticlesVpic : PushParticlesBase
     auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, HX + 6);
     auto& mprts = mprts_base.get_as<MparticlesVpic>();
     
-    sim_->push_mprts(*mprts.vmprts, *mflds.vmflds_fields);
+    sim_->push_mprts(mprts.vmprts_, *mflds.vmflds_fields);
     
     // update jf FIXME: rhob too, probably, depending on b.c.
     mflds_base.put_as(mflds, JXI, JXI + 3);
