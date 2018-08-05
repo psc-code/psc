@@ -163,8 +163,22 @@ struct MparticlesVpic : MparticlesBase
     static_cast<ParticlesOps*>(sim)->inject_particle(vmprts_, *sim->accumulator_, *sim->field_array_, &prt);
   }
 
-  void push_back(const struct vpic_mparticles_prt *prt);
-
+  void push_back(const vpic_mparticles_prt *prt)
+  {
+    for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
+      if (sp->id == prt->kind) {
+	assert(sp->np < sp->max_np);
+	// the below is inject_particle_raw()
+	Particles::Particle * RESTRICT p = sp->p + (sp->np++);
+	p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
+	p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
+	return;
+      }
+    }
+    mprintf("prt->kind %d not found in species list!\n", prt->kind);
+    assert(0);
+  }
+  
   ParticlesVpic operator[](int p)
   {
     assert(p == 0);
