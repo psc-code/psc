@@ -113,7 +113,7 @@ struct ConvertToCuda
 
     return {Real3{prt_other.x}, Real3{prt_other.p},
 	    real_t(prt_other.wni(grid)),
-	    prt_other.kind_, true};
+	    prt_other.kind_};
   }
 
 private:

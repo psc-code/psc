@@ -265,7 +265,7 @@ void cuda_mparticles<BS>::get_particles(uint p, F setter)
     int kind = cuda_float_as_int(xi4[n].w);
     auto prt = cuda_mparticles_prt{{xi4[n].x, xi4[n].y, xi4[n].z},
 				   {pxi4[n].x, pxi4[n].y, pxi4[n].z},
-				   pxi4[n].w / float(this->grid_.kinds[kind].q), kind, true};
+				   pxi4[n].w / float(this->grid_.kinds[kind].q), kind};
     setter(n, prt);
 
 #if 0
