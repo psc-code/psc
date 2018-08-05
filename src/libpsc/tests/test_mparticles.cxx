@@ -1,10 +1,13 @@
 
 #include <gtest/gtest.h>
 
+//#define VPIC
+
 #include "test_common.hxx"
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
+#include "psc_particles_vpic.h"
 
 template<typename _Mparticles>
 struct Config
@@ -12,8 +15,12 @@ struct Config
   using Mparticles = _Mparticles;
 };
 
-using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>,
-					     Config<MparticlesDouble>>;
+using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
+					     ,Config<MparticlesDouble>
+#ifdef VPIC
+					     ,Config<MparticlesVpic>
+#endif
+					     >;
 
 TYPED_TEST_CASE(MparticlesTest, MparticlesTestTypes);
 

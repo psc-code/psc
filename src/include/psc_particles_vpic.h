@@ -20,6 +20,54 @@ struct particle_vpic_t
   using real_t = float;
 };
 
+struct MparticlesVpic;
+
+// ======================================================================
+// ParticlesVpic
+
+struct ParticlesVpic
+{
+  using real_t = float;
+  using Real3 = Vec3<real_t>;
+  using Double3 = Vec3<double>;
+  
+  struct const_accessor
+  {
+    const_accessor(int n, const ParticlesVpic& prts)
+      : n_{n}, prts_{prts}
+    {}
+
+    Real3 momentum()   const;// { return prt_.p; }
+    real_t w()         const;// { return prt_.w; }
+    int kind()         const;// { return prt_.kind; }
+
+    Double3 position() const;
+    // {
+    //   auto& patch = prts_.grid().patches[prts_.p_];
+
+    //   return patch.xb +
+    // 	Double3{prt_.x};
+    // }
+    
+  private:
+    int n_;
+    const ParticlesVpic& prts_;
+  };
+  
+  ParticlesVpic(MparticlesVpic& mprts)
+    : mprts_{mprts}
+  {}
+
+  uint size() const;
+  const_accessor get(int n) const;
+  
+private:
+  MparticlesVpic& mprts_;
+};
+
+// ======================================================================
+// MparticlesVpic
+
 struct MparticlesVpic : MparticlesBase
 {
   using Self = MparticlesVpic;
@@ -107,6 +155,12 @@ struct MparticlesVpic : MparticlesBase
 
   void push_back(const struct vpic_mparticles_prt *prt);
 
+  ParticlesVpic operator[](int p)
+  {
+    assert(p == 0);
+    return ParticlesVpic(*this);
+  }
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
@@ -118,5 +172,12 @@ struct Mparticles_traits<MparticlesVpic>
   static constexpr const char* name = "vpic";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
+
+// ======================================================================
+
+inline uint ParticlesVpic::size() const
+{
+  return mprts_.get_n_prts();
+}
 
 #endif
