@@ -38,6 +38,20 @@ struct MparticlesTest : ::testing::Test
     : grid_{MakeGrid{}()}
   {
     grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+
+    // Setup basic grid parameters
+    auto& domain = grid_.domain;
+    double dx[3], xl[3], xh[3];
+    for (int d = 0; d < 3; d++) {
+      dx[d] = domain.length[d] / domain.gdims[d];
+      xl[d] = domain.corner[d];
+      xh[d] = xl[d] + domain.length[d];
+    }
+
+    vgrid_.setup(dx, grid_.dt, 1., 1.);
+  
+    // Define the grid
+    //sim->define_periodic_grid(xl, xh, domain.gdims, domain.np);
   }
 
   template<typename tag>
