@@ -35,7 +35,7 @@ struct ParticlesVpic
     {}
 
     Real3 momentum()   const { return {prt().ux, prt().uy, prt().uz}; }
-    real_t w()         const { return prt().w; }
+    real_t w()         const { return prt().w * sp_->grid()->dV; }
     int kind()         const { return sp_->id; }
 
     Double3 position() const
@@ -234,7 +234,9 @@ struct MparticlesVpic : MparticlesBase
   void inject(int p, const particle_inject& prt) override
   {
     particle_inject prt_reweighted = prt;
-    //prt_reweighted.w *= dVi;
+    auto vgrid = vmprts_.grid();
+    float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
+    prt_reweighted.w *= dVi;
     inject_reweight(p, prt_reweighted);
   }
 
