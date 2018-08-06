@@ -43,6 +43,8 @@ struct MparticlesTest : ::testing::Test
   Mparticles mk_mprts()
   {
     Mparticles mprts(grid_);
+    mprts.define_species("test_species", 1., 1., 100, 10,
+			 10, 0);
     return mprts;
   }
 
