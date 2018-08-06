@@ -260,8 +260,6 @@ struct mparticles_patch
 
   const_accessor_range get() { return {*this}; }
 
-  const_accessor get(int n) { return {buf[n], *this}; }
-
   particle_t& operator[](int n) { return buf[n]; }
   const particle_t& operator[](int n) const { return buf[n]; }
   const_iterator begin() const { return buf.begin(); }
