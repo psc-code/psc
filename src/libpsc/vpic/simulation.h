@@ -39,11 +39,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   {
   }
 
-  void setup_grid(double dx[3], double dt, double cvac, double eps0)
-  {
-    grid_->setup(dx, dt, cvac, eps0);
-  }
-
   void define_periodic_grid(double xl[3], double xh[3], const int gdims[3], const int np[3])
   {
     np_[0] = np[0]; np_[1] = np[1]; np_[2] = np[2];
