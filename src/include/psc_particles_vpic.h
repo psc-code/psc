@@ -76,14 +76,16 @@ struct MparticlesVpic : MparticlesBase
   // ----------------------------------------------------------------------
   // ctor
 
-  MparticlesVpic(const Grid_t& grid)
+  MparticlesVpic(const Grid_t& grid, Grid* vgrid = nullptr)
     : MparticlesBase(grid),
       vmprts_{*new Particles},
-      sim_{}
+      sim_{},
+      vgrid_(vgrid)
   {
     assert(grid.n_patches() == 1);
     if (ppsc) {
       psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
+      vgrid_ = sim_->grid_;
     }
   }
 
@@ -212,14 +214,16 @@ struct MparticlesVpic : MparticlesBase
 #endif
     }
     auto sp = vmprts_.create(name, q, m, max_local_np, max_local_nm,
-			     sort_interval, sort_out_of_place, sim_->grid_);
+			     sort_interval, sort_out_of_place, vgrid_);
     return vmprts_.append(sp);
   }
 
-  
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
+
+private:
+  Grid* vgrid_;
 };
 
 template<>
