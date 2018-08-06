@@ -31,6 +31,7 @@ TYPED_TEST_CASE(MparticlesTest, MparticlesTestTypes);
 template<typename T>
 struct MparticlesTest : ::testing::Test
 {
+  using Mparticles = typename T::Mparticles;
   using MakeGrid = typename T::MakeGrid;
   
   Grid_t mk_grid()
@@ -40,6 +41,26 @@ struct MparticlesTest : ::testing::Test
 
     return grid;
   }
+
+  void inject(Mparticles& mprts, int n_prts)
+  {
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto prts = mprts[p];
+      auto& patch = mprts.grid().patches[p];
+      for (int n = 0; n < n_prts; n++) {
+	double nn = double(n) / n_prts;
+	auto L = patch.xe - patch.xb;
+	particle_inject prt = {};
+	prt.x[0] = patch.xb[0] + nn * L[0];
+	prt.x[1] = patch.xb[1] + nn * L[1];
+	prt.x[2] = patch.xb[2] + nn * L[2];
+	prt.kind = 0;
+	prt.w = 1.;
+	mprts.inject(p, prt);
+      }
+    }
+  }
+  
 };
 
 // -----------------------------------------------------------------------
@@ -53,8 +74,21 @@ TYPED_TEST(MparticlesTest, Constructor)
   Mparticles mprts(grid);
 }
 
-#ifndef VPIC // FIXME
+// ----------------------------------------------------------------------
+// inject
 
+TYPED_TEST(MparticlesTest, inject)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  const int n_prts = 4;
+
+  auto grid = this->mk_grid();
+  Mparticles mprts(grid);
+
+  this->inject(mprts, n_prts);
+}
+
+#ifndef VPIC // FIXME
 // ----------------------------------------------------------------------
 // setParticles
 
@@ -66,21 +100,7 @@ TYPED_TEST(MparticlesTest, setParticles)
   auto grid = this->mk_grid();
   Mparticles mprts(grid);
 
-  for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto prts = mprts[p];
-    auto& patch = mprts.grid().patches[p];
-    for (int n = 0; n < n_prts; n++) {
-      double nn = double(n) / n_prts;
-      auto L = patch.xe - patch.xb;
-      particle_inject prt = {};
-      prt.x[0] = patch.xb[0] + nn * L[0];
-      prt.x[1] = patch.xb[1] + nn * L[1];
-      prt.x[2] = patch.xb[2] + nn * L[2];
-      prt.kind = 0;
-      prt.w = 1.;
-      mprts.inject(p, prt);
-    }
-  }
+  this->inject(mprts, n_prts);
 
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto prts = mprts[p];
@@ -99,5 +119,5 @@ TYPED_TEST(MparticlesTest, setParticles)
     }
   }
 }
-
 #endif
+
