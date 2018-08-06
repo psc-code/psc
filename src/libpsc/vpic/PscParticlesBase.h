@@ -220,6 +220,7 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   void inject_particle(PscParticlesBase& vmprts, const particle_inject& prt)
   {
     auto sp = vmprts.find(prt.kind);
+    assert(sp != end());
 
     double x = prt.x[0], y = prt.x[1], z = prt.x[2];
     double ux = prt.u[0], uy = prt.u[1], uz = prt.u[2];
