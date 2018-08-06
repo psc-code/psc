@@ -109,9 +109,9 @@ TYPED_TEST(MparticlesTest, Constructor)
 }
 
 // ----------------------------------------------------------------------
-// inject
+// Inject
 
-TYPED_TEST(MparticlesTest, inject)
+TYPED_TEST(MparticlesTest, Inject)
 {
   const int n_prts = 4;
 
