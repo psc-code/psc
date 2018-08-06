@@ -32,11 +32,14 @@ struct MparticlesTest : ::testing::Test
 {
   Grid_t mk_grid()
   {
-    Grid_t grid = make_grid();
+    Grid_t grid = make_grid_();
     grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
     return grid;
   }
+
+private:
+  MakeTestGrid make_grid_;
 };
 
 // -----------------------------------------------------------------------

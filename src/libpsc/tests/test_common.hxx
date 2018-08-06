@@ -12,3 +12,11 @@ inline Grid_t make_grid()
   return Grid_t(domain, offs);
 }
 
+struct MakeTestGrid
+{
+  Grid_t operator()()
+  {
+    return make_grid();
+  }
+};
+
