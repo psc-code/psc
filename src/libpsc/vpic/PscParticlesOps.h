@@ -390,15 +390,17 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // inject_particle
   
-  void inject_particle(Particles& vmprts, Accumulator& accumulator, FieldArray& fa,
-		       const particle_inject *prt)
+  void inject_particle(Particles& vmprts, const particle_inject& prt)
   {
-    auto sp = vmprts.find(prt->kind);
+    auto sp = vmprts.find(prt.kind);
 
-    double x = prt->x[0], y = prt->x[1], z = prt->x[2];
-    double ux = prt->u[0], uy = prt->u[1], uz = prt->u[2];
-    double w = prt->w, age = 0.;
+    double x = prt.x[0], y = prt.x[1], z = prt.x[2];
+    double ux = prt.u[0], uy = prt.u[1], uz = prt.u[2];
+    double w = prt.w;
+#if 0
+    double age = 0.;
     int update_rhob = 0;
+#endif
 
     int ix, iy, iz;
 
@@ -459,6 +461,7 @@ struct PscParticlesOps {
     p->uz = (float)uz;
     p->w  = w;
 
+#if 0
     if (update_rhob) accumulate_rhob(fa, p, -sp->q);
 
     if (age!=0) {
@@ -472,7 +475,7 @@ struct PscParticlesOps {
       pm->i     = sp->np-1;
       sp->nm += move_p( sp->p, pm, accumulator[0], grid, sp->q );
     }
-    
+#endif
   }
   
   // ----------------------------------------------------------------------
