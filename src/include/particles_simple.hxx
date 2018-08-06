@@ -239,8 +239,8 @@ struct mparticles_patch
       : prts_{prts}
     {}
 
-    const_iterator cbegin() { return {prts_, 0}; }
-    const_iterator cend()   { return {prts_, prts_.size()}; }
+    const_iterator begin() const { return {prts_, 0}; }
+    const_iterator end()   const { return {prts_, prts_.size()}; }
 
   private:
     const mparticles_patch& prts_;

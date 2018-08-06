@@ -137,9 +137,7 @@ TYPED_TEST(MparticlesTest, setParticles)
     auto& patch = mprts.grid().patches[p];
     EXPECT_EQ(prts.size(), n_prts);
     int n = 0;
-    auto range = prts.get();
-    for (auto it = range.cbegin(); it != range.cend(); ++it) {
-      auto prt = *it;
+    for (auto prt : prts.get()) {
       double nn = double(n) / n_prts;
       auto L = patch.xe - patch.xb;
       auto x = prt.position();
