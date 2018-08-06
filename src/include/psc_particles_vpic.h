@@ -170,7 +170,7 @@ struct MparticlesVpic : MparticlesBase
   void inject_reweight(int p, const particle_inject& prt) override
   {
     assert(p == 0);
-    static_cast<ParticlesOps*>(sim_)->inject_particle(vmprts_, prt);
+    vmprts_.inject_particle(vmprts_, prt);
   }
 
   void push_back(const vpic_mparticles_prt *prt)

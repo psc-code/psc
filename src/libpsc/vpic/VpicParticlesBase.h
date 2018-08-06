@@ -63,6 +63,17 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
     return iterator(static_cast<Species*>(sp));
   }
 
+  void inject_particle(VpicParticlesBase& vmprts, const particle_inject& prt)
+  {
+    species_t *sp = &*vmprts.find(prt.kind);
+
+    extern vpic_simulation *simulation;
+    assert(simulation);
+
+    simulation->inject_particle(sp, prt.x[0], prt.x[1], prt.x[2],
+				 prt.u[0], prt.u[1], prt.u[2], prt.w, 0., 0);
+  }
+
   Grid *grid()
   {
     assert(head_);
