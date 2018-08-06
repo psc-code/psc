@@ -33,13 +33,17 @@ struct MparticlesTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
   using MakeGrid = typename T::MakeGrid;
-  
-  Grid_t mk_grid()
-  {
-    Grid_t grid = MakeGrid{}();
-    grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
-    return grid;
+  MparticlesTest()
+    : grid_{MakeGrid{}()}
+  {
+    grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+  }
+  
+  Mparticles mk_mprts()
+  {
+    Mparticles mprts(grid_);
+    return mprts;
   }
 
   void inject(Mparticles& mprts, int n_prts)
@@ -60,7 +64,9 @@ struct MparticlesTest : ::testing::Test
       }
     }
   }
-  
+
+private:
+  Grid_t grid_;
 };
 
 // -----------------------------------------------------------------------
@@ -68,10 +74,7 @@ struct MparticlesTest : ::testing::Test
 
 TYPED_TEST(MparticlesTest, Constructor)
 {
-  using Mparticles = typename TypeParam::Mparticles;
-
-  auto grid = this->mk_grid();
-  Mparticles mprts(grid);
+  auto mprts = this->mk_mprts();
 }
 
 // ----------------------------------------------------------------------
@@ -79,11 +82,9 @@ TYPED_TEST(MparticlesTest, Constructor)
 
 TYPED_TEST(MparticlesTest, inject)
 {
-  using Mparticles = typename TypeParam::Mparticles;
   const int n_prts = 4;
 
-  auto grid = this->mk_grid();
-  Mparticles mprts(grid);
+  auto mprts = this->mk_mprts();
 
   this->inject(mprts, n_prts);
 }
@@ -94,11 +95,9 @@ TYPED_TEST(MparticlesTest, inject)
 
 TYPED_TEST(MparticlesTest, setParticles)
 {
-  using Mparticles = typename TypeParam::Mparticles;
   const int n_prts = 4;
 
-  auto grid = this->mk_grid();
-  Mparticles mprts(grid);
+  auto mprts = this->mk_mprts();
 
   this->inject(mprts, n_prts);
 
