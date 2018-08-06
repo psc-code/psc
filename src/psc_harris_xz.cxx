@@ -434,10 +434,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
-    define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
-		   electron_sort_interval, sort_method);
-    define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
-		   ion_sort_interval, sort_method);
+    mprts_.define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
+			  electron_sort_interval, sort_method);
+    mprts_.define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
+			  ion_sort_interval, sort_method);
   }
 
   // ----------------------------------------------------------------------

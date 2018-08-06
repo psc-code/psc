@@ -195,6 +195,28 @@ struct MparticlesVpic : MparticlesBase
     return ParticlesVpic(*this);
   }
 
+  Particles::Species* define_species(const char *name, double q, double m,
+				     double max_local_np, double max_local_nm,
+				     double sort_interval, double sort_out_of_place)
+  {
+    // Compute a reasonble number of movers if user did not specify
+    // Based on the twice the number of particles expected to hit the boundary
+    // of a wpdt=0.2 / dx=lambda species in a 3x3x3 domain
+    if (max_local_nm < 0) {
+      max_local_nm = 2 * max_local_np / 25;
+#if 0
+      // FIXME, don't know MAX_PIPELINE, and that's mostly gone
+      // could move this down into Particles.create()
+      if (max_local_nm < 16*(MAX_PIPELINE+1))
+	max_local_nm = 16*(MAX_PIPELINE+1);
+#endif
+    }
+    auto sp = vmprts_.create(name, q, m, max_local_np, max_local_nm,
+			     sort_interval, sort_out_of_place, sim_->grid_);
+    return vmprts_.append(sp);
+  }
+
+  
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
