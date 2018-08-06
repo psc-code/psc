@@ -3,14 +3,6 @@
 
 #include "test_common.hxx"
 
-static Grid_t make_grid_1()
-{
-  auto domain = Grid_t::Domain{{8, 4, 2},
-			       {10., 10., 10.}};
-  std::vector<Int3> offs = { { 0, 0, 0 } };
-  return Grid_t(domain, offs);
-}
-
 TEST(Grid, Domain)
 {
   Grid_t grid = make_grid();
