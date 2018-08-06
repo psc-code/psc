@@ -3,6 +3,8 @@
 
 #include "particles.hxx"
 
+#include <iterator>
+
 // ======================================================================
 // Particle positions in cell / patch
 
@@ -208,6 +210,42 @@ struct mparticles_patch
     const mparticles_patch& prts_;
   };
   
+  struct const_accessor_range
+  {
+    struct const_iterator : std::iterator<std::random_access_iterator_tag,
+					  const_accessor,  // value type
+					  ptrdiff_t,       // difference type
+					  const_accessor*, // pointer type
+					  const_accessor&> // reference type
+					   
+    {
+      const_iterator(const mparticles_patch& prts, uint n)
+	: prts_{prts}, n_{n}
+      {}
+      
+      bool operator==(const_iterator other) const { return n_ == other.n_; }
+      bool operator!=(const_iterator other) const { return !(*this == other); }
+
+      const_iterator& operator++()  { n_++; return *this; }
+      const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
+      const_accessor operator*() { return {prts_[n_], prts_}; }
+
+    private:
+      const mparticles_patch& prts_;
+      uint n_;
+    };
+    
+    const_accessor_range(const mparticles_patch& prts)
+      : prts_{prts}
+    {}
+
+    const_iterator cbegin() { return {prts_, 0}; }
+    const_iterator cend()   { return {prts_, prts_.size()}; }
+
+  private:
+    const mparticles_patch& prts_;
+  };
+
   // FIXME, I would like to delete the copy ctor because I don't
   // want to copy patch_t by mistake, but that doesn't play well with
   // putting the patches into std::vector
@@ -220,9 +258,12 @@ struct mparticles_patch
       grid_(&mprts->grid())
   {}
 
+  const_accessor_range get() { return {*this}; }
+
   const_accessor get(int n) { return {buf[n], *this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
+  const particle_t& operator[](int n) const { return buf[n]; }
   const_iterator begin() const { return buf.begin(); }
   iterator begin() { return buf.begin(); }
   const_iterator end() const { return buf.end(); }

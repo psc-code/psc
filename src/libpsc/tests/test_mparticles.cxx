@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 
-#define VPIC
+//#define VPIC
 
 #include "test_common.hxx"
 
@@ -136,16 +136,19 @@ TYPED_TEST(MparticlesTest, setParticles)
     auto prts = mprts[p];
     auto& patch = mprts.grid().patches[p];
     EXPECT_EQ(prts.size(), n_prts);
-    for (int n = 0; n < n_prts; n++) {
+    int n = 0;
+    auto range = prts.get();
+    for (auto it = range.cbegin(); it != range.cend(); ++it) {
+      auto prt = *it;
       double nn = double(n) / n_prts;
       auto L = patch.xe - patch.xb;
-      auto prt = prts.get(n);
       auto x = prt.position();
       EXPECT_EQ(x[0], patch.xb[0] + nn * L[0]);
       EXPECT_EQ(x[1], patch.xb[1] + nn * L[1]);
       EXPECT_EQ(x[2], patch.xb[2] + nn * L[2]);
       EXPECT_EQ(prt.w(), 1.);
       EXPECT_EQ(prt.kind(), 0);
+      ++n;
     }
   }
 }
