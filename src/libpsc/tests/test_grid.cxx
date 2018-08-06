@@ -5,7 +5,7 @@
 
 TEST(Grid, Domain)
 {
-  Grid_t grid = make_grid();
+  Grid_t grid = MakeTestGrid{}();
     
   EXPECT_EQ(grid.domain.gdims, Int3({ 8, 4, 2 }));
   EXPECT_EQ(grid.ldims, Int3({ 4, 2, 2 }));
@@ -21,7 +21,7 @@ TEST(Grid, Domain)
 
 TEST(Grid, Kinds)
 {
-  Grid_t grid = make_grid();
+  Grid_t grid = MakeTestGrid{}();
 
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
   EXPECT_EQ(grid.kinds.size(), 1);
@@ -135,7 +135,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   const int n_steps = 10;
   const real_t eps = 1e-6;
   
-  Grid_t grid = make_grid_1();
+  Grid_t grid = MakeTestGrid1{}();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
   Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
@@ -184,7 +184,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   //  be good)
   const real_t eps = 1e-2;
   
-  Grid_t grid = make_grid_1();
+  Grid_t grid = MakeTestGrid1{}();
   grid.kinds.emplace_back(Grid_t::Kind(2., 1., "test_species"));
 
   Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
