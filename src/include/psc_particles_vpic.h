@@ -78,10 +78,13 @@ struct MparticlesVpic : MparticlesBase
 
   MparticlesVpic(const Grid_t& grid)
     : MparticlesBase(grid),
-      vmprts_(*new Particles)
+      vmprts_{*new Particles},
+      sim_{}
   {
     assert(grid.n_patches() == 1);
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
+    if (ppsc) {
+      psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
+    }
   }
 
   // ----------------------------------------------------------------------
