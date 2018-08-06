@@ -9,16 +9,17 @@
 #include "psc_particles_double.h"
 #include "psc_particles_vpic.h"
 
-template<typename _Mparticles>
+template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
 {
   using Mparticles = _Mparticles;
+  using MakeGrid = _MakeGrid;
 };
 
 using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
-					     ,Config<MparticlesDouble>
+					    ,Config<MparticlesDouble>
 #ifdef VPIC
-					     ,Config<MparticlesVpic>
+					    ,Config<MparticlesVpic>
 #endif
 					     >;
 
@@ -30,16 +31,15 @@ TYPED_TEST_CASE(MparticlesTest, MparticlesTestTypes);
 template<typename T>
 struct MparticlesTest : ::testing::Test
 {
+  using MakeGrid = typename T::MakeGrid;
+  
   Grid_t mk_grid()
   {
-    Grid_t grid = make_grid_();
+    Grid_t grid = MakeGrid{}();
     grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
     return grid;
   }
-
-private:
-  MakeTestGrid make_grid_;
 };
 
 // -----------------------------------------------------------------------
