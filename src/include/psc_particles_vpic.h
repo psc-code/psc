@@ -160,6 +160,13 @@ struct MparticlesVpic : MparticlesBase
     }
   }
 
+  void inject(int p, const particle_inject& prt) override
+  {
+    particle_inject prt_reweighted = prt;
+    //prt_reweighted.w *= dVi;
+    inject_reweight(p, prt_reweighted);
+  }
+
   void inject_reweight(int p, const particle_inject& prt) override
   {
     assert(p == 0);
