@@ -63,7 +63,8 @@ struct PscSpecies
     memset(this, 0, sizeof(*this)); // FIXME
     int len = name ? strlen(name) : 0;
     assert(len);
-    assert(grid && grid->nv);
+    assert(grid);
+    assert(grid->nv);
     assert(max_local_np > 0);
     assert(max_local_nm > 0);
 

@@ -39,8 +39,9 @@ struct MparticlesTest : ::testing::Test
   {
     grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
   }
-  
-  Mparticles mk_mprts()
+
+  template<typename tag>
+  Mparticles mk_mprts(tag dummy)
   {
     Mparticles mprts(grid_);
     mprts.define_species("test_species", 1., 1., 100, 10,
@@ -48,6 +49,19 @@ struct MparticlesTest : ::testing::Test
     return mprts;
   }
 
+  Mparticles mk_mprts(MparticlesVpic* dummy)
+  {
+    Mparticles mprts(grid_, &vgrid_);
+    mprts.define_species("test_species", 1., 1., 100, 10,
+			 10, 0);
+    return mprts;
+  }
+
+  Mparticles mk_mprts()
+  {
+    return mk_mprts(static_cast<Mparticles*>(nullptr));
+  }
+  
   void inject(Mparticles& mprts, int n_prts)
   {
     for (int p = 0; p < mprts.n_patches(); ++p) {
@@ -69,6 +83,7 @@ struct MparticlesTest : ::testing::Test
 
 private:
   Grid_t grid_;
+  Grid vgrid_;
 };
 
 // -----------------------------------------------------------------------
