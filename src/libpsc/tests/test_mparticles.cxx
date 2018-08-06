@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 
-//#define VPIC
+#define VPIC
 
 #include "test_common.hxx"
 
@@ -120,7 +120,6 @@ TYPED_TEST(MparticlesTest, Inject)
   this->inject(mprts, n_prts);
 }
 
-#ifndef VPIC // FIXME
 // ----------------------------------------------------------------------
 // setParticles
 
@@ -150,7 +149,6 @@ TYPED_TEST(MparticlesTest, setParticles)
     }
   }
 }
-#endif
 
 
 int main(int argc, char **argv)
