@@ -51,7 +51,7 @@ struct MparticlesTest : ::testing::Test
     vgrid_.setup(dx, grid_.dt, 1., 1.);
   
     // Define the grid
-    //sim->define_periodic_grid(xl, xh, domain.gdims, domain.np);
+    vgrid_.partition_periodic_box(xl, xh, domain.gdims, {domain.np[0], domain.np[1], domain.np[2]});
   }
 
   template<typename tag>
@@ -151,3 +151,17 @@ TYPED_TEST(MparticlesTest, setParticles)
 }
 #endif
 
+
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+  MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
+  MPI_Comm_rank(psc_comm_world, &psc_world_rank);
+  MPI_Comm_size(psc_comm_world, &psc_world_size);
+
+  ::testing::InitGoogleTest(&argc, argv);
+  int rc = RUN_ALL_TESTS();
+
+  MPI_Finalize();
+  return rc;
+}
