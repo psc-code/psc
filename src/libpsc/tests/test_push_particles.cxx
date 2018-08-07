@@ -176,8 +176,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
 
   auto prt0 = particle_t{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  prt1.p[2] = 5.;
-  prt1.x[2] = 5.980580;
+  if (!Base::dim::InvarY::value) { prt1.p[2] = 5.; }
+  this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
