@@ -132,6 +132,9 @@ using TestConfig1vbec3dSingle = TestConfig<dim_xyz,
 using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
 					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_yz>>,
 					     checks_order_1st>;
+using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz,
+					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xz>>,
+					     checks_order_1st>;
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
