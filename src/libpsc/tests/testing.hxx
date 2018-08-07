@@ -275,48 +275,6 @@ struct PushParticlesTest : ::testing::Test
     check_after_push(*mprts);
   }
 
-  template<typename FUNC>
-  void runSingleParticleTest(FUNC init_fields, particle_t prt0, particle_t prt1,
-			     std::vector<CurrentReference> curr_ref = {})
-  {
-    auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-    make_psc(kinds);
-
-    // init fields
-    mflds = new Mfields{grid(), NR_FIELDS, ibn};
-    SetupFields<Mfields>::set(*mflds, init_fields);
-
-    // init particle
-    mprts = new Mparticles{grid()};
-    auto n_prts_by_patch = std::vector<uint>{1};
-    SetupParticles<Mparticles>::setup_particles(*mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-	return prt0;
-      });
-
-    //mprts->dump("mprts.dump");
-  
-    // do one step
-    PushParticles pushp_;
-    pushp_.push_mprts(*mprts, *mflds);
-
-    // check against reference
-    for (auto& prt : make_getter(*mprts)[0]) {
-      EXPECT_NEAR(prt.p[0], prt1.p[0], eps);
-      EXPECT_NEAR(prt.p[1], prt1.p[1], eps);
-      EXPECT_NEAR(prt.p[2], prt1.p[2], eps);
-      EXPECT_NEAR(prt.w, prt1.w, eps);
-      EXPECT_NEAR(prt.x[0], prt1.x[0], eps);
-      EXPECT_NEAR(prt.x[1], prt1.x[1], eps);
-      EXPECT_NEAR(prt.x[2], prt1.x[2], eps);
-    }
-
-    if (!curr_ref.empty()) {
-      checkCurrent(curr_ref);
-    }
-
-    check_after_push(*mprts);
-  }
-
   template<typename Mparticles>
   void check_after_push(Mparticles& mprts)
   {
@@ -350,21 +308,8 @@ struct PushParticlesTest : ::testing::Test
       });
   }
   
-  Vec3<double> push_x(const particle_t& prt0, particle_t& prt1)
-  {
-    Vec3<double> xi1 = { prt0.x[0] + vx(prt1),
-			 prt0.x[1] + vy(prt1),
-			 prt0.x[2] + vz(prt1) };
-    
-    if (!dim::InvarX::value) prt1.x[0] = xi1[0];
-    if (!dim::InvarY::value) prt1.x[1] = xi1[1];
-    if (!dim::InvarZ::value) prt1.x[2] = xi1[2];
-
-    return xi1;
-  }
-
   template<typename particle_t>
-  Vec3<double> push_x_(const particle_t& prt0, particle_t& prt1)
+  Vec3<double> push_x(const particle_t& prt0, particle_t& prt1)
   {
     Vec3<double> xi1 = { prt0.x[0] + vx(prt1),
 			 prt0.x[1] + vy(prt1),

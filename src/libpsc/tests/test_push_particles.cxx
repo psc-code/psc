@@ -57,27 +57,6 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 // ======================================================================
 // vx, vy, vz
 
-template<typename particle_t>
-typename particle_t::real_t vx(const particle_t& prt)
-{
-  auto gamma = 1./std::sqrt(1. + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
-  return gamma * prt.p[0];
-}
-
-template<typename particle_t>
-typename particle_t::real_t vy(const particle_t& prt)
-{
-  auto gamma = 1./std::sqrt(1. + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
-  return gamma * prt.p[1];
-}
-
-template<typename particle_t>
-typename particle_t::real_t vz(const particle_t& prt)
-{
-  auto gamma = 1./std::sqrt(1. + sqr(prt.p[0]) + sqr(prt.p[1]) + sqr(prt.p[2]));
-  return gamma * prt.p[2];
-}
-
 typename particle_inject::real_t vx(const particle_inject& prt)
 {
   auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
@@ -192,7 +171,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
   auto prt0 = particle_inject{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   if (!Base::dim::InvarY::value) { prt1.u[2] = 5.; }
-  this->push_x_(prt0, prt1);
+  this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -268,7 +247,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
   auto prt0 = particle_inject{{151., 152., 155.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.u[2] = 156;
-  this->push_x_(prt0, prt1);
+  this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -291,7 +270,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
 
   auto prt0 = particle_inject{{10., 10., 10.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -320,7 +299,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
 
   auto prt0 = particle_inject{{10., 10., 19.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -351,7 +330,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
 
   auto prt0 = particle_inject{{10., 19.5, 10.}, {0., 1., 0.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -384,7 +363,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
 
   auto prt0 = particle_inject{{10., 10., 10.}, {1., 0., 0.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -414,7 +393,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
 
   auto prt0 = particle_inject{{10., 10., 10.}, {0., 1., 1.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -447,7 +426,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
 
   auto prt0 = particle_inject{{10., 19.5, 10.}, {0., 1., 1.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -482,7 +461,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
 
   auto prt0 = particle_inject{{10., 10., 19.5}, {0., 1., 1.}, 1., 0};
   auto prt1 = prt0;
-  auto xi1 = this->push_x_(prt0, prt1);
+  auto xi1 = this->push_x(prt0, prt1);
 
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
@@ -517,7 +496,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
 
   auto prt0 = particle_inject{{5., 5., 39.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  this->push_x_(prt0, prt1);
+  this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
@@ -540,7 +519,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp16)
 
   auto prt0 = particle_inject{{5., 5., 159.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  this->push_x_(prt0, prt1);
+  this->push_x(prt0, prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
