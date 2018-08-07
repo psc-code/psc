@@ -135,11 +135,6 @@ private:
 
 struct MparticlesVpic : MparticlesBase
 {
-  using Self = MparticlesVpic;
-  using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
-
-  Particles vmprts_;
-
   // ----------------------------------------------------------------------
   // ctor
 
@@ -291,6 +286,7 @@ struct MparticlesVpic : MparticlesBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
+  Particles vmprts_;
 private:
   Grid* vgrid_;
 };
