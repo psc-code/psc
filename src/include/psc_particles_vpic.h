@@ -138,14 +138,13 @@ struct MparticlesVpic : MparticlesBase
   using Self = MparticlesVpic;
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
 
-  Particles& vmprts_;
+  Particles vmprts_;
 
   // ----------------------------------------------------------------------
   // ctor
 
   MparticlesVpic(const Grid_t& grid, Grid* vgrid = nullptr)
     : MparticlesBase(grid),
-      vmprts_{*new Particles},
       vgrid_(vgrid)
   {
     assert(grid.n_patches() == 1);
