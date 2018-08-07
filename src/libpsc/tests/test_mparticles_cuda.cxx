@@ -42,25 +42,6 @@ struct MparticlesCudaTest : ::testing::Test
     return mprts;
   }
 
-  void inject(Mparticles& mprts, int n_prts)
-  {
-    for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto prts = mprts[p];
-      auto& patch = mprts.grid().patches[p];
-      for (int n = 0; n < n_prts; n++) {
-	double nn = double(n) / n_prts;
-	auto L = patch.xe - patch.xb;
-	particle_inject prt = {};
-	prt.x[0] = patch.xb[0] + nn * L[0];
-	prt.x[1] = patch.xb[1] + nn * L[1];
-	prt.x[2] = patch.xb[2] + nn * L[2];
-	prt.kind = 0;
-	prt.w = 1.;
-	mprts.inject(p, prt);
-      }
-    }
-  }
-
 private:
   Grid_t grid_;
 };
@@ -71,6 +52,30 @@ private:
 TYPED_TEST(MparticlesCudaTest, Constructor)
 {
   auto mprts = this->mk_mprts();
+}
+
+// -----------------------------------------------------------------------
+// Inject
+
+TYPED_TEST(MparticlesCudaTest, Inject)
+{
+  const int n_prts = 1;
+  
+  auto mprts = this->mk_mprts();
+
+  int nn = 0;
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto prts = mprts[p];
+    auto& patch = mprts.grid().patches[p];
+    for (int n = 0; n < n_prts; n++) {
+      particle_inject prt = {};
+      auto x = .5 * (patch.xb + patch.xe);
+      int kind = 0;
+      // use weight to store particle number for testing
+      mprts.inject(p, {{x[0], x[1], x[2]}, {}, double(nn), kind});
+      nn++;
+    }
+  }
 }
 
 
