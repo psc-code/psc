@@ -139,7 +139,6 @@ struct MparticlesVpic : MparticlesBase
   using particle_t = particle_vpic_t; // FIXME, don't have it, but needed here...
 
   Particles& vmprts_;
-  Simulation *sim_;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -147,13 +146,13 @@ struct MparticlesVpic : MparticlesBase
   MparticlesVpic(const Grid_t& grid, Grid* vgrid = nullptr)
     : MparticlesBase(grid),
       vmprts_{*new Particles},
-      sim_{},
       vgrid_(vgrid)
   {
     assert(grid.n_patches() == 1);
     if (ppsc) {
-      psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-      vgrid_ = sim_->grid_;
+      Simulation* sim;
+      psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+      vgrid_ = sim->grid_;
     }
     assert(vgrid_);
   }
