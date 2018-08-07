@@ -493,8 +493,7 @@ void cuda_mparticles<BS>::inject(int p, const particle_inject& new_prt)
 // get_particles
 
 template<typename BS>
-template<typename F>
-void cuda_mparticles<BS>::get_particles(uint p, F setter)
+std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either
@@ -503,42 +502,25 @@ void cuda_mparticles<BS>::get_particles(uint p, F setter)
   uint off = h_off[p * this->n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
 
-  reorder();
+  std::vector<cuda_mparticles_prt> prts;
+  prts.reserve(n_prts);
+
+  reorder(); // FIXME? by means of this, this function disturbs the state...
 
   thrust::host_vector<float4> xi4(&this->d_xi4[off], &this->d_xi4[off + n_prts]);
   thrust::host_vector<float4> pxi4(&this->d_pxi4[off], &this->d_pxi4[off + n_prts]);
 
   for (int n = 0; n < n_prts; n++) {
     int kind = cuda_float_as_int(xi4[n].w);
-    auto prt = cuda_mparticles_prt{{xi4[n].x, xi4[n].y, xi4[n].z},
-				   {pxi4[n].x, pxi4[n].y, pxi4[n].z},
-				   pxi4[n].w / float(this->grid_.kinds[kind].q), kind};
-    setter(n, prt);
+    prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
+	              Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z},
+	              pxi4[n].w / float(this->grid_.kinds[kind].q), kind);
 
 #if 0
     uint b = blockIndex(xi4[n], p);
     assert(b < n_blocks);
 #endif
   }
-
-}
-
-// ----------------------------------------------------------------------
-// get_particles
-
-template<typename BS>
-std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
-{
-  std::vector<uint> n_prts_by_patch(this->n_patches);
-  this->get_size_all(n_prts_by_patch.data());
-  
-  auto n_prts = n_prts_by_patch[p];
-  std::vector<cuda_mparticles_prt> prts;
-  prts.reserve(n_prts);
-
-  get_particles(p, [&](int n, cuda_mparticles_prt prt) {
-      prts.push_back(prt);
-    });
 
   return prts;
 }

@@ -108,9 +108,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   template<typename F>
   void set_particles(uint p, F getter);
 
-  template<typename F>
-  void get_particles(uint p, F setter);
-  
   void dump(const std::string& filename) const;
   void dump_by_patch(uint *n_prts_by_patch);
 

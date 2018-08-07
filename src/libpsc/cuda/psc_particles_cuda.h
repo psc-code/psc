@@ -81,8 +81,7 @@ struct MparticlesCuda : MparticlesBase
   // ----------------------------------------------------------------------
   // facility to access particles without conversion,
   // mostly for debugging (?)
-  //
-  // FIXME, bad interface, based on even worse interface (cmprts::get_particles)
+
   std::vector<cuda_mparticles_prt> get_particles(int p);
 
   void define_species(const char *name, double q, double m,
