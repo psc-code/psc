@@ -54,11 +54,10 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
   RngPool rngpool;
   
   const double L = 1e10;
-  const Int3 bs_ = { 1, 1, 1 };
 
   void SetUp()
   {
-    auto domain = Grid_t::Domain{{1, 1, 1}, {L, L, L}};
+    auto domain = Grid_t::Domain{{1, 4, 4}, {L, L, L}}; // FIXME, grid size needs to be at least a block; could use an assert to make sure that's the case...
     grid_.reset(new Grid_t{domain});
   }
 
@@ -72,30 +71,20 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
     fields_single_t flds = cmflds->get_host_fields();
     Fields3d<fields_single_t> F(flds);
 
-    F(EX, 0,0,0) = set(EX);
-    F(EX, 0,1,0) = set(EX);
-    F(EX, 0,0,1) = set(EX);
-    F(EX, 0,1,1) = set(EX);
+    auto ldims = grid_->ldims;
+
+    // FIXME, initializes some ghosts too many, but that doesn't really hurt...
+    for (int k = 0; k <= ldims[2]; k++) {
+      for (int j = 0; j <= ldims[1]; j++) {
+	F(EX, 0,j,k) = set(EX);
+	F(EY, 0,j,k) = set(EY);
+	F(EZ, 0,j,k) = set(EZ);
+	F(HX, 0,j,k) = set(HX);
+	F(HY, 0,j,k) = set(HY);
+	F(HZ, 0,j,k) = set(HZ);
+      }
+    }
     
-    F(EY, 0,0,0) = set(EY);
-    F(EY, 0,0,1) = set(EY);
-    //    F(EY, 1,0,0) = set(EY);
-    //    F(EY, 1,0,1) = set(EY);
-    
-    F(EZ, 0,0,0) = set(EZ);
-    //    F(EZ, 1,0,0) = set(EZ);
-    F(EZ, 0,1,0) = set(EZ);
-    //    F(EZ, 1,1,0) = set(EZ);
-
-    F(HX, 0,0,0) = set(HX);
-    F(HX, 1,0,0) = set(HX);
-
-    F(HY, 0,0,0) = set(HY);
-    F(HY, 0,1,0) = set(HY);
-
-    F(HZ, 0,0,0) = set(HZ);
-    F(HZ, 0,0,1) = set(HZ);
-
     cmflds->copy_to_device(0, flds, 0, N_FIELDS);
     cmflds->dump("accel.fld.json");
     flds.dtor();
@@ -197,3 +186,16 @@ TEST_F(PushMprtsTest, Cyclo)
   }
 }
 
+// ======================================================================
+// main
+
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+  int rc = RUN_ALL_TESTS();
+
+  MPI_Finalize();
+  return rc;
+}
