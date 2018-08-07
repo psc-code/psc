@@ -327,42 +327,44 @@ static void setup_fields(Simulation* sim, psc* psc_)
 #endif
 }
 
-// ----------------------------------------------------------------------
-// setup_simulation
-
-Simulation* setup_simulation(psc* psc_, const globals_physics& phys_,
-			     const PscParams& p, const PscHarrisParams& params)
-{
-  if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
-    return nullptr;
-  } else {
-    const auto& grid = psc_->grid();
-    mpi_printf(psc_comm(psc_), "*** Initializing\n" );
-    auto sim = new Simulation();
-    // set high level VPIC simulation parameters
-    // FIXME, will be unneeded eventually
-    sim->setParams(p.nmax, p.stats_every,
-		   p.stats_every / 2, p.stats_every / 2,
-		   p.stats_every / 2);
-    setup_domain(sim, grid.domain, psc_, phys_, params);
-    setup_fields(sim, psc_);
-    
-    int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
-    sim->newDiag(interval);
-    
-    psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
-    psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-
-    psc_method_set_param_ptr(psc_->method, "sim", sim);
-    return sim;
-  }
-}
-
 #ifdef VPIC
 using PscConfig = PscConfigVpic;
 #else
 using PscConfig = PscConfig1vbecSingle<dim_xz>;
 #endif
+
+// ----------------------------------------------------------------------
+// setup_simulation
+
+Psc<PscConfig>::Simulation* setup_simulation(psc* psc_, const globals_physics& phys_,
+					     const PscParams& p, const PscHarrisParams& params)
+{
+  using Simulation = Psc<PscConfig>::Simulation;
+
+#ifdef VPIC
+  const auto& grid = psc_->grid();
+  mpi_printf(psc_comm(psc_), "*** Initializing\n" );
+  auto sim = new Simulation();
+  // set high level VPIC simulation parameters
+  // FIXME, will be unneeded eventually
+  sim->setParams(p.nmax, p.stats_every,
+		 p.stats_every / 2, p.stats_every / 2,
+		 p.stats_every / 2);
+  setup_domain(sim, grid.domain, psc_, phys_, params);
+  setup_fields(sim, psc_);
+  
+  int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
+  sim->newDiag(interval);
+  
+  psc_->n_state_fields = VPIC_MFIELDS_N_COMP;
+  psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+  
+  psc_method_set_param_ptr(psc_->method, "sim", sim);
+  return sim;
+#else
+  return nullptr;
+#endif
+}
 
 // ======================================================================
 // PscHarris
