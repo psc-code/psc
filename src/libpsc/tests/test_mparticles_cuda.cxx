@@ -59,6 +59,7 @@ TYPED_TEST(MparticlesCudaTest, Constructor)
 
 TYPED_TEST(MparticlesCudaTest, Inject)
 {
+  using Mparticles = typename TypeParam::Mparticles;
   const int n_prts = 1;
   
   auto mprts = this->mk_mprts();
@@ -88,9 +89,8 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   // check internal representation
   nn = 0;
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto prts = mprts.get_particles(p);
     auto& patch = mprts.grid().patches[p];
-    for (auto prt: prts) {
+    for (auto prt: mprts.get_particles(p)) {
       // xm is patch-relative position
       auto xm = .5 * (patch.xe - patch.xb);
       EXPECT_EQ(prt.x[0], xm[0]);
@@ -101,9 +101,17 @@ TYPED_TEST(MparticlesCudaTest, Inject)
     }
   }
 
+  auto prts = mprts[0];
+  auto cprts = mprts.get_particles(0, 1);
+  typename Mparticles::patch_t::const_accessor prt{cprts[0], prts};
+
+  auto prt2 = mprts[0].get_particle(0);
+  EXPECT_EQ(cprts[0], prt2);
   
 }
 
+// ======================================================================
+// main
 
 int main(int argc, char **argv)
 {

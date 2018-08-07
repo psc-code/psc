@@ -493,22 +493,16 @@ void cuda_mparticles<BS>::inject(int p, const particle_inject& new_prt)
 // get_particles
 
 template<typename BS>
-std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
+std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int end)
 {
-  // FIXME, doing the copy here all the time would be nice to avoid
-  // making sure we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->by_block_.d_off);
-
-  uint off = h_off[p * this->n_blocks_per_patch];
-  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
-
+  int n_prts = end - beg;
   std::vector<cuda_mparticles_prt> prts;
   prts.reserve(n_prts);
 
   reorder(); // FIXME? by means of this, this function disturbs the state...
 
-  thrust::host_vector<float4> xi4(&this->d_xi4[off], &this->d_xi4[off + n_prts]);
-  thrust::host_vector<float4> pxi4(&this->d_pxi4[off], &this->d_pxi4[off + n_prts]);
+  thrust::host_vector<float4> xi4(&this->d_xi4[beg], &this->d_xi4[end]);
+  thrust::host_vector<float4> pxi4(&this->d_pxi4[beg], &this->d_pxi4[end]);
 
   for (int n = 0; n < n_prts; n++) {
     int kind = cuda_float_as_int(xi4[n].w);
@@ -524,6 +518,32 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
 
   return prts;
 }
+
+// ----------------------------------------------------------------------
+// get_particles
+
+template<typename BS>
+std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
+{
+  // FIXME, doing the copy here all the time would be nice to avoid
+  // making sure we actually have a valid d_off would't hurt, either
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
+
+  uint beg = h_off[p * this->n_blocks_per_patch];
+  uint end = h_off[(p+1) * this->n_blocks_per_patch];
+
+  return get_particles(beg, end);
+}
+
+// ----------------------------------------------------------------------
+// start
+
+template<typename BS>
+uint cuda_mparticles<BS>::start(int p)
+{
+  return this->by_block_.d_off[p * this->n_blocks_per_patch];
+}
+
 #include "cuda_mparticles_gold.cu"
 #include "cuda_mparticles_checks.cu"
 

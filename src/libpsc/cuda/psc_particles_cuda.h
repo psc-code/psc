@@ -39,6 +39,15 @@ struct cuda_mparticles_prt
   cuda_mparticles_prt(Real3 x, Real3 p, real_t w, int kind)
     : x(x), p(p), w(w), kind(kind)
   {}
+
+  bool operator==(const cuda_mparticles_prt& other) const
+  {
+    return (x == other.x && w == other.w &&
+	    p == other.p && kind == other.kind);
+  }
+
+  bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
+
   
   Real3 x;
   real_t w;
@@ -76,13 +85,15 @@ struct MparticlesCuda : MparticlesBase
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
   void push_back(int p, const particle_t& prt);
+  uint start(int p) const;
   bool check_after_push();
 
   // ----------------------------------------------------------------------
   // facility to access particles without conversion,
   // mostly for debugging (?)
 
-  std::vector<cuda_mparticles_prt> get_particles(int p);
+  std::vector<cuda_mparticles_prt> get_particles(int beg, int end) const;
+  std::vector<cuda_mparticles_prt> get_particles(int p) const;
 
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
@@ -101,7 +112,7 @@ struct MparticlesCuda : MparticlesBase
     
     struct const_accessor
     {
-      const_accessor(const particle_t& prt, const patch_t& prts)
+      const_accessor(const cuda_mparticles_prt& prt, const patch_t& prts)
 	: prt_{prt}, prts_{prts}
       {}
       
@@ -117,7 +128,7 @@ struct MparticlesCuda : MparticlesBase
       }
     
     private:
-      const particle_t& prt_;
+      const cuda_mparticles_prt& prt_;
       const patch_t& prts_;
     };
   
@@ -139,7 +150,7 @@ struct MparticlesCuda : MparticlesBase
 	
 	const_iterator& operator++() { n_++; return *this; }
 	const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-	//const_accessor operator*() { return {prts_[n_], prts_}; }
+	const_accessor operator*() { return {prts_.get_particle(n_), prts_}; }
 	
       private:
 	const patch_t& prts_;
@@ -164,6 +175,13 @@ struct MparticlesCuda : MparticlesBase
     const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
 
     void push_back(const particle_t& prt) { assert(0); }
+
+    cuda_mparticles_prt get_particle(int n) const
+    {
+      uint off = mp_.start(p_);
+      auto cprts = mp_.get_particles(off + n, off + n + 1);
+      return cprts[0];
+    }
 
     uint size()
     {

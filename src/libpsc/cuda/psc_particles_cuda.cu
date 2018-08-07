@@ -88,12 +88,25 @@ void MparticlesCuda<BS>::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_pat
 }
 
 template<typename BS>
-std::vector<cuda_mparticles_prt> MparticlesCuda<BS>::get_particles(int p)
+std::vector<cuda_mparticles_prt> MparticlesCuda<BS>::get_particles(int beg, int end) const
+{
+  dprintf("CMPRTS: get_particles\n");
+  return cmprts_->get_particles(beg, end);
+}
+
+template<typename BS>
+std::vector<cuda_mparticles_prt> MparticlesCuda<BS>::get_particles(int p) const
 {
   dprintf("CMPRTS: get_particles\n");
   return cmprts_->get_particles(p);
 }
 
+template<typename BS>
+uint MparticlesCuda<BS>::start(int p) const
+{
+  dprintf("CMPRTS: start\n");
+  return cmprts_->start(p);
+}
 
 template<typename BS>
 void MparticlesCuda<BS>::dump(const std::string& filename)
