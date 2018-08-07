@@ -11,6 +11,8 @@
 
 struct particle_inject
 {
+  using real_t = double; // FIXME, do we want/need to keep this?
+  
   double x[3];
   double u[3];
   double w;

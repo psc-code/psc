@@ -135,6 +135,8 @@ private:
 
 struct MparticlesVpic : MparticlesBase
 {
+  using real_t = float;
+
   // ----------------------------------------------------------------------
   // ctor
 

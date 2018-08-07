@@ -81,6 +81,12 @@ typename particle_t::real_t vz(const particle_t& prt)
   return gamma * prt.p[2];
 }
 
+typename particle_inject::real_t vz(const particle_inject& prt)
+{
+  auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
+  return gamma * prt.u[2];
+}
+
 // ======================================================================
 // SingleParticlePushp1 test
 //

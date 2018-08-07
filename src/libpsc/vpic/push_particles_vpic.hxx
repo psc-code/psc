@@ -13,6 +13,9 @@
 
 struct PushParticlesVpic : PushParticlesBase
 {
+  using Mparticles = MparticlesVpic;
+  using Mfields = MfieldsVpic;
+  
   PushParticlesVpic()
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
@@ -21,8 +24,8 @@ struct PushParticlesVpic : PushParticlesBase
   void prep(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
     // needs E, B
-    auto mprts = mprts_base.get_as<MparticlesVpic>();
-    auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, HX + 6);
+    auto mprts = mprts_base.get_as<Mparticles>();
+    auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
     sim_->push_mprts_prep(mprts.vmprts_, *mflds.vmflds_fields);
     mflds_base.put_as(mflds, 0, 0);
     mprts_base.put_as(mprts, MP_DONT_COPY);
@@ -31,8 +34,8 @@ struct PushParticlesVpic : PushParticlesBase
   void push_mprts(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
     // needs E, B (not really, because they're already in interpolator), rhob?
-    auto& mflds = mflds_base.get_as<MfieldsVpic>(EX, HX + 6);
-    auto& mprts = mprts_base.get_as<MparticlesVpic>();
+    auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
+    auto& mprts = mprts_base.get_as<Mparticles>();
     
     sim_->push_mprts(mprts.vmprts_, *mflds.vmflds_fields);
     

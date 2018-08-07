@@ -194,9 +194,9 @@ struct mparticles_patch
       : prt_{prt}, prts_{prts}
     {}
 
-    Real3 momentum()   const { return prt_.p; }
-    real_t w()         const { return prt_.w; }
-    int kind()         const { return prt_.kind; }
+    Real3 u()   const { return prt_.p; }
+    real_t w()  const { return prt_.w; }
+    int kind()  const { return prt_.kind; }
 
     Double3 position() const
     {

@@ -16,6 +16,9 @@
 #include "setup_fields.hxx"
 #include "setup_particles.hxx"
 
+#include "../libpsc/vpic/push_particles_vpic.hxx"
+#include "../libpsc/vpic/bnd_particles_vpic.hxx"
+
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
@@ -136,6 +139,12 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz,
 					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xz>>,
 					     checks_order_1st>;
 
+using TestConfigVpic = TestConfig<dim_xyz,
+				  PushParticlesVpic,
+				  checks_order_1st,
+				  Checks_<MparticlesVpic, MfieldsVpic, checks_order_1st>,
+				  BndParticlesVpic>;
+
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz,
 					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
@@ -225,6 +234,45 @@ struct PushParticlesTest : ::testing::Test
   {
     assert(ppsc);
     return ppsc->grid();
+  }
+
+  template<typename FUNC>
+  void runSingleParticleTest(FUNC init_fields, particle_inject prt0, particle_inject prt1,
+			     std::vector<CurrentReference> curr_ref = {})
+  {
+    auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+    make_psc(kinds);
+
+    // init fields
+    mflds = new Mfields{grid(), NR_FIELDS, ibn};
+    SetupFields<Mfields>::set(*mflds, init_fields);
+
+    // init particle
+    mprts = new Mparticles{grid()};
+    mprts->inject_reweight(0, prt0);
+
+    //mprts->dump("mprts.dump");
+  
+    // do one step
+    PushParticles pushp_;
+    pushp_.push_mprts(*mprts, *mflds);
+
+    // check against reference
+    auto prt = *(*mprts)[0].get().begin();
+    EXPECT_NEAR(prt.u()[0], prt1.u[0], eps);
+    EXPECT_NEAR(prt.u()[1], prt1.u[1], eps);
+    EXPECT_NEAR(prt.u()[2], prt1.u[2], eps);
+    EXPECT_NEAR(prt.w(), prt1.w, eps);
+    EXPECT_NEAR(prt.position()[0], prt1.x[0], eps);
+    EXPECT_NEAR(prt.position()[1], prt1.x[1], eps);
+    EXPECT_NEAR(prt.position()[2], prt1.x[2], eps);
+    EXPECT_EQ(prt.kind(), prt1.kind);
+
+    if (!curr_ref.empty()) {
+      checkCurrent(curr_ref);
+    }
+
+    check_after_push(*mprts);
   }
 
   template<typename FUNC>
