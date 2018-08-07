@@ -112,14 +112,16 @@ TEST_F(CudaMparticlesTest, SetParticles)
   cuda_mparticles_add_particles_test_1(cmprts.get(), n_prts_by_patch);
 
   // check that particles are in C order
-  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      int k = n % grid_->ldims[2]; n /= grid_->ldims[2];
-      int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
-      int i = n;
-      EXPECT_FLOAT_EQ(prt.x[0], (i + .5) * grid_->domain.dx[0]);
-      EXPECT_FLOAT_EQ(prt.x[1], (j + .5) * grid_->domain.dx[1]);
-      EXPECT_FLOAT_EQ(prt.x[2], (k + .5) * grid_->domain.dx[2]);
-    });
+  int n = 0;
+  for (auto prt: cmprts->get_particles(0)) {
+    int k = n % grid_->ldims[2]; n /= grid_->ldims[2];
+    int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
+    int i = n;
+    EXPECT_FLOAT_EQ(prt.x[0], (i + .5) * grid_->domain.dx[0]);
+    EXPECT_FLOAT_EQ(prt.x[1], (j + .5) * grid_->domain.dx[1]);
+    EXPECT_FLOAT_EQ(prt.x[2], (k + .5) * grid_->domain.dx[2]);
+    n++;
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -282,12 +284,12 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   
   // check that particles are now in Fortran order
   int cur_bidx = 0;
-  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      float4 xi = { prt.x[0], prt.x[1], prt.x[2] };
-      int bidx = cmprts->blockIndex(xi, 0);
-      EXPECT_GE(bidx, cur_bidx);
-      cur_bidx = bidx;
-    });
+  for (auto prt: cmprts->get_particles(0)) {
+    float4 xi = { prt.x[0], prt.x[1], prt.x[2] };
+    int bidx = cmprts->blockIndex(xi, 0);
+    EXPECT_GE(bidx, cur_bidx);
+    cur_bidx = bidx;
+  }
 
   cmprts->check_ordered();
 }
@@ -332,10 +334,9 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   CudaCollision<CudaMparticles, RngStateCuda> coll{interval, nu, nicell, dt};
 
   coll(*cmprts);
-  cmprts->get_particles(0, [&] (int n, const cuda_mparticles_prt &prt) {
-      printf("xi %g %g pxi %g %g %g\n", prt.x[1], prt.x[2],
-	     prt.p[0], prt.p[1], prt.p[2]);
-    });
-
+  for (auto prt: cmprts->get_particles(0)) {
+    printf("xi %g %g pxi %g %g %g\n", prt.x[1], prt.x[2],
+	   prt.p[0], prt.p[1], prt.p[2]);
+  }
 }
 
