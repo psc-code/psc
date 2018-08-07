@@ -128,7 +128,7 @@ struct MparticlesCuda : MparticlesBase
       }
     
     private:
-      const cuda_mparticles_prt& prt_;
+      cuda_mparticles_prt prt_;
       const patch_t& prts_;
     };
   
@@ -161,8 +161,8 @@ struct MparticlesCuda : MparticlesBase
 	: prts_{prts}
       {}
 
-      const_iterator begin() const;
-      const_iterator end()   const;
+      const_iterator begin() const { return {prts_, 0}; }
+      const_iterator end()   const { return {prts_, prts_.size()}; };
       
     private:
       const patch_t& prts_;
@@ -183,7 +183,7 @@ struct MparticlesCuda : MparticlesBase
       return cprts[0];
     }
 
-    uint size()
+    uint size() const
     {
       uint n_prts_by_patch[mp_.grid().n_patches()];
       mp_.get_size_all(n_prts_by_patch);

@@ -108,6 +108,21 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   auto prt2 = mprts[0].get_particle(0);
   EXPECT_EQ(cprts[0], prt2);
   
+  nn = 0;
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto prts = mprts[p];
+    auto& patch = mprts.grid().patches[p];
+
+    for (auto prt: prts.get()) {
+      auto x = .5 * (patch.xb + patch.xe);
+      EXPECT_EQ(prt.position()[0], x[0]);
+      EXPECT_EQ(prt.position()[1], x[1]);
+      EXPECT_EQ(prt.position()[2], x[2]);
+      EXPECT_EQ(prt.w(), nn);
+      EXPECT_EQ(prt.kind(), 0);
+      nn++;
+    }
+  }
 }
 
 // ======================================================================
