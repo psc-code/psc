@@ -395,13 +395,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(mprts_, n_prts_by_patch_new);
     
-    mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
-    
-    if (strcmp(psc_method_type(psc_->method), "vpic") != 0) {
-    } else {
-      sim_->setupDiag();
-    }
+
+    setup_diagnostics();
 
     psc_setup_member_objs(psc_);
 

@@ -228,6 +228,16 @@ struct Psc
     return p.cfl * sqrt(1./inv_sum);
   }
   
+  // ----------------------------------------------------------------------
+  // setup_diagnostics
+
+  void setup_diagnostics()
+  {
+#ifdef VPIC
+    sim_->setupDiag();
+#endif
+  }
+
 protected:
   double dt() const { return psc_->grid().dt; }
 
