@@ -1,7 +1,7 @@
 
 #include <psc_config.h>
 
-#define VPIC 1
+//#define VPIC 1
 
 #include <psc.h>
 #include <psc.hxx>
@@ -841,6 +841,10 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   PscParams p{};
 
+  // collisions
+  p.collision_interval = 0;
+  p.collision_nu = .1; // FIXME, != 0 needed to avoid crash
+
   // --- balancing
   p.balance_interval = 0;
   p.balance_factor_fields = 1.;
@@ -906,8 +910,10 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   p.stats_every = 100;
 
+#ifdef VPIC
   psc_method_set_type(psc_->method, "vpic");
-
+#endif
+  
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
   psc_set_from_options(psc_);
