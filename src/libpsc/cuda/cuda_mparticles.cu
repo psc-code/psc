@@ -265,8 +265,8 @@ k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, f
       block = d_bidx[i];
     } else { // needed if there is no particle in the last block
       block = last_block;
-  }
-    
+    }
+
     // OPT: d_bidx[i-1] could use shmem
     // create offsets per block into particle array
     prev_block = -1;
@@ -430,7 +430,9 @@ void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
       pxi4->z = prt->p[2];
       pxi4->w = prt->w * this->grid_.kinds[prt->kind].q;
 
-      h_bidx[off + n] = this->blockIndex(*xi4, p);
+      auto bidx = this->blockIndex(*xi4, p);
+      assert(bidx >= 0 && bidx < this->n_blocks);
+      h_bidx[off + n] = bidx;;
       h_id[off + n] = this->n_prts + off + n;
     }
     off += buf_n_by_patch[p];
@@ -478,7 +480,9 @@ void cuda_mparticles<BS>::inject(int p, const particle_inject& new_prt)
   // FIXME, very slow implementation, only useful for testing!!!
   using Double3 = Vec3<double>;
 
-  auto prt = cuda_mparticles_prt{Real3{Double3{new_prt.x}}, Real3{Double3{new_prt.u}},
+  auto& patch = this->grid_.patches[p];
+  auto x = Double3{new_prt.x} - patch.xb;
+  auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3{new_prt.u}},
 				 real_t(new_prt.w), new_prt.kind};
   auto n_prts_by_patch = std::vector<uint>(this->grid_.n_patches());
   n_prts_by_patch[p] = 1;

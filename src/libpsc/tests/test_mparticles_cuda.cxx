@@ -15,7 +15,7 @@ struct Config
   using MakeGrid = _MakeGrid;
 };
 
-using MparticlesCudaTestTypes = ::testing::Types<Config<MparticlesCuda<BS144>>>;
+using MparticlesCudaTestTypes = ::testing::Types<Config<MparticlesCuda<BS144>, MakeTestGridYZ>>;
 
 TYPED_TEST_CASE(MparticlesCudaTest, MparticlesCudaTestTypes);
 
@@ -63,6 +63,8 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   
   auto mprts = this->mk_mprts();
 
+  EXPECT_EQ(mprts.n_patches(), 2);
+
   int nn = 0;
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto prts = mprts[p];
@@ -76,6 +78,12 @@ TYPED_TEST(MparticlesCudaTest, Inject)
       nn++;
     }
   }
+
+  EXPECT_EQ(mprts.get_n_prts(), 2);
+  
+  std::vector<uint> n_prts_by_patch(mprts.n_patches());
+  mprts.get_size_all(n_prts_by_patch.data());
+  EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts}));
 }
 
 
