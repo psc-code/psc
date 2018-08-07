@@ -59,7 +59,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     n_prts_reserve_by_patch[1] = 4;
     
     cmprts->reserve_all(n_prts_reserve_by_patch);
-    cmprts->inject(prts.data(), n_prts_by_patch);
+    cmprts->inject_buf(prts.data(), n_prts_by_patch);
 
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)

@@ -22,7 +22,7 @@ struct TestBase
     n_prts_by_patch[0] = prts.size();
 
     cmprts->reserve_all(n_prts_by_patch);
-    cmprts->inject(prts.data(), n_prts_by_patch);
+    cmprts->inject_buf(prts.data(), n_prts_by_patch);
   
     return cmprts;
   }
