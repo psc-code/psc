@@ -64,8 +64,6 @@ struct MparticlesCuda : MparticlesBase
   using CudaMparticles = cuda_mparticles<BS>;
   
   MparticlesCuda(const Grid_t& grid);
-
-  MparticlesCuda(const MparticlesCuda&) = delete;
   ~MparticlesCuda();
 
   int get_n_prts() const override;
@@ -79,6 +77,11 @@ struct MparticlesCuda : MparticlesBase
   void push_back(int p, const particle_t& prt);
   bool check_after_push();
 
+  void define_species(const char *name, double q, double m,
+		      double max_local_np, double max_local_nm,
+		      double sort_interval, double sort_out_of_place)
+  {}
+  
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
