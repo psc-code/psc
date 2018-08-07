@@ -489,6 +489,25 @@ void cuda_mparticles<BS>::inject(int p, const particle_inject& new_prt)
   inject_buf(&prt, n_prts_by_patch.data());
 }
 
+// ----------------------------------------------------------------------
+// get_particles
+
+template<typename BS>
+std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
+{
+  std::vector<uint> n_prts_by_patch(this->n_patches);
+  this->get_size_all(n_prts_by_patch.data());
+  
+  auto n_prts = n_prts_by_patch[p];
+  std::vector<cuda_mparticles_prt> prts;
+  prts.reserve(n_prts);
+
+  get_particles(p, [&](int n, cuda_mparticles_prt prt) {
+      prts.push_back(prt);
+    });
+
+  return prts;
+}
 #include "cuda_mparticles_gold.cu"
 #include "cuda_mparticles_checks.cu"
 

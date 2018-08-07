@@ -84,6 +84,24 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   std::vector<uint> n_prts_by_patch(mprts.n_patches());
   mprts.get_size_all(n_prts_by_patch.data());
   EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts}));
+
+  // check internal representation
+  nn = 0;
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto prts = mprts.get_particles(p);
+    auto& patch = mprts.grid().patches[p];
+    for (auto prt: prts) {
+      // xm is patch-relative position
+      auto xm = .5 * (patch.xe - patch.xb);
+      EXPECT_EQ(prt.x[0], xm[0]);
+      EXPECT_EQ(prt.x[1], xm[1]);
+      EXPECT_EQ(prt.x[2], xm[2]);
+      EXPECT_EQ(prt.w, nn);
+      nn++;
+    }
+  }
+
+  
 }
 
 

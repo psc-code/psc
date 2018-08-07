@@ -78,6 +78,13 @@ struct MparticlesCuda : MparticlesBase
   void push_back(int p, const particle_t& prt);
   bool check_after_push();
 
+  // ----------------------------------------------------------------------
+  // facility to access particles without conversion,
+  // mostly for debugging (?)
+  //
+  // FIXME, bad interface, based on even worse interface (cmprts::get_particles)
+  std::vector<cuda_mparticles_prt> get_particles(int p);
+
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
 		      double sort_interval, double sort_out_of_place)
@@ -167,7 +174,7 @@ struct MparticlesCuda : MparticlesBase
     }
 
     const_accessor_range get() const { return {*this}; }
-    
+
   private:
     const MparticlesCuda& mp_;
     int p_;
