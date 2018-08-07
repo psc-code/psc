@@ -77,7 +77,7 @@ template<typename BS>
 void MparticlesCuda<BS>::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
-  cmprts_->inject(buf, buf_n_by_patch);
+  cmprts_->inject_buf(buf, buf_n_by_patch);
 }
 
 template<typename BS>

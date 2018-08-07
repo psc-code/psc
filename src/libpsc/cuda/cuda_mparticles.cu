@@ -392,11 +392,11 @@ uint cuda_mparticles<BS>::get_n_prts()
 }
 
 // ----------------------------------------------------------------------
-// inject
+// inject_buf
 
 template<typename BS>
-void cuda_mparticles<BS>::inject(const cuda_mparticles_prt *buf,
-				 uint *buf_n_by_patch)
+void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
+				     uint *buf_n_by_patch)
 {
   if (need_reorder) {
     reorder();
