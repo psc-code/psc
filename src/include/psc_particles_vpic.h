@@ -34,9 +34,9 @@ struct ParticlesVpic
       : sp_{sp}, n_{n}
     {}
 
-    Real3 momentum()   const { return {prt().ux, prt().uy, prt().uz}; }
-    real_t w()         const { return prt().w * sp_->grid()->dV; }
-    int kind()         const { return sp_->id; }
+    Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
+    real_t w() const { return prt().w * sp_->grid()->dV; }
+    int kind() const { return sp_->id; }
 
     Double3 position() const
     {

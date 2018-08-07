@@ -363,6 +363,20 @@ struct PushParticlesTest : ::testing::Test
     return xi1;
   }
 
+  template<typename particle_t>
+  Vec3<double> push_x_(const particle_t& prt0, particle_t& prt1)
+  {
+    Vec3<double> xi1 = { prt0.x[0] + vx(prt1),
+			 prt0.x[1] + vy(prt1),
+			 prt0.x[2] + vz(prt1) };
+    
+    if (!dim::InvarX::value) prt1.x[0] = xi1[0];
+    if (!dim::InvarY::value) prt1.x[1] = xi1[1];
+    if (!dim::InvarZ::value) prt1.x[2] = xi1[2];
+
+    return xi1;
+  }
+
   Mparticles* mprts = {};
   Mfields* mflds = {};
 };
