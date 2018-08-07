@@ -74,9 +74,16 @@ void MparticlesCuda<BS>::reset(const Grid_t& grid)
 }
 
 template<typename BS>
-void MparticlesCuda<BS>::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
+void MparticlesCuda<BS>::inject(int p, const particle_inject& new_prt)
 {
   dprintf("CMPRTS: inject\n");
+  cmprts_->inject(p, new_prt);
+}
+
+template<typename BS>
+void MparticlesCuda<BS>::inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch)
+{
+  dprintf("CMPRTS: inject_buf\n");
   cmprts_->inject_buf(buf, buf_n_by_patch);
 }
 
