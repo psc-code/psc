@@ -73,8 +73,8 @@ struct Current1vbSplit
     }
 
     real_t fnqx = qni_wni * fnqxs_;
-    curr_cache.add(2, i[0]  ,i[1]  ,i[2]  , fnqx * (dx[0] * (1.f - xa[2])));
-    curr_cache.add(2, i[0]  ,i[1]  ,i[2]+1, fnqx * (dx[0] * (      xa[2])));
+    curr_cache.add(0, i[0]  ,i[1]  ,i[2]  , fnqx * (dx[0] * (1.f - xa[2])));
+    curr_cache.add(0, i[0]  ,i[1]  ,i[2]+1, fnqx * (dx[0] * (      xa[2])));
 
     real_t fnqy = qni_wni * fnqys_;
     curr_cache.add(1, i[0]  ,i[1]  ,i[2]  , fnqy * (dx[1] * (1.f - xa[0]) * (1.f - xa[2]) + h));

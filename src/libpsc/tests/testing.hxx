@@ -289,7 +289,7 @@ struct PushParticlesTest : ::testing::Test
       if (dim::InvarX::value) { ref.pos[0] = 0; }
       if (dim::InvarY::value) { ref.pos[1] = 0; }
       if (dim::InvarZ::value) { ref.pos[2] = 0; }
-      flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) = ref.val;
+      flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) += ref.val;
     }
 
     auto flds = (*mflds)[0];
