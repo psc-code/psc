@@ -227,8 +227,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
   auto prt0 = particle_t{{1., 2., 3.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
   if (!Base::dim::InvarX::value) prt1.x[0] += vx(prt1);
-  prt1.x[1] += vy(prt1);
-  prt1.x[2] += vz(prt1);
+  if (!Base::dim::InvarY::value) prt1.x[1] += vy(prt1);
+  if (!Base::dim::InvarZ::value) prt1.x[2] += vz(prt1);
   
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }

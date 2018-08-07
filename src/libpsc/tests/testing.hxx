@@ -287,6 +287,8 @@ struct PushParticlesTest : ::testing::Test
     auto flds_ref = mflds_ref[0];
     for (auto& ref : curr_ref) {
       if (dim::InvarX::value) { ref.pos[0] = 0; }
+      if (dim::InvarY::value) { ref.pos[1] = 0; }
+      if (dim::InvarZ::value) { ref.pos[2] = 0; }
       flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) = ref.val;
     }
 
