@@ -245,40 +245,6 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
   thrust::copy(pxi4.begin(), pxi4.end(), &this->d_pxi4[off]);
 }
 
-// ----------------------------------------------------------------------
-// get_particles
-
-template<typename BS>
-template<typename F>
-void cuda_mparticles<BS>::get_particles(uint p, F setter)
-{
-  // FIXME, doing the copy here all the time would be nice to avoid
-  // making sure we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->by_block_.d_off);
-
-  uint off = h_off[p * this->n_blocks_per_patch];
-  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
-
-  reorder();
-
-  thrust::host_vector<float4> xi4(&this->d_xi4[off], &this->d_xi4[off + n_prts]);
-  thrust::host_vector<float4> pxi4(&this->d_pxi4[off], &this->d_pxi4[off + n_prts]);
-
-  for (int n = 0; n < n_prts; n++) {
-    int kind = cuda_float_as_int(xi4[n].w);
-    auto prt = cuda_mparticles_prt{{xi4[n].x, xi4[n].y, xi4[n].z},
-				   {pxi4[n].x, pxi4[n].y, pxi4[n].z},
-				   pxi4[n].w / float(this->grid_.kinds[kind].q), kind};
-    setter(n, prt);
-
-#if 0
-    uint b = blockIndex(xi4[n], p);
-    assert(b < n_blocks);
-#endif
-  }
-
-}
-
 
 
 #endif
