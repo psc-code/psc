@@ -52,11 +52,18 @@ struct PscConfigPushParticlesCuda
 {
 };
 
+// need to use Config1vbecSplit when for dim_xyz, dim_xz
+
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
 {
-  // need to use Config1vbecSplit when for dim_xyz
   using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
+};
+
+template<typename Mparticles, typename Mfields>
+struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
+{
+  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
 };
 
 template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles,
