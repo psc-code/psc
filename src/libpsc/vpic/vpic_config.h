@@ -94,10 +94,12 @@ typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
 typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
 using PushFieldsOps = PscPushFieldsOps<FieldArray>;
+using DiagOps = PscDiagOps<FieldArray>;
 #else
 typedef VpicFieldArrayBase<Grid, VpicMaterialList> FieldArrayBase;
 typedef VpicFieldArray<FieldArrayBase> FieldArray;
 using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
+using DiagOps = VpicDiagOps<FieldArray>;
 #endif
 
 typedef PscInterpolatorBase<Grid> InterpolatorBase;
@@ -124,7 +126,7 @@ typedef VpicParticlesOps<Particles> ParticlesOps;
 #endif
 
 #if 1
-typedef VpicDiagMixin<Particles> DiagMixin;
+typedef VpicDiagMixin<Particles, DiagOps> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;
 #endif

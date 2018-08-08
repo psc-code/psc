@@ -13,7 +13,7 @@ struct VpicDiagOps
   // ----------------------------------------------------------------------
   // energy_f
 
-  void energy_f(FieldArray& fa, double en[6])
+  static void energy_f(FieldArray& fa, double en[6])
   {
     fa.energy_f(en);
   }

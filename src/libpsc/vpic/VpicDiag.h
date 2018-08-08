@@ -112,7 +112,7 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles>
+template<class Particles, class DiagOps>
 struct VpicDiagMixin
 {
   typedef typename Particles::FieldArray FieldArray;
@@ -496,7 +496,7 @@ struct VpicDiagMixin
       }
     }
 
-    fa.energy_f(en_f);
+    DiagOps::energy_f(fa, en_f);
     if (rank==0 && status!=fail )
       fileIO.print( " %e %e %e %e %e %e",
 		    en_f[0], en_f[1], en_f[2],

@@ -276,11 +276,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
   }
   
-  void energy_f(double en[6])
-  {
-    PscDiagOps<FieldArray>::energy_f(*this, en);
-  }
-
   // ----------------------------------------------------------------------
   // clear_jf
 
