@@ -4,6 +4,80 @@
 
 #include <mrc_bits.h>
 
+// ======================================================================
+// PscDiagOps
+
+template<typename FieldArray>
+struct PscDiagOps
+{
+  using Grid = typename FieldArray::Grid;
+  
+  // ----------------------------------------------------------------------
+  // vacuum_energy_f
+
+  static void vacuum_energy_f(FieldArray& fa, double global[6])
+  {
+    auto& prm = fa.params();
+    assert(prm.size() == 1);
+    auto m = prm[0];
+
+    Field3D<FieldArray> F(fa);
+    const Grid* g = fa.grid();
+    const int nx = g->nx, ny = g->ny, nz = g->nz;
+
+    const float qepsx = 0.25*m->epsx;
+    const float qepsy = 0.25*m->epsy;
+    const float qepsz = 0.25*m->epsz;
+    const float hrmux = 0.5*m->rmux;
+    const float hrmuy = 0.5*m->rmuy;
+    const float hrmuz = 0.5*m->rmuz;
+    double en[6] = {};
+
+    for (int k = 1; k <= nz; k++) {
+      for (int j = 1; j <= ny; j++) {
+	for (int i = 1; i <= nx; i++) {
+	  en[0] += qepsx*(sqr(F(i  ,j  ,k  ).ex) +
+			  sqr(F(i  ,j+1,k  ).ex) +
+			  sqr(F(i  ,j  ,k+1).ex) +
+			  sqr(F(i  ,j+1,k+1).ex));
+	  en[1] += qepsy*(sqr(F(i  ,j  ,k  ).ey) +
+			  sqr(F(i  ,j  ,k+1).ey) +
+			  sqr(F(i+1,j  ,k  ).ey) +
+			  sqr(F(i+1,j  ,k+1).ey));
+	  en[2] += qepsz*(sqr(F(i  ,j  ,k  ).ez) +
+			  sqr(F(i+1,j  ,k  ).ez) +
+			  sqr(F(i  ,j+1,k  ).ez) +
+			  sqr(F(i+1,j+1,k  ).ez));
+	  en[3] += hrmux*(sqr(F(i  ,j  ,k  ).cbx) +
+			  sqr(F(i+1,j  ,k  ).cbx));
+	  en[4] += hrmuy*(sqr(F(i  ,j  ,k  ).cby) +
+			  sqr(F(i  ,j+1,k  ).cby));
+	  en[5] += hrmuz*(sqr(F(i  ,j  ,k  ).cbz) +
+			  sqr(F(i  ,j  ,k+1).cbz));
+	}
+      }
+    }
+
+    // Convert to physical units
+    double v0 = 0.5 * g->eps0 * g->dV;
+    for (int m = 0; m < 6; m++) {
+      en[m] *= v0;
+    }
+
+    // Reduce results between nodes
+    MPI_Allreduce(en, global, 6, MPI_DOUBLE, MPI_SUM, psc_comm_world);
+  }
+
+  // ----------------------------------------------------------------------
+  // energy_f
+
+  static void energy_f(FieldArray& fa, double en[6])
+  {
+    vacuum_energy_f(fa, en);
+  }
+  
+};
+
 #include "PscFieldArrayRemoteOps.h" // FIXME, only because of Comm stuff
 
 // ======================================================================
@@ -202,65 +276,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
   }
   
-  // ----------------------------------------------------------------------
-  // energy_f
-
-  void vacuum_energy_f(double global[6])
-  {
-    SfaParams& prm = params();
-    assert(prm.size() == 1);
-    const MaterialCoefficient* m = prm[0];
-
-    Field3D<FieldArray> F(*this);
-    const Grid* g = grid();
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-
-    const float qepsx = 0.25*m->epsx;
-    const float qepsy = 0.25*m->epsy;
-    const float qepsz = 0.25*m->epsz;
-    const float hrmux = 0.5*m->rmux;
-    const float hrmuy = 0.5*m->rmuy;
-    const float hrmuz = 0.5*m->rmuz;
-    double en[6] = {};
-
-    for (int k = 1; k <= nz; k++) {
-      for (int j = 1; j <= ny; j++) {
-	for (int i = 1; i <= nx; i++) {
-	  en[0] += qepsx*(sqr(F(i  ,j  ,k  ).ex) +
-			  sqr(F(i  ,j+1,k  ).ex) +
-			  sqr(F(i  ,j  ,k+1).ex) +
-			  sqr(F(i  ,j+1,k+1).ex));
-	  en[1] += qepsy*(sqr(F(i  ,j  ,k  ).ey) +
-			  sqr(F(i  ,j  ,k+1).ey) +
-			  sqr(F(i+1,j  ,k  ).ey) +
-			  sqr(F(i+1,j  ,k+1).ey));
-	  en[2] += qepsz*(sqr(F(i  ,j  ,k  ).ez) +
-			  sqr(F(i+1,j  ,k  ).ez) +
-			  sqr(F(i  ,j+1,k  ).ez) +
-			  sqr(F(i+1,j+1,k  ).ez));
-	  en[3] += hrmux*(sqr(F(i  ,j  ,k  ).cbx) +
-			  sqr(F(i+1,j  ,k  ).cbx));
-	  en[4] += hrmuy*(sqr(F(i  ,j  ,k  ).cby) +
-			  sqr(F(i  ,j+1,k  ).cby));
-	  en[5] += hrmuz*(sqr(F(i  ,j  ,k  ).cbz) +
-			  sqr(F(i  ,j  ,k+1).cbz));
-	}
-      }
-    }
-
-    // Convert to physical units
-    double v0 = 0.5 * g->eps0 * g->dV;
-    for (int m = 0; m < 6; m++) {
-      en[m] *= v0;
-    }
-
-    // Reduce results between nodes
-    MPI_Allreduce(en, global, 6, MPI_DOUBLE, MPI_SUM, psc_comm_world);
-  }
-
   void energy_f(double en[6])
   {
-    vacuum_energy_f(en);
+    PscDiagOps<FieldArray>::energy_f(*this, en);
   }
 
   // ----------------------------------------------------------------------

@@ -3,6 +3,23 @@
 #define VPIC_FIELD_ARRAY_H
 
 // ======================================================================
+// VpicDiagOps
+
+template<typename FieldArray>
+struct VpicDiagOps
+{
+  using Grid = typename FieldArray::Grid;
+
+  // ----------------------------------------------------------------------
+  // energy_f
+
+  void energy_f(FieldArray& fa, double en[6])
+  {
+    fa.energy_f(en);
+  }
+};
+
+// ======================================================================
 // VpicPushFieldsOps
 //
 // will only work with VpicFieldArray, though.. (maybe it should be specialized...)
