@@ -41,16 +41,6 @@ struct MfieldsVpic : MfieldsBase
     }
   }
 
-  void compute_rhob()
-  {
-    TIC vmflds_fields->compute_rhob(); TOC(compute_rhob, 1);
-  }
-  
-  void compute_curl_b()
-  {
-    TIC vmflds_fields->compute_curl_b(); TOC(compute_curl_b, 1);
-  }
-
   void zero_comp(int m) override { assert(0); }
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
