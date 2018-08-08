@@ -37,8 +37,22 @@ struct cuda_mparticles_prt
   using Real3 = Vec3<real_t>;
 
   cuda_mparticles_prt(Real3 x, Real3 p, real_t w, int kind)
-    : x(x), p(p), w(w), kind(kind)
-  {}
+    : x{x}, p{p}, w{w}, kind{kind}
+  {
+    mprintf("ctor p %g:%g:%g w %g\n", p[0], p[1], p[2], w);
+  }
+
+  cuda_mparticles_prt(const cuda_mparticles_prt& other)
+    : x{other.x}, p{other.p}, w{other.w}, kind{other.kind}
+  {
+    mprintf("copy ctor p %g:%g:%g w %g\n", p[0], p[1], p[2], w);
+  }
+
+  cuda_mparticles_prt(cuda_mparticles_prt&& other)
+    : x{other.x}, p{other.p}, w{other.w}, kind{other.kind}
+  {
+    mprintf("move ctor p %g:%g:%g w %g\n", p[0], p[1], p[2], w);
+  }
 
   bool operator==(const cuda_mparticles_prt& other) const
   {
