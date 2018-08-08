@@ -14,6 +14,18 @@ struct PscCleanDivOps
   using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
   
   // ----------------------------------------------------------------------
+  // clear_rhof
+
+  static void clear_rhof(FieldArray& fa)
+  {
+    const int nv = fa.grid()->nv;
+
+    for (int v = 0; v < nv; v++) {
+      fa[v].rhof = 0;
+    }
+  }
+
+  // ----------------------------------------------------------------------
   // synchronize_rho
   
   // Note: synchronize_rho assumes that rhof has _not_ been adjusted at
@@ -1036,18 +1048,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   {
     return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
   }
-  
-  // ----------------------------------------------------------------------
-  // clear_rhof
-
-  void clear_rhof()
-  {
-    const int nv = grid()->nv;
-    for (int v = 0; v < nv; v++) {
-      (*this)[v].rhof = 0;
-    }
-  }
-
 };
   
 

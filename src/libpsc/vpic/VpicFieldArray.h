@@ -8,6 +8,7 @@
 template<typename FieldArray>
 struct VpicCleanDivOps
 {
+  static void clear_rhof(FieldArray& fa) { fa.clear_rhof(); }
   static void synchronize_rho(FieldArray& fa) { fa.synchronize_rho(); }
   static void compute_div_e_err(FieldArray& fa) { fa.compute_div_e_err(); }
   static double compute_rms_div_e_err(FieldArray& fa) { return fa.compute_rms_div_e_err(); }
