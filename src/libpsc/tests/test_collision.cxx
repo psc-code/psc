@@ -120,16 +120,12 @@ TYPED_TEST(CollisionTest, Test1)
   const auto& grid = ppsc->grid();
   
   // init particles
-  auto prt0 = particle_t{{5., 5., 5.}, {1., 0., 0.}, 1., 0};
-  auto prt1 = particle_t{{5., 5., 5.}, {0. ,0., 0.}, 1., 0};
+  auto prt0 = particle_inject{{5., 5., 5.}, {1., 0., 0.}, 1., 0};
+  auto prt1 = particle_inject{{5., 5., 5.}, {0. ,0., 0.}, 1., 0};
 
-  std::vector<particle_t> prts = { prt0, prt1 };
-
-  auto n_prts_by_patch = std::vector<uint>{2};
   Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      return prts[n];
-    });
+  mprts.inject(0, prt0);
+  mprts.inject(0, prt1);
 
   auto collision = Collision(psc_comm(ppsc), 1, 1.);
 
