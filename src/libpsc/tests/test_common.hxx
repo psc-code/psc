@@ -56,3 +56,21 @@ struct MakeTestGridYZ
   }
 };
 
+// ======================================================================
+// MakeTestGridYZ1
+//
+// Sample grid for testing, with 1 patch
+// patch size 8 x 16 (8 4x4 blocks)
+
+struct MakeTestGridYZ1
+{
+  Grid_t operator()()
+  {
+    auto domain = Grid_t::Domain{{1, 8, 16},
+				 {10., 80., 160.}, {0., -40., -80.},
+				 {1, 1, 1}};
+    std::vector<Int3> offs = {{0, 0, 0}};
+    return Grid_t{domain, offs};
+  }
+};
+

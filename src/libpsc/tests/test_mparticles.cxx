@@ -8,6 +8,9 @@
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 #include "psc_particles_vpic.h"
+#ifdef USE_CUDA
+#include "../libpsc/cuda/psc_particles_cuda.h"
+#endif
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
@@ -20,6 +23,12 @@ using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
 					    ,Config<MparticlesDouble>
 #ifdef VPIC
 					    ,Config<MparticlesVpic>
+#endif
+#ifdef USE_CUDA
+					     // FIXME, ugliness, cuda doen't work on the usual grid,
+					     // but the 2 patch YZ grid breaks vpic init,
+					     // which we aren't even using in this test...
+					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ1>
 #endif
 					     >;
 
