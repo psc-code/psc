@@ -41,13 +41,6 @@ struct MfieldsVpic : MfieldsBase
     }
   }
 
-  double synchronize_tang_e_norm_b()
-  {
-    double err;
-    TIC err = vmflds_fields->synchronize_tang_e_norm_b(); TOC(synchronize_tang_e_norm_b, 1);
-    return err;
-  }
-  
   void clear_rhof()
   {
     TIC vmflds_fields->clear_rhof(); TOC(clear_rhof, 1);

@@ -41,7 +41,8 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   // Do some consistency checks on user initialized fields
 
   mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
-  double err = mflds.synchronize_tang_e_norm_b();
+  double err;
+  TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds.vmflds_fields); TOC(synchronize_tang_e_norm_b, 1);
   mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
   
   mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
@@ -70,7 +71,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   TIC CleanDivOps::clean_div_e(*mflds.vmflds_fields); TOC(clean_div_e, 1);
 
   mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
-  err = mflds.synchronize_tang_e_norm_b();
+  TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds.vmflds_fields); TOC(synchronize_tang_e_norm_b, 1);
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
   FieldArray *vmflds = mflds.vmflds_fields;

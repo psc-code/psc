@@ -97,7 +97,8 @@ struct MarderVpic : MarderBase
     if (sync_shared) {
       // needs E, B, TCA
       mpi_printf(comm_, "Synchronizing shared tang e, norm b\n");
-      double err = mflds.synchronize_tang_e_norm_b();
+      double err;
+      TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds.vmflds_fields); TOC(synchronize_tang_e_norm_b, 1);
       mpi_printf(comm_, "Domain desynchronization error = %e (arb units)\n", err);
       // updates E, B, TCA
     }

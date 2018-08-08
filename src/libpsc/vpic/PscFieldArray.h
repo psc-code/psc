@@ -404,6 +404,88 @@ struct PscCleanDivOps
     fa.local_adjust_norm_b(fa);
   }
 
+  // ----------------------------------------------------------------------
+  // synchronize_tang_e_norm_b
+
+  template<class G, class F3D>
+  struct CommTangENormB : Comm<G, F3D>
+  {
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+    
+    using Base::begin;
+    using Base::end;
+
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommTangENormB(Grid *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = (nx_[Y] * nx_[Z] +
+			2 * nx_[Y] * (nx_[Z] + 1) +
+			2 * nx_[Z] * (nx_[Y] + 1));
+      }
+      err = 0.;
+    }
+
+    void begin_send(int X, int side, float* p, F3D& F)
+    {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      int face = side ? nx_[X] + 1 : 1;
+      foreach_face(g_, X, face, [&](int x, int y, int z)
+		   { *p++ = (&F(x,y,z).cbx)[X]; });
+      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z)
+		   { *p++ = (&F(x,y,z).ex)[Y]; *p++ = (&F(x,y,z).tcax)[Y]; });
+      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z)
+		   { *p++ = (&F(x,y,z).ex)[Z]; *p++ = (&F(x,y,z).tcax)[Z]; });
+    }
+    
+    void end_recv(int X, int side, float* p, F3D& F)
+    {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      int face = side ? 1 : nx_[X] + 1;
+      foreach_face(g_, X, face, [&](int x, int y, int z)
+		   { double w1 = *p++, w2 = (&F(x,y,z).cbx)[X];
+		     (&F(x,y,z).cbx)[X] = .5 * (w1+w2);
+		     err += sqr(w1-w2); });
+      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z)
+		   { double w1 = *p++, w2 = (&F(x,y,z).ex)[Y];
+		     (&F(x,y,z).ex)[Y] = .5 * (w1+w2);
+		     err += sqr(w1-w2);
+		     w1 = *p++, w2 = (&F(x,y,z).tcax)[Y];
+		     (&F(x,y,z).tcax)[Y] = .5 * (w1+w2); });
+      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z)
+		   { double w1 = *p++, w2 = (&F(x,y,z).ex)[Z];
+		     (&F(x,y,z).ex)[Z] = .5 * (w1+w2);
+		     err += sqr(w1-w2);
+		     w1 = *p++, w2 = (&F(x,y,z).tcax)[Z];
+		     (&F(x,y,z).tcax)[Z] = .5 * (w1+w2); });
+    }
+
+    double err;
+  };
+
+  static double synchronize_tang_e_norm_b(FieldArray& fa)
+  {
+    Field3D<FieldArray> F(fa);
+    CommTangENormB<Grid, Field3D<FieldArray>> comm(fa.grid());
+    
+    fa.local_adjust_tang_e(fa);
+    fa.local_adjust_norm_b(fa);
+
+    for (int dir = 0; dir < 3; dir++) {
+      comm.begin(dir, F);
+      comm.end(dir, F);
+    }
+    
+    double gerr;
+    MPI_Allreduce(&comm.err, &gerr, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);
+    return gerr;
+  }
+
 };
 
 // ======================================================================
@@ -962,88 +1044,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   void compute_curl_b()
   {
     vacuum_compute_curl_b();
-  }
-
-  // ----------------------------------------------------------------------
-  // synchronize_tang_e_norm_b
-
-  template<class G, class F3D>
-  struct CommTangENormB : Comm<G, F3D>
-  {
-    typedef Comm<G, F3D> Base;
-    typedef G Grid;
-    
-    using Base::begin;
-    using Base::end;
-
-    using Base::nx_;
-    using Base::g_;
-    using Base::buf_size_;
-
-    CommTangENormB(Grid *g) : Base(g)
-    {
-      for (int X = 0; X < 3; X++) {
-	int Y = (X + 1) % 3, Z = (X + 2) % 3;
-	buf_size_[X] = (nx_[Y] * nx_[Z] +
-			2 * nx_[Y] * (nx_[Z] + 1) +
-			2 * nx_[Z] * (nx_[Y] + 1));
-      }
-      err = 0.;
-    }
-
-    void begin_send(int X, int side, float* p, F3D& F)
-    {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      int face = side ? nx_[X] + 1 : 1;
-      foreach_face(g_, X, face, [&](int x, int y, int z)
-		   { *p++ = (&F(x,y,z).cbx)[X]; });
-      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z)
-		   { *p++ = (&F(x,y,z).ex)[Y]; *p++ = (&F(x,y,z).tcax)[Y]; });
-      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z)
-		   { *p++ = (&F(x,y,z).ex)[Z]; *p++ = (&F(x,y,z).tcax)[Z]; });
-    }
-    
-    void end_recv(int X, int side, float* p, F3D& F)
-    {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      int face = side ? 1 : nx_[X] + 1;
-      foreach_face(g_, X, face, [&](int x, int y, int z)
-		   { double w1 = *p++, w2 = (&F(x,y,z).cbx)[X];
-		     (&F(x,y,z).cbx)[X] = .5 * (w1+w2);
-		     err += sqr(w1-w2); });
-      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z)
-		   { double w1 = *p++, w2 = (&F(x,y,z).ex)[Y];
-		     (&F(x,y,z).ex)[Y] = .5 * (w1+w2);
-		     err += sqr(w1-w2);
-		     w1 = *p++, w2 = (&F(x,y,z).tcax)[Y];
-		     (&F(x,y,z).tcax)[Y] = .5 * (w1+w2); });
-      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z)
-		   { double w1 = *p++, w2 = (&F(x,y,z).ex)[Z];
-		     (&F(x,y,z).ex)[Z] = .5 * (w1+w2);
-		     err += sqr(w1-w2);
-		     w1 = *p++, w2 = (&F(x,y,z).tcax)[Z];
-		     (&F(x,y,z).tcax)[Z] = .5 * (w1+w2); });
-    }
-
-    double err;
-  };
-
-  double synchronize_tang_e_norm_b()
-  {
-    Field3D<FieldArray> F(*this);
-    CommTangENormB<Grid, Field3D<FieldArray>> comm(this->grid());
-    
-    this->local_adjust_tang_e(*this);
-    this->local_adjust_norm_b(*this);
-
-    for (int dir = 0; dir < 3; dir++) {
-      comm.begin(dir, F);
-      comm.end(dir, F);
-    }
-    
-    double gerr;
-    MPI_Allreduce(&comm.err, &gerr, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);
-    return gerr;
   }
 
 };
