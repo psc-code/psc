@@ -21,6 +21,11 @@ struct PushParticlesVpic : PushParticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
+  void push_mprts(MparticlesVpic& mprts, MfieldsVpic& mflds)
+  {
+    sim_->push_mprts(mprts.vmprts_, *mflds.vmflds_fields);
+  }
+
   void prep(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
     // needs E, B
@@ -36,8 +41,8 @@ struct PushParticlesVpic : PushParticlesBase
     // needs E, B (not really, because they're already in interpolator), rhob?
     auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
     auto& mprts = mprts_base.get_as<Mparticles>();
-    
-    sim_->push_mprts(mprts.vmprts_, *mflds.vmflds_fields);
+
+    push_mprts(mprts, mflds);
     
     // update jf FIXME: rhob too, probably, depending on b.c.
     mflds_base.put_as(mflds, JXI, JXI + 3);
