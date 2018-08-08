@@ -249,7 +249,7 @@ struct PushParticlesTest : ::testing::Test
 
     // init particle
     mprts = new Mparticles{grid()};
-    mprts->inject_reweight(0, prt0);
+    mprts->inject(0, prt0);
 
     //mprts->dump("mprts.dump");
   

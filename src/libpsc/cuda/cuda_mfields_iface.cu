@@ -114,3 +114,10 @@ MfieldsCuda::real_t MfieldsCuda::Accessor::operator=(real_t val)
   mflds_.cmflds->set_value(idx_, val);
   return val;
 }
+
+MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
+{
+  val += mflds_.cmflds->get_value(idx_);
+  mflds_.cmflds->set_value(idx_, val);
+  return val;
+}  

@@ -26,6 +26,7 @@ struct MfieldsCuda : MfieldsBase
     Accessor(MfieldsCuda& mflds, int idx);
     operator real_t() const;
     real_t operator=(real_t val);
+    real_t operator+=(real_t val);
 
   private:
     MfieldsCuda& mflds_;
