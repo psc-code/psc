@@ -3,6 +3,17 @@
 #define VPIC_FIELD_ARRAY_H
 
 // ======================================================================
+// VpicCleanDivOps
+
+template<typename FieldArray>
+struct VpicCleanDivOps
+{
+  static void compute_div_e_err(FieldArray& fa) { fa.compute_div_e_err(); }
+  static double compute_rms_div_e_err(FieldArray& fa) { return fa.compute_rms_div_e_err(); }
+  static void clean_div_e(FieldArray& fa) { fa.clean_div_e(); }
+};
+
+// ======================================================================
 // VpicAccumulateOps
 
 template<typename FieldArray>
@@ -20,15 +31,7 @@ struct VpicAccumulateOps
 template<typename FieldArray>
 struct VpicDiagOps
 {
-  using Grid = typename FieldArray::Grid;
-
-  // ----------------------------------------------------------------------
-  // energy_f
-
-  static void energy_f(FieldArray& fa, double en[6])
-  {
-    fa.energy_f(en);
-  }
+  static void energy_f(FieldArray& fa, double en[6]) { fa.energy_f(en); }
 };
 
 // ======================================================================
@@ -39,15 +42,8 @@ struct VpicDiagOps
 template<typename FieldArray>
 struct VpicPushFieldsOps
 {
-  static void advance_b(FieldArray& fa, double frac)
-  {
-    return fa.advance_b(frac);
-  }
-
-  static void advance_e(FieldArray& fa, double frac)
-  {
-    return fa.advance_e(frac);
-  }
+  static void advance_b(FieldArray& fa, double frac) { return fa.advance_b(frac); }
+  static void advance_e(FieldArray& fa, double frac) { return fa.advance_e(frac); }
 };
 
 // ======================================================================
@@ -135,8 +131,8 @@ struct VpicFieldArray : B
 
   // ----------------------------------------------------------------------
   // div E cleaning
-
-    void compute_div_e_err()
+  
+  void compute_div_e_err()
   {
     kernel->compute_div_e_err(this);
   }
