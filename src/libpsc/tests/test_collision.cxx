@@ -131,20 +131,20 @@ TYPED_TEST(CollisionTest, Test1)
 
   collision(mprts);
 
-  auto it = make_getter(mprts)[0].begin();
+  auto it = mprts[0].get().begin();
   auto prtf0 = *it++;
   auto prtf1 = *it++;
-  EXPECT_NEAR(prtf0.p[0] + prtf1.p[0], 1., eps);
-  EXPECT_NEAR(prtf0.p[1] + prtf1.p[1], 0., eps);
-  EXPECT_NEAR(prtf0.p[2] + prtf1.p[2], 0., eps);
+  EXPECT_NEAR(prtf0.u()[0] + prtf1.u()[0], 1., eps);
+  EXPECT_NEAR(prtf0.u()[1] + prtf1.u()[1], 0., eps);
+  EXPECT_NEAR(prtf0.u()[2] + prtf1.u()[2], 0., eps);
 
   // depends on random numbers, but for RngFake, we know
-  EXPECT_NEAR(prtf0.p[0],  0.96226911, eps);
-  EXPECT_NEAR(prtf0.p[1],  0.        , eps);
-  EXPECT_NEAR(prtf0.p[2], -0.17342988, eps);
-  EXPECT_NEAR(prtf1.p[0],  0.03773088, eps);
-  EXPECT_NEAR(prtf1.p[1], -0.        , eps);
-  EXPECT_NEAR(prtf1.p[2],  0.17342988, eps);
+  EXPECT_NEAR(prtf0.u()[0],  0.96226911, eps);
+  EXPECT_NEAR(prtf0.u()[1],  0.        , eps);
+  EXPECT_NEAR(prtf0.u()[2], -0.17342988, eps);
+  EXPECT_NEAR(prtf1.u()[0],  0.03773088, eps);
+  EXPECT_NEAR(prtf1.u()[1], -0.        , eps);
+  EXPECT_NEAR(prtf1.u()[2],  0.17342988, eps);
   
   ppsc = NULL; // FIXME
 }
