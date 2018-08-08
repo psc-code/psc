@@ -23,9 +23,9 @@ struct MarderVpic : MarderBase
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
   
-    mflds.clear_rhof();
+    TIC mflds.vmflds_fields->clear_rhof(); TOC(clear_rhof, 1);
     mflds.accumulate_rho_p(&mprts.vmprts_);
-    mflds.synchronize_rho();
+    mflds.vmflds_fields->synchronize_rho();
 
     for (int round = 0; round < num_div_e_round_; round++ ) {
       TIC CleanDivOps::compute_div_e_err(*mflds.vmflds_fields); TOC(compute_div_e_err, 1);

@@ -41,16 +41,6 @@ struct MfieldsVpic : MfieldsBase
     }
   }
 
-  void clear_rhof()
-  {
-    TIC vmflds_fields->clear_rhof(); TOC(clear_rhof, 1);
-  }
-
-  void synchronize_rho()
-  {
-    TIC vmflds_fields->synchronize_rho(); TOC(synchronize_rho, 1);
-  }
-  
   void compute_rhob()
   {
     TIC vmflds_fields->compute_rhob(); TOC(compute_rhob, 1);
