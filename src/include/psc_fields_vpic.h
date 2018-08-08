@@ -50,19 +50,19 @@ struct MfieldsVpic : MfieldsBase
   
   void compute_div_b_err()
   {
-    TIC vmflds_fields->compute_div_b_err(); TOC(compute_div_b_err, 1);
+    TIC CleanDivOps::compute_div_b_err(*vmflds_fields); TOC(compute_div_b_err, 1);
   }
   
   double compute_rms_div_b_err()
   {
     double err;
-    TIC err = vmflds_fields->compute_rms_div_b_err(); TOC(compute_rms_div_b_err, 1);
+    TIC err = CleanDivOps::compute_rms_div_b_err(*vmflds_fields); TOC(compute_rms_div_b_err, 1);
     return err;
   }
 
   void clean_div_b()
   {
-    TIC vmflds_fields->clean_div_b(); TOC(clean_div_b, 1);
+    TIC CleanDivOps::clean_div_b(*vmflds_fields); TOC(clean_div_b, 1);
   }
 
   void compute_div_e_err()

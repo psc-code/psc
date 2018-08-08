@@ -11,6 +11,9 @@ struct VpicCleanDivOps
   static void compute_div_e_err(FieldArray& fa) { fa.compute_div_e_err(); }
   static double compute_rms_div_e_err(FieldArray& fa) { return fa.compute_rms_div_e_err(); }
   static void clean_div_e(FieldArray& fa) { fa.clean_div_e(); }
+  static void compute_div_b_err(FieldArray& fa) { fa.compute_div_b_err(); }
+  static double compute_rms_div_b_err(FieldArray& fa) { return fa.compute_rms_div_b_err(); }
+  static void clean_div_b(FieldArray& fa) { fa.clean_div_b(); }
 };
 
 // ======================================================================
