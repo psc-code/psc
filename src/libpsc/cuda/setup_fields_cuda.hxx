@@ -12,7 +12,7 @@ void SetupFields<MfieldsCuda>::set(Mfields& mf, FUNC func)
     fields_single_t flds = mf.get_host_fields();
     Fields3d<fields_single_t> F(flds);
     
-    int n_ghosts = mf.ibn()[0]; // FIXME, not pretty
+    int n_ghosts = std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
     // FIXME, do we need the ghost points?
     mf.grid().Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
 	double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy), z_nc = patch.z_nc(jz);
