@@ -35,7 +35,7 @@ struct VpicGridBase : grid_t
     eps0 = eps0_;
   }
 
-  void partition_periodic_box(double xl[3], double xh[3], int gdims[3], int np[3])
+  void partition_periodic_box(const double xl[3], const double xh[3], const int gdims[3], const int np[3])
   {
     ::partition_periodic_box(this, xl[0], xl[1], xl[2], xh[0], xh[1], xh[2],
 			     gdims[0], gdims[1], gdims[2], np[0], np[1], np[2]);

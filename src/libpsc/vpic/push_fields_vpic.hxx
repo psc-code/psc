@@ -6,8 +6,6 @@
 #include "psc_method.h"
 #include "psc_fields_vpic.h"
 
-using PushFieldsOps = PscPushFieldsOps<FieldArray>;
-
 // ======================================================================
 // PushFieldsVpic
 

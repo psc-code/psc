@@ -60,7 +60,7 @@ struct MparticlesTest : ::testing::Test
     vgrid_.setup(dx, grid_.dt, 1., 1.);
   
     // Define the grid
-    vgrid_.partition_periodic_box(xl, xh, domain.gdims, {domain.np[0], domain.np[1], domain.np[2]});
+    vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
   }
 
   template<typename tag>

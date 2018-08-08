@@ -3,6 +3,25 @@
 #define VPIC_FIELD_ARRAY_H
 
 // ======================================================================
+// VpicPushFieldsOps
+//
+// will only work with VpicFieldArray, though.. (maybe it should be specialized...)
+
+template<typename FieldArray>
+struct VpicPushFieldsOps
+{
+  static void advance_b(FieldArray& fa, double frac)
+  {
+    return fa.advance_b(frac);
+  }
+
+  static void advance_e(FieldArray& fa, double frac)
+  {
+    return fa.advance_e(frac);
+  }
+};
+
+// ======================================================================
 // VpicFieldArray
 
 template<class B>
