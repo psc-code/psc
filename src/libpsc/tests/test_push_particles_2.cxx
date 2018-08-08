@@ -75,10 +75,10 @@ TYPED_TEST(PushParticlesTest, Accel)
     bnd_.fill_ghosts(mflds, JXI, JXI+3);
     checks_.continuity_after_particle_push(mprts, mflds);
 
-    for (auto& prt : make_getter(mprts)[0]) {
-      EXPECT_NEAR(prt.p[0], 1*(n+1), eps);
-      EXPECT_NEAR(prt.p[1], 2*(n+1), eps);
-      EXPECT_NEAR(prt.p[2], 3*(n+1), eps);
+    for (auto prt : mprts[0].get()) {
+      EXPECT_NEAR(prt.u()[0], 1*(n+1), eps);
+      EXPECT_NEAR(prt.u()[1], 2*(n+1), eps);
+      EXPECT_NEAR(prt.u()[2], 3*(n+1), eps);
     }
   }
 }
@@ -150,10 +150,10 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
-    for (auto& prt : make_getter(mprts)[0]) {
-      EXPECT_NEAR(prt.p[0], ux, eps);
-      EXPECT_NEAR(prt.p[1], uy, eps);
-      EXPECT_NEAR(prt.p[2], uz, eps);
+    for (auto prt : mprts[0].get()) {
+      EXPECT_NEAR(prt.u()[0], ux, eps);
+      EXPECT_NEAR(prt.u()[1], uy, eps);
+      EXPECT_NEAR(prt.u()[2], uz, eps);
     }
   }
 }
