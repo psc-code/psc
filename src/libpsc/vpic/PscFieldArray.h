@@ -7,25 +7,17 @@
 #include "PscFieldArrayRemoteOps.h" // FIXME, only because of Comm stuff
 
 // ======================================================================
-// PscFieldArray
+// PscPushFieldOps
 
-template<class B, class FieldArrayLocalOps, class FieldArrayRemoteOps>
-struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
+template<typename FieldArray>
+struct PscPushFieldsOps
 {
-  typedef B Base;
-  typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
-  using Grid = typename Base::Grid;
-  using typename Base::MaterialList;
-  using typename Base::SfaParams;
-  using typename Base::MaterialCoefficient;
-  
-  using Base::grid;
-  using Base::params;
+  using Grid = typename FieldArray::Grid;
+  using SfaParams = typename FieldArray::SfaParams;
+  using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
 
-  static PscFieldArray* create(Grid *grid, MaterialList material_list, float damp)
-  {
-    return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
-  }
+  // FIXME, uses enum-based components vs struct-based components, should
+  // settle on one or the other
   
   // ----------------------------------------------------------------------
   // advance_b
@@ -98,13 +90,8 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 #undef EY
 #undef EZ
 
-  void advance_b(double frac)
-  {
-    advance_b(*this, frac);
-  }
-  
   // ----------------------------------------------------------------------
-  // advance_e
+  // vacuum_advance_e
   
   static void vacuum_advance_e(FieldArray& fa, double frac)
   {
@@ -184,10 +171,45 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     fa.local_adjust_tang_e(fa);
   }
 
-  void advance_e(double frac)
+  // ----------------------------------------------------------------------
+  // advance_e
+  
+  static void advance_e(FieldArray& fa, double frac)
   {
     // FIXME vacuum hardcoded
-    vacuum_advance_e(*this, frac);
+    return vacuum_advance_e(fa, frac);
+  }
+};
+
+// ======================================================================
+// PscFieldArray
+
+template<class B, class FieldArrayLocalOps, class FieldArrayRemoteOps>
+struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
+{
+  typedef B Base;
+  typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
+  using Grid = typename Base::Grid;
+  using typename Base::MaterialList;
+  using typename Base::SfaParams;
+  using typename Base::MaterialCoefficient;
+  
+  using Base::grid;
+  using Base::params;
+
+  static PscFieldArray* create(Grid *grid, MaterialList material_list, float damp)
+  {
+    return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
+  }
+  
+  void advance_b(double frac)
+  {
+    PscPushFieldsOps<FieldArray>::advance_b(*this, frac);
+  }
+  
+  void advance_e(double frac)
+  {
+    PscPushFieldsOps<FieldArray>::advance_e(*this, frac);
   }
 
   // ----------------------------------------------------------------------
