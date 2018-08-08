@@ -28,6 +28,8 @@ struct VpicAccumulateOps
   
   static void clear_jf(FieldArray& fa) { fa.clear_jf(); }
   static void synchronize_jf(FieldArray& fa) { fa.synchronize_jf(); }
+  static void compute_rhob(FieldArray& fa) { fa.compute_rhob(); }
+  static void compute_curl_b(FieldArray& fa) { fa.compute_curl_b(); }
 };
 
 // ======================================================================
