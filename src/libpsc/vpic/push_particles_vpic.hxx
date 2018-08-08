@@ -66,7 +66,7 @@ struct PushParticlesVpic : PushParticlesBase
     // At this point, all particle positions are at r_1 and u_{1/2}, the
     // guard lists are empty and the accumulators on each processor are current.
     // Convert the accumulators into currents.
-    TIC vmflds.clear_jf(); TOC(clear_jf, 1);
+    TIC AccumulateOps::clear_jf(vmflds); TOC(clear_jf, 1);
     if (!vmprts.empty()) {
       TIC sim_->accumulator_->unload(vmflds); TOC(unload_accumulator, 1);
     }

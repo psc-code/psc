@@ -5,6 +5,28 @@
 #include <mrc_bits.h>
 
 // ======================================================================
+// PscAccumulateOps
+
+template<typename FieldArray>
+struct PscAccumulateOps
+{
+  // ----------------------------------------------------------------------
+  // clear_jf
+
+  static void clear_jf(FieldArray& fa)
+  {
+    const int nv = fa.grid()->nv;
+
+    for (int v = 0; v < nv; v++) {
+      fa[v].jfx = 0;
+      fa[v].jfy = 0;
+      fa[v].jfz = 0;
+    }
+  }
+
+};
+
+// ======================================================================
 // PscDiagOps
 
 template<typename FieldArray>
@@ -277,20 +299,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
   }
   
   // ----------------------------------------------------------------------
-  // clear_jf
-
-  void clear_jf()
-  {
-    const int nv = grid()->nv;
-
-    for (int v = 0; v < nv; v++) {
-      (*this)[v].jfx = 0;
-      (*this)[v].jfy = 0;
-      (*this)[v].jfz = 0;
-    }
-  }
-
-  // ----------------------------------------------------------------------
   // clear_rhof
 
   void clear_rhof()
@@ -301,9 +309,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     }
   }
 
-  // ----------------------------------------------------------------------
-  // synchronize_jf
-  
   // ----------------------------------------------------------------------
   // CommJf
 
@@ -345,6 +350,9 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     }
   };
 
+  // ----------------------------------------------------------------------
+  // synchronize_jf
+  
   void synchronize_jf()
   {
     Field3D<FieldArray> F(*this);

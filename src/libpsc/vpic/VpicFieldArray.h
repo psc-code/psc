@@ -3,6 +3,20 @@
 #define VPIC_FIELD_ARRAY_H
 
 // ======================================================================
+// VpicAccumulateOps
+
+template<typename FieldArray>
+struct VpicAccumulateOps
+{
+  using Grid = typename FieldArray::Grid;
+  
+  static void clear_jf(FieldArray& fa)
+  {
+    fa.clear_jf();
+  }
+};
+
+// ======================================================================
 // VpicDiagOps
 
 template<typename FieldArray>
