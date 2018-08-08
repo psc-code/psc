@@ -41,63 +41,6 @@ using Rng = PscRng;
 using RngPool = PscRngPool<Rng>;
 
 // ======================================================================
-// Getter etc
-
-template<class Mparticles>
-struct Getter
-{
-  Getter(Mparticles& mprts)
-    : mprts_(mprts) {}
-
-  typename Mparticles::patch_t& operator[](int p) { return mprts_[p]; }
-
-private:
-  Mparticles& mprts_;
-};
-
-#ifndef USE_CUDA
-
-template<class Mparticles>
-Getter<Mparticles> make_getter(Mparticles& mprts)
-{
-  return Getter<Mparticles>(mprts);
-}
-
-#endif
-
-#ifdef USE_CUDA
-
-template<class Mparticles>
-struct GetterCuda
-{
-  GetterCuda(Mparticles& mprts)
-    : mprts_(mprts.template get_as<MparticlesSingle>()) {}
-
-  typename MparticlesSingle::patch_t& operator[](int p) { return mprts_[p]; }
-
-private:
-  MparticlesSingle& mprts_;
-};
-
-template<class Mparticles,
-	 typename = typename std::enable_if<!(std::is_same<Mparticles, MparticlesCuda<BS144>>::value ||
-					      std::is_same<Mparticles, MparticlesCuda<BS444>>::value)>::type>
-Getter<Mparticles> make_getter(Mparticles& mprts)
-{
-  return Getter<Mparticles>(mprts);
-}
-
-template<class Mparticles,
-	 typename = typename std::enable_if<std::is_same<Mparticles, MparticlesCuda<BS144>>::value ||
-					    std::is_same<Mparticles, MparticlesCuda<BS444>>::value>::type>
-GetterCuda<Mparticles> make_getter(Mparticles& mprts)
-{
-  return GetterCuda<Mparticles>(mprts);
-}
-
-#endif
-
-// ======================================================================
 // TestConfig
 
 template<typename DIM, typename PUSHP, typename ORDER,
