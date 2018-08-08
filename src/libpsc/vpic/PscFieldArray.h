@@ -41,10 +41,10 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 #define UPDATE_CBY() F(CBY, i,j,k) -= (pz*(F(EX, i,j,k+1) - F(EX ,i,j,k)) - px*(F(EZ, i+1,j,k) - F(EZ, i,j,k)))
 #define UPDATE_CBZ() F(CBZ, i,j,k) -= (px*(F(EY, i+1,j,k) - F(EY, i,j,k)) - py*(F(EX, i,j+1,k) - F(EX, i,j,k)))
 
-  void advance_b(double frac)
+  static void advance_b(FieldArray&fa, double frac)
   {
-    Field3D<FieldArray> F(*this);
-    const Grid* g = grid();
+    Field3D<FieldArray> F(fa);
+    const Grid* g = fa.grid();
     int nx = g->nx, ny = g->ny, nz = g->nz;
 
     // FIXME, invariant should be based on global dims
@@ -88,7 +88,7 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       }
     }
     
-    this->local_adjust_norm_b(*this);
+    fa.local_adjust_norm_b(fa);
   }
 
 #undef CBX
@@ -98,14 +98,19 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 #undef EY
 #undef EZ
 
+  void advance_b(double frac)
+  {
+    advance_b(*this, frac);
+  }
+  
   // ----------------------------------------------------------------------
   // advance_e
   
-  void vacuum_advance_e(double frac)
+  static void vacuum_advance_e(FieldArray& fa, double frac)
   {
     assert(frac == 1.);
 
-    SfaParams& prm = params();
+    SfaParams& prm = fa.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
@@ -166,22 +171,23 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
       const float damp, cj;
     };
 
-    AdvanceE advanceE(*this, grid(), m, prm.damp);
+    AdvanceE advanceE(fa, fa.grid(), m, prm.damp);
 
-    this->begin_remote_ghost_tang_b(*this);
+    fa.begin_remote_ghost_tang_b(fa);
 
-    this->local_ghost_tang_b(*this);
-    foreach_ec_interior(advanceE, grid());
+    fa.local_ghost_tang_b(fa);
+    foreach_ec_interior(advanceE, fa.grid());
 
-    this->end_remote_ghost_tang_b(*this);
+    fa.end_remote_ghost_tang_b(fa);
 
-    foreach_ec_boundary(advanceE, grid());
-    this->local_adjust_tang_e(*this);
+    foreach_ec_boundary(advanceE, fa.grid());
+    fa.local_adjust_tang_e(fa);
   }
 
   void advance_e(double frac)
   {
-    vacuum_advance_e(frac);
+    // FIXME vacuum hardcoded
+    vacuum_advance_e(*this, frac);
   }
 
   // ----------------------------------------------------------------------
