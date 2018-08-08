@@ -27,11 +27,6 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
   [16]  = 16, [17] = 17, [18] = 18, [19] = 19,
 };
 
-void MfieldsVpic::accumulate_rho_p(Particles *vmprts)
-{
-  sim->accumulate_rho_p(*vmprts, *vmflds_fields);
-}
-
 // ======================================================================
 // convert from/to "single"
 

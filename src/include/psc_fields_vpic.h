@@ -51,7 +51,10 @@ struct MfieldsVpic : MfieldsBase
     TIC vmflds_fields->compute_curl_b(); TOC(compute_curl_b, 1);
   }
 
-  void accumulate_rho_p(Particles* vmprts);
+  void accumulate_rho_p(Particles* vmprts)
+  {
+    sim->accumulate_rho_p(*vmprts, *vmflds_fields);
+  }
 
   void zero_comp(int m) override { assert(0); }
   void set_comp(int m, double val) override { assert(0); }
