@@ -162,6 +162,7 @@ struct ConvertFromCuda
   void operator()(int n, const cuda_mparticles_prt &prt)
   {
     const auto& grid = mprts_other_.grid();
+    
     mprts_other_[p_][n] = particle_t{Real3{prt.x}, Real3{prt.p}, prt.w, prt.kind};
   }
 
@@ -202,9 +203,7 @@ static void copy_to(MparticlesCuda& mp, MP& mp_other)
   for (int p = 0; p < n_patches; p++) {
     ConvertFromCuda<MP> convert_from_cuda(mp_other, p);
     int n = 0;
-    MHERE;
     for (auto prt: mp.cmprts()->get_particles(p)) {
-      mprintf("cvt %g %g %g n %d\n", prt.p[0], prt.p[1], prt.p[2], n);
       convert_from_cuda(n, prt);
       n++;
     }

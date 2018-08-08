@@ -420,7 +420,6 @@ void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
       float4 *xi4 = &h_xi4[off + n];
       float4 *pxi4 = &h_pxi4[off + n];
       const cuda_mparticles_prt *prt = &buf[off + n];
-      mprintf("p %g %g %g\n", prt->p[0], prt->p[1], prt->p[2]);
       
       xi4->x  = prt->x[0];
       xi4->y  = prt->x[1];
@@ -507,8 +506,6 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
 
   for (int n = 0; n < n_prts; n++) {
     int kind = cuda_float_as_int(xi4[n].w);
-    mprintf("get_p p %g:%g:%g\n", pxi4[n].x, pxi4[n].y, pxi4[n].z);
-    MHERE;
 #if 1 // FIXME, why does it segfault?
     prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
 	              Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z},
@@ -518,20 +515,11 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
 				       {pxi4[n].x, pxi4[n].y, pxi4[n].z},
 				       pxi4[n].w / float(this->grid_.kinds[kind].q), kind});
 #endif
-    MHERE;
-    auto P = prts.back();
-    mprintf("back %g %g %g\n", P.p[0], P.p[1], P.p[2]);
 
 #if 0
     uint b = blockIndex(xi4[n], p);
     assert(b < n_blocks);
 #endif
-  }
-
-  for (auto prt: prts) {
-    mprintf("get_p B x %g:%g:%g p %g:%g:%g w %g kind %d\n",
-	    prt.x[0], prt.x[1], prt.x[2],
-	    prt.p[0], prt.p[1], prt.p[2], prt.w, prt.kind);
   }
 
   return prts;
@@ -543,7 +531,6 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
 template<typename BS>
 std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
 {
-  MHERE;
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
@@ -551,8 +538,6 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
   uint beg = h_off[p * this->n_blocks_per_patch];
   uint end = h_off[(p+1) * this->n_blocks_per_patch];
 
-  mprintf("gp p%d %d %d\n", p, beg, end);
-  
   return get_particles(beg, end);
 }
 
