@@ -3,10 +3,13 @@
 
 #include "psc_config.h"
 #include "test_common.hxx"
+#include "mpi.h"
+
+// FIXME, the general tests should be moved -> test_mparticles,
+// and the real cuda ones to test_cuda_mparticle?
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/psc_particles_cuda.h"
-#endif
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
@@ -124,6 +127,8 @@ TYPED_TEST(MparticlesCudaTest, Inject)
     }
   }
 }
+
+#endif
 
 // ======================================================================
 // main
