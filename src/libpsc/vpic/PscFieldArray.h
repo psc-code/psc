@@ -14,6 +14,86 @@ struct PscCleanDivOps
   using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
   
   // ----------------------------------------------------------------------
+  // synchronize_rho
+  
+  // Note: synchronize_rho assumes that rhof has _not_ been adjusted at
+  // the local domain boundary to account for partial cells but that
+  // rhob _has_.  Specifically it is very expensive to accumulate rhof
+  // and doing the adjustment for each particle is adds even more
+  // expense.  Worse, if we locally corrected it after each species,
+  // we cannot accumulate the next species in the same unless we use
+  // (running sum of locally corrected results and thw current species
+  // rhof being accumulated).  Further, rhof is always accumulated from
+  // scratch so we don't have to worry about whether or not the previous
+  // rhof values were in a locally corrected form.  Thus, after all
+  // particles have accumulated to rhof, we correct it for partial cells
+  // and remote cells for use with divergence cleaning and this is
+  // the function that does the correction.
+  //
+  // rhob is another story though.  rhob is continuously incrementally
+  // accumulated over time typically through infrequent surface area
+  // scaling processes.  Like rho_f, after synchronize_rhob, rhob _must_
+  // be corrected for partial and remote celle for the benefit of
+  // divergence cleaning. And like rho_f, since we don't want to have
+  // to keep around two versions of rhob (rhob contributions since last
+  // sync and rhob as of last sync), we have no choice but to do the
+  // charge accumulation per particle to rhob in a locally corrected
+  // form.
+
+  // ----------------------------------------------------------------------
+  // CommRho
+
+  template<class G, class F3D>
+  struct CommRho : Comm<G, F3D>
+  {
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+    
+    using Base::begin;
+    using Base::end;
+
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommRho(Grid *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = 2 * (nx_[Y] + 1) * (nx_[Z] + 1);
+      }
+    }
+
+    void begin_send(int X, int side, float* p, F3D& F)
+    {
+      int face = side ? nx_[X] + 1 : 1;
+      foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).rhof; });
+      foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).rhob; });
+    }
+    
+    void end_recv(int X, int side, float* p, F3D& F)
+    {
+      int face = side ? 1 : nx_[X] + 1;
+      foreach_node(g_, X, face, [&](int x, int y, int z) { F(x,y,z).rhof += *p++; });
+      foreach_node(g_, X, face, [&](int x, int y, int z) { F(x,y,z).rhob = .5f*(F(x,y,z).rhob + *p++); });
+    }
+  };
+
+  static void synchronize_rho(FieldArray& fa)
+  {
+    Field3D<FieldArray> F(fa);
+    CommRho<Grid, Field3D<FieldArray>> comm(fa.grid());
+
+    fa.local_adjust_rhof(fa);
+    fa.local_adjust_rhob(fa);
+
+    for (int dir = 0; dir < 3; dir++) {
+      comm.begin(dir, F);
+      comm.end(dir, F);
+    }
+  }
+
+  // ----------------------------------------------------------------------
   // compute_div_e_err
   
   static void compute_div_e_err(FieldArray& fa)
@@ -848,86 +928,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     const int nv = grid()->nv;
     for (int v = 0; v < nv; v++) {
       (*this)[v].rhof = 0;
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // synchronize_rho
-  
-  // Note: synchronize_rho assumes that rhof has _not_ been adjusted at
-  // the local domain boundary to account for partial cells but that
-  // rhob _has_.  Specifically it is very expensive to accumulate rhof
-  // and doing the adjustment for each particle is adds even more
-  // expense.  Worse, if we locally corrected it after each species,
-  // we cannot accumulate the next species in the same unless we use
-  // (running sum of locally corrected results and thw current species
-  // rhof being accumulated).  Further, rhof is always accumulated from
-  // scratch so we don't have to worry about whether or not the previous
-  // rhof values were in a locally corrected form.  Thus, after all
-  // particles have accumulated to rhof, we correct it for partial cells
-  // and remote cells for use with divergence cleaning and this is
-  // the function that does the correction.
-  //
-  // rhob is another story though.  rhob is continuously incrementally
-  // accumulated over time typically through infrequent surface area
-  // scaling processes.  Like rho_f, after synchronize_rhob, rhob _must_
-  // be corrected for partial and remote celle for the benefit of
-  // divergence cleaning. And like rho_f, since we don't want to have
-  // to keep around two versions of rhob (rhob contributions since last
-  // sync and rhob as of last sync), we have no choice but to do the
-  // charge accumulation per particle to rhob in a locally corrected
-  // form.
-
-  // ----------------------------------------------------------------------
-  // CommRho
-
-  template<class G, class F3D>
-  struct CommRho : Comm<G, F3D>
-  {
-    typedef Comm<G, F3D> Base;
-    typedef G Grid;
-    
-    using Base::begin;
-    using Base::end;
-
-    using Base::nx_;
-    using Base::g_;
-    using Base::buf_size_;
-
-    CommRho(Grid *g) : Base(g)
-    {
-      for (int X = 0; X < 3; X++) {
-	int Y = (X + 1) % 3, Z = (X + 2) % 3;
-	buf_size_[X] = 2 * (nx_[Y] + 1) * (nx_[Z] + 1);
-      }
-    }
-
-    void begin_send(int X, int side, float* p, F3D& F)
-    {
-      int face = side ? nx_[X] + 1 : 1;
-      foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).rhof; });
-      foreach_node(g_, X, face, [&](int x, int y, int z) { *p++ = F(x,y,z).rhob; });
-    }
-    
-    void end_recv(int X, int side, float* p, F3D& F)
-    {
-      int face = side ? 1 : nx_[X] + 1;
-      foreach_node(g_, X, face, [&](int x, int y, int z) { F(x,y,z).rhof += *p++; });
-      foreach_node(g_, X, face, [&](int x, int y, int z) { F(x,y,z).rhob = .5f*(F(x,y,z).rhob + *p++); });
-    }
-  };
-
-  void synchronize_rho()
-  {
-    Field3D<FieldArray> F(*this);
-    CommRho<Grid, Field3D<FieldArray>> comm(this->grid());
-
-    this->local_adjust_rhof(*this);
-    this->local_adjust_rhob(*this);
-
-    for (int dir = 0; dir < 3; dir++) {
-      comm.begin(dir, F);
-      comm.end(dir, F);
     }
   }
 
