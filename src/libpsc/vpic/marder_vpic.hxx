@@ -28,13 +28,14 @@ struct MarderVpic : MarderBase
     mflds.synchronize_rho();
 
     for (int round = 0; round < num_div_e_round_; round++ ) {
-      mflds.compute_div_e_err();
+      TIC CleanDivOps::compute_div_e_err(*mflds.vmflds_fields); TOC(compute_div_e_err, 1);
       if (round == 0 || round == num_div_e_round_ - 1) {
-	double err = mflds.compute_rms_div_e_err();
+	double err;
+	TIC err = CleanDivOps::compute_rms_div_e_err(*mflds.vmflds_fields); TOC(compute_rms_div_e_err, 1);
 	mpi_printf(comm_, "%s rms error = %e (charge/volume)\n",
 		   round == 0 ? "Initial" : "Cleaned", err);
       }
-      mflds.clean_div_e();
+      TIC CleanDivOps::clean_div_e(*mflds.vmflds_fields); TOC(clean_div_e, 1);
     }
   }
 
@@ -46,13 +47,15 @@ struct MarderVpic : MarderBase
     mpi_printf(comm_, "Divergence cleaning magnetic field\n");
   
     for (int round = 0; round < num_div_b_round_; round++) {
-      mflds.compute_div_b_err();
+      // FIXME, having the TIC/TOC stuff with every use is not pretty
+      TIC CleanDivOps::compute_div_b_err(*mflds.vmflds_fields); TOC(compute_div_b_err, 1);
       if (round == 0 || round == num_div_b_round_ - 1) {
-	double err = mflds.compute_rms_div_b_err();
+	double err;
+	TIC err = CleanDivOps::compute_rms_div_b_err(*mflds.vmflds_fields); TOC(compute_rms_div_b_err, 1);
 	mpi_printf(comm_, "%s rms error = %e (charge/volume)\n",
 		   round == 0 ? "Initial" : "Cleaned", err);
       }
-      mflds.clean_div_b();
+      TIC CleanDivOps::clean_div_b(*mflds.vmflds_fields); TOC(clean_div_b, 1);
     }
   }
 

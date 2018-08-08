@@ -45,10 +45,10 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
   
   mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
-  mflds.compute_div_b_err();
-  err = mflds.compute_rms_div_b_err();
+  TIC CleanDivOps::compute_div_b_err(*mflds.vmflds_fields); TOC(compute_div_b_err, 1);
+  TIC err = CleanDivOps::compute_rms_div_b_err(*mflds.vmflds_fields); TOC(compute_rms_div_b_err, 1);
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-  mflds.clean_div_b();
+  TIC CleanDivOps::clean_div_b(*mflds.vmflds_fields); TOC(clean_div_b, 1);
   
   // Load fields not initialized by the user
 
@@ -64,10 +64,10 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
   // Internal sanity checks
 
   mpi_printf(psc_comm(psc), "Checking electric field divergence\n");
-  mflds.compute_div_e_err();
-  err = mflds.compute_rms_div_e_err();
+  TIC CleanDivOps::compute_div_e_err(*mflds.vmflds_fields); TOC(compute_div_e_err, 1);
+  TIC err = CleanDivOps::compute_rms_div_e_err(*mflds.vmflds_fields); TOC(compute_rms_div_e_err, 1);
   mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-  mflds.clean_div_e();
+  TIC CleanDivOps::clean_div_e(*mflds.vmflds_fields); TOC(clean_div_e, 1);
 
   mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
   err = mflds.synchronize_tang_e_norm_b();

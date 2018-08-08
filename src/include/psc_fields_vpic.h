@@ -48,40 +48,6 @@ struct MfieldsVpic : MfieldsBase
     return err;
   }
   
-  void compute_div_b_err()
-  {
-    TIC CleanDivOps::compute_div_b_err(*vmflds_fields); TOC(compute_div_b_err, 1);
-  }
-  
-  double compute_rms_div_b_err()
-  {
-    double err;
-    TIC err = CleanDivOps::compute_rms_div_b_err(*vmflds_fields); TOC(compute_rms_div_b_err, 1);
-    return err;
-  }
-
-  void clean_div_b()
-  {
-    TIC CleanDivOps::clean_div_b(*vmflds_fields); TOC(clean_div_b, 1);
-  }
-
-  void compute_div_e_err()
-  {
-    TIC CleanDivOps::compute_div_e_err(*vmflds_fields); TOC(compute_div_e_err, 1);
-  }
-
-  double compute_rms_div_e_err()
-  {
-    double err;
-    TIC err = CleanDivOps::compute_rms_div_e_err(*vmflds_fields); TOC(compute_rms_div_e_err, 1);
-    return err;
-  }
-
-  void clean_div_e()
-  {
-    TIC CleanDivOps::clean_div_e(*vmflds_fields); TOC(clean_div_e, 1);
-  }
-
   void clear_rhof()
   {
     TIC vmflds_fields->clear_rhof(); TOC(clear_rhof, 1);
