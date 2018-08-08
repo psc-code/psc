@@ -81,13 +81,13 @@
 #endif
 
 
-#if 0
+#if 1
 typedef PscGridBase Grid;
 #else
 typedef VpicGridBase Grid;
 #endif
 
-#if 0
+#if 1
 typedef PscMaterialList MaterialList;
 typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;

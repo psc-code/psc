@@ -117,28 +117,6 @@ struct PscGridBase
     eps0 = eps0_;
   }
 
-  struct Int3 : std::array<int, 3>
-  {
-    Int3() = default; // not zero initialized!, I think
-    Int3(const int *p)
-    {
-      for (int i = 0; i < 3; i++) {
-	new (&(*this)[i])
-	  int(p[i]); // placement new -- not really necessary for int
-      }
-    }
-    
-    Int3(std::initializer_list<int> l)
-    {
-      assert(l.size() == 3);
-      std::uninitialized_copy(l.begin(), l.end(), data());
-    }
-
-    operator const int* () const { return data(); }
-
-    operator int* ()             { return data(); }
-  };
-  
   Int3 rank_to_idx(int rank, const Int3& np)
   {
     Int3 idx;
