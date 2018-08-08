@@ -202,16 +202,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
   }
   
-  void advance_b(double frac)
-  {
-    PscPushFieldsOps<FieldArray>::advance_b(*this, frac);
-  }
-  
-  void advance_e(double frac)
-  {
-    PscPushFieldsOps<FieldArray>::advance_e(*this, frac);
-  }
-
   // ----------------------------------------------------------------------
   // energy_f
 
