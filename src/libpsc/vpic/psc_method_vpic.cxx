@@ -58,7 +58,7 @@ psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
   TIC mflds.vmflds_fields->clear_rhof(); TOC(clear_rhof, 1);
-  mflds.accumulate_rho_p(&mprts.vmprts_);
+  sub->sim->accumulate_rho_p(mprts.vmprts_, *mflds.vmflds_fields);
   CleanDivOps::synchronize_rho(*mflds.vmflds_fields);
   mflds.compute_rhob();
 
