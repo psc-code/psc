@@ -163,66 +163,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   using SimulationMixin::collision_run;
 
   // ----------------------------------------------------------------------
-  // push_mprts
-
-  void push_mprts(Particles& vmprts, FieldArray& vmflds)
-  {
-    // For this to work, interpolator_ needs to have been set from vmflds E/B before,
-    // ie., we're not using vmflds for E and B here at all.
-    
-    // At this point, fields are at E_0 and B_0 and the particle positions
-    // are at r_0 and u_{-1/2}.  Further the mover lists for the particles should
-    // empty and all particles should be inside the local computational domain.
-    // Advance the particle lists.
-    if (!vmprts.empty()) {
-      TIC accumulator_->clear(); TOC(clear_accumulators, 1);
-      this->advance_p(vmprts, *accumulator_, *interpolator_);
-    }
-
-    // Because the partial position push when injecting aged particles might
-    // place those particles onto the guard list (boundary interaction) and
-    // because advance_p requires an empty guard list, particle injection must
-    // be done after advance_p and before guard list processing. Note:
-    // user_particle_injection should be a stub if sl_ is empty.
-    this->emitter();
-
-    // This should be after the emission and injection to allow for the
-    // possibility of thread parallelizing these operations
-    if (!vmprts.empty()) {
-      TIC accumulator_->reduce(); TOC(reduce_accumulators, 1);
-    }
-    
-    // At this point, most particle positions are at r_1 and u_{1/2}. Particles
-    // that had boundary interactions are now on the guard list. Process the
-    // guard lists. Particles that absorbed are added to rhob (using a corrected
-    // local accumulation).
-    TIC
-      for(int round = 0; round < num_comm_round_; round++) {
-	this->boundary_p(particle_bc_list_, vmprts, vmflds, *accumulator_);
-      } TOC(boundary_p, num_comm_round_);
-    
-    // Drop the particles that have unprocessed movers at this point
-    this->drop_p(vmprts, vmflds);
-
-    // At this point, all particle positions are at r_1 and u_{1/2}, the
-    // guard lists are empty and the accumulators on each processor are current.
-    // Convert the accumulators into currents.
-    TIC vmflds.clear_jf(); TOC(clear_jf, 1);
-    if (!vmprts.empty()) {
-      TIC accumulator_->unload(vmflds); TOC(unload_accumulator, 1);
-    }
-    TIC vmflds.synchronize_jf(); TOC(synchronize_jf, 1);
-
-    // At this point, the particle currents are known at jf_{1/2}.
-    // Let the user add their own current contributions. It is the users
-    // responsibility to insure injected currents are consistent across domains.
-    // It is also the users responsibility to update rhob according to
-    // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
-    // the user wants electric field divergence cleaning to work.
-    TIC this->current_injection(); TOC(user_current_injection, 1);
-  }
-
-  // ----------------------------------------------------------------------
   // field_injection
   
   using SimulationMixin::field_injection;
