@@ -497,7 +497,7 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
 {
   int n_prts = end - beg;
   std::vector<cuda_mparticles_prt> prts;
-  //prts.reserve(n_prts);
+  prts.reserve(n_prts);
 
   reorder(); // FIXME? by means of this, this function disturbs the state...
 
@@ -506,15 +506,9 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
 
   for (int n = 0; n < n_prts; n++) {
     int kind = cuda_float_as_int(xi4[n].w);
-#if 1 // FIXME, why does it segfault?
     prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
 	              Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z},
 	              pxi4[n].w / float(this->grid_.kinds[kind].q), kind);
-#else
-    prts.push_back(cuda_mparticles_prt{{xi4[n].x, xi4[n].y, xi4[n].z},
-				       {pxi4[n].x, pxi4[n].y, pxi4[n].z},
-				       pxi4[n].w / float(this->grid_.kinds[kind].q), kind});
-#endif
 
 #if 0
     uint b = blockIndex(xi4[n], p);
