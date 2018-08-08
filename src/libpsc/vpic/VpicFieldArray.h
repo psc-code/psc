@@ -10,10 +10,8 @@ struct VpicAccumulateOps
 {
   using Grid = typename FieldArray::Grid;
   
-  static void clear_jf(FieldArray& fa)
-  {
-    fa.clear_jf();
-  }
+  static void clear_jf(FieldArray& fa) { fa.clear_jf(); }
+  static void synchronize_jf(FieldArray& fa) { fa.synchronize_jf(); }
 };
 
 // ======================================================================

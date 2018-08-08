@@ -10,6 +10,8 @@
 template<typename FieldArray>
 struct PscAccumulateOps
 {
+  using Grid = typename FieldArray::Grid;
+  
   // ----------------------------------------------------------------------
   // clear_jf
 
@@ -24,6 +26,62 @@ struct PscAccumulateOps
     }
   }
 
+  // ----------------------------------------------------------------------
+  // CommJf
+
+  template<class G, class F3D>
+  struct CommJf : Comm<G, F3D>
+  {
+    typedef Comm<G, F3D> Base;
+    typedef G Grid;
+
+    using Base::begin;
+    using Base::end;
+
+    using Base::nx_;
+    using Base::g_;
+    using Base::buf_size_;
+
+    CommJf(Grid *g) : Base(g)
+    {
+      for (int X = 0; X < 3; X++) {
+	int Y = (X + 1) % 3, Z = (X + 2) % 3;
+	buf_size_[X] = nx_[Y] * (nx_[Z] + 1) + nx_[Z] * (nx_[Y] + 1);
+      }
+    }
+
+    void begin_send(int X, int side, float* p, F3D& F)
+    {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      int face = side ? nx_[X] + 1 : 1;
+      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).jfx)[Y]; });
+      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).jfx)[Z]; });
+    }
+    
+    void end_recv(int X, int side, float* p, F3D& F)
+    {
+      int Y = (X + 1) % 3, Z = (X + 2) % 3;
+      int face = side ? 1 : nx_[X] + 1;
+      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { (&F(x,y,z).jfx)[Y] += *p++; });
+      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { (&F(x,y,z).jfx)[Z] += *p++; });
+    }
+  };
+
+  // ----------------------------------------------------------------------
+  // synchronize_jf
+  
+  static void synchronize_jf(FieldArray& fa)
+  {
+    Field3D<FieldArray> F(fa);
+    CommJf<Grid, Field3D<FieldArray>> comm(fa.grid());
+
+    fa.local_adjust_jf(fa);
+
+    for (int dir = 0; dir < 3; dir++) {
+      comm.begin(dir, F);
+      comm.end(dir, F);
+    }
+  }
 };
 
 // ======================================================================
@@ -306,63 +364,6 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
     const int nv = grid()->nv;
     for (int v = 0; v < nv; v++) {
       (*this)[v].rhof = 0;
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // CommJf
-
-  template<class G, class F3D>
-  struct CommJf : Comm<G, F3D>
-  {
-    typedef Comm<G, F3D> Base;
-    typedef G Grid;
-
-    using Base::begin;
-    using Base::end;
-
-    using Base::nx_;
-    using Base::g_;
-    using Base::buf_size_;
-
-    CommJf(Grid *g) : Base(g)
-    {
-      for (int X = 0; X < 3; X++) {
-	int Y = (X + 1) % 3, Z = (X + 2) % 3;
-	buf_size_[X] = nx_[Y] * (nx_[Z] + 1) + nx_[Z] * (nx_[Y] + 1);
-      }
-    }
-
-    void begin_send(int X, int side, float* p, F3D& F)
-    {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      int face = side ? nx_[X] + 1 : 1;
-      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).jfx)[Y]; });
-      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { *p++ = (&F(x,y,z).jfx)[Z]; });
-    }
-    
-    void end_recv(int X, int side, float* p, F3D& F)
-    {
-      int Y = (X + 1) % 3, Z = (X + 2) % 3;
-      int face = side ? 1 : nx_[X] + 1;
-      foreach_edge(g_, Y, Z, face, [&](int x, int y, int z) { (&F(x,y,z).jfx)[Y] += *p++; });
-      foreach_edge(g_, Z, Y, face, [&](int x, int y, int z) { (&F(x,y,z).jfx)[Z] += *p++; });
-    }
-  };
-
-  // ----------------------------------------------------------------------
-  // synchronize_jf
-  
-  void synchronize_jf()
-  {
-    Field3D<FieldArray> F(*this);
-    CommJf<Grid, Field3D<FieldArray>> comm(this->grid());
-
-    this->local_adjust_jf(*this);
-
-    for (int dir = 0; dir < 3; dir++) {
-      comm.begin(dir, F);
-      comm.end(dir, F);
     }
   }
 

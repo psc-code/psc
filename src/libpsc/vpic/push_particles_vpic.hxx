@@ -70,7 +70,7 @@ struct PushParticlesVpic : PushParticlesBase
     if (!vmprts.empty()) {
       TIC sim_->accumulator_->unload(vmflds); TOC(unload_accumulator, 1);
     }
-    TIC vmflds.synchronize_jf(); TOC(synchronize_jf, 1);
+    TIC AccumulateOps::synchronize_jf(vmflds); TOC(synchronize_jf, 1);
 
     // At this point, the particle currents are known at jf_{1/2}.
     // Let the user add their own current contributions. It is the users
