@@ -18,8 +18,13 @@ struct PushFieldsVpic : PushFieldsBase
 
   void push_E(MfieldsVpic& mflds, double dt_fac)
   {
-    sim_->push_mflds_E(*mflds.vmflds_fields, dt_fac);
+    TIC mflds.vmflds_fields->advance_e(dt_fac); TOC(advance_e, 1);
     sim_->field_injection();
+  }
+
+  void push_H(MfieldsVpic& mflds, double dt_fac)
+  {
+    TIC mflds.vmflds_fields->advance_b(dt_fac); TOC(advance_b, 1);
   }
 
   void push_E(MfieldsBase& mflds_base, double dt_fac) override
@@ -29,11 +34,6 @@ struct PushFieldsVpic : PushFieldsBase
     push_E(mflds, dt_fac);
     // updates E, TCA, and B ghost points FIXME 9 == TCAX
     mflds_base.put_as(mflds, EX, 9 + 3);
-  }
-
-  void push_H(MfieldsVpic& mflds, double dt_fac)
-  {
-    sim_->push_mflds_H(*mflds.vmflds_fields, dt_fac);
   }
 
   void push_H(MfieldsBase& mflds_base, double dt_fac) override
