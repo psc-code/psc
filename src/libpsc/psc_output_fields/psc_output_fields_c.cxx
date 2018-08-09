@@ -45,8 +45,6 @@ struct OutputFieldsCParams
 {
   char *data_dir;
   char *output_fields;
-  char *pfd_s;
-  char *tfd_s;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
   int pfield_step, tfield_step;
@@ -94,10 +92,10 @@ struct OutputFieldsC : public OutputFieldsCParams
     naccum = 0;
     
     if (dowrite_pfield) {
-      ios[IO_TYPE_PFD] = create_mrc_io(pfd_s, data_dir);
+      ios[IO_TYPE_PFD] = create_mrc_io("pfd");
     }
     if (dowrite_tfield) {
-      ios[IO_TYPE_TFD] = create_mrc_io(tfd_s, data_dir);
+      ios[IO_TYPE_TFD] = create_mrc_io("tfd");
     }
   }
 
@@ -184,7 +182,7 @@ struct OutputFieldsC : public OutputFieldsCParams
   };
 
 private:
-  static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
+  mrc_io* create_mrc_io(const char* pfx)
   {
     mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
     mrc_io_set_param_string(io, "basename", pfx);
@@ -282,8 +280,6 @@ OutputFieldsC_run(struct psc_output_fields *out,
 static struct param OutputFieldsC_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("j,e,h")   },
-  { "pfd"                , VAR(pfd_s)                , PARAM_STRING("pfd")     },
-  { "tfd"                , VAR(tfd_s)                , PARAM_STRING("tfd")     },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
   { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)           },
