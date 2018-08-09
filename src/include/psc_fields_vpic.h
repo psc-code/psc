@@ -68,15 +68,6 @@ struct Mfields_traits<MfieldsVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-#if 0
-
-struct MfieldsStateVpic : MfieldsVpic
-{
-  using MfieldsVpic::MfieldsVpic;
-};
-
-#else
-
 struct MfieldsStateVpic
 {
   using fields_t = MfieldsVpic::fields_t;
@@ -97,7 +88,5 @@ struct MfieldsStateVpic
 private:
   MfieldsVpic mflds_;
 };
-
-#endif
 
 #endif
