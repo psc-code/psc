@@ -25,6 +25,7 @@
 #include "PscFieldArrayLocalOps.h"
 #include "PscFieldArrayRemoteOps.h"
 #include "PscFieldArray.h"
+#include "PscPushFieldsOps.hxx"
 
 #include "PscParticleBc.h"
 
@@ -57,6 +58,7 @@
 #include "VpicFieldArrayLocalOps.h"
 #include "VpicFieldArrayRemoteOps.h"
 #include "VpicFieldArray.h"
+#include "VpicPushFieldsOps.hxx"
 
 #include "VpicParticleBc.h"
 
