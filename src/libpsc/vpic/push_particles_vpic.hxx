@@ -81,12 +81,17 @@ struct PushParticlesVpic : PushParticlesBase
     TIC sim_->current_injection(); TOC(user_current_injection, 1);
   }
 
+  void prep(MparticlesVpic& mprts, MfieldsVpic& mflds)
+  {
+    sim_->push_mprts_prep(mprts.vmprts_, *mflds.vmflds_fields);
+  }
+  
   void prep(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
     // needs E, B
     auto mprts = mprts_base.get_as<Mparticles>();
     auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
-    sim_->push_mprts_prep(mprts.vmprts_, *mflds.vmflds_fields);
+    prep(mprts, mflds);
     mflds_base.put_as(mflds, 0, 0);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }

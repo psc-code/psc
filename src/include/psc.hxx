@@ -14,10 +14,11 @@
 #include <output_fields_c.hxx>
 
 #ifdef VPIC
-#include "../libpsc/vpic/vpic_iface.h"
+#include <psc_fields_vpic.h>
+#include <psc_particles_vpic.h>
 
 static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
-				       MfieldsBase& mflds_base, MparticlesBase& mprts_base);
+				       MfieldsVpic& mflds_base, MparticlesVpic& mprts_base);
 void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 #endif
@@ -346,18 +347,12 @@ protected:
 
 #ifdef VPIC
 
-#include "psc_fields_vpic.h"
-#include "psc_particles_vpic.h"
-
 // ----------------------------------------------------------------------
 // psc_method_vpic_initialize
 
 static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
-				       MfieldsBase& mflds_base, MparticlesBase& mprts_base)
+				       MfieldsVpic& mflds, MparticlesVpic& mprts)
 {
-  auto& mflds = mflds_base.get_as<MfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
-  auto& mprts = mprts_base.get_as<MparticlesVpic>();
-  
   // Do some consistency checks on user initialized fields
 
   mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
@@ -397,9 +392,6 @@ static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
   FieldArray *vmflds = mflds.vmflds_fields;
   mpi_printf(psc_comm(psc), "Uncentering particles\n");
   sim->uncenter_p(&mprts.vmprts_, vmflds);
-
-  mprts_base.put_as(mprts);
-  mflds_base.put_as(mflds, 0, VPIC_MFIELDS_N_COMP);
 }
 
 #endif
