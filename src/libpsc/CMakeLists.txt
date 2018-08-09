@@ -23,8 +23,6 @@ add_library(psc
   psc_diag/psc_diag_item_field_energy.cxx
   psc_diag/psc_diag_item_particle_energy.cxx
 
-  psc_output_fields/psc_output_fields.cxx
-  psc_output_fields/psc_output_fields_c.cxx
   psc_output_fields/psc_output_fields_item.cxx
   psc_output_fields/psc_output_fields_item_jeh.cxx
   psc_output_fields/psc_output_fields_item_moments_1st.cxx
