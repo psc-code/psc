@@ -129,7 +129,7 @@ struct psc_output_fields_c
       pfield_next += pfield_step;
       
       auto io = ios[IO_TYPE_PFD];
-      open_mrc_io(this, io);
+      open_mrc_io(io);
       for (auto& item : items) {
 	item.pfd.write_as_mrc_fld(io, item.name, item.comp_names);
       }
@@ -149,7 +149,7 @@ struct psc_output_fields_c
 	tfield_next += tfield_step;
 	
 	auto io = ios[IO_TYPE_TFD];
-	open_mrc_io(this, io);
+	open_mrc_io(io);
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
@@ -177,17 +177,17 @@ private:
     return io;
   }
 
-  static void open_mrc_io(psc_output_fields_c *outf, mrc_io *io)
+  void open_mrc_io(mrc_io *io)
   {
     int gdims[3];
     mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
     int slab_off[3], slab_dims[3];
     for (int d = 0; d < 3; d++) {
-      if (outf->rx[d] > gdims[d])
-	outf->rx[d] = gdims[d];
+      if (rx[d] > gdims[d])
+	rx[d] = gdims[d];
       
-      slab_off[d] = outf->rn[d];
-      slab_dims[d] = outf->rx[d] - outf->rn[d];
+      slab_off[d] = rn[d];
+      slab_dims[d] = rx[d] - rn[d];
     }
     
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
