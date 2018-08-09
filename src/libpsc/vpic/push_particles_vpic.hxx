@@ -81,7 +81,7 @@ struct PushParticlesVpic : PushParticlesBase
     TIC sim_->current_injection(); TOC(user_current_injection, 1);
   }
 
-  void prep(MparticlesVpic& mprts, MfieldsVpic& mflds)
+  void prep(MparticlesVpic& mprts, MfieldsStateVpic& mflds)
   {
     sim_->push_mprts_prep(mprts.vmprts_, mflds.vmflds());
   }

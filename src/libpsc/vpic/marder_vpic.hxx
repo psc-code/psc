@@ -19,7 +19,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // psc_marder_vpic_clean_div_e
 
-  void psc_marder_vpic_clean_div_e(MfieldsVpic& mflds, MparticlesVpic& mprts)
+  void psc_marder_vpic_clean_div_e(MfieldsStateVpic& mflds, MparticlesVpic& mprts)
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
   
@@ -42,7 +42,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // psc_marder_vpic_clean_div_b
 
-  void psc_marder_vpic_clean_div_b(MfieldsVpic& mflds)
+  void psc_marder_vpic_clean_div_b(MfieldsStateVpic& mflds)
   {
     mpi_printf(comm_, "Divergence cleaning magnetic field\n");
   
@@ -67,7 +67,7 @@ struct MarderVpic : MarderBase
     assert(0);
   }
   
-  void operator()(MfieldsVpic& mflds, MparticlesVpic& mprts)
+  void operator()(MfieldsStateVpic& mflds, MparticlesVpic& mprts)
   {
     struct psc *psc = ppsc; // FIXME
 

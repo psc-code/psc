@@ -18,7 +18,7 @@
 #include <psc_particles_vpic.h>
 
 static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
-				       MfieldsVpic& mflds_base, MparticlesVpic& mprts_base);
+				       MfieldsStateVpic& mflds, MparticlesVpic& mprts);
 void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 #endif
@@ -283,7 +283,7 @@ private:
   // initialize_default
   
   static void initialize_default(struct psc_method *method, struct psc *psc,
-				 MfieldsBase& mflds, MparticlesBase& mprts)
+				 MfieldsState& mflds, Mparticles_t& mprts)
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
   }
@@ -299,8 +299,13 @@ private:
       sim_->runDiag(vmprts);
     }
 #endif
+#ifdef VPIC
+    psc_diag_run(psc_->diag, psc_, mprts_, mflds_.base());
+    outf_(mflds_.base(), mprts_);
+#else
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
     outf_(mflds_, mprts_);
+#endif
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 
@@ -351,7 +356,7 @@ protected:
 // psc_method_vpic_initialize
 
 static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
-				       MfieldsVpic& mflds, MparticlesVpic& mprts)
+				       MfieldsStateVpic& mflds, MparticlesVpic& mprts)
 {
   // Do some consistency checks on user initialized fields
 

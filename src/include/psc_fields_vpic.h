@@ -68,7 +68,7 @@ struct Mfields_traits<MfieldsVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-#if 1
+#if 0
 
 struct MfieldsStateVpic : MfieldsVpic
 {
@@ -91,6 +91,8 @@ struct MfieldsStateVpic
   fields_vpic_t operator[](int p) { return mflds_[p]; }
   Int3 ibn() const { return mflds_.ibn(); }
   FieldArray& vmflds() { return mflds_.vmflds(); }
+  Simulation* sim() { return mflds_.sim(); }
+  MfieldsBase& base() { return mflds_; }
 
 private:
   MfieldsVpic mflds_;
