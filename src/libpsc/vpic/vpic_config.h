@@ -90,16 +90,16 @@ typedef VpicGridBase Grid;
 #if 1
 typedef PscMaterialList MaterialList;
 typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
+using FieldArray = FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
-typedef PscFieldArray<FieldArrayBase> FieldArray;
 using PushFieldsOps = PscPushFieldsOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using DiagOps = PscDiagOps<FieldArray>;
 using AccumulateOps = PscAccumulateOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using CleanDivOps = PscCleanDivOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #else
 typedef VpicFieldArrayBase<Grid, VpicMaterialList> FieldArrayBase;
-typedef VpicFieldArray<FieldArrayBase> FieldArray;
+using FieldArray = FieldArrayBase;
 using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
 using DiagOps = VpicDiagOps<FieldArray>;
 using AccumulateOps = VpicAccumulateOps<FieldArray>;

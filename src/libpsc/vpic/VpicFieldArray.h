@@ -54,20 +54,4 @@ struct VpicPushFieldsOps
   static void advance_e(FieldArray& fa, double frac) { return fa.kernel->advance_e(&fa, frac); }
 };
 
-// ======================================================================
-// VpicFieldArray
-
-template<class B>
-struct VpicFieldArray : B
-{
-  typedef B Base;
-  using typename Base::Grid;
-  using typename Base::MaterialList;
-
-  static VpicFieldArray* create(Grid *grid, MaterialList material_list, float damp)
-  {
-    return static_cast<VpicFieldArray*>(Base::create(grid, material_list, damp));
-  }
-};
-  
 #endif

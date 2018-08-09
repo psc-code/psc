@@ -1028,24 +1028,4 @@ struct PscPushFieldsOps
   }
 };
 
-// ======================================================================
-// PscFieldArray
-
-template<class B>
-struct PscFieldArray : B
-{
-  typedef B Base;
-  using typename Base::Grid;
-  using typename Base::MaterialList;
-  
-  using Base::grid;
-  using Base::params;
-
-  static PscFieldArray* create(Grid *grid, MaterialList material_list, float damp)
-  {
-    return static_cast<PscFieldArray*>(Base::create(grid, material_list, damp));
-  }
-};
-  
-
 #endif
