@@ -15,17 +15,6 @@
 #include "fields3d.hxx"
 #include "fields_item.hxx"
 
-static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
-{
-  mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
-  mrc_io_set_param_string(io, "basename", pfx);
-  mrc_io_set_param_string(io, "outdir", data_dir);
-  mrc_io_set_from_options(io);
-  mrc_io_setup(io);
-  mrc_io_view(io);
-  return io;
-}
-
 // ----------------------------------------------------------------------
 
 enum {
@@ -176,6 +165,18 @@ struct psc_output_fields_c
     prof_stop(pr);
   };
 
+private:
+  static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
+  {
+    mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
+    mrc_io_set_param_string(io, "basename", pfx);
+    mrc_io_set_param_string(io, "outdir", data_dir);
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+    mrc_io_view(io);
+    return io;
+  }
+
   static void open_mrc_io(psc_output_fields_c *outf, mrc_io *io)
   {
     int gdims[3];
@@ -207,6 +208,7 @@ struct psc_output_fields_c
     }
   }
 
+public:
   char *data_dir;
   char *output_fields;
   char *pfd_s;
