@@ -17,12 +17,6 @@
 
 // ----------------------------------------------------------------------
 
-enum {
-  IO_TYPE_PFD,
-  IO_TYPE_TFD,
-  NR_IO_TYPES,
-};
-
 struct OutputFieldsItem
 {
   OutputFieldsItem(PscFieldsItemBase item, const std::string& name,
@@ -92,10 +86,10 @@ struct OutputFieldsC : public OutputFieldsCParams
     naccum = 0;
     
     if (dowrite_pfield) {
-      ios[IO_TYPE_PFD] = create_mrc_io("pfd");
+      io_pfd_ = create_mrc_io("pfd");
     }
     if (dowrite_tfield) {
-      ios[IO_TYPE_TFD] = create_mrc_io("tfd");
+      io_tfd_ = create_mrc_io("tfd");
     }
   }
 
@@ -109,10 +103,8 @@ struct OutputFieldsC : public OutputFieldsCParams
       delete &item.tfd;
     }
     
-    for (int i = 0; i < NR_IO_TYPES; i++) {
-      mrc_io_destroy(ios[i]);
-      ios[i] = NULL;
-    }
+    mrc_io_destroy(io_pfd_);
+    mrc_io_destroy(io_tfd_);
   }
 
   // ----------------------------------------------------------------------
@@ -144,12 +136,11 @@ struct OutputFieldsC : public OutputFieldsCParams
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
-      auto io = ios[IO_TYPE_PFD];
-      open_mrc_io(io);
+      open_mrc_io(io_pfd_);
       for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io, item.name, item.comp_names);
+	item.pfd.write_as_mrc_fld(io_pfd_, item.name, item.comp_names);
       }
-      mrc_io_close(io);
+      mrc_io_close(io_pfd_);
     }
     
     if (dowrite_tfield) {
@@ -164,17 +155,16 @@ struct OutputFieldsC : public OutputFieldsCParams
 	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
 	tfield_next += tfield_step;
 	
-	auto io = ios[IO_TYPE_TFD];
-	open_mrc_io(io);
+	open_mrc_io(io_tfd_);
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
 	  item.tfd.scale(1. / naccum);
-	  item.tfd.write_as_mrc_fld(io, item.name, item.comp_names);
+	  item.tfd.write_as_mrc_fld(io_tfd_, item.name, item.comp_names);
 	  item.tfd.zero();
 	}
 	naccum = 0;
-	mrc_io_close(io);
+	mrc_io_close(io_tfd_);
       }
     }
 
@@ -229,7 +219,9 @@ public:
   // storage for output
   unsigned int naccum;
   std::vector<OutputFieldsItem> items;
-  struct mrc_io *ios[NR_IO_TYPES];
+private:
+  mrc_io *io_pfd_;
+  mrc_io *io_tfd_;
 
 };
 
