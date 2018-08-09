@@ -165,6 +165,7 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #include "../libpsc/vpic/bnd_fields_vpic.hxx"
 #include "../libpsc/vpic/bnd_particles_vpic.hxx"
 #include "../libpsc/vpic/marder_vpic.hxx"
+#include "../libpsc/vpic/checks_vpic.hxx"
 
 struct PscConfigVpic
 {
@@ -179,7 +180,7 @@ struct PscConfigVpic
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;
-  using Checks_t = Checks_<MparticlesSingle, MfieldsSingle, checks_order_1st>;
+  using Checks_t = ChecksVpic;
   using Marder_t = MarderVpic;
   using Simulation = Simulation;
 };
