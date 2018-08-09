@@ -404,12 +404,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     initialize_stats();
     setup_log();
-    
-    if (output_field_interval > 0) {
-      psc_output_fields_set_param_int(output_fields_, "pfield_step",
-				      (int) (output_field_interval / (phys_.wci*dt())));
-    }
-  
+
     if (output_particle_interval > 0) {
       psc_output_particles_set_param_int(psc_->output_particles, "every_step",
 					 (int) (output_particle_interval / (phys_.wci*dt())));
@@ -859,6 +854,10 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 #endif
   
+  // -- output fields
+  p.outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
+  p.outf_params.pfield_step = 0;
+  
   PscHarrisParams params;
 
   params.wpedt_max = .36;
@@ -877,7 +876,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   params.taui = 40.;
   params.t_intervali = 1.;
-  params.output_field_interval = 1.;
   params.output_particle_interval = 10.;
 
   params.overalloc = 2.;
@@ -932,6 +930,10 @@ PscHarris* PscHarrisBuilder::makePsc()
   double dt = set_dt(grid_domain, p.cfl, phys, params);
   
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
+  
+  params.output_field_interval = 1.; // FIXME, no need to be in params
+  p.outf_params.output_fields = "fields_vpic_single,hydro_vpic";
+  p.outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt)));
   
   auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);

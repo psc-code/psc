@@ -473,7 +473,11 @@ PscBubble* PscBubbleBuilder::makePsc()
   p.balance_print_loads = true;
   p.balance_write_loads = false;
 
-  p.stats_every = 10;
+  // -- output fields
+  p.outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
+  p.outf_params.pfield_step = 10;
+  
+  p.stats_every = 100;
   
   mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
   

@@ -5,7 +5,6 @@
 #include <mrc_profile.h>
 #include <psc_method.h>
 #include <psc_diag.h>
-#include <psc_output_fields.h>
 
 #include <particles.hxx>
 
@@ -91,11 +90,7 @@ struct Psc
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump),
       outf_{psc_comm(psc), p_.outf_params}
-  {
-    output_fields_ = psc_output_fields_create(psc_comm(psc));
-    psc_output_fields_set_from_options(output_fields_);
-    psc_output_fields_setup(output_fields_);
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // dtor
@@ -296,7 +291,6 @@ private:
     }
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
-    psc_output_fields_run(output_fields_, mflds_, mprts_);
     outf_(mflds_, mprts_);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
@@ -334,7 +328,6 @@ protected:
   Checks_t checks_;
   Marder_t marder_;
 
-  psc_output_fields* output_fields_;
   OutputFieldsC outf_;
 
   int st_nr_particles;
