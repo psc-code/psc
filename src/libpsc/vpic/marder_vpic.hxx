@@ -23,19 +23,19 @@ struct MarderVpic : MarderBase
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
   
-    TIC CleanDivOps::clear_rhof(*mflds.vmflds_fields); TOC(clear_rhof, 1);
-    mflds.sim->accumulate_rho_p(mprts.vmprts_, *mflds.vmflds_fields);
-    CleanDivOps::synchronize_rho(*mflds.vmflds_fields);
+    TIC CleanDivOps::clear_rhof(mflds.vmflds()); TOC(clear_rhof, 1);
+    mflds.sim->accumulate_rho_p(mprts.vmprts_, mflds.vmflds());
+    CleanDivOps::synchronize_rho(mflds.vmflds());
 
     for (int round = 0; round < num_div_e_round_; round++ ) {
-      TIC CleanDivOps::compute_div_e_err(*mflds.vmflds_fields); TOC(compute_div_e_err, 1);
+      TIC CleanDivOps::compute_div_e_err(mflds.vmflds()); TOC(compute_div_e_err, 1);
       if (round == 0 || round == num_div_e_round_ - 1) {
 	double err;
-	TIC err = CleanDivOps::compute_rms_div_e_err(*mflds.vmflds_fields); TOC(compute_rms_div_e_err, 1);
+	TIC err = CleanDivOps::compute_rms_div_e_err(mflds.vmflds()); TOC(compute_rms_div_e_err, 1);
 	mpi_printf(comm_, "%s rms error = %e (charge/volume)\n",
 		   round == 0 ? "Initial" : "Cleaned", err);
       }
-      TIC CleanDivOps::clean_div_e(*mflds.vmflds_fields); TOC(clean_div_e, 1);
+      TIC CleanDivOps::clean_div_e(mflds.vmflds()); TOC(clean_div_e, 1);
     }
   }
 
@@ -48,14 +48,14 @@ struct MarderVpic : MarderBase
   
     for (int round = 0; round < num_div_b_round_; round++) {
       // FIXME, having the TIC/TOC stuff with every use is not pretty
-      TIC CleanDivOps::compute_div_b_err(*mflds.vmflds_fields); TOC(compute_div_b_err, 1);
+      TIC CleanDivOps::compute_div_b_err(mflds.vmflds()); TOC(compute_div_b_err, 1);
       if (round == 0 || round == num_div_b_round_ - 1) {
 	double err;
-	TIC err = CleanDivOps::compute_rms_div_b_err(*mflds.vmflds_fields); TOC(compute_rms_div_b_err, 1);
+	TIC err = CleanDivOps::compute_rms_div_b_err(mflds.vmflds()); TOC(compute_rms_div_b_err, 1);
 	mpi_printf(comm_, "%s rms error = %e (charge/volume)\n",
 		   round == 0 ? "Initial" : "Cleaned", err);
       }
-      TIC CleanDivOps::clean_div_b(*mflds.vmflds_fields); TOC(clean_div_b, 1);
+      TIC CleanDivOps::clean_div_b(mflds.vmflds()); TOC(clean_div_b, 1);
     }
   }
 
@@ -98,7 +98,7 @@ struct MarderVpic : MarderBase
       // needs E, B, TCA
       mpi_printf(comm_, "Synchronizing shared tang e, norm b\n");
       double err;
-      TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds.vmflds_fields); TOC(synchronize_tang_e_norm_b, 1);
+      TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds.vmflds()); TOC(synchronize_tang_e_norm_b, 1);
       mpi_printf(comm_, "Domain desynchronization error = %e (arb units)\n", err);
       // updates E, B, TCA
     }

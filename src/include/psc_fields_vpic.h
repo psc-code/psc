@@ -30,7 +30,7 @@ struct MfieldsVpic : MfieldsBase
     // FIXME hacky...
     if (n_comps() == VPIC_MFIELDS_N_COMP) {
       int ib[3], im[3];
-      float* data = vmflds_fields->getData(ib, im);
+      float* data = vmflds_fields_->getData(ib, im);
       return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
     } else if (n_comps() == VPIC_HYDRO_N_COMP) {
       int ib[3], im[3];
@@ -40,6 +40,8 @@ struct MfieldsVpic : MfieldsBase
       assert(0);
     }
   }
+
+  FieldArray& vmflds() { return *vmflds_fields_; }
 
   void zero_comp(int m) override { assert(0); }
   void set_comp(int m, double val) override { assert(0); }
@@ -52,7 +54,9 @@ struct MfieldsVpic : MfieldsBase
   const Convert& convert_from() override { return convert_from_; }
 
   Simulation *sim;
-  FieldArray *vmflds_fields;
+ private:
+  FieldArray *vmflds_fields_;
+ public:
   HydroArray *vmflds_hydro;
 };
 

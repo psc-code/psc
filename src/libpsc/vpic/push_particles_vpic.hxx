@@ -24,7 +24,7 @@ struct PushParticlesVpic : PushParticlesBase
   void push_mprts(MparticlesVpic& mprts, MfieldsVpic& mflds)
   {
     auto& vmprts = mprts.vmprts_;
-    auto& vmflds = *mflds.vmflds_fields;
+    auto& vmflds = mflds.vmflds();
     
     // For this to work, interpolator_ needs to have been set from vmflds E/B before,
     // ie., we're not using vmflds for E and B here at all.
@@ -83,7 +83,7 @@ struct PushParticlesVpic : PushParticlesBase
 
   void prep(MparticlesVpic& mprts, MfieldsVpic& mflds)
   {
-    sim_->push_mprts_prep(mprts.vmprts_, *mflds.vmflds_fields);
+    sim_->push_mprts_prep(mprts.vmprts_, mflds.vmflds());
   }
   
   void prep(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override

@@ -18,13 +18,13 @@ struct PushFieldsVpic : PushFieldsBase
 
   void push_E(MfieldsVpic& mflds, double dt_fac)
   {
-    TIC PushFieldsOps::advance_e(*mflds.vmflds_fields, dt_fac); TOC(advance_e, 1);
+    TIC PushFieldsOps::advance_e(mflds.vmflds(), dt_fac); TOC(advance_e, 1);
     sim_->field_injection();
   }
 
   void push_H(MfieldsVpic& mflds, double dt_fac)
   {
-    TIC PushFieldsOps::advance_b(*mflds.vmflds_fields, dt_fac); TOC(advance_b, 1);
+    TIC PushFieldsOps::advance_b(mflds.vmflds(), dt_fac); TOC(advance_b, 1);
   }
 
   void push_E(MfieldsBase& mflds_base, double dt_fac) override
