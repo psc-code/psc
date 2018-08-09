@@ -23,13 +23,13 @@
 #define y_FACE_LOOP(y) XYZ_LOOP(1,nx,y,y,1,nz)
 #define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
 
-template<class FA>
-struct PscFieldArrayLocalOps {
-  typedef FA FieldArray;
-  typedef typename FieldArray::Grid Grid;
-  typedef typename FieldArray::Element FieldT;
+template<class FieldArray>
+struct PscFieldArrayLocalOps
+{
+  using Grid = typename FieldArray::Grid;
+  using FieldT = typename FieldArray::Element;
 
-  void local_ghost_tang_b(FieldArray& fa)
+  static void local_ghost_tang_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -108,7 +108,7 @@ struct PscFieldArrayLocalOps {
   // absorbing boundary conditions.  Thus, ghost norm e value is
   // irrevelant.
 
-  void local_ghost_norm_e(FieldArray& fa)
+  static void local_ghost_norm_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -162,7 +162,7 @@ struct PscFieldArrayLocalOps {
     APPLY_LOCAL_NORM_E( 0, 0, 1,z,x,y);
   }
 
-  void local_ghost_div_b(FieldArray& fa)
+  static void local_ghost_div_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -202,7 +202,7 @@ struct PscFieldArrayLocalOps {
   // FIXME: Specialty edge loops should be added to zero e_tang on local
   // edges exclusively to handle concave domain geometries
   
-  void local_adjust_tang_e(FieldArray& fa)
+  static void local_adjust_tang_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -245,7 +245,7 @@ struct PscFieldArrayLocalOps {
     ADJUST_TANG_E( 0, 0, 1,z,x,y);
   }
 
-  void local_adjust_norm_b(FieldArray& fa)
+  static void local_adjust_norm_b(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -278,7 +278,7 @@ struct PscFieldArrayLocalOps {
     ADJUST_NORM_B( 0, 0, 1,z,x,y);
   }
 
-  void local_adjust_div_e(FieldArray& fa)
+  static void local_adjust_div_e(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -316,7 +316,7 @@ struct PscFieldArrayLocalOps {
   // absorbing      => No image charges, half cell accumulation (double jf_tang)
   // (rhob/jf_norm account for particles that hit boundary and reflect/stick)
 
-  void local_adjust_jf(FieldArray& fa)
+  static void local_adjust_jf(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -358,7 +358,7 @@ struct PscFieldArrayLocalOps {
   // absorbing      => No image charges, half cell accumulation (double rhof)
   // (rhob/jf_norm account for particles that hit the boundary)
 
-  void local_adjust_rhof(FieldArray& fa)
+  static void local_adjust_rhof(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
@@ -397,7 +397,7 @@ struct PscFieldArrayLocalOps {
     // absorbing      => No image charges, half cell accumulation (rhob already
     //                   correct)
 
-  void local_adjust_rhob(FieldArray& fa)
+  static void local_adjust_rhob(FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
