@@ -81,6 +81,11 @@ struct MfieldsStateVpic
     : mflds_{grid, n_fields, ibn}
   {}
 
+  int n_patches() const { return mflds_.n_patches(); }
+  const Grid_t& grid() { return mflds_.grid(); }
+  fields_vpic_t operator[](int p) { return mflds_[p]; }
+  Int3 ibn() const { return mflds_.ibn(); }
+
 private:
   MfieldsVpic mflds_;
 };
