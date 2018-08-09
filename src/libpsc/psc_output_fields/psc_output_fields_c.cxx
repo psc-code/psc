@@ -37,15 +37,20 @@ struct OutputFieldsItem
 
 struct OutputFieldsCParams
 {
-  char *data_dir;
-  char *output_fields;
-  bool dowrite_pfield, dowrite_tfield;
-  int pfield_first, tfield_first;
-  int pfield_step, tfield_step;
-  int tfield_length;
-  int tfield_every;
-  int rn[3];
-  int rx[3];
+  const char *data_dir = {"."};
+  const char *output_fields = {"j,e,h"};
+
+  bool dowrite_pfield = {true};
+  int pfield_first = 0;
+  int pfield_step = 10;
+
+  bool dowrite_tfield = {true};
+  int tfield_first = 0;
+  int tfield_step = 10;
+  int tfield_length = 10;
+  int tfield_every = 1;
+  int rn[3] = {};
+  int rx[3] = {1000000, 1000000, 100000};
 };
 
 // ======================================================================
