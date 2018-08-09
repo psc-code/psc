@@ -49,6 +49,9 @@ struct OutputFieldsItem
   std::vector<std::string> comp_names;
 };
 
+// ======================================================================
+// psc_output_fields_c
+
 struct psc_output_fields_c
 {
   // ----------------------------------------------------------------------
@@ -88,6 +91,19 @@ struct psc_output_fields_c
     }
     if (dowrite_tfield) {
       ios[IO_TYPE_TFD] = create_mrc_io(tfd_s, data_dir);
+    }
+  }
+
+  ~psc_output_fields_c()
+  {
+    for (auto& item : items) {
+      psc_output_fields_item_destroy(item.item.item());
+      delete &item.tfd;
+    }
+    
+    for (int i = 0; i < NR_IO_TYPES; i++) {
+      mrc_io_destroy(ios[i]);
+      ios[i] = NULL;
     }
   }
 
@@ -152,16 +168,6 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
   PscOutputFields_t outf{out};
 
   outf->~psc_output_fields_c();
-
-  for (auto& item : outf->items) {
-    psc_output_fields_item_destroy(item.item.item());
-    delete &item.tfd;
-  }
-
-  for (int i = 0; i < NR_IO_TYPES; i++) {
-    mrc_io_destroy(outf->ios[i]);
-    outf->ios[i] = NULL;
-  }
 }
 
 // ----------------------------------------------------------------------
