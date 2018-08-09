@@ -119,31 +119,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 }
 
 // ----------------------------------------------------------------------
-// psc_output_fields_c_write
-
-static void
-psc_output_fields_c_write(struct psc_output_fields *out, struct mrc_io *io)
-{
-  PscOutputFields_t outf{out};
-
-  mrc_io_write_int(io, out, "pfield_next", outf->pfield_next);
-  mrc_io_write_int(io, out, "tfield_next", outf->tfield_next);
-}
-
-// ----------------------------------------------------------------------
-// psc_output_fields_c_read
-
-static void
-psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
-{
-  PscOutputFields_t outf{out};
-
-  psc_output_fields_read_super(out, io);
-  mrc_io_read_int(io, out, "pfield_next", &outf->pfield_next);
-  mrc_io_read_int(io, out, "tfield_next", &outf->tfield_next);
-}
-
-// ----------------------------------------------------------------------
 // psc_output_fields_c_run
 
 static void
@@ -250,8 +225,6 @@ struct psc_output_fields_ops_c : psc_output_fields_ops {
     param_descr           = psc_output_fields_c_descr;
     setup                 = psc_output_fields_c_setup;
     destroy               = psc_output_fields_c_destroy;
-    write                 = psc_output_fields_c_write;
-    read                  = psc_output_fields_c_read;
     run                   = psc_output_fields_c_run;
   }
 } psc_output_fields_c_ops;
