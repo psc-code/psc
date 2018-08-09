@@ -454,6 +454,13 @@ private:
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
+    int nr_patches_old;
+    mrc_domain_get_patches(domain, &nr_patches_old);
+
+    std::vector<int> nr_patches_all_old(size);
+    MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1, MPI_INT, comm);
+    for (auto n : nr_patches_all_old) { mprintf("old %d\n", n); }
+    
     int *nr_patches_all_new = NULL;
 
     if (rank == 0) { // do the mapping on proc 0
