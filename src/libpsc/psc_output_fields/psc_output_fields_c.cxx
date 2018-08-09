@@ -94,6 +94,9 @@ struct psc_output_fields_c
     }
   }
 
+  // ----------------------------------------------------------------------
+  // dtor
+
   ~psc_output_fields_c()
   {
     for (auto& item : items) {
@@ -104,6 +107,103 @@ struct psc_output_fields_c
     for (int i = 0; i < NR_IO_TYPES; i++) {
       mrc_io_destroy(ios[i]);
       ios[i] = NULL;
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // run
+
+  void run(MfieldsBase& mflds, MparticlesBase& mprts)
+  {
+    auto psc = ppsc;
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("output_c_field", 1., 0, 0);
+    }
+    prof_start(pr);
+
+    bool doaccum_tfield = dowrite_tfield && 
+      (((psc->timestep >= (tfield_next - tfield_length + 1)) &&
+	psc->timestep % tfield_every == 0) ||
+       psc->timestep == 0);
+    
+    if ((dowrite_pfield && psc->timestep >= pfield_next) ||
+	(dowrite_tfield && doaccum_tfield)) {
+      for (auto item : items) {
+	item.item(mflds, mprts);
+      }
+    }
+    
+    if (dowrite_pfield && psc->timestep >= pfield_next) {
+      mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
+      pfield_next += pfield_step;
+      
+      auto io = ios[IO_TYPE_PFD];
+      open_mrc_io(this, io);
+      for (auto& item : items) {
+	item.pfd.write_as_mrc_fld(io, item.name, item.comp_names);
+      }
+      mrc_io_close(io);
+    }
+    
+    if (dowrite_tfield) {
+      if (doaccum_tfield) {
+	// tfd += pfd
+	for (auto& item : items) {
+	  item.tfd.axpy(1., item.pfd);
+	}
+	naccum++;
+      }
+      if (psc->timestep >= tfield_next) {
+	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
+	tfield_next += tfield_step;
+	
+	auto io = ios[IO_TYPE_TFD];
+	open_mrc_io(this, io);
+	
+	// convert accumulated values to correct temporal mean
+	for (auto& item : items) {
+	  item.tfd.scale(1. / naccum);
+	  item.tfd.write_as_mrc_fld(io, item.name, item.comp_names);
+	  item.tfd.zero();
+	}
+	naccum = 0;
+	mrc_io_close(io);
+      }
+    }
+
+    prof_stop(pr);
+  };
+
+  static void open_mrc_io(psc_output_fields_c *outf, mrc_io *io)
+  {
+    int gdims[3];
+    mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
+    int slab_off[3], slab_dims[3];
+    for (int d = 0; d < 3; d++) {
+      if (outf->rx[d] > gdims[d])
+	outf->rx[d] = gdims[d];
+      
+      slab_off[d] = outf->rn[d];
+      slab_dims[d] = outf->rx[d] - outf->rn[d];
+    }
+    
+    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
+    
+    // save some basic info about the run in the output file
+    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
+    mrc_obj_set_name(obj, "psc");
+    mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
+    mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->grid().dt);
+    mrc_obj_dict_add_float(obj, "cc", ppsc->grid().norm.cc);
+    mrc_obj_dict_add_float(obj, "dt", ppsc->grid().dt);
+    mrc_obj_write(obj, io);
+    mrc_obj_destroy(obj);
+    
+    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
+      mrc_io_set_param_int3(io, "slab_off", slab_off);
+      mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
   }
 
@@ -124,40 +224,10 @@ struct psc_output_fields_c
   unsigned int naccum;
   std::vector<OutputFieldsItem> items;
   struct mrc_io *ios[NR_IO_TYPES];
+
 };
 
 using PscOutputFields_t = PscOutputFields<psc_output_fields_c>;
-
-static void open_mrc_io(PscOutputFields_t outf, mrc_io *io)
-{
-  int gdims[3];
-  mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
-  int slab_off[3], slab_dims[3];
-  for (int d = 0; d < 3; d++) {
-    if (outf->rx[d] > gdims[d])
-      outf->rx[d] = gdims[d];
-    
-    slab_off[d] = outf->rn[d];
-    slab_dims[d] = outf->rx[d] - outf->rn[d];
-  }
-
-  mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
-
-  // save some basic info about the run in the output file
-  struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
-  mrc_obj_set_name(obj, "psc");
-  mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
-  mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->grid().dt);
-  mrc_obj_dict_add_float(obj, "cc", ppsc->grid().norm.cc);
-  mrc_obj_dict_add_float(obj, "dt", ppsc->grid().dt);
-  mrc_obj_write(obj, io);
-  mrc_obj_destroy(obj);
-
-  if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
-    mrc_io_set_param_int3(io, "slab_off", slab_off);
-    mrc_io_set_param_int3(io, "slab_dims", slab_dims);
-  }
-}
 
 // ----------------------------------------------------------------------
 // psc_output_fields_c_destroy
@@ -189,65 +259,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 			MfieldsBase& mflds, MparticlesBase& mprts)
 {
   PscOutputFields_t outf{out};
-  struct psc *psc = ppsc;
 
-  static int pr;
-  if (!pr) {
-    pr = prof_register("output_c_field", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  bool doaccum_tfield = outf->dowrite_tfield && 
-    (((psc->timestep >= (outf->tfield_next - outf->tfield_length + 1)) &&
-      psc->timestep % outf->tfield_every == 0) ||
-     psc->timestep == 0);
-
-  if ((outf->dowrite_pfield && psc->timestep >= outf->pfield_next) ||
-      (outf->dowrite_tfield && doaccum_tfield)) {
-    for (auto item : outf->items) {
-      item.item(mflds, mprts);
-    }
-  }
-
-  if (outf->dowrite_pfield && psc->timestep >= outf->pfield_next) {
-    mpi_printf(psc_output_fields_comm(out), "***** Writing PFD output\n");
-    outf->pfield_next += outf->pfield_step;
-
-    auto io = outf->ios[IO_TYPE_PFD];
-    open_mrc_io(outf, io);
-    for (auto& item : outf->items) {
-      item.pfd.write_as_mrc_fld(io, item.name, item.comp_names);
-    }
-    mrc_io_close(io);
-  }
-
-  if (outf->dowrite_tfield) {
-    if (doaccum_tfield) {
-      // tfd += pfd
-      for (auto& item : outf->items) {
-	item.tfd.axpy(1., item.pfd);
-      }
-      outf->naccum++;
-    }
-    if (psc->timestep >= outf->tfield_next) {
-      mpi_printf(psc_output_fields_comm(out), "***** Writing TFD output\n");
-      outf->tfield_next += outf->tfield_step;
-      
-      auto io = outf->ios[IO_TYPE_TFD];
-      open_mrc_io(outf, io);
-
-      // convert accumulated values to correct temporal mean
-      for (auto& item : outf->items) {
-	item.tfd.scale(1. / outf->naccum);
-	item.tfd.write_as_mrc_fld(io, item.name, item.comp_names);
-	item.tfd.zero();
-      }
-      outf->naccum = 0;
-      mrc_io_close(io);
-    }
-  }
-  
-  prof_stop(pr);
+  outf->run(mflds, mprts);
 }
 
 // ======================================================================
