@@ -13,10 +13,14 @@
 #include <output_particles.hxx>
 #include <output_fields_c.hxx>
 
-void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
-				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
+#ifdef VPIC
+#include "../libpsc/vpic/vpic_iface.h"
+
+static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
+				       MfieldsBase& mflds_base, MparticlesBase& mprts_base);
 void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
+#endif
 
 // ======================================================================
 // PscParams
@@ -125,7 +129,9 @@ struct Psc
     mprts_.view();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_initialize(psc_->method, psc_, mflds_, mprts_);
+#ifdef VPIC
+      psc_method_vpic_initialize(sim_, psc_, mflds_, mprts_);
+#endif
     } else {
       initialize_default(psc_->method, psc_, mflds_, mprts_);
     }
@@ -172,9 +178,11 @@ struct Psc
       step();
     
       psc_->timestep++; // FIXME, too hacky
+#ifdef VPIC
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 	psc_method_vpic_inc_step(psc_->method, psc_->timestep);
       }
+#endif
       
       diagnostics();
 
@@ -300,9 +308,11 @@ private:
 
   void print_status()
   {
+#ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       psc_method_vpic_print_status(psc_->method);
     }
+#endif
     psc_stats_log(psc_->timestep);
     print_profiling();
   }
@@ -333,3 +343,63 @@ protected:
   int st_nr_particles;
   int st_time_step;
 };
+
+#ifdef VPIC
+
+#include "psc_fields_vpic.h"
+#include "psc_particles_vpic.h"
+
+// ----------------------------------------------------------------------
+// psc_method_vpic_initialize
+
+static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
+				       MfieldsBase& mflds_base, MparticlesBase& mprts_base)
+{
+  auto& mflds = mflds_base.get_as<MfieldsVpic>(0, VPIC_MFIELDS_N_COMP);
+  auto& mprts = mprts_base.get_as<MparticlesVpic>();
+  
+  // Do some consistency checks on user initialized fields
+
+  mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
+  double err;
+  TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds.vmflds_fields); TOC(synchronize_tang_e_norm_b, 1);
+  mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
+  
+  mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
+  TIC CleanDivOps::compute_div_b_err(*mflds.vmflds_fields); TOC(compute_div_b_err, 1);
+  TIC err = CleanDivOps::compute_rms_div_b_err(*mflds.vmflds_fields); TOC(compute_rms_div_b_err, 1);
+  mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
+  TIC CleanDivOps::clean_div_b(*mflds.vmflds_fields); TOC(clean_div_b, 1);
+  
+  // Load fields not initialized by the user
+
+  mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
+  TIC AccumulateOps::compute_curl_b(*mflds.vmflds_fields); TOC(compute_curl_b, 1);
+
+  mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
+  TIC CleanDivOps::clear_rhof(*mflds.vmflds_fields); TOC(clear_rhof, 1);
+  sim->accumulate_rho_p(mprts.vmprts_, *mflds.vmflds_fields);
+  CleanDivOps::synchronize_rho(*mflds.vmflds_fields);
+  TIC AccumulateOps::compute_rhob(*mflds.vmflds_fields); TOC(compute_rhob, 1);
+
+  // Internal sanity checks
+
+  mpi_printf(psc_comm(psc), "Checking electric field divergence\n");
+  TIC CleanDivOps::compute_div_e_err(*mflds.vmflds_fields); TOC(compute_div_e_err, 1);
+  TIC err = CleanDivOps::compute_rms_div_e_err(*mflds.vmflds_fields); TOC(compute_rms_div_e_err, 1);
+  mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
+  TIC CleanDivOps::clean_div_e(*mflds.vmflds_fields); TOC(clean_div_e, 1);
+
+  mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
+  TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds.vmflds_fields); TOC(synchronize_tang_e_norm_b, 1);
+  mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
+
+  FieldArray *vmflds = mflds.vmflds_fields;
+  mpi_printf(psc_comm(psc), "Uncentering particles\n");
+  sim->uncenter_p(&mprts.vmprts_, vmflds);
+
+  mprts_base.put_as(mprts);
+  mflds_base.put_as(mflds, 0, VPIC_MFIELDS_N_COMP);
+}
+
+#endif
