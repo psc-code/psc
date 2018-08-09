@@ -13,12 +13,12 @@ struct OutputFieldsCParams
   const char *data_dir = {"."};
   const char *output_fields = {"j,e,h"};
 
+  int pfield_step = 0;
   int pfield_first = 0;
-  int pfield_step = 10;
 
+  int tfield_step = 0;
   int tfield_first = 0;
-  int tfield_step = 10;
-  int tfield_length = 10;
+  int tfield_length = 1000000;
   int tfield_every = 1;
 
   int rn[3] = {};
