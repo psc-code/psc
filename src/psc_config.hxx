@@ -170,7 +170,7 @@ struct PscConfigVpic
 {
   using Mparticles_t = MparticlesVpic;
   using Mfields_t = MfieldsVpic;
-  using MfieldsState = MfieldsVpic;
+  using MfieldsState = MfieldsStateVpic;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;

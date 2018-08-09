@@ -63,6 +63,11 @@ struct Mfields_traits<MfieldsVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
+struct MfieldsStateVpic : MfieldsVpic
+{
+  using MfieldsVpic::MfieldsVpic;
+};
+
 #include "../libpsc/vpic/vpic_iface.h"
 
 #endif
