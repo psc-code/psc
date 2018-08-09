@@ -1036,10 +1036,8 @@ struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
 {
   typedef B Base;
   typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
-  using Grid = typename Base::Grid;
+  using typename Base::Grid;
   using typename Base::MaterialList;
-  using typename Base::SfaParams;
-  using typename Base::MaterialCoefficient;
   
   using Base::grid;
   using Base::params;
