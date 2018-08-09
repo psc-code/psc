@@ -39,9 +39,27 @@ struct OutputFieldsItem
 };
 
 // ======================================================================
+// OutputFieldsCParams
+
+struct OutputFieldsCParams
+{
+  char *data_dir;
+  char *output_fields;
+  char *pfd_s;
+  char *tfd_s;
+  bool dowrite_pfield, dowrite_tfield;
+  int pfield_first, tfield_first;
+  int pfield_step, tfield_step;
+  int tfield_length;
+  int tfield_every;
+  int rn[3];
+  int rx[3];
+};
+
+// ======================================================================
 // OutputFieldsC
 
-struct OutputFieldsC
+struct OutputFieldsC : public OutputFieldsCParams
 {
   // ----------------------------------------------------------------------
   // ctor
@@ -209,18 +227,6 @@ private:
   }
 
 public:
-  char *data_dir;
-  char *output_fields;
-  char *pfd_s;
-  char *tfd_s;
-  bool dowrite_pfield, dowrite_tfield;
-  int pfield_first, tfield_first;
-  int pfield_step, tfield_step;
-  int tfield_length;
-  int tfield_every;
-  int rn[3];
-  int rx[3];
-	
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
