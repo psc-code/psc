@@ -89,6 +89,7 @@ struct MfieldsStateVpic
   const Grid_t& grid() { return mflds_.grid(); }
   fields_vpic_t operator[](int p) { return mflds_[p]; }
   Int3 ibn() const { return mflds_.ibn(); }
+  FieldArray& vmflds() { return mflds_.vmflds(); }
 
 private:
   MfieldsVpic mflds_;

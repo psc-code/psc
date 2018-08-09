@@ -21,7 +21,7 @@ struct PushParticlesVpic : PushParticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_mprts(MparticlesVpic& mprts, MfieldsVpic& mflds)
+  void push_mprts(MparticlesVpic& mprts, MfieldsStateVpic& mflds)
   {
     auto& vmprts = mprts.vmprts_;
     auto& vmflds = mflds.vmflds();
