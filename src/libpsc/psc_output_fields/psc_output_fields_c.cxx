@@ -4,13 +4,14 @@
 #include "psc_fields_as_c.h"
 #include "bnd.hxx"
 #include "fields_item.hxx"
+#include "output_fields.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
 #include <mrc_io.h>
 #include <string.h>
 
-#define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
+using PscOutputFields_t = PscOutputFields<psc_output_fields_c>;
 
 static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
 {
@@ -60,7 +61,8 @@ static void open_mrc_io(psc_output_fields_c *out, mrc_io *io)
 static void
 psc_output_fields_c_destroy(struct psc_output_fields *out)
 {
-  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  PscOutputFields_t outf{out};
+  struct psc_output_fields_c *out_c = outf.sub();
 
   for (auto& item : out_c->items) {
     psc_output_fields_item_destroy(item.item.item());
@@ -79,7 +81,8 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 static void
 psc_output_fields_c_setup(struct psc_output_fields *out)
 {
-  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  PscOutputFields_t outf{out};
+  struct psc_output_fields_c *out_c = outf.sub();
   struct psc *psc = ppsc;
 
   out_c->pfield_next = out_c->pfield_first;
@@ -123,7 +126,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 static void
 psc_output_fields_c_write(struct psc_output_fields *out, struct mrc_io *io)
 {
-  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  PscOutputFields_t outf{out};
+  struct psc_output_fields_c *out_c = outf.sub();
 
   mrc_io_write_int(io, out, "pfield_next", out_c->pfield_next);
   mrc_io_write_int(io, out, "tfield_next", out_c->tfield_next);
@@ -135,7 +139,8 @@ psc_output_fields_c_write(struct psc_output_fields *out, struct mrc_io *io)
 static void
 psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 {
-  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  PscOutputFields_t outf{out};
+  struct psc_output_fields_c *out_c = outf.sub();
 
   psc_output_fields_read_super(out, io);
   mrc_io_read_int(io, out, "pfield_next", &out_c->pfield_next);
@@ -149,7 +154,8 @@ static void
 psc_output_fields_c_run(struct psc_output_fields *out,
 			MfieldsBase& mflds, MparticlesBase& mprts)
 {
-  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  PscOutputFields_t outf{out};
+  struct psc_output_fields_c *out_c = outf.sub();
   struct psc *psc = ppsc;
 
   static int pr;
