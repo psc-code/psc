@@ -57,7 +57,6 @@ static struct param psc_descr[] = {
 
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
-  { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
 
   {},
@@ -80,8 +79,6 @@ _psc_create(struct psc *psc)
   
   // default 9 state fields (J,E,B)
   psc->n_state_fields = NR_FIELDS;
-
-  psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
 }
 
 // ======================================================================

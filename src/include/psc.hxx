@@ -87,7 +87,12 @@ struct Psc
       bndp_{psc_->mrc_domain_, psc_->grid()},
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
-  {}
+  {
+    output_fields_collection_ = psc_output_fields_collection_create(psc_comm(psc));
+    psc_output_fields_collection_set_psc(output_fields_collection_, psc);
+    psc_output_fields_collection_set_from_options(output_fields_collection_);
+    psc_output_fields_collection_setup(output_fields_collection_);
+  }
 
   // ----------------------------------------------------------------------
   // dtor
@@ -288,7 +293,7 @@ private:
     }
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
-    psc_output_fields_collection_run(psc_->output_fields_collection, mflds_, mprts_);
+    psc_output_fields_collection_run(output_fields_collection_, mflds_, mprts_);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 
@@ -324,6 +329,8 @@ protected:
   BndParticles_t bndp_;
   Checks_t checks_;
   Marder_t marder_;
+
+  psc_output_fields_collection* output_fields_collection_;
 
   int st_nr_particles;
   int st_time_step;
