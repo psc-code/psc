@@ -8,7 +8,6 @@
 #include "psc_config.hxx"
 
 #include <psc_method.h>
-#include <psc_output_fields_collection_private.h>
 #include <psc_output_fields_private.h>
 #include <psc_output_particles.h>
 

@@ -32,8 +32,6 @@ add_library(psc
   psc_output_fields/psc_output_fields_item_moments_1st_nc_single.cxx
   psc_output_fields/psc_output_fields_item_moments_2nd_nc_double.cxx
 
-  psc_output_fields_collection/psc_output_fields_collection.cxx
-
   psc_output_particles/psc_output_particles.cxx
   psc_output_particles/psc_output_particles_ascii.cxx
   psc_output_particles/psc_output_particles_hdf5_impl.cxx
