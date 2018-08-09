@@ -12,6 +12,7 @@
 #include <push_particles.hxx>
 #include <checks.hxx>
 #include <output_particles.hxx>
+#include <output_fields_c.hxx>
 
 void psc_method_vpic_initialize(struct psc_method *method, struct psc *psc,
 				MfieldsBase& mflds_base, MparticlesBase& mprts_base); // FIXME
@@ -48,6 +49,8 @@ struct PscParams
   double marder_diffusion;
   int marder_loop;
   bool marder_dump;
+
+  OutputFieldsCParams outf_params;
 };
   
 // ======================================================================
@@ -86,7 +89,8 @@ struct Psc
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
-      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
+      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump),
+      outf_{psc_comm(psc), p_.outf_params}
   {
     output_fields_ = psc_output_fields_create(psc_comm(psc));
     psc_output_fields_set_from_options(output_fields_);
@@ -293,6 +297,7 @@ private:
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
     psc_output_fields_run(output_fields_, mflds_, mprts_);
+    outf_.run(mflds_, mprts_);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 
@@ -330,6 +335,7 @@ protected:
   Marder_t marder_;
 
   psc_output_fields* output_fields_;
+  OutputFieldsC outf_;
 
   int st_nr_particles;
   int st_time_step;
