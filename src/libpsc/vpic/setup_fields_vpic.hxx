@@ -9,11 +9,10 @@
 // SetupFields
 
 template<>
-struct SetupFields<MfieldsVpic>
+struct SetupFields<MfieldsStateVpic>
 {
-  using Mfields = MfieldsVpic;
+  using Mfields = MfieldsStateVpic;
   using Fields = typename Mfields::fields_t;
-  using real_t = typename Mfields::real_t;
 
   template<typename FUNC>
   static void set(Mfields& mf, FUNC func)
