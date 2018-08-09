@@ -63,6 +63,8 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 {
   PscOutputFields_t outf{out};
 
+  outf->~psc_output_fields_c();
+
   for (auto& item : outf->items) {
     psc_output_fields_item_destroy(item.item.item());
     delete &item.tfd;
@@ -81,6 +83,8 @@ static void
 psc_output_fields_c_setup(struct psc_output_fields *out)
 {
   PscOutputFields_t outf{out};
+
+  new(outf.sub()) psc_output_fields_c;
   struct psc *psc = ppsc;
 
   outf->pfield_next = outf->pfield_first;
