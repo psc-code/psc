@@ -73,7 +73,7 @@ struct PscConfig_
   using dim_t = DIM;
   using Mparticles_t = Mparticles;
   using Mfields_t = Mfields;
-  using MfieldArray = Mfields;
+  using MfieldsState = Mfields;
   using ConfigPushp = ConfigPushParticles<DIM, Mparticles, Mfields>;
   using PushParticles_t = typename ConfigPushp::PushParticles_t;
   using checks_order = typename PushParticles_t::checks_order;
@@ -170,7 +170,7 @@ struct PscConfigVpic
 {
   using Mparticles_t = MparticlesVpic;
   using Mfields_t = MfieldsVpic;
-  using MfieldArray = MfieldsVpic;
+  using MfieldsState = MfieldsVpic;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;

@@ -60,7 +60,7 @@ struct Psc
 {
   using Mparticles_t = typename PscConfig::Mparticles_t;
   using Mfields_t = typename PscConfig::Mfields_t;
-  using MfieldArray = typename PscConfig::MfieldArray;
+  using MfieldsState = typename PscConfig::MfieldsState;
   using Balance_t = typename PscConfig::Balance_t;
   using Sort_t = typename PscConfig::Sort_t;
   using Collision_t = typename PscConfig::Collision_t;
@@ -315,7 +315,7 @@ protected:
   psc* psc_;
 
   Mparticles_t mprts_;
-  MfieldArray mflds_;
+  MfieldsState mflds_;
 
   Balance_t balance_;
   Sort_t sort_;
