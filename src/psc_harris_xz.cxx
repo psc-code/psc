@@ -23,6 +23,7 @@
 #include "fields3d.hxx"
 #include "setup_particles.hxx"
 #include "setup_fields.hxx"
+#include "../libpsc/vpic/setup_fields_vpic.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
@@ -627,8 +628,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_initial_fields(Mfields_t& mflds)
   {
-    // FIXME MfieldsSingle
-    SetupFields<MfieldsSingle>::set(mflds_, [&](int m, double xx[3]) {
+    SetupFields<Mfields_t>::set(mflds, [&](int m, double xx[3]) {
 	return init_field(xx, m);
       });
   }
