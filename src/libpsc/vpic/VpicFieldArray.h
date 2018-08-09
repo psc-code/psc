@@ -16,7 +16,7 @@ struct VpicCleanDivOps
   static void compute_div_b_err(FieldArray& fa) { fa.compute_div_b_err(); }
   static double compute_rms_div_b_err(FieldArray& fa) { return fa.compute_rms_div_b_err(); }
   static void clean_div_b(FieldArray& fa) { fa.clean_div_b(); }
-  static double synchronize_tang_e_norm_b(FieldArray& fa) { return fa.sychronize_tang_e_norm_b(); }
+  static double synchronize_tang_e_norm_b(FieldArray& fa) { return fa.synchronize_tang_e_norm_b(); }
 };
 
 // ======================================================================
