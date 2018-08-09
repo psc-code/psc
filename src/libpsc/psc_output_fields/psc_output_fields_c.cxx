@@ -39,14 +39,14 @@ struct OutputFieldsItem
 };
 
 // ======================================================================
-// psc_output_fields_c
+// OutputFieldsC
 
-struct psc_output_fields_c
+struct OutputFieldsC
 {
   // ----------------------------------------------------------------------
   // ctor
 
-  psc_output_fields_c(MPI_Comm comm)
+  OutputFieldsC(MPI_Comm comm)
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
@@ -86,7 +86,7 @@ struct psc_output_fields_c
   // ----------------------------------------------------------------------
   // dtor
 
-  ~psc_output_fields_c()
+  ~OutputFieldsC()
   {
     for (auto& item : items) {
       psc_output_fields_item_destroy(item.item.item());
@@ -229,35 +229,35 @@ public:
 
 };
 
-using PscOutputFields_t = PscOutputFields<psc_output_fields_c>;
+using PscOutputFields_t = PscOutputFields<OutputFieldsC>;
 
 // ----------------------------------------------------------------------
-// psc_output_fields_c_destroy
+// OutputFieldsC_destroy
 
 static void
-psc_output_fields_c_destroy(struct psc_output_fields *out)
+OutputFieldsC_destroy(struct psc_output_fields *out)
 {
   PscOutputFields_t outf{out};
 
-  outf->~psc_output_fields_c();
+  outf->~OutputFieldsC();
 }
 
 // ----------------------------------------------------------------------
-// psc_output_fields_c_setup
+// OutputFieldsC_setup
 
 static void
-psc_output_fields_c_setup(struct psc_output_fields *out)
+OutputFieldsC_setup(struct psc_output_fields *out)
 {
   PscOutputFields_t outf{out};
 
-  new(outf.sub()) psc_output_fields_c{psc_output_fields_comm(out)};
+  new(outf.sub()) OutputFieldsC{psc_output_fields_comm(out)};
 }
 
 // ----------------------------------------------------------------------
-// psc_output_fields_c_run
+// OutputFieldsC_run
 
 static void
-psc_output_fields_c_run(struct psc_output_fields *out,
+OutputFieldsC_run(struct psc_output_fields *out,
 			MfieldsBase& mflds, MparticlesBase& mprts)
 {
   PscOutputFields_t outf{out};
@@ -268,12 +268,12 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 // ======================================================================
 // psc_output_fields: subclass "c"
 
-#define VAR(x) (void *)offsetof(struct psc_output_fields_c, x)
+#define VAR(x) (void *)offsetof(struct OutputFieldsC, x)
 
 // FIXME pfield_out_[xyz]_{min,max} aren't for pfield only, better init to 0,
 // use INT3
 
-static struct param psc_output_fields_c_descr[] = {
+static struct param OutputFieldsC_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("j,e,h")   },
   { "pfd"                , VAR(pfd_s)                , PARAM_STRING("pfd")     },
@@ -299,10 +299,10 @@ static struct param psc_output_fields_c_descr[] = {
 struct psc_output_fields_ops_c : psc_output_fields_ops {
   psc_output_fields_ops_c() {
     name                  = "c";
-    size                  = sizeof(struct psc_output_fields_c);
-    param_descr           = psc_output_fields_c_descr;
-    setup                 = psc_output_fields_c_setup;
-    destroy               = psc_output_fields_c_destroy;
-    run                   = psc_output_fields_c_run;
+    size                  = sizeof(struct OutputFieldsC);
+    param_descr           = OutputFieldsC_descr;
+    setup                 = OutputFieldsC_setup;
+    destroy               = OutputFieldsC_destroy;
+    run                   = OutputFieldsC_run;
   }
 } psc_output_fields_c_ops;
