@@ -40,7 +40,7 @@ OutputFieldsC_run(struct psc_output_fields *out,
 {
   PscOutputFields_t outf{out};
 
-  outf->run(mflds, mprts);
+  (*outf.sub())(mflds, mprts);
 }
 
 // ======================================================================

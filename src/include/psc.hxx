@@ -297,7 +297,7 @@ private:
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
     psc_output_fields_run(output_fields_, mflds_, mprts_);
-    outf_.run(mflds_, mprts_);
+    outf_(mflds_, mprts_);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 

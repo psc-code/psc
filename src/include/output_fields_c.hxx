@@ -101,9 +101,9 @@ struct OutputFieldsC : public OutputFieldsCParams
   }
 
   // ----------------------------------------------------------------------
-  // run
+  // operator()
 
-  void run(MfieldsBase& mflds, MparticlesBase& mprts)
+  void operator()(MfieldsBase& mflds, MparticlesBase& mprts)
   {
     auto psc = ppsc;
     
