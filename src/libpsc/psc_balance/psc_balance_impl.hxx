@@ -460,15 +460,14 @@ private:
     std::vector<int> nr_patches_all_old(size);
     MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1, MPI_INT, comm);
     for (auto n : nr_patches_all_old) { mprintf("old %d\n", n); }
-    
-    int *nr_patches_all_new = NULL;
+
+    std::vector<int> nr_patches_all_new(size);
 
     if (rank == 0) { // do the mapping on proc 0
-      double *capability = (double *) calloc(size, sizeof(*capability));
+      std::vector<double> capability(size);
       for (int p = 0; p < size; p++) {
 	capability[p] = capability_default(p);
       }
-      nr_patches_all_new = (int *) calloc(size, sizeof(*nr_patches_all_new));
       double loads_sum = 0.;
       for (int i = 0; i < loads_all.size(); i++) {
 	loads_sum += loads_all[i];
@@ -546,13 +545,11 @@ private:
 	fclose(f);
       }
 
-      free(capability);
     }
     // then scatter
     int nr_patches_new;
-    MPI_Scatter(nr_patches_all_new, 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
+    MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
 		0, comm);
-    free(nr_patches_all_new);
     return nr_patches_new;
   }
 
