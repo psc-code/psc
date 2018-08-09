@@ -118,7 +118,7 @@ MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
   assert(grid.n_patches() == 1);
   assert((ibn == Int3{ 1, 1, 1 }));
 
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
 
   if (n_fields == VPIC_MFIELDS_N_COMP) {
     // make sure we notice if we create a second psc_mfields
@@ -128,14 +128,14 @@ MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
     }
     ref_count_fields++;
 
-    vmflds_fields_ = sim->field_array_;
+    vmflds_fields_ = sim_->field_array_;
   } else if (n_fields == VPIC_HYDRO_N_COMP) {
     // make sure we notice if we create a second psc_mfields
     // which would share its memory with the first
     assert(ref_count_hydro == 0);
     ref_count_hydro++;
 
-    vmflds_hydro = sim->hydro_array_;
+    vmflds_hydro = sim_->hydro_array_;
   } else {
     assert(0);
   }

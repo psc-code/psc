@@ -42,6 +42,7 @@ struct MfieldsVpic : MfieldsBase
   }
 
   FieldArray& vmflds() { return *vmflds_fields_; }
+  Simulation* sim() { return sim_; }
 
   void zero_comp(int m) override { assert(0); }
   void set_comp(int m, double val) override { assert(0); }
@@ -53,9 +54,9 @@ struct MfieldsVpic : MfieldsBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  Simulation *sim;
  private:
-  FieldArray *vmflds_fields_;
+  Simulation* sim_;
+  FieldArray* vmflds_fields_;
  public:
   HydroArray *vmflds_hydro;
 };
