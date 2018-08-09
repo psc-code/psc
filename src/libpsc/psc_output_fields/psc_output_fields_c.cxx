@@ -15,6 +15,17 @@
 #include "fields3d.hxx"
 #include "fields_item.hxx"
 
+static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
+{
+  mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_param_string(io, "basename", pfx);
+  mrc_io_set_param_string(io, "outdir", data_dir);
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_view(io);
+  return io;
+}
+
 // ----------------------------------------------------------------------
 
 enum {
@@ -38,7 +49,48 @@ struct OutputFieldsItem
   std::vector<std::string> comp_names;
 };
 
-struct psc_output_fields_c {
+struct psc_output_fields_c
+{
+  // ----------------------------------------------------------------------
+  // ctor
+
+  psc_output_fields_c(MPI_Comm comm)
+  {
+    pfield_next = pfield_first;
+    tfield_next = tfield_first;
+
+    struct psc *psc = ppsc;
+    
+    // setup pfd according to output_fields as given
+    // (potentially) on the command line
+    // parse comma separated list of fields
+    char *s_orig = strdup(output_fields), *p, *s = s_orig;
+    while ((p = strsep(&s, ", "))) {
+      struct psc_output_fields_item *item =
+	psc_output_fields_item_create(comm);
+      psc_output_fields_item_set_type(item, p);
+      psc_output_fields_item_setup(item);
+      
+      // pfd
+      std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
+      MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
+      
+      // tfd -- FIXME?! always MfieldsC
+      MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->ibn};
+      items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
+    }
+    free(s_orig);
+    
+    naccum = 0;
+    
+    if (dowrite_pfield) {
+      ios[IO_TYPE_PFD] = create_mrc_io(pfd_s, data_dir);
+    }
+    if (dowrite_tfield) {
+      ios[IO_TYPE_TFD] = create_mrc_io(tfd_s, data_dir);
+    }
+  }
+
   char *data_dir;
   char *output_fields;
   char *pfd_s;
@@ -59,17 +111,6 @@ struct psc_output_fields_c {
 };
 
 using PscOutputFields_t = PscOutputFields<psc_output_fields_c>;
-
-static mrc_io* create_mrc_io(const char* pfx, const char* data_dir)
-{
-  mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
-  mrc_io_set_param_string(io, "basename", pfx);
-  mrc_io_set_param_string(io, "outdir", data_dir);
-  mrc_io_set_from_options(io);
-  mrc_io_setup(io);
-  mrc_io_view(io);
-  return io;
-}
 
 static void open_mrc_io(PscOutputFields_t outf, mrc_io *io)
 {
@@ -131,42 +172,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 {
   PscOutputFields_t outf{out};
 
-  new(outf.sub()) psc_output_fields_c;
-  struct psc *psc = ppsc;
-
-  outf->pfield_next = outf->pfield_first;
-  outf->tfield_next = outf->tfield_first;
-
-  // setup pfd according to output_fields as given
-  // (potentially) on the command line
-  // parse comma separated list of fields
-  char *s_orig = strdup(outf->output_fields), *p, *s = s_orig;
-  while ((p = strsep(&s, ", "))) {
-    struct psc_output_fields_item *item =
-      psc_output_fields_item_create(psc_output_fields_comm(out));
-    psc_output_fields_item_set_type(item, p);
-    psc_output_fields_item_setup(item);
-
-    // pfd
-    std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
-    MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
-
-    // tfd -- FIXME?! always MfieldsC
-    MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->ibn};
-    outf->items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
-  }
-  free(s_orig);
-
-  outf->naccum = 0;
-
-  psc_output_fields_setup_children(out);
-
-  if (outf->dowrite_pfield) {
-    outf->ios[IO_TYPE_PFD] = create_mrc_io(outf->pfd_s, outf->data_dir);
-  }
-  if (outf->dowrite_tfield) {
-    outf->ios[IO_TYPE_TFD] = create_mrc_io(outf->tfd_s, outf->data_dir);
-  }
+  new(outf.sub()) psc_output_fields_c{psc_output_fields_comm(out)};
 }
 
 // ----------------------------------------------------------------------
