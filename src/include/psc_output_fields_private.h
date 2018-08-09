@@ -6,7 +6,6 @@
 
 struct psc_output_fields {
   struct mrc_obj obj;
-  struct psc *psc;
 };
 
 struct psc_output_fields_ops {

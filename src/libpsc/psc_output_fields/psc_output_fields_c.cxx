@@ -80,7 +80,7 @@ static void
 psc_output_fields_c_setup(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
-  struct psc *psc = out->psc;
+  struct psc *psc = ppsc;
 
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
@@ -150,7 +150,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 			MfieldsBase& mflds, MparticlesBase& mprts)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
-  struct psc *psc = out->psc;
+  struct psc *psc = ppsc;
 
   static int pr;
   if (!pr) {

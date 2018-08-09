@@ -89,7 +89,6 @@ struct Psc
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
   {
     output_fields_ = psc_output_fields_create(psc_comm(psc));
-    psc_output_fields_set_psc(output_fields_, psc);
     psc_output_fields_set_from_options(output_fields_);
     psc_output_fields_setup(output_fields_);
   }
