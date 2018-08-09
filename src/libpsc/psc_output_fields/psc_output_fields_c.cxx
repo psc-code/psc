@@ -56,7 +56,8 @@ struct OutputFieldsC : public OutputFieldsCParams
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFieldsC(MPI_Comm comm)
+  OutputFieldsC(MPI_Comm comm, const OutputFieldsCParams& prm)
+    : OutputFieldsCParams{prm}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
@@ -246,7 +247,8 @@ OutputFieldsC_setup(struct psc_output_fields *out)
 {
   PscOutputFields_t outf{out};
 
-  new(outf.sub()) OutputFieldsC{psc_output_fields_comm(out)};
+  OutputFieldsCParams prm = *outf.sub();
+  new(outf.sub()) OutputFieldsC{psc_output_fields_comm(out), prm};
 }
 
 // ----------------------------------------------------------------------
