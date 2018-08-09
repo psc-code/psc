@@ -1031,11 +1031,10 @@ struct PscPushFieldsOps
 // ======================================================================
 // PscFieldArray
 
-template<class B, class FieldArrayLocalOps, class FieldArrayRemoteOps>
-struct PscFieldArray : B//, FieldArrayLocalOps
+template<class B>
+struct PscFieldArray : B
 {
   typedef B Base;
-  typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
   using typename Base::Grid;
   using typename Base::MaterialList;
   
