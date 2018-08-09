@@ -7,7 +7,7 @@
 // ======================================================================
 // PscCleanDivOps
 
-template<typename FieldArray>
+template<typename FieldArray, typename RemoteOps>
 struct PscCleanDivOps
 {
   using Grid = typename FieldArray::Grid;
@@ -140,14 +140,14 @@ struct PscCleanDivOps
     CalcDivE updater(fa, m);
     
     // Begin setting normal e ghosts
-    fa.begin_remote_ghost_norm_e(fa);
+    RemoteOps::begin_remote_ghost_norm_e(fa);
 
     // Overlap local computation
     fa.local_ghost_norm_e(fa);
     foreach_nc_interior(updater, fa.grid());
 
     // Finish setting normal e ghosts
-    fa.end_remote_ghost_norm_e(fa);
+    RemoteOps::end_remote_ghost_norm_e(fa);
 
     // Now do points on boundary
     foreach_nc_boundary(updater, fa.grid());
@@ -399,7 +399,7 @@ struct PscCleanDivOps
     // stragglers.
 
     // Begin setting ghosts
-    fa.begin_remote_ghost_div_b(fa);
+    RemoteOps::begin_remote_ghost_div_b(fa);
     fa.local_ghost_div_b(fa);
 
     // Interior
@@ -453,7 +453,7 @@ struct PscCleanDivOps
 
     // Finish setting derr ghosts
   
-    fa.end_remote_ghost_div_b(fa);
+    RemoteOps::end_remote_ghost_div_b(fa);
 
     // Do Marder pass in exterior
 
@@ -583,7 +583,7 @@ struct PscCleanDivOps
 // ======================================================================
 // PscAccumulateOps
 
-template<typename FieldArray>
+template<typename FieldArray, typename RemoteOps>
 struct PscAccumulateOps
 {
   using Grid = typename FieldArray::Grid;
@@ -694,14 +694,14 @@ struct PscAccumulateOps
     CalcRhoB updater(fa, m);
 
     // Begin setting normal e ghosts
-    fa.begin_remote_ghost_norm_e(fa);
+    RemoteOps::begin_remote_ghost_norm_e(fa);
 
     // Overlap local computation
     fa.local_ghost_norm_e(fa);
     foreach_nc_interior(updater, fa.grid());
     
     // Finish setting normal e ghosts
-    fa.end_remote_ghost_norm_e(fa);
+    RemoteOps::end_remote_ghost_norm_e(fa);
 
     // Now do points on boundary
     foreach_nc_boundary(updater, fa.grid());
@@ -759,12 +759,12 @@ struct PscAccumulateOps
 
     CurlB curlB(fa, fa.grid(), m);
       
-    fa.begin_remote_ghost_tang_b(fa);
+    RemoteOps::begin_remote_ghost_tang_b(fa);
 
     fa.local_ghost_tang_b(fa);
     foreach_ec_interior(curlB, fa.grid());
 
-    fa.end_remote_ghost_tang_b(fa);
+    RemoteOps::end_remote_ghost_tang_b(fa);
 
     foreach_ec_boundary(curlB, fa.grid());
     fa.local_adjust_tang_e(fa); // FIXME, is this right here?
@@ -856,7 +856,7 @@ struct PscDiagOps
 // ======================================================================
 // PscPushFieldOps
 
-template<typename FieldArray>
+template<typename FieldArray, typename RemoteOps>
 struct PscPushFieldsOps
 {
   using Grid = typename FieldArray::Grid;
@@ -1007,12 +1007,12 @@ struct PscPushFieldsOps
 
     AdvanceE advanceE(fa, fa.grid(), m, prm.damp);
 
-    fa.begin_remote_ghost_tang_b(fa);
+    RemoteOps::begin_remote_ghost_tang_b(fa);
 
     fa.local_ghost_tang_b(fa);
     foreach_ec_interior(advanceE, fa.grid());
 
-    fa.end_remote_ghost_tang_b(fa);
+    RemoteOps::end_remote_ghost_tang_b(fa);
 
     foreach_ec_boundary(advanceE, fa.grid());
     fa.local_adjust_tang_e(fa);
@@ -1032,7 +1032,7 @@ struct PscPushFieldsOps
 // PscFieldArray
 
 template<class B, class FieldArrayLocalOps, class FieldArrayRemoteOps>
-struct PscFieldArray : B, FieldArrayLocalOps, FieldArrayRemoteOps
+struct PscFieldArray : B, FieldArrayLocalOps
 {
   typedef B Base;
   typedef PscFieldArray<B, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;

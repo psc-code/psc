@@ -93,10 +93,10 @@ typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
 typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
 typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
 typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
-using PushFieldsOps = PscPushFieldsOps<FieldArray>;
+using PushFieldsOps = PscPushFieldsOps<FieldArray, FieldArrayRemoteOps>;
 using DiagOps = PscDiagOps<FieldArray>;
-using AccumulateOps = PscAccumulateOps<FieldArray>;
-using CleanDivOps = PscCleanDivOps<FieldArray>;
+using AccumulateOps = PscAccumulateOps<FieldArray, FieldArrayRemoteOps>;
+using CleanDivOps = PscCleanDivOps<FieldArray, FieldArrayRemoteOps>;
 #else
 typedef VpicFieldArrayBase<Grid, VpicMaterialList> FieldArrayBase;
 typedef VpicFieldArray<FieldArrayBase> FieldArray;
