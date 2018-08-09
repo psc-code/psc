@@ -88,18 +88,16 @@ typedef VpicGridBase Grid;
 #endif
 
 #if 1
-typedef PscMaterialList MaterialList;
-typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
-using FieldArray = FieldArrayBase;
-typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
-typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
+using MaterialList = PscMaterialList;
+using FieldArray = PscFieldArrayBase<Grid, MaterialList>;
+using FieldArrayLocalOps = PscFieldArrayLocalOps<FieldArray>;
+using FieldArrayRemoteOps = PscFieldArrayRemoteOps<FieldArray>;
 using PushFieldsOps = PscPushFieldsOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using DiagOps = PscDiagOps<FieldArray>;
 using AccumulateOps = PscAccumulateOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using CleanDivOps = PscCleanDivOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #else
-typedef VpicFieldArrayBase<Grid, VpicMaterialList> FieldArrayBase;
-using FieldArray = FieldArrayBase;
+using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
 using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
 using DiagOps = VpicDiagOps<FieldArray>;
 using AccumulateOps = VpicAccumulateOps<FieldArray>;
@@ -107,10 +105,10 @@ using CleanDivOps = VpicCleanDivOps<FieldArray>;
 #endif
 
 typedef PscInterpolatorBase<Grid> InterpolatorBase;
-typedef PscInterpolator<InterpolatorBase, FieldArrayBase> Interpolator;
+typedef PscInterpolator<InterpolatorBase, FieldArray> Interpolator;
 
 typedef PscAccumulatorBase<Grid> AccumulatorBase;
-typedef PscAccumulator<AccumulatorBase, FieldArrayBase> Accumulator;
+typedef PscAccumulator<AccumulatorBase, FieldArray> Accumulator;
 
 typedef PscHydroArrayBase<Grid> HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
