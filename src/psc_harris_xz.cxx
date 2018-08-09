@@ -407,11 +407,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     setup_log();
     
     if (output_field_interval > 0) {
-      struct psc_output_fields *out;
-      mrc_obj_for_each_child(out, output_fields_collection_, struct psc_output_fields) {
-	psc_output_fields_set_param_int(out, "pfield_step",
-					(int) (output_field_interval / (phys_.wci*dt())));
-      }
+      psc_output_fields_set_param_int(output_fields_, "pfield_step",
+				      (int) (output_field_interval / (phys_.wci*dt())));
     }
   
     if (output_particle_interval > 0) {

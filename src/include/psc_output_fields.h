@@ -1,6 +1,8 @@
 
 #include <mrc_obj.h>
 
+#pragma once
+
 #include "psc.h"
 #include "fields3d.hxx"
 

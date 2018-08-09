@@ -5,7 +5,7 @@
 #include <mrc_profile.h>
 #include <psc_method.h>
 #include <psc_diag.h>
-#include <psc_output_fields_collection.h>
+#include <psc_output_fields.h>
 
 #include <particles.hxx>
 
@@ -88,10 +88,10 @@ struct Psc
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
   {
-    output_fields_collection_ = psc_output_fields_collection_create(psc_comm(psc));
-    psc_output_fields_collection_set_psc(output_fields_collection_, psc);
-    psc_output_fields_collection_set_from_options(output_fields_collection_);
-    psc_output_fields_collection_setup(output_fields_collection_);
+    output_fields_ = psc_output_fields_create(psc_comm(psc));
+    psc_output_fields_set_psc(output_fields_, psc);
+    psc_output_fields_set_from_options(output_fields_);
+    psc_output_fields_setup(output_fields_);
   }
 
   // ----------------------------------------------------------------------
@@ -293,7 +293,7 @@ private:
     }
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
-    psc_output_fields_collection_run(output_fields_collection_, mflds_, mprts_);
+    psc_output_fields_run(output_fields_, mflds_, mprts_);
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 
@@ -330,7 +330,7 @@ protected:
   Checks_t checks_;
   Marder_t marder_;
 
-  psc_output_fields_collection* output_fields_collection_;
+  psc_output_fields* output_fields_;
 
   int st_nr_particles;
   int st_time_step;
