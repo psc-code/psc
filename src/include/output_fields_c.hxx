@@ -13,15 +13,14 @@ struct OutputFieldsCParams
   const char *data_dir = {"."};
   const char *output_fields = {"j,e,h"};
 
-  bool dowrite_pfield = {true};
   int pfield_first = 0;
   int pfield_step = 10;
 
-  bool dowrite_tfield = {true};
   int tfield_first = 0;
   int tfield_step = 10;
   int tfield_length = 10;
   int tfield_every = 1;
+
   int rn[3] = {};
   int rx[3] = {1000000, 1000000, 100000};
 };
@@ -79,10 +78,10 @@ struct OutputFieldsC : public OutputFieldsCParams
     
     naccum = 0;
     
-    if (dowrite_pfield) {
+    if (pfield_step > 0) {
       io_pfd_ = create_mrc_io("pfd");
     }
-    if (dowrite_tfield) {
+    if (tfield_step) {
       io_tfd_ = create_mrc_io("tfd");
     }
   }
@@ -114,19 +113,19 @@ struct OutputFieldsC : public OutputFieldsCParams
     }
     prof_start(pr);
 
-    bool doaccum_tfield = dowrite_tfield && 
+    bool doaccum_tfield = tfield_step > 0 && 
       (((psc->timestep >= (tfield_next - tfield_length + 1)) &&
 	psc->timestep % tfield_every == 0) ||
        psc->timestep == 0);
     
-    if ((dowrite_pfield && psc->timestep >= pfield_next) ||
-	(dowrite_tfield && doaccum_tfield)) {
+    if ((pfield_step > 0 && psc->timestep >= pfield_next) ||
+	(tfield_step > 0 && doaccum_tfield)) {
       for (auto item : items) {
 	item.item(mflds, mprts);
       }
     }
     
-    if (dowrite_pfield && psc->timestep >= pfield_next) {
+    if (pfield_step > 0 && psc->timestep >= pfield_next) {
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
@@ -137,7 +136,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       mrc_io_close(io_pfd_);
     }
     
-    if (dowrite_tfield) {
+    if (tfield_step > 0) {
       if (doaccum_tfield) {
 	// tfd += pfd
 	for (auto& item : items) {
