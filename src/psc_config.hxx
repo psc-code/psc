@@ -86,8 +86,8 @@ struct PscConfig_
   using Bnd_t = Bnd_<MfieldsState>;
   using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance_t = Balance_<Mparticles_t, Mfields>;
-  using Checks_t = Checks_<Mparticles_t, MfieldsState, checks_order>;
   using Marder_t = Marder_<Mparticles_t, MfieldsState>;
+  using Checks_t = Checks_<Mparticles_t, MfieldsState, Mfields, checks_order>;
   using Simulation = _Simulation;
 };
 

@@ -15,12 +15,12 @@ struct ChecksCuda : ChecksBase, ChecksParams
     assert(0);
   }
 
-  void continuity_after_particle_push(psc* psc, MparticlesBase& mprts, MfieldsBase& mflds) override
+  void continuity_after_particle_push(psc* psc, MparticlesBase& mprts, MfieldsStateBase& mflds) override
   {
     assert(0);
   }
 
-  void gauss(psc* psc, MparticlesBase& mprts, MfieldsBase& mflds) override
+  void gauss(psc* psc, MparticlesBase& mprts, MfieldsStateBase& mflds) override
   {
     assert(0);
   }
@@ -28,9 +28,9 @@ struct ChecksCuda : ChecksBase, ChecksParams
   void continuity_before_particle_push(Mparticles& mprts)
   {}
  
-  void continuity_after_particle_push(Mparticles& mprts, MfieldsCuda& mflds)
+  void continuity_after_particle_push(Mparticles& mprts, MfieldsStateCuda& mflds)
   {}
 
-  void gauss(Mparticles& mprts, MfieldsCuda& mflds)
+  void gauss(Mparticles& mprts, MfieldsStateCuda& mflds)
   {}
 };

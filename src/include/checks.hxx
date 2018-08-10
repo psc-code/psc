@@ -21,7 +21,7 @@ class ChecksBase
 {
 public:
   virtual void continuity_before_particle_push(psc* psc, MparticlesBase& mprts) = 0;
-  virtual void continuity_after_particle_push(psc* psc, MparticlesBase& mprts, MfieldsBase& mflds) = 0;
-  virtual void gauss(psc* psc, MparticlesBase& mprts, MfieldsBase& mflds) = 0;
+  virtual void continuity_after_particle_push(psc* psc, MparticlesBase& mprts, MfieldsStateBase& mflds) = 0;
+  virtual void gauss(psc* psc, MparticlesBase& mprts, MfieldsStateBase& mflds) = 0;
 };
 

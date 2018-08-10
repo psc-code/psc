@@ -23,11 +23,12 @@ struct checks_order_2nd
   using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
 };
 
-template<typename MP, typename MF, typename ORDER>
+template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typename ORDER>
 struct Checks_ : ChecksParams, ChecksBase
 {
-  using Mparticles = MP;
-  using Mfields = MF;
+  using Mparticles = _Mparticles;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
@@ -72,20 +73,20 @@ struct Checks_ : ChecksParams, ChecksBase
   // continuity_after_particle_push
 
   void continuity_after_particle_push(psc *psc, MparticlesBase& mprts_base,
-				      MfieldsBase& mflds_base) override
+				      MfieldsStateBase& mflds_base) override
   {
     if (continuity_every_step <= 0 || psc->timestep % continuity_every_step != 0) {
       return;
     }
 
     auto& mprts = mprts_base.get_as<Mparticles>();
-    auto& mflds = mflds_base.get_as<Mfields>(0, mflds_base.n_comps());
+    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base.n_comps());
     continuity_after_particle_push(mprts, mflds);
     mflds_base.put_as(mflds, 0, 0);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
-  void continuity_after_particle_push(Mparticles& mprts, Mfields& mflds)
+  void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
     
@@ -149,13 +150,13 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // gauss
 
-  void gauss(psc* psc, MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
+  void gauss(psc* psc, MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
   {
     if (gauss_every_step <= 0 || psc->timestep % gauss_every_step != 0) {
       return;
     }
     
-    auto& mflds = mflds_base.get_as<Mfields>(EX, EX+3);
+    auto& mflds = mflds_base.get_as<MfieldsState>(EX, EX+3);
     auto& mprts = mprts_base.get_as<Mparticles>();
 
     gauss(mprts, mflds);
@@ -164,7 +165,7 @@ struct Checks_ : ChecksParams, ChecksBase
     mprts_base.put_as(mprts);
 }
 
-  void gauss(Mparticles& mprts, Mfields& mflds)
+  void gauss(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
 
@@ -238,7 +239,7 @@ struct Checks_ : ChecksParams, ChecksBase
   ItemMomentLoopPatches<Moment_t> item_rho_p_;
   ItemMomentLoopPatches<Moment_t> item_rho_m_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
-  FieldsItemFields<ItemLoopPatches<Item_divj<Mfields>>> item_divj_;
+  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState>>> item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState>>> item_divj_;
 };
 

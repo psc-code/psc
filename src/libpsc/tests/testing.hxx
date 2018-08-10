@@ -44,7 +44,7 @@ using RngPool = PscRngPool<Rng>;
 // TestConfig
 
 template<typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
-	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::MfieldsState, ORDER>,
+	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::MfieldsState, _Mfields, ORDER>,
 	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
 	 typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
 	 typename BND = Bnd_<typename PUSHP::MfieldsState>,
@@ -87,7 +87,7 @@ using TestConfigVpic = TestConfig<dim_xyz,
 				  void,
 				  PushParticlesVpic,
 				  checks_order_1st,
-				  Checks_<MparticlesVpic, MfieldsStateVpic, checks_order_1st>,
+				  Checks_<MparticlesVpic, MfieldsStateVpic, void, checks_order_1st>,
 				  BndParticlesVpic>;
 
 #ifdef USE_CUDA
