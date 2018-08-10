@@ -281,8 +281,6 @@ protected:
   int n_fields_;
   const Grid_t* grid_;
   Int3 ibn_;
-public:
-  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
 // ======================================================================
