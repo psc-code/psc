@@ -291,7 +291,7 @@ private:
   // ----------------------------------------------------------------------
   // diagnostics
 
-  void diagnostics()
+  virtual void diagnostics()
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {

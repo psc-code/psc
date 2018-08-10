@@ -665,7 +665,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // step
 
-  void step()
+  void step() override
   {
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
       pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
@@ -793,8 +793,18 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
+  void diagnostics() override
+  {
+    int timestep = psc_->timestep;
+    if (pfield_step_ > 0 && timestep % pfield_step_ == 0) {
+      MHERE;
+    }
+  }
+
 private:
   globals_physics phys_;
+
+  int pfield_step_ = { 10 };
 };
 
 // ----------------------------------------------------------------------
