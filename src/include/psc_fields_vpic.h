@@ -74,18 +74,29 @@ struct MfieldsStateVpic
   using real_t = MfieldsVpic::real_t;
   
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-    : mflds_{grid, n_fields, ibn}
+  : grid_{grid},
+    ibn_{ibn},
+    mflds_{grid, n_fields, ibn}
   {}
 
-  int n_patches() const { return mflds_.n_patches(); }
-  const Grid_t& grid() { return mflds_.grid(); }
-  fields_vpic_t operator[](int p) { return mflds_[p]; }
-  Int3 ibn() const { return mflds_.ibn(); }
+  int n_patches() const { return 1; }
+  const Grid_t& grid() { return grid_; }
+
+  fields_vpic_t operator[](int p)
+  {
+    assert(p == 0);
+    int ib[3], im[3];
+    float* data = vmflds().getData(ib, im);
+    return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
+  }
+
+  Int3 ibn() const { return ibn_; }
   FieldArray& vmflds() { return mflds_.vmflds(); }
   Simulation* sim() { return mflds_.sim(); }
-  MfieldsBase& base() { return mflds_; }
 
 private:
+  const Grid_t& grid_;
+  Int3 ibn_;
   MfieldsVpic mflds_;
 };
 
