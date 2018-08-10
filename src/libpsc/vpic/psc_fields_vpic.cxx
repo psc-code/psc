@@ -118,8 +118,6 @@ static void MfieldsStateVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
 
 // ======================================================================
 
-static int ref_count_hydro;
-
 // ----------------------------------------------------------------------
 // MfieldsVpic ctor
 
@@ -128,13 +126,9 @@ MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
 {
   assert(grid.n_patches() == 1);
   assert((ibn == Int3{ 1, 1, 1 }));
+  assert(n_fields == VPIC_HYDRO_N_COMP);
 
   psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-
-  assert(n_fields == VPIC_HYDRO_N_COMP);
-  assert(ref_count_hydro == 0);
-  ref_count_hydro++;
-  
   vmflds_hydro = sim_->hydro_array_;
 }
 
@@ -143,7 +137,6 @@ MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
 
 MfieldsVpic::~MfieldsVpic()
 {
-  ref_count_hydro--;
 }
 
 const MfieldsBase::Convert MfieldsVpic::convert_to_ = {
