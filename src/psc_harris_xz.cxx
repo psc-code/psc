@@ -24,6 +24,7 @@
 #include "setup_particles.hxx"
 #include "setup_fields.hxx"
 #include "../libpsc/vpic/setup_fields_vpic.hxx"
+#include "../libpsc/vpic/fields_item_vpic.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
@@ -793,11 +794,61 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
+  mrc_io* create_mrc_io(const char* pfx, const char* outdir)
+  {
+    mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
+    mrc_io_set_param_string(io, "basename", pfx);
+    mrc_io_set_param_string(io, "outdir", outdir);
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+    mrc_io_view(io);
+    return io;
+  }
+
+  void open_mrc_io(mrc_io *io)
+  {
+    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
+    
+    // save some basic info about the run in the output file
+    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
+    mrc_obj_set_name(obj, "psc");
+    mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
+    mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->grid().dt);
+    mrc_obj_dict_add_float(obj, "cc", ppsc->grid().norm.cc);
+    mrc_obj_dict_add_float(obj, "dt", ppsc->grid().dt);
+    mrc_obj_write(obj, io);
+    mrc_obj_destroy(obj);
+  }
+
   void diagnostics() override
   {
+    MPI_Comm comm = psc_comm(psc_);
+
     int timestep = psc_->timestep;
     if (pfield_step_ > 0 && timestep % pfield_step_ == 0) {
-      MHERE;
+      using Item = Item_vpic_fields;
+      auto item = Item{};
+      auto mres = MfieldsSingle{ppsc->grid(), Item::n_comps, ppsc->ibn};
+      
+      auto& mflds_base = mflds_.base();
+      auto& mflds = mflds_base.get_as<Item::Mfields>(0, Item::n_comps);
+      item.run(mflds, mres);
+      mflds_base.put_as(mflds, 0, 0);
+      
+      mpi_printf(comm, "***** Writing PFD output\n");
+      
+      std::vector<std::string> comp_names;
+      for (int m = 0; m < Item::n_comps; m++) {
+	comp_names.emplace_back(Item::fld_names()[m]);
+      }
+      
+      if (!io_pfd_) {
+	io_pfd_ = create_mrc_io("pfd", ".");
+      }
+      
+      open_mrc_io(io_pfd_);
+      mres.write_as_mrc_fld(io_pfd_, Item::name, comp_names);
+      mrc_io_close(io_pfd_);
     }
   }
 
@@ -805,6 +856,7 @@ private:
   globals_physics phys_;
 
   int pfield_step_ = { 10 };
+  mrc_io* io_pfd_;
 };
 
 // ----------------------------------------------------------------------
