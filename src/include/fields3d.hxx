@@ -283,12 +283,7 @@ protected:
   Int3 ibn_;
 };
 
-// ======================================================================
-// MfieldsStateBase
-
-struct MfieldsStateBase
-{
-};
+using MfieldsStateBase = MfieldsBase;
 
 // ======================================================================
 // Mfields
@@ -400,18 +395,18 @@ struct Mfields : MfieldsBase
 // MfieldsStateFromMfields
 
 template<typename Mfields>
-struct MfieldsStateFromMfields : MfieldsBase
+struct MfieldsStateFromMfields : MfieldsStateBase
 {
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
 
   MfieldsStateFromMfields(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase{grid, n_fields, ibn},
+    : MfieldsStateBase{grid, n_fields, ibn},
       mflds_{grid, n_fields, ibn}
   {}
 
   fields_t operator[](int p) { return mflds_[p]; }
-  
+
   void zero_comp(int m) override { assert(0); }
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
