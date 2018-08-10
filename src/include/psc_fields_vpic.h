@@ -48,6 +48,7 @@ struct MfieldsHydroVpic : MfieldsBase
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
   void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override { assert(0); }
+  void copy_comp(int mto, MfieldsBase& from, int mfrom) override { assert(0); }
   double max_comp(int m) override { assert(0); }
 
   static const Convert convert_to_, convert_from_;
@@ -117,6 +118,7 @@ struct MfieldsStateVpic : MfieldsBase
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
   void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override { assert(0); }
+  void copy_comp(int mto, MfieldsBase& from, int mfrom) override { assert(0); }
   double max_comp(int m) override { assert(0); }
   
   static const Convert convert_to_, convert_from_;

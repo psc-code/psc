@@ -210,6 +210,7 @@ struct MfieldsBase
   virtual void set_comp(int m, double val) = 0;
   virtual void scale_comp(int m, double val) = 0;
   virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
+  virtual void copy_comp(int mto, MfieldsBase& from, int mfrom) = 0;
   virtual double max_comp(int m) = 0;
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
   {
@@ -352,8 +353,10 @@ struct Mfields : MfieldsBase
     }
   }
 
-  void copy_comp(int mto, Mfields& from, int mfrom)
+  void copy_comp(int mto, MfieldsBase& from_base, int mfrom) override
   {
+    // FIXME? dynamic_cast would actually be more appropriate
+    Mfields& from = static_cast<Mfields&>(from_base);
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].copy_comp(mto, from[p], mfrom);
     }
@@ -411,6 +414,7 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   void set_comp(int m, double val) override { assert(0); }
   void scale_comp(int m, double val) override { assert(0); }
   void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) override { assert(0); }
+  void copy_comp(int mto, MfieldsBase& from, int mfrom) override { assert(0); }
   double max_comp(int m)  override { assert(0); }
 
 private:
