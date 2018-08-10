@@ -74,16 +74,15 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
       HydroArray *vmflds_hydro = mf_hydro.vmflds_hydro;
       sim->moments_run(vmflds_hydro, &mprts.vmprts_, kind);
       
-      auto& mf = mf_hydro.get_as<Mfields>(0, VPIC_HYDRO_N_COMP);
       for (int p = 0; p < mres.n_patches(); p++) {
-	Fields F(mf[p]), R(mres[p]);
+	Fields R(mres[p]);
+	auto F = mf_hydro[p];
 	grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
 	    for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
 	      R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
 	    }
 	  });
       }
-      mf_hydro.put_as(mf, 0, 0);
     }
   }
 };
