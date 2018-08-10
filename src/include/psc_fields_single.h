@@ -14,6 +14,7 @@ struct fields_single_t : fields3d<float>
 };
 
 using MfieldsSingle = Mfields<fields_single_t>;
+using MfieldsStateSingle = MfieldsStatePsc<fields_single_t>;
 
 template<>
 struct Mfields_traits<MfieldsSingle>

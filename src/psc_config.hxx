@@ -133,13 +133,13 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
 
 
 template<typename dim>
-using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsC, PscConfigPushParticles2nd>;
+using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsStateDouble, PscConfigPushParticles2nd>;
 
 template<typename dim>
-using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles2nd>;
+using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, PscConfigPushParticles2nd>;
 
 template<typename dim>
-using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsSingle, PscConfigPushParticles1vbec>;
+using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, PscConfigPushParticles1vbec>;
 
 #ifdef USE_CUDA
 

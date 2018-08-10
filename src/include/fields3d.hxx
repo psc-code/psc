@@ -391,4 +391,15 @@ struct Mfields : MfieldsBase
   int im[3]; //> extent for each patch (incl. ghostpoints)
 };
 
+// ======================================================================
+// MfieldsStatePsc
+
+template<typename F>
+struct MfieldsStatePsc : Mfields<F>
+{
+  using Base = Mfields<F>;
+
+  using Base::Base;
+};
+
 #endif
