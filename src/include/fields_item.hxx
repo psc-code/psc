@@ -19,7 +19,7 @@
 
 struct FieldsItemBase
 {
-  virtual void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) = 0;
+  virtual void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
 
   virtual MfieldsBase& mres() = 0;
 
@@ -43,7 +43,7 @@ struct PscFieldsItem
     : item_(item)
   {}
 
-  void operator()(MfieldsBase& mflds, MparticlesBase& mprts)
+  void operator()(MfieldsStateBase& mflds, MparticlesBase& mprts)
   {
     sub()->run(mflds, mprts);
   }
@@ -103,6 +103,7 @@ struct FieldsItemOps : psc_output_fields_item_ops {
 template<typename Item>
 struct FieldsItemFields : FieldsItemBase
 {
+  using MfieldsState = typename Item::MfieldsState;
   using Mfields = typename Item::Mfields;
   
   static char const* name()
@@ -118,14 +119,14 @@ struct FieldsItemFields : FieldsItemBase
     : mres_{ppsc->grid(), Item::n_comps, ppsc->ibn}
   {}
 
-  void operator()(Mfields& mflds)
+  void operator()(MfieldsState& mflds)
   {
     Item::run(mflds, mres_);
   }
 
-  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
-    auto& mflds = mflds_base.get_as<Mfields>(0, mflds_base.n_comps());
+    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base.n_comps());
     (*this)(mflds);
     mflds_base.put_as(mflds, 0, 0);
   }
@@ -155,11 +156,12 @@ private:
 template<typename ItemPatch>
 struct ItemLoopPatches : ItemPatch
 {
+  using MfieldsState = typename ItemPatch::MfieldsState;
   using Mfields = typename ItemPatch::Mfields;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   
-  static void run(Mfields& mflds, Mfields& mres)
+  static void run(MfieldsState& mflds, Mfields& mres)
   {
     auto& grid = mres.grid();
     
@@ -361,7 +363,7 @@ struct FieldsItemMoment : FieldsItemBase
     : moment_(grid, comm)
   {}
 
-  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
     auto& mprts = mprts_base.get_as<Mparticles>();
     moment_.run(mprts);

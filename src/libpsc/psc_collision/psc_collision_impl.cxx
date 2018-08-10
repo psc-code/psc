@@ -37,7 +37,7 @@ struct Item_coll_stats
 	"coll_nudt_large", "coll_ncoll" }; }
   constexpr static int flags = 0;
 
-  static void run(Mfields& mflds, Mfields& mres)
+  static void run(MfieldsState& mflds, Mfields& mres)
   {
     assert(global_collision);
     Collision& coll = *reinterpret_cast<Collision*>(global_collision);
@@ -60,7 +60,7 @@ struct Item_coll_rei
   constexpr static fld_names_t fld_names() { return { "coll_rei_x", "coll_rei_y", "coll_rei_z" }; }
   constexpr static int flags = 0;
 
-  static void run(Mfields& mflds, Mfields& mres)
+  static void run(MfieldsState& mflds, Mfields& mres)
   {
     assert(global_collision);
     Collision& coll = *reinterpret_cast<Collision*>(global_collision);

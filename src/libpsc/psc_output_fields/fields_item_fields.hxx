@@ -18,13 +18,14 @@ struct Item_dive
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
   using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
+  using Fields = Fields3d<typename Mfields::fields_t>;
+  using FieldsState = Fields3d<typename MfieldsState::fields_t>;
   
   constexpr static char const* name = "dive";
   constexpr static int n_comps = 1;
   static fld_names_t fld_names() { return { "dive" }; }
-  
-  static void set(Fields& R, Fields&F, int i, int j, int k)
+
+  static void set(Fields& R, FieldsState& F, int i, int j, int k)
   {
     auto& grid = ppsc->grid();
     define_dxdydz(dx, dy, dz);
