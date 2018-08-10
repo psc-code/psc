@@ -22,4 +22,11 @@ struct Mfields_traits<MfieldsC>
   static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
 };
 
+template<>
+struct Mfields_traits<MfieldsStateDouble>
+{
+  static constexpr const char* name = "c";
+  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
+};
+
 #endif

@@ -66,26 +66,26 @@ struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
   using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
 };
 
-template<typename DIM, typename Mparticles, typename Mfields, template<typename...> class ConfigPushParticles,
+template<typename DIM, typename Mparticles, typename _MfieldsState,
+	 template<typename...> class ConfigPushParticles,
 	 typename _Simulation = SimulationNone>
 struct PscConfig_
 {
   using dim_t = DIM;
   using Mparticles_t = Mparticles;
-  using Mfields_t = Mfields;
-  using MfieldsState = Mfields;
-  using ConfigPushp = ConfigPushParticles<DIM, Mparticles, Mfields>;
+  using MfieldsState = _MfieldsState;
+  using ConfigPushp = ConfigPushParticles<DIM, Mparticles, MfieldsState>;
   using PushParticles_t = typename ConfigPushp::PushParticles_t;
   using checks_order = typename PushParticles_t::checks_order;
   using Sort_t = SortCountsort2<Mparticles_t>;
-  using Collision_t = Collision_<Mparticles_t, Mfields_t>;
-  using PushFields_t = PushFields<Mfields_t>;
+  using Collision_t = Collision_<Mparticles_t, MfieldsState>;
+  using PushFields_t = PushFields<MfieldsState>;
   using BndParticles_t = BndParticles_<Mparticles_t>;
-  using Bnd_t = Bnd_<Mfields_t>;
-  using BndFields_t = BndFieldsNone<Mfields_t>;
-  using Balance_t = Balance_<Mparticles_t, Mfields_t>;
-  using Checks_t = Checks_<Mparticles_t, Mfields_t, checks_order>;
-  using Marder_t = Marder_<Mparticles_t, Mfields_t>;
+  using Bnd_t = Bnd_<MfieldsState>;
+  using BndFields_t = BndFieldsNone<MfieldsState>;
+  using Balance_t = Balance_<Mparticles_t, MfieldsState>;
+  using Checks_t = Checks_<Mparticles_t, MfieldsState, checks_order>;
+  using Marder_t = Marder_<Mparticles_t, MfieldsState>;
   using Simulation = _Simulation;
 };
 

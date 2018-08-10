@@ -166,9 +166,9 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   // ----------------------------------------------------------------------
   // setup_initial_fields
   
-  void setup_initial_fields(Mfields_t& mflds)
+  void setup_initial_fields(MfieldsState& mflds)
   {
-    SetupFields<Mfields_t>::set(mflds, [&](int m, double crd[3]) {
+    SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
 	double z1 = crd[2];
 	double y1 = crd[1] + .5 * LLy;
 	double r1 = sqrt(sqr(z1) + sqr(y1));

@@ -22,4 +22,11 @@ struct Mfields_traits<MfieldsSingle>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
+template<>
+struct Mfields_traits<MfieldsStateSingle>
+{
+  static constexpr const char* name = "single";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
+
 #endif

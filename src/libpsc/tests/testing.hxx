@@ -85,7 +85,7 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz,
 using TestConfigVpic = TestConfig<dim_xyz,
 				  PushParticlesVpic,
 				  checks_order_1st,
-				  Checks_<MparticlesVpic, MfieldsVpic, checks_order_1st>,
+				  Checks_<MparticlesVpic, MfieldsStateVpic, checks_order_1st>,
 				  BndParticlesVpic>;
 
 #ifdef USE_CUDA

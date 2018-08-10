@@ -203,7 +203,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 {
   using DIM = PscConfig::dim_t;
   using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
-  using Inject_t = typename InjectSelector<Mparticles_t, Mfields_t, InjectFoil, DIM>::Inject;
+  using Inject_t = typename InjectSelector<Mparticles_t, MfieldsState, InjectFoil, DIM>::Inject;
   
   PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
     : Psc{p, psc},
@@ -303,9 +303,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   // ----------------------------------------------------------------------
   // setup_initial_fields
   
-  void setup_initial_fields(Mfields_t& mflds)
+  void setup_initial_fields(MfieldsState& mflds)
   {
-    SetupFields<Mfields_t>::set(mflds, [&](int m, double crd[3]) {
+    SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
 	switch (m) {
 	case HY: return BB;
 	default: return 0.;
