@@ -5,6 +5,8 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
+#include <psc_method.h>
+
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
 struct fields_vpic_t : fields3d<float, LayoutAOS>
@@ -75,9 +77,17 @@ struct MfieldsStateVpic
   
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
   : grid_{grid},
-    ibn_{ibn},
-    mflds_{grid, n_fields, ibn}
-  {}
+    ibn_{ibn}
+  {
+    assert(grid.n_patches() == 1);
+    assert((ibn == Int3{ 1, 1, 1 }));
+    assert(n_fields == VPIC_MFIELDS_N_COMP);
+
+    Simulation* sim;
+    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+    
+    vmflds_fields_ = sim->field_array_;
+  }
 
   int n_patches() const { return 1; }
   const Grid_t& grid() { return grid_; }
@@ -91,12 +101,12 @@ struct MfieldsStateVpic
   }
 
   Int3 ibn() const { return ibn_; }
-  FieldArray& vmflds() { return mflds_.vmflds(); }
+  FieldArray& vmflds() { return *vmflds_fields_; }
 
 private:
   const Grid_t& grid_;
   Int3 ibn_;
-  MfieldsVpic mflds_;
+  FieldArray* vmflds_fields_;
 };
 
 template<>
