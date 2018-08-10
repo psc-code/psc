@@ -3,7 +3,7 @@
 
 #include "fields_item.hxx"
 
-#include <mrc_io.h>
+#include <mrc_io.hxx>
 
 // ======================================================================
 // OutputFieldsCParams
@@ -81,10 +81,10 @@ struct OutputFieldsC : public OutputFieldsCParams
     naccum = 0;
     
     if (pfield_step > 0) {
-      io_pfd_ = create_mrc_io("pfd");
+      io_pfd_.create("pfd", data_dir);
     }
     if (tfield_step) {
-      io_tfd_ = create_mrc_io("tfd");
+      io_tfd_.create("tfd", data_dir);
     }
   }
 
@@ -98,8 +98,8 @@ struct OutputFieldsC : public OutputFieldsCParams
       delete &item.tfd;
     }
     
-    mrc_io_destroy(io_pfd_);
-    mrc_io_destroy(io_tfd_);
+    mrc_io_destroy(io_pfd_.io_);
+    mrc_io_destroy(io_tfd_.io_);
   }
 
   // ----------------------------------------------------------------------
@@ -131,11 +131,11 @@ struct OutputFieldsC : public OutputFieldsCParams
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
-      open_mrc_io(io_pfd_);
+      open_mrc_io(io_pfd_.io_);
       for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io_pfd_, item.name, item.comp_names);
+	item.pfd.write_as_mrc_fld(io_pfd_.io_, item.name, item.comp_names);
       }
-      mrc_io_close(io_pfd_);
+      mrc_io_close(io_pfd_.io_);
     }
     
     if (tfield_step > 0) {
@@ -150,16 +150,16 @@ struct OutputFieldsC : public OutputFieldsCParams
 	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
 	tfield_next += tfield_step;
 	
-	open_mrc_io(io_tfd_);
+	open_mrc_io(io_tfd_.io_);
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
 	  item.tfd.scale(1. / naccum);
-	  item.tfd.write_as_mrc_fld(io_tfd_, item.name, item.comp_names);
+	  item.tfd.write_as_mrc_fld(io_tfd_.io_, item.name, item.comp_names);
 	  item.tfd.zero();
 	}
 	naccum = 0;
-	mrc_io_close(io_tfd_);
+	mrc_io_close(io_tfd_.io_);
       }
     }
 
@@ -167,17 +167,6 @@ struct OutputFieldsC : public OutputFieldsCParams
   };
 
 private:
-  mrc_io* create_mrc_io(const char* pfx)
-  {
-    mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
-    mrc_io_set_param_string(io, "basename", pfx);
-    mrc_io_set_param_string(io, "outdir", data_dir);
-    mrc_io_set_from_options(io);
-    mrc_io_setup(io);
-    mrc_io_view(io);
-    return io;
-  }
-
   void open_mrc_io(mrc_io *io)
   {
     int gdims[3];
@@ -215,7 +204,7 @@ public:
   unsigned int naccum;
   std::vector<Item> items;
 private:
-  mrc_io *io_pfd_;
-  mrc_io *io_tfd_;
+  MrcIo io_pfd_;
+  MrcIo io_tfd_;
 };
 

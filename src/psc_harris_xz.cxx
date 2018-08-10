@@ -28,6 +28,8 @@
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
+#include "mrc_io.hxx"
+
 #include <psc_particles_single.h>
 
 #include "rngpool_iface.h"
@@ -794,17 +796,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
-  mrc_io* create_mrc_io(const char* pfx, const char* outdir)
-  {
-    mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
-    mrc_io_set_param_string(io, "basename", pfx);
-    mrc_io_set_param_string(io, "outdir", outdir);
-    mrc_io_set_from_options(io);
-    mrc_io_setup(io);
-    mrc_io_view(io);
-    return io;
-  }
-
   void open_mrc_io(mrc_io *io)
   {
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
@@ -824,14 +815,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     MPI_Comm comm = psc_comm(psc_);
 
-    if (!io_pfd_) {
-      io_pfd_ = create_mrc_io("pfd", ".");
+    if (!io_pfd_.io_) {
+      io_pfd_.create("pfd", ".");
     }
       
     int timestep = psc_->timestep;
     if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
-      open_mrc_io(io_pfd_);
+      open_mrc_io(io_pfd_.io_);
 
       {
 	std::vector<std::string> comp_names = { "ex_ec", "ey_ec", "ez_ec", "div_e_err_nc",
@@ -839,7 +830,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 						"tcax_ec", "tcay_ec", "tcaz_ec", "rhob_nc",
 						"jx_ec", "jy_ec", "jz_c", "rhof_nc" };
 	
-	mflds_.write_as_mrc_fld(io_pfd_, "vpic_fields", comp_names);
+	mflds_.write_as_mrc_fld(io_pfd_.io_, "vpic_fields", comp_names);
       }
 
       {
@@ -848,16 +839,16 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 	int n_comps = Moment::n_comps * ppsc->grid().kinds.size();
 	moment.run(mprts_);
 
-	moment.result().write_as_mrc_fld(io_pfd_, Moment::name, moment.comp_names());
+	moment.result().write_as_mrc_fld(io_pfd_.io_, Moment::name, moment.comp_names());
       }
-      mrc_io_close(io_pfd_);
+      mrc_io_close(io_pfd_.io_);
     }
   }
 
 private:
   globals_physics phys_;
 
-  mrc_io* io_pfd_;
+  MrcIo io_pfd_;
 };
 
 // ----------------------------------------------------------------------
