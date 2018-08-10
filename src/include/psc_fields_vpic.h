@@ -24,26 +24,24 @@ struct MfieldsVpic : MfieldsBase
 
   using Base::Base;
 
-  MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn);
-  ~MfieldsVpic();
-
-  inline fields_vpic_t operator[](int p)
+  MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase(grid, n_fields, ibn)
   {
-    // FIXME hacky...
-    if (n_comps() == VPIC_MFIELDS_N_COMP) {
-      int ib[3], im[3];
-      float* data = vmflds_fields_->getData(ib, im);
-      return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
-    } else if (n_comps() == VPIC_HYDRO_N_COMP) {
-      int ib[3], im[3];
-      float* data = vmflds_hydro->getData(ib, im);
-      return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
-    } else {
-      assert(0);
-    }
+    assert(grid.n_patches() == 1);
+    assert((ibn == Int3{ 1, 1, 1 }));
+    assert(n_fields == VPIC_HYDRO_N_COMP);
+    
+    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
+    vmflds_hydro = sim_->hydro_array_;
+  }
+  
+  fields_vpic_t operator[](int p)
+  {
+    int ib[3], im[3];
+    float* data = vmflds_hydro->getData(ib, im);
+    return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
   }
 
-  FieldArray& vmflds() { return *vmflds_fields_; }
   Simulation* sim() { return sim_; }
 
   void zero_comp(int m) override { assert(0); }
@@ -58,7 +56,6 @@ struct MfieldsVpic : MfieldsBase
 
  private:
   Simulation* sim_;
-  FieldArray* vmflds_fields_;
  public:
   HydroArray *vmflds_hydro;
 };

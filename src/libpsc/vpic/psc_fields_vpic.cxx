@@ -118,27 +118,6 @@ static void MfieldsStateVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
 
 // ======================================================================
 
-// ----------------------------------------------------------------------
-// MfieldsVpic ctor
-
-MfieldsVpic::MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-  : MfieldsBase(grid, n_fields, ibn)
-{
-  assert(grid.n_patches() == 1);
-  assert((ibn == Int3{ 1, 1, 1 }));
-  assert(n_fields == VPIC_HYDRO_N_COMP);
-
-  psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-  vmflds_hydro = sim_->hydro_array_;
-}
-
-// ----------------------------------------------------------------------
-// MfieldsVpic dtor
-
-MfieldsVpic::~MfieldsVpic()
-{
-}
-
 const MfieldsBase::Convert MfieldsVpic::convert_to_ = {
   { std::type_index(typeid(MfieldsSingle)), MfieldsVpic_copy_to_single },
 };
