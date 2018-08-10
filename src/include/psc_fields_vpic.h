@@ -70,14 +70,15 @@ struct Mfields_traits<MfieldsVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-struct MfieldsStateVpic
+struct MfieldsStateVpic : MfieldsBase
 {
   using fields_t = MfieldsVpic::fields_t;
   using real_t = MfieldsVpic::real_t;
   
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-  : grid_{grid},
-    ibn_{ibn}
+    : MfieldsBase{grid, n_fields, ibn},
+      grid_{grid},
+      ibn_{ibn}
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
@@ -89,9 +90,6 @@ struct MfieldsStateVpic
     vmflds_fields_ = sim->field_array_;
   }
 
-  int n_patches() const { return 1; }
-  const Grid_t& grid() { return grid_; }
-
   fields_vpic_t operator[](int p)
   {
     assert(p == 0);
@@ -100,9 +98,14 @@ struct MfieldsStateVpic
     return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
   }
 
-  Int3 ibn() const { return ibn_; }
   FieldArray& vmflds() { return *vmflds_fields_; }
 
+  void zero_comp(int m) override { assert(0); }
+  void set_comp(int m, double val) override { assert(0); }
+  void scale_comp(int m, double val) override { assert(0); }
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override { assert(0); }
+  double max_comp(int m) override { assert(0); }
+  
 private:
   const Grid_t& grid_;
   Int3 ibn_;
