@@ -12,10 +12,11 @@
 // ======================================================================
 // Item_dive
 
-template<class MF>
+template<typename _MfieldsState, typename _Mfields>
 struct Item_dive
 {
-  using Mfields = MF;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   
@@ -38,10 +39,11 @@ struct Item_dive
 
 // FIXME, almost same as dive
 
-template<class MF>
+template<typename _MfieldsState, typename _Mfields>
 struct Item_divj
 {
-  using Mfields = MF;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   

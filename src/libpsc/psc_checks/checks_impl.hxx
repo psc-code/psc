@@ -239,7 +239,7 @@ struct Checks_ : ChecksParams, ChecksBase
   ItemMomentLoopPatches<Moment_t> item_rho_p_;
   ItemMomentLoopPatches<Moment_t> item_rho_m_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState>>> item_dive_;
-  FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState>>> item_divj_;
+  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>> item_divj_;
 };
 

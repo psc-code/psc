@@ -9,8 +9,8 @@
 // ======================================================================
 // psc_output_fields_item_init
 
-FieldsItemFieldsOps<Item_dive<MfieldsSingle>> psc_output_fields_item_dive_single_ops;
-FieldsItemFieldsOps<Item_dive<MfieldsC>> psc_output_fields_item_dive_c_ops;
+FieldsItemFieldsOps<Item_dive<MfieldsStateSingle, MfieldsSingle>> psc_output_fields_item_dive_single_ops;
+FieldsItemFieldsOps<Item_dive<MfieldsStateDouble, MfieldsC>> psc_output_fields_item_dive_c_ops;
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_j_ops;

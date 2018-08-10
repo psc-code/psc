@@ -28,7 +28,8 @@ void* global_collision; // FIXME
 template<typename Collision>
 struct Item_coll_stats
 {
-  using Mfields = typename Collision::MfieldsState;
+  using MfieldsState = typename Collision::MfieldsState;
+  using Mfields = typename Collision::Mfields;
 
   constexpr static const char* name = "coll_stats";
   constexpr static int n_comps = Collision::NR_STATS;
@@ -51,7 +52,8 @@ struct Item_coll_stats
 template<typename Collision>
 struct Item_coll_rei
 {
-  using Mfields = typename Collision::MfieldsState;
+  using MfieldsState = typename Collision::MfieldsState;
+  using Mfields = typename Collision::Mfields;
 
   constexpr static const char* name = "coll_rei";
   constexpr static int n_comps = 3;

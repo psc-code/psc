@@ -5,6 +5,7 @@
 #include "psc_fields_as_c.h"
 #include "psc_fields_cuda.h"
 
+using MfieldsState_t = MfieldsStateDouble;
 using Mfields_t = MfieldsC;
 
 // ======================================================================
@@ -28,6 +29,7 @@ using Fields = Fields3d<Mfields_t::fields_t>;
 
 struct Item_j_nc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "j_nc";
@@ -56,6 +58,7 @@ FieldsItemFieldsOps<Item_j_nc> psc_output_fields_item_j_nc_ops;
 
 struct Item_j_cc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "j";
@@ -77,6 +80,7 @@ FieldsItemFieldsOps<Item_j_cc> psc_output_fields_item_j_ops;
 
 struct Item_j_ec
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "j_ec";
@@ -102,6 +106,7 @@ FieldsItemFieldsOps<Item_j_ec> psc_output_fields_item_j_ec_ops;
 
 struct Item_e_nc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "e_nc";
@@ -130,6 +135,7 @@ FieldsItemFieldsOps<Item_e_nc> psc_output_fields_item_e_nc_ops;
 
 struct Item_e_cc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "e";
@@ -151,6 +157,7 @@ FieldsItemFieldsOps<Item_e_cc> psc_output_fields_item_e_ops;
 
 struct Item_e_ec
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "e_ec";
@@ -179,6 +186,7 @@ FieldsItemFieldsOps<Item_e_ec> psc_output_fields_item_e_ec_ops;
 
 struct Item_h_nc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "h_nc";
@@ -204,6 +212,7 @@ FieldsItemFieldsOps<Item_h_nc> psc_output_fields_item_h_nc_ops;
 
 struct Item_h_cc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "h";
@@ -225,6 +234,7 @@ FieldsItemFieldsOps<Item_h_cc> psc_output_fields_item_h_ops;
 
 struct Item_h_fc
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "h_fc";
@@ -246,6 +256,7 @@ FieldsItemFieldsOps<Item_h_fc> psc_output_fields_item_h_fc_ops;
 
 struct Item_jdote
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "jdote";
@@ -267,6 +278,7 @@ FieldsItemFieldsOps<Item_jdote> psc_output_fields_item_jdote_ops;
 
 struct Item_poyn
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "poyn";
@@ -291,6 +303,7 @@ FieldsItemFieldsOps<Item_poyn> psc_output_fields_item_poyn_ops;
 
 struct Item_e2
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "e2";
@@ -312,6 +325,7 @@ FieldsItemFieldsOps<Item_e2> psc_output_fields_item_e2_ops;
 
 struct Item_h2
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "h2";
@@ -333,6 +347,7 @@ FieldsItemFieldsOps<Item_h2> psc_output_fields_item_h2_ops;
 
 struct Item_divb
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "divb";
@@ -355,6 +370,7 @@ FieldsItemFieldsOps<Item_divb> psc_output_fields_item_divb_ops;
 
 struct Item_divj
 {
+  using MfieldsState = MfieldsState_t;
   using Mfields = Mfields_t;
   
   constexpr static char const* name = "divj";

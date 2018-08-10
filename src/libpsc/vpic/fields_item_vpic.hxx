@@ -7,7 +7,9 @@
 struct Item_vpic_fields
 {
   using Mfields = MfieldsSingle;
+  using MfieldsState = MfieldsStateVpic;
   using Fields = Fields3d<typename Mfields::fields_t>;
+  using FieldsState = Fields3d<typename MfieldsState::fields_t>;
 
   constexpr static const char* name = "fields_vpic";
   constexpr static int n_comps = 16;
@@ -43,6 +45,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
 {
   using Base = ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>;
   using Mfields = MfieldsSingle;
+  using MfieldsState = MfieldsStateVpic;
   using Mparticles = MparticlesVpic;
   using Fields = Fields3d<typename Mfields::fields_t>;
   

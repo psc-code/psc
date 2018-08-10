@@ -225,7 +225,7 @@ private:
   MPI_Comm comm_;
   Bnd_<Mfields> bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState>>> item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
 };
 
