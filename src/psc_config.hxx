@@ -80,7 +80,7 @@ struct PscConfig_
   using PushParticles_t = typename ConfigPushp::PushParticles_t;
   using checks_order = typename PushParticles_t::checks_order;
   using Sort_t = SortCountsort2<Mparticles_t>;
-  using Collision_t = Collision_<Mparticles_t, Mfields>;
+  using Collision_t = Collision_<Mparticles_t, MfieldsState, Mfields>;
   using PushFields_t = PushFields<MfieldsState>;
   using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<MfieldsState>;

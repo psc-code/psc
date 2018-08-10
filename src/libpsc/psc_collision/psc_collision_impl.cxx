@@ -28,7 +28,7 @@ void* global_collision; // FIXME
 template<typename Collision>
 struct Item_coll_stats
 {
-  using Mfields = typename Collision::Mfields;
+  using Mfields = typename Collision::MfieldsState;
 
   constexpr static const char* name = "coll_stats";
   constexpr static int n_comps = Collision::NR_STATS;
@@ -51,7 +51,7 @@ struct Item_coll_stats
 template<typename Collision>
 struct Item_coll_rei
 {
-  using Mfields = typename Collision::Mfields;
+  using Mfields = typename Collision::MfieldsState;
 
   constexpr static const char* name = "coll_rei";
   constexpr static int n_comps = 3;
@@ -73,11 +73,11 @@ struct Item_coll_rei
 // ======================================================================
 // psc_output_fields_item: subclass "coll_stats" / "coll_rei"
 
-using CollisionSingle = Collision_<MparticlesSingle, MfieldsSingle>;
+using CollisionSingle = Collision_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
 FieldsItemOps<FieldsItemFields<Item_coll_stats<CollisionSingle>>> psc_output_fields_item_coll_stats_single_ops;
 FieldsItemOps<FieldsItemFields<Item_coll_rei<CollisionSingle>>> psc_output_fields_item_coll_rei_single_ops;
 
-using CollisionDouble = Collision_<MparticlesDouble, MfieldsC>;
+using CollisionDouble = Collision_<MparticlesDouble, MfieldsStateDouble, MfieldsC>;
 FieldsItemOps<FieldsItemFields<Item_coll_stats<CollisionDouble>>> psc_output_fields_item_coll_stats_double_ops;
 FieldsItemOps<FieldsItemFields<Item_coll_rei<CollisionDouble>>> psc_output_fields_item_coll_rei_double_ops;
 

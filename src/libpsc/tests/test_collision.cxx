@@ -91,8 +91,8 @@ template <typename T>
 class CollisionTest : public ::testing::Test
 {};
 
-using CollisionTestConfigSingle = CollisionTestConfig<dim_yz, CollisionHost<MparticlesSingle, MfieldsSingle, RngFake>>;
-using CollisionTestConfigDouble = CollisionTestConfig<dim_yz, CollisionHost<MparticlesDouble, MfieldsC, RngFake>>;
+using CollisionTestConfigSingle = CollisionTestConfig<dim_yz, CollisionHost<MparticlesSingle, MfieldsStateSingle, MfieldsSingle, RngFake>>;
+using CollisionTestConfigDouble = CollisionTestConfig<dim_yz, CollisionHost<MparticlesDouble, MfieldsStateDouble, MfieldsC, RngFake>>;
 #ifdef USE_CUDA
 using CollisionTestConfigCuda = CollisionTestConfig<dim_yz, CollisionCuda<MparticlesCuda<BS144>, RngStateFake>>;
 #endif

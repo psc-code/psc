@@ -14,14 +14,15 @@ extern void* global_collision; // FIXME
 // ======================================================================
 // CollisionHost
 
-template<typename MP, typename MF, typename Rng>
+template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typename Rng>
 struct CollisionHost
 {
-  using Mparticles = MP;
+  using Mparticles = _Mparticles;
   using particles_t = typename Mparticles::patch_t;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
-  using Mfields = MF;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using Fields = Fields3d<typename Mfields::fields_t>;
 
   constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
@@ -286,5 +287,5 @@ public: // FIXME
   Mfields mflds_rei_;
 };
 
-template<typename MP, typename MF>
-using Collision_ = CollisionHost<MP, MF, RngC<typename MP::real_t>>;
+template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
+using Collision_ = CollisionHost<_Mparticles, _MfieldsState, _Mfields, RngC<typename _Mparticles::real_t>>;
