@@ -78,11 +78,15 @@ struct MfieldsCuda : MfieldsBase
 // ======================================================================
 // MfieldsStateCuda
 
-struct MfieldsStateCuda : MfieldsCuda
+struct MfieldsStateCuda : MfieldsBase
 {
-  using Base = MfieldsCuda;
+  MfieldsStateCuda(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase{grid, n_fields, ibn},
+      mflds_{grid, n_fields, ibn}
+  {}
 
-  using Base::Base;
+private:
+  MfieldsCuda mflds_;
 };
 
 template<>

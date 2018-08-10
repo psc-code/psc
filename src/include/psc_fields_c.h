@@ -14,7 +14,7 @@ struct fields_c_t : fields3d<double>
 };
 
 using MfieldsC = Mfields<fields_c_t>;
-using MfieldsStateDouble = MfieldsStatePsc<fields_c_t>;
+using MfieldsStateDouble = MfieldsStateFromMfields<MfieldsC>;
 
 template<>
 struct Mfields_traits<MfieldsC>

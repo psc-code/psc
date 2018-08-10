@@ -392,14 +392,29 @@ struct Mfields : MfieldsBase
 };
 
 // ======================================================================
-// MfieldsStatePsc
+// MfieldsStateFromMfields
 
-template<typename F>
-struct MfieldsStatePsc : Mfields<F>
+template<typename Mfields>
+struct MfieldsStateFromMfields : MfieldsBase
 {
-  using Base = Mfields<F>;
+  using fields_t = typename Mfields::fields_t;
+  using real_t = typename Mfields::real_t;
 
-  using Base::Base;
+  MfieldsStateFromMfields(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase{grid, n_fields, ibn},
+      mflds_{grid, n_fields, ibn}
+  {}
+
+  fields_t operator[](int p) { return mflds_[p]; }
+  
+  void zero_comp(int m) override { assert(0); }
+  void set_comp(int m, double val) override { assert(0); }
+  void scale_comp(int m, double val) override { assert(0); }
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) override { assert(0); }
+  double max_comp(int m)  override { assert(0); }
+
+private:
+  Mfields mflds_;
 };
 
 #endif
