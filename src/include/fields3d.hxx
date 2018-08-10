@@ -284,7 +284,108 @@ protected:
   Int3 ibn_;
 };
 
+#if 1
+
 using MfieldsStateBase = MfieldsBase;
+
+#else
+
+// ======================================================================
+// MfieldsStateBase
+
+struct MfieldsStateBase
+{
+  using convert_func_t = void (*)(MfieldsStateBase&, MfieldsStateBase&, int, int);
+  using Convert = std::unordered_map<std::type_index, convert_func_t>;
+  
+  MfieldsStateBase(const Grid_t& grid, int n_fields, Int3 ibn)
+    : grid_(&grid),
+      n_fields_(n_fields),
+      ibn_(ibn)
+  {
+    instances.push_back(this);
+  }
+
+  virtual ~MfieldsStateBase()
+  {
+    instances.remove(this);
+  }
+
+  virtual void reset(const Grid_t& grid) { grid_ = &grid; }
+
+  int n_patches() const { return grid_->n_patches(); }
+  int n_comps() const { return n_fields_; }
+  Int3 ibn() const { return ibn_; }
+
+  virtual void zero_comp(int m) = 0;
+  virtual void set_comp(int m, double val) = 0;
+  virtual void scale_comp(int m, double val) = 0;
+  virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
+  virtual double max_comp(int m) = 0;
+  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
+  {
+    assert(0);
+  }
+
+  const Grid_t& grid() { return *grid_; }
+
+  virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
+  virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
+  static void convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_to, int mb, int me);
+
+  static std::list<MfieldsStateBase*> instances;
+
+  template<typename MF>
+  MF& get_as(int mb, int me)
+  {
+    // If we're already the subtype, nothing to be done
+    if (typeid(*this) == typeid(MF)) {
+      return *dynamic_cast<MF*>(this);
+    }
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("Mfields_get_as", 1., 0, 0);
+    }
+    prof_start(pr);
+
+    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
+    
+    auto& mflds = *new MF{grid(), n_comps(), ibn()};
+    
+    MfieldsStateBase::convert(*this, mflds, mb, me);
+
+    prof_stop(pr);
+    return mflds;
+  }
+
+  template<typename MF>
+  void put_as(MF& mflds, int mb, int me)
+  {
+    // If we're already the subtype, nothing to be done
+    if (typeid(*this) == typeid(mflds)) {
+      return;
+    }
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("Mfields_put_as", 1., 0, 0);
+    }
+    prof_start(pr);
+    
+    MfieldsStateBase::convert(mflds, *this, mb, me);
+    delete &mflds;
+    
+    prof_stop(pr);
+  }
+
+protected:
+  int n_fields_;
+  const Grid_t* grid_;
+  Int3 ibn_;
+};
+
+#endif
 
 // ======================================================================
 // Mfields
