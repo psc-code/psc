@@ -294,8 +294,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      auto& vmprts = mprts_.vmprts_;
-      sim_->runDiag(vmprts);
+      sim_->runDiag(mprts_.vmprts_, mflds_.vmflds());
     }
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
