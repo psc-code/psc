@@ -62,7 +62,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // run
 
-  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
     assert(0);
   }

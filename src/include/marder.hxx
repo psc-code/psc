@@ -8,6 +8,6 @@
 
 struct MarderBase
 {
-  virtual void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) = 0;
+  virtual void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
 };
 

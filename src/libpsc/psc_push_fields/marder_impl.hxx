@@ -8,11 +8,12 @@
 
 #include <mrc_io.h>
 
-template<typename MP, typename MF>
+template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
 struct Marder_ : MarderBase
 {
-  using Mparticles = MP;
-  using Mfields = MF;
+  using Mparticles = _Mparticles;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
@@ -51,7 +52,7 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // calc_aid_fields
 
-  void calc_aid_fields(Mfields& mflds)
+  void calc_aid_fields(MfieldsState& mflds)
   {
     item_dive_(mflds);
 	       
@@ -169,7 +170,7 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // correct
 
-  void correct(Mfields& mf)
+  void correct(MfieldsState& mf)
   {
     auto& mf_div_e = item_dive_.result();
 
@@ -185,7 +186,7 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(Mfields& mflds, Mparticles& mprts)
+  void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     item_rho_.run(mprts);
 
@@ -202,9 +203,9 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // run
   
-  void run(MfieldsBase& mflds_base, MparticlesBase& mprts_base) override
+  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
-    auto& mflds = mflds_base.get_as<Mfields>(EX, EX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsState>(EX, EX + 3);
     auto& mprts = mprts_base.get_as<Mparticles>();
 
     (*this)(mflds, mprts);
@@ -221,7 +222,7 @@ private:
   MPI_Comm comm_;
   Bnd_<Mfields> bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<Mfields>>> item_dive_;
+  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState>>> item_dive_;
   mrc_io *io_; //< for debug dumping
 };
 

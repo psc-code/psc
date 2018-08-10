@@ -12,7 +12,7 @@
 template<typename BS>
 struct MarderCuda : MarderBase
 {
-  using real_t = MfieldsCuda::fields_t::real_t;
+  using real_t = MfieldsStateCuda::fields_t::real_t;
   
   MarderCuda(MPI_Comm comm, real_t diffusion, int loop, bool dump)
     : diffusion_{diffusion},
@@ -107,9 +107,9 @@ struct MarderCuda : MarderBase
     fac[1] = .5 * ppsc->grid().dt * diffusion / dx[1];
     fac[2] = .5 * ppsc->grid().dt * diffusion / dx[2];
 
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(EX, EX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsStateCuda>(EX, EX + 3);
     auto& mf = mf_base.get_as<MfieldsCuda>(0, 1);
-    cuda_mfields *cmflds = mflds.cmflds;
+    cuda_mfields *cmflds = mflds.cmflds();
     cuda_mfields *cmf = mf.cmflds;
 
     // OPT, do all patches in one kernel
@@ -144,7 +144,7 @@ struct MarderCuda : MarderBase
     mf_base.put_as(mf, 0, 0);
   }
 
-  void operator()(MfieldsCuda& mflds, MparticlesCuda<BS>& mprts)
+  void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
   {
     MHERE;
   }
