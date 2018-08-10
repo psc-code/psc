@@ -14,14 +14,14 @@
 struct PushParticlesVpic : PushParticlesBase
 {
   using Mparticles = MparticlesVpic;
-  using Mfields = MfieldsVpic;
+  using Mfields = MfieldsStateVpic;
   
   PushParticlesVpic()
   {
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_mprts(MparticlesVpic& mprts, MfieldsStateVpic& mflds)
+  void push_mprts(Mparticles& mprts, Mfields& mflds)
   {
     auto& vmprts = mprts.vmprts_;
     auto& vmflds = mflds.vmflds();
@@ -81,7 +81,7 @@ struct PushParticlesVpic : PushParticlesBase
     TIC sim_->current_injection(); TOC(user_current_injection, 1);
   }
 
-  void prep(MparticlesVpic& mprts, MfieldsStateVpic& mflds)
+  void prep(Mparticles& mprts, Mfields& mflds)
   {
     sim_->push_mprts_prep(mprts.vmprts_, mflds.vmflds());
   }

@@ -10,7 +10,7 @@
 
 struct MarderVpic : MarderBase
 {
-  using real_t = MfieldsVpic::fields_t::real_t;
+  using real_t = MfieldsStateVpic::real_t;
   
   MarderVpic(MPI_Comm comm, real_t diffusion, int loop, bool dump)
     : comm_{comm}

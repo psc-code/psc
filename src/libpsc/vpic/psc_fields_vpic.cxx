@@ -30,17 +30,17 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
 // ======================================================================
 // convert from/to "single"
 
-static void MfieldsVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+static void MfieldsHydroVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
 {
   if (mb != me) {
     assert(0);
   }
 }
 
-static void MfieldsVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+static void MfieldsHydroVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
 {
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
-  auto& mf = dynamic_cast<MfieldsVpic&>(mflds);
+  auto& mf = dynamic_cast<MfieldsHydroVpic&>(mflds);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     fields_single_t flds_single = mf_single[p];
@@ -118,12 +118,12 @@ static void MfieldsStateVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
 
 // ======================================================================
 
-const MfieldsBase::Convert MfieldsVpic::convert_to_ = {
-  { std::type_index(typeid(MfieldsSingle)), MfieldsVpic_copy_to_single },
+const MfieldsBase::Convert MfieldsHydroVpic::convert_to_ = {
+  { std::type_index(typeid(MfieldsSingle)), MfieldsHydroVpic_copy_to_single },
 };
 
-const MfieldsBase::Convert MfieldsVpic::convert_from_ = {
-  { std::type_index(typeid(MfieldsSingle)), MfieldsVpic_copy_from_single },
+const MfieldsBase::Convert MfieldsHydroVpic::convert_from_ = {
+  { std::type_index(typeid(MfieldsSingle)), MfieldsHydroVpic_copy_from_single },
 };
 
 const MfieldsBase::Convert MfieldsStateVpic::convert_to_ = {

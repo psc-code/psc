@@ -66,7 +66,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
     const auto& kinds = mprts.grid().kinds;
     auto& mres = this->mres_;
     auto& grid = mprts.grid();
-    auto mf_hydro = MfieldsVpic{ppsc->grid(), 16, { 1, 1, 1 }};
+    auto mf_hydro = MfieldsHydroVpic{ppsc->grid(), 16, { 1, 1, 1 }};
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     

@@ -16,15 +16,12 @@ struct fields_vpic_t : fields3d<float, LayoutAOS>
   using Base::Base;
 };
 
-struct MfieldsVpic : MfieldsBase
+struct MfieldsHydroVpic : MfieldsBase
 {
   using real_t = float;
   using fields_t = fields_vpic_t;
-  using Base = MfieldsBase;
 
-  using Base::Base;
-
-  MfieldsVpic(const Grid_t& grid, int n_fields, Int3 ibn)
+  MfieldsHydroVpic(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn)
   {
     assert(grid.n_patches() == 1);
@@ -61,7 +58,7 @@ struct MfieldsVpic : MfieldsBase
 };
 
 template<>
-struct Mfields_traits<MfieldsVpic>
+struct Mfields_traits<MfieldsHydroVpic>
 {
   static constexpr const char* name = "vpic";
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
@@ -69,8 +66,8 @@ struct Mfields_traits<MfieldsVpic>
 
 struct MfieldsStateVpic : MfieldsBase
 {
-  using fields_t = MfieldsVpic::fields_t;
-  using real_t = MfieldsVpic::real_t;
+  using real_t = float;
+  using fields_t = fields_vpic_t;
   
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase{grid, n_fields, ibn}
