@@ -67,6 +67,7 @@ struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
 };
 
 template<typename DIM, typename Mparticles, typename _MfieldsState,
+	 typename _Mfields,
 	 template<typename...> class ConfigPushParticles,
 	 typename _Simulation = SimulationNone>
 struct PscConfig_
@@ -74,11 +75,12 @@ struct PscConfig_
   using dim_t = DIM;
   using Mparticles_t = Mparticles;
   using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using ConfigPushp = ConfigPushParticles<DIM, Mparticles, MfieldsState>;
   using PushParticles_t = typename ConfigPushp::PushParticles_t;
   using checks_order = typename PushParticles_t::checks_order;
   using Sort_t = SortCountsort2<Mparticles_t>;
-  using Collision_t = Collision_<Mparticles_t, MfieldsState>;
+  using Collision_t = Collision_<Mparticles_t, Mfields>;
   using PushFields_t = PushFields<MfieldsState>;
   using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<MfieldsState>;
@@ -91,39 +93,41 @@ struct PscConfig_
 
 #ifdef USE_CUDA
 
-template<typename DIM, typename Mparticles, typename Mfields>
-struct PscConfig_<DIM, Mparticles, Mfields, PscConfigPushParticlesCuda>
+template<typename DIM, typename Mparticles, typename _MfieldsState, typename _Mfields>
+struct PscConfig_<DIM, Mparticles, _MfieldsState, _Mfields, PscConfigPushParticlesCuda>
 {
   using dim_t = DIM;
   using BS = typename Mparticles::BS;
   using Mparticles_t = Mparticles;
-  using Mfields_t = Mfields;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3d<dim_t, BS>>;
   using Sort_t = SortCuda<BS>;
   using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
-  using Bnd_t = BndCuda3<Mfields_t>;
-  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using Bnd_t = BndCuda3<Mfields>;
+  using BndFields_t = BndFieldsNone<Mfields>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
 };
 
-template<typename Mparticles, typename Mfields>
-struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
+template<typename Mparticles, typename _MfieldsState, typename _Mfields>
+struct PscConfig_<dim_xyz, Mparticles, _MfieldsState, _Mfields, PscConfigPushParticlesCuda>
 {
   using dim_t = dim_xyz;
   using BS = typename Mparticles::BS;
   using Mparticles_t = Mparticles;
-  using Mfields_t = Mfields;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
   using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3dGmem<dim_t, BS>>;
   using Sort_t = SortCuda<BS>;
   using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<Mfields>;
-  using BndFields_t = BndFieldsNone<Mfields_t>;
+  using BndFields_t = BndFieldsNone<Mfields>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
@@ -133,22 +137,25 @@ struct PscConfig_<dim_xyz, Mparticles, Mfields, PscConfigPushParticlesCuda>
 
 
 template<typename dim>
-using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsStateDouble, PscConfigPushParticles2nd>;
+using PscConfig2ndDouble = PscConfig_<dim, MparticlesDouble, MfieldsStateDouble, MfieldsC,
+				      PscConfigPushParticles2nd>;
 
 template<typename dim>
-using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, PscConfigPushParticles2nd>;
+using PscConfig2ndSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, MfieldsSingle,
+				      PscConfigPushParticles2nd>;
 
 template<typename dim>
-using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, PscConfigPushParticles1vbec>;
+using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, MfieldsSingle,
+					PscConfigPushParticles1vbec>;
 
 #ifdef USE_CUDA
 
 template<typename dim>
-struct PscConfig1vbecCuda : PscConfig_<dim, MparticlesCuda<BS144>, MfieldsCuda, PscConfigPushParticlesCuda>
+struct PscConfig1vbecCuda : PscConfig_<dim, MparticlesCuda<BS144>, MfieldsStateCuda, MfieldsCuda, PscConfigPushParticlesCuda>
 {};
 
 template<>
-struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, MfieldsCuda, PscConfigPushParticlesCuda>
+struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, MfieldsStateCuda, MfieldsCuda, PscConfigPushParticlesCuda>
 {};
 
 #endif
@@ -171,7 +178,7 @@ struct PscConfigVpic
 {
   using Mparticles_t = MparticlesVpic;
   using MfieldsState = MfieldsStateVpic;
-  using Balance_t = Balance_<MparticlesSingle, MfieldsSingle>;
+  using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;
   using PushParticles_t = PushParticlesVpic;

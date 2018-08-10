@@ -75,6 +75,16 @@ struct MfieldsCuda : MfieldsBase
   struct cuda_mfields *cmflds;
 };
 
+// ======================================================================
+// MfieldsStateCuda
+
+struct MfieldsStateCuda : MfieldsCuda
+{
+  using Base = MfieldsCuda;
+
+  using Base::Base;
+};
+
 template<>
 struct Mfields_traits<MfieldsCuda>
 {
