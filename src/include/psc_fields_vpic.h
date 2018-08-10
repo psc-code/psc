@@ -66,7 +66,7 @@ struct Mfields_traits<MfieldsHydroVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-struct MfieldsStateVpic : MfieldsBase
+struct MfieldsStateVpic : MfieldsStateBase
 {
   using real_t = float;
   using fields_t = fields_vpic_t;
@@ -92,7 +92,7 @@ struct MfieldsStateVpic : MfieldsBase
   };
 
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase{grid, n_fields, ibn}
+    : MfieldsStateBase{grid, n_fields, ibn}
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));

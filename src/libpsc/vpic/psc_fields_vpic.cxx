@@ -65,7 +65,7 @@ static void MfieldsHydroVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
   }
 }
 
-static void MfieldsStateVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+static void MfieldsStateVpic_copy_from_single(MfieldsStateBase& mflds, MfieldsStateBase& mflds_single, int mb, int me)
 {
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
@@ -87,7 +87,7 @@ static void MfieldsStateVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& m
   }
 }
 
-static void MfieldsStateVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+static void MfieldsStateVpic_copy_to_single(MfieldsStateBase& mflds, MfieldsStateBase& mflds_single, int mb, int me)
 {
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
@@ -126,11 +126,11 @@ const MfieldsBase::Convert MfieldsHydroVpic::convert_from_ = {
   { std::type_index(typeid(MfieldsSingle)), MfieldsHydroVpic_copy_from_single },
 };
 
-const MfieldsBase::Convert MfieldsStateVpic::convert_to_ = {
-  { std::type_index(typeid(MfieldsSingle)), MfieldsStateVpic_copy_to_single },
+const MfieldsStateBase::Convert MfieldsStateVpic::convert_to_ = {
+  { std::type_index(typeid(MfieldsStateSingle)), MfieldsStateVpic_copy_to_single },
 };
 
-const MfieldsBase::Convert MfieldsStateVpic::convert_from_ = {
-  { std::type_index(typeid(MfieldsSingle)), MfieldsStateVpic_copy_from_single },
+const MfieldsStateBase::Convert MfieldsStateVpic::convert_from_ = {
+  { std::type_index(typeid(MfieldsStateSingle)), MfieldsStateVpic_copy_from_single },
 };
 
