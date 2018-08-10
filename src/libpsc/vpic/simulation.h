@@ -31,7 +31,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       num_comm_round_(3),
       grid_(SimulationMixin::getGrid()),
       material_list_(SimulationMixin::getMaterialList()),
-      field_array_(SimulationMixin::getFieldArray()),
       interpolator_(SimulationMixin::getInterpolator()),
       accumulator_(SimulationMixin::getAccumulator()),
       hydro_array_(SimulationMixin::getHydroArray()),
@@ -185,7 +184,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   //private:
   Grid*& grid_;
   MaterialList& material_list_;
-  FieldArray*& field_array_;
+  FieldArray* field_array_;
   Interpolator*& interpolator_;
   Accumulator*& accumulator_;
   HydroArray*& hydro_array_;

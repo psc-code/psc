@@ -39,11 +39,6 @@ public:
     return *reinterpret_cast<MaterialList *>(&material_list);
   }
 
-  FieldArray*& getFieldArray()
-  {
-    return *reinterpret_cast<FieldArray **>(&field_array);
-  }
-
   Interpolator*& getInterpolator()
   {
     return *reinterpret_cast<Interpolator **>(&interpolator_array);
