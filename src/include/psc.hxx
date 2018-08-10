@@ -300,7 +300,7 @@ private:
     }
 #endif
 #ifdef VPIC
-    psc_diag_run(psc_->diag, psc_, mprts_, mflds_.base());
+    //psc_diag_run(psc_->diag, psc_, mprts_, mflds_.base()); FIXME
     outf_(mflds_.base(), mprts_);
 #else
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);

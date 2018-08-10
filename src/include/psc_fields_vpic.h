@@ -89,4 +89,11 @@ private:
   MfieldsVpic mflds_;
 };
 
+template<>
+struct Mfields_traits<MfieldsStateVpic>
+{
+  static constexpr const char* name = "vpic";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
+
 #endif
