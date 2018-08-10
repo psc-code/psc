@@ -128,19 +128,19 @@ protected:
 // ======================================================================
 // class PushFields
 
-template<typename Mfields>
+template<typename _MfieldsState>
 class PushFields : public PushFieldsBase
 {
-  using fields_t = typename Mfields::fields_t;
+  using MfieldsState = _MfieldsState;
 
 public:
   // ----------------------------------------------------------------------
   // push_E
 
   template<typename dim>
-  void push_E(Mfields& mflds, double dt_fac, dim tag)
+  void push_E(MfieldsState& mflds, double dt_fac, dim tag)
   {
-    using Fields = Fields3d<fields_t, dim>;
+    using Fields = Fields3d<typename MfieldsState::fields_t, dim>;
     
     for (int p = 0; p < mflds.n_patches(); p++) {
       PushE<Fields> push_E(mflds[p], ppsc, dt_fac);
@@ -152,9 +152,9 @@ public:
   // push_H
 
   template<typename dim>
-  void push_H(Mfields& mflds, double dt_fac, dim tag)
+  void push_H(MfieldsState& mflds, double dt_fac, dim tag)
   {
-    using Fields = Fields3d<fields_t, dim>;
+    using Fields = Fields3d<typename MfieldsState::fields_t, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       PushH<Fields> push_H(mflds[p], ppsc, dt_fac);
@@ -171,9 +171,9 @@ public:
   // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
   //       jx^{n+1}[-.5:.5][-1:1][-1:1]
   
-  void push_E(MfieldsBase& mflds_base, double dt_fac) override
+  void push_E(MfieldsStateBase& mflds_base, double dt_fac) override
   {
-    auto& mflds = mflds_base.get_as<Mfields>(JXI, HX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsState>(JXI, HX + 3);
     
     const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;
@@ -200,9 +200,9 @@ public:
   // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
   // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
-  void push_H(MfieldsBase& mflds_base, double dt_fac) override
+  void push_H(MfieldsStateBase& mflds_base, double dt_fac) override
   {
-    auto& mflds = mflds_base.get_as<Mfields>(JXI, HX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsState>(JXI, HX + 3);
     
     const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;

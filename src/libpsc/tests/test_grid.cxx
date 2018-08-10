@@ -129,7 +129,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 {
   using PushParticles = TypeParam;
   using Mparticles = typename PushParticles::Mparticles;
-  using Mfields = typename PushParticles::Mfields;
+  using MfieldsState = typename PushParticles::MfieldsState;
   using real_t = typename Mparticles::real_t;
   const int n_prts = 131;
   const int n_steps = 10;
@@ -138,7 +138,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   Grid_t grid = MakeTestGrid1{}();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
-  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+  MfieldsState mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
 
   setValues(mflds, [](int m) -> real_t {
       switch(m) {
@@ -174,7 +174,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 {
   using PushParticles = TypeParam;
   using Mparticles = typename PushParticles::Mparticles;
-  using Mfields = typename PushParticles::Mfields;
+  using MfieldsState = typename PushParticles::MfieldsState;
   using real_t = typename Mparticles::real_t;
   const int n_prts = 131;
   const int n_steps = 64;
@@ -187,7 +187,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   Grid_t grid = MakeTestGrid1{}();
   grid.kinds.emplace_back(Grid_t::Kind(2., 1., "test_species"));
 
-  Mfields mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
+  MfieldsState mflds(grid, NR_FIELDS, Int3{ 1, 1, 1 });
 
   setValues(mflds, [](int m) -> real_t {
       switch(m) {

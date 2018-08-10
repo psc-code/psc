@@ -35,19 +35,19 @@ struct SimulationNone
   using Species = void;
 };
 
-template<typename DIM, typename Mparticles, typename Mfields>
+template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles2nd
 {
-  using PushParticles_t = PushParticles__<Config2nd<Mparticles, Mfields, DIM>>;
+  using PushParticles_t = PushParticles__<Config2nd<Mparticles, MfieldsState, DIM>>;
 };
 
-template<typename DIM, typename Mparticles, typename Mfields>
+template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles1vbec
 {
-  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, Mfields, DIM>>;
+  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, MfieldsState, DIM>>;
 };
 
-template<typename DIM, typename Mparticles, typename Mfields>
+template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticlesCuda
 {
 };
@@ -85,7 +85,7 @@ struct PscConfig_
   using BndParticles_t = BndParticles_<Mparticles_t>;
   using Bnd_t = Bnd_<MfieldsState>;
   using BndFields_t = BndFieldsNone<MfieldsState>;
-  using Balance_t = Balance_<Mparticles_t, MfieldsState>;
+  using Balance_t = Balance_<Mparticles_t, Mfields>;
   using Checks_t = Checks_<Mparticles_t, MfieldsState, checks_order>;
   using Marder_t = Marder_<Mparticles_t, MfieldsState>;
   using Simulation = _Simulation;

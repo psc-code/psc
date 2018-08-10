@@ -17,7 +17,7 @@ template<typename C>
 struct PushParticles1vb
 {
   using Mparticles = typename C::Mparticles;
-  using Mfields = typename C::Mfields;
+  using MfieldsState = typename C::MfieldsState;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using dim = typename C::dim;
@@ -31,7 +31,7 @@ struct PushParticles1vb
   // ----------------------------------------------------------------------
   // push_mprts
 
-  static void push_mprts(Mparticles& mprts, Mfields& mflds)
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
       mflds[p].zero(JXI, JXI + 3);
@@ -42,7 +42,7 @@ struct PushParticles1vb
   // ----------------------------------------------------------------------
   // stagger_mprts
   
-  static void stagger_mprts(Mparticles& mprts, Mfields& mflds)
+  static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
       stagger_mprts_patch(mflds[p], mprts[p]);
@@ -54,7 +54,7 @@ private:
   // ----------------------------------------------------------------------
   // push_mprts_patch
   
-  static void push_mprts_patch(typename Mfields::fields_t flds, typename Mparticles::patch_t& prts)
+  static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
     InterpolateEM_t ip;
@@ -140,7 +140,7 @@ private:
   // ----------------------------------------------------------------------
   // stagger_mprts_patch
   
-  static void stagger_mprts_patch(typename Mfields::fields_t flds, typename Mparticles::patch_t& prts)
+  static void stagger_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
     InterpolateEM_t ip;

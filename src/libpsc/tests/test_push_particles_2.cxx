@@ -21,7 +21,7 @@ TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
 TYPED_TEST(PushParticlesTest, Accel)
 {
   using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
+  using MfieldsState = typename TypeParam::MfieldsState;
   using PushParticles = typename TypeParam::PushParticles;
   using BndParticles = typename TypeParam::BndParticles;
   using Bnd = typename TypeParam::Bnd;
@@ -36,8 +36,8 @@ TYPED_TEST(PushParticlesTest, Accel)
   const auto& grid = this->grid();
   
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
-  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+  auto mflds = MfieldsState{grid, NR_FIELDS, this->ibn};
+  SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EX: return 1.;
       case EY: return 2.;
@@ -89,7 +89,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 TYPED_TEST(PushParticlesTest, Cyclo)
 {
   using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
+  using MfieldsState = typename TypeParam::MfieldsState;
   using PushParticles = typename TypeParam::PushParticles;
   using BndParticles = typename TypeParam::BndParticles;
   using Bnd = typename TypeParam::Bnd;
@@ -108,8 +108,8 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   const auto& grid = this->grid();
 
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
-  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+  auto mflds = MfieldsState{grid, NR_FIELDS, this->ibn};
+  SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HZ: return 2. * M_PI / n_steps;
       default: return 0.;

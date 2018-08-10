@@ -43,19 +43,20 @@ using RngPool = PscRngPool<Rng>;
 // ======================================================================
 // TestConfig
 
-template<typename DIM, typename PUSHP, typename ORDER,
-	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::Mfields, ORDER>,
+template<typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
+	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::MfieldsState, ORDER>,
 	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
-	 typename PUSHF = PushFields<typename PUSHP::Mfields>,
-	 typename BND = Bnd_<typename PUSHP::Mfields>,
-	 typename MOMENT_N = ItemMomentLoopPatches<Moment_n_1st<typename PUSHP::Mparticles, typename PUSHP::Mfields>>>
+	 typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
+	 typename BND = Bnd_<typename PUSHP::MfieldsState>,
+	 typename MOMENT_N = ItemMomentLoopPatches<Moment_n_1st<typename PUSHP::Mparticles, typename PUSHP::MfieldsState>>>
 struct TestConfig
 {
   using dim = DIM;
   using order = ORDER;
   using PushParticles = PUSHP;
   using Mparticles = typename PushParticles::Mparticles;
-  using Mfields = typename PushParticles::Mfields;
+  using MfieldsState = typename PushParticles::MfieldsState;
+  using Mfields = _Mfields;
   using Checks = CHECKS;
   using BndParticles = BNDP;
   using PushFields = PUSHF;
@@ -63,26 +64,27 @@ struct TestConfig
   using Moment_n = MOMENT_N;
 };
 
-using TestConfig2ndDouble = TestConfig<dim_xyz,
+using TestConfig2ndDouble = TestConfig<dim_xyz, MfieldsC,
 				       PushParticles__<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
-using TestConfig2ndDoubleYZ = TestConfig<dim_yz,
+using TestConfig2ndDoubleYZ = TestConfig<dim_yz, MfieldsC,
 					 PushParticles__<Config2ndDouble<dim_yz>>,
 					 checks_order_2nd>;
-using TestConfig2ndSingle = TestConfig<dim_xyz,
-				       PushParticles__<Config2nd<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+using TestConfig2ndSingle = TestConfig<dim_xyz, MfieldsSingle,
+				       PushParticles__<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
 				       checks_order_2nd>;
-using TestConfig1vbec3dSingle = TestConfig<dim_xyz,
-					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xyz>>,
+using TestConfig1vbec3dSingle = TestConfig<dim_xyz, MfieldsSingle,
+					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
 					   checks_order_1st>;
-using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz,
-					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_yz>>,
+using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz, MfieldsSingle,
+					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>>,
 					     checks_order_1st>;
-using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz,
-					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsSingle, dim_xz>>,
+using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
+					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>>,
 					     checks_order_1st>;
 
 using TestConfigVpic = TestConfig<dim_xyz,
+				  void,
 				  PushParticlesVpic,
 				  checks_order_1st,
 				  Checks_<MparticlesVpic, MfieldsStateVpic, checks_order_1st>,
@@ -132,7 +134,7 @@ struct PushParticlesTest : ::testing::Test
 {
   using dim = typename T::dim;
   using Mparticles = typename T::Mparticles;
-  using Mfields = typename T::Mfields;
+  using MfieldsState = typename T::MfieldsState;
   using PushParticles = typename T::PushParticles;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
@@ -187,8 +189,8 @@ struct PushParticlesTest : ::testing::Test
     make_psc(kinds);
 
     // init fields
-    mflds = new Mfields{grid(), NR_FIELDS, ibn};
-    SetupFields<Mfields>::set(*mflds, init_fields);
+    mflds = new MfieldsState{grid(), NR_FIELDS, ibn};
+    SetupFields<MfieldsState>::set(*mflds, init_fields);
 
     // init particle
     mprts = new Mparticles{grid()};
@@ -232,7 +234,7 @@ struct PushParticlesTest : ::testing::Test
   
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
-    auto mflds_ref = Mfields{grid(), NR_FIELDS, ibn};
+    auto mflds_ref = MfieldsState{grid(), NR_FIELDS, ibn};
     auto flds_ref = mflds_ref[0];
     for (auto& ref : curr_ref) {
       if (dim::InvarX::value) { ref.pos[0] = 0; }
@@ -266,6 +268,6 @@ struct PushParticlesTest : ::testing::Test
   }
 
   Mparticles* mprts = {};
-  Mfields* mflds = {};
+  MfieldsState* mflds = {};
 };
 

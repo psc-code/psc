@@ -9,20 +9,20 @@ struct PushFieldsCuda : PushFieldsBase
   // ----------------------------------------------------------------------
   // push_E
 
-  void push_E(MfieldsCuda& mflds, double dt_fac, dim_yz tag)
+  void push_E(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
   {
-    cuda_push_fields_E_yz(mflds.cmflds, dt_fac * ppsc->grid().dt);
+    cuda_push_fields_E_yz(mflds.cmflds(), dt_fac * ppsc->grid().dt);
   }
 
-  void push_E(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
+  void push_E(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
   {
-    cuda_push_fields_E_xyz(mflds.cmflds, dt_fac * ppsc->grid().dt);
+    cuda_push_fields_E_xyz(mflds.cmflds(), dt_fac * ppsc->grid().dt);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch
-  void push_E(MfieldsBase& mflds_base, double dt_fac) override
+  void push_E(MfieldsStateBase& mflds_base, double dt_fac) override
   {
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(JXI, HX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsStateCuda>(JXI, HX + 3);
     
     const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;
@@ -40,20 +40,20 @@ struct PushFieldsCuda : PushFieldsBase
   // ----------------------------------------------------------------------
   // push_H
 
-  void push_H(MfieldsCuda& mflds, double dt_fac, dim_yz tag)
+  void push_H(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
   {
-    cuda_push_fields_H_yz(mflds.cmflds, dt_fac * ppsc->grid().dt);
+    cuda_push_fields_H_yz(mflds.cmflds(), dt_fac * ppsc->grid().dt);
   }
 
-  void push_H(MfieldsCuda& mflds, double dt_fac, dim_xyz tag)
+  void push_H(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
   {
-    cuda_push_fields_H_xyz(mflds.cmflds, dt_fac * ppsc->grid().dt);
+    cuda_push_fields_H_xyz(mflds.cmflds(), dt_fac * ppsc->grid().dt);
   }
 
   // dispatch -- FIXME, mostly same as non-cuda dispatch
-  void push_H(MfieldsBase& mflds_base, double dt_fac) override
+  void push_H(MfieldsStateBase& mflds_base, double dt_fac) override
   {
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(JXI, HX + 3);
+    auto& mflds = mflds_base.get_as<MfieldsStateCuda>(JXI, HX + 3);
     
     const auto& grid = mflds.grid();
     using Bool3 = Vec3<bool>;

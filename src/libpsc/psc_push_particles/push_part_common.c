@@ -7,14 +7,14 @@ template<typename C>
 struct PushParticles__
 {
   using Mparticles = typename C::Mparticles;
-  using Mfields = typename C::Mfields;
-  using fields_t = typename Mfields::fields_t;
+  using MfieldsState = typename C::MfieldsState;
+  using fields_t = typename MfieldsState::fields_t;
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using checks_order = checks_order_2nd;
 
-  static void push_mprts(Mparticles& mprts, Mfields& mflds)
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     static int pr;
     if (!pr) {

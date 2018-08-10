@@ -85,6 +85,14 @@ struct MfieldsStateCuda : MfieldsBase
       mflds_{grid, n_fields, ibn}
   {}
 
+  cuda_mfields* cmflds() { return mflds_.cmflds; }
+
+  void zero_comp(int m) override { assert(0); }
+  void set_comp(int m, double val) override { assert(0); }
+  void scale_comp(int m, double val) override { assert(0); }
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) override { assert(0); }
+  double max_comp(int m)  override { assert(0); }
+
 private:
   MfieldsCuda mflds_;
 };

@@ -23,7 +23,7 @@ TYPED_TEST_CASE(PushFieldsTest, PushFieldsTestTypes);
 TYPED_TEST(PushFieldsTest, Pushf1)
 {
   using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
+  using MfieldsState = typename TypeParam::MfieldsState;
   using dim = typename TypeParam::dim;
   using PushFields = typename TypeParam::PushFields;
 
@@ -35,8 +35,8 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   const double kz = 2. * M_PI / grid.domain.length[2];
   
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
-  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+  auto mflds = MfieldsState{grid, NR_FIELDS, this->ibn};
+  SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EY: return sin(kz*crd[2]);
       default: return 0.;
@@ -59,7 +59,7 @@ TYPED_TEST(PushFieldsTest, Pushf1)
 TYPED_TEST(PushFieldsTest, Pushf2)
 {
   using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
+  using MfieldsState = typename TypeParam::MfieldsState;
   using dim = typename TypeParam::dim;
   using PushFields = typename TypeParam::PushFields;
 
@@ -71,8 +71,8 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   const double ky = 2. * M_PI / grid.domain.length[1];
   
   // init fields
-  auto mflds = Mfields{grid, NR_FIELDS, this->ibn};
-  SetupFields<Mfields>::set(mflds, [&](int m, double crd[3]) {
+  auto mflds = MfieldsState{grid, NR_FIELDS, this->ibn};
+  SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HX: return cos(ky*crd[1]);
       default: return 0.;
