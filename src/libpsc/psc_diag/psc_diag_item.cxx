@@ -19,7 +19,7 @@ psc_diag_item_title(struct psc_diag_item *item, int i)
 
 void
 psc_diag_item_run(struct psc_diag_item *item, struct psc *psc,
-		  MparticlesBase& mprts, MfieldsBase& mflds,
+		  MparticlesBase& mprts, MfieldsStateBase& mflds,
 		  double *result)
 {
   struct psc_diag_item_ops *ops = psc_diag_item_ops(item);

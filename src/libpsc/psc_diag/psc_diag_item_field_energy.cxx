@@ -11,10 +11,10 @@ using Fields = Fields3d<MfieldsC::fields_t, dim_xyz>;
 static void
 psc_diag_item_field_energy_run(struct psc_diag_item *item,
 			       struct psc *psc, MparticlesBase& mprts,
-			       MfieldsBase& mflds_base, double *EH2)
+			       MfieldsStateBase& mflds_base, double *EH2)
 {
   const Grid_t& grid = psc->grid();
-  auto& mf = mflds_base.get_as<MfieldsC>(EX, HX + 3);
+  auto& mf = mflds_base.get_as<MfieldsStateDouble>(EX, HX + 3);
   for (int p = 0; p < grid.n_patches(); p++) {
     double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
     Fields F(mf[p]);

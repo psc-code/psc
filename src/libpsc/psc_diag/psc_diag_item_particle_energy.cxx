@@ -6,7 +6,7 @@
 
 static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item, struct psc *psc,
-				  MparticlesBase& mprts_base, MfieldsBase& mflds_base,
+				  MparticlesBase& mprts_base, MfieldsStateBase& mflds_base,
 				  double *result)
 {
   auto& mprts = mprts_base.get_as<MparticlesDouble>();

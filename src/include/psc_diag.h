@@ -10,6 +10,6 @@
 MRC_CLASS_DECLARE(psc_diag, struct psc_diag);
 
 void psc_diag_run(struct psc_diag *diag, struct psc *psc,
-		  MparticlesBase& mprts, MfieldsBase& mflds);
+		  MparticlesBase& mprts, MfieldsStateBase& mflds);
 
 #endif

@@ -63,7 +63,7 @@ _psc_diag_destroy(struct psc_diag *diag)
 
 void
 psc_diag_run(struct psc_diag *diag, struct psc *psc,
-	     MparticlesBase& mprts, MfieldsBase& mflds)
+	     MparticlesBase& mprts, MfieldsStateBase& mflds)
 {
   if (diag->every_step < 0 || 
       psc->timestep % diag->every_step != 0)
