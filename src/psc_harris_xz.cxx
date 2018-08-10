@@ -916,10 +916,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 #endif
   
-  // -- output fields
-  p.outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
-  p.outf_params.pfield_step = 0;
-  
   PscHarrisParams params;
 
   params.wpedt_max = .36;
@@ -994,7 +990,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
   params.output_field_interval = 1.; // FIXME, no need to be in params
-  p.outf_params.output_fields = "fields_vpic_single,hydro_vpic";
   p.outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt)));
   
   auto coeff = Grid_t::Normalization{norm_params};
