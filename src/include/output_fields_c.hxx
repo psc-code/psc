@@ -55,26 +55,28 @@ struct OutputFieldsC : public OutputFieldsCParams
     tfield_next = tfield_first;
 
     struct psc *psc = ppsc;
-    
-    // setup pfd according to output_fields as given
-    // (potentially) on the command line
-    // parse comma separated list of fields
-    char *s_orig = strdup(output_fields), *p, *s = s_orig;
-    while ((p = strsep(&s, ", "))) {
-      struct psc_output_fields_item *item =
-	psc_output_fields_item_create(comm);
-      psc_output_fields_item_set_type(item, p);
-      psc_output_fields_item_setup(item);
-      
-      // pfd
-      std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
-      MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
-      
-      // tfd -- FIXME?! always MfieldsC
-      MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->ibn};
-      items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
+
+    if (output_fields) {
+      // setup pfd according to output_fields as given
+      // (potentially) on the command line
+      // parse comma separated list of fields
+      char *s_orig = strdup(output_fields), *p, *s = s_orig;
+      while ((p = strsep(&s, ", "))) {
+	struct psc_output_fields_item *item =
+	  psc_output_fields_item_create(comm);
+	psc_output_fields_item_set_type(item, p);
+	psc_output_fields_item_setup(item);
+	
+	// pfd
+	std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
+	MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
+	
+	// tfd -- FIXME?! always MfieldsC
+	MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->ibn};
+	items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
+      }
+      free(s_orig);
     }
-    free(s_orig);
     
     naccum = 0;
     
