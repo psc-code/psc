@@ -796,21 +796,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
-  void open_mrc_io(mrc_io *io)
-  {
-    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
-    
-    // save some basic info about the run in the output file
-    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
-    mrc_obj_set_name(obj, "psc");
-    mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
-    mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->grid().dt);
-    mrc_obj_dict_add_float(obj, "cc", ppsc->grid().norm.cc);
-    mrc_obj_dict_add_float(obj, "dt", ppsc->grid().dt);
-    mrc_obj_write(obj, io);
-    mrc_obj_destroy(obj);
-  }
-
   void diagnostics() override
   {
     MPI_Comm comm = psc_comm(psc_);
@@ -822,7 +807,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     int timestep = psc_->timestep;
     if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
-      open_mrc_io(io_pfd_.io_);
+      io_pfd_.open();
 
       {
 	std::vector<std::string> comp_names = { "ex_ec", "ey_ec", "ez_ec", "div_e_err_nc",
