@@ -27,7 +27,7 @@ struct PushFieldsVpic : PushFieldsBase
     TIC PushFieldsOps::advance_b(mflds.vmflds(), dt_fac); TOC(advance_b, 1);
   }
 
-  void push_E(MfieldsBase& mflds_base, double dt_fac) override
+  void push_E(MfieldsStateBase& mflds_base, double dt_fac) override
   {
     // needs J, E, B, TCA, material
     auto& mflds = mflds_base.get_as<MfieldsStateVpic>(JXI, MfieldsStateVpic::N_COMP);
@@ -36,7 +36,7 @@ struct PushFieldsVpic : PushFieldsBase
     mflds_base.put_as(mflds, EX, 9 + 3);
   }
 
-  void push_H(MfieldsBase& mflds_base, double dt_fac) override
+  void push_H(MfieldsStateBase& mflds_base, double dt_fac) override
   {
     // needs E, B
     auto& mflds = mflds_base.get_as<MfieldsStateVpic>(EX, HX + 6);
