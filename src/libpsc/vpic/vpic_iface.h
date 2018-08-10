@@ -12,33 +12,6 @@
 #include "../bk_mparticles_iface.h" // FIXME, path
 
 // ----------------------------------------------------------------------
-// vpic_mfields
-
-enum {
-  VPIC_MFIELDS_EX = 0,
-  VPIC_MFIELDS_EY = 1,
-  VPIC_MFIELDS_EZ = 2,
-  VPIC_MFIELDS_DIV_E_ERR = 3,
-  VPIC_MFIELDS_BX = 4,
-  VPIC_MFIELDS_BY = 5,
-  VPIC_MFIELDS_BZ = 6,
-  VPIC_MFIELDS_DIV_B_ERR = 7,
-  VPIC_MFIELDS_TCAX = 8,
-  VPIC_MFIELDS_TCAY = 9,
-  VPIC_MFIELDS_TCAZ = 10,
-  VPIC_MFIELDS_RHOB = 11,
-  VPIC_MFIELDS_JFX = 12,
-  VPIC_MFIELDS_JFY = 13,
-  VPIC_MFIELDS_JFZ = 14,
-  VPIC_MFIELDS_RHOF = 15,
-  VPIC_MFIELDS_N_COMP = 20,
-};
-
-enum {
-  VPIC_HYDRO_N_COMP = 16,
-};
-
-// ----------------------------------------------------------------------
 // vpic_mparticles
 
 struct vpic_mparticles_prt {

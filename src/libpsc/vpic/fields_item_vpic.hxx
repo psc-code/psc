@@ -47,7 +47,7 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
   using Fields = Fields3d<typename Mfields::fields_t>;
   
   constexpr static char const* name = "hydro";
-  constexpr static int n_comps = VPIC_HYDRO_N_COMP;
+  constexpr static int n_comps = MfieldsHydroVpic::N_COMP;
   constexpr static fld_names_t fld_names()
   {
     return { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
@@ -78,8 +78,8 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
 	Fields R(mres[p]);
 	auto F = mf_hydro[p];
 	grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
-	    for (int m = 0; m < VPIC_HYDRO_N_COMP; m++) {
-	      R(m + kind * VPIC_HYDRO_N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
+	    for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
+	      R(m + kind * MfieldsHydroVpic::N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
 	    }
 	  });
       }

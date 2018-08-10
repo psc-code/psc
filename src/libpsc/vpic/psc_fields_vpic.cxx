@@ -16,14 +16,14 @@
 using Fields = Fields3d<fields_vpic_t>;
 using FieldsS = Fields3d<fields_single_t>;
 
-static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
-  [JXI] = VPIC_MFIELDS_JFX, [JYI] = VPIC_MFIELDS_JFY, [JZI] = VPIC_MFIELDS_JFZ,
-  [EX]  = VPIC_MFIELDS_EX , [EY]  = VPIC_MFIELDS_EY , [EZ]  = VPIC_MFIELDS_EZ,
-  [HX]  = VPIC_MFIELDS_BX , [HY]  = VPIC_MFIELDS_BY , [HZ]  = VPIC_MFIELDS_BZ,
+static const int map_psc2vpic[MfieldsStateVpic::N_COMP] = {
+  [JXI] = MfieldsStateVpic::JFX, [JYI] = MfieldsStateVpic::JFY, [JZI] = MfieldsStateVpic::JFZ,
+  [EX]  = MfieldsStateVpic::EX , [EY]  = MfieldsStateVpic::EY , [EZ]  = MfieldsStateVpic::EZ,
+  [HX]  = MfieldsStateVpic::BX , [HY]  = MfieldsStateVpic::BY , [HZ]  = MfieldsStateVpic::BZ,
 
-  [9]   = VPIC_MFIELDS_TCAX, [10]  = VPIC_MFIELDS_TCAY, [11]  = VPIC_MFIELDS_TCAZ,
-  [12]  = VPIC_MFIELDS_DIV_E_ERR, [13] = VPIC_MFIELDS_DIV_B_ERR,
-  [14]  = VPIC_MFIELDS_RHOB     , [15] = VPIC_MFIELDS_RHOF,
+  [9]   = MfieldsStateVpic::TCAX, [10]  = MfieldsStateVpic::TCAY, [11]  = MfieldsStateVpic::TCAZ,
+  [12]  = MfieldsStateVpic::DIV_E_ERR, [13] = MfieldsStateVpic::DIV_B_ERR,
+  [14]  = MfieldsStateVpic::RHOB     , [15] = MfieldsStateVpic::RHOF,
   [16]  = 16, [17] = 17, [18] = 18, [19] = 19,
 };
 
@@ -52,7 +52,7 @@ static void MfieldsHydroVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
       ie[d] = MIN(flds.ib_[d] + flds.im_[d], flds_single.ib_[d] + flds_single.im_[d]);
     }
 
-    assert(mf.n_comps() == VPIC_HYDRO_N_COMP);
+    assert(mf.n_comps() == MfieldsHydroVpic::N_COMP);
     for (int m = mb; m < me; m++) {
       for (int jz = ib[2]; jz < ie[2]; jz++) {
 	for (int jy = ib[1]; jy < ie[1]; jy++) {
@@ -73,7 +73,7 @@ static void MfieldsStateVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& m
     fields_vpic_t flds = mf[p];
     FieldsS F_s(mf_single[p]);
 
-    assert(mf.n_comps() == VPIC_MFIELDS_N_COMP);
+    assert(mf.n_comps() == MfieldsStateVpic::N_COMP);
     for (int m = mb; m < me; m++) {
       int m_vpic = map_psc2vpic[m];
       for (int jz = flds.ib_[2]; jz < flds.ib_[2] + flds.im_[2]; jz++) {
@@ -102,7 +102,7 @@ static void MfieldsStateVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mfl
       ie[d] = MIN(flds.ib_[d] + flds.im_[d], flds_single.ib_[d] + flds_single.im_[d]);
     }
 
-    assert(mf.n_comps() == VPIC_MFIELDS_N_COMP);
+    assert(mf.n_comps() == MfieldsStateVpic::N_COMP);
     for (int m = mb; m < me; m++) {
       int m_vpic = map_psc2vpic[m];
       for (int jz = ib[2]; jz < ie[2]; jz++) {

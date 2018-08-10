@@ -21,12 +21,16 @@ struct MfieldsHydroVpic : MfieldsBase
   using real_t = float;
   using fields_t = fields_vpic_t;
 
+  enum {
+    N_COMP = 16,
+  };
+
   MfieldsHydroVpic(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn)
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
-    assert(n_fields == VPIC_HYDRO_N_COMP);
+    assert(n_fields == N_COMP);
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -37,7 +41,7 @@ struct MfieldsHydroVpic : MfieldsBase
   {
     int ib[3], im[3];
     float* data = vmflds_hydro->getData(ib, im);
-    return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
+    return fields_vpic_t(ib, im, N_COMP, data);
   }
 
   void zero_comp(int m) override { assert(0); }
@@ -66,12 +70,32 @@ struct MfieldsStateVpic : MfieldsBase
   using real_t = float;
   using fields_t = fields_vpic_t;
   
+  enum {
+    EX = 0,
+    EY = 1,
+    EZ = 2,
+    DIV_E_ERR = 3,
+    BX = 4,
+    BY = 5,
+    BZ = 6,
+    DIV_B_ERR = 7,
+    TCAX = 8,
+    TCAY = 9,
+    TCAZ = 10,
+    RHOB = 11,
+    JFX = 12,
+    JFY = 13,
+    JFZ = 14,
+    RHOF = 15,
+    N_COMP = 20,
+  };
+
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase{grid, n_fields, ibn}
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
-    assert(n_fields == VPIC_MFIELDS_N_COMP);
+    assert(n_fields == N_COMP);
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -84,7 +108,7 @@ struct MfieldsStateVpic : MfieldsBase
     assert(p == 0);
     int ib[3], im[3];
     float* data = vmflds().getData(ib, im);
-    return fields_vpic_t(ib, im, VPIC_MFIELDS_N_COMP, data);
+    return fields_vpic_t(ib, im, N_COMP, data);
   }
 
   FieldArray& vmflds() { return *vmflds_fields_; }

@@ -35,13 +35,13 @@ struct SetupFields<MfieldsStateVpic>
 	  double ncn[3] = { x_nc, y_cc, z_nc };
 	  double nnc[3] = { x_nc, y_nc, z_cc };
 	  
-	  F(VPIC_MFIELDS_BX, jx,jy,jz) += func(HX, ncc);
-	  F(VPIC_MFIELDS_BY, jx,jy,jz) += func(HY, cnc);
-	  F(VPIC_MFIELDS_BZ, jx,jy,jz) += func(HZ, ccn);
+	  F(MfieldsStateVpic::BX, jx,jy,jz) += func(HX, ncc);
+	  F(MfieldsStateVpic::BY, jx,jy,jz) += func(HY, cnc);
+	  F(MfieldsStateVpic::BZ, jx,jy,jz) += func(HZ, ccn);
 	  
-	  F(VPIC_MFIELDS_EX, jx,jy,jz) += func(EX, cnn);
-	  F(VPIC_MFIELDS_EY, jx,jy,jz) += func(EY, ncn);
-	  F(VPIC_MFIELDS_EZ, jx,jy,jz) += func(EZ, nnc);
+	  F(MfieldsStateVpic::EX, jx,jy,jz) += func(EX, cnn);
+	  F(MfieldsStateVpic::EY, jx,jy,jz) += func(EY, ncn);
+	  F(MfieldsStateVpic::EZ, jx,jy,jz) += func(EZ, nnc);
 	});
     }
   }
