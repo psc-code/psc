@@ -81,12 +81,10 @@ struct OutputFieldsC : public OutputFieldsCParams
     naccum = 0;
     
     if (pfield_step > 0) {
-      io_pfd_.reset(new MrcIo);
-      io_pfd_->create("pfd", data_dir);
+      io_pfd_.reset(new MrcIo{"pfd", data_dir});
     }
     if (tfield_step) {
-      io_tfd_.reset(new MrcIo);
-      io_tfd_->create("tfd", data_dir);
+      io_tfd_.reset(new MrcIo{"tfd", data_dir});
     }
   }
 
@@ -99,9 +97,6 @@ struct OutputFieldsC : public OutputFieldsCParams
       psc_output_fields_item_destroy(item.item.item());
       delete &item.tfd;
     }
-    
-    mrc_io_destroy(io_pfd_->io_);
-    mrc_io_destroy(io_tfd_->io_);
   }
 
   // ----------------------------------------------------------------------

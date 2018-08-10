@@ -10,7 +10,7 @@
 
 struct MrcIo
 {
-  void create(const char* pfx, const char* outdir = ".")
+  MrcIo(const char* pfx, const char* outdir = ".")
   {
     io_ = mrc_io_create(MPI_COMM_WORLD);
     mrc_io_set_param_string(io_, "basename", pfx);
@@ -18,6 +18,11 @@ struct MrcIo
     mrc_io_set_from_options(io_);
     mrc_io_setup(io_);
     mrc_io_view(io_);
+  }
+
+  ~MrcIo()
+  {
+    mrc_io_destroy(io_);
   }
 
   void open(Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})

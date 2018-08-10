@@ -380,10 +380,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 	    psc* psc, const globals_physics& phys)
     : Psc{p, psc, sim},
       PscHarrisParams(params),
-      phys_{phys}
+      phys_{phys},
+      io_pfd_{"pfd"}
   {
-    io_pfd_.create("pfd", ".");
-      
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
 
