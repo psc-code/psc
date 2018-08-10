@@ -382,6 +382,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       PscHarrisParams(params),
       phys_{phys}
   {
+    io_pfd_.create("pfd", ".");
+      
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
 
@@ -800,10 +802,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     MPI_Comm comm = psc_comm(psc_);
 
-    if (!io_pfd_.io_) {
-      io_pfd_.create("pfd", ".");
-    }
-      
     int timestep = psc_->timestep;
     if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
