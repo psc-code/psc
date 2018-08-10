@@ -12,10 +12,10 @@ extern int pr_time_step_no_comm; // FIXME
 class PushParticlesBase
 {
 public:
-  virtual void prep(MparticlesBase& mprts_base, MfieldsBase& mflds_base)
+  virtual void prep(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base)
   { assert(0); }
   
-  virtual void push_mprts(MparticlesBase& mprts_base, MfieldsBase& mflds_base)
+  virtual void push_mprts(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base)
   {
     const auto& grid = mprts_base.grid();
     using Bool3 = Vec3<bool>;
@@ -41,31 +41,31 @@ public:
     }
   }
 
-  virtual void push_mprts_xyz(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_xyz(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_xy(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_xy(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_xz(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_xz(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_yz(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_yz(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_x(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_x(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_y(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_y(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_z(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_z(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void push_mprts_1(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void push_mprts_1(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { assert(0); }
 
-  virtual void stagger_mprts(MparticlesBase& mprts_base, MfieldsBase& mflds_base)
+  virtual void stagger_mprts(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base)
   {
     const auto& grid = mprts_base.grid();
     using Bool3 = Vec3<bool>;
@@ -80,10 +80,10 @@ public:
     }
   }
   
-  virtual void stagger_mprts_yz(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void stagger_mprts_yz(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
-  virtual void stagger_mprts_1(MparticlesBase& mprts, MfieldsBase& mflds_base)
+  virtual void stagger_mprts_1(MparticlesBase& mprts, MfieldsStateBase& mflds_base)
   { mprintf("WARNING: %s not implemented\n", __func__); }
 
 };
