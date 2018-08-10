@@ -5,6 +5,7 @@
 #include "psc.h"
 
 #include "grid.hxx"
+#include <mrc_io.hxx>
 
 #include <mrc_profile.h>
 
@@ -378,28 +379,7 @@ struct Mfields : MfieldsBase
 
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
   {
-    mrc_fld* fld = mrc_domain_m3_create(ppsc->mrc_domain_);
-    mrc_fld_set_name(fld, name.c_str());
-    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
-    mrc_fld_set_param_int(fld, "nr_comps", n_comps());
-    mrc_fld_setup(fld);
-    assert(comp_names.size() == n_comps());
-    for (int m = 0; m < n_comps(); m++) {
-      mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
-    }
-
-    for (int p = 0; p < n_patches(); p++) {
-      mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
-      mrc_fld_foreach(fld, i,j,k, 0,0) {
-	for (int m = 0; m < n_comps(); m++) {
-	  MRC_M3(m3p ,m , i,j,k) = (*this)[p](m, i,j,k);
-	}
-      } mrc_fld_foreach_end;
-      mrc_fld_patch_put(fld);
-    }
-  
-    mrc_fld_write(fld, io);
-    mrc_fld_destroy(fld);
+    MrcIo::write_mflds(io, *this, name, comp_names);
   }
 
   static const Convert convert_to_, convert_from_;

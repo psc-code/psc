@@ -64,6 +64,14 @@ struct MrcIo
   template <typename Mfields>
   void write_mflds(Mfields& mflds, const std::string& name, const std::vector<std::string>& comp_names)
   {
+    write_mflds(io_, mflds, name, comp_names);
+  }
+
+  // static version so it can be used elsewhere without MrcIo wrapper
+  template <typename Mfields>
+  static void write_mflds(mrc_io* io, Mfields& mflds,
+			  const std::string& name, const std::vector<std::string>& comp_names)
+  {
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
     // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
@@ -77,7 +85,7 @@ struct MrcIo
     for (int m = 0; m < n_comps; m++) {
       mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
     }
-
+    
     for (int p = 0; p < mflds.n_patches(); p++) {
       mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
       mrc_fld_foreach(fld, i,j,k, 0,0) {
@@ -87,10 +95,11 @@ struct MrcIo
       } mrc_fld_foreach_end;
       mrc_fld_patch_put(fld);
     }
-  
-    mrc_fld_write(fld, io_);
+    
+    mrc_fld_write(fld, io);
     mrc_fld_destroy(fld);
   }
-  
+
   mrc_io* io_;
 };
+
