@@ -321,6 +321,7 @@ struct MfieldsStateBase
   virtual void set_comp(int m, double val) = 0;
   virtual void scale_comp(int m, double val) = 0;
   virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
+  virtual void copy_comp(int mto, MfieldsBase& from, int mfrom) = 0;
   virtual double max_comp(int m) = 0;
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
   {
