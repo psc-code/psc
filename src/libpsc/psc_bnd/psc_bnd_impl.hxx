@@ -68,9 +68,12 @@ struct Bnd_ : BndBase
 
   void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
+    assert(0);
+#if 0
     auto& mf = mflds_base.get_as<Mfields>(mb, me);
     add_ghosts(mf, mb, me);
     mflds_base.put_as(mf, mb, me);
+#endif
   }
 
   // ----------------------------------------------------------------------
@@ -89,9 +92,12 @@ struct Bnd_ : BndBase
 
   void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
+    assert(0);
+#if 0
     auto& mf = mflds_base.get_as<Mfields>(mb, me);
     fill_ghosts(mf, mb, me);
     mflds_base.put_as(mf, mb, me);
+#endif
   }
 
   // ----------------------------------------------------------------------

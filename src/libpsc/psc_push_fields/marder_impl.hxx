@@ -191,6 +191,8 @@ struct Marder_ : MarderBase
     item_rho_.run(mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
+    assert(0);
+#if 0
     bnd_.fill_ghosts(mflds, EX, EX+3);
 
     for (int i = 0; i < loop_; i++) {
@@ -198,6 +200,7 @@ struct Marder_ : MarderBase
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX+3);
     }
+#endif
   }
   
   // ----------------------------------------------------------------------
