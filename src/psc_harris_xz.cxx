@@ -318,18 +318,6 @@ static void setup_fields(Simulation* sim, psc* psc_)
   // Tensor electronic, magnetic and conductive materials are supported
   // though. See "shapes" for how to define them and assign them to regions.
   // Also, space is initially filled with the first material defined.
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // Finalize Field Advance
-  
-  mpi_printf(comm, "Finalizing Field Advance\n");
-  
-#if 0
-  assert(psc_->nr_patches > 0);
-  struct globals_physics *phys = &sub->phys;
-  Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
-					 0., resistive);
-#endif
 }
 
 #ifdef VPIC
@@ -388,6 +376,18 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Finalize Field Advance
+    
+    mpi_printf(comm, "*** Finalizing Field Advance\n");
+    
+#if 0
+    assert(psc_->nr_patches > 0);
+    struct globals_physics *phys = &sub->phys;
+    Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
+					   0., resistive);
+#endif
 
     // -- setup species
     // FIXME, taken out of setup_simulation, so in odd order,
