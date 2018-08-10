@@ -812,7 +812,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 						"tcax_ec", "tcay_ec", "tcaz_ec", "rhob_nc",
 						"jx_ec", "jy_ec", "jz_c", "rhof_nc" };
 	
-	mflds_.write_as_mrc_fld(io_pfd_.io_, "vpic_fields", comp_names);
+	io_pfd_.write_mflds(mflds_, "vpic_fields", comp_names);
       }
 
       {
@@ -821,7 +821,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 	int n_comps = Moment::n_comps * ppsc->grid().kinds.size();
 	moment.run(mprts_);
 
-	moment.result().write_as_mrc_fld(io_pfd_.io_, Moment::name, moment.comp_names());
+	io_pfd_.write_mflds(moment.result(), Moment::name, moment.comp_names());
       }
       mrc_io_close(io_pfd_.io_);
     }

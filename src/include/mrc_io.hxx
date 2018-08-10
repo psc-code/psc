@@ -60,6 +60,37 @@ struct MrcIo
   {
     mrc_io_close(io_);
   }
+
+  template <typename Mfields>
+  void write_mflds(Mfields& mflds, const std::string& name, const std::vector<std::string>& comp_names)
+  {
+    int n_comps = comp_names.size();
+    // FIXME, should generally equal the # of component in mflds,
+    // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
+    // stored together as AOS with floats...
+    
+    mrc_fld* fld = mrc_domain_m3_create(ppsc->mrc_domain_);
+    mrc_fld_set_name(fld, name.c_str());
+    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
+    mrc_fld_set_param_int(fld, "nr_comps", n_comps);
+    mrc_fld_setup(fld);
+    for (int m = 0; m < n_comps; m++) {
+      mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
+    }
+
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
+      mrc_fld_foreach(fld, i,j,k, 0,0) {
+	for (int m = 0; m < n_comps; m++) {
+	  MRC_M3(m3p ,m , i,j,k) = mflds[p](m, i,j,k);
+	}
+      } mrc_fld_foreach_end;
+      mrc_fld_patch_put(fld);
+    }
+  
+    mrc_fld_write(fld, io_);
+    mrc_fld_destroy(fld);
+  }
   
   mrc_io* io_;
 };
