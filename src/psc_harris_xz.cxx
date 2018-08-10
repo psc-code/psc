@@ -830,26 +830,23 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       
     int timestep = psc_->timestep;
     if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
+      mpi_printf(comm, "***** Writing PFD output\n");
       open_mrc_io(io_pfd_);
 
       {
-	using Item = Item_vpic_fields;
-	auto item = Item{};
-	auto mres = MfieldsSingle{ppsc->grid(), Item::n_comps, ppsc->ibn};
+	int n_comps = 16;
+	std::vector<std::string> comp_names = { "jx_ec", "jy_ec", "jz_ec",
+				  "ex_ec", "ey_ec", "ez_ec",
+				  "hx_fc", "hy_fc", "hz_fc",
+				  "tcax_ec", "tcay_ec", "tcaz_ec",
+				  "div_e_err_nc", "div_b_err_cc",
+				  "rhob_nc", "rhof_nc", };
+	auto mres = MfieldsSingle{ppsc->grid(), n_comps, ppsc->ibn};
 	
 	auto& mflds_base = mflds_.base();
-	auto& mflds = mflds_base.get_as<Item::Mfields>(0, Item::n_comps);
-	item.run(mflds, mres);
+	auto& mflds = mflds_base.get_as<MfieldsSingle>(0, n_comps);
+	mflds.write_as_mrc_fld(io_pfd_, "vpic_fields", comp_names);
 	mflds_base.put_as(mflds, 0, 0);
-	
-	mpi_printf(comm, "***** Writing PFD output\n");
-	
-	std::vector<std::string> comp_names;
-	for (int m = 0; m < Item::n_comps; m++) {
-	  comp_names.emplace_back(Item::fld_names()[m]);
-	}
-	
-	mres.write_as_mrc_fld(io_pfd_, Item::name, comp_names);
       }
 
       {
