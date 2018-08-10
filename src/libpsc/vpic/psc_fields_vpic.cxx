@@ -30,7 +30,7 @@ static const int map_psc2vpic[VPIC_MFIELDS_N_COMP] = {
 // ======================================================================
 // convert from/to "single"
 
-static void psc_mfields_vpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+static void MfieldsVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
 {
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto& mf = dynamic_cast<MfieldsVpic&>(mflds);
@@ -60,10 +60,85 @@ static void psc_mfields_vpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& m
   }
 }
 
-static void psc_mfields_vpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+static void MfieldsVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
 {
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto& mf = dynamic_cast<MfieldsVpic&>(mflds);
+  for (int p = 0; p < mf.n_patches(); p++) {
+    fields_vpic_t flds = mf[p];
+    fields_single_t flds_single = mf_single[p];
+    FieldsS F_s(flds_single);
+
+    int ib[3], ie[3];
+    for (int d = 0; d < 3; d++) {
+      ib[d] = MAX(flds.ib_[d], flds_single.ib_[d]);
+      ie[d] = MIN(flds.ib_[d] + flds.im_[d], flds_single.ib_[d] + flds_single.im_[d]);
+    }
+
+    // FIXME, hacky way to distinguish whether we want
+    // to copy the field into the standard PSC component numbering or,
+    // as in this case, just copy one-to-one
+    if (mf.n_comps() == VPIC_HYDRO_N_COMP) {
+      for (int m = mb; m < me; m++) {
+	for (int jz = ib[2]; jz < ie[2]; jz++) {
+	  for (int jy = ib[1]; jy < ie[1]; jy++) {
+	    for (int jx = ib[0]; jx < ie[0]; jx++) {
+	      F_s(m, jx,jy,jz) = flds(m, jx,jy,jz);
+	    }
+	  }
+	}
+      }
+    } else if (mf.n_comps() == VPIC_MFIELDS_N_COMP) {
+      for (int m = mb; m < me; m++) {
+	int m_vpic = map_psc2vpic[m];
+	for (int jz = ib[2]; jz < ie[2]; jz++) {
+	  for (int jy = ib[1]; jy < ie[1]; jy++) {
+	    for (int jx = ib[0]; jx < ie[0]; jx++) {
+	      F_s(m, jx,jy,jz) = flds(m_vpic, jx,jy,jz);
+	    }
+	  }
+	}
+      }
+    } else {
+      assert(0);
+    }
+  }
+}
+
+static void MfieldsStateVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+{
+  auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
+  auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
+  for (int p = 0; p < mf.n_patches(); p++) {
+    fields_vpic_t flds = mf[p];
+    FieldsS F_s(mf_single[p]);
+
+    
+    // FIXME, hacky way to distinguish whether we want
+    // to copy the field into the standard PSC component numbering
+    if (mf.n_comps() == VPIC_MFIELDS_N_COMP) {
+      for (int m = mb; m < me; m++) {
+	int m_vpic = map_psc2vpic[m];
+	for (int jz = flds.ib_[2]; jz < flds.ib_[2] + flds.im_[2]; jz++) {
+	  for (int jy = flds.ib_[1]; jy < flds.ib_[1] + flds.im_[1]; jy++) {
+	    for (int jx = flds.ib_[0]; jx < flds.ib_[0] + flds.im_[0]; jx++) {
+	      flds(m_vpic, jx,jy,jz) = F_s(m, jx,jy,jz);
+	    }
+	  }
+	}
+      }
+    } else {
+      if (mb != me) {
+	assert(0);
+      }
+    }
+  }
+}
+
+static void MfieldsStateVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
+{
+  auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
+  auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
     fields_single_t flds_single = mf_single[p];
@@ -155,14 +230,19 @@ MfieldsVpic::~MfieldsVpic()
   }
 }
 
-// ======================================================================
-// psc_mfields: subclass "vpic"
-
 const MfieldsBase::Convert MfieldsVpic::convert_to_ = {
-  { std::type_index(typeid(MfieldsSingle)), psc_mfields_vpic_copy_to_single },
+  { std::type_index(typeid(MfieldsSingle)), MfieldsVpic_copy_to_single },
 };
 
 const MfieldsBase::Convert MfieldsVpic::convert_from_ = {
-  { std::type_index(typeid(MfieldsSingle)), psc_mfields_vpic_copy_from_single },
+  { std::type_index(typeid(MfieldsSingle)), MfieldsVpic_copy_from_single },
+};
+
+const MfieldsBase::Convert MfieldsStateVpic::convert_to_ = {
+  { std::type_index(typeid(MfieldsSingle)), MfieldsStateVpic_copy_to_single },
+};
+
+const MfieldsBase::Convert MfieldsStateVpic::convert_from_ = {
+  { std::type_index(typeid(MfieldsSingle)), MfieldsStateVpic_copy_from_single },
 };
 

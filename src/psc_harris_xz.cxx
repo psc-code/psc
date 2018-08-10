@@ -797,6 +797,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
+#if 0
   void diagnostics() override
   {
     MPI_Comm comm = psc_comm(psc_);
@@ -818,7 +819,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	using Moment = Moment_vpic_hydro;
 	Moment moment{ppsc->grid(), psc_comm(ppsc)};
-	int n_comps = Moment::n_comps * ppsc->grid().kinds.size();
 	moment.run(mprts_);
 
 	io_pfd_.write_mflds(moment.result(), Moment::name, moment.comp_names());
@@ -826,7 +826,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       mrc_io_close(io_pfd_.io_);
     }
   }
-
+#endif
+  
 private:
   globals_physics phys_;
 
@@ -963,6 +964,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
   params.output_field_interval = 1.; // FIXME, no need to be in params
+  p.outf_params.output_fields = "fields_vpic_single,hydro_vpic";
   p.outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt)));
   
   auto coeff = Grid_t::Normalization{norm_params};

@@ -76,9 +76,7 @@ struct MfieldsStateVpic : MfieldsBase
   using real_t = MfieldsVpic::real_t;
   
   MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase{grid, n_fields, ibn},
-      grid_{grid},
-      ibn_{ibn}
+    : MfieldsBase{grid, n_fields, ibn}
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
@@ -106,9 +104,11 @@ struct MfieldsStateVpic : MfieldsBase
   void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override { assert(0); }
   double max_comp(int m) override { assert(0); }
   
+  static const Convert convert_to_, convert_from_;
+  const Convert& convert_to() override { return convert_to_; }
+  const Convert& convert_from() override { return convert_from_; }
+
 private:
-  const Grid_t& grid_;
-  Int3 ibn_;
   FieldArray* vmflds_fields_;
 };
 
