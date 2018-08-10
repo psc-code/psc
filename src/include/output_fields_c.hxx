@@ -81,10 +81,12 @@ struct OutputFieldsC : public OutputFieldsCParams
     naccum = 0;
     
     if (pfield_step > 0) {
-      io_pfd_.create("pfd", data_dir);
+      io_pfd_.reset(new MrcIo);
+      io_pfd_->create("pfd", data_dir);
     }
     if (tfield_step) {
-      io_tfd_.create("tfd", data_dir);
+      io_tfd_.reset(new MrcIo);
+      io_tfd_->create("tfd", data_dir);
     }
   }
 
@@ -98,8 +100,8 @@ struct OutputFieldsC : public OutputFieldsCParams
       delete &item.tfd;
     }
     
-    mrc_io_destroy(io_pfd_.io_);
-    mrc_io_destroy(io_tfd_.io_);
+    mrc_io_destroy(io_pfd_->io_);
+    mrc_io_destroy(io_tfd_->io_);
   }
 
   // ----------------------------------------------------------------------
@@ -131,11 +133,11 @@ struct OutputFieldsC : public OutputFieldsCParams
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
-      io_pfd_.open(rn, rx);
+      io_pfd_->open(rn, rx);
       for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io_pfd_.io_, item.name, item.comp_names);
+	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
       }
-      mrc_io_close(io_pfd_.io_);
+      io_pfd_->close();
     }
     
     if (tfield_step > 0) {
@@ -150,16 +152,16 @@ struct OutputFieldsC : public OutputFieldsCParams
 	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
 	tfield_next += tfield_step;
 	
-	io_tfd_.open(rn, rx);
+	io_tfd_->open(rn, rx);
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
 	  item.tfd.scale(1. / naccum);
-	  item.tfd.write_as_mrc_fld(io_tfd_.io_, item.name, item.comp_names);
+	  item.tfd.write_as_mrc_fld(io_tfd_->io_, item.name, item.comp_names);
 	  item.tfd.zero();
 	}
 	naccum = 0;
-	mrc_io_close(io_tfd_.io_);
+	io_tfd_->close();
       }
     }
 
@@ -172,7 +174,7 @@ public:
   unsigned int naccum;
   std::vector<Item> items;
 private:
-  MrcIo io_pfd_;
-  MrcIo io_tfd_;
+  std::unique_ptr<MrcIo> io_pfd_;
+  std::unique_ptr<MrcIo> io_tfd_;
 };
 
