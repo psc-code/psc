@@ -19,7 +19,6 @@ class VpicSimulationMixin : protected vpic_simulation
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::HydroArray HydroArray;
   typedef typename Particles::ParticleBcList ParticleBcList;
-  typedef typename FieldArray::MaterialList MaterialList;
 
 public:
   VpicSimulationMixin()
@@ -32,11 +31,6 @@ public:
   Grid*& getGrid()
   {
     return *reinterpret_cast<Grid **>(&grid);
-  }
-
-  MaterialList& getMaterialList()
-  {
-    return *reinterpret_cast<MaterialList *>(&material_list);
   }
 
   Interpolator*& getInterpolator()

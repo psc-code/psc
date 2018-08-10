@@ -20,7 +20,6 @@ public:
   }
   
   Grid*& getGrid()                    { return grid_; }
-  MaterialList& getMaterialList()     { return material_list_; }
   Interpolator*& getInterpolator()    { return interpolator_; }
   Accumulator*& getAccumulator()      { return accumulator_; }
   HydroArray*& getHydroArray()        { return hydro_array_;  }
@@ -75,7 +74,6 @@ public:
 
 private:
   Grid* grid_;
-  MaterialList material_list_;
   Interpolator *interpolator_;
   Accumulator *accumulator_;
   HydroArray *hydro_array_;
