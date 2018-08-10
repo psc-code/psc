@@ -824,30 +824,42 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     MPI_Comm comm = psc_comm(psc_);
 
+    if (!io_pfd_) {
+      io_pfd_ = create_mrc_io("pfd", ".");
+    }
+      
     int timestep = psc_->timestep;
-    if (pfield_step_ > 0 && timestep % pfield_step_ == 0) {
-      using Item = Item_vpic_fields;
-      auto item = Item{};
-      auto mres = MfieldsSingle{ppsc->grid(), Item::n_comps, ppsc->ibn};
-      
-      auto& mflds_base = mflds_.base();
-      auto& mflds = mflds_base.get_as<Item::Mfields>(0, Item::n_comps);
-      item.run(mflds, mres);
-      mflds_base.put_as(mflds, 0, 0);
-      
-      mpi_printf(comm, "***** Writing PFD output\n");
-      
-      std::vector<std::string> comp_names;
-      for (int m = 0; m < Item::n_comps; m++) {
-	comp_names.emplace_back(Item::fld_names()[m]);
-      }
-      
-      if (!io_pfd_) {
-	io_pfd_ = create_mrc_io("pfd", ".");
-      }
-      
+    if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
       open_mrc_io(io_pfd_);
-      mres.write_as_mrc_fld(io_pfd_, Item::name, comp_names);
+
+      {
+	using Item = Item_vpic_fields;
+	auto item = Item{};
+	auto mres = MfieldsSingle{ppsc->grid(), Item::n_comps, ppsc->ibn};
+	
+	auto& mflds_base = mflds_.base();
+	auto& mflds = mflds_base.get_as<Item::Mfields>(0, Item::n_comps);
+	item.run(mflds, mres);
+	mflds_base.put_as(mflds, 0, 0);
+	
+	mpi_printf(comm, "***** Writing PFD output\n");
+	
+	std::vector<std::string> comp_names;
+	for (int m = 0; m < Item::n_comps; m++) {
+	  comp_names.emplace_back(Item::fld_names()[m]);
+	}
+	
+	mres.write_as_mrc_fld(io_pfd_, Item::name, comp_names);
+      }
+
+      {
+	using Moment = Moment_vpic_hydro;
+	Moment moment{ppsc->grid(), psc_comm(ppsc)};
+	int n_comps = Moment::n_comps * ppsc->grid().kinds.size();
+	moment.run(mprts_);
+
+	moment.result().write_as_mrc_fld(io_pfd_, Moment::name, moment.comp_names());
+      }
       mrc_io_close(io_pfd_);
     }
   }
@@ -855,7 +867,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 private:
   globals_physics phys_;
 
-  int pfield_step_ = { 10 };
   mrc_io* io_pfd_;
 };
 
