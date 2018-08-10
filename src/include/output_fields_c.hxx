@@ -21,8 +21,8 @@ struct OutputFieldsCParams
   int tfield_length = 1000000;
   int tfield_every = 1;
 
-  int rn[3] = {};
-  int rx[3] = {1000000, 1000000, 100000};
+  Int3 rn = {};
+  Int3 rx = {1000000, 1000000, 100000};
 };
 
 // ======================================================================
@@ -131,7 +131,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
-      open_mrc_io(io_pfd_.io_);
+      open_mrc_io(io_pfd_.io_, rn, rx);
       for (auto& item : items) {
 	item.pfd.write_as_mrc_fld(io_pfd_.io_, item.name, item.comp_names);
       }
@@ -150,7 +150,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
 	tfield_next += tfield_step;
 	
-	open_mrc_io(io_tfd_.io_);
+	open_mrc_io(io_tfd_.io_, rn, rx);
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
@@ -167,7 +167,7 @@ struct OutputFieldsC : public OutputFieldsCParams
   };
 
 private:
-  void open_mrc_io(mrc_io *io)
+  void open_mrc_io(mrc_io *io, Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})
   {
     int gdims[3];
     mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
