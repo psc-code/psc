@@ -459,7 +459,6 @@ private:
 
     std::vector<int> nr_patches_all_old(size);
     MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1, MPI_INT, comm);
-    for (auto n : nr_patches_all_old) { mprintf("old %d\n", n); }
 
     std::vector<int> nr_patches_all_new(size);
 
@@ -545,7 +544,11 @@ private:
 	fclose(f);
       }
 
+      if (nr_patches_all_new == nr_patches_all_old) {
+	std::fill(nr_patches_all_new.begin(), nr_patches_all_new.end(), -1); // unchanged mapping, no communication etc needed
+      }
     }
+
     // then scatter
     int nr_patches_new;
     MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
@@ -801,10 +804,14 @@ private:
     auto& new_grid = *psc->make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
 				     psc->grid().norm, psc->grid().dt);
     
+    prof_stop(pr_bal_load);
+    if (n_patches_new < 0) { // unchanged mapping, nothing tbd
+      return n_prts_by_patch_old;
+    }
+
     delete[] psc_balance_comp_time_by_patch;
     psc_balance_comp_time_by_patch = new double[new_grid.n_patches()];
-    prof_stop(pr_bal_load);
-
+    
     prof_start(pr_bal_ctx);
     communicate_ctx ctx(domain_old, domain_new);
     prof_stop(pr_bal_ctx);
