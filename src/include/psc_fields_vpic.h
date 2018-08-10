@@ -27,9 +27,10 @@ struct MfieldsHydroVpic : MfieldsBase
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
     assert(n_fields == VPIC_HYDRO_N_COMP);
-    
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-    vmflds_hydro = sim_->hydro_array_;
+
+    Simulation* sim;
+    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
+    vmflds_hydro = sim->hydro_array_;
   }
   
   fields_vpic_t operator[](int p)
@@ -38,8 +39,6 @@ struct MfieldsHydroVpic : MfieldsBase
     float* data = vmflds_hydro->getData(ib, im);
     return fields_vpic_t(ib, im, VPIC_HYDRO_N_COMP, data);
   }
-
-  Simulation* sim() { return sim_; }
 
   void zero_comp(int m) override { assert(0); }
   void set_comp(int m, double val) override { assert(0); }
@@ -51,8 +50,6 @@ struct MfieldsHydroVpic : MfieldsBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
- private:
-  Simulation* sim_;
  public:
   HydroArray *vmflds_hydro;
 };
