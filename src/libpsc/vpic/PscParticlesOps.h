@@ -1102,7 +1102,7 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // accumulate_rho_p
 
-  void accumulate_rho_p(FieldArray& fa, typename Particles::const_iterator sp)
+  static void accumulate_rho_p(FieldArray& fa, typename Particles::const_iterator sp)
   {
     const Particle * RESTRICT ALIGNED(128) p = sp->p;
 
@@ -1153,7 +1153,7 @@ struct PscParticlesOps {
     }
   }
 
-  void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
+  static void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
   {
     for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
       TIC accumulate_rho_p(vmflds, sp); TOC(accumulate_rho_p, 1);

@@ -92,7 +92,6 @@ struct MfieldsStateVpic
 
   Int3 ibn() const { return ibn_; }
   FieldArray& vmflds() { return mflds_.vmflds(); }
-  Simulation* sim() { return mflds_.sim(); }
 
 private:
   const Grid_t& grid_;
