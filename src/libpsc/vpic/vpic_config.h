@@ -112,8 +112,7 @@ using InterpolatorOps = PscInterpolatorOps<Interpolator, FieldArray>;
 using Accumulator = PscAccumulatorBase<Grid>;
 using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
-typedef PscHydroArrayBase<Grid> HydroArrayBase;
-typedef PscHydroArray<HydroArrayBase> HydroArray;
+using HydroArray = PscHydroArrayBase<Grid>;
 using HydroArrayOps = PscHydroArrayOps<HydroArray>;
 
 #if 1

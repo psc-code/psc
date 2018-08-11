@@ -157,21 +157,3 @@ struct PscHydroArrayOps
   }
   
 };
-
-// ======================================================================
-// PscHydroArray
-
-template<class HydroArrayBase>
-struct PscHydroArray : HydroArrayBase
-{
-  using Self = PscHydroArray<HydroArrayBase>;
-  typedef HydroArrayBase Base;
-  using typename Base::Grid;
-  using typename Base::Element;
-
-  using Base::data;
-  using Base::grid;
-
-  using Base::Base;
-};
-
