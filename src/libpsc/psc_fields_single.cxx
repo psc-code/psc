@@ -19,6 +19,7 @@ using FieldsC = Fields3d<fields_c_t>;
 // ======================================================================
 // convert to c
 
+template<typename MfieldsBase, typename MfieldsSingle, typename MfieldsC>
 static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mflds_c, int mb, int me)
 {
   auto& mf = dynamic_cast<MfieldsSingle&>(mflds);
@@ -39,6 +40,7 @@ static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mfld
   }
 }
 
+template<typename MfieldsBase, typename MfieldsSingle, typename MfieldsC>
 static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_c, int mb, int me)
 {
   auto& mf = dynamic_cast<MfieldsSingle&>(mflds);
@@ -60,11 +62,19 @@ static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_
 }
 
 template<> const MfieldsBase::Convert MfieldsSingle::convert_to_ = {
-  { std::type_index(typeid(MfieldsC)), psc_mfields_single_copy_to_c },
+  { std::type_index(typeid(MfieldsC)), psc_mfields_single_copy_to_c<MfieldsBase, MfieldsSingle, MfieldsC> },
 };
 
 template<> const MfieldsBase::Convert MfieldsSingle::convert_from_ = {
-  { std::type_index(typeid(MfieldsC)), psc_mfields_single_copy_from_c },
+  { std::type_index(typeid(MfieldsC)), psc_mfields_single_copy_from_c<MfieldsBase, MfieldsSingle, MfieldsC> },
+};
+
+template<> const MfieldsStateBase::Convert MfieldsStateSingle::convert_to_ = {
+  { std::type_index(typeid(MfieldsStateDouble)), psc_mfields_single_copy_to_c<MfieldsStateBase, MfieldsStateSingle, MfieldsStateDouble> },
+};
+
+template<> const MfieldsStateBase::Convert MfieldsStateSingle::convert_from_ = {
+  { std::type_index(typeid(MfieldsStateDouble)), psc_mfields_single_copy_from_c<MfieldsStateBase, MfieldsStateSingle, MfieldsStateDouble> },
 };
 
 #include "psc_fields_common.cxx"

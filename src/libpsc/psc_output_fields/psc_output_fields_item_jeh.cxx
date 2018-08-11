@@ -11,6 +11,7 @@ using Mfields_t = MfieldsC;
 // ======================================================================
 
 using Fields = Fields3d<Mfields_t::fields_t>;
+using FieldsState = Fields3d<MfieldsState_t::fields_t>;
 
 // FIXME, we're assuming that the result fields are "c" type
 
@@ -142,7 +143,7 @@ struct Item_e_cc
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "ex", "ey", "ez" }; }
   
-  static void set(Fields& R, Fields&F, int i, int j, int k)
+  static void set(Fields& R, FieldsState&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = EX_CC(i,j,k);
