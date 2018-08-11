@@ -74,7 +74,7 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     return material_list_.append(m);
   }
 
-  void define_field_array()
+  void grid_setup_communication()
   {
     assert(grid_->nx && grid_->ny && grid_->ny);
   

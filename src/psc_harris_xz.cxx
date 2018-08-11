@@ -309,7 +309,7 @@ static void setup_fields(Simulation* sim, psc* psc_)
   struct material *resistive =
     define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 #endif
-  sim->define_field_array();
+  sim->grid_setup_communication();
 
   assert(!sim->material_list_.empty());
   
