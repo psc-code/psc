@@ -40,61 +40,72 @@ struct Item_vpic_fields
 // ----------------------------------------------------------------------
 // Moment_vpic_hydro
 
-struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
+struct Moment_vpic_hydro
 {
-  using Base = ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>;
   using Mfields = MfieldsSingle;
-  using MfieldsState = MfieldsStateVpic;
   using Mparticles = MparticlesVpic;
   using Fields = Fields3d<typename Mfields::fields_t>;
   
-  constexpr static char const* name = "hydro";
-  constexpr static int n_comps = MfieldsHydroVpic::N_COMP;
-  constexpr static fld_names_t fld_names()
-  {
+  constexpr static fld_names_t fld_names() {
     return { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
-	     "px_nc", "py_nc", "pz_nc", "ke_nc",
-	     "txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",
-	     "tzx_nc", "txy_nc", "_pad0", "_pad1", };
+	"px_nc", "py_nc", "pz_nc", "ke_nc",
+	"txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",
+	"tzx_nc", "txy_nc", "_pad0", "_pad1" };
   }
-  constexpr static int flags = POFI_BY_KIND;
 
-  Moment_vpic_hydro(const Grid_t& grid, MPI_Comm comm)
-    : Base(grid, comm)
+  Moment_vpic_hydro(const Grid_t& grid)
+    : mflds_res_{grid, MfieldsHydroVpic::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
-  
-  void run(MparticlesVpic& mprts)
+
+  std::vector<std::string> comp_names()
   {
-    const auto& kinds = mprts.grid().kinds;
-    auto& mres = this->mres_;
-    auto& grid = mprts.grid();
-    auto mf_hydro = MfieldsHydroVpic{ppsc->grid(), 16, { 1, 1, 1 }};
+    auto& grid = mflds_res_.grid();
+    
+    std::vector<std::string> comp_names;
+    comp_names.reserve(mflds_res_.n_comps());
+
+    for (int kind = 0; kind < grid.kinds.size(); kind++) {
+      for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
+	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + grid.kinds[kind].name);
+      }
+    }
+    return comp_names;
+  }
+  
+  MfieldsSingle& run(MparticlesVpic& mprts, MfieldsHydroVpic& mflds_hydro)
+  {
+    // This relies on load_interpolator_array() having been called earlier
+
+    auto& grid = mflds_res_.grid();
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
-      // This relies on load_interpolator_array() having been called earlier
-    for (int kind = 0; kind < kinds.size(); kind++) {
-      HydroArray& hydro = *mf_hydro.vmflds_hydro;
-      Particles& vmprts = mprts.vmprts_;
-
-      hydro.clear();
-
+    Particles& vmprts = mprts.vmprts_;
+    
+    for (int kind = 0; kind < grid.kinds.size(); ++kind) {
+      mflds_hydro.vmflds_hydro->clear();
+      
       // FIXME, just iterate over species instead?
       typename Particles::const_iterator sp = vmprts.find(kind);
-      vmprts.accumulate_hydro_p(hydro, sp, *sim->interpolator_);
+      vmprts.accumulate_hydro_p(*mflds_hydro.vmflds_hydro, sp, *sim->interpolator_);
       
-      hydro.synchronize();
+      mflds_hydro.vmflds_hydro->synchronize();
       
-      for (int p = 0; p < mres.n_patches(); p++) {
-	Fields R(mres[p]);
-	auto F = mf_hydro[p];
-	grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
+      for (int p = 0; p < mflds_res_.n_patches(); p++) {
+	auto res = mflds_res_[p];
+	auto H = mflds_hydro[p];
+	grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	    for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
-	      R(m + kind * MfieldsHydroVpic::N_COMP, ix,iy,iz) = F(m, ix,iy,iz);
+	      res(m + kind * MfieldsHydroVpic::N_COMP, i,j,k) = H(m, i,j,k);
 	    }
 	  });
       }
     }
+
+    return mflds_res_;
   }
+
+private:
+  MfieldsSingle mflds_res_;
 };
 

@@ -798,11 +798,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   }
 
-#if 0
+#if 1
   void diagnostics() override
   {
     MPI_Comm comm = psc_comm(psc_);
-
+    const Grid_t& grid = psc_->grid();
+    
     int timestep = psc_->timestep;
     if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
@@ -818,11 +819,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       }
 
       {
-	using Moment = Moment_vpic_hydro;
-	Moment moment{ppsc->grid(), psc_comm(ppsc)};
-	moment.run(mprts_);
+	// FIXME, would be better to keep this around
+	Moment_vpic_hydro moment{grid};
 
-	io_pfd_.write_mflds(moment.result(), Moment::name, moment.comp_names());
+	auto& mflds_res = moment.run(mprts_, hydro_);
+	io_pfd_.write_mflds(mflds_res, "hydro_vpic", moment.comp_names());
       }
       mrc_io_close(io_pfd_.io_);
     }
@@ -965,7 +966,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
   params.output_field_interval = 1.; // FIXME, no need to be in params
-  p.outf_params.output_fields = "fields_vpic_single,hydro_vpic";
+  p.outf_params.output_fields = nullptr;//"fields_vpic_single,hydro_vpic";
   p.outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt)));
   
   auto coeff = Grid_t::Normalization{norm_params};

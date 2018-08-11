@@ -13,5 +13,3 @@
 
 FieldsItemOps<FieldsItemFields<Item_vpic_fields>> psc_output_fields_item_vpic_fields_ops;
 
-FieldsItemOps<FieldsItemMoment<Moment_vpic_hydro>> psc_output_fields_item_vpic_hydro_ops;
-

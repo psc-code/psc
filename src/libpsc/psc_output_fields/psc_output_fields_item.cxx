@@ -67,7 +67,6 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_
 extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_cuda_ops;
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_vpic_fields_ops;
-extern struct psc_output_fields_item_ops psc_output_fields_item_vpic_hydro_ops;
 
 static void
 psc_output_fields_item_init()
@@ -127,7 +126,6 @@ psc_output_fields_item_init()
 #endif
 #ifdef USE_VPIC
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_vpic_fields_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_vpic_hydro_ops);
 #endif
 }
 
