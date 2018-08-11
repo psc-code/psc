@@ -95,7 +95,9 @@ struct Psc
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump),
       outf_{psc_comm(psc), p_.outf_params}
-  {}
+  {
+    interpolator_ = new Interpolator{sim_->grid_};
+  }
 
   // ----------------------------------------------------------------------
   // dtor
@@ -339,13 +341,15 @@ private:
     mpi_printf(psc_comm(psc), "Uncentering particles\n");
     auto& vmprts = mprts.vmprts_;
     if (!vmprts.empty()) {
-      sim->interpolator_->load(mflds.vmflds());
+      interpolator_->load(mflds.vmflds());
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	TIC vmprts.uncenter_p(&*sp, *sim->interpolator_); TOC(uncenter_p, 1);
+	TIC vmprts.uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
       }
     }
   }
+
+#endif
   
   // ----------------------------------------------------------------------
   // diagnostics
@@ -354,7 +358,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_.vmprts_, mflds_.vmflds(), *sim_->interpolator_, *hydro_.vmflds_hydro);
+      sim_->runDiag(mprts_.vmprts_, mflds_.vmflds(), *interpolator_, *hydro_.vmflds_hydro);
     }
 #endif
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
@@ -387,6 +391,7 @@ protected:
   MfieldsState mflds_;
 #ifdef VPIC
   MfieldsHydroVpic hydro_;
+  Interpolator* interpolator_;
 #endif
 
   Balance_t balance_;
@@ -405,5 +410,3 @@ protected:
   int st_nr_particles;
   int st_time_step;
 };
-
-#endif

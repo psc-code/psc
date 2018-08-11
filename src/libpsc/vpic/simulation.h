@@ -78,7 +78,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   {
     assert(grid_->nx && grid_->ny && grid_->ny);
   
-    interpolator_ = new Interpolator{grid_};
     accumulator_ = new Accumulator{grid_};
  
     // Pre-size communications buffers. This is done to get most memory
@@ -141,7 +140,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   //private:
   Grid*& grid_;
   MaterialList material_list_;
-  Interpolator* interpolator_;
   Accumulator* accumulator_;
   ParticleBcList& particle_bc_list_;
 
