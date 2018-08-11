@@ -821,7 +821,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	// FIXME, would be better to keep "moment" around
 	Moment_vpic_hydro moment{grid};
-	auto result = moment(mprts_, hydro_);
+	auto result = moment(mprts_, hydro_, *sim_->interpolator_);
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);

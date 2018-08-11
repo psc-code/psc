@@ -59,7 +59,7 @@ struct Moment_vpic_hydro
     : mflds_res_{grid, MfieldsHydroVpic::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
-  Result operator()(MparticlesVpic& mprts, MfieldsHydroVpic& mflds_hydro)
+  Result operator()(MparticlesVpic& mprts, MfieldsHydroVpic& mflds_hydro, Interpolator& interpolator)
   {
     // This relies on load_interpolator_array() having been called earlier
 
@@ -79,7 +79,7 @@ struct Moment_vpic_hydro
       
       // FIXME, just iterate over species instead?
       typename Particles::const_iterator sp = vmprts.find(kind);
-      vmprts.accumulate_hydro_p(vmflds, sp, *sim->interpolator_);
+      vmprts.accumulate_hydro_p(vmflds, sp, interpolator);
       
       vmflds.synchronize();
       
