@@ -14,7 +14,6 @@ template<class Particles>
 class VpicSimulationMixin : protected vpic_simulation
 {
   typedef typename Particles::Grid Grid;
-  typedef typename Particles::ParticleBcList ParticleBcList;
 
 public:
   VpicSimulationMixin()
@@ -34,11 +33,6 @@ public:
     return *reinterpret_cast<Particles *>(&species_list);
   }
   
-  ParticleBcList& getParticleBcList()
-  {
-    return *reinterpret_cast<ParticleBcList*>(&particle_bc_list);
-  }
-
   void initialization(int argc, char **argv)
   {
     TIC user_initialization(argc, argv); TOC(user_initialization, 1);

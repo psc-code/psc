@@ -6,7 +6,6 @@ template<class Particles, class MaterialList>
 class PscSimulationMixin
 {
   typedef typename Particles::Grid Grid;
-  typedef typename Particles::ParticleBcList ParticleBcList;
 
 public:
   PscSimulationMixin()
@@ -16,7 +15,6 @@ public:
   
   Grid*& getGrid()                    { return grid_; }
   Particles& getParticles()           { return particles_; }
-  ParticleBcList& getParticleBcList() { return particle_bc_list_; }
   
   void getParams(int& num_step_,
 		 int& clean_div_e_interval_,
@@ -67,12 +65,6 @@ public:
 private:
   Grid* grid_;
   Particles particles_;
-  ParticleBcList particle_bc_list_;
-};
-
-template<class Particles>
-class PscSimulationBase
-{
 };
 
 

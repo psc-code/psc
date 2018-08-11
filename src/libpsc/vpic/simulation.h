@@ -24,8 +24,7 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     : SimulationMixin(),
       DiagMixin(),
       num_comm_round_(3),
-      grid_(SimulationMixin::getGrid()),
-      particle_bc_list_(SimulationMixin::getParticleBcList())
+      grid_(SimulationMixin::getGrid())
   {
   }
 
@@ -106,7 +105,7 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   //private:
   Grid*& grid_;
   MaterialList material_list_;
-  ParticleBcList& particle_bc_list_;
+  ParticleBcList particle_bc_list_;
 
   int np_[3];
 };
