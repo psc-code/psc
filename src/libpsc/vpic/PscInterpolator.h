@@ -10,7 +10,7 @@ struct PscInterpolatorOps
   // ----------------------------------------------------------------------
   // load
   
-  static void do_load(Interpolator& ip, /*const*/ FieldArray& fa)
+  static void load(Interpolator& ip, /*const*/ FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
     Field3D<Interpolator> I(ip);
@@ -76,10 +76,5 @@ struct PscInterpolatorOps
 	}
       }
     }
-  }
-  
-  static void load(Interpolator& ip, FieldArray& fa)
-  {
-    TIC do_load(ip, fa); TOC(load_interpolator, 1);
   }
 };

@@ -90,7 +90,7 @@ struct PushParticlesVpic : PushParticlesBase
     // species to worry about
     
     if (!mprts.vmprts_.empty()) {
-      InterpolatorOps::load(interpolator, mflds.vmflds());
+      TIC InterpolatorOps::load(interpolator, mflds.vmflds()); TOC(load_interpolator, 1);
     }
   }
   
