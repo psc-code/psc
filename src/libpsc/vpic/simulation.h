@@ -106,17 +106,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
   }
 
-  void uncenter_p(Particles *vmprts, FieldArray *vmflds)
-  {
-    if (!vmprts->empty()) {
-      interpolator_->load(*vmflds);
-      
-      for (auto sp = vmprts->begin(); sp != vmprts->end(); ++sp) {
-	TIC vmprts->uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
-      }
-    }
-  }
-
   // ----------------------------------------------------------------------
   // DiagMixin
   

@@ -394,7 +394,14 @@ static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
   mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
 
   mpi_printf(psc_comm(psc), "Uncentering particles\n");
-  sim->uncenter_p(&mprts.vmprts_, &mflds.vmflds());
+  auto& vmprts = mprts.vmprts_;
+  if (!vmprts.empty()) {
+    sim->interpolator_->load(mflds.vmflds());
+    
+    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      TIC vmprts.uncenter_p(&*sp, *sim->interpolator_); TOC(uncenter_p, 1);
+    }
+  }
 }
 
 #endif
