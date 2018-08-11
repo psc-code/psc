@@ -317,12 +317,6 @@ struct MfieldsStateBase
   int n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
-  virtual void zero_comp(int m) = 0;
-  virtual void set_comp(int m, double val) = 0;
-  virtual void scale_comp(int m, double val) = 0;
-  virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
-  virtual void copy_comp(int mto, MfieldsBase& from, int mfrom) = 0;
-  virtual double max_comp(int m) = 0;
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
   {
     assert(0);
@@ -511,13 +505,6 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   {}
 
   fields_t operator[](int p) { return mflds_[p]; }
-
-  void zero_comp(int m) override { assert(0); }
-  void set_comp(int m, double val) override { assert(0); }
-  void scale_comp(int m, double val) override { assert(0); }
-  void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) override { assert(0); }
-  void copy_comp(int mto, MfieldsBase& from, int mfrom) override { assert(0); }
-  double max_comp(int m)  override { assert(0); }
 
 private:
   Mfields mflds_;
