@@ -55,16 +55,16 @@ static inline double trunc_granular( double a, double b )
 // ----------------------------------------------------------------------
 // define_material
 
-Material* define_material(Simulation* sim, const char *name,
+Material* define_material(MaterialList& ml, const char *name,
 			  double eps, double mu=1.,
 			  double sigma=0., double zeta=0.)
 {
-  Material *m = sim->material_list_.create(name,
-					   eps,   eps,   eps,
-					   mu,    mu,    mu,
-					   sigma, sigma, sigma,
-					   zeta,  zeta,  zeta);
-  return sim->material_list_.append(m);
+  Material *m = ml.create(name,
+			  eps,   eps,   eps,
+			  mu,    mu,    mu,
+			  sigma, sigma, sigma,
+			  zeta,  zeta,  zeta);
+  return ml.append(m);
 }
 
 void grid_setup_communication(Grid* grid_)
@@ -340,10 +340,10 @@ static void setup_fields(Simulation* sim, psc* psc_)
   
   mpi_printf(comm, "Setting up materials.\n");
   
-  define_material(sim, "vacuum", 1., 1., 0., 0.);
+  define_material(sim->material_list_, "vacuum", 1., 1., 0., 0.);
 #if 0
   struct material *resistive =
-    define_material(sub->sim, "resistive", 1., 1., 1., 0.);
+    define_material(sim->material_list_, "resistive", 1., 1., 1., 0.);
 #endif
 
   assert(!sim->material_list_.empty());
