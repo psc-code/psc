@@ -34,7 +34,7 @@ struct MfieldsHydroVpic
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vmflds_hydro = sim->hydro_array_;
+    vmflds_hydro = new HydroArray{sim->grid_};
   }
 
   int n_patches() const { return grid_.n_patches(); }
