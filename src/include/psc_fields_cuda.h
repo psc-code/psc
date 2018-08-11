@@ -83,9 +83,9 @@ struct MfieldsStateCuda : MfieldsStateBase
 {
   using fields_t = MfieldsCuda::fields_t;
   
-  MfieldsStateCuda(const Grid_t& grid, Int3 ibn)
-    : MfieldsStateBase{grid, NR_FIELDS, ibn},
-      mflds_{grid, NR_FIELDS, ibn}
+  MfieldsStateCuda(const Grid_t& grid)
+    : MfieldsStateBase{grid, NR_FIELDS, ppsc->ibn},
+      mflds_{grid, NR_FIELDS, ppsc->ibn}
   {}
 
   cuda_mfields* cmflds() { return mflds_.cmflds; }

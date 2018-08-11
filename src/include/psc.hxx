@@ -86,7 +86,7 @@ struct Psc
       sim_{sim},
       psc_{psc},
       mprts_{psc->grid()},
-      mflds_{psc->grid(), psc->ibn},
+      mflds_{psc->grid()},
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},

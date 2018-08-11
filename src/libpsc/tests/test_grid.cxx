@@ -138,7 +138,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   Grid_t grid = MakeTestGrid1{}();
   grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
 
-  MfieldsState mflds(grid, { 1, 1, 1 });
+  MfieldsState mflds(grid);
 
   setValues(mflds, [](int m) -> real_t {
       switch(m) {
@@ -187,7 +187,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   Grid_t grid = MakeTestGrid1{}();
   grid.kinds.emplace_back(Grid_t::Kind(2., 1., "test_species"));
 
-  MfieldsState mflds(grid, { 1, 1, 1 });
+  MfieldsState mflds{grid};
 
   setValues(mflds, [](int m) -> real_t {
       switch(m) {

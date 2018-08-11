@@ -35,7 +35,7 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   const double kz = 2. * M_PI / grid.domain.length[2];
   
   // init fields
-  auto mflds = MfieldsState{grid, this->ibn};
+  auto mflds = MfieldsState{grid};
   SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EY: return sin(kz*crd[2]);
@@ -71,7 +71,7 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   const double ky = 2. * M_PI / grid.domain.length[1];
   
   // init fields
-  auto mflds = MfieldsState{grid, this->ibn};
+  auto mflds = MfieldsState{grid};
   SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HX: return cos(ky*crd[1]);

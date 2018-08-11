@@ -189,7 +189,7 @@ struct PushParticlesTest : ::testing::Test
     make_psc(kinds);
 
     // init fields
-    mflds = new MfieldsState{grid(), ibn};
+    mflds = new MfieldsState{grid()};
     SetupFields<MfieldsState>::set(*mflds, init_fields);
 
     // init particle
@@ -234,7 +234,7 @@ struct PushParticlesTest : ::testing::Test
   
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
-    auto mflds_ref = MfieldsState{grid(), ibn};
+    auto mflds_ref = MfieldsState{grid()};
     auto flds_ref = mflds_ref[0];
     for (auto& ref : curr_ref) {
       if (dim::InvarX::value) { ref.pos[0] = 0; }

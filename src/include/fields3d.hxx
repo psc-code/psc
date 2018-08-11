@@ -346,7 +346,7 @@ struct MfieldsStateBase
 
     // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
     
-    auto& mflds = *new MF{grid(), ibn()};
+    auto& mflds = *new MF{grid()};
     
     MfieldsStateBase::convert(*this, mflds, mb, me);
 
@@ -499,9 +499,9 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
 
-  MfieldsStateFromMfields(const Grid_t& grid, Int3 ibn)
-    : MfieldsStateBase{grid, NR_FIELDS, ibn},
-      mflds_{grid, NR_FIELDS, ibn}
+  MfieldsStateFromMfields(const Grid_t& grid)
+    : MfieldsStateBase{grid, NR_FIELDS, ppsc->ibn}, // FIXME, still hacky ibn handling...
+      mflds_{grid, NR_FIELDS, ppsc->ibn}
   {}
 
   fields_t operator[](int p) { return mflds_[p]; }
