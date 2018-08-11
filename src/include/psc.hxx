@@ -131,7 +131,7 @@ struct Psc
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 #ifdef VPIC
-      initialize_vpic(sim_, psc_, mflds_, mprts_);
+      initialize_vpic();
 #endif
     } else {
       initialize_default(psc_->method, psc_, mflds_, mprts_);
@@ -293,9 +293,13 @@ private:
   // ----------------------------------------------------------------------
   // initialize_vpic
   
-  static void initialize_vpic(Simulation* sim, struct psc *psc,
-			      MfieldsStateVpic& mflds, MparticlesVpic& mprts)
+  void initialize_vpic()
   {
+    // FIXME, just change the uses
+    auto sim = sim_;
+    auto psc = psc_;
+    auto& mprts = mprts_;
+    auto& mflds = mflds_;
     // Do some consistency checks on user initialized fields
     
     mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
