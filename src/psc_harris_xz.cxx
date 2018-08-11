@@ -57,8 +57,8 @@ static inline double trunc_granular( double a, double b )
 
 void define_periodic_grid(Simulation* sim, double xl[3], double xh[3], const int gdims[3], const int np[3])
 {
-  sim->np_[0] = np[0]; sim->np_[1] = np[1]; sim->np_[2] = np[2];
-  // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME?
+  // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for vpic_simulation,
+  // I believe only because this info is written out in diagnostics_run
   sim->grid_->partition_periodic_box(xl, xh, gdims, np);
 }
 

@@ -63,9 +63,9 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     DiagMixin::diagnostics_setup();
   }
 
-  void runDiag(Particles& particles, FieldArray& fa, Interpolator& ia, HydroArray& ha)
+  void runDiag(Particles& particles, FieldArray& fa, Interpolator& ia, HydroArray& ha, Int3 np)
   {
-    DiagMixin::diagnostics_run(fa, particles, ia, ha, np_);
+    DiagMixin::diagnostics_run(fa, particles, ia, ha, np);
   }
 
   // ======================================================================
@@ -87,8 +87,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   Grid*& grid_;
   MaterialList material_list_;
   ParticleBcList particle_bc_list_;
-
-  int np_[3];
 };
 
 #endif
