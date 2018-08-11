@@ -122,21 +122,22 @@ using ParticleBcList = VpicParticleBcList;
 #endif
 
 typedef PscParticlesBase<Grid, ParticleBcList> ParticlesBase;
-typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
+typedef PscParticles<ParticlesBase> Particles;
 #if 1
-typedef PscParticlesOps<Particles, HydroArray> ParticlesOps;
+using ParticlesOps = PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator, HydroArray>;
 #else
-typedef VpicParticlesOps<Particles. HydroArray> ParticlesOps;
+using ParticlesOps = VpicParticlesOps<Particles. FieldArray, Interpolator, Accumulator, HydroArray>;
 #endif
 
 #if 1
-typedef VpicDiagMixin<Particles, DiagOps, ParticlesOps, HydroArrayOps> DiagMixin;
+typedef VpicDiagMixin<Particles, FieldArray, Interpolator, HydroArray,
+		      DiagOps, ParticlesOps, HydroArrayOps> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;
 #endif
 
 #if 1
-typedef PscSimulationMixin<Particles> SimulationMixin;
+typedef PscSimulationMixin<Particles, MaterialList> SimulationMixin;
 #else
 typedef VpicSimulationMixin<Particles> SimulationMixin;
 #endif
@@ -149,7 +150,7 @@ typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
 #endif
 
-typedef VpicSimulation<Particles, RngPool, SimulationMixin, DiagMixin> Simulation;
+typedef VpicSimulation<Particles, FieldArray, Interpolator, HydroArray, RngPool, SimulationMixin, DiagMixin> Simulation;
 
 #endif
 

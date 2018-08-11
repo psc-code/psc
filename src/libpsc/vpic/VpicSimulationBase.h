@@ -14,10 +14,6 @@ template<class Particles>
 class VpicSimulationMixin : protected vpic_simulation
 {
   typedef typename Particles::Grid Grid;
-  typedef typename Particles::FieldArray FieldArray;
-  typedef typename Particles::Interpolator Interpolator;
-  typedef typename Particles::Accumulator Accumulator;
-  typedef typename Particles::HydroArray HydroArray;
   typedef typename Particles::ParticleBcList ParticleBcList;
 
 public:

@@ -2,16 +2,11 @@
 #ifndef PSC_SIMULATION_BASE_H
 #define PSC_SIMULATION_BASE_H
 
-template<class Particles>
+template<class Particles, class MaterialList>
 class PscSimulationMixin
 {
   typedef typename Particles::Grid Grid;
-  typedef typename Particles::FieldArray FieldArray;
-  typedef typename Particles::Interpolator Interpolator;
-  typedef typename Particles::Accumulator Accumulator;
-  typedef typename Particles::HydroArray HydroArray;
   typedef typename Particles::ParticleBcList ParticleBcList;
-  typedef typename FieldArray::MaterialList MaterialList;
 
 public:
   PscSimulationMixin()

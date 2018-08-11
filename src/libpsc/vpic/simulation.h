@@ -9,15 +9,11 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class RP, class SimulationMixin, class DiagMixin>
+template<class P, class FieldArray, class Interpolator, class HydroArray, class RP, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, DiagMixin
 {
   typedef P Particles;
   typedef typename Particles::Grid Grid;
-  typedef typename Particles::FieldArray FieldArray;
-  typedef typename Particles::Interpolator Interpolator;
-  typedef typename Particles::Accumulator Accumulator;
-  typedef typename Particles::HydroArray HydroArray;
   typedef typename Particles::Species Species;
   typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename FieldArray::MaterialList MaterialList;

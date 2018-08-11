@@ -112,12 +112,10 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class DiagOps, class ParticlesOps, class HydroArrayOps>
+template<class Particles, class FieldArray, class Interpolator, class HydroArray,
+	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
-  typedef typename Particles::FieldArray FieldArray;
-  typedef typename Particles::Interpolator Interpolator;
-  typedef typename Particles::HydroArray HydroArray;
   typedef typename Particles::Grid Grid;
   
   

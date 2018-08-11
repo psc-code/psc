@@ -16,15 +16,13 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename HydroArray>
-struct PscParticlesOps {
+template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename HydroArray>
+struct PscParticlesOps
+{
   typedef typename Particles::Grid Grid;
   typedef typename Particles::Species Species;
   typedef typename Particles::Particle Particle;
   typedef typename Particles::ParticleMover ParticleMover;
-  typedef typename Particles::FieldArray FieldArray;
-  typedef typename Particles::Interpolator Interpolator;
-  typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename Accumulator::Block AccumulatorBlock;
   

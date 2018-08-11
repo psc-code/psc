@@ -1,12 +1,9 @@
 
 #pragma once
 
-template<typename Particles, typename HydroArray>
+template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename HydroArray>
 struct VpicParticlesOps
 {
-  typedef typename Particles::FieldArray FieldArray;
-  typedef typename Particles::Interpolator Interpolator;
-  typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::ParticleBcList ParticleBcList;
   
   static void advance_p(Particles& vmprts, Accumulator& accumulator,
@@ -91,14 +88,10 @@ struct VpicParticlesOps
 };
 
 
-template<class ParticlesBase, class FA, class IA, class AA, class HA>
+template<class ParticlesBase>
 struct VpicParticles : ParticlesBase
 {
   typedef ParticlesBase Base;
-  typedef FA FieldArray;
-  typedef IA Interpolator;
-  typedef AA Accumulator;
-  typedef HA HydroArray;
 
   using Base::Base;
 };
