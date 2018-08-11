@@ -106,17 +106,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
   }
 
-  void moments_run(HydroArray *hydro_array, Particles *vmprts, int kind)
-  {
-    // This relies on load_interpolator_array() having been called earlier
-    hydro_array->clear();
-
-    typename Particles::const_iterator sp = vmprts->find(kind);
-    vmprts->accumulate_hydro_p(*hydro_array, sp, *interpolator_);
-    
-    hydro_array->synchronize();
-  }
-
   void uncenter_p(Particles *vmprts, FieldArray *vmflds)
   {
     if (!vmprts->empty()) {

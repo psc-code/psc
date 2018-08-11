@@ -72,9 +72,18 @@ struct Moment_vpic_hydro : ItemMomentCRTP<Moment_vpic_hydro, MfieldsSingle>
     Simulation *sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
+      // This relies on load_interpolator_array() having been called earlier
     for (int kind = 0; kind < kinds.size(); kind++) {
-      HydroArray *vmflds_hydro = mf_hydro.vmflds_hydro;
-      sim->moments_run(vmflds_hydro, &mprts.vmprts_, kind);
+      HydroArray& hydro = *mf_hydro.vmflds_hydro;
+      Particles& vmprts = mprts.vmprts_;
+
+      hydro.clear();
+
+      // FIXME, just iterate over species instead?
+      typename Particles::const_iterator sp = vmprts.find(kind);
+      vmprts.accumulate_hydro_p(hydro, sp, *sim->interpolator_);
+      
+      hydro.synchronize();
       
       for (int p = 0; p < mres.n_patches(); p++) {
 	Fields R(mres[p]);
