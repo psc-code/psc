@@ -78,8 +78,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   {
     assert(grid_->nx && grid_->ny && grid_->ny);
   
-    accumulator_ = new Accumulator{grid_};
- 
     // Pre-size communications buffers. This is done to get most memory
     // allocation over with before the simulation starts running
     // FIXME, this isn't a great place. First, we shouldn't call mp

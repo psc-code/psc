@@ -96,7 +96,9 @@ struct Psc
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump),
       outf_{psc_comm(psc), p_.outf_params}
-  {}
+  {
+    sim_->accumulator_ = new Accumulator{sim_->grid_};
+  }
 
   // ----------------------------------------------------------------------
   // dtor
