@@ -9,8 +9,8 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class ParticlesOps, class RP, class SimulationMixin, class DiagMixin>
-struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
+template<class P, class RP, class SimulationMixin, class DiagMixin>
+struct VpicSimulation : SimulationMixin, DiagMixin
 {
   typedef P Particles;
   typedef typename Particles::Grid Grid;
@@ -26,7 +26,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
 
   VpicSimulation()
     : SimulationMixin(),
-      ParticlesOps(),
       DiagMixin(),
       num_comm_round_(3),
       grid_(SimulationMixin::getGrid()),

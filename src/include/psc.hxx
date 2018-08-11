@@ -377,7 +377,7 @@ static void psc_method_vpic_initialize(Simulation* sim, struct psc *psc,
 
   mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
   TIC CleanDivOps::clear_rhof(mflds.vmflds()); TOC(clear_rhof, 1);
-  sim->accumulate_rho_p(mprts.vmprts_, mflds.vmflds());
+  ParticlesOps::accumulate_rho_p(mprts.vmprts_, mflds.vmflds());
   CleanDivOps::synchronize_rho(mflds.vmflds());
   TIC AccumulateOps::compute_rhob(mflds.vmflds()); TOC(compute_rhob, 1);
 

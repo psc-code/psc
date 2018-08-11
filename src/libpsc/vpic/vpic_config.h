@@ -149,7 +149,7 @@ typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
 #endif
 
-typedef VpicSimulation<Particles, ParticlesOps, RngPool, SimulationMixin, DiagMixin> Simulation;
+typedef VpicSimulation<Particles, RngPool, SimulationMixin, DiagMixin> Simulation;
 
 #endif
 

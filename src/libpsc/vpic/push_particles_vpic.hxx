@@ -35,7 +35,7 @@ struct PushParticlesVpic : PushParticlesBase
     // Advance the particle lists.
     if (!vmprts.empty()) {
       TIC sim_->accumulator_->clear(); TOC(clear_accumulators, 1);
-      sim_->advance_p(vmprts, *sim_->accumulator_, *sim_->interpolator_);
+      ParticlesOps::advance_p(vmprts, *sim_->accumulator_, *sim_->interpolator_);
     }
 
     // Because the partial position push when injecting aged particles might
@@ -57,11 +57,11 @@ struct PushParticlesVpic : PushParticlesBase
     // local accumulation).
     TIC
       for(int round = 0; round < sim_->num_comm_round_; round++) {
-	sim_->boundary_p(sim_->particle_bc_list_, vmprts, vmflds, *sim_->accumulator_);
+	ParticlesOps::boundary_p(sim_->particle_bc_list_, vmprts, vmflds, *sim_->accumulator_);
       } TOC(boundary_p, sim_->num_comm_round_);
     
     // Drop the particles that have unprocessed movers at this point
-    sim_->drop_p(vmprts, vmflds);
+    ParticlesOps::drop_p(vmprts, vmflds);
 
     // At this point, all particle positions are at r_1 and u_{1/2}, the
     // guard lists are empty and the accumulators on each processor are current.
