@@ -284,7 +284,7 @@ protected:
   Int3 ibn_;
 };
 
-#if 1
+#if 0
 
 using MfieldsStateBase = MfieldsBase;
 
