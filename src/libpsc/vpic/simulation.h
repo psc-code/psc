@@ -183,7 +183,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   //private:
   Grid*& grid_;
   MaterialList material_list_;
-  FieldArray* field_array_;
   Interpolator*& interpolator_;
   Accumulator*& accumulator_;
   HydroArray*& hydro_array_;
