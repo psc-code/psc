@@ -28,17 +28,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   {
   }
 
-  void set_domain_field_bc(int boundary, int bc)
-  {
-    int fbc;
-    switch (bc) {
-    case BND_FLD_CONDUCTING_WALL: fbc = Grid::pec_fields   ; break;
-    case BND_FLD_ABSORBING:       fbc = Grid::absorb_fields; break;
-    default: assert(0);
-    }
-    grid_->set_fbc(boundary, fbc);
-  }
-
   void set_domain_particle_bc(int boundary, int bc)
   {
     int pbc;

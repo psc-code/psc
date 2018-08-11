@@ -63,6 +63,20 @@ void define_periodic_grid(Grid* vgrid, double xl[3], double xh[3], const int gdi
 }
 
 // ----------------------------------------------------------------------
+// set_domain_field_bc
+
+void set_domain_field_bc(Grid* vgrid, int boundary, int bc)
+{
+  int fbc;
+  switch (bc) {
+  case BND_FLD_CONDUCTING_WALL: fbc = Grid::pec_fields   ; break;
+  case BND_FLD_ABSORBING:       fbc = Grid::absorb_fields; break;
+  default: assert(0);
+  }
+  vgrid->set_fbc(boundary, fbc);
+}
+
+// ----------------------------------------------------------------------
 // define_material
 
 Material* define_material(MaterialList& ml, const char *name,
@@ -316,13 +330,13 @@ static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
   // ***** Set Field Boundary Conditions *****
   if (params.open_bc_x) {
     mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-    if (left ) sim->set_domain_field_bc(BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
-    if (right) sim->set_domain_field_bc(BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+    if (left ) set_domain_field_bc(vgrid, BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
+    if (right) set_domain_field_bc(vgrid, BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
   }
   
   mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-  if (bottom) sim->set_domain_field_bc(BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
-  if (top   ) sim->set_domain_field_bc(BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+  if (bottom) set_domain_field_bc(vgrid, BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
+  if (top   ) set_domain_field_bc(vgrid, BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
   
   // ***** Set Particle Boundary Conditions *****
   if (params.driven_bc_z) {
