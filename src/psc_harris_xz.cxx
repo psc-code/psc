@@ -810,12 +810,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       io_pfd_.open();
 
       {
-	std::vector<std::string> comp_names = { "ex_ec", "ey_ec", "ez_ec", "div_e_err_nc",
-						"hx_fc", "hy_fc", "hz_fc", "div_b_err_cc"
-						"tcax_ec", "tcay_ec", "tcaz_ec", "rhob_nc",
-						"jx_ec", "jy_ec", "jz_c", "rhof_nc" };
-	
-	io_pfd_.write_mflds(mflds_, "vpic_fields", comp_names);
+	OutputFieldsVpic out_fields;
+	auto result = out_fields(mflds_);
+	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
 
       {
