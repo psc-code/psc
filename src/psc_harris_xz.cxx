@@ -40,6 +40,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+using MaterialList = FieldArray::MaterialList;
+using Material = MaterialList::Material;
+
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
@@ -52,18 +55,16 @@ static inline double trunc_granular( double a, double b )
 // ----------------------------------------------------------------------
 // define_material
 
-struct material* define_material(Simulation* sim, const char *name,
-				 double eps, double mu=1.,
-				 double sigma=0., double zeta=0.)
+Material* define_material(Simulation* sim, const char *name,
+			  double eps, double mu=1.,
+			  double sigma=0., double zeta=0.)
 {
-  Simulation::Material *m = sim->material_list_.create(name,
-				      eps,   eps,   eps,
-				      mu,    mu,    mu,
-				      sigma, sigma, sigma,
-				      zeta,  zeta,  zeta);
-  m = sim->material_list_.append(m);
-
-  return reinterpret_cast<struct material*>(m);
+  Material *m = sim->material_list_.create(name,
+					   eps,   eps,   eps,
+					   mu,    mu,    mu,
+					   sigma, sigma, sigma,
+					   zeta,  zeta,  zeta);
+  return sim->material_list_.append(m);
 }
 
 void grid_setup_communication(Grid* grid_)
