@@ -116,9 +116,9 @@ using HydroArray = PscHydroArrayBase<Grid>;
 using HydroArrayOps = PscHydroArrayOps<HydroArray>;
 
 #if 1
-typedef PscParticleBcList ParticleBcList;
+using ParticleBcList = PscParticleBcList;
 #else
-typedef VpicParticleBcList ParticleBcList;
+using ParticleBcList = VpicParticleBcList;
 #endif
 
 typedef PscParticlesBase<Grid, ParticleBcList> ParticlesBase;
