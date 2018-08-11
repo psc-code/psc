@@ -43,11 +43,6 @@ public:
     return *reinterpret_cast<Accumulator **>(&accumulator_array);
   }
 
-  HydroArray*& getHydroArray()
-  {
-    return *reinterpret_cast<HydroArray **>(&hydro_array);
-  }
-  
   Particles& getParticles()
   {
     return *reinterpret_cast<Particles *>(&species_list);

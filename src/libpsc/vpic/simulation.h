@@ -32,7 +32,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
       grid_(SimulationMixin::getGrid()),
       interpolator_(SimulationMixin::getInterpolator()),
       accumulator_(SimulationMixin::getAccumulator()),
-      hydro_array_(SimulationMixin::getHydroArray()),
       particle_bc_list_(SimulationMixin::getParticleBcList())
   {
   }
@@ -185,7 +184,7 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   MaterialList material_list_;
   Interpolator*& interpolator_;
   Accumulator*& accumulator_;
-  HydroArray*& hydro_array_;
+  HydroArray* hydro_array_;
   ParticleBcList& particle_bc_list_;
 
   int np_[3];

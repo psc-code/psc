@@ -22,7 +22,6 @@ public:
   Grid*& getGrid()                    { return grid_; }
   Interpolator*& getInterpolator()    { return interpolator_; }
   Accumulator*& getAccumulator()      { return accumulator_; }
-  HydroArray*& getHydroArray()        { return hydro_array_;  }
   Particles& getParticles()           { return particles_; }
   ParticleBcList& getParticleBcList() { return particle_bc_list_; }
   
@@ -76,7 +75,6 @@ private:
   Grid* grid_;
   Interpolator *interpolator_;
   Accumulator *accumulator_;
-  HydroArray *hydro_array_;
   Particles particles_;
   ParticleBcList particle_bc_list_;
 };
