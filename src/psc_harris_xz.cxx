@@ -59,6 +59,34 @@ struct material * define_material(Simulation* sim, const char *name,
   return reinterpret_cast<struct material*>(sim->define_material(name, eps, mu, sigma, zeta));
 }
 
+void grid_setup_communication(Grid* grid_)
+{
+  assert(grid_->nx && grid_->ny && grid_->ny);
+  
+  // Pre-size communications buffers. This is done to get most memory
+  // allocation over with before the simulation starts running
+  // FIXME, this isn't a great place. First, we shouldn't call mp
+  // functions (semi-)directly. 2nd, whether we need these buffers depends
+  // on b.c., which aren't yet known.
+  
+  // FIXME, this really isn't a good place to do this, as it requires layer breaking knowledge of
+  // which communication will need the largest buffers...
+  int nx1 = grid_->nx+1, ny1 = grid_->ny+1, nz1 = grid_->nz+1;
+  grid_->mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_recv_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_recv_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_recv_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
+  
+  grid_->mp_size_send_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_send_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_send_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(typename HydroArray::Element));
+  grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
+}
+
 // ----------------------------------------------------------------------
 // courant length
 //
@@ -309,7 +337,6 @@ static void setup_fields(Simulation* sim, psc* psc_)
   struct material *resistive =
     define_material(sub->sim, "resistive", 1., 1., 1., 0.);
 #endif
-  sim->grid_setup_communication();
 
   assert(!sim->material_list_.empty());
   
@@ -372,6 +399,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       phys_{phys},
       io_pfd_{"pfd"}
   {
+    // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
+    grid_setup_communication(sim->grid_);
+    
     MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
 

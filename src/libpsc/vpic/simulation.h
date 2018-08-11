@@ -74,34 +74,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     return material_list_.append(m);
   }
 
-  void grid_setup_communication()
-  {
-    assert(grid_->nx && grid_->ny && grid_->ny);
-  
-    // Pre-size communications buffers. This is done to get most memory
-    // allocation over with before the simulation starts running
-    // FIXME, this isn't a great place. First, we shouldn't call mp
-    // functions (semi-)directly. 2nd, whether we need these buffers depends
-    // on b.c., which aren't yet known.
-
-    // FIXME, this really isn't a good place to do this, as it requires layer breaking knowledge of
-    // which communication will need the largest buffers...
-    int nx1 = grid_->nx+1, ny1 = grid_->ny+1, nz1 = grid_->nz+1;
-    grid_->mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_recv_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_recv_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_recv_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
-  
-    grid_->mp_size_send_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_send_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_send_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(typename HydroArray::Element));
-    grid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
-  }
-
   // ----------------------------------------------------------------------
   // DiagMixin
   

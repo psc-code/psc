@@ -2,28 +2,21 @@
 #ifndef PSC_ACCUMULATOR_H
 #define PSC_ACCUMULATOR_H
 
-template<class AccumulatorBase, class FA>
-struct PscAccumulator : AccumulatorBase
+template<typename Accumulator, typename FieldArray>
+struct PscAccumulatorOps
 {
-  typedef AccumulatorBase Base;
-  typedef FA FieldArray;
-  using typename Base::Grid;
-  using typename Base::Element;
+  using Grid = typename Accumulator::Grid;
   
-  using Base::grid;
-
-  using Base::Base;
-
   // ----------------------------------------------------------------------
   // clear
 
-  void clear()
+  static void clear(Accumulator& acc)
   {
-    const Grid* g = grid();
-    int n_array = this->n_pipeline() + 1;
+    auto g = acc.grid();
+    int n_array = acc.n_pipeline() + 1;
     for (int arr = 0; arr < n_array; arr++) {
-      Element* a_begin = &(*this)(arr, 1,1,1);
-      Element* a_end = &(*this)(arr, g->nx, g->ny, g->nz);
+      auto a_begin = &acc(arr, 1,1,1);
+      auto a_end = &acc(arr, g->nx, g->ny, g->nz);
       // FIXME, the + 1 in n0 doesn't really make sense to me.  And,
       // originally, this was extended to 128 byte boundaries, too,
       // which I dropped -- which is also a behavior change, which I
@@ -36,19 +29,19 @@ struct PscAccumulator : AccumulatorBase
   // ----------------------------------------------------------------------
   // reduce
   
-  void reduce()
+  static void reduce(Accumulator& acc)
   {
-    const Grid* g = grid();
-    int si = sizeof(typename Base::Element) / sizeof(float);
-    int nr = this->n_pipeline() + 1 - 1;
-    int sr = si * this->stride();
+    auto g = acc.grid();
+    int si = sizeof(typename Accumulator::Element) / sizeof(float);
+    int nr = acc.n_pipeline() + 1 - 1;
+    int sr = si * acc.stride();
+
+    auto a_begin = &acc(0,1,1,1);
+    auto a_end = &acc(0, g->nx, g->ny, g->nz);
+    int n = a_end - a_begin + 1;
 
     // a is broken into restricted rw and ro parts to allow the compiler
     // to do more aggresive optimizations
-
-    Element* a_begin = &(*this)(0,1,1,1);
-    Element* a_end = &(*this)(0, g->nx, g->ny, g->nz);
-    int n = a_end - a_begin + 1;
 
     float * RESTRICT a = reinterpret_cast<float *>(a_begin);
     const float * RESTRICT ALIGNED(16) b = a + sr;
@@ -75,15 +68,15 @@ struct PscAccumulator : AccumulatorBase
   // ----------------------------------------------------------------------
   // unload
   
-  void unload(FieldArray& fa) /*const*/
+  static void unload( /*const*/ Accumulator& acc, FieldArray& fa)
   {
-    const Grid* g = grid();
+    auto g = acc.grid();
     float cx = 0.25 * g->rdy * g->rdz / g->dt;
     float cy = 0.25 * g->rdz * g->rdx / g->dt;
     float cz = 0.25 * g->rdx * g->rdy / g->dt;
     
     Field3D<FieldArray> F(fa);
-    Field3D<AccumulatorBase> A(*this);
+    Field3D<Accumulator> A(acc);
 
     int nx = g->nx, ny = g->ny, nz = g->nz;
     // FIXME, these limits seem to go too far out compared to what we zeroed before
@@ -98,6 +91,19 @@ struct PscAccumulator : AccumulatorBase
     }
   }
   
+};
+
+template<class AccumulatorBase, class FieldArray>
+struct PscAccumulator : AccumulatorBase
+{
+  using Self = PscAccumulator<AccumulatorBase, FieldArray>;
+  using Base = AccumulatorBase;
+  
+  using Base::Base;
+
+  void clear() { PscAccumulatorOps<Self, FieldArray>::clear(*this); }
+  void reduce() { PscAccumulatorOps<Self, FieldArray>::reduce(*this); }
+  void unload(FieldArray& fa) { PscAccumulatorOps<Self, FieldArray>::unload(*this, fa); }
 };
 
 
