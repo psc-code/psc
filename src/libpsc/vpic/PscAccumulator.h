@@ -12,11 +12,8 @@ struct PscAccumulator : AccumulatorBase
   
   using Base::grid;
 
-  static PscAccumulator* create(Grid *grid)
-  {
-    return static_cast<PscAccumulator*>(Base::create(grid));
-  }
-  
+  using Base::Base;
+
   // ----------------------------------------------------------------------
   // clear
 

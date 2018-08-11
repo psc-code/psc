@@ -9,11 +9,6 @@ struct VpicAccumulator : AccumulatorBase
   typedef FA FieldArray;
   using typename Base::Grid;
 
-  static VpicAccumulator* create(Grid *grid)
-  {
-    return static_cast<VpicAccumulator*>(Base::create(grid));
-  }
-  
   void clear()                      { ::clear_accumulator_array(this); }
   void reduce()                     { ::reduce_accumulator_array(this); }
   void unload(FieldArray& fa) const { ::unload_accumulator_array(&fa, this); }

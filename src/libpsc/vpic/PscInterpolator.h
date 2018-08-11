@@ -14,11 +14,8 @@ struct PscInterpolator : InterpolatorBase
 
   using Base::grid;
 
-  static PscInterpolator* create(Grid *grid)
-  {
-    return reinterpret_cast<PscInterpolator*>(Base::create(grid));
-  }
-  
+  using Base::Base;
+
   // ----------------------------------------------------------------------
   // load
   

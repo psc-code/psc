@@ -34,11 +34,6 @@ struct PscAccumulatorBase
   typedef PscAccumulatorBlock<Grid> Block;
   typedef typename Block::Element Element;
 
-  static PscAccumulatorBase* create(Grid *grid)
-  {
-    return new PscAccumulatorBase(grid);
-  }
-
   PscAccumulatorBase(Grid *grid)
     : g_(grid)
   {

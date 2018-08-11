@@ -26,16 +26,6 @@ struct PscInterpolatorBase : PscFieldBase<PscInterpolatorT, G>
   using typename Base::Element;
 
   using Base::Base;
-
-  static PscInterpolatorBase* create(Grid *grid)
-  {
-    return new PscInterpolatorBase(grid);
-  }
-  
-  static void destroy(PscInterpolatorBase* interpolator)
-  {
-    delete interpolator;
-  }
 };
 
 #endif

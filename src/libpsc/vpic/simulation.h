@@ -79,8 +79,8 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   {
     assert(grid_->nx && grid_->ny && grid_->ny);
   
-    interpolator_ = Interpolator::create(grid_);
-    accumulator_ = Accumulator::create(grid_);
+    interpolator_ = new Interpolator{grid_};
+    accumulator_ = new Accumulator{grid_};
  
     // Pre-size communications buffers. This is done to get most memory
     // allocation over with before the simulation starts running

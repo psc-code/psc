@@ -9,11 +9,8 @@ struct VpicInterpolator : InterpolatorBase
   typedef FA FieldArray;
   using typename Base::Grid;
 
-  static VpicInterpolator* create(Grid *grid)
-  {
-    return reinterpret_cast<VpicInterpolator*>(Base::create(grid));
-  }
-  
+  using Base::Base;
+
   void load(FieldArray& fa)
   {
     TIC ::load_interpolator_array(this, &fa); TOC(load_interpolator, 1);
