@@ -28,13 +28,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   {
   }
 
-  void define_periodic_grid(double xl[3], double xh[3], const int gdims[3], const int np[3])
-  {
-    np_[0] = np[0]; np_[1] = np[1]; np_[2] = np[2];
-    SimulationMixin::setTopology(np[0], np[1], np[2]);
-    grid_->partition_periodic_box(xl, xh, gdims, np);
-  }
-
   void set_domain_field_bc(int boundary, int bc)
   {
     int fbc;
