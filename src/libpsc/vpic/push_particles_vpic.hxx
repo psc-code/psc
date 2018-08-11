@@ -21,12 +21,12 @@ struct PushParticlesVpic : PushParticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_mprts(Mparticles& mprts, MfieldsState& mflds)
+  void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator)
   {
     auto& vmprts = mprts.vmprts_;
     auto& vmflds = mflds.vmflds();
     
-    // For this to work, interpolator_ needs to have been set from vmflds E/B before,
+    // For this to work, interpolator needs to have been set from vmflds E/B before,
     // ie., we're not using vmflds for E and B here at all.
     
     // At this point, fields are at E_0 and B_0 and the particle positions
@@ -35,7 +35,7 @@ struct PushParticlesVpic : PushParticlesBase
     // Advance the particle lists.
     if (!vmprts.empty()) {
       TIC sim_->accumulator_->clear(); TOC(clear_accumulators, 1);
-      ParticlesOps::advance_p(vmprts, *sim_->accumulator_, *sim_->interpolator_);
+      ParticlesOps::advance_p(vmprts, *sim_->accumulator_, interpolator);
     }
 
     // Because the partial position push when injecting aged particles might
@@ -81,7 +81,7 @@ struct PushParticlesVpic : PushParticlesBase
     TIC sim_->current_injection(); TOC(user_current_injection, 1);
   }
 
-  void prep(Mparticles& mprts, MfieldsState& mflds)
+  void prep(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator)
   {
     // At end of step:
     // Fields are updated ... load the interpolator for next time step and
@@ -89,7 +89,7 @@ struct PushParticlesVpic : PushParticlesBase
     // species to worry about
     
     if (!mprts.vmprts_.empty()) {
-      sim_->interpolator_->load(mflds.vmflds());
+      interpolator.load(mflds.vmflds());
     }
   }
   

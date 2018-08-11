@@ -732,7 +732,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_.push_mprts(mprts_, mflds_);
+    pushp_.push_mprts(mprts_, mflds_, *sim_->interpolator_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -794,7 +794,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     checks_.gauss(psc_, mprts_, mflds_);
 
 #ifdef VPIC
-    pushp_.prep(mprts_, mflds_);
+    pushp_.prep(mprts_, mflds_, *sim_->interpolator_);
 #endif
   }
 
