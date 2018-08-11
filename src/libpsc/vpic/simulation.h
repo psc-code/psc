@@ -144,9 +144,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     DiagMixin::diagnostics_setup();
   }
 
-  void runDiag(Particles& particles, FieldArray& fa)
+  void runDiag(Particles& particles, FieldArray& fa, HydroArray& ha)
   {
-    DiagMixin::diagnostics_run(fa, particles, *interpolator_, *hydro_array_, np_);
+    DiagMixin::diagnostics_run(fa, particles, *interpolator_, ha, np_);
   }
 
   // ======================================================================
