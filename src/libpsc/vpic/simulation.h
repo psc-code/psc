@@ -28,17 +28,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   {
   }
 
-  void set_domain_particle_bc(int boundary, int bc)
-  {
-    int pbc;
-    switch (bc) {
-    case BND_PRT_REFLECTING: pbc = Grid::reflect_particles; break;
-    case BND_PRT_ABSORBING:  pbc = Grid::absorb_particles ; break;
-    default: assert(0);
-    }
-    grid_->set_pbc(boundary, pbc);
-  }
-
   // ----------------------------------------------------------------------
   // DiagMixin
   
