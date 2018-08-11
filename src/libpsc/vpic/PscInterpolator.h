@@ -82,19 +82,4 @@ struct PscInterpolatorOps
   {
     TIC do_load(ip, fa); TOC(load_interpolator, 1);
   }
-  
-};
-
-// ======================================================================
-// PscInterpolator
-
-template<class InterpolatorBase, class FieldArray>
-struct PscInterpolator : InterpolatorBase
-{
-  using Base = InterpolatorBase;
-  using Self = PscInterpolator<InterpolatorBase, FieldArray>;
-
-  using Base::Base;
-
-  void load(FieldArray& fa) { PscInterpolatorOps<Self, FieldArray>::load(*this, fa); }
 };

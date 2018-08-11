@@ -341,7 +341,7 @@ private:
     mpi_printf(psc_comm(psc), "Uncentering particles\n");
     auto& vmprts = mprts.vmprts_;
     if (!vmprts.empty()) {
-      interpolator_.load(mflds.vmflds());
+      InterpolatorOps::load(interpolator_, mflds.vmflds());
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	TIC vmprts.uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
