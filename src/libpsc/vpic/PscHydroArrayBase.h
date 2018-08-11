@@ -25,16 +25,6 @@ struct PscHydroArrayBase : PscFieldBase<PscHydroT, G>
   
   using Base::Base;
 
-  static PscHydroArrayBase* create(Grid *grid)
-  {
-    return new PscHydroArrayBase(grid);
-  }
-  
-  static void destroy(PscHydroArrayBase* hydro)
-  {
-    delete hydro;
-  }
-
   float* getData(int* ib, int* im)
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)

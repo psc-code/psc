@@ -10,17 +10,17 @@ struct VpicHydroArrayBase : hydro_array_t
 {
   typedef G Grid;
   typedef hydro_t Element;
-  
-  static VpicHydroArrayBase* create(Grid *grid)
-  {
-    return static_cast<VpicHydroArrayBase*>(new_hydro_array(grid));
-  }
-  
-  static void destroy(VpicHydroArrayBase* hydro)
-  {
-    delete_hydro_array(hydro);
-  }
 
+  // FIXME: broken,needs to wrap
+#if 0
+  // ctor
+  new_hydro_array(grid);
+  clear_hydro_array(hydro);
+
+  // dtor
+  delete_hydro_array(hydro);
+#endif
+  
   float* getData(int* ib, int* im)
   {
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
