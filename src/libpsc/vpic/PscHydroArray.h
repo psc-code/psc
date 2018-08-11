@@ -1,6 +1,5 @@
 
-#ifndef PSC_HYDRO_ARRAY_H
-#define PSC_HYDRO_ARRAY_H
+#pragma once
 
 // Generic looping
 #define XYZ_LOOP(xl,xh,yl,yh,zl,zh) \
@@ -14,27 +13,21 @@
 #define z_NODE_LOOP(z) XYZ_LOOP(1,nx+1,1,ny+1,z,z)
 
 // ======================================================================
-// PscHydroArray
+// PscHydroArrayOps
 
-template<class HydroArrayBase>
-struct PscHydroArray : HydroArrayBase
+template<typename HydroArray>
+struct PscHydroArrayOps
 {
-  typedef HydroArrayBase Base;
-  using typename Base::Grid;
-  using typename Base::Element;
-
-  using Base::data;
-  using Base::grid;
-
-  using Base::Base;
-
+  using Grid = typename HydroArray::Grid;
+  using Element = typename HydroArray::Element;
+  
   // ----------------------------------------------------------------------
   // clear
   
-  void clear()
+  static void clear(HydroArray& ha)
   {
-    Element *h = data();
-    memset(h, 0, grid()->nv * sizeof(*h));
+    auto h = ha.data();
+    memset(h, 0, ha.grid()->nv * sizeof(*h));
   }
 
   // ----------------------------------------------------------------------
@@ -106,14 +99,14 @@ struct PscHydroArray : HydroArrayBase
     }
   };
 
-  void synchronize()
+  static void synchronize(HydroArray& ha)
   {
     int face, bc, x, y, z;
     Element* h;
 
-    const Grid* g = grid();
+    auto g = ha.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
-    Field3D<HydroArrayBase> H(*this);
+    Field3D<HydroArray> H(ha);
 
     // Note: synchronize_hydro assumes that hydro has not been adjusted
     // at the local domain boundary. Because hydro fields are purely
@@ -122,7 +115,7 @@ struct PscHydroArray : HydroArrayBase
 
 # define ADJUST_HYDRO(i,j,k,X,Y,Z)              \
     do {					\
-      bc = g->bc[BOUNDARY(i,j,k)];		\
+      int bc = g->bc[BOUNDARY(i,j,k)];		\
       if( bc<0 || bc>=psc_world_size ) {	\
 	face = (i+j+k)<0 ? 1 : n##X+1;		\
 	X##_NODE_LOOP(face) {			\
@@ -154,7 +147,7 @@ struct PscHydroArray : HydroArrayBase
 
 # undef ADJUST_HYDRO
 
-    CommHydro<Grid, Field3D<HydroArrayBase>> comm(this->grid());
+    CommHydro<Grid, Field3D<HydroArray>> comm(ha.grid());
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, H);
@@ -162,7 +155,26 @@ struct PscHydroArray : HydroArrayBase
     }
     
   }
+  
 };
 
-#endif
+// ======================================================================
+// PscHydroArray
+
+template<class HydroArrayBase>
+struct PscHydroArray : HydroArrayBase
+{
+  using Self = PscHydroArray<HydroArrayBase>;
+  typedef HydroArrayBase Base;
+  using typename Base::Grid;
+  using typename Base::Element;
+
+  using Base::data;
+  using Base::grid;
+
+  using Base::Base;
+
+  void clear() { return PscHydroArrayOps<Self>::clear(*this); }
+  void synchronize() { return PscHydroArrayOps<Self>::synchronize(*this); }
+};
 
